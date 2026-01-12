@@ -26,9 +26,9 @@ public class GermlineVariantEnrichment
     public GermlineVariantEnrichment(
             final String purpleVersion, final String referenceSample, final String tumorSample, final ReferenceData refData,
             @Nullable final PurityAdjuster purityAdjuster, final List<PurpleCopyNumber> copyNumbers,
-            final Multimap<Chromosome, SimpleVariant> germlineHotspots)
+            final Multimap<Chromosome,SimpleVariant> germlineHotspots, final Set<String> somaticReportedGenes)
     {
-        mReportableEnrichment = new GermlineReportedEnrichment(refData.DriverGenes.DriverGeneMap);
+        mReportableEnrichment = new GermlineReportedEnrichment(refData.DriverGenes.DriverGeneMap, somaticReportedGenes);
 
         mLowVafRescueEnrichment = new GermlineRescueLowVAF(referenceSample);
 
@@ -37,6 +37,8 @@ public class GermlineVariantEnrichment
         mHotspotEnrichment = new HotspotEnrichment(germlineHotspots, true);
         mGenotypeEnrichment = new GermlineGenotypeEnrichment(referenceSample, tumorSample);
     }
+
+    public List<GermlineVariant> candidateVariants() { return mReportableEnrichment.candidateReportableVariants(); }
 
     public void enrichVariant(final GermlineVariant variant)
     {

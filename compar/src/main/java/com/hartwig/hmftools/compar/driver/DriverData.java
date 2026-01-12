@@ -12,6 +12,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
@@ -61,7 +62,7 @@ public class DriverData implements ComparableItem
     }
 
     @Override
-    public boolean reportable() { return true; }
+    public boolean reportable() { return DriverCatalog.reportedStatus() == ReportedStatus.REPORTED; }
 
     @Override
     public boolean isPass() {

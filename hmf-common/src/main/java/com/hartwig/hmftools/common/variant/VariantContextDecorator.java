@@ -315,8 +315,7 @@ public class VariantContextDecorator implements GenomePosition
         if(isHotspot || pathogenicSummary.Status.isPathogenic())
             return true;
 
-        return pathogenicSummary.Status == Pathogenicity.UNKNOWN
-                && (PATHOGENIC_EFFECT.contains(impact.CanonicalCodingEffect) || impact.CanonicalSpliceRegion);
+        return pathogenicSummary.Status == Pathogenicity.UNKNOWN && (PATHOGENIC_EFFECT.contains(impact.CanonicalCodingEffect));
     }
 
     private static String displayFilter(final VariantContext context)

@@ -31,7 +31,7 @@ public class GermlineVariants
     private final String mVersion;
 
     private final List<GermlineVariant> mVariants;
-    private final List<GermlineVariant> mReportableVariants;
+    private final List<GermlineVariant> mCandidateReportableVariants;
 
     public GermlineVariants(final PurpleConfig config, final ReferenceData referenceData, final String version)
     {
@@ -40,10 +40,10 @@ public class GermlineVariants
         mVersion = version;
 
         mVariants = Lists.newArrayList();
-        mReportableVariants = Lists.newArrayList();
+        mCandidateReportableVariants = Lists.newArrayList();
     }
 
-    public List<GermlineVariant> reportableVariants() { return mReportableVariants; }
+    public List<GermlineVariant> candidateVariants() { return mCandidateReportableVariants; }
 
     private void loadGermlineVariants(final String germlineVcf)
     {
@@ -64,7 +64,7 @@ public class GermlineVariants
 
     public void processAndWrite(
             final String referenceId, final String tumorSample, final String germlineVcf, @Nullable final PurityAdjuster purityAdjuster,
-            final List<PurpleCopyNumber> copyNumbers)
+            final List<PurpleCopyNumber> copyNumbers, final Set<String> somaticReportedGenes)
     {
         if(germlineVcf.isEmpty())
             return;
@@ -81,7 +81,7 @@ public class GermlineVariants
 
         GermlineVariantEnrichment enrichment = new GermlineVariantEnrichment(
                 mVersion, referenceId, tumorSample, mReferenceData, purityAdjuster, copyNumbers,
-                mReferenceData.GermlineHotspots);
+                mReferenceData.GermlineHotspots, somaticReportedGenes);
 
         VCFHeader header = vcfReader.getFileHeader();
         enrichment.enrichHeader(header);
@@ -94,6 +94,9 @@ public class GermlineVariants
 
         enrichment.flush();
 
+        mCandidateReportableVariants.addAll(enrichment.candidateVariants());
+
+        /*
         for(GermlineVariant variant : mVariants)
         {
             VariantContext newContext = new VariantContextBuilder(variant.context()).filters(variant.filters()).make();
@@ -103,6 +106,7 @@ public class GermlineVariants
 
             writer.add(newContext);
         }
+        */
 
         writer.close();
     }

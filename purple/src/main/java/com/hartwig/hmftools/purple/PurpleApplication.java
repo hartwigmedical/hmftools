@@ -347,8 +347,10 @@ public class PurpleApplication
 
         if(mConfig.runGermline())
         {
+            Set<String> somaticVariantReportedGenes = mConfig.runTumor() ? somaticStream.reportedGenes() : Collections.emptySet();
+
             mGermlineVariants.processAndWrite(
-                    referenceId, tumorId, sampleDataFiles.GermlineVcfFile, purityAdjuster, copyNumbers);
+                    referenceId, tumorId, sampleDataFiles.GermlineVcfFile, purityAdjuster, copyNumbers, somaticVariantReportedGenes);
 
             germlineSvCache.annotateCopyNumberInfo(fittedRegions, copyNumbers, purityContext);
             germlineSvCache.write(purpleGermlineSvFile(mConfig.OutputDir, tumorId));
@@ -466,10 +468,7 @@ public class PurpleApplication
         {
             GermlineDrivers germlineDrivers = new GermlineDrivers(mReferenceData.DriverGenes.DriverGeneMap);
 
-            Set<String> somaticVariantReportedGenes = mConfig.runTumor() ? somaticStream.reportedGenes() : Collections.emptySet();
-
-            List<DriverCatalog> germlineVariantDrivers = germlineDrivers.findDrivers(
-                    mGermlineVariants.reportableVariants(), geneCopyNumberMap, somaticVariantReportedGenes);
+            List<DriverCatalog> germlineVariantDrivers = germlineDrivers.findDrivers(mGermlineVariants.candidateVariants(), geneCopyNumberMap);
 
             germlineDriverCatalog.addAll(germlineVariantDrivers);
 

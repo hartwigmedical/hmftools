@@ -6,7 +6,6 @@ import static com.hartwig.hmftools.common.purple.PurpleCommon.DEFAULT_DRIVER_HET
 import static com.hartwig.hmftools.common.test.GeneTestUtils.GENE_NAME_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.GENE_NAME_2;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
-import static com.hartwig.hmftools.common.variant.CommonVcfTags.REPORTED_FLAG;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_BIALLELIC_FLAG;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_VARIANT_CN;
 import static com.hartwig.hmftools.common.variant.HotspotType.HOTSPOT_FLAG;
@@ -16,24 +15,20 @@ import static com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser
 import static com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser.toVcfData;
 import static com.hartwig.hmftools.purple.drivers.OncoDriversTest.createGeneCopyNumber;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.driver.DriverCategory;
 import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.driver.panel.DriverGeneGermlineReporting;
 import com.hartwig.hmftools.common.driver.panel.ImmutableDriverGene;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
-import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.test.VariantContextFromString;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
@@ -73,16 +68,16 @@ public class GermlineReportedTest
     @Test
     public void testReportHotspot()
     {
-        setDrivers(createDriverGene(GENE_NAME_1, DriverGeneGermlineReporting.NONE, ANY));
-
         GermlineVariant var = createGermlineVariant(
                 PASS_FILTER, GENE_NAME_1, false, true, CLIN_SIG, CodingEffect.NONE, 0.5);
 
-        var.context().getCommonInfo().putAttribute(REPORTED_FLAG, true);
+        DriverGene driverGene = createDriverGene(GENE_NAME_1, DriverGeneGermlineReporting.NONE, ANY);
+        GermlineReportedEnrichment germlineReportedEnrichment = new GermlineReportedEnrichment(buildDriverGeneMap(driverGene), Collections.emptySet());
 
-        List<DriverCatalog> driverCatalog = mGermlineDrivers.findDrivers(List.of(var), mGeneCopyNumberMap, Collections.emptySet());
-        assertEquals(1, driverCatalog.size());
-        assertEquals(ReportedStatus.REPORTED, driverCatalog.get(0).reportedStatus());
+        germlineReportedEnrichment.processVariant(var);
+        germlineReportedEnrichment.flush();
+
+        assertTrue(var.reported());
     }
 
     @Test
@@ -94,12 +89,14 @@ public class GermlineReportedTest
         GermlineVariant var1 = createGermlineVariant(PASS_FILTER, GENE_NAME_1, false, true, CLIN_SIG, CodingEffect.NONE, 0.5);
         GermlineVariant var2 = createGermlineVariant(PASS_FILTER, GENE_NAME_1, false, false, "Pathogenic", CodingEffect.NONE, 0.5);
 
-        var1.context().getCommonInfo().putAttribute(REPORTED_FLAG, true);
-        var2.context().getCommonInfo().putAttribute(REPORTED_FLAG, true);
+        GermlineReportedEnrichment germlineReportedEnrichment = new GermlineReportedEnrichment(buildDriverGeneMap(driverGene), Collections.emptySet());
 
-        List<DriverCatalog> driverCatalog = mGermlineDrivers.findDrivers(List.of(var1, var2), mGeneCopyNumberMap, Collections.emptySet());
-        assertEquals(1, driverCatalog.size());
-        assertEquals(ReportedStatus.REPORTED, driverCatalog.get(0).reportedStatus());
+        germlineReportedEnrichment.processVariant(var1);
+        germlineReportedEnrichment.processVariant(var2);
+        germlineReportedEnrichment.flush();
+
+        assertTrue(var1.reported());
+        assertTrue(var2.reported());
     }
 
     @Test
@@ -114,9 +111,14 @@ public class GermlineReportedTest
         GermlineVariant var2 = createGermline(
                 PASS_FILTER, GENE_NAME_1, false, false, "Pathogenic", CodingEffect.NONE, 0.5, 4) ;
 
-        List<DriverCatalog> driverCatalog = mGermlineDrivers.findDrivers(List.of(var1, var2), mGeneCopyNumberMap, Collections.emptySet());
-        assertEquals(1, driverCatalog.size());
-        assertEquals(ReportedStatus.NOT_REPORTED, driverCatalog.get(0).reportedStatus());
+        GermlineReportedEnrichment germlineReportedEnrichment = new GermlineReportedEnrichment(buildDriverGeneMap(driverGene), Collections.emptySet());
+
+        germlineReportedEnrichment.processVariant(var1);
+        germlineReportedEnrichment.processVariant(var2);
+        germlineReportedEnrichment.flush();
+
+        assertFalse(var1.reported());
+        assertFalse(var2.reported());
     }
 
     @Test
@@ -127,7 +129,7 @@ public class GermlineReportedTest
         GermlineVariant var = createGermlineVariant(
                 PASS_FILTER, GENE_NAME_1, false, false, CLIN_SIG, CodingEffect.NONSENSE_OR_FRAMESHIFT, 0.5);
 
-        GermlineReportedEnrichment germlineReportedEnrichment = new GermlineReportedEnrichment(buildDriverGeneMap(driverGene));
+        GermlineReportedEnrichment germlineReportedEnrichment = new GermlineReportedEnrichment(buildDriverGeneMap(driverGene), Collections.emptySet());
 
         germlineReportedEnrichment.processVariant(var);
         germlineReportedEnrichment.flush();
@@ -144,7 +146,7 @@ public class GermlineReportedTest
         GermlineVariant var = createGermlineVariant(
                 PASS_FILTER, GENE_NAME_1, false, false, "Pathogenic", CodingEffect.NONE, 0.5);
 
-        GermlineReportedEnrichment germlineReportedEnrichment = new GermlineReportedEnrichment(buildDriverGeneMap(driverGene));
+        GermlineReportedEnrichment germlineReportedEnrichment = new GermlineReportedEnrichment(buildDriverGeneMap(driverGene), Collections.emptySet());
 
         germlineReportedEnrichment.processVariant(var);
         germlineReportedEnrichment.flush();
@@ -160,10 +162,12 @@ public class GermlineReportedTest
         GermlineVariant var = createGermlineVariant(
                 PASS_FILTER, GENE_NAME_1, true, false, "Pathogenic", CodingEffect.NONE, 0.5);
 
-        GermlineReportedEnrichment germlineReportedEnrichment = new GermlineReportedEnrichment(buildDriverGeneMap(driverGene));
+        GermlineReportedEnrichment germlineReportedEnrichment = new GermlineReportedEnrichment(buildDriverGeneMap(driverGene), Collections.emptySet());
 
         germlineReportedEnrichment.processVariant(var);
         germlineReportedEnrichment.flush();
+
+        assertTrue(var.reported());
     }
 
     @Test
@@ -174,10 +178,12 @@ public class GermlineReportedTest
         GermlineVariant var = createGermlineVariant(
                 PASS_FILTER, GENE_NAME_1, false, false, "Pathogenic", CodingEffect.NONE, 0.5);
 
-        GermlineReportedEnrichment germlineReportedEnrichment = new GermlineReportedEnrichment(buildDriverGeneMap(driverGene));
+        GermlineReportedEnrichment germlineReportedEnrichment = new GermlineReportedEnrichment(buildDriverGeneMap(driverGene), Collections.emptySet());
 
         germlineReportedEnrichment.processVariant(var);
         germlineReportedEnrichment.flush();
+
+        assertFalse(var.reported());
     }
 
     @Test
@@ -189,9 +195,14 @@ public class GermlineReportedTest
         GermlineVariant var = createGermlineVariant(
                 PASS_FILTER, GENE_NAME_1, false, false, "Pathogenic", CodingEffect.NONE, 0.5);
 
-        List<DriverCatalog> driverCatalog = mGermlineDrivers.findDrivers(List.of(var), mGeneCopyNumberMap, Sets.newHashSet(GENE_NAME_1));
-        assertEquals(1, driverCatalog.size());
-        assertEquals(ReportedStatus.REPORTED, driverCatalog.get(0).reportedStatus());
+        // Sets.newHashSet(GENE_NAME_1),
+        GermlineReportedEnrichment germlineReportedEnrichment = new GermlineReportedEnrichment(
+                mGermlineDrivers.driverGeneMap(), Sets.newHashSet(GENE_NAME_1));
+
+        germlineReportedEnrichment.processVariant(var);
+        germlineReportedEnrichment.flush();
+
+        assertTrue(var.reported());
     }
 
     @Test
@@ -210,18 +221,14 @@ public class GermlineReportedTest
         GermlineVariant var2 = createGermlineVariant(
                 PASS_FILTER, GENE_NAME_2, false, false, "Pathogenic", CodingEffect.MISSENSE, 0.6);
 
-        var1.context().getCommonInfo().putAttribute(REPORTED_FLAG, true);
-        var2.context().getCommonInfo().putAttribute(REPORTED_FLAG, true);
+        GermlineReportedEnrichment germlineReportedEnrichment = new GermlineReportedEnrichment(mGermlineDrivers.driverGeneMap(), Collections.emptySet());
 
-        List<DriverCatalog> driverCatalogs = mGermlineDrivers.findDrivers(List.of(var1, var2), mGeneCopyNumberMap, Collections.emptySet());
-        assertEquals(2, driverCatalogs.size());
+        germlineReportedEnrichment.processVariant(var1);
+        germlineReportedEnrichment.processVariant(var2);
+        germlineReportedEnrichment.flush();
 
-        DriverCatalog driverCatalog = driverCatalogs.stream().filter(x -> x.gene().equals(GENE_NAME_1)).findFirst().orElse(null);
-
-        assertEquals(ReportedStatus.NOT_REPORTED, driverCatalog.reportedStatus());
-
-        driverCatalog = driverCatalogs.stream().filter(x -> x.gene().equals(GENE_NAME_2)).findFirst().orElse(null);
-        assertEquals(ReportedStatus.REPORTED, driverCatalog.reportedStatus());
+        assertFalse(var1.reported());
+        assertTrue(var2.reported());
     }
 
     private static GermlineVariant createGermlineVariant(
@@ -259,7 +266,6 @@ public class GermlineReportedTest
                         + "\tGT:AD:DP\t0/1:73,17:91";
 
         GermlineVariant variant = new GermlineVariant(VariantContextFromString.decode(line2));
-        variant.context().getCommonInfo().putAttribute(REPORTED_FLAG, true);
         return variant;
     }
 

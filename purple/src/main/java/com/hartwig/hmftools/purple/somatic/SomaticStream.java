@@ -234,7 +234,7 @@ public class SomaticStream
                 {
                     mTumorMutationalLoad.processVariant(variant);
                     mMicrosatelliteIndels.processVariant(variant);
-                    checkDrivers(variant, true); // sets reportable flag if applicable
+                    checkReportability(variant); // sets reportable flag if applicable
 
                     mRChartData.processVariant(variant);
                     checkChartDownsampling(variant);
@@ -284,11 +284,11 @@ public class SomaticStream
                 mTumorMutationalLoad.burden(), mTmb));
     }
 
-    private void checkDrivers(final SomaticVariant variant, boolean updateVcf)
+    private void checkReportability(final SomaticVariant variant)
     {
-        boolean reported = mDrivers.checkSomaticVariant(variant);
+        boolean isCandidateReportable = mDrivers.checkSomaticVariant(variant);
 
-        if(reported && updateVcf)
+        if(isCandidateReportable)
         {
             variant.context().getCommonInfo().putAttribute(REPORTED_FLAG, true);
 

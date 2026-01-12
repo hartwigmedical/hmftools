@@ -52,7 +52,8 @@ public abstract class SomaticVariantDriverFinder
         if(isCandidateReportable(mReportablePredicate, variant))
         {
             mDriverVariants.add(variant);
-            return true;
+
+            return mReportablePredicate.isReportable(variant.variantImpact(), variant.isHotspot());
         }
         
         return false;
@@ -60,11 +61,6 @@ public abstract class SomaticVariantDriverFinder
 
     public boolean hasVariant(final SomaticVariant variant) { return mDriverVariants.contains(variant); }
     public void addVariant(final SomaticVariant variant) { mDriverVariants.add(variant); }
-
-    public abstract DriverCatalog createDriverCatalog(
-            final List<SomaticVariant> geneVariants, final Map<VariantType,Integer> variantTypeCounts,
-            final Map<VariantType,Integer> biallelicCounts, final GeneCopyNumber geneCopyNumber,
-            final DndsDriverGeneLikelihood likelihood, final LikelihoodMethod likelihoodMethod, final ReportedStatus reportedStatus);
 
     protected List<DriverCatalog> findDrivers(
             final Map<String,GeneCopyNumber> geneCopyNumberMap, final Map<VariantType,Integer> variantTypeCounts,
@@ -112,4 +108,9 @@ public abstract class SomaticVariantDriverFinder
 
         return driverCatalog;
     }
+
+    public abstract DriverCatalog createDriverCatalog(
+            final List<SomaticVariant> geneVariants, final Map<VariantType,Integer> variantTypeCounts,
+            final Map<VariantType,Integer> biallelicCounts, final GeneCopyNumber geneCopyNumber,
+            final DndsDriverGeneLikelihood likelihood, final LikelihoodMethod likelihoodMethod, final ReportedStatus reportedStatus);
 }
