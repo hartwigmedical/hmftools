@@ -58,6 +58,8 @@ final class ChromosomeArmCopyNumberFactory
             }
         }
 
+        cnPerChromosomeArmData.sort(ChromosomeArmCopyNumber.COMPARATOR);
+
         return cnPerChromosomeArmData;
     }
 
