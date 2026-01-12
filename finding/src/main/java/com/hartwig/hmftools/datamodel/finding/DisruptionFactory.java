@@ -70,6 +70,8 @@ final class DisruptionFactory
                 linx.somaticDrivers(),
                 hasReliablePurity));
 
+        allDisruptions.sort(Disruption.COMPARATOR);
+
         return ImmutableDriverFindings.<Disruption>builder()
                 .status(FindingsStatus.OK)
                 .all(allDisruptions)

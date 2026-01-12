@@ -33,6 +33,8 @@ final class GainDeletionFactory {
         // we are going to add somatic LOH to purple. For this backported version we will reverse engineer how they might look
         allGainDels.addAll(somaticLoh(purple.suspectGeneCopyNumbersWithLOH()));
 
+        allGainDels.sort(GainDeletion.COMPARATOR);
+
         return ImmutableDriverFindings.<GainDeletion>builder()
                 .status(findingsStatus)
                 .all(allGainDels)
