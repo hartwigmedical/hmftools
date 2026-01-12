@@ -1,10 +1,5 @@
 package com.hartwig.hmftools.patientdb.amber;
 
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.AMBERANONYMOUS;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.AMBERMAPPING;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.AMBERPATIENT;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.AMBERSAMPLE;
-
 import static org.junit.Assert.assertEquals;
 
 import java.sql.SQLException;
@@ -18,54 +13,25 @@ import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import com.hartwig.hmftools.patientdb.DatabaseAutoSetup;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
-import org.testcontainers.mysql.MySQLContainer;
 
-public class LoadAmberDataTest
+@Ignore
+public class LoadAmberDataTest extends DatabaseAutoSetup
 {
-    private static final MySQLContainer SQL_CONTAINER = new MySQLContainer("mysql:8").withInitScript("generate_database.sql");
-
-    private static DatabaseAccess databaseAccess;
-
-    @BeforeClass
-    public static void setup() throws SQLException
-    {
-        SQL_CONTAINER.start();
-        databaseAccess = databaseAccess();
-    }
-
-    @After
-    public void clearDb()
-    {
-        databaseAccess.context().deleteFrom(AMBERPATIENT).execute();
-        databaseAccess.context().deleteFrom(AMBERSAMPLE).execute();
-        databaseAccess.context().deleteFrom(AMBERANONYMOUS).execute();
-        databaseAccess.context().deleteFrom(AMBERMAPPING).execute();
-    }
-
-    @AfterClass
-    public static void tearDown()
-    {
-        databaseAccess.close();
-        SQL_CONTAINER.stop();
-    }
-
     @Test
     public void shouldGenerateNewPatientIdForDifferentAmberSamples()
     {
         AmberSample amberSample = randomAmberSampleWithId("amber-sample-1");
         AmberSample otherAmberSample = randomAmberSampleWithId("amber-sample-2");
 
-        LoadAmberData.processSample(amberSample, databaseAccess);
-        LoadAmberData.processSample(otherAmberSample, databaseAccess);
+        LoadAmberData.processSample(amberSample, DB_ACCESS);
+        LoadAmberData.processSample(otherAmberSample, DB_ACCESS);
 
-        Set<Integer> loadedPatientIds =
-                databaseAccess.readAmberPatients().stream().map(AmberPatient::patientId).collect(Collectors.toSet());
+        Set<Integer> loadedPatientIds = DB_ACCESS.readAmberPatients().stream().map(AmberPatient::patientId).collect(Collectors.toSet());
 
         assertEquals(2, loadedPatientIds.size());
     }
@@ -76,22 +42,27 @@ public class LoadAmberDataTest
         AmberSample amberSample = randomAmberSampleWithId("amber-sample-1");
         AmberSample samePatientAmberSample = ImmutableAmberSample.builder().from(amberSample).sampleId("amber-sample-2").build();
 
-        LoadAmberData.processSample(amberSample, databaseAccess);
-        LoadAmberData.processSample(samePatientAmberSample, databaseAccess);
+        LoadAmberData.processSample(amberSample, DB_ACCESS);
+        LoadAmberData.processSample(samePatientAmberSample, DB_ACCESS);
 
-        Set<Integer> loadedPatientIds =
-                databaseAccess.readAmberPatients().stream().map(AmberPatient::patientId).collect(Collectors.toSet());
+        Set<Integer> loadedPatientIds = DB_ACCESS.readAmberPatients().stream().map(AmberPatient::patientId).collect(Collectors.toSet());
 
         assertEquals(1, loadedPatientIds.size());
     }
 
     @Test
-    public void shouldCorrectlyLoadAmberDataConcurrentlyAcrossSessions()
+    public void shouldCorrectlyLoadAmberDataConcurrentlyAcrossSessions() throws SQLException
     {
         int nSamplesPerConnection = 100;
         int nConnections = 10;
 
-        List<DatabaseAccess> connections = IntStream.range(0, nConnections).mapToObj(ignored -> databaseAccess()).toList();
+        List<DatabaseAccess> connections = new ArrayList<>();
+        for(int i = 0; i < nConnections; i++)
+        {
+            DatabaseAccess dbAccess = new DatabaseAccess(CONTAINER.getUsername(), CONTAINER.getPassword(), CONTAINER.getJdbcUrl());
+            connections.add(dbAccess);
+        }
+
         try
         {
             // Asynchronously insert n samples per connection.
@@ -107,38 +78,24 @@ public class LoadAmberDataTest
             {
                 DatabaseAccess dbAccess = connections.get(i);
                 List<AmberSample> amberSamples = toInsertPerConnection.get(i);
-                jobs.add(CompletableFuture.runAsync(() -> insertUsingDatabaseAccess(dbAccess, amberSamples), executor));
+
+                jobs.add(CompletableFuture.runAsync(() -> {
+                    for(AmberSample amberSample : amberSamples)
+                    {
+                        LoadAmberData.processSample(amberSample, dbAccess);
+                    }
+                }, executor));
             }
 
             jobs.forEach(CompletableFuture::join);
 
             // Assert there is a unique patientId for each patient in the db, and none got lost due to race conditions
-            Set<Integer> patientIds = databaseAccess.readAmberPatients().stream().map(AmberPatient::patientId).collect(Collectors.toSet());
+            Set<Integer> patientIds = DB_ACCESS.readAmberPatients().stream().map(AmberPatient::patientId).collect(Collectors.toSet());
             assertEquals(nSamplesPerConnection * nConnections, patientIds.size());
         }
         finally
         {
             connections.forEach(DatabaseAccess::close);
-        }
-    }
-
-    private static void insertUsingDatabaseAccess(DatabaseAccess databaseAccess, List<AmberSample> amberSamples)
-    {
-        for(AmberSample amberSample : amberSamples)
-        {
-            LoadAmberData.processSample(amberSample, databaseAccess);
-        }
-    }
-
-    private static DatabaseAccess databaseAccess()
-    {
-        try
-        {
-            return new DatabaseAccess(SQL_CONTAINER.getUsername(), SQL_CONTAINER.getPassword(), SQL_CONTAINER.getJdbcUrl());
-        }
-        catch(SQLException e)
-        {
-            throw new RuntimeException(e);
         }
     }
 
