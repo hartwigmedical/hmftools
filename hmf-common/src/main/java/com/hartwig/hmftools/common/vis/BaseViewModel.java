@@ -8,7 +8,7 @@ import org.jetbrains.annotations.Nullable;
 
 public class BaseViewModel
 {
-    private static final int MISSING_BASEQ = 0;
+    public static final int MISSING_BASEQ = 0;
 
     public final boolean IsOverlapped;
 

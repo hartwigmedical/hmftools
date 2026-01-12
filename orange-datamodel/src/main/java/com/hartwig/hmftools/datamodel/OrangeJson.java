@@ -2,12 +2,19 @@ package com.hartwig.hmftools.datamodel;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.FileReader;
-import java.io.FileWriter;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.ServiceLoader;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -45,7 +52,11 @@ public class OrangeJson {
 
     @NotNull
     public OrangeRecord read(@NotNull String orangeJsonFilePath) throws IOException {
-        return read(new FileReader(orangeJsonFilePath));
+        InputStream inputStream = new FileInputStream(orangeJsonFilePath);
+        if(orangeJsonFilePath.endsWith(".gz")) {
+            inputStream = new GZIPInputStream(inputStream);
+        }
+        return read(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
     }
 
     @NotNull
@@ -56,8 +67,17 @@ public class OrangeJson {
     }
 
     public void write(@NotNull OrangeRecord orangeRecord, @NotNull String outputFilePath) throws IOException {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputFilePath))) {
-            gson.toJson(orangeRecord, OrangeRecord.class, writer);
+        boolean isGzipped = outputFilePath.endsWith(".gz");
+        Gson gsonToUse = gson;
+        OutputStream outputStream = new FileOutputStream(outputFilePath);
+        if(isGzipped) {
+            outputStream = new GZIPOutputStream(outputStream);
+
+            // Pretty print if gzipped
+            gsonToUse = gson.newBuilder().setPrettyPrinting().create();
+        }
+        try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream, StandardCharsets.UTF_8))) {
+            gsonToUse.toJson(orangeRecord, OrangeRecord.class, writer);
         }
     }
 }

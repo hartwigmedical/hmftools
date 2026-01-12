@@ -24,7 +24,7 @@ import com.hartwig.hmftools.common.vis.CssBuilder;
 import com.hartwig.hmftools.common.vis.CssSize;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
-import com.hartwig.hmftools.esvee.assembly.vis.AssemblyVisualiser.RefSegmentViewModel;
+import com.hartwig.hmftools.esvee.assembly.vis.AssemblyVisualiser.SegmentViewModel;
 
 import org.jetbrains.annotations.Nullable;
 import org.jfree.svg.SVGGraphics2D;
@@ -35,17 +35,17 @@ import j2html.tags.DomContent;
 public final class ReadViewModel
 {
     private final SupportRead mSupportRead;
-    private final List<RefSegmentViewModel> mRefViewModel;
+    private final List<SegmentViewModel> mRefViewModel;
     private final BaseSeqViewModel mReadViewModel;
 
-    private ReadViewModel(final SupportRead supportRead, final List<RefSegmentViewModel> refViewModel, final BaseSeqViewModel readViewModel)
+    private ReadViewModel(final SupportRead supportRead, final List<SegmentViewModel> refViewModel, final BaseSeqViewModel readViewModel)
     {
         mSupportRead = supportRead;
         mRefViewModel = refViewModel;
         mReadViewModel = readViewModel;
     }
 
-    public static ReadViewModel create(final List<RefSegmentViewModel> refViewModel, final SupportRead read, final JunctionAssembly junctionAssembly)
+    public static ReadViewModel create(final List<SegmentViewModel> refViewModel, final SupportRead read, final JunctionAssembly junctionAssembly)
     {
         boolean readNegativeStrandFlag = read.cachedRead().bamRecord().getReadNegativeStrandFlag();
         byte[] readBases = read.cachedRead().getBases();
@@ -92,7 +92,7 @@ public final class ReadViewModel
         BaseRegion readRegion = new BaseRegion(mReadViewModel.FirstBasePos, mReadViewModel.LastBasePos);
 
         int totalBoxWidth = 0;
-        for(RefSegmentViewModel refViewModel : mRefViewModel)
+        for(SegmentViewModel refViewModel : mRefViewModel)
             totalBoxWidth += refViewModel.viewRegion().baseLength() + 2 * BOX_PADDING;
 
         SVGGraphics2D svgCanvas = new SVGGraphics2D(READ_HEIGHT_PX * totalBoxWidth, READ_HEIGHT_PX);
@@ -101,8 +101,8 @@ public final class ReadViewModel
         int renderCount = 0;
         for(int i = 0; i < mRefViewModel.size(); i += 1)
         {
-            RefSegmentViewModel refViewModel = mRefViewModel.get(i);
-            BaseRegion viewRegion = refViewModel.viewRegion();
+            SegmentViewModel refEl = mRefViewModel.get(i);
+            BaseRegion viewRegion = refEl.viewRegion();
 
             if(!viewRegion.overlaps(readRegion))
             {
@@ -110,10 +110,14 @@ public final class ReadViewModel
                 continue;
             }
 
+            BaseSeqViewModel refViewModel = refEl.refViewModel();
+            if(refViewModel == null)
+                refViewModel = refEl.assemblyViewModel();
+
             boolean renderLeftOrientationMarker = i == 0;
             boolean renderRightOrientationMarker = i == mRefViewModel.size() - 1;
             svgCanvas.setTransform(initTransform);
-            renderBaseSeq(svgCanvas, new Point2D.Double(xBoxOffset, 0.0d), READ_HEIGHT_PX, viewRegion, mReadViewModel, true, Maps.newHashMap(), refViewModel.viewModel(), renderLeftOrientationMarker, renderRightOrientationMarker);
+            renderBaseSeq(svgCanvas, new Point2D.Double(xBoxOffset, 0.0d), READ_HEIGHT_PX, viewRegion, mReadViewModel, true, Maps.newHashMap(), refViewModel, renderLeftOrientationMarker, renderRightOrientationMarker);
             renderCount += 1;
 
             xBoxOffset += viewRegion.baseLength() + 2 * BOX_PADDING;

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.vis;
 
+import static com.hartwig.hmftools.common.vis.BaseViewModel.MISSING_BASEQ;
+
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -27,7 +29,7 @@ public class BaseSeqViewModel
         this(bases, null, posStart, leftIsForwardStrand, rightIsForwardStrand);
     }
 
-    public BaseSeqViewModel(final List<BaseViewModel> bases, @Nullable final String chromosome, int posStart,
+    private BaseSeqViewModel(final List<BaseViewModel> bases, @Nullable final String chromosome, int posStart,
             @Nullable final Boolean leftIsForwardStrand, @Nullable final Boolean rightIsForwardStrand)
     {
         mBases = bases;
@@ -157,6 +159,48 @@ public class BaseSeqViewModel
         boolean leftIsForwardStrand = first.FirstBasePos <= second.FirstBasePos ? first.LeftIsForwardStrand : second.LeftIsForwardStrand;
         boolean rightIsForwardStrand = first.LastBasePos >= second.LastBasePos ? first.RightIsForwardStrand : second.RightIsForwardStrand;
         return new BaseSeqViewModel(indexedBases, unclippedStart, leftIsForwardStrand, rightIsForwardStrand);
+    }
+
+    public static BaseSeqViewModel fromStringWithCigar(final String baseStr, final List<CigarElement> cigarElements, int posStart)
+    {
+        List<BaseViewModel> indexedBases = Lists.newArrayList();
+        int baseIdx = 0;
+        for(CigarElement cigarElem : cigarElements)
+        {
+            CigarOperator cigarOp = cigarElem.getOperator();
+            int elemLen = cigarElem.getLength();
+            for(int i = 0; i < elemLen; i++)
+            {
+                switch(cigarOp)
+                {
+                    case M:
+                    case EQ:
+                    case X:
+                        indexedBases.add(new BaseViewModel(baseStr.charAt(baseIdx)));
+                        baseIdx++;
+                        break;
+                    case S:
+                        indexedBases.add(new BaseViewModel(baseStr.charAt(baseIdx), MISSING_BASEQ, true, false));
+                        baseIdx++;
+                        break;
+                    case I:
+                        if(!indexedBases.isEmpty())
+                            indexedBases.get(indexedBases.size() - 1).incRightInsertCount(baseStr.charAt(baseIdx), MISSING_BASEQ);
+
+                        baseIdx++;
+                        break;
+                    case D:
+                        indexedBases.add(BaseViewModel.createDelBase(false));
+                        break;
+                    case H:
+                    case N:
+                        indexedBases.add(BaseViewModel.createMissingBase());
+                        break;
+                }
+            }
+        }
+
+        return new BaseSeqViewModel(indexedBases, posStart, null, null);
     }
 
     public BaseViewModel getBase(int pos)
