@@ -9,7 +9,6 @@ import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
 import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
-import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.PurpleMicrosatelliteStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.PurpleTumorMutationalStatus;
@@ -48,11 +47,6 @@ final class FindingKeys
     public static String fusion(@NotNull DriverSource sampleType, LinxFusion fusion)
     {
         return String.format("fusion[%s %s %s]", sampleType, fusion.geneStart(), fusion.geneEnd());
-    }
-
-    public static String lohCopyNumber(PurpleGeneCopyNumber copyNumber)
-    {
-        return String.format("lohCopyNumber[%s %s %s]", copyNumber.gene(), copyNumber.chromosome(), copyNumber.chromosomeBand());
     }
 
     public static String virus(VirusInterpreterEntry virus)
