@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.utils.config.VersionInfo.fromAppName;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.APP_NAME;
+import static com.hartwig.hmftools.lilac.LilacConstants.CURRENT_GENES;
 import static com.hartwig.hmftools.lilac.LilacConstants.LILAC_FILE_CANDIDATE_AA;
 import static com.hartwig.hmftools.lilac.LilacConstants.LILAC_FILE_CANDIDATE_COVERAGE;
 import static com.hartwig.hmftools.lilac.LilacConstants.LILAC_FILE_CANDIDATE_FRAGS;
@@ -60,7 +61,7 @@ public class ResultsWriter
     private final Set<WriteType> mWriteTypes;
     private LilacVCF mVcfWriter;
 
-    private static final String WRITE_TYPES = "write_types";
+    public static final String WRITE_TYPES = "write_types";
     private static final String WRITE_TYPES_ALL = "ALL";
 
     private enum WriteType
@@ -70,14 +71,10 @@ public class ResultsWriter
         REF_COUNTS
     }
 
-    public ResultsWriter(final LilacConfig config, final ConfigBuilder configBuilder)
+    public ResultsWriter(final LilacConfig config, final String writeTypesStr)
     {
         mConfig = config;
-
         mWriteTypes = Sets.newHashSet();
-
-        String writeTypesStr = configBuilder.getValue(WRITE_TYPES);
-
         if(writeTypesStr.equals(WRITE_TYPES_ALL))
         {
             mWriteTypes.addAll(Arrays.asList(WriteType.values()));
@@ -123,7 +120,7 @@ public class ResultsWriter
         solutionSummary.write(LilacAllele.generateFilename(mConfig.OutputDir, mConfig.Sample));
         summaryMetrics.writefile(LilacQcData.generateFilename(mConfig.OutputDir, mConfig.Sample));
 
-        HlaComplexFile.writeToFile(mConfig.formFileId(LILAC_FILE_CANDIDATE_COVERAGE), mConfig.Genes, rankedComplexes);
+        HlaComplexFile.writeToFile(mConfig.formFileId(LILAC_FILE_CANDIDATE_COVERAGE), CURRENT_GENES, rankedComplexes);
     }
 
     public void writeDetailedOutputs(
@@ -161,7 +158,7 @@ public class ResultsWriter
             {
                 String geneStr = line.split("\\*")[0];
                 HlaGene gene = HlaGene.fromString(geneStr);
-                if(gene != null && !mConfig.Genes.contains(gene))
+                if(gene != null && !CURRENT_GENES.contains(gene))
                     existingLines.add(line);
 
                 line = reader.readLine();
@@ -204,11 +201,11 @@ public class ResultsWriter
         CoverageQC coverageQC = new CoverageQC(countsByGene, 0, 0, 0, 0, 0, 0, 0);
 
         LilacQC summaryMetrics = new LilacQC(
-                mConfig.Genes, 0, "", null, null,
+                CURRENT_GENES, 0, "", null, null,
                 aminoAcidQC, bamQC, coverageQC, haplotypeQC, new SomaticVariantQC(0, 0));
 
         SolutionSummary solutionSummary = new SolutionSummary(
-                mConfig.Genes, null, null, null, null, null);
+                CURRENT_GENES, null, null, null, null, null);
 
         solutionSummary.write(LilacAllele.generateFilename(mConfig.OutputDir, mConfig.Sample));
         summaryMetrics.writefile(LilacQcData.generateFilename(mConfig.OutputDir, mConfig.Sample));
@@ -267,7 +264,7 @@ public class ResultsWriter
 
                 String[] geneStrs = fields[3].split(ITEM_DELIM);
                 HlaGene firstGene = HlaGene.fromString(geneStrs[0]);
-                if(firstGene != null && !mConfig.Genes.contains(firstGene))
+                if(firstGene != null && !CURRENT_GENES.contains(firstGene))
                     existingFragmentRecords.add(line);
 
                 line = reader.readLine();

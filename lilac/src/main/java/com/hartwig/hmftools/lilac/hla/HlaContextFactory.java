@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.lilac.hla;
 
+import static com.hartwig.hmftools.lilac.LilacConstants.CURRENT_GENES;
+
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
@@ -26,8 +28,8 @@ public class HlaContextFactory
     public List<HlaContext> contexts()
     {
         List<HlaContext> output = Lists.newArrayList();
-        int geneCount = mConfig.Genes.genes().size();
-        for(HlaGene gene : mConfig.Genes.genes())
+        int geneCount = CURRENT_GENES.genes().size();
+        for(HlaGene gene : CURRENT_GENES.genes())
         {
             NavigableMap<Integer, Integer> filters =
                     mNucleotideGeneEnrichment == null ? Maps.newTreeMap() : mNucleotideGeneEnrichment.getFilters(gene);

@@ -8,10 +8,10 @@ import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.ENSEMBL
 import static com.hartwig.hmftools.common.hla.HlaCommon.HLA_CHROMOSOME_V37;
 import static com.hartwig.hmftools.common.hla.HlaCommon.HLA_CHROMOSOME_V38;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.lilac.GeneSelector.HLA_DRB1;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.CLASS_1_EXCLUDED_ALLELES;
 import static com.hartwig.hmftools.lilac.LilacConstants.COMMON_ALLELES_FREQ_CUTOFF;
+import static com.hartwig.hmftools.lilac.LilacConstants.CURRENT_GENES;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_CHR;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_DRB1_EXCLUDED_ALLELES;
 import static com.hartwig.hmftools.lilac.LilacConstants.STOP_LOSS_ON_C_ALLELE;
@@ -81,7 +81,7 @@ public class ReferenceData
     private final CohortFrequency mAlleleFrequencies;
 
     // temporary until HlaContextFactor and are refactored to be unaware of class-type
-    public static final Map<HlaGene, List<Integer>> GENE_EXON_BOUNDARIES = Maps.newHashMap();
+    public static Map<HlaGene, List<Integer>> GENE_EXON_BOUNDARIES = null;
 
     public static HlaContextFactory HLA_CONTEXT_FACTORY = null;
     public static NucleotideGeneEnrichment NUC_GENE_FRAG_ENRICHMENT = null;
@@ -102,20 +102,20 @@ public class ReferenceData
 
     public static Indel STOP_LOSS_ON_C_INDEL = null;
 
-    public static final List<Indel> INDEL_PON = Lists.newArrayList();
+    public static List<Indel> INDEL_PON = null;
 
     public ReferenceData(final String resourceDir, final LilacConfig config)
     {
         mResourceDir = resourceDir;
         mConfig = config;
 
-        Map<HlaGene, TranscriptData> hlaTranscriptMap = loadHlaTranscripts(config.RefGenVersion, mConfig.Genes);
-        if(config.Genes == HLA_DRB1)
+        Map<HlaGene, TranscriptData> hlaTranscriptMap = loadHlaTranscripts(config.RefGenVersion, CURRENT_GENES);
+        if(CURRENT_GENES == GeneSelector.HLA_DRB1)
             trimDrb1Transcripts(hlaTranscriptMap);
 
         HLA_CHR = config.RefGenVersion.is38() ? HLA_CHROMOSOME_V38 : HLA_CHROMOSOME_V37;
 
-        if(!"".equals(mConfig.RefGenome))
+        if(!"".equals(mConfig.RefGenome) && HLA_REF_BASES == null)
         {
             IndexedFastaSequenceFile refFastaSeqFile = null;
             try
@@ -142,14 +142,15 @@ public class ReferenceData
         }
 
         GENE_CACHE = new GeneCache(hlaTranscriptMap);
-
-        if(config.Genes.coversMhcClass1())
+        EXCLUDED_ALLELES.clear();
+        if(CURRENT_GENES.coversMhcClass1())
             EXCLUDED_ALLELES.addAll(CLASS_1_EXCLUDED_ALLELES);
 
-        if(config.Genes.contains(HlaGene.HLA_DRB1))
+        if(CURRENT_GENES.contains(HlaGene.HLA_DRB1))
             EXCLUDED_ALLELES.addAll(HLA_DRB1_EXCLUDED_ALLELES);
 
         // see note above
+        GENE_EXON_BOUNDARIES = Maps.newHashMap();
         for(HlaGene gene : GENE_CACHE.GeneNames)
             GENE_EXON_BOUNDARIES.computeIfAbsent(gene, k -> Lists.newArrayList()).addAll(GENE_CACHE.AminoAcidExonBoundaries.get(gene));
 
@@ -158,14 +159,14 @@ public class ReferenceData
 
         mAlleleCache = new HlaAlleleCache();
 
-        mAlleleFrequencies = new CohortFrequency(mConfig.Genes, !mResourceDir.isEmpty() ? mResourceDir + COHORT_ALLELE_FREQ_FILE : "");
+        mAlleleFrequencies = new CohortFrequency(CURRENT_GENES, !mResourceDir.isEmpty() ? mResourceDir + COHORT_ALLELE_FREQ_FILE : "");
 
         NucleotideSequences = Lists.newArrayList();
         AminoAcidSequences = Lists.newArrayList();
         AminoAcidSequencesWithInserts = Lists.newArrayList();
         AminoAcidSequencesWithDeletes = Lists.newArrayList();
-        HlaYNucleotideSequences = config.Genes.coversMhcClass1() ? Lists.newArrayList() : null;
-        HlaYAminoAcidSequences = config.Genes.coversMhcClass1() ? Lists.newArrayList() : null;
+        HlaYNucleotideSequences = CURRENT_GENES.coversMhcClass1() ? Lists.newArrayList() : null;
+        HlaYAminoAcidSequences = CURRENT_GENES.coversMhcClass1() ? Lists.newArrayList() : null;
 
         ExonSequencesLookup = Maps.newHashMap();
 
@@ -207,6 +208,11 @@ public class ReferenceData
 
     private static void setPonIndels(final RefGenomeVersion version)
     {
+        if(INDEL_PON != null)
+            return;
+
+        INDEL_PON = Lists.newArrayList();
+
         // load indel PON
         String refFile = version.is37() ? "/pon/indels_v37.csv" : "/pon/indels_v38.csv";
 
@@ -374,7 +380,7 @@ public class ReferenceData
     private void loadStopLossRecoveryAllele()
     {
         // TODO: load from resource file
-        if(mConfig.Genes.coversMhcClass1())
+        if(CURRENT_GENES.coversMhcClass1())
         {
             STOP_LOSS_ON_C_INDEL = mConfig.RefGenVersion.is38() ?
                     new Indel(HLA_CHR, 31269338, "CN", "C") : new Indel(HLA_CHR, 31237115, "CN", "C");
@@ -514,7 +520,7 @@ public class ReferenceData
             String alleleStr = items[0];
 
             HlaAllele allele = isProteinFile ? mAlleleCache.requestFourDigit(alleleStr) : mAlleleCache.request(alleleStr);
-            if(!mConfig.Genes.allGenes().contains(allele.Gene))
+            if(!CURRENT_GENES.allGenes().contains(allele.Gene))
                 continue;
 
             boolean isDefaultTemplate = isProteinFile && mDeflatedSequenceTemplate == null && allele.matches(DEFLATE_TEMPLATE);

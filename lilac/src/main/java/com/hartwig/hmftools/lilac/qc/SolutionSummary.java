@@ -3,6 +3,7 @@ package com.hartwig.hmftools.lilac.qc;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
+import static com.hartwig.hmftools.lilac.LilacConstants.CURRENT_GENES;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -87,13 +88,13 @@ public class SolutionSummary
     }
 
     public static SolutionSummary create(
-            final GeneSelector genes, final ComplexCoverage referenceCoverage, final ComplexCoverage tumorCoverage,
+            final ComplexCoverage referenceCoverage, final ComplexCoverage tumorCoverage,
             final List<Double> tumorCopyNumber, final Iterable<SomaticCodingCount> somaticCodingCount, final ComplexCoverage rnaCoverage)
     {
         List<SomaticCodingCount> sortedCodingCount = Lists.newArrayList(somaticCodingCount);
         Collections.sort(sortedCodingCount, new SomaticCodingCountSorter());
 
-        return new SolutionSummary(genes, referenceCoverage, tumorCoverage, tumorCopyNumber, sortedCodingCount, rnaCoverage);
+        return new SolutionSummary(CURRENT_GENES, referenceCoverage, tumorCoverage, tumorCopyNumber, sortedCodingCount, rnaCoverage);
     }
 
     public void write(final String fileName)
