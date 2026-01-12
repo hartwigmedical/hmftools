@@ -14,7 +14,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 @Ignore
-public class LoadChordDataTest extends DatabaseAutoSetup
+public class LoadChordDataTest extends DatabaseTestBase
 {
     @Test
     public void canLoadChordData()
@@ -31,10 +31,7 @@ public class LoadChordDataTest extends DatabaseAutoSetup
 
         DB_ACCESS.writeChord("example", chordData);
 
-        List<ChordRecord> chordRecords = DB_ACCESS.context()
-                .select().from(Tables.CHORD).fetch()
-                .stream().map(r -> r.into(ChordRecord.class))
-                .toList();
+        List<ChordRecord> chordRecords = fetchTable(Tables.CHORD, ChordRecord.class);
 
         assertEquals(1, chordRecords.size());
 

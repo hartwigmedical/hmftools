@@ -13,14 +13,14 @@ import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import com.hartwig.hmftools.patientdb.DatabaseAutoSetup;
+import com.hartwig.hmftools.patientdb.DatabaseTestBase;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.junit.Ignore;
 import org.junit.Test;
 
 @Ignore
-public class LoadAmberDataTest extends DatabaseAutoSetup
+public class LoadAmberDataTest extends DatabaseTestBase
 {
     @Test
     public void shouldGenerateNewPatientIdForDifferentAmberSamples()

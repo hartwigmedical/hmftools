@@ -15,7 +15,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 @Ignore
-public class LoadDriverGenePanelTest extends DatabaseAutoSetup
+public class LoadDriverGenePanelTest extends DatabaseTestBase
 {
     @Test
     public void canLoadDriverGenePanel()
@@ -27,10 +27,7 @@ public class LoadDriverGenePanelTest extends DatabaseAutoSetup
 
         DB_ACCESS.writeGenePanel(driverGenes);
 
-        List<DrivergenepanelRecord> driverGeneRecords = DB_ACCESS.context()
-                .select().from(Tables.DRIVERGENEPANEL).fetch()
-                .stream().map(r -> r.into(DrivergenepanelRecord.class))
-                .toList();
+        List<DrivergenepanelRecord> driverGeneRecords = fetchTable(Tables.DRIVERGENEPANEL, DrivergenepanelRecord.class);
 
         assertEquals(2, driverGeneRecords.size());
     }

@@ -17,7 +17,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 @Ignore
-public class LoadCuppaDataTest extends DatabaseAutoSetup
+public class LoadCuppaDataTest extends DatabaseTestBase
 {
     private static final String TEST_SAMPLE_ID = "example";
     private static final int TOP_N_PROBS = 2;
@@ -41,10 +41,7 @@ public class LoadCuppaDataTest extends DatabaseAutoSetup
         CUPPA_PREDICTIONS = new CuppaPredictions(predictionEntries);
         DB_ACCESS.writeCuppa(TEST_SAMPLE_ID, CUPPA_PREDICTIONS, TOP_N_PROBS);
 
-        CUPPA_RECORDS = DB_ACCESS.context()
-                .select().from(Tables.CUPPA).fetch()
-                .stream().map(r -> r.into(CuppaRecord.class))
-                .toList();
+        CUPPA_RECORDS = fetchTable(Tables.CUPPA, CuppaRecord.class);
     }
 
     @Test
