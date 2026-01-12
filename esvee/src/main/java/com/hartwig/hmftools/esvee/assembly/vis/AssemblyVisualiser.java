@@ -69,7 +69,8 @@ import j2html.tags.DomContent;
 
 public class AssemblyVisualiser
 {
-    public record SegmentViewModel(String chromosome, BaseRegion viewRegion, BaseRegion refViewRegion, BaseSeqViewModel refViewModel, BaseSeqViewModel assemblyViewModel, boolean isInsert) {}
+    public record SegmentViewModel(String chromosome, BaseRegion viewRegion, BaseRegion refViewRegion, BaseSeqViewModel refViewModel,
+                                   BaseSeqViewModel assemblyViewModel, boolean isInsert) {}
 
     private final AssemblyConfig mConfig;
     private final AssemblyAlignment mAssemblyAlignment;
@@ -183,9 +184,11 @@ public class AssemblyVisualiser
         return tableRows;
     }
 
-    private record BreakendInfo(String chromosome, int pos, Orientation orient, List<CigarElement> cigarElements, String insertedBases, BaseRegion refRegion, String assemblySeq, String refSeq) {}
+    private record BreakendInfo(String chromosome, int pos, Orientation orient, List<CigarElement> cigarElements, String insertedBases,
+                                BaseRegion refRegion, String assemblySeq, String refSeq) {}
 
-    private static BreakendInfo extractBreakendInfo(final RefGenomeInterface refGenome, final Breakend breakend, final String fullAssemblySeq)
+    private static BreakendInfo extractBreakendInfo(
+            final RefGenomeInterface refGenome, final Breakend breakend, final String fullAssemblySeq)
     {
         AlignData alignment = breakend.segments().get(0).Alignment;
         List<CigarElement> cigarEls = alignment.cigarElements();
@@ -237,7 +240,8 @@ public class AssemblyVisualiser
             BreakendInfo breakendInfo = extractBreakendInfo(config.RefGenome, assemblyAlignment.breakends().get(i), fullAssemblySeq);
 
             BaseSeqViewModel refSeqViewModel = BaseSeqViewModel.fromStr(breakendInfo.refSeq, baseIdx);
-            BaseSeqViewModel assemblySeqViewModel = BaseSeqViewModel.fromStringWithCigar(breakendInfo.assemblySeq, breakendInfo.cigarElements, baseIdx);
+            BaseSeqViewModel assemblySeqViewModel = BaseSeqViewModel.fromStringWithCigar(
+                    breakendInfo.assemblySeq, breakendInfo.cigarElements, baseIdx);
             baseIdx += breakendInfo.refRegion.baseLength();
 
             BaseRegion viewRegion;

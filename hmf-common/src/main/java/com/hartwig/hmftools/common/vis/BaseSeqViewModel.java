@@ -29,7 +29,7 @@ public class BaseSeqViewModel
         this(bases, null, posStart, leftIsForwardStrand, rightIsForwardStrand);
     }
 
-    public BaseSeqViewModel(final List<BaseViewModel> bases, @Nullable final String chromosome, int posStart,
+    private BaseSeqViewModel(final List<BaseViewModel> bases, @Nullable final String chromosome, int posStart,
             @Nullable final Boolean leftIsForwardStrand, @Nullable final Boolean rightIsForwardStrand)
     {
         mBases = bases;
