@@ -34,6 +34,9 @@ final class SmallVariantFactory
             allSmallVariants.addAll(SmallVariantFactory.create(
                     DriverSource.GERMLINE, germlineVariants, germlineDrivers, clinicalTranscriptsModel, driverGeneMap));
         }
+
+        allSmallVariants.sort(SmallVariant.COMPARATOR);
+
         return ImmutableDriverFindings.<SmallVariant>builder()
                 .status(findingsStatus)
                 .all(allSmallVariants)

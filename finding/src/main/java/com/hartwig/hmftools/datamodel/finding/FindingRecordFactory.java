@@ -197,7 +197,7 @@ public class FindingRecordFactory {
         return ImmutableDriverFindings.<Fusion>builder()
                 .status(FindingsStatus.OK)
                 .all(linx.reportableSomaticFusions().stream()
-                .map(o -> convertFusion(o, DriverSource.SOMATIC)).toList())
+                .map(o -> convertFusion(o, DriverSource.SOMATIC)).sorted(Fusion.COMPARATOR).toList())
                 .build();
     }
 
@@ -265,7 +265,7 @@ public class FindingRecordFactory {
                         .driverInterpretation(virusDriverInterpretation(v.driverLikelihood()))
                         .interpreterEntry(v)
                         .build()
-                ).toList();
+                ).sorted(Virus.COMPARATOR).toList();
     }
 
     @NotNull
@@ -294,7 +294,9 @@ public class FindingRecordFactory {
                                     .haplotype(o.haplotype())
                                     .linkedDrugs(o.linkedDrugs())
                                     .urlPrescriptionInfo(o.urlPrescriptionInfo())
-                                    .build()).toList())
+                                    .build())
+                            .sorted(PharmocoGenotype.COMPARATOR)
+                            .toList())
                     .build();
         }
         else
