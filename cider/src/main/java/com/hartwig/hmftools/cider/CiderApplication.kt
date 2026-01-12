@@ -154,6 +154,9 @@ class CiderApplication(configBuilder: ConfigBuilder)
         }
 
         processBam(mParams.bamPath, readerFactory, genomeRegions, asyncBamRecordHander, mParams.threadCount)
+
+        readProcessor.tryMatchReadsFromMates()
+
         sLogger.info("found {} VJ read records", readProcessor.allMatchedReads.size)
     }
 

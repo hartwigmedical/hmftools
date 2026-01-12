@@ -39,6 +39,8 @@ class CiderReadScreener(// collect the reads and sort by types
     // following store the reads we found, must be thread safe
     private val mVjReadCandidates = Collections.synchronizedList(ArrayList<VJReadCandidate>())
     private val mAllMatchedReads = Collections.synchronizedList(ArrayList<SAMRecord>())
+    private val mMatchedReadNames = Collections.newSetFromMap(ConcurrentHashMap<String, Boolean>())
+    private val mUnmatchedReadsByName = ConcurrentHashMap<String, MutableList<SAMRecord>>()
 
     val vjReadCandidates: List<VJReadCandidate>
         get() = mVjReadCandidates
@@ -48,13 +50,6 @@ class CiderReadScreener(// collect the reads and sort by types
     // Note: this function is called from multiple threads
     fun asyncProcessSamRecord(samRecord: SAMRecord)
     {
-        // see if we already processed this read. We must check using the referenceIndex. In the case of
-        // unmapped read, the read mate position will be the one used. However in the later steps we
-        // do not actually want to use this.
-        val mapped = if (samRecord.referenceIndex == -1) null else GenomeRegions.create(
-            samRecord.referenceName,
-            samRecord.alignmentStart, samRecord.alignmentEnd)
-
         val readRecordKey = ReadRecordKey(samRecord.readName, SamRecordUtils.firstInPair(samRecord),
                                             samRecord.referenceIndex, samRecord.alignmentStart)
 
@@ -68,33 +63,68 @@ class CiderReadScreener(// collect the reads and sort by types
         // The trimming amount is stored into the read so we can retrieve it later when needed.
         setAdapterDnaTrim(samRecord)
 
-        var matchFound = false
+        val matchFound = tryMatchRead(samRecord)
+
+        if (!matchFound)
+        {
+            // If the mate of this read is relevant, then later we will include this read too.
+            mUnmatchedReadsByName.computeIfAbsent(samRecord.readName)
+                { Collections.synchronizedList(ArrayList()) }
+                .add(samRecord)
+        }
+    }
+
+    // Adds reads which are mates of relevant reads.
+    fun tryMatchReadsFromMates()
+    {
+        for ((readName, reads) in mUnmatchedReadsByName)
+        {
+            for (read in reads)
+            {
+                if (mMatchedReadNames.contains(readName))
+                {
+                   tryMatchRead(read)
+                }
+            }
+        }
+    }
+
+    private fun tryMatchRead(samRecord: SAMRecord): Boolean
+    {
+        // In the case of unmapped read, the read mate position will be the one used.
+        // However in the later steps we do not actually want to use this.
+        val mapped = if (samRecord.referenceIndex == -1) null else GenomeRegions.create(
+            samRecord.referenceName,
+            samRecord.alignmentStart, samRecord.alignmentEnd)
 
         // first we try to match by genome region
-        if (mapped != null)
+        val matchFound = if (mapped != null)
         {
             if (!samRecord.readUnmappedFlag)
             {
-                matchFound = matchFound or tryMatchByAlignment(samRecord, mapped)
+                tryMatchByAlignment(samRecord, mapped)
             }
             else
             {
                 // if read is not mapped then the mate is mapped to this region instead, we use the mate mapped
                 // region to decide which locus (IGH, TRA etc) we need to search for
                 // if we do not do this then we will very likely match to wrong type
-                matchFound = matchFound or tryMatchUnmappedReadByBlosum(samRecord)
+                tryMatchUnmappedReadByBlosum(samRecord)
             }
         }
         else
         {
             // if both read and its mate are unmapped then we just try match by blosum
-            matchFound = matchFound or tryMatchByBlosum(samRecord)
+            tryMatchByBlosum(samRecord)
         }
 
         if (matchFound)
         {
             mAllMatchedReads.add(samRecord)
+            mMatchedReadNames.add(samRecord.readName)
         }
+
+        return matchFound
     }
 
     private fun tryMatchByAlignment(samRecord: SAMRecord, mapped: GenomeRegion): Boolean
@@ -150,9 +180,12 @@ class CiderReadScreener(// collect the reads and sort by types
         // anchor:    |----|                   |----|
         // CDR3:           |-------------------|
         // check:          <------->    <------>
+        val isNearbyAnchor =
+            (anchorLocation.anchorBoundarySide() == 1 && samRecord.readLength - readTrim.second - readAnchorEnd >= mMinReadCdr3Overlap) ||
+                    (anchorLocation.anchorBoundarySide() == -1 && readAnchorStart - readTrim.first >= mMinReadCdr3Overlap) ||
+                    mMatchedReadNames.contains(samRecord.readName)
 
-        if ((anchorLocation.anchorBoundarySide() == 1 && samRecord.readLength - readTrim.second - readAnchorEnd >= mMinReadCdr3Overlap) ||
-            (anchorLocation.anchorBoundarySide() == -1 && readAnchorStart - readTrim.first >= mMinReadCdr3Overlap))
+        if (isNearbyAnchor)
         {
             if (anchorLocation.strand === Strand.REVERSE)
             {
@@ -291,9 +324,9 @@ class CiderReadScreener(// collect the reads and sort by types
     private fun tryMatchByBlosum(samRecord: SAMRecord): Boolean
     {
         // in case someone changes this
-        assert(Strand.values().size == 2)
+        assert(Strand.entries.size == 2)
 
-        for (strand in Strand.values())
+        for (strand in Strand.entries)
         {
             var readString = samRecord.readString
             if (strand == Strand.REVERSE) readString = SequenceUtil.reverseComplement(readString)

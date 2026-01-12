@@ -26,6 +26,7 @@ import com.hartwig.hmftools.common.codon.Codons
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache
 import com.hartwig.hmftools.common.gene.GeneData
 import com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions.stripChrPrefix
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion
 import com.hartwig.hmftools.common.genome.region.Strand
 import com.hartwig.hmftools.common.utils.Doubles
@@ -256,6 +257,13 @@ class ImgtGeneCurator
                     break
 
                 val imgtGeneData = parseGeneData(sequence.name, sequence.baseString.uppercase())
+                if (imgtGeneData.species != SPECIES)
+                {
+                    continue
+                }
+                if (imgtGeneData.region == null) {
+                    continue
+                }
                 imgtGeneDataList.add(imgtGeneData)
 
                 sLogger.info("imgt gene: {}", imgtGeneData)
@@ -484,6 +492,8 @@ class ImgtGeneCurator
                 keyToGeneDataMap.mapValues { geneData -> geneData.value.sequenceWithoutGaps },
                 workdir, numThreads, BLASTN_EVALUE_CUTOFF)
 
+            println("GeneBlastnData:Name\tAllele\tRegion\tFunctionality\tSequence\tBlastnId\tCiderLocation")
+
             // process the blastnResults
             for ((k, geneData) in keyToGeneDataMap)
             {
@@ -530,6 +540,7 @@ class ImgtGeneCurator
                     }
                 }
 
+                var usedEnsembl = false
                 if (bestMatch == null)
                 {
                     if (ensemblGene != null)
@@ -540,6 +551,7 @@ class ImgtGeneCurator
                         {
                             // use ensembl for D region
                             geneData.genomicLocationV38 = toGenomicLocation(ensemblGene)
+                            usedEnsembl = true
                         }
                     }
                     sLogger.info("gene: {}*{}, no full match", geneData.geneName, geneData.allele)
@@ -549,6 +561,20 @@ class ImgtGeneCurator
                     geneData.genomicLocationV38 = matchToQueryGenomicLocation(bestMatch)
                     sLogger.info("gene: {}*{}, match: {}, gene loc: {}", geneData.geneName, geneData.allele, bestMatch, geneData.genomicLocationV38)
                 }
+
+                val ciderLocation = if (usedEnsembl) {
+                    val chromosomeNum = stripChrPrefix(ensemblGene.Chromosome)
+                    "Homo sapiens chromosome ${chromosomeNum}, GRCh38.p13 Primary Assembly:${ensemblGene.GeneStart}-${ensemblGene.GeneEnd}"
+                }
+                else {
+                    if (bestMatch == null) "" else {
+                        val start = if (bestMatch.subjectFrame == Strand.FORWARD) bestMatch.subjectAlignStart else bestMatch.subjectAlignEnd
+                        val end = if (bestMatch.subjectFrame == Strand.FORWARD) bestMatch.subjectAlignEnd else bestMatch.subjectAlignStart
+                        assert(start <= end)
+                        "${bestMatch.subjectTitle}:$start-$end"
+                    }
+                }
+                println("GeneBlastnData:${geneData.geneName}\t${geneData.allele}\t${geneData.region}\t${geneData.functionality}\t${geneData.sequenceWithoutGaps}\t$k\t$ciderLocation")
             }
         }
 
