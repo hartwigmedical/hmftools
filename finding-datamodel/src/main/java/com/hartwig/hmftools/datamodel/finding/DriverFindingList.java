@@ -12,7 +12,7 @@ import org.jetbrains.annotations.Nullable;
 @Gson.TypeAdapters
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface DriverFindings<T extends Driver> extends Findings<T> {
+public interface DriverFindingList<T extends Driver> extends FindingList<T> {
 
     @NotNull
     default FindingsQuery<T> query() {
