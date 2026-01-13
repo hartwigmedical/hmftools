@@ -36,6 +36,30 @@ public final class DriverGeneFile
         return fromLines(Files.readAllLines(new File(filename).toPath()));
     }
 
+    private enum Columns
+    {
+        gene,
+        reportMissense,
+        reportNonsense,
+        reportSplice,
+        reportDeletion,
+        reportHetDeletion,
+        reportLoh,
+        hetDeletionThreshold,
+        reportDisruption,
+        reportAmplification,
+        amplificationRatio,
+        reportSomaticHotspot,
+        likelihoodType,
+        reportGermlineVariant,
+        reportGermlineHotspot,
+        reportGermlineDisruption,
+        reportGermlineDeletion,
+        reportGermlineAmplification,
+        additionalReportedTranscripts,
+        reportPGX;
+    }
+
     public static List<DriverGene> fromLines(final List<String> lines)
     {
         List<DriverGene> driverGenes = Lists.newArrayList();
@@ -44,28 +68,28 @@ public final class DriverGeneFile
         Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
         lines.remove(0);
 
-        int geneIndex = fieldsIndexMap.get("gene");
-        int missenseIndex = fieldsIndexMap.get("reportMissense");
-        int nonsenseIndex = fieldsIndexMap.get("reportNonsense");
-        int spliceIndex = fieldsIndexMap.get("reportSplice");
-        int deletionIndex = fieldsIndexMap.get("reportDeletion");
-        Integer hetDelIndex = fieldsIndexMap.get("reportHetDeletion");
-        Integer lohIndex = fieldsIndexMap.get("reportLoh");
-        Integer hetDelThresholdIndex = fieldsIndexMap.get("hetDeletionThreshold");
-        int disruptionIndex = fieldsIndexMap.get("reportDisruption");
-        int amplificationIndex = fieldsIndexMap.get("reportAmplification");
-        Integer ampRatioIndex = fieldsIndexMap.get("amplificationRatio");
+        int geneIndex = fieldsIndexMap.get(Columns.gene.toString());
+        int missenseIndex = fieldsIndexMap.get(Columns.reportMissense.toString());
+        int nonsenseIndex = fieldsIndexMap.get(Columns.reportNonsense.toString());
+        int spliceIndex = fieldsIndexMap.get(Columns.reportSplice.toString());
+        int deletionIndex = fieldsIndexMap.get(Columns.reportDeletion.toString());
+        Integer hetDelIndex = fieldsIndexMap.get(Columns.reportHetDeletion.toString());
+        Integer lohIndex = fieldsIndexMap.get(Columns.reportLoh.toString());
+        Integer hetDelThresholdIndex = fieldsIndexMap.get(Columns.hetDeletionThreshold.toString());
+        int disruptionIndex = fieldsIndexMap.get(Columns.reportDisruption.toString());
+        int amplificationIndex = fieldsIndexMap.get(Columns.reportAmplification.toString());
+        Integer ampRatioIndex = fieldsIndexMap.get(Columns.amplificationRatio.toString());
 
-        int somaticHotspotIndex = fieldsIndexMap.get("reportSomaticHotspot");
+        int somaticHotspotIndex = fieldsIndexMap.get(Columns.reportSomaticHotspot.toString());
 
-        int likelihoodTypeIndex = fieldsIndexMap.get("likelihoodType");
-        int germlineVariantIndex = fieldsIndexMap.get("reportGermlineVariant");
-        int germlineHotspotIndex = fieldsIndexMap.get("reportGermlineHotspot");
-        int germlineDisruptionIndex = fieldsIndexMap.get("reportGermlineDisruption");
-        int germlineDeletionIndex = fieldsIndexMap.get("reportGermlineDeletion");
-        Integer germlineAmpIndex = fieldsIndexMap.get("reportGermlineAmplification");
-        int altTransIndex = fieldsIndexMap.get("additionalReportedTranscripts");
-        int reportPGXIndex = fieldsIndexMap.get("reportPGX");
+        int likelihoodTypeIndex = fieldsIndexMap.get(Columns.likelihoodType.toString());
+        int germlineVariantIndex = fieldsIndexMap.get(Columns.reportGermlineVariant.toString());
+        int germlineHotspotIndex = fieldsIndexMap.get(Columns.reportGermlineHotspot.toString());
+        int germlineDisruptionIndex = fieldsIndexMap.get(Columns.reportGermlineDisruption.toString());
+        int germlineDeletionIndex = fieldsIndexMap.get(Columns.reportGermlineDeletion.toString());
+        Integer germlineAmpIndex = fieldsIndexMap.get(Columns.reportGermlineAmplification.toString());
+        int altTransIndex = fieldsIndexMap.get(Columns.additionalReportedTranscripts.toString());
+        int reportPGXIndex = fieldsIndexMap.get(Columns.reportPGX.toString());
 
         ImmutableDriverGene.Builder builder = ImmutableDriverGene.builder();
 
@@ -131,27 +155,14 @@ public final class DriverGeneFile
 
     private static String header()
     {
-        return new StringJoiner(TSV_DELIM).add("gene")
-                .add("reportMissense")
-                .add("reportNonsense")
-                .add("reportSplice")
-                .add("reportDeletion")
-                .add("reportHetDeletion")
-                .add("reportLoh")
-                .add("hetDeletionThreshold")
-                .add("reportDisruption")
-                .add("reportAmplification")
-                .add("amplificationRatio")
-                .add("reportSomaticHotspot")
-                .add("likelihoodType")
-                .add("reportGermlineVariant")
-                .add("reportGermlineHotspot")
-                .add("reportGermlineDisruption")
-                .add("reportGermlineDeletion")
-                .add("reportGermlineAmplification")
-                .add("additionalReportedTranscripts")
-                .add("reportPGX")
-                .toString();
+        StringJoiner sj = new StringJoiner(TSV_DELIM);
+
+        for(Columns column : Columns.values())
+        {
+            sj.add(column.toString());
+        }
+
+        return sj.toString();
     }
 
     private static String toString(final DriverGene gene)
