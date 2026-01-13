@@ -16,13 +16,13 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.purple.drivers.DeletionRegionFrequency;
 
-public class GermlineDeletionFrequency
+public class GermlineAmpDelFrequencyCache
 {
     private Map<String,List<DeletionRegionFrequency>> mChrRegionMap;
 
     public static final String COHORT_DEL_FREQ_FILE = "germline_del_freq_file";
 
-    public GermlineDeletionFrequency(final String filename)
+    public GermlineAmpDelFrequencyCache(final String filename)
     {
         mChrRegionMap = Maps.newHashMap();
         loadCohortFrequencies(filename);

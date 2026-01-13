@@ -65,7 +65,7 @@ import com.hartwig.hmftools.purple.fitting.RegionFitCalculator;
 import com.hartwig.hmftools.purple.fittingsnv.PeakModelFile;
 import com.hartwig.hmftools.purple.gene.GeneCopyNumberBuilder;
 import com.hartwig.hmftools.purple.germline.ChimerismDetection;
-import com.hartwig.hmftools.purple.germline.GermlineAmpsDels;
+import com.hartwig.hmftools.purple.germline.GermlineAmpDelFinder;
 import com.hartwig.hmftools.purple.germline.GermlineDrivers;
 import com.hartwig.hmftools.purple.germline.GermlineSvCache;
 import com.hartwig.hmftools.purple.germline.GermlineVariants;
@@ -348,7 +348,7 @@ public class PurpleApplication
         List<PurpleSegment> segments = fittedRegions.stream().map(ObservedRegion::toSegment).collect(Collectors.toList());
         PurpleSegment.write(PurpleSegment.generateFilename(mConfig.OutputDir, tumorId), segments);
 
-        GermlineAmpsDels germlineDeletions = null;
+        GermlineAmpDelFinder germlineDeletions = null;
 
         if(mConfig.runGermline())
         {
@@ -358,7 +358,7 @@ public class PurpleApplication
             germlineSvCache.annotateCopyNumberInfo(fittedRegions, copyNumbers, purityContext);
             germlineSvCache.write(purpleGermlineSvFile(mConfig.OutputDir, tumorId));
 
-            germlineDeletions = new GermlineAmpsDels(
+            germlineDeletions = new GermlineAmpDelFinder(
                     mReferenceData.DriverGenes.DriverGeneMap, mReferenceData.GeneTransCache, mReferenceData.CohortGermlineDeletions);
 
             germlineDeletions.findEvents(copyNumbers, fittedRegions, germlineSvCache.germlineVariants());
@@ -427,7 +427,7 @@ public class PurpleApplication
 
     private void findDrivers(
             final String tumorSample, final PurityContext purityContext, final List<GeneCopyNumber> geneCopyNumbers,
-            @Nullable final SomaticStream somaticStream, @Nullable GermlineAmpsDels germlineDeletions,
+            @Nullable final SomaticStream somaticStream, @Nullable GermlineAmpDelFinder germlineDeletions,
             final List<DriverSourceData> driverSourceData) throws IOException
     {
         List<DriverCatalog> somaticDriverCatalog = Lists.newArrayList();

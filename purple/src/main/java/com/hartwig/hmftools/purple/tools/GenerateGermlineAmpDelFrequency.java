@@ -23,7 +23,7 @@ import com.hartwig.hmftools.purple.drivers.DeletionRegionFrequency;
 
 import org.jetbrains.annotations.NotNull;
 
-public class GenerateGermlineDeletionFrequency
+public class GenerateGermlineAmpDelFrequency
 {
     private final String mCohortFrequencyFile;
     private final String mCohortDeletionsFile;
@@ -32,16 +32,16 @@ public class GenerateGermlineDeletionFrequency
 
     private Map<String,List<DeletionRegionFrequency>> mChrRegionMap;
 
-    public static final String COHORT_DEL_FREQ_FILE = "germline_del_freq_file";
+    public static final String COHORT_AMP_DEL_FREQ_FILE = "germline_amp_del_freq_file";
 
     private static final String MIN_SAMPLE_COUNT = "min_samples";
-    private static final String COHORT_DEL_FILE = "cohort_germline_del_file";
+    private static final String COHORT_AMP_DEL_FILE = "cohort_germline_amp_del_file";
     private static final int DEFAULT_MIN_SAMPLES = 3;
 
-    public GenerateGermlineDeletionFrequency(final ConfigBuilder configBuilder)
+    public GenerateGermlineAmpDelFrequency(final ConfigBuilder configBuilder)
     {
-        mCohortDeletionsFile = configBuilder.getValue(COHORT_DEL_FILE);
-        mCohortFrequencyFile = configBuilder.getValue(COHORT_DEL_FREQ_FILE);
+        mCohortDeletionsFile = configBuilder.getValue(COHORT_AMP_DEL_FILE);
+        mCohortFrequencyFile = configBuilder.getValue(COHORT_AMP_DEL_FREQ_FILE);
         mMinSampleCount = configBuilder.getInteger(MIN_SAMPLE_COUNT);
 
         mChrRegionMap = Maps.newHashMap();
@@ -181,8 +181,8 @@ public class GenerateGermlineDeletionFrequency
     {
         ConfigBuilder configBuilder = new ConfigBuilder();
 
-        configBuilder.addPath(COHORT_DEL_FILE, true, "Input germline cohort deletions file");
-        configBuilder.addPath(COHORT_DEL_FREQ_FILE, false, "Output cohort germline deletions frequency file");
+        configBuilder.addPath(COHORT_AMP_DEL_FILE, true, "Input germline cohort amps/dels file");
+        configBuilder.addPath(COHORT_AMP_DEL_FREQ_FILE, false, "Output cohort germline amp/del frequency file");
         configBuilder.addInteger(MIN_SAMPLE_COUNT, "Min sample frequency to write a region", DEFAULT_MIN_SAMPLES);
         configBuilder.addConfigItem(SAMPLE_ID_FILE, true, "Reference de-duped sample IDs");
         addLoggingOptions(configBuilder);
@@ -191,7 +191,7 @@ public class GenerateGermlineDeletionFrequency
 
         configBuilder.checkAndParseCommandLine(args);
 
-        GenerateGermlineDeletionFrequency germlineDeletionFrequency = new GenerateGermlineDeletionFrequency(configBuilder);
+        GenerateGermlineAmpDelFrequency germlineDeletionFrequency = new GenerateGermlineAmpDelFrequency(configBuilder);
         germlineDeletionFrequency.buildCohortFrequencies();
     }
 }

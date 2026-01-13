@@ -11,7 +11,7 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.TARGET_REGIO
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TARGET_REGIONS_BED_DESC;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.SampleDataFiles.GERMLINE_VARIANTS;
-import static com.hartwig.hmftools.purple.germline.GermlineDeletionFrequency.COHORT_DEL_FREQ_FILE;
+import static com.hartwig.hmftools.purple.germline.GermlineAmpDelFrequencyCache.COHORT_DEL_FREQ_FILE;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,7 +37,7 @@ import com.hartwig.hmftools.common.hla.HlaCommon;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.variant.VariantHotspot;
 import com.hartwig.hmftools.common.variant.VariantHotspotFile;
-import com.hartwig.hmftools.purple.germline.GermlineDeletionFrequency;
+import com.hartwig.hmftools.purple.germline.GermlineAmpDelFrequencyCache;
 import com.hartwig.hmftools.purple.region.ObservedRegionFactory;
 import com.hartwig.hmftools.purple.targeted.TargetRegionsData;
 
@@ -57,7 +57,7 @@ public class ReferenceData
 
     public final DriverGeneResource DriverGenes;
     public final Map<String, List<String>> OtherReportableTranscripts;
-    public final GermlineDeletionFrequency CohortGermlineDeletions;
+    public final GermlineAmpDelFrequencyCache CohortGermlineDeletions;
 
     public final ListMultimap<Chromosome, VariantHotspot> SomaticHotspots;
     public final ListMultimap<Chromosome, VariantHotspot> GermlineHotspots;
@@ -190,7 +190,7 @@ public class ReferenceData
         }
 
         String germlineDeletionFreqFile = config.runGermline() ? configBuilder.getValue(COHORT_DEL_FREQ_FILE) : null;
-        CohortGermlineDeletions = new GermlineDeletionFrequency(germlineDeletionFreqFile);
+        CohortGermlineDeletions = new GermlineAmpDelFrequencyCache(germlineDeletionFreqFile);
 
         TargetRegions = new TargetRegionsData(
                 configBuilder.getValue(TARGET_REGIONS_RATIOS), configBuilder.getValue(TARGET_REGION_MSI_INDELS));
@@ -275,7 +275,7 @@ public class ReferenceData
         GeneTransCache = new EnsemblDataCache("", RefGenVersion);
         SomaticHotspots = ArrayListMultimap.create();
         GermlineHotspots = ArrayListMultimap.create();
-        CohortGermlineDeletions = new GermlineDeletionFrequency(null);
+        CohortGermlineDeletions = new GermlineAmpDelFrequencyCache(null);
         TargetRegions = new TargetRegionsData(null, null);
     }
 }
