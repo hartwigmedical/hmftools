@@ -546,6 +546,9 @@ public class VariantFilters
         if(!isSbx())
             return false;
 
+        if(var.isHotspot())
+            return false;
+
         double maxStrandBias = 0;
         int fullAssemblyLength = var.contextStart().getAttributeAsInt(ASM_LENGTH, 0);
         int inexactHomLength = 0;
