@@ -25,14 +25,19 @@ public class HlaAlleleFactory
     private HlaAlleleFactory() {
     }
 
-    public static Findings<HlaAllele> createHlaAllelesFindings(@NotNull OrangeRecord orangeRecord, boolean hasReliablePurity)
-    {
+    public static FindingList<HlaAllele> createHlaAllelesFindings(@NotNull OrangeRecord orangeRecord, boolean hasReliablePurity) {
         LilacRecord lilac = orangeRecord.lilac();
-        return ImmutableFindings.<HlaAllele>builder()
-                .status(lilac != null ? lilac.qc().equals(PASS) ? FindingsStatus.OK : FindingsStatus.NOT_RELIABLE : FindingsStatus.NOT_AVAILABLE)
-                .all(lilac != null ? HlaAlleleFactory.convertHlaAlleles(lilac, hasReliablePurity, !orangeRecord.tumorOnlyMode(),
-                        orangeRecord.isofox() != null) : List.of())
-                .build();
+        if (lilac != null) {
+            return ImmutableFindingList.<HlaAllele>builder()
+                    .status(lilac.qc().equals(PASS) ? FindingsStatus.OK : FindingsStatus.NOT_RELIABLE)
+                    .all(HlaAlleleFactory.convertHlaAlleles(lilac,
+                            hasReliablePurity,
+                            !orangeRecord.tumorOnlyMode(),
+                            orangeRecord.isofox() != null))
+                    .build();
+        } else {
+            return FindingUtil.notAvailableFindingList();
+        }
     }
 
     @NotNull

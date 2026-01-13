@@ -54,7 +54,7 @@ final class DisruptionFactory
     // back to the breakends, it probably will work by just selecting first reportable disruption with the same gene / transcript.
     // We can do it for the backport version if that makes it easier.
 
-    public static DriverFindings<Disruption> createDisruptionsFindings(@NotNull LinxRecord linx, boolean hasReliablePurity) {
+    public static DriverFindingList<Disruption> createDisruptionsFindings(@NotNull LinxRecord linx, boolean hasReliablePurity) {
         List<Disruption> allDisruptions = new ArrayList<>();
         List<LinxBreakend> germlineBreakends = linx.reportableGermlineBreakends();
         List<LinxSvAnnotation> germlineStructuralVariants = linx.allGermlineStructuralVariants();
@@ -72,7 +72,7 @@ final class DisruptionFactory
 
         allDisruptions.sort(Disruption.COMPARATOR);
 
-        return ImmutableDriverFindings.<Disruption>builder()
+        return ImmutableDriverFindingList.<Disruption>builder()
                 .status(FindingsStatus.OK)
                 .all(allDisruptions)
                 .build();

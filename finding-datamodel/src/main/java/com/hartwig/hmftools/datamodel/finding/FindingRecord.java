@@ -16,37 +16,30 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public interface FindingRecord
 {
-    @NotNull
-    DriverFindings<SmallVariant> smallVariants();
+    @NotNull DriverFindingList<SmallVariant> smallVariants();
 
-    @NotNull
-    DriverFindings<GainDeletion> gainDeletions();
+    @NotNull DriverFindingList<GainDeletion> gainDeletions();
 
-    @NotNull
-    DriverFindings<Fusion> fusions();
+    @NotNull DriverFindingList<Fusion> fusions();
 
-    @NotNull
-    DriverFindings<Disruption> disruptions();
+    @NotNull DriverFindingList<Disruption> disruptions();
 
-    @NotNull
-    DriverFindings<Virus> viruses();
+    @NotNull DriverFindingList<Virus> viruses();
 
-    @NotNull
-    Findings<HlaAllele> hla();
+    @NotNull FindingList<HlaAllele> hla();
 
-    @NotNull
-    Findings<PharmocoGenotype> pharmocoGenotypes();
+    @NotNull FindingList<PharmocoGenotype> pharmocoGenotypes();
 
     @NotNull
     List<ChromosomeArmCopyNumber> chromosomeArmCopyNumbers();
 
-    @NotNull CharacteristicsFinding<MicrosatelliteStability> microsatelliteStability();
+    @NotNull FindingItem<MicrosatelliteStability> microsatelliteStability();
 
-    @NotNull CharacteristicsFinding<TumorMutationStatus> tumorMutationStatus();
+    @NotNull FindingItem<TumorMutationStatus> tumorMutationStatus();
 
-    @NotNull CharacteristicsFinding<PredictedTumorOrigin> predictedTumorOrigin();
+    @NotNull FindingItem<PredictedTumorOrigin> predictedTumorOrigin();
 
-    @NotNull CharacteristicsFinding<HomologousRecombination> homologousRecombination();
+    @NotNull FindingItem<HomologousRecombination> homologousRecombination();
 
     @NotNull
     OrangeRefGenomeVersion refGenomeVersion();
