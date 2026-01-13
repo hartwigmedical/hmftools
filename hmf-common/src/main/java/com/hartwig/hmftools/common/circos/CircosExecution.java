@@ -48,7 +48,7 @@ public class CircosExecution
             "-outputfile",
             outputFile);
 
-        LOGGER.info(format("generating " + outputFile + " via command: %s", String.join(" ", command)));
+        LOGGER.debug(format("generating " + outputFile + " via command: %s", String.join(" ", command)));
 
         ProcessBuilder processBuilder = new ProcessBuilder(command);
         Map<String, String> environment = processBuilder.environment();
