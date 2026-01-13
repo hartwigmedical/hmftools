@@ -224,7 +224,7 @@ public class GeneCopyNumberDAO
                 DatabaseUtil.decimal(deletion.TumorCopyNumber),
                 checkStringLength(deletion.Filter, GERMLINEDELETION.FILTER),
                 deletion.CohortFrequency,
-                deletion.Reported,
+                deletion.Reported == ReportedStatus.REPORTED ? 1 : 0,
                 timestamp);
     }
 
