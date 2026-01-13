@@ -9,7 +9,7 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 
-import com.hartwig.hmftools.compar.common.Category;
+import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
@@ -32,7 +32,7 @@ public class ComparableImageTest
         }
 
         @Override
-        public Category category()
+        public CategoryType category()
         {
             return null;
         }
@@ -68,10 +68,10 @@ public class ComparableImageTest
 
         Mismatch mismatch = whiteImage1.findMismatch(whiteImage2, MatchLevel.DETAILED, TEST_THRESHOLDS, true);
 
-        assertEquals(MismatchType.VALUE, mismatch.MismatchType());
+        assertEquals(MismatchType.VALUE, mismatch.Type);
 
         String expectedDiffString = formDimensionMismatchString(1, 1, 2, 2);
-        assertEquals(expectedDiffString, mismatch.DiffValues().get(0));
+        assertEquals(expectedDiffString, mismatch.DiffValues.get(0));
     }
 
     @Test
@@ -82,7 +82,7 @@ public class ComparableImageTest
 
         Mismatch mismatch = whiteImage1.findMismatch(whiteImage2, MatchLevel.DETAILED, TEST_THRESHOLDS, true);
 
-        assertEquals(MismatchType.FULL_MATCH, mismatch.MismatchType());
+        assertEquals(MismatchType.FULL_MATCH, mismatch.Type);
     }
 
     @Test
@@ -93,10 +93,10 @@ public class ComparableImageTest
 
         Mismatch mismatch = whiteImage.findMismatch(blackImage, MatchLevel.DETAILED, TEST_THRESHOLDS, true);
 
-        assertEquals(MismatchType.VALUE, mismatch.MismatchType());
+        assertEquals(MismatchType.VALUE, mismatch.Type);
 
         String expectedDiffString = formPixelMismatchString(1.0, TEST_IMAGE_WIDTH * TEST_IMAGE_HEIGHT, TEST_IMAGE_WIDTH * TEST_IMAGE_HEIGHT);
-        assertEquals(expectedDiffString, mismatch.DiffValues().get(0));
+        assertEquals(expectedDiffString, mismatch.DiffValues.get(0));
     }
 
     @Test
@@ -107,10 +107,10 @@ public class ComparableImageTest
 
         Mismatch mismatch = whiteImage.findMismatch(mixedImage, MatchLevel.DETAILED, TEST_THRESHOLDS, true);
 
-        assertEquals(MismatchType.VALUE, mismatch.MismatchType());
+        assertEquals(MismatchType.VALUE, mismatch.Type);
 
         String expectedDiffString = formPixelMismatchString(0.5, 50, TEST_IMAGE_WIDTH * TEST_IMAGE_HEIGHT);
-        assertEquals(expectedDiffString, mismatch.DiffValues().get(0));
+        assertEquals(expectedDiffString, mismatch.DiffValues.get(0));
     }
 
     @Test
@@ -122,12 +122,12 @@ public class ComparableImageTest
         Mismatch mismatch;
 
         mismatch = valid.findMismatch(invalidImage, MatchLevel.DETAILED, TEST_THRESHOLDS, true);
-        assertEquals(MismatchType.INVALID_NEW, mismatch.MismatchType());
+        assertEquals(MismatchType.INVALID_NEW, mismatch.Type);
 
         mismatch = invalidImage.findMismatch(valid, MatchLevel.DETAILED, TEST_THRESHOLDS, true);
-        assertEquals(MismatchType.INVALID_REF, mismatch.MismatchType());
+        assertEquals(MismatchType.INVALID_REF, mismatch.Type);
 
         mismatch = invalidImage.findMismatch(invalidImage, MatchLevel.DETAILED, TEST_THRESHOLDS, true);
-        assertEquals(MismatchType.INVALID_BOTH, mismatch.MismatchType());
+        assertEquals(MismatchType.INVALID_BOTH, mismatch.Type);
     }
 }

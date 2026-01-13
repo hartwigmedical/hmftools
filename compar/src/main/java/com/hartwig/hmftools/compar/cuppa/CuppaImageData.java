@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.compar.cuppa;
 
-import static com.hartwig.hmftools.compar.common.Category.CUPPA_IMAGE;
+import static com.hartwig.hmftools.compar.common.CategoryType.CUPPA_IMAGE;
 
-import com.hartwig.hmftools.compar.common.Category;
 import com.hartwig.hmftools.compar.ComparableImage;
+import com.hartwig.hmftools.compar.common.CategoryType;
 
 public class CuppaImageData extends ComparableImage
 {
@@ -13,5 +13,5 @@ public class CuppaImageData extends ComparableImage
     }
 
     @Override
-    public Category category() { return CUPPA_IMAGE; }
+    public CategoryType category() { return CUPPA_IMAGE; }
 }
