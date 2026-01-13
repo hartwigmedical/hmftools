@@ -1,12 +1,13 @@
 package com.hartwig.hmftools.esvee.assembly.vis;
 
-import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
+import static com.hartwig.hmftools.common.codon.Nucleotides.reverseComplementBases;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.vis.HtmlUtil.renderReadInfoTable;
 import static com.hartwig.hmftools.common.vis.SvgRender.BOX_PADDING;
 import static com.hartwig.hmftools.common.vis.SvgRender.renderBaseSeq;
 import static com.hartwig.hmftools.esvee.assembly.vis.AssemblyVisConstants.READ_HEIGHT_PX;
 
+import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
 import static j2html.TagCreator.div;
 import static j2html.TagCreator.rawHtml;
@@ -14,172 +15,125 @@ import static j2html.TagCreator.rawHtml;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.util.List;
+import java.util.Map;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.vis.BaseSeqViewModel;
-import com.hartwig.hmftools.common.vis.BaseViewModel;
 import com.hartwig.hmftools.common.vis.CssBuilder;
 import com.hartwig.hmftools.common.vis.CssSize;
-import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
-import com.hartwig.hmftools.esvee.assembly.vis.AssemblyVisualiser.RefSegmentViewModel;
+import com.hartwig.hmftools.esvee.assembly.vis.AssemblyVisualiser.SegmentViewModel;
 
+import org.jetbrains.annotations.Nullable;
 import org.jfree.svg.SVGGraphics2D;
 
-import htsjdk.samtools.Cigar;
-import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.CigarElement;
 import j2html.tags.DomContent;
 
 public final class ReadViewModel
 {
-    private record SegmentViewModel(BaseRegion viewRegion, BaseSeqViewModel readViewModel, BaseSeqViewModel refViewModel) {}
+    private final SupportRead mSupportRead;
+    private final List<SegmentViewModel> mRefViewModel;
+    private final BaseSeqViewModel mReadViewModel;
 
-    private final SAMRecord mRead;
-    private final List<SegmentViewModel> mSegmentViewModels;
-
-    private ReadViewModel(final SAMRecord read, final List<SegmentViewModel> segmentViewModels)
+    private ReadViewModel(final SupportRead supportRead, final List<SegmentViewModel> refViewModel, final BaseSeqViewModel readViewModel)
     {
-        mRead = read;
-        mSegmentViewModels = segmentViewModels;
+        mSupportRead = supportRead;
+        mRefViewModel = refViewModel;
+        mReadViewModel = readViewModel;
     }
 
-    public static ReadViewModel create(final Cigar sequenceCigar, final List<RefSegmentViewModel> refViewModel,
-            final JunctionAssembly assembly, final SupportRead read)
+    public static ReadViewModel create(final List<SegmentViewModel> refViewModel, final SupportRead read, final JunctionAssembly junctionAssembly)
     {
-        Junction junction = assembly.junction();
-        int unclippedStart = junction.Position - read.junctionReadStartDistance();
-        SAMRecord record = read.cachedRead().bamRecord();
-
-        // find corresponding ref segment and the remote ref segment
-        RefSegmentViewModel readSegmentViewModel = null;
-        RefSegmentViewModel remoteSegmentViewModel = null;
-        int readViewModelIdx = -1;
-        int remoteViewModelIdx = -1;
-        for(int i = 0; i < refViewModel.size(); i++)
+        boolean readNegativeStrandFlag = read.cachedRead().bamRecord().getReadNegativeStrandFlag();
+        byte[] readBases = read.cachedRead().getBases();
+        byte[] readBaseQuals = read.cachedRead().getBaseQuality();
+        if(read.fullAssemblyOrientation() == REVERSE)
         {
-            RefSegmentViewModel segmentViewModel = refViewModel.get(i);
-            Junction segmentJunction = segmentViewModel.assembly().junction();
+            readBases = reverseComplementBases(readBases);
 
-            boolean matches = junction.Chromosome.equals(segmentJunction.Chromosome);
-            if(junction.Position != segmentJunction.Position)
-                matches = false;
-
-            if(junction.Orient != segmentJunction.Orient)
-                matches = false;
-
-            if(matches)
+            int left = 0;
+            int right = readBaseQuals.length - 1;
+            while(left < right)
             {
-                readViewModelIdx = i;
-                readSegmentViewModel = segmentViewModel;
-                continue;
-            }
-
-            remoteViewModelIdx = i;
-            remoteSegmentViewModel = segmentViewModel;
-        }
-
-        // construct segment view models
-        List<SegmentViewModel> segmentViewModels = Lists.newArrayList(null, null);
-
-        BaseSeqViewModel readViewModel = BaseSeqViewModel.fromRead(record, unclippedStart);
-        segmentViewModels.set(readViewModelIdx, new SegmentViewModel(readSegmentViewModel.viewRegion(), readViewModel, readSegmentViewModel.viewModel()));
-
-        int remoteStart = junction.Orient == FORWARD ? junction.Position + 1 : readViewModel.FirstBasePos;
-        int remoteEnd = junction.Orient == FORWARD ? readViewModel.LastBasePos : junction.Position - 1;
-        List<BaseViewModel> remoteBaseViewModels = Lists.newArrayList();
-        if(junction.Orient == FORWARD)
-        {
-            BaseViewModel baseViewModel = readViewModel.getBase(junction.Position);
-            if(baseViewModel.hasCharBase())
-            {
-                List<Character> rightInsertBases = baseViewModel.rightInsertBases();
-                List<Integer> rightInsertBaseQs = baseViewModel.rightInsertBaseQs();
-                for(int i = 0; i < rightInsertBases.size(); i++)
-                    remoteBaseViewModels.add(new BaseViewModel(rightInsertBases.get(i), rightInsertBaseQs.get(i)));
-
-                baseViewModel.resetRightInsert();
+                byte temp = readBaseQuals[left];
+                readBaseQuals[left] = readBaseQuals[right];
+                readBaseQuals[right] = temp;
+                left += 1;
+                right -= 1;
             }
         }
 
-        for(int pos = remoteStart; pos <= remoteEnd; pos++)
+        List<CigarElement> cigarEls = read.cachedRead().cigarElements();
+        int indelOffset = 0;
+        if(junctionAssembly.isForwardJunction())
         {
-            BaseViewModel baseViewModel = readViewModel.getBase(pos);
-            if(!baseViewModel.hasCharBase())
-                continue;
-
-            remoteBaseViewModels.add(new BaseViewModel(baseViewModel.charBase(), baseViewModel.baseQ()));
-            List<Character> rightInsertBases = baseViewModel.rightInsertBases();
-            List<Integer> rightInsertBaseQs = baseViewModel.rightInsertBaseQs();
-            for(int i = 0; i < rightInsertBases.size(); i++)
-                remoteBaseViewModels.add(new BaseViewModel(rightInsertBases.get(i), rightInsertBaseQs.get(i)));
+            for(CigarElement cigarEl : cigarEls)
+            {
+                if(cigarEl.getOperator() == I)
+                    indelOffset += cigarEl.getLength();
+                else if(cigarEl.getOperator() == D)
+                    indelOffset -= cigarEl.getLength();
+            }
         }
 
-        int insertLength = 0;
-        if(sequenceCigar.getCigarElements().size() == 3)
-        {
-            if(sequenceCigar.getCigarElements().get(1).getOperator() == I)
-                insertLength = sequenceCigar.getCigarElements().get(1).getLength();
-        }
+        BaseSeqViewModel readViewModel = BaseSeqViewModel.create(
+                read.fullAssemblyIndexStart() + indelOffset, cigarEls, readBases, readBaseQuals, readNegativeStrandFlag);
+        readViewModel.clearSoftClips();
 
-        if(remoteBaseViewModels.size() <= insertLength)
-        {
-            remoteBaseViewModels.clear();
-        }
-        else
-        {
-            if(junction.Orient == FORWARD)
-                remoteBaseViewModels = remoteBaseViewModels.subList(insertLength, remoteBaseViewModels.size());
-            else
-                remoteBaseViewModels = remoteBaseViewModels.subList(0, remoteBaseViewModels.size() - insertLength);
-        }
-
-        Junction remoteJunction = remoteSegmentViewModel.assembly().junction();
-        BaseSeqViewModel remoteReadViewModel;
-        if(remoteJunction.Orient == REVERSE)
-        {
-            remoteReadViewModel = new BaseSeqViewModel(
-                    remoteBaseViewModels, remoteJunction.Chromosome, remoteJunction.Position, readViewModel.LeftIsForwardStrand, readViewModel.RightIsForwardStrand);
-        }
-        else
-        {
-            int posStart = remoteJunction.Position - remoteBaseViewModels.size() + 1;
-            remoteReadViewModel = new BaseSeqViewModel(
-                    remoteBaseViewModels, remoteJunction.Chromosome, posStart, readViewModel.LeftIsForwardStrand, readViewModel.RightIsForwardStrand);
-        }
-
-        segmentViewModels.set(remoteViewModelIdx, new SegmentViewModel(remoteSegmentViewModel.viewRegion(), remoteReadViewModel, remoteSegmentViewModel.viewModel()));
-        return new ReadViewModel(record, segmentViewModels);
+        return new ReadViewModel(read, refViewModel, readViewModel);
     }
 
+    @Nullable
     public DomContent render()
     {
+        BaseRegion readRegion = new BaseRegion(mReadViewModel.FirstBasePos, mReadViewModel.LastBasePos);
+
         int totalBoxWidth = 0;
-        for(SegmentViewModel segmentViewModel : mSegmentViewModels)
-            totalBoxWidth += segmentViewModel.viewRegion.baseLength() + 2 * BOX_PADDING;
+        for(SegmentViewModel refViewModel : mRefViewModel)
+            totalBoxWidth += refViewModel.viewRegion().baseLength() + 2 * BOX_PADDING;
 
         SVGGraphics2D svgCanvas = new SVGGraphics2D(READ_HEIGHT_PX * totalBoxWidth, READ_HEIGHT_PX);
         AffineTransform initTransform = svgCanvas.getTransform();
         double xBoxOffset = 0.0d;
-        for(SegmentViewModel segmentViewModel : mSegmentViewModels)
+        int renderCount = 0;
+        for(int i = 0; i < mRefViewModel.size(); i += 1)
         {
-            BaseRegion viewRegion = segmentViewModel.viewRegion;
-            BaseSeqViewModel readViewModel = segmentViewModel.readViewModel;
-            BaseSeqViewModel refViewModel = segmentViewModel.refViewModel;
+            SegmentViewModel refEl = mRefViewModel.get(i);
+            BaseRegion viewRegion = refEl.viewRegion();
 
+            if(!viewRegion.overlaps(readRegion))
+            {
+                xBoxOffset += viewRegion.baseLength() + 2 * BOX_PADDING;
+                continue;
+            }
+
+            BaseSeqViewModel refViewModel = refEl.refViewModel();
+            if(refViewModel == null)
+                refViewModel = refEl.assemblyViewModel();
+
+            boolean renderLeftOrientationMarker = i == 0;
+            boolean renderRightOrientationMarker = i == mRefViewModel.size() - 1;
             svgCanvas.setTransform(initTransform);
-            renderBaseSeq(svgCanvas, new Point2D.Double(xBoxOffset, 0.0d), READ_HEIGHT_PX, viewRegion, readViewModel, true, Maps.newHashMap(), refViewModel);
+            renderBaseSeq(svgCanvas, new Point2D.Double(xBoxOffset, 0.0d), READ_HEIGHT_PX, viewRegion, mReadViewModel, true, Maps.newHashMap(), refViewModel, renderLeftOrientationMarker, renderRightOrientationMarker);
+            renderCount += 1;
 
             xBoxOffset += viewRegion.baseLength() + 2 * BOX_PADDING;
         }
+
+        if(renderCount <= 1)
+            return null;
+
+        Map<String, String> extraInfo = Maps.newHashMap();
+        extraInfo.put("Mismatch Info:", mSupportRead.mismatchInfo());
 
         CssBuilder baseDivStyle = CssBuilder.EMPTY.padding(CssSize.ZERO).margin(CssSize.ZERO);
 
         DomContent svgEl = rawHtml(svgCanvas.getSVGElement());
         DomContent svgDiv = div(svgEl).withClass("read-svg").withStyle(baseDivStyle.toString());
-        DomContent readInfoDiv = renderReadInfoTable(mRead, null);
+        DomContent readInfoDiv = renderReadInfoTable(mSupportRead.cachedRead().bamRecord(), null, extraInfo);
         DomContent containerDiv = div(svgDiv, readInfoDiv).withStyle(baseDivStyle.toString());
 
         return containerDiv;

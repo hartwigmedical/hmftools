@@ -2,8 +2,8 @@ package com.hartwig.hmftools.pave.annotation;
 
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.REPORTED_DESC;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.REPORTED_FLAG;
-import static com.hartwig.hmftools.common.variant.Hotspot.HOTSPOT_DESCRIPTION;
-import static com.hartwig.hmftools.common.variant.Hotspot.HOTSPOT_FLAG;
+import static com.hartwig.hmftools.common.variant.HotspotType.HOTSPOT_DESCRIPTION;
+import static com.hartwig.hmftools.common.variant.HotspotType.HOTSPOT_FLAG;
 
 import java.util.List;
 
@@ -34,12 +34,12 @@ public class Reportability
         if(variantImpact == null)
             return false;
 
-        if(mReportableOncoGenes.isReportable(variantImpact, variant.type(), isHotspot))
+        if(mReportableOncoGenes.isReportable(variantImpact, isHotspot))
         {
             return true;
         }
 
-        if(mReportableTsgGenes.isReportable(variantImpact, variant.type(), isHotspot))
+        if(mReportableTsgGenes.isReportable(variantImpact, isHotspot))
         {
             return true;
         }

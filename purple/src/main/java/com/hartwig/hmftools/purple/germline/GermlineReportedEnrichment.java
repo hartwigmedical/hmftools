@@ -8,14 +8,13 @@ import static com.hartwig.hmftools.common.variant.CommonVcfTags.REPORTED_DESC;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.REPORTED_FLAG;
 import static com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers.addReportableTranscriptList;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.driver.panel.DriverGeneGermlineReporting;
@@ -28,22 +27,28 @@ import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
 public class GermlineReportedEnrichment
 {
-    private static final double MIN_VARIANT_COPY_NUMBER = 0.5;
-
-    private final Map<String, DriverGene> mDriverGeneMap;
-    private final Set<String> mSomaticKnockouts;
+    private final Map<String,DriverGene> mDriverGeneMap;
     private final List<GermlineVariant> mBuffer;
 
-    public GermlineReportedEnrichment(final List<DriverGene> driverGenes, final Set<String> somaticReportedGenes)
+    private final Set<String> mSomaticReportedGenes;
+    private final List<GermlineVariant> mCandidateReportableVariants;
+
+    private static final double MIN_VARIANT_COPY_NUMBER = 0.5;
+
+    public GermlineReportedEnrichment(final Map<String,DriverGene> driverGenes, final Set<String> somaticReportedGenes)
     {
-        mDriverGeneMap = driverGenes.stream().filter(DriverGene::reportGermline).collect(Collectors.toMap(DriverGene::gene, x -> x));
-        mSomaticKnockouts = somaticReportedGenes;
+        mDriverGeneMap = driverGenes;
+        mSomaticReportedGenes = somaticReportedGenes;
+
+        mCandidateReportableVariants = Lists.newArrayList();
+
         mBuffer = Lists.newArrayList();
     }
 
+    public List<GermlineVariant> candidateReportableVariants() { return mCandidateReportableVariants; }
+
     public void processVariant(final GermlineVariant variant)
     {
-        // critical that the new context and filters are used
         mBuffer.add(variant);
     }
 
@@ -54,54 +59,69 @@ public class GermlineReportedEnrichment
 
     public void flush()
     {
-        final List<GermlineVariant> germlineHits = Lists.newArrayList();
+        Map<String,List<GermlineVariant>> geneVariantsMap = Maps.newHashMap();
 
         for(GermlineVariant variant : mBuffer)
         {
             if(!mDriverGeneMap.containsKey(variant.gene()))
                 continue;
 
-            DriverGene driverGene = mDriverGeneMap.get(variant.gene());
-
-            if(isReportable(
-                    variant.decorator(), downgradeWildType(driverGene.reportGermlineHotspot()),
-                    downgradeWildType(driverGene.reportGermlineVariant()), Collections.emptySet()))
+            if(isCandidateReportable(variant.decorator()))
             {
-                germlineHits.add(variant);
+                mCandidateReportableVariants.add(variant);
+
+                List<GermlineVariant> geneVariants = geneVariantsMap.get(variant.gene());
+
+                if(geneVariants == null)
+                {
+                    geneVariants = Lists.newArrayList();
+                    geneVariantsMap.put(variant.gene(), geneVariants);
+                }
+
+                geneVariants.add(variant);
             }
         }
 
-        for(GermlineVariant variant : mBuffer)
+        // check reportability status
+        for(Map.Entry<String,List<GermlineVariant>> entry : geneVariantsMap.entrySet())
         {
-            final Set<String> otherGermlineHits = germlineHits.stream()
-                    .filter(x -> !x.equals(variant))
-                    .filter(x -> x.gene().equals(variant.gene()))
-                    .filter(x -> variant.decorator().localPhaseSet() == null || x.decorator().localPhaseSet() == null
-                            || !Objects.equals(variant.decorator().localPhaseSet(), x.decorator().localPhaseSet()))
-                    .map(x -> x.gene())
-                    .collect(Collectors.toSet());
+            String gene = entry.getKey();
+            List<GermlineVariant> geneVariants = entry.getValue();
 
-            final Set<String> genesWithMultipleUnphasedHits = Sets.newHashSet();
-            genesWithMultipleUnphasedHits.addAll(mSomaticKnockouts);
-            genesWithMultipleUnphasedHits.addAll(otherGermlineHits);
+            DriverGene driverGene = mDriverGeneMap.get(gene);
 
-            if(report(variant.decorator(), genesWithMultipleUnphasedHits))
+            boolean hasMultipleUnphasedHits = false;
+
+            for(GermlineVariant variant : geneVariants)
             {
-                variant.context().getCommonInfo().putAttribute(REPORTED_FLAG, true);
+                if(geneVariants.size() > 1)
+                {
+                    hasMultipleUnphasedHits |= hasUnphasedSameGeneVariant(variant, geneVariants);
+                }
+            }
 
-                addReportableTranscriptList(variant.type(), variant.context(), variant.variantImpact());
+            if(driverGene.reportGermlineVariant() != NONE || driverGene.reportGermlineHotspot() != NONE)
+            {
+                Set<String> multiHitGenes = Sets.newHashSet(mSomaticReportedGenes);
+
+                if(hasMultipleUnphasedHits)
+                    multiHitGenes.add(gene);
+
+                for(GermlineVariant variant : geneVariants)
+                {
+                    if(isReportable(variant, driverGene.reportGermlineHotspot(), driverGene.reportGermlineVariant(), multiHitGenes))
+                    {
+                        variant.context().getCommonInfo().putAttribute(REPORTED_FLAG, true);
+                        addReportableTranscriptList(variant.type(), variant.context(), variant.variantImpact());
+                    }
+                }
             }
         }
 
         mBuffer.clear();
     }
 
-    private static DriverGeneGermlineReporting downgradeWildType(DriverGeneGermlineReporting reporting)
-    {
-        return reporting == WILDTYPE_LOST ? VARIANT_NOT_LOST : reporting;
-    }
-
-    public boolean report(final VariantContextDecorator variant, final Set<String> genesWithMultipleUnphasedHits)
+    private boolean isCandidateReportable(final VariantContextDecorator variant)
     {
         if(variant.gene().isEmpty())
             return false;
@@ -109,22 +129,20 @@ public class GermlineReportedEnrichment
         if(!mDriverGeneMap.containsKey(variant.gene()))
             return false;
 
-        final DriverGene driverGene = mDriverGeneMap.get(variant.gene());
-
-        return isReportable(variant, driverGene.reportGermlineHotspot(), driverGene.reportGermlineVariant(), genesWithMultipleUnphasedHits);
-    }
-
-    public static boolean isReportable(
-            final VariantContextDecorator variant, final DriverGeneGermlineReporting hotspotReporting,
-            final DriverGeneGermlineReporting variantReporting, final Set<String> genesWithMultipleUnphasedHits)
-    {
         if(!variant.isPass())
             return false;
 
-        if(!variant.isPathogenic())
+        return variant.isGermlinePathogenic() || variant.variantImpact().CanonicalSpliceRegion;
+    }
+
+    private static boolean isReportable(
+            final GermlineVariant variant, final DriverGeneGermlineReporting hotspotReporting,
+            final DriverGeneGermlineReporting variantReporting, final Set<String> genesWithMultipleUnphasedHits)
+    {
+        if(!variant.decorator().isGermlinePathogenic())
             return false;
 
-        final DriverGeneGermlineReporting reporting = variant.isHotspot() ? hotspotReporting : variantReporting;
+        DriverGeneGermlineReporting reporting = variant.isHotspot() ? hotspotReporting : variantReporting;
 
         if(reporting == NONE)
             return false;
@@ -144,8 +162,29 @@ public class GermlineReportedEnrichment
         return false;
     }
 
-    private static boolean isVariantLost(VariantContextDecorator variant, double minVariantCopyNumber)
+    private static boolean isVariantLost(final GermlineVariant variant, double minVariantCopyNumber)
     {
-        return Doubles.lessThan(variant.variantCopyNumber(), minVariantCopyNumber);
+        return Doubles.lessThan(variant.decorator().variantCopyNumber(), minVariantCopyNumber);
+    }
+
+    private static boolean hasUnphasedSameGeneVariant(final GermlineVariant variant, final List<GermlineVariant> otherVariants)
+    {
+        for(GermlineVariant otherVariant : otherVariants)
+        {
+            if(otherVariant == variant)
+                continue;
+
+            if(!otherVariant.gene().equals(variant.gene()))
+                continue;
+
+            if(variant.decorator().localPhaseSet() == null
+            || otherVariant.decorator().localPhaseSet() == null
+            || !Objects.equals(variant.decorator().localPhaseSet(), otherVariant.decorator().localPhaseSet()))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

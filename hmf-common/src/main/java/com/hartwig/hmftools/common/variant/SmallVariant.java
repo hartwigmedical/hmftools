@@ -61,11 +61,11 @@ public interface SmallVariant extends GenomePosition
     CodingEffect worstCodingEffect();
 
     @NotNull
-    Hotspot hotspot();
+    HotspotType hotspot();
 
     default boolean isHotspot()
     {
-        return hotspot() == Hotspot.HOTSPOT;
+        return hotspot() == HotspotType.HOTSPOT;
     }
 
     default boolean isFiltered()

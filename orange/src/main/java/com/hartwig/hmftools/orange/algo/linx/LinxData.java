@@ -19,43 +19,31 @@ import org.jetbrains.annotations.Nullable;
 public interface LinxData
 {
     @NotNull
-    List<LinxSvAnnotation> allSomaticSvAnnotations();
+    List<LinxSvAnnotation> somaticSvAnnotations(); // used in interpreter to form final LinxBreakend info
 
     @NotNull
     List<LinxDriver> somaticDrivers();
 
     @NotNull
-    List<LinxFusion> allSomaticFusions();
+    List<LinxFusion> fusions();
 
     @NotNull
-    List<LinxFusion> reportedSomaticFusions();
-
-    @NotNull
-    List<LinxBreakend> allSomaticBreakends();
-
-    @NotNull
-    List<LinxBreakend> driverSomaticBreakends();
+    List<LinxBreakend> somaticBreakends();
 
     @NotNull
     List<HomozygousDisruption> somaticHomozygousDisruptions();
 
     @Nullable
-    List<LinxSvAnnotation> allGermlineSvAnnotations();
+    List<LinxBreakend> germlineBreakends();
 
     @Nullable
-    List<LinxBreakend> allGermlineBreakends();
-
-    @Nullable
-    List<LinxBreakend> driverGermlineBreakends();
-
-    @Nullable
-    List<LinxGermlineDisruption> allGermlineDisruptions();
-
-    @Nullable
-    List<LinxGermlineDisruption> driverGermlineDisruptions();
+    List<LinxGermlineDisruption> germlineDisruptions();
 
     @Nullable
     List<HomozygousDisruption> germlineHomozygousDisruptions();
+
+    @Nullable
+    List<LinxSvAnnotation> germlineSvAnnotations();
 
     @NotNull
     Set<Integer> fusionClusterIds();

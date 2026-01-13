@@ -38,11 +38,11 @@ public class ComparTestUtil
 
         Mismatch detailedMismatch = refVictim.findMismatch(newVictim, matchLevel, diffThresholds, false);
 
-        assertEquals(testMessage, expectedMismatchType, detailedMismatch.MismatchType());
-        assertEquals(testMessage, refVictim, detailedMismatch.RefItem());
-        assertEquals(testMessage, newVictim, detailedMismatch.NewItem());
-        assertEquals(testMessage, 1, detailedMismatch.DiffValues().size());
-        assertEquals(testMessage, field, extractFieldNameFromDifference(detailedMismatch.DiffValues().get(0)));
+        assertEquals(testMessage, expectedMismatchType, detailedMismatch.Type);
+        assertEquals(testMessage, refVictim, detailedMismatch.RefItem);
+        assertEquals(testMessage, newVictim, detailedMismatch.NewItem);
+        assertEquals(testMessage, 1, detailedMismatch.DiffValues.size());
+        assertEquals(testMessage, field, extractFieldNameFromDifference(detailedMismatch.DiffValues.get(0)));
     }
 
     public static void assertValueDifferencesAsExpected(final ComparableItem refVictim, final ComparableItem newVictim,
@@ -60,11 +60,11 @@ public class ComparTestUtil
 
         Mismatch mismatch = refVictim.findMismatch(newVictim, matchLevel, diffThresholds, false);
 
-        assertEquals(MismatchType.VALUE, mismatch.MismatchType());
-        assertEquals(refVictim, mismatch.RefItem());
-        assertEquals(newVictim, mismatch.NewItem());
+        assertEquals(MismatchType.VALUE, mismatch.Type);
+        assertEquals(refVictim, mismatch.RefItem);
+        assertEquals(newVictim, mismatch.NewItem);
 
-        assertDifferencesAreForFields(expectedFieldNames, mismatch.DiffValues());
+        assertDifferencesAreForFields(expectedFieldNames, mismatch.DiffValues);
     }
 
     public static String extractFieldNameFromDifference(final String difference)

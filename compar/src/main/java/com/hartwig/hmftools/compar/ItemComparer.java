@@ -2,7 +2,7 @@ package com.hartwig.hmftools.compar;
 
 import java.util.List;
 
-import com.hartwig.hmftools.compar.common.Category;
+import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.common.Mismatch;
@@ -10,7 +10,7 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public interface ItemComparer
 {
-    Category category();
+    CategoryType category();
 
     boolean processSample(final String sampleId, final List<Mismatch> mismatches);
 

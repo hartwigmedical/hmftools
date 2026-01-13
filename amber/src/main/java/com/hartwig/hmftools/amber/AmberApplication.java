@@ -6,6 +6,7 @@ import static java.util.stream.Collectors.toList;
 import static com.hartwig.hmftools.amber.AmberConfig.AMB_LOGGER;
 import static com.hartwig.hmftools.amber.AmberConstants.APP_NAME;
 import static com.hartwig.hmftools.amber.AmberConstants.TARGET_REGION_SITE_BUFFER;
+import static com.hartwig.hmftools.amber.AmberUtils.aboveQualFilter;
 import static com.hartwig.hmftools.amber.AmberUtils.fromBaseDepth;
 import static com.hartwig.hmftools.amber.AmberUtils.fromTumorBaf;
 import static com.hartwig.hmftools.amber.AmberUtils.isValid;
@@ -181,11 +182,11 @@ public class AmberApplication implements AutoCloseable
 
         GermlineAnalysis germline = new GermlineAnalysis(mConfig, readerFactory, mChromosomeSites);
 
-        TumorAnalysis tumor = new TumorAnalysis(mConfig, readerFactory,
-                germline.getHeterozygousLoci(), germline.getHomozygousLoci());
+        TumorAnalysis tumor = new TumorAnalysis(mConfig, readerFactory, germline.getHeterozygousLoci(), germline.getHomozygousLoci());
 
         List<TumorBAF> tumorBAFList = tumor.getBafs().values().stream()
                 .filter(x -> x.TumorEvidence.ReadDepth >= mConfig.TumorMinDepth)
+                .filter(x -> aboveQualFilter(x.TumorEvidence))
                 .sorted().collect(toList());
 
         List<AmberBAF> amberBAFList = tumorBAFList.stream().map(x -> fromTumorBaf(x)).filter(AmberUtils::isValid).collect(toList());
@@ -216,6 +217,7 @@ public class AmberApplication implements AutoCloseable
         List<TumorBAF> tumorBAFList = tumor.getBafs().values()
                 .stream()
                 .filter(x -> x.TumorEvidence.ReadDepth >= mConfig.TumorMinDepth)
+                .filter(x -> aboveQualFilter(x.TumorEvidence))
                 .filter(x -> x.TumorEvidence.RefSupport >= mConfig.TumorOnlyMinSupport)
                 .filter(x -> x.TumorEvidence.AltSupport >= mConfig.TumorOnlyMinSupport)
                 .filter(x -> isFinite(x.refFrequency()) && Doubles.greaterOrEqual(x.refFrequency(), mConfig.TumorOnlyMinVaf))
@@ -233,8 +235,7 @@ public class AmberApplication implements AutoCloseable
 
     // the heterozygous loci snp list that we use contains some regions that could be noisy.
     // this is not a problem if we use those to identify loci that are heterozygous in the
-    // germline sample. However, in tumor only mode we would be better off removing those
-    // regions.
+    // germline sample. However, in tumor only mode we would be better off removing those regions
     private ListMultimap<Chromosome,PositionEvidence> hetLociTumorOnly() throws IOException
     {
         List<GenomeRegion> excludedRegions = loadTumorOnlyExcludedSnp();

@@ -15,9 +15,8 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_QUALI
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_REPEAT_COUNT;
 import static com.hartwig.hmftools.sage.SageCommon.APP_NAME;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+import static com.hartwig.hmftools.sage.SageConfig.isUltima;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FILTERED_MAX_GERMLINE_ALT_SUPPORT;
-import static com.hartwig.hmftools.sage.SageConstants.LONG_REPEAT_LENGTH;
-import static com.hartwig.hmftools.sage.SageConstants.MAX_GERMLINE_REL_RAW_QUAL_RATIO;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_GERMLINE_ALT_SUPPORT;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_GERMLINE_RELATIVE_QUAL;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_GERMLINE_VAF;
@@ -25,6 +24,7 @@ import static com.hartwig.hmftools.sage.filter.SoftFilterConfig.getTieredSoftFil
 import static com.hartwig.hmftools.sage.filter.VariantFilters.aboveMaxGermlineRelativeQual;
 import static com.hartwig.hmftools.sage.filter.VariantFilters.aboveMaxGermlineVaf;
 import static com.hartwig.hmftools.sage.filter.VariantFilters.aboveMaxMnvIndelGermlineAltSupport;
+import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.isPanelIndelRepeatVariant;
 import static com.hartwig.hmftools.sage.tinc.TincCalculator.populateDefaultLevels;
 import static com.hartwig.hmftools.sage.tinc.TincConstants.RECOVERY_FILTERS;
 import static com.hartwig.hmftools.sage.tinc.TincConstants.TINC_RECOVERY_FACTOR;
@@ -175,7 +175,12 @@ public class TincAnalyser
 
         adjustedRefAltCount = variant.calcReducedAltCount(adjustedRefAltCount);
 
-        if(aboveMaxGermlineVaf(variant.tier(), tumorVaf, adjustedRefAltCount, refReadCounts.Total, config.MaxGermlineVaf))
+        double qual = variant.Context.getPhredScaledQual();
+
+        boolean isUltimaIndelRepeat = isUltima() && isPanelIndelRepeatVariant(
+                variant.tier(), qual, variant.isIndel(), variant.Context.hasAttribute(READ_CONTEXT_REPEAT_COUNT));
+
+        if(aboveMaxGermlineVaf(variant.tier(), isUltimaIndelRepeat, tumorVaf, adjustedRefAltCount, refReadCounts.Total, config.MaxGermlineVaf))
             return;
 
         variant.newFilters().remove(MAX_GERMLINE_VAF);

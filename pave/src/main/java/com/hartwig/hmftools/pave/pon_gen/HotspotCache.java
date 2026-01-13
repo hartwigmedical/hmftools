@@ -11,13 +11,13 @@ import com.google.common.collect.ListMultimap;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.variant.VariantHotspot;
+import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.common.variant.VariantHotspotFile;
 
 public class HotspotCache
 {
-    private final ListMultimap<Chromosome, VariantHotspot> mSomaticHotspotMap;
-    private final ListMultimap<Chromosome, VariantHotspot> mGermlineHotspotMap;
+    private final ListMultimap<Chromosome,SimpleVariant> mSomaticHotspotMap;
+    private final ListMultimap<Chromosome,SimpleVariant> mGermlineHotspotMap;
 
     public HotspotCache(final ConfigBuilder configBuilder)
     {
@@ -29,7 +29,7 @@ public class HotspotCache
             if(configBuilder.hasValue(SOMATIC_HOTSPOT))
             {
                 String hotspotFile = configBuilder.getValue(SOMATIC_HOTSPOT);
-                mSomaticHotspotMap.putAll(VariantHotspotFile.readFromVCF(hotspotFile));
+                mSomaticHotspotMap.putAll(VariantHotspotFile.loadHotspotVcf(hotspotFile));
             }
         }
         catch(Exception e)
@@ -43,7 +43,7 @@ public class HotspotCache
             if(configBuilder.hasValue(GERMLINE_HOTSPOT))
             {
                 String hotspotFile = configBuilder.getValue(GERMLINE_HOTSPOT);
-                mGermlineHotspotMap.putAll(VariantHotspotFile.readFromVCF(hotspotFile));
+                mGermlineHotspotMap.putAll(VariantHotspotFile.loadHotspotVcf(hotspotFile));
             }
         }
         catch(Exception e)
@@ -58,12 +58,12 @@ public class HotspotCache
         }
     }
 
-    public List<VariantHotspot> getChromosomeSomaticHotspots(final String chromosome)
+    public List<SimpleVariant> getChromosomeSomaticHotspots(final String chromosome)
     {
         return mSomaticHotspotMap.get(HumanChromosome.fromString(chromosome));
     }
 
-    public List<VariantHotspot> getChromosomeGermlineHotspots(final String chromosome)
+    public List<SimpleVariant> getChromosomeGermlineHotspots(final String chromosome)
     {
         return mGermlineHotspotMap.get(HumanChromosome.fromString(chromosome));
     }

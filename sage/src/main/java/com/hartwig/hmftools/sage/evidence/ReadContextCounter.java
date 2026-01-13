@@ -11,6 +11,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_TYPE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.extractConsensusType;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.inferredInsertSizeAbs;
+import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.probabilityToPhredQual;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.CONSENSUS_TAG_TYPE_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.CONSENSUS_TYPE_COUNT;
 import static com.hartwig.hmftools.common.variant.VariantReadSupport.CORE;
@@ -252,7 +253,6 @@ public class ReadContextCounter
     public boolean isIndel() { return mIsIndel; }
     public boolean isLongInsert() { return SageVariant.isLongInsert(mVariant); }
     public boolean isLongIndel() { return mVariant.indelLengthAbs() >= LONG_INSERT_LENGTH; }
-    public boolean isInLongRepeat() { return mReadContext.maxRepeatCount() >= LONG_REPEAT_LENGTH; }
     public final ReadContextQualCache qualCache() { return mQualCache; }
     public String chromosome() { return mVariant.chromosome(); }
     public int position() { return mVariant.position(); }
@@ -810,6 +810,12 @@ public class ReadContextCounter
 
     public double tumorQualProbability() { return mTumorQualProbability; }
     public void setTumorQualProbability(double probability) { mTumorQualProbability = probability; }
+
+    public double phredQual()
+    {
+        return probabilityToPhredQual(min(max(tumorQualProbability(), TQP_QUAL_LOG_MIN), 1));
+    }
+
     public double logTqp()
     {
         double tqp = min(max(tumorQualProbability(), 0), 1);

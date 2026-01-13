@@ -19,35 +19,16 @@ public class TumorStatsFactory
         return ImmutableTumorStats.builder()
                 .maxDiploidProportion(purpleData.purityContext().score().maxDiploidProportion())
                 .hotspotMutationCount(hotspotMutationCount(purpleData))
-                .hotspotStructuralVariantCount(hotspotStructuralVariants(purpleData))
+                .hotspotStructuralVariantCount(0)
                 .smallVariantAlleleReadCount(smallVariantAlleleReadCount(purpleData))
-                .structuralVariantTumorFragmentCount(structuralVariantTumorFragmentCount(purpleData))
-                .bafCount(bafCount(purpleData))
+                .structuralVariantTumorFragmentCount(0)
+                .bafCount(0)
                 .build();
-    }
-
-    private static int structuralVariantTumorFragmentCount(@NotNull PurpleData purpleData)
-    {
-        int svFragmentReadCount = 0;
-        for(StructuralVariant variant : purpleData.allPassingSomaticStructuralVariants())
-        {
-            if(variant.isFiltered() || variant.type() == StructuralVariantType.SGL)
-            {
-                continue;
-            }
-
-            Integer startTumorVariantFragmentCount = variant.start().tumorVariantFragmentCount();
-            if(variant.end() != null && startTumorVariantFragmentCount != null)
-            {
-                svFragmentReadCount += startTumorVariantFragmentCount;
-            }
-        }
-        return svFragmentReadCount;
     }
 
     private static int smallVariantAlleleReadCount(@NotNull PurpleData purpleData)
     {
-        return purpleData.allSomaticVariants().stream()
+        return purpleData.somaticVariants().stream()
                 .filter(variant -> variant.type() == VariantType.SNP)
                 .mapToInt(variant -> variant.allelicDepth().AlleleReadCount)
                 .sum();
@@ -55,24 +36,8 @@ public class TumorStatsFactory
 
     private static int hotspotMutationCount(@NotNull PurpleData purpleData)
     {
-        return (int) purpleData.allSomaticVariants().stream()
+        return (int) purpleData.somaticVariants().stream()
                 .filter(variant -> variant.tier() == VariantTier.HOTSPOT)
-                .count();
-    }
-
-    private static int bafCount(@NotNull PurpleData purpleData)
-    {
-        return purpleData.segments().stream()
-                .filter(segment -> segment.germlineStatus() == GermlineStatus.DIPLOID)
-                .filter(segment -> segment.observedTumorRatio() < 0.8 || segment.observedTumorRatio() > 1.2)
-                .mapToInt(Segment::bafCount)
-                .sum();
-    }
-
-    private static int hotspotStructuralVariants(@NotNull PurpleData purpleData)
-    {
-        return (int) purpleData.allPassingSomaticStructuralVariants().stream()
-                .filter(variant -> !variant.isFiltered() && variant.hotspot())
                 .count();
     }
 }

@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.compar.metrics;
 
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
-import static com.hartwig.hmftools.compar.common.Category.GERMLINE_FLAGSTAT;
 import static com.hartwig.hmftools.compar.metrics.MetricsCommon.FLD_MAPPED_PROPORTION;
 import static com.hartwig.hmftools.compar.metrics.MetricsCommon.MAPPED_PROPORTION_ABS_THRESHOLD;
 import static com.hartwig.hmftools.compar.metrics.MetricsCommon.MAPPED_PROPORTION_PCT_THRESHOLD;
@@ -15,26 +14,28 @@ import com.hartwig.hmftools.common.metrics.BamFlagStats;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.ItemComparer;
-import com.hartwig.hmftools.compar.common.Category;
+import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
-public class GermlineFlagstatComparer implements ItemComparer
+public class FlagstatComparer implements ItemComparer
 {
+    public final CategoryType mCategory;
     private final ComparConfig mConfig;
 
-    public GermlineFlagstatComparer(final ComparConfig config)
+    public FlagstatComparer(final CategoryType category, final ComparConfig config)
     {
+        mCategory = category;
         mConfig = config;
     }
 
     @Override
-    public Category category()
+    public CategoryType category()
     {
-        return GERMLINE_FLAGSTAT;
+        return mCategory;
     }
 
     @Override
@@ -68,12 +69,12 @@ public class GermlineFlagstatComparer implements ItemComparer
         final List<ComparableItem> comparableItems = Lists.newArrayList();
         try
         {
-            BamFlagStats flagstat = BamFlagStats.read(determineFlagStatsFilePath(germlineSampleId, fileSources.GermlineFlagstat));
-            comparableItems.add(new GermlineFlagstatData(flagstat));
+            BamFlagStats flagstat = BamFlagStats.read(determineFlagStatsFilePath(sampleId, fileSources.TumorFlagstat));
+            comparableItems.add(new FlagstatData(mCategory, flagstat));
         }
         catch(IOException e)
         {
-            CMP_LOGGER.warn("sample({}) failed to load germline flagstat data: {}", sampleId, e.toString());
+            CMP_LOGGER.warn("sample({}) failed to load tumor flagstat data: {}", sampleId, e.toString());
             return null;
         }
         return comparableItems;

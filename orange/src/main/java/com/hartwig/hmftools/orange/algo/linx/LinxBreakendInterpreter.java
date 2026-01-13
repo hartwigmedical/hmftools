@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.orange.algo.linx;
 
-import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
-
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -17,9 +15,6 @@ import com.hartwig.hmftools.datamodel.linx.ImmutableLinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
 public class LinxBreakendInterpreter
 {
     private final Map<Integer, LinxSvAnnotation> mLinxSvAnnotationsMap;
@@ -34,11 +29,6 @@ public class LinxBreakendInterpreter
     public LinxBreakend interpret(com.hartwig.hmftools.common.linx.LinxBreakend linxBreakend)
     {
         LinxSvAnnotation svAnnotation = mLinxSvAnnotationsMap.get(linxBreakend.svId());
-        if(svAnnotation == null)
-        {
-            // CHECK: can't see why this would ever occur or be acceptable it if did
-            LOGGER.warn("No Linx SV annotation found for breakend {}", linxBreakend.id());
-        }
 
         return ImmutableLinxBreakend.builder()
                 .id(linxBreakend.id())
@@ -75,9 +65,6 @@ public class LinxBreakendInterpreter
 
     private static byte orientation(final LinxSvAnnotation svAnnotation, boolean isStart)
     {
-        if(svAnnotation == null)
-            return 0;
-
         String coords = isStart ? svAnnotation.coordsStart() : svAnnotation.coordsEnd();
         return com.hartwig.hmftools.common.linx.LinxBreakend.orientationFromCoords(coords);
     }
@@ -89,15 +76,8 @@ public class LinxBreakendInterpreter
     }
 
     @VisibleForTesting
-    static double junctionCopyNumber(@Nullable LinxSvAnnotation svAnnotation)
+    static double junctionCopyNumber(final LinxSvAnnotation svAnnotation)
     {
-        if(svAnnotation == null)
-        {
-            return 0;
-        }
-        else
-        {
-            return 0.5D * (svAnnotation.junctionCopyNumberMin() + svAnnotation.junctionCopyNumberMax());
-        }
+        return 0.5D * (svAnnotation.junctionCopyNumberMin() + svAnnotation.junctionCopyNumberMax());
     }
 }

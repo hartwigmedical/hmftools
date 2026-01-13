@@ -133,9 +133,9 @@ public class DriverDataTest extends ComparableItemTest<DriverData, DriverCompare
         List<Mismatch> mismatches = generateTestMismatches(false);
 
         assertEquals(3, mismatches.size());
-        assertEquals(1, mismatches.stream().filter(x -> x.MismatchType() == MismatchType.REF_ONLY).count());
-        assertEquals(1, mismatches.stream().filter(x -> x.MismatchType() == MismatchType.NEW_ONLY).count());
-        assertEquals(1, mismatches.stream().filter(x -> x.MismatchType() == MismatchType.VALUE).count());
+        assertEquals(1, mismatches.stream().filter(x -> x.Type == MismatchType.REF_ONLY).count());
+        assertEquals(1, mismatches.stream().filter(x -> x.Type == MismatchType.NEW_ONLY).count());
+        assertEquals(1, mismatches.stream().filter(x -> x.Type == MismatchType.VALUE).count());
     }
 
     @Test
@@ -144,10 +144,10 @@ public class DriverDataTest extends ComparableItemTest<DriverData, DriverCompare
         List<Mismatch> mismatches = generateTestMismatches(true);
 
         assertEquals(4, mismatches.size());
-        assertEquals(1, mismatches.stream().filter(x -> x.MismatchType() == MismatchType.REF_ONLY).count());
-        assertEquals(1, mismatches.stream().filter(x -> x.MismatchType() == MismatchType.NEW_ONLY).count());
-        assertEquals(1, mismatches.stream().filter(x -> x.MismatchType() == MismatchType.VALUE).count());
-        assertEquals(1, mismatches.stream().filter(x -> x.MismatchType() == MismatchType.FULL_MATCH).count());
+        assertEquals(1, mismatches.stream().filter(x -> x.Type == MismatchType.REF_ONLY).count());
+        assertEquals(1, mismatches.stream().filter(x -> x.Type == MismatchType.NEW_ONLY).count());
+        assertEquals(1, mismatches.stream().filter(x -> x.Type == MismatchType.VALUE).count());
+        assertEquals(1, mismatches.stream().filter(x -> x.Type == MismatchType.FULL_MATCH).count());
     }
 
     private static List<Mismatch> generateTestMismatches(final boolean includeMatches)

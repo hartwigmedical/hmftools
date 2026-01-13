@@ -22,6 +22,7 @@ public final class DriverGeneTestFactory
                 .reportAmplification(false)
                 .amplificationRatio(DEFAULT_DRIVER_AMPLIFICATION_PLOIDY_RATIO)
                 .reportHetDeletion(false)
+                .reportLoh(false)
                 .hetDeletionThreshold(DEFAULT_DRIVER_HET_DELETION_THRESHOLD)
                 .reportSomaticHotspot(false)
                 .reportGermlineVariant(NONE)
@@ -29,6 +30,7 @@ public final class DriverGeneTestFactory
                 .likelihoodType(DriverCategory.ONCO)
                 .reportGermlineDisruption(NONE)
                 .reportGermlineDeletion(NONE)
+                .reportGermlineAmplification(false)
                 .reportPGX(false);
     }
 }

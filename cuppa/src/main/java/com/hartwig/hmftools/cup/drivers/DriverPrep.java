@@ -20,6 +20,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 
 import com.hartwig.hmftools.common.purple.PurplePurity;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.cup.prep.CategoryType;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.driver.DriverCatalogFile;
@@ -103,13 +104,18 @@ public class DriverPrep implements CategoryPrep
             if(DriverType.isGermline(driver.driver()))
                 continue;
 
+            if(driver.reportedStatus() != ReportedStatus.REPORTED)
+                continue;
+
             double likelihood = driver.driverLikelihood();
 
             String featureName = driver.gene();
             if(driver.driver() == DriverType.AMP || driver.driver() == DriverType.PARTIAL_AMP)
             {
                 featureName += AMP_SUFFIX;
-            } else {
+            }
+            else
+            {
                 featureName += MUTATION_SUFFIX;
             }
 

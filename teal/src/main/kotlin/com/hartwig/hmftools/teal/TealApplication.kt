@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.teal
 
+import com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder
 import com.hartwig.hmftools.common.utils.config.ConfigUtils
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils
@@ -25,11 +26,9 @@ class TealApplication(val params: TealParams)
             return 1
         }
 
-        val versionInfo = VersionInfo("teal.version")
-        logger.info("Teal version: {}", versionInfo.version())
         logger.info("starting telomeric analysis")
         logger.info("{}", params)
-        val start = Instant.now()
+        var startTimeMs = System.currentTimeMillis()
 
         val tumorOnly = params.commonParams.tumorOnly()
         val germlineOnly = params.commonParams.referenceOnly()
@@ -116,9 +115,8 @@ class TealApplication(val params: TealParams)
             return 1
         }
 
-        val finish = Instant.now()
-        val seconds = Duration.between(start, finish).seconds
-        logger.info("Teal run complete, time taken: {}m {}s", seconds / 60, seconds % 60)
+        logger.info("Teal run complete, mins({})", runTimeMinsStr(startTimeMs))
+
         return 0
     }
 

@@ -7,7 +7,6 @@ import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GermlineAmpDel;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
-import com.hartwig.hmftools.common.sv.StructuralVariant;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -24,35 +23,17 @@ public interface PurpleData
     @Nullable
     List<DriverCatalog> germlineDrivers();
 
-    List<PurpleVariantContext> allSomaticVariants();
-
-    List<PurpleVariantContext> driverSomaticVariants();
+    List<PurpleVariantContext> somaticVariants();
 
     @Nullable
-    List<PurpleVariantContext> allGermlineVariants();
-
-    @Nullable
-    List<PurpleVariantContext> driverGermlineVariants();
-
-    List<StructuralVariant> allPassingSomaticStructuralVariants();
-
-    @Nullable
-    List<StructuralVariant> allPassingGermlineStructuralVariants();
-
-    List<StructuralVariant> allInferredSomaticStructuralVariants();
-
-    @Nullable
-    List<StructuralVariant> allInferredGermlineStructuralVariants();
+    List<PurpleVariantContext> germlineVariants();
 
     List<PurpleCopyNumber> somaticCopyNumbers();
 
     List<GeneCopyNumber> somaticGeneCopyNumbers();
 
     @Nullable
-    List<GermlineAmpDel> allGermlineDeletions();
-
-    @Nullable
-    List<GermlineAmpDel> driverGermlineDeletions();
+    List<GermlineAmpDel> germlineDeletions();
 
     List<Segment> segments();
 }

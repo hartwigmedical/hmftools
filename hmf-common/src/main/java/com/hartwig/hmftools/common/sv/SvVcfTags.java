@@ -85,7 +85,7 @@ public final class SvVcfTags
     public static final String THREE_PRIME_RANGE_DESC = "Unpaired read three-prime position range";
 
     public static final String MAX_LOCAL_REPEAT = "MLR";
-    public static final String MAX_LOCAL_REPEAT_DESC = "Max local indel repeat round breakend";
+    public static final String MAX_LOCAL_REPEAT_DESC = "Max local indel repeat around breakend";
 
     // per sample
     public static final String SPLIT_FRAGS = "SF";

@@ -27,7 +27,7 @@ public class BamEvidenceReader
     public BamEvidenceReader(final AmberConfig config)
     {
         mConfig = config;
-        mEvidenceChecker = new PositionEvidenceChecker(mConfig.MinBaseQuality);
+        mEvidenceChecker = new PositionEvidenceChecker(mConfig.MinMappingQuality, mConfig.MinBaseQuality);
     }
 
     public void processBam(
@@ -47,7 +47,7 @@ public class BamEvidenceReader
 
         for(int i = 0; i < max(mConfig.Threads, 1); ++i)
         {
-            BamReaderThread thread = new BamReaderThread(bamFile, samReaderFactory, taskQueue, mConfig.MinMappingQuality);
+            BamReaderThread thread = new BamReaderThread(bamFile, samReaderFactory, taskQueue);
             thread.setName(format("worker-%d", i));
             thread.start();
             bamReaders.add(thread);

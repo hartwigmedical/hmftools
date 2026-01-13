@@ -31,7 +31,6 @@ import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
-import com.hartwig.hmftools.common.variant.VariantHotspot;
 import com.hartwig.hmftools.common.variant.VariantHotspotFile;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
@@ -197,12 +196,11 @@ public class ReferenceData
         if(mConfig.Hotspots.isEmpty())
             return;
 
-        ListMultimap<Chromosome, VariantHotspot> hotspotMap = VariantHotspotFile.readFromVCF(mConfig.Hotspots);
+        ListMultimap<Chromosome,SimpleVariant> hotspotMap = VariantHotspotFile.loadHotspotVcf(mConfig.Hotspots);
 
-        for(VariantHotspot variant : hotspotMap.values())
+        for(SimpleVariant variant : hotspotMap.values())
         {
-            Hotspots.put(HumanChromosome.fromString(variant.chromosome()),
-                    new SimpleVariant(variant.chromosome(), variant.position(), variant.ref(), variant.alt()));
+            Hotspots.put(HumanChromosome.fromString(variant.chromosome()), variant);
         }
 
         SG_LOGGER.info("read {} hotspots from vcf: {}", Hotspots.size(), mConfig.Hotspots);

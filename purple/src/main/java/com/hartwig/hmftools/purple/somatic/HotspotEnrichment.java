@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.purple.somatic;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
-import static com.hartwig.hmftools.common.variant.Hotspot.HOTSPOT_DESCRIPTION;
-import static com.hartwig.hmftools.common.variant.Hotspot.HOTSPOT_FLAG;
-import static com.hartwig.hmftools.common.variant.Hotspot.NEAR_HOTSPOT_FLAG;
+import static com.hartwig.hmftools.common.variant.HotspotType.HOTSPOT_DESCRIPTION;
+import static com.hartwig.hmftools.common.variant.HotspotType.HOTSPOT_FLAG;
+import static com.hartwig.hmftools.common.variant.HotspotType.NEAR_HOTSPOT_FLAG;
 
 import java.util.Collection;
 import java.util.stream.Collectors;
@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.variant.VariantHotspot;
+import com.hartwig.hmftools.common.variant.SimpleVariant;
 
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.VariantContext;
@@ -25,10 +25,10 @@ public class HotspotEnrichment
     public static final int HOTSPOT_DISTANCE = 5;
     private static final String NEAR_HOTSPOT_DESCRIPTION = "Variant within " + HOTSPOT_DISTANCE + " bases of hotspot";
 
-    private final Multimap<Chromosome,VariantHotspot> mHotspots;
+    private final Multimap<Chromosome,SimpleVariant> mHotspots;
     private final boolean mEnabled;
 
-    public HotspotEnrichment(final Multimap<Chromosome, VariantHotspot> hotspots, boolean enabled)
+    public HotspotEnrichment(final Multimap<Chromosome,SimpleVariant> hotspots, boolean enabled)
     {
         mEnabled = enabled;
         mHotspots = hotspots;
@@ -46,7 +46,7 @@ public class HotspotEnrichment
             return;
 
         final Chromosome chromosome = HumanChromosome.fromString(variant.getContig());
-        Collection<VariantHotspot> hotspots = mHotspots.get(chromosome);
+        Collection<SimpleVariant> hotspots = mHotspots.get(chromosome);
 
         if(hotspots == null)
             return;
@@ -56,7 +56,7 @@ public class HotspotEnrichment
 
         boolean nearHotspot = false;
 
-        for(VariantHotspot hotspot : hotspots)
+        for(SimpleVariant hotspot : hotspots)
         {
             if(variantStart == hotspot.position() && hotspot.ref().equals(variant.getReference().getBaseString())
             && variant.getAlternateAlleles().stream().map(Allele::getBaseString).collect(Collectors.toList()).contains(hotspot.alt()))

@@ -113,7 +113,7 @@ public class DriverGeneAnnotator implements CohortFileInterface
         // - AMPs
         // - DELs
 
-        for(final DriverCatalog driverGene : mDataCache.getDriverCatalog())
+        for(DriverCatalog driverGene : mDataCache.getDriverCatalog())
         {
             if(!driverTypeHandled(driverGene))
                 continue;

@@ -4,7 +4,7 @@ import static com.hartwig.hmftools.common.driver.DriverType.AMP;
 import static com.hartwig.hmftools.common.driver.DriverType.DEL;
 import static com.hartwig.hmftools.common.driver.DriverType.PARTIAL_AMP;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
-import static com.hartwig.hmftools.compar.common.Category.GENE_COPY_NUMBER;
+import static com.hartwig.hmftools.compar.common.CategoryType.GENE_COPY_NUMBER;
 import static com.hartwig.hmftools.compar.common.CommonUtils.buildComparers;
 import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_ERROR;
 

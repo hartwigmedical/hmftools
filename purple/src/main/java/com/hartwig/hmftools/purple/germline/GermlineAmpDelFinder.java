@@ -2,6 +2,10 @@ package com.hartwig.hmftools.purple.germline;
 
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.common.purple.ReportedStatus.NONE;
+import static com.hartwig.hmftools.common.purple.ReportedStatus.NOT_REPORTED;
+import static com.hartwig.hmftools.common.purple.ReportedStatus.REPORTED;
+import static com.hartwig.hmftools.purple.drivers.DeletionDrivers.MAX_COPY_NUMBER_DEL;
 import static com.hartwig.hmftools.common.driver.panel.DriverGeneGermlineReporting.ANY;
 import static com.hartwig.hmftools.common.driver.panel.DriverGeneGermlineReporting.VARIANT_NOT_LOST;
 import static com.hartwig.hmftools.common.driver.panel.DriverGeneGermlineReporting.WILDTYPE_LOST;
@@ -445,6 +449,9 @@ public class GermlineAmpDelFinder
                     filter, cohortFrequency, reportedStatus));
         }
 
+        if(!filters.isEmpty())
+            return;
+
         for(TranscriptData transData : transcripts)
         {
             GeneData geneData = overlappingGenes.stream().filter(x -> x.GeneId.equals(transData.GeneId)).findFirst().orElse(null);
@@ -453,16 +460,11 @@ public class GermlineAmpDelFinder
             if(driverGene == null)
                 continue;
 
-            ReportedStatus reportedStatus = NONE;
-
-            if(filters.isEmpty() && reportGermlineDeletion(driverGene, tumorStatus))
-            {
-                reportedStatus = REPORTED;
-            }
-
             // only create one record even if multiple sections of the gene are deleted
             if(mDrivers.stream().anyMatch(x -> x.gene().equals(geneData.GeneName) && x.transcript().equals(transData.TransName)))
                 continue;
+
+            ReportedStatus reportedStatus = reportGermlineDeletion(driverGene, tumorStatus) ? REPORTED : NOT_REPORTED;
 
             // create a driver record for reportable genes
             DriverCatalog driverCatalog = ImmutableDriverCatalog.builder()

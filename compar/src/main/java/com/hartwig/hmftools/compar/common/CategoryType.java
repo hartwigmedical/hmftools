@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 
-public enum Category
+public enum CategoryType
 {
     PURITY,
     DRIVER,
@@ -17,6 +17,7 @@ public enum Category
     DISRUPTION,
     GERMLINE_SV,
     CUPPA,
+    CUPPA_IMAGE,
     LILAC,
     CHORD,
     PEACH,
@@ -36,17 +37,17 @@ public enum Category
     public static final String PURPLE_CATEGORIES = "PURPLE";
     public static final String PANEL_CATEGORIES = "PANEL";
 
-    public static List<Category> purpleCategories()
+    public static List<CategoryType> purpleCategories()
     {
         return Lists.newArrayList(PURITY, DRIVER, SOMATIC_VARIANT, GERMLINE_VARIANT, GERMLINE_DELETION);
     }
 
-    public static List<Category> linxCategories()
+    public static List<CategoryType> linxCategories()
     {
         return Lists.newArrayList(DRIVER, FUSION, DISRUPTION, GERMLINE_SV);
     }
 
-    public static List<Category> panelCategories()
+    public static List<CategoryType> panelCategories()
     {
         return Lists.newArrayList(PURITY, DRIVER, SOMATIC_VARIANT, FUSION, DISRUPTION, V_CHORD);
     }

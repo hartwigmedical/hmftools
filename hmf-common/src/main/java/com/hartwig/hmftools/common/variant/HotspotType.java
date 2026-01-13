@@ -4,7 +4,7 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
-public enum Hotspot
+public enum HotspotType
 {
     HOTSPOT,
     NEAR_HOTSPOT,
@@ -16,19 +16,19 @@ public enum Hotspot
     public static final String HOTSPOT_DESCRIPTION = "Site is at a known hotspot location";
 
     @NotNull
-    public static Hotspot fromVariant(@NotNull final VariantContext context)
+    public static HotspotType fromVariant(@NotNull final VariantContext context)
     {
         if(context.getAttributeAsBoolean(HOTSPOT_FLAG, false))
         {
-            return Hotspot.HOTSPOT;
+            return HotspotType.HOTSPOT;
         }
 
         if(context.getAttributeAsBoolean(NEAR_HOTSPOT_FLAG, false))
         {
-            return Hotspot.NEAR_HOTSPOT;
+            return HotspotType.NEAR_HOTSPOT;
         }
 
-        return Hotspot.NON_HOTSPOT;
+        return HotspotType.NON_HOTSPOT;
     }
 
 }

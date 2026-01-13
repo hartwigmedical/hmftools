@@ -85,7 +85,6 @@ public final class TestOrangeConfigFactory
                 .lilacQcTsv(LILAC_QC_TSV)
                 .convertGermlineToSomatic(false)
                 .limitJsonOutput(false)
-                .includeNonGenePanelEvents(true)
                 .addDisclaimer(false)
                 .build();
     }

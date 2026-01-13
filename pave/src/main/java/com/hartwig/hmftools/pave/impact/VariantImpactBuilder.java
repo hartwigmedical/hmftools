@@ -42,6 +42,7 @@ public class VariantImpactBuilder
         VariantTransImpact worstCanonicalImpact = null;
         int worstCanonicalRank = -1;
         String canonicalGeneName = ""; // can be set to the gene name of other reportable transcripts if the canonical has no impact
+        boolean canonicalSpliceRegion = false;
         String worstGeneName = "";
         String otherReportableTransData = "";
 
@@ -104,6 +105,7 @@ public class VariantImpactBuilder
                                 transImpact.effectsStr(), codingEffect));
 
                         canonicalGeneName = geneName;
+                        canonicalSpliceRegion |= transImpact.inSpliceRegion();
                     }
                 }
 
@@ -116,7 +118,6 @@ public class VariantImpactBuilder
         CodingEffect canonicalCodingEffect = NONE;
         String canonicalHgvsCodingImpact = "";
         String canonicalHgvsProteinImpact = "";
-        boolean canonicalSpliceRegion = false;
         CodingEffect worstCodingEffect = NONE;
 
         if(worstImpact != null)
@@ -132,7 +133,7 @@ public class VariantImpactBuilder
             canonicalHgvsCodingImpact = worstCanonicalImpact.hgvsCoding();
             canonicalHgvsProteinImpact = worstCanonicalImpact.hgvsProtein();
             canonicalTranscript = worstCanonicalImpact.TransData.TransName;
-            canonicalSpliceRegion = worstCanonicalImpact.inSpliceRegion();
+            canonicalSpliceRegion |= worstCanonicalImpact.inSpliceRegion();
         }
 
         return new VariantImpact(

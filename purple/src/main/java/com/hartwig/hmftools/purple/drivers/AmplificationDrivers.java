@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.purple.drivers;
 
 import static com.hartwig.hmftools.common.driver.DriverType.UNKNOWN;
-import static com.hartwig.hmftools.common.purple.PurpleCommon.DEFAULT_DRIVER_AMPLIFICATION_CANDIDATE_PLOIDY_RATIO;
+import static com.hartwig.hmftools.common.purple.PurpleCommon.DRIVER_AMPLIFICATION_CANDIDATE_PLOIDY_RATIO;
 import static com.hartwig.hmftools.purple.drivers.DeletionDrivers.createCopyNumberDriver;
 
 import java.util.List;
@@ -55,7 +55,7 @@ public final class AmplificationDrivers
 
             if(driverType == UNKNOWN)
             {
-                double candidateAmpThreshold = geneCopyNummberThreshold * DEFAULT_DRIVER_AMPLIFICATION_CANDIDATE_PLOIDY_RATIO;
+                double candidateAmpThreshold = geneCopyNummberThreshold * DRIVER_AMPLIFICATION_CANDIDATE_PLOIDY_RATIO;
                 driverType = calcDriverType(geneCopyNumber, candidateAmpThreshold, checkPartials);
                 isCandidate = driverType != UNKNOWN;
             }

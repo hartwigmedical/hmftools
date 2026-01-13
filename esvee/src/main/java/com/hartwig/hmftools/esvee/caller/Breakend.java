@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.esvee.caller;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ALLELE_FRACTION;
@@ -23,6 +24,7 @@ import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.sv.StructuralVariantLeg;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.sv.VariantAltInsertCoords;
+import com.hartwig.hmftools.esvee.assembly.types.Junction;
 
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
@@ -170,6 +172,26 @@ public class Breakend
             return min(fivePrimeRange, threePrimeRange);
 
         return fivePrimeRange >= 0 ? fivePrimeRange : threePrimeRange;
+    }
+
+    private static final int LOCAL_JUNCTION_MAX_DISTANCE = 50;
+
+    public boolean closeToOriginalJunction() { return closeToOriginalJunction(LOCAL_JUNCTION_MAX_DISTANCE); }
+
+    public boolean closeToOriginalJunction(int permittedDistance)
+    {
+        List<Junction> originalJunctions = sv().originalJunctions();
+
+        for(Junction junction : originalJunctions)
+        {
+            if(Chromosome.equals(junction.Chromosome) && Orient == junction.Orient
+            && abs(Position - junction.Position) <= permittedDistance)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public String toString()

@@ -5,10 +5,8 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
-import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.vis.BaseSeqViewModel.fromStr;
 import static com.hartwig.hmftools.common.vis.HtmlUtil.BASE_FONT_STYLE;
 import static com.hartwig.hmftools.common.vis.HtmlUtil.JQUERY_SCRIPT;
 import static com.hartwig.hmftools.common.vis.HtmlUtil.getJavascript;
@@ -40,12 +38,16 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayDeque;
 import java.util.List;
 import java.util.Locale;
+import java.util.Queue;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.vis.BaseSeqViewModel;
@@ -55,32 +57,30 @@ import com.hartwig.hmftools.common.vis.SvgRender;
 import com.hartwig.hmftools.esvee.assembly.AssemblyConfig;
 import com.hartwig.hmftools.esvee.assembly.alignment.AlignData;
 import com.hartwig.hmftools.esvee.assembly.alignment.AssemblyAlignment;
+import com.hartwig.hmftools.esvee.assembly.alignment.Breakend;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 
 import org.jfree.svg.SVGGraphics2D;
 
-import htsjdk.samtools.Cigar;
-import htsjdk.samtools.TextCigarCodec;
+import htsjdk.samtools.CigarElement;
 import j2html.tags.DomContent;
 
 public class AssemblyVisualiser
 {
-    public record RefSegmentViewModel(JunctionAssembly assembly, BaseRegion viewRegion, BaseSeqViewModel viewModel) {}
+    public record SegmentViewModel(String chromosome, BaseRegion viewRegion, BaseRegion refViewRegion, BaseSeqViewModel refViewModel,
+                                   BaseSeqViewModel assemblyViewModel, boolean isInsert) {}
 
     private final AssemblyConfig mConfig;
     private final AssemblyAlignment mAssemblyAlignment;
-    private final Cigar mSequenceCigar;
-
-    private final List<RefSegmentViewModel> mRefViewModel;
+    private final List<SegmentViewModel> mRefViewModel;
 
     public AssemblyVisualiser(final AssemblyConfig config, final AssemblyAlignment assemblyAlignment)
     {
         mConfig = config;
         mAssemblyAlignment = assemblyAlignment;
-        mRefViewModel = getRefViewModel(assemblyAlignment);
-        mSequenceCigar = TextCigarCodec.decode(assemblyAlignment.assemblyCigar());
+        mRefViewModel = getRefViewModel(config, assemblyAlignment);
     }
 
     public void writeVisFiles()
@@ -155,6 +155,10 @@ public class AssemblyVisualiser
         DomContent refRow = tr(td("ref").withStyle(headerStyle.toString()), td(renderRef()));
         tableRows.add(refRow);
 
+        // assembly row
+        DomContent assemblyRow = tr(td("assembly").withStyle(headerStyle.toString()), td(renderAssembly()));
+        tableRows.add(assemblyRow);
+
         // reads
         List<ReadViewModel> readViewModels = Lists.newArrayList();
         for(JunctionAssembly assembly : mAssemblyAlignment.assemblies())
@@ -164,77 +168,113 @@ public class AssemblyVisualiser
                 if(read.isSupplementary())
                     continue;
 
-                readViewModels.add(ReadViewModel.create(mSequenceCigar, mRefViewModel, assembly, read));
+                readViewModels.add(ReadViewModel.create(mRefViewModel, read, assembly));
             }
         }
 
         for(ReadViewModel readViewModel : readViewModels)
         {
-            List<DomContent> cols = Lists.newArrayList();
-            cols.add(td(""));
-            cols.add(td(readViewModel.render()));
-            tableRows.add(tr().with(cols));
+            DomContent readEl = readViewModel.render();
+            if(readEl == null)
+                continue;
+
+            tableRows.add(tr(td(""), td(readEl)));
         }
 
         return tableRows;
     }
 
-    private static List<RefSegmentViewModel> getRefViewModel(final AssemblyAlignment assemblyAlignment)
+    private record BreakendInfo(String chromosome, int pos, Orientation orient, List<CigarElement> cigarElements, String insertedBases,
+                                BaseRegion refRegion, String assemblySeq, String refSeq) {}
+
+    private static BreakendInfo extractBreakendInfo(
+            final RefGenomeInterface refGenome, final Breakend breakend, final String fullAssemblySeq)
     {
-        String refSeq = assemblyAlignment.fullSequence();
-        List<AlignData> segments = assemblyAlignment.breakends().stream()
-                .flatMap(x -> x.segments().stream())
-                .map(x -> x.Alignment)
-                .toList();
-
-        List<RefSegmentViewModel> refViewModel = Lists.newArrayList();
-        List<Integer> linkIndices = assemblyAlignment.linkIndices();
-        int refIdx = 0;
-        for(int i = 0; i < segments.size(); i++)
+        AlignData alignment = breakend.segments().get(0).Alignment;
+        List<CigarElement> cigarEls = alignment.cigarElements();
+        String assemblySeq = fullAssemblySeq.substring(alignment.sequenceStart(), alignment.sequenceEnd() + 1);
+        if(breakend.Orient == FORWARD)
         {
-            AlignData segment = segments.get(i);
+            if(cigarEls.get(cigarEls.size() - 1).getOperator().isClipping())
+                cigarEls = cigarEls.subList(0, cigarEls.size() - 1);
+        }
+        else
+        {
+            if(cigarEls.get(0).getOperator().isClipping())
+                cigarEls = cigarEls.subList(1, cigarEls.size());
+        }
 
-            String chromosome = segment.chromosome();
-            int posStart = segment.positionStart();
-            int posEnd = segment.positionEnd();
-            int length = posEnd - posStart + 1;
+        int refLength = 0;
+        for(CigarElement cigarEl : cigarEls)
+        {
+            if(cigarEl.getOperator().consumesReferenceBases())
+                refLength += cigarEl.getLength();
+        }
 
-            // find associated JunctionAssembly
-            JunctionAssembly junctionAssembly = null;
-            for(JunctionAssembly assembly : assemblyAlignment.assemblies())
-            {
-                Junction junction = assembly.junction();
-                if(!junction.Chromosome.equals(chromosome))
-                    continue;
+        int refStart;
+        int refEnd;
+        if(breakend.Orient == FORWARD)
+        {
+            refEnd = breakend.Position;
+            refStart = refEnd - refLength + 1;
+        }
+        else
+        {
+            refStart = breakend.Position;
+            refEnd = refStart + refLength - 1;
+        }
 
-                if(junction.Orient == FORWARD && posEnd != junction.Position)
-                    continue;
+        BaseRegion refRegion = new BaseRegion(refStart, refEnd);
+        String refSeq = refGenome.getBaseString(breakend.Chromosome, refStart, refEnd);
+        return new BreakendInfo(breakend.Chromosome, breakend.Position, breakend.Orient, cigarEls, breakend.InsertedBases, refRegion, assemblySeq, refSeq);
+    }
 
-                if(junction.Orient == REVERSE && posStart != junction.Position)
-                    continue;
+    private static List<SegmentViewModel> getRefViewModel(final AssemblyConfig config, final AssemblyAlignment assemblyAlignment)
+    {
+        List<SegmentViewModel> refViewModel = Lists.newArrayList();
 
-                junctionAssembly = assembly;
-                break;
-            }
+        String fullAssemblySeq = assemblyAlignment.fullSequence();
+        int baseIdx = 0;
+        for(int i = 0; i < assemblyAlignment.breakends().size(); i++)
+        {
+            BreakendInfo breakendInfo = extractBreakendInfo(config.RefGenome, assemblyAlignment.breakends().get(i), fullAssemblySeq);
 
-            BaseSeqViewModel segmentViewModel = fromStr(refSeq.substring(refIdx, refIdx + length), chromosome, posStart);
+            BaseSeqViewModel refSeqViewModel = BaseSeqViewModel.fromStr(breakendInfo.refSeq, baseIdx);
+            BaseSeqViewModel assemblySeqViewModel = BaseSeqViewModel.fromStringWithCigar(
+                    breakendInfo.assemblySeq, breakendInfo.cigarElements, baseIdx);
+            baseIdx += breakendInfo.refRegion.baseLength();
+
             BaseRegion viewRegion;
-            if(junctionAssembly.junction().Orient == FORWARD)
+            BaseRegion refViewRegion;
+            if(breakendInfo.orient == FORWARD)
             {
-                int viewRegionEnd = segmentViewModel.LastBasePos;
-                int viewRegionStart = max(segmentViewModel.FirstBasePos, viewRegionEnd - VIEW_REGION_SIZE + 1);
+                int viewRegionEnd = refSeqViewModel.LastBasePos;
+                int viewRegionStart = max(refSeqViewModel.FirstBasePos, viewRegionEnd - VIEW_REGION_SIZE + 1);
                 viewRegion = new BaseRegion(viewRegionStart, viewRegionEnd);
+
+                viewRegionEnd = breakendInfo.refRegion.end();
+                viewRegionStart = max(breakendInfo.refRegion.start(), viewRegionEnd - VIEW_REGION_SIZE + 1);
+                refViewRegion = new BaseRegion(viewRegionStart, viewRegionEnd);
             }
             else
             {
-                int viewRegionStart = segmentViewModel.FirstBasePos;
-                int viewRegionEnd = min(segmentViewModel.LastBasePos, viewRegionStart + VIEW_REGION_SIZE - 1);
+                int viewRegionStart = refSeqViewModel.FirstBasePos;
+                int viewRegionEnd = min(refSeqViewModel.LastBasePos, viewRegionStart + VIEW_REGION_SIZE - 1);
                 viewRegion = new BaseRegion(viewRegionStart, viewRegionEnd);
+
+                viewRegionStart = breakendInfo.refRegion.start();
+                viewRegionEnd = min(breakendInfo.refRegion.end(), viewRegionStart + VIEW_REGION_SIZE - 1);
+                refViewRegion = new BaseRegion(viewRegionStart, viewRegionEnd);
             }
 
-            refViewModel.add(new RefSegmentViewModel(junctionAssembly, viewRegion, segmentViewModel));
-            if(i < segments.size() - 1)
-                refIdx = linkIndices.get(i);
+            refViewModel.add(new SegmentViewModel(breakendInfo.chromosome, viewRegion, refViewRegion, refSeqViewModel, assemblySeqViewModel, false));
+            if(i < assemblyAlignment.breakends().size() - 1 && breakendInfo.insertedBases != null && !breakendInfo.insertedBases.isEmpty())
+            {
+                BaseSeqViewModel insertSeqViewModel = BaseSeqViewModel.fromStr(breakendInfo.insertedBases, baseIdx);
+                baseIdx += breakendInfo.insertedBases.length();
+                viewRegion = new BaseRegion(insertSeqViewModel.FirstBasePos, insertSeqViewModel.LastBasePos);
+                refViewModel.add(new SegmentViewModel(null, viewRegion, null, null, insertSeqViewModel, true));
+            }
         }
 
         return refViewModel;
@@ -243,18 +283,45 @@ public class AssemblyVisualiser
     private DomContent renderRef()
     {
         int totalBoxWidth = 0;
-        for(RefSegmentViewModel segmentViewModel : mRefViewModel)
-            totalBoxWidth += segmentViewModel.viewRegion.baseLength() + 2 * BOX_PADDING;
+        for(SegmentViewModel refEl : mRefViewModel)
+            totalBoxWidth += refEl.viewRegion.baseLength() + 2 * BOX_PADDING;
 
         SVGGraphics2D svgCanvas = new SVGGraphics2D(READ_HEIGHT_PX * totalBoxWidth, READ_HEIGHT_PX);
         AffineTransform initTransform = svgCanvas.getTransform();
         double xBoxOffset = 0.0d;
-        for(RefSegmentViewModel segmentViewModel : mRefViewModel)
+        for(SegmentViewModel refEl : mRefViewModel)
         {
-            BaseSeqViewModel viewModel = segmentViewModel.viewModel;
-            BaseRegion viewRegion = segmentViewModel.viewRegion;
+            BaseSeqViewModel viewModel = refEl.refViewModel;
+            BaseRegion viewRegion = refEl.viewRegion;
+            if(viewModel == null)
+            {
+                xBoxOffset += viewRegion.baseLength() + 2 * BOX_PADDING;
+                continue;
+            }
+
             svgCanvas.setTransform(initTransform);
             renderBaseSeq(svgCanvas, new Point2D.Double(xBoxOffset, 0.0d), READ_HEIGHT_PX, viewRegion, viewModel, false, Maps.newHashMap(), null);
+            xBoxOffset += viewRegion.baseLength() + 2 * BOX_PADDING;
+        }
+
+        return rawHtml(svgCanvas.getSVGElement());
+    }
+
+    private DomContent renderAssembly()
+    {
+        int totalBoxWidth = 0;
+        for(SegmentViewModel refEl : mRefViewModel)
+            totalBoxWidth += refEl.viewRegion.baseLength() + 2 * BOX_PADDING;
+
+        SVGGraphics2D svgCanvas = new SVGGraphics2D(READ_HEIGHT_PX * totalBoxWidth, READ_HEIGHT_PX);
+        AffineTransform initTransform = svgCanvas.getTransform();
+        double xBoxOffset = 0.0d;
+        for(SegmentViewModel refEl : mRefViewModel)
+        {
+            BaseSeqViewModel viewModel = refEl.assemblyViewModel;
+            BaseRegion viewRegion = refEl.viewRegion;
+            svgCanvas.setTransform(initTransform);
+            renderBaseSeq(svgCanvas, new Point2D.Double(xBoxOffset, 0.0d), READ_HEIGHT_PX, viewRegion, viewModel, false, Maps.newHashMap(), refEl.refViewModel());
             xBoxOffset += viewRegion.baseLength() + 2 * BOX_PADDING;
         }
 
@@ -267,11 +334,17 @@ public class AssemblyVisualiser
         double charWidth = getStringBounds(COORD_FONT, "9").getWidth();
         double maxStringWidth = 0.0d;
         int totalBoxWidth = 0;
-        for(RefSegmentViewModel segmentViewModel : mRefViewModel)
+        for(SegmentViewModel refEl : mRefViewModel)
         {
-            BaseRegion viewRegion = segmentViewModel.viewRegion;
-            totalBoxWidth += viewRegion.baseLength() + 2 * BOX_PADDING;
-            for(int i = viewRegion.start(); i <= viewRegion.end(); i++)
+            if(refEl.isInsert)
+            {
+                totalBoxWidth += refEl.viewRegion.baseLength() + 2 * BOX_PADDING;
+                continue;
+            }
+
+            BaseRegion refViewRegion = refEl.refViewRegion;
+            totalBoxWidth += refViewRegion.baseLength() + 2 * BOX_PADDING;
+            for(int i = refViewRegion.start(); i <= refViewRegion.end(); i++)
                 maxStringWidth = max(maxStringWidth, getStringBounds(COORD_FONT, format(Locale.US, "%,d", i)).getWidth());
         }
 
@@ -280,19 +353,23 @@ public class AssemblyVisualiser
                 scalingFactor * (maxStringWidth + 2 * charWidth));
         AffineTransform initTransform = svgCanvas.getTransform();
         double xBoxOffset = 0.0d;
-        for(int i = 0; i < mRefViewModel.size(); i++)
+        Queue<JunctionAssembly> assemblyQueue = new ArrayDeque<>(mAssemblyAlignment.assemblies());
+        for(SegmentViewModel refEl : mRefViewModel)
         {
-            RefSegmentViewModel segmentViewModel = mRefViewModel.get(i);
-            Junction junction = mAssemblyAlignment.assemblies().get(i).junction();
+            if(refEl.isInsert)
+            {
+                xBoxOffset += refEl.viewRegion.baseLength() + 2 * BOX_PADDING;
+                continue;
+            }
 
-            BaseRegion viewRegion = segmentViewModel.viewRegion;
-            svgCanvas.setTransform(initTransform);
-
+            BaseRegion refViewRegion = refEl.refViewRegion;
+            Junction junction = assemblyQueue.poll().junction();
             int centerPosition = junction.Position;
             Point2D.Double canvasSize = new Point2D.Double(
-                    scalingFactor * BASE_BOX_SIZE * (viewRegion.baseLength() + 2 * BOX_PADDING), svgCanvas.getHeight());
-            SvgRender.renderCoords(svgCanvas, new Point2D.Double(xBoxOffset, 0.0d), canvasSize, READ_HEIGHT_PX, viewRegion, centerPosition, DISPLAY_EVERY_NTH_COORD, maxStringWidth);
-            xBoxOffset += viewRegion.baseLength() + 2 * BOX_PADDING;
+                    scalingFactor * BASE_BOX_SIZE * (refViewRegion.baseLength() + 2 * BOX_PADDING), svgCanvas.getHeight());
+            svgCanvas.setTransform(initTransform);
+            SvgRender.renderCoords(svgCanvas, new Point2D.Double(xBoxOffset, 0.0d), canvasSize, READ_HEIGHT_PX, refViewRegion, centerPosition, DISPLAY_EVERY_NTH_COORD, maxStringWidth);
+            xBoxOffset += refViewRegion.baseLength() + 2 * BOX_PADDING;
         }
 
         return rawHtml(svgCanvas.getSVGElement());
@@ -302,12 +379,17 @@ public class AssemblyVisualiser
     {
         List<ChrBaseRegion> regions = Lists.newArrayList();
         int xBoxOffset = 0;
-        for(RefSegmentViewModel segmentViewModel : mRefViewModel)
+        for(SegmentViewModel refEl : mRefViewModel)
         {
-            BaseSeqViewModel viewModel = segmentViewModel.viewModel;
-            BaseRegion viewRegion = segmentViewModel.viewRegion;
+            BaseRegion viewRegion = refEl.viewRegion;
             int length = viewRegion.baseLength() + 2 * BOX_PADDING;
-            regions.add(new ChrBaseRegion(viewModel.Chromosome, xBoxOffset, xBoxOffset + length - 1));
+            if(refEl.isInsert)
+            {
+                xBoxOffset += length;
+                continue;
+            }
+
+            regions.add(new ChrBaseRegion(refEl.chromosome, xBoxOffset, xBoxOffset + length - 1));
             xBoxOffset += length;
         }
 

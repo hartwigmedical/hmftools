@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.compar.purple;
 
-import static com.hartwig.hmftools.compar.common.Category.COPY_NUMBER;
+import static com.hartwig.hmftools.compar.common.CategoryType.COPY_NUMBER;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonGenomePosition;
 import static com.hartwig.hmftools.compar.purple.CopyNumberData.FLD_COPY_NUMBER;
@@ -14,7 +14,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.region.BasePosition;
-import com.hartwig.hmftools.compar.common.Category;
+import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
@@ -34,7 +34,7 @@ public class CopyNumberComparer implements ItemComparer
     }
 
     @Override
-    public Category category() { return COPY_NUMBER; }
+    public CategoryType category() { return COPY_NUMBER; }
 
     @Override
     public void registerThresholds(final DiffThresholds thresholds)

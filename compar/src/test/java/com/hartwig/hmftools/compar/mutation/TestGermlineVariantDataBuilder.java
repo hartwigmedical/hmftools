@@ -12,7 +12,7 @@ import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.Hotspot;
+import com.hartwig.hmftools.common.variant.HotspotType;
 import com.hartwig.hmftools.common.variant.ImmutableSmallVariantImpl;
 import com.hartwig.hmftools.common.variant.SmallVariant;
 import com.hartwig.hmftools.common.variant.VariantTier;
@@ -28,7 +28,7 @@ public class TestGermlineVariantDataBuilder
     public VariantType type = VariantType.SNP;
     public String gene = "BRAF";
     public boolean reported = true;
-    public Hotspot hotspotStatus = Hotspot.HOTSPOT;
+    public HotspotType hotspotStatus = HotspotType.HOTSPOT;
     public VariantTier tier = VariantTier.HOTSPOT;
     public boolean biallelic = false;
     public String canonicalEffect = "missense_variant";
@@ -54,7 +54,7 @@ public class TestGermlineVariantDataBuilder
         b.type = VariantType.INDEL;
         b.gene = "BRCA1";
         b.reported = false;
-        b.hotspotStatus = Hotspot.NEAR_HOTSPOT;
+        b.hotspotStatus = HotspotType.NEAR_HOTSPOT;
         b.tier = VariantTier.PANEL;
         b.biallelic = true;
         b.canonicalEffect = "synonymous_variant";

@@ -158,6 +158,7 @@ public class GeneTestUtils
                 .reportAmplification(false)
                 .amplificationRatio(DEFAULT_DRIVER_AMPLIFICATION_PLOIDY_RATIO)
                 .reportHetDeletion(false)
+                .reportLoh(false)
                 .hetDeletionThreshold(DEFAULT_DRIVER_HET_DELETION_THRESHOLD)
                 .reportSomaticHotspot(false)
                 .reportGermlineVariant(DriverGeneGermlineReporting.NONE)
@@ -166,6 +167,7 @@ public class GeneTestUtils
                 .reportPGX(false)
                 .reportGermlineDisruption(DriverGeneGermlineReporting.ANY)
                 .reportGermlineDeletion(DriverGeneGermlineReporting.ANY)
+                .reportGermlineAmplification(false)
                 .build();
     }
 

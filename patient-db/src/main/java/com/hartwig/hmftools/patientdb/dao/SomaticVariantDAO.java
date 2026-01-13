@@ -17,7 +17,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.Hotspot;
+import com.hartwig.hmftools.common.variant.HotspotType;
 import com.hartwig.hmftools.common.variant.ImmutableSmallVariantImpl;
 import com.hartwig.hmftools.common.variant.SmallVariant;
 import com.hartwig.hmftools.common.variant.SomaticLikelihood;
@@ -128,7 +128,7 @@ public class SomaticVariantDAO
                 .microhomology(record.getValue(SOMATICVARIANT.MICROHOMOLOGY))
                 .repeatSequence(record.getValue(SOMATICVARIANT.REPEATSEQUENCE))
                 .repeatCount(record.getValue(SOMATICVARIANT.REPEATCOUNT))
-                .hotspot(Hotspot.valueOf(record.getValue(SOMATICVARIANT.HOTSPOT)))
+                .hotspot(HotspotType.valueOf(record.getValue(SOMATICVARIANT.HOTSPOT)))
                 .mappability(record.getValue(SOMATICVARIANT.MAPPABILITY))
                 .germlineStatus(GermlineStatus.valueOf(record.getValue(SOMATICVARIANT.GERMLINESTATUS)))
                 .minorAlleleCopyNumber(record.getValue(SOMATICVARIANT.MINORALLELECOPYNUMBER))

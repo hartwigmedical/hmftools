@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.compar.vchord;
 
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
-import static com.hartwig.hmftools.compar.common.Category.V_CHORD;
+import static com.hartwig.hmftools.compar.common.CategoryType.V_CHORD;
 import static com.hartwig.hmftools.compar.vchord.VChordData.FLD_BREAST;
 import static com.hartwig.hmftools.compar.vchord.VChordData.FLD_OTHER;
 import static com.hartwig.hmftools.compar.vchord.VChordData.FLD_OVARIAN;
@@ -18,7 +18,7 @@ import com.hartwig.hmftools.common.vchord.VChordPredictionFile;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.ItemComparer;
-import com.hartwig.hmftools.compar.common.Category;
+import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
 import com.hartwig.hmftools.compar.common.FileSources;
@@ -35,7 +35,7 @@ public class VChordComparer implements ItemComparer
     }
 
     @Override
-    public Category category() { return V_CHORD; }
+    public CategoryType category() { return V_CHORD; }
 
     @Override
     public void registerThresholds(final DiffThresholds thresholds)

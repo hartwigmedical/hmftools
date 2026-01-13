@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createField
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.List;
@@ -17,6 +16,7 @@ import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.driver.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.purple.ReportedStatus;
 
 import org.jetbrains.annotations.NotNull;
@@ -63,29 +63,39 @@ public final class DriverCatalogFile
         return lines;
     }
 
+    private enum Columns
+    {
+        chromosome,
+        chromosomeBand,
+        gene,
+        transcript,
+        isCanonical,
+        driver,
+        category,
+        likelihoodMethod,
+        reportedStatus,
+        driverLikelihood,
+        missense,
+        nonsense,
+        splice,
+        inframe,
+        frameshift,
+        biallelic,
+        minCopyNumber,
+        maxCopyNumber;
+    }
+
     @NotNull
     private static String header()
     {
-        return new StringJoiner(TSV_DELIM)
-                .add("chromosome")
-                .add("chromosomeBand")
-                .add("gene")
-                .add("transcript")
-                .add("isCanonical")
-                .add("driver")
-                .add("category")
-                .add("likelihoodMethod")
-                .add("reportedStatus")
-                .add("driverLikelihood")
-                .add("missense")
-                .add("nonsense")
-                .add("splice")
-                .add("inframe")
-                .add("frameshift")
-                .add("biallelic")
-                .add("minCopyNumber")
-                .add("maxCopyNumber")
-                .toString();
+        StringJoiner sj = new StringJoiner(TSV_DELIM);
+
+        for(Columns column : Columns.values())
+        {
+            sj.add(column.toString());
+        }
+
+        return sj.toString();
     }
 
     private static String toString(final DriverCatalog driverCatalog)
@@ -126,7 +136,7 @@ public final class DriverCatalogFile
         Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
         lines.remove(0);
 
-        Integer reportedIndex = fieldsIndexMap.get("reportedStatus");
+        Integer reportedIndex = fieldsIndexMap.get(Columns.reportedStatus.toString()); // added in pipeline v3.0
 
         for(String line : lines)
         {
@@ -135,26 +145,24 @@ public final class DriverCatalogFile
             ReportedStatus reportedStatus = reportedIndex != null ? ReportedStatus.valueOf(values[reportedIndex]) : ReportedStatus.REPORTED;
 
             drivers.add(ImmutableDriverCatalog.builder()
-                    .chromosome(values[fieldsIndexMap.get("chromosome")])
-                    .chromosomeBand(values[fieldsIndexMap.get("chromosomeBand")])
-                    .gene(values[fieldsIndexMap.get("gene")])
-                    .transcript(fieldsIndexMap.containsKey("transcript") ?
-                            values[fieldsIndexMap.get("transcript")] : "")
-                    .isCanonical(fieldsIndexMap.containsKey("isCanonical") ?
-                            Boolean.parseBoolean(values[fieldsIndexMap.get("isCanonical")]) : true)
-                    .driver(checkConvertType(values[fieldsIndexMap.get("driver")]))
-                    .category(DriverCategory.valueOf(values[fieldsIndexMap.get("category")]))
+                    .chromosome(values[fieldsIndexMap.get(Columns.chromosome.toString())])
+                    .chromosomeBand(values[fieldsIndexMap.get(Columns.chromosomeBand.toString())])
+                    .gene(values[fieldsIndexMap.get(Columns.gene.toString())])
+                    .transcript(values[fieldsIndexMap.get(Columns.transcript.toString())])
+                    .isCanonical(Boolean.parseBoolean(values[fieldsIndexMap.get(Columns.isCanonical.toString())]))
+                    .driver(checkConvertType(values[fieldsIndexMap.get(Columns.driver.toString())]))
+                    .category(DriverCategory.valueOf(values[fieldsIndexMap.get(Columns.category.toString())]))
                     .reportedStatus(reportedStatus)
-                    .likelihoodMethod(LikelihoodMethod.valueOf(values[fieldsIndexMap.get("likelihoodMethod")]))
-                    .driverLikelihood(Double.parseDouble(values[fieldsIndexMap.get("driverLikelihood")]))
-                    .missense(Integer.parseInt(values[fieldsIndexMap.get("missense")]))
-                    .nonsense(Integer.parseInt(values[fieldsIndexMap.get("nonsense")]))
-                    .splice(Integer.parseInt(values[fieldsIndexMap.get("splice")]))
-                    .inframe(Integer.parseInt(values[fieldsIndexMap.get("inframe")]))
-                    .frameshift(Integer.parseInt(values[fieldsIndexMap.get("frameshift")]))
-                    .biallelic(Boolean.parseBoolean(values[fieldsIndexMap.get("biallelic")]))
-                    .minCopyNumber(Double.parseDouble(values[fieldsIndexMap.get("minCopyNumber")]))
-                    .maxCopyNumber(Double.parseDouble(values[fieldsIndexMap.get("maxCopyNumber")]))
+                    .likelihoodMethod(LikelihoodMethod.valueOf(values[fieldsIndexMap.get(Columns.likelihoodMethod.toString())]))
+                    .driverLikelihood(Double.parseDouble(values[fieldsIndexMap.get(Columns.driverLikelihood.toString())]))
+                    .missense(Integer.parseInt(values[fieldsIndexMap.get(Columns.missense.toString())]))
+                    .nonsense(Integer.parseInt(values[fieldsIndexMap.get(Columns.nonsense.toString())]))
+                    .splice(Integer.parseInt(values[fieldsIndexMap.get(Columns.splice.toString())]))
+                    .inframe(Integer.parseInt(values[fieldsIndexMap.get(Columns.inframe.toString())]))
+                    .frameshift(Integer.parseInt(values[fieldsIndexMap.get(Columns.frameshift.toString())]))
+                    .biallelic(Boolean.parseBoolean(values[fieldsIndexMap.get(Columns.biallelic.toString())]))
+                    .minCopyNumber(Double.parseDouble(values[fieldsIndexMap.get(Columns.minCopyNumber.toString())]))
+                    .maxCopyNumber(Double.parseDouble(values[fieldsIndexMap.get(Columns.maxCopyNumber.toString())]))
                     .build());
         }
 

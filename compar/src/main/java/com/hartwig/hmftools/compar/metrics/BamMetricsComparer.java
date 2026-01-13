@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.compar.metrics;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
-import static com.hartwig.hmftools.compar.common.Category.GERMLINE_BAM_METRICS;
-import static com.hartwig.hmftools.compar.metrics.GermlineBamMetricsData.FLD_PERCENTAGE_10X;
-import static com.hartwig.hmftools.compar.metrics.GermlineBamMetricsData.FLD_PERCENTAGE_20X;
+import static com.hartwig.hmftools.compar.common.CategoryType.TUMOR_BAM_METRICS;
 import static com.hartwig.hmftools.compar.metrics.MetricsCommon.DUPLICATE_PERCENTAGE_ABS_THRESHOLD;
 import static com.hartwig.hmftools.compar.metrics.MetricsCommon.DUPLICATE_PERCENTAGE_PCT_THRESHOLD;
 import static com.hartwig.hmftools.compar.metrics.MetricsCommon.FLD_DUPLICATE_PERCENTAGE;
@@ -17,26 +17,34 @@ import com.hartwig.hmftools.common.metrics.BamMetricSummary;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.ItemComparer;
-import com.hartwig.hmftools.compar.common.Category;
+import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
-public class GermlineBamMetricsComparer implements ItemComparer
+public class BamMetricsComparer implements ItemComparer
 {
     private final ComparConfig mConfig;
 
-    public GermlineBamMetricsComparer(final ComparConfig config)
+    public final CategoryType mCategory;
+    private final List<Integer> mComparisonPercentages;
+
+    protected static final List<Integer> TUMOR_COVERAGE_PERCENTAGES = List.of(30, 60);
+    protected static final List<Integer> GERMLINE_COVERAGE_PERCENTAGES = List.of(10, 20);
+
+    public BamMetricsComparer(final CategoryType categoryType, final ComparConfig config)
     {
+        mCategory = categoryType;
+        mComparisonPercentages = categoryType == TUMOR_BAM_METRICS ? TUMOR_COVERAGE_PERCENTAGES : GERMLINE_COVERAGE_PERCENTAGES;
         mConfig = config;
     }
 
     @Override
-    public Category category()
+    public CategoryType category()
     {
-        return GERMLINE_BAM_METRICS;
+        return mCategory;
     }
 
     @Override
@@ -49,14 +57,25 @@ public class GermlineBamMetricsComparer implements ItemComparer
     public void registerThresholds(final DiffThresholds thresholds)
     {
         thresholds.addFieldThreshold(FLD_DUPLICATE_PERCENTAGE, DUPLICATE_PERCENTAGE_ABS_THRESHOLD, DUPLICATE_PERCENTAGE_PCT_THRESHOLD);
-        thresholds.addFieldThreshold(FLD_PERCENTAGE_10X, 0.03, 0);
-        thresholds.addFieldThreshold(FLD_PERCENTAGE_20X, 0.03, 0);
+
+        for(Integer coverage : mComparisonPercentages)
+        {
+            thresholds.addFieldThreshold(coverageString(coverage), 0.03, 0);
+        }
     }
+
+    protected static String coverageString(final int coverage) { return format("Percentage%dX", coverage); }
 
     @Override
     public List<String> comparedFieldNames()
     {
-        return Lists.newArrayList(FLD_DUPLICATE_PERCENTAGE, FLD_PERCENTAGE_10X, FLD_PERCENTAGE_20X);
+        List<String> fieldNames = Lists.newArrayList(FLD_DUPLICATE_PERCENTAGE);
+        for(Integer coverage : mComparisonPercentages)
+        {
+            fieldNames.add(coverageString(coverage));
+        }
+
+        return fieldNames;
     }
 
     @Override
@@ -72,15 +91,14 @@ public class GermlineBamMetricsComparer implements ItemComparer
         final List<ComparableItem> comparableItems = Lists.newArrayList();
         try
         {
-            BamMetricSummary metrics = loadBamMetricsSummary(germlineSampleId, fileSources.GermlineBamMetrics);
-            comparableItems.add(new GermlineBamMetricsData(metrics));
+            BamMetricSummary metrics = loadBamMetricsSummary(sampleId, fileSources.TumorBamMetrics);
+            comparableItems.add(new BamMetricsData(mCategory, metrics, mComparisonPercentages));
         }
         catch(IOException e)
         {
-            CMP_LOGGER.warn("sample({}) failed to load germline BAM metrics data: {}", sampleId, e.toString());
+            CMP_LOGGER.warn("sample({}) failed to load tumor BAM metrics data: {}", sampleId, e.toString());
             return null;
         }
         return comparableItems;
     }
-
 }

@@ -13,7 +13,7 @@ import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELI
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.REPORTED_FLAG;
 import static com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser.VAR_IMPACT;
-import static com.hartwig.hmftools.compar.common.Category.SOMATIC_VARIANT;
+import static com.hartwig.hmftools.compar.common.CategoryType.SOMATIC_VARIANT;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_QUAL;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonGenomePosition;
@@ -44,13 +44,13 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.Hotspot;
+import com.hartwig.hmftools.common.variant.HotspotType;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser;
 import com.hartwig.hmftools.compar.ComparConfig;
-import com.hartwig.hmftools.compar.common.Category;
+import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
 import com.hartwig.hmftools.compar.common.MatchLevel;
@@ -72,7 +72,7 @@ public class SomaticVariantData implements ComparableItem
     public final String Gene;
 
     public final boolean Reported;
-    public final Hotspot HotspotStatus;
+    public final HotspotType HotspotStatus;
     public final VariantTier Tier;
     public final boolean Biallelic;
     public final String CanonicalEffect;
@@ -100,7 +100,7 @@ public class SomaticVariantData implements ComparableItem
 
     public SomaticVariantData(
             final String chromosome, final int position, final String ref, final String alt, final VariantType type,
-            final String gene, final boolean reported, final Hotspot hotspotStatus, final VariantTier tier, final boolean biallelic,
+            final String gene, final boolean reported, final HotspotType hotspotStatus, final VariantTier tier, final boolean biallelic,
             final String canonicalEffect, final String canonicalCodingEffect, final String canonicalHgvsCodingImpact,
             final String canonicalHgvsProteinImpact, final String otherReportedEffects, final boolean hasLPS, final int qual,
             final double subclonalLikelihood, final Set<String> filters, final double variantCopyNumber, final double purityAdjustedVaf,
@@ -137,7 +137,7 @@ public class SomaticVariantData implements ComparableItem
     }
 
     @Override
-    public Category category() { return SOMATIC_VARIANT; }
+    public CategoryType category() { return SOMATIC_VARIANT; }
 
     @Override
     public String key()
@@ -180,10 +180,14 @@ public class SomaticVariantData implements ComparableItem
     }
 
     @Override
-    public boolean isPass() {
+    public boolean isPass()
+    {
         // A reportable variant not in a gene should be impossible, but if it happens we want to see it
         return !IsFromUnfilteredVcf && (Reported || !Gene.isEmpty());
     }
+
+    @Override
+    public String geneName() { return Gene; }
 
     @Override
     public boolean matches(final ComparableItem other)
@@ -294,7 +298,7 @@ public class SomaticVariantData implements ComparableItem
                 chromosome, position, ref, alt, VariantType.type(context),
                 variantImpact.GeneName,
                 context.getAttributeAsBoolean(REPORTED_FLAG, false),
-                Hotspot.fromVariant(context),
+                HotspotType.fromVariant(context),
                 VariantTier.fromContext(context),
                 context.getAttributeAsBoolean(PURPLE_BIALLELIC_FLAG, false),
                 variantImpact.CanonicalEffect,
@@ -337,7 +341,7 @@ public class SomaticVariantData implements ComparableItem
                 VariantType.valueOf(record.getValue(SOMATICVARIANT.TYPE)),
                 record.getValue(Tables.SOMATICVARIANT.GENE),
                 record.getValue(SOMATICVARIANT.REPORTED).intValue() == 1,
-                Hotspot.valueOf(record.getValue(SOMATICVARIANT.HOTSPOT)),
+                HotspotType.valueOf(record.getValue(SOMATICVARIANT.HOTSPOT)),
                 VariantTier.fromString(record.get(SOMATICVARIANT.TIER)),
                 record.getValue(SOMATICVARIANT.BIALLELIC).intValue() == 1,
                 record.getValue(SOMATICVARIANT.CANONICALEFFECT),

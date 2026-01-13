@@ -110,7 +110,11 @@ public class CobaltApplication
 
     private void writePcf(final ListMultimap<Chromosome, CobaltRatio> results, final ExecutorService executorService) throws Exception
     {
-        if(mConfig.UseNewSegmenter)
+        if(mConfig.UseOldSegmenter)
+        {
+            applyRatioSegmentation(executorService, mConfig.OutputDir, mConfig.cobaltRatiosFileName(), mConfig.ReferenceId, mConfig.TumorId, mConfig.PcfGamma);
+        }
+        else
         {
             if(mConfig.TumorId != null)
             {
@@ -120,10 +124,6 @@ public class CobaltApplication
             {
                 CobaltRatioSegmenter.writeReferenceSegments(results, mConfig.PcfGamma, mConfig.RefGenVersion, executorService, mConfig.referencePcfFileName());
             }
-        }
-        else
-        {
-            applyRatioSegmentation(executorService, mConfig.OutputDir, mConfig.cobaltRatiosFileName(), mConfig.ReferenceId, mConfig.TumorId, mConfig.PcfGamma);
         }
     }
 

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.compar.linx;
 
-import static com.hartwig.hmftools.compar.common.Category.GERMLINE_SV;
+import static com.hartwig.hmftools.compar.common.CategoryType.GERMLINE_SV;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonGenomePosition;
@@ -9,7 +9,6 @@ import static com.hartwig.hmftools.compar.linx.DisruptionData.FLD_BREAKEND_INFO;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -17,7 +16,7 @@ import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxGermlineDisruption;
 import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.common.region.BasePosition;
-import com.hartwig.hmftools.compar.common.Category;
+import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
@@ -38,7 +37,7 @@ public class GermlineSvComparer implements ItemComparer
     }
 
     @Override
-    public Category category() { return GERMLINE_SV; }
+    public CategoryType category() { return GERMLINE_SV; }
 
     @Override
     public void registerThresholds(final DiffThresholds thresholds) {}

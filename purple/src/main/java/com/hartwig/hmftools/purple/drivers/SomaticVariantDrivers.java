@@ -80,9 +80,9 @@ public class SomaticVariantDrivers
             mTsgDrivers.addVariant(variant);
     }
 
-    protected static boolean isReportable(final ReportablePredicate predicate, final SomaticVariant variant)
+    protected static boolean isCandidateReportable(final ReportablePredicate predicate, final SomaticVariant variant)
     {
-        return predicate.isReportable(variant.variantImpact(), variant.type(), variant.isHotspot());
+        return predicate.isCandidateReportable(variant.variantImpact(), variant.isHotspot());
     }
 
     public static boolean hasTranscriptCodingEffect(final VariantImpact variantImpact, final VariantType variantType, final String transcript)
@@ -119,7 +119,7 @@ public class SomaticVariantDrivers
         return topCodingEffect;
     }
 
-    public static boolean hasCodingEffect(final VariantType type, final CodingEffect codingEffect)
+    private static boolean hasCodingEffect(final VariantType type, final CodingEffect codingEffect)
     {
         DriverImpact impact = DriverImpact.select(type, codingEffect);
         return impact != DriverImpact.UNKNOWN;
@@ -150,7 +150,7 @@ public class SomaticVariantDrivers
         variantContext.getCommonInfo().putAttribute(REPORTABLE_TRANSCRIPTS, reportableTranscripts.toString());
     }
 
-    public List<DriverCatalog> buildCatalog(final Map<String,List<GeneCopyNumber>> geneCopyNumberMap, final List<DriverSourceData> driverSourceData)
+    public List<DriverCatalog> buildCatalog(final Map<String,GeneCopyNumber> geneCopyNumberMap, final List<DriverSourceData> driverSourceData)
     {
         final List<DriverCatalog> result = Lists.newArrayList();
 

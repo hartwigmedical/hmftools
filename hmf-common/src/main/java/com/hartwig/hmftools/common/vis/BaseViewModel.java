@@ -8,15 +8,15 @@ import org.jetbrains.annotations.Nullable;
 
 public class BaseViewModel
 {
-    private static final int MISSING_BASEQ = 0;
+    public static final int MISSING_BASEQ = 0;
 
-    public final boolean IsSoftClip;
     public final boolean IsOverlapped;
 
     private final Character mCharBase;
     private final SpecialBase mSpecialBase;
     private final int mBaseQ;
 
+    private boolean mIsSoftClip;
     private List<Character> mRightInsertBases;
     private List<Integer> mRightInsertBaseQs;
     private int mRightInsertCount;
@@ -26,7 +26,7 @@ public class BaseViewModel
         mCharBase = base;
         mSpecialBase = null;
         mBaseQ = MISSING_BASEQ;
-        IsSoftClip = false;
+        mIsSoftClip = false;
         IsOverlapped = false;
 
         mRightInsertBases = Lists.newArrayList();
@@ -44,7 +44,7 @@ public class BaseViewModel
         mCharBase = base;
         mSpecialBase = null;
         mBaseQ = baseQ;
-        IsSoftClip = isSoftClip;
+        mIsSoftClip = isSoftClip;
         IsOverlapped = isOverlapped;
 
         mRightInsertBases = Lists.newArrayList();
@@ -57,7 +57,7 @@ public class BaseViewModel
         mCharBase = null;
         mSpecialBase = base;
         mBaseQ = MISSING_BASEQ;
-        IsSoftClip = false;
+        mIsSoftClip = false;
         IsOverlapped = isOverlapped;
 
         mRightInsertBases = Lists.newArrayList();
@@ -145,6 +145,8 @@ public class BaseViewModel
         return mSpecialBase != null;
     }
 
+    public boolean isSoftClip() { return mIsSoftClip; }
+
     public boolean hasCharBase()
     {
         return mCharBase != null;
@@ -158,6 +160,11 @@ public class BaseViewModel
     public boolean isDel()
     {
         return hasSpecialBase() && specialBase() == SpecialBase.DEL;
+    }
+
+    public void clearSoftClip()
+    {
+        mIsSoftClip = false;
     }
 
     private enum SpecialBase

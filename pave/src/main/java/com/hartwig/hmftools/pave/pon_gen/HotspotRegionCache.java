@@ -5,14 +5,14 @@ import static java.lang.String.format;
 import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.variant.VariantHotspot;
+import com.hartwig.hmftools.common.variant.SimpleVariant;
 
 public class HotspotRegionCache
 {
-    private final List<VariantHotspot> mHotspots;
+    private final List<SimpleVariant> mHotspots;
     private int mCurrentIndex;
 
-    public HotspotRegionCache(final List<VariantHotspot> hotspots)
+    public HotspotRegionCache(final List<SimpleVariant> hotspots)
     {
         mHotspots = hotspots;
         mCurrentIndex = 0;
@@ -35,7 +35,7 @@ public class HotspotRegionCache
 
         for(; mCurrentIndex < mHotspots.size(); ++mCurrentIndex)
         {
-            VariantHotspot hotspot = mHotspots.get(mCurrentIndex);
+            SimpleVariant hotspot = mHotspots.get(mCurrentIndex);
 
             if(hotspot.position() < position)
                 continue;

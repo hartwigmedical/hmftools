@@ -14,7 +14,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.Hotspot;
+import com.hartwig.hmftools.common.variant.HotspotType;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.dnds.SampleMutationalLoad;
 import com.hartwig.hmftools.dnds.SomaticVariant;
@@ -142,7 +142,7 @@ public class SampleDataLoader
                     record.getValue(SOMATICVARIANT.ALT),
                     record.getValue(SOMATICVARIANT.GENE),
                     byteToBoolean(record.getValue(SOMATICVARIANT.BIALLELIC)),
-                    Hotspot.valueOf(record.getValue(SOMATICVARIANT.HOTSPOT)).equals(Hotspot.HOTSPOT),
+                    HotspotType.valueOf(record.getValue(SOMATICVARIANT.HOTSPOT)).equals(HotspotType.HOTSPOT),
                     record.getValue(SOMATICVARIANT.WORSTCODINGEFFECT).isEmpty()
                             ? CodingEffect.UNDEFINED
                             : CodingEffect.valueOf(record.getValue(SOMATICVARIANT.WORSTCODINGEFFECT)),

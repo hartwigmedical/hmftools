@@ -79,7 +79,7 @@ public class LinxReportableClustersTest
         Map<Integer, Integer> clusterIdToExonCount = Map.of(10, 1, 50, 1, 100, 1);
 
         return ImmutableLinxData.builder()
-                .driverSomaticBreakends(breakends)
+                .somaticBreakends(breakends)
                 .somaticDrivers(drivers)
                 .fusionClusterIds(fusions)
                 .svIdToClusterId(svToCluster)

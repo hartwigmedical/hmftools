@@ -53,6 +53,7 @@ public class ReportablePredicateTest
                 .reportAmplification(true)
                 .amplificationRatio(DEFAULT_DRIVER_AMPLIFICATION_PLOIDY_RATIO)
                 .reportHetDeletion(true)
+                .reportLoh(false)
                 .hetDeletionThreshold(DEFAULT_DRIVER_HET_DELETION_THRESHOLD)
                 .reportSomaticHotspot(true)
                 .likelihoodType(ONCO)
@@ -60,11 +61,12 @@ public class ReportablePredicateTest
                 .reportGermlineDeletion(DriverGeneGermlineReporting.NONE)
                 .reportGermlineHotspot(DriverGeneGermlineReporting.NONE)
                 .reportGermlineVariant(DriverGeneGermlineReporting.NONE)
+                .reportGermlineAmplification(false)
                 .reportPGX(false)
                 .build());
 
         ReportablePredicate predicate = new ReportablePredicate(ONCO, driverGenes);
 
-        assertTrue(predicate.isReportable(impact, VariantType.SNP, false));
+        assertTrue(predicate.isReportable(impact, false));
     }
 }

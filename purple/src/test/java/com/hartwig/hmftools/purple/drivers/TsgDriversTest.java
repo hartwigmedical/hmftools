@@ -1,13 +1,14 @@
 package com.hartwig.hmftools.purple.drivers;
 
 import static com.hartwig.hmftools.common.test.GeneTestUtils.GENE_NAME_1;
-import static com.hartwig.hmftools.common.variant.Hotspot.HOTSPOT;
-import static com.hartwig.hmftools.common.variant.Hotspot.NON_HOTSPOT;
+import static com.hartwig.hmftools.common.variant.HotspotType.HOTSPOT;
+import static com.hartwig.hmftools.common.variant.HotspotType.NON_HOTSPOT;
 import static com.hartwig.hmftools.purple.MiscTestUtils.createVariant;
 import static com.hartwig.hmftools.purple.drivers.OncoDriversTest.createGeneCopyNumber;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
@@ -18,18 +19,17 @@ import com.hartwig.hmftools.common.driver.dnds.DndsDriverGeneLikelihood;
 import com.hartwig.hmftools.common.driver.dnds.DndsDriverImpactLikelihood;
 import com.hartwig.hmftools.common.driver.dnds.ImmutableDndsDriverGeneLikelihood;
 import com.hartwig.hmftools.common.driver.dnds.ImmutableDndsDriverImpactLikelihood;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 
-import org.jetbrains.annotations.NotNull;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
 public class TsgDriversTest
 {
-
     private DndsDriverGeneLikelihood geneLikelihood;
     private SomaticVariant missense;
     private SomaticVariant nonsense;
@@ -59,13 +59,21 @@ public class TsgDriversTest
         biallelic = createVariant(VariantType.MNP, CodingEffect.NONSENSE_OR_FRAMESHIFT, 0, NON_HOTSPOT, 0.9);
     }
 
+    private DriverCatalog buildDriverCatalog(
+            final List<SomaticVariant> geneVariants, final Map<VariantType,Integer> variantTypeCounts,
+            final Map<VariantType,Integer> biallelicCounts)
+    {
+        return TsgDrivers.buildDriverCatalog(
+                geneVariants, variantTypeCounts, biallelicCounts,
+                createGeneCopyNumber(GENE_NAME_1), geneLikelihood, LikelihoodMethod.DNDS, ReportedStatus.REPORTED);
+    }
+
     @Test
     public void testHotspotFirst()
     {
         Map<VariantType, Integer> counts = countMap(5161, 10000);
 
-        DriverCatalog victim = TsgDrivers.createTsgDriver(Lists.newArrayList(hotspot, biallelic, missense), counts, counts,
-                createGeneCopyNumber(GENE_NAME_1), geneLikelihood);
+        DriverCatalog victim = buildDriverCatalog(Lists.newArrayList(hotspot, biallelic, missense), counts, counts);
 
         Assert.assertEquals(LikelihoodMethod.HOTSPOT, victim.likelihoodMethod());
         assertEquals(1, victim.driverLikelihood(), 0.01);
@@ -76,8 +84,7 @@ public class TsgDriversTest
     {
         Map<VariantType, Integer> counts = countMap(5161, 10000);
 
-        DriverCatalog victim = TsgDrivers.createTsgDriver(
-                Lists.newArrayList(biallelic, missense), counts, counts, createGeneCopyNumber(GENE_NAME_1), geneLikelihood);
+        DriverCatalog victim = buildDriverCatalog(Lists.newArrayList(biallelic, missense), counts, counts);
 
         assertEquals(LikelihoodMethod.BIALLELIC, victim.likelihoodMethod());
         assertEquals(1, victim.driverLikelihood(), 0.01);
@@ -88,8 +95,7 @@ public class TsgDriversTest
     {
         Map<VariantType, Integer> counts = countMap(351610, 10000);
 
-        DriverCatalog victim = TsgDrivers.createTsgDriver(
-                Lists.newArrayList(missense), counts, counts, createGeneCopyNumber(GENE_NAME_1), geneLikelihood);
+        DriverCatalog victim = buildDriverCatalog(Lists.newArrayList(missense), counts, counts);
 
         assertEquals(LikelihoodMethod.DNDS, victim.likelihoodMethod());
         assertEquals(0.33, victim.driverLikelihood(), 0.01);
@@ -99,8 +105,7 @@ public class TsgDriversTest
     public void testMultiMissense()
     {
         Map<VariantType, Integer> counts = countMap(351610, 10000);
-        DriverCatalog victim = TsgDrivers.createTsgDriver(
-                Lists.newArrayList(missense, missense), counts, counts, createGeneCopyNumber(GENE_NAME_1), geneLikelihood);
+        DriverCatalog victim = buildDriverCatalog(Lists.newArrayList(missense, missense), counts, counts);
         assertEquals(LikelihoodMethod.DNDS, victim.likelihoodMethod());
         assertEquals(0.97, victim.driverLikelihood(), 0.01);
     }
@@ -110,8 +115,7 @@ public class TsgDriversTest
     {
         Map<VariantType, Integer> counts = countMap(351610, 10000);
 
-        DriverCatalog victim = TsgDrivers.createTsgDriver(Lists.newArrayList(nonsense), counts, counts, createGeneCopyNumber(GENE_NAME_1),
-                geneLikelihood);
+        DriverCatalog victim = buildDriverCatalog(Lists.newArrayList(nonsense), counts, counts);
 
         assertEquals(LikelihoodMethod.DNDS, victim.likelihoodMethod());
         assertEquals(0.74, victim.driverLikelihood(), 0.01);
@@ -121,8 +125,7 @@ public class TsgDriversTest
     public void testMixed()
     {
         Map<VariantType, Integer> counts = countMap(351610, 10000);
-        DriverCatalog victim = TsgDrivers.createTsgDriver(Lists.newArrayList(missense, nonsense), counts, counts,
-                createGeneCopyNumber(GENE_NAME_1), geneLikelihood);
+        DriverCatalog victim = buildDriverCatalog(Lists.newArrayList(missense, nonsense), counts, counts);
         assertEquals(LikelihoodMethod.DNDS, victim.likelihoodMethod());
         assertEquals(1, victim.driverLikelihood(), 0.01);
     }
@@ -132,14 +135,12 @@ public class TsgDriversTest
     {
         Map<VariantType, Integer> counts = countMap(351610, 10000);
 
-        DriverCatalog victim = TsgDrivers.createTsgDriver(Lists.newArrayList(indel), counts, counts, createGeneCopyNumber(GENE_NAME_1),
-                geneLikelihood);
+        DriverCatalog victim = buildDriverCatalog(Lists.newArrayList(indel), counts, counts);
 
         assertEquals(LikelihoodMethod.DNDS, victim.likelihoodMethod());
         assertEquals(1, victim.driverLikelihood(), 0.01);
     }
 
-    @NotNull
     static DndsDriverImpactLikelihood createLikelihood(double pDriver, double pVariantNonDriver)
     {
         return ImmutableDndsDriverImpactLikelihood.builder()
@@ -148,8 +149,7 @@ public class TsgDriversTest
                 .build();
     }
 
-    @NotNull
-    static Map<VariantType, Integer> countMap(int snp, int indel)
+    protected static Map<VariantType, Integer> countMap(int snp, int indel)
     {
         Map<VariantType, Integer> countMap = Maps.newHashMap();
         countMap.put(VariantType.SNP, snp);

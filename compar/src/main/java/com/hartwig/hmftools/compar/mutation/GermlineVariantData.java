@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.compar.mutation;
 
-import static com.hartwig.hmftools.compar.common.Category.GERMLINE_VARIANT;
+import static com.hartwig.hmftools.compar.common.CategoryType.GERMLINE_VARIANT;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_QUAL;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.common.CommonUtils.createMismatchFromDiffs;
@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.variant.SmallVariant;
-import com.hartwig.hmftools.compar.common.Category;
+import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
 import com.hartwig.hmftools.compar.common.MatchLevel;
@@ -50,7 +50,7 @@ public class GermlineVariantData implements ComparableItem
     }
 
     @Override
-    public Category category() { return GERMLINE_VARIANT; }
+    public CategoryType category() { return GERMLINE_VARIANT; }
 
     @Override
     public String key()
@@ -84,6 +84,9 @@ public class GermlineVariantData implements ComparableItem
     public boolean isPass() {
         return true;
     }
+
+    @Override
+    public String geneName() { return Variant.gene(); }
 
     @Override
     public boolean matches(final ComparableItem other)

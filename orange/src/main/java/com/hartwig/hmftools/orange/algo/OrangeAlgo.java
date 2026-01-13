@@ -227,8 +227,8 @@ public class OrangeAlgo
         {
             wildTypeGenes = WildTypeAlgo.determineWildTypeGenes(
                     mDriverGenes,
-                    purple.driverSomaticVariants(), purple.driverGermlineVariants(), purple.driverSomaticGainsDels(),
-                    linx.reportableSomaticFusions(), linx.somaticHomozygousDisruptions(), linx.driverSomaticBreakends());
+                    purple.somaticVariants(), purple.germlineVariants(), purple.somaticGainsDels(),
+                    linx.fusions(), linx.somaticHomozygousDisruptions(), linx.somaticBreakends());
 
             LOGGER.info("Identified {} of {} driver genes to be wild-type", wildTypeGenes.size(), driverGenes.size());
         }
@@ -420,26 +420,17 @@ public class OrangeAlgo
 
         LOGGER.info(" Loaded {} somatic driver catalog entries", purple.somaticDrivers().size());
 
-        LOGGER.info(" Loaded {} somatic variants (of which {} are reportable)",
-                purple.allSomaticVariants().size(),
-                purple.driverSomaticVariants().size());
+        LOGGER.info(" Loaded {} somatic variants", purple.somaticVariants().size());
 
         LOGGER.info(" Loaded {} somatic copy numbers entries", purple.somaticCopyNumbers().size());
         LOGGER.info(" Loaded {} somatic gene copy numbers entries", purple.somaticGeneCopyNumbers().size());
-        LOGGER.info(" Loaded {} somatic structural variants", purple.allPassingSomaticStructuralVariants().size());
 
         if(referenceSample != null)
         {
             LOGGER.info(" Loaded {} germline driver catalog entries", purple.germlineDrivers().size());
-            LOGGER.info(" Loaded {} germline variants (of which {} are reportable)",
-                    purple.allGermlineVariants().size(),
-                    purple.driverGermlineVariants().size());
+            LOGGER.info(" Loaded {} reportable germline variants", purple.germlineVariants().size());
 
-            LOGGER.info(" Loaded {} germline deletions (of which {} are reportable)",
-                    purple.allGermlineDeletions().size(),
-                    purple.driverGermlineDeletions().size());
-
-            LOGGER.info(" Loaded {} germline structural variants", purple.allPassingGermlineStructuralVariants().size());
+            LOGGER.info(" Loaded {} reportable germline copy-number events", purple.germlineDeletions().size());
         }
         else
         {
@@ -457,26 +448,21 @@ public class OrangeAlgo
 
         LinxData linx = LinxDataLoader.load(config);
 
-        LOGGER.info(" Loaded {} somatic structural variants", linx.allSomaticSvAnnotations().size());
+        LOGGER.info(" Loaded {} somatic structural variants", linx.somaticSvAnnotations().size());
         LOGGER.info(" Loaded {} somatic structural drivers", linx.somaticDrivers().size());
-        LOGGER.info(" Loaded {} somatic fusions (of which {} are reportable)",
-                linx.allSomaticFusions().size(),
-                linx.reportedSomaticFusions().size());
-        LOGGER.info(" Loaded {} somatic breakends (of which {} are reportable)",
-                linx.allSomaticBreakends().size(),
-                linx.driverSomaticBreakends().size());
+        LOGGER.info(" Loaded {} somatic fusions", linx.fusions().size());
+
+        LOGGER.info(" Loaded {} somatic breakends", linx.somaticBreakends().size());
         LOGGER.info(" Loaded {} somatic reportable homozygous disruptions", linx.somaticHomozygousDisruptions().size());
 
         if(linxGermlineDataDirectory != null)
         {
             LOGGER.info("Loading LINX germline data from {}", linxGermlineDataDirectory);
-            LOGGER.info(" Loaded {} germline structural variants", linx.allGermlineSvAnnotations().size());
+            LOGGER.info(" Loaded {} germline structural variants", linx.germlineSvAnnotations().size());
             LOGGER.info(" Loaded {} germline breakends (of which {} are reportable)",
-                    linx.allGermlineBreakends().size(),
-                    linx.driverGermlineBreakends().size());
-            LOGGER.info(" Loaded {} germline disruptions (of which {} are reportable)",
-                    linx.allGermlineDisruptions().size(),
-                    linx.driverGermlineDisruptions().size());
+                    linx.germlineBreakends().size(),
+                    linx.germlineBreakends().size());
+            LOGGER.info(" Loaded {} germline disruptions", linx.germlineDisruptions().size());
             LOGGER.info(" Loaded {} germline reportable homozygous disruptions", linx.germlineHomozygousDisruptions().size());
         }
         else

@@ -260,14 +260,14 @@ public class VariantContextDecorator implements GenomePosition
         return mContext.getAttributeAsString(SageVcfTags.REPEAT_SEQUENCE, Strings.EMPTY);
     }
 
-    public Hotspot hotspot()
+    public HotspotType hotspot()
     {
-        return Hotspot.fromVariant(mContext);
+        return HotspotType.fromVariant(mContext);
     }
 
     public boolean isHotspot()
     {
-        return hotspot() == Hotspot.HOTSPOT;
+        return hotspot() == HotspotType.HOTSPOT;
     }
 
     public String trinucleotideContext()
@@ -290,22 +290,6 @@ public class VariantContextDecorator implements GenomePosition
         return mContext.getAttributeAsString(MICROHOMOLOGY, Strings.EMPTY);
     }
 
-    public boolean isPathogenic()
-    {
-        if(clinvarPathogenicSummary().Status == Pathogenicity.BENIGN_BLACKLIST)
-        {
-            return false;
-        }
-
-        if(isHotspot() || clinvarPathogenicSummary().Status.isPathogenic())
-        {
-            return true;
-        }
-
-        return clinvarPathogenicSummary().Status == Pathogenicity.UNKNOWN
-                && PATHOGENIC_EFFECT.contains(variantImpact().CanonicalCodingEffect);
-    }
-
     @Nullable
     public List<String> reportableTranscripts()
     {
@@ -316,6 +300,22 @@ public class VariantContextDecorator implements GenomePosition
         }
 
         return Collections.emptyList();
+    }
+
+    public boolean isGermlinePathogenic()
+    {
+        return isGermlinePathogenic(clinvarPathogenicSummary(), isHotspot(), variantImpact());
+    }
+
+    public static boolean isGermlinePathogenic(final PathogenicSummary pathogenicSummary, final boolean isHotspot, final VariantImpact impact)
+    {
+        if(pathogenicSummary.Status == Pathogenicity.BENIGN_BLACKLIST)
+            return false;
+
+        if(isHotspot || pathogenicSummary.Status.isPathogenic())
+            return true;
+
+        return pathogenicSummary.Status == Pathogenicity.UNKNOWN && (PATHOGENIC_EFFECT.contains(impact.CanonicalCodingEffect));
     }
 
     private static String displayFilter(final VariantContext context)

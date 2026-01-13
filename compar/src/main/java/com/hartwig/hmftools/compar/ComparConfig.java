@@ -4,28 +4,32 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL;
 import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_DESC;
+import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.addGenePanelOption;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.IGNORE_SAMPLE_ID;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addSampleIdFile;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadDelimitedIdFile;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
-import static com.hartwig.hmftools.compar.common.Category.ALL_CATEGORIES;
-import static com.hartwig.hmftools.compar.common.Category.DRIVER;
-import static com.hartwig.hmftools.compar.common.Category.GENE_COPY_NUMBER;
-import static com.hartwig.hmftools.compar.common.Category.LINX_CATEGORIES;
-import static com.hartwig.hmftools.compar.common.Category.PANEL_CATEGORIES;
-import static com.hartwig.hmftools.compar.common.Category.PURPLE_CATEGORIES;
-import static com.hartwig.hmftools.compar.common.Category.purpleCategories;
-import static com.hartwig.hmftools.compar.common.Category.linxCategories;
+import static com.hartwig.hmftools.compar.common.CategoryType.ALL_CATEGORIES;
+import static com.hartwig.hmftools.compar.common.CategoryType.DRIVER;
+import static com.hartwig.hmftools.compar.common.CategoryType.GENE_COPY_NUMBER;
+import static com.hartwig.hmftools.compar.common.CategoryType.LINX_CATEGORIES;
+import static com.hartwig.hmftools.compar.common.CategoryType.PANEL_CATEGORIES;
+import static com.hartwig.hmftools.compar.common.CategoryType.PURPLE_CATEGORIES;
+import static com.hartwig.hmftools.compar.common.CategoryType.purpleCategories;
+import static com.hartwig.hmftools.compar.common.CategoryType.linxCategories;
 import static com.hartwig.hmftools.compar.common.FileSources.fromConfig;
 import static com.hartwig.hmftools.compar.common.FileSources.registerConfig;
 import static com.hartwig.hmftools.compar.common.MatchLevel.REPORTABLE;
@@ -37,6 +41,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -48,7 +53,7 @@ import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.driver.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.compar.common.Category;
+import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.common.MatchLevel;
@@ -61,7 +66,7 @@ public class ComparConfig
 {
     public final List<String> SampleIds;
 
-    public final Map<Category,MatchLevel> Categories;
+    public final Map<CategoryType,MatchLevel> Categories;
 
     public final List<String> SourceNames; // list of sources to compare, eg prod vs pilot, or pipeline_1 vs pipeline_2
 
@@ -70,6 +75,7 @@ public class ComparConfig
     public final boolean RequiresLiftover;
 
     public final Set<String> DriverGenes;
+    public final Set<String> IgnoreGenes;
     public final Set<String> AlternateTranscriptDriverGenes;
     public final boolean RestrictToDrivers;
 
@@ -77,6 +83,7 @@ public class ComparConfig
 
     public final String OutputDir;
     public final String OutputId;
+    public final String ExpectedMismatchFile;
 
     public final boolean WriteDetailed;
     public final boolean IncludeMatches;
@@ -98,6 +105,8 @@ public class ComparConfig
     public static final String WRITE_DETAILED_FILES = "write_detailed";
     public static final String INCLUDE_MATCHES = "include_matches";
     public static final String RESTRICT_TO_DRIVERS = "restrict_to_drivers";
+    public static final String EXPECTED_MISMATCH_FILE = "expected_mismatches";
+    public static final String IGNORE_GENES = "ignore_genes";
 
     public static final Logger CMP_LOGGER = LogManager.getLogger(ComparConfig.class);
 
@@ -122,12 +131,12 @@ public class ComparConfig
 
         if(categoriesStr.equals(ALL_CATEGORIES))
         {
-            Arrays.stream(Category.values()).forEach(x -> Categories.put(x, matchLevel));
+            Arrays.stream(CategoryType.values()).forEach(x -> Categories.put(x, matchLevel));
         }
         else if(categoriesStr.contains(PANEL_CATEGORIES))
         {
             if(categoriesStr.contains(PANEL_CATEGORIES))
-                Category.panelCategories().forEach(x -> Categories.put(x, matchLevel));
+                CategoryType.panelCategories().forEach(x -> Categories.put(x, matchLevel));
         }
         else
         {
@@ -141,12 +150,13 @@ public class ComparConfig
                 else if(catStr.equals(LINX_CATEGORIES))
                     linxCategories().forEach(x -> Categories.put(x, matchLevel));
                 else
-                    Categories.put(Category.valueOf(catStr), matchLevel);
+                    Categories.put(CategoryType.valueOf(catStr), matchLevel);
             }
         }
 
         OutputDir = parseOutputDir(configBuilder);
         OutputId = configBuilder.getValue(OUTPUT_ID);
+        ExpectedMismatchFile = configBuilder.getValue(EXPECTED_MISMATCH_FILE);
         WriteDetailed = configBuilder.hasFlag(WRITE_DETAILED_FILES);
         IncludeMatches = configBuilder.hasFlag(INCLUDE_MATCHES);
         Threads = parseThreads(configBuilder);
@@ -196,6 +206,14 @@ public class ComparConfig
             {
                 CMP_LOGGER.error("failed to load driver gene panel file: {}", e.toString());
             }
+        }
+
+        IgnoreGenes = Sets.newHashSet();
+
+        if(configBuilder.hasValue(IGNORE_GENES))
+        {
+            List<String> ignoredGenes = loadDelimitedIdFile(configBuilder.getValue(IGNORE_GENES), FLD_GENE_NAME, TSV_DELIM);
+            ignoredGenes.forEach(x -> IgnoreGenes.add(x));
         }
 
         RestrictToDrivers = !DriverGenes.isEmpty() && configBuilder.hasFlag(RESTRICT_TO_DRIVERS);
@@ -272,7 +290,7 @@ public class ComparConfig
 
     private void loadSampleIds(final ConfigBuilder configBuilder)
     {
-        if(configBuilder.hasValue(SAMPLE_ID_FILE) && (configBuilder.hasFlag(SAMPLE) || configBuilder.hasFlag(GERMLINE_SAMPLE)))
+        if(configBuilder.hasValue(SAMPLE_ID_FILE) && (configBuilder.hasValue(SAMPLE) || configBuilder.hasValue(GERMLINE_SAMPLE)))
         {
             CMP_LOGGER.error("when the argument '{}' is set, the arguments '{}' and '{}' should not be set",
                     SAMPLE_ID_FILE, SAMPLE, GERMLINE_SAMPLE);
@@ -429,7 +447,8 @@ public class ComparConfig
         configBuilder.addConfigItem(SAMPLE, SAMPLE_DESC);
         configBuilder.addConfigItem(GERMLINE_SAMPLE, false, "Sample ID of germline sample if tumor-normal run");
         addSampleIdFile(configBuilder, false);
-        configBuilder.addConfigItem(DRIVER_GENE_PANEL, DRIVER_GENE_PANEL_DESC);
+        addGenePanelOption(configBuilder, false);
+        configBuilder.addPath(IGNORE_GENES, false, "Genes to ignore in all comparisons, file with 'GeneName'");
         configBuilder.addConfigItem(THRESHOLDS, "In form: Field,AbsoluteDiff,PercentDiff, separated by ';'");
 
         configBuilder.addConfigItem(formConfigSourceStr(DB_SOURCE, REF_SOURCE), false, "Database configurations for reference data");
@@ -438,6 +457,7 @@ public class ComparConfig
         registerConfig(configBuilder);
 
         configBuilder.addFlag(WRITE_DETAILED_FILES, "Write per-type details files");
+        configBuilder.addConfigItem(EXPECTED_MISMATCH_FILE, "Existing expected mismatch file");
         configBuilder.addFlag(INCLUDE_MATCHES, "Also write matches to output file(s)");
         configBuilder.addFlag(RESTRICT_TO_DRIVERS, "Restrict any comparison involving genes to driver gene panel");
         configBuilder.addFlag(REQUIRES_LIFTOVER, "Lift over ref positions from v37 to v 38");
@@ -466,10 +486,12 @@ public class ComparConfig
 
         Thresholds = new DiffThresholds();
         DriverGenes = Sets.newHashSet();
+        IgnoreGenes = Collections.emptySet();
         AlternateTranscriptDriverGenes = Sets.newHashSet();
         RestrictToDrivers = false;
         mSampleIdMappings = Maps.newHashMap();
         LiftoverCache = new GenomeLiftoverCache();
         RequiresLiftover = false;
+        ExpectedMismatchFile = null;
     }
 }

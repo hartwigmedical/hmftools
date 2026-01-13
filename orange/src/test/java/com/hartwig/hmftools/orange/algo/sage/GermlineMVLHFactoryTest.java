@@ -44,6 +44,7 @@ public class GermlineMVLHFactoryTest
                 .reportAmplification(false)
                 .amplificationRatio(DEFAULT_DRIVER_AMPLIFICATION_PLOIDY_RATIO)
                 .reportHetDeletion(false)
+                .reportLoh(false)
                 .hetDeletionThreshold(DEFAULT_DRIVER_HET_DELETION_THRESHOLD)
                 .reportSomaticHotspot(true)
                 .likelihoodType(DriverCategory.TSG)
@@ -51,8 +52,10 @@ public class GermlineMVLHFactoryTest
                 .reportGermlineHotspot(DriverGeneGermlineReporting.NONE)
                 .reportGermlineDeletion(DriverGeneGermlineReporting.NONE)
                 .reportGermlineDisruption(DriverGeneGermlineReporting.NONE)
+                .reportGermlineAmplification(false)
                 .reportPGX(false)
                 .build();
+
         DriverGene driverGene2 = ImmutableDriverGene.builder()
                 .gene(unReliableMVLHGene)
                 .reportMissenseAndInframe(false)
@@ -63,6 +66,7 @@ public class GermlineMVLHFactoryTest
                 .reportAmplification(true)
                 .amplificationRatio(DEFAULT_DRIVER_AMPLIFICATION_PLOIDY_RATIO)
                 .reportHetDeletion(false)
+                .reportLoh(false)
                 .hetDeletionThreshold(DEFAULT_DRIVER_HET_DELETION_THRESHOLD)
                 .reportSomaticHotspot(false)
                 .likelihoodType(DriverCategory.ONCO)
@@ -70,6 +74,7 @@ public class GermlineMVLHFactoryTest
                 .reportGermlineHotspot(DriverGeneGermlineReporting.NONE)
                 .reportGermlineDeletion(DriverGeneGermlineReporting.NONE)
                 .reportGermlineDisruption(DriverGeneGermlineReporting.NONE)
+                .reportGermlineAmplification(false)
                 .reportPGX(false)
                 .build();
 

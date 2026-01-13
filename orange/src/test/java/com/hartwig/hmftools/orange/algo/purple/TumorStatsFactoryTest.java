@@ -25,42 +25,6 @@ import org.junit.Test;
 public class TumorStatsFactoryTest
 {
     @Test
-    public void canComputeStructuralVariantCount()
-    {
-        PurpleData purpleData = createMinimalTestPurpleDataBuilder().addAllPassingSomaticStructuralVariants(
-                        withStartFragmentCount(createStructuralVariant(10, 20, StructuralVariantType.INS, false), 3),
-                        withStartFragmentCount(createStructuralVariant(50, 60, StructuralVariantType.DEL, false), 5)
-                )
-                .build();
-
-        TumorStats expectedStats = createMinimalTumorStatsBuilder()
-                .structuralVariantTumorFragmentCount(8)
-                .build();
-
-        TumorStats tumorStats = TumorStatsFactory.compute(purpleData);
-        assertEquals(expectedStats, tumorStats);
-    }
-
-    @Test
-    public void canComputeHotspotStructuralVariantCount()
-    {
-        StructuralVariantImpl hotspotSV = createStructuralVariant(10, 20, StructuralVariantType.INS, true);
-        StructuralVariantImpl nonHotspotSV1 = createStructuralVariant(30, 40, StructuralVariantType.INS, false);
-        StructuralVariantImpl nonHotspotSV2 = createStructuralVariant(50, 60, StructuralVariantType.DEL, false);
-
-        PurpleData purpleData = createMinimalTestPurpleDataBuilder()
-                .addAllPassingSomaticStructuralVariants(hotspotSV, nonHotspotSV1, nonHotspotSV2)
-                .build();
-
-        TumorStats expectedStats = createMinimalTumorStatsBuilder()
-                .hotspotStructuralVariantCount(1)
-                .build();
-
-        TumorStats tumorStats = TumorStatsFactory.compute(purpleData);
-        assertEquals(expectedStats, tumorStats);
-    }
-
-    @Test
     public void canComputeHotspotMutationCount()
     {
         List<PurpleVariantContext> somaticVariants = List.of(
@@ -78,7 +42,7 @@ public class TumorStatsFactoryTest
         PurpleData purpleData = createTestPurpleData(somaticVariants, germLineVariants);
 
         TumorStats expectedStats = createMinimalTumorStatsBuilder()
-                .hotspotMutationCount(2)
+                .hotspotMutationCount(1)
                 .build();
 
         TumorStats tumorStats = TumorStatsFactory.compute(purpleData);
@@ -98,73 +62,11 @@ public class TumorStatsFactoryTest
         PurpleData purpleData = createTestPurpleData(somaticVariants, List.of());
 
         TumorStats expectedStats = createMinimalTumorStatsBuilder()
-                .smallVariantAlleleReadCount(3)
+                .smallVariantAlleleReadCount(1)
                 .build();
 
         TumorStats tumorStats = TumorStatsFactory.compute(purpleData);
         assertEquals(expectedStats, tumorStats);
-    }
-
-    @Test
-    public void canComputeBafCount()
-    {
-        List<Segment> segments = List.of(
-                ImmutableSegment.builder().germlineStatus(
-                                GermlineStatus.DIPLOID)
-                        .observedTumorRatio(0.7)
-                        .bafCount(1)
-                        .build(),
-                ImmutableSegment.builder().germlineStatus(
-                                GermlineStatus.DIPLOID)
-                        .observedTumorRatio(1.0)
-                        .bafCount(2)
-                        .build(),
-                ImmutableSegment.builder().germlineStatus(
-                                GermlineStatus.DIPLOID)
-                        .observedTumorRatio(1.3)
-                        .bafCount(4)
-                        .build(),
-                ImmutableSegment.builder().germlineStatus(
-                                GermlineStatus.NOISE)
-                        .observedTumorRatio(0.7)
-                        .bafCount(8)
-                        .build()
-        );
-
-        PurpleData purpleData = createMinimalTestPurpleDataBuilder()
-                .segments(segments)
-                .build();
-
-        TumorStats expectedStats = createMinimalTumorStatsBuilder()
-                .bafCount(5)
-                .build();
-
-        TumorStats tumorStats = TumorStatsFactory.compute(purpleData);
-        assertEquals(expectedStats, tumorStats);
-    }
-
-    @NotNull
-    private StructuralVariantImpl createStructuralVariant(int start, int end, StructuralVariantType type, boolean hotspot)
-    {
-        return PurpleTestUtils.createStructuralVariant(
-                        "chr1",
-                        start,
-                        "chr1",
-                        end,
-                        type,
-                        0.0,
-                        0.0)
-                .hotspot(hotspot)
-                .build();
-    }
-
-    private static StructuralVariantImpl withStartFragmentCount(StructuralVariantImpl variant, int count)
-    {
-        return ImmutableStructuralVariantImpl.builder()
-                .from(variant)
-                .start(ImmutableStructuralVariantLegImpl.builder().from(variant.start())
-                        .tumorVariantFragmentCount(count).build())
-                .build();
     }
 
     @NotNull
@@ -207,12 +109,10 @@ public class TumorStatsFactoryTest
     private PurpleData createTestPurpleData(List<PurpleVariantContext> somaticVariants, List<PurpleVariantContext> germlineVariants)
     {
         return createMinimalTestPurpleDataBuilder()
-                .allSomaticVariants(somaticVariants)
-                .driverSomaticVariants(somaticVariants.stream().
+                .somaticVariants(somaticVariants.stream().
                         filter(PurpleVariantContext::reported)
                         .collect(Collectors.toList()))
-                .allGermlineVariants(germlineVariants)
-                .driverGermlineVariants(germlineVariants.stream()
+                .germlineVariants(germlineVariants.stream()
                         .filter(PurpleVariantContext::reported)
                         .collect(Collectors.toList()))
                 .build();

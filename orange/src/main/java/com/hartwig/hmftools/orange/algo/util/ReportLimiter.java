@@ -55,68 +55,50 @@ public final class ReportLimiter
                 .from(purple)
                 .somaticDrivers(max1(purple.somaticDrivers()))
                 .germlineDrivers(max1(purple.germlineDrivers()))
-                .otherSomaticVariants(max1(purple.otherSomaticVariants()))
-                .driverSomaticVariants(max1(purple.driverSomaticVariants()))
-                .otherGermlineVariants(max1(purple.otherGermlineVariants()))
-                .driverGermlineVariants(max1(purple.driverGermlineVariants()))
+                .somaticVariants(max1(purple.somaticVariants()))
+                .germlineVariants(max1(purple.germlineVariants()))
                 .somaticCopyNumbers(max1(purple.somaticCopyNumbers()))
                 .somaticGeneCopyNumbers(max1(purple.somaticGeneCopyNumbers()))
-                .driverSomaticGainsDels(max1(purple.driverSomaticGainsDels()))
-                .otherGermlineDeletions(max1(purple.otherGermlineDeletions()))
-                .driverGermlineDeletions(max1(purple.driverGermlineDeletions()))
-                .allGermlineLossOfHeterozygosities(max1(purple.allGermlineLossOfHeterozygosities()))
-                .driverGermlineLossOfHeterozygosities(max1(purple.driverGermlineLossOfHeterozygosities()))
+                .somaticGainsDels(max1(purple.somaticGainsDels()))
+                .germlineGainsDels(max1(purple.germlineGainsDels()))
                 .build();
     }
 
     private static LinxRecord limitLinxDataToOne(final LinxRecord linx)
     {
-        List<LinxBreakend> filteredAllSomaticBreakends = max1(linx.otherSomaticBreakends());
-        List<LinxBreakend> filteredReportableSomaticBreakends = max1(linx.driverSomaticBreakends());
-        List<LinxBreakend> filteredAllGermlineBreakends = max1(linx.otherGermlineBreakends());
-        List<LinxBreakend> filteredReportableGermlineBreakends = max1(linx.driverGermlineBreakends());
+        List<LinxBreakend> filteredSomaticBreakends = max1(linx.somaticBreakends());
+        List<LinxBreakend> filteredGermlineBreakends = max1(linx.germlineBreakends());
 
         return ImmutableLinxRecord.builder()
                 .from(linx)
                 .somaticDrivers(max1(linx.somaticDrivers()))
-                .allSomaticStructuralVariants(filterStructuralVariants(linx.allSomaticStructuralVariants(),
-                        filteredAllSomaticBreakends, filteredReportableSomaticBreakends))
-                .allGermlineStructuralVariants(filterStructuralVariants(linx.allGermlineStructuralVariants(),
-                        filteredAllGermlineBreakends, filteredReportableGermlineBreakends))
-                .allSomaticFusions(max1(linx.allSomaticFusions()))
-                .reportableSomaticFusions(max1(linx.reportableSomaticFusions()))
-                .otherSomaticBreakends(filteredAllSomaticBreakends)
-                .driverSomaticBreakends(filteredReportableSomaticBreakends)
+                .somaticStructuralVariants(filterStructuralVariants(linx.somaticStructuralVariants(), filteredSomaticBreakends))
+                .germlineStructuralVariants(filterStructuralVariants(linx.germlineStructuralVariants(), filteredGermlineBreakends))
+                .fusions(max1(linx.fusions()))
+                .somaticBreakends(filteredSomaticBreakends)
                 .somaticHomozygousDisruptions(max1(linx.somaticHomozygousDisruptions()))
-                .allGermlineStructuralVariants(max1(linx.allGermlineStructuralVariants()))
-                .otherGermlineBreakends(filteredAllGermlineBreakends)
-                .driverGermlineBreakends(filteredReportableGermlineBreakends)
+                .germlineBreakends(filteredGermlineBreakends)
                 .germlineHomozygousDisruptions(max1(linx.germlineHomozygousDisruptions()))
                 .build();
     }
 
     @Nullable
-    private static List<LinxSvAnnotation> filterStructuralVariants(@Nullable List<LinxSvAnnotation> allStructuralVariants,
-            @Nullable List<LinxBreakend> filteredAllBreakends, @Nullable List<LinxBreakend> filteredReportableBreakends)
+    private static List<LinxSvAnnotation> filterStructuralVariants(
+            @Nullable List<LinxSvAnnotation> structuralVariants, @Nullable List<LinxBreakend> filteredBreakends)
     {
-        if(allStructuralVariants == null || filteredAllBreakends == null || filteredReportableBreakends == null)
+        if(structuralVariants == null || filteredBreakends == null)
         {
             return null;
         }
 
         List<Integer> structuralVariantsToRetain = Lists.newArrayList();
-        for(LinxBreakend breakend : filteredAllBreakends)
-        {
-            structuralVariantsToRetain.add(breakend.svId());
-        }
-
-        for(LinxBreakend breakend : filteredReportableBreakends)
+        for(LinxBreakend breakend : filteredBreakends)
         {
             structuralVariantsToRetain.add(breakend.svId());
         }
 
         List<LinxSvAnnotation> filteredStructuralVariants = Lists.newArrayList();
-        for(LinxSvAnnotation structuralVariant : allStructuralVariants)
+        for(LinxSvAnnotation structuralVariant : structuralVariants)
         {
             if(structuralVariantsToRetain.contains(structuralVariant.svId()))
             {

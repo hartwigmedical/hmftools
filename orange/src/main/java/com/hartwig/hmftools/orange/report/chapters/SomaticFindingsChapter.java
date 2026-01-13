@@ -113,7 +113,7 @@ public class SomaticFindingsChapter implements ReportChapter
             List<PurpleDriver> somaticDrivers = report.purple().somaticDrivers();
 
             List<VariantEntry> reportableVariants =
-                    VariantEntryFactory.create(VariantDedup.apply(report.purple().driverSomaticVariants()), somaticDrivers);
+                    VariantEntryFactory.create(VariantDedup.apply(report.purple().somaticVariants()), somaticDrivers);
             String titleDrivers = driverVariantsTitle + " (" + reportableVariants.size() + ")";
             document.add(SomaticVariantTable.build(titleDrivers, contentWidth(), reportableVariants, reportResources));
         }
@@ -148,10 +148,10 @@ public class SomaticFindingsChapter implements ReportChapter
         }
         else
         {
-            String titleDrivers = driverAmpsDelsTitle + " (" + report.purple().driverSomaticGainsDels().size() + ")";
+            String titleDrivers = driverAmpsDelsTitle + " (" + report.purple().somaticGainsDels().size() + ")";
             document.add(GainDeletionTable.build(titleDrivers,
                     contentWidth(),
-                    report.purple().driverSomaticGainsDels(),
+                    report.purple().somaticGainsDels(),
                     report.isofox(),
                     reportResources));
         }
@@ -168,10 +168,10 @@ public class SomaticFindingsChapter implements ReportChapter
         }
         else
         {
-            String titleDrivers = driverFusionsTitle + " (" + report.linx().reportableSomaticFusions().size() + ")";
+            String titleDrivers = driverFusionsTitle + " (" + report.linx().fusions().size() + ")";
             document.add(DnaFusionTable.build(titleDrivers,
                     contentWidth(),
-                    report.linx().reportableSomaticFusions(),
+                    report.linx().fusions(),
                     report.isofox(),
                     reportResources));
         }
@@ -231,8 +231,8 @@ public class SomaticFindingsChapter implements ReportChapter
         else
         {
             List<BreakendEntry> reportableBreakends = BreakendEntryFactory.create(
-                    report.linx().driverSomaticBreakends(),
-                    report.linx().allSomaticStructuralVariants(),
+                    report.linx().somaticBreakends(),
+                    report.linx().somaticStructuralVariants(),
                     report.linx().somaticDrivers());
 
             String titleDriver = driverGeneDisruptionsTitle + " (" + reportableBreakends.size() + ")";

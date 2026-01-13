@@ -2,6 +2,7 @@ package com.hartwig.hmftools.linx.cn;
 
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.purple.PurpleCommon.LOH_MINOR_ALLEL_CN;
 import static com.hartwig.hmftools.common.purple.SegmentSupport.CENTROMERE;
 import static com.hartwig.hmftools.common.purple.SegmentSupport.NONE;
 import static com.hartwig.hmftools.common.purple.SegmentSupport.TELOMERE;
@@ -49,7 +50,7 @@ public class CnDataLoader
     private final Map<String,TelomereCentromereCnData> mChrEndsCNMap; // telomere and centromere CN values
     private final CnJcnCalcs mCnJcnCalcs;
 
-    public static final double MIN_LOH_CN = 0.5;
+    public static final double MIN_LOH_CN = LOH_MINOR_ALLEL_CN;
     public static final double TOTAL_CN_LOSS = 0.5;
 
     public CnDataLoader(final String purpleDataPath)

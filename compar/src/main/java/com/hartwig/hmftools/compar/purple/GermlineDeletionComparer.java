@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.compar.purple;
 
-import static com.hartwig.hmftools.compar.common.Category.GERMLINE_DELETION;
+import static com.hartwig.hmftools.compar.common.CategoryType.GERMLINE_DELETION;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonChromosome;
@@ -14,7 +14,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.GermlineAmpDel;
-import com.hartwig.hmftools.compar.common.Category;
+import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
@@ -34,7 +34,7 @@ public class GermlineDeletionComparer implements ItemComparer
     }
 
     @Override
-    public Category category() { return GERMLINE_DELETION; }
+    public CategoryType category() { return GERMLINE_DELETION; }
 
     @Override
     public void registerThresholds(final DiffThresholds thresholds)

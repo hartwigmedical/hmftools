@@ -2,7 +2,7 @@ package com.hartwig.hmftools.compar.purple;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.compar.common.Category.COPY_NUMBER;
+import static com.hartwig.hmftools.compar.common.CategoryType.COPY_NUMBER;
 import static com.hartwig.hmftools.compar.common.CommonUtils.createMismatchFromDiffs;
 import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
 
@@ -11,7 +11,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.CopyNumberMethod;
 import com.hartwig.hmftools.common.region.BasePosition;
-import com.hartwig.hmftools.compar.common.Category;
+import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
 import com.hartwig.hmftools.compar.common.MatchLevel;
@@ -32,7 +32,7 @@ public record CopyNumberData(
     static final String FLD_MAJOR_ALLELE_CN = "MajorAlleleCopyNumber";
     static final String FLD_METHOD = "Method";
 
-    public Category category() {
+    public CategoryType category() {
         return COPY_NUMBER;
     }
 
@@ -83,8 +83,8 @@ public record CopyNumberData(
     }
 
     @Override
-    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds,
-            final boolean includeMatches)
+    public Mismatch findMismatch(
+            final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds, final boolean includeMatches)
     {
         final CopyNumberData otherCn = (CopyNumberData) other;
 

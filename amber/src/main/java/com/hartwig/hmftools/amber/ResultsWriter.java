@@ -41,18 +41,19 @@ public class ResultsWriter
 
         if(mConfig.TumorId != null && !mConfig.SkipBafSegmentation)
         {
-            if(mConfig.UseNewSegmenter)
+            AMB_LOGGER.info("applying PCF segmentation");
+
+            if(mConfig.UseOldSegmenter)
             {
-                AMB_LOGGER.info("Creating pcf segmentation");
+                AMB_LOGGER.info("running old R segmentation");
+                new BAFSegmentation(mConfig.OutputDir).applySegmentation(mConfig.TumorId, filename);
+            }
+            else
+            {
                 ExecutorService executorService = Executors.newFixedThreadPool(mConfig.Threads);
                 final String pcfFile = PCFFile.generateBAFFilename(mConfig.OutputDir, mConfig.TumorId);
                 BAFSegmenter.writeSegments(result, mConfig.RefGenVersion, executorService, pcfFile);
                 executorService.shutdown();
-            }
-            else
-            {
-                AMB_LOGGER.info("applying pcf segmentation");
-                new BAFSegmentation(mConfig.OutputDir).applySegmentation(mConfig.TumorId, filename);
             }
         }
     }

@@ -6,29 +6,45 @@ import htsjdk.samtools.SAMRecord;
 
 public class PositionEvidenceChecker
 {
+    private final int mMinMapQuality;
     private final int mMinBaseQuality;
 
-    public PositionEvidenceChecker(final int minBaseQuality)
+    public PositionEvidenceChecker(final int minMapQuality, final int minBaseQuality)
     {
+        mMinMapQuality = minMapQuality;
         mMinBaseQuality = minBaseQuality;
     }
 
-    public void addEvidence(final PositionEvidence posEvidence, final SAMRecord samRecord)
+    public void addEvidence(final PositionEvidence posEvidence, final SAMRecord read)
     {
-        int baseQuality = getBaseQuality(posEvidence.Position, samRecord);
+        int baseQuality = getBaseQuality(posEvidence.Position, read);
+
+        boolean filtered = false;
+
+        if(read.getMappingQuality() < mMinMapQuality)
+        {
+            ++posEvidence.MapQualFiltered;
+            filtered = true;
+        }
 
         if(baseQuality < mMinBaseQuality)
-            return;
+        {
+            ++posEvidence.BaseQualFiltered;
+            filtered = true;
+        }
 
         ++posEvidence.ReadDepth;
 
+        if(filtered)
+            return;
+
         int bafPosition = posEvidence.position();
-        int readPosition = samRecord.getReadPositionAtReferencePosition(bafPosition);
+        int readPosition = read.getReadPositionAtReferencePosition(bafPosition);
         if(readPosition != 0)
         {
-            if(!isIndel(bafPosition, readPosition, samRecord))
+            if(!isIndel(bafPosition, readPosition, read))
             {
-                char baseChar = samRecord.getReadString().charAt(readPosition - 1);
+                char baseChar = read.getReadString().charAt(readPosition - 1);
 
                 if(posEvidence.equalsRef(baseChar))
                 {
@@ -37,7 +53,6 @@ public class PositionEvidenceChecker
                 else if(posEvidence.equalsAlt(baseChar))
                 {
                     ++posEvidence.AltSupport;
-                    posEvidence.AltQuality += baseQuality;
                 }
             }
             else

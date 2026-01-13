@@ -5,7 +5,11 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.compar.ComparConfig.NEW_SOURCE;
 import static com.hartwig.hmftools.compar.ComparConfig.REF_SOURCE;
-import static com.hartwig.hmftools.compar.common.Category.GENE_COPY_NUMBER;
+import static com.hartwig.hmftools.compar.common.CategoryType.GENE_COPY_NUMBER;
+import static com.hartwig.hmftools.compar.common.CategoryType.GERMLINE_BAM_METRICS;
+import static com.hartwig.hmftools.compar.common.CategoryType.GERMLINE_FLAGSTAT;
+import static com.hartwig.hmftools.compar.common.CategoryType.TUMOR_BAM_METRICS;
+import static com.hartwig.hmftools.compar.common.CategoryType.TUMOR_FLAGSTAT;
 import static com.hartwig.hmftools.compar.common.MatchLevel.REPORTABLE;
 import static com.hartwig.hmftools.compar.common.MismatchType.FULL_MATCH;
 import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_BOTH;
@@ -35,15 +39,14 @@ import com.hartwig.hmftools.compar.chord.ChordComparer;
 import com.hartwig.hmftools.compar.cider.Cdr3LocusSummaryComparer;
 import com.hartwig.hmftools.compar.cider.CiderVdjComparer;
 import com.hartwig.hmftools.compar.cuppa.CuppaComparer;
+import com.hartwig.hmftools.compar.cuppa.CuppaImageComparer;
 import com.hartwig.hmftools.compar.driver.DriverComparer;
 import com.hartwig.hmftools.compar.lilac.LilacComparer;
 import com.hartwig.hmftools.compar.linx.DisruptionComparer;
 import com.hartwig.hmftools.compar.linx.FusionComparer;
 import com.hartwig.hmftools.compar.linx.GermlineSvComparer;
-import com.hartwig.hmftools.compar.metrics.GermlineBamMetricsComparer;
-import com.hartwig.hmftools.compar.metrics.GermlineFlagstatComparer;
-import com.hartwig.hmftools.compar.metrics.TumorBamMetricsComparer;
-import com.hartwig.hmftools.compar.metrics.TumorFlagstatComparer;
+import com.hartwig.hmftools.compar.metrics.BamMetricsComparer;
+import com.hartwig.hmftools.compar.metrics.FlagstatComparer;
 import com.hartwig.hmftools.compar.mutation.GermlineVariantComparer;
 import com.hartwig.hmftools.compar.mutation.SomaticVariantComparer;
 import com.hartwig.hmftools.compar.peach.PeachComparer;
@@ -67,7 +70,7 @@ public class CommonUtils
         List<ItemComparer> comparers = Lists.newArrayList();
 
         // load in a predictable order irrespective of config
-        for(Category category : Category.values())
+        for(CategoryType category : CategoryType.values())
         {
             if(!config.Categories.containsKey(category))
             {
@@ -98,7 +101,7 @@ public class CommonUtils
         return comparers;
     }
 
-    private static ItemComparer createComparer(final Category category, final ComparConfig config)
+    private static ItemComparer createComparer(final CategoryType category, final ComparConfig config)
     {
         switch(category)
         {
@@ -132,6 +135,9 @@ public class CommonUtils
             case CUPPA:
                 return new CuppaComparer(config);
 
+            case CUPPA_IMAGE:
+                return new CuppaImageComparer(config);
+
             case CHORD:
                 return new ChordComparer(config);
 
@@ -148,16 +154,16 @@ public class CommonUtils
                 return new VirusComparer(config);
 
             case TUMOR_FLAGSTAT:
-                return new TumorFlagstatComparer(config);
+                return new FlagstatComparer(TUMOR_FLAGSTAT, config);
 
             case GERMLINE_FLAGSTAT:
-                return new GermlineFlagstatComparer(config);
+                return new FlagstatComparer(GERMLINE_FLAGSTAT, config);
 
             case TUMOR_BAM_METRICS:
-                return new TumorBamMetricsComparer(config);
+                return new BamMetricsComparer(TUMOR_BAM_METRICS, config);
 
             case GERMLINE_BAM_METRICS:
-                return new GermlineBamMetricsComparer(config);
+                return new BamMetricsComparer(GERMLINE_BAM_METRICS, config);
 
             case SNP_GENOTYPE:
                 return new SnpGenotypeComparer(config);
@@ -212,7 +218,8 @@ public class CommonUtils
         if(sourceItems.containsKey(REF_SOURCE) && sourceItems.containsKey(NEW_SOURCE))
         {
             // previously support comparisons for N sources but now can only be 2 as controlled by config
-            CommonUtils.compareItems(mismatches, matchLevel, config.Thresholds, config.IncludeMatches, sourceItems.get(REF_SOURCE), sourceItems.get(NEW_SOURCE));
+            CommonUtils.compareItems(
+                    mismatches, matchLevel, config.Thresholds, config.IncludeMatches, sourceItems.get(REF_SOURCE), sourceItems.get(NEW_SOURCE));
             return true;
         }
 
@@ -332,7 +339,8 @@ public class CommonUtils
         return Files.exists(new File(filename).toPath());
     }
 
-    public static Mismatch createMismatchFromDiffs(final ComparableItem refItem, final ComparableItem newItem, final List<String> diffs,
+    public static Mismatch createMismatchFromDiffs(
+            final ComparableItem refItem, final ComparableItem newItem, final List<String> diffs,
             final MatchLevel matchLevel, final boolean includeMatches)
     {
         if(diffs.isEmpty() && !includeMatches)

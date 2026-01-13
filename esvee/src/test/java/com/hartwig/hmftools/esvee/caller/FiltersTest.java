@@ -2,6 +2,7 @@ package com.hartwig.hmftools.esvee.caller;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ASM_INFO;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.ASM_LENGTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ASM_LINKS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.AVG_FRAG_LENGTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.DISC_FRAGS;
@@ -24,6 +25,7 @@ import static com.hartwig.hmftools.esvee.caller.CallerTestUtils.TEST_REF_ID;
 import static com.hartwig.hmftools.esvee.caller.CallerTestUtils.TEST_SAMPLE_ID;
 import static com.hartwig.hmftools.esvee.caller.CallerTestUtils.createSv;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_ADJACENT_MIN_UPS;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.SBX_HEURISTIC_SHORT_LENGTH;
 import static com.hartwig.hmftools.esvee.caller.SvDataCache.buildBreakendMap;
 import static com.hartwig.hmftools.esvee.common.SvConstants.SEQUENCING_TYPE;
 
@@ -422,6 +424,136 @@ public class FiltersTest
         mVariantFilters.applyFilters(var);
 
         assertTrue(var.filters().contains(FilterType.SBX_STRAND_BIAS));
+    }
+
+    @Test
+    public void testSbxArtefacts()
+    {
+        SEQUENCING_TYPE = SequencingType.SBX;
+
+        // first test indels
+
+        // test 1: non-line and stranded
+        Map<String, Object> commonAttributes = Maps.newHashMap();
+
+        commonAttributes.put(ASM_LENGTH, 1200);
+
+        Map<String, Object> tumorAttributes = Maps.newHashMap();
+        tumorAttributes.put(SPLIT_FRAGS, 10);
+        tumorAttributes.put(STRAND_BIAS, 1);
+
+        int posStart = 100;
+        int posEnd = 200;
+
+        Variant var = createSv(
+                "01", CHR_1, CHR_1, posStart, posEnd, ORIENT_FWD, ORIENT_REV, "",
+                commonAttributes, tumorAttributes, tumorAttributes);
+
+        mVariantFilters.applyFilters(var);
+
+        assertTrue(var.filters().contains(FilterType.SBX_ARTEFACT));
+
+        // test 2: not applied for longer indels
+        var = createSv(
+                "01", CHR_1, CHR_1, posStart, posEnd + SBX_HEURISTIC_SHORT_LENGTH, ORIENT_REV, ORIENT_FWD, "",
+                commonAttributes, tumorAttributes, tumorAttributes);
+
+        mVariantFilters.applyFilters(var);
+
+        assertFalse(var.filters().contains(FilterType.SBX_ARTEFACT));
+
+        // test 3: penalty for breakends away from original junctions
+        tumorAttributes.put(STRAND_BIAS, 0.5);
+
+        commonAttributes.put(ASM_INFO, "2:100:1_2:2000:-1"); // note diff chromosome
+
+        var = createSv(
+                "01", CHR_1, CHR_1, posStart, posEnd, ORIENT_REV, ORIENT_FWD, "",
+                commonAttributes, tumorAttributes, tumorAttributes);
+
+        mVariantFilters.applyFilters(var);
+
+        assertTrue(var.filters().contains(FilterType.SBX_ARTEFACT));
+
+        // very short DUPs
+        commonAttributes.put(ASM_INFO, "1:100:-1_1:130:1"); // matching
+
+        var = createSv(
+                "01", CHR_1, CHR_1, posStart, posStart + 30, ORIENT_REV, ORIENT_FWD, "",
+                commonAttributes, tumorAttributes, tumorAttributes);
+
+        mVariantFilters.applyFilters(var);
+
+        assertTrue(var.filters().contains(FilterType.SBX_ARTEFACT));
+
+        // INVs
+        tumorAttributes.put(SPLIT_FRAGS, 12);
+
+        // test 1: short INV with long insert sequence
+        String insSequence = "G".repeat(21);
+
+        var = createSv(
+                "01", CHR_1, CHR_1, posStart, posStart + 60, ORIENT_FWD, ORIENT_FWD, insSequence,
+                commonAttributes, tumorAttributes, tumorAttributes);
+
+        mVariantFilters.applyFilters(var);
+
+        assertTrue(var.filters().contains(FilterType.SBX_ARTEFACT));
+
+        // test 2: zero-length INV
+        var = createSv(
+                "01", CHR_1, CHR_1, posStart, posStart, ORIENT_FWD, ORIENT_FWD, insSequence,
+                commonAttributes, tumorAttributes, tumorAttributes);
+
+        mVariantFilters.applyFilters(var);
+
+        assertTrue(var.filters().contains(FilterType.SBX_ARTEFACT));
+
+        // BNDs
+        insSequence = "A".repeat(20);
+
+        commonAttributes.put(ASM_INFO, "1:100:1_2:200:1"); // matching
+
+        var = createSv(
+                "01", CHR_1, CHR_2, posStart, posEnd, ORIENT_FWD, ORIENT_FWD, insSequence,
+                commonAttributes, tumorAttributes, tumorAttributes);
+
+        mVariantFilters.applyFilters(var);
+
+        assertFalse(var.filters().contains(FilterType.SBX_ARTEFACT));
+
+        insSequence = "G".repeat(20);
+
+        var = createSv(
+                "01", CHR_1, CHR_2, posStart, posEnd, ORIENT_FWD, ORIENT_FWD, insSequence,
+                commonAttributes, tumorAttributes, tumorAttributes);
+
+        mVariantFilters.applyFilters(var);
+
+        assertTrue(var.filters().contains(FilterType.SBX_ARTEFACT));
+
+        // SGLs
+        commonAttributes.put(ASM_INFO, "1:100:1"); // matching
+
+        var = createSv(
+                "01", CHR_1, null, posStart, -1, ORIENT_FWD, ORIENT_FWD, "",
+                commonAttributes, tumorAttributes, tumorAttributes);
+
+        mVariantFilters.applyFilters(var);
+
+        assertFalse(var.filters().contains(FilterType.SBX_ARTEFACT));
+
+        // non-local and shorter assembly
+        commonAttributes.put(ASM_INFO, "2:100:1"); // not matching
+        commonAttributes.put(ASM_LENGTH, 400);
+
+        var = createSv(
+                "01", CHR_1, null, posStart, -1, ORIENT_FWD, ORIENT_FWD, "",
+                commonAttributes, tumorAttributes, tumorAttributes);
+
+        mVariantFilters.applyFilters(var);
+
+        assertTrue(var.filters().contains(FilterType.SBX_ARTEFACT));
     }
 
     @Test

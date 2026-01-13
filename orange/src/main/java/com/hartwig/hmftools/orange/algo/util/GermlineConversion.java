@@ -73,26 +73,27 @@ public final class GermlineConversion
         TumorStats mergedTumorStats;
         List<PurpleDriver> mergedDrivers;
         List<PurpleVariant> additionalReportableVariants;
-        List<PurpleGainDeletion> mergedAllSomaticGainsDels;
+
         List<PurpleGainDeletion> mergedReportableSomaticGainsDels;
+
         if(containsTumorCells)
         {
             mergedTumorStats = mergeTumorStats(purple);
 
             mergedDrivers = mergeGermlineDriversIntoSomatic(
-                    purple.somaticDrivers(), purple.germlineDrivers(), purple.driverGermlineDeletions());
+                    purple.somaticDrivers(), purple.germlineDrivers(), purple.germlineGainsDels());
 
-            additionalReportableVariants = toSomaticVariants(purple.driverGermlineVariants());
+            additionalReportableVariants = toSomaticVariants(purple.germlineVariants());
 
             mergedReportableSomaticGainsDels =
-                    mergeGermlineFullDels(purple.driverGermlineDeletions(), purple.driverSomaticGainsDels());
+                    mergeGermlineFullDels(purple.germlineGainsDels(), purple.somaticGainsDels());
         }
         else
         {
             mergedTumorStats = purple.tumorStats();
             mergedDrivers = purple.somaticDrivers();
             additionalReportableVariants = Lists.newArrayList();
-            mergedReportableSomaticGainsDels = purple.driverSomaticGainsDels();
+            mergedReportableSomaticGainsDels = purple.somaticGainsDels();
         }
 
         return ImmutablePurpleRecord.builder()
@@ -101,15 +102,10 @@ public final class GermlineConversion
                 .tumorStats(mergedTumorStats)
                 .somaticDrivers(mergedDrivers)
                 .germlineDrivers(null)
-                .addAllOtherSomaticVariants(additionalReportableVariants)
-                .addAllDriverSomaticVariants(additionalReportableVariants)
-                .otherGermlineVariants(null)
-                .driverGermlineVariants(null)
-                .driverSomaticGainsDels(mergedReportableSomaticGainsDels)
-                .otherGermlineDeletions(null)
-                .driverGermlineDeletions(null)
-                .allGermlineLossOfHeterozygosities(null)
-                .driverGermlineLossOfHeterozygosities(null)
+                .addAllSomaticVariants(additionalReportableVariants)
+                .germlineVariants(null)
+                .somaticGainsDels(mergedReportableSomaticGainsDels)
+                .germlineGainsDels(null)
                 .build();
     }
 
@@ -118,7 +114,7 @@ public final class GermlineConversion
         return ImmutableTumorStats.builder()
                 .from(purple.tumorStats())
                 .hotspotMutationCount(
-                        germlineHotspotCount(purple.driverGermlineVariants()) + purple.tumorStats().hotspotMutationCount())
+                        germlineHotspotCount(purple.germlineVariants()) + purple.tumorStats().hotspotMutationCount())
                 .build();
     }
 
@@ -385,25 +381,25 @@ public final class GermlineConversion
 
         if(containsTumorCells)
         {
-            Map<Integer, Integer> svIdMapping = buildSvIdMapping(linx.allSomaticStructuralVariants(), linx.allGermlineStructuralVariants());
-            Map<Integer, Integer> clusterIdMapping =
-                    buildClusterIdMapping(linx.allSomaticStructuralVariants(), linx.allGermlineStructuralVariants());
-            Map<Integer, Integer> breakendIdMapping = buildBreakendIdMapping(linx.otherSomaticBreakends(), linx.otherGermlineBreakends());
+            Map<Integer, Integer> svIdMapping = buildSvIdMapping(linx.somaticStructuralVariants(), linx.germlineStructuralVariants());
 
-            additionalStructuralVariants = toSomaticStructuralVariants(linx.allGermlineStructuralVariants(), svIdMapping, clusterIdMapping);
-            additionalReportableBreakends = toSomaticBreakends(linx.driverGermlineBreakends(), breakendIdMapping, svIdMapping);
+            Map<Integer, Integer> clusterIdMapping =
+                    buildClusterIdMapping(linx.somaticStructuralVariants(), linx.germlineStructuralVariants());
+
+            Map<Integer, Integer> breakendIdMapping = buildBreakendIdMapping(linx.somaticBreakends(), linx.germlineBreakends());
+
+            additionalStructuralVariants = toSomaticStructuralVariants(linx.germlineStructuralVariants(), svIdMapping, clusterIdMapping);
+            additionalReportableBreakends = toSomaticBreakends(linx.germlineBreakends(), breakendIdMapping, svIdMapping);
             additionalHomozygousDisruptions = toSomaticHomozygousDisruptions(linx.germlineHomozygousDisruptions());
         }
 
         return ImmutableLinxRecord.builder()
                 .from(linx)
-                .addAllAllSomaticStructuralVariants(additionalStructuralVariants)
-                .addAllOtherSomaticBreakends(additionalReportableBreakends)
-                .addAllDriverSomaticBreakends(additionalReportableBreakends)
+                .addAllSomaticStructuralVariants(additionalStructuralVariants)
+                .addAllSomaticBreakends(additionalReportableBreakends)
                 .addAllSomaticHomozygousDisruptions(additionalHomozygousDisruptions)
-                .allGermlineStructuralVariants(null)
-                .otherGermlineBreakends(null)
-                .driverGermlineBreakends(null)
+                .germlineStructuralVariants(null)
+                .germlineBreakends(null)
                 .germlineHomozygousDisruptions(null)
                 .build();
     }
@@ -504,9 +500,8 @@ public final class GermlineConversion
         return maxClusterId;
     }
 
-    @NotNull
-    private static Map<Integer, Integer> buildBreakendIdMapping(final List<LinxBreakend> allSomaticBreakends,
-            @Nullable List<LinxBreakend> allGermlineBreakends)
+    private static Map<Integer, Integer> buildBreakendIdMapping(
+            final List<LinxBreakend> allSomaticBreakends, @Nullable List<LinxBreakend> allGermlineBreakends)
     {
         Map<Integer, Integer> breakendIdMapping = Maps.newHashMap();
         if(allGermlineBreakends != null)

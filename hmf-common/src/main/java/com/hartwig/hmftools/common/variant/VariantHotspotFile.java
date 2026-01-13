@@ -13,9 +13,9 @@ import htsjdk.variant.variantcontext.VariantContext;
 
 public final class VariantHotspotFile
 {
-    public static ListMultimap<Chromosome,VariantHotspot> readFromVCF(final String fileName) throws IOException
+    public static ListMultimap<Chromosome,SimpleVariant> loadHotspotVcf(final String fileName) throws IOException
     {
-        ListMultimap<Chromosome, VariantHotspot> result = ArrayListMultimap.create();
+        ListMultimap<Chromosome,SimpleVariant> result = ArrayListMultimap.create();
 
         VcfFileReader vcfFileReader = new VcfFileReader(fileName);
 
@@ -32,13 +32,10 @@ public final class VariantHotspotFile
         return result;
     }
 
-    private static VariantHotspot fromVariantContext(@NotNull final VariantContext context)
+    private static SimpleVariant fromVariantContext(@NotNull final VariantContext context)
     {
-        return ImmutableVariantHotspotImpl.builder()
-                .chromosome(context.getContig())
-                .position(context.getStart())
-                .ref(context.getReference().getBaseString())
-                .alt(context.getAlternateAllele(0).getBaseString())
-                .build();
+        return new SimpleVariant(
+                context.getContig(), context.getStart(), context.getReference().getBaseString(),
+                context.getAlternateAllele(0).getBaseString());
     }
 }

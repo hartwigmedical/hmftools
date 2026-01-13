@@ -2,7 +2,7 @@ package com.hartwig.hmftools.compar.peach;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.compar.common.Category.PEACH;
+import static com.hartwig.hmftools.compar.common.CategoryType.PEACH;
 import static com.hartwig.hmftools.compar.common.CommonUtils.createMismatchFromDiffs;
 import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
 
@@ -11,7 +11,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.Category;
+import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
@@ -31,7 +31,7 @@ public class PeachData implements ComparableItem
     }
 
     @Override
-    public Category category()
+    public CategoryType category()
     {
         return PEACH;
     }
@@ -76,8 +76,8 @@ public class PeachData implements ComparableItem
     }
 
     @Override
-    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds,
-            final boolean includeMatches)
+    public Mismatch findMismatch(
+            final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds, final boolean includeMatches)
     {
         final PeachData otherData = (PeachData) other;
 

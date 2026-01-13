@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.compar.purple;
 
-import static com.hartwig.hmftools.compar.common.Category.PURITY;
+import static com.hartwig.hmftools.compar.common.CategoryType.PURITY;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.purple.PurityData.FLD_CN_SEGS;
 import static com.hartwig.hmftools.compar.purple.PurityData.FLD_CONTAMINATION;
@@ -26,7 +26,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurityContextFile;
-import com.hartwig.hmftools.compar.common.Category;
+import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
@@ -46,7 +46,7 @@ public class PurityComparer implements ItemComparer
     }
 
     @Override
-    public Category category() { return PURITY; }
+    public CategoryType category() { return PURITY; }
 
     @Override
     public void registerThresholds(final DiffThresholds thresholds)

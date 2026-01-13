@@ -2,7 +2,7 @@ package com.hartwig.hmftools.compar.vchord;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.compar.common.Category.V_CHORD;
+import static com.hartwig.hmftools.compar.common.CategoryType.V_CHORD;
 import static com.hartwig.hmftools.compar.common.CommonUtils.createMismatchFromDiffs;
 import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
 
@@ -11,7 +11,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.vchord.VChordPrediction;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.Category;
+import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
@@ -25,7 +25,7 @@ public record VChordData(VChordPrediction VChord) implements ComparableItem
     static final String FLD_OTHER = "OtherCancerScore";
 
     @Override
-    public Category category()
+    public CategoryType category()
     {
         return V_CHORD;
     }
@@ -56,8 +56,8 @@ public record VChordData(VChordPrediction VChord) implements ComparableItem
     }
 
     @Override
-    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds,
-            final boolean includeMatches)
+    public Mismatch findMismatch(
+            final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds, final boolean includeMatches)
     {
         final VChordData otherData = (VChordData) other;
 
