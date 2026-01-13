@@ -163,8 +163,12 @@ class CiderReadScreener(// collect the reads and sort by types
     ): VJReadCandidate?
     {
         // only if mapped
-        if (!isMappedToAnchorLocation(mapped, anchorLocation))
+        val mateIsMatched = mMatchedReadNames.contains(samRecord.readName)
+        val tolerance = if (mateIsMatched) mMaxFragmentLength else 0
+        if (!isMappedToAnchorLocation(mapped, anchorLocation, tolerance))
+        {
             return null
+        }
         val anchorLength: Int = anchorLocation.baseLength()
         if (anchorLength != 30)
         {
@@ -181,9 +185,8 @@ class CiderReadScreener(// collect the reads and sort by types
         // CDR3:           |-------------------|
         // check:          <------->    <------>
         val isNearbyAnchor =
-            (anchorLocation.anchorBoundarySide() == 1 && samRecord.readLength - readTrim.second - readAnchorEnd >= mMinReadCdr3Overlap) ||
-                    (anchorLocation.anchorBoundarySide() == -1 && readAnchorStart - readTrim.first >= mMinReadCdr3Overlap) ||
-                    mMatchedReadNames.contains(samRecord.readName)
+                (anchorLocation.anchorBoundarySide() == 1 && samRecord.readLength - readTrim.second - readAnchorEnd >= mMinReadCdr3Overlap - tolerance) ||
+                (anchorLocation.anchorBoundarySide() == -1 && readAnchorStart - readTrim.first >= mMinReadCdr3Overlap - tolerance)
 
         if (isNearbyAnchor)
         {
@@ -493,10 +496,10 @@ class CiderReadScreener(// collect the reads and sort by types
     {
         private val sLogger = LogManager.getLogger(CiderReadScreener::class.java)
 
-        fun isMappedToAnchorLocation(mapped: GenomeRegion, anchorLocation: VJAnchorGenomeLocation): Boolean
+        fun isMappedToAnchorLocation(mapped: GenomeRegion, anchorLocation: VJAnchorGenomeLocation, tolerance: Int): Boolean
         {
             if (anchorLocation.chromosome != mapped.chromosome()) return false
-            return anchorLocation.start <= mapped.end() && mapped.start() <= anchorLocation.end
+            return anchorLocation.start <= mapped.end() + tolerance && mapped.start() - tolerance <= anchorLocation.end
         }
 
         // 0 based read offset
