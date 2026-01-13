@@ -10,7 +10,7 @@ import org.jetbrains.annotations.Nullable;
 @Gson.TypeAdapters
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface Findings<T extends Finding> {
+public interface FindingList<T extends Finding> {
 
     @NotNull
     FindingsStatus status();

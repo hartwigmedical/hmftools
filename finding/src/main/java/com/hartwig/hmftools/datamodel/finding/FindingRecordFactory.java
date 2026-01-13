@@ -69,7 +69,7 @@ public class FindingRecordFactory {
                 .disruptions(createDisruptionsFindings(linx, hasReliablePurity))
                 .fusions(createFusionsFindings(orangeRecord.linx()));
 
-        Findings<GainDeletion> gainDeletions = addPurpleFindings(builder, orangeRecord, clinicalTranscriptsModel, driverGenes);
+        FindingList<GainDeletion> gainDeletions = addPurpleFindings(builder, orangeRecord, clinicalTranscriptsModel, driverGenes);
 
         return builder.predictedTumorOrigin(createPredictedTumorOrigin(orangeRecord.cuppa()))
                 .homologousRecombination(createHomologousRecombination(orangeRecord.chord(), orangeRecord.purple(), linx, gainDeletions))
@@ -80,13 +80,13 @@ public class FindingRecordFactory {
     }
 
     // return the gain deletions cause they are needed by HRD, will see if we can find a better way
-    private static DriverFindings<GainDeletion> addPurpleFindings(ImmutableFindingRecord.Builder builder, final OrangeRecord orangeRecord,
+    private static DriverFindingList<GainDeletion> addPurpleFindings(ImmutableFindingRecord.Builder builder, final OrangeRecord orangeRecord,
             final @Nullable ClinicalTranscriptsModel clinicalTranscriptsModel, @NotNull Map<String, DriverGene> driverGenes) {
         PurpleRecord purple = orangeRecord.purple();
 
         FindingsStatus findingsStatus = purpleFindingsStatus(purple);
 
-        DriverFindings<GainDeletion> gainDeletions = GainDeletionFactory.gainDeletionFindings(purple, findingsStatus);
+        DriverFindingList<GainDeletion> gainDeletions = GainDeletionFactory.gainDeletionFindings(purple, findingsStatus);
 
         builder.smallVariants(SmallVariantFactory.smallVariantFindings(purple, findingsStatus, clinicalTranscriptsModel, driverGenes))
                 .gainDeletions(gainDeletions)
@@ -100,8 +100,8 @@ public class FindingRecordFactory {
     }
 
     @NotNull
-    private static CharacteristicsFinding<TumorMutationStatus> createTumorMutationStatus(@NotNull PurpleRecord purple) {
-        return ImmutableCharacteristicsFinding.<TumorMutationStatus>builder()
+    private static FindingItem<TumorMutationStatus> createTumorMutationStatus(@NotNull PurpleRecord purple) {
+        return ImmutableFindingItem.<TumorMutationStatus>builder()
                 .status(FindingsStatus.OK)
                 .finding(ImmutableTumorMutationStatus.builder()
                         .findingKey(FindingKeys.tumorMutationStatus(purple.characteristics().tumorMutationalBurdenStatus(),
@@ -116,9 +116,9 @@ public class FindingRecordFactory {
     }
 
     @NotNull
-    private static CharacteristicsFinding<PredictedTumorOrigin> createPredictedTumorOrigin(CuppaData cuppa) {
+    private static FindingItem<PredictedTumorOrigin> createPredictedTumorOrigin(CuppaData cuppa) {
         if (cuppa != null) {
-            return ImmutableCharacteristicsFinding.<PredictedTumorOrigin>builder()
+            return ImmutableFindingItem.<PredictedTumorOrigin>builder()
                     .status(FindingsStatus.OK)
                     .finding( ImmutablePredictedTumorOrigin.builder()
                             .findingKey(FindingKeys.predictedTumorOrigin(cuppa.bestPrediction().cancerType()))
@@ -127,19 +127,17 @@ public class FindingRecordFactory {
                             .build())
                     .build();
         } else {
-            return ImmutableCharacteristicsFinding.<PredictedTumorOrigin>builder()
-                    .status(FindingsStatus.NOT_AVAILABLE)
-                    .build();
+            return FindingUtil.notAvailableFindingItem();
         }
     }
 
     @NotNull
-    private static CharacteristicsFinding<HomologousRecombination> createHomologousRecombination(@Nullable ChordRecord chord,
+    private static FindingItem<HomologousRecombination> createHomologousRecombination(@Nullable ChordRecord chord,
             @NotNull PurpleRecord purple,
             @NotNull LinxRecord linx,
-            @NotNull Findings<GainDeletion> gainDeletions) {
+            @NotNull FindingList<GainDeletion> gainDeletions) {
         if (chord != null) {
-            return ImmutableCharacteristicsFinding.<HomologousRecombination>builder()
+            return ImmutableFindingItem.<HomologousRecombination>builder()
                     .status(FindingsStatus.OK)
                     .finding(ImmutableHomologousRecombination.builder()
                             .findingKey(FindingKeys.homologousRecombination(chord.hrStatus()))
@@ -156,16 +154,14 @@ public class FindingRecordFactory {
                             .build())
                     .build();
         } else {
-            return ImmutableCharacteristicsFinding.<HomologousRecombination>builder()
-                    .status(FindingsStatus.NOT_AVAILABLE)
-                    .build();
+           return FindingUtil.notAvailableFindingItem();
         }
     }
 
     @NotNull
-    private static CharacteristicsFinding<MicrosatelliteStability> createMicrosatelliteStability(@NotNull PurpleRecord purple,
-            @NotNull LinxRecord linx, @NotNull Findings<GainDeletion> gainDeletions) {
-        return ImmutableCharacteristicsFinding.<MicrosatelliteStability>builder()
+    private static FindingItem<MicrosatelliteStability> createMicrosatelliteStability(@NotNull PurpleRecord purple,
+            @NotNull LinxRecord linx, @NotNull FindingList<GainDeletion> gainDeletions) {
+        return ImmutableFindingItem.<MicrosatelliteStability>builder()
                 .status(FindingsStatus.OK)
                 .finding(ImmutableMicrosatelliteStability.builder()
                         .findingKey(FindingKeys.microsatelliteStability(purple.characteristics().microsatelliteStatus()))
@@ -181,7 +177,7 @@ public class FindingRecordFactory {
     }
 
     @NotNull
-    private static List<GainDeletion> filterLohGainDeletions(@NotNull Findings<GainDeletion> gainDeletions, Set<String> geneNames) {
+    private static List<GainDeletion> filterLohGainDeletions(@NotNull FindingList<GainDeletion> gainDeletions, Set<String> geneNames) {
         return gainDeletions.all().stream()
                 .filter(x -> geneNames.contains(x.gene()))
                 .filter(x -> x.type() == GainDeletion.Type.SOMATIC_LOH)
@@ -193,8 +189,8 @@ public class FindingRecordFactory {
         return purpleRecord.fit().qc().status().equals(Set.of(PurpleQCStatus.PASS)) ? FindingsStatus.OK : FindingsStatus.NOT_AVAILABLE;
     }
 
-    public static DriverFindings<Fusion> createFusionsFindings(@NotNull LinxRecord linx) {
-        return ImmutableDriverFindings.<Fusion>builder()
+    public static DriverFindingList<Fusion> createFusionsFindings(@NotNull LinxRecord linx) {
+        return ImmutableDriverFindingList.<Fusion>builder()
                 .status(FindingsStatus.OK)
                 .all(linx.reportableSomaticFusions().stream()
                 .map(o -> convertFusion(o, DriverSource.SOMATIC)).sorted(Fusion.COMPARATOR).toList())
@@ -240,17 +236,15 @@ public class FindingRecordFactory {
     }
 
     @NotNull
-    private static DriverFindings<Virus> createVirusFindings(@Nullable VirusInterpreterData virusInterpreter){
+    private static DriverFindingList<Virus> createVirusFindings(@Nullable VirusInterpreterData virusInterpreter){
         if (virusInterpreter != null) {
-            return ImmutableDriverFindings.<Virus>builder()
+            return ImmutableDriverFindingList.<Virus>builder()
                     .status(FindingsStatus.OK)
                     .all(convertViruses(virusInterpreter.allViruses()))
                     .build();
 
         } else {
-            return ImmutableDriverFindings.<Virus>builder()
-                    .status(FindingsStatus.NOT_APPLICABLE)
-                    .build();
+            return FindingUtil.notAvailableDriverFindingList();
         }
     }
 
@@ -279,10 +273,10 @@ public class FindingRecordFactory {
         };
     }
 
-    private static Findings<PharmocoGenotype> createPharmcoGenotypesFindings(@Nullable Set<PeachGenotype> peachGenotypes) {
+    private static FindingList<PharmocoGenotype> createPharmcoGenotypesFindings(@Nullable Set<PeachGenotype> peachGenotypes) {
         if(peachGenotypes != null)
         {
-            return ImmutableFindings.<PharmocoGenotype>builder()
+            return ImmutableFindingList.<PharmocoGenotype>builder()
                     .status(FindingsStatus.OK)
                     .all(peachGenotypes.stream().map(o ->
                             ImmutablePharmocoGenotype.builder()
@@ -301,9 +295,7 @@ public class FindingRecordFactory {
         }
         else
         {
-            return ImmutableFindings.<PharmocoGenotype>builder()
-                    .status(FindingsStatus.NOT_AVAILABLE)
-                    .build();
+            return FindingUtil.notAvailableFindingList();
         }
     }
 
