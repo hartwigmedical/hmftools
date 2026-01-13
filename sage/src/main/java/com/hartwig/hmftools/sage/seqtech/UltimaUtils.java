@@ -400,13 +400,12 @@ public final class UltimaUtils
 
     static
     {
-        PANEL_REPEAT_HP_QUAL_MAP.put(1, 21.5);
-        PANEL_REPEAT_HP_QUAL_MAP.put(2, 20.0);
-        PANEL_REPEAT_HP_QUAL_MAP.put(3, 18.5);
-        PANEL_REPEAT_HP_QUAL_MAP.put(4, 17.0);
-        PANEL_REPEAT_HP_QUAL_MAP.put(5, 14.5);
-        PANEL_REPEAT_HP_QUAL_MAP.put(6, 12.0);
-        PANEL_REPEAT_HP_QUAL_MAP.put(7, 9.0);
+        PANEL_REPEAT_HP_QUAL_MAP.put(1, 19.5);
+        PANEL_REPEAT_HP_QUAL_MAP.put(2, 17.5);
+        PANEL_REPEAT_HP_QUAL_MAP.put(3, 15.5);
+        PANEL_REPEAT_HP_QUAL_MAP.put(4, 14.0);
+        PANEL_REPEAT_HP_QUAL_MAP.put(5, 13.5);
+        PANEL_REPEAT_HP_QUAL_MAP.put(6, 10.0);
     }
 
     private static final double PANEL_REPEAT_HP_QUAL_MAP_DEFAULT = 6;
