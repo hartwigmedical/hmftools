@@ -102,16 +102,6 @@ public class BaseQualRecalibration
                 chrRegionStart = chrRegionEnd - BQR_SAMPLE_SIZE;
             }
 
-            /*
-            int start = chrRegionStart;
-
-            while(start < chrRegionEnd)
-            {
-                chrRegionTasks.add(new ChrBaseRegion(chrStr, start, start + BQR_REGION_SIZE - 1));
-                start += BQR_REGION_SIZE;
-            }
-            */
-
             chrRegionTasks.add(new ChrBaseRegion(chrStr, chrRegionStart, chrRegionEnd));
 
             mRegions.addAll(chrRegionTasks);
