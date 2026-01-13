@@ -671,6 +671,8 @@ public class GermlineAmpDelFinderTest
                 .hetDeletionThreshold(0.23)
                 .reportDisruption(true)
                 .reportAmplification(true)
+                .reportLoh(true)
+                .reportGermlineAmplification(true)
                 .amplificationRatio(0.23)
                 .reportSomaticHotspot(true)
                 .likelihoodType(DriverCategory.TSG)
