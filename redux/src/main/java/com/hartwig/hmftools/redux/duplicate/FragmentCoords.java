@@ -46,6 +46,19 @@ public class FragmentCoords implements Comparable<FragmentCoords>
 
     private final String mKeyNonOriented; // only used for UMI collapsing, and set as required
 
+    public static final char FRAG_ORIENT_FORWARD = 'F';
+    public static final String FRAG_ORIENT_FORWARD_STR = String.valueOf(FRAG_ORIENT_FORWARD);
+    public static final char FRAG_ORIENT_REVERSE = 'R';
+    public static final String FRAG_ORIENT_REVERSE_STR = String.valueOf(FRAG_ORIENT_REVERSE);
+    public static final char FRAG_TYPE_SUPP_INFO = 'S';
+    public static final String FRAG_TYPE_SUPP_INFO_STR = String.valueOf(FRAG_TYPE_SUPP_INFO);
+    public static final char FRAG_TYPE_UNMAPPED = 'U';
+    public static final char FRAG_TYPE_NO_ORIENT = 'N';
+    public static final char FRAG_READ_UPPER = 'U';
+    public static final String FRAG_READ_UPPER_STR = String.valueOf(FRAG_READ_UPPER);
+    public static final char FRAG_READ_LOWER = 'L';
+    public static final String FRAG_READ_LOWER_STR = String.valueOf(FRAG_READ_LOWER);
+
     public FragmentCoords(
             final String chromsomeLower, final String chromsomeUpper, final int positionLower, final int positionUpper,
             final Orientation orientLower, final Orientation orientUpper, final Orientation fragmentOrientation, boolean readIsLower,
@@ -69,9 +82,9 @@ public class FragmentCoords implements Comparable<FragmentCoords>
             String coordinate = format("%s:%d_%d", ChromsomeLower, PositionLower, PositionUpper);
 
             if(ReadIsLower ? OrientLower.isReverse() : OrientUpper.isReverse())
-                coordinate = format("%s_R", coordinate);
+                coordinate = format("%s_%c", coordinate, FRAG_ORIENT_REVERSE);
 
-            Key = suppReadInfo != null ? format("%s_S", coordinate) : coordinate;
+            Key = suppReadInfo != null ? format("%s_%c", coordinate, FRAG_TYPE_SUPP_INFO) : coordinate;
             mKeyNonOriented = null;
             return;
         }
@@ -81,9 +94,9 @@ public class FragmentCoords implements Comparable<FragmentCoords>
         if(positionUpper == NO_POSITION)
         {
             if(isUnmapped)
-                Key = format("%s_U", coordinateLower);
+                Key = format("%s_%c", coordinateLower, FRAG_TYPE_UNMAPPED);
             else if(suppReadInfo != null)
-                Key = format("%s_S", coordinateLower);
+                Key = format("%s_%c", coordinateLower, FRAG_TYPE_SUPP_INFO);
             else
                 Key = coordinateLower;
 
@@ -93,14 +106,14 @@ public class FragmentCoords implements Comparable<FragmentCoords>
         {
             String coordinateUpper = formCoordinate(ChromsomeUpper, positionUpper, orientUpper.isForward());
 
-            String readInfo = ReadIsLower ? "L" : "U";
+            String readInfo = ReadIsLower ? FRAG_READ_LOWER_STR : FRAG_READ_UPPER_STR;
             if(SuppReadInfo != null)
-                readInfo += "_S";
+                readInfo += "_" + FRAG_TYPE_SUPP_INFO_STR;
 
             String keyNonOriented = format("%s_%s_%s", coordinateLower, coordinateUpper, readInfo);
             if(keyByFragmentOrientation && FragmentOrient.isReverse())
             {
-                Key = format("%s_N", keyNonOriented);
+                Key = format("%s_%c", keyNonOriented, FRAG_TYPE_NO_ORIENT);
                 mKeyNonOriented = keyNonOriented;
             }
             else
@@ -138,7 +151,7 @@ public class FragmentCoords implements Comparable<FragmentCoords>
 
     private static String formCoordinate(final String chromosome, final int position, final boolean isForward)
     {
-        return isForward ? format("%s:%d", chromosome, position) : format("%s:%d:R", chromosome, position);
+        return isForward ? format("%s:%d", chromosome, position) : format("%s:%d:%c", chromosome, position, FRAG_ORIENT_REVERSE);
     }
 
     public static FragmentCoords fromRead(final SAMRecord read, boolean useFragmentOrientation)
