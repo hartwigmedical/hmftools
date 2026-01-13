@@ -20,7 +20,7 @@ import org.jetbrains.annotations.Nullable;
 
 final class SmallVariantFactory
 {
-    public static DriverFindings<SmallVariant> smallVariantFindings(@NotNull PurpleRecord purpleRecord, @NotNull FindingsStatus findingsStatus, @Nullable ClinicalTranscriptsModel clinicalTranscriptsModel,
+    public static DriverFindingList<SmallVariant> smallVariantFindings(@NotNull PurpleRecord purpleRecord, @NotNull FindingsStatus findingsStatus, @Nullable ClinicalTranscriptsModel clinicalTranscriptsModel,
             @NotNull Map<String, DriverGene> driverGeneMap) {
         List<SmallVariant> allSmallVariants = Lists.newArrayList();
         allSmallVariants.addAll(SmallVariantFactory.create(
@@ -37,7 +37,7 @@ final class SmallVariantFactory
 
         allSmallVariants.sort(SmallVariant.COMPARATOR);
 
-        return ImmutableDriverFindings.<SmallVariant>builder()
+        return ImmutableDriverFindingList.<SmallVariant>builder()
                 .status(findingsStatus)
                 .all(allSmallVariants)
                 .build();
