@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.compar.cuppa;
 
-import static com.hartwig.hmftools.compar.common.Category.CUPPA_IMAGE;
+import static com.hartwig.hmftools.compar.common.CategoryType.CUPPA_IMAGE;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,7 +10,7 @@ import com.hartwig.hmftools.common.cuppa.CuppaPredictions;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.ItemComparer;
-import com.hartwig.hmftools.compar.common.Category;
+import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
 import com.hartwig.hmftools.compar.common.FileSources;
@@ -29,7 +29,7 @@ public class CuppaImageComparer implements ItemComparer
     }
 
     @Override
-    public Category category() { return CUPPA_IMAGE; }
+    public CategoryType category() { return CUPPA_IMAGE; }
 
     @Override
     public void registerThresholds(final DiffThresholds thresholds)
