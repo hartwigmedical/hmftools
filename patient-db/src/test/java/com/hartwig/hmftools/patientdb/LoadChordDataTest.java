@@ -29,7 +29,7 @@ public class LoadChordDataTest extends DatabaseTestBase
                 .remarksHrdType("")
                 .build();
 
-        DB_ACCESS.writeChord("example", chordData);
+        databaseAccess.writeChord("example", chordData);
 
         List<ChordRecord> chordRecords = fetchTable(Tables.CHORD, ChordRecord.class);
 

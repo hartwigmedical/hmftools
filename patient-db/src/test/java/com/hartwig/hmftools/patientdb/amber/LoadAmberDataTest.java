@@ -28,10 +28,10 @@ public class LoadAmberDataTest extends DatabaseTestBase
         AmberSample amberSample = randomAmberSampleWithId("amber-sample-1");
         AmberSample otherAmberSample = randomAmberSampleWithId("amber-sample-2");
 
-        LoadAmberData.processSample(amberSample, DB_ACCESS);
-        LoadAmberData.processSample(otherAmberSample, DB_ACCESS);
+        LoadAmberData.processSample(amberSample, databaseAccess);
+        LoadAmberData.processSample(otherAmberSample, databaseAccess);
 
-        Set<Integer> loadedPatientIds = DB_ACCESS.readAmberPatients().stream().map(AmberPatient::patientId).collect(Collectors.toSet());
+        Set<Integer> loadedPatientIds = databaseAccess.readAmberPatients().stream().map(AmberPatient::patientId).collect(Collectors.toSet());
 
         assertEquals(2, loadedPatientIds.size());
     }
@@ -42,10 +42,10 @@ public class LoadAmberDataTest extends DatabaseTestBase
         AmberSample amberSample = randomAmberSampleWithId("amber-sample-1");
         AmberSample samePatientAmberSample = ImmutableAmberSample.builder().from(amberSample).sampleId("amber-sample-2").build();
 
-        LoadAmberData.processSample(amberSample, DB_ACCESS);
-        LoadAmberData.processSample(samePatientAmberSample, DB_ACCESS);
+        LoadAmberData.processSample(amberSample, databaseAccess);
+        LoadAmberData.processSample(samePatientAmberSample, databaseAccess);
 
-        Set<Integer> loadedPatientIds = DB_ACCESS.readAmberPatients().stream().map(AmberPatient::patientId).collect(Collectors.toSet());
+        Set<Integer> loadedPatientIds = databaseAccess.readAmberPatients().stream().map(AmberPatient::patientId).collect(Collectors.toSet());
 
         assertEquals(1, loadedPatientIds.size());
     }
@@ -59,7 +59,7 @@ public class LoadAmberDataTest extends DatabaseTestBase
         List<DatabaseAccess> connections = new ArrayList<>();
         for(int i = 0; i < nConnections; i++)
         {
-            DatabaseAccess dbAccess = new DatabaseAccess(CONTAINER.getUsername(), CONTAINER.getPassword(), CONTAINER.getJdbcUrl());
+            DatabaseAccess dbAccess = new DatabaseAccess(container.getUsername(), container.getPassword(), container.getJdbcUrl());
             connections.add(dbAccess);
         }
 
@@ -90,7 +90,7 @@ public class LoadAmberDataTest extends DatabaseTestBase
             jobs.forEach(CompletableFuture::join);
 
             // Assert there is a unique patientId for each patient in the db, and none got lost due to race conditions
-            Set<Integer> patientIds = DB_ACCESS.readAmberPatients().stream().map(AmberPatient::patientId).collect(Collectors.toSet());
+            Set<Integer> patientIds = databaseAccess.readAmberPatients().stream().map(AmberPatient::patientId).collect(Collectors.toSet());
             assertEquals(nSamplesPerConnection * nConnections, patientIds.size());
         }
         finally

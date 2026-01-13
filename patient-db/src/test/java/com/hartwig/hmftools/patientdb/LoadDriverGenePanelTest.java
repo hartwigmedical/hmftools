@@ -25,7 +25,7 @@ public class LoadDriverGenePanelTest extends DatabaseTestBase
                 createTestGene("BRCA2")
         );
 
-        DB_ACCESS.writeGenePanel(driverGenes);
+        databaseAccess.writeGenePanel(driverGenes);
 
         List<DrivergenepanelRecord> driverGeneRecords = fetchTable(Tables.DRIVERGENEPANEL, DrivergenepanelRecord.class);
 

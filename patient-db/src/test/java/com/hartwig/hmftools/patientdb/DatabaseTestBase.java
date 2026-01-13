@@ -12,37 +12,34 @@ import org.testcontainers.mysql.MySQLContainer;
 
 public abstract class DatabaseTestBase
 {
-    protected static MySQLContainer CONTAINER;
-    protected static DatabaseAccess DB_ACCESS;
+    protected static MySQLContainer container;
+    protected static DatabaseAccess databaseAccess;
 
     @BeforeClass
     public static void createDatabase() throws Exception
     {
-        CONTAINER = new MySQLContainer("mysql:8")
+        container = new MySQLContainer("mysql:8")
                 .withInitScript("generate_database.sql");
 
-        CONTAINER.start();
+        container.start();
 
-        DB_ACCESS = new DatabaseAccess(
-                CONTAINER.getUsername(),
-                CONTAINER.getPassword(),
-                CONTAINER.getJdbcUrl()
+        databaseAccess = new DatabaseAccess(
+                container.getUsername(),
+                container.getPassword(),
+                container.getJdbcUrl()
         );
     }
 
     @AfterClass
     public static void closeDatabase()
     {
-        if(DB_ACCESS != null)
-            DB_ACCESS.close();
-
-        if(CONTAINER != null)
-            CONTAINER.stop();
+        databaseAccess.close();
+        container.stop();
     }
 
     public static <R extends UpdatableRecord<R>> List<R> fetchTable(Table<R> table, Class<R> recordClass)
     {
-        return DB_ACCESS.context()
+        return databaseAccess.context()
                 .selectFrom(table)
                 .fetchInto(recordClass);
     }

@@ -39,7 +39,7 @@ public class LoadCuppaDataTest extends DatabaseTestBase
         );
 
         CUPPA_PREDICTIONS = new CuppaPredictions(predictionEntries);
-        DB_ACCESS.writeCuppa(TEST_SAMPLE_ID, CUPPA_PREDICTIONS, TOP_N_PROBS);
+        databaseAccess.writeCuppa(TEST_SAMPLE_ID, CUPPA_PREDICTIONS, TOP_N_PROBS);
 
         CUPPA_RECORDS = fetchTable(Tables.CUPPA, CuppaRecord.class);
     }
