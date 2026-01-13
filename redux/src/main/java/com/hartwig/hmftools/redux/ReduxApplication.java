@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.redux;
 
 import static java.lang.Math.max;
+import static java.lang.Math.min;
+import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.runThreadTasks;
@@ -221,8 +223,19 @@ public class ReduxApplication
 
     private List<PartitionThread> createPartitionThreads(final FileWriterCache fileWriterCache)
     {
-        int partitionThreadCount = mConfig.WriteBam & mConfig.ParallelConcatenation ? max(mConfig.Threads - 1, 1) : mConfig.Threads;
+        int threadCount = mConfig.Threads;
+        int partitionThreadCount = mConfig.WriteBam & mConfig.ParallelConcatenation ? max(threadCount - 1, 1) : threadCount;
         int partitionCount = mConfig.PartitionThreadRatio * partitionThreadCount;
+
+        if(threadCount > 1 && mConfig.SpecificChrRegions.hasFilters())
+        {
+            // limited threads if running over small specific regions
+            int specificRegionBases = mConfig.SpecificChrRegions.Regions.stream().mapToInt(x -> x.baseLength()).sum();
+            threadCount = max(min(threadCount, (int)round(specificRegionBases / (double)10_000)), 1);
+
+            partitionThreadCount = threadCount;
+            partitionCount = partitionThreadCount;
+        }
 
         RD_LOGGER.debug("splitting {} partition regions across {} threads", partitionCount, partitionThreadCount);
 
