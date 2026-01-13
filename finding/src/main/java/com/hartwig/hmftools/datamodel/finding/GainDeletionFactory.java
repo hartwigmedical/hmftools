@@ -19,7 +19,7 @@ import org.jetbrains.annotations.NotNull;
 
 final class GainDeletionFactory {
 
-    public static DriverFindings<GainDeletion> gainDeletionFindings(@NotNull PurpleRecord purple, @NotNull FindingsStatus findingsStatus) {
+    public static DriverFindingList<GainDeletion> gainDeletionFindings(@NotNull PurpleRecord purple, @NotNull FindingsStatus findingsStatus) {
         List<GainDeletion> allGainDels = new ArrayList<>();
         List<PurpleGainDeletion> germlineFullDels = purple.reportableGermlineFullDels();
         List<PurpleLossOfHeterozygosity> germlineLohs = purple.reportableGermlineLossOfHeterozygosities();
@@ -35,7 +35,7 @@ final class GainDeletionFactory {
 
         allGainDels.sort(GainDeletion.COMPARATOR);
 
-        return ImmutableDriverFindings.<GainDeletion>builder()
+        return ImmutableDriverFindingList.<GainDeletion>builder()
                 .status(findingsStatus)
                 .all(allGainDels)
                 .build();
