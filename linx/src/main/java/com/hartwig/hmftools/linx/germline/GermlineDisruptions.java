@@ -480,7 +480,7 @@ public class GermlineDisruptions
                             .chromosomeBand(gene.KaryotypeBand)
                             .likelihoodMethod(LikelihoodMethod.GERMLINE)
                             .driverLikelihood(1.0)
-                            .reportedStatus(ReportedStatus.REPORTED)
+                            .reportedStatus(reportedStatus)
                             .missense(0)
                             .nonsense(0)
                             .splice(0)
