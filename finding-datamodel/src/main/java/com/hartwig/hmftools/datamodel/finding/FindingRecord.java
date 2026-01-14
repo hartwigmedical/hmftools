@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.datamodel.finding;
 
-import java.util.List;
-
 import com.hartwig.hmftools.datamodel.orange.ExperimentType;
 import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
 import com.hartwig.hmftools.datamodel.purple.PurpleFit;
@@ -29,9 +27,6 @@ public interface FindingRecord
     @NotNull FindingList<HlaAllele> hla();
 
     @NotNull FindingList<PharmocoGenotype> pharmocoGenotypes();
-
-    @NotNull
-    List<ChromosomeArmCopyNumber> chromosomeArmCopyNumbers();
 
     @NotNull FindingItem<MicrosatelliteStability> microsatelliteStability();
 
