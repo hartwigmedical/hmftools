@@ -501,6 +501,11 @@ public class DatabaseAccess implements AutoCloseable
         structuralVariantClusterDAO.writeDrivers(sample, drivers);
     }
 
+    public void writeBreakendsAndFusions(final String sampleId, final List<LinxBreakend> breakends, final List<LinxFusion> fusions)
+    {
+        structuralVariantFusionDAO.writeBreakendsAndFusions(sampleId, breakends, fusions);
+    }
+
     public void writeGermlineSVs(final String sample, final List<LinxGermlineDisruption> germlineSvs)
     {
         germlineVariantDAO.writeGermlineSVs(sample, germlineSvs);
