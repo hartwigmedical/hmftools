@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.cider
 
 import com.hartwig.hmftools.cider.layout.ReadLayout
-import com.hartwig.hmftools.cider.layout.ReadLayoutBuilderTest
 import com.hartwig.hmftools.cider.layout.TestLayoutRead
 import htsjdk.samtools.SAMUtils
 import org.junit.Before
@@ -184,12 +183,12 @@ class VdjBuilderUtilsTest
         // we are aligned at the T
         val baseQual1 = SAMUtils.fastqToPhred("FF:FFFF:FF") // F is 37, : is 25
         val read1 = TestLayoutRead("read1", ReadKey("read1", true), seq.toByteArray(), baseQual1, 4)
-        layout1.addRead(read1, ReadLayoutBuilderTest.MIN_BASE_QUALITY)
+        layout1.addRead(read1, VDJSequenceBuilderTest.MIN_BASE_QUALITY)
 
         val layout2 = ReadLayout()
         val baseQual2 = SAMUtils.fastqToPhred("FFFF::FFFF") // F is 37, : is 25
         val read2 = TestLayoutRead("read2", ReadKey("read2", true), seq.toByteArray(), baseQual2, 4)
-        layout2.addRead(read2, ReadLayoutBuilderTest.MIN_BASE_QUALITY)
+        layout2.addRead(read2, VDJSequenceBuilderTest.MIN_BASE_QUALITY)
 
         val vdj1 = TestUtils.createVDJ(layout1, 3, 7, 0, 10)
         val vdj2 = TestUtils.createVDJ(layout2, 3, 7, 0, 10)
