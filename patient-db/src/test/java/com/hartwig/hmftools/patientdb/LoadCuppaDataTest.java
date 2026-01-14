@@ -19,7 +19,6 @@ import org.junit.Test;
 @Ignore
 public class LoadCuppaDataTest extends DatabaseTestBase
 {
-    private static final String TEST_SAMPLE_ID = "example";
     private static final int TOP_N_PROBS = 2;
 
     private static CuppaPredictions CUPPA_PREDICTIONS;

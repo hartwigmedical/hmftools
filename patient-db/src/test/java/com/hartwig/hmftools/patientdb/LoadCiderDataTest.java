@@ -17,8 +17,6 @@ import org.junit.Test;
 @Ignore
 public class LoadCiderDataTest extends DatabaseTestBase
 {
-    private static final String TEST_SAMPLE_ID = "example";
-
     @Test
     public void canWriteCdr3Sequence()
     {

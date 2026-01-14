@@ -12,6 +12,8 @@ import org.testcontainers.mysql.MySQLContainer;
 
 public abstract class DatabaseTestBase
 {
+    protected static final String TEST_SAMPLE_ID = "test_sample";
+
     protected static MySQLContainer container;
     protected static DatabaseAccess databaseAccess;
 

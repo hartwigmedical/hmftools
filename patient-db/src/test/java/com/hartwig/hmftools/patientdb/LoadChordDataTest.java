@@ -16,6 +16,8 @@ import org.junit.Test;
 @Ignore
 public class LoadChordDataTest extends DatabaseTestBase
 {
+    private static final String TEST_SAMPLE_ID = "test_sample";
+
     @Test
     public void canLoadChordData()
     {
@@ -29,14 +31,14 @@ public class LoadChordDataTest extends DatabaseTestBase
                 .remarksHrdType("")
                 .build();
 
-        databaseAccess.writeChord("example", chordData);
+        databaseAccess.writeChord(TEST_SAMPLE_ID, chordData);
 
         List<ChordRecord> chordRecords = fetchTable(Tables.CHORD, ChordRecord.class);
 
         assertEquals(1, chordRecords.size());
 
         ChordRecord actualRecord = chordRecords.get(0);
-        ChordRecord expectedRecord = from(chordData, "example");
+        ChordRecord expectedRecord = from(chordData, TEST_SAMPLE_ID);
 
         assertEquals(expectedRecord, actualRecord);
     }
