@@ -117,32 +117,31 @@ final class GainDeletionFactory {
 
     public static List<GainDeletion> somaticLoh(List<PurpleGeneCopyNumber> lohGeneCopyNumbers)
     {
-        List<GainDeletion> somaticGainsDels = new ArrayList<>();
-        for(PurpleGeneCopyNumber geneCopyNumber : lohGeneCopyNumbers)
-        {
-            somaticGainsDels.add(
-                    ImmutableGainDeletion.builder()
-                            .findingKey(FindingKeys.gainDeletion(DriverSource.SOMATIC,
-                                    geneCopyNumber.gene(),
-                                    CopyNumberInterpretation.FULL_DEL,
-                                    geneCopyNumber.isCanonical(),
-                                    geneCopyNumber.transcript()))
-                            .driverSource(DriverSource.SOMATIC)
-                            .reportedStatus(ReportedStatus.REPORTED)
-                            .driverInterpretation(DriverInterpretation.LOW)
-                            .type(GainDeletion.Type.SOMATIC_LOH)
-                            .chromosome(geneCopyNumber.chromosome())
-                            .chromosomeBand(geneCopyNumber.chromosomeBand())
-                            .gene(geneCopyNumber.gene())
-                            .transcript(geneCopyNumber.transcript())
-                            .isCanonical(geneCopyNumber.isCanonical())
-                            .interpretation(CopyNumberInterpretation.FULL_DEL)
-                            .tumorMinCopies(geneCopyNumber.minCopyNumber())
-                            .tumorMaxCopies(geneCopyNumber.maxCopyNumber())
-                            .tumorMinMinorAlleleCopies(geneCopyNumber.minMinorAlleleCopyNumber())
-                            .build());
-        }
-        return somaticGainsDels;
+        return lohGeneCopyNumbers.stream().map(GainDeletionFactory::toGainDel).toList();
+    }
+
+    private static GainDeletion toGainDel(PurpleGeneCopyNumber geneCopyNumber)
+    {
+        return ImmutableGainDeletion.builder()
+                .findingKey(FindingKeys.gainDeletion(DriverSource.SOMATIC,
+                        geneCopyNumber.gene(),
+                        CopyNumberInterpretation.FULL_DEL,
+                        geneCopyNumber.isCanonical(),
+                        geneCopyNumber.transcript()))
+                .driverSource(DriverSource.SOMATIC)
+                .reportedStatus(ReportedStatus.REPORTED)
+                .driverInterpretation(DriverInterpretation.LOW)
+                .type(GainDeletion.Type.SOMATIC_LOH)
+                .chromosome(geneCopyNumber.chromosome())
+                .chromosomeBand(geneCopyNumber.chromosomeBand())
+                .gene(geneCopyNumber.gene())
+                .transcript(geneCopyNumber.transcript())
+                .isCanonical(geneCopyNumber.isCanonical())
+                .interpretation(CopyNumberInterpretation.FULL_DEL)
+                .tumorMinCopies(geneCopyNumber.minCopyNumber())
+                .tumorMaxCopies(geneCopyNumber.maxCopyNumber())
+                .tumorMinMinorAlleleCopies(geneCopyNumber.minMinorAlleleCopyNumber())
+                .build();
     }
 
     private static PurpleDriver findDriver(final List<PurpleDriver> drivers, final String gene, final String transcript,
