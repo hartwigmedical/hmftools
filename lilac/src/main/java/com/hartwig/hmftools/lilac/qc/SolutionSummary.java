@@ -11,10 +11,8 @@ import java.io.File;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Set;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.hla.ImmutableLilacAllele;
 import com.hartwig.hmftools.common.hla.LilacAllele;
 import com.hartwig.hmftools.common.utils.file.FileLock;
@@ -55,7 +53,9 @@ public class SolutionSummary
 
         AlleleCoverage noCoverage = new AlleleCoverage(refAllele, 0, 0, 0);
 
-        AlleleCoverage ref = !ReferenceCoverage.getAlleleCoverage().isEmpty() ? ReferenceCoverage.getAlleleCoverage().get(index) : noCoverage;
+        AlleleCoverage ref = !ReferenceCoverage.getAlleleCoverage().isEmpty()
+	        ? ReferenceCoverage.getAlleleCoverage().get(index)
+	        : noCoverage;
 
         AlleleCoverage tumor = !TumorCoverage.getAlleleCoverage().isEmpty() ? TumorCoverage.getAlleleCoverage().get(index) : noCoverage;
 
@@ -100,14 +100,10 @@ public class SolutionSummary
     public void write(final String fileName)
     {
         List<LilacAllele> alleles = Lists.newArrayList();
-        Set<HlaGene> genes = Sets.newHashSet();
         if(ReferenceCoverage != null)
         {
             for(int i = 0; i < ReferenceCoverage.getAlleles().size(); ++i)
-            {
-                genes.add(ReferenceCoverage.getAlleles().get(i).Gene);
                 alleles.add(buildAlleleData(i));
-            }
         }
 
         File file = new File(fileName);

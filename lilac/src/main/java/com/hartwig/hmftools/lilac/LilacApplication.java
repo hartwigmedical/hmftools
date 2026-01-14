@@ -162,6 +162,9 @@ public class LilacApplication
         mRefBamReader = null;
         mTumorBamReader = null;
 
+        mSummaryMetrics = null;
+        mSolutionSummary = null;
+
         // key state and results
         mRefAminoAcidCounts = null;
         mRefNucleotideCounts = null;

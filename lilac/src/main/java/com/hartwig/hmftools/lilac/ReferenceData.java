@@ -154,7 +154,7 @@ public class ReferenceData
         for(HlaGene gene : GENE_CACHE.GeneNames)
             GENE_EXON_BOUNDARIES.computeIfAbsent(gene, k -> Lists.newArrayList()).addAll(GENE_CACHE.AminoAcidExonBoundaries.get(gene));
 
-        HLA_CONTEXT_FACTORY = new HlaContextFactory(mConfig, GENE_EXON_BOUNDARIES);
+        HLA_CONTEXT_FACTORY = new HlaContextFactory(GENE_EXON_BOUNDARIES);
         NUC_GENE_FRAG_ENRICHMENT = NucleotideGeneEnrichment.create(GENE_EXON_BOUNDARIES);
 
         mAlleleCache = new HlaAlleleCache();

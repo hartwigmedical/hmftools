@@ -245,7 +245,7 @@ public class ResultsWriter
         }
     }
 
-    private List<String> existingFragments(final FileLock file)
+    private static List<String> existingFragments(final FileLock file)
     {
         List<String> existingFragmentRecords = Lists.newArrayList();
         try
