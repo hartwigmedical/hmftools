@@ -3,6 +3,8 @@ package com.hartwig.hmftools.datamodel.finding;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -49,10 +51,15 @@ public class FindingsJson {
     }
 
     @NotNull
-    public FindingRecord read(@NotNull Reader reader) throws IOException {
-        try (BufferedReader bufferedReader = new BufferedReader(reader)) {
-            return gson.fromJson(bufferedReader, FindingRecord.class);
+    public FindingRecord read(@NotNull InputStream inputStream) throws IOException {
+        try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream))) {
+            return read(bufferedReader);
         }
+    }
+
+    @NotNull
+    public FindingRecord read(@NotNull Reader reader) throws IOException {
+        return gson.fromJson(reader, FindingRecord.class);
     }
 
     public void write(@NotNull FindingRecord findingRecord, @NotNull Path outputFilePath) throws IOException {

@@ -21,6 +21,14 @@ public class FindingsQuery<T extends Driver> {
         return this;
     }
 
+    public FindingsQuery<T> germlineOnly() {
+        return driverSources(DriverSource.GERMLINE);
+    }
+
+    public FindingsQuery<T> somaticOnly() {
+        return driverSources(DriverSource.SOMATIC);
+    }
+
     public FindingsQuery<T> reportedStatuses(ReportedStatus... reportedStatuses) {
         this.reportedStatuses = Set.of(reportedStatuses);
         return this;
