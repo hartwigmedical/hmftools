@@ -18,7 +18,7 @@ import com.hartwig.hmftools.common.purple.FittedPurityMethod;
 import com.hartwig.hmftools.common.purple.FittedPurityScore;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
-import com.hartwig.hmftools.common.purple.GermlineDeletion;
+import com.hartwig.hmftools.common.purple.GermlineAmpDel;
 import com.hartwig.hmftools.common.purple.GermlineDetectionMethod;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.ImmutableFittedPurity;
@@ -210,7 +210,7 @@ public class LoadPurpleDataTest extends DatabaseTestBase
     @Test
     public void canWriteGermlineDeletions()
     {
-        GermlineDeletion germlineDeletion = new GermlineDeletion(
+        GermlineAmpDel germlineDeletion = new GermlineAmpDel(
                 "GENE1",
                 "chr1",
                 "1q1.1",
