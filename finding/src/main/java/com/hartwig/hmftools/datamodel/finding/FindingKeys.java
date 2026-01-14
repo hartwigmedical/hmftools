@@ -78,10 +78,6 @@ final class FindingKeys
         return String.format("predictedTumorOrigin[%s]", cancerType);
     }
 
-    public static String chromosomeArmCopyNumber(@NotNull String chromosome) {
-        return String.format("chrArmCopyNumber[%s]", chromosome);
-    }
-
     public static String pharmacoGenotype(@NotNull String gene, @NotNull String allele)
     {
         return String.format("pharmacoGenotype[%s:%s]", gene, allele);
