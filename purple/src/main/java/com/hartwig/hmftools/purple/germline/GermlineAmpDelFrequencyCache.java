@@ -18,7 +18,7 @@ import com.hartwig.hmftools.purple.drivers.AmpDelRegionFrequency;
 
 public class GermlineAmpDelFrequencyCache
 {
-    private Map<String,List<AmpDelRegionFrequency>> mChrRegionMap;
+    private Map<String, List<AmpDelRegionFrequency>> mChrRegionMap;
 
     public static final String COHORT_AMP_DEL_FREQ_FILE = "germline_amp_del_freq_file";
 
@@ -28,9 +28,10 @@ public class GermlineAmpDelFrequencyCache
         loadCohortFrequencies(filename);
     }
 
-    public int getRegionFrequency(final String chromsome, int regionStart, int regionEnd, int buffer, AmpDelRegionFrequency.EventType eventType)
+    public int getRegionFrequency(final String chromsome, int regionStart, int regionEnd, int buffer,
+            AmpDelRegionFrequency.EventType eventType)
     {
-        if (!mChrRegionMap.containsKey(chromsome))
+        if(!mChrRegionMap.containsKey(chromsome))
         {
             return 0;
         }
@@ -41,22 +42,30 @@ public class GermlineAmpDelFrequencyCache
         for(AmpDelRegionFrequency regionFreq : regions)
         {
             if(regionStart - buffer > regionFreq.Region.start())
+            {
                 continue;
+            }
 
             if(regionFreq.Region.start() - buffer > regionStart)
+            {
                 break;
+            }
 
             if(abs(regionFreq.Region.start() - regionStart) <= buffer && abs(regionFreq.Region.end() - regionEnd) <= buffer)
+            {
                 totalFrequency += regionFreq.Frequency;
+            }
         }
 
         return totalFrequency;
     }
 
-    private boolean loadCohortFrequencies(final String filename)
+    private void loadCohortFrequencies(final String filename)
     {
         if(filename == null)
-            return false;
+        {
+            return;
+        }
 
         try
         {
@@ -64,12 +73,12 @@ public class GermlineAmpDelFrequencyCache
             String header = lines.get(0);
             lines.remove(0);
 
-            Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, ",");
+            Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(header, ",");
 
             int chromosomeIndex = fieldsIndexMap.get("Chromosome");
             int regionStartIndex = fieldsIndexMap.get("RegionStart");
             int regionEndIndex = fieldsIndexMap.get("RegionEnd");
-            int typeIndex = fieldsIndexMap.get("Type");
+            int typeIndex = fieldsIndexMap.getOrDefault("Type", -1);
             int frequencyIndex = fieldsIndexMap.get("Frequency");
 
             String currentChromosome = "";
@@ -82,7 +91,8 @@ public class GermlineAmpDelFrequencyCache
                 String chromosome = values[chromosomeIndex];
                 int regionStart = Integer.parseInt(values[regionStartIndex]);
                 int regionEnd = Integer.parseInt(values[regionEndIndex]);
-                AmpDelRegionFrequency.EventType type = AmpDelRegionFrequency.EventType.valueOf(values[typeIndex]);
+                AmpDelRegionFrequency.EventType type =
+                        typeIndex >= 0 ? AmpDelRegionFrequency.EventType.valueOf(values[typeIndex]) : AmpDelRegionFrequency.EventType.DEL;
                 int frequency = Integer.parseInt(values[frequencyIndex]);
 
                 if(!currentChromosome.equals(chromosome))
@@ -96,12 +106,10 @@ public class GermlineAmpDelFrequencyCache
             }
 
             PPL_LOGGER.info("loaded {} germline deletions frequencies from file: {}", lines.size(), filename);
-            return true;
         }
         catch(IOException e)
         {
             PPL_LOGGER.error("failed to read cohort germline deletions file: {}", e.toString());
-            return false;
         }
     }
 }

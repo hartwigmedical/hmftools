@@ -22,46 +22,6 @@ public class PcfDataTest
     private final String CobaltDirectory = Paths.get("src", "test", "resources", "cobalt").toAbsolutePath().toString();
     private final PcfData data = new PcfData(CobaltDirectory);
 
-//    @Test
-    public void comparison() throws Exception
-    {
-        String baselineDir = "/Users/timlavers/work/junk/";
-        ListMultimap<Chromosome, PCFPosition> baseline = new PcfData(baselineDir).loadCobaltSegments("COLO829v003T", PCFSource.TUMOR_RATIO);
-
-        String newVersionDir = "/Users/timlavers/work/batches/2025/11/13/1/cobalt/";
-        ListMultimap<Chromosome, PCFPosition> newVersion = new PcfData(newVersionDir).loadCobaltSegments("COLO829v003T", PCFSource.TUMOR_RATIO);
-
-        var chr1Baseline = baseline.get(HumanChromosome._1);
-        var newChr1Baseline = newVersion.get(HumanChromosome._1);
-        System.out.println(chr1Baseline.size());
-        System.out.println(newChr1Baseline.size());
-        Set<PCFPosition> baselineSet = Sets.newHashSet(baseline.get(HumanChromosome._1));
-        Set<PCFPosition> newVersionSet = Sets.newHashSet(newVersion.get(HumanChromosome._1));
-
-//        Sets.difference(baselineSet, newVersionSet).forEach(System.out::println);
-        baselineSet.forEach(position -> {
-            if (!newVersionSet.contains(position)) {
-                System.out.println("In old, not in new: " + position);
-            }
-        });
-        newVersionSet.forEach(position -> {
-            if (!baselineSet.contains(position)) {
-                System.out.println("In new, not in old: " + position);
-            }
-        });
-//        int limit = Math.min(chr1Baseline.size(), newChr1Baseline.size());
-//        for (int i = 72; i < limit; i++)
-//        {
-//            System.out.println(i);
-//            System.out.println("old: " + chr1Baseline.get(i));
-//            System.out.println("new: " + newChr1Baseline.get(i));
-//            assertEquals(chr1Baseline.get(i).Position, newChr1Baseline.get(i).Position);
-//            assertEquals(chr1Baseline.get(i).minPosition(), newChr1Baseline.get(i).minPosition());
-//            assertEquals(chr1Baseline.get(i).maxPosition(), newChr1Baseline.get(i).maxPosition());
-//        }
-
-    }
-
     @Test
     public void returnEmptyForNull() throws Exception
     {
