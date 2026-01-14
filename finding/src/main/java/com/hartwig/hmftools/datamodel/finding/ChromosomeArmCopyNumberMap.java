@@ -1,8 +1,6 @@
 package com.hartwig.hmftools.datamodel.finding;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
@@ -10,25 +8,62 @@ import com.hartwig.hmftools.datamodel.purple.PurpleCopyNumber;
 
 import org.jetbrains.annotations.NotNull;
 
-final class ChromosomeArmCopyNumberFactory
+final class ChromosomeArmCopyNumberMap
 {
-    private ChromosomeArmCopyNumberFactory()
+    private enum ChromosomeArm
     {
+        P_ARM,
+        Q_ARM,
+    }
+
+    private record CopyNumberKey(String chromosome, ChromosomeArm arm) {
+    }
+
+    private final Map<CopyNumberKey, Double> cnPerChromosomeArm;
+
+    public static ChromosomeArmCopyNumberMap create(@NotNull Iterable<PurpleCopyNumber> copyNumbers,
+            @NotNull final OrangeRefGenomeVersion refGenomeVersion) {
+        return new ChromosomeArmCopyNumberMap(extractCnPerChromosomeArm(copyNumbers, refGenomeVersion));
+    }
+
+    private ChromosomeArmCopyNumberMap(Map<CopyNumberKey, Double> cnPerChromosomeArm)
+    {
+        this.cnPerChromosomeArm = cnPerChromosomeArm;
+    }
+
+    public double chromosomeArmCopyNumber(@NotNull String chromosome, @NotNull String chromosomeBand) {
+        Double copyNumber = cnPerChromosomeArm.get(new CopyNumberKey(chromosome, getChromosomeArm(chromosomeBand)));
+        if (copyNumber == null) {
+            throw new IllegalArgumentException("Copy number not found for chromosome band: " + chromosomeBand + "!");
+        }
+        return copyNumber;
     }
 
     @NotNull
-    public static List<ChromosomeArmCopyNumber> extractCnPerChromosomeArm(@NotNull Iterable<PurpleCopyNumber> copyNumbers,
+    static ChromosomeArm getChromosomeArm(@NotNull String chromosomeBand) {
+        ChromosomeArm chromosomeArm;
+        if (chromosomeBand.startsWith("p")) {
+            chromosomeArm = ChromosomeArm.P_ARM;
+        } else if (chromosomeBand.startsWith("q")) {
+            chromosomeArm = ChromosomeArm.Q_ARM;
+        } else {
+            throw new IllegalArgumentException("Chromosome arm could not be resolved from band: " + chromosomeBand + "!");
+        }
+        return chromosomeArm;
+    }
+
+    @NotNull
+    private static Map<CopyNumberKey, Double> extractCnPerChromosomeArm(@NotNull Iterable<PurpleCopyNumber> copyNumbers,
             @NotNull final OrangeRefGenomeVersion refGenomeVersion)
     {
-
         RefGenomeCoordinates refGenomeCoordinates = RefGenomeCoordinates.refGenomeCoordinates(refGenomeVersion);
 
-        List<ChromosomeArmCopyNumber> cnPerChromosomeArmData = new ArrayList<>();
+        Map<CopyNumberKey, Double> cnPerChromosomeArmData = new HashMap<>();
         for(String chromosome : refGenomeCoordinates.Lengths.keySet())
         {
-            Map<ChromosomeArmCopyNumber.ChromosomeArm, GenomeRegion> genomeRegion = determineArmRegions(chromosome, refGenomeCoordinates);
+            Map<ChromosomeArm, GenomeRegion> genomeRegion = determineArmRegions(chromosome, refGenomeCoordinates);
 
-            for(ChromosomeArmCopyNumber.ChromosomeArm arm : ChromosomeArmCopyNumber.ChromosomeArm.values())
+            for(ChromosomeArm arm : ChromosomeArm.values())
             {
                 double copyNumberArm = 0;
 
@@ -49,40 +84,32 @@ final class ChromosomeArmCopyNumberFactory
 
                 copyNumberArm = Doubles.round(copyNumberArm, 2);
 
-                cnPerChromosomeArmData.add(ImmutableChromosomeArmCopyNumber.builder()
-                        .findingKey(FindingKeys.chromosomeArmCopyNumber(chromosome))
-                        .chromosome(chromosome)
-                        .arm(arm)
-                        .meanCopyNumber(copyNumberArm)
-                        .build());
+                cnPerChromosomeArmData.put(new CopyNumberKey(chromosome, arm), copyNumberArm);
             }
         }
-
-        cnPerChromosomeArmData.sort(ChromosomeArmCopyNumber.COMPARATOR);
-
         return cnPerChromosomeArmData;
     }
 
     @NotNull
-    private static Map<ChromosomeArmCopyNumber.ChromosomeArm, GenomeRegion> determineArmRegions(@NotNull String chromosome,
+    private static Map<ChromosomeArm, GenomeRegion> determineArmRegions(@NotNull String chromosome,
             @NotNull RefGenomeCoordinates refGenomeCoordinates)
     {
         int centromerePos = refGenomeCoordinates.centromeres().get(chromosome);
         int chrLength = refGenomeCoordinates.lengths().get(chromosome);
 
-        Map<ChromosomeArmCopyNumber.ChromosomeArm, GenomeRegion> chromosomeArmGenomeRegionMap = new HashMap<>();
+        Map<ChromosomeArm, GenomeRegion> chromosomeArmGenomeRegionMap = new HashMap<>();
 
         GenomeRegion partBeforeCentromere = new GenomeRegion(chromosome, 1, centromerePos);
         GenomeRegion partAfterCentromere = new GenomeRegion(chromosome, centromerePos + 1, chrLength);
 
         if (bases(partBeforeCentromere) < bases(partAfterCentromere))
         {
-            chromosomeArmGenomeRegionMap.put(ChromosomeArmCopyNumber.ChromosomeArm.P_ARM, partBeforeCentromere);
-            chromosomeArmGenomeRegionMap.put(ChromosomeArmCopyNumber.ChromosomeArm.Q_ARM, partAfterCentromere);
+            chromosomeArmGenomeRegionMap.put(ChromosomeArm.P_ARM, partBeforeCentromere);
+            chromosomeArmGenomeRegionMap.put(ChromosomeArm.Q_ARM, partAfterCentromere);
         } else
         {
-            chromosomeArmGenomeRegionMap.put(ChromosomeArmCopyNumber.ChromosomeArm.P_ARM, partAfterCentromere);
-            chromosomeArmGenomeRegionMap.put(ChromosomeArmCopyNumber.ChromosomeArm.Q_ARM, partBeforeCentromere);
+            chromosomeArmGenomeRegionMap.put(ChromosomeArm.P_ARM, partAfterCentromere);
+            chromosomeArmGenomeRegionMap.put(ChromosomeArm.Q_ARM, partBeforeCentromere);
         }
         return chromosomeArmGenomeRegionMap;
     }
@@ -138,16 +165,6 @@ final class ChromosomeArmCopyNumberFactory
         @NotNull
         public Map<String, Integer> centromeres() {
             return Centromeres;
-        }
-
-        public int length(final String chromosome)
-        {
-            return Lengths.getOrDefault(chromosome, 0);
-        }
-
-        public int centromere(final String chromosome)
-        {
-            return Centromeres.getOrDefault(chromosome, 0);
         }
 
         private static Map<String, Integer> v37Lengths()
