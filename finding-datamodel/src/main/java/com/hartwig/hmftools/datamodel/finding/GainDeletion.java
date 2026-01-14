@@ -46,4 +46,6 @@ public interface GainDeletion extends Driver
     double tumorMaxCopies();
 
     double tumorMinMinorAlleleCopies();
+
+    double chromosomeArmCopies();
 }
