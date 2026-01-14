@@ -86,15 +86,12 @@ public class FindingRecordFactory {
 
         FindingsStatus findingsStatus = purpleFindingsStatus(purple);
 
-        DriverFindingList<GainDeletion> gainDeletions = GainDeletionFactory.gainDeletionFindings(purple, findingsStatus);
+        DriverFindingList<GainDeletion> gainDeletions = GainDeletionFactory.gainDeletionFindings(purple, orangeRecord.refGenomeVersion(), findingsStatus);
 
         builder.smallVariants(SmallVariantFactory.smallVariantFindings(purple, findingsStatus, clinicalTranscriptsModel, driverGenes))
                 .gainDeletions(gainDeletions)
                 .microsatelliteStability(createMicrosatelliteStability(purple, orangeRecord.linx(), gainDeletions))
                 .tumorMutationStatus(createTumorMutationStatus(purple));
-
-        builder.chromosomeArmCopyNumbers(
-                ChromosomeArmCopyNumberFactory.extractCnPerChromosomeArm(purple.allSomaticCopyNumbers(), orangeRecord.refGenomeVersion()));
 
         return gainDeletions;
     }
