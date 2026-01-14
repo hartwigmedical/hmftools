@@ -33,19 +33,19 @@ class CiderReadScreener(// collect the reads and sort by types
         val alignmentStart: Int
     )
 
-    // want a map to make sure we do not process same record twice
     private val mProcessedReadRecords = Collections.newSetFromMap(ConcurrentHashMap<ReadRecordKey, Boolean>())
-
-    // following store the reads we found, must be thread safe
     private val mVjReadCandidates = Collections.synchronizedList(ArrayList<VJReadCandidate>())
     private val mAllMatchedReads = Collections.synchronizedList(ArrayList<SAMRecord>())
     private val mMatchedReadNames = Collections.newSetFromMap(ConcurrentHashMap<String, Boolean>())
-    private val mUnmatchedReadsByName = ConcurrentHashMap<String, MutableList<SAMRecord>>()
+    private val mUnmatchedMappedReads = Collections.synchronizedList(ArrayList<SAMRecord>())
+    private val mVjMateCandidates = ArrayList<VJReadCandidate>()
 
     val vjReadCandidates: List<VJReadCandidate>
         get() = mVjReadCandidates
     val allMatchedReads: List<SAMRecord>
         get() = mAllMatchedReads
+    val vjMateCandidates: List<VJReadCandidate>
+        get() = mVjMateCandidates
 
     // Note: this function is called from multiple threads
     fun asyncProcessSamRecord(samRecord: SAMRecord)
@@ -63,46 +63,39 @@ class CiderReadScreener(// collect the reads and sort by types
         // The trimming amount is stored into the read so we can retrieve it later when needed.
         setAdapterDnaTrim(samRecord)
 
-        val matchFound = tryMatchRead(samRecord)
-
-        if (!matchFound)
-        {
-            // If the mate of this read is relevant, then later we will include this read too.
-            mUnmatchedReadsByName.computeIfAbsent(samRecord.readName)
-                { Collections.synchronizedList(ArrayList()) }
-                .add(samRecord)
-        }
+        tryMatchRead(samRecord)
     }
 
-    // Adds reads which are mates of relevant reads.
-    fun tryMatchReadsFromMates()
+    // Collect mates of candidate reads, which can be used to extend the consensus sequence.
+    fun processCandidateMates()
     {
-        for ((readName, reads) in mUnmatchedReadsByName)
+        val readCandidatesByFragment = mVjReadCandidates.groupBy { it.read.readName }
+        for (read in mUnmatchedMappedReads)
         {
-            for (read in reads)
+            val fragmentCandidates = readCandidatesByFragment[read.readName]
+            // This read is a mate which is relevant if its fragment contains relevant reads and the mate aligns nearby.
+            // If the mate aligns elsewhere, then it can't extend the consensus sequence.
+            val isMateRelevant = fragmentCandidates != null && !fragmentCandidates.isEmpty()
+                    && fragmentCandidates.any { it.read.referenceIndex == read.referenceIndex }
+            if (isMateRelevant)
             {
-                if (mMatchedReadNames.contains(readName))
-                {
-                   tryMatchRead(read)
-                }
+                // Only match by alignment (other matching possibilities would've been matched on the first pass).
+                tryMatchByAlignment(read, true)
             }
         }
     }
 
     private fun tryMatchRead(samRecord: SAMRecord): Boolean
     {
-        // In the case of unmapped read, the read mate position will be the one used.
-        // However in the later steps we do not actually want to use this.
-        val mapped = if (samRecord.referenceIndex == -1) null else GenomeRegions.create(
-            samRecord.referenceName,
-            samRecord.alignmentStart, samRecord.alignmentEnd)
+        val fragmentMapped = samRecord.referenceIndex != -1
+        val readMapped = !samRecord.readUnmappedFlag
 
         // first we try to match by genome region
-        val matchFound = if (mapped != null)
+        val matchFound = if (fragmentMapped)
         {
-            if (!samRecord.readUnmappedFlag)
+            if (readMapped)
             {
-                tryMatchByAlignment(samRecord, mapped)
+                tryMatchByAlignment(samRecord, false)
             }
             else
             {
@@ -123,16 +116,26 @@ class CiderReadScreener(// collect the reads and sort by types
             mAllMatchedReads.add(samRecord)
             mMatchedReadNames.add(samRecord.readName)
         }
+        else if (readMapped)
+        {
+            // If the mate of this read is relevant, then later we may include this read too.
+            // Only keep mapped reads because we will need the aligned position.
+            mUnmatchedMappedReads.add(samRecord)
+        }
 
         return matchFound
     }
 
-    private fun tryMatchByAlignment(samRecord: SAMRecord, mapped: GenomeRegion): Boolean
+    private fun tryMatchByAlignment(samRecord: SAMRecord, isMate: Boolean): Boolean
     {
+        val mapped = GenomeRegions.create(
+            samRecord.referenceName,
+            samRecord.alignmentStart, samRecord.alignmentEnd)
+
         // first step we see if the read overlaps with any anchor location
         for (anchorLocation in mCiderGeneDatastore.getVjAnchorGeneLocations())
         {
-            val readCandidate = matchesAnchorLocation(samRecord, mapped, anchorLocation)
+            val readCandidate = tryMatchToAnchorLocation(samRecord, mapped, anchorLocation, isMate)
             if (readCandidate != null)
             {
                 return true
@@ -146,7 +149,7 @@ class CiderReadScreener(// collect the reads and sort by types
             for (igTcrConstantRegion in mCiderGeneDatastore.getIgConstantDiversityRegions())
             {
                 // now try to match around location of constant regions
-                val readCandidate = tryMatchFromConstantRegion(samRecord, mapped, igTcrConstantRegion)
+                val readCandidate = tryMatchFromConstantRegion(samRecord, mapped, igTcrConstantRegion, isMate)
                 if (readCandidate != null)
                 {
                     return true
@@ -156,15 +159,14 @@ class CiderReadScreener(// collect the reads and sort by types
         return false
     }
 
-    // what this function does is to see if the anchor location is within this read
-    fun matchesAnchorLocation(
+    fun tryMatchToAnchorLocation(
         samRecord: SAMRecord, mapped: GenomeRegion,
         anchorLocation: VJAnchorGenomeLocation,
+        isMate: Boolean
     ): VJReadCandidate?
     {
-        // only if mapped
-        val mateIsMatched = mMatchedReadNames.contains(samRecord.readName)
-        val tolerance = if (mateIsMatched) mMaxFragmentLength else 0
+        // If this is the second pass on the mates, allow it to match the anchor up to the possible fragment length.
+        val tolerance = if (isMate) mMaxFragmentLength else 0
         if (!isMappedToAnchorLocation(mapped, anchorLocation, tolerance))
         {
             return null
@@ -206,7 +208,7 @@ class CiderReadScreener(// collect the reads and sort by types
             {
                 return addVjReadCandidate(samRecord, genes, MatchMethod.ALIGN,
                     anchorLocation.strand === Strand.REVERSE,
-                    readAnchorStart, readAnchorEnd, anchorLocation.genomeLocation)
+                    readAnchorStart, readAnchorEnd, anchorLocation.genomeLocation, isMate)
             }
         }
         return null
@@ -298,7 +300,9 @@ class CiderReadScreener(// collect the reads and sort by types
                     MatchMethod.BLOSUM,
                     reverseRead,
                     anchorBlosumMatch.anchorStart,
-                    anchorBlosumMatch.anchorEnd
+                    anchorBlosumMatch.anchorEnd,
+                    null,
+                    false
                 )
                 if (readCandidate != null)
                 {
@@ -345,7 +349,9 @@ class CiderReadScreener(// collect the reads and sort by types
                     MatchMethod.BLOSUM,
                     strand == Strand.REVERSE,
                     anchorBlosumMatch.anchorStart,
-                    anchorBlosumMatch.anchorEnd
+                    anchorBlosumMatch.anchorEnd,
+                    null,
+                    false
                 )
                 if (readCandidate != null)
                 {
@@ -357,7 +363,7 @@ class CiderReadScreener(// collect the reads and sort by types
     }
 
     fun tryMatchFromConstantRegion(
-        samRecord: SAMRecord, mapped: GenomeRegion, igTcrConstantDiversityRegion: IgTcrConstantDiversityRegion
+        samRecord: SAMRecord, mapped: GenomeRegion, igTcrConstantDiversityRegion: IgTcrConstantDiversityRegion, isMate: Boolean
     ): VJReadCandidate?
     {
         if (!igTcrConstantDiversityRegion.genomeLocation.inPrimaryAssembly)
@@ -418,7 +424,9 @@ class CiderReadScreener(// collect the reads and sort by types
                     MatchMethod.BLOSUM,
                     strand == Strand.REVERSE,
                     anchorBlosumMatch.anchorStart,
-                    anchorBlosumMatch.anchorEnd
+                    anchorBlosumMatch.anchorEnd,
+                    null,
+                    isMate
                 )
             }
         }
@@ -432,7 +440,8 @@ class CiderReadScreener(// collect the reads and sort by types
         useRevComp: Boolean,
         readAnchorStart: Int,
         readAnchorEnd: Int,
-        templateLocation: GenomicLocation? = null)
+        templateLocation: GenomicLocation?,
+        isMate: Boolean)
     : VJReadCandidate?
     {
         if (vjAnchorTemplates.isEmpty())
@@ -487,8 +496,14 @@ class CiderReadScreener(// collect the reads and sort by types
             throw RuntimeException("blosum match with -ve similarity score: ${readMatch}")
         }
 
-        // add it to list
-        mVjReadCandidates.add(readMatch)
+        if (isMate)
+        {
+            mVjMateCandidates.add(readMatch)
+        }
+        else
+        {
+            mVjReadCandidates.add(readMatch)
+        }
         return readMatch
     }
 

@@ -12,8 +12,6 @@ import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 import kotlin.collections.HashSet
 
-//data class
-
 open class ReadLayout(var id: String = String())
 {
     internal val allSequenceSupport: SequenceSupport = SequenceSupport()
@@ -98,37 +96,9 @@ open class ReadLayout(var id: String = String())
         return highQualSequenceSupport.counts()
     }
 
-    fun getAllSequenceSupportAt(index: Int) : Map.Entry<Byte, Int>
-    {
-        return allSequenceSupport.support[index].likelyBaseSupport()
-    }
-
     fun getHighQualSequenceSupportAt(index: Int) : Map.Entry<Byte, Int>
     {
         return highQualSequenceSupport.support[index].likelyBaseSupport()
-    }
-
-    // get the reads covering the segment
-    fun getSegmentReads(start: Int, end: Int) : List<Read>
-    {
-        val segmentReads = ArrayList<Read>()
-
-        for (r in reads)
-        {
-            val readStart = getReadOffset(r)
-            val readEnd = readStart + r.readLength
-
-            if (readStart < end && start < readEnd)
-            {
-                segmentReads.add(r)
-            }
-        }
-        return segmentReads
-    }
-
-    fun getReadsAt(index: Int) : List<Read>
-    {
-        return getSegmentReads(index, index + 1)
     }
 
     class BaseSupport

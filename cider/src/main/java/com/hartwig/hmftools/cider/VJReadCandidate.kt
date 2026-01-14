@@ -50,14 +50,6 @@ data class VJReadCandidate(
         return bq
     }
 
-    val baseQualityString: String get()
-    {
-        val bq = read.baseQualityString
-        return if (useReverseComplement)
-            bq.reversed()
-        else bq
-    }
-
     val anchorSequence: String get()
     {
         if (anchorOffsetStart >= readLength || anchorOffsetEnd <= 0)
