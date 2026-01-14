@@ -14,13 +14,13 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.region.BaseRegion;
-import com.hartwig.hmftools.purple.drivers.DeletionRegionFrequency;
+import com.hartwig.hmftools.purple.drivers.AmpDelRegionFrequency;
 
 public class GermlineAmpDelFrequencyCache
 {
-    private Map<String,List<DeletionRegionFrequency>> mChrRegionMap;
+    private Map<String,List<AmpDelRegionFrequency>> mChrRegionMap;
 
-    public static final String COHORT_DEL_FREQ_FILE = "germline_del_freq_file";
+    public static final String COHORT_AMP_DEL_FREQ_FILE = "germline_amp_del_freq_file";
 
     public GermlineAmpDelFrequencyCache(final String filename)
     {
@@ -28,16 +28,17 @@ public class GermlineAmpDelFrequencyCache
         loadCohortFrequencies(filename);
     }
 
-    public int getRegionFrequency(final String chromsome, int regionStart, int regionEnd, int buffer)
+    public int getRegionFrequency(final String chromsome, int regionStart, int regionEnd, int buffer, AmpDelRegionFrequency.EventType eventType)
     {
-        List<DeletionRegionFrequency> regions = mChrRegionMap.get(chromsome);
-
-        if(regions == null)
+        if (!mChrRegionMap.containsKey(chromsome))
+        {
             return 0;
+        }
+        List<AmpDelRegionFrequency> regions = mChrRegionMap.get(chromsome).stream().filter(r -> r.Type == eventType).toList();
 
         int totalFrequency = 0;
 
-        for(DeletionRegionFrequency regionFreq : regions)
+        for(AmpDelRegionFrequency regionFreq : regions)
         {
             if(regionStart - buffer > regionFreq.Region.start())
                 continue;
@@ -68,10 +69,11 @@ public class GermlineAmpDelFrequencyCache
             int chromosomeIndex = fieldsIndexMap.get("Chromosome");
             int regionStartIndex = fieldsIndexMap.get("RegionStart");
             int regionEndIndex = fieldsIndexMap.get("RegionEnd");
+            int typeIndex = fieldsIndexMap.get("Type");
             int frequencyIndex = fieldsIndexMap.get("Frequency");
 
             String currentChromosome = "";
-            List<DeletionRegionFrequency> regions = null;
+            List<AmpDelRegionFrequency> regions = null;
 
             for(String line : lines)
             {
@@ -80,6 +82,7 @@ public class GermlineAmpDelFrequencyCache
                 String chromosome = values[chromosomeIndex];
                 int regionStart = Integer.parseInt(values[regionStartIndex]);
                 int regionEnd = Integer.parseInt(values[regionEndIndex]);
+                AmpDelRegionFrequency.EventType type = AmpDelRegionFrequency.EventType.valueOf(values[typeIndex]);
                 int frequency = Integer.parseInt(values[frequencyIndex]);
 
                 if(!currentChromosome.equals(chromosome))
@@ -89,7 +92,7 @@ public class GermlineAmpDelFrequencyCache
                     mChrRegionMap.put(chromosome, regions);
                 }
 
-                regions.add(new DeletionRegionFrequency(new BaseRegion(regionStart, regionEnd), frequency));
+                regions.add(new AmpDelRegionFrequency(new BaseRegion(regionStart, regionEnd), type, frequency));
             }
 
             PPL_LOGGER.info("loaded {} germline deletions frequencies from file: {}", lines.size(), filename);

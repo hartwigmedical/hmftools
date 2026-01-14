@@ -161,7 +161,7 @@ public class SampleGermlineGeneTask implements Callable<Void>
                     PurpleCopyNumberFile.generateFilenameForReading(samplePurpleDir, sampleId));
 
             List<PurpleSegment> segments = PurpleSegment.read(PurpleSegment.generateFilename(samplePurpleDir, sampleId)).stream()
-                    .filter(x -> x.GermlineState == HET_DELETION || x.GermlineState == HOM_DELETION)
+                    .filter(x -> x.GermlineState == HET_DELETION || x.GermlineState == HOM_DELETION || x.GermlineState == AMPLIFICATION)
                     .collect(Collectors.toList());
 
             for(PurpleSegment segment : segments)

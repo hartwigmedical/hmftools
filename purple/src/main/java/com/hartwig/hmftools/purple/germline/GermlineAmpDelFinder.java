@@ -55,6 +55,7 @@ import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantLeg;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
+import com.hartwig.hmftools.purple.drivers.AmpDelRegionFrequency;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 
 import org.jetbrains.annotations.Nullable;
@@ -387,8 +388,9 @@ public class GermlineAmpDelFinder
         if(overlappingGenes.isEmpty())
             return;
 
+        AmpDelRegionFrequency.EventType eventType = germlineStatus == AMPLIFICATION ? AmpDelRegionFrequency.EventType.AMP : AmpDelRegionFrequency.EventType.DEL;
         int cohortFrequency = mCohortFrequency.getRegionFrequency(
-                region.chromosome(), region.start(), region.end(), GERMLINE_AMP_DEL_REGION_MATCH_BUFFER);
+                region.chromosome(), region.start(), region.end(), GERMLINE_AMP_DEL_REGION_MATCH_BUFFER, eventType);
 
         List<String> filters = checkFilters(region, matchedCopyNumber, cohortFrequency, germlineStatus);
 
@@ -403,7 +405,7 @@ public class GermlineAmpDelFinder
 
             List<ExonData> overlappedExons = transData.exons().stream()
                     .filter(x -> positionsOverlap(x.Start, x.End, regionLowerPos, regionHighPos))
-                    .collect(Collectors.toList());
+                    .toList();
 
             if(overlappedExons.isEmpty())
                 continue;

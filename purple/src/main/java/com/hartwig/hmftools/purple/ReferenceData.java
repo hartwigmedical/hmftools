@@ -11,7 +11,7 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.TARGET_REGIO
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TARGET_REGIONS_BED_DESC;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.SampleDataFiles.GERMLINE_VARIANTS;
-import static com.hartwig.hmftools.purple.germline.GermlineAmpDelFrequencyCache.COHORT_DEL_FREQ_FILE;
+import static com.hartwig.hmftools.purple.germline.GermlineAmpDelFrequencyCache.COHORT_AMP_DEL_FREQ_FILE;
 
 import java.io.File;
 import java.io.IOException;
@@ -189,7 +189,7 @@ public class ReferenceData
             PPL_LOGGER.error("failed to load hotspots: {}", e.toString());
         }
 
-        String germlineDeletionFreqFile = config.runGermline() ? configBuilder.getValue(COHORT_DEL_FREQ_FILE) : null;
+        String germlineDeletionFreqFile = config.runGermline() ? configBuilder.getValue(COHORT_AMP_DEL_FREQ_FILE) : null;
         CohortGermlineDeletions = new GermlineAmpDelFrequencyCache(germlineDeletionFreqFile);
 
         TargetRegions = new TargetRegionsData(
@@ -240,7 +240,7 @@ public class ReferenceData
         configBuilder.addConfigItem(SOMATIC_HOTSPOT, false, "Path to somatic hotspot VCF", "");
         configBuilder.addConfigItem(GERMLINE_HOTSPOT, false, "Path to germline hotspot VCF", "");
         addGcProfilePath(configBuilder, false);
-        configBuilder.addPath(COHORT_DEL_FREQ_FILE, false, "Path to cohort germline deletions frequency file");
+        configBuilder.addPath(COHORT_AMP_DEL_FREQ_FILE, false, "Path to cohort germline deletions frequency file");
         configBuilder.addPath(TARGET_REGIONS_BED, false, TARGET_REGIONS_BED_DESC);
         configBuilder.addPath(TARGET_REGIONS_RATIOS, false, "Path to target regions ratios file");
         configBuilder.addPath(TARGET_REGION_MSI_INDELS, false, "Path to target regions MSI INDELs file");

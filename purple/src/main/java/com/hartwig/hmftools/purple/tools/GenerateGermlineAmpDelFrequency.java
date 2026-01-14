@@ -17,9 +17,10 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.region.BaseRegion;
-import com.hartwig.hmftools.purple.drivers.DeletionRegionFrequency;
+import com.hartwig.hmftools.purple.drivers.AmpDelRegionFrequency;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -30,7 +31,7 @@ public class GenerateGermlineAmpDelFrequency
     private final int mMinSampleCount;
     private final List<String> mSampleIds;
 
-    private Map<String,List<DeletionRegionFrequency>> mChrRegionMap;
+    private Map<String,List<AmpDelRegionFrequency>> mChrRegionMap;
 
     public static final String COHORT_AMP_DEL_FREQ_FILE = "germline_amp_del_freq_file";
 
@@ -76,6 +77,7 @@ public class GenerateGermlineAmpDelFrequency
             int chromosomeIndex = fieldsIndexMap.get("Chromosome");
             int regionStartIndex = fieldsIndexMap.get("RegionStart");
             int regionEndIndex = fieldsIndexMap.get("RegionEnd");
+            int germlineStatusIndex = fieldsIndexMap.get("GermlineStatus");
 
             String line = "";
             int count = 0;
@@ -92,8 +94,9 @@ public class GenerateGermlineAmpDelFrequency
                 String chromosome = values[chromosomeIndex];
                 int regionStart = Integer.parseInt(values[regionStartIndex]);
                 int regionEnd = Integer.parseInt(values[regionEndIndex]);
+                GermlineStatus germlineStatus = GermlineStatus.valueOf(values[germlineStatusIndex]);
 
-                addDeletion(chromosome, regionStart, regionEnd);
+                addEvent(chromosome, regionStart, regionEnd, germlineStatus);
 
                 ++count;
 
@@ -113,34 +116,36 @@ public class GenerateGermlineAmpDelFrequency
         writeCohortFrequencies();
     }
 
-    public void addDeletion(final String chromsome, int regionStart, int regionEnd)
+    public void addEvent(final String chromsome, int regionStart, int regionEnd, GermlineStatus germlineStatus)
     {
-        List<DeletionRegionFrequency> regions = mChrRegionMap.get(chromsome);
+        List<AmpDelRegionFrequency> regions = mChrRegionMap.get(chromsome);
 
         if(regions == null)
         {
             regions = Lists.newArrayList();
             mChrRegionMap.put(chromsome, regions);
         }
+        AmpDelRegionFrequency.EventType type = germlineStatus == GermlineStatus.AMPLIFICATION ? AmpDelRegionFrequency.EventType.AMP : AmpDelRegionFrequency.EventType.DEL;
 
         int index = 0;
         while(index < regions.size())
         {
-            DeletionRegionFrequency region = regions.get(index);
+            AmpDelRegionFrequency region = regions.get(index);
 
-            if(region.Region.start() == regionStart && region.Region.end() == regionEnd)
+            if(region.Region.start() == regionStart && region.Region.end() == regionEnd && region.Type.equals(type))
             {
                 ++region.Frequency;
                 return;
             }
 
             if(regionStart < region.Region.start() || (regionStart == region.Region.start() && regionEnd < region.Region.end()))
+            {
                 break;
+            }
 
             ++index;
         }
-
-        regions.add(index, new DeletionRegionFrequency(new BaseRegion(regionStart, regionEnd), 1));
+        regions.add(index, new AmpDelRegionFrequency(new BaseRegion(regionStart, regionEnd), type, 1));
     }
 
     private void writeCohortFrequencies()
@@ -152,19 +157,19 @@ public class GenerateGermlineAmpDelFrequency
 
             BufferedWriter writer = createBufferedWriter(mCohortFrequencyFile, false);
 
-            writer.write("Chromosome,RegionStart,RegionEnd,Frequency");
+            writer.write("Chromosome,RegionStart,RegionEnd,Type,Frequency");
             writer.newLine();
 
-            for(Map.Entry<String,List<DeletionRegionFrequency>> entry : mChrRegionMap.entrySet())
+            for(Map.Entry<String,List<AmpDelRegionFrequency>> entry : mChrRegionMap.entrySet())
             {
                 String chromosome = entry.getKey();
 
-                for(DeletionRegionFrequency region : entry.getValue())
+                for(AmpDelRegionFrequency region : entry.getValue())
                 {
                     if(region.Frequency < mMinSampleCount)
                         continue;
 
-                    writer.write(String.format("%s,%d,%d,%d", chromosome, region.Region.start(), region.Region.end(), region.Frequency));
+                    writer.write(String.format("%s,%d,%d,%s,%d", chromosome, region.Region.start(), region.Region.end(), region.Type, region.Frequency));
                     writer.newLine();
                 }
             }
