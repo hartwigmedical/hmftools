@@ -10,11 +10,13 @@ import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConfig.isIllumina;
 import static com.hartwig.hmftools.lilac.LilacConstants.APP_NAME;
 import static com.hartwig.hmftools.lilac.LilacConstants.BASE_QUAL_PERCENTILE;
+import static com.hartwig.hmftools.lilac.LilacConstants.CURRENT_GENES;
 import static com.hartwig.hmftools.lilac.LilacConstants.MIN_EVIDENCE_FACTOR;
 import static com.hartwig.hmftools.lilac.LilacConstants.WARN_LOW_COVERAGE_DEPTH;
 import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
 import static com.hartwig.hmftools.lilac.ReferenceData.HLA_CONTEXT_FACTORY;
 import static com.hartwig.hmftools.lilac.ReferenceData.NUC_GENE_FRAG_ENRICHMENT;
+import static com.hartwig.hmftools.lilac.ResultsWriter.WRITE_TYPES;
 import static com.hartwig.hmftools.lilac.coverage.HlaComplex.findDuplicates;
 import static com.hartwig.hmftools.lilac.evidence.NucleotideFiltering.calcNucleotideHeterogygousLoci;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.CANDIDATE;
@@ -82,7 +84,8 @@ import org.jetbrains.annotations.NotNull;
 public class LilacApplication
 {
     private final LilacConfig mConfig;
-    private final ReferenceData mRefData;
+    private final String mWriteTypes;
+    private ReferenceData mRefData;
 
     private BamReader mRefBamReader;
     private BamReader mTumorBamReader;
@@ -97,24 +100,58 @@ public class LilacApplication
     private SequenceCount mRefAminoAcidCounts;
     private SequenceCount mRefNucleotideCounts;
 
-    private final List<ComplexCoverage> mRankedComplexes;
-    private final List<Fragment> mRefNucleotideFrags;
-    private final List<FragmentAlleles> mRefFragAlleles;
-    private final List<SomaticVariant> mSomaticVariants;
-    private final List<SomaticCodingCount> mSomaticCodingCounts;
+    private List<ComplexCoverage> mRankedComplexes;
+    private List<Fragment> mRefNucleotideFrags;
+    private List<FragmentAlleles> mRefFragAlleles;
+    private List<SomaticVariant> mSomaticVariants;
+    private List<SomaticCodingCount> mSomaticCodingCounts;
 
     private ComplexCoverage mTumorCoverage;
-    private final List<Double> mTumorCopyNumber;
+    private List<Double> mTumorCopyNumber;
     private ComplexCoverage mRnaCoverage;
 
     private LilacQC mSummaryMetrics;
     private SolutionSummary mSolutionSummary;
 
-    private final ResultsWriter mResultsWriter;
+    private ResultsWriter mResultsWriter;
 
     public LilacApplication(final LilacConfig config, final ConfigBuilder configBuilder)
     {
         mConfig = config;
+        mWriteTypes = configBuilder.getValue(WRITE_TYPES);
+        mRefData = null;
+
+        mAminoAcidPipeline = null;
+        mNucleotideFragFactory = null;
+        mFragAlleleMapper = null;
+        mHlaYCoverage = null;
+
+        mRefBamReader = null;
+        mTumorBamReader = null;
+
+        mSummaryMetrics = null;
+        mSolutionSummary = null;
+
+        // key state and results
+        mRefAminoAcidCounts = null;
+        mRefNucleotideCounts = null;
+
+        mRankedComplexes = null;
+        mRefNucleotideFrags = null;
+        mRefFragAlleles = null;
+
+        mSomaticVariants = null;
+        mSomaticCodingCounts = null;
+
+        mTumorCoverage = null;
+        mTumorCopyNumber = null;
+        mRnaCoverage = null;
+
+        mResultsWriter = null;
+    }
+
+    public void reset()
+    {
         mRefData = new ReferenceData(mConfig.ResourceDir, mConfig);
 
         mAminoAcidPipeline = null;
@@ -124,6 +161,9 @@ public class LilacApplication
 
         mRefBamReader = null;
         mTumorBamReader = null;
+
+        mSummaryMetrics = null;
+        mSolutionSummary = null;
 
         // key state and results
         mRefAminoAcidCounts = null;
@@ -140,7 +180,7 @@ public class LilacApplication
         mTumorCopyNumber = Lists.newArrayList(0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
         mRnaCoverage = null;
 
-        mResultsWriter = new ResultsWriter(mConfig, configBuilder);
+        mResultsWriter = new ResultsWriter(mConfig, mWriteTypes);
     }
 
     public void setBamReaders(final BamReader refBamReader, final BamReader tumorBamReader)
@@ -158,8 +198,21 @@ public class LilacApplication
     public void run()
     {
         long startTimeMs = System.currentTimeMillis();
-
         mConfig.logParams();
+        for(GeneSelector genes : mConfig.Genes)
+        {
+            CURRENT_GENES = genes;
+            LL_LOGGER.info("Solving for genes({})", CURRENT_GENES.name());
+            reset();
+            runGeneGroup();
+        }
+
+        LL_LOGGER.info("Lilac completed, mins({})", runTimeMinsStr(startTimeMs));
+    }
+
+    public void runGeneGroup()
+    {
+        long startTimeMs = System.currentTimeMillis();
 
         if(!mRefData.load())
         {
@@ -325,7 +378,7 @@ public class LilacApplication
             mHlaYCoverage.checkThreshold(mRefFragAlleles, refAminoAcidFrags);
 
         // build and score complexes
-        ComplexBuilder complexBuilder = new ComplexBuilder(mRefData, mConfig.Genes.geneCount());
+        ComplexBuilder complexBuilder = new ComplexBuilder(mRefData, CURRENT_GENES.geneCount());
 
         complexBuilder.filterCandidates(mRefFragAlleles, candidateAlleles, recoveredAlleles);
         allValid &= validateAlleles(complexBuilder.getUniqueProteinAlleles());
@@ -375,7 +428,7 @@ public class LilacApplication
 
         List<ComplexCoverage> calculatedComplexes = complexCalculator.calculateComplexCoverages(calcRefFragAlleles, complexes);
 
-        ComplexCoverageRanking complexRanker = new ComplexCoverageRanking(mConfig.TopScoreThreshold, mRefData, mConfig.Genes.geneCount());
+        ComplexCoverageRanking complexRanker = new ComplexCoverageRanking(mConfig.TopScoreThreshold, mRefData, CURRENT_GENES.geneCount());
         mRankedComplexes.addAll(complexRanker.rankCandidates(calculatedComplexes, Sets.newHashSet(recoveredAlleles), candidateSequences));
 
         if(mRankedComplexes.isEmpty())
@@ -392,7 +445,7 @@ public class LilacApplication
                     filteredComplexes.size(), mRefFragAlleles.size());
 
             calculatedComplexes = complexCalculator.calculateComplexCoverages(mRefFragAlleles, filteredComplexes);
-            complexRanker = new ComplexCoverageRanking(0, mRefData, mConfig.Genes.geneCount());
+            complexRanker = new ComplexCoverageRanking(0, mRefData, CURRENT_GENES.geneCount());
             mRankedComplexes.clear();
             mRankedComplexes.addAll(complexRanker.rankCandidates(calculatedComplexes, Sets.newHashSet(recoveredAlleles), candidateSequences));
         }
@@ -439,7 +492,7 @@ public class LilacApplication
                 .filter(x -> winningAlleles.contains(x.Allele.asFourDigit()))
                 .collect(Collectors.toList());
 
-        LL_LOGGER.info("{}", HlaComplexFile.header(mConfig.Genes));
+        LL_LOGGER.info("{}", HlaComplexFile.header(CURRENT_GENES));
 
         for(ComplexCoverage rankedComplex : mRankedComplexes)
         {
@@ -508,21 +561,21 @@ public class LilacApplication
         CoverageQC coverageQC = CoverageQC.create(refAminoAcidFrags, winningRefCoverage);
 
         mSummaryMetrics = new LilacQC(
-                mConfig.Genes, scoreMargin, nextSolutionInfo.toString(), medianBaseQuality,
+                CURRENT_GENES, scoreMargin, nextSolutionInfo.toString(), medianBaseQuality,
                 mHlaYCoverage == null ? null : mHlaYCoverage.getSelectedAllele(),
                 aminoAcidQC, bamQC, coverageQC, haplotypeQC, somaticVariantQC);
 
         ComplexCoverage refCoverage = !mConfig.tumorOnly() ? winningRefCoverage
                 : ComplexCoverage.create(Lists.newArrayList());
 
-        mSolutionSummary = SolutionSummary.create(mConfig.Genes, refCoverage, mTumorCoverage, mTumorCopyNumber,
+        mSolutionSummary = SolutionSummary.create(refCoverage, mTumorCoverage, mTumorCopyNumber,
                 mSomaticCodingCounts, mRnaCoverage);
 
         writeFileOutputs();
 
         mResultsWriter.close();
 
-        LL_LOGGER.info("Lilac complete, mins({})", runTimeMinsStr(startTimeMs));
+        LL_LOGGER.info("Lilac completed genes({}), mins({})", CURRENT_GENES.name(), runTimeMinsStr(startTimeMs));
     }
 
     private List<FragmentAlleles> checkDownsampleRefFragmentAlleles()

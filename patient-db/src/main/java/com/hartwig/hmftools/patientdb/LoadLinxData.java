@@ -33,7 +33,6 @@ import com.hartwig.hmftools.common.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
-import com.hartwig.hmftools.patientdb.dao.StructuralVariantFusionDAO;
 
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
@@ -131,8 +130,7 @@ public class LoadLinxData
         List<LinxBreakend> breakends = LinxBreakend.read(svBreakendFile);
         List<LinxFusion> fusions = LinxFusion.read(svFusionFile);
         LOGGER.info("sample({}) loading {} breakends and {} fusion records", sampleId, breakends.size(), fusions.size());
-        StructuralVariantFusionDAO annotationDAO = new StructuralVariantFusionDAO(dbAccess.context());
-        annotationDAO.writeBreakendsAndFusions(sampleId, breakends, fusions);
+        dbAccess.writeBreakendsAndFusions(sampleId, breakends, fusions);
 
         List<LinxDriver> drivers = LinxDriver.read(svDriverFile);
         LOGGER.info("sample({}) loading {} SV driver records", sampleId, drivers.size());

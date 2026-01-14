@@ -25,6 +25,8 @@ public final class LilacConstants
     public static final int DEFAULT_MIN_EVIDENCE_SUPPORT = 1;
     public static final int DEFAULT_MIN_DEPTH_FILTER = 10;
 
+    public static GeneSelector CURRENT_GENES = GeneSelector.MHC_CLASS_1;
+
     // can be overridden in config
     public static double MIN_EVIDENCE_FACTOR = DEFAULT_MIN_EVIDENCE_FACTOR;
     public static double MIN_HIGH_QUAL_EVIDENCE_FACTOR = DEFAULT_MIN_HIGH_QUAL_EVIDENCE_FACTOR;
