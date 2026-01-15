@@ -40,7 +40,7 @@ final class GainDeletionFactory {
 
         allGainDels.sort(GainDeletion.COMPARATOR);
 
-        return ImmutableDriverFindingList.<GainDeletion>builder()
+        return DriverFindingListBuilder.<GainDeletion>builder()
                 .status(findingsStatus)
                 .all(allGainDels)
                 .build();
@@ -129,15 +129,18 @@ final class GainDeletionFactory {
 
     private static GainDeletion toGainDel(PurpleGeneCopyNumber geneCopyNumber, ChromosomeArmCopyNumberMap cnPerChromosome)
     {
-        return ImmutableGainDeletion.builder()
-                .findingKey(FindingKeys.gainDeletion(DriverSource.SOMATIC,
-                        geneCopyNumber.gene(),
-                        CopyNumberInterpretation.FULL_DEL,
-                        geneCopyNumber.isCanonical(),
-                        geneCopyNumber.transcript()))
-                .driverSource(DriverSource.SOMATIC)
-                .reportedStatus(ReportedStatus.REPORTED)
-                .driverInterpretation(DriverInterpretation.LOW)
+        return GainDeletionBuilder.builder()
+                .driver(DriverFieldsBuilder.builder()
+                        .findingKey(FindingKeys.gainDeletion(DriverSource.SOMATIC,
+                                geneCopyNumber.gene(),
+                                CopyNumberInterpretation.FULL_DEL,
+                                geneCopyNumber.isCanonical(),
+                                geneCopyNumber.transcript()))
+                        .driverSource(DriverSource.SOMATIC)
+                        .reportedStatus(ReportedStatus.REPORTED)
+                        .driverInterpretation(DriverInterpretation.LOW)
+                        .build()
+                )
                 .type(GainDeletion.Type.SOMATIC_LOH)
                 .chromosome(geneCopyNumber.chromosome())
                 .chromosomeBand(geneCopyNumber.chromosomeBand())
@@ -166,15 +169,18 @@ final class GainDeletionFactory {
             DriverSource sourceSample,
             PurpleGeneCopyNumber geneCopyNumber,
             ChromosomeArmCopyNumberMap cnPerChromosome) {
-        return ImmutableGainDeletion.builder()
-                .findingKey(FindingKeys.gainDeletion(sourceSample,
-                        purpleGainDeletion.gene(),
-                        purpleGainDeletion.interpretation(),
-                        driver.isCanonical(),
-                        purpleGainDeletion.transcript()))
-                .driverSource(sourceSample)
-                .reportedStatus(ReportedStatus.REPORTED)
-                .driverInterpretation(DriverInterpretation.interpret(driver.driverLikelihood()))
+        return GainDeletionBuilder.builder()
+                .driver(DriverFieldsBuilder.builder()
+                        .findingKey(FindingKeys.gainDeletion(sourceSample,
+                                purpleGainDeletion.gene(),
+                                purpleGainDeletion.interpretation(),
+                                driver.isCanonical(),
+                                purpleGainDeletion.transcript()))
+                        .driverSource(sourceSample)
+                        .reportedStatus(ReportedStatus.REPORTED)
+                        .driverInterpretation(DriverInterpretation.interpret(driver.driverLikelihood()))
+                        .build()
+                )
                 .type(type)
                 .chromosome(purpleGainDeletion.chromosome())
                 .chromosomeBand(purpleGainDeletion.chromosomeBand())
@@ -197,15 +203,18 @@ final class GainDeletionFactory {
             case PARTIAL_GENE -> CopyNumberInterpretation.PARTIAL_DEL;
         };
 
-        return ImmutableGainDeletion.builder()
-                .findingKey(FindingKeys.gainDeletion(DriverSource.GERMLINE,
-                        loh.gene(),
-                        copyNumberInterpretation,
-                        driver.isCanonical(),
-                        loh.transcript()))
-                .driverSource(DriverSource.GERMLINE)
-                .reportedStatus(ReportedStatus.REPORTED)
-                .driverInterpretation(DriverInterpretation.interpret(driver.driverLikelihood()))
+        return GainDeletionBuilder.builder()
+                .driver(DriverFieldsBuilder.builder()
+                        .findingKey(FindingKeys.gainDeletion(DriverSource.GERMLINE,
+                                loh.gene(),
+                                copyNumberInterpretation,
+                                driver.isCanonical(),
+                                loh.transcript()))
+                        .driverSource(DriverSource.GERMLINE)
+                        .reportedStatus(ReportedStatus.REPORTED)
+                        .driverInterpretation(DriverInterpretation.interpret(driver.driverLikelihood()))
+                        .build()
+                )
                 .type(GainDeletion.Type.GERMLINE_DEL_HET_IN_TUMOR)
                 .chromosome(loh.chromosome())
                 .chromosomeBand(loh.chromosomeBand())
