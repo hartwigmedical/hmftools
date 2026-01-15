@@ -31,6 +31,11 @@ public abstract class PerArmSegmenter<T extends GenomePosition>
 
     protected PerArmSegmenter(ListMultimap<Chromosome, T> ratios, ChrArmLocator chrArmLocator, double gamma)
     {
+        this(ratios, chrArmLocator, gamma, 100_000);
+    }
+
+    protected PerArmSegmenter(ListMultimap<Chromosome, T> ratios, ChrArmLocator chrArmLocator, double gamma, int uniformPenaltyThreshold)
+    {
         ratios.keySet().forEach(chromosome ->
         {
             List<T> ratiosForChromosome = ratios.get(chromosome);
@@ -45,7 +50,7 @@ public abstract class PerArmSegmenter<T extends GenomePosition>
         ArmToRatios.keySet().forEach(chrArm -> mDataByArm.put(chrArm, buildSegmentationData(ArmToRatios.get(chrArm))));
         int totalCount = mDataByArm.values().stream().mapToInt(DataForSegmentation::count).sum();
         int position = 0;
-        if(totalCount < 100_000)
+        if(totalCount < uniformPenaltyThreshold)
         {
             double[] allRatios = new double[totalCount];
             for(ChrArm chrArm : mDataByArm.keySet())
