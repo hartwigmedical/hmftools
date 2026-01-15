@@ -114,7 +114,7 @@
         <apache.commons.math3.version>3.6</apache.commons.math3.version>
         <apache.commons.csv.version>1.9.0</apache.commons.csv.version>
         <apache.commons.dbcp2.version>2.1.1</apache.commons.dbcp2.version>
-        <apache.log4j.version>2.17.1</apache.log4j.version>
+        <apache.log4j.version>2.25.3</apache.log4j.version>
         <jooq.version>3.15.5</jooq.version>
         <mysqlconnector.version>8.0.16</mysqlconnector.version>
         <bouncycastle.jdk15.version>1.53</bouncycastle.jdk15.version>
@@ -124,6 +124,7 @@
         <itext.version>7.1.5</itext.version>
         <tablesaw.version>0.43.1</tablesaw.version>
         <jcommander.version>1.81</jcommander.version>
+        <record.builder.version>51</record.builder.version>
 
         <kotest.version>5.9.0</kotest.version>
         <junit.version>4.13.1</junit.version>
@@ -378,6 +379,11 @@
                 <groupId>com.beust</groupId>
                 <artifactId>jcommander</artifactId>
                 <version>${jcommander.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.soabase.record-builder</groupId>
+                <artifactId>record-builder-core</artifactId>
+                <version>${record.builder.version}</version>
             </dependency>
 
             <!-- Test dependencies -->
