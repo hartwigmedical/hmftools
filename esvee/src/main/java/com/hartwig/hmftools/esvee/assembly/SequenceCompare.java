@@ -163,8 +163,7 @@ public final class SequenceCompare
             }
 
             // check if the mismatch is a single-base INDEL and if so skip it
-            int recoverySkipBases = checkSkipShortIndel(
-                    firstBases, firstBaseQuals, firstIndex, secondBases, secondBaseQuals, secondIndex, checkForwards);
+            int recoverySkipBases = checkSkipShortIndel(firstBases, firstIndex, secondBases, secondIndex, checkForwards);
 
             if(recoverySkipBases != 0)
             {
@@ -392,16 +391,14 @@ public final class SequenceCompare
     }
 
     private static int checkSkipShortIndel(
-            final byte[] firstBases, final byte[] firstBaseQuals, final int firstIndex,
-            final byte[] secondBases, final byte[] secondBaseQuals, final int secondIndex, boolean checkForwards)
+            final byte[] firstBases, final int firstIndex, final byte[] secondBases, final int secondIndex, boolean checkForwards)
     {
         // test up to 2 skipped INDEL bases on each sequence, moving ahead 1 then 2 bases on the first sequence
         for(int diff = 1; diff <= 2; ++diff)
         {
             int adjustedFirstIndex = firstIndex + (checkForwards ? diff : -diff);
 
-            if(canRecoverMatch(
-                    firstBases, firstBaseQuals, adjustedFirstIndex, secondBases, secondBaseQuals, secondIndex, checkForwards))
+            if(canRecoverMatch(firstBases, adjustedFirstIndex, secondBases, secondIndex, checkForwards))
             {
                 return diff;
             }
@@ -412,8 +409,7 @@ public final class SequenceCompare
         {
             int adjustedSecondIndex = secondIndex + (checkForwards ? diff : -diff);
 
-            if(canRecoverMatch(
-                    firstBases, firstBaseQuals, firstIndex, secondBases, secondBaseQuals, adjustedSecondIndex, checkForwards))
+            if(canRecoverMatch(firstBases, firstIndex, secondBases, adjustedSecondIndex, checkForwards))
             {
                 return -diff;
             }
@@ -423,8 +419,7 @@ public final class SequenceCompare
     }
 
     private static boolean canRecoverMatch(
-            final byte[] firstBases, final byte[] firstBaseQuals, final int firstCurrentIndex,
-            final byte[] secondBases, final byte[] secondBaseQuals, final int secondCurrentStart, boolean checkForwards)
+            final byte[] firstBases, final int firstCurrentIndex, final byte[] secondBases, final int secondCurrentStart, boolean checkForwards)
     {
         int firstIndex = firstCurrentIndex;
         int secondIndex = secondCurrentStart;
@@ -450,7 +445,7 @@ public final class SequenceCompare
 
         while(true)
         {
-            if(!basesMatch(firstBases[firstIndex], secondBases[secondIndex], firstBaseQuals[firstIndex], secondBaseQuals[secondIndex]))
+            if(firstBases[firstIndex] != secondBases[secondIndex]) // must match regardless of qual
             {
                 return false;
             }
@@ -464,4 +459,64 @@ public final class SequenceCompare
 
         return true;
     }
+
+    public static int compareSequencesMismatchNoQuals(
+            final byte[] firstBases, int firstIndexStart, int firstIndexEnd,
+            final byte[] secondBases, int secondIndexStart, int secondIndexEnd, int maxMismatchPenalty)
+    {
+        if(firstIndexStart < 0 || firstIndexEnd >= firstBases.length || secondIndexStart < 0 || secondIndexEnd >= secondBases.length)
+        {
+            return maxMismatchPenalty < 0 ? maxMismatchPenalty : maxMismatchPenalty + 1;
+        }
+
+        int mismatchTotal = 0;
+
+        int firstIndex = firstIndexStart;
+        int secondIndex = secondIndexStart;
+
+        int lastRepeatSkipBases = 0;
+
+        while(firstIndex >= 0 && firstIndex <= firstIndexEnd && secondIndex >= 0 && secondIndex <= secondIndexEnd)
+        {
+            // the check for matching repeats is disabled since while logically a good idea, it is often throw out by prior mismatches
+            // the solution may be to start the matching process from the other end
+            if(firstBases[firstIndex] == secondBases[secondIndex])
+            {
+                ++firstIndex;
+                ++secondIndex;
+                continue;
+            }
+
+            // check if the mismatch is a single-base INDEL and if so skip it
+            int recoverySkipBases = checkSkipShortIndel(firstBases, firstIndex, secondBases, secondIndex, true);
+
+            if(recoverySkipBases != 0)
+            {
+                if(recoverySkipBases > 0)
+                    firstIndex += recoverySkipBases;
+                else
+                    secondIndex += -recoverySkipBases;
+
+                if(lastRepeatSkipBases + recoverySkipBases == 0)
+                {
+                    lastRepeatSkipBases = 0;
+                    continue;
+                }
+
+                ++mismatchTotal;
+                continue; // check the next base again
+            }
+
+            ++mismatchTotal;
+
+            if(maxMismatchPenalty >= 0 && mismatchTotal > maxMismatchPenalty)
+                return mismatchTotal;
+
+            ++firstIndex;
+            ++secondIndex;
+        }
+
+        return mismatchTotal;
+    }
+
 }

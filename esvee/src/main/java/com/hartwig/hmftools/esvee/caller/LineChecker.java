@@ -7,7 +7,7 @@ import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_A;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_T;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_POLY_AT_REQ;
 import static com.hartwig.hmftools.esvee.assembly.LineUtils.findLineSequenceCount;
-import static com.hartwig.hmftools.esvee.caller.FilterConstants.SBX_HEURISTIC_BND_LINE_PERC;
+import static com.hartwig.hmftools.esvee.caller.SeqTechUtils.SBX_HEURISTIC_BND_LINE_PERC;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.withinLineProximity;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_INDEL_MAX_GAP;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_INDEL_MAX_OVERLAP;
@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.common.genome.region.Orientation;
-import com.hartwig.hmftools.esvee.assembly.types.Junction;
 
 public final class LineChecker
 {
