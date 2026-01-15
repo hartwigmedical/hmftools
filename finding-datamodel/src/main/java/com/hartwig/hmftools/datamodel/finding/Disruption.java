@@ -28,7 +28,7 @@ public record Disruption(
         @Nullable LinxBreakend breakendEnd
 ) implements Driver
 {
-    enum Type
+    public enum Type
     {
         SOMATIC_DISRUPTION,
         SOMATIC_HOM_DUP_DISRUPTION,
