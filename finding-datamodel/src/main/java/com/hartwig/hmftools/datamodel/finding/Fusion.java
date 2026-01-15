@@ -11,6 +11,9 @@ import com.hartwig.hmftools.datamodel.linx.LinxUnreportableReason;
 
 import org.jetbrains.annotations.NotNull;
 
+import io.soabase.recordbuilder.core.RecordBuilder;
+
+@RecordBuilder
 public record Fusion(
         @NotNull DriverFields driver,
         @NotNull String geneStart,
