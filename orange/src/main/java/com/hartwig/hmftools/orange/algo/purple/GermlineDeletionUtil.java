@@ -10,13 +10,13 @@ import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
-import com.hartwig.hmftools.common.purple.GermlineDeletion;
+import com.hartwig.hmftools.common.purple.GermlineAmpDel;
 
 import org.jetbrains.annotations.NotNull;
 
 class GermlineDeletionUtil
 {
-    public static double getSomaticMaxCopyNumber(@NotNull List<GermlineDeletion> deletionsForGene,
+    public static double getSomaticMaxCopyNumber(@NotNull List<GermlineAmpDel> deletionsForGene,
             @NotNull GeneCopyNumber somaticGeneCopyNumber, @NotNull TranscriptData transcript)
     {
         double maximumTumorCopyNumberFromDeletions = getMaximumTumorCopyNumberFromDeletions(deletionsForGene);
@@ -26,13 +26,13 @@ class GermlineDeletionUtil
         return Math.max(0, maxCopyNumber);
     }
 
-    public static double getSomaticMinCopyNumber(@NotNull List<GermlineDeletion> deletionsForGene)
+    public static double getSomaticMinCopyNumber(@NotNull List<GermlineAmpDel> deletionsForGene)
     {
         double minCopyNumberFromDeletions = getMinimumTumorCopyNumberFromDeletions(deletionsForGene);
         return Math.max(0, minCopyNumberFromDeletions);
     }
 
-    public static boolean deletionsCoverTranscript(@NotNull List<GermlineDeletion> deletionsForGene, @NotNull TranscriptData transcript)
+    public static boolean deletionsCoverTranscript(@NotNull List<GermlineAmpDel> deletionsForGene, @NotNull TranscriptData transcript)
     {
         for(ExonData exon : transcript.exons())
         {
@@ -63,7 +63,7 @@ class GermlineDeletionUtil
     }
 
     @NotNull
-    public static String getChromosome(@NotNull List<GermlineDeletion> deletions)
+    public static String getChromosome(@NotNull List<GermlineAmpDel> deletions)
     {
         if(deletions.isEmpty())
         {
@@ -82,7 +82,7 @@ class GermlineDeletionUtil
     }
 
     @NotNull
-    public static String getChromosomeBand(@NotNull List<GermlineDeletion> deletions)
+    public static String getChromosomeBand(@NotNull List<GermlineAmpDel> deletions)
     {
         if(deletions.isEmpty())
         {
@@ -115,7 +115,7 @@ class GermlineDeletionUtil
         throw new IllegalStateException("Could not find gene copy number for gene with name: " + geneNameToFind);
     }
 
-    private static double getMinimumTumorCopyNumberFromDeletions(@NotNull List<GermlineDeletion> deletionsForGene)
+    private static double getMinimumTumorCopyNumberFromDeletions(@NotNull List<GermlineAmpDel> deletionsForGene)
     {
         if(deletionsForGene.isEmpty())
         {
@@ -125,7 +125,7 @@ class GermlineDeletionUtil
         return deletionsForGene.stream().mapToDouble(d -> d.TumorCopyNumber).min().getAsDouble();
     }
 
-    private static double getMaximumTumorCopyNumberFromDeletions(@NotNull List<GermlineDeletion> deletionsForGene)
+    private static double getMaximumTumorCopyNumberFromDeletions(@NotNull List<GermlineAmpDel> deletionsForGene)
     {
         if(deletionsForGene.isEmpty())
         {
@@ -135,9 +135,9 @@ class GermlineDeletionUtil
         return deletionsForGene.stream().mapToDouble(d -> d.TumorCopyNumber).max().getAsDouble();
     }
 
-    private static boolean deletionsCoverExon(@NotNull List<GermlineDeletion> deletionsForGene, @NotNull ExonData exon)
+    private static boolean deletionsCoverExon(@NotNull List<GermlineAmpDel> deletionsForGene, @NotNull ExonData exon)
     {
-        List<GermlineDeletion> relevantSortedDeletions = deletionsForGene.stream()
+        List<GermlineAmpDel> relevantSortedDeletions = deletionsForGene.stream()
                 .filter(d -> overlaps(d, exon))
                 .sorted(Comparator.comparingInt(o -> o.RegionStart))
                 .collect(Collectors.toList());
@@ -154,7 +154,7 @@ class GermlineDeletionUtil
         }
 
         int latestPositionCoveredContinuously = relevantSortedDeletions.get(0).RegionEnd;
-        for(GermlineDeletion deletion : relevantSortedDeletions)
+        for(GermlineAmpDel deletion : relevantSortedDeletions)
         {
             if(deletion.RegionStart > latestPositionCoveredContinuously + 1)
             {
@@ -170,7 +170,7 @@ class GermlineDeletionUtil
         return false;
     }
 
-    private static boolean overlaps(@NotNull GermlineDeletion deletion, @NotNull ExonData exon)
+    private static boolean overlaps(@NotNull GermlineAmpDel deletion, @NotNull ExonData exon)
     {
         return Math.max(deletion.RegionStart, exon.Start) <= Math.min(deletion.RegionEnd, exon.End);
     }

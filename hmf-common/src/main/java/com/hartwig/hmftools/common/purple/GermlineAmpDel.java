@@ -12,9 +12,7 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 
-import org.jetbrains.annotations.NotNull;
-
-public final class GermlineDeletion
+public final class GermlineAmpDel
 {
     public final String GeneName;
     public final String Chromosome;
@@ -33,7 +31,7 @@ public final class GermlineDeletion
     public final int CohortFrequency;
     public final ReportedStatus Reported;
 
-    public GermlineDeletion(
+    public GermlineAmpDel(
             final String geneName, final String chromosome, final String chromosomeBand, final int regionStart, final int regionEnd,
             final int depthWindowCount, final int exonStart, final int exonEnd, final GermlineDetectionMethod detectionMethod,
             final GermlineStatus normalStatus, final GermlineStatus tumorStatus, final double germlineCopyNumber, final double tumorCopyNumber,
@@ -57,24 +55,24 @@ public final class GermlineDeletion
         Reported = reportedStatus;
     }
 
-    private static final String EXTENSION = ".purple.germline.deletion.tsv";
+    private static final String EXTENSION = ".purple.germline_amp_del.tsv";
 
     public static String generateFilename(final String basePath, final String sample)
     {
         return basePath + File.separator + sample + EXTENSION;
     }
 
-    public static List<GermlineDeletion> read(final String fileName) throws IOException
+    public static List<GermlineAmpDel> read(final String fileName) throws IOException
     {
         return fromLines(Files.readAllLines(new File(fileName).toPath()));
     }
 
-    public static void write(final String fileName, List<GermlineDeletion> deletions) throws IOException
+    public static void write(final String fileName, List<GermlineAmpDel> deletions) throws IOException
     {
         Files.write(new File(fileName).toPath(), toLines(deletions));
     }
 
-    private static List<String> toLines(final List<GermlineDeletion> deletions)
+    private static List<String> toLines(final List<GermlineAmpDel> deletions)
     {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
@@ -104,7 +102,7 @@ public final class GermlineDeletion
                 .toString();
     }
 
-    private static String toString(final GermlineDeletion deletion)
+    private static String toString(final GermlineAmpDel deletion)
     {
         return new StringJoiner(TSV_DELIM)
                 .add(deletion.GeneName)
@@ -126,12 +124,12 @@ public final class GermlineDeletion
                 .toString();
     }
 
-    static List<GermlineDeletion> fromLines(final List<String> lines)
+    static List<GermlineAmpDel> fromLines(final List<String> lines)
     {
         final Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), TSV_DELIM);
         lines.remove(0);
 
-        List<GermlineDeletion> deletions = Lists.newArrayList();
+        List<GermlineAmpDel> deletions = Lists.newArrayList();
 
         Integer reportedStatusIndex = fieldsIndexMap.get("reportedStatus");
         Integer reportedIndex = fieldsIndexMap.get("reported");
@@ -151,7 +149,7 @@ public final class GermlineDeletion
                 reportedStatus = Boolean.parseBoolean(values[reportedIndex]) ? ReportedStatus.REPORTED : ReportedStatus.NONE;
             }
 
-            deletions.add(new GermlineDeletion(
+            deletions.add(new GermlineAmpDel(
                     values[fieldsIndexMap.get("gene")],
                     values[fieldsIndexMap.get("chromosome")],
                     fieldsIndexMap.containsKey("chromosomeBand") ? values[fieldsIndexMap.get("chromosomeBand")] : "",

@@ -9,7 +9,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
-import com.hartwig.hmftools.common.purple.GermlineDeletion;
+import com.hartwig.hmftools.common.purple.GermlineAmpDel;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.datamodel.purple.GeneProportion;
@@ -27,17 +27,17 @@ public class GermlineLossOfHeterozygosityFactory
         this.ensemblDataCache = ensemblDataCache;
     }
 
-    public Map<PurpleLossOfHeterozygosity, Boolean> getReportabilityMap(@NotNull List<GermlineDeletion> germlineDeletions,
+    public Map<PurpleLossOfHeterozygosity, Boolean> getReportabilityMap(@NotNull List<GermlineAmpDel> germlineDeletions,
             @NotNull List<GeneCopyNumber> allSomaticGeneCopyNumbers)
     {
-        List<GermlineDeletion> germlineDeletionsHeterozygousInTumor =
+        List<GermlineAmpDel> germlineDeletionsHeterozygousInTumor =
                 germlineDeletions.stream().filter(d -> d.TumorStatus == GermlineStatus.HET_DELETION).collect(Collectors.toList());
         Set<String> relevantGeneNames = germlineDeletionsHeterozygousInTumor.stream().map(d -> d.GeneName).collect(Collectors.toSet());
 
         Map<PurpleLossOfHeterozygosity, Boolean> lohToReportability = Maps.newHashMap();
         for(String geneName : relevantGeneNames)
         {
-            List<GermlineDeletion> deletionsForGene =
+            List<GermlineAmpDel> deletionsForGene =
                     germlineDeletionsHeterozygousInTumor.stream().filter(d -> d.GeneName.equals(geneName)).collect(Collectors.toList());
             GeneCopyNumber somaticGeneCopyNumber = GermlineDeletionUtil.findGeneCopyNumberForGene(geneName, allSomaticGeneCopyNumbers);
 
@@ -52,7 +52,7 @@ public class GermlineLossOfHeterozygosityFactory
 
     @NotNull
     private PurpleLossOfHeterozygosity toPurpleLossOfHeterozygosity(@NotNull String geneName,
-            @NotNull List<GermlineDeletion> deletionsForGene, @NotNull GeneCopyNumber somaticGeneCopyNumber)
+            @NotNull List<GermlineAmpDel> deletionsForGene, @NotNull GeneCopyNumber somaticGeneCopyNumber)
     {
         TranscriptData canonicalTranscript = GermlineDeletionUtil.findCanonicalTranscript(geneName, ensemblDataCache);
         GeneProportion geneProportion = GermlineDeletionUtil.deletionsCoverTranscript(deletionsForGene, canonicalTranscript)

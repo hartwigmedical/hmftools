@@ -14,6 +14,7 @@ import com.hartwig.hmftools.common.cuppa.CuppaPredictions;
 import com.hartwig.hmftools.common.linx.LinxGermlineDisruption;
 import com.hartwig.hmftools.common.metrics.BamFlagStats;
 import com.hartwig.hmftools.common.metrics.BamMetricSummary;
+import com.hartwig.hmftools.common.purple.GermlineAmpDel;
 import com.hartwig.hmftools.common.teal.TelomereLength;
 import com.hartwig.hmftools.common.variant.SmallVariant;
 import com.hartwig.hmftools.patientdb.amber.AmberMapping;
@@ -34,7 +35,6 @@ import com.hartwig.hmftools.common.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.purple.FittedPurity;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
-import com.hartwig.hmftools.common.purple.GermlineDeletion;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.PurpleQC;
@@ -330,7 +330,7 @@ public class DatabaseAccess implements AutoCloseable
     }
 
     @NotNull
-    public List<GermlineDeletion> readGermlineDeletions(final String sample)
+    public List<GermlineAmpDel> readGermlineDeletions(final String sample)
     {
         return geneCopyNumberDAO.readGermlineDeletions(sample);
     }
@@ -501,6 +501,11 @@ public class DatabaseAccess implements AutoCloseable
         structuralVariantClusterDAO.writeDrivers(sample, drivers);
     }
 
+    public void writeBreakendsAndFusions(final String sampleId, final List<LinxBreakend> breakends, final List<LinxFusion> fusions)
+    {
+        structuralVariantFusionDAO.writeBreakendsAndFusions(sampleId, breakends, fusions);
+    }
+
     public void writeGermlineSVs(final String sample, final List<LinxGermlineDisruption> germlineSvs)
     {
         germlineVariantDAO.writeGermlineSVs(sample, germlineSvs);
@@ -521,7 +526,7 @@ public class DatabaseAccess implements AutoCloseable
         geneCopyNumberDAO.writeCopyNumber(sample, geneCopyNumbers);
     }
 
-    public void writeGermlineDeletions(final String sample, final List<GermlineDeletion> deletions)
+    public void writeGermlineDeletions(final String sample, final List<GermlineAmpDel> deletions)
     {
         geneCopyNumberDAO.writeGermlineDeletions(sample, deletions);
     }

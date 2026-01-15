@@ -11,7 +11,7 @@ import com.hartwig.hmftools.common.driver.DriverCatalogFile;
 import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GeneCopyNumberFile;
-import com.hartwig.hmftools.common.purple.GermlineDeletion;
+import com.hartwig.hmftools.common.purple.GermlineAmpDel;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurityContextFile;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
@@ -41,7 +41,7 @@ public final class PurpleDataLoader
         String germlineVariantVcf = resolveVcfPath(PurpleCommon.purpleGermlineVcfFile(purpleDir, tumorSample));
         String copyNumberTsv = PurpleCopyNumberFile.generateFilenameForReading(purpleDir, tumorSample);
         String geneCopyNumberTsv = GeneCopyNumberFile.generateFilename(purpleDir, tumorSample);
-        String germlineDeletionTsv = GermlineDeletion.generateFilename(purpleDir, tumorSample);
+        String germlineDeletionTsv = GermlineAmpDel.generateFilename(purpleDir, tumorSample);
 
         return load(
                 tumorSample, referenceSample, rnaSample, qcFile, purityTsv,
@@ -84,7 +84,7 @@ public final class PurpleDataLoader
 
         List<DriverCatalog> germlineDrivers = null;
         List<PurpleVariantContext> panelGermlineVariants = null;
-        List<GermlineDeletion> panelGermlineDeletions = null;
+        List<GermlineAmpDel> panelGermlineDeletions = null;
 
         if(referenceSample != null)
         {
@@ -95,7 +95,7 @@ public final class PurpleDataLoader
 
             panelGermlineVariants = germlineVariants.stream().filter(x -> x.reported()).collect(Collectors.toList());
 
-            List<GermlineDeletion> germlineDeletions = GermlineDeletion.read(germlineDeletionTsv).stream()
+            List<GermlineAmpDel> germlineDeletions = GermlineAmpDel.read(germlineDeletionTsv).stream()
                     .filter(x -> x.Filter.equals(CommonVcfTags.PASS_FILTER)).collect(Collectors.toList());
 
             panelGermlineDeletions = germlineDeletions.stream().filter(x -> driverGenes.containsKey(x.GeneName)).collect(Collectors.toList());

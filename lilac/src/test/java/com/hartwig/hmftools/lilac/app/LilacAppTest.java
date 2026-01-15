@@ -62,7 +62,9 @@ public class LilacAppTest
     {
         ConfigBuilder configBuilder = new ConfigBuilder();
         ResultsWriter.registerConfig(configBuilder);
-        return new LilacApplication(new LilacConfig(SAMPLE_TEST), configBuilder);
+        LilacApplication app = new LilacApplication(new LilacConfig(SAMPLE_TEST), configBuilder);
+        app.reset();
+        return app;
     }
 
     public static void buildGeneCache()
@@ -116,7 +118,7 @@ public class LilacAppTest
         HlaAllele c2 = refData.findAllele("C*02:02:01", false);
         refBamReader.Fragments.addAll(createFragments(refData, c2, fragCount, startLoci, endLoci, length, gap));
 
-        lilac.run();
+        lilac.runGeneGroup();
 
         // check various outputs
 
@@ -195,7 +197,7 @@ public class LilacAppTest
         refBamReader.Fragments.addAll(createFragments(refData, c3, fragCount, startLoci, endLoci, length, gap));
         refBamReader.StopLossFragments.put(STOP_LOSS_ON_C_INDEL, stopLossFrags);
 
-        lilac.run();
+        lilac.runGeneGroup();
 
         // check various outputs
 
@@ -275,7 +277,7 @@ public class LilacAppTest
         // HlaAllele c2 = refData.findAllele("C*02:02:01", false);
         // refBamReader.Fragments.addAll(createFragments(refData, c2, fragCount, startLoci, endLoci, length, gap));
 
-        lilac.run();
+        lilac.runGeneGroup();
 
         // check various outputs
 

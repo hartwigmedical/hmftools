@@ -26,4 +26,14 @@ public class ChromosomeArmCopyNumbersFile
         segments.stream().map(ChromosomeArmCopyNumber::toTSV).forEach(lines::add);
         Files.write(new File(filename).toPath(), lines);
     }
+
+    public static List<ChromosomeArmCopyNumber> read(final String filename) throws IOException
+    {
+        final List<String> lines = Files.readAllLines(new File(filename).toPath());
+        final List<ChromosomeArmCopyNumber> result = Lists.newArrayList();
+        for (int i = 1; i < lines.size(); i++) {
+            result.add(ChromosomeArmCopyNumber.fromTsv(lines.get(i)));
+        }
+        return result;
+    }
 }

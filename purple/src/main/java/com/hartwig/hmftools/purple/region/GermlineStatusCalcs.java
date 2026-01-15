@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.purple.GermlineStatus.AMPLIFICATION;
 import static com.hartwig.hmftools.common.purple.GermlineStatus.DIPLOID;
 import static com.hartwig.hmftools.common.purple.GermlineStatus.HET_DELETION;
 import static com.hartwig.hmftools.common.purple.GermlineStatus.HOM_DELETION;
+import static com.hartwig.hmftools.common.purple.GermlineStatus.LIKELY_DIPLOID;
 import static com.hartwig.hmftools.common.purple.GermlineStatus.NOISE;
 import static com.hartwig.hmftools.common.purple.GermlineStatus.UNKNOWN;
 
@@ -15,8 +16,10 @@ import com.hartwig.hmftools.common.utils.Doubles;
 public class GermlineStatusCalcs
 {
     private static final double GERMLINE_HOM_DELETION_THRESHOLD = 0.1;
+    private static final double GERMLINE_LIKELY_DIPLOID_LOWER_THRESHOLD = 0.7;
     private static final double GERMLINE_HET_DELETION_THRESHOLD = 0.85;
-    private static final double GERMLINE_AMPLIFICATION_THRESHOLD = 1.15;
+    private static final double GERMLINE_DIPLOID_UPPER_THRESHOLD = 1.15;
+    private static final double GERMLINE_LIKELY_DIPLOID_UPPER_THRESHOLD = 1.3;
     private static final double GERMLINE_NOISE_THRESHOLD = 2.2;
 
     private final CobaltChromosomes mCobaltChromosomes;
@@ -42,21 +45,37 @@ public class GermlineStatusCalcs
             return HOM_DELETION;
         }
 
-        if(Doubles.lessThan(normalRatio, GERMLINE_HET_DELETION_THRESHOLD * adjustment))
+        // < likely diploid lower threshold
+        if(Doubles.lessThan(normalRatio, GERMLINE_LIKELY_DIPLOID_LOWER_THRESHOLD * adjustment))
         {
             return HET_DELETION;
         }
 
-        if(Doubles.greaterThan(normalRatio, GERMLINE_NOISE_THRESHOLD * adjustment))
+        // >= likely diploid lower threshold, < het deletion threshold
+        if(Doubles.lessThan(normalRatio, GERMLINE_HET_DELETION_THRESHOLD * adjustment))
         {
-            return NOISE;
+            return LIKELY_DIPLOID;
         }
 
-        if(Doubles.greaterThan(normalRatio, GERMLINE_AMPLIFICATION_THRESHOLD * adjustment))
+        // >= het deletion threshold, < diploid upper threshold
+        if(Doubles.lessThan(normalRatio, GERMLINE_DIPLOID_UPPER_THRESHOLD * adjustment))
+        {
+            return DIPLOID;
+        }
+
+        // >= diploid upper threshold, < likely diploid upper threshold
+        if(Doubles.lessThan(normalRatio, GERMLINE_LIKELY_DIPLOID_UPPER_THRESHOLD * adjustment))
+        {
+            return LIKELY_DIPLOID;
+        }
+
+        // >= likely diploid upper threshold, < noise threshold
+        if(Doubles.lessThan(normalRatio, GERMLINE_NOISE_THRESHOLD * adjustment))
         {
             return AMPLIFICATION;
         }
 
-        return DIPLOID;
+        // >= noise threshold
+        return NOISE;
     }
 }

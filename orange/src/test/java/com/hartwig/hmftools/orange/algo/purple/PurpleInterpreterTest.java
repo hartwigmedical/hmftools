@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.purple.GeneCopyNumberTestFactory;
-import com.hartwig.hmftools.common.purple.GermlineDeletion;
+import com.hartwig.hmftools.common.purple.GermlineAmpDel;
 import com.hartwig.hmftools.common.purple.GermlineDeletionTestFactory;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.ReportedStatus;
@@ -42,8 +42,8 @@ public class PurpleInterpreterTest
     public void canCreateReportableGermlineFullDels()
     {
         // Gene is needed to be able to match with ensembl test data
-        GermlineDeletion hetReported = GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HET_DELETION, 1);
-        GermlineDeletion homReported = GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION, 2);
+        GermlineAmpDel hetReported = GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HET_DELETION, 1);
+        GermlineAmpDel homReported = GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION, 2);
 
         PurpleData purple = createPurpleTestData(Lists.newArrayList(hetReported, homReported));
 
@@ -56,8 +56,8 @@ public class PurpleInterpreterTest
     public void canHandleHalfReportableGermlineFullDels()
     {
         // Gene is needed to be able to match with ensembl test data
-        GermlineDeletion hetUnreported = GermlineDeletionTestFactory.create(TEST_GENE, false, GermlineStatus.HET_DELETION, 1);
-        GermlineDeletion homReported = GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION, 2);
+        GermlineAmpDel hetUnreported = GermlineDeletionTestFactory.create(TEST_GENE, false, GermlineStatus.HET_DELETION, 1);
+        GermlineAmpDel homReported = GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION, 2);
 
         PurpleData purple = createPurpleTestData(Lists.newArrayList(hetUnreported, homReported));
 
@@ -71,8 +71,8 @@ public class PurpleInterpreterTest
     public void canCreateNonReportableGermlineFullDels()
     {
         // Gene is needed to be able to match with ensembl test data
-        GermlineDeletion hetUnreported = GermlineDeletionTestFactory.create(TEST_GENE, false, GermlineStatus.HET_DELETION, 1);
-        GermlineDeletion homUnreported = GermlineDeletionTestFactory.create(TEST_GENE, false, GermlineStatus.HOM_DELETION, 2);
+        GermlineAmpDel hetUnreported = GermlineDeletionTestFactory.create(TEST_GENE, false, GermlineStatus.HET_DELETION, 1);
+        GermlineAmpDel homUnreported = GermlineDeletionTestFactory.create(TEST_GENE, false, GermlineStatus.HOM_DELETION, 2);
 
         PurpleData purple = createPurpleTestData(Lists.newArrayList(hetUnreported, homUnreported));
 
@@ -84,7 +84,7 @@ public class PurpleInterpreterTest
 
 
     @NotNull
-    private static ImmutablePurpleData createPurpleTestData(@NotNull List<GermlineDeletion> allGermlineDeletions)
+    private static ImmutablePurpleData createPurpleTestData(@NotNull List<GermlineAmpDel> allGermlineDeletions)
     {
         return ImmutablePurpleData.builder()
                 .from(PurpleTestFactory.createMinimalTestPurpleData())

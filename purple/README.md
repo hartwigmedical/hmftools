@@ -515,13 +515,15 @@ For the purposes of purity and ploidy fitting and copy number smoothing each seg
 
 Any gene with a HET_DELETION or HOM_DELETION segment overlapping (within +/- 500 bases to allow for depth window resolution) an exonic region is marked as a germline gene deletion.    
 
-Deletions  are filtered with the following criteria
-Filter|Description
---|--
-minLength|the deleted segment must be >1kb long
-inconsistentTumorCN|the implied refNormalisedCopyNumber of the deleted segment in the tumor must be less than the major allele copy number +max(20%,0.5)
-highNormalRatio|the deleted segment must have an observedNormalCopyNumberRatio < 0.65 (ie equivalent to germline copyNumber < 1.3)
-cohortFrequency|the deleted segment is observed in > 3 samples in our cohort
+Deletions  are filtered with the following criteria:
+
+| Filter              | Description                                                                                                                            |
+|---------------------|----------------------------------------------------------------------------------------------------------------------------------------|
+| minLength           | the deleted segment must be >1kb long                                                                                                  |
+| inconsistentTumorCN | the implied `refNormalisedCopyNumber` of the deleted segment in the tumor must be less than the major allele copy number +max(20%,0.5) |
+| highNormalRatio     | the deleted segment must have an `observedNormalCopyNumberRatio` < 0.65 (ie equivalent to germline copyNumber < 1.3)                   |
+| cohortFrequency     | the deleted segment is observed in > 3 samples in our cohort                                                                           |
+
 
 ### 10. Determine a QC Status for the tumor
 

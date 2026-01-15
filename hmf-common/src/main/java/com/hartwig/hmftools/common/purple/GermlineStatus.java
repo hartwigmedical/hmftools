@@ -7,7 +7,8 @@ public enum GermlineStatus
     AMPLIFICATION,
     NOISE,
     DIPLOID,
+    LIKELY_DIPLOID,
     EXCLUDED,
     CENTROMETIC,
-    UNKNOWN;
+    UNKNOWN
 }

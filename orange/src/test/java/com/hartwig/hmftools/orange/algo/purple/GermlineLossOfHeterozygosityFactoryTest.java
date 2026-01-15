@@ -11,7 +11,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GeneCopyNumberTestFactory;
-import com.hartwig.hmftools.common.purple.GermlineDeletion;
+import com.hartwig.hmftools.common.purple.GermlineAmpDel;
 import com.hartwig.hmftools.common.purple.GermlineDeletionTestFactory;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.datamodel.purple.GeneProportion;
@@ -31,7 +31,7 @@ public class GermlineLossOfHeterozygosityFactoryTest
     {
         GermlineLossOfHeterozygosityFactory factory = createTestFactory();
 
-        GermlineDeletion reportableHom = GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION);
+        GermlineAmpDel reportableHom = GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION);
         assertTrue(factory.getReportabilityMap(Lists.newArrayList(reportableHom), Lists.newArrayList()).isEmpty());
     }
 
@@ -42,11 +42,11 @@ public class GermlineLossOfHeterozygosityFactoryTest
 
         // Gene runs from 150 to 950
         // Exons are 250-350, 450-550 and 600-900
-        GermlineDeletion reportablePartial1 =
+        GermlineAmpDel reportablePartial1 =
                 GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HET_DELETION, 1D, 400, 700);
-        GermlineDeletion reportablePartial2 =
+        GermlineAmpDel reportablePartial2 =
                 GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HET_DELETION, 2D, 800, 1000);
-        List<GermlineDeletion> deletions = Lists.newArrayList(reportablePartial2, reportablePartial1);
+        List<GermlineAmpDel> deletions = Lists.newArrayList(reportablePartial2, reportablePartial1);
 
         GeneCopyNumber geneCopyNumber = GeneCopyNumberTestFactory.createGeneCopyNumber(TEST_GENE, 2D, 4D);
 
@@ -67,7 +67,7 @@ public class GermlineLossOfHeterozygosityFactoryTest
         GermlineLossOfHeterozygosityFactory factory = createTestFactory();
 
         // Gene runs from 150 to 950
-        GermlineDeletion reportablePartial =
+        GermlineAmpDel reportablePartial =
                 GermlineDeletionTestFactory.create(TEST_GENE, false, GermlineStatus.HET_DELETION, 1D, 100, 1000);
         GeneCopyNumber geneCopyNumber = GeneCopyNumberTestFactory.createGeneCopyNumber(TEST_GENE, 2D, 4D);
 
@@ -90,15 +90,15 @@ public class GermlineLossOfHeterozygosityFactoryTest
 
         // Gene runs from 150 to 950
         // Exons are 250-350, 450-550 and 600-900
-        GermlineDeletion reportablePartial1 =
+        GermlineAmpDel reportablePartial1 =
                 GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HET_DELETION, 0.9D, 200, 375);
-        GermlineDeletion reportablePartial2 =
+        GermlineAmpDel reportablePartial2 =
                 GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HET_DELETION, 1.3D, 425, 450);
-        GermlineDeletion reportablePartial3 =
+        GermlineAmpDel reportablePartial3 =
                 GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HET_DELETION, 1.3D, 425, 525);
-        GermlineDeletion reportablePartial4 =
+        GermlineAmpDel reportablePartial4 =
                 GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HET_DELETION, 3D, 500, 2000);
-        List<GermlineDeletion> germlineDeletions =
+        List<GermlineAmpDel> germlineDeletions =
                 Lists.newArrayList(reportablePartial4, reportablePartial3, reportablePartial2, reportablePartial1);
 
         GeneCopyNumber geneCopyNumber = GeneCopyNumberTestFactory.createGeneCopyNumber(TEST_GENE, 2D, 4D);

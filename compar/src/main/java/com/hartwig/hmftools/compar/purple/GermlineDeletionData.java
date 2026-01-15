@@ -13,7 +13,7 @@ import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.purple.GermlineDeletion;
+import com.hartwig.hmftools.common.purple.GermlineAmpDel;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
@@ -22,7 +22,7 @@ import com.hartwig.hmftools.compar.common.Mismatch;
 
 public class GermlineDeletionData implements ComparableItem
 {
-    public final GermlineDeletion Deletion;
+    public final GermlineAmpDel Deletion;
     public final String mComparisonChromosome;
 
     protected static final String FLD_GERMLINE_STATUS = "GermlineStatus";
@@ -30,7 +30,7 @@ public class GermlineDeletionData implements ComparableItem
     protected static final String FLD_GERMLINE_CN = "GermlineCopyNumber";
     protected static final String FLD_TUMOR_CN = "TumorCopyNumber";
 
-    public GermlineDeletionData(final GermlineDeletion germlineDeletion, final String comparisonChromosome)
+    public GermlineDeletionData(final GermlineAmpDel germlineDeletion, final String comparisonChromosome)
     {
         Deletion = germlineDeletion;
         mComparisonChromosome = comparisonChromosome;

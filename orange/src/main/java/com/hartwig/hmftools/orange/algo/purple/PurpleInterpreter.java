@@ -12,6 +12,7 @@ import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.driver.DriverCatalogKey;
 import com.hartwig.hmftools.common.driver.DriverCatalogMap;
 import com.hartwig.hmftools.common.driver.DriverType;
+import com.hartwig.hmftools.common.purple.GermlineAmpDel;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleCharacteristics;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleFit;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGainDeletion;

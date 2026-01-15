@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
-import com.hartwig.hmftools.common.purple.GermlineDeletion;
+import com.hartwig.hmftools.common.purple.GermlineAmpDel;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 
@@ -33,5 +33,7 @@ public interface PurpleData
     List<GeneCopyNumber> somaticGeneCopyNumbers();
 
     @Nullable
-    List<GermlineDeletion> germlineDeletions();
+    List<GermlineAmpDel> germlineDeletions();
+
+    List<Segment> segments();
 }

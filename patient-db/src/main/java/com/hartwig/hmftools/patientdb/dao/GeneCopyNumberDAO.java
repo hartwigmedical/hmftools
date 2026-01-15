@@ -12,10 +12,10 @@ import java.util.List;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.purple.GermlineAmpDel;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
-import com.hartwig.hmftools.common.purple.GermlineDeletion;
 import com.hartwig.hmftools.common.purple.GermlineDetectionMethod;
 import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.common.purple.SegmentSupport;
@@ -75,9 +75,9 @@ public class GeneCopyNumberDAO
         return geneCopyNumbers;
     }
 
-    public List<GermlineDeletion> readGermlineDeletions(final String sample)
+    public List<GermlineAmpDel> readGermlineDeletions(final String sample)
     {
-        List<GermlineDeletion> germlineDeletions = Lists.newArrayList();
+        List<GermlineAmpDel> germlineDeletions = Lists.newArrayList();
 
         Result<Record15<String,String,Integer,Integer,Integer,Integer,Integer,String,String,String,Double,Double,String,Integer,Byte>> result = context.select(
                 GERMLINEDELETION.GENE, GERMLINEDELETION.CHROMOSOME, GERMLINEDELETION.REGIONSTART, GERMLINEDELETION.REGIONEND,
@@ -89,7 +89,7 @@ public class GeneCopyNumberDAO
 
         for(Record record : result)
         {
-            germlineDeletions.add(new GermlineDeletion(
+            germlineDeletions.add(new GermlineAmpDel(
                     record.getValue(GERMLINEDELETION.GENE),
                     record.getValue(GERMLINEDELETION.CHROMOSOME),
                     "", // record.getValue(GERMLINEDELETION.CHROMOSOMEBAND), // until 5.29 DB changes are applied to prod
@@ -171,7 +171,7 @@ public class GeneCopyNumberDAO
         context.delete(GENECOPYNUMBER).where(GENECOPYNUMBER.SAMPLEID.eq(sample)).execute();
     }
 
-    public void writeGermlineDeletions(final String sample, final List<GermlineDeletion> deletions)
+    public void writeGermlineDeletions(final String sample, final List<GermlineAmpDel> deletions)
     {
         Timestamp timestamp = new Timestamp(new Date().getTime());
         deleteGermlineDeletionsForSample(sample);
@@ -196,7 +196,7 @@ public class GeneCopyNumberDAO
                 GERMLINEDELETION.REPORTED,
                 COPYNUMBER.MODIFIED);
 
-        for(GermlineDeletion deletion : deletions)
+        for(GermlineAmpDel deletion : deletions)
         {
             addDeletionRecord(timestamp, inserter, sample, deletion);
         }
@@ -205,7 +205,7 @@ public class GeneCopyNumberDAO
     }
 
     private static void addDeletionRecord(
-            final Timestamp timestamp, final InsertValuesStep18 inserter, final String sample, final GermlineDeletion deletion)
+            final Timestamp timestamp, final InsertValuesStep18 inserter, final String sample, final GermlineAmpDel deletion)
     {
         inserter.values(
                 sample,
@@ -224,7 +224,7 @@ public class GeneCopyNumberDAO
                 DatabaseUtil.decimal(deletion.TumorCopyNumber),
                 checkStringLength(deletion.Filter, GERMLINEDELETION.FILTER),
                 deletion.CohortFrequency,
-                deletion.Reported,
+                deletion.Reported == ReportedStatus.REPORTED ? 1 : 0,
                 timestamp);
     }
 

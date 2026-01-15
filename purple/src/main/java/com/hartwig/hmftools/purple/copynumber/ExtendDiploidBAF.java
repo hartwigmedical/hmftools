@@ -318,8 +318,6 @@ public class ExtendDiploidBAF
 
     private static void extend(double targetAllele, InferRegion inferRegion, final List<CombinedRegion> regions)
     {
-        assert (inferRegion.isLeftValid());
-
         for(int i = inferRegion.leftTargetIndex; i <= inferRegion.rightTargetIndex; i++)
         {
             final CombinedRegion target = regions.get(i);
