@@ -12,18 +12,22 @@ import io.soabase.recordbuilder.core.RecordBuilder;
 public record DriverFindingList<T extends Driver>(
         @NotNull FindingsStatus status,
         @NotNull List<T> all
-) {
+)
+{
     @NotNull
-    public FindingsQuery<T> query() {
+    public FindingsQuery<T> query()
+    {
         return new FindingsQuery<>(all());
     }
 
     @NotNull
-    public List<T> germlineOnly() {
+    public List<T> germlineOnly()
+    {
         return query().driverSources(DriverSource.GERMLINE).results();
     }
 
-    public List<T> somaticOnly() {
+    public List<T> somaticOnly()
+    {
         return query().driverSources(DriverSource.SOMATIC).results();
     }
 }

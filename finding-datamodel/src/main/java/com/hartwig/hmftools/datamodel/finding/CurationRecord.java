@@ -22,26 +22,31 @@ import io.soabase.recordbuilder.core.RecordBuilder;
 @RecordBuilder
 public record CurationRecord(
         @NotNull List<DriverCuration> driverCurations
-) {
+)
+{
 
     @NotNull
-    public static CurationRecord read(@NotNull Path findingsJsonFilePath) throws IOException {
-        try (BufferedReader bufferedReader = Files.newBufferedReader(findingsJsonFilePath))
+    public static CurationRecord read(@NotNull Path findingsJsonFilePath) throws IOException
+    {
+        try(BufferedReader bufferedReader = Files.newBufferedReader(findingsJsonFilePath))
         {
             return gson().fromJson(bufferedReader, CurationRecord.class);
         }
     }
 
     @NotNull
-    public static CurationRecord read(@NotNull InputStream stream) throws IOException {
-        try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(stream))) {
+    public static CurationRecord read(@NotNull InputStream stream) throws IOException
+    {
+        try(BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(stream)))
+        {
             return gson().fromJson(bufferedReader, CurationRecord.class);
         }
     }
 
     public void write(@NotNull CurationRecord curationRecord, @NotNull Path outputFilePath) throws IOException
     {
-        try (BufferedWriter writer = Files.newBufferedWriter(outputFilePath)) {
+        try(BufferedWriter writer = Files.newBufferedWriter(outputFilePath))
+        {
             gson().toJson(curationRecord, CurationRecord.class, writer);
         }
     }
@@ -49,7 +54,8 @@ public record CurationRecord(
     private static com.google.gson.Gson gson()
     {
         GsonBuilder gsonBuilder = new GsonBuilder();
-        for (TypeAdapterFactory factory : ServiceLoader.load(TypeAdapterFactory.class)) {
+        for(TypeAdapterFactory factory : ServiceLoader.load(TypeAdapterFactory.class))
+        {
             gsonBuilder.registerTypeAdapterFactory(factory);
         }
 

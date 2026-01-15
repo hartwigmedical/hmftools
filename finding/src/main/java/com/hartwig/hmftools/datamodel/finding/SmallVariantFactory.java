@@ -22,8 +22,10 @@ import org.jetbrains.annotations.Nullable;
 
 final class SmallVariantFactory
 {
-    public static DriverFindingList<SmallVariant> smallVariantFindings(@NotNull PurpleRecord purpleRecord, @NotNull FindingsStatus findingsStatus, @Nullable ClinicalTranscriptsModel clinicalTranscriptsModel,
-            @NotNull Map<String, DriverGene> driverGeneMap) {
+    public static DriverFindingList<SmallVariant> smallVariantFindings(@NotNull PurpleRecord purpleRecord,
+            @NotNull FindingsStatus findingsStatus, @Nullable ClinicalTranscriptsModel clinicalTranscriptsModel,
+            @NotNull Map<String, DriverGene> driverGeneMap)
+    {
         List<SmallVariant> allSmallVariants = Lists.newArrayList();
         allSmallVariants.addAll(SmallVariantFactory.create(
                 DriverSource.SOMATIC, purpleRecord.reportableSomaticVariants(), purpleRecord.somaticDrivers(),
@@ -31,7 +33,7 @@ final class SmallVariantFactory
 
         List<PurpleVariant> germlineVariants = purpleRecord.reportableGermlineVariants();
         List<PurpleDriver> germlineDrivers = purpleRecord.germlineDrivers();
-        if (germlineVariants != null && germlineDrivers != null)
+        if(germlineVariants != null && germlineDrivers != null)
         {
             allSmallVariants.addAll(SmallVariantFactory.create(
                     DriverSource.GERMLINE, germlineVariants, germlineDrivers, clinicalTranscriptsModel, driverGeneMap));
@@ -79,7 +81,8 @@ final class SmallVariantFactory
 
     @NotNull
     private static SmallVariant toSmallVariant(@NotNull PurpleVariant variant, @NotNull PurpleDriver driver,
-            @NotNull DriverSource sampleType, @Nullable ClinicalTranscriptsModel clinicalTranscriptsModel, @NotNull Map<String, DriverGene> driverGeneMap)
+            @NotNull DriverSource sampleType, @Nullable ClinicalTranscriptsModel clinicalTranscriptsModel,
+            @NotNull Map<String, DriverGene> driverGeneMap)
     {
         PurpleTranscriptImpact transcriptImpact;
 
@@ -91,8 +94,9 @@ final class SmallVariantFactory
 
         boolean isCanonical = driver.transcript().equals(variant.canonicalImpact().transcript());
 
-        PurpleTranscriptImpact otherImpact = isCanonical && clinicalTranscriptsModel != null ? findOtherImpactClinical(variant, clinicalTranscriptsModel)
-                : null;
+        PurpleTranscriptImpact otherImpact =
+                isCanonical && clinicalTranscriptsModel != null ? findOtherImpactClinical(variant, clinicalTranscriptsModel)
+                        : null;
 
         DriverGene driverGene = driverGeneMap.get(variant.gene());
         DriverCategory driverCategory = driverGene != null ? driverLikelihoodType(driverGene.likelihoodType()) : null;
@@ -135,7 +139,10 @@ final class SmallVariantFactory
     @Nullable
     private static SmallVariant.TranscriptImpact convertTranscriptImpact(@Nullable PurpleTranscriptImpact transcriptImpact)
     {
-        if (transcriptImpact == null) { return null; }
+        if(transcriptImpact == null)
+        {
+            return null;
+        }
 
         return SmallVariantTranscriptImpactBuilder.builder()
                 .transcript(transcriptImpact.transcript())
@@ -153,7 +160,10 @@ final class SmallVariantFactory
     @Nullable
     private static SmallVariant.AllelicDepth convertAllelicDepth(@Nullable PurpleAllelicDepth allelicDepth)
     {
-        if (allelicDepth == null) { return null; }
+        if(allelicDepth == null)
+        {
+            return null;
+        }
 
         return SmallVariantAllelicDepthBuilder.builder()
                 .totalReadCount(allelicDepth.totalReadCount())
@@ -220,13 +230,14 @@ final class SmallVariantFactory
     }
 
     @Nullable
-    private static PurpleTranscriptImpact findOtherImpactClinical(@NotNull PurpleVariant variant, @NotNull ClinicalTranscriptsModel clinicalTranscriptsModel)
+    private static PurpleTranscriptImpact findOtherImpactClinical(@NotNull PurpleVariant variant,
+            @NotNull ClinicalTranscriptsModel clinicalTranscriptsModel)
     {
         String transcriptOverride = clinicalTranscriptsModel.findCanonicalTranscriptForGene(variant.gene());
-        if (transcriptOverride != null)
+        if(transcriptOverride != null)
         {
             PurpleTranscriptImpact otherImpactClinical = findOtherTranscriptImpact(variant, transcriptOverride);
-            if (otherImpactClinical != null)
+            if(otherImpactClinical != null)
             {
                 otherImpactClinical = !otherImpactClinical.hgvsCodingImpact().equals(variant.canonicalImpact().hgvsCodingImpact())
                         ? otherImpactClinical
@@ -242,8 +253,10 @@ final class SmallVariantFactory
         return !variant.canonicalImpact().transcript().isEmpty();
     }
 
-    private static DriverCategory driverLikelihoodType(@NotNull com.hartwig.hmftools.common.driver.DriverCategory driverLikelihoodType) {
-        return switch (driverLikelihoodType) {
+    private static DriverCategory driverLikelihoodType(@NotNull com.hartwig.hmftools.common.driver.DriverCategory driverLikelihoodType)
+    {
+        return switch(driverLikelihoodType)
+        {
             case ONCO -> DriverCategory.ONCO;
             case TSG -> DriverCategory.TSG;
         };

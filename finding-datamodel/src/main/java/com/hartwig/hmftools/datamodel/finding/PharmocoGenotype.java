@@ -14,4 +14,6 @@ public record PharmocoGenotype(
         @Deprecated @NotNull String haplotype,
         @NotNull String linkedDrugs,
         @NotNull String urlPrescriptionInfo
-) implements Finding {}
+) implements Finding
+{
+}

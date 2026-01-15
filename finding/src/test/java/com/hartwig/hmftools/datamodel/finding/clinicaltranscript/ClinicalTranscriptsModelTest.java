@@ -8,10 +8,12 @@ import java.util.Map;
 
 import org.junit.Test;
 
-public class ClinicalTranscriptsModelTest {
+public class ClinicalTranscriptsModelTest
+{
 
     @Test
-    public void canExtractClinicalTranscript() {
+    public void canExtractClinicalTranscript()
+    {
         Map<String, String> clinicalTranscriptMap = new HashMap<>();
         clinicalTranscriptMap.put("BRCA2", "NM_345");
         ClinicalTranscriptsModel clinicalTranscriptsModel = new ClinicalTranscriptsModel(clinicalTranscriptMap);
