@@ -205,8 +205,7 @@ final class DisruptionFactory
                 .disruptedCopies(hasReliablePurity ? breakend.junctionCopyNumber() : null)
                 .undisruptedCopies(hasReliablePurity ? undisruptedCopyNumber : null)
                 .clusterId(determineClusterId(structuralVariants, breakend))
-                .breakendStart(breakendStart)
-                .breakendEnd(breakendEnd)
+                .disruptedRange(rangeField(breakendStart, breakendEnd))
                 .build();
     }
 
