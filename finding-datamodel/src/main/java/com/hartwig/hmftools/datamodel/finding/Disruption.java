@@ -34,17 +34,54 @@ public record Disruption(
         GERMLINE_DISRUPTION,
         GERMLINE_HOM_DUP_DISRUPTION;
 
-        public boolean isSomatic() { return !isGermline(); }
-        public boolean isGermline() { return this == GERMLINE_DISRUPTION || this == GERMLINE_HOM_DUP_DISRUPTION; }
-        public boolean isHomozygous() { return this == SOMATIC_HOM_DUP_DISRUPTION ||
-                                               this == SOMATIC_HOM_DEL_DISRUPTION ||
-                                               this == GERMLINE_HOM_DUP_DISRUPTION; }
+        public boolean isSomatic()
+        {
+            return !isGermline();
+        }
+
+        public boolean isGermline()
+        {
+            return this == GERMLINE_DISRUPTION || this == GERMLINE_HOM_DUP_DISRUPTION;
+        }
+
+        public boolean isHomozygous()
+        {
+            return this == SOMATIC_HOM_DUP_DISRUPTION ||
+                    this == SOMATIC_HOM_DEL_DISRUPTION ||
+                    this == GERMLINE_HOM_DUP_DISRUPTION;
+        }
     }
 
-    @NotNull @Override public String findingKey() { return driver.findingKey(); }
-    @NotNull @Override public DriverSource driverSource() { return driver.driverSource(); }
-    @NotNull @Override public ReportedStatus reportedStatus() { return driver.reportedStatus(); }
-    @NotNull @Override public DriverInterpretation driverInterpretation() { return driver.driverInterpretation(); }
+    @NotNull
+    @Override
+    public String findingKey()
+    {
+        return driver.findingKey();
+    }
 
-    public boolean isHomozygous() { return type().isHomozygous(); }
+    @NotNull
+    @Override
+    public DriverSource driverSource()
+    {
+        return driver.driverSource();
+    }
+
+    @NotNull
+    @Override
+    public ReportedStatus reportedStatus()
+    {
+        return driver.reportedStatus();
+    }
+
+    @NotNull
+    @Override
+    public DriverInterpretation driverInterpretation()
+    {
+        return driver.driverInterpretation();
+    }
+
+    public boolean isHomozygous()
+    {
+        return type().isHomozygous();
+    }
 }

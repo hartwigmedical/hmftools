@@ -20,31 +20,38 @@ public record PurityPloidyFit(
         double ploidy,
         double minPloidy,
         double maxPloidy
-) {
+)
+{
     @RecordBuilder
     public record Qc(
-        @NotNull Set<PurpleQCStatus> status,
-        @NotNull Set<PurpleGermlineAberration> germlineAberrations,
-        int amberMeanDepth,
-        double contamination,
-        int totalCopyNumberSegments,
-        int unsupportedCopyNumberSegments,
-        int deletedGenes
-    ) {}
+            @NotNull Set<PurpleQCStatus> status,
+            @NotNull Set<PurpleGermlineAberration> germlineAberrations,
+            int amberMeanDepth,
+            double contamination,
+            int totalCopyNumberSegments,
+            int unsupportedCopyNumberSegments,
+            int deletedGenes
+    )
+    {
+    }
 
-    public boolean isFail() {
+    public boolean isFail()
+    {
         return isFailNoTumor() || isContaminated();
     }
 
-    public boolean isContaminated() {
+    public boolean isContaminated()
+    {
         return qc().status().contains(PurpleQCStatus.FAIL_CONTAMINATION);
     }
 
-    public boolean isFailNoTumor() {
+    public boolean isFailNoTumor()
+    {
         return qc().status().contains(PurpleQCStatus.FAIL_NO_TUMOR);
     }
 
-    public boolean containsTumorCells() {
+    public boolean containsTumorCells()
+    {
         return !isFailNoTumor();
     }
 }

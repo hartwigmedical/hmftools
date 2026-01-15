@@ -65,7 +65,8 @@ final class FindingKeys
         return String.format("microsatelliteStability[%s]", status.name());
     }
 
-    public static String homologousRecombination(ChordStatus status) {
+    public static String homologousRecombination(ChordStatus status)
+    {
         return String.format("homologousRecombination[%s]", status.name());
     }
 
@@ -74,7 +75,8 @@ final class FindingKeys
         return String.format("tumorMutationStatus[TMB_%s TML_%s]", tmbStatus, tmlStatus);
     }
 
-    public static String predictedTumorOrigin(@NotNull String cancerType) {
+    public static String predictedTumorOrigin(@NotNull String cancerType)
+    {
         return String.format("predictedTumorOrigin[%s]", cancerType);
     }
 
@@ -102,11 +104,13 @@ final class FindingKeys
     public static String determineVariantAnnotation(@Nullable String hgvsCoding, @Nullable String hgvsProtein, @NotNull String effects,
             boolean isSplice, boolean isUpstream)
     {
-        if (hgvsProtein != null && !hgvsProtein.isEmpty() && !hgvsProtein.equals("p.?")) {
+        if(hgvsProtein != null && !hgvsProtein.isEmpty() && !hgvsProtein.equals("p.?"))
+        {
             return hgvsProtein;
         }
 
-        if (hgvsCoding != null && !hgvsCoding.isEmpty()) {
+        if(hgvsCoding != null && !hgvsCoding.isEmpty())
+        {
             return isSplice ? hgvsCoding + " splice" : hgvsCoding;
         }
 

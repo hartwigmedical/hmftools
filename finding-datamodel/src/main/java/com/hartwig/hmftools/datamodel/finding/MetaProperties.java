@@ -14,4 +14,6 @@ public record MetaProperties(
         @Nullable String pipelineVersion,
         @NotNull String version,
         @NotNull OrangeRefGenomeVersion refGenomeVersion
-) {}
+)
+{
+}

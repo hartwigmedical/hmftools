@@ -18,4 +18,6 @@ public record HomologousRecombination(
         @NotNull String hrdType,
         @NotNull List<GainDeletion> lohCopyNumbers,
         @NotNull List<String> genes
-) implements Finding {}
+) implements Finding
+{
+}

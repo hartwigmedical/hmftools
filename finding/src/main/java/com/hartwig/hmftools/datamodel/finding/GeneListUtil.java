@@ -15,12 +15,14 @@ import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-class GeneListUtil {
+class GeneListUtil
+{
 
     static Set<String> genes(@NotNull List<PurpleVariant> reportableVariants,
             @NotNull List<PurpleGainDeletion> gainDeletions,
             @Nullable List<LinxHomozygousDisruption> homozygousDisruptions,
-            @NotNull Set<String> genes) {
+            @NotNull Set<String> genes)
+    {
         Set<String> genesDisplay = Sets.newTreeSet();
 
         genesDisplay.addAll(filteredMapped(reportableVariants,
@@ -28,11 +30,13 @@ class GeneListUtil {
                 PurpleVariant::gene));
 
         genesDisplay.addAll(filteredMapped(gainDeletions,
-                gainDeletion -> genes.contains(gainDeletion.gene()) && (gainDeletion.interpretation() == CopyNumberInterpretation.PARTIAL_DEL
-                        || gainDeletion.interpretation() == CopyNumberInterpretation.FULL_DEL),
+                gainDeletion -> genes.contains(gainDeletion.gene()) && (
+                        gainDeletion.interpretation() == CopyNumberInterpretation.PARTIAL_DEL
+                                || gainDeletion.interpretation() == CopyNumberInterpretation.FULL_DEL),
                 PurpleGainDeletion::gene));
 
-        if (homozygousDisruptions != null) {
+        if(homozygousDisruptions != null)
+        {
             genesDisplay.addAll(filteredMapped(homozygousDisruptions,
                     homozygousDisruption -> genes.contains(homozygousDisruption.gene()),
                     LinxHomozygousDisruption::gene));
@@ -41,7 +45,8 @@ class GeneListUtil {
         return genesDisplay;
     }
 
-    private static <T> Set<String> filteredMapped(List<T> items, Predicate<T> filter, Function<T, String> mapper) {
+    private static <T> Set<String> filteredMapped(List<T> items, Predicate<T> filter, Function<T, String> mapper)
+    {
         return items.stream()
                 .filter(filter)
                 .map(mapper)

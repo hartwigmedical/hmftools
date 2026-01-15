@@ -23,8 +23,31 @@ public record Virus(
         @Nullable Double expectedClonalCoverage
 ) implements Driver
 {
-    @NotNull @Override public String findingKey() { return driver.findingKey(); }
-    @NotNull @Override public DriverSource driverSource() { return driver.driverSource(); }
-    @NotNull @Override public ReportedStatus reportedStatus() { return driver.reportedStatus(); }
-    @NotNull @Override public DriverInterpretation driverInterpretation() { return driver.driverInterpretation(); }
+    @NotNull
+    @Override
+    public String findingKey()
+    {
+        return driver.findingKey();
+    }
+
+    @NotNull
+    @Override
+    public DriverSource driverSource()
+    {
+        return driver.driverSource();
+    }
+
+    @NotNull
+    @Override
+    public ReportedStatus reportedStatus()
+    {
+        return driver.reportedStatus();
+    }
+
+    @NotNull
+    @Override
+    public DriverInterpretation driverInterpretation()
+    {
+        return driver.driverInterpretation();
+    }
 }

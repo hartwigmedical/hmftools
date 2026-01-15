@@ -9,4 +9,6 @@ import io.soabase.recordbuilder.core.RecordBuilder;
 public record FindingItem<T>(
         @NotNull FindingsStatus status,
         @Nullable T finding
-) {}
+)
+{
+}

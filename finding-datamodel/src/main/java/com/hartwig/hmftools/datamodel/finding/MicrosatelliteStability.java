@@ -15,4 +15,6 @@ public record MicrosatelliteStability(
         @NotNull PurpleMicrosatelliteStatus microsatelliteStatus,
         @NotNull List<GainDeletion> lohCopyNumbers,
         @NotNull List<String> genes
-) implements Finding {}
+) implements Finding
+{
+}

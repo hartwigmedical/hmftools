@@ -19,4 +19,5 @@ public record FindingRecord(
         @NotNull FindingItem<TumorMutationStatus> tumorMutationStatus,
         @NotNull FindingItem<PredictedTumorOrigin> predictedTumorOrigin,
         @NotNull FindingItem<HomologousRecombination> homologousRecombination)
-{}
+{
+}

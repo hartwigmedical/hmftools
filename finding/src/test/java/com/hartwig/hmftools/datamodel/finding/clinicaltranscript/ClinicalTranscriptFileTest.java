@@ -10,12 +10,15 @@ import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
 
 import org.junit.Test;
 
-public class ClinicalTranscriptFileTest {
+public class ClinicalTranscriptFileTest
+{
 
-    private static final String CLINICAL_TRANSCRIPT_TSV = ClinicalTranscriptsModelTest.class.getClassLoader().getResource("clinicaltranscript/clinical_transcripts.tsv").getPath();
+    private static final String CLINICAL_TRANSCRIPT_TSV =
+            ClinicalTranscriptsModelTest.class.getClassLoader().getResource("clinicaltranscript/clinical_transcripts.tsv").getPath();
 
     @Test
-    public void canReadClinicalTranscriptsTsvHG37() throws IOException {
+    public void canReadClinicalTranscriptsTsvHG37() throws IOException
+    {
         ClinicalTranscriptsModel clinicalTranscriptsModel =
                 ClinicalTranscriptFile.buildFromTsv(OrangeRefGenomeVersion.V37, Path.of(CLINICAL_TRANSCRIPT_TSV));
 
@@ -24,7 +27,8 @@ public class ClinicalTranscriptFileTest {
     }
 
     @Test
-    public void canReadClinicalTranscriptsTsvHG38() throws IOException {
+    public void canReadClinicalTranscriptsTsvHG38() throws IOException
+    {
         ClinicalTranscriptsModel clinicalTranscriptsModel =
                 ClinicalTranscriptFile.buildFromTsv(OrangeRefGenomeVersion.V38, Path.of(CLINICAL_TRANSCRIPT_TSV));
 

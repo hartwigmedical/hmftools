@@ -18,18 +18,22 @@ import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 
 import org.jetbrains.annotations.NotNull;
 
-final class GainDeletionFactory {
+final class GainDeletionFactory
+{
 
     public static DriverFindingList<GainDeletion> gainDeletionFindings(@NotNull PurpleRecord purple,
             @NotNull OrangeRefGenomeVersion orangeRefGenomeVersion,
-            @NotNull FindingsStatus findingsStatus) {
-        ChromosomeArmCopyNumberMap cnPerChromosome = ChromosomeArmCopyNumberMap.create(purple.allSomaticCopyNumbers(), orangeRefGenomeVersion);
+            @NotNull FindingsStatus findingsStatus)
+    {
+        ChromosomeArmCopyNumberMap cnPerChromosome =
+                ChromosomeArmCopyNumberMap.create(purple.allSomaticCopyNumbers(), orangeRefGenomeVersion);
 
         List<GainDeletion> allGainDels = new ArrayList<>();
         List<PurpleGainDeletion> germlineFullDels = purple.reportableGermlineFullDels();
         List<PurpleLossOfHeterozygosity> germlineLohs = purple.reportableGermlineLossOfHeterozygosities();
         List<PurpleDriver> purpleGermlineDrivers = purple.germlineDrivers();
-        if (germlineFullDels != null && germlineLohs != null && purpleGermlineDrivers != null) {
+        if(germlineFullDels != null && germlineLohs != null && purpleGermlineDrivers != null)
+        {
             allGainDels.addAll(germlineDriverGainDels(germlineFullDels, germlineLohs, purple.germlineDrivers(),
                     purple.allSomaticGeneCopyNumbers(), cnPerChromosome));
         }
@@ -62,7 +66,8 @@ final class GainDeletionFactory {
             PurpleDriver driver = Objects.requireNonNull(
                     findDriver(germlineDrivers, fullDels.gene(), fullDels.transcript(), PurpleDriverType.GERMLINE_DELETION));
 
-            final PurpleGeneCopyNumber geneCopyNumber = findPurpleGeneCopyNumber(somaticGeneCopyNumbers, fullDels.gene(), fullDels.transcript());
+            final PurpleGeneCopyNumber geneCopyNumber =
+                    findPurpleGeneCopyNumber(somaticGeneCopyNumbers, fullDels.gene(), fullDels.transcript());
 
             driverGainDels.add(toGainDel(fullDels, driver, GainDeletion.Type.GERMLINE_DEL_HOM_IN_TUMOR, DriverSource.GERMLINE, geneCopyNumber, cnPerChromosome));
         }
@@ -84,7 +89,8 @@ final class GainDeletionFactory {
 
     @NotNull
     private static PurpleGeneCopyNumber findPurpleGeneCopyNumber(final List<PurpleGeneCopyNumber> somaticGeneCopyNumbers,
-            final String gene, final String transcript) {
+            final String gene, final String transcript)
+    {
         return somaticGeneCopyNumbers.stream()
                 .filter(o -> o.gene().equals(gene) && o.transcript().equals(transcript))
                 .findFirst()
@@ -115,7 +121,8 @@ final class GainDeletionFactory {
                 case FULL_DEL, PARTIAL_DEL -> GainDeletion.Type.SOMATIC_DEL;
             };
 
-            final PurpleGeneCopyNumber geneCopyNumber = findPurpleGeneCopyNumber(somaticGeneCopyNumbers, gainDeletion.gene(), gainDeletion.transcript());
+            final PurpleGeneCopyNumber geneCopyNumber =
+                    findPurpleGeneCopyNumber(somaticGeneCopyNumbers, gainDeletion.gene(), gainDeletion.transcript());
 
             somaticGainsDels.add(toGainDel(gainDeletion, driver, type, DriverSource.SOMATIC, geneCopyNumber, cnPerChromosome));
         }
@@ -156,11 +163,13 @@ final class GainDeletionFactory {
     }
 
     private static PurpleDriver findDriver(final List<PurpleDriver> drivers, final String gene, final String transcript,
-            final PurpleDriverType purpleDriverType) {
+            final PurpleDriverType purpleDriverType)
+    {
         return drivers.stream()
                 .filter(o -> o.gene().equals(gene) && o.transcript().equals(transcript) && o.type().equals(purpleDriverType))
                 .findFirst()
-                .orElseThrow(() -> new IllegalStateException("No driver found for " + gene + " transcript " + transcript + " type " + purpleDriverType));
+                .orElseThrow(() -> new IllegalStateException(
+                        "No driver found for " + gene + " transcript " + transcript + " type " + purpleDriverType));
     }
 
     private static GainDeletion toGainDel(PurpleGainDeletion purpleGainDeletion,
@@ -168,7 +177,8 @@ final class GainDeletionFactory {
             GainDeletion.Type type,
             DriverSource sourceSample,
             PurpleGeneCopyNumber geneCopyNumber,
-            ChromosomeArmCopyNumberMap cnPerChromosome) {
+            ChromosomeArmCopyNumberMap cnPerChromosome)
+    {
         return GainDeletionBuilder.builder()
                 .driver(DriverFieldsBuilder.builder()
                         .findingKey(FindingKeys.gainDeletion(sourceSample,
@@ -195,9 +205,11 @@ final class GainDeletionFactory {
                 .build();
     }
 
-    private static GainDeletion toGainDel(PurpleLossOfHeterozygosity loh, final PurpleDriver driver, PurpleGeneCopyNumber geneCopyNumber, ChromosomeArmCopyNumberMap cnPerChromosome) {
+    private static GainDeletion toGainDel(PurpleLossOfHeterozygosity loh, final PurpleDriver driver, PurpleGeneCopyNumber geneCopyNumber,
+            ChromosomeArmCopyNumberMap cnPerChromosome)
+    {
 
-        CopyNumberInterpretation copyNumberInterpretation = switch (loh.geneProportion())
+        CopyNumberInterpretation copyNumberInterpretation = switch(loh.geneProportion())
         {
             case FULL_GENE -> CopyNumberInterpretation.FULL_GAIN;
             case PARTIAL_GENE -> CopyNumberInterpretation.PARTIAL_DEL;

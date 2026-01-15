@@ -14,4 +14,6 @@ public record DriverFields(
         @NotNull DriverSource driverSource,
         @NotNull ReportedStatus reportedStatus,
         @NotNull DriverInterpretation driverInterpretation
-) {}
+)
+{
+}

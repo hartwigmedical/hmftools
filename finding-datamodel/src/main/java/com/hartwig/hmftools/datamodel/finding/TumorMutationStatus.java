@@ -14,4 +14,6 @@ public record TumorMutationStatus(
         int tumorMutationalLoad,
         @NotNull PurpleTumorMutationalStatus tumorMutationalLoadStatus,
         int svTumorMutationalBurden
-) implements Finding {}
+) implements Finding
+{
+}

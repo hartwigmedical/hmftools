@@ -5,17 +5,21 @@ import java.util.Map;
 
 import org.jetbrains.annotations.NotNull;
 
-final class CsvFileReader {
+final class CsvFileReader
+{
 
-    private CsvFileReader() {
+    private CsvFileReader()
+    {
     }
 
     @NotNull
-    public static Map<String, Integer> getHeadersToDelimiter(@NotNull String fieldsHeader, @NotNull String delimiter) {
+    public static Map<String, Integer> getHeadersToDelimiter(@NotNull String fieldsHeader, @NotNull String delimiter)
+    {
         String[] items = fieldsHeader.split(delimiter, -1);
         Map<String, Integer> fieldsIndexMap = new LinkedHashMap<>();
 
-        for (int i = 0; i < items.length; ++i) {
+        for(int i = 0; i < items.length; ++i)
+        {
             fieldsIndexMap.put(items[i], i);
         }
 
