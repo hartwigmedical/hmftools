@@ -11,7 +11,6 @@ import static com.hartwig.hmftools.redux.ReduxConfig.isIllumina;
 import static com.hartwig.hmftools.redux.common.ReadInfo.readToString;
 import static com.hartwig.hmftools.redux.consensus.IlluminaRoutines.calculatePCRClusterCount;
 
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -35,14 +34,10 @@ public class DuplicateGroup
     // contains reads that have been merged due to jitter (poly-G, UMI) but will not be used for consensus
     private final List<SAMRecord> mNonConsensusReads;
 
-    // contains reads that have been merged into this group due to poly-g UMI tail, these will not be used for consensus building
-    private final List<SAMRecord> mPolyGUmiReads;
-
     private SAMRecord mConsensusRead;
     private SAMRecord mPrimaryRead; // if no consensus is formed, the selected primary read
     private boolean mDualStrand;
-
-    public static final Comparator<DuplicateGroup> DUPLICATE_GROUP_COMPARATOR = Comparator.comparingInt(DuplicateGroup::totalReadCount).reversed();
+    private boolean mPolyGUnmapped; // comprised only of unmapped duplicate poly-G reads
 
     public DuplicateGroup(final String id, final SAMRecord read, final FragmentCoords fragmentCoords)
     {
@@ -60,28 +55,23 @@ public class DuplicateGroup
         mFragmentCoords = fragmentCoords;
         mReads = reads;
         mNonConsensusReads = Lists.newArrayList();
-        mPolyGUmiReads = Lists.newArrayList();
 
         mConsensusRead = null;
         mPrimaryRead = null;
         mDualStrand = false;
+        mPolyGUnmapped = false;
     }
 
     public void addRead(final SAMRecord read) { mReads.add(read); }
     public void addReads(final List<SAMRecord> reads) { mReads.addAll(reads); }
     public void addNonConsensusReads(final List<SAMRecord> reads) { mNonConsensusReads.addAll(reads); }
-    public void addPolyGUmiReads(final List<SAMRecord> reads) { mPolyGUmiReads.addAll(reads); }
 
     public List<SAMRecord> reads() { return mReads; }
     public List<SAMRecord> nonConsensusReads() { return mNonConsensusReads; }
-    public List<SAMRecord> polyGUmiReads() { return mPolyGUmiReads; }
 
-    public List<SAMRecord> allReads()
-    {
-        return Stream.concat(Stream.concat(mReads.stream(), mNonConsensusReads.stream()), mPolyGUmiReads.stream()).toList();
-    }
+    public List<SAMRecord> allReads() { return Stream.concat(mReads.stream(), mNonConsensusReads.stream()).toList(); }
 
-    public int totalReadCount() { return mReads.size() + mNonConsensusReads.size() + mPolyGUmiReads.size(); }
+    public int totalReadCount() { return mReads.size() + mNonConsensusReads.size(); }
 
     public FragmentCoords fragmentCoordinates() { return mFragmentCoords; }
 
@@ -96,6 +86,9 @@ public class DuplicateGroup
 
     public void registerDualStrand() { mDualStrand = true; }
     public boolean hasDualStrand() { return mDualStrand; }
+
+    public void markPolyGUnmapped() { mPolyGUnmapped = true; }
+    public boolean polyGUnmapped() { return mPolyGUnmapped; }
 
     public void formConsensusRead(final ConsensusReads consensusReads)
     {

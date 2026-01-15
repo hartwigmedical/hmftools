@@ -67,7 +67,7 @@ public class UmiGroupsTest
 
         assertTrue(hasDuplexUmiMatch(umiId1, umiId2, umiConfig.DuplexDelim, umiConfig.PermittedBaseDiff));
 
-        // too manu different base
+        // too many different base
         umiId2 = "AAGCCC_TATCGC";
 
         assertFalse(hasDuplexUmiMatch(umiId1, umiId2, umiConfig.DuplexDelim, umiConfig.PermittedBaseDiff));

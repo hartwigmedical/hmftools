@@ -458,7 +458,7 @@ public class PartitionReader
         {
             // do not form consensus if duplicateGroup only contains one non poly-G read, but even if only 1 read is to be used to make
             // the consensus read (the other being non-consensus), still make it to include its attributes and to mark the others as duplicates
-            if(mConfig.FormConsensus && duplicateGroup.totalReadCount() - duplicateGroup.polyGUmiReads().size() >= 2)
+            if(mConfig.FormConsensus && !duplicateGroup.polyGUnmapped())
             {
                 duplicateGroup.formConsensusRead(mConsensusReads);
                 mBamWriter.setBoundaryPosition(duplicateGroup.consensusRead().getAlignmentStart(), false);

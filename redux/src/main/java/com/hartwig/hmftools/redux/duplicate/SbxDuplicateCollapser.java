@@ -6,6 +6,9 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
+import static com.hartwig.hmftools.redux.duplicate.FragmentCoords.FRAG_ORIENT_FORWARD_STR;
+import static com.hartwig.hmftools.redux.duplicate.FragmentCoords.FRAG_ORIENT_REVERSE_STR;
+import static com.hartwig.hmftools.redux.duplicate.FragmentCoords.FRAG_TYPE_SUPP_INFO_STR;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -455,10 +458,10 @@ public class SbxDuplicateCollapser
 
     private static String collapseKey(final FragmentCoords fragmentCoords)
     {
-        String key = fragmentCoords.OrientLower.isForward() ? "F" : "R";
+        String key = fragmentCoords.OrientLower.isForward() ? FRAG_ORIENT_FORWARD_STR : FRAG_ORIENT_REVERSE_STR;
         if(fragmentCoords.SuppReadInfo != null)
         {
-            return key + "_S";
+            return key + "_" + FRAG_TYPE_SUPP_INFO_STR;
         }
 
         return key;

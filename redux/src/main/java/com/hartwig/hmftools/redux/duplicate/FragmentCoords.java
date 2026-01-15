@@ -23,7 +23,7 @@ public class FragmentCoords implements Comparable<FragmentCoords>
     // represents all the fragment property of a read or pair of reads
     // primary purpose is to find duplicates, by a match in their Key, which is defined as:
     // A_B_C_D where
-    // A: LowerCoordinate, where coordinate is chrmosome:unclipped_position and :R if reverse orientation
+    // A: LowerCoordinate, where coordinate is chromosome:unclipped_position and :R if reverse orientation
     // B: UpperCoordinate, or the read's unclipped end if unpaired
     // C: whether the read which builds the coordinates matched the lower or upper position if a paired read
     // D: if the read is unmapped or supplementary

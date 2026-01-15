@@ -124,9 +124,23 @@ public abstract class BamWriter
                 mReadDataWriter.writeReadData(read, PRIMARY, fragCoords, group.umi());
         }
 
-        // is poly-g umi collapsing the only reason this is a duplicate group?
+        // if the group was formed from unmapped poly-G reads then mark all reads as duplicates
+        for(SAMRecord read : group.allReads())
+        {
+            if(mConfig.UMIs.Enabled)
+                read.setAttribute(UMI_ATTRIBUTE, group.umi());
+
+            FragmentStatus fragmentStatus = !group.polyGUnmapped() && group.isPrimaryRead(read) ? PRIMARY : DUPLICATE;
+            if(mRecomputeFragCoords)
+                fragCoords = FragmentCoords.fromRead(read, false).Key;
+
+            writeRead(read, fragmentStatus, fragCoords, group.umi());
+        }
+
+        /*
         List<SAMRecord> remainingReads;
-        if(group.totalReadCount() - group.polyGUmiReads().size() == 1)
+
+        if(group.polyGUnmapped())
         {
             SAMRecord read = group.reads().get(0);
             if(mConfig.UMIs.Enabled)
@@ -155,6 +169,7 @@ public abstract class BamWriter
 
             writeRead(read, fragmentStatus, fragCoords, group.umi());
         }
+        */
     }
 
     protected abstract void writeRecord(final SAMRecord read);

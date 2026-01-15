@@ -2,11 +2,13 @@ package com.hartwig.hmftools.redux.duplicate;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CHROMOSOME_NAME;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CIGAR;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.UMI_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
 import static com.hartwig.hmftools.common.bam.SupplementaryReadData.SUPP_POS_STRAND;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
+import static com.hartwig.hmftools.common.test.SamRecordTestUtils.cloneSamRecord;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecord;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.flipFirstInPair;
 import static com.hartwig.hmftools.redux.TestUtils.READ_ID_GEN;
@@ -19,23 +21,17 @@ import static com.hartwig.hmftools.redux.TestUtils.setSecondInPair;
 import static com.hartwig.hmftools.redux.ReduxConstants.DEFAULT_DUPLEX_UMI_DELIM;
 import static com.hartwig.hmftools.redux.consensus.ConsensusReads.formConsensusReadId;
 import static com.hartwig.hmftools.redux.duplicate.UmiGroupBuilder.buildUmiGroups;
+import static com.hartwig.hmftools.redux.duplicate.UmiType.TWIST_DUPEX_DELIM;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.SortedMultiset;
-import com.google.common.collect.TreeMultiset;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.test.MockRefGenome;
@@ -44,6 +40,7 @@ import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 import com.hartwig.hmftools.redux.PartitionReader;
 import com.hartwig.hmftools.redux.ReduxConfig;
 import com.hartwig.hmftools.redux.TestBamWriter;
+import com.hartwig.hmftools.redux.common.ReadInfo;
 import com.hartwig.hmftools.redux.consensus.TemplateReads;
 
 import org.junit.Test;
@@ -52,7 +49,6 @@ import htsjdk.samtools.SAMRecord;
 
 public class UmiDuplicatesTest
 {
-    private final ReadIdGenerator mReadIdGen;
     private final MockRefGenome mRefGenome;
     private final TestBamWriter mWriter;
 
@@ -61,7 +57,6 @@ public class UmiDuplicatesTest
 
     public UmiDuplicatesTest()
     {
-        mReadIdGen = new ReadIdGenerator();
         mRefGenome = new MockRefGenome();
         mRefGenome.RefGenomeMap.put(CHR_1, REF_BASES_REPEAT_40);
         mRefGenome.ChromosomeLengths.put(CHR_1, REF_BASES_REPEAT_40.length());
@@ -316,8 +311,6 @@ public class UmiDuplicatesTest
         mPartitionReaderDuplexUMIs.processRead(read5);
         mPartitionReaderDuplexUMIs.postProcessRegion();
 
-        // PartitionData partitionData = mPartitionReaderDuplexUMIs.partitionDataStore().getOrCreatePartitionData("1_0");
-        // assertEquals(5, partitionData.duplicateGroupMap().size());
         assertEquals(5, mWriter.nonConsensusWriteCount());
         assertEquals(2, mWriter.consensusWriteCount());
 
@@ -494,290 +487,141 @@ public class UmiDuplicatesTest
     }
 
     @Test
-    public void testPolyGCollapsingCreatedOrphanConsensusRead()
+    public void testPolyGMerging()
     {
-        MockRefGenome refGenome = new MockRefGenome(true);
-        refGenome.RefGenomeMap.put(CHR_1, "A".repeat(2_000));
-        refGenome.ChromosomeLengths.put(CHR_1, 2_000);
-        refGenome.RefGenomeMap.put(CHR_2, "A".repeat(2_000));
-        refGenome.ChromosomeLengths.put(CHR_2, 2_000);
-
-        ReduxConfig config = new ReduxConfig(refGenome, true, true, false, READ_UNMAPPER_DISABLED);
-        TestBamWriter writer = new TestBamWriter(config);
-        PartitionReader partitionReader = createPartitionRead(config, writer);
-
         String umiIdPart1 = "A".repeat(7);
         String umiId1Part2 = "G".repeat(7);
         String umiId2Part2 = "C" + "G".repeat(6);
 
+        // test 1: basic case where all mates are unmapped
         String readName1 = "READ_001:" + umiIdPart1 + DEFAULT_DUPLEX_UMI_DELIM + umiId1Part2;
         String readName2 = "READ_002:" + umiIdPart1 + DEFAULT_DUPLEX_UMI_DELIM + umiId2Part2;
 
         int readPosition = 1000;
-        int matePosition = 1000;
 
-        SAMRecord read1 = createSamRecord(readName1, CHR_1, readPosition, TEST_READ_BASES, TEST_READ_CIGAR, CHR_2, matePosition,
+        SAMRecord read1 = createSamRecord(readName1, CHR_1, readPosition, TEST_READ_BASES, TEST_READ_CIGAR, NO_CHROMOSOME_NAME, NO_POSITION,
+                false, false, null, false, NO_CIGAR);
+        read1.setMateUnmappedFlag(true);
+
+        SAMRecord mate1 = createSamRecord(readName1, NO_CHROMOSOME_NAME, readPosition, TEST_READ_BASES, NO_CIGAR, CHR_1, readPosition,
                 false, false, null, false, TEST_READ_CIGAR);
-        flipFirstInPair(read1);
+        flipFirstInPair(mate1);
 
-        SAMRecord mate1 = createSamRecord(readName1, CHR_2, readPosition, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, matePosition,
+        SAMRecord read2 = cloneSamRecord(read1, readName2);
+
+        SAMRecord mate2 = cloneSamRecord(mate1, readName2);
+
+        UmiConfig umiConfig = new UmiConfig(true, true, TWIST_DUPEX_DELIM, false);
+        PolyGUmiMerger polyGUmiMerger = new PolyGUmiMerger(umiConfig);
+
+        List<ReadInfo> singleFragments = formSingleFragments(List.of(read1, mate1, read2, mate2));
+
+        List<DuplicateGroup> umiGroups = Lists.newArrayList();
+        polyGUmiMerger.mergeGroups(umiGroups, singleFragments);
+
+        assertEquals(2, umiGroups.size());
+        assertTrue(singleFragments.isEmpty());
+
+        DuplicateGroup duplicateGroup = findMatchingGroup(umiGroups, List.of(read1, read2), false);
+
+        assertNotNull(duplicateGroup);
+        assertFalse(duplicateGroup.polyGUnmapped());
+
+        duplicateGroup = findMatchingGroup(umiGroups, List.of(mate1, mate2), true);
+
+        assertNotNull(duplicateGroup);
+        assertFalse(duplicateGroup.polyGUnmapped());
+
+
+        // test 2: UMIs must have poly-G tail
+        readName1 = "READ_001:" + umiIdPart1 + DEFAULT_DUPLEX_UMI_DELIM + "C".repeat(7);
+        readName2 = "READ_002:" + umiIdPart1 + DEFAULT_DUPLEX_UMI_DELIM + "C".repeat(6) + "A";
+        read1.setReadName(readName1);
+        mate1.setReadName(readName1);
+        read2.setReadName(readName2);
+        mate2.setReadName(readName2);
+
+        singleFragments = formSingleFragments(List.of(read1, mate1, read2, mate2));
+
+        umiGroups = Lists.newArrayList();
+        polyGUmiMerger.mergeGroups(umiGroups, singleFragments);
+
+        assertEquals(0, umiGroups.size());
+        assertEquals(4, singleFragments.size());
+
+
+        // test 3: require unmapped reads to merge
+        readName1 = "READ_001:" + umiIdPart1 + DEFAULT_DUPLEX_UMI_DELIM + umiId1Part2;
+        readName2 = "READ_002:" + umiIdPart1 + DEFAULT_DUPLEX_UMI_DELIM + umiId2Part2;
+
+        read1 = createSamRecord(readName1, CHR_1, readPosition, TEST_READ_BASES, TEST_READ_CIGAR, CHR_2, readPosition,
                 false, false, null, false, TEST_READ_CIGAR);
 
-        SAMRecord read2 = createSamRecord(readName2, CHR_2, readPosition, TEST_READ_BASES, TEST_READ_CIGAR, CHR_2, matePosition,
+        mate1 = createSamRecord(readName1, CHR_2, readPosition, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, readPosition,
+                false, false, null, false, TEST_READ_CIGAR);
+        flipFirstInPair(mate1);
+
+        read2 = cloneSamRecord(read1, readName2);
+        mate2 = cloneSamRecord(mate1, readName2);
+
+        singleFragments = formSingleFragments(List.of(read1, read2));
+
+        umiGroups = Lists.newArrayList();
+        polyGUmiMerger.mergeGroups(umiGroups, singleFragments);
+
+        assertEquals(0, umiGroups.size());
+        assertEquals(2, singleFragments.size());
+
+
+        // test 4: some reads unmapped, some mapped elsewhere, mark unmapped as duplicates
+        read2 = createSamRecord(readName2, CHR_1, readPosition, TEST_READ_BASES, TEST_READ_CIGAR, NO_CHROMOSOME_NAME, NO_POSITION,
                 false, false, null, false, NO_CIGAR);
         read2.setMateUnmappedFlag(true);
 
-        SAMRecord mate2 = createSamRecord(readName2, CHR_2, readPosition, TEST_READ_BASES, NO_CIGAR, CHR_2, matePosition,
+        mate2 = createSamRecord(readName2, NO_CHROMOSOME_NAME, readPosition, TEST_READ_BASES, NO_CIGAR, CHR_1, readPosition,
                 false, false, null, false, TEST_READ_CIGAR);
         flipFirstInPair(mate2);
-        mate2.setReadUnmappedFlag(true);
 
-        List<SAMRecord> reads = Lists.newArrayList(read1, mate1, read2, mate2);
-        Map<String, List<SAMRecord>> readsByChromosome = Maps.newHashMap();
+        singleFragments = formSingleFragments(List.of(read1, read2, mate2));
 
-        for(SAMRecord read : reads)
-        {
-            String chromosome = read.getReferenceName();
-            readsByChromosome.computeIfAbsent(chromosome, k -> Lists.newArrayList());
-            readsByChromosome.get(chromosome).add(read);
-        }
+        umiGroups = Lists.newArrayList();
+        polyGUmiMerger.mergeGroups(umiGroups, singleFragments);
 
-        for(List<SAMRecord> chromosomeReads : readsByChromosome.values())
-            chromosomeReads.sort(Comparator.comparingInt(SAMRecord::getAlignmentStart));
+        assertEquals(2, umiGroups.size());
+        assertEquals(0, singleFragments.size());
 
-        for(String chromosome : readsByChromosome.keySet())
-        {
-            partitionReader.setupRegion(new ChrBaseRegion(chromosome, 1, 2_000));
-            readsByChromosome.get(chromosome).forEach(x -> partitionReader.processRead(x.deepCopy()));
-            partitionReader.postProcessRegion();
-        }
+        duplicateGroup = findMatchingGroup(umiGroups, List.of(read1, read2), false);
 
-        assertEquals(4, writer.nonConsensusWriteCount());
-        assertEquals(0, writer.consensusWriteCount());
+        assertNotNull(duplicateGroup);
+        assertFalse(duplicateGroup.polyGUnmapped());
 
-        final List<SAMRecord> writtenRecords = Collections.unmodifiableList(writer.WrittenRecords);
-        final BiFunction<String, Boolean, Stream<SAMRecord>>
-                readStream = (final String readName, final Boolean isFirstOfPair) -> writtenRecords.stream()
-                .filter(x -> (x.getReadName().equals(readName) && x.getFirstOfPairFlag() == isFirstOfPair));
+        duplicateGroup = findMatchingGroup(umiGroups, List.of(mate2), true);
 
-        assertEquals(1L, readStream.apply(readName1, true).count());
-        assertEquals(1L, readStream.apply(readName1, false).count());
-        assertEquals(1L, readStream.apply(readName2, true).count());
-        assertEquals(1L, readStream.apply(readName2, false).count());
-
-        SAMRecord outRead1 = readStream.apply(readName1, false).findAny().orElse(null);
-        SAMRecord outMate1 = readStream.apply(readName1, true).findAny().orElse(null);
-        SAMRecord outRead2 = readStream.apply(readName2, true).findAny().orElse(null);
-        SAMRecord outMate2 = readStream.apply(readName2, false).findAny().orElse(null);
-
-        outRead1.setAttribute(UMI_ATTRIBUTE, null);
-        outMate1.setAttribute(UMI_ATTRIBUTE, null);
-        outRead2.setAttribute(UMI_ATTRIBUTE, null);
-        outMate2.setAttribute(UMI_ATTRIBUTE, null);
-
-        assertEquals(read1, outRead1);
-        assertEquals(mate1, outMate1);
-
-        assertTrue(outRead2.getDuplicateReadFlag());
-        outRead2.setDuplicateReadFlag(false);
-        assertEquals(read2, outRead2);
-
-        assertTrue(outMate2.getDuplicateReadFlag());
-        outMate2.setDuplicateReadFlag(false);
-        assertEquals(mate2, outMate2);
+        assertNotNull(duplicateGroup);
+        assertTrue(duplicateGroup.polyGUnmapped());
     }
 
-    @Test
-    public void testPolyGCollapsingOnUnmappedReads()
+    private static DuplicateGroup findMatchingGroup(
+            final List<DuplicateGroup> duplicateGroups, final List<SAMRecord> reads, boolean checkNonConsensus)
     {
-        MockRefGenome refGenome = new MockRefGenome(true);
-        refGenome.RefGenomeMap.put(CHR_1, "A".repeat(2_000));
-        refGenome.ChromosomeLengths.put(CHR_1, 2_000);
+        for(DuplicateGroup duplicateGroup : duplicateGroups)
+        {
+            if(reads.stream().allMatch(x -> duplicateGroup.reads().contains(x)))
+                return duplicateGroup;
 
-        ReduxConfig config = new ReduxConfig(refGenome, true, true, false, READ_UNMAPPER_DISABLED);
-        TestBamWriter writer = new TestBamWriter(config);
-        PartitionReader partitionReader = createPartitionRead(config, writer);
+            if(checkNonConsensus)
+            {
+                if(reads.stream().allMatch(x -> duplicateGroup.allReads().contains(x)))
+                    return duplicateGroup;
+            }
+        }
 
-        String umiIdPart1 = "A".repeat(7);
-        String umiId1Part2 = "G".repeat(7);
-        String umiId2Part2 = "A".repeat(7);
-
-        String readName1 = "READ_001:" + umiIdPart1 + DEFAULT_DUPLEX_UMI_DELIM + umiId1Part2;
-        String readName2 = "READ_002:" + umiIdPart1 + DEFAULT_DUPLEX_UMI_DELIM + umiId1Part2;
-        String readName3 = "READ_003:" + umiIdPart1 + DEFAULT_DUPLEX_UMI_DELIM + umiId2Part2;
-        String readName4 = "READ_004:" + umiIdPart1 + DEFAULT_DUPLEX_UMI_DELIM + umiId2Part2;
-
-        SAMRecord read1 = createSamRecord(
-                readName1, CHR_1, 1_000, TEST_READ_BASES, NO_CIGAR, CHR_1, 1_000, false,
-                false, null, false, TEST_READ_CIGAR);
-        read1.setReadUnmappedFlag(true);
-
-        SAMRecord mate1 = createSamRecord(
-                readName1, CHR_1, 1_000, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 1_000, false,
-                false, null, false, NO_CIGAR);
-        mate1.setMateUnmappedFlag(true);
-        flipFirstInPair(mate1);
-
-        SAMRecord read2 = createSamRecord(
-                readName2, CHR_1, 1_000, TEST_READ_BASES, NO_CIGAR, CHR_1, 1_000, false,
-                false, null, false, TEST_READ_CIGAR);
-        read2.setReadUnmappedFlag(true);
-
-        SAMRecord mate2 = createSamRecord(
-                readName2, CHR_1, 1_000, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 1_000, false,
-                false, null, false, NO_CIGAR);
-        mate2.setMateUnmappedFlag(true);
-        flipFirstInPair(mate2);
-
-        SAMRecord read3 = createSamRecord(
-                readName3, CHR_1, 1_000, TEST_READ_BASES, NO_CIGAR, CHR_1, 1_000, false,
-                false, null, false, TEST_READ_CIGAR);
-        read3.setReadUnmappedFlag(true);
-
-        SAMRecord mate3 = createSamRecord(
-                readName3, CHR_1, 1_000, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 1_000, false,
-                false, null, false, NO_CIGAR);
-        mate3.setMateUnmappedFlag(true);
-        flipFirstInPair(mate3);
-
-        SAMRecord read4 = createSamRecord(
-                readName4, CHR_1, 1_000, TEST_READ_BASES, NO_CIGAR, CHR_1, 1_000, false,
-                false, null, false, TEST_READ_CIGAR);
-        read4.setReadUnmappedFlag(true);
-
-        SAMRecord mate4 = createSamRecord(
-                readName1, CHR_1, 1_000, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 1_000, false,
-                false, null, false, NO_CIGAR);
-        mate4.setMateUnmappedFlag(true);
-        flipFirstInPair(mate4);
-
-        List<SAMRecord> reads = List.of(mate1, mate2, mate3, mate4, read1, read2, read3, read4);
-        partitionReader.setupRegion(new ChrBaseRegion(CHR_1, 1, 2_000));
-        reads.forEach(partitionReader::processRead);
-        partitionReader.postProcessRegion();
-
-        assertEquals(8, writer.nonConsensusWriteCount());
-        assertEquals(2, writer.consensusWriteCount());
+        return null;
     }
 
-    @Test
-    public void testPolyGConsistentCollapsingOfReadsAndTheirUnmappedMates()
+    private static List<ReadInfo> formSingleFragments(final List<SAMRecord> reads)
     {
-        MockRefGenome refGenome = new MockRefGenome(true);
-        refGenome.RefGenomeMap.put(CHR_1, "A".repeat(2_000));
-        refGenome.ChromosomeLengths.put(CHR_1, 2_000);
-
-        ReduxConfig config = new ReduxConfig(refGenome, true, true, false, READ_UNMAPPER_DISABLED);
-        TestBamWriter writer = new TestBamWriter(config);
-        final PartitionReader partitionReader = createPartitionRead(config, writer);
-
-        String umiId = "A".repeat(7) + DEFAULT_DUPLEX_UMI_DELIM + "G".repeat(7);
-
-        String readName1 = nextReadId(umiId);
-        String readName2 = nextReadId(umiId);
-        String readName3 = nextReadId(umiId);
-
-        SAMRecord read1 = createSamRecord(
-                readName1, CHR_1, 500, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 500, false,
-                false, null, false, NO_CIGAR);
-        read1.setMateUnmappedFlag(true);
-
-        SAMRecord mate1 = createSamRecord(
-                readName1, CHR_1, 500, TEST_READ_BASES, NO_CIGAR, CHR_1, 500, false,
-                false, null, false, TEST_READ_CIGAR);
-        mate1.setReadUnmappedFlag(true);
-        flipFirstInPair(mate1);
-
-        SAMRecord read2 = createSamRecord(
-                readName2, CHR_1, 500, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 500, false,
-                false, null, false, NO_CIGAR);
-        read2.setMateUnmappedFlag(true);
-
-        SAMRecord mate2 = createSamRecord(
-                readName2, CHR_1, 500, TEST_READ_BASES, NO_CIGAR, CHR_1, 500, false,
-                false, null, false, TEST_READ_CIGAR);
-        mate2.setReadUnmappedFlag(true);
-        flipFirstInPair(mate2);
-
-        SAMRecord read3 = createSamRecord(
-                readName3, CHR_1, 500, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 1_500, false,
-                false, null, false, TEST_READ_CIGAR);
-        SAMRecord mate3 = createSamRecord(
-                readName3, CHR_1, 1_500, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 500, false,
-                false, null, false, TEST_READ_CIGAR);
-        flipFirstInPair(mate3);
-
-        List<SAMRecord> reads = Lists.newArrayList(read1, mate1, read2, mate2, read3, mate3);
-        reads.sort(Comparator.comparingInt(SAMRecord::getAlignmentStart));
-
-        partitionReader.setupRegion(new ChrBaseRegion(CHR_1, 1, 2_000));
-        reads.forEach(x -> partitionReader.processRead(x.deepCopy()));
-        partitionReader.postProcessRegion();
-
-        assertEquals(6, writer.nonConsensusWriteCount());
-        assertEquals(0, writer.consensusWriteCount());
-
-        final Function<SAMRecord, SAMRecord> makeReadDuplicate = (final SAMRecord read) ->
-        {
-            SAMRecord readCopy = read.deepCopy();
-            readCopy.setDuplicateReadFlag(true);
-            return readCopy;
-        };
-
-        final Function<SAMRecord, SAMRecord> removeUmiAttribute = (final SAMRecord read) ->
-        {
-            SAMRecord readCopy = read.deepCopy();
-            readCopy.setAttribute(UMI_ATTRIBUTE, null);
-            return readCopy;
-        };
-
-        SortedMultiset<String> expectedDuplicateReads = Lists.newArrayList(read1, mate1, read2, mate2).stream()
-                .map(makeReadDuplicate)
-                .map(SAMRecord::getSAMString)
-                .collect(Collectors.toCollection(TreeMultiset::create));
-        SortedMultiset<String> actualDuplicateReads = writer.WrittenRecords.stream()
-                .filter(SAMRecord::getDuplicateReadFlag)
-                .map(removeUmiAttribute)
-                .map(SAMRecord::getSAMString)
-                .collect(Collectors.toCollection(TreeMultiset::create));
-
-        assertEquals(expectedDuplicateReads, actualDuplicateReads);
-
-        // now create a dup of read3
-        writer = new TestBamWriter(config);
-        final PartitionReader partitionReader2 = createPartitionRead(config, writer);
-
-        String readName4 = nextReadId(umiId);
-        SAMRecord read4 = createSamRecord(
-                readName4, CHR_1, 500, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 1_500, false,
-                false, null, false, TEST_READ_CIGAR);
-        SAMRecord mate4 = createSamRecord(
-                readName4, CHR_1, 1_500, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 500, false,
-                false, null, false, TEST_READ_CIGAR);
-        flipFirstInPair(mate4);
-
-        reads.add(read4);
-        reads.add(mate4);
-        reads.sort(Comparator.comparingInt(SAMRecord::getAlignmentStart));
-
-        partitionReader2.setupRegion(new ChrBaseRegion(CHR_1, 1, 2_000));
-        reads.forEach(x -> partitionReader2.processRead(x.deepCopy()));
-        partitionReader2.postProcessRegion();
-
-        assertEquals(8, writer.nonConsensusWriteCount());
-        assertEquals(2, writer.consensusWriteCount());
-
-        expectedDuplicateReads = Lists.newArrayList(read1, mate1, read2, mate2, read3, mate3, read4, mate4).stream()
-                .map(makeReadDuplicate)
-                .map(SAMRecord::getSAMString)
-                .collect(Collectors.toCollection(TreeMultiset::create));
-        actualDuplicateReads = writer.WrittenRecords.stream()
-                .filter(SAMRecord::getDuplicateReadFlag)
-                .map(removeUmiAttribute)
-                .map(SAMRecord::getSAMString)
-                .collect(Collectors.toCollection(TreeMultiset::create));
-
-        assertEquals(expectedDuplicateReads, actualDuplicateReads);
+        return reads.stream().map(x -> new ReadInfo(x, FragmentCoords.fromRead(x, true))).collect(Collectors.toList());
     }
 
     protected static String nextReadId(final String umiId)
