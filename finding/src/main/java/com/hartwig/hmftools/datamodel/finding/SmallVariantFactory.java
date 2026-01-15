@@ -3,6 +3,7 @@ package com.hartwig.hmftools.datamodel.finding;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.driver.panel.DriverGene;
@@ -10,6 +11,7 @@ import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.driver.DriverSource;
 import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
 import com.hartwig.hmftools.datamodel.finding.clinicaltranscript.ClinicalTranscriptsModel;
+import com.hartwig.hmftools.datamodel.purple.PurpleAllelicDepth;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleTranscriptImpact;
@@ -37,7 +39,7 @@ final class SmallVariantFactory
 
         allSmallVariants.sort(SmallVariant.COMPARATOR);
 
-        return ImmutableDriverFindingList.<SmallVariant>builder()
+        return DriverFindingListBuilder.<SmallVariant>builder()
                 .status(findingsStatus)
                 .all(allSmallVariants)
                 .build();
@@ -94,17 +96,68 @@ final class SmallVariantFactory
 
         DriverGene driverGene = driverGeneMap.get(variant.gene());
         DriverCategory driverCategory = driverGene != null ? driverLikelihoodType(driverGene.likelihoodType()) : null;
-        return ImmutableSmallVariant.builder()
-                .findingKey(FindingKeys.smallVariant(sampleType, variant, transcriptImpact, isCanonical))
-                .driverSource(sampleType)
+        return SmallVariantBuilder.builder()
+                .driver(DriverFieldsBuilder.builder()
+                        .findingKey(FindingKeys.smallVariant(sampleType, variant, transcriptImpact, isCanonical))
+                        .driverSource(sampleType)
+                        .reportedStatus(ReportedStatus.REPORTED) // all drivers here are reported
+                        .driverInterpretation(DriverInterpretation.interpret(driver.driverLikelihood()))
+                        .build()
+                )
                 .driverLikelihoodType(driverCategory)
-                .reportedStatus(ReportedStatus.REPORTED) // all drivers here are reported
-                .driverInterpretation(DriverInterpretation.interpret(driver.driverLikelihood()))
-                .purpleVariant(variant)
-                .driver(driver)
-                .transcriptImpact(transcriptImpact)
-                .otherImpact(otherImpact)
+                .driverLikelihood(driver.driverLikelihood())
+                .transcriptImpact(Objects.requireNonNull(convertTranscriptImpact(transcriptImpact)))
+                .otherImpact(convertTranscriptImpact(otherImpact))
                 .isCanonical(isCanonical)
+                .type(variant.type())
+                .gene(variant.gene())
+                .chromosome(variant.chromosome())
+                .position(variant.position())
+                .ref(variant.ref())
+                .alt(variant.alt())
+                .worstCodingEffect(variant.worstCodingEffect())
+                .hotspot(variant.hotspot())
+                .tumorDepth(Objects.requireNonNull(convertAllelicDepth(variant.tumorDepth())))
+                .rnaDepth(convertAllelicDepth(variant.rnaDepth()))
+                .adjustedCopyNumber(variant.adjustedCopyNumber())
+                .adjustedVAF(variant.adjustedVAF())
+                .minorAlleleCopyNumber(variant.minorAlleleCopyNumber())
+                .variantCopyNumber(variant.variantCopyNumber())
+                .biallelic(variant.biallelic())
+                .biallelicProbability(Objects.requireNonNull(variant.biallelicProbability()))
+                .genotypeStatus(variant.genotypeStatus())
+                .repeatCount(variant.repeatCount())
+                .subclonalLikelihood(variant.subclonalLikelihood())
+                .localPhaseSets(variant.localPhaseSets())
+                .build();
+    }
+
+    @Nullable
+    private static SmallVariant.TranscriptImpact convertTranscriptImpact(@Nullable PurpleTranscriptImpact transcriptImpact)
+    {
+        if (transcriptImpact == null) { return null; }
+
+        return SmallVariantTranscriptImpactBuilder.builder()
+                .transcript(transcriptImpact.transcript())
+                .hgvsCodingImpact(transcriptImpact.hgvsCodingImpact())
+                .hgvsProteinImpact(transcriptImpact.hgvsProteinImpact())
+                .affectedCodon(transcriptImpact.affectedCodon())
+                .affectedExon(transcriptImpact.affectedExon())
+                .inSpliceRegion(transcriptImpact.inSpliceRegion())
+                .effects(transcriptImpact.effects())
+                .codingEffect(transcriptImpact.codingEffect())
+                .reported(transcriptImpact.reported())
+                .build();
+    }
+
+    @Nullable
+    private static SmallVariant.AllelicDepth convertAllelicDepth(@Nullable PurpleAllelicDepth allelicDepth)
+    {
+        if (allelicDepth == null) { return null; }
+
+        return SmallVariantAllelicDepthBuilder.builder()
+                .totalReadCount(allelicDepth.totalReadCount())
+                .alleleReadCount(allelicDepth.alleleReadCount())
                 .build();
     }
 

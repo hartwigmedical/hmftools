@@ -72,7 +72,7 @@ final class DisruptionFactory
 
         allDisruptions.sort(Disruption.COMPARATOR);
 
-        return ImmutableDriverFindingList.<Disruption>builder()
+        return DriverFindingListBuilder.<Disruption>builder()
                 .status(FindingsStatus.OK)
                 .all(allDisruptions)
                 .build();
@@ -186,11 +186,15 @@ final class DisruptionFactory
 
         ReportedStatus reportedStatus = breakend.reported() ? ReportedStatus.REPORTED : ReportedStatus.NOT_REPORTED;
 
-        return ImmutableDisruption.builder()
-                .findingKey(FindingKeys.disruption(sourceSample, breakend))
-                .driverSource(sourceSample)
-                .reportedStatus(reportedStatus)
-                .driverInterpretation(DriverInterpretation.HIGH) // TODOHWL: fix
+        return DisruptionBuilder.builder()
+                .driver(
+                        DriverFieldsBuilder.builder()
+                                .findingKey(FindingKeys.disruption(sourceSample, breakend))
+                                .driverSource(sourceSample)
+                                .reportedStatus(reportedStatus)
+                                .driverInterpretation(DriverInterpretation.HIGH) // TODOHWL: fix
+                                .build()
+                )
                 .type(disruptionType)
                 .chromosome(breakend.chromosome())
                 .chromosomeBand(breakend.chromosomeBand())
