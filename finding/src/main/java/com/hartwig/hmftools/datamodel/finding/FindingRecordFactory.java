@@ -40,12 +40,15 @@ import org.jetbrains.annotations.Nullable;
 
 // to reduce duplication, the findings are collected from
 // various part of the orange record
-public class FindingRecordFactory {
+public class FindingRecordFactory
+{
 
     @NotNull
     public static FindingRecord fromOrangeJsonWithTranscriptFile(@NotNull Path orangeJson, @Nullable Path clinicalTranscriptsTsv,
-            @Nullable Path driverGeneTsv) throws IOException {
-        try (Reader reader = Files.newBufferedReader(orangeJson)) {
+            @Nullable Path driverGeneTsv) throws IOException
+    {
+        try(Reader reader = Files.newBufferedReader(orangeJson))
+        {
             OrangeRecord orangeRecord = com.hartwig.hmftools.datamodel.OrangeJson.getInstance().read(reader);
             return fromOrangeRecord(orangeRecord, clinicalTranscriptsTsv, driverGeneTsv);
         }
@@ -53,7 +56,8 @@ public class FindingRecordFactory {
 
     @NotNull
     public static FindingRecord fromOrangeRecord(@NotNull OrangeRecord orangeRecord, @Nullable Path clinicalTranscriptsTsv,
-            @Nullable Path driverGeneTsv) throws IOException {
+            @Nullable Path driverGeneTsv) throws IOException
+    {
         ClinicalTranscriptsModel clinicalTranscriptsModel = clinicalTranscriptsTsv != null ?
                 ClinicalTranscriptFile.buildFromTsv(orangeRecord.refGenomeVersion(), clinicalTranscriptsTsv) : null;
         Map<String, DriverGene> driverGenes = driverGenesMap(driverGeneTsv);
@@ -83,13 +87,14 @@ public class FindingRecordFactory {
 
     // return the gain deletions cause they are needed by HRD, will see if we can find a better way
     private static DriverFindingList<GainDeletion> addPurpleFindings(FindingRecordBuilder builder, final OrangeRecord orangeRecord,
-            final @Nullable ClinicalTranscriptsModel clinicalTranscriptsModel, @NotNull Map<String, DriverGene> driverGenes) {
+            final @Nullable ClinicalTranscriptsModel clinicalTranscriptsModel, @NotNull Map<String, DriverGene> driverGenes)
+    {
         PurpleRecord purple = orangeRecord.purple();
-        
+
         FindingsStatus findingsStatus = purpleFindingsStatus(purple);
-        
+
         PurpleFit purpleFit = purple.fit();
-        
+
         builder.purityPloidyFit(PurityPloidyFitBuilder.builder()
                 .qc(PurityPloidyFitQcBuilder.builder()
                         .status(purpleFit.qc().status())
@@ -109,7 +114,8 @@ public class FindingRecordFactory {
                 .maxPloidy(purpleFit.maxPloidy())
                 .build());
 
-        DriverFindingList<GainDeletion> gainDeletions = GainDeletionFactory.gainDeletionFindings(purple, orangeRecord.refGenomeVersion(), findingsStatus);
+        DriverFindingList<GainDeletion> gainDeletions =
+                GainDeletionFactory.gainDeletionFindings(purple, orangeRecord.refGenomeVersion(), findingsStatus);
 
         builder.smallVariants(SmallVariantFactory.smallVariantFindings(purple, findingsStatus, clinicalTranscriptsModel, driverGenes))
                 .gainDeletions(gainDeletions)
@@ -120,7 +126,8 @@ public class FindingRecordFactory {
     }
 
     @NotNull
-    private static FindingItem<TumorMutationStatus> createTumorMutationStatus(@NotNull PurpleRecord purple) {
+    private static FindingItem<TumorMutationStatus> createTumorMutationStatus(@NotNull PurpleRecord purple)
+    {
         return FindingItemBuilder.<TumorMutationStatus>builder()
                 .status(FindingsStatus.OK)
                 .finding(TumorMutationStatusBuilder.builder()
@@ -136,17 +143,21 @@ public class FindingRecordFactory {
     }
 
     @NotNull
-    private static FindingItem<PredictedTumorOrigin> createPredictedTumorOrigin(CuppaData cuppa) {
-        if (cuppa != null) {
+    private static FindingItem<PredictedTumorOrigin> createPredictedTumorOrigin(CuppaData cuppa)
+    {
+        if(cuppa != null)
+        {
             return FindingItemBuilder.<PredictedTumorOrigin>builder()
                     .status(FindingsStatus.OK)
-                    .finding( PredictedTumorOriginBuilder.builder()
+                    .finding(PredictedTumorOriginBuilder.builder()
                             .findingKey(FindingKeys.predictedTumorOrigin(cuppa.bestPrediction().cancerType()))
                             .cancerType(cuppa.bestPrediction().cancerType())
                             .likelihood(cuppa.bestPrediction().likelihood())
                             .build())
                     .build();
-        } else {
+        }
+        else
+        {
             return FindingUtil.notAvailableFindingItem();
         }
     }
@@ -155,8 +166,10 @@ public class FindingRecordFactory {
     private static FindingItem<HomologousRecombination> createHomologousRecombination(@Nullable ChordRecord chord,
             @NotNull PurpleRecord purple,
             @NotNull LinxRecord linx,
-            @NotNull DriverFindingList<GainDeletion> gainDeletions) {
-        if (chord != null) {
+            @NotNull DriverFindingList<GainDeletion> gainDeletions)
+    {
+        if(chord != null)
+        {
             return FindingItemBuilder.<HomologousRecombination>builder()
                     .status(FindingsStatus.OK)
                     .finding(HomologousRecombinationBuilder.builder()
@@ -166,21 +179,24 @@ public class FindingRecordFactory {
                             .hrdValue(chord.hrdValue())
                             .hrStatus(chord.hrStatus())
                             .hrdType(chord.hrdType())
-                            .lohCopyNumbers(filterLohGainDeletions(gainDeletions, Genes.HRD_GENES ))
+                            .lohCopyNumbers(filterLohGainDeletions(gainDeletions, Genes.HRD_GENES))
                             .genes(GeneListUtil.genes(purple.reportableSomaticVariants(),
                                     purple.reportableSomaticGainsDels(),
                                     linx.germlineHomozygousDisruptions(),
                                     Genes.HRD_GENES).stream().toList())
                             .build())
                     .build();
-        } else {
-           return FindingUtil.notAvailableFindingItem();
+        }
+        else
+        {
+            return FindingUtil.notAvailableFindingItem();
         }
     }
 
     @NotNull
     private static FindingItem<MicrosatelliteStability> createMicrosatelliteStability(@NotNull PurpleRecord purple,
-            @NotNull LinxRecord linx, @NotNull DriverFindingList<GainDeletion> gainDeletions) {
+            @NotNull LinxRecord linx, @NotNull DriverFindingList<GainDeletion> gainDeletions)
+    {
         return FindingItemBuilder.<MicrosatelliteStability>builder()
                 .status(FindingsStatus.OK)
                 .finding(MicrosatelliteStabilityBuilder.builder()
@@ -197,7 +213,8 @@ public class FindingRecordFactory {
     }
 
     @NotNull
-    private static List<GainDeletion> filterLohGainDeletions(@NotNull DriverFindingList<GainDeletion> gainDeletions, Set<String> geneNames) {
+    private static List<GainDeletion> filterLohGainDeletions(@NotNull DriverFindingList<GainDeletion> gainDeletions, Set<String> geneNames)
+    {
         return gainDeletions.all().stream()
                 .filter(x -> geneNames.contains(x.gene()))
                 .filter(x -> x.type() == GainDeletion.Type.SOMATIC_LOH)
@@ -205,15 +222,17 @@ public class FindingRecordFactory {
                 .collect(Collectors.toList());
     }
 
-    private static FindingsStatus purpleFindingsStatus(PurpleRecord purpleRecord) {
+    private static FindingsStatus purpleFindingsStatus(PurpleRecord purpleRecord)
+    {
         return purpleRecord.fit().qc().status().equals(Set.of(PurpleQCStatus.PASS)) ? FindingsStatus.OK : FindingsStatus.NOT_AVAILABLE;
     }
 
-    public static DriverFindingList<Fusion> createFusionsFindings(@NotNull LinxRecord linx) {
+    public static DriverFindingList<Fusion> createFusionsFindings(@NotNull LinxRecord linx)
+    {
         return DriverFindingListBuilder.<Fusion>builder()
                 .status(FindingsStatus.OK)
                 .all(linx.reportableSomaticFusions().stream()
-                .map(o -> convertFusion(o, DriverSource.SOMATIC)).sorted(Fusion.COMPARATOR).toList())
+                        .map(o -> convertFusion(o, DriverSource.SOMATIC)).sorted(Fusion.COMPARATOR).toList())
                 .build();
     }
 
@@ -251,7 +270,8 @@ public class FindingRecordFactory {
     @NotNull
     private static DriverInterpretation toDriverInterpretation(@NotNull FusionLikelihoodType likelihood)
     {
-        return switch (likelihood) {
+        return switch(likelihood)
+        {
             case HIGH -> DriverInterpretation.HIGH;
             case LOW -> DriverInterpretation.LOW;
             case NA -> DriverInterpretation.UNKNOWN;
@@ -259,14 +279,18 @@ public class FindingRecordFactory {
     }
 
     @NotNull
-    private static DriverFindingList<Virus> createVirusFindings(@Nullable VirusInterpreterData virusInterpreter){
-        if (virusInterpreter != null) {
+    private static DriverFindingList<Virus> createVirusFindings(@Nullable VirusInterpreterData virusInterpreter)
+    {
+        if(virusInterpreter != null)
+        {
             return DriverFindingListBuilder.<Virus>builder()
                     .status(FindingsStatus.OK)
                     .all(convertViruses(virusInterpreter.allViruses()))
                     .build();
 
-        } else {
+        }
+        else
+        {
             return FindingUtil.notAvailableDriverFindingList();
         }
     }
@@ -305,22 +329,23 @@ public class FindingRecordFactory {
         };
     }
 
-    private static FindingList<PharmocoGenotype> createPharmcoGenotypesFindings(@Nullable Set<PeachGenotype> peachGenotypes) {
+    private static FindingList<PharmocoGenotype> createPharmcoGenotypesFindings(@Nullable Set<PeachGenotype> peachGenotypes)
+    {
         if(peachGenotypes != null)
         {
             return FindingListBuilder.<PharmocoGenotype>builder()
                     .status(FindingsStatus.OK)
                     .all(peachGenotypes.stream().map(o ->
-                            PharmocoGenotypeBuilder.builder()
-                                    .findingKey(FindingKeys.pharmacoGenotype(o.gene(), o.allele()))
-                                    .gene(o.gene())
-                                    .allele(o.allele())
-                                    .alleleCount(o.alleleCount())
-                                    .function(o.function())
-                                    .haplotype(o.haplotype())
-                                    .linkedDrugs(o.linkedDrugs())
-                                    .urlPrescriptionInfo(o.urlPrescriptionInfo())
-                                    .build())
+                                    PharmocoGenotypeBuilder.builder()
+                                            .findingKey(FindingKeys.pharmacoGenotype(o.gene(), o.allele()))
+                                            .gene(o.gene())
+                                            .allele(o.allele())
+                                            .alleleCount(o.alleleCount())
+                                            .function(o.function())
+                                            .haplotype(o.haplotype())
+                                            .linkedDrugs(o.linkedDrugs())
+                                            .urlPrescriptionInfo(o.urlPrescriptionInfo())
+                                            .build())
                             .sorted(PharmocoGenotype.COMPARATOR)
                             .toList())
                     .build();
@@ -331,7 +356,10 @@ public class FindingRecordFactory {
         }
     }
 
-    private static Map<String, DriverGene> driverGenesMap(@Nullable Path driverGeneTsv) throws IOException {
-        return driverGeneTsv != null ? DriverGeneFile.read(driverGeneTsv).stream().collect(Collectors.toMap(DriverGene::gene, Function.identity())) : Map.of();
+    private static Map<String, DriverGene> driverGenesMap(@Nullable Path driverGeneTsv) throws IOException
+    {
+        return driverGeneTsv != null ? DriverGeneFile.read(driverGeneTsv)
+                .stream()
+                .collect(Collectors.toMap(DriverGene::gene, Function.identity())) : Map.of();
     }
 }

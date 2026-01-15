@@ -28,13 +28,16 @@ final class DisruptionFactory
 {
     // when can we move to kotlin
     @FunctionalInterface
-    private interface DisruptionTypeFinder {
+    private interface DisruptionTypeFinder
+    {
         Disruption.Type apply(String gene, String transcript);
     }
 
     public static final Logger LOGGER = LogManager.getLogger(DisruptionFactory.class);
 
-    private record Pair<A, B>(@Nullable A left, @Nullable B right) {}
+    private record Pair<A, B>(@Nullable A left, @Nullable B right)
+    {
+    }
 
     // for the types of disruptions, see hmftools.common.driver.DriverType, they are:
     // germline: GERMLINE_DISRUPTION, GERMLINE_HOM_DUP_DISRUPTION
@@ -54,13 +57,15 @@ final class DisruptionFactory
     // back to the breakends, it probably will work by just selecting first reportable disruption with the same gene / transcript.
     // We can do it for the backport version if that makes it easier.
 
-    public static DriverFindingList<Disruption> createDisruptionsFindings(@NotNull LinxRecord linx, boolean hasReliablePurity) {
+    public static DriverFindingList<Disruption> createDisruptionsFindings(@NotNull LinxRecord linx, boolean hasReliablePurity)
+    {
         List<Disruption> allDisruptions = new ArrayList<>();
         List<LinxBreakend> germlineBreakends = linx.reportableGermlineBreakends();
         List<LinxSvAnnotation> germlineStructuralVariants = linx.allGermlineStructuralVariants();
         List<LinxHomozygousDisruption> germlineHomozygousDisruptions = linx.germlineHomozygousDisruptions();
 
-        if (germlineBreakends != null && germlineStructuralVariants != null && germlineHomozygousDisruptions != null) {
+        if(germlineBreakends != null && germlineStructuralVariants != null && germlineHomozygousDisruptions != null)
+        {
             allDisruptions.addAll(createGermlineDisruptions(germlineBreakends, germlineStructuralVariants, germlineHomozygousDisruptions));
         }
 
@@ -85,10 +90,10 @@ final class DisruptionFactory
             @NotNull List<LinxHomozygousDisruption> germlineHomozygousDisruptions)
     {
         DisruptionTypeFinder findDisruptionType = (gene, transcript) ->
-            germlineHomozygousDisruptions.stream()
-                .anyMatch(o -> o.gene().equals(gene) && o.transcript().equals(transcript))
-                ? Disruption.Type.GERMLINE_HOM_DUP_DISRUPTION
-                : Disruption.Type.GERMLINE_DISRUPTION;
+                germlineHomozygousDisruptions.stream()
+                        .anyMatch(o -> o.gene().equals(gene) && o.transcript().equals(transcript))
+                        ? Disruption.Type.GERMLINE_HOM_DUP_DISRUPTION
+                        : Disruption.Type.GERMLINE_DISRUPTION;
 
         return createDisruptions(DriverSource.GERMLINE, breakends, structuralVariants, true, findDisruptionType);
     }
@@ -103,7 +108,7 @@ final class DisruptionFactory
         Map<String, Disruption.Type> geneDriverTypeMap = new HashMap<>();
         for(LinxDriver linxDriver : linxDrivers)
         {
-            Disruption.Type disruptionType = switch (linxDriver.type())
+            Disruption.Type disruptionType = switch(linxDriver.type())
             {
                 case HOM_DUP_DISRUPTION -> Disruption.Type.SOMATIC_HOM_DUP_DISRUPTION;
                 case HOM_DEL_DISRUPTION -> Disruption.Type.SOMATIC_HOM_DEL_DISRUPTION;
@@ -112,18 +117,18 @@ final class DisruptionFactory
             geneDriverTypeMap.put(linxDriver.gene(), disruptionType);
         }
         DisruptionTypeFinder findDisruptionType = (gene, transcript) ->
-            geneDriverTypeMap.getOrDefault(gene, Disruption.Type.SOMATIC_DISRUPTION);
+                geneDriverTypeMap.getOrDefault(gene, Disruption.Type.SOMATIC_DISRUPTION);
 
         return createDisruptions(DriverSource.SOMATIC, breakends, structuralVariants, hasReliablePurity, findDisruptionType);
     }
 
     @NotNull
     private static List<Disruption> createDisruptions(
-                @NotNull DriverSource sampleType,
-                @NotNull Collection<LinxBreakend> breakends,
-                @NotNull Collection<LinxSvAnnotation> structuralVariants,
-                boolean hasReliablePurity,
-                DisruptionTypeFinder disruptionTypeFinder)
+            @NotNull DriverSource sampleType,
+            @NotNull Collection<LinxBreakend> breakends,
+            @NotNull Collection<LinxSvAnnotation> structuralVariants,
+            boolean hasReliablePurity,
+            DisruptionTypeFinder disruptionTypeFinder)
     {
         List<Disruption> reportableDisruptions = new ArrayList<>();
         Map<SvAndTranscriptKey, Pair<LinxBreakend, LinxBreakend>> pairedMap = mapBreakendsPerStructuralVariant(breakends);
@@ -143,7 +148,7 @@ final class DisruptionFactory
 
                 double copyNumberLeft = primaryBreakendStart.junctionCopyNumber();
                 double copyNumberRight = primaryBreakendEnd.junctionCopyNumber();
-                if (!Doubles.equal(copyNumberLeft, copyNumberRight))
+                if(!Doubles.equal(copyNumberLeft, copyNumberRight))
                 {
                     LOGGER.warn("The disrupted copy number of a paired sv is not the same on {}", primaryBreakendStart.gene());
                 }
@@ -213,7 +218,7 @@ final class DisruptionFactory
     static Integer determineClusterId(@NotNull Collection<LinxSvAnnotation> structuralVariants, @NotNull LinxBreakend breakend)
     {
         Optional<LinxSvAnnotation> sv = structuralVariants.stream().filter(o -> o.svId() == breakend.svId()).findFirst();
-        if (sv.isPresent())
+        if(sv.isPresent())
         {
             return sv.get().clusterId();
         }
@@ -241,11 +246,11 @@ final class DisruptionFactory
     {
         Map<SvAndTranscriptKey, Pair<LinxBreakend, LinxBreakend>> pairedMap = new HashMap<>();
 
-        for (Map.Entry<SvAndTranscriptKey, List<LinxBreakend>> entry : breakendsPerSvAndTranscript.entrySet())
+        for(Map.Entry<SvAndTranscriptKey, List<LinxBreakend>> entry : breakendsPerSvAndTranscript.entrySet())
         {
             List<LinxBreakend> breakends = entry.getValue();
 
-            if (breakends.size() != 1 && breakends.size() != 2)
+            if(breakends.size() != 1 && breakends.size() != 2)
             {
                 LOGGER.warn("Found unusual number of breakends on single event: {}", breakends.size());
                 continue;
@@ -253,7 +258,7 @@ final class DisruptionFactory
 
             LinxBreakend left;
             LinxBreakend right;
-            if (breakends.size() == 1)
+            if(breakends.size() == 1)
             {
                 LinxBreakend breakend = breakends.get(0);
                 if(breakend.geneOrientation() == LinxGeneOrientation.Upstream)
@@ -302,18 +307,18 @@ final class DisruptionFactory
     @NotNull
     private static String exonDescription(int exonUp, int exonDown)
     {
-        if (exonUp > 0)
+        if(exonUp > 0)
         {
-            if (exonUp == exonDown)
+            if(exonUp == exonDown)
             {
                 return String.format("Exon %d", exonUp);
             }
-            else if (exonDown - exonUp == 1)
+            else if(exonDown - exonUp == 1)
             {
                 return String.format("Intron %d", exonUp);
             }
         }
-        else if (exonUp == 0 && (exonDown == 1 || exonDown == 2))
+        else if(exonUp == 0 && (exonDown == 1 || exonDown == 2))
         {
             return "Promoter Region";
         }

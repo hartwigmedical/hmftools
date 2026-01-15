@@ -556,7 +556,7 @@
     }
   ],
   "cuppa": {
-    "mode" : "WGS",
+    "mode": "WGS",
     "predictions": [
       {
         "cancerType": "Melanoma",

@@ -58,18 +58,45 @@ public record SmallVariant(
             @NotNull Set<PurpleVariantEffect> effects,
             @NotNull PurpleCodingEffect codingEffect,
             boolean reported
-    ) {}
+    )
+    {
+    }
 
     @RecordBuilder
     public record AllelicDepth(
             int totalReadCount,
             int alleleReadCount
-    ) {}
+    )
+    {
+    }
 
-    @NotNull @Override public String findingKey() { return driver.findingKey(); }
-    @NotNull @Override public DriverSource driverSource() { return driver.driverSource(); }
-    @NotNull @Override public ReportedStatus reportedStatus() { return driver.reportedStatus(); }
-    @NotNull @Override public DriverInterpretation driverInterpretation() { return driver.driverInterpretation(); }
+    @NotNull
+    @Override
+    public String findingKey()
+    {
+        return driver.findingKey();
+    }
+
+    @NotNull
+    @Override
+    public DriverSource driverSource()
+    {
+        return driver.driverSource();
+    }
+
+    @NotNull
+    @Override
+    public ReportedStatus reportedStatus()
+    {
+        return driver.reportedStatus();
+    }
+
+    @NotNull
+    @Override
+    public DriverInterpretation driverInterpretation()
+    {
+        return driver.driverInterpretation();
+    }
 
     public double clonalLikelihood()
     {

@@ -22,12 +22,15 @@ public class HlaAlleleFactory
 
     private static final String PASS = "PASS";
 
-    private HlaAlleleFactory() {
+    private HlaAlleleFactory()
+    {
     }
 
-    public static FindingList<HlaAllele> createHlaAllelesFindings(@NotNull OrangeRecord orangeRecord, boolean hasReliablePurity) {
+    public static FindingList<HlaAllele> createHlaAllelesFindings(@NotNull OrangeRecord orangeRecord, boolean hasReliablePurity)
+    {
         LilacRecord lilac = orangeRecord.lilac();
-        if (lilac != null) {
+        if(lilac != null)
+        {
             return FindingListBuilder.<HlaAllele>builder()
                     .status(lilac.qc().equals(PASS) ? FindingsStatus.OK : FindingsStatus.NOT_RELIABLE)
                     .all(HlaAlleleFactory.convertHlaAlleles(lilac,
@@ -35,7 +38,9 @@ public class HlaAlleleFactory
                             !orangeRecord.tumorOnlyMode(),
                             orangeRecord.isofox() != null))
                     .build();
-        } else {
+        }
+        else
+        {
             return FindingUtil.notAvailableFindingList();
         }
     }
@@ -48,7 +53,7 @@ public class HlaAlleleFactory
                 .collect(Collectors.groupingBy(LilacAllele::allele));
 
         List<HlaAllele> hlaAlleles = new ArrayList<>();
-        for (Map.Entry<String, List<LilacAllele>> keyMap : hlaAllelesMap.entrySet())
+        for(Map.Entry<String, List<LilacAllele>> keyMap : hlaAllelesMap.entrySet())
         {
             LilacAllele lilacAllele = keyMap.getValue().get(0);
 
@@ -66,14 +71,15 @@ public class HlaAlleleFactory
                     .somaticSynonymous(lilacAllele.somaticSynonymous())
                     .somaticInframeIndel(lilacAllele.somaticInframeIndel());
 
-            if (keyMap.getValue().size() == 1)
+            if(keyMap.getValue().size() == 1)
             {
                 hlaAlleles.add(builder
                         .germlineCopyNumber(1)
                         .tumorCopyNumber(hasReliablePurity ? lilacAllele.tumorCopyNumber() : null)
                         .build());
 
-            } else if (keyMap.getValue().size() == 2)
+            }
+            else if(keyMap.getValue().size() == 2)
             {
                 LilacAllele allele2 = keyMap.getValue().get(1);
                 double tumorCopies = lilacAllele.tumorCopyNumber() + allele2.tumorCopyNumber();
@@ -82,7 +88,8 @@ public class HlaAlleleFactory
                         .germlineCopyNumber(2)
                         .tumorCopyNumber(hasReliablePurity ? tumorCopies : null)
                         .build());
-            } else
+            }
+            else
             {
                 LOGGER.warn("To many hla alleles of allele '{}'", keyMap.getKey());
             }
@@ -93,14 +100,22 @@ public class HlaAlleleFactory
     }
 
     @NotNull
-    public static String extractHLAGene(@NotNull String allele) {
-        if (allele.startsWith("A*")) {
+    public static String extractHLAGene(@NotNull String allele)
+    {
+        if(allele.startsWith("A*"))
+        {
             return "HLA-A";
-        } else if (allele.startsWith("B*")) {
+        }
+        else if(allele.startsWith("B*"))
+        {
             return "HLA-B";
-        } else if (allele.startsWith("C*")) {
+        }
+        else if(allele.startsWith("C*"))
+        {
             return "HLA-C";
-        } else {
+        }
+        else
+        {
             LOGGER.warn("Unknown HLA gene name '{}' present! ", allele);
             return Strings.EMPTY;
         }
