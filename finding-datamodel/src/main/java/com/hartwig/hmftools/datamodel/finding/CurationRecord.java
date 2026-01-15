@@ -17,12 +17,15 @@ import com.hartwig.hmftools.datamodel.LocalDateAdapter;
 
 import org.jetbrains.annotations.NotNull;
 
+import io.soabase.recordbuilder.core.RecordBuilder;
+
+@RecordBuilder
 public record CurationRecord(
         @NotNull List<DriverCuration> driverCurations
 ) {
 
     @NotNull
-    static CurationRecord read(@NotNull Path findingsJsonFilePath) throws IOException {
+    public static CurationRecord read(@NotNull Path findingsJsonFilePath) throws IOException {
         try (BufferedReader bufferedReader = Files.newBufferedReader(findingsJsonFilePath))
         {
             return gson().fromJson(bufferedReader, CurationRecord.class);
@@ -30,7 +33,7 @@ public record CurationRecord(
     }
 
     @NotNull
-    static CurationRecord read(@NotNull InputStream stream) throws IOException {
+    public static CurationRecord read(@NotNull InputStream stream) throws IOException {
         try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(stream))) {
             return gson().fromJson(bufferedReader, CurationRecord.class);
         }

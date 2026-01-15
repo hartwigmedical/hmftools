@@ -9,6 +9,9 @@ import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import io.soabase.recordbuilder.core.RecordBuilder;
+
+@RecordBuilder
 public record Disruption(
         @NotNull DriverFields driver,
         @NotNull Type type,
@@ -45,5 +48,5 @@ public record Disruption(
     @NotNull @Override public ReportedStatus reportedStatus() { return driver.reportedStatus(); }
     @NotNull @Override public DriverInterpretation driverInterpretation() { return driver.driverInterpretation(); }
 
-    boolean isHomozygous() { return type().isHomozygous(); }
+    public boolean isHomozygous() { return type().isHomozygous(); }
 }
