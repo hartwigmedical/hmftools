@@ -28,7 +28,7 @@ public class HlaAlleleFactory
     public static FindingList<HlaAllele> createHlaAllelesFindings(@NotNull OrangeRecord orangeRecord, boolean hasReliablePurity) {
         LilacRecord lilac = orangeRecord.lilac();
         if (lilac != null) {
-            return ImmutableFindingList.<HlaAllele>builder()
+            return FindingListBuilder.<HlaAllele>builder()
                     .status(lilac.qc().equals(PASS) ? FindingsStatus.OK : FindingsStatus.NOT_RELIABLE)
                     .all(HlaAlleleFactory.convertHlaAlleles(lilac,
                             hasReliablePurity,
@@ -53,7 +53,7 @@ public class HlaAlleleFactory
             LilacAllele lilacAllele = keyMap.getValue().get(0);
 
             // NOTE: the fragment counts are doubled in lilac if an allele is present twice
-            ImmutableHlaAllele.Builder builder = ImmutableHlaAllele.builder()
+            HlaAlleleBuilder builder = HlaAlleleBuilder.builder()
                     .findingKey(FindingKeys.hlaAllele(lilacAllele))
                     .allele(lilacAllele.allele())
                     .gene(extractHLAGene(lilacAllele.allele()))
