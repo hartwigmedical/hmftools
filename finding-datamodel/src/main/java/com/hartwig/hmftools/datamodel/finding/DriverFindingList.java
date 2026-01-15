@@ -6,6 +6,9 @@ import com.hartwig.hmftools.datamodel.driver.DriverSource;
 
 import org.jetbrains.annotations.NotNull;
 
+import io.soabase.recordbuilder.core.RecordBuilder;
+
+@RecordBuilder
 public record DriverFindingList<T extends Driver>(
         @NotNull FindingsStatus status,
         @NotNull List<T> all

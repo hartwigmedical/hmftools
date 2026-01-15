@@ -6,10 +6,13 @@ import com.hartwig.hmftools.datamodel.purple.PurpleMicrosatelliteStatus;
 
 import org.jetbrains.annotations.NotNull;
 
+import io.soabase.recordbuilder.core.RecordBuilder;
+
+@RecordBuilder
 public record MicrosatelliteStability(
         @NotNull String findingKey,
         double microsatelliteIndelsPerMb,
         @NotNull PurpleMicrosatelliteStatus microsatelliteStatus,
         @NotNull List<GainDeletion> lohCopyNumbers,
-        @NotNull List<String> genes)
-implements Finding {}
+        @NotNull List<String> genes
+) implements Finding {}

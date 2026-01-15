@@ -7,6 +7,9 @@ import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
 
 import org.jetbrains.annotations.NotNull;
 
+import io.soabase.recordbuilder.core.RecordBuilder;
+
+@RecordBuilder
 public record GainDeletion(
         @NotNull DriverFields driver,
         @NotNull Type type,
