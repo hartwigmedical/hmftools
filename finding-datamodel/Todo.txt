@@ -1,0 +1,40 @@
+
+* Handling of CDKN2A/CDKN2A (p16)/CDKN2A (p14ARF) which should also move to the findings model (but could be optional for NL).
+* Shared interface for "GeneFindings"
+    * Naming in OncoAct is inconsistent (also in the report). I think it's good to make clear that this is the same thing by using a shared interface
+    * Shared by Disruption, GainDeletion, SmallVariant
+    * Includes the following fields
+        * Gene
+        * Transcript
+        * IsCanonical
+        * Chromosome
+        * ChromosomeBand (not in small variant)
+* Consistent handling of missing / unreliable data / etc
+    * Return NOT_AVAILABLE_NOT_TESTED (?) for findings that are not available for panels
+        * Also make sure this is implemented correctly for different types of panels (OncoPanel, TSO500, etc.)
+    * Return NOT_AVAILABLE_NO_NORMAL (?) for findings that are not available because there’s no normal
+    * Handling of purity cut off
+    * Consistent handling of "reliable purity" (either in this model or not)
+* Move handling of germline for NL into findings model?
+    * We are not allowed to report germline findings in NL
+    * Any germline findings are changed to somatic, unless they are considered “germline only” (variant copy number < 0.5).
+    * The germline only findings need to be recognizable as such
+    * Probably necessary for UI anyway. NL UI can not show germline findings as germline findings
+* Consider moving handling of driverLikelihood to findings model
+    * OncoAct sets the driverlikelihood to the highest value for a gene (can change null value to actual driverlikelihood)
+* Consider if we want to expose the Orange model in this model, or if we want to make this completely independent of the Orange model?
+    * Downside is duplication of data structures and enums
+    * Upside’s are
+        * Extra level of indirection that makes it possible to deal with some type of data model changes
+        * Simpler model, user of findings does not need to know about Orange
+        * Could move enums elsewhere so they can be shared?
+* Create shared interface between all types of findings (for FindingStatus)?
+* Review all naming
+    * Make sure everything is consistent and names are sensible
+    * Rename Breakend to BreakEnd?
+    * Rename finding package to findings?
+* Consider adding good test factories that can be reused (easier with Kotlin)
+* Make sure there is good test coverage
+* Handling of reportable vs candidate. Right now it is a method in Driver. Perhaps it is better to make CANDIDATE a value in the ReportedStatus enum?
+
+
