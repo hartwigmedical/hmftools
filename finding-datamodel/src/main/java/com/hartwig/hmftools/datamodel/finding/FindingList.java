@@ -9,4 +9,6 @@ import io.soabase.recordbuilder.core.RecordBuilder;
 @RecordBuilder
 public record FindingList<T extends Finding>(
         @NotNull FindingsStatus status,
-        @NotNull List<T> all) {}
+        @NotNull List<T> all)
+{
+}
