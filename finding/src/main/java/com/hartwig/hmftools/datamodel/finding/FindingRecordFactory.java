@@ -62,10 +62,12 @@ public class FindingRecordFactory {
         boolean hasReliablePurity = orangeRecord.purple().fit().containsTumorCells();
 
         FindingRecordBuilder builder = FindingRecordBuilder.builder()
-                .version("1.0")
-                .refGenomeVersion(orangeRecord.refGenomeVersion())
-                .experimentType(orangeRecord.experimentType())
-                .pipelineVersion(orangeRecord.pipelineVersion())
+                .metaProperties(MetaPropertiesBuilder.builder()
+                        .version("1.0")
+                        .refGenomeVersion(orangeRecord.refGenomeVersion())
+                        .experimentType(orangeRecord.experimentType())
+                        .pipelineVersion(orangeRecord.pipelineVersion())
+                        .build())
                 .disruptions(createDisruptionsFindings(linx, hasReliablePurity))
                 .fusions(createFusionsFindings(orangeRecord.linx()));
 
