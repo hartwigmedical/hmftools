@@ -6,6 +6,9 @@ import com.hartwig.hmftools.datamodel.chord.ChordStatus;
 
 import org.jetbrains.annotations.NotNull;
 
+import io.soabase.recordbuilder.core.RecordBuilder;
+
+@RecordBuilder
 public record HomologousRecombination(
         @NotNull String findingKey,
         double brca1Value,

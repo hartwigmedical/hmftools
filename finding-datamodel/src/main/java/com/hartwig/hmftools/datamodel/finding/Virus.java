@@ -9,6 +9,9 @@ import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import io.soabase.recordbuilder.core.RecordBuilder;
+
+@RecordBuilder
 public record Virus(
         @NotNull DriverFields driver,
         @NotNull String name,

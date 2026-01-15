@@ -15,9 +15,13 @@ import com.hartwig.hmftools.datamodel.purple.PurpleVariantType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import io.soabase.recordbuilder.core.RecordBuilder;
+
+@RecordBuilder
 public record SmallVariant(
         @NotNull DriverFields driver,
         @Nullable DriverCategory driverLikelihoodType,
+        double driverLikelihood,
         @NotNull TranscriptImpact transcriptImpact,
         @Nullable TranscriptImpact otherImpact,
         boolean isCanonical,
@@ -43,6 +47,7 @@ public record SmallVariant(
         @Nullable List<Integer> localPhaseSets
 ) implements Driver
 {
+    @RecordBuilder
     public record TranscriptImpact(
             @NotNull String transcript,
             @NotNull String hgvsCodingImpact,
@@ -55,6 +60,7 @@ public record SmallVariant(
             boolean reported
     ) {}
 
+    @RecordBuilder
     public record AllelicDepth(
             int totalReadCount,
             int alleleReadCount
