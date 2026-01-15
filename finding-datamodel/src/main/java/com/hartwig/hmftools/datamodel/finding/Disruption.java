@@ -3,7 +3,6 @@ package com.hartwig.hmftools.datamodel.finding;
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.driver.DriverSource;
 import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
-import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
 
 import org.jetbrains.annotations.NotNull;
@@ -24,8 +23,7 @@ public record Disruption(
         @Nullable Double disruptedCopies,
         @Nullable Double undisruptedCopies,
         @Nullable Integer clusterId,
-        @Nullable LinxBreakend breakendStart,
-        @Nullable LinxBreakend breakendEnd
+        @NotNull String disruptedRange
 ) implements Driver
 {
     public enum Type
