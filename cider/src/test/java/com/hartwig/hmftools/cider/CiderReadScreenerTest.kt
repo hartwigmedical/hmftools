@@ -179,7 +179,7 @@ class CiderReadScreenerTest
             VJGeneType.IGHJ,
             GenomicLocation("14", 106330801, 106330830, Strand.REVERSE)
         )
-        val readCandidate = ciderReadScreener.tryMatchToAnchorLocation(record, mapped!!, anchorLocation, false)
+        val readCandidate = ciderReadScreener.tryMatchToAnchorLocation(record, mapped!!, anchorLocation, 0)
         TestCase.assertNotNull(readCandidate)
         TestCase.assertEquals(68, readCandidate!!.anchorOffsetStart)
         TestCase.assertEquals(98, readCandidate.anchorOffsetEnd)

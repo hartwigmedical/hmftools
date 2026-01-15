@@ -160,7 +160,7 @@ class CiderReadScreener(// collect the reads and sort by types
         return null
     }
 
-    private fun tryMatchToAnchorLocation(
+    internal fun tryMatchToAnchorLocation(
         samRecord: SAMRecord, mapped: GenomeRegion,
         anchorLocation: VJAnchorGenomeLocation,
         tolerance: Int
