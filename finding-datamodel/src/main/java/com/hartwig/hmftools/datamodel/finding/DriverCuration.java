@@ -10,4 +10,6 @@ public record DriverCuration(
         long utcTimestamp,
         @NotNull String userId,
         boolean reportableOverride,
-        @NotNull String comment) {}
+        @NotNull String comment)
+{
+}

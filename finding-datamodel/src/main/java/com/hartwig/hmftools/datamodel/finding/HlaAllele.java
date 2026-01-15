@@ -20,4 +20,6 @@ public record HlaAllele(
         double somaticSplice,
         double somaticSynonymous,
         double somaticInframeIndel
-) implements Finding {}
+) implements Finding
+{
+}

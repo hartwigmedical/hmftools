@@ -32,15 +32,40 @@ public record Fusion(
         @NotNull String domainsKept,
         @NotNull String domainsLost,
         double junctionCopyNumber
-) implements Driver {
-
-    @NotNull @Override public String findingKey() { return driver.findingKey(); }
-    @NotNull @Override public DriverSource driverSource() { return driver.driverSource(); }
-    @NotNull @Override public ReportedStatus reportedStatus() { return driver.reportedStatus(); }
-    @NotNull @Override public DriverInterpretation driverInterpretation() { return driver.driverInterpretation(); }
+) implements Driver
+{
 
     @NotNull
-    public String display() {
+    @Override
+    public String findingKey()
+    {
+        return driver.findingKey();
+    }
+
+    @NotNull
+    @Override
+    public DriverSource driverSource()
+    {
+        return driver.driverSource();
+    }
+
+    @NotNull
+    @Override
+    public ReportedStatus reportedStatus()
+    {
+        return driver.reportedStatus();
+    }
+
+    @NotNull
+    @Override
+    public DriverInterpretation driverInterpretation()
+    {
+        return driver.driverInterpretation();
+    }
+
+    @NotNull
+    public String display()
+    {
         return String.format("%s::%s", geneStart, geneEnd);
     }
 }
