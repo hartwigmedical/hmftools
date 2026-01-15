@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.redux.duplicate;
 
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CIGAR;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.UMI_ATTRIBUTE;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.flipFirstInPair;
@@ -42,7 +40,7 @@ import org.junit.Test;
 
 import htsjdk.samtools.SAMRecord;
 
-public class IlluminaUmiGroupJitterTest
+public class UmiGroupJitterTest
 {
     @Test
     public void testIlluminaJitterUmiGroupCollapse()
@@ -51,7 +49,7 @@ public class IlluminaUmiGroupJitterTest
         refGenome.RefGenomeMap.put(CHR_1, "A".repeat(1_000));
         refGenome.ChromosomeLengths.put(CHR_1, 1_000);
 
-        ReduxConfig config = new ReduxConfig(refGenome, true, false, false, READ_UNMAPPER_DISABLED);
+        ReduxConfig config = new ReduxConfig(refGenome, true, true, false, READ_UNMAPPER_DISABLED);
         TestBamWriter writer = new TestBamWriter(config);
         PartitionReader partitionReader = createPartitionRead(config, writer);
 
@@ -59,15 +57,18 @@ public class IlluminaUmiGroupJitterTest
 
         String umi1 = "AAAAA";
         String umi2 = "AAATA";
+        String readName1 = "READ_001:" + umi1 + DEFAULT_DUPLEX_UMI_DELIM + umi2;
+        String readName2 = "READ_002:" + umi1 + DEFAULT_DUPLEX_UMI_DELIM + umi2;
+
+        int matePosition = 1000;
 
         SAMRecord read1 = SamRecordTestUtils.createSamRecord(
-                nextReadId(umi1), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 1_000, false,
+                readName1, CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, matePosition, false,
                 false, null, true, TEST_READ_CIGAR);
 
         SAMRecord read2 = SamRecordTestUtils.createSamRecord(
-                nextReadId(umi2), CHR_1, 100 + SINGLE_END_JITTER_COLLAPSE_DISTANCE, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1,
-                1_000, false,
-                false, null, true, TEST_READ_CIGAR);
+                readName2, CHR_1, 100 + SINGLE_END_JITTER_COLLAPSE_DISTANCE, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1,
+                matePosition, false, false, null, true, TEST_READ_CIGAR);
 
         partitionReader.processRead(read1);
         partitionReader.processRead(read2);
@@ -84,7 +85,7 @@ public class IlluminaUmiGroupJitterTest
         refGenome.RefGenomeMap.put(CHR_1, "A".repeat(1_000));
         refGenome.ChromosomeLengths.put(CHR_1, 1_000);
 
-        ReduxConfig config = new ReduxConfig(refGenome, true, false, false, READ_UNMAPPER_DISABLED);
+        ReduxConfig config = new ReduxConfig(refGenome, true, true, false, READ_UNMAPPER_DISABLED);
         TestBamWriter writer = new TestBamWriter(config);
         PartitionReader partitionReader = createPartitionRead(config, writer);
 
@@ -100,46 +101,6 @@ public class IlluminaUmiGroupJitterTest
                 nextReadId(umi), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1,
                 1_000 + SINGLE_END_JITTER_COLLAPSE_DISTANCE, false,
                 false, null, true, TEST_READ_CIGAR);
-
-        partitionReader.processRead(read1);
-        partitionReader.processRead(read2);
-        partitionReader.postProcessRegion();
-
-        assertEquals(2, writer.nonConsensusWriteCount());
-        assertEquals(1, writer.consensusWriteCount());
-    }
-
-    @Test
-    public void testIlluminaJitterDuplexUmiGroupCollapse()
-    {
-        MockRefGenome refGenome = new MockRefGenome(true);
-        refGenome.RefGenomeMap.put(CHR_1, "A".repeat(1_000));
-        refGenome.ChromosomeLengths.put(CHR_1, 1_000);
-
-        ReduxConfig config = new ReduxConfig(refGenome, true, true, false, READ_UNMAPPER_DISABLED);
-        TestBamWriter writer = new TestBamWriter(config);
-        PartitionReader partitionReader = createPartitionRead(config, writer);
-
-        partitionReader.setupRegion(new ChrBaseRegion(CHR_1, 1, 1_000));
-
-        String umidId1Part1 = "TATTAT";
-        String umidId2Part1 = "TATGAT";
-        String umidIdPart2 = "GCGGCG";
-        String umiId = umidId1Part1 + DEFAULT_DUPLEX_UMI_DELIM + umidIdPart2;
-        String umiIdReversed = umidIdPart2 + DEFAULT_DUPLEX_UMI_DELIM + umidId2Part1;
-
-        SAMRecord read1 = SamRecordTestUtils.createSamRecord(
-                nextReadId(umiId), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 1_000, false,
-                false, null, true, TEST_READ_CIGAR);
-        read1.setFirstOfPairFlag(true);
-        read1.setSecondOfPairFlag(false);
-
-        SAMRecord read2 = SamRecordTestUtils.createSamRecord(nextReadId(umiIdReversed), CHR_1,
-                100 + SINGLE_END_JITTER_COLLAPSE_DISTANCE,
-                TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 1_000, false, false, null,
-                true, TEST_READ_CIGAR);
-        read1.setFirstOfPairFlag(false);
-        read1.setSecondOfPairFlag(true);
 
         partitionReader.processRead(read1);
         partitionReader.processRead(read2);
@@ -263,13 +224,13 @@ public class IlluminaUmiGroupJitterTest
         refGenome.RefGenomeMap.put(CHR_1, "A".repeat(1_000));
         refGenome.ChromosomeLengths.put(CHR_1, 1_000);
 
-        ReduxConfig config = new ReduxConfig(refGenome, true, false, false, READ_UNMAPPER_DISABLED);
+        ReduxConfig config = new ReduxConfig(refGenome, true, true, false, READ_UNMAPPER_DISABLED);
         UmiConfig umiConfig = config.UMIs;
 
         UmiGroupBuilder umiGroupBuilder = new UmiGroupBuilder(umiConfig, new UmiStatistics());
 
         String umi1 = "AAAAA";
-        String umi2 = "AAATA";
+        String umi2 = umi1;
 
         SAMRecord read1 = SamRecordTestUtils.createSamRecord(
                 nextReadId(umi1), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 1_000, false,
@@ -413,7 +374,7 @@ public class IlluminaUmiGroupJitterTest
         refGenome.RefGenomeMap.put(CHR_1, "A".repeat(2_000));
         refGenome.ChromosomeLengths.put(CHR_1, 2_000);
 
-        ReduxConfig config = new ReduxConfig(refGenome, true, false, false, READ_UNMAPPER_DISABLED);
+        ReduxConfig config = new ReduxConfig(refGenome, true, true, false, READ_UNMAPPER_DISABLED);
         TestBamWriter writer = new TestBamWriter(config);
         PartitionReader partitionReader = createPartitionRead(config, writer);
 
@@ -474,7 +435,7 @@ public class IlluminaUmiGroupJitterTest
         refGenome.RefGenomeMap.put(CHR_1, "A".repeat(2_000));
         refGenome.ChromosomeLengths.put(CHR_1, 2_000);
 
-        ReduxConfig config = new ReduxConfig(refGenome, true, false, false, READ_UNMAPPER_DISABLED);
+        ReduxConfig config = new ReduxConfig(refGenome, true, true, false, READ_UNMAPPER_DISABLED);
         TestBamWriter writer = new TestBamWriter(config);
         PartitionReader partitionReader = createPartitionRead(config, writer);
 
@@ -535,7 +496,7 @@ public class IlluminaUmiGroupJitterTest
         refGenome.RefGenomeMap.put(CHR_1, "A".repeat(2_000));
         refGenome.ChromosomeLengths.put(CHR_1, 2_000);
 
-        ReduxConfig config = new ReduxConfig(refGenome, true, false, false, READ_UNMAPPER_DISABLED);
+        ReduxConfig config = new ReduxConfig(refGenome, true, true, false, READ_UNMAPPER_DISABLED);
         TestBamWriter writer = new TestBamWriter(config);
         PartitionReader partitionReader = createPartitionRead(config, writer);
 

@@ -124,52 +124,19 @@ public abstract class BamWriter
                 mReadDataWriter.writeReadData(read, PRIMARY, fragCoords, group.umi());
         }
 
-        // if the group was formed from unmapped poly-G reads then mark all reads as duplicates
         for(SAMRecord read : group.allReads())
         {
             if(mConfig.UMIs.Enabled)
                 read.setAttribute(UMI_ATTRIBUTE, group.umi());
 
+            // if the group was formed from unmapped poly-G reads then mark all reads as duplicates
             FragmentStatus fragmentStatus = !group.polyGUnmapped() && group.isPrimaryRead(read) ? PRIMARY : DUPLICATE;
+
             if(mRecomputeFragCoords)
                 fragCoords = FragmentCoords.fromRead(read, false).Key;
 
             writeRead(read, fragmentStatus, fragCoords, group.umi());
         }
-
-        /*
-        List<SAMRecord> remainingReads;
-
-        if(group.polyGUnmapped())
-        {
-            SAMRecord read = group.reads().get(0);
-            if(mConfig.UMIs.Enabled)
-                read.setAttribute(UMI_ATTRIBUTE, group.umi());
-
-            if(mRecomputeFragCoords)
-                fragCoords = FragmentCoords.fromRead(read, false).Key;
-
-            writeRead(read, PRIMARY, fragCoords, group.umi());
-
-            remainingReads = group.polyGUmiReads();
-        }
-        else
-        {
-            remainingReads = group.allReads();
-        }
-
-        for(SAMRecord read : remainingReads)
-        {
-            if(mConfig.UMIs.Enabled)
-                read.setAttribute(UMI_ATTRIBUTE, group.umi());
-
-            FragmentStatus fragmentStatus = group.isPrimaryRead(read) ? PRIMARY : DUPLICATE;
-            if(mRecomputeFragCoords)
-                fragCoords = FragmentCoords.fromRead(read, false).Key;
-
-            writeRead(read, fragmentStatus, fragCoords, group.umi());
-        }
-        */
     }
 
     protected abstract void writeRecord(final SAMRecord read);

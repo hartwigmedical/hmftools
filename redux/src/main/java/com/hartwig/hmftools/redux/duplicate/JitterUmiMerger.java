@@ -4,6 +4,10 @@ import static java.lang.Math.abs;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.redux.ReduxConstants.SINGLE_END_JITTER_COLLAPSE_DISTANCE;
+import static com.hartwig.hmftools.redux.duplicate.FragmentCoords.FRAG_ORIENT_FORWARD;
+import static com.hartwig.hmftools.redux.duplicate.FragmentCoords.FRAG_ORIENT_REVERSE;
+import static com.hartwig.hmftools.redux.duplicate.FragmentCoords.FRAG_TYPE_SUPP_INFO;
+import static com.hartwig.hmftools.redux.duplicate.UmiGroupBuilder.hasDuplexUmiMatch;
 
 import java.util.List;
 import java.util.Map;
@@ -26,34 +30,46 @@ public class JitterUmiMerger
 
     private class JitterMergeGroup
     {
-        public boolean KeyOnLower;
+        public final String Umi;
         public final FragmentCoords FragmentCoords;
         public final List<Object> Fragments;
         public boolean Merged;
 
-        public JitterMergeGroup(final Object fragment, final FragmentCoords fragmentCoords, final boolean keyOnLower)
+        public JitterMergeGroup(final Object fragment, final FragmentCoords fragmentCoords, final String umi)
         {
-            KeyOnLower = keyOnLower;
+            Umi = umi;
             FragmentCoords = fragmentCoords;
             Fragments = Lists.newArrayList(fragment);
             Merged = false;
         }
 
-        public boolean canMerge(final JitterMergeGroup other)
+        public boolean canMerge(final JitterMergeGroup other, boolean checkLower)
         {
-            if(Merged || other.Merged)
+            if(other.Merged)
                 return false;
 
-            if(KeyOnLower)
+            // check UMIs - exact matches are required where jitter was used
+            if(FragmentCoords.FragmentOrient == other.FragmentCoords.FragmentOrient)
             {
-                // other coords must have same orientation and match within the permitted range
-                return FragmentCoords.OrientUpper == other.FragmentCoords.OrientUpper
-                    && abs(FragmentCoords.PositionUpper - other.FragmentCoords.PositionLower) <= SINGLE_END_JITTER_COLLAPSE_DISTANCE;
+                if(!Umi.equals(other.Umi))
+                    return false;
             }
             else
             {
+                if(!hasDuplexUmiMatch(Umi, other.Umi, mUmiConfig.DuplexDelim, 0))
+                    return false;
+            }
+
+            if(checkLower)
+            {
                 return FragmentCoords.OrientLower == other.FragmentCoords.OrientLower
                     && abs(FragmentCoords.PositionLower - other.FragmentCoords.PositionLower) <= SINGLE_END_JITTER_COLLAPSE_DISTANCE;
+            }
+            else
+            {
+                // other coords must have same orientation and match within the permitted range
+                return FragmentCoords.OrientUpper == other.FragmentCoords.OrientUpper
+                    && abs(FragmentCoords.PositionUpper - other.FragmentCoords.PositionUpper) <= SINGLE_END_JITTER_COLLAPSE_DISTANCE;
             }
         }
 
@@ -81,11 +97,13 @@ public class JitterUmiMerger
         boolean hasCandidates = false;
         for(DuplicateGroup duplicateGroup : umiGroups)
         {
+            JitterMergeGroup group = new JitterMergeGroup(duplicateGroup, duplicateGroup.fragmentCoordinates(), duplicateGroup.umi());
+
             for(int g = 0; g <= 1; ++g)
             {
                 boolean useLower = (g == 0);
 
-                String key = formKey(duplicateGroup.umi(), duplicateGroup.fragmentCoordinates(), useLower);
+                String key = formKey(duplicateGroup.fragmentCoordinates(), useLower);
                 Map<String,List<JitterMergeGroup>> posGroups = useLower ? lowerPosGroups : upperPosGroups;
 
                 List<JitterMergeGroup> groups = posGroups.get(key);
@@ -100,19 +118,20 @@ public class JitterUmiMerger
                     hasCandidates = true;
                 }
 
-                groups.add(new JitterMergeGroup(duplicateGroup, duplicateGroup.fragmentCoordinates(), useLower));
+                groups.add(group);
             }
         }
 
         for(ReadInfo readInfo : singleFragments)
         {
-            String umiId = mUmiConfig.extractUmiId(readInfo.read().getReadName());
+            String umiId = readInfo.getOrExtract(mUmiConfig);
+            JitterMergeGroup group = new JitterMergeGroup(readInfo, readInfo.coordinates(), umiId);
 
             for(int g = 0; g <= 1; ++g)
             {
                 boolean useLower = (g == 0);
 
-                String key = formKey(umiId, readInfo.coordinates(), useLower);
+                String key = formKey(readInfo.coordinates(), useLower);
                 Map<String,List<JitterMergeGroup>> posGroups = useLower ? lowerPosGroups : upperPosGroups;
 
                 List<JitterMergeGroup> groups = posGroups.get(key);
@@ -127,7 +146,7 @@ public class JitterUmiMerger
                     hasCandidates = true;
                 }
 
-                groups.add(new JitterMergeGroup(readInfo, readInfo.coordinates(), useLower));
+                groups.add(group);
             }
         }
 
@@ -151,17 +170,26 @@ public class JitterUmiMerger
                 {
                     JitterMergeGroup group1 = groups.get(i);
 
+                    if(group1.Merged)
+                        continue;
+
                     for(int j = i + 1; j < groups.size(); ++j)
                     {
                         JitterMergeGroup group2 = groups.get(j);
 
-                        if(group1.FragmentCoords.PositionLower != group2.FragmentCoords.PositionLower)
-                            break;
-
-                        if(group1.canMerge(group2))
+                        if(group1.canMerge(group2, !useLower))
                         {
-                            group1.merge(group2);
                             hasMerges = true;
+
+                            if(prioritiseFirstCoords(group1.FragmentCoords, group2.FragmentCoords))
+                            {
+                                group1.merge(group2);
+                            }
+                            else
+                            {
+                                group2.merge(group1);
+                                break;
+                            }
                         }
                     }
                 }
@@ -214,7 +242,7 @@ public class JitterUmiMerger
                                 if(readInfo != null)
                                 {
                                     // convert to duplicate group
-                                    String umiId = mUmiConfig.extractUmiId(readInfo.read().getReadName());
+                                    String umiId = readInfo.getOrExtract(mUmiConfig);
                                     originalGroup = new DuplicateGroup(umiId, readInfo.read(), readInfo.coordinates());
                                     umiGroups.add(originalGroup);
                                     singleFragments.remove(readInfo);
@@ -228,11 +256,17 @@ public class JitterUmiMerger
                             {
                                 if(readInfo != null)
                                 {
-                                    originalGroup.addReads(List.of(readInfo.read()));
+                                    originalGroup.addNonConsensusReads(List.of(readInfo.read()));
+
+                                    if(originalGroup.fragmentCoordinates().FragmentOrient != readInfo.coordinates().FragmentOrient)
+                                        originalGroup.registerDualStrand();
                                 }
                                 else
                                 {
-                                    originalGroup.addReads(duplicateGroup.allReads());
+                                    originalGroup.addNonConsensusReads(duplicateGroup.allReads());
+
+                                    if(originalGroup.fragmentCoordinates().FragmentOrient != duplicateGroup.fragmentCoordinates().FragmentOrient)
+                                        originalGroup.registerDualStrand();
                                 }
                             }
                         }
@@ -242,11 +276,19 @@ public class JitterUmiMerger
         }
     }
 
-    private static String formKey(final String umi, final FragmentCoords coords, final boolean keyOnLower)
+    private static String formKey(final FragmentCoords coords, final boolean keyOnLower)
     {
         // same UMI
         Orientation orient = keyOnLower ? coords.OrientLower : coords.OrientUpper;
         int position = keyOnLower ? coords.PositionLower : coords.PositionUpper;
-        return format("%s_%d_%d_%s", umi, position, orient, coords.SuppReadInfo != null);
+
+        return format("%d_%c_%c",
+                position, orient.isForward() ? FRAG_ORIENT_FORWARD : FRAG_ORIENT_REVERSE,
+                coords.SuppReadInfo != null ? FRAG_TYPE_SUPP_INFO : 'P');
+    }
+
+    private static boolean prioritiseFirstCoords(final FragmentCoords coords1, final FragmentCoords coords2)
+    {
+        return (coords1.PositionLower <= coords2.PositionLower) && (coords1.PositionUpper <= coords2.PositionUpper);
     }
 }

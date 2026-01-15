@@ -22,6 +22,10 @@ import htsjdk.samtools.SAMRecord;
 
 public class PolyGUmiMerger
 {
+    // applies to Illumina with duplex UMIs
+    // looks for fragments where the only difference in UMI can be explained by degradation to Gs on the unmapped read side
+    // fragments with both reads mapped take precedence for consensus, and in this case the unmapped reads are all marked as duplicates
+
     private final UmiConfig mUmiConfig;
 
     public PolyGUmiMerger(final UmiConfig umiConfig)
@@ -56,7 +60,7 @@ public class PolyGUmiMerger
 
         public boolean canMerge(final PolyGMergeGroup other)
         {
-            if(Merged || other.Merged)
+            if(other.Merged)
                 return false;
 
             if(!fragmentCoordinatesMatch(FragmentCoords, other.FragmentCoords))
@@ -105,6 +109,9 @@ public class PolyGUmiMerger
             for(int i = 0; i < groups.size() - 1; ++i)
             {
                 PolyGMergeGroup group1 = groups.get(i);
+
+                if(group1.Merged)
+                    continue;
 
                 for(int j = i + 1; j < groups.size(); ++j)
                 {
@@ -267,6 +274,7 @@ public class PolyGUmiMerger
 
     private static boolean fragmentCoordinatesMatch(final FragmentCoords coords1, final FragmentCoords coords2)
     {
+        // require a match on the lower coordinates
         return coords1.PositionLower == coords2.PositionLower
             && coords1.UnmappedSourced == coords2.UnmappedSourced
             && coords1.OrientLower == coords2.OrientLower
