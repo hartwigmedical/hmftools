@@ -9,4 +9,6 @@ public record PredictedTumorOrigin(
         @NotNull String findingKey,
         @NotNull String cancerType,
         double likelihood
-) implements Finding {}
+) implements Finding
+{
+}

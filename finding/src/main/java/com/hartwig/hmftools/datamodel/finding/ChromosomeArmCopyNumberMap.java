@@ -16,13 +16,15 @@ final class ChromosomeArmCopyNumberMap
         Q_ARM,
     }
 
-    private record CopyNumberKey(String chromosome, ChromosomeArm arm) {
+    private record CopyNumberKey(String chromosome, ChromosomeArm arm)
+    {
     }
 
     private final Map<CopyNumberKey, Double> cnPerChromosomeArm;
 
     public static ChromosomeArmCopyNumberMap create(@NotNull Iterable<PurpleCopyNumber> copyNumbers,
-            @NotNull final OrangeRefGenomeVersion refGenomeVersion) {
+            @NotNull final OrangeRefGenomeVersion refGenomeVersion)
+    {
         return new ChromosomeArmCopyNumberMap(extractCnPerChromosomeArm(copyNumbers, refGenomeVersion));
     }
 
@@ -31,22 +33,30 @@ final class ChromosomeArmCopyNumberMap
         this.cnPerChromosomeArm = cnPerChromosomeArm;
     }
 
-    public double chromosomeArmCopyNumber(@NotNull String chromosome, @NotNull String chromosomeBand) {
+    public double chromosomeArmCopyNumber(@NotNull String chromosome, @NotNull String chromosomeBand)
+    {
         Double copyNumber = cnPerChromosomeArm.get(new CopyNumberKey(chromosome, getChromosomeArm(chromosomeBand)));
-        if (copyNumber == null) {
+        if(copyNumber == null)
+        {
             throw new IllegalArgumentException("Copy number not found for chromosome band: " + chromosomeBand + "!");
         }
         return copyNumber;
     }
 
     @NotNull
-    static ChromosomeArm getChromosomeArm(@NotNull String chromosomeBand) {
+    static ChromosomeArm getChromosomeArm(@NotNull String chromosomeBand)
+    {
         ChromosomeArm chromosomeArm;
-        if (chromosomeBand.startsWith("p")) {
+        if(chromosomeBand.startsWith("p"))
+        {
             chromosomeArm = ChromosomeArm.P_ARM;
-        } else if (chromosomeBand.startsWith("q")) {
+        }
+        else if(chromosomeBand.startsWith("q"))
+        {
             chromosomeArm = ChromosomeArm.Q_ARM;
-        } else {
+        }
+        else
+        {
             throw new IllegalArgumentException("Chromosome arm could not be resolved from band: " + chromosomeBand + "!");
         }
         return chromosomeArm;
@@ -71,10 +81,12 @@ final class ChromosomeArmCopyNumberMap
 
                 if(armGenomeRegion != null)
                 {
-                    for (PurpleCopyNumber purpleCopyNumber : copyNumbers) {
+                    for(PurpleCopyNumber purpleCopyNumber : copyNumbers)
+                    {
                         String copyNumberChromosome = purpleCopyNumber.chromosome();
 
-                        if (copyNumberChromosome.equals(chromosome) && overlaps(armGenomeRegion, purpleCopyNumber)) {
+                        if(copyNumberChromosome.equals(chromosome) && overlaps(armGenomeRegion, purpleCopyNumber))
+                        {
                             double copyNumber = purpleCopyNumber.averageTumorCopyNumber();
                             int totalLengthSegment = bases(purpleCopyNumber);
                             copyNumberArm += (copyNumber * totalLengthSegment) / bases(armGenomeRegion);
@@ -102,11 +114,12 @@ final class ChromosomeArmCopyNumberMap
         GenomeRegion partBeforeCentromere = new GenomeRegion(chromosome, 1, centromerePos);
         GenomeRegion partAfterCentromere = new GenomeRegion(chromosome, centromerePos + 1, chrLength);
 
-        if (bases(partBeforeCentromere) < bases(partAfterCentromere))
+        if(bases(partBeforeCentromere) < bases(partAfterCentromere))
         {
             chromosomeArmGenomeRegionMap.put(ChromosomeArm.P_ARM, partBeforeCentromere);
             chromosomeArmGenomeRegionMap.put(ChromosomeArm.Q_ARM, partAfterCentromere);
-        } else
+        }
+        else
         {
             chromosomeArmGenomeRegionMap.put(ChromosomeArm.P_ARM, partAfterCentromere);
             chromosomeArmGenomeRegionMap.put(ChromosomeArm.Q_ARM, partBeforeCentromere);
@@ -145,25 +158,28 @@ final class ChromosomeArmCopyNumberMap
 
         public static RefGenomeCoordinates refGenomeCoordinates(final OrangeRefGenomeVersion refGenomeVersion)
         {
-            return switch (refGenomeVersion) {
+            return switch(refGenomeVersion)
+            {
                 case V37 -> COORDS_37;
                 case V38 -> COORDS_38;
             };
         }
 
-        RefGenomeCoordinates(@NotNull final Map<String, Integer> lengths, @NotNull final Map<String ,Integer> centromeres)
+        RefGenomeCoordinates(@NotNull final Map<String, Integer> lengths, @NotNull final Map<String, Integer> centromeres)
         {
             Lengths = lengths;
             Centromeres = centromeres;
         }
 
         @NotNull
-        public Map<String, Integer> lengths() {
+        public Map<String, Integer> lengths()
+        {
             return Lengths;
         }
 
         @NotNull
-        public Map<String, Integer> centromeres() {
+        public Map<String, Integer> centromeres()
+        {
             return Centromeres;
         }
 
@@ -288,5 +304,7 @@ final class ChromosomeArmCopyNumberMap
         }
     }
 
-    private record GenomeRegion(String chromosome, int start, int end) {}
+    private record GenomeRegion(String chromosome, int start, int end)
+    {
+    }
 }
