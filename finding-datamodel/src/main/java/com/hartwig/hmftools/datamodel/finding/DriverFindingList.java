@@ -11,7 +11,7 @@ import jakarta.validation.constraints.NotNull;
 public record DriverFindingList<T extends Driver>(
         @NotNull FindingsStatus status,
         @NotNull List<T> all
-)
+) implements IFindingList<T>
 {
     @NotNull
     public FindingsQuery<T> query()
@@ -32,9 +32,15 @@ public record DriverFindingList<T extends Driver>(
     }
 
     @NotNull
-    public DriverFindingList<T> reportableOnly()
+    public DriverFindingList<T> reportedOnly()
     {
-        return new DriverFindingList<>(status, query().reportedStatuses(ReportedStatus.REPORTED).results());
+        return filter(ReportedStatus.REPORTED);
+    }
+
+    @NotNull
+    public DriverFindingList<T> candidateOnly()
+    {
+        return filter(ReportedStatus.CANDIDATE);
     }
 
     @NotNull
