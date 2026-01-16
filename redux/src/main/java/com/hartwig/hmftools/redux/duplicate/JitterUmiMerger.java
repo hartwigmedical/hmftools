@@ -26,8 +26,6 @@ public class JitterUmiMerger
         mUmiConfig = umiConfig;
     }
 
-    // TODO: form a base class for these merge groups across poly-G, jitter and SBX-collapsing?
-
     private class JitterMergeGroup
     {
         public final String Umi;

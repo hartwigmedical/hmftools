@@ -227,7 +227,7 @@ public class ReduxApplication
         int partitionThreadCount = mConfig.WriteBam & mConfig.ParallelConcatenation ? max(threadCount - 1, 1) : threadCount;
         int partitionCount = mConfig.PartitionThreadRatio * partitionThreadCount;
 
-        if(threadCount > 1 && mConfig.SpecificChrRegions.hasFilters())
+        if(threadCount > 1 && !mConfig.SpecificChrRegions.Regions.isEmpty())
         {
             // limited threads if running over small specific regions
             int specificRegionBases = mConfig.SpecificChrRegions.Regions.stream().mapToInt(x -> x.baseLength()).sum();

@@ -412,7 +412,7 @@ public class ReduxConfig
 
         addThreadOptions(configBuilder);
         configBuilder.addInteger(PARTIION_THREAD_RATIO, "Partitions per thread, impacts BAM-writing performance", 2);
-        configBuilder.addFlag(PARALLEL_CONCATENATION, "Parallel final BAM concatenation");
+        configBuilder.addFlag(PARALLEL_CONCATENATION, "Concantente final BAM in parallel");
         configBuilder.addFlag(SKIP_FULL_UNMAPPED_READS, "Skip processing existing fully unmapped reads");
         configBuilder.addFlag(SKIP_UNMAPPING, "Skip unmapping routine, including excluded regions");
         configBuilder.addFlag(UNMAP_MITOCHONDRIAL, "Unmap mitochondrial reads");
