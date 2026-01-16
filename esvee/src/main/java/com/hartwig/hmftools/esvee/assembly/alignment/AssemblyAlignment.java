@@ -470,8 +470,14 @@ public class AssemblyAlignment
                 // use junction reads over discordant reads, use earlier junction reads over later, and use the discordant
                 // read closest to a junction
                 boolean useMatchedReadInfo;
+                boolean updateMatchedReadInfo = true;
 
-                if(read.type() == matchedRead.type() && !read.type().isSplitSupport())
+                if(read.trimCountStart() != matchedRead.trimCountStart() || read.trimCountEnd() != matchedRead.trimCountEnd())
+                {
+                    useMatchedReadInfo = false;
+                    updateMatchedReadInfo = false;
+                }
+                else if(read.type() == matchedRead.type() && !read.type().isSplitSupport())
                 {
                     useMatchedReadInfo = juncReadStartDistance > matchedRead.junctionReadStartDistance();
                 }
@@ -484,7 +490,7 @@ public class AssemblyAlignment
                 {
                     fullSeqIndex = matchedRead.fullAssemblyIndexStart();
                 }
-                else
+                else if(updateMatchedReadInfo)
                 {
                     matchedRead.setFullAssemblyInfo(fullSeqIndex, fullSeqOrientation);
                 }
