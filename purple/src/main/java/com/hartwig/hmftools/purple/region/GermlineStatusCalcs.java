@@ -19,7 +19,7 @@ public class GermlineStatusCalcs
     private static final double GERMLINE_LIKELY_DIPLOID_LOWER_THRESHOLD = 0.7;
     private static final double GERMLINE_HET_DELETION_THRESHOLD = 0.85;
     private static final double GERMLINE_DIPLOID_UPPER_THRESHOLD = 1.15;
-    private static final double GERMLINE_LIKELY_DIPLOID_UPPER_THRESHOLD = 1.3;
+    public static final double GERMLINE_LIKELY_DIPLOID_UPPER_THRESHOLD = 1.3;
     private static final double GERMLINE_NOISE_THRESHOLD = 2.2;
 
     private final CobaltChromosomes mCobaltChromosomes;
