@@ -52,7 +52,7 @@ import com.hartwig.hmftools.compar.mutation.SomaticVariantComparer;
 import com.hartwig.hmftools.compar.peach.PeachComparer;
 import com.hartwig.hmftools.compar.purple.CopyNumberComparer;
 import com.hartwig.hmftools.compar.purple.GeneCopyNumberComparer;
-import com.hartwig.hmftools.compar.purple.GermlineDeletionComparer;
+import com.hartwig.hmftools.compar.purple.GermlineAmpDelComparer;
 import com.hartwig.hmftools.compar.purple.PurityComparer;
 import com.hartwig.hmftools.compar.snpgenotype.SnpGenotypeComparer;
 import com.hartwig.hmftools.compar.teal.TealComparer;
@@ -117,8 +117,8 @@ public class CommonUtils
             case GENE_COPY_NUMBER:
                 return new GeneCopyNumberComparer(config);
 
-            case GERMLINE_DELETION:
-                return new GermlineDeletionComparer(config);
+            case GERMLINE_AMP_DEL:
+                return new GermlineAmpDelComparer(config);
 
             case FUSION:
                 return new FusionComparer(config);

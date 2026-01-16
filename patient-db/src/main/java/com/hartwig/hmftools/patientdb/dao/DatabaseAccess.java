@@ -330,9 +330,9 @@ public class DatabaseAccess implements AutoCloseable
     }
 
     @NotNull
-    public List<GermlineAmpDel> readGermlineDeletions(final String sample)
+    public List<GermlineAmpDel> readGermlineCopyNumbers(final String sample)
     {
-        return geneCopyNumberDAO.readGermlineDeletions(sample);
+        return geneCopyNumberDAO.readGermlineCopyNumbers(sample);
     }
 
     @NotNull
@@ -528,7 +528,7 @@ public class DatabaseAccess implements AutoCloseable
 
     public void writeGermlineDeletions(final String sample, final List<GermlineAmpDel> deletions)
     {
-        geneCopyNumberDAO.writeGermlineDeletions(sample, deletions);
+        geneCopyNumberDAO.writeGermlineCopyNumbers(sample, deletions);
     }
 
     public void writeLinxDriverCatalog(
@@ -636,7 +636,7 @@ public class DatabaseAccess implements AutoCloseable
 
         LOGGER.info("Deleting gene copy numbers for sample: {}", sample);
         geneCopyNumberDAO.deleteGeneCopyNumberForSample(sample);
-        geneCopyNumberDAO.deleteGermlineDeletionsForSample(sample);
+        geneCopyNumberDAO.deleteGermlineCopyNumbersForSample(sample);
 
         LOGGER.info("Deleting somatic variants for sample: {}", sample);
         somaticVariantDAO.deleteSomaticVariantForSample(sample);

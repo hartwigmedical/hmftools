@@ -12,7 +12,7 @@ public enum CategoryType
     GENE_COPY_NUMBER,
     SOMATIC_VARIANT,
     GERMLINE_VARIANT,
-    GERMLINE_DELETION,
+    GERMLINE_AMP_DEL,
     FUSION,
     DISRUPTION,
     GERMLINE_SV,
@@ -39,7 +39,7 @@ public enum CategoryType
 
     public static List<CategoryType> purpleCategories()
     {
-        return Lists.newArrayList(PURITY, DRIVER, SOMATIC_VARIANT, GERMLINE_VARIANT, GERMLINE_DELETION);
+        return Lists.newArrayList(PURITY, DRIVER, SOMATIC_VARIANT, GERMLINE_VARIANT, GERMLINE_AMP_DEL);
     }
 
     public static List<CategoryType> linxCategories()

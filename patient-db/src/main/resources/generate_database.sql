@@ -526,8 +526,8 @@ CREATE TABLE `driverCatalog`
 CREATE INDEX `driverCatalog_sampleId_gene` ON `driverCatalog` (`sampleId`, `gene`);
 CREATE INDEX `driverCatalog_gene` ON `driverCatalog` (`gene`);
 
-DROP TABLE IF EXISTS `germlineDeletion`;
-CREATE TABLE `germlineDeletion`
+DROP TABLE IF EXISTS `germlineCopyNumber`;
+CREATE TABLE `germlineCopyNumber`
 (   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
     `modified` DATETIME NOT NULL,
     `sampleId` VARCHAR(50) NOT NULL,
@@ -542,7 +542,7 @@ CREATE TABLE `germlineDeletion`
     `detectionMethod` VARCHAR(20) NOT NULL,
     `germlineStatus` VARCHAR(20) NOT NULL,
     `tumorStatus` VARCHAR(20) NOT NULL,
-    `germlineCopyNumber` DOUBLE PRECISION NOT NULL,
+    `normalCopyNumber` DOUBLE PRECISION NOT NULL,
     `tumorCopyNumber` DOUBLE PRECISION NOT NULL,
     `filter` VARCHAR(50) NOT NULL,
     `cohortFrequency` INT NOT NULL,
@@ -550,8 +550,8 @@ CREATE TABLE `germlineDeletion`
     PRIMARY KEY (`id`)
 );
 
-CREATE INDEX `germlineDeletion_sampleId_gene` ON `germlineDeletion` (`sampleId`, `gene`);
-CREATE INDEX `germlineDeletion_gene` ON `germlineDeletion` (`gene`);
+CREATE INDEX `germlineCopyNumber_sampleId_gene` ON `germlineCopyNumber` (`sampleId`, `gene`);
+CREATE INDEX `germlineCopyNumber_gene` ON `germlineCopyNumber` (`gene`);
 
 DROP TABLE IF EXISTS `structuralVariant`;
 CREATE TABLE `structuralVariant`

@@ -3,10 +3,10 @@ package com.hartwig.hmftools.compar.purple;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_CHROMOSOME_BAND;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
-import static com.hartwig.hmftools.compar.purple.GermlineDeletionData.FLD_GERMLINE_CN;
-import static com.hartwig.hmftools.compar.purple.GermlineDeletionData.FLD_GERMLINE_STATUS;
-import static com.hartwig.hmftools.compar.purple.GermlineDeletionData.FLD_TUMOR_CN;
-import static com.hartwig.hmftools.compar.purple.GermlineDeletionData.FLD_TUMOR_STATUS;
+import static com.hartwig.hmftools.compar.purple.GermlineAmpDelData.FLD_GERMLINE_CN;
+import static com.hartwig.hmftools.compar.purple.GermlineAmpDelData.FLD_GERMLINE_STATUS;
+import static com.hartwig.hmftools.compar.purple.GermlineAmpDelData.FLD_TUMOR_CN;
+import static com.hartwig.hmftools.compar.purple.GermlineAmpDelData.FLD_TUMOR_STATUS;
 
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -27,32 +27,32 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class GermlineAmpDelDataTest
-        extends ComparableItemTest<GermlineDeletionData, GermlineDeletionComparer, TestGermlineDeletionDataBuilder>
+        extends ComparableItemTest<GermlineAmpDelData, GermlineAmpDelComparer, TestGermlineDeletionDataBuilder>
 {
     @Before
     public void setUp()
     {
-        comparer = new GermlineDeletionComparer(new ComparConfig());
+        comparer = new GermlineAmpDelComparer(new ComparConfig());
         builder = TestGermlineDeletionDataBuilder.BUILDER;
-        GermlineDeletionData alternateValueSource = builder.createWithAlternateDefaults();
+        GermlineAmpDelData alternateValueSource = builder.createWithAlternateDefaults();
 
         fieldToAlternateValueInitializer = Map.of(
-            FLD_GERMLINE_STATUS, b -> b.germlineStatus = alternateValueSource.Deletion.NormalStatus,
-            FLD_TUMOR_STATUS, b -> b.tumorStatus = alternateValueSource.Deletion.TumorStatus,
-            FLD_GERMLINE_CN, b -> b.germlineCopyNumber = alternateValueSource.Deletion.GermlineCopyNumber,
-            FLD_TUMOR_CN, b -> b.tumorCopyNumber = alternateValueSource.Deletion.TumorCopyNumber,
+            FLD_GERMLINE_STATUS, b -> b.germlineStatus = alternateValueSource.AmpDelData.NormalStatus,
+            FLD_TUMOR_STATUS, b -> b.tumorStatus = alternateValueSource.AmpDelData.TumorStatus,
+            FLD_GERMLINE_CN, b -> b.germlineCopyNumber = alternateValueSource.AmpDelData.GermlineCopyNumber,
+            FLD_TUMOR_CN, b -> b.tumorCopyNumber = alternateValueSource.AmpDelData.TumorCopyNumber,
             FLD_CHROMOSOME, b -> b.comparisonChromosome = alternateValueSource.mComparisonChromosome,
-            FLD_CHROMOSOME_BAND, b -> b.chromosomeBand = alternateValueSource.Deletion.ChromosomeBand
+            FLD_CHROMOSOME_BAND, b -> b.chromosomeBand = alternateValueSource.AmpDelData.ChromosomeBand
         );
-        nameToAlternateIndexInitializer = Map.of("Gene", b -> b.gene = alternateValueSource.Deletion.GeneName);
+        nameToAlternateIndexInitializer = Map.of("Gene", b -> b.gene = alternateValueSource.AmpDelData.GeneName);
         reportabilityFieldToFalseReportabilityInitializer = Map.of(FLD_REPORTED, b -> b.reported = false);
     }
 
     @Test
     public void fullyMatchesSelfWithLiftover()
     {
-        GermlineDeletionData victim = TestGermlineDeletionDataBuilder.BUILDER.create(b -> b.comparisonChromosome = "8");
-        GermlineDeletionData liftoverVictim = TestGermlineDeletionDataBuilder.BUILDER.create(b -> b.comparisonChromosome = "8");
+        GermlineAmpDelData victim = TestGermlineDeletionDataBuilder.BUILDER.create(b -> b.comparisonChromosome = "8");
+        GermlineAmpDelData liftoverVictim = TestGermlineDeletionDataBuilder.BUILDER.create(b -> b.comparisonChromosome = "8");
         DiffThresholds diffThresholds = createDefaultThresholds();
 
         assertTrue(victim.matches(liftoverVictim));

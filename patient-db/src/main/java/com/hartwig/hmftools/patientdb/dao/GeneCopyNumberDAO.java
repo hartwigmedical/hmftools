@@ -3,7 +3,7 @@ package com.hartwig.hmftools.patientdb.dao;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.DB_BATCH_INSERT_SIZE;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.checkStringLength;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.GENECOPYNUMBER;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.GERMLINEDELETION;
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.GERMLINECOPYNUMBER;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Copynumber.COPYNUMBER;
 
 import java.sql.Timestamp;
@@ -75,39 +75,39 @@ public class GeneCopyNumberDAO
         return geneCopyNumbers;
     }
 
-    public List<GermlineAmpDel> readGermlineDeletions(final String sample)
+    public List<GermlineAmpDel> readGermlineCopyNumbers(final String sample)
     {
-        List<GermlineAmpDel> germlineDeletions = Lists.newArrayList();
+        List<GermlineAmpDel> germlineAmpDels = Lists.newArrayList();
 
         Result<Record15<String,String,Integer,Integer,Integer,Integer,Integer,String,String,String,Double,Double,String,Integer,Byte>> result = context.select(
-                GERMLINEDELETION.GENE, GERMLINEDELETION.CHROMOSOME, GERMLINEDELETION.REGIONSTART, GERMLINEDELETION.REGIONEND,
-                GERMLINEDELETION.DEPTHWINDOWCOUNT, GERMLINEDELETION.EXONSTART, GERMLINEDELETION.EXONEND,
-                GERMLINEDELETION.DETECTIONMETHOD, GERMLINEDELETION.GERMLINESTATUS, GERMLINEDELETION.TUMORSTATUS,
-                GERMLINEDELETION.GERMLINECOPYNUMBER, GERMLINEDELETION.TUMORCOPYNUMBER, GERMLINEDELETION.FILTER,
-                GERMLINEDELETION.COHORTFREQUENCY, GERMLINEDELETION.REPORTED)
-                .from(GERMLINEDELETION).where(GERMLINEDELETION.SAMPLEID.eq(sample)).fetch();
+                GERMLINECOPYNUMBER.GENE, GERMLINECOPYNUMBER.CHROMOSOME, GERMLINECOPYNUMBER.REGIONSTART, GERMLINECOPYNUMBER.REGIONEND,
+                GERMLINECOPYNUMBER.DEPTHWINDOWCOUNT, GERMLINECOPYNUMBER.EXONSTART, GERMLINECOPYNUMBER.EXONEND,
+                GERMLINECOPYNUMBER.DETECTIONMETHOD, GERMLINECOPYNUMBER.GERMLINESTATUS, GERMLINECOPYNUMBER.TUMORSTATUS,
+                GERMLINECOPYNUMBER.NORMALCOPYNUMBER, GERMLINECOPYNUMBER.TUMORCOPYNUMBER, GERMLINECOPYNUMBER.FILTER,
+                GERMLINECOPYNUMBER.COHORTFREQUENCY, GERMLINECOPYNUMBER.REPORTED)
+                .from(GERMLINECOPYNUMBER).where(GERMLINECOPYNUMBER.SAMPLEID.eq(sample)).fetch();
 
         for(Record record : result)
         {
-            germlineDeletions.add(new GermlineAmpDel(
-                    record.getValue(GERMLINEDELETION.GENE),
-                    record.getValue(GERMLINEDELETION.CHROMOSOME),
-                    "", // record.getValue(GERMLINEDELETION.CHROMOSOMEBAND), // until 5.29 DB changes are applied to prod
-                    record.getValue(GERMLINEDELETION.REGIONSTART),
-                    record.getValue(GERMLINEDELETION.REGIONEND),
-                    record.getValue(GERMLINEDELETION.DEPTHWINDOWCOUNT),
-                    record.getValue(GERMLINEDELETION.EXONSTART),
-                    record.getValue(GERMLINEDELETION.EXONEND),
-                    GermlineDetectionMethod.valueOf(record.getValue(GERMLINEDELETION.DETECTIONMETHOD)),
-                    GermlineStatus.valueOf(record.getValue(GERMLINEDELETION.GERMLINESTATUS)),
-                    GermlineStatus.valueOf(record.getValue(GERMLINEDELETION.TUMORSTATUS)),
-                    record.getValue(GERMLINEDELETION.GERMLINECOPYNUMBER),
-                    record.getValue(GERMLINEDELETION.TUMORCOPYNUMBER),
-                    record.getValue(GERMLINEDELETION.FILTER),
-                    record.getValue(GERMLINEDELETION.COHORTFREQUENCY),
-                    record.getValue(GERMLINEDELETION.REPORTED).intValue() == 1 ? ReportedStatus.REPORTED : ReportedStatus.NONE));
+            germlineAmpDels.add(new GermlineAmpDel(
+                    record.getValue(GERMLINECOPYNUMBER.GENE),
+                    record.getValue(GERMLINECOPYNUMBER.CHROMOSOME),
+                    record.getValue(GERMLINECOPYNUMBER.CHROMOSOMEBAND),
+                    record.getValue(GERMLINECOPYNUMBER.REGIONSTART),
+                    record.getValue(GERMLINECOPYNUMBER.REGIONEND),
+                    record.getValue(GERMLINECOPYNUMBER.DEPTHWINDOWCOUNT),
+                    record.getValue(GERMLINECOPYNUMBER.EXONSTART),
+                    record.getValue(GERMLINECOPYNUMBER.EXONEND),
+                    GermlineDetectionMethod.valueOf(record.getValue(GERMLINECOPYNUMBER.DETECTIONMETHOD)),
+                    GermlineStatus.valueOf(record.getValue(GERMLINECOPYNUMBER.GERMLINESTATUS)),
+                    GermlineStatus.valueOf(record.getValue(GERMLINECOPYNUMBER.TUMORSTATUS)),
+                    record.getValue(GERMLINECOPYNUMBER.NORMALCOPYNUMBER),
+                    record.getValue(GERMLINECOPYNUMBER.TUMORCOPYNUMBER),
+                    record.getValue(GERMLINECOPYNUMBER.FILTER),
+                    record.getValue(GERMLINECOPYNUMBER.COHORTFREQUENCY),
+                    record.getValue(GERMLINECOPYNUMBER.REPORTED).intValue() == 1 ? ReportedStatus.REPORTED : ReportedStatus.NONE));
         }
-        return germlineDeletions;
+        return germlineAmpDels;
     }
 
     public void writeCopyNumber(final String sample, final List<GeneCopyNumber> copyNumbers)
@@ -137,12 +137,12 @@ public class GeneCopyNumberDAO
                     GENECOPYNUMBER.MINREGIONMETHOD,
                     GENECOPYNUMBER.MINMINORALLELECOPYNUMBER,
                     COPYNUMBER.MODIFIED);
-            splitCopyNumbers.forEach(x -> addCopynumberRecord(timestamp, inserter, sample, x));
+            splitCopyNumbers.forEach(x -> addCopyNumberRecord(timestamp, inserter, sample, x));
             inserter.execute();
         }
     }
 
-    private static void addCopynumberRecord(
+    private static void addCopyNumberRecord(
             final Timestamp timestamp, final InsertValuesStep19 inserter, final String sample, final GeneCopyNumber gene)
     {
         inserter.values(sample,
@@ -171,45 +171,45 @@ public class GeneCopyNumberDAO
         context.delete(GENECOPYNUMBER).where(GENECOPYNUMBER.SAMPLEID.eq(sample)).execute();
     }
 
-    public void writeGermlineDeletions(final String sample, final List<GermlineAmpDel> deletions)
+    public void writeGermlineCopyNumbers(final String sample, final List<GermlineAmpDel> ampDels)
     {
         Timestamp timestamp = new Timestamp(new Date().getTime());
-        deleteGermlineDeletionsForSample(sample);
+        deleteGermlineCopyNumbersForSample(sample);
 
-        InsertValuesStep18 inserter = context.insertInto(GERMLINEDELETION,
-                GERMLINEDELETION.SAMPLEID,
-                GERMLINEDELETION.GENE,
-                GERMLINEDELETION.CHROMOSOME,
-                GERMLINEDELETION.CHROMOSOMEBAND,
-                GERMLINEDELETION.REGIONSTART,
-                GERMLINEDELETION.REGIONEND,
-                GERMLINEDELETION.DEPTHWINDOWCOUNT,
-                GERMLINEDELETION.EXONSTART,
-                GERMLINEDELETION.EXONEND,
-                GERMLINEDELETION.DETECTIONMETHOD,
-                GERMLINEDELETION.GERMLINESTATUS,
-                GERMLINEDELETION.TUMORSTATUS,
-                GERMLINEDELETION.GERMLINECOPYNUMBER,
-                GERMLINEDELETION.TUMORCOPYNUMBER,
-                GERMLINEDELETION.FILTER,
-                GERMLINEDELETION.COHORTFREQUENCY,
-                GERMLINEDELETION.REPORTED,
+        InsertValuesStep18 inserter = context.insertInto(GERMLINECOPYNUMBER,
+                GERMLINECOPYNUMBER.SAMPLEID,
+                GERMLINECOPYNUMBER.GENE,
+                GERMLINECOPYNUMBER.CHROMOSOME,
+                GERMLINECOPYNUMBER.CHROMOSOMEBAND,
+                GERMLINECOPYNUMBER.REGIONSTART,
+                GERMLINECOPYNUMBER.REGIONEND,
+                GERMLINECOPYNUMBER.DEPTHWINDOWCOUNT,
+                GERMLINECOPYNUMBER.EXONSTART,
+                GERMLINECOPYNUMBER.EXONEND,
+                GERMLINECOPYNUMBER.DETECTIONMETHOD,
+                GERMLINECOPYNUMBER.GERMLINESTATUS,
+                GERMLINECOPYNUMBER.TUMORSTATUS,
+                GERMLINECOPYNUMBER.NORMALCOPYNUMBER,
+                GERMLINECOPYNUMBER.TUMORCOPYNUMBER,
+                GERMLINECOPYNUMBER.FILTER,
+                GERMLINECOPYNUMBER.COHORTFREQUENCY,
+                GERMLINECOPYNUMBER.REPORTED,
                 COPYNUMBER.MODIFIED);
 
-        for(GermlineAmpDel deletion : deletions)
+        for(GermlineAmpDel ampDel : ampDels)
         {
-            addDeletionRecord(timestamp, inserter, sample, deletion);
+            addCopyNumberRecord(timestamp, inserter, sample, ampDel);
         }
 
         inserter.execute();
     }
 
-    private static void addDeletionRecord(
+    private static void addCopyNumberRecord(
             final Timestamp timestamp, final InsertValuesStep18 inserter, final String sample, final GermlineAmpDel deletion)
     {
         inserter.values(
                 sample,
-                DatabaseUtil.checkStringLength(deletion.GeneName, GERMLINEDELETION.GENE),
+                DatabaseUtil.checkStringLength(deletion.GeneName, GERMLINECOPYNUMBER.GENE),
                 deletion.Chromosome,
                 deletion.ChromosomeBand,
                 deletion.RegionStart,
@@ -222,15 +222,15 @@ public class GeneCopyNumberDAO
                 deletion.TumorStatus.toString(),
                 DatabaseUtil.decimal(deletion.GermlineCopyNumber),
                 DatabaseUtil.decimal(deletion.TumorCopyNumber),
-                checkStringLength(deletion.Filter, GERMLINEDELETION.FILTER),
+                checkStringLength(deletion.Filter, GERMLINECOPYNUMBER.FILTER),
                 deletion.CohortFrequency,
                 deletion.Reported == ReportedStatus.REPORTED ? 1 : 0,
                 timestamp);
     }
 
-    public void deleteGermlineDeletionsForSample(final String sample)
+    public void deleteGermlineCopyNumbersForSample(final String sample)
     {
-        context.delete(GERMLINEDELETION).where(GERMLINEDELETION.SAMPLEID.eq(sample)).execute();
+        context.delete(GERMLINECOPYNUMBER).where(GERMLINECOPYNUMBER.SAMPLEID.eq(sample)).execute();
     }
 
 }

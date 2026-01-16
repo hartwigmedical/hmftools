@@ -41,7 +41,7 @@ import com.hartwig.hmftools.patientdb.database.hmfpatients.Tables;
 import com.hartwig.hmftools.patientdb.database.hmfpatients.tables.records.CopynumberRecord;
 import com.hartwig.hmftools.patientdb.database.hmfpatients.tables.records.DrivercatalogRecord;
 import com.hartwig.hmftools.patientdb.database.hmfpatients.tables.records.GenecopynumberRecord;
-import com.hartwig.hmftools.patientdb.database.hmfpatients.tables.records.GermlinedeletionRecord;
+import com.hartwig.hmftools.patientdb.database.hmfpatients.tables.records.GermlinecopynumberRecord;
 import com.hartwig.hmftools.patientdb.database.hmfpatients.tables.records.PurityRecord;
 import com.hartwig.hmftools.patientdb.database.hmfpatients.tables.records.StructuralvariantRecord;
 
@@ -210,7 +210,7 @@ public class LoadPurpleDataTest extends DatabaseTestBase
     @Test
     public void canWriteGermlineDeletions()
     {
-        GermlineAmpDel germlineDeletion = new GermlineAmpDel(
+        GermlineAmpDel germlineAmpDel = new GermlineAmpDel(
                 "GENE1",
                 "chr1",
                 "1q1.1",
@@ -229,9 +229,9 @@ public class LoadPurpleDataTest extends DatabaseTestBase
                 ReportedStatus.REPORTED
         );
 
-        databaseAccess.writeGermlineDeletions(TEST_SAMPLE_ID, List.of(germlineDeletion));
+        databaseAccess.writeGermlineDeletions(TEST_SAMPLE_ID, List.of(germlineAmpDel));
 
-        List<GermlinedeletionRecord> germlineDeletionRecords = fetchTable(Tables.GERMLINEDELETION, GermlinedeletionRecord.class);
+        List<GermlinecopynumberRecord> germlineDeletionRecords = fetchTable(Tables.GERMLINECOPYNUMBER, GermlinecopynumberRecord.class);
         assertEquals(1, germlineDeletionRecords.size());
     }
 

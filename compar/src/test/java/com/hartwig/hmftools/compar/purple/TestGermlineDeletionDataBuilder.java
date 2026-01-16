@@ -31,16 +31,16 @@ public class TestGermlineDeletionDataBuilder
         b.chromosomeBand = "13q13.1";
     };
 
-    public static final TestComparableItemBuilder<TestGermlineDeletionDataBuilder, GermlineDeletionData> BUILDER =
+    public static final TestComparableItemBuilder<TestGermlineDeletionDataBuilder, GermlineAmpDelData> BUILDER =
             new TestComparableItemBuilder<>(
                     TestGermlineDeletionDataBuilder::new,
                     TestGermlineDeletionDataBuilder::build,
                     ALTERNATE_INITIALIZER
             );
 
-    private GermlineDeletionData build()
+    private GermlineAmpDelData build()
     {
-        return new GermlineDeletionData(
+        return new GermlineAmpDelData(
                 new GermlineAmpDel(
                         gene,
                         "",

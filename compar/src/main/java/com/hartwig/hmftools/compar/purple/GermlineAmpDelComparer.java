@@ -1,13 +1,13 @@
 package com.hartwig.hmftools.compar.purple;
 
-import static com.hartwig.hmftools.compar.common.CategoryType.GERMLINE_DELETION;
+import static com.hartwig.hmftools.compar.common.CategoryType.GERMLINE_AMP_DEL;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonChromosome;
-import static com.hartwig.hmftools.compar.purple.GermlineDeletionData.FLD_GERMLINE_CN;
-import static com.hartwig.hmftools.compar.purple.GermlineDeletionData.FLD_GERMLINE_STATUS;
-import static com.hartwig.hmftools.compar.purple.GermlineDeletionData.FLD_TUMOR_CN;
-import static com.hartwig.hmftools.compar.purple.GermlineDeletionData.FLD_TUMOR_STATUS;
+import static com.hartwig.hmftools.compar.purple.GermlineAmpDelData.FLD_GERMLINE_CN;
+import static com.hartwig.hmftools.compar.purple.GermlineAmpDelData.FLD_GERMLINE_STATUS;
+import static com.hartwig.hmftools.compar.purple.GermlineAmpDelData.FLD_TUMOR_CN;
+import static com.hartwig.hmftools.compar.purple.GermlineAmpDelData.FLD_TUMOR_STATUS;
 
 import java.io.IOException;
 import java.util.List;
@@ -24,17 +24,17 @@ import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
-public class GermlineDeletionComparer implements ItemComparer
+public class GermlineAmpDelComparer implements ItemComparer
 {
     private final ComparConfig mConfig;
 
-    public GermlineDeletionComparer(final ComparConfig config)
+    public GermlineAmpDelComparer(final ComparConfig config)
     {
         mConfig = config;
     }
 
     @Override
-    public CategoryType category() { return GERMLINE_DELETION; }
+    public CategoryType category() { return GERMLINE_AMP_DEL; }
 
     @Override
     public void registerThresholds(final DiffThresholds thresholds)
@@ -59,9 +59,9 @@ public class GermlineDeletionComparer implements ItemComparer
     @Override
     public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final String sourceName)
     {
-        final List<GermlineAmpDel> germlineDeletions = dbAccess.readGermlineDeletions(sampleId);
+        final List<GermlineAmpDel> germlineAmpDels = dbAccess.readGermlineCopyNumbers(sampleId);
         List<ComparableItem> items = Lists.newArrayList();
-        germlineDeletions.forEach(x -> items.add(createGermlineDeletionData(x)));
+        germlineAmpDels.forEach(x -> items.add(createGermlineAmpDelData(x)));
         return items;
     }
 
@@ -72,21 +72,21 @@ public class GermlineDeletionComparer implements ItemComparer
 
         try
         {
-            List<GermlineAmpDel> germlineDeletions = GermlineAmpDel.read(GermlineAmpDel.generateFilename(fileSources.Purple, sampleId));
-            germlineDeletions.forEach(x -> comparableItems.add(createGermlineDeletionData(x)));
+            List<GermlineAmpDel> germlineAmpDels = GermlineAmpDel.read(GermlineAmpDel.generateFilename(fileSources.Purple, sampleId));
+            germlineAmpDels.forEach(x -> comparableItems.add(createGermlineAmpDelData(x)));
         }
         catch(IOException e)
         {
-            CMP_LOGGER.warn("sample({}) failed to read germline deletion data: {}", sampleId, e.toString());
+            CMP_LOGGER.warn("sample({}) failed to read germline amp-del data: {}", sampleId, e.toString());
             return null;
         }
 
         return comparableItems;
     }
 
-    private GermlineDeletionData createGermlineDeletionData(final GermlineAmpDel deletion)
+    private GermlineAmpDelData createGermlineAmpDelData(final GermlineAmpDel deletion)
     {
         String comparisonChromosome = determineComparisonChromosome(deletion.Chromosome, mConfig.RequiresLiftover);
-        return new GermlineDeletionData(deletion, comparisonChromosome);
+        return new GermlineAmpDelData(deletion, comparisonChromosome);
     }
 }
