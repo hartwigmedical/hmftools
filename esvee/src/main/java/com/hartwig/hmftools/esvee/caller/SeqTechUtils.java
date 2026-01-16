@@ -64,11 +64,18 @@ public final class SeqTechUtils
             "AGGCGAGTATTCCATACATGGAATACTCGCCT",
             "AGGTTATCAGCTTATGTATGAAGCTGATAACCT",
             "AGGGACATTACCAATGTATGTGGTAATGTCCCT",
-            "ACAACAGCCGAAGATGTATGCTTCGGCTGTTGT");
+            "ACAACAGCCGAAGATGTATGCTTCGGCTGTTGT",
+            "AGGTATTGCCTGGATGTATGCCAGGCAATACCT",
+            "AGAATCGCAGTTAATGTATGTAACTGCGATTCT",
+            "ACCTGCGGTTGAAATGTATGTTCAACCGCAGGT",
+            "ACCACTTCGCCAAATGTATGTTGGCGAAGTGGT",
+            "AGGCTTACTACGGATGTATGCCGTAGTAAGCCT",
+            "TCTTCTGTATTTCTAGTGTTCAATAGAAATACAGA",
+            "ACATAGAAGGTAGATGTATGCTACCTTCTATGT");
 
     public static final int SBX_INV_INSERT_MOTIF_MIN_LENGTH = 29;
     public static final int SBX_INV_INSERT_MOTIF_MAX_LENGTH = 34;
-    public static final int SBX_INV_INSERT_MOTIF_MAX_DIFFS = 3;
+    public static final int SBX_INV_INSERT_MOTIF_MAX_DIFFS = 10;
 
     protected static boolean isSbxStrandBias(final Variant var)
     {
@@ -262,7 +269,7 @@ public final class SeqTechUtils
         {
             int lengthDiff = insertSequence.length() - motifSeq.length();
 
-            for(int i = 0; i < abs(lengthDiff); ++i)
+            for(int i = 0; i <= abs(lengthDiff); ++i)
             {
                 int s1Offset = lengthDiff > 0 ? i : 0;
                 int s2Offset = lengthDiff < 0 ? i : 0;

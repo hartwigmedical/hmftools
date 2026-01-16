@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.esvee.caller;
 
+import static java.lang.Math.abs;
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ASM_INFO;
@@ -14,11 +17,14 @@ import static com.hartwig.hmftools.esvee.caller.FiltersTest.FILTER_CONSTANTS;
 import static com.hartwig.hmftools.esvee.caller.FiltersTest.FRAG_LENGTHS;
 import static com.hartwig.hmftools.esvee.caller.SeqTechUtils.SBX_HEURISTIC_SHORT_LENGTH;
 import static com.hartwig.hmftools.esvee.caller.SeqTechUtils.SBX_INV_INSERT_MOTIFS;
+import static com.hartwig.hmftools.esvee.caller.SeqTechUtils.SBX_INV_INSERT_MOTIF_MAX_DIFFS;
+import static com.hartwig.hmftools.esvee.caller.SeqTechUtils.sequenceMismatches;
 import static com.hartwig.hmftools.esvee.common.SvConstants.SEQUENCING_TYPE;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
@@ -28,6 +34,7 @@ import com.hartwig.hmftools.esvee.common.FilterType;
 import com.hartwig.hmftools.esvee.prep.types.DiscordantStats;
 
 import org.junit.After;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class SeqTechTest
@@ -278,8 +285,8 @@ public class SeqTechTest
         assertTrue(var.filters().contains(FilterType.SBX_INV_ZERO_MOTIF));
 
         // too many mismatches
-        motif =  SBX_INV_INSERT_MOTIFS.get(2);
-        insSequence = "AA" + motif.substring(2, motif.length() - 2) + "GG";
+        motif =  SBX_INV_INSERT_MOTIFS.get(2); // ACCCGTAGTATTAATGTATGTAATACTACGGGT
+        insSequence = "TTTTT" + motif.substring(5, motif.length() - 6) + "GAAAAA";
 
         var = createSv(
                 "01", CHR_1, CHR_1, posStart, posStart, ORIENT_FWD, ORIENT_FWD, insSequence,
@@ -288,5 +295,109 @@ public class SeqTechTest
         mVariantFilters.applyFilters(var);
 
         assertFalse(var.filters().contains(FilterType.SBX_INV_ZERO_MOTIF));
+    }
+
+    @Ignore
+    @Test
+    public void testSbxInversionSequenceMatches()
+    {
+        List<String> testSequences = List.of(
+                "ACCATCAATCCGGATGTATGCCGGATTGATGGT",
+                "AGGAGTAACATCCATGTATGGGATGTTACTCCT",
+                "AGGCGAGTATTCCATGTATGGGAATACTCGCCT",
+                "ACCCGTAGTATTAATGTATGTAATACTACGGGT",
+                "ACTATTGAAGGCTATGTATGAGCCTTCAATAGT",
+                "AGGTATTGCCTGGATGTATGCCAGGCAATACCT",
+                "AGAATCGCAGTTAATGTATGTAACTGCGATTCT",
+                "CCATCAATCCGGATGTATGCCGGATTGATGG",
+                "AGGATTATGGCAAATGTATGTTGCCATAATCCT",
+                "CCCGTAGTATTAATGTATGTAATACTACGGG",
+                "GGCGAGTATTCCATGTATGGGAATACTCGCC",
+                "ACCTGCGGTTGAAATGTATGTTCAACCGCAGGT",
+                "AGGATTATGGCAAAATGTATGTTGCCATAATCCT",
+                "CTATTGAAGGCTATGTATGAGCCTTCAATAG",
+                "GGAGTAACATCCATGTATGGGATGTTACTCC",
+                "GGTATTGCCTGGATGTATGCCAGGCAATACC",
+                "AGGCGAGTATTCCATACATGGAATACTCGCCT",
+                "AGGTTATCAGCTTATGTATGAAGCTGATAACCT",
+                "ACCTGCGGTTGAAAATGTATGTTCAACCGCAGGT",
+                "GAATCGCAGTTAATGTATGTAACTGCGATTC",
+                "GCGAGTATTCCATGTATGGGAATACTCGC",
+                "GGATTATGGCAAATGTATGTTGCCATAATCC",
+                "AGGGACATTACCAATGTATGTGGTAATGTCCCT",
+                "CCTGCGGTTGAAATGTATGTTCAACCGCAGG",
+                "GGATTATGGCAAAATGTATGTTGCCATAATCC",
+                "AGGCGAGTATCCCATACATGGAATACTCGCCT",
+                "GGCGAGTATTCCATACATGGAATACTCGCC",
+                "ACCACTTCGCCAAATGTATGTTGGCGAAGTGGT",
+                "AGGCTTACTACGGATGTATGCCGTAGTAAGCCT",
+                "AGGATCTCCTATTATGTATGAATAGGAGATCCT",
+                "AGGCGAGTATTCCATGTATGGAAATACTCGCCT",
+                "AGGCGAGTATTCCATGTATGGGAAACTCGCCT",
+                "AGGCGAGTATTCCATGTAGGGAATACTCGCCT",
+                "AGGAGTAACATCCATACATGGATGTTACTCCT",
+                "ACCCGTAGTATTAAATGTATGTAATACTACGGGT",
+                "GTATTGCCTGGATGTATGCCAGGCAATAC",
+                "GAGTAACATCCATGTATGGGATGTTACTC",
+                "AGGAGTAACATCCCATACATGGGATGTTACTCCT",
+                "AGGCGAGTATTCCCATACAGGGAATACTCGCCT",
+                "GGTTATCAGCTTATGTATGAAGCTGATAACC",
+                "CATCAATCCGGATGTATGCCGGATTGATG",
+                "ACTATTGAAGGCTATGTATGAACCTTCAATAGT",
+                "TCTTCTGTATTTCTAGTGTTCAATAGAAATACAGAAGA",
+                "AATCGCAGTTAATGTATGTAACTGCGATT",
+                "ACCATCAATCCGGAATGTATGCCGGATTGATGGT",
+                "ACCATCAATCCGCATACATCCGGATTGATGGT",
+                "CCTGCGGTTGAAAATGTATGTTCAACCGCAGG",
+                "AGAATCGCAGTTAAATGTATGTAACTGCGATTCT",
+                "AGGATTATGGCAAATGTATGTGCCATAATCCT",
+                "GATTATGGCAAATGTATGTTGCCATAATC",
+                "ACCCGTAGTATTAACATACATTAATACTACGGGT",
+                "CCACTTCGCCAAATGTATGTTGGCGAAGTGG",
+                "ACAACAGCCGAAGATGTATGCTTCGGCTGTTGT",
+                "AGGAGTAACATCCCATACACGGATGTTACTCCT",
+                "ACATAGAAGGTAGATGTATGCTACCTTCTATGT",
+                "AGGAGTAACATCCATGTAATGGGATGTTACTCCT",
+                "GGAGTAACATCCATGTATGAGATGTTACTCC");
+
+        for(String testSequence : testSequences)
+        {
+            boolean hasMatch = false;
+            String lowestMotifSeqMatch = "";
+            int lowestMismatches = -1;
+
+            String testSeqReversed = Nucleotides.reverseComplementBases(testSequence);
+
+            for(String motifSeq : SBX_INV_INSERT_MOTIFS)
+            {
+                int lengthDiff = testSequence.length() - motifSeq.length();
+
+                for(int i = 0; i <= abs(lengthDiff); ++i)
+                {
+                    int s1Offset = lengthDiff > 0 ? i : 0;
+                    int s2Offset = lengthDiff < 0 ? i : 0;
+                    int diffs = sequenceMismatches(testSequence, motifSeq, s1Offset, s2Offset);
+                    diffs = min(diffs, sequenceMismatches(testSeqReversed, motifSeq, s1Offset, s2Offset));
+
+                    if(diffs <= SBX_INV_INSERT_MOTIF_MAX_DIFFS)
+                    {
+                        hasMatch = true;
+                        break;
+                    }
+
+                    if(lowestMismatches < 0 || diffs < lowestMismatches)
+                    {
+                        lowestMismatches = diffs;
+                        lowestMotifSeqMatch = motifSeq;
+                    }
+                }
+
+                if(hasMatch)
+                    break;
+            }
+
+            if(!hasMatch)
+                assertTrue(false);
+        }
     }
 }
