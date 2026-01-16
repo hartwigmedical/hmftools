@@ -63,7 +63,10 @@ public class FindingRecordFactory
         Map<String, DriverGene> driverGenes = driverGenesMap(driverGeneTsv);
 
         LinxRecord linx = orangeRecord.linx();
-        boolean hasReliablePurity = orangeRecord.purple().fit().containsTumorCells();
+        PurpleRecord purple = orangeRecord.purple();
+
+        boolean hasReliablePurity = purple.fit().containsTumorCells();
+        boolean hasContainmination = purple.fit().qc().status().contains(PurpleQCStatus.FAIL_CONTAMINATION);
 
         FindingRecordBuilder builder = FindingRecordBuilder.builder()
                 .metaProperties(MetaPropertiesBuilder.builder()
@@ -78,10 +81,10 @@ public class FindingRecordFactory
         DriverFindingList<GainDeletion> gainDeletions = addPurpleFindings(builder, orangeRecord, clinicalTranscriptsModel, driverGenes);
 
         return builder.predictedTumorOrigin(createPredictedTumorOrigin(orangeRecord.cuppa()))
-                .homologousRecombination(createHomologousRecombination(orangeRecord.chord(), orangeRecord.purple(), linx, gainDeletions))
+                .homologousRecombination(createHomologousRecombination(orangeRecord.chord(), purple, linx, gainDeletions))
                 .viruses(createVirusFindings(orangeRecord.virusInterpreter()))
                 .hla(HlaAlleleFactory.createHlaAllelesFindings(orangeRecord, hasReliablePurity))
-                .pharmocoGenotypes(createPharmcoGenotypesFindings(orangeRecord.peach()))
+                .pharmocoGenotypes(createPharmcoGenotypesFindings(orangeRecord.peach(), hasContainmination))
                 .build();
     }
 
@@ -334,12 +337,13 @@ public class FindingRecordFactory
         };
     }
 
-    private static FindingList<PharmocoGenotype> createPharmcoGenotypesFindings(@Nullable Set<PeachGenotype> peachGenotypes)
+    private static FindingList<PharmocoGenotype> createPharmcoGenotypesFindings(@Nullable Set<PeachGenotype> peachGenotypes,
+            boolean hasContamination)
     {
         if(peachGenotypes != null)
         {
             return FindingListBuilder.<PharmocoGenotype>builder()
-                    .status(FindingsStatus.OK)
+                    .status(hasContamination ? FindingsStatus.NOT_RELIABLE : FindingsStatus.OK)
                     .all(peachGenotypes.stream().map(o ->
                                     PharmocoGenotypeBuilder.builder()
                                             .findingKey(FindingKeys.pharmacoGenotype(o.gene(), o.allele()))
