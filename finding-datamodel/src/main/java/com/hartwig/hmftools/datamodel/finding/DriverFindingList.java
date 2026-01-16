@@ -3,7 +3,6 @@ package com.hartwig.hmftools.datamodel.finding;
 import java.util.List;
 
 import com.hartwig.hmftools.datamodel.driver.DriverSource;
-import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
 
 import io.soabase.recordbuilder.core.RecordBuilder;
 import jakarta.validation.constraints.NotNull;
@@ -36,5 +35,11 @@ public record DriverFindingList<T extends Driver>(
     public DriverFindingList<T> reportableOnly()
     {
         return new DriverFindingList<>(status, query().reportedStatuses(ReportedStatus.REPORTED).results());
+    }
+
+    @NotNull
+    public DriverFindingList<T> filter(ReportedStatus... reportedStatuses)
+    {
+        return new DriverFindingList<>(status, query().reportedStatuses(reportedStatuses).results());
     }
 }
