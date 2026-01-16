@@ -85,9 +85,8 @@ object AlignmentUtil
             .withGapExtend(-GAP_EXTEND_SCORE)
             .withExpectedValueCutoff(expectedValueCutoff)
             .withNumThreads(numThreads)
-            .withSubjectBestHit(false)
+            .withSubjectBestHit(true)
             .withMaxTargetSeqs(MAX_TARGET_SEQUENCES)
-            .withKeepOutput(true)
             .build()
             .run(sequences)
     }
