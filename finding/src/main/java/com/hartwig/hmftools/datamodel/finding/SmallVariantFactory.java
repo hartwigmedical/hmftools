@@ -9,7 +9,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.driver.DriverSource;
-import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
 import com.hartwig.hmftools.datamodel.finding.clinicaltranscript.ClinicalTranscriptsModel;
 import com.hartwig.hmftools.datamodel.purple.PurpleAllelicDepth;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
@@ -100,12 +99,17 @@ final class SmallVariantFactory
 
         DriverGene driverGene = driverGeneMap.get(variant.gene());
         DriverCategory driverCategory = driverGene != null ? driverLikelihoodType(driverGene.likelihoodType()) : null;
+
+        boolean reportable = transcriptImpact.reported() || (otherImpact != null && otherImpact.reported());
+        DriverInterpretation driverInterpretation = DriverInterpretation.interpret(driver.driverLikelihood());
+        ReportedStatus reportedStatus = DriverUtil.reportedStatus(true, reportable, driverInterpretation);
+
         return SmallVariantBuilder.builder()
                 .driver(DriverFieldsBuilder.builder()
                         .findingKey(FindingKeys.smallVariant(sampleType, variant, transcriptImpact, isCanonical))
                         .driverSource(sampleType)
-                        .reportedStatus(ReportedStatus.REPORTED) // all drivers here are reported
-                        .driverInterpretation(DriverInterpretation.interpret(driver.driverLikelihood()))
+                        .reportedStatus(reportedStatus)
+                        .driverInterpretation(driverInterpretation)
                         .build()
                 )
                 .driverLikelihoodType(driverCategory)
