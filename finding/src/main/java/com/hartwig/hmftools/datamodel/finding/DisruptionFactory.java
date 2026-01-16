@@ -210,7 +210,36 @@ final class DisruptionFactory
                 .disruptedCopies(hasReliablePurity ? breakend.junctionCopyNumber() : null)
                 .undisruptedCopies(hasReliablePurity ? undisruptedCopyNumber : null)
                 .clusterId(determineClusterId(structuralVariants, breakend))
-                .disruptedRange(rangeField(breakendStart, breakendEnd))
+                .breakendStart(convert(breakendStart))
+                .breakendEnd(convert(breakendEnd))
+                .build();
+    }
+
+    @Nullable
+    static Breakend convert(@Nullable LinxBreakend linxBreakend)
+    {
+        if(linxBreakend == null)
+            return null;
+        return BreakendBuilder.builder()
+                .id(linxBreakend.id())
+                .svId(linxBreakend.svId())
+                .gene(linxBreakend.gene())
+                .chromosome(linxBreakend.chromosome())
+                .chromosomeBand(linxBreakend.chromosomeBand())
+                .transcript(linxBreakend.transcript())
+                .isCanonical(linxBreakend.isCanonical())
+                .geneOrientation(linxBreakend.geneOrientation())
+                .disruptive(linxBreakend.disruptive())
+                .reported(linxBreakend.reported())
+                .undisruptedCopyNumber(linxBreakend.undisruptedCopyNumber())
+                .type(linxBreakend.type())
+                .regionType(linxBreakend.regionType())
+                .codingType(linxBreakend.codingType())
+                .nextSpliceExonRank(linxBreakend.nextSpliceExonRank())
+                .orientation(linxBreakend.orientation())
+                .exonUp(linxBreakend.exonUp())
+                .exonDown(linxBreakend.exonDown())
+                .junctionCopyNumber(linxBreakend.junctionCopyNumber())
                 .build();
     }
 
@@ -283,52 +312,6 @@ final class DisruptionFactory
         }
 
         return pairedMap;
-    }
-
-    @NotNull
-    private static String rangeField(@Nullable LinxBreakend breakendStart, @Nullable LinxBreakend breakendEnd)
-    {
-        if(breakendStart != null && breakendEnd != null)
-        {
-            return exonDescription(breakendStart.exonUp(), breakendStart.exonDown()) + " -> " + exonDescription(breakendEnd.exonUp(),
-                    breakendEnd.exonDown());
-        }
-        if(breakendEnd == null)
-        {
-            assert breakendStart != null;
-            return exonDescription(breakendStart.exonUp(), breakendStart.exonDown()) + " Upstream";
-        }
-        else
-        {
-            return exonDescription(breakendEnd.exonUp(), breakendEnd.exonDown()) + " Downstream";
-        }
-    }
-
-    @NotNull
-    private static String exonDescription(int exonUp, int exonDown)
-    {
-        if(exonUp > 0)
-        {
-            if(exonUp == exonDown)
-            {
-                return String.format("Exon %d", exonUp);
-            }
-            else if(exonDown - exonUp == 1)
-            {
-                return String.format("Intron %d", exonUp);
-            }
-        }
-        else if(exonUp == 0 && (exonDown == 1 || exonDown == 2))
-        {
-            return "Promoter Region";
-        }
-
-        return String.format("ERROR up=%d, down=%d", exonUp, exonDown);
-    }
-
-    private static boolean isUpstream(@NotNull LinxBreakend breakend)
-    {
-        return breakend.geneOrientation() == LinxGeneOrientation.Upstream;
     }
 
     private record SvAndTranscriptKey(int variantId, @NotNull String transcriptId)
