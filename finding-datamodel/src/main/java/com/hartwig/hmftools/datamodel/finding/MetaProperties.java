@@ -3,10 +3,10 @@ package com.hartwig.hmftools.datamodel.finding;
 import com.hartwig.hmftools.datamodel.orange.ExperimentType;
 import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import io.soabase.recordbuilder.core.RecordBuilder;
+import jakarta.validation.constraints.NotNull;
 
 @RecordBuilder
 public record MetaProperties(

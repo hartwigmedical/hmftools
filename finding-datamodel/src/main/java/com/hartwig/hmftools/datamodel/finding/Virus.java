@@ -6,10 +6,10 @@ import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
 import com.hartwig.hmftools.datamodel.virus.VirusBreakendQCStatus;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import io.soabase.recordbuilder.core.RecordBuilder;
+import jakarta.validation.constraints.NotNull;
 
 @RecordBuilder
 public record Virus(

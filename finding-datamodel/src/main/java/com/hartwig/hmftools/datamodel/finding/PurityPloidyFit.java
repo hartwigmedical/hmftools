@@ -6,9 +6,8 @@ import com.hartwig.hmftools.datamodel.purple.PurpleFittedPurityMethod;
 import com.hartwig.hmftools.datamodel.purple.PurpleGermlineAberration;
 import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
 
-import org.jetbrains.annotations.NotNull;
-
 import io.soabase.recordbuilder.core.RecordBuilder;
+import jakarta.validation.constraints.NotNull;
 
 @RecordBuilder
 public record PurityPloidyFit(

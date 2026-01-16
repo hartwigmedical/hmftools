@@ -16,13 +16,11 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.TypeAdapterFactory;
 import com.hartwig.hmftools.datamodel.LocalDateAdapter;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import jakarta.validation.constraints.NotNull;
 
 public class FindingsJson
 {
 
-    @Nullable
     private static FindingsJson instance;
 
     private final Gson gson;

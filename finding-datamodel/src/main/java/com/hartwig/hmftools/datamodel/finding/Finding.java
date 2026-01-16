@@ -2,7 +2,7 @@ package com.hartwig.hmftools.datamodel.finding;
 
 import java.util.Comparator;
 
-import org.jetbrains.annotations.NotNull;
+import jakarta.validation.constraints.NotNull;
 
 public interface Finding
 {

@@ -3,10 +3,10 @@ package com.hartwig.hmftools.datamodel.finding;
 import java.util.List;
 
 import com.hartwig.hmftools.datamodel.driver.DriverSource;
-
-import org.jetbrains.annotations.NotNull;
+import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
 
 import io.soabase.recordbuilder.core.RecordBuilder;
+import jakarta.validation.constraints.NotNull;
 
 @RecordBuilder
 public record DriverFindingList<T extends Driver>(
@@ -21,13 +21,20 @@ public record DriverFindingList<T extends Driver>(
     }
 
     @NotNull
-    public List<T> germlineOnly()
+    public DriverFindingList<T> germlineOnly()
     {
-        return query().driverSources(DriverSource.GERMLINE).results();
+        return new DriverFindingList<>(status, query().driverSources(DriverSource.GERMLINE).results());
     }
 
-    public List<T> somaticOnly()
+    @NotNull
+    public DriverFindingList<T> somaticOnly()
     {
-        return query().driverSources(DriverSource.SOMATIC).results();
+        return new DriverFindingList<>(status, query().driverSources(DriverSource.SOMATIC).results());
+    }
+
+    @NotNull
+    public DriverFindingList<T> reportableOnly()
+    {
+        return new DriverFindingList<>(status, query().reportedStatuses(ReportedStatus.REPORTED).results());
     }
 }

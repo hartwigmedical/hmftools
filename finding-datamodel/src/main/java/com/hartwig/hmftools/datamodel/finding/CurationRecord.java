@@ -15,9 +15,8 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.TypeAdapterFactory;
 import com.hartwig.hmftools.datamodel.LocalDateAdapter;
 
-import org.jetbrains.annotations.NotNull;
-
 import io.soabase.recordbuilder.core.RecordBuilder;
+import jakarta.validation.constraints.NotNull;
 
 @RecordBuilder
 public record CurationRecord(

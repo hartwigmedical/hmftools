@@ -5,9 +5,8 @@ import com.hartwig.hmftools.datamodel.driver.DriverSource;
 import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
 import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
 
-import org.jetbrains.annotations.NotNull;
-
 import io.soabase.recordbuilder.core.RecordBuilder;
+import jakarta.validation.constraints.NotNull;
 
 @RecordBuilder
 public record GainDeletion(

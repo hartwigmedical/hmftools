@@ -3,12 +3,13 @@ package com.hartwig.hmftools.datamodel.finding;
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.driver.DriverSource;
 import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
+import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import io.soabase.recordbuilder.core.RecordBuilder;
+import jakarta.validation.constraints.NotNull;
 
 @RecordBuilder
 public record Disruption(
@@ -23,7 +24,8 @@ public record Disruption(
         @Nullable Double disruptedCopies,
         @Nullable Double undisruptedCopies,
         @Nullable Integer clusterId,
-        @NotNull String disruptedRange
+        @Nullable LinxBreakend breakendStart,
+        @Nullable LinxBreakend breakendEnd
 ) implements Driver
 {
     public enum Type
