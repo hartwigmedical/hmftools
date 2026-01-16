@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Set;
 
 import com.hartwig.hmftools.datamodel.driver.DriverSource;
-import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
 
 public class FindingsQuery<T extends Driver>
 {

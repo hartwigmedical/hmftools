@@ -19,12 +19,12 @@ import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.driver.DriverSource;
-import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
 import com.hartwig.hmftools.datamodel.finding.clinicaltranscript.ClinicalTranscriptFile;
 import com.hartwig.hmftools.datamodel.finding.clinicaltranscript.ClinicalTranscriptsModel;
 import com.hartwig.hmftools.datamodel.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
+import com.hartwig.hmftools.datamodel.linx.LinxUnreportableReason;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
 import com.hartwig.hmftools.datamodel.purple.Genes;
@@ -240,11 +240,13 @@ public class FindingRecordFactory
     {
         DriverInterpretation driverInterpretation = toDriverInterpretation(fusion.driverLikelihood());
 
+        boolean isDriverGene = !fusion.unreportedReasons().contains(LinxUnreportableReason.NOT_KNOWN);
+
         return FusionBuilder.builder()
                 .driver(DriverFieldsBuilder.builder()
                         .findingKey(FindingKeys.fusion(sampleType, fusion))
                         .driverSource(sampleType)
-                        .reportedStatus(ReportedStatus.REPORTED)
+                        .reportedStatus(DriverUtil.reportedStatus(isDriverGene, fusion.reported(), driverInterpretation))
                         .driverInterpretation(driverInterpretation)
                         .build()
                 )
@@ -303,7 +305,10 @@ public class FindingRecordFactory
                         .driver(DriverFieldsBuilder.builder()
                                 .findingKey(FindingKeys.virus(v))
                                 .driverSource(DriverSource.SOMATIC)
-                                .reportedStatus(v.reported() ? ReportedStatus.REPORTED : ReportedStatus.NOT_REPORTED)
+                                .reportedStatus(DriverUtil.reportedStatus(
+                                        true,
+                                        v.reported(),
+                                        virusDriverInterpretation(v.driverLikelihood())))
                                 .driverInterpretation(virusDriverInterpretation(v.driverLikelihood()))
                                 .build()
                         )
