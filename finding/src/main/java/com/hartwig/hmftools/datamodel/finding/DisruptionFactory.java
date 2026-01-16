@@ -10,7 +10,6 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.driver.DriverSource;
-import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxDriver;
 import com.hartwig.hmftools.datamodel.linx.LinxGeneOrientation;
@@ -189,15 +188,13 @@ final class DisruptionFactory
             throw new IllegalStateException("Disruption with no breakend");
         }
 
-        ReportedStatus reportedStatus = breakend.reported() ? ReportedStatus.REPORTED : ReportedStatus.NOT_REPORTED;
-
         return DisruptionBuilder.builder()
                 .driver(
                         DriverFieldsBuilder.builder()
                                 .findingKey(FindingKeys.disruption(sourceSample, breakend))
                                 .driverSource(sourceSample)
-                                .reportedStatus(reportedStatus)
-                                .driverInterpretation(DriverInterpretation.HIGH) // TODOHWL: fix
+                                .reportedStatus(breakend.reported() ? ReportedStatus.REPORTED : ReportedStatus.NOT_REPORTED)
+                                .driverInterpretation(breakend.reported() ? DriverInterpretation.HIGH : DriverInterpretation.LOW) // TODOHWL: fix
                                 .build()
                 )
                 .type(disruptionType)
