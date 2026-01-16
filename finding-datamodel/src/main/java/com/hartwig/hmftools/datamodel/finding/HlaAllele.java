@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.datamodel.finding;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import io.soabase.recordbuilder.core.RecordBuilder;
+import jakarta.validation.constraints.NotNull;
 
 @RecordBuilder
 public record HlaAllele(
