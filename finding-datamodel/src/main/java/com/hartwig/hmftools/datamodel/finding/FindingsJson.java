@@ -2,14 +2,19 @@ package com.hartwig.hmftools.datamodel.finding;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.Reader;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.ServiceLoader;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -51,27 +56,37 @@ public class FindingsJson
     @NotNull
     public FindingRecord read(@NotNull Path findingsJsonFilePath) throws IOException
     {
-        return read(Files.newBufferedReader(findingsJsonFilePath));
+        InputStream inputStream = new FileInputStream(findingsJsonFilePath.toFile());
+        if(findingsJsonFilePath.toString().endsWith(".gz"))
+        {
+            inputStream = new GZIPInputStream(inputStream);
+        }
+        return read(inputStream);
     }
 
     @NotNull
     public FindingRecord read(@NotNull InputStream inputStream) throws IOException
     {
-        try(BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream)))
-        {
-            return read(bufferedReader);
-        }
+        return read(new InputStreamReader(inputStream));
     }
 
     @NotNull
     public FindingRecord read(@NotNull Reader reader) throws IOException
     {
-        return gson.fromJson(reader, FindingRecord.class);
+        try(BufferedReader bufferedReader = new BufferedReader(reader))
+        {
+            return gson.fromJson(bufferedReader, FindingRecord.class);
+        }
     }
 
     public void write(@NotNull FindingRecord findingRecord, @NotNull Path outputFilePath) throws IOException
     {
-        try(BufferedWriter writer = Files.newBufferedWriter(outputFilePath))
+        OutputStream outputStream = new FileOutputStream(outputFilePath.toFile());
+        if(outputFilePath.toString().endsWith(".gz"))
+        {
+            outputStream = new GZIPOutputStream(outputStream);
+        }
+        try(BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream)))
         {
             gson.toJson(findingRecord, FindingRecord.class, writer);
         }
