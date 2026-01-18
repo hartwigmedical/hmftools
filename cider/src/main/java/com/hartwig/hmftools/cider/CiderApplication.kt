@@ -61,6 +61,9 @@ class CiderApplication(configBuilder: ConfigBuilder)
 
         val vjReadLayoutAdaptor = VJReadLayoutBuilder(mParams.numBasesToTrim, mParams.minBaseQuality)
         val layoutBuildResults = buildLayouts(vjReadLayoutAdaptor, readProcessor.vjReadCandidates, mParams.threadCount)
+        val mateLayoutReads = readProcessor.vjMateCandidates
+            .groupBy({ it.read.readName }, vjReadLayoutAdaptor::readCandidateToLayoutRead)
+            .mapValues { it.value.filterNotNull() }
 
         val vdjBuilderBlosumSearcher = AnchorBlosumSearcher(
             ciderGeneDatastore,
@@ -73,7 +76,7 @@ class CiderApplication(configBuilder: ConfigBuilder)
         )
 
         val vdjSequences: List<VDJSequence> = vdjSeqBuilder.buildVDJSequences(
-            layoutBuildResults.mapValues { (_, v) -> v.layouts }, mParams.threadCount)
+            layoutBuildResults.mapValues { (_, v) -> v.layouts }, mateLayoutReads, mParams.threadCount)
         var primerMatchList: List<VdjPrimerMatch> = emptyList()
 
         if (mParams.primerCsv != null)
@@ -154,7 +157,9 @@ class CiderApplication(configBuilder: ConfigBuilder)
         }
 
         processBam(mParams.bamPath, readerFactory, genomeRegions, asyncBamRecordHander, mParams.threadCount)
-        sLogger.info("found {} VJ read records", readProcessor.allMatchedReads.size)
+        readProcessor.processCandidateMates()
+
+        sLogger.info("found {} VJ read records with {} mates", readProcessor.allMatchedReads.size, readProcessor.vjMateCandidates.size)
     }
 
     // Build the consensus layout of all reads
@@ -176,7 +181,6 @@ class CiderApplication(configBuilder: ConfigBuilder)
             {
                 val readsOfGeneType = readCandidates
                     .filter { o: VJReadCandidate -> o.vjGeneType === geneType }
-                    .toList()
 
                 val workerTask: Callable<VJReadLayoutBuilder.LayoutBuildResult> = Callable {
                     vjReadLayoutAdaptor.buildLayouts(

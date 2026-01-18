@@ -71,11 +71,6 @@ class VDJSequence(
         return layout.consensusSequenceString().substring(layoutSliceStart, layoutSliceEnd)
     }
 
-    val isFullyRearranged: Boolean get()
-    {
-        return vAnchor != null && jAnchor != null
-    }
-
     val vAnchorBoundary: Int? get()
     {
         return vAnchor?.anchorBoundary
@@ -152,20 +147,6 @@ class VDJSequence(
     {
         return if (jAnchor == null) null else sequence.substring(jAnchorBoundary!!)
     }
-
-    /*
-    val vAnchorAA: String get()
-    {
-        val vAnchorSeq = vAnchorSequence
-
-        // codon align
-        return Codons.aminoAcidFromBases(vAnchorSeq.drop(Math.floorMod(vAnchorSeq.length, 3)))
-    }
-
-    val jAnchorAA: String get()
-    {
-        return Codons.aminoAcidFromBases(jAnchorSequence)
-    }*/
 
     // does not include the C and W
     val cdr3SequenceShort: String get()

@@ -23,6 +23,9 @@ object CiderConstants
     const val LAYOUT_MIN_READ_OVERLAP_BASES: Int = 20
     const val MIN_VJ_LAYOUT_JOIN_OVERLAP_BASES: Int = 20
 
+    // Maximum number of mismatches between the consensus and a mate read attempting to extend it.
+    const val LAYOUT_MATE_EXTEND_MISMATCHES_MAX = 1
+
     // word size of 8 is experimentally decided to provide good speed up in finding VJ overlaps
     const val VJ_JOIN_HASH_WORD_SIZE: Int = 8
     const val MIN_ANCHOR_LENGTH_BASES: Int = 3
