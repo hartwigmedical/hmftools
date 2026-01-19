@@ -5,6 +5,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeFile
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion
 import com.hartwig.hmftools.common.perf.TaskExecutor
+import com.hartwig.hmftools.common.sequencing.SequencingType
 import com.hartwig.hmftools.common.utils.config.CommonConfig.*
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder.getConfigDecimal
@@ -31,7 +32,8 @@ data class TealCommonParams(
     val refGenomeFile: String? = null,
     val outputDir: String? = null,
     val threadCount: Int = 1,
-    val refGenomeVersion: RefGenomeVersion = RefGenomeVersion.V37
+    val refGenomeVersion: RefGenomeVersion = RefGenomeVersion.V37,
+    val sequenceType: SequencingType = SequencingType.ILLUMINA
 )
 {
     constructor(configBuilder: ConfigBuilder): this(
@@ -42,7 +44,9 @@ data class TealCommonParams(
         refGenomeFile = configBuilder.getValue(RefGenomeSource.REF_GENOME, null),
         outputDir = FileWriterUtils.parseOutputDir(configBuilder),
         threadCount = TaskExecutor.parseThreads(configBuilder),
-        refGenomeVersion = RefGenomeVersion.from(configBuilder))
+        refGenomeVersion = RefGenomeVersion.from(configBuilder),
+        sequenceType = SequencingType.parseConfig(configBuilder)
+    )
 
     fun getRefGenomeVersionStr() : String
     {
@@ -122,6 +126,7 @@ data class TealCommonParams(
             FileWriterUtils.addOutputDir(configBuilder)
             TaskExecutor.addThreadOptions(configBuilder)
             RefGenomeSource.addRefGenomeVersion(configBuilder)
+            SequencingType.registerConfig(configBuilder)
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.teal.tellength
 
+import com.hartwig.hmftools.common.sequencing.SequencingType
 import com.hartwig.hmftools.teal.ReadGroup
 import htsjdk.samtools.SAMRecord
 import junit.framework.TestCase
@@ -10,7 +11,8 @@ class TelomereLengthCalcTest
     @Test
     fun testTelomereLengthCalcZeroRead()
     {
-        val telomereLengthCalc = TelomereLengthCalc(1.0, 2.0, 0.0,
+        val telomereLengthCalc = TelomereLengthCalc(
+            SequencingType.ILLUMINA, 1.0, 2.0, 0.0,
             100.0, 100.0, 1000.0)
         TestCase.assertEquals(0.0, telomereLengthCalc.calcTelomereLength())
         TestCase.assertEquals(0.0, telomereLengthCalc.calcTumorTelomereLength())
@@ -19,7 +21,7 @@ class TelomereLengthCalcTest
     @Test
     fun testTelomereLengthCalc()
     {
-        val telomereLengthCalc = TelomereLengthCalc(1.0, 2.0, 0.0,
+        val telomereLengthCalc = TelomereLengthCalc(SequencingType.ILLUMINA, 1.0, 2.0, 0.0,
             2.0, 2.0, 100.0)
 
         // create a read group

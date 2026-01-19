@@ -74,6 +74,7 @@ class TelLengthApp
         telbamReader.read()
 
         val analyser = TelomereLengthCalc(
+            sequencingType = params.sequencingType,
             purity = params.purity,
             ploidy = params.ploidy,
             duplicateProportion = params.duplicatePercent,

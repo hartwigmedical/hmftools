@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.teal.tellength
 
+import com.hartwig.hmftools.common.sequencing.SequencingType
 import com.hartwig.hmftools.common.teal.ImmutableTelomereLength
 import com.hartwig.hmftools.common.teal.TelomereLengthFile
 import com.hartwig.hmftools.teal.ReadGroup
-import com.hartwig.hmftools.teal.TealUtils
 import org.apache.logging.log4j.Level
 import org.apache.logging.log4j.LogManager
 import java.util.*
@@ -11,6 +11,7 @@ import java.util.*
 // analyse the telo bam and come up with our own score
 // of F1, F2, F4
 class TelomereLengthCalc(
+    val sequencingType: SequencingType,
     val purity: Double,
     val ploidy: Double,
     val duplicateProportion: Double,
@@ -23,15 +24,7 @@ class TelomereLengthCalc(
     // following fields used to calculate mean read length
     private var readLengthSum: Long = 0
     private var numReads: Long = 0
-
-    enum class FragmentType
-    {
-        UNKNOWN,
-        NOT_TELOMERE,
-        F1, // both sides telomeric
-        F2, // one side telomeric C rich
-        F4  // one side telomeric G rich
-    }
+    private val fragmentClassifier = FragmentClassifier(sequencingType)
 
     private val mFragmentTypeCount: MutableMap<FragmentType, Int> = EnumMap(FragmentType::class.java)
     fun getFragmentTypeCount(fragType: FragmentType): Int
@@ -60,77 +53,11 @@ class TelomereLengthCalc(
     fun onReadGroup(readGroup: ReadGroup)
     {
         // we want to classify this read group
-        val fragType = classifyFragment(readGroup)
+        val fragType = fragmentClassifier.classifyFragment(readGroup)
         mFragmentTypeCount[fragType] = mFragmentTypeCount.getOrDefault(fragType, 0) + 1
 
         readGroup.allReads.forEach { r -> readLengthSum += r.readLength }
         numReads += readGroup.allReads.size
-    }
-
-    fun classifyFragment(readGroup: ReadGroup): FragmentType
-    {
-        if (readGroup.Reads.size < 2)
-        {
-            return FragmentType.UNKNOWN
-        }
-
-        // we want to check
-        val read1 = readGroup.firstOfPair
-        val read2 = readGroup.secondOfPair
-
-        if (read1 == null || read2 == null)
-        {
-            return FragmentType.UNKNOWN
-        }
-
-        var seq1 = read1.readString!!
-        var seq2 = read2.readString!!
-
-        // qual_str1 = read1['BaseQualities']
-        // qual_str2 = read2['BaseQualities']
-        if (read1.readNegativeStrandFlag)
-        {
-            seq1 = TealUtils.reverseComplementSequence(seq1)
-        }
-        if (read2.readNegativeStrandFlag)
-        {
-            seq2 = TealUtils.reverseComplementSequence(seq2)
-        }
-
-        // try each one in tern
-        var fragType = classifyFragment(seq1, seq2)
-        if (fragType == FragmentType.NOT_TELOMERE)
-        {
-            fragType = classifyFragment(seq2, seq1)
-        }
-        return fragType
-    }
-
-    private fun classifyFragment(readPairG: String, readPairC: String): FragmentType
-    {
-        val isGTelomeric = TealUtils.isLikelyGTelomeric(readPairG)
-        val isCTelomeric = TealUtils.isLikelyCTelomeric(readPairC)
-
-        // first we want to find the TTAGGG motif, then fill it up backwards
-        if (isGTelomeric && isCTelomeric)
-        {
-            return FragmentType.F1
-        }
-        if (isGTelomeric)
-        {
-            // only g is telomeric
-            return FragmentType.F4
-        }
-        return if (isCTelomeric)
-        {
-            // only C term is telomeric, could be F2a or F2b
-            FragmentType.F2
-        }
-        else
-        {
-            // not telomeric
-            FragmentType.NOT_TELOMERE
-        }
     }
 
     fun calcGcBiasAdj(): Double

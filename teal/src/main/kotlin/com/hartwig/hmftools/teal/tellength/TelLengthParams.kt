@@ -2,6 +2,7 @@ package com.hartwig.hmftools.teal.tellength
 
 import com.beust.jcommander.Parameter
 import com.beust.jcommander.ParameterException
+import com.hartwig.hmftools.common.sequencing.SequencingType
 
 enum class SampleType
 {
@@ -17,6 +18,9 @@ data class TelLengthParams
 
     @Parameter(names = ["-type"], required = true, description = "Type of sample")
     var sampleType: SampleType? = null,
+
+    @Parameter(names = ["-" + SequencingType.SEQUENCING_TYPE_CFG], description = "Sequencing types")
+    var sequencingType: SequencingType = SequencingType.ILLUMINA,
 
     @Parameter(names = ["-output_file"], required = true, description = "Path to output tsv file")
     var outputFile: String? = null,
