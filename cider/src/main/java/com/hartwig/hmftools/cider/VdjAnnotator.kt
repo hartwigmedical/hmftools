@@ -142,36 +142,6 @@ class VdjAnnotator(private val adaptor: IVJReadLayoutAdaptor,
             alignmentAnnotation = alignmentAnnotation)
     }
 
-    fun findAnchorByBlosum(vdj: VDJSequence, vj: VJ) : AnchorBlosumMatch?
-    {
-        // see if we can find an anchor in this sequence
-        val anchorBlosumMatch: AnchorBlosumMatch?
-        if (vj == VJ.V)
-        {
-            if (vdj.jAnchor == null)
-                return null
-
-            anchorBlosumMatch = blosumSearcher.searchForAnchor(
-                vdj.sequence, vdj.jAnchor.geneType.pairedVjGeneTypes(),
-                IAnchorBlosumSearcher.Mode.ALLOW_NEG_SIMILARITY,
-                0,
-                vdj.jAnchor.anchorBoundary)
-        }
-        else
-        {
-            if (vdj.vAnchor == null)
-                return null
-
-            anchorBlosumMatch = blosumSearcher.searchForAnchor(
-                vdj.sequence, vdj.vAnchor.geneType.pairedVjGeneTypes(),
-                IAnchorBlosumSearcher.Mode.ALLOW_NEG_SIMILARITY,
-                vdj.vAnchor.anchorBoundary,
-                vdj.length)
-        }
-
-        return anchorBlosumMatch
-    }
-
     // TODO: probably simpler to just directly count the number of split reads instead of
     // trying to see if any split location straddle a boundary
     //

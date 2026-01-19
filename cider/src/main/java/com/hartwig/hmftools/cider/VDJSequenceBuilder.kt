@@ -1,19 +1,26 @@
 package com.hartwig.hmftools.cider
 
+import com.hartwig.hmftools.cider.CiderConstants.LAYOUT_MIN_READ_OVERLAP_BASES
+import com.hartwig.hmftools.cider.CiderConstants.LAYOUT_MATE_EXTEND_MISMATCHES_MAX
 import com.hartwig.hmftools.cider.CiderConstants.MIN_ANCHOR_LENGTH_BASES
 import com.hartwig.hmftools.cider.layout.ReadLayout
 import com.hartwig.hmftools.common.codon.Codons
 import com.hartwig.hmftools.common.perf.TaskExecutor
+import htsjdk.samtools.util.SequenceUtil.N
 import org.apache.logging.log4j.LogManager
 import java.util.*
 import kotlin.collections.ArrayList
+import kotlin.math.max
+import kotlin.math.min
 
 class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
                          private val anchorBlosumSearcher: IAnchorBlosumSearcher,
                          private val minBaseQuality: Byte,
                          private val minOverlappedBases: Int)
 {
-    fun buildVDJSequences(layoutMultimap: Map<VJGeneType, List<ReadLayout>>, threadCount: Int) : List<VDJSequence>
+    fun buildVDJSequences(
+        layoutMultimap: Map<VJGeneType, List<ReadLayout>>, mateLayoutReads: Map<String, List<ReadLayout.Read>>, threadCount: Int
+    ) : List<VDJSequence>
     {
         // Care is taken here to populate this list in a deterministic order, otherwise the output can be somewhat different between runs,
         // which is confusing.
@@ -28,7 +35,7 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
         }
 
         // try to join together the layouts
-        joinVjLayouts(oneSidedLayouts, vdjList)
+        joinVjLayouts(oneSidedLayouts, mateLayoutReads, vdjList)
         sLogger.info("built {} vdj by joining V with J layouts", vdjList.size)
 
         // for the remaining ones, we try to complete with blosum
@@ -90,7 +97,7 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
     }
 
     private fun joinVjLayouts(
-        oneSidedLayouts: Map<VJGeneType, MutableList<ReadLayout>>,
+        oneSidedLayouts: Map<VJGeneType, MutableList<ReadLayout>>, mateLayoutReads: Map<String, List<ReadLayout.Read>>,
         vdjList: MutableList<VDJSequence>)
     {
         val geneTypes = oneSidedLayouts.keys.filter { vjGeneType -> vjGeneType.vj == VJ.V }.sorted()
@@ -101,24 +108,25 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
                 joinVjLayouts(vGeneType, jGeneType,
                     oneSidedLayouts[vGeneType] ?: ArrayList(),
                     oneSidedLayouts[jGeneType] ?: ArrayList(),
+                    mateLayoutReads,
                     vdjList)
             }
         }
     }
 
-    private fun joinVjLayouts(vGeneType: VJGeneType, jGeneType: VJGeneType,
-                              vLayouts: MutableList<ReadLayout>, jLayouts: MutableList<ReadLayout>,
-                              vdjList: MutableList<VDJSequence>)
+    private fun joinVjLayouts(
+        vGeneType: VJGeneType, jGeneType: VJGeneType, vLayouts: MutableList<ReadLayout>, jLayouts: MutableList<ReadLayout>,
+        mateLayoutReads: Map<String, List<ReadLayout.Read>>, vdjList: MutableList<VDJSequence>)
     {
-        joinVjLayoutsBySharedReads(vGeneType, jGeneType, vLayouts, jLayouts, vdjList)
-        joinVjLayoutsByWordHash(vGeneType, jGeneType, vLayouts, jLayouts, vdjList)
+        joinVjLayoutsBySharedReads(vGeneType, jGeneType, vLayouts, jLayouts, mateLayoutReads, vdjList)
+        joinVjLayoutsByWordHash(vGeneType, jGeneType, vLayouts, jLayouts, mateLayoutReads, vdjList)
     }
 
     // this method of joining V and J layout finds the candidate matches by looking for layouts
     // that share reads. The layout that share the largest number of reads are tested first.
-    private fun joinVjLayoutsBySharedReads(vGeneType: VJGeneType, jGeneType: VJGeneType,
-                              vLayouts: MutableList<ReadLayout>, jLayouts: MutableList<ReadLayout>,
-                              vdjList: MutableList<VDJSequence>)
+    private fun joinVjLayoutsBySharedReads(
+        vGeneType: VJGeneType, jGeneType: VJGeneType, vLayouts: MutableList<ReadLayout>, jLayouts: MutableList<ReadLayout>,
+        mateLayoutReads: Map<String, List<ReadLayout.Read>>, vdjList: MutableList<VDJSequence>)
     {
         val consumedLayouts: MutableSet<ReadLayout> = Collections.newSetFromMap(IdentityHashMap())
 
@@ -156,7 +164,7 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
 
             for ((jLayout, _) in jCandidates)
             {
-                val vdj: VDJSequence? = tryOverlapVJ(vLayout, jLayout, vGeneType, jGeneType)
+                val vdj: VDJSequence? = tryOverlapVJ(vLayout, jLayout, vGeneType, jGeneType, mateLayoutReads)
 
                 if (vdj != null)
                 {
@@ -185,9 +193,9 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
     // until the J anchor start. The reason for doing it this way is that the V and J anchor sequences
     // are very repetitive and cause too many spurious hash matches (80% of j layouts will match with any
     // v layouts from my tests)
-    internal fun joinVjLayoutsByWordHash(vGeneType: VJGeneType, jGeneType: VJGeneType,
-                                vLayouts: MutableList<ReadLayout>, jLayouts: MutableList<ReadLayout>,
-                                vdjList: MutableList<VDJSequence>)
+    internal fun joinVjLayoutsByWordHash(
+        vGeneType: VJGeneType, jGeneType: VJGeneType, vLayouts: MutableList<ReadLayout>, jLayouts: MutableList<ReadLayout>,
+        mateLayoutReads: Map<String, List<ReadLayout.Read>>, vdjList: MutableList<VDJSequence>)
     {
         // for v and j layouts that have not found a match yet,
         // we calculate a key for each 5 high qual bases. The hash is actually a match since
@@ -205,7 +213,7 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
 
             // for j layout, we only hash bases up to the anchor start, reason is that the anchor sequences
             // are too repetitive to make hashing meaningful
-            seq = seq.substring(0, Math.min(layoutAnchorRange.first, seq.length))
+            seq = seq.substring(0, min(layoutAnchorRange.first, seq.length))
 
             val hashList = VdjBuilderUtils.calcSequenceWordHashes(seq, CiderConstants.VJ_JOIN_HASH_WORD_SIZE)
             for (hash in hashList)
@@ -231,7 +239,7 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
 
             // for v layout, we only hash from anchor end, reason is that the anchor sequences
             // are too repetitive to make hashing meaningful
-            seq = seq.substring(Math.max(layoutAnchorRange.last + 1, 0), seq.length)
+            seq = seq.substring(max(layoutAnchorRange.last + 1, 0), seq.length)
 
             val hashList = VdjBuilderUtils.calcSequenceWordHashes(seq, CiderConstants.VJ_JOIN_HASH_WORD_SIZE)
 
@@ -255,7 +263,7 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
 
             for ((jLayout, _) in jCandidates)
             {
-                val vdj: VDJSequence? = tryOverlapVJ(vLayout, jLayout, vGeneType, jGeneType)
+                val vdj: VDJSequence? = tryOverlapVJ(vLayout, jLayout, vGeneType, jGeneType, mateLayoutReads)
 
                 if (vdj != null)
                 {
@@ -335,8 +343,8 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
             jAnchorRange = layoutAnchorRange
         }
 
-        val layoutStart = Math.max(vAnchorRange.first, 0)
-        val layoutEnd = Math.min(jAnchorRange.last + 1, layout.length) // inclusive to exclusive
+        val layoutStart = max(vAnchorRange.first, 0)
+        val layoutEnd = min(jAnchorRange.last + 1, layout.length) // inclusive to exclusive
 
         // make sure we shift the anchor ranges as well now we trimmed the left
         vAnchorRange = vAnchorRange.first - layoutStart .. vAnchorRange.last - layoutStart
@@ -389,7 +397,9 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
     }
 
     // we should probably say allow some more leeway if a position has very little support
-    internal fun tryOverlapVJ(vLayout: ReadLayout, jLayout: ReadLayout, vLayoutGeneType: VJGeneType, jLayoutGeneType: VJGeneType): VDJSequence?
+    internal fun tryOverlapVJ(
+        vLayout: ReadLayout, jLayout: ReadLayout, vLayoutGeneType: VJGeneType, jLayoutGeneType: VJGeneType,
+        mateLayoutReads: Map<String, List<ReadLayout.Read>>): VDJSequence?
     {
         assert(vLayoutGeneType.vj == VJ.V)
         assert(jLayoutGeneType.vj == VJ.J)
@@ -427,6 +437,10 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
         val combinedVjLayout: ReadLayout = ReadLayout.merge(vLayout, jLayout, 0, jAlignedPositionShift, minBaseQuality)
         combinedVjLayout.id = "${vLayout.id};${jLayout.id}"
 
+        // Extend the layout sequence by adding mates of reads in the layout.
+        // These mates wouldn't have been included earlier because they are not close enough to the anchor.
+        tryExtendCombinedLayoutWithMates(combinedVjLayout, mateLayoutReads, vLayoutGeneType, jLayoutGeneType, jAlignedPositionShift)
+
         // next we want to work out where the anchor ranges are in the combined layout
         // we use "extrapolated" anchor range, the reason is that the layout might contain only half
         // of the anchor, if we do not use extrapolated anchor range then the final anchor length
@@ -454,7 +468,7 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
             vLayout.consensusSequenceString(), jLayout.consensusSequenceString(), combinedVjLayout.consensusSequenceString())
 
         val layoutSliceStart: Int
-        val layoutSliceEnd = Math.min(jAnchorRange.last + 1, combinedVjLayout.length) // inclusive to exclusive
+        val layoutSliceEnd = min(jAnchorRange.last + 1, combinedVjLayout.length) // inclusive to exclusive
 
         var vAnchorBoundary = vAnchorRange.last + 1
         var jAnchorBoundary = jAnchorRange.first
@@ -471,7 +485,7 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
         //if (jAnchorBoundary - vAnchorBoundary >= 0)
         if (vAnchorRange.last < jAnchorRange.first)
         {
-            layoutSliceStart = Math.max(vAnchorRange.first, 0)
+            layoutSliceStart = max(vAnchorRange.first, 0)
             vAnchorBoundary -= layoutSliceStart
             jAnchorBoundary -= layoutSliceStart
 
@@ -524,10 +538,10 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
         {
             val vAnchorRange = layoutAnchorRange
 
-            val layoutStart = Math.max(vAnchorRange.first, 0)
+            val layoutStart = max(vAnchorRange.first, 0)
 
             // we limit one sided VDJ post V anchor length
-            val layoutEnd = Math.min(layout.length, vAnchorRange.last + 1 + CiderConstants.PARTIAL_VDJ_UNANCHORED_LENGTH_BASES)
+            val layoutEnd = min(layout.length, vAnchorRange.last + 1 + CiderConstants.PARTIAL_VDJ_UNANCHORED_LENGTH_BASES)
 
             vAnchor = createVJAnchorByReadMatch(
                 anchorBoundary = vAnchorRange.last + 1 - layoutStart,
@@ -545,8 +559,8 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
             val jAnchorRange = layoutAnchorRange
 
             // we limit one sided VDJ pre J anchor length
-            val layoutStart = Math.max(0, jAnchorRange.first - CiderConstants.PARTIAL_VDJ_UNANCHORED_LENGTH_BASES)
-            val layoutEnd = Math.min(layout.length, jAnchorRange.last + 1)
+            val layoutStart = max(0, jAnchorRange.first - CiderConstants.PARTIAL_VDJ_UNANCHORED_LENGTH_BASES)
+            val layoutEnd = min(layout.length, jAnchorRange.last + 1)
 
             jAnchor = createVJAnchorByReadMatch(
                 anchorBoundary = jAnchorRange.first - layoutStart,
@@ -572,7 +586,6 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
             when (vjLayoutAdaptor.getAnchorMatchMethod(layout))
             {
                 VJReadCandidate.MatchMethod.ALIGN -> "align"
-                VJReadCandidate.MatchMethod.EXACT -> "exact"
                 VJReadCandidate.MatchMethod.BLOSUM -> "blosum"
             }
 
@@ -580,6 +593,91 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
 
         return VJAnchorByReadMatch(vjGeneType.vj, vjGeneType, anchorBoundary, matchMethodStr,
             templateAnchorSeq, layout.reads.size)
+    }
+
+    private fun tryExtendCombinedLayoutWithMates(
+        combinedVjLayout: ReadLayout, mateLayoutReads: Map<String, List<ReadLayout.Read>>,
+        vLayoutGeneType: VJGeneType, jLayoutGeneType: VJGeneType, jAlignedPositionShift: Int)
+    {
+        val mates = combinedVjLayout.reads.flatMap { mateLayoutReads[it.readKey.readName] ?: emptyList() }
+            .mapNotNull {
+                val mateCandidate = vjLayoutAdaptor.toReadCandidate(it)
+                val canExtend = mateCandidate.vjGeneType == vLayoutGeneType || mateCandidate.vjGeneType == jLayoutGeneType
+                if (canExtend)
+                {
+                    // The combined layout is relative to the V side. So if the read is for the J side, need to adjust its aligned position.
+                    if (mateCandidate.vjGeneType.vj == VJ.J) it.copy(it.alignedPosition + jAlignedPositionShift) else it
+                }
+                else null
+            }
+        tryExtendLayoutBySequence(combinedVjLayout, mates)
+    }
+
+    private fun tryExtendLayoutBySequence(layout: ReadLayout, reads: List<ReadLayout.Read>)
+    {
+        // Iteratively: collect reads which overlap the layout (by aligned position), check their sequence, and add them to the layout if
+        // they mostly match.
+
+        val remainingReads = reads.indices.toMutableSet()
+        while (true)
+        {
+            //  layout aligned pos:              |
+            //  consensus:        ----------------------------------
+            //  reads: V       ----------------  |
+            //         V ------------------      |
+            //         J                         |          -----------------
+            //         J                         |               ----------------
+            //         J                         |                            -------------
+            // Aligned position is the last base of the V anchor.
+
+            // Consider all reads which overlap the current assembled sequence.
+            val candidateReads = remainingReads.mapNotNull { readIndex ->
+                val read = reads[readIndex]
+                val readStartInLayout = layout.alignedPosition - read.alignedPosition
+                val readEndInLayout = readStartInLayout + read.readLength
+                val readLayoutOverlap = min(readEndInLayout, layout.length) - max(readStartInLayout, 0)
+                if (readLayoutOverlap >= LAYOUT_MIN_READ_OVERLAP_BASES) Pair(readIndex, readStartInLayout) else null
+            }
+
+            // Iterate over the sequences of the candidate reads to determine if they sufficiently match the assembly.
+            val candidateReadMismatches = Array(candidateReads.size) { 0 }
+            for ((position, consensusBase) in layout.consensusSequence().withIndex())
+            {
+                for (candidateReadIndex in candidateReads.indices)
+                {
+                    val (readIndex, readStartInLayout) = candidateReads[candidateReadIndex]
+                    val readSequence = reads[readIndex].sequence
+                    val readPosition = position - readStartInLayout
+                    if (readPosition >= 0 && readPosition < readSequence.size)
+                    {
+                        val readBase = readSequence[readPosition]
+                        val basesMatch = readBase == consensusBase || readBase == N
+                        if (!basesMatch)
+                        {
+                            candidateReadMismatches[candidateReadIndex]++
+                        }
+                    }
+                }
+            }
+
+            val matchingReadIndices = candidateReads.indices
+                .filter { candidateReadMismatches[it] <= LAYOUT_MATE_EXTEND_MISMATCHES_MAX }
+                .map { candidateReads[it].first }
+            if (matchingReadIndices.isEmpty())
+            {
+                // No more reads can extend the sequence.
+                break
+            }
+            else
+            {
+                for (readIndex in matchingReadIndices)
+                {
+                    remainingReads.remove(readIndex)
+                    layout.addRead(reads[readIndex], minBaseQuality)
+                }
+                // Next iteration, we may be able to overlap more reads now.
+            }
+        }
     }
 
     companion object
@@ -685,7 +783,7 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
                     if (s1.value >= 1 && s2.value >= 1)
                     {
                         ++numBaseDiff
-                        maxReadsAtDiff = Math.max(maxReadsAtDiff, Math.min(s1.value, s2.value))
+                        maxReadsAtDiff = max(maxReadsAtDiff, min(s1.value, s2.value))
                     }
 
                     // we say they are the same if there is only 1 base difference

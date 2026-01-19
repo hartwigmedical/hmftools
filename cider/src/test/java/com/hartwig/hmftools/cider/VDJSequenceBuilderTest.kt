@@ -123,7 +123,7 @@ class VDJSequenceBuilderTest
         mockVjReadLayoutAdaptor.anchorRangeMap[jLayout] = 12 until 17
 
         // now we should be able to build a VDJ sequence
-        val vdjSeq = vdjSeqBuilder.tryOverlapVJ(vLayout, jLayout, VJGeneType.TRAV, VJGeneType.TRAJ)
+        val vdjSeq = vdjSeqBuilder.tryOverlapVJ(vLayout, jLayout, VJGeneType.TRAV, VJGeneType.TRAJ, emptyMap())
 
         assertNotNull(vdjSeq)
         assertNotNull(vdjSeq.vAnchor)
@@ -166,7 +166,7 @@ class VDJSequenceBuilderTest
         mockVjReadLayoutAdaptor.anchorRangeMap[jLayout] = 22 until 27
 
         // now we should be able to build a VDJ sequence
-        val vdjSeq = vdjSeqBuilder.tryOverlapVJ(vLayout, jLayout, VJGeneType.TRAV, VJGeneType.TRAJ)
+        val vdjSeq = vdjSeqBuilder.tryOverlapVJ(vLayout, jLayout, VJGeneType.TRAV, VJGeneType.TRAJ, emptyMap())
 
         assertNotNull(vdjSeq)
         assertNotNull(vdjSeq.vAnchor)
@@ -209,7 +209,7 @@ class VDJSequenceBuilderTest
         mockVjReadLayoutAdaptor.anchorRangeMap[jLayout] = 15 until 20
 
         // now we should be able to build a VDJ sequence
-        val vdjSeq = vdjSeqBuilder.tryOverlapVJ(vLayout, jLayout, VJGeneType.TRAV, VJGeneType.TRAJ)
+        val vdjSeq = vdjSeqBuilder.tryOverlapVJ(vLayout, jLayout, VJGeneType.TRAV, VJGeneType.TRAJ, emptyMap())
 
         assertNotNull(vdjSeq)
         assertNotNull(vdjSeq.vAnchor)
@@ -252,7 +252,7 @@ class VDJSequenceBuilderTest
         mockVjReadLayoutAdaptor.anchorRangeMap[jLayout] = 22 until 27
 
         // now we should be able to build a VDJ sequence
-        val vdjSeq = vdjSeqBuilder.tryOverlapVJ(vLayout, jLayout, VJGeneType.TRAV, VJGeneType.TRAJ)
+        val vdjSeq = vdjSeqBuilder.tryOverlapVJ(vLayout, jLayout, VJGeneType.TRAV, VJGeneType.TRAJ, emptyMap())
 
         assertNotNull(vdjSeq)
         assertNotNull(vdjSeq.vAnchor)
@@ -294,7 +294,7 @@ class VDJSequenceBuilderTest
         mockVjReadLayoutAdaptor.anchorRangeMap[jLayout] = -4 until 1
 
         // now we should be able to build a VDJ sequence
-        val vdjSeq = vdjSeqBuilder.tryOverlapVJ(vLayout, jLayout, VJGeneType.TRAV, VJGeneType.TRAJ)
+        val vdjSeq = vdjSeqBuilder.tryOverlapVJ(vLayout, jLayout, VJGeneType.TRAV, VJGeneType.TRAJ, emptyMap())
 
         assertNotNull(vdjSeq)
         assertNotNull(vdjSeq.vAnchor)
@@ -334,7 +334,7 @@ class VDJSequenceBuilderTest
         mockVjReadLayoutAdaptor.anchorRangeMap[jLayout] = 22 until 27
 
         // now we should be able to build a VDJ sequence
-        val vdjSeq = vdjSeqBuilder.tryOverlapVJ(vLayout, jLayout, VJGeneType.TRAV, VJGeneType.TRAJ)
+        val vdjSeq = vdjSeqBuilder.tryOverlapVJ(vLayout, jLayout, VJGeneType.TRAV, VJGeneType.TRAJ, emptyMap())
 
         assertNotNull(vdjSeq)
         assertNotNull(vdjSeq.vAnchor)
@@ -446,7 +446,7 @@ class VDJSequenceBuilderTest
         // should be able to find read word hash
         vdjSeqBuilder.joinVjLayoutsByWordHash(
             VJGeneType.TRAV, VJGeneType.TRAJ,
-            vLayoutList, jLayoutList, vdjList)
+            vLayoutList, jLayoutList, emptyMap(), vdjList)
 
         assertTrue(vdjList.isNotEmpty())
 
