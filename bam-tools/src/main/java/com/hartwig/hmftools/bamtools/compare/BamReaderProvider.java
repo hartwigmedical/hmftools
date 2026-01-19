@@ -10,8 +10,6 @@ import java.util.List;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
-// interface to abstract away the bam reader. Main use is to
-// allow thread local bam reader
 public interface BamReaderProvider extends AutoCloseable
 {
     SamReader getBamReader();

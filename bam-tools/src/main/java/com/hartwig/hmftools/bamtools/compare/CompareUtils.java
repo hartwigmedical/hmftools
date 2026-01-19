@@ -5,9 +5,6 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNMAP_ATTRIBUTE;
-import static com.hartwig.hmftools.common.codon.Nucleotides.complement;
-
-import static htsjdk.samtools.util.SequenceUtil.reverseComplement;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -90,28 +87,17 @@ public class CompareUtils
             }
         }
 
-        // check the read bases, make sure we account for the read negative strand flag
-        if(!basesMatch(
-                origRead.getReadString(), origRead.getReadNegativeStrandFlag(),
-                newRead.getReadString(), newRead.getReadNegativeStrandFlag()))
+        if(config.CheckBasesAndQuals)
         {
-            diffs.add(format("bases(%s/%s)",
-                    origRead.getReadNegativeStrandFlag() ? reverseComplement(origRead.getReadString()) : origRead.getReadString(),
-                    newRead.getReadNegativeStrandFlag() ? reverseComplement(newRead.getReadString()) : newRead.getReadString()));
-        }
+            if(origRead.getReadString().equals(newRead.getReadString()))
+            {
+                diffs.add(format("bases(%s/%s)", origRead.getReadString(), newRead.getReadString()));
+            }
 
-        // check the base qual, make sure we account for the read negative strand flag
-        if(!stringsMatch(
-                origRead.getBaseQualityString(), origRead.getReadNegativeStrandFlag(),
-                newRead.getBaseQualityString(), newRead.getReadNegativeStrandFlag()))
-        {
-            diffs.add(format("baseQual(%s/%s)",
-                    origRead.getReadNegativeStrandFlag()
-                            ? new StringBuilder(origRead.getBaseQualityString()).reverse()
-                            : origRead.getBaseQualityString(),
-                    newRead.getReadNegativeStrandFlag()
-                            ? new StringBuilder(newRead.getBaseQualityString()).reverse()
-                            : newRead.getBaseQualityString()));
+            if(origRead.getBaseQualityString().equals(newRead.getBaseQualityString()))
+            {
+                diffs.add(format("baseQual(%s/%s)", origRead.getBaseQualityString(), newRead.getBaseQualityString()));
+            }
         }
 
         return diffs;
@@ -126,50 +112,5 @@ public class CompareUtils
             readerFactory.referenceSequence(new File(config.RefGenomeFile));
         }
         return readerFactory;
-    }
-
-    // check if the string match, with the extra caveat that they could be reversed
-    public static boolean stringsMatch(String str1, boolean str1Reversed, String str2, boolean str2Reversed)
-    {
-        if(str1Reversed == str2Reversed)
-        {
-            return str1.equals(str2);
-        }
-
-        // they are not the same orientation, check str1 forward and str2 backwards
-        if (str1.length() == str2.length())
-        {
-            for(int i = 0; i < str1.length(); i++)
-            {
-                if(str1.charAt(i) != str2.charAt(str2.length() - i - 1))
-                {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
-    // check if the bases match, with the extra caveat that they could be reverse complemented
-    public static boolean basesMatch(String bases1, boolean bases1Reversed, String bases2, boolean bases2Reversed)
-    {
-        if(bases1Reversed == bases2Reversed)
-        {
-            return bases1.equals(bases2);
-        }
-
-        // they are not the same orientation, check bases1 forward and bases2 backwards and apply complement
-        if(bases1.length() == bases2.length())
-        {
-            for(int i = 0; i < bases1.length(); i++)
-            {
-                // need to be complemented
-                if(complement(bases1.charAt(i)) != bases2.charAt(bases2.length() - i - 1))
-                {
-                    return false;
-                }
-            }
-        }
-        return true;
     }
 }

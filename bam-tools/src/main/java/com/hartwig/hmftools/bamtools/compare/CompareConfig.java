@@ -36,6 +36,7 @@ public class CompareConfig
     public final boolean IgnoreSupplementaryReads;
     public final boolean IgnoreSupplementaryAttribute;
     public final boolean IgnoreReduxUnmapped;
+    public final boolean CheckBasesAndQuals;
 
     public final boolean IgnoreReduxAlterations; // consensus reads and internal unmappings
 
@@ -57,6 +58,7 @@ public class CompareConfig
     private static final String IGNORE_CONSENSUS_READS = "ignore_consensus_reads";
     private static final String IGNORE_REDUX_UNMAPPED = "ignore_redux_unmapped";
     private static final String IGNORE_REDUX_DIFFS = "ignore_redux_diffs";
+    private static final String CHECK_BASES_QUALS = "check_bases_quals";
 
     private static final int DEFAULT_CHR_PARTITION_SIZE = 10_000_000;
 
@@ -86,6 +88,7 @@ public class CompareConfig
             IgnoreSupplementaryReads = true;
             IgnoreSupplementaryAttribute = true;
             IgnoreReduxUnmapped = true;
+            CheckBasesAndQuals = false;
 
             // setting these false allows primary read differences other than those caused by Redux to be evaluated - ie they are not dropped
             IgnoreReduxAlterations = false;
@@ -98,15 +101,16 @@ public class CompareConfig
             IgnoreSupplementaryAttribute = configBuilder.hasFlag(IGNORE_SUPPLEMENTARY_ATTRIBUTE);
             IgnoreReduxUnmapped = configBuilder.hasFlag(IGNORE_REDUX_UNMAPPED);
             IgnoreReduxAlterations = configBuilder.hasFlag(IGNORE_ALTERATIONS);
+            CheckBasesAndQuals = configBuilder.hasFlag(CHECK_BASES_QUALS);
         }
 
         BT_LOGGER.info("origBam({}) newBam({})", OrigBamFile, NewBamFile);
 
         BT_LOGGER.info("outputFile({})", OutputFile);
 
-        BT_LOGGER.info("ignore options: duplicateDiffs({}) supps(reads={} attributes={}) Redux(all={} unmapped={} consensus={})",
+        BT_LOGGER.info("ignore options: duplicateDiffs({}) supps(reads={} attributes={}) Redux(all={} unmapped={} consensus={} basesQuals={})",
                 IgnoreDupDiffs, IgnoreSupplementaryReads, IgnoreSupplementaryAttribute,
-                IgnoreReduxAlterations, IgnoreReduxUnmapped, IgnoreConsensusReads);
+                IgnoreReduxAlterations, IgnoreReduxUnmapped, IgnoreConsensusReads, CheckBasesAndQuals);
 
         SpecificChrRegions = SpecificRegions.from(configBuilder);
 
@@ -153,6 +157,7 @@ public class CompareConfig
         configBuilder.addFlag(IGNORE_SUPPLEMENTARY_READS, "Ignore supplementary reads");
         configBuilder.addFlag(IGNORE_SUPPLEMENTARY_ATTRIBUTE, "Ignore supplementary attribute, can change from unmapping");
         configBuilder.addFlag(IGNORE_REDUX_UNMAPPED, "Ignore differences in reads unmapped by Redux");
+        configBuilder.addFlag(CHECK_BASES_QUALS, "Ignore differences in consensus read bases and quals");
 
         addRefGenomeFile(configBuilder, false);
         addSpecificChromosomesRegionsConfig(configBuilder);
@@ -182,6 +187,7 @@ public class CompareConfig
         IgnoreSupplementaryAttribute = ignoreSupplementaryAttribute;
         IgnoreReduxUnmapped = ignoreReduxUnmapped;
         IgnoreReduxAlterations = ignoreReduxAlterations;
+        CheckBasesAndQuals = false;
 
         OutputFile = null;
         OrigBamFile = null;

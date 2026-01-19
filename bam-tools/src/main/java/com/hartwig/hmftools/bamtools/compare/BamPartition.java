@@ -11,7 +11,6 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SamReader;
 
-// abstraction of a bam partition
 public interface BamPartition
 {
     String toString();
