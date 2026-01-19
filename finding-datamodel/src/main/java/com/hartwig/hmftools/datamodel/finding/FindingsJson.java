@@ -57,7 +57,7 @@ public class FindingsJson
     public FindingRecord read(@NotNull Path findingsJsonFilePath) throws IOException
     {
         InputStream inputStream = new FileInputStream(findingsJsonFilePath.toFile());
-        if(findingsJsonFilePath.toString().endsWith(".gz"))
+        if(isGZIP(findingsJsonFilePath))
         {
             inputStream = new GZIPInputStream(inputStream);
         }
@@ -82,7 +82,7 @@ public class FindingsJson
     public void write(@NotNull FindingRecord findingRecord, @NotNull Path outputFilePath) throws IOException
     {
         OutputStream outputStream = new FileOutputStream(outputFilePath.toFile());
-        if(outputFilePath.toString().endsWith(".gz"))
+        if(isGZIP(outputFilePath))
         {
             outputStream = new GZIPOutputStream(outputStream);
         }
@@ -90,5 +90,10 @@ public class FindingsJson
         {
             gson.toJson(findingRecord, FindingRecord.class, writer);
         }
+    }
+
+    private static boolean isGZIP(@NotNull Path path)
+    {
+        return path.toString().endsWith(".gz");
     }
 }
