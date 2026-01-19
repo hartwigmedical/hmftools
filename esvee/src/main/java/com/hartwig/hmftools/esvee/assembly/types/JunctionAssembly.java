@@ -286,7 +286,7 @@ public class JunctionAssembly
 
         if(readInfo != null)
         {
-            readInfo.read().setExtensionMismatches(read.mismatches());
+            readInfo.read().setExtensionMismatches(readInfo.mismatches());
             support.setMismatchInfo(readInfo.mismatchInfo());
         }
 
