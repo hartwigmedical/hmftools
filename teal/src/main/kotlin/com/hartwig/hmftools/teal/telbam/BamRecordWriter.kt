@@ -47,14 +47,14 @@ class BamRecordWriter(config: TelbamParams, private val mIncompleteReadNames: Mu
         for (rg in mIncompleteReadGroups.values)
         {
             logger.warn("incomplete read group: id={}, is complete={}", rg.name, rg.isComplete(Level.WARN))
-            for (r in rg.Reads)
+            for (r in rg.reads)
             {
                 logger.warn(
                     "record({}) cigar({}) neg strand({}) suppl flag({}) suppl attr({})",
                     r, r.cigarString, r.readNegativeStrandFlag, r.supplementaryAlignmentFlag,
                     r.getStringAttribute(SAMTag.SA.name))
             }
-            for (r in rg.SupplementaryReads)
+            for (r in rg.supplementaryReads)
             {
                 logger.warn(
                     "supplementary({}) cigar({}) neg strand({}) suppl flag({}) suppl attr({})",
@@ -115,9 +115,9 @@ class BamRecordWriter(config: TelbamParams, private val mIncompleteReadNames: Mu
         if (mIncompleteReadGroups.remove(readGroup.name) != null)
         {
             mIncompleteReadNames.remove(readGroup.name)
-            if (readGroup.Reads.size > 2)
+            if (readGroup.reads.size > 2)
             {
-                logger.debug("read group size: {}", readGroup.Reads.size)
+                logger.debug("read group size: {}", readGroup.reads.size)
             }
             writeReadGroup(readGroup)
             ++mNumCompletedGroups

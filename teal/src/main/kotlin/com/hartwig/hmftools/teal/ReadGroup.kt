@@ -36,18 +36,23 @@ class ReadGroup(val name: String)
         }
     }
 
+    val isPairedRead: Boolean get()
+    {
+        return mutableReads.firstOrNull()?.readPairedFlag ?: mutableSupplementaryReads.firstOrNull()?.readPairedFlag ?: false
+    }
+
     val mutableReads: MutableList<SAMRecord> = ArrayList()
     val mutableSupplementaryReads: MutableList<SAMRecord> = ArrayList()
 
-    val Reads: List<SAMRecord> get() { return mutableReads }
-    val SupplementaryReads: List<SAMRecord> get() { return mutableSupplementaryReads }
+    val reads: List<SAMRecord> get() { return mutableReads }
+    val supplementaryReads: List<SAMRecord> get() { return mutableSupplementaryReads }
 
     // we have to find it
     val firstOfPair: SAMRecord?
         get()
         {
             // we have to find it
-            for (r in Reads)
+            for (r in reads)
             {
                 if (SamRecordUtils.firstInPair(r))
                 {
@@ -62,7 +67,7 @@ class ReadGroup(val name: String)
         get()
         {
             // we have to find it
-            for (r in Reads)
+            for (r in reads)
             {
                 if (!SamRecordUtils.firstInPair(r))
                 {
@@ -77,27 +82,27 @@ class ReadGroup(val name: String)
     val allReads: List<SAMRecord>
         get()
         {
-            return Reads + SupplementaryReads
+            return reads + supplementaryReads
         }
 
     fun isComplete(logLevel: Level? = null): Boolean
     {
-        if (Reads.isEmpty())
+        if (reads.isEmpty())
         {
             logger.log(logLevel, "Read is empty")
             return false
         }
 
         // we check several things
-        if (Reads[0].readPairedFlag && Reads.size != 2)
+        if (reads[0].readPairedFlag && reads.size != 2)
         {
             // we havent got all the reads yet
-            logger.log(logLevel, "{} missing mate pair", Reads[0])
+            logger.log(logLevel, "{} missing mate pair", reads[0])
             return false
         }
 
         // check for any of the supplementary reads
-        for (read in Reads)
+        for (read in reads)
         {
             val saAttribute = read.getStringAttribute(SAMTag.SA.name)
             if (saAttribute != null)
@@ -105,10 +110,10 @@ class ReadGroup(val name: String)
                 for (sa in suppAlignmentPositions(SamRecordUtils.firstInPair(read), saAttribute)!!)
                 {
                     // check if this supplementary read exists
-                    if (SupplementaryReads.stream().noneMatch { r: SAMRecord -> sa.isMatch(r) })
+                    if (supplementaryReads.stream().noneMatch { r: SAMRecord -> sa.isMatch(r) })
                     {
                         logger.log(
-                            logLevel, "{} Missing supplementary read: aligned to {}:{}", Reads[0],
+                            logLevel, "{} Missing supplementary read: aligned to {}:{}", reads[0],
                             sa.chromosome, sa.position)
                         return false
                     }
@@ -127,11 +132,11 @@ class ReadGroup(val name: String)
         val listToLook: List<SAMRecord>
         listToLook = if (read.isSecondaryOrSupplementary)
         {
-            SupplementaryReads
+            supplementaryReads
         }
         else
         {
-            Reads
+            reads
         }
 
         // we only check chromosome and alignment start
@@ -147,7 +152,7 @@ class ReadGroup(val name: String)
     //public boolean isDuplicate() { return Reads.stream().anyMatch(x -> x.isDuplicate()); }
     override fun toString(): String
     {
-        return String.format("%s reads(%d) complete(%s)", name, Reads.size, isComplete())
+        return String.format("%s reads(%d) complete(%s)", name, reads.size, isComplete())
     }
 
     fun invariant(): Boolean
@@ -156,32 +161,32 @@ class ReadGroup(val name: String)
         // 1. same record cannot appear more than once
         // 2. Reads cannot contain supplementary
         // 3. SupplementaryReads must only contain supplementary
-        if (Reads.size > 2)
+        if (reads.size > 2)
         {
             return false
         }
-        if (!Reads.stream().allMatch { x: SAMRecord -> x.readName == name })
+        if (!reads.stream().allMatch { x: SAMRecord -> x.readName == name })
         {
             return false
         }
-        if (!SupplementaryReads.stream().allMatch { x: SAMRecord -> x.readName == name })
+        if (!supplementaryReads.stream().allMatch { x: SAMRecord -> x.readName == name })
         {
             return false
         }
-        return if (Reads.stream().anyMatch { obj: SAMRecord -> obj.supplementaryAlignmentFlag })
+        return if (reads.stream().anyMatch { obj: SAMRecord -> obj.supplementaryAlignmentFlag })
         {
             false
         }
-        else SupplementaryReads.stream().allMatch { x: SAMRecord -> x.supplementaryAlignmentFlag }
+        else supplementaryReads.stream().allMatch { x: SAMRecord -> x.supplementaryAlignmentFlag }
     }
 
     fun findMissingReadBaseRegions(): List<ChrBaseRegion>
     {
         val baseRegions: MutableList<ChrBaseRegion> = ArrayList()
         assert(invariant())
-        if (Reads.size == 1)
+        if (reads.size == 1)
         {
-            val read = Reads[0]
+            val read = reads[0]
             if (read.readPairedFlag && read.mateReferenceIndex != SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX)
             {
                 // note that even if the mate unmapped flag is set, we still might not be there
@@ -197,12 +202,12 @@ class ReadGroup(val name: String)
                 {
                     baseRegions.add(ChrBaseRegion(read.mateReferenceName, read.mateAlignmentStart, read.mateAlignmentStart))
                     logger.trace(
-                        "{} missing read mate: aligned to {}:{}", Reads[0],
+                        "{} missing read mate: aligned to {}:{}", reads[0],
                         read.mateReferenceName, read.mateAlignmentStart)
                 }
             }
         }
-        for (read in Reads)
+        for (read in reads)
         {
             val saAttribute = read.getStringAttribute(SAMTag.SA.name)
             if (saAttribute != null)
@@ -210,7 +215,7 @@ class ReadGroup(val name: String)
                 for (sa in suppAlignmentPositions(SamRecordUtils.firstInPair(read), saAttribute)!!)
                 {
                     // check if this supplementary read exists
-                    if (SupplementaryReads.stream().noneMatch { r: SAMRecord -> sa.isMatch(r) })
+                    if (supplementaryReads.stream().noneMatch { r: SAMRecord -> sa.isMatch(r) })
                     {
                         baseRegions.add(ChrBaseRegion(sa.chromosome, sa.position, sa.position))
                         logger.trace(

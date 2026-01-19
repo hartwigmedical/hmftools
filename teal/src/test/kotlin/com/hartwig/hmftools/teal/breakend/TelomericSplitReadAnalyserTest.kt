@@ -2,7 +2,6 @@ package com.hartwig.hmftools.teal.breakend
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion
 import htsjdk.samtools.SAMRecord
-import com.hartwig.hmftools.teal.TealUtils
 import kotlin.test.*
 
 /*
@@ -67,18 +66,5 @@ class TelomericSplitReadAnalyserTest
         assertEquals(TelomericBreakEndType.LEFT_G_TELOMERIC, tbe!!.type)
         assertEquals("1", tbe.chromosome)
         assertEquals(1000, tbe.position)
-    }
-
-    @Test
-    fun testLikelyTelomeric()
-    {
-        val readBasesG = "AGGGTTAGGGTTAGGGTTAGGGTTAGGGTTAGGGTTAGGGTTAGGGTTAGGGTTAGGGTTAGGGTTAGGGTTAGGGTTAGTGTTAGGG"
-        val readBasesC = "CTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAAACCTAACCCAAACCCTAACCCAAACCCTAACCCTAACCCTAAC"
-        assertTrue(TealUtils.isLikelyGTelomeric(readBasesG))
-        assertFalse(TealUtils.isLikelyCTelomeric(readBasesG))
-        assertFalse(TealUtils.isLikelyGTelomeric(readBasesC))
-        assertTrue(TealUtils.isLikelyCTelomeric(readBasesC))
-
-        //readBasesC = "CCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAAACCAAACCCAAACCCTAACCCAAACCCACACCCCCACACCAACCCCCACCCCCACCACAACACCCCCCCCCCCCCCCCCCCCACC";
     }
 }

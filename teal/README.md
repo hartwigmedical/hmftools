@@ -96,6 +96,7 @@ other pipeline tools will need to be explicited provided.
 | ref_genome                     |                           | Path to the reference genome fasta file. Required only when using CRAM files.              |
 | ref_genome (optional)          |                           | Path to the reference genome fasta file. Required only when using CRAM files.              |
 | ref_genome_version             | V37                       | Reference genome version (V37 or V38)                                                      |
+| sequencing_type                | ILLUMINA                  | Sequencing technology (ILLUMINA, SBX or ULTIMA)                                            |
 
 Example Usage:
 ```
