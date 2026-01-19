@@ -23,6 +23,7 @@ import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_SUPPORT_LE
 import static htsjdk.samtools.CigarOperator.S;
 import static htsjdk.samtools.util.StringUtil.bytesToString;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -31,6 +32,7 @@ import javax.annotation.Nullable;
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.genome.region.Orientation;
+import com.hartwig.hmftools.esvee.assembly.SequenceDiffInfo;
 import com.hartwig.hmftools.esvee.common.IndelCoords;
 
 import htsjdk.samtools.CigarElement;
@@ -61,7 +63,6 @@ public class Read
     private SupplementaryReadData mSupplementaryData;
 
     private boolean mCheckedIndelCoords;
-
     private IndelCoords mIndelCoords;
     private boolean mInvalidIndel;
 
@@ -75,6 +76,8 @@ public class Read
     private int mTrimCountStart;
     private int mTrimCountEnd;
     private boolean mLowQualTrimmed;
+
+    private List<SequenceDiffInfo> mMismatches;
 
     public Read(final SAMRecord record)
     {
@@ -108,6 +111,8 @@ public class Read
         mTrimCountStart = 0;
         mTrimCountEnd = 0;
         mLowQualTrimmed = false;
+
+        mMismatches = null;
     }
 
     private void setBoundaries(int newReadStart)
@@ -514,6 +519,13 @@ public class Read
     {
         return mIndelInferredUnclippedEnd == null ? mUnclippedEnd : max(mUnclippedEnd, mIndelInferredUnclippedEnd);
     }
+
+    public void setExtensionMismatches(final List<SequenceDiffInfo> seqMismatches)
+    {
+        mMismatches = seqMismatches;
+    }
+
+    public List<SequenceDiffInfo> mismatches() { return mMismatches != null ? mMismatches : Collections.emptyList(); }
 
     public synchronized void trimLowQualBases()
     {

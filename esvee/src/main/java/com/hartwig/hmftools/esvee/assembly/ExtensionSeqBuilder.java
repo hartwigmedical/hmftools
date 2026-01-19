@@ -130,6 +130,7 @@ public class ExtensionSeqBuilder
 
             SupportRead supportRead = new SupportRead(
                     read.read(), SupportType.JUNCTION, read.startIndex(), read.matchedBases(), read.mismatchCount(true));
+            read.read().setExtensionMismatches(read.mismatches()); // cached for the visualiser
             supportRead.setMismatchInfo(read.mismatchInfo());
 
             supportReads.add(supportRead);

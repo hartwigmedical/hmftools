@@ -285,7 +285,10 @@ public class JunctionAssembly
         SupportRead support = new SupportRead(read, adjustedType, junctionReadStartDistance, matchedBases, mismatchCount);
 
         if(readInfo != null)
+        {
+            readInfo.read().setExtensionMismatches(read.mismatches());
             support.setMismatchInfo(readInfo.mismatchInfo());
+        }
 
         mSupport.add(support);
     }
