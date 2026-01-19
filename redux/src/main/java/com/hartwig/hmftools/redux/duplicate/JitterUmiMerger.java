@@ -3,11 +3,13 @@ package com.hartwig.hmftools.redux.duplicate;
 import static java.lang.Math.abs;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.redux.ReduxConstants.MAX_UMI_BASE_DIFF_JITTER_COLLAPSE;
 import static com.hartwig.hmftools.redux.ReduxConstants.SINGLE_END_JITTER_COLLAPSE_DISTANCE;
-import static com.hartwig.hmftools.redux.duplicate.FragmentCoords.FRAG_ORIENT_FORWARD;
-import static com.hartwig.hmftools.redux.duplicate.FragmentCoords.FRAG_ORIENT_REVERSE;
-import static com.hartwig.hmftools.redux.duplicate.FragmentCoords.FRAG_TYPE_SUPP_INFO;
+import static com.hartwig.hmftools.redux.duplicate.FragmentCoords.COORD_ORIENT_FORWARD;
+import static com.hartwig.hmftools.redux.duplicate.FragmentCoords.COORD_ORIENT_REVERSE;
+import static com.hartwig.hmftools.redux.duplicate.FragmentCoords.COORD_READ_SUPP_INFO;
 import static com.hartwig.hmftools.redux.duplicate.UmiGroupBuilder.hasDuplexUmiMatch;
+import static com.hartwig.hmftools.redux.duplicate.UmiUtils.exceedsUmiIdDiff;
 
 import java.util.List;
 import java.util.Map;
@@ -46,15 +48,19 @@ public class JitterUmiMerger
             if(other.Merged)
                 return false;
 
+            if(FragmentCoords.ReadIsLower != other.FragmentCoords.ReadIsLower)
+                return false; // this could be the same fragment (ie same reads) but the lower (R1) trying to merge with the upper (R2) reads
+
             // check UMIs - exact matches are required where jitter was used
             if(FragmentCoords.FragmentOrient == other.FragmentCoords.FragmentOrient)
             {
-                if(!Umi.equals(other.Umi))
+                if(exceedsUmiIdDiff(Umi, other.Umi, MAX_UMI_BASE_DIFF_JITTER_COLLAPSE))
+                //if(!Umi.equals(other.Umi))
                     return false;
             }
             else
             {
-                if(!hasDuplexUmiMatch(Umi, other.Umi, mUmiConfig.DuplexDelim, 0))
+                if(!hasDuplexUmiMatch(Umi, other.Umi, mUmiConfig.DuplexDelim, MAX_UMI_BASE_DIFF_JITTER_COLLAPSE))
                     return false;
             }
 
@@ -92,16 +98,19 @@ public class JitterUmiMerger
         Map<String,List<JitterMergeGroup>> upperPosGroups = Maps.newHashMap();
 
         // collapse fragments with matching UMIs after trimming and the same 5' unclipped position
+        // convert each duplicate group and single fragment to a candidate jitter group, and add each of these to 2 separate maps
+        // so as to test the lower and upper coordinates in turn being jitter-matched
+
         boolean hasCandidates = false;
         for(DuplicateGroup duplicateGroup : umiGroups)
         {
-            JitterMergeGroup group = new JitterMergeGroup(duplicateGroup, duplicateGroup.fragmentCoordinates(), duplicateGroup.umi());
+            JitterMergeGroup group = new JitterMergeGroup(duplicateGroup, duplicateGroup.fragCoordinates(), duplicateGroup.umi());
 
             for(int g = 0; g <= 1; ++g)
             {
                 boolean useLower = (g == 0);
 
-                String key = formKey(duplicateGroup.fragmentCoordinates(), useLower);
+                String key = formKey(duplicateGroup.fragCoordinates(), useLower);
                 Map<String,List<JitterMergeGroup>> posGroups = useLower ? lowerPosGroups : upperPosGroups;
 
                 List<JitterMergeGroup> groups = posGroups.get(key);
@@ -122,14 +131,14 @@ public class JitterUmiMerger
 
         for(ReadInfo readInfo : singleFragments)
         {
-            String umiId = readInfo.getOrExtract(mUmiConfig);
-            JitterMergeGroup group = new JitterMergeGroup(readInfo, readInfo.coordinates(), umiId);
+            String umiId = readInfo.getOrExtractUmi(mUmiConfig);
+            JitterMergeGroup group = new JitterMergeGroup(readInfo, readInfo.fragCoordinates(), umiId);
 
             for(int g = 0; g <= 1; ++g)
             {
                 boolean useLower = (g == 0);
 
-                String key = formKey(readInfo.coordinates(), useLower);
+                String key = formKey(readInfo.fragCoordinates(), useLower);
                 Map<String,List<JitterMergeGroup>> posGroups = useLower ? lowerPosGroups : upperPosGroups;
 
                 List<JitterMergeGroup> groups = posGroups.get(key);
@@ -197,75 +206,67 @@ public class JitterUmiMerger
         if(!hasMerges)
             return;
 
-        for(int g = 0; g <= 1; ++g)
+        for(List<JitterMergeGroup> groups : lowerPosGroups.values()) // both maps contains the same groups, just keyed differently
         {
-            boolean useLower = (g == 0);
-
-            Map<String,List<JitterMergeGroup>> posGroups = useLower ? lowerPosGroups : upperPosGroups;
-
-            for(List<JitterMergeGroup> groups : posGroups.values())
+            for(JitterMergeGroup group : groups)
             {
-                if(groups.size() == 1)
-                    continue;
-
-                for(JitterMergeGroup group : groups)
+                if(group.Merged)
                 {
-                    if(group.Merged)
+                    // removed groups single fragments which have been merged
+                    for(Object fragment : group.Fragments)
                     {
-                        for(Object fragment : group.Fragments)
+                        if(fragment instanceof DuplicateGroup)
                         {
-                            if(fragment instanceof DuplicateGroup)
-                            {
-                                umiGroups.remove(fragment);
-                            }
-                            else
-                            {
-                                singleFragments.remove(fragment);
-                            }
+                            umiGroups.remove(fragment);
+                        }
+                        else
+                        {
+                            singleFragments.remove(fragment);
                         }
                     }
-                    else if(group.Fragments.size() > 1)
+                }
+                else if(group.Fragments.size() > 1)
+                {
+                    // and then add in the reads from merged groups and single fragments to their new parent group
+                    DuplicateGroup originalGroup = null;
+
+                    for(int i = 0; i < group.Fragments.size(); ++i)
                     {
-                        DuplicateGroup originalGroup = null;
+                        Object fragment = group.Fragments.get(i);
 
-                        for(int i = 0; i < group.Fragments.size(); ++i)
+                        ReadInfo readInfo = fragment instanceof ReadInfo ? (ReadInfo) fragment : null;
+                        DuplicateGroup duplicateGroup = fragment instanceof DuplicateGroup ? (DuplicateGroup) fragment : null;
+
+                        if(originalGroup == null)
                         {
-                            Object fragment = group.Fragments.get(i);
-
-                            ReadInfo readInfo = fragment instanceof ReadInfo ? (ReadInfo) fragment : null;
-                            DuplicateGroup duplicateGroup = fragment instanceof DuplicateGroup ? (DuplicateGroup) fragment : null;
-
-                            if(originalGroup == null)
+                            if(readInfo != null)
                             {
-                                if(readInfo != null)
-                                {
-                                    // convert to duplicate group
-                                    String umiId = readInfo.getOrExtract(mUmiConfig);
-                                    originalGroup = new DuplicateGroup(umiId, readInfo.read(), readInfo.coordinates());
-                                    umiGroups.add(originalGroup);
-                                    singleFragments.remove(readInfo);
-                                }
-                                else
-                                {
-                                    originalGroup = duplicateGroup;
-                                }
+                                // convert to duplicate group
+                                String umiId = readInfo.getOrExtractUmi(mUmiConfig);
+                                originalGroup = new DuplicateGroup(umiId, readInfo.read(), readInfo.fragCoordinates());
+                                umiGroups.add(originalGroup);
+                                singleFragments.remove(readInfo);
                             }
                             else
                             {
-                                if(readInfo != null)
-                                {
-                                    originalGroup.addNonConsensusReads(List.of(readInfo.read()));
+                                originalGroup = duplicateGroup;
+                            }
+                        }
+                        else
+                        {
+                            if(readInfo != null)
+                            {
+                                originalGroup.addNonConsensusReads(List.of(readInfo.read()));
 
-                                    if(originalGroup.fragmentCoordinates().FragmentOrient != readInfo.coordinates().FragmentOrient)
-                                        originalGroup.registerDualStrand();
-                                }
-                                else
-                                {
-                                    originalGroup.addNonConsensusReads(duplicateGroup.allReads());
+                                if(originalGroup.fragCoordinates().FragmentOrient != readInfo.fragCoordinates().FragmentOrient)
+                                    originalGroup.registerDualStrand();
+                            }
+                            else
+                            {
+                                originalGroup.addNonConsensusReads(duplicateGroup.allReads());
 
-                                    if(originalGroup.fragmentCoordinates().FragmentOrient != duplicateGroup.fragmentCoordinates().FragmentOrient)
-                                        originalGroup.registerDualStrand();
-                                }
+                                if(originalGroup.fragCoordinates().FragmentOrient != duplicateGroup.fragCoordinates().FragmentOrient)
+                                    originalGroup.registerDualStrand();
                             }
                         }
                     }
@@ -281,8 +282,8 @@ public class JitterUmiMerger
         int position = keyOnLower ? coords.PositionLower : coords.PositionUpper;
 
         return format("%d_%c_%c",
-                position, orient.isForward() ? FRAG_ORIENT_FORWARD : FRAG_ORIENT_REVERSE,
-                coords.SuppReadInfo != null ? FRAG_TYPE_SUPP_INFO : 'P');
+                position, orient.isForward() ? COORD_ORIENT_FORWARD : COORD_ORIENT_REVERSE,
+                coords.SuppReadInfo != null ? COORD_READ_SUPP_INFO : 'P');
     }
 
     private static boolean prioritiseFirstCoords(final FragmentCoords coords1, final FragmentCoords coords2)

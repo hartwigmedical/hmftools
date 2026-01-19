@@ -1,21 +1,24 @@
 package com.hartwig.hmftools.redux.duplicate;
 
 import static java.lang.Math.min;
+import static java.lang.Math.sin;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
 import static com.hartwig.hmftools.redux.ReduxConstants.MIN_POLYG_UMI_TAIL_LENGTH;
-import static com.hartwig.hmftools.redux.duplicate.FragmentCoords.FRAG_ORIENT_FORWARD;
-import static com.hartwig.hmftools.redux.duplicate.FragmentCoords.FRAG_ORIENT_REVERSE;
-import static com.hartwig.hmftools.redux.duplicate.FragmentCoords.FRAG_TYPE_SUPP_INFO;
-import static com.hartwig.hmftools.redux.duplicate.FragmentCoords.FRAG_TYPE_UNMAPPED;
+import static com.hartwig.hmftools.redux.duplicate.FragmentCoords.COORD_ORIENT_FORWARD;
+import static com.hartwig.hmftools.redux.duplicate.FragmentCoords.COORD_ORIENT_REVERSE;
+import static com.hartwig.hmftools.redux.duplicate.FragmentCoords.COORD_READ_SUPP_INFO;
+import static com.hartwig.hmftools.redux.duplicate.FragmentCoords.COORD_READ_UNMAPPED;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.redux.common.ReadInfo;
 
 import htsjdk.samtools.SAMRecord;
@@ -36,6 +39,7 @@ public class PolyGUmiMerger
     private class PolyGMergeGroup
     {
         public final List<String> Umis;
+        public final boolean UmiHasPolyGTail;
         public final FragmentCoords FragmentCoords;
         public final List<Object> Fragments;
         public boolean Merged;
@@ -43,6 +47,8 @@ public class PolyGUmiMerger
         public PolyGMergeGroup(final String umi, final Object fragment, final FragmentCoords fragmentCoords)
         {
             Umis = Lists.newArrayList(trimPolyGTail(umi));
+            UmiHasPolyGTail = hasPolyGTail(umi);
+
             FragmentCoords = fragmentCoords;
             Fragments = Lists.newArrayList(fragment);
             Merged = false;
@@ -50,12 +56,12 @@ public class PolyGUmiMerger
 
         public PolyGMergeGroup(final DuplicateGroup duplicateGroup)
         {
-            this(duplicateGroup.umi(), duplicateGroup, duplicateGroup.fragmentCoordinates());
+            this(duplicateGroup.umi(), duplicateGroup, duplicateGroup.fragCoordinates());
         }
 
         public PolyGMergeGroup(final ReadInfo singleRead, final String umi)
         {
-            this(umi, singleRead, singleRead.coordinates());
+            this(umi, singleRead, singleRead.fragCoordinates());
         }
 
         public boolean canMerge(final PolyGMergeGroup other)
@@ -91,6 +97,10 @@ public class PolyGUmiMerger
     public void mergeGroups(final List<DuplicateGroup> umiGroups, final List<ReadInfo> singleFragments)
     {
         if(umiGroups.isEmpty() && singleFragments.isEmpty())
+            return;
+
+        // first a quick search for either poly-G tails or unmapped reads
+        if(!hasCandidateFragments(umiGroups, singleFragments))
             return;
 
         // at least one fragment must have unmapped mates and a poly-G tail on the UMI
@@ -167,7 +177,7 @@ public class PolyGUmiMerger
                             if(readInfo != null)
                             {
                                 // convert to duplicate group
-                                originalGroup = new DuplicateGroup(readInfo.umi(), readInfo.read(), readInfo.coordinates());
+                                originalGroup = new DuplicateGroup(readInfo.umi(), readInfo.read(), readInfo.fragCoordinates());
                                 umiGroups.add(originalGroup);
                                 group.Fragments.set(0, originalGroup);
                                 singleFragments.remove(readInfo);
@@ -181,7 +191,7 @@ public class PolyGUmiMerger
                         {
                             List<SAMRecord> readsToAdd = readInfo != null ? List.of(readInfo.read()) : duplicateGroup.reads();
 
-                            if(originalGroup.fragmentCoordinates().UnmappedSourced)
+                            if(originalGroup.fragCoordinates().UnmappedSourced)
                             {
                                 originalGroup.addNonConsensusReads(readsToAdd);
                             }
@@ -212,7 +222,7 @@ public class PolyGUmiMerger
                     if(duplicateGroup.reads().stream().anyMatch(x -> !x.getMateUnmappedFlag()))
                     {
                         // use trimmed UMI
-                        groupsWithMappedMates.add(new UnmappingKey(group.Umis.get(0), duplicateGroup.fragmentCoordinates()));
+                        groupsWithMappedMates.add(new UnmappingKey(group.Umis.get(0), duplicateGroup.fragCoordinates()));
                     }
                 }
             }
@@ -243,7 +253,7 @@ public class PolyGUmiMerger
                         if(!readInfo.read().getReadUnmappedFlag())
                             continue;
 
-                        DuplicateGroup duplicateGroup = new DuplicateGroup(readInfo.umi(), readInfo.read(), readInfo.coordinates());
+                        DuplicateGroup duplicateGroup = new DuplicateGroup(readInfo.umi(), readInfo.read(), readInfo.fragCoordinates());
                         duplicateGroup.markPolyGUnmapped();
                         umiGroups.add(duplicateGroup);
                         singleFragments.remove(readInfo);
@@ -267,9 +277,9 @@ public class PolyGUmiMerger
     private static String formKey(final FragmentCoords coords)
     {
         return format("%d_%c_%c_%s",
-                coords.PositionLower, coords.OrientLower.isForward() ? FRAG_ORIENT_FORWARD : FRAG_ORIENT_REVERSE,
-                coords.UnmappedSourced ? FRAG_TYPE_UNMAPPED : 'M',
-                coords.SuppReadInfo != null ? FRAG_TYPE_SUPP_INFO : 'P');
+                coords.PositionLower, coords.OrientLower.isForward() ? COORD_ORIENT_FORWARD : COORD_ORIENT_REVERSE,
+                coords.UnmappedSourced ? COORD_READ_UNMAPPED : 'M',
+                coords.SuppReadInfo != null ? COORD_READ_SUPP_INFO : 'P');
     }
 
     private static boolean fragmentCoordinatesMatch(final FragmentCoords coords1, final FragmentCoords coords2)
@@ -281,23 +291,41 @@ public class PolyGUmiMerger
             && (coords1.SuppReadInfo != null) == (coords2.SuppReadInfo != null);
     }
 
+    private boolean hasCandidateFragments(final List<DuplicateGroup> umiGroups, final List<ReadInfo> singleFragments)
+    {
+        boolean hasPolyGUmi = false;
+        boolean hasUnmappedReads = false;
+
+        for(DuplicateGroup duplicateGroup : umiGroups)
+        {
+            hasPolyGUmi |= hasUnmappedRead(duplicateGroup.fragCoordinates());
+            hasUnmappedReads |= hasPolyGTail(duplicateGroup.umi());
+
+            if(hasPolyGUmi && hasUnmappedReads)
+                break;
+        }
+
+        for(ReadInfo readInfo : singleFragments)
+        {
+            hasPolyGUmi |= hasUnmappedRead(readInfo.fragCoordinates());
+            hasUnmappedReads |= hasPolyGTail(readInfo.getOrExtractUmi(mUmiConfig));
+
+            if(hasPolyGUmi && hasUnmappedReads)
+                break;
+        }
+
+        return hasPolyGUmi && hasUnmappedReads;
+    }
+
     private Map<String,List<PolyGMergeGroup>> findCandidateFragments(
             final List<DuplicateGroup> umiGroups, final List<ReadInfo> singleFragments)
     {
         Map<String,List<PolyGMergeGroup>> groupMap = Maps.newHashMap();
 
         // collapse fragments with matching UMIs after trimming and the same 5' unclipped position
-        boolean hasPrimaryUnmappedMateFragments = false;
-
         for(DuplicateGroup duplicateGroup : umiGroups)
         {
-            if(!hasPolyGTail(duplicateGroup.umi()))
-                continue;
-
-            if(hasUnmappedRead(duplicateGroup.fragmentCoordinates()))
-                hasPrimaryUnmappedMateFragments = true;
-
-            String key = formKey(duplicateGroup.fragmentCoordinates());
+            String key = formKey(duplicateGroup.fragCoordinates());
             List<PolyGMergeGroup> groups = groupMap.get(key);
 
             if(groups == null)
@@ -311,15 +339,9 @@ public class PolyGUmiMerger
 
         for(ReadInfo readInfo : singleFragments)
         {
-            String umiId = readInfo.getOrExtract(mUmiConfig);
+            String umi = readInfo.getOrExtractUmi(mUmiConfig);
 
-            if(!hasPolyGTail(umiId))
-                continue;
-
-            if(hasUnmappedRead(readInfo.coordinates()))
-                hasPrimaryUnmappedMateFragments = true;
-
-            String key = formKey(readInfo.coordinates());
+            String key = formKey(readInfo.fragCoordinates());
             List<PolyGMergeGroup> groups = groupMap.get(key);
 
             if(groups == null)
@@ -328,10 +350,25 @@ public class PolyGUmiMerger
                 groupMap.put(key, groups);
             }
 
-            groups.add(new PolyGMergeGroup(readInfo, umiId));
+            groups.add(new PolyGMergeGroup(readInfo, umi));
         }
 
-        return hasPrimaryUnmappedMateFragments ? groupMap : Collections.emptyMap();
+        List<String> invalidGroups = Lists.newArrayList();
+
+        for(Map.Entry<String,List<PolyGMergeGroup>> entry : groupMap.entrySet())
+        {
+            List<PolyGMergeGroup> groups = entry.getValue();
+
+            boolean hasPolyGUmi = groups.stream().anyMatch(x -> x.UmiHasPolyGTail);
+            boolean hasUnmappedRead = groups.stream().anyMatch(x -> hasUnmappedRead(x.FragmentCoords));
+
+            if(!hasPolyGUmi && !hasUnmappedRead)
+                invalidGroups.add(entry.getKey());
+        }
+
+        invalidGroups.forEach(x -> groupMap.remove(x));
+
+        return groupMap;
     }
 
     private static String trimPolyGTail(final String umiId)

@@ -73,7 +73,7 @@ public class DuplicateGroup
 
     public int totalReadCount() { return mReads.size() + mNonConsensusReads.size(); }
 
-    public FragmentCoords fragmentCoordinates() { return mFragmentCoords; }
+    public FragmentCoords fragCoordinates() { return mFragmentCoords; }
 
     public List<SAMRecord> duplicate() { return mReads; }
     public SAMRecord consensusRead() { return mConsensusRead; }

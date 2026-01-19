@@ -59,7 +59,7 @@ public class UmiGroupBuilder
 
         for(DuplicateGroup duplicateGroup : duplicateGroups)
         {
-            List<DuplicateGroup> umiGroups = buildUmiGroups(duplicateGroup.fragmentCoordinates(), duplicateGroup.reads(), mUmiConfig);
+            List<DuplicateGroup> umiGroups = buildUmiGroups(duplicateGroup.fragCoordinates(), duplicateGroup.reads(), mUmiConfig);
             allUmiGroups.addAll(umiGroups);
         }
 
@@ -72,7 +72,7 @@ public class UmiGroupBuilder
             Collections.sort(allUmiGroups, new UmiUtils.SizeComparator());
             for(DuplicateGroup umiGroup : allUmiGroups)
             {
-                CoordinateGroup coordGroup = getOrCreateCoordGroup(coordinateGroupMap, umiGroup.fragmentCoordinates().keyNonOriented());
+                CoordinateGroup coordGroup = getOrCreateCoordGroup(coordinateGroupMap, umiGroup.fragCoordinates().keyNonOriented());
                 coordGroup.addGroup(umiGroup);
             }
 
@@ -81,7 +81,7 @@ public class UmiGroupBuilder
             // add in single fragments
             for(ReadInfo readInfo : singleFragments)
             {
-                CoordinateGroup coordGroup = getOrCreateCoordGroup(coordinateGroupMap, readInfo.coordinates().keyNonOriented());
+                CoordinateGroup coordGroup = getOrCreateCoordGroup(coordinateGroupMap, readInfo.fragCoordinates().keyNonOriented());
                 coordGroup.addSingleRead(readInfo);
             }
 
@@ -112,7 +112,7 @@ public class UmiGroupBuilder
             if(umiGroup.totalReadCount() == 1)
             {
                 // drop any single fragments
-                singleFragments.add(new ReadInfo(umiGroup.reads().get(0), umiGroup.fragmentCoordinates()));
+                singleFragments.add(new ReadInfo(umiGroup.reads().get(0), umiGroup.fragCoordinates()));
                 continue;
             }
 
@@ -325,12 +325,12 @@ public class UmiGroupBuilder
 
         public void addGroup(final DuplicateGroup group)
         {
-            addFragmentGroup(group, group.fragmentCoordinates().forwardFragment());
+            addFragmentGroup(group, group.fragCoordinates().forwardFragment());
         }
 
         public void addSingleRead(final ReadInfo readInfo)
         {
-            addFragmentGroup(readInfo, readInfo.coordinates().forwardFragment());
+            addFragmentGroup(readInfo, readInfo.fragCoordinates().forwardFragment());
         }
 
         public String toString()
@@ -389,13 +389,13 @@ public class UmiGroupBuilder
             {
                 firstGroup = (DuplicateGroup) first;
                 firstUmi = firstGroup.umi();
-                firstFragCoords = firstGroup.fragmentCoordinates();
+                firstFragCoords = firstGroup.fragCoordinates();
             }
             else
             {
                 firstSingleRead = (ReadInfo) first;
-                firstUmi = firstSingleRead.getOrExtract(mUmiConfig);
-                firstFragCoords = firstSingleRead.coordinates();
+                firstUmi = firstSingleRead.getOrExtractUmi(mUmiConfig);
+                firstFragCoords = firstSingleRead.fragCoordinates();
             }
 
             int secondIndex = 0;
@@ -414,7 +414,7 @@ public class UmiGroupBuilder
                 else
                 {
                     secondSingleRead = (ReadInfo) second;
-                    secondUmi = secondSingleRead.getOrExtract(mUmiConfig);
+                    secondUmi = secondSingleRead.getOrExtractUmi(mUmiConfig);
                 }
 
                 boolean canCollapse = hasDuplexUmiMatch(firstUmi, secondUmi, mUmiConfig.DuplexDelim, mUmiConfig.PermittedBaseDiff);

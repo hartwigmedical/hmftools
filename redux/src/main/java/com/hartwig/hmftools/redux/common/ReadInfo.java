@@ -22,11 +22,11 @@ public class ReadInfo
     public String id() { return mRead.getReadName(); }
     public SAMRecord read() { return mRead; }
 
-    public FragmentCoords coordinates() { return mCoordinates; }
+    public FragmentCoords fragCoordinates() { return mCoordinates; }
 
     public String umi() { return mUmi; }
 
-    public String getOrExtract(final UmiConfig umiConfig)
+    public String getOrExtractUmi(final UmiConfig umiConfig)
     {
         if(mUmi == null)
             mUmi = umiConfig.extractUmiId(mRead.getReadName());

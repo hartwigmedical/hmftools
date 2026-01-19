@@ -4,12 +4,12 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
-import static com.hartwig.hmftools.redux.duplicate.FragmentCoords.FRAG_ORIENT_FORWARD_STR;
-import static com.hartwig.hmftools.redux.duplicate.FragmentCoords.FRAG_ORIENT_REVERSE_STR;
-import static com.hartwig.hmftools.redux.duplicate.FragmentCoords.FRAG_READ_LOWER_STR;
-import static com.hartwig.hmftools.redux.duplicate.FragmentCoords.FRAG_READ_UPPER_STR;
-import static com.hartwig.hmftools.redux.duplicate.FragmentCoords.FRAG_TYPE_SUPP_INFO_STR;
-import static com.hartwig.hmftools.redux.duplicate.FragmentCoords.FRAG_TYPE_UNMAPPED;
+import static com.hartwig.hmftools.redux.duplicate.FragmentCoords.COORD_ORIENT_FORWARD_STR;
+import static com.hartwig.hmftools.redux.duplicate.FragmentCoords.COORD_ORIENT_REVERSE_STR;
+import static com.hartwig.hmftools.redux.duplicate.FragmentCoords.COORD_READ_LOWER_STR;
+import static com.hartwig.hmftools.redux.duplicate.FragmentCoords.COORD_READ_UPPER_STR;
+import static com.hartwig.hmftools.redux.duplicate.FragmentCoords.COORD_READ_SUPP_INFO_STR;
+import static com.hartwig.hmftools.redux.duplicate.FragmentCoords.COORD_READ_UNMAPPED;
 
 import java.util.Collection;
 import java.util.List;
@@ -30,7 +30,7 @@ public final class CollapseUtils
         {
             if(collapsedGroup.totalReadCount() == 1)
             {
-                singleReads.add(new ReadInfo(collapsedGroup.reads().get(0), collapsedGroup.fragmentCoordinates()));
+                singleReads.add(new ReadInfo(collapsedGroup.reads().get(0), collapsedGroup.fragCoordinates()));
                 return;
             }
 
@@ -51,16 +51,16 @@ public final class CollapseUtils
         if(fragmentCoords.Unpaired)
             return null;
 
-        String lowerOrientation = fragmentCoords.OrientLower == FORWARD ? FRAG_ORIENT_FORWARD_STR : FRAG_ORIENT_REVERSE_STR;
-        String suppSuffix = fragmentCoords.SuppReadInfo == null ? "" : ":" + FRAG_TYPE_SUPP_INFO_STR;
+        String lowerOrientation = fragmentCoords.OrientLower == FORWARD ? COORD_ORIENT_FORWARD_STR : COORD_ORIENT_REVERSE_STR;
+        String suppSuffix = fragmentCoords.SuppReadInfo == null ? "" : ":" + COORD_READ_SUPP_INFO_STR;
         if(fragmentCoords.PositionUpper == NO_POSITION)
         {
-            String unmappedSuffix = fragmentCoords.UnmappedSourced ? format(":%c", FRAG_TYPE_UNMAPPED) : "";
+            String unmappedSuffix = fragmentCoords.UnmappedSourced ? format(":%c", COORD_READ_UNMAPPED) : "";
             return format("%s:%s%s%s", fragmentCoords.ChromsomeLower, lowerOrientation, unmappedSuffix, suppSuffix);
         }
 
-        String upperOrientation = fragmentCoords.OrientUpper == FORWARD ? FRAG_ORIENT_FORWARD_STR : FRAG_ORIENT_REVERSE_STR;
-        String isLowerString = fragmentCoords.ReadIsLower ? FRAG_READ_LOWER_STR : FRAG_READ_UPPER_STR;
+        String upperOrientation = fragmentCoords.OrientUpper == FORWARD ? COORD_ORIENT_FORWARD_STR : COORD_ORIENT_REVERSE_STR;
+        String isLowerString = fragmentCoords.ReadIsLower ? COORD_READ_LOWER_STR : COORD_READ_UPPER_STR;
         return format("%s:%s:%s:%s:%s%s",
                 fragmentCoords.ChromsomeLower, lowerOrientation, fragmentCoords.ChromsomeUpper, upperOrientation, isLowerString, suppSuffix);
     }

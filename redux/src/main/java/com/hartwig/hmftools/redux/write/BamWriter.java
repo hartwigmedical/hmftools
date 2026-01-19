@@ -3,8 +3,6 @@ package com.hartwig.hmftools.redux.write;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.UMI_ATTRIBUTE;
-import static com.hartwig.hmftools.redux.ReduxConfig.isIllumina;
-import static com.hartwig.hmftools.redux.ReduxConfig.isSbx;
 import static com.hartwig.hmftools.redux.ReduxConstants.BQR_MIN_MAP_QUAL;
 import static com.hartwig.hmftools.redux.common.FragmentStatus.DUPLICATE;
 import static com.hartwig.hmftools.redux.common.FragmentStatus.PRIMARY;
@@ -19,7 +17,6 @@ import com.hartwig.hmftools.redux.jitter.MsJitterAnalyser;
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 import com.hartwig.hmftools.redux.ReduxConfig;
 import com.hartwig.hmftools.redux.duplicate.DuplicateGroup;
-import com.hartwig.hmftools.redux.duplicate.FragmentCoords;
 import com.hartwig.hmftools.redux.common.FragmentStatus;
 import com.hartwig.hmftools.redux.common.ReadInfo;
 
@@ -38,9 +35,6 @@ public abstract class BamWriter
     private final MsJitterAnalyser mMsJitterAnalyser;
     private final BqrRegionReader mBqrProcessor;
 
-    // calculate per read frag coords where jitter allowances mean they may differ from their duplicate group's frag coords
-    private final boolean mRecomputeFragCoords;
-
     protected final AtomicLong mNonConsensusReadCount;
     protected final AtomicLong mConsensusReadCount;
 
@@ -54,9 +48,6 @@ public abstract class BamWriter
         mReadDataWriter = readDataWriter;
         mMsJitterAnalyser = msJitterAnalyser;
         mBqrProcessor = new BqrRegionReader(config.RefGenome, bqr.results(), bqr.regions());
-
-        mRecomputeFragCoords = mReadDataWriter.enabled()
-                && ((isSbx() && mConfig.DuplicateConfig.SbxMaxDuplicateDistance> 0) || (isIllumina() && config.UMIs.Enabled));
 
         mNonConsensusReadCount = new AtomicLong(0);
         mConsensusReadCount = new AtomicLong(0);
@@ -99,7 +90,7 @@ public abstract class BamWriter
         for(ReadInfo readInfo : readInfos)
         {
             // UMIs are not captured nor written for non-duplicates
-            writeRead(readInfo.read(), FragmentStatus.NONE, readInfo.coordinates().Key, "");
+            writeRead(readInfo.read(), FragmentStatus.NONE, readInfo.fragCoordinates().Key, "");
         }
     }
 
@@ -110,15 +101,12 @@ public abstract class BamWriter
 
     public void writeDuplicateGroup(final DuplicateGroup group)
     {
-        String fragCoords = group.fragmentCoordinates().Key;
+        String fragCoords = group.fragCoordinates().Key;
         if(group.consensusRead() != null)
         {
             SAMRecord read = group.consensusRead();
             processRecord(read);
             mConsensusReadCount.incrementAndGet();
-
-            if(mRecomputeFragCoords)
-                fragCoords = FragmentCoords.fromRead(read, false).Key;
 
             if(mReadDataWriter != null && mReadDataWriter.enabled())
                 mReadDataWriter.writeReadData(read, PRIMARY, fragCoords, group.umi());
@@ -131,9 +119,6 @@ public abstract class BamWriter
 
             // if the group was formed from unmapped poly-G reads then mark all reads as duplicates
             FragmentStatus fragmentStatus = !group.polyGUnmapped() && group.isPrimaryRead(read) ? PRIMARY : DUPLICATE;
-
-            if(mRecomputeFragCoords)
-                fragCoords = FragmentCoords.fromRead(read, false).Key;
 
             writeRead(read, fragmentStatus, fragCoords, group.umi());
         }

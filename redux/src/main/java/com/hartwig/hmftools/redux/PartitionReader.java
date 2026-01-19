@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUT
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNMAP_ATTRIBUTE;
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.secondsSinceNow;
-import static com.hartwig.hmftools.redux.ReduxConfig.ProcessOnlyReadIds;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.ReduxConfig.SEQUENCING_TYPE;
 import static com.hartwig.hmftools.redux.ReduxConfig.isIllumina;
@@ -22,7 +21,6 @@ import static com.hartwig.hmftools.redux.common.ReadInfo.readToString;
 import static com.hartwig.hmftools.redux.consensus.SbxRoutines.SBX_READ_CACHE_GROUP_SIZE;
 import static com.hartwig.hmftools.redux.consensus.SbxRoutines.SBX_READ_CACHE_LOG_READ_COUNT_THRESHOLD;
 import static com.hartwig.hmftools.redux.consensus.SbxRoutines.SBX_READ_CACHE_MAX_SOFT_CLIP;
-import static com.hartwig.hmftools.redux.consensus.SbxRoutines.prepProcessRead;
 import static com.hartwig.hmftools.redux.duplicate.ReadCache.DEFAULT_POP_DISTANCE_CHECK;
 
 import static org.apache.logging.log4j.Level.DEBUG;
@@ -469,7 +467,7 @@ public class PartitionReader
 
             if(mConfig.LogDuplicateGroupSize > 0 && duplicateGroup.totalReadCount() >= mConfig.LogDuplicateGroupSize)
             {
-                RD_LOGGER.debug("dup group size({}) coords({})", duplicateGroup.totalReadCount(), duplicateGroup.fragmentCoordinates());
+                RD_LOGGER.debug("dup group size({}) coords({})", duplicateGroup.totalReadCount(), duplicateGroup.fragCoordinates());
             }
         }
 

@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_CIGAR;
 import static com.hartwig.hmftools.redux.TestUtils.createPartitionRead;
 import static com.hartwig.hmftools.redux.consensus.TemplateReads.selectTemplateRead;
 import static com.hartwig.hmftools.redux.duplicate.UmiDuplicatesTest.nextReadId;
+import static com.hartwig.hmftools.redux.duplicate.UmiType.TWIST_DUPEX_DELIM;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -224,21 +225,20 @@ public class UmiGroupJitterTest
         refGenome.RefGenomeMap.put(CHR_1, "A".repeat(1_000));
         refGenome.ChromosomeLengths.put(CHR_1, 1_000);
 
-        ReduxConfig config = new ReduxConfig(refGenome, true, true, false, READ_UNMAPPER_DISABLED);
-        UmiConfig umiConfig = config.UMIs;
-
+        UmiConfig umiConfig = new UmiConfig(true, true, TWIST_DUPEX_DELIM, false);
         UmiGroupBuilder umiGroupBuilder = new UmiGroupBuilder(umiConfig, new UmiStatistics());
 
-        String umi1 = "AAAAA";
+        String umi1 = "AAAAA_CCCCC";
         String umi2 = umi1;
+        int mateStart = 1000;
 
         SAMRecord read1 = SamRecordTestUtils.createSamRecord(
-                nextReadId(umi1), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 1_000, false,
+                nextReadId(umi1), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, mateStart, false,
                 false, null, true, TEST_READ_CIGAR);
 
         SAMRecord read2 = SamRecordTestUtils.createSamRecord(
                 nextReadId(umi2), CHR_1, 100 + SINGLE_END_JITTER_COLLAPSE_DISTANCE, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1,
-                1_000, false, false, null, true, TEST_READ_CIGAR);
+                mateStart, false, false, null, true, TEST_READ_CIGAR);
 
         List<DuplicateGroup> duplicateGroups = Lists.newArrayList();
         List<ReadInfo> singleFragments = Lists.newArrayList(
@@ -246,7 +246,7 @@ public class UmiGroupJitterTest
                 new ReadInfo(read2, FragmentCoords.fromRead(read2, true))
         );
 
-        List<DuplicateGroup> umiGroups = umiGroupBuilder.processUmiGroups(duplicateGroups, singleFragments, true);
+        List<DuplicateGroup> umiGroups = umiGroupBuilder.processUmiGroups(duplicateGroups, singleFragments, false);
 
         assertTrue(singleFragments.isEmpty());
         assertEquals(1, umiGroups.size());
@@ -264,7 +264,6 @@ public class UmiGroupJitterTest
         String umiIdPart2 = "C".repeat(6);
         String forwardUmiId = umiIdPart1 + DEFAULT_DUPLEX_UMI_DELIM + umiIdPart2;
         String reverseUmiId = umiIdPart2 + DEFAULT_DUPLEX_UMI_DELIM + umiIdPart1;
-
 
         SAMRecord read1 = SamRecordTestUtils.createSamRecord("READ_001:" + forwardUmiId, CHR_1, 200, TEST_READ_BASES,
                 TEST_READ_CIGAR, CHR_2, 200, false, false, null, true, TEST_READ_CIGAR);
@@ -319,17 +318,16 @@ public class UmiGroupJitterTest
         refGenome.RefGenomeMap.put(CHR_2, "A".repeat(1_000));
         refGenome.ChromosomeLengths.put(CHR_2, 1_000);
 
-        ReduxConfig config = new ReduxConfig(refGenome, true, true, false, READ_UNMAPPER_DISABLED);
-        UmiConfig umiConfig = config.UMIs;
+        UmiConfig umiConfig = new UmiConfig(true, true, TWIST_DUPEX_DELIM, false);
         UmiGroupBuilder umiGroupBuilder = new UmiGroupBuilder(umiConfig, new UmiStatistics());
 
         List<ReadInfo> chr1SingleReads = chr1FragmentCoordsReads.SingleReads;
         List<DuplicateGroup> chr1UmiGroups = umiGroupBuilder.processUmiGroups(
-                chr1FragmentCoordsReads.DuplicateGroups, chr1SingleReads, true);
+                chr1FragmentCoordsReads.DuplicateGroups, chr1SingleReads, false);
 
         List<ReadInfo> chr2SingleReads = chr2FragmentCoordsReads.SingleReads;
         List<DuplicateGroup> chr2UmiGroups = umiGroupBuilder.processUmiGroups(
-                chr2FragmentCoordsReads.DuplicateGroups, chr2SingleReads, true);
+                chr2FragmentCoordsReads.DuplicateGroups, chr2SingleReads, false);
 
         assertEquals(1, chr1UmiGroups.size());
         assertEquals(0, chr1SingleReads.size());
@@ -342,12 +340,12 @@ public class UmiGroupJitterTest
         assertEquals(chr1SingleReadNames, chr2SingleReadNames);
 
         List<String> chr1TemplateReadNames = chr1UmiGroups.stream()
-                .map(x -> selectTemplateRead(x.reads(), x.fragmentCoordinates()).getReadName())
+                .map(x -> selectTemplateRead(x.reads(), x.fragCoordinates()).getReadName())
                 .sorted()
                 .collect(Collectors.toList());
 
         List<String> chr2TemplateReadNames = chr2UmiGroups.stream()
-                .map(x -> selectTemplateRead(x.reads(), x.fragmentCoordinates()).getReadName())
+                .map(x -> selectTemplateRead(x.reads(), x.fragCoordinates()).getReadName())
                 .sorted()
                 .collect(Collectors.toList());
 

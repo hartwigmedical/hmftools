@@ -467,8 +467,8 @@ public class UmiDuplicatesTest
         DuplicateGroup readGroup = new DuplicateGroup(Lists.newArrayList(read1, read2), FragmentCoords.fromRead(read1, true));
         DuplicateGroup mateGroup = new DuplicateGroup(Lists.newArrayList(mate2, mate1), FragmentCoords.fromRead(mate1, true));
 
-        List<DuplicateGroup> readUmiGroups = buildUmiGroups(readGroup.fragmentCoordinates(), readGroup.reads(), umiConfig);
-        List<DuplicateGroup> mateUmiGroups = buildUmiGroups(mateGroup.fragmentCoordinates(), mateGroup.reads(), umiConfig);
+        List<DuplicateGroup> readUmiGroups = buildUmiGroups(readGroup.fragCoordinates(), readGroup.reads(), umiConfig);
+        List<DuplicateGroup> mateUmiGroups = buildUmiGroups(mateGroup.fragCoordinates(), mateGroup.reads(), umiConfig);
 
         assertEquals(1, readUmiGroups.size());
         assertEquals(1, mateUmiGroups.size());
@@ -476,10 +476,10 @@ public class UmiDuplicatesTest
         DuplicateGroup readUmiGroup = readUmiGroups.get(0);
         DuplicateGroup mateUmiGroup = mateUmiGroups.get(0);
 
-        SAMRecord readTemplate = TemplateReads.selectTemplateRead(readUmiGroup.reads(), readUmiGroup.fragmentCoordinates());
+        SAMRecord readTemplate = TemplateReads.selectTemplateRead(readUmiGroup.reads(), readUmiGroup.fragCoordinates());
         String readConsensusReadName = formConsensusReadId(readTemplate, readUmiGroup.umi());
 
-        SAMRecord mateTemplate = TemplateReads.selectTemplateRead(mateUmiGroup.reads(), mateUmiGroup.fragmentCoordinates());
+        SAMRecord mateTemplate = TemplateReads.selectTemplateRead(mateUmiGroup.reads(), mateUmiGroup.fragCoordinates());
         String mateConsensusReadName = formConsensusReadId(mateTemplate, mateUmiGroup.umi());
 
         assertEquals(readConsensusReadName, mateConsensusReadName);
@@ -561,7 +561,7 @@ public class UmiDuplicatesTest
         flipFirstInPair(mate1);
 
         read2 = cloneSamRecord(read1, readName2);
-        mate2 = cloneSamRecord(mate1, readName2);
+        // mate2 = cloneSamRecord(mate1, readName2);
 
         singleFragments = formSingleFragments(List.of(read1, read2));
 

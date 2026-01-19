@@ -91,12 +91,12 @@ public class JitterReadCache implements IReadCache
 
     public void pushSingleRead(final ReadInfo readInfo)
     {
-        pushDuplicateGroup(new DuplicateGroup(null, readInfo.read(), readInfo.coordinates()));
+        pushDuplicateGroup(new DuplicateGroup(null, readInfo.read(), readInfo.fragCoordinates()));
     }
 
     public void pushDuplicateGroup(final DuplicateGroup duplicateGroup)
     {
-        FragmentCoords coords = duplicateGroup.fragmentCoordinates();
+        FragmentCoords coords = duplicateGroup.fragCoordinates();
         String collapsedKey = collapseToNonOrientedKeyWithoutCoordinates(coords);
         mCollapsedPartitionLookup.computeIfAbsent(collapsedKey, key -> new CollapsedPartition());
         mCollapsedPartitionLookup.get(collapsedKey).pushDuplicateGroup(duplicateGroup);
@@ -157,13 +157,13 @@ public class JitterReadCache implements IReadCache
         List<DuplicateGroup> duplicateGroups = Lists.newArrayList();
         for(ReadInfo singleRead : fragmentCoordReads.SingleReads)
         {
-            if(singleRead.coordinates().PositionUpper == NO_POSITION)
+            if(singleRead.fragCoordinates().PositionUpper == NO_POSITION)
             {
                 singleReads.add(singleRead);
                 continue;
             }
 
-            if(singleRead.coordinates().SuppReadInfo != null)
+            if(singleRead.fragCoordinates().SuppReadInfo != null)
             {
                 singleReads.add(singleRead);
                 continue;
@@ -175,13 +175,13 @@ public class JitterReadCache implements IReadCache
 
         for(DuplicateGroup duplicateGroup : fragmentCoordReads.DuplicateGroups)
         {
-            if(duplicateGroup.fragmentCoordinates().PositionUpper == NO_POSITION)
+            if(duplicateGroup.fragCoordinates().PositionUpper == NO_POSITION)
             {
                 duplicateGroups.add(duplicateGroup);
                 continue;
             }
 
-            if(duplicateGroup.fragmentCoordinates().SuppReadInfo != null)
+            if(duplicateGroup.fragCoordinates().SuppReadInfo != null)
             {
                 duplicateGroups.add(duplicateGroup);
                 continue;
@@ -378,7 +378,7 @@ public class JitterReadCache implements IReadCache
 
         public void pushDuplicateGroup(final DuplicateGroup duplicateGroup)
         {
-            FragmentCoords coords = duplicateGroup.fragmentCoordinates();
+            FragmentCoords coords = duplicateGroup.fragCoordinates();
             int upperBoundary = coords.readPosition() + SINGLE_END_JITTER_COLLAPSE_DISTANCE;
             mDuplicateGroupLookup.put(coords, duplicateGroup);
             mCoordsMerger.add(coords);

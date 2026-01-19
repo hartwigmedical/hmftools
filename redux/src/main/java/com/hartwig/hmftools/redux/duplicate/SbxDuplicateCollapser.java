@@ -5,10 +5,9 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
-import static com.hartwig.hmftools.redux.duplicate.FragmentCoords.FRAG_ORIENT_FORWARD_STR;
-import static com.hartwig.hmftools.redux.duplicate.FragmentCoords.FRAG_ORIENT_REVERSE_STR;
-import static com.hartwig.hmftools.redux.duplicate.FragmentCoords.FRAG_TYPE_SUPP_INFO_STR;
+import static com.hartwig.hmftools.redux.duplicate.FragmentCoords.COORD_ORIENT_FORWARD_STR;
+import static com.hartwig.hmftools.redux.duplicate.FragmentCoords.COORD_ORIENT_REVERSE_STR;
+import static com.hartwig.hmftools.redux.duplicate.FragmentCoords.COORD_READ_SUPP_INFO_STR;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -219,7 +218,7 @@ public class SbxDuplicateCollapser
         {
             for(ReadInfo readInfo : singleReads)
             {
-                String key = collapseKey(readInfo.coordinates());
+                String key = collapseKey(readInfo.fragCoordinates());
 
                 List<GroupInfo> groups = keyGroups.get(key);
 
@@ -230,7 +229,7 @@ public class SbxDuplicateCollapser
                 }
 
                 GroupInfo groupInfo = new GroupInfo(
-                        readInfo, readInfo.coordinates().PositionLower, readInfo.coordinates().PositionUpper, 1);
+                        readInfo, readInfo.fragCoordinates().PositionLower, readInfo.fragCoordinates().PositionUpper, 1);
 
                 groups.add(groupInfo);
             }
@@ -240,7 +239,7 @@ public class SbxDuplicateCollapser
         {
             for(DuplicateGroup duplicateGroup : duplicateGroups)
             {
-                String key = collapseKey(duplicateGroup.fragmentCoordinates());
+                String key = collapseKey(duplicateGroup.fragCoordinates());
 
                 List<GroupInfo> groups = keyGroups.get(key);
 
@@ -251,8 +250,8 @@ public class SbxDuplicateCollapser
                 }
 
                 GroupInfo groupInfo = new GroupInfo(
-                            duplicateGroup, duplicateGroup.fragmentCoordinates().PositionLower,
-                            duplicateGroup.fragmentCoordinates().PositionUpper, duplicateGroup.reads().size());
+                            duplicateGroup, duplicateGroup.fragCoordinates().PositionLower,
+                            duplicateGroup.fragCoordinates().PositionUpper, duplicateGroup.reads().size());
 
                 groups.add(groupInfo);
             }
@@ -305,7 +304,7 @@ public class SbxDuplicateCollapser
                     }
 
                     // convert single read to group
-                    duplicateGroup = new DuplicateGroup(null, readInfo.read(), readInfo.coordinates());
+                    duplicateGroup = new DuplicateGroup(null, readInfo.read(), readInfo.fragCoordinates());
                 }
                 else
                 {
@@ -458,10 +457,10 @@ public class SbxDuplicateCollapser
 
     private static String collapseKey(final FragmentCoords fragmentCoords)
     {
-        String key = fragmentCoords.OrientLower.isForward() ? FRAG_ORIENT_FORWARD_STR : FRAG_ORIENT_REVERSE_STR;
+        String key = fragmentCoords.OrientLower.isForward() ? COORD_ORIENT_FORWARD_STR : COORD_ORIENT_REVERSE_STR;
         if(fragmentCoords.SuppReadInfo != null)
         {
-            return key + "_" + FRAG_TYPE_SUPP_INFO_STR;
+            return key + "_" + COORD_READ_SUPP_INFO_STR;
         }
 
         return key;
