@@ -479,7 +479,7 @@ public class SequenceBuilder
                 BaseQualType qualType = read.straddlingQualType(read.readIndex(), previousIndex); // order doesn't matter
 
                 return SequenceDiffInfo.fromIndel(
-                        read.readIndex(), mCurrentIndex, "", SequenceDiffType.DELETE, qualType, 1);
+                        read.readIndex(), mCurrentIndex, "", SequenceDiffType.DELETE, qualType, -1);
             }
         }
 
@@ -614,9 +614,11 @@ public class SequenceBuilder
 
             BaseQualType baseQualType = read.rangeMinQualType(readRepeatStart, readRepeatEnd);
 
+            int readRepeatBaseCountDiff = (readRepeatCount - consensusRepeatCount) * selectedRepeatBases.length();
+
             seqDiffInfos[readIndex] = new SequenceDiffInfo(
                     read.readIndex(), mCurrentIndex, selectedRepeatBases, diffType, baseQualType,
-                    readRepeatCount, readRepeatIndexBegin, 0);
+                    readRepeatCount, readRepeatIndexBegin, readRepeatBaseCountDiff);
         }
     }
 

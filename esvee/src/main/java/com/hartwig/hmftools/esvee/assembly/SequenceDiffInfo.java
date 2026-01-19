@@ -14,7 +14,9 @@ public class SequenceDiffInfo
     public final String Bases; // either the alt SNV base, the novel indel or the repeat sequence if a contraction or expansion
     public final SequenceDiffType Type;
 
-    public final int IndelLength; // novel indel length
+    // novel indel length (+ve for inserts, -ve for deletes
+    // for repeat differences the adjustment relative to the consensus repeat, eg read has ATATAT, consensus has ATATATAT, IndelLength = -2
+    public final int IndelLength;
 
     // repeat-diff fields
     public final int RepeatCount; // repeat count in the read

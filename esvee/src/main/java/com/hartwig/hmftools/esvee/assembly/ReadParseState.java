@@ -140,7 +140,7 @@ public class ReadParseState
         }
         else if(seqDiffInfo.Type == DELETE)
         {
-            // hold on base
+            // hold on base - only 1 base deletes are currently supported
         }
         else if(seqDiffInfo.Type == INSERT)
         {
