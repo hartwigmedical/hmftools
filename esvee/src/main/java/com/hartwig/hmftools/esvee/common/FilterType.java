@@ -27,6 +27,7 @@ public enum FilterType
     SBX_STRAND_BIAS("sbxStrandBias", "SBX strand-bias", false),
     SBX_ARTEFACT("sbxArtefact", "SBX artefact", false),
     SBX_INV_ZERO_MOTIF("sbxInvZeroMotif", "SBX artefact, zero-length INV with known motif", false),
+    OFF_TARGET("offTarget", "Outside target panel", false),
     PON("PON", "Found in panel of normals", true);
 
     private final String mVcfTag;

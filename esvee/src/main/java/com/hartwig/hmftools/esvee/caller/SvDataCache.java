@@ -15,6 +15,7 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantFactory;
 import com.hartwig.hmftools.common.variant.GenotypeIds;
+import com.hartwig.hmftools.esvee.common.FilterType;
 
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.filter.CompoundFilter;
@@ -55,33 +56,36 @@ public class SvDataCache
     public int hardFilteredCount() { return mHardFilteredCount; }
     public int incompleteSVs() { return mSvFactory.unmatched().size(); }
 
-    public void processVariant(final VariantContext variant, final GenotypeIds genotypeIds)
+    public void processVariant(final VariantContext variantContext, final GenotypeIds genotypeIds)
     {
-        if(!HumanChromosome.contains(variant.getContig()))
+        if(!HumanChromosome.contains(variantContext.getContig()))
             return;
 
-        boolean isSgl = StructuralVariantFactory.isSingleBreakend(variant);
+        boolean isSgl = StructuralVariantFactory.isSingleBreakend(variantContext);
 
         if(isSgl)
         {
-            if(mTargetRegions.hasTargetRegions() && !mTargetRegions.inTargetRegions(variant.getContig(), variant.getStart()))
+            StructuralVariant sv = mSvFactory.createSingleBreakend(variantContext);
+            Variant variant = new Variant(sv, genotypeIds);
+
+            if(mTargetRegions.hasTargetRegions() && !mTargetRegions.inTargetRegions(variantContext.getContig(), variantContext.getStart()))
             {
-                ++mHardFilteredCount;
-                return;
+                variant.addFilter(FilterType.OFF_TARGET);
+                // ++mHardFilteredCount;
+                // return;
             }
 
-            StructuralVariant sv = mSvFactory.createSingleBreakend(variant);
-            addSvData(new Variant(sv, genotypeIds));
+            addSvData(variant);
             return;
         }
 
-        String mateId = StructuralVariantFactory.mateId(variant);
+        String mateId = StructuralVariantFactory.mateId(variantContext);
 
         if(mateId == null)
             return;
 
         int currentSvCount = mSvFactory.results().size();
-        mSvFactory.addVariantContext(variant);
+        mSvFactory.addVariantContext(variantContext);
 
         // check if both breakends have now been encountered
         if(currentSvCount == mSvFactory.results().size())
@@ -93,10 +97,14 @@ public class SvDataCache
             return;
 
         // one of the breakends at least must be within a targeted region
-        if(mTargetRegions.hasTargetRegions() && !svWithinTargetedRegion(sv))
-            return;
+        Variant variant = new Variant(sv, genotypeIds);
 
-        addSvData(new Variant(sv, genotypeIds));
+        if(mTargetRegions.hasTargetRegions() && !svWithinTargetedRegion(sv))
+        {
+            variant.addFilter(FilterType.OFF_TARGET);
+        }
+
+        addSvData(variant);
     }
 
     private boolean svWithinTargetedRegion(final StructuralVariant sv)
