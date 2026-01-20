@@ -65,8 +65,8 @@ public class ObservedRegionFactory
     }
 
     public static void setSpecificRegions(
-            final RefGenomeVersion refGenomeVersion, final Map<Chromosome,GenomePosition> chrLengths,
-            final Map<Chromosome,GenomePosition> centromeres)
+            final RefGenomeVersion refGenomeVersion, final Map<Chromosome, GenomePosition> chrLengths,
+            final Map<Chromosome, GenomePosition> centromeres)
     {
         EXCLUDED_IMMUNE_REGIONS.addAll(ImmuneRegions.getIgRegions(refGenomeVersion));
         EXCLUDED_IMMUNE_REGIONS.addAll(ImmuneRegions.getTrRegions(refGenomeVersion));
@@ -98,7 +98,7 @@ public class ObservedRegionFactory
 
     public List<ObservedRegion> formObservedRegions(
             final List<PurpleSupportSegment> regions, final Multimap<Chromosome, AmberBAF> bafs,
-            final Map<Chromosome,List<CobaltRatio>> ratios)
+            final Map<Chromosome, List<CobaltRatio>> ratios)
     {
         List<ObservedRegion> observedRegions = Lists.newArrayList();
 
@@ -107,7 +107,8 @@ public class ObservedRegionFactory
 
         List<Integer> candidateGermlineAmpDelRegions = Lists.newArrayList();
 
-        for(PurpleSupportSegment region : regions)
+        List<PurpleSupportSegment> refinedRegions = new ExcludedRegionsRefiner(EXCLUDED_IMMUNE_REGIONS).refine(regions);
+        for(PurpleSupportSegment region : refinedRegions)
         {
             final BAFAccumulator baf = new BAFAccumulator();
             final CobaltAccumulator cobalt = new CobaltAccumulator(mWindowSize, region);
@@ -128,7 +129,7 @@ public class ObservedRegionFactory
                     region.SvCluster, tumorMeanContent, region.minStart(), region.maxStart());
 
             if(observedRegion.start() > observedRegion.end()
-            || !positionsWithin(region.minStart(), region.maxStart(), observedRegion.start(), observedRegion.end()))
+                    || !positionsWithin(region.minStart(), region.maxStart(), observedRegion.start(), observedRegion.end()))
             {
                 PPL_LOGGER.error("invalid observed region: {}", observedRegion);
             }
@@ -171,7 +172,9 @@ public class ObservedRegionFactory
             final PurpleSupportSegment region, final GermlineStatus germlineStatus, double rawNormalRatio, double normalRatio)
     {
         if(germlineStatus != DIPLOID || normalRatio <= 0 || region.chr().isAllosome())
+        {
             return false;
+        }
 
         if(GERMLINE_AMP_DEL_EXCLUSIONS.stream()
                 .anyMatch(x -> x.Chromosome.equals(region.Chromosome) && positionsWithin(region.start(), region.end(), x.start(), x.end())))
@@ -190,7 +193,9 @@ public class ObservedRegionFactory
     private static boolean isGermlineAmpDelRatio(double rawNormalRatio, double normalRatio)
     {
         if(normalRatio == 0)
+        {
             return false;
+        }
 
         double ratio = rawNormalRatio / normalRatio;
         return ratio < GERMLINE_DEL_RATIO || ratio > GERMLINE_AMP_RATIO;
@@ -200,14 +205,18 @@ public class ObservedRegionFactory
     {
         // test for diploid regions with evidence of germline AMPs or DELs
         if(candidateGermlineAmpDelRegions.isEmpty())
+        {
             return;
+        }
 
         Set<Integer> processedCandidateIndices = Sets.newHashSet();
 
         for(Integer candidateRegionIndex : candidateGermlineAmpDelRegions)
         {
             if(processedCandidateIndices.contains(candidateRegionIndex))
+            {
                 continue;
+            }
 
             ObservedRegion candidateRegion = observedRegions.get(candidateRegionIndex);
 
@@ -222,10 +231,12 @@ public class ObservedRegionFactory
                 ObservedRegion nextRegion = observedRegions.get(j);
 
                 if(!nextRegion.chromosome().equals(candidateRegion.chromosome()))
+                {
                     break;
+                }
 
                 if(nextRegion.support() == SegmentSupport.CENTROMERE
-                || nextRegion.germlineStatus() == DIPLOID && !isGermlineAmpDelCandidate(nextRegion))
+                        || nextRegion.germlineStatus() == DIPLOID && !isGermlineAmpDelCandidate(nextRegion))
                 {
                     candidateRangeMin = nextRegion.end();
                     break;
@@ -254,7 +265,7 @@ public class ObservedRegionFactory
                 }
 
                 if(nextRegion.support() == SegmentSupport.CENTROMERE
-                || nextRegion.germlineStatus() == DIPLOID && !isGermlineAmpDelCandidate(nextRegion))
+                        || nextRegion.germlineStatus() == DIPLOID && !isGermlineAmpDelCandidate(nextRegion))
                 {
                     candidateRangeMax = nextRegion.start();
                     break;
@@ -391,10 +402,20 @@ public class ObservedRegionFactory
             return mUnnormalisedReferenceAccumulator.meanRatio();
         }
 
-        double tumorMedianRatio() { return mTumorGcRatioAccumulator.medianRatio(); }
-        double tumorMeanContent() { return mTumorGcContentAccumulator.meanRatio(); }
+        double tumorMedianRatio()
+        {
+            return mTumorGcRatioAccumulator.medianRatio();
+        }
 
-        int tumorCount() { return mTumorGcRatioAccumulator.count(); }
+        double tumorMeanContent()
+        {
+            return mTumorGcContentAccumulator.meanRatio();
+        }
+
+        int tumorCount()
+        {
+            return mTumorGcRatioAccumulator.count();
+        }
 
         @Override
         public void accept(final CobaltRatio ratio)
@@ -402,7 +423,9 @@ public class ObservedRegionFactory
             if(mWindow.end(ratio.position()) <= mRegion.end())
             {
                 if(ratio.referenceGCDiploidRatio() < 0)
+                {
                     return;
+                }
 
                 mReferenceAccumulator.add(ratio.referenceGCDiploidRatio());
                 mUnnormalisedReferenceAccumulator.add(ratio.referenceGCRatio());
@@ -430,14 +453,20 @@ public class ObservedRegionFactory
         private double medianRatio()
         {
             if(mRatios.isEmpty())
+            {
                 return 0;
+            }
 
             int medianIndex = mRatios.size() / 2;
 
             if((mRatios.size() % 2) == 0)
+            {
                 return (mRatios.get(medianIndex - 1) + mRatios.get(medianIndex)) * 0.5;
+            }
             else
+            {
                 return mRatios.get(medianIndex);
+            }
         }
 
         private int count()
@@ -453,7 +482,9 @@ public class ObservedRegionFactory
         public boolean add(double ratio, boolean keepValues)
         {
             if(!Doubles.greaterThan(ratio, -1))
+            {
                 return false;
+            }
 
             mCount++;
             mSumRatio += ratio;
@@ -465,7 +496,9 @@ public class ObservedRegionFactory
                 while(index < mRatios.size())
                 {
                     if(ratio < mRatios.get(index))
+                    {
                         break;
+                    }
 
                     ++index;
                 }

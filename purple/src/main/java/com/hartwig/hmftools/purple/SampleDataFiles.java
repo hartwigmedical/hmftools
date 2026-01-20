@@ -25,19 +25,19 @@ public class SampleDataFiles
     public final String CobaltDirectory;
 
     public static final String SAMPLE_DIR = "sample_dir";
-    private static final String AMBER = "amber";
-    private static final String COBALT = "cobalt";
-    private static final String SOMATIC_SV_VCF = "somatic_sv_vcf";
-    private static final String GERMLINE_SV_VCF = "germline_sv_vcf";
+    public static final String AMBER = "amber";
+    public static final String COBALT = "cobalt";
+    public static final String SOMATIC_SV_VCF = "somatic_sv_vcf";
+    public static final String GERMLINE_SV_VCF = "germline_sv_vcf";
     public static final String GERMLINE_VARIANTS = "germline_vcf";
-    private static final String SOMATIC_VARIANTS = "somatic_vcf";
+    public static final String SOMATIC_VARIANTS = "somatic_vcf";
 
     static void addConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addPath(SAMPLE_DIR, false,
                 "Sample data directory containing Cobalt, Amber, Pave and Esvee files");
 
-        configBuilder.addPath(COBALT,false,
+        configBuilder.addPath(COBALT, false,
                 "Cobalt directory - required if <run_dir> not set, otherwise defaults to <run_dir>/cobalt");
 
         configBuilder.addPath(AMBER, false,
@@ -59,18 +59,30 @@ public class SampleDataFiles
                 configBuilder, PIPELINE_FORMAT_CFG, PIPELINE_FORMAT_FILE_CFG);
 
         if(configBuilder.hasValue(AMBER))
+        {
             AmberDirectory = checkAddDirSeparator(configBuilder.getValue(AMBER));
+        }
         else if(SampleDataDir != null)
+        {
             AmberDirectory = SampleDataDir + pipelineToolDirectories.amberDir() + File.separator;
+        }
         else
+        {
             AmberDirectory = null;
+        }
 
         if(configBuilder.hasValue(COBALT))
+        {
             CobaltDirectory = checkAddDirSeparator(configBuilder.getValue(COBALT));
+        }
         else if(SampleDataDir != null)
+        {
             CobaltDirectory = SampleDataDir + pipelineToolDirectories.cobaltDir() + File.separator;
+        }
         else
+        {
             CobaltDirectory = null;
+        }
 
         SomaticSvVcfFile = getFilename(
                 configBuilder, SOMATIC_SV_VCF, pipelineToolDirectories.esveeDir(), sampleId, ".esvee.somatic.vcf.gz");
@@ -99,7 +111,9 @@ public class SampleDataFiles
     private boolean hasValidVcfSampleNames(final String vcfFile, final PurpleConfig config)
     {
         if(vcfFile.isEmpty())
+        {
             return true;
+        }
 
         VcfFileReader vcfReader = new VcfFileReader(vcfFile);
 
@@ -128,19 +142,25 @@ public class SampleDataFiles
             final String filename = configBuilder.getValue(config);
 
             if(Files.exists(Paths.get(filename)))
+            {
                 return filename;
+            }
 
             PPL_LOGGER.error("missing file: {}", filename);
             return null;
         }
 
         if(SampleDataDir == null)
+        {
             return "";
+        }
 
         String filename = SampleDataDir + toolDir + File.separator + sampleId + fileSuffix;
 
         if(Files.exists(Paths.get(filename)))
+        {
             return filename;
+        }
 
         filename = SampleDataDir + sampleId + fileSuffix;
 

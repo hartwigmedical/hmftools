@@ -69,8 +69,8 @@ import j2html.tags.DomContent;
 
 public class AssemblyVisualiser
 {
-    public record SegmentViewModel(String chromosome, BaseRegion viewRegion, BaseRegion refViewRegion, BaseSeqViewModel refViewModel,
-                                   BaseSeqViewModel assemblyViewModel, boolean isInsert) {}
+    public record SegmentViewModel(String chromosome, BaseRegion refRegion, BaseRegion viewRegion, BaseRegion refViewRegion,
+                                   BaseSeqViewModel refViewModel, BaseSeqViewModel assemblyViewModel, boolean isInsert) {}
 
     private final AssemblyConfig mConfig;
     private final AssemblyAlignment mAssemblyAlignment;
@@ -231,8 +231,14 @@ public class AssemblyVisualiser
 
     private static List<SegmentViewModel> getRefViewModel(final AssemblyConfig config, final AssemblyAlignment assemblyAlignment)
     {
-        List<SegmentViewModel> refViewModel = Lists.newArrayList();
+        // TODO(mkcmkc): remove
+        if(assemblyAlignment.breakends().size() != 2)
+        {
+            SV_LOGGER.error("Expected exactly two breakends.");
+            System.exit(1);
+        }
 
+        List<SegmentViewModel> refViewModel = Lists.newArrayList();
         String fullAssemblySeq = assemblyAlignment.fullSequence();
         int baseIdx = 0;
         for(int i = 0; i < assemblyAlignment.breakends().size(); i++)
@@ -267,14 +273,21 @@ public class AssemblyVisualiser
                 refViewRegion = new BaseRegion(viewRegionStart, viewRegionEnd);
             }
 
-            refViewModel.add(new SegmentViewModel(breakendInfo.chromosome, viewRegion, refViewRegion, refSeqViewModel, assemblySeqViewModel, false));
+            refViewModel.add(new SegmentViewModel(breakendInfo.chromosome, breakendInfo.refRegion, viewRegion, refViewRegion, refSeqViewModel, assemblySeqViewModel, false));
             if(i < assemblyAlignment.breakends().size() - 1 && breakendInfo.insertedBases != null && !breakendInfo.insertedBases.isEmpty())
             {
                 BaseSeqViewModel insertSeqViewModel = BaseSeqViewModel.fromStr(breakendInfo.insertedBases, baseIdx);
                 baseIdx += breakendInfo.insertedBases.length();
                 viewRegion = new BaseRegion(insertSeqViewModel.FirstBasePos, insertSeqViewModel.LastBasePos);
-                refViewModel.add(new SegmentViewModel(null, viewRegion, null, null, insertSeqViewModel, true));
+                refViewModel.add(new SegmentViewModel(null, null, viewRegion, null, null, insertSeqViewModel, true));
             }
+        }
+
+        // TODO(mkcmkc): remove
+        if(baseIdx != fullAssemblySeq.length())
+        {
+            SV_LOGGER.error("Didn't consume all assembly bases.");
+            System.exit(1);
         }
 
         return refViewModel;
