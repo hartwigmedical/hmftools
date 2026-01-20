@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.purple.region;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates.COORDS_38;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.purple.FittingTestUtils.buildCobaltChromosomes;
 import static com.hartwig.hmftools.purple.FittingTestUtils.createCobaltRatio;
 
@@ -18,6 +20,8 @@ import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.position.GenomePosition;
+import com.hartwig.hmftools.common.genome.position.GenomePositions;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.SegmentSupport;
 import com.hartwig.hmftools.purple.segment.PurpleSupportSegment;
@@ -28,18 +32,66 @@ import org.junit.Test;
 
 public class ObservedRegionFactoryTest
 {
-    private final int segmentLength = 1000;
     private final Chromosome chrA = HumanChromosome._1;
     private final Chromosome chrB = HumanChromosome._2;
-    ObservedRegionFactory factory = new ObservedRegionFactory(segmentLength, buildCobaltChromosomes());
-    private final List<AmberBAF> allBafs = new LinkedList<>();
-    private final List<CobaltRatio> allCobaltRatios = new ArrayList<>();
+    private final Chromosome chr14 = HumanChromosome._14;
+    private ObservedRegionFactory factory;
+    private List<AmberBAF> allBafs = new LinkedList<>();
+    private List<CobaltRatio> allCobaltRatios = new ArrayList<>();
 
     @Before
     public void setup()
     {
-        allBafs.clear();
-        allCobaltRatios.clear();
+        Map<Chromosome, GenomePosition> lengths = new HashMap<>();
+        Map<Chromosome, GenomePosition> centromeres = new HashMap<>();
+        for(HumanChromosome chromosome : HumanChromosome.values())
+        {
+            String chrStr = V38.versionedChromosome(chromosome);
+            lengths.put(chromosome, GenomePositions.create(chrStr, COORDS_38.Lengths.get(chromosome)));
+            centromeres.put(chromosome, GenomePositions.create(chrStr, COORDS_38.Centromeres.get(chromosome)));
+        }
+        ObservedRegionFactory.setSpecificRegions(V38, lengths, centromeres);
+        final int segmentLength = 1000;
+        factory = new ObservedRegionFactory(segmentLength, buildCobaltChromosomes());
+        allBafs = new LinkedList<>();
+        allCobaltRatios = new ArrayList<>();
+    }
+
+    @Test
+    public void excludedRegions()
+    {
+        // There's an excluded immune region, TRAD, on chr14 from 21622293 to 22552156 (in V38)
+        int tradStart = 21622293;
+        int tradEnd = 22552156;
+        PurpleSupportSegment r = purpleSupportSegment(chr14, 21480001, 21487000);
+        PurpleSupportSegment s = purpleSupportSegment(chr14, 21487001, 21663000);
+        PurpleSupportSegment t = purpleSupportSegment(chr14, 21663001, 21665000);
+        PurpleSupportSegment u = purpleSupportSegment(chr14, 21665001, 22636000);
+        PurpleSupportSegment v = purpleSupportSegment(chr14, 22636001, 22640000);
+
+        List<ObservedRegion> result = factory.formObservedRegions(List.of(r, s, t, u, v), ArrayListMultimap.create(), new HashMap<>());
+        assertEquals(7, result.size());
+
+        assertEquals(r.start(), result.get(0).start());
+        assertEquals(r.end(), result.get(0).end());
+
+        assertEquals(s.start(), result.get(1).start());
+        assertEquals(tradStart - 1, result.get(1).end());
+
+        assertEquals(tradStart, result.get(2).start());
+        assertEquals(s.end(), result.get(2).end());
+
+        assertEquals(t.start(), result.get(3).start());
+        assertEquals(t.end(), result.get(3).end());
+
+        assertEquals(u.start(), result.get(4).start());
+        assertEquals(tradEnd, result.get(4).end());
+
+        assertEquals(tradEnd + 1, result.get(5).start());
+        assertEquals(u.end(), result.get(5).end());
+
+        assertEquals(v.start(), result.get(6).start());
+        assertEquals(v.end(), result.get(6).end());
     }
 
     @Test
@@ -138,7 +190,7 @@ public class ObservedRegionFactoryTest
     public void windowsWithNegativeReferenceDiploidGcRatiosAreIgnored()
     {
         Map<Chromosome, List<CobaltRatio>> ratios = new HashMap<>();
-        CobaltRatio ratio = new CobaltRatio(chrA.toString(), 5000, 0.5, 0.4, 0.4, -1.0, 0.4, 0.5, 0.5);
+        CobaltRatio ratio = new CobaltRatio(V38.versionedChromosome(chrA), 5000, 0.5, 0.4, 0.4, -1.0, 0.4, 0.5, 0.5);
         ratios.put(chrA, List.of(ratio));
         PurpleSupportSegment segment = purpleSupportSegment(4900);
         List<ObservedRegion> lor = factory.formObservedRegions(List.of(segment), bafMap(), ratios);
@@ -281,5 +333,10 @@ public class ObservedRegionFactoryTest
     private PurpleSupportSegment purpleSupportSegment(Chromosome chr, int start)
     {
         return new PurpleSupportSegment(chr.toString(), start, start + 1000, true, SegmentSupport.NONE, false, start, start);
+    }
+
+    private PurpleSupportSegment purpleSupportSegment(Chromosome chr, int start, int end)
+    {
+        return new PurpleSupportSegment(V38.versionedChromosome(chr), start, end, true, SegmentSupport.NONE, false, start, start);
     }
 }

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.purple.segment;
 
-import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
+import java.util.List;
 
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.purple.SegmentSupport;
@@ -17,6 +17,13 @@ public class PurpleSupportSegment implements GenomeRegion
     private int mEnd;
     private int mMinStart;
     private int mMaxStart;
+
+    public PurpleSupportSegment(
+            final String chromosome, final int start, final int end, final boolean ratioSupport,
+            final SegmentSupport support, final boolean svCluster)
+    {
+        this(chromosome, start, end, ratioSupport, support, svCluster, start, start);
+    }
 
     public PurpleSupportSegment(
             final String chromosome, final int start, final int end, final boolean ratioSupport,
@@ -56,30 +63,58 @@ public class PurpleSupportSegment implements GenomeRegion
         return mEnd;
     }
 
-    public void setStart(int position)  { mStart = position; }
+    public void setStart(int position)
+    {
+        mStart = position;
+    }
 
     public void setEnd(int position)
     {
         mEnd = position;
-
-        // if(checkPositions)
-        //    checkPositions();
     }
 
-    public void setMinStart(int position) { mMinStart = position; }
-    public void setMaxStart(int position) { mMaxStart = position; }
+    public void setMinStart(int position)
+    {
+        mMinStart = position;
+    }
+
+    public void setMaxStart(int position)
+    {
+        mMaxStart = position;
+    }
+
     public int minStart()
     {
         return mMinStart;
     }
-    public int maxStart() { return mMaxStart; }
 
-    private void checkPositions()
+    public int maxStart()
     {
-        if(mEnd < mStart || mMaxStart > mEnd || mMaxStart > mEnd)
+        return mMaxStart;
+    }
+
+    public List<PurpleSupportSegment> split(int position)
+    {
+        if(position <= mStart || position > mEnd)
         {
-            PPL_LOGGER.warn("invalid purple segment: {}", toString());
+            return List.of(this);
         }
+        int endOfLeft = position - 1;
+        int newMaxStart = Math.min(mMaxStart, endOfLeft);
+        return List.of(new PurpleSupportSegment(Chromosome, mStart, endOfLeft, RatioSupport, Support, SvCluster, mMinStart, newMaxStart),
+                new PurpleSupportSegment(Chromosome, position, mEnd, RatioSupport, Support, SvCluster));
+    }
+
+    public List<PurpleSupportSegment> splitBy(GenomeRegion other)
+    {
+        if(!chromosome().equals(other.chromosome()))
+        {
+            return List.of(this);
+        }
+
+        return split(other.start()).stream()
+                .flatMap(segment -> segment.split(other.end() + 1).stream())
+                .toList();
     }
 
     public String toString()
