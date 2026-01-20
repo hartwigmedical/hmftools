@@ -8,6 +8,15 @@ import org.jfree.svg.SVGGraphics2D;
 
 public class SvgUtil
 {
+    private SvgUtil() {}
+
+    public enum Alignment
+    {
+        LEFT,
+        RIGHT,
+        CENTER
+    }
+
     public static Rectangle2D scaleRectangleFromCenter(final Rectangle2D rect, double factor)
     {
         double scaledWidth = factor * rect.getWidth();

@@ -8,6 +8,9 @@ import static java.util.Map.entry;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions.enforceChrPrefix;
 import static com.hartwig.hmftools.common.vis.ColorUtil.PURPLE;
 import static com.hartwig.hmftools.common.vis.ColorUtil.lighten;
+import static com.hartwig.hmftools.common.vis.SvgUtil.Alignment.CENTER;
+import static com.hartwig.hmftools.common.vis.SvgUtil.Alignment.LEFT;
+import static com.hartwig.hmftools.common.vis.SvgUtil.Alignment.RIGHT;
 import static com.hartwig.hmftools.common.vis.SvgUtil.drawStringFromCenter;
 import static com.hartwig.hmftools.common.vis.SvgUtil.getStringBounds;
 
@@ -27,7 +30,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.BaseRegion;
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.vis.SvgUtil.Alignment;
 
 import org.jetbrains.annotations.Nullable;
 import org.jfree.svg.SVGGraphics2D;
@@ -151,11 +154,11 @@ public final class SvgRender
             return;
 
         String delSizeStr = String.valueOf(labelDelLen);
-        renderText(svgCanvas, boxOffset, boxIdxEnd + 1 - 0.5 * delLen, 0.5, INDEL_FONT, Color.BLACK, delSizeStr, Color.WHITE, 1.5);
+        renderText(svgCanvas, boxOffset, boxIdxEnd + 1 - 0.5 * delLen, 0.5, INDEL_FONT, Color.BLACK, delSizeStr, Color.WHITE, 1.5, CENTER);
     }
 
-    private static void renderText(final SVGGraphics2D svgCanvas, final Point2D.Double boxOffset, double boxCenterX, double boxCenterY,
-            final Font font, final Color fgColor, final String text, @Nullable final Color bgColor, double backgroundBoxExpandFactor)
+    private static void renderText(final SVGGraphics2D svgCanvas, final Point2D.Double boxOffset, double boxX, double boxY,
+            final Font font, final Color fgColor, final String text, @Nullable final Color bgColor, double backgroundBoxExpandFactor, final Alignment alignment)
     {
         Font currentFont = svgCanvas.getFont();
         svgCanvas.setFont(font);
@@ -164,22 +167,42 @@ public final class SvgRender
         AffineTransform currentTransform = svgCanvas.getTransform();
         svgCanvas.scale(1.0 / BASE_BOX_SIZE, 1.0 / BASE_BOX_SIZE);
 
-        double textCenterX = (boxCenterX + boxOffset.x) * BASE_BOX_SIZE;
-        double textCenterY = (boxCenterY + boxOffset.y) * BASE_BOX_SIZE;
-
-        if(bgColor != null)
+        Rectangle2D stringBounds = null;
+        if(alignment == CENTER)
         {
-            Rectangle2D textBackgroundRect =
-                    SvgUtil.scaleRectangleFromCenter(SvgUtil.getStringBoundsFromCenter(font, text, textCenterX, textCenterY), backgroundBoxExpandFactor);
-            svgCanvas.setColor(bgColor);
-            svgCanvas.fill(textBackgroundRect);
-        }
 
-        svgCanvas.setColor(fgColor);
-        drawStringFromCenter(svgCanvas, text, textCenterX, textCenterY);
+            double textCenterX = (boxX + boxOffset.x) * BASE_BOX_SIZE;
+            double textCenterY = (boxY + boxOffset.y) * BASE_BOX_SIZE;
+
+            if(bgColor != null)
+            {
+                Rectangle2D textBackgroundRect = SvgUtil.scaleRectangleFromCenter(
+                        SvgUtil.getStringBoundsFromCenter(font, text, textCenterX, textCenterY), backgroundBoxExpandFactor);
+                svgCanvas.setColor(bgColor);
+                svgCanvas.fill(textBackgroundRect);
+            }
+
+            svgCanvas.setColor(fgColor);
+            drawStringFromCenter(svgCanvas, text, textCenterX, textCenterY);
+        }
+        else
+        {
+            stringBounds = getStringBounds(font, text);
+        }
 
         svgCanvas.setTransform(currentTransform);
         svgCanvas.setFont(currentFont);
+
+        if(alignment == LEFT)
+        {
+            double boxCenterX = boxX + stringBounds.getCenterX() / BASE_BOX_SIZE;
+            renderText(svgCanvas, boxOffset, boxCenterX, boxY, font, fgColor, text, bgColor, backgroundBoxExpandFactor, CENTER);
+        }
+        else if(alignment == RIGHT)
+        {
+            double boxCenterX = boxX - stringBounds.getCenterX() / BASE_BOX_SIZE;
+            renderText(svgCanvas, boxOffset, boxCenterX, boxY, font, fgColor, text, bgColor, backgroundBoxExpandFactor, CENTER);
+        }
     }
 
     public static SVGGraphics2D renderBaseSeq(double baseBoxSizePx, final BaseRegion renderRegion, final BaseSeqViewModel bases,
@@ -187,7 +210,7 @@ public final class SvgRender
     {
         SVGGraphics2D svgCanvas = new SVGGraphics2D(
                 baseBoxSizePx * (renderRegion.baseLength() + 2 * BOX_PADDING), baseBoxSizePx);
-        renderBaseSeq(svgCanvas, ZERO_2D, baseBoxSizePx, renderRegion, bases, shadeQuals, posToBordersMap, refBases, true, true);
+        renderBaseSeq(svgCanvas, ZERO_2D, baseBoxSizePx, renderRegion, bases, shadeQuals, posToBordersMap, refBases, true, true, false);
         return svgCanvas;
     }
 
@@ -195,13 +218,13 @@ public final class SvgRender
             final BaseRegion renderRegion, final BaseSeqViewModel bases, boolean shadeQuals,
             final Map<Integer, List<BoxBorder>> posToBordersMap, @Nullable final BaseSeqViewModel refBases)
     {
-        renderBaseSeq(svgCanvas, boxOffset, baseBoxSizePx, renderRegion, bases, shadeQuals, posToBordersMap, refBases, true, true);
+        renderBaseSeq(svgCanvas, boxOffset, baseBoxSizePx, renderRegion, bases, shadeQuals, posToBordersMap, refBases, true, true, false);
     }
 
     public static void renderBaseSeq(final SVGGraphics2D svgCanvas, final Point2D.Double boxOffset, double baseBoxSizePx,
             final BaseRegion renderRegion, final BaseSeqViewModel bases, boolean shadeQuals,
             final Map<Integer, List<BoxBorder>> posToBordersMap, @Nullable final BaseSeqViewModel refBases,
-            boolean renderLeftOrientationMarker, boolean renderRightOrientationMarker)
+            boolean renderLeftOrientationMarker, boolean renderRightOrientationMarker, boolean reverseOrientationMarkers)
     {
         // work in units of BASE_BOX_SIZE
         svgCanvas.scale(baseBoxSizePx, baseBoxSizePx);
@@ -264,7 +287,7 @@ public final class SvgRender
 
                 if(!matchesRef)
                     renderText(svgCanvas, boxOffset,
-                            boxIdx + 0.5, 0.5, svgCanvas.getFont(), fgColour, String.valueOf(base.charBase()), null, 1.0);
+                            boxIdx + 0.5, 0.5, svgCanvas.getFont(), fgColour, String.valueOf(base.charBase()), null, 1.0, CENTER);
             }
 
             // overlapping bases
@@ -324,7 +347,7 @@ public final class SvgRender
             {
                 drawLeftInsertIndicator(svgCanvas, boxOffset, boxIdx);
                 String insertSizeStr = String.valueOf(prevBase.rightInsertCount());
-                renderText(svgCanvas, boxOffset, boxIdx, 0.5, INDEL_FONT, Color.WHITE, insertSizeStr, INSERT_COLOR, 1.0);
+                renderText(svgCanvas, boxOffset, boxIdx, 0.5, INDEL_FONT, Color.WHITE, insertSizeStr, INSERT_COLOR, 1.0, CENTER);
             }
 
             prevBase = base;
@@ -333,7 +356,8 @@ public final class SvgRender
         // final del connector
         if(delLen > 0)
         {
-            drawDel(svgCanvas, boxOffset, delLen, renderRegion.end() + 1 - delLen, renderRegion.end());
+            int boxEndIdx = renderRegion.end() - renderRegion.start() + BOX_PADDING;
+            drawDel(svgCanvas, boxOffset, delLen, boxEndIdx + 1 - delLen, boxEndIdx);
         }
 
         // overlapping base side borders
@@ -350,7 +374,11 @@ public final class SvgRender
         // left orientation indicator
         if(renderLeftOrientationMarker)
         {
-            if(bases.LeftIsForwardStrand)
+            boolean leftIsForwardStrand = bases.LeftIsForwardStrand;
+            if(reverseOrientationMarkers)
+                leftIsForwardStrand = !leftIsForwardStrand;
+
+            if(leftIsForwardStrand)
             {
                 svgCanvas.setColor(FORWARD_STRAND_COLOR);
                 drawRightBoxBorder(svgCanvas, boxOffset, firstBaseIdx - 1, 0.5);
@@ -365,7 +393,11 @@ public final class SvgRender
         // right orientation colour
         if(renderRightOrientationMarker)
         {
-            if(bases.RightIsForwardStrand)
+            boolean rightIsForwardStrand = bases.RightIsForwardStrand;
+            if(reverseOrientationMarkers)
+                rightIsForwardStrand = !rightIsForwardStrand;
+
+            if(rightIsForwardStrand)
             {
                 svgCanvas.setColor(FORWARD_STRAND_COLOR);
                 drawForwardArrow(svgCanvas, boxOffset, lastBaseIdx + 1, 0.0, 0.5, 1.0);
@@ -381,6 +413,12 @@ public final class SvgRender
     public static SVGGraphics2D renderCoords(double baseBoxSizePx, final BaseRegion renderRegion, int centerPosition,
             int displayEveryNthCoord)
     {
+        return renderCoords(baseBoxSizePx, renderRegion, centerPosition, displayEveryNthCoord, false);
+    }
+
+    public static SVGGraphics2D renderCoords(double baseBoxSizePx, final BaseRegion renderRegion, int centerPosition,
+            int displayEveryNthCoord, boolean reverse)
+    {
         double scalingFactor = baseBoxSizePx / BASE_BOX_SIZE;
         double charWidth = getStringBounds(COORD_FONT, "9").getWidth();
         List<Rectangle2D> stringBounds = Lists.newArrayList();
@@ -394,12 +432,12 @@ public final class SvgRender
                 scalingFactor * (maxStringWidth + 2 * charWidth));
         Point2D.Double canvasSize = new Point2D.Double(svgCanvas.getWidth(), svgCanvas.getHeight());
 
-        renderCoords(svgCanvas, ZERO_2D, canvasSize, baseBoxSizePx, renderRegion, centerPosition, displayEveryNthCoord, maxStringWidth);
+        renderCoords(svgCanvas, ZERO_2D, canvasSize, baseBoxSizePx, renderRegion, centerPosition, displayEveryNthCoord, maxStringWidth, reverse);
         return svgCanvas;
     }
 
     public static void renderCoords(final SVGGraphics2D svgCanvas, final Point2D.Double boxOffset, final Point2D.Double canvasSize,
-            double baseBoxSizePx, final BaseRegion renderRegion, int centerPosition, int displayEveryNthCoord, double maxStringWidth)
+            double baseBoxSizePx, final BaseRegion renderRegion, int centerPosition, int displayEveryNthCoord, double maxStringWidth, boolean reverse)
     {
         double scalingFactor = baseBoxSizePx / BASE_BOX_SIZE;
         double charWidth = getStringBounds(COORD_FONT, "9").getWidth();
@@ -419,12 +457,13 @@ public final class SvgRender
         AffineTransform scalingTransform = svgCanvas.getTransform();
 
         svgCanvas.setColor(Color.BLACK);
-        for(int i = renderRegion.start(); i <= renderRegion.end(); ++i)
+        for(int box = 0; box < renderRegion.baseLength(); ++box)
         {
             svgCanvas.setTransform(scalingTransform);
 
-            int boxIdx = i - renderRegion.start() + BOX_PADDING;
-            int basePosOffset = i - centerPosition;
+            int boxIdx = box + BOX_PADDING;
+            int basePos = reverse ? renderRegion.end() - box : renderRegion.start() + box;
+            int basePosOffset = basePos - centerPosition;
             boolean displayCoord = basePosOffset % displayEveryNthCoord == 0;
             if(!displayCoord)
             {
@@ -444,20 +483,23 @@ public final class SvgRender
                     1.5 * charWidth);
             svgCanvas.fill(largeTick);
 
-            Rectangle2D stringBound = stringBounds.get(i - renderRegion.start());
+            int stringIdx = reverse ? stringBounds.size() - 1 - box : box;
+            Rectangle2D stringBound = stringBounds.get(stringIdx);
 
             svgCanvas.rotate(Math.PI / 2);
             svgCanvas.translate(
                     maxStringWidth - 0.5 * stringBound.getWidth() + BASE_BOX_SIZE * boxOffset.y,
                     -BASE_BOX_SIZE * (boxIdx + 0.5 + boxOffset.x));
-            drawStringFromCenter(svgCanvas, format(Locale.US, "%,d", i), 0, 0);
+            drawStringFromCenter(svgCanvas, format(Locale.US, "%,d", basePos), 0, 0);
         }
     }
 
-    public static SVGGraphics2D renderChrLabels(double baseBoxSizePx, final List<ChrBaseRegion> regions)
+    public record ChrLabel(String chromosome, int position, BaseRegion viewRegion, boolean isReversed, Alignment alignment) {}
+
+    public static SVGGraphics2D renderChrLabels(double baseBoxSizePx, final List<ChrLabel> labels)
     {
-        int startIdx = regions.get(0).start();
-        int endIdx = regions.get(regions.size() - 1).end();
+        int startIdx = labels.get(0).viewRegion.start();
+        int endIdx = labels.get(labels.size() - 1).viewRegion.end();
         int boxLength = endIdx - startIdx + 1;
         SVGGraphics2D svgCanvas = new SVGGraphics2D(baseBoxSizePx * boxLength, baseBoxSizePx);
 
@@ -465,11 +507,33 @@ public final class SvgRender
         svgCanvas.scale(baseBoxSizePx, baseBoxSizePx);
 
         svgCanvas.setFont(BASE_FONT);
-        for(ChrBaseRegion region : regions)
+        for(ChrLabel label : labels)
         {
-            String chromosome = enforceChrPrefix(region.chromosome());
-            double boxCenterX = region.start() + 0.5d * region.baseLength();
-            renderText(svgCanvas, ZERO_2D, boxCenterX, 0.5, svgCanvas.getFont(), Color.BLACK, chromosome, null, 1.0);
+            String chromosome = enforceChrPrefix(label.chromosome);
+            BaseRegion viewRegion = label.viewRegion;
+            Alignment alignment = label.alignment;
+
+            String strandLabel = label.isReversed ? "<<" : ">>";
+            String chrPositionLabel = chromosome + ":" + label.position;
+            String fullLabel;
+            double boxX;
+            if(alignment == CENTER)
+            {
+                fullLabel = strandLabel + " " + chrPositionLabel + " " + strandLabel;
+                boxX = viewRegion.start() + 0.5d * viewRegion.baseLength();
+            }
+            else if(alignment == LEFT)
+            {
+                fullLabel = chrPositionLabel + " " + strandLabel;
+                boxX = viewRegion.start() + BOX_PADDING;
+            }
+            else
+            {
+                fullLabel = strandLabel + " " + chrPositionLabel;
+                boxX = viewRegion.start() + viewRegion.baseLength();
+            }
+
+            renderText(svgCanvas, ZERO_2D, boxX, 0.5, svgCanvas.getFont(), Color.BLACK, fullLabel, null, 1.0, alignment);
         }
 
         return svgCanvas;
@@ -614,7 +678,8 @@ public final class SvgRender
             svgCanvas.fill(box);
 
             Color fgColour = Color.WHITE;
-            renderText(svgCanvas, ZERO_2D, boxIdx + 0.5 * boxWidth, 0.5, svgCanvas.getFont(), fgColour, String.valueOf(aa), null, 1.0);
+            renderText(svgCanvas, ZERO_2D, boxIdx + 0.5 * boxWidth, 0.5, svgCanvas.getFont(), fgColour,
+		    String.valueOf(aa), null, 1.0, CENTER);
         }
 
         // left orientation indicator
@@ -679,7 +744,7 @@ public final class SvgRender
 
             Color fgColour = Color.WHITE;
             renderText(svgCanvas, ZERO_2D,
-                    boxIdx + 0.5 * boxWidth, 0.5, svgCanvas.getFont(), fgColour, String.valueOf(aaModel.alt()), null, 1.0);
+                    boxIdx + 0.5 * boxWidth, 0.5, svgCanvas.getFont(), fgColour, String.valueOf(aaModel.alt()), null, 1.0, CENTER);
         }
     }
 }
