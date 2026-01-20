@@ -177,9 +177,28 @@ public final class ReadViewModel
 
             if(mismatch.Type == SequenceDiffType.REPEAT)
             {
-                // TODO(mkcmkc): handle this case.
-                if(true)
-                    throw new NotImplementedException("TODO");
+                if(mismatch.IndelLength > 0)
+                {
+                    int insertLength = abs(mismatch.IndelLength);
+                    if(!isBuiltForward)
+                        indelOffset += insertLength;
+
+                    for(int i = 0; i < insertLength; i++)
+                    {
+                        int baseIdx = mismatch.ReadIndex + (i + 1) * (isBuiltForward ? 1 : -1);
+                        mappedCigarOps.get(baseIdx).set(0, I);
+                    }
+                }
+                else
+                {
+                    int delLength = abs(mismatch.IndelLength);
+                    if(!isBuiltForward)
+                        indelOffset -= delLength;
+
+                    int baseIdx = mismatch.ReadIndex - (isBuiltForward ? 0 : 1);
+                    for(int i = 0; i < delLength; i++)
+                        mappedCigarOps.get(baseIdx).add(D);
+                }
 
                 continue;
             }
