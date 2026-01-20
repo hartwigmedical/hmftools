@@ -173,13 +173,13 @@ public class CompareConfig
     {
         this(
                 false, false, false, false,
-                false, false);
+                false, false, false);
     }
 
     @VisibleForTesting
     public CompareConfig(
-            final boolean ignoreDupDiffs, final boolean ignoreConsensusReads, final boolean ignoreSupplementaryReads,
-            final boolean ignoreSupplementaryAttribute, final boolean ignoreReduxUnmapped, final boolean ignoreReduxAlterations)
+            boolean ignoreDupDiffs, boolean ignoreConsensusReads, boolean ignoreSupplementaryReads,
+            boolean ignoreSupplementaryAttribute, boolean ignoreReduxUnmapped, boolean ignoreReduxAlterations, boolean checkBaseAndQuals)
     {
         IgnoreDupDiffs = ignoreDupDiffs;
         IgnoreConsensusReads = ignoreConsensusReads;
@@ -187,7 +187,7 @@ public class CompareConfig
         IgnoreSupplementaryAttribute = ignoreSupplementaryAttribute;
         IgnoreReduxUnmapped = ignoreReduxUnmapped;
         IgnoreReduxAlterations = ignoreReduxAlterations;
-        CheckBasesAndQuals = false;
+        CheckBasesAndQuals = checkBaseAndQuals;
 
         OutputFile = null;
         OrigBamFile = null;

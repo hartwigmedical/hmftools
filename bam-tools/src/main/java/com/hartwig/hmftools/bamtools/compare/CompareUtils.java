@@ -89,12 +89,12 @@ public class CompareUtils
 
         if(config.CheckBasesAndQuals)
         {
-            if(origRead.getReadString().equals(newRead.getReadString()))
+            if(!origRead.getReadString().equals(newRead.getReadString()))
             {
                 diffs.add(format("bases(%s/%s)", origRead.getReadString(), newRead.getReadString()));
             }
 
-            if(origRead.getBaseQualityString().equals(newRead.getBaseQualityString()))
+            if(!origRead.getBaseQualityString().equals(newRead.getBaseQualityString()))
             {
                 diffs.add(format("baseQual(%s/%s)", origRead.getBaseQualityString(), newRead.getBaseQualityString()));
             }

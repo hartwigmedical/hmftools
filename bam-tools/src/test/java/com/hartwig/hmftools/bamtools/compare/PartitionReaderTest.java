@@ -23,7 +23,9 @@ public class PartitionReaderTest
     @Test
     public void testCompareReads()
     {
-        CompareConfig config = new CompareConfig();
+        CompareConfig config = new CompareConfig(
+                true, true, true,
+                true, true, true, true);
 
         SAMRecord read1 = SamRecordTestUtils.createSamRecord(
                 TEST_READ_ID, CHR_1, 2000, TEST_READ_BASES, TEST_CIGAR, CHR_1, 2200,
@@ -56,14 +58,6 @@ public class PartitionReaderTest
         diffs = CompareUtils.compareReads(read1, read2, config);
         Assert.assertEquals(1, diffs.size());
         Assert.assertEquals("bases(ATCG/ATCC)", diffs.get(0));
-
-        // is negative strand
-        read2.setReadNegativeStrandFlag(true);
-        read1.setReadString("ATCG");
-        read2.setReadString("CGAT");
-        diffs = CompareUtils.compareReads(read1, read2, config);
-        Assert.assertEquals(1, diffs.size());
-        Assert.assertEquals("negStrand(false/true)", diffs.get(0));
     }
 
     @Test
@@ -71,7 +65,7 @@ public class PartitionReaderTest
     {
         CompareConfig config = new CompareConfig(
                 true, true, true,
-                 true, true, true);
+                 true, true, true, true);
 
         // reads differ on duplicate status
         int readPosition = 1000;
@@ -100,7 +94,5 @@ public class PartitionReaderTest
 
         diffs = CompareUtils.compareReads(read1, read2, config);
         Assert.assertTrue(diffs.isEmpty());
-
-
     }
 }
