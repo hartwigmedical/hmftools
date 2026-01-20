@@ -217,6 +217,21 @@ public class BaseSeqViewModel
         return LeftIsForwardStrand != null && RightIsForwardStrand != null;
     }
 
+    public int mismatchCount(final BaseSeqViewModel refBases)
+    {
+        int mismatches = 0;
+        for(int i = refBases.FirstBasePos; i <= refBases.LastBasePos; ++i)
+        {
+            BaseViewModel refBase = refBases.getBase(i);
+            BaseViewModel base = getBase(i);
+
+            if(!base.isSoftClip() && base.hasCharBase() && refBase.hasCharBase() && refBase.charBase() != base.charBase())
+                mismatches++;
+        }
+
+        return mismatches;
+    }
+
     public void clearSoftClips()
     {
         mBases.forEach(BaseViewModel::clearSoftClip);
