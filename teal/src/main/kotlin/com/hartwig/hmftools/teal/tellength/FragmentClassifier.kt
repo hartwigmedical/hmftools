@@ -97,9 +97,6 @@ class FragmentClassifier(val sequencingType: SequencingType)
             fragType = classifyFragment(seq2, seq1)
         }
 
-        val read = readGroup.allReads.first()
-        logger.info("read: {} frag type: {}, bases: {}", read, fragType, read.readString)
-
         return fragType
     }
 

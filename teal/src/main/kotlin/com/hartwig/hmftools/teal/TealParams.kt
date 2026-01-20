@@ -9,6 +9,7 @@ import com.hartwig.hmftools.common.sequencing.SequencingType
 import com.hartwig.hmftools.common.utils.config.CommonConfig.*
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder.getConfigDecimal
+import com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils
 
 private const val REF_WGS_METRICS = "reference_wgs_metrics"
@@ -124,6 +125,7 @@ data class TealCommonParams(
             configBuilder.addPath(TUMOR_BAM, false, TUMOR_BAM_DESC)
             addRefGenomeFile(configBuilder, false)
             FileWriterUtils.addOutputDir(configBuilder)
+            addLoggingOptions(configBuilder);
             TaskExecutor.addThreadOptions(configBuilder)
             RefGenomeSource.addRefGenomeVersion(configBuilder)
             SequencingType.registerConfig(configBuilder)
@@ -142,8 +144,8 @@ data class TealPipelineParams(
     )
 {
     constructor(configBuilder: ConfigBuilder): this(
-        purple = configBuilder.getValue("purple"),
-        cobalt = configBuilder.getValue("cobalt"),
+        purple = configBuilder.getValue(PURPLE_DIR_CFG),
+        cobalt = configBuilder.getValue(COBALT_DIR_CFG),
         referenceWgsMetrics = configBuilder.getValue(REF_WGS_METRICS, null),
         tumorWgsMetrics = configBuilder.getValue(TUMOR_WGS_METRICS, null),
         commonParams = TealCommonParams(configBuilder))
@@ -181,8 +183,8 @@ data class TealPipelineParams(
     {
         fun registerConfig(configBuilder: ConfigBuilder)
         {
-            configBuilder.addPath("purple", false, PURPLE_DIR_DESC)
-            configBuilder.addPath("cobalt", true, COBALT_DIR_CFG)
+            configBuilder.addPath(PURPLE_DIR_CFG, true, PURPLE_DIR_DESC)
+            configBuilder.addPath(COBALT_DIR_CFG, true, COBALT_DIR_DESC)
             configBuilder.addPath(REF_WGS_METRICS, false, "Path to reference BAM METRICS file")
             configBuilder.addPath(TUMOR_WGS_METRICS, false, "Path to tumor BAM METRICS file")
             TealCommonParams.registerConfig(configBuilder)
