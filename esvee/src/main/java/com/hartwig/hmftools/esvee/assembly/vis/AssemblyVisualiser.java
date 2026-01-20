@@ -69,8 +69,8 @@ import j2html.tags.DomContent;
 
 public class AssemblyVisualiser
 {
-    public record SegmentViewModel(String chromosome, BaseRegion refRegion, BaseRegion viewRegion, BaseRegion refViewRegion, BaseSeqViewModel refViewModel,
-                                   BaseSeqViewModel assemblyViewModel, boolean isInsert) {}
+    public record SegmentViewModel(String chromosome, BaseRegion refRegion, BaseRegion viewRegion, BaseRegion refViewRegion,
+                                   BaseSeqViewModel refViewModel, BaseSeqViewModel assemblyViewModel, boolean isInsert) {}
 
     private final AssemblyConfig mConfig;
     private final AssemblyAlignment mAssemblyAlignment;

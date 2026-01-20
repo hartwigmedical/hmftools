@@ -149,9 +149,8 @@ public final class HtmlUtil
         String numMutationsStr = secondReadNM == null ? firstNumMutationsStr : firstNumMutationsStr + ", " + secondNumMutationsStr;
         readInfoRows.add(tr(td("NM:"), td(numMutationsStr)));
 
-        String umiTypeStr = consensusTypeAttribute;
-        if(umiTypeStr != null)
-            readInfoRows.add(tr(td("Dup type:"), td(umiTypeStr)));
+        if(consensusTypeAttribute != null)
+            readInfoRows.add(tr(td("Dup type:"), td(consensusTypeAttribute)));
 
         String dupCountStr = "0";
         if(consensusReadAttribute != null)
