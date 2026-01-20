@@ -559,10 +559,4 @@ Other planned improvements
 - Multi tumor and reference sample support including donor support
 - Append mode
 - Investigate region specific filtering for IG,TCR & HLA regions
-- Switch minSupport from MAX to SUM of samples & lower minSupport to 3. Could analyse given recent duplicate collapsing improvements in Redux and Esvee prep
 
-### GRIDSS and GRIPSS SV filtering
-- [Old Gripss information](./README_GRIPSS.md)
-
-### Version History and Download Links
-- [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/esvee-v1.0)

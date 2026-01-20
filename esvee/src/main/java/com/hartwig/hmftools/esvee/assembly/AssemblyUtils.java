@@ -30,7 +30,7 @@ import com.hartwig.hmftools.esvee.assembly.read.Read;
 public final class AssemblyUtils
 {
     public static final byte[] DNA_BASE_BYTES = { 65, 67, 71, 84, 78 }; // allows for Ns
-    public static final int DNA_BASE_COUNT = DNA_BASE_BYTES.length + 1;
+    public static final int DNA_BASE_COUNT = DNA_BASE_BYTES.length;
     public static final byte NO_BASE = 0;
 
     public static int baseIndex(final byte base)
