@@ -16,10 +16,14 @@ import com.hartwig.hmftools.common.utils.Doubles;
 public class GermlineStatusCalcs
 {
     private static final double GERMLINE_HOM_DELETION_THRESHOLD = 0.1;
-    private static final double GERMLINE_LIKELY_DIPLOID_LOWER_THRESHOLD = 0.7;
-    private static final double GERMLINE_HET_DELETION_THRESHOLD = 0.85;
-    private static final double GERMLINE_DIPLOID_UPPER_THRESHOLD = 1.15;
-    public static final double GERMLINE_LIKELY_DIPLOID_UPPER_THRESHOLD = 1.3;
+
+    private static final double GERMLINE_LIKELY_DIPLOID_BUFFER = 0.3;
+    private static final double GERMLINE_DIPLOID_BUFFER = 0.15;
+
+    private static final double GERMLINE_LIKELY_DIPLOID_LOWER_THRESHOLD = 1 - GERMLINE_LIKELY_DIPLOID_BUFFER;
+    public static final double GERMLINE_LIKELY_DIPLOID_UPPER_THRESHOLD = 1 + GERMLINE_LIKELY_DIPLOID_BUFFER;
+    private static final double GERMLINE_DIPLOID_LOWER_THRESHOLD = 1 - GERMLINE_DIPLOID_BUFFER;
+    private static final double GERMLINE_DIPLOID_UPPER_THRESHOLD = 1 + GERMLINE_DIPLOID_BUFFER;
     private static final double GERMLINE_NOISE_THRESHOLD = 2.2;
 
     private final CobaltChromosomes mCobaltChromosomes;
@@ -51,13 +55,13 @@ public class GermlineStatusCalcs
             return HET_DELETION;
         }
 
-        // >= likely diploid lower threshold, < het deletion threshold
-        if(Doubles.lessThan(normalRatio, GERMLINE_HET_DELETION_THRESHOLD * adjustment))
+        // >= likely diploid lower threshold, < lower diploid threshold
+        if(Doubles.lessThan(normalRatio, GERMLINE_DIPLOID_LOWER_THRESHOLD * adjustment))
         {
             return LIKELY_DIPLOID;
         }
 
-        // >= het deletion threshold, < diploid upper threshold
+        // in between diploid thresholds
         if(Doubles.lessThan(normalRatio, GERMLINE_DIPLOID_UPPER_THRESHOLD * adjustment))
         {
             return DIPLOID;
