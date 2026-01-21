@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.cider
 
-import com.google.common.collect.Multimap
 import com.hartwig.hmftools.cider.CiderConstants.ALIGNMENT_BATCH_SIZE
 import com.hartwig.hmftools.cider.genes.GenomicLocation
 import com.hartwig.hmftools.common.blastn.BlastnMatch
@@ -68,11 +67,14 @@ object AlignmentUtil
         return GenomicLocation(chromosome, start, end, blastnMatch.subjectFrame, altAssemblyName)
     }
 
-    fun runBlastn(sampleId: String, blastDir: String, blastDb: String, sequences: Map<Int, String>, outputDir: String, numThreads: Int,
+    fun runBlastn(sampleId: String, blastDir: String, blastDb: String, sequences: List<String>, outputDir: String, numThreads: Int,
                   expectedValueCutoff: Double)
-            : Multimap<Int, BlastnMatch>
+            : List<Collection<BlastnMatch>>
     {
-        return BlastnRunner.Builder()
+        var key = 0
+        val sequencesByKey = sequences.associateBy { key++ }
+
+        val resultsMap = BlastnRunner.Builder()
             .withTask("blastn")
             .withPrefix(sampleId)
             .withBlastDir(blastDir)
@@ -88,7 +90,9 @@ object AlignmentUtil
             .withSubjectBestHit(true)
             .withMaxTargetSeqs(MAX_TARGET_SEQUENCES)
             .build()
-            .run(sequences)
+            .run(sequencesByKey)
+
+        return sequences.indices.map { key -> resultsMap.get(key) }
     }
 
     data class Alignment(
