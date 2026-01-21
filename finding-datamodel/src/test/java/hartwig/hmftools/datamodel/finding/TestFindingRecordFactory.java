@@ -1,0 +1,36 @@
+package com.hartwig.hmftools.datamodel.finding;
+
+import java.util.List;
+
+import com.hartwig.hmftools.datamodel.orange.ExperimentType;
+import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
+
+import org.jetbrains.annotations.NotNull;
+
+public class TestFindingRecordFactory {
+    @NotNull
+    public static FindingRecord createMinimalTestFindingRecord() {
+        return createMinimalTestFindingRecordBuilder().build();
+    }
+
+    @NotNull
+    public static FindingRecordBuilder createMinimalTestFindingRecordBuilder() {
+        return FindingRecordBuilder.builder()
+                .metaProperties(MetaPropertiesBuilder.builder()
+                        .experimentType(ExperimentType.WHOLE_GENOME)
+                        .refGenomeVersion(OrangeRefGenomeVersion.V37)
+                        .build())
+                .purityPloidyFit(TestFindingFactory.purityPloidyFitBuilder().build())
+                .predictedTumorOrigin(TestFindingFactory.buildFindingItem(FindingsStatus.OK, TestFindingFactory.predictedTumorOriginBuilder().build()))
+                .homologousRecombination(TestFindingFactory.buildFindingItem(FindingsStatus.OK, TestFindingFactory.homologousRecombinationBuilder().build()))
+                .microsatelliteStability(TestFindingFactory.buildFindingItem(FindingsStatus.OK, TestFindingFactory.microsatelliteStabilityBuilder().build()))
+                .tumorMutationStatus(TestFindingFactory.buildFindingItem(FindingsStatus.OK, TestFindingFactory.mutationStatusBuilder().build()))
+                .smallVariants(TestFindingFactory.buildDriverFindingsList(FindingsStatus.OK, List.of()))
+                .gainDeletions(TestFindingFactory.buildDriverFindingsList(FindingsStatus.OK, List.of()))
+                .disruptions(TestFindingFactory.buildDriverFindingsList(FindingsStatus.OK, List.of()))
+                .fusions(TestFindingFactory.buildDriverFindingsList(FindingsStatus.OK, List.of()))
+                .viruses(TestFindingFactory.buildDriverFindingsList(FindingsStatus.OK, List.of()))
+                .hla(TestFindingFactory.buildFindingsList(FindingsStatus.OK, List.of()))
+                .pharmocoGenotypes(TestFindingFactory.buildFindingsList(FindingsStatus.OK, List.of()));
+    }
+}
