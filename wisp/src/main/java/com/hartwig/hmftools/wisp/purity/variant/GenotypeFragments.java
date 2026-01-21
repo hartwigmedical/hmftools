@@ -39,7 +39,6 @@ public class GenotypeFragments
         GenotypeData = genotype;
 
         mBqrErrorRate = 0;
-        mIsOutlier = false;
         mFilterReasons = Lists.newArrayList();
     }
 
@@ -52,11 +51,8 @@ public class GenotypeFragments
 
     public void markOutlier()
     {
-        mIsOutlier = true;
         mFilterReasons.add(FilterReason.OUTLIER);
     }
-
-    public boolean isOutlier() { return mIsOutlier; }
 
     public double averageReadDistance()
     {

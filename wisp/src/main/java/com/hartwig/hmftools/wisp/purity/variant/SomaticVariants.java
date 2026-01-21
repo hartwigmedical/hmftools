@@ -420,7 +420,7 @@ public class SomaticVariants
             if(sampleFragData.qualPerAlleleFragment() <= PurityConstants.MIN_QUAL_PER_AD)
                 sampleFragData.addFilterReason(LOW_QUAL_PER_AD);
 
-            if(sampleFragData.averageReadDistance() < MIN_AVG_EDGE_DISTANCE)
+            if(sampleFragData.averageReadDistance() >= 0 && sampleFragData.averageReadDistance() < MIN_AVG_EDGE_DISTANCE)
                 sampleFragData.addFilterReason(AVG_EDGE_DIST);
         }
     }
