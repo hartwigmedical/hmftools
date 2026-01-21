@@ -24,9 +24,9 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.broadinstitute</groupId>
+            <groupId>org.umccr.java</groupId>
             <artifactId>gatk-bwamem-jni</artifactId>
-            <version>1.0.5</version>
+            <version>1.2.0</version>
         </dependency>
 
         <dependency>
