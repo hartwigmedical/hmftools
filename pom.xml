@@ -67,7 +67,7 @@
         <bam-tools.version>1.5</bam-tools.version>
         <chord.version>2.1.2</chord.version>
         <cuppa.version>2.2.1</cuppa.version>
-        <cider.version>1.1.1</cider.version>
+        <cider.version>1.2</cider.version>
         <cobalt.version>3.0</cobalt.version>
         <compar.version>1.5</compar.version>
         <crest.version>1.0.0</crest.version>
@@ -86,7 +86,7 @@
         <paddle.version>1.1</paddle.version>
         <panel-builder.version>1.0</panel-builder.version>
         <patient-db.version>3.0</patient-db.version>
-        <pave.version>1.8.1</pave.version>
+        <pave.version>1.9</pave.version>
         <peach.version>2.0</peach.version>
         <purple.version>4.4</purple.version>
         <qsee.version>0.1</qsee.version>
