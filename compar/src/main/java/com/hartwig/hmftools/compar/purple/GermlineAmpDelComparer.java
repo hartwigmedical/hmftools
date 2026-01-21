@@ -10,6 +10,8 @@ import static com.hartwig.hmftools.compar.purple.GermlineAmpDelData.FLD_TUMOR_CN
 import static com.hartwig.hmftools.compar.purple.GermlineAmpDelData.FLD_TUMOR_STATUS;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -72,7 +74,15 @@ public class GermlineAmpDelComparer implements ItemComparer
 
         try
         {
-            List<GermlineAmpDel> germlineAmpDels = GermlineAmpDel.read(GermlineAmpDel.generateFilename(fileSources.Purple, sampleId));
+            String germlineAmpDelFile = GermlineAmpDel.generateFilename(fileSources.Purple, sampleId);
+
+            if(!Files.exists(Paths.get(germlineAmpDelFile)))
+            {
+                // try pre v3.0 germline deletions
+                germlineAmpDelFile = germlineAmpDelFile.replaceAll("purple.germline_amp_del.tsv", "purple.germline.deletion.tsv");
+            }
+
+            List<GermlineAmpDel> germlineAmpDels = GermlineAmpDel.read(germlineAmpDelFile);
             germlineAmpDels.forEach(x -> comparableItems.add(createGermlineAmpDelData(x)));
         }
         catch(IOException e)
