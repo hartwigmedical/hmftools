@@ -10,6 +10,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.ServiceLoader;
@@ -56,7 +57,7 @@ public class FindingsJson
     @NotNull
     public FindingRecord read(@NotNull Path findingsJsonFilePath) throws IOException
     {
-        InputStream inputStream = new FileInputStream(findingsJsonFilePath.toFile());
+        InputStream inputStream = Files.newInputStream(findingsJsonFilePath);
         if(isGZIP(findingsJsonFilePath))
         {
             inputStream = new GZIPInputStream(inputStream);
@@ -81,7 +82,7 @@ public class FindingsJson
 
     public void write(@NotNull FindingRecord findingRecord, @NotNull Path outputFilePath) throws IOException
     {
-        OutputStream outputStream = new FileOutputStream(outputFilePath.toFile());
+        OutputStream outputStream = Files.newOutputStream(outputFilePath);
         if(isGZIP(outputFilePath))
         {
             outputStream = new GZIPOutputStream(outputStream);
