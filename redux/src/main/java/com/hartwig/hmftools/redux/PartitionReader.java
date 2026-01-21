@@ -21,6 +21,7 @@ import static com.hartwig.hmftools.redux.common.ReadInfo.readToString;
 import static com.hartwig.hmftools.redux.consensus.SbxRoutines.SBX_READ_CACHE_GROUP_SIZE;
 import static com.hartwig.hmftools.redux.consensus.SbxRoutines.SBX_READ_CACHE_LOG_READ_COUNT_THRESHOLD;
 import static com.hartwig.hmftools.redux.consensus.SbxRoutines.SBX_READ_CACHE_MAX_SOFT_CLIP;
+import static com.hartwig.hmftools.redux.duplicate.ReadCache.DEFAULT_DYNAMIC_READ_COUNT_THRESHOLD;
 import static com.hartwig.hmftools.redux.duplicate.ReadCache.DEFAULT_POP_DISTANCE_CHECK;
 
 import static org.apache.logging.log4j.Level.DEBUG;
@@ -93,7 +94,7 @@ public class PartitionReader
         {
             ReadCache readCache = new ReadCache(mConfig.UMIs.Enabled, mConfig.DuplicateConfig);
 
-            mReadCache = mConfig.UMIs.Enabled ? new JitterReadCache(readCache) : readCache;
+            mReadCache = !mConfig.DisableJitterReadCache && mConfig.UMIs.Enabled ? new JitterReadCache(readCache) : readCache;
         }
         else
         {
@@ -107,7 +108,7 @@ public class PartitionReader
 
             mReadCache = new ReadCache(
                     groupSize, maxSoftClipLength, false, mConfig.DuplicateConfig,
-                    DEFAULT_POP_DISTANCE_CHECK, logCacheReadCount);
+                    DEFAULT_POP_DISTANCE_CHECK, DEFAULT_DYNAMIC_READ_COUNT_THRESHOLD, logCacheReadCount);
         }
 
         mDuplicateGroupBuilder = new DuplicateGroupBuilder(config);

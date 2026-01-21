@@ -3,7 +3,6 @@ package com.hartwig.hmftools.redux.duplicate;
 import static java.lang.Math.abs;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.redux.ReduxConstants.MAX_UMI_BASE_DIFF_JITTER_COLLAPSE;
 import static com.hartwig.hmftools.redux.ReduxConstants.SINGLE_END_JITTER_COLLAPSE_DISTANCE;
 import static com.hartwig.hmftools.redux.duplicate.FragmentCoords.COORD_ORIENT_FORWARD;
 import static com.hartwig.hmftools.redux.duplicate.FragmentCoords.COORD_ORIENT_REVERSE;
@@ -54,13 +53,13 @@ public class JitterUmiMerger
             // check UMIs - exact matches are required where jitter was used
             if(FragmentCoords.FragmentOrient == other.FragmentCoords.FragmentOrient)
             {
-                if(exceedsUmiIdDiff(Umi, other.Umi, MAX_UMI_BASE_DIFF_JITTER_COLLAPSE))
+                if(exceedsUmiIdDiff(Umi, other.Umi, 0))
                 //if(!Umi.equals(other.Umi))
                     return false;
             }
             else
             {
-                if(!hasDuplexUmiMatch(Umi, other.Umi, mUmiConfig.DuplexDelim, MAX_UMI_BASE_DIFF_JITTER_COLLAPSE))
+                if(!hasDuplexUmiMatch(Umi, other.Umi, mUmiConfig.DuplexDelim, 0))
                     return false;
             }
 

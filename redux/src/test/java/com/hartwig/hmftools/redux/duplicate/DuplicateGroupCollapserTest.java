@@ -92,7 +92,8 @@ public class DuplicateGroupCollapserTest
         checkCollapseToKeyWithoutCoordinatesSupplementaryReadWithUnmappedMate(false, false, true);
     }
 
-    private void checkCollapseToKeyWithoutCoordinatesSupplementaryReadWithUnmappedMate(boolean firstOfPair, boolean primaryReversed, boolean supplementaryReversed)
+    private void checkCollapseToKeyWithoutCoordinatesSupplementaryReadWithUnmappedMate(
+            boolean firstOfPair, boolean primaryReversed, boolean supplementaryReversed)
     {
         char primaryOrientation = primaryReversed ? SUPP_NEG_STRAND : SUPP_POS_STRAND;
         SupplementaryReadData primaryAlignment = new SupplementaryReadData(CHR_1, 100, primaryOrientation, TEST_READ_CIGAR, 60);

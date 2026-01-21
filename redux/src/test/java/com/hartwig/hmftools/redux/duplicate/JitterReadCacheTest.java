@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.redux.ReduxConstants.SINGLE_END_JITTER_COLLAP
 import static com.hartwig.hmftools.redux.TestUtils.READ_ID_GEN;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
@@ -32,8 +33,50 @@ import htsjdk.samtools.SAMRecord;
 
 public class JitterReadCacheTest
 {
-    private static final String TEST_READ_BASES = "A".repeat(100);
-    private static final String TEST_CIGAR = "100M";
+    private static final String TEST_READ_BASES = "A".repeat(10);
+    private static final String TEST_CIGAR = "10M";
+
+    @Test
+    public void testReadCacheAboveDynamicThreshold()
+    {
+        ReadCache readCache = new ReadCache(
+                100, 50, false, new DuplicatesConfig(0),
+                100, 100, 100);
+
+        // create reads above the dynamic threshold but without standard purging occurring
+        int readPos1 = 100;
+        int readPos2 = 110;
+        int readPos3 = 120;
+        for(int i = 0; i < 40; ++i)
+        {
+            SAMRecord read = createSamRecord(
+                    READ_ID_GEN.nextId(), CHR_1, readPos1, TEST_READ_BASES, TEST_CIGAR, CHR_1, 200, false, false,
+                    null, true, TEST_CIGAR);
+
+            readCache.processRead(read);
+
+            read = createSamRecord(
+                    READ_ID_GEN.nextId(), CHR_1, readPos2, TEST_READ_BASES, TEST_CIGAR, CHR_1, 200, false, false,
+                    null, true, TEST_CIGAR);
+
+            readCache.processRead(read);
+
+            read = createSamRecord(
+                    READ_ID_GEN.nextId(), CHR_1, readPos3, TEST_READ_BASES, TEST_CIGAR, CHR_1, 200, false, false,
+                    null, true, TEST_CIGAR);
+
+            readCache.processRead(read);
+        }
+
+        assertEquals(120, readCache.cachedReadCount());
+        assertEquals(3, readCache.cachedFragCoordGroups());
+
+        FragmentCoordReads fragmentCoordReads = readCache.popReads();
+        assertNotNull(fragmentCoordReads);
+
+        assertEquals(80, fragmentCoordReads.totalReadCount());
+    }
+
 
     @Test
     public void testHandlesReadCachePossibleHoldingBackOfReadsForPerformanceReasons()

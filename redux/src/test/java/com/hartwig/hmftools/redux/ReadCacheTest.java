@@ -38,7 +38,7 @@ public class ReadCacheTest
 
         readCache.processRead(read1);
 
-        assertEquals(1, readCache.cachedReadGroups());
+        assertEquals(1, readCache.cachedReadPositionGroups());
         assertEquals(1, readCache.cachedFragCoordGroups());
         assertEquals(1, readCache.cachedReadCount());
 
@@ -55,7 +55,7 @@ public class ReadCacheTest
 
         readCache.processRead(read3);
 
-        assertEquals(2, readCache.cachedReadGroups());
+        assertEquals(2, readCache.cachedReadPositionGroups());
         assertEquals(4, readCache.cachedReadCount());
         assertEquals(3, readCache.cachedFragCoordGroups());
 
@@ -66,7 +66,7 @@ public class ReadCacheTest
 
         readCache.processRead(read4);
 
-        assertEquals(2, readCache.cachedReadGroups());
+        assertEquals(2, readCache.cachedReadPositionGroups());
 
         // the next read triggers the first group to be processed
         SAMRecord read5 = createRecord(CHR_1, 201);
@@ -79,7 +79,7 @@ public class ReadCacheTest
         assertEquals(1, fragCoordReads.SingleReads.size());
         assertEquals(1, fragCoordReads.DuplicateGroups.size());
 
-        assertEquals(2, readCache.cachedReadGroups());
+        assertEquals(2, readCache.cachedReadPositionGroups());
         assertEquals(3, readCache.cachedReadCount());
         assertEquals(3, readCache.cachedFragCoordGroups());
 
@@ -94,7 +94,7 @@ public class ReadCacheTest
         assertEquals(3, fragCoordReads.SingleReads.size());
         assertEquals(0, fragCoordReads.DuplicateGroups.size());
 
-        assertEquals(1, readCache.cachedReadGroups());
+        assertEquals(1, readCache.cachedReadPositionGroups());
         assertEquals(1, readCache.cachedReadCount());
         assertEquals(1, readCache.cachedFragCoordGroups());
 
@@ -107,7 +107,7 @@ public class ReadCacheTest
         readCache.processRead(read7b);
         readCache.processRead(read7c);
 
-        assertEquals(2, readCache.cachedReadGroups());
+        assertEquals(2, readCache.cachedReadPositionGroups());
         assertEquals(4, readCache.cachedReadCount());
         assertEquals(2, readCache.cachedFragCoordGroups());
 
@@ -118,7 +118,7 @@ public class ReadCacheTest
         assertEquals(1, fragCoordReads.DuplicateGroups.size());
         assertEquals(3, fragCoordReads.DuplicateGroups.get(0).totalReadCount());
 
-        assertEquals(0, readCache.cachedReadGroups());
+        assertEquals(0, readCache.cachedReadPositionGroups());
         assertEquals(0, readCache.cachedReadCount());
         assertEquals(0, readCache.cachedFragCoordGroups());
     }
@@ -143,7 +143,7 @@ public class ReadCacheTest
         readCache.processRead(read1);
         readCache.processRead(read2);
 
-        assertEquals(1, readCache.cachedReadGroups());
+        assertEquals(1, readCache.cachedReadPositionGroups());
         assertEquals(2, readCache.cachedReadCount());
         assertEquals(2, readCache.cachedFragCoordGroups());
     }

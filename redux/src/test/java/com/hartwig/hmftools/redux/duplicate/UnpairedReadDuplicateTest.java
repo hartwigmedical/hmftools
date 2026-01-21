@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.cloneSamRecord;
 import static com.hartwig.hmftools.redux.TestUtils.READ_ID_GEN;
 import static com.hartwig.hmftools.redux.TestUtils.REF_BASES;
+import static com.hartwig.hmftools.redux.duplicate.ReadCache.DEFAULT_DYNAMIC_READ_COUNT_THRESHOLD;
 import static com.hartwig.hmftools.redux.duplicate.ReadCache.DEFAULT_POP_DISTANCE_CHECK;
 
 import static org.junit.Assert.assertEquals;
@@ -38,7 +39,7 @@ public class UnpairedReadDuplicateTest
 
         ReadCache readCache = new ReadCache(
                 100, 100, false, groupCollapseConfig,
-                DEFAULT_POP_DISTANCE_CHECK, 0);
+                DEFAULT_POP_DISTANCE_CHECK, DEFAULT_DYNAMIC_READ_COUNT_THRESHOLD, 0);
 
         int readStart = 100;
         int readEnd = 150;
@@ -154,7 +155,8 @@ public class UnpairedReadDuplicateTest
         int maxDupDistance = 1;
         DuplicatesConfig groupCollapseConfig = new DuplicatesConfig(maxDupDistance);
         ReadCache readCache = new ReadCache(
-                100, 100, false, groupCollapseConfig, DEFAULT_POP_DISTANCE_CHECK, 0);
+                100, 100, false, groupCollapseConfig,
+                DEFAULT_POP_DISTANCE_CHECK, DEFAULT_DYNAMIC_READ_COUNT_THRESHOLD, 0);
 
         int readStart = 100;
         int readEnd = 250;
