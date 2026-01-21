@@ -38,3 +38,121 @@
 * Handling of reportable vs candidate. Right now it is a method in Driver. Perhaps it is better to make CANDIDATE a value in the ReportedStatus enum?
 
 
+The list below shows what kind of post-processing happens in OncoAct on the data from the findings model:
+
+In general OncoAct currently combines somatic and germline variants, and reports everything as somatic.
+
+Variants
+
+First pass:
+
+List:
+- Sorting -> using max driver likelihoods
+    - Max driver likelihoods are already set but driver likelihood is cleared again for germline only
+
+Items:
+- Clear fields on “germline only” (variant copy number < 0.5 as germline only)
+    - Copies
+    - Driver
+    - Biallic
+    - Hotspot
+    - tvaf
+- Convert DriverInterpretation enum  (seems unnecessary?)
+    - This is because that DriverInterpretation is in common as it’s shared with protect
+- Curation of gene name
+- Add a + to the gene name if it's a phased variant
+- Add genomic position
+- Calculate tvaf
+- Add other impact to annotation list
+
+Homozygous Disruptions
+
+List
+- Filter (is Homozygous)
+- Distinct (is this necessary? -> Introduced in findings branch)
+- Sort
+
+Disruptions
+
+(probably currently also contains the homozygous disruptions? so these are reported double?)
+
+List
+- Sort
+
+Items:
+- Curation of gene name
+- Copy numbers are also filled in if not reliable
+- Convert copy numbers to integers
+
+Fusions
+
+List
+- Sort
+
+Items:
+- Add fusion name
+- Renames of properties
+- Add ensemble urls
+- Only fill in copy numbers if reliable purity
+- Convert copy numbers to integers
+
+GainDeletions
+
+List:
+- Filter out SOMATIC_LOH
+- Sort
+
+Items:
+- Curation of gene name
+- Only fill in copy numbers if reliable purity
+- Convert copy numbers to integers
+
+GeneCopyNumbers (comparable to GainDeletions, but only used for LOH events for HRD/MSI)
+
+(Has less fields than GainDeletions)
+
+List
+- Sort
+
+Items
+- Only fill in copy numbers if reliable purity
+- Convert copy numbers to integers
+
+Viruses
+
+List
+- Currently not explicitly sorted! -> Should change
+
+Items:
+- Interpret name
+- Convert double mean coverage to integer
+
+Pharmacogenetics
+
+List
+- Do not use if purples status fail contaminated
+- Sorting
+-  Converting to Set
+
+Items
+- Setting UGT1A1 to N/A
+
+HLA
+
+List
+- Only add if reliable and no contamination
+
+Items
+- Allele is called germlineAlllele
+- Germlinecopies is converted from double to int?
+- TumorCopies are rounded
+- Interpretation (if tumorCopyNumber != null)
+    - Number of somatic mutations
+    - Hla in tumor
+
+Tissue of Origin
+
+- Marking results inconclusive if below likelihood cutoff
+- Overriding tumor types:
+    - "Uterus: Endometrium" -> "Endometrium"
+    - "Colorectum/Appendix/SmallIntestine" -> "Lower GI tract"
