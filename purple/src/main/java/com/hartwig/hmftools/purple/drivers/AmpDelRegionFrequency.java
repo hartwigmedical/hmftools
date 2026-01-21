@@ -9,6 +9,10 @@ public class AmpDelRegionFrequency
         AMP,
         DEL
     }
+
+    public static final String FLD_FREQUENCY = "Frequency";
+    public static final String FLD_TYPE = "Type";
+
     public final BaseRegion Region;
     public int Frequency;
     public final EventType Type;

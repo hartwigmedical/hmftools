@@ -2,8 +2,14 @@ package com.hartwig.hmftools.purple.germline;
 
 import static java.lang.Math.abs;
 
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_REGION_END;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_REGION_START;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
+import static com.hartwig.hmftools.purple.drivers.AmpDelRegionFrequency.FLD_FREQUENCY;
+import static com.hartwig.hmftools.purple.drivers.AmpDelRegionFrequency.FLD_TYPE;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -20,7 +26,7 @@ public class GermlineAmpDelFrequencyCache
 {
     private Map<String, List<AmpDelRegionFrequency>> mChrRegionMap;
 
-    public static final String COHORT_AMP_DEL_FREQ_FILE = "germline_amp_del_freq_file";
+    public static final String COHORT_AMP_DEL_FREQ_FILE = "`germline_amp_del_freq_file`";
 
     public GermlineAmpDelFrequencyCache(final String filename)
     {
@@ -63,9 +69,7 @@ public class GermlineAmpDelFrequencyCache
     private void loadCohortFrequencies(final String filename)
     {
         if(filename == null)
-        {
             return;
-        }
 
         try
         {
@@ -73,43 +77,51 @@ public class GermlineAmpDelFrequencyCache
             String header = lines.get(0);
             lines.remove(0);
 
-            Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(header, ",");
+            Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(header, CSV_DELIM);
 
-            int chromosomeIndex = fieldsIndexMap.get("Chromosome");
-            int regionStartIndex = fieldsIndexMap.get("RegionStart");
-            int regionEndIndex = fieldsIndexMap.get("RegionEnd");
-            int typeIndex = fieldsIndexMap.getOrDefault("Type", -1);
-            int frequencyIndex = fieldsIndexMap.get("Frequency");
+            int chromosomeIndex = fieldsIndexMap.get(FLD_CHROMOSOME);
+            int regionStartIndex = fieldsIndexMap.get(FLD_REGION_START);
+            int regionEndIndex = fieldsIndexMap.get(FLD_REGION_END);
+            int typeIndex = fieldsIndexMap.getOrDefault(FLD_TYPE, -1);
+            int frequencyIndex = fieldsIndexMap.get(FLD_FREQUENCY);
 
             String currentChromosome = "";
             List<AmpDelRegionFrequency> regions = null;
 
             for(String line : lines)
             {
-                final String[] values = line.split(",", -1);
+                final String[] values = line.split(CSV_DELIM, -1);
 
                 String chromosome = values[chromosomeIndex];
                 int regionStart = Integer.parseInt(values[regionStartIndex]);
                 int regionEnd = Integer.parseInt(values[regionEndIndex]);
-                AmpDelRegionFrequency.EventType type =
-                        typeIndex >= 0 ? AmpDelRegionFrequency.EventType.valueOf(values[typeIndex]) : AmpDelRegionFrequency.EventType.DEL;
+
+                AmpDelRegionFrequency.EventType type = typeIndex >= 0
+                        ? AmpDelRegionFrequency.EventType.valueOf(values[typeIndex]) : AmpDelRegionFrequency.EventType.DEL;
+
                 int frequency = Integer.parseInt(values[frequencyIndex]);
 
                 if(!currentChromosome.equals(chromosome))
                 {
                     currentChromosome = chromosome;
-                    regions = Lists.newArrayList();
-                    mChrRegionMap.put(chromosome, regions);
+
+                    regions = mChrRegionMap.get(chromosome);
+
+                    if(regions == null)
+                    {
+                        regions = Lists.newArrayList();
+                        mChrRegionMap.put(chromosome, regions);
+                    }
                 }
 
                 regions.add(new AmpDelRegionFrequency(new BaseRegion(regionStart, regionEnd), type, frequency));
             }
 
-            PPL_LOGGER.info("loaded {} germline deletions frequencies from file: {}", lines.size(), filename);
+            PPL_LOGGER.info("loaded {} germline amp-del frequencies from file: {}", lines.size(), filename);
         }
         catch(IOException e)
         {
-            PPL_LOGGER.error("failed to read cohort germline deletions file: {}", e.toString());
+            PPL_LOGGER.error("failed to read cohort germline amp-del file: {}", e.toString());
         }
     }
 }

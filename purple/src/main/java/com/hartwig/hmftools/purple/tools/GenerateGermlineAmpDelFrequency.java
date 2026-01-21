@@ -4,9 +4,15 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FIL
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadSampleIdsFile;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_REGION_END;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_REGION_START;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
+import static com.hartwig.hmftools.purple.drivers.AmpDelRegionFrequency.FLD_FREQUENCY;
+import static com.hartwig.hmftools.purple.drivers.AmpDelRegionFrequency.FLD_TYPE;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -14,6 +20,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -157,7 +164,9 @@ public class GenerateGermlineAmpDelFrequency
 
             BufferedWriter writer = createBufferedWriter(mCohortFrequencyFile, false);
 
-            writer.write("Chromosome,RegionStart,RegionEnd,Type,Frequency");
+            StringJoiner sj = new StringJoiner(CSV_DELIM);
+            sj.add(FLD_CHROMOSOME).add(FLD_REGION_START).add(FLD_REGION_END).add(FLD_TYPE).add(FLD_FREQUENCY);
+            writer.write(sj.toString());
             writer.newLine();
 
             for(Map.Entry<String,List<AmpDelRegionFrequency>> entry : mChrRegionMap.entrySet())

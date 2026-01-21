@@ -14,6 +14,8 @@ public final class CommonFields
     public static final String FLD_POS_END = "PosEnd";
     public static final String FLD_POSITION_END = "PositionEnd";
     public static final String FLD_ORIENTATION = "Orientation";
+    public static final String FLD_REGION_START = "RegionStart";
+    public static final String FLD_REGION_END = "RegionEnd";
 
     // genes
     public static final String FLD_GENE_ID = "GeneId";
