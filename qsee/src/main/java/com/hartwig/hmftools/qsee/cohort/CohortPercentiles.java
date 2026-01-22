@@ -32,6 +32,14 @@ public class CohortPercentiles
 
     public FeaturePercentiles getFeaturePercentiles(SampleType sampleType, FeatureKey featureKey)
     {
+        FeaturePercentiles percentiles = mCohortData.get(sampleType).get(featureKey);
+
+        if(percentiles == null)
+        {
+            throw new IllegalArgumentException(String.format("No cohort percentiles found for sampleType(%s) feature(%s)",
+                    sampleType, featureKey));
+        }
+
         return mCohortData.get(sampleType).get(featureKey);
     }
 }

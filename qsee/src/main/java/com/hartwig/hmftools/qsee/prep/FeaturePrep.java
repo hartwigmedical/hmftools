@@ -14,6 +14,7 @@ import com.hartwig.hmftools.qsee.feature.Feature;
 import com.hartwig.hmftools.qsee.feature.FeatureKey;
 import com.hartwig.hmftools.qsee.prep.category.BaseQualRecalibrationPrep;
 import com.hartwig.hmftools.qsee.prep.category.CoverageDistributionPrep;
+import com.hartwig.hmftools.qsee.prep.category.DiscordantFragFreqPrep;
 import com.hartwig.hmftools.qsee.prep.category.DuplicateFreqPrep;
 import com.hartwig.hmftools.qsee.prep.category.FragLengthDistributionPrep;
 import com.hartwig.hmftools.qsee.prep.category.GcBiasPrep;
@@ -39,6 +40,7 @@ public class FeaturePrep
                 new MissedGeneVariantPrep(config),
                 new DuplicateFreqPrep(config),
                 new GcBiasPrep(config),
+                new DiscordantFragFreqPrep(config),
                 new BaseQualRecalibrationPrep(config),
                 new MsIndelErrorPrep(config)
         );

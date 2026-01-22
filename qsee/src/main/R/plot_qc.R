@@ -152,7 +152,7 @@ FEATURE_TYPE <- list(
    MISSED_VARIANT_LIKELIHOOD  = list(name = "MISSED_VARIANT_LIKELIHOOD", plot_func = NULL),
    DUPLICATE_FREQ             = list(name = "DUPLICATE_FREQ", plot_func = NULL),
    GC_BIAS                    = list(name = "GC_BIAS", plot_func = NULL),
-   DISCORDANT_READ_STATS      = list(name = "DISCORDANT_READ_STATS", plot_func = NULL),
+   DISCORDANT_FRAG_FREQ       = list(name = "DISCORDANT_FRAG_FREQ", plot_func = NULL),
    BQR_BY_SNV96_CONTEXT       = list(name = "BQR_PER_SNV96_CONTEXT", plot_func = NULL),
    BQR_BY_ORIG_QUAL           = list(name = "BQR_PER_ORIG_QUAL", plot_func = NULL),
    MS_INDEL_ERROR_RATES       = list(name = "MS_INDEL_ERROR_RATES", plot_func = NULL),
@@ -826,50 +826,50 @@ FEATURE_TYPE$MS_INDEL_ERROR_BIAS$plot_func <- function(){
 ## Box plots
 ## =============================
 
-FEATURE_TYPE$DISCORDANT_READ_STATS$plot_func <- function(){
+FEATURE_TYPE$DISCORDANT_FRAG_FREQ$plot_func <- function(){
    
-   return(ggplot() + theme_bw())
+   plot_data <- get_prelim_plot_data(feature_type = FEATURE_TYPE$DISCORDANT_FRAG_FREQ$name)
+   plot_data <- preordered_factors(plot_data)
+
+   PLOT_AESTHETICS <- data.frame(
+      
+      row.names = c(SAMPLE_GROUP$TUMOR_COHORT$name, SAMPLE_GROUP$TUMOR_SAMPLE$name, 
+                    SAMPLE_GROUP$NORMAL_COHORT$name, SAMPLE_GROUP$NORMAL_SAMPLE$name),
+      
+      color     = c(SAMPLE_TYPE$TUMOR$color, SAMPLE_TYPE$TUMOR$color,
+                    SAMPLE_TYPE$NORMAL$color, SAMPLE_TYPE$NORMAL$color)
+   )
    
-   # plot_data <- get_prelim_plot_data(feature_type = FEATURE_TYPE$DISCORDANT_READ_STATS$name)
-   # plot_data <- preordered_factors(plot_data)
-   # 
-   # PLOT_AESTHETICS <- data.frame(
-   #    
-   #    row.names = c(SAMPLE_GROUP$TUMOR_COHORT$name, SAMPLE_GROUP$TUMOR_SAMPLE$name,
-   #                  SAMPLE_GROUP$NORMAL_COHORT$name, SAMPLE_GROUP$NORMAL_SAMPLE$name),
-   #    
-   #    color     = c("#D1392C66", SAMPLE_TYPE$TUMOR$color, 
-   #                  "#4A7DB466", SAMPLE_TYPE$NORMAL$color)
-   # )
-   # 
-   # ggplot(plot_data, aes(x = FeatureName)) +
-   #    
-   #    geom_boxplot(
-   #       data = subset(plot_data, GroupType == GROUP_TYPE$COHORT$name),
-   #       mapping = aes(
-   #          ymin = PctMin, lower = PctLower, middle = PctMid, upper = PctUpper, ymax = PctMax, 
-   #          color = SampleGroup
-   #       ),
-   #       stat = "identity"
-   #    ) +
-   #    
-   #    geom_point(
-   #       data = subset(plot_data, GroupType == GROUP_TYPES$sample),
-   #       mapping = aes(y = QuantileMid, color = SampleGroup)
-   #    ) +
-   #    
-   #    scale_color_manual(values = named_vector_from_df(PLOT_AESTHETICS, "color")) +
-   #    scale_y_continuous(transform = "log10") +
-   #    
-   #    labs(title = data_type$name, x = data_type$axis_x_title, y = data_type$axis_y_title) +
-   #    
-   #    theme_bw() +
-   #    theme(
-   #       panel.grid.minor = element_blank(),
-   #       panel.grid.major.x = element_blank(),
-   #       strip.text.x = element_blank(),
-   #       axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1)
-   #    )
+   ggplot(plot_data, aes(x = DiscordantFragType)) +
+
+      geom_boxplot(
+         data = subset(plot_data, GroupType == GROUP_TYPE$COHORT$name),
+         mapping = aes(
+            ymin = PctMin, lower = PctLower, middle = PctMid, upper = PctUpper, ymax = PctMax,
+            fill = SampleGroup
+         ),
+         stat = "identity", width = 0.75, alpha = 0.3, size = 0.25
+      ) +
+
+      geom_point(
+         data = subset(plot_data, GroupType == GROUP_TYPE$SAMPLE$name),
+         mapping = aes(y = PctMid, color = SampleGroup)
+      ) +
+
+      scale_color_manual(values = named_vector_from_df(PLOT_AESTHETICS, "color")) +
+      scale_fill_manual(values = named_vector_from_df(PLOT_AESTHETICS, "color")) +
+      scale_y_continuous(transform = "log10") +
+
+      labs(title = "Discordant fragment frequency", x = "Discordant fragment type", y = "Prop. of reads") +
+
+      theme_bw() +
+      theme(
+         panel.grid.minor = element_blank(),
+         panel.grid.major.x = element_blank(),
+         strip.text.x = element_blank(),
+         axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1),
+         legend.position = "none"
+      )
 }
 
 
@@ -897,7 +897,7 @@ create_report <- function(){
       paste0(plot_letters[[FEATURE_TYPE$SUMMARY_TABLE$name]]       , plot_letters[[FEATURE_TYPE$COVERAGE_DISTRIBUTION$name]]),
       paste0(plot_letters[[FEATURE_TYPE$SUMMARY_TABLE$name]]       , plot_letters[[FEATURE_TYPE$FRAG_LENGTH_DISTRIBUTION$name]]),
       paste0(plot_letters[[FEATURE_TYPE$SUMMARY_TABLE$name]]       , plot_letters[[FEATURE_TYPE$GC_BIAS$name]]),
-      paste0(plot_letters[[FEATURE_TYPE$SUMMARY_TABLE$name]]       , plot_letters[[FEATURE_TYPE$DISCORDANT_READ_STATS$name]]),
+      paste0(plot_letters[[FEATURE_TYPE$SUMMARY_TABLE$name]]       , plot_letters[[FEATURE_TYPE$DISCORDANT_FRAG_FREQ$name]]),
       paste0(plot_letters[[FEATURE_TYPE$DUPLICATE_FREQ$name]]      , plot_letters[[FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD$name]]),
       paste0(plot_letters[[FEATURE_TYPE$BQR_BY_ORIG_QUAL$name]]    , plot_letters[[FEATURE_TYPE$BQR_BY_SNV96_CONTEXT$name]]),
       paste0(plot_letters[[FEATURE_TYPE$MS_INDEL_ERROR_RATES$name]], plot_letters[[FEATURE_TYPE$MS_INDEL_ERROR_BIAS$name]]),
