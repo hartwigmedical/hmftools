@@ -30,6 +30,7 @@ import com.google.common.annotations.VisibleForTesting;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+import com.hartwig.hmftools.common.sv.EsveeDiscordantStats;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.VersionInfo;
 import com.hartwig.hmftools.common.variant.GenotypeIds;

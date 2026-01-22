@@ -39,7 +39,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.esvee.common.FilterType;
 import com.hartwig.hmftools.esvee.common.FragmentLengthBounds;
-import com.hartwig.hmftools.esvee.prep.types.DiscordantFragType;
+import com.hartwig.hmftools.common.sv.DiscordantFragType;
 import com.hartwig.hmftools.esvee.prep.types.DiscordantStats;
 
 import org.junit.After;

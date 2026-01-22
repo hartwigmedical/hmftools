@@ -5,13 +5,15 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 
+import com.hartwig.hmftools.common.sv.EsveeCommon;
+import com.hartwig.hmftools.common.sv.EsveeDiscordantStats;
 import com.hartwig.hmftools.common.sv.LineElements;
 
 public final class PrepConstants
 {
     public static final String PREP_JUNCTION_FILE_ID = "junction" + TSV_EXTENSION;
     public static final String PREP_FRAG_LENGTH_FILE_ID = "fragment_length" + TSV_EXTENSION;
-    public static final String PREP_DISC_STATS_FILE_ID = "disc_stats" + TSV_EXTENSION;
+    public static final String PREP_DISC_STATS_FILE_ID = EsveeDiscordantStats.PREP_DISC_STATS_FILE_ID;
 
     // common fields
     public static final String FLD_JUNCTION_FRAGS = "JunctionFrags";

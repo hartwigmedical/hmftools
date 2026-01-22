@@ -29,6 +29,7 @@ import com.hartwig.hmftools.common.bamops.BamOperations;
 import com.hartwig.hmftools.common.bam.BamSlicer;
 import com.hartwig.hmftools.common.bamops.BamToolName;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
+import com.hartwig.hmftools.common.sv.EsveeCommon;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.jetbrains.annotations.Nullable;
@@ -41,8 +42,8 @@ public final class FileCommon
     public static final String INPUT_VCF_DESC = "Input VCF";
 
     // file IDs and names
-    public static final String ESVEE_FILE_ID = "esvee";
-    public static final String PREP_FILE_ID = "esvee.prep";
+    public static final String ESVEE_FILE_ID = EsveeCommon.ESVEE_FILE_ID;
+    public static final String PREP_FILE_ID = EsveeCommon.PREP_FILE_ID;
 
     public static final String PREP_DIR = "esvee_prep_dir";
     public static final String PREP_DIR_DESC = "Esvee prep input directory";
