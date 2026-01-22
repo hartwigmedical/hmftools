@@ -33,7 +33,7 @@ public class HlaAlleleFactory
         {
             return FindingListBuilder.<HlaAllele>builder()
                     .status(lilac.qc().equals(PASS) ? FindingsStatus.OK : FindingsStatus.NOT_RELIABLE)
-                    .all(HlaAlleleFactory.convertHlaAlleles(lilac,
+                    .findings(HlaAlleleFactory.convertHlaAlleles(lilac,
                             hasReliablePurity,
                             !orangeRecord.tumorOnlyMode(),
                             orangeRecord.isofox() != null))
