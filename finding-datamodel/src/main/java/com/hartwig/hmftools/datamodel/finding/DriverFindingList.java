@@ -10,13 +10,13 @@ import jakarta.validation.constraints.NotNull;
 @RecordBuilder
 public record DriverFindingList<T extends Driver>(
         @NotNull FindingsStatus status,
-        @NotNull List<T> all
+        @NotNull List<T> findings
 ) implements IFindingList<T>
 {
     @NotNull
     public FindingsQuery<T> query()
     {
-        return new FindingsQuery<>(all());
+        return new FindingsQuery<>(findings());
     }
 
     @NotNull

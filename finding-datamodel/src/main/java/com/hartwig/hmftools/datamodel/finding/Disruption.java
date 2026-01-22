@@ -80,6 +80,12 @@ public record Disruption(
         return driver.driverInterpretation();
     }
 
+    @Override
+    public double driverLikelihood()
+    {
+        return driver.driverLikelihood();
+    }
+
     public boolean isHomozygous()
     {
         return type().isHomozygous();
