@@ -10,6 +10,7 @@ import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
 import com.hartwig.hmftools.datamodel.linx.LinxDriver;
 import com.hartwig.hmftools.datamodel.linx.LinxDriverType;
+import com.hartwig.hmftools.datamodel.linx.LinxGeneOrientation;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.orange.algo.linx.LinxOrangeTestFactory;
 import com.hartwig.hmftools.orange.algo.util.LinxDriverTestFactory;
@@ -33,7 +34,7 @@ public class BreakendEntryFactoryTest
                 .isCanonical(true)
                 .exonUp(12)
                 .exonDown(12)
-                .geneOrientation("Upstream")
+                .geneOrientation(LinxGeneOrientation.UPSTREAM)
                 .type(LinxBreakendType.DEL)
                 .junctionCopyNumber(1.2)
                 .undisruptedCopyNumber(1.4)
@@ -73,10 +74,10 @@ public class BreakendEntryFactoryTest
     @Test
     public void canGenerateRangeField()
     {
-        assertEquals("Exon 4 Upstream", BreakendEntryFactory.range(create(4, 4, "Upstream")));
-        assertEquals("Intron 4 Downstream", BreakendEntryFactory.range(create(4, 5, "Downstream")));
-        assertEquals("Promoter Region Upstream", BreakendEntryFactory.range(create(0, 2, "Upstream")));
-        assertEquals(Strings.EMPTY, BreakendEntryFactory.range(create(-1, -1, Strings.EMPTY)));
+        assertEquals("Exon 4 Upstream", BreakendEntryFactory.range(create(4, 4, LinxGeneOrientation.UPSTREAM)));
+        assertEquals("Intron 4 Downstream", BreakendEntryFactory.range(create(4, 5, LinxGeneOrientation.DOWNSTREAM)));
+        assertEquals("Promoter Region Upstream", BreakendEntryFactory.range(create(0, 2, LinxGeneOrientation.UPSTREAM)));
+        assertEquals(Strings.EMPTY, BreakendEntryFactory.range(create(-1, -1, LinxGeneOrientation.UPSTREAM)));
     }
 
     @Test
@@ -100,7 +101,7 @@ public class BreakendEntryFactoryTest
     }
 
     @NotNull
-    private static LinxBreakend create(int exonUp, int exonDown, @NotNull String geneOrientation)
+    private static LinxBreakend create(int exonUp, int exonDown, @NotNull LinxGeneOrientation geneOrientation)
     {
         return LinxOrangeTestFactory.breakendBuilder().exonUp(exonUp).exonDown(exonDown).geneOrientation(geneOrientation).build();
     }

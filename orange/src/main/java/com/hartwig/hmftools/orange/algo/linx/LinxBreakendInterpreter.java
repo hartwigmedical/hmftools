@@ -14,6 +14,7 @@ import com.hartwig.hmftools.datamodel.gene.TranscriptRegionType;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
+import com.hartwig.hmftools.datamodel.linx.LinxGeneOrientation;
 
 public class LinxBreakendInterpreter
 {
@@ -38,8 +39,8 @@ public class LinxBreakendInterpreter
                 .chromosomeBand(chromosomeBand(linxBreakend.gene()))
                 .transcript(linxBreakend.transcriptId())
                 .isCanonical(linxBreakend.canonical())
-                .geneOrientation(linxBreakend.geneOrientation())
-                .isCanonical(linxBreakend.canonical())
+                .geneOrientation(linxBreakend.geneOrientation().equals(com.hartwig.hmftools.common.linx.LinxBreakend.BREAKEND_ORIENTATION_UPSTREAM) ?
+                        LinxGeneOrientation.UPSTREAM : LinxGeneOrientation.DOWNSTREAM)
                 .disruptive(linxBreakend.disruptive())
                 .reportedStatus(ReportedStatus.valueOf(linxBreakend.reportedStatus().name()))
                 .undisruptedCopyNumber(linxBreakend.undisruptedCopyNumber())
