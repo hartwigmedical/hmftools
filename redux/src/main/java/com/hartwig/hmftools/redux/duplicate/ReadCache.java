@@ -35,7 +35,7 @@ public class ReadCache implements IReadCache
     private int mPopDistanceCheck;
     private final boolean mUseFragmentOrientation;
     private final SbxDuplicateCollapser mSbxDuplicateCollapser;
-    private final int mReadCountThreshold;
+    private final int mReadCountReductionThreshold;
 
     private int mCurrentReadMinPosition;
     private String mCurrentChromosome;
@@ -53,7 +53,7 @@ public class ReadCache implements IReadCache
     public static final int DEFAULT_MAX_SOFT_CLIP = 130; // based on Illumina and a conservative min alignment of 30 bases plus a buffer
     public static final int DEFAULT_POP_DISTANCE_CHECK = 100; // how often in base terms to check for popping read groups
     public static final int DEFAULT_LOG_READ_COUNT_THRESHOLD = 100000; // based on observed cache sizes for deep panels
-    public static final int DEFAULT_DYNAMIC_READ_COUNT_THRESHOLD = 1_000_000; // level at which steps are taken to reduce the cache size
+    public static final int DEFAULT_DYNAMIC_READ_COUNT_THRESHOLD = 100_000; // level at which steps are taken to reduce the cache size
 
     public ReadCache(
             int groupSize, int maxSoftClipLength, boolean useFragmentOrientation, final DuplicatesConfig duplicatesConfig,
@@ -65,7 +65,7 @@ public class ReadCache implements IReadCache
 
         mDefaultDistanceCheck = popDistanceCheck;
         mPopDistanceCheck = mDefaultDistanceCheck;
-        mReadCountThreshold = dynamicReadCountThreshold;
+        mReadCountReductionThreshold = dynamicReadCountThreshold;
         mLogCacheReadCount = logCacheReadCount;
         mCheckLogCacheReadCount = (int)round(mLogCacheReadCount * 0.1);
 
@@ -137,8 +137,8 @@ public class ReadCache implements IReadCache
         if(fragmentCoordReads != null)
             return fragmentCoordReads;
 
-        if(mLastCacheReadCount >= mReadCountThreshold)
-            return purgeOnLargeCache();
+        if(mLastCacheReadCount >= mReadCountReductionThreshold)
+            return purgeAboveReadReductionThreshold();
 
         return null;
     }
@@ -314,7 +314,7 @@ public class ReadCache implements IReadCache
             return mSbxDuplicateCollapser.collapseGroups(duplicateGroups, singleReads);
     }
 
-    private FragmentCoordReads purgeOnLargeCache()
+    private FragmentCoordReads purgeAboveReadReductionThreshold()
     {
         if(mPositionGroups.stream().anyMatch(x -> !x.Chromosome.equals(mCurrentChromosome))) // on work with local intense regions
             return null;
@@ -325,14 +325,14 @@ public class ReadCache implements IReadCache
         int cachedReadCount = cachedReadCount();
         int cachedFragCount = cachedFragCoordGroups();
 
-        // aim to cut the cached reads in half
+        // aim to cut the cached reads in half by popping any fragment groups half the average size, which will target
+        // the larger groups
         double averageGroupSize = cachedReadCount / (double)cachedFragCount;
         double targetReadCount = cachedReadCount * 0.5;
         double groupSizeThreshold = max(averageGroupSize * 0.5, 10.0);
 
         int fragmentPopped = 0;
         int readsPopped = 0;
-        // int cachedSingleReads
 
         int groupIndex = 0;
         while(groupIndex < mPositionGroups.size())
@@ -341,9 +341,6 @@ public class ReadCache implements IReadCache
                 break;
 
             ReadPositionGroup group = mPositionGroups.get(groupIndex);
-
-            //if(mCurrentReadMinPosition < group.PositionStart)
-            //     break;
 
             Set<FragmentCoords> processedCoords = Sets.newHashSet();
 
@@ -359,14 +356,7 @@ public class ReadCache implements IReadCache
                 ++fragmentPopped;
                 processedCoords.add(fragCoords);
 
-                if(reads.size() > 1)
-                {
-                    duplicateGroups.add(new DuplicateGroup(reads, fragCoords));
-                }
-                else
-                {
-                    singleReads.add(new ReadInfo(reads.get(0), fragCoords));
-                }
+                duplicateGroups.add(new DuplicateGroup(reads, fragCoords));
 
                 if(cachedReadCount - readsPopped <= targetReadCount)
                     break;
@@ -388,7 +378,7 @@ public class ReadCache implements IReadCache
 
         if(readsPopped > 0)
         {
-            RD_LOGGER.debug("read cache({}) large cache(frags={} reads={}) purge popped(frags={} reads={}) groups({})",
+            RD_LOGGER.debug("read cache({}) above threshold(frags={} reads={}) purged(frags={} reads={}) groups({})",
                     readCachePosId(), cachedFragCount, cachedReadCount, fragmentPopped, readsPopped, mPositionGroups.size());
 
             checkCacheSize(true);
@@ -545,7 +535,7 @@ public class ReadCache implements IReadCache
         if(mPopDistanceCheck == mDefaultDistanceCheck)
             return;
 
-        if(cachedReadCount < mReadCountThreshold)
+        if(cachedReadCount < mReadCountReductionThreshold)
         {
             mPopDistanceCheck = mDefaultDistanceCheck;
 
@@ -553,7 +543,8 @@ public class ReadCache implements IReadCache
         }
         else
         {
-            int multiple = min((int)round(cachedReadCount / (double)mReadCountThreshold), 9);
+            // creep in 10% of the usual pop distance check for each multiple of the cached read count above the threshold
+            int multiple = min((int)round(cachedReadCount / (double) mReadCountReductionThreshold), 9);
             double adjustFraction = (10 - multiple) / 10.0;
 
             int dynamicPopDistanceCheck = (int)round(mDefaultDistanceCheck * adjustFraction);

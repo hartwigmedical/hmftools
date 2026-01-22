@@ -94,7 +94,7 @@ public class PartitionReader
         {
             ReadCache readCache = new ReadCache(mConfig.UMIs.Enabled, mConfig.DuplicateConfig);
 
-            mReadCache = !mConfig.DisableJitterReadCache && mConfig.UMIs.Enabled ? new JitterReadCache(readCache) : readCache;
+            mReadCache = mConfig.UseJitterReadCache && mConfig.UMIs.Enabled ? new JitterReadCache(readCache) : readCache;
         }
         else
         {

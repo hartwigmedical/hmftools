@@ -31,7 +31,7 @@ import org.junit.Test;
 
 import htsjdk.samtools.SAMRecord;
 
-public class JitterReadCacheTest
+public class ReadCacheTest
 {
     private static final String TEST_READ_BASES = "A".repeat(10);
     private static final String TEST_CIGAR = "10M";
@@ -79,7 +79,7 @@ public class JitterReadCacheTest
 
 
     @Test
-    public void testHandlesReadCachePossibleHoldingBackOfReadsForPerformanceReasons()
+    public void testJitterCacheHandlesReadCachePossibleHoldingBackOfReadsForPerformanceReasons()
     {
         JitterReadCache readCache =  new JitterReadCache(
                 new ReadCache(ReadCache.DEFAULT_GROUP_SIZE, ReadCache.DEFAULT_MAX_SOFT_CLIP, true));
@@ -143,7 +143,7 @@ public class JitterReadCacheTest
     }
 
     @Test
-    public void testReadFlows()
+    public void testJitterCacheReadFlows()
     {
         JitterReadCache readCache = new JitterReadCache(
                 new ReadCache(ReadCache.DEFAULT_GROUP_SIZE, ReadCache.DEFAULT_MAX_SOFT_CLIP, false));
@@ -207,7 +207,7 @@ public class JitterReadCacheTest
     }
 
     @Test
-    public void testSingleMateUnmappedFragment()
+    public void testJitterCacheSingleMateUnmappedFragment()
     {
         JitterReadCache readCache = new JitterReadCache(
                 new ReadCache(ReadCache.DEFAULT_GROUP_SIZE, ReadCache.DEFAULT_MAX_SOFT_CLIP, false));
@@ -244,7 +244,7 @@ public class JitterReadCacheTest
     }
 
     @Test
-    public void testReadCacheBoundary()
+    public void testJitterCacheReadCacheBoundary()
     {
         ReadCache innerReadCache = new ReadCache(ReadCache.DEFAULT_GROUP_SIZE, ReadCache.DEFAULT_MAX_SOFT_CLIP, false);
         JitterReadCache readCache = new JitterReadCache(innerReadCache);
@@ -263,7 +263,7 @@ public class JitterReadCacheTest
     }
 
     @Test
-    public void testDoNotGroupCoordsThatDoNotMatchOnAtLeastOneEnd()
+    public void testJitterCacheDoNotGroupCoordsThatDoNotMatchOnAtLeastOneEnd()
     {
         JitterReadCache readCache = new JitterReadCache(
                 new ReadCache(ReadCache.DEFAULT_GROUP_SIZE, ReadCache.DEFAULT_MAX_SOFT_CLIP, false));

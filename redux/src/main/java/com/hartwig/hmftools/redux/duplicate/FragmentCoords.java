@@ -52,7 +52,7 @@ public class FragmentCoords implements Comparable<FragmentCoords>
     public static final String COORD_ORIENT_REVERSE_STR = String.valueOf(COORD_ORIENT_REVERSE);
     public static final char COORD_READ_SUPP_INFO = 'S';
     public static final String COORD_READ_SUPP_INFO_STR = String.valueOf(COORD_READ_SUPP_INFO);
-    public static final char COORD_READ_UNMAPPED = 'U';
+    public static final char COORD_READ_UNMAPPED = 'N';
     public static final char COORD_FRAG_REVERSED = 'V';
     public static final char COORD_READ_UPPER = 'U';
     public static final String COORD_READ_UPPER_STR = String.valueOf(COORD_READ_UPPER);

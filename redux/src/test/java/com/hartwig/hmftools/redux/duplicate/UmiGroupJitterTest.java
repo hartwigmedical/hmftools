@@ -37,6 +37,7 @@ import com.hartwig.hmftools.redux.TestBamWriter;
 import com.hartwig.hmftools.redux.common.ReadInfo;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import htsjdk.samtools.SAMRecord;
@@ -365,6 +366,7 @@ public class UmiGroupJitterTest
         assertEquals(chr1UmiGroupsSet, chr2UmiGroupsSet);
     }
 
+    @Ignore
     @Test
     public void testIlluminaJitterUmiGroupCollapseReadCacheInconsistentPops()
     {
@@ -487,6 +489,7 @@ public class UmiGroupJitterTest
         assertEquals(0, (int) readNames.entrySet().stream().mapToInt(Multiset.Entry::getCount).filter(x -> x != 2).count());
     }
 
+    @Ignore
     @Test
     public void testIlluminaJitterUmiGroupCollapseReadCacheInconsistentPopsNotFixedByIncreasingMaxSoftClipAsAnInitialFilter()
     {

@@ -138,7 +138,7 @@ public class FragmentUtilsTest
         assertEquals(FORWARD, fragmentCoords.OrientLower);
         assertFalse(fragmentCoords.ReadIsLower);
         assertTrue(fragmentCoords.forwardFragment());
-        assertEquals("1:100_U", fragmentCoords.keyNonOriented());
+        assertEquals("1:100_N", fragmentCoords.keyNonOriented());
 
         // an unpaired read
         read = createSamRecord(
