@@ -11,7 +11,6 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.PEACH_DIR_CF
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PEACH_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REF_METRICS_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REF_METRICS_DIR_DESC;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_GERMLINE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_GERMLINE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SIGS_DIR_CFG;
@@ -20,7 +19,7 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_CF
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
-import static com.hartwig.hmftools.orange.OrangeConfig.REDUX_DIR_CFG;
+import static com.hartwig.hmftools.orange.OrangeConfig.TUMOR_REDUX_DIR_CFG;
 import static com.hartwig.hmftools.orange.OrangeConfig.TUMOR_SAMPLE_ID;
 import static com.hartwig.hmftools.orange.util.PathUtil.mandatoryPath;
 
@@ -49,11 +48,15 @@ public interface OrangeWGSRefConfig
 {
     String REFERENCE_SAMPLE_ID = "reference_sample_id";
 
+    String REFERENCE_REDUX_DIR_CFG = "ref_redux_dir";
+    String REFERENCE_REDUX_DIR_DESC = "Path to Redux reference files";
+
     static void registerConfig(@NotNull ConfigBuilder configBuilder)
     {
         configBuilder.addConfigItem(REFERENCE_SAMPLE_ID,
                 false,
                 "(Optional) The reference sample of the tumor sample for which ORANGE will run.");
+        configBuilder.addPath(REFERENCE_REDUX_DIR_CFG, false, REFERENCE_REDUX_DIR_DESC);
         configBuilder.addPath(REF_METRICS_DIR_CFG, false, REF_METRICS_DIR_DESC);
         configBuilder.addPath(LINX_GERMLINE_DIR_CFG, false, LINX_GERMLINE_DIR_DESC);
         configBuilder.addPath(SAGE_GERMLINE_DIR_CFG, false, SAGE_GERMLINE_DIR_DESC);
@@ -92,7 +95,7 @@ public interface OrangeWGSRefConfig
             LOGGER.debug("Ref sample has been configured as {}.", refSampleId);
             builder.referenceSampleId(refSampleId);
 
-            String reduxDir = configBuilder.getValue(REDUX_DIR_CFG);
+            String reduxDir = configBuilder.getValue(REFERENCE_REDUX_DIR_CFG);
             builder.refSampleBqrPlot(mandatoryPath(BqrFile.generatePlotFilename(reduxDir, refSampleId)));
 
             String refMetricsDir = pathResolver.resolveMandatoryToolDirectory(
@@ -141,7 +144,6 @@ public interface OrangeWGSRefConfig
         return checkAddDirSeparator(basePath) + sample + ".sage.gene.coverage.tsv";
     }
 
-    // params for WGS Tumor only
     @Nullable
     String annotatedVirusTsv();
 

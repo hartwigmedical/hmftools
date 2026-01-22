@@ -28,7 +28,6 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_METRICS_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_METRICS_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
@@ -80,9 +79,8 @@ public interface OrangeConfig
     // Files containing the actual genomic results for this sample.
     String PIPELINE_VERSION_FILE = "pipeline_version_file";
 
-    // TODO: add to pipeline directories for OA v3_0
-    String REDUX_DIR_CFG = "redux_dir";
-    String REDUX_DIR_DESC = "Path to Redux files";
+    String TUMOR_REDUX_DIR_CFG = "tumor_redux_dir";
+    String TUMOR_REDUX_DIR_DESC = "Path to Redux tumor files";
 
     // Some additional optional params and flags
     String CONVERT_GERMLINE_TO_SOMATIC = "convert_germline_to_somatic";
@@ -105,7 +103,7 @@ public interface OrangeConfig
         configBuilder.addPath(COHORT_MAPPING_TSV, true, "Path to cohort mapping TSV.");
         configBuilder.addPath(COHORT_PERCENTILES_TSV, true, "Path to cohort percentiles TSV.");
         configBuilder.addPath(SIGNATURES_ETIOLOGY_TSV, true, "Path to signatures etiology TSV.");
-        configBuilder.addPath(REDUX_DIR_CFG, true, REDUX_DIR_DESC);
+        configBuilder.addPath(TUMOR_REDUX_DIR_CFG, true, TUMOR_REDUX_DIR_DESC);
         addGenePanelOption(configBuilder, true);
         addKnownFusionFileOption(configBuilder);
         addEnsemblDir(configBuilder);
@@ -266,7 +264,7 @@ public interface OrangeConfig
 
         ImmutableOrangeConfig.Builder builder = ImmutableOrangeConfig.builder();
 
-        String reduxDir = configBuilder.getValue(REDUX_DIR_CFG);
+        String reduxDir = configBuilder.getValue(TUMOR_REDUX_DIR_CFG);
 
         builder.experimentType(experimentType)
                 .tumorSampleId(tumorSampleId)
