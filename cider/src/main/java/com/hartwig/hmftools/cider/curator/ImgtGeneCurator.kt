@@ -19,6 +19,7 @@ import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.SPECIES
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.jAnchorSignatures
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.liftOverBlacklist
 import com.hartwig.hmftools.cider.genes.GenomicLocation
+import com.hartwig.hmftools.common.bam.CigarUtils.getPositionFromReadIndex
 import com.hartwig.hmftools.common.blastn.BlastnMatch
 import com.hartwig.hmftools.common.cider.IgTcrGeneFile
 import com.hartwig.hmftools.common.codon.Codons
@@ -29,6 +30,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion
 import com.hartwig.hmftools.common.genome.region.Strand
 import com.hartwig.hmftools.common.utils.Doubles
 import com.hartwig.hmftools.common.utils.config.DeclaredOrderParameterComparator
+import htsjdk.samtools.CigarElement
 import htsjdk.samtools.liftover.LiftOver
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
 import htsjdk.samtools.util.Interval
@@ -49,6 +51,16 @@ data class ProcessedGeneAllele(
     val anchorSequence: String?,
     val anchorLocationV38: GenomicLocation?,
     val anchorLocationV37: GenomicLocation?,
+)
+
+data class LocationInfo(
+    val location: GenomicLocation,
+    val cigar: List<CigarElement>?,
+)
+
+data class AnchorInfo(
+    val sequence: String,
+    val location: GenomicLocation?
 )
 
 // This utility processes IMGT IG/TCR genes into format CIDER can use.
@@ -104,12 +116,17 @@ class ImgtGeneCurator
     @Parameter(names = ["-workdir"], description = "Number of threads")
     lateinit var workdir: String
 
+    lateinit var refGenomeSourceV38: IndexedFastaSequenceFile
+    lateinit var refGenomeSourceV37: IndexedFastaSequenceFile
     lateinit var ensemblDataCache: EnsemblDataCache
     lateinit var liftOverHtsjdk: LiftOver
     lateinit var liftOverHmf: GenomeLiftoverCache
 
     fun run(): Int
     {
+        refGenomeSourceV38 = IndexedFastaSequenceFile(File(refGenomeV38))
+        refGenomeSourceV37 = IndexedFastaSequenceFile(File(refGenomeV37))
+
         ensemblDataCache = EnsemblDataCache(ensemblDataDir, BLAST_REF_GENOME_VERSION)
         val ensemblLoadOk = ensemblDataCache.load(true)
         if (!ensemblLoadOk)
@@ -126,20 +143,19 @@ class ImgtGeneCurator
         val (ciderGenesV38, ciderGenesV37) = createCiderGenes(processedGeneAlleles)
 
         sLogger.info("validating V38 anchor locations")
-        validateAnchorLocations(ciderGenesV38, refGenomeV38)
+        validateAnchorLocations(ciderGenesV38, refGenomeSourceV38)
         sLogger.info("validating V37 anchor locations")
-        validateAnchorLocations(ciderGenesV37, refGenomeV37)
+        validateAnchorLocations(ciderGenesV37, refGenomeSourceV37)
 
         val outputGenesV38 = Paths.get(outputDir, "igtcr_gene.38.tsv").toString()
         IgTcrGeneFile.write(outputGenesV38, ciderGenesV38.map { o -> toCommonIgTcrGene(o) })
         val outputGenesV37 = Paths.get(outputDir, "igtcr_gene.37.tsv").toString()
         IgTcrGeneFile.write(outputGenesV37, ciderGenesV37.map { o -> toCommonIgTcrGene(o) })
 
-        // TODO
-//        val outputFastaV38 = Paths.get(outputDir, "igtcr_gene.38.fasta").toString()
-//        writeGeneFasta(outputFastaV38, processedGeneAlleles, true)
-//        val outputFastaV37 = Paths.get(outputDir, "igtcr_gene.37.fasta").toString()
-//        writeGeneFasta(outputFastaV37, processedGeneAlleles, false)
+        val outputFastaV38 = Paths.get(outputDir, "igtcr_gene.38.fasta").toString()
+        writeGeneFasta(outputFastaV38, processedGeneAlleles, true)
+        val outputFastaV37 = Paths.get(outputDir, "igtcr_gene.37.fasta").toString()
+        writeGeneFasta(outputFastaV37, processedGeneAlleles, false)
 
         return 0
     }
@@ -150,67 +166,65 @@ class ImgtGeneCurator
         return alleles.mapIndexed { index, allele -> processAllele(allele, alleleLocationsV38[index]) }
     }
 
-    private fun processAllele(allele: ImgtGeneAllele, alleleLocationV38: GenomicLocation?): ProcessedGeneAllele
+    private fun processAllele(allele: ImgtGeneAllele, alleleLocationInfoV38: LocationInfo?): ProcessedGeneAllele
     {
         val region = allele.region!!
 
-        val anchorData = when (region)
+        val anchorInfo = when (region)
         {
-            IgTcrRegion.V_REGION -> findVAnchor(allele, alleleLocationV38)
-            IgTcrRegion.J_REGION -> findJAnchor(allele, alleleLocationV38)
+            IgTcrRegion.V_REGION -> findVAnchor(allele, alleleLocationInfoV38)
+            IgTcrRegion.J_REGION -> findJAnchor(allele, alleleLocationInfoV38)
             else -> null
         }
-        val anchorSequence = anchorData?.first
-        val anchorLocationV38 = anchorData?.second
 
-        val (alleleLocationV37, anchorLocationV37) = convertAlleleLocationsTo37(allele, anchorSequence, alleleLocationV38, anchorLocationV38)
+        val (alleleLocationV37, anchorLocationV37) = convertAlleleLocationsTo37(allele, anchorInfo?.sequence, alleleLocationInfoV38?.location, anchorInfo?.location)
 
-        return ProcessedGeneAllele(allele, alleleLocationV38, alleleLocationV37, anchorSequence, anchorLocationV38, anchorLocationV37)
+        return ProcessedGeneAllele(allele, alleleLocationInfoV38?.location, alleleLocationV37, anchorInfo?.sequence, anchorInfo?.location, anchorLocationV37)
     }
 
-    private fun findAlleleLocations(alleles: List<ImgtGeneAllele>): List<GenomicLocation?>
+    private fun findAlleleLocations(alleles: List<ImgtGeneAllele>): List<LocationInfo?>
     {
         // V / D / J gene use blast, constant genes use ensembl
         // reason is that ensembl is easier, and we do not need the alt locations for the constant genes. Another reason
         // is that we do not need to be very precise with the location of the anchor for constant genes
         // if we use ensembl for V / J gene, we need to use the fasta file to validate the anchor location is precise
 
-        val genomicLocations = MutableList<GenomicLocation?>(alleles.size) { null }
+        val locations = MutableList<LocationInfo?>(alleles.size) { null }
 
         val nonConstantAlleles = alleles.withIndex().filter { (_, allele) -> allele.region != IgTcrRegion.CONSTANT }
         val nonConstantAlleleLocations = blastForAlleleLocation(nonConstantAlleles.map { it.value })
         nonConstantAlleleLocations.withIndex().forEach { (indexInNonconstant, location) ->
-            genomicLocations[nonConstantAlleles[indexInNonconstant].index] = location
+            locations[nonConstantAlleles[indexInNonconstant].index] = location
         }
 
         val constantAlleles = alleles.withIndex().filter { (_, gene) -> gene.region == IgTcrRegion.CONSTANT }
         for ((index, allele) in constantAlleles)
         {
             val ensemblGene = ensemblDataCache.getGeneDataByName(allele.geneName) ?: continue
-            genomicLocations[index] = toGenomicLocation(ensemblGene)
+            locations[index] = LocationInfo(toGenomicLocation(ensemblGene), null)
         }
 
         // also apply genomic location overrides
         for ((index, allele) in alleles.withIndex())
         {
-            if (genomicLocations[index] == null)
+            if (locations[index] == null)
             {
                 ImgtGeneCuratorSettings.getGenomicLocationOverrides(allele.geneName)
-                    ?.let { override -> genomicLocations[index] = override }
+                    ?.let { override -> locations[index] = LocationInfo(override, null) }
             }
         }
 
-        return genomicLocations
+        return locations
     }
 
-    private fun blastForAlleleLocation(alleles: List<ImgtGeneAllele>): List<GenomicLocation?>
+    private fun blastForAlleleLocation(alleles: List<ImgtGeneAllele>): List<LocationInfo?>
     {
         val blastnResults = AlignmentUtil.runBlastn(
             "imgt", blast, blastDb,
             alleles.map { it -> it.sequenceWithoutGaps },
             workdir, threadCount, BLASTN_EVALUE_CUTOFF)
 
-        val genomicLocations = ArrayList<GenomicLocation?>()
+        val locations = ArrayList<LocationInfo?>()
         for ((alleleIndex, allele) in alleles.withIndex())
         {
             // Filter by full match and not too many mismatches, then
@@ -218,8 +232,7 @@ class ImgtGeneCurator
             // 1. match quality
             // 2. primary assembly
             val matches = blastnResults[alleleIndex]
-                .filter { m: BlastnMatch -> m.numMismatch <= BLASTN_MAX_MISMATCH &&
-                        m.alignmentLength >= (m.querySeqLen - BLASTN_MAX_MISMATCH) }
+                .filter { m -> m.numMismatch <= BLASTN_MAX_MISMATCH && m.queryAlignStart == 1 && m.queryAlignEnd == m.querySeqLen }
                 .sortedWith(Comparator.comparingDouble { m: BlastnMatch -> m.expectedValue }
                     .thenComparingInt { m: BlastnMatch -> if (m.subjectTitle.endsWith(BLASTN_PRIMARY_ASSEMBLY_NAME)) 0 else 1 })
 
@@ -256,7 +269,7 @@ class ImgtGeneCurator
                 }
             }
 
-            var genomicLocation: GenomicLocation? = null
+            var location: LocationInfo? = null
             if (bestMatch == null)
             {
                 if (ensemblGene != null)
@@ -266,19 +279,23 @@ class ImgtGeneCurator
                     if (allele.region == IgTcrRegion.D_REGION)
                     {
                         // use ensembl for D region
-                        genomicLocation = toGenomicLocation(ensemblGene)
+                        location = LocationInfo(toGenomicLocation(ensemblGene), null)
                     }
                 }
                 sLogger.info("gene: {}*{}, no full match", allele.geneName, allele.allele)
             }
             else
             {
-                genomicLocation = matchToQueryGenomicLocation(bestMatch)
-                sLogger.info("gene: {}*{}, match: {}, gene loc: {}", allele.geneName, allele.allele, bestMatch, genomicLocation)
+                val genomicLocation = matchToQueryGenomicLocation(bestMatch)
+                location = LocationInfo(genomicLocation, bestMatch.cigar)
+                sLogger.info(
+                    "gene: {}*{}, gene loc: {}, contig={}, start={}, end={}, cigar: {}",
+                    allele.geneName, allele.allele, genomicLocation,
+                    bestMatch.subjectTitle, bestMatch.subjectAlignStart, bestMatch.subjectAlignEnd, bestMatch.cigar)
             }
-            genomicLocations.add(genomicLocation)
+            locations.add(location)
         }
-        return genomicLocations
+        return locations
     }
 
     private fun convertAlleleLocationsTo37(
@@ -451,7 +468,7 @@ class ImgtGeneCurator
             return filteredAlleles
         }
 
-        private fun findVAnchor(allele: ImgtGeneAllele, alleleLocation: GenomicLocation?): Pair<String, GenomicLocation?>?
+        private fun findVAnchor(allele: ImgtGeneAllele, alleleLocationInfo: LocationInfo?): AnchorInfo?
         {
             // some sequences are longer
             val seqWithGaps = allele.sequenceWithGaps
@@ -496,24 +513,27 @@ class ImgtGeneCurator
                 anchor = anchor.take(27) + "TGT"
             }
 
-            // for v gene the anchor is near the end, due to introns we much find the sequence from the end backwards
-            val anchorOffsetFromEnd = allele.sequenceWithoutGaps.length - anchorIndex - anchor.length
-
             var anchorLocation: GenomicLocation? = null
 
-            if (alleleLocation != null && anchorIndex != -1)
+            val alleleLocation = alleleLocationInfo?.location
+            if (alleleLocation != null && anchorIndex >= 0)
             {
+                // Work based on the end of the anchor for V genes, because it's more important that lines up correctly in the case of INDELs.
+                val anchorEndOffset = alleleLocationInfo.cigar
+                    ?.let { getPositionFromReadIndex(0, it, anchorIndex + anchor.length - 1) }
+                    ?: (anchorIndex + anchor.length - 1)
+                val anchorStartOffset = anchorEndOffset - (anchor.length - 1)
                 anchorLocation = if (alleleLocation.strand == Strand.FORWARD)
                 {
                     alleleLocation.copy(
-                        posStart = alleleLocation.posEnd - anchorOffsetFromEnd - anchor.length + 1,
-                        posEnd = alleleLocation.posEnd - anchorOffsetFromEnd
+                        posStart = alleleLocation.posStart + anchorStartOffset,
+                        posEnd = alleleLocation.posStart + anchorStartOffset + anchor.length - 1
                     )
                 } else
                 {
                     alleleLocation.copy(
-                        posStart = alleleLocation.posStart + anchorOffsetFromEnd,
-                        posEnd = alleleLocation.posStart + anchorOffsetFromEnd + anchor.length - 1
+                        posStart = alleleLocation.posEnd - (anchorStartOffset + anchor.length - 1),
+                        posEnd = alleleLocation.posEnd - anchorStartOffset
                     )
                 }
             }
@@ -522,17 +542,17 @@ class ImgtGeneCurator
 
             // v gene
             sLogger.info(
-                "V gene: {}, anchor: {}, offset from end: {}, anchor AA: {}",
+                "V gene: {}, anchor: {}, offset from start: {}, anchor AA: {}",
                 allele.geneName,
                 anchor,
-                anchorOffsetFromEnd,
+                anchorIndex,
                 aaSeq
             )
 
-            return Pair(anchor, anchorLocation)
+            return AnchorInfo(anchor, anchorLocation)
         }
 
-        private fun findJAnchor(allele: ImgtGeneAllele, alleleLocation: GenomicLocation?): Pair<String, GenomicLocation?>?
+        private fun findJAnchor(allele: ImgtGeneAllele, alleleLocationInfo: LocationInfo?): AnchorInfo?
         {
             // J gene rules
             // 30 base sequence starting with TGGGG (W) or TTTG and TTCG (F)
@@ -558,19 +578,23 @@ class ImgtGeneCurator
 
             var anchorLocation: GenomicLocation? = null
 
+            val alleleLocation = alleleLocationInfo?.location
             if (alleleLocation != null)
             {
+                val anchorStartOffset = alleleLocationInfo.cigar
+                    ?.let { getPositionFromReadIndex(0, it, anchorIndex) }
+                    ?: anchorIndex
                 anchorLocation = if (alleleLocation.strand == Strand.FORWARD)
                 {
                     alleleLocation.copy(
-                        posStart = alleleLocation.posStart + anchorIndex,
-                        posEnd = alleleLocation.posStart + anchorIndex + anchor.length - 1
+                        posStart = alleleLocation.posStart + anchorStartOffset,
+                        posEnd = alleleLocation.posStart + anchorStartOffset + anchor.length - 1
                     )
                 } else
                 {
                     alleleLocation.copy(
-                        posStart = alleleLocation.posEnd - anchorIndex - anchor.length + 1,
-                        posEnd = alleleLocation.posEnd - anchorIndex
+                        posStart = alleleLocation.posEnd - (anchorStartOffset + anchor.length - 1),
+                        posEnd = alleleLocation.posEnd - anchorStartOffset
                     )
                 }
             }
@@ -579,7 +603,7 @@ class ImgtGeneCurator
 
             sLogger.info("J gene: {}, anchor: {}, offset from start: {}, anchor AA: {}", allele.geneName, anchor, anchorIndex, aaSeq)
 
-            return Pair(anchor, anchorLocation)
+            return AnchorInfo(anchor, anchorLocation)
         }
 
         private fun toGenomicLocation(ensemblGene: GeneData) : GenomicLocation
@@ -610,11 +634,11 @@ class ImgtGeneCurator
             }
         }
 
-        private fun validateAnchorLocations(igTcrGeneList: List<IgTcrGene>, refGenomeFastaPath: String)
+        private fun validateAnchorLocations(igTcrGeneList: List<IgTcrGene>, refGenome: IndexedFastaSequenceFile)
         {
-            val refGenomeFile = IndexedFastaSequenceFile(File(refGenomeFastaPath))
-            val genomicLocationValidator = GenomicLocationValidator(refGenomeFile)
+            val genomicLocationValidator = GenomicLocationValidator(refGenome)
 
+            var failed = false
             for (gene in igTcrGeneList)
             {
                 if (gene.anchorLocation != null && gene.anchorLocation.inPrimaryAssembly)
@@ -623,9 +647,21 @@ class ImgtGeneCurator
                     {
                         sLogger.error("gene: {} anchor location: {} does not match anchor seq: {}",
                             gene.geneAllele, gene.anchorLocation, gene.anchorSequence)
-                        // throw RuntimeException()
+                        failed = true
                     }
                 }
+            }
+            if (failed)
+            {
+                throw RuntimeException("Invalid anchor locations")
+            }
+        }
+
+        private fun writeGeneFasta(path: String, alleles: List<ProcessedGeneAllele>, isV38: Boolean)
+        {
+            // TODO: write reference base context?
+            File(path).printWriter().use { file ->
+                alleles.forEach { file.println(">${it.data.geneName}|${it.data.allele}\n${it.data.sequenceWithoutGaps}") }
             }
         }
     }

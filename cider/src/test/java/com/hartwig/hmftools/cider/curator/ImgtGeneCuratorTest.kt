@@ -30,6 +30,7 @@ class ImgtGeneCuratorTest
             0.1,
             150.0,
             "",
+            "",
             ""
         )
 
@@ -58,6 +59,7 @@ class ImgtGeneCuratorTest
             Strand.FORWARD,
             0.1,
             150.0,
+            "",
             "",
             ""
         )
@@ -91,6 +93,7 @@ class ImgtGeneCuratorTest
             0.1,
             150.0,
             "",
+            "",
             ""
         )
 
@@ -119,6 +122,7 @@ class ImgtGeneCuratorTest
             Strand.REVERSE,
             0.1,
             150.0,
+            "",
             "",
             ""
         )

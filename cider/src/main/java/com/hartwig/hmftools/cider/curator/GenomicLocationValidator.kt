@@ -19,18 +19,18 @@ class GenomicLocationValidator(val refGenome: IndexedFastaSequenceFile)
             return false
         }
 
-        // do not allow more than 2 bases difference
-        var numDiff: Int = 0
+        var numDiff = 0
         for (i in seq.indices)
         {
             if (seq[i] != refGenomeSeq[i])
                 ++numDiff
         }
 
-        if (numDiff > 6)
+        val maxDiff = 6
+        if (numDiff > maxDiff)
         {
             sLogger.error(
-                "validation failed: seq({}) and ref genome seq({} of {}) sequence mismatch({}) > 6",
+                "validation failed: seq({}) and ref genome seq({} of {}) sequence mismatch({}) > $maxDiff",
                 seq,
                 refGenomeSeq,
                 genomicLocation,
