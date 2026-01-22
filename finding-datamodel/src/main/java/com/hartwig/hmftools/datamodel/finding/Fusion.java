@@ -61,6 +61,12 @@ public record Fusion(
         return driver.driverInterpretation();
     }
 
+    @Override
+    public double driverLikelihood()
+    {
+        return driver.driverLikelihood();
+    }
+
     @NotNull
     public String display()
     {

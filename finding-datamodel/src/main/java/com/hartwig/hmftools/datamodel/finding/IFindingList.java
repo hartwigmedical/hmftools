@@ -11,45 +11,45 @@ import jakarta.validation.constraints.NotNull;
 public interface IFindingList<T extends Finding>
 {
     @NotNull FindingsStatus status();
-    @NotNull List<T> all();
+    @NotNull List<T> findings();
 
     default int size()
     {
-        return all().size();
+        return findings().size();
     }
 
     default boolean isEmpty()
     {
-        return all().isEmpty();
+        return findings().isEmpty();
     }
 
     default Iterator<T> iterator()
     {
-        return all().iterator();
+        return findings().iterator();
     }
 
     default T get(int index)
     {
-        return all().get(index);
+        return findings().get(index);
     }
 
     default ListIterator<T> listIterator()
     {
-        return all().listIterator();
+        return findings().listIterator();
     }
 
     default ListIterator<T> listIterator(int index)
     {
-        return all().listIterator(index);
+        return findings().listIterator(index);
     }
 
     default Stream<T> stream()
     {
-        return all().stream();
+        return findings().stream();
     }
 
     default Stream<T> parallelStream()
     {
-        return all().parallelStream();
+        return findings().parallelStream();
     }
 }

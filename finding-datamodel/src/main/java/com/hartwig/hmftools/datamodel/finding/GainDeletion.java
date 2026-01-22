@@ -58,4 +58,10 @@ public record GainDeletion(
     {
         return driver.driverInterpretation();
     }
+
+    @Override
+    public double driverLikelihood()
+    {
+        return driver.driverLikelihood();
+    }
 }

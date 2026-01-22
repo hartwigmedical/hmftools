@@ -20,7 +20,6 @@ import jakarta.validation.constraints.NotNull;
 public record SmallVariant(
         @NotNull DriverFields driver,
         @Nullable DriverCategory driverLikelihoodType,
-        double driverLikelihood,
         @NotNull TranscriptImpact transcriptImpact,
         @Nullable TranscriptImpact otherImpact,
         boolean isCanonical,
@@ -95,6 +94,12 @@ public record SmallVariant(
     public DriverInterpretation driverInterpretation()
     {
         return driver.driverInterpretation();
+    }
+
+    @Override
+    public double driverLikelihood()
+    {
+        return driver.driverLikelihood();
     }
 
     public double clonalLikelihood()
