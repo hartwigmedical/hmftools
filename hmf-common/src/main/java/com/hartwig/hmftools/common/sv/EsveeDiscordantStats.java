@@ -32,7 +32,7 @@ public class EsveeDiscordantStats
 
     public static final String PREP_DISC_STATS_FILE_ID = "disc_stats" + TSV_EXTENSION;
 
-    private static String FILE_EXTENSION = ESVEE_FILE_ID + "." + PREP_DISC_STATS_FILE_ID;
+    private static String FILE_EXTENSION = "." + ESVEE_FILE_ID + "." + PREP_DISC_STATS_FILE_ID;
 
     public static String generateFilename(String basePath, String sample)
     {
