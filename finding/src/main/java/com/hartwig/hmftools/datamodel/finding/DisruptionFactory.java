@@ -78,7 +78,7 @@ final class DisruptionFactory
 
         return DriverFindingListBuilder.<Disruption>builder()
                 .status(FindingsStatus.OK)
-                .all(allDisruptions)
+                .findings(allDisruptions)
                 .build();
     }
 
@@ -195,6 +195,7 @@ final class DisruptionFactory
                                 .driverSource(sourceSample)
                                 .reportedStatus(breakend.reported() ? ReportedStatus.REPORTED : ReportedStatus.NOT_REPORTED)
                                 .driverInterpretation(breakend.reported() ? DriverInterpretation.HIGH : DriverInterpretation.LOW) // TODOHWL: fix
+                                .driverLikelihood(breakend.reported() ? 1.0 : 0.0)
                                 .build()
                 )
                 .type(disruptionType)

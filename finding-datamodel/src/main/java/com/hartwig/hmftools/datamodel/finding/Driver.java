@@ -12,4 +12,6 @@ public interface Driver extends Finding
     @NotNull ReportedStatus reportedStatus();
 
     @NotNull DriverInterpretation driverInterpretation();
+
+    double driverLikelihood();
 }

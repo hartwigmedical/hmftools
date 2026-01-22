@@ -24,13 +24,13 @@ public class TestFindingFactory {
 
     @NotNull
     public static <T extends Finding> FindingList<T> buildFindingsList(@NotNull FindingsStatus findingsStatus, @NotNull List<T> findings) {
-        return FindingListBuilder.<T>builder().status(findingsStatus).all(findings).build();
+        return FindingListBuilder.<T>builder().status(findingsStatus).findings(findings).build();
     }
 
     @NotNull
     public static <T extends Driver> DriverFindingList<T> buildDriverFindingsList(@NotNull FindingsStatus findingsStatus,
             @NotNull List<T> findings) {
-        return DriverFindingListBuilder.<T>builder().status(findingsStatus).all(findings).build();
+        return DriverFindingListBuilder.<T>builder().status(findingsStatus).findings(findings).build();
     }
 
     @NotNull
@@ -199,7 +199,7 @@ public class TestFindingFactory {
     }
 
     public static <T extends Driver> DriverFindingListBuilder<T> driverFindingsBuilder(List<T> findings) {
-        return DriverFindingListBuilder.<T>builder().status(FindingsStatus.OK).all(findings);
+        return DriverFindingListBuilder.<T>builder().status(FindingsStatus.OK).findings(findings);
     }
 
     @NotNull

@@ -45,12 +45,12 @@ final class GainDeletionFactory
 
         return DriverFindingListBuilder.<GainDeletion>builder()
                 .status(findingsStatus)
-                .all(allGainDels)
+                .findings(allGainDels)
                 .build();
     }
 
     // in orange data, HOM_DELS are stored as germline full dels, HET_DELS are stored in LOH, they do not overlap.
-    // all the reportable ones are in purple drivers. Other types are not reportable, we can ignore them
+    // findings the reportable ones are in purple drivers. Other types are not reportable, we can ignore them
     private static List<GainDeletion> germlineDriverGainDels(List<PurpleGainDeletion> reportableGermlineFullDels,
             List<PurpleLossOfHeterozygosity> reportableGermlineLossOfHeterozygosities,
             final List<PurpleDriver> germlineDrivers,
@@ -145,6 +145,7 @@ final class GainDeletionFactory
                         .driverSource(DriverSource.SOMATIC)
                         .reportedStatus(ReportedStatus.REPORTED)
                         .driverInterpretation(DriverInterpretation.LOW)
+                        .driverLikelihood(0)
                         .build()
                 )
                 .type(GainDeletion.Type.SOMATIC_LOH)
@@ -188,6 +189,7 @@ final class GainDeletionFactory
                         .driverSource(sourceSample)
                         .reportedStatus(ReportedStatus.REPORTED)
                         .driverInterpretation(DriverInterpretation.interpret(driver.driverLikelihood()))
+                        .driverLikelihood(driver.driverLikelihood())
                         .build()
                 )
                 .type(type)
@@ -224,6 +226,7 @@ final class GainDeletionFactory
                         .driverSource(DriverSource.GERMLINE)
                         .reportedStatus(ReportedStatus.REPORTED)
                         .driverInterpretation(DriverInterpretation.interpret(driver.driverLikelihood()))
+                        .driverLikelihood(driver.driverLikelihood())
                         .build()
                 )
                 .type(GainDeletion.Type.GERMLINE_DEL_HET_IN_TUMOR)
