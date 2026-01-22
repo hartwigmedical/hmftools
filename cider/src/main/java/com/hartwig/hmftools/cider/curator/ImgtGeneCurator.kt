@@ -204,14 +204,13 @@ class ImgtGeneCurator
             locations[index] = LocationInfo(toGenomicLocation(ensemblGene), null)
         }
 
-        // also apply genomic location overrides
         for ((index, allele) in alleles.withIndex())
         {
-            if (locations[index] == null)
-            {
-                ImgtGeneCuratorSettings.getGenomicLocationOverrides(allele.geneName)
-                    ?.let { override -> locations[index] = LocationInfo(override, null) }
-            }
+            ImgtGeneCuratorSettings.getGenomicLocationOverrides(allele.geneName)
+                ?.let { override ->
+                    sLogger.info("gene: {}*{}, using location override: {}", allele.geneName, allele.allele, override)
+                    locations[index] = LocationInfo(override, null)
+                }
         }
 
         return locations
