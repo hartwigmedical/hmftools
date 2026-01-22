@@ -11,7 +11,8 @@ public record DriverFields(
         @NotNull String findingKey,
         @NotNull DriverSource driverSource,
         @NotNull ReportedStatus reportedStatus,
-        @NotNull DriverInterpretation driverInterpretation
+        @NotNull DriverInterpretation driverInterpretation,
+        double driverLikelihood
 )
 {
 }
