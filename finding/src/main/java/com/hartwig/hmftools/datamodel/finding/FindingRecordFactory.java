@@ -218,7 +218,7 @@ public class FindingRecordFactory
     @NotNull
     private static List<GainDeletion> filterLohGainDeletions(@NotNull DriverFindingList<GainDeletion> gainDeletions, Set<String> geneNames)
     {
-        return gainDeletions.all().stream()
+        return gainDeletions.findings().stream()
                 .filter(x -> geneNames.contains(x.gene()))
                 .filter(x -> x.type() == GainDeletion.Type.SOMATIC_LOH)
                 .sorted(Comparator.comparing(GainDeletion::gene))
@@ -234,7 +234,7 @@ public class FindingRecordFactory
     {
         return DriverFindingListBuilder.<Fusion>builder()
                 .status(FindingsStatus.OK)
-                .all(linx.reportableSomaticFusions().stream()
+                .findings(linx.reportableSomaticFusions().stream()
                         .map(o -> convertFusion(o, DriverSource.SOMATIC)).sorted(Fusion.COMPARATOR).toList())
                 .build();
     }
@@ -251,6 +251,7 @@ public class FindingRecordFactory
                         .driverSource(sampleType)
                         .reportedStatus(DriverUtil.reportedStatus(isDriverGene, fusion.reported(), driverInterpretation))
                         .driverInterpretation(driverInterpretation)
+                        .driverLikelihood(fusion.driverLikelihood() == FusionLikelihoodType.HIGH ? 1.0 : 0.0)
                         .build()
                 )
                 .geneStart(fusion.geneStart())
@@ -290,7 +291,7 @@ public class FindingRecordFactory
         {
             return DriverFindingListBuilder.<Virus>builder()
                     .status(FindingsStatus.OK)
-                    .all(convertViruses(virusInterpreter.allViruses()))
+                    .findings(convertViruses(virusInterpreter.allViruses()))
                     .build();
 
         }
@@ -313,6 +314,7 @@ public class FindingRecordFactory
                                         v.reported(),
                                         virusDriverInterpretation(v.driverLikelihood())))
                                 .driverInterpretation(virusDriverInterpretation(v.driverLikelihood()))
+                                .driverLikelihood(v.driverLikelihood() == VirusLikelihoodType.HIGH ? 1.0 : 0.0)
                                 .build()
                         )
                         .name(v.name())
@@ -344,7 +346,7 @@ public class FindingRecordFactory
         {
             return FindingListBuilder.<PharmocoGenotype>builder()
                     .status(hasContamination ? FindingsStatus.NOT_RELIABLE : FindingsStatus.OK)
-                    .all(peachGenotypes.stream().map(o ->
+                    .findings(peachGenotypes.stream().map(o ->
                                     PharmocoGenotypeBuilder.builder()
                                             .findingKey(FindingKeys.pharmacoGenotype(o.gene(), o.allele()))
                                             .gene(o.gene())

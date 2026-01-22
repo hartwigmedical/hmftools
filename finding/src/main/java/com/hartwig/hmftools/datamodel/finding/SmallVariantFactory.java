@@ -42,7 +42,7 @@ final class SmallVariantFactory
 
         return DriverFindingListBuilder.<SmallVariant>builder()
                 .status(findingsStatus)
-                .all(allSmallVariants)
+                .findings(allSmallVariants)
                 .build();
     }
 
@@ -110,10 +110,10 @@ final class SmallVariantFactory
                         .driverSource(sampleType)
                         .reportedStatus(reportedStatus)
                         .driverInterpretation(driverInterpretation)
+                        .driverLikelihood(driver.driverLikelihood())
                         .build()
                 )
                 .driverLikelihoodType(driverCategory)
-                .driverLikelihood(driver.driverLikelihood())
                 .transcriptImpact(Objects.requireNonNull(convertTranscriptImpact(transcriptImpact)))
                 .otherImpact(convertTranscriptImpact(otherImpact))
                 .isCanonical(isCanonical)

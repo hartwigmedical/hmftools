@@ -49,4 +49,10 @@ public record Virus(
     {
         return driver.driverInterpretation();
     }
+
+    @Override
+    public double driverLikelihood()
+    {
+        return driver.driverLikelihood();
+    }
 }
