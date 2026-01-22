@@ -39,6 +39,7 @@ public class OrangeJson {
         }
 
         gson = gsonBuilder.serializeNulls().serializeSpecialFloatingPointValues()
+                .setPrettyPrinting()
                 .registerTypeAdapter(LocalDate.class, new LocalDateAdapter())
                 .create();
     }
