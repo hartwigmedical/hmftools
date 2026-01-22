@@ -2,10 +2,6 @@ package com.hartwig.hmftools.purple.germline;
 
 import static java.lang.Math.max;
 
-import static com.hartwig.hmftools.common.purple.ReportedStatus.NONE;
-import static com.hartwig.hmftools.common.purple.ReportedStatus.NOT_REPORTED;
-import static com.hartwig.hmftools.common.purple.ReportedStatus.REPORTED;
-import static com.hartwig.hmftools.purple.drivers.DeletionDrivers.MAX_COPY_NUMBER_DEL;
 import static com.hartwig.hmftools.common.driver.panel.DriverGeneGermlineReporting.ANY;
 import static com.hartwig.hmftools.common.driver.panel.DriverGeneGermlineReporting.VARIANT_NOT_LOST;
 import static com.hartwig.hmftools.common.driver.panel.DriverGeneGermlineReporting.WILDTYPE_LOST;
@@ -14,6 +10,9 @@ import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
 import static com.hartwig.hmftools.common.purple.GermlineStatus.AMPLIFICATION;
 import static com.hartwig.hmftools.common.purple.GermlineStatus.HET_DELETION;
 import static com.hartwig.hmftools.common.purple.GermlineStatus.HOM_DELETION;
+import static com.hartwig.hmftools.common.purple.ReportedStatus.NONE;
+import static com.hartwig.hmftools.common.purple.ReportedStatus.NOT_REPORTED;
+import static com.hartwig.hmftools.common.purple.ReportedStatus.REPORTED;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
@@ -29,6 +28,7 @@ import static com.hartwig.hmftools.purple.PurpleConstants.GERMLINE_AMP_DEL_REGIO
 import static com.hartwig.hmftools.purple.PurpleConstants.GERMLINE_AMP_DEL_REGION_MIN;
 import static com.hartwig.hmftools.purple.PurpleConstants.WINDOW_SIZE;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
+import static com.hartwig.hmftools.purple.drivers.DeletionDrivers.MAX_COPY_NUMBER_DEL;
 import static com.hartwig.hmftools.purple.region.GermlineStatusCalcs.GERMLINE_LIKELY_DIPLOID_UPPER_THRESHOLD;
 
 import java.util.List;
@@ -176,6 +176,10 @@ public class GermlineAmpDelFinder
             int regionStart;
             int regionEnd;
             byte requiredOrientation = (se == SE_START) ? ORIENT_FWD : ORIENT_REV;
+            if(germlineStatus == AMPLIFICATION)
+            {
+                requiredOrientation = (byte) (-1 * requiredOrientation);
+            }
 
             if(se == SE_START)
             {

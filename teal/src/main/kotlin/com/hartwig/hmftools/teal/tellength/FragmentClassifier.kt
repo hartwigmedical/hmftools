@@ -12,7 +12,7 @@ class FragmentClassifier(val sequencingType: SequencingType)
 {
     private val minCanonicalCount: Int
     private val minConsecutiveHexamers: Int
-    private val singlReadTelomereCheckBases: Int
+    private val singleReadTelomereCheckBases: Int
 
     // make matcher thread local since they are not thread safe
     private val gTeloPatternMatcher: ThreadLocal<Matcher>
@@ -24,17 +24,17 @@ class FragmentClassifier(val sequencingType: SequencingType)
             SequencingType.ILLUMINA -> {
                 minCanonicalCount = 4
                 minConsecutiveHexamers = 6
-                singlReadTelomereCheckBases = 151
+                singleReadTelomereCheckBases = 151
             }
             SequencingType.ULTIMA -> {
                 minCanonicalCount = 3
-                minConsecutiveHexamers = 4
-                singlReadTelomereCheckBases = 151
+                minConsecutiveHexamers = 0
+                singleReadTelomereCheckBases = 75
             }
             SequencingType.SBX -> {
                 minCanonicalCount = 3
-                minConsecutiveHexamers = 4
-                singlReadTelomereCheckBases = 100
+                minConsecutiveHexamers = 0
+                singleReadTelomereCheckBases = 75
             }
         }
 
@@ -86,8 +86,8 @@ class FragmentClassifier(val sequencingType: SequencingType)
             val read = readGroup.allReads.first()
             val readBases = if (read.readNegativeStrandFlag) TealUtils.reverseComplementSequence(read.readString) else read.readString
 
-            seq1 = readBases.take(singlReadTelomereCheckBases)
-            seq2 = TealUtils.reverseComplementSequence(readBases).take(singlReadTelomereCheckBases)
+            seq1 = readBases.take(singleReadTelomereCheckBases)
+            seq2 = TealUtils.reverseComplementSequence(readBases).take(singleReadTelomereCheckBases)
         }
 
         // try each one in tern

@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
+import com.hartwig.hmftools.datamodel.purple.PurpleQCInterpretation;
 import com.hartwig.hmftools.datamodel.sigs.SignatureAllocation;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 import com.hartwig.hmftools.orange.report.PlotPathResolver;
@@ -12,7 +13,6 @@ import com.hartwig.hmftools.orange.report.datamodel.BreakendEntry;
 import com.hartwig.hmftools.orange.report.datamodel.BreakendEntryFactory;
 import com.hartwig.hmftools.orange.report.datamodel.VariantEntry;
 import com.hartwig.hmftools.orange.report.datamodel.VariantEntryFactory;
-import com.hartwig.hmftools.orange.report.interpretation.PurpleQCInterpretation;
 import com.hartwig.hmftools.orange.report.interpretation.VariantDedup;
 import com.hartwig.hmftools.orange.report.tables.BreakendTable;
 import com.hartwig.hmftools.orange.report.tables.DnaFusionTable;

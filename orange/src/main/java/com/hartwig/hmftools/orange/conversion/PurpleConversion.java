@@ -11,6 +11,7 @@ import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.impact.VariantEffect;
 import com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact;
+import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleAllelicDepth;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleDriver;
@@ -73,6 +74,7 @@ public final class PurpleConversion
                 .transcript(catalog.transcript())
                 .type(PurpleDriverType.valueOf(catalog.driver().name()))
                 .driverLikelihood(catalog.driverLikelihood())
+                .driverInterpretation(DriverInterpretation.interpret(catalog.driverLikelihood()))
                 .likelihoodMethod(PurpleLikelihoodMethod.valueOf(catalog.likelihoodMethod().name()))
                 .isCanonical(catalog.isCanonical())
                 .reportedStatus(com.hartwig.hmftools.datamodel.driver.ReportedStatus.valueOf(catalog.reportedStatus().name()))

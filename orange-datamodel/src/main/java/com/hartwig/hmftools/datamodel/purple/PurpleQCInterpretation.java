@@ -1,7 +1,4 @@
-package com.hartwig.hmftools.orange.report.interpretation;
-
-import com.hartwig.hmftools.datamodel.purple.PurpleQC;
-import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
+package com.hartwig.hmftools.datamodel.purple;
 
 import org.jetbrains.annotations.NotNull;
 

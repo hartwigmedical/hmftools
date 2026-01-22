@@ -25,6 +25,7 @@ import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.linx.LinxFusionType;
+import com.hartwig.hmftools.datamodel.linx.LinxGeneOrientation;
 import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
@@ -274,7 +275,7 @@ public class OrangeJsonTest
 
         assertEquals(1, linx.somaticBreakends().size());
         LinxBreakend breakend = linx.somaticBreakends().iterator().next();
-        assertFalse(breakend.reportedStatus() == ReportedStatus.REPORTED);
+        assertEquals(breakend.reportedStatus(), ReportedStatus.NOT_REPORTED);
         assertFalse(breakend.disruptive());
         assertEquals(1, breakend.svId());
         assertEquals("NF1", breakend.gene());
@@ -287,7 +288,7 @@ public class OrangeJsonTest
         assertEquals(-1, breakend.nextSpliceExonRank());
         assertEquals(1, breakend.exonUp());
         assertEquals(2, breakend.exonDown());
-        assertEquals("Upstream", breakend.geneOrientation());
+        assertEquals(LinxGeneOrientation.UPSTREAM, breakend.geneOrientation());
         assertEquals(-1, breakend.orientation());
         assertEquals(TranscriptRegionType.EXONIC, breakend.regionType());
         assertEquals(TranscriptCodingType.UTR_3P, breakend.codingType());

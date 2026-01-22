@@ -106,6 +106,7 @@
         "transcript": "ENST00000310581",
         "type": "MUTATION",
         "driverLikelihood": 1.0,
+        "driverInterpretation": "HIGH",
         "reportedStatus": "REPORTED",
         "likelihoodMethod": "HOTSPOT",
         "isCanonical": true
@@ -323,7 +324,7 @@
         "chromosomeBand": "",
         "transcript": "ENST00000371953",
         "isCanonical": true,
-        "geneOrientation": "Upstream",
+        "geneOrientation": "UPSTREAM",
         "disruptive": true,
         "reportedStatus": "REPORTED",
         "undisruptedCopyNumber": 0.0,
