@@ -138,7 +138,7 @@ final class SmallVariantFactory
                 .alt(variant.alt())
                 .worstCodingEffect(variant.worstCodingEffect())
                 .hotspot(variant.hotspot())
-                .tumorDepth(Objects.requireNonNull(convertAllelicDepth(variant.tumorDepth())))
+                .allelicDepth(Objects.requireNonNull(convertAllelicDepth(variant.tumorDepth())))
                 .rnaDepth(convertAllelicDepth(variant.rnaDepth()))
                 .adjustedCopyNumber(variant.adjustedCopyNumber())
                 .adjustedVAF(variant.adjustedVAF())
