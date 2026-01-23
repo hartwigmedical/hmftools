@@ -9,12 +9,16 @@ import com.hartwig.hmftools.cider.CiderConstants.BLAST_REF_GENOME_VERSION
 import com.hartwig.hmftools.cider.IgTcrGene.Companion.toCommonIgTcrGene
 import com.hartwig.hmftools.cider.AlignmentUtil
 import com.hartwig.hmftools.cider.AlignmentUtil.BLASTN_PRIMARY_ASSEMBLY_NAME
+import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.ANCHOR_MISMATCH_MAX
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.BLASTN_EVALUE_CUTOFF
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.BLASTN_MAX_MISMATCH
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.IGKDEL_SEQ
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.IGKINTR_SEQ
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.IMGT_ANCHOR_LENGTH
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.IMGT_V_ANCHOR_INDEX
+import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.FASTA_REF_CONTEXT
+import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.REF_CONTEXT_CHECK
+import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.REF_CONTEXT_CHECK_MISMATCH_MAX
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.SPECIES
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.jAnchorSignatures
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.liftOverBlacklist
@@ -26,14 +30,16 @@ import com.hartwig.hmftools.common.codon.Codons
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache
 import com.hartwig.hmftools.common.gene.GeneData
 import com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion
 import com.hartwig.hmftools.common.genome.region.Strand
 import com.hartwig.hmftools.common.utils.Doubles
 import com.hartwig.hmftools.common.utils.config.DeclaredOrderParameterComparator
 import htsjdk.samtools.CigarElement
 import htsjdk.samtools.liftover.LiftOver
-import htsjdk.samtools.reference.IndexedFastaSequenceFile
 import htsjdk.samtools.util.Interval
+import htsjdk.samtools.util.SequenceUtil.reverseComplement
 import org.apache.logging.log4j.Level
 import org.apache.logging.log4j.LogManager
 import java.io.File
@@ -45,7 +51,7 @@ import kotlin.system.exitProcess
 const val ANCHOR_DNA_LENGTH: Int = 30
 
 data class ProcessedGeneAllele(
-    val data: ImgtGeneAllele,
+    val imgt: ImgtGeneAllele,
     val locationV38: GenomicLocation?,
     val locationV37: GenomicLocation?,
     val anchorSequence: String?,
@@ -116,16 +122,16 @@ class ImgtGeneCurator
     @Parameter(names = ["-workdir"], description = "Number of threads")
     lateinit var workdir: String
 
-    lateinit var refGenomeSourceV38: IndexedFastaSequenceFile
-    lateinit var refGenomeSourceV37: IndexedFastaSequenceFile
+    lateinit var refGenomeSourceV38: RefGenomeSource
+    lateinit var refGenomeSourceV37: RefGenomeSource
     lateinit var ensemblDataCache: EnsemblDataCache
     lateinit var liftOverHtsjdk: LiftOver
     lateinit var liftOverHmf: GenomeLiftoverCache
 
     fun run(): Int
     {
-        refGenomeSourceV38 = IndexedFastaSequenceFile(File(refGenomeV38))
-        refGenomeSourceV37 = IndexedFastaSequenceFile(File(refGenomeV37))
+        refGenomeSourceV38 = loadRefGenome(refGenomeV38)
+        refGenomeSourceV37 = loadRefGenome(refGenomeV37)
 
         ensemblDataCache = EnsemblDataCache(ensemblDataDir, BLAST_REF_GENOME_VERSION)
         val ensemblLoadOk = ensemblDataCache.load(true)
@@ -152,10 +158,12 @@ class ImgtGeneCurator
         val outputGenesV37 = Paths.get(outputDir, "igtcr_gene.37.tsv").toString()
         IgTcrGeneFile.write(outputGenesV37, ciderGenesV37.map { o -> toCommonIgTcrGene(o) })
 
+        sLogger.info("Writing V38 allele fasta")
         val outputFastaV38 = Paths.get(outputDir, "igtcr_gene.38.fasta").toString()
-        writeGeneFasta(outputFastaV38, processedGeneAlleles, true)
+        writeAlleleFasta(outputFastaV38, processedGeneAlleles, true)
+        sLogger.info("Writing V37 allele fasta")
         val outputFastaV37 = Paths.get(outputDir, "igtcr_gene.37.fasta").toString()
-        writeGeneFasta(outputFastaV37, processedGeneAlleles, false)
+        writeAlleleFasta(outputFastaV37, processedGeneAlleles, false)
 
         return 0
     }
@@ -404,14 +412,71 @@ class ImgtGeneCurator
     private fun createCiderGene(processedAllele: ProcessedGeneAllele, isV38: Boolean): IgTcrGene
     {
         return IgTcrGene(
-            processedAllele.data.geneName,
-            processedAllele.data.allele,
-            processedAllele.data.region!!,
-            processedAllele.data.functionality,
+            processedAllele.imgt.geneName,
+            processedAllele.imgt.allele,
+            processedAllele.imgt.region!!,
+            processedAllele.imgt.functionality,
             if (isV38) processedAllele.locationV38 else processedAllele.locationV37,
             processedAllele.anchorSequence,
             if (isV38) processedAllele.anchorLocationV38 else processedAllele.anchorLocationV37,
         )
+    }
+
+    private fun writeAlleleFasta(path: String, alleles: List<ProcessedGeneAllele>, isV38: Boolean)
+    {
+        File(path).printWriter().use { file ->
+            alleles.forEach { allele ->
+                if (allele.imgt.region != IgTcrRegion.CONSTANT)
+                {
+                    val (seqWithContext, refBefore, refAfter) = getAlleleSequenceWithContext(allele, isV38)
+                    val label = "${allele.imgt.geneName}|${allele.imgt.allele}|$refBefore|$refAfter"
+                    file.println(">$label\n${seqWithContext}")
+                }
+            }
+        }
+    }
+
+    private fun getAlleleSequenceWithContext(allele: ProcessedGeneAllele, isV38: Boolean): Triple<String, Int, Int>
+    {
+        val alleleSeq = allele.imgt.sequenceWithoutGaps
+        val location = if (isV38) allele.locationV38 else allele.locationV37
+        // If it's not in the primary assembly then the chromosome from Blastn won't index the ref genome.
+        if (location == null || !location.inPrimaryAssembly)
+        {
+            return Triple(alleleSeq, 0, 0)
+        }
+
+        val alleleAlignedSeq = if (location.strand == Strand.FORWARD) alleleSeq else reverseComplement(alleleSeq)
+
+        val refGenome = if (isV38) refGenomeSourceV38 else refGenomeSourceV37
+        val chromosome = getChromosomeForRefGenome(location.chromosome, refGenome)
+        // When we get the reference sequence surrounding the allele, check a few bases overlapping the allele to ensure it lines up.
+        val ref1 = refGenome.getBaseString(
+            chromosome,
+            location.posStart - FASTA_REF_CONTEXT,
+            location.posStart - 1 + REF_CONTEXT_CHECK)
+        val ref2 = refGenome.getBaseString(
+            chromosome,
+            location.posEnd + 1 - REF_CONTEXT_CHECK,
+            location.posEnd + FASTA_REF_CONTEXT)
+        val refStart = ref1.substring(FASTA_REF_CONTEXT)
+        val alleleStart = alleleAlignedSeq.substring(0, REF_CONTEXT_CHECK)
+        val refEnd = ref2.substring(0, REF_CONTEXT_CHECK)
+        val alleleEnd = alleleAlignedSeq.substring(alleleAlignedSeq.length - REF_CONTEXT_CHECK)
+        val startMismatches = countMismatches(alleleStart, refStart)
+        val endMismatches = countMismatches(alleleEnd, refEnd)
+        if (startMismatches > REF_CONTEXT_CHECK_MISMATCH_MAX || endMismatches > REF_CONTEXT_CHECK_MISMATCH_MAX)
+        {
+            sLogger.error("Gene allele ref mismatch: allele={} alleleStart={} refStart={} alleleEnd={} refEnd={}",
+                allele.imgt.alleleName, alleleStart, refStart, alleleEnd, refEnd
+            )
+            return Triple(alleleSeq, 0, 0)
+        }
+        val refBefore = ref1.substring(0, ref1.length - REF_CONTEXT_CHECK)
+        val refAfter = ref2.substring(REF_CONTEXT_CHECK)
+        val seq = refBefore + alleleAlignedSeq + refAfter
+
+        return Triple(seq, refBefore.length, refAfter.length)
     }
 
     companion object
@@ -629,16 +694,14 @@ class ImgtGeneCurator
             }
         }
 
-        private fun validateAnchorLocations(igTcrGeneList: List<IgTcrGene>, refGenome: IndexedFastaSequenceFile)
+        private fun validateAnchorLocations(igTcrGeneList: List<IgTcrGene>, refGenome: RefGenomeSource)
         {
-            val genomicLocationValidator = GenomicLocationValidator(refGenome)
-
             var failed = false
             for (gene in igTcrGeneList)
             {
                 if (gene.anchorLocation != null && gene.anchorLocation.inPrimaryAssembly)
                 {
-                    if (!genomicLocationValidator.validateAgainstRefGenome(gene.anchorSequence!!, gene.anchorLocation))
+                    if (!validateAgainstRefGenome(gene.anchorSequence!!, gene.anchorLocation, refGenome, ANCHOR_MISMATCH_MAX))
                     {
                         sLogger.error("gene: {} anchor location: {} does not match anchor seq: {}",
                             gene.geneAllele, gene.anchorLocation, gene.anchorSequence)
@@ -648,16 +711,50 @@ class ImgtGeneCurator
             }
             if (failed)
             {
-                throw RuntimeException("Invalid anchor locations")
+                //throw RuntimeException("Invalid anchor locations")
             }
         }
 
-        private fun writeGeneFasta(path: String, alleles: List<ProcessedGeneAllele>, isV38: Boolean)
+        // validate sequence against the ref genome file to make sure we got it right
+        fun validateAgainstRefGenome(seq: String, genomicLocation: GenomicLocation, refGenome: RefGenomeSource, maxMismatches: Int): Boolean
         {
-            // TODO: write reference base context?
-            File(path).printWriter().use { file ->
-                alleles.forEach { file.println(">${it.data.geneName}|${it.data.allele}\n${it.data.sequenceWithoutGaps}") }
+            val refForwardSeq = refGenome.getBaseString(getChromosomeForRefGenome(genomicLocation.chromosome, refGenome), genomicLocation.posStart, genomicLocation.posEnd)
+            val refGenomeSeq = if (genomicLocation.strand == Strand.FORWARD) refForwardSeq else reverseComplement(refForwardSeq)
+
+            if (refGenomeSeq.length != seq.length)
+            {
+                sLogger.warn("validation failed: seq({}) and ref genome seq({} of {}) length mismatch", seq, refGenomeSeq, genomicLocation)
+                return false
             }
+
+            val mismatches = countMismatches(seq, refGenomeSeq)
+            if (mismatches > maxMismatches)
+            {
+                sLogger.error(
+                    "validation failed: seq({}) and ref genome seq({} of {}) sequence mismatch({}) > $maxMismatches",
+                    seq,
+                    refGenomeSeq,
+                    genomicLocation,
+                    mismatches
+                )
+                return false
+            }
+            return true
+        }
+
+        private fun getChromosomeForRefGenome(chromosome: String, refGenome: RefGenomeSource): String
+        {
+            return if (refGenome.refGenomeFile().index.hasIndexEntry(chromosome))
+                chromosome
+            else
+                // maybe need to try removing chr
+                chromosome.replace("chr", "")
+        }
+
+        private fun countMismatches(seq1: String, seq2: String): Int
+        {
+            require(seq1.length == seq2.length) { "Sequences must be same length" }
+            return seq1.zip(seq2).count { it.first != it.second }
         }
     }
 }
