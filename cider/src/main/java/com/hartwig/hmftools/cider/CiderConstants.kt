@@ -42,18 +42,42 @@ object CiderConstants
 
     // From some testing, 50k query sequences used 10GB of memory.
     // Want to limit it to about use only a few GB.
-    const val ALIGNMENT_BATCH_SIZE = 20000
+    const val BWAMEM_BATCH_SIZE = 20000
 
+    // Require a match of minimum ~20 bases. If we want to match D segment that is shorter
+    // we will need a higher cut off, maybe 10, but will get many false positive hits that are longer but more mismatches
+    const val ANNOTATION_ALIGN_SCORE_MIN = 19
+    const val ANNOTATION_VDJ_FLANK_BASES = 50
     // filter out matches that have too low identity
     // reason for doing this is that we use match/mismatch of 1/-4, in worst case we can
     // get 1 mismatch for every 4 matches, and could find alignments with 80% identity.
     // those are probably too different to use. We use 90% for V / J identities, and 95%
     // cut off for full match
-    const val ALIGNMENT_MATCH_MIN_VJ_IDENTITY = 90
-    const val ALIGNMENT_MATCH_FULL_MATCH_IDENTITY = 95
+    const val ANNOTATION_MIN_VJ_IDENTITY = 90
+    const val ANNOTATION_MATCH_REF_IDENTITY = 95
+    // D genes often are very short, for example, TRBD1 is only 12 bases. We allow more leeway to match
+    // an alignment to the gene
+    const val ANNOTATION_GENE_REGION_TOLERANCE = 50
+
+    // For the scoring function, the match/mismatch score 1/-4 optimizes the scoring for 100% identical sequences and 1/-1 for 75% identical
+    // sequences. The default for NCBI Blastn is 2/-3, which is optimal for 89% identical sequences. BWA uses 1/-4.
+    // There is also gap opening and gap extension. BWA uses gap opening of -6 and gap extension of -1.
+    // For blastn default scoring, see: https://www.ncbi.nlm.nih.gov/books/NBK279684/
+    // we set it to 1/-4/-5/-2 which is optimal for 100% identical sequences
+    // My test shows that this scoring would mostly prefer shorter matches with higher identity than longer matches with lower identity.
+    const val ALIGNER_MATCH_SCORE = 1
+    const val ALIGNER_MISMATCH_SCORE = -4
+    const val ALIGNER_GAP_OPENING_SCORE = -5
+    const val ALIGNER_GAP_EXTEND_SCORE = -2
+
+    const val ALIGNER_WORD_SIZE = 9
 
     // blast uses v38
     val BLAST_REF_GENOME_VERSION = RefGenomeVersion.V38
+    // This limits the number of hit each query can get. Necessary to protect against edge cases
+    const val BLASTN_MAX_TARGET_SEQUENCES = 5000
+    val BLASTN_CHROMOSOME_ASSEMBLY_REGEX = Regex("^Homo sapiens chromosome (\\w+).*, GRCh38.p13 (.+)$")
+    val BLASTN_PRIMARY_ASSEMBLY_NAME = "Primary Assembly".intern()
 
     // Amino acids sequences which are known to match the reference genome but are not detected by alignment.
     // This exists because of switching from Blastn to BWA-MEM, and some sequences cause significant discrepancies.

@@ -7,8 +7,7 @@ import com.beust.jcommander.UnixStyleUsageFormatter
 import com.hartwig.hmftools.cider.*
 import com.hartwig.hmftools.cider.CiderConstants.BLAST_REF_GENOME_VERSION
 import com.hartwig.hmftools.cider.IgTcrGene.Companion.toCommonIgTcrGene
-import com.hartwig.hmftools.cider.AlignmentUtil
-import com.hartwig.hmftools.cider.AlignmentUtil.BLASTN_PRIMARY_ASSEMBLY_NAME
+import com.hartwig.hmftools.cider.CiderConstants.BLASTN_PRIMARY_ASSEMBLY_NAME
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.ANCHOR_MISMATCH_MAX
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.BLASTN_EVALUE_CUTOFF
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.BLASTN_MAX_MISMATCH
@@ -216,7 +215,7 @@ class ImgtGeneCurator
         {
             ImgtGeneCuratorSettings.getGenomicLocationOverrides(allele.geneName)
                 ?.let { override ->
-                    sLogger.info("gene: {}, using location override: {}", allele.alleleName, override)
+                    sLogger.info("gene: {}, using location override: {}", allele.geneAllele, override)
                     locations[index] = override
                 }
         }
@@ -226,7 +225,7 @@ class ImgtGeneCurator
 
     private fun blastForAlleleLocation(alleles: List<ImgtGeneAllele>): List<LocationInfo?>
     {
-        val blastnResults = AlignmentUtil.runBlastn(
+        val blastnResults = runBlastn(
             "imgt", blast, blastDb,
             alleles.map { it -> it.sequenceWithoutGaps },
             workdir, threadCount, BLASTN_EVALUE_CUTOFF)
@@ -249,7 +248,7 @@ class ImgtGeneCurator
 
             for (match in matches)
             {
-                val matchLocation = AlignmentUtil.toGenomicLocation(match)
+                val matchLocation = blastnMatchtoGenomicLocation(match)
 
                 if (matchLocation == null)
                 {
@@ -271,7 +270,7 @@ class ImgtGeneCurator
                         ensemblGene.GeneEnd >= matchLocation.posStart)
                     {
                         bestMatch = match
-                        sLogger.debug("gene: {}, using match that overlaps with ensembl", allele.alleleName)
+                        sLogger.debug("gene: {}, using match that overlaps with ensembl", allele.geneAllele)
                     }
                 }
             }
@@ -281,7 +280,7 @@ class ImgtGeneCurator
             {
                 if (ensemblGene != null)
                 {
-                    sLogger.error("gene: {}, no full match yet has ensembl", allele.alleleName)
+                    sLogger.error("gene: {}, no full match yet has ensembl", allele.geneAllele)
 
                     if (allele.region == IgTcrRegion.D_REGION)
                     {
@@ -289,7 +288,7 @@ class ImgtGeneCurator
                         location = LocationInfo(toGenomicLocation(ensemblGene), null)
                     }
                 }
-                sLogger.info("gene: {}, no full match", allele.alleleName)
+                sLogger.info("gene: {}, no full match", allele.geneAllele)
             }
             else
             {
@@ -297,7 +296,7 @@ class ImgtGeneCurator
                 location = LocationInfo(genomicLocation, bestMatch.cigar)
                 sLogger.info(
                     "gene: {}, gene loc: {}, contig={}, start={}, end={}, cigar: {}",
-                    allele.alleleName, genomicLocation,
+                    allele.geneAllele, genomicLocation,
                     bestMatch.subjectTitle, bestMatch.subjectAlignStart, bestMatch.subjectAlignEnd, bestMatch.cigar)
             }
             locations.add(location)
@@ -330,7 +329,7 @@ class ImgtGeneCurator
             if ((allele.region == IgTcrRegion.V_REGION) == (anchorLocationV37.strand == Strand.FORWARD))
             {
                 sLogger.warn("gene: {}, strand: {}, different base lengths between v38({}) and v37({}), anchor length: {}, changing anchor start",
-                    allele.alleleName, anchorLocationV37.strand, anchorLocationV38.baseLength(), anchorLocationV37.baseLength(),
+                    allele.geneAllele, anchorLocationV37.strand, anchorLocationV38.baseLength(), anchorLocationV37.baseLength(),
                     anchorSequence!!.length)
 
                 anchorLocationV37 = anchorLocationV37.copy(posStart = anchorLocationV37.posEnd - anchorSequence.length + 1)
@@ -338,7 +337,7 @@ class ImgtGeneCurator
             else
             {
                 sLogger.warn("gene: {}, strand: {}, different base lengths between v38({}) and v37({}), anchor length: {}, changing anchor end",
-                    allele.alleleName, anchorLocationV37.strand, anchorLocationV38.baseLength(), anchorLocationV37.baseLength(),
+                    allele.geneAllele, anchorLocationV37.strand, anchorLocationV38.baseLength(), anchorLocationV37.baseLength(),
                     anchorSequence!!.length)
 
                 anchorLocationV37 = anchorLocationV37.copy(posEnd = anchorLocationV37.posStart + anchorSequence.length - 1)
@@ -468,7 +467,7 @@ class ImgtGeneCurator
         if (startMismatches > REF_CONTEXT_CHECK_MISMATCH_MAX || endMismatches > REF_CONTEXT_CHECK_MISMATCH_MAX)
         {
             sLogger.error("Gene allele ref mismatch: allele={} alleleStart={} refStart={} alleleEnd={} refEnd={}",
-                allele.imgt.alleleName, alleleStart, refStart, alleleEnd, refEnd
+                allele.imgt.geneAllele, alleleStart, refStart, alleleEnd, refEnd
             )
             return Triple(alleleSeq, 0, 0)
         }
@@ -541,7 +540,7 @@ class ImgtGeneCurator
             {
                 sLogger.log(
                     if (allele.functionality == IgTcrFunctionality.FUNCTIONAL && !allele.partial) Level.ERROR else Level.INFO,
-                    "Cannot find V anchor, sequence too short. {}", allele.alleleName)
+                    "Cannot find V anchor, sequence too short. {}", allele.geneAllele)
                 return null
             }
 
@@ -553,7 +552,7 @@ class ImgtGeneCurator
                 // skip this one
                 sLogger.log(
                     if (allele.functionality == IgTcrFunctionality.FUNCTIONAL && !allele.partial) Level.ERROR else Level.INFO,
-                    "V anchor:{} too short for {}", anchor, allele.alleleName
+                    "V anchor:{} too short for {}", anchor, allele.geneAllele
                 )
                 return null
             }
@@ -561,7 +560,7 @@ class ImgtGeneCurator
             // anchor cannot contain .
             if (anchor.contains("."))
             {
-                sLogger.error("V anchor: {} contains \".\", gene: {}", anchor, allele.alleleName)
+                sLogger.error("V anchor: {} contains \".\", gene: {}", anchor, allele.geneAllele)
                 return null
             }
 
@@ -604,7 +603,7 @@ class ImgtGeneCurator
             // v gene
             sLogger.info(
                 "V gene: {}, anchor: {}, offset from start: {}, anchor AA: {}",
-                allele.alleleName,
+                allele.geneAllele,
                 anchor,
                 anchorIndex,
                 aaSeq
@@ -624,7 +623,7 @@ class ImgtGeneCurator
             {
                 sLogger.log(
                     if (allele.functionality == IgTcrFunctionality.FUNCTIONAL && !allele.partial) Level.ERROR else Level.INFO,
-                    "J gene: {} cannot find anchor", allele.alleleName)
+                    "J gene: {} cannot find anchor", allele.geneAllele)
                 return null
             }
 
@@ -633,7 +632,7 @@ class ImgtGeneCurator
             // cannot contain .
             if (anchor.contains("."))
             {
-                sLogger.error("J gene: {}, anchor({}) contains .", allele.alleleName, anchor)
+                sLogger.error("J gene: {}, anchor({}) contains .", allele.geneAllele, anchor)
                 return null
             }
 
@@ -661,7 +660,7 @@ class ImgtGeneCurator
 
             val aaSeq = Codons.aminoAcidFromBases(anchor)
 
-            sLogger.info("J gene: {}, anchor: {}, offset from start: {}, anchor AA: {}", allele.alleleName, anchor, anchorIndex, aaSeq)
+            sLogger.info("J gene: {}, anchor: {}, offset from start: {}, anchor AA: {}", allele.geneAllele, anchor, anchorIndex, aaSeq)
 
             return AnchorInfo(anchor, anchorLocation)
         }
@@ -677,7 +676,7 @@ class ImgtGeneCurator
             // we need to correct for the ends to make sure things align properly
             val startExtend = match.queryAlignStart - 1
             val endExtend = match.querySeqLen - match.queryAlignEnd
-            val matchGenomicLoc = AlignmentUtil.toGenomicLocation(match)!!
+            val matchGenomicLoc = blastnMatchtoGenomicLocation(match)!!
 
             if (startExtend == 0 && endExtend == 0)
             {

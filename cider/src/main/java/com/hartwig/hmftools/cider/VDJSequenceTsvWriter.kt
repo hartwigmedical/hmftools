@@ -143,7 +143,7 @@ object VDJSequenceTsvWriter
                     }
                 Column.vAlignEnd -> if (vdjAnnotation.alignmentAnnotation != null)
                     {
-                        csvPrinter.print(vdjAnnotation.alignmentAnnotation!!.vAlignment?.queryAlignEnd)
+                        csvPrinter.print(vdjAnnotation.alignmentAnnotation!!.vAlignment?.queryEnd)
                     }
                     else
                     {
@@ -163,7 +163,7 @@ object VDJSequenceTsvWriter
                     }
                 Column.dAlignEnd -> if (vdjAnnotation.alignmentAnnotation != null)
                     {
-                        csvPrinter.print(vdjAnnotation.alignmentAnnotation!!.dAlignment?.queryAlignEnd)
+                        csvPrinter.print(vdjAnnotation.alignmentAnnotation!!.dAlignment?.queryEnd)
                     }
                     else
                     {
@@ -183,7 +183,7 @@ object VDJSequenceTsvWriter
                     }
                 Column.jAlignEnd -> if (vdjAnnotation.alignmentAnnotation != null)
                     {
-                        csvPrinter.print(vdjAnnotation.alignmentAnnotation!!.jAlignment?.queryAlignEnd)
+                        csvPrinter.print(vdjAnnotation.alignmentAnnotation!!.jAlignment?.queryEnd)
                     }
                     else
                     {
@@ -199,9 +199,9 @@ object VDJSequenceTsvWriter
         csvPrinter.println()
     }
 
-    private fun zeroBaseAlignStart(alignment: AlignmentUtil.Alignment?) : Int?
+    private fun zeroBaseAlignStart(alignment: Alignment?) : Int?
     {
-        return if (alignment == null) null else alignment.queryAlignStart - 1
+        return if (alignment == null) null else alignment.queryStart - 1
     }
 
     private fun formatGeneSupplementary(geneSupplementary: List<IgTcrGene>?, primaryGene: IgTcrGene?): String?

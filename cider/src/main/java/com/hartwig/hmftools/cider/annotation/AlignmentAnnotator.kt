@@ -2,13 +2,20 @@ package com.hartwig.hmftools.cider.annotation
 
 import com.hartwig.hmftools.cider.*
 import com.hartwig.hmftools.cider.IgTcrGene.Companion.fromCommonIgTcrGene
-import com.hartwig.hmftools.cider.AlignmentUtil.parseChromosome
+import com.hartwig.hmftools.cider.CiderConstants.ANNOTATION_MATCH_REF_IDENTITY
+import com.hartwig.hmftools.cider.CiderConstants.ANNOTATION_ALIGN_SCORE_MIN
+import com.hartwig.hmftools.cider.CiderConstants.ANNOTATION_VDJ_FLANK_BASES
+import com.hartwig.hmftools.cider.CiderConstants.ANNOTATION_GENE_REGION_TOLERANCE
+import com.hartwig.hmftools.cider.CiderConstants.ANNOTATION_MIN_VJ_IDENTITY
 import com.hartwig.hmftools.common.cider.IgTcrGeneFile
 import com.hartwig.hmftools.common.cider.IgTcrRegion
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion
 import com.hartwig.hmftools.common.genome.region.Strand
 import org.apache.logging.log4j.LogManager
 import java.util.*
+import kotlin.compareTo
+import kotlin.math.max
+import kotlin.math.min
 
 enum class AlignmentStatus
 {
@@ -23,10 +30,10 @@ data class AlignmentAnnotation(
     val dGeneSupplementary: List<IgTcrGene> = emptyList(),
     val jGene: IgTcrGene? = null,
     val jGeneSupplementary: List<IgTcrGene> = emptyList(),
-    val vAlignment: AlignmentUtil.Alignment? = null,
-    val dAlignment: AlignmentUtil.Alignment? = null,
-    val jAlignment: AlignmentUtil.Alignment? = null,
-    val fullAlignment: AlignmentUtil.Alignment? = null,
+    val vAlignment: Alignment? = null,
+    val dAlignment: Alignment? = null,
+    val jAlignment: Alignment? = null,
+    val fullAlignment: Alignment? = null,
     val alignmentStatus: AlignmentStatus)
 
 class AlignmentAnnotator
@@ -38,8 +45,7 @@ class AlignmentAnnotator
     private val mRefGenomeBwaIndexImagePath: String
     private val mVdjGenes: Map<Pair<String, Strand>, List<IgTcrGene>>
 
-    // class to help associate the data back
-    data class AlignmentRunData(val vdj: VDJSequence, val querySeqRange: IntRange, val querySeq: String)
+    private data class AlignmentMetadata(val vdj: VDJSequence, val querySeqRange: IntRange, val querySeq: String)
 
     constructor(refGenomeVersion: RefGenomeVersion, refGenomeDictPath: String, refGenomeBwaIndexImagePath: String)
     {
@@ -53,7 +59,6 @@ class AlignmentAnnotator
         val igTcrGenes = IgTcrGeneFile.read(refGenomeVersion)
             .map { o -> fromCommonIgTcrGene(o) }
 
-        // find all the genes that we need
         for (geneData in igTcrGenes)
         {
             if (geneData.region !in arrayOf(IgTcrRegion.V_REGION, IgTcrRegion.D_REGION, IgTcrRegion.J_REGION))
@@ -68,11 +73,6 @@ class AlignmentAnnotator
 
             val key = Pair(geneData.geneLocation.chromosome, geneData.geneLocation.strand)
             vdjGenes.computeIfAbsent(key) { ArrayList() }.add(geneData)
-
-            /* sLogger.debug(
-                "found constant region gene: {}, type: {}, location: {}",
-                geneData.GeneName, igConstantRegionType, genomeRegionStrand
-            )*/
         }
 
         mVdjGenes = vdjGenes
@@ -83,72 +83,62 @@ class AlignmentAnnotator
     {
         sLogger.info("Running alignment annotation")
 
-        val alignmentRunDatas = vdjList.map {
+        val alignmentMetadata = vdjList.map {
             val querySeqRange = alignmentQuerySeqRange(it)
-            AlignmentRunData(it, querySeqRange, it.layout.consensusSequenceString().substring(querySeqRange))
+            AlignmentMetadata(it, querySeqRange, it.layout.consensusSequenceString().substring(querySeqRange))
         }
+        val querySequences = alignmentMetadata.map { it.querySeq }
 
         // Align to the normal reference genome to get most of the alignments.
         // For GRCh37, also align to a patch assembly which contains some genes (e.g. TRBJ1) which are missing from the main assembly.
         // The issue does not exist in GRCh38 as that assembly is more complete.
-        val querySequences = alignmentRunDatas.map { it.querySeq }
-        val mainAlignments = AlignmentUtil.runBwaMem(
-            querySequences,
-             mRefGenomeDictPath, mRefGenomeBwaIndexImagePath, ALIGNMENT_SCORE_MIN, numThreads)
-        val alignmentResults = if(mRefGenomeVersion == RefGenomeVersion.V37) {
-            val patchAlignments = AlignmentUtil.runGRCh37PatchAlignment(querySequences, ALIGNMENT_SCORE_MIN, numThreads)
-            require(mainAlignments.size == patchAlignments.size)
-            mainAlignments.zip(patchAlignments).map { it.first + it.second }
-        }
-        else {
-            mainAlignments
+        var refAlignments = runBwaMem(
+            querySequences, mRefGenomeDictPath, mRefGenomeBwaIndexImagePath, ANNOTATION_ALIGN_SCORE_MIN, numThreads)
+        if(mRefGenomeVersion == RefGenomeVersion.V37)
+        {
+            val patchAlignments = runGRCh37PatchAlignment(querySequences, ANNOTATION_ALIGN_SCORE_MIN, numThreads)
+            require(patchAlignments.size == refAlignments.size)
+            refAlignments = refAlignments.zip(patchAlignments).map { it.first + it.second }
         }
 
-        val annotations = processAlignments(alignmentRunDatas, alignmentResults)
+        val imgtAlignments = runImgtAlignment(mRefGenomeVersion, querySequences, ANNOTATION_ALIGN_SCORE_MIN, numThreads)
+
+        val annotations = processAlignments(alignmentMetadata, refAlignments, imgtAlignments)
 
         AlignmentMatchTsvWriter.write(outputDir, sampleId, annotations)
 
         return annotations
     }
 
-    // process the alignment matches for each VDJ, and set the alignmentAnnotation in the VdjAnnotation
-    private fun processAlignments(alignmentRunDataList: List<AlignmentRunData>, alignments: List<List<AlignmentUtil.Alignment>>)
-    : Collection<AlignmentAnnotation>
+    private fun processAlignments(
+        metadatas: List<AlignmentMetadata>, refAlignments: List<List<Alignment>>, imgtAlignments: List<List<Alignment>>
+    ): Collection<AlignmentAnnotation>
     {
         sLogger.debug("Processing alignments")
         val alignmentAnnotations = ArrayList<AlignmentAnnotation>()
-        require(alignmentRunDataList.size == alignments.size)
-        for ((runData, vdjAlignments) in alignmentRunDataList.zip(alignments))
+        require(metadatas.size == refAlignments.size)
+        require(metadatas.size == imgtAlignments.size)
+        for ((index, metadata) in metadatas.withIndex())
         {
-            alignmentAnnotations.add(processAlignments(runData, vdjAlignments))
+            alignmentAnnotations.add(processAlignments(metadata, refAlignments[index], imgtAlignments[index]))
         }
         sLogger.debug("Done processing alignments")
         return alignmentAnnotations
     }
 
-    private fun processAlignments(alignmentRunData: AlignmentRunData, alignments: Collection<AlignmentUtil.Alignment>)
-    : AlignmentAnnotation
+    private fun processAlignments(
+        metadata: AlignmentMetadata, refAlignments: Collection<Alignment>,
+        imgtAlignments: Collection<Alignment>): AlignmentAnnotation
     {
-        val vdjSequence: VDJSequence = alignmentRunData.vdj
+        val preprocessedAlignments = preprocessAlignments(metadata, refAlignments)
 
-        val alignStartOffset = alignmentRunData.querySeqRange.start
-
-        val alignments = alignments
-            .filter { m -> m.alignmentScore >= ALIGNMENT_SCORE_MIN }
-            .map {
-                // we also need to fix up the matches, since we did not use the full sequence to query, the queryAlignStart
-                // and queryAlignEnd indices are off
-                it.copy(
-                    queryAlignStart = it.queryAlignStart + alignStartOffset,
-                    queryAlignEnd = it.queryAlignEnd + alignStartOffset)
-            }
-            .sortedBy { m -> -m.alignmentScore }
+        val vdjSequence = metadata.vdj
 
         // Check if any alignments cover the whole sequence, in which case there is no VDJ rearrangement.
         for (alignment in alignments)
         {
-            if (alignment.percentageIdent >= CiderConstants.ALIGNMENT_MATCH_FULL_MATCH_IDENTITY &&
-                alignmentRunData.querySeq.length <= (alignment.queryAlignEnd - alignment.queryAlignStart) + 5
+            if (alignment.percentageIdent >= ANNOTATION_MATCH_REF_IDENTITY &&
+                metadata.querySeq.length <= (alignment.queryAlignEnd - alignment.queryAlignStart) + 5
             )
             {
                 return AlignmentAnnotation(
@@ -165,9 +155,9 @@ class AlignmentAnnotator
         require(locus != null)
 
         // Find candidate gene matches, from which we will then select the best and supplementary matches.
-        val vGeneCandidates: MutableList<Pair<IgTcrGene, AlignmentUtil.Alignment>> = ArrayList()
-        val dGeneCandidates: MutableList<Pair<IgTcrGene, AlignmentUtil.Alignment>> = ArrayList()
-        val jGeneCandidates: MutableList<Pair<IgTcrGene, AlignmentUtil.Alignment>> = ArrayList()
+        val vGeneCandidates: MutableList<Pair<IgTcrGene, Alignment>> = ArrayList()
+        val dGeneCandidates: MutableList<Pair<IgTcrGene, Alignment>> = ArrayList()
+        val jGeneCandidates: MutableList<Pair<IgTcrGene, Alignment>> = ArrayList()
         for (alignment in alignments)
         {
             val vdjGene: IgTcrGene? = findGene(alignment)
@@ -177,7 +167,7 @@ class AlignmentAnnotator
             }
 
             // for V/J gene segments, we mandate 90% identity
-            if (vdjGene.region in arrayOf(IgTcrRegion.V_REGION, IgTcrRegion.J_REGION) && alignment.percentageIdent < CiderConstants.ALIGNMENT_MATCH_MIN_VJ_IDENTITY)
+            if (vdjGene.region in arrayOf(IgTcrRegion.V_REGION, IgTcrRegion.J_REGION) && alignment.percentageIdent < ANNOTATION_MIN_VJ_IDENTITY)
             {
                 continue
             }
@@ -268,9 +258,9 @@ class AlignmentAnnotator
             alignmentStatus = alignmentStatus)
     }
 
-    private fun findGene(alignment: AlignmentUtil.Alignment) : IgTcrGene?
+    private fun findGene(alignment: Alignment) : IgTcrGene?
     {
-        val chromosome = parseChromosome(alignment.refContig)
+        val chromosome = parseChromosomeFromContig(alignment.refContig)
 
         val geneDataList = mVdjGenes[Pair(chromosome, alignment.strand)] ?: return null
 
@@ -286,8 +276,8 @@ class AlignmentAnnotator
             if (bestGene == null || !bestGene.isFunctional)
             {
                 // check if they overlap. We prioritise functional genes
-                if (geneLocation.posStart <= alignment.refEnd + GENE_REGION_TOLERANCE &&
-                    geneLocation.posEnd >= alignment.refStart - GENE_REGION_TOLERANCE)
+                if (geneLocation.posStart <= alignment.refEnd + ANNOTATION_GENE_REGION_TOLERANCE &&
+                    geneLocation.posEnd >= alignment.refStart - ANNOTATION_GENE_REGION_TOLERANCE)
                 {
                     bestGene = gene
                 }
@@ -299,16 +289,6 @@ class AlignmentAnnotator
 
     private companion object
     {
-        // Require a match of minimum ~20 bases. If we want to match D segment that is shorter
-        // we will need a higher cut off, maybe 10, but will get many false positive hits that are longer but more mismatches
-        const val ALIGNMENT_SCORE_MIN = 19
-
-        const val FLANKING_BASES = 50
-
-        // D genes often are very short, for example, TRBD1 is only 12 bases. We allow more leeway to match
-        // an alignment to the gene
-        const val GENE_REGION_TOLERANCE = 50
-
         fun alignmentQuerySeqRange(vdj: VDJSequence) : IntRange
         {
             val fullSeq = vdj.layout.consensusSequenceString()
@@ -320,14 +300,29 @@ class AlignmentAnnotator
         {
             val i = fullSeq.indexOf(vdjSeq)
             require(i >= 0)
-            val range = Math.max(i - FLANKING_BASES, 0) until
-                    Math.min(i + vdjSeq.length + FLANKING_BASES, fullSeq.length)
+            val range = max(i - ANNOTATION_VDJ_FLANK_BASES, 0) until
+                    min(i + vdjSeq.length + ANNOTATION_VDJ_FLANK_BASES, fullSeq.length)
             return range
         }
 
-        data class GeneMatch(val gene: IgTcrGene, val alignment: AlignmentUtil.Alignment, val supplementaryGenes: List<IgTcrGene>)
+        fun preprocessAlignments(metadata: AlignmentMetadata, alignments: Collection<Alignment>): List<Alignment>
+        {
+            val alignStartOffset = metadata.querySeqRange.start
+            return alignments
+                .filter { it.alignmentScore >= ANNOTATION_ALIGN_SCORE_MIN }
+                .map {
+                    // we also need to fix up the matches, since we did not use the full sequence to query, the queryAlignStart
+                    // and queryAlignEnd indices are off
+                    it.copy(
+                        queryStart = it.queryStart + alignStartOffset,
+                        queryEnd = it.queryEnd + alignStartOffset)
+                }
+                .sortedBy { -it.alignmentScore }
+        }
 
-        fun selectBestGene(candidateGenes: List<Pair<IgTcrGene, AlignmentUtil.Alignment>>) : GeneMatch?
+        data class GeneMatch(val gene: IgTcrGene, val alignment: Alignment, val supplementaryGenes: List<IgTcrGene>)
+
+        fun selectBestGene(candidateGenes: List<Pair<IgTcrGene, Alignment>>) : GeneMatch?
         {
             if (candidateGenes.isEmpty())
             {
@@ -335,9 +330,9 @@ class AlignmentAnnotator
             }
 
             // Find the best gene match. There may be multiple, in which case we use a tie breaker and select the rest as supplementary matches.
-            val baseComparator = Comparator<Pair<IgTcrGene, AlignmentUtil.Alignment>>
+            val baseComparator = Comparator<Pair<IgTcrGene, Alignment>>
                 { p1, p2 -> compareGeneMatch(p1.second, p1.first, p2.second, p2.first) }
-            val tieBreakerComparator = Comparator<Pair<IgTcrGene, AlignmentUtil.Alignment>>
+            val tieBreakerComparator = Comparator<Pair<IgTcrGene, Alignment>>
                 { p1, p2 -> geneMatchTieBreaker(p1.first, p2.first) }
             val best = candidateGenes.minWith(baseComparator.thenComparing(tieBreakerComparator))
             val supplementary = candidateGenes.filter { it != best && baseComparator.compare(it, best) == 0 }.map { it.first }
@@ -345,7 +340,7 @@ class AlignmentAnnotator
         }
 
         // Better gene match compares less than.
-        fun compareGeneMatch(alignment1: AlignmentUtil.Alignment, gene1: IgTcrGene, alignment2: AlignmentUtil.Alignment, gene2: IgTcrGene)
+        fun compareGeneMatch(alignment1: Alignment, gene1: IgTcrGene, alignment2: Alignment, gene2: IgTcrGene)
             : Int
         {
             // Always prefer higher alignment score
