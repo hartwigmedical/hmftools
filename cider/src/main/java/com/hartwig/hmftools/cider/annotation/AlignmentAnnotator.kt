@@ -24,17 +24,21 @@ enum class AlignmentStatus
 
 data class AlignmentAnnotation(
     val vdjSequence: VDJSequence,
+    val status: AlignmentStatus,
+    val fullAlignment: Alignment? = null,
     val vGene: IgTcrGene? = null,
+    val vAlignment: Alignment? = null,
+    val vIdentity: Double? = null,
     val vGeneSupplementary: List<IgTcrGene> = emptyList(),
     val dGene: IgTcrGene? = null,
+    val dAlignment: Alignment? = null,
+    val dIdentity: Double? = null,
     val dGeneSupplementary: List<IgTcrGene> = emptyList(),
     val jGene: IgTcrGene? = null,
-    val jGeneSupplementary: List<IgTcrGene> = emptyList(),
-    val vAlignment: Alignment? = null,
-    val dAlignment: Alignment? = null,
     val jAlignment: Alignment? = null,
-    val fullAlignment: Alignment? = null,
-    val alignmentStatus: AlignmentStatus)
+    val jIdentity: Double? = null,
+    val jGeneSupplementary: List<IgTcrGene> = emptyList()
+)
 
 class AlignmentAnnotator
 {
@@ -127,27 +131,33 @@ class AlignmentAnnotator
     }
 
     private fun processAlignments(
-        metadata: AlignmentMetadata, refAlignments: Collection<Alignment>,
-        imgtAlignments: Collection<Alignment>): AlignmentAnnotation
+        metadata: AlignmentMetadata, refAlignments: Collection<Alignment>, imgtAlignments: Collection<Alignment>): AlignmentAnnotation
     {
-        val preprocessedAlignments = preprocessAlignments(metadata, refAlignments)
+        tryMatchReference(metadata, refAlignments)?.let { return it }
+        return matchRearrangedGenes(metadata, imgtAlignments)
+    }
 
-        val vdjSequence = metadata.vdj
-
-        // Check if any alignments cover the whole sequence, in which case there is no VDJ rearrangement.
+    // Check if any alignments cover the whole sequence, in which case there is no VDJ rearrangement.
+    private fun tryMatchReference(metadata: AlignmentMetadata, refAlignments: Collection<Alignment>): AlignmentAnnotation?
+    {
+        val alignments = preprocessAlignments(metadata, refAlignments)
         for (alignment in alignments)
         {
+            // TODO: can do it based on edit distance?
             if (alignment.percentageIdent >= ANNOTATION_MATCH_REF_IDENTITY &&
                 metadata.querySeq.length <= (alignment.queryAlignEnd - alignment.queryAlignStart) + 5
             )
             {
-                return AlignmentAnnotation(
-                    vdjSequence = vdjSequence,
-                    fullAlignment = alignment,
-                    alignmentStatus = AlignmentStatus.NO_REARRANGEMENT
-                )
+                return AlignmentAnnotation(metadata.vdj, AlignmentStatus.NO_REARRANGEMENT, fullAlignment = alignment)
             }
         }
+        return null
+    }
+
+    // Annotate the individual genes which have been rearranged to form this sequence.
+    private fun matchRearrangedGenes(metadata: AlignmentMetadata, imgtAlignments: Collection<Alignment>): AlignmentAnnotation
+    {
+        val vdjSequence = metadata.vdj
 
         // we freeze the locus here. Reason is that there are cases where a low identity match (92%) from another
         // locus supercedes a 100% identity match from the correct locus
@@ -197,7 +207,7 @@ class AlignmentAnnotator
         val vGeneMatch = selectBestGene(vGeneCandidates)
         val dGeneMatch = selectBestGene(dGeneCandidates)
         val jGeneMatch = selectBestGene(jGeneCandidates)
-        
+
         // determine status
         val alignmentStatus: AlignmentStatus = if (vGeneMatch != null)
         {
@@ -246,6 +256,7 @@ class AlignmentAnnotator
 
         return AlignmentAnnotation(
             vdjSequence = vdjSequence,
+            status = alignmentStatus,
             vGene = vGeneMatch?.gene,
             dGene = dGeneMatch?.gene,
             jGene = jGeneMatch?.gene,
@@ -254,8 +265,7 @@ class AlignmentAnnotator
             jAlignment = jGeneMatch?.alignment,
             vGeneSupplementary = vGeneMatch?.supplementaryGenes ?: emptyList(),
             dGeneSupplementary = dGeneMatch?.supplementaryGenes ?: emptyList(),
-            jGeneSupplementary = jGeneMatch?.supplementaryGenes ?: emptyList(),
-            alignmentStatus = alignmentStatus)
+            jGeneSupplementary = jGeneMatch?.supplementaryGenes ?: emptyList())
     }
 
     private fun findGene(alignment: Alignment) : IgTcrGene?
@@ -369,7 +379,7 @@ class AlignmentAnnotator
         // Deterministic tie breaker for otherwise identical gene alignments
         fun geneMatchTieBreaker(gene1: IgTcrGene, gene2: IgTcrGene) : Int
         {
-            return gene1.geneName.compareTo(gene2.geneName)
+            return gene1.geneAllele.compareTo(gene2.geneAllele)
         }
     }
 }

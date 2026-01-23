@@ -102,7 +102,7 @@ object VDJSequenceTsvWriter
                 Column.cdr3AA -> csvPrinter.print(CiderFormatter.cdr3AminoAcid(vdj))
                 Column.locus -> csvPrinter.print(vdjAnnotation.locus.prettyPrint())
                 Column.filter -> csvPrinter.print(vdjAnnotation.filters.joinToString(separator = ";"))
-                Column.alignmentStatus -> csvPrinter.print(vdjAnnotation.alignmentAnnotation?.alignmentStatus ?: AlignmentStatus.SKIPPED_ALIGN)
+                Column.alignmentStatus -> csvPrinter.print(vdjAnnotation.alignmentAnnotation?.status ?: AlignmentStatus.SKIPPED_ALIGN)
                 Column.minHighQualBaseReads -> csvPrinter.print(vdjAnnotation.cdr3SupportMin)
                 Column.assignedReads -> csvPrinter.print(vdj.numReads)
                 Column.vAlignedReads -> csvPrinter.print(vdjAnnotation.vAlignedReads)

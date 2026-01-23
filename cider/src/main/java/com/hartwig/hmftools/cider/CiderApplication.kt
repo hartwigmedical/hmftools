@@ -254,8 +254,8 @@ class CiderApplication(configBuilder: ConfigBuilder)
                     return false
                 }
             }
-            else if (vdjAnnotation.alignmentAnnotation!!.alignmentStatus == AlignmentStatus.V_ONLY ||
-                    vdjAnnotation.alignmentAnnotation!!.alignmentStatus == AlignmentStatus.J_ONLY)
+            else if (vdjAnnotation.alignmentAnnotation!!.status == AlignmentStatus.V_ONLY ||
+                    vdjAnnotation.alignmentAnnotation!!.status == AlignmentStatus.J_ONLY)
             {
                 return false
             }

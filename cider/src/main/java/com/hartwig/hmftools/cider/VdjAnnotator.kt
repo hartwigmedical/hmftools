@@ -307,7 +307,7 @@ class VdjAnnotator(private val adaptor: IVJReadLayoutAdaptor,
         {
             val filters = ArrayList<VdjAnnotation.Filter>()
 
-            if (matchesRef || alignmentAnnotation?.alignmentStatus == AlignmentStatus.NO_REARRANGEMENT)
+            if (matchesRef || alignmentAnnotation?.status == AlignmentStatus.NO_REARRANGEMENT)
             {
                 filters.add(VdjAnnotation.Filter.MATCHES_REF)
             }
@@ -333,14 +333,14 @@ class VdjAnnotator(private val adaptor: IVJReadLayoutAdaptor,
             }
             else
             {
-                if (alignmentAnnotation.alignmentStatus == AlignmentStatus.V_D ||
-                    alignmentAnnotation.alignmentStatus == AlignmentStatus.D_J ||
-                    alignmentAnnotation.alignmentStatus == AlignmentStatus.V_ONLY ||
-                    alignmentAnnotation.alignmentStatus == AlignmentStatus.J_ONLY)
+                if (alignmentAnnotation.status == AlignmentStatus.V_D ||
+                    alignmentAnnotation.status == AlignmentStatus.D_J ||
+                    alignmentAnnotation.status == AlignmentStatus.V_ONLY ||
+                    alignmentAnnotation.status == AlignmentStatus.J_ONLY)
                 {
                     filters.add(VdjAnnotation.Filter.PARTIAL)
                 }
-                else if (alignmentAnnotation.alignmentStatus == AlignmentStatus.NO_VDJ_ALIGNMENT)
+                else if (alignmentAnnotation.status == AlignmentStatus.NO_VDJ_ALIGNMENT)
                 {
                     filters.add(VdjAnnotation.Filter.NO_VDJ_ALIGNMENT)
                 }
