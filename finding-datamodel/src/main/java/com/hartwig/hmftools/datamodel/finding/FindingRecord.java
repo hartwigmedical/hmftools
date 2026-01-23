@@ -7,10 +7,13 @@ import jakarta.validation.constraints.NotNull;
 public record FindingRecord(
         @NotNull MetaProperties metaProperties,
         @NotNull PurityPloidyFit purityPloidyFit,
-        @NotNull DriverFindingList<SmallVariant> smallVariants,
-        @NotNull DriverFindingList<GainDeletion> gainDeletions,
+        @NotNull DriverFindingList<SmallVariant> somaticSmallVariants,
+        @NotNull DriverFindingList<SmallVariant> germlineSmallVariants,
+        @NotNull DriverFindingList<GainDeletion> somaticGainDeletions,
+        @NotNull DriverFindingList<GainDeletion> germlineGainDeletions,
+        @NotNull DriverFindingList<Disruption> somaticDisruptions,
+        @NotNull DriverFindingList<Disruption> germlineDisruptions,
         @NotNull DriverFindingList<Fusion> fusions,
-        @NotNull DriverFindingList<Disruption> disruptions,
         @NotNull DriverFindingList<Virus> viruses,
         @NotNull FindingList<HlaAllele> hla,
         @NotNull FindingList<PharmocoGenotype> pharmocoGenotypes,
@@ -19,4 +22,5 @@ public record FindingRecord(
         @NotNull FindingItem<PredictedTumorOrigin> predictedTumorOrigin,
         @NotNull FindingItem<HomologousRecombination> homologousRecombination)
 {
+
 }
