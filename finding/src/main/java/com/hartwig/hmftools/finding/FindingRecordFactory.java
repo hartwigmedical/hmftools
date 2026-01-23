@@ -37,16 +37,13 @@ import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
 import com.hartwig.hmftools.datamodel.virus.VirusLikelihoodType;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 // to reduce duplication, the findings are collected from
 // various part of the orange record
 public class FindingRecordFactory
 {
-
-    @NotNull
-    public static FindingRecord fromOrangeJsonWithTranscriptFile(@NotNull Path orangeJson, @Nullable Path clinicalTranscriptsTsv,
+    public static FindingRecord fromOrangeJsonWithTranscriptFile(Path orangeJson, @Nullable Path clinicalTranscriptsTsv,
             @Nullable Path driverGeneTsv) throws IOException
     {
         try(Reader reader = Files.newBufferedReader(orangeJson))
@@ -56,8 +53,7 @@ public class FindingRecordFactory
         }
     }
 
-    @NotNull
-    public static FindingRecord fromOrangeRecord(@NotNull OrangeRecord orangeRecord, @Nullable Path clinicalTranscriptsTsv,
+    public static FindingRecord fromOrangeRecord(OrangeRecord orangeRecord, @Nullable Path clinicalTranscriptsTsv,
             @Nullable Path driverGeneTsv) throws IOException
     {
         ClinicalTranscriptsModel clinicalTranscriptsModel = clinicalTranscriptsTsv != null ?
@@ -93,7 +89,7 @@ public class FindingRecordFactory
 
     // return the gain deletions cause they are needed by HRD, will see if we can find a better way
     private static DriverFindingList<GainDeletion> addPurpleFindings(FindingRecordBuilder builder, final OrangeRecord orangeRecord,
-            final @Nullable ClinicalTranscriptsModel clinicalTranscriptsModel, @NotNull Map<String, DriverGene> driverGenes)
+            final @Nullable ClinicalTranscriptsModel clinicalTranscriptsModel, Map<String, DriverGene> driverGenes)
     {
         boolean hasRefSample = orangeRecord.refSample() != null;
 
@@ -135,8 +131,7 @@ public class FindingRecordFactory
         return somaticGainDeletions;
     }
 
-    @NotNull
-    private static FindingItem<TumorMutationStatus> createTumorMutationStatus(@NotNull PurpleRecord purple)
+    private static FindingItem<TumorMutationStatus> createTumorMutationStatus(PurpleRecord purple)
     {
         return FindingItemBuilder.<TumorMutationStatus>builder()
                 .status(FindingsStatus.OK)
@@ -152,8 +147,7 @@ public class FindingRecordFactory
                 .build();
     }
 
-    @NotNull
-    private static FindingItem<PredictedTumorOrigin> createPredictedTumorOrigin(CuppaData cuppa)
+    private static FindingItem<PredictedTumorOrigin> createPredictedTumorOrigin(@Nullable CuppaData cuppa)
     {
         if(cuppa != null)
         {
@@ -172,11 +166,10 @@ public class FindingRecordFactory
         }
     }
 
-    @NotNull
     private static FindingItem<HomologousRecombination> createHomologousRecombination(@Nullable ChordRecord chord,
-            @NotNull PurpleRecord purple,
-            @NotNull LinxRecord linx,
-            @NotNull DriverFindingList<GainDeletion> gainDeletions)
+            PurpleRecord purple,
+            LinxRecord linx,
+            DriverFindingList<GainDeletion> gainDeletions)
     {
         if(chord != null)
         {
@@ -203,9 +196,8 @@ public class FindingRecordFactory
         }
     }
 
-    @NotNull
-    private static FindingItem<MicrosatelliteStability> createMicrosatelliteStability(@NotNull PurpleRecord purple,
-            @NotNull LinxRecord linx, @NotNull DriverFindingList<GainDeletion> gainDeletions)
+    private static FindingItem<MicrosatelliteStability> createMicrosatelliteStability(PurpleRecord purple,
+            LinxRecord linx, DriverFindingList<GainDeletion> gainDeletions)
     {
         return FindingItemBuilder.<MicrosatelliteStability>builder()
                 .status(FindingsStatus.OK)
@@ -222,8 +214,7 @@ public class FindingRecordFactory
                 .build();
     }
 
-    @NotNull
-    private static List<GainDeletion> filterLohGainDeletions(@NotNull DriverFindingList<GainDeletion> gainDeletions, Set<String> geneNames)
+    private static List<GainDeletion> filterLohGainDeletions(DriverFindingList<GainDeletion> gainDeletions, Set<String> geneNames)
     {
         return gainDeletions.findings().stream()
                 .filter(x -> geneNames.contains(x.gene()))
@@ -237,7 +228,7 @@ public class FindingRecordFactory
         return purpleRecord.fit().qc().status().equals(Set.of(PurpleQCStatus.PASS)) ? FindingsStatus.OK : FindingsStatus.NOT_AVAILABLE;
     }
 
-    public static DriverFindingList<Fusion> createFusionsFindings(@NotNull LinxRecord linx)
+    public static DriverFindingList<Fusion> createFusionsFindings(LinxRecord linx)
     {
         return DriverFindingListBuilder.<Fusion>builder()
                 .status(FindingsStatus.OK)
@@ -280,8 +271,7 @@ public class FindingRecordFactory
                 .build();
     }
 
-    @NotNull
-    private static DriverInterpretation toDriverInterpretation(@NotNull FusionLikelihoodType likelihood)
+    private static DriverInterpretation toDriverInterpretation(FusionLikelihoodType likelihood)
     {
         return switch(likelihood)
         {
@@ -291,7 +281,6 @@ public class FindingRecordFactory
         };
     }
 
-    @NotNull
     private static DriverFindingList<Virus> createVirusFindings(@Nullable VirusInterpreterData virusInterpreter)
     {
         if(virusInterpreter != null)
@@ -308,7 +297,6 @@ public class FindingRecordFactory
         }
     }
 
-    @NotNull
     private static List<Virus> convertViruses(List<VirusInterpreterEntry> viruses)
     {
         return viruses.stream()
@@ -335,8 +323,7 @@ public class FindingRecordFactory
                 ).sorted(Virus.COMPARATOR).toList();
     }
 
-    @NotNull
-    private static DriverInterpretation virusDriverInterpretation(@NotNull VirusLikelihoodType virusLikelihoodType)
+    private static DriverInterpretation virusDriverInterpretation(VirusLikelihoodType virusLikelihoodType)
     {
         return switch(virusLikelihoodType)
         {

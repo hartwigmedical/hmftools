@@ -13,7 +13,6 @@ import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
-import org.jetbrains.annotations.NotNull;
 
 // lilac shows two copies of HLA alleles even if they are the
 // same allele. This class combine the alleles and sum the copies
@@ -27,7 +26,7 @@ public class HlaAlleleFactory
     {
     }
 
-    public static FindingList<HlaAllele> createHlaAllelesFindings(@NotNull OrangeRecord orangeRecord, boolean hasReliablePurity)
+    public static FindingList<HlaAllele> createHlaAllelesFindings(OrangeRecord orangeRecord, boolean hasReliablePurity)
     {
         LilacRecord lilac = orangeRecord.lilac();
         if(lilac != null)
@@ -46,8 +45,7 @@ public class HlaAlleleFactory
         }
     }
 
-    @NotNull
-    public static List<HlaAllele> convertHlaAlleles(@NotNull LilacRecord lilac, boolean hasReliablePurity, boolean hasRef, boolean hasRna)
+    public static List<HlaAllele> convertHlaAlleles(LilacRecord lilac, boolean hasReliablePurity, boolean hasRef, boolean hasRna)
     {
         Map<String, List<LilacAllele>> hlaAllelesMap = lilac.alleles()
                 .stream()
@@ -100,8 +98,7 @@ public class HlaAlleleFactory
         return hlaAlleles;
     }
 
-    @NotNull
-    public static String extractHLAGene(@NotNull String allele)
+    public static String extractHLAGene(String allele)
     {
         if(allele.startsWith("A*"))
         {
