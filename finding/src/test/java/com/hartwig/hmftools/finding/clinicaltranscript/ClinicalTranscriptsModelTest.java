@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.datamodel.finding.clinicaltranscript;
+package com.hartwig.hmftools.finding.clinicaltranscript;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;

@@ -1,7 +1,7 @@
-package com.hartwig.hmftools.datamodel.finding;
+package com.hartwig.hmftools.finding;
 
-import static com.hartwig.hmftools.datamodel.finding.DisruptionFactory.createGermlineDisruptions;
-import static com.hartwig.hmftools.datamodel.finding.DisruptionFactory.createSomaticDisruptions;
+import static com.hartwig.hmftools.finding.DisruptionFactory.createGermlineDisruptions;
+import static com.hartwig.hmftools.finding.DisruptionFactory.createSomaticDisruptions;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -20,8 +20,9 @@ import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.driver.DriverSource;
-import com.hartwig.hmftools.datamodel.finding.clinicaltranscript.ClinicalTranscriptFile;
-import com.hartwig.hmftools.datamodel.finding.clinicaltranscript.ClinicalTranscriptsModel;
+import com.hartwig.hmftools.datamodel.finding.*;
+import com.hartwig.hmftools.finding.clinicaltranscript.ClinicalTranscriptFile;
+import com.hartwig.hmftools.finding.clinicaltranscript.ClinicalTranscriptsModel;
 import com.hartwig.hmftools.datamodel.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;

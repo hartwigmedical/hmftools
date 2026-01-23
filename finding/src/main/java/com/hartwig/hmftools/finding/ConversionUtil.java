@@ -1,17 +1,22 @@
-package com.hartwig.hmftools.datamodel.finding;
+package com.hartwig.hmftools.finding;
 
 import java.io.IOException;
 import java.nio.file.Path;
 
+import com.hartwig.hmftools.datamodel.finding.FindingRecord;
+import com.hartwig.hmftools.datamodel.finding.FindingsJson;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+@SuppressWarnings("unused")
 public class ConversionUtil
 {
     public static void orangeJsonToFindingsJson(@NotNull Path findingsJson, @NotNull Path orangeJson, @Nullable Path clinicalTranscriptsTsv,
             @Nullable Path driverGeneTsv) throws IOException
     {
-        FindingRecord findingRecord = FindingRecordFactory.fromOrangeJsonWithTranscriptFile(orangeJson, clinicalTranscriptsTsv, driverGeneTsv);
+        FindingRecord
+                findingRecord = FindingRecordFactory.fromOrangeJsonWithTranscriptFile(orangeJson, clinicalTranscriptsTsv, driverGeneTsv);
         FindingsJson.getInstance().write(findingRecord, findingsJson);
     }
 }
