@@ -21,28 +21,41 @@ import org.jetbrains.annotations.Nullable;
 
 final class SmallVariantFactory
 {
-    public static DriverFindingList<SmallVariant> smallVariantFindings(@NotNull PurpleRecord purpleRecord,
-            @NotNull FindingsStatus findingsStatus, @Nullable ClinicalTranscriptsModel clinicalTranscriptsModel,
+    public static DriverFindingList<SmallVariant> somaticSmallVariantFindings(
+            @NotNull PurpleRecord purpleRecord,
+            @NotNull FindingsStatus findingsStatus,
+            @Nullable ClinicalTranscriptsModel clinicalTranscriptsModel,
             @NotNull Map<String, DriverGene> driverGeneMap)
     {
-        List<SmallVariant> allSmallVariants = Lists.newArrayList();
-        allSmallVariants.addAll(SmallVariantFactory.create(
-                DriverSource.SOMATIC, purpleRecord.reportableSomaticVariants(), purpleRecord.somaticDrivers(),
-                clinicalTranscriptsModel, driverGeneMap));
-
-        List<PurpleVariant> germlineVariants = purpleRecord.reportableGermlineVariants();
-        List<PurpleDriver> germlineDrivers = purpleRecord.germlineDrivers();
-        if(germlineVariants != null && germlineDrivers != null)
-        {
-            allSmallVariants.addAll(SmallVariantFactory.create(
-                    DriverSource.GERMLINE, germlineVariants, germlineDrivers, clinicalTranscriptsModel, driverGeneMap));
-        }
-
-        allSmallVariants.sort(SmallVariant.COMPARATOR);
-
         return DriverFindingListBuilder.<SmallVariant>builder()
                 .status(findingsStatus)
-                .findings(allSmallVariants)
+                .findings(SmallVariantFactory.create(
+                        DriverSource.SOMATIC, purpleRecord.reportableSomaticVariants(), purpleRecord.somaticDrivers(),
+                        clinicalTranscriptsModel, driverGeneMap))
+                .build();
+    }
+
+    public static DriverFindingList<SmallVariant> germlineSmallVariantFindings(
+            boolean hasGermlineSample,
+            @NotNull PurpleRecord purpleRecord,
+            @Nullable ClinicalTranscriptsModel clinicalTranscriptsModel,
+            @NotNull Map<String, DriverGene> driverGeneMap)
+    {
+        if(!hasGermlineSample)
+        {
+            return DriverFindingListBuilder.<SmallVariant>builder()
+                    .status(FindingsStatus.NOT_AVAILABLE)
+                    .findings(List.of())
+                    .build();
+        }
+
+        List<PurpleVariant> germlineVariants = Objects.requireNonNull(purpleRecord.reportableGermlineVariants());
+        List<PurpleDriver> germlineDrivers = Objects.requireNonNull(purpleRecord.germlineDrivers());
+
+        return DriverFindingListBuilder.<SmallVariant>builder()
+                .status(FindingsStatus.OK)
+                .findings(SmallVariantFactory.create(
+                        DriverSource.GERMLINE, germlineVariants, germlineDrivers, clinicalTranscriptsModel, driverGeneMap))
                 .build();
     }
 
@@ -74,7 +87,7 @@ final class SmallVariantFactory
                 entries.add(toSmallVariant(nonCanonicalVariant, nonCanonicalDriver, sampleType, clinicalTranscriptsModel, driverGeneMap));
             }
         }
-
+        entries.sort(SmallVariant.COMPARATOR);
         return entries;
     }
 
