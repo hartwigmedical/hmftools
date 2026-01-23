@@ -520,7 +520,7 @@ class ImgtGeneCurator
 
                 anchorLocation = if (alleleLocation.strand == Strand.FORWARD)
                 {
-                    val anchorEndOffsetFromEnd = seqWithoutGaps.length - anchorEndOffsetFromStart - 1
+                    val anchorEndOffsetFromEnd = alleleLocation.baseLength() - anchorEndOffsetFromStart - 1
                     alleleLocation.copy(
                         posStart = alleleLocation.posEnd - anchorEndOffsetFromEnd - (anchor.length - 1),
                         posEnd = alleleLocation.posEnd - anchorEndOffsetFromEnd
@@ -577,7 +577,7 @@ class ImgtGeneCurator
             val alleleLocation = alleleLocationInfo?.location
             if (alleleLocation != null)
             {
-                // TODO: this needs to be indel aware
+                // TODO: this should be indel aware
                 // TODO: why is this using the index in the sequence with gaps?
                 anchorLocation = if (alleleLocation.strand == Strand.FORWARD)
                 {
