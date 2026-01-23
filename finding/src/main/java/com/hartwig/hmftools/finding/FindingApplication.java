@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.datamodel.finding;
+package com.hartwig.hmftools.finding;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -12,6 +12,7 @@ import com.google.gson.TypeAdapterFactory;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.datamodel.LocalDateAdapter;
 import com.hartwig.hmftools.datamodel.OrangeJson;
+import com.hartwig.hmftools.datamodel.finding.FindingRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 
 import org.apache.logging.log4j.LogManager;
@@ -22,8 +23,6 @@ public class FindingApplication
     public static final String APP_NAME = "Finding";
 
     public static final Logger LOGGER = LogManager.getLogger(FindingApplication.class);
-
-    public static final String VERSION = FindingApplication.class.getPackage().getImplementationVersion();
 
     public static void main(String[] args) throws Exception
     {
