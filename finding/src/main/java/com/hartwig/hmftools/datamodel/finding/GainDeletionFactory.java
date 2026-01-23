@@ -20,44 +20,52 @@ import org.jetbrains.annotations.NotNull;
 final class GainDeletionFactory
 {
 
-    public static DriverFindingList<GainDeletion> gainDeletionFindings(@NotNull PurpleRecord purple,
+    public static DriverFindingList<GainDeletion> somaticGainDeletionFindings(
             @NotNull OrangeRefGenomeVersion orangeRefGenomeVersion,
-            @NotNull FindingsStatus findingsStatus)
+            @NotNull FindingsStatus findingsStatus,
+            @NotNull PurpleRecord purple)
     {
         ChromosomeArmCopyNumberMap cnPerChromosome =
                 ChromosomeArmCopyNumberMap.create(purple.allSomaticCopyNumbers(), orangeRefGenomeVersion);
 
-        List<GainDeletion> allGainDels = new ArrayList<>();
-        List<PurpleGainDeletion> germlineFullDels = purple.reportableGermlineFullDels();
-        List<PurpleLossOfHeterozygosity> germlineLohs = purple.reportableGermlineLossOfHeterozygosities();
-        List<PurpleDriver> purpleGermlineDrivers = purple.germlineDrivers();
-        if(germlineFullDels != null && germlineLohs != null && purpleGermlineDrivers != null)
-        {
-            allGainDels.addAll(germlineDriverGainDels(germlineFullDels, germlineLohs, purple.germlineDrivers(),
-                    purple.allSomaticGeneCopyNumbers(), cnPerChromosome));
-        }
-        allGainDels.addAll(somaticDriverGainDels(purple.reportableSomaticGainsDels(), purple.somaticDrivers(), purple.allSomaticGeneCopyNumbers(), cnPerChromosome));
+        List<GainDeletion> gainDeletions = new ArrayList<>();
+        gainDeletions.addAll(somaticDriverGainDels(purple.reportableSomaticGainsDels(), purple.somaticDrivers(), purple.allSomaticGeneCopyNumbers(), cnPerChromosome));
 
         // we are going to add somatic LOH to purple. For this backported version we will reverse engineer how they might look
-        allGainDels.addAll(somaticLoh(purple.suspectGeneCopyNumbersWithLOH(), cnPerChromosome));
+        gainDeletions.addAll(somaticLoh(purple.suspectGeneCopyNumbersWithLOH(), cnPerChromosome));
 
-        allGainDels.sort(GainDeletion.COMPARATOR);
+        gainDeletions.sort(GainDeletion.COMPARATOR);
 
         return DriverFindingListBuilder.<GainDeletion>builder()
                 .status(findingsStatus)
-                .findings(allGainDels)
+                .findings(gainDeletions)
                 .build();
     }
 
     // in orange data, HOM_DELS are stored as germline full dels, HET_DELS are stored in LOH, they do not overlap.
     // findings the reportable ones are in purple drivers. Other types are not reportable, we can ignore them
-    private static List<GainDeletion> germlineDriverGainDels(List<PurpleGainDeletion> reportableGermlineFullDels,
-            List<PurpleLossOfHeterozygosity> reportableGermlineLossOfHeterozygosities,
-            final List<PurpleDriver> germlineDrivers,
-            List<PurpleGeneCopyNumber> somaticGeneCopyNumbers,
-            ChromosomeArmCopyNumberMap cnPerChromosome)
+    public static DriverFindingList<GainDeletion> germlineGainDeletionFindings(
+            boolean hasGermlineSample,
+            @NotNull OrangeRefGenomeVersion orangeRefGenomeVersion,
+            @NotNull PurpleRecord purple)
     {
-        List<GainDeletion> driverGainDels = new ArrayList<>();
+        if(!hasGermlineSample)
+        {
+            return DriverFindingListBuilder.<GainDeletion>builder()
+                    .status(FindingsStatus.NOT_AVAILABLE)
+                    .findings(List.of())
+                    .build();
+        }
+
+        List<PurpleGeneCopyNumber> somaticGeneCopyNumbers = purple.allSomaticGeneCopyNumbers();
+
+        ChromosomeArmCopyNumberMap cnPerChromosome =
+                ChromosomeArmCopyNumberMap.create(purple.allSomaticCopyNumbers(), orangeRefGenomeVersion);
+
+        List<GainDeletion> gainDeletions = new ArrayList<>();
+        List<PurpleGainDeletion> reportableGermlineFullDels = Objects.requireNonNull(purple.reportableGermlineFullDels());
+        List<PurpleLossOfHeterozygosity> reportableGermlineLossOfHeterozygosities = Objects.requireNonNull(purple.reportableGermlineLossOfHeterozygosities());
+        List<PurpleDriver> germlineDrivers = Objects.requireNonNull(purple.germlineDrivers());
 
         for(PurpleGainDeletion fullDels : reportableGermlineFullDels)
         {
@@ -68,7 +76,7 @@ final class GainDeletionFactory
             final PurpleGeneCopyNumber geneCopyNumber =
                     findPurpleGeneCopyNumber(somaticGeneCopyNumbers, fullDels.gene(), fullDels.transcript());
 
-            driverGainDels.add(toGainDel(fullDels, driver, GainDeletion.Type.GERMLINE_DEL_HOM_IN_TUMOR, DriverSource.GERMLINE, geneCopyNumber, cnPerChromosome));
+            gainDeletions.add(toGainDel(fullDels, driver, GainDeletion.Type.GERMLINE_DEL_HOM_IN_TUMOR, DriverSource.GERMLINE, geneCopyNumber, cnPerChromosome));
         }
 
         for(PurpleLossOfHeterozygosity loh : reportableGermlineLossOfHeterozygosities)
@@ -79,11 +87,14 @@ final class GainDeletionFactory
 
             final PurpleGeneCopyNumber geneCopyNumber = findPurpleGeneCopyNumber(somaticGeneCopyNumbers, loh.gene(), loh.transcript());
 
-            driverGainDels.add(toGainDel(loh, driver, geneCopyNumber, cnPerChromosome));
+            gainDeletions.add(toGainDel(loh, driver, geneCopyNumber, cnPerChromosome));
         }
 
-        // should we sort this?
-        return driverGainDels;
+        gainDeletions.sort(GainDeletion.COMPARATOR);
+        return DriverFindingListBuilder.<GainDeletion>builder()
+                .status(FindingsStatus.OK)
+                .findings(gainDeletions)
+                .build();
     }
 
     @NotNull

@@ -7,6 +7,7 @@ import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
 
 import org.jetbrains.annotations.NotNull;
 
+@SuppressWarnings("unused")
 public class TestFindingRecordFactory {
     @NotNull
     public static FindingRecord createMinimalTestFindingRecord() {
@@ -25,9 +26,12 @@ public class TestFindingRecordFactory {
                 .homologousRecombination(TestFindingFactory.buildFindingItem(FindingsStatus.OK, TestFindingFactory.homologousRecombinationBuilder().build()))
                 .microsatelliteStability(TestFindingFactory.buildFindingItem(FindingsStatus.OK, TestFindingFactory.microsatelliteStabilityBuilder().build()))
                 .tumorMutationStatus(TestFindingFactory.buildFindingItem(FindingsStatus.OK, TestFindingFactory.mutationStatusBuilder().build()))
-                .smallVariants(TestFindingFactory.buildDriverFindingsList(FindingsStatus.OK, List.of()))
-                .gainDeletions(TestFindingFactory.buildDriverFindingsList(FindingsStatus.OK, List.of()))
-                .disruptions(TestFindingFactory.buildDriverFindingsList(FindingsStatus.OK, List.of()))
+                .somaticSmallVariants(TestFindingFactory.buildDriverFindingsList(FindingsStatus.OK, List.of()))
+                .germlineSmallVariants(TestFindingFactory.buildDriverFindingsList(FindingsStatus.OK, List.of()))
+                .somaticGainDeletions(TestFindingFactory.buildDriverFindingsList(FindingsStatus.OK, List.of()))
+                .germlineGainDeletions(TestFindingFactory.buildDriverFindingsList(FindingsStatus.OK, List.of()))
+                .somaticDisruptions(TestFindingFactory.buildDriverFindingsList(FindingsStatus.OK, List.of()))
+                .germlineDisruptions(TestFindingFactory.buildDriverFindingsList(FindingsStatus.OK, List.of()))
                 .fusions(TestFindingFactory.buildDriverFindingsList(FindingsStatus.OK, List.of()))
                 .viruses(TestFindingFactory.buildDriverFindingsList(FindingsStatus.OK, List.of()))
                 .hla(TestFindingFactory.buildFindingsList(FindingsStatus.OK, List.of()))

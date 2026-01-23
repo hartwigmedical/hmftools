@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -56,54 +57,40 @@ final class DisruptionFactory
     // back to the breakends, it probably will work by just selecting first reportable disruption with the same gene / transcript.
     // We can do it for the backport version if that makes it easier.
 
-    public static DriverFindingList<Disruption> createDisruptionsFindings(@NotNull LinxRecord linx, boolean hasReliablePurity)
+    @NotNull
+    public static DriverFindingList<Disruption> createGermlineDisruptions(boolean hasRefSample, @NotNull LinxRecord linx)
     {
-        List<Disruption> allDisruptions = new ArrayList<>();
-        List<LinxBreakend> germlineBreakends = linx.reportableGermlineBreakends();
-        List<LinxSvAnnotation> germlineStructuralVariants = linx.allGermlineStructuralVariants();
-        List<LinxHomozygousDisruption> germlineHomozygousDisruptions = linx.germlineHomozygousDisruptions();
-
-        if(germlineBreakends != null && germlineStructuralVariants != null && germlineHomozygousDisruptions != null)
+        if(!hasRefSample)
         {
-            allDisruptions.addAll(createGermlineDisruptions(germlineBreakends, germlineStructuralVariants, germlineHomozygousDisruptions));
+            return DriverFindingListBuilder.<Disruption>builder()
+                    .status(FindingsStatus.NOT_AVAILABLE)
+                    .findings(List.of())
+                    .build();
         }
 
-        allDisruptions.addAll(createSomaticDisruptions(
-                linx.reportableSomaticBreakends(),
-                linx.allSomaticStructuralVariants(),
-                linx.somaticDrivers(),
-                hasReliablePurity));
+        List<LinxBreakend> breakends = Objects.requireNonNull(linx.reportableGermlineBreakends());
+        List<LinxSvAnnotation> structuralVariants = Objects.requireNonNull(linx.allGermlineStructuralVariants());
+        List<LinxHomozygousDisruption> germlineHomozygousDisruptions = Objects.requireNonNull(linx.germlineHomozygousDisruptions());
 
-        allDisruptions.sort(Disruption.COMPARATOR);
-
-        return DriverFindingListBuilder.<Disruption>builder()
-                .status(FindingsStatus.OK)
-                .findings(allDisruptions)
-                .build();
-    }
-
-    @NotNull
-    public static List<Disruption> createGermlineDisruptions(
-            @NotNull Collection<LinxBreakend> breakends,
-            @NotNull Collection<LinxSvAnnotation> structuralVariants,
-            @NotNull List<LinxHomozygousDisruption> germlineHomozygousDisruptions)
-    {
         DisruptionTypeFinder findDisruptionType = (gene, transcript) ->
                 germlineHomozygousDisruptions.stream()
                         .anyMatch(o -> o.gene().equals(gene) && o.transcript().equals(transcript))
                         ? Disruption.Type.GERMLINE_HOM_DUP_DISRUPTION
                         : Disruption.Type.GERMLINE_DISRUPTION;
 
-        return createDisruptions(DriverSource.GERMLINE, breakends, structuralVariants, true, findDisruptionType);
+        return DriverFindingListBuilder.<Disruption>builder()
+                .status(FindingsStatus.OK)
+                .findings(createDisruptions(DriverSource.GERMLINE, breakends, structuralVariants, true, findDisruptionType))
+                .build();
     }
 
     @NotNull
-    public static List<Disruption> createSomaticDisruptions(
-            @NotNull Collection<LinxBreakend> breakends,
-            @NotNull Collection<LinxSvAnnotation> structuralVariants,
-            @NotNull List<LinxDriver> linxDrivers,
-            boolean hasReliablePurity)
+    public static DriverFindingList<Disruption> createSomaticDisruptions(boolean hasReliablePurity, @NotNull LinxRecord linx)
     {
+        @NotNull Collection<LinxBreakend> breakends = linx.reportableSomaticBreakends();
+        @NotNull Collection<LinxSvAnnotation> structuralVariants = linx.allSomaticStructuralVariants();
+        @NotNull List<LinxDriver> linxDrivers = linx.somaticDrivers();
+
         Map<String, Disruption.Type> geneDriverTypeMap = new HashMap<>();
         for(LinxDriver linxDriver : linxDrivers)
         {
@@ -118,7 +105,10 @@ final class DisruptionFactory
         DisruptionTypeFinder findDisruptionType = (gene, transcript) ->
                 geneDriverTypeMap.getOrDefault(gene, Disruption.Type.SOMATIC_DISRUPTION);
 
-        return createDisruptions(DriverSource.SOMATIC, breakends, structuralVariants, hasReliablePurity, findDisruptionType);
+        return  DriverFindingListBuilder.<Disruption>builder()
+                .status(FindingsStatus.OK)
+                .findings(createDisruptions(DriverSource.SOMATIC, breakends, structuralVariants, hasReliablePurity, findDisruptionType))
+                .build();
     }
 
     @NotNull
@@ -129,7 +119,7 @@ final class DisruptionFactory
             boolean hasReliablePurity,
             DisruptionTypeFinder disruptionTypeFinder)
     {
-        List<Disruption> reportableDisruptions = new ArrayList<>();
+        List<Disruption> disruptions = new ArrayList<>();
         Map<SvAndTranscriptKey, Pair<LinxBreakend, LinxBreakend>> pairedMap = mapBreakendsPerStructuralVariant(breakends);
 
         for(Pair<LinxBreakend, LinxBreakend> pairedBreakend : pairedMap.values())
@@ -159,7 +149,7 @@ final class DisruptionFactory
 
             Disruption.Type disruptionType = disruptionTypeFinder.apply(breakend.gene(), breakend.transcript());
 
-            reportableDisruptions.add(createDisruption(
+            disruptions.add(createDisruption(
                     sampleType,
                     disruptionType,
                     primaryBreakendStart,
@@ -168,7 +158,9 @@ final class DisruptionFactory
                     structuralVariants,
                     hasReliablePurity));
         }
-        return reportableDisruptions;
+        disruptions.sort(Disruption.COMPARATOR);
+
+        return disruptions;
     }
 
     @NotNull

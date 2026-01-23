@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.datamodel.finding;
 
-import static com.hartwig.hmftools.datamodel.finding.DisruptionFactory.createDisruptionsFindings;
+import static com.hartwig.hmftools.datamodel.finding.DisruptionFactory.createGermlineDisruptions;
+import static com.hartwig.hmftools.datamodel.finding.DisruptionFactory.createSomaticDisruptions;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -75,13 +76,14 @@ public class FindingRecordFactory
                         .experimentType(orangeRecord.experimentType())
                         .pipelineVersion(orangeRecord.pipelineVersion())
                         .build())
-                .disruptions(createDisruptionsFindings(linx, hasReliablePurity))
+                .somaticDisruptions(createSomaticDisruptions(hasReliablePurity, linx))
+                .germlineDisruptions(createGermlineDisruptions(orangeRecord.refSample() != null, linx))
                 .fusions(createFusionsFindings(orangeRecord.linx()));
 
-        DriverFindingList<GainDeletion> gainDeletions = addPurpleFindings(builder, orangeRecord, clinicalTranscriptsModel, driverGenes);
+        DriverFindingList<GainDeletion> somaticGainDeletions = addPurpleFindings(builder, orangeRecord, clinicalTranscriptsModel, driverGenes);
 
         return builder.predictedTumorOrigin(createPredictedTumorOrigin(orangeRecord.cuppa()))
-                .homologousRecombination(createHomologousRecombination(orangeRecord.chord(), purple, linx, gainDeletions))
+                .homologousRecombination(createHomologousRecombination(orangeRecord.chord(), purple, linx, somaticGainDeletions))
                 .viruses(createVirusFindings(orangeRecord.virusInterpreter()))
                 .hla(HlaAlleleFactory.createHlaAllelesFindings(orangeRecord, hasReliablePurity))
                 .pharmocoGenotypes(createPharmcoGenotypesFindings(orangeRecord.peach(), hasContainmination))
@@ -92,6 +94,8 @@ public class FindingRecordFactory
     private static DriverFindingList<GainDeletion> addPurpleFindings(FindingRecordBuilder builder, final OrangeRecord orangeRecord,
             final @Nullable ClinicalTranscriptsModel clinicalTranscriptsModel, @NotNull Map<String, DriverGene> driverGenes)
     {
+        boolean hasRefSample = orangeRecord.refSample() != null;
+
         PurpleRecord purple = orangeRecord.purple();
 
         FindingsStatus findingsStatus = purpleFindingsStatus(purple);
@@ -117,15 +121,17 @@ public class FindingRecordFactory
                 .maxPloidy(purpleFit.maxPloidy())
                 .build());
 
-        DriverFindingList<GainDeletion> gainDeletions =
-                GainDeletionFactory.gainDeletionFindings(purple, orangeRecord.refGenomeVersion(), findingsStatus);
+        DriverFindingList<GainDeletion> somaticGainDeletions =
+                GainDeletionFactory.somaticGainDeletionFindings(orangeRecord.refGenomeVersion(), findingsStatus, purple);
 
-        builder.smallVariants(SmallVariantFactory.smallVariantFindings(purple, findingsStatus, clinicalTranscriptsModel, driverGenes))
-                .gainDeletions(gainDeletions)
-                .microsatelliteStability(createMicrosatelliteStability(purple, orangeRecord.linx(), gainDeletions))
+        builder.somaticSmallVariants(SmallVariantFactory.somaticSmallVariantFindings(purple, findingsStatus, clinicalTranscriptsModel, driverGenes))
+                .germlineSmallVariants(SmallVariantFactory.germlineSmallVariantFindings(hasRefSample, purple, clinicalTranscriptsModel, driverGenes))
+                .somaticGainDeletions(somaticGainDeletions)
+                .germlineGainDeletions(GainDeletionFactory.germlineGainDeletionFindings(hasRefSample, orangeRecord.refGenomeVersion(), purple))
+                .microsatelliteStability(createMicrosatelliteStability(purple, orangeRecord.linx(), somaticGainDeletions))
                 .tumorMutationStatus(createTumorMutationStatus(purple));
 
-        return gainDeletions;
+        return somaticGainDeletions;
     }
 
     @NotNull

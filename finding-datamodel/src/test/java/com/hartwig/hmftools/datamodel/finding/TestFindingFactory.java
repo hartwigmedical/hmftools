@@ -20,6 +20,7 @@ import com.hartwig.hmftools.datamodel.purple.PurpleVariantType;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
+@SuppressWarnings("unused")
 public class TestFindingFactory {
 
     @NotNull
