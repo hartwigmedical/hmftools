@@ -6,8 +6,6 @@ import java.util.Map;
 import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
 import com.hartwig.hmftools.datamodel.purple.PurpleCopyNumber;
 
-import org.jetbrains.annotations.NotNull;
-
 final class ChromosomeArmCopyNumberMap
 {
     private enum ChromosomeArm
@@ -22,8 +20,8 @@ final class ChromosomeArmCopyNumberMap
 
     private final Map<CopyNumberKey, Double> cnPerChromosomeArm;
 
-    public static ChromosomeArmCopyNumberMap create(@NotNull Iterable<PurpleCopyNumber> copyNumbers,
-            @NotNull final OrangeRefGenomeVersion refGenomeVersion)
+    public static ChromosomeArmCopyNumberMap create(Iterable<PurpleCopyNumber> copyNumbers,
+            final OrangeRefGenomeVersion refGenomeVersion)
     {
         return new ChromosomeArmCopyNumberMap(extractCnPerChromosomeArm(copyNumbers, refGenomeVersion));
     }
@@ -33,7 +31,7 @@ final class ChromosomeArmCopyNumberMap
         this.cnPerChromosomeArm = cnPerChromosomeArm;
     }
 
-    public double chromosomeArmCopyNumber(@NotNull String chromosome, @NotNull String chromosomeBand)
+    public double chromosomeArmCopyNumber(String chromosome, String chromosomeBand)
     {
         Double copyNumber = cnPerChromosomeArm.get(new CopyNumberKey(chromosome, getChromosomeArm(chromosomeBand)));
         if(copyNumber == null)
@@ -43,8 +41,7 @@ final class ChromosomeArmCopyNumberMap
         return copyNumber;
     }
 
-    @NotNull
-    static ChromosomeArm getChromosomeArm(@NotNull String chromosomeBand)
+    static ChromosomeArm getChromosomeArm(String chromosomeBand)
     {
         ChromosomeArm chromosomeArm;
         if(chromosomeBand.startsWith("p"))
@@ -62,9 +59,8 @@ final class ChromosomeArmCopyNumberMap
         return chromosomeArm;
     }
 
-    @NotNull
-    private static Map<CopyNumberKey, Double> extractCnPerChromosomeArm(@NotNull Iterable<PurpleCopyNumber> copyNumbers,
-            @NotNull final OrangeRefGenomeVersion refGenomeVersion)
+    private static Map<CopyNumberKey, Double> extractCnPerChromosomeArm(Iterable<PurpleCopyNumber> copyNumbers,
+            final OrangeRefGenomeVersion refGenomeVersion)
     {
         RefGenomeCoordinates refGenomeCoordinates = RefGenomeCoordinates.refGenomeCoordinates(refGenomeVersion);
 
@@ -102,9 +98,8 @@ final class ChromosomeArmCopyNumberMap
         return cnPerChromosomeArmData;
     }
 
-    @NotNull
-    private static Map<ChromosomeArm, GenomeRegion> determineArmRegions(@NotNull String chromosome,
-            @NotNull RefGenomeCoordinates refGenomeCoordinates)
+    private static Map<ChromosomeArm, GenomeRegion> determineArmRegions(String chromosome,
+            RefGenomeCoordinates refGenomeCoordinates)
     {
         int centromerePos = refGenomeCoordinates.centromeres().get(chromosome);
         int chrLength = refGenomeCoordinates.lengths().get(chromosome);
@@ -127,18 +122,18 @@ final class ChromosomeArmCopyNumberMap
         return chromosomeArmGenomeRegionMap;
     }
 
-    private static boolean overlaps(@NotNull GenomeRegion region, @NotNull PurpleCopyNumber purpleCopyNumber)
+    private static boolean overlaps(GenomeRegion region, PurpleCopyNumber purpleCopyNumber)
     {
         return purpleCopyNumber.chromosome().equals(region.chromosome()) && purpleCopyNumber.end() > region.start()
                 && purpleCopyNumber.start() < region.end();
     }
 
-    private static int bases(@NotNull GenomeRegion region)
+    private static int bases(GenomeRegion region)
     {
         return bases(region.start(), region.end());
     }
 
-    private static int bases(@NotNull PurpleCopyNumber purpleCopyNumber)
+    private static int bases(PurpleCopyNumber purpleCopyNumber)
     {
         return bases(purpleCopyNumber.start(), purpleCopyNumber.end());
     }
@@ -165,19 +160,17 @@ final class ChromosomeArmCopyNumberMap
             };
         }
 
-        RefGenomeCoordinates(@NotNull final Map<String, Integer> lengths, @NotNull final Map<String, Integer> centromeres)
+        RefGenomeCoordinates(final Map<String, Integer> lengths, final Map<String, Integer> centromeres)
         {
             Lengths = lengths;
             Centromeres = centromeres;
         }
 
-        @NotNull
         public Map<String, Integer> lengths()
         {
             return Lengths;
         }
 
-        @NotNull
         public Map<String, Integer> centromeres()
         {
             return Centromeres;

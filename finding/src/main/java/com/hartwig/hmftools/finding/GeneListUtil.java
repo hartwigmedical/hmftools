@@ -12,16 +12,14 @@ import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 class GeneListUtil
 {
-
-    static Set<String> genes(@NotNull List<PurpleVariant> reportableVariants,
-            @NotNull List<PurpleGainDeletion> gainDeletions,
+    static Set<String> genes(List<PurpleVariant> reportableVariants,
+            List<PurpleGainDeletion> gainDeletions,
             @Nullable List<LinxHomozygousDisruption> homozygousDisruptions,
-            @NotNull Set<String> genes)
+            Set<String> genes)
     {
         Set<String> genesDisplay = Sets.newTreeSet();
 
