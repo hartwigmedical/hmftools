@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.datamodel.finding;
+package com.hartwig.hmftools.finding;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.driver.DriverSource;
+import com.hartwig.hmftools.datamodel.finding.*;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxDriver;
 import com.hartwig.hmftools.datamodel.linx.LinxGeneOrientation;
