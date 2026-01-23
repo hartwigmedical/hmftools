@@ -44,8 +44,6 @@ import com.hartwig.hmftools.redux.common.Statistics;
 import com.hartwig.hmftools.redux.consensus.ConsensusReads;
 import com.hartwig.hmftools.redux.consensus.SbxRoutines;
 import com.hartwig.hmftools.redux.consensus.UltimaRoutines;
-import com.hartwig.hmftools.redux.duplicate.IReadCache;
-import com.hartwig.hmftools.redux.duplicate.JitterReadCache;
 import com.hartwig.hmftools.redux.duplicate.ReadCache;
 import com.hartwig.hmftools.redux.unmap.ReadUnmapper;
 import com.hartwig.hmftools.redux.unmap.UnmapRegionState;
@@ -62,7 +60,7 @@ public class PartitionReader
     private final ReduxConfig mConfig;
 
     private final BamReader mBamReader;
-    private final IReadCache mReadCache;
+    private final ReadCache mReadCache;
     private final ReadUnmapper mReadUnmapper;
     private final DuplicateGroupBuilder mDuplicateGroupBuilder;
     private final ConsensusReads mConsensusReads;
@@ -92,9 +90,7 @@ public class PartitionReader
 
         if(isIllumina())
         {
-            ReadCache readCache = new ReadCache(mConfig.UMIs.Enabled, mConfig.DuplicateConfig);
-
-            mReadCache = mConfig.UseJitterReadCache && mConfig.UMIs.Enabled ? new JitterReadCache(readCache) : readCache;
+            mReadCache = new ReadCache(mConfig.UMIs.Enabled, mConfig.DuplicateConfig);
         }
         else
         {
