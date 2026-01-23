@@ -31,7 +31,7 @@ public record SmallVariant(
         @NotNull String alt,
         @NotNull PurpleCodingEffect worstCodingEffect,
         @NotNull HotspotType hotspot,
-        @NotNull AllelicDepth tumorDepth,
+        @NotNull AllelicDepth allelicDepth,
         @Nullable AllelicDepth rnaDepth,
         double adjustedCopyNumber,
         double adjustedVAF,
