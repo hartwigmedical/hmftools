@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.datamodel.finding;
+package com.hartwig.hmftools.finding;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,6 +6,7 @@ import java.util.Objects;
 
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.driver.DriverSource;
+import com.hartwig.hmftools.datamodel.finding.*;
 import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
 import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;

@@ -1,6 +1,13 @@
-package com.hartwig.hmftools.datamodel.finding;
+package com.hartwig.hmftools.finding;
 
 import java.util.List;
+
+import com.hartwig.hmftools.datamodel.finding.Driver;
+import com.hartwig.hmftools.datamodel.finding.DriverFindingList;
+import com.hartwig.hmftools.datamodel.finding.Finding;
+import com.hartwig.hmftools.datamodel.finding.FindingItem;
+import com.hartwig.hmftools.datamodel.finding.FindingList;
+import com.hartwig.hmftools.datamodel.finding.FindingsStatus;
 
 import org.jetbrains.annotations.NotNull;
 

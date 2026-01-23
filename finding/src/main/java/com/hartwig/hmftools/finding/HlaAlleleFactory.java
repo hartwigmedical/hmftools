@@ -1,10 +1,11 @@
-package com.hartwig.hmftools.datamodel.finding;
+package com.hartwig.hmftools.finding;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.hartwig.hmftools.datamodel.finding.*;
 import com.hartwig.hmftools.datamodel.hla.LilacAllele;
 import com.hartwig.hmftools.datamodel.hla.LilacRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
