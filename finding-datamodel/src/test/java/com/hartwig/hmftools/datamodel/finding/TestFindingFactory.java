@@ -101,7 +101,7 @@ public class TestFindingFactory {
                 .minorAlleleCopyNumber(0D)
                 .variantCopyNumber(0D)
                 .hotspot(HotspotType.NON_HOTSPOT)
-                .tumorDepth(depthBuilder().build())
+                .allelicDepth(depthBuilder().build())
                 .subclonalLikelihood(0D)
                 .biallelic(false)
                 .biallelicProbability(0D)
