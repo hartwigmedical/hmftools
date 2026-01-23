@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.datamodel.finding.clinicaltranscript;
+package com.hartwig.hmftools.finding.clinicaltranscript;
 
 import java.io.IOException;
 import java.nio.file.Files;
