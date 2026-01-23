@@ -208,8 +208,8 @@ class ImgtGeneCurator
         {
             ImgtGeneCuratorSettings.getGenomicLocationOverrides(allele.geneName)
                 ?.let { override ->
-                    sLogger.info("gene: {}*{}, using location override: {}", allele.geneName, allele.allele, override)
-                    locations[index] = LocationInfo(override, null)
+                    sLogger.info("gene: {}, using location override: {}", allele.alleleName, override)
+                    locations[index] = override
                 }
         }
 
@@ -263,7 +263,7 @@ class ImgtGeneCurator
                         ensemblGene.GeneEnd >= matchLocation.posStart)
                     {
                         bestMatch = match
-                        sLogger.debug("gene: {}*{}, using match that overlaps with ensembl", allele.geneName, allele.allele)
+                        sLogger.debug("gene: {}, using match that overlaps with ensembl", allele.alleleName)
                     }
                 }
             }
@@ -273,7 +273,7 @@ class ImgtGeneCurator
             {
                 if (ensemblGene != null)
                 {
-                    sLogger.error("gene: {}*{}, no full match yet has ensembl", allele.geneName, allele.allele)
+                    sLogger.error("gene: {}, no full match yet has ensembl", allele.alleleName)
 
                     if (allele.region == IgTcrRegion.D_REGION)
                     {
@@ -281,15 +281,15 @@ class ImgtGeneCurator
                         location = LocationInfo(toGenomicLocation(ensemblGene), null)
                     }
                 }
-                sLogger.info("gene: {}*{}, no full match", allele.geneName, allele.allele)
+                sLogger.info("gene: {}, no full match", allele.alleleName)
             }
             else
             {
                 val genomicLocation = matchToQueryGenomicLocation(bestMatch)
                 location = LocationInfo(genomicLocation, bestMatch.cigar)
                 sLogger.info(
-                    "gene: {}*{}, gene loc: {}, contig={}, start={}, end={}, cigar: {}",
-                    allele.geneName, allele.allele, genomicLocation,
+                    "gene: {}, gene loc: {}, contig={}, start={}, end={}, cigar: {}",
+                    allele.alleleName, genomicLocation,
                     bestMatch.subjectTitle, bestMatch.subjectAlignStart, bestMatch.subjectAlignEnd, bestMatch.cigar)
             }
             locations.add(location)
@@ -321,16 +321,16 @@ class ImgtGeneCurator
             // for J gene we need to preserve the TGG at the start of anchor
             if ((allele.region == IgTcrRegion.V_REGION) == (anchorLocationV37.strand == Strand.FORWARD))
             {
-                sLogger.warn("gene: {}*{}, strand: {}, different base lengths between v38({}) and v37({}), anchor length: {}, changing anchor start",
-                    allele.geneName, allele.allele, anchorLocationV37.strand, anchorLocationV38.baseLength(), anchorLocationV37.baseLength(),
+                sLogger.warn("gene: {}, strand: {}, different base lengths between v38({}) and v37({}), anchor length: {}, changing anchor start",
+                    allele.alleleName, anchorLocationV37.strand, anchorLocationV38.baseLength(), anchorLocationV37.baseLength(),
                     anchorSequence!!.length)
 
                 anchorLocationV37 = anchorLocationV37.copy(posStart = anchorLocationV37.posEnd - anchorSequence.length + 1)
             }
             else
             {
-                sLogger.warn("gene: {}*{}, strand: {}, different base lengths between v38({}) and v37({}), anchor length: {}, changing anchor end",
-                    allele.geneName, allele.allele, anchorLocationV37.strand, anchorLocationV38.baseLength(), anchorLocationV37.baseLength(),
+                sLogger.warn("gene: {}, strand: {}, different base lengths between v38({}) and v37({}), anchor length: {}, changing anchor end",
+                    allele.alleleName, anchorLocationV37.strand, anchorLocationV38.baseLength(), anchorLocationV37.baseLength(),
                     anchorSequence!!.length)
 
                 anchorLocationV37 = anchorLocationV37.copy(posEnd = anchorLocationV37.posStart + anchorSequence.length - 1)
@@ -476,19 +476,19 @@ class ImgtGeneCurator
             {
                 sLogger.log(
                     if (allele.functionality == IgTcrFunctionality.FUNCTIONAL && !allele.partial) Level.ERROR else Level.INFO,
-                    "Cannot find V anchor, sequence too short. {}", allele)
+                    "Cannot find V anchor, sequence too short. {}", allele.alleleName)
                 return null
             }
 
-            var anchor = seqWithGaps.substring(IMGT_V_ANCHOR_INDEX, min(IMGT_V_ANCHOR_INDEX + IMGT_ANCHOR_LENGTH, seqWithGaps.length))
+            val anchor = seqWithGaps.substring(IMGT_V_ANCHOR_INDEX, min(IMGT_V_ANCHOR_INDEX + IMGT_ANCHOR_LENGTH, seqWithGaps.length))
 
             // if anchor is too short we remove
-            if (anchor.length < IMGT_ANCHOR_LENGTH)
+            if (anchor.length < min(IMGT_ANCHOR_LENGTH, ANCHOR_DNA_LENGTH))
             {
                 // skip this one
                 sLogger.log(
                     if (allele.functionality == IgTcrFunctionality.FUNCTIONAL && !allele.partial) Level.ERROR else Level.INFO,
-                    "V anchor:{} too short for {}", anchor, allele
+                    "V anchor:{} too short for {}", anchor, allele.alleleName
                 )
                 return null
             }
@@ -496,43 +496,40 @@ class ImgtGeneCurator
             // anchor cannot contain .
             if (anchor.contains("."))
             {
-                sLogger.error("V anchor: {} contains \".\", gene: {}", anchor, allele)
+                sLogger.error("V anchor: {} contains \".\", gene: {}", anchor, allele.alleleName)
                 return null
             }
 
-            // now we find the anchor index again using the one without gap
-            val anchorIndex = allele.sequenceWithoutGaps.indexOf(anchor)
+            val seqWithoutGaps = allele.sequenceWithoutGaps
 
-            // if the anchor is < 30 bases long, we fill it in with the last C which is TGT
-            // it is missing in some
-            // this is hacky
-            if (anchor.length < ANCHOR_DNA_LENGTH)
-            {
-                sLogger.warn("V anchor for {} too short, adding TGT to end", allele)
-                anchor = anchor.take(27) + "TGT"
-            }
+            // now we find the anchor index again using the one without gap
+            val anchorIndex = seqWithoutGaps.indexOf(anchor)
 
             var anchorLocation: GenomicLocation? = null
 
             val alleleLocation = alleleLocationInfo?.location
             if (alleleLocation != null && anchorIndex >= 0)
             {
-                // Work based on the end of the anchor for V genes, because it's more important that lines up correctly in the case of INDELs.
-                val anchorEndOffset = alleleLocationInfo.cigar
-                    ?.let { getPositionFromReadIndex(0, it, anchorIndex + anchor.length - 1) }
-                    ?: (anchorIndex + anchor.length - 1)
-                val anchorStartOffset = anchorEndOffset - (anchor.length - 1)
+                // Work based on the end of the anchor for V genes, because it's more important that lines up correctly in the case of indels.
+
+                val anchorEndInSeq = anchorIndex + anchor.length - 1
+                val anchorEndInAligned = if (alleleLocation.strand == Strand.FORWARD) anchorEndInSeq else seqWithoutGaps.length - anchorEndInSeq - 1
+                val anchorEndOffsetFromStart = alleleLocationInfo.cigar
+                    ?.let { getPositionFromReadIndex(0, it, anchorEndInAligned) }
+                    ?: anchorEndInAligned
+
                 anchorLocation = if (alleleLocation.strand == Strand.FORWARD)
                 {
+                    val anchorEndOffsetFromEnd = seqWithoutGaps.length - anchorEndOffsetFromStart - 1
                     alleleLocation.copy(
-                        posStart = alleleLocation.posStart + anchorStartOffset,
-                        posEnd = alleleLocation.posStart + anchorStartOffset + anchor.length - 1
+                        posStart = alleleLocation.posEnd - anchorEndOffsetFromEnd - (anchor.length - 1),
+                        posEnd = alleleLocation.posEnd - anchorEndOffsetFromEnd
                     )
                 } else
                 {
                     alleleLocation.copy(
-                        posStart = alleleLocation.posEnd - (anchorStartOffset + anchor.length - 1),
-                        posEnd = alleleLocation.posEnd - anchorStartOffset
+                        posStart = alleleLocation.posStart + anchorEndOffsetFromStart,
+                        posEnd = alleleLocation.posStart + anchorEndOffsetFromStart + (anchor.length - 1)
                     )
                 }
             }
@@ -542,7 +539,7 @@ class ImgtGeneCurator
             // v gene
             sLogger.info(
                 "V gene: {}, anchor: {}, offset from start: {}, anchor AA: {}",
-                allele.geneName,
+                allele.alleleName,
                 anchor,
                 anchorIndex,
                 aaSeq
@@ -562,7 +559,7 @@ class ImgtGeneCurator
             {
                 sLogger.log(
                     if (allele.functionality == IgTcrFunctionality.FUNCTIONAL && !allele.partial) Level.ERROR else Level.INFO,
-                    "J gene: {} cannot find anchor", allele)
+                    "J gene: {} cannot find anchor", allele.alleleName)
                 return null
             }
 
@@ -571,7 +568,7 @@ class ImgtGeneCurator
             // cannot contain .
             if (anchor.contains("."))
             {
-                sLogger.error("J gene: {}, anchor({}) contains .", allele, anchor)
+                sLogger.error("J gene: {}, anchor({}) contains .", allele.alleleName, anchor)
                 return null
             }
 
@@ -580,27 +577,26 @@ class ImgtGeneCurator
             val alleleLocation = alleleLocationInfo?.location
             if (alleleLocation != null)
             {
-                val anchorStartOffset = alleleLocationInfo.cigar
-                    ?.let { getPositionFromReadIndex(0, it, anchorIndex) }
-                    ?: anchorIndex
+                // TODO: this needs to be indel aware
+                // TODO: why is this using the index in the sequence with gaps?
                 anchorLocation = if (alleleLocation.strand == Strand.FORWARD)
                 {
                     alleleLocation.copy(
-                        posStart = alleleLocation.posStart + anchorStartOffset,
-                        posEnd = alleleLocation.posStart + anchorStartOffset + anchor.length - 1
+                        posStart = alleleLocation.posStart + anchorIndex,
+                        posEnd = alleleLocation.posStart + anchorIndex + anchor.length - 1
                     )
                 } else
                 {
                     alleleLocation.copy(
-                        posStart = alleleLocation.posEnd - (anchorStartOffset + anchor.length - 1),
-                        posEnd = alleleLocation.posEnd - anchorStartOffset
+                        posStart = alleleLocation.posEnd - anchorIndex - anchor.length + 1,
+                        posEnd = alleleLocation.posEnd - anchorIndex
                     )
                 }
             }
 
             val aaSeq = Codons.aminoAcidFromBases(anchor)
 
-            sLogger.info("J gene: {}, anchor: {}, offset from start: {}, anchor AA: {}", allele.geneName, anchor, anchorIndex, aaSeq)
+            sLogger.info("J gene: {}, anchor: {}, offset from start: {}, anchor AA: {}", allele.alleleName, anchor, anchorIndex, aaSeq)
 
             return AnchorInfo(anchor, anchorLocation)
         }

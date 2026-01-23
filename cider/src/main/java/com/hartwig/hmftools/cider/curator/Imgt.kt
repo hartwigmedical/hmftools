@@ -15,6 +15,8 @@ data class ImgtGeneAllele(
     val partial: Boolean)
 {
     val sequenceWithoutGaps: String get() { return sequenceWithGaps.replace(".", "") }
+
+    val alleleName: String get() { return "$geneName*$allele" }
 }
 
 // https://www.imgt.org/IMGTScientificChart/SequenceDescription/IMGTfunctionality.html
