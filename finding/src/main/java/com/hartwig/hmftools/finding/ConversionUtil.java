@@ -6,13 +6,12 @@ import java.nio.file.Path;
 import com.hartwig.hmftools.datamodel.finding.FindingRecord;
 import com.hartwig.hmftools.datamodel.finding.FindingsJson;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 @SuppressWarnings("unused")
 public class ConversionUtil
 {
-    public static void orangeJsonToFindingsJson(@NotNull Path findingsJson, @NotNull Path orangeJson, @Nullable Path clinicalTranscriptsTsv,
+    public static void orangeJsonToFindingsJson(Path findingsJson, Path orangeJson, @Nullable Path clinicalTranscriptsTsv,
             @Nullable Path driverGeneTsv) throws IOException
     {
         FindingRecord

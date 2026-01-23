@@ -16,15 +16,13 @@ import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.PurpleLossOfHeterozygosity;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 
-import org.jetbrains.annotations.NotNull;
-
 final class GainDeletionFactory
 {
 
     public static DriverFindingList<GainDeletion> somaticGainDeletionFindings(
-            @NotNull OrangeRefGenomeVersion orangeRefGenomeVersion,
-            @NotNull FindingsStatus findingsStatus,
-            @NotNull PurpleRecord purple)
+            OrangeRefGenomeVersion orangeRefGenomeVersion,
+            FindingsStatus findingsStatus,
+            PurpleRecord purple)
     {
         ChromosomeArmCopyNumberMap cnPerChromosome =
                 ChromosomeArmCopyNumberMap.create(purple.allSomaticCopyNumbers(), orangeRefGenomeVersion);
@@ -47,8 +45,8 @@ final class GainDeletionFactory
     // findings the reportable ones are in purple drivers. Other types are not reportable, we can ignore them
     public static DriverFindingList<GainDeletion> germlineGainDeletionFindings(
             boolean hasGermlineSample,
-            @NotNull OrangeRefGenomeVersion orangeRefGenomeVersion,
-            @NotNull PurpleRecord purple)
+            OrangeRefGenomeVersion orangeRefGenomeVersion,
+            PurpleRecord purple)
     {
         if(!hasGermlineSample)
         {
@@ -98,7 +96,6 @@ final class GainDeletionFactory
                 .build();
     }
 
-    @NotNull
     private static PurpleGeneCopyNumber findPurpleGeneCopyNumber(final List<PurpleGeneCopyNumber> somaticGeneCopyNumbers,
             final String gene, final String transcript)
     {

@@ -17,26 +17,25 @@ import com.hartwig.hmftools.datamodel.purple.PurpleVariantEffect;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 final class FindingKeys
 {
-    public static String smallVariant(@NotNull DriverSource sampleType, @NotNull PurpleVariant variant,
-            @NotNull PurpleTranscriptImpact transcriptImpact, boolean isCanonical)
+    public static String smallVariant(DriverSource sampleType, PurpleVariant variant,
+            PurpleTranscriptImpact transcriptImpact, boolean isCanonical)
     {
         return String.format("smallVariant[%s %s %s]", sampleType, geneTranscriptLabel(variant.gene(), isCanonical,
                 transcriptImpact.transcript()), impact(transcriptImpact));
     }
 
-    public static String gainDeletion(@NotNull DriverSource sampleType, String gene, CopyNumberInterpretation copyNumberInterpretation,
+    public static String gainDeletion(DriverSource sampleType, String gene, CopyNumberInterpretation copyNumberInterpretation,
             boolean isCanonical, String transcriptId)
     {
         return String.format("gainDeletion[%s %s %s]", sampleType, geneTranscriptLabel(gene, isCanonical, transcriptId),
                 copyNumberInterpretation.name());
     }
 
-    public static String disruption(@NotNull DriverSource sampleType, LinxBreakend breakend)
+    public static String disruption(DriverSource sampleType, LinxBreakend breakend)
     {
         return String.format("disruption[%s %s %d]",
                 sampleType,
@@ -44,7 +43,7 @@ final class FindingKeys
                 breakend.svId());
     }
 
-    public static String fusion(@NotNull DriverSource sampleType, LinxFusion fusion)
+    public static String fusion(DriverSource sampleType, LinxFusion fusion)
     {
         return String.format("fusion[%s %s %s]", sampleType, fusion.geneStart(), fusion.geneEnd());
     }
@@ -55,7 +54,7 @@ final class FindingKeys
         return String.format("virus[%s]", label);
     }
 
-    public static String hlaAllele(@NotNull LilacAllele allele)
+    public static String hlaAllele(LilacAllele allele)
     {
         return String.format("hlaAllele[%s]", allele.allele());
     }
@@ -75,12 +74,12 @@ final class FindingKeys
         return String.format("tumorMutationStatus[TMB_%s TML_%s]", tmbStatus, tmlStatus);
     }
 
-    public static String predictedTumorOrigin(@NotNull String cancerType)
+    public static String predictedTumorOrigin(String cancerType)
     {
         return String.format("predictedTumorOrigin[%s]", cancerType);
     }
 
-    public static String pharmacoGenotype(@NotNull String gene, @NotNull String allele)
+    public static String pharmacoGenotype(String gene, String allele)
     {
         return String.format("pharmacoGenotype[%s:%s]", gene, allele);
     }
@@ -91,7 +90,7 @@ final class FindingKeys
         return isCanonical ? gene : String.format("%s(%s)", gene, transcriptId);
     }
 
-    private static String impact(@NotNull PurpleTranscriptImpact transcriptImpact)
+    private static String impact(PurpleTranscriptImpact transcriptImpact)
     {
         return determineVariantAnnotation(transcriptImpact.hgvsCodingImpact(),
                 transcriptImpact.hgvsProteinImpact(),
@@ -100,8 +99,7 @@ final class FindingKeys
                 transcriptImpact.effects().contains(PurpleVariantEffect.UPSTREAM_GENE));
     }
 
-    @NotNull
-    public static String determineVariantAnnotation(@Nullable String hgvsCoding, @Nullable String hgvsProtein, @NotNull String effects,
+    public static String determineVariantAnnotation(@Nullable String hgvsCoding, @Nullable String hgvsProtein, String effects,
             boolean isSplice, boolean isUpstream)
     {
         if(hgvsProtein != null && !hgvsProtein.isEmpty() && !hgvsProtein.equals("p.?"))

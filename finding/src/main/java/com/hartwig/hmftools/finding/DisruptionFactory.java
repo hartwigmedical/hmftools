@@ -58,8 +58,7 @@ final class DisruptionFactory
     // back to the breakends, it probably will work by just selecting first reportable disruption with the same gene / transcript.
     // We can do it for the backport version if that makes it easier.
 
-    @NotNull
-    public static DriverFindingList<Disruption> createGermlineDisruptions(boolean hasRefSample, @NotNull LinxRecord linx)
+    public static DriverFindingList<Disruption> createGermlineDisruptions(boolean hasRefSample, LinxRecord linx)
     {
         if(!hasRefSample)
         {
@@ -85,8 +84,7 @@ final class DisruptionFactory
                 .build();
     }
 
-    @NotNull
-    public static DriverFindingList<Disruption> createSomaticDisruptions(boolean hasReliablePurity, @NotNull LinxRecord linx)
+    public static DriverFindingList<Disruption> createSomaticDisruptions(boolean hasReliablePurity, LinxRecord linx)
     {
         @NotNull Collection<LinxBreakend> breakends = linx.reportableSomaticBreakends();
         @NotNull Collection<LinxSvAnnotation> structuralVariants = linx.allSomaticStructuralVariants();
@@ -112,11 +110,10 @@ final class DisruptionFactory
                 .build();
     }
 
-    @NotNull
     private static List<Disruption> createDisruptions(
-            @NotNull DriverSource sampleType,
-            @NotNull Collection<LinxBreakend> breakends,
-            @NotNull Collection<LinxSvAnnotation> structuralVariants,
+            DriverSource sampleType,
+            Collection<LinxBreakend> breakends,
+            Collection<LinxSvAnnotation> structuralVariants,
             boolean hasReliablePurity,
             DisruptionTypeFinder disruptionTypeFinder)
     {
@@ -164,10 +161,9 @@ final class DisruptionFactory
         return disruptions;
     }
 
-    @NotNull
     public static Disruption createDisruption(
-            @NotNull DriverSource sourceSample,
-            @NotNull Disruption.Type disruptionType,
+            DriverSource sourceSample,
+            Disruption.Type disruptionType,
             @Nullable LinxBreakend breakendStart,
             @Nullable LinxBreakend breakendEnd,
             double undisruptedCopyNumber,
@@ -235,7 +231,7 @@ final class DisruptionFactory
     }
 
     @Nullable
-    static Integer determineClusterId(@NotNull Collection<LinxSvAnnotation> structuralVariants, @NotNull LinxBreakend breakend)
+    static Integer determineClusterId(Collection<LinxSvAnnotation> structuralVariants, LinxBreakend breakend)
     {
         Optional<LinxSvAnnotation> sv = structuralVariants.stream().filter(o -> o.svId() == breakend.svId()).findFirst();
         if(sv.isPresent())
@@ -249,9 +245,8 @@ final class DisruptionFactory
         }
     }
 
-    @NotNull
     private static Map<SvAndTranscriptKey, Pair<LinxBreakend, LinxBreakend>> mapBreakendsPerStructuralVariant(
-            @NotNull Collection<LinxBreakend> breakends)
+            Collection<LinxBreakend> breakends)
     {
         Map<SvAndTranscriptKey, List<LinxBreakend>> breakendsPerSvAndTranscript = breakends.stream()
                 .collect(Collectors.groupingBy(breakend -> new SvAndTranscriptKey(breakend.svId(), breakend.transcript()),
@@ -260,9 +255,8 @@ final class DisruptionFactory
         return toPairedMap(breakendsPerSvAndTranscript);
     }
 
-    @NotNull
     private static Map<SvAndTranscriptKey, Pair<LinxBreakend, LinxBreakend>> toPairedMap(
-            @NotNull Map<SvAndTranscriptKey, List<LinxBreakend>> breakendsPerSvAndTranscript)
+            Map<SvAndTranscriptKey, List<LinxBreakend>> breakendsPerSvAndTranscript)
     {
         Map<SvAndTranscriptKey, Pair<LinxBreakend, LinxBreakend>> pairedMap = new HashMap<>();
 
@@ -305,7 +299,7 @@ final class DisruptionFactory
         return pairedMap;
     }
 
-    private record SvAndTranscriptKey(int variantId, @NotNull String transcriptId)
+    private record SvAndTranscriptKey(int variantId, String transcriptId)
     {
     }
 }
