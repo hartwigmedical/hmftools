@@ -6,7 +6,7 @@ import java.awt.geom.Rectangle2D;
 
 import org.jfree.svg.SVGGraphics2D;
 
-public class SvgUtil
+public final class SvgUtil
 {
     private SvgUtil() {}
 
