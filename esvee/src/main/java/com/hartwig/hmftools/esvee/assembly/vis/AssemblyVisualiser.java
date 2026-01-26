@@ -240,13 +240,6 @@ public class AssemblyVisualiser
         if(isRefReversed)
             Collections.reverse(cigarEls);
 
-        int refLength = 0;
-        for(CigarElement cigarEl : cigarEls)
-        {
-            if(cigarEl.getOperator().consumesReferenceBases())
-                refLength += cigarEl.getLength();
-        }
-
         String chromosome = alignment.refLocation().chromosome();
         BaseRegion refRegion = alignment.refLocation().baseRegion();
         int position = breakend.Orient == FORWARD ? refRegion.end() : refRegion.start();
