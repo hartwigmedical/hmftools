@@ -47,7 +47,7 @@ object CiderConstants
     // Require a match of minimum ~20 bases. If we want to match D segment that is shorter
     // we will need a higher cut off, maybe 10, but will get many false positive hits that are longer but more mismatches
     const val ANNOTATION_ALIGN_SCORE_MIN = 19
-    const val ANNOTATION_VDJ_FLANK_BASES = 50
+    const val ANNOTATION_VDJ_FLANK_BASES = 300
     // filter out matches that have too low identity
     // reason for doing this is that we use match/mismatch of 1/-4, in worst case we can
     // get 1 mismatch for every 4 matches, and could find alignments with 80% identity.

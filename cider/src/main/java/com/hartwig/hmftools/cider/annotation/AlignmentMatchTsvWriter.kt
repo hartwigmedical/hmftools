@@ -63,9 +63,10 @@ object AlignmentMatchTsvWriter
 
     private fun writeVDJSequence(csvPrinter: CSVPrinter, alignmentAnnotation: AlignmentAnnotation)
     {
-        val typeMatch = listOf(Triple(MatchType.V, alignmentAnnotation.vGene, alignmentAnnotation.vAlignment),
-            Triple(MatchType.D, alignmentAnnotation.dGene, alignmentAnnotation.dAlignment),
-            Triple(MatchType.J, alignmentAnnotation.jGene, alignmentAnnotation.jAlignment),
+        val typeMatch = listOf(
+            Triple(MatchType.V, alignmentAnnotation.vGene?.gene, alignmentAnnotation.vGene?.alignment),
+            Triple(MatchType.D, alignmentAnnotation.dGene?.gene, alignmentAnnotation.dGene?.alignment),
+            Triple(MatchType.J, alignmentAnnotation.jGene?.gene, alignmentAnnotation.jGene?.alignment),
             Triple(MatchType.full, null, alignmentAnnotation.fullAlignment))
 
         for ((type, gene, alignment) in typeMatch)

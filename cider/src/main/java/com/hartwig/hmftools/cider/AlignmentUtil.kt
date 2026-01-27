@@ -253,7 +253,7 @@ class ImgtSequenceFile(genomeVersion: RefGenomeVersion)
     val fastaPath: String
     val dictPath: String
     val bwamemImgPath: String
-    val sequencesByContig: Map<String, ImgtSequence>
+    val sequencesByContig: Map<String, Sequence>
 
     init
     {
@@ -266,33 +266,30 @@ class ImgtSequenceFile(genomeVersion: RefGenomeVersion)
         sequencesByContig = fasta.sequenceDictionary.sequences
             .associateBy(
                 { it.sequenceName},
-                { ImgtSequence.fromFasta(it.sequenceName, fasta.getSequence(it.sequenceName).baseString) })
+                { Sequence.fromFasta(it.sequenceName, fasta.getSequence(it.sequenceName).baseString) })
     }
-}
 
-data class ImgtSequence(
-    val geneName: String,
-    val allele: String,
-    val sequenceWithRef: String,
-    val imgtRange: IntRange,
-)
-{
-    val geneAllele: String get() = "$geneName*$allele"
-
-    // The exact sequence from the IMGT resource.
-    val imgtSequence: String get() = sequenceWithRef.substring(imgtRange)
-
-    companion object
+    data class Sequence(
+        val geneName: String,
+        val allele: String,
+        val sequenceWithRef: String,
+        val imgtRange: IntRange,
+    )
     {
-        fun fromFasta(label: String, sequence: String): ImgtSequence
+        val geneAllele: String get() = "$geneName*$allele"
+
+        companion object
         {
-            val parts = label.split('|')
-            val geneName = parts[0]
-            val allele = parts[1]
-            val refBefore = parts[2].toInt()
-            val refAfter = parts[3].toInt()
-            val imgtRange = refBefore until (sequence.length - refAfter)
-            return ImgtSequence(geneName, allele, sequence, imgtRange)
+            fun fromFasta(label: String, sequence: String): Sequence
+            {
+                val parts = label.split('|')
+                val geneName = parts[0]
+                val allele = parts[1]
+                val refBefore = parts[2].toInt()
+                val refAfter = parts[3].toInt()
+                val imgtRange = refBefore until (sequence.length - refAfter)
+                return Sequence(geneName, allele, sequence, imgtRange)
+            }
         }
     }
 }

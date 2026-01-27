@@ -94,7 +94,7 @@ object VDJSequenceTsvWriter
     {
         val vdj = vdjAnnotation.vdj
 
-        for (c in Column.values())
+        for (c in Column.entries)
         {
             when (c)
             {
@@ -129,13 +129,14 @@ object VDJSequenceTsvWriter
                 Column.jMatchMethod -> csvPrinter.print(vdj.jAnchor?.matchMethod)
                 Column.jSimilarityScore -> csvPrinter.print(vdjAnnotation.jSimilarityScore)
                 Column.jNonSplitReads -> csvPrinter.print(vdjAnnotation.jNonSplitReads)
-                Column.vGene -> csvPrinter.print(vdjAnnotation.alignmentAnnotation?.vGene?.geneName)
+                // TODO: output allele
+                Column.vGene -> csvPrinter.print(vdjAnnotation.alignmentAnnotation?.vGene?.gene?.geneName)
                 Column.vGeneSupplementary -> csvPrinter.print(formatGeneSupplementary(
-                    vdjAnnotation.alignmentAnnotation?.vGeneSupplementary, vdjAnnotation.alignmentAnnotation?.vGene))
-                Column.vPIdent -> csvPrinter.print(vdjAnnotation.alignmentAnnotation?.vIdentity)
+                    vdjAnnotation.alignmentAnnotation?.vGene?.supplementaryGenes, vdjAnnotation.alignmentAnnotation?.vGene?.gene))
+                Column.vPIdent -> csvPrinter.print(vdjAnnotation.alignmentAnnotation?.vGene?.identity)
                 Column.vAlignStart -> if (vdjAnnotation.alignmentAnnotation != null)
                     {
-                        csvPrinter.print(zeroBaseAlignStart(vdjAnnotation.alignmentAnnotation!!.vAlignment))
+                        csvPrinter.print(zeroBaseAlignStart(vdjAnnotation.alignmentAnnotation!!.vGene?.alignment))
                     }
                     else
                     {
@@ -143,19 +144,19 @@ object VDJSequenceTsvWriter
                     }
                 Column.vAlignEnd -> if (vdjAnnotation.alignmentAnnotation != null)
                     {
-                        csvPrinter.print(vdjAnnotation.alignmentAnnotation!!.vAlignment?.queryEnd)
+                        csvPrinter.print(vdjAnnotation.alignmentAnnotation!!.vGene?.alignment?.queryEnd)
                     }
                     else
                     {
                         csvPrinter.print(null)
                     }
-                Column.dGene -> csvPrinter.print(vdjAnnotation.alignmentAnnotation?.dGene?.geneName)
+                Column.dGene -> csvPrinter.print(vdjAnnotation.alignmentAnnotation?.dGene?.gene?.geneName)
                 Column.dGeneSupplementary -> csvPrinter.print(formatGeneSupplementary(
-                    vdjAnnotation.alignmentAnnotation?.dGeneSupplementary, vdjAnnotation.alignmentAnnotation?.dGene))
-                Column.dPIdent -> csvPrinter.print(vdjAnnotation.alignmentAnnotation?.dIdentity)
+                    vdjAnnotation.alignmentAnnotation?.dGene?.supplementaryGenes, vdjAnnotation.alignmentAnnotation?.dGene?.gene))
+                Column.dPIdent -> csvPrinter.print(vdjAnnotation.alignmentAnnotation?.dGene?.identity)
                 Column.dAlignStart -> if (vdjAnnotation.alignmentAnnotation != null)
                     {
-                        csvPrinter.print(zeroBaseAlignStart(vdjAnnotation.alignmentAnnotation!!.dAlignment))
+                        csvPrinter.print(zeroBaseAlignStart(vdjAnnotation.alignmentAnnotation!!.dGene?.alignment))
                     }
                     else
                     {
@@ -163,19 +164,19 @@ object VDJSequenceTsvWriter
                     }
                 Column.dAlignEnd -> if (vdjAnnotation.alignmentAnnotation != null)
                     {
-                        csvPrinter.print(vdjAnnotation.alignmentAnnotation!!.dAlignment?.queryEnd)
+                        csvPrinter.print(vdjAnnotation.alignmentAnnotation!!.dGene?.alignment?.queryEnd)
                     }
                     else
                     {
                         csvPrinter.print(null)
                     }
-                Column.jGene -> csvPrinter.print(vdjAnnotation.alignmentAnnotation?.jGene?.geneName)
+                Column.jGene -> csvPrinter.print(vdjAnnotation.alignmentAnnotation?.jGene?.gene?.geneName)
                 Column.jGeneSupplementary -> csvPrinter.print(formatGeneSupplementary(
-                    vdjAnnotation.alignmentAnnotation?.jGeneSupplementary, vdjAnnotation.alignmentAnnotation?.jGene))
-                Column.jPIdent -> csvPrinter.print(vdjAnnotation.alignmentAnnotation?.jIdentity)
+                    vdjAnnotation.alignmentAnnotation?.jGene?.supplementaryGenes, vdjAnnotation.alignmentAnnotation?.jGene?.gene))
+                Column.jPIdent -> csvPrinter.print(vdjAnnotation.alignmentAnnotation?.jGene?.identity)
                 Column.jAlignStart -> if (vdjAnnotation.alignmentAnnotation != null)
                     {
-                        csvPrinter.print(zeroBaseAlignStart(vdjAnnotation.alignmentAnnotation!!.jAlignment))
+                        csvPrinter.print(zeroBaseAlignStart(vdjAnnotation.alignmentAnnotation!!.jGene?.alignment))
                     }
                     else
                     {
@@ -183,7 +184,7 @@ object VDJSequenceTsvWriter
                     }
                 Column.jAlignEnd -> if (vdjAnnotation.alignmentAnnotation != null)
                     {
-                        csvPrinter.print(vdjAnnotation.alignmentAnnotation!!.jAlignment?.queryEnd)
+                        csvPrinter.print(vdjAnnotation.alignmentAnnotation!!.jGene?.alignment?.queryEnd)
                     }
                     else
                     {
