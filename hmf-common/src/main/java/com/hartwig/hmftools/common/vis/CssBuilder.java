@@ -76,6 +76,11 @@ public final class CssBuilder
         return new CssBuilder(mProperties.plus("writing-mode", value), mBoxShadowValues);
     }
 
+    public CssBuilder transform(final String value)
+    {
+        return new CssBuilder(mProperties.plus("transform", value), mBoxShadowValues);
+    }
+
     public CssBuilder fontFamily(final String value)
     {
         return new CssBuilder(mProperties.plus("font-family", value), mBoxShadowValues);

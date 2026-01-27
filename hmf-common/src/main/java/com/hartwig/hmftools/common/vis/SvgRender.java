@@ -81,6 +81,8 @@ public final class SvgRender
 
     private static final int MAX_BASEQ_SHADING_CUTTOFF = 37;
 
+    private static final String INSERT_LABEL = "INS";
+
     private SvgRender() {}
 
     private static void drawTopBoxBorder(final SVGGraphics2D svgCanvas, final Point2D.Double boxOffset, int boxIdx, double boxPropWidth)
@@ -509,14 +511,23 @@ public final class SvgRender
         svgCanvas.setFont(BASE_FONT);
         for(ChrLabel label : labels)
         {
-            String chromosome = enforceChrPrefix(label.chromosome);
+            String chromosome = label.chromosome;
             BaseRegion viewRegion = label.viewRegion;
-            Alignment alignment = label.alignment;
 
+            double boxX;
+            String fullLabel;
+            if(chromosome == null)
+            {
+                fullLabel = INSERT_LABEL;
+                boxX = viewRegion.start() + 0.5d * viewRegion.baseLength();
+                renderText(svgCanvas, ZERO_2D, boxX, 0.5, svgCanvas.getFont(), Color.BLACK, fullLabel, null, 1.0, CENTER);
+                continue;
+            }
+
+            chromosome = enforceChrPrefix(chromosome);
+            Alignment alignment = label.alignment;
             String strandLabel = label.isReversed ? "<<" : ">>";
             String chrPositionLabel = chromosome + ":" + label.position;
-            String fullLabel;
-            double boxX;
             if(alignment == CENTER)
             {
                 fullLabel = strandLabel + " " + chrPositionLabel + " " + strandLabel;
