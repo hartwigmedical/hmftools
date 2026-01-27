@@ -599,7 +599,8 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
         combinedVjLayout: ReadLayout, mateLayoutReads: Map<String, List<ReadLayout.Read>>,
         vLayoutGeneType: VJGeneType, jLayoutGeneType: VJGeneType, jAlignedPositionShift: Int)
     {
-        val mates = combinedVjLayout.reads.flatMap { mateLayoutReads[it.readKey.readName] ?: emptyList() }
+        val mates = combinedVjLayout.reads
+            .flatMap { mateLayoutReads[it.readKey.readName] ?: emptyList() }
             .mapNotNull {
                 val mateCandidate = vjLayoutAdaptor.toReadCandidate(it)
                 val canExtend = mateCandidate.vjGeneType == vLayoutGeneType || mateCandidate.vjGeneType == jLayoutGeneType

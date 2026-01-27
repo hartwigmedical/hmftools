@@ -25,7 +25,7 @@ enum class AlignmentStatus
 data class GeneAnnotation(
     val gene: IgTcrGene,
     val alignment: Alignment,
-    val identity: Double,
+    val identity: Double?,
     val supplementaryGenes: List<IgTcrGene>
 )
 
@@ -208,16 +208,19 @@ class AlignmentAnnotator
         )
     }
 
-    private fun compareGeneSequence(querySeq: String, alignment: Alignment): AlignedSeqCompare
+    private fun compareSequenceToImgt(metadata: AlignmentMetadata, match: GeneMatchCandidate): AlignedSeqCompare
     {
+        // Calculate percentage identity of the V region between the sample and IMGT sequence.
+        // This is a heuristic for the degree of somatic hypermutation, which is a prognostic indicator for chronic lymphocytic leukemia.
+        // https://pmc.ncbi.nlm.nih.gov/articles/PMC7248390/
+        // The V region is from Cys104 (last amino acid of anchor) upstream to the start of the V exon.
+
         // TODO: want to compare the V side from Cys104 upstream until the IMGT sequence ends
         // TODO: want to compare the J side from anchor downstream until the IMGT sequence ends
-        val imgtSequence = mImgtSequences.sequencesByContig[alignment.refContig]!!
         val refSeq = imgtSequence.sequenceWithRef.substring(alignment.refStart - 1, alignment.refEnd)
         val queryAlignedSeq = if (alignment.strand == Strand.FORWARD) querySeq else reverseComplement(querySeq)
         return compareAlignedSequence(queryAlignedSeq, refSeq, alignment.cigar)
     }
-
 
     private companion object
     {
