@@ -5,15 +5,12 @@ import com.hartwig.hmftools.cider.IgTcrGene.Companion.fromCommonIgTcrGene
 import com.hartwig.hmftools.cider.CiderConstants.ANNOTATION_MATCH_REF_IDENTITY
 import com.hartwig.hmftools.cider.CiderConstants.ANNOTATION_ALIGN_SCORE_MIN
 import com.hartwig.hmftools.cider.CiderConstants.ANNOTATION_VDJ_FLANK_BASES
-import com.hartwig.hmftools.cider.CiderConstants.ANNOTATION_GENE_REGION_TOLERANCE
-import com.hartwig.hmftools.cider.CiderConstants.ANNOTATION_MIN_VJ_IDENTITY
+import com.hartwig.hmftools.cider.CiderConstants.ANNOTATION_VJ_IDENTITY_MIN
 import com.hartwig.hmftools.common.cider.IgTcrGeneFile
 import com.hartwig.hmftools.common.cider.IgTcrRegion
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion
-import com.hartwig.hmftools.common.genome.region.Strand
 import org.apache.logging.log4j.LogManager
 import java.util.*
-import kotlin.compareTo
 import kotlin.math.max
 import kotlin.math.min
 
@@ -47,7 +44,8 @@ class AlignmentAnnotator
     private val mRefGenomeVersion: RefGenomeVersion
     private val mRefGenomeDictPath: String
     private val mRefGenomeBwaIndexImagePath: String
-    private val mVdjGenes: Map<Pair<String, Strand>, List<IgTcrGene>>
+    private val mVdjGenes: Map<String, IgTcrGene>
+    private val mImgtSequences: ImgtSequenceFile
 
     private data class AlignmentMetadata(val vdj: VDJSequence, val querySeqRange: IntRange, val querySeq: String)
 
@@ -57,29 +55,22 @@ class AlignmentAnnotator
         mRefGenomeDictPath = refGenomeDictPath
         mRefGenomeBwaIndexImagePath = refGenomeBwaIndexImagePath
 
-        // Explicitly using an ArrayList here to give a deterministic iteration order when finding genes later.
-        val vdjGenes: HashMap<Pair<String, Strand>, ArrayList<IgTcrGene>> = HashMap()
-
         val igTcrGenes = IgTcrGeneFile.read(refGenomeVersion)
-            .map { o -> fromCommonIgTcrGene(o) }
-
+            .map(::fromCommonIgTcrGene)
+            .filter { it.region.isVDJ }
+        val vdjGenes: HashMap<String, IgTcrGene> = HashMap()
         for (geneData in igTcrGenes)
         {
-            if (geneData.region !in arrayOf(IgTcrRegion.V_REGION, IgTcrRegion.D_REGION, IgTcrRegion.J_REGION))
+            val key = geneData.geneAllele
+            if (key in vdjGenes)
             {
-                continue
+                throw RuntimeException("Duplicate gene allele: $key")
             }
-
-            if (geneData.geneLocation == null)
-            {
-                continue
-            }
-
-            val key = Pair(geneData.geneLocation.chromosome, geneData.geneLocation.strand)
-            vdjGenes.computeIfAbsent(key) { ArrayList() }.add(geneData)
+            vdjGenes[key] = geneData
         }
-
         mVdjGenes = vdjGenes
+
+        mImgtSequences = ImgtSequenceFile(refGenomeVersion)
     }
 
     fun runAnnotate(sampleId: String, vdjList: List<VDJSequence>, outputDir: String, numThreads: Int)
@@ -105,7 +96,7 @@ class AlignmentAnnotator
             refAlignments = refAlignments.zip(patchAlignments).map { it.first + it.second }
         }
 
-        val imgtAlignments = runImgtAlignment(mRefGenomeVersion, querySequences, ANNOTATION_ALIGN_SCORE_MIN, numThreads)
+        val imgtAlignments = runImgtAlignment(mImgtSequences, querySequences, ANNOTATION_ALIGN_SCORE_MIN, numThreads)
 
         val annotations = processAlignments(alignmentMetadata, refAlignments, imgtAlignments)
 
@@ -143,10 +134,9 @@ class AlignmentAnnotator
         val alignments = preprocessAlignments(metadata, refAlignments)
         for (alignment in alignments)
         {
-            // TODO: can do it based on edit distance?
-            if (alignment.percentageIdent >= ANNOTATION_MATCH_REF_IDENTITY &&
-                metadata.querySeq.length <= (alignment.queryAlignEnd - alignment.queryAlignStart) + 5
-            )
+            val alignLength = (alignment.queryEnd - alignment.queryStart + 1)
+            val minAlignLength = metadata.querySeq.length * ANNOTATION_MATCH_REF_IDENTITY
+            if (alignment.editDistancePct <= 1 - ANNOTATION_MATCH_REF_IDENTITY && alignLength >= minAlignLength)
             {
                 return AlignmentAnnotation(metadata.vdj, AlignmentStatus.NO_REARRANGEMENT, fullAlignment = alignment)
             }
@@ -157,6 +147,8 @@ class AlignmentAnnotator
     // Annotate the individual genes which have been rearranged to form this sequence.
     private fun matchRearrangedGenes(metadata: AlignmentMetadata, imgtAlignments: Collection<Alignment>): AlignmentAnnotation
     {
+        val alignments = preprocessAlignments(metadata, imgtAlignments)
+
         val vdjSequence = metadata.vdj
 
         // we freeze the locus here. Reason is that there are cases where a low identity match (92%) from another
@@ -165,19 +157,17 @@ class AlignmentAnnotator
         require(locus != null)
 
         // Find candidate gene matches, from which we will then select the best and supplementary matches.
-        val vGeneCandidates: MutableList<Pair<IgTcrGene, Alignment>> = ArrayList()
-        val dGeneCandidates: MutableList<Pair<IgTcrGene, Alignment>> = ArrayList()
-        val jGeneCandidates: MutableList<Pair<IgTcrGene, Alignment>> = ArrayList()
+        val vGeneCandidates = ArrayList<Pair<IgTcrGene, Alignment>>()
+        val dGeneCandidates = ArrayList<Pair<IgTcrGene, Alignment>>()
+        val jGeneCandidates = ArrayList<Pair<IgTcrGene, Alignment>>()
         for (alignment in alignments)
         {
-            val vdjGene: IgTcrGene? = findGene(alignment)
-            if (vdjGene == null)
-            {
-                continue
-            }
+            val imgtSequence = mImgtSequences.sequencesByContig[alignment.refContig]!!
 
-            // for V/J gene segments, we mandate 90% identity
-            if (vdjGene.region in arrayOf(IgTcrRegion.V_REGION, IgTcrRegion.J_REGION) && alignment.percentageIdent < ANNOTATION_MIN_VJ_IDENTITY)
+            val vdjGene = mVdjGenes[imgtSequence.geneAllele] ?: continue
+
+            // For V/J gene segments, require 90% identity as a baseline.
+            if (vdjGene.region.isVJ && alignment.editDistancePct > 1 - ANNOTATION_VJ_IDENTITY_MIN)
             {
                 continue
             }
@@ -266,35 +256,6 @@ class AlignmentAnnotator
             vGeneSupplementary = vGeneMatch?.supplementaryGenes ?: emptyList(),
             dGeneSupplementary = dGeneMatch?.supplementaryGenes ?: emptyList(),
             jGeneSupplementary = jGeneMatch?.supplementaryGenes ?: emptyList())
-    }
-
-    private fun findGene(alignment: Alignment) : IgTcrGene?
-    {
-        val chromosome = parseChromosomeFromContig(alignment.refContig)
-
-        val geneDataList = mVdjGenes[Pair(chromosome, alignment.strand)] ?: return null
-
-        var bestGene : IgTcrGene? = null
-
-        for (gene in geneDataList)
-        {
-            val geneLocation = gene.geneLocation ?: continue
-
-            require(geneLocation.chromosome == chromosome)
-            require(geneLocation.strand == alignment.strand)
-
-            if (bestGene == null || !bestGene.isFunctional)
-            {
-                // check if they overlap. We prioritise functional genes
-                if (geneLocation.posStart <= alignment.refEnd + ANNOTATION_GENE_REGION_TOLERANCE &&
-                    geneLocation.posEnd >= alignment.refStart - ANNOTATION_GENE_REGION_TOLERANCE)
-                {
-                    bestGene = gene
-                }
-            }
-        }
-
-        return bestGene
     }
 
     private companion object

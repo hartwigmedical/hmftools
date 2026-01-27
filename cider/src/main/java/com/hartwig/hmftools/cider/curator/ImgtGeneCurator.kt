@@ -159,10 +159,10 @@ class ImgtGeneCurator
 
         sLogger.info("Writing V38 allele fasta")
         val outputFastaV38 = Paths.get(outputDir, "igtcr_gene.38.fasta").toString()
-        writeAlleleFasta(outputFastaV38, processedGeneAlleles, true)
+        writeVDJFasta(outputFastaV38, processedGeneAlleles, true)
         sLogger.info("Writing V37 allele fasta")
         val outputFastaV37 = Paths.get(outputDir, "igtcr_gene.37.fasta").toString()
-        writeAlleleFasta(outputFastaV37, processedGeneAlleles, false)
+        writeVDJFasta(outputFastaV37, processedGeneAlleles, false)
 
         return 0
     }
@@ -421,11 +421,11 @@ class ImgtGeneCurator
         )
     }
 
-    private fun writeAlleleFasta(path: String, alleles: List<ProcessedGeneAllele>, isV38: Boolean)
+    private fun writeVDJFasta(path: String, alleles: List<ProcessedGeneAllele>, isV38: Boolean)
     {
         File(path).printWriter().use { file ->
             alleles.forEach { allele ->
-                if (allele.imgt.region != IgTcrRegion.CONSTANT)
+                if (allele.imgt.region?.isVDJ ?: false)
                 {
                     val (seqWithContext, refBefore, refAfter) = getAlleleSequenceWithContext(allele, isV38)
                     val label = "${allele.imgt.geneName}|${allele.imgt.allele}|$refBefore|$refAfter"

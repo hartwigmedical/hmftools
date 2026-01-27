@@ -53,11 +53,8 @@ object CiderConstants
     // get 1 mismatch for every 4 matches, and could find alignments with 80% identity.
     // those are probably too different to use. We use 90% for V / J identities, and 95%
     // cut off for full match
-    const val ANNOTATION_MIN_VJ_IDENTITY = 90
-    const val ANNOTATION_MATCH_REF_IDENTITY = 95
-    // D genes often are very short, for example, TRBD1 is only 12 bases. We allow more leeway to match
-    // an alignment to the gene
-    const val ANNOTATION_GENE_REGION_TOLERANCE = 50
+    const val ANNOTATION_VJ_IDENTITY_MIN = 0.9
+    const val ANNOTATION_MATCH_REF_IDENTITY = 0.95
 
     // For the scoring function, the match/mismatch score 1/-4 optimizes the scoring for 100% identical sequences and 1/-1 for 75% identical
     // sequences. The default for NCBI Blastn is 2/-3, which is optimal for 89% identical sequences. BWA uses 1/-4.

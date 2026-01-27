@@ -17,10 +17,12 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion
 import com.hartwig.hmftools.common.genome.region.Strand
 import htsjdk.samtools.CigarElement
 import htsjdk.samtools.SAMSequenceDictionary
+import htsjdk.samtools.reference.IndexedFastaSequenceFile
 import htsjdk.samtools.reference.ReferenceSequenceFileFactory
 import org.apache.logging.log4j.LogManager
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAligner
 import org.broadinstitute.hellbender.utils.bwa.BwaMemIndex
+import java.io.File
 import java.io.FileInputStream
 import java.io.InputStream
 import kotlin.io.path.createTempFile
@@ -45,13 +47,8 @@ data class Alignment(
         require(refStart <= refEnd)
         require(queryStart <= queryEnd)
     }
-}
 
-fun parseChromosomeFromContig(contig: String): String
-{
-    // Parses ref genome contig to the primary assembly chromosome. E.g.:
-    // chr14_KI270726v1_random
-    return contig.split("_")[0]
+    val editDistancePct: Double get() = editDistance.toDouble() / querySeq.length
 }
 
 fun blastnMatchtoGenomicLocation(blastnMatch: BlastnMatch) : GenomicLocation?
@@ -230,17 +227,12 @@ fun runGRCh37PatchAlignment(sequences: List<String>, alignScoreThreshold: Int, t
 }
 
 // Run alignment against the original IMGT gene allele sequences.
-fun runImgtAlignment(genomeVersion: RefGenomeVersion, sequences: List<String>, alignScoreThreshold: Int, threadCount: Int): List<List<Alignment>>
+fun runImgtAlignment(imgtSequenceFile: ImgtSequenceFile, sequences: List<String>, alignScoreThreshold: Int, threadCount: Int): List<List<Alignment>>
 {
-    val refFasta = "/Users/reecejones/Dev/cider-gene-curator/output/igtcr_gene.${genomeVersion.identifier()}.fasta"
-    val refDict = "$refFasta.dict"
-    val refIndexImage = "$refFasta.img"
-    return runBwaMem(sequences, refDict, refIndexImage, alignScoreThreshold, threadCount)
-    // TODO
-//        return runAlignmentFromResourceFasta(refFastaName, sequences, alignScoreThreshold, threadCount)
+    return runBwaMem(sequences, imgtSequenceFile.dictPath, imgtSequenceFile.bwamemImgPath, alignScoreThreshold, threadCount)
 }
 
-fun runAlignmentFromResourceFasta(
+private fun runAlignmentFromResourceFasta(
     refFastaName: String, sequences: List<String>, alignScoreThreshold: Int, threadCount: Int): List<List<Alignment>>
 {
     sLogger.debug("Aligning ${sequences.size} sequences to resource $refFastaName")
@@ -252,4 +244,53 @@ fun runAlignmentFromResourceFasta(
     refIndexImageFile.deleteOnExit()
     refIndexImageFile.writeBytes(refIndexImage.readAllBytes())
     return runBwaMem(sequences, refDict, refIndexImageFile.path, alignScoreThreshold, threadCount)
+}
+
+class ImgtSequenceFile(genomeVersion: RefGenomeVersion)
+{
+    val fastaPath: String
+    val dictPath: String
+    val bwamemImgPath: String
+    val sequencesByContig: Map<String, ImgtSequence>
+
+    init
+    {
+        // TODO: update for real resource file
+        fastaPath = "/Users/reecejones/Dev/cider-gene-curator/output/igtcr_gene.${genomeVersion.identifier()}.fasta"
+        dictPath = "$fastaPath.dict"
+        bwamemImgPath = "$fastaPath.img"
+
+        val fasta = IndexedFastaSequenceFile(File(fastaPath))
+        sequencesByContig = fasta.sequenceDictionary.sequences
+            .associateBy(
+                { it.sequenceName},
+                { ImgtSequence.fromFasta(it.sequenceName, fasta.getSequence(it.sequenceName).baseString) })
+    }
+}
+
+data class ImgtSequence(
+    val geneName: String,
+    val allele: String,
+    val sequenceWithRef: String,
+    val imgtRange: IntRange,
+)
+{
+    val geneAllele: String get() = "$geneName*$allele"
+
+    // The exact sequence from the IMGT resource.
+    val imgtSequence: String get() = sequenceWithRef.substring(imgtRange)
+
+    companion object
+    {
+        fun fromFasta(label: String, sequence: String): ImgtSequence
+        {
+            val parts = label.split('|')
+            val geneName = parts[0]
+            val allele = parts[1]
+            val refBefore = parts[2].toInt()
+            val refAfter = parts[3].toInt()
+            val imgtRange = refBefore until (sequence.length - refAfter)
+            return ImgtSequence(geneName, allele, sequence, imgtRange)
+        }
+    }
 }

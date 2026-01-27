@@ -5,5 +5,15 @@ public enum IgTcrRegion
     V_REGION,
     D_REGION,
     J_REGION,
-    CONSTANT
+    CONSTANT;
+
+    public boolean isVJ()
+    {
+        return this == V_REGION || this == J_REGION;
+    }
+
+    public boolean isVDJ()
+    {
+        return isVJ() || this == D_REGION;
+    }
 }

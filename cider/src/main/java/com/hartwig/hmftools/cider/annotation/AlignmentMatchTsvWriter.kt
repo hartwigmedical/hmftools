@@ -15,7 +15,7 @@ object AlignmentMatchTsvWriter
         matchType,
         gene,
         functionality,
-        pIdent,
+        editDistance,
         alignStart,
         alignEnd,
         alignScore,
@@ -73,7 +73,7 @@ object AlignmentMatchTsvWriter
             if (alignment == null)
                 continue
 
-            for (c in Column.values())
+            for (c in Column.entries)
             {
                 when (c)
                 {
@@ -82,9 +82,9 @@ object AlignmentMatchTsvWriter
                     Column.matchType -> csvPrinter.print(type)
                     Column.gene -> csvPrinter.print(gene?.geneName)
                     Column.functionality -> csvPrinter.print(gene?.functionality?.toCode())
-                    Column.pIdent -> csvPrinter.print(alignment.percentageIdent)
-                    Column.alignStart -> csvPrinter.print(alignment.queryAlignStart)
-                    Column.alignEnd -> csvPrinter.print(alignment.queryAlignEnd)
+                    Column.editDistance -> csvPrinter.print(alignment.editDistance)
+                    Column.alignStart -> csvPrinter.print(alignment.queryStart)
+                    Column.alignEnd -> csvPrinter.print(alignment.queryEnd)
                     Column.alignScore -> csvPrinter.print(alignment.alignmentScore)
                     Column.refStrand -> csvPrinter.print(alignment.strand.asChar())
                     Column.refStart -> csvPrinter.print(alignment.refStart)
