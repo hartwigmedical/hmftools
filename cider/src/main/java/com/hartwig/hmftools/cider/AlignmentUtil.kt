@@ -246,6 +246,8 @@ private fun runAlignmentFromResourceFasta(
     return runBwaMem(sequences, refDict, refIndexImageFile.path, alignScoreThreshold, threadCount)
 }
 
+// Curated FASTA file which contains V/D/J gene alleles.
+// Includes the exact sequence from IMGT and some surrounding ref context if possible.
 class ImgtSequenceFile(genomeVersion: RefGenomeVersion)
 {
     val fastaPath: String
@@ -256,7 +258,7 @@ class ImgtSequenceFile(genomeVersion: RefGenomeVersion)
     init
     {
         // TODO: update for real resource file
-        fastaPath = "/Users/reecejones/Dev/cider-gene-curator/output/igtcr_gene.${genomeVersion.identifier()}.fasta"
+        fastaPath = "/Users/reecejones/Dev/hmftools/temp/cider-gene-curator/output/igtcr_gene.${genomeVersion.identifier()}.fasta"
         dictPath = "$fastaPath.dict"
         bwamemImgPath = "$fastaPath.img"
 
