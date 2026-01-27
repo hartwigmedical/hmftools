@@ -238,7 +238,9 @@ class ImgtGeneCurator
             // 1. match quality
             // 2. primary assembly
             val matches = blastnResults[alleleIndex]
-                .filter { m -> m.numMismatch <= BLASTN_MAX_MISMATCH && m.queryAlignStart == 1 && m.queryAlignEnd == m.querySeqLen }
+                .filter { m ->
+                    m.numMismatch <= BLASTN_MAX_MISMATCH &&
+                            m.querySeqLen - (m.queryAlignEnd - m.queryAlignStart + 1) <= BLASTN_MAX_MISMATCH }
                 .sortedWith(Comparator.comparingDouble { m: BlastnMatch -> m.expectedValue }
                     .thenComparingInt { m: BlastnMatch -> if (m.subjectTitle.endsWith(BLASTN_PRIMARY_ASSEMBLY_NAME)) 0 else 1 })
 
