@@ -424,7 +424,7 @@ public final class ReadViewModel
             xBoxOffset += viewRegion.baseLength() + 2 * BOX_PADDING;
         }
 
-        if(renderCount <= 1)
+        if(renderCount <= 0)
             return null;
 
         String readName = mSupportRead.id();

@@ -330,7 +330,7 @@ public class VcfWriter implements AutoCloseable
         builder.attribute(ASM_LENGTH, assemblyAlignment.fullSequenceLength());
 
         if(assemblyAlignment.assemblies().stream().anyMatch(x -> x.hasLineSequence())
-        && isMobileLineElement(breakend.Orient, breakend.InsertedBases))
+                && isMobileLineElement(breakend.Orient, breakend.InsertedBases))
         {
             builder.attribute(LINE_SITE, true);
         }
@@ -368,7 +368,7 @@ public class VcfWriter implements AutoCloseable
         mVariants.add(variantContext);
     }
 
-    private Genotype buildGenotype(final String sampleId, final BreakendSupport breakendSupport)
+    public static Genotype buildGenotype(final String sampleId, final BreakendSupport breakendSupport)
     {
         GenotypeBuilder builder = new GenotypeBuilder(sampleId);
 
@@ -389,7 +389,12 @@ public class VcfWriter implements AutoCloseable
 
     private List<Allele> buildAlleleInfo(final Breakend breakend)
     {
-        byte[] refBases = mConfig.RefGenome.getBases(breakend.Chromosome, breakend.Position, breakend.Position);
+        return buildAlleleInfo(mConfig, breakend);
+    }
+
+    public static List<Allele> buildAlleleInfo(final AssemblyConfig config, final Breakend breakend)
+    {
+        byte[] refBases = config.RefGenome.getBases(breakend.Chromosome, breakend.Position, breakend.Position);
         byte refBase = refBases[0];
 
         if(!isValidDnaBase(refBase))
