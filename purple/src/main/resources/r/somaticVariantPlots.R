@@ -117,15 +117,18 @@ somatic_ploidy_pdf <- function(somaticBuckets) {
   cnColours = c("#8dd3c7", "#ffffb3", "#bebada", "#fb8072", "#80b1d3", "#fdb462", "#b3de69")
   cnColours = setNames(cnColours, c("CN0", "CN1","CN2","CN3","CN4", "CN5", "CN6+"))
   
-  maxPloidy = somaticBuckets %>%
-    mutate(bucket = ceiling(variantCopyNumberBucket)) %>%
-    group_by(bucket) %>%
-    summarise(n = sum(count)) %>%
-    mutate(cumn = cumsum(n), proportion =  cumn / max(cumn)) %>%
-    arrange(proportion) %>%
-    filter(proportion > 0.95)   %>%
-    filter(row_number() == 1) %>%
-    pull(bucket)
+  maxPloidy = NA
+  if(nrow(somaticBuckets) != 0){
+     maxPloidy = somaticBuckets %>%
+       mutate(bucket = ceiling(variantCopyNumberBucket)) %>%
+       group_by(bucket) %>%
+       summarise(n = sum(count)) %>%
+       mutate(cumn = cumsum(n), proportion =  cumn / max(cumn)) %>%
+       arrange(proportion) %>%
+       filter(proportion > 0.95) %>%
+       filter(row_number() == 1) %>%
+       pull(bucket)
+  }
   
   somatics = somaticBuckets %>%
     mutate(
@@ -133,7 +136,7 @@ somatic_ploidy_pdf <- function(somaticBuckets) {
       cn = ifelse(cn >=6, "CN6+", paste0("CN", cn)))
   
   ggplot(somatics, aes(x = variantCopyNumberBucket)) +
-    geom_bar(aes(fill = cn, weight = count), alpha=1, color = "black",  position = "stack", size = 0.07, width = 0.05) +
+    geom_bar(aes(fill = cn, weight = count), alpha=1, color = "black",  position = "stack", linewidth = 0.07, width = 0.05) +
     scale_x_continuous(breaks = c(0:10), limits = c(-0.1, maxPloidy + 1.1)) +
     scale_fill_manual(values = cnColours) +
     theme(panel.grid.minor = element_blank(), axis.ticks = element_blank(), legend.position = "right", legend.title = element_blank()) +
