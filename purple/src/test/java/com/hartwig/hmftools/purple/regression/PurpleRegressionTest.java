@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.purple.SampleDataFiles.GERMLINE_SV_VCF;
 import static com.hartwig.hmftools.purple.SampleDataFiles.GERMLINE_VARIANTS;
 import static com.hartwig.hmftools.purple.SampleDataFiles.SOMATIC_SV_VCF;
 import static com.hartwig.hmftools.purple.SampleDataFiles.SOMATIC_VARIANTS;
-import static com.hartwig.hmftools.purple.germline.GermlineAmpDelFrequencyCache.COHORT_AMP_DEL_FREQ_FILE;
+import static com.hartwig.hmftools.purple.tools.GenerateGermlineAmpDelFrequency.COHORT_AMP_DEL_FREQ_FILE;
 
 import static org.junit.Assert.assertEquals;
 
