@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.ReduxConstants.BQR_CHR_END_BUFFER;
 import static com.hartwig.hmftools.redux.ReduxConstants.BQR_SAMPLE_SIZE;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -232,20 +233,27 @@ public class BaseQualRecalibration
 
     private void writeSampleData(final String sampleId, final Collection<BqrRecord> records)
     {
+        String tsvFile = BqrFile.generateFilename(mConfig.OutputDir, sampleId);
+
         try
         {
-            String tsvFile = BqrFile.generateFilename(mConfig.OutputDir, sampleId);
-
             BqrFile.write(tsvFile, records.stream().collect(Collectors.toList()));
+        }
+        catch(IOException e)
+        {
+            RD_LOGGER.error(" sample({}) failed to write base recalibration: {}", sampleId, e);
+        }
 
-            if(mConfig.BQR.WritePlot)
+        if(mConfig.BQR.WritePlot)
+        {
+            try
             {
                 RExecutor.executeFromClasspath("r/baseQualityRecalibrationPlot.R", tsvFile);
             }
-        }
-        catch(Exception e)
-        {
-            RD_LOGGER.error(" sample({}) failed to write base recalibration: {}", sampleId, e.toString());
+            catch(IOException | InterruptedException e)
+            {
+                RD_LOGGER.error(" sample({}) failed to plot base recalibration: {}", sampleId, e);
+            }
         }
     }
 }
