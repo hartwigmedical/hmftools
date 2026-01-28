@@ -134,7 +134,7 @@ object VDJSequenceTsvWriter
                 Column.vGene -> csvPrinter.print(vdjAnnotation.alignmentAnnotation?.vGene?.gene?.geneName)
                 Column.vGeneSupplementary -> csvPrinter.print(formatGeneSupplementary(
                     vdjAnnotation.alignmentAnnotation?.vGene?.supplementaryGenes, vdjAnnotation.alignmentAnnotation?.vGene?.gene))
-                Column.vPIdent -> csvPrinter.print(vdjAnnotation.alignmentAnnotation?.vGene?.identity)
+                Column.vPIdent -> csvPrinter.print(vdjAnnotation.alignmentAnnotation?.vGene?.comparison?.pctIdentity)
                 Column.vAlignStart -> if (vdjAnnotation.alignmentAnnotation != null)
                     {
                         csvPrinter.print(zeroBaseAlignStart(vdjAnnotation.alignmentAnnotation!!.vGene?.alignment))
@@ -154,7 +154,7 @@ object VDJSequenceTsvWriter
                 Column.dGene -> csvPrinter.print(vdjAnnotation.alignmentAnnotation?.dGene?.gene?.geneName)
                 Column.dGeneSupplementary -> csvPrinter.print(formatGeneSupplementary(
                     vdjAnnotation.alignmentAnnotation?.dGene?.supplementaryGenes, vdjAnnotation.alignmentAnnotation?.dGene?.gene))
-                Column.dPIdent -> csvPrinter.print(vdjAnnotation.alignmentAnnotation?.dGene?.identity)
+                Column.dPIdent -> csvPrinter.print(vdjAnnotation.alignmentAnnotation?.dGene?.comparison?.pctIdentity)
                 Column.dAlignStart -> if (vdjAnnotation.alignmentAnnotation != null)
                     {
                         csvPrinter.print(zeroBaseAlignStart(vdjAnnotation.alignmentAnnotation!!.dGene?.alignment))
@@ -174,7 +174,7 @@ object VDJSequenceTsvWriter
                 Column.jGene -> csvPrinter.print(vdjAnnotation.alignmentAnnotation?.jGene?.gene?.geneName)
                 Column.jGeneSupplementary -> csvPrinter.print(formatGeneSupplementary(
                     vdjAnnotation.alignmentAnnotation?.jGene?.supplementaryGenes, vdjAnnotation.alignmentAnnotation?.jGene?.gene))
-                Column.jPIdent -> csvPrinter.print(vdjAnnotation.alignmentAnnotation?.jGene?.identity)
+                Column.jPIdent -> csvPrinter.print(vdjAnnotation.alignmentAnnotation?.jGene?.comparison?.pctIdentity)
                 Column.jAlignStart -> if (vdjAnnotation.alignmentAnnotation != null)
                     {
                         csvPrinter.print(zeroBaseAlignStart(vdjAnnotation.alignmentAnnotation!!.jGene?.alignment))

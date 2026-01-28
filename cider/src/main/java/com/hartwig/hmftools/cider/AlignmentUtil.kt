@@ -30,15 +30,15 @@ import kotlin.io.path.createTempFile
 private val sLogger = LogManager.getLogger("AlignmentUtil")
 
 data class Alignment(
-    val querySeq: String,
-    val queryStart: Int,   // 1-based, inclusive
-    val queryEnd: Int,     // 1-based, inclusive
+    val querySeq: String,   // Original query sequence input into the aligner.
+    val queryStart: Int,    // 1-based, inclusive, with respect to querySeq.
+    val queryEnd: Int,      // 1-based, inclusive, with respect to querySeq.
     val refContig: String,
-    val refStart: Int,      // 1-based, inclusive
-    val refEnd: Int,        // 1-based, inclusive
-    val strand: Strand,
+    val refStart: Int,      // 1-based, inclusive.
+    val refEnd: Int,        // 1-based, inclusive.
+    val strand: Strand,     // If REVERSE, then the reverse complement of querySeq was matched to the reference.
     val alignmentScore: Int,
-    val editDistance: Int,  // With respect to the original query sequence
+    val editDistance: Int,  // With respect to querySeq.
     val cigar: List<CigarElement>
 )
 {

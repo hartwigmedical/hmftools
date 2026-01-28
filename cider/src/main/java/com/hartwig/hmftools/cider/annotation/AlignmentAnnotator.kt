@@ -12,7 +12,6 @@ import com.hartwig.hmftools.common.cider.IgTcrGeneFile
 import com.hartwig.hmftools.common.cider.IgTcrRegion
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion
 import com.hartwig.hmftools.common.genome.region.Strand
-import htsjdk.samtools.CigarElement
 import htsjdk.samtools.util.SequenceUtil.reverseComplement
 import org.apache.logging.log4j.LogManager
 import java.util.*
@@ -24,10 +23,17 @@ enum class AlignmentStatus
     V_D_J, V_J, V_D, D_J, V_ONLY, D_ONLY, J_ONLY, NO_REARRANGEMENT, NO_VDJ_ALIGNMENT, SKIPPED_ALIGN
 }
 
+data class GeneComparison(
+    val seqLength: Int,         // Length of the VDJ subsequence used in comparison.
+    val imgtLength: Int,        // Length of the IMGT sequence used in comparison.
+    val pctIdentity: Double,    // Range [0, 100]. Excludes indel bases (for now, at least).
+    val indelBases: Int
+)
+
 data class GeneAnnotation(
     val gene: IgTcrGene,
     val alignment: Alignment,
-    val identity: Double?,
+    val comparison: GeneComparison?,
     val supplementaryGenes: List<IgTcrGene>
 )
 
@@ -195,8 +201,7 @@ class AlignmentAnnotator
             GeneAnnotation(
                 m.primary.gene,
                 m.primary.alignment,
-                // For now, we are ignoring indels. May want to reevaluate that in the future.
-                compareSequenceToImgt(metadata, m.primary).alignedPctIdentity,
+                compareSequenceToImgt(metadata, m.primary),
                 m.supplementary.map { c -> c.gene })
         } }
         val alignmentStatus = getAlignmentStatus(geneMatches)
@@ -210,19 +215,20 @@ class AlignmentAnnotator
         )
     }
 
-    private fun compareSequenceToImgt(metadata: AlignmentMetadata, match: GeneMatchCandidate): AlignedSeqCompare
+    private fun compareSequenceToImgt(metadata: AlignmentMetadata, match: GeneMatchCandidate): GeneComparison?
     {
-        // Calculate percentage identity of the V region between the sample and IMGT sequence.
-        // This is a heuristic for the degree of somatic hypermutation, which is a prognostic indicator for chronic lymphocytic leukemia.
-        // https://pmc.ncbi.nlm.nih.gov/articles/PMC7248390/
-        // The V region is from Cys104 (last amino acid of anchor) upstream to the start of the V exon.
+        val vdj = metadata.vdj
 
-        // TODO: want to compare the V side from Cys104 upstream until the IMGT sequence ends
-        // TODO: want to compare the J side from anchor downstream until the IMGT sequence ends
-//        val refSeq = imgtSequence.sequenceWithRef.substring(alignment.refStart - 1, alignment.refEnd)
-//        val queryAlignedSeq = if (alignment.strand == Strand.FORWARD) querySeq else reverseComplement(querySeq)
-//        return compareAlignedSequence(queryAlignedSeq, refSeq, alignment.cigar)
-        return AlignedSeqCompare(0, 0, 0)
+        return if (match.gene.region == IgTcrRegion.V_REGION)
+        {
+            val layoutAnchorEnd = vdj.layoutSliceStart + (vdj.vAnchorBoundary ?: return null)
+            compareVRegionToImgt(
+                vdj.layout.consensusSequenceString(), layoutAnchorEnd,
+                match.imgtSequence,
+                metadata.querySeqRange, match.alignment)
+        }
+        // TODO: J side?
+        else null
     }
 
     private companion object
@@ -231,11 +237,6 @@ class AlignmentAnnotator
         {
             val fullSeq = vdj.layout.consensusSequenceString()
             val vdjSeq = vdj.sequence
-            return alignmentQuerySeqRange(vdjSeq, fullSeq)
-        }
-
-        fun alignmentQuerySeqRange(vdjSeq: String, fullSeq: String): IntRange
-        {
             val i = fullSeq.indexOf(vdjSeq)
             require(i >= 0)
             val range = max(i - ANNOTATION_VDJ_FLANK_BASES, 0) until
@@ -310,54 +311,95 @@ class AlignmentAnnotator
             return candidate1.gene.geneAllele.compareTo(candidate2.gene.geneAllele)
         }
 
-        data class AlignedSeqCompare(
-            val alignedBases: Int,
-            val unalignedBases: Int,
-            val matches: Int
-        )
+        fun compareVRegionToImgt(
+            layoutSeq: String, layoutAnchorEnd: Int, imgtSequence: ImgtSequenceFile.Sequence, queryRange: IntRange, alignment: Alignment
+        ): GeneComparison
         {
-            val alignedPctIdentity: Double = matches.toDouble() / alignedBases
-        }
+            // Calculate percentage identity of the V region between the sample and IMGT sequence.
+            // This is a heuristic for the degree of somatic hypermutation, which is a prognostic indicator for chronic lymphocytic leukemia.
+            // https://pmc.ncbi.nlm.nih.gov/articles/PMC7248390/
+            // The V region is from Cys104 (last amino acid of anchor) upstream to the start of the second exon.
+            // It seems like the start of the sequence in the IMGT resource is the start of the second exon.
 
-        fun compareAlignedSequence(query: String, ref: String, cigar: List<CigarElement>): AlignedSeqCompare
-        {
-            var alignedBases = 0
-            var unalignedBases = 0
+            //                           V side         || anc ||    CDR3    || anc ||  J side
+            // layout:           LLLLLLLLLLLLLLLLLLLLLLLLAAAAAAACCCCCCCCCCCCCCAAAAAAALLLLLLLLLLLLLLLLLL
+            // alignment query:                |-------------------------------------------|
+            // IMGT sequence:       RRRRRRRIIIIIIIIIIIIIIIIIIIIIIIIII
+            //                      | ref ||         IMGT           |
+            // alignment:              |--------------------------|
+            // compare:             |--------------------------|
+
+            val isForward = alignment.strand == Strand.FORWARD
+            val layoutSeqStranded = if (isForward) layoutSeq else reverseComplement(layoutSeq)
+            val queryStartStranded = if (isForward) queryRange.start else layoutSeq.length - 1 - queryRange.endInclusive
+            val layoutSeqRange = if (isForward) 0 until layoutAnchorEnd else (layoutSeq.length - layoutAnchorEnd) until layoutSeq.length
+
+            val imgtSeq = imgtSequence.sequenceWithRef
+            val imgtAlignStart = alignment.refStart - 1
+            val imgtSeqRange = imgtSequence.imgtRange
+
+            var comparedBases = 0
             var matches = 0
+            var indelBases = 0
+            var layoutIndex = queryStartStranded
+            var imgtIndex = imgtAlignStart
+            var firstComparedLayoutIndex: Int? = null
+            var lastComparedLayoutIndex = 0
+            var firstComparedImgtIndex: Int? = null
+            var lastComparedImgtIndex = 0
 
-            var refIndex = 0
-            var queryIndex = 0
-
-            for (element in cigar)
+            for (element in alignment.cigar)
             {
                 val op = element.operator
                 if (op.isAlignment)
                 {
                     for (i in 0 until element.length)
                     {
-                        if (query[queryIndex] == ref[refIndex])
+                        if (layoutSeqRange.contains(layoutIndex) && imgtSeqRange.contains(imgtIndex))
                         {
-                            matches++
+                            comparedBases++
+                            if (firstComparedLayoutIndex == null)
+                            {
+                                firstComparedLayoutIndex = layoutIndex
+                            }
+                            lastComparedLayoutIndex = layoutIndex
+                            if (firstComparedImgtIndex == null)
+                            {
+                                firstComparedImgtIndex = imgtIndex
+                            }
+                            lastComparedImgtIndex = imgtIndex
+
+                            if (layoutSeqStranded[layoutIndex] == imgtSeq[imgtIndex])
+                            {
+                                matches++
+                            }
                         }
-                        queryIndex += 1
-                        refIndex += 1
+                        layoutIndex += 1
+                        imgtIndex += 1
                     }
-                    alignedBases += element.length
                 }
                 else if (op.consumesReadBases() || op.isClipping)
                 {
-                    unalignedBases += element.length
-                    queryIndex += element.length
+                    layoutIndex += element.length
                 }
                 else if (op.consumesReferenceBases())
                 {
-                    unalignedBases += element.length
-                    refIndex += element.length
+                    imgtIndex += element.length
+                }
+                if (op.isIndel)
+                {
+                    indelBases += element.length
                 }
             }
-            require(queryIndex == query.length)
 
-            return AlignedSeqCompare(alignedBases, unalignedBases, matches)
+            return GeneComparison(
+                seqLength = lastComparedLayoutIndex - firstComparedLayoutIndex!! + 1,
+                imgtLength = lastComparedImgtIndex - firstComparedImgtIndex!! + 1,
+                // For now, we are excluding indels in the %identity calculation because we're not sure how they should be counted, and
+                // there are probably few of them.
+                // TODO: handle indels better?
+                pctIdentity = (100.0 * matches) / comparedBases,
+                indelBases = indelBases)
         }
 
         fun getAlignmentStatus(geneMatches: Map<IgTcrRegion, GeneMatch?>): AlignmentStatus

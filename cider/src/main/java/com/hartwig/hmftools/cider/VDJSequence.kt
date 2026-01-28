@@ -5,6 +5,8 @@ import com.hartwig.hmftools.cider.genes.VJAnchorTemplate
 import com.hartwig.hmftools.cider.genes.VJGeneType
 import com.hartwig.hmftools.cider.layout.ReadLayout
 import com.hartwig.hmftools.common.codon.Codons
+import kotlin.math.max
+import kotlin.math.min
 
 interface VJAnchor
 {
@@ -44,8 +46,6 @@ data class VJAnchorByReadMatch(
     override val templateAnchorSeq: String,
     val numReads: Int
 ) : VJAnchor
-{
-}
 
 // NOTE: vAnchorBoundary could be smaller than jAnchorBoundary
 // if the anchors overlap
@@ -171,7 +171,7 @@ class VDJSequence(
     {
         if (vAnchorBoundary != null)
         {
-            return Math.max(vAnchorBoundary!! - 3, 0)
+            return max(vAnchorBoundary!! - 3, 0)
         }
         if (jAnchorBoundary != null)
         {
@@ -185,7 +185,7 @@ class VDJSequence(
     val cdr3End: Int get()
     {
         // protect against case where v anchor boundary is actually > j anchor boundary
-        return Math.max(Math.min((jAnchorBoundary ?: return length) + 3, length), cdr3Start)
+        return max(min((jAnchorBoundary ?: return length) + 3, length), cdr3Start)
     }
 
     val cdr3Sequence: String get()
