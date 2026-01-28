@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.cider.curator
 
-import com.hartwig.hmftools.cider.VJGeneType
 import com.hartwig.hmftools.cider.genes.GenomicLocation
+import com.hartwig.hmftools.cider.genes.VJGeneType
 import com.hartwig.hmftools.common.bam.CigarUtils.cigarElementsFromStr
 import com.hartwig.hmftools.common.genome.region.Strand
 

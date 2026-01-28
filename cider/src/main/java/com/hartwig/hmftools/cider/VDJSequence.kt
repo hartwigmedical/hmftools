@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.cider
 
+import com.hartwig.hmftools.cider.genes.VJ
+import com.hartwig.hmftools.cider.genes.VJAnchorTemplate
+import com.hartwig.hmftools.cider.genes.VJGeneType
 import com.hartwig.hmftools.cider.layout.ReadLayout
 import com.hartwig.hmftools.common.codon.Codons
 
@@ -29,7 +32,7 @@ data class VJAnchorByBlosum(
         if (geneTypeList.size != 1)
             throw IllegalStateException("VJAnchorByBlosum: gene types(${geneTypeList}) size != 1")
         if (geneTypeList[0] != geneType)
-            throw IllegalStateException("VJAnchorByBlosum: gene type mismatch: ${geneType} != ${geneTypeList[0]}")
+            throw IllegalStateException("VJAnchorByBlosum: gene type mismatch: $geneType != ${geneTypeList[0]}")
     }
 }
 
@@ -193,11 +196,6 @@ class VDJSequence(
     val supportCounts: IntArray get()
     {
         return layout.highQualSupportCounts().sliceArray(layoutSliceStart until layoutSliceEnd)
-    }
-
-    val supportString: String get()
-    {
-        return CiderUtils.countsToString(supportCounts)
     }
 
     val isInFrame: Boolean get()

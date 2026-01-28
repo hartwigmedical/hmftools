@@ -1,6 +1,5 @@
-package com.hartwig.hmftools.cider
+package com.hartwig.hmftools.cider.genes
 
-import com.hartwig.hmftools.cider.genes.GenomicLocation
 import com.hartwig.hmftools.cider.genes.GenomicLocation.Companion.toChrBaseRegion
 
 // TODO: should get rid of this

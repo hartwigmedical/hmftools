@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.cider.genes
 
-import com.hartwig.hmftools.cider.IgTcrLocus
-import com.hartwig.hmftools.cider.VJGeneType
-
 data class IgTcrConstantDiversityRegion(val locus: IgTcrLocus, val genomeLocation: GenomicLocation, val geneName: String)
 {
     init

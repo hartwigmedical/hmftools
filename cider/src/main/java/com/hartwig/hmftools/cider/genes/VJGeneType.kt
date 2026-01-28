@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.cider
+package com.hartwig.hmftools.cider.genes
 
 // this file defines the gene segments that encode the variable region
 // of Ig/TCR locus. They are V, D, J and constant
@@ -12,17 +12,6 @@ enum class IgTcrLocus
     TRA_TRD,
     TRB,
     TRG;
-
-    /*
-    fun isIg() : Boolean
-    {
-        return this == IGH || this == IGK || this == IGL
-    }
-
-    fun isTcr() : Boolean
-    {
-        return this == TRA_TRD || this == TRB || this == TRG
-    }*/
 
     fun prettyPrint() : String
     {

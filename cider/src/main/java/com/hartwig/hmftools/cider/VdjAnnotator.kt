@@ -3,6 +3,8 @@ package com.hartwig.hmftools.cider
 import com.hartwig.hmftools.cider.CiderConstants.MATCHES_REF_KNOWN_CDR3_AA
 import com.hartwig.hmftools.cider.annotation.AlignmentAnnotation
 import com.hartwig.hmftools.cider.annotation.AlignmentStatus
+import com.hartwig.hmftools.cider.genes.IgTcrLocus
+import com.hartwig.hmftools.cider.genes.VJ
 import com.hartwig.hmftools.cider.primer.VdjPrimerMatch
 import com.hartwig.hmftools.common.codon.Codons
 import com.hartwig.hmftools.common.utils.IntPair

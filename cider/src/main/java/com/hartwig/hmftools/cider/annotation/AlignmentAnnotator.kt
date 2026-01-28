@@ -1,11 +1,13 @@
 package com.hartwig.hmftools.cider.annotation
 
 import com.hartwig.hmftools.cider.*
-import com.hartwig.hmftools.cider.IgTcrGene.Companion.fromCommonIgTcrGene
 import com.hartwig.hmftools.cider.CiderConstants.ANNOTATION_MATCH_REF_IDENTITY
 import com.hartwig.hmftools.cider.CiderConstants.ANNOTATION_ALIGN_SCORE_MIN
 import com.hartwig.hmftools.cider.CiderConstants.ANNOTATION_VDJ_FLANK_BASES
 import com.hartwig.hmftools.cider.CiderConstants.ANNOTATION_VJ_IDENTITY_MIN
+import com.hartwig.hmftools.cider.genes.IgTcrGene
+import com.hartwig.hmftools.cider.genes.IgTcrGene.Companion.fromCommonIgTcrGene
+import com.hartwig.hmftools.cider.genes.IgTcrLocus
 import com.hartwig.hmftools.common.cider.IgTcrGeneFile
 import com.hartwig.hmftools.common.cider.IgTcrRegion
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion
@@ -194,7 +196,7 @@ class AlignmentAnnotator
                 m.primary.gene,
                 m.primary.alignment,
                 // For now, we are ignoring indels. May want to reevaluate that in the future.
-                compareGeneSequence(metadata.querySeq, m.primary.alignment).alignedPctIdentity,
+                compareSequenceToImgt(metadata, m.primary).alignedPctIdentity,
                 m.supplementary.map { c -> c.gene })
         } }
         val alignmentStatus = getAlignmentStatus(geneMatches)
@@ -217,9 +219,10 @@ class AlignmentAnnotator
 
         // TODO: want to compare the V side from Cys104 upstream until the IMGT sequence ends
         // TODO: want to compare the J side from anchor downstream until the IMGT sequence ends
-        val refSeq = imgtSequence.sequenceWithRef.substring(alignment.refStart - 1, alignment.refEnd)
-        val queryAlignedSeq = if (alignment.strand == Strand.FORWARD) querySeq else reverseComplement(querySeq)
-        return compareAlignedSequence(queryAlignedSeq, refSeq, alignment.cigar)
+//        val refSeq = imgtSequence.sequenceWithRef.substring(alignment.refStart - 1, alignment.refEnd)
+//        val queryAlignedSeq = if (alignment.strand == Strand.FORWARD) querySeq else reverseComplement(querySeq)
+//        return compareAlignedSequence(queryAlignedSeq, refSeq, alignment.cigar)
+        return AlignedSeqCompare(0, 0, 0)
     }
 
     private companion object

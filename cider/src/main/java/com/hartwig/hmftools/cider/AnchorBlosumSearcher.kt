@@ -1,10 +1,12 @@
 package com.hartwig.hmftools.cider
 
-import org.apache.logging.log4j.LogManager
+import com.hartwig.hmftools.cider.genes.VJ
+import com.hartwig.hmftools.cider.genes.VJAnchorTemplate
+import com.hartwig.hmftools.cider.genes.VJGeneType
 import kotlin.math.ceil
 import kotlin.math.floor
 
-fun roundUpToMultiple(v: Int, m: Int) : Int
+private fun roundUpToMultiple(v: Int, m: Int) : Int
 {
     return (ceil(v / m.toDouble()) * m).toInt()
 }
@@ -52,7 +54,7 @@ class AnchorBlosumSearcher(
     {
         return searchForAnchor(
             readString,
-            VJGeneType.values().toList(),
+            VJGeneType.entries,
             mode,
             0,
             readString.length
@@ -66,8 +68,6 @@ class AnchorBlosumSearcher(
                                  endOffset: Int)
     : AnchorBlosumMatch?
     {
-        // sLogger.trace("finding anchor for {}, seq: {}, offset: {}-{}", targetAnchorGeneType, dnaSeq, startOffset, endOffset)
-
         var bestMatch: AnchorBlosumMatch? = null
 
         for (targetAnchorGeneType in targetAnchorGeneTypes)
@@ -191,10 +191,5 @@ class AnchorBlosumSearcher(
             }
         }
         return null
-    }
-
-    companion object
-    {
-        private val sLogger = LogManager.getLogger(AnchorBlosumSearcher::class.java)
     }
 }

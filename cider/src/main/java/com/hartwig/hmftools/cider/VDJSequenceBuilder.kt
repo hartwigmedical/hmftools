@@ -3,6 +3,8 @@ package com.hartwig.hmftools.cider
 import com.hartwig.hmftools.cider.CiderConstants.LAYOUT_MIN_READ_OVERLAP_BASES
 import com.hartwig.hmftools.cider.CiderConstants.LAYOUT_MATE_EXTEND_MISMATCHES_MAX
 import com.hartwig.hmftools.cider.CiderConstants.MIN_ANCHOR_LENGTH_BASES
+import com.hartwig.hmftools.cider.genes.VJ
+import com.hartwig.hmftools.cider.genes.VJGeneType
 import com.hartwig.hmftools.cider.layout.ReadLayout
 import com.hartwig.hmftools.common.codon.Codons
 import com.hartwig.hmftools.common.perf.TaskExecutor

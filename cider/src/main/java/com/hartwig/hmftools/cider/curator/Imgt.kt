@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.cider.curator
 
-import com.hartwig.hmftools.cider.IgTcrFunctionality
-import com.hartwig.hmftools.cider.IgTcrRegion
+import com.hartwig.hmftools.cider.genes.IgTcrFunctionality
+import com.hartwig.hmftools.cider.genes.IgTcrRegion
 import htsjdk.samtools.reference.FastaSequenceFile
 import java.io.File
 

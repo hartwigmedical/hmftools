@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.cider
 
+import com.hartwig.hmftools.cider.genes.VJ
+import com.hartwig.hmftools.cider.genes.VJGeneType
 import com.hartwig.hmftools.cider.layout.ReadLayout
 import java.util.*
 

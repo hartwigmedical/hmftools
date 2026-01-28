@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.cider
 
+import com.hartwig.hmftools.cider.genes.VJAnchorTemplate
+import com.hartwig.hmftools.cider.genes.VJGeneType
 import com.hartwig.hmftools.common.codon.Codons
 import htsjdk.samtools.SAMRecord
 import htsjdk.samtools.util.SequenceUtil

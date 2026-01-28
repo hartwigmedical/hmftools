@@ -6,7 +6,6 @@ import com.beust.jcommander.ParameterException
 import com.beust.jcommander.UnixStyleUsageFormatter
 import com.hartwig.hmftools.cider.*
 import com.hartwig.hmftools.cider.CiderConstants.BLAST_REF_GENOME_VERSION
-import com.hartwig.hmftools.cider.IgTcrGene.Companion.toCommonIgTcrGene
 import com.hartwig.hmftools.cider.CiderConstants.BLASTN_PRIMARY_ASSEMBLY_NAME
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.ANCHOR_MISMATCH_MAX
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.BLASTN_EVALUE_CUTOFF
@@ -22,6 +21,11 @@ import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.SPECIES
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.jAnchorSignatures
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.liftOverBlacklist
 import com.hartwig.hmftools.cider.genes.GenomicLocation
+import com.hartwig.hmftools.cider.genes.IgTcrFunctionality
+import com.hartwig.hmftools.cider.genes.IgTcrGene
+import com.hartwig.hmftools.cider.genes.IgTcrGene.Companion.toCommonIgTcrGene
+import com.hartwig.hmftools.cider.genes.IgTcrRegion
+import com.hartwig.hmftools.cider.genes.VJGeneType
 import com.hartwig.hmftools.common.bam.CigarUtils.getPositionFromReadIndex
 import com.hartwig.hmftools.common.blastn.BlastnMatch
 import com.hartwig.hmftools.common.cider.IgTcrGeneFile
