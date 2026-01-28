@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.purple.segment;
 
+import static com.hartwig.hmftools.common.purple.SegmentSupport.CENTROMERE;
+import static com.hartwig.hmftools.common.purple.SegmentSupport.EXCL;
+import static com.hartwig.hmftools.common.purple.SegmentSupport.INV;
+
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
@@ -14,6 +18,41 @@ import org.junit.Test;
 public class PurpleSupportSegmentTest
 {
     private final String chr = HumanChromosome._1.shortName();
+
+    @Test
+    public void supportWhenSplit()
+    {
+        PurpleSupportSegment a = new PurpleSupportSegment(chr, 100, 200, true, CENTROMERE, false, 100, 200);
+        List<PurpleSupportSegment> result = a.split(150);
+        assertEquals(2, result.size());
+        assertEquals(CENTROMERE, result.get(0).Support);
+        assertEquals(EXCL, result.get(1).Support);
+
+        a = new PurpleSupportSegment(chr, 100, 200, true, INV, false, 100, 200);
+        result = a.split(150);
+        assertEquals(2, result.size());
+        assertEquals(INV, result.get(0).Support);
+        assertEquals(EXCL, result.get(1).Support);
+
+        a = new PurpleSupportSegment(chr, 100, 200, true, EXCL, false, 100, 200);
+        result = a.split(150);
+        assertEquals(2, result.size());
+        assertEquals(EXCL, result.get(0).Support);
+        assertEquals(EXCL, result.get(1).Support);
+    }
+
+    @Test
+    public void supportWhenSplitBySegment()
+    {
+        PurpleSupportSegment a = new PurpleSupportSegment(chr, 100, 200, true, CENTROMERE, false, 100, 200);
+        PurpleSupportSegment b = pss(150, 180);
+        List<PurpleSupportSegment> result = a.splitBy(b);
+        assertEquals(3, result.size());
+
+        assertEquals(CENTROMERE, result.get(0).Support);
+        assertEquals(EXCL, result.get(1).Support);
+        assertEquals(EXCL, result.get(2).Support);
+    }
 
     @Test
     public void splitAtPositionBeforeStart()
