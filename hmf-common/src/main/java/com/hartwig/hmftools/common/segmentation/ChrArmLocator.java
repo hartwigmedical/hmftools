@@ -2,6 +2,7 @@ package com.hartwig.hmftools.common.segmentation;
 
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
+import com.hartwig.hmftools.common.genome.position.GenomePositionImpl;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
@@ -19,5 +20,10 @@ public interface ChrArmLocator
         };
     }
 
-    ChrArm map(GenomePosition cobaltRatio);
+    ChrArm map(GenomePosition position);
+
+    default ChrArm map(String chromosome, int position)
+    {
+        return map(new GenomePositionImpl(chromosome, position));
+    }
 }
