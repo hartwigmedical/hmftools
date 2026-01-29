@@ -242,6 +242,7 @@ public class BaseQualRecalibration
         catch(IOException e)
         {
             RD_LOGGER.error(" sample({}) failed to write base recalibration: {}", sampleId, e);
+            System.exit(1);
         }
 
         if(mConfig.BQR.WritePlot)
@@ -253,6 +254,7 @@ public class BaseQualRecalibration
             catch(IOException | InterruptedException e)
             {
                 RD_LOGGER.error(" sample({}) failed to plot base recalibration: {}", sampleId, e);
+                System.exit(1);
             }
         }
     }
