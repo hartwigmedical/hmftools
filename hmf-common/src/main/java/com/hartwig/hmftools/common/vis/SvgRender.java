@@ -496,7 +496,7 @@ public final class SvgRender
         }
     }
 
-    public record ChrLabel(String chromosome, int position, BaseRegion viewRegion, boolean isReversed, Alignment alignment) {}
+    public record ChrLabel(String chromosome, int position, BaseRegion viewRegion, @Nullable BaseRegion refRegion, boolean isReversed, List<Alignment> alignments) {}
 
     public static SVGGraphics2D renderChrLabels(double baseBoxSizePx, final List<ChrLabel> labels)
     {
@@ -525,26 +525,26 @@ public final class SvgRender
             }
 
             chromosome = enforceChrPrefix(chromosome);
-            Alignment alignment = label.alignment;
-            String strandLabel = label.isReversed ? "<<" : ">>";
-            String chrPositionLabel = chromosome + ":" + label.position;
-            if(alignment == CENTER)
+            for(Alignment alignment : label.alignments)
             {
-                fullLabel = strandLabel + " " + chrPositionLabel + " " + strandLabel;
-                boxX = viewRegion.start() + 0.5d * viewRegion.baseLength();
-            }
-            else if(alignment == LEFT)
-            {
-                fullLabel = chrPositionLabel + " " + strandLabel;
-                boxX = viewRegion.start() + BOX_PADDING;
-            }
-            else
-            {
-                fullLabel = strandLabel + " " + chrPositionLabel;
-                boxX = viewRegion.start() + viewRegion.baseLength();
-            }
+                String strandLabel = label.isReversed ? "<<" : ">>";
+                int leftPosition = label.isReversed ? label.refRegion.end() : label.refRegion.start();
+                int rightPosition = label.isReversed ? label.refRegion.start() : label.refRegion.end();
+                int position = alignment == LEFT ? leftPosition : rightPosition;
+                String chrPositionLabel = chromosome + ":" + position;
+                if(alignment == LEFT)
+                {
+                    fullLabel = chrPositionLabel + " " + strandLabel;
+                    boxX = viewRegion.start() + BOX_PADDING;
+                }
+                else
+                {
+                    fullLabel = strandLabel + " " + chrPositionLabel;
+                    boxX = viewRegion.start() + viewRegion.baseLength();
+                }
 
-            renderText(svgCanvas, ZERO_2D, boxX, 0.5, svgCanvas.getFont(), Color.BLACK, fullLabel, null, 1.0, alignment);
+                renderText(svgCanvas, ZERO_2D, boxX, 0.5, svgCanvas.getFont(), Color.BLACK, fullLabel, null, 1.0, alignment);
+            }
         }
 
         return svgCanvas;
