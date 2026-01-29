@@ -27,8 +27,17 @@ public class TumorContaminationModel
 
     public double calcContamination(final List<TumorContamination> unfilteredTumorContamination, long amberSiteCount)
     {
+        //        List<TumorContamination> contaminationSites = unfilteredTumorContamination.stream()
+        //                .filter(x -> x.Normal.readDepth() > MIN_NORMAL_READ_DEPTH).collect(Collectors.toList());
+
         List<TumorContamination> contaminationSites = unfilteredTumorContamination.stream()
-                .filter(x -> x.Normal.readDepth() > MIN_NORMAL_READ_DEPTH).collect(Collectors.toList());
+                .filter(x -> x.Tumor.readDepth() > MIN_NORMAL_READ_DEPTH)
+                .filter(x ->
+                {
+                    double v = x.tumorVaf();
+                    return v > 0.001 && v < 0.2;
+                })
+                .collect(Collectors.toList());
 
         int medianTumorReadDepth = medianDepth(contaminationSites);
 
@@ -50,7 +59,9 @@ public class TumorContaminationModel
 
                     double vaf = site.Tumor.altSupport() / (double) site.Tumor.readDepth();
                     if(vaf < THREE_PLUS_READS_VAF_MIN)
+                    {
                         ++threePlusReadsLowVafSiteCount;
+                    }
                 }
             }
         }
@@ -76,7 +87,7 @@ public class TumorContaminationModel
             return 0;
         }
 
-        Map<Integer,Long> altSupportFrequencies = contaminationSites.stream()
+        Map<Integer, Long> altSupportFrequencies = contaminationSites.stream()
                 .collect(Collectors.groupingBy(x -> x.Tumor.altSupport(), Collectors.counting()));
 
         double contaminationLevel = doCalcContamination(medianTumorReadDepth, twoPlusReadsSiteCount, altSupportFrequencies);
@@ -89,14 +100,14 @@ public class TumorContaminationModel
     }
 
     @VisibleForTesting
-    public double calcContamination(int medianTumorReadDepth, final Map<Integer,Long> altSupportFrequencies)
+    public double calcContamination(int medianTumorReadDepth, final Map<Integer, Long> altSupportFrequencies)
     {
         long twoPlusReadCount = calcAltReadCountAboveThreshold(2, altSupportFrequencies);
         return doCalcContamination(medianTumorReadDepth, twoPlusReadCount, altSupportFrequencies);
     }
 
     private double doCalcContamination(
-            int medianTumorReadDepth, long twoPlusReadCount, final Map<Integer,Long> altSupportFrequencies)
+            int medianTumorReadDepth, long twoPlusReadCount, final Map<Integer, Long> altSupportFrequencies)
     {
         double contamination = 0;
         double lowestScore = Double.MAX_VALUE;
@@ -116,7 +127,7 @@ public class TumorContaminationModel
 
     private double contaminationScore(
             final double contamination, final long twoPlusReadCount, final long medianTumorReadDepth,
-            final Map<Integer,Long> altSupportMap)
+            final Map<Integer, Long> altSupportMap)
     {
         PoissonDistribution hetDistribution = new PoissonDistribution(0.5 * contamination * medianTumorReadDepth);
         PoissonDistribution homAltDistribution = new PoissonDistribution(contamination * medianTumorReadDepth);
@@ -138,7 +149,7 @@ public class TumorContaminationModel
         double totalModelPercentage = 0;
         double totalDifference = 0;
 
-        for(Map.Entry<Integer,Long> entry : altSupportMap.entrySet())
+        for(Map.Entry<Integer, Long> entry : altSupportMap.entrySet())
         {
             long altSupport = entry.getKey();
             long altSupportCount = entry.getValue();

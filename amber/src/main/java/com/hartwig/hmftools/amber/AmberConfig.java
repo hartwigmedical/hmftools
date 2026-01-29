@@ -107,7 +107,7 @@ public class AmberConfig
         }
 
         BafLociPath = configBuilder.getValue(LOCI_FILE);
-        TargetRegionsBed  = configBuilder.getValue(TARGET_REGIONS_BED);
+        TargetRegionsBed = configBuilder.getValue(TARGET_REGIONS_BED);
 
         RefGenVersion = RefGenomeVersion.from(configBuilder);
         RefGenomeFile = configBuilder.getValue(REF_GENOME);
@@ -116,11 +116,17 @@ public class AmberConfig
         TumorOnlyMinVaf = configBuilder.getDecimal(TUMOR_ONLY_MIN_VAF);
 
         if(configBuilder.hasValue(TUMOR_MIN_DEPTH))
+        {
             TumorMinDepth = configBuilder.getInteger(TUMOR_MIN_DEPTH);
+        }
         else if(ReferenceIds.isEmpty())
+        {
             TumorMinDepth = DEFAULT_TUMOR_ONLY_MIN_DEPTH;
+        }
         else
+        {
             TumorMinDepth = DEFAULT_TUMOR_MIN_DEPTH;
+        }
 
         MinBaseQuality = configBuilder.getInteger(MIN_BASE_QUALITY);
         MinMappingQuality = configBuilder.getInteger(MIN_MAP_QUALITY);
@@ -208,10 +214,14 @@ public class AmberConfig
 
     public String primaryReference()
     {
-        return ReferenceIds.get(0);
+        return ReferenceIds.isEmpty() ? "" : ReferenceIds.get(0);
     }
 
-    public boolean isTumorOnly() { return ReferenceBams.isEmpty() && TumorBam != null; }
+    public boolean isTumorOnly()
+    {
+        return ReferenceBams.isEmpty() && TumorBam != null;
+    }
+
     public boolean isGermlineOnly()
     {
         return !ReferenceBams.isEmpty() && TumorBam == null;
@@ -231,7 +241,7 @@ public class AmberConfig
             return false;
         }
 
-        if ((TumorId == null) != (TumorBam == null))
+        if((TumorId == null) != (TumorBam == null))
         {
             AMB_LOGGER.error("Unmatched: TumorId: {} and TumorBamPath: {}", TumorId, TumorBam);
             return false;

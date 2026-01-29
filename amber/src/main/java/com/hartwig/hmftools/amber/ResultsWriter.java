@@ -38,6 +38,7 @@ public class ResultsWriter
     {
         final String filename = AmberBAFFile.generateAmberFilenameForWriting(mConfig.OutputDir, mConfig.getSampleId());
         AmberBAFFile.write(filename, result);
+        AmberBAFFile.write(filename, result);
 
         if(mConfig.TumorId != null && !mConfig.SkipBafSegmentation)
         {

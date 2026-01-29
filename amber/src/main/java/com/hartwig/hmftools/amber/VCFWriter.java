@@ -39,6 +39,7 @@ public class VCFWriter
 
         final VariantContextWriter writer =
                 new VariantContextWriterBuilder().setOutputFile(filename).modifyOption(Options.INDEX_ON_THE_FLY, true).build();
+
         final VCFHeader header = header(Lists.newArrayList(mConfig.primaryReference(), mConfig.TumorId));
         writer.setHeader(header);
         writer.writeHeader(header);
@@ -75,15 +76,15 @@ public class VCFWriter
                 .alleles(alleles)
                 .make();
 
-        final Genotype normal = new GenotypeBuilder(mConfig.primaryReference()).DP(contamination.Normal.readDepth())
-                .AD(new int[] { contamination.Normal.refSupport(), contamination.Normal.altSupport() })
-                .alleles(alleles)
-                .make();
+        //        final Genotype normal = new GenotypeBuilder(mConfig.primaryReference()).DP(contamination.Normal.readDepth())
+        //                .AD(new int[] { contamination.Normal.refSupport(), contamination.Normal.altSupport() })
+        //                .alleles(alleles)
+        //                .make();
 
         final VariantContextBuilder builder = new VariantContextBuilder().chr(contamination.chromosome())
                 .start(contamination.position())
                 .computeEndFromAlleles(alleles, contamination.position())
-                .genotypes(tumor, normal)
+                .genotypes(tumor)
                 .alleles(alleles);
 
         return builder.make();

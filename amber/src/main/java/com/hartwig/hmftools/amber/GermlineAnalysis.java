@@ -33,25 +33,33 @@ public class GermlineAnalysis
     private final List<RegionOfHomozygosity> mRegionsOfHomozygosity;
     private final double mConsanguinityProportion;
 
-    @Nullable private final Chromosome mUniparentalDisomy;
+    @Nullable
+    private final Chromosome mUniparentalDisomy;
 
     public GermlineAnalysis(
-            final AmberConfig config, SamReaderFactory readerFactory, ListMultimap<Chromosome,AmberSite> chrAmberSites)
+            final AmberConfig config, SamReaderFactory readerFactory, ListMultimap<Chromosome, AmberSite> chrAmberSites)
             throws InterruptedException, IOException
     {
         mConfig = config;
 
         final Predicate<PositionEvidence> isValidFilter = PositionEvidence::isValid;
         Predicate<PositionEvidence> homozygousFilter = new NormalHomozygousFilter().and(isValidFilter);
-        Predicate<PositionEvidence> heterozygousFilter = new NormalHeterozygousFilter(mConfig.MinHetAfPercent, mConfig.MaxHetAfPercent).and(isValidFilter);
+        Predicate<PositionEvidence> heterozygousFilter =
+                new NormalHeterozygousFilter(mConfig.MinHetAfPercent, mConfig.MaxHetAfPercent).and(isValidFilter);
         Predicate<PositionEvidence> snpCheckFilter = new SnpCheckFilter(chrAmberSites);
 
         mHetNormalEvidence = new HetNormalEvidence();
 
         // Primary Reference Data
-        ListMultimap<Chromosome, PositionEvidence> unfilteredLoci = germlineDepth(readerFactory, mConfig.ReferenceBams.get(0), chrAmberSites);
+        ListMultimap<Chromosome, PositionEvidence> unfilteredLoci =
+                germlineDepth(readerFactory, mConfig.ReferenceBams.get(0), chrAmberSites);
 
-        final Predicate<PositionEvidence> depthFilter = new BaseDepthFilter(mConfig.MinDepthPercent, mConfig.MaxDepthPercent, unfilteredLoci);
+        final Predicate<PositionEvidence> depthFilter =
+                new BaseDepthFilter(mConfig.MinDepthPercent, mConfig.MaxDepthPercent, unfilteredLoci);
+        String amberFilename = PositionEvidenceFile.generateAmberFilenameForWriting(mConfig.OutputDir, mConfig.getSampleId());
+        PositionEvidenceFile.write(amberFilename, unfilteredLoci);
+        AMB_LOGGER.info("raw germline data written to {}", amberFilename);
+
         mSnpCheckedLoci = filterEntries(unfilteredLoci, snpCheckFilter);
         mHomozygousLoci = filterEntries(unfilteredLoci, depthFilter.and(homozygousFilter));
         var primaryHeterozygousLoci = filterEntries(unfilteredLoci, depthFilter.and(heterozygousFilter));
@@ -62,45 +70,73 @@ public class GermlineAnalysis
         {
             final String sample = mConfig.ReferenceIds.get(i);
             final String sampleBam = mConfig.ReferenceBams.get(i);
-            final Collection<PositionEvidence> additional = germlineDepth(readerFactory, sampleBam, mHetNormalEvidence.intersection()).values();
+            final Collection<PositionEvidence> additional =
+                    germlineDepth(readerFactory, sampleBam, mHetNormalEvidence.intersection()).values();
             final Predicate<PositionEvidence> filter = new BaseDepthFilter(mConfig.MinDepthPercent, mConfig.MaxDepthPercent, additional);
-            final Collection<PositionEvidence> additionalHetNormal = additional.stream().filter(filter.and(heterozygousFilter)).collect(toList());
+            final Collection<PositionEvidence> additionalHetNormal =
+                    additional.stream().filter(filter.and(heterozygousFilter)).collect(toList());
             mHetNormalEvidence.add(sample, additionalHetNormal);
         }
 
         if(mConfig.WriteUnfilteredGermline)
+        {
             mHeterozygousLoci = unfilteredLoci;
+        }
         else
+        {
             mHeterozygousLoci = filterEntries(primaryHeterozygousLoci, mHetNormalEvidence.intersectionFilter());
+        }
 
         AMB_LOGGER.info("{} heterozygous, {} homozygous in reference bams", mHeterozygousLoci.size(), mHomozygousLoci.size());
 
-        RegionOfHomozygosityFinder rohFinder = new RegionOfHomozygosityFinder(mConfig.RefGenVersion, mConfig.MinDepthPercent, mConfig.MaxDepthPercent);
+        RegionOfHomozygosityFinder rohFinder =
+                new RegionOfHomozygosityFinder(mConfig.RefGenVersion, mConfig.MinDepthPercent, mConfig.MaxDepthPercent);
         mRegionsOfHomozygosity = rohFinder.findRegions(unfilteredLoci);
 
         mConsanguinityProportion = ConsanguinityAnalyser.calcConsanguinityProportion(mRegionsOfHomozygosity);
         mUniparentalDisomy = ConsanguinityAnalyser.findUniparentalDisomy(mRegionsOfHomozygosity);
     }
 
-    public ListMultimap<Chromosome,PositionEvidence> getSnpCheckedLoci() { return mSnpCheckedLoci; }
-    public ListMultimap<Chromosome,PositionEvidence> getHomozygousLoci() { return mHomozygousLoci; }
-    public ListMultimap<Chromosome,PositionEvidence> getHeterozygousLoci() { return mHeterozygousLoci; }
+    public ListMultimap<Chromosome, PositionEvidence> getSnpCheckedLoci()
+    {
+        return mSnpCheckedLoci;
+    }
 
-    public List<RegionOfHomozygosity> getRegionsOfHomozygosity() { return mRegionsOfHomozygosity; }
-    public double getConsanguinityProportion() { return mConsanguinityProportion; }
+    public ListMultimap<Chromosome, PositionEvidence> getHomozygousLoci()
+    {
+        return mHomozygousLoci;
+    }
+
+    public ListMultimap<Chromosome, PositionEvidence> getHeterozygousLoci()
+    {
+        return mHeterozygousLoci;
+    }
+
+    public List<RegionOfHomozygosity> getRegionsOfHomozygosity()
+    {
+        return mRegionsOfHomozygosity;
+    }
+
+    public double getConsanguinityProportion()
+    {
+        return mConsanguinityProportion;
+    }
 
     @Nullable
-    Chromosome getUniparentalDisomy() { return mUniparentalDisomy; }
+    Chromosome getUniparentalDisomy()
+    {
+        return mUniparentalDisomy;
+    }
 
     private ListMultimap<Chromosome, PositionEvidence> germlineDepth(
             final SamReaderFactory readerFactory, final String bamPath,
-            final ListMultimap<Chromosome,AmberSite> chrAmberSites) throws InterruptedException
+            final ListMultimap<Chromosome, AmberSite> chrAmberSites) throws InterruptedException
     {
         AMB_LOGGER.info("processing {} Amber sites in reference bam({})", chrAmberSites.values().size(), bamPath);
 
-        Map<Chromosome,List<PositionEvidence>> chrPositionEvidence = Maps.newHashMap();
+        Map<Chromosome, List<PositionEvidence>> chrPositionEvidence = Maps.newHashMap();
 
-        for(Map.Entry<Chromosome,AmberSite> entry : chrAmberSites.entries())
+        for(Map.Entry<Chromosome, AmberSite> entry : chrAmberSites.entries())
         {
             Chromosome chromosome = entry.getKey();
 
@@ -120,7 +156,7 @@ public class GermlineAnalysis
 
         ListMultimap<Chromosome, PositionEvidence> normalEvidence = ArrayListMultimap.create();
 
-        for(Map.Entry<Chromosome,List<PositionEvidence>> entry : chrPositionEvidence.entrySet())
+        for(Map.Entry<Chromosome, List<PositionEvidence>> entry : chrPositionEvidence.entrySet())
         {
             Chromosome chromosome = entry.getKey();
             List<PositionEvidence> positions = entry.getValue();

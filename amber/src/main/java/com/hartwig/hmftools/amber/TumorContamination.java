@@ -19,7 +19,22 @@ public class TumorContamination implements GenomePosition
     }
 
     @Override
-    public String chromosome() { return Chromosome; }
-    public int position() { return Position; }
+    public String chromosome()
+    {
+        return Chromosome;
+    }
 
+    public int position()
+    {
+        return Position;
+    }
+
+    public double tumorVaf()
+    {
+        if(Tumor.refSupport() == 0)
+        {
+            return -1.0;
+        }
+        return Tumor.altSupport() / (double) Tumor.refSupport();
+    }
 }

@@ -31,7 +31,8 @@ public class BamEvidenceReader
     }
 
     public void processBam(
-            final String bamFile, final SamReaderFactory samReaderFactory, final Map<Chromosome,List<PositionEvidence>> chrPositionEvidence)
+            final String bamFile, final SamReaderFactory samReaderFactory,
+            final Map<Chromosome, List<PositionEvidence>> chrPositionEvidence)
             throws InterruptedException
     {
         AMB_LOGGER.trace("processing bam({})", bamFile);
@@ -79,7 +80,7 @@ public class BamEvidenceReader
     }
 
     private void populateTaskQueue(
-            final Map<Chromosome,List<PositionEvidence>> chrBaseDepth, final Queue<RegionTask> taskQueue, boolean limitRegions)
+            final Map<Chromosome, List<PositionEvidence>> chrBaseDepth, final Queue<RegionTask> taskQueue, boolean limitRegions)
     {
         int positionCount = chrBaseDepth.values().stream().mapToInt(x -> x.size()).sum();
 
@@ -90,17 +91,21 @@ public class BamEvidenceReader
 
         List<RegionTask> tasks = Lists.newArrayList();
 
-        for(Map.Entry<Chromosome,List<PositionEvidence>> entry : chrBaseDepth.entrySet())
+        for(Map.Entry<Chromosome, List<PositionEvidence>> entry : chrBaseDepth.entrySet())
         {
             String chromosome = mConfig.RefGenVersion.versionedChromosome(entry.getKey().toString());
 
             if(!mConfig.SpecificChromosomes.isEmpty() && !mConfig.SpecificChromosomes.contains(chromosome))
+            {
                 continue;
+            }
 
             List<PositionEvidence> positions = entry.getValue();
 
             if(positions.isEmpty())
+            {
                 continue;
+            }
 
             RegionTask currentTask = new RegionTask(mEvidenceChecker, chromosome, positions.get(0));
             tasks.add(currentTask);
@@ -128,12 +133,18 @@ public class BamEvidenceReader
 
             for(RegionTask task : tasks)
             {
-                if(maxRegion == null || task.Region.length() > maxRegion.Region.length() || task.positionCount() > maxRegion.positionCount())
+                if(maxRegion == null || task.Region.length() > maxRegion.Region.length()
+                        || task.positionCount() > maxRegion.positionCount())
+                {
                     maxRegion = task;
+                }
             }
 
-            AMB_LOGGER.debug("split {} sites across {} regions, max region({} size={} length={}) minGap({})",
-                    positionCount, tasks.size(), maxRegion.Region, maxRegion.positionCount(), maxRegion.Region.length(), minGap);
+            if(maxRegion != null)
+            {
+                AMB_LOGGER.debug("split {} sites across {} regions, max region({} size={} length={}) minGap({})",
+                        positionCount, tasks.size(), maxRegion.Region, maxRegion.positionCount(), maxRegion.Region.length(), minGap);
+            }
         }
 
         taskQueue.addAll(tasks);
