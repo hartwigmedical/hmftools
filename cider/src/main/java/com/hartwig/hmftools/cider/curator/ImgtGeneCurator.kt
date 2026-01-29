@@ -459,11 +459,11 @@ class ImgtGeneCurator
         val ref1 = refGenome.getBaseString(
             chromosome,
             location.posStart - FASTA_REF_CONTEXT,
-            location.posStart - 1 + REF_CONTEXT_CHECK)
+            location.posStart - 1 + REF_CONTEXT_CHECK) ?: ""
         val ref2 = refGenome.getBaseString(
             chromosome,
             location.posEnd + 1 - REF_CONTEXT_CHECK,
-            location.posEnd + FASTA_REF_CONTEXT)
+            location.posEnd + FASTA_REF_CONTEXT) ?: ""
         val refStart = ref1.substring(FASTA_REF_CONTEXT)
         val alleleStart = alleleAlignedSeq.substring(0, REF_CONTEXT_CHECK)
         val refEnd = ref2.substring(0, REF_CONTEXT_CHECK)

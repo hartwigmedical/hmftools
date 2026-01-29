@@ -227,7 +227,7 @@ class AlignmentAnnotator
                 match.imgtSequence,
                 metadata.querySeqRange, match.alignment)
         }
-        // TODO: J side?
+        // TODO? J side
         else null
     }
 
@@ -313,7 +313,7 @@ class AlignmentAnnotator
 
         fun compareVRegionToImgt(
             layoutSeq: String, layoutAnchorEnd: Int, imgtSequence: ImgtSequenceFile.Sequence, queryRange: IntRange, alignment: Alignment
-        ): GeneComparison
+        ): GeneComparison?
         {
             // Calculate percentage identity of the V region between the sample and IMGT sequence.
             // This is a heuristic for the degree of somatic hypermutation, which is a prognostic indicator for chronic lymphocytic leukemia.
@@ -392,12 +392,13 @@ class AlignmentAnnotator
                 }
             }
 
-            return GeneComparison(
+            return if (comparedBases == 0) null
+            else GeneComparison(
                 seqLength = lastComparedLayoutIndex - firstComparedLayoutIndex!! + 1,
                 imgtLength = lastComparedImgtIndex - firstComparedImgtIndex!! + 1,
                 // For now, we are excluding indels in the %identity calculation because we're not sure how they should be counted, and
                 // there are probably few of them.
-                // TODO: handle indels better?
+                // TODO? handle indels better
                 pctIdentity = (100.0 * matches) / comparedBases,
                 indelBases = indelBases)
         }
