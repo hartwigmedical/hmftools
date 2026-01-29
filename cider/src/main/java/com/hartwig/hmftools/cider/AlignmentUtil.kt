@@ -44,11 +44,26 @@ data class Alignment(
 {
     init
     {
-        require(refStart <= refEnd)
+        require(queryStart >= 1)
+        // Can't assert this because later we adjust the start and end given that querySeq is a subsequence.
+//        require(queryEnd <= querySeq.length)
         require(queryStart <= queryEnd)
+        require(refStart >= 1)
+        require(refStart <= refEnd)
+        require(editDistance >= startClip + endClip)
+        require(cigar.isNotEmpty())
     }
 
-    val editDistancePct: Double get() = editDistance.toDouble() / querySeq.length
+    val queryAlignLength: Int get() = queryEnd - queryStart + 1
+
+    // Number of bases clipped at the start of querySeq.
+    val startClip: Int get() = queryStart - 1
+
+    // Number of bases clipped at the end of querySeq.
+    val endClip: Int get() = querySeq.length - queryEnd
+
+    // Edit distance of the aligned subsequence of querySeq. I.e. excluding clipping.
+    val alignedEditDistance: Int get() = editDistance - startClip - endClip
 }
 
 fun blastnMatchtoGenomicLocation(blastnMatch: BlastnMatch) : GenomicLocation?
@@ -189,12 +204,14 @@ private fun parseBwaMemAlignment(
     val strand = if ((alignment.samFlag and 0x10) == 0) Strand.FORWARD else Strand.REVERSE
 
     val cigar = cigarElementsFromStr(alignment.cigar)
+    val (startClip, endClip) = getQueryClipping(cigar, strand)
 
-    val (queryStart, queryEnd) = calcQueryAlignRange(querySeq.length, cigar, strand)
+    val queryStart = startClip + 1
+    val queryEnd = querySeq.length - endClip
     require(queryStart <= queryEnd)
 
-    // nMismatches is not the best name - it's actually the edit distance.
-    val editDistance = alignment.nMismatches
+    // nMismatches is not the best name - it's actually the edit distance but excluding clipping.
+    val editDistance = alignment.nMismatches + startClip + endClip
 
     return Alignment(
         querySeq,
@@ -210,13 +227,11 @@ private fun parseBwaMemAlignment(
     )
 }
 
-private fun calcQueryAlignRange(querySeqLength: Int, cigar: List<CigarElement>, strand: Strand): Pair<Int, Int>
+private fun getQueryClipping(cigar: List<CigarElement>, strand: Strand): Pair<Int, Int>
 {
     val leftClip = if (cigar[0].operator.isClipping) cigar[0].length else 0
     val rightClip = if (cigar.last().operator.isClipping) cigar.last().length else 0
-    val (startClip, endClip) = if (strand == Strand.FORWARD) Pair(leftClip, rightClip) else Pair(rightClip, leftClip)
-    // Convert to 1-based inclusive.
-    return Pair(startClip + 1, querySeqLength - endClip)
+    return if (strand == Strand.FORWARD) Pair(leftClip, rightClip) else Pair(rightClip, leftClip)
 }
 
 // Run alignment against a patch of the GRCh37 genome which includes more genes, particularly TRBJ1.
@@ -259,7 +274,7 @@ class ImgtSequenceFile(genomeVersion: RefGenomeVersion)
     init
     {
         // TODO: update for real resource file
-        fastaPath = "/Users/reecejones/Dev/hmftools/temp/cider-gene-curator/output/igtcr_gene.${genomeVersion.identifier()}.fasta"
+        fastaPath = "/Users/reecejones/Dev/hmftools/temp/cider-gene-curator/output-ref-100b/igtcr_gene.${genomeVersion.identifier()}.fasta"
         dictPath = "$fastaPath.dict"
         bwamemImgPath = "$fastaPath.img"
 

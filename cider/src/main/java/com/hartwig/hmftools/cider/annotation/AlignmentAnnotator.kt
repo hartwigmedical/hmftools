@@ -143,9 +143,9 @@ class AlignmentAnnotator
         val alignments = preprocessAlignments(metadata, refAlignments)
         for (alignment in alignments)
         {
-            val alignLength = (alignment.queryEnd - alignment.queryStart + 1)
+            val distance = alignment.editDistance.toDouble() / metadata.querySeq.length
             val minAlignLength = metadata.querySeq.length * ANNOTATION_MATCH_REF_IDENTITY
-            if (alignment.editDistancePct <= 1 - ANNOTATION_MATCH_REF_IDENTITY && alignLength >= minAlignLength)
+            if (distance <= 1 - ANNOTATION_MATCH_REF_IDENTITY && alignment.queryAlignLength >= minAlignLength)
             {
                 return AlignmentAnnotation(metadata.vdj, AlignmentStatus.NO_REARRANGEMENT, fullAlignment = alignment)
             }
@@ -179,9 +179,13 @@ class AlignmentAnnotator
             val vdjGene = mVdjGenes[imgtSequence.geneAllele] ?: continue
 
             // For V/J gene segments, require 90% identity as a baseline.
-            if (vdjGene.region.isVJ && alignment.editDistancePct > 1 - ANNOTATION_VJ_IDENTITY_MIN)
+            if (vdjGene.region.isVJ)
             {
-                continue
+                val distance = alignment.alignedEditDistance.toDouble() / alignment.queryAlignLength
+                if (distance > 1 - ANNOTATION_VJ_IDENTITY_MIN)
+                {
+                    continue
+                }
             }
 
             // we must check to make sure the locus matches the top alignment
