@@ -622,7 +622,11 @@ public class AssemblyVisualiser
             refViewModel.add(new SegmentViewModel(breakendInfo.chromosome, breakendInfo.pos, breakendInfo.refRegion, viewRegion, refViewRegion, refSeqViewModel, isRefReversed, assemblySeqViewModel, false, breakendInfo.leftDelLength));
             if(i < assemblyAlignment.breakends().size() - 1 && breakendInfo.insertedBases != null && !breakendInfo.insertedBases.isEmpty())
             {
-                BaseSeqViewModel insertSeqViewModel = BaseSeqViewModel.fromStr(breakendInfo.insertedBases, baseIdx);
+                String insertBases = breakendInfo.insertedBases;
+                if(isRefReversed)
+                    insertBases = reverseComplementBases(insertBases);
+
+                BaseSeqViewModel insertSeqViewModel = BaseSeqViewModel.fromStr(insertBases, baseIdx);
                 viewRegion = new BaseRegion(baseIdx, baseIdx + breakendInfo.insertedBases.length() - 1);
                 baseIdx += breakendInfo.insertedBases.length();
                 refViewModel.add(new SegmentViewModel(null, null, null, viewRegion, null, null, false, insertSeqViewModel, true, 0));

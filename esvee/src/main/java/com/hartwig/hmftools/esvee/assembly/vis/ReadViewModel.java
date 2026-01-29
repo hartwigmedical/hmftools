@@ -213,7 +213,7 @@ public final class ReadViewModel
 
                     for(int i = 0; i < insertLength; i++)
                     {
-                        int baseIdx = mismatch.ReadIndex + (i + 1) * (isBuiltForward ? 1 : -1);
+                        int baseIdx = mismatch.ReadIndex + (isBuiltForward ? 0 : 1) + (i + 1) * (isBuiltForward ? 1 : -1);
                         mappedCigarOps.get(baseIdx).set(0, I);
                     }
                 }
