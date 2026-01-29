@@ -226,9 +226,10 @@ fun runGRCh37PatchAlignment(sequences: List<String>, alignScoreThreshold: Int, t
     return runAlignmentFromResourceFasta(refFastaName, sequences, alignScoreThreshold, threadCount)
 }
 
-// Run alignment against the original IMGT gene allele sequences.
+// Run alignment against the IMGT gene allele sequences.
 fun runImgtAlignment(imgtSequenceFile: ImgtSequenceFile, sequences: List<String>, alignScoreThreshold: Int, threadCount: Int): List<List<Alignment>>
 {
+    sLogger.debug("Aligning ${sequences.size} sequences to IMGT gene alleles")
     return runBwaMem(sequences, imgtSequenceFile.dictPath, imgtSequenceFile.bwamemImgPath, alignScoreThreshold, threadCount)
 }
 
