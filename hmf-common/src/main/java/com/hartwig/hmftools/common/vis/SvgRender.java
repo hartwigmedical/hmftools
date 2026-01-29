@@ -29,6 +29,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.amber.BaseDepthData;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.vis.SvgUtil.Alignment;
 
@@ -496,12 +497,12 @@ public final class SvgRender
         }
     }
 
-    public record ChrLabel(String chromosome, int position, BaseRegion viewRegion, boolean isReversed, Alignment alignment) {}
+    public record ChrLabel_(String chromosome_, int position_, BaseRegion viewRegion_, @Nullable BaseRegion refRegion_, boolean isReversed_, List<Alignment> alignments_) {}
 
-    public static SVGGraphics2D renderChrLabels(double baseBoxSizePx, final List<ChrLabel> labels)
+    public static SVGGraphics2D renderChrLabels(double baseBoxSizePx, final List<ChrLabel_> labels_)
     {
-        int startIdx = labels.get(0).viewRegion.start();
-        int endIdx = labels.get(labels.size() - 1).viewRegion.end();
+        int startIdx = labels_.get(0).viewRegion_.start();
+        int endIdx = labels_.get(labels_.size() - 1).viewRegion_.end();
         int boxLength = endIdx - startIdx + 1;
         SVGGraphics2D svgCanvas = new SVGGraphics2D(baseBoxSizePx * boxLength, baseBoxSizePx);
 
@@ -509,42 +510,42 @@ public final class SvgRender
         svgCanvas.scale(baseBoxSizePx, baseBoxSizePx);
 
         svgCanvas.setFont(BASE_FONT);
-        for(ChrLabel label : labels)
+        for(ChrLabel_ label_ : labels_)
         {
-            String chromosome = label.chromosome;
-            BaseRegion viewRegion = label.viewRegion;
+            String chromosome = label_.chromosome_;
+            BaseRegion viewRegion_ = label_.viewRegion_;
 
             double boxX;
             String fullLabel;
             if(chromosome == null)
             {
                 fullLabel = INSERT_LABEL;
-                boxX = viewRegion.start() + 0.5d * viewRegion.baseLength();
+                boxX = viewRegion_.start() + 0.5d * viewRegion_.baseLength();
                 renderText(svgCanvas, ZERO_2D, boxX, 0.5, svgCanvas.getFont(), Color.BLACK, fullLabel, null, 1.0, CENTER);
                 continue;
             }
 
             chromosome = enforceChrPrefix(chromosome);
-            Alignment alignment = label.alignment;
-            String strandLabel = label.isReversed ? "<<" : ">>";
-            String chrPositionLabel = chromosome + ":" + label.position;
-            if(alignment == CENTER)
+            for(Alignment alignment_ : label_.alignments_)
             {
-                fullLabel = strandLabel + " " + chrPositionLabel + " " + strandLabel;
-                boxX = viewRegion.start() + 0.5d * viewRegion.baseLength();
-            }
-            else if(alignment == LEFT)
-            {
-                fullLabel = chrPositionLabel + " " + strandLabel;
-                boxX = viewRegion.start() + BOX_PADDING;
-            }
-            else
-            {
-                fullLabel = strandLabel + " " + chrPositionLabel;
-                boxX = viewRegion.start() + viewRegion.baseLength();
-            }
+                String strandLabel = label_.isReversed_ ? "<<" : ">>";
+                int leftPosition = label_.isReversed_ ? label_.refRegion_.end() : label_.refRegion_.start();
+                int rightPosition = label_.isReversed_ ? label_.refRegion_.start() : label_.refRegion_.end();
+                int position = alignment_ == LEFT ? leftPosition : rightPosition;
+                String chrPositionLabel = chromosome + ":" + position;
+                if(alignment_ == LEFT)
+                {
+                    fullLabel = chrPositionLabel + " " + strandLabel;
+                    boxX = viewRegion_.start() + BOX_PADDING;
+                }
+                else
+                {
+                    fullLabel = strandLabel + " " + chrPositionLabel;
+                    boxX = viewRegion_.start() + viewRegion_.baseLength();
+                }
 
-            renderText(svgCanvas, ZERO_2D, boxX, 0.5, svgCanvas.getFont(), Color.BLACK, fullLabel, null, 1.0, alignment);
+                renderText(svgCanvas, ZERO_2D, boxX, 0.5, svgCanvas.getFont(), Color.BLACK, fullLabel, null, 1.0, alignment_);
+            }
         }
 
         return svgCanvas;
