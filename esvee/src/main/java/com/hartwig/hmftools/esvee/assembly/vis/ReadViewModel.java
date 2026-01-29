@@ -213,7 +213,7 @@ public final class ReadViewModel
 
                     for(int i = 0; i < insertLength; i++)
                     {
-                        int baseIdx = mismatch.ReadIndex + (i + 1) * (isBuiltForward ? 1 : -1);
+                        int baseIdx = mismatch.ReadIndex + (isBuiltForward ? 0 : 1) + (i + 1) * (isBuiltForward ? 1 : -1);
                         mappedCigarOps.get(baseIdx).set(0, I);
                     }
                 }
@@ -318,8 +318,17 @@ public final class ReadViewModel
         return new HandleDelResult(shiftedReadViewModel, indelOffset, newCigarEls);
     }
 
+    // TODO: remove
+    public final static String DBG_READ_NAME = "A00624:311:HWJF3DSX7:2:2666:27118:15953";
+
     public static ReadViewModel create(final List<SegmentViewModel> refViewModel, final SupportRead read, final JunctionAssembly junctionAssembly)
     {
+        // TODO:
+        if(DBG_READ_NAME.equals(read.id()))
+        {
+            System.out.println("");
+        }
+
         boolean readNegativeStrandFlag = read.orientation() == REVERSE;
         byte[] readBases = read.cachedRead().getBases();
         byte[] readBaseQuals = read.cachedRead().getBaseQuality();
@@ -390,6 +399,12 @@ public final class ReadViewModel
     @Nullable
     public DomContent render()
     {
+        // TODO: remove
+//        if(!DBG_READ_NAME.equals(mSupportRead.id()))
+//        {
+//            return null;
+//        }
+
         BaseRegion readRegion = new BaseRegion(mReadViewModel.FirstBasePos, mReadViewModel.LastBasePos);
 
         int totalBoxWidth = 0;

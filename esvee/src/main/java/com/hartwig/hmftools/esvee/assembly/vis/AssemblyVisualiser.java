@@ -701,8 +701,8 @@ public class AssemblyVisualiser
         for(int i = 0; i < assemblyAlignment.breakends().size(); i++)
         {
             Breakend breakend = assemblyAlignment.breakends().get(i);
-            boolean isRefReversed = (i == 0 && breakend.Orient == REVERSE) || (i == 1 && breakend.Orient == FORWARD);
-            BreakendInfo breakendInfo = extractBreakendInfo(config.RefGenome, breakend, fullAssemblySeq, isRefReversed, lastSequenceEnd);
+            boolean isRefReversed_ = (i == 0 && breakend.Orient == REVERSE) || (i == 1 && breakend.Orient == FORWARD);
+            BreakendInfo breakendInfo = extractBreakendInfo(config.RefGenome, breakend, fullAssemblySeq, isRefReversed_, lastSequenceEnd);
             lastSequenceEnd = breakendInfo.alignmentSequenceEnd;
 
             BaseSeqViewModel refSeqViewModel = BaseSeqViewModel.fromStr(breakendInfo.refSeq, baseIdx);
@@ -739,10 +739,14 @@ public class AssemblyVisualiser
                 refViewRegion = new BaseRegion(viewRegionStart, viewRegionEnd);
             }
 
-            refViewModel.add(new SegmentViewModel(breakendInfo.chromosome, breakendInfo.pos, breakendInfo.refRegion, viewRegion, refViewRegion, refSeqViewModel, isRefReversed, assemblySeqViewModel, false, breakendInfo.leftDelLength));
+            refViewModel.add(new SegmentViewModel(breakendInfo.chromosome, breakendInfo.pos, breakendInfo.refRegion, viewRegion, refViewRegion, refSeqViewModel, isRefReversed_, assemblySeqViewModel, false, breakendInfo.leftDelLength));
             if(i < assemblyAlignment.breakends().size() - 1 && breakendInfo.insertedBases != null && !breakendInfo.insertedBases.isEmpty())
             {
-                BaseSeqViewModel insertSeqViewModel = BaseSeqViewModel.fromStr(breakendInfo.insertedBases, baseIdx);
+                String insertBases = breakendInfo.insertedBases;
+                if(isRefReversed_)
+                    insertBases = reverseComplementBases(insertBases);
+
+                BaseSeqViewModel insertSeqViewModel = BaseSeqViewModel.fromStr(insertBases, baseIdx);
                 viewRegion = new BaseRegion(baseIdx, baseIdx + breakendInfo.insertedBases.length() - 1);
                 baseIdx += breakendInfo.insertedBases.length();
                 refViewModel.add(new SegmentViewModel(null, null, null, viewRegion, null, null, false, insertSeqViewModel, true, 0));
