@@ -325,22 +325,22 @@ class AlignmentAnnotator
             // The V region is from Cys104 (last amino acid of anchor) upstream to the start of the second exon.
             // It seems like the start of the sequence in the IMGT resource is the start of the second exon.
 
-            //                           V side         || anc ||    CDR3    || anc ||  J side
-            // layout:           LLLLLLLLLLLLLLLLLLLLLLLLAAAAAAACCCCCCCCCCCCCCAAAAAAALLLLLLLLLLLLLLLLLL
-            // alignment query:                |-------------------------------------------|
-            // IMGT sequence:       RRRRRRRIIIIIIIIIIIIIIIIIIIIIIIIII
-            //                      | ref ||         IMGT           |
-            // alignment:              |--------------------------|
-            // compare:             |--------------------------|
+            //                           V side      || anc ||    CDR3    || anc ||  J side
+            // layout:          LLLLLLLLLLLLLLLLLLLLLLAAAAAAACCCCCCCCCCCCCCAAAAAAALLLLLLLLLLLLLLLLLL
+            // alignment query:       |--------------------------------------------------------|
+            // IMGT sequence:     RRRRRRRRRRIIIIIIIIIIIIIIIIIIIIIIIII
+            //                    |  ref   ||         IMGT          |
+            // alignment:                |-----------------------|
+            // compare:                     |---------------|
 
             val isForward = alignment.strand == Strand.FORWARD
             val layoutSeqStranded = if (isForward) layoutSeq else reverseComplement(layoutSeq)
             val queryStartStranded = if (isForward) queryRange.start else layoutSeq.length - 1 - queryRange.endInclusive
-            val layoutSeqRange = if (isForward) 0 until layoutAnchorEnd else (layoutSeq.length - layoutAnchorEnd) until layoutSeq.length
+            val layoutSeqBounds = if (isForward) 0 until layoutAnchorEnd else (layoutSeq.length - layoutAnchorEnd) until layoutSeq.length
 
             val imgtSeq = imgtSequence.sequenceWithRef
             val imgtAlignStart = alignment.refStart - 1
-            val imgtSeqRange = imgtSequence.imgtRange
+            val imgtSeqBounds = imgtSequence.imgtRange
 
             var comparedBases = 0
             var matches = 0
@@ -359,7 +359,7 @@ class AlignmentAnnotator
                 {
                     for (i in 0 until element.length)
                     {
-                        if (layoutSeqRange.contains(layoutIndex) && imgtSeqRange.contains(imgtIndex))
+                        if (layoutSeqBounds.contains(layoutIndex) && imgtSeqBounds.contains(imgtIndex))
                         {
                             comparedBases++
                             if (firstComparedLayoutIndex == null)
