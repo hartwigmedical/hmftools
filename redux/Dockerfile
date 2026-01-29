@@ -15,6 +15,15 @@ RUN micromamba install -y -n base -c bioconda -c conda-forge \
     procps-ng \
     "openjdk >=8,<=21" \
     "samtools >=1.14" \
+    r-base \
+    bioconductor-variantannotation \
+    bioconductor-genomicranges \
+    r-dplyr \
+    r-tidyr \
+    r-ggplot2 \
+    r-patchwork \
+    xorg-libxt \
+    font-ttf-dejavu \
     && micromamba clean --all --yes
 
 ENV PATH="/opt/conda/bin:/opt/conda/condabin:${PATH}"
