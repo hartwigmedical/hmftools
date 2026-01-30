@@ -6,6 +6,7 @@ public enum PurpleLikelihoodMethod
     HOTSPOT,
     INFRAME,
     DNDS,
+    SPLICE_REGION,
     AMP,
     DEL,
     DISRUPTION,
