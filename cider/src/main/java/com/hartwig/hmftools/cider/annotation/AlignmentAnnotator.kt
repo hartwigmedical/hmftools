@@ -8,6 +8,7 @@ import com.hartwig.hmftools.cider.CiderConstants.ANNOTATION_VJ_IDENTITY_MIN
 import com.hartwig.hmftools.cider.genes.IgTcrGene
 import com.hartwig.hmftools.cider.genes.IgTcrGene.Companion.fromCommonIgTcrGene
 import com.hartwig.hmftools.cider.genes.IgTcrLocus
+import com.hartwig.hmftools.cider.genes.VJ
 import com.hartwig.hmftools.common.cider.IgTcrGeneFile
 import com.hartwig.hmftools.common.cider.IgTcrRegion
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion
@@ -221,18 +222,12 @@ class AlignmentAnnotator
 
     private fun compareSequenceToImgt(metadata: AlignmentMetadata, match: GeneMatchCandidate): GeneComparison?
     {
-        val vdj = metadata.vdj
-
-        return if (match.gene.region == IgTcrRegion.V_REGION)
+        return when(match.gene.region)
         {
-            val layoutAnchorEnd = vdj.layoutSliceStart + (vdj.vAnchorBoundary ?: return null)
-            compareVRegionToImgt(
-                vdj.layout.consensusSequenceString(), layoutAnchorEnd,
-                match.imgtSequence,
-                metadata.querySeqRange, match.alignment)
+            IgTcrRegion.V_REGION -> compareVRegionToImgt(metadata.vdj, match.imgtSequence, metadata.querySeqRange, match.alignment)
+            IgTcrRegion.J_REGION -> compareJRegionToImgt(metadata.vdj, match.imgtSequence, metadata.querySeqRange, match.alignment)
+            else -> null
         }
-        // TODO? J side
-        else null
     }
 
     private companion object
@@ -316,7 +311,24 @@ class AlignmentAnnotator
         }
 
         fun compareVRegionToImgt(
-            layoutSeq: String, layoutAnchorEnd: Int, imgtSequence: ImgtSequenceFile.Sequence, queryRange: IntRange, alignment: Alignment
+            vdj: VDJSequence, imgtSequence: ImgtSequenceFile.Sequence, queryRange: IntRange, alignment: Alignment) : GeneComparison?
+        {
+            val layoutAnchorBoundary = vdj.layoutSliceStart + (vdj.vAnchorBoundary ?: return null)
+            return compareVJRegionToImgt(
+                vdj.layout.consensusSequenceString(), VJ.V, layoutAnchorBoundary, imgtSequence, queryRange, alignment)
+        }
+
+        fun compareJRegionToImgt(
+            vdj: VDJSequence, imgtSequence: ImgtSequenceFile.Sequence, queryRange: IntRange, alignment: Alignment) : GeneComparison?
+        {
+            val layoutAnchorBoundary = vdj.layoutSliceStart + (vdj.jAnchorBoundary ?: return null)
+            return compareVJRegionToImgt(
+                vdj.layout.consensusSequenceString(), VJ.J, layoutAnchorBoundary, imgtSequence, queryRange, alignment)
+        }
+
+        fun compareVJRegionToImgt(
+            layoutSeq: String, type: VJ, layoutAnchorBoundary: Int, imgtSequence: ImgtSequenceFile.Sequence, queryRange: IntRange,
+            alignment: Alignment
         ): GeneComparison?
         {
             // Calculate percentage identity of the V region between the sample and IMGT sequence.
@@ -333,10 +345,15 @@ class AlignmentAnnotator
             // alignment:                |-----------------------|
             // compare:                     |---------------|
 
+            // Similar logic for the J side.
+
+            val isV = type == VJ.V
             val isForward = alignment.strand == Strand.FORWARD
             val layoutSeqStranded = if (isForward) layoutSeq else reverseComplement(layoutSeq)
             val queryStartStranded = if (isForward) queryRange.start else layoutSeq.length - 1 - queryRange.endInclusive
-            val layoutSeqBounds = if (isForward) 0 until layoutAnchorEnd else (layoutSeq.length - layoutAnchorEnd) until layoutSeq.length
+            val layoutSeqBounds = if (isV)
+                    (if (isForward) 0 until layoutAnchorBoundary else (layoutSeq.length - layoutAnchorBoundary) until layoutSeq.length)
+            else (if (isForward) layoutAnchorBoundary until layoutSeq.length else 0 until layoutSeq.length - layoutAnchorBoundary)
 
             val imgtSeq = imgtSequence.sequenceWithRef
             val imgtAlignStart = alignment.refStart - 1
