@@ -26,6 +26,7 @@ public record GainDeletion(
     {
         GERMLINE_DEL_HOM_IN_TUMOR,
         GERMLINE_DEL_HET_IN_TUMOR,
+        GERMLINE_GAIN,
         SOMATIC_GAIN,
         SOMATIC_DEL,
         SOMATIC_LOH
