@@ -525,7 +525,14 @@ public class OrangeAlgo
             return null;
         }
 
-        return LilacSummaryData.load(config.lilacQcTsv(), config.lilacResultTsv());
+        // TODO:
+//        return LilacSummaryData.load(config.lilacQcTsv(), config.lilacResultTsv());
+        if(true)
+        {
+            System.out.println("");
+            System.exit(1);
+        }
+        return null;
     }
 
     @Nullable

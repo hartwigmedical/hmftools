@@ -191,14 +191,17 @@ public final class TestOrangeReportFactory
     @NotNull
     private static LilacRecord createTestLilacData()
     {
-        List<LilacAllele> alleles = Lists.newArrayList();
-        alleles.add(OrangeConversion.convert(LilacTestFactory.alleleBuilder().allele("Allele 1").build(), true, true));
-        alleles.add(OrangeConversion.convert(LilacTestFactory.alleleBuilder()
-                .allele("Allele 2")
-                .somaticInframeIndel(1D)
-                .build(), true, true));
+        // TODO:
+//        List<LilacAllele> alleles = Lists.newArrayList();
+//        alleles.add(OrangeConversion.convert(LilacTestFactory.alleleBuilder().allele("Allele 1").build(), true, true));
+//        alleles.add(OrangeConversion.convert(LilacTestFactory.alleleBuilder()
+//                .allele("Allele 2")
+//                .somaticInframeIndel(1D)
+//                .build(), true, true));
+//
+//        return ImmutableLilacRecord.builder().qc("PASS").alleles(alleles).build();
 
-        return ImmutableLilacRecord.builder().qc("PASS").alleles(alleles).build();
+        return null;
     }
 
     @NotNull

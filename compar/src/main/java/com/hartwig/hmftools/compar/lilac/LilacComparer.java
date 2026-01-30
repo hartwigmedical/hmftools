@@ -90,10 +90,18 @@ public class LilacComparer implements ItemComparer
 
         try
         {
-            LilacQcData qcData = LilacQcData.read(LilacQcData.generateFilename(fileSources.Lilac, sampleId));
+            List<LilacQcData> qcData = LilacQcData.read_(LilacQcData.generateFilename(fileSources.Lilac, sampleId));
             List<LilacAllele> alleles = LilacAllele.read(LilacAllele.generateFilename(fileSources.Lilac, sampleId));
 
-            comparableItems.add(new LilacData(qcData, alleles));
+            // TODO: what is alleles
+            if(true)
+            {
+                System.out.println("");
+                System.exit(1);
+            }
+
+            // TODO:
+//            comparableItems.add(new LilacData(qcData, alleles));
         }
         catch(IOException e)
         {

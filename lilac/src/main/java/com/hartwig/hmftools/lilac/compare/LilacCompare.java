@@ -114,18 +114,26 @@ public class LilacCompare
 
     private void compareQcData() throws IOException
     {
-        String origFile = LilacQcData.generateFilename(mOriginalDir, mSampleId);
-        String newFile = LilacQcData.generateFilename(mNewDir, mSampleId);
+        // TODO:
+        if(true)
+        {
+            System.out.println("");
+            System.exit(1);
+        }
 
-        LilacQcData origQcData = LilacQcData.read(origFile);
-        LilacQcData newQcData = LilacQcData.read(newFile);
-
-        checkDifference(FLD_QC_STATUS, origQcData.status(), newQcData.status());
-        checkDifference(FLD_TOTAL_FRAGS, origQcData.totalFragments(), newQcData.totalFragments());
-        checkDifference(FLD_FIT_FRAGS, origQcData.fittedFragments(), newQcData.fittedFragments());
-        checkDifference(FLD_DISC_ALIGN_FRAGS, origQcData.discardedAlignmentFragments(), newQcData.discardedAlignmentFragments());
-        checkDifference(FLD_DISC_INDELS, origQcData.discardedIndels(), newQcData.discardedIndels());
-        checkDifference(FLD_HLA_Y, origQcData.hlaYAllele(), newQcData.hlaYAllele());
+        // TODO:
+//        String origFile = LilacQcData.generateFilename(mOriginalDir, mSampleId);
+//        String newFile = LilacQcData.generateFilename(mNewDir, mSampleId);
+//
+//        LilacQcData origQcData = LilacQcData.read(origFile);
+//        LilacQcData newQcData = LilacQcData.read(newFile);
+//
+//        checkDifference(FLD_QC_STATUS, origQcData.status(), newQcData.status());
+//        checkDifference(FLD_TOTAL_FRAGS, origQcData.totalFragments(), newQcData.totalFragments());
+//        checkDifference(FLD_FIT_FRAGS, origQcData.fittedFragments(), newQcData.fittedFragments());
+//        checkDifference(FLD_DISC_ALIGN_FRAGS, origQcData.discardedAlignmentFragments(), newQcData.discardedAlignmentFragments());
+//        checkDifference(FLD_DISC_INDELS, origQcData.discardedIndels(), newQcData.discardedIndels());
+//        checkDifference(FLD_HLA_Y, origQcData.hlaYAllele(), newQcData.hlaYAllele());
     }
 
     private void compareFinalAlleles() throws IOException

@@ -68,13 +68,23 @@ public final class OrangeConversion
     @NotNull
     public static LilacRecord convert(@NotNull LilacSummaryData lilacSummaryData, boolean hasRef, boolean hasRna)
     {
-        return ImmutableLilacRecord.builder()
-                .qc(lilacSummaryData.qc())
-                .alleles(() -> lilacSummaryData.alleles()
-                        .stream()
-                        .map(allele -> OrangeConversion.convert(allele, hasRef, hasRna))
-                        .iterator())
-                .build();
+        // TODO:
+        if(true)
+        {
+            System.out.println("");
+            System.exit(1);
+        }
+
+        // TODO:
+//        return ImmutableLilacRecord.builder()
+//                .qc(lilacSummaryData.qc())
+//                .alleles(() -> lilacSummaryData.alleles()
+//                        .stream()
+//                        .map(allele -> OrangeConversion.convert(allele, hasRef, hasRna))
+//                        .iterator())
+//                .build();
+
+        return null;
     }
 
     @NotNull

@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.lilac.GeneSelector;
 import com.hartwig.hmftools.lilac.coverage.ComplexCoverage;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
@@ -69,9 +70,9 @@ public class CoverageQC
         WildcardFragments = wildcardFragments;
 
         FittedFragments = uniqueFragments + sharedFragments + wildcardFragments;
-        PercentUnique = 1.0 * uniqueFragments / FittedFragments;
-        PercentShared = 1.0 * sharedFragments / FittedFragments;
-        PercentWildcard = 1.0 * wildcardFragments / FittedFragments;
+        PercentUnique = FittedFragments == 0 ? 0d : 1.0 * uniqueFragments / FittedFragments;
+        PercentShared = FittedFragments == 0 ? 0d : 1.0 * sharedFragments / FittedFragments;
+        PercentWildcard = FittedFragments == 0 ? 0d : 1.0 * wildcardFragments / FittedFragments;
     }
 
     public static CoverageQC create(final Collection<Fragment> fragments, final ComplexCoverage winner)
@@ -158,6 +159,9 @@ public class CoverageQC
                 .filter(x -> !x.isPseudo())
                 .map(gene -> String.valueOf(CountsByGene.getOrDefault(gene, 0)))
                 .collect(Collectors.toCollection(Lists::newArrayList));
+
+        while(bodyStrs.size() < GeneSelector.MHC_CLASS_1.geneCount())
+            bodyStrs.add("0");
 
         bodyStrs.addAll(List.of(
                 String.valueOf(TotalFragments), String.valueOf(FittedFragments),
