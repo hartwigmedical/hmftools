@@ -617,7 +617,6 @@ public class ProbeGenerator
                 })
                 .toList();
 
-        // This must be executed before reading probeToPosition otherwise the stream won't have been enumerated yet.
         Optional<Probe> bestCandidate = selectBestCandidate(candidateProbes.stream(), evalCriteria, selectStrategy);
 
         // Always include the full list of candidate positions in the result.

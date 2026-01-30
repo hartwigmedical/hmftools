@@ -15,7 +15,7 @@ import java.util.stream.Stream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-// TODO: support single breakends?
+// TODO? support single breakends?
 
 // Probes covering a list of arbitrary structural variants provided by the user.
 public class CustomSvs
@@ -35,7 +35,7 @@ public class CustomSvs
         checkNoDuplicates(customSvs);
 
         ProbeGenerationResult result = generateProbes(customSvs, probeGenerator, panelData);
-        // TODO: should try to check overlaps better?
+        // TODO? should try to check overlaps better?
         // Generate all the probes at once and then add to the result because it's too hard to check overlap in advance, and it's unlikely
         // the user accidentally specified overlapping SVs.
         panelData.addResult(result);
