@@ -6,5 +6,10 @@ public enum ReportedStatus
     NON_DRIVER_GENE,
     NOT_REPORTED,
     CANDIDATE,
-    REPORTED,
+    REPORTED;
+
+    public static boolean isMoreReportable(ReportedStatus r1, ReportedStatus r2)
+    {
+        return r1.ordinal() > r2.ordinal();
+    }
 }

@@ -41,7 +41,7 @@ final class DisruptionFactory
     }
 
     // for the types of disruptions, see hmftools.common.driver.DriverType, they are:
-    // germline: GERMLINE_DISRUPTION, GERMLINE_HOM_DUP_DISRUPTION
+    // germline: GERMLINE_DISRUPTION
     // somatic: HOM_DUP_DISRUPTION, HOM_DEL_DISRUPTION, DISRUPTION
 
     // we can work out which disruption type it was by the following logic:
@@ -68,8 +68,8 @@ final class DisruptionFactory
                     .build();
         }
 
-        List<LinxBreakend> breakends = Objects.requireNonNull(linx.reportableGermlineBreakends());
-        List<LinxSvAnnotation> structuralVariants = Objects.requireNonNull(linx.allGermlineStructuralVariants());
+        List<LinxBreakend> breakends = Objects.requireNonNull(linx.germlineBreakends());
+        List<LinxSvAnnotation> structuralVariants = Objects.requireNonNull(linx.germlineStructuralVariants());
         List<LinxHomozygousDisruption> germlineHomozygousDisruptions = Objects.requireNonNull(linx.germlineHomozygousDisruptions());
 
         DisruptionTypeFinder findDisruptionType = (gene, transcript) ->
@@ -86,8 +86,8 @@ final class DisruptionFactory
 
     public static DriverFindingList<Disruption> createSomaticDisruptions(boolean hasReliablePurity, LinxRecord linx)
     {
-        @NotNull Collection<LinxBreakend> breakends = linx.reportableSomaticBreakends();
-        @NotNull Collection<LinxSvAnnotation> structuralVariants = linx.allSomaticStructuralVariants();
+        @NotNull Collection<LinxBreakend> breakends = linx.somaticBreakends();
+        @NotNull Collection<LinxSvAnnotation> structuralVariants = linx.somaticStructuralVariants();
         @NotNull List<LinxDriver> linxDrivers = linx.somaticDrivers();
 
         Map<String, Disruption.Type> geneDriverTypeMap = new HashMap<>();
@@ -169,12 +169,32 @@ final class DisruptionFactory
             double undisruptedCopyNumber,
             Collection<LinxSvAnnotation> structuralVariants, boolean hasReliablePurity)
     {
-        LinxBreakend breakend = breakendStart == null ? breakendEnd : breakendStart;
+        List<LinxBreakend> breakends = new ArrayList<>();
+        if(breakendStart != null)
+        {
+            breakends.add(breakendStart);
+        }
+        if(breakendEnd != null)
+        {
+            breakends.add(breakendEnd);
+        }
 
-        if(breakend == null)
+        if(breakends.isEmpty())
         {
             // should not be possible
             throw new IllegalStateException("Disruption with no breakend");
+        }
+
+        LinxBreakend breakend = breakends.get(0);
+
+        ReportedStatus reportedStatus = ReportedStatus.NON_DRIVER_GENE;
+        for(LinxBreakend b : breakends)
+        {
+            ReportedStatus status = DriverUtil.reportedStatus(b.reportedStatus());
+            if(ReportedStatus.isMoreReportable(status, reportedStatus))
+            {
+                reportedStatus = status;
+            }
         }
 
         return DisruptionBuilder.builder()
@@ -182,9 +202,9 @@ final class DisruptionFactory
                         DriverFieldsBuilder.builder()
                                 .findingKey(FindingKeys.disruption(sourceSample, breakend))
                                 .driverSource(sourceSample)
-                                .reportedStatus(breakend.reported() ? ReportedStatus.REPORTED : ReportedStatus.NOT_REPORTED)
-                                .driverInterpretation(breakend.reported() ? DriverInterpretation.HIGH : DriverInterpretation.LOW) // TODOHWL: fix
-                                .driverLikelihood(breakend.reported() ? 1.0 : 0.0)
+                                .reportedStatus(reportedStatus)
+                                .driverInterpretation(reportedStatus == ReportedStatus.REPORTED ? DriverInterpretation.HIGH : DriverInterpretation.LOW) // TODOHWL: fix
+                                .driverLikelihood(reportedStatus == ReportedStatus.REPORTED ? 1.0 : 0.0)
                                 .build()
                 )
                 .type(disruptionType)
@@ -217,7 +237,6 @@ final class DisruptionFactory
                 .isCanonical(linxBreakend.isCanonical())
                 .geneOrientation(linxBreakend.geneOrientation())
                 .disruptive(linxBreakend.disruptive())
-                .reported(linxBreakend.reported())
                 .undisruptedCopyNumber(linxBreakend.undisruptedCopyNumber())
                 .type(linxBreakend.type())
                 .regionType(linxBreakend.regionType())
@@ -275,7 +294,7 @@ final class DisruptionFactory
             if(breakends.size() == 1)
             {
                 LinxBreakend breakend = breakends.get(0);
-                if(breakend.geneOrientation() == LinxGeneOrientation.Upstream)
+                if(breakend.geneOrientation() == LinxGeneOrientation.UPSTREAM)
                 {
                     left = breakend;
                     right = null;
