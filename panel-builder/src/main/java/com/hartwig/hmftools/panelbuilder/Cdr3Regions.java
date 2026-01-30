@@ -42,9 +42,7 @@ public class Cdr3Regions
 
         List<IgTcrGene> genes = loadIgTcrGenes(refGenomeVersion);
 
-        ProbeGenerationResult result = generateProbes(genes, probeGenerator, panelData);
-        // Overlaps between CDR3 probes are checked as they are generated, so it's safe to add them to the result all at once at the end.
-        panelData.addResult(result);
+        generateProbes(genes, probeGenerator, panelData);
 
         LOGGER.info("Done generating CDR3 probes");
     }
@@ -60,13 +58,13 @@ public class Cdr3Regions
         return genes;
     }
 
-    private static ProbeGenerationResult generateProbes(final List<IgTcrGene> genes, final ProbeGenerator probeGenerator,
-            final PanelCoverage coverage)
+    private static void generateProbes(final List<IgTcrGene> genes, final ProbeGenerator probeGenerator,
+            PanelData panelData)
     {
         List<ChrBaseRegion> generatedRegions = new ArrayList<>();
         Stream<ProbeGenerationSpec> probeGenerationSpecs =
                 genes.stream().flatMap(gene -> createProbeGenerationSpec(gene, generatedRegions).stream());
-        return probeGenerator.generateBatch(probeGenerationSpecs, coverage);
+        probeGenerator.generateBatch(probeGenerationSpecs, panelData);
     }
 
     private static Optional<ProbeGenerationSpec> createProbeGenerationSpec(final IgTcrGene gene, List<ChrBaseRegion> generatedRegions)

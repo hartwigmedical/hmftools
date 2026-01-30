@@ -108,17 +108,11 @@ public class Genes
         List<GeneTranscriptData> geneTranscriptDatas = loadGeneTranscriptDatas(geneDefinitions, ensemblData);
         checkNoDuplicateGenes(geneTranscriptDatas);
 
-        // When generating probes, don't check probe overlap between genes. This is because:
-        //   - Assume different genes don't overlap, or if they do, it's small enough that the overlap is tolerable, and
-        //   - Within one gene, multiple transcripts are merged beforehand to avoid subregion overlap.
-
         LOGGER.debug("Generating probes");
         ProbeGenerationResult result = generateProbes(geneTranscriptDatas, probeGenerator, panelData);
 
         List<GeneStats> geneStats = computeGeneStats(result, geneTranscriptDatas);
         ExtraOutput extraOutput = new ExtraOutput(geneStats);
-
-        panelData.addResult(result);
 
         LOGGER.info("Done generating gene probes");
 
@@ -331,11 +325,11 @@ public class Genes
     }
 
     private static ProbeGenerationResult generateProbes(final List<GeneTranscriptData> genes, final ProbeGenerator probeGenerator,
-            final PanelCoverage coverage)
+            PanelData panelData)
     {
         Stream<ProbeGenerationSpec> probeGenerationSpecs = genes.stream()
                 .flatMap(gene -> createGeneRegions(gene).stream().map(Genes::createProbeGenerationSpec));
-        return probeGenerator.generateBatch(probeGenerationSpecs, coverage);
+        return probeGenerator.generateBatch(probeGenerationSpecs, panelData);
     }
 
     private static List<GeneRegion> createGeneRegions(final GeneTranscriptData gene)

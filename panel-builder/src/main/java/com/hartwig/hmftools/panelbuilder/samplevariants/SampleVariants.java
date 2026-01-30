@@ -26,10 +26,8 @@ import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.panelbuilder.EvaluationResult;
-import com.hartwig.hmftools.panelbuilder.PanelCoverage;
 import com.hartwig.hmftools.panelbuilder.PanelData;
 import com.hartwig.hmftools.panelbuilder.ProbeEvaluator;
-import com.hartwig.hmftools.panelbuilder.ProbeGenerationResult;
 import com.hartwig.hmftools.panelbuilder.ProbeGenerationSpec;
 import com.hartwig.hmftools.panelbuilder.ProbeGenerator;
 import com.hartwig.hmftools.panelbuilder.SequenceDefinition;
@@ -80,13 +78,10 @@ public class SampleVariants
         variants.addAll(GermlineSv.load(config.sampleId(), config.linxGermlineDir()));
 
         Map<Variant, EvaluationResult> variantFilters = new HashMap<>();
-        ProbeGenerationResult result =
-                generateProbes(variants, config.maxProbes(), config.prioritiseSmallIndels(), probeGenerator, panelData, variantFilters);
+        generateProbes(variants, config.maxProbes(), config.prioritiseSmallIndels(), probeGenerator, panelData, variantFilters);
 
         List<VariantInfo> variantInfos = createVariantInfos(variants, variantFilters);
         ExtraOutput extraOutput = new ExtraOutput(variantInfos);
-
-        panelData.addResult(result);
 
         LOGGER.info("Done generating sample variant probes");
 
@@ -104,32 +99,29 @@ public class SampleVariants
         }
     }
 
-    public static ProbeGenerationResult generateProbes(final List<Variant> variants, int maxProbes, boolean prioritiseSmallIndels,
-            final ProbeGenerator probeGenerator, final PanelCoverage coverage, Map<Variant, EvaluationResult> variantFilters)
+    public static void generateProbes(final List<Variant> variants, int maxProbes, boolean prioritiseSmallIndels,
+            final ProbeGenerator probeGenerator, PanelData panelData, Map<Variant, EvaluationResult> variantFilters)
     {
-        ProbeGenerationResult result = new ProbeGenerationResult();
+        int generatedProbes = 0;
         Map<String, Integer> geneDisruptions = new HashMap<>();
-        result = result.add(
-                generateProbes(
-                        remainingProbes -> selectDriverVariants(variants, geneDisruptions, variantFilters, remainingProbes),
-                        maxProbes - result.probes().size(), probeGenerator, coverage));
-        result = result.add(
-                generateProbes(
-                        remainingProbes -> selectNondriverVariants(variants, variantFilters, remainingProbes, prioritiseSmallIndels),
-                        maxProbes - result.probes().size(), probeGenerator, coverage));
-        return result;
+        generatedProbes += generateProbes(
+                remainingProbes -> selectDriverVariants(variants, geneDisruptions, variantFilters, remainingProbes),
+                maxProbes - generatedProbes, probeGenerator, panelData);
+        generatedProbes += generateProbes(
+                remainingProbes -> selectNondriverVariants(variants, variantFilters, remainingProbes, prioritiseSmallIndels),
+                maxProbes - generatedProbes, probeGenerator, panelData);
     }
 
-    private static ProbeGenerationResult generateProbes(final Function<Integer, List<Variant>> variantSelector, int maxProbes,
-            final ProbeGenerator probeGenerator, final PanelCoverage coverage)
+    private static int generateProbes(final Function<Integer, List<Variant>> variantSelector, int maxProbes,
+            final ProbeGenerator probeGenerator, PanelData panelData)
     {
         // Want to create exactly maxProbes probes if there are enough variants, but since probe evaluation is done in batches and can
         // reject probes, we need to iteratively generate until the quota is filled.
 
-        ProbeGenerationResult result = new ProbeGenerationResult();
+        int generatedProbes = 0;
         while(true)
         {
-            int remainingProbes = maxProbes - result.probes().size();
+            int remainingProbes = maxProbes - generatedProbes;
             if(remainingProbes <= 0)
             {
                 // Filled the probe quota.
@@ -144,10 +136,9 @@ public class SampleVariants
             }
 
             Stream<ProbeGenerationSpec> probeGenerationSpecs = variants.stream().map(SampleVariants::createProbeGenerationSpec);
-            // TODO? this won't check probe overlap between batches. maybe ok for variants?
-            result = result.add(probeGenerator.generateBatch(probeGenerationSpecs, coverage));
+            generatedProbes += probeGenerator.generateBatch(probeGenerationSpecs, panelData).probes().size();
         }
-        return result;
+        return generatedProbes;
     }
 
     private static List<Variant> selectDriverVariants(final List<Variant> variants, Map<String, Integer> geneDisruptions,
