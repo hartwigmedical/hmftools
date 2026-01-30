@@ -46,6 +46,8 @@ object VDJSequenceTsvWriter
         vGene,
         vGeneSupplementary,
         vPIdent,
+        vPIdentLen,
+        vPIdentIndels,
         vAlignStart,
         vAlignEnd,
         dGene,
@@ -56,6 +58,8 @@ object VDJSequenceTsvWriter
         jGene,
         jGeneSupplementary,
         jPIdent,
+        jPIdentLen,
+        jPIdentIndels,
         jAlignStart,
         jAlignEnd,
         vPrimerMatches,
@@ -135,6 +139,8 @@ object VDJSequenceTsvWriter
                 Column.vGeneSupplementary -> csvPrinter.print(formatGeneSupplementary(
                     vdjAnnotation.alignmentAnnotation?.vGene?.supplementaryGenes, vdjAnnotation.alignmentAnnotation?.vGene?.gene))
                 Column.vPIdent -> csvPrinter.print(vdjAnnotation.alignmentAnnotation?.vGene?.comparison?.pctIdentity)
+                Column.vPIdentLen -> csvPrinter.print(vdjAnnotation.alignmentAnnotation?.vGene?.comparison?.seqLength)
+                Column.vPIdentIndels -> csvPrinter.print(vdjAnnotation.alignmentAnnotation?.vGene?.comparison?.indelBases)
                 Column.vAlignStart -> if (vdjAnnotation.alignmentAnnotation != null)
                     {
                         csvPrinter.print(zeroBaseAlignStart(vdjAnnotation.alignmentAnnotation!!.vGene?.alignment))
@@ -175,6 +181,8 @@ object VDJSequenceTsvWriter
                 Column.jGeneSupplementary -> csvPrinter.print(formatGeneSupplementary(
                     vdjAnnotation.alignmentAnnotation?.jGene?.supplementaryGenes, vdjAnnotation.alignmentAnnotation?.jGene?.gene))
                 Column.jPIdent -> csvPrinter.print(vdjAnnotation.alignmentAnnotation?.jGene?.comparison?.pctIdentity)
+                Column.jPIdentLen -> csvPrinter.print(vdjAnnotation.alignmentAnnotation?.jGene?.comparison?.seqLength)
+                Column.jPIdentIndels -> csvPrinter.print(vdjAnnotation.alignmentAnnotation?.jGene?.comparison?.indelBases)
                 Column.jAlignStart -> if (vdjAnnotation.alignmentAnnotation != null)
                     {
                         csvPrinter.print(zeroBaseAlignStart(vdjAnnotation.alignmentAnnotation!!.jGene?.alignment))
