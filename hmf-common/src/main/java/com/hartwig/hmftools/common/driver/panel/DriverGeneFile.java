@@ -37,8 +37,7 @@ public final class DriverGeneFile
         return read(new File(filename).toPath());
     }
 
-    @NotNull
-    public static List<DriverGene> read(@NotNull final Path path) throws IOException
+    public static List<DriverGene> read(final Path path) throws IOException
     {
         return fromLines(Files.readAllLines(path));
     }
