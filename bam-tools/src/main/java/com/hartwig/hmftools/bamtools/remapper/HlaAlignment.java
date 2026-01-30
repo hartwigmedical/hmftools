@@ -12,7 +12,7 @@ import com.hartwig.hmftools.common.immune.ImmuneRegions;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.Arrays;
 
-import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
+import org.umccr.java.hellbender.utils.bwa.BwaMemAlignment;
 
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFlag;
