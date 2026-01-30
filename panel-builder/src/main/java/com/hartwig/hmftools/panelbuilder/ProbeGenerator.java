@@ -136,22 +136,22 @@ public class ProbeGenerator
         return batch.generate(resultBuffer);
     }
 
-    private ProbeGenerationResult generateGenericSpec(final ProbeGenerationSpec spec, final PanelCoverage existingCoverage)
+    private ProbeGenerationResult generateGenericSpec(final ProbeGenerationSpec spec, final PanelCoverage coverage)
     {
         if(spec instanceof ProbeGenerationSpec.CoverRegion specObj)
         {
             return coverRegion(
-                    specObj.region(), specObj.metadata(), specObj.evalCriteria(), specObj.localSelectStrategy(), existingCoverage);
+                    specObj.region(), specObj.metadata(), specObj.evalCriteria(), specObj.localSelectStrategy(), coverage);
         }
         else if(spec instanceof ProbeGenerationSpec.CoverOneSubregion specObj)
         {
             return coverOneSubregion(
-                    specObj.region(), specObj.metadata(), specObj.evalCriteria(), specObj.selectStrategy(), existingCoverage);
+                    specObj.region(), specObj.metadata(), specObj.evalCriteria(), specObj.selectStrategy(), coverage);
         }
         else if(spec instanceof ProbeGenerationSpec.CoverOnePosition specObj)
         {
             return coverOnePosition(
-                    specObj.positions(), specObj.metadata(), specObj.evalCriteria(), specObj.selectStrategy(), existingCoverage);
+                    specObj.positions(), specObj.metadata(), specObj.evalCriteria(), specObj.selectStrategy(), coverage);
         }
         else
         {
