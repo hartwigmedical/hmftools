@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.lilac;
 
+import java.util.Collections;
+
 import com.hartwig.hmftools.common.hla.ImmutableLilacAllele;
 import com.hartwig.hmftools.common.hla.ImmutableLilacSummaryData;
 import com.hartwig.hmftools.common.hla.LilacSummaryData;
@@ -12,7 +14,7 @@ public final class LilacTestFactory
     @NotNull
     public static LilacSummaryData createEmptyData()
     {
-        return ImmutableLilacSummaryData.builder().qc(Strings.EMPTY).build();
+        return ImmutableLilacSummaryData.builder().qc(Collections.emptyList()).build();
     }
 
     @NotNull
