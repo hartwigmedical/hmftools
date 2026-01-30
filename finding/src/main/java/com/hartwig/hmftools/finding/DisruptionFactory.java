@@ -54,7 +54,7 @@ final class DisruptionFactory
 
     // more note on Homozygous disruptions:
     // right now it is created from linx driver catalog entries instead of the linx breakends.
-    // It select HOM_DUP_DISRUPTION, HOM_DEL_DISRUPTION and GERMLINE_HOM_DUP_DISRUPTION. Unfortunately there is no foolproof way to link
+    // It select HOM_DUP_DISRUPTION, HOM_DEL_DISRUPTION. Unfortunately there is no foolproof way to link
     // back to the breakends, it probably will work by just selecting first reportable disruption with the same gene / transcript.
     // We can do it for the backport version if that makes it easier.
 
