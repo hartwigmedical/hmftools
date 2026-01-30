@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.driver.DriverCatalogTestFactory;
+import com.hartwig.hmftools.common.driver.DriverType;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.purple.GeneCopyNumberTestFactory;
 import com.hartwig.hmftools.common.purple.GermlineAmpDel;
@@ -18,6 +20,7 @@ import com.hartwig.hmftools.common.sv.ImmutableStructuralVariantLegImpl;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
+import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.orange.algo.linx.LinxOrangeTestFactory;
 import com.hartwig.hmftools.orange.algo.pave.PaveAlgo;
@@ -49,7 +52,9 @@ public class PurpleInterpreterTest
 
         PurpleInterpreter interpreter = createRealInterpreter();
         PurpleRecord interpreted = interpreter.interpret(purple);
-        assertEquals(1, interpreted.germlineGainsDels().size());
+        List<PurpleGainDeletion> germlineGainsDels = interpreted.germlineGainsDels();
+        assertNotNull(germlineGainsDels);
+        assertEquals(1, germlineGainsDels.size());
     }
 
     @Test
@@ -63,25 +68,10 @@ public class PurpleInterpreterTest
 
         PurpleInterpreter interpreter = createRealInterpreter();
         PurpleRecord interpreted = interpreter.interpret(purple);
-        // assertEquals(1, interpreted.otherGermlineDeletions().size());
-        assertEquals(1, interpreted.germlineGainsDels().size());
+        List<PurpleGainDeletion> germlineGainsDels = interpreted.germlineGainsDels();
+        assertNotNull(germlineGainsDels);
+        assertEquals(1, germlineGainsDels.size());
     }
-
-    @Test
-    public void canCreateNonReportableGermlineFullDels()
-    {
-        // Gene is needed to be able to match with ensembl test data
-        GermlineAmpDel hetUnreported = GermlineDeletionTestFactory.create(TEST_GENE, false, GermlineStatus.HET_DELETION, 1);
-        GermlineAmpDel homUnreported = GermlineDeletionTestFactory.create(TEST_GENE, false, GermlineStatus.HOM_DELETION, 2);
-
-        PurpleData purple = createPurpleTestData(Lists.newArrayList(hetUnreported, homUnreported));
-
-        PurpleInterpreter interpreter = createRealInterpreter();
-        PurpleRecord interpreted = interpreter.interpret(purple);
-        // assertEquals(1, interpreted.otherGermlineDeletions(). size());
-        assertEquals(0, interpreted.germlineGainsDels().size());
-    }
-
 
     @NotNull
     private static ImmutablePurpleData createPurpleTestData(@NotNull List<GermlineAmpDel> allGermlineDeletions)
@@ -91,6 +81,10 @@ public class PurpleInterpreterTest
                 .addSomaticGeneCopyNumbers(GeneCopyNumberTestFactory.createGeneCopyNumber("1", TEST_GENE, 0, 0))
                 .addAllGermlineDeletions(allGermlineDeletions)
                 .germlineDeletions(allGermlineDeletions.stream().filter(d -> d.Reported == ReportedStatus.REPORTED).collect(Collectors.toList()))
+                .addGermlineDrivers(DriverCatalogTestFactory.builder()
+                        .gene(TEST_GENE)
+                        .driver(DriverType.GERMLINE_DELETION)
+                        .build())
                 .build();
     }
 
@@ -112,12 +106,10 @@ public class PurpleInterpreterTest
         PaveAlgo pave = new PaveAlgo(ensemblDataCache, false);
         PurpleVariantFactory purpleVariantFactory = new PurpleVariantFactory(pave);
         GermlineGainDeletionFactory germlineGainDeletionFactory = new GermlineGainDeletionFactory(ensemblDataCache);
-        GermlineLossOfHeterozygosityFactory germlineLossOfHeterozygosityFactory = new GermlineLossOfHeterozygosityFactory(ensemblDataCache);
 
         return new PurpleInterpreter(
                 purpleVariantFactory,
-                germlineGainDeletionFactory,
-                germlineLossOfHeterozygosityFactory);
+                germlineGainDeletionFactory);
     }
 
     @NotNull

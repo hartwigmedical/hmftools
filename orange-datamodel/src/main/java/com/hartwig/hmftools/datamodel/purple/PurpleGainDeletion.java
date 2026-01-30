@@ -11,10 +11,20 @@ import org.jetbrains.annotations.Nullable;
 public interface PurpleGainDeletion
 {
     @NotNull
-    CopyNumberInterpretation interpretation();
+    PurpleDriver driver();
 
     @NotNull
-    String gene();
+    CopyNumberInterpretation interpretation();
+
+    // only populated for germline amp dels
+    @Nullable
+    GermlineAmpDelFields germlineAmpDelFields();
+
+    @NotNull
+    default String gene()
+    {
+        return driver().gene();
+    }
 
     @NotNull
     String chromosome();
@@ -23,11 +33,20 @@ public interface PurpleGainDeletion
     String chromosomeBand();
 
     @NotNull
-    String transcript();
+    default String transcript()
+    {
+        return driver().transcript();
+    }
 
-    boolean isCanonical();
+    default boolean isCanonical()
+    {
+        return driver().isCanonical();
+    }
 
+    // these are the tumor copies
     double minCopies();
 
     double maxCopies();
+
+    double minMinorAlleleCopies();
 }

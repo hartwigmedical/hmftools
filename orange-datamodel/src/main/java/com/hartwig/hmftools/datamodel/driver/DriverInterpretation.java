@@ -5,6 +5,7 @@ import org.jetbrains.annotations.NotNull;
 public enum DriverInterpretation
 {
     // must be listed from low to high for comparison
+    UNKNOWN,
     LOW,
     MEDIUM,
     HIGH;

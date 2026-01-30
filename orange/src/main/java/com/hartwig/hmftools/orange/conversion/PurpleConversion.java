@@ -6,6 +6,7 @@ import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GermlineAmpDel;
+import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.CodingEffect;
@@ -117,8 +118,8 @@ public final class PurpleConversion
                 .exonStart(germlineDeletion.ExonStart)
                 .exonEnd(germlineDeletion.ExonEnd)
                 .detectionMethod(PurpleGermlineDetectionMethod.valueOf(germlineDeletion.DetectionMethod.name()))
-                .normalStatus(PurpleGermlineStatus.valueOf(germlineDeletion.NormalStatus.name()))
-                .tumorStatus(PurpleGermlineStatus.valueOf(germlineDeletion.TumorStatus.name()))
+                .normalStatus(convert(germlineDeletion.NormalStatus))
+                .tumorStatus(convert(germlineDeletion.TumorStatus))
                 .germlineCopyNumber(germlineDeletion.GermlineCopyNumber)
                 .tumorCopyNumber(germlineDeletion.TumorCopyNumber)
                 .filter(germlineDeletion.Filter)
@@ -167,5 +168,11 @@ public final class PurpleConversion
                 .codingEffect(purpleCodingEffect)
                 .reported(reported)
                 .build();
+    }
+
+    @NotNull
+    public static PurpleGermlineStatus convert(@NotNull GermlineStatus germlineStatus)
+    {
+        return PurpleGermlineStatus.valueOf(germlineStatus.name());
     }
 }

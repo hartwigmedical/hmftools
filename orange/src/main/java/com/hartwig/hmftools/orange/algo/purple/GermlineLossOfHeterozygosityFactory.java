@@ -39,7 +39,7 @@ public class GermlineLossOfHeterozygosityFactory
         {
             List<GermlineAmpDel> deletionsForGene =
                     germlineDeletionsHeterozygousInTumor.stream().filter(d -> d.GeneName.equals(geneName)).collect(Collectors.toList());
-            GeneCopyNumber somaticGeneCopyNumber = GermlineDeletionUtil.findGeneCopyNumberForGene(geneName, allSomaticGeneCopyNumbers);
+            GeneCopyNumber somaticGeneCopyNumber = GermlineGainDeletionUtil.findGeneCopyNumberForGene(geneName, allSomaticGeneCopyNumbers);
 
             PurpleLossOfHeterozygosity  lossOfHeterozygosity = toPurpleLossOfHeterozygosity(
                     geneName, deletionsForGene, somaticGeneCopyNumber);
@@ -54,14 +54,14 @@ public class GermlineLossOfHeterozygosityFactory
     private PurpleLossOfHeterozygosity toPurpleLossOfHeterozygosity(@NotNull String geneName,
             @NotNull List<GermlineAmpDel> deletionsForGene, @NotNull GeneCopyNumber somaticGeneCopyNumber)
     {
-        TranscriptData canonicalTranscript = GermlineDeletionUtil.findCanonicalTranscript(geneName, ensemblDataCache);
-        GeneProportion geneProportion = GermlineDeletionUtil.deletionsCoverTranscript(deletionsForGene, canonicalTranscript)
+        TranscriptData canonicalTranscript = GermlineGainDeletionUtil.findCanonicalTranscript(geneName, ensemblDataCache);
+        GeneProportion geneProportion = GermlineGainDeletionUtil.deletionsCoverTranscript(deletionsForGene, canonicalTranscript)
                 ? GeneProportion.FULL_GENE
                 : GeneProportion.PARTIAL_GENE;
-        double minCopies = GermlineDeletionUtil.getSomaticMinCopyNumber(deletionsForGene);
-        double maxCopies = GermlineDeletionUtil.getSomaticMaxCopyNumber(deletionsForGene, somaticGeneCopyNumber, canonicalTranscript);
-        String chromosome = GermlineDeletionUtil.getChromosome(deletionsForGene);
-        String chromosomeBand = GermlineDeletionUtil.getChromosomeBand(deletionsForGene);
+        double minCopies = GermlineGainDeletionUtil.getSomaticMinCopyNumber(deletionsForGene);
+        double maxCopies = GermlineGainDeletionUtil.getSomaticMaxCopyNumber(deletionsForGene, somaticGeneCopyNumber, canonicalTranscript);
+        String chromosome = GermlineGainDeletionUtil.getChromosome(deletionsForGene);
+        String chromosomeBand = GermlineGainDeletionUtil.getChromosomeBand(deletionsForGene);
 
         return ImmutablePurpleLossOfHeterozygosity.builder()
                 .geneProportion(geneProportion)

@@ -216,14 +216,23 @@
     ],
     "somaticGainsDels": [
       {
+        "driver": {
+          "gene": "SMAD4",
+          "transcript": "ENST00000342988",
+          "type": "DEL",
+          "driverLikelihood": 1.0,
+          "likelihoodMethod": "HOTSPOT",
+          "reportedStatus": "REPORTED",
+          "driverInterpretation": "HIGH",
+          "isCanonical": false
+        },
         "interpretation": "FULL_DEL",
-        "gene": "SMAD4",
+        "germlineAmpDelFields": null,
         "chromosome": "5",
         "chromosomeBand": "q2.2",
-        "transcript": "ENST00000591126",
-        "isCanonical": false,
         "minCopies": 0.1,
-        "maxCopies": 1.2
+        "maxCopies": 1.2,
+        "minMinorAlleleCopies": 0.1
       }
     ],
     "germlineGainsDels": null
