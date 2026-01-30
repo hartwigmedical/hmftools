@@ -15,7 +15,6 @@ object AlignmentMatchTsvWriter
         matchType,
         gene,
         functionality,
-        editDistance,
         alignStart,
         alignEnd,
         alignScore,
@@ -23,6 +22,8 @@ object AlignmentMatchTsvWriter
         refStart,
         refEnd,
         refContig,
+        cigar,
+        editDistance,
         querySeq
     }
 
@@ -83,7 +84,6 @@ object AlignmentMatchTsvWriter
                     Column.matchType -> csvPrinter.print(type)
                     Column.gene -> csvPrinter.print(gene?.geneName)
                     Column.functionality -> csvPrinter.print(gene?.functionality?.toCode())
-                    Column.editDistance -> csvPrinter.print(alignment.editDistance)
                     Column.alignStart -> csvPrinter.print(alignment.queryStart)
                     Column.alignEnd -> csvPrinter.print(alignment.queryEnd)
                     Column.alignScore -> csvPrinter.print(alignment.alignmentScore)
@@ -91,6 +91,8 @@ object AlignmentMatchTsvWriter
                     Column.refStart -> csvPrinter.print(alignment.refStart)
                     Column.refEnd -> csvPrinter.print(alignment.refEnd)
                     Column.refContig -> csvPrinter.print(alignment.refContig)
+                    Column.cigar -> csvPrinter.print(alignment.cigar)
+                    Column.editDistance -> csvPrinter.print(alignment.editDistance)
                     Column.querySeq -> csvPrinter.print(alignment.querySeq)
                 }
             }
