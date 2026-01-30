@@ -34,11 +34,7 @@ public class CustomRegions
         checkRegionBounds(customRegions, chromosomeLengths);
         checkNoOverlaps(customRegions);
 
-        ProbeGenerationResult result = generateProbes(customRegions, probeGenerator, panelData);
-        // Mostly safe to generate the probes at once and then add to the result afterward,
-        // since we already checked that the custom regions don't overlap and assume any overlap from the probe generation is minimal.
-        // Potentially, there could be a small overlap if two custom regions were right next to each other.
-        panelData.addResult(result);
+        generateProbes(customRegions, probeGenerator, panelData);
 
         LOGGER.info("Done generating custom region probes");
     }
@@ -66,11 +62,10 @@ public class CustomRegions
         }
     }
 
-    private static ProbeGenerationResult generateProbes(final List<CustomRegion> customRegions, final ProbeGenerator probeGenerator,
-            final PanelCoverage coverage)
+    private static void generateProbes(final List<CustomRegion> customRegions, final ProbeGenerator probeGenerator, PanelData panelData)
     {
         Stream<ProbeGenerationSpec> probeGenerationSpecs = customRegions.stream().map(CustomRegions::createProbeGenerationSpec);
-        return probeGenerator.generateBatch(probeGenerationSpecs, coverage);
+        probeGenerator.generateBatch(probeGenerationSpecs, panelData);
     }
 
     private static ProbeGenerationSpec createProbeGenerationSpec(final CustomRegion region)

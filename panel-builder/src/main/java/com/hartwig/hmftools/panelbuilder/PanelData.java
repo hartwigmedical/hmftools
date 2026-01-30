@@ -9,16 +9,11 @@ import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 // Holds the panel output data, including probes, target regions, and rejected features.
 // It's a mutable data structure because it's also used during probe generation to check which regions are already covered.
-public class PanelData implements PanelCoverage
+public class PanelData implements PanelBuffer
 {
     private ProbeGenerationResult mData;
-
-    private static final Logger LOGGER = LogManager.getLogger(PanelData.class);
 
     public PanelData()
     {
@@ -31,6 +26,7 @@ public class PanelData implements PanelCoverage
         return mData.probes().stream().flatMap(probe -> probe.definition().regions().stream());
     }
 
+    @Override
     public void addResult(final ProbeGenerationResult result)
     {
         result.probes().forEach(probe ->
@@ -40,8 +36,6 @@ public class PanelData implements PanelCoverage
                 throw new IllegalArgumentException("Should only add accepted probes to the panel");
             }
         });
-        LOGGER.debug("Adding to panel: probes={} candidateTargetRegions={} rejectedFeatures={}",
-                result.probes().size(), result.candidateTargetRegions().size(), result.rejectedFeatures().size());
         mData = mData.add(result);
     }
 
