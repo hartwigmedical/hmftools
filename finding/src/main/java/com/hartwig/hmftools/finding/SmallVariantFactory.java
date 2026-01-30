@@ -29,7 +29,7 @@ final class SmallVariantFactory
         return DriverFindingListBuilder.<SmallVariant>builder()
                 .status(findingsStatus)
                 .findings(SmallVariantFactory.create(
-                        DriverSource.SOMATIC, purpleRecord.reportableSomaticVariants(), purpleRecord.somaticDrivers(),
+                        DriverSource.SOMATIC, purpleRecord.somaticVariants(), purpleRecord.somaticDrivers(),
                         clinicalTranscriptsModel, driverGeneMap))
                 .build();
     }
@@ -48,7 +48,7 @@ final class SmallVariantFactory
                     .build();
         }
 
-        List<PurpleVariant> germlineVariants = Objects.requireNonNull(purpleRecord.reportableGermlineVariants());
+        List<PurpleVariant> germlineVariants = Objects.requireNonNull(purpleRecord.germlineVariants());
         List<PurpleDriver> germlineDrivers = Objects.requireNonNull(purpleRecord.germlineDrivers());
 
         return DriverFindingListBuilder.<SmallVariant>builder()

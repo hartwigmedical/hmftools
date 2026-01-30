@@ -19,7 +19,6 @@ public record Breakend(
     boolean isCanonical,
     @NotNull LinxGeneOrientation geneOrientation,
     boolean disruptive,
-    boolean reported,
     double undisruptedCopyNumber,
     @NotNull LinxBreakendType type,
     @NotNull TranscriptRegionType regionType,

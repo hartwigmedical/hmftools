@@ -183,8 +183,8 @@ public class FindingRecordFactory
                             .hrStatus(chord.hrStatus())
                             .hrdType(chord.hrdType())
                             .lohCopyNumbers(filterLohGainDeletions(gainDeletions, Genes.HRD_GENES))
-                            .genes(GeneListUtil.genes(purple.reportableSomaticVariants(),
-                                    purple.reportableSomaticGainsDels(),
+                            .genes(GeneListUtil.genes(purple.somaticVariants(),
+                                    purple.somaticGainsDels(),
                                     linx.germlineHomozygousDisruptions(),
                                     Genes.HRD_GENES).stream().toList())
                             .build())
@@ -206,8 +206,8 @@ public class FindingRecordFactory
                         .microsatelliteStatus(purple.characteristics().microsatelliteStatus())
                         .microsatelliteIndelsPerMb(purple.characteristics().microsatelliteIndelsPerMb())
                         .lohCopyNumbers(filterLohGainDeletions(gainDeletions, Genes.MSI_GENES))
-                        .genes(GeneListUtil.genes(purple.reportableSomaticVariants(),
-                                purple.reportableSomaticGainsDels(),
+                        .genes(GeneListUtil.genes(purple.somaticVariants(),
+                                purple.somaticGainsDels(),
                                 linx.germlineHomozygousDisruptions(),
                                 Genes.MSI_GENES).stream().toList())
                         .build())
@@ -232,7 +232,7 @@ public class FindingRecordFactory
     {
         return DriverFindingListBuilder.<Fusion>builder()
                 .status(FindingsStatus.OK)
-                .findings(linx.reportableSomaticFusions().stream()
+                .findings(linx.fusions().stream()
                         .map(o -> convertFusion(o, DriverSource.SOMATIC)).sorted(Fusion.COMPARATOR).toList())
                 .build();
     }
@@ -277,7 +277,7 @@ public class FindingRecordFactory
         {
             case HIGH -> DriverInterpretation.HIGH;
             case LOW -> DriverInterpretation.LOW;
-            case NA -> DriverInterpretation.UNKNOWN;
+            case NA -> DriverInterpretation.LOW;
         };
     }
 
