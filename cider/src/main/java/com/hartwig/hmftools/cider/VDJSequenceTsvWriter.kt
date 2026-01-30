@@ -98,6 +98,8 @@ object VDJSequenceTsvWriter
     private fun writeVDJSequence(csvPrinter: CSVPrinter, vdjAnnotation: VdjAnnotation)
     {
         val vdj = vdjAnnotation.vdj
+        val alignmentAnnotation = vdjAnnotation.alignmentAnnotation
+        val alignmentOffset = alignmentAnnotation?.alignmentQueryRange?.start ?: 0
 
         for (c in Column.entries)
         {
@@ -107,7 +109,7 @@ object VDJSequenceTsvWriter
                 Column.cdr3AA -> csvPrinter.print(CiderFormatter.cdr3AminoAcid(vdj))
                 Column.locus -> csvPrinter.print(vdjAnnotation.locus.prettyPrint())
                 Column.filter -> csvPrinter.print(vdjAnnotation.filters.joinToString(separator = ";"))
-                Column.alignmentStatus -> csvPrinter.print(vdjAnnotation.alignmentAnnotation?.status ?: AlignmentStatus.SKIPPED_ALIGN)
+                Column.alignmentStatus -> csvPrinter.print(alignmentAnnotation?.status ?: AlignmentStatus.SKIPPED_ALIGN)
                 Column.minHighQualBaseReads -> csvPrinter.print(vdjAnnotation.cdr3SupportMin)
                 Column.assignedReads -> csvPrinter.print(vdj.numReads)
                 Column.vAlignedReads -> csvPrinter.print(vdjAnnotation.vAlignedReads)
@@ -135,70 +137,28 @@ object VDJSequenceTsvWriter
                 Column.jSimilarityScore -> csvPrinter.print(vdjAnnotation.jSimilarityScore)
                 Column.jNonSplitReads -> csvPrinter.print(vdjAnnotation.jNonSplitReads)
                 // TODO: output allele
-                Column.vGene -> csvPrinter.print(vdjAnnotation.alignmentAnnotation?.vGene?.gene?.geneName)
+                Column.vGene -> csvPrinter.print(alignmentAnnotation?.vGene?.gene?.geneName)
                 Column.vGeneSupplementary -> csvPrinter.print(formatGeneSupplementary(
-                    vdjAnnotation.alignmentAnnotation?.vGene?.supplementaryGenes, vdjAnnotation.alignmentAnnotation?.vGene?.gene))
-                Column.vPIdent -> csvPrinter.print(vdjAnnotation.alignmentAnnotation?.vGene?.comparison?.pctIdentity)
-                Column.vPIdentLen -> csvPrinter.print(vdjAnnotation.alignmentAnnotation?.vGene?.comparison?.seqLength)
-                Column.vPIdentIndels -> csvPrinter.print(vdjAnnotation.alignmentAnnotation?.vGene?.comparison?.indelBases)
-                Column.vAlignStart -> if (vdjAnnotation.alignmentAnnotation != null)
-                    {
-                        csvPrinter.print(zeroBaseAlignStart(vdjAnnotation.alignmentAnnotation!!.vGene?.alignment))
-                    }
-                    else
-                    {
-                        csvPrinter.print(null)
-                    }
-                Column.vAlignEnd -> if (vdjAnnotation.alignmentAnnotation != null)
-                    {
-                        csvPrinter.print(vdjAnnotation.alignmentAnnotation!!.vGene?.alignment?.queryEnd)
-                    }
-                    else
-                    {
-                        csvPrinter.print(null)
-                    }
-                Column.dGene -> csvPrinter.print(vdjAnnotation.alignmentAnnotation?.dGene?.gene?.geneName)
+                    alignmentAnnotation?.vGene?.supplementaryGenes, alignmentAnnotation?.vGene?.gene))
+                Column.vPIdent -> csvPrinter.print(alignmentAnnotation?.vGene?.comparison?.pctIdentity)
+                Column.vPIdentLen -> csvPrinter.print(alignmentAnnotation?.vGene?.comparison?.seqLength)
+                Column.vPIdentIndels -> csvPrinter.print(alignmentAnnotation?.vGene?.comparison?.indelBases)
+                Column.vAlignStart -> csvPrinter.print(alignmentAnnotation?.vGene?.alignment?.queryStart?.plus(alignmentOffset - 1))
+                Column.vAlignEnd -> csvPrinter.print(alignmentAnnotation?.vGene?.alignment?.queryEnd?.plus(alignmentOffset))
+                Column.dGene -> csvPrinter.print(alignmentAnnotation?.dGene?.gene?.geneName)
                 Column.dGeneSupplementary -> csvPrinter.print(formatGeneSupplementary(
-                    vdjAnnotation.alignmentAnnotation?.dGene?.supplementaryGenes, vdjAnnotation.alignmentAnnotation?.dGene?.gene))
-                Column.dPIdent -> csvPrinter.print(vdjAnnotation.alignmentAnnotation?.dGene?.comparison?.pctIdentity)
-                Column.dAlignStart -> if (vdjAnnotation.alignmentAnnotation != null)
-                    {
-                        csvPrinter.print(zeroBaseAlignStart(vdjAnnotation.alignmentAnnotation!!.dGene?.alignment))
-                    }
-                    else
-                    {
-                        csvPrinter.print(null)
-                    }
-                Column.dAlignEnd -> if (vdjAnnotation.alignmentAnnotation != null)
-                    {
-                        csvPrinter.print(vdjAnnotation.alignmentAnnotation!!.dGene?.alignment?.queryEnd)
-                    }
-                    else
-                    {
-                        csvPrinter.print(null)
-                    }
-                Column.jGene -> csvPrinter.print(vdjAnnotation.alignmentAnnotation?.jGene?.gene?.geneName)
+                    alignmentAnnotation?.dGene?.supplementaryGenes, alignmentAnnotation?.dGene?.gene))
+                Column.dPIdent -> csvPrinter.print(alignmentAnnotation?.dGene?.comparison?.pctIdentity)
+                Column.dAlignStart -> csvPrinter.print(alignmentAnnotation?.dGene?.alignment?.queryStart?.plus(alignmentOffset - 1))
+                Column.dAlignEnd -> csvPrinter.print(alignmentAnnotation?.dGene?.alignment?.queryEnd?.plus(alignmentOffset))
+                Column.jGene -> csvPrinter.print(alignmentAnnotation?.jGene?.gene?.geneName)
                 Column.jGeneSupplementary -> csvPrinter.print(formatGeneSupplementary(
-                    vdjAnnotation.alignmentAnnotation?.jGene?.supplementaryGenes, vdjAnnotation.alignmentAnnotation?.jGene?.gene))
-                Column.jPIdent -> csvPrinter.print(vdjAnnotation.alignmentAnnotation?.jGene?.comparison?.pctIdentity)
-                Column.jPIdentLen -> csvPrinter.print(vdjAnnotation.alignmentAnnotation?.jGene?.comparison?.seqLength)
-                Column.jPIdentIndels -> csvPrinter.print(vdjAnnotation.alignmentAnnotation?.jGene?.comparison?.indelBases)
-                Column.jAlignStart -> if (vdjAnnotation.alignmentAnnotation != null)
-                    {
-                        csvPrinter.print(zeroBaseAlignStart(vdjAnnotation.alignmentAnnotation!!.jGene?.alignment))
-                    }
-                    else
-                    {
-                        csvPrinter.print(null)
-                    }
-                Column.jAlignEnd -> if (vdjAnnotation.alignmentAnnotation != null)
-                    {
-                        csvPrinter.print(vdjAnnotation.alignmentAnnotation!!.jGene?.alignment?.queryEnd)
-                    }
-                    else
-                    {
-                        csvPrinter.print(null)
-                    }
+                    alignmentAnnotation?.jGene?.supplementaryGenes, alignmentAnnotation?.jGene?.gene))
+                Column.jPIdent -> csvPrinter.print(alignmentAnnotation?.jGene?.comparison?.pctIdentity)
+                Column.jPIdentLen -> csvPrinter.print(alignmentAnnotation?.jGene?.comparison?.seqLength)
+                Column.jPIdentIndels -> csvPrinter.print(alignmentAnnotation?.jGene?.comparison?.indelBases)
+                Column.jAlignStart -> csvPrinter.print(alignmentAnnotation?.jGene?.alignment?.queryStart?.plus(alignmentOffset - 1))
+                Column.jAlignEnd -> csvPrinter.print(alignmentAnnotation?.jGene?.alignment?.queryEnd?.plus(alignmentOffset))
                 Column.vPrimerMatches -> csvPrinter.print(vdjAnnotation.vPrimerMatchCount)
                 Column.jPrimerMatches -> csvPrinter.print(vdjAnnotation.jPrimerMatchCount)
                 Column.layoutId -> csvPrinter.print(vdj.layout.id)
@@ -207,11 +167,6 @@ object VDJSequenceTsvWriter
             }
         }
         csvPrinter.println()
-    }
-
-    private fun zeroBaseAlignStart(alignment: Alignment?) : Int?
-    {
-        return if (alignment == null) null else alignment.queryStart - 1
     }
 
     private fun formatGeneSupplementary(geneSupplementary: List<IgTcrGene>?, primaryGene: IgTcrGene?): String?

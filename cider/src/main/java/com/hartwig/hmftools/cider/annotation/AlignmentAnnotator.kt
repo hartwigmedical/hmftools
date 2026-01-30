@@ -40,6 +40,7 @@ data class GeneAnnotation(
 
 data class AlignmentAnnotation(
     val vdjSequence: VDJSequence,
+    val alignmentQueryRange: IntRange,
     val status: AlignmentStatus,
     val fullAlignment: Alignment? = null,
     val vGene: GeneAnnotation? = null,
@@ -141,14 +142,18 @@ class AlignmentAnnotator
     // Check if any alignments cover the whole sequence, in which case there is no VDJ rearrangement.
     private fun tryMatchReference(metadata: AlignmentMetadata, refAlignments: Collection<Alignment>): AlignmentAnnotation?
     {
-        val alignments = preprocessAlignments(metadata, refAlignments)
+        val alignments = preprocessAlignments(refAlignments)
         for (alignment in alignments)
         {
             val distance = alignment.editDistance.toDouble() / metadata.querySeq.length
             val minAlignLength = metadata.querySeq.length * ANNOTATION_MATCH_REF_IDENTITY
             if (distance <= 1 - ANNOTATION_MATCH_REF_IDENTITY && alignment.queryAlignLength >= minAlignLength)
             {
-                return AlignmentAnnotation(metadata.vdj, AlignmentStatus.NO_REARRANGEMENT, fullAlignment = alignment)
+                return AlignmentAnnotation(
+                    metadata.vdj,
+                    metadata.querySeqRange,
+                    AlignmentStatus.NO_REARRANGEMENT,
+                    fullAlignment = alignment)
             }
         }
         return null
@@ -163,7 +168,7 @@ class AlignmentAnnotator
     // Annotate the individual genes which have been rearranged to form this sequence.
     private fun matchRearrangedGenes(metadata: AlignmentMetadata, imgtAlignments: Collection<Alignment>): AlignmentAnnotation
     {
-        val alignments = preprocessAlignments(metadata, imgtAlignments)
+        val alignments = preprocessAlignments(imgtAlignments)
 
         val vdjSequence = metadata.vdj
 
@@ -213,6 +218,7 @@ class AlignmentAnnotator
 
         return AlignmentAnnotation(
             vdjSequence = vdjSequence,
+            alignmentQueryRange = metadata.querySeqRange,
             status = alignmentStatus,
             vGene = geneAnnotations[IgTcrRegion.V_REGION],
             dGene = geneAnnotations[IgTcrRegion.D_REGION],
@@ -243,18 +249,10 @@ class AlignmentAnnotator
             return range
         }
 
-        fun preprocessAlignments(metadata: AlignmentMetadata, alignments: Collection<Alignment>): List<Alignment>
+        fun preprocessAlignments(alignments: Collection<Alignment>): List<Alignment>
         {
-            val alignStartOffset = metadata.querySeqRange.start
             return alignments
                 .filter { it.alignmentScore >= ANNOTATION_ALIGN_SCORE_MIN }
-                .map {
-                    // we also need to fix up the matches, since we did not use the full sequence to query, the queryAlignStart
-                    // and queryAlignEnd indices are off
-                    it.copy(
-                        queryStart = it.queryStart + alignStartOffset,
-                        queryEnd = it.queryEnd + alignStartOffset)
-                }
                 .sortedBy { -it.alignmentScore }
         }
 
@@ -350,7 +348,7 @@ class AlignmentAnnotator
             val isV = type == VJ.V
             val isForward = alignment.strand == Strand.FORWARD
             val layoutSeqStranded = if (isForward) layoutSeq else reverseComplement(layoutSeq)
-            val queryStartStranded = if (isForward) queryRange.start else layoutSeq.length - 1 - queryRange.endInclusive
+            val layoutStart = if (isForward) queryRange.start else layoutSeq.length - 1 - queryRange.endInclusive
             val layoutSeqBounds = if (isV)
                     (if (isForward) 0 until layoutAnchorBoundary else (layoutSeq.length - layoutAnchorBoundary) until layoutSeq.length)
             else (if (isForward) layoutAnchorBoundary until layoutSeq.length else 0 until layoutSeq.length - layoutAnchorBoundary)
@@ -362,7 +360,7 @@ class AlignmentAnnotator
             var comparedBases = 0
             var matches = 0
             var indelBases = 0
-            var layoutIndex = queryStartStranded
+            var layoutIndex = layoutStart
             var imgtIndex = imgtAlignStart
             var firstComparedLayoutIndex: Int? = null
             var lastComparedLayoutIndex = 0

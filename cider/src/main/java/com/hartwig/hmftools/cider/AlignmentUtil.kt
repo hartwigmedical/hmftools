@@ -41,14 +41,14 @@ data class Alignment(
     val strand: Strand,     // If REVERSE, then the reverse complement of querySeq was matched to the reference.
     val alignmentScore: Int,
     val editDistance: Int,  // With respect to querySeq.
-    val cigar: List<CigarElement>
+    val cigar: List<CigarElement>,
+    val refContigLength: Int,
 )
 {
     init
     {
         require(queryStart >= 1)
-        // Can't assert this because later we adjust the start and end given that querySeq is a subsequence.
-//        require(queryEnd <= querySeq.length)
+        require(queryEnd <= querySeq.length)
         require(queryStart <= queryEnd)
         require(refStart >= 1)
         require(refStart <= refEnd)
@@ -202,7 +202,8 @@ private fun parseBwaMemAlignment(
         return null
     }
 
-    val refContig = refGenSeqDict.getSequence(alignment.refId).sequenceName
+    val refContigSequence = refGenSeqDict.getSequence(alignment.refId)
+    val refContig = refContigSequence.sequenceName
     val refStart = alignment.refStart + 1   // apparently BWA lib gives 0-based index
     val refEnd = alignment.refEnd
     require(refStart <= refEnd)
@@ -229,7 +230,8 @@ private fun parseBwaMemAlignment(
         strand,
         alignment.alignerScore,
         editDistance,
-        cigar
+        cigar,
+        refContigSequence.sequenceLength
     )
 }
 
