@@ -184,7 +184,7 @@ public class GermlineConversionTest
     @Test
     public void doesNotConvertGermlineLOHIfAlsoGermlineFullLoss()
     {
-        PurpleGainDeletion reportableGermlineFullDel = TestPurpleGainDeletionFactory.builder().gene(TEST_GENE1).build();
+        PurpleGainDeletion reportableGermlineFullDel = TestPurpleGainDeletionFactory.builder(TEST_GENE1).build();
 
         PurpleLossOfHeterozygosity germlineLOH = TestPurpleLossOfHeterozygosityFactory.builder().gene(TEST_GENE1).minCopies(0.8).build();
         PurpleGeneCopyNumber geneCopyNumber =
@@ -219,9 +219,11 @@ public class GermlineConversionTest
                 .gene(TEST_GENE1)
                 .build();
         PurpleGainDeletion somaticDel = TestPurpleGainDeletionFactory.builder()
-                .gene(TEST_GENE1)
+                .driver(TestPurpleGainDeletionFactory.driverBuilder()
+                        .gene(TEST_GENE1)
+                        .transcript(TEST_TRANSCRIPT1)
+                        .build())
                 .interpretation(CopyNumberInterpretation.PARTIAL_DEL)
-                .transcript(TEST_TRANSCRIPT1)
                 .minCopies(0.1)
                 .maxCopies(1.0)
                 .build();
@@ -232,9 +234,11 @@ public class GermlineConversionTest
                 .gene(TEST_GENE1)
                 .build();
         PurpleGainDeletion germlineDel = TestPurpleGainDeletionFactory.builder()
-                .gene(TEST_GENE1)
+                .driver(TestPurpleGainDeletionFactory.driverBuilder()
+                        .gene(TEST_GENE1)
+                        .transcript(TEST_TRANSCRIPT1)
+                        .build())
                 .interpretation(CopyNumberInterpretation.PARTIAL_DEL)
-                .transcript(TEST_TRANSCRIPT1)
                 .minCopies(0.2)
                 .maxCopies(0.9)
                 .build();
@@ -267,9 +271,11 @@ public class GermlineConversionTest
                 .gene(TEST_GENE1)
                 .build();
         PurpleGainDeletion somaticDel = TestPurpleGainDeletionFactory.builder()
-                .gene(TEST_GENE1)
+                .driver(TestPurpleGainDeletionFactory.driverBuilder()
+                        .gene(TEST_GENE1)
+                        .transcript(TEST_TRANSCRIPT1)
+                        .build())
                 .interpretation(CopyNumberInterpretation.FULL_DEL)
-                .transcript(TEST_TRANSCRIPT1)
                 .minCopies(0.1)
                 .maxCopies(0.3)
                 .build();
@@ -280,9 +286,11 @@ public class GermlineConversionTest
                 .gene(TEST_GENE1)
                 .build();
         PurpleGainDeletion germlineDel = TestPurpleGainDeletionFactory.builder()
-                .gene(TEST_GENE1)
+                .driver(TestPurpleGainDeletionFactory.driverBuilder()
+                        .gene(TEST_GENE1)
+                        .transcript(TEST_TRANSCRIPT1)
+                        .build())
                 .interpretation(CopyNumberInterpretation.FULL_DEL)
-                .transcript(TEST_TRANSCRIPT1)
                 .minCopies(0.2)
                 .maxCopies(0.4)
                 .build();
@@ -315,9 +323,11 @@ public class GermlineConversionTest
                 .gene(TEST_GENE1)
                 .build();
         PurpleGainDeletion somaticDel = TestPurpleGainDeletionFactory.builder()
-                .gene(TEST_GENE1)
+                .driver(TestPurpleGainDeletionFactory.driverBuilder()
+                        .gene(TEST_GENE1)
+                        .transcript(TEST_TRANSCRIPT1)
+                        .build())
                 .interpretation(CopyNumberInterpretation.PARTIAL_DEL)
-                .transcript(TEST_TRANSCRIPT1)
                 .minCopies(0.1)
                 .maxCopies(1.0)
                 .build();
@@ -328,9 +338,11 @@ public class GermlineConversionTest
                 .gene(TEST_GENE1)
                 .build();
         PurpleGainDeletion germlineDel = TestPurpleGainDeletionFactory.builder()
-                .gene(TEST_GENE1)
+                .driver(TestPurpleGainDeletionFactory.driverBuilder()
+                        .gene(TEST_GENE1)
+                        .transcript(TEST_TRANSCRIPT1)
+                        .build())
                 .interpretation(CopyNumberInterpretation.FULL_DEL)
-                .transcript(TEST_TRANSCRIPT1)
                 .minCopies(0.2)
                 .maxCopies(0.4)
                 .build();
@@ -363,9 +375,11 @@ public class GermlineConversionTest
                 .gene(TEST_GENE1)
                 .build();
         PurpleGainDeletion somaticDel = TestPurpleGainDeletionFactory.builder()
-                .gene(TEST_GENE1)
+                .driver(TestPurpleGainDeletionFactory.driverBuilder()
+                        .gene(TEST_GENE1)
+                        .transcript(TEST_TRANSCRIPT1)
+                        .build())
                 .interpretation(CopyNumberInterpretation.FULL_DEL)
-                .transcript(TEST_TRANSCRIPT1)
                 .minCopies(0.1)
                 .maxCopies(0.3)
                 .build();
@@ -376,9 +390,11 @@ public class GermlineConversionTest
                 .gene(TEST_GENE1)
                 .build();
         PurpleGainDeletion germlineDel = TestPurpleGainDeletionFactory.builder()
-                .gene(TEST_GENE1)
+                .driver(TestPurpleGainDeletionFactory.driverBuilder()
+                        .gene(TEST_GENE1)
+                        .transcript(TEST_TRANSCRIPT1)
+                        .build())
                 .interpretation(CopyNumberInterpretation.PARTIAL_DEL)
-                .transcript(TEST_TRANSCRIPT1)
                 .minCopies(0.2)
                 .maxCopies(1.1)
                 .build();
@@ -413,7 +429,9 @@ public class GermlineConversionTest
                 .isCanonical(false)
                 .build();
         PurpleGainDeletion somaticDel =
-                TestPurpleGainDeletionFactory.builder().gene(TEST_GENE1).transcript(TEST_TRANSCRIPT1).minCopies(0.1).maxCopies(1.0).build();
+                TestPurpleGainDeletionFactory.builder()
+                        .driver(TestPurpleGainDeletionFactory.driverBuilder().gene(TEST_GENE1).transcript(TEST_TRANSCRIPT1).build())
+                        .minCopies(0.1).maxCopies(1.0).build();
 
         PurpleDriver germlineDriver = PurpleDriverTestFactory.builder()
                 .type(PurpleDriverType.GERMLINE_DELETION)
@@ -424,7 +442,9 @@ public class GermlineConversionTest
                 .build();
 
         PurpleGainDeletion germlineDel =
-                TestPurpleGainDeletionFactory.builder().gene(TEST_GENE1).transcript(TEST_TRANSCRIPT2).minCopies(0.2).maxCopies(0.9).build();
+                TestPurpleGainDeletionFactory.builder()
+                        .driver(TestPurpleGainDeletionFactory.driverBuilder().gene(TEST_GENE1).transcript(TEST_TRANSCRIPT2).build())
+                        .minCopies(0.2).maxCopies(0.9).build();
 
         PurpleRecord purple = TestPurpleInterpretationFactory.builder()
                 .fit(createWithGermlineAberration())
@@ -451,7 +471,9 @@ public class GermlineConversionTest
                 .gene(TEST_GENE1)
                 .build();
         PurpleGainDeletion somaticAmp =
-                TestPurpleGainDeletionFactory.builder().gene(TEST_GENE1).transcript(TEST_TRANSCRIPT1).minCopies(20.).maxCopies(25.).build();
+                TestPurpleGainDeletionFactory.builder()
+                        .driver(TestPurpleGainDeletionFactory.driverBuilder().gene(TEST_GENE1).transcript(TEST_TRANSCRIPT1).build())
+                        .minCopies(20.).maxCopies(25.).build();
 
         PurpleDriver germlineDriver = PurpleDriverTestFactory.builder()
                 .type(PurpleDriverType.GERMLINE_DELETION)
@@ -459,7 +481,9 @@ public class GermlineConversionTest
                 .gene(TEST_GENE1)
                 .build();
         PurpleGainDeletion germlineDel =
-                TestPurpleGainDeletionFactory.builder().gene(TEST_GENE1).transcript(TEST_TRANSCRIPT1).minCopies(0.2).maxCopies(0.9).build();
+                TestPurpleGainDeletionFactory.builder()
+                        .driver(TestPurpleGainDeletionFactory.driverBuilder().gene(TEST_GENE1).transcript(TEST_TRANSCRIPT1).build())
+                        .minCopies(0.2).maxCopies(0.9).build();
 
         PurpleRecord purple = TestPurpleInterpretationFactory.builder()
                 .fit(createWithGermlineAberration())
@@ -484,7 +508,9 @@ public class GermlineConversionTest
                 .gene(TEST_GENE1)
                 .build();
         PurpleGainDeletion somaticPartialAmp =
-                TestPurpleGainDeletionFactory.builder().gene(TEST_GENE1).transcript(TEST_TRANSCRIPT1).minCopies(2.0).maxCopies(25.).build();
+                TestPurpleGainDeletionFactory.builder()
+                        .driver(TestPurpleGainDeletionFactory.driverBuilder().gene(TEST_GENE1).transcript(TEST_TRANSCRIPT1).build())
+                        .minCopies(2.0).maxCopies(25.).build();
 
         PurpleDriver germlineDriver = PurpleDriverTestFactory.builder()
                 .type(PurpleDriverType.GERMLINE_DELETION)
@@ -492,7 +518,9 @@ public class GermlineConversionTest
                 .gene(TEST_GENE1)
                 .build();
         PurpleGainDeletion germlineDel =
-                TestPurpleGainDeletionFactory.builder().gene(TEST_GENE1).transcript(TEST_TRANSCRIPT1).minCopies(0.2).maxCopies(0.3).build();
+                TestPurpleGainDeletionFactory.builder()
+                        .driver(TestPurpleGainDeletionFactory.driverBuilder().gene(TEST_GENE1).transcript(TEST_TRANSCRIPT1).build())
+                        .minCopies(0.2).maxCopies(0.3).build();
 
         PurpleRecord purple = TestPurpleInterpretationFactory.builder()
                 .fit(createWithGermlineAberration())
@@ -604,7 +632,7 @@ public class GermlineConversionTest
                 .type(PurpleDriverType.GERMLINE_DELETION)
                 .build();
         PurpleGainDeletion fullgermlineDelForDriver2 =
-                TestPurpleGainDeletionFactory.builder().gene("gene 2").interpretation(CopyNumberInterpretation.FULL_DEL).build();
+                TestPurpleGainDeletionFactory.builder("gene 2").interpretation(CopyNumberInterpretation.FULL_DEL).build();
 
         PurpleDriver germlineDriver3 = PurpleDriverTestFactory.builder()
                 .gene("gene 3")

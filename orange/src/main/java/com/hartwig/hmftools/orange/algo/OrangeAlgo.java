@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -204,11 +205,9 @@ public class OrangeAlgo
 
         GermlineGainDeletionFactory germlineGainDeletionFactory = new GermlineGainDeletionFactory(mEnsemblDataCache);
 
-        GermlineLossOfHeterozygosityFactory germlineLOHFactory = new GermlineLossOfHeterozygosityFactory(mEnsemblDataCache);
+        List<DriverGene> driverGenes = new ArrayList<>(mDriverGenes.values());
 
-        List<DriverGene> driverGenes = mDriverGenes.values().stream().collect(Collectors.toList());
-
-        PurpleInterpreter purpleInterpreter = new PurpleInterpreter(purpleVariantFactory, germlineGainDeletionFactory, germlineLOHFactory);
+        PurpleInterpreter purpleInterpreter = new PurpleInterpreter(purpleVariantFactory, germlineGainDeletionFactory);
 
         PurpleRecord purple = purpleInterpreter.interpret(purpleData);
 

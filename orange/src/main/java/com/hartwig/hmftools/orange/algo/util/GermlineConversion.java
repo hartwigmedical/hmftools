@@ -272,13 +272,12 @@ public final class GermlineConversion
 
         return ImmutablePurpleGainDeletion.builder()
                 .interpretation(interpretation)
+                .driver(somaticDel.driver()) // todo: fix it later
                 .chromosome(somaticDel.chromosome())
                 .chromosomeBand(somaticDel.chromosomeBand())
-                .gene(somaticDel.gene())
-                .transcript(somaticDel.transcript())
-                .isCanonical(somaticDel.isCanonical())
                 .minCopies(minCopies)
                 .maxCopies(maxCopies)
+                .minMinorAlleleCopies(somaticDel.minMinorAlleleCopies())
                 .build();
     }
 

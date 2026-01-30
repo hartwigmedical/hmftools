@@ -3,6 +3,8 @@ package com.hartwig.hmftools.orange.algo.purple;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
+import java.util.function.BinaryOperator;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
@@ -11,6 +13,7 @@ import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GermlineAmpDel;
+import com.hartwig.hmftools.common.purple.GermlineStatus;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -32,6 +35,13 @@ class GermlineDeletionUtil
         return Math.max(0, minCopyNumberFromDeletions);
     }
 
+    public static double getGermlineMinCopyNumber(@NotNull List<GermlineAmpDel> deletionsForGene)
+    {
+        return getCopyNumberFromAmpDels(deletionsForGene,
+                germlineAmpDel -> germlineAmpDel.GermlineCopyNumber,
+                Double::min);
+    }
+
     public static boolean deletionsCoverTranscript(@NotNull List<GermlineAmpDel> deletionsForGene, @NotNull TranscriptData transcript)
     {
         for(ExonData exon : transcript.exons())
@@ -42,6 +52,26 @@ class GermlineDeletionUtil
             }
         }
         return true;
+    }
+
+    public static GermlineStatus getGermlineGainDelStatus(@NotNull List<GermlineAmpDel> deletionsForGene)
+    {
+        if(deletionsForGene.isEmpty())
+        {
+            throw new IllegalArgumentException("Cannot determine germline status for empty list of germline deletions");
+        }
+
+        return deletionsForGene.stream().map(d -> d.NormalStatus).min(Comparator.naturalOrder()).orElseThrow();
+    }
+
+    public static GermlineStatus getSomaticGainDelStatus(@NotNull List<GermlineAmpDel> deletionsForGene)
+    {
+        if(deletionsForGene.isEmpty())
+        {
+            throw new IllegalArgumentException("Cannot determine germline status for empty list of germline deletions");
+        }
+
+        return deletionsForGene.stream().map(d -> d.TumorStatus).min(Comparator.naturalOrder()).orElseThrow();
     }
 
     @NotNull
@@ -57,6 +87,26 @@ class GermlineDeletionUtil
         if(transcript == null)
         {
             throw new IllegalStateException("Could not find canonical transcript in ensembl data cache for gene with id: " + gene.GeneId);
+        }
+
+        return transcript;
+    }
+
+    @NotNull
+    public static TranscriptData findTranscript(@NotNull String geneNameToFind, @NotNull String transcriptNameToFind, @NotNull EnsemblDataCache ensemblDataCache)
+    {
+        GeneData gene = ensemblDataCache.getGeneDataByName(geneNameToFind);
+        if(gene == null)
+        {
+            throw new IllegalStateException("Could not find gene in ensembl data cache with name: " + geneNameToFind);
+        }
+
+        TranscriptData transcript = ensemblDataCache.getTranscriptData(gene.GeneId, transcriptNameToFind);
+        if(transcript == null)
+        {
+            throw new IllegalStateException(
+                    String.format("Could not find transcript in ensembl data cache for gene id: %s transcript name: %s",
+                            gene.GeneId, transcriptNameToFind));
         }
 
         return transcript;
@@ -104,35 +154,50 @@ class GermlineDeletionUtil
     public static GeneCopyNumber findGeneCopyNumberForGene(@NotNull String geneNameToFind,
             @NotNull List<GeneCopyNumber> allSomaticGeneCopyNumbers)
     {
-        for(GeneCopyNumber geneCopyNumber : allSomaticGeneCopyNumbers)
-        {
-            if(geneCopyNumber.geneName().equals(geneNameToFind))
-            {
-                return geneCopyNumber;
-            }
-        }
+        return allSomaticGeneCopyNumbers.stream()
+                .filter(g -> g.geneName().equals(geneNameToFind))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("Could not find gene copy number for gene with name: " + geneNameToFind));
+    }
 
-        throw new IllegalStateException("Could not find gene copy number for gene with name: " + geneNameToFind);
+    @NotNull
+    public static GeneCopyNumber findGeneCopyNumberForGeneTranscript(
+            @NotNull String geneNameToFind,
+            @NotNull String transcriptToFind,
+            @NotNull List<GeneCopyNumber> allSomaticGeneCopyNumbers)
+    {
+        return allSomaticGeneCopyNumbers.stream()
+                .filter(g -> g.geneName().equals(geneNameToFind) && g.TransName.equals(transcriptToFind))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException(
+                        String.format("Could not find gene copy number for gene: %s transcript: %s", geneNameToFind, transcriptToFind)));
     }
 
     private static double getMinimumTumorCopyNumberFromDeletions(@NotNull List<GermlineAmpDel> deletionsForGene)
     {
-        if(deletionsForGene.isEmpty())
-        {
-            throw new IllegalArgumentException("Cannot determine minimum tumor copy number for empty list of germline deletions");
-        }
-
-        return deletionsForGene.stream().mapToDouble(d -> d.TumorCopyNumber).min().getAsDouble();
+        return getCopyNumberFromAmpDels(deletionsForGene,
+                germlineAmpDel -> germlineAmpDel.TumorCopyNumber,
+                Double::min);
     }
 
     private static double getMaximumTumorCopyNumberFromDeletions(@NotNull List<GermlineAmpDel> deletionsForGene)
     {
-        if(deletionsForGene.isEmpty())
+        return getCopyNumberFromAmpDels(deletionsForGene,
+                germlineAmpDel -> germlineAmpDel.TumorCopyNumber,
+                Double::max);
+    }
+
+    private static double getCopyNumberFromAmpDels(
+            @NotNull List<GermlineAmpDel> ampDelsForGene,
+            Function<GermlineAmpDel, Double> copyNumberGetter,
+            BinaryOperator<Double> minMaxOperator)
+    {
+        if(ampDelsForGene.isEmpty())
         {
-            throw new IllegalArgumentException("Cannot determine maximum tumor copy number for empty list of germline deletions");
+            throw new IllegalArgumentException("Cannot determine copy number for empty list of germline amp dels");
         }
 
-        return deletionsForGene.stream().mapToDouble(d -> d.TumorCopyNumber).max().getAsDouble();
+        return Math.max(0, ampDelsForGene.stream().map(copyNumberGetter).reduce(minMaxOperator).orElseThrow());
     }
 
     private static boolean deletionsCoverExon(@NotNull List<GermlineAmpDel> deletionsForGene, @NotNull ExonData exon)

@@ -1,20 +1,19 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 import java.util.List;
-import java.util.Map;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GeneCopyNumberTestFactory;
 import com.hartwig.hmftools.common.purple.GermlineAmpDel;
 import com.hartwig.hmftools.common.purple.GermlineDeletionTestFactory;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
+import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
 import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
+import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
+import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 import com.hartwig.hmftools.orange.algo.pave.TestEnsemblDataCacheFactory;
 
@@ -27,15 +26,6 @@ public class GermlineGainDeletionFactoryTest
     private static final double EPSILON = 1.0E-2;
 
     @Test
-    public void canFilterHetDeletion()
-    {
-        GermlineGainDeletionFactory factory = createTestFactory();
-
-        GermlineAmpDel reportableHet = GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HET_DELETION);
-        assertTrue(factory.getReportabilityMap(Lists.newArrayList(reportableHet), Lists.newArrayList()).isEmpty());
-    }
-
-    @Test
     public void canTransformReportableHomDeletionsToPartial()
     {
         GermlineGainDeletionFactory factory = createTestFactory();
@@ -46,15 +36,20 @@ public class GermlineGainDeletionFactoryTest
                 GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION, 0D, 400, 700);
         GermlineAmpDel reportablePartialHom2 =
                 GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION, 0D, 800, 1000);
-        List<GermlineAmpDel> deletions = Lists.newArrayList(reportablePartialHom1, reportablePartialHom2);
+        List<GermlineAmpDel> deletions = List.of(reportablePartialHom1, reportablePartialHom2);
 
         GeneCopyNumber partialLoss = GeneCopyNumberTestFactory.createGeneCopyNumber(TEST_GENE, 1D, 4D);
 
-        Map<PurpleGainDeletion, Boolean> map = factory.getReportabilityMap(deletions, Lists.newArrayList(partialLoss));
-        PurpleGainDeletion gainDel = map.keySet().iterator().next();
+        PurpleDriver purpleDriver = TestPurpleGainDeletionFactory.driverBuilder()
+                .gene(TEST_GENE)
+                .type(PurpleDriverType.GERMLINE_DELETION)
+                .build();
 
-        assertEquals(1, map.keySet().size());
-        assertTrue(map.get(gainDel));
+        List<PurpleGainDeletion> gainDels = factory.createGermlineGainDeletions(deletions, List.of(purpleDriver), List.of(partialLoss));
+        PurpleGainDeletion gainDel = gainDels.get(0);
+
+        assertEquals(1, gainDels.size());
+        assertEquals(ReportedStatus.REPORTED, gainDel.driver().reportedStatus());
         assertEquals(CopyNumberInterpretation.PARTIAL_DEL, gainDel.interpretation());
         assertEquals(TEST_GENE, gainDel.gene());
         assertEquals(0, gainDel.minCopies(), EPSILON);
@@ -62,20 +57,25 @@ public class GermlineGainDeletionFactoryTest
     }
 
     @Test
-    public void canTransformNonReportableHomDeletionToFull()
+    public void canTransformReportableHomDeletionToFull()
     {
         GermlineGainDeletionFactory factory = createTestFactory();
 
         // Gene runs from 150 to 950
         GermlineAmpDel reportableFullHom =
-                GermlineDeletionTestFactory.create(TEST_GENE, false, GermlineStatus.HOM_DELETION, 0D, 100, 1200);
+                GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION, 0D, 100, 1200);
         GeneCopyNumber fullLoss = GeneCopyNumberTestFactory.createGeneCopyNumber(TEST_GENE, 1D, 1D);
 
-        Map<PurpleGainDeletion, Boolean> map = factory.getReportabilityMap(Lists.newArrayList(reportableFullHom), Lists.newArrayList(fullLoss));
-        PurpleGainDeletion gainDel = map.keySet().iterator().next();
+        PurpleDriver purpleDriver = TestPurpleGainDeletionFactory.driverBuilder()
+                .gene(TEST_GENE)
+                .type(PurpleDriverType.GERMLINE_DELETION)
+                .build();
 
-        assertEquals(1, map.keySet().size());
-        assertFalse(map.get(gainDel));
+        List<PurpleGainDeletion> gainDels = factory.createGermlineGainDeletions(List.of(reportableFullHom), List.of(purpleDriver), List.of(fullLoss));
+        PurpleGainDeletion gainDel = gainDels.get(0);
+
+        assertEquals(1, gainDels.size());
+        assertEquals(ReportedStatus.REPORTED, gainDel.driver().reportedStatus());
         assertEquals(CopyNumberInterpretation.FULL_DEL, gainDel.interpretation());
         assertEquals(TEST_GENE, gainDel.gene());
         assertEquals(0, gainDel.minCopies(), EPSILON);
@@ -97,16 +97,20 @@ public class GermlineGainDeletionFactoryTest
                 GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION, 0D, 500, 800);
         GermlineAmpDel reportablePartial4 =
                 GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION, 0.2D, 700, 2000);
-        List<GermlineAmpDel> deletions =
-                Lists.newArrayList(reportablePartial1, reportablePartial2, reportablePartial3, reportablePartial4);
+        List<GermlineAmpDel> deletions = List.of(reportablePartial1, reportablePartial2, reportablePartial3, reportablePartial4);
 
         GeneCopyNumber partialLoss = GeneCopyNumberTestFactory.createGeneCopyNumber(TEST_GENE, 1D, 4D);
 
-        Map<PurpleGainDeletion, Boolean> map = factory.getReportabilityMap(deletions, Lists.newArrayList(partialLoss));
-        PurpleGainDeletion gainDel = map.keySet().iterator().next();
+        PurpleDriver purpleDriver = TestPurpleGainDeletionFactory.driverBuilder()
+                .gene(TEST_GENE)
+                .type(PurpleDriverType.GERMLINE_DELETION)
+                .build();
 
-        assertEquals(1, map.keySet().size());
-        assertTrue(map.get(gainDel));
+        List<PurpleGainDeletion> gainDels = factory.createGermlineGainDeletions(deletions, List.of(purpleDriver), List.of(partialLoss));
+        PurpleGainDeletion gainDel = gainDels.get(0);
+
+        assertEquals(1, gainDels.size());
+        assertEquals(ReportedStatus.REPORTED, gainDel.driver().reportedStatus());
         assertEquals(CopyNumberInterpretation.FULL_DEL, gainDel.interpretation());
         assertEquals(TEST_GENE, gainDel.gene());
         assertEquals(0, gainDel.minCopies(), EPSILON);
