@@ -9,7 +9,9 @@ import htsjdk.samtools.CigarElement
 import htsjdk.samtools.CigarOperator
 import htsjdk.samtools.SAMRecord
 import org.apache.logging.log4j.LogManager
+import java.io.InputStream
 import java.util.*
+import kotlin.io.path.createTempFile
 import kotlin.math.abs
 import kotlin.math.max
 
@@ -190,5 +192,18 @@ object CiderUtils
     fun getAdapterDnaTrim(read: SAMRecord): Pair<Int, Int>
     {
         return (read.getTransientAttribute(ADAPTER_DNA_TRIM_ATTRIBUTE) ?: Pair(0, 0)) as Pair<Int, Int>
+    }
+
+    fun getResourceAsStream(name: String): InputStream
+        = CiderUtils::class.java.classLoader.getResourceAsStream(name)!!
+
+    fun getResourceAsFile(name: String, suffix: String? = null): String
+    {
+        // I don't think we can get a file directly from the resources, so have to write it to a temporary file.
+        val resourceStream = getResourceAsStream(name)
+        val file = createTempFile(suffix = suffix).toFile()
+        file.deleteOnExit()
+        file.writeBytes(resourceStream.readAllBytes())
+        return file.path
     }
 }

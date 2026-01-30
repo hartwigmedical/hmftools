@@ -9,6 +9,8 @@ import com.hartwig.hmftools.cider.CiderConstants.BLASTN_CHROMOSOME_ASSEMBLY_REGE
 import com.hartwig.hmftools.cider.CiderConstants.BLASTN_MAX_TARGET_SEQUENCES
 import com.hartwig.hmftools.cider.CiderConstants.BLASTN_PRIMARY_ASSEMBLY_NAME
 import com.hartwig.hmftools.cider.CiderConstants.BWAMEM_BATCH_SIZE
+import com.hartwig.hmftools.cider.CiderUtils.getResourceAsStream
+import com.hartwig.hmftools.cider.CiderUtils.getResourceAsFile
 import com.hartwig.hmftools.cider.genes.GenomicLocation
 import com.hartwig.hmftools.common.bam.CigarUtils.cigarElementsFromStr
 import com.hartwig.hmftools.common.blastn.BlastnMatch
@@ -17,15 +19,15 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion
 import com.hartwig.hmftools.common.genome.region.Strand
 import htsjdk.samtools.CigarElement
 import htsjdk.samtools.SAMSequenceDictionary
+import htsjdk.samtools.reference.FastaSequenceIndex
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
 import htsjdk.samtools.reference.ReferenceSequenceFileFactory
 import org.apache.logging.log4j.LogManager
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAligner
 import org.broadinstitute.hellbender.utils.bwa.BwaMemIndex
-import java.io.File
 import java.io.FileInputStream
 import java.io.InputStream
-import kotlin.io.path.createTempFile
+import kotlin.io.path.Path
 
 private val sLogger = LogManager.getLogger("AlignmentUtil")
 
@@ -127,11 +129,15 @@ fun runBwaMem(sequences: List<String>, refGenomeDictPath: String, refGenomeIndex
     runBwaMem(sequences, FileInputStream(refGenomeDictPath), refGenomeIndexPath, alignScoreThreshold, numThreads)
 
 fun runBwaMem(sequences: List<String>, refGenomeDict: InputStream, refGenomeIndexPath: String, alignScoreThreshold: Int, numThreads: Int):
-        List<List<Alignment>>
+        List<List<Alignment>> =
+    runBwaMem(sequences, ReferenceSequenceFileFactory.loadDictionary(refGenomeDict), refGenomeIndexPath, alignScoreThreshold, numThreads)
+
+fun runBwaMem(
+    sequences: List<String>, refGenomeDict: SAMSequenceDictionary, refGenomeIndexPath: String, alignScoreThreshold: Int, numThreads: Int
+): List<List<Alignment>>
 {
     sLogger.debug("Aligning ${sequences.size} sequences with BWA-MEM")
 
-    val refGenSeqDict = ReferenceSequenceFileFactory.loadDictionary(refGenomeDict)
     val aligner = createBwaMemAligner(refGenomeIndexPath, alignScoreThreshold, numThreads)
 
     val results = ArrayList<List<Alignment>>()
@@ -143,7 +149,7 @@ fun runBwaMem(sequences: List<String>, refGenomeDict: InputStream, refGenomeInde
         // Perform a JVM garbage collection before alignment to reduce memory pressure.
         System.gc()
         val batchAlignments = aligner.alignSeqs(batchByteSeqs)
-        val batchResults = parseBwaMemAlignments(batchSequences, batchAlignments, refGenSeqDict)
+        val batchResults = parseBwaMemAlignments(batchSequences, batchAlignments, refGenomeDict)
         results.addAll(batchResults)
     }
     sLogger.debug("Alignment complete")
@@ -237,49 +243,40 @@ private fun getQueryClipping(cigar: List<CigarElement>, strand: Strand): Pair<In
 // Run alignment against a patch of the GRCh37 genome which includes more genes, particularly TRBJ1.
 fun runGRCh37PatchAlignment(sequences: List<String>, alignScoreThreshold: Int, threadCount: Int): List<List<Alignment>>
 {
+    sLogger.debug("Aligning ${sequences.size} sequences to GRCh37 patch")
     val refFastaName = "7_gl582971_fix.fasta"
-    return runAlignmentFromResourceFasta(refFastaName, sequences, alignScoreThreshold, threadCount)
+    val refDictStream = getResourceAsStream("$refFastaName.dict")
+    val refIndexImagePath = getResourceAsFile("$refFastaName.img")
+    return runBwaMem(sequences, refDictStream, refIndexImagePath, alignScoreThreshold, threadCount)
 }
 
 // Run alignment against the IMGT gene allele sequences.
 fun runImgtAlignment(imgtSequenceFile: ImgtSequenceFile, sequences: List<String>, alignScoreThreshold: Int, threadCount: Int): List<List<Alignment>>
 {
     sLogger.debug("Aligning ${sequences.size} sequences to IMGT gene alleles")
-    return runBwaMem(sequences, imgtSequenceFile.dictPath, imgtSequenceFile.bwamemImgPath, alignScoreThreshold, threadCount)
-}
-
-private fun runAlignmentFromResourceFasta(
-    refFastaName: String, sequences: List<String>, alignScoreThreshold: Int, threadCount: Int): List<List<Alignment>>
-{
-    sLogger.debug("Aligning ${sequences.size} sequences to resource $refFastaName")
-    val refDict = CiderApplication::class.java.classLoader.getResourceAsStream("$refFastaName.dict")!!
-    val refIndexImage = CiderApplication::class.java.classLoader.getResourceAsStream("$refFastaName.img")!!
-    // Unfortunately, the BWA-MEM API requires a file for the index image, which I don't think we can get straight from the resource.
-    // So we have to write the contents to a temporary file first.
-    val refIndexImageFile = createTempFile().toFile()
-    refIndexImageFile.deleteOnExit()
-    refIndexImageFile.writeBytes(refIndexImage.readAllBytes())
-    return runBwaMem(sequences, refDict, refIndexImageFile.path, alignScoreThreshold, threadCount)
+    return runBwaMem(sequences, imgtSequenceFile.fastaDict, imgtSequenceFile.bwamemImgPath, alignScoreThreshold, threadCount)
 }
 
 // Curated FASTA file which contains V/D/J gene alleles.
-// Includes the exact sequence from IMGT and some surrounding ref context if possible.
+// Includes the exact sequence from IMGT and maybe some surrounding ref context.
 class ImgtSequenceFile(genomeVersion: RefGenomeVersion)
 {
-    val fastaPath: String
-    val dictPath: String
+    val fastaDict: SAMSequenceDictionary
     val bwamemImgPath: String
     val sequencesByContig: Map<String, Sequence>
 
     init
     {
-        // TODO: update for real resource file
-        fastaPath = "/Users/reecejones/Dev/hmftools/temp/cider-gene-curator/output-ref-100b/igtcr_gene.${genomeVersion.identifier()}.fasta"
-        dictPath = "$fastaPath.dict"
-        bwamemImgPath = "$fastaPath.img"
+        val fastaName = "igtcr_gene.${genomeVersion.identifier()}.fasta"
 
-        val fasta = IndexedFastaSequenceFile(File(fastaPath))
-        sequencesByContig = fasta.sequenceDictionary.sequences
+        fastaDict = ReferenceSequenceFileFactory.loadDictionary(getResourceAsStream("$fastaName.dict"))
+        bwamemImgPath = getResourceAsFile("$fastaName.img")
+
+        val fastaIndex = FastaSequenceIndex(getResourceAsStream("$fastaName.fai"))
+        // Needs to end in .fasta or IndexedFastaSequenceFile will complain.
+        val fastaPath = getResourceAsFile(fastaName, ".fasta")
+        val fasta = IndexedFastaSequenceFile(Path(fastaPath), fastaIndex)
+        sequencesByContig = fastaDict.sequences
             .associateBy(
                 { it.sequenceName},
                 { Sequence.fromFasta(it.sequenceName, fasta.getSequence(it.sequenceName).baseString) })
