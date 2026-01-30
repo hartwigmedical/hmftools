@@ -4,8 +4,8 @@ import static java.util.Collections.emptyList;
 
 import static com.hartwig.hmftools.panelbuilder.ProbeUtils.probeTargetRegions;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Stream;
 
 public record ProbeGenerationResult(
         List<Probe> probes,
@@ -32,11 +32,13 @@ public record ProbeGenerationResult(
     public ProbeGenerationResult add(ProbeGenerationResult other)
     {
         // Naive merge, does not try to deduplicate data.
-        return new ProbeGenerationResult(
-                Stream.concat(probes.stream(), other.probes.stream()).toList(),
-                Stream.concat(candidateTargetRegions.stream(), other.candidateTargetRegions.stream()).toList(),
-                Stream.concat(rejectedFeatures.stream(), other.rejectedFeatures.stream()).toList()
-        );
+        ArrayList<Probe> newProbes = new ArrayList<>(probes);
+        newProbes.addAll(other.probes);
+        ArrayList<TargetRegion> newCandidateTargetRegions = new ArrayList<>(candidateTargetRegions);
+        newCandidateTargetRegions.addAll(other.candidateTargetRegions);
+        ArrayList<RejectedFeature> newRejectedFeatures = new ArrayList<>(rejectedFeatures);
+        newRejectedFeatures.addAll(other.rejectedFeatures);
+        return new ProbeGenerationResult(newProbes, newCandidateTargetRegions, newRejectedFeatures);
     }
 
     // Convenience method for creating a result from candidate targets which got no probes since they were already covered by the panel.

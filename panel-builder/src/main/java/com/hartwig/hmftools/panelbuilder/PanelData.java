@@ -1,9 +1,14 @@
 package com.hartwig.hmftools.panelbuilder;
 
+import static java.util.Collections.emptyList;
+
 import static com.hartwig.hmftools.panelbuilder.ProbeUtils.probeTargetedRegions;
 import static com.hartwig.hmftools.panelbuilder.RegionUtils.mergeOverlapAndAdjacentRegions;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -14,6 +19,7 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 public class PanelData implements PanelBuffer
 {
     private ProbeGenerationResult mData;
+    private final Map<String, List<ChrBaseRegion>> mCoveredRegionsCache = new HashMap<>();
 
     public PanelData()
     {
@@ -23,20 +29,40 @@ public class PanelData implements PanelBuffer
     @Override
     public Stream<ChrBaseRegion> coveredRegions()
     {
-        return mData.probes().stream().flatMap(probe -> probe.definition().regions().stream());
+        return mCoveredRegionsCache.values().stream().flatMap(List::stream);
+    }
+
+    @Override
+    public Stream<ChrBaseRegion> coveredRegions(final String chromosome)
+    {
+        return mCoveredRegionsCache.getOrDefault(chromosome, emptyList()).stream();
     }
 
     @Override
     public void addResult(final ProbeGenerationResult result)
     {
-        result.probes().forEach(probe ->
+        for(Probe probe : result.probes())
         {
             if(!probe.accepted())
             {
                 throw new IllegalArgumentException("Should only add accepted probes to the panel");
             }
-        });
+        }
+
         mData = mData.add(result);
+        for(Probe probe : result.probes())
+        {
+            for(ChrBaseRegion region : probe.definition().regions())
+            {
+                List<ChrBaseRegion> regions = mCoveredRegionsCache.get(region.chromosome());
+                if(regions == null)
+                {
+                    regions = new ArrayList<>();
+                    mCoveredRegionsCache.put(region.chromosome(), regions);
+                }
+                regions.add(region);
+            }
+        }
     }
 
     public List<Probe> probes()
