@@ -15,7 +15,7 @@ public interface PanelCoverage
     // Checks if a region is fully covered by probes in the panel.
     default boolean isCovered(final ChrBaseRegion region)
     {
-        return isFullyOverlappedBy(region, coveredRegions());
+        return isFullyOverlappedBy(region, coveredRegions(region.chromosome()));
     }
 
     // Checks if a probe sequence is fully covered by probes in the panel.
@@ -37,6 +37,11 @@ public interface PanelCoverage
 
     // Gets all regions covered by probes in the panel.
     Stream<ChrBaseRegion> coveredRegions();
+
+    default Stream<ChrBaseRegion> coveredRegions(final String chromosome)
+    {
+        return coveredRegions().filter(region -> region.chromosome().equals(chromosome));
+    }
 
     private static boolean needsCoverageCheck(final SequenceDefinition sequenceDefinition)
     {

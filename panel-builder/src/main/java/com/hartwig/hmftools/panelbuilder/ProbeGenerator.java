@@ -171,7 +171,8 @@ public class ProbeGenerator
     {
         List<ChrBaseRegion> subregions;
         // Split the region into uncovered subregions to avoid overlap with regions already covered by probes.
-        subregions = regionNegatedIntersection(region.baseRegion(), coverage.coveredRegions().map(ChrBaseRegion::baseRegion))
+        subregions = regionNegatedIntersection(region.baseRegion(), coverage.coveredRegions(region.chromosome())
+                .map(ChrBaseRegion::baseRegion))
                 .stream()
                 .map(baseRegion -> ChrBaseRegion.from(region.chromosome(), baseRegion))
                 .toList();
@@ -233,7 +234,8 @@ public class ProbeGenerator
 
         if(acceptableSubregions.size() > 1)
         {
-            acceptableSubregions.forEach(subregion -> LOGGER.trace("Split region into acceptable subregion: {}", subregion));
+            acceptableSubregions.forEach(subregion ->
+                    LOGGER.trace("Split region into acceptable subregion: {}", ChrBaseRegion.from(uncoveredRegion.chromosome(), subregion)));
         }
 
         List<Probe> probes = new ArrayList<>();
