@@ -9,9 +9,9 @@ import com.hartwig.hmftools.datamodel.driver.DriverSource;
 import com.hartwig.hmftools.datamodel.finding.*;
 import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
-import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
+import com.hartwig.hmftools.datamodel.purple.PurpleGermlineStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 
 final class GainDeletionFactory
@@ -25,8 +25,7 @@ final class GainDeletionFactory
         ChromosomeArmCopyNumberMap cnPerChromosome =
                 ChromosomeArmCopyNumberMap.create(purple.somaticCopyNumbers(), orangeRefGenomeVersion);
 
-        List<GainDeletion> gainDeletions = somaticDriverGainDels(purple.somaticGainsDels(), purple.somaticDrivers(),
-                purple.somaticGeneCopyNumbers(), cnPerChromosome);
+        List<GainDeletion> gainDeletions = somaticDriverGainDels(purple.somaticGainsDels(), cnPerChromosome);
 
         gainDeletions.sort(GainDeletion.COMPARATOR);
 
@@ -49,25 +48,14 @@ final class GainDeletionFactory
                     .build();
         }
 
-        List<PurpleGeneCopyNumber> somaticGeneCopyNumbers = purple.somaticGeneCopyNumbers();
-
         ChromosomeArmCopyNumberMap cnPerChromosome =
                 ChromosomeArmCopyNumberMap.create(purple.somaticCopyNumbers(), orangeRefGenomeVersion);
 
         List<GainDeletion> gainDeletions = new ArrayList<>();
-        List<PurpleDriver> germlineDrivers = Objects.requireNonNull(purple.germlineDrivers());
 
-        for(PurpleGainDeletion fullDels : Objects.requireNonNull(purple.germlineGainsDels()))
+        for(PurpleGainDeletion gainDels : Objects.requireNonNull(purple.germlineGainsDels()))
         {
-            // find the purple driver object, it should be there
-            PurpleDriver driver = Objects.requireNonNull(
-                    findDriver(germlineDrivers, fullDels.gene(), fullDels.transcript(), PurpleDriverType.GERMLINE_DELETION));
-
-            final PurpleGeneCopyNumber geneCopyNumber =
-                    findPurpleGeneCopyNumber(somaticGeneCopyNumbers, fullDels.gene(), fullDels.transcript());
-
-            gainDeletions.add(toGainDel(fullDels, driver, GainDeletion.Type.GERMLINE_DEL_HOM_IN_TUMOR, DriverSource.GERMLINE,
-                    geneCopyNumber, cnPerChromosome));
+            gainDeletions.add(toGainDel(gainDels, DriverSource.GERMLINE, cnPerChromosome));
         }
 
         gainDeletions.sort(GainDeletion.COMPARATOR);
@@ -87,54 +75,45 @@ final class GainDeletionFactory
     }
 
     private static List<GainDeletion> somaticDriverGainDels(
-            List<PurpleGainDeletion> gainDeletions, final List<PurpleDriver> drivers,
-            List<PurpleGeneCopyNumber> somaticGeneCopyNumbers,
-            ChromosomeArmCopyNumberMap cnPerChromosome)
+            List<PurpleGainDeletion> gainDeletions, ChromosomeArmCopyNumberMap cnPerChromosome)
     {
         List<GainDeletion> somaticGainsDels = new ArrayList<>();
         for(PurpleGainDeletion gainDeletion : gainDeletions)
         {
-            // we have to reverse the copy number interpretation logic to get back the purple driver type
-            final PurpleDriverType purpleDriverType = switch(gainDeletion.interpretation())
-            {
-                case FULL_GAIN -> PurpleDriverType.AMP;
-                case PARTIAL_GAIN -> PurpleDriverType.PARTIAL_AMP;
-                case FULL_DEL, PARTIAL_DEL -> PurpleDriverType.DEL;
-            };
-
-            PurpleDriver driver = findDriver(drivers, gainDeletion.gene(), gainDeletion.transcript(), purpleDriverType);
-
-            final GainDeletion.Type type = switch(gainDeletion.interpretation())
-            {
-                case FULL_GAIN, PARTIAL_GAIN -> GainDeletion.Type.SOMATIC_GAIN;
-                case FULL_DEL, PARTIAL_DEL -> GainDeletion.Type.SOMATIC_DEL;
-            };
-
-            final PurpleGeneCopyNumber geneCopyNumber =
-                    findPurpleGeneCopyNumber(somaticGeneCopyNumbers, gainDeletion.gene(), gainDeletion.transcript());
-
-            somaticGainsDels.add(toGainDel(gainDeletion, driver, type, DriverSource.SOMATIC, geneCopyNumber, cnPerChromosome));
+            somaticGainsDels.add(toGainDel(gainDeletion, DriverSource.SOMATIC, cnPerChromosome));
         }
         return somaticGainsDels;
     }
 
-    private static PurpleDriver findDriver(final List<PurpleDriver> drivers, final String gene, final String transcript,
-            final PurpleDriverType purpleDriverType)
-    {
-        return drivers.stream()
-                .filter(o -> o.gene().equals(gene) && o.transcript().equals(transcript) && o.type().equals(purpleDriverType))
-                .findFirst()
-                .orElseThrow(() -> new IllegalStateException(
-                        "No driver found for " + gene + " transcript " + transcript + " type " + purpleDriverType));
-    }
-
     private static GainDeletion toGainDel(PurpleGainDeletion purpleGainDeletion,
-            final PurpleDriver driver,
-            GainDeletion.Type type,
             DriverSource sourceSample,
-            PurpleGeneCopyNumber geneCopyNumber,
             ChromosomeArmCopyNumberMap cnPerChromosome)
     {
+        PurpleDriver driver = purpleGainDeletion.driver();
+
+        GainDeletion.Type type = switch(purpleGainDeletion.driver().type())
+        {
+            case AMP, PARTIAL_AMP -> GainDeletion.Type.SOMATIC_GAIN;
+            case DEL, HET_DEL -> GainDeletion.Type.SOMATIC_DEL;
+            case LOH -> GainDeletion.Type.SOMATIC_LOH;
+            case GERMLINE_DELETION -> {
+                if(purpleGainDeletion.germlineAmpDelFields().somaticStatus() == PurpleGermlineStatus.HOM_DELETION)
+                {
+                    yield GainDeletion.Type.GERMLINE_DEL_HOM_IN_TUMOR;
+                }
+                else if(purpleGainDeletion.germlineAmpDelFields().somaticStatus() == PurpleGermlineStatus.HET_DELETION)
+                {
+                    yield GainDeletion.Type.GERMLINE_DEL_HET_IN_TUMOR;
+                }
+                else
+                {
+                    throw new IllegalStateException("Unexpected germline status: " + purpleGainDeletion.germlineAmpDelFields().somaticStatus());
+                }
+            }
+            case GERMLINE_AMP -> GainDeletion.Type.GERMLINE_GAIN;
+            default -> throw new IllegalStateException("Unexpected driver type: " + purpleGainDeletion.driver().type());
+        };
+
         return GainDeletionBuilder.builder()
                 .driver(DriverFieldsBuilder.builder()
                         .findingKey(FindingKeys.gainDeletion(sourceSample,
@@ -143,7 +122,7 @@ final class GainDeletionFactory
                                 driver.isCanonical(),
                                 purpleGainDeletion.transcript()))
                         .driverSource(sourceSample)
-                        .reportedStatus(ReportedStatus.REPORTED)
+                        .reportedStatus(DriverUtil.reportedStatus(purpleGainDeletion.driver().reportedStatus()))
                         .driverInterpretation(DriverInterpretation.interpret(driver.driverLikelihood()))
                         .driverLikelihood(driver.driverLikelihood())
                         .build()
@@ -157,8 +136,9 @@ final class GainDeletionFactory
                 .interpretation(purpleGainDeletion.interpretation())
                 .tumorMinCopies(purpleGainDeletion.minCopies())
                 .tumorMaxCopies(purpleGainDeletion.maxCopies())
-                .tumorMinMinorAlleleCopies(geneCopyNumber.minMinorAlleleCopyNumber())
-                .chromosomeArmCopies(cnPerChromosome.chromosomeArmCopyNumber(geneCopyNumber.chromosome(), geneCopyNumber.chromosomeBand()))
+                .tumorMinMinorAlleleCopies(purpleGainDeletion.minMinorAlleleCopies())
+                .chromosomeArmCopies(cnPerChromosome.chromosomeArmCopyNumber(
+                        purpleGainDeletion.chromosome(), purpleGainDeletion.chromosomeBand()))
                 .build();
     }
 }
