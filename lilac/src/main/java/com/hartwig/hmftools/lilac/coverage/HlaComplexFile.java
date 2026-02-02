@@ -2,22 +2,48 @@ package com.hartwig.hmftools.lilac.coverage;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.StringJoiner;
 
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.utils.file.FileLock;
 import com.hartwig.hmftools.lilac.GeneSelector;
 import com.hartwig.hmftools.lilac.hla.HlaGene;
+
+import org.jetbrains.annotations.Nullable;
 
 public final class HlaComplexFile
 {
     private HlaComplexFile() {}
 
-    public static String header(final GeneSelector genes)
+    public static String header()
+    {
+        StringJoiner sb = new StringJoiner(TSV_DELIM);
+        sb.add("Genes");
+        sb.add("Score");
+        sb.add("ComplexityPenalty");
+        sb.add("Complexity");
+        sb.add("HomozygousCount");
+        sb.add("CohortFrequencyPenalty");
+        sb.add("CohortFrequency");
+        sb.add("RecoveryCount");
+        sb.add("WildcardCount");
+        sb.add("TotalCoverage");
+        sb.add("UniqueCoverage");
+        sb.add("SharedCoverage");
+        sb.add("WildCoverage");
+        sb.add("AlleleInfo");
+
+        return sb.toString();
+    }
+
+    public static String infoHeader(final GeneSelector genes)
     {
         StringJoiner sb = new StringJoiner(TSV_DELIM);
         sb.add("Score");
@@ -41,32 +67,64 @@ public final class HlaComplexFile
         return sb.toString();
     }
 
-    public static void writeToFile(final String fileName, final GeneSelector genes, final Iterable<ComplexCoverage> coverages)
+    public static void writeToFile(final String fileName, final GeneSelector currentGenes, final Iterable<ComplexCoverage> coverages)
     {
-        try
+        File file = new File(fileName);
+        List<String> existingRecords = Lists.newArrayList();
+        try(FileLock fileLock = FileLock.create(file))
         {
-            BufferedWriter writer = createBufferedWriter(fileName, false);
-
-            writer.write(header(genes));
-            writer.newLine();
-
-            for(ComplexCoverage coverage : coverages)
+            BufferedReader reader = fileLock.getBufferedReader();
+            reader.readLine();
+            String line = reader.readLine();
+            while(line != null)
             {
-                writer.write(asString(coverage));
+                String genesField = line.split(TSV_DELIM)[0];
+                GeneSelector genes;
+                try
+                {
+                    genes = GeneSelector.valueOf(genesField);
+                }
+                catch(IllegalArgumentException e)
+                {
+                    genes = null;
+                }
+
+                if(genes != null && genes != currentGenes)
+                    existingRecords.add(line);
+
+                line = reader.readLine();
+            }
+
+            fileLock.clear();
+            BufferedWriter writer = fileLock.getBufferedWriter();
+            writer.write(header());
+            writer.newLine();
+            for(String existingRecord : existingRecords)
+            {
+                writer.write(existingRecord);
                 writer.newLine();
             }
 
-            writer.close();
+            for(ComplexCoverage coverage : coverages)
+            {
+                writer.write(asString(currentGenes, coverage));
+                writer.newLine();
+            }
+
+            writer.flush();
         }
-        catch(IOException e)
+        catch(Exception e)
         {
-            LL_LOGGER.error("failed to write {}: {}", fileName, e.toString());
+            LL_LOGGER.error("failed to update {}: {}", fileName, e.toString());
         }
     }
 
-    public static String asString(final ComplexCoverage coverage)
+    public static String asString(@Nullable final GeneSelector genes, final ComplexCoverage coverage)
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);
+
+        if(genes != null)
+            sj.add(genes.name());
 
         sj.add(String.format("%.2f", coverage.getScore()));
         sj.add(String.format("%.2f", coverage.getComplexityPenalty()));
@@ -80,7 +138,16 @@ public final class HlaComplexFile
         sj.add(String.valueOf(coverage.UniqueCoverage));
         sj.add(String.valueOf(coverage.SharedCoverage));
         sj.add(String.valueOf(coverage.WildCoverage));
-        coverage.getAlleleCoverage().forEach(x -> sj.add(x.toString()));
+        if(genes != null)
+        {
+            StringJoiner alleleInfoBuilder = new StringJoiner(";");
+            coverage.getAlleleCoverage().forEach(x -> alleleInfoBuilder.add(x.toString()));
+            sj.add(alleleInfoBuilder.toString());
+        }
+        else
+        {
+            coverage.getAlleleCoverage().forEach(x -> sj.add(x.toString()));
+        }
 
         return sj.toString();
     }

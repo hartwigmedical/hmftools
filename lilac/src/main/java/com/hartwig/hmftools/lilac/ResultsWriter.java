@@ -120,7 +120,7 @@ public class ResultsWriter
         solutionSummary.write(LilacAllele.generateFilename(mConfig.OutputDir, mConfig.Sample));
         summaryMetrics.writefile(LilacQcData.generateFilename(mConfig.OutputDir, mConfig.Sample));
 
-        HlaComplexFile.writeToFile(mConfig.formFileId(LILAC_FILE_CANDIDATE_COVERAGE), CURRENT_GENES, rankedComplexes);
+        HlaComplexFile.writeToFile(mConfig.formFileId(LILAC_FILE_CANDIDATE_COVERAGE, false), CURRENT_GENES, rankedComplexes);
     }
 
     public void writeDetailedOutputs(
