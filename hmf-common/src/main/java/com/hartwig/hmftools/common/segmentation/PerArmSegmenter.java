@@ -59,11 +59,11 @@ public abstract class PerArmSegmenter<T extends GenomePosition>
                 System.arraycopy(data.valuesForSegmentation(), 0, allRatios, position, data.count());
                 position += data.count();
             }
-            SG_LOGGER.info("Using uniform segmentation penalty, number of ratios: {}", allRatios.length);
+            SG_LOGGER.debug("Using uniform segmentation penalty, number of ratios: {}", allRatios.length);
             GammaPenaltyCalculator oneOffCalculation = new GammaPenaltyCalculator(gamma, true);
             final double penalty = oneOffCalculation.getPenalty(allRatios);
             mPenaltyCalculator = new FixedPenalty(penalty);
-            SG_LOGGER.info("Uniform segmentation penalty: {}", penalty);
+            SG_LOGGER.debug("Uniform segmentation penalty: {}", penalty);
         }
         else
         {
