@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.hla;
 
+import static com.hartwig.hmftools.common.hla.LilacAllele.MHC_CLASS_I;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.checkFileExtensionRename;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferFileDelimiter;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
@@ -54,12 +55,17 @@ public abstract class LilacQcData
 
         final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), delim);
 
+        Integer genesIndex = fieldsIndexMap.get(FLD_GENES);
+
         List<LilacQcData> qcData = Lists.newArrayList();
         for(int i = 1; i < lines.size(); i++)
         {
             String[] values = lines.get(i).split(delim);
+
+            String genes = genesIndex != null ? values[genesIndex] : MHC_CLASS_I; // backwards compatibility for v1.7 and earlier
+
             ImmutableLilacQcData data = ImmutableLilacQcData.builder()
-                    .genes(values[fieldsIndexMap.get(FLD_GENES)])
+                    .genes(genes)
                     .status(values[fieldsIndexMap.get(FLD_QC_STATUS)])
                     .totalFragments(Integer.parseInt(values[fieldsIndexMap.get(FLD_TOTAL_FRAGS)]))
                     .fittedFragments(Integer.parseInt(values[fieldsIndexMap.get(FLD_FIT_FRAGS)]))

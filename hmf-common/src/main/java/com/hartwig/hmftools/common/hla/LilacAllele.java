@@ -27,11 +27,13 @@ public abstract class LilacAllele
 {
     private static final Map<String, String> GENES_LOOKUP = Maps.newHashMap();
 
+    public static final String MHC_CLASS_I = "MHC_CLASS_I";
+
     static
     {
-        GENES_LOOKUP.put("A", "MHC_CLASS_1");
-        GENES_LOOKUP.put("B", "MHC_CLASS_1");
-        GENES_LOOKUP.put("C", "MHC_CLASS_1");
+        GENES_LOOKUP.put("A", MHC_CLASS_I);
+        GENES_LOOKUP.put("B", MHC_CLASS_I);
+        GENES_LOOKUP.put("C", MHC_CLASS_I);
 
         GENES_LOOKUP.put("DQB1", "HLA_DQB1");
         GENES_LOOKUP.put("DPA1", "HLA_DPA1");

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.compar.lilac;
 
+import static com.hartwig.hmftools.common.hla.LilacAllele.MHC_CLASS_I;
+
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -49,6 +51,7 @@ public class TestLilacDataBuilder
     private LilacData build()
     {
         LilacQcData qcData = ImmutableLilacQcData.builder()
+                .genes(MHC_CLASS_I)
                 .status(qcStatus)
                 .totalFragments(totalFragments)
                 .fittedFragments(fittedFragments)
