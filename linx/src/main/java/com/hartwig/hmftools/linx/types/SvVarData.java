@@ -32,9 +32,9 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
+import com.hartwig.hmftools.common.segmentation.Arm;
 import com.hartwig.hmftools.linx.gene.BreakendGeneData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
-import com.hartwig.hmftools.common.purple.ChromosomeArm;
 import com.hartwig.hmftools.common.sv.StartEndPair;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
@@ -48,7 +48,7 @@ public class SvVarData
     // full set of DB fields
     private final StructuralVariantData mSVData;
     private final String[] mChr; // stripped of 'chr' for logging
-    private final ChromosomeArm[] mArm;
+    private final Arm[] mArm;
     private final SvBreakend[] mBreakend;
     private final boolean[] mFragileSite;
     private final StartEndPair<Set<LineElementType>> mLineElements;
@@ -98,7 +98,7 @@ public class SvVarData
     {
         mSVData = svData;
 
-        mArm = new ChromosomeArm[SE_PAIR];
+        mArm = new Arm[SE_PAIR];
         mChr = new String[] { RefGenomeFunctions.stripChrPrefix(chromosome(true)), RefGenomeFunctions.stripChrPrefix(chromosome(false)) };
 
         mFragileSite = new boolean[SE_PAIR];
@@ -204,10 +204,10 @@ public class SvVarData
         return LinxBreakend.coordsStr(chromosome, position, orientation);
     }
 
-    public ChromosomeArm arm(boolean isStart) { return mArm[seIndex(isStart)]; }
+    public Arm arm(boolean isStart) { return mArm[seIndex(isStart)]; }
     public String chrShort(boolean isStart) { return mChr[seIndex(isStart)]; }
 
-    public void setChromosomalArms(final ChromosomeArm start, final ChromosomeArm end)
+    public void setChromosomalArms(final Arm start, final Arm end)
     {
         mArm[SE_START] = start;
         mArm[SE_END] = end;

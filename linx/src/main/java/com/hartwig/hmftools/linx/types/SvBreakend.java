@@ -1,13 +1,13 @@
 package com.hartwig.hmftools.linx.types;
 
+import static com.hartwig.hmftools.common.segmentation.Arm.P;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getChromosomalArm;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.makeChrArmStr;
-import static com.hartwig.hmftools.common.purple.ChromosomeArm.P_ARM;
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.segmentation.Arm;
 import com.hartwig.hmftools.linx.gene.BreakendGeneData;
-import com.hartwig.hmftools.common.purple.ChromosomeArm;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.linx.annotators.LineElementType;
 import com.hartwig.hmftools.linx.cn.SvCNData;
@@ -18,7 +18,7 @@ public class SvBreakend {
     private int mChrPosIndex; // position in chromosome's breakend list
     private int mClusterChrPosIndex;
     private final String mChromosome;
-    private final ChromosomeArm mArm ;
+    private final Arm mArm ;
     private final String mChrArm;
     private final int mPosition;
     private final byte mOrientation;
@@ -54,7 +54,7 @@ public class SvBreakend {
     public final SvCluster getCluster() { return mSV.getCluster(); }
 
     public final String chromosome() { return mChromosome; }
-    public final ChromosomeArm arm() { return mArm; }
+    public final Arm arm() { return mArm; }
     public final String getChrArm() { return mChrArm; }
 
     public final int position() { return mPosition; }
@@ -73,7 +73,7 @@ public class SvBreakend {
     public static final String DIRECTION_CENTROMERE = "C";
     public static final String DIRECTION_TELOMERE = "T";
 
-    public String direction() { return (mOrientation == 1) == (mArm == P_ARM) ? DIRECTION_TELOMERE : DIRECTION_CENTROMERE; }
+    public String direction() { return (mOrientation == 1) == (mArm == P) ? DIRECTION_TELOMERE : DIRECTION_CENTROMERE; }
 
     public final String toString()
     {

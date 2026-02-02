@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.linx.utils;
 
+import static com.hartwig.hmftools.common.segmentation.Arm.P;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
@@ -9,7 +10,6 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getChromosomalArm;
-import static com.hartwig.hmftools.common.purple.ChromosomeArm.P_ARM;
 
 import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.driver.DriverCategory;
@@ -20,10 +20,10 @@ import com.hartwig.hmftools.common.purple.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.common.purple.SegmentSupport;
+import com.hartwig.hmftools.common.segmentation.Arm;
 import com.hartwig.hmftools.common.sv.ImmutableStructuralVariantData;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
-import com.hartwig.hmftools.common.purple.ChromosomeArm;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
 import org.apache.logging.log4j.util.Strings;
@@ -179,13 +179,13 @@ public class SvTestUtils
 
     public static void initialiseSV(SvVarData var)
     {
-        ChromosomeArm startArm = getChromosomalArm(var.chromosome(true), var.position(true));
+        Arm startArm = getChromosomalArm(var.chromosome(true), var.position(true));
 
-        ChromosomeArm endArm;
+        Arm endArm;
         if(!var.isSglBreakend())
             endArm = getChromosomalArm(var.chromosome(false), var.position(false));
         else
-            endArm = P_ARM;
+            endArm = P;
 
         var.setChromosomalArms(startArm, endArm);
 

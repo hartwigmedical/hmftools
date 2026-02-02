@@ -5,7 +5,6 @@ import static com.hartwig.hmftools.common.linx.LinxCommonTypes.generateVisFusion
 import static com.hartwig.hmftools.common.linx.LinxCommonTypes.generateVisProteinFilename;
 import static com.hartwig.hmftools.common.linx.LinxCommonTypes.generateVisSegmentFilename;
 import static com.hartwig.hmftools.common.linx.LinxCommonTypes.generateVisSvFilename;
-import static com.hartwig.hmftools.common.purple.ChromosomeArm.asStr;
 import static com.hartwig.hmftools.common.purple.Gender.MALE;
 import static com.hartwig.hmftools.common.utils.Strings.appendStr;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
@@ -38,7 +37,7 @@ import com.hartwig.hmftools.common.linx.LinxGermlineDisruption;
 import com.hartwig.hmftools.common.linx.LinxLink;
 import com.hartwig.hmftools.common.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.common.perf.PerformanceCounter;
-import com.hartwig.hmftools.common.purple.ChromosomeArm;
+import com.hartwig.hmftools.common.segmentation.Arm;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.linx.analysis.ClusterAnalyser;
@@ -56,7 +55,6 @@ import com.hartwig.hmftools.linx.types.LinkedPair;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
-import com.hartwig.hmftools.linx.visualiser.file.VisCopyNumber;
 import com.hartwig.hmftools.linx.visualiser.file.VisFusion;
 import com.hartwig.hmftools.linx.visualiser.file.VisGeneExon;
 import com.hartwig.hmftools.linx.visualiser.file.VisProteinDomain;
@@ -467,13 +465,13 @@ public class SampleAnalyser implements Callable<Void>
 
             mSvAnnotators.LineElementAnnotator.setKnownLineElements(var);
 
-            ChromosomeArm startArm = getChromosomalArm(var.chromosome(true), var.position(true));
+            Arm startArm = getChromosomalArm(var.chromosome(true), var.position(true));
 
-            ChromosomeArm endArm;
+            Arm endArm;
             if(!var.isSglBreakend())
                 endArm = getChromosomalArm(var.chromosome(false), var.position(false));
             else
-                endArm = ChromosomeArm.P_ARM;
+                endArm = Arm.P;
 
             var.setChromosomalArms(startArm, endArm);
 
@@ -613,10 +611,10 @@ public class SampleAnalyser implements Callable<Void>
                         }
                     }
 
-                    final SvBreakend beStart = pair.getBreakend(true);
-                    final SvBreakend beEnd = pair.getBreakend(false);
+                    SvBreakend beStart = pair.getBreakend(true);
+                    SvBreakend beEnd = pair.getBreakend(false);
 
-                    final String linkArm = beStart.arm() == beEnd.arm() ? asStr(beStart.arm()) : asStr(beStart.arm()) + "_" + asStr(beEnd.arm());
+                    String linkArm = beStart.arm() == beEnd.arm() ? beStart.arm().toString() : beStart.arm().toString() + "_" + beEnd.arm().toString();
 
                     linksData.add(ImmutableLinxLink.builder()
                             .clusterId(cluster.id())
