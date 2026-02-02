@@ -532,6 +532,7 @@ CREATE TABLE `germlineCopyNumber`
     `modified` DATETIME NOT NULL,
     `sampleId` VARCHAR(50) NOT NULL,
     `gene` VARCHAR(50) NOT NULL,
+    `transcriptId` VARCHAR(128) NOT NULL,
     `chromosome` VARCHAR(10) NOT NULL,
     `chromosomeBand` VARCHAR(50) NOT NULL,
     `regionStart` INT NOT NULL,
