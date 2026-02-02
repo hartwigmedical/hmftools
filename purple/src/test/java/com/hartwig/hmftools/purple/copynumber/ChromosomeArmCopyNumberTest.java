@@ -11,21 +11,18 @@ import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._21;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._22;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._X;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._Y;
-import static com.hartwig.hmftools.common.purple.ChromosomeArm.P_ARM;
-import static com.hartwig.hmftools.common.purple.ChromosomeArm.Q_ARM;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.purple.ChromosomeArm;
+import com.hartwig.hmftools.common.segmentation.Arm;
 
 import org.junit.Test;
 
 public class ChromosomeArmCopyNumberTest
 {
-
     @Test
     public void headingsTest()
     {
@@ -36,14 +33,16 @@ public class ChromosomeArmCopyNumberTest
     @Test
     public void toTsvTest()
     {
-        ChromosomeArmCopyNumber o1 = new ChromosomeArmCopyNumber(_1, P_ARM, 0.663333333333, 0.600000001, 0.320092, 0.90002000200025);
+        ChromosomeArmCopyNumber o1 = new ChromosomeArmCopyNumber(
+                _1, Arm.P, 0.663333333333, 0.600000001, 0.320092, 0.90002000200025);
         assertEquals("1\tP\t0.6633\t0.6000\t0.3201\t0.9000", o1.toTSV());
     }
 
     @Test
     public void fromTsvTest()
     {
-        ChromosomeArmCopyNumber original = new ChromosomeArmCopyNumber(_1, P_ARM, 0.6633, 0.6000, 0.3201, 0.9000);
+        ChromosomeArmCopyNumber original = new ChromosomeArmCopyNumber(
+                _1, Arm.P, 0.6633, 0.6000, 0.3201, 0.9000);
         ChromosomeArmCopyNumber rebuilt = ChromosomeArmCopyNumber.fromTsv(original.toTSV());
         assertEquals(original, rebuilt);
     }
@@ -51,31 +50,31 @@ public class ChromosomeArmCopyNumberTest
     @Test
     public void isReportable()
     {
-        assertTrue(cn(_1, P_ARM).includeInReport());
-        assertTrue(cn(_1, Q_ARM).includeInReport());
-        assertTrue(cn(_12, P_ARM).includeInReport());
-        assertTrue(cn(_12, Q_ARM).includeInReport());
-        assertFalse(cn(_13, P_ARM).includeInReport());
-        assertTrue(cn(_13, Q_ARM).includeInReport());
-        assertFalse(cn(_14, P_ARM).includeInReport());
-        assertTrue(cn(_14, Q_ARM).includeInReport());
-        assertFalse(cn(_15, P_ARM).includeInReport());
-        assertTrue(cn(_15, Q_ARM).includeInReport());
-        assertTrue(cn(_16, P_ARM).includeInReport());
-        assertTrue(cn(_16, Q_ARM).includeInReport());
-        assertTrue(cn(_20, P_ARM).includeInReport());
-        assertTrue(cn(_20, Q_ARM).includeInReport());
-        assertFalse(cn(_21, P_ARM).includeInReport());
-        assertTrue(cn(_21, Q_ARM).includeInReport());
-        assertFalse(cn(_22, P_ARM).includeInReport());
-        assertTrue(cn(_22, Q_ARM).includeInReport());
-        assertTrue(cn(_X, P_ARM).includeInReport());
-        assertTrue(cn(_X, Q_ARM).includeInReport());
-        assertTrue(cn(_Y, P_ARM).includeInReport());
-        assertTrue(cn(_Y, Q_ARM).includeInReport());
+        assertTrue(cn(_1, Arm.P).includeInReport());
+        assertTrue(cn(_1, Arm.Q).includeInReport());
+        assertTrue(cn(_12, Arm.P).includeInReport());
+        assertTrue(cn(_12, Arm.Q).includeInReport());
+        assertFalse(cn(_13, Arm.P).includeInReport());
+        assertTrue(cn(_13, Arm.Q).includeInReport());
+        assertFalse(cn(_14, Arm.P).includeInReport());
+        assertTrue(cn(_14, Arm.Q).includeInReport());
+        assertFalse(cn(_15, Arm.P).includeInReport());
+        assertTrue(cn(_15, Arm.Q).includeInReport());
+        assertTrue(cn(_16, Arm.P).includeInReport());
+        assertTrue(cn(_16, Arm.Q).includeInReport());
+        assertTrue(cn(_20, Arm.P).includeInReport());
+        assertTrue(cn(_20, Arm.Q).includeInReport());
+        assertFalse(cn(_21, Arm.P).includeInReport());
+        assertTrue(cn(_21, Arm.Q).includeInReport());
+        assertFalse(cn(_22, Arm.P).includeInReport());
+        assertTrue(cn(_22, Arm.Q).includeInReport());
+        assertTrue(cn(_X, Arm.P).includeInReport());
+        assertTrue(cn(_X, Arm.Q).includeInReport());
+        assertTrue(cn(_Y, Arm.P).includeInReport());
+        assertTrue(cn(_Y, Arm.Q).includeInReport());
     }
 
-    private ChromosomeArmCopyNumber cn(HumanChromosome chromosome, ChromosomeArm arm)
+    private ChromosomeArmCopyNumber cn(final HumanChromosome chromosome, final Arm arm)
     {
         return new ChromosomeArmCopyNumber(chromosome, arm, 0.0, 0.0, 0.0, 0.0);
     }

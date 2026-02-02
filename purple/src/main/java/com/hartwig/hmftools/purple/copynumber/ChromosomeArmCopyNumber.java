@@ -8,10 +8,10 @@ import java.util.Locale;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.purple.ChromosomeArm;
+import com.hartwig.hmftools.common.segmentation.Arm;
 
 public record ChromosomeArmCopyNumber(
-        HumanChromosome chromosome, ChromosomeArm arm, double meanCopyNumber, double medianCopyNumber,
+        HumanChromosome chromosome, Arm arm, double meanCopyNumber, double medianCopyNumber,
         double minCopyNumber, double maxCopyNumber)
 {
     static final DecimalFormat FORMAT = new DecimalFormat("0.0000", new DecimalFormatSymbols(Locale.ENGLISH));
@@ -20,7 +20,7 @@ public record ChromosomeArmCopyNumber(
     {
         String[] fields = tsv.split(TSV_DELIM);
         return new ChromosomeArmCopyNumber(HumanChromosome.fromString(fields[0]),
-                ChromosomeArm.fromString(fields[1]),
+                Arm.valueOf(fields[1]),
                 Double.parseDouble(fields[2].trim()),
                 Double.parseDouble(fields[3].trim()),
                 Double.parseDouble(fields[4].trim()),
@@ -43,7 +43,7 @@ public record ChromosomeArmCopyNumber(
     {
         return new StringJoiner(TSV_DELIM)
                 .add(chromosome.toString())
-                .add(ChromosomeArm.asStr(arm))
+                .add(arm.toString())
                 .add(FORMAT.format(meanCopyNumber))
                 .add(FORMAT.format(medianCopyNumber))
                 .add(FORMAT.format(minCopyNumber))
@@ -54,9 +54,8 @@ public record ChromosomeArmCopyNumber(
     public boolean includeInReport()
     {
         if(chromosome.hasShortArm())
-        {
-            return arm == ChromosomeArm.Q_ARM;
-        }
+            return arm == Arm.Q;
+
         return true;
     }
 }
