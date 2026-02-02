@@ -15,7 +15,7 @@ import org.jetbrains.annotations.Nullable;
 public abstract class LilacSummaryData
 {
     @NotNull
-    public abstract String qc();
+    public abstract List<LilacQcData> qc();
 
     @NotNull
     public abstract List<LilacAllele> alleles();
@@ -29,11 +29,11 @@ public abstract class LilacSummaryData
 
     public static LilacSummaryData read(final String basePath, final String sampleId) throws IOException
     {
-        LilacQcData qcData = LilacQcData.read(LilacQcData.generateFilename(basePath, sampleId));
+        List<LilacQcData> qcData = LilacQcData.read(LilacQcData.generateFilename(basePath, sampleId));
         List<LilacAllele> alleles = LilacAllele.read(LilacAllele.generateFilename(basePath, sampleId));
 
         return ImmutableLilacSummaryData.builder()
-                .qc(qcData.status())
+                .qc(qcData)
                 .alleles(alleles)
                 .build();
     }
@@ -42,15 +42,17 @@ public abstract class LilacSummaryData
     {
         LOGGER.info("Loading LILAC data from {}", new File(lilacQcFile).getParent());
 
-        LilacQcData qcData = LilacQcData.read(lilacQcFile);
+        List<LilacQcData> qcData = LilacQcData.read(lilacQcFile);
 
-        LOGGER.info(" Read QC status '{}' from {}", qcData.status(), lilacQcFile);
+        for(LilacQcData geneDataEntry : qcData)
+            LOGGER.info(" Read QC status '{}' for genes '{}' from {}", geneDataEntry.status(), geneDataEntry.genes(), lilacQcFile);
+
 
         List<LilacAllele> alleles = LilacAllele.read(lilacResultFile);
         LOGGER.info(" Read {} LILAC alleles from {}", alleles.size(), lilacResultFile);
 
         return ImmutableLilacSummaryData.builder()
-                .qc(qcData.status())
+                .qc(qcData)
                 .alleles(alleles)
                 .build();
     }

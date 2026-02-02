@@ -35,15 +35,20 @@ public class CobaltCalculator
         tumourDepthReadings.forEach(tumorCalc::addReading);
         ListMultimap<Chromosome, BamRatio> tumorResults = tumorCalc.calculateRatios();
         mTumorStats = tumorCalc.medianReadDepths();
-        CB_LOGGER.info("Tumor sample median: {}, mean: {}", mTumorStats.medianReadDepth(), mTumorStats.meanReadDepth());
+        if(!tumourDepthReadings.isEmpty())
+        {
+            CB_LOGGER.info("Tumor sample median: {}, mean: {}", format(mTumorStats.medianReadDepth()), format(mTumorStats.meanReadDepth()));
+        }
 
         ReferenceCalculation referenceCalc = new ReferenceCalculation(mWindowStatuses, scope, config.genome(), tumorCalc.consolidator());
         referenceDepthReadings.forEach(referenceCalc::addReading);
         ListMultimap<Chromosome, BamRatio> referenceResults = referenceCalc.calculateRatios();
         mMedianRatios = referenceCalc.medianRatios();
         mReferenceStatistics = referenceCalc.medianReadDepths();
-        CB_LOGGER.info("Reference sample median: {}, mean: {}", mReferenceStatistics.medianReadDepth(), mReferenceStatistics.meanReadDepth());
-
+        if(!referenceDepthReadings.isEmpty())
+        {
+            CB_LOGGER.info("Reference sample median: {}, mean: {}", format(mReferenceStatistics.medianReadDepth()), format(mReferenceStatistics.meanReadDepth()));
+        }
         ResultsCollator collator = new ResultsCollator(config.genome());
         mRatios = collator.collateResults(tumorResults, referenceResults);
     }
@@ -66,5 +71,10 @@ public class CobaltCalculator
     public GcMedianReadDepth referenceMedianReadDepth()
     {
         return mReferenceStatistics;
+    }
+
+    private static String format(Double value)
+    {
+        return String.format("%.2f", value);
     }
 }

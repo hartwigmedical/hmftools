@@ -492,11 +492,11 @@ public class LilacApplication
                 .filter(x -> winningAlleles.contains(x.Allele.asFourDigit()))
                 .collect(Collectors.toList());
 
-        LL_LOGGER.info("{}", HlaComplexFile.header(CURRENT_GENES));
+        LL_LOGGER.info("{}", HlaComplexFile.infoHeader(CURRENT_GENES));
 
         for(ComplexCoverage rankedComplex : mRankedComplexes)
         {
-            LL_LOGGER.info(HlaComplexFile.asString(rankedComplex));
+            LL_LOGGER.info(HlaComplexFile.asString(null, rankedComplex));
         }
 
         // log key results for fast post-run analysis

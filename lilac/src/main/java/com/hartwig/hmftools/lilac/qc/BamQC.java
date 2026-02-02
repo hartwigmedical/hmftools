@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.lilac.qc;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.WARN_LOW_COVERAGE_DEPTH;
 import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
@@ -7,8 +9,8 @@ import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.lilac.hla.HlaGene;
 import com.hartwig.hmftools.lilac.read.BamReader;
@@ -41,21 +43,20 @@ public class BamQC
 
     public int totalLowCoverage() { return GeneLowCoverageCounts.values().stream().mapToInt(Integer::intValue).sum(); }
 
-    public List<String> header()
+    public static List<String> header()
     {
-        List<String> headerStrs = Lists.newArrayList("DiscardedIndels", "DiscardedIndelMaxFrags", "DiscardedAlignmentFragments");
-        GENE_CACHE.GeneNames.stream().filter(x -> !x.isPseudo()).forEach(gene -> headerStrs.add(gene.shortName() + "_LowCoverageBases"));
-        return headerStrs;
+        return List.of("DiscardedIndels", "DiscardedIndelMaxFrags", "DiscardedAlignmentFragments", "LowCoverageBases");
     }
 
     public List<String> body()
     {
-        List<String> bodyStrs = Lists.newArrayList(
-                String.valueOf(DiscardedIndels), String.valueOf(DiscardedIndelMaxFrags), String.valueOf(DiscardedAlignmentFragments));
+        StringJoiner lowCoverageBasesStrBuilder = new StringJoiner(";");
         GENE_CACHE.GeneNames.stream()
                 .filter(x -> !x.isPseudo())
-                .forEach(gene -> bodyStrs.add(String.valueOf(GeneLowCoverageCounts.get(gene))));
-        return bodyStrs;
+                .map(gene -> format("%s=%d", gene.shortName(), GeneLowCoverageCounts.getOrDefault(gene, 0)))
+                .forEach(lowCoverageBasesStrBuilder::add);
+
+        return List.of(String.valueOf(DiscardedIndels), String.valueOf(DiscardedIndelMaxFrags), String.valueOf(DiscardedAlignmentFragments), lowCoverageBasesStrBuilder.toString());
     }
 
     public static BamQC create(final BamReader reader, final Map<HlaGene, int[]> geneBaseDepth)
@@ -63,11 +64,11 @@ public class BamQC
         Map<Indel, Integer> fragmentsWithUnmatchedPonIndel = reader.unmatchedPonIndels(MIN_SUPPORT);
         Map<Indel, Integer> fragmentsWithUnmatchedIndel = reader.unmatchedIndels(MIN_SUPPORT);
 
-        fragmentsWithUnmatchedIndel.entrySet().forEach(x -> LL_LOGGER.warn(
-                "  UNMATCHED_INDEL - {} fragments excluded with unmatched indel {}", x.getValue(), x.getKey().toString()));
+        fragmentsWithUnmatchedIndel.forEach((key, value) -> LL_LOGGER.warn(
+                "  UNMATCHED_INDEL - {} fragments excluded with unmatched indel {}", value, key.toString()));
 
-        fragmentsWithUnmatchedPonIndel.entrySet().forEach(x -> LL_LOGGER.debug(
-                "  UNMATCHED_PON_INDEL - {} fragments excluded with unmatched PON indel {}", x.getValue(), x.getKey().toString()));
+        fragmentsWithUnmatchedPonIndel.forEach((key, value) -> LL_LOGGER.debug(
+                "  UNMATCHED_PON_INDEL - {} fragments excluded with unmatched PON indel {}", value, key.toString()));
 
         return new BamQC(
                 reader.filteredReadCount(),

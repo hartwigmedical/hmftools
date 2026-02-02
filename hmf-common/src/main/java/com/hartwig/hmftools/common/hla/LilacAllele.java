@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -24,6 +25,23 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class LilacAllele
 {
+    private static final Map<String, String> GENES_LOOKUP = Maps.newHashMap();
+
+    static
+    {
+        GENES_LOOKUP.put("A", "MHC_CLASS_1");
+        GENES_LOOKUP.put("B", "MHC_CLASS_1");
+        GENES_LOOKUP.put("C", "MHC_CLASS_1");
+
+        GENES_LOOKUP.put("DQB1", "HLA_DQB1");
+        GENES_LOOKUP.put("DPA1", "HLA_DPA1");
+        GENES_LOOKUP.put("DPB1", "HLA_DPB1");
+        GENES_LOOKUP.put("DQA1", "HLA_DQA1");
+        GENES_LOOKUP.put("DRB1", "HLA_DRB1");
+    }
+
+    public abstract String genes();
+
     public abstract String allele();
 
     public abstract int refFragments();
@@ -92,8 +110,12 @@ public abstract class LilacAllele
         {
             String[] values = line.split(delim);
 
+            String allele = values[fieldsIndexMap.get(FLD_ALLELE)];
+            String gene = allele.split("\\*")[0];
+            String genes = GENES_LOOKUP.get(gene);
             alleles.add(ImmutableLilacAllele.builder()
-                    .allele(values[fieldsIndexMap.get(FLD_ALLELE)])
+                    .genes(genes)
+                    .allele(allele)
                     .refFragments(Integer.parseInt(values[fieldsIndexMap.get(FLD_REF_TOTAL)]))
                     .refUnique(Integer.parseInt(values[fieldsIndexMap.get(FLD_REF_UNIQUE)]))
                     .refShared(Integer.parseInt(values[fieldsIndexMap.get(FLD_REF_SHARED)]))
