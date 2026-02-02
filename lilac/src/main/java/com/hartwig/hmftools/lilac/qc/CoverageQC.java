@@ -91,7 +91,7 @@ public class CoverageQC
         if(countsByGene.values().stream().anyMatch(x -> x == 0))
         {
             StringJoiner msgBuilder = new StringJoiner(", ");
-            countsByGene.entrySet().forEach(x -> msgBuilder.add(x.getValue() + " " + x.getKey().shortName() + " alleles"));
+            countsByGene.forEach((key, value) -> msgBuilder.add(value + " " + key.shortName() + " alleles"));
             LL_LOGGER.warn("  UNMATCHED ALLELE: {}", msgBuilder.toString());
         }
 
@@ -143,7 +143,7 @@ public class CoverageQC
                 winner.UniqueCoverage, winner.SharedCoverage, winner.WildCoverage);
     }
 
-    public List<String> header()
+    public static List<String> header()
     {
         return List.of("geneTypes", "TotalFragments", "FittedFragments", "UnmatchedFragments", "UninformativeFragments", "HlaYFragments", "PercentUnique", "PercentShared", "PercentWildcard");
     }

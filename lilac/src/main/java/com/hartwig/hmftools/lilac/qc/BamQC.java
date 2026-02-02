@@ -43,7 +43,7 @@ public class BamQC
 
     public int totalLowCoverage() { return GeneLowCoverageCounts.values().stream().mapToInt(Integer::intValue).sum(); }
 
-    public List<String> header()
+    public static List<String> header()
     {
         return List.of("DiscardedIndels", "DiscardedIndelMaxFrags", "DiscardedAlignmentFragments", "LowCoverageBases");
     }
@@ -64,11 +64,11 @@ public class BamQC
         Map<Indel, Integer> fragmentsWithUnmatchedPonIndel = reader.unmatchedPonIndels(MIN_SUPPORT);
         Map<Indel, Integer> fragmentsWithUnmatchedIndel = reader.unmatchedIndels(MIN_SUPPORT);
 
-        fragmentsWithUnmatchedIndel.entrySet().forEach(x -> LL_LOGGER.warn(
-                "  UNMATCHED_INDEL - {} fragments excluded with unmatched indel {}", x.getValue(), x.getKey().toString()));
+        fragmentsWithUnmatchedIndel.forEach((key, value) -> LL_LOGGER.warn(
+                "  UNMATCHED_INDEL - {} fragments excluded with unmatched indel {}", value, key.toString()));
 
-        fragmentsWithUnmatchedPonIndel.entrySet().forEach(x -> LL_LOGGER.debug(
-                "  UNMATCHED_PON_INDEL - {} fragments excluded with unmatched PON indel {}", x.getValue(), x.getKey().toString()));
+        fragmentsWithUnmatchedPonIndel.forEach((key, value) -> LL_LOGGER.debug(
+                "  UNMATCHED_PON_INDEL - {} fragments excluded with unmatched PON indel {}", value, key.toString()));
 
         return new BamQC(
                 reader.filteredReadCount(),
