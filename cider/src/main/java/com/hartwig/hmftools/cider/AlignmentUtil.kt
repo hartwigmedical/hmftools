@@ -33,8 +33,8 @@ private val sLogger = LogManager.getLogger("AlignmentUtil")
 
 data class Alignment(
     val querySeq: String,   // Original query sequence input into the aligner.
-    val queryStart: Int,    // 1-based, inclusive, with respect to querySeq.
-    val queryEnd: Int,      // 1-based, inclusive, with respect to querySeq.
+    val queryStart: Int,    // 0-based, inclusive, with respect to querySeq.
+    val queryEnd: Int,      // 0-based, exclusive, with respect to querySeq.
     val refContig: String,
     val refStart: Int,      // 1-based, inclusive.
     val refEnd: Int,        // 1-based, inclusive.
@@ -47,7 +47,7 @@ data class Alignment(
 {
     init
     {
-        require(queryStart >= 1)
+        require(queryStart >= 0)
         require(queryEnd <= querySeq.length)
         require(queryStart <= queryEnd)
         require(refStart >= 1)
@@ -56,10 +56,10 @@ data class Alignment(
         require(cigar.isNotEmpty())
     }
 
-    val queryAlignLength: Int get() = queryEnd - queryStart + 1
+    val queryAlignLength: Int get() = queryEnd - queryStart
 
     // Number of bases clipped at the start of querySeq.
-    val startClip: Int get() = queryStart - 1
+    val startClip: Int get() = queryStart
 
     // Number of bases clipped at the end of querySeq.
     val endClip: Int get() = querySeq.length - queryEnd
@@ -213,9 +213,9 @@ private fun parseBwaMemAlignment(
     val cigar = cigarElementsFromStr(alignment.cigar)
     val (startClip, endClip) = getQueryClipping(cigar, strand)
 
-    val queryStart = startClip + 1
+    val queryStart = startClip
     val queryEnd = querySeq.length - endClip
-    require(queryStart <= queryEnd)
+    require(queryStart < queryEnd)
 
     // nMismatches is not the best name - it's actually the edit distance but excluding clipping.
     val editDistance = alignment.nMismatches + startClip + endClip

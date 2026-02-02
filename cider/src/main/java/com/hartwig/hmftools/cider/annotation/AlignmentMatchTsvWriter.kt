@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.cider.annotation
 
-import com.hartwig.hmftools.cider.CiderFormatter
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVPrinter
@@ -10,13 +9,12 @@ object AlignmentMatchTsvWriter
 {
     enum class Column
     {
-        cdr3Seq,
-        cdr3AA,
+        fullSeq,
         matchType,
         gene,
         functionality,
-        alignStart,
-        alignEnd,
+        layoutAlignStart,
+        layoutAlignEnd,
         alignScore,
         refStrand,
         refStart,
@@ -25,6 +23,8 @@ object AlignmentMatchTsvWriter
         refContigLength,
         cigar,
         editDistance,
+        querySeqStart,
+        querySeqEnd,
         querySeq
     }
 
@@ -82,13 +82,12 @@ object AlignmentMatchTsvWriter
             {
                 when (c)
                 {
-                    Column.cdr3Seq -> csvPrinter.print(alignmentAnnotation.vdjSequence.cdr3Sequence)
-                    Column.cdr3AA -> csvPrinter.print(CiderFormatter.cdr3AminoAcid(alignmentAnnotation.vdjSequence))
+                    Column.fullSeq -> csvPrinter.print(alignmentAnnotation.vdjSequence.layout.consensusSequenceString())
                     Column.matchType -> csvPrinter.print(type)
                     Column.gene -> csvPrinter.print(gene?.geneAllele)
                     Column.functionality -> csvPrinter.print(gene?.functionality?.toCode())
-                    Column.alignStart -> csvPrinter.print(alignmentOffset + alignment.queryStart)
-                    Column.alignEnd -> csvPrinter.print(alignmentOffset + alignment.queryEnd)
+                    Column.layoutAlignStart -> csvPrinter.print(alignmentOffset + alignment.queryStart)
+                    Column.layoutAlignEnd -> csvPrinter.print(alignmentOffset + alignment.queryEnd)
                     Column.alignScore -> csvPrinter.print(alignment.alignmentScore)
                     Column.refStrand -> csvPrinter.print(alignment.strand.asChar())
                     Column.refStart -> csvPrinter.print(alignment.refStart)
@@ -97,6 +96,8 @@ object AlignmentMatchTsvWriter
                     Column.refContigLength -> csvPrinter.print(alignment.refContigLength)
                     Column.cigar -> csvPrinter.print(alignment.cigar.joinToString("") { it.toString() })
                     Column.editDistance -> csvPrinter.print(alignment.editDistance)
+                    Column.querySeqStart -> csvPrinter.print(alignmentAnnotation.alignmentQueryRange.start)
+                    Column.querySeqEnd -> csvPrinter.print(alignmentAnnotation.alignmentQueryRange.endInclusive + 1)
                     Column.querySeq -> csvPrinter.print(alignment.querySeq)
                 }
             }
