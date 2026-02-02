@@ -79,11 +79,7 @@ public class CopyNumberBackbone
 
         populateAmberSites(partitions);
 
-        ProbeGenerationResult result = generateProbes(partitions);
-        // Probes generated here cannot overlap with themselves since there is one probe per partition.
-        // So it's safe to generate all the probes together and then add them to the result at the end.
-        // No need to check any overlap of generated probes with themselves.
-        mPanelData.addResult(result);
+        generateProbes(partitions);
 
         LOGGER.info("Done generating copy number backbone probes");
     }
@@ -206,10 +202,10 @@ public class CopyNumberBackbone
         LOGGER.debug("Amber site filters: {}", filterCountStr);
     }
 
-    private ProbeGenerationResult generateProbes(final Map<String, List<Partition>> partitions)
+    private void generateProbes(final Map<String, List<Partition>> partitions)
     {
         Stream<ProbeGenerationSpec> probeGenerationSpecs = createProbeGenerationSpecs(partitions);
-        return mProbeGenerator.generateBatch(probeGenerationSpecs, mPanelData);
+        mProbeGenerator.generateBatch(probeGenerationSpecs, mPanelData);
     }
 
     private static Stream<ProbeGenerationSpec> createProbeGenerationSpecs(final Map<String, List<Partition>> partitions)

@@ -1,20 +1,20 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GermlineAmpDel;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
-import com.hartwig.hmftools.common.purple.ReportedStatus;
+import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
 import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
+import com.hartwig.hmftools.datamodel.purple.ImmutableGermlineAmpDelFields;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGainDeletion;
+import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
+import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
+import com.hartwig.hmftools.orange.conversion.PurpleConversion;
 
 public class GermlineGainDeletionFactory
 {
@@ -25,48 +25,59 @@ public class GermlineGainDeletionFactory
         this.ensemblDataCache = ensemblDataCache;
     }
 
-    public Map<PurpleGainDeletion, Boolean> getReportabilityMap(
-            final List<GermlineAmpDel> germlineDeletions, final List<GeneCopyNumber> allSomaticGeneCopyNumbers)
+    //
+    public List<PurpleGainDeletion> createGermlineGainDeletions(
+            final List<GermlineAmpDel> germlineAmpDels,
+            final List<PurpleDriver> germlineDrivers,
+            final List<GeneCopyNumber> allSomaticGeneCopyNumbers)
     {
-        List<GermlineAmpDel> germlineDeletionsHomozygousInTumor =
-                germlineDeletions.stream().filter(d -> d.TumorStatus == GermlineStatus.HOM_DELETION).collect(Collectors.toList());
-        Set<String> relevantGeneNames = germlineDeletionsHomozygousInTumor.stream().map(d -> d.GeneName).collect(Collectors.toSet());
+        // get all the drivers
+        List<PurpleDriver> reportableGermlineAmpDelDrivers = germlineDrivers.stream()
+                .filter(o -> o.reportedStatus() == ReportedStatus.REPORTED)
+                .filter(o -> o.type() == PurpleDriverType.GERMLINE_DELETION || o.type() == PurpleDriverType.GERMLINE_AMP)
+                .toList();
 
-        Map<PurpleGainDeletion, Boolean> delToReportability = Maps.newHashMap();
-        for(String geneName : relevantGeneNames)
-        {
-            List<GermlineAmpDel> deletionsForGene =
-                    germlineDeletionsHomozygousInTumor.stream().filter(d -> d.GeneName.equals(geneName)).collect(Collectors.toList());
-            GeneCopyNumber somaticGeneCopyNumber = GermlineDeletionUtil.findGeneCopyNumberForGene(geneName, allSomaticGeneCopyNumbers);
-
-            PurpleGainDeletion del = toGainDel(geneName, deletionsForGene, somaticGeneCopyNumber);
-            boolean reported = deletionsForGene.stream().anyMatch(d -> d.Reported == ReportedStatus.REPORTED);
-            delToReportability.put(del, reported);
-        }
-        return delToReportability;
+        return reportableGermlineAmpDelDrivers.stream()
+                .map(driver -> {
+                    List<GermlineAmpDel> ampDels =
+                            germlineAmpDels.stream().filter(o -> o.GeneName.equals(driver.gene())).toList();
+                    GeneCopyNumber somaticGeneCopyNumber = GermlineGainDeletionUtil.findGeneCopyNumberForGeneTranscript(
+                            driver.gene(), driver.transcript(), allSomaticGeneCopyNumbers);
+                    return toGainDel(driver, ampDels, somaticGeneCopyNumber);
+                })
+                .toList();
     }
 
-    private PurpleGainDeletion toGainDel(final String geneName, final List<GermlineAmpDel> deletionsForGene,
+    private PurpleGainDeletion toGainDel(final PurpleDriver driver, final List<GermlineAmpDel> deletionsForGene,
             final GeneCopyNumber somaticGeneCopyNumber)
     {
-        TranscriptData canonicalTranscript = GermlineDeletionUtil.findCanonicalTranscript(geneName, ensemblDataCache);
-        CopyNumberInterpretation interpretation = GermlineDeletionUtil.deletionsCoverTranscript(deletionsForGene, canonicalTranscript)
+        TranscriptData canonicalTranscript = GermlineGainDeletionUtil.findTranscript(driver.gene(), driver.transcript(), ensemblDataCache);
+        CopyNumberInterpretation interpretation = GermlineGainDeletionUtil.deletionsCoverTranscript(deletionsForGene, canonicalTranscript)
                 ? CopyNumberInterpretation.FULL_DEL
                 : CopyNumberInterpretation.PARTIAL_DEL;
-        double minCopies = GermlineDeletionUtil.getSomaticMinCopyNumber(deletionsForGene);
-        double maxCopies = GermlineDeletionUtil.getSomaticMaxCopyNumber(deletionsForGene, somaticGeneCopyNumber, canonicalTranscript);
-        String chromosome = GermlineDeletionUtil.getChromosome(deletionsForGene);
-        String chromosomeBand = GermlineDeletionUtil.getChromosomeBand(deletionsForGene);
+        double minCopies = GermlineGainDeletionUtil.getSomaticMinCopyNumber(deletionsForGene);
+        double maxCopies = GermlineGainDeletionUtil.getSomaticMaxCopyNumber(deletionsForGene, somaticGeneCopyNumber, canonicalTranscript);
+        double germlineMinCopies = GermlineGainDeletionUtil.getGermlineMinCopyNumber(deletionsForGene);
+
+        GermlineStatus germlineStatus = GermlineGainDeletionUtil.getGermlineGainDelStatus(deletionsForGene);
+        GermlineStatus somaticStatus = GermlineGainDeletionUtil.getSomaticGainDelStatus(deletionsForGene);
+
+        String chromosome = GermlineGainDeletionUtil.getChromosome(deletionsForGene);
+        String chromosomeBand = GermlineGainDeletionUtil.getChromosomeBand(deletionsForGene);
 
         return ImmutablePurpleGainDeletion.builder()
+                .driver(driver)
                 .interpretation(interpretation)
                 .chromosome(chromosome)
                 .chromosomeBand(chromosomeBand)
-                .gene(geneName)
-                .transcript(canonicalTranscript.TransName)
-                .isCanonical(true)
+                .germlineAmpDelFields(ImmutableGermlineAmpDelFields.builder()
+                        .germlineStatus(PurpleConversion.convert(germlineStatus))
+                        .somaticStatus(PurpleConversion.convert(somaticStatus))
+                        .germlineMinCopyNumber(germlineMinCopies)
+                        .build())
                 .minCopies(minCopies)
                 .maxCopies(maxCopies)
+                .minMinorAlleleCopies(somaticGeneCopyNumber.MinMinorAlleleCopyNumber)
                 .build();
     }
 }

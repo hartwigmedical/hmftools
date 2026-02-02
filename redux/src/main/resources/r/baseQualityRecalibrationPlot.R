@@ -31,37 +31,37 @@ prepare_data <- function(df, readType) {
   
   bqrData <- 
     df %>%
-    filter(ref != alt) %>%
+    filter(Ref != Alt) %>%
     mutate(
-      changeInQual = recalibratedQual - originalQual,
-      type = paste0(ref,">",alt), 
+      ChangeInQual = RecalibratedQual - OriginalQual,
+      type = paste0(Ref,">",Alt), 
       substitution = factor(standard_mutation(type)),
-      context = ifelse(type == substitution, trinucleotideContext, reverse_complement(trinucleotideContext)),
+      context = ifelse(type == substitution, TrinucleotideContext, reverse_complement(TrinucleotideContext)),
       context = factor(paste0(substring(context, 1, 1), ".", substring(context, 3, 3)))
     ) %>% 
-    group_by(originalQual, substitution, context) %>%
-    summarise(changeInQual = mean(changeInQual)) %>%
+    group_by(OriginalQual, substitution, context) %>%
+    summarise(ChangeInQual = mean(ChangeInQual)) %>%
     ungroup() %>%
-    spread(originalQual, changeInQual, fill = 0) %>%
-    gather(originalQual, changeInQual, -1, -2) %>%
-    select(substitution, context, originalQual, changeInQual) %>%
-    mutate(originalQual = as.numeric(originalQual))
+    spread(OriginalQual, ChangeInQual, fill = 0) %>%
+    gather(OriginalQual, ChangeInQual, -1, -2) %>%
+    select(substitution, context, OriginalQual, ChangeInQual) %>%
+    mutate(OriginalQual = as.numeric(OriginalQual))
   
-  uniqueBaseQuals = unique(bqrData$originalQual)
+  uniqueBaseQuals = unique(bqrData$OriginalQual)
   if (length(uniqueBaseQuals) > 7) {
     sampleBy = ceiling(length(uniqueBaseQuals)/7)
     uniqueBaseQuals <- uniqueBaseQuals[seq(1, length(uniqueBaseQuals), sampleBy)]
-    bqrData = bqrData %>% filter(originalQual %in% uniqueBaseQuals)
+    bqrData = bqrData %>% filter(OriginalQual %in% uniqueBaseQuals)
   }
   
   return(bqrData)
 }
 
 plot_data <- function(df) {
-  ggplot(data = df, aes(x = context, y = changeInQual, fill = substitution, width = 0.6)) + 
+  ggplot(data = df, aes(x = context, y = ChangeInQual, fill = substitution, width = 0.6)) + 
     geom_bar(stat = "identity", colour = "black", size = 0.2) + 
     scale_fill_manual(values = COLORS6) + 
-    facet_grid(originalQual ~ substitution) + 
+    facet_grid(OriginalQual ~ substitution) + 
     ylab("Base Quality Adjustment") + xlab("Context") + 
     guides(fill = FALSE) + theme_bw() +
     theme(axis.title.y = element_text(size = 12, vjust = 1), 
@@ -71,9 +71,9 @@ plot_data <- function(df) {
           strip.text.y = element_text(size = 9), panel.grid.major.x = element_blank())
 }
 
-bqrPlotsByReadType <- lapply(unique(bqrDataRaw$readType), function(readType) {
+bqrPlotsByReadType <- lapply(unique(bqrDataRaw$ReadType), function(readType) {
   
-  bqrData <- prepare_data( bqrDataRaw[bqrDataRaw$readType==readType,] )
+  bqrData <- prepare_data( bqrDataRaw[bqrDataRaw$ReadType==readType,] )
   bqrPlot <- plot_data(bqrData) + ggtitle(paste0("Read type: ", readType))
   
   return(bqrPlot)

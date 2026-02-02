@@ -79,8 +79,6 @@ public class ProbeGenerator
     {
         private final List<ProbeGenerationSpec> mGenericSpecs = new ArrayList<>();
         private final List<ProbeGenerationSpec.SingleProbe> mSingleProbeSpecs = new ArrayList<>();
-        // Buffer to store probe regions generated within this batch. Because we need to check if probes within the batch overlap.
-        private final SimpleCoverageBuffer mBatchCoverage = new SimpleCoverageBuffer();
 
         public void add(final ProbeGenerationSpec spec)
         {
@@ -99,69 +97,61 @@ public class ProbeGenerator
             specs.forEach(this::add);
         }
 
-        public ProbeGenerationResult generate(final PanelCoverage coverage)
+        public ProbeGenerationResult generate(PanelBuffer resultBuffer)
         {
-            ProbeGenerationResult result = generateGenericSpecs(coverage).add(generateSingleProbeSpecs(coverage));
+            ProbeGenerationResult result = generateGenericSpecs(resultBuffer, resultBuffer)
+                    .add(generateSingleProbeSpecs(resultBuffer, resultBuffer));
             clear();
             return result;
         }
 
-        private ProbeGenerationResult generateGenericSpecs(final PanelCoverage coverage)
+        private ProbeGenerationResult generateGenericSpecs(final PanelCoverage coverage, PanelStore resultStore)
         {
             // TODO: batch probe evaluation
-            return mGenericSpecs.stream()
-                    .map(spec ->
+            return mGenericSpecs.stream().map(spec ->
                     {
                         ProbeGenerationResult result = generateGenericSpec(spec, coverage);
-                        // Add generated probe regions to the coverage check for future probe generation within this batch.
-                        mBatchCoverage.addCoveredRegions(
-                                result.probes().stream().flatMap(probe -> probe.definition().regions().stream()));
+                        resultStore.addResult(result);
                         return result;
                     })
                     .reduce(new ProbeGenerationResult(), ProbeGenerationResult::add);
         }
 
-        private ProbeGenerationResult generateSingleProbeSpecs(final PanelCoverage coverage)
+        private ProbeGenerationResult generateSingleProbeSpecs(final PanelCoverage coverage, PanelStore resultStore)
         {
-            return singleProbeBatch(mSingleProbeSpecs, coverage, mBatchCoverage);
+            return singleProbeBatch(mSingleProbeSpecs, coverage, resultStore);
         }
 
         private void clear()
         {
             mGenericSpecs.clear();
             mSingleProbeSpecs.clear();
-            mBatchCoverage.clear();
         }
     }
 
-    public Batch createBatch()
+    public ProbeGenerationResult generateBatch(Stream<ProbeGenerationSpec> specs, PanelBuffer resultBuffer)
     {
-        return new Batch();
-    }
-
-    public ProbeGenerationResult generateBatch(Stream<ProbeGenerationSpec> specs, final PanelCoverage coverage)
-    {
-        Batch batch = createBatch();
+        Batch batch = new Batch();
         batch.addAll(specs);
-        return batch.generate(coverage);
+        return batch.generate(resultBuffer);
     }
 
-    private ProbeGenerationResult generateGenericSpec(final ProbeGenerationSpec spec, final PanelCoverage existingCoverage)
+    private ProbeGenerationResult generateGenericSpec(final ProbeGenerationSpec spec, final PanelCoverage coverage)
     {
         if(spec instanceof ProbeGenerationSpec.CoverRegion specObj)
         {
             return coverRegion(
-                    specObj.region(), specObj.metadata(), specObj.evalCriteria(), specObj.localSelectStrategy(), existingCoverage);
+                    specObj.region(), specObj.metadata(), specObj.evalCriteria(), specObj.localSelectStrategy(), coverage);
         }
         else if(spec instanceof ProbeGenerationSpec.CoverOneSubregion specObj)
         {
             return coverOneSubregion(
-                    specObj.region(), specObj.metadata(), specObj.evalCriteria(), specObj.selectStrategy(), existingCoverage);
+                    specObj.region(), specObj.metadata(), specObj.evalCriteria(), specObj.selectStrategy(), coverage);
         }
         else if(spec instanceof ProbeGenerationSpec.CoverOnePosition specObj)
         {
             return coverOnePosition(
-                    specObj.positions(), specObj.metadata(), specObj.evalCriteria(), specObj.selectStrategy(), existingCoverage);
+                    specObj.positions(), specObj.metadata(), specObj.evalCriteria(), specObj.selectStrategy(), coverage);
         }
         else
         {
@@ -181,7 +171,8 @@ public class ProbeGenerator
     {
         List<ChrBaseRegion> subregions;
         // Split the region into uncovered subregions to avoid overlap with regions already covered by probes.
-        subregions = regionNegatedIntersection(region.baseRegion(), coverage.coveredRegions().map(ChrBaseRegion::baseRegion))
+        subregions = regionNegatedIntersection(region.baseRegion(), coverage.coveredRegions(region.chromosome())
+                .map(ChrBaseRegion::baseRegion))
                 .stream()
                 .map(baseRegion -> ChrBaseRegion.from(region.chromosome(), baseRegion))
                 .toList();
@@ -243,7 +234,8 @@ public class ProbeGenerator
 
         if(acceptableSubregions.size() > 1)
         {
-            acceptableSubregions.forEach(subregion -> LOGGER.trace("Split region into acceptable subregion: {}", subregion));
+            acceptableSubregions.forEach(subregion ->
+                    LOGGER.trace("Split region into acceptable subregion: {}", ChrBaseRegion.from(uncoveredRegion.chromosome(), subregion)));
         }
 
         List<Probe> probes = new ArrayList<>();
@@ -617,7 +609,6 @@ public class ProbeGenerator
                 })
                 .toList();
 
-        // This must be executed before reading probeToPosition otherwise the stream won't have been enumerated yet.
         Optional<Probe> bestCandidate = selectBestCandidate(candidateProbes.stream(), evalCriteria, selectStrategy);
 
         // Always include the full list of candidate positions in the result.
@@ -642,52 +633,34 @@ public class ProbeGenerator
                 .orElseGet(() -> ProbeGenerationResult.rejectTargets(candidateTargetRegions));
     }
 
-    private ProbeGenerationResult singleProbeBatch(List<ProbeGenerationSpec.SingleProbe> specs, final PanelCoverage existingCoverage,
-            SimpleCoverageBuffer batchCoverage)
+    private ProbeGenerationResult singleProbeBatch(List<ProbeGenerationSpec.SingleProbe> specs, final PanelCoverage coverage,
+            PanelStore resultStore)
     {
-        ProbeGenerationResult result = new ProbeGenerationResult();
-
-        List<Probe> candidateProbes = new ArrayList<>();
-        for(ProbeGenerationSpec.SingleProbe spec : specs)
-        {
-            Probe probe = new Probe(spec.sequenceDefinition(), spec.targetedRange(), spec.metadata())
-                    .withEvaluationCriteria(spec.evalCriteria());
-            // Check if the region was already covered by probes in the panel before this batch.
-            if(existingCoverage.isCovered(probe.definition(), probe.targetedRange()))
-            {
-                result = result.add(ProbeGenerationResult.alreadyCoveredProbe(probe));
-            }
-            else
-            {
-                candidateProbes.add(probe);
-            }
-        }
-
-        Stream<Probe> evaluatedProbes = evaluateProbes(candidateProbes.stream());
-        result = result.add(evaluatedProbes.map(probe ->
-        {
-            List<ChrBaseRegion> probeRegions = probe.definition().regions();
-            // Check if the region was already covered by probes added inside this batch.
-            if(batchCoverage.isCovered(probe.definition(), probe.targetedRange()))
-            {
-                return ProbeGenerationResult.alreadyCoveredProbe(probe);
-            }
-            else
-            {
-                if(probe.accepted())
+        Stream<Probe> candidateProbes = specs.stream().map(spec ->
+                new Probe(spec.sequenceDefinition(), spec.targetedRange(), spec.metadata()).withEvaluationCriteria(spec.evalCriteria()));
+        Stream<Probe> evaluatedProbes = evaluateProbes(candidateProbes);
+        return evaluatedProbes.map(probe ->
                 {
-                    // Add generated probe regions to the coverage check for future probe generation within this batch.
-                    batchCoverage.addCoveredRegions(probeRegions);
-                    return ProbeGenerationResult.acceptProbe(probe);
-                }
-                else
-                {
-                    return ProbeGenerationResult.rejectProbe(probe);
-                }
-            }
-        }).reduce(new ProbeGenerationResult(), ProbeGenerationResult::add));
-
-        return result;
+                    ProbeGenerationResult result;
+                    if(coverage.isCovered(probe.definition(), probe.targetedRange()))
+                    {
+                        result = ProbeGenerationResult.alreadyCoveredProbe(probe);
+                    }
+                    else
+                    {
+                        if(probe.accepted())
+                        {
+                            result = ProbeGenerationResult.acceptProbe(probe);
+                        }
+                        else
+                        {
+                            result = ProbeGenerationResult.rejectProbe(probe);
+                        }
+                    }
+                    resultStore.addResult(result);
+                    return result;
+                })
+                .reduce(new ProbeGenerationResult(), ProbeGenerationResult::add);
     }
 
     // Evaluates candidate probes and select the one best probe.

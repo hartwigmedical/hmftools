@@ -17,6 +17,7 @@ public enum SegmentSupport
     CENTROMERE(false),
     TELOMERE(false),
     NONE(false),
+    EXCL(false),
     UNKNOWN(false);
 
     private final boolean isSV;

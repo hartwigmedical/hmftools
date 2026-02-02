@@ -160,7 +160,7 @@ public class OutputWriter implements AutoCloseable
     {
         LOGGER.debug("Writing {} panel probes to file", probes.size());
 
-        // TODO: should there be a probe ID which matches between TSV, BED, and FASTA?
+        // TODO? should there be a probe ID which matches between TSV, BED, and FASTA?
 
         // Must be sorted for BED files since some tools expect sorted order.
         probes = probes.stream().sorted(Comparator.comparing(

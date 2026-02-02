@@ -13,7 +13,6 @@ import com.hartwig.hmftools.datamodel.linx.LinxDriverType;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
 
 import org.apache.logging.log4j.util.Strings;
-import org.jetbrains.annotations.NotNull;
 
 public final class BreakendEntryFactory
 {
@@ -64,7 +63,12 @@ public final class BreakendEntryFactory
             return Strings.EMPTY;
         }
 
-        return exonRange + " " + breakend.geneOrientation();
+        String geneOrientation = switch (breakend.geneOrientation()) {
+            case UPSTREAM -> "Upstream";
+            case DOWNSTREAM -> "Downstream";
+        };
+
+        return exonRange + " " + geneOrientation;
     }
 
     private static int determineClusterId(final LinxBreakend breakend, final List<LinxSvAnnotation> variants)

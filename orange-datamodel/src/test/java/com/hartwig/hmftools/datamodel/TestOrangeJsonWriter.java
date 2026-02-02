@@ -167,8 +167,7 @@ public class TestOrangeJsonWriter
     @NotNull
     private static PurpleRecord createPurpleRecord()
     {
-        List<PurpleDriver> somaticDrivers = List.of(
-                ImmutablePurpleDriver.builder()
+        PurpleDriver mutationDriver = ImmutablePurpleDriver.builder()
                         .gene("SF3B1")
                         .transcript("ENST00000335508")
                         .type(PurpleDriverType.MUTATION)
@@ -177,8 +176,9 @@ public class TestOrangeJsonWriter
                         .reportedStatus(ReportedStatus.REPORTED)
                         .driverInterpretation(DriverInterpretation.HIGH)
                         .isCanonical(false)
-                        .build(),
-                ImmutablePurpleDriver.builder()
+                        .build();
+
+        PurpleDriver deletionDriver = ImmutablePurpleDriver.builder()
                         .gene("SMAD4")
                         .transcript("ENST00000342988")
                         .type(PurpleDriverType.DEL)
@@ -187,7 +187,7 @@ public class TestOrangeJsonWriter
                         .reportedStatus(ReportedStatus.REPORTED)
                         .driverInterpretation(DriverInterpretation.HIGH)
                         .isCanonical(false)
-                        .build());
+                        .build();
 
         PurpleVariant somaticVariant = ImmutablePurpleVariant.builder()
                 .gene("SF3B1")
@@ -291,7 +291,7 @@ public class TestOrangeJsonWriter
                         .tumorMutationalLoadStatus(PurpleTumorMutationalStatus.HIGH)
                         .svTumorMutationalBurden(75)
                         .build())
-                .somaticDrivers(somaticDrivers)
+                .somaticDrivers(List.of(mutationDriver, deletionDriver))
                 .germlineDrivers(List.of(ImmutablePurpleDriver.builder()
                         .gene("BRCA1")
                         .transcript("ENST00000471181")
@@ -323,14 +323,13 @@ public class TestOrangeJsonWriter
                         .build())
                 )
                 .somaticGainsDels(List.of(ImmutablePurpleGainDeletion.builder()
+                                .driver(deletionDriver)
                         .interpretation(CopyNumberInterpretation.FULL_DEL)
                         .chromosome("5")
                         .chromosomeBand("q2.2")
-                        .gene("SMAD4")
-                        .transcript("ENST00000591126")
-                        .isCanonical(false)
                         .minCopies(0.1)
                         .maxCopies(1.2)
+                        .minMinorAlleleCopies(0.1)
                         .build()))
                 .build();
     }

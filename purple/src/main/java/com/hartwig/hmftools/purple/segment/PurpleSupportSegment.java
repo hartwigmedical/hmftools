@@ -102,7 +102,7 @@ public class PurpleSupportSegment implements GenomeRegion
         int endOfLeft = position - 1;
         int newMaxStart = Math.min(mMaxStart, endOfLeft);
         return List.of(new PurpleSupportSegment(Chromosome, mStart, endOfLeft, RatioSupport, Support, SvCluster, mMinStart, newMaxStart),
-                new PurpleSupportSegment(Chromosome, position, mEnd, RatioSupport, Support, SvCluster));
+                new PurpleSupportSegment(Chromosome, position, mEnd, RatioSupport, SegmentSupport.EXCL, SvCluster));
     }
 
     public List<PurpleSupportSegment> splitBy(GenomeRegion other)

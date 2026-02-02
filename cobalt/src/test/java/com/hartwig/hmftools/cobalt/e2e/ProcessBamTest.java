@@ -1220,7 +1220,7 @@ public class ProcessBamTest
         {
             argCount += 2;
         }
-        if(useNewSegmenter)
+        if(!useNewSegmenter)
         {
             argCount += 1;
         }

@@ -11,7 +11,7 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.TARGET_REGIO
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TARGET_REGIONS_BED_DESC;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.SampleDataFiles.GERMLINE_VARIANTS;
-import static com.hartwig.hmftools.purple.germline.GermlineAmpDelFrequencyCache.COHORT_AMP_DEL_FREQ_FILE;
+import static com.hartwig.hmftools.purple.tools.GenerateGermlineAmpDelFrequency.COHORT_AMP_DEL_FREQ_FILE;
 
 import java.io.File;
 import java.io.IOException;

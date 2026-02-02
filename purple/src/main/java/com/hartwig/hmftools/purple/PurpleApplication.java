@@ -51,6 +51,7 @@ import com.hartwig.hmftools.common.purple.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.purple.PurpleQC;
 import com.hartwig.hmftools.common.purple.PurpleSegment;
 import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
+import com.hartwig.hmftools.common.segmentation.ChrArmLocator;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.VersionInfo;
 import com.hartwig.hmftools.purple.copynumber.ChromosomeArmCopyNumbersFile;
@@ -243,7 +244,8 @@ public class PurpleApplication
         }
 
         PPL_LOGGER.info("applying segmentation");
-        List<ObservedRegion> observedRegions = mSegmentation.createObservedRegions(sampleData.SvCache.somaticVariants(), amberData, cobaltData);
+        List<ObservedRegion> observedRegions =
+                mSegmentation.createObservedRegions(sampleData.SvCache.somaticVariants(), amberData, cobaltData);
 
         if(observedRegions.isEmpty() || !validateObservedRegions(observedRegions))
         {
@@ -380,7 +382,7 @@ public class PurpleApplication
             TargetRegionsCopyNumberFile.write(fileName, targetRegionDataBuilder.targetRegionData());
         }
 
-        ChromosomeCopyNumbers ccm = new ChromosomeCopyNumbers(copyNumbers);
+        ChromosomeCopyNumbers ccm = new ChromosomeCopyNumbers(copyNumbers, ChrArmLocator.defaultLocator(mReferenceData.RefGenVersion));
         String fileName = ChromosomeArmCopyNumbersFile.generateFilename(mConfig.OutputDir, tumorId);
         ChromosomeArmCopyNumbersFile.write(fileName, ccm.data());
 
@@ -417,7 +419,9 @@ public class PurpleApplication
                 e.printStackTrace();
 
                 if(!mConfig.IgnorePlotErrors)
+                {
                     System.exit(1);
+                }
             }
         }
     }
@@ -432,7 +436,7 @@ public class PurpleApplication
 
         PPL_LOGGER.info("generating drivers");
 
-        Map<String,GeneCopyNumber> geneCopyNumberMap = Maps.newHashMap();
+        Map<String, GeneCopyNumber> geneCopyNumberMap = Maps.newHashMap();
 
         for(GeneCopyNumber geneCopyNumber : geneCopyNumbers)
         {
@@ -468,7 +472,8 @@ public class PurpleApplication
         {
             GermlineDrivers germlineDrivers = new GermlineDrivers(mReferenceData.DriverGenes.DriverGeneMap);
 
-            List<DriverCatalog> germlineVariantDrivers = germlineDrivers.findDrivers(mGermlineVariants.candidateVariants(), geneCopyNumberMap);
+            List<DriverCatalog> germlineVariantDrivers =
+                    germlineDrivers.findDrivers(mGermlineVariants.candidateVariants(), geneCopyNumberMap);
 
             germlineDriverCatalog.addAll(germlineVariantDrivers);
 

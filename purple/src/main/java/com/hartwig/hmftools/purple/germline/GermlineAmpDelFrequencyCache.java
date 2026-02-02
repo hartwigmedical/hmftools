@@ -26,8 +26,6 @@ public class GermlineAmpDelFrequencyCache
 {
     private Map<String, List<AmpDelRegionFrequency>> mChrRegionMap;
 
-    public static final String COHORT_AMP_DEL_FREQ_FILE = "`germline_amp_del_freq_file`";
-
     public GermlineAmpDelFrequencyCache(final String filename)
     {
         mChrRegionMap = Maps.newHashMap();

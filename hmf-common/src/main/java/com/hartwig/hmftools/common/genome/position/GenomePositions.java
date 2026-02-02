@@ -16,12 +16,12 @@ public final class GenomePositions
 {
     public static GenomePosition create(final String chromosome, final int position)
     {
-        return ImmutableGenomePositionImpl.builder().chromosome(chromosome).position(position).build();
+        return new GenomePositionImpl(chromosome, position);
     }
 
     public static <T extends GenomePosition> GenomePosition create(@NotNull final T genomePosition)
     {
-        return ImmutableGenomePositionImpl.builder().chromosome(genomePosition.chromosome()).position(genomePosition.position()).build();
+        return new GenomePositionImpl(genomePosition.chromosome(), genomePosition.position());
     }
 
     @NotNull

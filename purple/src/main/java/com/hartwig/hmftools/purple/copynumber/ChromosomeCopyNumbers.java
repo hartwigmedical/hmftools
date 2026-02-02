@@ -2,6 +2,7 @@ package com.hartwig.hmftools.purple.copynumber;
 
 import static com.hartwig.hmftools.common.purple.ChromosomeArm.P_ARM;
 import static com.hartwig.hmftools.common.purple.ChromosomeArm.Q_ARM;
+import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -14,7 +15,9 @@ import java.util.TreeSet;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.ChromosomeArm;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
-import com.hartwig.hmftools.common.purple.SegmentSupport;
+import com.hartwig.hmftools.common.segmentation.Arm;
+import com.hartwig.hmftools.common.segmentation.ChrArm;
+import com.hartwig.hmftools.common.segmentation.ChrArmLocator;
 
 public class ChromosomeCopyNumbers
 {
@@ -23,10 +26,12 @@ public class ChromosomeCopyNumbers
     }
 
     private final Collection<PurpleCopyNumber> rawCopyNumbers;
+    private final ChrArmLocator mChrArmLocator;
 
-    public ChromosomeCopyNumbers(Collection<PurpleCopyNumber> rawCopyNumbers)
+    public ChromosomeCopyNumbers(Collection<PurpleCopyNumber> rawCopyNumbers, final ChrArmLocator mChrArmLocator)
     {
         this.rawCopyNumbers = rawCopyNumbers;
+        this.mChrArmLocator = mChrArmLocator;
     }
 
     public List<ChromosomeArmCopyNumber> data()
@@ -40,7 +45,8 @@ public class ChromosomeCopyNumbers
         for(PurpleCopyNumber purpleCopyNumber : rawCopyNumbers)
         {
             final boolean switchChromosome = !Objects.equals(purpleCopyNumber.chr(), currentChromosome);
-            boolean switchArm = purpleCopyNumber.segmentStartSupport().equals(SegmentSupport.CENTROMERE);
+            ChromosomeArm segmentArm = armForSegment(purpleCopyNumber);
+            boolean switchArm = segmentArm != currentArm;
             if(switchChromosome || switchArm)
             {
                 if(!currentArmCopyNumbers.isEmpty())
@@ -49,7 +55,7 @@ public class ChromosomeCopyNumbers
                     result.add(new ChromosomeArmCopyNumber(currentChromosome, currentArm, statistics.mean, statistics.median, statistics.min, statistics.max));
                 }
                 currentChromosome = purpleCopyNumber.chr();
-                currentArm = nextArm(currentArm);
+                currentArm = segmentArm;
                 currentArmCopyNumbers = new ArrayList<>();
             }
             currentArmCopyNumbers.add(purpleCopyNumber);
@@ -62,13 +68,15 @@ public class ChromosomeCopyNumbers
         return result.stream().filter(ChromosomeArmCopyNumber::includeInReport).toList();
     }
 
-    private static ChromosomeArm nextArm(ChromosomeArm arm)
+    private ChromosomeArm armForSegment(PurpleCopyNumber purpleCopyNumber)
     {
-        if(arm == null)
+        ChrArm startArm = mChrArmLocator.map(purpleCopyNumber.chromosome(), purpleCopyNumber.start());
+        ChrArm endArm = mChrArmLocator.map(purpleCopyNumber.chromosome(), purpleCopyNumber.start());
+        if(startArm.arm() != endArm.arm())
         {
-            return P_ARM;
+            PPL_LOGGER.warn("Segment spans multiple chromosome arms: {}-{} on {}", purpleCopyNumber.start(), purpleCopyNumber.end(), purpleCopyNumber.chromosome());
         }
-        return arm == P_ARM ? Q_ARM : P_ARM;
+        return startArm.arm() == Arm.P ? P_ARM : Q_ARM;
     }
 
     private Statistics calculateStats(List<PurpleCopyNumber> rawCopyNumbers)
@@ -100,7 +108,7 @@ public class ChromosomeCopyNumbers
                 break;
             }
         }
-        return new Statistics(weightedMean,median, min, max);
+        return new Statistics(weightedMean, median, min, max);
     }
 
     private static Comparator<PurpleCopyNumber> copyNumberComparator()
