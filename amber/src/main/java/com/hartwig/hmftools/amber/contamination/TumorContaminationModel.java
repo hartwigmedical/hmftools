@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.amber;
+package com.hartwig.hmftools.amber.contamination;
 
 import static java.lang.Math.floor;
 import static java.lang.String.format;

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.amber;
+package com.hartwig.hmftools.amber.contamination;
 
 import static org.junit.Assert.assertEquals;
 

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.amber;
+package com.hartwig.hmftools.amber.contamination;
 
 import com.hartwig.hmftools.common.amber.BaseDepthData;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
