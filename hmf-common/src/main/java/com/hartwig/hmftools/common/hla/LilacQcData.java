@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.hla;
 
-import static com.hartwig.hmftools.common.hla.LilacAllele.MHC_CLASS_I;
+import static com.hartwig.hmftools.common.hla.HlaCommon.MHC_CLASS_I;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.checkFileExtensionRename;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferFileDelimiter;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.hla;
 
+import static com.hartwig.hmftools.common.hla.HlaCommon.MHC_CLASS_I;
+import static com.hartwig.hmftools.common.hla.LilacQcData.FLD_GENES;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.checkFileExtensionRename;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferFileDelimiter;
@@ -15,7 +17,6 @@ import java.util.Map;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -25,23 +26,6 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class LilacAllele
 {
-    private static final Map<String, String> GENES_LOOKUP = Maps.newHashMap();
-
-    public static final String MHC_CLASS_I = "MHC_CLASS_I";
-
-    static
-    {
-        GENES_LOOKUP.put("A", MHC_CLASS_I);
-        GENES_LOOKUP.put("B", MHC_CLASS_I);
-        GENES_LOOKUP.put("C", MHC_CLASS_I);
-
-        GENES_LOOKUP.put("DQB1", "HLA_DQB1");
-        GENES_LOOKUP.put("DPA1", "HLA_DPA1");
-        GENES_LOOKUP.put("DPB1", "HLA_DPB1");
-        GENES_LOOKUP.put("DQA1", "HLA_DQA1");
-        GENES_LOOKUP.put("DRB1", "HLA_DRB1");
-    }
-
     public abstract String genes();
 
     public abstract String allele();
@@ -104,7 +88,9 @@ public abstract class LilacAllele
         final String header = lines.get(0);
         lines.remove(0);
 
-        final Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(header, delim);
+        Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(header, delim);
+
+        Integer genesIndex = fieldsIndexMap.get(FLD_GENES);
 
         List<LilacAllele> alleles = Lists.newArrayList();
 
@@ -113,8 +99,8 @@ public abstract class LilacAllele
             String[] values = line.split(delim);
 
             String allele = values[fieldsIndexMap.get(FLD_ALLELE)];
-            String gene = allele.split("\\*")[0];
-            String genes = GENES_LOOKUP.get(gene);
+            String genes = genesIndex != null ? values[genesIndex] : MHC_CLASS_I;
+
             alleles.add(ImmutableLilacAllele.builder()
                     .genes(genes)
                     .allele(allele)
@@ -184,6 +170,7 @@ public abstract class LilacAllele
     public static String header()
     {
         return new StringJoiner(TSV_DELIM)
+                .add(FLD_GENES)
                 .add(FLD_ALLELE)
                 .add(FLD_REF_TOTAL)
                 .add(FLD_REF_UNIQUE)
@@ -209,6 +196,7 @@ public abstract class LilacAllele
     private static String toString(final LilacAllele allele)
     {
         return new StringJoiner(TSV_DELIM)
+                .add(allele.genes())
                 .add(allele.allele())
                 .add(String.valueOf(allele.refFragments()))
                 .add(String.valueOf(allele.refUnique()))

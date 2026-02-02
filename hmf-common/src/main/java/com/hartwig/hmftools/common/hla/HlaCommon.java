@@ -23,6 +23,8 @@ public final class HlaCommon
 
     public static final List<String> HLA_GENES = Lists.newArrayList("HLA-A","HLA-B","HLA-C","HLA-DQA1","HLA-DQB1","HLA-DRB1");
 
+    public static final String MHC_CLASS_I = "MHC_CLASS_I";
+
     public static final List<GeneData> HLA_GENE_DATA = Lists.newArrayList();
 
     public static String hlaChromosome(final RefGenomeVersion version) { return version == V37 ? HLA_CHROMOSOME_V37 : HLA_CHROMOSOME_V38; }

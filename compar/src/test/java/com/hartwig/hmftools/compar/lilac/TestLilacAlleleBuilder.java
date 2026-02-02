@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.compar.lilac;
 
-import static com.hartwig.hmftools.common.hla.LilacAllele.MHC_CLASS_I;
+import static com.hartwig.hmftools.common.hla.HlaCommon.MHC_CLASS_I;
 import static com.hartwig.hmftools.compar.ComparTestUtil.combine;
 
 import java.util.function.Consumer;

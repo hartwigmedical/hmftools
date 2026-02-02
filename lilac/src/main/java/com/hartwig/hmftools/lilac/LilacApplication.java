@@ -202,7 +202,7 @@ public class LilacApplication
         for(GeneSelector genes : mConfig.Genes)
         {
             CURRENT_GENES = genes;
-            LL_LOGGER.info("Solving for genes({})", CURRENT_GENES.name());
+            LL_LOGGER.info("solving for genes({})", CURRENT_GENES.name());
             reset();
             runGeneGroup();
         }
