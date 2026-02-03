@@ -42,7 +42,7 @@ public class TestGermlineDeletionDataBuilder
     {
         return new GermlineAmpDelData(
                 new GermlineAmpDel(
-                        gene,
+                        gene, "",
                         "",
                         chromosomeBand,
                         -1,

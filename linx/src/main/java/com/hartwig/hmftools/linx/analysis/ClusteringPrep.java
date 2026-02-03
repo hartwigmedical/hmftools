@@ -6,6 +6,8 @@ import static java.lang.Math.min;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
+import static com.hartwig.hmftools.common.segmentation.Arm.P;
+import static com.hartwig.hmftools.common.segmentation.Arm.Q;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
@@ -17,8 +19,6 @@ import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.ClusteringReason.SGL_MAPPING_INF;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.addSvToChrBreakendMap;
 import static com.hartwig.hmftools.linx.cn.LohEvent.CN_DATA_NO_SV;
-import static com.hartwig.hmftools.common.purple.ChromosomeArm.P_ARM;
-import static com.hartwig.hmftools.common.purple.ChromosomeArm.Q_ARM;
 import static com.hartwig.hmftools.linx.types.LinxConstants.MAX_SIMPLE_DUP_DEL_CUTOFF;
 import static com.hartwig.hmftools.linx.types.LinxConstants.MIN_SIMPLE_DUP_DEL_CUTOFF;
 import static com.hartwig.hmftools.linx.types.SvVarData.RELATION_TYPE_NEIGHBOUR;
@@ -219,10 +219,10 @@ public class ClusteringPrep
                 if(var.type() != INV)
                     continue;
 
-                if(!pArmHasInversions && (var.arm(true) == P_ARM || var.arm(false) == P_ARM))
+                if(!pArmHasInversions && (var.arm(true) == P || var.arm(false) == P))
                     pArmHasInversions = true;
 
-                if(!qArmHasInversions && (var.arm(true) == Q_ARM || var.arm(false) == Q_ARM))
+                if(!qArmHasInversions && (var.arm(true) == Q || var.arm(false) == Q))
                     qArmHasInversions = true;
 
                 if(pArmHasInversions && qArmHasInversions)
@@ -248,13 +248,13 @@ public class ClusteringPrep
 
                 if(pArmHasInversions)
                 {
-                    if(var.arm(true) == P_ARM || var.arm(false) == P_ARM)
+                    if(var.arm(true) == P || var.arm(false) == P)
                         continue;
                 }
 
                 if(qArmHasInversions)
                 {
-                    if(var.arm(true) == Q_ARM || var.arm(false) == Q_ARM)
+                    if(var.arm(true) == Q || var.arm(false) == Q)
                         continue;
                 }
 

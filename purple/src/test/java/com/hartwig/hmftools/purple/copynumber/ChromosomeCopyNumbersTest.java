@@ -9,12 +9,11 @@ import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._12;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._2;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._3;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
-import static com.hartwig.hmftools.common.purple.ChromosomeArm.P_ARM;
-import static com.hartwig.hmftools.common.purple.ChromosomeArm.Q_ARM;
 import static com.hartwig.hmftools.common.purple.PurpleTestUtils.createCopyNumber;
 import static com.hartwig.hmftools.common.purple.SegmentSupport.CENTROMERE;
 import static com.hartwig.hmftools.common.purple.SegmentSupport.NONE;
 import static com.hartwig.hmftools.common.purple.SegmentSupport.TELOMERE;
+import static com.hartwig.hmftools.common.segmentation.Arm.P;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -56,7 +55,7 @@ public class ChromosomeCopyNumbersTest
         assertEquals(1, results.size());
         ChromosomeArmCopyNumber result = results.get(0);
         assertEquals(_1, result.chromosome());
-        assertEquals(P_ARM, result.arm());
+        assertEquals(Arm.P, result.arm());
         assertEquals(copyNumber, result.meanCopyNumber(), EPSILON);
         assertEquals(copyNumber, result.medianCopyNumber(), EPSILON);
         assertEquals(copyNumber, result.maxCopyNumber(), EPSILON);
@@ -77,7 +76,7 @@ public class ChromosomeCopyNumbersTest
         assertEquals(1, results.size());
         ChromosomeArmCopyNumber result = results.get(0);
         assertEquals(_1, result.chromosome());
-        assertEquals(P_ARM, result.arm());
+        assertEquals(P, result.arm());
         assertEquals(0.6, result.meanCopyNumber(), EPSILON);
         assertEquals(0.5, result.medianCopyNumber(), EPSILON);
         assertEquals(0.8, result.maxCopyNumber(), EPSILON);
@@ -140,7 +139,7 @@ public class ChromosomeCopyNumbersTest
         assertEquals(4, results.size());
         ChromosomeArmCopyNumber p1 = results.get(0);
         assertEquals(_1, p1.chromosome());
-        assertEquals(P_ARM, p1.arm());
+        assertEquals(Arm.P, p1.arm());
         assertEquals(0.6, p1.meanCopyNumber(), EPSILON);
         assertEquals(0.7, p1.medianCopyNumber(), EPSILON);
         assertEquals(0.7, p1.maxCopyNumber(), EPSILON);
@@ -148,7 +147,7 @@ public class ChromosomeCopyNumbersTest
 
         ChromosomeArmCopyNumber q1 = results.get(1);
         assertEquals(_1, q1.chromosome());
-        assertEquals(Q_ARM, q1.arm());
+        assertEquals(Arm.Q, q1.arm());
         assertEquals(0.5, q1.meanCopyNumber(), EPSILON);
         assertEquals(0.6, q1.medianCopyNumber(), EPSILON);
         assertEquals(0.6, q1.maxCopyNumber(), EPSILON);
@@ -156,7 +155,7 @@ public class ChromosomeCopyNumbersTest
 
         ChromosomeArmCopyNumber p2 = results.get(2);
         assertEquals(_2, p2.chromosome());
-        assertEquals(P_ARM, p2.arm());
+        assertEquals(Arm.P, p2.arm());
         assertEquals(0.65, p2.meanCopyNumber(), EPSILON);
         assertEquals(0.75, p2.medianCopyNumber(), EPSILON);
         assertEquals(0.75, p2.maxCopyNumber(), EPSILON);
@@ -164,7 +163,7 @@ public class ChromosomeCopyNumbersTest
 
         ChromosomeArmCopyNumber q2 = results.get(3);
         assertEquals(_2, q2.chromosome());
-        assertEquals(Q_ARM, q2.arm());
+        assertEquals(Arm.Q, q2.arm());
         assertEquals(0.55, q2.meanCopyNumber(), EPSILON);
         assertEquals(0.65, q2.medianCopyNumber(), EPSILON);
         assertEquals(0.65, q2.maxCopyNumber(), EPSILON);
@@ -191,15 +190,15 @@ public class ChromosomeCopyNumbersTest
         assertEquals(3, results.size());
         ChromosomeArmCopyNumber p1 = results.get(0);
         assertEquals(_1, p1.chromosome());
-        assertEquals(P_ARM, p1.arm());
+        assertEquals(Arm.P, p1.arm());
 
         ChromosomeArmCopyNumber p2 = results.get(1);
         assertEquals(_2, p2.chromosome());
-        assertEquals(Q_ARM, p2.arm());
+        assertEquals(Arm.Q, p2.arm());
 
         ChromosomeArmCopyNumber p3 = results.get(2);
         assertEquals(_3, p3.chromosome());
-        assertEquals(Q_ARM, p3.arm());
+        assertEquals(Arm.Q, p3.arm());
     }
 
     @Test
@@ -223,20 +222,20 @@ public class ChromosomeCopyNumbersTest
         assertEquals(4, results.size());
         ChromosomeArmCopyNumber p1 = results.get(0);
         assertEquals(_10, p1.chromosome());
-        assertEquals(P_ARM, p1.arm());
+        assertEquals(Arm.P, p1.arm());
 
         ChromosomeArmCopyNumber p2 = results.get(1);
         assertEquals(_10, p2.chromosome());
-        assertEquals(Q_ARM, p2.arm());
+        assertEquals(Arm.Q, p2.arm());
         assertEquals(0.3, p2.minCopyNumber(), EPSILON);
 
         ChromosomeArmCopyNumber p3 = results.get(2);
         assertEquals(_11, p3.chromosome());
-        assertEquals(P_ARM, p3.arm());
+        assertEquals(Arm.P, p3.arm());
 
         ChromosomeArmCopyNumber p4 = results.get(3);
         assertEquals(_11, p4.chromosome());
-        assertEquals(Q_ARM, p4.arm());
+        assertEquals(Arm.Q, p4.arm());
     }
 
     @Test
@@ -255,15 +254,15 @@ public class ChromosomeCopyNumbersTest
         assertEquals(3, results.size());
         ChromosomeArmCopyNumber p1 = results.get(0);
         assertEquals(_10, p1.chromosome());
-        assertEquals(P_ARM, p1.arm());
+        assertEquals(Arm.P, p1.arm());
 
         ChromosomeArmCopyNumber p2 = results.get(1);
         assertEquals(_11, p2.chromosome());
-        assertEquals(P_ARM, p2.arm());
+        assertEquals(Arm.P, p2.arm());
 
         ChromosomeArmCopyNumber p3 = results.get(2);
         assertEquals(_12, p3.chromosome());
-        assertEquals(Q_ARM, p3.arm());
+        assertEquals(Arm.Q, p3.arm());
     }
 
     @Test
@@ -299,7 +298,7 @@ class DummyChrArmLocator implements ChrArmLocator
     public ChrArm map(final GenomePosition genomePosition)
     {
         int centre = ChromosomeCentres.getOrDefault(V38.versionedChromosome(genomePosition.chromosome()), 1_000_000_000);
-        Arm arm = genomePosition.position() <= centre ? Arm.P : Arm.Q;
+        Arm arm = genomePosition.position() <= centre ? P : Arm.Q;
         return new ChrArm(genomePosition.chr(), arm);
     }
 }

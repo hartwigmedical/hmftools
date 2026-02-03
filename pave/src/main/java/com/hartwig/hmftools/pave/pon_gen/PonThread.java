@@ -9,6 +9,7 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.perf.TaskQueue;
 import com.hartwig.hmftools.pave.annotation.ClinvarAnnotation;
+import com.hartwig.hmftools.pave.annotation.PonAnnotation;
 
 public class PonThread extends Thread
 {
@@ -17,17 +18,20 @@ public class PonThread extends Thread
     private final PonWriter mPonWriter;
 
     private final List<String> mSampleVcfs;
+    private final PonAnnotation mExistingPon;
     private final ClinvarAnnotation mClinvarAnnotation;
     private final HotspotCache mHotspotCache;
     private final EnsemblDataCache mEnsemblDataCache;
 
     public PonThread(
             final PonConfig config, final List<String> sampleVcfs, final TaskQueue taskQueue, final PonWriter ponWriter,
-            final ClinvarAnnotation clinvarAnnotation, final HotspotCache hotspotCache, final EnsemblDataCache ensemblDataCache)
+            final PonAnnotation existingPon, final ClinvarAnnotation clinvarAnnotation, final HotspotCache hotspotCache,
+            final EnsemblDataCache ensemblDataCache)
     {
         mRegions = taskQueue;
         mConfig = config;
         mPonWriter = ponWriter;
+        mExistingPon = existingPon;
         mSampleVcfs = sampleVcfs;
         mEnsemblDataCache = ensemblDataCache;
         mHotspotCache = hotspotCache;
@@ -44,7 +48,7 @@ public class PonThread extends Thread
                 ChrBaseRegion region = (ChrBaseRegion)mRegions.removeItem();
 
                 RegionPonTask regionPonTask = new RegionPonTask(
-                        mConfig, region, mSampleVcfs, mClinvarAnnotation, mHotspotCache, mEnsemblDataCache);
+                        mConfig, region, mSampleVcfs, mExistingPon, mClinvarAnnotation, mHotspotCache, mEnsemblDataCache);
 
                 regionPonTask.run();
 

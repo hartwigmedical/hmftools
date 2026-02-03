@@ -21,7 +21,6 @@ import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxOutput.ITEM_DELIM_CHR;
 import static com.hartwig.hmftools.linx.analysis.ClusterClassification.getClusterCategory;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
-import static com.hartwig.hmftools.common.purple.ChromosomeArm.asStr;
 import static com.hartwig.hmftools.linx.types.ArmCluster.getArmClusterData;
 import static com.hartwig.hmftools.linx.types.LinxConstants.NO_DB_MARKER;
 import static com.hartwig.hmftools.linx.types.LinxConstants.SHORT_TI_LENGTH;
@@ -246,11 +245,11 @@ public class CohortDataWriter
                 sj.add(var.chromosome(true));
                 sj.add(String.valueOf(var.position(true)));
                 sj.add(String.valueOf(var.orientation(true)));
-                sj.add(asStr(var.arm(true)));
+                sj.add(var.arm(true).toString());
                 sj.add(var.chromosome(false));
                 sj.add(String.valueOf(var.position(false)));
                 sj.add(String.valueOf(var.orientation(false)));
-                sj.add(asStr(var.arm(false)));
+                sj.add(var.arm(false).toString());
 
                 if(mConfig.isSomatic())
                 {

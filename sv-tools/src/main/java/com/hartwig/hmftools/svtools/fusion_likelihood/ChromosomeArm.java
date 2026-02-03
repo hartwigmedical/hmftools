@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.purple;
+package com.hartwig.hmftools.svtools.fusion_likelihood;
 
 public enum ChromosomeArm
 {

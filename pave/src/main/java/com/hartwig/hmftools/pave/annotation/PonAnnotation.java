@@ -23,7 +23,6 @@ public class PonAnnotation extends AnnotationData implements Callable<Void>
     public PonAnnotation(final String filename, boolean loadOnDemand)
     {
         mPonFilename = filename;
-
         mPonCache = new PonCache(filename, loadOnDemand);
     }
 

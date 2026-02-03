@@ -9,14 +9,18 @@ public class PonVariantData
     public final int Samples;
     public final int MaxSampleReads;
     public final int TotalSampleReads;
+    public final MultiPonStatus MultiPon;
 
-    public PonVariantData(final String ref, final String alt, final int samples, final int maxSampleReads, final int totalSampleReads)
+    public PonVariantData(
+            final String ref, final String alt, final int samples, final int maxSampleReads, final int totalSampleReads,
+            final MultiPonStatus multiPonStatus)
     {
         Ref = ref;
         Alt = alt;
         Samples = samples;
         MaxSampleReads = maxSampleReads;
         TotalSampleReads = totalSampleReads;
+        MultiPon = multiPonStatus;
     }
 
     public boolean matches(final String ref, final String alt) { return ref.equals(Ref) && alt.equals(Alt); }

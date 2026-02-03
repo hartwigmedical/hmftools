@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.pave.pon_gen;
 
+import static java.lang.Math.max;
+
 import static com.hartwig.hmftools.common.variant.SageVcfTags.MAP_QUAL_FACTOR;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TIER;
 import static com.hartwig.hmftools.common.variant.VariantTier.HOTSPOT;
@@ -7,6 +9,7 @@ import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
@@ -16,8 +19,11 @@ import com.hartwig.hmftools.common.perf.StringCache;
 import com.hartwig.hmftools.common.variant.SageVcfTags;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
+import com.hartwig.hmftools.common.variant.pon.PonChrCache;
+import com.hartwig.hmftools.common.variant.pon.PonVariantData;
 import com.hartwig.hmftools.pave.annotation.ClinvarAnnotation;
 import com.hartwig.hmftools.pave.annotation.ClinvarChrCache;
+import com.hartwig.hmftools.pave.annotation.PonAnnotation;
 
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
@@ -30,17 +36,19 @@ public class RegionPonTask
 
     private final VariantCache mVariantCache;
     private final ClinvarChrCache mClinvarData;
+    private final PonAnnotation mExistingPon;
     private final HotspotRegionCache mSomaticHotspots;
     private final HotspotRegionCache mGermlineHotspots;
     private final TranscriptRegionCache mTranscriptChrCache;
 
     public RegionPonTask(
-            final PonConfig config, final ChrBaseRegion region, final List<String> sampleVcfs,
+            final PonConfig config, final ChrBaseRegion region, final List<String> sampleVcfs, final PonAnnotation existingPon,
             final ClinvarAnnotation clinvarAnnotation, final HotspotCache hotspotCache, final EnsemblDataCache ensemblDataCache)
     {
         mConfig = config;
         mRegion = region;
         mSampleVcfs = sampleVcfs;
+        mExistingPon = existingPon;
 
         mVariantCache = new VariantCache();
 
@@ -106,6 +114,8 @@ public class RegionPonTask
         }
 
         int cachedVariantCount = mVariantCache.variantCount();
+
+        addExistingPonEntries();
 
         // filter & finalise variants
         filterVariants();
@@ -237,6 +247,54 @@ public class RegionPonTask
             variant.setRepeatCount(variantContext.getAttributeAsInt(SageVcfTags.REPEAT_COUNT, 0));
 
         return variant;
+    }
+
+    private void addExistingPonEntries()
+    {
+        if(!mExistingPon.enabled())
+            return;
+
+        mVariantCache.resetSearch();
+
+        PonChrCache ponChrCache = mExistingPon.getChromosomeCache(mRegion.Chromosome);
+
+        Map<Integer,List<PonVariantData>> positionMap = ponChrCache.positionMap();
+
+        List<Integer> existingPositions = positionMap.keySet().stream()
+                .filter(x -> mRegion.containsPosition(x)).sorted().toList();
+
+        for(Integer existingPosition : existingPositions)
+        {
+            List<PonVariantData> existingVariants = positionMap.get(existingPosition);
+
+            for(PonVariantData existingVariant : existingVariants)
+            {
+                VariantPonData variantPonData = mVariantCache.getOrCreateVariant(
+                        mRegion.Chromosome, existingPosition, existingVariant.Ref, existingVariant.Alt);
+
+                variantPonData.markInBasePonCache();
+
+                if(variantPonData.sampleCount() > 0)
+                {
+                    variantPonData.markInMultiplePonCaches();
+
+                    if(existingVariant.Samples > variantPonData.sampleCount())
+                    {
+                        variantPonData.setSampleCount(existingVariant.Samples);
+                        variantPonData.setTotalReadCount(existingVariant.TotalSampleReads);
+                    }
+
+                    int maxSampleReadCount = max(variantPonData.maxSampleReadCount(), existingVariant.MaxSampleReads);
+                    variantPonData.setMaxSampleReadCount(maxSampleReadCount);
+                }
+                else
+                {
+                    variantPonData.setSampleCount(existingVariant.Samples);
+                    variantPonData.setMaxSampleReadCount(existingVariant.MaxSampleReads);
+                    variantPonData.setTotalReadCount(existingVariant.TotalSampleReads);
+                }
+            }
+        }
     }
 
     private void filterVariants()

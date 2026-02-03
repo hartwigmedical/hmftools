@@ -202,7 +202,7 @@ public class LilacApplication
         for(GeneSelector genes : mConfig.Genes)
         {
             CURRENT_GENES = genes;
-            LL_LOGGER.info("Solving for genes({})", CURRENT_GENES.name());
+            LL_LOGGER.info("solving for genes({})", CURRENT_GENES.name());
             reset();
             runGeneGroup();
         }
@@ -492,11 +492,11 @@ public class LilacApplication
                 .filter(x -> winningAlleles.contains(x.Allele.asFourDigit()))
                 .collect(Collectors.toList());
 
-        LL_LOGGER.info("{}", HlaComplexFile.header(CURRENT_GENES));
+        LL_LOGGER.info("{}", HlaComplexFile.infoHeader(CURRENT_GENES));
 
         for(ComplexCoverage rankedComplex : mRankedComplexes)
         {
-            LL_LOGGER.info(HlaComplexFile.asString(rankedComplex));
+            LL_LOGGER.info(HlaComplexFile.asString(null, rankedComplex));
         }
 
         // log key results for fast post-run analysis

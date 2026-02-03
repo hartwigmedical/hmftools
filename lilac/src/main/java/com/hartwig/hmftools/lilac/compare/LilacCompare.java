@@ -117,8 +117,9 @@ public class LilacCompare
         String origFile = LilacQcData.generateFilename(mOriginalDir, mSampleId);
         String newFile = LilacQcData.generateFilename(mNewDir, mSampleId);
 
-        LilacQcData origQcData = LilacQcData.read(origFile);
-        LilacQcData newQcData = LilacQcData.read(newFile);
+        // TODO: compare all by gene type
+        LilacQcData origQcData = LilacQcData.read(origFile).get(0);
+        LilacQcData newQcData = LilacQcData.read(newFile).get(0);
 
         checkDifference(FLD_QC_STATUS, origQcData.status(), newQcData.status());
         checkDifference(FLD_TOTAL_FRAGS, origQcData.totalFragments(), newQcData.totalFragments());

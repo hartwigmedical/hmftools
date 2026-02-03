@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.purple.ChromosomeArm;
+import com.hartwig.hmftools.common.segmentation.Arm;
 
 // clusters of proximate SVs on an arm
 public class ArmCluster
@@ -32,14 +32,14 @@ public class ArmCluster
     final SvCluster mCluster;
 
     private final String mChromosome;
-    private final ChromosomeArm mArm;
+    private final Arm mArm;
     private int mStartPos;
     private int mEndPos;
 
     private ArmClusterType mType;
     private int mTICount;
 
-    public ArmCluster(int id, final SvCluster cluster, final String chr, final ChromosomeArm arm)
+    public ArmCluster(int id, final SvCluster cluster, final String chr, final Arm arm)
     {
         mId = id;
         mCluster = cluster;
@@ -62,7 +62,7 @@ public class ArmCluster
     }
 
     public final String chromosome() { return mChromosome; }
-    public final ChromosomeArm arm() { return mArm; }
+    public final Arm arm() { return mArm; }
     public int posStart() { return mStartPos; }
     public int posEnd() { return mEndPos; }
 

@@ -18,7 +18,7 @@ public class VariantCache
         mLastVariantIndex = 0;
     }
 
-    public VariantPonData getOrCreateVariant(final String chromosome, final int position, final String ref, final String alt)
+    public VariantPonData   getOrCreateVariant(final String chromosome, final int position, final String ref, final String alt)
     {
         // start from the last inserted index since each VCF is ordered
 

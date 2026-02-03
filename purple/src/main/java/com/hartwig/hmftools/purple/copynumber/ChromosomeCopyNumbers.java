@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.purple.copynumber;
 
-import static com.hartwig.hmftools.common.purple.ChromosomeArm.P_ARM;
-import static com.hartwig.hmftools.common.purple.ChromosomeArm.Q_ARM;
+import static com.hartwig.hmftools.common.segmentation.Arm.P;
+import static com.hartwig.hmftools.common.segmentation.Arm.Q;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
 import java.util.ArrayList;
@@ -13,7 +13,6 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.purple.ChromosomeArm;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.segmentation.Arm;
 import com.hartwig.hmftools.common.segmentation.ChrArm;
@@ -21,17 +20,15 @@ import com.hartwig.hmftools.common.segmentation.ChrArmLocator;
 
 public class ChromosomeCopyNumbers
 {
-    private record Statistics(double mean, double median, double min, double max)
-    {
-    }
+    private record Statistics(double mean, double median, double min, double max) {}
 
-    private final Collection<PurpleCopyNumber> rawCopyNumbers;
+    private final Collection<PurpleCopyNumber> mRawCopyNumbers;
     private final ChrArmLocator mChrArmLocator;
 
-    public ChromosomeCopyNumbers(Collection<PurpleCopyNumber> rawCopyNumbers, final ChrArmLocator mChrArmLocator)
+    public ChromosomeCopyNumbers(Collection<PurpleCopyNumber> rawCopyNumbers, final ChrArmLocator chrArmLocator)
     {
-        this.rawCopyNumbers = rawCopyNumbers;
-        this.mChrArmLocator = mChrArmLocator;
+        mRawCopyNumbers = rawCopyNumbers;
+        mChrArmLocator = chrArmLocator;
     }
 
     public List<ChromosomeArmCopyNumber> data()
@@ -39,13 +36,13 @@ public class ChromosomeCopyNumbers
         List<ChromosomeArmCopyNumber> result = new ArrayList<>();
         List<PurpleCopyNumber> currentArmCopyNumbers = new ArrayList<>();
         HumanChromosome currentChromosome = null;
-        ChromosomeArm currentArm = null;
-        // The raw copy numbers are always in order (sorted by chromosome and location)
-        // and cover every arm of every chromosome.
-        for(PurpleCopyNumber purpleCopyNumber : rawCopyNumbers)
+        Arm currentArm = null;
+
+        // The raw copy numbers are always in order (sorted by chromosome and location) and cover every arm of every chromosome
+        for(PurpleCopyNumber purpleCopyNumber : mRawCopyNumbers)
         {
             final boolean switchChromosome = !Objects.equals(purpleCopyNumber.chr(), currentChromosome);
-            ChromosomeArm segmentArm = armForSegment(purpleCopyNumber);
+            Arm segmentArm = armForSegment(purpleCopyNumber);
             boolean switchArm = segmentArm != currentArm;
             if(switchChromosome || switchArm)
             {
@@ -68,18 +65,19 @@ public class ChromosomeCopyNumbers
         return result.stream().filter(ChromosomeArmCopyNumber::includeInReport).toList();
     }
 
-    private ChromosomeArm armForSegment(PurpleCopyNumber purpleCopyNumber)
+    private Arm armForSegment(final PurpleCopyNumber purpleCopyNumber)
     {
         ChrArm startArm = mChrArmLocator.map(purpleCopyNumber.chromosome(), purpleCopyNumber.start());
         ChrArm endArm = mChrArmLocator.map(purpleCopyNumber.chromosome(), purpleCopyNumber.start());
         if(startArm.arm() != endArm.arm())
         {
-            PPL_LOGGER.warn("Segment spans multiple chromosome arms: {}-{} on {}", purpleCopyNumber.start(), purpleCopyNumber.end(), purpleCopyNumber.chromosome());
+            PPL_LOGGER.warn("Segment spans multiple chromosome arms: {}-{} on {}",
+                    purpleCopyNumber.start(), purpleCopyNumber.end(), purpleCopyNumber.chromosome());
         }
-        return startArm.arm() == Arm.P ? P_ARM : Q_ARM;
+        return startArm.arm() == P ? P : Q;
     }
 
-    private Statistics calculateStats(List<PurpleCopyNumber> rawCopyNumbers)
+    private Statistics calculateStats(final List<PurpleCopyNumber> rawCopyNumbers)
     {
         double totalLength = 0.0;
         double totalWeight = 0.0;

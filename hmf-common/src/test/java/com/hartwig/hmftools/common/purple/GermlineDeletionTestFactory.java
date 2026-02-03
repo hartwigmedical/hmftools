@@ -5,44 +5,40 @@ import org.jetbrains.annotations.NotNull;
 
 public final class GermlineDeletionTestFactory
 {
-    @NotNull
-    public static GermlineAmpDel create(@NotNull String geneName)
+    public static GermlineAmpDel create(final String geneName)
     {
         return create(geneName, false, GermlineStatus.HET_DELETION, 0D, 0, 0);
     }
 
-    @NotNull
-    public static GermlineAmpDel create(@NotNull String geneName, boolean reported, @NotNull String chromosome,
-            @NotNull String chromosomeBand)
+    public static GermlineAmpDel create(final String geneName, boolean reported, final String chromosome,
+            final String chromosomeBand)
     {
         return create(geneName, reported, GermlineStatus.HET_DELETION, 0D, 0, 0, chromosome, chromosomeBand);
     }
 
-    @NotNull
-    public static GermlineAmpDel create(@NotNull String geneName, boolean reported, @NotNull GermlineStatus tumorStatus)
+    public static GermlineAmpDel create(final String geneName, boolean reported, final GermlineStatus tumorStatus)
     {
         return create(geneName, reported, tumorStatus, 0D, 0, 0);
     }
 
-    @NotNull
-    public static GermlineAmpDel create(@NotNull String geneName, boolean reported, @NotNull GermlineStatus tumorStatus,
-            double tumorCopyNumber)
+    public static GermlineAmpDel create(
+            final String geneName, boolean reported, final GermlineStatus tumorStatus, double tumorCopyNumber)
     {
         return create(geneName, reported, tumorStatus, tumorCopyNumber, 0, 0);
     }
 
-    @NotNull
-    public static GermlineAmpDel create(@NotNull String geneName, boolean reported, @NotNull GermlineStatus tumorStatus,
-            double tumorCopyNumber, int regionStart, int regionEnd)
+    public static GermlineAmpDel create(
+            final String geneName, boolean reported, final GermlineStatus tumorStatus, double tumorCopyNumber, int regionStart, int regionEnd)
     {
         return create(geneName, reported, tumorStatus, tumorCopyNumber, regionStart, regionEnd, Strings.EMPTY, Strings.EMPTY);
     }
 
-    @NotNull
-    public static GermlineAmpDel create(@NotNull String geneName, boolean reported, @NotNull GermlineStatus tumorStatus,
-            double tumorCopyNumber, int regionStart, int regionEnd, @NotNull String chromosome, @NotNull String chromosomeBand)
+    public static GermlineAmpDel create(
+            final String geneName, boolean reported, final GermlineStatus tumorStatus,
+            double tumorCopyNumber, int regionStart, int regionEnd, final String chromosome, final String chromosomeBand)
     {
-        return new GermlineAmpDel(geneName,
+        return new GermlineAmpDel(
+                geneName, "",
                 chromosome,
                 chromosomeBand,
                 regionStart,

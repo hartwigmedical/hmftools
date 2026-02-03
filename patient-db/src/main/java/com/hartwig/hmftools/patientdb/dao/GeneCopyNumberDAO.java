@@ -21,10 +21,9 @@ import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.common.purple.SegmentSupport;
 
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep18;
 import org.jooq.InsertValuesStep19;
 import org.jooq.Record;
-import org.jooq.Record15;
+import org.jooq.Record16;
 import org.jooq.Result;
 
 public class GeneCopyNumberDAO
@@ -36,7 +35,7 @@ public class GeneCopyNumberDAO
         this.context = context;
     }
 
-    public List<GeneCopyNumber> readCopyNumbers(final String sample, final List<String> genes)
+    public List<GeneCopyNumber> readGeneCopyNumbers(final String sample, final List<String> genes)
     {
         List<GeneCopyNumber> geneCopyNumbers = Lists.newArrayList();
 
@@ -79,8 +78,8 @@ public class GeneCopyNumberDAO
     {
         List<GermlineAmpDel> germlineAmpDels = Lists.newArrayList();
 
-        Result<Record15<String,String,Integer,Integer,Integer,Integer,Integer,String,String,String,Double,Double,String,Integer,Byte>> result = context.select(
-                GERMLINECOPYNUMBER.GENE, GERMLINECOPYNUMBER.CHROMOSOME, GERMLINECOPYNUMBER.REGIONSTART, GERMLINECOPYNUMBER.REGIONEND,
+        Result<Record16<String,String,String,Integer,Integer,Integer,Integer,Integer,String,String,String,Double,Double,String,Integer,Byte>> result = context.select(
+                GERMLINECOPYNUMBER.GENE, GERMLINECOPYNUMBER.TRANSCRIPTID, GERMLINECOPYNUMBER.CHROMOSOME, GERMLINECOPYNUMBER.REGIONSTART, GERMLINECOPYNUMBER.REGIONEND,
                 GERMLINECOPYNUMBER.DEPTHWINDOWCOUNT, GERMLINECOPYNUMBER.EXONSTART, GERMLINECOPYNUMBER.EXONEND,
                 GERMLINECOPYNUMBER.DETECTIONMETHOD, GERMLINECOPYNUMBER.GERMLINESTATUS, GERMLINECOPYNUMBER.TUMORSTATUS,
                 GERMLINECOPYNUMBER.NORMALCOPYNUMBER, GERMLINECOPYNUMBER.TUMORCOPYNUMBER, GERMLINECOPYNUMBER.FILTER,
@@ -91,6 +90,7 @@ public class GeneCopyNumberDAO
         {
             germlineAmpDels.add(new GermlineAmpDel(
                     record.getValue(GERMLINECOPYNUMBER.GENE),
+                    record.getValue(GERMLINECOPYNUMBER.TRANSCRIPTID),
                     record.getValue(GERMLINECOPYNUMBER.CHROMOSOME),
                     record.getValue(GERMLINECOPYNUMBER.CHROMOSOMEBAND),
                     record.getValue(GERMLINECOPYNUMBER.REGIONSTART),
@@ -110,7 +110,7 @@ public class GeneCopyNumberDAO
         return germlineAmpDels;
     }
 
-    public void writeCopyNumber(final String sample, final List<GeneCopyNumber> copyNumbers)
+    public void writeGeneCopyNumbers(final String sample, final List<GeneCopyNumber> copyNumbers)
     {
         Timestamp timestamp = new Timestamp(new Date().getTime());
         deleteGeneCopyNumberForSample(sample);
@@ -137,12 +137,12 @@ public class GeneCopyNumberDAO
                     GENECOPYNUMBER.MINREGIONMETHOD,
                     GENECOPYNUMBER.MINMINORALLELECOPYNUMBER,
                     COPYNUMBER.MODIFIED);
-            splitCopyNumbers.forEach(x -> addCopyNumberRecord(timestamp, inserter, sample, x));
+            splitCopyNumbers.forEach(x -> addGeneCopyNumberRecord(timestamp, inserter, sample, x));
             inserter.execute();
         }
     }
 
-    private static void addCopyNumberRecord(
+    private static void addGeneCopyNumberRecord(
             final Timestamp timestamp, final InsertValuesStep19 inserter, final String sample, final GeneCopyNumber gene)
     {
         inserter.values(sample,
@@ -176,9 +176,10 @@ public class GeneCopyNumberDAO
         Timestamp timestamp = new Timestamp(new Date().getTime());
         deleteGermlineCopyNumbersForSample(sample);
 
-        InsertValuesStep18 inserter = context.insertInto(GERMLINECOPYNUMBER,
+        InsertValuesStep19 inserter = context.insertInto(GERMLINECOPYNUMBER,
                 GERMLINECOPYNUMBER.SAMPLEID,
                 GERMLINECOPYNUMBER.GENE,
+                GERMLINECOPYNUMBER.TRANSCRIPTID,
                 GERMLINECOPYNUMBER.CHROMOSOME,
                 GERMLINECOPYNUMBER.CHROMOSOMEBAND,
                 GERMLINECOPYNUMBER.REGIONSTART,
@@ -198,18 +199,19 @@ public class GeneCopyNumberDAO
 
         for(GermlineAmpDel ampDel : ampDels)
         {
-            addCopyNumberRecord(timestamp, inserter, sample, ampDel);
+            addGermlineCopyNumberRecord(timestamp, inserter, sample, ampDel);
         }
 
         inserter.execute();
     }
 
-    private static void addCopyNumberRecord(
-            final Timestamp timestamp, final InsertValuesStep18 inserter, final String sample, final GermlineAmpDel deletion)
+    private static void addGermlineCopyNumberRecord(
+            final Timestamp timestamp, final InsertValuesStep19 inserter, final String sample, final GermlineAmpDel deletion)
     {
         inserter.values(
                 sample,
                 DatabaseUtil.checkStringLength(deletion.GeneName, GERMLINECOPYNUMBER.GENE),
+                DatabaseUtil.checkStringLength(deletion.Transcript, GERMLINECOPYNUMBER.TRANSCRIPTID),
                 deletion.Chromosome,
                 deletion.ChromosomeBand,
                 deletion.RegionStart,

@@ -64,8 +64,11 @@ public class SolutionSummary
         double copyNumber = TumorCopyNumber.get(index);
         SomaticCodingCount codingCount = SomaticCodingCount.get(index);
 
+        String genes = mGenes.name();
+
         return ImmutableLilacAllele.builder()
                 .allele(refAllele.toString())
+                .genes(genes)
                 .refFragments((int) round(ref.TotalCoverage))
                 .refUnique(ref.UniqueCoverage)
                 .refShared((int) round(ref.SharedCoverage))

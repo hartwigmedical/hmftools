@@ -59,7 +59,6 @@ import org.jetbrains.annotations.Nullable;
 
 public class GermlineAmpDelFinder
 {
-
     private static final double HOM_DELETION_CUTOFF = 0.5;
 
     public interface GeneDataSupplier
@@ -425,6 +424,7 @@ public class GermlineAmpDelFinder
 
         AmpDelRegionFrequency.EventType eventType =
                 germlineStatus == AMPLIFICATION ? AmpDelRegionFrequency.EventType.AMP : AmpDelRegionFrequency.EventType.DEL;
+
         int cohortFrequency = mCohortFrequency.getRegionFrequency(
                 region.chromosome(), region.start(), region.end(), GERMLINE_AMP_DEL_REGION_MATCH_BUFFER, eventType);
 
@@ -436,19 +436,15 @@ public class GermlineAmpDelFinder
         for(GeneData geneData : overlappingGenes)
         {
             TranscriptData transData = mGeneDataCache.getTranscriptData(geneData.GeneId);
+
             if(transData == null)
-            {
                 continue;
-            }
 
             List<ExonData> overlappedExons = transData.exons().stream()
-                    .filter(x -> positionsOverlap(x.Start, x.End, regionLowerPos, regionHighPos))
-                    .toList();
+                    .filter(x -> positionsOverlap(x.Start, x.End, regionLowerPos, regionHighPos)).toList();
 
             if(overlappedExons.isEmpty())
-            {
                 continue;
-            }
 
             PPL_LOGGER.trace("region({}: {}-{}) overlaps gene({}) exons({})",
                     region.chromosome(), region.start(), region.end(), geneData.GeneName, overlappedExons.size());
@@ -462,9 +458,7 @@ public class GermlineAmpDelFinder
         }
 
         if(transcripts.isEmpty())
-        {
             return;
-        }
 
         double germlineCopyNumber = region.observedNormalRatio() * 2;
         String filter = filters.isEmpty() ? PASS_FILTER : String.join(";", filters);
@@ -486,8 +480,11 @@ public class GermlineAmpDelFinder
                 }
             }
 
+            TranscriptData transData = transcripts.stream().filter(x -> x.GeneId.equals(geneData.GeneId)).findFirst().orElse(null);
+            String transcriptName = transData != null ? transData.TransName : "";
+
             mEvents.add(new GermlineAmpDel(
-                    geneData.GeneName, region.chromosome(), geneData.KaryotypeBand, adjustPosStart, adjustPosEnd,
+                    geneData.GeneName, transcriptName, region.chromosome(), geneData.KaryotypeBand, adjustPosStart, adjustPosEnd,
                     region.depthWindowCount(), deletedExonRange[0], deletedExonRange[1],
                     GermlineDetectionMethod.SEGMENT, region.germlineStatus(), tumorStatus, germlineCopyNumber, tumorCopyNumber,
                     filter, cohortFrequency, reportedStatus));
@@ -504,9 +501,7 @@ public class GermlineAmpDelFinder
             DriverGene driverGene = driverGenes.stream().filter(x -> x.gene().equals(geneData.GeneName)).findFirst().orElse(null);
 
             if(driverGene == null)
-            {
                 continue;
-            }
 
             // only create one record even if multiple sections of the gene are deleted
             if(mDrivers.stream().anyMatch(x -> x.gene().equals(geneData.GeneName) && x.transcript().equals(transData.TransName)))

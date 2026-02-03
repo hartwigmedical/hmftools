@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.linx.misc;
 
+import static com.hartwig.hmftools.common.segmentation.Arm.P;
+import static com.hartwig.hmftools.common.segmentation.Arm.Q;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.findCentromereBreakendIndex;
-import static com.hartwig.hmftools.common.purple.ChromosomeArm.P_ARM;
-import static com.hartwig.hmftools.common.purple.ChromosomeArm.Q_ARM;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createBnd;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDel;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDup;
@@ -53,7 +53,7 @@ public class MiscTest
         LinxTester tester = new LinxTester();
 
         // 4 breakends, 2 on each arm
-        int centromerePos = SvUtilities.getChromosomalArmLength("1", P_ARM);
+        int centromerePos = SvUtilities.getChromosomalArmLength("1", P);
         int qArmPos = centromerePos + 10000000;
         final SvVarData var1 = createDel(tester.nextVarId(), "1", 100,200);
         final SvVarData var2 = createDel(tester.nextVarId(), "1", 300,400);
@@ -70,8 +70,8 @@ public class MiscTest
 
         List<SvBreakend> breakendList = tester.Analyser.getState().getChrBreakendMap().get("1");
 
-        assertEquals(3, findCentromereBreakendIndex(breakendList, P_ARM));
-        assertEquals(4, findCentromereBreakendIndex(breakendList, Q_ARM));
+        assertEquals(3, findCentromereBreakendIndex(breakendList, P));
+        assertEquals(4, findCentromereBreakendIndex(breakendList, Q));
 
         // try again with breakends only in 1 list
         tester.clearClustersAndSVs();
@@ -82,8 +82,8 @@ public class MiscTest
 
         breakendList = tester.Analyser.getState().getChrBreakendMap().get("1");
 
-        assertEquals(3, findCentromereBreakendIndex(breakendList, P_ARM));
-        assertEquals(-1, findCentromereBreakendIndex(breakendList, Q_ARM));
+        assertEquals(3, findCentromereBreakendIndex(breakendList, P));
+        assertEquals(-1, findCentromereBreakendIndex(breakendList, Q));
 
         tester.clearClustersAndSVs();
         tester.AllVariants.add(var3);
@@ -93,7 +93,7 @@ public class MiscTest
 
         breakendList = tester.Analyser.getState().getChrBreakendMap().get("1");
 
-        assertEquals(-1, findCentromereBreakendIndex(breakendList, P_ARM));
-        assertEquals(0, findCentromereBreakendIndex(breakendList, Q_ARM));
+        assertEquals(-1, findCentromereBreakendIndex(breakendList, P));
+        assertEquals(0, findCentromereBreakendIndex(breakendList, Q));
     }
 }

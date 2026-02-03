@@ -2,12 +2,12 @@ package com.hartwig.hmftools.linx.drivers;
 
 import static com.hartwig.hmftools.common.driver.DriverCategory.TSG;
 import static com.hartwig.hmftools.common.driver.DriverType.PARTIAL_AMP;
+import static com.hartwig.hmftools.common.segmentation.Arm.P;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.drivers.GeneCopyNumberRegion.calcGeneCopyNumberRegion;
-import static com.hartwig.hmftools.common.purple.ChromosomeArm.P_ARM;
 import static com.hartwig.hmftools.linx.fusion.DisruptionFinder.getDisruptionGeneTranscripts;
 import static com.hartwig.hmftools.linx.visualiser.file.VisGeneAnnotationType.DRIVER;
 
@@ -263,8 +263,8 @@ public class DriverGeneAnnotator implements CohortFileInterface
         }
         else
         {
-            centromereCopyNumber = dgData.Arm == P_ARM ? tcData.CentromerePArm : tcData.CentromereQArm;
-            telomereCopyNumber = dgData.Arm == P_ARM ? tcData.TelomerePArm : tcData.TelomereQArm;
+            centromereCopyNumber = dgData.ChrArm == P ? tcData.CentromerePArm : tcData.CentromereQArm;
+            telomereCopyNumber = dgData.ChrArm == P ? tcData.TelomerePArm : tcData.TelomereQArm;
         }
 
         List<String> outputLines = Lists.newArrayList();
@@ -295,7 +295,7 @@ public class DriverGeneAnnotator implements CohortFileInterface
             // Chromosome,Arm,SamplePloidy,GeneMinCN,CentromereCN,TelomereCN,CNGain,SvIdStart,SvIdEnd,SvPosStart,SvPosEnd,SvMatchType
 
             sb.append(String.format(",%s,%s,%.2f,%.2f,%.2f,%.2f,%.2f",
-                    geneData.Chromosome, dgData.Arm, mDataCache.samplePloidy(), dgData.CopyNumberRegion.MinCopyNumber,
+                    geneData.Chromosome, dgData.ChrArm, mDataCache.samplePloidy(), dgData.CopyNumberRegion.MinCopyNumber,
                     centromereCopyNumber, telomereCopyNumber, driverEvent.getCopyNumberGain()));
 
             int posStart = breakendPair[SE_START] != null ? breakendPair[SE_START].position() : 0;

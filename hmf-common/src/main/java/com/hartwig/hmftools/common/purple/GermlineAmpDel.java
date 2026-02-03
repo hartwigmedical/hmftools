@@ -16,6 +16,7 @@ import com.google.common.collect.Lists;
 public final class GermlineAmpDel
 {
     public final String GeneName;
+    public final String Transcript;
     public final String Chromosome;
     public final String ChromosomeBand;
     public final int RegionStart;
@@ -33,12 +34,13 @@ public final class GermlineAmpDel
     public final ReportedStatus Reported;
 
     public GermlineAmpDel(
-            final String geneName, final String chromosome, final String chromosomeBand, final int regionStart, final int regionEnd,
+            final String geneName, final String transcript, final String chromosome, final String chromosomeBand, int regionStart, int regionEnd,
             final int depthWindowCount, final int exonStart, final int exonEnd, final GermlineDetectionMethod detectionMethod,
             final GermlineStatus normalStatus, final GermlineStatus tumorStatus, final double germlineCopyNumber, final double tumorCopyNumber,
             final String filter, final int cohortFrequency, final ReportedStatus reportedStatus)
     {
         GeneName = geneName;
+        Transcript = transcript;
         Chromosome = chromosome;
         ChromosomeBand = chromosomeBand;
         RegionStart = regionStart;
@@ -84,6 +86,7 @@ public final class GermlineAmpDel
     private enum Columns
     {
         gene,
+        transcript,
         chromosome,
         chromosomeBand,
         regionStart,
@@ -113,6 +116,7 @@ public final class GermlineAmpDel
     {
         return new StringJoiner(TSV_DELIM)
                 .add(ampDel.GeneName)
+                .add(ampDel.Transcript)
                 .add(ampDel.Chromosome)
                 .add(ampDel.ChromosomeBand)
                 .add(String.valueOf(ampDel.RegionStart))
@@ -139,7 +143,10 @@ public final class GermlineAmpDel
         List<GermlineAmpDel> ampDels = Lists.newArrayList();
 
         Integer reportedStatusIndex = fieldsIndexMap.get(Columns.reportedStatus.toString());
-        Integer reportedIndex = fieldsIndexMap.get("reported"); // for pre-v3.0
+
+        // for pre-v3.0
+        Integer reportedIndex = fieldsIndexMap.get("reported");
+        Integer transcriptIndex = fieldsIndexMap.get(Columns.transcript.toString());
 
         for(final String line : lines)
         {
@@ -158,6 +165,7 @@ public final class GermlineAmpDel
 
             ampDels.add(new GermlineAmpDel(
                     values[fieldsIndexMap.get(Columns.gene.toString())],
+                    transcriptIndex != null ? values[fieldsIndexMap.get(Columns.transcript.toString())] : "",
                     values[fieldsIndexMap.get(Columns.chromosome.toString())],
                     values[fieldsIndexMap.get(Columns.chromosomeBand.toString())],
                     Integer.parseInt(values[fieldsIndexMap.get(Columns.regionStart.toString())]),

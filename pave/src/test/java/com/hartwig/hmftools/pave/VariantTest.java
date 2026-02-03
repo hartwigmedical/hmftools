@@ -21,6 +21,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.perf.StringCache;
 import com.hartwig.hmftools.common.variant.VariantTier;
+import com.hartwig.hmftools.common.variant.pon.MultiPonStatus;
 import com.hartwig.hmftools.common.variant.pon.PonChrCache;
 import com.hartwig.hmftools.pave.annotation.PonAnnotation;
 
@@ -157,12 +158,12 @@ public class VariantTest
         assertFilters(var, true, false, true);
 
         // artefact PON
-        artefactsPon.addEntry(var.Position, var.Ref, var.Alt, 11, 11, 100);
+        artefactsPon.addEntry(var.Position, var.Ref, var.Alt, 11, 11, 100, MultiPonStatus.BASE);
         applyFilters(var, SAMPLE_ID, standardPon, artefactsPon, true);
         assertFilters(var, true, true, true);
 
         artefactsPon.clear();
-        artefactsPon.addEntry(var.Position, var.Ref, var.Alt, 5, 11, 20);
+        artefactsPon.addEntry(var.Position, var.Ref, var.Alt, 5, 11, 20, MultiPonStatus.BASE);
         applyFilters(var, SAMPLE_ID, standardPon, artefactsPon, true);
         assertFilters(var, true, false, true);
 

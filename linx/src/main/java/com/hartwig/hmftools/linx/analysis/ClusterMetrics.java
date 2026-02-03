@@ -2,9 +2,9 @@ package com.hartwig.hmftools.linx.analysis;
 
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.common.segmentation.Arm.P;
+import static com.hartwig.hmftools.common.segmentation.Arm.Q;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
-import static com.hartwig.hmftools.common.purple.ChromosomeArm.P_ARM;
-import static com.hartwig.hmftools.common.purple.ChromosomeArm.Q_ARM;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.linx.types.LinxConstants.SHORT_DB_LENGTH;
@@ -154,7 +154,7 @@ public class ClusterMetrics
                     ImpliedTICount += impliedTICount;
                 }
 
-                if(breakend.arm() == P_ARM && nextBreakend.arm() == Q_ARM)
+                if(breakend.arm() == P && nextBreakend.arm() == Q)
                 {
                     // if neither breakend points across the centromere then subtract it from the total range
                     // and also check for a reliable TI across this region as well

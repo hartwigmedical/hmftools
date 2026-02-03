@@ -211,7 +211,7 @@ public class LoadPurpleDataTest extends DatabaseTestBase
     public void canWriteGermlineDeletions()
     {
         GermlineAmpDel germlineAmpDel = new GermlineAmpDel(
-                "GENE1",
+                "GENE1", "TRANS1",
                 "chr1",
                 "1q1.1",
                 1,

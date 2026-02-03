@@ -142,7 +142,7 @@ public class ReduxApplication
 
         if(mConfig.BqrAndJitterMsiOnly)
         {
-            RD_LOGGER.info("Redux jitter complete, mins({})", runTimeMinsStr(startTimeMs));
+            RD_LOGGER.info("Redux BQR and jitter complete, mins({})", runTimeMinsStr(startTimeMs));
             return;
         }
 

@@ -7,6 +7,7 @@ import java.util.Comparator;
 
 import com.hartwig.hmftools.common.pathogenic.Pathogenicity;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
+import com.hartwig.hmftools.common.variant.pon.MultiPonStatus;
 
 public class VariantPonData extends SimpleVariant
 {
@@ -20,6 +21,8 @@ public class VariantPonData extends SimpleVariant
     private boolean mSomaticHotspot;
     private boolean mGermlineHotspot;
     private boolean mInCodingRegion;
+    private boolean mInBasePonCache;
+    private boolean mInMultipleCaches;
 
     public VariantPonData(final String chromosome, final int position, final String ref, final String alt)
     {
@@ -33,6 +36,8 @@ public class VariantPonData extends SimpleVariant
         mInCodingRegion = false;
         mSomaticHotspot = false;
         mGermlineHotspot = false;
+        mInBasePonCache = false;
+        mInMultipleCaches = false;
     }
 
     public int sampleCount() { return mSampleCount; }
@@ -48,6 +53,8 @@ public class VariantPonData extends SimpleVariant
     }
 
     public void setSampleCount(int sampleCount) { mSampleCount = sampleCount; }
+    public void setMaxSampleReadCount(int readCount) { mMaxSampleReadCount = readCount; }
+    public void setTotalReadCount(int readCount) { mTotalReadCount = readCount; }
 
     public void setClinvarPathogenicity(final Pathogenicity pathogenicity) { mClinvarPathogenicity = pathogenicity; }
     public Pathogenicity clinvarPathogenicity() { return mClinvarPathogenicity; }
@@ -55,6 +62,23 @@ public class VariantPonData extends SimpleVariant
 
     public void setRepeatCount(int repeatCount) { mRepeatCount = repeatCount; }
     public int repeatCount() { return mRepeatCount; }
+
+    public void markInBasePonCache() { mInBasePonCache = true; }
+    public boolean inBasePonCache() { return mInBasePonCache; }
+
+    public void markInMultiplePonCaches() { mInMultipleCaches = true; }
+    public boolean inMultipleCaches() { return mInMultipleCaches; }
+
+    public MultiPonStatus multiPonStatus()
+    {
+        if(mInBasePonCache && mInMultipleCaches)
+            return MultiPonStatus.MULTI;
+
+        if(mInBasePonCache)
+            return MultiPonStatus.BASE;
+
+        return MultiPonStatus.ARTEFACT;
+    }
 
     public void markSomaticHotspot() { mSomaticHotspot = true; }
     public boolean isSomaticHotspot() { return mSomaticHotspot; }

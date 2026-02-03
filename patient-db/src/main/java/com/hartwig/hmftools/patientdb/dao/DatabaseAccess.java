@@ -326,7 +326,7 @@ public class DatabaseAccess implements AutoCloseable
     @NotNull
     public List<GeneCopyNumber> readGeneCopynumbers(final String sample, final List<String> genes)
     {
-        return geneCopyNumberDAO.readCopyNumbers(sample, genes);
+        return geneCopyNumberDAO.readGeneCopyNumbers(sample, genes);
     }
 
     @NotNull
@@ -523,7 +523,7 @@ public class DatabaseAccess implements AutoCloseable
 
     public void writeGeneCopyNumbers(final String sample, final List<GeneCopyNumber> geneCopyNumbers)
     {
-        geneCopyNumberDAO.writeCopyNumber(sample, geneCopyNumbers);
+        geneCopyNumberDAO.writeGeneCopyNumbers(sample, geneCopyNumbers);
     }
 
     public void writeGermlineDeletions(final String sample, final List<GermlineAmpDel> deletions)

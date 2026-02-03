@@ -6,6 +6,8 @@ import static com.hartwig.hmftools.common.linx.LinxCommonTypes.generateVisFusion
 import static com.hartwig.hmftools.common.linx.LinxCommonTypes.generateVisProteinFilename;
 import static com.hartwig.hmftools.common.linx.LinxCommonTypes.generateVisSegmentFilename;
 import static com.hartwig.hmftools.common.linx.LinxCommonTypes.generateVisSvFilename;
+import static com.hartwig.hmftools.common.segmentation.Arm.P;
+import static com.hartwig.hmftools.common.segmentation.Arm.Q;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_SAMPLE_ID;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
@@ -15,8 +17,6 @@ import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.linx.analysis.ClusterClassification.isFilteredResolvedType;
-import static com.hartwig.hmftools.common.purple.ChromosomeArm.P_ARM;
-import static com.hartwig.hmftools.common.purple.ChromosomeArm.Q_ARM;
 import static com.hartwig.hmftools.linx.types.SvBreakend.DIRECTION_CENTROMERE;
 import static com.hartwig.hmftools.linx.types.SvBreakend.DIRECTION_TELOMERE;
 import static com.hartwig.hmftools.linx.visualiser.file.VisGeneAnnotationType.EXON_LOST;
@@ -350,15 +350,15 @@ public class VisDataWriter
     {
         int position = breakend.position();
 
-        if(breakend.orientation() == 1 && breakend.arm() == P_ARM)
+        if(breakend.orientation() == 1 && breakend.arm() == P)
         {
             return isChainEnd ? DIRECTION_TELOMERE : Long.toString(position);
         }
-        else if(breakend.orientation() == -1 && breakend.arm() == P_ARM)
+        else if(breakend.orientation() == -1 && breakend.arm() == P)
         {
             return isChainEnd ? Long.toString(position) : DIRECTION_CENTROMERE;
         }
-        else if(breakend.orientation() == -1 && breakend.arm() == Q_ARM)
+        else if(breakend.orientation() == -1 && breakend.arm() == Q)
         {
             return isChainEnd ? Long.toString(position) : DIRECTION_TELOMERE;
         }

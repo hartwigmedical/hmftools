@@ -11,7 +11,7 @@ import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.driver.DriverType;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.common.purple.ChromosomeArm;
+import com.hartwig.hmftools.common.segmentation.Arm;
 
 public class DriverGeneData
 {
@@ -19,7 +19,7 @@ public class DriverGeneData
     public final GeneData GeneInfo;
     public final TranscriptData TransData;
     public final GeneCopyNumberRegion CopyNumberRegion;
-    public final ChromosomeArm Arm;
+    public final Arm ChrArm;
 
     private final List<DriverGeneEvent> mEvents;
 
@@ -31,7 +31,7 @@ public class DriverGeneData
         TransData = transData;
         CopyNumberRegion = copyNumberRegion;
 
-        Arm = getChromosomalArm(geneData.Chromosome, geneData.GeneStart);
+        ChrArm = getChromosomalArm(geneData.Chromosome, geneData.GeneStart);
 
         mEvents = Lists.newArrayList();
     }

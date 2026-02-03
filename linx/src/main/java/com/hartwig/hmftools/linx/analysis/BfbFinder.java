@@ -4,8 +4,8 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.pow;
 
+import static com.hartwig.hmftools.common.segmentation.Arm.P;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
-import static com.hartwig.hmftools.common.purple.ChromosomeArm.P_ARM;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_BFB;
 
 import java.util.List;
@@ -108,8 +108,8 @@ public class BfbFinder
 
             if(tcData != null)
             {
-                double centromereCopyNumber = armGroup.arm() == P_ARM ? tcData.CentromerePArm : tcData.CentromereQArm;
-                double telomereCopyNumber = armGroup.arm() == P_ARM ? tcData.TelomerePArm : tcData.TelomereQArm;
+                double centromereCopyNumber = armGroup.arm() == P ? tcData.CentromerePArm : tcData.CentromereQArm;
+                double telomereCopyNumber = armGroup.arm() == P ? tcData.TelomerePArm : tcData.TelomereQArm;
                 maxCopyNumber = max(max(telomereCopyNumber, centromereCopyNumber), maxCopyNumber);
             }
         }

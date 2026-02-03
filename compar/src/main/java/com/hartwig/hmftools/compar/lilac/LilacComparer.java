@@ -90,7 +90,8 @@ public class LilacComparer implements ItemComparer
 
         try
         {
-            LilacQcData qcData = LilacQcData.read(LilacQcData.generateFilename(fileSources.Lilac, sampleId));
+            // TODO: handle multiple gene groups
+            LilacQcData qcData = LilacQcData.read(LilacQcData.generateFilename(fileSources.Lilac, sampleId)).get(0);
             List<LilacAllele> alleles = LilacAllele.read(LilacAllele.generateFilename(fileSources.Lilac, sampleId));
 
             comparableItems.add(new LilacData(qcData, alleles));

@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOpt
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreateOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.redux.ReduxConfig.APP_NAME;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 
 import static htsjdk.samtools.util.SequenceUtil.N;
@@ -62,9 +63,9 @@ import htsjdk.samtools.util.StringUtil;
 public class MicrosatelliteSiteFinder
 {
     private static final int BED_REGION_EXPANSION = 950;
-    private static final int TARGET_SITE_COUNT = 3000;
+    private static final int MIN_TARGET_SITE_COUNT = 15_000;
 
-    private static final double MIN_MAPPABILITY = 0.8;
+    private static final double MIN_MAPPABILITY = 0.7;
 
     private static class Config
     {
@@ -149,12 +150,17 @@ public class MicrosatelliteSiteFinder
         CG_GC("CG/GC");
 
         private final String unitKey;
+        public final int length;
 
         public String getUnitKey() { return unitKey; }
 
         UnitKey(String unitKey)
         {
             this.unitKey = unitKey;
+            if(unitKey.contains("/"))
+                this.length = unitKey.split("/")[0].length();
+            else
+                this.length = 3;
         }
 
         public static UnitKey fromUnit(String unit)
@@ -259,7 +265,6 @@ public class MicrosatelliteSiteFinder
 
         IndexedFastaSequenceFile refGenome = new IndexedFastaSequenceFile(new File(mConfig.RefGenomeFile));
 
-        //
         MicrosatelliteSiteFinder.findMicrosatellites(refGenome, JitterConstants.MIN_MICROSAT_UNIT_COUNT,
                 r -> {
                     populateMappability(r, mGcProfiles);
@@ -269,13 +274,15 @@ public class MicrosatelliteSiteFinder
                 });
 
         // now do downsampling
-        downsampleSites(TARGET_SITE_COUNT);
+        downsampleSites();
 
         // now write only the downsampled sites to file
         String outputFile = RefGenomeMicrosatelliteFile.generateFilename(mConfig.OutputDir, mConfig.RefGenVersion);
         try (RefGenomeMicrosatelliteFile refGenomeMicrosatelliteFile = new RefGenomeMicrosatelliteFile(outputFile))
         {
-            mDownSampledMicrosatelliteSites.values().forEach(refGenomeMicrosatelliteFile::writeRow);
+            List<MicrosatelliteSite> sortedMicrosatelliteSites = new ArrayList<>(mDownSampledMicrosatelliteSites.values());
+            sortedMicrosatelliteSites.sort(Comparator.comparing(site -> site.Region));
+            sortedMicrosatelliteSites.forEach(refGenomeMicrosatelliteFile::writeRow);
         }
 
         RD_LOGGER.info("wrote {} microsatellite sites into {}", mDownSampledMicrosatelliteSites.size(), outputFile);
@@ -337,7 +344,7 @@ public class MicrosatelliteSiteFinder
     // algorithm to find short tandem repeats
     // at each base, we try find longest candidate starting from this base.
     // if a microsatellite is found, we start again from the base after.
-    //
+
     static void findMicrosatellites(
             final ReferenceSequenceFile referenceSequenceFile, int minNumRepeats,
             final Consumer<MicrosatelliteSite> refGenomeMsConsumer, int chunkSize)
@@ -543,10 +550,15 @@ public class MicrosatelliteSiteFinder
         }
     }
 
-    // filter the microsatellites such that each type of (unit, length) is approximately the target count
-    void downsampleSites(int targetCountPerType) throws ExecutionException, InterruptedException
+    public static int downsampleCount(UnitRepeatKey unitRepeatKey)
     {
-        RD_LOGGER.info("filtering microsatellite sites, target count per type = {}", targetCountPerType);
+        int rawValue = 25_000_000 / (int) Math.pow(2, (unitRepeatKey.NumRepeats + unitRepeatKey.Key.length * 2));
+        return Math.max(MIN_TARGET_SITE_COUNT, rawValue);
+    }
+
+    // filter the microsatellites such that each type of (unit, length) is approximately the target count
+    void downsampleSites() throws ExecutionException, InterruptedException
+    {
 
         Map<String,List<BaseRegion>> regionsToKeep = ChrBaseRegion.loadChrBaseRegions(mConfig.BedFile);
 
@@ -557,10 +569,12 @@ public class MicrosatelliteSiteFinder
 
         final List<CompletableFuture<Void>> futures = new ArrayList<>();
 
-        // first we need to decide how much to downsample by. We do so by working out how many sites need to be
+        // first we need to decide how much to downsample by. We do so by working out how many sites need to be kept
         for(UnitRepeatKey unitRepeatKey : mAllMicrosatelliteSites.keySet())
         {
-            Runnable task = () -> downSampleMsType(targetCountPerType, regionsToKeep, unitRepeatKey);
+            int downsampleCountPerType = downsampleCount(unitRepeatKey);
+            RD_LOGGER.info("[{}] filtering microsatellite sites, target count per type = {}", unitRepeatKey, downsampleCountPerType);
+            Runnable task = () -> downSampleMsType(downsampleCountPerType, regionsToKeep, unitRepeatKey);
             futures.add(CompletableFuture.runAsync(task, executorService));
         }
 
@@ -571,101 +585,81 @@ public class MicrosatelliteSiteFinder
                 mAllMicrosatelliteSites.size(), mDownSampledMicrosatelliteSites.size());
     }
 
+    private static List<MicrosatelliteSite> downsampleList(List<MicrosatelliteSite> originalList, int numItemsToKeep, Random seed)
+    {
+        if(numItemsToKeep >= originalList.size())
+            return originalList;
+        else if(numItemsToKeep <= 0)
+            return Collections.emptyList();
+
+        Collections.shuffle(originalList, seed);
+        return originalList.subList(0, numItemsToKeep);
+    }
+
     private void downSampleMsType(
             final int targetCountPerType, final Map<String,List<BaseRegion>> regionsToKeep,
             final UnitRepeatKey unitRepeatKey)
     {
-        Collection<MicrosatelliteSite> filteredList = mDownSampledMicrosatelliteSites.get(unitRepeatKey);
         Collection<MicrosatelliteSite> allList = mAllMicrosatelliteSites.get(unitRepeatKey);
 
         RD_LOGGER.info("[{}] filtering {} microsatellite sites", unitRepeatKey, allList.size());
 
-        if(allList.size() <= targetCountPerType)
-        {
-            // no filtering for this ms type
-            filteredList.addAll(allList);
-            return;
-        }
-
         List<MicrosatelliteSite> sitesOutsideBedRegions = new ArrayList<>();
+        List<MicrosatelliteSite> sitesInsideBedRegions = new ArrayList<>();
 
-        // first work out which are retained by the bed regions
-        // we do it first by taking all inside the bed regions + 1000 bases around those bed regions
-        // if there are too many, then we only take those inside the bed regions.
+        // we filter to sites satisfying min mappability constraints
+        // we then downsample to our target downsample count, prioritising sites inside the bed regions + 950 base buffer
+        // if sites inside our bed regions already exceed target downsample count, we downsample these and take nothing from off-target
 
-        // As a speed optimisation, we assume that if we have more than 100x more sites than what we need
-        // then we should use the smaller bed regions and skip the expanded bed
-        int bedRegionExpansion = allList.size() > 100 * targetCountPerType ? 0 : BED_REGION_EXPANSION;
+        int bedRegionExpansion = BED_REGION_EXPANSION;
         double mappabilityCutoff = MIN_MAPPABILITY;
 
-        while(true)
+        for(MicrosatelliteSite r : allList)
         {
-            for(MicrosatelliteSite r : allList)
+            if(r.mappability() < mappabilityCutoff)
             {
-                if(r.mappability() < mappabilityCutoff)
-                {
-                    continue;
-                }
-
-                boolean isInBed = false;
-                for(BaseRegion region : regionsToKeep.get(r.chromosome()))
-                {
-                    if(positionsOverlap(
-                            r.Region.start(), r.Region.end(),
-                            region.start() - bedRegionExpansion, region.end() + bedRegionExpansion))
-                    {
-                        isInBed = true;
-                        break;
-                    }
-                }
-                if(isInBed)
-                {
-                    filteredList.add(r);
-                }
-                else
-                {
-                    sitesOutsideBedRegions.add(r);
-                }
-            }
-
-            if(bedRegionExpansion > 0 && filteredList.size() > targetCountPerType * 2)
-            {
-                // if we got way too many sites inside bed region try again with no expanded region and also mappability cutoff of 1.0
-                RD_LOGGER.debug("[{}] too many sites in bed + expanded region: {}, try again with no expanded region",
-                        unitRepeatKey, filteredList.size());
-                bedRegionExpansion = 0;
-                mappabilityCutoff = 1.0;
-                filteredList.clear();
-                sitesOutsideBedRegions.clear();
                 continue;
             }
-            break;
-        }
 
-        // now decide how many to filter out from the rest
-        int numSitesInBed = filteredList.size();
-
-        double frac = ((double) targetCountPerType - numSitesInBed) / sitesOutsideBedRegions.size();
-        if(frac > 0.0)
-        {
-            if(frac < 1.0)
+            boolean isInBed = false;
+            for(BaseRegion region : regionsToKeep.get(r.chromosome()))
             {
-                final Random random = new Random();
-                sitesOutsideBedRegions.stream().filter(o -> random.nextDouble() <= frac).forEach(filteredList::add);
+                if(positionsOverlap(
+                        r.Region.start(), r.Region.end(),
+                        region.start() - bedRegionExpansion, region.end() + bedRegionExpansion))
+                {
+                    isInBed = true;
+                    break;
+                }
+            }
+            if(isInBed)
+            {
+                sitesInsideBedRegions.add(r);
             }
             else
             {
-                filteredList.addAll(sitesOutsideBedRegions);
+                sitesOutsideBedRegions.add(r);
             }
         }
 
-        RD_LOGGER.info("[{}] filtered {} microsatellite sites down to {}, sites in bed: {}, sites outside bed: {}",
-                unitRepeatKey, allList.size(), filteredList.size(), numSitesInBed, sitesOutsideBedRegions.size());
+        // now decide how many to filter out from the rest
+        int numSitesInBed = sitesInsideBedRegions.size();
+        Random randomSeed = new Random(0);
+        Collection<MicrosatelliteSite> filteredList = mDownSampledMicrosatelliteSites.get(unitRepeatKey);
+
+        int sitesOutsideBedToKeep = targetCountPerType - numSitesInBed;
+        List<MicrosatelliteSite> downsampledSitesInsideBedRegions = downsampleList(sitesInsideBedRegions, targetCountPerType, randomSeed);
+        List<MicrosatelliteSite> downsampledSitesOutsideBedRegions = downsampleList(sitesOutsideBedRegions, sitesOutsideBedToKeep, randomSeed);
+        filteredList.addAll(downsampledSitesInsideBedRegions);
+        filteredList.addAll(downsampledSitesOutsideBedRegions);
+
+        RD_LOGGER.info("[{}] filtered {} microsatellite sites down to {}, sites in bed: {} filtered to {}, sites outside bed: {} filtered to {}",
+                unitRepeatKey, allList.size(), filteredList.size(), numSitesInBed, downsampledSitesInsideBedRegions.size(), sitesOutsideBedRegions.size(), downsampledSitesOutsideBedRegions.size());
     }
 
     public static void main(final String... args) throws Exception
     {
-        ConfigBuilder configBuilder = new ConfigBuilder("RefGenomeMicrosatellitesFinder");
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
         Config.registerConfig(configBuilder);
 
         configBuilder.checkAndParseCommandLine(args);

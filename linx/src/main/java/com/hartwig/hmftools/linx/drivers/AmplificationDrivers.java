@@ -4,6 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.hasShortArm;
+import static com.hartwig.hmftools.common.segmentation.Arm.P;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
@@ -12,7 +13,6 @@ import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
 import static com.hartwig.hmftools.common.linx.DriverEventType.GAIN;
 import static com.hartwig.hmftools.common.linx.DriverEventType.GAIN_ARM;
 import static com.hartwig.hmftools.common.linx.DriverEventType.GAIN_CHR;
-import static com.hartwig.hmftools.common.purple.ChromosomeArm.P_ARM;
 
 import java.util.List;
 import java.util.Map;
@@ -81,14 +81,14 @@ public class AmplificationDrivers
             }
         }
 
-        double centromereCNChange = dgData.Arm == P_ARM ?
+        double centromereCNChange = dgData.ChrArm == P ?
                 min(tcData.CentromerePArm, tcData.TelomerePArm) - tcData.CentromereQArm
                 : min(tcData.CentromereQArm, tcData.TelomereQArm) - tcData.CentromerePArm;
 
         if(centromereCNChange > 0 && !copyNumbersEqual(centromereCNChange, 0))
         {
             LNX_LOGGER.debug("gene({}) AMP gain from arm({}) cnChange across centromere({} -> {} = {})",
-                    dgData.GeneInfo.GeneName, dgData.Arm, formatJcn(tcData.CentromerePArm), formatJcn(tcData.CentromereQArm),
+                    dgData.GeneInfo.GeneName, dgData.ChrArm, formatJcn(tcData.CentromerePArm), formatJcn(tcData.CentromereQArm),
                     formatJcn(centromereCNChange));
 
             DriverGeneEvent event = new DriverGeneEvent(GAIN_ARM);

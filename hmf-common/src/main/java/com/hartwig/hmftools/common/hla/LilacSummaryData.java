@@ -1,8 +1,11 @@
 package com.hartwig.hmftools.common.hla;
 
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.StringJoiner;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -20,37 +23,31 @@ public abstract class LilacSummaryData
     @NotNull
     public abstract List<LilacAllele> alleles();
 
-    public int somaticVariantCount()
-    {
-        return (int)alleles().stream().mapToDouble(x -> x.somaticVariantCount()).sum();
-    }
-
     private static final Logger LOGGER = LogManager.getLogger(LilacSummaryData.class);
 
     public static LilacSummaryData read(final String basePath, final String sampleId) throws IOException
     {
-        LilacQcData qcData = LilacQcData.read(LilacQcData.generateFilename(basePath, sampleId));
-        List<LilacAllele> alleles = LilacAllele.read(LilacAllele.generateFilename(basePath, sampleId));
-
-        return ImmutableLilacSummaryData.builder()
-                .qc(qcData.status())
-                .alleles(alleles)
-                .build();
+        return load(LilacQcData.generateFilename(basePath, sampleId), LilacAllele.generateFilename(basePath, sampleId));
     }
 
     public static LilacSummaryData load(final String lilacQcFile, final String lilacResultFile) throws IOException
     {
         LOGGER.info("Loading LILAC data from {}", new File(lilacQcFile).getParent());
 
-        LilacQcData qcData = LilacQcData.read(lilacQcFile);
+        List<LilacQcData> qcData = LilacQcData.read(lilacQcFile);
+        StringJoiner qcValues = new StringJoiner(ITEM_DELIM);
 
-        LOGGER.info(" Read QC status '{}' from {}", qcData.status(), lilacQcFile);
+        for(LilacQcData geneDataEntry : qcData)
+        {
+            LOGGER.debug(" Read QC status '{}' for genes '{}' from {}", geneDataEntry.status(), geneDataEntry.genes(), lilacQcFile);
+            qcValues.add(geneDataEntry.status());
+        }
 
         List<LilacAllele> alleles = LilacAllele.read(lilacResultFile);
         LOGGER.info(" Read {} LILAC alleles from {}", alleles.size(), lilacResultFile);
 
         return ImmutableLilacSummaryData.builder()
-                .qc(qcData.status())
+                .qc(qcValues.toString())
                 .alleles(alleles)
                 .build();
     }

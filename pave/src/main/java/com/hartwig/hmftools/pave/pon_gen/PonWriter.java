@@ -7,6 +7,10 @@ import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_REF;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.variant.pon.PonCache.FLD_MAX_READ_COUNT;
+import static com.hartwig.hmftools.common.variant.pon.PonCache.FLD_MULTI_PON_STATUS;
+import static com.hartwig.hmftools.common.variant.pon.PonCache.FLD_SAMPLE_COUNT;
+import static com.hartwig.hmftools.common.variant.pon.PonCache.FLD_TOTAL_READ_COUNT;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 import static com.hartwig.hmftools.pave.pon_gen.PonConfig.GERMLINE_CLINVAR_MAX_REPEAT;
 import static com.hartwig.hmftools.pave.pon_gen.PonConfig.GERMLINE_CLINVAR_MIN_SAMPLES;
@@ -21,6 +25,7 @@ import java.util.StringJoiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.variant.pon.MultiPonStatus;
 
 public class PonWriter
 {
@@ -105,9 +110,12 @@ public class PonWriter
             sj.add(FLD_REF);
             sj.add(FLD_ALT);
 
-            sj.add("SampleCount");
-            sj.add("MaxSampleReadCount");
-            sj.add("TotalReadCount");
+            sj.add(FLD_SAMPLE_COUNT);
+            sj.add(FLD_MAX_READ_COUNT);
+            sj.add(FLD_TOTAL_READ_COUNT);
+
+            if(!mConfig.ExistingPonFilename.isEmpty())
+                sj.add(FLD_MULTI_PON_STATUS);
 
             if(!mConfig.WriteFinal)
             {
@@ -146,6 +154,15 @@ public class PonWriter
                 sj.add(String.valueOf(variant.maxSampleReadCount()));
                 sj.add(String.valueOf(variant.totalReadCount()));
 
+                MultiPonStatus ponStatus = MultiPonStatus.BASE;
+
+                if(!mConfig.ExistingPonFilename.isEmpty())
+                {
+                    ponStatus = variant.multiPonStatus();
+                }
+
+                sj.add(ponStatus.toString());
+
                 if(mConfig.WriteFinal)
                 {
                     if(filterOutVariant(variant))
@@ -173,20 +190,48 @@ public class PonWriter
 
     private boolean filterOutVariant(final VariantPonData variant)
     {
-        // exckude a variant from the PON if either of the following dot points are satisfied:
+        if(variant.inBasePonCache())
+            return false;
+
+        // exclude a variant from the PON if either of the following are satisfied:
         // - somatic hotspot
         // - (germline hotspot OR clinvar pathogenic) AND has sampleCount < 10 AND (has repeatCount < 4 or is NOT an indel)
         if(variant.isSomaticHotspot())
             return true;
 
+        if(isGermlineExcludedVariant(variant))
+            return true;
+
+        /*
         if(variant.sampleCount() < GERMLINE_CLINVAR_MIN_SAMPLES
         && (variant.isGermlineHotspot() || variant.clinvarPathogenicity().isPathogenic())
         && (!variant.isIndel() || variant.repeatCount() < GERMLINE_CLINVAR_MAX_REPEAT))
         {
             return true;
         }
+        */
 
         return false;
+    }
 
+    private boolean isGermlineExcludedVariant(final VariantPonData variant)
+    {
+        if(variant.sampleCount() >= GERMLINE_CLINVAR_MIN_SAMPLES)
+            return false;
+
+        if(!variant.isGermlineHotspot() && !variant.clinvarPathogenicity().isPathogenic())
+            return false;
+
+        if(variant.isIndel())
+        {
+            if(mConfig.SkipGermlineIndelCheck)
+                return false;
+
+            return variant.repeatCount() < GERMLINE_CLINVAR_MAX_REPEAT;
+        }
+        else
+        {
+            return true;
+        }
     }
 }
