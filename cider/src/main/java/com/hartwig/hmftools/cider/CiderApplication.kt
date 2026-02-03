@@ -92,7 +92,7 @@ class CiderApplication(configBuilder: ConfigBuilder)
             VdjPrimerMatchTsv.writePrimerMatches(mParams.outputDir, mParams.sampleId, primerMatchList)
         }
 
-        val vdjAnnotator = VdjAnnotator(vjReadLayoutAdaptor, vdjBuilderBlosumSearcher)
+        val vdjAnnotator = VdjAnnotator(vjReadLayoutAdaptor)
         val alignmentAnnotations: Collection<AlignmentAnnotation>
 
         if (mParams.refGenomePath != null && mParams.bwaIndexImagePath != null)

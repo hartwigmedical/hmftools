@@ -48,6 +48,7 @@ object VDJSequenceTsvWriter
         vPIdent,
         vPIdentLen,
         vPIdentIndelBases,
+        SHMStatus,
         vAlignStart,
         vAlignEnd,
         dGene,
@@ -143,6 +144,7 @@ object VDJSequenceTsvWriter
                 Column.vPIdent -> csvPrinter.print(alignmentAnnotation?.vGene?.comparison?.pctIdentity)
                 Column.vPIdentLen -> csvPrinter.print(alignmentAnnotation?.vGene?.comparison?.seqLength)
                 Column.vPIdentIndelBases -> csvPrinter.print(alignmentAnnotation?.vGene?.comparison?.indelBases)
+                Column.SHMStatus -> csvPrinter.print(vdjAnnotation.somaticHypermutationStatus)
                 Column.vAlignStart -> csvPrinter.print(alignmentAnnotation?.vGene?.alignment?.queryStart?.plus(alignmentOffset))
                 Column.vAlignEnd -> csvPrinter.print(alignmentAnnotation?.vGene?.alignment?.queryEnd?.plus(alignmentOffset))
                 Column.dGene -> csvPrinter.print(alignmentAnnotation?.dGene?.gene?.geneName)

@@ -11,7 +11,7 @@ class VdjAnnotatorTest
     fun testCountNonSplitRead()
     {
         val adaptor = MockVJReadLayoutAdaptor()
-        val vdjAnnotator = VdjAnnotator(adaptor, MockAnchorBlosumSearcher())
+        val vdjAnnotator = VdjAnnotator(adaptor)
 
         // length 100
         // VDJ sequence is the middle 70 bases
@@ -109,7 +109,7 @@ class VdjAnnotatorTest
     fun testCountNonSplitReadAlignedPos()
     {
         val adaptor = MockVJReadLayoutAdaptor()
-        val vdjAnnotator = VdjAnnotator(adaptor, MockAnchorBlosumSearcher())
+        val vdjAnnotator = VdjAnnotator(adaptor)
 
         // next we want to test that the reads with different aligned position is also calculated correctly
         // add another read to the layout which starts 10 bases further down

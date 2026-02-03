@@ -26,7 +26,8 @@ data class VdjAnnotation(val vdj: VDJSequence,
                          val jSimilarityScore: Int?,
                          val vPrimerMatchCount: Int,
                          val jPrimerMatchCount: Int,
-                         var alignmentAnnotation: AlignmentAnnotation? = null)
+                         val alignmentAnnotation: AlignmentAnnotation?,
+                         val somaticHypermutationStatus: SomaticHypermutationStatus?)
 {
     enum class Filter
     {
@@ -60,8 +61,7 @@ data class VdjAnnotation(val vdj: VDJSequence,
 }
 
 // helper object to annotate the VDJ sequences that we found
-class VdjAnnotator(private val adaptor: IVJReadLayoutAdaptor,
-                   private val blosumSearcher: IAnchorBlosumSearcher)
+class VdjAnnotator(private val adaptor: IVJReadLayoutAdaptor)
 {
     fun sortAndAnnotateVdjs(vdjSequences: List<VDJSequence>,
                             alignmentAnnotations: Collection<AlignmentAnnotation>,
@@ -135,13 +135,17 @@ class VdjAnnotator(private val adaptor: IVJReadLayoutAdaptor,
         val vPrimerMatchCount = primerMatches.filter({ o -> o.vdj === vdj && o.primer.vj == VJ.V}).size
         val jPrimerMatchCount = primerMatches.filter({ o -> o.vdj === vdj && o.primer.vj == VJ.J}).size
 
+        val somaticHypermutationStatus = alignmentAnnotation?.vGene?.comparison?.pctIdentity
+            ?.let(SomaticHypermutationStatus::determineFromVGeneIdentity)
+
         return VdjAnnotation(vdj, filterReasons,
             vAlignedReads = vAlignedReads, jAlignedReads = jAlignedReads,
             vNonSplitReads = vNonSplitReads, jNonSplitReads = jNonSplitReads,
             cdr3SupportMin = cdr3SupportMin,
             vSimilarityScore = vSimilarityScore, jSimilarityScore = jSimilarityScore,
             vPrimerMatchCount = vPrimerMatchCount, jPrimerMatchCount = jPrimerMatchCount,
-            alignmentAnnotation = alignmentAnnotation)
+            alignmentAnnotation = alignmentAnnotation,
+            somaticHypermutationStatus = somaticHypermutationStatus)
     }
 
     // TODO: probably simpler to just directly count the number of split reads instead of
@@ -298,9 +302,9 @@ class VdjAnnotator(private val adaptor: IVJReadLayoutAdaptor,
             {
                 return BlosumSimilarityCalc.calcSimilarityScore(anchor.vj, templateAnchorSeq, seq)
             }
-            catch (e: IllegalArgumentException)
+            catch (_: IllegalArgumentException)
             {
-                throw IllegalArgumentException("cannot calc similarity score: ${templateAnchorSeq} and ${seq}")
+                throw IllegalArgumentException("cannot calc similarity score: $templateAnchorSeq and $seq")
             }
         }
 
