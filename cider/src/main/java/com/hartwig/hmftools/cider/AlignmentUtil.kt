@@ -9,25 +9,19 @@ import com.hartwig.hmftools.cider.CiderConstants.BLASTN_CHROMOSOME_ASSEMBLY_REGE
 import com.hartwig.hmftools.cider.CiderConstants.BLASTN_MAX_TARGET_SEQUENCES
 import com.hartwig.hmftools.cider.CiderConstants.BLASTN_PRIMARY_ASSEMBLY_NAME
 import com.hartwig.hmftools.cider.CiderConstants.BWAMEM_BATCH_SIZE
-import com.hartwig.hmftools.cider.CiderUtils.getResourceAsStream
-import com.hartwig.hmftools.cider.CiderUtils.getResourceAsFile
 import com.hartwig.hmftools.cider.genes.GenomicLocation
 import com.hartwig.hmftools.common.bam.CigarUtils.cigarElementsFromStr
 import com.hartwig.hmftools.common.blastn.BlastnMatch
 import com.hartwig.hmftools.common.blastn.BlastnRunner
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion
 import com.hartwig.hmftools.common.genome.region.Strand
 import htsjdk.samtools.CigarElement
 import htsjdk.samtools.SAMSequenceDictionary
-import htsjdk.samtools.reference.FastaSequenceIndex
-import htsjdk.samtools.reference.IndexedFastaSequenceFile
 import htsjdk.samtools.reference.ReferenceSequenceFileFactory
 import org.apache.logging.log4j.LogManager
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAligner
 import org.broadinstitute.hellbender.utils.bwa.BwaMemIndex
 import java.io.FileInputStream
 import java.io.InputStream
-import kotlin.io.path.Path
 
 private val sLogger = LogManager.getLogger("AlignmentUtil")
 
@@ -240,71 +234,4 @@ private fun getQueryClipping(cigar: List<CigarElement>, strand: Strand): Pair<In
     val leftClip = if (cigar[0].operator.isClipping) cigar[0].length else 0
     val rightClip = if (cigar.last().operator.isClipping) cigar.last().length else 0
     return if (strand == Strand.FORWARD) Pair(leftClip, rightClip) else Pair(rightClip, leftClip)
-}
-
-// Run alignment against a patch of the GRCh37 genome which includes more genes, particularly TRBJ1.
-fun runGRCh37PatchAlignment(sequences: List<String>, alignScoreThreshold: Int, threadCount: Int): List<List<Alignment>>
-{
-    sLogger.debug("Aligning ${sequences.size} sequences to GRCh37 patch")
-    val refFastaName = "7_gl582971_fix.fasta"
-    val refDictStream = getResourceAsStream("$refFastaName.dict")
-    val refIndexImagePath = getResourceAsFile("$refFastaName.img")
-    return runBwaMem(sequences, refDictStream, refIndexImagePath, alignScoreThreshold, threadCount)
-}
-
-// Run alignment against the IMGT gene allele sequences.
-fun runImgtAlignment(imgtSequenceFile: ImgtSequenceFile, sequences: List<String>, alignScoreThreshold: Int, threadCount: Int): List<List<Alignment>>
-{
-    sLogger.debug("Aligning ${sequences.size} sequences to IMGT gene alleles")
-    return runBwaMem(sequences, imgtSequenceFile.fastaDict, imgtSequenceFile.bwamemImgPath, alignScoreThreshold, threadCount)
-}
-
-// Curated FASTA file which contains V/D/J gene alleles.
-// Includes the exact sequence from IMGT and maybe some surrounding ref context.
-class ImgtSequenceFile(genomeVersion: RefGenomeVersion)
-{
-    val fastaDict: SAMSequenceDictionary
-    val bwamemImgPath: String
-    val sequencesByContig: Map<String, Sequence>
-
-    init
-    {
-        val fastaName = "igtcr_gene.${genomeVersion.identifier()}.fasta"
-
-        fastaDict = ReferenceSequenceFileFactory.loadDictionary(getResourceAsStream("$fastaName.dict"))
-        bwamemImgPath = getResourceAsFile("$fastaName.img")
-
-        val fastaIndex = FastaSequenceIndex(getResourceAsStream("$fastaName.fai"))
-        // Needs to end in .fasta or IndexedFastaSequenceFile will complain.
-        val fastaPath = getResourceAsFile(fastaName, ".fasta")
-        val fasta = IndexedFastaSequenceFile(Path(fastaPath), fastaIndex)
-        sequencesByContig = fastaDict.sequences
-            .associateBy(
-                { it.sequenceName},
-                { Sequence.fromFasta(it.sequenceName, fasta.getSequence(it.sequenceName).baseString) })
-    }
-
-    data class Sequence(
-        val geneName: String,
-        val allele: String,
-        val sequenceWithRef: String,
-        val imgtRange: IntRange,
-    )
-    {
-        val geneAllele: String get() = "$geneName*$allele"
-
-        companion object
-        {
-            fun fromFasta(label: String, sequence: String): Sequence
-            {
-                val parts = label.split('|')
-                val geneName = parts[0]
-                val allele = parts[1]
-                val refBefore = parts[2].toInt()
-                val refAfter = parts[3].toInt()
-                val imgtRange = refBefore until (sequence.length - refAfter)
-                return Sequence(geneName, allele, sequence, imgtRange)
-            }
-        }
-    }
 }
