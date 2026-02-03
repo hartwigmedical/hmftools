@@ -47,7 +47,7 @@ object VDJSequenceTsvWriter
         vGeneSupplementary,
         vPIdent,
         vPIdentLen,
-        vPIdentIndels,
+        vPIdentIndelBases,
         vAlignStart,
         vAlignEnd,
         dGene,
@@ -59,7 +59,7 @@ object VDJSequenceTsvWriter
         jGeneSupplementary,
         jPIdent,
         jPIdentLen,
-        jPIdentIndels,
+        jPIdentIndelBases,
         jAlignStart,
         jAlignEnd,
         vPrimerMatches,
@@ -142,7 +142,7 @@ object VDJSequenceTsvWriter
                     alignmentAnnotation?.vGene?.supplementaryGenes, alignmentAnnotation?.vGene?.gene))
                 Column.vPIdent -> csvPrinter.print(alignmentAnnotation?.vGene?.comparison?.pctIdentity)
                 Column.vPIdentLen -> csvPrinter.print(alignmentAnnotation?.vGene?.comparison?.seqLength)
-                Column.vPIdentIndels -> csvPrinter.print(alignmentAnnotation?.vGene?.comparison?.indelBases)
+                Column.vPIdentIndelBases -> csvPrinter.print(alignmentAnnotation?.vGene?.comparison?.indelBases)
                 Column.vAlignStart -> csvPrinter.print(alignmentAnnotation?.vGene?.alignment?.queryStart?.plus(alignmentOffset))
                 Column.vAlignEnd -> csvPrinter.print(alignmentAnnotation?.vGene?.alignment?.queryEnd?.plus(alignmentOffset))
                 Column.dGene -> csvPrinter.print(alignmentAnnotation?.dGene?.gene?.geneName)
@@ -156,7 +156,7 @@ object VDJSequenceTsvWriter
                     alignmentAnnotation?.jGene?.supplementaryGenes, alignmentAnnotation?.jGene?.gene))
                 Column.jPIdent -> csvPrinter.print(alignmentAnnotation?.jGene?.comparison?.pctIdentity)
                 Column.jPIdentLen -> csvPrinter.print(alignmentAnnotation?.jGene?.comparison?.seqLength)
-                Column.jPIdentIndels -> csvPrinter.print(alignmentAnnotation?.jGene?.comparison?.indelBases)
+                Column.jPIdentIndelBases -> csvPrinter.print(alignmentAnnotation?.jGene?.comparison?.indelBases)
                 Column.jAlignStart -> csvPrinter.print(alignmentAnnotation?.jGene?.alignment?.queryStart?.plus(alignmentOffset))
                 Column.jAlignEnd -> csvPrinter.print(alignmentAnnotation?.jGene?.alignment?.queryEnd?.plus(alignmentOffset))
                 Column.vPrimerMatches -> csvPrinter.print(vdjAnnotation.vPrimerMatchCount)
