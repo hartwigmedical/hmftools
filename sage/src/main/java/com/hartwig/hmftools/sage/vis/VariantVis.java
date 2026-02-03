@@ -501,15 +501,15 @@ public class VariantVis
 
         String tumorValue = tumorCounter == null ? null : String.valueOf(tumorCounter.tumorQuality());
         String refValue = refCounter == null ? null : String.valueOf(refCounter.tumorQuality());
-        values.put("RAW_QUAL", List.of(tumorValue, refValue));
+        values.put("RAW_QUAL", Lists.newArrayList(tumorValue, refValue));
 
         tumorValue = tumorCounter == null ? null : String.valueOf((int) tumorCounter.averageAltRecalibratedBaseQuality());
         refValue = refCounter == null ? null : String.valueOf((int) refCounter.averageAltRecalibratedBaseQuality());
-        values.put(AVG_RECALIBRATED_BASE_QUAL, List.of(tumorValue, refValue));
+        values.put(AVG_RECALIBRATED_BASE_QUAL, Lists.newArrayList(tumorValue, refValue));
 
         tumorValue = tumorCounter == null ? null : String.valueOf((int) tumorCounter.averageAltSeqTechBaseQuality());
         refValue = refCounter == null ? null : String.valueOf((int) refCounter.averageAltSeqTechBaseQuality());
-        values.put(AVG_SEQ_TECH_BASE_QUAL, List.of(tumorValue, refValue));
+        values.put(AVG_SEQ_TECH_BASE_QUAL, Lists.newArrayList(tumorValue, refValue));
 
         tumorValue = tumorCounter == null
                 ? null
@@ -520,31 +520,31 @@ public class VariantVis
                 ? null
                 : String.valueOf(
                         refCounter.altSupport() > 0 ? (int) round(refCounter.altMapQualityTotal() / (double) refCounter.altSupport()) : 0);
-        values.put(AVG_READ_MAP_QUALITY, List.of(tumorValue, refValue));
+        values.put(AVG_READ_MAP_QUALITY, Lists.newArrayList(tumorValue, refValue));
 
         tumorValue = tumorCounter == null ? null : format("%.2f", tumorCounter.fragmentStrandBiasAlt().bias());
         refValue = refCounter == null ? null : format("%.2f", refCounter.fragmentStrandBiasAlt().bias());
-        values.put(FRAG_STRAND_BIAS, List.of(tumorValue, refValue));
+        values.put(FRAG_STRAND_BIAS, Lists.newArrayList(tumorValue, refValue));
 
         tumorValue = tumorCounter == null ? null : format("%.2f", tumorCounter.readStrandBiasAlt().bias());
         refValue = refCounter == null ? null : format("%.2f", refCounter.readStrandBiasAlt().bias());
-        values.put(READ_STRAND_BIAS, List.of(tumorValue, refValue));
+        values.put(READ_STRAND_BIAS, Lists.newArrayList(tumorValue, refValue));
 
         tumorValue = tumorCounter == null ? null : format("%d-%d", tumorCounter.jitter().shortened(), tumorCounter.jitter().lengthened());
         refValue = refCounter == null ? null : format("%d-%d", refCounter.jitter().shortened(), refCounter.jitter().lengthened());
-        values.put("JIT", List.of(tumorValue, refValue));
+        values.put("JIT", Lists.newArrayList(tumorValue, refValue));
 
         tumorValue = tumorCounter == null ? null : String.valueOf(tumorCounter.fragmentCoords().minCount());
         refValue = refCounter == null ? null : String.valueOf(refCounter.fragmentCoords().minCount());
-        values.put(MIN_COORDS_COUNT, List.of(tumorValue, refValue));
+        values.put(MIN_COORDS_COUNT, Lists.newArrayList(tumorValue, refValue));
 
         tumorValue = tumorCounter == null ? null : Arrays.toString(tumorCounter.consensusTypeCounts()).replace("[", "").replace("]", "");
         refValue = refCounter == null ? null : Arrays.toString(refCounter.consensusTypeCounts()).replace("[", "").replace("]", "");
-        values.put(UMI_TYPE_COUNTS, List.of(tumorValue, refValue));
+        values.put(UMI_TYPE_COUNTS, Lists.newArrayList(tumorValue, refValue));
 
         tumorValue = tumorCounter == null ? null : format("%.2f", nonAvgEdgeDist);
         refValue = refCounter == null ? null : format("%.2f", altAvgEdgeDist);
-        values.put("AED", List.of(tumorValue, refValue));
+        values.put("AED", Lists.newArrayList(tumorValue, refValue));
 
         List<List<TdTag>> contentRowsElems = Lists.newArrayList();
         for(Map.Entry<String, List<String>> entry : values.entrySet())
