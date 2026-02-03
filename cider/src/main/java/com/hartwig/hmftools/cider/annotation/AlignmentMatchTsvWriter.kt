@@ -9,6 +9,7 @@ object AlignmentMatchTsvWriter
 {
     enum class Column
     {
+        cdr3Seq,
         fullSeq,
         matchType,
         gene,
@@ -16,7 +17,7 @@ object AlignmentMatchTsvWriter
         layoutAlignStart,
         layoutAlignEnd,
         alignScore,
-        refStrand,
+        strand,
         refStart,
         refEnd,
         refContig,
@@ -82,6 +83,7 @@ object AlignmentMatchTsvWriter
             {
                 when (c)
                 {
+                    Column.cdr3Seq -> csvPrinter.print(alignmentAnnotation.vdjSequence.cdr3Sequence)
                     Column.fullSeq -> csvPrinter.print(alignmentAnnotation.vdjSequence.layout.consensusSequenceString())
                     Column.matchType -> csvPrinter.print(type)
                     Column.gene -> csvPrinter.print(gene?.geneAllele)
@@ -89,7 +91,7 @@ object AlignmentMatchTsvWriter
                     Column.layoutAlignStart -> csvPrinter.print(alignmentOffset + alignment.queryStart)
                     Column.layoutAlignEnd -> csvPrinter.print(alignmentOffset + alignment.queryEnd)
                     Column.alignScore -> csvPrinter.print(alignment.alignmentScore)
-                    Column.refStrand -> csvPrinter.print(alignment.strand.asChar())
+                    Column.strand -> csvPrinter.print(alignment.strand.asChar())
                     Column.refStart -> csvPrinter.print(alignment.refStart)
                     Column.refEnd -> csvPrinter.print(alignment.refEnd)
                     Column.refContig -> csvPrinter.print(alignment.refContig)
