@@ -9,6 +9,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.perf.StringCache;
 
+import org.jetbrains.annotations.Nullable;
+
 public class PonChrCache
 {
     public final String Chromosome;
@@ -26,7 +28,8 @@ public class PonChrCache
     }
 
     public void addEntry(
-            final int position, final String ref, final String alt, final int samples, final int maxSampleReads, final int totalSampleReads)
+            final int position, final String ref, final String alt, final int samples, final int maxSampleReads, final int totalSampleReads,
+            @Nullable final MultiPonStatus multiStatus)
     {
         List<PonVariantData> posList = mPositionMap.get(position);
 
@@ -36,7 +39,9 @@ public class PonChrCache
             mPositionMap.put(position, posList);
         }
 
-        posList.add(new PonVariantData(mStringCache.intern(ref), mStringCache.intern(alt), samples, maxSampleReads, totalSampleReads));
+        posList.add(new PonVariantData(
+                mStringCache.intern(ref), mStringCache.intern(alt), samples, maxSampleReads, totalSampleReads,
+                multiStatus != null ? multiStatus : MultiPonStatus.BASE));
     }
 
     public boolean isComplete() { return mComplete; }
@@ -48,6 +53,7 @@ public class PonChrCache
     {
         return getPonData(position, ref, alt) != null;
     }
+    public Map<Integer,List<PonVariantData>> positionMap() { return mPositionMap; }
 
     public PonVariantData getPonData(final int position, final String ref, final String alt)
     {

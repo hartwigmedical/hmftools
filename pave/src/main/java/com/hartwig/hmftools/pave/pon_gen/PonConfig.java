@@ -29,6 +29,7 @@ public class PonConfig
     public final int MinSamples;
     public final boolean ApplyWgsFilters;
     public final boolean WriteFinal;
+    public final boolean SkipGermlineIndelCheck;
 
     public final int RefSampleGenoptypeIndex;
     public final RefGenomeVersion RefGenVersion;
@@ -50,6 +51,7 @@ public class PonConfig
     public static final String MANUAL_ENTRIES = "manual_entries";
     public static final String SOMATIC_HOTSPOT = "somatic_hotspots";
     public static final String GERMLINE_HOTSPOT = "germline_hotspots";
+    public static final String SKIP_GERMLINE_INDEL_CHECK = "skip_germline_indel_check";
 
     // constants
     private static final int DEFAULT_MIN_SAMPLES = 3;
@@ -74,6 +76,7 @@ public class PonConfig
 
         ApplyWgsFilters = configBuilder.hasFlag(APPLY_WGS_FILTERS);
         WriteFinal = configBuilder.hasFlag(WRITE_FINAL_PON);
+        SkipGermlineIndelCheck = configBuilder.hasFlag(SKIP_GERMLINE_INDEL_CHECK);
 
         ExistingPonFilename = configBuilder.getValue(PON_FILE);
 
@@ -97,6 +100,7 @@ public class PonConfig
 
         configBuilder.addFlag(APPLY_WGS_FILTERS, "Apply WGS filters");
         configBuilder.addFlag(WRITE_FINAL_PON, "Write final PON without annotations");
+        configBuilder.addFlag(SKIP_GERMLINE_INDEL_CHECK, "Skip germline indel repeat filter");
 
         configBuilder.addPath(PON_FILE, false, "PON entries");
         ClinvarAnnotation.addConfig(configBuilder);

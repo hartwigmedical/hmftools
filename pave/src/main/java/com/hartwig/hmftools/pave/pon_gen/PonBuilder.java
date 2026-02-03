@@ -145,7 +145,8 @@ public class PonBuilder
 
         for(int i = 0; i < min(regions.size(), mConfig.Threads); ++i)
         {
-            PonThread ponThread = new PonThread(mConfig, sampleVcfs, taskQueue, ponWriter, mClinvarAnnotation, mHotspotCache, mEnsemblDataCache);
+            PonThread ponThread = new PonThread(
+                    mConfig, sampleVcfs, taskQueue, ponWriter, mExistingPon, mClinvarAnnotation, mHotspotCache, mEnsemblDataCache);
             ponThreads.add(ponThread);
 
             ponThread.start();

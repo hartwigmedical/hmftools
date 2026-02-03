@@ -2,9 +2,15 @@ package com.hartwig.hmftools.common.variant.pon;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_ALT;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_REF;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
+import static com.hartwig.hmftools.common.variant.pon.MultiPonStatus.BASE;
 
 import static org.apache.logging.log4j.Level.DEBUG;
 import static org.apache.logging.log4j.Level.TRACE;
@@ -41,6 +47,15 @@ public class PonCache
     private final Map<String, PonChrCache> mChrCacheMap;
     private final StringCache mStringCache;
 
+    private int mColumnChrIndex;
+    private int mColumnPositionIndex;
+    private int mColumnRefIndex;
+    private int mColumnAltIndex;
+    private Integer mColumnSampleCountIndex;
+    private Integer mColumnMaxReadIndex;
+    private Integer mColumnTotalReadIndex;
+    private Integer mColumnMultiStatusIndex;
+
     // PON file config
     public static final String PON_FILE = "pon_file";
 
@@ -76,11 +91,21 @@ public class PonCache
 
     protected static final Logger LOGGER = LogManager.getLogger(PonCache.class);
 
+    public static final String FLD_SAMPLE_COUNT = "SampleCount";
+    public static final String FLD_MAX_READ_COUNT = "MaxSampleReadCount";
+    public static final String FLD_TOTAL_READ_COUNT = "TotalReadCount";
+    public static final String FLD_MULTI_PON_STATUS = "MultiPonStatus";
+
     public PonCache(final String filename, boolean loadOnDemand)
     {
         mPonFilename = filename;
         mFileReader = null;
         mColumnCount = -1;
+        mColumnSampleCountIndex = null;
+        mColumnMaxReadIndex = null;
+        mColumnTotalReadIndex = null;
+        mColumnMultiStatusIndex = null;
+
         mHasValidData = true;
         mChrCacheMap = Maps.newHashMap();
         mStringCache = new StringCache();
@@ -195,6 +220,19 @@ public class PonCache
                 LOGGER.error("pon file({}) has insufficient column count({})", filename, mColumnCount);
                 mFileReader = null;
             }
+            else
+            {
+                Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(line, TSV_DELIM);
+                mColumnChrIndex = fieldsIndexMap.get(FLD_CHROMOSOME);
+                mColumnPositionIndex = fieldsIndexMap.get(FLD_POSITION);
+                mColumnRefIndex = fieldsIndexMap.get(FLD_REF);
+                mColumnAltIndex = fieldsIndexMap.get(FLD_ALT);
+                mColumnSampleCountIndex = fieldsIndexMap.get(FLD_SAMPLE_COUNT);
+                mColumnMaxReadIndex = fieldsIndexMap.get(FLD_MAX_READ_COUNT);
+                mColumnTotalReadIndex = fieldsIndexMap.get(FLD_TOTAL_READ_COUNT);
+
+                mColumnMultiStatusIndex = fieldsIndexMap.get(FLD_MULTI_PON_STATUS);
+            }
 
             mHasValidData = true;
 
@@ -225,8 +263,7 @@ public class PonCache
             {
                 final String[] values = line.split(TSV_DELIM, -1);
 
-                int colIndex = 0;
-                String chromosome = values[colIndex++];
+                String chromosome = values[mColumnChrIndex];
 
                 boolean exitOnNew = false;
 
@@ -261,15 +298,16 @@ public class PonCache
                     }
                 }
 
-                int position = Integer.parseInt(values[colIndex++]);
-                String ref = values[colIndex++];
-                String alt = values[colIndex++];
+                int position = Integer.parseInt(values[mColumnPositionIndex]);
+                String ref = values[mColumnRefIndex];
+                String alt = values[mColumnAltIndex];
 
-                int sampleCount = mColumnCount > colIndex ? Integer.parseInt(values[colIndex++]) : 0;
-                int maxReadsCount = mColumnCount > colIndex ? Integer.parseInt(values[colIndex++]) : 0;
-                int totalReadsCount = mColumnCount > colIndex ? Integer.parseInt(values[colIndex++]) : 0;
+                int sampleCount = mColumnSampleCountIndex != null ? Integer.parseInt(values[mColumnSampleCountIndex]) : 0;
+                int maxReadsCount = mColumnMaxReadIndex != null ? Integer.parseInt(values[mColumnMaxReadIndex]) : 0;
+                int totalReadsCount = mColumnTotalReadIndex != null ? Integer.parseInt(values[mColumnTotalReadIndex]) : 0;
+                MultiPonStatus multiStatus = mColumnMultiStatusIndex != null ? MultiPonStatus.valueOf(values[mColumnMultiStatusIndex]) : BASE;
 
-                currentCache.addEntry(position, ref, alt, sampleCount, maxReadsCount, totalReadsCount);
+                currentCache.addEntry(position, ref, alt, sampleCount, maxReadsCount, totalReadsCount, multiStatus);
                 ++itemCount;
 
                 if(exitOnNew)
