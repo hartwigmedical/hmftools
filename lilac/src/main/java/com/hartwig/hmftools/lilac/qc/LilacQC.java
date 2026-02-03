@@ -2,6 +2,7 @@ package com.hartwig.hmftools.lilac.qc;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.FAIL_LOW_COVERAGE_THRESHOLD;
 import static com.hartwig.hmftools.lilac.LilacConstants.WARN_INDEL_THRESHOLD;
@@ -17,9 +18,8 @@ import static com.hartwig.hmftools.lilac.qc.LilacQCStatus.WARN_UNMATCHED_HAPLOTY
 import static com.hartwig.hmftools.lilac.qc.LilacQCStatus.WARN_UNMATCHED_INDEL;
 import static com.hartwig.hmftools.lilac.qc.LilacQCStatus.WARN_UNMATCHED_SOMATIC_VARIANT;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 import java.util.StringJoiner;
@@ -27,9 +27,10 @@ import java.util.StringJoiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.hla.LilacQcData;
-import com.hartwig.hmftools.common.utils.file.FileLock;
 import com.hartwig.hmftools.lilac.GeneSelector;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
+
+import org.jetbrains.annotations.Nullable;
 
 public final class LilacQC
 {
@@ -69,7 +70,7 @@ public final class LilacQC
         populateStatus();
     }
 
-    public List<String> getHeaderItems()
+    private static List<String> getHeaderItems()
     {
         List<String> columns = Lists.newArrayList();
         columns.add("Genes");
@@ -78,11 +79,11 @@ public final class LilacQC
         columns.add("NextSolutionAlleles");
         columns.add("MedianBaseQuality");
         columns.add("HlaYAllele");
-        columns.addAll(BamQC.header());
-        columns.addAll(CoverageQC.header());
-        columns.addAll(AminoAcidQC.header());
-        columns.addAll(HaplotypeQC.header());
-        columns.addAll(SomaticVariantQC.header());
+        columns.addAll(com.hartwig.hmftools.lilac.qc.BamQC.header());
+        columns.addAll(com.hartwig.hmftools.lilac.qc.CoverageQC.header());
+        columns.addAll(com.hartwig.hmftools.lilac.qc.AminoAcidQC.header());
+        columns.addAll(com.hartwig.hmftools.lilac.qc.HaplotypeQC.header());
+        columns.addAll(com.hartwig.hmftools.lilac.qc.SomaticVariantQC.header());
         return columns;
     }
 
@@ -107,7 +108,7 @@ public final class LilacQC
         return columns;
     }
 
-    public String header()
+    public static String header()
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);
         getHeaderItems().forEach(sj::add);
@@ -136,52 +137,33 @@ public final class LilacQC
         LL_LOGGER.info("{} QC Stats: {}", sampleId, sj.toString());
     }
 
-    public void writefile(final String fileName)
+    @Nullable
+    public static BufferedWriter initialiseWriter(final String fileName)
     {
-        File file = new File(fileName);
-        List<String> existingRecords = Lists.newArrayList();
-        try(FileLock fileLock = FileLock.create(file))
+        try
         {
-            BufferedReader reader = fileLock.getBufferedReader();
-            reader.readLine();
-            String line = reader.readLine();
-            while(line != null)
-            {
-                String genesField = line.split(TSV_DELIM)[0];
-                GeneSelector genes;
-                try
-                {
-                    genes = GeneSelector.valueOf(genesField);
-                }
-                catch(IllegalArgumentException e)
-                {
-                    genes = null;
-                }
-
-                if(genes != null && genes != mGenes)
-                    existingRecords.add(line);
-
-                line = reader.readLine();
-            }
-
-            fileLock.clear();
-            BufferedWriter writer = fileLock.getBufferedWriter();
+            BufferedWriter writer = createBufferedWriter(fileName);
             writer.write(header());
             writer.newLine();
+            return writer;
+        }
+        catch(IOException e)
+        {
+            LL_LOGGER.error("failed to write {}: {}", fileName, e.toString());
+            return null;
+        }
+    }
 
-            for(String existingRecord : existingRecords)
-            {
-                writer.write(existingRecord);
-                writer.newLine();
-            }
-
+    public void writefile(final BufferedWriter writer)
+    {
+        try
+        {
             writer.write(body());
             writer.newLine();
-            writer.flush();
         }
-        catch(Exception e)
+        catch(IOException e)
         {
-            LL_LOGGER.error("failed to update {}: {}", fileName, e.toString());
+            LL_LOGGER.error("failed to write to QC file: {}", e.toString());
         }
     }
 

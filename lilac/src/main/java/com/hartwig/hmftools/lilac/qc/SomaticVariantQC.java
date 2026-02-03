@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.lilac.qc;
 
-import static java.lang.Math.abs;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
@@ -22,7 +21,7 @@ public class SomaticVariantQC
         mVariantAlleleCount = variantAlleleCount;
     }
 
-    public List<String> header()
+    public static List<String> header()
     {
         return Lists.newArrayList("SomaticVariantsMatched", "SomaticVariantsUnmatched");
     }

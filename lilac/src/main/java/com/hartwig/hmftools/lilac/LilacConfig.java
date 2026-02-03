@@ -49,7 +49,6 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
-import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -249,17 +248,9 @@ public class LilacConfig
         return Files.exists(Paths.get(filename)) ? filename : "";
     }
 
-    public String formFileId(final String fileId) { return formFileId(fileId, true); }
-    public String formFileId(final String fileId, boolean includeGenes)
+    public String formFileId(final String fileId)
     {
-        StringJoiner geneStrBuilder = new StringJoiner("_");
-        if(includeGenes)
-        {
-            for(GeneSelector genes : Genes)
-                geneStrBuilder.add(genes.toString());
-        }
-
-        return OutputDir + Sample + LILAC_FILE_ID + (includeGenes ? geneStrBuilder + "." : "") + fileId;
+        return OutputDir + Sample + LILAC_FILE_ID + fileId;
     }
 
     public void logParams()
