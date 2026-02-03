@@ -30,6 +30,7 @@ public final class SageVisConstants
         MAX_READS_PER_TYPE.put(ReadContextMatch.CORE, 10);
         MAX_READS_PER_TYPE.put(ReadContextMatch.REALIGNED, 20);
         MAX_READS_PER_TYPE.put(ReadContextMatch.REF, 20);
+        MAX_READS_PER_TYPE.put(ReadContextMatch.SIMPLE_ALT, 5);
     }
 
     public static final String REPORTED_KEY = "REPORTED";
