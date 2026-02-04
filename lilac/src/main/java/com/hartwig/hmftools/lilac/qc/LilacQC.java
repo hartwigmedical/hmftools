@@ -51,7 +51,7 @@ public final class LilacQC
     public LilacQC(
             final GeneSelector genes, double scoreMargin, final String nextSolutionInfo, final Integer medianBaseQual,
             final HlaAllele hlaYAllele, final AminoAcidQC aminoAcidQC, final BamQC bamQC, final CoverageQC coverageQC,
-	    final HaplotypeQC haplotypeQC, final SomaticVariantQC somaticVariantQC)
+            final HaplotypeQC haplotypeQC, final SomaticVariantQC somaticVariantQC)
     {
         mGenes = genes;
 
@@ -87,7 +87,7 @@ public final class LilacQC
         return columns;
     }
 
-    public List<String> getBodyItems()
+    private List<String> getBodyItems()
     {
         List<String> columns = Lists.newArrayList();
         columns.add(mGenes.toString());
@@ -115,7 +115,7 @@ public final class LilacQC
         return sj.toString();
     }
 
-    public String body()
+    private String body()
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);
         getBodyItems().forEach(sj::add);

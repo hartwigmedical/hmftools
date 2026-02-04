@@ -64,23 +64,6 @@ public final class HlaComplexFile
         return sb.toString();
     }
 
-    @Nullable
-    public BufferedWriter initWriter(final String fileName)
-    {
-        try
-        {
-            BufferedWriter writer = createBufferedWriter(fileName);
-            writer.write(header());
-            writer.newLine();
-            return writer;
-        }
-        catch(IOException e)
-        {
-            LL_LOGGER.error("failed to write to {}: {}", fileName, e.toString());
-            return null;
-        }
-    }
-
     public static void writeToFile(final BufferedWriter writer, final GeneSelector currentGenes, final Iterable<ComplexCoverage> coverages)
     {
         try

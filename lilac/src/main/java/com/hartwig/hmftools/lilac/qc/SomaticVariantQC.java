@@ -5,6 +5,7 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 
+import java.util.Collection;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -31,13 +32,13 @@ public class SomaticVariantQC
         return Lists.newArrayList(String.valueOf(matchedVariants()), String.valueOf(unmatchedVariants()));
     }
 
-    public int matchedVariants() { return (int)round(min(mVariantAlleleCount, mVariantCount)); }
+    private int matchedVariants() { return (int) round(min(mVariantAlleleCount, mVariantCount)); }
 
     public int unmatchedVariants() { return mVariantCount - matchedVariants(); }
 
-    public static SomaticVariantQC create(int variantCount, final List<SomaticCodingCount> codingCount)
+    public static SomaticVariantQC create(final int variantCount, final Collection<SomaticCodingCount> codingCount)
     {
-        double totalCount = codingCount.stream().mapToDouble(x -> x.total()).sum();
+        double totalCount = codingCount.stream().mapToDouble(SomaticCodingCount::total).sum();
 
         SomaticVariantQC result = new SomaticVariantQC(variantCount, totalCount);
 

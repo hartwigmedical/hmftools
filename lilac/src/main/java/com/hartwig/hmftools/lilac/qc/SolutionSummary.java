@@ -54,8 +54,8 @@ public class SolutionSummary
         AlleleCoverage noCoverage = new AlleleCoverage(refAllele, 0, 0, 0);
 
         AlleleCoverage ref = !ReferenceCoverage.getAlleleCoverage().isEmpty()
-	        ? ReferenceCoverage.getAlleleCoverage().get(index)
-	        : noCoverage;
+                ? ReferenceCoverage.getAlleleCoverage().get(index)
+                : noCoverage;
 
         AlleleCoverage tumor = !TumorCoverage.getAlleleCoverage().isEmpty() ? TumorCoverage.getAlleleCoverage().get(index) : noCoverage;
 
