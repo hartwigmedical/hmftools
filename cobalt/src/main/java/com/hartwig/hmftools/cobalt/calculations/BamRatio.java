@@ -114,24 +114,20 @@ public class BamRatio
         {
             Included = false;
             Ratio = -1.0;
+            return;
         }
         if(Doubles.isZero(Ratio))
         {
             return;
         }
-        if(!Included | Ratio < 0)
-        {
-            Ratio = -1.0;
-            return;
-        }
-        if(factor <= 0 || Double.isNaN(factor))
+        if(factor <= 0 || !Included || Ratio < 0)
         {
             Included = false;
             Ratio = -1.0;
         }
         else
         {
-            Ratio = Ratio / factor;
+            Ratio /= factor;
         }
     }
 

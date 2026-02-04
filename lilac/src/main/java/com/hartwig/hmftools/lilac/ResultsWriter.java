@@ -2,6 +2,7 @@ package com.hartwig.hmftools.lilac;
 
 import static com.hartwig.hmftools.common.utils.config.VersionInfo.fromAppName;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.APP_NAME;
 import static com.hartwig.hmftools.lilac.LilacConstants.CURRENT_GENES;
@@ -14,12 +15,9 @@ import static com.hartwig.hmftools.lilac.LilacConstants.LILAC_FILE_SOMATIC_VCF;
 import static com.hartwig.hmftools.lilac.fragment.FragmentSource.REFERENCE;
 import static com.hartwig.hmftools.lilac.fragment.FragmentSource.TUMOR;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -32,7 +30,6 @@ import com.hartwig.hmftools.common.hla.LilacAllele;
 import com.hartwig.hmftools.common.hla.LilacQcData;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.VersionInfo;
-import com.hartwig.hmftools.common.utils.file.FileLock;
 import com.hartwig.hmftools.lilac.coverage.ComplexCoverage;
 import com.hartwig.hmftools.lilac.coverage.FragmentAlleles;
 import com.hartwig.hmftools.lilac.coverage.HlaComplexFile;
@@ -57,7 +54,11 @@ import htsjdk.variant.variantcontext.VariantContext;
 public class ResultsWriter
 {
     private final LilacConfig mConfig;
-    private final FileLock mFragmentWriter;
+    private final BufferedWriter mFragmentWriter;
+    private final BufferedWriter mRefFragmentWriter;
+    private final BufferedWriter mSolutionSummaryWriter;
+    private final BufferedWriter mQcWriter;
+    private final BufferedWriter mHlaComplexWriter;
     private final Set<WriteType> mWriteTypes;
     private LilacVCF mVcfWriter;
 
@@ -86,6 +87,12 @@ public class ResultsWriter
         }
 
         mFragmentWriter = mWriteTypes.contains(WriteType.FRAGMENTS) ? initialiseFragmentWriter() : null;
+        mRefFragmentWriter = mWriteTypes.contains(WriteType.FRAGMENTS)
+                ? HlaComplexFile.initialiseRefFragmentWriter(mConfig.formFileId(LILAC_FILE_CANDIDATE_FRAGS))
+                : null;
+        mSolutionSummaryWriter = SolutionSummary.initialiseWriter(LilacAllele.generateFilename(mConfig.OutputDir, mConfig.Sample));
+        mQcWriter = LilacQC.initialiseWriter(LilacQcData.generateFilename(mConfig.OutputDir, mConfig.Sample));
+        mHlaComplexWriter = HlaComplexFile.initialiseRefFragmentWriter(mConfig.formFileId(LILAC_FILE_CANDIDATE_COVERAGE));
         mVcfWriter = null;
     }
 
@@ -98,6 +105,13 @@ public class ResultsWriter
 
             if(mVcfWriter != null)
                 mVcfWriter.close();
+
+            if(mRefFragmentWriter != null)
+                mRefFragmentWriter.close();
+
+            mSolutionSummaryWriter.close();
+            mQcWriter.close();
+            mHlaComplexWriter.close();
         }
         catch(Exception e)
         {
@@ -117,10 +131,10 @@ public class ResultsWriter
         if(mConfig.OutputDir.isEmpty())
             return;
 
-        solutionSummary.write(LilacAllele.generateFilename(mConfig.OutputDir, mConfig.Sample));
-        summaryMetrics.writefile(LilacQcData.generateFilename(mConfig.OutputDir, mConfig.Sample));
+        solutionSummary.write(mSolutionSummaryWriter);
+        summaryMetrics.writefile(mQcWriter);
 
-        HlaComplexFile.writeToFile(mConfig.formFileId(LILAC_FILE_CANDIDATE_COVERAGE, false), CURRENT_GENES, rankedComplexes);
+        HlaComplexFile.writeToFile(mHlaComplexWriter, CURRENT_GENES, rankedComplexes);
     }
 
     public void writeDetailedOutputs(
@@ -144,40 +158,16 @@ public class ResultsWriter
             final Iterable<ComplexCoverage> rankedComplexes, final Iterable<Fragment> refNucleotideFrags,
             final List<FragmentAlleles> refFragAlleles)
     {
-        if(!mWriteTypes.contains(WriteType.FRAGMENTS))
+        if(mRefFragmentWriter == null)
             return;
 
-        String filename = mConfig.formFileId(LILAC_FILE_CANDIDATE_FRAGS, false);
-        try(FileLock file = FileLock.create(new File(filename)))
+        try
         {
-            List<String> existingLines = Lists.newArrayList();
-            BufferedReader reader = file.getBufferedReader();
-            reader.readLine();
-            String line = reader.readLine();
-            while(line != null)
-            {
-                String geneStr = line.split("\\*")[0];
-                HlaGene gene = HlaGene.fromString(geneStr);
-                if(gene != null && !CURRENT_GENES.contains(gene))
-                    existingLines.add(line);
-
-                line = reader.readLine();
-            }
-
-            file.clear();
-            BufferedWriter writer = file.getBufferedWriter();
-            HlaComplexFile.writeFragmentAssignment(writer, rankedComplexes, refFragAlleles);
-            for(String existingLine : existingLines)
-            {
-                writer.write(existingLine);
-                writer.newLine();
-            }
-
-            writer.flush();
+            HlaComplexFile.writeFragmentAssignment(mRefFragmentWriter, rankedComplexes, refFragAlleles);
         }
-        catch(Exception e)
+        catch(IOException e)
         {
-            LL_LOGGER.error("failed to update {}: {}", filename, e.toString());
+            LL_LOGGER.error("failed to write reference fragments: {}", e.toString());
         }
 
         writeFragments(mConfig.tumorOnly() ? TUMOR : REFERENCE, refNucleotideFrags);
@@ -207,75 +197,25 @@ public class ResultsWriter
         SolutionSummary solutionSummary = new SolutionSummary(
                 CURRENT_GENES, null, null, null, null, null);
 
-        solutionSummary.write(LilacAllele.generateFilename(mConfig.OutputDir, mConfig.Sample));
-        summaryMetrics.writefile(LilacQcData.generateFilename(mConfig.OutputDir, mConfig.Sample));
+        solutionSummary.write(mSolutionSummaryWriter);
+        summaryMetrics.writefile(mQcWriter);
     }
 
-    private FileLock initialiseFragmentWriter()
+    private BufferedWriter initialiseFragmentWriter()
     {
-        String filename = mConfig.formFileId(LILAC_FILE_FRAGMENTS, false);
-        FileLock fileLock = FileLock.create(new File(filename));
-        if(fileLock == null)
-        {
-            LL_LOGGER.error("failed to update {}", filename);
-            return null;
-        }
-
-        List<String> existingRecords = existingFragments(fileLock);
+        String filename = mConfig.formFileId(LILAC_FILE_FRAGMENTS);
         try
         {
-            fileLock.clear();
-            BufferedWriter writer = fileLock.getBufferedWriter();
+            BufferedWriter writer = createBufferedWriter(filename);
             writer.write("Source\tReadId\tReadInfo\tGenes");
             writer.write("\tNucLociStart\tNucLociEnd\tAcidLociStart\tAcidLociEnd\tScope");
             writer.newLine();
-            for(String existingRecord : existingRecords)
-            {
-                writer.write(existingRecord);
-                writer.newLine();
-            }
-
-            writer.flush();
-            return fileLock;
+            return writer;
         }
         catch(IOException e)
         {
-            LL_LOGGER.error("failed to update {}: {}", filename, e.toString());
+            LL_LOGGER.error("failed to write to {}: {}", filename, e.toString());
             return null;
-        }
-    }
-
-    private static List<String> existingFragments(final FileLock file)
-    {
-        List<String> existingFragmentRecords = Lists.newArrayList();
-        try
-        {
-            BufferedReader reader = file.getBufferedReader();
-            reader.readLine();
-            String line = reader.readLine();
-            while(line != null)
-            {
-                String[] fields = line.split("\t");
-                if(fields.length < 4)
-                {
-                    LL_LOGGER.error("existing data in lilac.{} file is malformed", LILAC_FILE_FRAGMENTS);
-                    return Collections.emptyList();
-                }
-
-                String[] geneStrs = fields[3].split(ITEM_DELIM);
-                HlaGene firstGene = HlaGene.fromString(geneStrs[0]);
-                if(firstGene != null && !CURRENT_GENES.contains(firstGene))
-                    existingFragmentRecords.add(line);
-
-                line = reader.readLine();
-            }
-
-            return existingFragmentRecords;
-        }
-        catch(IOException e)
-        {
-            LL_LOGGER.error("failed to read existing data in lilac.{} file: {}", LILAC_FILE_FRAGMENTS, e.toString());
-            return Collections.emptyList();
         }
     }
 
@@ -286,23 +226,20 @@ public class ResultsWriter
 
         try
         {
-            BufferedWriter writer = mFragmentWriter.getBufferedWriter();
             for(Fragment fragment : fragments)
             {
                 StringJoiner genesStr = new StringJoiner(ITEM_DELIM);
                 fragment.genes().forEach(x -> genesStr.add(x.toString()));
 
-                writer.write(String.format("%s\t%s\t%s\t%s",
+                mFragmentWriter.write(String.format("%s\t%s\t%s\t%s",
                         source.toString(), fragment.id(), fragment.readInfo(), genesStr));
 
-                writer.write(String.format("\t%d\t%d\t%d\t%d\t%s",
+                mFragmentWriter.write(String.format("\t%d\t%d\t%d\t%d\t%s",
                         fragment.minNucleotideLocus(), fragment.maxNucleotideLocus(),
                         fragment.minAminoAcidLocus(), fragment.maxAminoAcidLocus(), fragment.scope()));
 
-                writer.newLine();
+                mFragmentWriter.newLine();
             }
-
-            writer.flush();
         }
         catch(IOException e)
         {

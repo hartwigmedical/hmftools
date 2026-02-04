@@ -244,13 +244,7 @@ public class HlaYCoverage
 
             for(HlaAllele allele : matchedAlleles)
             {
-                int[] alleleCounts = sourceAlleleCounts.get(allele);
-
-                if(alleleCounts == null)
-                {
-                    alleleCounts = new int[MAX];
-                    sourceAlleleCounts.put(allele, alleleCounts);
-                }
+                int[] alleleCounts = sourceAlleleCounts.computeIfAbsent(allele, k -> new int[MAX]);
 
                 if(matchedFragment != null)
                     ++alleleCounts[SHARED];
@@ -280,7 +274,7 @@ public class HlaYCoverage
 
     private static void updateMiscCounts(final Fragment fragment, final int[] miscCounts)
     {
-        if(fragment.aminoAcidsByLoci().containsKey(Y0101_X_LOCUS) && fragment.aminoAcid(Y0101_X_LOCUS).equals("X"))
+        if(fragment.aminoAcidsByLoci().containsKey(Y0101_X_LOCUS) && "X".equals(fragment.aminoAcid(Y0101_X_LOCUS)))
             ++miscCounts[Y0101_X];
 
         List<Integer> hlaAExonBoundaries = getAminoAcidExonBoundaries(HLA_A);
@@ -307,7 +301,7 @@ public class HlaYCoverage
                     sampleId, source, miscCounts[Y0101_X], miscCounts[EXON_3], outcome);
         }
 
-        String fileName = mConfig.formFileId(LILAC_FILE_HLA_Y_COVERAGE, false);
+        String fileName = mConfig.formFileId(LILAC_FILE_HLA_Y_COVERAGE);
         try
         {
             BufferedWriter writer = createBufferedWriter(fileName, false);
@@ -352,7 +346,7 @@ public class HlaYCoverage
         {
             if(mWriter == null)
             {
-                String fileName = mConfig.formFileId(LILAC_FILE_HLA_Y_FRAGMENTS, false);
+                String fileName = mConfig.formFileId(LILAC_FILE_HLA_Y_FRAGMENTS);
                 mWriter = createBufferedWriter(fileName, false);
 
                 mWriter.write("ReadId\tReadInfo\tAlleles\tShared\tLoci");
