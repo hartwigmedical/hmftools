@@ -4,13 +4,17 @@ import static com.hartwig.hmftools.common.redux.JitterModelParams.MAX_SPECIFIC_L
 import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.probabilityToPhredQual;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConfig.isIllumina;
+import static com.hartwig.hmftools.sage.SageConfig.isSbx;
+import static com.hartwig.hmftools.sage.SageConfig.isUltima;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_REPEAT_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_REPEAT_COUNT;
 import static com.hartwig.hmftools.sage.SageConstants.MSI_JITTER_DEFAULT_ERROR_RATE;
 import static com.hartwig.hmftools.sage.SageConstants.MSI_JITTER_MAX_REPEAT_CHANGE;
 import static com.hartwig.hmftools.sage.common.SageVariant.indelAltBases;
-import static com.hartwig.hmftools.sage.quality.JitterConstants.DEFAULT_HD_JITTER_PARAMS;
-import static com.hartwig.hmftools.sage.quality.JitterConstants.DEFAULT_JITTER_PARAMS;
+import static com.hartwig.hmftools.sage.quality.JitterConstants.DEFAULT_JITTER_PARAMS_ILLUMINA;
+import static com.hartwig.hmftools.sage.quality.JitterConstants.DEFAULT_JITTER_PARAMS_ILLUMINA_HIGH_DEPTH;
+import static com.hartwig.hmftools.sage.quality.JitterConstants.DEFAULT_JITTER_PARAMS_SBX;
+import static com.hartwig.hmftools.sage.quality.JitterConstants.DEFAULT_JITTER_PARAMS_ULTIMA;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -50,7 +54,22 @@ public class MsiJitterCalcs
     {
         MsiJitterCalcs msiJitterCalcs = new MsiJitterCalcs();
 
-        List<JitterModelParams> jitterDefaults = highDepthMode ? DEFAULT_HD_JITTER_PARAMS : DEFAULT_JITTER_PARAMS;
+        List<JitterModelParams> jitterDefaults;
+
+        if(isSbx())
+        {
+            jitterDefaults = DEFAULT_JITTER_PARAMS_SBX;
+        }
+        else if(isUltima())
+        {
+            jitterDefaults = DEFAULT_JITTER_PARAMS_ULTIMA;
+        }
+        else
+        {
+            jitterDefaults = highDepthMode ? DEFAULT_JITTER_PARAMS_ILLUMINA_HIGH_DEPTH : DEFAULT_JITTER_PARAMS_ILLUMINA;
+        }
+
+        // List<JitterModelParams> jitterDefaults = highDepthMode ? DEFAULT_HD_JITTER_PARAMS : DEFAULT_JITTER_PARAMS;
 
         if(jitterParamsDir != null)
         {
