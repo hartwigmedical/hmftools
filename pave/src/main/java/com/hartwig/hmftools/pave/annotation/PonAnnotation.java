@@ -3,10 +3,12 @@ package com.hartwig.hmftools.pave.annotation;
 import static com.hartwig.hmftools.common.variant.pon.PonCache.PON_AVG_READS;
 import static com.hartwig.hmftools.common.variant.pon.PonCache.PON_COUNT;
 import static com.hartwig.hmftools.common.variant.pon.PonCache.PON_MAX;
+import static com.hartwig.hmftools.common.variant.pon.PonCache.PON_MULTI_STATUS;
 
 import java.util.concurrent.Callable;
 
 import com.hartwig.hmftools.common.variant.VariantTier;
+import com.hartwig.hmftools.common.variant.pon.MultiPonStatus;
 import com.hartwig.hmftools.common.variant.pon.PonCache;
 import com.hartwig.hmftools.common.variant.pon.PonChrCache;
 import com.hartwig.hmftools.common.variant.pon.PonVariantData;
@@ -71,17 +73,21 @@ public class PonAnnotation extends AnnotationData implements Callable<Void>
         if(ponData == null)
             return;
 
-        variant.setPonFrequency(ponData.Samples, ponData.MaxSampleReads, ponData.meanReadCount());
+        variant.setPonFrequency(ponData);
     }
 
     public static void annotateFromContext(final VariantData variant)
     {
         if(variant.context().hasAttribute(PON_COUNT))
         {
+            MultiPonStatus multiPonStatus = MultiPonStatus.valueOf(
+                    variant.context().getAttributeAsString(PON_MULTI_STATUS, MultiPonStatus.BASE.toString()));
+
             variant.setPonFrequency(
                     variant.context().getAttributeAsInt(PON_COUNT, 0),
                     variant.context().getAttributeAsInt(PON_MAX, 0),
-                    variant.context().getAttributeAsInt(PON_AVG_READS, 0));
+                    variant.context().getAttributeAsInt(PON_AVG_READS, 0),
+                    multiPonStatus);
         }
     }
 

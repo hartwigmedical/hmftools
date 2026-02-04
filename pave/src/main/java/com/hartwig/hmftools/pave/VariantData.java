@@ -29,6 +29,8 @@ import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
+import com.hartwig.hmftools.common.variant.pon.MultiPonStatus;
+import com.hartwig.hmftools.common.variant.pon.PonVariantData;
 import com.hartwig.hmftools.pave.impact.VariantTransImpact;
 
 import org.apache.logging.log4j.util.Strings;
@@ -82,6 +84,7 @@ public class VariantData
     public int mPonSampleCount;
     public int mPonMaxReadCount;
     public int mPonMeanReadCount;
+    public MultiPonStatus mMultiPonStatus;
     private Double mGnomadFrequency;
 
     public static final int NO_LOCAL_PHASE_SET = -1;
@@ -161,6 +164,7 @@ public class VariantData
         mPonSampleCount = 0;
         mPonMaxReadCount = 0;
         mPonMeanReadCount = 0;
+        mMultiPonStatus = MultiPonStatus.BASE;
         mGnomadFrequency = null;
     }
 
@@ -357,12 +361,24 @@ public class VariantData
     public int ponSampleCount() { return mPonSampleCount; }
     public int ponMaxReadCount() { return mPonMaxReadCount; }
     public int ponMeanReadCount() { return mPonMeanReadCount; }
+    public MultiPonStatus multiPonStatus() { return mMultiPonStatus; }
+
+    public void setPonFrequency(final PonVariantData ponData)
+    {
+        setPonFrequency(ponData.Samples, ponData.MaxSampleReads, ponData.meanReadCount(), ponData.MultiPon);
+    }
 
     public void setPonFrequency(int sampleCount, int maxReadCount, int meanReadCount)
+    {
+        setPonFrequency(sampleCount, maxReadCount, meanReadCount, MultiPonStatus.BASE);
+    }
+
+    public void setPonFrequency(int sampleCount, int maxReadCount, int meanReadCount, final MultiPonStatus multiPonStatus)
     {
         mPonSampleCount = sampleCount;
         mPonMaxReadCount = maxReadCount;
         mPonMeanReadCount = meanReadCount;
+        mMultiPonStatus = multiPonStatus;
     }
 
     public Double gnomadFrequency() { return mGnomadFrequency; }

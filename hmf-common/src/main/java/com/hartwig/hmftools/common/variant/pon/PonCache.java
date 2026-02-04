@@ -63,6 +63,7 @@ public class PonCache
     public static final String PON_COUNT = "PON_COUNT"; // samples in cohort with the variant
     public static final String PON_MAX = "PON_MAX"; // max observed reads from those samples
     public static final String PON_AVG_READS = "PON_READS"; // average reads from those samples
+    public static final String PON_MULTI_STATUS = "PON_MULTI";
 
     // PON filter config
     public static final String PON_FILTERS = "pon_filters";
@@ -339,6 +340,9 @@ public class PonCache
 
         header.addMetaDataLine(new VCFInfoHeaderLine(
                 PON_AVG_READS, 1, VCFHeaderLineType.Integer, "Average reads in sample with variant"));
+
+        header.addMetaDataLine(new VCFInfoHeaderLine(
+                PON_MULTI_STATUS, 1, VCFHeaderLineType.String, "Status of the variant across PONs"));
     }
 
     public static void addFilterHeader(final VCFHeader header)
