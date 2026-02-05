@@ -34,6 +34,7 @@ data class ShmGeneComparison(
 )
 
 
+// TODO: unit test
 fun compareVJRegionToImgt(
     layoutSeq: String, type: VJ, layoutAnchorBoundary: Int, imgtSequence: ImgtSequenceFile.Sequence, queryRange: IntRange,
     alignment: Alignment
@@ -63,7 +64,7 @@ fun compareVJRegionToImgt(
     else (if (isForward) layoutAnchorBoundary until layoutSeq.length else 0 until layoutSeq.length - layoutAnchorBoundary)
 
     val imgtSeq = imgtSequence.sequenceWithRef
-    val imgtAlignStart = alignment.refStart - 1
+    val imgtAlignStart = alignment.refRange.start
     val imgtSeqBounds = imgtSequence.imgtRange
 
     var comparedBases = 0
