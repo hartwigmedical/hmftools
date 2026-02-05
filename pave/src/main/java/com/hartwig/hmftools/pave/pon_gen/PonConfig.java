@@ -29,7 +29,6 @@ public class PonConfig
     public final int MqfCutoff;
     public final int MinSamples;
     public final boolean WriteFinal;
-    public final boolean SkipGermlineIndelCheck;
 
     public final int RefSampleGenoptypeIndex;
     public final RefGenomeVersion RefGenVersion;
@@ -50,7 +49,6 @@ public class PonConfig
     public static final String MANUAL_ENTRIES = "manual_entries";
     public static final String SOMATIC_HOTSPOT = "somatic_hotspots";
     public static final String GERMLINE_HOTSPOT = "germline_hotspots";
-    public static final String SKIP_GERMLINE_INDEL_CHECK = "skip_germline_indel_check";
 
     // constants
     private static final int DEFAULT_MIN_SAMPLES = 3;
@@ -74,12 +72,10 @@ public class PonConfig
         RefGenVersion = RefGenomeVersion.from(configBuilder);
 
         WriteFinal = configBuilder.hasFlag(WRITE_FINAL_PON);
-        SkipGermlineIndelCheck = configBuilder.hasFlag(SKIP_GERMLINE_INDEL_CHECK);
 
         ExistingPonFilename = configBuilder.getValue(PON_FILE);
 
-        PV_LOGGER.info("key config: minSamples({}) cut-offs(qual={} mqf={}) skipGermlineIndelCheck({})",
-                MinSamples, QualCutoff, MqfCutoff, SkipGermlineIndelCheck);
+        PV_LOGGER.info("key config: minSamples({}) cut-offs(qual={} mqf={})", MinSamples, QualCutoff, MqfCutoff);
 
         Threads = parseThreads(configBuilder);
 
@@ -100,7 +96,6 @@ public class PonConfig
         configBuilder.addConfigItem(MANUAL_ENTRIES, false, "Manual PON entries in form Chr:Pos:Ref:Alt separated by ';'");
 
         configBuilder.addFlag(WRITE_FINAL_PON, "Write final PON without annotations");
-        configBuilder.addFlag(SKIP_GERMLINE_INDEL_CHECK, "Skip germline indel repeat filter");
 
         configBuilder.addPath(PON_FILE, false, "PON entries");
         ClinvarAnnotation.addConfig(configBuilder);
