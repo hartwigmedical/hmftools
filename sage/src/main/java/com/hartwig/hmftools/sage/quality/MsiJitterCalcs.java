@@ -224,13 +224,7 @@ public class MsiJitterCalcs
             }
         }
 
-        if(isIllumina())
-        {
-            return new PerSampleJitterParams(sampleParamList, comparisonScore < 0);
-        }
-
-        // TODO: set different jitter defaults for SBX and Ultima, and reference those instead
-        return new PerSampleJitterParams(sampleParamList, false);
+        return new PerSampleJitterParams(sampleParamList, comparisonScore < 0);
     }
 
     public RepeatInfo findRepeat(final VariantReadContext readContext)
