@@ -109,7 +109,7 @@ public class AssemblyVisualiser
 
     public record SegmentViewModel(String chromosome, @Nullable Integer position, BaseRegion refRegion, BaseRegion viewRegion,
                                    BaseRegion refViewRegion, BaseSeqViewModel refViewModel, boolean isRefReversed,
-				   BaseSeqViewModel assemblyViewModel, boolean isInsert, int leftDelLength) {}
+                                   BaseSeqViewModel assemblyViewModel, boolean isInsert, int leftDelLength) {}
 
     private final AssemblyConfig mConfig;
     private final AssemblyAlignment mAssemblyAlignment;

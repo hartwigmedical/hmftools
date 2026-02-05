@@ -247,8 +247,8 @@ public final class CssBuilder
         BOTTOM(0, 1),
         LEFT(-1, 0);
 
-        public int HorizontalScale;
-        public int VerticalScale;
+        public final int HorizontalScale;
+        public final int VerticalScale;
 
         BorderDirections(int horizontalScale, int verticalScale)
         {

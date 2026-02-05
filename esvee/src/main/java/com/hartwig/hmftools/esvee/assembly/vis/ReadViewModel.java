@@ -370,7 +370,7 @@ public final class ReadViewModel
         }
 
         HandleDelResult handleDelResult = handleDel(
-		refViewModel, read, indelOffset, cigarEls, readBases, readBases, readNegativeStrandFlag);
+                refViewModel, read, indelOffset, cigarEls, readBases, readBases, readNegativeStrandFlag);
         BaseSeqViewModel readViewModel;
         if(handleDelResult == null)
         {

@@ -690,7 +690,7 @@ public final class SvgRender
 
             Color fgColour = Color.WHITE;
             renderText(svgCanvas, ZERO_2D, boxIdx + 0.5 * boxWidth, 0.5, svgCanvas.getFont(), fgColour,
-		    String.valueOf(aa), null, 1.0, CENTER);
+                    String.valueOf(aa), null, 1.0, CENTER);
         }
 
         // left orientation indicator
