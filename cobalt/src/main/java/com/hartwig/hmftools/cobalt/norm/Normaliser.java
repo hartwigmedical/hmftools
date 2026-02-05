@@ -149,8 +149,12 @@ public class Normaliser
 
                 for(SampleRegionData sampleRegionData : regionData.getSamples())
                 {
-                    double relativeEnrichment = sampleRegionData.WgsGcRatio > 0 ?
-                            sampleRegionData.adjustedGcRatio() / sampleRegionData.WgsGcRatio : 0;
+                    if(sampleRegionData.WgsGcRatio < 0)
+                    {
+                        // -1.0 is used to mark Y regions in female samples and may also arise from masked windows in WGS data
+                        continue;
+                    }
+                    double relativeEnrichment = sampleRegionData.adjustedGcRatio() / sampleRegionData.WgsGcRatio;
 
                     sampleRelativeEnrichment.add(relativeEnrichment);
                 }

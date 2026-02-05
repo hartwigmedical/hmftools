@@ -169,6 +169,7 @@ public class Junction implements Comparable<Junction>
             String currentChromosome = "";
 
             int junctionCount = 0;
+            int rawJunctionCount = 0;
             int discordantCount = 0;
             int indelCount = 0;
             int hotspotCount = 0;
@@ -186,6 +187,8 @@ public class Junction implements Comparable<Junction>
 
                 if(!specificRegions.includePosition(chromosome, position))
                     continue;
+
+                ++rawJunctionCount;
 
                 int junctionFrags = juncFragsIndex != null ? Integer.parseInt(values[juncFragsIndex]) : 0;
                 int otherJunctionFrags = otherSupportFragsIndex != null ? Integer.parseInt(values[otherJuncFragsIndex]) : 0;
@@ -231,9 +234,9 @@ public class Junction implements Comparable<Junction>
                 ++junctionCount;
             }
 
-            int splitCount = junctionCount - discordantCount;
-            SV_LOGGER.info("loaded {} junctions, types(split={} discordant={} indel={} hotspot={}) from file: {}",
-                    junctionCount, splitCount, discordantCount, indelCount, hotspotCount, filename);
+            int splitCount = junctionCount - discordantCount - indelCount;
+            SV_LOGGER.info("loaded {} junctions (raw={}) types(split={} indel={} discordant={} hotspot={}) from file: {}",
+                    junctionCount, rawJunctionCount, splitCount, indelCount, discordantCount, hotspotCount, filename);
 
             chrJunctionsMap.values().forEach(x -> Collections.sort(x));
 

@@ -2,12 +2,12 @@ package com.hartwig.hmftools.lilac.qc;
 
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.CURRENT_GENES;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.File;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -15,13 +15,13 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.hla.ImmutableLilacAllele;
 import com.hartwig.hmftools.common.hla.LilacAllele;
-import com.hartwig.hmftools.common.utils.file.FileLock;
 import com.hartwig.hmftools.lilac.GeneSelector;
 import com.hartwig.hmftools.lilac.coverage.AlleleCoverage;
 import com.hartwig.hmftools.lilac.coverage.ComplexCoverage;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
-import com.hartwig.hmftools.lilac.hla.HlaGene;
 import com.hartwig.hmftools.lilac.variant.SomaticCodingCount;
+
+import org.jetbrains.annotations.Nullable;
 
 public class SolutionSummary
 {
@@ -54,8 +54,8 @@ public class SolutionSummary
         AlleleCoverage noCoverage = new AlleleCoverage(refAllele, 0, 0, 0);
 
         AlleleCoverage ref = !ReferenceCoverage.getAlleleCoverage().isEmpty()
-	        ? ReferenceCoverage.getAlleleCoverage().get(index)
-	        : noCoverage;
+                ? ReferenceCoverage.getAlleleCoverage().get(index)
+                : noCoverage;
 
         AlleleCoverage tumor = !TumorCoverage.getAlleleCoverage().isEmpty() ? TumorCoverage.getAlleleCoverage().get(index) : noCoverage;
 
@@ -100,7 +100,24 @@ public class SolutionSummary
         return new SolutionSummary(CURRENT_GENES, referenceCoverage, tumorCoverage, tumorCopyNumber, sortedCodingCount, rnaCoverage);
     }
 
-    public void write(final String fileName)
+    @Nullable
+    public static BufferedWriter initialiseWriter(final String fileName)
+    {
+        try
+        {
+            BufferedWriter writer = createBufferedWriter(fileName);
+            writer.write(LilacAllele.header());
+            writer.newLine();
+            return writer;
+        }
+        catch(IOException e)
+        {
+            LL_LOGGER.error("Failed to write to {}: {}", fileName, e.toString());
+            return null;
+        }
+    }
+
+    public void write(final BufferedWriter writer)
     {
         List<LilacAllele> alleles = Lists.newArrayList();
         if(ReferenceCoverage != null)
@@ -109,31 +126,13 @@ public class SolutionSummary
                 alleles.add(buildAlleleData(i));
         }
 
-        File file = new File(fileName);
-        List<String> existingLines = Lists.newArrayList();
-        try(FileLock fileLock = FileLock.create(file))
+        try
         {
-            BufferedReader reader = fileLock.getBufferedReader();
-            reader.readLine();
-            String line = reader.readLine();
-            while(line != null)
-            {
-                String geneStr = line.split("\\*")[0];
-                HlaGene gene = HlaGene.fromString(geneStr);
-                if(gene != null && !mGenes.contains(gene))
-                    existingLines.add(line);
-
-                line = reader.readLine();
-            }
-
-            fileLock.clear();
-            BufferedWriter writer = fileLock.getBufferedWriter();
-            LilacAllele.write(writer, alleles, existingLines);
-            writer.flush();
+            LilacAllele.write(writer, alleles);
         }
         catch(Exception e)
         {
-            LL_LOGGER.error("failed to update {}: {}", fileName, e.toString());
+            LL_LOGGER.error("failed to write solution summary: {}", e.toString());
         }
     }
 

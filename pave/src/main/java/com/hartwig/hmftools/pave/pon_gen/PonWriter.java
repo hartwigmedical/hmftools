@@ -202,15 +202,6 @@ public class PonWriter
         if(isGermlineExcludedVariant(variant))
             return true;
 
-        /*
-        if(variant.sampleCount() < GERMLINE_CLINVAR_MIN_SAMPLES
-        && (variant.isGermlineHotspot() || variant.clinvarPathogenicity().isPathogenic())
-        && (!variant.isIndel() || variant.repeatCount() < GERMLINE_CLINVAR_MAX_REPEAT))
-        {
-            return true;
-        }
-        */
-
         return false;
     }
 

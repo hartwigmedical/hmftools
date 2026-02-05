@@ -1,14 +1,24 @@
 package com.hartwig.hmftools.pave;
 
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.variant.pon.GnomadCache.PON_GNOMAD_FILTER;
 import static com.hartwig.hmftools.common.variant.pon.PonCache.PON_FILTER;
 import static com.hartwig.hmftools.pave.FilterType.PANEL;
 import static com.hartwig.hmftools.pave.FilterType.PASS;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
+import static com.hartwig.hmftools.pave.PaveConfig.SEQUENCING_TYPE;
+import static com.hartwig.hmftools.pave.PaveConfig.isSbx;
+import static com.hartwig.hmftools.pave.PaveConfig.isUltima;
 import static com.hartwig.hmftools.pave.PaveConstants.GNMOAD_FILTER_HOTSPOT_PATHOGENIC_THRESHOLD;
 import static com.hartwig.hmftools.pave.PaveConstants.GNMOAD_FILTER_THRESHOLD;
+import static com.hartwig.hmftools.pave.PaveConstants.PON_INDEL_ARTEFACT_REPEAT_COUNT;
+import static com.hartwig.hmftools.pave.PaveConstants.PON_INDEL_ARTEFACT_SBX_FACTOR;
+import static com.hartwig.hmftools.pave.PaveConstants.PON_INDEL_ARTEFACT_SBX_MIN_THRESHOLD;
+import static com.hartwig.hmftools.pave.PaveConstants.PON_INDEL_ARTEFACT_ULTIMA_FACTOR;
+import static com.hartwig.hmftools.pave.PaveConstants.PON_INDEL_ARTEFACT_ULTIMA_MIN_THRESHOLD;
+import static com.hartwig.hmftools.pave.PaveConstants.PON_INDEL_ARTEFACT_VAF_REDUCTION;
 import static com.hartwig.hmftools.pave.PaveConstants.PON_MEAN_READ_THRESHOLD;
 import static com.hartwig.hmftools.pave.PaveConstants.PON_REPEAT_COUNT_THRESHOLD;
 import static com.hartwig.hmftools.pave.PaveConstants.PON_SAMPLE_COUNT_THRESHOLD;
@@ -27,10 +37,12 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.pathogenic.PathogenicSummaryFactory;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.common.variant.pon.GnomadChrCache;
+import com.hartwig.hmftools.common.variant.pon.MultiPonStatus;
 import com.hartwig.hmftools.common.variant.pon.PonChrCache;
 import com.hartwig.hmftools.common.variant.pon.PonVariantData;
 import com.hartwig.hmftools.pave.annotation.ClinvarChrCache;
@@ -108,9 +120,9 @@ public class ChromosomeTask implements Callable<Void>
 
         ChrBaseRegion chrRegion;
 
-        if(mConfig.SpecificRegions.size() == 1 && mConfig.SpecificRegions.get(0).Chromosome.equals(mChromosomeStr))
+        if(mConfig.SpecificChrRegions.Regions.size() == 1 && mConfig.SpecificChrRegions.Regions.get(0).Chromosome.equals(mChromosomeStr))
         {
-            chrRegion = mConfig.SpecificRegions.get(0);
+            chrRegion = mConfig.SpecificChrRegions.Regions.get(0);
         }
         else
         {
@@ -118,17 +130,21 @@ public class ChromosomeTask implements Callable<Void>
             chrRegion = new ChrBaseRegion(mChromosomeStr, 1, coordinates.Lengths.get(mChromosome));
         }
 
-        PV_LOGGER.debug("chr({}) starting variant annotation", mChromosome);
+        PV_LOGGER.debug("chr({}) starting variant annotation", mChromosomeStr);
 
         CloseableTribbleIterator<VariantContext> varIterator = mConfig.requireIndex() ?
                 vcfFileReader.regionIterator(chrRegion) : vcfFileReader.iterator();
 
         for(VariantContext variantContext : varIterator)
         {
-            if(!mConfig.SpecificRegions.isEmpty())
+            if(mConfig.SpecificChrRegions.hasFilters())
             {
-                if(mConfig.SpecificRegions.stream().noneMatch(x -> x.containsPosition(variantContext.getContig(), variantContext.getStart())))
+                if(!mConfig.SpecificChrRegions.Regions.isEmpty()
+                && mConfig.SpecificChrRegions.Regions.stream().noneMatch(x -> x.containsPosition(
+                        variantContext.getContig(), variantContext.getStart())))
+                {
                     continue;
+                }
             }
 
             processVariant(variantContext);
@@ -268,7 +284,7 @@ public class ChromosomeTask implements Callable<Void>
         int repeatCount = variant.repeatCount();
 
         // the WGS PON
-        boolean ponFilter = true;
+        boolean ponFilter = standardPon.filterOnTierCriteria(variant.tier(), variant.ponSampleCount(), variant.ponMaxReadCount());
 
         if(hotspotOrPathogenic)
         {
@@ -288,9 +304,32 @@ public class ChromosomeTask implements Callable<Void>
                 }
             }
         }
-        else
+
+        if(ponFilter && variant.isIndel() && repeatCount >= PON_INDEL_ARTEFACT_REPEAT_COUNT
+        && (isSbx() || isUltima()) && variant.multiPonStatus() == MultiPonStatus.ARTEFACT)
         {
-            ponFilter = standardPon.filterOnTierCriteria(variant.tier(), variant.ponSampleCount(), variant.ponMaxReadCount());
+            // the AF-based indel filtering would only be applied to variants with SeqTechOnly=true
+            //	- Variant is only in seq tech PON (not in Illumina PON)
+            //	- Variant is MSI indel with repeat count >= 7
+            //	- Variant has PON_MAX < min(60 * (sampleAF - 0.1), 18) (if Ultima) or min(40 * (sampleAF - 0.1), 8) (if SBX)
+            double variantVaf = variant.sampleVaf(sampleId);
+            int ponMinThreshold, ponFactor;
+
+            if(isUltima())
+            {
+                ponMinThreshold = PON_INDEL_ARTEFACT_ULTIMA_MIN_THRESHOLD;
+                ponFactor = PON_INDEL_ARTEFACT_ULTIMA_FACTOR;
+            }
+            else
+            {
+                ponMinThreshold = PON_INDEL_ARTEFACT_SBX_MIN_THRESHOLD;
+                ponFactor = PON_INDEL_ARTEFACT_SBX_FACTOR;
+            }
+
+            double ponThreshold = min(ponFactor * (variantVaf - PON_INDEL_ARTEFACT_VAF_REDUCTION), ponMinThreshold);
+
+            if(variant.ponSampleCount() < ponThreshold)
+                ponFilter = false;
         }
 
         if(ponFilter)

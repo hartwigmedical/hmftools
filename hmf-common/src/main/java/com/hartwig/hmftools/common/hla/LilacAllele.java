@@ -11,7 +11,6 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
@@ -128,10 +127,9 @@ public abstract class LilacAllele
         return alleles;
     }
 
-    public static void write(final BufferedWriter writer, final List<LilacAllele> alleles, final Collection<String> existingLines) throws IOException
+    public static void write(final BufferedWriter writer, final List<LilacAllele> alleles) throws IOException
     {
         List<String> lines = Lists.newArrayList(toLines(alleles));
-        lines.addAll(existingLines);
         for(String line : lines)
         {
             writer.write(line);
@@ -142,7 +140,6 @@ public abstract class LilacAllele
     private static List<String> toLines(final List<LilacAllele> alleles)
     {
         final List<String> lines = Lists.newArrayList();
-        lines.add(header());
         alleles.stream().map(x -> toString(x)).forEach(lines::add);
         return lines;
     }

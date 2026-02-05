@@ -26,6 +26,13 @@ public class PaveConstants
     public static final int PON_MEAN_READ_THRESHOLD = 6;
     public static final double PON_VAF_THRESHOLD = 0.08;
 
+    public static final int PON_INDEL_ARTEFACT_REPEAT_COUNT = 7;
+    public static final double PON_INDEL_ARTEFACT_VAF_REDUCTION = 0.1;
+    public static final int PON_INDEL_ARTEFACT_SBX_FACTOR = 40;
+    public static final int PON_INDEL_ARTEFACT_SBX_MIN_THRESHOLD = 8;
+    public static final int PON_INDEL_ARTEFACT_ULTIMA_FACTOR = 60;
+    public static final int PON_INDEL_ARTEFACT_ULTIMA_MIN_THRESHOLD = 18;
+
     public static final double GNMOAD_FILTER_HOTSPOT_PATHOGENIC_THRESHOLD = 0.01;
     public static final double GNMOAD_FILTER_THRESHOLD = 0.00015;
 }

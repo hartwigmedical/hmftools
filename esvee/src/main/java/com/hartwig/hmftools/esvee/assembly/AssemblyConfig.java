@@ -82,7 +82,7 @@ public class AssemblyConfig
     public final List<String> TumorBams;
     public final List<String> ReferenceBams;
 
-    public final List<String> JunctionFiles;
+    public final String JunctionFile;
     public final String PrepDir;
 
     public final RefGenomeVersion RefGenVersion;
@@ -248,20 +248,22 @@ public class AssemblyConfig
             ReferenceBams.clear();
         }
 
-        JunctionFiles = Lists.newArrayList();
+        String junctionFile = null;
 
         if(configBuilder.hasValue(JUNCTION_FILE))
         {
-            JunctionFiles.add(configBuilder.getValue(JUNCTION_FILE));
+            junctionFile = configBuilder.getValue(JUNCTION_FILE);
         }
         else
         {
             // since Prep now reads multiple BAMs, only the tumor-labelled junctions file needs to be loaded
-            String junctionFile = formPrepInputFilename(PrepDir, TumorIds.get(0), PREP_JUNCTION_FILE_ID, OutputId);
+            String prepJunctionFile = formPrepInputFilename(PrepDir, TumorIds.get(0), PREP_JUNCTION_FILE_ID, OutputId);
 
-            if(Files.exists(Paths.get(junctionFile)))
-                JunctionFiles.add(junctionFile);
+            if(Files.exists(Paths.get(prepJunctionFile)))
+                junctionFile = prepJunctionFile;
         }
+
+        JunctionFile = junctionFile;
 
         BamToolPath = configBuilder.getValue(BAMTOOL_PATH);
 
@@ -443,7 +445,7 @@ public class AssemblyConfig
         TumorBams = Collections.emptyList();
         ReferenceBams = Collections.emptyList();
 
-        JunctionFiles = Collections.emptyList();
+        JunctionFile = null;
         PrepDir = null;
 
         RefGenVersion = V38;

@@ -47,7 +47,7 @@ public class HaplotypeQC
         UnmatchedHaplotypes = haplotypes;
     }
 
-    public List<String> header()
+    public static List<String> header()
     {
         return Lists.newArrayList("UnusedHaplotypes", "UnusedHaplotypeMaxFrags");
     }

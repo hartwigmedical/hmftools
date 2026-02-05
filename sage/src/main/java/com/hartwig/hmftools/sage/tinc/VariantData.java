@@ -14,7 +14,11 @@ import java.util.Set;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.GenotypeIds;
 import com.hartwig.hmftools.common.variant.VariantTier;
+import com.hartwig.hmftools.common.variant.pon.MultiPonStatus;
+import com.hartwig.hmftools.common.variant.pon.PonVariantData;
 import com.hartwig.hmftools.sage.filter.SoftFilter;
+
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
@@ -41,6 +45,7 @@ public class VariantData
     public int mPonSampleCount;
     public int mPonMaxReadCount;
     public int mPonMeanReadCount;
+    public MultiPonStatus mMultiPonStatus;
     private Double mGnomadFrequency;
 
     public double mReferenceAltFragsReduction;
@@ -70,6 +75,7 @@ public class VariantData
         mPonSampleCount = 0;
         mPonMaxReadCount = 0;
         mPonMeanReadCount = 0;
+        mMultiPonStatus = MultiPonStatus.BASE;
         mGnomadFrequency = null;
 
         mReferenceAltFragsReduction = 0;
@@ -129,12 +135,24 @@ public class VariantData
     public int ponSampleCount() { return mPonSampleCount; }
     public int ponMaxReadCount() { return mPonMaxReadCount; }
     public int ponMeanReadCount() { return mPonMeanReadCount; }
+    public MultiPonStatus multiPonStatus() { return mMultiPonStatus; }
+
+    public void setPonFrequency(final PonVariantData ponData)
+    {
+        setPonFrequency(ponData.Samples, ponData.MaxSampleReads, ponData.meanReadCount(), ponData.MultiPon);
+    }
 
     public void setPonFrequency(int sampleCount, int maxReadCount, int meanReadCount)
+    {
+        setPonFrequency(sampleCount, maxReadCount, meanReadCount, MultiPonStatus.BASE);
+    }
+
+    public void setPonFrequency(int sampleCount, int maxReadCount, int meanReadCount, @Nullable final MultiPonStatus multiPonStatus)
     {
         mPonSampleCount = sampleCount;
         mPonMaxReadCount = maxReadCount;
         mPonMeanReadCount = meanReadCount;
+        mMultiPonStatus = multiPonStatus;
     }
 
     public Double gnomadFrequency() { return mGnomadFrequency; }

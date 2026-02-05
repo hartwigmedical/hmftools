@@ -73,10 +73,13 @@ public class PaveApplication
         {
             String chrStr = mConfig.RefGenVersion.versionedChromosome(chromosome.toString());
 
-            if(!mConfig.SpecificRegions.isEmpty() && mConfig.SpecificRegions.stream().noneMatch(x -> x.Chromosome.equals(chrStr)))
+            if(mConfig.SpecificChrRegions.hasFilters())
             {
-                mVcfWriter.onChromosomeComplete(chromosome);
-                continue;
+                if(mConfig.SpecificChrRegions.excludeChromosome(chrStr))
+                {
+                    mVcfWriter.onChromosomeComplete(chromosome);
+                    continue;
+                }
             }
 
             ChromosomeTask chromosomeTask = new ChromosomeTask(chromosome, mConfig, mReferenceData, mVcfWriter, mTranscriptWriter);

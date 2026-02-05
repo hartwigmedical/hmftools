@@ -198,7 +198,7 @@ public class AminoAcidFragmentPipeline
         {
             HlaGene gene = entry.getKey();
             entry.getValue().writeVertically(
-                    config.formFileId(gene.longName() + ".aminoacids.txt", false),
+                    config.formFileId(gene.longName() + ".aminoacids.txt"),
                     RAW_REF_AMINO_ACID_COUNTS.get(gene));
         }
 
@@ -206,7 +206,7 @@ public class AminoAcidFragmentPipeline
         {
             HlaGene gene = entry.getKey();
             entry.getValue().writeVertically(
-                    config.formFileId(gene.longName() + ".nucleotides.txt", false),
+                    config.formFileId(gene.longName() + ".nucleotides.txt"),
                     RAW_REF_NUCLEOTIDE_COUNTS.get(gene));
         }
     }

@@ -414,7 +414,7 @@ public class VariantCache
 
                 if(ponData != null)
                 {
-                    variant.setPonFrequency(ponData.Samples, ponData.MaxSampleReads, ponData.meanReadCount());
+                    variant.setPonFrequency(ponData);
 
                     if(mPonCache.filterOnTierCriteria(variant.tier(), ponData.Samples, ponData.MaxSampleReads))
                         variant.setPonFiltered();
