@@ -186,6 +186,12 @@ public class AssemblyApplication
             return true;
         }
 
+        if(mConfig.JunctionFile == null || !Files.exists(Paths.get(mConfig.JunctionFile)))
+        {
+            SV_LOGGER.error("invalid junction file({})", mConfig.JunctionFile);
+            System.exit(1);
+        }
+
         String discStatsFilename = formDiscordantStatsFilename(mConfig.PrepDir, mConfig.sampleId(), mConfig.OutputId);
         DiscordantStats discordantStats = loadDiscordantStats(discStatsFilename);
 
@@ -205,24 +211,11 @@ public class AssemblyApplication
                     minHotspotFrags, minJunctionFrags, minDiscordantFrags, format("%.3f", discordantRate));
         }
 
-        for(String junctionFile : mConfig.JunctionFiles)
-        {
-            Map<String,List<Junction>> newJunctionsMap = Junction.loadJunctions(
-                    junctionFile, mConfig.SpecificChrRegions, minJunctionFrags, minHotspotFrags, minDiscordantFrags);
-
-            if(newJunctionsMap == null)
-                return false;
-
-            Junction.mergeJunctions(mChrJunctionsMap, newJunctionsMap);
-        }
+        mChrJunctionsMap.putAll(Junction.loadJunctions(
+                mConfig.JunctionFile, mConfig.SpecificChrRegions, minJunctionFrags, minHotspotFrags, minDiscordantFrags));
 
         // if(AssemblyConfig.DevDebug && !validateJunctionMap(mChrJunctionsMap))
         //    System.exit(1);
-
-        if(mConfig.JunctionFiles.size() > 1)
-        {
-            SV_LOGGER.debug("merged into {} junctions", mChrJunctionsMap.values().stream().mapToInt(x -> x.size()).sum());
-        }
 
         return true;
     }

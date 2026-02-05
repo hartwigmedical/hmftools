@@ -4,6 +4,7 @@ import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
@@ -42,8 +43,8 @@ public class PonCombiner
     {
         mPonCaches = Lists.newArrayList();
 
-        String[] svFiles = configBuilder.getValue(INPUT_SV_PON_FILES).split(";", -1);
-        String[] sglFiles = configBuilder.getValue(INPUT_SGL_PON_FILES).split(";", -1);
+        String[] svFiles = configBuilder.getValue(INPUT_SV_PON_FILES).split(ITEM_DELIM, -1);
+        String[] sglFiles = configBuilder.getValue(INPUT_SGL_PON_FILES).split(ITEM_DELIM, -1);
 
         if(svFiles.length != sglFiles.length)
         {
