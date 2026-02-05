@@ -2,6 +2,7 @@ package com.hartwig.hmftools.qsee.prep;
 
 import static com.hartwig.hmftools.qsee.common.QseeConstants.QC_LOGGER;
 
+import java.io.IOException;
 import java.nio.file.NoSuchFileException;
 import java.util.ArrayList;
 import java.util.List;
@@ -91,7 +92,7 @@ public class CategoryPrepTask implements Runnable
             logProgress();
             mOutput = mCategoryPrep.extractSampleData(mSampleId, mSampleType);
         }
-        catch(NoSuchFileException e)
+        catch(IOException e)
         {
             missingInputFilesError(mAllowMissingInput, mCategoryPrep, mSampleType, mSampleId, e.getMessage());
 
