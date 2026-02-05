@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.esvee.assembly.phase;
 
+import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.Math.round;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
@@ -33,9 +35,11 @@ import static com.hartwig.hmftools.esvee.assembly.types.SupportRead.hasFragmentO
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.DISCORDANT;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.EXTENSION;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.isLineInsertPair;
+import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.hasPairedReads;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.StringJoiner;
@@ -45,6 +49,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.sv.SvUtils;
+import com.hartwig.hmftools.common.utils.Integers;
 import com.hartwig.hmftools.esvee.assembly.AssemblyConfig;
 import com.hartwig.hmftools.esvee.assembly.AssemblyUtils;
 import com.hartwig.hmftools.esvee.assembly.RefBaseExtender;
@@ -83,6 +88,7 @@ public class PhaseSetBuilder
 
     // performance tracking
     private final boolean mHasHighAssemblyCount;
+    private final boolean mHasUltraHighAssemblyCount;
     private long mStartTimeMs;
     private boolean mDetailsLogged;
 
@@ -111,10 +117,22 @@ public class PhaseSetBuilder
         mRemoteReadExtractor = remoteReadExtractor;
         mRemoteReadExtractor.resetCounts();
 
+        int assemblyCount = mPhaseGroup.assemblies().size();
+        mHasHighAssemblyCount = assemblyCount >= HIGH_ASSEMBLY_COUNT;
+        mHasUltraHighAssemblyCount = assemblyCount >= ULTRA_HIGH_ASSEMBLY_COUNT;
+
+        if(mHasUltraHighAssemblyCount)
+        {
+            mAssemblies = filterUltraHighAssemblies(mPhaseGroup);
+        }
+        else
+        {
+            mAssemblies = mPhaseGroup.assemblies();
+        }
+
         mLocalSequenceMatcher = new LocalSequenceMatcher(refGenome, LOCAL_ASSEMBLY_MATCH_DISTANCE);
 
         mPhaseSets = mPhaseGroup.phaseSets();
-        mAssemblies = mPhaseGroup.assemblies();
         mSecondarySplitLinks = mPhaseGroup.secondaryLinks();
 
         mLineRelatedAssemblies = Sets.newHashSet();
@@ -125,8 +143,6 @@ public class PhaseSetBuilder
         mBranchedAssemblies = Lists.newArrayList();
         mLocallyLinkedAssemblies = Sets.newHashSet();
 
-        mHasHighAssemblyCount = mAssemblies.size() >= HIGH_ASSEMBLY_COUNT;
-
         mStartTimeMs = 0;
         mRoutineIteration = 0;
         mCurrentStage = null;
@@ -134,6 +150,7 @@ public class PhaseSetBuilder
     }
 
     private static final int HIGH_ASSEMBLY_COUNT = 100;
+    private static final int ULTRA_HIGH_ASSEMBLY_COUNT = 1000;
     private static final int HIGH_ASSEMBLY_READ_COUNT = 100;
     private static final int MAX_HIGH_ASSEMBLY_MATCHED_READS = 1000;
 
@@ -1387,5 +1404,79 @@ public class PhaseSetBuilder
         }
 
         return format("pgId(%d) assemblies(%d: %s)", mPhaseGroup.id(), mAssemblies.size(), sj);
+    }
+
+    private List<JunctionAssembly> filterUltraHighAssemblies(final PhaseGroup phaseGroup)
+    {
+        // log stats to make further analysis easier
+        int lineCount = 0;
+        int splitCount = 0;
+        int indelCount = 0;
+        int discordantCount = 0;
+
+        List<Integer> extensionLengths = Lists.newArrayList();
+        List<Integer> fragmentCounts = Lists.newArrayList();
+        List<Integer> mismatchReadCounts = Lists.newArrayList();
+
+        for(JunctionAssembly assembly : phaseGroup.assemblies())
+        {
+            if(assembly.junction().DiscordantOnly)
+            {
+                ++discordantCount;
+            }
+            else if(assembly.junction().indelBased())
+            {
+                ++indelCount;
+            }
+            else
+            {
+                ++splitCount;
+
+                if(assembly.hasLineSequence())
+                    ++lineCount;
+            }
+
+            fragmentCounts.add(assembly.supportCount());
+            extensionLengths.add(assembly.extensionLength());
+            mismatchReadCounts.add(assembly.mismatchReadCount());
+        }
+
+        int medianFragCount = (int)round(Integers.median(fragmentCounts));
+        int medianExtensionLength = (int)round(Integers.median(extensionLengths));
+        int medianMismatchReads = (int)round(Integers.median(mismatchReadCounts));
+
+        SV_LOGGER.info("pgId({}) assemblies({}) types(disc={} indel={} split={} line={}) median(frags={} extLength={} mismatchReads={})",
+                mPhaseGroup.id(), mPhaseGroup.assemblies().size(), discordantCount, indelCount, splitCount, lineCount,
+                medianFragCount, medianExtensionLength, medianMismatchReads);
+
+        // take the top X assemblies only, scored by longest extensions, lowest mismatch ratio and highest frag counts
+        List<JunctionAssembly> allAssemblies = Lists.newArrayList(phaseGroup.assemblies());
+
+        Collections.sort(allAssemblies, new JunctionAssemblyScoredSorter());
+
+        return allAssemblies.subList(0, ULTRA_HIGH_ASSEMBLY_COUNT);
+    }
+
+    private static double scoreJunctionAssembly(final JunctionAssembly assembly)
+    {
+        int fragCount = assembly.supportCount();
+        int mismatchReadCount = assembly.mismatchReadCount();
+        int extBaseLength = assembly.extensionLength();
+        int refBaseLength = assembly.refBaseLength();
+
+        double fragScore = fragCount / (double)max(mismatchReadCount, 1);
+        double lengthScore = extBaseLength * refBaseLength / (double)(MIN_VARIANT_LENGTH * MIN_VARIANT_LENGTH);
+        return fragScore * lengthScore;
+    }
+
+    private static class JunctionAssemblyScoredSorter implements Comparator<JunctionAssembly>
+    {
+        public int compare(final JunctionAssembly first, final JunctionAssembly second)
+        {
+            double firstScore = scoreJunctionAssembly(first);
+            double secondScore = scoreJunctionAssembly(second);
+
+            return Double.compare(-firstScore, -secondScore);
+        }
     }
 }
