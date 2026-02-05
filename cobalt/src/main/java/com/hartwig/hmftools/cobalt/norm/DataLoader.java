@@ -149,7 +149,10 @@ public class DataLoader
 
                     double wgsGcRatio = cobaltWgsRatio != null && cobaltWgsRatio.position() == region.Position ?
                             cobaltWgsRatio.tumorGcContent() : defaultWgsGcRatio;
-
+                    if(chromosome == HumanChromosome._Y && amberGender == Gender.FEMALE)
+                    {
+                        wgsGcRatio = -1.0;
+                    }
                     if(cobaltRatio != null && cobaltRatio.position() == region.Position)
                     {
                         SampleRegionData sampleRegionData = new SampleRegionData(
