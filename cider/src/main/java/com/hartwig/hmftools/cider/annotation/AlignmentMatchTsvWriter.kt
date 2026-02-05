@@ -93,7 +93,7 @@ object AlignmentMatchTsvWriter
                     Column.alignScore -> csvPrinter.print(alignment.alignmentScore)
                     Column.strand -> csvPrinter.print(alignment.strand.asChar())
                     Column.refStart -> csvPrinter.print(alignment.refRange.start + 1)
-                    Column.refEnd -> csvPrinter.print(alignment.refRange.endInclusive)
+                    Column.refEnd -> csvPrinter.print(alignment.refRange.endInclusive + 1)
                     Column.refContig -> csvPrinter.print(alignment.refContig)
                     Column.refContigLength -> csvPrinter.print(alignment.refContigLength)
                     Column.cigar -> csvPrinter.print(alignment.cigar.joinToString("") { it.toString() })

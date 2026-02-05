@@ -27,9 +27,9 @@ private val sLogger = LogManager.getLogger("AlignmentUtil")
 
 data class Alignment(
     val querySeq: String,   // Original query sequence input into the aligner.
-    val queryRange: IntRange,  // With respect to querySeq.
+    val queryRange: IntRange,  // 0-based, with respect to querySeq.
     val refContig: String,
-    val refRange: IntRange,
+    val refRange: IntRange, // 0-based.
     val strand: Strand,     // If REVERSE, then the reverse complement of querySeq was matched to the reference.
     val alignmentScore: Int,
     val editDistance: Int,  // With respect to querySeq.
