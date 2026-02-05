@@ -49,7 +49,7 @@ public class QseePlot
                 config.CommonPrep.TumorIds,
                 config.CommonPrep.ReferenceIds,
                 QseePrep.formOutputFilename(config.CommonPrep),
-                CohortPercentilesFile.generateFilename(config.CommonPrep.OutputDir),
+                config.CohortPercentilesFile,
                 config.CommonPrep.OutputDir
         );
     }
