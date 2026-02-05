@@ -163,13 +163,6 @@ public class RegionPonTask
             if(mqf < mConfig.MqfCutoff)
                 continue;
 
-            if(!mConfig.ApplyWgsFilters)
-            {
-                String tier = variantContext.getAttributeAsString(TIER, "");
-                if(tier.equals(HOTSPOT.toString()))
-                    continue;
-            }
-
             int refSampleAd = 0;
 
             if(mConfig.RefSampleGenoptypeIndex >= 0)
