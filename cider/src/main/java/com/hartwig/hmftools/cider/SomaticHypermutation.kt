@@ -8,6 +8,7 @@ import htsjdk.samtools.util.SequenceUtil.reverseComplement
 // Determination of "somatic hypermutation status" from V-region sequence, which is a prognostic indicator for chronic lymphocytic leukemia.
 // https://pmc.ncbi.nlm.nih.gov/articles/PMC7248390/
 
+
 enum class SomaticHypermutationStatus {
     UNMUTATED,
     MUTATED_BORDERLINE,
@@ -34,7 +35,6 @@ data class ShmGeneComparison(
 )
 
 
-// TODO: unit test
 fun compareVJRegionToImgt(
     layoutSeq: String, type: VJ, layoutAnchorBoundary: Int, imgtSequence: ImgtSequenceFile.Sequence, queryRange: IntRange,
     alignment: Alignment
@@ -128,6 +128,6 @@ fun compareVJRegionToImgt(
         // For now, we are excluding indels in the %identity calculation because we're not sure how they should be counted, and
         // there are usually few of them
         // TODO? handle indels better
-        pctIdentity = (100.0 * matches) / comparedBases,
+        pctIdentity = 100.0 * matches / comparedBases,
         indelBases = indelBases)
 }
