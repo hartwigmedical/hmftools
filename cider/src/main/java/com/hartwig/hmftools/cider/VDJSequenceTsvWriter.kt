@@ -137,8 +137,7 @@ object VDJSequenceTsvWriter
                 Column.jMatchMethod -> csvPrinter.print(vdj.jAnchor?.matchMethod)
                 Column.jSimilarityScore -> csvPrinter.print(vdjAnnotation.jSimilarityScore)
                 Column.jNonSplitReads -> csvPrinter.print(vdjAnnotation.jNonSplitReads)
-                // TODO: output allele
-                Column.vGene -> csvPrinter.print(alignmentAnnotation?.vGene?.gene?.geneName)
+                Column.vGene -> csvPrinter.print(alignmentAnnotation?.vGene?.gene?.geneAllele)
                 Column.vGeneSupplementary -> csvPrinter.print(formatGeneSupplementary(
                     alignmentAnnotation?.vGene?.supplementaryGenes, alignmentAnnotation?.vGene?.gene))
                 Column.vPIdent -> csvPrinter.print(alignmentAnnotation?.vGene?.comparison?.pctIdentity)
@@ -147,13 +146,13 @@ object VDJSequenceTsvWriter
                 Column.SHMStatus -> csvPrinter.print(vdjAnnotation.somaticHypermutationStatus)
                 Column.vAlignStart -> csvPrinter.print(alignmentAnnotation?.vGene?.alignment?.queryRange?.start?.plus(alignmentOffset))
                 Column.vAlignEnd -> csvPrinter.print(alignmentAnnotation?.vGene?.alignment?.queryRange?.endInclusive?.plus(alignmentOffset + 1))
-                Column.dGene -> csvPrinter.print(alignmentAnnotation?.dGene?.gene?.geneName)
+                Column.dGene -> csvPrinter.print(alignmentAnnotation?.dGene?.gene?.geneAllele)
                 Column.dGeneSupplementary -> csvPrinter.print(formatGeneSupplementary(
                     alignmentAnnotation?.dGene?.supplementaryGenes, alignmentAnnotation?.dGene?.gene))
                 Column.dPIdent -> csvPrinter.print(alignmentAnnotation?.dGene?.comparison?.pctIdentity)
                 Column.dAlignStart -> csvPrinter.print(alignmentAnnotation?.dGene?.alignment?.queryRange?.start?.plus(alignmentOffset))
                 Column.dAlignEnd -> csvPrinter.print(alignmentAnnotation?.dGene?.alignment?.queryRange?.endInclusive?.plus(alignmentOffset + 1))
-                Column.jGene -> csvPrinter.print(alignmentAnnotation?.jGene?.gene?.geneName)
+                Column.jGene -> csvPrinter.print(alignmentAnnotation?.jGene?.gene?.geneAllele)
                 Column.jGeneSupplementary -> csvPrinter.print(formatGeneSupplementary(
                     alignmentAnnotation?.jGene?.supplementaryGenes, alignmentAnnotation?.jGene?.gene))
                 Column.jPIdent -> csvPrinter.print(alignmentAnnotation?.jGene?.comparison?.pctIdentity)
@@ -174,9 +173,8 @@ object VDJSequenceTsvWriter
     private fun formatGeneSupplementary(geneSupplementary: List<IgTcrGene>?, primaryGene: IgTcrGene?): String?
     {
         return geneSupplementary
-            ?.map { it.geneName }
-            // Since we only output the gene name, don't output duplicate gene names. Can have multiple alleles with the same name.
-            ?.filter { it != primaryGene?.geneName }
+            ?.map { it.geneAllele }
+            ?.filter { it != primaryGene?.geneAllele }
             ?.toSet()
             ?.sorted()
             ?.joinToString(";")
