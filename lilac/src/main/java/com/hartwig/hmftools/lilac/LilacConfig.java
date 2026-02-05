@@ -238,6 +238,8 @@ public class LilacConfig
             LL_LOGGER.error("failed to create output directory: {}", OutputDir);
             System.exit(1);
         }
+
+        LL_LOGGER.info("writing output to {}", OutputDir);
     }
 
     public boolean tumorOnly() { return ReferenceBam.isEmpty() && !TumorBam.isEmpty(); }
