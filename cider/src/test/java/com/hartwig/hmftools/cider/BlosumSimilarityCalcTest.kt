@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.cider
 
+import com.hartwig.hmftools.cider.genes.VJ
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

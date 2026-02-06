@@ -1,10 +1,9 @@
 package com.hartwig.hmftools.cider.primer
 
-import com.hartwig.hmftools.cider.*
+import com.hartwig.hmftools.cider.genes.VJ
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVRecord
-import org.apache.logging.log4j.LogManager
 import java.io.IOException
 
 object PrimerTsvFile
@@ -16,8 +15,6 @@ object PrimerTsvFile
         sequence,
         vj
     }
-
-    private val sLogger = LogManager.getLogger(VDJSequenceTsvWriter::class.java)
 
     @Throws(IOException::class)
     fun load(path: String): List<Primer>

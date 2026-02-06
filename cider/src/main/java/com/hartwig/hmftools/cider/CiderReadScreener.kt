@@ -5,6 +5,10 @@ import com.hartwig.hmftools.cider.CiderUtils.setAdapterDnaTrim
 import com.hartwig.hmftools.cider.VJReadCandidate.MatchMethod
 import com.hartwig.hmftools.cider.genes.GenomicLocation
 import com.hartwig.hmftools.cider.genes.IgTcrConstantDiversityRegion
+import com.hartwig.hmftools.cider.genes.VJ
+import com.hartwig.hmftools.cider.genes.VJAnchorGenomeLocation
+import com.hartwig.hmftools.cider.genes.VJAnchorTemplate
+import com.hartwig.hmftools.cider.genes.VJGeneType
 import com.hartwig.hmftools.common.genome.region.GenomeRegion
 import com.hartwig.hmftools.common.genome.region.GenomeRegions
 import com.hartwig.hmftools.common.genome.region.Strand
@@ -80,7 +84,8 @@ class CiderReadScreener(// collect the reads and sort by types
                 (_, candidates) -> candidates.flatMap {
                     candidate -> candidate.vjAnchorTemplates.mapNotNull {
                         template -> template.anchorLocation?.let {
-                            location -> VJAnchorGenomeLocation(template.type, location) } } } }
+                            location -> VJAnchorGenomeLocation(template.type, location)
+            } } } }
         for (read in mUnmatchedMappedReads)
         {
             // Since we are matching with tolerance up to the fragment length, we need to choose the closest match.
