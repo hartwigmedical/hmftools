@@ -16,7 +16,7 @@ object ImgtGeneCuratorSettings
 
     const val ANCHOR_MISMATCH_MAX = 6
 
-    const val FASTA_REF_CONTEXT = 100
+    const val FASTA_REF_CONTEXT = 0
     const val REF_CONTEXT_CHECK = 5
     const val REF_CONTEXT_CHECK_MISMATCH_MAX = 1
 
