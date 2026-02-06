@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.qsee.cohort;
 
+import static com.hartwig.hmftools.qsee.common.QseeConstants.QC_LOGGER;
+
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,8 +38,7 @@ public class CohortPercentiles
 
         if(percentiles == null)
         {
-            throw new IllegalArgumentException(String.format("No cohort percentiles found for sampleType(%s) feature(%s)",
-                    sampleType, featureKey));
+            QC_LOGGER.error("No cohort percentiles found for sampleType({}) feature({})", sampleType, featureKey);
         }
 
         return mCohortData.get(sampleType).get(featureKey);

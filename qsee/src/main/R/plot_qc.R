@@ -27,11 +27,15 @@ OUTPUT_PATH <- args[5]
 GLOBAL_LOG_LEVEL <- args[6]
 
 if(FALSE){
-    TUMOR_ID <- "H00000098"
-    NORMAL_ID <- "H00000098-ref"
-    SAMPLE_FEATURES_FILE <- "/Users/lnguyen/Hartwig/experiments/wigits_qc/analysis/20250805_oa_run_hmf_samples/qsee_output/H00000098.qsee.vis.features.tsv.gz"
-    COHORT_PERCENTILES_FILE <- "/Users/lnguyen/Hartwig/experiments/wigits_qc/analysis/20250805_oa_run_hmf_samples/qsee_output/COHORT.qsee.percentiles.tsv.gz"
-    OUTPUT_PATH <- sprintf("/Users/lnguyen/Hartwig/experiments/wigits_qc/analysis/20250805_oa_run_hmf_samples/qsee_output/%s.qsee.vis.report.pdf", TUMOR_ID)
+    TUMOR_ID <- "TUMOR"
+    NORMAL_ID <- "TUMOR-ref"
+
+    COHORT_PERCENTILES_FILE <- "COHORT.qsee.percentiles.tsv.gz"
+
+    output_dir <- ""
+    SAMPLE_FEATURES_FILE <- sprintf("%s/%s.qsee.vis.features.tsv.gz", output_dir, TUMOR_ID)
+    OUTPUT_PATH <- sprintf("%s/%s.qsee.vis.report.pdf", output_dir, TUMOR_ID)
+
     GLOBAL_LOG_LEVEL <- "DEBUG"
 }
 
@@ -428,23 +432,20 @@ get_prelim_plot_data <- function(feature_type){
    
    ## Assign groupings
    cohort_data$GroupType <- GROUP_TYPE$COHORT$name
-   sample_data$GroupType <- GROUP_TYPE$SAMPLE$name
-   
    cohort_data$SampleGroup <- paste0(cohort_data$SampleType, "_", cohort_data$GroupType)
-   sample_data$SampleGroup <- paste0(sample_data$SampleType, "_", sample_data$GroupType)
+   
+   if(nrow(sample_data) > 0){
+      sample_data$GroupType <- GROUP_TYPE$SAMPLE$name
+      sample_data$SampleGroup <- paste0(sample_data$SampleType, "_", sample_data$GroupType)
+   } else {
+      sample_data$GroupType <- character()
+      sample_data$SampleGroup <- character()
+   }
    
    ## Merge cohort and sample data into one data frame
    sample_data <- sample_data %>% rename(PctMid = FeatureValue)
-   
-   sample_data <- sapply(colnames(cohort_data), function(column){
-      if(!(column %in% colnames(sample_data))){
-         return(NA)
-      } else {
-         return(sample_data[,column])
-      }
-   }) %>% as.data.frame()
-   
-   plot_data <- rbind(cohort_data, sample_data)
+
+   plot_data <- bind_rows(cohort_data, sample_data)
    plot_data <- plot_data %>% select(SampleGroup, GroupType, SampleType, everything())
    
    ## Split feature names into columns

@@ -79,9 +79,14 @@ public class QseePrep
                          sampleFeatures.sampleId(), sampleFeatures.sampleType(), feature.key(), feature.value());
 
                 FeaturePercentiles featurePercentiles = cohortPercentiles.getFeaturePercentiles(sampleFeatures.sampleType(), feature.key());
-                PercentileTransformer transformer = featurePercentiles.transformer();
-                double featureValue = feature.value();
-                double percentileInCohort = transformer.featureValueToPercentile(featureValue);
+
+                double percentileInCohort = Double.NaN;
+                if(featurePercentiles != null)
+                {
+                    PercentileTransformer transformer = featurePercentiles.transformer();
+                    double featureValue = feature.value();
+                    percentileInCohort = transformer.featureValueToPercentile(featureValue);
+                }
 
                 VisSampleData visData = new VisSampleData(
                         sampleFeatures.sampleId(),

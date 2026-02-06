@@ -49,7 +49,7 @@ public class QseePlot
                 config.CommonPrep.TumorIds,
                 config.CommonPrep.ReferenceIds,
                 QseePrep.formOutputFilename(config.CommonPrep),
-                CohortPercentilesFile.generateFilename(config.CommonPrep.OutputDir),
+                config.CohortPercentilesFile,
                 config.CommonPrep.OutputDir
         );
     }
@@ -72,7 +72,12 @@ public class QseePlot
                     QC_LOGGER.getLevel().toString()
             };
 
-            RExecutor.executeFromClasspath(SCRIPT_PATH, true, scriptArgs);
+            int exitCode = RExecutor.executeFromClasspath(SCRIPT_PATH, true, scriptArgs);
+
+            if(exitCode != 0)
+            {
+                throw new RuntimeException();
+            }
         }
         catch(IOException | InterruptedException e)
         {

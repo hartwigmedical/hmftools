@@ -76,6 +76,11 @@ public final class CssBuilder
         return new CssBuilder(mProperties.plus("writing-mode", value), mBoxShadowValues);
     }
 
+    public CssBuilder transform(final String value)
+    {
+        return new CssBuilder(mProperties.plus("transform", value), mBoxShadowValues);
+    }
+
     public CssBuilder fontFamily(final String value)
     {
         return new CssBuilder(mProperties.plus("font-family", value), mBoxShadowValues);
@@ -242,8 +247,8 @@ public final class CssBuilder
         BOTTOM(0, 1),
         LEFT(-1, 0);
 
-        public int HorizontalScale;
-        public int VerticalScale;
+        public final int HorizontalScale;
+        public final int VerticalScale;
 
         BorderDirections(int horizontalScale, int verticalScale)
         {

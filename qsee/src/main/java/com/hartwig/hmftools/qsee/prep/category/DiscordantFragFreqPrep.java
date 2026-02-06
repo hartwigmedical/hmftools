@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.qsee.prep.category;
 
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.EnumMap;
@@ -36,10 +34,18 @@ public class DiscordantFragFreqPrep implements CategoryPrep
 
     public SourceTool sourceTool() { return SOURCE_TOOL; }
 
-    private EsveeDiscordantStats loadDiscordantStats(String sampleId)
+    private EsveeDiscordantStats loadDiscordantStats(String sampleId) throws IOException
     {
         String baseDir = mConfig.getEsveeDir(sampleId);
         String filePath = EsveeDiscordantStats.generateFilename(baseDir, sampleId);
+
+        EsveeDiscordantStats stats = EsveeDiscordantStats.read(filePath);
+
+        if(stats == null)
+        {
+            throw new IOException(filePath);
+        }
+
         return EsveeDiscordantStats.read(filePath);
     }
 
