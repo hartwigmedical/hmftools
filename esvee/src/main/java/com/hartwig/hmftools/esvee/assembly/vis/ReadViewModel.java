@@ -149,7 +149,8 @@ public final class ReadViewModel
 
     private record CorrectIndelsResult(List<CigarElement> cigarEls, int indexOffset) {}
 
-    private static CorrectIndelsResult correctIndels(final List<SegmentViewModel> refViewModel, final SupportRead read, final List<CigarElement> cigarEls)
+    private static CorrectIndelsResult correctIndels(final List<SegmentViewModel> refViewModel, final SupportRead read,
+            final List<CigarElement> cigarEls)
     {
         Boolean isBuiltForward = null;
         int refViewModelIndex = getRefViewModelIndex(refViewModel, read);
@@ -318,7 +319,8 @@ public final class ReadViewModel
         return new HandleDelResult(shiftedReadViewModel, indelOffset, newCigarEls);
     }
 
-    public static ReadViewModel create(final List<SegmentViewModel> refViewModel, final SupportRead read, final JunctionAssembly junctionAssembly)
+    public static ReadViewModel create(final List<SegmentViewModel> refViewModel, final SupportRead read,
+            final JunctionAssembly junctionAssembly)
     {
         boolean readNegativeStrandFlag = read.orientation() == REVERSE;
         byte[] readBases = read.cachedRead().getBases();

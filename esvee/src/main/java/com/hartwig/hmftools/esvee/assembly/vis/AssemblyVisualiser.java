@@ -245,8 +245,8 @@ public class AssemblyVisualiser
         CssBuilder headerStyle = CssBuilder.EMPTY.fontWeight("bold").textAlign("center").backgroundColor(Color.LIGHT_GRAY);
         CssBuilder cellStyle = CssBuilder.EMPTY.paddingLeft(CssSize.em(0.5)).paddingRight(CssSize.em(0.5)).merge(borderStyle);
         CssBuilder firstRowCellStyle = CssBuilder.EMPTY.paddingLeft(CssSize.em(0.5))
-	        .paddingRight(CssSize.em(0.5))
-	        .merge(firstRowBorderStyle);
+                .paddingRight(CssSize.em(0.5))
+                .merge(firstRowBorderStyle);
         CssBuilder leftHeaderStyle = CssBuilder.EMPTY.backgroundColor(Color.LIGHT_GRAY)
                 .writingMode("vertical-rl")
                 .transform("rotate(180deg)")
@@ -367,8 +367,8 @@ public class AssemblyVisualiser
         CssBuilder headerStyle = CssBuilder.EMPTY.fontWeight("bold").textAlign("center").backgroundColor(Color.LIGHT_GRAY);
         CssBuilder cellStyle = CssBuilder.EMPTY.paddingLeft(CssSize.em(0.5)).paddingRight(CssSize.em(0.5)).merge(borderStyle);
         CssBuilder firstRowCellStyle = CssBuilder.EMPTY.paddingLeft(CssSize.em(0.5))
-	        .paddingRight(CssSize.em(0.5))
-	        .merge(firstRowBorderStyle);
+                .paddingRight(CssSize.em(0.5))
+                .merge(firstRowBorderStyle);
         CssBuilder leftHeaderStyle = CssBuilder.EMPTY.backgroundColor(Color.LIGHT_GRAY)
                 .writingMode("vertical-rl")
                 .transform("rotate(180deg)")
@@ -747,7 +747,8 @@ public class AssemblyVisualiser
                 continue;
             }
 
-            labels.add(new ChrLabel(refEl.chromosome, refEl.position, new BaseRegion(xBoxOffset, xBoxOffset + length - 1), refEl.isRefReversed, alignment));
+            labels.add(new ChrLabel(refEl.chromosome, refEl.position, new BaseRegion(xBoxOffset,
+                    xBoxOffset + length - 1), refEl.isRefReversed, alignment));
             alignment = LEFT;
             xBoxOffset += length;
         }
