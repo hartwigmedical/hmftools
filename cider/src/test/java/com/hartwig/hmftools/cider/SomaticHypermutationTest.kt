@@ -35,9 +35,9 @@ class SomaticHypermutationTest {
         //   alignment:     |------------------|
         val layoutSeq = "GGGTTGGGGGCAAAAACAAACCCCCCCCCCAAAAAAAAAATTTTTTTTTT"
         //   IMGT             |------------------|
-        //   ref:        -----                    -----
+        //   ref:        -----                    -------
         //   alignment:     |------------------|
-        val imgtSeq =   "AAAAAGGGGGAAAAAAAAAACCCCCAAAAA"
+        val imgtSeq =   "AAAAAGGGGGAAAAAAAAAACCCCCAAAAAAA"
         //   compare:         |-------------|
 
         val anchorBoundary = 20
@@ -53,10 +53,10 @@ class SomaticHypermutationTest {
             layoutSeq,
             VJ.V,
             anchorBoundary,
-            ImgtSequenceFile.Sequence("test", "1", imgtSeq, 5, 5),
+            ImgtSequenceFile.Sequence("test", "1", imgtSeq, 5, 7),
             queryRange,
             alignment)
-        val expected = ShmGeneComparison(15, 15, 100.0 * 13 / 15, 0)
+        val expected = ShmGeneComparison(15, 15, 100.0 * 13 / 15, 0, 0)
         assertEquals(expected, actual)
     }
 
@@ -68,9 +68,9 @@ class SomaticHypermutationTest {
         //   alignment:     |------------------|
         val layoutSeq = "GGGTTGGGGGCAAAAACAAACCCCCCCCCCAAAAAAAAAATTTTTTTTTT"
         //   IMGT             |------------------|
-        //   ref:        -----                    -----
+        //   ref:        -----                    -------
         //   alignment:     |------------------|
-        var imgtSeq =   "AAAAAGGGGGAAAAAAAAAACCCCCAAAAA"
+        var imgtSeq =   "AAAAAGGGGGAAAAAAAAAACCCCCAAAAAAA"
         //   compare:         |-------------|
 
         imgtSeq = reverseComplement(imgtSeq)
@@ -88,10 +88,10 @@ class SomaticHypermutationTest {
             layoutSeq,
             VJ.V,
             anchorBoundary,
-            ImgtSequenceFile.Sequence("test", "1", imgtSeq, 5, 5),
+            ImgtSequenceFile.Sequence("test", "1", imgtSeq, 7, 5),
             queryRange,
             alignment)
-        val expected = ShmGeneComparison(15, 15, 100.0 * 13 / 15, 0)
+        val expected = ShmGeneComparison(15, 15, 100.0 * 13 / 15, 0, 0)
         assertEquals(expected, actual)
     }
 
@@ -124,7 +124,7 @@ class SomaticHypermutationTest {
             ImgtSequenceFile.Sequence("test", "1", imgtSeq, 5, 5),
             queryRange,
             alignment)
-        val expected = ShmGeneComparison(15, 15, 100.0 * 13 / 15, 0)
+        val expected = ShmGeneComparison(15, 15, 100.0 * 13 / 15, 0, 0)
         assertEquals(expected, actual)
     }
 
@@ -159,7 +159,75 @@ class SomaticHypermutationTest {
             ImgtSequenceFile.Sequence("test", "1", imgtSeq, 5, 5),
             queryRange,
             alignment)
-        val expected = ShmGeneComparison(15, 15, 100.0 * 13 / 15, 0)
+        val expected = ShmGeneComparison(15, 15, 100.0 * 13 / 15, 0, 0)
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun testCompareVJRegionToImgtClipV()
+    {
+        //   sections:   |---V----||-anchor-||--CDR3--||-anchor-||---J----|
+        //   query:        |-------------------------------------------|
+        //   alignment:         |------------------|
+        val layoutSeq = "GGGGGGGGGGAAAAAAAAAACCCCCCCCCCAAAAAAAAAATTTTTTTTTT"
+        //   IMGT             |------------------|
+        //   ref:        -----                    ------
+        //   alignment:         |------------------|
+        val imgtSeq =   "AAAAAGGGGGAAAAAAAAAACCCCCAAAAA"
+        //   compare:           |-----------|
+        //   clip:            --
+
+        val anchorBoundary = 20
+        val queryRange = 2 until 47
+        val queryAlignRange = 5 until 25
+        val refAlignRange = 7 until 27
+        val alignment = Alignment(
+            layoutSeq.substring(queryRange), queryAlignRange,
+            "test", refAlignRange, Strand.FORWARD,
+            0, 25, cigarElementsFromStr("5S20M20S"),
+            imgtSeq.length)
+        val actual = compareVJRegionToImgt(
+            layoutSeq,
+            VJ.V,
+            anchorBoundary,
+            ImgtSequenceFile.Sequence("test", "1", imgtSeq, 5, 5),
+            queryRange,
+            alignment)
+        val expected = ShmGeneComparison(13, 13, 100.0, 0, 2)
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun testCompareVJRegionToImgtClipJ()
+    {
+        //   sections:   |---V----||-anchor-||--CDR3--||-anchor-||---J----|
+        //   query:        |--------------------------------------------|
+        //   alignment:                             |-------------|
+        val layoutSeq = "GGGGGGGGGGAAAAAAAAAACCCCCCCCCCAAAAAAAAAATTTTTTTTTT"
+        //   IMGT                                 |------------------|
+        //   ref:                            -----                    -----
+        //   alignment:                             |-------------|
+        val imgtSeq =                       "AAAAACCCCCAAAAAAAAAATTTTTAAAAA"
+        //   compare:                                  |----------|
+        //   clip:                                                 ---
+
+        val anchorBoundary = 30
+        val queryRange = 2 until 48
+        val queryAlignRange = 25 until 40
+        val refAlignRange = 7 until 22
+        val alignment = Alignment(
+            layoutSeq.substring(queryRange), queryAlignRange,
+            "test", refAlignRange, Strand.FORWARD,
+            0, 31, cigarElementsFromStr("25S15M6S"),
+            imgtSeq.length)
+        val actual = compareVJRegionToImgt(
+            layoutSeq,
+            VJ.J,
+            anchorBoundary,
+            ImgtSequenceFile.Sequence("test", "1", imgtSeq, 5, 5),
+            queryRange,
+            alignment)
+        val expected = ShmGeneComparison(12, 12, 100.0, 0, 3)
         assertEquals(expected, actual)
     }
 }

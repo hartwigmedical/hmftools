@@ -48,6 +48,7 @@ object VDJSequenceTsvWriter
         vPIdent,
         vPIdentLen,
         vPIdentIndelBases,
+        vPIdentClipBases,
         SHMStatus,
         vAlignStart,
         vAlignEnd,
@@ -61,6 +62,7 @@ object VDJSequenceTsvWriter
         jPIdent,
         jPIdentLen,
         jPIdentIndelBases,
+        jPIdentClipBases,
         jAlignStart,
         jAlignEnd,
         vPrimerMatches,
@@ -143,6 +145,7 @@ object VDJSequenceTsvWriter
                 Column.vPIdent -> csvPrinter.print(alignmentAnnotation?.vGene?.comparison?.pctIdentity)
                 Column.vPIdentLen -> csvPrinter.print(alignmentAnnotation?.vGene?.comparison?.seqLength)
                 Column.vPIdentIndelBases -> csvPrinter.print(alignmentAnnotation?.vGene?.comparison?.indelBases)
+                Column.vPIdentClipBases -> csvPrinter.print(alignmentAnnotation?.vGene?.comparison?.clipBases)
                 Column.SHMStatus -> csvPrinter.print(vdjAnnotation.somaticHypermutationStatus)
                 Column.vAlignStart -> csvPrinter.print(alignmentAnnotation?.vGene?.alignment?.queryRange?.start?.plus(alignmentOffset))
                 Column.vAlignEnd -> csvPrinter.print(alignmentAnnotation?.vGene?.alignment?.queryRange?.endInclusive?.plus(alignmentOffset + 1))
@@ -158,6 +161,7 @@ object VDJSequenceTsvWriter
                 Column.jPIdent -> csvPrinter.print(alignmentAnnotation?.jGene?.comparison?.pctIdentity)
                 Column.jPIdentLen -> csvPrinter.print(alignmentAnnotation?.jGene?.comparison?.seqLength)
                 Column.jPIdentIndelBases -> csvPrinter.print(alignmentAnnotation?.jGene?.comparison?.indelBases)
+                Column.jPIdentClipBases -> csvPrinter.print(alignmentAnnotation?.jGene?.comparison?.clipBases)
                 Column.jAlignStart -> csvPrinter.print(alignmentAnnotation?.jGene?.alignment?.queryRange?.start?.plus(alignmentOffset))
                 Column.jAlignEnd -> csvPrinter.print(alignmentAnnotation?.jGene?.alignment?.queryRange?.endInclusive?.plus(alignmentOffset + 1))
                 Column.vPrimerMatches -> csvPrinter.print(vdjAnnotation.vPrimerMatchCount)
