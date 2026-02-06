@@ -43,7 +43,6 @@ class SomaticHypermutationTest {
         val anchorBoundary = 20
         val queryRange = 2 until 47
         val queryAlignRange = 1 until 21
-        val imgtRange = 5 until 25
         val refAlignRange = 3 until 23
         val alignment = Alignment(
             layoutSeq.substring(queryRange), queryAlignRange,
@@ -54,7 +53,7 @@ class SomaticHypermutationTest {
             layoutSeq,
             VJ.V,
             anchorBoundary,
-            ImgtSequenceFile.Sequence("test", "1", imgtSeq, imgtRange),
+            ImgtSequenceFile.Sequence("test", "1", imgtSeq, 5, 5),
             queryRange,
             alignment)
         val expected = ShmGeneComparison(15, 15, 100.0 * 13 / 15, 0)
@@ -79,7 +78,6 @@ class SomaticHypermutationTest {
         val anchorBoundary = 20
         val queryRange = 2 until 47
         val queryAlignRange = 1 until 21
-        val imgtRange = imgtSeq.length - 25 until imgtSeq.length - 5
         val refAlignRange = imgtSeq.length - 23 until imgtSeq.length - 3
         val alignment = Alignment(
             layoutSeq.substring(queryRange), queryAlignRange,
@@ -90,7 +88,7 @@ class SomaticHypermutationTest {
             layoutSeq,
             VJ.V,
             anchorBoundary,
-            ImgtSequenceFile.Sequence("test", "1", imgtSeq, imgtRange),
+            ImgtSequenceFile.Sequence("test", "1", imgtSeq, 5, 5),
             queryRange,
             alignment)
         val expected = ShmGeneComparison(15, 15, 100.0 * 13 / 15, 0)
@@ -113,7 +111,6 @@ class SomaticHypermutationTest {
         val anchorBoundary = 30
         val queryRange = 2 until 48
         val queryAlignRange = 25 until 45
-        val imgtRange = 5 until 25
         val refAlignRange = 7 until 27
         val alignment = Alignment(
             layoutSeq.substring(queryRange), queryAlignRange,
@@ -124,7 +121,7 @@ class SomaticHypermutationTest {
             layoutSeq,
             VJ.J,
             anchorBoundary,
-            ImgtSequenceFile.Sequence("test", "1", imgtSeq, imgtRange),
+            ImgtSequenceFile.Sequence("test", "1", imgtSeq, 5, 5),
             queryRange,
             alignment)
         val expected = ShmGeneComparison(15, 15, 100.0 * 13 / 15, 0)
@@ -149,7 +146,6 @@ class SomaticHypermutationTest {
         val anchorBoundary = 30
         val queryRange = 2 until 48
         val queryAlignRange = 25 until 45
-        val imgtRange = imgtSeq.length - 25 until imgtSeq.length - 5
         val refAlignRange = imgtSeq.length - 27 until imgtSeq.length - 7
         val alignment = Alignment(
             layoutSeq.substring(queryRange), queryAlignRange,
@@ -160,7 +156,7 @@ class SomaticHypermutationTest {
             layoutSeq,
             VJ.J,
             anchorBoundary,
-            ImgtSequenceFile.Sequence("test", "1", imgtSeq, imgtRange),
+            ImgtSequenceFile.Sequence("test", "1", imgtSeq, 5, 5),
             queryRange,
             alignment)
         val expected = ShmGeneComparison(15, 15, 100.0 * 13 / 15, 0)

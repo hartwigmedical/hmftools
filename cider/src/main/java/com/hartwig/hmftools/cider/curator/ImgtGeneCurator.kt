@@ -7,6 +7,7 @@ import com.beust.jcommander.UnixStyleUsageFormatter
 import com.hartwig.hmftools.cider.*
 import com.hartwig.hmftools.cider.CiderConstants.BLAST_REF_GENOME_VERSION
 import com.hartwig.hmftools.cider.CiderConstants.BLASTN_PRIMARY_ASSEMBLY_NAME
+import com.hartwig.hmftools.cider.annotation.ImgtSequenceFile
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.ANCHOR_MISMATCH_MAX
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.BLASTN_EVALUE_CUTOFF
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.BLASTN_MAX_MISMATCH
@@ -433,55 +434,76 @@ class ImgtGeneCurator
             alleles.forEach { allele ->
                 if (allele.imgt.region?.isVDJ ?: false)
                 {
-                    val (seqWithContext, refBefore, refAfter) = getAlleleSequenceWithContext(allele, isV38)
-                    val label = "${allele.imgt.geneName}|${allele.imgt.allele}|$refBefore|$refAfter"
-                    file.println(">$label\n${seqWithContext}")
+                    val sequence = getAlleleSequenceWithContext(allele, isV38)
+                    file.print(">${sequence.fastaLabel}\n${sequence.sequenceWithRef}\n")
                 }
             }
         }
     }
 
-    private fun getAlleleSequenceWithContext(allele: ProcessedGeneAllele, isV38: Boolean): Triple<String, Int, Int>
+    private fun getAlleleSequenceWithContext(allele: ProcessedGeneAllele, isV38: Boolean): ImgtSequenceFile.Sequence
     {
         val alleleSeq = allele.imgt.sequenceWithoutGaps
         val location = if (isV38) allele.locationV38 else allele.locationV37
+        val isForward = location?.strand == Strand.FORWARD
+
+        val seq: String
+        val refBeforeLength: Int
+        val refAfterLength: Int
+
         // If it's not in the primary assembly then the chromosome from Blastn won't index the ref genome.
         if (location == null || !location.inPrimaryAssembly)
         {
-            return Triple(alleleSeq, 0, 0)
+            seq = alleleSeq
+            refBeforeLength = 0
+            refAfterLength = 0
         }
-
-        val alleleAlignedSeq = if (location.strand == Strand.FORWARD) alleleSeq else reverseComplement(alleleSeq)
-
-        val refGenome = if (isV38) refGenomeSourceV38 else refGenomeSourceV37
-        val chromosome = getChromosomeForRefGenome(location.chromosome, refGenome)
-        // When we get the reference sequence surrounding the allele, check a few bases overlapping the allele to ensure it lines up.
-        val ref1 = refGenome.getBaseString(
-            chromosome,
-            location.posStart - FASTA_REF_CONTEXT,
-            location.posStart - 1 + REF_CONTEXT_CHECK) ?: ""
-        val ref2 = refGenome.getBaseString(
-            chromosome,
-            location.posEnd + 1 - REF_CONTEXT_CHECK,
-            location.posEnd + FASTA_REF_CONTEXT) ?: ""
-        val refStart = ref1.substring(FASTA_REF_CONTEXT)
-        val alleleStart = alleleAlignedSeq.substring(0, REF_CONTEXT_CHECK)
-        val refEnd = ref2.substring(0, REF_CONTEXT_CHECK)
-        val alleleEnd = alleleAlignedSeq.substring(alleleAlignedSeq.length - REF_CONTEXT_CHECK)
-        val startMismatches = countMismatches(alleleStart, refStart)
-        val endMismatches = countMismatches(alleleEnd, refEnd)
-        if (startMismatches > REF_CONTEXT_CHECK_MISMATCH_MAX || endMismatches > REF_CONTEXT_CHECK_MISMATCH_MAX)
+        else
         {
-            sLogger.error("Gene allele ref mismatch: allele={} alleleStart={} refStart={} alleleEnd={} refEnd={}",
-                allele.imgt.geneAllele, alleleStart, refStart, alleleEnd, refEnd
-            )
-            return Triple(alleleSeq, 0, 0)
-        }
-        val refBefore = ref1.substring(0, ref1.length - REF_CONTEXT_CHECK)
-        val refAfter = ref2.substring(REF_CONTEXT_CHECK)
-        val seq = refBefore + alleleAlignedSeq + refAfter
+            val alleleSeqAligned = if (isForward) alleleSeq else reverseComplement(alleleSeq)
 
-        return Triple(seq, refBefore.length, refAfter.length)
+            val refGenome = if (isV38) refGenomeSourceV38 else refGenomeSourceV37
+            val chromosome = getChromosomeForRefGenome(location.chromosome, refGenome)
+            // When we get the reference sequence surrounding the allele, check a few bases overlapping the allele to ensure it lines up.
+            val ref1 = refGenome.getBaseString(
+                chromosome,
+                location.posStart - FASTA_REF_CONTEXT,
+                location.posStart - 1 + REF_CONTEXT_CHECK
+            ) ?: ""
+            val ref2 = refGenome.getBaseString(
+                chromosome,
+                location.posEnd + 1 - REF_CONTEXT_CHECK,
+                location.posEnd + FASTA_REF_CONTEXT
+            ) ?: ""
+            val refStart = ref1.substring(FASTA_REF_CONTEXT)
+            val alleleStart = alleleSeqAligned.substring(0, REF_CONTEXT_CHECK)
+            val refEnd = ref2.substring(0, REF_CONTEXT_CHECK)
+            val alleleEnd = alleleSeqAligned.substring(alleleSeqAligned.length - REF_CONTEXT_CHECK)
+            val startMismatches = countMismatches(alleleStart, refStart)
+            val endMismatches = countMismatches(alleleEnd, refEnd)
+            if (startMismatches > REF_CONTEXT_CHECK_MISMATCH_MAX || endMismatches > REF_CONTEXT_CHECK_MISMATCH_MAX)
+            {
+                sLogger.error(
+                    "Gene allele ref mismatch: allele={} alleleStart={} refStart={} alleleEnd={} refEnd={}",
+                    allele.imgt.geneAllele, alleleStart, refStart, alleleEnd, refEnd
+                )
+                seq = alleleSeq
+                refBeforeLength = 0
+                refAfterLength = 0
+            }
+            else
+            {
+                val refBefore = ref1.substring(0, ref1.length - REF_CONTEXT_CHECK)
+                val refAfter = ref2.substring(REF_CONTEXT_CHECK)
+                val seqAligned = refBefore + alleleSeqAligned + refAfter
+                // Note the final sequence is always on the same strand as the original IMGT resource.
+                seq = if (isForward) seqAligned else reverseComplement(seqAligned)
+                refBeforeLength = if (isForward) refBefore.length else refAfter.length
+                refAfterLength = if (isForward) refAfter.length else refBefore.length
+            }
+        }
+
+        return ImgtSequenceFile.Sequence(allele.imgt.geneName, allele.imgt.allele, seq, refBeforeLength, refAfterLength)
     }
 
     companion object

@@ -38,10 +38,18 @@ class ImgtSequenceFile(genomeVersion: RefGenomeVersion)
         val geneName: String,
         val allele: String,
         val sequenceWithRef: String,
-        val imgtRange: IntRange,
+        val refBefore: Int,
+        val refAfter: Int
     )
     {
+        init
+        {
+            require(refBefore + refAfter < sequenceWithRef.length)
+        }
+
         val geneAllele: String get() = "$geneName*$allele"
+        val imgtRange: IntRange get() = refBefore until (sequenceWithRef.length - refAfter)
+        val fastaLabel: String get() = "$geneName|$allele|$refBefore|$refAfter"
 
         companion object
         {
@@ -52,8 +60,7 @@ class ImgtSequenceFile(genomeVersion: RefGenomeVersion)
                 val allele = parts[1]
                 val refBefore = parts[2].toInt()
                 val refAfter = parts[3].toInt()
-                val imgtRange = refBefore until (sequence.length - refAfter)
-                return Sequence(geneName, allele, sequence, imgtRange)
+                return Sequence(geneName, allele, sequence, refBefore, refAfter)
             }
         }
     }
