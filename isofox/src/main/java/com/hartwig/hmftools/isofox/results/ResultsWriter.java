@@ -4,8 +4,8 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.rna.CanonicalSpliceJunctionFile.CANONICAL_SJ_FILE_ID;
 import static com.hartwig.hmftools.common.rna.GeneExpressionFile.GENE_EXPRESSION_FILE_ID;
-import static com.hartwig.hmftools.common.rna.GeneExpressionFile.TRANSCRIPT_EXPRESSION_FILE_ID;
-import static com.hartwig.hmftools.common.rna.RnaStatistics.SUMMARY_FILE_ID;
+import static com.hartwig.hmftools.common.rna.RnaStatisticFile.SUMMARY_FILE_ID;
+import static com.hartwig.hmftools.common.rna.TranscriptExpressionFile.TRANSCRIPT_EXPRESSION_FILE_ID;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
@@ -42,6 +42,7 @@ import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.rna.CanonicalSpliceJunctionFile;
+import com.hartwig.hmftools.common.rna.RnaStatisticFile;
 import com.hartwig.hmftools.common.rna.RnaStatistics;
 import com.hartwig.hmftools.isofox.FragmentAllocator;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
@@ -65,6 +66,8 @@ public class ResultsWriter
 {
     public static final String SPLICE_SITE_FILE = "splice_site_data.csv";
 
+    public static final String DELIMITER = CSV_DELIM; // for cohort files and non-standard output for now
+
     private final IsofoxConfig mConfig;
 
     private BufferedWriter mGeneDataWriter;
@@ -82,8 +85,6 @@ public class ResultsWriter
     private BufferedWriter mRetainedIntronWriter;
     private BufferedWriter mSpliceSiteWriter;
     private BufferedWriter mUnamppedReadsWriter;
-
-    public static final String DELIMITER = CSV_DELIM;
 
     public ResultsWriter(final IsofoxConfig config)
     {
@@ -183,13 +184,13 @@ public class ResultsWriter
 
         try
         {
-            final String outputFileName = mConfig.formOutputFile(SUMMARY_FILE_ID);
-            final BufferedWriter writer = createBufferedWriter(outputFileName, false);
+            String outputFileName = mConfig.formOutputFile(SUMMARY_FILE_ID);
+            BufferedWriter writer = createBufferedWriter(outputFileName, false);
 
-            writer.write(RnaStatistics.csvHeader());
+            writer.write(RnaStatisticFile.header());
             writer.newLine();
 
-            writer.write(summaryStats.toCsv(mConfig.SampleId));
+            writer.write(RnaStatisticFile.writeLine(mConfig.SampleId, summaryStats));
             writer.newLine();
             closeBufferedWriter(writer);
         }
@@ -208,14 +209,14 @@ public class ResultsWriter
         {
             if(mGeneDataWriter == null)
             {
-                final String outputFileName = mConfig.formOutputFile(GENE_EXPRESSION_FILE_ID);
+                String outputFileName = mConfig.formOutputFile(GENE_EXPRESSION_FILE_ID);
 
                 mGeneDataWriter = createBufferedWriter(outputFileName, false);
-                mGeneDataWriter.write(GeneResult.csvHeader());
+                mGeneDataWriter.write(GeneResult.header());
                 mGeneDataWriter.newLine();
             }
 
-            mGeneDataWriter.write(geneResult.toCsv());
+            mGeneDataWriter.write(geneResult.toLine());
             mGeneDataWriter.newLine();
         }
         catch(IOException e)
@@ -287,11 +288,11 @@ public class ResultsWriter
                 final String outputFileName = mConfig.formOutputFile(TRANSCRIPT_EXPRESSION_FILE_ID);
 
                 mTransDataWriter = createBufferedWriter(outputFileName, false);
-                mTransDataWriter.write(TranscriptResult.csvHeader());
+                mTransDataWriter.write(TranscriptResult.header());
                 mTransDataWriter.newLine();
             }
 
-            mTransDataWriter.write(transResults.toCsv(geneData));
+            mTransDataWriter.write(transResults.toLine(geneData));
             mTransDataWriter.newLine();
 
         }
@@ -375,7 +376,7 @@ public class ResultsWriter
                 final String outputFileName = mConfig.formOutputFile(CANONICAL_SJ_FILE_ID);
 
                 mSpliceJunctionWriter = createBufferedWriter(outputFileName, false);
-                mSpliceJunctionWriter.write(CanonicalSpliceJunctionFile.csvHeader());
+                mSpliceJunctionWriter.write(CanonicalSpliceJunctionFile.header());
                 mSpliceJunctionWriter.newLine();
             }
 

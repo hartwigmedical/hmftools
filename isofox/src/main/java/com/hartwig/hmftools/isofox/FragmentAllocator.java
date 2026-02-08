@@ -71,6 +71,7 @@ import com.hartwig.hmftools.isofox.expression.CategoryCountsData;
 import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
 import com.hartwig.hmftools.isofox.expression.ExpressionReadTracker;
 import com.hartwig.hmftools.isofox.fusion.ChimericReadTracker;
+import com.hartwig.hmftools.isofox.novel.AltSjCohortCache;
 import com.hartwig.hmftools.isofox.novel.AltSpliceJunctionFinder;
 import com.hartwig.hmftools.isofox.novel.RetainedIntronFinder;
 import com.hartwig.hmftools.isofox.novel.SpliceSiteCounter;
@@ -118,7 +119,7 @@ public class FragmentAllocator
     private static final int GENE_LOG_COUNT = 5000000;
     private static final int NON_GENIC_BASE_DEPTH_WIDTH = 250000;
 
-    public FragmentAllocator(final IsofoxConfig config, final ResultsWriter resultsWriter)
+    public FragmentAllocator(final IsofoxConfig config, final AltSjCohortCache altSjCohortCache, final ResultsWriter resultsWriter)
     {
         mConfig = config;
 
@@ -157,7 +158,7 @@ public class FragmentAllocator
         mSpliceSiteCounter = new SpliceSiteCounter(resultsWriter.getSpliceSiteWriter());
 
         mExpressionReadTracker = new ExpressionReadTracker(mConfig);
-        mAltSpliceJunctionFinder = new AltSpliceJunctionFinder(mConfig, resultsWriter.getAltSpliceJunctionWriter());
+        mAltSpliceJunctionFinder = new AltSpliceJunctionFinder(mConfig, resultsWriter.getAltSpliceJunctionWriter(), altSjCohortCache);
         mRetainedIntronFinder = new RetainedIntronFinder(mConfig, resultsWriter.getRetainedIntronWriter());
         mUmrFinder = new UmrFinder(mConfig, resultsWriter.getUnmappedReadsWriter());
     }

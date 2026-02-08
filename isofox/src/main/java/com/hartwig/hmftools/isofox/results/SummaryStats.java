@@ -19,6 +19,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.rna.ImmutableRnaStatistics;
 import com.hartwig.hmftools.common.rna.RnaQcFilter;
+import com.hartwig.hmftools.common.rna.RnaStatisticFile;
 import com.hartwig.hmftools.common.rna.RnaStatistics;
 import com.hartwig.hmftools.isofox.adjusts.FragmentSize;
 import com.hartwig.hmftools.isofox.adjusts.FragmentSizeCalcs;
@@ -44,7 +45,7 @@ public class SummaryStats
 
         final List<Double> fragLengths = FragmentSizeCalcs.calcPercentileData(fragmentLengths, Lists.newArrayList(0.05, 0.5, 0.95));
 
-        List<RnaQcFilter> qcFilters = RnaStatistics.calcQcStatus(
+        List<RnaQcFilter> qcFilters = RnaStatisticFile.calcQcStatus(
                 totalFragments, duplicateFragments, spliceGeneCount, lowCoverageThreshold, splicedGeneThreshold);
 
         return ImmutableRnaStatistics.builder()
@@ -77,7 +78,7 @@ public class SummaryStats
                 return null;
             }
 
-            return RnaStatistics.fromLines(lines);
+            return RnaStatisticFile.fromLines(lines);
         }
         catch(IOException e)
         {

@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.orange.algo.isofox;
 
+import static com.hartwig.hmftools.common.rna.AltSpliceJunctionType.SKIPPED_EXONS;
+import static com.hartwig.hmftools.orange.algo.isofox.FusionNameUtil.geneDown;
+import static com.hartwig.hmftools.orange.algo.isofox.FusionNameUtil.geneUp;
+
 import java.util.List;
 import java.util.Set;
 
@@ -8,7 +12,9 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionType;
+import com.hartwig.hmftools.common.rna.KnownFusionType;
 import com.hartwig.hmftools.common.rna.NovelSpliceJunction;
+import com.hartwig.hmftools.common.rna.RnaFusion;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.orange.algo.linx.DnaFusionEvaluator;
 
@@ -16,23 +22,33 @@ import org.jetbrains.annotations.NotNull;
 
 final class NovelSpliceJunctionSelector
 {
-    @NotNull
-    public static List<NovelSpliceJunction> selectSkippedExons(@NotNull List<NovelSpliceJunction> junctions,
-            @NotNull List<LinxFusion> linxFusions, @NotNull KnownFusionCache knownFusionCache)
+    public static List<NovelSpliceJunction> selectSkippedExons(
+            final List<RnaFusion> rnaFusions, final List<NovelSpliceJunction> junctions, final List<LinxFusion> linxFusions)
     {
         List<NovelSpliceJunction> result = Lists.newArrayList();
 
-        for(NovelSpliceJunction junction : junctions)
+        for(RnaFusion rnaFusion : rnaFusions)
         {
-            if(knownFusionCache.hasExonDelDup(junction.geneName()))
+            String geneUp = geneUp(rnaFusion);
+            String geneDown = geneDown(rnaFusion);
+            if(geneUp != null && geneDown != null && geneUp.equals(geneDown)
+            && rnaFusion.knownType() == KnownFusionType.KNOWN_PAIR)
             {
-                boolean isTypeMatch = junction.type() == AltSpliceJunctionType.SKIPPED_EXONS;
-                boolean hasSufficientFragments = junction.fragmentCount() > 5;
-                boolean hasLimitedCohortFreq = junction.cohortFrequency() < 30;
-                boolean hasReportedLinxFusion = DnaFusionEvaluator.hasFusion(linxFusions, junction.geneName(), junction.geneName());
-                if(isTypeMatch && hasSufficientFragments && hasLimitedCohortFreq && !hasReportedLinxFusion)
+                for(NovelSpliceJunction junction : junctions)
                 {
-                    result.add(junction);
+                    if(!junction.geneName().equals(geneUp))
+                        continue;
+                    if(junction.type() != SKIPPED_EXONS)
+                        continue;
+
+                    boolean isTypeMatch = junction.type() == SKIPPED_EXONS;
+                    boolean hasSufficientFragments = junction.fragmentCount() > 5;
+                    boolean hasLimitedCohortFreq = junction.cohortFrequency() < 30;
+                    boolean hasReportedLinxFusion = DnaFusionEvaluator.hasFusion(linxFusions, junction.geneName(), junction.geneName());
+                    if(isTypeMatch && hasSufficientFragments && hasLimitedCohortFreq && !hasReportedLinxFusion)
+                    {
+                        result.add(junction);
+                    }
                 }
             }
         }
@@ -40,9 +56,8 @@ final class NovelSpliceJunctionSelector
         return result;
     }
 
-    @NotNull
-    public static List<NovelSpliceJunction> selectNovelExonsIntrons(@NotNull List<NovelSpliceJunction> junctions,
-            @NotNull List<DriverGene> driverGenes)
+    public static List<NovelSpliceJunction> selectNovelExonsIntrons(
+            final List<NovelSpliceJunction> junctions, final List<DriverGene> driverGenes)
     {
         List<NovelSpliceJunction> result = Lists.newArrayList();
 

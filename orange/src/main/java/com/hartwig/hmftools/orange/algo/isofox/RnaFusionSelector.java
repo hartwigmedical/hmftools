@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.orange.algo.isofox;
 
+import static com.hartwig.hmftools.common.rna.KnownFusionType.KNOWN_PAIR;
+import static com.hartwig.hmftools.common.rna.KnownFusionType.hasPromiscousGene;
 import static com.hartwig.hmftools.orange.algo.isofox.FusionNameUtil.geneDown;
 import static com.hartwig.hmftools.orange.algo.isofox.FusionNameUtil.geneUp;
 
@@ -8,13 +10,10 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.rna.RnaFusion;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.orange.algo.linx.DnaFusionEvaluator;
-
-import org.jetbrains.annotations.NotNull;
 
 final class RnaFusionSelector
 {
@@ -27,9 +26,7 @@ final class RnaFusionSelector
         ALWAYS_VALID_FOR_PROMISCUOUS.add(StructuralVariantType.INS);
     }
 
-    @NotNull
-    public static List<RnaFusion> selectNovelKnownFusions(@NotNull List<RnaFusion> rnaFusions, @NotNull List<LinxFusion> linxFusions,
-            @NotNull KnownFusionCache knownFusionCache)
+    public static List<RnaFusion> selectNovelKnownFusions(final List<RnaFusion> rnaFusions, final List<LinxFusion> linxFusions)
     {
         List<RnaFusion> result = Lists.newArrayList();
 
@@ -39,7 +36,7 @@ final class RnaFusionSelector
             String geneDown = geneDown(rnaFusion);
             if(geneUp != null && geneDown != null)
             {
-                if(knownFusionCache.hasKnownFusion(geneUp, geneDown) && !DnaFusionEvaluator.hasFusion(linxFusions, geneUp, geneDown))
+                if(rnaFusion.knownType() == KNOWN_PAIR && !DnaFusionEvaluator.hasFusion(linxFusions, geneUp, geneDown))
                 {
                     result.add(rnaFusion);
                 }
@@ -49,9 +46,7 @@ final class RnaFusionSelector
         return result;
     }
 
-    @NotNull
-    public static List<RnaFusion> selectNovelPromiscuousFusions(@NotNull List<RnaFusion> rnaFusions, @NotNull List<LinxFusion> linxFusions,
-            @NotNull KnownFusionCache knownFusionCache)
+    public static List<RnaFusion> selectNovelPromiscuousFusions(final List<RnaFusion> rnaFusions, final List<LinxFusion> linxFusions)
     {
         List<RnaFusion> result = Lists.newArrayList();
 
@@ -64,9 +59,8 @@ final class RnaFusionSelector
             String geneDown = geneDown(rnaFusion);
             if(geneUp != null && geneDown != null && (isTypeMatch || hasSufficientDistance))
             {
-                boolean isPromiscuous =
-                        knownFusionCache.hasPromiscuousFiveGene(geneUp) || knownFusionCache.hasPromiscuousThreeGene(geneDown);
-                boolean isKnown = knownFusionCache.hasKnownFusion(geneUp, geneDown);
+                boolean isPromiscuous = hasPromiscousGene(rnaFusion.knownType());
+                boolean isKnown = rnaFusion.knownType() == KNOWN_PAIR;
                 if(isPromiscuous && !isKnown && !DnaFusionEvaluator.hasFusion(linxFusions, geneUp, geneDown))
                 {
                     result.add(rnaFusion);

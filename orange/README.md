@@ -59,7 +59,6 @@ java -jar orange.jar \
     -cohort_mapping_tsv /path/to/input_cohort_mapping.tsv \
     -cohort_percentiles_tsv /path/to/input_cohort_percentiles.tsv \
     -driver_gene_panel /path/to/driver_gene_panel.tsv \
-    -known_fusion_file /path/to/known_fusion_file.tsv \
     -ensembl_data_dir /path/to/ensembl_data_directory \
     -tumor_sample_wgs_metrics_file /path/to/tumor_sample_wgs_metrics \
     -tumor_sample_flagstat_file /path/to/tumor_sample_flagstats \
@@ -102,8 +101,6 @@ Also, the value of the `-experiment_type` parameter should be set to `WGS` for a
 
 ```
     -rna_sample_id rna_sample \
-    -isofox_gene_distribution /path/to/isofox_gene_distribution.csv \
-    -isofox_alt_sj_cohort /path/to/isofox_alt_sj_cohort.csv \
     -isofox_dir /path/to/isofox_output 
 ```
 

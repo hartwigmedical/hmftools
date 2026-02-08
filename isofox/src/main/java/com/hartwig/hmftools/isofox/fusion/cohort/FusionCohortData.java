@@ -4,16 +4,17 @@ import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
+import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_CHR;
+import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_JUNC_TYPE;
+import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_ORIENT;
+import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_POS;
+import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_SV_TYPE;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_CHR;
 import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_COHORT_COUNT;
-import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_JUNC_TYPE;
-import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_ORIENT;
-import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_POS;
-import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_SV_TYPE;
+import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_TOTAL_FRAGS;
 import static com.hartwig.hmftools.isofox.fusion.FusionData.formStreamField;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
@@ -114,7 +115,7 @@ public class FusionCohortData
 
         header.add(FLD_SV_TYPE);
         header.add(FLD_COHORT_COUNT);
-        header.add("TotalFragments");
+        header.add(FLD_TOTAL_FRAGS);
         header.add("MaxFragments");
         header.add("Samples");
         return header.toString();

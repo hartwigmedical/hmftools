@@ -15,29 +15,17 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.isofox.expression.cohort.CohortGenePercentiles;
-import com.hartwig.hmftools.isofox.novel.cohort.AltSjCohortCache;
+import com.hartwig.hmftools.isofox.novel.AltSjCohortCache;
 
 import org.jetbrains.annotations.NotNull;
 
 public class IsofoxDataLoader
 {
     private final DataLoaderConfig mConfig;
-    private final AltSjCohortCache mAltSjCohortCache;
-    private final CohortGenePercentiles mGeneDistribution;
 
     public IsofoxDataLoader(final ConfigBuilder configBuilder)
     {
         mConfig = new DataLoaderConfig(configBuilder);
-
-        if(mConfig.loadDataType(NOVEL_JUNCTION) && mConfig.AltSjCohortFile != null)
-            mAltSjCohortCache = new AltSjCohortCache(mConfig.AltSjCohortFile);
-        else
-            mAltSjCohortCache = null;
-
-        if(mConfig.loadDataType(GENE_EXPRESSION) && mConfig.GeneDistributionFile != null)
-            mGeneDistribution = new CohortGenePercentiles(mConfig.GeneDistributionFile);
-        else
-            mGeneDistribution = null;
     }
 
     public boolean load()
@@ -54,7 +42,7 @@ public class IsofoxDataLoader
         {
             for(int i = 0; i < min(mConfig.SampleIds.size(), mConfig.Threads); ++i)
             {
-                sampleTasks.add(new SampleLoaderTask(i, mConfig, mAltSjCohortCache, mGeneDistribution));
+                sampleTasks.add(new SampleLoaderTask(i, mConfig));
             }
 
             int taskIndex = 0;
@@ -73,7 +61,7 @@ public class IsofoxDataLoader
         }
         else
         {
-            SampleLoaderTask sampleTask = new SampleLoaderTask(0, mConfig, mAltSjCohortCache, mGeneDistribution);
+            SampleLoaderTask sampleTask = new SampleLoaderTask(0, mConfig);
 
             sampleTask.getSampleIds().addAll(mConfig.SampleIds);
 

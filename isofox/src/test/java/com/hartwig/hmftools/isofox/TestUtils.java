@@ -36,6 +36,7 @@ import com.hartwig.hmftools.isofox.fusion.JunctionRacFragments;
 import com.hartwig.hmftools.isofox.fusion.PassingFusions;
 import com.hartwig.hmftools.isofox.fusion.RacFragmentCache;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
+import com.hartwig.hmftools.isofox.novel.AltSjCohortCache;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
@@ -83,6 +84,8 @@ public class TestUtils
 
     public static final int EXON_LENGTH = 100;
     public static final int INTRON_LENGTH = 200;
+
+    public static final AltSjCohortCache ALT_SJ_COHORT_CACHE = new AltSjCohortCache(null);
 
     public static IsofoxConfig createIsofoxConfig() { return new IsofoxConfig(new MockRefGenome()); }
 

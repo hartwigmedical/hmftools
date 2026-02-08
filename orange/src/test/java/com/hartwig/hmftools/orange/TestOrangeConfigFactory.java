@@ -23,12 +23,7 @@ public final class TestOrangeConfigFactory
     private static final String DRIVER_GENE_PANEL_TSV = Resources.getResource("driver/example.DriverGenePanel.tsv").getPath();
     private static final String SIGNATURES_ETIOLOGY_TSV =
             Resources.getResource("test_run_resources/sigs/signatures_etiology.tsv").getPath();
-    private static final String KNOWN_FUSION_FILE = Resources.getResource("known_fusion_data/known_fusion_file.csv").getPath();
     private static final String ENSEMBL_DATA_DIRECTORY = Resources.getResource("test_run_resources/ensembl").getPath();
-    private static final String ISOFOX_GENE_DISTRIBUTION_CSV =
-            Resources.getResource("test_run_resources/isofox/test.gene_distribution.csv").getPath();
-    private static final String ISOFOX_ALT_SJ_COHORT_CSV =
-            Resources.getResource("test_run_resources/isofox/test.alt_sj.cohort.csv").getPath();
 
     private static final String RUN_DIRECTORY = Resources.getResource("test_run").getPath();
     private static final String PIPELINE_VERSION_FILE = RUN_DIRECTORY + "/pipeline.version";
@@ -73,7 +68,6 @@ public final class TestOrangeConfigFactory
                 .cohortPercentilesTsv(COHORT_PERCENTILES_TSV)
                 .driverGenePanelTsv(DRIVER_GENE_PANEL_TSV)
                 .signaturesEtiologyTsv(SIGNATURES_ETIOLOGY_TSV)
-                .knownFusionFile(KNOWN_FUSION_FILE)
                 .ensemblDataDirectory(ENSEMBL_DATA_DIRECTORY)
                 .tumorSampleWGSMetricsFile(TUMOR_SAMPLE_WGS_METRICS_FILE)
                 .tumorSampleFlagstatFile(TUMOR_SAMPLE_FLAGSTAT_FILE)
@@ -146,8 +140,6 @@ public final class TestOrangeConfigFactory
                 .from(createWGSConfigTumorNormal())
                 .rnaConfig(ImmutableOrangeRnaConfig.builder()
                         .rnaSampleId("tumor_sample")
-                        .isofoxGeneDistributionCsv(ISOFOX_GENE_DISTRIBUTION_CSV)
-                        .isofoxAltSjCohortCsv(ISOFOX_ALT_SJ_COHORT_CSV)
                         .isofoxSummaryCsv(ISOFOX_SUMMARY_CSV)
                         .isofoxGeneDataCsv(ISOFOX_GENE_DATA_CSV)
                         .isofoxFusionCsv(ISOFOX_FUSION_CSV)

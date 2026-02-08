@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.rna.RnaExpressionMatrix.EXPRESSION_SCO
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferFileDelimiter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
@@ -172,7 +173,8 @@ public class UmrCohortAnalyser
         {
             final List<String> lines = Files.readAllLines(filename);
 
-            Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIMITER);
+            String fileDelim = inferFileDelimiter(filename.toString());
+            Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), fileDelim);
 
             lines.remove(0);
 

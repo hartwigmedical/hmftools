@@ -476,7 +476,7 @@ public class FragmentSizeCalcs implements Callable<Void>
     {
         try
         {
-            final String outputFileName = config.formOutputFile("frag_length_by_gene.csv");
+            String outputFileName = config.formOutputFile("frag_length_by_gene.csv");
 
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
 

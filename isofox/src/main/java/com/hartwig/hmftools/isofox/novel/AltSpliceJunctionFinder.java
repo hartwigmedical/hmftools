@@ -3,7 +3,7 @@ package com.hartwig.hmftools.isofox.novel;
 import static java.lang.Math.abs;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.ALT_SJ_FILE_ID;
+import static com.hartwig.hmftools.common.rna.NovelSpliceJunctionFile.ALT_SJ_FILE_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
@@ -38,6 +38,7 @@ import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionContext;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionType;
 import com.hartwig.hmftools.common.bam.ClippedSide;
+import com.hartwig.hmftools.common.rna.NovelSpliceJunction;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.BaseDepth;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
@@ -58,10 +59,12 @@ public class AltSpliceJunctionFinder
     private final BufferedWriter mWriter;
 
     private GeneCollection mGenes;
+    private final AltSjCohortCache mAltSjCohortCache;
 
-    public AltSpliceJunctionFinder(final IsofoxConfig config, final BufferedWriter writer)
+    public AltSpliceJunctionFinder(final IsofoxConfig config, final BufferedWriter writer, final AltSjCohortCache altSjCohortCache)
     {
         mEnabled = config.runFunction(ALT_SPLICE_JUNCTIONS);
+        mAltSjCohortCache = altSjCohortCache;
         mConfig = config;
         mAltSpliceJunctions = Lists.newArrayList();
         mWriter = writer;
@@ -653,10 +656,10 @@ public class AltSpliceJunctionFinder
     {
         try
         {
-            final String outputFileName = config.formOutputFile(ALT_SJ_FILE_ID);
+            String outputFileName = config.formOutputFile(ALT_SJ_FILE_ID);
 
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
-            writer.write(AltSpliceJunction.csvHeader());
+            writer.write(AltSpliceJunction.header());
             writer.newLine();
             return writer;
         }
@@ -671,27 +674,35 @@ public class AltSpliceJunctionFinder
     {
         if(mWriter != null)
         {
-            for(final AltSpliceJunction altSJ : mAltSpliceJunctions)
+            for(AltSpliceJunction altSJ : mAltSpliceJunctions)
             {
                 final GeneReadData gene = mGenes.genes().stream().filter(x -> x.GeneData.GeneId.equals(altSJ.getGeneId())).findFirst().orElse(null);
                 altSJ.calcSummaryData(gene);
             }
 
-            writeAltSpliceJunctions(mWriter, mAltSpliceJunctions, mGenes);
+            writeAltSpliceJunctions(mWriter, mAltSpliceJunctions, mGenes, mAltSjCohortCache);
         }
     }
 
     private synchronized static void writeAltSpliceJunctions(
-            final BufferedWriter writer, final List<AltSpliceJunction> altSpliceJunctions, final GeneCollection geneCollection)
+            final BufferedWriter writer, final List<AltSpliceJunction> altSpliceJunctions, final GeneCollection geneCollection,
+            final AltSjCohortCache altSjCohortCache)
     {
         try
         {
-            for(final AltSpliceJunction altSJ : altSpliceJunctions)
+            for(AltSpliceJunction altSJ : altSpliceJunctions)
             {
-                final GeneReadData gene = geneCollection.genes().stream()
+                GeneReadData gene = geneCollection.genes().stream()
                         .filter(x -> x.GeneData.GeneId.equals(altSJ.getGeneId())).findFirst().orElse(null);
 
-                writer.write(altSJ.toCsv(gene.GeneData));
+                int cohortFrequency = 0;
+                if(altSjCohortCache != null)
+                {
+                    String asjKey = AltSjCohortCache.formKey(altSJ.Chromosome, altSJ.SpliceJunction[SE_START], altSJ.SpliceJunction[SE_END]);
+                    cohortFrequency = altSjCohortCache.getCohortFrequency(asjKey);
+                }
+
+                writer.write(altSJ.toLine(gene.GeneData));
                 writer.newLine();
             }
 

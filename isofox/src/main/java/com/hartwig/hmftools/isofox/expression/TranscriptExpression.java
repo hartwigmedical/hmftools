@@ -26,6 +26,7 @@ import com.hartwig.hmftools.common.sigs.SigResiduals;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.adjusts.FragmentSize;
 import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
+import com.hartwig.hmftools.isofox.expression.cohort.CohortGenePercentiles;
 import com.hartwig.hmftools.isofox.results.GeneResult;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
 import com.hartwig.hmftools.isofox.results.TranscriptResult;
@@ -241,7 +242,7 @@ public class TranscriptExpression
 
     public static void setTranscriptsPerMillion(final List<GeneCollectionSummary> allGeneSummaries, double[] tmpFactors)
     {
-        for(final GeneCollectionSummary geneSummary : allGeneSummaries)
+        for(GeneCollectionSummary geneSummary : allGeneSummaries)
         {
             Map<String,double[]> geneTPMs = Maps.newHashMap();
 
@@ -269,6 +270,29 @@ public class TranscriptExpression
             {
                 final double[] geneTpm = geneTPMs.get(geneResult.Gene.GeneId);
                 geneResult.setTPM(geneTpm[RAW_TPM], geneTpm[ADJUSTED_TPM]);
+            }
+        }
+    }
+
+    public static void setCohortDistributionValues(
+            final List<GeneCollectionSummary> allGeneSummaries, final CohortGenePercentiles cohortGenePercentiles, final String cancerType)
+    {
+        boolean useCancerType = cancerType != null && cohortGenePercentiles.hasCancerType(cancerType);
+
+        for(GeneCollectionSummary geneSummary : allGeneSummaries)
+        {
+            for(GeneResult geneResult : geneSummary.GeneResults)
+            {
+                String geneId = geneResult.Gene.GeneId;
+                double tpm = geneResult.adjustedTpm();
+
+                double medianCohort = cohortGenePercentiles.getTpmMedian(geneId, CohortGenePercentiles.PAN_CANCER);
+                double percentileCohort = cohortGenePercentiles.getTpmPercentile(geneId, CohortGenePercentiles.PAN_CANCER, tpm);
+
+                double medianCancer = useCancerType ? cohortGenePercentiles.getTpmMedian(geneId, cancerType) : medianCohort;
+                double percentileCancer = useCancerType ? cohortGenePercentiles.getTpmPercentile(geneId, cancerType, tpm) : percentileCohort;
+
+                geneResult.setCohortValues(medianCohort, percentileCohort, medianCancer, percentileCancer);
             }
         }
     }

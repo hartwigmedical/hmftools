@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadDelimitedIdFile;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CANCER_TYPE;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
@@ -75,6 +76,12 @@ public class IsofoxConfig
     private static final String EXP_GC_RATIOS_FILE = "exp_gc_ratios_file";
     private static final String PANEL_TPM_NORM_FILE = "panel_tpm_norm_file";
 
+    // cohort files
+    public static final String GENE_DIST_FILE = "gene_distribution_file";
+    public static final String GENE_DIST_DESC = "Gene distribution for medians and percentile data";
+    public static final String ALT_SJ_COHORT_FILE = "alt_sj_cohort_file";
+    public static final String CANCER_TYPE = "cancer_type";
+
     private static final String DROP_DUPLICATES = "drop_dups";
     private static final String SINGLE_MAP_QUAL = "single_map_qual";
 
@@ -96,7 +103,11 @@ public class IsofoxConfig
     public final File RefGenomeFile;
     public final RefGenomeVersion RefGenVersion;
     public final RefGenomeInterface RefGenome;
+    public final String GeneDistributionFile;
+    public final String AltSjCohortFile;
     public final GeneRegionFilters Filters;
+    public final String CancerType;
+
     public int ReadLength;
     public int MaxFragmentLength;
     public final boolean DropDuplicates;
@@ -170,6 +181,10 @@ public class IsofoxConfig
 
         Filters = new GeneRegionFilters(RefGenVersion);
         Filters.loadConfig(configBuilder);
+
+        GeneDistributionFile = configBuilder.getValue(GENE_DIST_FILE);
+        AltSjCohortFile = configBuilder.getValue(ALT_SJ_COHORT_FILE);
+        CancerType = configBuilder.getValue(CANCER_TYPE);
 
         GeneReadLimit = Integer.parseInt(configBuilder.getValue(GENE_READ_LIMIT, "0"));
 
@@ -308,6 +323,10 @@ public class IsofoxConfig
         MaxFragmentLength = DEFAULT_MAX_FRAGMENT_SIZE;
         DropDuplicates = false;
 
+        GeneDistributionFile = "";
+        AltSjCohortFile = "";
+        CancerType = "";
+
         ReadLength = 0;
         FragmentSizeData = Lists.newArrayList();
         ExpCountsFile = null;
@@ -348,6 +367,10 @@ public class IsofoxConfig
         addRefGenomeConfig(configBuilder, true);
         configBuilder.addInteger(LONG_FRAGMENT_LIMIT, "Max RNA fragment size", DEFAULT_MAX_FRAGMENT_SIZE);
         configBuilder.addFlag(DROP_DUPLICATES, "Include duplicate fragments in expression calculations");
+
+        configBuilder.addPath(GENE_DIST_FILE, false, GENE_DIST_DESC);
+        configBuilder.addPath(ALT_SJ_COHORT_FILE, false, "Alternate splice junction cohort file");
+        configBuilder.addConfigItem(CANCER_TYPE, "Cancer type for gene cohort distribution");
 
         configBuilder.addInteger(
                 FRAG_LENGTH_MIN_COUNT, "Fragment length measurement - min read fragments required", DEFAULT_FRAG_LENGTH_MIN_COUNT);

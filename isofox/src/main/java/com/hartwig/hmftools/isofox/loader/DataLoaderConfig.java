@@ -12,12 +12,12 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOpt
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadGeneIdsFile;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CANCER_TYPE;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_SAMPLE_ID;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 
 import java.io.IOException;
@@ -41,9 +41,6 @@ public class DataLoaderConfig
     public static final String STATISTICS_DATA_DIRECTORY = "stats_data_dir";
 
     public static final String CANCER_TYPES_FILE = "cancer_types_file";
-    public static final String GENE_DIST_FILE = "gene_distribution_file";
-    public static final String GENE_DIST_FILE_DESC = "Gene distribution for medians and percentile data";
-    public static final String ALT_SJ_COHORT_FILE = "alt_sj_cohort_file";
 
     public static final String LOAD_TYPES = "load_types";
 
@@ -52,8 +49,6 @@ public class DataLoaderConfig
     public final String AltSjDataDir;
     public final String FusionDataDir;
     public final String StatisticsDataDir;
-    public final String GeneDistributionFile;
-    public final String AltSjCohortFile;
     public final List<String> RestrictedGeneIds;
     public final List<String> SampleIds;
     public final List<String> PrimaryCancerTypes;
@@ -94,7 +89,7 @@ public class DataLoaderConfig
         {
             try
             {
-                final List<String> lines = Files.readAllLines(Paths.get(configBuilder.getValue(CANCER_TYPES_FILE)));
+                List<String> lines = Files.readAllLines(Paths.get(configBuilder.getValue(CANCER_TYPES_FILE)));
                 lines.stream().filter(x -> !x.equals("CancerType")).forEach(x -> PrimaryCancerTypes.add(x));
                 ISF_LOGGER.info("loaded {} known cancer types", PrimaryCancerTypes.size());
             }
@@ -105,8 +100,6 @@ public class DataLoaderConfig
         }
 
         SampleDataDir = checkAddDirSeparator(configBuilder.getValue(SAMPLE_DATA_DIR_CFG));
-        GeneDistributionFile = configBuilder.getValue(GENE_DIST_FILE);
-        AltSjCohortFile = configBuilder.getValue(ALT_SJ_COHORT_FILE);
 
         GeneDataDir = configBuilder.hasValue(GENE_DATA_DIRECTORY) ?
                 checkAddDirSeparator(configBuilder.getValue(GENE_DATA_DIRECTORY)) : SampleDataDir;
@@ -143,7 +136,7 @@ public class DataLoaderConfig
         {
             final List<String> lines = Files.readAllLines(Paths.get(filename));
 
-            Map<String,Integer> fieldsIndexMap = FileReaderUtils.createFieldsIndexMap(lines.get(0), DELIMITER);
+            Map<String,Integer> fieldsIndexMap = FileReaderUtils.createFieldsIndexMap(lines.get(0), CSV_DELIM);
             lines.remove(0);
 
             if(!fieldsIndexMap.containsKey(FLD_SAMPLE_ID))
@@ -160,7 +153,7 @@ public class DataLoaderConfig
                 if(line.isEmpty() || line.startsWith(IGNORE_SAMPLE_ID))
                     continue;
 
-                String[] values = line.split(DELIMITER, -1);
+                String[] values = line.split(CSV_DELIM, -1);
                 String sampleId = values[sampleIdIndex];
                 SampleIds.add(sampleId);
 
@@ -179,13 +172,13 @@ public class DataLoaderConfig
 
     private void addSampleInfo(final String sampleInfo)
     {
-        if(!sampleInfo.contains(DELIMITER))
+        if(!sampleInfo.contains(CSV_DELIM))
         {
             SampleIds.add(sampleInfo);
             return;
         }
 
-        String[] items = sampleInfo.split(DELIMITER, -1);
+        String[] items = sampleInfo.split(CSV_DELIM, -1);
         String sampleId = items[0];
         String cancerType = items[1];
         SampleIds.add(sampleId);
@@ -208,8 +201,6 @@ public class DataLoaderConfig
         configBuilder.addPath(FUSION_DATA_DIRECTORY, false, "Fusion data directory, will use sample data dir if not present");
         configBuilder.addPath(STATISTICS_DATA_DIRECTORY, false, "Summary statistics data directory, will use sample data dir if not present");
         configBuilder.addPath(CANCER_TYPES_FILE, false, "Primary cancer types (otherwise will use 'Other' for sample");
-        configBuilder.addPath(GENE_DIST_FILE, false, GENE_DIST_FILE_DESC);
-        configBuilder.addPath(ALT_SJ_COHORT_FILE, false, "Alternate splice junction cohort file");
         configBuilder.addPath(GENE_ID_FILE, false, GENE_ID_FILE_DESC);
 
         addLoggingOptions(configBuilder);

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.isofox;
+package com.hartwig.hmftools.orange.algo.isofox;
 
 import static com.hartwig.hmftools.common.rna.RnaQcFilter.PASS;
 
@@ -10,6 +10,7 @@ import com.hartwig.hmftools.common.rna.ImmutableGeneExpression;
 import com.hartwig.hmftools.common.rna.ImmutableNovelSpliceJunction;
 import com.hartwig.hmftools.common.rna.ImmutableRnaFusion;
 import com.hartwig.hmftools.common.rna.ImmutableRnaStatistics;
+import com.hartwig.hmftools.common.rna.KnownFusionType;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 
 import org.apache.logging.log4j.util.Strings;
@@ -71,6 +72,7 @@ public final class IsofoxTestFactory
                 .orientationDown((byte) 0)
                 .junctionTypeUp(Strings.EMPTY)
                 .junctionTypeDown(Strings.EMPTY)
+                .knownType(KnownFusionType.KNOWN_PAIR)
                 .svType(StructuralVariantType.BND)
                 .splitFragments(0)
                 .realignedFrags(0)

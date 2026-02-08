@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -30,8 +29,8 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.hla.LilacSummaryData;
-import com.hartwig.hmftools.common.isofox.IsofoxData;
-import com.hartwig.hmftools.common.isofox.IsofoxDataLoader;
+import com.hartwig.hmftools.orange.algo.isofox.IsofoxData;
+import com.hartwig.hmftools.orange.algo.isofox.IsofoxDataLoader;
 import com.hartwig.hmftools.orange.algo.linx.LinxData;
 import com.hartwig.hmftools.orange.algo.linx.LinxDataLoader;
 import com.hartwig.hmftools.common.metrics.BamFlagStats;
@@ -108,7 +107,6 @@ public class OrangeAlgo
     private final CohortPercentilesModel mPercentilesModel;
     private final Map<String,DriverGene> mDriverGenes;
     private final Map<String, String> mEtiologyPerSignature;
-    private final KnownFusionCache mKnownFusionCache;
     private final EnsemblDataCache mEnsemblDataCache;
     private final PlotManager mPlotManager;
 
@@ -138,14 +136,6 @@ public class OrangeAlgo
         Map<String, String> etiologyPerSignature = SigsEtiologiesLoader.read(config.signaturesEtiologyTsv());
         LOGGER.info(" Read {} signatures etiology", etiologyPerSignature.size());
 
-        LOGGER.info("Reading known fusions from {}", config.knownFusionFile());
-        KnownFusionCache knownFusionCache = new KnownFusionCache();
-        if(!knownFusionCache.loadFile(config.knownFusionFile()))
-        {
-            throw new IOException("Could not load known fusions from " + config.knownFusionFile());
-        }
-        LOGGER.info(" Read {} known fusion entries", knownFusionCache.getData().size());
-
         LOGGER.info("Reading ensembl data cache from {}", config.ensemblDataDirectory());
         EnsemblDataCache ensemblDataCache = loadEnsemblDataCache(config);
         LOGGER.info(" Read ensembl data dir");
@@ -154,13 +144,13 @@ public class OrangeAlgo
         PlotManager plotManager = !outputDir.isEmpty() ? new FileBasedPlotManager(outputDir) : new DummyPlotManager();
 
         return new OrangeAlgo(
-                doidEntry, mapper, percentilesModel, driverGenes, etiologyPerSignature, knownFusionCache, ensemblDataCache, plotManager);
+                doidEntry, mapper, percentilesModel, driverGenes, etiologyPerSignature, ensemblDataCache, plotManager);
     }
 
     private OrangeAlgo(
             final DoidEntry doidEntry, final CohortMapper cohortMapper, final CohortPercentilesModel percentilesModel,
-            final List<DriverGene> driverGenes, final Map<String, String> etiologyPerSignature, final KnownFusionCache knownFusionCache,
-            final EnsemblDataCache ensemblDataCache, final PlotManager plotManager)
+            final List<DriverGene> driverGenes, final Map<String, String> etiologyPerSignature, final EnsemblDataCache ensemblDataCache,
+            final PlotManager plotManager)
     {
         mDoidEntry = doidEntry;
         mCohortMapper = cohortMapper;
@@ -170,7 +160,6 @@ public class OrangeAlgo
         driverGenes.forEach(x -> mDriverGenes.put(x.gene(), x));
 
         mEtiologyPerSignature = etiologyPerSignature;
-        mKnownFusionCache = knownFusionCache;
         mEnsemblDataCache = ensemblDataCache;
         mPlotManager = plotManager;
         mSuppressGeneWarnings = false;
@@ -215,7 +204,7 @@ public class OrangeAlgo
         IsofoxRecord isofox = null;
         if(isofoxData != null)
         {
-            IsofoxInterpreter isofoxInterpreter = new IsofoxInterpreter(driverGenes, mKnownFusionCache, linx);
+            IsofoxInterpreter isofoxInterpreter = new IsofoxInterpreter(driverGenes, linx);
             isofox = isofoxInterpreter.interpret(isofoxData);
         }
 
@@ -506,8 +495,6 @@ public class OrangeAlgo
         }
 
         return IsofoxDataLoader.load(isofoxCancerType,
-                rna.isofoxGeneDistributionCsv(),
-                rna.isofoxAltSjCohortCsv(),
                 rna.isofoxSummaryCsv(),
                 rna.isofoxGeneDataCsv(),
                 rna.isofoxFusionCsv(),

@@ -105,7 +105,6 @@ public interface OrangeConfig
         configBuilder.addPath(SIGNATURES_ETIOLOGY_TSV, true, "Path to signatures etiology TSV.");
         configBuilder.addPath(TUMOR_REDUX_DIR_CFG, true, TUMOR_REDUX_DIR_DESC);
         addGenePanelOption(configBuilder, true);
-        addKnownFusionFileOption(configBuilder);
         addEnsemblDir(configBuilder);
 
         configBuilder.addPath(PIPELINE_VERSION_FILE, false, "Path towards the pipeline version file.");
@@ -173,9 +172,6 @@ public interface OrangeConfig
 
     @NotNull
     String driverGenePanelTsv();
-
-    @NotNull
-    String knownFusionFile();
 
     @NotNull
     String ensemblDataDirectory();
@@ -278,7 +274,6 @@ public interface OrangeConfig
                 .cohortPercentilesTsv(configBuilder.getValue(COHORT_PERCENTILES_TSV))
                 .driverGenePanelTsv(configBuilder.getValue(DRIVER_GENE_PANEL))
                 .signaturesEtiologyTsv(configBuilder.getValue(SIGNATURES_ETIOLOGY_TSV))
-                .knownFusionFile(configBuilder.getValue(KNOWN_FUSIONS_FILE))
                 .ensemblDataDirectory(configBuilder.getValue(ENSEMBL_DATA_DIR))
                 .pipelineVersionFile(configBuilder.getValue(PIPELINE_VERSION_FILE))
                 .purpleDataDirectory(pathResolver.resolveMandatoryToolDirectory(PURPLE_DIR_CFG, defaultToolDirectories.purpleDir()))

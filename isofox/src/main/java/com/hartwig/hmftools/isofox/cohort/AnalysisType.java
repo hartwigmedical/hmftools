@@ -1,12 +1,12 @@
 package com.hartwig.hmftools.isofox.cohort;
 
-import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.ALT_SJ_FILE_ID;
 import static com.hartwig.hmftools.common.rna.CanonicalSpliceJunctionFile.CANONICAL_SJ_FILE_ID;
 import static com.hartwig.hmftools.common.rna.GeneExpressionFile.GENE_EXPRESSION_FILE_ID;
-import static com.hartwig.hmftools.common.rna.GeneExpressionFile.TRANSCRIPT_EXPRESSION_FILE_ID;
-import static com.hartwig.hmftools.common.rna.GeneFusionFile.PASS_FUSION_FILE_ID;
-import static com.hartwig.hmftools.common.rna.GeneFusionFile.UNFILTERED_FUSION_FILE_ID;
-import static com.hartwig.hmftools.common.rna.RnaStatistics.SUMMARY_FILE_ID;
+import static com.hartwig.hmftools.common.rna.NovelSpliceJunctionFile.ALT_SJ_FILE_ID;
+import static com.hartwig.hmftools.common.rna.RnaFusionFile.PASS_FUSION_FILE_ID;
+import static com.hartwig.hmftools.common.rna.RnaFusionFile.UNFILTERED_FUSION_FILE_ID;
+import static com.hartwig.hmftools.common.rna.RnaStatisticFile.SUMMARY_FILE_ID;
+import static com.hartwig.hmftools.common.rna.TranscriptExpressionFile.TRANSCRIPT_EXPRESSION_FILE_ID;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.SPLICE_SITE_FILE;
 import static com.hartwig.hmftools.isofox.unmapped.UmrFinder.UNMAPPED_READS_FILE_ID;
 

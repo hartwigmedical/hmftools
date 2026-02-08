@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.isofox;
+package com.hartwig.hmftools.orange.algo.isofox;
 
 import java.util.List;
 

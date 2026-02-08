@@ -5,11 +5,11 @@ import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_TRANS_ID;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_TRANS_NAME;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.isofox.common.GeneCollection.TRANS_COUNT;
 import static com.hartwig.hmftools.isofox.common.GeneCollection.UNIQUE_TRANS_COUNT;
 import static com.hartwig.hmftools.isofox.common.RegionReadData.findExonRegion;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
 import java.util.List;
 import java.util.StringJoiner;
@@ -170,9 +170,9 @@ public class TranscriptResult
     public static final String FLD_RAW_FRAGMENTS = "RawFittedFragments";
     public static final String FLD_EFFECTIVE_LENGTH = "EffectiveLength";
 
-    public static String csvHeader()
+    public static String header()
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add(FLD_GENE_ID)
                 .add(FLD_GENE_NAME)
                 .add(FLD_TRANS_ID)
@@ -194,9 +194,9 @@ public class TranscriptResult
                 .toString();
     }
 
-    public String toCsv(final GeneData geneData)
+    public String toLine(final GeneData geneData)
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add(geneData.GeneId)
                 .add(geneData.GeneName)
                 .add(String.valueOf(Trans.TransId))

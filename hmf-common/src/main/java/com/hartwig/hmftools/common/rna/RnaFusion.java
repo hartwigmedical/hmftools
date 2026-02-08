@@ -16,6 +16,7 @@ public abstract class RnaFusion
     public abstract byte orientationDown();
     public abstract String junctionTypeUp();
     public abstract String junctionTypeDown();
+    public abstract KnownFusionType knownType();
     public abstract StructuralVariantType svType();
     public abstract int splitFragments();
     public abstract int realignedFrags();

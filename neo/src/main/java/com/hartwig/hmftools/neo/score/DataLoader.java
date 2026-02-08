@@ -22,7 +22,10 @@ import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.FLD_NE_VAR_CN;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.FLD_NE_VAR_INFO;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.FLD_NE_VAR_TYPE;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.extractTranscriptNames;
+import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_ADJ_TPM;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_TRANS_NAME;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferFileDelimiter;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.score.AlleleCoverage.EXPECTED_ALLELE_COUNT;
@@ -37,12 +40,14 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.hla.LilacAllele;
 import com.hartwig.hmftools.common.neo.NeoEpitopeFile;
 import com.hartwig.hmftools.common.neo.NeoEpitopeType;
 import com.hartwig.hmftools.common.neo.RnaNeoEpitope;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurityContextFile;
+import com.hartwig.hmftools.common.rna.TranscriptExpressionFile;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 
 import htsjdk.variant.variantcontext.VariantContext;
@@ -228,4 +233,32 @@ public class DataLoader
             return null;
         }
     }
+
+    public static Map<String,Double> loadTranscriptExpression(final String sampleDir, final String sampleId) throws IOException
+    {
+        Map<String,Double> transcriptTpms = Maps.newHashMap();
+
+        String filename = TranscriptExpressionFile.generateFilename(sampleDir, sampleId);
+
+        List<String> lines = Files.readAllLines(Paths.get(filename));
+
+        String fileDelim = inferFileDelimiter(filename);
+        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), fileDelim);
+
+        int transNameIndex = fieldsIndexMap.get(FLD_TRANS_NAME);
+        int tpmIndex = fieldsIndexMap.get(FLD_ADJ_TPM);
+
+        for(String line : lines.subList(1, lines.size()))
+        {
+            final String[] items = line.split(fileDelim, -1);
+
+            final String transName = items[transNameIndex];
+            double tpm = Double.parseDouble(items[tpmIndex]);
+
+            transcriptTpms.put(transName, tpm);
+        }
+
+        return transcriptTpms;
+    }
+
 }

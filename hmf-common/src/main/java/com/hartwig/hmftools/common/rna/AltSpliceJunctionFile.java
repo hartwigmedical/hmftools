@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.common.rna;
 
-import static com.hartwig.hmftools.common.rna.RnaCommon.DELIMITER;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_DEPTH_END;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_DEPTH_START;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_FRAG_COUNT;
@@ -8,6 +7,7 @@ import static com.hartwig.hmftools.common.rna.RnaCommon.ISF_FILE_ID;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
@@ -33,8 +33,6 @@ public class AltSpliceJunctionFile
     public static final String FLD_ALT_SJ_POS_END = "SjEnd";
     public static final String FLD_ALT_SJ_TYPE = "Type";
 
-    public static final String ALT_SJ_FILE_ID = "alt_splice_junc.csv";
-
     public AltSpliceJunctionFile(
             final String geneId, final String geneName, final String chromosome, final int[] spliceJunction,
             final AltSpliceJunctionType type, final int fragmentCount, final int[] depthCounts,
@@ -52,14 +50,10 @@ public class AltSpliceJunctionFile
         BaseContexts = baseContexts;
     }
 
-    public static String generateFilename(final String basePath, final String sample)
-    {
-        return checkAddDirSeparator(basePath) + sample + ISF_FILE_ID + ALT_SJ_FILE_ID;
-    }
 
-    public static String csvHeader()
+    public static String header()
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add(FLD_GENE_ID)
                 .add(FLD_GENE_NAME)
                 .add(FLD_CHROMOSOME)
@@ -94,9 +88,9 @@ public class AltSpliceJunctionFile
 
     public String key() { return formKey(Chromosome, SpliceJunction[SE_START], SpliceJunction[SE_END]); }
 
-    public String toCsv()
+    public String toLine()
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add(GeneId)
                 .add(GeneName)
                 .add(Chromosome)

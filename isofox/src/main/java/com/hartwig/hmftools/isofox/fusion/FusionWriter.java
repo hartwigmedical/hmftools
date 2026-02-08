@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.isofox.fusion;
 
-import static com.hartwig.hmftools.common.rna.GeneFusionFile.PASS_FUSION_FILE_ID;
-import static com.hartwig.hmftools.common.rna.GeneFusionFile.UNFILTERED_FUSION_FILE_ID;
+import static com.hartwig.hmftools.common.rna.RnaFusionFile.PASS_FUSION_FILE_ID;
+import static com.hartwig.hmftools.common.rna.RnaFusionFile.UNFILTERED_FUSION_FILE_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
@@ -61,11 +61,11 @@ public class FusionWriter
         try
         {
             mFusionWriter = createBufferedWriter(mConfig.formOutputFile(UNFILTERED_FUSION_FILE_ID), false);
-            mFusionWriter.write(FusionData.csvHeader(false));
+            mFusionWriter.write(FusionData.header(false));
             mFusionWriter.newLine();
 
             mPassingFusionWriter = createBufferedWriter(mConfig.formOutputFile(PASS_FUSION_FILE_ID), false);
-            mPassingFusionWriter.write(FusionData.csvHeader(true));
+            mPassingFusionWriter.write(FusionData.header(true));
             mPassingFusionWriter.newLine();
         }
         catch(IOException e)
@@ -84,13 +84,13 @@ public class FusionWriter
         {
             for(FusionData fusionData : fusions)
             {
-                mFusionWriter.write(fusionData.toCsv(false));
+                mFusionWriter.write(fusionData.toTsv(false));
                 mFusionWriter.newLine();
             }
 
             for(FusionData fusionData : passingFusions)
             {
-                mPassingFusionWriter.write(fusionData.toCsv(true));
+                mPassingFusionWriter.write(fusionData.toTsv(true));
                 mPassingFusionWriter.newLine();
             }
 
