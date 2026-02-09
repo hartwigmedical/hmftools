@@ -185,11 +185,6 @@ public class DataLoaderConfig
         SampleCancerTypes.put(sampleId, cancerType);
     }
 
-    public boolean processGeneId(final String geneId)
-    {
-        return RestrictedGeneIds.isEmpty() || RestrictedGeneIds.contains(geneId);
-    }
-
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addConfigItem(SAMPLE, SAMPLE_DESC);

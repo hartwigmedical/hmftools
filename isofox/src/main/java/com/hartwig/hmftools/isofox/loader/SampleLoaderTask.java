@@ -217,5 +217,4 @@ public class SampleLoaderTask implements Callable<Void>
         ISF_LOGGER.debug("sample({}) writing {} fusion records to DB", sampleId, fusions.size());
         mRnaDAO.writeRnaFusions(sampleId, fusions);
     }
-
 }
