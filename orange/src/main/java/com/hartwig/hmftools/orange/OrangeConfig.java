@@ -80,7 +80,6 @@ public interface OrangeConfig
     String TUMOR_REDUX_DIR_DESC = "Path to Redux tumor files";
 
     // Some additional optional params and flags
-    String CONVERT_GERMLINE_TO_SOMATIC = "convert_germline_to_somatic";
     String LIMIT_JSON_OUTPUT = "limit_json_output";
     String ADD_DISCLAIMER = "add_disclaimer";
 
@@ -121,7 +120,6 @@ public interface OrangeConfig
         configBuilder.addPath(LILAC_DIR_CFG, false, LILAC_DIR_DESC);
         PipelineToolDirectories.addPipelineFormatOptions(configBuilder);
 
-        configBuilder.addFlag(CONVERT_GERMLINE_TO_SOMATIC, "If set, germline events are converted to somatic events.");
         configBuilder.addFlag(LIMIT_JSON_OUTPUT, "If set, limits every list in the json output to 1 entry.");
         configBuilder.addFlag(ADD_DISCLAIMER, "If set, prints a disclaimer on each page.");
         addLoggingOptions(configBuilder);
@@ -199,8 +197,6 @@ public interface OrangeConfig
     @Nullable
     String lilacQcTsv();
 
-    boolean convertGermlineToSomatic();
-
     boolean limitJsonOutput();
 
     boolean addDisclaimer();
@@ -222,12 +218,6 @@ public interface OrangeConfig
         if(limitJsonOutput)
         {
             LOGGER.info("JSON limitation has been enabled.");
-        }
-
-        boolean convertGermlineToSomatic = configBuilder.hasFlag(CONVERT_GERMLINE_TO_SOMATIC);
-        if(convertGermlineToSomatic)
-        {
-            LOGGER.info("Germline conversion to somatic has been enabled.");
         }
 
         LocalDate samplingDate;
@@ -272,7 +262,6 @@ public interface OrangeConfig
                 .purplePlotDirectory(pathResolver.resolveMandatoryToolPlotsDirectory(PURPLE_PLOT_DIR_CFG, defaultToolDirectories.purpleDir()))
                 .linxSomaticDataDirectory(pathResolver.resolveMandatoryToolDirectory(LINX_DIR_CFG, defaultToolDirectories.linxSomaticDir()))
                 .linxPlotDirectory(optionalPath(pathResolver.resolveOptionalToolPlotsDirectory(LINX_PLOT_DIR_CFG, defaultToolDirectories.linxSomaticDir())))
-                .convertGermlineToSomatic(convertGermlineToSomatic)
                 .limitJsonOutput(limitJsonOutput)
                 .addDisclaimer(addDisclaimer);
 

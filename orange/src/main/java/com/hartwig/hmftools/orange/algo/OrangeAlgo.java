@@ -75,7 +75,6 @@ import com.hartwig.hmftools.orange.algo.purple.PurpleVariantFactory;
 import com.hartwig.hmftools.orange.algo.sage.GermlineMVLHFactory;
 import com.hartwig.hmftools.orange.algo.sigs.SigsEtiologiesLoader;
 import com.hartwig.hmftools.orange.algo.sigs.SigsInterpreter;
-import com.hartwig.hmftools.orange.algo.util.GermlineConversion;
 import com.hartwig.hmftools.orange.algo.util.ReportLimiter;
 import com.hartwig.hmftools.orange.algo.virus.VirusInterpreter;
 import com.hartwig.hmftools.orange.algo.wildtype.WildTypeAlgo;
@@ -237,11 +236,6 @@ public class OrangeAlgo
         if(config.limitJsonOutput())
         {
             report = ReportLimiter.limitAllListsToMaxOne(report);
-        }
-
-        if(config.convertGermlineToSomatic())
-        {
-            report = GermlineConversion.convertGermlineToSomatic(report);
         }
 
         return report;

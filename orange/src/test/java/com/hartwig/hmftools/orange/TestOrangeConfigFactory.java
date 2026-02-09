@@ -74,7 +74,6 @@ public final class TestOrangeConfigFactory
                 .linxSomaticDataDirectory(LINX_SOMATIC_DATA_DIRECTORY)
                 .lilacResultTsv(LILAC_RESULT_TSV)
                 .lilacQcTsv(LILAC_QC_TSV)
-                .convertGermlineToSomatic(false)
                 .limitJsonOutput(false)
                 .addDisclaimer(false)
                 .build();
