@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.purple.ChromosomeArm;
 import com.hartwig.hmftools.common.segmentation.Arm;
 
 import org.junit.Rule;
