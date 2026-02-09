@@ -5,7 +5,6 @@ import com.hartwig.hmftools.cider.genes.VJGeneType
 import com.hartwig.hmftools.common.bam.CigarUtils.cigarElementsFromStr
 import com.hartwig.hmftools.common.genome.region.Strand
 
-// some extra settings to do with the gene curator
 object ImgtGeneCuratorSettings
 {
     const val SPECIES = "Homo sapiens"
@@ -20,9 +19,13 @@ object ImgtGeneCuratorSettings
     const val REF_CONTEXT_CHECK = 5
     const val REF_CONTEXT_CHECK_MISMATCH_MAX = 1
 
-    // shift the V anchor index such that it starts at the first base
-    val IGKINTR_SEQ = ".".repeat(IMGT_V_ANCHOR_INDEX) + "CACCGCGCTCTTGGGGCAGCCGCCTTGCCGCTAGTGGCCGTGGCCACCCTGTGTCTGCCCGATT"
-    val IGKDEL_SEQ = "GGAGCCCTAGTGGCAGCCCAGGGCGACTCCTCATGAGTCTGCAGCTGCATTTTTGCCATATCCACTATTTGGAGTCTGACCTCCCTAGGAAGCCTCCCTGC"
+    // Region which is often included on the V side of a rearrangement and produces a nonfunctional rearrangement.
+    // It's useful to track but is not a real gene. We kind of hack it in to treat it uniformly with the other genes.
+    const val IGKINTR_RAW_SEQ = "TGTAGACAGAGCCGCGGTCTTTCTCGATTGAGTGGCTTTGGTGGCCATGCCACCGCGCTCTTGGGGCAGCCGCCTTGCCGCTAGTGGCCGTGGCCACCCTGTGTCTGCCCGATTGATGCTGCCGTAGCCAGCTTTCCTGATGCACAGTGATACAAATAATGCCA"
+    // Shift the V anchor index such that it's somewhere in the middle. Doesn't really matter where, it's not a real anchor.
+    val IGKINTR_IMGT_SEQ = ".".repeat(IMGT_V_ANCHOR_INDEX - IGKINTR_RAW_SEQ.length / 2) + IGKINTR_RAW_SEQ
+
+    const val IGKDEL_IMGT_SEQ = "GGAGCCCTAGTGGCAGCCCAGGGCGACTCCTCATGAGTCTGCAGCTGCATTTTTGCCATATCCACTATTTGGAGTCTGACCTCCCTAGGAAGCCTCCCTGC"
 
     // extra override for this one gene that does not seem to map nicely
     val genomicLocationOverrides = mapOf(

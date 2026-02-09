@@ -11,8 +11,8 @@ import com.hartwig.hmftools.cider.annotation.ImgtSequenceFile
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.ANCHOR_MISMATCH_MAX
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.BLASTN_EVALUE_CUTOFF
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.BLASTN_MAX_MISMATCH
-import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.IGKDEL_SEQ
-import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.IGKINTR_SEQ
+import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.IGKDEL_IMGT_SEQ
+import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.IGKINTR_IMGT_SEQ
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.IMGT_ANCHOR_LENGTH
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.IMGT_V_ANCHOR_INDEX
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.FASTA_REF_CONTEXT
@@ -543,11 +543,11 @@ class ImgtGeneCurator
             val alleles = imgtAlleles.toMutableList()
             alleles.add(ImgtGeneAllele(
                 geneName = VJGeneType.IGKINTR, allele = "01", species = SPECIES, functionality = IgTcrFunctionality.ORF,
-                region = IgTcrRegion.V_REGION, sequenceWithGaps = IGKINTR_SEQ, partial = false
+                region = IgTcrRegion.V_REGION, sequenceWithGaps = IGKINTR_IMGT_SEQ, partial = false
             ))
             alleles.add(ImgtGeneAllele(
                 geneName = VJGeneType.IGKDEL, allele = "01", species = SPECIES, functionality = IgTcrFunctionality.ORF,
-                region = IgTcrRegion.J_REGION, sequenceWithGaps = IGKDEL_SEQ, partial = false
+                region = IgTcrRegion.J_REGION, sequenceWithGaps = IGKDEL_IMGT_SEQ, partial = false
             ))
 
             val filteredAlleles = alleles.filter {

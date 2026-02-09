@@ -1154,5 +1154,5 @@
 @SQ	SN:TRGV9|01|0|0	LN:306	M5:92a2343d32533f03bca12f1c2709c27f	UR:file:///Users/reecejones/Dev/hmftools/temp/cider-gene-curator/output/igtcr_gene.38.fasta
 @SQ	SN:TRGV9|02|0|0	LN:306	M5:1c239798c4f405a2acee37029ceda987	UR:file:///Users/reecejones/Dev/hmftools/temp/cider-gene-curator/output/igtcr_gene.38.fasta
 @SQ	SN:TRGVA|01|0|0	LN:285	M5:ac0795bd88219e684622f7785fb687af	UR:file:///Users/reecejones/Dev/hmftools/temp/cider-gene-curator/output/igtcr_gene.38.fasta
-@SQ	SN:IGKINTR|01|0|0	LN:64	M5:a79f9b4d53f577b8038521c3a9ad2a5b	UR:file:///Users/reecejones/Dev/hmftools/temp/cider-gene-curator/output/igtcr_gene.38.fasta
+@SQ	SN:IGKINTR|01|0|0	LN:164	M5:ccc61b996aca9dc3f6ac0ee50792029f	UR:file:///Users/reecejones/Dev/hmftools/temp/cider-gene-curator/output/igtcr_gene.38.fasta
 @SQ	SN:IGKDEL|01|0|0	LN:101	M5:3ee1ea49dc144f5a13db11ee7b35adca	UR:file:///Users/reecejones/Dev/hmftools/temp/cider-gene-curator/output/igtcr_gene.38.fasta
