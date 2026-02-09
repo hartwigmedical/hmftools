@@ -73,7 +73,6 @@ public interface OrangeConfig
     // Input files used by the algorithm
     String DOID_JSON = "doid_json";
     String COHORT_MAPPING_TSV = "cohort_mapping_tsv";
-    String COHORT_PERCENTILES_TSV = "cohort_percentiles_tsv";
     String SIGNATURES_ETIOLOGY_TSV = "signatures_etiology_tsv";
 
     // Files containing the actual genomic results for this sample.
@@ -93,16 +92,15 @@ public interface OrangeConfig
         configBuilder.addConfigItem(TUMOR_SAMPLE_ID, true, "The sample ID for which ORANGE will run.");
         configBuilder.addConfigItem(PRIMARY_TUMOR_DOIDS,
                 true,
-                "A semicolon-separated list of DOIDs representing the primary tumor of patient.");
-        configBuilder.addConfigItem(SAMPLING_DATE, false, "Optional, if provided represents the sampling date in YYMMDD format.");
+                "A semicolon-separated list of DOIDs representing the primary tumor of patient");
+        configBuilder.addConfigItem(SAMPLING_DATE, false, "Optional, if provided represents the sampling date in YYMMDD format");
 
         addRefGenomeVersion(configBuilder);
         addOutputDir(configBuilder);
 
-        configBuilder.addPath(DOID_JSON, true, "Path to JSON file containing the full DOID tree.");
-        configBuilder.addPath(COHORT_MAPPING_TSV, true, "Path to cohort mapping TSV.");
-        configBuilder.addPath(COHORT_PERCENTILES_TSV, true, "Path to cohort percentiles TSV.");
-        configBuilder.addPath(SIGNATURES_ETIOLOGY_TSV, true, "Path to signatures etiology TSV.");
+        configBuilder.addPath(DOID_JSON, true, "Path to JSON file containing the full DOID tree");
+        configBuilder.addPath(COHORT_MAPPING_TSV, true, "Path to cohort mapping TSV");
+        configBuilder.addPath(SIGNATURES_ETIOLOGY_TSV, true, "Path to signatures etiology TSV");
         configBuilder.addPath(TUMOR_REDUX_DIR_CFG, true, TUMOR_REDUX_DIR_DESC);
         addGenePanelOption(configBuilder, true);
         addEnsemblDir(configBuilder);
@@ -163,9 +161,6 @@ public interface OrangeConfig
 
     @NotNull
     String cohortMappingTsv();
-
-    @NotNull
-    String cohortPercentilesTsv();
 
     @NotNull
     String signaturesEtiologyTsv();
@@ -271,7 +266,6 @@ public interface OrangeConfig
                 .outputDir(parseMandatoryOutputDir(configBuilder))
                 .doidJsonFile(configBuilder.getValue(DOID_JSON))
                 .cohortMappingTsv(configBuilder.getValue(COHORT_MAPPING_TSV))
-                .cohortPercentilesTsv(configBuilder.getValue(COHORT_PERCENTILES_TSV))
                 .driverGenePanelTsv(configBuilder.getValue(DRIVER_GENE_PANEL))
                 .signaturesEtiologyTsv(configBuilder.getValue(SIGNATURES_ETIOLOGY_TSV))
                 .ensemblDataDirectory(configBuilder.getValue(ENSEMBL_DATA_DIR))

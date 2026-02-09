@@ -14,14 +14,12 @@ import java.util.StringJoiner;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.chord.ChordStatus;
-import com.hartwig.hmftools.datamodel.cohort.Evaluation;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.orange.OrangeDoidNode;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
-import com.hartwig.hmftools.datamodel.orange.PercentileType;
 import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
 import com.hartwig.hmftools.datamodel.purple.PurpleCharacteristics;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
@@ -594,22 +592,7 @@ public class FrontPageChapter implements ReportChapter
 
         String svTmb = String.valueOf(report.purple().characteristics().svTumorMutationalBurden());
 
-        Evaluation evaluation = report.cohortEvaluations().get(PercentileType.SV_TMB);
         String addon = Strings.EMPTY;
-        if(evaluation != null)
-        {
-            String panCancerPercentile = formatTwoDigitDecimal(evaluation.panCancerPercentile());
-            addon = " (Pan " + panCancerPercentile;
-            String cancerType = evaluation.cancerType();
-            if(cancerType != null && !cancerType.equals(CohortConstants.COHORT_OTHER)
-                    && !cancerType.equals(CohortConstants.COHORT_UNKNOWN))
-            {
-                Double percentile = evaluation.cancerTypePercentile();
-                String cancerTypePercentile = percentile != null ? formatTwoDigitDecimal(percentile) : "NA";
-                addon = addon + " | " + evaluation.cancerType() + " " + cancerTypePercentile;
-            }
-            addon = addon + ")";
-        }
 
         return svTmb + addon;
     }

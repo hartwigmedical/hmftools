@@ -89,9 +89,6 @@ public interface OrangeRecord
     List<SignatureAllocation> sigAllocations();
 
     @NotNull
-    Map<PercentileType, Evaluation> cohortEvaluations();
-
-    @NotNull
     OrangePlots plots();
 
     default boolean tumorOnlyMode()

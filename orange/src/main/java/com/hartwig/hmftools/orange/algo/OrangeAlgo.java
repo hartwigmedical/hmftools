@@ -15,7 +15,6 @@ import java.util.Set;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.chord.ChordDataFile;
@@ -26,7 +25,6 @@ import com.hartwig.hmftools.common.doid.DoidParents;
 import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.driver.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.hla.LilacSummaryData;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxData;
@@ -43,7 +41,6 @@ import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 import com.hartwig.hmftools.common.sigs.SignatureAllocationFile;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
 import com.hartwig.hmftools.common.virus.VirusInterpreterDataLoader;
-import com.hartwig.hmftools.datamodel.cohort.Evaluation;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.flagstat.Flagstat;
 import com.hartwig.hmftools.datamodel.immuno.ImmuneEscapeRecord;
@@ -56,7 +53,6 @@ import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeSample;
 import com.hartwig.hmftools.datamodel.orange.OrangePlots;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangeSample;
-import com.hartwig.hmftools.datamodel.orange.PercentileType;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.datamodel.wildtype.WildTypeGene;
 import com.hartwig.hmftools.orange.OrangeConfig;
@@ -83,17 +79,12 @@ import com.hartwig.hmftools.orange.algo.util.GermlineConversion;
 import com.hartwig.hmftools.orange.algo.util.ReportLimiter;
 import com.hartwig.hmftools.orange.algo.virus.VirusInterpreter;
 import com.hartwig.hmftools.orange.algo.wildtype.WildTypeAlgo;
-import com.hartwig.hmftools.orange.cohort.datamodel.ImmutableObservation;
 import com.hartwig.hmftools.orange.cohort.datamodel.ImmutableSample;
-import com.hartwig.hmftools.orange.cohort.datamodel.Observation;
 import com.hartwig.hmftools.orange.cohort.datamodel.Sample;
 import com.hartwig.hmftools.orange.cohort.mapping.CohortMapper;
 import com.hartwig.hmftools.orange.cohort.mapping.CohortMapping;
 import com.hartwig.hmftools.orange.cohort.mapping.CohortMappingFile;
 import com.hartwig.hmftools.orange.cohort.mapping.DoidCohortMapper;
-import com.hartwig.hmftools.orange.cohort.percentile.CohortPercentiles;
-import com.hartwig.hmftools.orange.cohort.percentile.CohortPercentilesFile;
-import com.hartwig.hmftools.orange.cohort.percentile.CohortPercentilesModel;
 import com.hartwig.hmftools.orange.conversion.ConversionUtil;
 import com.hartwig.hmftools.orange.conversion.OrangeConversion;
 
@@ -104,7 +95,6 @@ public class OrangeAlgo
 {
     private final DoidEntry mDoidEntry;
     private final CohortMapper mCohortMapper;
-    private final CohortPercentilesModel mPercentilesModel;
     private final Map<String,DriverGene> mDriverGenes;
     private final Map<String, String> mEtiologyPerSignature;
     private final EnsemblDataCache mEnsemblDataCache;
@@ -123,11 +113,6 @@ public class OrangeAlgo
         LOGGER.info(" Reading {} cohort mappings", mappings.size());
         CohortMapper mapper = new DoidCohortMapper(doidParentModel, mappings);
 
-        LOGGER.info("Reading percentiles from {}", config.cohortPercentilesTsv());
-        Multimap<PercentileType, CohortPercentiles> percentilesMap = CohortPercentilesFile.read(config.cohortPercentilesTsv());
-        LOGGER.info(" Read {} percentiles", percentilesMap.values().size());
-        CohortPercentilesModel percentilesModel = new CohortPercentilesModel(mapper, percentilesMap);
-
         LOGGER.info("Reading driver genes from {}", config.driverGenePanelTsv());
         List<DriverGene> driverGenes = DriverGeneFile.read(config.driverGenePanelTsv());
         LOGGER.info(" Read {} driver genes", driverGenes.size());
@@ -143,18 +128,15 @@ public class OrangeAlgo
         String outputDir = config.outputDir();
         PlotManager plotManager = !outputDir.isEmpty() ? new FileBasedPlotManager(outputDir) : new DummyPlotManager();
 
-        return new OrangeAlgo(
-                doidEntry, mapper, percentilesModel, driverGenes, etiologyPerSignature, ensemblDataCache, plotManager);
+        return new OrangeAlgo(doidEntry, mapper, driverGenes, etiologyPerSignature, ensemblDataCache, plotManager);
     }
 
     private OrangeAlgo(
-            final DoidEntry doidEntry, final CohortMapper cohortMapper, final CohortPercentilesModel percentilesModel,
-            final List<DriverGene> driverGenes, final Map<String, String> etiologyPerSignature, final EnsemblDataCache ensemblDataCache,
-            final PlotManager plotManager)
+            final DoidEntry doidEntry, final CohortMapper cohortMapper, final List<DriverGene> driverGenes,
+            final Map<String, String> etiologyPerSignature, final EnsemblDataCache ensemblDataCache, final PlotManager plotManager)
     {
         mDoidEntry = doidEntry;
         mCohortMapper = cohortMapper;
-        mPercentilesModel = percentilesModel;
 
         mDriverGenes = Maps.newHashMap();
         driverGenes.forEach(x -> mDriverGenes.put(x.gene(), x));
@@ -247,7 +229,6 @@ public class OrangeAlgo
                 .cuppa(cuppa)
                 .peach(ConversionUtil.mapToIterable(peach, OrangeConversion::convert))
                 .sigAllocations(SigsInterpreter.interpret(sigAllocations, mEtiologyPerSignature))
-                .cohortEvaluations(evaluateCohortPercentiles(config, purple))
                 .plots(buildPlots(config))
                 .build();
 
@@ -610,37 +591,6 @@ public class OrangeAlgo
         return sigsAllocations;
     }
 
-    private Map<PercentileType, Evaluation> evaluateCohortPercentiles(final OrangeConfig config, final PurpleRecord purple)
-    {
-        PercentileType type = PercentileType.SV_TMB;
-
-        Observation svTmbObservation = ImmutableObservation.builder()
-                .sample(createSample(config))
-                .type(type)
-                .value(purple.characteristics().svTumorMutationalBurden())
-                .build();
-
-        LOGGER.info("Determining SV TMB percentile for value {}", svTmbObservation.value());
-        Map<PercentileType, Evaluation> evaluations = Maps.newHashMap();
-        Evaluation evaluation = mPercentilesModel.percentile(svTmbObservation);
-        if(evaluation != null)
-        {
-            String cancerType = evaluation.cancerType();
-            Double cancerTypePercentile = evaluation.cancerTypePercentile();
-            LOGGER.info(" Determined percentile '{}' for pan-cancer and '{}' for cancer type '{}'",
-                    evaluation.panCancerPercentile(),
-                    cancerTypePercentile != null ? cancerTypePercentile : "NA",
-                    cancerType != null ? cancerType : "NA");
-            evaluations.put(type, evaluation);
-        }
-        else
-        {
-            LOGGER.warn("Could not evaluate SV TMB percentile for {}!", config.tumorSampleId());
-        }
-
-        return evaluations;
-    }
-
     private OrangePlots buildPlots(final OrangeConfig config) throws IOException
     {
         LOGGER.info("Loading plots");
@@ -714,7 +664,10 @@ public class OrangeAlgo
 
     private static Sample createSample(final OrangeConfig config)
     {
-        return ImmutableSample.builder().sampleId(config.tumorSampleId()).doids(config.primaryTumorDoids()).build();
+        return ImmutableSample.builder()
+                .sampleId(config.tumorSampleId())
+                .doids(config.primaryTumorDoids())
+                .build();
     }
 
     @VisibleForTesting

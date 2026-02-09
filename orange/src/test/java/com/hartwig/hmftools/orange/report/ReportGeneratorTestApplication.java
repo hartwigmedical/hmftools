@@ -3,20 +3,15 @@ package com.hartwig.hmftools.orange.report;
 import java.io.File;
 import java.nio.file.Files;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.hartwig.hmftools.datamodel.cohort.Evaluation;
-import com.hartwig.hmftools.datamodel.cohort.ImmutableEvaluation;
 import com.hartwig.hmftools.datamodel.isofox.ImmutableIsofoxRecord;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
-import com.hartwig.hmftools.datamodel.orange.PercentileType;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleFit;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleQC;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleRecord;
@@ -87,16 +82,14 @@ public class ReportGeneratorTestApplication
             report = overwritePurpleQCStatus(report, OVERRIDE_QC_STATUS);
         }
 
-        OrangeRecord withPercentiles = overwriteCohortPercentiles(report);
-
         OrangeRecord filtered;
         if(REMOVE_UNREPORTED_VARIANTS)
         {
-            filtered = removeUnreported(withPercentiles);
+            filtered = removeUnreported(report);
         }
         else
         {
-            filtered = withPercentiles;
+            filtered = report;
         }
 
         OrangeRecord finalReport = ImmutableOrangeRecord.builder().from(filtered).sampleId("Test").build();
@@ -118,17 +111,6 @@ public class ReportGeneratorTestApplication
                                 .build())
                         .build())
                 .build();
-    }
-
-    @NotNull
-    private static OrangeRecord overwriteCohortPercentiles(@NotNull OrangeRecord report)
-    {
-        // Need to overwrite percentiles since test code doesn't have access to real production cohort percentile files.
-        Map<PercentileType, Evaluation> evaluations = Maps.newHashMap();
-        evaluations.put(PercentileType.SV_TMB,
-                ImmutableEvaluation.builder().cancerType("Skin").panCancerPercentile(0.22).cancerTypePercentile(0.34).build());
-
-        return ImmutableOrangeRecord.builder().from(report).cohortEvaluations(evaluations).build();
     }
 
     @NotNull

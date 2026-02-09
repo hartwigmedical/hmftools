@@ -18,8 +18,6 @@ public final class TestOrangeConfigFactory
 
     private static final String DOID_JSON = Resources.getResource("doid/example_doid.json").getPath();
     private static final String COHORT_MAPPING_TSV = Resources.getResource("cohort/mapping/example_cohort_mapping.tsv").getPath();
-    private static final String COHORT_PERCENTILES_TSV =
-            Resources.getResource("cohort/percentile/example_cohort_percentiles.tsv").getPath();
     private static final String DRIVER_GENE_PANEL_TSV = Resources.getResource("driver/example.DriverGenePanel.tsv").getPath();
     private static final String SIGNATURES_ETIOLOGY_TSV =
             Resources.getResource("test_run_resources/sigs/signatures_etiology.tsv").getPath();
@@ -65,7 +63,6 @@ public final class TestOrangeConfigFactory
                 .outputDir(Strings.EMPTY)
                 .doidJsonFile(DOID_JSON)
                 .cohortMappingTsv(COHORT_MAPPING_TSV)
-                .cohortPercentilesTsv(COHORT_PERCENTILES_TSV)
                 .driverGenePanelTsv(DRIVER_GENE_PANEL_TSV)
                 .signaturesEtiologyTsv(SIGNATURES_ETIOLOGY_TSV)
                 .ensemblDataDirectory(ENSEMBL_DATA_DIRECTORY)
