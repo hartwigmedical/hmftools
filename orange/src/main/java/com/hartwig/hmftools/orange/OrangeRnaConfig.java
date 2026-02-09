@@ -5,12 +5,10 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.ISOFOX_DIR_D
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 
 import com.hartwig.hmftools.common.pipeline.PipelineToolDirectories;
-import com.hartwig.hmftools.common.rna.AltSpliceJunctionFile;
 import com.hartwig.hmftools.common.rna.GeneExpressionFile;
 import com.hartwig.hmftools.common.rna.NovelSpliceJunctionFile;
 import com.hartwig.hmftools.common.rna.RnaFusionFile;
 import com.hartwig.hmftools.common.rna.RnaStatisticFile;
-import com.hartwig.hmftools.common.rna.RnaStatistics;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.orange.util.PathResolver;
 import com.hartwig.hmftools.orange.util.PathUtil;

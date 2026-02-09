@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.isofox.novel.cohort;
 
-import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_POS_END;
-import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_POS_START;
+import static com.hartwig.hmftools.common.rna.NovelSpliceJunctionFile.FLD_ALT_SJ_POS_END;
+import static com.hartwig.hmftools.common.rna.NovelSpliceJunctionFile.FLD_ALT_SJ_POS_START;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
@@ -23,11 +23,9 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.rna.AltSpliceJunctionFile;
+import com.hartwig.hmftools.isofox.novel.AltSpliceJunctionFile;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
-
-import org.apache.commons.cli.CommandLine;
 
 public class SpliceVariantCache
 {
@@ -193,7 +191,7 @@ public class SpliceVariantCache
 
             String line = fileReader.readLine();
 
-            if (line == null)
+            if(line == null)
                 return;
 
             final Map<String,Integer> fieldsMap = createFieldsIndexMap(line, DELIMITER);

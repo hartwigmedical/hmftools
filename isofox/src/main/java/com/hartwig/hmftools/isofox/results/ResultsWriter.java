@@ -2,7 +2,7 @@ package com.hartwig.hmftools.isofox.results;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.rna.CanonicalSpliceJunctionFile.CANONICAL_SJ_FILE_ID;
+import static com.hartwig.hmftools.isofox.novel.CanonicalSpliceJunctionFile.CANONICAL_SJ_FILE_ID;
 import static com.hartwig.hmftools.common.rna.GeneExpressionFile.GENE_EXPRESSION_FILE_ID;
 import static com.hartwig.hmftools.common.rna.RnaStatisticFile.SUMMARY_FILE_ID;
 import static com.hartwig.hmftools.common.rna.TranscriptExpressionFile.TRANSCRIPT_EXPRESSION_FILE_ID;
@@ -41,7 +41,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.common.rna.CanonicalSpliceJunctionFile;
+import com.hartwig.hmftools.isofox.novel.CanonicalSpliceJunctionFile;
 import com.hartwig.hmftools.common.rna.RnaStatisticFile;
 import com.hartwig.hmftools.common.rna.RnaStatistics;
 import com.hartwig.hmftools.isofox.FragmentAllocator;
@@ -77,7 +77,7 @@ public class ResultsWriter
     private BufferedWriter mSpliceJunctionWriter;
     private BufferedWriter mCategoryCountsWriter;
 
-    // controlled by other components but instantiated once for output synchronosation
+    // controlled by other components but instantiated once for output synchronisation
     private BufferedWriter mReadDataWriter;
     private BufferedWriter mAltSpliceJunctionWriter;
     private BufferedWriter mGeneFragLengthWriter;

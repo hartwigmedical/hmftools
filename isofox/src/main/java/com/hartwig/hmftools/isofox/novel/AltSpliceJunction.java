@@ -26,7 +26,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionContext;
-import com.hartwig.hmftools.common.rna.AltSpliceJunctionFile;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionType;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
@@ -335,11 +334,11 @@ public class AltSpliceJunction
         return sj.toString();
     }
 
-    public String toLine(final GeneData geneData)
+    public String toLine(final GeneData geneData, final int cohortFrequency)
     {
         AltSpliceJunctionFile asjFile = new AltSpliceJunctionFile(
                 mGeneId, geneData.GeneName, Chromosome, SpliceJunction, mType,
-                mFragmentCount, mPositionCounts, RegionContexts, mBaseContext, mTranscriptNames);
+                mFragmentCount, mPositionCounts, RegionContexts, mBaseContext, mTranscriptNames, cohortFrequency);
 
         StringJoiner sj = new StringJoiner(TSV_DELIM);
         sj.add(asjFile.toLine());

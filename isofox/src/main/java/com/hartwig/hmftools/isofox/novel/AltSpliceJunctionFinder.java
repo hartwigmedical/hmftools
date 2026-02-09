@@ -702,7 +702,7 @@ public class AltSpliceJunctionFinder
                     cohortFrequency = altSjCohortCache.getCohortFrequency(asjKey);
                 }
 
-                writer.write(altSJ.toLine(gene.GeneData));
+                writer.write(altSJ.toLine(gene.GeneData, cohortFrequency));
                 writer.newLine();
             }
 
@@ -712,5 +712,4 @@ public class AltSpliceJunctionFinder
             ISF_LOGGER.error("failed to write alt splice junction file: {}", e.toString());
         }
     }
-
 }

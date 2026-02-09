@@ -39,9 +39,9 @@ import com.hartwig.hmftools.common.linx.LinxCluster;
 import com.hartwig.hmftools.common.linx.LinxDriver;
 import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
-import com.hartwig.hmftools.common.rna.AltSpliceJunctionFile;
 import com.hartwig.hmftools.common.rna.GeneExpressionFile;
 import com.hartwig.hmftools.common.perf.TaskExecutor;
+import com.hartwig.hmftools.common.rna.NovelSpliceJunctionFile;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.common.virus.AnnotatedVirusFile;
@@ -163,7 +163,7 @@ public class PrepConfig
     public String linxFusionFile(final String sampleId) { return LinxFusion.generateFilename(getLinxDataDir(sampleId), sampleId); }
     public String viralAnnotationFile(final String sampleId) { return AnnotatedVirusFile.generateFileName(getVirusDataDir(sampleId), sampleId); }
     public String geneExpressionFile(final String sampleId) { return GeneExpressionFile.generateFilename(getIsofoxDataDir(sampleId), sampleId); }
-    public String altSpliceJunctionFile(final String sampleId) { return AltSpliceJunctionFile.generateFilename(getIsofoxDataDir(sampleId), sampleId); }
+    public String altSpliceJunctionFile(final String sampleId) { return NovelSpliceJunctionFile.generateFilename(getIsofoxDataDir(sampleId), sampleId); }
 
     private static List<CategoryType> parseCategories(final ConfigBuilder configBuilder)
     {

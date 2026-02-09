@@ -24,6 +24,7 @@ import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_EXPECTED_RATE_
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_FRAG_LENGTH_MIN_COUNT;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_MAX_FRAGMENT_SIZE;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_SINGLE_MAP_QUALITY;
+import static com.hartwig.hmftools.isofox.IsofoxFunction.DEFAULT_FUNCTIONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.FUSIONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.ALT_SPLICE_JUNCTIONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.RETAINED_INTRONS;
@@ -158,9 +159,7 @@ public class IsofoxConfig
         }
         else
         {
-            Functions.add(TRANSCRIPT_COUNTS);
-            Functions.add(ALT_SPLICE_JUNCTIONS);
-            Functions.add(FUSIONS);
+            Functions.addAll(DEFAULT_FUNCTIONS);
         }
 
         ISF_LOGGER.info("running function(s): {}",

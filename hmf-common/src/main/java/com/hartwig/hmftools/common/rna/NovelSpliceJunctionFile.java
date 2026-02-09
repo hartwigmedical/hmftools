@@ -6,9 +6,11 @@ import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_FRAG_COUNT;
 import static com.hartwig.hmftools.common.rna.RnaCommon.ISF_FILE_ID;
 import static com.hartwig.hmftools.common.rna.RnaCommon.RNA_LOGGER;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_REGION_END;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_REGION_START;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferFileDelimiter;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
@@ -18,6 +20,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 
@@ -38,6 +41,30 @@ public final class NovelSpliceJunctionFile
     public static final String FLD_BASES_START = "BaseStart";
     public static final String FLD_BASES_END = "BaseEnd";
     public static final String FLD_COHORT_FREQUENCY = "CohortFrequency";
+
+    public static String formKey(final String chromosome, int posStart, int posEnd)
+    {
+        return String.format("%s;%s;%s", chromosome, posStart, posEnd);
+    }
+
+    public static String header()
+    {
+        return new StringJoiner(TSV_DELIM)
+                .add(FLD_GENE_NAME)
+                .add(FLD_CHROMOSOME)
+                .add(FLD_ALT_SJ_POS_START)
+                .add(FLD_ALT_SJ_POS_END)
+                .add(FLD_ALT_SJ_TYPE)
+                .add(FLD_FRAG_COUNT)
+                .add(FLD_DEPTH_START)
+                .add(FLD_DEPTH_END)
+                .add(FLD_REGION_START)
+                .add(FLD_REGION_END)
+                .add(FLD_BASES_START)
+                .add(FLD_BASES_END)
+                .add(FLD_COHORT_FREQUENCY)
+                .toString();
+    }
 
     public static List<NovelSpliceJunction> read(final String filename)
     {
@@ -69,13 +96,9 @@ public final class NovelSpliceJunctionFile
                 Integer basesEndIndex = fieldsIndexMap.get(FLD_BASES_END);
                 Integer cohortFreqIndex = fieldsIndexMap.get(FLD_COHORT_FREQUENCY);
 
-                // int transStart = fieldsIndexMap.get("TransStart");
-                // int transEnd = fieldsIndexMap.get("TransEnd");
-
                 String chromosome = values[chrIndex];
                 int sjStart = Integer.parseInt(values[sjStartIndex]);
                 int sjEnd = Integer.parseInt(values[sjEndIndex]);
-
 
                 novelJunctions.add(ImmutableNovelSpliceJunction.builder()
                         .geneName(values[geneIndex])

@@ -2,7 +2,7 @@ package com.hartwig.hmftools.isofox.novel.cohort;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.rna.AltSpliceJunctionFile;
+import com.hartwig.hmftools.isofox.novel.AltSpliceJunctionFile;
 
 public class AltSjFilter
 {

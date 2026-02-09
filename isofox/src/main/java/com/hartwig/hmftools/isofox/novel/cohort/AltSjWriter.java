@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 
-import com.hartwig.hmftools.common.rna.AltSpliceJunctionFile;
+import com.hartwig.hmftools.isofox.novel.AltSpliceJunctionFile;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
 

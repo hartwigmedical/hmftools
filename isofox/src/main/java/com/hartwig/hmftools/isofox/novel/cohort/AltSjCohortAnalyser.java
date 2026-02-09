@@ -1,15 +1,22 @@
 package com.hartwig.hmftools.isofox.novel.cohort;
 
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionContext.SPLICE_JUNC;
-import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_POS_END;
-import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_POS_START;
-import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_TYPE;
+import static com.hartwig.hmftools.common.rna.NovelSpliceJunctionFile.FLD_ALT_SJ_POS_END;
+import static com.hartwig.hmftools.common.rna.NovelSpliceJunctionFile.FLD_ALT_SJ_POS_START;
+import static com.hartwig.hmftools.common.rna.NovelSpliceJunctionFile.FLD_ALT_SJ_TYPE;
+import static com.hartwig.hmftools.common.rna.NovelSpliceJunctionFile.FLD_BASES_END;
+import static com.hartwig.hmftools.common.rna.NovelSpliceJunctionFile.FLD_BASES_START;
+import static com.hartwig.hmftools.common.rna.NovelSpliceJunctionFile.FLD_COHORT_FREQUENCY;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_REGION_END;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_REGION_START;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_DEPTH_END;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_DEPTH_START;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_FRAG_COUNT;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferFileDelimiter;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
@@ -17,6 +24,8 @@ import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.ALT_SPLICE_JUNCTION;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.CANONICAL_SPLICE_JUNCTION;
 import static com.hartwig.hmftools.isofox.cohort.CohortConfig.formSampleFilenames;
+import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionFile.FLD_TRANS_END;
+import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionFile.FLD_TRANS_START;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
 import java.io.IOException;
@@ -28,7 +37,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionContext;
-import com.hartwig.hmftools.common.rna.AltSpliceJunctionFile;
+import com.hartwig.hmftools.isofox.novel.AltSpliceJunctionFile;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionType;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.isofox.cohort.AnalysisType;
@@ -174,41 +183,44 @@ public class AltSjCohortAnalyser
     {
         try
         {
-            final List<String> lines = Files.readAllLines(filename);
+            List<String> lines = Files.readAllLines(filename);
+            String fileDelim = inferFileDelimiter(filename.toString());
 
-            Map<String,Integer> fieldsIndexMap = refFieldsIndexMap != null ? refFieldsIndexMap : createFieldsIndexMap(lines.get(0), DELIMITER);
+            Map<String,Integer> fieldsIndexMap = refFieldsIndexMap != null ? refFieldsIndexMap : createFieldsIndexMap(lines.get(0), fileDelim);
 
             lines.remove(0);
 
-            int geneId = fieldsIndexMap.get(FLD_GENE_ID);
-            int geneName = fieldsIndexMap.get(FLD_GENE_NAME);
-            int chr = fieldsIndexMap.get(FLD_CHROMOSOME);
-            int posStart = fieldsIndexMap.get(FLD_ALT_SJ_POS_START);
-            int posEnd = fieldsIndexMap.get(FLD_ALT_SJ_POS_END);
-            int type = fieldsIndexMap.get(FLD_ALT_SJ_TYPE);
-            int fragCount = fieldsIndexMap.get(FLD_FRAG_COUNT);
-            int depthStart = fieldsIndexMap.get(FLD_DEPTH_START);
-            int depthEnd = fieldsIndexMap.get(FLD_DEPTH_END);
-            int regionStart = fieldsIndexMap.containsKey("RegionStart") ? fieldsIndexMap.get("RegionStart") : fieldsIndexMap.get("ContextStart");
-            int regionEnd = fieldsIndexMap.containsKey("RegionEnd") ? fieldsIndexMap.get("RegionEnd") : fieldsIndexMap.get("ContextEnd");
-            int basesStart = fieldsIndexMap.get("BasesStart");
-            int basesEnd = fieldsIndexMap.get("BasesEnd");
-            int transStart = fieldsIndexMap.get("TransStart");
-            int transEnd = fieldsIndexMap.get("TransEnd");
+            int geneIdIndex = fieldsIndexMap.get(FLD_GENE_ID);
+            int geneNameIndex = fieldsIndexMap.get(FLD_GENE_NAME);
+            int chrIndex = fieldsIndexMap.get(FLD_CHROMOSOME);
+            int posStartIndex = fieldsIndexMap.get(FLD_ALT_SJ_POS_START);
+            int posEndIndex = fieldsIndexMap.get(FLD_ALT_SJ_POS_END);
+            int typeIndex = fieldsIndexMap.get(FLD_ALT_SJ_TYPE);
+            int fragCountIndex = fieldsIndexMap.get(FLD_FRAG_COUNT);
+            int depthStartIndex = fieldsIndexMap.get(FLD_DEPTH_START);
+            int depthEndIndex = fieldsIndexMap.get(FLD_DEPTH_END);
+            int regionStartIndex = fieldsIndexMap.get(FLD_REGION_START);
+            int regionEndIndex = fieldsIndexMap.get(FLD_REGION_END);
+            int basesStartIndex = fieldsIndexMap.get(FLD_BASES_START);
+            int basesEndIndex = fieldsIndexMap.get(FLD_BASES_END);
+            int transStartIndex = fieldsIndexMap.get(FLD_TRANS_START);
+            int transEndIndex = fieldsIndexMap.get(FLD_TRANS_END);
+            int cohortFreqIndex = fieldsIndexMap.get(FLD_COHORT_FREQUENCY);
 
             final List<AltSpliceJunctionFile> altSJs = Lists.newArrayList();
 
             for(String data : lines)
             {
-                final String[] values = data.split(DELIMITER);
+                String[] values = data.split(fileDelim);
 
-                if(!filter.passesFilter(values[geneId], Integer.parseInt(values[fragCount])))
+                if(!filter.passesFilter(values[geneIdIndex], Integer.parseInt(values[fragCountIndex])))
                     continue;
 
                 try
                 {
-                    altSJs.add(AltSpliceJunctionFile.parseLine(values, geneId, geneName, chr, posStart, posEnd, type,
-                            fragCount, depthStart, depthEnd, regionStart, regionEnd, basesStart, basesEnd, transStart, transEnd));
+                    altSJs.add(parseLine(values, geneIdIndex, geneNameIndex, chrIndex, posStartIndex, posEndIndex, typeIndex,
+                            fragCountIndex, depthStartIndex, depthEndIndex, regionStartIndex, regionEndIndex, basesStartIndex, basesEndIndex,
+                            transStartIndex, transEndIndex, cohortFreqIndex));
                 }
                 catch(Exception e)
                 {
@@ -225,14 +237,29 @@ public class AltSjCohortAnalyser
         }
     }
 
+    private static AltSpliceJunctionFile parseLine(
+            final String[] values,
+            int geneId, int geneName, int chr, int posStart, int posEnd, int type, int fragCount, int depthStart, int depthEnd,
+            int regionStart, int regionEnd, int basesStart, int basesEnd, int transStart, int transEnd, int cohortFrequency)
+    {
+        return new AltSpliceJunctionFile(
+                values[geneId], values[geneName], values[chr], new int[] { Integer.parseInt(values[posStart]), Integer.parseInt(values[posEnd]) },
+                AltSpliceJunctionType.valueOf(values[type]),
+                Integer.parseInt(values[fragCount]), new int[] { Integer.parseInt(values[depthStart]), Integer.parseInt(values[depthEnd]) },
+                new AltSpliceJunctionContext[] { AltSpliceJunctionContext.valueOf(values[regionStart]), AltSpliceJunctionContext.valueOf(values[regionEnd]) },
+                new String[] { values[basesStart], values[basesEnd] }, new String[] { values[transStart], values[transEnd]},
+                Integer.parseInt(values[cohortFrequency]));
+    }
+
+
     public static List<AltSpliceJunctionFile> loadCanonicalSpliceFile(
             final Path filename, final Map<String,Integer> refFieldsIndexMap, final AltSjFilter filter)
     {
         try
         {
-            final List<String> lines = Files.readAllLines(filename);
+            List<String> lines = Files.readAllLines(filename);
 
-            Map<String,Integer> fieldsIndexMap = refFieldsIndexMap != null ? refFieldsIndexMap : createFieldsIndexMap(lines.get(0), DELIMITER);
+            Map<String,Integer> fieldsIndexMap = refFieldsIndexMap != null ? refFieldsIndexMap : createFieldsIndexMap(lines.get(0), TSV_DELIM);
 
             lines.remove(0);
 
@@ -271,7 +298,7 @@ public class AltSjCohortAnalyser
 
                 altSJs.add(new AltSpliceJunctionFile(
                         geneId, values[geneNameIndex], values[chrIndex], spliceJunction, AltSpliceJunctionType.CANONICAL,
-                        fragCount, depthCounts, emptyRegionContexts, emptyBaseContexts, emptyTranscriptNames));
+                        fragCount, depthCounts, emptyRegionContexts, emptyBaseContexts, emptyTranscriptNames, 0));
             }
 
             return altSJs;
