@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.isofox.expression;
 
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_ID;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferFileDelimiter;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.expression.cohort.GeneratePanelNormalisation.FLD_TPM_ADJUST_FACTOR;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -58,9 +58,10 @@ public class PanelTpmNormaliser
 
         try
         {
-            final List<String> lines = Files.readAllLines(Paths.get(filename));
+            List<String> lines = Files.readAllLines(Paths.get(filename));
+            String fileDelim = inferFileDelimiter(filename);
 
-            Map<String,Integer> fieldsMap = createFieldsIndexMap(lines.get(0), DELIMITER);
+            Map<String,Integer> fieldsMap = createFieldsIndexMap(lines.get(0), fileDelim);
             lines.remove(0);
 
             int geneIdIndex = fieldsMap.get(FLD_GENE_ID);
@@ -68,7 +69,7 @@ public class PanelTpmNormaliser
 
             for(final String data : lines)
             {
-                final String[] values = data.split(DELIMITER);
+                String[] values = data.split(fileDelim);
 
                 String geneId = values[geneIdIndex];
                 double adjustFactor = Double.parseDouble(values[adjustIndex]);

@@ -7,11 +7,11 @@ import static com.hartwig.hmftools.common.sigs.DataUtils.convertList;
 import static com.hartwig.hmftools.common.stats.Percentiles.PERCENTILE_COUNT;
 import static com.hartwig.hmftools.common.stats.Percentiles.calcPercentileValues;
 import static com.hartwig.hmftools.common.utils.MatrixFile.loadMatrixDataFile;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferFileDelimiter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -292,7 +292,8 @@ public class ExpressionCohortDistribution
 
             String header = fileReader.readLine();
 
-            final Map<String,Integer> fieldsMapIndex = createFieldsIndexMap(header, DELIMITER);
+            String fileDelim = inferFileDelimiter(mConfig.Expression.GeneExpMatrixFile);
+            Map<String,Integer> fieldsMapIndex = createFieldsIndexMap(header, fileDelim);
 
             int geneIdIndex = fieldsMapIndex.get(FLD_GENE_ID);
             int geneNameIndex = fieldsMapIndex.get(FLD_GENE_NAME);
@@ -304,9 +305,9 @@ public class ExpressionCohortDistribution
 
             while(line != null)
             {
-                final String[] items = line.split(DELIMITER, -1);
+                String[] values = line.split(fileDelim, -1);
 
-                final String geneId = items[geneIdIndex];
+                String geneId = values[geneIdIndex];
 
                 if(!mConfig.RestrictedGeneIds.isEmpty() && !mConfig.RestrictedGeneIds.contains(geneId))
                 {
@@ -315,11 +316,11 @@ public class ExpressionCohortDistribution
                     continue;
                 }
 
-                final String geneName = items[geneNameIndex];
+                final String geneName = values[geneNameIndex];
 
                 if(mTranscriptScope)
                 {
-                    final String transName = items[transNameIndex];
+                    final String transName = values[transNameIndex];
                     mGeneTransIds.add(transName);
                     mGeneTransIdIndexMap.put(transName, geneRowIndex);
                     mIdNameMap.put(transName, String.format("%s,%s", geneId, geneName));

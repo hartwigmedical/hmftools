@@ -3,7 +3,7 @@ package com.hartwig.hmftools.isofox.novel.cohort;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
+import static com.hartwig.hmftools.isofox.results.ResultsWriter.OLD_FILE_DELIM;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -74,7 +74,7 @@ public class RecurrentVariantFinder
                 line = fileReader.readLine();
             }
 
-            final String delimiter = line.contains(DELIMITER) ? DELIMITER : "\t";
+            final String delimiter = line.contains(OLD_FILE_DELIM) ? OLD_FILE_DELIM : "\t";
             final String[] fieldNames = line.split(delimiter, -1);
             if(fieldNames.length < 11)
             {

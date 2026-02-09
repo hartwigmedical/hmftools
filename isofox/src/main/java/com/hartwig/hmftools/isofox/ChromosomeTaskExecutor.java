@@ -350,11 +350,11 @@ public class ChromosomeTaskExecutor implements Callable<Void>
                         .filter(x -> !x.transcriptIds().isEmpty())
                         .mapToDouble(x -> x.fragmentCount()).sum();
 
-                ISF_LOGGER.debug(String.format("genes(%s) catCounts(all=%.2f trans=%.1f)",
+                ISF_LOGGER.trace(String.format("genes(%s) catCounts(all=%.2f trans=%.1f)",
                         geneCollection.geneNames(), allCategoryTotals, transCategoryTotals));
             }
 
-            ISF_LOGGER.debug("chr({}) gene({}) transCombo(gene={} total={})",
+            ISF_LOGGER.trace("chr({}) gene({}) transCombo(gene={} total={})",
                     mChromosome, geneCollection.geneNames(10), mBamFragmentAllocator.getTransComboData().size(),
                     mGeneCollectionSummaryData.stream().mapToInt(x -> x.TransCategoryCounts.size()).sum());
         }

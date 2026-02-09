@@ -7,7 +7,7 @@ import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.novel.cohort.AcceptorDonorType.ACCEPTOR;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
+import static com.hartwig.hmftools.isofox.results.ResultsWriter.OLD_FILE_DELIM;
 
 import java.util.List;
 import java.util.Map;
@@ -85,7 +85,7 @@ public class SpliceVariant
 
     public static String header()
     {
-        StringJoiner sj = new StringJoiner(DELIMITER);
+        StringJoiner sj = new StringJoiner(OLD_FILE_DELIM);
         sj.add(FLD_GENE_NAME);
         sj.add(FLD_CHROMOSOME);
         sj.add("Position");
@@ -101,7 +101,7 @@ public class SpliceVariant
 
     public String toCsv()
     {
-        StringJoiner sj = new StringJoiner(DELIMITER);
+        StringJoiner sj = new StringJoiner(OLD_FILE_DELIM);
         sj.add(GeneName);
         sj.add(Chromosome);
         sj.add(String.valueOf(Position));

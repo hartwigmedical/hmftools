@@ -392,7 +392,7 @@ public class FusionFinder implements Callable<Void>
             }
         }
 
-        Level level = mAllFragments.size() > HIGH_LOG_COUNT ? Level.INFO : Level.DEBUG;
+        Level level = mAllFragments.size() > HIGH_LOG_COUNT ? Level.DEBUG : Level.TRACE;
         ISF_LOGGER.log(level, "chr({}) chimeric fragments({} disc={} junc={}) fusions(loc={} total={})",
                 mChromosome, mAllFragments.size(), mDiscordantFragments.values().stream().mapToInt(x -> x.size()).sum(),
                 junctioned, mFusionCandidates.size(), mFusionCandidates.values().stream().mapToInt(x -> x.size()).sum());

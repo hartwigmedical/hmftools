@@ -3,9 +3,9 @@ package com.hartwig.hmftools.isofox.cohort;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.IGNORE_SAMPLE_ID;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CANCER_TYPE;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_ID;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
 import java.io.File;
 import java.io.IOException;
@@ -81,7 +81,7 @@ public class SampleDataCache
             if(items.isEmpty())
                 return false;
 
-            final Map<String,Integer> fieldIndexMap = createFieldsIndexMap(items.get(0), DELIMITER);
+            Map<String,Integer> fieldIndexMap = createFieldsIndexMap(items.get(0), CSV_DELIM);
             items.remove(0);
 
             Integer cancerTypeIndex = fieldIndexMap.get(FLD_CANCER_TYPE);
@@ -93,7 +93,7 @@ public class SampleDataCache
                 if(item.startsWith(IGNORE_SAMPLE_ID))
                     continue;
 
-                final String[] data = item.split(DELIMITER);
+                final String[] data = item.split(CSV_DELIM);
 
                 final String sampleId = data[COL_SAMPLE_ID];
 

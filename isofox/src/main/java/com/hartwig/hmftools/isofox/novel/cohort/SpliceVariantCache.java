@@ -2,6 +2,10 @@ package com.hartwig.hmftools.isofox.novel.cohort;
 
 import static com.hartwig.hmftools.common.rna.NovelSpliceJunctionFile.FLD_ALT_SJ_POS_END;
 import static com.hartwig.hmftools.common.rna.NovelSpliceJunctionFile.FLD_ALT_SJ_POS_START;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_SAMPLE_ID;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferFileDelimiter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
@@ -10,7 +14,6 @@ import static com.hartwig.hmftools.isofox.novel.cohort.SpliceVariantMatcher.COHO
 import static com.hartwig.hmftools.isofox.novel.cohort.SpliceVariantMatcher.SOMATIC_VARIANT_FILE;
 import static com.hartwig.hmftools.isofox.novel.cohort.SpliceVariantMatcher.SV_BREAKEND_FILE;
 import static com.hartwig.hmftools.isofox.novel.cohort.SpliceVariantMatcher.WRITE_VARIANT_CACHE;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -23,6 +26,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.rna.NovelSpliceJunctionFile;
 import com.hartwig.hmftools.isofox.novel.AltSpliceJunctionFile;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
@@ -188,29 +192,28 @@ public class SpliceVariantCache
         try
         {
             BufferedReader fileReader = new BufferedReader(new FileReader(filename));
+            String fileDelim = inferFileDelimiter(filename);
 
             String line = fileReader.readLine();
 
             if(line == null)
                 return;
 
-            final Map<String,Integer> fieldsMap = createFieldsIndexMap(line, DELIMITER);
+            Map<String,Integer> fieldsMap = createFieldsIndexMap(line, fileDelim);
 
-            // GeneId,CancerType,SampleCount,Chromosome,Type,SjStart,SjEnd
             int sampleCountIndex = fieldsMap.get("SampleCount");
-            // int typeIndex = fieldsMap.get("Type");
-            int chromosomeIndex = fieldsMap.get("Chromosome");
+            int chromosomeIndex = fieldsMap.get(FLD_CHROMOSOME);
             int sjStartPosIndex = fieldsMap.get(FLD_ALT_SJ_POS_START);
             int sjEndPosIndex = fieldsMap.get(FLD_ALT_SJ_POS_END);
 
             while ((line = fileReader.readLine()) != null)
             {
-                final String[] items = line.split(DELIMITER);
+                String[] values = line.split(fileDelim);
 
-                final String altSjKey = String.format("%s;%s;%s",
-                        items[chromosomeIndex], items[sjStartPosIndex], items[sjEndPosIndex]);
+                String altSjKey = NovelSpliceJunctionFile.formKey(
+                        values[chromosomeIndex], Integer.parseInt(values[sjStartPosIndex]), Integer.parseInt(values[sjEndPosIndex]));
 
-                final int sampleCount = Integer.parseInt(items[sampleCountIndex]);
+                int sampleCount = Integer.parseInt(values[sampleCountIndex]);
 
                 mCohortAltSJs.put(altSjKey, sampleCount);
             }
@@ -238,12 +241,13 @@ public class SpliceVariantCache
 
             String line = fileReader.readLine();
 
-            if (line == null)
+            if(line == null)
                 return;
 
-            final Map<String,Integer> fieldsMap = createFieldsIndexMap(line, DELIMITER);
+            String fileDelim = inferFileDelimiter(filename);
+            Map<String,Integer> fieldsMap = createFieldsIndexMap(line, fileDelim);
 
-            int sampleIdIndex = fieldsMap.get("SampleId");
+            int sampleIdIndex = fieldsMap.get(FLD_SAMPLE_ID);
 
             List<SpliceVariant> spliceVariants = null;
             String currentSampleId = "";
@@ -251,8 +255,8 @@ public class SpliceVariantCache
 
             while ((line = fileReader.readLine()) != null)
             {
-                final String[] items = line.split(DELIMITER);
-                final String sampleId = items[sampleIdIndex];
+                String[] values = line.split(fileDelim);
+                String sampleId = values[sampleIdIndex];
 
                 if(!sampleId.equals(currentSampleId))
                 {
@@ -261,7 +265,7 @@ public class SpliceVariantCache
                     mSampleSpliceVariants.put(sampleId, spliceVariants);
                 }
 
-                spliceVariants.add(SpliceVariant.fromCsv(items, fieldsMap));
+                spliceVariants.add(SpliceVariant.fromCsv(values, fieldsMap));
                 ++variantCount;
             }
 
@@ -288,14 +292,16 @@ public class SpliceVariantCache
 
             String line = fileReader.readLine();
 
-            if (line == null)
+            if(line == null)
                 return;
 
-            final Map<String,Integer> fieldsMap = createFieldsIndexMap(line, DELIMITER);
+            String fileDelim = inferFileDelimiter(filename);
 
-            int sampleIdIndex = fieldsMap.get("SampleId");
-            int chromosomeIndex = fieldsMap.get("Chromosome");
-            int positionIndex = fieldsMap.get("Position");
+            Map<String,Integer> fieldsMap = createFieldsIndexMap(line, fileDelim);
+
+            int sampleIdIndex = fieldsMap.get(FLD_SAMPLE_ID);
+            int chromosomeIndex = fieldsMap.get(FLD_CHROMOSOME);
+            int positionIndex = fieldsMap.get(FLD_POSITION);
 
             String currentSampleId = "";
             Map<String,List<Integer>> svBreakends = null;
@@ -303,7 +309,7 @@ public class SpliceVariantCache
 
             while ((line = fileReader.readLine()) != null)
             {
-                final String[] items = line.split(DELIMITER);
+                final String[] items = line.split(fileDelim);
                 String sampleId = items[sampleIdIndex];
                 String chromosome = items[chromosomeIndex];
                 int position = Integer.parseInt(items[positionIndex]);

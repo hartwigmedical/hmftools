@@ -249,7 +249,7 @@ public class FragmentAllocator
             mUmrFinder.writeUnmappedReads();
         }
 
-        ISF_LOGGER.debug("genes({}) bamReadCount({}) depth(bases={} perc={} max={})",
+        ISF_LOGGER.trace("genes({}) bamReadCount({}) depth(bases={} perc={} max={})",
                 mCurrentGenes.geneNames(), mGeneReadCount, mBaseDepth.basesWithDepth(),
                 String.format("%.3f", mBaseDepth.basesWithDepthPerc()), mBaseDepth.maxDepth());
     }

@@ -26,7 +26,6 @@ import static com.hartwig.hmftools.isofox.cohort.AnalysisType.CANONICAL_SPLICE_J
 import static com.hartwig.hmftools.isofox.cohort.CohortConfig.formSampleFilenames;
 import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionFile.FLD_TRANS_END;
 import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionFile.FLD_TRANS_START;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -259,7 +258,8 @@ public class AltSjCohortAnalyser
         {
             List<String> lines = Files.readAllLines(filename);
 
-            Map<String,Integer> fieldsIndexMap = refFieldsIndexMap != null ? refFieldsIndexMap : createFieldsIndexMap(lines.get(0), TSV_DELIM);
+            String fileDelim = inferFileDelimiter(filename.toString());
+            Map<String,Integer> fieldsIndexMap = refFieldsIndexMap != null ? refFieldsIndexMap : createFieldsIndexMap(lines.get(0), fileDelim);
 
             lines.remove(0);
 
@@ -272,11 +272,6 @@ public class AltSjCohortAnalyser
             int depthStartIndex = fieldsIndexMap.get(FLD_DEPTH_START);
             int depthEndIndex = fieldsIndexMap.get(FLD_DEPTH_END);
 
-            /*
-            GeneId,GeneName,Chromosome,SjStart,SjEnd,FragCount,DepthStart,DepthEnd,TranscriptNames
-            ENSG00000272636,DOC2B,17,11981,13921,9,16,15,ENST00000343572
-             */
-
             final List<AltSpliceJunctionFile> altSJs = Lists.newArrayList();
 
             final AltSpliceJunctionContext[] emptyRegionContexts = { SPLICE_JUNC, SPLICE_JUNC };
@@ -285,7 +280,7 @@ public class AltSjCohortAnalyser
 
             for(String data : lines)
             {
-                final String[] values = data.split(DELIMITER);
+                String[] values = data.split(fileDelim);
 
                 String geneId = values[geneIdIndex];
                 int fragCount = Integer.parseInt(values[fragCountIndex]);

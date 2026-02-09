@@ -16,7 +16,7 @@ import static com.hartwig.hmftools.common.sv.StartEndIterator.startEndStr;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.UNMAPPED_READS;
 import static com.hartwig.hmftools.isofox.cohort.CohortConfig.formSampleFilenames;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
+import static com.hartwig.hmftools.isofox.results.ResultsWriter.OLD_FILE_DELIM;
 import static com.hartwig.hmftools.isofox.unmapped.UnmappedRead.UMR_NO_MATE;
 import static com.hartwig.hmftools.isofox.unmapped.UnmappedRead.baseQualsFromString;
 
@@ -199,7 +199,7 @@ public class UmrCohortAnalyser
 
             for(String data : lines)
             {
-                final String[] values = data.split(DELIMITER);
+                final String[] values = data.split(OLD_FILE_DELIM);
 
                 UnmappedRead umRead = new UnmappedRead(
                         values[readIndex],
@@ -501,7 +501,7 @@ public class UmrCohortAnalyser
             BufferedReader fileReader = new BufferedReader(new FileReader(inputFile));
 
             String line = fileReader.readLine();
-            String[] columnHeaders = line.split(DELIMITER);
+            String[] columnHeaders = line.split(OLD_FILE_DELIM);
 
             for(String string : columnHeaders)
             {
@@ -511,7 +511,7 @@ public class UmrCohortAnalyser
             mWriter.write("ExonicBases," + BlatResult.csvHeader());
             mWriter.newLine();
 
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(line, DELIMITER);
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(line, OLD_FILE_DELIM);
 
             int sampleIdIndex = fieldsIndexMap.get("SampleId");
             int seqIdIndex = fieldsIndexMap.get("SequenceId");
@@ -524,7 +524,7 @@ public class UmrCohortAnalyser
 
             while((line = fileReader.readLine()) != null)
             {
-                final String[] values = line.split(DELIMITER, -1);
+                final String[] values = line.split(OLD_FILE_DELIM, -1);
 
                 String sampleId = values[sampleIdIndex];
 

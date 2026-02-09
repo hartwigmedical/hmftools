@@ -185,7 +185,7 @@ public class FragmentSizeCalcs implements Callable<Void>
             if(currentGeneIndex >= nextLogCount)
             {
                 nextLogCount += 100;
-                ISF_LOGGER.debug("chromosome({}) processed {} genes, fragCount({}) totalReads({})",
+                ISF_LOGGER.trace("chromosome({}) processed {} genes, fragCount({}) totalReads({})",
                         mChromosome, currentGeneIndex, mProcessedFragments, mTotalFragmentCount);
             }
 
@@ -226,7 +226,7 @@ public class FragmentSizeCalcs implements Callable<Void>
 
             if(mProcessedFragments >= mRequiredFragCount)
             {
-                ISF_LOGGER.debug("chromosome({}) max fragment length samples reached: {}", mChromosome, mProcessedFragments);
+                ISF_LOGGER.trace("chromosome({}) max fragment length samples reached: {}", mChromosome, mProcessedFragments);
                 break;
             }
         }

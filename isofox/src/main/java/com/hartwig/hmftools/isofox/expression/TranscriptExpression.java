@@ -3,6 +3,7 @@ package com.hartwig.hmftools.isofox.expression;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.sigs.SigUtils.calcResiduals;
 import static com.hartwig.hmftools.common.sigs.SigUtils.calculateFittedCounts;
@@ -119,7 +120,7 @@ public class TranscriptExpression
 
         SigResiduals residuals = calcResiduals(transComboCounts, fittedCounts, totalCounts);
 
-        ISF_LOGGER.debug(String.format("gene(%s) totalFragments(%.0f) fitTotal(%.0f) residuals(%.0f perc=%.3f)",
+        ISF_LOGGER.trace(format("gene(%s) totalFragments(%.0f) fitTotal(%.0f) residuals(%.0f perc=%.3f)",
                 geneSummaryData.GeneNames, totalCounts, fitTotal, residuals.Total, residuals.Percent));
 
         geneSummaryData.setFitResiduals(residuals.Total);
@@ -135,7 +136,7 @@ public class TranscriptExpression
 
             if(transAllocation > 0 && ISF_LOGGER.isTraceEnabled())
             {
-                ISF_LOGGER.trace("transcript({}) allocated count({})", transName, String.format("%.2f", transAllocation));
+                ISF_LOGGER.trace("transcript({}) allocated count({})", transName, format("%.2f", transAllocation));
             }
 
             transAllocations.put(transName, transAllocation);
@@ -342,7 +343,7 @@ public class TranscriptExpression
                     if(fragmentCount/totalCounts > 0.20 && fragmentCount > 50)
                     {
                         ISF_LOGGER.debug("category({}) {} fragCount({}) skipped",
-                                categoryKey, tcData.impliedType(), String.format("%.2f", fragmentCount));
+                                categoryKey, tcData.impliedType(), format("%.2f", fragmentCount));
                     }
                     skippedComboCounts += fragmentCount;
                 }
@@ -357,7 +358,7 @@ public class TranscriptExpression
         {
             double skippedPerc = skippedComboCounts/totalCounts;
 
-            ISF_LOGGER.debug(String.format("gene(%d:%s) categories(act=%d exp=%d trans+genes=%d) skippedCounts(%d perc=%.3f of total=%.0f)",
+            ISF_LOGGER.trace(format("gene(%d:%s) categories(act=%d exp=%d trans+genes=%d) skippedCounts(%d perc=%.3f of total=%.0f)",
                     geneSummaryData.GeneIds.size(), geneSummaryData.GeneNames,
                     geneSummaryData.TransCategoryCounts.size(), mCurrentExpRatesData.Categories.size(),
                     mCurrentExpRatesData.TranscriptIds.size(), skippedComboCounts, skippedPerc, totalCounts));
@@ -384,7 +385,7 @@ public class TranscriptExpression
 
                 for(Double gcRatio : tmp.getRatios())
                 {
-                    writer.write(String.format(",Gcr_%.2f", gcRatio));
+                    writer.write(format(",Gcr_%.2f", gcRatio));
                 }
             }
 
@@ -411,7 +412,7 @@ public class TranscriptExpression
                 double count = counts[i];
                 final String category = categories.get(i);
 
-                writer.write(String.format("%s,%s,%.0f,%.1f",
+                writer.write(format("%s,%s,%.0f,%.1f",
                         genesId, category, count, fittedCounts[i]));
 
                 if(writeGcData)
@@ -423,7 +424,7 @@ public class TranscriptExpression
 
                     for(int j = 0; j < gcCounts.length; ++j)
                     {
-                        writer.write(String.format(",%.2f", gcCounts[j]));
+                        writer.write(format(",%.2f", gcCounts[j]));
                     }
                 }
 

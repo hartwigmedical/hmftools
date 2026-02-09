@@ -5,6 +5,9 @@ import static com.hartwig.hmftools.common.rna.NovelSpliceJunctionFile.FLD_ALT_SJ
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_FRAG_COUNT;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_ID;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POS_END;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POS_START;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferFileDelimiter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
@@ -14,7 +17,6 @@ import static com.hartwig.hmftools.isofox.cohort.AnalysisType.CANONICAL_SPLICE_J
 import static com.hartwig.hmftools.isofox.cohort.CohortConfig.formSampleFilenames;
 import static com.hartwig.hmftools.isofox.novel.cohort.AltSjCohortAnalyser.ALT_SJ_LOAD_CANONICAL;
 import static com.hartwig.hmftools.isofox.novel.cohort.AltSjCohortAnalyser.ALT_SJ_LOAD_CANONICAL_DESC;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -164,20 +166,21 @@ public class AltSjCohortMatrix
             BufferedReader fileReader = new BufferedReader(new FileReader(filename));
 
             String header = fileReader.readLine();
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIMITER);
+            String fileDelim = inferFileDelimiter(filename);
+            Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, fileDelim);
 
             int geneIndex = fieldsIndexMap.get(FLD_GENE_ID);
             int chrIndex = fieldsIndexMap.get(FLD_CHROMOSOME);
-            int posStartIndex = fieldsIndexMap.get("PosStart");
-            int posEndIndex = fieldsIndexMap.get("PosEnd");
+            int posStartIndex = fieldsIndexMap.get(FLD_POS_START);
+            int posEndIndex = fieldsIndexMap.get(FLD_POS_END);
 
             String line = fileReader.readLine();
 
             while(line != null)
             {
-                final String[] items = line.split(DELIMITER, -1);
+                String[] values = line.split(fileDelim, -1);
 
-                final AltSjLocation altSJ = AltSjLocation.fromCsv(items, geneIndex, chrIndex, posStartIndex, posEndIndex);
+                final AltSjLocation altSJ = AltSjLocation.fromCsv(values, geneIndex, chrIndex, posStartIndex, posEndIndex);
 
                 mAltSjDataMap.put(altSJ.Key, altSJ);
                 mAltSjDataList.add(altSJ);
@@ -190,7 +193,6 @@ public class AltSjCohortMatrix
         catch(IOException e)
         {
             ISF_LOGGER.error("failed to cohort alt-SJ site file({}): {}", filename.toString(), e.toString());
-            return;
         }
     }
 
@@ -198,9 +200,10 @@ public class AltSjCohortMatrix
     {
         try
         {
-            final List<String> lines = Files.readAllLines(filename);
+            List<String> lines = Files.readAllLines(filename);
+            String fileDelim = inferFileDelimiter(filename.toString());
 
-            Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIMITER);
+            Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), fileDelim);
 
             int geneIndex = fieldsIndexMap.get(FLD_GENE_ID);
             int chrIndex = fieldsIndexMap.get(FLD_CHROMOSOME);
@@ -216,13 +219,13 @@ public class AltSjCohortMatrix
 
             for(int i = 1; i < lines.size(); ++i)
             {
-                final String[] items = lines.get(i).split(DELIMITER,-1);
+                String[] values = lines.get(i).split(fileDelim,-1);
 
                 AltSjLocation altSJ = null;
 
                 try
                 {
-                    altSJ = AltSjLocation.fromCsv(items, geneIndex, chrIndex, posStartIndex, posEndIndex);
+                    altSJ = AltSjLocation.fromCsv(values, geneIndex, chrIndex, posStartIndex, posEndIndex);
                 }
                 catch(Exception e)
                 {
@@ -235,7 +238,7 @@ public class AltSjCohortMatrix
                 if(asjMatrixIndex == null)
                     continue;
 
-                final int fragCount = Integer.parseInt(items[fragCountIndex]);
+                final int fragCount = Integer.parseInt(values[fragCountIndex]);
 
                 if(fragCount < mMinFragments)
                     continue;
