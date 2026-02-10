@@ -109,7 +109,7 @@ fun runBlastn(sampleId: String, blastDir: String, blastDb: String, sequences: Li
         .withGapExtend(-ALIGNER_GAP_EXTEND_SCORE)
         .withExpectedValueCutoff(expectedValueCutoff)
         .withNumThreads(numThreads)
-        .withSubjectBestHit(true)
+        .withSubjectBestHit(false)
         .withMaxTargetSeqs(BLASTN_MAX_TARGET_SEQUENCES)
         .build()
         .run(sequencesByKey)
