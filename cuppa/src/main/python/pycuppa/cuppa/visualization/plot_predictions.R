@@ -481,6 +481,7 @@ plot_signatures <- function(vis_data){
    plot_data$row_label <- with(plot_data, {
       perc <- round((feat_value / snv_count) * 100, SIGNATURE_PERC_SIGNIF_DIGITS)
       feat_value <- round(feat_value, SIGNATURE_VALUES_DECIMAL_PLACES)
+      feat_name <- sub("SBS", "Sig", feat_name)
       paste0(gsub("_", " ", feat_name), " = ", feat_value, " (", perc, "%)")
    })
 
