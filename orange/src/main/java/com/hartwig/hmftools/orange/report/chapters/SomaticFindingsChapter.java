@@ -36,19 +36,16 @@ import org.jetbrains.annotations.NotNull;
 
 public class SomaticFindingsChapter implements ReportChapter
 {
-    @NotNull
-    private final OrangeRecord report;
-    @NotNull
-    private final PlotPathResolver plotPathResolver;
-    @NotNull
-    private final ReportResources reportResources;
+    private final OrangeRecord mReport;
+    private final PlotPathResolver mPlotPathResolver;
+    private final ReportResources mReportResources;
 
-    public SomaticFindingsChapter(@NotNull final OrangeRecord report, @NotNull final PlotPathResolver plotPathResolver,
-            @NotNull final ReportResources reportResources)
+    public SomaticFindingsChapter(final OrangeRecord report, final PlotPathResolver plotPathResolver,
+            final ReportResources reportResources)
     {
-        this.report = report;
-        this.plotPathResolver = plotPathResolver;
-        this.reportResources = reportResources;
+        mReport = report;
+        mPlotPathResolver = plotPathResolver;
+        mReportResources = reportResources;
     }
 
     @NotNull
@@ -66,19 +63,19 @@ public class SomaticFindingsChapter implements ReportChapter
     }
 
     @Override
-    public void render(@NotNull final Document document)
+    public void render(final Document document)
     {
-        document.add(new Paragraph(name()).addStyle(reportResources.chapterTitleStyle()));
+        document.add(new Paragraph(name()).addStyle(mReportResources.chapterTitleStyle()));
 
         addSomaticVariants(document);
-        if(!PurpleQCInterpretation.isContaminated(report.purple().fit().qc()))
+        if(!PurpleQCInterpretation.isContaminated(mReport.purple().fit().qc()))
         {
             addKataegisPlot(document);
         }
         addSomaticAmpDels(document);
         addFusions(document);
 
-        if(!report.tumorOnlyMode())
+        if(!mReport.tumorOnlyMode())
         {
             addViralPresence(document);
         }
@@ -86,46 +83,46 @@ public class SomaticFindingsChapter implements ReportChapter
         addHomozygousDisruptions(document);
         addBreakends(document);
 
-        if(!report.tumorOnlyMode())
+        if(!mReport.tumorOnlyMode())
         {
             addSignatureAllocations(document);
         }
 
-        if(!PurpleQCInterpretation.isContaminated(report.purple().fit().qc()))
+        if(!PurpleQCInterpretation.isContaminated(mReport.purple().fit().qc()))
         {
             addStructuralDriverPlots(document);
         }
     }
 
-    private void addSomaticVariants(@NotNull Document document)
+    private void addSomaticVariants(final Document document)
     {
         String driverVariantsTitle = "Driver variants";
         String otherPotentiallyInterestingTitle = "Other potentially relevant variants";
 
-        if(PurpleQCInterpretation.isContaminated(report.purple().fit().qc()))
+        if(PurpleQCInterpretation.isContaminated(mReport.purple().fit().qc()))
         {
-            Tables tables = new Tables(reportResources);
+            Tables tables = new Tables(mReportResources);
             document.add(tables.createNotAvailable(driverVariantsTitle, contentWidth()));
             document.add(tables.createNotAvailable(otherPotentiallyInterestingTitle, contentWidth()));
         }
         else
         {
-            List<PurpleDriver> somaticDrivers = report.purple().somaticDrivers();
+            List<PurpleDriver> somaticDrivers = mReport.purple().somaticDrivers();
 
             List<VariantEntry> reportableVariants =
-                    VariantEntryFactory.create(VariantDedup.apply(report.purple().somaticVariants()), somaticDrivers);
+                    VariantEntryFactory.create(VariantDedup.apply(mReport.purple().somaticVariants()), somaticDrivers);
             String titleDrivers = driverVariantsTitle + " (" + reportableVariants.size() + ")";
-            document.add(SomaticVariantTable.build(titleDrivers, contentWidth(), reportableVariants, reportResources));
+            document.add(SomaticVariantTable.build(titleDrivers, contentWidth(), reportableVariants, mReportResources));
         }
     }
 
-    private void addKataegisPlot(@NotNull Document document)
+    private void addKataegisPlot(final Document document)
     {
-        document.add(new Paragraph("Kataegis plot").addStyle(reportResources.tableTitleStyle()));
-        String kataegisPlot = report.plots().purpleKataegisPlot();
+        document.add(new Paragraph("Kataegis plot").addStyle(mReportResources.tableTitleStyle()));
+        String kataegisPlot = mReport.plots().purpleKataegisPlot();
         if(kataegisPlot != null)
         {
-            Image image = Images.build(plotPathResolver.resolve(kataegisPlot));
+            Image image = Images.build(mPlotPathResolver.resolve(kataegisPlot));
             image.setMaxWidth(contentWidth());
             image.setHorizontalAlignment(HorizontalAlignment.CENTER);
             document.add(image);
@@ -133,149 +130,149 @@ public class SomaticFindingsChapter implements ReportChapter
         else
         {
             document.add(new Paragraph("No kataegis plot could be generated for this sample")
-                    .addStyle(reportResources.tableContentStyle()));
+                    .addStyle(mReportResources.tableContentStyle()));
         }
     }
 
-    private void addSomaticAmpDels(@NotNull Document document)
+    private void addSomaticAmpDels(final Document document)
     {
         String driverAmpsDelsTitle = "Driver amplifications and homozygous deletions";
 
-        if(PurpleQCInterpretation.isContaminated(report.purple().fit().qc()))
+        if(PurpleQCInterpretation.isContaminated(mReport.purple().fit().qc()))
         {
-            Tables tables = new Tables(reportResources);
+            Tables tables = new Tables(mReportResources);
             document.add(tables.createNotAvailable(driverAmpsDelsTitle, contentWidth()));
         }
         else
         {
-            String titleDrivers = driverAmpsDelsTitle + " (" + report.purple().somaticGainsDels().size() + ")";
+            String titleDrivers = driverAmpsDelsTitle + " (" + mReport.purple().somaticGainsDels().size() + ")";
             document.add(GainDeletionTable.build(titleDrivers,
                     contentWidth(),
-                    report.purple().somaticGainsDels(),
-                    report.isofox(),
-                    reportResources));
+                    mReport.purple().somaticGainsDels(),
+                    mReport.isofox(),
+                    mReportResources));
         }
     }
 
-    private void addFusions(@NotNull Document document)
+    private void addFusions(final Document document)
     {
         String driverFusionsTitle = "Driver fusions";
 
-        if(PurpleQCInterpretation.isContaminated(report.purple().fit().qc()))
+        if(PurpleQCInterpretation.isContaminated(mReport.purple().fit().qc()))
         {
-            Tables tables = new Tables(reportResources);
+            Tables tables = new Tables(mReportResources);
             document.add(tables.createNotAvailable(driverFusionsTitle, contentWidth()));
         }
         else
         {
-            String titleDrivers = driverFusionsTitle + " (" + report.linx().fusions().size() + ")";
+            String titleDrivers = driverFusionsTitle + " (" + mReport.linx().fusions().size() + ")";
             document.add(DnaFusionTable.build(titleDrivers,
                     contentWidth(),
-                    report.linx().fusions(),
-                    report.isofox(),
-                    reportResources));
+                    mReport.linx().fusions(),
+                    mReport.isofox(),
+                    mReportResources));
         }
     }
 
-    private void addViralPresence(@NotNull Document document)
+    private void addViralPresence(final Document document)
     {
-        VirusInterpreterData virusInterpreter = report.virusInterpreter();
+        VirusInterpreterData virusInterpreter = mReport.virusInterpreter();
 
         if(virusInterpreter != null)
         {
             String driverVirusTitle = "Driver viruses";
 
-            if(PurpleQCInterpretation.isContaminated(report.purple().fit().qc()))
+            if(PurpleQCInterpretation.isContaminated(mReport.purple().fit().qc()))
             {
-                Tables tables = new Tables(reportResources);
+                Tables tables = new Tables(mReportResources);
                 document.add(tables.createNotAvailable(driverVirusTitle, contentWidth()));
             }
             else
             {
                 String titleDrivers = driverVirusTitle + " (" + virusInterpreter.reportableViruses().size() + ")";
-                document.add(ViralPresenceTable.build(titleDrivers, contentWidth(), virusInterpreter.reportableViruses(), reportResources));
+                document.add(ViralPresenceTable.build(titleDrivers, contentWidth(), virusInterpreter.reportableViruses(), mReportResources));
             }
         }
     }
 
-    private void addHomozygousDisruptions(@NotNull Document document)
+    private void addHomozygousDisruptions(final Document document)
     {
         String homozygousDisruptionTitle = "Homozygous disruptions";
 
-        if(PurpleQCInterpretation.isContaminated(report.purple().fit().qc()))
+        if(PurpleQCInterpretation.isContaminated(mReport.purple().fit().qc()))
         {
-            Tables tables = new Tables(reportResources);
+            Tables tables = new Tables(mReportResources);
             document.add(tables.createNotAvailable(homozygousDisruptionTitle, contentWidth()));
         }
         else
         {
-            String title = homozygousDisruptionTitle + " (" + report.linx().somaticHomozygousDisruptions().size() + ")";
+            String title = homozygousDisruptionTitle + " (" + mReport.linx().somaticHomozygousDisruptions().size() + ")";
             document.add(HomozygousDisruptionTable.build(title,
                     contentWidth(),
-                    report.linx().somaticHomozygousDisruptions(),
-                    reportResources));
+                    mReport.linx().somaticHomozygousDisruptions(),
+                    mReportResources));
         }
     }
 
-    private void addBreakends(@NotNull Document document)
+    private void addBreakends(final Document document)
     {
         String driverGeneDisruptionsTitle = "Driver gene disruptions";
         String nonDriverGeneDisruptionsTitle = "Other potentially interesting gene disruptions";
 
-        if(PurpleQCInterpretation.isContaminated(report.purple().fit().qc()))
+        if(PurpleQCInterpretation.isContaminated(mReport.purple().fit().qc()))
         {
-            Tables tables = new Tables(reportResources);
+            Tables tables = new Tables(mReportResources);
             document.add(tables.createNotAvailable(driverGeneDisruptionsTitle, contentWidth()));
             document.add(tables.createNotAvailable(nonDriverGeneDisruptionsTitle, contentWidth()));
         }
         else
         {
             List<BreakendEntry> reportableBreakends = BreakendEntryFactory.create(
-                    report.linx().somaticBreakends(),
-                    report.linx().somaticStructuralVariants(),
-                    report.linx().somaticDrivers());
+                    mReport.linx().somaticBreakends(),
+                    mReport.linx().somaticStructuralVariants(),
+                    mReport.linx().somaticDrivers());
 
             String titleDriver = driverGeneDisruptionsTitle + " (" + reportableBreakends.size() + ")";
-            document.add(BreakendTable.build(titleDriver, contentWidth(), reportableBreakends, reportResources));
+            document.add(BreakendTable.build(titleDriver, contentWidth(), reportableBreakends, mReportResources));
         }
     }
 
-    private void addSignatureAllocations(@NotNull Document document)
+    private void addSignatureAllocations(final Document document)
     {
-        List<SignatureAllocation> sigAllocations = report.sigAllocations();
+        List<SignatureAllocation> sigAllocations = mReport.sigAllocations();
 
         if(sigAllocations != null)
         {
             String signatureTitle = "Signature allocations";
 
-            if(PurpleQCInterpretation.isFail(report.purple().fit().qc()))
+            if(PurpleQCInterpretation.isFail(mReport.purple().fit().qc()))
             {
-                Tables tables = new Tables(reportResources);
+                Tables tables = new Tables(mReportResources);
                 document.add(tables.createNotAvailable(signatureTitle, contentWidth()));
             }
             else
             {
                 String title = signatureTitle + " (" + sigAllocations.size() + ")";
-                document.add(SignatureAllocationTable.build(title, contentWidth(), sigAllocations, reportResources));
+                document.add(SignatureAllocationTable.build(title, contentWidth(), sigAllocations, mReportResources));
             }
         }
     }
 
-    private void addStructuralDriverPlots(@NotNull Document document)
+    private void addStructuralDriverPlots(final Document document)
     {
-        String title = "Structural driver plots (" + report.plots().linxDriverPlots().size() + ")";
-        document.add(new Paragraph(title).addStyle(reportResources.tableTitleStyle()));
+        String title = "Structural driver plots (" + mReport.plots().linxDriverPlots().size() + ")";
+        document.add(new Paragraph(title).addStyle(mReportResources.tableTitleStyle()));
         Table table = new Table(2);
-        Cells cells = new Cells(reportResources);
-        for(String plot : report.plots().linxDriverPlots())
+        Cells cells = new Cells(mReportResources);
+        for(String plot : mReport.plots().linxDriverPlots())
         {
-            Image image = Images.build(plotPathResolver.resolve(plot));
+            Image image = Images.build(mPlotPathResolver.resolve(plot));
             image.setMaxWidth(Math.round(contentWidth() / 2D) - 2);
             image.setHorizontalAlignment(HorizontalAlignment.CENTER);
             table.addCell(cells.createImage(image));
         }
 
-        if(report.plots().linxDriverPlots().size() % 2 == 1)
+        if(mReport.plots().linxDriverPlots().size() % 2 == 1)
         {
             table.addCell(cells.createContent(Strings.EMPTY));
         }

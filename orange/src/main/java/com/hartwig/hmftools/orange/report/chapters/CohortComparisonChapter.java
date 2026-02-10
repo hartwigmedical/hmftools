@@ -15,29 +15,23 @@ import org.jetbrains.annotations.NotNull;
 
 public class CohortComparisonChapter implements ReportChapter
 {
-    @NotNull
-    private final OrangeRecord report;
-    @NotNull
-    private final PlotPathResolver plotPathResolver;
-    @NotNull
-    private final ReportResources reportResources;
+    private final OrangeRecord mReport;
+    private final PlotPathResolver mPlotPathResolver;
+    private final ReportResources mReportResources;
 
-    public CohortComparisonChapter(@NotNull final OrangeRecord report, @NotNull final PlotPathResolver plotPathResolver,
-            @NotNull ReportResources reportResources)
+    public CohortComparisonChapter(final OrangeRecord report, final PlotPathResolver plotPathResolver, final ReportResources reportResources)
     {
-        this.report = report;
-        this.plotPathResolver = plotPathResolver;
-        this.reportResources = reportResources;
+        this.mReport = report;
+        this.mPlotPathResolver = plotPathResolver;
+        this.mReportResources = reportResources;
     }
 
-    @NotNull
     @Override
     public String name()
     {
         return "Cohort Comparison";
     }
 
-    @NotNull
     @Override
     public PageSize pageSize()
     {
@@ -45,24 +39,24 @@ public class CohortComparisonChapter implements ReportChapter
     }
 
     @Override
-    public void render(@NotNull final Document document)
+    public void render(final Document document)
     {
-        document.add(new Paragraph(name()).addStyle(reportResources.chapterTitleStyle()));
+        document.add(new Paragraph(name()).addStyle(mReportResources.chapterTitleStyle()));
 
-        boolean isFail = PurpleQCInterpretation.isFail(report.purple().fit().qc());
-        if(!isFail && report.plots().cuppaSummaryPlot() != null)
+        boolean isFail = PurpleQCInterpretation.isFail(mReport.purple().fit().qc());
+        if(!isFail && mReport.plots().cuppaSummaryPlot() != null)
         {
             addCuppaSummaryPlot(document);
         }
         else
         {
-            document.add(new Paragraph(ReportResources.NOT_AVAILABLE).addStyle(reportResources.tableContentStyle()));
+            document.add(new Paragraph(ReportResources.NOT_AVAILABLE).addStyle(mReportResources.tableContentStyle()));
         }
     }
 
     private void addCuppaSummaryPlot(@NotNull Document document)
     {
-        Image cuppaSummaryPlot = Images.build(plotPathResolver.resolve(report.plots().cuppaSummaryPlot()));
+        Image cuppaSummaryPlot = Images.build(mPlotPathResolver.resolve(mReport.plots().cuppaSummaryPlot()));
         cuppaSummaryPlot.setMaxWidth(740);
         cuppaSummaryPlot.setMaxHeight(420);
         cuppaSummaryPlot.setHorizontalAlignment(HorizontalAlignment.CENTER);
