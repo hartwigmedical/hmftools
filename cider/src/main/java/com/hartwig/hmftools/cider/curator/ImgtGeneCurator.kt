@@ -15,7 +15,8 @@ import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.IGKDEL_IMGT_SE
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.IGKINTR_IMGT_SEQ
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.IMGT_ANCHOR_LENGTH
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.IMGT_V_ANCHOR_INDEX
-import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.FASTA_REF_CONTEXT
+import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.FASTA_REF_CONTEXT_AMBIGUOUS
+import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.FASTA_REF_CONTEXT_BASE
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.REF_CONTEXT_CHECK
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.REF_CONTEXT_CHECK_MISMATCH_MAX
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.SPECIES
@@ -44,11 +45,11 @@ import htsjdk.samtools.CigarElement
 import htsjdk.samtools.liftover.LiftOver
 import htsjdk.samtools.util.Interval
 import htsjdk.samtools.util.SequenceUtil.reverseComplement
-import org.apache.logging.log4j.Level
 import org.apache.logging.log4j.LogManager
 import java.io.File
 import java.nio.file.Paths
 import java.util.Comparator
+import kotlin.math.max
 import kotlin.math.min
 import kotlin.system.exitProcess
 
@@ -61,11 +62,14 @@ data class ProcessedGeneAllele(
     val anchorSequence: String?,
     val anchorLocationV38: GenomicLocation?,
     val anchorLocationV37: GenomicLocation?,
+    val duplicateSequence: Boolean,
+    val multipleAlignments: Boolean
 )
 
 data class LocationInfo(
     val location: GenomicLocation,
     val cigar: List<CigarElement>?,
+    val multipleAlignments: Boolean
 )
 
 data class AnchorInfo(
@@ -141,7 +145,6 @@ class ImgtGeneCurator
         val ensemblLoadOk = ensemblDataCache.load(true)
         if (!ensemblLoadOk)
         {
-            sLogger.error("Ensembl data cache load failed")
             throw RuntimeException("Ensembl data cache load failed")
         }
 
@@ -152,9 +155,9 @@ class ImgtGeneCurator
         val processedGeneAlleles = processAlleles(geneAlleles)
         val (ciderGenesV38, ciderGenesV37) = createCiderGenes(processedGeneAlleles)
 
-        sLogger.info("validating V38 anchor locations")
+        sLogger.info("Validating V38 anchor locations")
         validateAnchorLocations(ciderGenesV38, refGenomeSourceV38)
-        sLogger.info("validating V37 anchor locations")
+        sLogger.info("Validating V37 anchor locations")
         validateAnchorLocations(ciderGenesV37, refGenomeSourceV37)
 
         val outputGenesV38 = Paths.get(outputDir, "igtcr_gene.38.tsv").toString()
@@ -175,11 +178,12 @@ class ImgtGeneCurator
     private fun processAlleles(alleles: List<ImgtGeneAllele>): List<ProcessedGeneAllele>
     {
         val alleleLocationsV38 = findAlleleLocations(alleles)
-        return alleles.mapIndexed { index, allele -> processAllele(allele, alleleLocationsV38[index]) }
+        return alleles.indices.map { index -> processAllele(alleles, index, alleleLocationsV38[index]) }
     }
 
-    private fun processAllele(allele: ImgtGeneAllele, alleleLocationInfoV38: LocationInfo?): ProcessedGeneAllele
+    private fun processAllele(alleles: List<ImgtGeneAllele>, index: Int, alleleLocationInfoV38: LocationInfo?): ProcessedGeneAllele
     {
+        val allele = alleles[index]
         val region = allele.region!!
 
         val anchorInfo = when (region)
@@ -191,7 +195,17 @@ class ImgtGeneCurator
 
         val (alleleLocationV37, anchorLocationV37) = convertAlleleLocationsTo37(allele, anchorInfo?.sequence, alleleLocationInfoV38?.location, anchorInfo?.location)
 
-        return ProcessedGeneAllele(allele, alleleLocationInfoV38?.location, alleleLocationV37, anchorInfo?.sequence, anchorInfo?.location, anchorLocationV37)
+        val ambiguousSequence = alleles.any { it != allele && it.sequenceWithoutGaps == allele.sequenceWithoutGaps }
+
+        return ProcessedGeneAllele(
+            allele,
+            alleleLocationInfoV38?.location,
+            alleleLocationV37,
+            anchorInfo?.sequence,
+            anchorInfo?.location,
+            anchorLocationV37,
+            ambiguousSequence,
+            alleleLocationInfoV38?.multipleAlignments ?: false)
     }
 
     private fun findAlleleLocations(alleles: List<ImgtGeneAllele>): List<LocationInfo?>
@@ -213,16 +227,28 @@ class ImgtGeneCurator
         for ((index, allele) in constantAlleles)
         {
             val ensemblGene = ensemblDataCache.getGeneDataByName(allele.geneName) ?: continue
-            locations[index] = LocationInfo(toGenomicLocation(ensemblGene), null)
+            locations[index] = LocationInfo(toGenomicLocation(ensemblGene), null, false)
         }
 
         for ((index, allele) in alleles.withIndex())
         {
             ImgtGeneCuratorSettings.getGenomicLocationOverrides(allele.geneName)
                 ?.let { override ->
-                    sLogger.info("gene: {}, using location override: {}", allele.geneAllele, override)
+                    sLogger.info("Using location override: {} {}", allele.geneAllele, override)
                     locations[index] = override
                 }
+        }
+
+        // Find which genes have the same locations as other genes.
+        val duplicates = alleles.withIndex()
+            .groupBy({ (index, _) -> locations[index]?.location }, { (_, allele) -> allele.geneName })
+            .mapValues { (_, genes) -> genes.distinct() }
+            .filter { (location, genes) -> location != null && genes.size > 1 }
+            .values.flatten()
+            .sorted()
+        if (duplicates.isNotEmpty())
+        {
+            sLogger.warn("Identical locations: {}: {}", duplicates.size, duplicates)
         }
 
         return locations
@@ -250,23 +276,19 @@ class ImgtGeneCurator
                     .thenComparingInt { m: BlastnMatch -> if (m.subjectTitle.endsWith(BLASTN_PRIMARY_ASSEMBLY_NAME)) 0 else 1 })
 
             // find the gene in the ensembl
-            val ensemblGene = ensemblDataCache.getGeneDataByName(allele.geneName)
+            val ensemblGene = ensemblDataCache.getGeneDataByName(toEnsemblGeneName(allele.geneName))
             var bestMatch: BlastnMatch? = null
+            var multipleAlignments = false
+            var locationMethod: String? = null
 
             for (match in matches)
             {
-                val matchLocation = blastnMatchtoGenomicLocation(match)
-
-                if (matchLocation == null)
-                {
-                    continue
-                }
+                val matchLocation = blastnMatchtoGenomicLocation(match) ?: continue
 
                 if (bestMatch == null)
                 {
                     bestMatch = match
                 }
-
                 else if (Doubles.equal(bestMatch.bitScore, match.bitScore))
                 {
                     // if they have same score, we want to choose the one that overlaps with ensembl gene
@@ -277,35 +299,39 @@ class ImgtGeneCurator
                         ensemblGene.GeneEnd >= matchLocation.posStart)
                     {
                         bestMatch = match
-                        sLogger.debug("gene: {}, using match that overlaps with ensembl", allele.geneAllele)
+                        locationMethod = "AlignmentOverlapsEnsembl"
                     }
+                    multipleAlignments = true
                 }
             }
 
-            var location: LocationInfo? = null
+            val location: LocationInfo?
             if (bestMatch == null)
             {
-                if (ensemblGene != null)
+                if (ensemblGene != null && allele.region == IgTcrRegion.D_REGION)
                 {
-                    sLogger.error("gene: {}, no full match yet has ensembl", allele.geneAllele)
-
-                    if (allele.region == IgTcrRegion.D_REGION)
-                    {
-                        // use ensembl for D region
-                        location = LocationInfo(toGenomicLocation(ensemblGene), null)
-                    }
+                    // use ensembl for D region since they may be unalignable.
+                    location = LocationInfo(toGenomicLocation(ensemblGene), null, multipleAlignments)
+                    locationMethod = "DRegionEnsembl"
                 }
-                sLogger.info("gene: {}, no full match", allele.geneAllele)
+                else
+                {
+                    location = null
+                }
             }
             else
             {
                 val genomicLocation = matchToQueryGenomicLocation(bestMatch)
-                location = LocationInfo(genomicLocation, bestMatch.cigar)
-                sLogger.info(
-                    "gene: {}, gene loc: {}, contig={}, start={}, end={}, cigar: {}",
-                    allele.geneAllele, genomicLocation,
-                    bestMatch.subjectTitle, bestMatch.subjectAlignStart, bestMatch.subjectAlignEnd, bestMatch.cigar)
+                location = LocationInfo(genomicLocation, bestMatch.cigar, multipleAlignments)
+                locationMethod = "Alignment"
             }
+
+            sLogger.info(
+                "Gene location: {}  method={} location={} contig=\"{}\" start={} end={} cigar={} multipleAlignments={}",
+                allele.geneAllele, locationMethod, location?.location,
+                bestMatch?.subjectTitle, bestMatch?.subjectAlignStart, bestMatch?.subjectAlignEnd, bestMatch?.cigar?.joinToString(""),
+                multipleAlignments)
+
             locations.add(location)
         }
         return locations
@@ -322,7 +348,7 @@ class ImgtGeneCurator
         // apply blacklist
         if (allele.geneName in liftOverBlacklist)
         {
-            sLogger.info("gene: {} in liftover blacklist, clearing v37 genomic location", allele.geneName)
+            sLogger.info("Liftover blacklist, clearing v37 genomic location {}", allele.geneName)
             alleleLocationV37 = null
             anchorLocationV37 = null
         }
@@ -374,7 +400,7 @@ class ImgtGeneCurator
 
                 if (interval37 != null)
                 {
-                    sLogger.info("HMF cannot convert but htsjdk liftover can: v38({}) v37({})", locationV38, genomicLocV37)
+                    sLogger.debug("HMF cannot convert but htsjdk liftover can: v38={} v37={}", locationV38, genomicLocV37)
                     return locationV38.copy(chromosome = RefGenomeVersion.V37.versionedChromosome(locationV38.chromosome),
                         posStart = interval37.start, posEnd = interval37.end, strand = if (interval37.isPositiveStrand) Strand.FORWARD else Strand.REVERSE)
                 }
@@ -430,14 +456,22 @@ class ImgtGeneCurator
 
     private fun writeVDJFasta(path: String, alleles: List<ProcessedGeneAllele>, isV38: Boolean)
     {
+        val sequences = alleles.mapNotNull { allele ->
+            if (allele.imgt.region?.isVDJ ?: false) getAlleleSequenceWithContext(allele, isV38)
+            else null
+        }
+
         File(path).printWriter().use { file ->
-            alleles.forEach { allele ->
-                if (allele.imgt.region?.isVDJ ?: false)
-                {
-                    val sequence = getAlleleSequenceWithContext(allele, isV38)
-                    file.print(">${sequence.fastaLabel}\n${sequence.sequenceWithRef}\n")
-                }
-            }
+            sequences.forEach { sequence -> file.print(">${sequence.fastaLabel}\n${sequence.sequenceWithRef}\n") }
+        }
+
+        val duplicates = sequences
+            .filter { s1 -> sequences.any { s2 -> s1 !== s2 && s1.sequenceWithRef == s2.sequenceWithRef } }
+            .map { it.geneAllele }
+            .sorted()
+        if (duplicates.isNotEmpty())
+        {
+            sLogger.warn("Identical FASTA sequences: {}: {}", duplicates.size, duplicates)
         }
     }
 
@@ -462,20 +496,24 @@ class ImgtGeneCurator
         {
             val alleleSeqAligned = if (isForward) alleleSeq else reverseComplement(alleleSeq)
 
+            // If there are multiple best alignments for this sequence, then ensure there are some ref bases surrounding to disambiguate it.
+            val refContext = if (allele.duplicateSequence || allele.multipleAlignments) max(FASTA_REF_CONTEXT_BASE, FASTA_REF_CONTEXT_AMBIGUOUS)
+                else FASTA_REF_CONTEXT_BASE
+
             val refGenome = if (isV38) refGenomeSourceV38 else refGenomeSourceV37
             val chromosome = getChromosomeForRefGenome(location.chromosome, refGenome)
             // When we get the reference sequence surrounding the allele, check a few bases overlapping the allele to ensure it lines up.
             val ref1 = refGenome.getBaseString(
                 chromosome,
-                location.posStart - FASTA_REF_CONTEXT,
+                location.posStart - refContext,
                 location.posStart - 1 + REF_CONTEXT_CHECK
             ) ?: ""
             val ref2 = refGenome.getBaseString(
                 chromosome,
                 location.posEnd + 1 - REF_CONTEXT_CHECK,
-                location.posEnd + FASTA_REF_CONTEXT
+                location.posEnd + refContext
             ) ?: ""
-            val refStart = ref1.substring(FASTA_REF_CONTEXT)
+            val refStart = ref1.substring(refContext)
             val alleleStart = alleleSeqAligned.substring(0, REF_CONTEXT_CHECK)
             val refEnd = ref2.substring(0, REF_CONTEXT_CHECK)
             val alleleEnd = alleleSeqAligned.substring(alleleSeqAligned.length - REF_CONTEXT_CHECK)
@@ -554,10 +592,13 @@ class ImgtGeneCurator
                 it.species == SPECIES && it.region != null
             }
 
+            sLogger.info("Gene alleles: {}", filteredAlleles.size)
             filteredAlleles.forEach { sLogger.info("Gene allele: $it") }
 
             return filteredAlleles
         }
+
+        private fun toEnsemblGeneName(name: String) = name.replace("/", "").uppercase()
 
         private fun findVAnchor(allele: ImgtGeneAllele, alleleLocationInfo: LocationInfo?): AnchorInfo?
         {
@@ -566,9 +607,7 @@ class ImgtGeneCurator
 
             if (seqWithGaps.length < IMGT_V_ANCHOR_INDEX)
             {
-                sLogger.log(
-                    if (allele.functionality == IgTcrFunctionality.FUNCTIONAL && !allele.partial) Level.ERROR else Level.INFO,
-                    "Cannot find V anchor, sequence too short. {}", allele.geneAllele)
+                sLogger.warn("Cannot find V anchor, sequence too short: {}", allele.geneAllele)
                 return null
             }
 
@@ -578,17 +617,14 @@ class ImgtGeneCurator
             if (anchor.length < min(IMGT_ANCHOR_LENGTH, ANCHOR_DNA_LENGTH))
             {
                 // skip this one
-                sLogger.log(
-                    if (allele.functionality == IgTcrFunctionality.FUNCTIONAL && !allele.partial) Level.ERROR else Level.INFO,
-                    "V anchor:{} too short for {}", anchor, allele.geneAllele
-                )
+                sLogger.warn("V anchor too short: {} {}", allele.geneAllele, anchor)
                 return null
             }
 
             // anchor cannot contain .
             if (anchor.contains("."))
             {
-                sLogger.error("V anchor: {} contains \".\", gene: {}", anchor, allele.geneAllele)
+                sLogger.error("V anchor contains gap: {} {}", allele.geneAllele, anchor)
                 return null
             }
 
@@ -626,16 +662,9 @@ class ImgtGeneCurator
                 }
             }
 
-            val aaSeq = Codons.aminoAcidFromBases(anchor)
-
-            // v gene
             sLogger.info(
-                "V gene: {}, anchor: {}, offset from start: {}, anchor AA: {}",
-                allele.geneAllele,
-                anchor,
-                anchorIndex,
-                aaSeq
-            )
+                "V gene {} anchor={} anchorAA={} offset={}",
+                allele.geneAllele, anchor, Codons.aminoAcidFromBases(anchor), anchorIndex)
 
             return AnchorInfo(anchor, anchorLocation)
         }
@@ -649,9 +678,7 @@ class ImgtGeneCurator
 
             if (anchorIndex <= 0)
             {
-                sLogger.log(
-                    if (allele.functionality == IgTcrFunctionality.FUNCTIONAL && !allele.partial) Level.ERROR else Level.INFO,
-                    "J gene: {} cannot find anchor", allele.geneAllele)
+                sLogger.warn("Cannot find J anchor: {}", allele.geneAllele)
                 return null
             }
 
@@ -660,7 +687,7 @@ class ImgtGeneCurator
             // cannot contain .
             if (anchor.contains("."))
             {
-                sLogger.error("J gene: {}, anchor({}) contains .", allele.geneAllele, anchor)
+                sLogger.error("J anchor contains gap: {} {}", allele.geneAllele, anchor)
                 return null
             }
 
@@ -686,9 +713,9 @@ class ImgtGeneCurator
                 }
             }
 
-            val aaSeq = Codons.aminoAcidFromBases(anchor)
-
-            sLogger.info("J gene: {}, anchor: {}, offset from start: {}, anchor AA: {}", allele.geneAllele, anchor, anchorIndex, aaSeq)
+            sLogger.info(
+                "J gene {} anchor={} anchorAA={} offset={}",
+                allele.geneAllele, anchor, Codons.aminoAcidFromBases(anchor), anchorIndex)
 
             return AnchorInfo(anchor, anchorLocation)
         }
@@ -730,7 +757,7 @@ class ImgtGeneCurator
                 {
                     if (!validateAgainstRefGenome(gene.anchorSequence!!, gene.anchorLocation, refGenome, ANCHOR_MISMATCH_MAX))
                     {
-                        sLogger.error("gene: {} anchor location: {} does not match anchor seq: {}",
+                        sLogger.error("Anchor location does not match anchor seq: {} {} {}",
                             gene.geneAllele, gene.anchorLocation, gene.anchorSequence)
                         failed = true
                     }
@@ -743,14 +770,15 @@ class ImgtGeneCurator
         }
 
         // validate sequence against the ref genome file to make sure we got it right
-        fun validateAgainstRefGenome(seq: String, genomicLocation: GenomicLocation, refGenome: RefGenomeSource, maxMismatches: Int): Boolean
+        private fun validateAgainstRefGenome(
+            seq: String, genomicLocation: GenomicLocation, refGenome: RefGenomeSource, maxMismatches: Int): Boolean
         {
             val refForwardSeq = refGenome.getBaseString(getChromosomeForRefGenome(genomicLocation.chromosome, refGenome), genomicLocation.posStart, genomicLocation.posEnd)
             val refGenomeSeq = if (genomicLocation.strand == Strand.FORWARD) refForwardSeq else reverseComplement(refForwardSeq)
 
             if (refGenomeSeq.length != seq.length)
             {
-                sLogger.warn("validation failed: seq({}) and ref genome seq({} of {}) length mismatch", seq, refGenomeSeq, genomicLocation)
+                sLogger.error("Ref genome and seq length mismatch: seq={} refSeq={} location={}", seq, refGenomeSeq, genomicLocation)
                 return false
             }
 
@@ -758,12 +786,8 @@ class ImgtGeneCurator
             if (mismatches > maxMismatches)
             {
                 sLogger.error(
-                    "validation failed: seq({}) and ref genome seq({} of {}) sequence mismatch({}) > $maxMismatches",
-                    seq,
-                    refGenomeSeq,
-                    genomicLocation,
-                    mismatches
-                )
+                    "Ref genome and seq base mismatch: seq={} refSeq={} location={} mismatches={}",
+                    seq, refGenomeSeq, genomicLocation, mismatches)
                 return false
             }
             return true
