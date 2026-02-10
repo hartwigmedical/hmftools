@@ -15,12 +15,13 @@ import org.jetbrains.annotations.NotNull;
 
 public final class VariantDedup
 {
-    private static final Set<PurpleVariantEffect> PHASED_EFFECTS =
-            Sets.newHashSet(PurpleVariantEffect.PHASED_INFRAME_DELETION, PurpleVariantEffect.PHASED_INFRAME_INSERTION,
-                    PurpleVariantEffect.PHASED_MISSENSE, PurpleVariantEffect.PHASED_SYNONYMOUS);
+    private static final Set<PurpleVariantEffect> PHASED_EFFECTS = Sets.newHashSet(
+            PurpleVariantEffect.PHASED_INFRAME_DELETION,
+            PurpleVariantEffect.PHASED_INFRAME_INSERTION,
+            PurpleVariantEffect.PHASED_MISSENSE,
+            PurpleVariantEffect.PHASED_SYNONYMOUS);
 
-    @NotNull
-    public static List<PurpleVariant> apply(@NotNull List<PurpleVariant> variants)
+    public static List<PurpleVariant> apply(final List<PurpleVariant> variants)
     {
         List<PurpleVariant> filtered = Lists.newArrayList();
         for(PurpleVariant variant : variants)
@@ -37,7 +38,7 @@ public final class VariantDedup
         return filtered;
     }
 
-    private static boolean hasCanonicalPhasedEffect(@NotNull PurpleVariant variant)
+    private static boolean hasCanonicalPhasedEffect(final PurpleVariant variant)
     {
         for(PurpleVariantEffect effect : variant.canonicalImpact().effects())
         {
@@ -49,7 +50,7 @@ public final class VariantDedup
         return false;
     }
 
-    private static boolean hasSameEffectWithHigherVCN(@NotNull List<PurpleVariant> variants, @NotNull PurpleVariant variantToMatch)
+    private static boolean hasSameEffectWithHigherVCN(final List<PurpleVariant> variants, final PurpleVariant variantToMatch)
     {
         // We assume that variants with same effect have unique hgvs coding impact.
         Double minVariantCopyNumber = null;

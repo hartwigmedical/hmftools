@@ -67,14 +67,6 @@ public final class TestPurpleVariantFactory
                 .reported(false);
     }
 
-    public static ImmutablePurpleVariantContext.Builder contextBuilder()
-    {
-        return ImmutablePurpleVariantContext.builder()
-                .from(variantBuilder().build())
-                .biallelicProbability(0)
-                .subclonalLikelihood(0);
-    }
-
     @NotNull static ImmutableSmallVariantImpl.Builder variantBuilder()
     {
         return ImmutableSmallVariantImpl.builder()
@@ -90,6 +82,8 @@ public final class TestPurpleVariantFactory
                 .canonicalCodingEffect(CodingEffect.UNDEFINED)
                 .canonicalHgvsCodingImpact(Strings.EMPTY)
                 .canonicalHgvsProteinImpact(Strings.EMPTY)
+                .canonicalAffectedCodon(0)
+                .canonicalAffectedExon(0)
                 .qual(0)
                 .mappability(0)
                 .filter(Strings.EMPTY)
@@ -105,6 +99,7 @@ public final class TestPurpleVariantFactory
                 .minorAlleleCopyNumber(0)
                 .variantCopyNumber(0)
                 .biallelic(false)
+                .biallelicProbability(0)
                 .genotypeStatus(GenotypeStatus.UNKNOWN)
                 .germlineStatus(GermlineStatus.UNKNOWN)
                 .trinucleotideContext(Strings.EMPTY)

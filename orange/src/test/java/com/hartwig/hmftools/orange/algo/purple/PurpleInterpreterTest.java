@@ -23,7 +23,6 @@ import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.orange.algo.linx.LinxOrangeTestFactory;
-import com.hartwig.hmftools.orange.algo.pave.PaveAlgo;
 import com.hartwig.hmftools.orange.algo.pave.TestEnsemblDataCacheFactory;
 
 import org.apache.logging.log4j.util.Strings;
@@ -103,13 +102,9 @@ public class PurpleInterpreterTest
     @NotNull
     private static PurpleInterpreter createInterpreter(@NotNull EnsemblDataCache ensemblDataCache)
     {
-        PaveAlgo pave = new PaveAlgo(ensemblDataCache, false);
-        PurpleVariantFactory purpleVariantFactory = new PurpleVariantFactory(pave);
         GermlineGainDeletionFactory germlineGainDeletionFactory = new GermlineGainDeletionFactory(ensemblDataCache);
 
-        return new PurpleInterpreter(
-                purpleVariantFactory,
-                germlineGainDeletionFactory);
+        return new PurpleInterpreter(germlineGainDeletionFactory);
     }
 
     @NotNull

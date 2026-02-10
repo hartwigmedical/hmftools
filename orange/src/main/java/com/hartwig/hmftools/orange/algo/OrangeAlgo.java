@@ -63,7 +63,6 @@ import com.hartwig.hmftools.orange.algo.immuno.ImmuneEscapeInterpreter;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpreter;
 import com.hartwig.hmftools.orange.algo.linx.LinxInterpreter;
 import com.hartwig.hmftools.orange.algo.linx.LinxReportableClusters;
-import com.hartwig.hmftools.orange.algo.pave.PaveAlgo;
 import com.hartwig.hmftools.orange.algo.plot.DummyPlotManager;
 import com.hartwig.hmftools.orange.algo.plot.FileBasedPlotManager;
 import com.hartwig.hmftools.orange.algo.plot.PlotManager;
@@ -71,7 +70,6 @@ import com.hartwig.hmftools.orange.algo.purple.GermlineGainDeletionFactory;
 import com.hartwig.hmftools.orange.algo.purple.PurpleData;
 import com.hartwig.hmftools.orange.algo.purple.PurpleDataLoader;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpreter;
-import com.hartwig.hmftools.orange.algo.purple.PurpleVariantFactory;
 import com.hartwig.hmftools.orange.algo.sage.GermlineMVLHFactory;
 import com.hartwig.hmftools.orange.algo.sigs.SigsEtiologiesLoader;
 import com.hartwig.hmftools.orange.algo.sigs.SigsInterpreter;
@@ -168,15 +166,11 @@ public class OrangeAlgo
 
         LinxRecord linx = linxInterpreter.interpret(linxData);
 
-        PaveAlgo pave = new PaveAlgo(mEnsemblDataCache, !mSuppressGeneWarnings);
-
-        PurpleVariantFactory purpleVariantFactory = new PurpleVariantFactory(pave);
-
         GermlineGainDeletionFactory germlineGainDeletionFactory = new GermlineGainDeletionFactory(mEnsemblDataCache);
 
         List<DriverGene> driverGenes = new ArrayList<>(mDriverGenes.values());
 
-        PurpleInterpreter purpleInterpreter = new PurpleInterpreter(purpleVariantFactory, germlineGainDeletionFactory);
+        PurpleInterpreter purpleInterpreter = new PurpleInterpreter(germlineGainDeletionFactory);
 
         PurpleRecord purple = purpleInterpreter.interpret(purpleData);
 

@@ -15,13 +15,11 @@ import com.hartwig.hmftools.datamodel.purple.PurpleVariantEffect;
 import com.hartwig.hmftools.orange.report.interpretation.Drivers;
 
 import com.google.common.collect.Lists;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class VariantEntryFactory
 {
-    @NotNull
-    public static List<VariantEntry> create(@NotNull List<PurpleVariant> variants, @NotNull List<PurpleDriver> drivers)
+    public static List<VariantEntry> create(final List<PurpleVariant> variants, final List<PurpleDriver> drivers)
     {
         List<VariantEntry> entries = Lists.newArrayList();
         for(PurpleVariant variant : variants)
@@ -45,8 +43,7 @@ public final class VariantEntryFactory
         return entries;
     }
 
-    @NotNull
-    private static VariantEntry toVariantEntry(@NotNull PurpleVariant variant, @Nullable PurpleDriver driver)
+    private static VariantEntry toVariantEntry(final PurpleVariant variant, @Nullable final PurpleDriver driver)
     {
         PurpleTranscriptImpact transcriptImpact;
 
@@ -82,8 +79,7 @@ public final class VariantEntryFactory
                 .build();
     }
 
-    @NotNull
-    private static List<PurpleVariant> findReportedVariantsForDriver(@NotNull List<PurpleVariant> variants, @NotNull PurpleDriver driver)
+    private static List<PurpleVariant> findReportedVariantsForDriver(final List<PurpleVariant> variants, final PurpleDriver driver)
     {
         List<PurpleVariant> reportedVariantsForDriver = Lists.newArrayList();
         List<PurpleVariant> reportedVariantsForGene = findReportedVariantsForGene(variants, driver.gene());
@@ -98,8 +94,7 @@ public final class VariantEntryFactory
         return reportedVariantsForDriver;
     }
 
-    @NotNull
-    private static List<PurpleVariant> findReportedVariantsForGene(@NotNull List<PurpleVariant> variants, @NotNull String geneToFind)
+    private static List<PurpleVariant> findReportedVariantsForGene(final List<PurpleVariant> variants, final String geneToFind)
     {
         List<PurpleVariant> reportedVariantsForGene = Lists.newArrayList();
         for(PurpleVariant variant : variants)
@@ -114,7 +109,7 @@ public final class VariantEntryFactory
 
     @Nullable
     @VisibleForTesting
-    static PurpleTranscriptImpact findTranscriptImpact(@NotNull PurpleVariant variant, @NotNull String transcriptToFind)
+    static PurpleTranscriptImpact findTranscriptImpact(final PurpleVariant variant, final String transcriptToFind)
     {
         if(variant.canonicalImpact().transcript().equals(transcriptToFind))
         {
@@ -132,9 +127,8 @@ public final class VariantEntryFactory
         return null;
     }
 
-    @NotNull
     @VisibleForTesting
-    static String determineImpact(@NotNull PurpleTranscriptImpact impact)
+    static String determineImpact(final PurpleTranscriptImpact impact)
     {
         String hgvsProteinImpact = impact.hgvsProteinImpact();
         if(!hgvsProteinImpact.isEmpty() && !hgvsProteinImpact.equals("p.?"))
@@ -162,7 +156,7 @@ public final class VariantEntryFactory
         return joiner.toString();
     }
 
-    private static boolean hasCanonicalImpact(@NotNull PurpleVariant variant)
+    private static boolean hasCanonicalImpact(final PurpleVariant variant)
     {
         return !variant.canonicalImpact().transcript().isEmpty();
     }

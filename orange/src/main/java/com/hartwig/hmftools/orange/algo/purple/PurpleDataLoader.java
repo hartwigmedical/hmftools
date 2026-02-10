@@ -20,7 +20,8 @@ import com.hartwig.hmftools.common.purple.PurplePurity;
 import com.hartwig.hmftools.common.purple.PurpleQCFile;
 import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.common.variant.CommonVcfTags;
-import com.hartwig.hmftools.common.variant.VariantTier;
+import com.hartwig.hmftools.common.variant.SmallVariant;
+import com.hartwig.hmftools.common.variant.SmallVariantFactory;
 import com.hartwig.hmftools.orange.OrangeConfig;
 
 import org.jetbrains.annotations.Nullable;
@@ -77,17 +78,17 @@ public final class PurpleDataLoader
         // exclude non-reportable events
         somaticDrivers = somaticDrivers.stream().filter(x -> x.reportedStatus() != ReportedStatus.NOT_REPORTED).collect(Collectors.toList());
 
-        List<PurpleVariantContext> allSomaticVariants = PurpleVariantContextLoader.withPassingOnlyFilter()
-                .fromVCFFile(tumorSample, referenceSample, rnaSample, somaticVariantVcf);
+        List<SmallVariant> allSomaticVariants = SmallVariantFactory.passOnlyInstance().fromVCFFile(
+                tumorSample, referenceSample, rnaSample, somaticVariantVcf);
 
-        List<PurpleVariantContext> panelSomaticVariants = allSomaticVariants.stream().filter(x -> x.reported()).collect(Collectors.toList());
+        List<SmallVariant> panelSomaticVariants = allSomaticVariants.stream().filter(x -> x.reported()).collect(Collectors.toList());
 
         List<GeneCopyNumber> geneCopyNumbers = GeneCopyNumberFile.read(geneCopyNumberTsv);
 
         geneCopyNumbers = geneCopyNumbers.stream().filter(x -> driverGenes.containsKey(x.GeneName)).collect(Collectors.toList());
 
         List<DriverCatalog> germlineDrivers = null;
-        List<PurpleVariantContext> panelGermlineVariants = null;
+        List<SmallVariant> panelGermlineVariants = null;
         List<GermlineAmpDel> panelGermlineDeletions = null;
 
         if(referenceSample != null)
@@ -96,8 +97,7 @@ public final class PurpleDataLoader
 
             germlineDrivers = germlineDrivers.stream().filter(x -> x.reportedStatus() != ReportedStatus.NOT_REPORTED).collect(Collectors.toList());
 
-            List<PurpleVariantContext> germlineVariants = new PurpleVariantContextLoader().fromVCFFile(
-                    tumorSample, referenceSample, rnaSample, germlineVariantVcf);
+            List<SmallVariant> germlineVariants = new SmallVariantFactory().fromVCFFile(tumorSample, referenceSample, rnaSample, germlineVariantVcf);
 
             panelGermlineVariants = germlineVariants.stream().filter(x -> x.reported()).collect(Collectors.toList());
 

@@ -48,14 +48,12 @@ public class SomaticFindingsChapter implements ReportChapter
         mReportResources = reportResources;
     }
 
-    @NotNull
     @Override
     public String name()
     {
         return "Somatic Findings";
     }
 
-    @NotNull
     @Override
     public PageSize pageSize()
     {
@@ -68,10 +66,7 @@ public class SomaticFindingsChapter implements ReportChapter
         document.add(new Paragraph(name()).addStyle(mReportResources.chapterTitleStyle()));
 
         addSomaticVariants(document);
-        if(!PurpleQCInterpretation.isContaminated(mReport.purple().fit().qc()))
-        {
-            addKataegisPlot(document);
-        }
+
         addSomaticAmpDels(document);
         addFusions(document);
 
@@ -92,25 +87,30 @@ public class SomaticFindingsChapter implements ReportChapter
         {
             addStructuralDriverPlots(document);
         }
+
+        if(!PurpleQCInterpretation.isContaminated(mReport.purple().fit().qc()))
+        {
+            addKataegisPlot(document);
+        }
     }
 
     private void addSomaticVariants(final Document document)
     {
         String driverVariantsTitle = "Driver variants";
-        String otherPotentiallyInterestingTitle = "Other potentially relevant variants";
 
         if(PurpleQCInterpretation.isContaminated(mReport.purple().fit().qc()))
         {
             Tables tables = new Tables(mReportResources);
             document.add(tables.createNotAvailable(driverVariantsTitle, contentWidth()));
-            document.add(tables.createNotAvailable(otherPotentiallyInterestingTitle, contentWidth()));
         }
         else
         {
             List<PurpleDriver> somaticDrivers = mReport.purple().somaticDrivers();
 
-            List<VariantEntry> reportableVariants =
-                    VariantEntryFactory.create(VariantDedup.apply(mReport.purple().somaticVariants()), somaticDrivers);
+            // List<VariantEntry> reportableVariants = VariantEntryFactory.create(VariantDedup.apply(mReport.purple().somaticVariants()), somaticDrivers);
+
+            List<VariantEntry> reportableVariants = VariantEntryFactory.create(mReport.purple().somaticVariants(), somaticDrivers);
+
             String titleDrivers = driverVariantsTitle + " (" + reportableVariants.size() + ")";
             document.add(SomaticVariantTable.build(titleDrivers, contentWidth(), reportableVariants, mReportResources));
         }

@@ -31,14 +31,10 @@ import org.jetbrains.annotations.Nullable;
 
 public class PurpleInterpreter
 {
-    private final PurpleVariantFactory mPurpleVariantFactory;
     private final GermlineGainDeletionFactory mGermlineGainDelFactory;
 
-    public PurpleInterpreter(
-            final PurpleVariantFactory purpleVariantFactory,
-            final GermlineGainDeletionFactory germlineGainDeletionFactory)
+    public PurpleInterpreter(final GermlineGainDeletionFactory germlineGainDeletionFactory)
     {
-        mPurpleVariantFactory = purpleVariantFactory;
         mGermlineGainDelFactory = germlineGainDeletionFactory;
     }
 
@@ -46,9 +42,9 @@ public class PurpleInterpreter
     {
         LOGGER.info("Analysing purple data");
 
-        List<PurpleVariant> driverSomaticVariants = mPurpleVariantFactory.fromPurpleVariantContext(purple.somaticVariants());
+        List<PurpleVariant> somaticVariants = PurpleVariantFactory.fromPurpleVariants(purple.somaticVariants());
 
-        List<PurpleVariant> driverGermlineVariants = mPurpleVariantFactory.fromPurpleVariantContext(purple.germlineVariants());
+        List<PurpleVariant> germlineVariants = PurpleVariantFactory.fromPurpleVariants(purple.germlineVariants());
 
         @Nullable List<PurpleDriver> germlineDrivers = ConversionUtil.mapToNullableList(purple.germlineDrivers(), PurpleConversion::convert);
 
@@ -68,8 +64,8 @@ public class PurpleInterpreter
                 .characteristics(createCharacteristics(purple))
                 .somaticDrivers(ConversionUtil.mapToIterable(purple.somaticDrivers(), PurpleConversion::convert))
                 .germlineDrivers(germlineDrivers)
-                .somaticVariants(driverSomaticVariants)
-                .germlineVariants(driverGermlineVariants)
+                .somaticVariants(somaticVariants)
+                .germlineVariants(germlineVariants)
                 .somaticCopyNumbers(ConversionUtil.mapToIterable(purple.somaticCopyNumbers(), PurpleConversion::convert))
                 .somaticGeneCopyNumbers(ConversionUtil.mapToIterable(purple.somaticGeneCopyNumbers(), PurpleConversion::convert))
                 .somaticGainsDels(driverSomaticGainsDels)
@@ -80,8 +76,8 @@ public class PurpleInterpreter
     private static final Set<DriverType> AMP_DEL_TYPES = EnumSet.of(
             DriverType.AMP, DriverType.PARTIAL_AMP, DriverType.DEL, DriverType.HET_DEL, DriverType.LOH);
 
-    private static List<PurpleGainDeletion> somaticGainsDelsFromDrivers(final List<DriverCatalog> drivers,
-            final List<GeneCopyNumber> allSomaticGeneCopyNumbers)
+    private static List<PurpleGainDeletion> somaticGainsDelsFromDrivers(
+            final List<DriverCatalog> drivers, final List<GeneCopyNumber> allSomaticGeneCopyNumbers)
     {
         return drivers.stream()
                 .filter(o -> AMP_DEL_TYPES.contains(o.driver()))
