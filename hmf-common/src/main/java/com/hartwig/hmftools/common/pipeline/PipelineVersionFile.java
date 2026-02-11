@@ -17,7 +17,7 @@ public final class PipelineVersionFile
     private static final Logger LOGGER = LogManager.getLogger(PipelineVersionFile.class);
 
     @Nullable
-    public static String majorDotMinorVersion(@NotNull String pipelineVersionFile) throws IOException
+    public static String majorDotMinorVersion(final String pipelineVersionFile) throws IOException
     {
         String version = readPipelineVersion(pipelineVersionFile);
         return version != null ? convertToMajorDotVersion(version) : null;
@@ -25,7 +25,7 @@ public final class PipelineVersionFile
 
     @Nullable
     @VisibleForTesting
-    static String convertToMajorDotVersion(@NotNull String version)
+    static String convertToMajorDotVersion(final String version)
     {
         // In case no dot is present there is no major.minor version either.
         if(!version.contains("."))
@@ -38,7 +38,7 @@ public final class PipelineVersionFile
     }
 
     @Nullable
-    private static String readPipelineVersion(@NotNull String pipelineVersionFile) throws IOException
+    private static String readPipelineVersion(final String pipelineVersionFile) throws IOException
     {
         List<String> lines = Files.readAllLines(new File(pipelineVersionFile).toPath());
         if(lines.isEmpty())

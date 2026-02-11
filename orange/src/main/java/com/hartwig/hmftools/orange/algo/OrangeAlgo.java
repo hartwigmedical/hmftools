@@ -25,6 +25,7 @@ import com.hartwig.hmftools.common.doid.DoidParents;
 import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.driver.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.genome.chromosome.CytoBands;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.hla.LilacSummaryData;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxData;
@@ -162,7 +163,9 @@ public class OrangeAlgo
         List<SignatureAllocation> sigAllocations = loadSigAllocations(config);
         IsofoxData isofoxData = loadIsofoxData(config);
 
-        LinxInterpreter linxInterpreter = new LinxInterpreter(mEnsemblDataCache);
+        CytoBands cytoBands = new CytoBands(config.refGenomeVersion());
+
+        LinxInterpreter linxInterpreter = new LinxInterpreter(cytoBands);
 
         LinxRecord linx = linxInterpreter.interpret(linxData);
 
@@ -206,7 +209,7 @@ public class OrangeAlgo
                 .samplingDate(config.samplingDate())
                 .experimentType(config.experimentType())
                 .configuredPrimaryTumor(ConversionUtil.mapToIterable(configuredPrimaryTumor, OrangeConversion::convert))
-                .refGenomeVersion(config.refGenomeVersion())
+                .refGenomeVersion(config.orangeRefGenomeVersion())
                 .pipelineVersion(pipelineVersion)
                 .refSample(refSample)
                 .tumorSample(tumorSample)

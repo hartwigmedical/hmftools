@@ -15,7 +15,7 @@ import com.hartwig.hmftools.common.purple.GeneCopyNumberTestFactory;
 import com.hartwig.hmftools.common.purple.GermlineAmpDel;
 import com.hartwig.hmftools.common.purple.GermlineDeletionTestFactory;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
-import com.hartwig.hmftools.orange.algo.pave.TestEnsemblDataCacheFactory;
+import com.hartwig.hmftools.orange.TestDataUtils;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -192,7 +192,7 @@ public class GermlineAmpDelUtilTest
     @Test
     public void testGetCanonicalTranscript()
     {
-        EnsemblDataCache ensemblDataCache = TestEnsemblDataCacheFactory.loadTestCache();
+        EnsemblDataCache ensemblDataCache = TestDataUtils.loadTestCache();
         TranscriptData canonicalTranscript = GermlineGainDeletionUtil.findCanonicalTranscript(TEST_GENE, ensemblDataCache);
 
         assertEquals("gene_id", canonicalTranscript.GeneId);
@@ -232,7 +232,7 @@ public class GermlineAmpDelUtilTest
     @NotNull
     private static TranscriptData getTestTranscript()
     {
-        EnsemblDataCache ensemblDataCache = TestEnsemblDataCacheFactory.loadTestCache();
+        EnsemblDataCache ensemblDataCache = TestDataUtils.loadTestCache();
         return ensemblDataCache.getCanonicalTranscriptData("gene_id");
     }
 }

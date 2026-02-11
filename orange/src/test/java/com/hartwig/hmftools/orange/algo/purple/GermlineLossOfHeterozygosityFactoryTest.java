@@ -16,7 +16,7 @@ import com.hartwig.hmftools.common.purple.GermlineDeletionTestFactory;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.datamodel.purple.GeneProportion;
 import com.hartwig.hmftools.datamodel.purple.PurpleLossOfHeterozygosity;
-import com.hartwig.hmftools.orange.algo.pave.TestEnsemblDataCacheFactory;
+import com.hartwig.hmftools.orange.TestDataUtils;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -117,7 +117,7 @@ public class GermlineLossOfHeterozygosityFactoryTest
     @NotNull
     private static GermlineLossOfHeterozygosityFactory createTestFactory()
     {
-        EnsemblDataCache ensemblDataCache = TestEnsemblDataCacheFactory.loadTestCache();
+        EnsemblDataCache ensemblDataCache = TestDataUtils.loadTestCache();
         return new GermlineLossOfHeterozygosityFactory(ensemblDataCache);
     }
 }

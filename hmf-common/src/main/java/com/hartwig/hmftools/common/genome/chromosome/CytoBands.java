@@ -22,7 +22,7 @@ import org.apache.logging.log4j.core.util.IOUtils;
 
 public class CytoBands
 {
-    private final Map<String, List<CytoBand>> mChromosomeMap;
+    private final Map<String,List<CytoBand>> mChromosomeMap;
 
     public CytoBands(final RefGenomeVersion refGenomeVersion)
     {
@@ -63,7 +63,7 @@ public class CytoBands
         {
             final String[] values = line.split(delim, -1);
 
-            String chromosome = values[chrIndex];
+            String chromosome = refGenomeVersion.versionedChromosome(values[chrIndex]);
             int posStart = Integer.parseInt(values[posStartIndex]);
             int posEnd = Integer.parseInt(values[posEndIndex]);
 

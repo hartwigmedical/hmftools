@@ -5,8 +5,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.genome.chromosome.CytoBands;
 import com.hartwig.hmftools.common.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
 import com.hartwig.hmftools.datamodel.gene.TranscriptCodingType;
@@ -19,24 +18,32 @@ import com.hartwig.hmftools.datamodel.linx.LinxGeneOrientation;
 public class LinxBreakendInterpreter
 {
     private final Map<Integer, LinxSvAnnotation> mLinxSvAnnotationsMap;
-    private final EnsemblDataCache mEnsemblDataCache;
+    private final CytoBands mCytoBands;
 
-    public LinxBreakendInterpreter(final List<LinxSvAnnotation> linxSvAnnotations, final EnsemblDataCache ensemblDataCache)
+    public LinxBreakendInterpreter(final List<LinxSvAnnotation> linxSvAnnotations, final CytoBands cytoBands)
     {
         mLinxSvAnnotationsMap = linxSvAnnotations.stream().collect(Collectors.toMap(LinxSvAnnotation::svId, s -> s));
-        mEnsemblDataCache = ensemblDataCache;
+        mCytoBands = cytoBands;
     }
 
     public LinxBreakend interpret(com.hartwig.hmftools.common.linx.LinxBreakend linxBreakend)
     {
         LinxSvAnnotation svAnnotation = mLinxSvAnnotationsMap.get(linxBreakend.svId());
 
+        String breakendCoords = linxBreakend.isStart() ? svAnnotation.coordsStart() : svAnnotation.coordsEnd();
+
+        String chromosome = com.hartwig.hmftools.common.linx.LinxBreakend.chromosomeFromCoords(breakendCoords);
+        int position = com.hartwig.hmftools.common.linx.LinxBreakend.positionFromCoords(breakendCoords);
+        byte orientation = com.hartwig.hmftools.common.linx.LinxBreakend.orientationFromCoords(breakendCoords);
+
+        String cytoBand = mCytoBands.getCytoBandName(chromosome, position);
+
         return ImmutableLinxBreakend.builder()
                 .id(linxBreakend.id())
                 .svId(linxBreakend.svId())
                 .gene(linxBreakend.gene())
-                .chromosome(chromosome(svAnnotation, linxBreakend.isStart()))
-                .chromosomeBand(chromosomeBand(linxBreakend.gene()))
+                .chromosome(chromosome)
+                .chromosomeBand(cytoBand)
                 .transcript(linxBreakend.transcriptId())
                 .isCanonical(linxBreakend.canonical())
                 .geneOrientation(linxBreakend.geneOrientation().equals(com.hartwig.hmftools.common.linx.LinxBreakend.BREAKEND_ORIENTATION_UPSTREAM) ?
@@ -48,32 +55,11 @@ public class LinxBreakendInterpreter
                 .regionType(TranscriptRegionType.valueOf(linxBreakend.regionType().name()))
                 .codingType(TranscriptCodingType.valueOf(linxBreakend.codingType().name()))
                 .nextSpliceExonRank(linxBreakend.nextSpliceExonRank())
-                .orientation(orientation(svAnnotation, linxBreakend.isStart()))
+                .orientation(orientation)
                 .exonUp(linxBreakend.exonUp())
                 .exonDown(linxBreakend.exonDown())
                 .junctionCopyNumber(junctionCopyNumber(svAnnotation))
                 .build();
-    }
-
-    private static String chromosome(final LinxSvAnnotation svAnnotation, boolean isStart)
-    {
-        if(svAnnotation == null)
-            return "";
-
-        String coords = isStart ? svAnnotation.coordsStart() : svAnnotation.coordsEnd();
-        return com.hartwig.hmftools.common.linx.LinxBreakend.chromosomeFromCoords(coords);
-    }
-
-    private static byte orientation(final LinxSvAnnotation svAnnotation, boolean isStart)
-    {
-        String coords = isStart ? svAnnotation.coordsStart() : svAnnotation.coordsEnd();
-        return com.hartwig.hmftools.common.linx.LinxBreakend.orientationFromCoords(coords);
-    }
-
-    private String chromosomeBand(final String gene)
-    {
-        GeneData geneData = mEnsemblDataCache.getGeneDataByName(gene);
-        return geneData != null ? geneData.KaryotypeBand : "";
     }
 
     @VisibleForTesting

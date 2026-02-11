@@ -18,14 +18,13 @@ import com.hartwig.hmftools.orange.conversion.PurpleConversion;
 
 public class GermlineGainDeletionFactory
 {
-    private final EnsemblDataCache ensemblDataCache;
+    private final EnsemblDataCache mEnsemblDataCache;
 
     public GermlineGainDeletionFactory(final EnsemblDataCache ensemblDataCache)
     {
-        this.ensemblDataCache = ensemblDataCache;
+        mEnsemblDataCache = ensemblDataCache;
     }
 
-    //
     public List<PurpleGainDeletion> createGermlineGainDeletions(
             final List<GermlineAmpDel> germlineAmpDels,
             final List<PurpleDriver> germlineDrivers,
@@ -48,10 +47,10 @@ public class GermlineGainDeletionFactory
                 .toList();
     }
 
-    private PurpleGainDeletion toGainDel(final PurpleDriver driver, final List<GermlineAmpDel> deletionsForGene,
-            final GeneCopyNumber somaticGeneCopyNumber)
+    private PurpleGainDeletion toGainDel(
+            final PurpleDriver driver, final List<GermlineAmpDel> deletionsForGene, final GeneCopyNumber somaticGeneCopyNumber)
     {
-        TranscriptData canonicalTranscript = GermlineGainDeletionUtil.findTranscript(driver.gene(), driver.transcript(), ensemblDataCache);
+        TranscriptData canonicalTranscript = GermlineGainDeletionUtil.findTranscript(driver.gene(), driver.transcript(), mEnsemblDataCache);
         CopyNumberInterpretation interpretation = GermlineGainDeletionUtil.deletionsCoverTranscript(deletionsForGene, canonicalTranscript)
                 ? CopyNumberInterpretation.FULL_DEL
                 : CopyNumberInterpretation.PARTIAL_DEL;

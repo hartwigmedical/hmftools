@@ -23,7 +23,7 @@ import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.orange.algo.linx.LinxOrangeTestFactory;
-import com.hartwig.hmftools.orange.algo.pave.TestEnsemblDataCacheFactory;
+import com.hartwig.hmftools.orange.TestDataUtils;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -90,13 +90,13 @@ public class PurpleInterpreterTest
     @NotNull
     private static PurpleInterpreter createTestInterpreter()
     {
-        return createInterpreter(TestEnsemblDataCacheFactory.createDummyCache());
+        return createInterpreter(TestDataUtils.createDummyCache());
     }
 
     @NotNull
     private static PurpleInterpreter createRealInterpreter()
     {
-        return createInterpreter(TestEnsemblDataCacheFactory.loadTestCache());
+        return createInterpreter(TestDataUtils.loadTestCache());
     }
 
     @NotNull

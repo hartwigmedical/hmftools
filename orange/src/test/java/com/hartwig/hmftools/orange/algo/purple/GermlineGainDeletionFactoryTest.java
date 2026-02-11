@@ -15,7 +15,7 @@ import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
-import com.hartwig.hmftools.orange.algo.pave.TestEnsemblDataCacheFactory;
+import com.hartwig.hmftools.orange.TestDataUtils;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -120,7 +120,7 @@ public class GermlineGainDeletionFactoryTest
     @NotNull
     private static GermlineGainDeletionFactory createTestFactory()
     {
-        EnsemblDataCache ensemblDataCache = TestEnsemblDataCacheFactory.loadTestCache();
+        EnsemblDataCache ensemblDataCache = TestDataUtils.loadTestCache();
         return new GermlineGainDeletionFactory(ensemblDataCache);
     }
 }

@@ -147,7 +147,7 @@ public interface OrangeConfig
     LocalDate samplingDate();
 
     @NotNull
-    OrangeRefGenomeVersion refGenomeVersion();
+    RefGenomeVersion refGenomeVersion();
 
     @NotNull
     String outputDir();
@@ -196,6 +196,11 @@ public interface OrangeConfig
 
     @Nullable
     String lilacQcTsv();
+
+    default OrangeRefGenomeVersion orangeRefGenomeVersion()
+    {
+        return refGenomeVersion().is37() ? OrangeRefGenomeVersion.V37 : OrangeRefGenomeVersion.V38;
+    }
 
     boolean limitJsonOutput();
 
@@ -250,7 +255,7 @@ public interface OrangeConfig
                 .rnaConfig(OrangeRnaConfig.createConfig(configBuilder, pathResolver, defaultToolDirectories))
                 .primaryTumorDoids(toStringSet(configBuilder.getValue(PRIMARY_TUMOR_DOIDS), DOID_SEPARATOR))
                 .samplingDate(samplingDate)
-                .refGenomeVersion(OrangeRefGenomeVersion.valueOf(RefGenomeVersion.from(configBuilder).name()))
+                .refGenomeVersion(RefGenomeVersion.from(configBuilder))
                 .outputDir(parseMandatoryOutputDir(configBuilder))
                 .doidJsonFile(configBuilder.getValue(DOID_JSON))
                 .cohortMappingTsv(configBuilder.getValue(COHORT_MAPPING_TSV))
