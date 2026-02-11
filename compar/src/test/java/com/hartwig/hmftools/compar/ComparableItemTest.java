@@ -28,17 +28,22 @@ public abstract class ComparableItemTest<I extends ComparableItem, C extends Ite
 {
     protected C comparer;
 
-    // Builder for objects to be tested. Alternate initializer in builder needs to contain a value different from the default for every
+    // Builder for objects to be tested. Default object needs to be "reportable" and "pass".
+    // Alternate initializer in builder needs to contain a value different from the default for every
     // field that is compared in the "findMismatch" method, used in the "matches" method or that is used in the "reportable" method.
+    // Alternate object should still be pass.
     protected TestComparableItemBuilder<B, I> builder;
 
-    // Map from name of compared field in "findMismatch" to initializer that causes a mismatch in that field.
+    // Map from name of compared field in "findMismatch" to initializer that changes that field from the default value.
+    // This is meant for causing "VALUE" differences in testing.
     protected Map<String, Consumer<B>> fieldToAlternateValueInitializer;
 
-    // Map from name/description of field used in "matches" method to initializer that causes a mismatch in that field
+    // Map from name of field used in "matches" method to initializer that changes that field from the default value.
+    // This is meant for creating non-matching objects in testing.
     protected Map<String, Consumer<B>> nameToAlternateIndexInitializer;
 
-    // Map from name/description of field used in "reportable" method to initializer that causes a mismatch in that field
+    // Map from field used in "reportable" method to initializer that changes that field from the default value.
+    // This is meant for causing differences in reportability in testing.
     protected Map<String, Consumer<B>> reportabilityFieldToFalseReportabilityInitializer;
 
     @Test
