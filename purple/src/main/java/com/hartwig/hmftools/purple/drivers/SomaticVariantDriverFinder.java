@@ -49,10 +49,13 @@ public abstract class SomaticVariantDriverFinder
     
     public boolean checkVariant(final SomaticVariant variant)
     {
+        // first check if the variant has reportable criteria irrespective of its driver gene settings
+        // since these will be used to make driver catalog records
         if(isCandidateReportable(mReportablePredicate, variant))
         {
             mDriverVariants.add(variant);
 
+            // return true if the variant is configured true for reportability
             return mReportablePredicate.isReportable(variant.variantImpact(), variant.isHotspot());
         }
         

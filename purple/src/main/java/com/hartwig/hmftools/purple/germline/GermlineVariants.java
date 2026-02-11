@@ -96,17 +96,11 @@ public class GermlineVariants
 
         mCandidateReportableVariants.addAll(enrichment.candidateVariants());
 
-        /*
         for(GermlineVariant variant : mVariants)
         {
             VariantContext newContext = new VariantContextBuilder(variant.context()).filters(variant.filters()).make();
-
-            if(newContext.getAttributeAsBoolean(CommonVcfTags.REPORTED_FLAG, false))
-                mReportableVariants.add(variant);
-
             writer.add(newContext);
         }
-        */
 
         writer.close();
     }

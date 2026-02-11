@@ -337,8 +337,7 @@ public class PurpleApplication
                 cobaltChromosomes.germlineAberrations(), amberData.AverageTumorDepth,
                 mConfig.TargetRegionsMode ? TARGET_REGIONS_MAX_DELETED_GENES : MAX_DELETED_GENES, tincLevel, chimerismPercentage);
 
-        PurityContext purityContext = createPurity(
-                bestFit, gender, mConfig, qcChecks, copyNumbers, somaticStream, sampleData.SvCache);
+        PurityContext purityContext = createPurity(bestFit, gender, mConfig, qcChecks, copyNumbers, somaticStream, sampleData.SvCache);
 
         PurityContextFile.write(mConfig.OutputDir, tumorId, purityContext);
 
