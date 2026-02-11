@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.qsee.prep.table;
+package com.hartwig.hmftools.qsee.prep.category.table;
 
 import java.util.Arrays;
 import java.util.List;

@@ -23,8 +23,8 @@ import com.hartwig.hmftools.qsee.feature.Feature;
 import com.hartwig.hmftools.qsee.feature.SourceTool;
 import com.hartwig.hmftools.qsee.prep.CategoryPrep;
 import com.hartwig.hmftools.qsee.prep.CommonPrepConfig;
-import com.hartwig.hmftools.qsee.prep.bqr.BaseQualBin;
-import com.hartwig.hmftools.qsee.prep.bqr.BaseQualBinner;
+import com.hartwig.hmftools.qsee.prep.category.bqr.BaseQualBin;
+import com.hartwig.hmftools.qsee.prep.category.bqr.BaseQualBinner;
 
 public class BaseQualRecalibrationPrep implements CategoryPrep
 {

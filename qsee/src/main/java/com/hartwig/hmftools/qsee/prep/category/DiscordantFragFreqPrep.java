@@ -15,7 +15,7 @@ import com.hartwig.hmftools.qsee.feature.FeatureType;
 import com.hartwig.hmftools.qsee.feature.SourceTool;
 import com.hartwig.hmftools.qsee.prep.CategoryPrep;
 import com.hartwig.hmftools.qsee.prep.CommonPrepConfig;
-import com.hartwig.hmftools.qsee.prep.discordant.DiscordantFragGroup;
+import com.hartwig.hmftools.qsee.prep.category.discordant.DiscordantFragGroup;
 
 import org.jetbrains.annotations.NotNull;
 

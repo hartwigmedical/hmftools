@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.qsee.prep.bqr;
+package com.hartwig.hmftools.qsee.prep.category.bqr;
 
 import java.util.EnumMap;
 

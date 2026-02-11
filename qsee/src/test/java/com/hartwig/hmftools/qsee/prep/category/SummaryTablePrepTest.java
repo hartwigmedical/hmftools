@@ -28,7 +28,7 @@ import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.purple.RunMode;
 import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
 import com.hartwig.hmftools.qsee.feature.Feature;
-import com.hartwig.hmftools.qsee.prep.table.SummaryTableFeature;
+import com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature;
 
 import org.junit.Test;
 
