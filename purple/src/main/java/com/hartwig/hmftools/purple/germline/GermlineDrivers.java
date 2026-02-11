@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.driver.LikelihoodMethod.GERMLINE;
 import static com.hartwig.hmftools.common.driver.LikelihoodMethod.SPLICE_REGION;
 import static com.hartwig.hmftools.common.driver.panel.DriverGeneGermlineReporting.NONE;
 import static com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers.getWorstReportableCodingEffect;
+import static com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers.hasTranscriptCodingEffect;
 
 import java.util.List;
 import java.util.Map;
@@ -34,7 +35,7 @@ public class GermlineDrivers
         mDriverGeneMap = driverGenes;
     }
 
-    public List<DriverCatalog> findDrivers(final List<GermlineVariant> variants, final Map<String,GeneCopyNumber> geneCopyNumberMap)
+    public List<DriverCatalog> findDrivers(final List<GermlineVariant> variants, final Map<String,List<GeneCopyNumber>> geneCopyNumberMap)
     {
         Set<String> genes = variants.stream().map(GermlineVariant::gene).collect(toSet());
 
@@ -49,12 +50,25 @@ public class GermlineDrivers
 
             List<GermlineVariant> geneVariants = variants.stream().filter(x -> x.gene().equals(gene)).collect(toList());
 
-            GeneCopyNumber geneCopyNumber = geneCopyNumberMap.get(gene);
+            List<GeneCopyNumber> geneCopyNumbers = geneCopyNumberMap.get(gene);
 
-            if(geneCopyNumber == null)
+            if(geneCopyNumbers == null)
                 continue;
 
-            driverCatalog.add(germlineDriver(driverGene, gene, geneVariants, geneCopyNumber));
+            for(GeneCopyNumber geneCopyNumber : geneCopyNumbers)
+            {
+                if(geneCopyNumbers.size() == 1)
+                {
+                    driverCatalog.add(germlineDriver(driverGene, gene, geneVariants, geneCopyNumber));
+                }
+                else
+                {
+                    if(geneVariants.stream().anyMatch(x -> hasTranscriptCodingEffect(x.variantImpact(), x.type(), geneCopyNumber.TransName)))
+                    {
+                        driverCatalog.add(germlineDriver(driverGene, gene, geneVariants, geneCopyNumber));
+                    }
+                }
+            }
         }
 
         return driverCatalog;

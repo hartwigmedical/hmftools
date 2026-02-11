@@ -4,6 +4,8 @@ import static com.hartwig.hmftools.common.genome.gc.GCProfileFactory.GC_PROFILE;
 import static com.hartwig.hmftools.common.genome.gc.GCProfileFactory.addGcProfilePath;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.deriveRefGenomeVersion;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.common.hla.HlaCommon.hlaChromosome;
@@ -32,6 +34,7 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.position.GenomePositions;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.hla.HlaCommon;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -48,7 +51,7 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 public class ReferenceData
 {
     public final RefGenomeVersion RefGenVersion;
-    public final IndexedFastaSequenceFile RefGenome;
+    public final RefGenomeSource RefGenome;
 
     public final Map<Chromosome, GenomePosition> ChromosomeLengths;
     public final Map<Chromosome, GenomePosition> Centromeres;
@@ -86,21 +89,13 @@ public class ReferenceData
         final String refGenomePath = configBuilder.getValue(REF_GENOME);
         GcProfileFilename = configBuilder.getValue(GC_PROFILE);
 
-        IndexedFastaSequenceFile refGenome = null;
+        RefGenome = RefGenomeSource.loadRefGenome(refGenomePath);
 
-        try
-        {
-            refGenome = new IndexedFastaSequenceFile(new File(refGenomePath));
-        }
-        catch(Exception e)
-        {
-            mIsValid = false;
-            PPL_LOGGER.error("failed to load ref genome: {}", e.toString());
-        }
+        if(configBuilder.hasValue(REF_GENOME_VERSION))
+            RefGenVersion = RefGenomeVersion.from(configBuilder);
+        else
+            RefGenVersion = deriveRefGenomeVersion(RefGenome);
 
-        RefGenome = refGenome;
-
-        RefGenVersion = RefGenomeVersion.from(configBuilder);
         PPL_LOGGER.info("using ref genome: {}", RefGenVersion);
 
         ChromosomeLengths = Maps.newHashMap();

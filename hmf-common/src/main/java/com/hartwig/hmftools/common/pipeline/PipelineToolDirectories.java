@@ -106,6 +106,7 @@ public record PipelineToolDirectories(
     );
 
     public static final PipelineToolDirectories OA_V2_3_FORMAT = OA_V2_2_FORMAT;
+    public static final PipelineToolDirectories OA_V3_0_FORMAT = OA_V2_2_FORMAT;
 
     public static final PipelineToolDirectories PIP5_V6_0_FORMAT = new PipelineToolDirectories(
             "amber",
@@ -215,6 +216,7 @@ public record PipelineToolDirectories(
             case OA_V2_0 -> OA_V2_0_FORMAT;
             case OA_V2_2 -> OA_V2_2_FORMAT;
             case OA_V2_3 -> OA_V2_3_FORMAT;
+            case OA_V3_0 -> OA_V3_0_FORMAT;
             case PIP5_V6_0 -> PIP5_V6_0_FORMAT;
             case DB_V6_0 -> DB_V6_0_FORMAT;
         };
