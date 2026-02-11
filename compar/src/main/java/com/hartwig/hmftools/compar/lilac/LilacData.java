@@ -24,6 +24,7 @@ import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
+import com.hartwig.hmftools.compar.driver.DriverData;
 
 public class LilacData implements ComparableItem
 {
@@ -47,7 +48,7 @@ public class LilacData implements ComparableItem
     @Override
     public String key()
     {
-        return "";
+        return QcData.genes();
     }
 
     @Override
@@ -75,7 +76,11 @@ public class LilacData implements ComparableItem
     @Override
     public boolean matches(final ComparableItem other)
     {
-        // a single record for each sample
+        final LilacData otherData = (LilacData)other;
+
+        if(!QcData.genes().equals(otherData.QcData.genes()))
+            return false;
+
         return true;
     }
 

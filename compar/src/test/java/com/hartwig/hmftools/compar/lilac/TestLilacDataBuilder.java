@@ -12,6 +12,7 @@ import com.hartwig.hmftools.compar.TestComparableItemBuilder;
 
 public class TestLilacDataBuilder
 {
+    public String genes = MHC_CLASS_I;
     public String qcStatus = "PASS";
     public int totalFragments = 1600;
     public int fittedFragments = 1500;
@@ -29,6 +30,7 @@ public class TestLilacDataBuilder
 
     private static final Consumer<TestLilacDataBuilder> ALTERNATE_INITIALIZER = b ->
     {
+        b.genes = "HLA_DPB1";
         b.qcStatus = "WARN_LOW_COVERAGE";
         b.totalFragments = 1500;
         b.fittedFragments = 1400;

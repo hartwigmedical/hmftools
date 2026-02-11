@@ -56,7 +56,12 @@ public class LilacDataTest extends ComparableItemTest<LilacData, LilacComparer, 
                         )
                 )
         );
-        nameToAlternateIndexInitializer = Collections.emptyMap();
+
+        // nameToAlternateIndexInitializer = Collections.emptyMap();
+
+        nameToAlternateIndexInitializer = Map.of(
+                "genes", b -> b.genes = alternateValueSource.QcData.genes());
+
         reportabilityFieldToFalseReportabilityInitializer = Collections.emptyMap();
     }
 
@@ -145,6 +150,4 @@ public class LilacDataTest extends ComparableItemTest<LilacData, LilacComparer, 
             }
         }
     }
-
-
 }

@@ -11,6 +11,7 @@ import com.hartwig.hmftools.compar.TestComparableItemBuilder;
 
 public class TestLilacAlleleBuilder
 {
+    public String genes = MHC_CLASS_I;
     public String allele = "A*01:01";
     public double missense = 0;
     public double nonsenseOrFrameshift = 0;
@@ -23,6 +24,7 @@ public class TestLilacAlleleBuilder
 
     private static final Consumer<TestLilacAlleleBuilder> ALTERNATE_INITIALIZER = b ->
     {
+        b.genes = MHC_CLASS_I;
         b.allele = "A*01:02";
         b.missense = 1;
         b.nonsenseOrFrameshift = 1;
@@ -40,6 +42,7 @@ public class TestLilacAlleleBuilder
     public static LilacAllele buildFrom(final LilacAllele lilacAllele, final Consumer<TestLilacAlleleBuilder> initializer)
     {
         Consumer<TestLilacAlleleBuilder> copyInitializer = b -> {
+            b.genes = lilacAllele.genes();
             b.allele = lilacAllele.allele();
             b.missense = lilacAllele.somaticMissense();
             b.nonsenseOrFrameshift = lilacAllele.somaticNonsenseOrFrameshift();

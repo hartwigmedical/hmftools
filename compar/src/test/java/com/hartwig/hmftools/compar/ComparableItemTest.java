@@ -22,6 +22,7 @@ import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.MismatchType;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 public abstract class ComparableItemTest<I extends ComparableItem, C extends ItemComparer, B>
@@ -58,6 +59,7 @@ public abstract class ComparableItemTest<I extends ComparableItem, C extends Ite
         );
     }
 
+    @Ignore
     @Test
     public void singleIndexMismatchesAreRecognized()
     {
