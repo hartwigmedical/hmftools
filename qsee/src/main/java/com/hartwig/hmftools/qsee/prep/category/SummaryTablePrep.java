@@ -108,7 +108,6 @@ public class SummaryTablePrep implements CategoryPrep
         putFeature(featuresMap, SummaryTableFeature.DELETED_GENES, purityContext.qc().deletedGenes());
         putFeature(featuresMap, SummaryTableFeature.UNSUPPORTED_CN_SEGMENTS, purityContext.qc().unsupportedCopyNumberSegments());
         putFeature(featuresMap, SummaryTableFeature.LOH_PERCENT, purityContext.qc().lohPercent());
-        putFeature(featuresMap, SummaryTableFeature.CHIMERISM_PERCENT, purityContext.qc().chimerismPercentage());
         putFeature(featuresMap, SummaryTableFeature.CONTAMINATION, purityContext.qc().contamination());
         putFeature(featuresMap, SummaryTableFeature.TMB_SMALL_VARIANTS, purityContext.tumorMutationalBurdenPerMb());
         putFeature(featuresMap, SummaryTableFeature.TMB_MS_INDELS, purityContext.microsatelliteIndelsPerMb());

@@ -15,7 +15,6 @@ public enum SummaryTableFeature
     DELETED_GENES           (SummaryTableGroup.GENERAL, "Deleted genes", SourceTool.PURPLE),
     UNSUPPORTED_CN_SEGMENTS (SummaryTableGroup.GENERAL, "Unsupported CN segments", SourceTool.PURPLE),
     LOH_PERCENT             (SummaryTableGroup.GENERAL, "LOH percent", SourceTool.PURPLE),
-    CHIMERISM_PERCENT       (SummaryTableGroup.GENERAL, "Chimerism percent", SourceTool.PURPLE),
     CONTAMINATION           (SummaryTableGroup.GENERAL, "Contamination", SourceTool.PURPLE),
 
     TMB_SMALL_VARIANTS      (SummaryTableGroup.TMB, "Small variants per MB", SourceTool.PURPLE),
