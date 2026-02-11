@@ -22,16 +22,23 @@ import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.MismatchType;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 public abstract class ComparableItemTest<I extends ComparableItem, C extends ItemComparer, B>
 {
-    // Assumes alternate initializer in builder has value different from default for every field
     protected C comparer;
+
+    // Builder for objects to be tested. Alternate initializer in builder needs to contain a value different from the default for every
+    // field that is compared in the "findMismatch" method, used in the "matches" method or that is used in the "reportable" method.
     protected TestComparableItemBuilder<B, I> builder;
+
+    // Map from name of compared field in "findMismatch" to initializer that causes a mismatch in that field.
     protected Map<String, Consumer<B>> fieldToAlternateValueInitializer;
+
+    // Map from name/description of field used in "matches" method to initializer that causes a mismatch in that field
     protected Map<String, Consumer<B>> nameToAlternateIndexInitializer;
+
+    // Map from name/description of field used in "reportable" method to initializer that causes a mismatch in that field
     protected Map<String, Consumer<B>> reportabilityFieldToFalseReportabilityInitializer;
 
     @Test
@@ -59,7 +66,6 @@ public abstract class ComparableItemTest<I extends ComparableItem, C extends Ite
         );
     }
 
-    @Ignore
     @Test
     public void singleIndexMismatchesAreRecognized()
     {
@@ -67,8 +73,8 @@ public abstract class ComparableItemTest<I extends ComparableItem, C extends Ite
         for(Map.Entry<String, Consumer<B>> entry : nameToAlternateIndexInitializer.entrySet())
         {
             I indexMismatch = builder.create(entry.getValue());
-            assertFalse("Test mismatch in index field: " + entry.getKey(), victim.matches(indexMismatch));
-            assertFalse("Test mismatch in index field: " + entry.getKey(), indexMismatch.matches(victim));
+            assertFalse("Test mismatch in index field (victim.matches(alt)): " + entry.getKey(), victim.matches(indexMismatch));
+            assertFalse("Test mismatch in index field (alt.matches(victim)): " + entry.getKey(), indexMismatch.matches(victim));
         }
     }
 

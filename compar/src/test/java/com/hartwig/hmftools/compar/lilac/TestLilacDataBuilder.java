@@ -53,7 +53,7 @@ public class TestLilacDataBuilder
     private LilacData build()
     {
         LilacQcData qcData = ImmutableLilacQcData.builder()
-                .genes(MHC_CLASS_I)
+                .genes(genes)
                 .status(qcStatus)
                 .totalFragments(totalFragments)
                 .fittedFragments(fittedFragments)
