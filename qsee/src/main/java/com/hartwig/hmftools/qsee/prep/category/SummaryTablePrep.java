@@ -8,8 +8,6 @@ import java.util.List;
 import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.amber.AmberQC;
-import com.hartwig.hmftools.common.amber.AmberQCFile;
 import com.hartwig.hmftools.common.metrics.BamMetricCoverage;
 import com.hartwig.hmftools.common.metrics.BamMetricSummary;
 import com.hartwig.hmftools.common.metrics.ValueFrequency;
@@ -40,22 +38,6 @@ public class SummaryTablePrep implements CategoryPrep
     }
 
     public SourceTool sourceTool() { return SOURCE_TOOL; }
-
-    private AmberQC loadAmberQC(String sampleId, List<String> missingInputPaths)
-    {
-        String baseDir = mConfig.getAmberDir(sampleId);
-        String filePath = AmberQCFile.generateFilename(baseDir, sampleId);
-
-        try
-        {
-            return AmberQCFile.read(filePath);
-        }
-        catch(IOException e)
-        {
-            missingInputPaths.add(filePath);
-            return null;
-        }
-    }
 
     private PurityContext loadPurplePurity(String sampleId, List<String> missingInputPaths)
     {
@@ -112,15 +94,6 @@ public class SummaryTablePrep implements CategoryPrep
     {
         Feature feature = new Feature(summaryTableFeature.key(), value);
         featuresMap.put(summaryTableFeature, feature);
-    }
-
-    @VisibleForTesting
-    static void putFeatures(AmberQC amberQC, EnumMap<SummaryTableFeature, Feature> features)
-    {
-        if(amberQC == null)
-            return;
-
-        putFeature(features, SummaryTableFeature.CONSANGUINITY, amberQC.consanguinityProportion());
     }
 
     @VisibleForTesting
@@ -191,9 +164,6 @@ public class SummaryTablePrep implements CategoryPrep
         {
             PurityContext purityContext = loadPurplePurity(sampleId, missingInputPaths);
             putFeatures(purityContext, featuresMap);
-
-            AmberQC amberQC = loadAmberQC(sampleId, missingInputPaths);
-            putFeatures(amberQC, featuresMap);
         }
 
         BamMetricSummary bamMetricSummary = loadBamMetricSummary(sampleId, sampleType, missingInputPaths);

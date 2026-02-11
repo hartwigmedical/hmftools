@@ -17,7 +17,6 @@ public enum SummaryTableFeature
     LOH_PERCENT             (SummaryTableGroup.GENERAL, "LOH percent", SourceTool.PURPLE),
     CHIMERISM_PERCENT       (SummaryTableGroup.GENERAL, "Chimerism percent", SourceTool.PURPLE),
     CONTAMINATION           (SummaryTableGroup.GENERAL, "Contamination", SourceTool.PURPLE),
-    CONSANGUINITY           (SummaryTableGroup.GENERAL, "Consanguinity prop.", SourceTool.AMBER),
 
     TMB_SMALL_VARIANTS      (SummaryTableGroup.TMB, "Small variants per MB", SourceTool.PURPLE),
     TMB_MS_INDELS           (SummaryTableGroup.TMB, "Microsatellite indels per MB", SourceTool.PURPLE),
