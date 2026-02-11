@@ -73,7 +73,8 @@ public class FileSources
     private static final String GERMLINE_BAM_METRICS = "germline_bam_metrics_dir";
     private static final String SNP_GENOTYPE = "snp_genotype_dir";
 
-    public FileSources(final String source, final String linx, final String cobalt, final String purple, final String linxGermline, final String cuppa,
+    public FileSources(
+            final String source, final String linx, final String cobalt, final String purple, final String linxGermline, final String cuppa,
             final String lilac, final String chord, final String peach, final String virus, final String somaticVcf,
             final String somaticUnfilteredVcf, final String tumorFlagstat, final String germlineFlagstat, final String tumorBamMetrics,
             final String germlineBamMetrics, final String snpGenotype, final String cider, final String teal, final String vChord)
@@ -215,11 +216,9 @@ public class FileSources
         String somaticUnfilteredVcf = getConfigValue(configBuilder, SOMATIC_UNFILTERED_VCF, sourceName);
 
         String tumorFlagstat = getDirectory(configBuilder, sampleDir, defaultToolDirs.tumorFlagstatDir(), TUMOR_FLAGSTAT, sourceName);
-        String germlineFlagstat =
-                getDirectory(configBuilder, sampleDir, defaultToolDirs.germlineFlagstatDir(), GERMLINE_FLAGSTAT, sourceName);
+        String germlineFlagstat = getDirectory(configBuilder, sampleDir, defaultToolDirs.germlineFlagstatDir(), GERMLINE_FLAGSTAT, sourceName);
         String tumorBamMetrics = getDirectory(configBuilder, sampleDir, defaultToolDirs.tumorMetricsDir(), TUMOR_BAM_METRICS, sourceName);
-        String germlineBamMetrics =
-                getDirectory(configBuilder, sampleDir, defaultToolDirs.germlineMetricsDir(), GERMLINE_BAM_METRICS, sourceName);
+        String germlineBamMetrics = getDirectory(configBuilder, sampleDir, defaultToolDirs.germlineMetricsDir(), GERMLINE_BAM_METRICS, sourceName);
         String snpGenotype = getDirectory(configBuilder, sampleDir, defaultToolDirs.snpGenotypeDir(), SNP_GENOTYPE, sourceName);
         String ciderDir = getDirectory(configBuilder, sampleDir, defaultToolDirs.ciderDir(), CIDER_DIR_CFG, sourceName);
         String tealDir = getDirectory(configBuilder, sampleDir, defaultToolDirs.tealDir(), TEAL_DIR_CFG, sourceName);

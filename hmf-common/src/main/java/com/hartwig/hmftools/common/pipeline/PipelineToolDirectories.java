@@ -199,7 +199,7 @@ public record PipelineToolDirectories(
         }
         else
         {
-            return PipelineToolDirectories.resolveToolDirectoriesFromDefault(PipelineOutputStructure.OA_V2_2);
+            return PipelineToolDirectories.resolveToolDirectoriesFromDefault(PipelineOutputStructure.OA_V3_0);
         }
     }
 

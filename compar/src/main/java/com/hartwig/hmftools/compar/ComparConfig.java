@@ -5,6 +5,8 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL;
 import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_DESC;
 import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.addGenePanelOption;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.IGNORE_SAMPLE_ID;
@@ -95,7 +97,6 @@ public class ComparConfig
     private boolean mIsValid;
 
     // config strings
-    public static final String GERMLINE_SAMPLE = "germline_sample";
     public static final String CATEGORIES = "categories";
     public static final String MATCH_LEVEL = "match_level";
 
@@ -290,17 +291,17 @@ public class ComparConfig
 
     private void loadSampleIds(final ConfigBuilder configBuilder)
     {
-        if(configBuilder.hasValue(SAMPLE_ID_FILE) && (configBuilder.hasValue(SAMPLE) || configBuilder.hasValue(GERMLINE_SAMPLE)))
+        if(configBuilder.hasValue(SAMPLE_ID_FILE) && (configBuilder.hasValue(SAMPLE) || configBuilder.hasValue(REFERENCE)))
         {
             CMP_LOGGER.error("when the argument '{}' is set, the arguments '{}' and '{}' should not be set",
-                    SAMPLE_ID_FILE, SAMPLE, GERMLINE_SAMPLE);
+                    SAMPLE_ID_FILE, SAMPLE, REFERENCE);
             mIsValid = false;
             return;
         }
 
         if(configBuilder.hasValue(SAMPLE))
         {
-            registerSampleIds(configBuilder.getValue(SAMPLE), configBuilder.getValue(GERMLINE_SAMPLE, null));
+            registerSampleIds(configBuilder.getValue(SAMPLE), configBuilder.getValue(REFERENCE, null));
             return;
         }
 
@@ -445,7 +446,7 @@ public class ComparConfig
                 MATCH_LEVEL, false, "Match level from REPORTABLE (default) or DETAILED", REPORTABLE.toString());
 
         configBuilder.addConfigItem(SAMPLE, SAMPLE_DESC);
-        configBuilder.addConfigItem(GERMLINE_SAMPLE, false, "Sample ID of germline sample if tumor-normal run");
+        configBuilder.addConfigItem(REFERENCE, false, REFERENCE_DESC);
         addSampleIdFile(configBuilder, false);
         addGenePanelOption(configBuilder, false);
         configBuilder.addPath(IGNORE_GENES, false, "Genes to ignore in all comparisons, file with 'GeneName'");
