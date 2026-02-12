@@ -54,8 +54,11 @@ public class SiteDownsampler
 
     public void downsampleSites() throws ExecutionException, InterruptedException
     {
+        RD_LOGGER.info("down-sampling sites");
+
         // filter the microsatellites such that each type of (unit, length) is approximately the target count
         int numDigits = Integer.toString(mConfig.Threads - 1).length();
+
         final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("thread-%0" + numDigits + "d").build();
         ExecutorService executorService = Executors.newFixedThreadPool(mConfig.Threads, namedThreadFactory);
 
@@ -66,7 +69,7 @@ public class SiteDownsampler
         {
             int downsampleCountPerType = downsampleCount(unitRepeatKey);
 
-            RD_LOGGER.debug("[{}] filtering microsatellite sites, target count per type = {}",
+            RD_LOGGER.trace("[{}] filtering microsatellite sites, target count per type = {}",
                     unitRepeatKey, downsampleCountPerType);
 
             Runnable task = () -> downSampleMsType(downsampleCountPerType, unitRepeatKey);
@@ -90,12 +93,11 @@ public class SiteDownsampler
         return originalList.subList(0, numItemsToKeep);
     }
 
-    private void downSampleMsType(
-            final int targetCountPerType, final UnitRepeatKey unitRepeatKey)
+    private void downSampleMsType(final int targetCountPerType, final UnitRepeatKey unitRepeatKey)
     {
         Collection<MicrosatelliteSite> allList = mAllMsSites.get(unitRepeatKey);
 
-        RD_LOGGER.info("[{}] filtering {} microsatellite sites", unitRepeatKey, allList.size());
+        RD_LOGGER.trace("[{}] filtering {} microsatellite sites", unitRepeatKey, allList.size());
 
         List<MicrosatelliteSite> sitesOutsideBedRegions = new ArrayList<>();
         List<MicrosatelliteSite> sitesInsideBedRegions = new ArrayList<>();
@@ -107,19 +109,20 @@ public class SiteDownsampler
         int bedRegionExpansion = MsFinderConfig.BED_REGION_EXPANSION;
         double mappabilityCutoff = MIN_MAPPABILITY;
 
-        for(MicrosatelliteSite r : allList)
+        for(MicrosatelliteSite msSite : allList)
         {
-            if(r.mappability() < mappabilityCutoff)
-            {
+            if(msSite == null)
                 continue;
-            }
+
+            if(msSite.mappability() < mappabilityCutoff)
+                continue;
 
             boolean isInBed = false;
 
-            for(BaseRegion region : mExomeRegions.get(r.chromosome()))
+            for(BaseRegion region : mExomeRegions.get(msSite.chromosome()))
             {
                 if(positionsOverlap(
-                        r.Region.start(), r.Region.end(),
+                        msSite.Region.start(), msSite.Region.end(),
                         region.start() - bedRegionExpansion, region.end() + bedRegionExpansion))
                 {
                     isInBed = true;
@@ -128,11 +131,11 @@ public class SiteDownsampler
             }
             if(isInBed)
             {
-                sitesInsideBedRegions.add(r);
+                sitesInsideBedRegions.add(msSite);
             }
             else
             {
-                sitesOutsideBedRegions.add(r);
+                sitesOutsideBedRegions.add(msSite);
             }
         }
 
@@ -147,9 +150,8 @@ public class SiteDownsampler
         filteredList.addAll(downsampledSitesInsideBedRegions);
         filteredList.addAll(downsampledSitesOutsideBedRegions);
 
-        RD_LOGGER.info("[{}] filtered {} microsatellite sites down to {}, sites in bed: {} filtered to {}, sites outside bed: {} filtered to {}",
+        RD_LOGGER.debug("[{}] sites({} filtered={}) exome(orig={} filtered={}) outside-exome({} filtered={})",
                 unitRepeatKey, allList.size(), filteredList.size(), numSitesInBed, downsampledSitesInsideBedRegions.size(),
                 sitesOutsideBedRegions.size(), downsampledSitesOutsideBedRegions.size());
     }
-
 }

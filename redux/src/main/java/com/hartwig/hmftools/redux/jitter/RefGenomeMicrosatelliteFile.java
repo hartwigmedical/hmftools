@@ -29,7 +29,7 @@ public class RefGenomeMicrosatelliteFile implements AutoCloseable
 
     public static String generateFilename(final String basePath, final RefGenomeVersion refGenomeVersion)
     {
-        return format("%s/msi_jitter_sites.%d.tsv.gz", basePath, refGenomeVersion.identifier());
+        return format("%s/msi_jitter_sites.%s.tsv.gz", basePath, refGenomeVersion.identifier());
     }
 
     private final DelimFileWriter<MicrosatelliteSite> mWriter;

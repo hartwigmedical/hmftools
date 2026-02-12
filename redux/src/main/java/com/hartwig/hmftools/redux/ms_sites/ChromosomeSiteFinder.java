@@ -118,7 +118,7 @@ public class ChromosomeSiteFinder implements Callable<Void>
                         pendingMicrosatellies.add(microsatelliteSite);
 
                         // check the panding microsatellites, see if any can be accepted
-                        checkPendingMicrosatellites(pendingMicrosatellies, null); // microsatelliteCounter
+                        checkPendingMicrosatellites(pendingMicrosatellies);
                     }
 
                     bestCandidate = null;
@@ -146,16 +146,13 @@ public class ChromosomeSiteFinder implements Callable<Void>
 
         if(pendingMicrosatellies.size() == 1)
         {
-            // microsatelliteCounter.increment();
             mConsumer.accept(pendingMicrosatellies.get(0));
         }
 
         RD_LOGGER.info("finished chromosome {}", mChromosome);
-
     }
 
-    private void checkPendingMicrosatellites(
-            final List<MicrosatelliteSite> pendingMicrosatellies, final MutableInt microsatelliteCounter)
+    private void checkPendingMicrosatellites(final List<MicrosatelliteSite> pendingMicrosatellies)
     {
         // the aim of this code is to remove microsatellites that are too close to each other eg AAAAATAAAAAAA
         int groupStart = 0;
@@ -191,11 +188,8 @@ public class ChromosomeSiteFinder implements Callable<Void>
             }
         }
 
-        // we can remove anything before groupStart
         if(groupStart > 0)
-        {
             pendingMicrosatellies.subList(0, groupStart).clear();
-        }
     }
 
     private static boolean isValidUnit(byte[] unit)

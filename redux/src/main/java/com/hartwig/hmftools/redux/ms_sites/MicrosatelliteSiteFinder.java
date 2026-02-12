@@ -22,6 +22,7 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.gc.GCProfile;
 import com.hartwig.hmftools.common.genome.gc.ImmutableGCProfile;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
@@ -114,6 +115,9 @@ public class MicrosatelliteSiteFinder
         {
             String chromosome = entry.getKey();
 
+            if(!HumanChromosome.contains(chromosome))
+                continue;
+
             if(mConfig.SpecificChrRegions.excludeChromosome(chromosome))
                 continue;
 
@@ -129,15 +133,7 @@ public class MicrosatelliteSiteFinder
             System.exit(1);
         }
 
-        /*
-        MicrosatelliteSiteFinder.findMicrosatellites(mRefGenome, JitterConstants.MIN_MICROSAT_UNIT_COUNT,
-            r -> {
-                populateMappability(r, mGcProfiles);
-
-                // put all into multimap
-                mAllMsSites.put(new UnitRepeatKey(UnitKey.fromUnit(r.unitString()), r.RepeatCount), r);
-            });
-         */
+        RD_LOGGER.info("site finding complete");
 
         SiteDownsampler siteDownsampler = new SiteDownsampler(mConfig, mAllMsSites, mExomeRegions);
         siteDownsampler.downsampleSites();
@@ -159,7 +155,7 @@ public class MicrosatelliteSiteFinder
         RD_LOGGER.info("MS site finding complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
-    private void processSiteInfo(final MicrosatelliteSite msSite)
+    private synchronized void processSiteInfo(final MicrosatelliteSite msSite)
     {
         populateMappability(msSite);
         mAllMsSites.put(new UnitRepeatKey(UnitKey.fromUnit(msSite.unitString()), msSite.RepeatCount), msSite);
