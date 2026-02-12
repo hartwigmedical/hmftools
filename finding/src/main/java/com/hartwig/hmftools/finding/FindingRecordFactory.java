@@ -76,8 +76,7 @@ public class FindingRecordFactory
 
         DriverFindingList<GainDeletion> somaticGainDeletions = addPurpleFindings(builder, orangeRecord, null, driverGenes);
 
-        VisualisationFiles visualisationFiles = new VisualisationFilesFactory(config.PlotDir)
-                .create(config.PipelineOutputDir, config.tumorSampleId, config.referenceSampleId, orangeRecord.cuppa() != null);
+        VisualisationFiles visualisationFiles = VisualisationFilesFactory.create(orangeRecord.plots());
 
         return builder.predictedTumorOrigin(createPredictedTumorOrigin(orangeRecord.cuppa()))
                 .homologousRecombination(createHomologousRecombination(orangeRecord.chord(), purple, linx, somaticGainDeletions))
