@@ -146,12 +146,16 @@ public class SiteDownsampler
 
         int sitesOutsideBedToKeep = targetCountPerType - numSitesInBed;
         List<MicrosatelliteSite> downsampledSitesInsideBedRegions = downsampleList(sitesInsideBedRegions, targetCountPerType, randomSeed);
-        List<MicrosatelliteSite> downsampledSitesOutsideBedRegions = downsampleList(sitesOutsideBedRegions, sitesOutsideBedToKeep, randomSeed);
+        List<MicrosatelliteSite> downsampledSitesOutsideBedRegions =
+                downsampleList(sitesOutsideBedRegions, sitesOutsideBedToKeep, randomSeed);
         filteredList.addAll(downsampledSitesInsideBedRegions);
         filteredList.addAll(downsampledSitesOutsideBedRegions);
 
-        RD_LOGGER.debug("[{}] sites({} filtered={}) exome(orig={} filtered={}) outside-exome({} filtered={})",
-                unitRepeatKey, allList.size(), filteredList.size(), numSitesInBed, downsampledSitesInsideBedRegions.size(),
-                sitesOutsideBedRegions.size(), downsampledSitesOutsideBedRegions.size());
+        if(filteredList.size() < allList.size())
+        {
+            RD_LOGGER.debug("[{}] sites({} filtered={}) exome(orig={} filtered={}) outside-exome({} filtered={})",
+                    unitRepeatKey, allList.size(), filteredList.size(), numSitesInBed, downsampledSitesInsideBedRegions.size(),
+                    sitesOutsideBedRegions.size(), downsampledSitesOutsideBedRegions.size());
+        }
     }
 }
