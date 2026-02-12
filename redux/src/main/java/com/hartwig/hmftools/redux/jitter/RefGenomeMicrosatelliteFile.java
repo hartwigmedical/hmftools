@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.redux.jitter;
 
+import static java.lang.String.format;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -25,11 +27,9 @@ public class RefGenomeMicrosatelliteFile implements AutoCloseable
         mappability
     }
 
-    private static final String FILE_EXTENSION = ".ref_genome_ms.tsv.gz";
-
-    public static String generateFilename(String basePath, RefGenomeVersion refGenomeVersion)
+    public static String generateFilename(final String basePath, final RefGenomeVersion refGenomeVersion)
     {
-        return basePath + File.separator + refGenomeVersion + FILE_EXTENSION;
+        return format("%s/msi_jitter_sites.%d.tsv.gz", basePath, refGenomeVersion.identifier());
     }
 
     private final DelimFileWriter<MicrosatelliteSite> mWriter;
