@@ -44,7 +44,7 @@ public class FindingApplication
 
         FindingRecord findingRecord = FindingRecordFactory.fromOrangeRecord(orangeRecord, config);
 
-        FindingsJson.getInstance().write(findingRecord, Path.of(config.FindingJsonPath));
+        new FindingsJson().write(findingRecord, Path.of(config.FindingJsonPath));
 
         LOGGER.info("Done!");
     }
