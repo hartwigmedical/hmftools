@@ -79,11 +79,14 @@ public class FindingRecordFactory
 
         DriverFindingList<GainDeletion> somaticGainDeletions = addPurpleFindings(builder, orangeRecord, clinicalTranscriptsModel, driverGenes);
 
+        VisualisationFiles visualisationFiles = VisualisationFilesFactory.create(orangeRecord.plots());
+
         return builder.predictedTumorOrigin(createPredictedTumorOrigin(orangeRecord.cuppa()))
                 .homologousRecombination(createHomologousRecombination(orangeRecord.chord(), purple, linx, somaticGainDeletions))
                 .viruses(createVirusFindings(orangeRecord.virusInterpreter()))
-                .hla(HlaAlleleFactory.createHlaAllelesFindings(orangeRecord, hasReliablePurity))
+                .hlaAlleles(HlaAlleleFactory.createHlaAllelesFindings(orangeRecord, hasReliablePurity))
                 .pharmocoGenotypes(createPharmcoGenotypesFindings(orangeRecord.peach(), hasContainmination))
+                .visualisationFiles(visualisationFiles)
                 .build();
     }
 

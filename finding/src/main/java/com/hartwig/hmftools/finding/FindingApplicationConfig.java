@@ -20,10 +20,22 @@ public class FindingApplicationConfig
 
     public FindingApplicationConfig(final ConfigBuilder configBuilder)
     {
-        OrangeJsonPath =  configBuilder.getValue(ORANGE_JSON_PATH_ARG);
-        ClinicalTranscriptsPath = configBuilder.getValue(CLINICAL_TRANSCRIPT_PATH_ARG);
-        DriverGenePath =  configBuilder.getValue(DRIVER_GENE_PATH_ARG);
-        FindingJsonPath = configBuilder.getValue(FINDING_JSON_PATH_ARG);
+        this(configBuilder.getValue(ORANGE_JSON_PATH_ARG),
+                configBuilder.getValue(CLINICAL_TRANSCRIPT_PATH_ARG),
+                configBuilder.getValue(DRIVER_GENE_PATH_ARG),
+                configBuilder.getValue(FINDING_JSON_PATH_ARG));
+    }
+
+    public FindingApplicationConfig(
+            final String orangeJsonPath,
+            @Nullable final String clinicalTranscriptsPath,
+            final String driverGenePath,
+            final String findingJsonPath)
+    {
+        this.OrangeJsonPath = orangeJsonPath;
+        this.ClinicalTranscriptsPath = clinicalTranscriptsPath;
+        this.DriverGenePath = driverGenePath;
+        this.FindingJsonPath = findingJsonPath;
     }
 
     public static void registerConfig(final ConfigBuilder configBuilder)
