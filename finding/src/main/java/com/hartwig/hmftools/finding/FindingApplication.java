@@ -1,18 +1,11 @@
 package com.hartwig.hmftools.finding;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.nio.file.Path;
-import java.time.LocalDate;
-import java.util.ServiceLoader;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.TypeAdapterFactory;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.datamodel.LocalDateAdapter;
 import com.hartwig.hmftools.datamodel.OrangeJson;
 import com.hartwig.hmftools.datamodel.finding.FindingRecord;
+import com.hartwig.hmftools.datamodel.finding.FindingsJson;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 
 import org.apache.logging.log4j.LogManager;
@@ -49,23 +42,9 @@ public class FindingApplication
 
         OrangeRecord orangeRecord = OrangeJson.getInstance().read(config.OrangeJsonPath);
 
-        FindingRecord findingRecord = FindingRecordFactory.fromOrangeRecord(orangeRecord,
-                config.ClinicalTranscriptsPath != null ? Path.of(config.ClinicalTranscriptsPath) : null,
-                Path.of(config.DriverGenePath));
+        FindingRecord findingRecord = FindingRecordFactory.fromOrangeRecord(orangeRecord, config);
 
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        gsonBuilder.setPrettyPrinting();
-        for (TypeAdapterFactory factory : ServiceLoader.load(TypeAdapterFactory.class)) {
-            gsonBuilder.registerTypeAdapterFactory(factory);
-        }
-
-        Gson gson = gsonBuilder.serializeNulls().serializeSpecialFloatingPointValues()
-                .registerTypeAdapter(LocalDate.class, new LocalDateAdapter())
-                .create();
-
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(config.FindingJsonPath))) {
-            gson.toJson(findingRecord, FindingRecord.class, writer);
-        }
+        FindingsJson.getInstance().write(findingRecord, Path.of(config.FindingJsonPath));
 
         LOGGER.info("Done!");
     }

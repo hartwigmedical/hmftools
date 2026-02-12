@@ -21,7 +21,6 @@ import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.driver.DriverSource;
 import com.hartwig.hmftools.datamodel.finding.*;
-import com.hartwig.hmftools.finding.clinicaltranscript.ClinicalTranscriptFile;
 import com.hartwig.hmftools.finding.clinicaltranscript.ClinicalTranscriptsModel;
 import com.hartwig.hmftools.datamodel.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
@@ -43,21 +42,19 @@ import org.jetbrains.annotations.Nullable;
 // various part of the orange record
 public class FindingRecordFactory
 {
-    public static FindingRecord fromOrangeJsonWithTranscriptFile(Path orangeJson, @Nullable Path clinicalTranscriptsTsv,
-            @Nullable Path driverGeneTsv) throws IOException
+    public static FindingRecord fromOrangeJsonWithTranscriptFile(Path orangeJson, FindingApplicationConfig config) throws IOException
     {
         try(Reader reader = Files.newBufferedReader(orangeJson))
         {
             OrangeRecord orangeRecord = com.hartwig.hmftools.datamodel.OrangeJson.getInstance().read(reader);
-            return fromOrangeRecord(orangeRecord, clinicalTranscriptsTsv, driverGeneTsv);
+            return fromOrangeRecord(orangeRecord, config);
         }
     }
 
-    public static FindingRecord fromOrangeRecord(OrangeRecord orangeRecord, @Nullable Path clinicalTranscriptsTsv,
-            @Nullable Path driverGeneTsv) throws IOException
+    public static FindingRecord fromOrangeRecord(OrangeRecord orangeRecord, FindingApplicationConfig config) throws IOException
     {
-        ClinicalTranscriptsModel clinicalTranscriptsModel = clinicalTranscriptsTsv != null ?
-                ClinicalTranscriptFile.buildFromTsv(orangeRecord.refGenomeVersion(), clinicalTranscriptsTsv) : null;
+        @Nullable Path driverGeneTsv = Path.of(config.DriverGenePath);
+
         Map<String, DriverGene> driverGenes = driverGenesMap(driverGeneTsv);
 
         LinxRecord linx = orangeRecord.linx();
@@ -77,13 +74,17 @@ public class FindingRecordFactory
                 .germlineDisruptions(createGermlineDisruptions(orangeRecord.refSample() != null, linx))
                 .fusions(createFusionsFindings(orangeRecord.linx()));
 
-        DriverFindingList<GainDeletion> somaticGainDeletions = addPurpleFindings(builder, orangeRecord, clinicalTranscriptsModel, driverGenes);
+        DriverFindingList<GainDeletion> somaticGainDeletions = addPurpleFindings(builder, orangeRecord, null, driverGenes);
+
+        VisualisationFiles visualisationFiles = new VisualisationFilesFactory(config.PlotDir)
+                .create(config.PipelineOutputDir, config.tumorSampleId, config.referenceSampleId, orangeRecord.cuppa() != null);
 
         return builder.predictedTumorOrigin(createPredictedTumorOrigin(orangeRecord.cuppa()))
                 .homologousRecombination(createHomologousRecombination(orangeRecord.chord(), purple, linx, somaticGainDeletions))
                 .viruses(createVirusFindings(orangeRecord.virusInterpreter()))
-                .hla(HlaAlleleFactory.createHlaAllelesFindings(orangeRecord, hasReliablePurity))
+                .hlaAlleles(HlaAlleleFactory.createHlaAllelesFindings(orangeRecord, hasReliablePurity))
                 .pharmocoGenotypes(createPharmcoGenotypesFindings(orangeRecord.peach(), hasContainmination))
+                .visualisationFiles(visualisationFiles)
                 .build();
     }
 
