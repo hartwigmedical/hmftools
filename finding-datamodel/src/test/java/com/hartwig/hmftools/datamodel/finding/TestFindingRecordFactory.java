@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.datamodel.finding;
 
 import java.util.List;
+import java.util.Map;
 
 import com.hartwig.hmftools.datamodel.orange.ExperimentType;
 import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
@@ -34,7 +35,20 @@ public class TestFindingRecordFactory {
                 .germlineDisruptions(TestFindingFactory.buildDriverFindingsList(FindingsStatus.OK, List.of()))
                 .fusions(TestFindingFactory.buildDriverFindingsList(FindingsStatus.OK, List.of()))
                 .viruses(TestFindingFactory.buildDriverFindingsList(FindingsStatus.OK, List.of()))
-                .hla(TestFindingFactory.buildFindingsList(FindingsStatus.OK, List.of()))
-                .pharmocoGenotypes(TestFindingFactory.buildFindingsList(FindingsStatus.OK, List.of()));
+                .hlaAlleles(TestFindingFactory.buildFindingsList(FindingsStatus.OK, List.of()))
+                .pharmocoGenotypes(TestFindingFactory.buildFindingsList(FindingsStatus.OK, List.of()))
+                .visualisationFiles(VisualisationFilesBuilder.builder()
+                        .tumorBqrPlot("")
+                        .purpleInputPlot("")
+                        .purpleFinalCircosPlot("")
+                        .purpleClonalityPlot("")
+                        .purpleCopyNumberPlot("")
+                        .purpleVariantCopyNumberPlot("")
+                        .purplePurityRangePlot("")
+                        .purpleKataegisPlot("")
+                        .qseePlot("")
+                        .linxDriverPlots(List.of())
+                        .sageVisualisations(Map.of())
+                        .build());
     }
 }
