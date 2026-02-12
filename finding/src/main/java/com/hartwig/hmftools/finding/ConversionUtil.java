@@ -11,6 +11,7 @@ import org.jetbrains.annotations.Nullable;
 @SuppressWarnings("unused")
 public class ConversionUtil
 {
+    /*
     public static void orangeJsonToFindingsJson(Path findingsJson, Path orangeJson, @Nullable Path clinicalTranscriptsTsv,
             @Nullable Path driverGeneTsv) throws IOException
     {
@@ -18,4 +19,5 @@ public class ConversionUtil
                 findingRecord = FindingRecordFactory.fromOrangeJsonWithTranscriptFile(orangeJson, clinicalTranscriptsTsv, driverGeneTsv);
         FindingsJson.getInstance().write(findingRecord, findingsJson);
     }
+     */
 }
