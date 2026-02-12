@@ -291,22 +291,12 @@ class AlignmentAnnotator
         // Better gene match compares less than.
         fun compareGeneMatch(candidate1: GeneMatchCandidate, candidate2: GeneMatchCandidate): Int
         {
-            // Always prefer higher alignment score
+            // Always prefer higher alignment score.
             if (candidate1.alignment.alignmentScore > candidate2.alignment.alignmentScore)
             {
                 return -1
             }
             else if (candidate1.alignment.alignmentScore < candidate2.alignment.alignmentScore)
-            {
-                return 1
-            }
-
-            // if scores are equal, we prefer the functional one
-            if (candidate1.gene.isFunctional && !candidate2.gene.isFunctional)
-            {
-                return -1
-            }
-            else if (!candidate1.gene.isFunctional && candidate2.gene.isFunctional)
             {
                 return 1
             }
@@ -317,6 +307,17 @@ class AlignmentAnnotator
         // Deterministic tie breaker for otherwise identical gene alignments
         fun geneMatchTieBreaker(candidate1: GeneMatchCandidate, candidate2: GeneMatchCandidate) : Int
         {
+            // Prefer the functional gene.
+            if (candidate1.gene.isFunctional && !candidate2.gene.isFunctional)
+            {
+                return -1
+            }
+            else if (!candidate1.gene.isFunctional && candidate2.gene.isFunctional)
+            {
+                return 1
+            }
+
+            // Use gene name as a final tie-breaker.
             return candidate1.gene.geneAllele.compareTo(candidate2.gene.geneAllele)
         }
 
