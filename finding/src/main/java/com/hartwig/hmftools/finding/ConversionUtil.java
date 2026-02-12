@@ -16,6 +16,6 @@ public class ConversionUtil
     {
         FindingRecord
                 findingRecord = FindingRecordFactory.fromOrangeJsonWithTranscriptFile(orangeJson, clinicalTranscriptsTsv, driverGeneTsv);
-        FindingsJson.getInstance().write(findingRecord, findingsJson);
+        new FindingsJson().write(findingRecord, findingsJson);
     }
 }

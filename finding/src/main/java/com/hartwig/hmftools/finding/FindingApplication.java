@@ -46,7 +46,8 @@ public class FindingApplication
                 config.ClinicalTranscriptsPath != null ? Path.of(config.ClinicalTranscriptsPath) : null,
                 Path.of(config.DriverGenePath));
 
-        FindingsJson.getInstance().write(findingRecord, Path.of(config.FindingJsonPath));
+        new FindingsJson().write(findingRecord, Path.of(config.FindingJsonPath));
+
         LOGGER.info("Done!");
     }
 }
