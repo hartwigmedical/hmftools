@@ -18,12 +18,13 @@ public record FindingRecord(
         @NotNull DriverFindingList<Disruption> germlineDisruptions,
         @NotNull DriverFindingList<Fusion> fusions,
         @NotNull DriverFindingList<Virus> viruses,
-        @NotNull FindingList<HlaAllele> hla,
+        @NotNull FindingList<HlaAllele> hlaAlleles,
         @NotNull FindingList<PharmocoGenotype> pharmocoGenotypes,
         @NotNull FindingItem<MicrosatelliteStability> microsatelliteStability,
         @NotNull FindingItem<TumorMutationStatus> tumorMutationStatus,
         @NotNull FindingItem<PredictedTumorOrigin> predictedTumorOrigin,
-        @NotNull FindingItem<HomologousRecombination> homologousRecombination)
+        @NotNull FindingItem<HomologousRecombination> homologousRecombination,
+        @NotNull VisualisationFiles visualisationFiles)
 {
     @NotNull
     List<SmallVariant> allSmallVariants()
