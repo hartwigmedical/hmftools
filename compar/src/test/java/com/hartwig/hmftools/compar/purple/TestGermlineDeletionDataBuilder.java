@@ -50,6 +50,7 @@ public class TestGermlineDeletionDataBuilder
                         -1,
                         -1,
                         -1,
+                        false,
                         GermlineDetectionMethod.SEGMENT,
                         germlineStatus,
                         tumorStatus,

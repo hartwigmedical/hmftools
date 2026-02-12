@@ -2,8 +2,6 @@ package com.hartwig.hmftools.orange;
 
 import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL;
 import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.addGenePanelOption;
-import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
-import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeVersion;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.PIPELINE_FORMAT_CFG;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.PIPELINE_FORMAT_FILE_CFG;
@@ -100,7 +98,6 @@ public interface OrangeConfig
         configBuilder.addPath(SIGNATURES_ETIOLOGY_TSV, true, "Path to signatures etiology TSV");
         configBuilder.addPath(TUMOR_REDUX_DIR_CFG, true, TUMOR_REDUX_DIR_DESC);
         addGenePanelOption(configBuilder, true);
-        addEnsemblDir(configBuilder);
 
         configBuilder.addPath(PIPELINE_VERSION_FILE, false, "Path towards the pipeline version file.");
 
@@ -163,9 +160,6 @@ public interface OrangeConfig
 
     @NotNull
     String driverGenePanelTsv();
-
-    @NotNull
-    String ensemblDataDirectory();
 
     @Nullable
     String pipelineVersionFile();
@@ -261,7 +255,6 @@ public interface OrangeConfig
                 .cohortMappingTsv(configBuilder.getValue(COHORT_MAPPING_TSV))
                 .driverGenePanelTsv(configBuilder.getValue(DRIVER_GENE_PANEL))
                 .signaturesEtiologyTsv(configBuilder.getValue(SIGNATURES_ETIOLOGY_TSV))
-                .ensemblDataDirectory(configBuilder.getValue(ENSEMBL_DATA_DIR))
                 .pipelineVersionFile(configBuilder.getValue(PIPELINE_VERSION_FILE))
                 .purpleDataDirectory(pathResolver.resolveMandatoryToolDirectory(PURPLE_DIR_CFG, defaultToolDirectories.purpleDir()))
                 .purplePlotDirectory(pathResolver.resolveMandatoryToolPlotsDirectory(PURPLE_PLOT_DIR_CFG, defaultToolDirectories.purpleDir()))

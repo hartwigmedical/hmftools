@@ -46,6 +46,7 @@ public final class GermlineDeletionTestFactory
                 0,
                 0,
                 0,
+                true,
                 GermlineDetectionMethod.SEGMENT,
                 tumorStatus,
                 tumorStatus,

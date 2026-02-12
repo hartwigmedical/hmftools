@@ -22,7 +22,6 @@ public final class TestOrangeConfigFactory
     private static final String DRIVER_GENE_PANEL_TSV = Resources.getResource("driver/example.DriverGenePanel.tsv").getPath();
     private static final String SIGNATURES_ETIOLOGY_TSV =
             Resources.getResource("test_run_resources/sigs/signatures_etiology.tsv").getPath();
-    private static final String ENSEMBL_DATA_DIRECTORY = Resources.getResource("test_run_resources/ensembl").getPath();
 
     private static final String RUN_DIRECTORY = Resources.getResource("test_run").getPath();
     private static final String PIPELINE_VERSION_FILE = RUN_DIRECTORY + "/pipeline.version";
@@ -66,7 +65,6 @@ public final class TestOrangeConfigFactory
                 .cohortMappingTsv(COHORT_MAPPING_TSV)
                 .driverGenePanelTsv(DRIVER_GENE_PANEL_TSV)
                 .signaturesEtiologyTsv(SIGNATURES_ETIOLOGY_TSV)
-                .ensemblDataDirectory(ENSEMBL_DATA_DIRECTORY)
                 .tumorSampleWGSMetricsFile(TUMOR_SAMPLE_WGS_METRICS_FILE)
                 .tumorSampleFlagstatFile(TUMOR_SAMPLE_FLAGSTAT_FILE)
                 .tumorSampleBqrPlot(TUMOR_SAMPLE_BQR_PLOT)

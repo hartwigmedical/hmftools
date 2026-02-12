@@ -1,13 +1,13 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
-import static com.hartwig.hmftools.orange.algo.purple.GermlineGainDeletionUtil.findGeneCopyNumberForGeneTranscript;
 
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.driver.DriverType;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
@@ -31,12 +31,7 @@ import org.jetbrains.annotations.Nullable;
 
 public class PurpleInterpreter
 {
-    private final GermlineGainDeletionFactory mGermlineGainDelFactory;
-
-    public PurpleInterpreter(final GermlineGainDeletionFactory germlineGainDeletionFactory)
-    {
-        mGermlineGainDelFactory = germlineGainDeletionFactory;
-    }
+    public PurpleInterpreter() {}
 
     public PurpleRecord interpret(final PurpleData purple)
     {
@@ -54,7 +49,7 @@ public class PurpleInterpreter
 
         if(purple.germlineDeletions() != null)
         {
-            driverGermlineAmpDels = mGermlineGainDelFactory.createGermlineGainDeletions(
+            driverGermlineAmpDels = GermlineGainDeletionFactory.createGermlineGainDeletions(
                     purple.germlineDeletions(), Objects.requireNonNull(germlineDrivers), purple.somaticGeneCopyNumbers());
         }
 
@@ -77,16 +72,26 @@ public class PurpleInterpreter
             DriverType.AMP, DriverType.PARTIAL_AMP, DriverType.DEL, DriverType.HET_DEL, DriverType.LOH);
 
     private static List<PurpleGainDeletion> somaticGainsDelsFromDrivers(
-            final List<DriverCatalog> drivers, final List<GeneCopyNumber> allSomaticGeneCopyNumbers)
+            final List<DriverCatalog> drivers, final List<GeneCopyNumber> geneCopyNumbers)
     {
-        return drivers.stream()
-                .filter(o -> AMP_DEL_TYPES.contains(o.driver()))
-                .map(o -> toGainDel(
-                        o, findGeneCopyNumberForGeneTranscript(o.gene(), o.transcript(), allSomaticGeneCopyNumbers)))
-                .toList();
+        List<PurpleGainDeletion> gainDeletions = Lists.newArrayList();
+
+        for(DriverCatalog driver : drivers)
+        {
+            if(AMP_DEL_TYPES.contains(driver.driver()))
+            {
+                GeneCopyNumber geneCopyNumber = geneCopyNumbers.stream()
+                        .filter(x -> x.GeneName.equals(driver.gene()) && driver.transcript().equals(x.TransName))
+                        .findFirst().orElse(null);
+
+                gainDeletions.add(toGainDel(driver, geneCopyNumber));
+            }
+        }
+
+        return gainDeletions;
     }
 
-    private static PurpleGainDeletion toGainDel(final DriverCatalog driver, final GeneCopyNumber somaticGeneCopyNumber)
+    private static PurpleGainDeletion toGainDel(final DriverCatalog driver, final GeneCopyNumber geneCopyNumber)
     {
         return ImmutablePurpleGainDeletion.builder()
                 .driver(PurpleConversion.convert(driver))
@@ -95,7 +100,7 @@ public class PurpleInterpreter
                 .chromosomeBand(driver.chromosomeBand())
                 .minCopies(Math.max(0, driver.minCopyNumber()))
                 .maxCopies(Math.max(0, driver.maxCopyNumber()))
-                .minMinorAlleleCopies(somaticGeneCopyNumber.MinMinorAlleleCopyNumber)
+                .minMinorAlleleCopies(geneCopyNumber.MinMinorAlleleCopyNumber)
                 .build();
     }
 

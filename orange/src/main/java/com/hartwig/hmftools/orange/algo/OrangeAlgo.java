@@ -24,9 +24,7 @@ import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.common.doid.DoidParents;
 import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.driver.panel.DriverGeneFile;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.genome.chromosome.CytoBands;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.hla.LilacSummaryData;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxData;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxDataLoader;
@@ -86,7 +84,6 @@ import com.hartwig.hmftools.orange.cohort.mapping.DoidCohortMapper;
 import com.hartwig.hmftools.orange.conversion.ConversionUtil;
 import com.hartwig.hmftools.orange.conversion.OrangeConversion;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class OrangeAlgo
@@ -95,7 +92,6 @@ public class OrangeAlgo
     private final CohortMapper mCohortMapper;
     private final Map<String,DriverGene> mDriverGenes;
     private final Map<String, String> mEtiologyPerSignature;
-    private final EnsemblDataCache mEnsemblDataCache;
     private final PlotManager mPlotManager;
 
     private boolean mSuppressGeneWarnings;
@@ -119,19 +115,15 @@ public class OrangeAlgo
         Map<String, String> etiologyPerSignature = SigsEtiologiesLoader.read(config.signaturesEtiologyTsv());
         LOGGER.info(" Read {} signatures etiology", etiologyPerSignature.size());
 
-        LOGGER.info("Reading ensembl data cache from {}", config.ensemblDataDirectory());
-        EnsemblDataCache ensemblDataCache = loadEnsemblDataCache(config);
-        LOGGER.info(" Read ensembl data dir");
-
         String outputDir = config.outputDir();
         PlotManager plotManager = !outputDir.isEmpty() ? new FileBasedPlotManager(outputDir) : new DummyPlotManager();
 
-        return new OrangeAlgo(doidEntry, mapper, driverGenes, etiologyPerSignature, ensemblDataCache, plotManager);
+        return new OrangeAlgo(doidEntry, mapper, driverGenes, etiologyPerSignature, plotManager);
     }
 
     private OrangeAlgo(
             final DoidEntry doidEntry, final CohortMapper cohortMapper, final List<DriverGene> driverGenes,
-            final Map<String, String> etiologyPerSignature, final EnsemblDataCache ensemblDataCache, final PlotManager plotManager)
+            final Map<String, String> etiologyPerSignature, final PlotManager plotManager)
     {
         mDoidEntry = doidEntry;
         mCohortMapper = cohortMapper;
@@ -140,7 +132,6 @@ public class OrangeAlgo
         driverGenes.forEach(x -> mDriverGenes.put(x.gene(), x));
 
         mEtiologyPerSignature = etiologyPerSignature;
-        mEnsemblDataCache = ensemblDataCache;
         mPlotManager = plotManager;
         mSuppressGeneWarnings = false;
     }
@@ -169,11 +160,9 @@ public class OrangeAlgo
 
         LinxRecord linx = linxInterpreter.interpret(linxData);
 
-        GermlineGainDeletionFactory germlineGainDeletionFactory = new GermlineGainDeletionFactory(mEnsemblDataCache);
-
         List<DriverGene> driverGenes = new ArrayList<>(mDriverGenes.values());
 
-        PurpleInterpreter purpleInterpreter = new PurpleInterpreter(germlineGainDeletionFactory);
+        PurpleInterpreter purpleInterpreter = new PurpleInterpreter();
 
         PurpleRecord purple = purpleInterpreter.interpret(purpleData);
 
@@ -323,16 +312,6 @@ public class OrangeAlgo
         LOGGER.info(" Loaded flagstat from {}", flagstatFile);
 
         return ImmutableOrangeSample.builder().metrics(metrics).flagstat(flagstat).build();
-    }
-
-    @NotNull
-    private static EnsemblDataCache loadEnsemblDataCache(final OrangeConfig config)
-    {
-        EnsemblDataCache ensemblDataCache = new EnsemblDataCache(config.ensemblDataDirectory(),
-                RefGenomeVersion.from(config.refGenomeVersion().name()));
-        ensemblDataCache.setRequireNonEnsemblTranscripts();
-        ensemblDataCache.load(false);
-        return ensemblDataCache;
     }
 
     @Nullable

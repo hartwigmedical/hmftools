@@ -9,7 +9,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.driver.DriverCatalogTestFactory;
 import com.hartwig.hmftools.common.driver.DriverType;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.purple.GeneCopyNumberTestFactory;
 import com.hartwig.hmftools.common.purple.GermlineAmpDel;
 import com.hartwig.hmftools.common.purple.GermlineDeletionTestFactory;
@@ -23,7 +22,6 @@ import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.orange.algo.linx.LinxOrangeTestFactory;
-import com.hartwig.hmftools.orange.TestDataUtils;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -36,7 +34,7 @@ public class PurpleInterpreterTest
     @Test
     public void canInterpretMinimalPurpleData()
     {
-        PurpleInterpreter interpreter = createTestInterpreter();
+        PurpleInterpreter interpreter = new PurpleInterpreter();
         assertNotNull(interpreter.interpret(PurpleTestFactory.createMinimalTestPurpleData()));
     }
 
@@ -49,7 +47,7 @@ public class PurpleInterpreterTest
 
         PurpleData purple = createPurpleTestData(Lists.newArrayList(hetReported, homReported));
 
-        PurpleInterpreter interpreter = createRealInterpreter();
+        PurpleInterpreter interpreter = new PurpleInterpreter();
         PurpleRecord interpreted = interpreter.interpret(purple);
         List<PurpleGainDeletion> germlineGainsDels = interpreted.germlineGainsDels();
         assertNotNull(germlineGainsDels);
@@ -65,7 +63,7 @@ public class PurpleInterpreterTest
 
         PurpleData purple = createPurpleTestData(Lists.newArrayList(hetUnreported, homReported));
 
-        PurpleInterpreter interpreter = createRealInterpreter();
+        PurpleInterpreter interpreter = new PurpleInterpreter();
         PurpleRecord interpreted = interpreter.interpret(purple);
         List<PurpleGainDeletion> germlineGainsDels = interpreted.germlineGainsDels();
         assertNotNull(germlineGainsDels);
@@ -85,26 +83,6 @@ public class PurpleInterpreterTest
                         .driver(DriverType.GERMLINE_DELETION)
                         .build())
                 .build();
-    }
-
-    @NotNull
-    private static PurpleInterpreter createTestInterpreter()
-    {
-        return createInterpreter(TestDataUtils.createDummyCache());
-    }
-
-    @NotNull
-    private static PurpleInterpreter createRealInterpreter()
-    {
-        return createInterpreter(TestDataUtils.loadTestCache());
-    }
-
-    @NotNull
-    private static PurpleInterpreter createInterpreter(@NotNull EnsemblDataCache ensemblDataCache)
-    {
-        GermlineGainDeletionFactory germlineGainDeletionFactory = new GermlineGainDeletionFactory(ensemblDataCache);
-
-        return new PurpleInterpreter(germlineGainDeletionFactory);
     }
 
     @NotNull

@@ -98,6 +98,7 @@ public class GeneCopyNumberDAO
                     record.getValue(GERMLINECOPYNUMBER.DEPTHWINDOWCOUNT),
                     record.getValue(GERMLINECOPYNUMBER.EXONSTART),
                     record.getValue(GERMLINECOPYNUMBER.EXONEND),
+                    false,
                     GermlineDetectionMethod.valueOf(record.getValue(GERMLINECOPYNUMBER.DETECTIONMETHOD)),
                     GermlineStatus.valueOf(record.getValue(GERMLINECOPYNUMBER.GERMLINESTATUS)),
                     GermlineStatus.valueOf(record.getValue(GERMLINECOPYNUMBER.TUMORSTATUS)),

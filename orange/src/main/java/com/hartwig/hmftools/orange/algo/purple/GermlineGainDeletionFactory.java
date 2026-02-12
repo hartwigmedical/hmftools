@@ -1,12 +1,20 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
-import java.util.List;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 
-import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.gene.TranscriptData;
+import static com.hartwig.hmftools.common.purple.GermlineStatus.AMPLIFICATION;
+import static com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation.FULL_DEL;
+import static com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation.FULL_GAIN;
+import static com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation.PARTIAL_DEL;
+import static com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation.PARTIAL_GAIN;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GermlineAmpDel;
-import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
 import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
 import com.hartwig.hmftools.datamodel.purple.ImmutableGermlineAmpDelFields;
@@ -16,67 +24,86 @@ import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 import com.hartwig.hmftools.orange.conversion.PurpleConversion;
 
-public class GermlineGainDeletionFactory
+public final class GermlineGainDeletionFactory
 {
-    private final EnsemblDataCache mEnsemblDataCache;
-
-    public GermlineGainDeletionFactory(final EnsemblDataCache ensemblDataCache)
-    {
-        mEnsemblDataCache = ensemblDataCache;
-    }
-
-    public List<PurpleGainDeletion> createGermlineGainDeletions(
+    public static List<PurpleGainDeletion> createGermlineGainDeletions(
             final List<GermlineAmpDel> germlineAmpDels,
             final List<PurpleDriver> germlineDrivers,
-            final List<GeneCopyNumber> allSomaticGeneCopyNumbers)
+            final List<GeneCopyNumber> geneCopyNumbers)
     {
-        // get all the drivers
-        List<PurpleDriver> reportableGermlineAmpDelDrivers = germlineDrivers.stream()
-                .filter(o -> o.reportedStatus() == ReportedStatus.REPORTED)
-                .filter(o -> o.type() == PurpleDriverType.GERMLINE_DELETION || o.type() == PurpleDriverType.GERMLINE_AMP)
-                .toList();
+        List<PurpleGainDeletion> gainDeletions = Lists.newArrayList();
 
-        return reportableGermlineAmpDelDrivers.stream()
-                .map(driver -> {
-                    List<GermlineAmpDel> ampDels =
-                            germlineAmpDels.stream().filter(o -> o.GeneName.equals(driver.gene())).toList();
-                    GeneCopyNumber somaticGeneCopyNumber = GermlineGainDeletionUtil.findGeneCopyNumberForGeneTranscript(
-                            driver.gene(), driver.transcript(), allSomaticGeneCopyNumbers);
-                    return toGainDel(driver, ampDels, somaticGeneCopyNumber);
-                })
-                .toList();
+        for(PurpleDriver driver : germlineDrivers)
+        {
+            if(driver.reportedStatus() != ReportedStatus.REPORTED)
+                continue;
+
+            if(driver.type() != PurpleDriverType.GERMLINE_DELETION && driver.type() != PurpleDriverType.GERMLINE_AMP)
+                continue;
+
+            List<GermlineAmpDel> matchedGermlineAmpDels = germlineAmpDels.stream()
+                    .filter(x -> x.GeneName.equals(driver.gene())).collect(Collectors.toList());
+
+            GeneCopyNumber geneCopyNumber = geneCopyNumbers.stream()
+                    .filter(x -> x.GeneName.equals(driver.gene()) && driver.transcript().equals(x.TransName)).findFirst().orElse(null);
+
+            if(matchedGermlineAmpDels.isEmpty() || geneCopyNumber == null)
+                continue;
+
+            gainDeletions.add(toGainDel(driver, matchedGermlineAmpDels, geneCopyNumber));
+        }
+
+        return gainDeletions;
     }
 
-    private PurpleGainDeletion toGainDel(
-            final PurpleDriver driver, final List<GermlineAmpDel> deletionsForGene, final GeneCopyNumber somaticGeneCopyNumber)
+    private static PurpleGainDeletion toGainDel(
+            final PurpleDriver driver, final List<GermlineAmpDel> germlineAmpDels, final GeneCopyNumber geneCopyNumber)
     {
-        TranscriptData canonicalTranscript = GermlineGainDeletionUtil.findTranscript(driver.gene(), driver.transcript(), mEnsemblDataCache);
-        CopyNumberInterpretation interpretation = GermlineGainDeletionUtil.deletionsCoverTranscript(deletionsForGene, canonicalTranscript)
-                ? CopyNumberInterpretation.FULL_DEL
-                : CopyNumberInterpretation.PARTIAL_DEL;
-        double minCopies = GermlineGainDeletionUtil.getSomaticMinCopyNumber(deletionsForGene);
-        double maxCopies = GermlineGainDeletionUtil.getSomaticMaxCopyNumber(deletionsForGene, somaticGeneCopyNumber, canonicalTranscript);
-        double germlineMinCopies = GermlineGainDeletionUtil.getGermlineMinCopyNumber(deletionsForGene);
+        GermlineAmpDel firstGermlineAmpDel = germlineAmpDels.get(0);
 
-        GermlineStatus germlineStatus = GermlineGainDeletionUtil.getGermlineGainDelStatus(deletionsForGene);
-        GermlineStatus somaticStatus = GermlineGainDeletionUtil.getSomaticGainDelStatus(deletionsForGene);
+        CopyNumberInterpretation interpretation;
 
-        String chromosome = GermlineGainDeletionUtil.getChromosome(deletionsForGene);
-        String chromosomeBand = GermlineGainDeletionUtil.getChromosomeBand(deletionsForGene);
+        if(firstGermlineAmpDel.NormalStatus == AMPLIFICATION)
+        {
+            interpretation = firstGermlineAmpDel.IsPartial ? PARTIAL_GAIN : FULL_GAIN;
+        }
+        else
+        {
+            interpretation = firstGermlineAmpDel.IsPartial ? PARTIAL_DEL : FULL_DEL;
+        }
+
+        double minCopies = firstGermlineAmpDel.TumorCopyNumber;
+
+        boolean coversTranscript = germlineAmpDels.stream().noneMatch(x -> x.IsPartial);
+
+        double maxCopies = coversTranscript ?
+                firstGermlineAmpDel.TumorCopyNumber : max(geneCopyNumber.maxCopyNumber(), firstGermlineAmpDel.TumorCopyNumber);
+
+        double germlineMinCopies = firstGermlineAmpDel.GermlineCopyNumber;
+
+        if(germlineAmpDels.size() > 1)
+        {
+            for(GermlineAmpDel germlineAmpDel : germlineAmpDels)
+            {
+                minCopies = min(germlineAmpDel.TumorCopyNumber, minCopies);
+                maxCopies = max(germlineAmpDel.TumorCopyNumber, maxCopies);
+                germlineMinCopies = min(germlineAmpDel.GermlineCopyNumber, germlineMinCopies);
+            }
+        }
 
         return ImmutablePurpleGainDeletion.builder()
                 .driver(driver)
                 .interpretation(interpretation)
-                .chromosome(chromosome)
-                .chromosomeBand(chromosomeBand)
+                .chromosome(firstGermlineAmpDel.Chromosome)
+                .chromosomeBand(firstGermlineAmpDel.ChromosomeBand)
                 .germlineAmpDelFields(ImmutableGermlineAmpDelFields.builder()
-                        .germlineStatus(PurpleConversion.convert(germlineStatus))
-                        .somaticStatus(PurpleConversion.convert(somaticStatus))
+                        .germlineStatus(PurpleConversion.convert(firstGermlineAmpDel.NormalStatus))
+                        .somaticStatus(PurpleConversion.convert(firstGermlineAmpDel.TumorStatus))
                         .germlineMinCopyNumber(germlineMinCopies)
                         .build())
                 .minCopies(minCopies)
                 .maxCopies(maxCopies)
-                .minMinorAlleleCopies(somaticGeneCopyNumber.MinMinorAlleleCopyNumber)
+                .minMinorAlleleCopies(geneCopyNumber.MinMinorAlleleCopyNumber)
                 .build();
     }
 }
