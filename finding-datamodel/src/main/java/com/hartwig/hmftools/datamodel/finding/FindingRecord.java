@@ -27,37 +27,37 @@ public record FindingRecord(
         @NotNull VisualisationFiles visualisationFiles)
 {
     @NotNull
-    List<SmallVariant> allSmallVariants()
+    public List<SmallVariant> allSmallVariants()
     {
         return mergeDriverFindings(somaticSmallVariants, germlineSmallVariants);
     }
 
     @NotNull
-    List<GainDeletion> allGainDeletions()
+    public List<GainDeletion> allGainDeletions()
     {
         return mergeDriverFindings(somaticGainDeletions, germlineGainDeletions);
     }
 
     @NotNull
-    List<Disruption> allDisruptions()
+    public List<Disruption> allDisruptions()
     {
         return mergeDriverFindings(somaticDisruptions, germlineDisruptions);
     }
 
     @NotNull
-    List<SmallVariant> allReportableSmallVariants()
+    public List<SmallVariant> allReportableSmallVariants()
     {
         return mergeReportedDriverFindings(somaticSmallVariants, germlineSmallVariants);
     }
 
     @NotNull
-    List<GainDeletion> allReportableGainDeletions()
+    public List<GainDeletion> allReportableGainDeletions()
     {
         return mergeReportedDriverFindings(somaticGainDeletions, germlineGainDeletions);
     }
 
     @NotNull
-    List<Disruption> allReportableDisruptions()
+    public List<Disruption> allReportableDisruptions()
     {
         return mergeReportedDriverFindings(somaticDisruptions, germlineDisruptions);
     }
