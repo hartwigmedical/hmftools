@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.hartwig.hmftools.common.metrics.BamFlagStats;
 import com.hartwig.hmftools.common.metrics.BamMetricCoverage;
 import com.hartwig.hmftools.common.metrics.BamMetricSummary;
 import com.hartwig.hmftools.common.metrics.ValueFrequency;
@@ -91,6 +92,22 @@ public class SummaryTablePrep implements CategoryPrep
         }
     }
 
+    private BamFlagStats loadBamFlagStats(String sampleId, SampleType sampleType, List<String> missingInputPaths)
+    {
+        String baseDir = mConfig.getBamMetricsDir(sampleId, sampleType);
+        String filePath = BamFlagStats.generateFilename(baseDir, sampleId);
+
+        try
+        {
+            return BamFlagStats.read(filePath);
+        }
+        catch(IOException e)
+        {
+            missingInputPaths.add(filePath);
+            return null;
+        }
+    }
+
     @VisibleForTesting
     private static void putFeature(EnumMap<SummaryTableFeature, Feature> featuresMap, SummaryTableFeature summaryTableFeature, double value)
     {
@@ -157,6 +174,15 @@ public class SummaryTablePrep implements CategoryPrep
         return (double) basesAboveCoverageThres / totalBases;
     }
 
+    @VisibleForTesting
+    static void putFeatures(BamFlagStats bamFlagStats, EnumMap<SummaryTableFeature, Feature> featuresMap)
+    {
+        if(bamFlagStats == null)
+            return;
+
+        putFeature(featuresMap, SummaryTableFeature.MAPPED_PROPORTION, bamFlagStats.mappedProportion());
+    }
+
     @Override
     public List<Feature> extractSampleData(String sampleId, @NotNull SampleType sampleType) throws IOException
     {
@@ -174,6 +200,9 @@ public class SummaryTablePrep implements CategoryPrep
 
         BamMetricCoverage bamMetricCoverage = loadBamMetricCoverage(sampleId, sampleType, missingInputPaths);
         putFeatures(bamMetricCoverage, featuresMap);
+
+        BamFlagStats bamFlagStats = loadBamFlagStats(sampleId, sampleType, missingInputPaths);
+        putFeatures(bamFlagStats, featuresMap);
 
         if(!missingInputPaths.isEmpty())
         {

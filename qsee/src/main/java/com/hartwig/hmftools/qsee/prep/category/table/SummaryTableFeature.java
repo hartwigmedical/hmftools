@@ -24,6 +24,7 @@ public enum SummaryTableFeature
     DELETED_GENES           (SummaryTableGroup.COPY_NUMBER, "Deleted genes", SourceTool.PURPLE),
     UNSUPPORTED_CN_SEGMENTS (SummaryTableGroup.COPY_NUMBER, "Unsupported CN segments", SourceTool.PURPLE),
 
+    MAPPED_PROPORTION       (SummaryTableGroup.MAPPING, "Mapped proportion", SourceTool.BAM_METRICS),
     MIN_COVERAGE_10         (SummaryTableGroup.MAPPING, "Coverage ≥ 10", SourceTool.BAM_METRICS),
     MIN_COVERAGE_20         (SummaryTableGroup.MAPPING, "Coverage ≥ 20", SourceTool.BAM_METRICS),
     MIN_COVERAGE_30         (SummaryTableGroup.MAPPING, "Coverage ≥ 30", SourceTool.BAM_METRICS),
