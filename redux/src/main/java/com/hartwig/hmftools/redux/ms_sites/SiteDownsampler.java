@@ -48,7 +48,7 @@ public class SiteDownsampler
 
     private static int downsampleCount(UnitRepeatKey unitRepeatKey)
     {
-        int rawValue = MsFinderConfig.DOWNSAMPLE_FACTOR / (int) Math.pow(2, (unitRepeatKey.NumRepeats + unitRepeatKey.Key.length * 2));
+        int rawValue = MsFinderConfig.DOWNSAMPLE_FACTOR / (int) Math.pow(2, (unitRepeatKey.NumRepeats + unitRepeatKey.Key.Length * 2));
         return Math.max(MIN_TARGET_SITE_COUNT, rawValue);
     }
 

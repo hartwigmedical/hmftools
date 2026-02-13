@@ -10,24 +10,25 @@ public enum UnitKey
     AC_CA_GT_TG("AC/CA/GT/TG"),
     CG_GC("CG/GC");
 
-    private final String unitKey;
-    public final int length;
+    private final String mKeyStr;
+    public final int Length;
 
-    public String getUnitKey()
+    public String keyStr()
     {
-        return unitKey;
+        return mKeyStr;
     }
 
     UnitKey(String unitKey)
     {
-        this.unitKey = unitKey;
+        mKeyStr = unitKey;
+
         if(unitKey.contains("/"))
         {
-            this.length = unitKey.split("/")[0].length();
+            Length = unitKey.split("/")[0].length();
         }
         else
         {
-            this.length = 3;
+            Length = 3;
         }
     }
 

@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.redux.jitter;
 
+import static com.hartwig.hmftools.common.redux.ReduxCommon.COL_CONSENSUS_TYPE;
+import static com.hartwig.hmftools.common.redux.ReduxCommon.COL_UNIT;
+
 import java.io.File;
 import java.util.Collection;
 import java.util.Comparator;
@@ -19,8 +22,6 @@ public class MicrosatelliteSiteFile
     private static final String CHROMOSOME = "chromosome";
     private static final String START = "start";
     private static final String END = "end";
-    private static final String UNIT = "unit";
-    private static final String CONSENSUS_TYPE = "consensusType";
     private static final String NUM_READS = "numReads";
     private static final String NUM_READS_REJECTED = "numReadsRejected";
 
@@ -69,7 +70,7 @@ public class MicrosatelliteSiteFile
         // sort the bins
         List<MicrosatelliteSiteData> sortedAnalysers = microsatelliteSiteData.stream().sorted(comparator).collect(Collectors.toList());
 
-        List<String> columns = List.of(CHROMOSOME, START, END, UNIT, CONSENSUS_TYPE, NUM_READS, NUM_READS_REJECTED, REAL_VARIANT,
+        List<String> columns = List.of(CHROMOSOME, START, END, COL_UNIT, COL_CONSENSUS_TYPE, NUM_READS, NUM_READS_REJECTED, REAL_VARIANT,
                 COUNT_m10, COUNT_m9, COUNT_m8, COUNT_m7, COUNT_m6, COUNT_m5, COUNT_m4, COUNT_m3, COUNT_m2, COUNT_m1,
                 COUNT_p0, COUNT_p1, COUNT_p2, COUNT_p3, COUNT_p4, COUNT_p5, COUNT_p6, COUNT_p7, COUNT_p8, COUNT_p9, COUNT_p10,
                 READ_REPEAT_LENGTHS);
@@ -92,8 +93,8 @@ public class MicrosatelliteSiteFile
             row.set(CHROMOSOME, repeatAnalyser.refGenomeMicrosatellite().chromosome());
             row.set(START, repeatAnalyser.refGenomeMicrosatellite().referenceStart());
             row.set(END, repeatAnalyser.refGenomeMicrosatellite().referenceEnd());
-            row.set(UNIT,  repeatAnalyser.refGenomeMicrosatellite().unitString());
-            row.set(CONSENSUS_TYPE, consensusType.name());
+            row.set(COL_UNIT,  repeatAnalyser.refGenomeMicrosatellite().unitString());
+            row.set(COL_CONSENSUS_TYPE, consensusType.name());
             row.set(NUM_READS, repeatAnalyser.readCountByConsensus(consensusType));
             row.set(NUM_READS_REJECTED, repeatAnalyser.readsRejectedByConsensus(consensusType));
             row.set(REAL_VARIANT, repeatAnalyser.isRealVariant(JitterConstants.ALT_COUNT_FRACTION_INIT, JitterConstants.ALT_COUNT_FRACTION_STEP,

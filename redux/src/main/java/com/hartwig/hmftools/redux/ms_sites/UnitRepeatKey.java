@@ -43,6 +43,6 @@ public class UnitRepeatKey
     @Override
     public String toString()
     {
-        return Key.getUnitKey() + " x " + NumRepeats;
+        return Key.keyStr() + " x " + NumRepeats;
     }
 }
