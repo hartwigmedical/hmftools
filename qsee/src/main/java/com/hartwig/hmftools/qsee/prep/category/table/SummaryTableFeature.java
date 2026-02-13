@@ -18,8 +18,8 @@ public enum SummaryTableFeature
     TMB_MS_INDELS           (SummaryTableGroup.TMB, "Microsatellite indels per MB", SourceTool.PURPLE),
     TMB_STRUCTURAL_VARIANTS (SummaryTableGroup.TMB, "Structural variants per MB", SourceTool.PURPLE),
 
-    TINC                    (SummaryTableGroup.CONTAMINATION, "TINC level", SourceTool.PURPLE),
-    CONTAMINATION           (SummaryTableGroup.CONTAMINATION, "Contamination", SourceTool.PURPLE),
+    TINC                    (SummaryTableGroup.CONTAMINATION, "Tumor in normal contamination", SourceTool.PURPLE),
+    CONTAMINATION           (SummaryTableGroup.CONTAMINATION, "Other DNA contamination", SourceTool.PURPLE),
 
     DELETED_GENES           (SummaryTableGroup.COPY_NUMBER, "Deleted genes", SourceTool.PURPLE),
     UNSUPPORTED_CN_SEGMENTS (SummaryTableGroup.COPY_NUMBER, "Unsupported CN segments", SourceTool.PURPLE),
