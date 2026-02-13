@@ -136,7 +136,9 @@ public class SummaryTablePrep implements CategoryPrep
             return;
 
         putFeature(featuresMap, SummaryTableFeature.MIN_COVERAGE_10, calcPropBasesWithMinCoverage(bamMetricCoverage, 10));
+        putFeature(featuresMap, SummaryTableFeature.MIN_COVERAGE_20, calcPropBasesWithMinCoverage(bamMetricCoverage, 20));
         putFeature(featuresMap, SummaryTableFeature.MIN_COVERAGE_30, calcPropBasesWithMinCoverage(bamMetricCoverage, 30));
+        putFeature(featuresMap, SummaryTableFeature.MIN_COVERAGE_60, calcPropBasesWithMinCoverage(bamMetricCoverage, 60));
         putFeature(featuresMap, SummaryTableFeature.MIN_COVERAGE_100, calcPropBasesWithMinCoverage(bamMetricCoverage, 100));
         putFeature(featuresMap, SummaryTableFeature.MIN_COVERAGE_250, calcPropBasesWithMinCoverage(bamMetricCoverage, 250));
     }
