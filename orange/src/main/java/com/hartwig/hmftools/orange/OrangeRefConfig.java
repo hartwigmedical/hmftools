@@ -19,7 +19,6 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_CF
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
-import static com.hartwig.hmftools.orange.OrangeConfig.TUMOR_REDUX_DIR_CFG;
 import static com.hartwig.hmftools.orange.OrangeConfig.TUMOR_SAMPLE_ID;
 import static com.hartwig.hmftools.orange.util.PathUtil.mandatoryPath;
 
@@ -44,7 +43,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface OrangeWGSRefConfig
+public interface OrangeRefConfig
 {
     String REFERENCE_SAMPLE_ID = "reference_sample_id";
 
@@ -69,17 +68,17 @@ public interface OrangeWGSRefConfig
     }
 
     @NotNull
-    static OrangeWGSRefConfig createConfig(
+    static OrangeRefConfig createConfig(
             final ConfigBuilder configBuilder, final PathResolver pathResolver, final PipelineToolDirectories defaultToolDirectories)
     {
-        ImmutableOrangeWGSRefConfig.Builder builder = ImmutableOrangeWGSRefConfig.builder();
+        ImmutableOrangeRefConfig.Builder builder = ImmutableOrangeRefConfig.builder();
         String tumorSampleId = configBuilder.getValue(TUMOR_SAMPLE_ID);
 
         // Params required for WGS, Tumor only
         String virusDir = pathResolver.resolveOptionalToolDirectory(VIRUS_DIR_CFG, defaultToolDirectories.virusInterpreterDir());
         if(virusDir != null)
         {
-            builder.annotatedVirusTsv(mandatoryPath(AnnotatedVirusFile.generateFileName(virusDir, tumorSampleId)));
+            builder.annotatedVirusTsv(AnnotatedVirusFile.generateFileName(virusDir, tumorSampleId));
         }
 
         String chordDir = pathResolver.resolveMandatoryToolDirectory(CHORD_DIR_CFG, defaultToolDirectories.chordDir());
@@ -95,8 +94,11 @@ public interface OrangeWGSRefConfig
             LOGGER.debug("Ref sample has been configured as {}.", refSampleId);
             builder.referenceSampleId(refSampleId);
 
-            String reduxDir = configBuilder.getValue(REFERENCE_REDUX_DIR_CFG);
-            builder.refSampleBqrPlot(mandatoryPath(BqrFile.generatePlotFilename(reduxDir, refSampleId)));
+            if(configBuilder.hasValue(REFERENCE_REDUX_DIR_CFG))
+            {
+                String reduxDir = configBuilder.getValue(REFERENCE_REDUX_DIR_CFG);
+                builder.refSampleBqrPlot(BqrFile.generatePlotFilename(reduxDir, refSampleId));
+            }
 
             String refMetricsDir = pathResolver.resolveMandatoryToolDirectory(
                     REF_METRICS_DIR_CFG, defaultToolDirectories.germlineMetricsDir());

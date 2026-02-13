@@ -35,7 +35,7 @@ public class PurpleInterpreter
 
     public PurpleRecord interpret(final PurpleData purple)
     {
-        LOGGER.info("Analysing purple data");
+        LOGGER.info("Analysing Purple data");
 
         List<PurpleVariant> somaticVariants = PurpleVariantFactory.fromPurpleVariants(purple.somaticVariants());
 

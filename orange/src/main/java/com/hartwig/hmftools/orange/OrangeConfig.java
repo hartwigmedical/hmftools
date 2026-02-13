@@ -27,7 +27,7 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOpt
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
-import static com.hartwig.hmftools.orange.OrangeWGSRefConfig.REFERENCE_SAMPLE_ID;
+import static com.hartwig.hmftools.orange.OrangeRefConfig.REFERENCE_SAMPLE_ID;
 import static com.hartwig.hmftools.orange.util.PathUtil.mandatoryPath;
 import static com.hartwig.hmftools.orange.util.PathUtil.optionalPath;
 
@@ -96,7 +96,7 @@ public interface OrangeConfig
         configBuilder.addPath(DOID_JSON, true, "Path to JSON file containing the full DOID tree");
         configBuilder.addPath(COHORT_MAPPING_TSV, true, "Path to cohort mapping TSV");
         configBuilder.addPath(SIGNATURES_ETIOLOGY_TSV, true, "Path to signatures etiology TSV");
-        configBuilder.addPath(TUMOR_REDUX_DIR_CFG, true, TUMOR_REDUX_DIR_DESC);
+        configBuilder.addPath(TUMOR_REDUX_DIR_CFG, false, TUMOR_REDUX_DIR_DESC);
         addGenePanelOption(configBuilder, true);
 
         configBuilder.addPath(PIPELINE_VERSION_FILE, false, "Path towards the pipeline version file.");
@@ -122,7 +122,7 @@ public interface OrangeConfig
         addLoggingOptions(configBuilder);
 
         OrangeRnaConfig.registerConfig(configBuilder);
-        OrangeWGSRefConfig.registerConfig(configBuilder);
+        OrangeRefConfig.registerConfig(configBuilder);
     }
 
     @NotNull
@@ -135,7 +135,7 @@ public interface OrangeConfig
     OrangeRnaConfig rnaConfig();
 
     @Nullable
-    OrangeWGSRefConfig wgsRefConfig();
+    OrangeRefConfig wgsRefConfig();
 
     @NotNull
     Set<String> primaryTumorDoids();
@@ -170,7 +170,7 @@ public interface OrangeConfig
     @NotNull
     String tumorSampleFlagstatFile();
 
-    @NotNull
+    @Nullable
     String tumorSampleBqrPlot();
 
     @NotNull
@@ -242,9 +242,7 @@ public interface OrangeConfig
 
         ImmutableOrangeConfig.Builder builder = ImmutableOrangeConfig.builder();
 
-        String reduxDir = configBuilder.getValue(TUMOR_REDUX_DIR_CFG);
-
-        builder.experimentType(experimentType)
+                builder.experimentType(experimentType)
                 .tumorSampleId(tumorSampleId)
                 .rnaConfig(OrangeRnaConfig.createConfig(configBuilder, pathResolver, defaultToolDirectories))
                 .primaryTumorDoids(toStringSet(configBuilder.getValue(PRIMARY_TUMOR_DOIDS), DOID_SEPARATOR))
@@ -263,7 +261,12 @@ public interface OrangeConfig
                 .limitJsonOutput(limitJsonOutput)
                 .addDisclaimer(addDisclaimer);
 
-        builder.tumorSampleBqrPlot(mandatoryPath(BqrFile.generatePlotFilename(reduxDir, tumorSampleId)));
+        if(configBuilder.hasValue(TUMOR_REDUX_DIR_CFG))
+        {
+            String reduxDir = configBuilder.getValue(TUMOR_REDUX_DIR_CFG);
+
+            builder.tumorSampleBqrPlot(BqrFile.generatePlotFilename(reduxDir, tumorSampleId));
+        }
 
         String lilacDir = pathResolver.resolveOptionalToolDirectory(LILAC_DIR_CFG, defaultToolDirectories.lilacDir());
         if(lilacDir != null)
@@ -278,7 +281,7 @@ public interface OrangeConfig
 
         if(experimentType == ExperimentType.WHOLE_GENOME)
         {
-            builder.wgsRefConfig(OrangeWGSRefConfig.createConfig(configBuilder, pathResolver, defaultToolDirectories));
+            builder.wgsRefConfig(OrangeRefConfig.createConfig(configBuilder, pathResolver, defaultToolDirectories));
         }
 
         return builder.build();

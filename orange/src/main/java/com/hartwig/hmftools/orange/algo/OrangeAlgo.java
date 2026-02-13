@@ -4,6 +4,8 @@ import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -56,7 +58,7 @@ import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.datamodel.wildtype.WildTypeGene;
 import com.hartwig.hmftools.orange.OrangeConfig;
 import com.hartwig.hmftools.orange.OrangeRnaConfig;
-import com.hartwig.hmftools.orange.OrangeWGSRefConfig;
+import com.hartwig.hmftools.orange.OrangeRefConfig;
 import com.hartwig.hmftools.orange.algo.cuppa.CuppaDataFactory;
 import com.hartwig.hmftools.orange.algo.immuno.ImmuneEscapeInterpreter;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpreter;
@@ -65,7 +67,6 @@ import com.hartwig.hmftools.orange.algo.linx.LinxReportableClusters;
 import com.hartwig.hmftools.orange.algo.plot.DummyPlotManager;
 import com.hartwig.hmftools.orange.algo.plot.FileBasedPlotManager;
 import com.hartwig.hmftools.orange.algo.plot.PlotManager;
-import com.hartwig.hmftools.orange.algo.purple.GermlineGainDeletionFactory;
 import com.hartwig.hmftools.orange.algo.purple.PurpleData;
 import com.hartwig.hmftools.orange.algo.purple.PurpleDataLoader;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpreter;
@@ -318,8 +319,8 @@ public class OrangeAlgo
     private static Map<String, Double> loadGermlineMVLHPerGene(final OrangeConfig config, final Map<String,DriverGene> driverGenes)
             throws IOException
     {
-        OrangeWGSRefConfig orangeWGSRefConfig = config.wgsRefConfig();
-        String germlineGeneCoverageTsv = orangeWGSRefConfig != null ? orangeWGSRefConfig.germlineGeneCoverageTsv() : null;
+        OrangeRefConfig orangeRefConfig = config.wgsRefConfig();
+        String germlineGeneCoverageTsv = orangeRefConfig != null ? orangeRefConfig.germlineGeneCoverageTsv() : null;
         if(germlineGeneCoverageTsv == null)
         {
             LOGGER.info("Skipping loading of germline MVLH as no germline gene coverage has been provided");
@@ -473,7 +474,7 @@ public class OrangeAlgo
         }
 
         String annotatedVirusTsv = config.wgsRefConfig().annotatedVirusTsv();
-        if(annotatedVirusTsv == null)
+        if(annotatedVirusTsv == null || !Files.exists(Paths.get(annotatedVirusTsv)))
         {
             LOGGER.debug("Skipping loading of annotated viruses as no input has been provided");
             return null;
@@ -506,13 +507,13 @@ public class OrangeAlgo
     @Nullable
     private static CuppaData loadCuppaData(final OrangeConfig config) throws Exception
     {
-        OrangeWGSRefConfig orangeWGSRefConfig = config.wgsRefConfig();
-        if(orangeWGSRefConfig == null || orangeWGSRefConfig.cuppaVisDataTsv() == null)
+        OrangeRefConfig orangeRefConfig = config.wgsRefConfig();
+        if(orangeRefConfig == null || orangeRefConfig.cuppaVisDataTsv() == null)
         {
             return null;
         }
 
-        String cuppaVisDataTsv = orangeWGSRefConfig.cuppaVisDataTsv();
+        String cuppaVisDataTsv = orangeRefConfig.cuppaVisDataTsv();
         LOGGER.info("Loading CUPPA predictions from {}", new File(cuppaVisDataTsv).getParent());
         CuppaData cuppaData = CuppaDataFactory.create(cuppaVisDataTsv);
         LOGGER.info(" Loaded {} CUPPA predictions from {}", cuppaData.predictions().size(), cuppaVisDataTsv);
@@ -584,6 +585,9 @@ public class OrangeAlgo
                 config.wgsRefConfig() != null ? config.wgsRefConfig().refSampleBqrPlot() : null);
 
         String tumorBqrPlot = mPlotManager.processPlotFile(config.tumorSampleBqrPlot());
+
+        if(tumorBqrPlot == null)
+            tumorBqrPlot = "";
 
         String purplePlotBasePath = config.purplePlotDirectory() + File.separator + config.tumorSampleId();
         String purpleInputPlot = mPlotManager.processPlotFile(purplePlotBasePath + ".input.png");
