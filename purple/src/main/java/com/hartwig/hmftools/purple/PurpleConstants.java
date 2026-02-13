@@ -11,7 +11,6 @@ public class PurpleConstants
     public static final double BAF_PNT_5 = 0.5;
 
     // TMB calcs
-    public static final double MB_PER_GENOME = 2859;
     public static final double CODING_BASES_PER_GENOME = 3.188e7; // calculated from GRCh38 canonical transcripts (overlaps ignored)
     public static final double TUMOR_MSI_LOAD_MIN_VAF = 0.02;
 
