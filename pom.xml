@@ -76,7 +76,7 @@
         <cuppa.version>2.3</cuppa.version>
         <esvee.version>2.0</esvee.version>
         <fastq-tools.version>1.0</fastq-tools.version>
-        <finding.version>1.0</finding.version>
+        <finding.version>0.1.0</finding.version>
         <finding-datamodel.version>1.0</finding-datamodel.version>
         <gene-utils.version>1.3</gene-utils.version>
         <health-checker.version>3.6</health-checker.version>
