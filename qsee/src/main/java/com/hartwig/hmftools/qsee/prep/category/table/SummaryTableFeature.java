@@ -9,28 +9,29 @@ import com.hartwig.hmftools.qsee.feature.SourceTool;
 
 public enum SummaryTableFeature
 {
+    MEAN_COVERAGE           (SummaryTableGroup.GENERAL, "Mean coverage", SourceTool.BAM_METRICS),
     PURITY                  (SummaryTableGroup.GENERAL, "Purity", SourceTool.PURPLE),
     PLOIDY                  (SummaryTableGroup.GENERAL, "Ploidy", SourceTool.PURPLE),
-    TINC                    (SummaryTableGroup.GENERAL, "TINC level", SourceTool.PURPLE),
-    DELETED_GENES           (SummaryTableGroup.GENERAL, "Deleted genes", SourceTool.PURPLE),
-    UNSUPPORTED_CN_SEGMENTS (SummaryTableGroup.GENERAL, "Unsupported CN segments", SourceTool.PURPLE),
     LOH_PERCENT             (SummaryTableGroup.GENERAL, "LOH percent", SourceTool.PURPLE),
-    CONTAMINATION           (SummaryTableGroup.GENERAL, "Contamination", SourceTool.PURPLE),
 
     TMB_SMALL_VARIANTS      (SummaryTableGroup.TMB, "Small variants per MB", SourceTool.PURPLE),
     TMB_MS_INDELS           (SummaryTableGroup.TMB, "Microsatellite indels per MB", SourceTool.PURPLE),
-    TMB_STRUCTURAL_VARIANTS (SummaryTableGroup.TMB, "Structural variants", SourceTool.PURPLE),
+    TMB_STRUCTURAL_VARIANTS (SummaryTableGroup.TMB, "Structural variants per MB", SourceTool.PURPLE),
 
-    MEAN_COVERAGE           (SummaryTableGroup.COVERAGE, "Mean coverage", SourceTool.BAM_METRICS),
-    MIN_COVERAGE_10         (SummaryTableGroup.COVERAGE, "Coverage ≥ 10", SourceTool.BAM_METRICS),
-    MIN_COVERAGE_30         (SummaryTableGroup.COVERAGE, "Coverage ≥ 30", SourceTool.BAM_METRICS),
-    MIN_COVERAGE_100        (SummaryTableGroup.COVERAGE, "Coverage ≥ 100", SourceTool.BAM_METRICS),
-    MIN_COVERAGE_250        (SummaryTableGroup.COVERAGE, "Coverage ≥ 250", SourceTool.BAM_METRICS),
-    LOW_MAP_QUAL            (SummaryTableGroup.COVERAGE, "Low map qual percent", SourceTool.BAM_METRICS),
-    LOW_BASE_QUAL           (SummaryTableGroup.COVERAGE, "Low base qual percent", SourceTool.BAM_METRICS),
+    TINC                    (SummaryTableGroup.CONTAMINATION, "TINC level", SourceTool.PURPLE),
+    CONTAMINATION           (SummaryTableGroup.CONTAMINATION, "Contamination", SourceTool.PURPLE),
 
-    DUPLICATE_READS         (SummaryTableGroup.READ, "Duplicate reads rate", SourceTool.BAM_METRICS),
-    DUAL_STRAND_READS       (SummaryTableGroup.READ, "Dual-strand reads rate", SourceTool.BAM_METRICS);
+    DELETED_GENES           (SummaryTableGroup.COPY_NUMBER, "Deleted genes", SourceTool.PURPLE),
+    UNSUPPORTED_CN_SEGMENTS (SummaryTableGroup.COPY_NUMBER, "Unsupported CN segments", SourceTool.PURPLE),
+
+    MIN_COVERAGE_10         (SummaryTableGroup.MAPPING, "Coverage ≥ 10", SourceTool.BAM_METRICS),
+    MIN_COVERAGE_30         (SummaryTableGroup.MAPPING, "Coverage ≥ 30", SourceTool.BAM_METRICS),
+    MIN_COVERAGE_100        (SummaryTableGroup.MAPPING, "Coverage ≥ 100", SourceTool.BAM_METRICS),
+    MIN_COVERAGE_250        (SummaryTableGroup.MAPPING, "Coverage ≥ 250", SourceTool.BAM_METRICS),
+    LOW_MAP_QUAL            (SummaryTableGroup.MAPPING, "Low map qual percent", SourceTool.BAM_METRICS),
+    LOW_BASE_QUAL           (SummaryTableGroup.MAPPING, "Low base qual percent", SourceTool.BAM_METRICS),
+    DUPLICATE_READS         (SummaryTableGroup.MAPPING, "Duplicate reads rate", SourceTool.BAM_METRICS),
+    DUAL_STRAND_READS       (SummaryTableGroup.MAPPING, "Dual-strand reads rate", SourceTool.BAM_METRICS);
 
     private final SummaryTableGroup mGroup;
     private final String mMetric;

@@ -3,9 +3,10 @@ package com.hartwig.hmftools.qsee.prep.category.table;
 enum SummaryTableGroup
 {
     GENERAL("General"),
-    TMB("Mutation burden"),
-    COVERAGE("Coverage stats"),
-    READ("Read stats");
+    TMB("Mutational burden"),
+    CONTAMINATION("Contamination"),
+    COPY_NUMBER("Copy number"),
+    MAPPING("Mapping");
 
     private final String mHumanReadableName;
 

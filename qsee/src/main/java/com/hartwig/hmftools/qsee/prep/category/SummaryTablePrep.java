@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.qsee.prep.category;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeConstants.MB_PER_GENOME;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -111,7 +113,7 @@ public class SummaryTablePrep implements CategoryPrep
         putFeature(featuresMap, SummaryTableFeature.CONTAMINATION, purityContext.qc().contamination());
         putFeature(featuresMap, SummaryTableFeature.TMB_SMALL_VARIANTS, purityContext.tumorMutationalBurdenPerMb());
         putFeature(featuresMap, SummaryTableFeature.TMB_MS_INDELS, purityContext.microsatelliteIndelsPerMb());
-        putFeature(featuresMap, SummaryTableFeature.TMB_STRUCTURAL_VARIANTS, purityContext.svTumorMutationalBurden());
+        putFeature(featuresMap, SummaryTableFeature.TMB_STRUCTURAL_VARIANTS, purityContext.svTumorMutationalBurden() / MB_PER_GENOME);
     }
 
     @VisibleForTesting
