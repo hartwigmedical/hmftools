@@ -12,7 +12,6 @@ import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 
 // lilac shows two copies of HLA alleles even if they are the
 // same allele. This class combine the alleles and sum the copies
@@ -100,22 +99,12 @@ public class HlaAlleleFactory
 
     public static String extractHLAGene(String allele)
     {
-        if(allele.startsWith("A*"))
+        int asteriskIndex = allele.indexOf('*');
+        if(asteriskIndex == -1)
         {
-            return "HLA-A";
+            LOGGER.error("Unknown HLA gene name '{}' present! ", allele);
+            throw new IllegalArgumentException("Unknown HLA gene name '" + allele + "'");
         }
-        else if(allele.startsWith("B*"))
-        {
-            return "HLA-B";
-        }
-        else if(allele.startsWith("C*"))
-        {
-            return "HLA-C";
-        }
-        else
-        {
-            LOGGER.warn("Unknown HLA gene name '{}' present! ", allele);
-            return Strings.EMPTY;
-        }
+        return "HLA-" + allele.substring(0, asteriskIndex);
     }
 }
