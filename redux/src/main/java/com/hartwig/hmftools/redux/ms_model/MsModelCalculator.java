@@ -5,13 +5,21 @@ import static java.lang.Math.max;
 import static java.lang.Math.pow;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_SAMPLE_ID;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.ms_model.MsModelConstants.MULTI_BASE_REPEAT;
 import static com.hartwig.hmftools.redux.ms_model.MsModelConstants.REPEAT_3_5_GROUP;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -22,6 +30,7 @@ import com.hartwig.hmftools.common.redux.JitterTableRow;
 import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.apache.commons.math3.stat.regression.OLSMultipleLinearRegression;
+import org.apache.logging.log4j.Level;
 
 public class MsModelCalculator
 {
@@ -160,6 +169,8 @@ public class MsModelCalculator
 
     public void calculateCoefficients(final Map<String,PurplePurity> samplePurities)
     {
+        RD_LOGGER.info("calculating model coefficients");
+
         mSamplePurities.putAll(samplePurities);
 
         runFittingRoutine();
@@ -217,7 +228,7 @@ public class MsModelCalculator
             }
             else
             {
-                RD_LOGGER.debug(format("{} coefficient(b1=%.6f b2=%.6f)", rucKey, coefficients[0], coefficients[1]));
+                RD_LOGGER.debug(format("%s coefficient(b1=%.6f b2=%.6f)", rucKey, coefficients[0], coefficients[1]));
                 mRepeatUnitCountCoefficients.put(rucKey, coefficients);
             }
         }
@@ -251,20 +262,58 @@ public class MsModelCalculator
         }
     }
 
-    public void runValidation(final Map<String,PurplePurity> samplePurities, final Map<String,Collection<JitterCountsTable>> sampleJitterCounts)
+    public void runValidation(
+            final Map<String,PurplePurity> samplePurities, final Map<String,Collection<JitterCountsTable>> sampleJitterCounts,
+            final MsModelConfig config)
     {
-        for(Map.Entry<String,PurplePurity> entry : samplePurities.entrySet())
+        RD_LOGGER.info("evaluating samples");
+
+        Level logLevel = mSamplePurities.size() > 100 ? Level.TRACE : Level.DEBUG;
+
+        try
         {
-            String sampleId = entry.getKey();
+            String filename = config.OutputDir + File.separator + "ms_model_evaluation";
 
-            PurplePurity purplePurity = entry.getValue();
+            if(config.OutputId != null)
+                filename += "." + config.OutputId;
 
-            Collection<JitterCountsTable> jitterCounts = sampleJitterCounts.get(sampleId);
+            filename += TSV_EXTENSION;
 
-            double predictedMsIndelsPerMb = calcMsIndelPerMb(jitterCounts);
+            BufferedWriter writer = createBufferedWriter(filename, false);
 
-            RD_LOGGER.debug(format("sample(%s) purity(%.3f) msIndelsPerMb(actual=%.4f predicted=%.4f)",
-                    sampleId, purplePurity.Purity, purplePurity.MsIndelsPerMb, predictedMsIndelsPerMb));
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
+            sj.add(FLD_SAMPLE_ID).add("Purity").add("MsIndelsPerMb").add("PredictedValue");
+            writer.write(sj.toString());
+            writer.newLine();
+
+            for(Map.Entry<String,PurplePurity> entry : samplePurities.entrySet())
+            {
+                String sampleId = entry.getKey();
+
+                PurplePurity purplePurity = entry.getValue();
+
+                Collection<JitterCountsTable> jitterCounts = sampleJitterCounts.get(sampleId);
+
+                double predictedMsIndelsPerMb = calcMsIndelPerMb(jitterCounts);
+
+                RD_LOGGER.log(logLevel, format("sample(%s) purity(%.3f) msIndelsPerMb(actual=%.4f predicted=%.4f)",
+                        sampleId, purplePurity.Purity, purplePurity.MsIndelsPerMb, predictedMsIndelsPerMb));
+
+                sj = new StringJoiner(TSV_DELIM);
+                sj.add(sampleId);
+                sj.add(format("%.4f", purplePurity.Purity));
+                sj.add(format("%.4f", purplePurity.MsIndelsPerMb));
+                sj.add(format("%.4f", predictedMsIndelsPerMb));
+                writer.write(sj.toString());
+                writer.newLine();
+            }
+
+            writer.close();
+        }
+        catch(IOException e)
+        {
+            RD_LOGGER.error(" failed to create sample evaluation file: {}", e.toString());
+            System.exit(1);
         }
     }
 
@@ -290,17 +339,6 @@ public class MsModelCalculator
             double predictedValue = coefficients[0] * x + coefficients[1] * pow(x, 3);
             calcMsIndelsPerMb.add(predictedValue);
         }
-
-        /*
-        6. To get the predicted msIndelsPerMb for a new sample, we would do :
-        estimate_AT11 = linearRegression_AT11.predict( [x_AT11, x_AT11 ^ 3] )
-        estimate_AT12 = linearRegression_AT12.predict( [x_AT12, x_AT12 ^ 3] )
-
-        Then calculate the mean:
-        finalEstimate = mean([estimate_AT11, estimate_AT12, ...], na.rm = TRUE)
-        NAs occur when we don't have the jitter counts at a specific numUnits. We don't treat those counts as 0, but rather not include them when estimating msIndelsPerMb
-
-        */
 
         double avergeMsIndelsPerMb = Doubles.median(calcMsIndelsPerMb);
         return avergeMsIndelsPerMb;
@@ -369,13 +407,28 @@ public class MsModelCalculator
         }
     }
 
-    public void loadModelCoeffcients(final List<MsModelCoefficients> modelCoefficients)
+    public void loadModelErrorRates(final List<MsModelErrorRates> modelErrorRates)
     {
-        for(MsModelCoefficients coefficients : modelCoefficients)
+        for(MsModelErrorRates errorRates : modelErrorRates)
         {
-            String rucKey = repeatUnitAndCountKey(coefficients.RepeatUnit, coefficients.RepeatCount);
-            mRepeatUnitCountCoefficients.put(rucKey, new double[] { coefficients.Coefficient1, coefficients.Coefficient2} );
+            String rucKey = repeatUnitAndCountKey(errorRates.RepeatUnit, errorRates.RepeatCount);
+            mRepeatUnitCountErrorRates.put(rucKey, errorRates.ErrorRate);
         }
+    }
+
+    public List<MsModelErrorRates> getModelErrorRates()
+    {
+        List<MsModelErrorRates> modelErrorRates = Lists.newArrayListWithCapacity(mRepeatUnitCountErrorRates.size());
+
+        for(Map.Entry<String,Double> entry : mRepeatUnitCountErrorRates.entrySet())
+        {
+            String repeatUnit = repeatUnitFromKey(entry.getKey());
+            int repeatCount = repeatCountFromKey(entry.getKey());
+            double errorRate = entry.getValue();
+            modelErrorRates.add(new MsModelErrorRates(repeatUnit, repeatCount, errorRate));
+        }
+
+        return modelErrorRates;
     }
 
     public List<MsModelCoefficients> getModelCoeffcients()
@@ -392,6 +445,16 @@ public class MsModelCalculator
 
         return modelCoefficients;
     }
+
+    public void loadModelCoeffcients(final List<MsModelCoefficients> modelCoefficients)
+    {
+        for(MsModelCoefficients coefficients : modelCoefficients)
+        {
+            String rucKey = repeatUnitAndCountKey(coefficients.RepeatUnit, coefficients.RepeatCount);
+            mRepeatUnitCountCoefficients.put(rucKey, new double[] { coefficients.Coefficient1, coefficients.Coefficient2} );
+        }
+    }
+
 
     private static String repeatUnitFromKey(final String key)
     {

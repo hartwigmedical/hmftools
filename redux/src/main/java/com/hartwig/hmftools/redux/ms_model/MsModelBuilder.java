@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.redux.ms_model;
 
+import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.redux.ReduxConfig.APP_NAME;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.ms_model.MsModelConfig.TrainingRoutines.COEFFICIENTS;
@@ -8,7 +9,10 @@ import static com.hartwig.hmftools.redux.ms_model.MsModelConfig.TrainingRoutines
 import static com.hartwig.hmftools.redux.ms_model.MsModelParams.DEFAULT_MODEL_PARAMS;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
@@ -37,6 +41,8 @@ public class MsModelBuilder
 
     public void run()
     {
+        long startTimeMs = System.currentTimeMillis();
+
         RD_LOGGER.info("running MSI model builder for {} samples", mConfig.SampleIds.size());
 
         loadSampleFiles();
@@ -48,46 +54,77 @@ public class MsModelBuilder
             modelCalculator.calculateErrorRates(mSampleJitterCounts);
 
             // persist to file
+            String modelErrorRatesFile = mConfig.ModelErroRatesFile != null ?
+                    mConfig.ModelErroRatesFile : MsModelErrorRates.generateFilename(mConfig.OutputDir, mConfig.OutputId);
+            MsModelErrorRates.write(modelErrorRatesFile, modelCalculator.getModelErrorRates());
+        }
+        else
+        {
+            // load error rates
+            List<MsModelErrorRates> modelErrorRates = MsModelErrorRates.read(mConfig.ModelErroRatesFile);
+            modelCalculator.loadModelErrorRates(modelErrorRates);
+        }
+
+        if(mConfig.Routines.contains(COEFFICIENTS))
+        {
+            modelCalculator.calculateCoefficients(mSamplePurities);
+
             String modelCoefficientsFile = mConfig.ModelCoefficientsFile != null ?
                     mConfig.ModelCoefficientsFile : MsModelCoefficients.generateFilename(mConfig.OutputDir, mConfig.OutputId);
             MsModelCoefficients.write(modelCoefficientsFile, modelCalculator.getModelCoeffcients());
         }
         else
         {
-            // load error rates
-        }
-
-        if(mConfig.Routines.contains(COEFFICIENTS))
-        {
-            modelCalculator.calculateCoefficients(mSamplePurities);
-        }
-        else
-        {
             // load coefficients
+            List<MsModelCoefficients> modelCoefficients = MsModelCoefficients.read(mConfig.ModelCoefficientsFile);
+            modelCalculator.loadModelCoeffcients(modelCoefficients);
         }
 
         if(mConfig.Routines.contains(VALIDATION))
         {
-            modelCalculator.runValidation(mSamplePurities, mSampleJitterCounts);
+            modelCalculator.runValidation(mSamplePurities, mSampleJitterCounts, mConfig);
         }
 
-        RD_LOGGER.info("MSI model builder complete");
+        RD_LOGGER.info("MSI model builder, mins({})", runTimeMinsStr(startTimeMs));
     }
 
     private void loadSampleFiles()
     {
         try
         {
+            int count = 0;
+
             for(String sampleId : mConfig.SampleIds)
             {
                 String purplePurityFile = PurplePurity.generateFilename(mConfig.PurpleDir, sampleId);
+                String msSitesFile = JitterCountsTableFile.generateFilename(mConfig.ReduxDir, sampleId);
+
+                if(!Files.exists(Paths.get(msSitesFile)))
+                {
+                    msSitesFile = msSitesFile.replace(".redux", "");
+                }
+
+                if(!Files.exists(Paths.get(msSitesFile)) || !Files.exists(Paths.get(purplePurityFile)))
+                {
+                    RD_LOGGER.warn("sample({}) missing files: present purity({}) msTable({})",
+                            sampleId,
+                            Files.exists(Paths.get(purplePurityFile)),
+                            Files.exists(Paths.get(msSitesFile)));
+                    continue;
+                }
+
                 PurplePurity purplePurity = PurplePurity.read(purplePurityFile);
                 mSamplePurities.put(sampleId, purplePurity);
 
-                String msSitesFile = JitterCountsTableFile.generateFilename(mConfig.ReduxDir, sampleId);
-
                 Collection<JitterCountsTable> jitterCounts = JitterCountsTableFile.read(msSitesFile);
                 mSampleJitterCounts.put(sampleId, jitterCounts);
+
+                ++count;
+
+                if((count % 1000) == 0)
+                {
+                    RD_LOGGER.debug("loaded {} sample files", count);
+                }
             }
         }
         catch(IOException e)
