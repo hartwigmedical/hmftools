@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.qsee.prep.discordant;
+package com.hartwig.hmftools.qsee.prep.category.discordant;
 
 import com.hartwig.hmftools.common.sv.DiscordantFragType;
 

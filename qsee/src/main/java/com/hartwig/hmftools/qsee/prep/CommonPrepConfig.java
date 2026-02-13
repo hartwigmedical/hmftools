@@ -5,8 +5,6 @@ import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.DRI
 import static com.hartwig.hmftools.common.perf.TaskExecutor.THREADS;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.THREADS_DESC;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.SEQUENCING_TYPE_CFG;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.AMBER_DIR_CFG;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.AMBER_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.COBALT_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.COBALT_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.ESVEE_DIR_CFG;
@@ -49,7 +47,6 @@ public class CommonPrepConfig
     public final List<String> TumorIds;
     public final List<String> ReferenceIds;
 
-    public final String AmberDir;
     public final String CobaltDir;
     public final String EsveeDir;
     public final String PurpleDir;
@@ -76,7 +73,6 @@ public class CommonPrepConfig
         TumorIds = sampleIdsLoader.tumorIds();
         ReferenceIds = sampleIdsLoader.referenceIds();
 
-        AmberDir = configBuilder.getValue(AMBER_DIR_CFG);
         CobaltDir = configBuilder.getValue(COBALT_DIR_CFG);
         EsveeDir = configBuilder.getValue(ESVEE_DIR_CFG);
         PurpleDir = configBuilder.getValue(PURPLE_DIR_CFG);
@@ -103,7 +99,6 @@ public class CommonPrepConfig
         configBuilder.addConfigItem(REFERENCE, false, REFERENCE_IDS_DESC);
         configBuilder.addPath(SAMPLE_ID_FILE, false, SAMPLE_ID_FILE_DESC);
 
-        configBuilder.addPath(AMBER_DIR_CFG, false, AMBER_DIR_DESC);
         configBuilder.addPath(COBALT_DIR_CFG, false, COBALT_DIR_DESC);
         configBuilder.addPath(ESVEE_DIR_CFG, false, ESVEE_DIR_DESC);
         configBuilder.addPath(PURPLE_DIR_CFG, false, PURPLE_DIR_DESC);
@@ -130,7 +125,6 @@ public class CommonPrepConfig
 
     public boolean isSinglePatient() { return TumorIds.size() <= 1 && ReferenceIds.size() <= 1; }
 
-    public String getAmberDir(final String sampleId) { return convertWildcardSamplePath(AmberDir, sampleId); }
     public String getCobaltDir(final String sampleId) { return convertWildcardSamplePath(CobaltDir, sampleId); }
     public String getEsveeDir(final String sampleId) { return convertWildcardSamplePath(EsveeDir, sampleId); }
     public String getPurpleDir(final String sampleId) { return convertWildcardSamplePath(PurpleDir, sampleId); }

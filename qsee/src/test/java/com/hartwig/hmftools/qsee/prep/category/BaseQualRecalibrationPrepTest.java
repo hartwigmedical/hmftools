@@ -14,8 +14,8 @@ import com.hartwig.hmftools.common.redux.BqrKey;
 import com.hartwig.hmftools.common.redux.BqrRecord;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.qsee.feature.Feature;
-import com.hartwig.hmftools.qsee.prep.bqr.BaseQualBin;
-import com.hartwig.hmftools.qsee.prep.bqr.BaseQualBinner;
+import com.hartwig.hmftools.qsee.prep.category.bqr.BaseQualBin;
+import com.hartwig.hmftools.qsee.prep.category.bqr.BaseQualBinner;
 
 import org.junit.Test;
 

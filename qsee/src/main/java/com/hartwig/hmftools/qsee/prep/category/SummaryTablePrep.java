@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.qsee.prep.category;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeConstants.MB_PER_GENOME;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -8,8 +10,7 @@ import java.util.List;
 import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.amber.AmberQC;
-import com.hartwig.hmftools.common.amber.AmberQCFile;
+import com.hartwig.hmftools.common.metrics.BamFlagStats;
 import com.hartwig.hmftools.common.metrics.BamMetricCoverage;
 import com.hartwig.hmftools.common.metrics.BamMetricSummary;
 import com.hartwig.hmftools.common.metrics.ValueFrequency;
@@ -26,7 +27,7 @@ import com.hartwig.hmftools.qsee.feature.SourceTool;
 import com.hartwig.hmftools.qsee.prep.CategoryPrep;
 import com.hartwig.hmftools.qsee.prep.CategoryPrepTask;
 import com.hartwig.hmftools.qsee.prep.CommonPrepConfig;
-import com.hartwig.hmftools.qsee.prep.table.SummaryTableFeature;
+import com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature;
 
 public class SummaryTablePrep implements CategoryPrep
 {
@@ -40,22 +41,6 @@ public class SummaryTablePrep implements CategoryPrep
     }
 
     public SourceTool sourceTool() { return SOURCE_TOOL; }
-
-    private AmberQC loadAmberQC(String sampleId, List<String> missingInputPaths)
-    {
-        String baseDir = mConfig.getAmberDir(sampleId);
-        String filePath = AmberQCFile.generateFilename(baseDir, sampleId);
-
-        try
-        {
-            return AmberQCFile.read(filePath);
-        }
-        catch(IOException e)
-        {
-            missingInputPaths.add(filePath);
-            return null;
-        }
-    }
 
     private PurityContext loadPurplePurity(String sampleId, List<String> missingInputPaths)
     {
@@ -107,20 +92,27 @@ public class SummaryTablePrep implements CategoryPrep
         }
     }
 
+    private BamFlagStats loadBamFlagStats(String sampleId, SampleType sampleType, List<String> missingInputPaths)
+    {
+        String baseDir = mConfig.getBamMetricsDir(sampleId, sampleType);
+        String filePath = BamFlagStats.generateFilename(baseDir, sampleId);
+
+        try
+        {
+            return BamFlagStats.read(filePath);
+        }
+        catch(IOException e)
+        {
+            missingInputPaths.add(filePath);
+            return null;
+        }
+    }
+
     @VisibleForTesting
     private static void putFeature(EnumMap<SummaryTableFeature, Feature> featuresMap, SummaryTableFeature summaryTableFeature, double value)
     {
         Feature feature = new Feature(summaryTableFeature.key(), value);
         featuresMap.put(summaryTableFeature, feature);
-    }
-
-    @VisibleForTesting
-    static void putFeatures(AmberQC amberQC, EnumMap<SummaryTableFeature, Feature> features)
-    {
-        if(amberQC == null)
-            return;
-
-        putFeature(features, SummaryTableFeature.CONSANGUINITY, amberQC.consanguinityProportion());
     }
 
     @VisibleForTesting
@@ -135,11 +127,10 @@ public class SummaryTablePrep implements CategoryPrep
         putFeature(featuresMap, SummaryTableFeature.DELETED_GENES, purityContext.qc().deletedGenes());
         putFeature(featuresMap, SummaryTableFeature.UNSUPPORTED_CN_SEGMENTS, purityContext.qc().unsupportedCopyNumberSegments());
         putFeature(featuresMap, SummaryTableFeature.LOH_PERCENT, purityContext.qc().lohPercent());
-        putFeature(featuresMap, SummaryTableFeature.CHIMERISM_PERCENT, purityContext.qc().chimerismPercentage());
         putFeature(featuresMap, SummaryTableFeature.CONTAMINATION, purityContext.qc().contamination());
         putFeature(featuresMap, SummaryTableFeature.TMB_SMALL_VARIANTS, purityContext.tumorMutationalBurdenPerMb());
         putFeature(featuresMap, SummaryTableFeature.TMB_MS_INDELS, purityContext.microsatelliteIndelsPerMb());
-        putFeature(featuresMap, SummaryTableFeature.TMB_STRUCTURAL_VARIANTS, purityContext.svTumorMutationalBurden());
+        putFeature(featuresMap, SummaryTableFeature.TMB_STRUCTURAL_VARIANTS, purityContext.svTumorMutationalBurden() / MB_PER_GENOME);
     }
 
     @VisibleForTesting
@@ -162,7 +153,9 @@ public class SummaryTablePrep implements CategoryPrep
             return;
 
         putFeature(featuresMap, SummaryTableFeature.MIN_COVERAGE_10, calcPropBasesWithMinCoverage(bamMetricCoverage, 10));
+        putFeature(featuresMap, SummaryTableFeature.MIN_COVERAGE_20, calcPropBasesWithMinCoverage(bamMetricCoverage, 20));
         putFeature(featuresMap, SummaryTableFeature.MIN_COVERAGE_30, calcPropBasesWithMinCoverage(bamMetricCoverage, 30));
+        putFeature(featuresMap, SummaryTableFeature.MIN_COVERAGE_60, calcPropBasesWithMinCoverage(bamMetricCoverage, 60));
         putFeature(featuresMap, SummaryTableFeature.MIN_COVERAGE_100, calcPropBasesWithMinCoverage(bamMetricCoverage, 100));
         putFeature(featuresMap, SummaryTableFeature.MIN_COVERAGE_250, calcPropBasesWithMinCoverage(bamMetricCoverage, 250));
     }
@@ -181,6 +174,15 @@ public class SummaryTablePrep implements CategoryPrep
         return (double) basesAboveCoverageThres / totalBases;
     }
 
+    @VisibleForTesting
+    static void putFeatures(BamFlagStats bamFlagStats, EnumMap<SummaryTableFeature, Feature> featuresMap)
+    {
+        if(bamFlagStats == null)
+            return;
+
+        putFeature(featuresMap, SummaryTableFeature.MAPPED_PROPORTION, bamFlagStats.mappedProportion());
+    }
+
     @Override
     public List<Feature> extractSampleData(String sampleId, @NotNull SampleType sampleType) throws IOException
     {
@@ -191,9 +193,6 @@ public class SummaryTablePrep implements CategoryPrep
         {
             PurityContext purityContext = loadPurplePurity(sampleId, missingInputPaths);
             putFeatures(purityContext, featuresMap);
-
-            AmberQC amberQC = loadAmberQC(sampleId, missingInputPaths);
-            putFeatures(amberQC, featuresMap);
         }
 
         BamMetricSummary bamMetricSummary = loadBamMetricSummary(sampleId, sampleType, missingInputPaths);
@@ -201,6 +200,9 @@ public class SummaryTablePrep implements CategoryPrep
 
         BamMetricCoverage bamMetricCoverage = loadBamMetricCoverage(sampleId, sampleType, missingInputPaths);
         putFeatures(bamMetricCoverage, featuresMap);
+
+        BamFlagStats bamFlagStats = loadBamFlagStats(sampleId, sampleType, missingInputPaths);
+        putFeatures(bamFlagStats, featuresMap);
 
         if(!missingInputPaths.isEmpty())
         {

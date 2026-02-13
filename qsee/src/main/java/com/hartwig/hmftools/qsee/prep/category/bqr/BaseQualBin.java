@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.qsee.prep.bqr;
+package com.hartwig.hmftools.qsee.prep.category.bqr;
 
 import com.hartwig.hmftools.common.redux.BaseQualAdjustment;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
