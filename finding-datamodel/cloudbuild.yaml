@@ -17,8 +17,8 @@ steps:
     args:
       - -c
       - |
-        VERSION="$(echo "$$TAG_NAME" | sed -E 's/^.*-v//')"
-        echo "TAG_NAME=$$TAG_NAME"
+        VERSION="$(echo "$TAG_NAME" | sed -E 's/^.*-v//')"
+        echo "TAG_NAME=$TAG_NAME"
         echo "Using version: $$VERSION"
         mvn -B versions:set -DnewVersion="$$VERSION" versions:commit
     volumes:
