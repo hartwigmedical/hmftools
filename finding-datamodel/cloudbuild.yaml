@@ -13,12 +13,13 @@ steps:
 
   - name: 'maven:3.9.11-eclipse-temurin-21'
     id: 'Setting version for Maven'
-    entrypoint: mvn
+    entrypoint: bash
     args:
-      - '-B'
-      - 'versions:set'
-      - '-DnewVersion=${TAG_NAME}'
-      - 'versions:commit'
+      - -c
+      - |
+        VERSION="${TAG_NAME##*-v}"
+        echo "Using version: $VERSION"
+        mvn -B versions:set -DnewVersion=$VERSION versions:commit
     volumes:
       - path: '/cache/.m2'
         name: 'm2_cache'
