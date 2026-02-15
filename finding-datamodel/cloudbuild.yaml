@@ -1,0 +1,54 @@
+steps:
+  - name: 'gcr.io/cloud-builders/gsutil'
+    id: 'Populating Maven cache from bucket'
+    args:
+      - '-m'
+      - 'rsync'
+      - '-r'
+      - 'gs://hmf-build-caches/hmftools/.m2'
+      - '/cache/.m2'
+    volumes:
+      - path: '/cache/.m2'
+        name: 'm2_cache'
+
+  - name: 'maven:3.9.11-eclipse-temurin-21'
+    id: 'Setting version for Maven'
+    entrypoint: mvn
+    args: [ 'versions:set', '-DnewVersion=${TAG_NAME}' ]
+
+  - name: 'maven:3.9.11-eclipse-temurin-21'
+    id: 'Deploying parent pom to Maven'
+    entrypoint: mvn
+    args: [ 'deploy', '-B', '-N' ]
+    volumes:
+      - path: '/cache/.m2'
+        name: 'm2_cache'
+    env:
+      - MAVEN_OPTS=-Dmaven.repo.local=/cache/.m2
+
+  - name: 'maven:3.9.11-eclipse-temurin-21'
+    id: 'Deploying finding-datamodel to Maven'
+    entrypoint: mvn
+    args: [ 'deploy', '-B' ]
+    dir: 'finding-datamodel'
+    volumes:
+      - path: '/cache/.m2'
+        name: 'm2_cache'
+    env:
+      - MAVEN_OPTS=-Dmaven.repo.local=/cache/.m2
+
+  - name: 'gcr.io/cloud-builders/gsutil'
+    id: 'Refreshing bucket from local Maven cache after build'
+    args:
+      - '-m'
+      - 'rsync'
+      - '-r'
+      - '/cache/.m2'
+      - 'gs://hmf-build-caches/hmftools/.m2/'
+    volumes:
+      - path: '/cache/.m2'
+        name: 'm2_cache'
+
+timeout: 4800s
+options:
+  machineType: 'E2_HIGHCPU_8'
