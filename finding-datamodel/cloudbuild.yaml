@@ -5,8 +5,8 @@ steps:
       - '-m'
       - 'rsync'
       - '-r'
-      - 'gs://hmf-build-caches/hmftools/.m2'
-      - '/cache/.m2'
+      - 'gs://hmf-build-caches/hmftools/.m2/'
+      - '/cache/.m2/'
     volumes:
       - path: '/cache/.m2'
         name: 'm2_cache'
@@ -14,7 +14,16 @@ steps:
   - name: 'maven:3.9.11-eclipse-temurin-21'
     id: 'Setting version for Maven'
     entrypoint: mvn
-    args: [ 'versions:set', '-DnewVersion=${TAG_NAME}' ]
+    args:
+      - '-B'
+      - 'versions:set'
+      - '-DnewVersion=${TAG_NAME}'
+      - 'versions:commit'
+    volumes:
+      - path: '/cache/.m2'
+        name: 'm2_cache'
+    env:
+      - MAVEN_OPTS=-Dmaven.repo.local=/cache/.m2
 
   - name: 'maven:3.9.11-eclipse-temurin-21'
     id: 'Deploying parent pom to Maven'
@@ -26,11 +35,15 @@ steps:
     env:
       - MAVEN_OPTS=-Dmaven.repo.local=/cache/.m2
 
+  # Deploy ONLY the finding-datamodel module (no sibling modules in the reactor)
   - name: 'maven:3.9.11-eclipse-temurin-21'
     id: 'Deploying finding-datamodel to Maven'
     entrypoint: mvn
-    args: [ 'deploy', '-B' ]
-    dir: 'finding-datamodel'
+    args:
+      - '-B'
+      - 'deploy'
+      - '-pl'
+      - ':finding-datamodel'
     volumes:
       - path: '/cache/.m2'
         name: 'm2_cache'
@@ -43,7 +56,7 @@ steps:
       - '-m'
       - 'rsync'
       - '-r'
-      - '/cache/.m2'
+      - '/cache/.m2/'
       - 'gs://hmf-build-caches/hmftools/.m2/'
     volumes:
       - path: '/cache/.m2'
