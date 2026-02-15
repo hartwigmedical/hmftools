@@ -23,6 +23,8 @@ public class VisConfig
     public final List<SimpleVariant> SpecificVariants;
     public final File PurpleVcf;
 
+    public boolean mNoVariants;
+
     private static final String VIS_OUTPUT_DIR = "vis_output_dir";
     private static final String SPECIFIC_VARIANTS = "vis_variants";
     private static final String PASS_ONLY = "vis_pass_only";
@@ -39,6 +41,7 @@ public class VisConfig
         String VcfStr = configBuilder.hasValue(PURPLE_VCF) ? configBuilder.getValue(PURPLE_VCF) : null;
         PurpleVcf = VcfStr == null ? null : new File(VcfStr);
 
+        mNoVariants = false;
         if(configBuilder.hasValue(SPECIFIC_VARIANTS))
         {
             SpecificVariants.addAll(SimpleVariant.fromConfig(configBuilder.getValue(SPECIFIC_VARIANTS)));
@@ -64,12 +67,13 @@ public class VisConfig
 
                 iter.close();
             }
+
+            if(SpecificVariants.isEmpty())
+                mNoVariants = true;
         }
 
         boolean enabled = PassOnly || !SpecificVariants.isEmpty();
-
         File visDir = null;
-
         if(configBuilder.hasValue(VIS_OUTPUT_DIR))
         {
             enabled = true;
@@ -117,6 +121,9 @@ public class VisConfig
         PassOnly = false;
         MaxSupportReads = 0;
         Enabled = false;
+        mNoVariants = false;
         PurpleVcf = null;
     }
+
+    public boolean noVariants() { return mNoVariants; }
 }

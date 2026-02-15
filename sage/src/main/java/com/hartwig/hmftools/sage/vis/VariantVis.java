@@ -774,6 +774,9 @@ public class VariantVis
             List<String> impact = (List<String>) rawImpact;
             String transcriptName = impact.get(TRANSCRIPT_NAME_IDX);
             TranscriptAminoAcids transcriptAminoAcids = refData.TransAminoAcidMap.get(transcriptName);
+            if(transcriptAminoAcids == null)
+                continue;
+
             boolean isCanonical = transcriptAminoAcids.Canonical;
 
             String hgvs = impact.get(HGVS_INDEX);
