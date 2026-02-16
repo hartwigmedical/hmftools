@@ -20,6 +20,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -273,11 +274,16 @@ public class MsModelCalculator
         try
         {
             String filename = config.OutputDir + File.separator + "ms_model_evaluation";
+            String calcsFilename = config.OutputDir + File.separator + "ms_model_calcs";
 
             if(config.OutputId != null)
+            {
                 filename += "." + config.OutputId;
+                calcsFilename += "." + config.OutputId;
+            }
 
             filename += TSV_EXTENSION;
+            calcsFilename += TSV_EXTENSION;
 
             BufferedWriter writer = createBufferedWriter(filename, false);
 
@@ -285,6 +291,12 @@ public class MsModelCalculator
             sj.add(FLD_SAMPLE_ID).add("Purity").add("MsIndelsPerMb").add("PredictedValue");
             writer.write(sj.toString());
             writer.newLine();
+
+            BufferedWriter calcsWriter = createBufferedWriter(calcsFilename, false);
+            sj = new StringJoiner(TSV_DELIM);
+            sj.add(FLD_SAMPLE_ID).add("RepeatUnit").add("RepeatCount").add("AdjustedErrorRate").add("PredictedValue");
+            calcsWriter.write(sj.toString());
+            calcsWriter.newLine();
 
             for(Map.Entry<String,PurplePurity> entry : samplePurities.entrySet())
             {
@@ -294,7 +306,26 @@ public class MsModelCalculator
 
                 Collection<JitterCountsTable> jitterCounts = sampleJitterCounts.get(sampleId);
 
-                double predictedMsIndelsPerMb = calcMsIndelPerMb(jitterCounts);
+                List<RepeatUnitData> repeatUnitDataList = buildRepeatUnitData(jitterCounts);
+
+                List<Double> repeatUnitPredictedValues = calcMsIndelPerMbValues(repeatUnitDataList);
+
+                for(int i = 0; i < repeatUnitDataList.size(); ++i)
+                {
+                    RepeatUnitData repeatUnitData = repeatUnitDataList.get(i);
+                    double predictedValue = repeatUnitPredictedValues.get(i);
+
+                    sj = new StringJoiner(TSV_DELIM);
+                    sj.add(sampleId);
+                    sj.add(repeatUnitData.RepeatUnit);
+                    sj.add(String.valueOf(repeatUnitData.repeatCount()));
+                    sj.add(format("%4.3e", repeatUnitData.adjustedErrorRate()));
+                    sj.add(format("%.4f", predictedValue));
+                    calcsWriter.write(sj.toString());
+                    calcsWriter.newLine();
+                }
+
+                double predictedMsIndelsPerMb = calcMsIndelPerMb(repeatUnitPredictedValues);
 
                 RD_LOGGER.log(logLevel, format("sample(%s) purity(%.3f) msIndelsPerMb(actual=%.4f predicted=%.4f)",
                         sampleId, purplePurity.Purity, purplePurity.MsIndelsPerMb, predictedMsIndelsPerMb));
@@ -309,6 +340,7 @@ public class MsModelCalculator
             }
 
             writer.close();
+            calcsWriter.close();
         }
         catch(IOException e)
         {
@@ -321,6 +353,13 @@ public class MsModelCalculator
     {
         List<RepeatUnitData> repeatUnitDataList = buildRepeatUnitData(jitterCounts);
 
+        List<Double> repeatUnitPredictedValues = calcMsIndelPerMbValues(repeatUnitDataList);
+
+        return calcMsIndelPerMb(repeatUnitPredictedValues);
+    }
+
+    private List<Double> calcMsIndelPerMbValues(final List<RepeatUnitData> repeatUnitDataList)
+    {
         List<Double> calcMsIndelsPerMb = Lists.newArrayList();
 
         for(RepeatUnitData repeatUnitData : repeatUnitDataList)
@@ -331,7 +370,10 @@ public class MsModelCalculator
             double[] coefficients = mRepeatUnitCountCoefficients.get(repeatUnitData.rucKey());
 
             if(coefficients == null || coefficients[0] == 0 || coefficients[1] == 0)
+            {
+                calcMsIndelsPerMb.add(INVALID_VALUE);
                 continue;
+            }
 
             repeatUnitData.setAdjustedErrorRate(combinedErrorRate);
             double x = repeatUnitData.adjustedErrorRate();
@@ -340,7 +382,30 @@ public class MsModelCalculator
             calcMsIndelsPerMb.add(predictedValue);
         }
 
-        double avergeMsIndelsPerMb = Doubles.median(calcMsIndelsPerMb);
+        return calcMsIndelsPerMb;
+    }
+
+    private static final double INVALID_VALUE = -1;
+
+    private double calcMsIndelPerMb(final List<Double> calcMsIndelsPerMb)
+    {
+        int validCount = (int)calcMsIndelsPerMb.stream().filter(x -> x != INVALID_VALUE).count();
+
+        if(validCount == 0)
+            return INVALID_VALUE;
+
+        double[] validValues = new double[validCount];
+        int index = 0;
+
+        for(Double value : calcMsIndelsPerMb)
+        {
+            if(value != INVALID_VALUE)
+            {
+                 validValues[index++] = value;
+            }
+        }
+
+        double avergeMsIndelsPerMb = Doubles.mean(validValues);
         return avergeMsIndelsPerMb;
     }
 

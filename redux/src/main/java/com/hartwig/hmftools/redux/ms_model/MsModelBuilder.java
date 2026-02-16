@@ -32,8 +32,7 @@ public class MsModelBuilder
     public MsModelBuilder(final ConfigBuilder configBuilder)
     {
         mConfig = new MsModelConfig(configBuilder);
-
-        mModelParams = DEFAULT_MODEL_PARAMS;
+        mModelParams = MsModelParams.fromConfig(configBuilder);
 
         mSamplePurities = Maps.newHashMap();
         mSampleJitterCounts = Maps.newHashMap();

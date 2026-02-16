@@ -79,6 +79,8 @@ public class MsModelConfig
         configBuilder.addPath(MODEL_COEFF_FILE, false, "Model coefficients file");
         configBuilder.addPath(MODEL_ERROR_RATES_FILE, false, "Model cohort error rates file");
 
+        MsModelParams.registerConfig(configBuilder);
+
         configBuilder.addConfigItem(ROUTINES, true, enumValueSelectionAsStr(TrainingRoutines.values(), "Routines"));
 
         ConfigUtils.addLoggingOptions(configBuilder);
