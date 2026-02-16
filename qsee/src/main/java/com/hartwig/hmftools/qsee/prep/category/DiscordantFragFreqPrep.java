@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.qsee.prep.category;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.NoSuchFileException;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
@@ -34,10 +36,27 @@ public class DiscordantFragFreqPrep implements CategoryPrep
 
     public SourceTool sourceTool() { return SOURCE_TOOL; }
 
+    private String findBackwardsCompatibleDiscStatsFile(String sampleId) throws IOException
+    {
+        // TODO: Remove this temporary method. In WiGiTS 3.0, the new ESVEE disc stats file path will be used.
+
+        String baseDir = mConfig.getEsveeDir(sampleId);
+
+        File discStatsFile = new File(EsveeDiscordantStats.generateFilename(baseDir, sampleId));
+        File discStatsFileOld = new File(baseDir + File.separator + sampleId + ".esvee.prep.disc_stats.tsv");
+
+        if(discStatsFile.isFile())
+            return discStatsFile.getAbsolutePath();
+
+        if(discStatsFileOld.isFile())
+            return discStatsFileOld.getAbsolutePath();
+
+        throw new NoSuchFileException(discStatsFile.getName() + " or " + discStatsFileOld.getName());
+    }
+
     private EsveeDiscordantStats loadDiscordantStats(String sampleId) throws IOException
     {
-        String baseDir = mConfig.getEsveeDir(sampleId);
-        String filePath = EsveeDiscordantStats.generateFilename(baseDir, sampleId);
+        String filePath = findBackwardsCompatibleDiscStatsFile(sampleId);
         return EsveeDiscordantStats.read(filePath);
     }
 
