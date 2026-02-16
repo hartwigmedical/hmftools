@@ -16,7 +16,7 @@ public class Realignment
 {
     public static RealignedType checkRealignment(
             final VariantReadContext readContext, final ReadContextMatcher readContextMatcher, final SAMRecord record,
-            int readIndex, int realignedReadIndex, final SplitReadSegment splitReadSegment)
+            int readIndex, int realignedReadIndex, final SplitReadSegment splitReadSegment, final boolean isMsiSampleAndVariant)
     {
         // the read index corresponding to the ref position at the end of the core
         if(readIndex == realignedReadIndex)
@@ -54,7 +54,7 @@ public class Realignment
         }
 
         // otherwise check jitter
-        JitterMatch jitterMatch = checkJitter(readContext, readContextMatcher, record, realignedReadIndex);
+        JitterMatch jitterMatch = checkJitter(readContext, readContextMatcher, record, realignedReadIndex, isMsiSampleAndVariant);
 
         if(jitterMatch == JitterMatch.SHORTENED)
             return RealignedType.SHORTENED;

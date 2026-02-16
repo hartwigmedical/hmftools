@@ -197,7 +197,7 @@ public class RealignmentTest
         realignedReadIndex = Realignment.realignedReadIndexPosition(readContext, realignedRead);
         matcher = createReadContextMatcher(readContext);
         RealignedType realignedType = Realignment.checkRealignment(
-                readContext, matcher, realignedRead,  16, realignedReadIndex, null);
+                readContext, matcher, realignedRead,  16, realignedReadIndex, null, false);
 
         // works if realignedReadIndex is 6 rather than 10, since the 1xTATT lengthened jitter causes the realignedIndex to be off
         assertEquals(RealignedType.LENGTHENED, realignedType);
@@ -354,7 +354,7 @@ public class RealignmentTest
         ReadContextMatcher matcher = createReadContextMatcher(readContext);
         int readVarIndex = RawContext.createFromRead(var, polyTVarBuildRead).ReadVariantIndex;
         int realignedReadIndex = Realignment.realignedReadIndexPosition(readContext, polyTVarBuildRead);
-        RealignedType realignedType = checkRealignment(readContext, matcher, polyTVarBuildRead, readVarIndex, realignedReadIndex, null);
+        RealignedType realignedType = checkRealignment(readContext, matcher, polyTVarBuildRead, readVarIndex, realignedReadIndex, null, false);
 
         assertEquals(RealignedType.NONE, realignedType);
     }

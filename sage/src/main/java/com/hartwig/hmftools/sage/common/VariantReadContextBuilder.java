@@ -11,9 +11,10 @@ import static com.hartwig.hmftools.sage.SageConfig.isUltima;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_REPEAT_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_REPEAT_COUNT;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_HP_LEN;
 import static com.hartwig.hmftools.sage.common.SageVariant.isLongInsert;
 import static com.hartwig.hmftools.sage.seqtech.UltimaCoreExtender.extendUltimaCore;
-import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.ultimaLongRepeatFilter;
+import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.hasLongHomopolymerInRange;
 
 import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.M;
@@ -148,9 +149,6 @@ public class VariantReadContextBuilder
         if(readCoreStart < 0 || readCoreEnd >= read.getReadBases().length)
             return null;
 
-        if(isUltima() && ultimaLongRepeatFilter(variant, read, varIndexInRead, homology))
-            return null;
-
         final byte[] readBases = read.getReadBases();
 
         RepeatBoundaries repeatBoundaries = findRepeatBoundaries(readCoreStart, readCoreEnd, readBases);
@@ -223,6 +221,9 @@ public class VariantReadContextBuilder
         int coreIndexStart = readCoreStart - readContextOffset;
         int readVarIndex = varIndexInRead - readContextOffset;
         int coreIndexEnd = readCoreEnd - readContextOffset;
+
+        if(isUltima() && hasLongHomopolymerInRange(readCoreStart, readCoreEnd, ULTIMA_MAX_HP_LEN - 1, read))
+            return null;
 
         // ref bases are the core width around the variant's position
         byte[] refBases = refSequence.baseRange(corePositionStart, corePositionEnd);

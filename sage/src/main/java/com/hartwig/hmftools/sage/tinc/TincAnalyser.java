@@ -13,9 +13,9 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_QUALITY;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_REPEAT_COUNT;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_REPEAT_SEQUENCE;
 import static com.hartwig.hmftools.sage.SageCommon.APP_NAME;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
-import static com.hartwig.hmftools.sage.SageConfig.isUltima;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FILTERED_MAX_GERMLINE_ALT_SUPPORT;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_GERMLINE_ALT_SUPPORT;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_GERMLINE_RELATIVE_QUAL;
@@ -24,7 +24,8 @@ import static com.hartwig.hmftools.sage.filter.SoftFilterConfig.getTieredSoftFil
 import static com.hartwig.hmftools.sage.filter.VariantFilters.aboveMaxGermlineRelativeQual;
 import static com.hartwig.hmftools.sage.filter.VariantFilters.aboveMaxGermlineVaf;
 import static com.hartwig.hmftools.sage.filter.VariantFilters.aboveMaxMnvIndelGermlineAltSupport;
-import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.isPanelIndelRepeatVariant;
+import static com.hartwig.hmftools.sage.filter.VariantFilters.includeRefJitterInMsiIndel;
+import static com.hartwig.hmftools.sage.filter.VariantFilters.isPanelOrLongIndelRepeatVariant;
 import static com.hartwig.hmftools.sage.tinc.TincCalculator.populateDefaultLevels;
 import static com.hartwig.hmftools.sage.tinc.TincConstants.RECOVERY_FILTERS;
 import static com.hartwig.hmftools.sage.tinc.TincConstants.TINC_RECOVERY_FACTOR;
@@ -41,7 +42,9 @@ import com.hartwig.hmftools.sage.evidence.ReadSupportCounts;
 import com.hartwig.hmftools.sage.filter.FilterConfig;
 import com.hartwig.hmftools.sage.filter.SoftFilterConfig;
 
+import com.hartwig.hmftools.sage.seqtech.UltimaUtils;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
+import org.apache.logging.log4j.util.Strings;
 
 public class TincAnalyser
 {
@@ -166,8 +169,10 @@ public class TincAnalyser
 
         int altSupport = refReadCounts.altSupport();
         int adjustedRefAltCount = altSupport + simpleAltMatches;
+        int rcRepeatCount = variant.Context.getAttributeAsInt(READ_CONTEXT_REPEAT_COUNT, 0);
+        String rcRepeatBases = variant.Context.getAttributeAsString(READ_CONTEXT_REPEAT_SEQUENCE, Strings.EMPTY);
 
-        if(variant.isLongIndel())
+        if(variant.isLongIndel() || includeRefJitterInMsiIndel(rcRepeatCount, rcRepeatBases, variant.Ref, variant.Alt))
         {
             int[] jitterCounts = parseIntegerList(variant.RefGenotype, READ_CONTEXT_JITTER);
             adjustedRefAltCount += jitterCounts[0] + jitterCounts[1];
@@ -176,11 +181,9 @@ public class TincAnalyser
         adjustedRefAltCount = variant.calcReducedAltCount(adjustedRefAltCount);
 
         double qual = variant.Context.getPhredScaledQual();
+        boolean isValidIndelRepeat = isPanelOrLongIndelRepeatVariant(variant.tier(), qual, variant.isIndel(), rcRepeatCount);
 
-        boolean isUltimaIndelRepeat = isUltima() && isPanelIndelRepeatVariant(
-                variant.tier(), qual, variant.isIndel(), variant.Context.hasAttribute(READ_CONTEXT_REPEAT_COUNT));
-
-        if(aboveMaxGermlineVaf(variant.tier(), isUltimaIndelRepeat, tumorVaf, adjustedRefAltCount, refReadCounts.Total, config.MaxGermlineVaf))
+        if(aboveMaxGermlineVaf(variant.tier(), isValidIndelRepeat, tumorVaf, adjustedRefAltCount, refReadCounts.Total, config.MaxGermlineVaf))
             return;
 
         variant.newFilters().remove(MAX_GERMLINE_VAF);
@@ -210,8 +213,12 @@ public class TincAnalyser
 
         refQual = variant.calcReducedAltValue(refQual);
 
+        double qual = variant.Context.getPhredScaledQual();
+        int rcRepeatCount = variant.Context.getAttributeAsInt(READ_CONTEXT_REPEAT_COUNT, 0);
+        boolean isValidIndelRepeat = isPanelOrLongIndelRepeatVariant(variant.tier(), qual, variant.isIndel(), rcRepeatCount);
+
         if(aboveMaxGermlineRelativeQual(
-                variant.tier(), tumorQual, tumorVaf, tumorDepth, tumorAvgBaseQual, refQual, refDepth, refAltSupport, refAvgBaseQual))
+                variant.tier(), tumorQual, tumorVaf, tumorDepth, tumorAvgBaseQual, refQual, refDepth, refAltSupport, refAvgBaseQual, isValidIndelRepeat))
             return;
 
         variant.newFilters().remove(MAX_GERMLINE_RELATIVE_QUAL);

@@ -188,7 +188,7 @@ public class SageAppendApplication
 
         MsiJitterCalcs msiJitterCalcs = MsiJitterCalcs.build(
                 mConfig.Common.ReferenceIds, !mConfig.Common.SkipMsiJitter ? mConfig.Common.JitterBqrDir : null,
-                mConfig.Common.Quality.HighDepthMode);
+                mConfig.Common.Quality.HighDepthMode, mConfig.Common.MsiSampleOverride);
 
         ChromosomePartition chromosomePartition = new ChromosomePartition(mConfig.Common, mRefGenome);
 

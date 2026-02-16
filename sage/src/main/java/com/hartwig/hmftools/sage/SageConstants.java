@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage;
 
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_HP_LEN;
+
 import com.hartwig.hmftools.sage.filter.SoftFilterConfig;
 
 public class SageConstants
@@ -42,12 +44,19 @@ public class SageConstants
     public static final int LONG_INSERT_LENGTH = 11;
     public static final int LONG_GERMLINE_INSERT_READ_VS_REF_DIFF = 2;
     public static final int LONG_REPEAT_LENGTH = 10;
+    public static final int PANEL_REPEAT_MIN_QUAL = 100;
+    public static final int LONG_INDEL_REPEAT_MIN = 7;
+    public static final int LONG_INDEL_REPEAT_MAX = ULTIMA_MAX_HP_LEN - 2;
 
     public static final int EVIDENCE_MIN_MAP_QUAL = 1;
 
     public static final int CHIMERIC_FRAGMENT_LENGTH_MAX = 1000;
 
-    public static final int DOUBLE_JITTER_REPEAT_COUNT = 11;
+    public static final int DEFAULT_DOUBLE_JITTER_REPEAT_COUNT = 11;
+    public static final int JITTER_MIN_REPEAT_CHANGE = 3;
+    public static final int DOUBLE_JITTER_MIN_REPEAT_CHANGE = 4;
+
+    public static final int MSI_DOUBLE_JITTER_REPEAT_COUNT = 21;
     public static final int MSI_JITTER_MAX_REPEAT_CHANGE = 5;
     public static final double MSI_JITTER_DEFAULT_ERROR_RATE = 0.0001;
     public static final double MSI_JITTER_MIN_TRINUC_ERROR_RATE = 0.04;
@@ -155,7 +164,7 @@ public class SageConstants
 
     public static final double DEFAULT_MAX_GERMLINE_VAF = 0.05;
     public static final double MAX_GERMLINE_VAF_THRESHOLD_FACTOR = 2;
-    public static final double MAX_GERMLINE_VAF_PANEL_INDEL_REPEAT_THRESHOLD_FACTOR = 6;
+    public static final double MAX_GERMLINE_VAF_PANEL_INDEL_REPEAT_THRESHOLD_FACTOR = 5;
 
     public static final double MAX_GERMLINE_VAF_PANEL_VAF_FACTOR = 2;
     public static final double MAX_GERMLINE_VAF_PANEL_INDEL_REPEAT_VAF_FACTOR = 1.5;
