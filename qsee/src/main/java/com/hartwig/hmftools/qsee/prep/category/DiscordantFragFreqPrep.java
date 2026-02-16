@@ -38,14 +38,6 @@ public class DiscordantFragFreqPrep implements CategoryPrep
     {
         String baseDir = mConfig.getEsveeDir(sampleId);
         String filePath = EsveeDiscordantStats.generateFilename(baseDir, sampleId);
-
-        EsveeDiscordantStats stats = EsveeDiscordantStats.read(filePath);
-
-        if(stats == null)
-        {
-            throw new IOException(filePath);
-        }
-
         return EsveeDiscordantStats.read(filePath);
     }
 

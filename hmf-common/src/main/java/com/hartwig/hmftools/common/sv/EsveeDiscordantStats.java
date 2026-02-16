@@ -82,32 +82,24 @@ public class EsveeDiscordantStats
         }
     }
 
-    public static EsveeDiscordantStats read(final String filename)
+    public static EsveeDiscordantStats read(final String filename) throws IOException
     {
-        try
+        List<String> lines = Files.readAllLines(new File(filename).toPath());
+
+        String[] values = lines.get(1).split(TSV_DELIM);
+
+        long totalReads = Long.parseLong(values[0]);
+        long prepReads = 0;
+
+        long[] typeCounts = new long[DiscordantFragType.values().length];
+
+        prepReads = Long.parseLong(values[1]);
+
+        for(int i = 0; i < typeCounts.length; ++i)
         {
-            List<String> lines = Files.readAllLines(new File(filename).toPath());
-
-            String[] values = lines.get(1).split(TSV_DELIM);
-
-            long totalReads = Long.parseLong(values[0]);
-            long prepReads = 0;
-
-            long[] typeCounts = new long[DiscordantFragType.values().length];
-
-            prepReads = Long.parseLong(values[1]);
-
-            for(int i = 0; i < typeCounts.length; ++i)
-            {
-                typeCounts[i] = Long.parseLong(values[i + 2]);
-            }
-
-            return new EsveeDiscordantStats(totalReads, prepReads, typeCounts);
+            typeCounts[i] = Long.parseLong(values[i + 2]);
         }
-        catch(Exception e)
-        {
-            LOGGER.error("failed to load Esvee discordant stat file({}): {}", filename, e.toString());
-            return null;
-        }
+
+        return new EsveeDiscordantStats(totalReads, prepReads, typeCounts);
     }
 }

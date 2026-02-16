@@ -5,6 +5,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.inferredInsertSizeAbs;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.WriteType.DISCORDANT_STATS;
 
 import java.util.Arrays;
@@ -163,7 +164,15 @@ public class DiscordantStats
 
     public static DiscordantStats loadDiscordantStats(final String filename)
     {
-        EsveeDiscordantStats esveeDiscordantStats = EsveeDiscordantStats.read(filename);
-        return new DiscordantStats(esveeDiscordantStats.TotalReads, esveeDiscordantStats.PrepReads, esveeDiscordantStats.TypeCounts);
+        try
+        {
+            EsveeDiscordantStats esveeDiscordantStats = EsveeDiscordantStats.read(filename);
+            return new DiscordantStats(esveeDiscordantStats.TotalReads, esveeDiscordantStats.PrepReads, esveeDiscordantStats.TypeCounts);
+        }
+        catch(Exception e)
+        {
+            SV_LOGGER.error("failed to load Esvee discordant stat file({}): {}", filename, e.toString());
+            return null;
+        }
     }
 }
