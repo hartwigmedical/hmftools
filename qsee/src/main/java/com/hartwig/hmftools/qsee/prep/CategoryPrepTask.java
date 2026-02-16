@@ -6,7 +6,9 @@ import java.io.IOException;
 import java.nio.file.NoSuchFileException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.logging.log4j.Level;
 import org.jetbrains.annotations.Nullable;
 
 import com.hartwig.hmftools.qsee.cohort.FeatureMatrix;
@@ -21,7 +23,11 @@ public class CategoryPrepTask implements Runnable
     private final int mSampleIndex;
     private final int mTotalSampleCount;
     private final SampleType mSampleType;
+
     private final boolean mAllowMissingInput;
+
+    @Nullable
+    private final AtomicInteger mSamplesMissingInputCount;
 
     private List<Feature> mOutput;
 
@@ -30,7 +36,7 @@ public class CategoryPrepTask implements Runnable
 
     public CategoryPrepTask(CategoryPrep categoryPrep,
             String sampleId, int sampleIndex, int totalSampleCount, SampleType sampleType,
-            @Nullable FeatureMatrix sampleFeatureMatrix, boolean allowMissingInput)
+            @Nullable FeatureMatrix sampleFeatureMatrix, boolean allowMissingInput, @Nullable AtomicInteger samplesMissingInputCount)
     {
         mCategoryPrep = categoryPrep;
         mSampleId = sampleId;
@@ -39,6 +45,7 @@ public class CategoryPrepTask implements Runnable
         mSampleType = sampleType;
         mSampleFeatureMatrix = sampleFeatureMatrix;
         mAllowMissingInput = allowMissingInput;
+        mSamplesMissingInputCount = samplesMissingInputCount;
     }
 
     public CategoryPrepTask(CategoryPrep categoryPrep, String sampleId, SampleType sampleType, boolean allowMissingInput)
@@ -50,6 +57,7 @@ public class CategoryPrepTask implements Runnable
         mSampleType = sampleType;
         mSampleFeatureMatrix = null;
         mAllowMissingInput = allowMissingInput;
+        mSamplesMissingInputCount = null;
     }
 
     private void logProgress()
@@ -77,8 +85,11 @@ public class CategoryPrepTask implements Runnable
     public static void missingInputFilesError(
             boolean allowMissingInput, CategoryPrep categoryPrep, SampleType sampleType, String sampleId, String missingFilePath)
     {
-        QC_LOGGER.error("sampleType({}) category({}) - sample({}) missing input file(s): {}",
-                sampleType, categoryPrep.name(), sampleId, missingFilePath);
+        QC_LOGGER.log(
+                allowMissingInput ? Level.WARN : Level.ERROR,
+                "sampleType({}) category({}) - sample({}) missing input file: {}",
+                sampleType, categoryPrep.name(), sampleId, missingFilePath
+        );
 
         if(!allowMissingInput)
             System.exit(1);
@@ -95,6 +106,9 @@ public class CategoryPrepTask implements Runnable
         catch(IOException e)
         {
             missingInputFilesError(mAllowMissingInput, mCategoryPrep, mSampleType, mSampleId, e.getMessage());
+
+            if(mSamplesMissingInputCount != null)
+                mSamplesMissingInputCount.incrementAndGet();
 
             mOutput = new ArrayList<>();
         }
