@@ -163,11 +163,11 @@ class AlignmentAnnotator
     {
         val alignments = preprocessAlignments(imgtAlignments)
 
-        val vdjSequence = metadata.vdj
+        val vdj = metadata.vdj
 
         // we freeze the locus here. Reason is that there are cases where a low identity match (92%) from another
         // locus supercedes a 100% identity match from the correct locus
-        val locus: IgTcrLocus? = vdjSequence.vAnchor?.geneType?.locus ?: vdjSequence.jAnchor?.geneType?.locus
+        val locus: IgTcrLocus? = vdj.vAnchor?.geneType?.locus ?: vdj.jAnchor?.geneType?.locus
         require(locus != null)
 
         // Find candidate gene matches, from which we will then select the best and supplementary matches.
@@ -177,11 +177,21 @@ class AlignmentAnnotator
             val imgtSequence = mImgtSequences.sequencesByContig[alignment.refContig]!!
             val vdjGene = mVdjGenes[imgtSequence.geneAllele] ?: continue
 
-            // For V/J gene segments, require 90% identity as a baseline.
             if (vdjGene.region.isVJ)
             {
+                // For V/J gene segments, require 90% identity as a baseline.
                 val distance = alignment.alignedEditDistance.toDouble() / alignment.queryAlignLength
                 if (distance > 1 - ANNOTATION_VJ_IDENTITY_MIN)
+                {
+                    continue
+                }
+
+                // Also require that the alignment covers the anchor.
+                // TODO: what if the anchor matches the ref genome part?
+                val layoutAlignRange = alignment.queryRange.start + metadata.querySeqRange.start..alignment.queryRange.endInclusive + metadata.querySeqRange.start
+                val anchorBoundary = if (vdjGene.region == IgTcrRegion.V_REGION) vdj.vAnchorBoundary?.plus(vdj.layoutSliceStart - 1)
+                    else vdj.jAnchorBoundary?.plus(vdj.layoutSliceStart)
+                if (anchorBoundary != null && !layoutAlignRange.contains(anchorBoundary))
                 {
                     continue
                 }
@@ -210,7 +220,7 @@ class AlignmentAnnotator
         val alignmentStatus = getAlignmentStatus(geneMatches)
 
         return AlignmentAnnotation(
-            vdjSequence = vdjSequence,
+            vdjSequence = vdj,
             alignmentQueryRange = metadata.querySeqRange,
             status = alignmentStatus,
             vGene = geneAnnotations[IgTcrRegion.V_REGION],
