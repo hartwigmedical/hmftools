@@ -35,6 +35,8 @@ public class QseePrep
 
     private static final String COL_FEATURE_VALUE = "FeatureValue";
     private static final String COL_PERCENTILE_IN_COHORT = "PctInCohort";
+    private static final String COL_QC_STATUS = "QcStatus";
+
     private static final String SAMPLE_ID_MULTI = "MULTI_SAMPLE";
 
     public QseePrep(QseePrepConfig config)
@@ -116,6 +118,7 @@ public class QseePrep
             header.add(COL_FEATURE_NAME);
             header.add(COL_FEATURE_VALUE);
             header.add(COL_PERCENTILE_IN_COHORT);
+            header.add(COL_QC_STATUS);
 
             writer.write(header.toString());
             writer.newLine();
@@ -136,6 +139,8 @@ public class QseePrep
 
                 String percentileInCohort = QseeFileCommon.DECIMAL_FORMAT.format(entry.percentileInCohort());
                 line.add(percentileInCohort);
+
+                line.add(entry.feature().qcStatus());
 
                 writer.write(line.toString());
                 writer.newLine();
