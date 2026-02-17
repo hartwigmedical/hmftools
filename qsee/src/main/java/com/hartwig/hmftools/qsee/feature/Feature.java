@@ -1,19 +1,21 @@
 package com.hartwig.hmftools.qsee.feature;
 
+import org.jetbrains.annotations.Nullable;
+
 public class Feature
 {
     private final FeatureKey mKey;
     private final double mValue;
-    private final String mQcStatus;
+    @Nullable private final QcStatus mQcStatus;
 
-    public Feature(String name, double value, FeatureType type, SourceTool sourceTool, String qcStatus)
+    public Feature(String name, double value, FeatureType type, SourceTool sourceTool, @Nullable QcStatus qcStatus)
     {
         mKey = new FeatureKey(name, type, sourceTool);
         mValue = value;
         mQcStatus = qcStatus;
     }
 
-    public Feature(FeatureKey key, double value, String qcStatus)
+    public Feature(FeatureKey key, double value, @Nullable QcStatus qcStatus)
     {
         mKey = key;
         mValue = value;
@@ -24,10 +26,10 @@ public class Feature
     {
         mKey = key;
         mValue = value;
-        mQcStatus = "";
+        mQcStatus = null;
     }
 
     public FeatureKey key() { return mKey; }
     public double value() { return mValue; }
-    public String qcStatus() { return mQcStatus; }
+    public QcStatus qcStatus() { return mQcStatus; }
 }
