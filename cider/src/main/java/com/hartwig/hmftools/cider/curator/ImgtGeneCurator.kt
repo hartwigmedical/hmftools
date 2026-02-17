@@ -5,29 +5,25 @@ import com.beust.jcommander.Parameter
 import com.beust.jcommander.ParameterException
 import com.beust.jcommander.UnixStyleUsageFormatter
 import com.hartwig.hmftools.cider.*
-import com.hartwig.hmftools.cider.CiderConstants.BLAST_REF_GENOME_VERSION
 import com.hartwig.hmftools.cider.CiderConstants.BLASTN_PRIMARY_ASSEMBLY_NAME
+import com.hartwig.hmftools.cider.CiderConstants.BLAST_REF_GENOME_VERSION
 import com.hartwig.hmftools.cider.annotation.ImgtSequenceFile
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.ANCHOR_MISMATCH_MAX
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.BLASTN_EVALUE_CUTOFF
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.BLASTN_MAX_MISMATCH
+import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.FASTA_REF_CONTEXT_AMBIGUOUS
+import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.FASTA_REF_CONTEXT_BASE
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.IGKDEL_IMGT_SEQ
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.IGKINTR_IMGT_SEQ
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.IMGT_ANCHOR_LENGTH
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.IMGT_V_ANCHOR_INDEX
-import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.FASTA_REF_CONTEXT_AMBIGUOUS
-import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.FASTA_REF_CONTEXT_BASE
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.REF_CONTEXT_CHECK
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.REF_CONTEXT_CHECK_MISMATCH_MAX
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.SPECIES
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.jAnchorSignatures
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.liftOverBlacklist
-import com.hartwig.hmftools.cider.genes.GenomicLocation
-import com.hartwig.hmftools.cider.genes.IgTcrFunctionality
-import com.hartwig.hmftools.cider.genes.IgTcrGene
+import com.hartwig.hmftools.cider.genes.*
 import com.hartwig.hmftools.cider.genes.IgTcrGene.Companion.toCommonIgTcrGene
-import com.hartwig.hmftools.cider.genes.IgTcrRegion
-import com.hartwig.hmftools.cider.genes.VJGeneType
 import com.hartwig.hmftools.common.bam.CigarUtils.getPositionFromReadIndex
 import com.hartwig.hmftools.common.blastn.BlastnMatch
 import com.hartwig.hmftools.common.cider.IgTcrGeneFile
@@ -45,10 +41,11 @@ import htsjdk.samtools.CigarElement
 import htsjdk.samtools.liftover.LiftOver
 import htsjdk.samtools.util.Interval
 import htsjdk.samtools.util.SequenceUtil.reverseComplement
+import org.apache.logging.log4j.Level
 import org.apache.logging.log4j.LogManager
+import org.apache.logging.log4j.core.config.Configurator
 import java.io.File
 import java.nio.file.Paths
-import java.util.Comparator
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.system.exitProcess
@@ -130,6 +127,9 @@ class ImgtGeneCurator
     @Parameter(names = ["-workdir"], description = "Number of threads")
     lateinit var workdir: String
 
+    @Parameter(names = ["-log_level"], description = "Log level")
+    var logLevel = "INFO"
+
     lateinit var refGenomeSourceV38: RefGenomeSource
     lateinit var refGenomeSourceV37: RefGenomeSource
     lateinit var ensemblDataCache: EnsemblDataCache
@@ -138,6 +138,8 @@ class ImgtGeneCurator
 
     fun run(): Int
     {
+        Configurator.setRootLevel(Level.valueOf(logLevel))
+
         refGenomeSourceV38 = loadRefGenome(refGenomeV38)
         refGenomeSourceV37 = loadRefGenome(refGenomeV37)
 
@@ -283,7 +285,18 @@ class ImgtGeneCurator
 
             for (match in matches)
             {
-                val matchLocation = blastnMatchtoGenomicLocation(match) ?: continue
+                val matchLocation = blastnMatchtoGenomicLocation(match)
+
+                sLogger.debug(
+                    "Gene alignment: {}  contig=\"{}\" start={} end={} cigar={} location={}",
+                    allele.geneAllele, matchLocation,
+                    match.subjectTitle, match.subjectAlignStart, match.subjectAlignEnd,
+                    match.cigar?.joinToString(""))
+
+                if (matchLocation == null)
+                {
+                    continue
+                }
 
                 if (bestMatch == null)
                 {
@@ -323,7 +336,7 @@ class ImgtGeneCurator
             {
                 val genomicLocation = matchToQueryGenomicLocation(bestMatch)
                 location = LocationInfo(genomicLocation, bestMatch.cigar, multipleAlignments)
-                locationMethod = "Alignment"
+                locationMethod = locationMethod ?: "Alignment"
             }
 
             sLogger.info(
@@ -593,7 +606,7 @@ class ImgtGeneCurator
             }
 
             sLogger.info("Gene alleles: {}", filteredAlleles.size)
-            filteredAlleles.forEach { sLogger.info("Gene allele: $it") }
+            filteredAlleles.forEach { sLogger.info("Gene allele: {}", it) }
 
             return filteredAlleles
         }
