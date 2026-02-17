@@ -36,6 +36,10 @@
 * Consider adding good test factories that can be reused (easier with Kotlin)
 * Make sure there is good test coverage
 * Handling of reportable vs candidate. Right now it is a method in Driver. Perhaps it is better to make CANDIDATE a value in the ReportedStatus enum?
+* Added information on what resources are used to generate the report
+    * Orange version
+    * CKB Data version
+    * Etc.
 
 
 The list below shows what kind of post-processing happens in OncoAct on the data from the findings model:
