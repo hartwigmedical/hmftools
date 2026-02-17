@@ -18,8 +18,10 @@ import com.hartwig.hmftools.common.purple.PurityContext;
 
 import org.jetbrains.annotations.NotNull;
 
+import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.Feature;
+import com.hartwig.hmftools.qsee.feature.QcStatus;
 import com.hartwig.hmftools.qsee.feature.SourceTool;
 import com.hartwig.hmftools.qsee.prep.CategoryPrep;
 import com.hartwig.hmftools.qsee.prep.CategoryPrepTask;
@@ -54,9 +56,22 @@ public class SummaryTablePrep implements CategoryPrep
         return featuresMap.values().stream().toList();
     }
 
-    @VisibleForTesting
-    private static void putFeature(EnumMap<SummaryTableFeature, Feature> featuresMap, SummaryTableFeature summaryTableFeature, double value)
-    {
+    private static void putFeature(
+            EnumMap<SummaryTableFeature, Feature> featuresMap,
+            SummaryTableFeature summaryTableFeature,
+            double value,
+            String qcStatusString
+    ){
+        QcStatus qcStatus = new QcStatus(qcStatusString, summaryTableFeature.qcThreshold() );
+        Feature feature = new Feature(summaryTableFeature.key(), value, qcStatus);
+        featuresMap.put(summaryTableFeature, feature);
+    }
+
+    private static void putFeature(
+            EnumMap<SummaryTableFeature, Feature> featuresMap,
+            SummaryTableFeature summaryTableFeature,
+            double value
+    ){
         Feature feature = new Feature(summaryTableFeature.key(), value);
         featuresMap.put(summaryTableFeature, feature);
     }
@@ -67,16 +82,50 @@ public class SummaryTablePrep implements CategoryPrep
         if(purityContext == null)
             return;
 
-        putFeature(featuresMap, PURITY, purityContext.bestFit().purity());
+        EnumMap<PurpleQCStatus, String> qcStatusStrings = getPurpleQCStatusStrings(purityContext);
+
+        putFeature(featuresMap, PURITY, purityContext.bestFit().purity(), qcStatusStrings.get(PurpleQCStatus.WARN_LOW_PURITY));
         putFeature(featuresMap, PLOIDY, purityContext.bestFit().ploidy());
-        putFeature(featuresMap, TINC, purityContext.qc().tincLevel());
-        putFeature(featuresMap, DELETED_GENES, purityContext.qc().deletedGenes());
-        putFeature(featuresMap, UNSUPPORTED_CN_SEGMENTS, purityContext.qc().unsupportedCopyNumberSegments());
+        putFeature(featuresMap, TINC, purityContext.qc().tincLevel(), getTincStatus(qcStatusStrings));
+        putFeature(featuresMap, DELETED_GENES, purityContext.qc().deletedGenes(), qcStatusStrings.get(PurpleQCStatus.WARN_DELETED_GENES));
+        putFeature(featuresMap, UNSUPPORTED_CN_SEGMENTS, purityContext.qc().unsupportedCopyNumberSegments(),
+                qcStatusStrings.get(PurpleQCStatus.WARN_HIGH_COPY_NUMBER_NOISE));
         putFeature(featuresMap, LOH_PERCENT, purityContext.qc().lohPercent());
-        putFeature(featuresMap, CONTAMINATION, purityContext.qc().contamination());
+        putFeature(featuresMap, CONTAMINATION, purityContext.qc().contamination(), qcStatusStrings.get(PurpleQCStatus.FAIL_CONTAMINATION));
         putFeature(featuresMap, TMB_SMALL_VARIANTS, purityContext.tumorMutationalBurdenPerMb());
         putFeature(featuresMap, TMB_MS_INDELS, purityContext.microsatelliteIndelsPerMb());
         putFeature(featuresMap, TMB_STRUCTURAL_VARIANTS, purityContext.svTumorMutationalBurden() / MB_PER_GENOME);
+    }
+
+    private static EnumMap<PurpleQCStatus, String> getPurpleQCStatusStrings(PurityContext purityContext)
+    {
+        EnumMap<PurpleQCStatus, String> qcStatusStrings = new EnumMap<>(PurpleQCStatus.class);
+
+        for(PurpleQCStatus purpleQcStatus : PurpleQCStatus.values())
+        {
+            boolean sampleHasQcStatus = purityContext.qc().status().contains(purpleQcStatus);
+
+            String qcStatusString = sampleHasQcStatus
+                    ? purpleQcStatus.toString()
+                    : QcStatus.NO_STATUS;
+
+            qcStatusStrings.put(purpleQcStatus, qcStatusString);
+        }
+
+        return qcStatusStrings;
+    }
+
+    private static String getTincStatus(EnumMap<PurpleQCStatus, String> qcStatusStrings)
+    {
+        String tincStatus = qcStatusStrings.get(PurpleQCStatus.FAIL_NO_TUMOR);
+
+        if(tincStatus == null)
+            tincStatus = qcStatusStrings.get(PurpleQCStatus.WARN_TINC);
+
+        if(tincStatus == null)
+            tincStatus = QcStatus.NO_STATUS;
+
+        return tincStatus;
     }
 
     @VisibleForTesting

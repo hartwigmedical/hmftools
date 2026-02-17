@@ -28,6 +28,7 @@ import com.hartwig.hmftools.qsee.common.QseeFileCommon;
 import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.Feature;
 import com.hartwig.hmftools.qsee.feature.FeatureKey;
+import com.hartwig.hmftools.qsee.feature.QcStatus;
 
 public class QseePrep
 {
@@ -36,6 +37,7 @@ public class QseePrep
     private static final String COL_FEATURE_VALUE = "FeatureValue";
     private static final String COL_PERCENTILE_IN_COHORT = "PctInCohort";
     private static final String COL_QC_STATUS = "QcStatus";
+    private static final String COL_QC_THRESHOLD = "QcThreshold";
 
     private static final String SAMPLE_ID_MULTI = "MULTI_SAMPLE";
 
@@ -119,13 +121,15 @@ public class QseePrep
             header.add(COL_FEATURE_VALUE);
             header.add(COL_PERCENTILE_IN_COHORT);
             header.add(COL_QC_STATUS);
+            header.add(COL_QC_THRESHOLD);
 
             writer.write(header.toString());
             writer.newLine();
 
             for(VisSampleData entry : visSampleDataEntries)
             {
-                FeatureKey featureKey = entry.feature().key();
+                Feature feature = entry.feature();
+                FeatureKey featureKey = feature.key();
 
                 StringJoiner line = new StringJoiner(TSV_DELIM);
                 line.add(entry.sampleId());
@@ -134,13 +138,22 @@ public class QseePrep
                 line.add(featureKey.type().name());
                 line.add(featureKey.name());
 
-                String featureValue = QseeFileCommon.DECIMAL_FORMAT.format(entry.feature().value());
+                String featureValue = QseeFileCommon.DECIMAL_FORMAT.format(feature.value());
                 line.add(featureValue);
 
                 String percentileInCohort = QseeFileCommon.DECIMAL_FORMAT.format(entry.percentileInCohort());
                 line.add(percentileInCohort);
 
-                line.add(entry.feature().qcStatus());
+                String qcStatus = "";
+                String qcThreshold = "";
+                if(feature.qcStatus() != null)
+                {
+                    qcStatus = feature.qcStatus().mStatus;
+                    qcThreshold = QseeFileCommon.DECIMAL_FORMAT.format(feature.qcStatus().mThreshold);
+                }
+
+                line.add(qcStatus);
+                line.add(qcThreshold);
 
                 writer.write(line.toString());
                 writer.newLine();
