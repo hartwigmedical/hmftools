@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.qsee.prep.category;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeConstants.MB_PER_GENOME;
+import static com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -121,16 +122,16 @@ public class SummaryTablePrep implements CategoryPrep
         if(purityContext == null)
             return;
 
-        putFeature(featuresMap, SummaryTableFeature.PURITY, purityContext.bestFit().purity());
-        putFeature(featuresMap, SummaryTableFeature.PLOIDY, purityContext.bestFit().ploidy());
-        putFeature(featuresMap, SummaryTableFeature.TINC, purityContext.qc().tincLevel());
-        putFeature(featuresMap, SummaryTableFeature.DELETED_GENES, purityContext.qc().deletedGenes());
-        putFeature(featuresMap, SummaryTableFeature.UNSUPPORTED_CN_SEGMENTS, purityContext.qc().unsupportedCopyNumberSegments());
-        putFeature(featuresMap, SummaryTableFeature.LOH_PERCENT, purityContext.qc().lohPercent());
-        putFeature(featuresMap, SummaryTableFeature.CONTAMINATION, purityContext.qc().contamination());
-        putFeature(featuresMap, SummaryTableFeature.TMB_SMALL_VARIANTS, purityContext.tumorMutationalBurdenPerMb());
-        putFeature(featuresMap, SummaryTableFeature.TMB_MS_INDELS, purityContext.microsatelliteIndelsPerMb());
-        putFeature(featuresMap, SummaryTableFeature.TMB_STRUCTURAL_VARIANTS, purityContext.svTumorMutationalBurden() / MB_PER_GENOME);
+        putFeature(featuresMap, PURITY, purityContext.bestFit().purity());
+        putFeature(featuresMap, PLOIDY, purityContext.bestFit().ploidy());
+        putFeature(featuresMap, TINC, purityContext.qc().tincLevel());
+        putFeature(featuresMap, DELETED_GENES, purityContext.qc().deletedGenes());
+        putFeature(featuresMap, UNSUPPORTED_CN_SEGMENTS, purityContext.qc().unsupportedCopyNumberSegments());
+        putFeature(featuresMap, LOH_PERCENT, purityContext.qc().lohPercent());
+        putFeature(featuresMap, CONTAMINATION, purityContext.qc().contamination());
+        putFeature(featuresMap, TMB_SMALL_VARIANTS, purityContext.tumorMutationalBurdenPerMb());
+        putFeature(featuresMap, TMB_MS_INDELS, purityContext.microsatelliteIndelsPerMb());
+        putFeature(featuresMap, TMB_STRUCTURAL_VARIANTS, purityContext.svTumorMutationalBurden() / MB_PER_GENOME);
     }
 
     @VisibleForTesting
@@ -139,11 +140,11 @@ public class SummaryTablePrep implements CategoryPrep
         if(bamMetricSummary == null)
             return;
 
-        putFeature(featuresMap, SummaryTableFeature.MEAN_COVERAGE, bamMetricSummary.meanCoverage());
-        putFeature(featuresMap, SummaryTableFeature.LOW_MAP_QUAL, bamMetricSummary.lowMapQualPercent());
-        putFeature(featuresMap, SummaryTableFeature.LOW_BASE_QUAL, bamMetricSummary.lowBaseQualPercent());
-        putFeature(featuresMap, SummaryTableFeature.DUPLICATE_READS, (double) bamMetricSummary.duplicateReads() / bamMetricSummary.totalReads());
-        putFeature(featuresMap, SummaryTableFeature.DUAL_STRAND_READS, (double) bamMetricSummary.dualStrandReads() / bamMetricSummary.totalReads());
+        putFeature(featuresMap, MEAN_COVERAGE, bamMetricSummary.meanCoverage());
+        putFeature(featuresMap, LOW_MAP_QUAL, bamMetricSummary.lowMapQualPercent());
+        putFeature(featuresMap, LOW_BASE_QUAL, bamMetricSummary.lowBaseQualPercent());
+        putFeature(featuresMap, DUPLICATE_READS, (double) bamMetricSummary.duplicateReads() / bamMetricSummary.totalReads());
+        putFeature(featuresMap, DUAL_STRAND_READS, (double) bamMetricSummary.dualStrandReads() / bamMetricSummary.totalReads());
     }
 
     @VisibleForTesting
@@ -152,12 +153,12 @@ public class SummaryTablePrep implements CategoryPrep
         if(bamMetricCoverage == null)
             return;
 
-        putFeature(featuresMap, SummaryTableFeature.MIN_COVERAGE_10, calcPropBasesWithMinCoverage(bamMetricCoverage, 10));
-        putFeature(featuresMap, SummaryTableFeature.MIN_COVERAGE_20, calcPropBasesWithMinCoverage(bamMetricCoverage, 20));
-        putFeature(featuresMap, SummaryTableFeature.MIN_COVERAGE_30, calcPropBasesWithMinCoverage(bamMetricCoverage, 30));
-        putFeature(featuresMap, SummaryTableFeature.MIN_COVERAGE_60, calcPropBasesWithMinCoverage(bamMetricCoverage, 60));
-        putFeature(featuresMap, SummaryTableFeature.MIN_COVERAGE_100, calcPropBasesWithMinCoverage(bamMetricCoverage, 100));
-        putFeature(featuresMap, SummaryTableFeature.MIN_COVERAGE_250, calcPropBasesWithMinCoverage(bamMetricCoverage, 250));
+        putFeature(featuresMap, MIN_COVERAGE_10, calcPropBasesWithMinCoverage(bamMetricCoverage, 10));
+        putFeature(featuresMap, MIN_COVERAGE_20, calcPropBasesWithMinCoverage(bamMetricCoverage, 20));
+        putFeature(featuresMap, MIN_COVERAGE_30, calcPropBasesWithMinCoverage(bamMetricCoverage, 30));
+        putFeature(featuresMap, MIN_COVERAGE_60, calcPropBasesWithMinCoverage(bamMetricCoverage, 60));
+        putFeature(featuresMap, MIN_COVERAGE_100, calcPropBasesWithMinCoverage(bamMetricCoverage, 100));
+        putFeature(featuresMap, MIN_COVERAGE_250, calcPropBasesWithMinCoverage(bamMetricCoverage, 250));
     }
 
     private static double calcPropBasesWithMinCoverage(BamMetricCoverage bamMetricCoverage, int coverageThreshold)
@@ -180,7 +181,7 @@ public class SummaryTablePrep implements CategoryPrep
         if(bamFlagStats == null)
             return;
 
-        putFeature(featuresMap, SummaryTableFeature.MAPPED_PROPORTION, bamFlagStats.mappedProportion());
+        putFeature(featuresMap, MAPPED_PROPORTION, bamFlagStats.mappedProportion());
     }
 
     @Override
