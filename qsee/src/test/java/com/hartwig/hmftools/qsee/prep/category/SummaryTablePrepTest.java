@@ -40,9 +40,9 @@ public class SummaryTablePrepTest
         BamMetricCoverage bamMetricCoverage = createTestBamMetricCoverage();
 
         EnumMap<SummaryTableFeature, Feature> featuresMap = new EnumMap<>(SummaryTableFeature.class);
-        SummaryTablePrep.putFeatures(purityContext, featuresMap);
-        SummaryTablePrep.putFeatures(bamMetricSummary, featuresMap);
-        SummaryTablePrep.putFeatures(bamMetricCoverage, featuresMap);
+        SummaryTablePrep.putFeatures(featuresMap, purityContext);
+        SummaryTablePrep.putFeatures(featuresMap, bamMetricSummary);
+        SummaryTablePrep.putFeatures(featuresMap, bamMetricCoverage);
 
         Set<SummaryTableFeature> allFeatures = EnumSet.allOf(SummaryTableFeature.class);
         Set<SummaryTableFeature> populatedFeatures = featuresMap.keySet();
@@ -56,7 +56,7 @@ public class SummaryTablePrepTest
     {
         EnumMap<SummaryTableFeature, Feature> featuresMap = new EnumMap<>(SummaryTableFeature.class);
         BamMetricCoverage bamMetricCoverage = createTestBamMetricCoverage();
-        SummaryTablePrep.putFeatures(bamMetricCoverage, featuresMap);
+        SummaryTablePrep.putFeatures(featuresMap, bamMetricCoverage);
 
         assertEquals(0.9, featuresMap.get(SummaryTableFeature.MIN_COVERAGE_10).value(), 0.01);
         assertEquals(0.7, featuresMap.get(SummaryTableFeature.MIN_COVERAGE_30).value(), 0.01);

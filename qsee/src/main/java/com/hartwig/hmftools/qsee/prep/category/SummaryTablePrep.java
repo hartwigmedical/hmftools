@@ -5,7 +5,6 @@ import static com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature.
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.StringJoiner;
@@ -16,9 +15,6 @@ import com.hartwig.hmftools.common.metrics.BamMetricCoverage;
 import com.hartwig.hmftools.common.metrics.BamMetricSummary;
 import com.hartwig.hmftools.common.metrics.ValueFrequency;
 import com.hartwig.hmftools.common.purple.PurityContext;
-import com.hartwig.hmftools.common.purple.PurityContextFile;
-import com.hartwig.hmftools.common.purple.PurplePurity;
-import com.hartwig.hmftools.common.purple.PurpleQCFile;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -29,6 +25,7 @@ import com.hartwig.hmftools.qsee.prep.CategoryPrep;
 import com.hartwig.hmftools.qsee.prep.CategoryPrepTask;
 import com.hartwig.hmftools.qsee.prep.CommonPrepConfig;
 import com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature;
+import com.hartwig.hmftools.qsee.prep.category.table.SummaryTableInputData;
 
 public class SummaryTablePrep implements CategoryPrep
 {
@@ -36,77 +33,25 @@ public class SummaryTablePrep implements CategoryPrep
 
     private static final SourceTool SOURCE_TOOL = SourceTool.MULTIPLE;
 
-    public SummaryTablePrep(CommonPrepConfig config)
-    {
-        mConfig = config;
-    }
+    public SummaryTablePrep(CommonPrepConfig config) { mConfig = config; }
 
     public SourceTool sourceTool() { return SOURCE_TOOL; }
 
-    private PurityContext loadPurplePurity(String sampleId, List<String> missingInputPaths)
+    @Override
+    public List<Feature> extractSampleData(String sampleId, @NotNull SampleType sampleType) throws IOException
     {
-        String baseDir = mConfig.getPurpleDir(sampleId);
-        String purityFile = PurplePurity.generateFilename(baseDir, sampleId);
-        String qcFile = PurpleQCFile.generateFilename(baseDir, sampleId);
+        SummaryTableInputData inputData = new SummaryTableInputData(mConfig, sampleId, sampleType);
 
-        try
-        {
-            return PurityContextFile.readWithQC(qcFile, purityFile);
-        }
-        catch(IOException e)
-        {
-            missingInputPaths.add(purityFile);
-            missingInputPaths.add(qcFile);
-            return null;
-        }
-    }
+        EnumMap<SummaryTableFeature, Feature> featuresMap = new EnumMap<>(SummaryTableFeature.class);
 
-    private BamMetricSummary loadBamMetricSummary(String sampleId, SampleType sampleType, List<String> missingInputPaths)
-    {
-        String baseDir = mConfig.getBamMetricsDir(sampleId, sampleType);
-        String filePath = BamMetricSummary.generateFilename(baseDir, sampleId);
+        putFeatures(featuresMap, inputData.purityContext());
+        putFeatures(featuresMap, inputData.bamMetricSummary());
+        putFeatures(featuresMap, inputData.bamMetricCoverage());
+        putFeatures(featuresMap, inputData.bamFlagStats());
 
-        try
-        {
-            return BamMetricSummary.read(filePath);
-        }
-        catch(IOException e)
-        {
-            missingInputPaths.add(filePath);
-            return null;
-        }
-    }
+        printMissingInputFiles(inputData, sampleType, sampleId);
 
-    private BamMetricCoverage loadBamMetricCoverage(String sampleId, SampleType sampleType, List<String> missingInputPaths)
-    {
-        String baseDir = mConfig.getBamMetricsDir(sampleId, sampleType);
-        String filePath = BamMetricCoverage.generateFilename(baseDir, sampleId);
-
-        try
-        {
-            return BamMetricCoverage.read(filePath);
-        }
-        catch(IOException e)
-        {
-            missingInputPaths.add(filePath);
-            return null;
-        }
-    }
-
-    private BamFlagStats loadBamFlagStats(String sampleId, SampleType sampleType, List<String> missingInputPaths)
-    {
-        String baseDir = mConfig.getBamMetricsDir(sampleId, sampleType);
-        String filePath = BamFlagStats.generateFilename(baseDir, sampleId);
-
-        try
-        {
-            return BamFlagStats.read(filePath);
-        }
-        catch(IOException e)
-        {
-            missingInputPaths.add(filePath);
-            return null;
-        }
+        return featuresMap.values().stream().toList();
     }
 
     @VisibleForTesting
@@ -117,7 +62,7 @@ public class SummaryTablePrep implements CategoryPrep
     }
 
     @VisibleForTesting
-    static void putFeatures(PurityContext purityContext, EnumMap<SummaryTableFeature, Feature> featuresMap)
+    static void putFeatures(EnumMap<SummaryTableFeature, Feature> featuresMap, PurityContext purityContext)
     {
         if(purityContext == null)
             return;
@@ -135,7 +80,7 @@ public class SummaryTablePrep implements CategoryPrep
     }
 
     @VisibleForTesting
-    static void putFeatures(BamMetricSummary bamMetricSummary, EnumMap<SummaryTableFeature, Feature> featuresMap)
+    static void putFeatures(EnumMap<SummaryTableFeature, Feature> featuresMap, BamMetricSummary bamMetricSummary)
     {
         if(bamMetricSummary == null)
             return;
@@ -148,7 +93,7 @@ public class SummaryTablePrep implements CategoryPrep
     }
 
     @VisibleForTesting
-    static void putFeatures(BamMetricCoverage bamMetricCoverage, EnumMap<SummaryTableFeature, Feature> featuresMap)
+    static void putFeatures(EnumMap<SummaryTableFeature, Feature> featuresMap, BamMetricCoverage bamMetricCoverage)
     {
         if(bamMetricCoverage == null)
             return;
@@ -176,7 +121,7 @@ public class SummaryTablePrep implements CategoryPrep
     }
 
     @VisibleForTesting
-    static void putFeatures(BamFlagStats bamFlagStats, EnumMap<SummaryTableFeature, Feature> featuresMap)
+    static void putFeatures(EnumMap<SummaryTableFeature, Feature> featuresMap, BamFlagStats bamFlagStats)
     {
         if(bamFlagStats == null)
             return;
@@ -184,40 +129,18 @@ public class SummaryTablePrep implements CategoryPrep
         putFeature(featuresMap, MAPPED_PROPORTION, bamFlagStats.mappedProportion());
     }
 
-    @Override
-    public List<Feature> extractSampleData(String sampleId, @NotNull SampleType sampleType) throws IOException
+    private void printMissingInputFiles(SummaryTableInputData inputData, @NotNull SampleType sampleType, String sampleId)
     {
-        EnumMap<SummaryTableFeature, Feature> featuresMap = new EnumMap<>(SummaryTableFeature.class);
-        List<String> missingInputPaths = new ArrayList<>();
+        if(inputData.missingInputPaths().isEmpty())
+            return;
 
-        if(sampleType == SampleType.TUMOR)
+        StringJoiner toolsMissingInput = new StringJoiner(", ");
+        for(String path : inputData.missingInputPaths())
         {
-            PurityContext purityContext = loadPurplePurity(sampleId, missingInputPaths);
-            putFeatures(purityContext, featuresMap);
+            String basename = new File(path).getName();
+            toolsMissingInput.add(basename);
         }
 
-        BamMetricSummary bamMetricSummary = loadBamMetricSummary(sampleId, sampleType, missingInputPaths);
-        putFeatures(bamMetricSummary, featuresMap);
-
-        BamMetricCoverage bamMetricCoverage = loadBamMetricCoverage(sampleId, sampleType, missingInputPaths);
-        putFeatures(bamMetricCoverage, featuresMap);
-
-        BamFlagStats bamFlagStats = loadBamFlagStats(sampleId, sampleType, missingInputPaths);
-        putFeatures(bamFlagStats, featuresMap);
-
-        if(!missingInputPaths.isEmpty())
-        {
-            StringJoiner toolsMissingInput = new StringJoiner(", ");
-            for(String path : missingInputPaths)
-            {
-                String basename = new File(path).getName();
-                toolsMissingInput.add(basename);
-            }
-
-            CategoryPrepTask.missingInputFilesError(
-                    mConfig.AllowMissingInput, this, sampleType, sampleId, toolsMissingInput.toString());
-        }
-
-        return featuresMap.values().stream().toList();
+        CategoryPrepTask.missingInputFilesError(mConfig.AllowMissingInput, this, sampleType, sampleId, toolsMissingInput.toString());
     }
 }
