@@ -63,7 +63,7 @@ public class SummaryTablePrep implements CategoryPrep
             String qcStatusString
     ){
         QcStatus qcStatus = new QcStatus(qcStatusString, summaryTableFeature.qcThreshold() );
-        Feature feature = new Feature(summaryTableFeature.key(), value, qcStatus);
+        Feature feature = new Feature(summaryTableFeature.key(), value, qcStatus, summaryTableFeature.plotLabel());
         featuresMap.put(summaryTableFeature, feature);
     }
 
@@ -72,7 +72,7 @@ public class SummaryTablePrep implements CategoryPrep
             SummaryTableFeature summaryTableFeature,
             double value
     ){
-        Feature feature = new Feature(summaryTableFeature.key(), value);
+        Feature feature = new Feature(summaryTableFeature.key(), value, null, summaryTableFeature.plotLabel());
         featuresMap.put(summaryTableFeature, feature);
     }
 

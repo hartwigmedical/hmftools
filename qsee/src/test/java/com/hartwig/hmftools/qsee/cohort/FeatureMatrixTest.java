@@ -14,6 +14,7 @@ import com.hartwig.hmftools.qsee.cohort.FeatureMatrix;
 import org.junit.Test;
 
 import com.hartwig.hmftools.qsee.feature.Feature;
+import com.hartwig.hmftools.qsee.feature.FeatureKey;
 
 public class FeatureMatrixTest
 {
@@ -123,7 +124,8 @@ public class FeatureMatrixTest
 
     private static Feature createTestFeature(String name, double value)
     {
-        return new Feature(name, value, null, null);
+        FeatureKey key = new FeatureKey(name, null, null);
+        return new Feature(key, value, null, null);
     }
 
     private static String formTestSampleId(int sampleIndex) { return String.format("sample%d", sampleIndex); }

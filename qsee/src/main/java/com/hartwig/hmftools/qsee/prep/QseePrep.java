@@ -38,6 +38,7 @@ public class QseePrep
     private static final String COL_PERCENTILE_IN_COHORT = "PctInCohort";
     private static final String COL_QC_STATUS = "QcStatus";
     private static final String COL_QC_THRESHOLD = "QcThreshold";
+    private static final String COL_PLOT_LABEL = "PlotLabel";
 
     private static final String SAMPLE_ID_MULTI = "MULTI_SAMPLE";
 
@@ -122,6 +123,7 @@ public class QseePrep
             header.add(COL_PERCENTILE_IN_COHORT);
             header.add(COL_QC_STATUS);
             header.add(COL_QC_THRESHOLD);
+            header.add(COL_PLOT_LABEL);
 
             writer.write(header.toString());
             writer.newLine();
@@ -154,6 +156,7 @@ public class QseePrep
 
                 line.add(qcStatus);
                 line.add(qcThreshold);
+                line.add(feature.plotLabel());
 
                 writer.write(line.toString());
                 writer.newLine();
