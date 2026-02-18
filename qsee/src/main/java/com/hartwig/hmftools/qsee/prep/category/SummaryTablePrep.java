@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.qsee.prep.category;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeConstants.MB_PER_GENOME;
+import static com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature.*;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.StringJoiner;
@@ -15,19 +15,19 @@ import com.hartwig.hmftools.common.metrics.BamMetricCoverage;
 import com.hartwig.hmftools.common.metrics.BamMetricSummary;
 import com.hartwig.hmftools.common.metrics.ValueFrequency;
 import com.hartwig.hmftools.common.purple.PurityContext;
-import com.hartwig.hmftools.common.purple.PurityContextFile;
-import com.hartwig.hmftools.common.purple.PurplePurity;
-import com.hartwig.hmftools.common.purple.PurpleQCFile;
 
 import org.jetbrains.annotations.NotNull;
 
+import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.Feature;
+import com.hartwig.hmftools.qsee.feature.QcStatus;
 import com.hartwig.hmftools.qsee.feature.SourceTool;
 import com.hartwig.hmftools.qsee.prep.CategoryPrep;
 import com.hartwig.hmftools.qsee.prep.CategoryPrepTask;
 import com.hartwig.hmftools.qsee.prep.CommonPrepConfig;
 import com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature;
+import com.hartwig.hmftools.qsee.prep.category.table.SummaryTableInputData;
 
 public class SummaryTablePrep implements CategoryPrep
 {
@@ -35,129 +35,124 @@ public class SummaryTablePrep implements CategoryPrep
 
     private static final SourceTool SOURCE_TOOL = SourceTool.MULTIPLE;
 
-    public SummaryTablePrep(CommonPrepConfig config)
-    {
-        mConfig = config;
-    }
+    public SummaryTablePrep(CommonPrepConfig config) { mConfig = config; }
 
     public SourceTool sourceTool() { return SOURCE_TOOL; }
 
-    private PurityContext loadPurplePurity(String sampleId, List<String> missingInputPaths)
+    @Override
+    public List<Feature> extractSampleData(String sampleId, @NotNull SampleType sampleType) throws IOException
     {
-        String baseDir = mConfig.getPurpleDir(sampleId);
-        String purityFile = PurplePurity.generateFilename(baseDir, sampleId);
-        String qcFile = PurpleQCFile.generateFilename(baseDir, sampleId);
+        SummaryTableInputData inputData = new SummaryTableInputData(mConfig, sampleId, sampleType);
 
-        try
-        {
-            return PurityContextFile.readWithQC(qcFile, purityFile);
-        }
-        catch(IOException e)
-        {
-            missingInputPaths.add(purityFile);
-            missingInputPaths.add(qcFile);
-            return null;
-        }
+        EnumMap<SummaryTableFeature, Feature> featuresMap = new EnumMap<>(SummaryTableFeature.class);
+
+        putFeatures(featuresMap, inputData.purityContext());
+        putFeatures(featuresMap, inputData.bamMetricSummary());
+        putFeatures(featuresMap, inputData.bamMetricCoverage());
+        putFeatures(featuresMap, inputData.bamFlagStats());
+
+        printMissingInputFiles(inputData, sampleType, sampleId);
+
+        return featuresMap.values().stream().toList();
     }
 
-    private BamMetricSummary loadBamMetricSummary(String sampleId, SampleType sampleType, List<String> missingInputPaths)
-    {
-        String baseDir = mConfig.getBamMetricsDir(sampleId, sampleType);
-        String filePath = BamMetricSummary.generateFilename(baseDir, sampleId);
-
-        try
-        {
-            return BamMetricSummary.read(filePath);
-        }
-        catch(IOException e)
-        {
-            missingInputPaths.add(filePath);
-            return null;
-        }
+    private static void putFeature(
+            EnumMap<SummaryTableFeature, Feature> featuresMap,
+            SummaryTableFeature summaryTableFeature,
+            double value,
+            String qcStatusString
+    ){
+        QcStatus qcStatus = new QcStatus(qcStatusString, summaryTableFeature.qcThreshold() );
+        Feature feature = new Feature(summaryTableFeature.key(), value, qcStatus);
+        featuresMap.put(summaryTableFeature, feature);
     }
 
-    private BamMetricCoverage loadBamMetricCoverage(String sampleId, SampleType sampleType, List<String> missingInputPaths)
-    {
-        String baseDir = mConfig.getBamMetricsDir(sampleId, sampleType);
-        String filePath = BamMetricCoverage.generateFilename(baseDir, sampleId);
-
-        try
-        {
-            return BamMetricCoverage.read(filePath);
-        }
-        catch(IOException e)
-        {
-            missingInputPaths.add(filePath);
-            return null;
-        }
-    }
-
-    private BamFlagStats loadBamFlagStats(String sampleId, SampleType sampleType, List<String> missingInputPaths)
-    {
-        String baseDir = mConfig.getBamMetricsDir(sampleId, sampleType);
-        String filePath = BamFlagStats.generateFilename(baseDir, sampleId);
-
-        try
-        {
-            return BamFlagStats.read(filePath);
-        }
-        catch(IOException e)
-        {
-            missingInputPaths.add(filePath);
-            return null;
-        }
-    }
-
-    @VisibleForTesting
-    private static void putFeature(EnumMap<SummaryTableFeature, Feature> featuresMap, SummaryTableFeature summaryTableFeature, double value)
-    {
+    private static void putFeature(
+            EnumMap<SummaryTableFeature, Feature> featuresMap,
+            SummaryTableFeature summaryTableFeature,
+            double value
+    ){
         Feature feature = new Feature(summaryTableFeature.key(), value);
         featuresMap.put(summaryTableFeature, feature);
     }
 
     @VisibleForTesting
-    static void putFeatures(PurityContext purityContext, EnumMap<SummaryTableFeature, Feature> featuresMap)
+    static void putFeatures(EnumMap<SummaryTableFeature, Feature> featuresMap, PurityContext purityContext)
     {
         if(purityContext == null)
             return;
 
-        putFeature(featuresMap, SummaryTableFeature.PURITY, purityContext.bestFit().purity());
-        putFeature(featuresMap, SummaryTableFeature.PLOIDY, purityContext.bestFit().ploidy());
-        putFeature(featuresMap, SummaryTableFeature.TINC, purityContext.qc().tincLevel());
-        putFeature(featuresMap, SummaryTableFeature.DELETED_GENES, purityContext.qc().deletedGenes());
-        putFeature(featuresMap, SummaryTableFeature.UNSUPPORTED_CN_SEGMENTS, purityContext.qc().unsupportedCopyNumberSegments());
-        putFeature(featuresMap, SummaryTableFeature.LOH_PERCENT, purityContext.qc().lohPercent());
-        putFeature(featuresMap, SummaryTableFeature.CONTAMINATION, purityContext.qc().contamination());
-        putFeature(featuresMap, SummaryTableFeature.TMB_SMALL_VARIANTS, purityContext.tumorMutationalBurdenPerMb());
-        putFeature(featuresMap, SummaryTableFeature.TMB_MS_INDELS, purityContext.microsatelliteIndelsPerMb());
-        putFeature(featuresMap, SummaryTableFeature.TMB_STRUCTURAL_VARIANTS, purityContext.svTumorMutationalBurden() / MB_PER_GENOME);
+        EnumMap<PurpleQCStatus, String> qcStatusStrings = getPurpleQCStatusStrings(purityContext);
+
+        putFeature(featuresMap, PURITY, purityContext.bestFit().purity(), qcStatusStrings.get(PurpleQCStatus.WARN_LOW_PURITY));
+        putFeature(featuresMap, PLOIDY, purityContext.bestFit().ploidy());
+        putFeature(featuresMap, TINC, purityContext.qc().tincLevel(), getTincStatus(qcStatusStrings));
+        putFeature(featuresMap, DELETED_GENES, purityContext.qc().deletedGenes(), qcStatusStrings.get(PurpleQCStatus.WARN_DELETED_GENES));
+        putFeature(featuresMap, UNSUPPORTED_CN_SEGMENTS, purityContext.qc().unsupportedCopyNumberSegments(),
+                qcStatusStrings.get(PurpleQCStatus.WARN_HIGH_COPY_NUMBER_NOISE));
+        putFeature(featuresMap, LOH_PERCENT, purityContext.qc().lohPercent());
+        putFeature(featuresMap, CONTAMINATION, purityContext.qc().contamination(), qcStatusStrings.get(PurpleQCStatus.FAIL_CONTAMINATION));
+        putFeature(featuresMap, TMB_SMALL_VARIANTS, purityContext.tumorMutationalBurdenPerMb());
+        putFeature(featuresMap, TMB_MS_INDELS, purityContext.microsatelliteIndelsPerMb());
+        putFeature(featuresMap, TMB_STRUCTURAL_VARIANTS, purityContext.svTumorMutationalBurden() / MB_PER_GENOME);
+    }
+
+    private static EnumMap<PurpleQCStatus, String> getPurpleQCStatusStrings(PurityContext purityContext)
+    {
+        EnumMap<PurpleQCStatus, String> qcStatusStrings = new EnumMap<>(PurpleQCStatus.class);
+
+        for(PurpleQCStatus purpleQcStatus : PurpleQCStatus.values())
+        {
+            boolean sampleHasQcStatus = purityContext.qc().status().contains(purpleQcStatus);
+
+            String qcStatusString = sampleHasQcStatus
+                    ? purpleQcStatus.toString()
+                    : QcStatus.NO_STATUS;
+
+            qcStatusStrings.put(purpleQcStatus, qcStatusString);
+        }
+
+        return qcStatusStrings;
+    }
+
+    private static String getTincStatus(EnumMap<PurpleQCStatus, String> qcStatusStrings)
+    {
+        String tincStatus = qcStatusStrings.get(PurpleQCStatus.FAIL_NO_TUMOR);
+
+        if(tincStatus == null)
+            tincStatus = qcStatusStrings.get(PurpleQCStatus.WARN_TINC);
+
+        if(tincStatus == null)
+            tincStatus = QcStatus.NO_STATUS;
+
+        return tincStatus;
     }
 
     @VisibleForTesting
-    static void putFeatures(BamMetricSummary bamMetricSummary, EnumMap<SummaryTableFeature, Feature> featuresMap)
+    static void putFeatures(EnumMap<SummaryTableFeature, Feature> featuresMap, BamMetricSummary bamMetricSummary)
     {
         if(bamMetricSummary == null)
             return;
 
-        putFeature(featuresMap, SummaryTableFeature.MEAN_COVERAGE, bamMetricSummary.meanCoverage());
-        putFeature(featuresMap, SummaryTableFeature.LOW_MAP_QUAL, bamMetricSummary.lowMapQualPercent());
-        putFeature(featuresMap, SummaryTableFeature.LOW_BASE_QUAL, bamMetricSummary.lowBaseQualPercent());
-        putFeature(featuresMap, SummaryTableFeature.DUPLICATE_READS, (double) bamMetricSummary.duplicateReads() / bamMetricSummary.totalReads());
-        putFeature(featuresMap, SummaryTableFeature.DUAL_STRAND_READS, (double) bamMetricSummary.dualStrandReads() / bamMetricSummary.totalReads());
+        putFeature(featuresMap, MEAN_COVERAGE, bamMetricSummary.meanCoverage());
+        putFeature(featuresMap, LOW_MAP_QUAL, bamMetricSummary.lowMapQualPercent());
+        putFeature(featuresMap, LOW_BASE_QUAL, bamMetricSummary.lowBaseQualPercent());
+        putFeature(featuresMap, DUPLICATE_READS, (double) bamMetricSummary.duplicateReads() / bamMetricSummary.totalReads());
+        putFeature(featuresMap, DUAL_STRAND_READS, (double) bamMetricSummary.dualStrandReads() / bamMetricSummary.totalReads());
     }
 
     @VisibleForTesting
-    static void putFeatures(BamMetricCoverage bamMetricCoverage, EnumMap<SummaryTableFeature, Feature> featuresMap)
+    static void putFeatures(EnumMap<SummaryTableFeature, Feature> featuresMap, BamMetricCoverage bamMetricCoverage)
     {
         if(bamMetricCoverage == null)
             return;
 
-        putFeature(featuresMap, SummaryTableFeature.MIN_COVERAGE_10, calcPropBasesWithMinCoverage(bamMetricCoverage, 10));
-        putFeature(featuresMap, SummaryTableFeature.MIN_COVERAGE_20, calcPropBasesWithMinCoverage(bamMetricCoverage, 20));
-        putFeature(featuresMap, SummaryTableFeature.MIN_COVERAGE_30, calcPropBasesWithMinCoverage(bamMetricCoverage, 30));
-        putFeature(featuresMap, SummaryTableFeature.MIN_COVERAGE_60, calcPropBasesWithMinCoverage(bamMetricCoverage, 60));
-        putFeature(featuresMap, SummaryTableFeature.MIN_COVERAGE_100, calcPropBasesWithMinCoverage(bamMetricCoverage, 100));
-        putFeature(featuresMap, SummaryTableFeature.MIN_COVERAGE_250, calcPropBasesWithMinCoverage(bamMetricCoverage, 250));
+        putFeature(featuresMap, MIN_COVERAGE_10, calcPropBasesWithMinCoverage(bamMetricCoverage, 10));
+        putFeature(featuresMap, MIN_COVERAGE_20, calcPropBasesWithMinCoverage(bamMetricCoverage, 20));
+        putFeature(featuresMap, MIN_COVERAGE_30, calcPropBasesWithMinCoverage(bamMetricCoverage, 30));
+        putFeature(featuresMap, MIN_COVERAGE_60, calcPropBasesWithMinCoverage(bamMetricCoverage, 60));
+        putFeature(featuresMap, MIN_COVERAGE_100, calcPropBasesWithMinCoverage(bamMetricCoverage, 100));
+        putFeature(featuresMap, MIN_COVERAGE_250, calcPropBasesWithMinCoverage(bamMetricCoverage, 250));
     }
 
     private static double calcPropBasesWithMinCoverage(BamMetricCoverage bamMetricCoverage, int coverageThreshold)
@@ -175,48 +170,26 @@ public class SummaryTablePrep implements CategoryPrep
     }
 
     @VisibleForTesting
-    static void putFeatures(BamFlagStats bamFlagStats, EnumMap<SummaryTableFeature, Feature> featuresMap)
+    static void putFeatures(EnumMap<SummaryTableFeature, Feature> featuresMap, BamFlagStats bamFlagStats)
     {
         if(bamFlagStats == null)
             return;
 
-        putFeature(featuresMap, SummaryTableFeature.MAPPED_PROPORTION, bamFlagStats.mappedProportion());
+        putFeature(featuresMap, MAPPED_PROPORTION, bamFlagStats.mappedProportion());
     }
 
-    @Override
-    public List<Feature> extractSampleData(String sampleId, @NotNull SampleType sampleType) throws IOException
+    private void printMissingInputFiles(SummaryTableInputData inputData, @NotNull SampleType sampleType, String sampleId)
     {
-        EnumMap<SummaryTableFeature, Feature> featuresMap = new EnumMap<>(SummaryTableFeature.class);
-        List<String> missingInputPaths = new ArrayList<>();
+        if(inputData.missingInputPaths().isEmpty())
+            return;
 
-        if(sampleType == SampleType.TUMOR)
+        StringJoiner toolsMissingInput = new StringJoiner(", ");
+        for(String path : inputData.missingInputPaths())
         {
-            PurityContext purityContext = loadPurplePurity(sampleId, missingInputPaths);
-            putFeatures(purityContext, featuresMap);
+            String basename = new File(path).getName();
+            toolsMissingInput.add(basename);
         }
 
-        BamMetricSummary bamMetricSummary = loadBamMetricSummary(sampleId, sampleType, missingInputPaths);
-        putFeatures(bamMetricSummary, featuresMap);
-
-        BamMetricCoverage bamMetricCoverage = loadBamMetricCoverage(sampleId, sampleType, missingInputPaths);
-        putFeatures(bamMetricCoverage, featuresMap);
-
-        BamFlagStats bamFlagStats = loadBamFlagStats(sampleId, sampleType, missingInputPaths);
-        putFeatures(bamFlagStats, featuresMap);
-
-        if(!missingInputPaths.isEmpty())
-        {
-            StringJoiner toolsMissingInput = new StringJoiner(", ");
-            for(String path : missingInputPaths)
-            {
-                String basename = new File(path).getName();
-                toolsMissingInput.add(basename);
-            }
-
-            CategoryPrepTask.missingInputFilesError(
-                    mConfig.AllowMissingInput, this, sampleType, sampleId, toolsMissingInput.toString());
-        }
-
-        return featuresMap.values().stream().toList();
+        CategoryPrepTask.missingInputFilesError(mConfig.AllowMissingInput, this, sampleType, sampleId, toolsMissingInput.toString());
     }
 }
