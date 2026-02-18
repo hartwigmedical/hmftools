@@ -31,6 +31,7 @@ public enum PurpleQCStatus
     public static final double MIN_PURITY = 0.2;
 
     public static final double TINC_FAIL_LEVEL = 0.25;
+    public static final double TINC_WARN_LEVEL = 0;
 
     public static final String STATUS_DELIM = ",";
 
@@ -79,7 +80,7 @@ public enum PurpleQCStatus
         {
             result.add(PurpleQCStatus.FAIL_TINC);
         }
-        else if(tincLevel > 0)
+        else if(tincLevel > TINC_WARN_LEVEL)
         {
             result.add(PurpleQCStatus.WARN_TINC);
         }
