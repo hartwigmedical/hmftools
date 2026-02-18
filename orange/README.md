@@ -53,7 +53,6 @@ java -jar orange.jar \
     -primary_tumor_doids "doid1;doid2" \
     -ref_genome_version "37" \
     -doid_json /path/to/input_doid_tree.json \
-    -cohort_mapping_tsv /path/to/input_cohort_mapping.tsv \
     -driver_gene_panel /path/to/driver_gene_panel.tsv \
     -pipeline_sample_root_dir /sample_oa_results/
     -tumor_metrics_dir /sample_oa_results/bamtools/tumor/
@@ -83,7 +82,6 @@ Also, the value of the `-experiment_type` parameter should be set to `WGS` for a
 |-----------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | pipeline_version_file       | Path to the file containing the (platinum) pipeline version used.                                                                                                                                                                                                                     |
 | sampling_date               | Sets the sampling date to the specified date if set. Expected format is YYMMDD. If omitted, current date is used as sampling date.                                                                                                                                                    |
-| convert_germline_to_somatic | If set, converts all germline driver variants to somatic driver variants, thereby obfuscating the germline driver part of the analysis without actually loosing this data. Note that the data in other germline tables, except the pharmacogenetics table, is removed from this page. |
 | add_disclaimer              | If set, adds a "research use only" disclaimer to the footer of every page.                                                                                                                                                                                                            |  
 | limit_json_output           | If set, limits all lists in the JSON output to a single entry to facilitate manual inspection of the JSON output.                                                                                                                                                                     |
 | log_debug                   | If set, additional DEBUG logging is generated.                                                                                                                                                                                                                                        |

@@ -76,10 +76,6 @@ import com.hartwig.hmftools.orange.algo.virus.VirusInterpreter;
 import com.hartwig.hmftools.orange.algo.wildtype.WildTypeAlgo;
 import com.hartwig.hmftools.orange.cohort.datamodel.ImmutableSample;
 import com.hartwig.hmftools.orange.cohort.datamodel.Sample;
-import com.hartwig.hmftools.orange.cohort.mapping.CohortMapper;
-import com.hartwig.hmftools.orange.cohort.mapping.CohortMapping;
-import com.hartwig.hmftools.orange.cohort.mapping.CohortMappingFile;
-import com.hartwig.hmftools.orange.cohort.mapping.DoidCohortMapper;
 import com.hartwig.hmftools.orange.conversion.ConversionUtil;
 import com.hartwig.hmftools.orange.conversion.OrangeConversion;
 

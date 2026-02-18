@@ -18,12 +18,9 @@ import com.hartwig.hmftools.datamodel.isofox.IsofoxRnaStatistics;
 import com.hartwig.hmftools.datamodel.isofox.RnaQCStatus;
 import com.hartwig.hmftools.datamodel.isofox.StructuralVariantType;
 
-import org.jetbrains.annotations.NotNull;
-
 public final class IsofoxConversion
 {
-    @NotNull
-    public static IsofoxRnaStatistics convert(@NotNull RnaStatistics rnaStatistics)
+    public static IsofoxRnaStatistics convert(final RnaStatistics rnaStatistics)
     {
         return ImmutableIsofoxRnaStatistics.builder()
                 .totalFragments(rnaStatistics.totalFragments())
@@ -32,14 +29,12 @@ public final class IsofoxConversion
                 .build();
     }
 
-    @NotNull
-    public static RnaQCStatus convert(@NotNull RnaQcFilter filter)
+    public static RnaQCStatus convert(final RnaQcFilter filter)
     {
         return RnaQCStatus.valueOf(filter.name());
     }
 
-    @NotNull
-    public static GeneExpression convert(@NotNull com.hartwig.hmftools.common.rna.GeneExpression geneExpression)
+    public static GeneExpression convert(final com.hartwig.hmftools.common.rna.GeneExpression geneExpression)
     {
         return ImmutableGeneExpression.builder()
                 .gene(geneExpression.geneName())
@@ -51,8 +46,7 @@ public final class IsofoxConversion
                 .build();
     }
 
-    @NotNull
-    public static com.hartwig.hmftools.datamodel.isofox.RnaFusion convert(@NotNull RnaFusion rnaFusion)
+    public static com.hartwig.hmftools.datamodel.isofox.RnaFusion convert(final RnaFusion rnaFusion)
     {
         return ImmutableRnaFusion.builder()
                 .geneStart(geneUp(rnaFusion))
@@ -73,8 +67,7 @@ public final class IsofoxConversion
                 .build();
     }
 
-    @NotNull
-    public static com.hartwig.hmftools.datamodel.isofox.NovelSpliceJunction convert(@NotNull NovelSpliceJunction novelSpliceJunction)
+    public static com.hartwig.hmftools.datamodel.isofox.NovelSpliceJunction convert(final NovelSpliceJunction novelSpliceJunction)
     {
         return ImmutableNovelSpliceJunction.builder()
                 .gene(novelSpliceJunction.geneName())

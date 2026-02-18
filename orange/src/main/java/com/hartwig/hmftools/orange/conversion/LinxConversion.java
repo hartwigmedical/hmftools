@@ -23,8 +23,7 @@ import org.jetbrains.annotations.NotNull;
 
 public final class LinxConversion
 {
-    @NotNull
-    public static LinxDriver convert(@NotNull com.hartwig.hmftools.common.linx.LinxDriver driver)
+    public static LinxDriver convert(final com.hartwig.hmftools.common.linx.LinxDriver driver)
     {
         return ImmutableLinxDriver.builder()
                 .gene(driver.gene())
@@ -32,8 +31,7 @@ public final class LinxConversion
                 .build();
     }
 
-    @NotNull
-    public static LinxSvAnnotation convert(@NotNull com.hartwig.hmftools.common.linx.LinxSvAnnotation linxSvAnnotation)
+    public static LinxSvAnnotation convert(final com.hartwig.hmftools.common.linx.LinxSvAnnotation linxSvAnnotation)
     {
         return ImmutableLinxSvAnnotation.builder()
                 .vcfId(linxSvAnnotation.vcfIdStart())
@@ -58,8 +56,7 @@ public final class LinxConversion
                 .build();
     }
 
-    @NotNull
-    public static LinxFusion convert(@NotNull com.hartwig.hmftools.common.linx.LinxFusion linxFusion)
+    public static LinxFusion convert(final com.hartwig.hmftools.common.linx.LinxFusion linxFusion)
     {
         return ImmutableLinxFusion.builder()
                 .geneStart(linxFusion.geneStart())
@@ -83,8 +80,7 @@ public final class LinxConversion
                 .build();
     }
 
-    @NotNull
-    private static List<LinxUnreportableReason> convertUnreportableReasons(@NotNull List<FusionReportableReason> reasons)
+    private static List<LinxUnreportableReason> convertUnreportableReasons(final List<FusionReportableReason> reasons)
     {
         return reasons.stream()
                 .map(item -> switch(item)
@@ -96,8 +92,7 @@ public final class LinxConversion
                 }).collect(Collectors.toList());
     }
 
-    @NotNull
-    public static LinxHomozygousDisruption convert(@NotNull HomozygousDisruption homozygousDisruption)
+    public static LinxHomozygousDisruption convert(final HomozygousDisruption homozygousDisruption)
     {
         return ImmutableLinxHomozygousDisruption.builder()
                 .gene(homozygousDisruption.gene())
