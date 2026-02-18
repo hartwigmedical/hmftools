@@ -421,9 +421,6 @@ public class OrangeAlgo
     @Nullable
     private static VirusInterpreterData loadVirusInterpreterData(final OrangeConfig config) throws IOException
     {
-        if(config.ReferenceId == null) // TODO: check if this should be a condition
-            return null;
-
         if(config.VirusDir == null || !Files.exists(Paths.get(config.VirusDir)))
         {
             LOGGER.debug("Skipping Virus annotations as no input has been provided");
@@ -436,9 +433,6 @@ public class OrangeAlgo
     @Nullable
     private static ChordData loadChordAnalysis(final OrangeConfig config) throws IOException
     {
-        if(config.ReferenceId == null) // TODO: check if this should be a condition
-            return null;
-
         if(config.ChordDir == null || !Files.exists(Paths.get(config.ChordDir)))
         {
             LOGGER.debug("Skipping Chord loading as no input has been provided");
@@ -455,7 +449,7 @@ public class OrangeAlgo
     @Nullable
     private static CuppaData loadCuppaData(final OrangeConfig config) throws Exception
     {
-        if(config.ReferenceId == null) // TODO: check if this should be a condition
+        if(config.ReferenceId == null) // may change, esp if vCuppa is used
             return null;
 
         if(config.CuppaDir == null || !Files.exists(Paths.get(config.CuppaDir)))
@@ -496,9 +490,6 @@ public class OrangeAlgo
     @Nullable
     private static List<SignatureAllocation> loadSigAllocations(final OrangeConfig config) throws IOException
     {
-        if(config.ReferenceId == null) // TODO: check if this should be a condition
-            return null;
-
         if(config.SigsDir == null || !Files.exists(Paths.get(config.SigsDir)))
         {
             LOGGER.debug("Skipping Signature loading as no input has been provided");
