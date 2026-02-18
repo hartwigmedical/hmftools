@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.orange.report;
 
 import static com.hartwig.hmftools.orange.TestOrangeConfigFactory.CHORD_DIR;
-import static com.hartwig.hmftools.orange.TestOrangeConfigFactory.COHORT_MAPPING_TSV;
 import static com.hartwig.hmftools.orange.TestOrangeConfigFactory.CUPPA_DIR;
 import static com.hartwig.hmftools.orange.TestOrangeConfigFactory.DRIVER_GENE_PANEL_TSV;
 import static com.hartwig.hmftools.orange.TestOrangeConfigFactory.ISOFOX_DIR;
@@ -48,7 +47,6 @@ import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
 import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
 import com.hartwig.hmftools.orange.OrangeConfig;
-import com.hartwig.hmftools.orange.TestOrangeConfigFactory;
 import com.hartwig.hmftools.orange.TestOrangeReportFactory;
 import com.hartwig.hmftools.orange.algo.OrangeAlgo;
 
@@ -139,19 +137,14 @@ public class ReportGeneratorTestApplication
 
     private static OrangeConfig buildConfig()
     {
-        OrangeConfig baseConfig = TUMOR_ONLY ?
-                TestOrangeConfigFactory.createWGSConfigTumorOnly() : TestOrangeConfigFactory.createWGSConfigTumorNormal();
-
         return new OrangeConfig(
                 ExperimentType.WHOLE_GENOME, TUMOR_SAMPLE_ID, TUMOR_ONLY ? null : REFERENCE_SAMPLE_ID, null,
                 RefGenomeVersion.V37, Collections.emptySet(), LocalDate.now(),
-                null, MELANOMA_DOID, COHORT_MAPPING_TSV, SIGNATURES_ETIOLOGY_TSV, DRIVER_GENE_PANEL_TSV,
+                null, MELANOMA_DOID, SIGNATURES_ETIOLOGY_TSV, DRIVER_GENE_PANEL_TSV,
                 PIPELINE_VERSION_FILE, PURPLE_DATA_DIRECTORY, PURPLE_PLOT_DIRECTORY, LINX_SOMATIC_DATA_DIRECTORY,
                 LINX_GERMLINE_DATA_DIRECTORY, LINX_PLOT_DIRECTORY, TUMOR_SAMPLE_BAM_METRICS_DIR, REFERENCE_SAMPLE_BAM_METRICS_DIR,
                 TUMOR_SAMPLE_REDUX_DIR, REFERENCE_SAMPLE_REDUX_DIR, LILAC_DIR, CHORD_DIR, CUPPA_DIR, PEACH_DIR, SIGS_DIR, VIRUS_DIR,
                 ISOFOX_DIR, false, true);
-
-        // return ImmutableOrangeConfig.builder().from(baseConfig).limitJsonOutput(LIMIT_JSON_OUTPUT).outputDir(REPORT_BASE_DIR).build();
     }
 
     private static OrangeRecord removeUnreported(final OrangeRecord report)

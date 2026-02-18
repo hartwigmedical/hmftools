@@ -88,7 +88,6 @@ import org.jetbrains.annotations.Nullable;
 public class OrangeAlgo
 {
     private final DoidEntry mDoidEntry;
-    private final CohortMapper mCohortMapper;
     private final Map<String,DriverGene> mDriverGenes;
     private final Map<String, String> mEtiologyPerSignature;
     private final PlotManager mPlotManager;
@@ -97,12 +96,6 @@ public class OrangeAlgo
     {
         LOGGER.info("Loading DOID database from {}", config.DoidJsonFile);
         DoidEntry doidEntry = DiseaseOntology.readDoidOwlEntryFromDoidJson(config.DoidJsonFile);
-        DoidParents doidParentModel = DoidParents.fromEdges(doidEntry.edges());
-
-        LOGGER.info("Reading cohort mappings from {}", config.CohortMappingTsv);
-        List<CohortMapping> mappings = CohortMappingFile.read(config.CohortMappingTsv);
-        LOGGER.info(" Reading {} cohort mappings", mappings.size());
-        CohortMapper mapper = new DoidCohortMapper(doidParentModel, mappings);
 
         LOGGER.info("Reading driver genes from {}", config.DriverGenePanelTsv);
         List<DriverGene> driverGenes = DriverGeneFile.read(config.DriverGenePanelTsv);
@@ -115,15 +108,14 @@ public class OrangeAlgo
         String outputDir = config.OutputDir;
         PlotManager plotManager = !outputDir.isEmpty() ? new FileBasedPlotManager(outputDir) : new DummyPlotManager();
 
-        return new OrangeAlgo(doidEntry, mapper, driverGenes, etiologyPerSignature, plotManager);
+        return new OrangeAlgo(doidEntry, driverGenes, etiologyPerSignature, plotManager);
     }
 
     private OrangeAlgo(
-            final DoidEntry doidEntry, final CohortMapper cohortMapper, final List<DriverGene> driverGenes,
-            final Map<String, String> etiologyPerSignature, final PlotManager plotManager)
+            final DoidEntry doidEntry, final List<DriverGene> driverGenes, final Map<String, String> etiologyPerSignature,
+            final PlotManager plotManager)
     {
         mDoidEntry = doidEntry;
-        mCohortMapper = cohortMapper;
 
         mDriverGenes = Maps.newHashMap();
         driverGenes.forEach(x -> mDriverGenes.put(x.gene(), x));
