@@ -23,12 +23,13 @@ import com.hartwig.hmftools.common.cuppa.CuppaPredictions;
 import com.hartwig.hmftools.common.doid.DiseaseOntology;
 import com.hartwig.hmftools.common.doid.DoidEntry;
 import com.hartwig.hmftools.common.doid.DoidNode;
-import com.hartwig.hmftools.common.doid.DoidParents;
 import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.driver.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.genome.chromosome.CytoBands;
 import com.hartwig.hmftools.common.hla.LilacSummaryData;
 import com.hartwig.hmftools.common.redux.BqrFile;
+import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeDoidNode;
+import com.hartwig.hmftools.datamodel.orange.OrangeDoidNode;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxData;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxDataLoader;
 import com.hartwig.hmftools.orange.algo.linx.LinxData;
@@ -83,15 +84,19 @@ import org.jetbrains.annotations.Nullable;
 
 public class OrangeAlgo
 {
-    private final DoidEntry mDoidEntry;
     private final Map<String,DriverGene> mDriverGenes;
     private final Map<String, String> mEtiologyPerSignature;
     private final PlotManager mPlotManager;
 
     public static OrangeAlgo fromConfig(final OrangeConfig config) throws IOException
     {
-        LOGGER.info("Loading DOID database from {}", config.DoidJsonFile);
-        DoidEntry doidEntry = DiseaseOntology.readDoidOwlEntryFromDoidJson(config.DoidJsonFile);
+        DoidEntry doidEntry = null;
+
+        if(config.DoidJsonFile != null)
+        {
+            LOGGER.info("Loading DOID database from {}", config.DoidJsonFile);
+            doidEntry = DiseaseOntology.readDoidOwlEntryFromDoidJson(config.DoidJsonFile);
+        }
 
         LOGGER.info("Reading driver genes from {}", config.DriverGenePanelTsv);
         List<DriverGene> driverGenes = DriverGeneFile.read(config.DriverGenePanelTsv);
@@ -104,15 +109,12 @@ public class OrangeAlgo
         String outputDir = config.OutputDir;
         PlotManager plotManager = !outputDir.isEmpty() ? new FileBasedPlotManager(outputDir) : new DummyPlotManager();
 
-        return new OrangeAlgo(doidEntry, driverGenes, etiologyPerSignature, plotManager);
+        return new OrangeAlgo(driverGenes, etiologyPerSignature, plotManager);
     }
 
     private OrangeAlgo(
-            final DoidEntry doidEntry, final List<DriverGene> driverGenes, final Map<String, String> etiologyPerSignature,
-            final PlotManager plotManager)
+            final List<DriverGene> driverGenes, final Map<String, String> etiologyPerSignature, final PlotManager plotManager)
     {
-        mDoidEntry = doidEntry;
-
         mDriverGenes = Maps.newHashMap();
         driverGenes.forEach(x -> mDriverGenes.put(x.gene(), x));
 
@@ -122,7 +124,8 @@ public class OrangeAlgo
 
     public OrangeRecord run(final OrangeConfig config) throws Exception
     {
-        Set<DoidNode> configuredPrimaryTumor = loadConfiguredPrimaryTumor(config);
+        Set<OrangeDoidNode> primaryTumorDoids = formConfiguredPrimaryTumorDoid(config);
+
         String pipelineVersion = determinePipelineVersion(config);
         OrangeSample refSample = loadSampleData(config, false);
         OrangeSample tumorSample = loadSampleData(config, true);
@@ -181,7 +184,7 @@ public class OrangeAlgo
                 .sampleId(config.TumorId)
                 .samplingDate(config.SamplingDate)
                 .experimentType(config.RunType)
-                .configuredPrimaryTumor(ConversionUtil.mapToIterable(configuredPrimaryTumor, OrangeConversion::convert))
+                .configuredPrimaryTumor(primaryTumorDoids)
                 .refGenomeVersion(config.orangeRefGenomeVersion())
                 .pipelineVersion(pipelineVersion)
                 .refSample(refSample)
@@ -211,37 +214,46 @@ public class OrangeAlgo
         return report;
     }
 
-    private Set<DoidNode> loadConfiguredPrimaryTumor(final OrangeConfig config)
+    private Set<OrangeDoidNode> formConfiguredPrimaryTumorDoid(final OrangeConfig config)
     {
-        Set<DoidNode> nodes = Sets.newHashSet();
-        LOGGER.info("Determining configured primary tumor");
-        for(String doid : config.PrimaryTumorDoids)
-        {
-            DoidNode node = resolveDoid(mDoidEntry.nodes(), doid);
-            if(node != null)
-            {
-                LOGGER.info(" Adding DOID {} ({}) as configured primary tumor", doid, node.doidTerm());
-                nodes.add(node);
-            }
-            else
-            {
-                LOGGER.warn("Could not resolve doid '{}'", doid);
-            }
-        }
-        return nodes;
-    }
+        Set<OrangeDoidNode> orangeNodes = Sets.newHashSet();
 
-    @Nullable
-    private static DoidNode resolveDoid(final List<DoidNode> nodes, final String doid)
-    {
-        for(DoidNode node : nodes)
+        if(!config.PrimaryTumorDoids.isEmpty())
         {
-            if(node.doid().equals(doid))
+            LOGGER.debug("Determining configured primary tumor");
+
+            Set<DoidNode> nodes = Sets.newHashSet();
+            for(String doid : config.PrimaryTumorDoids)
             {
-                return node;
+                DoidNode matchedNode = null;
+
+                for(DoidNode node : nodes)
+                {
+                    if(node.doid().equals(doid))
+                    {
+                        matchedNode = node;
+                        break;
+                    }
+                }
+
+                if(matchedNode != null)
+                {
+                    LOGGER.debug(" Adding DOID {} ({}) as configured primary tumor", doid, matchedNode.doidTerm());
+                    orangeNodes.add(OrangeConversion.convert(matchedNode));
+                }
+                else
+                {
+                    LOGGER.warn("Could not resolve doid '{}'", doid);
+                }
             }
         }
-        return null;
+        else if(config.PrimaryTumorLocation != null)
+        {
+            OrangeDoidNode doidNode = ImmutableOrangeDoidNode.builder().doid("").doidTerm(config.PrimaryTumorLocation).build();
+            orangeNodes.add(doidNode);
+        }
+
+        return orangeNodes;
     }
 
     @Nullable

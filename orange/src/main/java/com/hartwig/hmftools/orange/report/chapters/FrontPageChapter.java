@@ -132,13 +132,18 @@ public class FrontPageChapter implements ReportChapter
         }
     }
 
-    @NotNull
     private static String configuredPrimaryTumor(final Set<OrangeDoidNode> nodes)
     {
         Set<String> configured = Sets.newHashSet();
+
         for(OrangeDoidNode node : nodes)
         {
-            configured.add(node.doidTerm() + " (DOID " + node.doid() + ")");
+            String primaryTumorInfo = node.doidTerm();
+
+            if(!node.doid().isEmpty())
+                primaryTumorInfo += " (DOID " + node.doid() + ")";
+
+            configured.add(primaryTumorInfo);
         }
 
         return concat(configured);
@@ -159,7 +164,6 @@ public class FrontPageChapter implements ReportChapter
         return cuppaCancerType(mReport.cuppa());
     }
 
-    @NotNull
     private static String cuppaCancerType(@Nullable CuppaData cuppaData)
     {
         if(cuppaData == null)

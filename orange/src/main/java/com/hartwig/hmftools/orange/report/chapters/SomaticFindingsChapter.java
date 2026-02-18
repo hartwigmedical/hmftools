@@ -13,7 +13,6 @@ import com.hartwig.hmftools.orange.report.datamodel.BreakendEntry;
 import com.hartwig.hmftools.orange.report.datamodel.BreakendEntryFactory;
 import com.hartwig.hmftools.orange.report.datamodel.VariantEntry;
 import com.hartwig.hmftools.orange.report.datamodel.VariantEntryFactory;
-import com.hartwig.hmftools.orange.report.interpretation.VariantDedup;
 import com.hartwig.hmftools.orange.report.tables.BreakendTable;
 import com.hartwig.hmftools.orange.report.tables.DnaFusionTable;
 import com.hartwig.hmftools.orange.report.tables.GainDeletionTable;
@@ -106,8 +105,6 @@ public class SomaticFindingsChapter implements ReportChapter
         else
         {
             List<PurpleDriver> somaticDrivers = mReport.purple().somaticDrivers();
-
-            // List<VariantEntry> reportableVariants = VariantEntryFactory.create(VariantDedup.apply(mReport.purple().somaticVariants()), somaticDrivers);
 
             List<VariantEntry> reportableVariants = VariantEntryFactory.create(mReport.purple().somaticVariants(), somaticDrivers);
 

@@ -79,6 +79,7 @@ public class OrangeConfig
     public final RefGenomeVersion RefGenVersion;
 
     public final Set<String> PrimaryTumorDoids;
+    public final String PrimaryTumorLocation;
     public final LocalDate SamplingDate;
 
     public final String OutputDir;
@@ -119,6 +120,7 @@ public class OrangeConfig
     // General params needed for every analysis
     private static final String EXPERIMENT_TYPE = "experiment_type";
     private static final String PRIMARY_TUMOR_DOIDS = "primary_tumor_doids";
+    private static final String PRIMARY_TUMOR_LOCATION = "primary_tumor_location";
     private static final String SAMPLING_DATE = "sampling_date";
 
     // Input files used by the algorithm
@@ -147,14 +149,20 @@ public class OrangeConfig
 
         PrimaryTumorDoids = Sets.newHashSet();
 
-        if(configBuilder.hasValue(PRIMARY_TUMOR_DOIDS))
+        if(configBuilder.hasValue(PRIMARY_TUMOR_DOIDS) && configBuilder.hasValue(DOID_JSON))
         {
             String[] values = configBuilder.getValue(PRIMARY_TUMOR_DOIDS).split(DOID_SEPARATOR, -1);
             Arrays.stream(values).forEach(x -> PrimaryTumorDoids.add(x));
+            DoidJsonFile = configBuilder.getValue(DOID_JSON);
+        }
+        else
+        {
+            DoidJsonFile = null;
         }
 
+        PrimaryTumorLocation = configBuilder.getValue(PRIMARY_TUMOR_LOCATION);
+
         RefGenVersion = RefGenomeVersion.from(configBuilder);
-        DoidJsonFile = configBuilder.getValue(DOID_JSON);
         DriverGenePanelTsv = configBuilder.getValue(DRIVER_GENE_PANEL);
         SignaturesEtiologyTsv = configBuilder.getValue(SIGNATURES_ETIOLOGY_TSV);
         PipelineVersionFile = configBuilder.getValue(PIPELINE_VERSION_FILE);
@@ -245,15 +253,17 @@ public class OrangeConfig
         configBuilder.addConfigItem(TUMOR, true, TUMOR_DESC);
         configBuilder.addConfigItem(REFERENCE, false, REFERENCE_DESC);
 
+        configBuilder.addConfigItem(PRIMARY_TUMOR_LOCATION, false, "Primary tumor location displayed in the report");
+
         configBuilder.addConfigItem(PRIMARY_TUMOR_DOIDS,
-                true,
-                "A semicolon-separated list of DOIDs representing the primary tumor of patient");
+                false, "A semicolon-separated list of DOIDs representing the primary tumor of patient");
+
         configBuilder.addConfigItem(SAMPLING_DATE, false, "Optional, if provided represents the sampling date in YYMMDD format");
 
         addRefGenomeVersion(configBuilder);
         addOutputDir(configBuilder);
 
-        configBuilder.addPath(DOID_JSON, true, "Path to JSON file containing the full DOID tree");
+        configBuilder.addPath(DOID_JSON, false, "Path to JSON file containing the full DOID tree");
         configBuilder.addPath(SIGNATURES_ETIOLOGY_TSV, true, "Path to signatures etiology TSV");
         addGenePanelOption(configBuilder, true);
 
@@ -378,6 +388,7 @@ public class OrangeConfig
         SamplingDate = samplingDate;
         OutputDir = outputDir;
         DoidJsonFile = doidJsonFile;
+        PrimaryTumorLocation = "";
         SignaturesEtiologyTsv = signaturesEtiologyTsv;
         DriverGenePanelTsv = driverGenePanelTsv;
         PipelineVersionFile = pipelineVersionFile;
