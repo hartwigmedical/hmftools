@@ -9,8 +9,8 @@ public final class ReportWriterFactory
     @NotNull
     public static ReportWriter createToDiskWriter(@NotNull OrangeConfig config)
     {
-        String outputDir = config.outputDir();
-        return new ReportWriter(true, outputDir, new PlotPathResolver(outputDir), config.addDisclaimer());
+        String outputDir = config.OutputDir;
+        return new ReportWriter(true, outputDir, new PlotPathResolver(outputDir), config.AddDisclaimer);
     }
 
     @NotNull

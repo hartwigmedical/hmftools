@@ -11,8 +11,8 @@ import org.junit.Test;
 
 public class LilacDataLoaderTest
 {
-    private static final String LILAC_QC_CSV = Resources.getResource("lilac/sample.lilac.qc.csv").getPath();
-    private static final String LILAC_RESULT_CSV = Resources.getResource("lilac/sample.lilac.csv").getPath();
+    private static final String LILAC_QC_CSV = Resources.getResource("lilac/sample.lilac.qc.tsv").getPath();
+    private static final String LILAC_RESULT_CSV = Resources.getResource("lilac/sample.lilac.tsv").getPath();
 
     @Test
     public void canLoadFromTestFiles() throws IOException

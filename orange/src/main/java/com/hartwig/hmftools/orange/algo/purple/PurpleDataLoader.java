@@ -30,23 +30,21 @@ public final class PurpleDataLoader
 {
     public static PurpleData load(final OrangeConfig config, final Map<String,DriverGene> driverGenes) throws IOException
     {
-        String tumorSample = config.tumorSampleId();
-        String referenceSample = config.wgsRefConfig() != null ? config.wgsRefConfig().referenceSampleId() : null;
-        String rnaSample = config.rnaConfig() != null ? config.rnaConfig().rnaSampleId() : null;
-        String purpleDir = config.purpleDataDirectory();
+        String tumorId = config.TumorId;
+        String purpleDir = config.PurpleDataDirectory;
 
-        String qcFile = PurpleQCFile.generateFilename(purpleDir, tumorSample);
-        String purityTsv = PurplePurity.generateFilename(purpleDir, tumorSample);
-        String somaticDriverCatalogTsv = DriverCatalogFile.generateSomaticFilename(purpleDir, tumorSample);
-        String somaticVariantVcf = resolveVcfPath(PurpleCommon.purpleSomaticVcfFile(purpleDir, tumorSample));
-        String germlineDriverCatalogTsv = DriverCatalogFile.generateGermlineFilename(purpleDir, tumorSample);
-        String germlineVariantVcf = resolveVcfPath(PurpleCommon.purpleGermlineVcfFile(purpleDir, tumorSample));
-        String copyNumberTsv = PurpleCopyNumberFile.generateFilenameForReading(purpleDir, tumorSample);
-        String geneCopyNumberTsv = GeneCopyNumberFile.generateFilename(purpleDir, tumorSample);
-        String germlineDeletionTsv = GermlineAmpDel.generateFilename(purpleDir, tumorSample);
+        String qcFile = PurpleQCFile.generateFilename(purpleDir, tumorId);
+        String purityTsv = PurplePurity.generateFilename(purpleDir, tumorId);
+        String somaticDriverCatalogTsv = DriverCatalogFile.generateSomaticFilename(purpleDir, tumorId);
+        String somaticVariantVcf = resolveVcfPath(PurpleCommon.purpleSomaticVcfFile(purpleDir, tumorId));
+        String germlineDriverCatalogTsv = DriverCatalogFile.generateGermlineFilename(purpleDir, tumorId);
+        String germlineVariantVcf = resolveVcfPath(PurpleCommon.purpleGermlineVcfFile(purpleDir, tumorId));
+        String copyNumberTsv = PurpleCopyNumberFile.generateFilenameForReading(purpleDir, tumorId);
+        String geneCopyNumberTsv = GeneCopyNumberFile.generateFilename(purpleDir, tumorId);
+        String germlineDeletionTsv = GermlineAmpDel.generateFilename(purpleDir, tumorId);
 
         return load(
-                tumorSample, referenceSample, rnaSample, qcFile, purityTsv,
+                tumorId, config.ReferenceId, config.RnaSampleId, qcFile, purityTsv,
                 somaticDriverCatalogTsv, somaticVariantVcf, germlineDriverCatalogTsv, germlineVariantVcf,
                 copyNumberTsv, geneCopyNumberTsv, germlineDeletionTsv, driverGenes);
     }

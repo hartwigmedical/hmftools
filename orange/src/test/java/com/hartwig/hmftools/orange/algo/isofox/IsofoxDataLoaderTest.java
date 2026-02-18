@@ -22,11 +22,7 @@ public class IsofoxDataLoaderTest
     @Test
     public void canLoadIsofoxData() throws IOException
     {
-        IsofoxData isofox = IsofoxDataLoader.load("Stomach",
-                ISOFOX_SUMMARY_CSV,
-                ISOFOX_GENE_DATA_CSV,
-                ISOFOX_FUSION_CSV,
-                ISOFOX_ALT_SPLICE_JUNCTION_CSV);
+        IsofoxData isofox = IsofoxDataLoader.load("sample", ISOFOX_DATA_DIR);
 
         assertEquals(2, isofox.geneExpressions().size());
         assertEquals(2, isofox.novelSpliceJunctions().size());

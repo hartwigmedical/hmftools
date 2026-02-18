@@ -61,7 +61,6 @@ public class OrangeAlgoTest
     private static OrangeAlgo createOrangeAlgo(@NotNull OrangeConfig config) throws IOException
     {
         OrangeAlgo algo = OrangeAlgo.fromConfig(config);
-        algo.setSuppressGeneWarnings();
         return algo;
     }
 }

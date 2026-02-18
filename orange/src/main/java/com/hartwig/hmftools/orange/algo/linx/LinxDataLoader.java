@@ -37,9 +37,9 @@ public final class LinxDataLoader
 {
     public static LinxData load(final OrangeConfig config)throws IOException
     {
-        String linxSomaticDir = config.linxSomaticDataDirectory();
-        String linxGermlineDir = config.wgsRefConfig() != null ? config.wgsRefConfig().linxGermlineDataDirectory() : null;
-        String tumorSample = config.tumorSampleId();
+        String linxSomaticDir = config.LinxSomaticDataDirectory;
+        String linxGermlineDir = config.LinxGermlineDataDirectory;
+        String tumorSample = config.TumorId;
 
         String somaticSvAnnotationFile = LinxSvAnnotation.generateFilename(linxSomaticDir, tumorSample, false);
         String somaticBreakendFile = LinxBreakend.generateFilename(linxSomaticDir, tumorSample);

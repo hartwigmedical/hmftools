@@ -54,7 +54,6 @@ public class ReportWriterTest
     private static void run(@NotNull OrangeConfig config) throws Exception
     {
         OrangeAlgo algo = OrangeAlgo.fromConfig(config);
-        algo.setSuppressGeneWarnings();
         OrangeRecord report = algo.run(config);
 
         ReportWriter writer = ReportWriterFactory.createInMemoryWriter();

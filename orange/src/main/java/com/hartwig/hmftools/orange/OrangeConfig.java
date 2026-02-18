@@ -5,86 +5,249 @@ import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.add
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeVersion;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.PIPELINE_FORMAT_CFG;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.PIPELINE_FORMAT_FILE_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.CHORD_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.CHORD_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.CUPPA_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.CUPPA_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.ISOFOX_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.ISOFOX_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LILAC_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LILAC_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_GERMLINE_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_GERMLINE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_PLOT_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_PLOT_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PEACH_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PEACH_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PIPELINE_SAMPLE_ROOT_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PIPELINE_SAMPLE_ROOT_DIR;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_PLOT_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_PLOT_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REF_METRICS_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REF_METRICS_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_GERMLINE_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_GERMLINE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SIGS_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SIGS_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_METRICS_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_METRICS_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
-import static com.hartwig.hmftools.orange.OrangeRefConfig.REFERENCE_SAMPLE_ID;
 import static com.hartwig.hmftools.orange.util.PathUtil.mandatoryPath;
 import static com.hartwig.hmftools.orange.util.PathUtil.optionalPath;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.Arrays;
 import java.util.Locale;
 import java.util.Set;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.hla.LilacAllele;
-import com.hartwig.hmftools.common.hla.LilacQcData;
-import com.hartwig.hmftools.common.metrics.BamFlagStats;
-import com.hartwig.hmftools.common.metrics.BamMetricSummary;
 import com.hartwig.hmftools.common.pipeline.PipelineToolDirectories;
-import com.hartwig.hmftools.common.redux.BqrFile;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.datamodel.orange.ExperimentType;
 import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
 import com.hartwig.hmftools.orange.util.PathResolver;
 
-import org.immutables.value.Value;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-@Value.Immutable
-@Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface OrangeConfig
+public class OrangeConfig
 {
-    String DOID_SEPARATOR = ";";
+    public final ExperimentType RunType;
+
+    public final String TumorId;
+    public final String ReferenceId;
+    public final String RnaSampleId;
+
+    public final RefGenomeVersion RefGenVersion;
+
+    public final Set<String> PrimaryTumorDoids;
+    public final LocalDate SamplingDate;
+
+    public final String OutputDir;
+
+    public final String DoidJsonFile;
+    public final String CohortMappingTsv;
+    public final String SignaturesEtiologyTsv;
+    public final String DriverGenePanelTsv;
+
+    public final String PipelineVersionFile;
+
+    public final String PurpleDataDirectory;
+    public final String PurplePlotDirectory;
+
+    public final String LinxSomaticDataDirectory;
+    public final String LinxGermlineDataDirectory;
+    public final String LinxPlotDirectory;
+
+    public final String TumorBamMetricsDir;
+    public final String ReferenceBamMetricsDir;
+
+    public final String TumorReduxDir;
+    public final String ReferenceReduxDir;
+
+    public final String LilacDir;
+    public final String ChordDir;
+    public final String CuppaDir;
+    public final String PeachDir;
+    public final String SigsDir;
+    public final String VirusDir;
+
+    public final String IsofoxDir;
+
+    public final boolean LimitJsonOutput;
+    public final boolean AddDisclaimer;
+
+    private static final String DOID_SEPARATOR = ";";
 
     // General params needed for every analysis
-    String EXPERIMENT_TYPE = "experiment_type";
-    String TUMOR_SAMPLE_ID = "tumor_sample_id";
-    String PRIMARY_TUMOR_DOIDS = "primary_tumor_doids";
-    String SAMPLING_DATE = "sampling_date";
+    private static final String EXPERIMENT_TYPE = "experiment_type";
+    private static final String PRIMARY_TUMOR_DOIDS = "primary_tumor_doids";
+    private static final String SAMPLING_DATE = "sampling_date";
 
     // Input files used by the algorithm
-    String DOID_JSON = "doid_json";
-    String COHORT_MAPPING_TSV = "cohort_mapping_tsv";
-    String SIGNATURES_ETIOLOGY_TSV = "signatures_etiology_tsv";
+    private static final String DOID_JSON = "doid_json";
+    private static final String COHORT_MAPPING_TSV = "cohort_mapping_tsv";
+    private static final String SIGNATURES_ETIOLOGY_TSV = "signatures_etiology_tsv";
 
     // Files containing the actual genomic results for this sample.
-    String PIPELINE_VERSION_FILE = "pipeline_version_file";
+    private static final String PIPELINE_VERSION_FILE = "pipeline_version_file";
 
-    String TUMOR_REDUX_DIR_CFG = "tumor_redux_dir";
-    String TUMOR_REDUX_DIR_DESC = "Path to Redux tumor files";
+    private static String RNA_SAMPLE_ID = "rna_sample_id";
+
+    private static final String TUMOR_REDUX_DIR_CFG = "tumor_redux_dir";
+    private static final String TUMOR_REDUX_DIR_DESC = "Path to Redux tumor files";
+
+    private static String REFERENCE_REDUX_DIR_CFG = "ref_redux_dir";
+    private static String REFERENCE_REDUX_DIR_DESC = "Path to Redux reference files";
 
     // Some additional optional params and flags
-    String LIMIT_JSON_OUTPUT = "limit_json_output";
-    String ADD_DISCLAIMER = "add_disclaimer";
+    private static final String LIMIT_JSON_OUTPUT = "limit_json_output";
+    private static final String ADD_DISCLAIMER = "add_disclaimer";
 
-    static void registerConfig(final ConfigBuilder configBuilder)
+    public OrangeConfig(final ConfigBuilder configBuilder)
+    {
+        TumorId = configBuilder.getValue(TUMOR);
+        ReferenceId = configBuilder.getValue(REFERENCE);
+
+        PrimaryTumorDoids = Sets.newHashSet();
+
+        if(configBuilder.hasValue(PRIMARY_TUMOR_DOIDS))
+        {
+            String[] values = configBuilder.getValue(PRIMARY_TUMOR_DOIDS).split(DOID_SEPARATOR, -1);
+            Arrays.stream(values).forEach(x -> PrimaryTumorDoids.add(x));
+        }
+
+        RefGenVersion = RefGenomeVersion.from(configBuilder);
+        DoidJsonFile = configBuilder.getValue(DOID_JSON);
+        CohortMappingTsv = configBuilder.getValue(COHORT_MAPPING_TSV);
+        DriverGenePanelTsv = configBuilder.getValue(DRIVER_GENE_PANEL);
+        SignaturesEtiologyTsv = configBuilder.getValue(SIGNATURES_ETIOLOGY_TSV);
+        PipelineVersionFile = configBuilder.getValue(PIPELINE_VERSION_FILE);
+
+        OutputDir = parseMandatoryOutputDir(configBuilder);
+
+        PathResolver pathResolver = new PathResolver(configBuilder,
+                configBuilder.getValue(PIPELINE_SAMPLE_ROOT_DIR),
+                configBuilder.getValue(SAMPLE_DATA_DIR_CFG));
+
+        PipelineToolDirectories defaultToolDirectories = resolveDefaultPipelineDirectories(configBuilder);
+
+        PurpleDataDirectory = pathResolver.resolveMandatoryToolDirectory(PURPLE_DIR_CFG, defaultToolDirectories.purpleDir());
+        PurplePlotDirectory = pathResolver.resolveMandatoryToolPlotsDirectory(PURPLE_PLOT_DIR_CFG, defaultToolDirectories.purpleDir());
+        LinxSomaticDataDirectory = pathResolver.resolveMandatoryToolDirectory(LINX_DIR_CFG, defaultToolDirectories.linxSomaticDir());
+        LinxPlotDirectory = optionalPath(pathResolver.resolveOptionalToolPlotsDirectory(LINX_PLOT_DIR_CFG, defaultToolDirectories.linxSomaticDir()));
+
+        if(ReferenceId != null)
+        {
+            LinxGermlineDataDirectory = pathResolver.resolveMandatoryToolDirectory(
+                    LINX_GERMLINE_DIR_CFG, defaultToolDirectories.linxGermlineDir());
+
+            ReferenceBamMetricsDir = pathResolver.resolveMandatoryToolDirectory(REF_METRICS_DIR_CFG, defaultToolDirectories.germlineMetricsDir());
+
+            ReferenceReduxDir = configBuilder.getValue(REFERENCE_REDUX_DIR_CFG);
+        }
+        else
+        {
+            LinxGermlineDataDirectory = null;
+            ReferenceBamMetricsDir = null;
+            ReferenceReduxDir = null;
+        }
+
+        TumorBamMetricsDir = pathResolver.resolveMandatoryToolDirectory(TUMOR_METRICS_DIR_CFG, defaultToolDirectories.tumorMetricsDir());
+        TumorReduxDir = configBuilder.getValue(TUMOR_REDUX_DIR_CFG);
+
+        LilacDir = pathResolver.resolveOptionalToolDirectory(LILAC_DIR_CFG, defaultToolDirectories.lilacDir());
+        ChordDir = pathResolver.resolveMandatoryToolDirectory(CHORD_DIR_CFG, defaultToolDirectories.chordDir());
+        CuppaDir = pathResolver.resolveOptionalToolDirectory(CUPPA_DIR_CFG, defaultToolDirectories.cuppaDir());
+        PeachDir = pathResolver.resolveOptionalToolDirectory(PEACH_DIR_CFG, defaultToolDirectories.peachDir());
+        SigsDir = pathResolver.resolveMandatoryToolDirectory(SIGS_DIR_CFG, defaultToolDirectories.sigsDir());
+        VirusDir = pathResolver.resolveOptionalToolDirectory(VIRUS_DIR_CFG, defaultToolDirectories.virusInterpreterDir());
+
+        if(!configBuilder.hasValue(RNA_SAMPLE_ID) || !configBuilder.hasValue(ISOFOX_DIR_CFG))
+        {
+            RnaSampleId = null;
+            IsofoxDir = null;
+
+            LOGGER.info("RNA config not present, will continue without RNA configuration");
+        }
+        else
+        {
+            RnaSampleId = configBuilder.getValue(RNA_SAMPLE_ID);
+            IsofoxDir = pathResolver.resolveMandatoryToolDirectory(ISOFOX_DIR_CFG, defaultToolDirectories.isofoxDir());
+        }
+
+        LOGGER.debug("RNA sample configured as {}", RnaSampleId);
+
+        AddDisclaimer = configBuilder.hasFlag(ADD_DISCLAIMER);
+        if(AddDisclaimer)
+        {
+            LOGGER.debug("disclaimer will be included in footer");
+        }
+
+        LimitJsonOutput = configBuilder.hasFlag(LIMIT_JSON_OUTPUT);
+        if(LimitJsonOutput)
+        {
+            LOGGER.info("JSON limitation has been enabled");
+        }
+
+        if(configBuilder.hasValue(SAMPLING_DATE))
+        {
+            SamplingDate = interpretSamplingDateParam(configBuilder.getValue(SAMPLING_DATE));
+        }
+        else
+        {
+            LOGGER.debug("No sampling date has been configured. Setting sampling data to current date");
+            SamplingDate = LocalDate.now();
+        }
+
+        RunType = determineExperimentType(configBuilder.getValue(EXPERIMENT_TYPE));
+        LOGGER.info("experiment type has been resolved to '{}'", RunType);
+    }
+
+    public static void registerConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addConfigItem(EXPERIMENT_TYPE, true, "The type of the experiment, one of WGS or PANEL");
-        configBuilder.addConfigItem(TUMOR_SAMPLE_ID, true, "The sample ID for which ORANGE will run.");
+        configBuilder.addConfigItem(TUMOR, true, TUMOR_DESC);
+        configBuilder.addConfigItem(REFERENCE, false, REFERENCE_DESC);
+
         configBuilder.addConfigItem(PRIMARY_TUMOR_DOIDS,
                 true,
                 "A semicolon-separated list of DOIDs representing the primary tumor of patient");
@@ -96,20 +259,31 @@ public interface OrangeConfig
         configBuilder.addPath(DOID_JSON, true, "Path to JSON file containing the full DOID tree");
         configBuilder.addPath(COHORT_MAPPING_TSV, true, "Path to cohort mapping TSV");
         configBuilder.addPath(SIGNATURES_ETIOLOGY_TSV, true, "Path to signatures etiology TSV");
-        configBuilder.addPath(TUMOR_REDUX_DIR_CFG, false, TUMOR_REDUX_DIR_DESC);
         addGenePanelOption(configBuilder, true);
 
         configBuilder.addPath(PIPELINE_VERSION_FILE, false, "Path towards the pipeline version file.");
 
         // tool output
         configBuilder.addPath(TUMOR_METRICS_DIR_CFG, false, TUMOR_METRICS_DIR_DESC);
+        configBuilder.addPath(REF_METRICS_DIR_CFG, false, REF_METRICS_DIR_DESC);
 
         // per tool directory config options are supported, but simpler is to specific the root sample directory containing all tool
         // subdirectories or a single directory containing all pipeline output
         configBuilder.addPath(PIPELINE_SAMPLE_ROOT_DIR, false, PIPELINE_SAMPLE_ROOT_DESC);
         configBuilder.addPath(SAMPLE_DATA_DIR_CFG, false, SAMPLE_DATA_DIR_DESC);
 
+        configBuilder.addPath(TUMOR_REDUX_DIR_CFG, false, TUMOR_REDUX_DIR_DESC);
+        configBuilder.addPath(REFERENCE_REDUX_DIR_CFG, false, REFERENCE_REDUX_DIR_DESC);
+
+        configBuilder.addPath(LINX_GERMLINE_DIR_CFG, false, LINX_GERMLINE_DIR_DESC);
+        configBuilder.addPath(VIRUS_DIR_CFG, false, VIRUS_DIR_DESC);
+        configBuilder.addPath(CHORD_DIR_CFG, false, CHORD_DIR_DESC);
+        configBuilder.addPath(CUPPA_DIR_CFG, false, CUPPA_DIR_DESC);
+        configBuilder.addPath(PEACH_DIR_CFG, false, PEACH_DIR_DESC);
+        configBuilder.addPath(SIGS_DIR_CFG, false, SIGS_DIR_DESC);
+
         configBuilder.addPath(SAGE_DIR_CFG, false, SAGE_DIR_DESC);
+        configBuilder.addPath(SAGE_GERMLINE_DIR_CFG, false, SAGE_GERMLINE_DIR_DESC);
         configBuilder.addPath(PURPLE_DIR_CFG, false, PURPLE_DIR_DESC);
         configBuilder.addPath(PURPLE_PLOT_DIR_CFG, false, PURPLE_PLOT_DIR_DESC);
         configBuilder.addPath(LINX_DIR_CFG, false, LINX_DIR_DESC);
@@ -117,179 +291,17 @@ public interface OrangeConfig
         configBuilder.addPath(LILAC_DIR_CFG, false, LILAC_DIR_DESC);
         PipelineToolDirectories.addPipelineFormatOptions(configBuilder);
 
+        configBuilder.addConfigItem(RNA_SAMPLE_ID, false, "(Optional) The RNA sample of the tumor sample for which ORANGE will run");
+        configBuilder.addPath(ISOFOX_DIR_CFG, false, ISOFOX_DIR_DESC);
+
         configBuilder.addFlag(LIMIT_JSON_OUTPUT, "If set, limits every list in the json output to 1 entry.");
         configBuilder.addFlag(ADD_DISCLAIMER, "If set, prints a disclaimer on each page.");
         addLoggingOptions(configBuilder);
-
-        OrangeRnaConfig.registerConfig(configBuilder);
-        OrangeRefConfig.registerConfig(configBuilder);
     }
 
-    @NotNull
-    ExperimentType experimentType();
-
-    @NotNull
-    String tumorSampleId();
-
-    @Nullable
-    OrangeRnaConfig rnaConfig();
-
-    @Nullable
-    OrangeRefConfig wgsRefConfig();
-
-    @NotNull
-    Set<String> primaryTumorDoids();
-
-    @NotNull
-    LocalDate samplingDate();
-
-    @NotNull
-    RefGenomeVersion refGenomeVersion();
-
-    @NotNull
-    String outputDir();
-
-    @NotNull
-    String doidJsonFile();
-
-    @NotNull
-    String cohortMappingTsv();
-
-    @NotNull
-    String signaturesEtiologyTsv();
-
-    @NotNull
-    String driverGenePanelTsv();
-
-    @Nullable
-    String pipelineVersionFile();
-
-    @NotNull
-    String tumorSampleWGSMetricsFile();
-
-    @NotNull
-    String tumorSampleFlagstatFile();
-
-    @Nullable
-    String tumorSampleBqrPlot();
-
-    @NotNull
-    String purpleDataDirectory();
-
-    @NotNull
-    String purplePlotDirectory();
-
-    @NotNull
-    String linxSomaticDataDirectory();
-
-    @Nullable
-    String linxPlotDirectory();
-
-    @Nullable
-    String lilacResultTsv();
-
-    @Nullable
-    String lilacQcTsv();
-
-    default OrangeRefGenomeVersion orangeRefGenomeVersion()
+    public OrangeRefGenomeVersion orangeRefGenomeVersion()
     {
-        return refGenomeVersion().is37() ? OrangeRefGenomeVersion.V37 : OrangeRefGenomeVersion.V38;
-    }
-
-    boolean limitJsonOutput();
-
-    boolean addDisclaimer();
-
-    static OrangeConfig createConfig(final ConfigBuilder configBuilder)
-    {
-        if(LOGGER.isDebugEnabled())
-        {
-            LOGGER.debug("Switched root level logging to DEBUG");
-        }
-
-        boolean addDisclaimer = configBuilder.hasFlag(ADD_DISCLAIMER);
-        if(addDisclaimer)
-        {
-            LOGGER.info("Disclaimer will be included in footer.");
-        }
-
-        boolean limitJsonOutput = configBuilder.hasFlag(LIMIT_JSON_OUTPUT);
-        if(limitJsonOutput)
-        {
-            LOGGER.info("JSON limitation has been enabled.");
-        }
-
-        LocalDate samplingDate;
-        if(configBuilder.hasValue(SAMPLING_DATE))
-        {
-            samplingDate = interpretSamplingDateParam(configBuilder.getValue(SAMPLING_DATE));
-        }
-        else
-        {
-            LOGGER.debug("No sampling date has been configured. Setting sampling data to current date");
-            samplingDate = LocalDate.now();
-        }
-
-        ExperimentType experimentType = determineExperimentType(configBuilder.getValue(EXPERIMENT_TYPE));
-        LOGGER.info("Experiment type has been resolved to '{}'", experimentType);
-
-        String tumorSampleId = configBuilder.getValue(TUMOR_SAMPLE_ID);
-
-        PathResolver pathResolver = new PathResolver(configBuilder,
-                configBuilder.getValue(PIPELINE_SAMPLE_ROOT_DIR),
-                configBuilder.getValue(SAMPLE_DATA_DIR_CFG));
-        PipelineToolDirectories defaultToolDirectories = resolveDefaultPipelineDirectories(configBuilder);
-
-        ImmutableOrangeConfig.Builder builder = ImmutableOrangeConfig.builder();
-
-                builder.experimentType(experimentType)
-                .tumorSampleId(tumorSampleId)
-                .rnaConfig(OrangeRnaConfig.createConfig(configBuilder, pathResolver, defaultToolDirectories))
-                .primaryTumorDoids(toStringSet(configBuilder.getValue(PRIMARY_TUMOR_DOIDS), DOID_SEPARATOR))
-                .samplingDate(samplingDate)
-                .refGenomeVersion(RefGenomeVersion.from(configBuilder))
-                .outputDir(parseMandatoryOutputDir(configBuilder))
-                .doidJsonFile(configBuilder.getValue(DOID_JSON))
-                .cohortMappingTsv(configBuilder.getValue(COHORT_MAPPING_TSV))
-                .driverGenePanelTsv(configBuilder.getValue(DRIVER_GENE_PANEL))
-                .signaturesEtiologyTsv(configBuilder.getValue(SIGNATURES_ETIOLOGY_TSV))
-                .pipelineVersionFile(configBuilder.getValue(PIPELINE_VERSION_FILE))
-                .purpleDataDirectory(pathResolver.resolveMandatoryToolDirectory(PURPLE_DIR_CFG, defaultToolDirectories.purpleDir()))
-                .purplePlotDirectory(pathResolver.resolveMandatoryToolPlotsDirectory(PURPLE_PLOT_DIR_CFG, defaultToolDirectories.purpleDir()))
-                .linxSomaticDataDirectory(pathResolver.resolveMandatoryToolDirectory(LINX_DIR_CFG, defaultToolDirectories.linxSomaticDir()))
-                .linxPlotDirectory(optionalPath(pathResolver.resolveOptionalToolPlotsDirectory(LINX_PLOT_DIR_CFG, defaultToolDirectories.linxSomaticDir())))
-                .limitJsonOutput(limitJsonOutput)
-                .addDisclaimer(addDisclaimer);
-
-        if(configBuilder.hasValue(TUMOR_REDUX_DIR_CFG))
-        {
-            String reduxDir = configBuilder.getValue(TUMOR_REDUX_DIR_CFG);
-
-            builder.tumorSampleBqrPlot(BqrFile.generatePlotFilename(reduxDir, tumorSampleId));
-        }
-
-        String lilacDir = pathResolver.resolveOptionalToolDirectory(LILAC_DIR_CFG, defaultToolDirectories.lilacDir());
-        if(lilacDir != null)
-        {
-            builder.lilacResultTsv(mandatoryPath(LilacAllele.generateFilename(lilacDir, tumorSampleId)));
-            builder.lilacQcTsv(mandatoryPath(LilacQcData.generateFilename(lilacDir, tumorSampleId)));
-        }
-
-        String metricsDir = pathResolver.resolveMandatoryToolDirectory(TUMOR_METRICS_DIR_CFG, defaultToolDirectories.tumorMetricsDir());
-        builder.tumorSampleWGSMetricsFile(mandatoryPath(BamMetricSummary.generateFilename(metricsDir, tumorSampleId)));
-        builder.tumorSampleFlagstatFile(mandatoryPath(BamFlagStats.generateFilename(metricsDir, tumorSampleId)));
-
-        if(experimentType == ExperimentType.WHOLE_GENOME)
-        {
-            builder.wgsRefConfig(OrangeRefConfig.createConfig(configBuilder, pathResolver, defaultToolDirectories));
-        }
-
-        return builder.build();
-    }
-
-    static Iterable<String> toStringSet(final String paramValue, final String separator)
-    {
-        return !paramValue.isEmpty() ? Sets.newHashSet(paramValue.split(separator)) : Sets.newHashSet();
+        return RefGenVersion.is37() ? OrangeRefGenomeVersion.V37 : OrangeRefGenomeVersion.V38;
     }
 
     private static LocalDate interpretSamplingDateParam(final String samplingDateString)
@@ -335,11 +347,11 @@ public interface OrangeConfig
 
     private static PipelineToolDirectories resolveDefaultPipelineDirectories(final ConfigBuilder configBuilder)
     {
-        String tumorSampleId = configBuilder.getValue(TUMOR_SAMPLE_ID);
+        String tumorSampleId = configBuilder.getValue(TUMOR);
 
-        if(configBuilder.hasValue(REFERENCE_SAMPLE_ID))
+        if(configBuilder.hasValue(REFERENCE))
         {
-            String referenceSampleId = configBuilder.getValue(REFERENCE_SAMPLE_ID);
+            String referenceSampleId = configBuilder.getValue(REFERENCE);
             return PipelineToolDirectories.resolveToolDirectories(
                     configBuilder, PIPELINE_FORMAT_CFG, PIPELINE_FORMAT_FILE_CFG, tumorSampleId, referenceSampleId);
         }
@@ -348,5 +360,49 @@ public interface OrangeConfig
             return PipelineToolDirectories.resolveToolDirectories(
                     configBuilder, PIPELINE_FORMAT_CFG, PIPELINE_FORMAT_FILE_CFG, tumorSampleId);
         }
+    }
+
+    @VisibleForTesting
+    public OrangeConfig(
+            final ExperimentType runType, final String tumorId, final String referenceId, final String rnaSampleId,
+            final RefGenomeVersion refGenVersion, final Set<String> primaryTumorDoids, final LocalDate samplingDate, final String outputDir,
+            final String doidJsonFile, final String cohortMappingTsv, final String signaturesEtiologyTsv, final String driverGenePanelTsv,
+            final String pipelineVersionFile, final String purpleDataDirectory, final String purplePlotDirectory,
+            final String linxSomaticDataDirectory, final String linxGermlineDataDirectory, final String linxPlotDirectory,
+            final String tumorBamMetricsDir, final String referenceBamMetricsDir, final String tumorReduxDir,
+            final String referenceReduxDir, final String lilacDir, final String chordDir, final String cuppaDir, final String peachDir,
+            final String sigsDir, final String virusDir, final String isofoxDir, final boolean limitJsonOutput, final boolean addDisclaimer)
+    {
+        RunType = runType;
+        TumorId = tumorId;
+        ReferenceId = referenceId;
+        RnaSampleId = rnaSampleId;
+        RefGenVersion = refGenVersion;
+        PrimaryTumorDoids = primaryTumorDoids;
+        SamplingDate = samplingDate;
+        OutputDir = outputDir;
+        DoidJsonFile = doidJsonFile;
+        CohortMappingTsv = cohortMappingTsv;
+        SignaturesEtiologyTsv = signaturesEtiologyTsv;
+        DriverGenePanelTsv = driverGenePanelTsv;
+        PipelineVersionFile = pipelineVersionFile;
+        PurpleDataDirectory = purpleDataDirectory;
+        PurplePlotDirectory = purplePlotDirectory;
+        LinxSomaticDataDirectory = linxSomaticDataDirectory;
+        LinxGermlineDataDirectory = linxGermlineDataDirectory;
+        LinxPlotDirectory = linxPlotDirectory;
+        TumorBamMetricsDir = tumorBamMetricsDir;
+        ReferenceBamMetricsDir = referenceBamMetricsDir;
+        TumorReduxDir = tumorReduxDir;
+        ReferenceReduxDir = referenceReduxDir;
+        LilacDir = lilacDir;
+        ChordDir = chordDir;
+        CuppaDir = cuppaDir;
+        PeachDir = peachDir;
+        SigsDir = sigsDir;
+        VirusDir = virusDir;
+        IsofoxDir = isofoxDir;
+        LimitJsonOutput = limitJsonOutput;
+        AddDisclaimer = addDisclaimer;
     }
 }

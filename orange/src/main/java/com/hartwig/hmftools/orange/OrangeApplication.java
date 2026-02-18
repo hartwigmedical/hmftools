@@ -25,25 +25,25 @@ public class OrangeApplication
 
         configBuilder.checkAndParseCommandLine(args);
 
-        OrangeConfig config = OrangeConfig.createConfig(configBuilder);
+        OrangeConfig config = new OrangeConfig(configBuilder);
         new OrangeApplication(config).run();
     }
 
-    private final OrangeConfig config;
+    private final OrangeConfig mConfig;
 
     private OrangeApplication(final OrangeConfig config)
     {
-        this.config = config;
+        mConfig = config;
     }
 
     private void run() throws Exception
     {
         LOGGER.info("Generating ORANGE report data");
 
-        OrangeAlgo algo = OrangeAlgo.fromConfig(config);
-        OrangeRecord report = algo.run(config);
+        OrangeAlgo algo = OrangeAlgo.fromConfig(mConfig);
+        OrangeRecord report = algo.run(mConfig);
 
-        ReportWriter writer = ReportWriterFactory.createToDiskWriter(config);
+        ReportWriter writer = ReportWriterFactory.createToDiskWriter(mConfig);
         writer.write(report);
 
         LOGGER.info("Done!");
