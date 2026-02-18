@@ -1,8 +1,9 @@
 package com.hartwig.hmftools.orange.algo.isofox;
 
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionType.SKIPPED_EXONS;
-import static com.hartwig.hmftools.orange.algo.isofox.FusionNameUtil.geneDown;
-import static com.hartwig.hmftools.orange.algo.isofox.FusionNameUtil.geneUp;
+import static com.hartwig.hmftools.orange.algo.isofox.RnaFusionSelector.geneDown;
+import static com.hartwig.hmftools.orange.algo.isofox.RnaFusionSelector.geneUp;
+import static com.hartwig.hmftools.orange.algo.isofox.RnaFusionSelector.hasFusion;
 
 import java.util.List;
 import java.util.Set;
@@ -10,15 +11,11 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.driver.panel.DriverGene;
-import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionType;
 import com.hartwig.hmftools.common.rna.KnownFusionType;
 import com.hartwig.hmftools.common.rna.NovelSpliceJunction;
 import com.hartwig.hmftools.common.rna.RnaFusion;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
-import com.hartwig.hmftools.orange.algo.linx.DnaFusionEvaluator;
-
-import org.jetbrains.annotations.NotNull;
 
 final class NovelSpliceJunctionSelector
 {
@@ -44,7 +41,7 @@ final class NovelSpliceJunctionSelector
                     boolean isTypeMatch = junction.type() == SKIPPED_EXONS;
                     boolean hasSufficientFragments = junction.fragmentCount() > 5;
                     boolean hasLimitedCohortFreq = junction.cohortFrequency() < 30;
-                    boolean hasReportedLinxFusion = DnaFusionEvaluator.hasFusion(linxFusions, junction.geneName(), junction.geneName());
+                    boolean hasReportedLinxFusion = hasFusion(linxFusions, junction.geneName(), junction.geneName());
                     if(isTypeMatch && hasSufficientFragments && hasLimitedCohortFreq && !hasReportedLinxFusion)
                     {
                         result.add(junction);

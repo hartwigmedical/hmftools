@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.orange.algo.isofox;
 
-import static com.hartwig.hmftools.orange.algo.isofox.FusionNameUtil.geneDown;
-import static com.hartwig.hmftools.orange.algo.isofox.FusionNameUtil.geneUp;
+import static com.hartwig.hmftools.orange.algo.isofox.RnaFusionSelector.geneDown;
+import static com.hartwig.hmftools.orange.algo.isofox.RnaFusionSelector.geneUp;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;

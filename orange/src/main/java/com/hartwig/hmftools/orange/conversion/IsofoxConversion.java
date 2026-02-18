@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.orange.conversion;
 
-import static com.hartwig.hmftools.orange.algo.isofox.FusionNameUtil.geneDown;
-import static com.hartwig.hmftools.orange.algo.isofox.FusionNameUtil.geneUp;
+import static com.hartwig.hmftools.orange.algo.isofox.RnaFusionSelector.geneDown;
+import static com.hartwig.hmftools.orange.algo.isofox.RnaFusionSelector.geneUp;
 
 import com.hartwig.hmftools.common.rna.NovelSpliceJunction;
 import com.hartwig.hmftools.common.rna.RnaFusion;
