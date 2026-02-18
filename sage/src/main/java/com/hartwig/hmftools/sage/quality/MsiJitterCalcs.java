@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sage.quality;
 
+import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.probabilityToPhredQual;
 import static com.hartwig.hmftools.common.redux.JitterModelParams.MAX_SPECIFIC_LENGTH_UNIT;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConfig.isSbx;
@@ -30,6 +31,7 @@ import com.hartwig.hmftools.common.redux.JitterCountsTable;
 import com.hartwig.hmftools.common.redux.JitterCountsTableFile;
 import com.hartwig.hmftools.common.redux.JitterModelParams;
 import com.hartwig.hmftools.common.redux.JitterModelParamsFile;
+import com.hartwig.hmftools.common.redux.JitterTableRow;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.sage.common.RepeatInfo;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
@@ -48,7 +50,8 @@ public class MsiJitterCalcs
     }
 
     public static MsiJitterCalcs build(
-            final List<String> sampleIds, @Nullable final String jitterParamsDir, boolean highDepthMode, boolean msiSampleOverride)
+            final List<String> sampleIds, @Nullable final String jitterParamsDir, boolean highDepthMode,
+            final List<String> msiOverrideSampleIds)
     {
         MsiJitterCalcs msiJitterCalcs = new MsiJitterCalcs();
 
@@ -69,7 +72,7 @@ public class MsiJitterCalcs
 
         if(jitterParamsDir != null)
         {
-            if(msiJitterCalcs.loadSampleJitterParams(sampleIds, jitterParamsDir, jitterDefaults, msiSampleOverride))
+            if(msiJitterCalcs.loadSampleJitterParams(sampleIds, jitterParamsDir, jitterDefaults, msiOverrideSampleIds))
                 return msiJitterCalcs;
             else
                 System.exit(1);
@@ -94,7 +97,7 @@ public class MsiJitterCalcs
 
     public boolean loadSampleJitterParams(
             final List<String> sampleIds, final String jitterParamsDir, final List<JitterModelParams> defaultParams,
-            boolean msiSampleOverride)
+            final List<String> msiOverrideSampleIds)
     {
         try
         {
@@ -121,7 +124,8 @@ public class MsiJitterCalcs
 
                 jitterCounts = jitterCounts.stream().filter(x -> x.ConsensusType == consensusType).collect(Collectors.toList());
 
-                PerSampleJitterParams sampleJitterParams = shouldRevertToDefaults(msiParams, defaultMsiParams, jitterCounts, msiSampleOverride);
+                boolean isMsiOverride = msiOverrideSampleIds.contains(sampleId);
+                PerSampleJitterParams sampleJitterParams = shouldRevertToDefaults(msiParams, defaultMsiParams, jitterCounts, isMsiOverride);
 
                 mSampleParams.put(sampleId, sampleJitterParams.UseDefaults ? sampleJitterParams.ParamList : msiParams);
                 mProbableMsiSample.put(sampleId, sampleJitterParams.UseDefaults);
@@ -182,6 +186,8 @@ public class MsiJitterCalcs
     {
         List<MsiModelParams> sampleParamList = Lists.newArrayListWithCapacity(msiParams.size());
 
+        double comparisonScore = 0;
+
         for(JitterCountsTable unitParams : jitterCounts)
         {
             String repeatUnit = unitParams.RepeatUnit.split("/")[0];
@@ -198,7 +204,30 @@ public class MsiJitterCalcs
             MsiModelParams sampleModelParams = new MsiModelParams(sampleJitterParams);
 
             sampleParamList.add(sampleModelParams);
+
+            for(JitterTableRow perRepeatData : unitParams.getRows())
+            {
+                int refLength = perRepeatData.refNumUnits();
+                for(Map.Entry<Integer, Integer> entry : perRepeatData.jitterCounts().entrySet())
+                {
+                    int jitterLength = entry.getKey();
+
+                    if(Math.abs(jitterLength) > MSI_JITTER_MAX_REPEAT_CHANGE || jitterLength == 0)
+                        continue;
+
+                    Double rawScale = getScaleParam(relevantMsiParams.params(), refLength);
+                    double rawErrorRate = relevantMsiParams.calcErrorRate(refLength, jitterLength, rawScale);
+
+                    double rawPhredScore = probabilityToPhredQual(rawErrorRate);
+                    Double defaultScale = getScaleParam(sampleModelParams.params(), refLength);
+                    double defaultErrorRate = sampleModelParams.calcErrorRate(refLength, jitterLength, defaultScale);
+                    double defaultPhredScore = probabilityToPhredQual(defaultErrorRate);
+                    comparisonScore += (rawPhredScore - defaultPhredScore) * entry.getValue();
+                }
+            }
         }
+
+        boolean useDefaultParams = msiSampleOverride || comparisonScore < 0;
 
         return new PerSampleJitterParams(sampleParamList, msiSampleOverride);
     }

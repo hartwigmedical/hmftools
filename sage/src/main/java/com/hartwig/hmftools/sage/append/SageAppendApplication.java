@@ -184,11 +184,13 @@ public class SageAppendApplication
         if(isUltima())
             UltimaUtils.setMaxRawQual(bqrCache.maxRawQual());
 
-        final Map<String, BqrRecordMap> recalibrationMap = bqrCache.getSampleRecalibrationMap();
+        Map<String, BqrRecordMap> recalibrationMap = bqrCache.getSampleRecalibrationMap();
+
+        List<String> msiSamples = mConfig.Common.MsiSampleOverride ? Lists.newArrayList(mConfig.Common.ReferenceIds) : Collections.emptyList();
 
         MsiJitterCalcs msiJitterCalcs = MsiJitterCalcs.build(
                 mConfig.Common.ReferenceIds, !mConfig.Common.SkipMsiJitter ? mConfig.Common.JitterBqrDir : null,
-                mConfig.Common.Quality.HighDepthMode, mConfig.Common.MsiSampleOverride);
+                mConfig.Common.Quality.HighDepthMode, msiSamples);
 
         ChromosomePartition chromosomePartition = new ChromosomePartition(mConfig.Common, mRefGenome);
 

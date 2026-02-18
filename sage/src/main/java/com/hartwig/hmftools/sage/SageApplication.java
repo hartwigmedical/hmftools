@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.sage.tinc.TincConfig.callerTincConfig;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -101,11 +102,12 @@ public class SageApplication implements AutoCloseable
 
         List<String> combinedSampleIds = Lists.newArrayList(mConfig.TumorIds);
         combinedSampleIds.addAll(mConfig.Common.ReferenceIds);
+        List<String> msiSamples = mConfig.Common.MsiSampleOverride ? Lists.newArrayList(mConfig.TumorIds) : Collections.emptyList();
 
         MsiJitterCalcs msiJitterCalcs = MsiJitterCalcs.build(
                 combinedSampleIds,
                 !mConfig.Common.SkipMsiJitter ? mConfig.Common.JitterBqrDir : null,
-                mConfig.Common.Quality.HighDepthMode, mConfig.Common.MsiSampleOverride);
+                mConfig.Common.Quality.HighDepthMode, msiSamples);
 
         final SAMSequenceDictionary dictionary = dictionary();
         for(SAMSequenceRecord samSequenceRecord : dictionary.getSequences())
