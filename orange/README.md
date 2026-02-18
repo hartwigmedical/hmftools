@@ -10,9 +10,7 @@ see [orange-datamodel](../orange-datamodel)).
 3. ORANGE can be configured to convert all germline driver variants to somatic driver variants, thereby obfuscating the germline driver part
    of the analysis without actually loosing this data.
 4. Every event that is labeled as a driver by any of the Hartwig algorithms is displayed in the PDF along with the driver likelihood.
-5. An additional exhaustive WGS and WTS scan is performed for anything interesting that may be potentially relevant but not picked up as a
-   driver. Details of what is considered interesting are described in below.
-6. A comprehensive range of QC measures and plots is displayed which provides in-depth details about the data quality of the samples
+5. A comprehensive range of QC measures and plots is displayed which provides in-depth details about the data quality of the samples
    provided.
 
 Example reports based on the publicly available melanoma cell line COLO829 can be found here:
@@ -51,23 +49,18 @@ found [here](https://resources.hartwigmedicalfoundation.nl) for either 37 or 38 
 ```
 java -jar orange.jar \
     -experiment_type "PANEL"
-    -tumor_sample_id tumor_sample \
+    -tumor tumor_sample \
     -primary_tumor_doids "doid1;doid2" \
     -ref_genome_version "37" \
-    -output_dir /path/to/where/to/write/output \
     -doid_json /path/to/input_doid_tree.json \
     -cohort_mapping_tsv /path/to/input_cohort_mapping.tsv \
-    -cohort_percentiles_tsv /path/to/input_cohort_percentiles.tsv \
     -driver_gene_panel /path/to/driver_gene_panel.tsv \
-    -ensembl_data_dir /path/to/ensembl_data_directory \
-    -tumor_sample_wgs_metrics_file /path/to/tumor_sample_wgs_metrics \
-    -tumor_sample_flagstat_file /path/to/tumor_sample_flagstats \
-    -sage_dir /path/to/sage_somatic_output \
-    -purple_dir /path/to/purple_output \
-    -purple_plot_dir /path/to/purple_plots \
-    -linx_dir /path/to/linx_somatic_output \
-    -linx_plot_dir /path/to/optional_linx_somatic_output_plots \
-    -lilac_dir /path/to/lilac_output 
+    -pipeline_sample_root_dir /sample_oa_results/
+    -tumor_metrics_dir /sample_oa_results/bamtools/tumor/
+    -ref_metrics_dir /sample_oa_results/bamtools/reference/
+    -tumor_redux_dir /sample_oa_results/alignments/tumor/
+    -ref_redux_dir /sample_oa_results/alignments/reference/
+    -output_dir /path/to/where/to/write/output \
 ```
 
 Note that `linx_plot_dir` is an optional parameter and can be left out completely in case linx has not generated any plots.
@@ -75,27 +68,7 @@ Note that `linx_plot_dir` is an optional parameter and can be left out completel
 Note that `primary_tumor_doids` can be left blank (""). This parameter is used to look up cancer-type-specific percentiles for various
 tumor characteristics. If primary tumor doids are not provided, percentiles are calculated against the full HMF database only.
 
-### Additional parameters when whole genome tumor DNA data is available
-
-```
-   -virus_dir /path/to/virus_interpreter_output \
-   -chord_dir /path/to/chord_output \
-   -cuppa_dir /path/to/cuppa_output \
-   -sigs_dir /path/to/sigs_output 
-```
-
 Also, the value of the `-experiment_type` parameter should be set to `WGS` for all whole genome configurations.
-
-### Additional parameters when whole genome germline DNA data is available
-
-```
-    -reference_sample_id reference_sample \
-    -ref_sample_wgs_metrics_file /path/to/reference_sample_wgs_metrics \
-    -ref_sample_flagstat_file /path/to/reference_sample_flagstats \
-    -sage_germline_dir /path/to/sage_germline_output \
-    -linx_germline_dir /path/to/linx_germline_output \
-    -peach_dir /path/to/peach_output.tsv 
-```
 
 ### Additional parameters when whole genome RNA data is available
 
@@ -171,10 +144,8 @@ If run with RNA, this chapter displays potentially interesting RNA details:
 
 - QC Details
 - Drive gene panel genes with high TPM (>90th percentile database & tumor type) or low TPM (<5th percentile database & tumor type)
-- Potentially interesting support for known or promiscuous fusions not detected in our DNA analysis pipeline
-- Potentially interesting novel splice junctions
-    1. Exon-skipping events in `EXON_DEL_DUP` fusion genes
-    2. Novel exon/intron events in driver gene panel genes
+- Support for known or promiscuous fusions not detected in our DNA analysis pipeline
+- Reportable novel splice junctions
 
 ## Cohort Comparison
 
@@ -189,35 +160,4 @@ Do note that RNA features and cohort comparison thereof are only included if ORA
 
 ## Quality Control
 
-The quality control chapter provides extensive details that can help with interpreting the overall [PURPLE](../purple) QC status or
-investigate potential causes for QC failure.
-
-- The high-level QC from [PURPLE](../purple)
-- Various details from the tumor and reference samples flagstats and coverage stats
-- Various plots from [PURPLE](../purple)
-- BQR plots from both reference and tumor sample from [SAGE](../sage)
-
-## Version History and Download Links
-
-- [4.0.1](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v4.0.1):
-    - Change UGT1A1 status from None to NA on Front page
-- [4.0.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v4.0.0):
-    - Add presence of tumor stats to quality control page and to orange-datamodel
-    - Ensure only exonic variants that are phased with reported variants are shown in 'potentially interesting' section
-    - Add potentially interesting chromosomal rearrangements (1q trisomy and 1p19q co-deletion) to report
-    - Derive breakend fields type, chromosome, chromosomeBand, orientation and junctionCopyNumber from root sources
-    - Make PurpleGeneCopyNumber transcript-aware in orange-datamodel
-    - Upgraded DOID datamodel to version of Dec 2024 release
-    - Replace "platinum" with "pipeline"
-    - Improve nomenclature for losses
-    - Capture CUPPA mode in ORANGE output
-    - Remove UGT1A1 from PEACH output ingested in ORANGE
-- [3.8.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.8.0):
-   - Make compatible with new doid.json format
-  - Support Purple QC status for TINC
-- [3.7.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.7.0):
-    - Add unreported reason to fusions in ORANGE
-    - Add etiology information to signatures and sort by allocation
-    - Add percentage of unsupported segments to Quality control page
-    - Show all viable fusions in ORANGE in samples where we detect no HIGH drivers
-    - Ensure HIV is never reported in ORANGE report or included in ORANGE json
+See [QSee](../qsee) 
