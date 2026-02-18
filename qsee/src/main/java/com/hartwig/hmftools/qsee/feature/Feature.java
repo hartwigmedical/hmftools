@@ -1,12 +1,14 @@
 package com.hartwig.hmftools.qsee.feature;
 
+import com.hartwig.hmftools.qsee.status.QcStatus;
+
 import org.jetbrains.annotations.Nullable;
 
 public class Feature
 {
     private final FeatureKey mKey;
     private final double mValue;
-    @Nullable private final QcStatus mQcStatus;
+    private final QcStatus mQcStatus;
     @Nullable private final String mPlotLabel;
 
     public Feature(String name, double value, FeatureType type, SourceTool sourceTool,
@@ -30,7 +32,7 @@ public class Feature
     {
         mKey = key;
         mValue = value;
-        mQcStatus = null;
+        mQcStatus = QcStatus.createEmpty();
         mPlotLabel = null;
     }
 

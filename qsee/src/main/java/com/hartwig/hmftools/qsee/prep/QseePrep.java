@@ -28,7 +28,6 @@ import com.hartwig.hmftools.qsee.common.QseeFileCommon;
 import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.Feature;
 import com.hartwig.hmftools.qsee.feature.FeatureKey;
-import com.hartwig.hmftools.qsee.feature.QcStatus;
 
 public class QseePrep
 {
@@ -37,7 +36,6 @@ public class QseePrep
     private static final String COL_FEATURE_VALUE = "FeatureValue";
     private static final String COL_PERCENTILE_IN_COHORT = "PctInCohort";
     private static final String COL_QC_STATUS = "QcStatus";
-    private static final String COL_QC_THRESHOLD = "QcThreshold";
     private static final String COL_PLOT_LABEL = "PlotLabel";
 
     private static final String SAMPLE_ID_MULTI = "MULTI_SAMPLE";
@@ -122,7 +120,6 @@ public class QseePrep
             header.add(COL_FEATURE_VALUE);
             header.add(COL_PERCENTILE_IN_COHORT);
             header.add(COL_QC_STATUS);
-            header.add(COL_QC_THRESHOLD);
             header.add(COL_PLOT_LABEL);
 
             writer.write(header.toString());
@@ -147,15 +144,12 @@ public class QseePrep
                 line.add(percentileInCohort);
 
                 String qcStatus = "";
-                String qcThreshold = "";
                 if(feature.qcStatus() != null)
                 {
-                    qcStatus = feature.qcStatus().mStatus;
-                    qcThreshold = QseeFileCommon.DECIMAL_FORMAT.format(feature.qcStatus().mThreshold);
+                    qcStatus = feature.qcStatus().toString();
                 }
 
                 line.add(qcStatus);
-                line.add(qcThreshold);
                 line.add(feature.plotLabel());
 
                 writer.write(line.toString());

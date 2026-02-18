@@ -3,17 +3,14 @@ package com.hartwig.hmftools.qsee.prep.category.table;
 import java.util.Arrays;
 import java.util.List;
 
-import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.qsee.feature.FeatureKey;
 import com.hartwig.hmftools.qsee.feature.FeatureType;
 import com.hartwig.hmftools.qsee.feature.SourceTool;
 
-import org.jetbrains.annotations.Nullable;
-
 public enum SummaryTableFeature
 {
     MEAN_COVERAGE           (SummaryTableGroup.GENERAL, "Mean coverage", SourceTool.BAM_METRICS),
-    PURITY                  (SummaryTableGroup.GENERAL, "Purity", SourceTool.PURPLE, PurpleQCStatus.MIN_PURITY),
+    PURITY                  (SummaryTableGroup.GENERAL, "Purity", SourceTool.PURPLE),
     PLOIDY                  (SummaryTableGroup.GENERAL, "Ploidy", SourceTool.PURPLE),
     LOH_PERCENT             (SummaryTableGroup.GENERAL, "LOH", SourceTool.PURPLE),
 
@@ -21,11 +18,11 @@ public enum SummaryTableFeature
     TMB_MS_INDELS           (SummaryTableGroup.TMB, "MS indels per MB", SourceTool.PURPLE),
     TMB_STRUCTURAL_VARIANTS (SummaryTableGroup.TMB, "SVs per MB", SourceTool.PURPLE),
 
-    TINC                    (SummaryTableGroup.CONTAMINATION, "Tumor in normal", SourceTool.PURPLE, PurpleQCStatus.TINC_FAIL_LEVEL),
-    CONTAMINATION           (SummaryTableGroup.CONTAMINATION, "Other DNA", SourceTool.PURPLE, PurpleQCStatus.MAX_CONTAMINATION),
+    TINC                    (SummaryTableGroup.CONTAMINATION, "Tumor in normal", SourceTool.PURPLE),
+    CONTAMINATION           (SummaryTableGroup.CONTAMINATION, "Other DNA", SourceTool.PURPLE),
 
-    DELETED_GENES           (SummaryTableGroup.COPY_NUMBER, "Deleted genes", SourceTool.PURPLE, (double) PurpleQCStatus.MAX_DELETED_GENES),
-    UNSUPPORTED_CN_SEGMENTS (SummaryTableGroup.COPY_NUMBER, "Unsupp. segments", SourceTool.PURPLE, (double) PurpleQCStatus.MAX_UNSUPPORTED_SEGMENTS),
+    DELETED_GENES           (SummaryTableGroup.COPY_NUMBER, "Deleted genes", SourceTool.PURPLE),
+    UNSUPPORTED_CN_SEGMENTS (SummaryTableGroup.COPY_NUMBER, "Unsupp. segments", SourceTool.PURPLE),
 
     MAPPED_PROPORTION       (SummaryTableGroup.MAPPING, "Mapped proportion", SourceTool.BAM_METRICS),
     MIN_COVERAGE_10         (SummaryTableGroup.MAPPING, "Coverage ≥ 10", SourceTool.BAM_METRICS),
@@ -42,22 +39,12 @@ public enum SummaryTableFeature
     private final SummaryTableGroup mGroup;
     private final String mPlotLabel;
     private final SourceTool mSourceTool;
-    private final @Nullable Double mQcThreshold;
-
-    SummaryTableFeature(SummaryTableGroup group, String plotLabel, SourceTool sourceTool, @Nullable Double qcThreshold)
-    {
-        mGroup = group;
-        mPlotLabel = plotLabel;
-        mSourceTool = sourceTool;
-        mQcThreshold = qcThreshold;
-    }
 
     SummaryTableFeature(SummaryTableGroup group, String plotLabel, SourceTool sourceTool)
     {
         mGroup = group;
         mPlotLabel = plotLabel;
         mSourceTool = sourceTool;
-        mQcThreshold = null;
     }
 
     public static List<SourceTool> sourceTools()
@@ -71,16 +58,6 @@ public enum SummaryTableFeature
     {
         String featureName = FeatureKey.formMultiFieldName("FeatureGroup", mGroup.humanReadableName(), "Key", this.toString());
         return new FeatureKey(featureName, FeatureType.SUMMARY_TABLE, mSourceTool);
-    }
-
-    public Double qcThreshold()
-    {
-        if(mQcThreshold == null)
-        {
-            throw new IllegalStateException("QC threshold not set for feature: " + this);
-        }
-
-        return mQcThreshold;
     }
 
     public String plotLabel() { return mPlotLabel; }
