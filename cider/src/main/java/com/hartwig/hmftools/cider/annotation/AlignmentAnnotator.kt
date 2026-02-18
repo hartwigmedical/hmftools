@@ -3,6 +3,7 @@ package com.hartwig.hmftools.cider.annotation
 import com.hartwig.hmftools.cider.*
 import com.hartwig.hmftools.cider.CiderConstants.ANNOTATION_MATCH_REF_IDENTITY
 import com.hartwig.hmftools.cider.CiderConstants.ANNOTATION_ALIGN_SCORE_MIN
+import com.hartwig.hmftools.cider.CiderConstants.ANNOTATION_ANCHOR_BASE_TOLERANCE
 import com.hartwig.hmftools.cider.CiderConstants.ANNOTATION_VDJ_FLANK_BASES
 import com.hartwig.hmftools.cider.CiderConstants.ANNOTATION_VJ_IDENTITY_MIN
 import com.hartwig.hmftools.cider.CiderUtils.getResourceAsFile
@@ -187,11 +188,8 @@ class AlignmentAnnotator
                 }
 
                 // Also require that the alignment covers the anchor.
-                // TODO: what if the anchor matches the ref genome part?
-                val layoutAlignRange = alignment.queryRange.start + metadata.querySeqRange.start..alignment.queryRange.endInclusive + metadata.querySeqRange.start
-                val anchorBoundary = if (vdjGene.region == IgTcrRegion.V_REGION) vdj.vAnchorBoundary?.plus(vdj.layoutSliceStart - 1)
-                    else vdj.jAnchorBoundary?.plus(vdj.layoutSliceStart)
-                if (anchorBoundary != null && !layoutAlignRange.contains(anchorBoundary))
+                // This ensures that the matched gene actually participates in the rearrangement.
+                if (alignmentMatchesAnchor(metadata, alignment, vdjGene.region == IgTcrRegion.V_REGION) == false)
                 {
                     continue
                 }
@@ -276,6 +274,24 @@ class AlignmentAnnotator
             return alignments
                 .filter { it.alignmentScore >= ANNOTATION_ALIGN_SCORE_MIN }
                 .sortedBy { -it.alignmentScore }
+        }
+
+        fun alignmentMatchesAnchor(metadata: AlignmentMetadata, alignment: Alignment, isV: Boolean): Boolean?
+        {
+            // TODO: what if the anchor matches the ref genome part?
+            val vdj = metadata.vdj
+            val layoutAlignRange = alignment.queryRange.start + metadata.querySeqRange.start..alignment.queryRange.endInclusive + metadata.querySeqRange.start
+            val anchorRange = if (isV)
+            {
+                val end = (vdj.vAnchorBoundary ?: return null) + vdj.layoutSliceStart
+                end - (1 + ANNOTATION_ANCHOR_BASE_TOLERANCE) until end
+            }
+            else
+            {
+                val start = (vdj.jAnchorBoundary ?: return null) + vdj.layoutSliceStart
+                start until start + (1 + ANNOTATION_ANCHOR_BASE_TOLERANCE)
+            }
+            return anchorRange.start <= layoutAlignRange.endInclusive && layoutAlignRange.start <= anchorRange.endInclusive
         }
 
         data class GeneMatch(
