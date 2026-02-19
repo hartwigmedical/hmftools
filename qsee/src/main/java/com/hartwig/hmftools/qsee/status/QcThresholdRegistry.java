@@ -8,12 +8,12 @@ import static com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature.
 import static com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature.LOW_MAP_QUAL;
 import static com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature.MAPPED_PROPORTION;
 import static com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature.MEAN_COVERAGE;
-import static com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature.MIN_COVERAGE_10;
-import static com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature.MIN_COVERAGE_100;
-import static com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature.MIN_COVERAGE_20;
-import static com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature.MIN_COVERAGE_250;
-import static com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature.MIN_COVERAGE_30;
-import static com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature.MIN_COVERAGE_60;
+import static com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature.COVERAGE_ABOVE_10;
+import static com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature.COVERAGE_ABOVE_100;
+import static com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature.COVERAGE_ABOVE_20;
+import static com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature.COVERAGE_ABOVE_250;
+import static com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature.COVERAGE_ABOVE_30;
+import static com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature.COVERAGE_ABOVE_60;
 import static com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature.PURITY;
 import static com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature.TINC;
 import static com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature.UNSUPPORTED_CN_SEGMENTS;
@@ -61,12 +61,12 @@ public final class QcThresholdRegistry
         Map<SummaryTableFeature, QcThreshold> thresholds = new EnumMap<>(SummaryTableFeature.class);
 
         thresholds.put(MEAN_COVERAGE, new QcThreshold(WARN, LESS_THAN, 70));
-        thresholds.put(MIN_COVERAGE_10, new QcThreshold(WARN, LESS_THAN, 0.9));
-        thresholds.put(MIN_COVERAGE_20, new QcThreshold(WARN, LESS_THAN, 0.9));
-        thresholds.put(MIN_COVERAGE_30, new QcThreshold(WARN, LESS_THAN, 0.9));
-        thresholds.put(MIN_COVERAGE_60, new QcThreshold(WARN, LESS_THAN, 0.8));
-        thresholds.put(MIN_COVERAGE_100, new QcThreshold(WARN, LESS_THAN, 0.1));
-        thresholds.put(MIN_COVERAGE_250, QcThreshold.notSet());
+        thresholds.put(COVERAGE_ABOVE_10, new QcThreshold(WARN, LESS_THAN, 0.9));
+        thresholds.put(COVERAGE_ABOVE_20, new QcThreshold(WARN, LESS_THAN, 0.9));
+        thresholds.put(COVERAGE_ABOVE_30, new QcThreshold(WARN, LESS_THAN, 0.9));
+        thresholds.put(COVERAGE_ABOVE_60, new QcThreshold(WARN, LESS_THAN, 0.8));
+        thresholds.put(COVERAGE_ABOVE_100, new QcThreshold(WARN, LESS_THAN, 0.1));
+        thresholds.put(COVERAGE_ABOVE_250, QcThreshold.notSet());
 
         THRESHOLDS_TUMOR = Collections.unmodifiableMap(thresholds);
     }
@@ -77,12 +77,12 @@ public final class QcThresholdRegistry
         Map<SummaryTableFeature, QcThreshold> thresholds = new EnumMap<>(SummaryTableFeature.class);
 
         thresholds.put(MEAN_COVERAGE, new QcThreshold(WARN, LESS_THAN, 20));
-        thresholds.put(MIN_COVERAGE_10, new QcThreshold(WARN, LESS_THAN, 0.9));
-        thresholds.put(MIN_COVERAGE_20, new QcThreshold(WARN, LESS_THAN, 0.8));
-        thresholds.put(MIN_COVERAGE_30, new QcThreshold(WARN, LESS_THAN, 0.4));
-        thresholds.put(MIN_COVERAGE_60, QcThreshold.notSet());
-        thresholds.put(MIN_COVERAGE_100, QcThreshold.notSet());
-        thresholds.put(MIN_COVERAGE_250, QcThreshold.notSet());
+        thresholds.put(COVERAGE_ABOVE_10, new QcThreshold(WARN, LESS_THAN, 0.9));
+        thresholds.put(COVERAGE_ABOVE_20, new QcThreshold(WARN, LESS_THAN, 0.8));
+        thresholds.put(COVERAGE_ABOVE_30, new QcThreshold(WARN, LESS_THAN, 0.4));
+        thresholds.put(COVERAGE_ABOVE_60, QcThreshold.notSet());
+        thresholds.put(COVERAGE_ABOVE_100, QcThreshold.notSet());
+        thresholds.put(COVERAGE_ABOVE_250, QcThreshold.notSet());
 
         THRESHOLDS_NORMAL = Collections.unmodifiableMap(thresholds);
     }

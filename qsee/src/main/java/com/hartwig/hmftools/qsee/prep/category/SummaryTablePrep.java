@@ -150,20 +150,20 @@ public class SummaryTablePrep implements CategoryPrep
         if(bamMetricCoverage == null)
             return;
 
-        List<SummaryTableFeature> minCoverageFeatures = List.of(
-                MIN_COVERAGE_10, MIN_COVERAGE_20, MIN_COVERAGE_30, MIN_COVERAGE_60, MIN_COVERAGE_100, MIN_COVERAGE_250);
+        List<SummaryTableFeature> coverageAboveXFeatures = List.of(
+                COVERAGE_ABOVE_10, COVERAGE_ABOVE_20, COVERAGE_ABOVE_30, COVERAGE_ABOVE_60, COVERAGE_ABOVE_100, COVERAGE_ABOVE_250);
 
-        for(SummaryTableFeature minCoverageFeature : minCoverageFeatures)
+        for(SummaryTableFeature coverageAboveXFeature : coverageAboveXFeatures)
         {
-            int coverageThreshold = switch(minCoverageFeature)
+            int coverageThreshold = switch(coverageAboveXFeature)
             {
-                case MIN_COVERAGE_10 -> 10;
-                case MIN_COVERAGE_20 -> 20;
-                case MIN_COVERAGE_30 -> 30;
-                case MIN_COVERAGE_60 -> 60;
-                case MIN_COVERAGE_100 -> 100;
-                case MIN_COVERAGE_250 -> 250;
-                default -> throw new IllegalStateException("Unexpected min coverage feature: " + minCoverageFeature);
+                case COVERAGE_ABOVE_10 -> 10;
+                case COVERAGE_ABOVE_20 -> 20;
+                case COVERAGE_ABOVE_30 -> 30;
+                case COVERAGE_ABOVE_60 -> 60;
+                case COVERAGE_ABOVE_100 -> 100;
+                case COVERAGE_ABOVE_250 -> 250;
+                default -> throw new IllegalStateException("Unexpected min coverage feature: " + coverageAboveXFeature);
             };
 
             List<ValueFrequency> coverageBaseCounts = bamMetricCoverage.Coverage;
@@ -177,10 +177,10 @@ public class SummaryTablePrep implements CategoryPrep
 
             double propBasesAboveCoverage = (double) basesAboveCoverage / totalBases;
 
-            QcThreshold qcThreshold = QcThresholdRegistry.getThreshold(sampleType, minCoverageFeature);
+            QcThreshold qcThreshold = QcThresholdRegistry.getThreshold(sampleType, coverageAboveXFeature);
             QcStatus qcStatus = qcThreshold.getQcStatus(propBasesAboveCoverage);
 
-            putFeature(featuresMap, minCoverageFeature, propBasesAboveCoverage, qcStatus);
+            putFeature(featuresMap, coverageAboveXFeature, propBasesAboveCoverage, qcStatus);
         }
     }
 

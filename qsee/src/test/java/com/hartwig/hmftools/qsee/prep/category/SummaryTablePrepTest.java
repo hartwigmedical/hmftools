@@ -53,16 +53,16 @@ public class SummaryTablePrepTest
     }
 
     @Test
-    public void canCalcPropBasesWithMinCoverage()
+    public void canCalcPropBasesAboveCoverage()
     {
         EnumMap<SummaryTableFeature, Feature> featuresMap = new EnumMap<>(SummaryTableFeature.class);
         BamMetricCoverage bamMetricCoverage = createTestBamMetricCoverage();
         SummaryTablePrep.putFeatures(featuresMap, bamMetricCoverage, SampleType.TUMOR);
 
-        assertEquals(0.9, featuresMap.get(SummaryTableFeature.MIN_COVERAGE_10).value(), 0.01);
-        assertEquals(0.7, featuresMap.get(SummaryTableFeature.MIN_COVERAGE_30).value(), 0.01);
-        assertEquals(0.6, featuresMap.get(SummaryTableFeature.MIN_COVERAGE_100).value(), 0.01);
-        assertEquals(0.4, featuresMap.get(SummaryTableFeature.MIN_COVERAGE_250).value(), 0.01);
+        assertEquals(0.9, featuresMap.get(SummaryTableFeature.COVERAGE_ABOVE_10).value(), 0.01);
+        assertEquals(0.7, featuresMap.get(SummaryTableFeature.COVERAGE_ABOVE_30).value(), 0.01);
+        assertEquals(0.6, featuresMap.get(SummaryTableFeature.COVERAGE_ABOVE_100).value(), 0.01);
+        assertEquals(0.4, featuresMap.get(SummaryTableFeature.COVERAGE_ABOVE_250).value(), 0.01);
     }
 
     private PurityContext createTestPurityContext()
