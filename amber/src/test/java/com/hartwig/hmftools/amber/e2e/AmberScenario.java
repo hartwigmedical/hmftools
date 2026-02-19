@@ -1,17 +1,27 @@
 package com.hartwig.hmftools.amber.e2e;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.amber.AmberSitesFile;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.position.GenomePosition;
+import com.hartwig.hmftools.common.genome.position.GenomePositionImpl;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
+import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
@@ -58,6 +68,40 @@ public class AmberScenario
         Preconditions.checkState(TumorReads != null || ReferenceReads != null);
     }
 
+    public void checkResultsForTargetedMode(Multimap<Chromosome, AmberBAF> results, Multimap<Chromosome, GenomeRegion> targetRegions)
+    {
+        checkResultsForTargetedModeWithExcludedPositions(results, targetRegions, ArrayListMultimap.create());
+    }
+
+    public void checkResultsForTargetedModeWithExcludedPositions(
+            Multimap<Chromosome, AmberBAF> results,
+            Multimap<Chromosome, GenomeRegion> targetRegions,
+            Multimap<Chromosome, GenomePosition> excludedPositions)
+    {
+        for(Chromosome chromosome : TumorReads.chromosomes())
+        {
+            String chr = V38.versionedChromosome(chromosome);
+            Collection<AmberBAF> bafsForChromosome = results.get(chromosome);
+            List<AmberSiteExpectation> expectedForChromosome = new ArrayList<>();
+            Collection<GenomeRegion> regionsForChromosome = targetRegions.get(chromosome);
+            Collection<GenomePosition> excludedPositionsForChromosome = excludedPositions.get(chromosome);
+            for(AmberSiteExpectation ase : TumorReads.specifications(chromosome))
+            {
+                GenomePosition position = new GenomePositionImpl(chr, ase.Position);
+                if(excludedPositionsForChromosome.contains(position))
+                {
+                    continue;
+                }
+                boolean onTarget = regionsForChromosome.stream().anyMatch(region -> region.contains(position));
+                if(onTarget)
+                {
+                    expectedForChromosome.add(ase);
+                }
+            }
+            checkTumorChromosomeResults(bafsForChromosome, expectedForChromosome);
+        }
+    }
+
     public void checkResults(Multimap<Chromosome, AmberBAF> results)
     {
         Assert.assertEquals(TumorReads.chromosomes(), results.keySet());
@@ -84,6 +128,11 @@ public class AmberScenario
         File locationsFile = new File(destination, "AmberGermlineSites.38.tsv");
         FileUtils.copyFile(sitesFile, locationsFile);
         return locationsFile;
+    }
+
+    File getTestDataFile(String fileName)
+    {
+        return new File(testResourcesDir(), fileName);
     }
 
     private void checkTumorChromosomeResults(Collection<AmberBAF> results, List<AmberSiteExpectation> expectedResults)

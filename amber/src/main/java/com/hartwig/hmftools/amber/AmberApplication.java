@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.amber;
 
 import static java.lang.Double.isFinite;
+import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 
 import static com.hartwig.hmftools.amber.AmberConfig.AMB_LOGGER;
@@ -8,7 +9,6 @@ import static com.hartwig.hmftools.amber.AmberConstants.APP_NAME;
 import static com.hartwig.hmftools.amber.AmberConstants.TARGET_REGION_SITE_BUFFER;
 import static com.hartwig.hmftools.amber.AmberUtils.aboveQualFilter;
 import static com.hartwig.hmftools.amber.AmberUtils.fromBaseDepth;
-import static com.hartwig.hmftools.amber.AmberUtils.fromTumorBaf;
 import static com.hartwig.hmftools.amber.AmberUtils.isValid;
 import static com.hartwig.hmftools.common.region.BedFileReader.loadBedFileChrMap;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
@@ -24,14 +24,19 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ListMultimap;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
+import com.hartwig.hmftools.amber.blacklist.AmberBlacklistFile;
+import com.hartwig.hmftools.amber.blacklist.AmberBlacklistPoint;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.amber.AmberSite;
 import com.hartwig.hmftools.common.amber.AmberSitesFile;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.position.GenomePositionImpl;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.Doubles;
@@ -48,7 +53,7 @@ public class AmberApplication implements AutoCloseable
 
     private ResultsWriter mPersistence;
     private VersionInfo mVersionInfo;
-    private ImmutableListMultimap<Chromosome,AmberSite> mChromosomeSites;
+    private ImmutableListMultimap<Chromosome, AmberSite> mChromosomeSites;
 
     public AmberApplication(final ConfigBuilder configBuilder)
     {
@@ -89,52 +94,71 @@ public class AmberApplication implements AutoCloseable
         return 0;
     }
 
-    private ImmutableListMultimap<Chromosome,AmberSite> loadAmberSites() throws IOException
+    private ImmutableListMultimap<Chromosome, AmberSite> loadAmberSites() throws IOException
     {
-        ListMultimap<Chromosome,AmberSite> amberSitesMap = AmberSitesFile.sites(mConfig.BafLociPath);
+        ListMultimap<Chromosome, AmberSite> amberSitesMap = AmberSitesFile.sites(mConfig.BafLociPath);
 
         if(mConfig.TargetRegionsBed == null)
+        {
             return ImmutableListMultimap.copyOf(amberSitesMap);
+        }
 
-        ListMultimap<Chromosome,AmberSite> targetRegionSites = ArrayListMultimap.create();
+        Multimap<Chromosome, GenomePositionImpl> blacklistedPoints = HashMultimap.create();
+        if(mConfig.BlacklistedSitesPath != null)
+        {
+            List<AmberBlacklistPoint> blacklistPoints = AmberBlacklistFile.readFromFile(new File(mConfig.BlacklistedSitesPath));
+            for(AmberBlacklistPoint point : blacklistPoints)
+            {
+                blacklistedPoints.put(point.chr(), new GenomePositionImpl(point));
+            }
+        }
 
+        ListMultimap<Chromosome, AmberSite> targetRegionSites = ArrayListMultimap.create();
         try
         {
-            Map<Chromosome,List<BaseRegion>> targetRegions = loadBedFileChrMap(mConfig.TargetRegionsBed);
+            Map<Chromosome, List<BaseRegion>> targetRegions = loadBedFileChrMap(mConfig.TargetRegionsBed);
 
-            for(Map.Entry<Chromosome,List<BaseRegion>> entry : targetRegions.entrySet())
+            for(Map.Entry<Chromosome, List<BaseRegion>> entry : targetRegions.entrySet())
             {
                 Chromosome chromosome = entry.getKey();
+                Collection<GenomePositionImpl> blacklistedPositions = blacklistedPoints.get(chromosome);
                 List<BaseRegion> regions = entry.getValue();
 
                 Collection<AmberSite> amberSites = amberSitesMap.get(chromosome);
-
-                if(amberSites == null)
-                    continue;
 
                 int regionIndex = 0;
                 BaseRegion currentRegion = regions.get(0);
 
                 for(AmberSite amberSite : amberSites)
                 {
-                    if(amberSite.position() < currentRegion.start() - TARGET_REGION_SITE_BUFFER)
+                    if(blacklistedPositions.contains(amberSite.rawPosition()))
+                    {
                         continue;
+                    }
+                    if(amberSite.position() < currentRegion.start() - TARGET_REGION_SITE_BUFFER)
+                    {
+                        continue;
+                    }
 
                     while(amberSite.position() > currentRegion.end() + TARGET_REGION_SITE_BUFFER)
                     {
                         ++regionIndex;
 
                         if(regionIndex >= regions.size())
+                        {
                             break;
+                        }
 
                         currentRegion = regions.get(regionIndex);
                     }
 
                     if(regionIndex >= regions.size())
+                    {
                         break;
+                    }
 
                     if(amberSite.position() >= currentRegion.start() - TARGET_REGION_SITE_BUFFER
-                    && amberSite.position() <= currentRegion.end() + TARGET_REGION_SITE_BUFFER)
+                            && amberSite.position() <= currentRegion.end() + TARGET_REGION_SITE_BUFFER)
                     {
                         targetRegionSites.put(chromosome, amberSite);
                     }
@@ -145,7 +169,7 @@ public class AmberApplication implements AutoCloseable
         }
         catch(Exception e)
         {
-            AMB_LOGGER.error("failed to load target regions file(): {}", mConfig.TargetRegionsBed, e.toString());
+            AMB_LOGGER.error(format("failed to load target regions file(): {%s}", mConfig.TargetRegionsBed), e);
             System.exit(1);
         }
 
@@ -163,7 +187,9 @@ public class AmberApplication implements AutoCloseable
             AmberBAF amberBAF = fromBaseDepth(baseDepth);
 
             if(mConfig.WriteUnfilteredGermline || isValid(amberBAF))
+            {
                 amberBAFList.add(amberBAF);
+            }
         }
 
         Collections.sort(amberBAFList);
@@ -187,9 +213,9 @@ public class AmberApplication implements AutoCloseable
         List<TumorBAF> tumorBAFList = tumor.getBafs().values().stream()
                 .filter(x -> x.TumorEvidence.ReadDepth >= mConfig.TumorMinDepth)
                 .filter(x -> aboveQualFilter(x.TumorEvidence))
-                .sorted().collect(toList());
+                .sorted().toList();
 
-        List<AmberBAF> amberBAFList = tumorBAFList.stream().map(x -> fromTumorBaf(x)).filter(AmberUtils::isValid).collect(toList());
+        List<AmberBAF> amberBAFList = tumorBAFList.stream().map(AmberUtils::fromTumorBaf).filter(AmberUtils::isValid).collect(toList());
 
         List<TumorContamination> contaminationList = new ArrayList<>(tumor.getContamination().values());
 
@@ -223,10 +249,10 @@ public class AmberApplication implements AutoCloseable
                 .filter(x -> isFinite(x.refFrequency()) && Doubles.greaterOrEqual(x.refFrequency(), mConfig.TumorOnlyMinVaf))
                 .filter(x -> isFinite(x.altFrequency()) && Doubles.greaterOrEqual(x.altFrequency(), mConfig.TumorOnlyMinVaf))
                 .sorted()
-                .collect(toList());
+                .toList();
 
         List<AmberBAF> amberBAFList = tumorBAFList.stream()
-                .map(x -> fromTumorBaf(x)).filter(x -> Double.isFinite(x.tumorBAF())).collect(toList());
+                .map(AmberUtils::fromTumorBaf).filter(x -> Double.isFinite(x.tumorBAF())).collect(toList());
 
         mPersistence.persistQC(0, 0.0, null);
         mPersistence.persistVersionInfo(mVersionInfo);
@@ -235,15 +261,15 @@ public class AmberApplication implements AutoCloseable
 
     // the heterozygous loci snp list that we use contains some regions that could be noisy.
     // this is not a problem if we use those to identify loci that are heterozygous in the
-    // germline sample. However, in tumor only mode we would be better off removing those regions
-    private ListMultimap<Chromosome,PositionEvidence> hetLociTumorOnly() throws IOException
+    // germline sample. However, in tumor-only mode we would be better off removing those regions
+    private ListMultimap<Chromosome, PositionEvidence> hetLociTumorOnly()
     {
         List<GenomeRegion> excludedRegions = loadTumorOnlyExcludedSnp();
         ListMultimap<Chromosome, PositionEvidence> result = ArrayListMultimap.create();
         int numBlackListed = 0;
 
         // filter out everything in loaded genome positions that are in these regions
-        for(Map.Entry<Chromosome,AmberSite> entry : mChromosomeSites.entries())
+        for(Map.Entry<Chromosome, AmberSite> entry : mChromosomeSites.entries())
         {
             // check against black list
             boolean blacklisted = false;
@@ -282,10 +308,12 @@ public class AmberApplication implements AutoCloseable
     private List<GenomeRegion> loadTumorOnlyExcludedSnp()
     {
         if(mConfig.RefGenVersion == V37)
+        {
             return Collections.emptyList();
+        }
 
         List<ChrBaseRegion> regions = AmberUtils.loadBedFromResource("tumorOnlyExcludedSnp.38.bed");
-        return regions.stream().map(x -> x.genomeRegion()).collect(toList());
+        return regions.stream().map(ChrBaseRegion::genomeRegion).collect(toList());
     }
 
     @Override

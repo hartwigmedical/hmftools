@@ -9,6 +9,7 @@ import java.io.IOException;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.amber.AmberBAFFile;
@@ -27,8 +28,8 @@ public class AmberData
 {
     private static int DEFAULT_READ_DEPTH = 100;
 
-    public final Multimap<Chromosome,AmberBAF> ChromosomeBafs;
-    public final Multimap<Chromosome,PCFPosition> TumorSegments;
+    public final ListMultimap<Chromosome, AmberBAF> ChromosomeBafs;
+    public final Multimap<Chromosome, PCFPosition> TumorSegments;
 
     public final int AverageTumorDepth;
     public final double Contamination;
@@ -94,6 +95,7 @@ public class AmberData
     {
         return (int) Math.floor(MIN_SOMATIC_TOTAL_READ_COUNT_PROPORTION * AverageTumorDepth);
     }
+
     public int maxSomaticTotalReadCount()
     {
         return (int) Math.ceil(MAX_SOMATIC_TOTAL_READ_COUNT_PROPORTION * AverageTumorDepth);
