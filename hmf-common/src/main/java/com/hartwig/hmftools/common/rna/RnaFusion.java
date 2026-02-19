@@ -26,4 +26,5 @@ public abstract class RnaFusion
     public abstract int maxAnchorLengthUp();
     public abstract int maxAnchorLengthDown();
     public abstract int cohortFrequency();
+    public abstract String filter();
 }

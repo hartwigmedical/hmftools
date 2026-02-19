@@ -11,7 +11,7 @@ import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_JUNC_TYPE;
 import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_KNOWN_TYPE;
 import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_ORIENT;
 import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_POS;
-import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_REALIGN_FLAGS;
+import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_REALIGN_FRAGS;
 import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_SPLIT_FRAGS;
 import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_SV_TYPE;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_ID;
@@ -201,7 +201,7 @@ public class FusionData
         sj.add(FLD_SV_TYPE);
         sj.add(FLD_TOTAL_FRAGS);
         sj.add(FLD_SPLIT_FRAGS);
-        sj.add(FLD_REALIGN_FLAGS);
+        sj.add(FLD_REALIGN_FRAGS);
         sj.add(FLD_DISCORD_FRAGS);
         sj.add(FLD_REL_SPLICED_IDS);
         sj.add(FLD_COHORT_COUNT);
@@ -306,7 +306,7 @@ public class FusionData
 
             int totalFragsIndex = fieldsIndexMap.get(FLD_TOTAL_FRAGS);
             int splitFragsIndex = fieldsIndexMap.get(FLD_SPLIT_FRAGS);
-            int realignedFragsIndex = fieldsIndexMap.get(FLD_REALIGN_FLAGS);
+            int realignedFragsIndex = fieldsIndexMap.get(FLD_REALIGN_FRAGS);
             int discordantFragsIndex = fieldsIndexMap.get(FLD_DISCORD_FRAGS);
 
             int ancDistUpIndex = fieldsIndexMap.get(formStreamField(FLD_MAX_ANCHOR, FS_UP));

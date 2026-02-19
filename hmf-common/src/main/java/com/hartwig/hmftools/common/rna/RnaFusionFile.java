@@ -36,9 +36,10 @@ public final class RnaFusionFile
     public static final String FLD_COVERAGE = "Coverage";
     public static final String FLD_KNOWN_TYPE = "KnownFusionType";
     public static final String FLD_SPLIT_FRAGS = "SplitFrags";
-    public static final String FLD_REALIGN_FLAGS = "RealignedFrags";
+    public static final String FLD_REALIGN_FRAGS = "RealignedFrags";
     public static final String FLD_DISCORD_FRAGS = "DiscordantFrags";
     public static final String FLD_COHORT_COUNT = "CohortCount";
+    public static final String FLD_FILTER = "Filter";
 
     public static List<RnaFusion> read(final String filename)
     {
@@ -49,6 +50,7 @@ public final class RnaFusionFile
             List<String> lines = Files.readAllLines(Paths.get(filename));
             String fileDelim = inferFileDelimiter(filename);
             Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), fileDelim);
+            boolean hasFilterField = fieldsIndexMap.containsKey(FLD_FILTER);
 
             for(String line : lines.subList(1, lines.size()))
             {
@@ -71,13 +73,14 @@ public final class RnaFusionFile
                         .knownType(KnownFusionType.valueOf(items[fieldsIndexMap.get(FLD_KNOWN_TYPE)]))
                         .svType(StructuralVariantType.valueOf(items[fieldsIndexMap.get(FLD_SV_TYPE)]))
                         .splitFragments(Integer.parseInt(items[fieldsIndexMap.get(FLD_SPLIT_FRAGS)]))
-                        .realignedFrags(Integer.parseInt(items[fieldsIndexMap.get(FLD_REALIGN_FLAGS)]))
+                        .realignedFrags(Integer.parseInt(items[fieldsIndexMap.get(FLD_REALIGN_FRAGS)]))
                         .discordantFrags(Integer.parseInt(items[fieldsIndexMap.get(FLD_DISCORD_FRAGS)]))
                         .depthUp(Integer.parseInt(items[fieldsIndexMap.get(formStreamField(FLD_COVERAGE, FS_UP))]))
                         .depthDown(Integer.parseInt(items[fieldsIndexMap.get(formStreamField(FLD_COVERAGE, FS_DOWN))]))
                         .maxAnchorLengthUp(Integer.parseInt(items[fieldsIndexMap.get(formStreamField(FLD_COVERAGE, FS_UP))]))
                         .maxAnchorLengthDown(Integer.parseInt(items[fieldsIndexMap.get(formStreamField(FLD_COVERAGE, FS_DOWN))]))
                         .cohortFrequency(Integer.parseInt(items[fieldsIndexMap.get(FLD_COHORT_COUNT)]))
+                        .filter(hasFilterField ? items[fieldsIndexMap.get(FLD_FILTER)] : null)
                         .build());
             }
 

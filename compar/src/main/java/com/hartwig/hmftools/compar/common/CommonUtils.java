@@ -41,6 +41,11 @@ import com.hartwig.hmftools.compar.cider.CiderVdjComparer;
 import com.hartwig.hmftools.compar.cuppa.CuppaComparer;
 import com.hartwig.hmftools.compar.cuppa.CuppaImageComparer;
 import com.hartwig.hmftools.compar.driver.DriverComparer;
+import com.hartwig.hmftools.compar.isofox.IsofoxGeneDataComparer;
+import com.hartwig.hmftools.compar.isofox.IsofoxSummaryComparer;
+import com.hartwig.hmftools.compar.isofox.IsofoxTranscriptDataComparer;
+import com.hartwig.hmftools.compar.isofox.NovelSpliceJunctionComparer;
+import com.hartwig.hmftools.compar.isofox.RnaFusionComparer;
 import com.hartwig.hmftools.compar.lilac.LilacComparer;
 import com.hartwig.hmftools.compar.linx.DisruptionComparer;
 import com.hartwig.hmftools.compar.linx.FusionComparer;
@@ -179,6 +184,21 @@ public class CommonUtils
 
             case V_CHORD:
                 return new VChordComparer(config);
+
+            case ISOFOX_SUMMARY:
+                return new IsofoxSummaryComparer(config);
+
+            case ISOFOX_GENE_DATA:
+                return new IsofoxGeneDataComparer(config);
+
+            case ISOFOX_TRANSCRIPT_DATA:
+                return new IsofoxTranscriptDataComparer(config);
+
+            case NOVEL_SPLICE_JUNCTION:
+                return new NovelSpliceJunctionComparer(config);
+
+            case RNA_FUSION:
+                return new RnaFusionComparer(config);
 
             default:
                 return null;
