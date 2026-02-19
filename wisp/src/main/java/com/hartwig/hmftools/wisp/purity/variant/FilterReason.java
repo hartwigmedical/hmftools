@@ -13,5 +13,6 @@ public enum FilterReason
     GC_RATIO,
     LOW_QUAL_PER_AD,
     AVG_EDGE_DIST,
-    OUTLIER;
+    OUTLIER,
+    DUAL_ERROR_RATE;
 }

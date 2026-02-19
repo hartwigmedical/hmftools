@@ -28,7 +28,7 @@ import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_READ_MAP_QUALITY;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_SEQ_TECH_BASE_QUAL;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.FRAG_STRAND_BIAS;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_STRAND_BIAS;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_STRAND_BIAS;
 import static com.hartwig.hmftools.sage.vis.AminoAcidUtil.getAltGeneRegionViewModels;
 import static com.hartwig.hmftools.sage.vis.AminoAcidUtil.getGeneRegionLabel;
 import static com.hartwig.hmftools.sage.vis.AminoAcidUtil.getGeneRegions;

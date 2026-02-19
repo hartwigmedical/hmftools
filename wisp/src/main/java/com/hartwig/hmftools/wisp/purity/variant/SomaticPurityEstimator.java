@@ -1,7 +1,12 @@
 package com.hartwig.hmftools.wisp.purity.variant;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+import static java.lang.Math.round;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.phredQualToProbability;
+import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.probabilityToPhredQual;
 import static com.hartwig.hmftools.common.stats.PoissonCalcs.calcPoissonNoiseValue;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.HIGH_PROBABILITY;
@@ -26,7 +31,9 @@ import java.util.List;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.purple.PurityContext;
+import com.hartwig.hmftools.common.bam.ConsensusType;
+import com.hartwig.hmftools.common.codon.Nucleotides;
+import com.hartwig.hmftools.common.redux.BaseQualAdjustment;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.wisp.purity.SampleData;
 import com.hartwig.hmftools.wisp.purity.PurityConfig;
@@ -221,9 +228,24 @@ public class SomaticPurityEstimator
         return new SomaticPurityResult(true, totalVariantCount, sjOutlier.toString(), fragmentTotals, umiTypeCounts, purityCalcData);
     }
 
-    public double getBqrErrorRate(final SomaticVariant variant)
+    private double getBqrErrorRate(final SomaticVariant variant, final GenotypeFragments sampleFragData)
     {
-        return mBqrAdjustment.calcErrorRate(variant.TriNucContext, variant.Alt);
+        return getBqrErrorRate(variant, sampleFragData, ConsensusType.NONE);
+    }
+
+    public double getBqrErrorRate(final SomaticVariant variant, final GenotypeFragments sampleFragData, final ConsensusType consensusType)
+    {
+        double readStrandBias = max(min(sampleFragData.readStrandBias(), 1), 0);
+
+        double errorRateForward = mBqrAdjustment.calcErrorRate(variant.TriNucContext, variant.Alt, consensusType);
+        String tncReversed = Nucleotides.reverseComplementBases(variant.TriNucContext);
+        String altReversed = Nucleotides.reverseComplementBases(variant.Alt);
+        double errorRateReverse = mBqrAdjustment.calcErrorRate(tncReversed, altReversed, consensusType);
+
+        double weightedPhredQual = readStrandBias * probabilityToPhredQual(errorRateForward)
+                + (1 - readStrandBias) * probabilityToPhredQual(errorRateReverse);
+
+        return phredQualToProbability((byte)round(weightedPhredQual));
     }
 
     private FragmentTotals calculateThresholdValues(
@@ -252,7 +274,7 @@ public class SomaticPurityEstimator
                 if(!hasVariantContext(filteredBqrData, variant.TriNucContext, variant.Alt))
                     continue;
 
-                varBqrErrorRate = getBqrErrorRate(variant);
+                varBqrErrorRate = getBqrErrorRate(variant, sampleFragData);
             }
             else
             {

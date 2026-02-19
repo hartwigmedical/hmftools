@@ -17,6 +17,7 @@ public class PurityConstants
 
     public static final int MIN_QUAL_PER_AD = 18;
     public static final int MIN_QUAL_PER_AD_DUAL_ULTIMA = 34;
+    public static final byte MIN_DUAL_QUAL = 50;
 
     public static final double COPY_NUMBER_MAX = 6;
     public static final double COPY_NUMBER_CLONAL_MARGIN = 0.2;
@@ -61,7 +62,8 @@ public class PurityConstants
 
     public static final double SYNTHETIC_TUMOR_VAF = 0.5;
 
-    public static final int OUTLIER_MIN_ALLELE_FRAGS = 3;
+    public static final int OUTLIER_MIN_ALLELE_FRAGS = 4;
+    public static final int OUTLIER_MIN_ALLELE_FRAGS_WITH_DUAL = 2;
     public static final double OUTLIER_MIN_SAMPLE_PERC = 0.15;
     public static final int OUTLIER_MIN_AVG_VAF_MULTIPLE = 8;
     public static final double OUTLIER_MIN_SAMPLE_RETEST_PERC = 0.3;

@@ -2,7 +2,9 @@ package com.hartwig.hmftools.wisp.purity.variant;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsDouble;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LIST_SEPARATOR;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_STRAND_BIAS;
 
 import java.util.List;
 
@@ -64,6 +66,17 @@ public class GenotypeFragments
 
         String[] aedCounts = value.toString().split(LIST_SEPARATOR, 2);
         return aedCounts.length == 2 ? Double.parseDouble(aedCounts[1]) : -1;
+    }
+
+    public double readStrandBias()
+    {
+        Object value = GenotypeData.getExtendedAttribute(SageVcfTags.READ_STRAND_BIAS, null);
+
+        if(value == null)
+            return -1;
+
+        String[] biasStrings = value.toString().split(LIST_SEPARATOR, 2);
+        return biasStrings.length == 2 ? Double.parseDouble(biasStrings[1]) : 0.5;
     }
 
     public boolean isFiltered() { return !mFilterReasons.isEmpty(); }
