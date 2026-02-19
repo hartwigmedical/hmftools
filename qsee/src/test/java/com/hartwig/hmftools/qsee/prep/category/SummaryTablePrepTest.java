@@ -25,6 +25,7 @@ import com.hartwig.hmftools.common.purple.PurpleQC;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.purple.RunMode;
 import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
+import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.Feature;
 import com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature;
 
@@ -41,8 +42,8 @@ public class SummaryTablePrepTest
 
         EnumMap<SummaryTableFeature, Feature> featuresMap = new EnumMap<>(SummaryTableFeature.class);
         SummaryTablePrep.putFeatures(featuresMap, purityContext);
-        SummaryTablePrep.putFeatures(featuresMap, bamMetricSummary);
-        SummaryTablePrep.putFeatures(featuresMap, bamMetricCoverage);
+        SummaryTablePrep.putFeatures(featuresMap, bamMetricSummary, SampleType.TUMOR);
+        SummaryTablePrep.putFeatures(featuresMap, bamMetricCoverage, SampleType.TUMOR);
 
         Set<SummaryTableFeature> allFeatures = EnumSet.allOf(SummaryTableFeature.class);
         Set<SummaryTableFeature> populatedFeatures = featuresMap.keySet();
@@ -56,7 +57,7 @@ public class SummaryTablePrepTest
     {
         EnumMap<SummaryTableFeature, Feature> featuresMap = new EnumMap<>(SummaryTableFeature.class);
         BamMetricCoverage bamMetricCoverage = createTestBamMetricCoverage();
-        SummaryTablePrep.putFeatures(featuresMap, bamMetricCoverage);
+        SummaryTablePrep.putFeatures(featuresMap, bamMetricCoverage, SampleType.TUMOR);
 
         assertEquals(0.9, featuresMap.get(SummaryTableFeature.MIN_COVERAGE_10).value(), 0.01);
         assertEquals(0.7, featuresMap.get(SummaryTableFeature.MIN_COVERAGE_30).value(), 0.01);
