@@ -64,6 +64,9 @@ public interface PurpleVariant
     double subclonalLikelihood();
 
     @Nullable
+    PurpleSomaticLikelihood somaticLikelihood();
+
+    @Nullable
     List<Integer> localPhaseSets();
 
     @Value.Derived

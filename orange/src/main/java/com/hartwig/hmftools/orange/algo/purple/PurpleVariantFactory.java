@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.variant.SmallVariant;
 import com.hartwig.hmftools.common.variant.impact.AltTranscriptReportableInfo;
 import com.hartwig.hmftools.common.variant.impact.VariantEffect;
@@ -26,15 +27,15 @@ import org.jetbrains.annotations.Nullable;
 public final class PurpleVariantFactory
 {
     @Nullable
-    public static List<PurpleVariant> fromPurpleVariants(@Nullable final List<SmallVariant> variants)
+    public static List<PurpleVariant> fromPurpleVariants(@Nullable final List<SmallVariant> variants, final List<DriverCatalog> drivers)
     {
         if(variants == null)
             return null;
 
-        return variants.stream().map(PurpleVariantFactory::fromPurpleVariant).collect(Collectors.toList());
+        return variants.stream().map(x -> fromPurpleVariant(x, drivers)).collect(Collectors.toList());
     }
 
-    public static PurpleVariant fromPurpleVariant(final SmallVariant variant)
+    public static PurpleVariant fromPurpleVariant(final SmallVariant variant, final List<DriverCatalog> drivers)
     {
         List<AltTranscriptReportableInfo> altTransEffects = parseAltTranscriptInfo(variant.otherReportedEffects());
 
@@ -76,6 +77,7 @@ public final class PurpleVariantFactory
                 .genotypeStatus(PurpleGenotypeStatus.valueOf(variant.genotypeStatus().name()))
                 .repeatCount(variant.repeatCount())
                 .subclonalLikelihood(variant.subclonalLikelihood())
+                .somaticLikelihood(PurpleConversion.convert(variant.somaticLikelihood()))
                 .localPhaseSets(variant.localPhaseSets())
                 .build();
     }

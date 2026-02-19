@@ -41,10 +41,10 @@ public class OrangeApplication
         LOGGER.info("Generating ORANGE report data");
 
         OrangeAlgo algo = OrangeAlgo.fromConfig(mConfig);
-        OrangeRecord report = algo.run(mConfig);
+        OrangeRecord orangeRecord = algo.run(mConfig);
 
         ReportWriter writer = ReportWriterFactory.createToDiskWriter(mConfig);
-        writer.write(report);
+        writer.write(orangeRecord);
 
         LOGGER.info("Done!");
     }

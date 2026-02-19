@@ -90,14 +90,6 @@ public class OrangeAlgo
 
     public static OrangeAlgo fromConfig(final OrangeConfig config) throws IOException
     {
-        DoidEntry doidEntry = null;
-
-        if(config.DoidJsonFile != null)
-        {
-            LOGGER.info("Loading DOID database from {}", config.DoidJsonFile);
-            doidEntry = DiseaseOntology.readDoidOwlEntryFromDoidJson(config.DoidJsonFile);
-        }
-
         LOGGER.info("Reading driver genes from {}", config.DriverGenePanelTsv);
         List<DriverGene> driverGenes = DriverGeneFile.read(config.DriverGenePanelTsv);
         LOGGER.info(" Read {} driver genes", driverGenes.size());
@@ -180,7 +172,7 @@ public class OrangeAlgo
 
         boolean hasRefSample = config.ReferenceId != null;
 
-        OrangeRecord report = ImmutableOrangeRecord.builder()
+        OrangeRecord orangeRecord = ImmutableOrangeRecord.builder()
                 .sampleId(config.TumorId)
                 .samplingDate(config.SamplingDate)
                 .experimentType(config.RunType)
@@ -204,14 +196,14 @@ public class OrangeAlgo
                 .plots(buildPlots(config))
                 .build();
 
-        verifyPlots(report.plots(), linxData);
+        verifyPlots(orangeRecord.plots(), linxData);
 
         if(config.LimitJsonOutput)
         {
-            report = ReportLimiter.limitAllListsToMaxOne(report);
+            orangeRecord = ReportLimiter.limitAllListsToMaxOne(orangeRecord);
         }
 
-        return report;
+        return orangeRecord;
     }
 
     private Set<OrangeDoidNode> formConfiguredPrimaryTumorDoid(final OrangeConfig config)
@@ -220,6 +212,16 @@ public class OrangeAlgo
 
         if(!config.PrimaryTumorDoids.isEmpty())
         {
+            /* currently unused
+            DoidEntry doidEntry = null;
+
+            if(config.DoidJsonFile != null)
+            {
+                LOGGER.info("Loading DOID database from {}", config.DoidJsonFile);
+                doidEntry = DiseaseOntology.readDoidOwlEntryFromDoidJson(config.DoidJsonFile);
+            }
+            */
+
             LOGGER.debug("Determining configured primary tumor");
 
             Set<DoidNode> nodes = Sets.newHashSet();

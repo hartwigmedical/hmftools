@@ -31,7 +31,6 @@ import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.property.HorizontalAlignment;
 
 import org.apache.logging.log4j.util.Strings;
-import org.jetbrains.annotations.NotNull;
 
 public class SomaticFindingsChapter implements ReportChapter
 {
@@ -39,8 +38,7 @@ public class SomaticFindingsChapter implements ReportChapter
     private final PlotPathResolver mPlotPathResolver;
     private final ReportResources mReportResources;
 
-    public SomaticFindingsChapter(final OrangeRecord report, final PlotPathResolver plotPathResolver,
-            final ReportResources reportResources)
+    public SomaticFindingsChapter(final OrangeRecord report, final PlotPathResolver plotPathResolver, final ReportResources reportResources)
     {
         mReport = report;
         mPlotPathResolver = plotPathResolver;
@@ -109,7 +107,9 @@ public class SomaticFindingsChapter implements ReportChapter
             List<VariantEntry> reportableVariants = VariantEntryFactory.create(mReport.purple().somaticVariants(), somaticDrivers);
 
             String titleDrivers = driverVariantsTitle + " (" + reportableVariants.size() + ")";
-            document.add(SomaticVariantTable.build(titleDrivers, contentWidth(), reportableVariants, mReportResources));
+
+            document.add(SomaticVariantTable.build(
+                    titleDrivers, contentWidth(), reportableVariants, mReportResources, mReport.tumorOnlyMode(), mReport.isofox() != null));
         }
     }
 

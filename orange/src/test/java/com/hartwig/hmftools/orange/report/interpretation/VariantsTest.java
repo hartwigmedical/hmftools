@@ -92,29 +92,16 @@ public class VariantsTest
     public void canRenderRnaDepthField()
     {
         VariantEntry missingRna = TestVariantEntryFactory.builder().rnaDepth(null).build();
-        assertEquals(ReportResources.NOT_AVAILABLE, Variants.rnaDepthField(missingRna));
+        assertEquals(ReportResources.NOT_AVAILABLE, Variants.rnaInfoField(missingRna));
 
         VariantEntry proper = TestVariantEntryFactory.builder()
                 .rnaDepth(TestPurpleVariantFactory.depthBuilder().alleleReadCount(10).totalReadCount(20).build())
                 .build();
-        assertEquals("10/20 (50%)", Variants.rnaDepthField(proper));
+        assertEquals("10/20", Variants.rnaInfoField(proper));
 
         VariantEntry noDepth = TestVariantEntryFactory.builder()
                 .rnaDepth(TestPurpleVariantFactory.depthBuilder().alleleReadCount(0).totalReadCount(0).build())
                 .build();
-        assertEquals("0/0", Variants.rnaDepthField(noDepth));
-    }
-
-    @Test
-    public void canRenderPhaseSetField()
-    {
-        VariantEntry missingPhaseSet = TestVariantEntryFactory.builder().localPhaseSets(null).build();
-        assertEquals(Strings.EMPTY, Variants.phaseSetField(missingPhaseSet));
-
-        VariantEntry emptyPhaseSet = TestVariantEntryFactory.builder().localPhaseSets(Lists.newArrayList()).build();
-        assertEquals(Strings.EMPTY, Variants.phaseSetField(emptyPhaseSet));
-
-        VariantEntry multiPhaseSet = TestVariantEntryFactory.builder().localPhaseSets(Lists.newArrayList(1, 2)).build();
-        assertEquals("1, 2", Variants.phaseSetField(multiPhaseSet));
+        assertEquals("0/0", Variants.rnaInfoField(noDepth));
     }
 }

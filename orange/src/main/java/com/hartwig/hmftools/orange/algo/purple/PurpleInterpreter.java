@@ -37,11 +37,11 @@ public class PurpleInterpreter
     {
         LOGGER.info("Analysing Purple data");
 
-        List<PurpleVariant> somaticVariants = PurpleVariantFactory.fromPurpleVariants(purple.somaticVariants());
+        List<PurpleVariant> somaticVariants = PurpleVariantFactory.fromPurpleVariants(purple.somaticVariants(), purple.somaticDrivers());
 
-        List<PurpleVariant> germlineVariants = PurpleVariantFactory.fromPurpleVariants(purple.germlineVariants());
+        List<PurpleVariant> germlineVariants = PurpleVariantFactory.fromPurpleVariants(purple.germlineVariants(), purple.germlineDrivers());
 
-        @Nullable List<PurpleDriver> germlineDrivers = ConversionUtil.mapToNullableList(purple.germlineDrivers(), PurpleConversion::convert);
+        List<PurpleDriver> germlineDrivers = ConversionUtil.mapToNullableList(purple.germlineDrivers(), PurpleConversion::convert);
 
         List<PurpleGainDeletion> driverSomaticGainsDels = somaticGainsDelsFromDrivers(purple.somaticDrivers(), purple.somaticGeneCopyNumbers());
 

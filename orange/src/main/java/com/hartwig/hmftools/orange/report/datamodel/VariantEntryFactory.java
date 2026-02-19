@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.orange.report.datamodel;
 
+import static java.lang.Math.min;
+
 import java.util.List;
 import java.util.Set;
 import java.util.StringJoiner;
@@ -62,10 +64,13 @@ public final class VariantEntryFactory
 
         return ImmutableVariantEntry.builder()
                 .gene(variant.gene())
+                .vaf(min(variant.adjustedVAF(), 0))
+                .depth(variant.tumorDepth().totalReadCount())
+                .somaticLikelihood(variant.somaticLikelihood().toString())
                 .isCanonical(driver == null || driver.transcript().equals(variant.canonicalImpact().transcript()))
                 .affectedCodon(transcriptImpact.affectedCodon())
                 .impact(determineImpact(transcriptImpact))
-                .variantCopyNumber(variant.adjustedCopyNumber() * Math.max(0, Math.min(1, variant.adjustedVAF())))
+                .variantCopyNumber(variant.adjustedCopyNumber() * Math.max(0, min(1, variant.adjustedVAF())))
                 .totalCopyNumber(variant.adjustedCopyNumber())
                 .minorAlleleCopyNumber(variant.minorAlleleCopyNumber())
                 .biallelic(variant.biallelic())
@@ -73,7 +78,6 @@ public final class VariantEntryFactory
                 .hotspot(variant.hotspot())
                 .driverLikelihood(driver != null ? driver.driverLikelihood() : null)
                 .clonalLikelihood(1 - variant.subclonalLikelihood())
-                .localPhaseSets(variant.localPhaseSets())
                 .rnaDepth(variant.rnaDepth())
                 .genotypeStatus(variant.genotypeStatus())
                 .build();

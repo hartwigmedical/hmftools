@@ -33,6 +33,7 @@ import com.hartwig.hmftools.datamodel.purple.PurpleGermlineStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleLikelihoodMethod;
 import com.hartwig.hmftools.datamodel.purple.PurpleQC;
 import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
+import com.hartwig.hmftools.datamodel.purple.PurpleSomaticLikelihood;
 import com.hartwig.hmftools.datamodel.purple.PurpleTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariantEffect;
 import com.hartwig.hmftools.orange.algo.purple.CodingEffectDeterminer;
@@ -162,5 +163,10 @@ public final class PurpleConversion
     public static PurpleGermlineStatus convert(final GermlineStatus germlineStatus)
     {
         return PurpleGermlineStatus.valueOf(germlineStatus.name());
+    }
+
+    public static PurpleSomaticLikelihood convert(final com.hartwig.hmftools.common.variant.SomaticLikelihood somaticLikelihood)
+    {
+        return PurpleSomaticLikelihood.valueOf(somaticLikelihood.name());
     }
 }

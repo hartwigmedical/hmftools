@@ -6,6 +6,7 @@ import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.HotspotType;
 import com.hartwig.hmftools.common.variant.ImmutableSmallVariantImpl;
+import com.hartwig.hmftools.common.variant.SomaticLikelihood;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleAllelicDepth;
@@ -13,6 +14,7 @@ import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleVariant;
 import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
 import com.hartwig.hmftools.datamodel.purple.PurpleGenotypeStatus;
+import com.hartwig.hmftools.datamodel.purple.PurpleSomaticLikelihood;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariantType;
 
 import org.apache.logging.log4j.util.Strings;
@@ -44,6 +46,7 @@ public final class TestPurpleVariantFactory
                 .genotypeStatus(PurpleGenotypeStatus.UNKNOWN)
                 .repeatCount(0)
                 .subclonalLikelihood(0D)
+                .somaticLikelihood(PurpleSomaticLikelihood.MEDIUM)
                 .localPhaseSets(null);
     }
 

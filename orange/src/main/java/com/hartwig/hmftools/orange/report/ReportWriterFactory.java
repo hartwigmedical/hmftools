@@ -2,18 +2,13 @@ package com.hartwig.hmftools.orange.report;
 
 import com.hartwig.hmftools.orange.OrangeConfig;
 
-import org.jetbrains.annotations.NotNull;
-
 public final class ReportWriterFactory
 {
-    @NotNull
-    public static ReportWriter createToDiskWriter(@NotNull OrangeConfig config)
+    public static ReportWriter createToDiskWriter(final OrangeConfig config)
     {
-        String outputDir = config.OutputDir;
-        return new ReportWriter(true, outputDir, new PlotPathResolver(outputDir), config.AddDisclaimer);
+        return new ReportWriter(true, config.OutputDir, new PlotPathResolver(config.OutputDir), config.AddDisclaimer);
     }
 
-    @NotNull
     public static ReportWriter createInMemoryWriter()
     {
         return new ReportWriter(false, null, new PlotPathResolver(null), true);
