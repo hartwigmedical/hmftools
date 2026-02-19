@@ -57,11 +57,6 @@ public class GeneCopyNumberData implements ComparableItem
     }
 
     @Override
-    public boolean isPass() {
-        return true;
-    }
-
-    @Override
     public String geneName() { return CopyNumber.GeneName; }
 
     @Override

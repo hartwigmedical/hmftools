@@ -69,11 +69,8 @@ public class FusionData implements ComparableItem
     }
 
     @Override
-    public boolean reportable() { return Fusion.reported(); }
-
-    @Override
-    public boolean isPass() {
-        return true;
+    public boolean reportable() {
+        return Fusion.reported();
     }
 
     @Override

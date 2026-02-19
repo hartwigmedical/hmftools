@@ -14,7 +14,7 @@ public final class DiffFunctions
 {
     public static final String FILTER_DIFF = "filter";
 
-    public static boolean checkDiff(final List<String> diffs, final String name, int value1, int value2, final DiffThresholds thresholds)
+    public static boolean checkDiff(final List<String> diffs, final String name, long value1, long value2, final DiffThresholds thresholds)
     {
         if(!thresholds.isFieldRegistered(name))
             return checkDiff(diffs, name, value1, value2);
@@ -40,7 +40,7 @@ public final class DiffFunctions
         return false;
     }
 
-    public static boolean checkDiff(final List<String> diffs, final String name, int value1, int value2)
+    public static boolean checkDiff(final List<String> diffs, final String name, long value1, long value2)
     {
         if(value1 != value2)
         {

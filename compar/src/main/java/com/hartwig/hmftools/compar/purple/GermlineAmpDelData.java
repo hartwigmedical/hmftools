@@ -64,11 +64,6 @@ public class GermlineAmpDelData implements ComparableItem
     }
 
     @Override
-    public boolean isPass() {
-        return true;
-    }
-
-    @Override
     public String geneName() { return AmpDelData.GeneName; }
 
     @Override

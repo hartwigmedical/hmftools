@@ -51,14 +51,6 @@ public class Cdr3LocusSummaryData implements ComparableItem
     }
 
     @Override
-    public boolean reportable() { return true; }
-
-    @Override
-    public boolean isPass() {
-        return true;
-    }
-
-    @Override
     public boolean matches(final ComparableItem comparableItem)
     {
         final Cdr3LocusSummary other = ((Cdr3LocusSummaryData) comparableItem).Cdr3LocusSummary;

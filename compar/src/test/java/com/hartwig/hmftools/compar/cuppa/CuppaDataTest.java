@@ -28,5 +28,6 @@ public class CuppaDataTest extends ComparableItemTest<CuppaData, CuppaComparer, 
                 "classifierName", b -> b.classifierName = alternateValueSource.PredictionEntry.ClassifierName
         );
         reportabilityFieldToFalseReportabilityInitializer = Collections.emptyMap();
+        nameToNonPassInitializer = Collections.emptyMap();
     }
 }

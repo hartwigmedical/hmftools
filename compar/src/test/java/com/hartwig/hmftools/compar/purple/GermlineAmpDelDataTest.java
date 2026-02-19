@@ -46,6 +46,7 @@ public class GermlineAmpDelDataTest
         );
         nameToAlternateIndexInitializer = Map.of("Gene", b -> b.gene = alternateValueSource.AmpDelData.GeneName);
         reportabilityFieldToFalseReportabilityInitializer = Map.of(FLD_REPORTED, b -> b.reported = false);
+        nameToNonPassInitializer = Collections.emptyMap();
     }
 
     @Test

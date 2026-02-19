@@ -53,14 +53,6 @@ public class ChordComparData implements ComparableItem
     }
 
     @Override
-    public boolean reportable() { return true; }
-
-    @Override
-    public boolean isPass() {
-        return true;
-    }
-
-    @Override
     public boolean matches(final ComparableItem other)
     {
         // a single record for each sample

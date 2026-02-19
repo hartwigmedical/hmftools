@@ -81,11 +81,6 @@ public class GermlineVariantData implements ComparableItem
     }
 
     @Override
-    public boolean isPass() {
-        return true;
-    }
-
-    @Override
     public String geneName() { return Variant.gene(); }
 
     @Override

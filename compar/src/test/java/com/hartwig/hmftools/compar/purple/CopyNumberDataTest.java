@@ -53,6 +53,7 @@ public class CopyNumberDataTest extends ComparableItemTest<CopyNumberData, CopyN
                 }
         );
         reportabilityFieldToFalseReportabilityInitializer = Collections.emptyMap();
+        nameToNonPassInitializer = Collections.emptyMap();
     }
 
     @Override

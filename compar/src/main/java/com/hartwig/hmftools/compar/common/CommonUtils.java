@@ -41,6 +41,11 @@ import com.hartwig.hmftools.compar.cider.CiderVdjComparer;
 import com.hartwig.hmftools.compar.cuppa.CuppaComparer;
 import com.hartwig.hmftools.compar.cuppa.CuppaImageComparer;
 import com.hartwig.hmftools.compar.driver.DriverComparer;
+import com.hartwig.hmftools.compar.isofox.IsofoxGeneDataComparer;
+import com.hartwig.hmftools.compar.isofox.IsofoxSummaryComparer;
+import com.hartwig.hmftools.compar.isofox.IsofoxTranscriptDataComparer;
+import com.hartwig.hmftools.compar.isofox.NovelSpliceJunctionComparer;
+import com.hartwig.hmftools.compar.isofox.RnaFusionComparer;
 import com.hartwig.hmftools.compar.lilac.LilacComparer;
 import com.hartwig.hmftools.compar.linx.DisruptionComparer;
 import com.hartwig.hmftools.compar.linx.FusionComparer;
@@ -179,6 +184,21 @@ public class CommonUtils
 
             case V_CHORD:
                 return new VChordComparer(config);
+
+            case ISOFOX_SUMMARY:
+                return new IsofoxSummaryComparer(config);
+
+            case ISOFOX_GENE_DATA:
+                return new IsofoxGeneDataComparer(config);
+
+            case ISOFOX_TRANSCRIPT_DATA:
+                return new IsofoxTranscriptDataComparer(config);
+
+            case NOVEL_SPLICE_JUNCTION:
+                return new NovelSpliceJunctionComparer(config);
+
+            case RNA_FUSION:
+                return new RnaFusionComparer(config);
 
             default:
                 return null;
@@ -350,29 +370,42 @@ public class CommonUtils
 
         boolean refCountsAsCalled = countsAsCalled(refItem, matchLevel);
         boolean newCountsAsCalled = countsAsCalled(newItem, matchLevel);
-        MismatchType mismatchType;
-        if(refCountsAsCalled && !newCountsAsCalled)
+        if(!refCountsAsCalled && !newCountsAsCalled)
         {
-            mismatchType = REF_ONLY;
+            // ignore unimportant differences
+            return null;
         }
-        else if(!refCountsAsCalled && newCountsAsCalled)
+        else if(refCountsAsCalled && newCountsAsCalled && diffs.isEmpty() && !includeMatches)
         {
-            mismatchType = NEW_ONLY;
-        }
-        else if(refCountsAsCalled && newCountsAsCalled && !diffs.isEmpty())
-        {
-            mismatchType = VALUE;
-        }
-        else if(refCountsAsCalled && newCountsAsCalled && includeMatches)
-        {
-            mismatchType = FULL_MATCH;
+            // ignore perfect matches when not including matches
+            return null;
         }
         else
         {
-            // should be impossible due to earlier filters
-            mismatchType = INVALID_ERROR;
+            MismatchType mismatchType;
+            if(refCountsAsCalled && !newCountsAsCalled)
+            {
+                mismatchType = REF_ONLY;
+            }
+            else if(!refCountsAsCalled && newCountsAsCalled)
+            {
+                mismatchType = NEW_ONLY;
+            }
+            else if(refCountsAsCalled && newCountsAsCalled && !diffs.isEmpty())
+            {
+                mismatchType = VALUE;
+            }
+            else if(refCountsAsCalled && newCountsAsCalled && includeMatches)
+            {
+                mismatchType = FULL_MATCH;
+            }
+            else
+            {
+                // should be impossible due to earlier filters
+                mismatchType = INVALID_ERROR;
+            }
+            return new Mismatch(refItem, newItem, mismatchType, diffs);
         }
-        return new Mismatch(refItem, newItem, mismatchType, diffs);
     }
 
     public static boolean countsAsCalled(final ComparableItem item, final MatchLevel matchLevel)
