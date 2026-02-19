@@ -27,6 +27,8 @@ import com.hartwig.hmftools.qsee.prep.CategoryPrepTask;
 import com.hartwig.hmftools.qsee.prep.CommonPrepConfig;
 import com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature;
 import com.hartwig.hmftools.qsee.prep.category.table.SummaryTableInputData;
+import com.hartwig.hmftools.qsee.status.ComparisonOperator;
+import com.hartwig.hmftools.qsee.status.QcStatusType;
 import com.hartwig.hmftools.qsee.status.QcThresholdRegistry;
 import com.hartwig.hmftools.qsee.status.QcStatus;
 import com.hartwig.hmftools.qsee.status.QcThreshold;
@@ -101,13 +103,46 @@ public class SummaryTablePrep implements CategoryPrep
             boolean purpleQcStatusExists = purityContext.qc().status().contains(purpleQcStatus);
 
             QcStatus qcStatus = purpleQcStatusExists
-                    ? QcStatus.fromPurpleQcStatus(purpleQcStatus)
+                    ? convertQcStatus(purpleQcStatus)
                     : QcStatus.createEmpty();
 
             qcStatuses.put(purpleQcStatus, qcStatus);
         }
 
         return qcStatuses;
+    }
+
+    private static QcStatus convertQcStatus(PurpleQCStatus purpleQCStatus)
+    {
+        return switch(purpleQCStatus)
+        {
+            case PASS -> QcStatus.createEmpty();
+
+            case WARN_DELETED_GENES ->
+                    new QcStatus(QcStatusType.WARN, ComparisonOperator.GREATER_THAN, PurpleQCStatus.MAX_DELETED_GENES);
+
+            case WARN_HIGH_COPY_NUMBER_NOISE ->
+                    new QcStatus(QcStatusType.WARN, ComparisonOperator.GREATER_THAN, PurpleQCStatus.MAX_UNSUPPORTED_SEGMENTS);
+
+            case WARN_LOW_PURITY ->
+                    new QcStatus(QcStatusType.WARN, ComparisonOperator.LESS_THAN, PurpleQCStatus.MIN_PURITY);
+
+            case WARN_TINC ->
+                    new QcStatus(QcStatusType.WARN, ComparisonOperator.GREATER_THAN, PurpleQCStatus.TINC_WARN_LEVEL);
+
+            case FAIL_TINC ->
+                    new QcStatus(QcStatusType.FAIL, ComparisonOperator.GREATER_THAN_OR_EQUAL, PurpleQCStatus.TINC_FAIL_LEVEL);
+
+            case FAIL_CONTAMINATION ->
+                    new QcStatus(QcStatusType.FAIL, ComparisonOperator.GREATER_THAN, PurpleQCStatus.MAX_CONTAMINATION);
+
+            case FAIL_NO_TUMOR -> new QcStatus(QcStatusType.FAIL, null, Double.NaN);
+
+            case WARN_GENDER_MISMATCH -> new QcStatus(QcStatusType.WARN, null, Double.NaN);
+
+            default ->
+                    throw new IllegalArgumentException("QC threshold not defined for PurpleQCStatus(" + purpleQCStatus + ")");
+        };
     }
 
     private static QcStatus getTincQcStatus(EnumMap<PurpleQCStatus, QcStatus> qcStatuses)
