@@ -58,5 +58,6 @@ public class PurityDataTest extends ComparableItemTest<PurityData, PurityCompare
 
         nameToAlternateIndexInitializer = Collections.emptyMap();
         reportabilityFieldToFalseReportabilityInitializer = Collections.emptyMap();
+        nameToNonPassInitializer = Collections.emptyMap();
     }
 }

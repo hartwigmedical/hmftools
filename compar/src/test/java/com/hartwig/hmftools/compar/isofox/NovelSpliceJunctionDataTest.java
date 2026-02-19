@@ -59,6 +59,7 @@ public class NovelSpliceJunctionDataTest
                     b.comparisonPositionEnd = alternateValueSource.ComparisonPositionEnd().Position;
                 });
         reportabilityFieldToFalseReportabilityInitializer = Collections.emptyMap();
+        nameToNonPassInitializer = Collections.emptyMap();
     }
 
     @Override

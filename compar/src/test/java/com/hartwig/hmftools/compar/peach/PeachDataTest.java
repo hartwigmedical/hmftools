@@ -33,5 +33,6 @@ public class PeachDataTest extends ComparableItemTest<PeachData, PeachComparer, 
                 "Allele", b -> b.allele = alternateValueSource.Genotype.allele()
         );
         reportabilityFieldToFalseReportabilityInitializer = Collections.emptyMap();
+        nameToNonPassInitializer = Collections.emptyMap();
     }
 }

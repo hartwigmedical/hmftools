@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.compar.isofox;
 
 import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_DISCORD_FRAGS;
+import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_FILTER;
 import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_KNOWN_TYPE;
 import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_REALIGN_FRAGS;
 import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_SPLIT_FRAGS;
@@ -67,6 +68,9 @@ public class RnaFusionDataTest extends ComparableItemTest<RnaFusionData, RnaFusi
                 }
         );
         reportabilityFieldToFalseReportabilityInitializer = Collections.emptyMap();
+        nameToNonPassInitializer = Map.of(
+                FLD_FILTER, b -> b.filter = "Filter"
+        );
     }
 
     @Override

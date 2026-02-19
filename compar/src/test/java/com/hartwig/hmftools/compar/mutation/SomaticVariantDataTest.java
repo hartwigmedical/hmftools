@@ -97,6 +97,13 @@ public class SomaticVariantDataTest extends ComparableItemTest<SomaticVariantDat
                 "Type", b -> b.type = alternateValueSource.Type
         );
         reportabilityFieldToFalseReportabilityInitializer = Map.of(FLD_REPORTED, b -> b.reported = false);
+        nameToNonPassInitializer = Map.of(
+                "UnfilteredVcf", b -> b.isFromUnfilteredVcf = true,
+                "NonGene", b -> {
+                    b.gene = "";
+                    b.reported = false;
+                }
+        );
     }
 
     @Test

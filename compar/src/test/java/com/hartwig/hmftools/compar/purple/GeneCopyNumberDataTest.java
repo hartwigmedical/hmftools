@@ -27,6 +27,7 @@ public class GeneCopyNumberDataTest extends ComparableItemTest<GeneCopyNumberDat
         );
         nameToAlternateIndexInitializer = Map.of("Gene", b -> b.gene = alternateValueSource.CopyNumber.geneName());
         reportabilityFieldToFalseReportabilityInitializer = Collections.emptyMap();
+        nameToNonPassInitializer = Collections.emptyMap();
     }
 
     @Override

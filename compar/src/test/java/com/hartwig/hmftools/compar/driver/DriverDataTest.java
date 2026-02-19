@@ -62,6 +62,7 @@ public class DriverDataTest extends ComparableItemTest<DriverData, DriverCompare
                 }
         );
         reportabilityFieldToFalseReportabilityInitializer = Collections.emptyMap();
+        nameToNonPassInitializer = Collections.emptyMap();
     }
     
     @Test

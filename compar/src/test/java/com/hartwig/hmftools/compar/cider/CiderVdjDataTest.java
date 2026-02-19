@@ -25,5 +25,6 @@ public class CiderVdjDataTest extends ComparableItemTest<CiderVdjData, CiderVdjC
         );
         nameToAlternateIndexInitializer = Map.of("cdr3Seq", b -> b.cdr3Seq = alternateValueSource.mCdr3Sequence.cdr3Seq());
         reportabilityFieldToFalseReportabilityInitializer = Collections.emptyMap();
+        nameToNonPassInitializer = Collections.emptyMap();
     }
 }

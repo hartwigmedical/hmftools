@@ -87,6 +87,7 @@ public class GermlineVariantDataTest extends ComparableItemTest<GermlineVariantD
                 "Type", b -> b.type = alternateValueSource.Variant.type()
         );
         reportabilityFieldToFalseReportabilityInitializer = Map.of(FLD_REPORTED, b -> b.reported = false);
+        nameToNonPassInitializer = Collections.emptyMap();
     }
 
     @Test

@@ -370,29 +370,42 @@ public class CommonUtils
 
         boolean refCountsAsCalled = countsAsCalled(refItem, matchLevel);
         boolean newCountsAsCalled = countsAsCalled(newItem, matchLevel);
-        MismatchType mismatchType;
-        if(refCountsAsCalled && !newCountsAsCalled)
+        if(!refCountsAsCalled && !newCountsAsCalled)
         {
-            mismatchType = REF_ONLY;
+            // ignore unimportant differences
+            return null;
         }
-        else if(!refCountsAsCalled && newCountsAsCalled)
+        else if(refCountsAsCalled && newCountsAsCalled && diffs.isEmpty() && !includeMatches)
         {
-            mismatchType = NEW_ONLY;
-        }
-        else if(refCountsAsCalled && newCountsAsCalled && !diffs.isEmpty())
-        {
-            mismatchType = VALUE;
-        }
-        else if(refCountsAsCalled && newCountsAsCalled && includeMatches)
-        {
-            mismatchType = FULL_MATCH;
+            // ignore perfect matches when not including matches
+            return null;
         }
         else
         {
-            // should be impossible due to earlier filters
-            mismatchType = INVALID_ERROR;
+            MismatchType mismatchType;
+            if(refCountsAsCalled && !newCountsAsCalled)
+            {
+                mismatchType = REF_ONLY;
+            }
+            else if(!refCountsAsCalled && newCountsAsCalled)
+            {
+                mismatchType = NEW_ONLY;
+            }
+            else if(refCountsAsCalled && newCountsAsCalled && !diffs.isEmpty())
+            {
+                mismatchType = VALUE;
+            }
+            else if(refCountsAsCalled && newCountsAsCalled && includeMatches)
+            {
+                mismatchType = FULL_MATCH;
+            }
+            else
+            {
+                // should be impossible due to earlier filters
+                mismatchType = INVALID_ERROR;
+            }
+            return new Mismatch(refItem, newItem, mismatchType, diffs);
         }
-        return new Mismatch(refItem, newItem, mismatchType, diffs);
     }
 
     public static boolean countsAsCalled(final ComparableItem item, final MatchLevel matchLevel)

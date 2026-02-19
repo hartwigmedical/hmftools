@@ -30,6 +30,7 @@ public class IsofoxTranscriptDataTest extends ComparableItemTest<IsofoxTranscrip
                 FLD_TRANS_NAME, b -> b.transcriptName = alternateValueSource.TranscriptExpression().transcriptName()
         );
         reportabilityFieldToFalseReportabilityInitializer = Collections.emptyMap();
+        nameToNonPassInitializer = Collections.emptyMap();
     }
 
     @Override

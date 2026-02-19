@@ -31,5 +31,6 @@ public class ChordComparDataTest extends ComparableItemTest<ChordComparData, Cho
         );
         nameToAlternateIndexInitializer = Collections.emptyMap();
         reportabilityFieldToFalseReportabilityInitializer = Collections.emptyMap();
+        nameToNonPassInitializer = Collections.emptyMap();
     }
 }

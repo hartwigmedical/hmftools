@@ -29,5 +29,6 @@ public class BamMetricsDataTest
         );
         nameToAlternateIndexInitializer = Collections.emptyMap();
         reportabilityFieldToFalseReportabilityInitializer = Collections.emptyMap();
+        nameToNonPassInitializer = Collections.emptyMap();
     }
 }

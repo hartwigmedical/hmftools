@@ -32,6 +32,7 @@ public class IsofoxGeneDataTest extends ComparableItemTest<IsofoxGeneData, Isofo
                 FLD_GENE_NAME, b -> b.geneName = alternateValueSource.GeneExpression().geneName()
         );
         reportabilityFieldToFalseReportabilityInitializer = Collections.emptyMap();
+        nameToNonPassInitializer = Collections.emptyMap();
     }
 
     @Override

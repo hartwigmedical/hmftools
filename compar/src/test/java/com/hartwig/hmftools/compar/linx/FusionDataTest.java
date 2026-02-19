@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.compar.linx.FusionData.FLD_REPORTED_TYPE;
 import static com.hartwig.hmftools.compar.linx.FusionData.FLD_TRANSCRIPT_DOWN;
 import static com.hartwig.hmftools.compar.linx.FusionData.FLD_TRANSCRIPT_UP;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -49,5 +50,6 @@ public class FusionDataTest extends ComparableItemTest<FusionData, FusionCompare
 
         nameToAlternateIndexInitializer = Map.of("FusionName", b -> b.fusionName = alternateValueSource.GeneMappedName);
         reportabilityFieldToFalseReportabilityInitializer = Map.of(FLD_REPORTED, b -> b.reported = false);
+        nameToNonPassInitializer = Collections.emptyMap();
     }
 }

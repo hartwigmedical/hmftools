@@ -24,5 +24,6 @@ public class TealDataTest extends ComparableItemTest<TealData, TealComparer, Tes
                 Map.of(FLD_TELOMERE_LENGTH, b -> b.telomereLength = alternateValueSource.TelomereLength.finalTelomereLength());
         nameToAlternateIndexInitializer = Map.of(FLD_TYPE, b -> b.type = alternateValueSource.TelomereLength.type());
         reportabilityFieldToFalseReportabilityInitializer = Collections.emptyMap();
+        nameToNonPassInitializer = Collections.emptyMap();
     }
 }

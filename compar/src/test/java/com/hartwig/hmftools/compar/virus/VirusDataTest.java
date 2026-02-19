@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.compar.virus.VirusData.FLD_DRIVER_LIKELIHOOD;
 import static com.hartwig.hmftools.compar.virus.VirusData.FLD_INTEGRATIONS;
 import static com.hartwig.hmftools.compar.virus.VirusData.FLD_MEAN_COVERAGE;
 
+import java.util.Collections;
 import java.util.Map;
 
 import com.hartwig.hmftools.compar.ComparConfig;
@@ -28,5 +29,6 @@ public class VirusDataTest extends ComparableItemTest<VirusData, VirusComparer, 
         );
         nameToAlternateIndexInitializer = Map.of("name", b -> b.name = alternateValueSource.Virus.name());
         reportabilityFieldToFalseReportabilityInitializer = Map.of(FLD_REPORTED, b -> b.reported = false);
+        nameToNonPassInitializer = Collections.emptyMap();
     }
 }
