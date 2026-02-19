@@ -48,13 +48,9 @@ public interface PurpleVariant
     PurpleAllelicDepth rnaDepth();
 
     double adjustedCopyNumber();
-
     double adjustedVAF();
-
     double minorAlleleCopyNumber();
-
     double variantCopyNumber();
-
     boolean biallelic();
 
     // make regular double in the future
@@ -65,8 +61,10 @@ public interface PurpleVariant
     PurpleGenotypeStatus genotypeStatus();
 
     int repeatCount();
-
     double subclonalLikelihood();
+
+    @Nullable
+    PurpleSomaticLikelihood somaticLikelihood();
 
     @Nullable
     List<Integer> localPhaseSets();

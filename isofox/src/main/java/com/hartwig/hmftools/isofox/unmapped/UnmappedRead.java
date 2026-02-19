@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.isofox.unmapped;
 
 import static com.hartwig.hmftools.common.sv.StartEndIterator.startEndStr;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 
 import java.util.StringJoiner;
 
@@ -63,7 +63,7 @@ public class UnmappedRead
 
     public static String header()
     {
-        StringJoiner sj = new StringJoiner(DELIMITER);
+        StringJoiner sj = new StringJoiner(CSV_DELIM);
         sj.add("ReadId");
         sj.add("Chromosome");
         sj.add("ReadStart");
@@ -88,7 +88,7 @@ public class UnmappedRead
 
     public String toCsv()
     {
-        StringJoiner sj = new StringJoiner(DELIMITER);
+        StringJoiner sj = new StringJoiner(CSV_DELIM);
         sj.add(ReadId);
         sj.add(ReadRegion.Chromosome);
         sj.add(String.valueOf(ReadRegion.start()));

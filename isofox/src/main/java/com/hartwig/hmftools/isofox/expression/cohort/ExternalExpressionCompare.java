@@ -22,7 +22,6 @@ import static com.hartwig.hmftools.isofox.expression.cohort.ExpressionData.fromR
 import static com.hartwig.hmftools.isofox.expression.cohort.ExpressionData.fromRsemTranscript;
 import static com.hartwig.hmftools.isofox.expression.cohort.ExpressionData.fromSalmon;
 import static com.hartwig.hmftools.isofox.expression.cohort.ExpressionData.getExternalSourceFilename;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 import static com.hartwig.hmftools.isofox.results.TranscriptResult.FLD_EFFECTIVE_LENGTH;
 import static com.hartwig.hmftools.isofox.results.TranscriptResult.FLD_FITTED_FRAGMENTS;
 import static com.hartwig.hmftools.isofox.results.TranscriptResult.FLD_RAW_FRAGMENTS;

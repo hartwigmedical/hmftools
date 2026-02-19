@@ -1,9 +1,8 @@
 package com.hartwig.hmftools.cup.rna;
 
-import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_POS_END;
-import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_POS_START;
-import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_FRAG_COUNT;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POS_END;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POS_START;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferFileDelimiter;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
@@ -21,7 +20,8 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.rna.AltSpliceJunctionFile;
+import com.hartwig.hmftools.common.rna.NovelSpliceJunction;
+import com.hartwig.hmftools.common.rna.NovelSpliceJunctionFile;
 import com.hartwig.hmftools.cup.prep.CategoryType;
 import com.hartwig.hmftools.cup.prep.CategoryPrep;
 import com.hartwig.hmftools.cup.prep.DataItem;
@@ -52,70 +52,42 @@ public class AltSpliceJunctionPrep implements CategoryPrep
         if(mRefAsjIndexMap.isEmpty())
             return null;
 
-        final String filename = mConfig.altSpliceJunctionFile(sampleId);
+        String filename = mConfig.altSpliceJunctionFile(sampleId);
 
         if(!Files.exists(Paths.get(filename)))
             return null;
 
-        try
+        List<NovelSpliceJunction> novelSpliceJunctions = NovelSpliceJunctionFile.read(filename);
+
+        List<DataItem> dataItems = new ArrayList<>();
+        Set<String> existingAsjKeys = new HashSet<>();
+
+        for(NovelSpliceJunction novelSpliceJunction : novelSpliceJunctions)
         {
-            List<DataItem> dataItems = new ArrayList<>();
+            String asjKey = NovelSpliceJunctionFile.formKey(
+                    novelSpliceJunction.chromosome(), novelSpliceJunction.junctionStart(), novelSpliceJunction.junctionEnd());
 
-            final List<String> lines = Files.readAllLines(Paths.get(filename));
-            String fileDelim = inferFileDelimiter(filename);
+            if(!mRefAsjIndexMap.containsKey(asjKey))
+                continue;
 
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), fileDelim);
-            lines.remove(0);
-
-            int chrIndex = fieldsIndexMap.get(FLD_CHROMOSOME);
-            int posStartIndex = fieldsIndexMap.get(FLD_ALT_SJ_POS_START);
-            int posEndIndex = fieldsIndexMap.get(FLD_ALT_SJ_POS_END);
-            int fragCountIndex = fieldsIndexMap.get(FLD_FRAG_COUNT);
-
-            Set<String> existingAsjKeys = new HashSet<>();
-
-            for(String data : lines)
+            if(existingAsjKeys.contains(asjKey))
             {
-                final String items[] = data.split(fileDelim, -1);
-
-                String chromosome = items[chrIndex];
-                int posStart = Integer.parseInt(items[posStartIndex]);
-                int posEnd = Integer.parseInt(items[posEndIndex]);
-
-                final String asjKey = AltSpliceJunctionFile.formKey(chromosome, posStart, posEnd);
-
-                if(!mRefAsjIndexMap.containsKey(asjKey))
-                    continue;
-
-                if(existingAsjKeys.contains(asjKey))
-                {
-                    CUP_LOGGER.trace("Ignoring alt splice junction with duplicate coordinates: {}", asjKey);
-                    continue;
-                }
-
-                int fragCount = Integer.parseInt(items[fragCountIndex]);
-
-                dataItems.add(new DataItem(RNA, ItemType.ALT_SJ, asjKey, fragCount));
-                existingAsjKeys.add(asjKey);
+                CUP_LOGGER.trace("Ignoring alt splice junction with duplicate coordinates: {}", asjKey);
+                continue;
             }
 
-            if(dataItems.isEmpty())
-            {
-                CUP_LOGGER.warn("sample({}) had no matching alt-SJs of the {} provided in configItem(-{})", sampleId, mRefAsjIndexMap.size(), REF_ALT_SJ_SITES);
-            }
+            dataItems.add(new DataItem(RNA, ItemType.ALT_SJ, asjKey, novelSpliceJunction.fragmentCount()));
+            existingAsjKeys.add(asjKey);
+        }
 
-            return dataItems;
-        }
-        catch(Exception e)
+        if(dataItems.isEmpty())
         {
-            CUP_LOGGER.error("sample({}) failed to extract category({}):", sampleId, categoryType(), e);
-            System.exit(1);
-            return null;
+            CUP_LOGGER.warn("sample({}) had no matching alt-SJs of the {} provided in configItem(-{})",
+                    sampleId, mRefAsjIndexMap.size(), REF_ALT_SJ_SITES);
         }
+
+        return dataItems;
     }
-
-    public static final String FLD_POS_START = "PosStart";
-    public static final String FLD_POS_END = "PosEnd";
 
     protected static boolean loadRefAltSjIndices(final String filename, final Map<String,Integer> refAsjIndexMap)
     {
@@ -138,7 +110,7 @@ public class AltSpliceJunctionPrep implements CategoryPrep
             {
                 final String[] items = line.split(fileDelim, -1);
 
-                final String asjKey = AltSpliceJunctionFile.formKey(
+                final String asjKey = NovelSpliceJunctionFile.formKey(
                         items[chrIndex], Integer.parseInt(items[posStartIndex]), Integer.parseInt(items[posEndIndex]));
 
                 refAsjIndexMap.put(asjKey, altSjIndex++);

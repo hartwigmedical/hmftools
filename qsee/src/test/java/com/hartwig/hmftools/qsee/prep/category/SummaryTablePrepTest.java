@@ -7,8 +7,6 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
-import com.hartwig.hmftools.common.amber.AmberQC;
-import com.hartwig.hmftools.common.amber.ImmutableAmberQC;
 import com.hartwig.hmftools.common.metrics.BamMetricCoverage;
 import com.hartwig.hmftools.common.metrics.BamMetricSummary;
 import com.hartwig.hmftools.common.metrics.ImmutableBamMetricSummary;
@@ -28,7 +26,7 @@ import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.purple.RunMode;
 import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
 import com.hartwig.hmftools.qsee.feature.Feature;
-import com.hartwig.hmftools.qsee.prep.table.SummaryTableFeature;
+import com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature;
 
 import org.junit.Test;
 
@@ -37,16 +35,14 @@ public class SummaryTablePrepTest
     @Test
     public void allSummaryTableFeaturesExtracted()
     {
-        AmberQC amberQC = createTestAmberQC();
         PurityContext purityContext = createTestPurityContext();
         BamMetricSummary bamMetricSummary = createTestBamMetricSummary();
         BamMetricCoverage bamMetricCoverage = createTestBamMetricCoverage();
 
         EnumMap<SummaryTableFeature, Feature> featuresMap = new EnumMap<>(SummaryTableFeature.class);
-        SummaryTablePrep.putFeatures(amberQC, featuresMap);
-        SummaryTablePrep.putFeatures(purityContext, featuresMap);
-        SummaryTablePrep.putFeatures(bamMetricSummary, featuresMap);
-        SummaryTablePrep.putFeatures(bamMetricCoverage, featuresMap);
+        SummaryTablePrep.putFeatures(featuresMap, purityContext);
+        SummaryTablePrep.putFeatures(featuresMap, bamMetricSummary);
+        SummaryTablePrep.putFeatures(featuresMap, bamMetricCoverage);
 
         Set<SummaryTableFeature> allFeatures = EnumSet.allOf(SummaryTableFeature.class);
         Set<SummaryTableFeature> populatedFeatures = featuresMap.keySet();
@@ -60,20 +56,12 @@ public class SummaryTablePrepTest
     {
         EnumMap<SummaryTableFeature, Feature> featuresMap = new EnumMap<>(SummaryTableFeature.class);
         BamMetricCoverage bamMetricCoverage = createTestBamMetricCoverage();
-        SummaryTablePrep.putFeatures(bamMetricCoverage, featuresMap);
+        SummaryTablePrep.putFeatures(featuresMap, bamMetricCoverage);
 
         assertEquals(0.9, featuresMap.get(SummaryTableFeature.MIN_COVERAGE_10).value(), 0.01);
         assertEquals(0.7, featuresMap.get(SummaryTableFeature.MIN_COVERAGE_30).value(), 0.01);
         assertEquals(0.6, featuresMap.get(SummaryTableFeature.MIN_COVERAGE_100).value(), 0.01);
         assertEquals(0.4, featuresMap.get(SummaryTableFeature.MIN_COVERAGE_250).value(), 0.01);
-    }
-
-    private AmberQC createTestAmberQC()
-    {
-        return ImmutableAmberQC.builder()
-                .contamination(0.01)
-                .consanguinityProportion(0.05)
-                .build();
     }
 
     private PurityContext createTestPurityContext()

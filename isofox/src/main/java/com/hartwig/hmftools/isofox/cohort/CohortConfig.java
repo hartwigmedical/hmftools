@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.GENE_ID_FILE_
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadGeneIdsFile;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID_DESC;
@@ -62,6 +63,8 @@ public class CohortConfig
     public static final String EXCLUDED_GENE_ID_FILE = "excluded_gene_id_file";
 
     public static final String SAMPLE_MUT_FILE = "sample_mut_file";
+
+    public static final String COHORT_DELIM = CSV_DELIM;
 
     public final String RootDataDir;
     public final String OutputDir;

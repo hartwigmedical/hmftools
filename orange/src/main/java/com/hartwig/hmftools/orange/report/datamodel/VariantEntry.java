@@ -14,15 +14,16 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class VariantEntry
 {
-    @NotNull
     public abstract String gene();
+
+    public abstract int depth();
+    public abstract double vaf();
 
     public abstract boolean isCanonical();
 
     @Nullable
     public abstract Integer affectedCodon();
 
-    @NotNull
     public abstract String impact();
 
     public abstract double variantCopyNumber();
@@ -33,10 +34,8 @@ public abstract class VariantEntry
 
     public abstract boolean biallelic();
 
-    @Nullable
     public abstract Double biallelicProbability();
 
-    @NotNull
     public abstract HotspotType hotspot();
 
     @Nullable
@@ -44,13 +43,11 @@ public abstract class VariantEntry
 
     public abstract double clonalLikelihood();
 
-    @Nullable
-    public abstract List<Integer> localPhaseSets();
+    public abstract String somaticLikelihood();
 
     @Nullable
     public abstract PurpleAllelicDepth rnaDepth();
 
-    @NotNull
     public abstract PurpleGenotypeStatus genotypeStatus();
 
 }

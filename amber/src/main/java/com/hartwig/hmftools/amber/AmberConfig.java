@@ -12,6 +12,8 @@ import static com.hartwig.hmftools.common.region.SpecificRegions.loadSpecificChr
 import static com.hartwig.hmftools.common.bam.BamUtils.addValidationStringencyOption;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.BLACKLISTED_SITES;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.BLACKLISTED_SITES_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_BAM;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_BAM_DESC;
@@ -50,6 +52,7 @@ public class AmberConfig
 
     public final String BafLociPath;
     public final String TargetRegionsBed;
+    public final String BlacklistedSitesPath;
     public final RefGenomeVersion RefGenVersion;
     public final String RefGenomeFile;
 
@@ -108,6 +111,7 @@ public class AmberConfig
 
         BafLociPath = configBuilder.getValue(LOCI_FILE);
         TargetRegionsBed = configBuilder.getValue(TARGET_REGIONS_BED);
+        BlacklistedSitesPath = configBuilder.getValue(BLACKLISTED_SITES);
 
         RefGenVersion = RefGenomeVersion.from(configBuilder);
         RefGenomeFile = configBuilder.getValue(REF_GENOME);
@@ -174,6 +178,7 @@ public class AmberConfig
 
         configBuilder.addPath(LOCI_FILE, true, "Path to BAF loci vcf file");
         configBuilder.addPath(TARGET_REGIONS_BED, false, TARGET_REGIONS_BED_DESC);
+        configBuilder.addPath(BLACKLISTED_SITES, false, BLACKLISTED_SITES_DESC);
 
         addRefGenomeVersion(configBuilder);
         configBuilder.addPath(REF_GENOME, false, REF_GENOME_CFG_DESC + ", required when using CRAM files");
@@ -215,6 +220,11 @@ public class AmberConfig
     public String primaryReference()
     {
         return ReferenceIds.isEmpty() ? "" : ReferenceIds.get(0);
+    }
+
+    public boolean isTumorOnly()
+    {
+        return ReferenceBams.isEmpty() && TumorBam != null;
     }
 
     public boolean isTumorOnly()
@@ -270,6 +280,20 @@ public class AmberConfig
                     AMB_LOGGER.error("Unable to locate reference bam {}", referenceBam);
                     return false;
                 }
+            }
+        }
+
+        if(BlacklistedSitesPath != null)
+        {
+            if(TargetRegionsBed == null)
+            {
+                AMB_LOGGER.error("Blacklist file provided but no target regions bed file");
+                return false;
+            }
+            if(!isTumorOnly())
+            {
+                AMB_LOGGER.error("Blacklist file only supported in tumor-only mode");
+                return false;
             }
         }
 

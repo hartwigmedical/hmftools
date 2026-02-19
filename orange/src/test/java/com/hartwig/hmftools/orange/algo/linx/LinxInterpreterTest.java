@@ -1,8 +1,10 @@
 package com.hartwig.hmftools.orange.algo.linx;
 
+import static com.hartwig.hmftools.orange.TestDataUtils.CYTO_BANDS;
+
 import static org.junit.Assert.assertNotNull;
 
-import com.hartwig.hmftools.orange.algo.pave.TestEnsemblDataCacheFactory;
+import com.hartwig.hmftools.orange.TestDataUtils;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -19,6 +21,6 @@ public class LinxInterpreterTest
     @NotNull
     private static LinxInterpreter createTestInterpreter()
     {
-        return new LinxInterpreter(TestEnsemblDataCacheFactory.loadTestCache());
+        return new LinxInterpreter(CYTO_BANDS);
     }
 }

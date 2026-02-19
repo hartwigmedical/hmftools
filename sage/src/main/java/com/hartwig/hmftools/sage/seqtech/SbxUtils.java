@@ -19,6 +19,10 @@ public final class SbxUtils
     public static final byte MATCHING_BASE_QUALITY_SBX = 10;
     public static final int MQF_NM_1_THRESHOLD_DEDUCTION = 10;
 
+    public static final double GERMLINE_VAF_INDEL_REPEAT_THRESHOLD = 3.5;
+    public static final double GERMLINE_VAF_INDEL_REPEAT_MIN_THRESHOLD_FACTOR = 2;
+    public static final double GERMLINE_VAF_REL_QUAL_RATIO_THRESHOLD = 0.2;
+
     public static ConsensusType determineConsensusType(final VariantReadContext readContext, int readVarIndex, final SAMRecord record)
     {
         ConsensusType consensusType = extractConsensusType(record);

@@ -59,9 +59,8 @@ public class UltimaCoreExtender
 
                 if(!lowerState.isValid() && inAppendMode)
                 {
-                    // move to the first aligned base, ie up from the soft-clip or end of the read
-                    lowerState.resetValid();
-                    moveState(lowerState, cigarElements, true, true);
+                    lowerState = ReadCigarState.initialise(readAlignmentStart, cigarElements);
+                    moveToIndex(lowerState, cigarElements, readCigarInfo.FlankIndexStart);
                 }
 
                 flankPositionStart = lowerState.RefPosition;
@@ -97,8 +96,8 @@ public class UltimaCoreExtender
 
                 if(!upperState.isValid() && inAppendMode)
                 {
-                    upperState.resetValid();
-                    moveState(upperState, cigarElements, false, true);
+                    upperState = ReadCigarState.initialise(readAlignmentStart, cigarElements);
+                    moveToIndex(upperState, cigarElements, readCigarInfo.FlankIndexEnd);
                 }
 
                 flankPositionEnd = upperState.RefPosition;

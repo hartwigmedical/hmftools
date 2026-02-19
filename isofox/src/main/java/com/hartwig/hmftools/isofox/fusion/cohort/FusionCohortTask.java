@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.isofox.fusion.cohort;
 
-import static com.hartwig.hmftools.common.rna.GeneFusionFile.PASS_FUSION_FILE_ID;
-import static com.hartwig.hmftools.common.rna.GeneFusionFile.UNFILTERED_FUSION_FILE_ID;
+import static com.hartwig.hmftools.common.rna.RnaFusionFile.PASS_FUSION_FILE_ID;
+import static com.hartwig.hmftools.common.rna.RnaFusionFile.UNFILTERED_FUSION_FILE_ID;
 import static com.hartwig.hmftools.common.rna.RnaCommon.ISF_FILE_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
@@ -129,12 +129,12 @@ public class FusionCohortTask implements Callable<Void>
         try
         {
             BufferedWriter writer = createBufferedWriter(outputFile, false);
-            writer.write(FusionData.csvHeader(includeFilterFields));
+            writer.write(FusionData.header(includeFilterFields));
             writer.newLine();
 
             for(FusionData fusion : fusions)
             {
-                writer.write(fusion.toCsv(includeFilterFields));
+                writer.write(fusion.toTsv(includeFilterFields));
                 writer.newLine();
             }
 

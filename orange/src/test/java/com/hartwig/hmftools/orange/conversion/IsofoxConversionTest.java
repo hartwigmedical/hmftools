@@ -6,7 +6,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
-import com.hartwig.hmftools.common.isofox.IsofoxTestFactory;
+import com.hartwig.hmftools.orange.algo.isofox.IsofoxTestFactory;
 import com.hartwig.hmftools.common.rna.ImmutableGeneExpression;
 import com.hartwig.hmftools.common.rna.ImmutableRnaFusion;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;

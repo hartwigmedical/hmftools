@@ -215,9 +215,6 @@ public class PonWriter
 
         if(variant.isIndel())
         {
-            if(mConfig.SkipGermlineIndelCheck)
-                return false;
-
             return variant.repeatCount() < GERMLINE_CLINVAR_MAX_REPEAT;
         }
         else

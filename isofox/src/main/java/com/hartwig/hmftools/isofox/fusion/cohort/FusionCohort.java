@@ -143,7 +143,7 @@ public class FusionCohort
         try
         {
             mWriter = createBufferedWriter(outputFile, false);
-            mWriter.write(String.format("SampleId,%s", FusionData.csvHeader(true)));
+            mWriter.write(String.format("SampleId,%s", FusionData.header(true)));
             mWriter.newLine();
         }
         catch(IOException e)
@@ -161,7 +161,7 @@ public class FusionCohort
         {
             for(FusionData fusion : fusions)
             {
-                writer.write(String.format("%s,%s", sampleId, fusion.toCsv(true)));
+                writer.write(String.format("%s,%s", sampleId, fusion.toTsv(true)));
                 writer.newLine();
             }
         }

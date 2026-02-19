@@ -396,6 +396,8 @@ public class GermlineVariantDAO
                         : CodingEffect.valueOf(record.getValue(GERMLINEVARIANT.CANONICALCODINGEFFECT)))
                 .canonicalHgvsCodingImpact(record.getValue(GERMLINEVARIANT.CANONICALHGVSCODINGIMPACT))
                 .canonicalHgvsProteinImpact(record.getValue(GERMLINEVARIANT.CANONICALHGVSPROTEINIMPACT))
+                .canonicalAffectedCodon(0)
+                .canonicalAffectedExon(0)
                 .spliceRegion(DatabaseUtil.byteToBoolean(record.getValue(GERMLINEVARIANT.SPLICEREGION)))
                 .otherReportedEffects(DatabaseUtil.valueNotNull(record.getValue(GERMLINEVARIANT.OTHERTRANSCRIPTEFFECTS)))
                 .allelicDepth(new AllelicDepth(
@@ -404,6 +406,7 @@ public class GermlineVariantDAO
                 .adjustedVAF(record.getValue(GERMLINEVARIANT.ADJUSTEDVAF))
                 .variantCopyNumber(record.getValue(GERMLINEVARIANT.VARIANTCOPYNUMBER))
                 .biallelic(DatabaseUtil.byteToBoolean(record.getValue(GERMLINEVARIANT.BIALLELIC)))
+                .biallelicProbability(0)
                 .reported(DatabaseUtil.byteToBoolean(record.getValue(GERMLINEVARIANT.REPORTED)))
                 .trinucleotideContext(record.getValue(GERMLINEVARIANT.TRINUCLEOTIDECONTEXT))
                 .microhomology(record.getValue(GERMLINEVARIANT.MICROHOMOLOGY))

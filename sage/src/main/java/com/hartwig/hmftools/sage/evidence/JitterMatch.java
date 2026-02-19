@@ -3,7 +3,8 @@ package com.hartwig.hmftools.sage.evidence;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.sage.SageConfig.isSbx;
 import static com.hartwig.hmftools.sage.SageConfig.isUltima;
-import static com.hartwig.hmftools.sage.SageConstants.DOUBLE_JITTER_REPEAT_COUNT;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_DOUBLE_JITTER_REPEAT_COUNT;
+import static com.hartwig.hmftools.sage.SageConstants.MSI_DOUBLE_JITTER_REPEAT_COUNT;
 import static com.hartwig.hmftools.sage.SageConstants.MATCHING_BASE_QUALITY;
 import static com.hartwig.hmftools.sage.quality.QualityCalculator.isMediumBaseQual;
 import static com.hartwig.hmftools.sage.seqtech.SbxUtils.MATCHING_BASE_QUALITY_SBX;
@@ -63,14 +64,16 @@ public enum JitterMatch
     }
 
     public static JitterMatch checkJitter(
-            final VariantReadContext readContext, final ReadContextMatcher matcher, final SAMRecord record, int readVarIndex)
+            final VariantReadContext readContext, final ReadContextMatcher matcher, final SAMRecord record, int readVarIndex,
+            boolean isMsiSampleAndVariant)
     {
         if(readContext.AllRepeats.isEmpty())
             return JitterMatch.NONE;
 
         final byte[] readBases = record.getReadBases();
         final byte[] readQuals = isUltima() ? null : record.getBaseQualities();
-        boolean checkDoubleJitter = readContext.MaxRepeat != null && readContext.MaxRepeat.Count >= DOUBLE_JITTER_REPEAT_COUNT;
+        int doubleJitterRepeatCount = isMsiSampleAndVariant ? MSI_DOUBLE_JITTER_REPEAT_COUNT : DEFAULT_DOUBLE_JITTER_REPEAT_COUNT;
+        boolean checkDoubleJitter = readContext.MaxRepeat != null && readContext.MaxRepeat.Count >= doubleJitterRepeatCount;
 
         // try each repeat covering the read context in turn
         for(RepeatInfo repeat : readContext.AllRepeats)

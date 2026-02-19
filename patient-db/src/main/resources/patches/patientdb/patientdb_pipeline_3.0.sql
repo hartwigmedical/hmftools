@@ -9,15 +9,15 @@ ALTER TABLE svBreakend
     DROP COLUMN reportedDisruption,
     ADD COLUMN reportedStatus varchar(50) NULL after disruptive;
 
-ALTER TABLE svBreakend
-    DROP COLUMN svBreakendGermline,
+ALTER TABLE svBreakendGermline
+    DROP COLUMN reportedDisruption,
     ADD COLUMN reportedStatus varchar(50) NULL after disruptive;
 
 ALTER TABLE somaticVariant
     DROP COLUMN recovered;
 
 # or rename to keep records
-DROP TABLE IF EXISTS `germlineCopyNumber`;
+DROP TABLE IF EXISTS `germlineDeletion`;
 CREATE TABLE `germlineCopyNumber`
 (   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
     `modified` DATETIME NOT NULL,

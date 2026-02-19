@@ -25,7 +25,7 @@ public class GenotypeFragments
     private double mBqrErrorRate; // only used for output data
 
     private final List<FilterReason> mFilterReasons;
-    private boolean mIsOutlier;
+    private final List<FilterReason> mDualFilterReasons;
 
     public GenotypeFragments(
             final String sampleName, final int alleleCount, final int depth, final double qualTotal, final UmiTypeCounts umiCounts,
@@ -40,6 +40,7 @@ public class GenotypeFragments
 
         mBqrErrorRate = 0;
         mFilterReasons = Lists.newArrayList();
+        mDualFilterReasons = Lists.newArrayList();
     }
 
     public double qualPerAlleleFragment() { return AlleleCount > 0 ? QualTotal / (double)AlleleCount : 0; }
@@ -68,6 +69,10 @@ public class GenotypeFragments
     public boolean isFiltered() { return !mFilterReasons.isEmpty(); }
     public void addFilterReason(final FilterReason filterReason) { mFilterReasons.add(filterReason); }
     public List<FilterReason> filterReasons() { return mFilterReasons; }
+
+    public boolean isDualFiltered() { return !mDualFilterReasons.isEmpty(); }
+    public void addDualFilterReason(final FilterReason filterReason) { mDualFilterReasons.add(filterReason); }
+    public List<FilterReason> dualFilterReasons() { return mDualFilterReasons; }
 
     public String toString()
     {

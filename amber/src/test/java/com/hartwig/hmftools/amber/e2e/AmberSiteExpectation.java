@@ -6,7 +6,7 @@ import com.hartwig.hmftools.common.amber.AmberBAF;
 
 class AmberSiteExpectation
 {
-    private final int Position;
+    final int Position;
     private final int RefReadsCount;
     private final int AltReadsCount;
     private final int Depth;

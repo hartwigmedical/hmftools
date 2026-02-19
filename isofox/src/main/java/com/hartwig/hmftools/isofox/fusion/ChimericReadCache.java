@@ -9,7 +9,7 @@ import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.NONE;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
+import static com.hartwig.hmftools.isofox.results.ResultsWriter.OLD_FILE_DELIM;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -169,7 +169,7 @@ public class ChimericReadCache
                 return readGroupList;
             }
 
-            final Map<String,Integer> fieldsMap  = createFieldsIndexMap(line, DELIMITER);
+            final Map<String,Integer> fieldsMap  = createFieldsIndexMap(line, OLD_FILE_DELIM);
 
             int readId = fieldsMap.get("ReadId");
             int fusionGroup = fieldsMap.get("FusionGroup");
@@ -200,7 +200,7 @@ public class ChimericReadCache
 
             while ((line = fileReader.readLine()) != null)
             {
-                String[] items = line.split(DELIMITER, -1);
+                String[] items = line.split(OLD_FILE_DELIM, -1);
 
                 try
                 {

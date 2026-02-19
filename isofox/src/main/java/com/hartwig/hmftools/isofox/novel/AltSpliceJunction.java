@@ -4,6 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.isofox.common.CommonUtils.SP_SEQ_ACCEPTOR;
 import static com.hartwig.hmftools.isofox.common.CommonUtils.SP_SEQ_DONOR_1;
 import static com.hartwig.hmftools.isofox.common.CommonUtils.SP_SEQ_DONOR_2;
@@ -25,7 +26,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionContext;
-import com.hartwig.hmftools.common.rna.AltSpliceJunctionFile;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionType;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
@@ -99,8 +99,6 @@ public class AltSpliceJunction
     public void addFragmentCount() { ++mFragmentCount;}
 
     public void addPositionCount(int seIndex, int count) { mPositionCounts[seIndex] += count; }
-
-    public String[] getTranscriptNames() { return mTranscriptNames; }
 
     public void setGeneId(final String geneId) { mGeneId = geneId; }
     public final String getGeneId() { return mGeneId; }
@@ -324,18 +322,30 @@ public class AltSpliceJunction
                 RegionContexts[SE_START], RegionContexts[SE_END], mType, mFragmentCount);
     }
 
-    public static String csvHeader()
+    public static String header()
     {
-        return AltSpliceJunctionFile.csvHeader() + ",NearestStartExon,NearestEndExon,InitialReadId";
+        StringJoiner sj = new StringJoiner(TSV_DELIM);
+
+        sj.add(AltSpliceJunctionFile.header());
+
+        sj.add("NearestStartExon");
+        sj.add("NearestEndExon");
+        sj.add("InitialReadId");
+        return sj.toString();
     }
 
-    public String toCsv(final GeneData geneData)
+    public String toLine(final GeneData geneData, final int cohortFrequency)
     {
         AltSpliceJunctionFile asjFile = new AltSpliceJunctionFile(
                 mGeneId, geneData.GeneName, Chromosome, SpliceJunction, mType,
-                mFragmentCount, mPositionCounts, RegionContexts, mBaseContext, mTranscriptNames);
+                mFragmentCount, mPositionCounts, RegionContexts, mBaseContext, mTranscriptNames, cohortFrequency);
 
-        return String.format("%s,%d,%d,%s",
-                asjFile.toCsv(), mNearestExonDistance[SE_START], mNearestExonDistance[SE_END], mInitialReadId);
+        StringJoiner sj = new StringJoiner(TSV_DELIM);
+        sj.add(asjFile.toLine());
+        sj.add(String.valueOf(mNearestExonDistance[SE_START]));
+        sj.add(String.valueOf(mNearestExonDistance[SE_END]));
+        sj.add(mInitialReadId);
+
+        return sj.toString();
     }
 }

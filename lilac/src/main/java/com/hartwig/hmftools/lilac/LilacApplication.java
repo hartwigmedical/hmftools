@@ -196,8 +196,11 @@ public class LilacApplication
     public void run()
     {
         long startTimeMs = System.currentTimeMillis();
+
         mConfig.logParams();
+
         mResultsWriter = new ResultsWriter(mConfig, mWriteTypes);
+
         for(GeneSelector genes : mConfig.Genes)
         {
             CURRENT_GENES = genes;
@@ -699,8 +702,6 @@ public class LilacApplication
     private void writeFileOutputs()
     {
         mSummaryMetrics.log(mConfig.Sample);
-
-        LL_LOGGER.info("writing output to {}", mConfig.OutputDir);
 
         if(mResultsWriter != null)
         {

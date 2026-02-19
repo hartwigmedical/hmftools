@@ -1,9 +1,10 @@
 package com.hartwig.hmftools.isofox.expression;
 
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferFileDelimiter;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.expression.ExpectedRatesCommon.EXP_COUNT_LENGTH_HEADER;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -89,17 +90,18 @@ public class ExpectedCountsCache
         try
         {
             BufferedReader fileReader = new BufferedReader(new FileReader(mConfig.ExpCountsFile));
+            String fileDelim = inferFileDelimiter(mConfig.ExpCountsFile);
 
             // skip field names
             String line = fileReader.readLine();
 
-            if (line == null)
+            if(line == null)
             {
                 ISF_LOGGER.error("empty calculated expected counts file({})", mConfig.ExpCountsFile);
                 return false;
             }
 
-            String[] headerItems = line.split(DELIMITER, -1);
+            String[] headerItems = line.split(fileDelim, -1);
 
             // extract the fragment lengths from the header if not already populated (in which case they must match)
             int fileFragmentLengthCount = headerItems.length - 2;
@@ -127,7 +129,7 @@ public class ExpectedCountsCache
 
             int fragLengths = mConfig.FragmentSizeData.size();
 
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(line, DELIMITER);
+            Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(line, fileDelim);
             int geneSetIdIndex = fieldsIndexMap.get("GeneSetId");
             int categoryIndex = fieldsIndexMap.get("Category");
 
@@ -136,10 +138,10 @@ public class ExpectedCountsCache
 
             while ((line = fileReader.readLine()) != null)
             {
-                String[] items = line.split(DELIMITER, -1);
+                String[] values = line.split(fileDelim, -1);
 
-                String geneSetId = items[geneSetIdIndex];
-                String categoryStr = items[categoryIndex];
+                String geneSetId = values[geneSetIdIndex];
+                String categoryStr = values[categoryIndex];
 
                 if(!geneSetId.equals(currentGeneSetId))
                 {
@@ -153,7 +155,7 @@ public class ExpectedCountsCache
 
                 for(int i = 0; i < fragLengths; ++i)
                 {
-                    int count = Integer.parseInt(items[categoryIndex + i + 1]);
+                    int count = Integer.parseInt(values[categoryIndex + i + 1]);
                     catCounts.addFragLengthCounts(count, i);
                 }
             }
@@ -169,6 +171,4 @@ public class ExpectedCountsCache
 
         return true;
     }
-
-
 }

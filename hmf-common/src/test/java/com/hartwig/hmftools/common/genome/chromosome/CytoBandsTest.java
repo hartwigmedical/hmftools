@@ -12,7 +12,7 @@ public class CytoBandsTest
     public void testCytoBands37()
     {
         CytoBands cytoBands = new CytoBands(RefGenomeVersion.V37);
-        assertEquals("p36.33", cytoBands.getCytoBandName("chr1", 1000));
+        assertEquals("p36.33", cytoBands.getCytoBandName("1", 1000));
     }
 
     @Test

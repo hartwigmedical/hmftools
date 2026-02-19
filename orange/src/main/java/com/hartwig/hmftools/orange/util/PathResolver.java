@@ -13,23 +13,21 @@ import org.jetbrains.annotations.Nullable;
 
 public class PathResolver
 {
-    @NotNull
-    private final ConfigBuilder configBuilder;
+    private final ConfigBuilder mConfigBuilder;
     @Nullable
-    private final String pipelineSampleRootDir;
+    private final String mPipelineSampleRootDir;
     @Nullable
-    private final String sampleDataDir;
+    private final String mSampleDataDir;
 
-    public PathResolver(@NotNull final ConfigBuilder configBuilder, @Nullable final String pipelineSampleRootDir,
+    public PathResolver(final ConfigBuilder configBuilder, @Nullable final String pipelineSampleRootDir,
             @Nullable final String sampleDataDir)
     {
-        this.configBuilder = configBuilder;
-        this.pipelineSampleRootDir = pipelineSampleRootDir;
-        this.sampleDataDir = sampleDataDir;
+        mConfigBuilder = configBuilder;
+        mPipelineSampleRootDir = pipelineSampleRootDir;
+        mSampleDataDir = sampleDataDir;
     }
 
-    @NotNull
-    public String resolveMandatoryToolDirectory(@NotNull String toolDirConfigKey, @NotNull String defaultPipelineToolDir)
+    public String resolveMandatoryToolDirectory(final String toolDirConfigKey, final String defaultPipelineToolDir)
     {
         String toolDir = resolveOptionalToolDirectory(toolDirConfigKey, defaultPipelineToolDir);
         if(toolDir == null)
@@ -41,23 +39,22 @@ public class PathResolver
     }
 
     @Nullable
-    public String resolveOptionalToolDirectory(@NotNull String toolDirConfigKey, @NotNull String defaultPipelineToolDir)
+    public String resolveOptionalToolDirectory(final String toolDirConfigKey, final String defaultPipelineToolDir)
     {
-        if(configBuilder.hasValue(toolDirConfigKey))
+        if(mConfigBuilder.hasValue(toolDirConfigKey))
         {
-            return configBuilder.getValue(toolDirConfigKey);
+            return mConfigBuilder.getValue(toolDirConfigKey);
         }
 
-        if(pipelineSampleRootDir != null)
+        if(mPipelineSampleRootDir != null)
         {
-            return pipelineSampleRootDir + File.separator + defaultPipelineToolDir;
+            return mPipelineSampleRootDir + File.separator + defaultPipelineToolDir;
         }
 
-        return sampleDataDir;
+        return mSampleDataDir;
     }
 
-    @NotNull
-    public String resolveMandatoryToolPlotsDirectory(@NotNull String toolPlotDirConfigKey, @NotNull String defaultPipelineToolDir)
+    public String resolveMandatoryToolPlotsDirectory(final String toolPlotDirConfigKey, final String defaultPipelineToolDir)
     {
         String plotDir = resolveOptionalToolPlotsDirectory(toolPlotDirConfigKey, defaultPipelineToolDir);
         if(plotDir == null)
@@ -69,16 +66,16 @@ public class PathResolver
     }
 
     @Nullable
-    public String resolveOptionalToolPlotsDirectory(@NotNull String toolPlotDirConfigKey, @NotNull String defaultPipelineToolDir)
+    public String resolveOptionalToolPlotsDirectory(final String toolPlotDirConfigKey, final String defaultPipelineToolDir)
     {
-        if(configBuilder.hasValue(toolPlotDirConfigKey))
+        if(mConfigBuilder.hasValue(toolPlotDirConfigKey))
         {
-            return configBuilder.getValue(toolPlotDirConfigKey);
+            return mConfigBuilder.getValue(toolPlotDirConfigKey);
         }
 
-        if(pipelineSampleRootDir != null)
+        if(mPipelineSampleRootDir != null)
         {
-            return pipelineSampleRootDir + File.separator + defaultPipelineToolDir + File.separator + "plot";
+            return mPipelineSampleRootDir + File.separator + defaultPipelineToolDir + File.separator + "plot";
         }
 
         return null;

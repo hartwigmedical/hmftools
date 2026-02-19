@@ -18,10 +18,9 @@ public class VariantCache
         mLastVariantIndex = 0;
     }
 
-    public VariantPonData   getOrCreateVariant(final String chromosome, final int position, final String ref, final String alt)
+    public VariantPonData getOrCreateVariant(final String chromosome, final int position, final String ref, final String alt)
     {
         // start from the last inserted index since each VCF is ordered
-
         if(!mVariants.isEmpty() && mLastVariantIndex > 0 && position < mVariants.get(mLastVariantIndex).Position)
         {
             PV_LOGGER.error("variant cache invalid: size({}) lastIndex({} pos={}) new position({})",
@@ -31,6 +30,7 @@ public class VariantCache
         }
 
         int index = mLastVariantIndex;
+
         while(index < mVariants.size())
         {
             VariantPonData variant = mVariants.get(index);
@@ -43,6 +43,30 @@ public class VariantCache
 
             if(position < variant.Position)
                 break;
+
+            // ensure that the search looks at all variants at this position, forwards and backwards
+            for(int i = 0; i <= 1; ++i)
+            {
+                boolean searchUp = (i == 0);
+
+                int posMatchIndex = searchUp ? index : index - 1;
+
+                while(true)
+                {
+                    if(posMatchIndex < 0 || posMatchIndex >= mVariants.size())
+                        break;
+
+                    variant = mVariants.get(posMatchIndex);
+
+                    if(position != variant.Position)
+                        break;
+
+                    if(variant.Ref.equals(ref) && variant.Alt.equals(alt))
+                        return variant;
+
+                    posMatchIndex += searchUp ? 1 : -1;
+                }
+            }
 
             if(variant.Ref.equals(ref) && variant.Alt.equals(alt))
                 return variant;

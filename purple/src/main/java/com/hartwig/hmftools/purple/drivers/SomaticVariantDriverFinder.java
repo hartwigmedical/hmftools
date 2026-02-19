@@ -49,10 +49,13 @@ public abstract class SomaticVariantDriverFinder
     
     public boolean checkVariant(final SomaticVariant variant)
     {
+        // first check if the variant has reportable criteria irrespective of its driver gene settings
+        // since these will be used to make driver catalog records
         if(isCandidateReportable(mReportablePredicate, variant))
         {
             mDriverVariants.add(variant);
 
+            // return true if the variant is configured true for reportability
             return mReportablePredicate.isReportable(variant.variantImpact(), variant.isHotspot());
         }
         
@@ -63,7 +66,7 @@ public abstract class SomaticVariantDriverFinder
     public void addVariant(final SomaticVariant variant) { mDriverVariants.add(variant); }
 
     protected List<DriverCatalog> findDrivers(
-            final Map<String,GeneCopyNumber> geneCopyNumberMap, final Map<VariantType,Integer> variantTypeCounts,
+            final Map<String,List<GeneCopyNumber>> geneCopyNumberMap, final Map<VariantType,Integer> variantTypeCounts,
             final Map<VariantType,Integer> variantTypeCountsBiallelic, final List<DriverSourceData> driverSourceData)
     {
         List<DriverCatalog> driverCatalog = Lists.newArrayList();
@@ -78,32 +81,40 @@ public abstract class SomaticVariantDriverFinder
             DndsDriverGeneLikelihood dndsLikelihood = mLikelihoodsByGene.containsKey(gene) ?
                     mLikelihoodsByGene.get(gene) : NO_GENE_DNDS_LIKELIHOOD;
 
-            GeneCopyNumber geneCopyNumber = geneCopyNumberMap.get(gene);
+            List<GeneCopyNumber> geneCopyNumbers = geneCopyNumberMap.get(gene);
 
-            if(geneCopyNumber == null)
+            if(geneCopyNumbers == null)
                 continue;
 
-            if(!mReportablePredicate.isDriverGene(geneCopyNumber.GeneName))
+            if(!mReportablePredicate.isDriverGene(geneCopyNumbers.get(0).GeneName))
                 continue;
 
-            // check the driver-gene-panel reportable flag based on the type of mutation
-            boolean hasCodingImpact = geneVariants.stream()
-                    .anyMatch(x -> x.isHotspot() || hasTranscriptCodingEffect(x.variantImpact(), x.type(), geneCopyNumber.TransName));
+            for(GeneCopyNumber geneCopyNumber : geneCopyNumbers)
+            {
+                if(geneCopyNumbers.size() == 1
+                || geneVariants.stream().anyMatch(x -> hasTranscriptCodingEffect(x.variantImpact(), x.type(), geneCopyNumber.TransName)))
+                {
+                    // check the driver-gene-panel reportable flag based on the type of mutation
+                    boolean hasCodingImpact = geneVariants.stream()
+                            .anyMatch(x -> x.isHotspot() || hasTranscriptCodingEffect(x.variantImpact(), x.type(), geneCopyNumber.TransName));
 
-            boolean isReportable = hasCodingImpact
-                    && geneVariants.stream().anyMatch(x -> mReportablePredicate.isReportable(x.variantImpact(), x.isHotspot()));
+                    boolean isReportable = hasCodingImpact
+                            && geneVariants.stream().anyMatch(x -> mReportablePredicate.isReportable(x.variantImpact(), x.isHotspot()));
 
-            ReportedStatus reportedStatus = isReportable ? ReportedStatus.REPORTED : ReportedStatus.NOT_REPORTED;
+                    ReportedStatus reportedStatus = isReportable ? ReportedStatus.REPORTED : ReportedStatus.NOT_REPORTED;
 
-            LikelihoodMethod likelihoodMethod = hasCodingImpact ? DNDS : SPLICE_REGION;
+                    LikelihoodMethod likelihoodMethod = hasCodingImpact ? DNDS : SPLICE_REGION;
 
-            DriverCatalog driverRecord = createDriverCatalog(
-                    geneVariants, variantTypeCounts, variantTypeCountsBiallelic, geneCopyNumber,
-                    dndsLikelihood, likelihoodMethod, reportedStatus);
+                    DriverCatalog driverRecord = createDriverCatalog(
+                            geneVariants, variantTypeCounts, variantTypeCountsBiallelic, geneCopyNumber,
+                            dndsLikelihood, likelihoodMethod, reportedStatus);
 
-            driverCatalog.add(driverRecord);
+                    driverCatalog.add(driverRecord);
 
-            driverSourceData.add(new DriverSourceData(driverRecord, geneVariants.get(0)));
+                    driverSourceData.add(new DriverSourceData(driverRecord, geneVariants.get(0)));
+
+                }
+            }
         }
 
         return driverCatalog;

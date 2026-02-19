@@ -49,7 +49,7 @@ public class PonBuilder
 
         mConfig = new PonConfig(configBuilder);
 
-        mExistingPon = new PonAnnotation(mConfig.ExistingPonFilename, false);
+        mExistingPon = new PonAnnotation(mConfig.ExistingPonFilename, mConfig.SpecificChrRegions.hasFilters());
 
         mClinvarAnnotation = new ClinvarAnnotation(configBuilder);
         mClinvarAnnotation.loadData();

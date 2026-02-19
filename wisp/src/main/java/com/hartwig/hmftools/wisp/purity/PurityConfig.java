@@ -5,6 +5,9 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
+import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
+import static com.hartwig.hmftools.common.sequencing.SequencingType.SEQUENCING_TYPE_CFG;
+import static com.hartwig.hmftools.common.sequencing.SequencingType.ULTIMA;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.AMBER_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.AMBER_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.COBALT_DIR_CFG;
@@ -44,6 +47,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.wisp.purity.variant.ProbeVariantCache;
@@ -82,6 +86,8 @@ public class PurityConfig
     public final boolean AllowMissingSamples;
     public final boolean DisableDualFragments;
     public final int Threads;
+
+    public static SequencingType SEQUENCING_TYPE = ILLUMINA;
 
     private static final String PATIENT_ID = "patient_id";
     private static final String TUMOR_ID = "tumor_id";
@@ -151,6 +157,8 @@ public class PurityConfig
         FragmentLengthDir = checkAddDirSeparator(configBuilder.getValue(FRAG_LENGTH_DIR, SomaticDir));
         OutputDir = checkAddDirSeparator(configBuilder.getValue(OUTPUT_DIR, SampleDataDir));
         OutputId = configBuilder.getValue(OUTPUT_ID);
+
+        SEQUENCING_TYPE = SequencingType.valueOf(configBuilder.getValue(SEQUENCING_TYPE_CFG));
 
         PlotDir = checkAddDirSeparator(configBuilder.getValue(PLOT_DIR, OutputDir));
 
@@ -237,6 +245,8 @@ public class PurityConfig
         }
     }
 
+    public static boolean isUltima() { return SEQUENCING_TYPE == ULTIMA; }
+
     public boolean writeType(final WriteType writeType) { return WriteTypes.contains(writeType); }
     public boolean hasSyntheticTumor() { return PurpleDir == null || PurpleDir.isEmpty(); }
     public boolean multiplePatients() { return Samples.size() > 1; }
@@ -318,6 +328,8 @@ public class PurityConfig
         configBuilder.addConfigItem(REFERENCE_ID, false, "Original reference ID");
         configBuilder.addConfigItem(AMBER_EXTRA_TUMOR_ID, false, "Secondary Amber tumor ID");
         configBuilder.addConfigItem(SAMPLES, false, "List of sample IDs separated by ','");
+
+        SequencingType.registerConfig(configBuilder);
 
         configBuilder.addConfigItem(
                 PURITY_METHODS, false,

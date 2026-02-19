@@ -422,8 +422,8 @@ public class GermlineAmpDelFinder
             return;
         }
 
-        AmpDelRegionFrequency.EventType eventType =
-                germlineStatus == AMPLIFICATION ? AmpDelRegionFrequency.EventType.AMP : AmpDelRegionFrequency.EventType.DEL;
+        AmpDelRegionFrequency.EventType eventType = germlineStatus == AMPLIFICATION ?
+                AmpDelRegionFrequency.EventType.AMP : AmpDelRegionFrequency.EventType.DEL;
 
         int cohortFrequency = mCohortFrequency.getRegionFrequency(
                 region.chromosome(), region.start(), region.end(), GERMLINE_AMP_DEL_REGION_MATCH_BUFFER, eventType);
@@ -483,9 +483,11 @@ public class GermlineAmpDelFinder
             TranscriptData transData = transcripts.stream().filter(x -> x.GeneId.equals(geneData.GeneId)).findFirst().orElse(null);
             String transcriptName = transData != null ? transData.TransName : "";
 
+            boolean isPartial = transData != null && (deletedExonRange[0] > 1 || deletedExonRange[1] < transData.exons().size());
+
             mEvents.add(new GermlineAmpDel(
                     geneData.GeneName, transcriptName, region.chromosome(), geneData.KaryotypeBand, adjustPosStart, adjustPosEnd,
-                    region.depthWindowCount(), deletedExonRange[0], deletedExonRange[1],
+                    region.depthWindowCount(), deletedExonRange[0], deletedExonRange[1], isPartial,
                     GermlineDetectionMethod.SEGMENT, region.germlineStatus(), tumorStatus, germlineCopyNumber, tumorCopyNumber,
                     filter, cohortFrequency, reportedStatus));
         }

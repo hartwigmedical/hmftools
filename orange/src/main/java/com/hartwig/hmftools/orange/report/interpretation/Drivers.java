@@ -16,8 +16,7 @@ public final class Drivers
     private static final Set<PurpleDriverType> MUTATION_DRIVER_TYPES =
             Sets.newHashSet(PurpleDriverType.MUTATION, PurpleDriverType.GERMLINE_MUTATION);
 
-    @NotNull
-    public static List<PurpleDriver> nonCanonicalMutationEntries(@NotNull List<PurpleDriver> drivers)
+    public static List<PurpleDriver> nonCanonicalMutationEntries(final List<PurpleDriver> drivers)
     {
         List<PurpleDriver> nonCanonicalVariantEntries = Lists.newArrayList();
         for(PurpleDriver driver : drivers)
@@ -31,7 +30,7 @@ public final class Drivers
     }
 
     @Nullable
-    public static PurpleDriver canonicalMutationEntryForGene(@NotNull List<PurpleDriver> drivers, @NotNull String geneToFind)
+    public static PurpleDriver canonicalMutationEntryForGene(final List<PurpleDriver> drivers, final String geneToFind)
     {
         PurpleDriver highest = null;
         for(PurpleDriver driver : drivers)

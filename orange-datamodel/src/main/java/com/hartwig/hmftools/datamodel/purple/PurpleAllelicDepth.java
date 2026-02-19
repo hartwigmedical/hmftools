@@ -11,6 +11,5 @@ import org.jetbrains.annotations.Nullable;
 public interface PurpleAllelicDepth
 {
     int totalReadCount();
-
     int alleleReadCount();
 }

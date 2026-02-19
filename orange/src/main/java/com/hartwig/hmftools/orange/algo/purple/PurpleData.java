@@ -7,6 +7,7 @@ import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GermlineAmpDel;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
+import com.hartwig.hmftools.common.variant.SmallVariant;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -23,10 +24,10 @@ public interface PurpleData
     @Nullable
     List<DriverCatalog> germlineDrivers();
 
-    List<PurpleVariantContext> somaticVariants();
+    List<SmallVariant> somaticVariants();
 
     @Nullable
-    List<PurpleVariantContext> germlineVariants();
+    List<SmallVariant> germlineVariants();
 
     List<PurpleCopyNumber> somaticCopyNumbers();
 

@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PANEL_SOMATIC_LI
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_GERMLINE_INFO;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELIHOOD_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
+import static com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact.fromVariantContext;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -22,6 +23,7 @@ import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.variant.filter.HumanChromosomeFilter;
 import com.hartwig.hmftools.common.variant.filter.NTFilter;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
+import com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.Nullable;
@@ -209,6 +211,21 @@ public class SmallVariantFactory implements VariantContextFilter
 
         PathogenicSummary pathogenicSummary = context.hasAttribute(CLNSIG) ? PathogenicSummaryFactory.fromContext(context) : null;
 
+        List<VariantTranscriptImpact> transcriptImpacts = fromVariantContext(context);
+
+        int canonicalAffectedCodon = 0;
+        int canonicalAffectedExon = 0;
+
+        for(VariantTranscriptImpact transcriptImpact : transcriptImpacts)
+        {
+            if(transcriptImpact.Transcript.equals(variantImpact.CanonicalTranscript))
+            {
+                canonicalAffectedExon = transcriptImpact.AffectedExon;
+                canonicalAffectedCodon = transcriptImpact.AffectedCodon;
+                break;
+            }
+        }
+
         ImmutableSmallVariantImpl.Builder builder = ImmutableSmallVariantImpl.builder()
                 .chromosome(decorator.chromosome())
                 .position(decorator.position())
@@ -222,6 +239,8 @@ public class SmallVariantFactory implements VariantContextFilter
                 .canonicalCodingEffect(variantImpact.CanonicalCodingEffect)
                 .canonicalHgvsCodingImpact(variantImpact.CanonicalHgvsCoding)
                 .canonicalHgvsProteinImpact(variantImpact.CanonicalHgvsProtein)
+                .canonicalAffectedCodon(canonicalAffectedCodon)
+                .canonicalAffectedExon(canonicalAffectedExon)
                 .qual(decorator.qual())
                 .mappability(decorator.mappability())
                 .filter(decorator.filter())
@@ -235,6 +254,7 @@ public class SmallVariantFactory implements VariantContextFilter
                 .minorAlleleCopyNumber(decorator.minorAlleleCopyNumber())
                 .variantCopyNumber(decorator.variantCopyNumber())
                 .biallelic(decorator.biallelic())
+                .biallelicProbability(decorator.biallelicProbability())
                 .reported(decorator.reported())
                 .genotypeStatus(genotypeStatus)
                 .germlineStatus(extractGermlineStatus(context))

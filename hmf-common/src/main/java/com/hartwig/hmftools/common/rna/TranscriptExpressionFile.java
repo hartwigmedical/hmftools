@@ -7,7 +7,7 @@ import java.io.File;
 
 public final class TranscriptExpressionFile
 {
-    public static final String TRANSCRIPT_EXPRESSION_FILE_ID = "transcript_data.csv";
+    public static final String TRANSCRIPT_EXPRESSION_FILE_ID = "transcript_data.tsv";
 
     public static String generateFilename(final String basePath, final String sample)
     {

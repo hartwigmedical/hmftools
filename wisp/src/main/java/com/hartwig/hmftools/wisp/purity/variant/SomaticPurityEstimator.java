@@ -68,13 +68,19 @@ public class SomaticPurityEstimator
                     variant.CopyNumber, variant.VariantCopyNumber, tumorFragData.AlleleCount, sampleFragData.AlleleCount,
                     tumorFragData.Depth, sampleFragData.Depth);
 
-            dualFragmentTotals.addVariantData(
-                    variant.CopyNumber, variant.VariantCopyNumber, tumorFragData.AlleleCount, sampleFragData.UmiCounts.AlleleDual,
-                    tumorFragData.Depth, sampleFragData.UmiCounts.TotalDual);
+            boolean includeDual = !sampleFragData.isDualFiltered();
 
-            umiTypeCounts.add(sampleFragData.UmiCounts);
-            sampleDualDP += sampleFragData.UmiCounts.TotalDual;
-            sampleDualAD += sampleFragData.UmiCounts.AlleleDual;
+            if(includeDual)
+            {
+                dualFragmentTotals.addVariantData(
+                        variant.CopyNumber, variant.VariantCopyNumber, tumorFragData.AlleleCount, sampleFragData.UmiCounts.AlleleDual,
+                        tumorFragData.Depth, sampleFragData.UmiCounts.TotalDual);
+
+                sampleDualDP += sampleFragData.UmiCounts.TotalDual;
+                sampleDualAD += sampleFragData.UmiCounts.AlleleDual;
+            }
+
+            umiTypeCounts.add(sampleFragData.UmiCounts, includeDual);
         }
 
         if(fragmentTotals.sampleDepthTotal() == 0)

@@ -6,6 +6,7 @@ import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.HotspotType;
 import com.hartwig.hmftools.common.variant.ImmutableSmallVariantImpl;
+import com.hartwig.hmftools.common.variant.SomaticLikelihood;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleAllelicDepth;
@@ -13,6 +14,7 @@ import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleVariant;
 import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
 import com.hartwig.hmftools.datamodel.purple.PurpleGenotypeStatus;
+import com.hartwig.hmftools.datamodel.purple.PurpleSomaticLikelihood;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariantType;
 
 import org.apache.logging.log4j.util.Strings;
@@ -44,6 +46,7 @@ public final class TestPurpleVariantFactory
                 .genotypeStatus(PurpleGenotypeStatus.UNKNOWN)
                 .repeatCount(0)
                 .subclonalLikelihood(0D)
+                .somaticLikelihood(PurpleSomaticLikelihood.MEDIUM)
                 .localPhaseSets(null);
     }
 
@@ -67,14 +70,6 @@ public final class TestPurpleVariantFactory
                 .reported(false);
     }
 
-    public static ImmutablePurpleVariantContext.Builder contextBuilder()
-    {
-        return ImmutablePurpleVariantContext.builder()
-                .from(variantBuilder().build())
-                .biallelicProbability(0)
-                .subclonalLikelihood(0);
-    }
-
     @NotNull static ImmutableSmallVariantImpl.Builder variantBuilder()
     {
         return ImmutableSmallVariantImpl.builder()
@@ -90,6 +85,8 @@ public final class TestPurpleVariantFactory
                 .canonicalCodingEffect(CodingEffect.UNDEFINED)
                 .canonicalHgvsCodingImpact(Strings.EMPTY)
                 .canonicalHgvsProteinImpact(Strings.EMPTY)
+                .canonicalAffectedCodon(0)
+                .canonicalAffectedExon(0)
                 .qual(0)
                 .mappability(0)
                 .filter(Strings.EMPTY)
@@ -105,6 +102,7 @@ public final class TestPurpleVariantFactory
                 .minorAlleleCopyNumber(0)
                 .variantCopyNumber(0)
                 .biallelic(false)
+                .biallelicProbability(0)
                 .genotypeStatus(GenotypeStatus.UNKNOWN)
                 .germlineStatus(GermlineStatus.UNKNOWN)
                 .trinucleotideContext(Strings.EMPTY)

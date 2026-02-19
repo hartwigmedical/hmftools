@@ -51,11 +51,11 @@ public class ComparTestUtil
     {
         if(expectIndexMatch)
         {
-            assertTrue(refVictim.matches(newVictim));
+            assertTrue("Test ref.matches(new) is True", refVictim.matches(newVictim));
         }
         else
         {
-            assertFalse(refVictim.matches(newVictim));
+            assertFalse("Test ref.matches(new) is False", refVictim.matches(newVictim));
         }
 
         Mismatch mismatch = refVictim.findMismatch(newVictim, matchLevel, diffThresholds, false);

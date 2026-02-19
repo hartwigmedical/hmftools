@@ -28,7 +28,9 @@ import static com.hartwig.hmftools.wisp.common.CommonUtils.generateMutationSeque
 import static com.hartwig.hmftools.wisp.purity.FileType.SOMATICS;
 import static com.hartwig.hmftools.wisp.purity.FileType.SOMATIC_PEAK;
 import static com.hartwig.hmftools.wisp.purity.FileType.SUMMARY;
+import static com.hartwig.hmftools.wisp.purity.PurityConfig.isUltima;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.MIN_AVG_EDGE_DISTANCE;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.MIN_AVG_EDGE_DISTANCE_DUAL_ULTIMA;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.OUTLIER_MIN_ALLELE_FRAGS;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.OUTLIER_MIN_AVG_VAF_MULTIPLE;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.OUTLIER_MIN_SAMPLE_PERC;
@@ -420,8 +422,17 @@ public class SomaticVariants
             if(sampleFragData.qualPerAlleleFragment() <= PurityConstants.MIN_QUAL_PER_AD)
                 sampleFragData.addFilterReason(LOW_QUAL_PER_AD);
 
-            if(sampleFragData.averageReadDistance() >= 0 && sampleFragData.averageReadDistance() < MIN_AVG_EDGE_DISTANCE)
-                sampleFragData.addFilterReason(AVG_EDGE_DIST);
+            if(isUltima() && sampleFragData.qualPerAlleleFragment() <= PurityConstants.MIN_QUAL_PER_AD_DUAL_ULTIMA)
+                sampleFragData.addDualFilterReason(LOW_QUAL_PER_AD);
+
+            if(sampleFragData.averageReadDistance() >= 0)
+            {
+                if(sampleFragData.averageReadDistance() < MIN_AVG_EDGE_DISTANCE)
+                    sampleFragData.addFilterReason(AVG_EDGE_DIST);
+
+                if(isUltima() && sampleFragData.averageReadDistance() < MIN_AVG_EDGE_DISTANCE_DUAL_ULTIMA)
+                    sampleFragData.addDualFilterReason(AVG_EDGE_DIST);
+            }
         }
     }
 
@@ -514,7 +525,9 @@ public class SomaticVariants
             sj.add("Gene").add("CodingEffect").add("Hotspot").add("Reported");
             sj.add("VCN").add("CopyNumber");
             sj.add("TumorDP").add("TumorAD");
-            sj.add("SampleDP").add("SampleAD").add("SampleDualDP").add("SampleDualAD").add("SampleQualPerAD");
+            sj.add("SampleDP").add("SampleAD");
+
+            sj.add("DualFilter").add("SampleDualDP").add("SampleDualAD").add("SampleQualPerAD");
             sj.add("SeqGcRatio").add("BqrErrorRate").add("AvgReadDistance");
 
             writer.write(sj.toString());
@@ -559,7 +572,11 @@ public class SomaticVariants
 
             sj.add(valueOf(tumorData.Depth)).add(valueOf(tumorData.AlleleCount));
             sj.add(valueOf(sampleFragData.Depth)).add(valueOf(sampleFragData.AlleleCount));
-            sj.add(valueOf(sampleFragData.UmiCounts.TotalDual)).add(valueOf(sampleFragData.UmiCounts.AlleleDual));
+
+            String dualFiltersStr = !sampleFragData.dualFilterReasons().isEmpty() ?
+                    sampleFragData.dualFilterReasons().stream().map(x -> x.toString()).collect(Collectors.joining(ITEM_DELIM)) : PASS_FILTER;
+
+            sj.add(dualFiltersStr).add(valueOf(sampleFragData.UmiCounts.TotalDual)).add(valueOf(sampleFragData.UmiCounts.AlleleDual));
             sj.add(format("%.1f", sampleFragData.qualPerAlleleFragment()));
             sj.add(format("%.3f", variant.sequenceGcRatio()));
             sj.add(format("%.6f", sampleFragData.bqrErrorRate()));

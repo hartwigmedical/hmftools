@@ -1,4 +1,0 @@
-GeneId,CanonicalTranscriptId,Strand,TransId,TransName,BioType,TransStart,TransEnd,ExonRank,ExonStart,ExonEnd,ExonPhase,ExonEndPhase,CodingStart,CodingEnd
-gene_id,1,-1,1,trans,protein_coding,150,950,3,250,350,1,-1,300,800
-gene_id,1,-1,1,trans,protein_coding,150,950,2,450,550,1,-1,300,800
-gene_id,1,-1,1,trans,protein_coding,150,950,1,600,900,1,-1,300,800

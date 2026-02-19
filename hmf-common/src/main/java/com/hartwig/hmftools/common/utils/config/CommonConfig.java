@@ -38,7 +38,6 @@ public final class CommonConfig
     public static final String RNA_BAM = "rna_bam";
     public static final String RNA_BAM_DESC = "RNA BAM file";
 
-
     public static final String LOG_READ_IDS = "log_read_ids";
     public static final String LOG_READ_IDS_DESC = "Log specific read IDs, separated by ';'";
 
@@ -50,6 +49,9 @@ public final class CommonConfig
 
     public static final String TARGET_REGIONS_BED = "target_regions_bed";
     public static final String TARGET_REGIONS_BED_DESC = "Target regions BED file";
+
+    public static final String BLACKLISTED_SITES = "blacklisted_sites";
+    public static final String BLACKLISTED_SITES_DESC = "Blacklisted sites file";
 
     public static final String SAMPLE_DATA_DIR_CFG = "sample_data_dir";
     public static final String SAMPLE_DATA_DIR_DESC = "Path to sample pipeline files";
@@ -129,16 +131,31 @@ public final class CommonConfig
     public static final String REF_METRICS_DIR_CFG = "ref_metrics_dir";
     public static final String REF_METRICS_DIR_DESC = "Path to reference metrics directory";
 
-    private static String toolDirectory(final String toolName) { return format("%s_dir", toolName); }
-    private static String toolDirectoryDesc(final String toolName) { return format("Path to %s pipeline files", toolName); }
-    private static String toolPlotsDirectoryDesc(final String toolName) { return format("Path to %s plots", toolName); }
+    private static String toolDirectory(final String toolName)
+    {
+        return format("%s_dir", toolName);
+    }
+
+    private static String toolDirectoryDesc(final String toolName)
+    {
+        return format("Path to %s pipeline files", toolName);
+    }
+
+    private static String toolPlotsDirectoryDesc(final String toolName)
+    {
+        return format("Path to %s plots", toolName);
+    }
 
     public static List<String> parseLogReadIds(final ConfigBuilder configBuilder)
     {
         if(configBuilder.hasValue(LOG_READ_IDS))
+        {
             return Arrays.stream(configBuilder.getValue(LOG_READ_IDS).split(ITEM_DELIM, -1)).collect(Collectors.toList());
+        }
         else
+        {
             return Collections.emptyList();
+        }
 
     }
 }

@@ -4,8 +4,8 @@ import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
-import static com.hartwig.hmftools.common.rna.RnaStatistics.LOW_COVERAGE_THRESHOLD;
-import static com.hartwig.hmftools.common.rna.RnaStatistics.SPLICE_GENE_THRESHOLD;
+import static com.hartwig.hmftools.common.rna.RnaStatisticFile.LOW_COVERAGE_THRESHOLD;
+import static com.hartwig.hmftools.common.rna.RnaStatisticFile.SPLICE_GENE_THRESHOLD;
 import static com.hartwig.hmftools.common.sigs.SigUtils.convertToPercentages;
 import static com.hartwig.hmftools.common.utils.VectorUtils.copyVector;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
@@ -20,6 +20,7 @@ import static com.hartwig.hmftools.isofox.TaskType.TRANSCRIPT_COUNTS;
 import static com.hartwig.hmftools.isofox.adjusts.FragmentSizeCalcs.setConfigFragmentLengthData;
 import static com.hartwig.hmftools.isofox.adjusts.GcRatioCounts.writeReadGcRatioCounts;
 import static com.hartwig.hmftools.isofox.expression.TranscriptExpression.calcTpmFactors;
+import static com.hartwig.hmftools.isofox.expression.TranscriptExpression.setCohortDistributionValues;
 import static com.hartwig.hmftools.isofox.expression.TranscriptExpression.setTranscriptsPerMillion;
 import static com.hartwig.hmftools.isofox.results.SummaryStats.createSummaryStats;
 
@@ -49,9 +50,11 @@ import com.hartwig.hmftools.isofox.common.PerformanceTracking;
 import com.hartwig.hmftools.isofox.expression.ExpectedCountsCache;
 import com.hartwig.hmftools.isofox.expression.GeneCollectionSummary;
 import com.hartwig.hmftools.isofox.expression.PanelTpmNormaliser;
+import com.hartwig.hmftools.isofox.expression.cohort.CohortGenePercentiles;
 import com.hartwig.hmftools.isofox.fusion.ChimericStats;
 import com.hartwig.hmftools.isofox.fusion.FusionTaskManager;
 import com.hartwig.hmftools.isofox.neo.NeoEpitopeReader;
+import com.hartwig.hmftools.isofox.novel.AltSjCohortCache;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
 
 import org.jetbrains.annotations.NotNull;
@@ -64,6 +67,9 @@ public class Isofox
     private final ExpectedCountsCache mExpectedCountsCache;
     private final GcTranscriptCalculator mGcTranscriptCalcs;
     private final FusionTaskManager mFusionTaskManager;
+
+    private final CohortGenePercentiles mGeneDistribution;
+    private final AltSjCohortCache mAltSjCohortCache;
 
     private int mMaxObservedReadLength;
     private final List<FragmentSize> mFragmentLengthDistribution;
@@ -93,6 +99,16 @@ public class Isofox
         mGcTranscriptCalcs = mConfig.applyGcBiasAdjust() ? new GcTranscriptCalculator(mConfig) : null;
 
         mFusionTaskManager = mConfig.runFunction(FUSIONS) ? new FusionTaskManager(mConfig, mGeneTransCache) : null;
+
+        if(mConfig.runFunction(IsofoxFunction.ALT_SPLICE_JUNCTIONS) && mConfig.AltSjCohortFile != null)
+            mAltSjCohortCache = new AltSjCohortCache(mConfig.AltSjCohortFile);
+        else
+            mAltSjCohortCache = null;
+
+        if(mConfig.runFunction(IsofoxFunction.TRANSCRIPT_COUNTS) && mConfig.GeneDistributionFile != null)
+            mGeneDistribution = new CohortGenePercentiles(mConfig.GeneDistributionFile);
+        else
+            mGeneDistribution = null;
 
         mMaxObservedReadLength = 0;
         mFragmentLengthDistribution = Lists.newArrayList();
@@ -154,9 +170,9 @@ public class Isofox
             }
         }
 
-        final List<ChromosomeTaskExecutor> chrTasks = Lists.newArrayList();
-        final List<Callable<Void>> callableList = Lists.newArrayList();
-        final List<String> chromosomes = Lists.newArrayList();
+        List<ChromosomeTaskExecutor> chrTasks = Lists.newArrayList();
+        List<Callable<Void>> callableList = Lists.newArrayList();
+        List<String> chromosomes = Lists.newArrayList();
 
         // process any enriched genes first, then add the rest in order of decreasing length
         PRIORITISED_CHROMOSOMES.forEach(x -> chromosomes.add(mConfig.RefGenVersion.versionedChromosome(x)));
@@ -175,7 +191,7 @@ public class Isofox
 
             ChromosomeTaskExecutor bamReaderTask = new ChromosomeTaskExecutor(
                     mConfig, chromosome, geneDataList, mGeneTransCache, mResultsWriter,
-                    mFusionTaskManager, mExpectedCountsCache, mGcTranscriptCalcs);
+                    mFusionTaskManager, mExpectedCountsCache, mGcTranscriptCalcs, mAltSjCohortCache);
 
             chrTasks.add(bamReaderTask);
             callableList.add(bamReaderTask);
@@ -275,6 +291,8 @@ public class Isofox
         for(ChromosomeTaskExecutor chrTask : chrTasks)
         {
             setTranscriptsPerMillion(chrTask.getGeneCollectionSummaryData(), tpmFactors);
+
+            setCohortDistributionValues(chrTask.getGeneCollectionSummaryData(), mGeneDistribution, mConfig.CancerType);
 
             panelTpmNormaliser.applyNormalisation(chrTask.getGeneCollectionSummaryData());
 

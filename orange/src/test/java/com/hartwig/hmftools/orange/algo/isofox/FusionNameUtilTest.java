@@ -1,12 +1,11 @@
 package com.hartwig.hmftools.orange.algo.isofox;
 
-import static com.hartwig.hmftools.orange.algo.isofox.FusionNameUtil.geneDown;
-import static com.hartwig.hmftools.orange.algo.isofox.FusionNameUtil.geneUp;
+import static com.hartwig.hmftools.orange.algo.isofox.RnaFusionSelector.geneDown;
+import static com.hartwig.hmftools.orange.algo.isofox.RnaFusionSelector.geneUp;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-import com.hartwig.hmftools.common.isofox.IsofoxTestFactory;
 import com.hartwig.hmftools.common.rna.RnaFusion;
 
 import org.apache.logging.log4j.util.Strings;

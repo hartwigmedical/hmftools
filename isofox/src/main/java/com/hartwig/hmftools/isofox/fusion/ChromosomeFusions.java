@@ -68,7 +68,7 @@ public class ChromosomeFusions
         if(highCount)
         {
             int nonSuppGroups = (int)completeReadGroups.stream().filter(x -> x.size() == 2).count();
-            ISF_LOGGER.debug("chr({}) genes({}) region({} - {}) found {} local chimeric read groups (non-supp={}), stats({})",
+            ISF_LOGGER.trace("chr({}) genes({}) region({} - {}) found {} local chimeric read groups (non-supp={}), stats({})",
                     mChromosome, geneCollection.geneNames(),
                     geneCollection.getNonGenicPositions()[SE_START], geneCollection.getNonGenicPositions()[SE_END],
                     completeReadGroups.size(), nonSuppGroups, mChimericStats);

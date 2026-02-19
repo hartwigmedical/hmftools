@@ -368,7 +368,7 @@ public class VcfWriter implements AutoCloseable
         mVariants.add(variantContext);
     }
 
-    private Genotype buildGenotype(final String sampleId, final BreakendSupport breakendSupport)
+    public static Genotype buildGenotype(final String sampleId, final BreakendSupport breakendSupport)
     {
         GenotypeBuilder builder = new GenotypeBuilder(sampleId);
 

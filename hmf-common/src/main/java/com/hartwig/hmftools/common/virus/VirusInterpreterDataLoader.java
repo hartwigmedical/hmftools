@@ -14,8 +14,12 @@ public final class VirusInterpreterDataLoader
 {
     private static final Logger LOGGER = LogManager.getLogger(VirusInterpreterDataLoader.class);
 
-    @NotNull
-    public static VirusInterpreterData load(@NotNull String annotatedVirusTsv) throws IOException
+    public static VirusInterpreterData load(final String basePath, final String sampleId) throws IOException
+    {
+        return VirusInterpreterDataLoader.load(AnnotatedVirusFile.generateFileName(basePath, sampleId));
+    }
+
+    public static VirusInterpreterData load(final String annotatedVirusTsv) throws IOException
     {
         LOGGER.info("Loading VirusInterpreter data from {}", new File(annotatedVirusTsv).getParent());
         List<AnnotatedVirus> viruses = AnnotatedVirusFile.read(annotatedVirusTsv);

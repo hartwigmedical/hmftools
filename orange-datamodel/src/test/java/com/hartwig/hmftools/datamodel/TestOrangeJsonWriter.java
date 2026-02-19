@@ -67,6 +67,7 @@ import com.hartwig.hmftools.datamodel.purple.PurpleLikelihoodMethod;
 import com.hartwig.hmftools.datamodel.purple.PurpleMicrosatelliteStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
+import com.hartwig.hmftools.datamodel.purple.PurpleSomaticLikelihood;
 import com.hartwig.hmftools.datamodel.purple.PurpleTumorMutationalStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariantEffect;
@@ -204,6 +205,7 @@ public class TestOrangeJsonWriter
                 .hotspot(HotspotType.NON_HOTSPOT)
                 .tumorDepth(ImmutablePurpleAllelicDepth.builder().totalReadCount(20).alleleReadCount(10).build())
                 .subclonalLikelihood(0.0)
+                .somaticLikelihood(PurpleSomaticLikelihood.MEDIUM)
                 .biallelic(false)
                 .biallelicProbability(0.1)
                 .genotypeStatus(PurpleGenotypeStatus.UNKNOWN)
@@ -236,6 +238,7 @@ public class TestOrangeJsonWriter
                 .hotspot(HotspotType.HOTSPOT)
                 .tumorDepth(ImmutablePurpleAllelicDepth.builder().totalReadCount(30).alleleReadCount(20).build())
                 .subclonalLikelihood(0.2)
+                .somaticLikelihood(PurpleSomaticLikelihood.UNKNOWN)
                 .biallelic(false)
                 .biallelicProbability(0.0)
                 .genotypeStatus(PurpleGenotypeStatus.HET)

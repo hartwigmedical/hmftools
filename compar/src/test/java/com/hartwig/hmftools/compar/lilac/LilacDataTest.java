@@ -56,7 +56,10 @@ public class LilacDataTest extends ComparableItemTest<LilacData, LilacComparer, 
                         )
                 )
         );
-        nameToAlternateIndexInitializer = Collections.emptyMap();
+
+        nameToAlternateIndexInitializer = Map.of(
+                "genes", b -> b.genes = alternateValueSource.QcData.genes());
+
         reportabilityFieldToFalseReportabilityInitializer = Collections.emptyMap();
     }
 
@@ -100,7 +103,8 @@ public class LilacDataTest extends ComparableItemTest<LilacData, LilacComparer, 
 
         LilacData refVictim = builder.create();
         LilacData newVictim = builder.createWithAlternateDefaults();
-        assertValueDifferencesAsExpected(refVictim, newVictim, matchLevel, diffThresholds, expectedFieldNames, true);
+        boolean expectIndexMatch = nameToAlternateIndexInitializer.isEmpty();
+        assertValueDifferencesAsExpected(refVictim, newVictim, matchLevel, diffThresholds, expectedFieldNames, expectIndexMatch);
     }
 
     @Test
@@ -145,6 +149,4 @@ public class LilacDataTest extends ComparableItemTest<LilacData, LilacComparer, 
             }
         }
     }
-
-
 }

@@ -9,7 +9,7 @@ import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_IN
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_INFRAME_INSERTION;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_MISSENSE;
 import static com.hartwig.hmftools.purple.PurpleConstants.BIALLELIC_ASSUMED_FRACTION;
-import static com.hartwig.hmftools.purple.PurpleConstants.MB_PER_GENOME;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeConstants.MB_PER_GENOME;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers.addReportableTranscriptList;
 import static com.hartwig.hmftools.purple.somatic.SomaticVariantEnrichment.populateHeader;
@@ -128,7 +128,7 @@ public class SomaticStream
     }
 
     public List<DriverCatalog> buildDrivers(
-            final Map<String,GeneCopyNumber> geneCopyNumberMap, final List<DriverSourceData> driverSourceData)
+            final Map<String,List<GeneCopyNumber>> geneCopyNumberMap, final List<DriverSourceData> driverSourceData)
     {
         if(mReferenceData.TargetRegions.hasTargetRegions())
         {

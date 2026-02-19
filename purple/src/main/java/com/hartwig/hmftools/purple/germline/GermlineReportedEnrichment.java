@@ -123,6 +123,7 @@ public class GermlineReportedEnrichment
 
     private boolean isCandidateReportable(final VariantContextDecorator variant)
     {
+        // check reportable criteria irrespective of the reportable flags set in the driver gene catalog
         if(variant.gene().isEmpty())
             return false;
 
@@ -139,6 +140,7 @@ public class GermlineReportedEnrichment
             final GermlineVariant variant, final DriverGeneGermlineReporting hotspotReporting,
             final DriverGeneGermlineReporting variantReporting, final Set<String> genesWithMultipleUnphasedHits)
     {
+        // check the driver gene configuration
         if(!variant.decorator().isGermlinePathogenic())
             return false;
 

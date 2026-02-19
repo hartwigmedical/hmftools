@@ -6,6 +6,7 @@ import javax.annotation.Nullable;
 
 import com.google.common.primitives.Booleans;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
+import com.hartwig.hmftools.common.genome.position.GenomePositionImpl;
 
 public class AmberSite implements GenomePosition
 {
@@ -26,24 +27,59 @@ public class AmberSite implements GenomePosition
     }
 
     @Override
-    public String chromosome() { return Chromosome; }
+    public String chromosome()
+    {
+        return Chromosome;
+    }
 
     @Override
-    public int position() { return Position; }
+    public int position()
+    {
+        return Position;
+    }
+
+    public GenomePositionImpl rawPosition()
+    {
+        return new GenomePositionImpl(Chromosome, Position);
+    }
 
     // convenience
-    public String ref() { return Ref; }
-    public String alt() { return Alt; }
-    public boolean snpCheck() { return mSnpCheck; };
-    public void setSnpCheck(boolean value) { mSnpCheck = value; };
+    public String ref()
+    {
+        return Ref;
+    }
 
-    public String toString() { return format("%s:%d %s>%s %s", Chromosome, Position, Ref, Alt, mSnpCheck ? "snpcheck" : ""); }
+    public String alt()
+    {
+        return Alt;
+    }
+
+    public boolean snpCheck()
+    {
+        return mSnpCheck;
+    }
+
+    ;
+
+    public void setSnpCheck(boolean value)
+    {
+        mSnpCheck = value;
+    }
+
+    ;
+
+    public String toString()
+    {
+        return format("%s:%d %s>%s %s", Chromosome, Position, Ref, Alt, mSnpCheck ? "snpcheck" : "");
+    }
 
     @Override
     public boolean equals(@Nullable Object another)
     {
         if(this == another)
+        {
             return true;
+        }
 
         return another instanceof AmberSite && matches((AmberSite) another);
     }

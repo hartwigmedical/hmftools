@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Objects;
 
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.genome.chromosome.CytoBands;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.orange.conversion.ConversionUtil;
@@ -13,22 +14,21 @@ import com.hartwig.hmftools.orange.conversion.LinxConversion;
 
 public class LinxInterpreter
 {
-    private final EnsemblDataCache mEnsemblDataCache;
+    private final CytoBands mCytoBands;
 
-    public LinxInterpreter(final EnsemblDataCache ensemblDataCache)
+    public LinxInterpreter(final CytoBands cytoBands)
     {
-        mEnsemblDataCache = ensemblDataCache;
+        mCytoBands = cytoBands;
     }
 
     public LinxRecord interpret(final LinxData linx)
     {
-        LOGGER.info("Analysing linx data");
+        LOGGER.info("Analysing Linx data");
 
-        LinxBreakendInterpreter somaticBreakendInterpreter = new LinxBreakendInterpreter(
-                linx.somaticSvAnnotations(), mEnsemblDataCache);
+        LinxBreakendInterpreter somaticBreakendInterpreter = new LinxBreakendInterpreter(linx.somaticSvAnnotations(), mCytoBands);
 
         LinxBreakendInterpreter germlineBreakendInterpreter = new LinxBreakendInterpreter(
-                Objects.requireNonNullElse(linx.germlineSvAnnotations(), List.of()), mEnsemblDataCache);
+                Objects.requireNonNullElse(linx.germlineSvAnnotations(), List.of()), mCytoBands);
 
         return ImmutableLinxRecord.builder()
                 .somaticStructuralVariants(ConversionUtil.mapToIterable(linx.somaticSvAnnotations(), LinxConversion::convert))

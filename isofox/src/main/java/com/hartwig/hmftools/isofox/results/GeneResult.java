@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.isofox.results;
 
+import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_MEDIAN_TPM_CANCER;
+import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_MEDIAN_TPM_COHORT;
+import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_PERC_TPM_CANCER;
+import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_PERC_TPM_COHORT;
 import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_SPLICED_FRAGS;
 import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_ADJ_TPM;
 import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_UNSPLICED_FRAGS;
@@ -7,7 +11,7 @@ import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_SET_ID;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 
 import java.util.StringJoiner;
 
@@ -28,6 +32,12 @@ public class GeneResult
     private double mFitResiduals;
     private double mLowMapQualsAllocation;
 
+    // cohort values for annotation
+    private double mMedianTpmCohort;
+    private double mPercentileTpmCohort;
+    private double mMedianTpmCancer;
+    private double mPercentileTpmCancer;
+
     public GeneResult(final GeneCollection geneCollection, final GeneReadData geneReadData)
     {
         Gene = geneReadData.GeneData;
@@ -43,6 +53,11 @@ public class GeneResult
         mAdjustedTpm = 0;
         mUnsplicedAlloc = 0;
         mLowMapQualsAllocation = 0;
+
+        mMedianTpmCohort = 0;
+        mPercentileTpmCohort = 0;
+        mMedianTpmCancer = 0;
+        mPercentileTpmCancer = 0;
     }
 
     public void setFitAllocation(double splicedAlloc, double unsplicedAlloc)
@@ -57,6 +72,8 @@ public class GeneResult
         mAdjustedTpm = adjusted;
     }
 
+    public double adjustedTpm() { return mAdjustedTpm; }
+
     public void applyTpmAdjustFactor(double factor) { mAdjustedTpm /= factor; }
 
     public void setFitResiduals(double residuals) { mFitResiduals = residuals; }
@@ -66,9 +83,17 @@ public class GeneResult
 
     public void setLowMapQualsAllocation(double alloc) { mLowMapQualsAllocation = alloc; }
 
-    public static String csvHeader()
+    public void setCohortValues(double medianTpmCohort, double percentileTpmCohort, double medianTpmCancer, double percentileTpmCancer)
     {
-        return new StringJoiner(DELIMITER)
+        mMedianTpmCohort = medianTpmCohort;
+        mPercentileTpmCohort = percentileTpmCohort;
+        mMedianTpmCancer = medianTpmCancer;
+        mPercentileTpmCancer = percentileTpmCancer;
+    }
+
+    public static String header()
+    {
+        return new StringJoiner(TSV_DELIM)
                 .add(FLD_GENE_ID)
                 .add(FLD_GENE_NAME)
                 .add(FLD_CHROMOSOME)
@@ -82,12 +107,16 @@ public class GeneResult
                 .add("RawTPM")
                 .add("FitResiduals")
                 .add("LowMapQualFrags")
+                .add(FLD_MEDIAN_TPM_CANCER)
+                .add(FLD_PERC_TPM_CANCER)
+                .add(FLD_MEDIAN_TPM_COHORT)
+                .add(FLD_PERC_TPM_COHORT)
                 .toString();
     }
 
-    public String toCsv()
+    public String toLine()
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add(Gene.GeneId)
                 .add(Gene.GeneName)
                 .add(Gene.Chromosome)
@@ -101,6 +130,10 @@ public class GeneResult
                 .add(String.format("%6.3e", mRawTpm))
                 .add(String.format("%.1f", getFitResiduals()))
                 .add(String.format("%.1f", mLowMapQualsAllocation))
+                .add(String.format("%6.3e", mMedianTpmCancer))
+                .add(String.format("%.3f", mPercentileTpmCancer))
+                .add(String.format("%6.3e", mMedianTpmCohort))
+                .add(String.format("%.3f", mPercentileTpmCohort))
                 .toString();
     }
 }

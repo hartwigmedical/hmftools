@@ -41,14 +41,20 @@ public class UmiTypeCounts
         AlleleDual = alleleDual;
     }
 
-    public void add(final UmiTypeCounts other)
+    public void add(final UmiTypeCounts other) { add(other, true); }
+
+    public void add(final UmiTypeCounts other, final boolean includeDual)
     {
         TotalNone += other.TotalNone;
         TotalSingle += other.TotalSingle;
-        TotalDual += other.TotalDual;
         AlleleNone += other.AlleleNone;
         AlleleSingle += other.AlleleSingle;
-        AlleleDual += other.AlleleDual;
+
+        if(includeDual)
+        {
+            TotalDual += other.TotalDual;
+            AlleleDual += other.AlleleDual;
+        }
     }
 
     public UmiTypeCounts()

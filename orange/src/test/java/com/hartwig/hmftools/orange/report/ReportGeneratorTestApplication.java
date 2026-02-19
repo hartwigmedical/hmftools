@@ -1,22 +1,44 @@
 package com.hartwig.hmftools.orange.report;
 
+import static com.hartwig.hmftools.orange.TestOrangeConfigFactory.CHORD_DIR;
+import static com.hartwig.hmftools.orange.TestOrangeConfigFactory.CUPPA_DIR;
+import static com.hartwig.hmftools.orange.TestOrangeConfigFactory.DRIVER_GENE_PANEL_TSV;
+import static com.hartwig.hmftools.orange.TestOrangeConfigFactory.ISOFOX_DIR;
+import static com.hartwig.hmftools.orange.TestOrangeConfigFactory.LILAC_DIR;
+import static com.hartwig.hmftools.orange.TestOrangeConfigFactory.LINX_GERMLINE_DATA_DIRECTORY;
+import static com.hartwig.hmftools.orange.TestOrangeConfigFactory.LINX_PLOT_DIRECTORY;
+import static com.hartwig.hmftools.orange.TestOrangeConfigFactory.LINX_SOMATIC_DATA_DIRECTORY;
+import static com.hartwig.hmftools.orange.TestOrangeConfigFactory.MELANOMA_DOID;
+import static com.hartwig.hmftools.orange.TestOrangeConfigFactory.PEACH_DIR;
+import static com.hartwig.hmftools.orange.TestOrangeConfigFactory.PIPELINE_VERSION_FILE;
+import static com.hartwig.hmftools.orange.TestOrangeConfigFactory.PURPLE_DATA_DIRECTORY;
+import static com.hartwig.hmftools.orange.TestOrangeConfigFactory.PURPLE_PLOT_DIRECTORY;
+import static com.hartwig.hmftools.orange.TestOrangeConfigFactory.REFERENCE_SAMPLE_BAM_METRICS_DIR;
+import static com.hartwig.hmftools.orange.TestOrangeConfigFactory.REFERENCE_SAMPLE_ID;
+import static com.hartwig.hmftools.orange.TestOrangeConfigFactory.REFERENCE_SAMPLE_REDUX_DIR;
+import static com.hartwig.hmftools.orange.TestOrangeConfigFactory.SIGNATURES_ETIOLOGY_TSV;
+import static com.hartwig.hmftools.orange.TestOrangeConfigFactory.SIGS_DIR;
+import static com.hartwig.hmftools.orange.TestOrangeConfigFactory.TUMOR_SAMPLE_BAM_METRICS_DIR;
+import static com.hartwig.hmftools.orange.TestOrangeConfigFactory.TUMOR_SAMPLE_ID;
+import static com.hartwig.hmftools.orange.TestOrangeConfigFactory.TUMOR_SAMPLE_REDUX_DIR;
+import static com.hartwig.hmftools.orange.TestOrangeConfigFactory.VIRUS_DIR;
+
 import java.io.File;
 import java.nio.file.Files;
+import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.hartwig.hmftools.datamodel.cohort.Evaluation;
-import com.hartwig.hmftools.datamodel.cohort.ImmutableEvaluation;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.datamodel.isofox.ImmutableIsofoxRecord;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
+import com.hartwig.hmftools.datamodel.orange.ExperimentType;
 import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
-import com.hartwig.hmftools.datamodel.orange.PercentileType;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleFit;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleQC;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleRecord;
@@ -24,9 +46,7 @@ import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
 import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
-import com.hartwig.hmftools.orange.ImmutableOrangeConfig;
 import com.hartwig.hmftools.orange.OrangeConfig;
-import com.hartwig.hmftools.orange.TestOrangeConfigFactory;
 import com.hartwig.hmftools.orange.TestOrangeReportFactory;
 import com.hartwig.hmftools.orange.algo.OrangeAlgo;
 
@@ -34,7 +54,6 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class ReportGeneratorTestApplication
@@ -71,8 +90,7 @@ public class ReportGeneratorTestApplication
         }
     }
 
-    @NotNull
-    private static OrangeRecord buildReport(@NotNull OrangeConfig config) throws Exception
+    private static OrangeRecord buildReport(final OrangeConfig config) throws Exception
     {
         if(USE_MOCK_DATA_FOR_REPORT)
         {
@@ -87,16 +105,14 @@ public class ReportGeneratorTestApplication
             report = overwritePurpleQCStatus(report, OVERRIDE_QC_STATUS);
         }
 
-        OrangeRecord withPercentiles = overwriteCohortPercentiles(report);
-
         OrangeRecord filtered;
         if(REMOVE_UNREPORTED_VARIANTS)
         {
-            filtered = removeUnreported(withPercentiles);
+            filtered = removeUnreported(report);
         }
         else
         {
-            filtered = withPercentiles;
+            filtered = report;
         }
 
         OrangeRecord finalReport = ImmutableOrangeRecord.builder().from(filtered).sampleId("Test").build();
@@ -104,8 +120,7 @@ public class ReportGeneratorTestApplication
         return finalReport;
     }
 
-    @NotNull
-    private static OrangeRecord overwritePurpleQCStatus(@NotNull OrangeRecord report, @NotNull Set<PurpleQCStatus> newStatus)
+    private static OrangeRecord overwritePurpleQCStatus(final OrangeRecord report, final Set<PurpleQCStatus> newStatus)
     {
         return ImmutableOrangeRecord.builder().from(report)
                 .purple(ImmutablePurpleRecord.builder().from(report.purple())
@@ -120,27 +135,19 @@ public class ReportGeneratorTestApplication
                 .build();
     }
 
-    @NotNull
-    private static OrangeRecord overwriteCohortPercentiles(@NotNull OrangeRecord report)
-    {
-        // Need to overwrite percentiles since test code doesn't have access to real production cohort percentile files.
-        Map<PercentileType, Evaluation> evaluations = Maps.newHashMap();
-        evaluations.put(PercentileType.SV_TMB,
-                ImmutableEvaluation.builder().cancerType("Skin").panCancerPercentile(0.22).cancerTypePercentile(0.34).build());
-
-        return ImmutableOrangeRecord.builder().from(report).cohortEvaluations(evaluations).build();
-    }
-
-    @NotNull
     private static OrangeConfig buildConfig()
     {
-        OrangeConfig baseConfig =
-                TUMOR_ONLY ? TestOrangeConfigFactory.createWGSConfigTumorOnly() : TestOrangeConfigFactory.createWGSConfigTumorNormal();
-        return ImmutableOrangeConfig.builder().from(baseConfig).limitJsonOutput(LIMIT_JSON_OUTPUT).outputDir(REPORT_BASE_DIR).build();
+        return new OrangeConfig(
+                ExperimentType.WHOLE_GENOME, TUMOR_SAMPLE_ID, TUMOR_ONLY ? null : REFERENCE_SAMPLE_ID, null,
+                RefGenomeVersion.V37, Collections.emptySet(), LocalDate.now(),
+                null, MELANOMA_DOID, SIGNATURES_ETIOLOGY_TSV, DRIVER_GENE_PANEL_TSV,
+                PIPELINE_VERSION_FILE, PURPLE_DATA_DIRECTORY, PURPLE_PLOT_DIRECTORY, LINX_SOMATIC_DATA_DIRECTORY,
+                LINX_GERMLINE_DATA_DIRECTORY, LINX_PLOT_DIRECTORY, TUMOR_SAMPLE_BAM_METRICS_DIR, REFERENCE_SAMPLE_BAM_METRICS_DIR,
+                TUMOR_SAMPLE_REDUX_DIR, REFERENCE_SAMPLE_REDUX_DIR, LILAC_DIR, CHORD_DIR, CUPPA_DIR, PEACH_DIR, SIGS_DIR, VIRUS_DIR,
+                ISOFOX_DIR, false, true);
     }
 
-    @NotNull
-    private static OrangeRecord removeUnreported(@NotNull OrangeRecord report)
+    private static OrangeRecord removeUnreported(final OrangeRecord report)
     {
         ImmutableOrangeRecord.Builder builder = ImmutableOrangeRecord.builder()
                 .from(report)
@@ -167,9 +174,8 @@ public class ReportGeneratorTestApplication
         return builder.build();
     }
 
-    @NotNull
-    private static List<PurpleGeneCopyNumber> retainReportableCopyNumbers(@NotNull List<PurpleGeneCopyNumber> geneCopyNumbers,
-            @NotNull List<PurpleDriver> drivers)
+    private static List<PurpleGeneCopyNumber> retainReportableCopyNumbers(
+            final List<PurpleGeneCopyNumber> geneCopyNumbers, final List<PurpleDriver> drivers)
     {
         List<String> copyNumberDriverGenes = Lists.newArrayList();
         for(PurpleDriver driver : drivers)
@@ -213,7 +219,7 @@ public class ReportGeneratorTestApplication
         return reportable;
     }
 
-    private static boolean isReportableSv(@NotNull LinxSvAnnotation structuralVariant, @NotNull List<LinxBreakend> reportableBreakends)
+    private static boolean isReportableSv(final LinxSvAnnotation structuralVariant, final List<LinxBreakend> reportableBreakends)
     {
         for(LinxBreakend breakend : reportableBreakends)
         {
@@ -225,7 +231,7 @@ public class ReportGeneratorTestApplication
         return false;
     }
 
-    private static void deleteDir(@NotNull File file)
+    private static void deleteDir(final File file)
     {
         File[] contents = file.listFiles();
         if(contents != null)

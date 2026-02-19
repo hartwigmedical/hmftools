@@ -12,10 +12,14 @@ import static com.hartwig.hmftools.sage.ReferenceData.isHighlyPolymorphic;
 import static com.hartwig.hmftools.sage.SageConfig.isSbx;
 import static com.hartwig.hmftools.sage.SageConfig.isUltima;
 import static com.hartwig.hmftools.sage.SageConfig.isIllumina;
+import static com.hartwig.hmftools.sage.SageConstants.DOUBLE_JITTER_MIN_REPEAT_CHANGE;
 import static com.hartwig.hmftools.sage.SageConstants.HIGHLY_POLYMORPHIC_GENES_ALT_MAP_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_TUMOR_ALT_SUPPORT_SKIP_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_TUMOR_VAF_SKIP_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_ALT_BASE_QUAL;
+import static com.hartwig.hmftools.sage.SageConstants.JITTER_MIN_REPEAT_CHANGE;
+import static com.hartwig.hmftools.sage.SageConstants.LONG_INDEL_REPEAT_MAX;
+import static com.hartwig.hmftools.sage.SageConstants.LONG_INDEL_REPEAT_MIN;
 import static com.hartwig.hmftools.sage.SageConstants.MAP_QUAL_INDEL_REPEAT_PENALTY;
 import static com.hartwig.hmftools.sage.SageConstants.MAP_QUAL_NON_INDEL_REPEAT_PENALTY;
 import static com.hartwig.hmftools.sage.SageConstants.MAP_QUAL_READ_BIAS_CAP;
@@ -36,6 +40,7 @@ import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PER
 import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PROB;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_TQP_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_TQP_QUAL_MSI_VARIANT;
+import static com.hartwig.hmftools.sage.SageConstants.PANEL_REPEAT_MIN_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.REALIGNED_MAX_PERC;
 import static com.hartwig.hmftools.sage.SageConstants.REQUIRED_STRONG_SUPPORT;
 import static com.hartwig.hmftools.sage.SageConstants.REQUIRED_STRONG_SUPPORT_HOTSPOT;
@@ -53,11 +58,12 @@ import static com.hartwig.hmftools.sage.SageConstants.HIGHLY_POLYMORPHIC_GENES_M
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_BASE_QUAL_FIXED_PENALTY;
 import static com.hartwig.hmftools.sage.SageConstants.GERMLINE_HET_MIN_EXPECTED_VAF;
 import static com.hartwig.hmftools.sage.SageConstants.GERMLINE_HET_MIN_SAMPLING_PROB;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_DOUBLE_JITTER_REPEAT_COUNT;
 import static com.hartwig.hmftools.sage.filter.SoftFilterConfig.getTieredSoftFilterConfig;
 import static com.hartwig.hmftools.sage.seqtech.SbxUtils.MQF_NM_1_THRESHOLD_DEDUCTION;
+import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.GERMLINE_VAF_INDEL_REPEAT_MIN_THRESHOLD_FACTOR;
 import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.belowExpectedHpQuals;
 import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.belowExpectedT0Quals;
-import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.isPanelIndelRepeatVariant;
 
 import java.util.EnumSet;
 import java.util.List;
@@ -72,8 +78,11 @@ import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
+import com.hartwig.hmftools.sage.seqtech.SbxUtils;
+import com.hartwig.hmftools.sage.seqtech.UltimaUtils;
 
 import org.apache.commons.math3.distribution.BinomialDistribution;
+import org.apache.logging.log4j.util.Strings;
 
 public class VariantFilters
 {
@@ -611,6 +620,38 @@ public class VariantFilters
         return refCounter.depth() < minGermlineCoverage;
     }
 
+    public static boolean includeRefJitterInMsiIndel(int rcRepeatCount, String rcRepeatBases, String ref, String alt)
+    {
+        int indelLengthAbs = Math.abs(ref.length() - alt.length());
+        boolean isIndel = indelLengthAbs > 0;
+
+        if(!isUltima() || !isIndel || rcRepeatCount == 0)
+            return false;
+
+        int minRepeatChange = rcRepeatCount >= DEFAULT_DOUBLE_JITTER_REPEAT_COUNT ? DOUBLE_JITTER_MIN_REPEAT_CHANGE : JITTER_MIN_REPEAT_CHANGE;
+        return indelLengthAbs / rcRepeatBases.length() >= minRepeatChange;
+    }
+
+    public static boolean isPanelOrLongIndelRepeatVariant(final VariantTier tier, final double qual, boolean isIndel, int repeatLength)
+    {
+        return isPanelIndelRepeatVariant(tier, qual, isIndel, repeatLength) || isLongIndelRepeatVariant(qual, isIndel, repeatLength);
+    }
+
+    public static boolean isPanelIndelRepeatVariant(final VariantTier tier, final double qual, boolean isIndel, int repeatLength)
+    {
+        return (tier == PANEL || tier == HOTSPOT) && isIndelRepeatVariant(qual, isIndel, repeatLength > 0);
+    }
+
+    private static boolean isLongIndelRepeatVariant(final double qual, boolean isIndel, int repeatLength)
+    {
+        return repeatLength >= LONG_INDEL_REPEAT_MIN && repeatLength <= LONG_INDEL_REPEAT_MAX
+                && isIndelRepeatVariant(qual, isIndel, repeatLength > 0);
+    }
+
+    private static boolean isIndelRepeatVariant(final double qual, boolean isIndel, boolean hasRepeat)
+    {
+        return qual >= PANEL_REPEAT_MIN_QUAL && isIndel && hasRepeat;
+    }
     private static boolean aboveMaxGermlineVaf(
             final VariantTier tier, final SoftFilterConfig config, final ReadContextCounter refCounter,
             final ReadContextCounter primaryTumor)
@@ -621,22 +662,26 @@ public class VariantFilters
             return false; // will be handled in tumor filters
 
         int adjustedRefAltCount = refCounter.readCounts().altSupport() + refCounter.simpleAltMatches();
-
-        if(refCounter.isLongIndel())
+        String maxRepeatBases = primaryTumor.readContext().MaxRepeat != null ? primaryTumor.readContext().MaxRepeat.Bases : Strings.EMPTY;
+        if(primaryTumor.isLongIndel() || includeRefJitterInMsiIndel(primaryTumor.readContext().maxRepeatCount(), maxRepeatBases, primaryTumor.ref(), primaryTumor.alt()))
         {
             adjustedRefAltCount += refCounter.jitter().shortened() + refCounter.jitter().lengthened();
         }
 
-        boolean isPanelIndelRepeat = isUltima() && isPanelIndelRepeatVariant(primaryTumor);
-        return aboveMaxGermlineVaf(tier, isPanelIndelRepeat, tumorVaf, adjustedRefAltCount, refCounter.readCounts().Total, config.MaxGermlineVaf);
+        int repeatLength = primaryTumor.readContext().maxRepeatCount();
+        boolean isValidIndelRepeat = isPanelOrLongIndelRepeatVariant(primaryTumor.tier(), primaryTumor.phredQual(), primaryTumor.variant().isIndel(), repeatLength);
+        return aboveMaxGermlineVaf(tier, isValidIndelRepeat, tumorVaf, adjustedRefAltCount, refCounter.readCounts().Total, config.MaxGermlineVaf);
     }
 
     public static boolean aboveMaxGermlineVaf(
-            final VariantTier tier, boolean isPanelIndelRepeat, double tumorVaf, int adjustedRefAltCount, int refTotalReads,
+            final VariantTier tier, boolean isValidIndelRepeat, double tumorVaf, int adjustedRefAltCount, int refTotalReads,
             double maxGermlineVaf)
     {
         if(tumorVaf == 0)
             return false; // will be handled in tumor filters
+
+        boolean isValidUltimaIndelRepeat = isUltima() && isValidIndelRepeat;
+        boolean isValidSbxIndelRepeat = isSbx() && isValidIndelRepeat;
 
         if(tier == PANEL || tier == HOTSPOT)
         {
@@ -644,14 +689,34 @@ public class VariantFilters
 
             if(tier == PANEL)
             {
-                if(isPanelIndelRepeat)
+                if(isValidUltimaIndelRepeat)
                     threshold /= MAX_GERMLINE_VAF_PANEL_INDEL_REPEAT_VAF_FACTOR;
                 else
                     threshold /= MAX_GERMLINE_VAF_PANEL_VAF_FACTOR;
             }
 
-            double minThresholdFactor = isPanelIndelRepeat ?
+            double minThresholdFactor = isValidUltimaIndelRepeat ?
                     MAX_GERMLINE_VAF_PANEL_INDEL_REPEAT_THRESHOLD_FACTOR : MAX_GERMLINE_VAF_THRESHOLD_FACTOR;
+
+            maxGermlineVaf = max(min(threshold, maxGermlineVaf * minThresholdFactor), maxGermlineVaf);
+        }
+
+        else if(isValidUltimaIndelRepeat || isValidSbxIndelRepeat)
+        {
+            double thresholdDenom, minThresholdFactor;
+
+            if(isValidUltimaIndelRepeat)
+            {
+                thresholdDenom = UltimaUtils.GERMLINE_VAF_INDEL_REPEAT_THRESHOLD;
+                minThresholdFactor = UltimaUtils.GERMLINE_VAF_INDEL_REPEAT_MIN_THRESHOLD_FACTOR;
+            }
+            else
+            {
+                thresholdDenom = SbxUtils.GERMLINE_VAF_INDEL_REPEAT_THRESHOLD;
+                minThresholdFactor = SbxUtils.GERMLINE_VAF_INDEL_REPEAT_MIN_THRESHOLD_FACTOR;
+            }
+
+            double threshold = tumorVaf / thresholdDenom;
 
             maxGermlineVaf = max(min(threshold, maxGermlineVaf * minThresholdFactor), maxGermlineVaf);
         }
@@ -667,16 +732,18 @@ public class VariantFilters
         int refAvgAltBaseQuality = (int)round(refCounter.averageAltRecalibratedBaseQuality());
         int tumorQuality = primaryTumor.readQuals().Full + primaryTumor.readQuals().PartialCore + primaryTumor.readQuals().Realigned;
         int refQuality = refCounter.readQuals().Full + refCounter.readQuals().PartialCore + refCounter.readQuals().Realigned;
+        int repeatLength = primaryTumor.readContext().maxRepeatCount();
+        boolean isValidIndelRepeat = isPanelOrLongIndelRepeatVariant(primaryTumor.tier(), primaryTumor.phredQual(), primaryTumor.variant().isIndel(), repeatLength);
 
         return aboveMaxGermlineRelativeQual(
                 tier, tumorQuality, primaryTumor.vaf(), primaryTumor.depth(), tumorAvgAltBaseQuality,
-                refQuality, refCounter.depth(), refCounter.altSupport(), refAvgAltBaseQuality);
+                refQuality, refCounter.depth(), refCounter.altSupport(), refAvgAltBaseQuality, isValidIndelRepeat);
     }
 
     public static boolean aboveMaxGermlineRelativeQual(
             final VariantTier tier,
             double tumorQual, double tumorVaf, int tumorDepth, double tumorAvgBaseQual,
-            double refQual, int refDepth, int refAltSupport, double refAvgBaseQual)
+            double refQual, int refDepth, int refAltSupport, double refAvgBaseQual, boolean isValidIndelRepeat)
     {
         if(tumorQual == 0)
             return false; // will be handled in tumor filters
@@ -698,7 +765,15 @@ public class VariantFilters
         double probThreshold = tier == HOTSPOT ? MAX_GERMLINE_QUAL_PROB_HOTSPOT :
                 (tier == PANEL ? MAX_GERMLINE_QUAL_PROB_PANEL : MAX_GERMLINE_QUAL_PROB_OTHER);
 
-        double ratioThreshold = tier == HOTSPOT ? MAX_GERMLINE_QUAL_RATIO_THRESHOLD_HOTSPOT : MAX_GERMLINE_QUAL_RATIO_THRESHOLD;
+        double ratioThreshold;
+        if(tier == HOTSPOT)
+            ratioThreshold = MAX_GERMLINE_QUAL_RATIO_THRESHOLD_HOTSPOT;
+        else if(isSbx() && isValidIndelRepeat)
+            ratioThreshold = SbxUtils.GERMLINE_VAF_REL_QUAL_RATIO_THRESHOLD;
+        else if(isUltima() && isValidIndelRepeat)
+            ratioThreshold = UltimaUtils.GERMLINE_VAF_REL_QUAL_RATIO_THRESHOLD;
+        else
+            ratioThreshold = MAX_GERMLINE_QUAL_RATIO_THRESHOLD;
 
         return prob > probThreshold && adjustedRefQualRatio > ratioThreshold;
     }

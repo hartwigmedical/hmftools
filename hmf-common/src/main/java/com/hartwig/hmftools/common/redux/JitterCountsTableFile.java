@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.common.redux;
 
+import static com.hartwig.hmftools.common.redux.ReduxCommon.COL_CONSENSUS_TYPE;
+import static com.hartwig.hmftools.common.redux.ReduxCommon.COL_NUM_UNITS;
+import static com.hartwig.hmftools.common.redux.ReduxCommon.COL_UNIT;
 import static com.hartwig.hmftools.common.redux.ReduxCommon.REDUX_FILE_ID;
 
 import java.io.File;
@@ -16,10 +19,6 @@ import org.jetbrains.annotations.NotNull;
 
 public class JitterCountsTableFile
 {
-    private static String UNIT = "unit";
-    private static String CONSENSUS_TYPE = "consensusType";
-	private static String NUM_UNITS = "numUnits";
-
 	private static String READ_COUNT = "readCount";
 	private static String COUNT_m10 = "count-10";
 	private static String COUNT_m9 = "count-9";
@@ -54,15 +53,15 @@ public class JitterCountsTableFile
 
 	public static void write(final String filename, @NotNull final Collection<JitterCountsTable> msStatsTables)
 	{
-		List<String> columns = List.of(UNIT, CONSENSUS_TYPE, NUM_UNITS, READ_COUNT,
+		List<String> columns = List.of(COL_UNIT, COL_CONSENSUS_TYPE, COL_NUM_UNITS, READ_COUNT,
 				COUNT_m10, COUNT_m9, COUNT_m8, COUNT_m7, COUNT_m6, COUNT_m5, COUNT_m4, COUNT_m3, COUNT_m2, COUNT_m1,
 				COUNT_p0, COUNT_p1, COUNT_p2, COUNT_p3, COUNT_p4, COUNT_p5, COUNT_p6, COUNT_p7, COUNT_p8, COUNT_p9, COUNT_p10);
 
 		try(DelimFileWriter<JitterTableRow> writer = new DelimFileWriter<>(filename, columns, (msStatsTableRow, row) ->
 			{
-				row.set(UNIT,  msStatsTableRow.getRepeatUnit());
-                row.set(CONSENSUS_TYPE, msStatsTableRow.getConsensusType().name());
-				row.set(NUM_UNITS,  msStatsTableRow.refNumUnits());
+				row.set(COL_UNIT,  msStatsTableRow.getRepeatUnit());
+                row.set(COL_CONSENSUS_TYPE, msStatsTableRow.getConsensusType().name());
+				row.set(COL_NUM_UNITS,  msStatsTableRow.refNumUnits());
 				row.set(READ_COUNT,  msStatsTableRow.totalReadCount());
 				row.set(COUNT_p0, msStatsTableRow.getJitterReadCount(0));
 
@@ -132,7 +131,7 @@ public class JitterCountsTableFile
 				unitConsensusData = new JitterCountsTable(unit, consensusType);
 			}
 
-			JitterTableRow countRow = unitConsensusData.getOrCreateRow(row.getInt(NUM_UNITS));
+			JitterTableRow countRow = unitConsensusData.getOrCreateRow(row.getInt(COL_NUM_UNITS));
 
 			countRow.setTotalReadCount(row.getInt(READ_COUNT));
 			countRow.setJitterReadCount(0, row.getInt(COUNT_p0));

@@ -5,15 +5,16 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
+import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_CHR;
+import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_ORIENT;
+import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_POS;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferFileDelimiter;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_CHR;
 import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_COHORT_COUNT;
-import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_ORIENT;
-import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_POS;
 import static com.hartwig.hmftools.isofox.fusion.FusionData.formStreamField;
 import static com.hartwig.hmftools.isofox.fusion.FusionFilterType.PASS;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formChromosomePair;
@@ -21,16 +22,15 @@ import static com.hartwig.hmftools.isofox.fusion.FusionFilterType.ALLELE_FREQUEN
 import static com.hartwig.hmftools.isofox.fusion.FusionFilterType.ANCHOR_DISTANCE;
 import static com.hartwig.hmftools.isofox.fusion.FusionFilterType.COHORT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFilterType.FRAGMENT_COUNT;
-import static com.hartwig.hmftools.isofox.fusion.KnownGeneType.KNOWN_OTHER;
-import static com.hartwig.hmftools.isofox.fusion.KnownGeneType.KNOWN_PAIR;
-import static com.hartwig.hmftools.isofox.fusion.KnownGeneType.KNOWN_PROM3;
-import static com.hartwig.hmftools.isofox.fusion.KnownGeneType.OTHER;
-import static com.hartwig.hmftools.isofox.fusion.KnownGeneType.OTHER_PROM3;
-import static com.hartwig.hmftools.isofox.fusion.KnownGeneType.PROM5_KNOWN;
-import static com.hartwig.hmftools.isofox.fusion.KnownGeneType.PROM5_OTHER;
-import static com.hartwig.hmftools.isofox.fusion.KnownGeneType.PROM5_PROM3;
-import static com.hartwig.hmftools.isofox.fusion.KnownGeneType.hasKnownPairGene;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
+import static com.hartwig.hmftools.common.rna.KnownFusionType.KNOWN_OTHER;
+import static com.hartwig.hmftools.common.rna.KnownFusionType.KNOWN_PAIR;
+import static com.hartwig.hmftools.common.rna.KnownFusionType.KNOWN_PROM3;
+import static com.hartwig.hmftools.common.rna.KnownFusionType.OTHER;
+import static com.hartwig.hmftools.common.rna.KnownFusionType.OTHER_PROM3;
+import static com.hartwig.hmftools.common.rna.KnownFusionType.PROM5_KNOWN;
+import static com.hartwig.hmftools.common.rna.KnownFusionType.PROM5_OTHER;
+import static com.hartwig.hmftools.common.rna.KnownFusionType.PROM5_PROM3;
+import static com.hartwig.hmftools.common.rna.KnownFusionType.hasKnownPairGene;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -41,7 +41,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.fusion.KnownFusionData;
-import com.hartwig.hmftools.common.fusion.KnownFusionType;
+import com.hartwig.hmftools.common.rna.KnownFusionType;
 
 public class PassingFusions
 {
@@ -97,7 +97,7 @@ public class PassingFusions
                     nonPassingFusionsWithRelated.add(fusion);
 
                 // combine fragment support for non-local known-pair fusions
-                if(fusion.getKnownFusionType() == KnownGeneType.KNOWN_PAIR && fusion.getFilter() == FRAGMENT_COUNT && !isShortLocal)
+                if(fusion.getKnownFusionType() == KnownFusionType.KNOWN_PAIR && fusion.getFilter() == FRAGMENT_COUNT && !isShortLocal)
                 {
                     List<FusionData> fusions = lowSupportKnownFusions.get(fusion.name());
                     if(fusions == null)
@@ -155,7 +155,7 @@ public class PassingFusions
         return isPassingFusion(fusion, fusion.getKnownFusionType(), fusion.hasKnownSpliceSites());
     }
 
-    private boolean isPassingFusion(final FusionData fusion, final KnownGeneType knownType, boolean hasKnownSpliceSites)
+    private boolean isPassingFusion(final FusionData fusion, final KnownFusionType knownType, boolean hasKnownSpliceSites)
     {
         if(knownType == KNOWN_PAIR && !isShortLocalFusion(fusion))
         {
@@ -264,7 +264,7 @@ public class PassingFusions
     {
         boolean[] isKnown = {false, false};
 
-        for(KnownFusionData knownFusionData : mKnownFusionCache.getDataByType(KnownFusionType.KNOWN_PAIR))
+        for(KnownFusionData knownFusionData : mKnownFusionCache.getDataByType(com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR))
         {
             if(knownFusionData.FiveGene.equals(fusion.GeneNames[SE_START]) && knownFusionData.ThreeGene.equals(fusion.GeneNames[SE_END]))
             {
@@ -329,7 +329,8 @@ public class PassingFusions
 
             String header = fileReader.readLine();
 
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIMITER);
+            String fileDelim = inferFileDelimiter(filename);
+            Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, fileDelim);
 
             int chrUpIndex = fieldsIndexMap.get(formStreamField(FLD_CHR, FS_UP));
             int chrDownIndex = fieldsIndexMap.get(formStreamField(FLD_CHR, FS_DOWN));
@@ -345,7 +346,7 @@ public class PassingFusions
             while((line = fileReader.readLine()) != null)
             {
                 CohortFusionData fusion = new CohortFusionData(
-                        line, chrUpIndex, chrDownIndex, posUpIndex, posDownIndex, orientUpIndex, orientDownIndex, cohortFreqIndex);
+                        line, fileDelim, chrUpIndex, chrDownIndex, posUpIndex, posDownIndex, orientUpIndex, orientDownIndex, cohortFreqIndex);
 
                 ++fusionCount;
 
@@ -394,10 +395,10 @@ public class PassingFusions
         public int CohortCount;
 
         public CohortFusionData(
-                final String data, int chrUpIndex, int chrDownIndex, int posUpIndex, int posDownIndex,
+                final String data, String fileDelim, int chrUpIndex, int chrDownIndex, int posUpIndex, int posDownIndex,
                 int orientUpIndex, int orientDownIndex, int cohortCountIndex)
         {
-            String[] values = data.split(DELIMITER, -1);
+            String[] values = data.split(fileDelim, -1);
 
             Chromosomes = new String[] { values[chrUpIndex], values[chrDownIndex]};
             JunctionPositions = new int[] { Integer.parseInt(values[posUpIndex]), Integer.parseInt(values[posDownIndex])};

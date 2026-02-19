@@ -4,18 +4,19 @@ import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
+import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_CHR;
+import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_JUNC_TYPE;
+import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_ORIENT;
+import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_POS;
+import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_SV_TYPE;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_CHR;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_COHORT_COUNT;
-import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_JUNC_TYPE;
-import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_ORIENT;
-import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_POS;
-import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_SV_TYPE;
+import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_TOTAL_FRAGS;
 import static com.hartwig.hmftools.isofox.fusion.FusionData.formStreamField;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
 import java.util.List;
 import java.util.StringJoiner;
@@ -100,7 +101,7 @@ public class FusionCohortData
 
     public static String header()
     {
-        StringJoiner header = new StringJoiner(DELIMITER);
+        StringJoiner header = new StringJoiner(CSV_DELIM);
 
         for(int fs = FS_UP; fs <= FS_DOWN; ++fs)
         {
@@ -114,7 +115,7 @@ public class FusionCohortData
 
         header.add(FLD_SV_TYPE);
         header.add(FLD_COHORT_COUNT);
-        header.add("TotalFragments");
+        header.add(FLD_TOTAL_FRAGS);
         header.add("MaxFragments");
         header.add("Samples");
         return header.toString();
@@ -122,7 +123,7 @@ public class FusionCohortData
 
     public static String toCsv(final FusionCohortData fusion)
     {
-        StringJoiner output = new StringJoiner(DELIMITER);
+        StringJoiner output = new StringJoiner(CSV_DELIM);
 
         for (int fs = FS_UP; fs <= FS_DOWN; ++fs)
         {

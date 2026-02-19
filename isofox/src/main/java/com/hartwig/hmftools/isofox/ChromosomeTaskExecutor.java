@@ -46,6 +46,7 @@ import com.hartwig.hmftools.isofox.expression.TranscriptExpression;
 import com.hartwig.hmftools.isofox.fusion.ChimericStats;
 import com.hartwig.hmftools.isofox.fusion.ChromosomeFusions;
 import com.hartwig.hmftools.isofox.fusion.FusionTaskManager;
+import com.hartwig.hmftools.isofox.novel.AltSjCohortCache;
 import com.hartwig.hmftools.isofox.results.GeneResult;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
 import com.hartwig.hmftools.isofox.results.TranscriptResult;
@@ -86,7 +87,8 @@ public class ChromosomeTaskExecutor implements Callable<Void>
     public ChromosomeTaskExecutor(
             final IsofoxConfig config, final String chromosome, final List<GeneData> geneDataList,
             final EnsemblDataCache geneTransCache, final ResultsWriter resultsWriter, final FusionTaskManager fusionManager,
-            final ExpectedCountsCache expectedCountsCache, final GcTranscriptCalculator transcriptGcCalcs)
+            final ExpectedCountsCache expectedCountsCache, final GcTranscriptCalculator transcriptGcCalcs,
+            final AltSjCohortCache altSjCohortCache)
     {
         mConfig = config;
         mChromosome = chromosome;
@@ -101,7 +103,7 @@ public class ChromosomeTaskExecutor implements Callable<Void>
 
         mExpectedCountsCache = expectedCountsCache;
 
-        mBamFragmentAllocator = new FragmentAllocator(mConfig, resultsWriter);
+        mBamFragmentAllocator = new FragmentAllocator(mConfig, altSjCohortCache, resultsWriter);
         mBamFragmentAllocator.registerKnownFusionPairs(mGeneTransCache);
 
         mGcRatioCounts = mBamFragmentAllocator.getGcRatioCounts();
@@ -348,11 +350,11 @@ public class ChromosomeTaskExecutor implements Callable<Void>
                         .filter(x -> !x.transcriptIds().isEmpty())
                         .mapToDouble(x -> x.fragmentCount()).sum();
 
-                ISF_LOGGER.debug(String.format("genes(%s) catCounts(all=%.2f trans=%.1f)",
+                ISF_LOGGER.trace(String.format("genes(%s) catCounts(all=%.2f trans=%.1f)",
                         geneCollection.geneNames(), allCategoryTotals, transCategoryTotals));
             }
 
-            ISF_LOGGER.debug("chr({}) gene({}) transCombo(gene={} total={})",
+            ISF_LOGGER.trace("chr({}) gene({}) transCombo(gene={} total={})",
                     mChromosome, geneCollection.geneNames(10), mBamFragmentAllocator.getTransComboData().size(),
                     mGeneCollectionSummaryData.stream().mapToInt(x -> x.TransCategoryCounts.size()).sum());
         }
@@ -492,14 +494,14 @@ public class ChromosomeTaskExecutor implements Callable<Void>
 
     public void writeResults()
     {
-        for(final GeneCollectionSummary geneCollectionResult : mGeneCollectionSummaryData)
+        for(GeneCollectionSummary geneCollectionResult : mGeneCollectionSummaryData)
         {
-            for(final GeneResult geneResult : geneCollectionResult.GeneResults)
+            for(GeneResult geneResult : geneCollectionResult.GeneResults)
             {
                 mResultsWriter.writeGeneResult(geneResult);
             }
 
-            for(final TranscriptResult transResult : geneCollectionResult.TranscriptResults)
+            for(TranscriptResult transResult : geneCollectionResult.TranscriptResults)
             {
                 final GeneData geneData = geneCollectionResult.GeneResults.stream()
                         .filter(x -> x.Gene.GeneId.equals(transResult.Trans.GeneId))

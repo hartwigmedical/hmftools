@@ -29,7 +29,6 @@ import org.jetbrains.annotations.NotNull;
 
 public final class OrangeConversion
 {
-    @NotNull
     public static com.hartwig.hmftools.datamodel.flagstat.Flagstat convert(final BamFlagStats flagstat)
     {
         return ImmutableFlagstat.builder()
@@ -40,7 +39,6 @@ public final class OrangeConversion
                 .build();
     }
 
-    @NotNull
     public static com.hartwig.hmftools.datamodel.metrics.WGSMetrics convert(final BamMetricSummary metricsSummary)
     {
         return ImmutableWGSMetrics.builder()
@@ -59,14 +57,12 @@ public final class OrangeConversion
                 .build();
     }
 
-    @NotNull
-    public static OrangeDoidNode convert(@NotNull DoidNode doidNode)
+    public static OrangeDoidNode convert(final DoidNode doidNode)
     {
         return ImmutableOrangeDoidNode.builder().doid(doidNode.doid()).doidTerm(doidNode.doidTerm()).build();
     }
 
-    @NotNull
-    public static LilacRecord convert(@NotNull LilacSummaryData lilacSummaryData, boolean hasRef, boolean hasRna)
+    public static LilacRecord convert(final LilacSummaryData lilacSummaryData, boolean hasRef, boolean hasRna)
     {
         return ImmutableLilacRecord.builder()
                 .qc(lilacSummaryData.qc())
@@ -77,8 +73,7 @@ public final class OrangeConversion
                 .build();
     }
 
-    @NotNull
-    public static LilacAllele convert(@NotNull com.hartwig.hmftools.common.hla.LilacAllele allele, boolean hasRef, boolean hasRna)
+    public static LilacAllele convert(final com.hartwig.hmftools.common.hla.LilacAllele allele, boolean hasRef, boolean hasRna)
     {
         return ImmutableLilacAllele.builder()
                 .allele(allele.allele())
@@ -94,8 +89,7 @@ public final class OrangeConversion
                 .build();
     }
 
-    @NotNull
-    public static VirusInterpreterEntry convert(@NotNull com.hartwig.hmftools.common.virus.AnnotatedVirus annotatedVirus)
+    public static VirusInterpreterEntry convert(final com.hartwig.hmftools.common.virus.AnnotatedVirus annotatedVirus)
     {
         VirusType interpretation = annotatedVirus.interpretation();
         return ImmutableVirusInterpreterEntry.builder()
@@ -111,8 +105,7 @@ public final class OrangeConversion
                 .build();
     }
 
-    @NotNull
-    public static ChordRecord convert(@NotNull ChordData chordData)
+    public static ChordRecord convert(final ChordData chordData)
     {
         return ImmutableChordRecord.builder()
                 .brca1Value(chordData.BRCA1Value())
@@ -123,8 +116,7 @@ public final class OrangeConversion
                 .build();
     }
 
-    @NotNull
-    public static PeachGenotype convert(@NotNull com.hartwig.hmftools.common.peach.PeachGenotype peachGenotype)
+    public static PeachGenotype convert(final com.hartwig.hmftools.common.peach.PeachGenotype peachGenotype)
     {
         return ImmutablePeachGenotype.builder()
                 .gene(peachGenotype.gene())

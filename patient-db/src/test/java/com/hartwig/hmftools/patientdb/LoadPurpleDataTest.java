@@ -219,6 +219,7 @@ public class LoadPurpleDataTest extends DatabaseTestBase
                 1,
                 1,
                 1,
+                true,
                 GermlineDetectionMethod.SEGMENT,
                 GermlineStatus.UNKNOWN,
                 GermlineStatus.UNKNOWN,

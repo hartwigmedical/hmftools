@@ -11,12 +11,12 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferFileDelimiter;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.isofox.IsofoxConfig.GENE_DIST_DESC;
+import static com.hartwig.hmftools.isofox.IsofoxConfig.GENE_DIST_FILE;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.PANEL_TPM_NORMALISATION;
 import static com.hartwig.hmftools.isofox.cohort.CohortConfig.formSampleFilenames;
 import static com.hartwig.hmftools.isofox.expression.cohort.CohortGenePercentiles.PAN_CANCER;
-import static com.hartwig.hmftools.isofox.loader.DataLoaderConfig.GENE_DIST_FILE;
-import static com.hartwig.hmftools.isofox.loader.DataLoaderConfig.GENE_DIST_FILE_DESC;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -58,7 +58,7 @@ public class GeneratePanelNormalisation
 
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addPath(GENE_DIST_FILE, false, GENE_DIST_FILE_DESC);
+        configBuilder.addPath(GENE_DIST_FILE, false, GENE_DIST_DESC);
         configBuilder.addPath(GENE_ID_FILE, false, GENE_ID_FILE_DESC);
     }
 

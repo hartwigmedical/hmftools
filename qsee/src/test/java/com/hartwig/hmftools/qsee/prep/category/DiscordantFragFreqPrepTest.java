@@ -7,7 +7,7 @@ import java.util.Map;
 
 import com.hartwig.hmftools.common.sv.DiscordantFragType;
 import com.hartwig.hmftools.common.sv.EsveeDiscordantStats;
-import com.hartwig.hmftools.qsee.prep.discordant.DiscordantFragGroup;
+import com.hartwig.hmftools.qsee.prep.category.discordant.DiscordantFragGroup;
 
 import org.junit.Test;
 

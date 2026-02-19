@@ -4,11 +4,11 @@ import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.utils.MatrixFile.loadMatrixDataFile;
 import static com.hartwig.hmftools.common.stats.FdrCalcs.calculateFDRs;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferFileDelimiter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -67,10 +67,11 @@ public class ExpressionCohortCompare
         try
         {
             BufferedReader fileReader = new BufferedReader(new FileReader(mConfig.Expression.GeneExpMatrixFile));
+            String fileDelim = inferFileDelimiter(mConfig.Expression.GeneExpMatrixFile);
 
             String header = fileReader.readLine();
 
-            final Map<String,Integer> fieldsMapIndex = createFieldsIndexMap(header, DELIMITER);
+            Map<String,Integer> fieldsMapIndex = createFieldsIndexMap(header, fileDelim);
 
             int geneIdIndex = fieldsMapIndex.get(FLD_GENE_ID);
             int geneNameIndex = fieldsMapIndex.get(FLD_GENE_NAME);
@@ -79,10 +80,10 @@ public class ExpressionCohortCompare
 
             while(line != null)
             {
-                final String[] items = line.split(DELIMITER, -1);
+                String[] values = line.split(fileDelim, -1);
 
-                mGeneIds.add(items[geneIdIndex]);
-                mGeneIdNameMap.put(items[geneIdIndex], items[geneNameIndex]);
+                mGeneIds.add(values[geneIdIndex]);
+                mGeneIdNameMap.put(values[geneIdIndex], values[geneNameIndex]);
 
                 line = fileReader.readLine();
             }

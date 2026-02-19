@@ -76,6 +76,7 @@ public class ResultsWriter
     {
         mConfig = config;
         mWriteTypes = Sets.newHashSet();
+
         if(writeTypesStr.equals(WRITE_TYPES_ALL))
         {
             mWriteTypes.addAll(Arrays.asList(WriteType.values()));
@@ -87,10 +88,12 @@ public class ResultsWriter
         }
 
         mFragmentWriter = mWriteTypes.contains(WriteType.FRAGMENTS) ? initialiseFragmentWriter() : null;
+
         mRefFragmentWriter = mWriteTypes.contains(WriteType.FRAGMENTS)
-                ? HlaComplexFile.initialiseRefFragmentWriter(mConfig.formFileId(LILAC_FILE_CANDIDATE_FRAGS))
-                : null;
+                ? HlaComplexFile.initialiseRefFragmentWriter(mConfig.formFileId(LILAC_FILE_CANDIDATE_FRAGS)) : null;
+
         mSolutionSummaryWriter = SolutionSummary.initialiseWriter(LilacAllele.generateFilename(mConfig.OutputDir, mConfig.Sample));
+
         mQcWriter = LilacQC.initialiseWriter(LilacQcData.generateFilename(mConfig.OutputDir, mConfig.Sample));
         mHlaComplexWriter = HlaComplexFile.initialiseRefFragmentWriter(mConfig.formFileId(LILAC_FILE_CANDIDATE_COVERAGE));
         mVcfWriter = null;

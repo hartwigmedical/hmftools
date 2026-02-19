@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.qsee.common.QseeConstants.QC_LOGGER;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
 import com.hartwig.hmftools.common.perf.TaskExecutor;
@@ -80,7 +81,7 @@ public class FeaturePrep
         for(CategoryPrep categoryPrep : categoryPreps)
         {
             QC_LOGGER.info("Extracting category({})", categoryPrep.name());
-            prepCohortCategory(categoryPrep, sampleType, sampleFeatureMatrix);
+            prepCohortCategory(categoryPrep, sampleType, sampleFeatureMatrix, false);
         }
 
         sampleFeatureMatrix.sortFeatureKeys();
@@ -102,17 +103,19 @@ public class FeaturePrep
         return multiSampleFeatures;
     }
 
-    public void prepCohortCategory(CategoryPrep categoryPrep, SampleType sampleType, FeatureMatrix outputMatrix)
+    public void prepCohortCategory(CategoryPrep categoryPrep, SampleType sampleType, FeatureMatrix outputMatrix, boolean isTraining)
     {
         List<String> sampleIds = mConfig.getSampleIds(sampleType);
 
         List<Runnable> sampleCategoryTasks = new ArrayList<>();
+        AtomicInteger samplesMissingInputCount = new AtomicInteger(0);
+
         for(int sampleIndex = 0; sampleIndex < sampleIds.size(); ++sampleIndex)
         {
             CategoryPrepTask task = new CategoryPrepTask(
                     categoryPrep,
-                    sampleIds.get(sampleIndex), sampleIndex, sampleIds.size(), sampleType,
-                    outputMatrix, mConfig.AllowMissingInput
+                    sampleIds.get(sampleIndex), sampleIndex, sampleIds.size(), sampleType, outputMatrix,
+                    mConfig.AllowMissingInput, samplesMissingInputCount
             );
 
             sampleCategoryTasks.add(task);
@@ -120,5 +123,21 @@ public class FeaturePrep
 
         TaskExecutor.executeRunnables(sampleCategoryTasks, mConfig.Threads);
         sampleCategoryTasks.clear();
+
+        if(isTraining)
+        {
+            if(samplesMissingInputCount.get() == sampleIds.size())
+            {
+                QC_LOGGER.error("failed prep as no samples had data for sampleType({}) category({})",
+                        sampleType, categoryPrep.name());
+
+                System.exit(1);
+            }
+            else if(samplesMissingInputCount.get() > 0)
+            {
+                QC_LOGGER.warn("sampleType({}) category({}) - {}/{} samples had missing input files",
+                        sampleType, categoryPrep.name(), samplesMissingInputCount.get(), sampleIds.size());
+            }
+        }
     }
 }

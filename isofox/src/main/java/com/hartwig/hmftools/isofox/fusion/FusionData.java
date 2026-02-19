@@ -4,9 +4,20 @@ import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
+import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_CHR;
+import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_COVERAGE;
+import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_DISCORD_FRAGS;
+import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_JUNC_TYPE;
+import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_KNOWN_TYPE;
+import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_ORIENT;
+import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_POS;
+import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_REALIGN_FLAGS;
+import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_SPLIT_FRAGS;
+import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_SV_TYPE;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferFileDelimiter;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
@@ -18,7 +29,6 @@ import static com.hartwig.hmftools.isofox.fusion.FusionReadData.FUSION_ID_PREFIX
 import static com.hartwig.hmftools.isofox.fusion.FusionReadData.FUSION_NONE;
 import static com.hartwig.hmftools.isofox.fusion.FusionReadData.fusionId;
 import static com.hartwig.hmftools.isofox.fusion.FusionFilterType.NOT_SET;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -29,6 +39,7 @@ import java.util.Map;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.rna.KnownFusionType;
 
 public class FusionData
 {
@@ -58,7 +69,7 @@ public class FusionData
 
     // annotations from filtering
 
-    private KnownGeneType mKnownFusionType;
+    private KnownFusionType mKnownFusionType;
     private boolean mHasRelatedKnownSpliceSites;
     private int mCohortFrequency;
     private FusionFilterType mFilter;
@@ -95,7 +106,7 @@ public class FusionData
         RelatedSplicedIds = relatedFusionIds;
 
         // mRawData = null;
-        mKnownFusionType = KnownGeneType.OTHER;
+        mKnownFusionType = KnownFusionType.OTHER;
         mRelatedFusionIds = Lists.newArrayList();
 
         if(!relatedFusionIds.isEmpty() && !relatedFusionIds.equals(FUSION_NONE))
@@ -114,8 +125,8 @@ public class FusionData
 
     public List<Integer> relatedFusionIds() { return mRelatedFusionIds; }
 
-    public final KnownGeneType getKnownFusionType() { return mKnownFusionType; }
-    public void setKnownFusionType(KnownGeneType type) { mKnownFusionType = type; }
+    public final KnownFusionType getKnownFusionType() { return mKnownFusionType; }
+    public void setKnownFusionType(KnownFusionType type) { mKnownFusionType = type; }
 
     public boolean isRelated(final FusionData other)
     {
@@ -151,19 +162,9 @@ public class FusionData
 
     public static final String FLD_FUSION_ID = "FusionId";
     private static final String FLD_VALID = "Valid";
-    public static final String FLD_CHR = "Chr";
-    public static final String FLD_POS = "Pos";
-    public static final String FLD_ORIENT = "Orient";
-    public static final String FLD_JUNC_TYPE = "JuncType";
     public static final String FLD_STRAND = "Strand";
-    public static final String FLD_SV_TYPE = "SVType";
-    public static final String FLD_COVERAGE = "Coverage";
     public static final String FLD_MAX_ANCHOR = "MaxAnchorLength";
     public static final String FLD_TOTAL_FRAGS = "TotalFragments";
-    public static final String FLD_SPLIT_FRAGS = "SplitFrags";
-    public static final String FLD_REALIGN_FLAGS = "RealignedFrags";
-    public static final String FLD_DISCORD_FRAGS = "DiscordantFrags";
-    public static final String FLD_NON_SUPP = "NonSupp";
     public static final String FLD_READ_TYPE = "ReadType"; // replaces 'NonSupp'
     public static final String FLD_TRANS_DATA = "TransData";
     public static final String FLD_REL_SPLICED_IDS = "RelatedSplicedIds";
@@ -172,14 +173,10 @@ public class FusionData
     // post-filtering fields
     public static final String FLD_FILTER = "Filter";
     public static final String FLD_COHORT_COUNT = "CohortCount";
-    public static final String FLD_KNOWN_TYPE = "KnownFusionType";
 
-    // more verbose discovery fields
-    private static final String FLD_HOM_OFFSET = "HomologyOffset";
-
-    public static String csvHeader(boolean isFiltered)
+    public static String header(boolean isFiltered)
     {
-        StringJoiner sj = new StringJoiner(DELIMITER);
+        StringJoiner sj = new StringJoiner(TSV_DELIM);
         sj.add(FLD_FUSION_ID);
         sj.add(FLD_VALID);
 
@@ -223,9 +220,10 @@ public class FusionData
         return sj.toString();
     }
 
-    public String toCsv(boolean isFiltered)
+    public String toTsv(boolean isFiltered)
     {
-        StringJoiner sj = new StringJoiner(DELIMITER);
+        // consider building a RnaFusion object and then writing this plus any additional fields for debug
+        StringJoiner sj = new StringJoiner(TSV_DELIM);
 
         sj.add(fusionId(Id));
         sj.add(String.valueOf(Valid));

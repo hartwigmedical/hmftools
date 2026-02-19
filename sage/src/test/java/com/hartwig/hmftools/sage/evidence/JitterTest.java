@@ -178,20 +178,20 @@ public class JitterTest
 
         JitterMatch jitterMatch;
 
-        jitterMatch = checkJitter(readContext, matcher, read1, 29);
+        jitterMatch = checkJitter(readContext, matcher, read1, 29, false);
         assertEquals(JitterMatch.NONE, jitterMatch);
 
         readBases = refBases.substring(1, 30) + "TTCC" + variant.alt() + refBases.substring(31, 71);
         readCigar = buildCigarString(readBases.length());
         read1 = buildSamRecord(1, readCigar, readBases);
 
-        jitterMatch = checkJitter(readContext, matcher, read1, 33);
+        jitterMatch = checkJitter(readContext, matcher, read1, 33, false);
         assertEquals(JitterMatch.LENGTHENED, jitterMatch);
 
         readBases = refBases.substring(1, 26) + variant.alt() + refBases.substring(31, 71);
         read1 = buildSamRecord(1, readCigar, readBases);
 
-        jitterMatch = checkJitter(readContext, matcher, read1, 25);
+        jitterMatch = checkJitter(readContext, matcher, read1, 25, false);
         assertEquals(JitterMatch.SHORTENED, jitterMatch);
 
         // now test reads where the jitter is after the variant read index
@@ -200,13 +200,13 @@ public class JitterTest
         readCigar = buildCigarString(readBases.length());
         read1 = buildSamRecord(1, readCigar, readBases);
 
-        jitterMatch = checkJitter(readContext, matcher, read1, 29);
+        jitterMatch = checkJitter(readContext, matcher, read1, 29, false);
         assertEquals(JitterMatch.LENGTHENED, jitterMatch);
 
         readBases = refBases.substring(1, 30) + variant.alt() + refBases.substring(32, 71);
         read1 = buildSamRecord(1, readCigar, readBases);
 
-        jitterMatch = checkJitter(readContext, matcher, read1, 29);
+        jitterMatch = checkJitter(readContext, matcher, read1, 29, false);
         assertEquals(JitterMatch.SHORTENED, jitterMatch);
 
         // test a partial core on each side - still valid for jitter
@@ -216,7 +216,7 @@ public class JitterTest
         readCigar = buildCigarString(readBases.length());
         read1 = buildSamRecord(13, readCigar, readBases);
 
-        jitterMatch = checkJitter(readContext, matcher, read1, 17);
+        jitterMatch = checkJitter(readContext, matcher, read1, 17, false);
         assertEquals(JitterMatch.LENGTHENED, jitterMatch);
 
         // now missing the right core
@@ -224,7 +224,7 @@ public class JitterTest
         readCigar = buildCigarString(readBases.length());
         read1 = buildSamRecord(1, readCigar, readBases);
 
-        jitterMatch = checkJitter(readContext, matcher, read1, 29);
+        jitterMatch = checkJitter(readContext, matcher, read1, 29, false);
         assertEquals(JitterMatch.SHORTENED, jitterMatch);
 
         // test read not covering the repeat so cannot test it correctly
@@ -232,7 +232,7 @@ public class JitterTest
         readCigar = buildCigarString(readBases.length());
         read1 = buildSamRecord(1, readCigar, readBases);
 
-        jitterMatch = checkJitter(readContext, matcher, read1, 29);
+        jitterMatch = checkJitter(readContext, matcher, read1, 29, false);
         assertEquals(JitterMatch.NONE, jitterMatch);
     }
 
@@ -259,23 +259,23 @@ public class JitterTest
         String read1Bases = refBases.substring(1, 30) + "AC" + variant.alt() + refBases.substring(31, 71);
         SAMRecord readWithIndel = buildSamRecord(1, "21M2I49M", read1Bases);
 
-        JitterMatch jitterMatch = checkJitter(readContext, matcher, readWithIndel, 31);
+        JitterMatch jitterMatch = checkJitter(readContext, matcher, readWithIndel, 31, false);
         assertEquals(JitterMatch.LENGTHENED, jitterMatch);
 
         // test 2: insert but without a matching CIGAR
         SAMRecord readWithoutIndel = buildSamRecord(1, buildCigarString(read1Bases.length()), read1Bases);
-        jitterMatch = checkJitter(readContext, matcher, readWithoutIndel, 29);
+        jitterMatch = checkJitter(readContext, matcher, readWithoutIndel, 29, false);
         assertEquals(JitterMatch.LENGTHENED, jitterMatch);
 
         // test 3: deleted repeat bases matched in the CIGAR
         String read2Bases = refBases.substring(1, 28) + variant.alt() + refBases.substring(31, 71);
         readWithIndel = buildSamRecord(1, "21M2D47M", read2Bases);
-        jitterMatch = checkJitter(readContext, matcher, readWithIndel, 27);
+        jitterMatch = checkJitter(readContext, matcher, readWithIndel, 27, false);
         assertEquals(JitterMatch.SHORTENED, jitterMatch);
 
         // test 4: deleted but all bases appear aligned
         readWithoutIndel = buildSamRecord(1, buildCigarString(read2Bases.length()), read2Bases);
-        jitterMatch = checkJitter(readContext, matcher, readWithoutIndel, 29);
+        jitterMatch = checkJitter(readContext, matcher, readWithoutIndel, 29, false);
         assertEquals(JitterMatch.SHORTENED, jitterMatch);
     }
 
@@ -300,11 +300,11 @@ public class JitterTest
 
         String read1Bases = refBases.substring(1, 49) + "CA" + variant.alt() + refBases.substring(50, 71);
         SAMRecord read1_withCigarElem = buildSamRecord(1, "21M2I49M", read1Bases);
-        JitterMatch jitterMatch_withCigarElem = checkJitter(readContext, matcher, read1_withCigarElem, 50);
+        JitterMatch jitterMatch_withCigarElem = checkJitter(readContext, matcher, read1_withCigarElem, 50, false);
         assertEquals(JitterMatch.LENGTHENED, jitterMatch_withCigarElem);
 
         SAMRecord read1_noCigarElem = buildSamRecord(1, buildCigarString(read1Bases.length()), read1Bases);
-        JitterMatch jitterMatch_noCigarElem = checkJitter(readContext, matcher, read1_noCigarElem, 48);
+        JitterMatch jitterMatch_noCigarElem = checkJitter(readContext, matcher, read1_noCigarElem, 48, false);
         assertEquals(JitterMatch.LENGTHENED, jitterMatch_noCigarElem);
     }
 

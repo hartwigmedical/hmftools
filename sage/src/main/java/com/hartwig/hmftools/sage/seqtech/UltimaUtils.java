@@ -15,7 +15,9 @@ import static com.hartwig.hmftools.common.variant.VariantTier.PANEL;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
+import static com.hartwig.hmftools.sage.SageConstants.GERMLINE_HET_MIN_EXPECTED_VAF;
 import static com.hartwig.hmftools.sage.filter.FilterConfig.ULTIMA_CANDIDATE_HIGH_BQ_REPEAT_MIN;
+import static com.hartwig.hmftools.sage.filter.VariantFilters.isPanelIndelRepeatVariant;
 import static com.hartwig.hmftools.sage.seqtech.UltimaQualModelBuilder.canSkipRealignedModels;
 
 import java.io.BufferedReader;
@@ -41,7 +43,7 @@ import htsjdk.samtools.SAMRecord;
 
 public final class UltimaUtils
 {
-    protected static final int MAX_HOMOPOLYMER = 15;
+    protected static final int MAX_HOMOPOLYMER = ULTIMA_MAX_HP_LEN;
 
     protected static final byte INVALID_BASE = -1;
     private static final byte TP_ZERO_BASE_QUAL = 0;
@@ -49,7 +51,11 @@ public final class UltimaUtils
     private static final byte T0_EXPECTED_QUAL_THRESHOLD_SIMPLE = 18;
     private static final byte T0_EXPECTED_QUAL_THRESHOLD_COMPLEX = 24;
 
-    private static final int PANEL_REPEAT_MIN_QUAL = 100;
+    private static final int MSI_SAMPLE_REPEAT_LENGTH_MAX = 8;
+
+    public static final double GERMLINE_VAF_INDEL_REPEAT_THRESHOLD = 2.5;
+    public static final double GERMLINE_VAF_INDEL_REPEAT_MIN_THRESHOLD_FACTOR = 4;
+    public static final double GERMLINE_VAF_REL_QUAL_RATIO_THRESHOLD = 0.17;
 
     protected static final UltimaQualRecalibration BQR_CACHE = new UltimaQualRecalibration();
 
@@ -223,17 +229,6 @@ public final class UltimaUtils
         return false;
     }
 
-    public static boolean isPanelIndelRepeatVariant(final ReadContextCounter counter)
-    {
-        return isPanelIndelRepeatVariant(
-                counter.tier(), counter.phredQual(), counter.variant().isIndel(), counter.readContext().MaxRepeat != null);
-    }
-
-    public static boolean isPanelIndelRepeatVariant(final VariantTier tier, final double qual, boolean isIndel, boolean hasRepeat)
-    {
-        return (tier == PANEL || tier == HOTSPOT) && qual >= PANEL_REPEAT_MIN_QUAL && isIndel && hasRepeat;
-    }
-
     @VisibleForTesting
     public static boolean isAdjacentToLongHomopolymer(final SAMRecord read, int varIndexInRead, int longLength)
     {
@@ -278,17 +273,21 @@ public final class UltimaUtils
         int standardLength = MIN_CORE_DISTANCE + DEFAULT_FLANK_LENGTH;
         int coreStartIndex = max(varReadIndex - standardLength + (variant.isIndel() ? 1 : 0), 0);
         int coreEndIndex = min(varReadIndex + (variant.altLength() - 1) + standardLength, read.getReadBases().length - 1);
+        return hasLongHomopolymerInRange(coreStartIndex, coreEndIndex, ULTIMA_CANDIDATE_HIGH_BQ_REPEAT_MIN, read);
+    }
 
-        byte lastBase = read.getReadBases()[coreStartIndex];
+    public static boolean hasLongHomopolymerInRange(final int startIndex, final int endIndex, final int longRepeatLength, final SAMRecord read)
+    {
+        byte lastBase = read.getReadBases()[startIndex];
         int repeatCount = 1;
-        for(int i = coreStartIndex + 1; i <= coreEndIndex; ++i)
+        for(int i = startIndex + 1; i <= endIndex; ++i)
         {
             byte nextBase = read.getReadBases()[i];
             if(nextBase == lastBase)
             {
                 ++repeatCount;
 
-                if(repeatCount >= ULTIMA_CANDIDATE_HIGH_BQ_REPEAT_MIN)
+                if(repeatCount >= longRepeatLength)
                     return true;
             }
             else
@@ -362,24 +361,6 @@ public final class UltimaUtils
         return false;
     }
 
-    private static final List<String> SINGLE_HOMOPOLYMERS = List.of("A", "C", "G", "T");
-    private static final List<String> DI_NUCLEOTIDES = List.of("TA", "AT");
-
-    public static boolean ultimaLongRepeatFilter(
-            final SimpleVariant variant, final SAMRecord read, int varIndexInRead, final Microhomology homology)
-    {
-        if(isMsiIndelOfType(variant, SINGLE_HOMOPOLYMERS) && homology != null && homology.Length >= ULTIMA_MAX_HP_LEN - 5)
-            return true; // Ultima cannot call variants of this type
-
-        if(isMsiIndelOfType(variant, DI_NUCLEOTIDES) && homology != null && homology.Length >= ULTIMA_MAX_HP_LEN)
-            return true; // Ultima cannot call variants of this type
-
-        if(isAdjacentToLongHomopolymer(read, varIndexInRead, ULTIMA_MAX_HP_LEN))
-            return true;  // Ultima gets confused near variants of this type
-
-        return false;
-    }
-
     // variant filters
     private static final Map<Integer,Double> MIN_HP_QUAL_MAP = Maps.newHashMap();
 
@@ -423,15 +404,16 @@ public final class UltimaUtils
 
         if(primaryTumor.isLongIndel() && Collections.max(homopolymerLengths) < HP_MAX_LENGTHS)
             return false;
+        if((double) primaryTumor.strongAltSupport() / primaryTumor.depth() >= GERMLINE_HET_MIN_EXPECTED_VAF)
+            return false;
 
-        boolean isPanelIndelRepeat = isPanelIndelRepeatVariant(primaryTumor);
+        int repeatLength = primaryTumor.readContext().maxRepeatCount();
+        boolean isPanelIndelRepeat = isPanelIndelRepeatVariant(
+                primaryTumor.tier(), primaryTumor.phredQual(), primaryTumor.variant().isIndel(), repeatLength);
 
         for(int i = 0; i < homopolymerLengths.size(); i++)
         {
             int length = homopolymerLengths.get(i);
-
-            if(length >= MAX_HOMOPOLYMER)
-                return true;
 
             double threshold;
 
@@ -446,6 +428,14 @@ public final class UltimaUtils
                 if(!primaryTumor.isIndel())
                     threshold -= HP_THRESHOLD_NON_INDEL_DEDUCTION;
             }
+
+            if(primaryTumor.qualCache().isMsiSampleAndVariant() && primaryTumor.readContext().MaxRepeat != null
+            &&primaryTumor.readContext().MaxRepeat.repeatLength() == 1 && repeatLength >= MSI_SAMPLE_REPEAT_LENGTH_MAX
+            && primaryTumor.variant().indelLengthAbs() > 1 && length >= MSI_SAMPLE_REPEAT_LENGTH_MAX)
+            {
+                continue;
+            }
+
 
             double avgQual = ultimaData.homopolymerAvgQuals().get(i);
 

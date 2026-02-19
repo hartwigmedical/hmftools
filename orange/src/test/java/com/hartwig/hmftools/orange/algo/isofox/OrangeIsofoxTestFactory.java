@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.orange.algo.isofox;
 
-import com.hartwig.hmftools.common.isofox.IsofoxTestFactory;
 import com.hartwig.hmftools.common.rna.RnaStatistics;
 import com.hartwig.hmftools.datamodel.isofox.GeneExpression;
 import com.hartwig.hmftools.datamodel.isofox.ImmutableGeneExpression;

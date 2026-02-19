@@ -1,9 +1,8 @@
 package com.hartwig.hmftools.sage.quality;
 
-import static com.hartwig.hmftools.common.redux.JitterModelParams.MAX_SPECIFIC_LENGTH_UNIT;
 import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.probabilityToPhredQual;
+import static com.hartwig.hmftools.common.redux.JitterModelParams.MAX_SPECIFIC_LENGTH_UNIT;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
-import static com.hartwig.hmftools.sage.SageConfig.isIllumina;
 import static com.hartwig.hmftools.sage.SageConfig.isSbx;
 import static com.hartwig.hmftools.sage.SageConfig.isUltima;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_REPEAT_LENGTH;
@@ -27,12 +26,12 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.redux.JitterTableRow;
 import com.hartwig.hmftools.common.bam.ConsensusType;
 import com.hartwig.hmftools.common.redux.JitterCountsTable;
 import com.hartwig.hmftools.common.redux.JitterCountsTableFile;
 import com.hartwig.hmftools.common.redux.JitterModelParams;
 import com.hartwig.hmftools.common.redux.JitterModelParamsFile;
+import com.hartwig.hmftools.common.redux.JitterTableRow;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.sage.common.RepeatInfo;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
@@ -50,7 +49,9 @@ public class MsiJitterCalcs
         mProbableMsiSample = Maps.newHashMap();
     }
 
-    public static MsiJitterCalcs build(final List<String> sampleIds, @Nullable final String jitterParamsDir, final boolean highDepthMode)
+    public static MsiJitterCalcs build(
+            final List<String> sampleIds, @Nullable final String jitterParamsDir, boolean highDepthMode,
+            final List<String> msiOverrideSampleIds)
     {
         MsiJitterCalcs msiJitterCalcs = new MsiJitterCalcs();
 
@@ -69,11 +70,9 @@ public class MsiJitterCalcs
             jitterDefaults = highDepthMode ? DEFAULT_JITTER_PARAMS_ILLUMINA_HIGH_DEPTH : DEFAULT_JITTER_PARAMS_ILLUMINA;
         }
 
-        // List<JitterModelParams> jitterDefaults = highDepthMode ? DEFAULT_HD_JITTER_PARAMS : DEFAULT_JITTER_PARAMS;
-
         if(jitterParamsDir != null)
         {
-            if(msiJitterCalcs.loadSampleJitterParams(sampleIds, jitterParamsDir, jitterDefaults))
+            if(msiJitterCalcs.loadSampleJitterParams(sampleIds, jitterParamsDir, jitterDefaults, msiOverrideSampleIds))
                 return msiJitterCalcs;
             else
                 System.exit(1);
@@ -96,7 +95,9 @@ public class MsiJitterCalcs
         mProbableMsiSample.put(sampleId, false);
     }
 
-    public boolean loadSampleJitterParams(final List<String> sampleIds, final String jitterParamsDir, final List<JitterModelParams> defaultParams)
+    public boolean loadSampleJitterParams(
+            final List<String> sampleIds, final String jitterParamsDir, final List<JitterModelParams> defaultParams,
+            final List<String> msiOverrideSampleIds)
     {
         try
         {
@@ -123,7 +124,8 @@ public class MsiJitterCalcs
 
                 jitterCounts = jitterCounts.stream().filter(x -> x.ConsensusType == consensusType).collect(Collectors.toList());
 
-                PerSampleJitterParams sampleJitterParams = shouldRevertToDefaults(msiParams, defaultMsiParams, jitterCounts);
+                boolean isMsiOverride = msiOverrideSampleIds.contains(sampleId);
+                PerSampleJitterParams sampleJitterParams = shouldRevertToDefaults(msiParams, defaultMsiParams, jitterCounts, isMsiOverride);
 
                 mSampleParams.put(sampleId, sampleJitterParams.UseDefaults ? sampleJitterParams.ParamList : msiParams);
                 mProbableMsiSample.put(sampleId, sampleJitterParams.UseDefaults);
@@ -179,11 +181,12 @@ public class MsiJitterCalcs
     }
 
     private PerSampleJitterParams shouldRevertToDefaults(
-            final List<MsiModelParams> msiParams, final List<MsiModelParams> defaultParams, final Collection<JitterCountsTable> jitterCounts)
+            final List<MsiModelParams> msiParams, final List<MsiModelParams> defaultParams, final Collection<JitterCountsTable> jitterCounts,
+            final boolean msiSampleOverride)
     {
-        double comparisonScore = 0;
-
         List<MsiModelParams> sampleParamList = Lists.newArrayListWithCapacity(msiParams.size());
+
+        double comparisonScore = 0;
 
         for(JitterCountsTable unitParams : jitterCounts)
         {
@@ -224,7 +227,9 @@ public class MsiJitterCalcs
             }
         }
 
-        return new PerSampleJitterParams(sampleParamList, comparisonScore < 0);
+        boolean useDefaultParams = msiSampleOverride || comparisonScore < 0;
+
+        return new PerSampleJitterParams(sampleParamList, msiSampleOverride);
     }
 
     public RepeatInfo findRepeat(final VariantReadContext readContext)

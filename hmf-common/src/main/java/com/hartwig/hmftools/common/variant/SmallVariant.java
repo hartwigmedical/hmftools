@@ -43,6 +43,9 @@ public interface SmallVariant extends GenomePosition
     @NotNull
     String canonicalHgvsProteinImpact();
 
+    int canonicalAffectedExon();
+    int canonicalAffectedCodon();
+
     double qual();
 
     double mappability();
@@ -87,6 +90,7 @@ public interface SmallVariant extends GenomePosition
     double variantCopyNumber();
 
     boolean biallelic();
+    double biallelicProbability();
 
     boolean reported();
 

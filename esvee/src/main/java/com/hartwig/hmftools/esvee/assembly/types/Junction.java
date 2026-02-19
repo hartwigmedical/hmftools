@@ -235,7 +235,7 @@ public class Junction implements Comparable<Junction>
             }
 
             int splitCount = junctionCount - discordantCount - indelCount;
-            SV_LOGGER.info("loaded {} junctions (raw={}) types(split={} indel={} discordant={} hotspot={}) from file: {}",
+            SV_LOGGER.info("loaded junctions({} raw={}) types(split={} indel={} discordant={} hotspot={}) from file: {}",
                     junctionCount, rawJunctionCount, splitCount, indelCount, discordantCount, hotspotCount, filename);
 
             chrJunctionsMap.values().forEach(x -> Collections.sort(x));

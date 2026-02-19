@@ -95,7 +95,7 @@ public class CohortPercentilesTrainer
             FeaturePrep featurePrep = new FeaturePrep(mCommonPrepConfig);
 
             FeatureMatrix sampleFeatureMatrix = new FeatureMatrix(new ConcurrentHashMap<>(), sampleIds);
-            featurePrep.prepCohortCategory(categoryPrep, sampleType, sampleFeatureMatrix);
+            featurePrep.prepCohortCategory(categoryPrep, sampleType, sampleFeatureMatrix, true);
 
             sampleFeatureMatrix.sortFeatureKeys();
 

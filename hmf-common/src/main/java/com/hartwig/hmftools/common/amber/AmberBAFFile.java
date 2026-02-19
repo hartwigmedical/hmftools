@@ -47,9 +47,9 @@ public final class AmberBAFFile
     private static final String NORM_MOD_BAF = "normalModifiedBAF";
     private static final String NORM_DEPTH = "normalDepth";
 
-    public static Multimap<Chromosome,AmberBAF> read(final String fileName, boolean hasTumor) throws IOException
+    public static ListMultimap<Chromosome, AmberBAF> read(final String fileName, boolean hasTumor) throws IOException
     {
-        ListMultimap<Chromosome,AmberBAF> chrBafMap = ArrayListMultimap.create();
+        ListMultimap<Chromosome, AmberBAF> chrBafMap = ArrayListMultimap.create();
 
         try(BufferedReader reader = fileName.endsWith(".gz") ? createGzipBufferedReader(fileName) : createBufferedReader(fileName))
         {
@@ -84,9 +84,9 @@ public final class AmberBAFFile
 
     public static void write(final String filename, final List<AmberBAF> bafs) throws IOException
     {
-        try (Writer writer = createGzipBufferedWriter(filename))
+        try(Writer writer = createGzipBufferedWriter(filename))
         {
-            for (String line : toLines(bafs))
+            for(String line : toLines(bafs))
             {
                 writer.write(line + '\n');
             }

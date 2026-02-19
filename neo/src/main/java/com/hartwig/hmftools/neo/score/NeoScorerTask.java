@@ -18,7 +18,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.isofox.TranscriptExpressionLoader;
 import com.hartwig.hmftools.common.neo.RnaNeoEpitope;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.neo.bind.BindData;
@@ -112,7 +111,7 @@ public class NeoScorerTask implements Callable<Void>
                 try
                 {
                     String tpmFileSampleId = sample.RnaSampleId != null ? sample.RnaSampleId : sample.TumorId;
-                    sampleTPMs.putAll(TranscriptExpressionLoader.loadTranscriptExpression(mConfig.IsofoxDir, tpmFileSampleId));
+                    sampleTPMs.putAll(DataLoader.loadTranscriptExpression(mConfig.IsofoxDir, tpmFileSampleId));
                 }
                 catch(Exception e)
                 {

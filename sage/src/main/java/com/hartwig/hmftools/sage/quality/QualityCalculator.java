@@ -180,6 +180,8 @@ public class QualityCalculator
                 {
                     msiIndelErrorQualToUse /= 2;
                 }
+                if(readContextCounter.allowUncertainCoreBases())
+                    return msiIndelErrorQualToUse;
             }
 
             if(readContextCounter.qualCache().usesMsiIndelErrorQual() && artefactAdjustedQual != INVALID_BASE_QUAL)

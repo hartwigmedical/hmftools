@@ -29,40 +29,39 @@ import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.AreaBreak;
 import com.itextpdf.layout.property.AreaBreakType;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class ReportWriter
 {
-    private final boolean writeToDisk;
-    @Nullable
-    private final String outputDir;
-    @NotNull
-    private final PlotPathResolver plotPathResolver;
-    private final boolean addDisclaimer;
+    private final boolean mWriteToDisk;
 
-    ReportWriter(boolean writeToDisk, @Nullable String outputDir, @NotNull PlotPathResolver plotPathResolver, boolean addDisclaimer)
+    @Nullable
+    private final String mOutputDir;
+    private final PlotPathResolver mPlotPathResolver;
+    private final boolean mAddDisclaimer;
+
+    ReportWriter(boolean writeToDisk, @Nullable String outputDir, final PlotPathResolver plotPathResolver, boolean addDisclaimer)
     {
-        this.writeToDisk = writeToDisk;
-        this.outputDir = outputDir;
-        this.plotPathResolver = plotPathResolver;
-        this.addDisclaimer = addDisclaimer;
+        mWriteToDisk = writeToDisk;
+        mOutputDir = outputDir;
+        mPlotPathResolver = plotPathResolver;
+        mAddDisclaimer = addDisclaimer;
     }
 
-    public void write(@NotNull OrangeRecord report) throws IOException
+    public void write(final OrangeRecord report) throws IOException
     {
         writePdf(report);
         writeJson(report);
     }
 
-    private void writePdf(@NotNull OrangeRecord report) throws IOException
+    private void writePdf(final OrangeRecord report) throws IOException
     {
         ReportResources reportResources = ReportResources.create();
 
         List<ReportChapter> chapters = new ArrayList<>();
 
-        chapters.add(new FrontPageChapter(report, plotPathResolver, reportResources));
-        chapters.add(new SomaticFindingsChapter(report, plotPathResolver, reportResources));
+        chapters.add(new FrontPageChapter(report, mPlotPathResolver, reportResources));
+        chapters.add(new SomaticFindingsChapter(report, mPlotPathResolver, reportResources));
 
         if(!report.tumorOnlyMode())
         {
@@ -79,20 +78,20 @@ public class ReportWriter
 
         if(!report.tumorOnlyMode())
         {
-            chapters.add(new CohortComparisonChapter(report, plotPathResolver, reportResources));
+            chapters.add(new CohortComparisonChapter(report, mPlotPathResolver, reportResources));
         }
 
-        chapters.add(new QualityControlChapter(report, plotPathResolver, reportResources));
+        chapters.add(new QualityControlChapter(report, mPlotPathResolver, reportResources));
 
         String pipelineVersion = report.pipelineVersion() != null ? report.pipelineVersion() : ReportResources.NOT_AVAILABLE;
         writePdfChapters(report.sampleId(), pipelineVersion, chapters, reportResources);
     }
 
-    private void writeJson(@NotNull OrangeRecord report) throws IOException
+    private void writeJson(final OrangeRecord report) throws IOException
     {
-        if(writeToDisk && outputDir != null)
+        if(mWriteToDisk && mOutputDir != null)
         {
-            String basePath = FileWriterUtils.checkAddDirSeparator(outputDir);
+            String basePath = FileWriterUtils.checkAddDirSeparator(mOutputDir);
             String outputFilePath = basePath + report.sampleId() + ".orange.json";
             LOGGER.info("Writing JSON report to {} ", outputFilePath);
 
@@ -104,13 +103,14 @@ public class ReportWriter
         }
     }
 
-    private void writePdfChapters(@NotNull String sampleId, @NotNull String pipelineVersion, @NotNull List<ReportChapter> chapters,
-            @NotNull ReportResources reportResources) throws IOException
+    private void writePdfChapters(
+            final String sampleId, final String pipelineVersion, final List<ReportChapter> chapters,
+            final ReportResources reportResources) throws IOException
     {
         Document doc = initializeReport(sampleId);
         PdfDocument pdfDocument = doc.getPdfDocument();
 
-        PageEventHandler pageEventHandler = PageEventHandler.create(sampleId, pipelineVersion, reportResources, addDisclaimer);
+        PageEventHandler pageEventHandler = PageEventHandler.create(sampleId, pipelineVersion, reportResources, mAddDisclaimer);
         pdfDocument.addEventHandler(PdfDocumentEvent.START_PAGE, pageEventHandler);
 
         for(int i = 0; i < chapters.size(); i++)
@@ -133,17 +133,16 @@ public class ReportWriter
         pdfDocument.close();
     }
 
-    @NotNull
-    private Document initializeReport(@NotNull String sampleId) throws IOException
+    private Document initializeReport(final String sampleId) throws IOException
     {
         PdfWriter writer;
         WriterProperties properties = new WriterProperties()
                 .setFullCompressionMode(true)
                 .setCompressionLevel(CompressionConstants.BEST_COMPRESSION)
                 .useSmartMode();
-        if(writeToDisk)
+        if(mWriteToDisk)
         {
-            String basePath = FileWriterUtils.checkAddDirSeparator(outputDir);
+            String basePath = FileWriterUtils.checkAddDirSeparator(mOutputDir);
             String outputFilePath = basePath + sampleId + ".orange.pdf";
             LOGGER.info("Writing PDF report to {}", outputFilePath);
             writer = new PdfWriter(outputFilePath, properties);

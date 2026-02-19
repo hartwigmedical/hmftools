@@ -24,6 +24,8 @@ public final class CopyNumberInterpretationUtil
             case PARTIAL_AMP:
                 return CopyNumberInterpretation.PARTIAL_GAIN;
             case DEL:
+            case HET_DEL:
+            case LOH:
                 return Doubles.greaterThan(cnaDriver.maxCopyNumber(), 0.5)
                         ? CopyNumberInterpretation.PARTIAL_DEL
                         : CopyNumberInterpretation.FULL_DEL;

@@ -11,28 +11,24 @@ import org.jetbrains.annotations.Nullable;
 
 public final class ConversionUtil
 {
-    @NotNull
-    public static <T, R> Iterable<R> mapToIterable(@Nullable Collection<T> collection, @NotNull Function<T, R> mapper)
+    public static <T, R> Iterable<R> mapToIterable(@Nullable Collection<T> collection, final Function<T, R> mapper)
     {
         Collection<T> nonNull = Objects.requireNonNullElseGet(collection, List::of);
         return () -> nonNull.stream().map(mapper).iterator();
     }
 
-    @NotNull
-    public static <T, R> List<R> mapToList(@Nullable Collection<T> collection, @NotNull Function<T, R> mapper)
+    public static <T, R> List<R> mapToList(@Nullable Collection<T> collection, final Function<T, R> mapper)
     {
         Collection<T> nonNull = Objects.requireNonNullElseGet(collection, List::of);
         return nonNull.stream().map(mapper).collect(Collectors.toList());
     }
 
-    @Nullable
-    public static <T, R> Iterable<R> mapToNullableIterable(@Nullable Collection<T> collection, @NotNull Function<T, R> mapper)
+    public static <T, R> Iterable<R> mapToNullableIterable(@Nullable Collection<T> collection, final Function<T, R> mapper)
     {
         return collection == null ? null : () -> collection.stream().map(mapper).iterator();
     }
 
-    @Nullable
-    public static <T, R> List<R> mapToNullableList(@Nullable Collection<T> collection, @NotNull Function<T, R> mapper)
+    public static <T, R> List<R> mapToNullableList(@Nullable Collection<T> collection, final Function<T, R> mapper)
     {
         return collection == null ? null : collection.stream().map(mapper).collect(Collectors.toList());
     }
