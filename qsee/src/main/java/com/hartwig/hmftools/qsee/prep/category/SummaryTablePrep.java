@@ -57,22 +57,20 @@ public class SummaryTablePrep implements CategoryPrep
     }
 
     private static void putFeature(
-            EnumMap<SummaryTableFeature, Feature> featuresMap,
-            SummaryTableFeature summaryTableFeature,
-            double value,
-            QcStatus qcStatus
-    ){
+            EnumMap<SummaryTableFeature, Feature> featuresMap, SummaryTableFeature summaryTableFeature, double value, QcStatus qcStatus)
+    {
         Feature feature = new Feature(summaryTableFeature.key(), value, qcStatus, summaryTableFeature.plotLabel());
         featuresMap.put(summaryTableFeature, feature);
     }
 
     private static void putFeature(
-            EnumMap<SummaryTableFeature, Feature> featuresMap,
-            SummaryTableFeature summaryTableFeature,
-            double value
-    ){
-        Feature feature = new Feature(summaryTableFeature.key(), value, null, summaryTableFeature.plotLabel());
-        featuresMap.put(summaryTableFeature, feature);
+            EnumMap<SummaryTableFeature, Feature> featuresMap, SummaryTableFeature summaryTableFeature, double value)
+    {
+        QcStatus qcStatus = summaryTableFeature.hasQcThreshold()
+                ? summaryTableFeature.qcThreshold().getQcStatus(value)
+                : null;
+
+        putFeature(featuresMap, summaryTableFeature, value, qcStatus);
     }
 
     @VisibleForTesting
@@ -87,8 +85,7 @@ public class SummaryTablePrep implements CategoryPrep
         putFeature(featuresMap, PLOIDY, purityContext.bestFit().ploidy());
         putFeature(featuresMap, TINC, purityContext.qc().tincLevel(), getTincQcStatus(qcStatuses));
         putFeature(featuresMap, DELETED_GENES, purityContext.qc().deletedGenes(), qcStatuses.get(PurpleQCStatus.WARN_DELETED_GENES));
-        putFeature(featuresMap, UNSUPPORTED_CN_SEGMENTS, purityContext.qc().unsupportedCopyNumberSegments(),
-                qcStatuses.get(PurpleQCStatus.WARN_HIGH_COPY_NUMBER_NOISE));
+        putFeature(featuresMap, UNSUPPORTED_CN_SEGMENTS, purityContext.qc().unsupportedCopyNumberSegments(), qcStatuses.get(PurpleQCStatus.WARN_HIGH_COPY_NUMBER_NOISE));
         putFeature(featuresMap, LOH_PERCENT, purityContext.qc().lohPercent());
         putFeature(featuresMap, CONTAMINATION, purityContext.qc().contamination(), qcStatuses.get(PurpleQCStatus.FAIL_CONTAMINATION));
         putFeature(featuresMap, TMB_SMALL_VARIANTS, purityContext.tumorMutationalBurdenPerMb());
@@ -146,26 +143,34 @@ public class SummaryTablePrep implements CategoryPrep
         if(bamMetricCoverage == null)
             return;
 
-        putFeature(featuresMap, MIN_COVERAGE_10, calcPropBasesWithMinCoverage(bamMetricCoverage, 10));
-        putFeature(featuresMap, MIN_COVERAGE_20, calcPropBasesWithMinCoverage(bamMetricCoverage, 20));
-        putFeature(featuresMap, MIN_COVERAGE_30, calcPropBasesWithMinCoverage(bamMetricCoverage, 30));
-        putFeature(featuresMap, MIN_COVERAGE_60, calcPropBasesWithMinCoverage(bamMetricCoverage, 60));
-        putFeature(featuresMap, MIN_COVERAGE_100, calcPropBasesWithMinCoverage(bamMetricCoverage, 100));
-        putFeature(featuresMap, MIN_COVERAGE_250, calcPropBasesWithMinCoverage(bamMetricCoverage, 250));
-    }
+        List<SummaryTableFeature> minCoverageFeatures = List.of(
+                MIN_COVERAGE_10, MIN_COVERAGE_20, MIN_COVERAGE_30, MIN_COVERAGE_60, MIN_COVERAGE_100, MIN_COVERAGE_250);
 
-    private static double calcPropBasesWithMinCoverage(BamMetricCoverage bamMetricCoverage, int coverageThreshold)
-    {
-        List<ValueFrequency> coverageBaseCounts = bamMetricCoverage.Coverage;
+        for(SummaryTableFeature minCoverageFeature : minCoverageFeatures)
+        {
+            int coverageThreshold = switch(minCoverageFeature)
+            {
+                case MIN_COVERAGE_10 -> 10;
+                case MIN_COVERAGE_20 -> 20;
+                case MIN_COVERAGE_30 -> 30;
+                case MIN_COVERAGE_60 -> 60;
+                case MIN_COVERAGE_100 -> 100;
+                case MIN_COVERAGE_250 -> 250;
+                default -> throw new IllegalStateException("Unexpected min coverage feature: " + minCoverageFeature);
+            };
 
-        long totalBases = coverageBaseCounts.stream().mapToLong(x -> x.Count).sum();
+            List<ValueFrequency> coverageBaseCounts = bamMetricCoverage.Coverage;
 
-        long basesAboveCoverageThres = coverageBaseCounts.stream()
-                .filter(x -> x.Value >= coverageThreshold)
-                .mapToLong(x -> x.Count)
-                .sum();
+            long totalBases = coverageBaseCounts.stream().mapToLong(x -> x.Count).sum();
 
-        return (double) basesAboveCoverageThres / totalBases;
+            long basesAboveCoverageThres = coverageBaseCounts.stream()
+                    .filter(x -> x.Value >= coverageThreshold)
+                    .mapToLong(x -> x.Count)
+                    .sum();
+
+            double propBasesAboveCoverage = (double) basesAboveCoverageThres / totalBases;
+            putFeature(featuresMap, minCoverageFeature, propBasesAboveCoverage);
+        }
     }
 
     @VisibleForTesting
