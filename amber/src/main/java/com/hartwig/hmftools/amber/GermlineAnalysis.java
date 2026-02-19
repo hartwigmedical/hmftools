@@ -2,11 +2,13 @@ package com.hartwig.hmftools.amber;
 
 import static java.util.stream.Collectors.toList;
 
+import static com.hartwig.hmftools.amber.AmberApplication.switchBases;
 import static com.hartwig.hmftools.amber.AmberConfig.AMB_LOGGER;
 import static com.hartwig.hmftools.amber.PositionEvidenceChecker.fromAmberSite;
 import static com.hartwig.hmftools.common.utils.Multimaps.filterEntries;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -16,8 +18,13 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.amber.contamination.TumorContamination;
+import com.hartwig.hmftools.amber.contamination.TumorContaminationModel;
 import com.hartwig.hmftools.common.amber.AmberSite;
+import com.hartwig.hmftools.common.amber.BaseDepthData;
+import com.hartwig.hmftools.common.amber.ImmutableBaseDepthData;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -95,6 +102,46 @@ public class GermlineAnalysis
 
         mConsanguinityProportion = ConsanguinityAnalyser.calcConsanguinityProportion(mRegionsOfHomozygosity);
         mUniparentalDisomy = ConsanguinityAnalyser.findUniparentalDisomy(mRegionsOfHomozygosity);
+    }
+
+    private double persistRawGermlineBAFs(ListMultimap<Chromosome, TumorBAF> tumorBAFs) throws IOException
+    {
+        List<PositionEvidence> dataList = new ArrayList<>();
+        for(HumanChromosome chromosome : HumanChromosome.values())
+        {
+            if(!tumorBAFs.containsKey(chromosome))
+            {
+                continue;
+            }
+            List<TumorBAF> chromosomeBAFs = tumorBAFs.get(chromosome);
+            dataList.addAll(chromosomeBAFs.stream().map(x -> x.TumorEvidence).toList());
+        }
+
+        List<TumorContamination> contaminationList = new ArrayList<>();
+        dataList.forEach(x ->
+        {
+            BaseDepthData bdd = ImmutableBaseDepthData.builder()
+                    .ref(switchBases(x.Ref))
+                    .alt(switchBases(x.Alt))
+                    .refSupport(x.RefSupport)
+                    .altSupport(x.AltSupport)
+                    .readDepth(x.ReadDepth)
+                    .indelCount(x.IndelCount)
+                    .build();
+            contaminationList.add(new TumorContamination(x.Chromosome, x.Position, null, bdd));
+        });
+
+        long sampleHetCount = dataList.size(); // TODO
+
+        double contamination = new TumorContaminationModel().calcContamination(contaminationList, sampleHetCount);
+
+        AMB_LOGGER.info("germline contamination: {}", contamination);
+        //        mPersistence.persistContamination(contaminationList);
+
+        String filename = PositionEvidenceFile.generateAmberFilenameForWriting(mConfig.OutputDir, mConfig.primaryReference());
+        PositionEvidenceFile.write(filename, dataList);
+
+        return contamination;
     }
 
     public ListMultimap<Chromosome, PositionEvidence> getSnpCheckedLoci()

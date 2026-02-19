@@ -41,14 +41,9 @@ public final class PositionEvidenceFile
         List<PositionEvidence> bafs = new ArrayList<>();
         for(Chromosome chromosome : HumanChromosome.values())
         {
-            if(chromosome != HumanChromosome._11)
-            {
-                continue;
-            }
-
             if(data.containsKey(chromosome))
             {
-                bafs.addAll(data.get(chromosome).stream().filter(p -> p.position() < 10_000_001).sorted().toList());
+                bafs.addAll(data.get(chromosome).stream().sorted().toList());
             }
         }
         write(filename, bafs);

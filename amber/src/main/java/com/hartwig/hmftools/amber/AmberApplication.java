@@ -290,7 +290,7 @@ public class AmberApplication implements AutoCloseable
         return contamination;
     }
 
-    private static BaseDepthData.Base switchBases(PositionEvidence.Base base)
+    static BaseDepthData.Base switchBases(PositionEvidence.Base base)
     {
         if(base == PositionEvidence.Base.A)
         {
@@ -365,7 +365,7 @@ public class AmberApplication implements AutoCloseable
         }
 
         List<ChrBaseRegion> regions = AmberUtils.loadBedFromResource("tumorOnlyExcludedSnp.38.bed");
-        return regions.stream().map(x -> x.genomeRegion()).collect(toList());
+        return regions.stream().map(ChrBaseRegion::genomeRegion).collect(toList());
     }
 
     @Override
