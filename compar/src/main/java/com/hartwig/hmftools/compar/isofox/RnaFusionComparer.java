@@ -8,6 +8,8 @@ import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.isofox.RnaFusionData.FLD_JUNC_TYPE_DOWN;
 import static com.hartwig.hmftools.compar.isofox.RnaFusionData.FLD_JUNC_TYPE_UP;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -68,9 +70,10 @@ public record RnaFusionComparer(ComparConfig mConfig) implements ItemComparer
     @Override
     public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources)
     {
-        String filename = RnaFusionFile.generateFilename(fileSources.Isofox, sampleId);
+        String filename = determineFileName(sampleId, fileSources);
         List<RnaFusion> fusions = RnaFusionFile.read(filename);
-        if(fusions == null){
+        if(fusions == null)
+        {
             CMP_LOGGER.warn("sample({}) failed to load Isofox Gene data", sampleId);
             return null;
         }
@@ -89,5 +92,20 @@ public record RnaFusionComparer(ComparConfig mConfig) implements ItemComparer
         }
 
         return comparableItems;
+    }
+
+    private static String determineFileName(final String sampleId, final FileSources fileSources)
+    {
+        String current_file_name = RnaFusionFile.generateFilename(fileSources.Isofox, sampleId);
+        String old_file_name = current_file_name.replace(".tsv", ".csv");
+
+        if(!Files.exists(Paths.get(current_file_name)) && Files.exists(Paths.get(old_file_name)))
+        {
+            return old_file_name;
+        }
+        else
+        {
+            return current_file_name;
+        }
     }
 }

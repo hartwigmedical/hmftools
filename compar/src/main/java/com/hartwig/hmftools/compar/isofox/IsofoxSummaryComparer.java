@@ -97,7 +97,7 @@ public record IsofoxSummaryComparer(ComparConfig mConfig) implements ItemCompare
 
         try
         {
-            List<String> lines = Files.readAllLines(Paths.get(RnaStatisticFile.generateFilename(fileSources.Isofox, sampleId)));
+            List<String> lines = Files.readAllLines(Paths.get(determineFileName(sampleId, fileSources)));
             RnaStatistics rnaStatistics = RnaStatisticFile.fromLines(lines);
             comparableItems.add(new IsofoxSummaryData(rnaStatistics));
         }
@@ -108,5 +108,20 @@ public record IsofoxSummaryComparer(ComparConfig mConfig) implements ItemCompare
         }
 
         return comparableItems;
+    }
+
+    private static String determineFileName(final String sampleId, final FileSources fileSources)
+    {
+        String current_file_name = RnaStatisticFile.generateFilename(fileSources.Isofox, sampleId);
+        String old_file_name = current_file_name.replace(".tsv", ".csv");
+
+        if(!Files.exists(Paths.get(current_file_name)) && Files.exists(Paths.get(old_file_name)))
+        {
+            return old_file_name;
+        }
+        else
+        {
+            return current_file_name;
+        }
     }
 }

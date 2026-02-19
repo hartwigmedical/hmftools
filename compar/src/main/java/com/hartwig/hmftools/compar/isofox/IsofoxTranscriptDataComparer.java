@@ -5,6 +5,8 @@ import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -65,7 +67,7 @@ public record IsofoxTranscriptDataComparer(ComparConfig mConfig) implements Item
 
         try
         {
-            String filename = TranscriptExpressionFile.generateFilename(fileSources.Isofox, sampleId);
+            String filename = determineFileName(sampleId, fileSources);
             TranscriptExpressionFile.read(filename).stream().map(IsofoxTranscriptData::new).forEach(comparableItems::add);
         }
         catch(IOException e)
@@ -75,5 +77,20 @@ public record IsofoxTranscriptDataComparer(ComparConfig mConfig) implements Item
         }
 
         return comparableItems;
+    }
+
+    private static String determineFileName(final String sampleId, final FileSources fileSources)
+    {
+        String current_file_name = TranscriptExpressionFile.generateFilename(fileSources.Isofox, sampleId);
+        String old_file_name = current_file_name.replace(".tsv", ".csv");
+
+        if(!Files.exists(Paths.get(current_file_name)) && Files.exists(Paths.get(old_file_name)))
+        {
+            return old_file_name;
+        }
+        else
+        {
+            return current_file_name;
+        }
     }
 }

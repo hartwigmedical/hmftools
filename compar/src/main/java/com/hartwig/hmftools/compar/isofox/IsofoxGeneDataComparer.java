@@ -5,7 +5,10 @@ import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_SPLICED_FRA
 import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_UNSPLICED_FRAGS;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.rna.GeneExpression;
@@ -19,6 +22,8 @@ import com.hartwig.hmftools.compar.common.DiffThresholds;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
+
+import org.jetbrains.annotations.NotNull;
 
 public record IsofoxGeneDataComparer(ComparConfig mConfig) implements ItemComparer
 {
@@ -64,12 +69,30 @@ public record IsofoxGeneDataComparer(ComparConfig mConfig) implements ItemCompar
     @Override
     public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources)
     {
-        List<GeneExpression> geneExpressions = GeneExpressionFile.read(GeneExpressionFile.generateFilename(fileSources.Isofox, sampleId));
-        if(geneExpressions == null){
+        final String filename = determineFileName(sampleId, fileSources);
+        List<GeneExpression> geneExpressions = GeneExpressionFile.read(filename);
+        if(geneExpressions == null)
+        {
             CMP_LOGGER.warn("sample({}) failed to load Isofox Gene data", sampleId);
             return null;
         }
 
-        return geneExpressions.stream().<ComparableItem>map(IsofoxGeneData::new).toList();
+        return geneExpressions.stream().<ComparableItem>map(IsofoxGeneData::new).collect(Collectors.toList());
+    }
+
+    @NotNull
+    private static String determineFileName(final String sampleId, final FileSources fileSources)
+    {
+        String current_file_name = GeneExpressionFile.generateFilename(fileSources.Isofox, sampleId);
+        String old_file_name = current_file_name.replace(".tsv", ".csv");
+
+        if(!Files.exists(Paths.get(current_file_name)) && Files.exists(Paths.get(old_file_name)))
+        {
+            return old_file_name;
+        }
+        else
+        {
+            return current_file_name;
+        }
     }
 }

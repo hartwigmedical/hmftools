@@ -6,6 +6,8 @@ import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_REGION_END
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_REGION_START;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -64,9 +66,10 @@ public record NovelSpliceJunctionComparer(ComparConfig mConfig) implements ItemC
     @Override
     public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources)
     {
-        String filename = NovelSpliceJunctionFile.generateFilename(fileSources.Isofox, sampleId);
+        String filename = determineFileName(sampleId, fileSources);
         List<NovelSpliceJunction> junctions = NovelSpliceJunctionFile.read(filename);
-        if(junctions == null){
+        if(junctions == null)
+        {
             CMP_LOGGER.warn("sample({}) failed to load Isofox Gene data", sampleId);
             return null;
         }
@@ -85,5 +88,20 @@ public record NovelSpliceJunctionComparer(ComparConfig mConfig) implements ItemC
         }
 
         return comparableItems;
+    }
+
+    private static String determineFileName(final String sampleId, final FileSources fileSources)
+    {
+        String current_file_name = NovelSpliceJunctionFile.generateFilename(fileSources.Isofox, sampleId);
+        String old_file_name = current_file_name.replace(".tsv", ".csv");
+
+        if(!Files.exists(Paths.get(current_file_name)) && Files.exists(Paths.get(old_file_name)))
+        {
+            return old_file_name;
+        }
+        else
+        {
+            return current_file_name;
+        }
     }
 }
