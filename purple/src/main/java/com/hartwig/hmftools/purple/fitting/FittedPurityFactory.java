@@ -18,6 +18,7 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.genome.position.GenomePositionSelectorFactory;
 import com.hartwig.hmftools.common.purple.FittedPurity;
+import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.ImmutableFittedPurity;
 import com.hartwig.hmftools.common.utils.Doubles;
@@ -227,27 +228,44 @@ public class FittedPurityFactory
                 .build();
     }
 
-    private static boolean useRegionToFitPurity(boolean tumorOnlyMode, final CobaltChromosomes cobaltChromosomes,
+    static boolean useRegionToFitPurity(boolean tumorOnlyMode,
+            final CobaltChromosomes cobaltChromosomes,
             final FittingRegion region)
     {
         if(region.bafCount() <= 0)
+        {
             return false;
+        }
 
         if(!positiveOrZero(region.observedTumorRatio()))
+        {
             return false;
+        }
 
         if(region.germlineStatus() != GermlineStatus.DIPLOID)
+        {
             return false;
+        }
 
         if(Doubles.greaterThan(region.observedTumorRatio(), MAX_TUMOR_RATIO_TO_FIT))
+        {
             return false;
+        }
 
         if(!cobaltChromosomes.hasChromosome(region.chromosome()))
+        {
             return false;
+        }
 
         CobaltChromosome chromosome = cobaltChromosomes.get(region.chromosome());
-        if(tumorOnlyMode && chromosome.isAllosome())
+        if(tumorOnlyMode && cobaltChromosomes.gender().equals(Gender.MALE) && chromosome.isAllosome())
+        {
             return false;
+        }
+        if(tumorOnlyMode && cobaltChromosomes.gender().equals(Gender.FEMALE) && chromosome.humanChromosome().equals(HumanChromosome._Y))
+        {
+            return false;
+        }
 
         return chromosome.isNormal() && chromosome.isDiploid();
     }
