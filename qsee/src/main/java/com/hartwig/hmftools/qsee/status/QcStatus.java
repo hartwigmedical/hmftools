@@ -47,6 +47,8 @@ public class QcStatus
     {
         return switch(purpleQCStatus)
         {
+            case PASS -> QcStatus.createEmpty();
+
             case WARN_DELETED_GENES ->
                 new QcStatus(QcStatusType.WARN, ComparisonOperator.GREATER_THAN, PurpleQCStatus.MAX_DELETED_GENES);
 
@@ -64,6 +66,10 @@ public class QcStatus
 
             case FAIL_CONTAMINATION ->
                 new QcStatus(QcStatusType.FAIL, ComparisonOperator.GREATER_THAN, PurpleQCStatus.MAX_CONTAMINATION);
+
+            case FAIL_NO_TUMOR -> new QcStatus(QcStatusType.FAIL, null, Double.NaN);
+
+            case WARN_GENDER_MISMATCH -> new QcStatus(QcStatusType.WARN, null, Double.NaN);
 
             default ->
                 throw new IllegalArgumentException("QC threshold not defined for PurpleQCStatus(" + purpleQCStatus + ")");
