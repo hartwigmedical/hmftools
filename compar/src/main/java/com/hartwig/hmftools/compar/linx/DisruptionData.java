@@ -64,11 +64,6 @@ public class DisruptionData implements ComparableItem
     public boolean reportable() { return Breakends.stream().anyMatch(x -> x.Breakend.reportedStatus() == ReportedStatus.REPORTED); }
 
     @Override
-    public boolean isPass() {
-        return true;
-    }
-
-    @Override
     public String geneName() { return GeneName; }
 
     @Override

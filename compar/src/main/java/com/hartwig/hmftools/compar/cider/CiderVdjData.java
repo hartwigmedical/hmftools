@@ -52,14 +52,6 @@ public class CiderVdjData implements ComparableItem
     }
 
     @Override
-    public boolean reportable() { return true; }
-
-    @Override
-    public boolean isPass() {
-        return true;
-    }
-
-    @Override
     public boolean matches(final ComparableItem o)
     {
         final Cdr3Sequence other = ((CiderVdjData) o).mCdr3Sequence;

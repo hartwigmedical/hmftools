@@ -47,14 +47,6 @@ public class CuppaData implements ComparableItem
     }
 
     @Override
-    public boolean reportable() { return true; }
-
-    @Override
-    public boolean isPass() {
-        return true;
-    }
-
-    @Override
     public boolean matches(final ComparableItem other)
     {
         final CuppaData otherCuppaData = (CuppaData) other;

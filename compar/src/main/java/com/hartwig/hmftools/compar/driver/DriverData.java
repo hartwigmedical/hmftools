@@ -65,11 +65,6 @@ public class DriverData implements ComparableItem
     public boolean reportable() { return DriverCatalog.reportedStatus() == ReportedStatus.REPORTED; }
 
     @Override
-    public boolean isPass() {
-        return true;
-    }
-
-    @Override
     public String geneName() { return DriverCatalog.gene(); }
 
     @Override
