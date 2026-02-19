@@ -15,6 +15,11 @@ public class QcThreshold
 
     public QcStatus getQcStatus(double sampleValue)
     {
+        if(mType == QcStatusType.NONE)
+        {
+            return QcStatus.createEmpty();
+        }
+
         boolean sampleFailsThreshold = switch(mOperator)
         {
             case LESS_THAN -> sampleValue < mThreshold;
@@ -28,10 +33,13 @@ public class QcThreshold
                 : QcStatus.createEmpty();
     }
 
-    public static QcThreshold determinedElsewhere()
+    public static QcThreshold createNoThreshold()
     {
-        return null;
+        return new QcThreshold(QcStatusType.NONE, null, Double.NaN);
     }
+
+    public static QcThreshold determinedElsewhere() { return createNoThreshold(); }
+    public static QcThreshold notSet() { return createNoThreshold(); }
 
     public String toString()
     {
