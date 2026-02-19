@@ -91,7 +91,8 @@ public class SummaryTablePrep implements CategoryPrep
         putFeature(featuresMap, TMB_STRUCTURAL_VARIANTS, purityContext.svTumorMutationalBurden() / MB_PER_GENOME);
     }
 
-    private static EnumMap<PurpleQCStatus, QcStatus> qcStatusFrom(PurityContext purityContext)
+    @VisibleForTesting
+    static EnumMap<PurpleQCStatus, QcStatus> qcStatusFrom(PurityContext purityContext)
     {
         EnumMap<PurpleQCStatus, QcStatus> qcStatuses = new EnumMap<>(PurpleQCStatus.class);
 
