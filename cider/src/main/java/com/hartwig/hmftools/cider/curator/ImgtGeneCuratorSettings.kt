@@ -30,7 +30,7 @@ object ImgtGeneCuratorSettings
 
     // extra override for this one gene that does not seem to map nicely
     val genomicLocationOverrides = mapOf(
-        "IGHV3-54" to LocationInfo(GenomicLocation("chr14", 106601338, 106601641, Strand.REVERSE), cigarElementsFromStr("1X14=1X4=1X2=1X100=1X12=1X41=1X73=8D43="), false)
+        "IGHV3-54" to LocationInfo(GenomicLocation("chr14", 106601338, 106601641, Strand.REVERSE), cigarElementsFromStr("1X14=1X4=1X2=1X100=1X12=1X41=1X73=8D43="), false,true)
     )
 
     // following genes liftover from v38 to v37 produce incorrect genomic locations

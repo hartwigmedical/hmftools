@@ -60,18 +60,27 @@ data class ProcessedGeneAllele(
     val anchorLocationV38: GenomicLocation?,
     val anchorLocationV37: GenomicLocation?,
     val duplicateSequence: Boolean,
-    val multipleAlignments: Boolean
+    val tiedAlignments: Boolean,
+    val usedEnsembl: Boolean
 )
 
 data class LocationInfo(
     val location: GenomicLocation,
     val cigar: List<CigarElement>?,
-    val multipleAlignments: Boolean
+    val tiedAlignments: Boolean,
+    val usedEnsembl: Boolean
 )
 
 data class AnchorInfo(
     val sequence: String,
     val location: GenomicLocation?
+)
+
+data class GeneAggregateInfo(
+    val geneName: String,
+    val alleles: Int,
+    val alleleLocations: Int,
+    val usedEnsembl: Boolean
 )
 
 // This utility processes IMGT IG/TCR genes into format CIDER can use.
@@ -155,6 +164,7 @@ class ImgtGeneCurator
 
         val geneAlleles = loadGeneAlleles(inputImgtFasta)
         val processedGeneAlleles = processAlleles(geneAlleles)
+        val geneAggregateInfo = createGeneAggregateInfo(processedGeneAlleles)
         val (ciderGenesV38, ciderGenesV37) = createCiderGenes(processedGeneAlleles)
 
         sLogger.info("Validating V38 anchor locations")
@@ -169,10 +179,10 @@ class ImgtGeneCurator
 
         sLogger.info("Writing V38 allele fasta")
         val outputFastaV38 = Paths.get(outputDir, "igtcr_gene.38.fasta").toString()
-        writeVDJFasta(outputFastaV38, processedGeneAlleles, true)
+        writeVDJFasta(outputFastaV38, processedGeneAlleles, geneAggregateInfo, true)
         sLogger.info("Writing V37 allele fasta")
         val outputFastaV37 = Paths.get(outputDir, "igtcr_gene.37.fasta").toString()
-        writeVDJFasta(outputFastaV37, processedGeneAlleles, false)
+        writeVDJFasta(outputFastaV37, processedGeneAlleles, geneAggregateInfo, false)
 
         return 0
     }
@@ -207,7 +217,8 @@ class ImgtGeneCurator
             anchorInfo?.location,
             anchorLocationV37,
             ambiguousSequence,
-            alleleLocationInfoV38?.multipleAlignments ?: false)
+            alleleLocationInfoV38?.tiedAlignments ?: false,
+            alleleLocationInfoV38?.usedEnsembl ?: false)
     }
 
     private fun findAlleleLocations(alleles: List<ImgtGeneAllele>): List<LocationInfo?>
@@ -229,7 +240,7 @@ class ImgtGeneCurator
         for ((index, allele) in constantAlleles)
         {
             val ensemblGene = ensemblDataCache.getGeneDataByName(allele.geneName) ?: continue
-            locations[index] = LocationInfo(toGenomicLocation(ensemblGene), null, false)
+            locations[index] = LocationInfo(toGenomicLocation(ensemblGene), null, false, true)
         }
 
         for ((index, allele) in alleles.withIndex())
@@ -281,6 +292,7 @@ class ImgtGeneCurator
             val ensemblGene = ensemblDataCache.getGeneDataByName(toEnsemblGeneName(allele.geneName))
             var bestMatch: BlastnMatch? = null
             var multipleAlignments = false
+            var usedEnsembl = false
             var locationMethod: String? = null
 
             for (match in matches)
@@ -312,6 +324,7 @@ class ImgtGeneCurator
                         ensemblGene.GeneEnd >= matchLocation.posStart)
                     {
                         bestMatch = match
+                        usedEnsembl = true
                         locationMethod = "AlignmentOverlapsEnsembl"
                     }
                     multipleAlignments = true
@@ -324,8 +337,9 @@ class ImgtGeneCurator
                 if (ensemblGene != null && allele.region == IgTcrRegion.D_REGION)
                 {
                     // use ensembl for D region since they may be unalignable.
-                    location = LocationInfo(toGenomicLocation(ensemblGene), null, multipleAlignments)
+                    usedEnsembl = true
                     locationMethod = "DRegionEnsembl"
+                    location = LocationInfo(toGenomicLocation(ensemblGene), null, multipleAlignments, usedEnsembl)
                 }
                 else
                 {
@@ -335,7 +349,7 @@ class ImgtGeneCurator
             else
             {
                 val genomicLocation = matchToQueryGenomicLocation(bestMatch)
-                location = LocationInfo(genomicLocation, bestMatch.cigar, multipleAlignments)
+                location = LocationInfo(genomicLocation, bestMatch.cigar, multipleAlignments, usedEnsembl)
                 locationMethod = locationMethod ?: "Alignment"
             }
 
@@ -467,10 +481,10 @@ class ImgtGeneCurator
         )
     }
 
-    private fun writeVDJFasta(path: String, alleles: List<ProcessedGeneAllele>, isV38: Boolean)
+    private fun writeVDJFasta(path: String, alleles: List<ProcessedGeneAllele>, geneInfo: Map<String, GeneAggregateInfo>, isV38: Boolean)
     {
         val sequences = alleles.mapNotNull { allele ->
-            if (allele.imgt.region?.isVDJ ?: false) getAlleleSequenceWithContext(allele, isV38)
+            if (allele.imgt.region?.isVDJ ?: false) getAlleleSequenceWithContext(allele, geneInfo[allele.imgt.geneName]!!, isV38)
             else null
         }
 
@@ -488,7 +502,8 @@ class ImgtGeneCurator
         }
     }
 
-    private fun getAlleleSequenceWithContext(allele: ProcessedGeneAllele, isV38: Boolean): ImgtSequenceFile.Sequence
+    private fun getAlleleSequenceWithContext(
+        allele: ProcessedGeneAllele, geneInfo: GeneAggregateInfo, isV38: Boolean): ImgtSequenceFile.Sequence
     {
         val alleleSeq = allele.imgt.sequenceWithoutGaps
         val location = if (isV38) allele.locationV38 else allele.locationV37
@@ -498,7 +513,7 @@ class ImgtGeneCurator
         val refBeforeLength: Int
         val refAfterLength: Int
 
-        // If it's not in the primary assembly then the chromosome from Blastn won't index the ref genome.
+        // If it's not in the primary assembly, then the chromosome from Blastn won't index the ref genome.
         if (location == null || !location.inPrimaryAssembly)
         {
             seq = alleleSeq
@@ -510,8 +525,13 @@ class ImgtGeneCurator
             val alleleSeqAligned = if (isForward) alleleSeq else reverseComplement(alleleSeq)
 
             // If there are multiple best alignments for this sequence, then ensure there are some ref bases surrounding to disambiguate it.
-            val refContext = if (allele.duplicateSequence || allele.multipleAlignments) max(FASTA_REF_CONTEXT_BASE, FASTA_REF_CONTEXT_AMBIGUOUS)
-                else FASTA_REF_CONTEXT_BASE
+            // However, we can't add ref if there are multiple locations for the alleles, because then we could pick ref from a different gene.
+            val needsRef = (allele.duplicateSequence || allele.tiedAlignments) && geneInfo.alleleLocations == 1 && geneInfo.usedEnsembl
+            val refContext = if (needsRef) max(FASTA_REF_CONTEXT_BASE, FASTA_REF_CONTEXT_AMBIGUOUS) else FASTA_REF_CONTEXT_BASE
+            if (needsRef)
+            {
+                sLogger.info("Adding ref bases for gene allele: {}", allele.imgt.geneAllele)
+            }
 
             val refGenome = if (isV38) refGenomeSourceV38 else refGenomeSourceV37
             val chromosome = getChromosomeForRefGenome(location.chromosome, refGenome)
@@ -758,6 +778,19 @@ class ImgtGeneCurator
             else
             {
                 matchGenomicLoc.copy(posStart = matchGenomicLoc.posStart - endExtend, posEnd = matchGenomicLoc.posEnd + startExtend)
+            }
+        }
+
+        private fun createGeneAggregateInfo(geneAlleles: List<ProcessedGeneAllele>): Map<String, GeneAggregateInfo>
+        {
+            val allelesByGene = geneAlleles.groupBy { it.imgt.geneName }
+            return allelesByGene.mapValues { (geneName, alleles) ->
+                GeneAggregateInfo(
+                    geneName = geneName,
+                    alleles = alleles.size,
+                    alleleLocations = alleles.map { allele -> allele.locationV38 }.distinct().size,
+                    usedEnsembl = alleles.all { allele -> allele.usedEnsembl }
+                )
             }
         }
 
