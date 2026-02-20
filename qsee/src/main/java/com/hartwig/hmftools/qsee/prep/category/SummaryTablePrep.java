@@ -21,6 +21,9 @@ import org.jetbrains.annotations.NotNull;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.Feature;
+import com.hartwig.hmftools.qsee.feature.FeatureKey;
+import com.hartwig.hmftools.qsee.feature.FeatureType;
+import com.hartwig.hmftools.qsee.feature.PlotMetadata;
 import com.hartwig.hmftools.qsee.feature.SourceTool;
 import com.hartwig.hmftools.qsee.prep.CategoryPrep;
 import com.hartwig.hmftools.qsee.prep.CategoryPrepTask;
@@ -236,7 +239,16 @@ public class SummaryTablePrep implements CategoryPrep
             double value,
             QcStatus qcStatus
     ){
-        Feature feature = new Feature(summaryTableFeature.key(), value, qcStatus, summaryTableFeature.plotLabel());
+        FeatureKey key = new FeatureKey(summaryTableFeature.toString(), FeatureType.SUMMARY_TABLE, SOURCE_TOOL);
+
+        PlotMetadata metadata = PlotMetadata.builder()
+                .featureGroup(summaryTableFeature.group().humanReadableName())
+                .plotLabel(summaryTableFeature.plotLabel())
+                .numberFormat(summaryTableFeature.numberFormat())
+                .qcStatus(qcStatus)
+                .build();
+
+        Feature feature = new Feature(key, value, metadata);
         featuresMap.put(summaryTableFeature, feature);
     }
 
@@ -246,8 +258,7 @@ public class SummaryTablePrep implements CategoryPrep
             double value,
             QcThreshold qcThreshold
     ){
-        Feature feature = new Feature(summaryTableFeature.key(), value, qcThreshold.getQcStatus(value), summaryTableFeature.plotLabel());
-        featuresMap.put(summaryTableFeature, feature);
+        putFeature(featuresMap, summaryTableFeature, value, qcThreshold.getQcStatus(value));
     }
 
     private static void putFeature(
