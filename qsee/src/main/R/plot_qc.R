@@ -84,7 +84,7 @@ LOGGER$debug("Running script with args:")
 LOGGER$debug(" tumor_id: %s", TUMOR_ID)
 LOGGER$debug(" normal_id: %s", NORMAL_ID)
 LOGGER$debug(" sample_features_file: %s", SAMPLE_FEATURES_FILE)
-LOGGER$debug(" cohort_percentiles_file:%s", COHORT_PERCENTILES_FILE)
+LOGGER$debug(" cohort_percentiles_file: %s", COHORT_PERCENTILES_FILE)
 LOGGER$debug(" output_path: %s", OUTPUT_PATH)
 LOGGER$debug(" log_level: %s", GLOBAL_LOG_LEVEL)
 
@@ -120,13 +120,17 @@ df_to_strings <- function(df, key_value_sep = "=", group_sep = ";"){
 
 strings_to_df <- function(strings, key_value_sep = "=", group_sep = ";"){
    
-   group_strings <- strsplit(as.character(strings), group_sep, fixed=TRUE) %>% do.call(rbind, .)
+   strings_split <- strsplit(as.character(strings), group_sep, fixed=TRUE)
    
-   column_names <- sub(paste0(key_value_sep, ".+"), "", group_strings[1,])
-   value_strings <- sub(paste0(".+", key_value_sep), "", group_strings)
+   key_value_pairs <- lapply(strings_split, function(row_strings){
+      row_strings_split <- strsplit(row_strings, key_value_sep)
+      keys <- sapply(row_strings_split, `[[`, 1)
+      values <- sapply(row_strings_split, `[[`, 2)
+      structure(values, names = keys)
+   })
    
-   df <- data.frame(value_strings)
-   colnames(df) <- column_names
+   df <- dplyr::bind_rows(key_value_pairs) %>% as.data.frame(check.names=FALSE)
+   df[is.na(df)] <- ""
    
    return(df)
 }
@@ -167,12 +171,20 @@ FEATURE_TYPE <- list(
    MS_INDEL_ERROR_BIAS        = list(name = "MS_INDEL_ERROR_BIAS", plot_func = NULL)
 )
 
+PERCENTILE_PREFIX <- "Pct_"
+
 NAMED_PERCENTILES <- list(
-   MIN   = list(name = "Min"  , percentile =  5.0),
-   LOWER = list(name = "Lower", percentile = 25.0),
-   MID   = list(name = "Mid"  , percentile = 50.0),
-   UPPER = list(name = "Upper", percentile = 75.0),
-   MAX   = list(name = "Max"  , percentile = 95.0)
+   MIN   = list(name = "PctMin"  , colname = paste0(PERCENTILE_PREFIX,  5)),
+   LOWER = list(name = "PctLower", colname = paste0(PERCENTILE_PREFIX, 25)),
+   MID   = list(name = "PctMid"  , colname = paste0(PERCENTILE_PREFIX, 50)),
+   UPPER = list(name = "PctUpper", colname = paste0(PERCENTILE_PREFIX, 75)),
+   MAX   = list(name = "PctMax"  , colname = paste0(PERCENTILE_PREFIX, 95))
+)
+
+NUMBER_FORMATS <- list(
+   NUMBER = "NUMBER",
+   PERCENT = "PERCENT",
+   LOG = "LOG"
 )
 
 ################################
@@ -183,46 +195,15 @@ load_cohort_percentiles <- function(){
    
    LOGGER$info("Loading cohort percentiles from: %s", COHORT_PERCENTILES_FILE)
    
-   PERCENTILE_PREFIX <- "Pct"
-   
    cohort_percentiles <- read.delim(COHORT_PERCENTILES_FILE, na.strings = c("NA", "null"))
    
-   pct_ref_values <- cohort_percentiles %>% select(starts_with(PERCENTILE_PREFIX))
-   colnames(pct_ref_values) <- sub(paste0(PERCENTILE_PREFIX, "_"), "", colnames(pct_ref_values))
-   percentiles <- as.numeric(colnames(pct_ref_values))
-
-   get_pct_ref_values <- function(target_percentile){
-
-      if(target_percentile %in% percentiles){
-         output <- pct_ref_values[[as.character(target_percentile)]]
-      } else { 
-         ## Linear interpolation
-         
-         LOGGER$debug("Interpolating percentile(%s) as it was not found in the cohort percentiles file", target_percentile)
-         
-         lower_index <- abs(target_percentile - percentiles) %>% which.min()
-         upper_index <- lower_index + 1
-         
-         lower_percentile <- percentiles[lower_index]
-         upper_percentile <- percentiles[upper_index]
-         
-         lower_ref_values <- pct_ref_values[[as.character(lower_percentile)]]
-         upper_ref_values <- pct_ref_values[[as.character(upper_percentile)]]
-         
-         fraction <- target_percentile - lower_percentile
-         output <- lower_ref_values + fraction * (upper_ref_values - lower_ref_values)
-      }
-      
-      return(output)
-   }
+   cohort_named_percentiles <- cohort_percentiles[ sapply(NAMED_PERCENTILES, `[[`, "colname") ]
+   colnames(cohort_named_percentiles) <- sapply(NAMED_PERCENTILES, `[[`, "name")
    
-   cohort_named_percentiles <- cohort_percentiles %>% select(!starts_with(PERCENTILE_PREFIX))
-   
-   for(named_percentile in NAMED_PERCENTILES){
-      percentile_colname <- paste0(PERCENTILE_PREFIX, named_percentile$name)
-      ref_values <- get_pct_ref_values(named_percentile$percentile)
-      cohort_named_percentiles[[percentile_colname]] <- ref_values
-   }
+   cohort_named_percentiles <- cbind(
+      cohort_percentiles %>% select(!starts_with(PERCENTILE_PREFIX)),
+      cohort_named_percentiles
+   )
    
    return(cohort_named_percentiles)
 }
@@ -252,6 +233,12 @@ get_prelim_plot_data <- function(feature_type, merge_strategy = "rbind"){
    if(nrow(sample_data) == 0){
       return(data.frame())
    }
+   
+   ## Only select the features cohort data that are present in the sample
+   cohort_data <- cohort_data[
+      paste(cohort_data$SampleType, cohort_data$FeatureName) %in% 
+      paste(sample_data$SampleType, sample_data$FeatureName)
+   ,]
    
    ## Assign groupings
    cohort_data$GroupType <- GROUP_TYPE$COHORT$name
@@ -302,10 +289,10 @@ get_summary_table_data <- function(){
    )
    
    merged_data <- cbind(
-      strings_to_df(merged_data$FeatureName),
-      merged_data
+      merged_data,
+      strings_to_df(merged_data$PlotMetadata)
    )
-   merged_data$FeatureName <- NULL
+   merged_data$PlotMetadata <- NULL
    
    merged_data <- preordered_factors(merged_data)
    
@@ -314,36 +301,29 @@ get_summary_table_data <- function(){
 
 SUMMARY_TABLE_DATA <- get_summary_table_data()
 
-plot_sub_table <- function(
-   feature_group, keys = NULL, number_format = "none",
-   show_title = TRUE, show_sample_type_label = TRUE
-){
+plot_sub_table <- function(feature_group, number_format = "NUMBER", show_title = TRUE, show_sample_type_label = TRUE){
 
    if(FALSE){
       show_title = TRUE
       show_sample_type_label = TRUE
-      keys <- NULL
 
-      feature_group = "General"; number_format = "none"; keys = "Purity"
-      feature_group = "Copy number"; number_format = "log"
-      feature_group = "Mapping"; number_format = "percent"
-      feature_group = "Mutational burden"; number_format = "log"
+      feature_group = "Mutational burden"; number_format = "LOG"
    }
 
    ## Prep data =============================
    plot_data <- SUMMARY_TABLE_DATA %>%
-      filter(FeatureGroup == feature_group) %>%
+      filter(FeatureGroup == feature_group & NumberFormat == number_format) %>%
       mutate(
          PlotLabel = factor(PlotLabel, rev(levels(PlotLabel))),
          SampleType = factor(SampleType, rev(levels(SampleType)))
       )
-
-   if(!is.null(keys)){
-      plot_data <- plot_data %>% filter(Key %in% keys)
-   }
+   
+   n_rows <- plot_data$PlotLabel %>% unique() %>% length()
+   
+   if(n_rows == 0)
+      return(NULL)
 
    ## Plot config =============================
-   n_rows <- plot_data$PlotLabel %>% unique() %>% length()
 
    axis_trans <- "identity"
    axis_breaks <- waiver()
@@ -351,11 +331,11 @@ plot_sub_table <- function(
    axis_fmt_func <- function(x) return(x)
    value_fmt_func <- function(x) ifelse(x < 1, signif(x, 2), round(x, 1))
 
-   if(number_format == "percent"){
+   if(number_format == "PERCENT"){
       value_fmt_func <- scales::label_percent(accuracy = 0.1)
       axis_fmt_func <- scales::label_percent()
       axis_limits <- c(0, 1)
-   } else if(number_format == "log"){
+   } else if(number_format == "LOG"){
       axis_trans <- "log1p"
       axis_breaks <- 10^(0:10)
    }
@@ -377,20 +357,17 @@ plot_sub_table <- function(
    plot_data <- plot_data %>%
       mutate(
          HasQcStatus = nchar(as.character(QcStatus)) > 0,
-         ValueLabel = value_fmt_func(FeatureValue)
-      ) %>%
-      mutate(
+         ValueLabel = value_fmt_func(FeatureValue),
          ValueLabel = ifelse(
             HasQcStatus, paste0(ValueLabel,"\n", QcStatus),
             ValueLabel
-         ),
-         ValueLabelSize = ifelse(HasQcStatus, 2.6, 2.9)
+         )
       )
 
    subplot_values <- ggplot(plot_data, aes(y = PlotLabel, x = SampleType, group = SampleType, color = SampleType)) +
 
       H_DIV_LINES +
-      geom_text(aes(label = ValueLabel), size = plot_data$ValueLabelSize, lineheight = 0.8, show.legend = FALSE) +
+      geom_text(aes(label = ValueLabel), size = 3, lineheight = 0.8, show.legend = FALSE) +
       scale_color_manual(values = SAMPLE_TYPE_COLORS, drop = FALSE) +
       scale_x_discrete(position = X_AXIS_POSITION, limits = rev, drop = FALSE) +
       labs(title = feature_group) +
@@ -400,7 +377,8 @@ plot_sub_table <- function(
          axis.title.x = element_blank(),
          axis.title.y = element_blank(),
          axis.ticks.x = element_blank(),
-         axis.text.x = if(show_sample_type_label) element_text() else element_blank()
+         axis.text.x = if(show_sample_type_label) element_text() else element_blank(),
+         plot.margin = margin(r = 0, b = 10)
       )
 
    ## Sample vs cohort =============================
@@ -424,7 +402,7 @@ plot_sub_table <- function(
          trans = axis_trans,
          breaks = axis_breaks,
          limits = axis_limits,
-         label = axis_fmt_func,
+         label = axis_fmt_func
       ) +
 
       theme(
@@ -433,34 +411,59 @@ plot_sub_table <- function(
          axis.ticks.y = element_blank(),
          axis.text.y = element_blank(),
          axis.line.y = element_blank(),
+         plot.margin = margin(r = 10, b = 10, l = 0)
       )
 
    ## Combine plots =============================
-   subplots_combined <- patchwork::wrap_plots(subplot_values, subplot_boxplot, nrow = 1, axes = "collect")
-
-   subplots_combined <- subplots_combined & theme(plot.margin = margin(0, 0, 10, 0))
+   subplots_combined <- patchwork::wrap_plots(subplot_values, subplot_boxplot, nrow = 1)
+   
    subplots_combined$height <- n_rows
+   
    subplots_combined
 }
 
-FEATURE_TYPE$SUMMARY_TABLE$plot_func <- function(){
+FEATURE_TYPE$SUMMARY_TABLE$plot_func <- function(feature_group){
    
-   plots <- list(
-      plot_sub_table(feature_group = "General", keys = "MEAN_COVERAGE", number_format = "none"),
-      plot_sub_table(feature_group = "General", keys = "PLOIDY", number_format = "none", show_title = FALSE),
-      plot_sub_table(feature_group = "General", keys = c("PURITY", "LOH_PERCENT"), number_format = "percent", show_title = FALSE),
+   plots <- list()
+   
+   plot_index <- 0
+   
+   for(feature_group in SUMMARY_TABLE_DATA$FeatureGroup %>% unique()){
       
-      plot_sub_table(feature_group = "Mapping", number_format = "percent"),
+      is_first_group_plot <- TRUE
       
-      plot_sub_table(feature_group = "Mutational burden", number_format = "log"),
-      plot_sub_table(feature_group = "Contamination", number_format = "percent"),
-      plot_sub_table(feature_group = "Copy number", number_format = "log")
+      for(number_format in NUMBER_FORMATS){
+         subplot <- plot_sub_table(feature_group = feature_group, number_format = number_format)
+         
+         if(is.null(subplot))
+            next
+         
+         LOGGER$debug(" featureGroup(%s) numberFormat(%s)", feature_group, number_format)
+         
+         plot_index <- plot_index + 1
+         
+         plots[[plot_index]] <- plot_sub_table(
+            feature_group = feature_group, 
+            number_format = number_format,
+            show_title = is_first_group_plot,
+            show_sample_type_label = FALSE
+         )
+         
+         is_first_group_plot <- FALSE
+      }
+   }
+   
+   ## Show sample type only in the last plot
+   plots[[plot_index]] <- plot_sub_table(
+      feature_group = feature_group, 
+      number_format = number_format,
+      show_title = is_first_group_plot,
+      show_sample_type_label = TRUE
    )
    
    heights <- sapply(plots, function(p){ p$height })
    plots_combined <- patchwork::wrap_plots(plots, ncol = 1, heights = heights)
    plots_combined
-   
 }
 
 ## =============================
@@ -930,40 +933,50 @@ FEATURE_TYPE$DISCORDANT_FRAG_FREQ$plot_func <- function(){
 
 create_report <- function(){
 
-   LOGGER$info("Creating plots per feature type")
-   
    plots <- list()
    for(i in 1:length(FEATURE_TYPE)){
-
       feature_type <- FEATURE_TYPE[[i]]
-
-      LOGGER$debug("Plotting: %s", feature_type$name)
-      
-      plot_feature_type <- feature_type$plot_func()
-      plot_feature_type <- plot_feature_type %>% patchwork::free("label")
-      plots[[feature_type$name]] <- plot_feature_type
+      LOGGER$info("Plotting featureType(%s)", feature_type$name)
+      plots[[feature_type$name]] <- feature_type$plot_func() %>% patchwork::free("label")
    }
    
+   plots <- plots[c(
+      FEATURE_TYPE$SUMMARY_TABLE$name,
+      
+      FEATURE_TYPE$COVERAGE_DISTRIBUTION$name,
+      FEATURE_TYPE$FRAG_LENGTH_DISTRIBUTION$name,
+      FEATURE_TYPE$GC_BIAS$name,
+      
+      FEATURE_TYPE$DISCORDANT_FRAG_FREQ$name,
+      FEATURE_TYPE$DUPLICATE_FREQ$name,
+      FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD$name,
+      
+      FEATURE_TYPE$BQR_BY_ORIG_QUAL$name,
+      FEATURE_TYPE$BQR_BY_SNV96_CONTEXT$name,
+      FEATURE_TYPE$MS_INDEL_ERROR_RATES$name,
+      FEATURE_TYPE$MS_INDEL_ERROR_BIAS$name
+   )]
+   
    design <- "
-      AB
-      AC
-      AD
-      AE
-      FG
-      HI
-      JK
+      AABBEE
+      AACCFF
+      AADDGG
+      AAHHHH
+      AAIIII
    "
-
-   plots_combined <- patchwork::wrap_plots(plots, guides = "collect", design = design) &
+   
+   plots_combined <- 
+      patchwork::wrap_plots(plots, guides = "collect", design = design) &
       theme(
          legend.position = "bottom",
+         legend.byrow = TRUE,
          legend.direction = "vertical"
       )
    
    LOGGER$info("Writing report to: %s", OUTPUT_PATH)
    ggsave(
       filename = OUTPUT_PATH, plot = plots_combined, 
-      device = "pdf", width = 14, height = 18, units = "in"
+      device = "pdf", width = 16, height = 13, units = "in"
    )
 }
 
