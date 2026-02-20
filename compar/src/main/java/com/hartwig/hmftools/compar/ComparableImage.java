@@ -120,7 +120,7 @@ public abstract class ComparableImage implements ComparableItem
 
             if(image == null)
             {
-                CMP_LOGGER.error("failed to load image with unsupported format: {}", path);
+                CMP_LOGGER.warn("failed to load image with unsupported format: {}", path);
                 return null;
             }
 
@@ -128,7 +128,7 @@ public abstract class ComparableImage implements ComparableItem
         }
         catch(IOException e)
         {
-            CMP_LOGGER.error("failed to load image: {}", path, e);
+            CMP_LOGGER.warn("failed to load image: {}", path, e);
             return null;
         }
     }

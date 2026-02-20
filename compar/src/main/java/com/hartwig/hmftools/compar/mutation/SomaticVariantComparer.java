@@ -345,7 +345,7 @@ public class SomaticVariantComparer implements ItemComparer
 
         if(!vcfFileReader.fileValid())
         {
-            CMP_LOGGER.error("failed to read somatic VCF file({})", vcfFile);
+            CMP_LOGGER.warn("failed to read somatic VCF file({})", vcfFile);
             return null;
         }
 
