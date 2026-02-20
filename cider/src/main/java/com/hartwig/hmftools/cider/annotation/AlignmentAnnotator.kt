@@ -3,7 +3,7 @@ package com.hartwig.hmftools.cider.annotation
 import com.hartwig.hmftools.cider.*
 import com.hartwig.hmftools.cider.CiderConstants.ANNOTATION_MATCH_REF_IDENTITY
 import com.hartwig.hmftools.cider.CiderConstants.ANNOTATION_ALIGN_SCORE_MIN
-import com.hartwig.hmftools.cider.CiderConstants.ANNOTATION_ANCHOR_BASE_TOLERANCE
+import com.hartwig.hmftools.cider.CiderConstants.ANNOTATION_ANCHOR_BASE_OVERLAP
 import com.hartwig.hmftools.cider.CiderConstants.ANNOTATION_VDJ_FLANK_BASES
 import com.hartwig.hmftools.cider.CiderConstants.ANNOTATION_VJ_IDENTITY_MIN
 import com.hartwig.hmftools.cider.CiderUtils.getResourceAsFile
@@ -278,20 +278,28 @@ class AlignmentAnnotator
 
         fun alignmentMatchesAnchor(metadata: AlignmentMetadata, alignment: Alignment, isV: Boolean): Boolean?
         {
-            // TODO: what if the anchor matches the ref genome part?
             val vdj = metadata.vdj
-            val layoutAlignRange = alignment.queryRange.start + metadata.querySeqRange.start..alignment.queryRange.endInclusive + metadata.querySeqRange.start
+            val alignRange = alignment.queryRange.start + metadata.querySeqRange.start..alignment.queryRange.endInclusive + metadata.querySeqRange.start
             val anchorRange = if (isV)
             {
-                val end = (vdj.vAnchorBoundary ?: return null) + vdj.layoutSliceStart
-                end - (1 + ANNOTATION_ANCHOR_BASE_TOLERANCE) until end
+                val anchorBoundary = vdj.vAnchorBoundary ?: return null
+                val anchorLength = (vdj.vAnchorSequence ?: return null).length
+                val end = anchorBoundary + vdj.layoutSliceStart
+                end - anchorLength until end
             }
             else
             {
-                val start = (vdj.jAnchorBoundary ?: return null) + vdj.layoutSliceStart
-                start until start + (1 + ANNOTATION_ANCHOR_BASE_TOLERANCE)
+                val anchorBoundary = vdj.jAnchorBoundary ?: return null
+                val anchorLength = (vdj.jAnchorSequence ?: return null).length
+                val start = anchorBoundary + vdj.layoutSliceStart
+                start until start + anchorLength
             }
-            return anchorRange.start <= layoutAlignRange.endInclusive && layoutAlignRange.start <= anchorRange.endInclusive
+            val anchorLength = anchorRange.last + 1 - anchorRange.first
+            val requiredOverlap = min(anchorLength, ANNOTATION_ANCHOR_BASE_OVERLAP)
+            val overlapStart = max(alignRange.first, anchorRange.first)
+            val overlapEnd = min(alignRange.last, anchorRange.last)
+            val overlap = overlapEnd + 1 - overlapStart
+            return overlap >= requiredOverlap
         }
 
         data class GeneMatch(
