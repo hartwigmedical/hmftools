@@ -7,8 +7,11 @@ import static com.hartwig.hmftools.compar.common.CommonUtils.createMismatchFromD
 import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
 
 import java.util.List;
+import java.util.Set;
+import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.rna.RnaQcFilter;
 import com.hartwig.hmftools.common.rna.RnaStatistics;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.CategoryType;
@@ -50,7 +53,7 @@ public record IsofoxSummaryData(RnaStatistics RnaStatistics) implements Comparab
     public List<String> displayValues()
     {
         List<String> values = Lists.newArrayList();
-        values.add(format("%s", RnaStatistics.qcStatus()));
+        values.add(format("%s", qcStatus(RnaStatistics.qcStatus())));
         values.add(format("%d", RnaStatistics.totalFragments()));
         values.add(format("%d", RnaStatistics.duplicateFragments()));
         values.add(format("%.2f", RnaStatistics.splicedFragmentPerc()));
@@ -87,7 +90,7 @@ public record IsofoxSummaryData(RnaStatistics RnaStatistics) implements Comparab
 
         final List<String> diffs = Lists.newArrayList();
 
-        checkDiff(diffs, FLD_QC_STATUS, ref.qcStatus().toString(), otherData.qcStatus().toString());
+        checkDiff(diffs, FLD_QC_STATUS, qcStatus(ref.qcStatus()), qcStatus(otherData.qcStatus()));
         checkDiff(diffs, FLD_TOTAL_FRAGS, ref.totalFragments(), otherData.totalFragments(), thresholds);
         checkDiff(diffs, FLD_DUPLICATE_FRAGS, ref.duplicateFragments(), otherData.duplicateFragments(), thresholds);
         checkDiff(diffs, FLD_SPLICED_FRAG_PERC, ref.splicedFragmentPerc(), otherData.splicedFragmentPerc(), thresholds);
@@ -104,5 +107,12 @@ public record IsofoxSummaryData(RnaStatistics RnaStatistics) implements Comparab
         checkDiff(diffs, FLD_FORWARD_STRAND_PERC, ref.forwardStrandPercent(), otherData.forwardStrandPercent(), thresholds);
 
         return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
+    }
+
+    public static String qcStatus(final List<RnaQcFilter> status)
+    {
+        StringJoiner sj = new StringJoiner(";");
+        status.forEach(x -> sj.add(x.toString()));
+        return sj.toString();
     }
 }
