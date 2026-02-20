@@ -57,7 +57,7 @@ object CiderConstants
     const val ANNOTATION_MATCH_REF_IDENTITY = 0.95
     // We require that the alignment covers the anchor boundary base, +/- this many bases.
     // This is because sometimes a valid rearrangement can chop off the last few bases of the anchor.
-    const val ANNOTATION_ANCHOR_BASE_TOLERANCE = 10
+    const val ANNOTATION_ANCHOR_BASE_TOLERANCE = 15
 
     // For the scoring function, the match/mismatch score 1/-4 optimizes the scoring for 100% identical sequences and 1/-1 for 75% identical
     // sequences. The default for NCBI Blastn is 2/-3, which is optimal for 89% identical sequences. BWA uses 1/-4.
