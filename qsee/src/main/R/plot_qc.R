@@ -1,9 +1,5 @@
 suppressPackageStartupMessages(library(dplyr))
 
-## Pre-processing
-library(dplyr)
-library(tidyr)
-
 ## Plotting
 library(ggplot2)
 theme_set(
@@ -15,7 +11,6 @@ theme_set(
 
 library(patchwork)
 library(scales)
-library(ggh4x)
 
 ################################
 ## Config
@@ -201,7 +196,7 @@ load_cohort_percentiles <- function(){
    colnames(cohort_named_percentiles) <- sapply(NAMED_PERCENTILES, `[[`, "name")
    
    cohort_named_percentiles <- cbind(
-      cohort_percentiles %>% select(!starts_with(PERCENTILE_PREFIX)),
+      cohort_percentiles %>% dplyr::select(!dplyr::starts_with(PERCENTILE_PREFIX)),
       cohort_named_percentiles
    )
    
@@ -212,7 +207,7 @@ load_sample_features <- function(){
    LOGGER$info("Loading sample features from: %s", SAMPLE_FEATURES_FILE)
    
    sample_features <- read.delim(SAMPLE_FEATURES_FILE, na.strings = c("NA", "null"))
-   sample_features <- sample_features %>% filter(SampleId %in% c(TUMOR_ID, NORMAL_ID))
+   sample_features <- sample_features %>% dplyr::filter(SampleId %in% c(TUMOR_ID, NORMAL_ID))
    
    return(sample_features)
 }
@@ -224,11 +219,11 @@ SAMPLE_DATA <- load_sample_features()
 ## Plot functions
 ################################
 
-get_prelim_plot_data <- function(feature_type, merge_strategy = "rbind"){
+get_prelim_plot_data <- function(feature_type){
    
    ## Select rows
-   cohort_data <- COHORT_DATA %>% filter(FeatureType == feature_type)
-   sample_data <- SAMPLE_DATA %>% filter(FeatureType == feature_type)
+   cohort_data <- COHORT_DATA %>% dplyr::filter(FeatureType == feature_type)
+   sample_data <- SAMPLE_DATA %>% dplyr::filter(FeatureType == feature_type)
    
    if(nrow(sample_data) == 0){
       return(data.frame())
@@ -247,11 +242,10 @@ get_prelim_plot_data <- function(feature_type, merge_strategy = "rbind"){
    sample_data$GroupType <- GROUP_TYPE$SAMPLE$name
    sample_data$SampleGroup <- paste0(sample_data$SampleType, "_", sample_data$GroupType)
    
+   sample_data <- sample_data %>% dplyr::rename(PctMid = FeatureValue)
    
-   sample_data <- sample_data %>% rename(PctMid = FeatureValue)
-   
-   merged_data <- bind_rows(cohort_data, sample_data)
-   merged_data <- merged_data %>% select(SampleGroup, GroupType, SampleType, everything())
+   merged_data <- dplyr::bind_rows(cohort_data, sample_data)
+   merged_data <- merged_data %>% dplyr::select(SampleGroup, GroupType, SampleType, dplyr::everything())
    
    ## Split feature names into columns
    has_multiplex_feature_names <- grepl(".+=.+", merged_data$FeatureName[1])
@@ -279,8 +273,8 @@ plot_missing_data <- function(plot_labels = labs()){
 
 get_summary_table_data <- function(){
    
-   cohort_data <- COHORT_DATA %>% filter(FeatureType == FEATURE_TYPE$SUMMARY_TABLE$name)
-   sample_data <- SAMPLE_DATA %>% filter(FeatureType == FEATURE_TYPE$SUMMARY_TABLE$name)
+   cohort_data <- COHORT_DATA %>% dplyr::filter(FeatureType == FEATURE_TYPE$SUMMARY_TABLE$name)
+   sample_data <- SAMPLE_DATA %>% dplyr::filter(FeatureType == FEATURE_TYPE$SUMMARY_TABLE$name)
    
    merged_data <- merge(
       sample_data, cohort_data, 
@@ -312,8 +306,8 @@ plot_sub_table <- function(feature_group, number_format = "NUMBER", show_title =
 
    ## Prep data =============================
    plot_data <- SUMMARY_TABLE_DATA %>%
-      filter(FeatureGroup == feature_group & NumberFormat == number_format) %>%
-      mutate(
+      dplyr::filter(FeatureGroup == feature_group & NumberFormat == number_format) %>%
+      dplyr::mutate(
          PlotLabel = factor(PlotLabel, rev(levels(PlotLabel))),
          SampleType = factor(SampleType, rev(levels(SampleType)))
       )
@@ -355,7 +349,7 @@ plot_sub_table <- function(feature_group, number_format = "NUMBER", show_title =
 
    ## Feature values =============================
    plot_data <- plot_data %>%
-      mutate(
+      dplyr::mutate(
          HasQcStatus = nchar(as.character(QcStatus)) > 0,
          ValueLabel = value_fmt_func(FeatureValue),
          ValueLabel = ifelse(
@@ -527,9 +521,9 @@ plot_distribution <- function(plot_data, invert_normal = FALSE, show_median = FA
    ## Customisations ================================
    if(show_median){
       median_data <- plot_data %>% 
-         group_by(SampleGroup) %>%
-         slice(floor(n() * 0.05):ceiling(n() * 0.95)) %>% ## Remove the bottom 5% since the coverage plot has a spike there
-         reframe(
+         dplyr::group_by(SampleGroup) %>%
+         dplyr::slice(floor(dplyr::n() * 0.05):ceiling(dplyr::n() * 0.95)) %>% ## Remove the bottom 5% since the coverage plot has a spike there
+         dplyr::reframe(
             AxisX = AxisX[which.max(abs(PctMid))],
             PctMid = PctMid[which.max(abs(PctMid))]
          )
@@ -557,7 +551,7 @@ plot_distribution <- function(plot_data, invert_normal = FALSE, show_median = FA
 FEATURE_TYPE$COVERAGE_DISTRIBUTION$plot_func <- function(){
    
    plot_data <- get_prelim_plot_data(feature_type = FEATURE_TYPE$COVERAGE_DISTRIBUTION$name)
-   plot_data <- plot_data %>% rename(AxisX = ReadDepth)
+   plot_data <- plot_data %>% dplyr::rename(AxisX = ReadDepth)
    
    p <- plot_distribution(plot_data, show_median = TRUE, show_cohort_lines = FALSE, invert_normal = TRUE)
    p + labs(title = "Coverage", x = "Coverage", y = "Prop. of bases")
@@ -566,7 +560,7 @@ FEATURE_TYPE$COVERAGE_DISTRIBUTION$plot_func <- function(){
 FEATURE_TYPE$FRAG_LENGTH_DISTRIBUTION$plot_func <- function(){
    
    plot_data <- get_prelim_plot_data(feature_type = FEATURE_TYPE$FRAG_LENGTH_DISTRIBUTION$name)
-   plot_data <- plot_data %>% rename(AxisX = FragLength)
+   plot_data <- plot_data %>% dplyr::rename(AxisX = FragLength)
    
    p <- plot_distribution(plot_data, show_median = TRUE, show_cohort_lines = FALSE, invert_normal = TRUE)
    p + labs(title = "Fragment length", x = "Fragment length", y = "Prop. of fragments")
@@ -575,7 +569,7 @@ FEATURE_TYPE$FRAG_LENGTH_DISTRIBUTION$plot_func <- function(){
 FEATURE_TYPE$GC_BIAS$plot_func <- function(){
    
    plot_data <- get_prelim_plot_data(feature_type = FEATURE_TYPE$GC_BIAS$name)
-   plot_data <- plot_data %>% rename(AxisX = GCBucket)
+   plot_data <- plot_data %>% dplyr::rename(AxisX = GCBucket)
    
    p <- plot_distribution(plot_data, show_cohort_lines = FALSE)
    p + labs(title = "GC bias", x = "GC percentage", y = "Read depth")
@@ -664,7 +658,7 @@ FEATURE_TYPE$BQR_BY_ORIG_QUAL$plot_func <- function(){
       return(plot_missing_data(plot_labels))
    }
    
-   plot_data <- plot_data %>% rename(
+   plot_data <- plot_data %>% dplyr::rename(
       AxisX = OriginalQualBin, 
       FacetX = StandardMutation, 
       FacetY = ReadType
@@ -704,7 +698,7 @@ FEATURE_TYPE$BQR_BY_SNV96_CONTEXT$plot_func <- function(){
       return(plot_missing_data(plot_labels))
    }
    
-   plot_data <- plot_data %>% rename(
+   plot_data <- plot_data %>% dplyr::rename(
       AxisX = StandardTrinucContext, 
       FacetX = StandardMutation, 
       FacetY = ReadType
@@ -737,7 +731,7 @@ FEATURE_TYPE$MS_INDEL_ERROR_RATES$plot_func <- function(){
       return(plot_missing_data(plot_labels))
    }
    
-   plot_data <- plot_data %>% rename(
+   plot_data <- plot_data %>% dplyr::rename(
       AxisX = RefNumUnits, 
       FacetX = RepeatUnitType, 
       FacetY = ConsensusType
@@ -764,7 +758,7 @@ FEATURE_TYPE$MS_INDEL_ERROR_BIAS$plot_func <- function(){
       return(plot_missing_data(plot_labels))
    }
    
-   plot_data <- plot_data %>% rename(
+   plot_data <- plot_data %>% dplyr::rename(
       AxisX = RefNumUnits, 
       FacetX = RepeatUnitType, 
       FacetY = ConsensusType
@@ -859,7 +853,7 @@ FEATURE_TYPE$DUPLICATE_FREQ$plot_func <- function(){
       return(plot_missing_data(plot_labels))
    }
    
-   plot_data <- plot_data %>% rename(AxisX = ReadCount)
+   plot_data <- plot_data %>% dplyr::rename(AxisX = ReadCount)
    
    plot_boxplot(plot_data) +
       plot_labels +
@@ -887,16 +881,16 @@ FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD$plot_func <- function(){
    }
    
    sample_genes_of_interest <- plot_data %>% 
-      filter(GroupType == GROUP_TYPE$SAMPLE$name & PctMid >= MIN_MISSED_VARIANT_LIKELIHOOD) %>%
-      arrange(-PctMid) %>%
-      pull(Gene) %>% 
+      dplyr::filter(GroupType == GROUP_TYPE$SAMPLE$name & PctMid >= MIN_MISSED_VARIANT_LIKELIHOOD) %>%
+      dplyr::arrange(-PctMid) %>%
+      dplyr::pull(Gene) %>% 
       unique() %>% 
       head(TOP_N_GENES)
    
    plot_data <- plot_data %>% 
-      filter(Gene %in% sample_genes_of_interest) %>% 
-      mutate(Gene = factor(Gene, sample_genes_of_interest)) %>%
-      rename(AxisX = Gene)
+      dplyr::filter(Gene %in% sample_genes_of_interest) %>% 
+      dplyr::mutate(Gene = factor(Gene, sample_genes_of_interest)) %>%
+      dplyr::rename(AxisX = Gene)
    
    plot_data <- preordered_factors(plot_data)
    
@@ -917,7 +911,7 @@ FEATURE_TYPE$DISCORDANT_FRAG_FREQ$plot_func <- function(){
       return(plot_missing_data(plot_labels))
    }
    
-   plot_data <- plot_data %>% rename(AxisX = DiscordantFragType)
+   plot_data <- plot_data %>% dplyr::rename(AxisX = DiscordantFragType)
    
    plot_boxplot(plot_data) + 
       plot_labels + 
