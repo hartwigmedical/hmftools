@@ -85,35 +85,35 @@ public final class SvgRender
 
     private SvgRender() {}
 
-    private static void drawTopBoxBorder(final SVGGraphics2D svgCanvas, final Point2D.Double boxOffset, int boxIdx, double boxPropWidth)
+    private static void drawTopBoxBorder(final SVGGraphics2D svgCanvas, final Point2D.Double boxOffset, final int boxIdx, final double boxPropWidth)
     {
         // canvas is scaled to be in units of BASE_BOX_SIZE
         Rectangle2D rect = new Rectangle2D.Double(boxIdx + boxOffset.x, boxOffset.y, 1.0, boxPropWidth);
         svgCanvas.fill(rect);
     }
 
-    private static void drawRightBoxBorder(final SVGGraphics2D svgCanvas, final Point2D.Double boxOffset, int boxIdx, double boxPropWidth)
+    private static void drawRightBoxBorder(final SVGGraphics2D svgCanvas, final Point2D.Double boxOffset, final int boxIdx, final double boxPropWidth)
     {
         // canvas is scaled to be in units of BASE_BOX_SIZE
         Rectangle2D rect = new Rectangle2D.Double(boxIdx + 1 - boxPropWidth + boxOffset.x, boxOffset.y, boxPropWidth, 1.0);
         svgCanvas.fill(rect);
     }
 
-    private static void drawBottomBoxBorder(final SVGGraphics2D svgCanvas, final Point2D.Double boxOffset, int boxIdx, double boxPropWidth)
+    private static void drawBottomBoxBorder(final SVGGraphics2D svgCanvas, final Point2D.Double boxOffset, final int boxIdx, final double boxPropWidth)
     {
         // canvas is scaled to be in units of BASE_BOX_SIZE
         Rectangle2D rect = new Rectangle2D.Double(boxIdx + boxOffset.x, 1.0 - boxPropWidth + boxOffset.y, 1.0, boxPropWidth);
         svgCanvas.fill(rect);
     }
 
-    private static void drawLeftBoxBorder(final SVGGraphics2D svgCanvas, final Point2D.Double boxOffset, int boxIdx, double boxPropWidth)
+    private static void drawLeftBoxBorder(final SVGGraphics2D svgCanvas, final Point2D.Double boxOffset, final int boxIdx, final double boxPropWidth)
     {
         // canvas is scaled to be in units of BASE_BOX_SIZE
         Rectangle2D rect = new Rectangle2D.Double(boxIdx + boxOffset.x, boxOffset.y, boxPropWidth, 1.0);
         svgCanvas.fill(rect);
     }
 
-    private static void drawRightInsertIndicator(final SVGGraphics2D svgCanvas, final Point2D.Double boxOffset, int boxIdx)
+    private static void drawRightInsertIndicator(final SVGGraphics2D svgCanvas, final Point2D.Double boxOffset, final int boxIdx)
     {
         // canvas is scaled to be in units of BASE_BOX_SIZE
         drawRightBoxBorder(svgCanvas, boxOffset, boxIdx, BOUNDARY_BOX_PROPORTION);
@@ -126,7 +126,7 @@ public final class SvgRender
         svgCanvas.fill(rightBottomI);
     }
 
-    private static void drawLeftInsertIndicator(final SVGGraphics2D svgCanvas, final Point2D.Double boxOffset, int boxIdx)
+    private static void drawLeftInsertIndicator(final SVGGraphics2D svgCanvas, final Point2D.Double boxOffset, final int boxIdx)
     {
         // canvas is scaled to be in units of BASE_BOX_SIZE
         drawLeftBoxBorder(svgCanvas, boxOffset, boxIdx, BOUNDARY_BOX_PROPORTION);
@@ -140,7 +140,7 @@ public final class SvgRender
     }
 
     private static void drawDel(final SVGGraphics2D svgCanvas, final Point2D.Double boxOffset, @Nullable final Integer labelDelLen,
-            int boxIdxStart, int boxIdxEnd)
+            final int boxIdxStart, final int boxIdxEnd)
     {
         // canvas is scaled to be in units of BASE_BOX_SIZE
         int delLen = boxIdxEnd - boxIdxStart + 1;
@@ -159,8 +159,9 @@ public final class SvgRender
         renderText(svgCanvas, boxOffset, boxIdxEnd + 1 - 0.5 * delLen, 0.5, INDEL_FONT, Color.BLACK, delSizeStr, Color.WHITE, 1.5, CENTER);
     }
 
-    private static void renderText(final SVGGraphics2D svgCanvas, final Point2D.Double boxOffset, double boxX, double boxY,
-            final Font font, final Color fgColor, final String text, @Nullable final Color bgColor, double backgroundBoxExpandFactor, final Alignment alignment)
+    private static void renderText(final SVGGraphics2D svgCanvas, final Point2D.Double boxOffset, final double boxX, final double boxY,
+            final Font font, final Color fgColor, final String text, @Nullable final Color bgColor, final double backgroundBoxExpandFactor,
+            final Alignment alignment)
     {
         Font currentFont = svgCanvas.getFont();
         svgCanvas.setFont(font);
@@ -207,8 +208,8 @@ public final class SvgRender
         }
     }
 
-    public static SVGGraphics2D renderBaseSeq(double baseBoxSizePx, final BaseRegion renderRegion, final BaseSeqViewModel bases,
-            boolean shadeQuals, final Map<Integer, List<BoxBorder>> posToBordersMap, @Nullable final BaseSeqViewModel refBases)
+    public static SVGGraphics2D renderBaseSeq(final double baseBoxSizePx, final BaseRegion renderRegion, final BaseSeqViewModel bases,
+            final boolean shadeQuals, final Map<Integer, List<BoxBorder>> posToBordersMap, @Nullable final BaseSeqViewModel refBases)
     {
         SVGGraphics2D svgCanvas = new SVGGraphics2D(
                 baseBoxSizePx * (renderRegion.baseLength() + 2 * BOX_PADDING), baseBoxSizePx);
@@ -216,17 +217,17 @@ public final class SvgRender
         return svgCanvas;
     }
 
-    public static void renderBaseSeq(final SVGGraphics2D svgCanvas, final Point2D.Double boxOffset, double baseBoxSizePx,
-            final BaseRegion renderRegion, final BaseSeqViewModel bases, boolean shadeQuals,
+    public static void renderBaseSeq(final SVGGraphics2D svgCanvas, final Point2D.Double boxOffset, final double baseBoxSizePx,
+            final BaseRegion renderRegion, final BaseSeqViewModel bases, final boolean shadeQuals,
             final Map<Integer, List<BoxBorder>> posToBordersMap, @Nullable final BaseSeqViewModel refBases)
     {
         renderBaseSeq(svgCanvas, boxOffset, baseBoxSizePx, renderRegion, bases, shadeQuals, posToBordersMap, refBases, true, true, false);
     }
 
-    public static void renderBaseSeq(final SVGGraphics2D svgCanvas, final Point2D.Double boxOffset, double baseBoxSizePx,
-            final BaseRegion renderRegion, final BaseSeqViewModel bases, boolean shadeQuals,
+    public static void renderBaseSeq(final SVGGraphics2D svgCanvas, final Point2D.Double boxOffset, final double baseBoxSizePx,
+            final BaseRegion renderRegion, final BaseSeqViewModel bases, final boolean shadeQuals,
             final Map<Integer, List<BoxBorder>> posToBordersMap, @Nullable final BaseSeqViewModel refBases,
-            boolean renderLeftOrientationMarker, boolean renderRightOrientationMarker, boolean reverseOrientationMarkers)
+            final boolean renderLeftOrientationMarker, final boolean renderRightOrientationMarker, final boolean reverseOrientationMarkers)
     {
         // work in units of BASE_BOX_SIZE
         svgCanvas.scale(baseBoxSizePx, baseBoxSizePx);
@@ -412,14 +413,14 @@ public final class SvgRender
         }
     }
 
-    public static SVGGraphics2D renderCoords(double baseBoxSizePx, final BaseRegion renderRegion, int centerPosition,
-            int displayEveryNthCoord)
+    public static SVGGraphics2D renderCoords(final double baseBoxSizePx, final BaseRegion renderRegion, final int centerPosition,
+            final int displayEveryNthCoord)
     {
         return renderCoords(baseBoxSizePx, renderRegion, centerPosition, displayEveryNthCoord, false);
     }
 
-    public static SVGGraphics2D renderCoords(double baseBoxSizePx, final BaseRegion renderRegion, int centerPosition,
-            int displayEveryNthCoord, boolean reverse)
+    public static SVGGraphics2D renderCoords(final double baseBoxSizePx, final BaseRegion renderRegion, final int centerPosition,
+            final int displayEveryNthCoord, final boolean reverse)
     {
         double scalingFactor = baseBoxSizePx / BASE_BOX_SIZE;
         double charWidth = getStringBounds(COORD_FONT, "9").getWidth();
@@ -439,7 +440,8 @@ public final class SvgRender
     }
 
     public static void renderCoords(final SVGGraphics2D svgCanvas, final Point2D.Double boxOffset, final Point2D.Double canvasSize,
-            double baseBoxSizePx, final BaseRegion renderRegion, int centerPosition, int displayEveryNthCoord, double maxStringWidth, boolean reverse)
+            final double baseBoxSizePx, final BaseRegion renderRegion, final int centerPosition, final int displayEveryNthCoord, final double maxStringWidth,
+            final boolean reverse)
     {
         double scalingFactor = baseBoxSizePx / BASE_BOX_SIZE;
         double charWidth = getStringBounds(COORD_FONT, "9").getWidth();
@@ -496,9 +498,10 @@ public final class SvgRender
         }
     }
 
-    public record ChrLabel(String chromosome, int position, BaseRegion viewRegion, @Nullable BaseRegion refRegion, boolean isReversed, List<Alignment> alignments) {}
+    public record ChrLabel(String chromosome, int position, BaseRegion viewRegion, @Nullable BaseRegion refRegion, boolean isReversed,
+                           List<Alignment> alignments) {}
 
-    public static SVGGraphics2D renderChrLabels(double baseBoxSizePx, final List<ChrLabel> labels)
+    public static SVGGraphics2D renderChrLabels(final double baseBoxSizePx, final List<ChrLabel> labels)
     {
         int startIdx = labels.get(0).viewRegion.start();
         int endIdx = labels.get(labels.size() - 1).viewRegion.end();
@@ -550,8 +553,8 @@ public final class SvgRender
         return svgCanvas;
     }
 
-    private static void drawForwardArrow(final SVGGraphics2D svgCanvas, final Point2D.Double offset, double left, double top, double width,
-            double height)
+    private static void drawForwardArrow(final SVGGraphics2D svgCanvas, final Point2D.Double offset, final double left, final double top, final double width,
+            final double height)
     {
         Path2D.Double forwardArrowPath = new Path2D.Double();
         forwardArrowPath.moveTo(left + offset.x, top + offset.y);
@@ -562,8 +565,8 @@ public final class SvgRender
         svgCanvas.fill(forwardArrowPath);
     }
 
-    private static void drawReverseArrow(final SVGGraphics2D svgCanvas, final Point2D.Double offset, double left, double top, double width,
-            double height)
+    private static void drawReverseArrow(final SVGGraphics2D svgCanvas, final Point2D.Double offset, final double left, final double top, final double width,
+            final double height)
     {
         Path2D.Double reverseArrowPath = new Path2D.Double();
         reverseArrowPath.moveTo(left + offset.x, top + 0.5 * height + offset.y);
@@ -574,7 +577,7 @@ public final class SvgRender
         svgCanvas.fill(reverseArrowPath);
     }
 
-    public static SVGGraphics2D renderColoredBox(double sizePx, final Color color)
+    public static SVGGraphics2D renderColoredBox(final double sizePx, final Color color)
     {
         SVGGraphics2D svgCanvas = new SVGGraphics2D(sizePx, sizePx);
         svgCanvas.setColor(color);
@@ -605,7 +608,7 @@ public final class SvgRender
 
     public record RenderedGeneData(SVGGraphics2D refSvgCanvas, SVGGraphics2D altSvgCanvas) {}
 
-    public static RenderedGeneData renderGeneData(double baseBoxSizePx, final BaseRegion renderRegion, boolean posStrand,
+    public static RenderedGeneData renderGeneData(final double baseBoxSizePx, final BaseRegion renderRegion, final boolean posStrand,
             final List<GeneRegionViewModel> refViewModels, final List<GeneRegionViewModel> altViewModels)
     {
         SVGGraphics2D refSvgCanvas = new SVGGraphics2D(
@@ -619,8 +622,8 @@ public final class SvgRender
         return new RenderedGeneData(refSvgCanvas, altSvgCanvas);
     }
 
-    private static void renderGeneRegions(final SVGGraphics2D svgCanvas, double baseBoxSizePx, final BaseRegion renderRegion,
-            boolean posStrand, final List<GeneRegionViewModel> viewModels, boolean renderRef)
+    private static void renderGeneRegions(final SVGGraphics2D svgCanvas, final double baseBoxSizePx, final BaseRegion renderRegion,
+            final boolean posStrand, final List<GeneRegionViewModel> viewModels, final boolean renderRef)
     {
         // work in units of BASE_BOX_SIZE
         svgCanvas.scale(baseBoxSizePx, baseBoxSizePx);

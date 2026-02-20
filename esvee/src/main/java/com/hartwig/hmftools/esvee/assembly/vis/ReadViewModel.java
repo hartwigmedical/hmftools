@@ -60,7 +60,8 @@ public final class ReadViewModel
     private final int mRefViewModelIndex;
     private final String mFullAssemblyStr;
 
-    private ReadViewModel(final SupportRead supportRead, final PairedSegmentViewModel refViewModel, final BaseSeqViewModel readViewModel, int indelOffset, boolean isReverseComplemented, int refViewModelIndex, final String fullAssemblyStr)
+    private ReadViewModel(final SupportRead supportRead, final PairedSegmentViewModel refViewModel, final BaseSeqViewModel readViewModel,
+            final int indelOffset, final boolean isReverseComplemented, final int refViewModelIndex, final String fullAssemblyStr)
     {
         mSupportRead = supportRead;
         mRefViewModel = refViewModel;
@@ -157,7 +158,8 @@ public final class ReadViewModel
 
     private record CorrectIndelsResult(List<CigarElement> cigarEls, int indexOffset) {}
 
-    private static CorrectIndelsResult correctIndels(final List<SegmentViewModel> refViewModel, final SupportRead read, final List<CigarElement> cigarEls)
+    private static CorrectIndelsResult correctIndels(final List<SegmentViewModel> refViewModel, final SupportRead read,
+            final List<CigarElement> cigarEls)
     {
 
         Integer refViewModelIndex = getRefViewModelIndex(refViewModel, read);
@@ -247,9 +249,12 @@ public final class ReadViewModel
     private record HandleDelResult(BaseSeqViewModel readViewModel, int indelOffset, List<CigarElement> cigarEls) {}
 
     @Nullable
-    private static HandleDelResult handleDel(final PairedSegmentViewModel refViewModel, final SupportRead read, int indelOffset, final List<CigarElement> cigarEls, final byte[] readBases, final byte[] readBaseQuals, boolean readNegativeStrandFlag)
+    private static HandleDelResult handleDel(final PairedSegmentViewModel refViewModel, final SupportRead read, int indelOffset,
+            final List<CigarElement> cigarEls, final byte[] readBases, final byte[] readBaseQuals, final boolean readNegativeStrandFlag)
     {
-        int delLength = refViewModel.viewModels().get(0).leftDelLength() + refViewModel.viewModels().get(refViewModel.viewModels().size() - 1).leftDelLength();
+        int delLength = refViewModel.viewModels().get(0).leftDelLength() + refViewModel.viewModels()
+                .get(refViewModel.viewModels().size() - 1)
+                .leftDelLength();
         if(delLength <= 0)
             return null;
 
@@ -293,7 +298,8 @@ public final class ReadViewModel
         List<CigarElement> newCigarEls = collapseCigarOps(newCigarOps);
 
         BaseSeqViewModel unshiftedReadViewModel = BaseSeqViewModel.create(
-                read.fullAssemblyIndexStart() + indelOffset + refViewModel.readStartOffset(), newCigarEls, readBases, readBaseQuals, readNegativeStrandFlag);
+                read.fullAssemblyIndexStart() + indelOffset
+                        + refViewModel.readStartOffset(), newCigarEls, readBases, readBaseQuals, readNegativeStrandFlag);
         unshiftedReadViewModel.clearSoftClips();
         int unshiftedMismatchCount = 0;
         for(SegmentViewModel refEl : refViewModel.viewModels())
@@ -304,7 +310,8 @@ public final class ReadViewModel
 
         indelOffset -= readDelLength;
         BaseSeqViewModel shiftedReadViewModel = BaseSeqViewModel.create(
-                read.fullAssemblyIndexStart() + indelOffset + refViewModel.readStartOffset(), newCigarEls, readBases, readBaseQuals, readNegativeStrandFlag);
+                read.fullAssemblyIndexStart() + indelOffset
+                        + refViewModel.readStartOffset(), newCigarEls, readBases, readBaseQuals, readNegativeStrandFlag);
         shiftedReadViewModel.clearSoftClips();
         int shiftedMismatchCount = 0;
         for(SegmentViewModel refEl : refViewModel.viewModels())
@@ -323,7 +330,8 @@ public final class ReadViewModel
     }
 
     @Nullable
-    public static ReadViewModel create(final PairedSegmentViewModel refViewModel, final SupportRead read, final JunctionAssembly junctionAssembly, final String fullAssemblyStr)
+    public static ReadViewModel create(final PairedSegmentViewModel refViewModel, final SupportRead read,
+            final JunctionAssembly junctionAssembly, final String fullAssemblyStr)
     {
         boolean readNegativeStrandFlag = read.orientation() == REVERSE;
         byte[] readBases = read.cachedRead().getBases();
@@ -386,7 +394,8 @@ public final class ReadViewModel
         if(handleDelResult == null)
         {
             readViewModel = BaseSeqViewModel.create(
-                    read.fullAssemblyIndexStart() + indelOffset + refViewModel.readStartOffset(), cigarEls, readBases, readBaseQuals, readNegativeStrandFlag);
+                    read.fullAssemblyIndexStart() + indelOffset
+                            + refViewModel.readStartOffset(), cigarEls, readBases, readBaseQuals, readNegativeStrandFlag);
             readViewModel.clearSoftClips();
         }
         else
@@ -469,7 +478,8 @@ public final class ReadViewModel
         extraInfo.add(Pair.of("Full assembly index start:", String.valueOf(mSupportRead.fullAssemblyIndexStart())));
 
         // TODO(mkcmkc): Remove
-        extraInfo.add(Pair.of("Full assembly seq start:", mFullAssemblyStr.substring(mSupportRead.fullAssemblyIndexStart(), min(mSupportRead.fullAssemblyIndexEnd() + 1, mSupportRead.fullAssemblyIndexStart() + 10))));
+        extraInfo.add(Pair.of("Full assembly seq start:", mFullAssemblyStr.substring(mSupportRead.fullAssemblyIndexStart(), min(
+                mSupportRead.fullAssemblyIndexEnd() + 1, mSupportRead.fullAssemblyIndexStart() + 10))));
 
         // TODO(mkcmkc): Remove
         SupplementaryReadData suppData = mSupportRead.supplementaryData();
