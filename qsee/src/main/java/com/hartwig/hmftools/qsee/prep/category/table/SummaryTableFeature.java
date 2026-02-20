@@ -9,21 +9,7 @@ import com.hartwig.hmftools.qsee.feature.SourceTool;
 
 public enum SummaryTableFeature
 {
-    MEAN_COVERAGE           (SummaryTableGroup.GENERAL, "Mean coverage", SourceTool.BAM_METRICS),
-    PURITY                  (SummaryTableGroup.GENERAL, "Purity", SourceTool.PURPLE),
-    PLOIDY                  (SummaryTableGroup.GENERAL, "Ploidy", SourceTool.PURPLE),
-    LOH_PERCENT             (SummaryTableGroup.GENERAL, "LOH", SourceTool.PURPLE),
-
-    TMB_SMALL_VARIANTS      (SummaryTableGroup.TMB, "SNVs/indels per MB", SourceTool.PURPLE),
-    TMB_MS_INDELS           (SummaryTableGroup.TMB, "MS indels per MB", SourceTool.PURPLE),
-    TMB_STRUCTURAL_VARIANTS (SummaryTableGroup.TMB, "SVs per MB", SourceTool.PURPLE),
-
-    TINC                    (SummaryTableGroup.CONTAMINATION, "Tumor in normal", SourceTool.PURPLE),
-    CONTAMINATION           (SummaryTableGroup.CONTAMINATION, "Other DNA", SourceTool.PURPLE),
-
-    DELETED_GENES           (SummaryTableGroup.COPY_NUMBER, "Deleted genes", SourceTool.PURPLE),
-    UNSUPPORTED_CN_SEGMENTS (SummaryTableGroup.COPY_NUMBER, "Unsupp. segments", SourceTool.PURPLE),
-
+    MEAN_COVERAGE           (SummaryTableGroup.MAPPING, "Mean coverage", SourceTool.BAM_METRICS),
     MAPPED_PROPORTION       (SummaryTableGroup.MAPPING, "Mapped proportion", SourceTool.BAM_METRICS),
     COVERAGE_ABOVE_10       (SummaryTableGroup.MAPPING, "Coverage > 10", SourceTool.BAM_METRICS),
     COVERAGE_ABOVE_20       (SummaryTableGroup.MAPPING, "Coverage > 20", SourceTool.BAM_METRICS),
@@ -31,10 +17,23 @@ public enum SummaryTableFeature
     COVERAGE_ABOVE_60       (SummaryTableGroup.MAPPING, "Coverage > 60", SourceTool.BAM_METRICS),
     COVERAGE_ABOVE_100      (SummaryTableGroup.MAPPING, "Coverage > 100", SourceTool.BAM_METRICS),
     COVERAGE_ABOVE_250      (SummaryTableGroup.MAPPING, "Coverage > 250", SourceTool.BAM_METRICS),
-    LOW_MAP_QUAL            (SummaryTableGroup.MAPPING, "Low map quality", SourceTool.BAM_METRICS),
-    LOW_BASE_QUAL           (SummaryTableGroup.MAPPING, "Low base quality", SourceTool.BAM_METRICS),
+    LOW_BASE_QUAL           (SummaryTableGroup.MAPPING, "Low qual. bases", SourceTool.BAM_METRICS),
+    LOW_MAP_QUAL            (SummaryTableGroup.MAPPING, "Low map qual. reads", SourceTool.BAM_METRICS),
     DUPLICATE_READS         (SummaryTableGroup.MAPPING, "Duplicate reads", SourceTool.BAM_METRICS),
-    DUAL_STRAND_READS       (SummaryTableGroup.MAPPING, "Dual-strand reads", SourceTool.BAM_METRICS);
+    DUAL_STRAND_READS       (SummaryTableGroup.MAPPING, "Dual-strand reads", SourceTool.BAM_METRICS),
+
+    PURITY                  (SummaryTableGroup.COPY_NUMBER, "Purity", SourceTool.PURPLE),
+    PLOIDY                  (SummaryTableGroup.COPY_NUMBER, "Ploidy", SourceTool.PURPLE),
+    LOH_PERCENT             (SummaryTableGroup.COPY_NUMBER, "LOH", SourceTool.PURPLE),
+    DELETED_GENES           (SummaryTableGroup.COPY_NUMBER, "Deleted genes", SourceTool.PURPLE),
+    UNSUPPORTED_CN_SEGMENTS (SummaryTableGroup.COPY_NUMBER, "Unsupp. segments", SourceTool.PURPLE),
+
+    TINC                    (SummaryTableGroup.CONTAMINATION, "Tumor in normal", SourceTool.PURPLE),
+    CONTAMINATION           (SummaryTableGroup.CONTAMINATION, "Other DNA", SourceTool.PURPLE),
+
+    TMB_SMALL_VARIANTS      (SummaryTableGroup.TMB, "SNVs/indels per MB", SourceTool.PURPLE),
+    TMB_MS_INDELS           (SummaryTableGroup.TMB, "MS indels per MB", SourceTool.PURPLE),
+    TMB_STRUCTURAL_VARIANTS (SummaryTableGroup.TMB, "SVs per MB", SourceTool.PURPLE);
 
     private final SummaryTableGroup mGroup;
     private final String mPlotLabel;

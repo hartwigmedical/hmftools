@@ -2,7 +2,6 @@ package com.hartwig.hmftools.qsee.prep.category.table;
 
 enum SummaryTableGroup
 {
-    GENERAL("General"),
     TMB("Mutational burden"),
     CONTAMINATION("Contamination"),
     COPY_NUMBER("Copy number"),
