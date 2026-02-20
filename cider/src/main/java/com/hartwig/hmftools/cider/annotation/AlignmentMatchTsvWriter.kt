@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.cider.annotation
 
-import com.hartwig.hmftools.cider.CiderFormatter
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVPrinter
@@ -11,18 +10,22 @@ object AlignmentMatchTsvWriter
     enum class Column
     {
         cdr3Seq,
-        cdr3AA,
+        fullSeq,
         matchType,
         gene,
         functionality,
-        pIdent,
-        alignStart,
-        alignEnd,
+        layoutAlignStart,
+        layoutAlignEnd,
         alignScore,
-        refStrand,
+        refContig,
         refStart,
         refEnd,
-        refContig,
+        strand,
+        refContigLength,
+        cigar,
+        editDistance,
+        querySeqStart,
+        querySeqEnd,
         querySeq
     }
 
@@ -63,9 +66,10 @@ object AlignmentMatchTsvWriter
 
     private fun writeVDJSequence(csvPrinter: CSVPrinter, alignmentAnnotation: AlignmentAnnotation)
     {
-        val typeMatch = listOf(Triple(MatchType.V, alignmentAnnotation.vGene, alignmentAnnotation.vAlignment),
-            Triple(MatchType.D, alignmentAnnotation.dGene, alignmentAnnotation.dAlignment),
-            Triple(MatchType.J, alignmentAnnotation.jGene, alignmentAnnotation.jAlignment),
+        val typeMatch = listOf(
+            Triple(MatchType.V, alignmentAnnotation.vGene?.gene, alignmentAnnotation.vGene?.alignment),
+            Triple(MatchType.D, alignmentAnnotation.dGene?.gene, alignmentAnnotation.dGene?.alignment),
+            Triple(MatchType.J, alignmentAnnotation.jGene?.gene, alignmentAnnotation.jGene?.alignment),
             Triple(MatchType.full, null, alignmentAnnotation.fullAlignment))
 
         for ((type, gene, alignment) in typeMatch)
@@ -73,23 +77,29 @@ object AlignmentMatchTsvWriter
             if (alignment == null)
                 continue
 
-            for (c in Column.values())
+            val alignmentOffset = alignmentAnnotation.alignmentQueryRange.start
+
+            for (c in Column.entries)
             {
                 when (c)
                 {
                     Column.cdr3Seq -> csvPrinter.print(alignmentAnnotation.vdjSequence.cdr3Sequence)
-                    Column.cdr3AA -> csvPrinter.print(CiderFormatter.cdr3AminoAcid(alignmentAnnotation.vdjSequence))
+                    Column.fullSeq -> csvPrinter.print(alignmentAnnotation.vdjSequence.layout.consensusSequenceString())
                     Column.matchType -> csvPrinter.print(type)
-                    Column.gene -> csvPrinter.print(gene?.geneName)
+                    Column.gene -> csvPrinter.print(gene?.geneAllele)
                     Column.functionality -> csvPrinter.print(gene?.functionality?.toCode())
-                    Column.pIdent -> csvPrinter.print(alignment.percentageIdent)
-                    Column.alignStart -> csvPrinter.print(alignment.queryAlignStart)
-                    Column.alignEnd -> csvPrinter.print(alignment.queryAlignEnd)
+                    Column.layoutAlignStart -> csvPrinter.print(alignmentOffset + alignment.queryRange.start)
+                    Column.layoutAlignEnd -> csvPrinter.print(alignmentOffset + alignment.queryRange.endInclusive + 1)
                     Column.alignScore -> csvPrinter.print(alignment.alignmentScore)
-                    Column.refStrand -> csvPrinter.print(alignment.strand.asChar())
-                    Column.refStart -> csvPrinter.print(alignment.refStart)
-                    Column.refEnd -> csvPrinter.print(alignment.refEnd)
+                    Column.strand -> csvPrinter.print(alignment.strand.asChar())
+                    Column.refStart -> csvPrinter.print(alignment.refRange.start + 1)
+                    Column.refEnd -> csvPrinter.print(alignment.refRange.endInclusive + 1)
                     Column.refContig -> csvPrinter.print(alignment.refContig)
+                    Column.refContigLength -> csvPrinter.print(alignment.refContigLength)
+                    Column.cigar -> csvPrinter.print(alignment.cigar.joinToString("") { it.toString() })
+                    Column.editDistance -> csvPrinter.print(alignment.editDistance)
+                    Column.querySeqStart -> csvPrinter.print(alignmentAnnotation.alignmentQueryRange.start)
+                    Column.querySeqEnd -> csvPrinter.print(alignmentAnnotation.alignmentQueryRange.endInclusive + 1)
                     Column.querySeq -> csvPrinter.print(alignment.querySeq)
                 }
             }

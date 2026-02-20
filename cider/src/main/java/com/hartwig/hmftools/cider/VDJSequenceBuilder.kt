@@ -3,6 +3,8 @@ package com.hartwig.hmftools.cider
 import com.hartwig.hmftools.cider.CiderConstants.LAYOUT_MIN_READ_OVERLAP_BASES
 import com.hartwig.hmftools.cider.CiderConstants.LAYOUT_MATE_EXTEND_MISMATCHES_MAX
 import com.hartwig.hmftools.cider.CiderConstants.MIN_ANCHOR_LENGTH_BASES
+import com.hartwig.hmftools.cider.genes.VJ
+import com.hartwig.hmftools.cider.genes.VJGeneType
 import com.hartwig.hmftools.cider.layout.ReadLayout
 import com.hartwig.hmftools.common.codon.Codons
 import com.hartwig.hmftools.common.perf.TaskExecutor
@@ -599,7 +601,8 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
         combinedVjLayout: ReadLayout, mateLayoutReads: Map<String, List<ReadLayout.Read>>,
         vLayoutGeneType: VJGeneType, jLayoutGeneType: VJGeneType, jAlignedPositionShift: Int)
     {
-        val mates = combinedVjLayout.reads.flatMap { mateLayoutReads[it.readKey.readName] ?: emptyList() }
+        val mates = combinedVjLayout.reads
+            .flatMap { mateLayoutReads[it.readKey.readName] ?: emptyList() }
             .mapNotNull {
                 val mateCandidate = vjLayoutAdaptor.toReadCandidate(it)
                 val canExtend = mateCandidate.vjGeneType == vLayoutGeneType || mateCandidate.vjGeneType == jLayoutGeneType

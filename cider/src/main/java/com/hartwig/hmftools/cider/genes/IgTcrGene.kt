@@ -1,7 +1,8 @@
-package com.hartwig.hmftools.cider
+package com.hartwig.hmftools.cider.genes
 
-import com.hartwig.hmftools.cider.genes.GenomicLocation
 import com.hartwig.hmftools.cider.genes.GenomicLocation.Companion.toChrBaseRegion
+
+// TODO: should get rid of this
 
 // see https://www.imgt.org/IMGTScientificChart/SequenceDescription/IMGTfunctionality.html
 typealias IgTcrFunctionality = com.hartwig.hmftools.common.cider.IgTcrFunctionality

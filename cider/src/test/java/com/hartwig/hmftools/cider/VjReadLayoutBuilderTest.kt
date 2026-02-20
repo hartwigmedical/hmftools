@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.cider
 
 import com.hartwig.hmftools.cider.TestUtils.createReadCandidate
+import com.hartwig.hmftools.cider.genes.VJ
 import kotlin.test.*
 
 class VjReadLayoutBuilderTest

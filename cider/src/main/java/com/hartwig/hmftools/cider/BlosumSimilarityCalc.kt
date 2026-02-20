@@ -1,12 +1,12 @@
 package com.hartwig.hmftools.cider
 
+import com.hartwig.hmftools.cider.genes.VJ
 import com.hartwig.hmftools.common.aminoacid.BlosumMapping
 import com.hartwig.hmftools.common.codon.Codons
-import org.apache.logging.log4j.LogManager
+import kotlin.math.min
 
 object BlosumSimilarityCalc
 {
-    private val sLogger = LogManager.getLogger(javaClass)
     val blosumMapping = BlosumMapping()
 
     // we do with amino acid sequence
@@ -21,9 +21,9 @@ object BlosumSimilarityCalc
             // calculate the blosum score
             return blosumMapping.calcSequenceSum(refAnchorAA) - blosumMapping.calcSequenceSum(refAnchorAA, seqAA)
         }
-        catch (e: IllegalArgumentException)
+        catch (_: IllegalArgumentException)
         {
-            throw IllegalArgumentException("cannot calc blosum for seq: ${refAnchorAA} and ${seqAA}")
+            throw IllegalArgumentException("cannot calc blosum for seq: $refAnchorAA and $seqAA")
         }
     }
 
@@ -48,7 +48,7 @@ object BlosumSimilarityCalc
         if (templateDnaSeq.length != dnaSeq.length)
         {
             // for V we must align to right side, and set length to multiple of 3
-            val trimToLength = roundDownToMultiple(Math.min(templateDnaSeq.length, dnaSeq.length), 3)
+            val trimToLength = roundDownToMultiple(min(templateDnaSeq.length, dnaSeq.length), 3)
 
             if (vj == VJ.V)
             {
@@ -100,11 +100,6 @@ object BlosumSimilarityCalc
         val aaSeq = Codons.aminoAcidFromBases(dnaSeqFixed)
 
         val similarity = calcAminoAcidSimilarityScore(templateAaSeq, aaSeq) - numUnknownBases * CiderConstants.BLOSUM_UNKNOWN_BASE_PENALTY
-
-        /* sLogger.trace("{} vs {}, AA: {} vs {}, similiarity={}",
-            templateDnaSeq, dnaSeq,
-            templateAaSeq, aaSeq,
-            similarity)*/
 
         return similarity
     }

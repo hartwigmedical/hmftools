@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.cider
 
+import com.hartwig.hmftools.cider.genes.VJAnchorTemplate
+import com.hartwig.hmftools.cider.genes.VJGeneType
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
@@ -13,7 +15,8 @@ class AnchorBlosumSearcherTest
         "01",
         null,
         "TGGGGCCAGGGCACCCTGGTCACCGTCTCC",
-        null)
+        null
+    )
 
     val ighJ6 = VJAnchorTemplate(
         VJGeneType.IGHJ,
