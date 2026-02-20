@@ -10,6 +10,7 @@ import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.Feature;
 import com.hartwig.hmftools.qsee.feature.FeatureKey;
 import com.hartwig.hmftools.qsee.feature.FeatureType;
+import com.hartwig.hmftools.qsee.common.MultiFieldStringBuilder;
 import com.hartwig.hmftools.qsee.feature.SourceTool;
 import com.hartwig.hmftools.qsee.prep.CategoryPrep;
 import com.hartwig.hmftools.qsee.prep.CommonPrepConfig;
@@ -49,7 +50,7 @@ public class MissedGeneVariantPrep implements CategoryPrep
         return selectedGeneDepths.stream()
                 .map(x ->
                 {
-                    String featureName = FeatureKey.formSingleFieldName(FIELD_GENE, x.Gene);
+                    String featureName = MultiFieldStringBuilder.formSingleField(FIELD_GENE, x.Gene);
                     FeatureKey key = new FeatureKey(featureName, FeatureType.MISSED_VARIANT_LIKELIHOOD, SOURCE_TOOL);
                     return new Feature(key, x.MissedVariantLikelihood);
                 })

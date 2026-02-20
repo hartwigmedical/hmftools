@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.qsee.feature;
 
+import com.hartwig.hmftools.qsee.common.MultiFieldStringBuilder;
 import com.hartwig.hmftools.qsee.status.QcStatus;
 
 public class PlotMetadata
@@ -33,12 +34,14 @@ public class PlotMetadata
 
     public String toString()
     {
-        return FeatureKey.formMultiFieldName(
-                FLD_FEATURE_GROUP, mFeatureGroup,
-                FLD_PLOT_LABEL, mPlotLabel,
-                FLD_NUMBER_FORMAT, mNumberFormat.toString(),
-                FLD_QC_STATUS, mQcStatus.toString()
-        );
+        MultiFieldStringBuilder builder = new MultiFieldStringBuilder();
+
+        builder.add(FLD_FEATURE_GROUP, mFeatureGroup);
+        builder.add(FLD_PLOT_LABEL, mPlotLabel);
+        builder.add(FLD_NUMBER_FORMAT, mNumberFormat.toString());
+        builder.add(FLD_QC_STATUS, mQcStatus.toString());
+
+        return builder.toString();
     }
 
     public static class Builder

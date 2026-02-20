@@ -9,6 +9,7 @@ import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.Feature;
 import com.hartwig.hmftools.qsee.feature.FeatureKey;
 import com.hartwig.hmftools.qsee.feature.FeatureType;
+import com.hartwig.hmftools.qsee.common.MultiFieldStringBuilder;
 import com.hartwig.hmftools.qsee.feature.SourceTool;
 import com.hartwig.hmftools.qsee.prep.CategoryPrep;
 import com.hartwig.hmftools.qsee.prep.CommonPrepConfig;
@@ -45,7 +46,7 @@ public class CoverageDistributionPrep implements CategoryPrep
 
             double propBases = (double) x.Count / totalCount;
 
-            String featureName = FeatureKey.formSingleFieldName(FIELD_READ_DEPTH, String.valueOf(x.Value));
+            String featureName = MultiFieldStringBuilder.formSingleField(FIELD_READ_DEPTH, String.valueOf(x.Value));
             FeatureKey key = new FeatureKey(featureName, FeatureType.COVERAGE_DISTRIBUTION, SOURCE_TOOL);
 
             return new Feature(key, propBases);

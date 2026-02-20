@@ -17,6 +17,7 @@ import com.hartwig.hmftools.common.redux.JitterTableRow;
 import com.hartwig.hmftools.qsee.feature.Feature;
 import com.hartwig.hmftools.qsee.feature.FeatureKey;
 import com.hartwig.hmftools.qsee.feature.FeatureType;
+import com.hartwig.hmftools.qsee.common.MultiFieldStringBuilder;
 import com.hartwig.hmftools.qsee.feature.SourceTool;
 import com.hartwig.hmftools.qsee.prep.CategoryPrep;
 import com.hartwig.hmftools.qsee.prep.CommonPrepConfig;
@@ -131,7 +132,7 @@ public class MsIndelErrorPrep implements CategoryPrep
         Map<String, List<JitterTableRow>> groupedTables = new LinkedHashMap<>();
         for(JitterTableRow row : table)
         {
-            String groupName = FeatureKey.formMultiFieldName(
+            String groupName = MultiFieldStringBuilder.formMultiField(
                     FIELD_CONSENSUS_TYPE, row.getConsensusType().toString(),
                     FIELD_REPEAT_TYPE, getRepeatType(row.getRepeatUnit()),
                     FIELD_REF_NUM_UNITS, String.valueOf(row.refNumUnits())
@@ -209,7 +210,7 @@ public class MsIndelErrorPrep implements CategoryPrep
             int insertionReadCount = row.getJitterReadCount(INSERTIONS_KEY);
             int indelReadCount = deletionReadCount + insertionReadCount;
 
-            String featureName = FeatureKey.formMultiFieldName(
+            String featureName = MultiFieldStringBuilder.formMultiField(
                     FIELD_CONSENSUS_TYPE, consensusType,
                     FIELD_REPEAT_TYPE, repeatType,
                     FIELD_REF_NUM_UNITS, refNumUnits
