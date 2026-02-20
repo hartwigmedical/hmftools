@@ -550,8 +550,8 @@ public class AssemblyVisualiser
     }
 
     private record BreakendInfo(Integer id, String chromosome, List<CigarElement> cigarElements, String insertedBases,
-                                BaseRegion refRegion, String assemblySeq, String refSeq, boolean isRefReversed, boolean isAssemblyReversed, BaseRegion assemblyRegion,
-                                int leftDelLength) {}
+                                BaseRegion refRegion, String assemblySeq, String refSeq, boolean isRefReversed, boolean isAssemblyReversed,
+                                BaseRegion assemblyRegion, int leftDelLength) {}
 
     private static BreakendInfo extractBreakendInfo(final RefGenomeInterface refGenome, final PairedBreakendInfo pairedBreakend,
             final String fullAssemblySeq, @Nullable final Integer lastSeqEnd)
