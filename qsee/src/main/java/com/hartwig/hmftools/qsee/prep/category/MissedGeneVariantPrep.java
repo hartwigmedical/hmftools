@@ -59,6 +59,11 @@ public class MissedGeneVariantPrep implements CategoryPrep
     @Override
     public List<Feature> extractSampleData(String sampleId, @NotNull SampleType sampleType) throws IOException
     {
+        if(sampleType != SampleType.TUMOR)
+        {
+            return List.of();
+        }
+
         List<GeneDepth> geneCoverage = loadGeneCoverage(sampleId, sampleType);
         List<Feature> features = getMissedVariantLikelihoods(geneCoverage, mConfig.DriverGenes);
         return features;

@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.hartwig.hmftools.common.redux.DuplicateFrequency;
+import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.Feature;
 import com.hartwig.hmftools.qsee.feature.FeatureKey;
 import com.hartwig.hmftools.qsee.feature.FeatureType;
@@ -64,8 +65,13 @@ public class DuplicateFreqPrep implements CategoryPrep
     }
 
     @Override
-    public List<Feature> extractSampleData(String sampleId) throws IOException
+    public List<Feature> extractSampleData(String sampleId, SampleType sampleType) throws IOException
     {
+        if(sampleType != SampleType.TUMOR)
+        {
+            return List.of();
+        }
+
         List<DuplicateFrequency> dupFreqs = loadDuplicateFrequencies(sampleId);
         List<Feature> features = normaliseAndBinCounts(dupFreqs);
         return features;
