@@ -405,7 +405,7 @@ plot_sub_table <- function(feature_group, number_format = "NUMBER", show_title =
          axis.ticks.y = element_blank(),
          axis.text.y = element_blank(),
          axis.line.y = element_blank(),
-         plot.margin = margin(r = 10, b = 10, l = 0)
+         plot.margin = margin(r = 15, b = 10, l = 0)
       )
 
    ## Combine plots =============================
@@ -933,31 +933,40 @@ create_report <- function(){
       LOGGER$info("Plotting featureType(%s)", feature_type$name)
       plots[[feature_type$name]] <- feature_type$plot_func() %>% patchwork::free("label")
    }
-   
-   plots <- plots[c(
-      FEATURE_TYPE$SUMMARY_TABLE$name,
+
+   LOGGER$info("Combining plots")
+   plot_letter_name_map <- c(
+      "A" = FEATURE_TYPE$SUMMARY_TABLE$name,
       
-      FEATURE_TYPE$COVERAGE_DISTRIBUTION$name,
-      FEATURE_TYPE$FRAG_LENGTH_DISTRIBUTION$name,
-      FEATURE_TYPE$GC_BIAS$name,
+      "B" = FEATURE_TYPE$COVERAGE_DISTRIBUTION$name,
+      "C" = FEATURE_TYPE$FRAG_LENGTH_DISTRIBUTION$name,
+      "D" = FEATURE_TYPE$GC_BIAS$name,
+      "E" = FEATURE_TYPE$DISCORDANT_FRAG_FREQ$name,
+      "F" = FEATURE_TYPE$DUPLICATE_FREQ$name,
+      "G" = FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD$name,
       
-      FEATURE_TYPE$DISCORDANT_FRAG_FREQ$name,
-      FEATURE_TYPE$DUPLICATE_FREQ$name,
-      FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD$name,
-      
-      FEATURE_TYPE$BQR_BY_ORIG_QUAL$name,
-      FEATURE_TYPE$BQR_BY_SNV96_CONTEXT$name,
-      FEATURE_TYPE$MS_INDEL_ERROR_RATES$name,
-      FEATURE_TYPE$MS_INDEL_ERROR_BIAS$name
-   )]
+      "H" = FEATURE_TYPE$BQR_BY_ORIG_QUAL$name,
+      "I" = FEATURE_TYPE$BQR_BY_SNV96_CONTEXT$name,
+      "J" = FEATURE_TYPE$MS_INDEL_ERROR_RATES$name,
+      "K" = FEATURE_TYPE$MS_INDEL_ERROR_BIAS$name
+   )
+
+   plots <- plots[plot_letter_name_map]
    
    design <- "
-      AABBEE
-      AACCFF
-      AADDGG
-      AAHHHH
-      AAIIII
+      AABBCCDD
+      AAEEFFGG
+      AAHHIIII
+      AAJJKK##
    "
+   
+   plots_in_map <- plot_letter_name_map %in% sapply(FEATURE_TYPE, `[[`, "name")
+   plots_designed <- sapply(names(plot_letter_name_map), function(letter) grepl(letter, design, fixed=TRUE) )
+   plots_missing <- plot_letter_name_map[!(plots_in_map & plots_designed)]
+      
+   if(length(plots_missing)>0){
+      LOGGER$error(paste0("Plots missing from design: ", paste(plots_missing, collapse = ",")))
+   }
    
    plots_combined <- 
       patchwork::wrap_plots(plots, guides = "collect", design = design) &
@@ -970,7 +979,7 @@ create_report <- function(){
    LOGGER$info("Writing report to: %s", OUTPUT_PATH)
    ggsave(
       filename = OUTPUT_PATH, plot = plots_combined, 
-      device = "pdf", width = 16, height = 13, units = "in"
+      device = "pdf", width = 20, height = 12, units = "in"
    )
 }
 
