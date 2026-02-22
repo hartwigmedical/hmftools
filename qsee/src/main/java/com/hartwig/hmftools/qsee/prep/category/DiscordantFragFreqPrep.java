@@ -8,6 +8,7 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.sv.DiscordantFragType;
 import com.hartwig.hmftools.common.sv.EsveeDiscordantStats;
 import com.hartwig.hmftools.qsee.common.SampleType;
@@ -61,6 +62,7 @@ public class DiscordantFragFreqPrep implements CategoryPrep
         return EsveeDiscordantStats.read(filePath);
     }
 
+    @VisibleForTesting
     static Map<DiscordantFragGroup, Double> calcDiscordantProportions(EsveeDiscordantStats discordantStats)
     {
         Map<DiscordantFragGroup, Long> discCountPerGroup = new EnumMap<>(DiscordantFragGroup.class);
@@ -85,7 +87,8 @@ public class DiscordantFragFreqPrep implements CategoryPrep
         return discPropPerGroup;
     }
 
-    private static List<Feature> formFeatures(Map<DiscordantFragGroup, Double> discPropPerGroup)
+    @VisibleForTesting
+    static List<Feature> formFeatures(Map<DiscordantFragGroup, Double> discPropPerGroup)
     {
         List<Feature> features = new ArrayList<>();
         for(DiscordantFragGroup group : discPropPerGroup.keySet())
