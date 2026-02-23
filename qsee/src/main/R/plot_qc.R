@@ -75,12 +75,12 @@ LOGGER <- list(
 )
 
 LOGGER$debug("Running script with args:")
-LOGGER$debug(" tumor_id: %s", TUMOR_ID)
-LOGGER$debug(" normal_id: %s", NORMAL_ID)
-LOGGER$debug(" sample_features_file: %s", SAMPLE_FEATURES_FILE)
-LOGGER$debug(" cohort_percentiles_file: %s", COHORT_PERCENTILES_FILE)
-LOGGER$debug(" output_path: %s", OUTPUT_PATH)
-LOGGER$debug(" log_level: %s", GLOBAL_LOG_LEVEL)
+LOGGER$debug("  tumor_id: %s", TUMOR_ID)
+LOGGER$debug("  normal_id: %s", NORMAL_ID)
+LOGGER$debug("  sample_features_file: %s", SAMPLE_FEATURES_FILE)
+LOGGER$debug("  cohort_percentiles_file: %s", COHORT_PERCENTILES_FILE)
+LOGGER$debug("  output_path: %s", OUTPUT_PATH)
+LOGGER$debug("  log_level: %s", GLOBAL_LOG_LEVEL)
 
 ## =============================
 ## String functions
@@ -228,17 +228,6 @@ PLOTS <- list()
 ## Plot helper functions
 ## =============================
 
-plot_missing_data <- function(plot_labels = labs()){
-
-   ggplot() +
-      annotate("text", x = 0, y = 0, label = "Missing sample data") +
-      plot_labels +
-      theme(
-         axis.text = element_blank(),
-         axis.ticks = element_blank()
-      )
-}
-
 get_plot_data <- function(feature_type){
    
    LOGGER$info("Plotting featureType(%s)", feature_type)
@@ -276,14 +265,24 @@ get_plot_data <- function(feature_type){
    return(merged_data)
 }
 
+plot_missing_data <- function(plot_labels = labs()){
+   
+   LOGGER$warn("  Missing sample data - creating empty plot")
+   
+   ggplot() +
+      annotate("text", x = 0, y = 0, label = "Missing sample data") +
+      plot_labels +
+      theme(
+         axis.text = element_blank(),
+         axis.ticks = element_blank()
+      )
+}
+
 ## =============================
 ## Box plots
 ## =============================
 
-plot_boxplot <- function(
-   plot_data, x, y = "FeatureValue", plot_labels = geom_blank(), plot_type = "boxplot",
-   hlines = NULL, vlines = NULL
-){
+plot_boxplot <- function(plot_data, x, y = "FeatureValue", plot_type = "boxplot", hlines = NULL, vlines = NULL){
    
    if(FALSE){
       plot_type = "boxplot"
@@ -294,12 +293,11 @@ plot_boxplot <- function(
       y = "FeatureValue"
 
       plot_data <- get_plot_data(FEATURE_TYPE$BQR_BY_ORIG_QUAL$name)
-      plot_labels <- labs(title = "BQR by original base quality", x = "Original base quality", y = "Phred score adjustment")
       gg_facet <- facet_grid("ReadType ~ StandardMutation")
    }
    
    if(nrow(plot_data) == 0){
-      return(plot_missing_data(plot_labels))
+      LOGGER$error("Box plot failed - empty data frame")
    }
    
    sample_type_colors <- sapply(SAMPLE_TYPE, `[[`, "color")
@@ -346,8 +344,6 @@ plot_boxplot <- function(
       
       #gg_facet +
       
-      plot_labels +
-      
       theme(
          panel.grid.minor = element_blank(),
          panel.grid.major = element_blank(),
@@ -363,7 +359,12 @@ PLOTS[[FEATURE_TYPE$DUPLICATE_FREQ]] <- local({
    
    plot_labels <- labs(title = "Duplicate frequency", x = "Duplicate read count", y = "Prop. of read groups")
    
-   plot_boxplot(plot_data, x = "ReadCount", plot_labels = plot_labels) +
+   if(nrow(plot_data) == 0){
+      return(plot_missing_data(plot_labels))
+   }
+   
+   plot_boxplot(plot_data, x = "ReadCount") +
+      plot_labels +
       theme(
          panel.grid.major.y = element_line(color = "grey90", linewidth = 0.25),
          axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1)
@@ -380,11 +381,16 @@ PLOTS[[FEATURE_TYPE$DISCORDANT_FRAG_FREQ]] <- local({
       y = "Prop. of reads"
    )
    
-   plot_boxplot(plot_data, x = "DiscordantFragType", plot_labels = plot_labels) + 
+   if(nrow(plot_data) == 0){
+      return(plot_missing_data(plot_labels))
+   }
+   
+   plot_boxplot(plot_data, x = "DiscordantFragType") + 
       scale_y_continuous(
          transform = "log10", 
          labels = scales::trans_format("log10", scales::math_format(10^.x))
       ) +
+      plot_labels +
       theme(
          axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1),
       )
@@ -421,7 +427,8 @@ PLOTS[[FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD]] <- local({
       dplyr::filter(Gene %in% sample_genes_of_interest) %>% 
       dplyr::mutate(Gene = factor(Gene, sample_genes_of_interest))
    
-   plot_boxplot(plot_data, x = "Gene", plot_labels = plot_labels) + 
+   plot_boxplot(plot_data, x = "Gene") + 
+      plot_labels +
       theme(
          axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1),
       )
@@ -437,12 +444,17 @@ PLOTS[[FEATURE_TYPE$BQR_BY_ORIG_QUAL]] <- local({
       y = "Phred score adjustment"
    )
    
-   plot_boxplot(plot_data, x = "OriginalQualBin", plot_labels = plot_labels, hlines = 0) +
+   if(nrow(plot_data) == 0){
+      return(plot_missing_data(plot_labels))
+   }
+   
+   plot_boxplot(plot_data, x = "OriginalQualBin", hlines = 0) +
       facet_grid("ReadType ~ StandardMutation") +
       scale_y_continuous(
          labels = function(x){ ifelse(x > 0, paste0("+",x), x) },
          sec.axis = dup_axis(name = "Consensus type")
       ) +
+      plot_labels + 
       theme(
          axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1),
       )
@@ -459,7 +471,7 @@ PLOTS[[FEATURE_TYPE$BQR_BY_SNV96_CONTEXT]] <- local({
    }
    
    plot_boxplot(
-      plot_data, x = "StandardTrinucContext", plot_labels = plot_labels, plot_type = "pointrange", 
+      plot_data, x = "StandardTrinucContext", plot_type = "pointrange", 
       hlines = 0, vlines = c(4, 8, 12) + 0.5
    ) +
       facet_grid("ReadType ~ StandardMutation", scales = "free_x") +
@@ -467,6 +479,7 @@ PLOTS[[FEATURE_TYPE$BQR_BY_SNV96_CONTEXT]] <- local({
          labels = function(x){ ifelse(x > 0, paste0("+",x), x) },
          sec.axis = dup_axis(name = "Consensus type")
       ) +
+      plot_labels +
       theme(
          axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, size = 5),
       )
@@ -478,7 +491,7 @@ PLOTS[[FEATURE_TYPE$MS_INDEL_ERROR_RATES]] <- local({
    
    plot_labels <- labs(title = "Microsatellite indel error rates", x = "Repeat units", y = "Phred score") 
    
-   plot_boxplot(plot_data, plot_labels = plot_labels, x = "RefNumUnits", plot_type = "pointrange") +
+   plot_boxplot(plot_data, x = "RefNumUnits", plot_type = "pointrange") +
       facet_grid("ConsensusType ~ RepeatUnitType") +
       scale_x_discrete(breaks = function(x) ifelse(as.numeric(x) %% 3 == 0, x, "") ) +
       scale_y_continuous(limits = c(0, NA), sec.axis = dup_axis(name = "Consensus type")) +
@@ -506,7 +519,7 @@ PLOTS[[FEATURE_TYPE$MS_INDEL_ERROR_BIAS]] <- local({
       Vjust          = c(1.5, -0.5)
    )
    
-   plot_boxplot(plot_data, x = "RefNumUnits", plot_labels = plot_labels, hlines = 0, plot_type = "pointrange") +
+   plot_boxplot(plot_data, x = "RefNumUnits", hlines = 0, plot_type = "pointrange") +
       facet_grid("ConsensusType ~ RepeatUnitType") +
       geom_text(
          data = text_data, mapping = aes(label = Label, vjust = Vjust), 
@@ -516,23 +529,23 @@ PLOTS[[FEATURE_TYPE$MS_INDEL_ERROR_BIAS]] <- local({
       scale_y_continuous(
          labels = function(x){ ifelse(x > 0, paste0("+",x), x) },
          sec.axis = dup_axis(name = "Consensus type")
-      )
+      ) +
+      plot_labels
 })
 
 ## =============================
 ## Line / PDF
 ## =============================
 
-plot_distribution <- function(plot_data, x, plot_labels = geom_blank(), invert_normal = FALSE, mark_sample_peak = FALSE){
+plot_distribution <- function(plot_data, x, invert_normal = FALSE, mark_sample_peak = FALSE){
    
    if(FALSE){
       plot_data = get_plot_data(FEATURE_TYPE$COVERAGE_DISTRIBUTION)
-      plot_labels = labs(title = "Coverage", x = "Coverage", y = "Prop. of bases")
       x = "ReadDepth"
    }
    
    if(nrow(plot_data) == 0){
-      return(plot_missing_data(plot_labels))
+      LOGGER$error("Line/distribution plot failed - empty data frame")
    }
    
    plot_data[[x]] <- as.numeric(plot_data[[x]])
@@ -590,10 +603,8 @@ plot_distribution <- function(plot_data, x, plot_labels = geom_blank(), invert_n
       
       gg_hline + 
       gg_scale_y_continuous +
-      plot_labels +
       theme(legend.position = "none")
 }
-
 
 PLOTS[[FEATURE_TYPE$COVERAGE_DISTRIBUTION]] <- local({
    
@@ -601,10 +612,12 @@ PLOTS[[FEATURE_TYPE$COVERAGE_DISTRIBUTION]] <- local({
    
    plot_labels <- labs(title = "Coverage", x = "Coverage", y = "Prop. of bases")
    
-   plot_distribution(
-      plot_data, x = "ReadDepth", plot_labels = plot_labels, 
-      mark_sample_peak = TRUE, invert_normal = TRUE
-   )
+   if(nrow(plot_data) == 0){
+      return(plot_missing_data(plot_labels))
+   }
+   
+   plot_distribution(plot_data, x = "ReadDepth", mark_sample_peak = TRUE, invert_normal = TRUE) +
+      plot_labels
 })
 
 PLOTS[[FEATURE_TYPE$FRAG_LENGTH_DISTRIBUTION]] <- local({
@@ -613,10 +626,12 @@ PLOTS[[FEATURE_TYPE$FRAG_LENGTH_DISTRIBUTION]] <- local({
    
    plot_labels <- labs(title = "Fragment length", x = "Fragment length", y = "Prop. of fragments")
    
-   plot_distribution(
-      plot_data, x = "FragLength", plot_labels = plot_labels, 
-      mark_sample_peak = TRUE, invert_normal = TRUE
-   )
+   if(nrow(plot_data) == 0){
+      return(plot_missing_data(plot_labels))
+   }
+   
+   plot_distribution(plot_data, x = "FragLength", mark_sample_peak = TRUE, invert_normal = TRUE) +
+      plot_labels
 })
 
 PLOTS[[FEATURE_TYPE$GC_BIAS]] <- local({
@@ -625,10 +640,12 @@ PLOTS[[FEATURE_TYPE$GC_BIAS]] <- local({
    
    plot_labels <- labs(title = "GC bias", x = "GC percentage", y = "Read depth")
    
-   plot_distribution(
-      plot_data, x = "GCBucket", plot_labels = plot_labels, 
-      mark_sample_peak = FALSE, invert_normal = FALSE
-   )
+   if(nrow(plot_data) == 0){
+      return(plot_missing_data(plot_labels))
+   }
+   
+   plot_distribution(plot_data, x = "GCBucket", mark_sample_peak = FALSE, invert_normal = FALSE) +
+      plot_labels
 })
 
 ## =============================
@@ -781,7 +798,7 @@ PLOTS[[FEATURE_TYPE$SUMMARY_TABLE]] <- local({
          if(is.null(subplot))
             next
          
-         LOGGER$debug(" featureGroup(%s) numberFormat(%s)", feature_group, number_format)
+         LOGGER$debug("  featureGroup(%s) numberFormat(%s)", feature_group, number_format)
          
          plot_index <- plot_index + 1
          
