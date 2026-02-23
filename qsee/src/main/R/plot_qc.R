@@ -83,7 +83,7 @@ LOGGER$debug(" output_path: %s", OUTPUT_PATH)
 LOGGER$debug(" log_level: %s", GLOBAL_LOG_LEVEL)
 
 ## =============================
-## Helper functions
+## String functions
 ## =============================
 
 preordered_factor <- function(x){ factor(x, unique(x)) }
@@ -97,11 +97,10 @@ preordered_factors <- function(df){
    }))
 }
 
-named_vector <- function(values, names){ setNames(values, names) }
+KEY_VALUE_SEP <- "="
+GROUP_SEP <- ";"
 
-named_vector_from_df <- function(df, column){ setNames(df[[column]], rownames(df)) }
-
-df_to_strings <- function(df, key_value_sep = "=", group_sep = ";"){
+df_to_strings <- function(df, key_value_sep = KEY_VALUE_SEP, group_sep = GROUP_SEP){
    
    key_value_strings <- lapply(colnames(df), function(colname){
       paste0(colname, key_value_sep, df[[colname]])
@@ -112,7 +111,7 @@ df_to_strings <- function(df, key_value_sep = "=", group_sep = ";"){
    return(strings)
 }
 
-strings_to_df <- function(strings, key_value_sep = "=", group_sep = ";"){
+strings_to_df <- function(strings, key_value_sep = KEY_VALUE_SEP, group_sep = GROUP_SEP){
    
    strings_split <- strsplit(as.character(strings), group_sep, fixed=TRUE)
    
@@ -127,6 +126,18 @@ strings_to_df <- function(strings, key_value_sep = "=", group_sep = ";"){
    df[is.na(df)] <- ""
    
    return(df)
+}
+
+has_multiple_fields <- function(strings, key_value_sep = KEY_VALUE_SEP, group_sep = GROUP_SEP){
+   
+   multifield_string_regex <- paste0(".+", key_value_sep, ".+", group_sep, "*")
+   is_multifield_string <- grepl(multifield_string_regex, strings)
+   
+   if(unique(is_multifield_string) > 1){
+      LOGGER$error("Found a mix of single and multi field strings: %s", paste(strings, collapse = "\n"))
+   }
+   
+   return(all(is_multifield_string))
 }
 
 ## =============================
@@ -229,7 +240,7 @@ plot_missing_data <- function(plot_labels = labs()){
       )
 }
 
-get_prelim_plot_data <- function(feature_type_name){
+get_plot_data <- function(feature_type_name){
    
    ## Select rows
    cohort_data <- COHORT_DATA %>% dplyr::filter(FeatureType == feature_type_name)
@@ -239,26 +250,25 @@ get_prelim_plot_data <- function(feature_type_name){
       return(data.frame())
    }
    
-   ## Only select the features cohort data that are present in the sample
-   cohort_data <- cohort_data[
-      paste(cohort_data$SampleType, cohort_data$FeatureName) %in% 
-      paste(sample_data$SampleType, sample_data$FeatureName)
-   ,]
-   
    merged_data <- merge(
       sample_data, cohort_data, 
       by=c("SampleType", "SourceTool", "FeatureType", "FeatureName"), 
-      all = TRUE, sort = FALSE
+      all.x = TRUE, ## Only select the features in the cohort data that are present in the sample
+      sort = FALSE
    )
    
    ## Split multi-field strings
-   merged_data <- 
-      cbind(
-         merged_data,
-         strings_to_df(merged_data$FeatureName),
-         strings_to_df(merged_data$PlotMetadata)
-      ) %>% 
-      select(-FeatureName, -PlotMetadata)
+   for(colname in colnames(merged_data)){
+      column <- merged_data[[colname]]
+      
+      if(!has_multiple_fields(column))
+         next
+      
+      column_as_df <- strings_to_df(column)
+      
+      merged_data[[colname]] <- NULL
+      merged_data <- cbind(merged_data, column_as_df)
+   }
 
    merged_data <- preordered_factors(merged_data)
    
@@ -282,7 +292,7 @@ plot_boxplot <- function(
       x = "OriginalQualBin"
       y = "FeatureValue"
 
-      plot_data <- get_prelim_plot_data(FEATURE_TYPE$BQR_BY_ORIG_QUAL$name)
+      plot_data <- get_plot_data(FEATURE_TYPE$BQR_BY_ORIG_QUAL$name)
       plot_labels <- labs(title = "BQR by original base quality", x = "Original base quality", y = "Phred score adjustment")
       gg_facet <- facet_grid("ReadType ~ StandardMutation")
    }
@@ -348,7 +358,7 @@ plot_boxplot <- function(
 
 FEATURE_TYPE$DUPLICATE_FREQ$plot_func <- function(){
    
-   plot_data <- get_prelim_plot_data(FEATURE_TYPE$DUPLICATE_FREQ$name)
+   plot_data <- get_plot_data(FEATURE_TYPE$DUPLICATE_FREQ$name)
    
    plot_labels <- labs(title = "Duplicate frequency", x = "Duplicate read count", y = "Prop. of read groups")
    
@@ -361,7 +371,7 @@ FEATURE_TYPE$DUPLICATE_FREQ$plot_func <- function(){
 
 FEATURE_TYPE$DISCORDANT_FRAG_FREQ$plot_func <- function(){
    
-   plot_data <- get_prelim_plot_data(FEATURE_TYPE$DISCORDANT_FRAG_FREQ$name)
+   plot_data <- get_plot_data(FEATURE_TYPE$DISCORDANT_FRAG_FREQ$name)
    
    plot_labels <- labs(
       title = "Discordant fragment frequency", 
@@ -381,7 +391,7 @@ FEATURE_TYPE$DISCORDANT_FRAG_FREQ$plot_func <- function(){
 
 FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD$plot_func <- function(){
    
-   plot_data <- get_prelim_plot_data(FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD$name)
+   plot_data <- get_plot_data(FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD$name)
    
    MIN_MISSED_VARIANT_LIKELIHOOD <- 0.01
    TOP_N_GENES <- 20
@@ -418,7 +428,7 @@ FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD$plot_func <- function(){
 
 FEATURE_TYPE$BQR_BY_ORIG_QUAL$plot_func <- function(){
    
-   plot_data <- get_prelim_plot_data(FEATURE_TYPE$BQR_BY_ORIG_QUAL$name)
+   plot_data <- get_plot_data(FEATURE_TYPE$BQR_BY_ORIG_QUAL$name)
    
    plot_labels <- labs(
       title = "BQR by original base quality", 
@@ -439,7 +449,7 @@ FEATURE_TYPE$BQR_BY_ORIG_QUAL$plot_func <- function(){
 
 FEATURE_TYPE$BQR_BY_SNV96_CONTEXT$plot_func <- function(){
    
-   plot_data <- get_prelim_plot_data(FEATURE_TYPE$BQR_BY_SNV96_CONTEXT$name)
+   plot_data <- get_plot_data(FEATURE_TYPE$BQR_BY_SNV96_CONTEXT$name)
    
    plot_labels <- labs(title = "BQR by SNV96 context", x = "Mutation context", y = "Phred score adjustment")
    
@@ -463,7 +473,7 @@ FEATURE_TYPE$BQR_BY_SNV96_CONTEXT$plot_func <- function(){
 
 FEATURE_TYPE$MS_INDEL_ERROR_RATES$plot_func <- function(){
    
-   plot_data <- get_prelim_plot_data(FEATURE_TYPE$MS_INDEL_ERROR_RATES$name)
+   plot_data <- get_plot_data(FEATURE_TYPE$MS_INDEL_ERROR_RATES$name)
    
    plot_labels <- labs(title = "Microsatellite indel error rates", x = "Repeat units", y = "Phred score") 
    
@@ -478,7 +488,7 @@ FEATURE_TYPE$MS_INDEL_ERROR_RATES$plot_func <- function(){
 
 FEATURE_TYPE$MS_INDEL_ERROR_BIAS$plot_func <- function(){
    
-   plot_data <- get_prelim_plot_data(FEATURE_TYPE$MS_INDEL_ERROR_BIAS$name)
+   plot_data <- get_plot_data(FEATURE_TYPE$MS_INDEL_ERROR_BIAS$name)
    
    plot_labels <- labs(title = "Microsatellite indel error bias", x = "Repeat units", y = "Phred score diff.")
    
@@ -515,7 +525,7 @@ FEATURE_TYPE$MS_INDEL_ERROR_BIAS$plot_func <- function(){
 plot_distribution <- function(plot_data, x, plot_labels = geom_blank(), invert_normal = FALSE, mark_sample_peak = FALSE){
    
    if(FALSE){
-      plot_data = get_prelim_plot_data(FEATURE_TYPE$COVERAGE_DISTRIBUTION$name)
+      plot_data = get_plot_data(FEATURE_TYPE$COVERAGE_DISTRIBUTION$name)
       plot_labels = labs(title = "Coverage", x = "Coverage", y = "Prop. of bases")
       x = "ReadDepth"
    }
@@ -585,7 +595,7 @@ plot_distribution <- function(plot_data, x, plot_labels = geom_blank(), invert_n
 
 FEATURE_TYPE$COVERAGE_DISTRIBUTION$plot_func <- function(){
    
-   plot_data <- get_prelim_plot_data(FEATURE_TYPE$COVERAGE_DISTRIBUTION$name)
+   plot_data <- get_plot_data(FEATURE_TYPE$COVERAGE_DISTRIBUTION$name)
    
    plot_labels <- labs(title = "Coverage", x = "Coverage", y = "Prop. of bases")
    
@@ -597,7 +607,7 @@ FEATURE_TYPE$COVERAGE_DISTRIBUTION$plot_func <- function(){
 
 FEATURE_TYPE$FRAG_LENGTH_DISTRIBUTION$plot_func <- function(){
    
-   plot_data <- get_prelim_plot_data(FEATURE_TYPE$FRAG_LENGTH_DISTRIBUTION$name)
+   plot_data <- get_plot_data(FEATURE_TYPE$FRAG_LENGTH_DISTRIBUTION$name)
    
    plot_labels <- labs(title = "Fragment length", x = "Fragment length", y = "Prop. of fragments")
    
@@ -609,7 +619,7 @@ FEATURE_TYPE$FRAG_LENGTH_DISTRIBUTION$plot_func <- function(){
 
 FEATURE_TYPE$GC_BIAS$plot_func <- function(){
    
-   plot_data <- get_prelim_plot_data(FEATURE_TYPE$GC_BIAS$name)
+   plot_data <- get_plot_data(FEATURE_TYPE$GC_BIAS$name)
    
    plot_labels <- labs(title = "GC bias", x = "GC percentage", y = "Read depth")
    
@@ -623,29 +633,7 @@ FEATURE_TYPE$GC_BIAS$plot_func <- function(){
 ## Summary table
 ## =============================
 
-get_summary_table_data <- function(){
-
-   cohort_data <- COHORT_DATA %>% dplyr::filter(FeatureType == FEATURE_TYPE$SUMMARY_TABLE$name)
-   sample_data <- SAMPLE_DATA %>% dplyr::filter(FeatureType == FEATURE_TYPE$SUMMARY_TABLE$name)
-
-   merged_data <- merge(
-      sample_data, cohort_data,
-      by=c("SampleType", "SourceTool", "FeatureType", "FeatureName"),
-      all = TRUE, sort = FALSE
-   )
-
-   merged_data <- cbind(
-      merged_data,
-      strings_to_df(merged_data$PlotMetadata)
-   )
-   merged_data$PlotMetadata <- NULL
-
-   merged_data <- preordered_factors(merged_data)
-
-   return(merged_data)
-}
-
-SUMMARY_TABLE_DATA <- get_summary_table_data()
+SUMMARY_TABLE_DATA <- get_plot_data(FEATURE_TYPE$SUMMARY_TABLE$name)
 
 plot_sub_table <- function(feature_group, number_format = "NUMBER", show_title = TRUE, show_sample_type_label = TRUE){
 
@@ -844,7 +832,7 @@ create_report <- function(){
    plots_missing <- plot_letter_name_map[!(plots_in_map & plots_designed)]
       
    if(length(plots_missing)>0){
-      LOGGER$error(paste0("Plots missing from design: ", paste(plots_missing, collapse = ",")))
+      LOGGER$error("Plots missing from design: %s", paste(plots_missing, collapse = ","))
    }
    
    plots_combined <- patchwork::wrap_plots(plots, guides = "collect", design = design) #&
