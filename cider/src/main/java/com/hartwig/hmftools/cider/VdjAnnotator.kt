@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.cider
 
+import com.hartwig.hmftools.cider.CiderConstants.ANNOTATION_V_J_OVERLAP_MAX
 import com.hartwig.hmftools.cider.CiderConstants.MATCHES_REF_KNOWN_CDR3_AA
 import com.hartwig.hmftools.cider.annotation.AlignmentAnnotation
 import com.hartwig.hmftools.cider.annotation.AlignmentStatus
@@ -43,7 +44,8 @@ data class VdjAnnotation(val vdj: VDJSequence,
         MIN_LENGTH,
         MAX_LENGTH,
         CDR3_DELETED,
-        NO_HIGH_QUAL_SUPPORT
+        NO_HIGH_QUAL_SUPPORT,
+        V_J_OVERLAP
     }
     
     val passesFilter : Boolean get()
@@ -339,7 +341,14 @@ class VdjAnnotator(private val adaptor: IVJReadLayoutAdaptor)
             }
             else
             {
-                if (alignmentAnnotation.status == AlignmentStatus.V_D ||
+                val vGene = alignmentAnnotation.vGene
+                val jGene = alignmentAnnotation.jGene
+                if (vGene != null && jGene != null &&
+                    vGene.alignment.queryRange.endInclusive - jGene.alignment.queryRange.start >= ANNOTATION_V_J_OVERLAP_MAX)
+                {
+                    filters.add(VdjAnnotation.Filter.V_J_OVERLAP)
+                }
+                else if (alignmentAnnotation.status == AlignmentStatus.V_D ||
                     alignmentAnnotation.status == AlignmentStatus.D_J ||
                     alignmentAnnotation.status == AlignmentStatus.V_ONLY ||
                     alignmentAnnotation.status == AlignmentStatus.J_ONLY)

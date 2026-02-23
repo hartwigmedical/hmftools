@@ -58,6 +58,7 @@ object CiderConstants
     // We require that the alignment covers at least this many anchor bases.
     // This is required because sometimes a valid rearrangement can chop off the last few bases of the anchor.
     const val ANNOTATION_ANCHOR_BASE_OVERLAP = 5
+    const val ANNOTATION_V_J_OVERLAP_MAX = 30
 
     // For the scoring function, the match/mismatch score 1/-4 optimizes the scoring for 100% identical sequences and 1/-1 for 75% identical
     // sequences. The default for NCBI Blastn is 2/-3, which is optimal for 89% identical sequences. BWA uses 1/-4.

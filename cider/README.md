@@ -104,7 +104,7 @@ Each collapsed sequence is either marked as PASS or one or more of the following
 - **MIN_LENGTH** - CDR3 nt sequence must be at least 5 AA in length (including anchor C & W/F)
 - **MATCHES_REF** - (NonSplitRead+vNonSplitReads >=2 AND either vAlignedReads or jAlignedReads=0), OR alignment matches to reference contig, OR the sequences matches known list (see below).
 - **NO_HIGH_QUAL_SUPPORT** - Some base in the CDR3 is not supported by any high base quality base in any read.
-- **VJ_OVERLAP** - V and J genes were aligned and annotated, but the V and J aligned regions are in the wrong order. Likely indicates a nonfunctional CDR3 sequence.
+- **V_J_OVERLAP** - V and J genes were aligned and annotated, but the V and J aligned regions are in the wrong order.
 
 Note that CIDER has a small list of CDR3 sequences known to match the reference genome, which are not found by alignment. These will always be marked as `MATCHES_REF`.  The list of amino acid sequences is:
 - CTXGPKXELRT
