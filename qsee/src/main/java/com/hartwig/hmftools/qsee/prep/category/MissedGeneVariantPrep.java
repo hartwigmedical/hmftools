@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.metrics.GeneDepth;
 import com.hartwig.hmftools.common.metrics.GeneDepthFile;
@@ -43,7 +44,8 @@ public class MissedGeneVariantPrep implements CategoryPrep
         return GeneDepthFile.read(filePath);
     }
 
-    private static List<String> getReportableGenes(List<DriverGene> driverGenes, SampleType sampleType)
+    @VisibleForTesting
+    static List<String> getReportableGenes(List<DriverGene> driverGenes, SampleType sampleType)
     {
         List<String> reportableGenes = new ArrayList<>();
 
@@ -62,7 +64,8 @@ public class MissedGeneVariantPrep implements CategoryPrep
         return reportableGenes;
     }
 
-    private static List<Feature> getMissedVariantLikelihoods(List<GeneDepth> geneDepths, List<String> reportableGenes)
+    @VisibleForTesting
+    static List<Feature> getMissedVariantLikelihoods(List<GeneDepth> geneDepths, List<String> reportableGenes)
     {
         List<GeneDepth> selectedGeneDepths = geneDepths.stream().filter(x -> reportableGenes.contains(x.Gene)).toList();
 
