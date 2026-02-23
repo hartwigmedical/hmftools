@@ -46,7 +46,7 @@ object CiderConstants
 
     // Require a match of minimum ~20 bases. If we want to match D segment that is shorter
     // we will need a higher cut off, maybe 10, but will get many false positive hits that are longer but more mismatches
-    const val ANNOTATION_ALIGN_SCORE_MIN = 19
+    const val ANNOTATION_ALIGN_SCORE_MIN = 15
     const val ANNOTATION_VDJ_FLANK_BASES = 300
     // filter out matches that have too low identity
     // reason for doing this is that we use match/mismatch of 1/-4, in worst case we can
@@ -71,7 +71,7 @@ object CiderConstants
     const val ALIGNER_GAP_OPENING_SCORE = -5
     const val ALIGNER_GAP_EXTEND_SCORE = -2
 
-    const val ALIGNER_WORD_SIZE = 9
+    const val ALIGNER_WORD_SIZE = 8
 
     // blast uses v38
     val BLAST_REF_GENOME_VERSION = RefGenomeVersion.V38
