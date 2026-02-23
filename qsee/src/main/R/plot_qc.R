@@ -149,18 +149,6 @@ SAMPLE_TYPE <- list(
    NORMAL = list(name = "NORMAL", human_readable_name = "Normal", color = "#4A7DB4")
 )
 
-GROUP_TYPE <- list(
-   COHORT = list(name = "COHORT"),
-   SAMPLE = list(name = "SAMPLE")
-)
-
-SAMPLE_GROUP <- list(
-   TUMOR_COHORT = list(name = "TUMOR_COHORT"),
-   NORMAL_COHORT = list(name = "NORMAL_COHORT"),
-   TUMOR_SAMPLE = list(name = "TUMOR_SAMPLE"),
-   NORMAL_SAMPLE = list(name = "NORMAL_SAMPLE")
-)
-
 FEATURE_TYPE <- list(
    SUMMARY_TABLE              = "SUMMARY_TABLE",
    COVERAGE_DISTRIBUTION      = "COVERAGE_DISTRIBUTION",
