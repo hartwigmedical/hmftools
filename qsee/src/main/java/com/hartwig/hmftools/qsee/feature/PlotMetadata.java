@@ -2,6 +2,7 @@ package com.hartwig.hmftools.qsee.feature;
 
 import com.hartwig.hmftools.qsee.common.MultiFieldStringBuilder;
 import com.hartwig.hmftools.qsee.status.QcStatus;
+import com.hartwig.hmftools.qsee.status.QcStatusType;
 
 public class PlotMetadata
 {
@@ -10,10 +11,10 @@ public class PlotMetadata
     private final NumberFormat mNumberFormat;
     private final QcStatus mQcStatus;
 
-    public static final String FLD_FEATURE_GROUP = "FeatureGroup";
-    public static final String FLD_PLOT_LABEL = "PlotLabel";
-    public static final String FLD_NUMBER_FORMAT = "NumberFormat";
-    public static final String FLD_QC_STATUS = "QcStatus";
+    public static final String FIELD_FEATURE_GROUP = "FeatureGroup";
+    public static final String FIELD_PLOT_LABEL = "PlotLabel";
+    public static final String FIELD_NUMBER_FORMAT = "NumberFormat";
+    public static final String FIELD_QC_STATUS = "QcStatus";
 
     public PlotMetadata(String featureGroup, String plotLabel, NumberFormat numberFormat, QcStatus qcStatus)
     {
@@ -36,12 +37,36 @@ public class PlotMetadata
     {
         MultiFieldStringBuilder builder = new MultiFieldStringBuilder();
 
-        builder.add(FLD_FEATURE_GROUP, mFeatureGroup);
-        builder.add(FLD_PLOT_LABEL, mPlotLabel);
-        builder.add(FLD_NUMBER_FORMAT, mNumberFormat.toString());
-        builder.add(FLD_QC_STATUS, mQcStatus.toString());
+        builder.add(FIELD_FEATURE_GROUP, mFeatureGroup);
+        builder.add(FIELD_PLOT_LABEL, mPlotLabel);
+        builder.add(FIELD_NUMBER_FORMAT, mNumberFormat.toString());
+        builder.add(FIELD_QC_STATUS, getFormattedQcStatus());
 
         return builder.toString();
+    }
+
+    private String getFormattedQcStatus()
+    {
+        QcStatusType qcStatusType = mQcStatus.type();
+        if(qcStatusType == QcStatusType.NONE)
+            return "";
+
+        double thresholdValue = mQcStatus.threshold();
+        boolean isPercent = mNumberFormat == NumberFormat.PERCENT;
+
+        if(isPercent)
+            thresholdValue = thresholdValue * 100;
+
+        boolean isInteger = thresholdValue % 1 == 0;
+
+        String thresholdString = isInteger
+                ? String.valueOf((int) thresholdValue)
+                : String.valueOf(thresholdValue);
+
+        if(isPercent)
+            thresholdString = thresholdString + "%";
+
+        return qcStatusType + " " + mQcStatus.operator().operatorString() + thresholdString;
     }
 
     public static class Builder
