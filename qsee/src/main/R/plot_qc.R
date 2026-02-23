@@ -162,18 +162,17 @@ SAMPLE_GROUP <- list(
 )
 
 FEATURE_TYPE <- list(
-   ## Plot functions are defined later
-   SUMMARY_TABLE              = list(name = "SUMMARY_TABLE", plot_func = NULL),
-   COVERAGE_DISTRIBUTION      = list(name = "COVERAGE_DISTRIBUTION", plot_func = NULL),
-   FRAG_LENGTH_DISTRIBUTION   = list(name = "FRAG_LENGTH_DISTRIBUTION", plot_func = NULL),
-   GC_BIAS                    = list(name = "GC_BIAS", plot_func = NULL),
-   DUPLICATE_FREQ             = list(name = "DUPLICATE_FREQ", plot_func = NULL),
-   DISCORDANT_FRAG_FREQ       = list(name = "DISCORDANT_FRAG_FREQ", plot_func = NULL),
-   MISSED_VARIANT_LIKELIHOOD  = list(name = "MISSED_VARIANT_LIKELIHOOD", plot_func = NULL),
-   BQR_BY_SNV96_CONTEXT       = list(name = "BQR_PER_SNV96_CONTEXT", plot_func = NULL),
-   BQR_BY_ORIG_QUAL           = list(name = "BQR_PER_ORIG_QUAL", plot_func = NULL),
-   MS_INDEL_ERROR_RATES       = list(name = "MS_INDEL_ERROR_RATES", plot_func = NULL),
-   MS_INDEL_ERROR_BIAS        = list(name = "MS_INDEL_ERROR_BIAS", plot_func = NULL)
+   SUMMARY_TABLE              = "SUMMARY_TABLE",
+   COVERAGE_DISTRIBUTION      = "COVERAGE_DISTRIBUTION",
+   FRAG_LENGTH_DISTRIBUTION   = "FRAG_LENGTH_DISTRIBUTION",
+   GC_BIAS                    = "GC_BIAS",
+   DUPLICATE_FREQ             = "DUPLICATE_FREQ",
+   DISCORDANT_FRAG_FREQ       = "DISCORDANT_FRAG_FREQ",
+   MISSED_VARIANT_LIKELIHOOD  = "MISSED_VARIANT_LIKELIHOOD",
+   BQR_BY_SNV96_CONTEXT       = "BQR_PER_SNV96_CONTEXT",
+   BQR_BY_ORIG_QUAL           = "BQR_PER_ORIG_QUAL",
+   MS_INDEL_ERROR_RATES       = "MS_INDEL_ERROR_RATES",
+   MS_INDEL_ERROR_BIAS        = "MS_INDEL_ERROR_BIAS"
 )
 
 PERCENTILE_PREFIX <- "Pct_"
@@ -225,6 +224,8 @@ load_sample_features <- function(){
 COHORT_DATA <- load_cohort_percentiles()
 SAMPLE_DATA <- load_sample_features()
 
+PLOTS <- list()
+
 ## =============================
 ## Plot helper functions
 ## =============================
@@ -240,11 +241,13 @@ plot_missing_data <- function(plot_labels = labs()){
       )
 }
 
-get_plot_data <- function(feature_type_name){
+get_plot_data <- function(feature_type){
+   
+   LOGGER$info("Plotting featureType(%s)", feature_type)
    
    ## Select rows
-   cohort_data <- COHORT_DATA %>% dplyr::filter(FeatureType == feature_type_name)
-   sample_data <- SAMPLE_DATA %>% dplyr::filter(FeatureType == feature_type_name)
+   cohort_data <- COHORT_DATA %>% dplyr::filter(FeatureType == feature_type)
+   sample_data <- SAMPLE_DATA %>% dplyr::filter(FeatureType == feature_type)
    
    if(nrow(sample_data) == 0){
       return(data.frame())
@@ -356,9 +359,8 @@ plot_boxplot <- function(
       )
 }
 
-FEATURE_TYPE$DUPLICATE_FREQ$plot_func <- function(){
-   
-   plot_data <- get_plot_data(FEATURE_TYPE$DUPLICATE_FREQ$name)
+PLOTS[[FEATURE_TYPE$DUPLICATE_FREQ]] <- local({
+   plot_data <- get_plot_data(FEATURE_TYPE$DUPLICATE_FREQ)
    
    plot_labels <- labs(title = "Duplicate frequency", x = "Duplicate read count", y = "Prop. of read groups")
    
@@ -367,11 +369,11 @@ FEATURE_TYPE$DUPLICATE_FREQ$plot_func <- function(){
          panel.grid.major.y = element_line(color = "grey90", linewidth = 0.25),
          axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1)
       )
-}
+})
 
-FEATURE_TYPE$DISCORDANT_FRAG_FREQ$plot_func <- function(){
+PLOTS[[FEATURE_TYPE$DISCORDANT_FRAG_FREQ]] <- local({
    
-   plot_data <- get_plot_data(FEATURE_TYPE$DISCORDANT_FRAG_FREQ$name)
+   plot_data <- get_plot_data(FEATURE_TYPE$DISCORDANT_FRAG_FREQ)
    
    plot_labels <- labs(
       title = "Discordant fragment frequency", 
@@ -387,11 +389,11 @@ FEATURE_TYPE$DISCORDANT_FRAG_FREQ$plot_func <- function(){
       theme(
          axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1),
       )
-}
+})
 
-FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD$plot_func <- function(){
+PLOTS[[FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD]] <- local({
    
-   plot_data <- get_plot_data(FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD$name)
+   plot_data <- get_plot_data(FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD)
    
    MIN_MISSED_VARIANT_LIKELIHOOD <- 0.01
    TOP_N_GENES <- 20
@@ -424,11 +426,11 @@ FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD$plot_func <- function(){
       theme(
          axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1),
       )
-}
+})
 
-FEATURE_TYPE$BQR_BY_ORIG_QUAL$plot_func <- function(){
+PLOTS[[FEATURE_TYPE$BQR_BY_ORIG_QUAL]] <- local({
    
-   plot_data <- get_plot_data(FEATURE_TYPE$BQR_BY_ORIG_QUAL$name)
+   plot_data <- get_plot_data(FEATURE_TYPE$BQR_BY_ORIG_QUAL)
    
    plot_labels <- labs(
       title = "BQR by original base quality", 
@@ -445,11 +447,11 @@ FEATURE_TYPE$BQR_BY_ORIG_QUAL$plot_func <- function(){
       theme(
          axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1),
       )
-}
+})
 
-FEATURE_TYPE$BQR_BY_SNV96_CONTEXT$plot_func <- function(){
+PLOTS[[FEATURE_TYPE$BQR_BY_SNV96_CONTEXT]] <- local({
    
-   plot_data <- get_plot_data(FEATURE_TYPE$BQR_BY_SNV96_CONTEXT$name)
+   plot_data <- get_plot_data(FEATURE_TYPE$BQR_BY_SNV96_CONTEXT)
    
    plot_labels <- labs(title = "BQR by SNV96 context", x = "Mutation context", y = "Phred score adjustment")
    
@@ -469,11 +471,11 @@ FEATURE_TYPE$BQR_BY_SNV96_CONTEXT$plot_func <- function(){
       theme(
          axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, size = 5),
       )
-}
+})
 
-FEATURE_TYPE$MS_INDEL_ERROR_RATES$plot_func <- function(){
+PLOTS[[FEATURE_TYPE$MS_INDEL_ERROR_RATES]] <- local({
    
-   plot_data <- get_plot_data(FEATURE_TYPE$MS_INDEL_ERROR_RATES$name)
+   plot_data <- get_plot_data(FEATURE_TYPE$MS_INDEL_ERROR_RATES)
    
    plot_labels <- labs(title = "Microsatellite indel error rates", x = "Repeat units", y = "Phred score") 
    
@@ -484,11 +486,11 @@ FEATURE_TYPE$MS_INDEL_ERROR_RATES$plot_func <- function(){
       theme(
          panel.grid.major = element_line(color = "grey90", linewidth = 0.25)
       )
-}
+})
 
-FEATURE_TYPE$MS_INDEL_ERROR_BIAS$plot_func <- function(){
+PLOTS[[FEATURE_TYPE$MS_INDEL_ERROR_BIAS]] <- local({
    
-   plot_data <- get_plot_data(FEATURE_TYPE$MS_INDEL_ERROR_BIAS$name)
+   plot_data <- get_plot_data(FEATURE_TYPE$MS_INDEL_ERROR_BIAS)
    
    plot_labels <- labs(title = "Microsatellite indel error bias", x = "Repeat units", y = "Phred score diff.")
    
@@ -516,7 +518,7 @@ FEATURE_TYPE$MS_INDEL_ERROR_BIAS$plot_func <- function(){
          labels = function(x){ ifelse(x > 0, paste0("+",x), x) },
          sec.axis = dup_axis(name = "Consensus type")
       )
-}
+})
 
 ## =============================
 ## Line / PDF
@@ -525,7 +527,7 @@ FEATURE_TYPE$MS_INDEL_ERROR_BIAS$plot_func <- function(){
 plot_distribution <- function(plot_data, x, plot_labels = geom_blank(), invert_normal = FALSE, mark_sample_peak = FALSE){
    
    if(FALSE){
-      plot_data = get_plot_data(FEATURE_TYPE$COVERAGE_DISTRIBUTION$name)
+      plot_data = get_plot_data(FEATURE_TYPE$COVERAGE_DISTRIBUTION)
       plot_labels = labs(title = "Coverage", x = "Coverage", y = "Prop. of bases")
       x = "ReadDepth"
    }
@@ -593,9 +595,9 @@ plot_distribution <- function(plot_data, x, plot_labels = geom_blank(), invert_n
 }
 
 
-FEATURE_TYPE$COVERAGE_DISTRIBUTION$plot_func <- function(){
+PLOTS[[FEATURE_TYPE$COVERAGE_DISTRIBUTION]] <- local({
    
-   plot_data <- get_plot_data(FEATURE_TYPE$COVERAGE_DISTRIBUTION$name)
+   plot_data <- get_plot_data(FEATURE_TYPE$COVERAGE_DISTRIBUTION)
    
    plot_labels <- labs(title = "Coverage", x = "Coverage", y = "Prop. of bases")
    
@@ -603,11 +605,11 @@ FEATURE_TYPE$COVERAGE_DISTRIBUTION$plot_func <- function(){
       plot_data, x = "ReadDepth", plot_labels = plot_labels, 
       mark_sample_peak = TRUE, invert_normal = TRUE
    )
-}
+})
 
-FEATURE_TYPE$FRAG_LENGTH_DISTRIBUTION$plot_func <- function(){
+PLOTS[[FEATURE_TYPE$FRAG_LENGTH_DISTRIBUTION]] <- local({
    
-   plot_data <- get_plot_data(FEATURE_TYPE$FRAG_LENGTH_DISTRIBUTION$name)
+   plot_data <- get_plot_data(FEATURE_TYPE$FRAG_LENGTH_DISTRIBUTION)
    
    plot_labels <- labs(title = "Fragment length", x = "Fragment length", y = "Prop. of fragments")
    
@@ -615,11 +617,11 @@ FEATURE_TYPE$FRAG_LENGTH_DISTRIBUTION$plot_func <- function(){
       plot_data, x = "FragLength", plot_labels = plot_labels, 
       mark_sample_peak = TRUE, invert_normal = TRUE
    )
-}
+})
 
-FEATURE_TYPE$GC_BIAS$plot_func <- function(){
+PLOTS[[FEATURE_TYPE$GC_BIAS]] <- local({
    
-   plot_data <- get_plot_data(FEATURE_TYPE$GC_BIAS$name)
+   plot_data <- get_plot_data(FEATURE_TYPE$GC_BIAS)
    
    plot_labels <- labs(title = "GC bias", x = "GC percentage", y = "Read depth")
    
@@ -627,13 +629,13 @@ FEATURE_TYPE$GC_BIAS$plot_func <- function(){
       plot_data, x = "GCBucket", plot_labels = plot_labels, 
       mark_sample_peak = FALSE, invert_normal = FALSE
    )
-}
+})
 
 ## =============================
 ## Summary table
 ## =============================
 
-SUMMARY_TABLE_DATA <- get_plot_data(FEATURE_TYPE$SUMMARY_TABLE$name)
+SUMMARY_TABLE_DATA <- get_plot_data(FEATURE_TYPE$SUMMARY_TABLE)
 
 plot_sub_table <- function(feature_group, number_format = "NUMBER", show_title = TRUE, show_sample_type_label = TRUE){
 
@@ -744,7 +746,7 @@ plot_sub_table <- function(feature_group, number_format = "NUMBER", show_title =
    subplots_combined
 }
 
-FEATURE_TYPE$SUMMARY_TABLE$plot_func <- function(feature_group){
+PLOTS[[FEATURE_TYPE$SUMMARY_TABLE]] <- local({
    
    plots <- list()
    
@@ -786,36 +788,32 @@ FEATURE_TYPE$SUMMARY_TABLE$plot_func <- function(feature_group){
    heights <- sapply(plots, function(p){ p$height })
    plots_combined <- patchwork::wrap_plots(plots, ncol = 1, heights = heights)
    plots_combined
-}
+})
 
 ## =============================
 ## Combine plots
 ## =============================
 
-create_report <- function(){
-
-   plots <- list()
-   for(i in 1:length(FEATURE_TYPE)){
-      feature_type <- FEATURE_TYPE[[i]]
-      LOGGER$info("Plotting featureType(%s)", feature_type$name)
-      plots[[feature_type$name]] <- feature_type$plot_func() %>% patchwork::free("label")
-   }
-
+create_report <- local({
+   
    LOGGER$info("Combining plots")
+   
+   plots <- lapply(PLOTS, function(p){ patchwork::free(p, "label") })
+
    plot_letter_name_map <- c(
-      "A" = FEATURE_TYPE$SUMMARY_TABLE$name,
+      "A" = FEATURE_TYPE$SUMMARY_TABLE,
       
-      "B" = FEATURE_TYPE$COVERAGE_DISTRIBUTION$name,
-      "C" = FEATURE_TYPE$FRAG_LENGTH_DISTRIBUTION$name,
-      "D" = FEATURE_TYPE$GC_BIAS$name,
-      "E" = FEATURE_TYPE$DISCORDANT_FRAG_FREQ$name,
-      "F" = FEATURE_TYPE$DUPLICATE_FREQ$name,
-      "G" = FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD$name,
+      "B" = FEATURE_TYPE$COVERAGE_DISTRIBUTION,
+      "C" = FEATURE_TYPE$FRAG_LENGTH_DISTRIBUTION,
+      "D" = FEATURE_TYPE$GC_BIAS,
+      "E" = FEATURE_TYPE$DISCORDANT_FRAG_FREQ,
+      "F" = FEATURE_TYPE$DUPLICATE_FREQ,
+      "G" = FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD,
       
-      "H" = FEATURE_TYPE$BQR_BY_ORIG_QUAL$name,
-      "I" = FEATURE_TYPE$BQR_BY_SNV96_CONTEXT$name,
-      "J" = FEATURE_TYPE$MS_INDEL_ERROR_RATES$name,
-      "K" = FEATURE_TYPE$MS_INDEL_ERROR_BIAS$name
+      "H" = FEATURE_TYPE$BQR_BY_ORIG_QUAL,
+      "I" = FEATURE_TYPE$BQR_BY_SNV96_CONTEXT,
+      "J" = FEATURE_TYPE$MS_INDEL_ERROR_RATES,
+      "K" = FEATURE_TYPE$MS_INDEL_ERROR_BIAS
    )
 
    plots <- plots[plot_letter_name_map]
@@ -827,7 +825,7 @@ create_report <- function(){
       AAJJKK##
    "
    
-   plots_in_map <- plot_letter_name_map %in% sapply(FEATURE_TYPE, `[[`, "name")
+   plots_in_map <- plot_letter_name_map %in% unlist(FEATURE_TYPE, use.names = FALSE)
    plots_designed <- sapply(names(plot_letter_name_map), function(letter) grepl(letter, design, fixed=TRUE) )
    plots_missing <- plot_letter_name_map[!(plots_in_map & plots_designed)]
       
@@ -842,9 +840,7 @@ create_report <- function(){
       filename = OUTPUT_PATH, plot = plots_combined, 
       device = "pdf", width = 20, height = 12, units = "in"
    )
-}
-
-create_report()
+})
 
 
 
