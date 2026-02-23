@@ -166,11 +166,15 @@ FEATURE_TYPE <- list(
 PERCENTILE_PREFIX <- "Pct_"
 
 NAMED_PERCENTILES <- list(
+   LIM_LOWER = list(name = "PctLimLower", colname = paste0(PERCENTILE_PREFIX, 0)),
+   
    MIN   = list(name = "PctMin"  , colname = paste0(PERCENTILE_PREFIX,  5)),
    LOWER = list(name = "PctLower", colname = paste0(PERCENTILE_PREFIX, 25)),
    MID   = list(name = "PctMid"  , colname = paste0(PERCENTILE_PREFIX, 50)),
    UPPER = list(name = "PctUpper", colname = paste0(PERCENTILE_PREFIX, 75)),
-   MAX   = list(name = "PctMax"  , colname = paste0(PERCENTILE_PREFIX, 95))
+   MAX   = list(name = "PctMax"  , colname = paste0(PERCENTILE_PREFIX, 95)),
+   
+   LIM_UPPER = list(name = "PctLimUpper", colname = paste0(PERCENTILE_PREFIX, 100))
 )
 
 NUMBER_FORMATS <- list(
@@ -658,7 +662,12 @@ plot_sub_table <- function(feature_group, number_format = "NUMBER", show_title =
    ## Plot config =============================
    axis_trans <- "identity"
    axis_breaks <- waiver()
-   axis_limits <- c(0, NA)
+   
+   axis_limits <- c(
+      min(c(0, plot_data$PctLimLower)), 
+      max(plot_data$PctLimUpper)
+   )
+   
    axis_fmt_func <- function(x) return(x)
    value_fmt_func <- function(x) ifelse(x < 1, signif(x, 2), round(x, 1))
 
