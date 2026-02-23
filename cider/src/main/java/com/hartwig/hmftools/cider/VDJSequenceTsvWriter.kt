@@ -54,7 +54,6 @@ object VDJSequenceTsvWriter
         vAlignEnd,
         dGene,
         dGeneSupplementary,
-        dPIdent,
         dAlignStart,
         dAlignEnd,
         jGene,
@@ -152,7 +151,6 @@ object VDJSequenceTsvWriter
                 Column.dGene -> csvPrinter.print(alignmentAnnotation?.dGene?.gene?.geneAllele)
                 Column.dGeneSupplementary -> csvPrinter.print(formatGeneSupplementary(
                     alignmentAnnotation?.dGene?.supplementaryGenes, alignmentAnnotation?.dGene?.gene))
-                Column.dPIdent -> csvPrinter.print(alignmentAnnotation?.dGene?.comparison?.pctIdentity)
                 Column.dAlignStart -> csvPrinter.print(alignmentAnnotation?.dGene?.alignment?.queryRange?.start?.plus(alignmentOffset))
                 Column.dAlignEnd -> csvPrinter.print(alignmentAnnotation?.dGene?.alignment?.queryRange?.endInclusive?.plus(alignmentOffset + 1))
                 Column.jGene -> csvPrinter.print(alignmentAnnotation?.jGene?.gene?.geneAllele)
