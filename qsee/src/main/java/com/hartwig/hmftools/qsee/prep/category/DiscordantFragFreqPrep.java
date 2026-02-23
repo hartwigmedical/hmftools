@@ -14,6 +14,7 @@ import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.Feature;
 import com.hartwig.hmftools.qsee.feature.FeatureKey;
 import com.hartwig.hmftools.qsee.feature.FeatureType;
+import com.hartwig.hmftools.qsee.common.MultiFieldStringBuilder;
 import com.hartwig.hmftools.qsee.feature.SourceTool;
 import com.hartwig.hmftools.qsee.prep.CategoryPrep;
 import com.hartwig.hmftools.qsee.prep.CommonPrepConfig;
@@ -89,7 +90,7 @@ public class DiscordantFragFreqPrep implements CategoryPrep
         List<Feature> features = new ArrayList<>();
         for(DiscordantFragGroup group : discPropPerGroup.keySet())
         {
-            String featureName = FeatureKey.formSingleFieldName(FIELD_FRAG_TYPE, group.getName());
+            String featureName = MultiFieldStringBuilder.formSingleField(FIELD_FRAG_TYPE, group.getName());
             FeatureKey key = new FeatureKey(featureName, FeatureType.DISCORDANT_FRAG_FREQ, SOURCE_TOOL);
             Feature feature = new Feature(key, discPropPerGroup.get(group));
             features.add(feature);

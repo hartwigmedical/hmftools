@@ -21,13 +21,21 @@ import org.jetbrains.annotations.NotNull;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.Feature;
-import com.hartwig.hmftools.qsee.feature.QcStatus;
+import com.hartwig.hmftools.qsee.feature.FeatureKey;
+import com.hartwig.hmftools.qsee.feature.FeatureType;
+import com.hartwig.hmftools.qsee.feature.PlotMetadata;
 import com.hartwig.hmftools.qsee.feature.SourceTool;
 import com.hartwig.hmftools.qsee.prep.CategoryPrep;
 import com.hartwig.hmftools.qsee.prep.CategoryPrepTask;
 import com.hartwig.hmftools.qsee.prep.CommonPrepConfig;
 import com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature;
 import com.hartwig.hmftools.qsee.prep.category.table.SummaryTableInputData;
+import com.hartwig.hmftools.qsee.status.ComparisonOperator;
+import com.hartwig.hmftools.qsee.status.QcStatusType;
+import com.hartwig.hmftools.qsee.status.QcThresholdRegistry;
+import com.hartwig.hmftools.qsee.status.QcStatus;
+import com.hartwig.hmftools.qsee.status.QcThreshold;
+import com.hartwig.hmftools.qsee.status.ThresholdGroup;
 
 public class SummaryTablePrep implements CategoryPrep
 {
@@ -47,33 +55,13 @@ public class SummaryTablePrep implements CategoryPrep
         EnumMap<SummaryTableFeature, Feature> featuresMap = new EnumMap<>(SummaryTableFeature.class);
 
         putFeatures(featuresMap, inputData.purityContext());
-        putFeatures(featuresMap, inputData.bamMetricSummary());
-        putFeatures(featuresMap, inputData.bamMetricCoverage());
+        putFeatures(featuresMap, inputData.bamMetricSummary(), sampleType);
+        putFeatures(featuresMap, inputData.bamMetricCoverage(), sampleType);
         putFeatures(featuresMap, inputData.bamFlagStats());
 
         printMissingInputFiles(inputData, sampleType, sampleId);
 
         return featuresMap.values().stream().toList();
-    }
-
-    private static void putFeature(
-            EnumMap<SummaryTableFeature, Feature> featuresMap,
-            SummaryTableFeature summaryTableFeature,
-            double value,
-            String qcStatusString
-    ){
-        QcStatus qcStatus = new QcStatus(qcStatusString, summaryTableFeature.qcThreshold() );
-        Feature feature = new Feature(summaryTableFeature.key(), value, qcStatus);
-        featuresMap.put(summaryTableFeature, feature);
-    }
-
-    private static void putFeature(
-            EnumMap<SummaryTableFeature, Feature> featuresMap,
-            SummaryTableFeature summaryTableFeature,
-            double value
-    ){
-        Feature feature = new Feature(summaryTableFeature.key(), value);
-        featuresMap.put(summaryTableFeature, feature);
     }
 
     @VisibleForTesting
@@ -82,91 +70,157 @@ public class SummaryTablePrep implements CategoryPrep
         if(purityContext == null)
             return;
 
-        EnumMap<PurpleQCStatus, String> qcStatusStrings = getPurpleQCStatusStrings(purityContext);
+        EnumMap<PurpleQCStatus, QcStatus> qcStatuses = qcStatusFrom(purityContext);
 
-        putFeature(featuresMap, PURITY, purityContext.bestFit().purity(), qcStatusStrings.get(PurpleQCStatus.WARN_LOW_PURITY));
+        putFeature(featuresMap, PURITY, purityContext.bestFit().purity(),
+                qcStatuses.get(PurpleQCStatus.WARN_LOW_PURITY));
+
         putFeature(featuresMap, PLOIDY, purityContext.bestFit().ploidy());
-        putFeature(featuresMap, TINC, purityContext.qc().tincLevel(), getTincStatus(qcStatusStrings));
-        putFeature(featuresMap, DELETED_GENES, purityContext.qc().deletedGenes(), qcStatusStrings.get(PurpleQCStatus.WARN_DELETED_GENES));
+
+        putFeature(featuresMap, TINC, purityContext.qc().tincLevel(),
+                getTincQcStatus(qcStatuses));
+
+        putFeature(featuresMap, DELETED_GENES, purityContext.qc().deletedGenes(),
+                qcStatuses.get(PurpleQCStatus.WARN_DELETED_GENES));
+
         putFeature(featuresMap, UNSUPPORTED_CN_SEGMENTS, purityContext.qc().unsupportedCopyNumberSegments(),
-                qcStatusStrings.get(PurpleQCStatus.WARN_HIGH_COPY_NUMBER_NOISE));
+                qcStatuses.get(PurpleQCStatus.WARN_HIGH_COPY_NUMBER_NOISE));
+
         putFeature(featuresMap, LOH_PERCENT, purityContext.qc().lohPercent());
-        putFeature(featuresMap, CONTAMINATION, purityContext.qc().contamination(), qcStatusStrings.get(PurpleQCStatus.FAIL_CONTAMINATION));
+
+        putFeature(featuresMap, CONTAMINATION, purityContext.qc().contamination(),
+                qcStatuses.get(PurpleQCStatus.FAIL_CONTAMINATION));
+
         putFeature(featuresMap, TMB_SMALL_VARIANTS, purityContext.tumorMutationalBurdenPerMb());
         putFeature(featuresMap, TMB_MS_INDELS, purityContext.microsatelliteIndelsPerMb());
         putFeature(featuresMap, TMB_STRUCTURAL_VARIANTS, purityContext.svTumorMutationalBurden() / MB_PER_GENOME);
     }
 
-    private static EnumMap<PurpleQCStatus, String> getPurpleQCStatusStrings(PurityContext purityContext)
+    @VisibleForTesting
+    static EnumMap<PurpleQCStatus, QcStatus> qcStatusFrom(PurityContext purityContext)
     {
-        EnumMap<PurpleQCStatus, String> qcStatusStrings = new EnumMap<>(PurpleQCStatus.class);
+        EnumMap<PurpleQCStatus, QcStatus> qcStatuses = new EnumMap<>(PurpleQCStatus.class);
 
         for(PurpleQCStatus purpleQcStatus : PurpleQCStatus.values())
         {
-            boolean sampleHasQcStatus = purityContext.qc().status().contains(purpleQcStatus);
+            boolean purpleQcStatusExists = purityContext.qc().status().contains(purpleQcStatus);
 
-            String qcStatusString = sampleHasQcStatus
-                    ? purpleQcStatus.toString()
-                    : QcStatus.NO_STATUS;
+            QcStatus qcStatus = purpleQcStatusExists
+                    ? convertQcStatus(purpleQcStatus)
+                    : QcStatus.createEmpty();
 
-            qcStatusStrings.put(purpleQcStatus, qcStatusString);
+            qcStatuses.put(purpleQcStatus, qcStatus);
         }
 
-        return qcStatusStrings;
+        return qcStatuses;
     }
 
-    private static String getTincStatus(EnumMap<PurpleQCStatus, String> qcStatusStrings)
+    private static QcStatus convertQcStatus(PurpleQCStatus purpleQCStatus)
     {
-        String tincStatus = qcStatusStrings.get(PurpleQCStatus.FAIL_NO_TUMOR);
+        return switch(purpleQCStatus)
+        {
+            case PASS -> QcStatus.createEmpty();
+
+            case WARN_DELETED_GENES ->
+                    new QcStatus(QcStatusType.WARN, ComparisonOperator.GREATER_THAN, PurpleQCStatus.MAX_DELETED_GENES);
+
+            case WARN_HIGH_COPY_NUMBER_NOISE ->
+                    new QcStatus(QcStatusType.WARN, ComparisonOperator.GREATER_THAN, PurpleQCStatus.MAX_UNSUPPORTED_SEGMENTS);
+
+            case WARN_LOW_PURITY ->
+                    new QcStatus(QcStatusType.WARN, ComparisonOperator.LESS_THAN, PurpleQCStatus.MIN_PURITY);
+
+            case WARN_TINC ->
+                    new QcStatus(QcStatusType.WARN, ComparisonOperator.GREATER_THAN, PurpleQCStatus.TINC_WARN_LEVEL);
+
+            case FAIL_TINC ->
+                    new QcStatus(QcStatusType.FAIL, ComparisonOperator.GREATER_THAN_OR_EQUAL, PurpleQCStatus.TINC_FAIL_LEVEL);
+
+            case FAIL_CONTAMINATION ->
+                    new QcStatus(QcStatusType.FAIL, ComparisonOperator.GREATER_THAN, PurpleQCStatus.MAX_CONTAMINATION);
+
+            case FAIL_NO_TUMOR -> new QcStatus(QcStatusType.FAIL, null, Double.NaN);
+
+            case WARN_GENDER_MISMATCH -> new QcStatus(QcStatusType.WARN, null, Double.NaN);
+
+            default ->
+                    throw new IllegalArgumentException("QC threshold not defined for PurpleQCStatus(" + purpleQCStatus + ")");
+        };
+    }
+
+    private static QcStatus getTincQcStatus(EnumMap<PurpleQCStatus, QcStatus> qcStatuses)
+    {
+        QcStatus tincStatus = qcStatuses.get(PurpleQCStatus.FAIL_NO_TUMOR);
 
         if(tincStatus == null)
-            tincStatus = qcStatusStrings.get(PurpleQCStatus.WARN_TINC);
+            tincStatus = qcStatuses.get(PurpleQCStatus.WARN_TINC);
 
         if(tincStatus == null)
-            tincStatus = QcStatus.NO_STATUS;
+            tincStatus = QcStatus.createEmpty();
 
         return tincStatus;
     }
 
     @VisibleForTesting
-    static void putFeatures(EnumMap<SummaryTableFeature, Feature> featuresMap, BamMetricSummary bamMetricSummary)
+    static void putFeatures(EnumMap<SummaryTableFeature, Feature> featuresMap, BamMetricSummary bamMetricSummary, SampleType sampleType)
     {
         if(bamMetricSummary == null)
             return;
 
-        putFeature(featuresMap, MEAN_COVERAGE, bamMetricSummary.meanCoverage());
-        putFeature(featuresMap, LOW_MAP_QUAL, bamMetricSummary.lowMapQualPercent());
-        putFeature(featuresMap, LOW_BASE_QUAL, bamMetricSummary.lowBaseQualPercent());
-        putFeature(featuresMap, DUPLICATE_READS, (double) bamMetricSummary.duplicateReads() / bamMetricSummary.totalReads());
-        putFeature(featuresMap, DUAL_STRAND_READS, (double) bamMetricSummary.dualStrandReads() / bamMetricSummary.totalReads());
+        putFeature(featuresMap, MEAN_COVERAGE, bamMetricSummary.meanCoverage(),
+                QcThresholdRegistry.getThreshold(sampleType, MEAN_COVERAGE));
+
+        putFeature(featuresMap, LOW_MAP_QUAL, bamMetricSummary.lowMapQualPercent(),
+                QcThresholdRegistry.getCommonThreshold(LOW_MAP_QUAL));
+
+        putFeature(featuresMap, LOW_BASE_QUAL, bamMetricSummary.lowBaseQualPercent(),
+                QcThresholdRegistry.getCommonThreshold(LOW_BASE_QUAL));
+
+        putFeature(featuresMap, DUPLICATE_READS, (double) bamMetricSummary.duplicateReads() / bamMetricSummary.totalReads(),
+                QcThresholdRegistry.getCommonThreshold(DUPLICATE_READS));
+
+        putFeature(featuresMap, DUAL_STRAND_READS, (double) bamMetricSummary.dualStrandReads() / bamMetricSummary.totalReads(),
+                QcThresholdRegistry.getCommonThreshold(DUAL_STRAND_READS));
     }
 
     @VisibleForTesting
-    static void putFeatures(EnumMap<SummaryTableFeature, Feature> featuresMap, BamMetricCoverage bamMetricCoverage)
+    static void putFeatures(EnumMap<SummaryTableFeature, Feature> featuresMap, BamMetricCoverage bamMetricCoverage, SampleType sampleType)
     {
         if(bamMetricCoverage == null)
             return;
 
-        putFeature(featuresMap, MIN_COVERAGE_10, calcPropBasesWithMinCoverage(bamMetricCoverage, 10));
-        putFeature(featuresMap, MIN_COVERAGE_20, calcPropBasesWithMinCoverage(bamMetricCoverage, 20));
-        putFeature(featuresMap, MIN_COVERAGE_30, calcPropBasesWithMinCoverage(bamMetricCoverage, 30));
-        putFeature(featuresMap, MIN_COVERAGE_60, calcPropBasesWithMinCoverage(bamMetricCoverage, 60));
-        putFeature(featuresMap, MIN_COVERAGE_100, calcPropBasesWithMinCoverage(bamMetricCoverage, 100));
-        putFeature(featuresMap, MIN_COVERAGE_250, calcPropBasesWithMinCoverage(bamMetricCoverage, 250));
-    }
+        List<SummaryTableFeature> coverageAboveXFeatures = List.of(
+                COVERAGE_ABOVE_10, COVERAGE_ABOVE_20, COVERAGE_ABOVE_30, COVERAGE_ABOVE_60, COVERAGE_ABOVE_100, COVERAGE_ABOVE_250);
 
-    private static double calcPropBasesWithMinCoverage(BamMetricCoverage bamMetricCoverage, int coverageThreshold)
-    {
-        List<ValueFrequency> coverageBaseCounts = bamMetricCoverage.Coverage;
+        for(SummaryTableFeature coverageAboveXFeature : coverageAboveXFeatures)
+        {
+            int coverageThreshold = switch(coverageAboveXFeature)
+            {
+                case COVERAGE_ABOVE_10 -> 10;
+                case COVERAGE_ABOVE_20 -> 20;
+                case COVERAGE_ABOVE_30 -> 30;
+                case COVERAGE_ABOVE_60 -> 60;
+                case COVERAGE_ABOVE_100 -> 100;
+                case COVERAGE_ABOVE_250 -> 250;
+                default -> throw new IllegalStateException("Unexpected min coverage feature: " + coverageAboveXFeature);
+            };
 
-        long totalBases = coverageBaseCounts.stream().mapToLong(x -> x.Count).sum();
+            List<ValueFrequency> coverageBaseCounts = bamMetricCoverage.Coverage;
 
-        long basesAboveCoverageThres = coverageBaseCounts.stream()
-                .filter(x -> x.Value >= coverageThreshold)
-                .mapToLong(x -> x.Count)
-                .sum();
+            long totalBases = coverageBaseCounts.stream().mapToLong(x -> x.Count).sum();
 
-        return (double) basesAboveCoverageThres / totalBases;
+            long basesAboveCoverage = coverageBaseCounts.stream()
+                    .filter(x -> x.Value >= coverageThreshold)
+                    .mapToLong(x -> x.Count)
+                    .sum();
+
+            double propBasesAboveCoverage = (double) basesAboveCoverage / totalBases;
+
+            QcThreshold qcThreshold = QcThresholdRegistry.getThreshold(sampleType, coverageAboveXFeature);
+            QcStatus qcStatus = qcThreshold.getQcStatus(propBasesAboveCoverage);
+
+            putFeature(featuresMap, coverageAboveXFeature, propBasesAboveCoverage, qcStatus);
+        }
     }
 
     @VisibleForTesting
@@ -175,7 +229,44 @@ public class SummaryTablePrep implements CategoryPrep
         if(bamFlagStats == null)
             return;
 
-        putFeature(featuresMap, MAPPED_PROPORTION, bamFlagStats.mappedProportion());
+        QcStatus qcStatus = QcThresholdRegistry.getThreshold(ThresholdGroup.COMMON, MAPPED_PROPORTION).getQcStatus(bamFlagStats.mappedProportion());
+        putFeature(featuresMap, MAPPED_PROPORTION, bamFlagStats.mappedProportion(), qcStatus);
+    }
+
+    private static void putFeature(
+            EnumMap<SummaryTableFeature, Feature> featuresMap,
+            SummaryTableFeature summaryTableFeature,
+            double value,
+            QcStatus qcStatus
+    ){
+        FeatureKey key = new FeatureKey(summaryTableFeature.toString(), FeatureType.SUMMARY_TABLE, SOURCE_TOOL);
+
+        PlotMetadata metadata = PlotMetadata.builder()
+                .featureGroup(summaryTableFeature.group().humanReadableName())
+                .plotLabel(summaryTableFeature.plotLabel())
+                .numberFormat(summaryTableFeature.numberFormat())
+                .qcStatus(qcStatus)
+                .build();
+
+        Feature feature = new Feature(key, value, metadata);
+        featuresMap.put(summaryTableFeature, feature);
+    }
+
+    private static void putFeature(
+            EnumMap<SummaryTableFeature, Feature> featuresMap,
+            SummaryTableFeature summaryTableFeature,
+            double value,
+            QcThreshold qcThreshold
+    ){
+        putFeature(featuresMap, summaryTableFeature, value, qcThreshold.getQcStatus(value));
+    }
+
+    private static void putFeature(
+            EnumMap<SummaryTableFeature, Feature> featuresMap,
+            SummaryTableFeature summaryTableFeature,
+            double value
+    ){
+        putFeature(featuresMap, summaryTableFeature, value, QcStatus.createEmpty());
     }
 
     private void printMissingInputFiles(SummaryTableInputData inputData, @NotNull SampleType sampleType, String sampleId)

@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.codon.Codons.isStopCodon;
 import static com.hartwig.hmftools.common.codon.Nucleotides.reverseComplementBases;
 import static com.hartwig.hmftools.sage.vis.AminoAcidEvent.START_LOST;
 import static com.hartwig.hmftools.sage.vis.AminoAcidEvent.STOP;
+import static com.hartwig.hmftools.sage.vis.SageVisConstants.REF_BUFFER_SIZE;
 
 import java.util.ArrayDeque;
 import java.util.Collections;
@@ -236,7 +237,7 @@ public final class AminoAcidUtil
                                 break;
 
                             final int refPosStart = min(aaRegion.region().start(), variant.position() - 1);
-                            final int refPosEnd = min(renderRegion.end() + 100, refGenome.getChromosomeLength(variant.chromosome()));
+                            final int refPosEnd = min(renderRegion.end() + REF_BUFFER_SIZE, refGenome.getChromosomeLength(variant.chromosome()));
                             String refBases = refGenome.getBaseString(variant.chromosome(), refPosStart, refPosEnd);
                             int variantIdx = variant.position() - refPosStart;
                             String altBases = refBases.substring(0, variantIdx)
@@ -295,8 +296,9 @@ public final class AminoAcidUtil
                             if(aaRegion.region().end() < renderRegion.start())
                                 break;
 
-                            final int refPosStart = max(renderRegion.start() - 100, 1);
-                            final int refPosEnd = max(aaRegion.region().end(), variant.position() + 1);
+                            final int chrLength = refGenome.getChromosomeLength(variant.chromosome());
+                            final int refPosStart = max(renderRegion.start() - REF_BUFFER_SIZE, 1);
+                            final int refPosEnd = min(max(aaRegion.region().end(), variant.position() + REF_BUFFER_SIZE), chrLength);
                             String refBases = refGenome.getBaseString(variant.chromosome(), refPosStart, refPosEnd);
                             int variantIdx = variant.position() - refPosStart;
                             String altBases = refBases.substring(0, variantIdx)

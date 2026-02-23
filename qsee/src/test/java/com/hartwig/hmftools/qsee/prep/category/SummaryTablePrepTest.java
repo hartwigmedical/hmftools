@@ -7,8 +7,10 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
+import com.hartwig.hmftools.common.metrics.BamFlagStats;
 import com.hartwig.hmftools.common.metrics.BamMetricCoverage;
 import com.hartwig.hmftools.common.metrics.BamMetricSummary;
+import com.hartwig.hmftools.common.metrics.ImmutableBamFlagStats;
 import com.hartwig.hmftools.common.metrics.ImmutableBamMetricSummary;
 import com.hartwig.hmftools.common.metrics.ValueFrequency;
 import com.hartwig.hmftools.common.purple.FittedPurity;
@@ -25,24 +27,50 @@ import com.hartwig.hmftools.common.purple.PurpleQC;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.purple.RunMode;
 import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
+import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.Feature;
 import com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature;
+import com.hartwig.hmftools.qsee.status.QcStatus;
 
 import org.junit.Test;
 
 public class SummaryTablePrepTest
 {
     @Test
+    public void canMapPurpleQCStatusToQCStatus()
+    {
+        List<PurpleQCStatus> purpleQcStatuses = List.of(PurpleQCStatus.values());
+        PurityContext purityContext = createTestPurityContext(purpleQcStatuses);
+        EnumMap<PurpleQCStatus, QcStatus> qcStatuses = SummaryTablePrep.qcStatusFrom(purityContext);
+        assertEquals(purpleQcStatuses.size(), qcStatuses.size());
+    }
+
+    @Test
+    public void canCalcPropBasesAboveCoverage()
+    {
+        EnumMap<SummaryTableFeature, Feature> featuresMap = new EnumMap<>(SummaryTableFeature.class);
+        BamMetricCoverage bamMetricCoverage = createTestBamMetricCoverage();
+        SummaryTablePrep.putFeatures(featuresMap, bamMetricCoverage, SampleType.TUMOR);
+
+        assertEquals(0.9, featuresMap.get(SummaryTableFeature.COVERAGE_ABOVE_10).value(), 0.01);
+        assertEquals(0.7, featuresMap.get(SummaryTableFeature.COVERAGE_ABOVE_30).value(), 0.01);
+        assertEquals(0.6, featuresMap.get(SummaryTableFeature.COVERAGE_ABOVE_100).value(), 0.01);
+        assertEquals(0.4, featuresMap.get(SummaryTableFeature.COVERAGE_ABOVE_250).value(), 0.01);
+    }
+
+    @Test
     public void allSummaryTableFeaturesExtracted()
     {
-        PurityContext purityContext = createTestPurityContext();
+        PurityContext purityContext = createTestPurityContext(List.of(PurpleQCStatus.PASS));
         BamMetricSummary bamMetricSummary = createTestBamMetricSummary();
         BamMetricCoverage bamMetricCoverage = createTestBamMetricCoverage();
+        BamFlagStats bamFlagStats = createTestBamFlagStats();
 
         EnumMap<SummaryTableFeature, Feature> featuresMap = new EnumMap<>(SummaryTableFeature.class);
         SummaryTablePrep.putFeatures(featuresMap, purityContext);
-        SummaryTablePrep.putFeatures(featuresMap, bamMetricSummary);
-        SummaryTablePrep.putFeatures(featuresMap, bamMetricCoverage);
+        SummaryTablePrep.putFeatures(featuresMap, bamMetricSummary, SampleType.TUMOR);
+        SummaryTablePrep.putFeatures(featuresMap, bamMetricCoverage, SampleType.TUMOR);
+        SummaryTablePrep.putFeatures(featuresMap, bamFlagStats);
 
         Set<SummaryTableFeature> allFeatures = EnumSet.allOf(SummaryTableFeature.class);
         Set<SummaryTableFeature> populatedFeatures = featuresMap.keySet();
@@ -51,20 +79,7 @@ public class SummaryTablePrepTest
         assertEquals(allFeatures, populatedFeatures);
     }
 
-    @Test
-    public void canCalcPropBasesWithMinCoverage()
-    {
-        EnumMap<SummaryTableFeature, Feature> featuresMap = new EnumMap<>(SummaryTableFeature.class);
-        BamMetricCoverage bamMetricCoverage = createTestBamMetricCoverage();
-        SummaryTablePrep.putFeatures(featuresMap, bamMetricCoverage);
-
-        assertEquals(0.9, featuresMap.get(SummaryTableFeature.MIN_COVERAGE_10).value(), 0.01);
-        assertEquals(0.7, featuresMap.get(SummaryTableFeature.MIN_COVERAGE_30).value(), 0.01);
-        assertEquals(0.6, featuresMap.get(SummaryTableFeature.MIN_COVERAGE_100).value(), 0.01);
-        assertEquals(0.4, featuresMap.get(SummaryTableFeature.MIN_COVERAGE_250).value(), 0.01);
-    }
-
-    private PurityContext createTestPurityContext()
+    private PurityContext createTestPurityContext(List<PurpleQCStatus> purpleQcStatuses)
     {
         FittedPurity fittedPurity = ImmutableFittedPurity.builder()
                 .purity(0.85)
@@ -85,7 +100,7 @@ public class SummaryTablePrepTest
                 .build();
 
         PurpleQC qc = ImmutablePurpleQC.builder()
-                .status(List.of(PurpleQCStatus.PASS))
+                .status(purpleQcStatuses)
                 .method(FittedPurityMethod.NORMAL)
                 .copyNumberSegments(100)
                 .unsupportedCopyNumberSegments(1)
@@ -158,5 +173,20 @@ public class SummaryTablePrepTest
         );
 
         return new BamMetricCoverage(coverageData);
+    }
+
+    private BamFlagStats createTestBamFlagStats()
+    {
+        return ImmutableBamFlagStats.builder()
+                .uniqueReadCount(0)
+                .secondaryCount(0)
+                .supplementaryCount(0)
+                .duplicateProportion(0.0)
+                .mappedProportion(0.0)
+                .pairedInSequencingProportion(0.0)
+                .properlyPairedProportion(0.0)
+                .withItselfAndMateMappedProportion(0.0)
+                .singletonProportion(0.0)
+                .build();
     }
 }

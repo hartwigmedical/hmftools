@@ -170,6 +170,13 @@ public class SageApplication implements AutoCloseable
         configBuilder.checkAndParseCommandLine(args);
 
         SageApplication application = new SageApplication(configBuilder);
+        if(application.mConfig.Common.Visualiser.Enabled && application.mConfig.Common.Visualiser.noVariants())
+        {
+            SG_LOGGER.info("No reportable variants to visualise. Exiting.");
+            application.close();
+            return;
+        }
+
         application.run();
         application.close();
     }

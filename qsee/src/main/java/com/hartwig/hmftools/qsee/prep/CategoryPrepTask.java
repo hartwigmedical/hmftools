@@ -3,7 +3,6 @@ package com.hartwig.hmftools.qsee.prep;
 import static com.hartwig.hmftools.qsee.common.QseeConstants.QC_LOGGER;
 
 import java.io.IOException;
-import java.nio.file.NoSuchFileException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -115,6 +114,7 @@ public class CategoryPrepTask implements Runnable
         catch(Exception e)
         {
             QC_LOGGER.error("sampleType({}) category({}) - Failed to run prep for sample({})", mCategoryPrep.name(), mSampleId, e);
+            e.printStackTrace();
             System.exit(1);
         }
 

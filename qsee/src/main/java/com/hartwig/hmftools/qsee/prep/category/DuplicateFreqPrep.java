@@ -5,9 +5,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.hartwig.hmftools.common.redux.DuplicateFrequency;
+import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.Feature;
 import com.hartwig.hmftools.qsee.feature.FeatureKey;
 import com.hartwig.hmftools.qsee.feature.FeatureType;
+import com.hartwig.hmftools.qsee.common.MultiFieldStringBuilder;
 import com.hartwig.hmftools.qsee.feature.SourceTool;
 import com.hartwig.hmftools.qsee.prep.CategoryPrep;
 import com.hartwig.hmftools.qsee.prep.CommonPrepConfig;
@@ -46,7 +48,7 @@ public class DuplicateFreqPrep implements CategoryPrep
         {
             if(dupFreq.ReadCount < MAX_DUP_READS)
             {
-                String featureName = FeatureKey.formSingleFieldName(FIELD_READ_COUNT, String.valueOf(dupFreq.ReadCount));
+                String featureName = MultiFieldStringBuilder.formSingleField(FIELD_READ_COUNT, String.valueOf(dupFreq.ReadCount));
                 FeatureKey key = new FeatureKey(featureName, FeatureType.DUPLICATE_FREQ, SOURCE_TOOL);
                 features.add(new Feature(key, (double) dupFreq.Count / totalCount));
             }
@@ -56,7 +58,7 @@ public class DuplicateFreqPrep implements CategoryPrep
             }
         }
 
-        String aboveMaxDupName = FeatureKey.formSingleFieldName(FIELD_READ_COUNT, String.format("≥%s",MAX_DUP_READS));
+        String aboveMaxDupName = MultiFieldStringBuilder.formSingleField(FIELD_READ_COUNT, String.format("≥%s",MAX_DUP_READS));
         FeatureKey aboveMaxDupKey = new FeatureKey(aboveMaxDupName, FeatureType.DUPLICATE_FREQ, SOURCE_TOOL);
         features.add(new Feature(aboveMaxDupKey, (double) aboveMaxDupReadsCount / totalCount));
 
@@ -64,8 +66,13 @@ public class DuplicateFreqPrep implements CategoryPrep
     }
 
     @Override
-    public List<Feature> extractSampleData(String sampleId) throws IOException
+    public List<Feature> extractSampleData(String sampleId, SampleType sampleType) throws IOException
     {
+        if(sampleType != SampleType.TUMOR)
+        {
+            return List.of();
+        }
+
         List<DuplicateFrequency> dupFreqs = loadDuplicateFrequencies(sampleId);
         List<Feature> features = normaliseAndBinCounts(dupFreqs);
         return features;

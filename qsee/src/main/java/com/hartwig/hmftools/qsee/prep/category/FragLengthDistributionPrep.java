@@ -9,6 +9,7 @@ import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.Feature;
 import com.hartwig.hmftools.qsee.feature.FeatureKey;
 import com.hartwig.hmftools.qsee.feature.FeatureType;
+import com.hartwig.hmftools.qsee.common.MultiFieldStringBuilder;
 import com.hartwig.hmftools.qsee.feature.SourceTool;
 import com.hartwig.hmftools.qsee.prep.CategoryPrep;
 import com.hartwig.hmftools.qsee.prep.CommonPrepConfig;
@@ -44,7 +45,7 @@ public class FragLengthDistributionPrep implements CategoryPrep
         return fragmentLengthCounts.stream().map(x -> {
             double propBases = (double) x.Count / totalFragments;
 
-            String featureName = FeatureKey.formSingleFieldName(FIELD_FRAG_LENGTH, String.valueOf(x.Value));
+            String featureName = MultiFieldStringBuilder.formSingleField(FIELD_FRAG_LENGTH, String.valueOf(x.Value));
             FeatureKey key = new FeatureKey(featureName, FeatureType.FRAG_LENGTH_DISTRIBUTION, SOURCE_TOOL);
 
             return new Feature(key, propBases);
