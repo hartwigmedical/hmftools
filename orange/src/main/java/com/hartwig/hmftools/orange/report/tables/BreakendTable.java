@@ -18,9 +18,8 @@ import org.jetbrains.annotations.NotNull;
 
 public final class BreakendTable
 {
-    @NotNull
-    public static Table build(@NotNull String title, float width, @NotNull List<BreakendEntry> breakends,
-            @NotNull ReportResources reportResources)
+    public static Table build(
+            final String title, float width, final List<BreakendEntry> breakends, final ReportResources reportResources)
     {
         if(breakends.isEmpty())
         {
@@ -48,8 +47,7 @@ public final class BreakendTable
         return new Tables(reportResources).createWrapping(table, title);
     }
 
-    @NotNull
-    private static List<BreakendEntry> sort(@NotNull List<BreakendEntry> breakends)
+    private static List<BreakendEntry> sort(final List<BreakendEntry> breakends)
     {
         return breakends.stream().sorted((breakend1, breakend2) ->
         {
@@ -72,8 +70,7 @@ public final class BreakendTable
         }).collect(Collectors.toList());
     }
 
-    @NotNull
-    private static String displayGene(@NotNull BreakendEntry breakend)
+    private static String displayGene(final BreakendEntry breakend)
     {
         String addon = Strings.EMPTY;
         if(!breakend.canonical())

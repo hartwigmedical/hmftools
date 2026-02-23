@@ -18,9 +18,8 @@ import org.jetbrains.annotations.NotNull;
 
 public final class ViralPresenceTable
 {
-    @NotNull
-    public static Table build(@NotNull String title, float width, @NotNull List<VirusInterpreterEntry> viruses,
-            @NotNull ReportResources reportResources)
+    public static Table build(
+            final String title, float width, final List<VirusInterpreterEntry> viruses, final ReportResources reportResources)
     {
         if(viruses.isEmpty())
         {
@@ -49,7 +48,7 @@ public final class ViralPresenceTable
         return new Tables(reportResources).createWrapping(table, title);
     }
 
-    private static String display(VirusLikelihoodType virusLikelihoodType)
+    private static String display(final VirusLikelihoodType virusLikelihoodType)
     {
         switch(virusLikelihoodType)
         {
@@ -63,8 +62,7 @@ public final class ViralPresenceTable
         throw new IllegalStateException();
     }
 
-    @NotNull
-    private static String expectedClonalCoverageField(@NotNull VirusInterpreterEntry virus)
+    private static String expectedClonalCoverageField(final VirusInterpreterEntry virus)
     {
         Double expectedClonalCoverage = virus.expectedClonalCoverage();
         return expectedClonalCoverage != null ? formatSingleDigitDecimal(expectedClonalCoverage) : Strings.EMPTY;

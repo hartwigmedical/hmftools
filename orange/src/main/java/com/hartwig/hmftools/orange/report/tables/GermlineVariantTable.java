@@ -11,9 +11,9 @@ import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_HOT
 import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_MACN;
 import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_VARIANT;
 import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_VCN;
-import static com.hartwig.hmftools.orange.report.tables.SomaticVariantTable.addEntry;
-import static com.hartwig.hmftools.orange.report.tables.SomaticVariantTable.cellArray;
-import static com.hartwig.hmftools.orange.report.tables.SomaticVariantTable.floatArray;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.cellArray;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.floatArray;
 
 import java.util.List;
 

@@ -6,11 +6,12 @@ public final class ReportWriterFactory
 {
     public static ReportWriter createToDiskWriter(final OrangeConfig config)
     {
-        return new ReportWriter(true, config.OutputDir, new PlotPathResolver(config.OutputDir), config.AddDisclaimer);
+        return new ReportWriter(
+                true, config.OutputDir, config.OutputId, new PlotPathResolver(config.OutputDir), config.AddDisclaimer);
     }
 
     public static ReportWriter createInMemoryWriter()
     {
-        return new ReportWriter(false, null, new PlotPathResolver(null), true);
+        return new ReportWriter(false, null, null, new PlotPathResolver(null), true);
     }
 }

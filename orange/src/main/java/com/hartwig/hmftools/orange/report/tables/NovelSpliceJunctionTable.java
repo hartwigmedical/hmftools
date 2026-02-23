@@ -15,9 +15,8 @@ import org.jetbrains.annotations.NotNull;
 
 public final class NovelSpliceJunctionTable
 {
-    @NotNull
-    public static Table build(@NotNull String title, float width, @NotNull List<NovelSpliceJunction> junctions,
-            @NotNull ReportResources reportResources)
+    public static Table build(
+            final String title, float width, final List<NovelSpliceJunction> junctions, final ReportResources reportResources)
     {
         if(junctions.isEmpty())
         {
@@ -48,8 +47,7 @@ public final class NovelSpliceJunctionTable
         return new Tables(reportResources).createWrapping(table, title);
     }
 
-    @NotNull
-    private static List<NovelSpliceJunction> sort(@NotNull List<NovelSpliceJunction> junctions)
+    private static List<NovelSpliceJunction> sort(final List<NovelSpliceJunction> junctions)
     {
         return junctions.stream().sorted((junction1, junction2) ->
         {

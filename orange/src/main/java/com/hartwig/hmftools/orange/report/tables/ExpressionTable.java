@@ -21,7 +21,6 @@ import org.jetbrains.annotations.Nullable;
 
 public final class ExpressionTable
 {
-    @NotNull
     public static Table build(@NotNull String title, float width, @NotNull List<GeneExpression> expressions, boolean sortAscending,
             @NotNull List<PurpleGeneCopyNumber> allSomaticGeneCopyNumbers, @NotNull ReportResources reportResources)
     {

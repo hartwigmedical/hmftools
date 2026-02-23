@@ -14,6 +14,9 @@ import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_RNA
 import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_SL;
 import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_VARIANT;
 import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_VCN;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.cellArray;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.floatArray;
 
 import java.util.List;
 
@@ -91,34 +94,5 @@ public final class SomaticVariantTable
         return new Tables(reportResources).createWrapping(table, title);
     }
 
-    protected static void addEntry(final Cells cells, final List<Integer> widths, final List<Cell> cellEntries, int width, final String column)
-    {
-        cellEntries.add(cells.createHeader(column));
-        widths.add(width);
-    }
-
-    protected static float[] floatArray(final List<Integer> widths)
-    {
-        float[] widthArray = new float[widths.size()];
-
-        for(int i = 0; i < widthArray.length; ++i)
-        {
-            widthArray[i] = widths.get(i);
-        }
-
-        return widthArray;
-    }
-
-    protected static Cell[] cellArray(final List<Cell> cellEntries)
-    {
-        Cell[] cellArray = new Cell[cellEntries.size()];
-
-        for(int i = 0; i < cellArray.length; ++i)
-        {
-            cellArray[i] = cellEntries.get(i);
-        }
-
-        return cellArray;
-    }
 }
 

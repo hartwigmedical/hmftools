@@ -18,9 +18,9 @@ import org.jetbrains.annotations.NotNull;
 
 public final class MissedVariantLikelihoodTable
 {
-    @NotNull
-    public static Table build(@NotNull String title, float width, @NotNull Map<String, Double> significantGermlineMVLHPerGene,
-            @NotNull ReportResources reportResources)
+    public static Table build(
+            final String title, float width, final Map<String, Double> significantGermlineMVLHPerGene,
+            final ReportResources reportResources)
     {
         if(significantGermlineMVLHPerGene.isEmpty())
         {

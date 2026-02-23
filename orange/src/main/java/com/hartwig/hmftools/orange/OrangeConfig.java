@@ -46,7 +46,9 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_METRIC
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreateOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import static com.hartwig.hmftools.orange.util.PathUtil.mandatoryPath;
@@ -83,6 +85,7 @@ public class OrangeConfig
     public final LocalDate SamplingDate;
 
     public final String OutputDir;
+    public final String OutputId;
 
     public final String DoidJsonFile;
     public final String SignaturesEtiologyTsv;
@@ -167,7 +170,9 @@ public class OrangeConfig
         SignaturesEtiologyTsv = configBuilder.getValue(SIGNATURES_ETIOLOGY_TSV);
         PipelineVersionFile = configBuilder.getValue(PIPELINE_VERSION_FILE);
 
-        OutputDir = parseMandatoryOutputDir(configBuilder);
+        OutputDir = parseOutputDir(configBuilder);
+        checkCreateOutputDir(OutputDir);
+        OutputId = configBuilder.getValue(OUTPUT_ID);
 
         PathResolver pathResolver = new PathResolver(configBuilder,
                 configBuilder.getValue(PIPELINE_SAMPLE_ROOT_DIR),
@@ -261,7 +266,7 @@ public class OrangeConfig
         configBuilder.addConfigItem(SAMPLING_DATE, false, "Optional, if provided represents the sampling date in YYMMDD format");
 
         addRefGenomeVersion(configBuilder);
-        addOutputDir(configBuilder);
+        addOutputOptions(configBuilder);
 
         configBuilder.addPath(DOID_JSON, false, "Path to JSON file containing the full DOID tree");
         configBuilder.addPath(SIGNATURES_ETIOLOGY_TSV, true, "Path to signatures etiology TSV");
@@ -341,16 +346,6 @@ public class OrangeConfig
         }
     }
 
-    private static String parseMandatoryOutputDir(final ConfigBuilder configBuilder)
-    {
-        String dir = parseOutputDir(configBuilder);
-        if(dir == null)
-        {
-            throw new IllegalArgumentException("Could not parse output directory from configuration");
-        }
-        return mandatoryPath(dir);
-    }
-
     private static PipelineToolDirectories resolveDefaultPipelineDirectories(final ConfigBuilder configBuilder)
     {
         String tumorSampleId = configBuilder.getValue(TUMOR);
@@ -387,6 +382,7 @@ public class OrangeConfig
         PrimaryTumorDoids = primaryTumorDoids;
         SamplingDate = samplingDate;
         OutputDir = outputDir;
+        OutputId = null;
         DoidJsonFile = doidJsonFile;
         PrimaryTumorLocation = "";
         SignaturesEtiologyTsv = signaturesEtiologyTsv;

@@ -20,9 +20,8 @@ import org.jetbrains.annotations.Nullable;
 
 public final class HLAAlleleTable
 {
-    @NotNull
-    public static Table build(@NotNull String title, float width, @NotNull List<LilacAllele> alleles,
-            @NotNull ReportResources reportResources, boolean isTumorFail)
+    public static Table build(
+            final String title, float width, final List<LilacAllele> alleles, final ReportResources reportResources, boolean isTumorFail)
     {
         if(alleles.isEmpty())
         {
@@ -49,7 +48,7 @@ public final class HLAAlleleTable
     }
 
     @NotNull
-    private static List<LilacAllele> sort(@NotNull List<LilacAllele> alleles)
+    private static List<LilacAllele> sort(final List<LilacAllele> alleles)
     {
         return alleles.stream()
                 .sorted(Comparator.comparing(LilacAllele::allele)
@@ -77,7 +76,7 @@ public final class HLAAlleleTable
     }
 
     @NotNull
-    private static String mutationString(@NotNull LilacAllele allele, boolean isTumorFail)
+    private static String mutationString(final LilacAllele allele, boolean isTumorFail)
     {
         if(isTumorFail)
         {

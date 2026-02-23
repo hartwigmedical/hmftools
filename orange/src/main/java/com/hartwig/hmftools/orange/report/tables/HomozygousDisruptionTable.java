@@ -16,9 +16,9 @@ import org.jetbrains.annotations.NotNull;
 
 public final class HomozygousDisruptionTable
 {
-    @NotNull
-    public static Table build(@NotNull String title, float width, @NotNull List<LinxHomozygousDisruption> homozygousDisruptions,
-            @NotNull ReportResources reportResources)
+    public static Table build(
+            final String title, float width, final List<LinxHomozygousDisruption> homozygousDisruptions,
+            final ReportResources reportResources)
     {
         if(homozygousDisruptions.isEmpty())
         {
@@ -40,8 +40,7 @@ public final class HomozygousDisruptionTable
         return new Tables(reportResources).createWrapping(table, title);
     }
 
-    @NotNull
-    private static List<LinxHomozygousDisruption> sort(@NotNull List<LinxHomozygousDisruption> homozygousDisruptions)
+    private static List<LinxHomozygousDisruption> sort(final List<LinxHomozygousDisruption> homozygousDisruptions)
     {
         return homozygousDisruptions.stream().sorted((disruption1, disruption2) ->
         {
@@ -59,8 +58,7 @@ public final class HomozygousDisruptionTable
         }).collect(Collectors.toList());
     }
 
-    @NotNull
-    private static String gene(@NotNull LinxHomozygousDisruption homozygousDisruption)
+    private static String gene(final LinxHomozygousDisruption homozygousDisruption)
     {
         String addon = Strings.EMPTY;
         if(!homozygousDisruption.isCanonical())

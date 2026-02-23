@@ -37,13 +37,17 @@ public class ReportWriter
 
     @Nullable
     private final String mOutputDir;
+    private final String mOutputId;
     private final PlotPathResolver mPlotPathResolver;
     private final boolean mAddDisclaimer;
 
-    ReportWriter(boolean writeToDisk, @Nullable String outputDir, final PlotPathResolver plotPathResolver, boolean addDisclaimer)
+    public ReportWriter(
+            boolean writeToDisk, @Nullable final String outputDir, @Nullable final String outputId,
+            final PlotPathResolver plotPathResolver, boolean addDisclaimer)
     {
         mWriteToDisk = writeToDisk;
         mOutputDir = outputDir;
+        mOutputId = outputId;
         mPlotPathResolver = plotPathResolver;
         mAddDisclaimer = addDisclaimer;
     }
@@ -87,15 +91,24 @@ public class ReportWriter
         writePdfChapters(report.sampleId(), pipelineVersion, chapters, reportResources);
     }
 
+    private String formOutputFile(final String sampleId, final String fileId)
+    {
+        String filename = mOutputDir + sampleId + ".orange.";
+
+        if(mOutputId != null)
+            filename += mOutputId + ".";
+
+        return filename + fileId;
+    }
+
     private void writeJson(final OrangeRecord report) throws IOException
     {
         if(mWriteToDisk && mOutputDir != null)
         {
-            String basePath = FileWriterUtils.checkAddDirSeparator(mOutputDir);
-            String outputFilePath = basePath + report.sampleId() + ".orange.json";
-            LOGGER.info("Writing JSON report to {} ", outputFilePath);
+            String outputFilename = formOutputFile(report.sampleId(), "json");
+            LOGGER.info("Writing JSON report to {} ", outputFilename);
 
-            OrangeJson.getInstance().write(report, outputFilePath);
+            OrangeJson.getInstance().write(report, outputFilename);
         }
         else
         {
@@ -142,10 +155,9 @@ public class ReportWriter
                 .useSmartMode();
         if(mWriteToDisk)
         {
-            String basePath = FileWriterUtils.checkAddDirSeparator(mOutputDir);
-            String outputFilePath = basePath + sampleId + ".orange.pdf";
-            LOGGER.info("Writing PDF report to {}", outputFilePath);
-            writer = new PdfWriter(outputFilePath, properties);
+            String outputFilename = formOutputFile(sampleId, "pdf");
+            LOGGER.info("Writing PDF report to {}", outputFilename);
+            writer = new PdfWriter(outputFilename, properties);
         }
         else
         {

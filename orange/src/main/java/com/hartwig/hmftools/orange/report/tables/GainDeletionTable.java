@@ -23,9 +23,9 @@ import org.jetbrains.annotations.Nullable;
 
 public final class GainDeletionTable
 {
-    @NotNull
-    public static Table build(@NotNull String title, float width, @NotNull List<PurpleGainDeletion> gainsDels,
-            @Nullable IsofoxRecord isofox, @NotNull ReportResources reportResources)
+    public static Table build(
+            final String title, float width, final List<PurpleGainDeletion> gainsDels,
+            @Nullable final IsofoxRecord isofox, final ReportResources reportResources)
     {
         if(gainsDels.isEmpty())
         {
@@ -69,7 +69,7 @@ public final class GainDeletionTable
     }
 
     @Nullable
-    private static GeneExpression findExpressionForGene(@Nullable IsofoxRecord isofox, @NotNull String geneToFind)
+    private static GeneExpression findExpressionForGene(@Nullable IsofoxRecord isofox, final String geneToFind)
     {
         if(isofox == null)
         {
@@ -79,8 +79,7 @@ public final class GainDeletionTable
         return Expressions.findByGene(isofox.allGeneExpressions(), geneToFind);
     }
 
-    @NotNull
-    private static List<PurpleGainDeletion> sort(@NotNull List<PurpleGainDeletion> gainsAndDels)
+    private static List<PurpleGainDeletion> sort(final List<PurpleGainDeletion> gainsAndDels)
     {
         return gainsAndDels.stream().sorted((gainDel1, gainDel2) ->
         {
@@ -98,8 +97,7 @@ public final class GainDeletionTable
         }).collect(Collectors.toList());
     }
 
-    @NotNull
-    private static String displayGene(@NotNull PurpleGainDeletion gainDel)
+    private static String displayGene(final PurpleGainDeletion gainDel)
     {
         String addon = Strings.EMPTY;
         if(!gainDel.isCanonical())
