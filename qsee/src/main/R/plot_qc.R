@@ -83,64 +83,6 @@ LOGGER$debug("  output_path: %s", OUTPUT_PATH)
 LOGGER$debug("  log_level: %s", GLOBAL_LOG_LEVEL)
 
 ## =============================
-## String functions
-## =============================
-
-preordered_factor <- function(x){ factor(x, unique(x)) }
-
-preordered_factors <- function(df){ 
-   as.data.frame(lapply(df, function(x){
-      if(is.character(x)){
-         x <- factor(x, unique(x))
-      }
-      return(x)
-   }))
-}
-
-KEY_VALUE_SEP <- "="
-GROUP_SEP <- ";"
-
-df_to_strings <- function(df, key_value_sep = KEY_VALUE_SEP, group_sep = GROUP_SEP){
-   
-   key_value_strings <- lapply(colnames(df), function(colname){
-      paste0(colname, key_value_sep, df[[colname]])
-   })
-   
-   strings <- do.call(paste, c(key_value_strings, sep=group_sep))
-   
-   return(strings)
-}
-
-strings_to_df <- function(strings, key_value_sep = KEY_VALUE_SEP, group_sep = GROUP_SEP){
-   
-   strings_split <- strsplit(as.character(strings), group_sep, fixed=TRUE)
-   
-   key_value_pairs <- lapply(strings_split, function(row_strings){
-      row_strings_split <- strsplit(row_strings, key_value_sep)
-      keys <- sapply(row_strings_split, `[[`, 1)
-      values <- sapply(row_strings_split, `[[`, 2)
-      structure(values, names = keys)
-   })
-   
-   df <- dplyr::bind_rows(key_value_pairs) %>% as.data.frame(check.names=FALSE)
-   df[is.na(df)] <- ""
-   
-   return(df)
-}
-
-has_multiple_fields <- function(strings, key_value_sep = KEY_VALUE_SEP, group_sep = GROUP_SEP){
-   
-   multifield_string_regex <- paste0(".+", key_value_sep, ".+", group_sep, "*")
-   is_multifield_string <- grepl(multifield_string_regex, strings)
-   
-   if(unique(is_multifield_string) > 1){
-      LOGGER$error("Found a mix of single and multi field strings: %s", paste(strings, collapse = "\n"))
-   }
-   
-   return(all(is_multifield_string))
-}
-
-## =============================
 ## Constants
 ## =============================
 
@@ -225,6 +167,64 @@ SAMPLE_DATA <- load_sample_features()
 PLOTS <- list()
 
 ## =============================
+## String functions
+## =============================
+
+preordered_factor <- function(x){ factor(x, unique(x)) }
+
+preordered_factors <- function(df){ 
+   as.data.frame(lapply(df, function(x){
+      if(is.character(x)){
+         x <- factor(x, unique(x))
+      }
+      return(x)
+   }))
+}
+
+KEY_VALUE_SEP <- "="
+GROUP_SEP <- ";"
+
+df_to_strings <- function(df, key_value_sep = KEY_VALUE_SEP, group_sep = GROUP_SEP){
+   
+   key_value_strings <- lapply(colnames(df), function(colname){
+      paste0(colname, key_value_sep, df[[colname]])
+   })
+   
+   strings <- do.call(paste, c(key_value_strings, sep=group_sep))
+   
+   return(strings)
+}
+
+strings_to_df <- function(strings, key_value_sep = KEY_VALUE_SEP, group_sep = GROUP_SEP){
+   
+   strings_split <- strsplit(as.character(strings), group_sep, fixed=TRUE)
+   
+   key_value_pairs <- lapply(strings_split, function(row_strings){
+      row_strings_split <- strsplit(row_strings, key_value_sep)
+      keys <- sapply(row_strings_split, `[[`, 1)
+      values <- sapply(row_strings_split, `[[`, 2)
+      structure(values, names = keys)
+   })
+   
+   df <- dplyr::bind_rows(key_value_pairs) %>% as.data.frame(check.names=FALSE)
+   df[is.na(df)] <- ""
+   
+   return(df)
+}
+
+has_multiple_fields <- function(strings, key_value_sep = KEY_VALUE_SEP, group_sep = GROUP_SEP){
+   
+   multifield_string_regex <- paste0(".+", key_value_sep, ".+", group_sep, "*")
+   is_multifield_string <- grepl(multifield_string_regex, strings)
+   
+   if(unique(is_multifield_string) > 1){
+      LOGGER$error("Found a mix of single and multi field strings: %s", paste(strings, collapse = "\n"))
+   }
+   
+   return(all(is_multifield_string))
+}
+
+## =============================
 ## Plot helper functions
 ## =============================
 
@@ -240,13 +240,14 @@ get_plot_data <- function(feature_type){
       return(data.frame())
    }
    
+   ## Sample and cohort data as one data frame
    merged_data <- merge(
       sample_data, cohort_data, 
       by=c("SampleType", "SourceTool", "FeatureType", "FeatureName"), 
       all.x = TRUE, ## Only select the features in the cohort data that are present in the sample
       sort = FALSE
    )
-   
+
    ## Split multi-field strings
    for(colname in colnames(merged_data)){
       column <- merged_data[[colname]]
