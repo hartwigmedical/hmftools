@@ -179,6 +179,12 @@ NUMBER_FORMATS <- list(
    LOG = "LOG"
 )
 
+QC_STATUS <- list(
+   FAIL = list(name = "FAIL", color = "#F3C27B"),
+   WARN = list(name = "WARN", color = "#FCFFC6"),
+   PASS = list(name = "PASS", color = "#FFFFFF00")
+)
+
 ## =============================
 ## Load data
 ## =============================
@@ -631,6 +637,7 @@ plot_sub_table <- function(feature_group, number_format = "NUMBER", show_title =
       show_title = TRUE
       show_sample_type_label = TRUE
       feature_group = "Mutational burden"; number_format = "LOG"
+      feature_group = "Contamination"; number_format = "PERCENT"
    }
 
    ## Prep data =============================
@@ -665,7 +672,7 @@ plot_sub_table <- function(feature_group, number_format = "NUMBER", show_title =
    gg_div_lines <- function(direction = "horizontal"){
       
       positions <- seq(1.5, n_rows)
-      color <- if(n_rows > 1) "grey90" else "white"
+      color <- if(n_rows > 1) "grey70" else "white"
       linetype <- "dotted"
       
       if(direction == "horizontal"){
@@ -678,33 +685,44 @@ plot_sub_table <- function(feature_group, number_format = "NUMBER", show_title =
    }
    
    ## Feature values =============================
-   plot_data <- plot_data %>%
-      dplyr::mutate(
-         HasQcStatus = nchar(as.character(QcStatus)) > 0,
-         ValueLabel = value_fmt_func(FeatureValue),
-         ValueLabel = ifelse(
-            HasQcStatus, paste0(ValueLabel,"\n", QcStatus),
-            ValueLabel
-         )
-      )
+   plot_data <- plot_data %>% dplyr::mutate(
+      ValueLabel = value_fmt_func(FeatureValue),
+      
+      QcStatus = as.character(QcStatus),
+      QcStatusEnum = case_when(
+         startsWith(QcStatus, QC_STATUS$FAIL$name) ~ QC_STATUS$FAIL$name,
+         startsWith(QcStatus, QC_STATUS$WARN$name) ~ QC_STATUS$WARN$name,
+         .default = QC_STATUS$PASS$name
+      ),
+      QcStatusEnum = factor(QcStatusEnum, sapply(QC_STATUS, `[[`, "name"))
+   )
 
    sample_type_colors <- sapply(SAMPLE_TYPE, `[[`, "color")
+   qc_status_colors <- sapply(QC_STATUS, `[[`, "color")
    
    subplot_values <- ggplot(plot_data, aes(y = PlotLabel, x = SampleType, group = SampleType, color = SampleType)) +
-
+      
+      geom_label(
+         aes(label = ValueLabel, fill = QcStatusEnum), 
+         size = 3, label.padding = unit(4, "pt"),
+         border.colour = ifelse(plot_data$QcStatusEnum == QC_STATUS$PASS$name, "#FFFFFF00", "black")
+      ) +
+      scale_color_manual(values = sample_type_colors) +
+      scale_fill_manual(values = qc_status_colors) +
+      
       gg_div_lines("horizontal") +
-      geom_text(aes(label = ValueLabel), size = 3, lineheight = 0.8, show.legend = FALSE) +
-      scale_color_manual(values = sample_type_colors, drop = FALSE) +
+      
       scale_x_discrete(position = "bottom", limits = rev, drop = FALSE) +
+      guides(color = "none") +
       labs(title = feature_group) +
       
       theme(
          plot.title = if(show_title) element_text() else element_blank(),
          axis.title.x = element_blank(),
          axis.title.y = element_blank(),
-         axis.ticks.x = element_blank(),
+         axis.ticks.x = if(show_sample_type_label) element_line() else element_blank(),
          axis.text.x = if(show_sample_type_label) element_text() else element_blank(),
-         plot.margin = margin(r = 0, b = 10)
+         plot.margin = margin(b = 10)
       )
 
    ## Sample vs cohort =============================
@@ -723,11 +741,11 @@ plot_sub_table <- function(feature_group, number_format = "NUMBER", show_title =
          axis.ticks.y = element_blank(),
          axis.text.y = element_blank(),
          axis.line.y = element_blank(),
-         plot.margin = margin(r = 15, b = 10, l = 0)
+         plot.margin = margin(b = 10, r = 15, l = 2)
       )
 
    ## Combine plots =============================
-   subplots_combined <- patchwork::wrap_plots(subplot_values, subplot_boxplot, nrow = 1)
+   subplots_combined <- patchwork::wrap_plots(subplot_values, subplot_boxplot, nrow = 1, guides = "collect")
    
    subplots_combined$height <- n_rows
    
@@ -782,6 +800,37 @@ PLOTS[[FEATURE_TYPE$SUMMARY_TABLE]] <- local({
 ## Combine plots
 ## =============================
 
+REPORT_TITLE <- local({
+   
+   get_qc_string <- function(sample_type){
+      
+      df <- SUMMARY_TABLE_DATA %>% filter(
+         SampleType == sample_type$name & 
+         nchar(as.character(QcStatus)) != 0
+      )
+      
+      if(nrow(df) == 0)
+         return(character())
+      
+      qc_string <- sprintf("[%s: %s]", df$PlotLabel, df$QcStatus) %>% paste(collapse = ", ")
+      qc_string <- paste0(sample_type$human_readable_name, " QC status: ", qc_string)
+      return(qc_string)
+   }
+   
+   qc_strings <- c(
+      get_qc_string(SAMPLE_TYPE$TUMOR), 
+      get_qc_string(SAMPLE_TYPE$NORMAL)
+   )
+   
+   subtitle <- if(length(qc_strings) > 0) paste(qc_strings, collapse = "\n") else waiver()
+   
+   patchwork::plot_annotation(
+      title = TUMOR_ID,
+      subtitle = subtitle,
+      theme = theme(plot.title = element_text(size = 16, face = "bold"))
+   )
+})
+
 create_report <- local({
    
    LOGGER$info("Combining plots")
@@ -821,7 +870,9 @@ create_report <- local({
       LOGGER$error("Plots missing from design: %s", paste(plots_missing, collapse = ","))
    }
    
-   plots_combined <- patchwork::wrap_plots(plots, guides = "collect", design = design) #&
+   plots_combined <- 
+      patchwork::wrap_plots(plots, guides = "collect", design = design) +
+      REPORT_TITLE
    
    LOGGER$info("Writing report to: %s", OUTPUT_PATH)
    ggsave(
