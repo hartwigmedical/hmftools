@@ -350,6 +350,7 @@ plot_boxplot <- function(
          panel.spacing.x = unit(-0.5, "pt"),
          axis.text.y.right = element_blank(),
          axis.ticks.y.right = element_blank(),
+         legend.position = "none"
       )
 }
 
@@ -576,7 +577,7 @@ plot_distribution <- function(plot_data, x, plot_labels = geom_blank(), invert_n
    
    ggplot(plot_data, aes(x = .data[[x]], y = FeatureValue, group = SampleType)) +
       
-      geom_ribbon(aes(ymin = PctMin, ymax = PctMax, fill = SampleType), alpha=0.1) +
+      geom_ribbon(aes(ymin = PctMin, ymax = PctMax, fill = SampleType), alpha = 0.1) +
       geom_line(aes(color = SampleType)) +
       geom_sample_peak +
       
@@ -585,7 +586,8 @@ plot_distribution <- function(plot_data, x, plot_labels = geom_blank(), invert_n
       
       gg_hline + 
       gg_scale_y_continuous +
-      plot_labels
+      plot_labels +
+      theme(legend.position = "none")
 }
 
 
@@ -722,7 +724,8 @@ plot_sub_table <- function(feature_group, number_format = "NUMBER", show_title =
          axis.title.y = element_blank(),
          axis.ticks.x = if(show_sample_type_label) element_line() else element_blank(),
          axis.text.x = if(show_sample_type_label) element_text() else element_blank(),
-         plot.margin = margin(b = 10)
+         plot.margin = margin(b = 10),
+         legend.position = "none"
       )
 
    ## Sample vs cohort =============================
@@ -741,11 +744,12 @@ plot_sub_table <- function(feature_group, number_format = "NUMBER", show_title =
          axis.ticks.y = element_blank(),
          axis.text.y = element_blank(),
          axis.line.y = element_blank(),
-         plot.margin = margin(b = 10, r = 15, l = 2)
+         plot.margin = margin(b = 10, r = 15, l = 2),
+         legend.position = "none"
       )
 
    ## Combine plots =============================
-   subplots_combined <- patchwork::wrap_plots(subplot_values, subplot_boxplot, nrow = 1, guides = "collect")
+   subplots_combined <- patchwork::wrap_plots(subplot_values, subplot_boxplot, nrow = 1)
    
    subplots_combined$height <- n_rows
    
@@ -797,8 +801,96 @@ PLOTS[[FEATURE_TYPE$SUMMARY_TABLE]] <- local({
 })
 
 ## =============================
-## Combine plots
+## Other plot components
 ## =============================
+
+PLOT_NAME_LEGEND <- "CUSTOM_LEGEND"
+
+PLOTS[[PLOT_NAME_LEGEND]] <- local({
+   
+   #' A custom legend is created for a few reasons:
+   #' 
+   #' 1) `patchwork::wrap_plots(..., guides = "collect")` is unreliable, especially if some plots 
+   #'    for example have 'TUMOR' and 'NORMAL' sample types but other plots only have 'TUMOR' 
+   #'    (but not 'NORMAL'). 
+   #' 
+   #' 2) We don't need to for example have the boxplot legend as well as the line plot legend both 
+   #'    showing the same colors. Therefore, the custom legend only shows colors.
+   #'    
+   #' 3) The custom legend is also itself a plot, which allows it to be positioned in an empty spot 
+   #'    with patchwork.
+   
+   plot_data_sample_type <- data.frame(
+      SampleType = c(
+         paste(SAMPLE_TYPE$TUMOR$human_readable_name, "sample"),
+         paste(SAMPLE_TYPE$TUMOR$human_readable_name, "cohort"),
+         paste(SAMPLE_TYPE$NORMAL$human_readable_name, "sample"),
+         paste(SAMPLE_TYPE$NORMAL$human_readable_name, "cohort")
+      ),
+      
+      Color = c(
+         SAMPLE_TYPE$TUMOR$color,
+         SAMPLE_TYPE$TUMOR$color %>% adjustcolor(alpha.f = 0.2),
+         SAMPLE_TYPE$NORMAL$color,
+         SAMPLE_TYPE$NORMAL$color %>% adjustcolor(alpha.f = 0.2)
+      )
+   ) %>% 
+      mutate(Index = 1:dplyr::n())
+   
+   plot_data_qc_status <- data.frame(
+      Index = 1:length(QC_STATUS),
+      QcStatus = lapply(QC_STATUS, `[[`, "name") %>% unlist(use.names = FALSE),
+      Color = lapply(QC_STATUS, `[[`, "color") %>% unlist(use.names = FALSE)
+   )
+   
+   dummy_plot <- ggplot(data.frame(), aes(SampleType, QcStatus)) +
+      
+      ## Sample type
+      geom_point(
+         data = plot_data_sample_type, 
+         mapping = aes(x = Index, y = 1, color = preordered_factor(SampleType)),
+         shape = 15, size = 6
+      ) +
+      scale_color_manual(
+         name = "Sample type",
+         values = plot_data_sample_type %>% dplyr::pull(Color, name = SampleType),
+         labels = plot_data_sample_type %>% dplyr::pull(SampleType, name = SampleType),
+      ) +
+      
+      ## QC status
+      geom_label(
+         data = plot_data_qc_status, 
+         mapping = aes(x = Index, y = 2, fill = preordered_factor(QcStatus), label = QcStatus),
+         color = "#FFFFFF00", border.color = "black"
+      ) +
+      scale_fill_manual(
+         name = "QC status",
+         values = plot_data_qc_status %>% dplyr::pull(Color, name = QcStatus)
+      ) +
+      
+      ## Set legend order
+      guides(
+         color = guide_legend(order = 1),
+         fill = guide_legend(order = 2)
+      ) +
+      
+      theme(
+         legend.position="bottom", 
+         legend.direction="vertical",
+      )
+   
+   legend <- local({ 
+      plot_as_gtable <- dummy_plot %>% ggplot_build() %>% ggplot_gtable() 
+      
+      grobs <- plot_as_gtable$grobs
+      grob_names <- sapply(grobs, function(x) x$name)
+      legend_index <- which(grob_names == "guide-box")
+      
+      grobs[[legend_index]] %>% patchwork::wrap_elements()
+   })
+   
+   return(legend)
+})
 
 REPORT_TITLE <- local({
    
@@ -831,6 +923,10 @@ REPORT_TITLE <- local({
    )
 })
 
+## =============================
+## Combine plots
+## =============================
+
 create_report <- local({
    
    LOGGER$info("Combining plots")
@@ -850,7 +946,9 @@ create_report <- local({
       "H" = FEATURE_TYPE$BQR_BY_ORIG_QUAL,
       "I" = FEATURE_TYPE$BQR_BY_SNV96_CONTEXT,
       "J" = FEATURE_TYPE$MS_INDEL_ERROR_RATES,
-      "K" = FEATURE_TYPE$MS_INDEL_ERROR_BIAS
+      "K" = FEATURE_TYPE$MS_INDEL_ERROR_BIAS,
+      
+      "L" = PLOT_NAME_LEGEND
    )
 
    plots <- plots[plot_letter_name_map]
@@ -859,20 +957,10 @@ create_report <- local({
       AABBCCDD
       AAEEFFGG
       AAHHIIII
-      AAJJKK##
+      AAJJKKLL
    "
    
-   plots_in_map <- plot_letter_name_map %in% unlist(FEATURE_TYPE, use.names = FALSE)
-   plots_designed <- sapply(names(plot_letter_name_map), function(letter) grepl(letter, design, fixed=TRUE) )
-   plots_missing <- plot_letter_name_map[!(plots_in_map & plots_designed)]
-      
-   if(length(plots_missing)>0){
-      LOGGER$error("Plots missing from design: %s", paste(plots_missing, collapse = ","))
-   }
-   
-   plots_combined <- 
-      patchwork::wrap_plots(plots, guides = "collect", design = design) +
-      REPORT_TITLE
+   plots_combined <- patchwork::wrap_plots(plots, design = design) + REPORT_TITLE
    
    LOGGER$info("Writing report to: %s", OUTPUT_PATH)
    ggsave(
