@@ -77,6 +77,9 @@ public final class SageVcfTags
     public static final int CONSENSUS_TYPE_COUNT = ConsensusType.values().length;
     public static final int CONSENSUS_TAG_TYPE_COUNT = CONSENSUS_TYPE_COUNT * 2;
 
+    public static final String READ_STRAND_BIAS = "RSB";
+    public static final String READ_STRAND_BIAS_DESC = "Read strand bias - percentage of forward-orientation reads (ref,alt)";
+
     public static final String TINC_LEVEL = "tincLevel";
 
     public static final String LPS_DELIM = ";";

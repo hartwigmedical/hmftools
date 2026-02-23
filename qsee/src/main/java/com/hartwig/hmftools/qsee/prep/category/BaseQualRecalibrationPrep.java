@@ -20,6 +20,7 @@ import com.hartwig.hmftools.common.redux.BqrRecord;
 import com.hartwig.hmftools.qsee.feature.FeatureKey;
 import com.hartwig.hmftools.qsee.feature.FeatureType;
 import com.hartwig.hmftools.qsee.feature.Feature;
+import com.hartwig.hmftools.qsee.common.MultiFieldStringBuilder;
 import com.hartwig.hmftools.qsee.feature.SourceTool;
 import com.hartwig.hmftools.qsee.prep.CategoryPrep;
 import com.hartwig.hmftools.qsee.prep.CommonPrepConfig;
@@ -126,7 +127,7 @@ public class BaseQualRecalibrationPrep implements CategoryPrep
         Map<FeatureKey, List<BqrRecord>> bqrRecordGroups = new LinkedHashMap<>();
         for(BqrRecord bqrRecord : bqrRecords)
         {
-            String featureName = FeatureKey.formMultiFieldName(
+            String featureName = MultiFieldStringBuilder.formMultiField(
                     FIELD_READ_TYPE, bqrRecord.Key.ReadType.toString(),
                     FIELD_STANDARD_MUTATION, formMutationString(bqrRecord.Key),
                     FIELD_STANDARD_TRINUC_CONTEXT, new String(bqrRecord.Key.TrinucleotideContext),
@@ -149,7 +150,7 @@ public class BaseQualRecalibrationPrep implements CategoryPrep
         Map<FeatureKey, List<BqrRecord>> bqrRecordGroups = new LinkedHashMap<>();
         for(BqrRecord bqrRecord : bqrRecords)
         {
-            String featureName = FeatureKey.formMultiFieldName(
+            String featureName = MultiFieldStringBuilder.formMultiField(
                     FIELD_READ_TYPE, bqrRecord.Key.ReadType.toString(),
                     FIELD_STANDARD_MUTATION, formMutationString(bqrRecord.Key),
                     FIELD_ORIGINAL_QUAL_BIN, baseQualBinner.binRangeStringFrom(bqrRecord.Key.Quality)

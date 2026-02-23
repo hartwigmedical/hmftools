@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.wisp.purity.PurityConstants.BQR_MIN_ERROR_RAT
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -26,12 +27,12 @@ public class BqrAdjustment
 {
     private final PurityConfig mConfig;
 
-    private final List<BqrContextData> mBqrContextData;
+    private final Map<ConsensusType,List<BqrContextData>> mBqrContextData;
 
     public BqrAdjustment(final PurityConfig config)
     {
         mConfig = config;
-        mBqrContextData = Lists.newArrayList();
+        mBqrContextData = Maps.newHashMap();
     }
 
     private static final byte NO_KEY_VALUE = 1;
@@ -40,13 +41,23 @@ public class BqrAdjustment
 
     public List<BqrContextData> getThresholdBqrData(final int qualThreshold)
     {
+        List<BqrContextData> bqrContextData = mBqrContextData.get(ConsensusType.NONE);
+
+        if(bqrContextData == null)
+            return Collections.emptyList();
+
         return qualThreshold <= 0 ?
-                mBqrContextData : mBqrContextData.stream().filter(x -> x.calculatedQual() >= qualThreshold).collect(Collectors.toList());
+                bqrContextData : bqrContextData.stream().filter(x -> x.calculatedQual() >= qualThreshold).collect(Collectors.toList());
     }
 
-    public double calcErrorRate(final String triNucContext, final String alt)
+    public double calcErrorRate(final String triNucContext, final String alt, final ConsensusType consensusType)
     {
-        BqrContextData bqrData = mBqrContextData.stream()
+        List<BqrContextData> bqrContextData = mBqrContextData.get(consensusType);
+
+        if(bqrContextData == null)
+            return BQR_MIN_ERROR_RATE;
+
+        BqrContextData bqrData = bqrContextData.stream()
                 .filter(x -> x.TrinucleotideContext.equals(triNucContext) && x.Alt.equals(alt)).findFirst().orElse(null);
 
         return bqrData != null ? max(bqrData.errorRate(), BQR_MIN_ERROR_RATE) : BQR_MIN_ERROR_RATE;
@@ -100,7 +111,7 @@ public class BqrAdjustment
         if(!Files.exists(Paths.get(bqrFilename)))
         {
             CT_LOGGER.warn("sample({}) missing BQR file: {}", sampleId, bqrFilename);
-            return;
+            System.exit(1);
         }
 
         List<BqrRecord> allCounts = BqrFile.read(bqrFilename);
@@ -114,48 +125,63 @@ public class BqrAdjustment
             if(bqrRecord.Key.Quality < mConfig.BqrQualThreshold)
                 continue;
 
-            if(bqrRecord.Key.ReadType == ConsensusType.DUAL)
-                continue;
+            // merge none and single
+            ConsensusType consensusType = bqrRecord.Key.ReadType == ConsensusType.DUAL ? ConsensusType.DUAL : ConsensusType.NONE;
 
-            BqrKey noAltKey = new BqrKey(key.Ref, NO_KEY_VALUE, key.TrinucleotideContext, key.Quality, key.ReadType);
+            BqrKey noAltKey = new BqrKey(key.Ref, NO_KEY_VALUE, key.TrinucleotideContext, key.Quality, consensusType);
 
             int count = summaryCounts.getOrDefault(noAltKey, 0);
             summaryCounts.put(noAltKey, count + bqrRecord.Count);
 
             if(key.Ref != key.Alt)
             {
-                BqrContextData bqrContextData = getOrCreate(key.TrinucleotideContext, key.Alt);
+                BqrContextData bqrContextData = getOrCreate(key.TrinucleotideContext, key.Alt, consensusType);
                 bqrContextData.AltCount += bqrRecord.Count;
             }
         }
 
-        for(BqrContextData bqrContextData : mBqrContextData)
+        for(Map.Entry<ConsensusType,List<BqrContextData>> ctEntry : mBqrContextData.entrySet())
         {
-            for(Map.Entry<BqrKey,Integer> entry : summaryCounts.entrySet())
+            for(BqrContextData bqrContextData : ctEntry.getValue())
             {
-                BqrKey key = entry.getKey();
-
-                if(new String(key.TrinucleotideContext).equals(bqrContextData.TrinucleotideContext))
+                for(Map.Entry<BqrKey,Integer> entry : summaryCounts.entrySet())
                 {
-                    bqrContextData.TotalCount += entry.getValue();
+                    BqrKey key = entry.getKey();
+
+                    if(key.ReadType == ctEntry.getKey()
+                    && new String(key.TrinucleotideContext).equals(bqrContextData.TrinucleotideContext))
+                    {
+                        bqrContextData.TotalCount += entry.getValue();
+                    }
                 }
             }
         }
 
-        for(BqrContextData bqrContextData : mBqrContextData)
+        for(Map.Entry<ConsensusType,List<BqrContextData>> entry : mBqrContextData.entrySet())
         {
-            CT_LOGGER.trace("sample({}) simple BQR summary: {}", sampleId, bqrContextData);
+            for(BqrContextData bqrContextData : entry.getValue())
+            {
+                CT_LOGGER.trace("sample({}) consensus({}) simple BQR summary: {}", sampleId, entry.getKey(), bqrContextData);
+            }
         }
     }
 
-    private BqrContextData getOrCreate(final byte[] trinucleotideContext, final byte alt)
+    private BqrContextData getOrCreate(final byte[] trinucleotideContext, final byte alt, final ConsensusType consensusType)
     {
-        return getOrCreate(new String(trinucleotideContext), String.valueOf((char)alt));
+        return getOrCreate(new String(trinucleotideContext), String.valueOf((char)alt), consensusType);
     }
 
-    private BqrContextData getOrCreate(final String trinucleotideContext, final String alt)
+    private BqrContextData getOrCreate(final String trinucleotideContext, final String alt, final ConsensusType consensusType)
     {
-        BqrContextData bqrErrorRate = mBqrContextData.stream()
+        List<BqrContextData> bqrContextData = mBqrContextData.get(consensusType);
+
+        if(bqrContextData == null)
+        {
+            bqrContextData = Lists.newArrayList();
+            mBqrContextData.put(consensusType, bqrContextData);
+        }
+
+        BqrContextData bqrErrorRate = bqrContextData.stream()
                 .filter(x -> x.Alt.equals(alt) && x.TrinucleotideContext.equals(trinucleotideContext))
                 .findFirst().orElse(null);
 
@@ -163,7 +189,7 @@ public class BqrAdjustment
             return bqrErrorRate;
 
         bqrErrorRate = new BqrContextData(trinucleotideContext, alt);
-        mBqrContextData.add(bqrErrorRate);
+        bqrContextData.add(bqrErrorRate);
         return bqrErrorRate;
     }
 }

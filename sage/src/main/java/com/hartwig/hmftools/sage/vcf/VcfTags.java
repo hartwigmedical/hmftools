@@ -26,9 +26,6 @@ public final class VcfTags
     public static final String FRAG_STRAND_BIAS = "FSB";
     public static final String FRAG_STRAND_BIAS_DESC = "Fragment strand bias - percentage of forward-orientation fragments (ref,alt)";
 
-    public static final String READ_STRAND_BIAS = "RSB";
-    public static final String READ_STRAND_BIAS_DESC = "Read strand bias - percentage of forward-orientation reads (ref,alt)";
-
     public static final String AVG_SEQ_TECH_BASE_QUAL = "ASBQ";
     public static final String AVG_SEQ_TECH_BASE_QUAL_DESC = "Average sequencing-tech base quality in alt reads";
 

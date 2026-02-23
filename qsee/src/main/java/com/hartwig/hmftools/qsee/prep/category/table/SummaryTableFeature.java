@@ -1,63 +1,54 @@
 package com.hartwig.hmftools.qsee.prep.category.table;
 
+import static com.hartwig.hmftools.qsee.feature.NumberFormat.LOG;
+import static com.hartwig.hmftools.qsee.feature.NumberFormat.NUMBER;
+import static com.hartwig.hmftools.qsee.feature.NumberFormat.PERCENT;
+
 import java.util.Arrays;
 import java.util.List;
 
-import com.hartwig.hmftools.common.purple.PurpleQCStatus;
-import com.hartwig.hmftools.qsee.feature.FeatureKey;
-import com.hartwig.hmftools.qsee.feature.FeatureType;
+import com.hartwig.hmftools.qsee.feature.NumberFormat;
 import com.hartwig.hmftools.qsee.feature.SourceTool;
-
-import org.jetbrains.annotations.Nullable;
 
 public enum SummaryTableFeature
 {
-    MEAN_COVERAGE           (SummaryTableGroup.GENERAL, "Mean coverage", SourceTool.BAM_METRICS),
-    PURITY                  (SummaryTableGroup.GENERAL, "Purity", SourceTool.PURPLE, PurpleQCStatus.MIN_PURITY),
-    PLOIDY                  (SummaryTableGroup.GENERAL, "Ploidy", SourceTool.PURPLE),
-    LOH_PERCENT             (SummaryTableGroup.GENERAL, "LOH percent", SourceTool.PURPLE),
+    MEAN_COVERAGE(SourceTool.BAM_METRICS, SummaryTableGroup.MAPPING, "Mean coverage", NUMBER),
+    MAPPED_PROPORTION(SourceTool.BAM_METRICS, SummaryTableGroup.MAPPING, "Mapped proportion", PERCENT),
+    COVERAGE_ABOVE_10(SourceTool.BAM_METRICS, SummaryTableGroup.MAPPING, "Coverage > 10", PERCENT),
+    COVERAGE_ABOVE_20(SourceTool.BAM_METRICS, SummaryTableGroup.MAPPING, "Coverage > 20", PERCENT),
+    COVERAGE_ABOVE_30(SourceTool.BAM_METRICS, SummaryTableGroup.MAPPING, "Coverage > 30", PERCENT),
+    COVERAGE_ABOVE_60(SourceTool.BAM_METRICS, SummaryTableGroup.MAPPING, "Coverage > 60", PERCENT),
+    COVERAGE_ABOVE_100(SourceTool.BAM_METRICS, SummaryTableGroup.MAPPING, "Coverage > 100", PERCENT),
+    COVERAGE_ABOVE_250(SourceTool.BAM_METRICS, SummaryTableGroup.MAPPING, "Coverage > 250", PERCENT),
+    LOW_BASE_QUAL(SourceTool.BAM_METRICS, SummaryTableGroup.MAPPING, "Low qual. bases", PERCENT),
+    LOW_MAP_QUAL(SourceTool.BAM_METRICS, SummaryTableGroup.MAPPING, "Low map qual. reads", PERCENT),
+    DUPLICATE_READS(SourceTool.BAM_METRICS, SummaryTableGroup.MAPPING, "Duplicate reads", PERCENT),
+    DUAL_STRAND_READS(SourceTool.BAM_METRICS, SummaryTableGroup.MAPPING, "Dual-strand reads", PERCENT),
 
-    TMB_SMALL_VARIANTS      (SummaryTableGroup.TMB, "Small variants per MB", SourceTool.PURPLE),
-    TMB_MS_INDELS           (SummaryTableGroup.TMB, "Microsatellite indels per MB", SourceTool.PURPLE),
-    TMB_STRUCTURAL_VARIANTS (SummaryTableGroup.TMB, "Structural variants per MB", SourceTool.PURPLE),
+    PURITY(SourceTool.PURPLE, SummaryTableGroup.COPY_NUMBER, "Purity", PERCENT),
+    PLOIDY(SourceTool.PURPLE, SummaryTableGroup.COPY_NUMBER, "Ploidy", NUMBER),
+    LOH_PERCENT(SourceTool.PURPLE, SummaryTableGroup.COPY_NUMBER, "LOH", PERCENT),
+    DELETED_GENES(SourceTool.PURPLE, SummaryTableGroup.COPY_NUMBER, "Deleted genes", LOG),
+    UNSUPPORTED_CN_SEGMENTS(SourceTool.PURPLE, SummaryTableGroup.COPY_NUMBER, "Unsupp. segments", LOG),
 
-    TINC                    (SummaryTableGroup.CONTAMINATION, "Tumor in normal contamination", SourceTool.PURPLE, PurpleQCStatus.TINC_FAIL_LEVEL),
-    CONTAMINATION           (SummaryTableGroup.CONTAMINATION, "Other DNA contamination", SourceTool.PURPLE, PurpleQCStatus.MAX_CONTAMINATION),
+    TINC(SourceTool.PURPLE, SummaryTableGroup.CONTAMINATION, "Tumor in normal", PERCENT),
+    CONTAMINATION(SourceTool.PURPLE, SummaryTableGroup.CONTAMINATION, "Other DNA", PERCENT),
 
-    DELETED_GENES           (SummaryTableGroup.COPY_NUMBER, "Deleted genes", SourceTool.PURPLE, (double) PurpleQCStatus.MAX_DELETED_GENES),
-    UNSUPPORTED_CN_SEGMENTS (SummaryTableGroup.COPY_NUMBER, "Unsupported CN segments", SourceTool.PURPLE, (double) PurpleQCStatus.MAX_UNSUPPORTED_SEGMENTS),
+    TMB_SMALL_VARIANTS(SourceTool.PURPLE, SummaryTableGroup.TMB, "SNVs/indels per MB", LOG),
+    TMB_MS_INDELS(SourceTool.PURPLE, SummaryTableGroup.TMB, "MS indels per MB", LOG),
+    TMB_STRUCTURAL_VARIANTS(SourceTool.PURPLE, SummaryTableGroup.TMB, "SVs per MB", LOG);
 
-    MAPPED_PROPORTION       (SummaryTableGroup.MAPPING, "Mapped proportion", SourceTool.BAM_METRICS),
-    MIN_COVERAGE_10         (SummaryTableGroup.MAPPING, "Coverage ≥ 10", SourceTool.BAM_METRICS),
-    MIN_COVERAGE_20         (SummaryTableGroup.MAPPING, "Coverage ≥ 20", SourceTool.BAM_METRICS),
-    MIN_COVERAGE_30         (SummaryTableGroup.MAPPING, "Coverage ≥ 30", SourceTool.BAM_METRICS),
-    MIN_COVERAGE_60         (SummaryTableGroup.MAPPING, "Coverage ≥ 60", SourceTool.BAM_METRICS),
-    MIN_COVERAGE_100        (SummaryTableGroup.MAPPING, "Coverage ≥ 100", SourceTool.BAM_METRICS),
-    MIN_COVERAGE_250        (SummaryTableGroup.MAPPING, "Coverage ≥ 250", SourceTool.BAM_METRICS),
-    LOW_MAP_QUAL            (SummaryTableGroup.MAPPING, "Low map qual percent", SourceTool.BAM_METRICS),
-    LOW_BASE_QUAL           (SummaryTableGroup.MAPPING, "Low base qual percent", SourceTool.BAM_METRICS),
-    DUPLICATE_READS         (SummaryTableGroup.MAPPING, "Duplicate reads rate", SourceTool.BAM_METRICS),
-    DUAL_STRAND_READS       (SummaryTableGroup.MAPPING, "Dual-strand reads rate", SourceTool.BAM_METRICS);
-
-    private final SummaryTableGroup mGroup;
-    private final String mMetric;
     private final SourceTool mSourceTool;
-    private final @Nullable Double mQcThreshold;
+    private final SummaryTableGroup mGroup;
+    private final String mPlotLabel;
+    private final NumberFormat mNumberFormat;
 
-    SummaryTableFeature(SummaryTableGroup group, String metric, SourceTool sourceTool, @Nullable Double qcThreshold)
+    SummaryTableFeature(SourceTool sourceTool, SummaryTableGroup group, String plotLabel, NumberFormat numberFormat)
     {
-        mGroup = group;
-        mMetric = metric;
         mSourceTool = sourceTool;
-        mQcThreshold = qcThreshold;
-    }
-
-    SummaryTableFeature(SummaryTableGroup group, String metric, SourceTool sourceTool)
-    {
         mGroup = group;
-        mMetric = metric;
-        mSourceTool = sourceTool;
-        mQcThreshold = null;
+        mPlotLabel = plotLabel;
+        mNumberFormat = numberFormat;
     }
 
     public static List<SourceTool> sourceTools()
@@ -66,20 +57,7 @@ public enum SummaryTableFeature
     }
 
     public SourceTool sourceTool() { return mSourceTool; }
-
-    public FeatureKey key()
-    {
-        String featureName = FeatureKey.formMultiFieldName("FeatureGroup", mGroup.humanReadableName(), "Metric", mMetric);
-        return new FeatureKey(featureName, FeatureType.SUMMARY_TABLE, mSourceTool);
-    }
-
-    public Double qcThreshold()
-    {
-        if(mQcThreshold == null)
-        {
-            throw new IllegalStateException("QC threshold not set for feature: " + this);
-        }
-
-        return mQcThreshold;
-    }
+    public SummaryTableGroup group() { return mGroup; }
+    public String plotLabel() { return mPlotLabel; }
+    public NumberFormat numberFormat() { return mNumberFormat; }
 }

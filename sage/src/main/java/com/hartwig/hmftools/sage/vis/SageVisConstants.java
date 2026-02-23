@@ -33,6 +33,8 @@ public final class SageVisConstants
         MAX_READS_PER_TYPE.put(ReadContextMatch.SIMPLE_ALT, 5);
     }
 
+    public static final int REF_BUFFER_SIZE = 100;
+
     public static final String REPORTED_KEY = "REPORTED";
     public static final String IMPACT_KEY = "IMPACT";
     public static final int GENE_NAME_IDX = 0;

@@ -17,6 +17,7 @@ import com.hartwig.hmftools.common.genome.gc.GCBucket;
 import com.hartwig.hmftools.qsee.feature.FeatureKey;
 import com.hartwig.hmftools.qsee.feature.FeatureType;
 import com.hartwig.hmftools.qsee.feature.Feature;
+import com.hartwig.hmftools.qsee.common.MultiFieldStringBuilder;
 import com.hartwig.hmftools.qsee.feature.SourceTool;
 import com.hartwig.hmftools.qsee.prep.CategoryPrep;
 import com.hartwig.hmftools.qsee.prep.CommonPrepConfig;
@@ -75,7 +76,7 @@ public class GcBiasPrep implements CategoryPrep
 
             double normalisedDepth = medianReadDepth / overallMedianReadDepth;
 
-            String featureName = FeatureKey.formSingleFieldName(FIELD_GC_BUCKET, String.valueOf(bucket.bucket()));
+            String featureName = MultiFieldStringBuilder.formSingleField(FIELD_GC_BUCKET, String.valueOf(bucket.bucket()));
             FeatureKey key = new FeatureKey(featureName, FeatureType.GC_BIAS, SOURCE_TOOL);
             Feature feature = new Feature(key, normalisedDepth);
 

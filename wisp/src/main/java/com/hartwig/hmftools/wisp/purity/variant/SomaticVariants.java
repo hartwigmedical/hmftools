@@ -5,6 +5,7 @@ import static java.lang.String.format;
 import static java.lang.String.valueOf;
 
 import static com.hartwig.hmftools.common.genome.gc.GcCalcs.calcGcPercent;
+import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.probabilityToPhredQual;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_ALT;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION;
@@ -31,7 +32,9 @@ import static com.hartwig.hmftools.wisp.purity.FileType.SUMMARY;
 import static com.hartwig.hmftools.wisp.purity.PurityConfig.isUltima;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.MIN_AVG_EDGE_DISTANCE;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.MIN_AVG_EDGE_DISTANCE_DUAL_ULTIMA;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.MIN_DUAL_QUAL;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.OUTLIER_MIN_ALLELE_FRAGS;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.OUTLIER_MIN_ALLELE_FRAGS_WITH_DUAL;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.OUTLIER_MIN_AVG_VAF_MULTIPLE;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.OUTLIER_MIN_SAMPLE_PERC;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.OUTLIER_MIN_SAMPLE_RETEST_PERC;
@@ -43,6 +46,7 @@ import static com.hartwig.hmftools.wisp.purity.ResultsWriter.addCommonFields;
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.addCommonHeaderFields;
 import static com.hartwig.hmftools.wisp.purity.WriteType.FRAG_LENGTHS;
 import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.AVG_EDGE_DIST;
+import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.DUAL_ERROR_RATE;
 import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.GC_RATIO;
 import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.LOW_CONFIDENCE;
 import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.LOW_QUAL_PER_AD;
@@ -64,6 +68,7 @@ import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.bam.ConsensusType;
 import com.hartwig.hmftools.common.utils.RExecutor;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.PaveVcfTags;
@@ -321,7 +326,7 @@ public class SomaticVariants
             if(sampleFragData == null || tumorFragData == null)
                 continue;
 
-            checkSampleDataFilters(sampleFragData);
+            checkSampleDataFilters(variant, sampleFragData);
 
             // only include unfiltered variants which satisfy the min avg qual check in the sample
             if(variant.isFiltered() || sampleFragData.isFiltered())
@@ -415,7 +420,7 @@ public class SomaticVariants
         return filters;
     }
 
-    public void checkSampleDataFilters(final GenotypeFragments sampleFragData)
+    public void checkSampleDataFilters(final SomaticVariant variant, final GenotypeFragments sampleFragData)
     {
         if(sampleFragData.AlleleCount > 0)
         {
@@ -433,6 +438,12 @@ public class SomaticVariants
                 if(isUltima() && sampleFragData.averageReadDistance() < MIN_AVG_EDGE_DISTANCE_DUAL_ULTIMA)
                     sampleFragData.addDualFilterReason(AVG_EDGE_DIST);
             }
+
+            double dualBqrErrorRate = mEstimator.getBqrErrorRate(variant, sampleFragData, ConsensusType.DUAL);
+            double dualBqrErrorQual = probabilityToPhredQual(dualBqrErrorRate);
+
+            if(dualBqrErrorQual < MIN_DUAL_QUAL)
+                sampleFragData.addDualFilterReason(DUAL_ERROR_RATE);
         }
     }
 
@@ -465,7 +476,10 @@ public class SomaticVariants
             {
                 GenotypeFragments sampleFragData = variant.findGenotypeData(sampleId);
 
-                if(sampleFragData.AlleleCount <= OUTLIER_MIN_ALLELE_FRAGS)
+                boolean sufficientFrags = sampleFragData.AlleleCount >= OUTLIER_MIN_ALLELE_FRAGS
+                        || (sampleFragData.AlleleCount >= OUTLIER_MIN_ALLELE_FRAGS_WITH_DUAL && sampleFragData.UmiCounts.AlleleDual >= 1);
+
+                if(!sufficientFrags)
                     continue;
 
                 if(sampleFragData.vaf() < OUTLIER_MIN_AVG_VAF_MULTIPLE * averageVaf)
