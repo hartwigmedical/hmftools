@@ -378,7 +378,7 @@ public class MsModelCalculator
             repeatUnitData.setAdjustedErrorRate(combinedErrorRate);
             double x = repeatUnitData.adjustedErrorRate();
 
-            double predictedValue = coefficients[0] * x + coefficients[1] * pow(x, 3);
+            double predictedValue = max(coefficients[0] * x + coefficients[1] * pow(x, 3), 0);
             calcMsIndelsPerMb.add(predictedValue);
         }
 
