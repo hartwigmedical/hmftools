@@ -23,5 +23,6 @@ public class FlagstatDataTest extends ComparableItemTest<FlagstatData, FlagstatC
                 Map.of(FLD_MAPPED_PROPORTION, b -> b.mappedProportion = alternateValueSource.flagStats().mappedProportion());
         nameToAlternateIndexInitializer = Collections.emptyMap();
         reportabilityFieldToFalseReportabilityInitializer = Collections.emptyMap();
+        nameToNonPassInitializer = Collections.emptyMap();
     }
 }

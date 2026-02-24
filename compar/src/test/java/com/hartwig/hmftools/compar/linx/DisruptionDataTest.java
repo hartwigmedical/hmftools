@@ -39,6 +39,7 @@ public class DisruptionDataTest extends ComparableItemTest<DisruptionData, Disru
 
         nameToAlternateIndexInitializer = Map.of("GeneName", b -> b.geneName = alternateValueSource.GeneName);
         reportabilityFieldToFalseReportabilityInitializer = Collections.emptyMap();
+        nameToNonPassInitializer = Collections.emptyMap();
     }
 
     @Test

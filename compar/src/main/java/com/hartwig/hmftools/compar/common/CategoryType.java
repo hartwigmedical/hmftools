@@ -30,7 +30,12 @@ public enum CategoryType
     CDR3_SEQUENCE,
     CDR3_LOCUS_SUMMARY,
     TELOMERE_LENGTH,
-    V_CHORD;
+    V_CHORD,
+    ISOFOX_SUMMARY,
+    ISOFOX_GENE_DATA,
+    ISOFOX_TRANSCRIPT_DATA,
+    NOVEL_SPLICE_JUNCTION,
+    RNA_FUSION;
 
     public static final String ALL_CATEGORIES = "ALL";
     public static final String LINX_CATEGORIES = "LINX";

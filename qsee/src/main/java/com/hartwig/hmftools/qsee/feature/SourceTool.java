@@ -6,7 +6,5 @@ public enum SourceTool
     COBALT,
     ESVEE,
     PURPLE,
-    REDUX,
-
-    MULTIPLE;
+    REDUX;
 }

@@ -21,18 +21,6 @@ public class InvalidDataItem implements ComparableItem
     public List<String> displayValues() { return Collections.emptyList(); }
 
     @Override
-    public boolean reportable()
-    {
-        return true;
-    }
-
-    @Override
-    public boolean isPass()
-    {
-        return true;
-    }
-
-    @Override
     public boolean matches(final ComparableItem other) { return false; }
 
     @Override

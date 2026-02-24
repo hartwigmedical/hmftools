@@ -61,6 +61,7 @@ public class LilacDataTest extends ComparableItemTest<LilacData, LilacComparer, 
                 "genes", b -> b.genes = alternateValueSource.QcData.genes());
 
         reportabilityFieldToFalseReportabilityInitializer = Collections.emptyMap();
+        nameToNonPassInitializer = Collections.emptyMap();
     }
 
     @Override

@@ -59,11 +59,6 @@ public class VirusData implements ComparableItem
     }
 
     @Override
-    public boolean isPass() {
-        return true;
-    }
-
-    @Override
     public boolean matches(final ComparableItem other)
     {
         final VirusData otherData = (VirusData) other;

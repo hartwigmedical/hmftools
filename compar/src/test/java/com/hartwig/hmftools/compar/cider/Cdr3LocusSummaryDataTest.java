@@ -22,5 +22,6 @@ public class Cdr3LocusSummaryDataTest extends ComparableItemTest<Cdr3LocusSummar
                 Map.of(PASS_SEQUENCES_FIELD, b -> b.passSequenceCount = alternateValueSource.Cdr3LocusSummary.passSequences());
         nameToAlternateIndexInitializer = Map.of("Locus", b -> b.locus = alternateValueSource.Cdr3LocusSummary.locus());
         reportabilityFieldToFalseReportabilityInitializer = Collections.emptyMap();
+        nameToNonPassInitializer = Collections.emptyMap();
     }
 }

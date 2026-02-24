@@ -5,10 +5,17 @@ import static com.hartwig.hmftools.qsee.feature.NumberFormat.NUMBER;
 import static com.hartwig.hmftools.qsee.feature.NumberFormat.PERCENT;
 
 import java.util.Arrays;
+import java.util.EnumMap;
 import java.util.List;
 
+import com.hartwig.hmftools.qsee.feature.Feature;
+import com.hartwig.hmftools.qsee.feature.FeatureKey;
+import com.hartwig.hmftools.qsee.feature.FeatureType;
 import com.hartwig.hmftools.qsee.feature.NumberFormat;
+import com.hartwig.hmftools.qsee.feature.PlotMetadata;
 import com.hartwig.hmftools.qsee.feature.SourceTool;
+import com.hartwig.hmftools.qsee.status.QcStatus;
+import com.hartwig.hmftools.qsee.status.QcThreshold;
 
 public enum SummaryTableFeature
 {
@@ -60,4 +67,26 @@ public enum SummaryTableFeature
     public SummaryTableGroup group() { return mGroup; }
     public String plotLabel() { return mPlotLabel; }
     public NumberFormat numberFormat() { return mNumberFormat; }
+
+    public static void putFeature(EnumMap<SummaryTableFeature, Feature> featuresMap, SummaryTableFeature summaryTableFeature,
+            double value, QcStatus qcStatus)
+    {
+        FeatureKey key = new FeatureKey(summaryTableFeature.toString(), FeatureType.SUMMARY_TABLE, summaryTableFeature.sourceTool());
+
+        PlotMetadata metadata = PlotMetadata.builder()
+                .featureGroup(summaryTableFeature.group().humanReadableName())
+                .plotLabel(summaryTableFeature.plotLabel())
+                .numberFormat(summaryTableFeature.numberFormat())
+                .qcStatus(qcStatus)
+                .build();
+
+        Feature feature = new Feature(key, value, metadata);
+        featuresMap.put(summaryTableFeature, feature);
+    }
+
+    public static void putFeature(EnumMap<SummaryTableFeature, Feature> featuresMap, SummaryTableFeature summaryTableFeature,
+            double value, QcThreshold qcThreshold)
+    {
+        putFeature(featuresMap, summaryTableFeature, value, qcThreshold.getQcStatus(value));
+    }
 }

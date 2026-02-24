@@ -21,7 +21,8 @@ import com.hartwig.hmftools.qsee.prep.category.FragLengthDistributionPrep;
 import com.hartwig.hmftools.qsee.prep.category.GcBiasPrep;
 import com.hartwig.hmftools.qsee.prep.category.MissedGeneVariantPrep;
 import com.hartwig.hmftools.qsee.prep.category.MsIndelErrorPrep;
-import com.hartwig.hmftools.qsee.prep.category.SummaryTablePrep;
+import com.hartwig.hmftools.qsee.prep.category.SummaryTableBamMetricsPrep;
+import com.hartwig.hmftools.qsee.prep.category.SummaryTablePurplePrep;
 
 public class FeaturePrep
 {
@@ -35,7 +36,8 @@ public class FeaturePrep
     public static List<CategoryPrep> createCategoryPreps(CommonPrepConfig config)
     {
         return List.of(
-                new SummaryTablePrep(config),
+                new SummaryTableBamMetricsPrep(config),
+                new SummaryTablePurplePrep(config),
                 new CoverageDistributionPrep(config),
                 new FragLengthDistributionPrep(config),
                 new MissedGeneVariantPrep(config),

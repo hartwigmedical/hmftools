@@ -67,11 +67,6 @@ public record CopyNumberData(
     }
 
     @Override
-    public boolean isPass() {
-        return true;
-    }
-
-    @Override
     public boolean matches(final ComparableItem other)
     {
         final CopyNumberData otherCn = (CopyNumberData) other;

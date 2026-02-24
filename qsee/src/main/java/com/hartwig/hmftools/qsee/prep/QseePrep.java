@@ -22,20 +22,18 @@ import java.util.StringJoiner;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.qsee.cohort.CohortPercentiles;
 import com.hartwig.hmftools.qsee.cohort.CohortPercentilesFile;
-import com.hartwig.hmftools.qsee.cohort.FeaturePercentiles;
-import com.hartwig.hmftools.qsee.cohort.PercentileTransformer;
 import com.hartwig.hmftools.qsee.common.QseeFileCommon;
 import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.Feature;
 import com.hartwig.hmftools.qsee.feature.FeatureKey;
-import com.hartwig.hmftools.qsee.feature.PlotMetadata;
+
+import org.jetbrains.annotations.Nullable;
 
 public class QseePrep
 {
     private final QseePrepConfig mConfig;
 
     private static final String COL_FEATURE_VALUE = "FeatureValue";
-    private static final String COL_PERCENTILE_IN_COHORT = "PctInCohort";
     private static final String COL_PLOT_METADATA = "PlotMetadata";
 
     private static final String SAMPLE_ID_MULTI = "MULTI_SAMPLE";
@@ -66,37 +64,21 @@ public class QseePrep
         }
     }
 
-    private List<VisSampleData> getVisSampleData(List<SampleFeatures> multiSampleFeatures, CohortPercentiles cohortPercentiles)
+    private List<VisSampleData> getVisSampleData(List<SampleFeatures> multiSampleFeatures, @Nullable CohortPercentiles cohortPercentiles)
     {
         List<VisSampleData> visSampleData = new ArrayList<>();
 
-        QC_LOGGER.info("Creating vis data entries");
-
         for(SampleFeatures sampleFeatures : multiSampleFeatures)
         {
-            QC_LOGGER.debug("Creating vis data entries - sampleType({}) sample({})", sampleFeatures.sampleType(), sampleFeatures.sampleId());
+            QC_LOGGER.info("Creating vis data entries - sampleType({}) sample({})",
+                    sampleFeatures.sampleType(), sampleFeatures.sampleId());
 
             for(Feature feature : sampleFeatures.features())
             {
-                 QC_LOGGER.trace("sampleType({}) sample({}) - transforming featureKey({}) featureValue({}) to percentile",
-                         sampleFeatures.sampleId(), sampleFeatures.sampleType(), feature.key(), feature.value());
+                if(cohortPercentiles != null)
+                    cohortPercentiles.warnIfMissing(sampleFeatures.sampleType(), feature.key());
 
-                FeaturePercentiles featurePercentiles = cohortPercentiles.getFeaturePercentiles(sampleFeatures.sampleType(), feature.key());
-
-                double percentileInCohort = Double.NaN;
-                if(featurePercentiles != null)
-                {
-                    PercentileTransformer transformer = featurePercentiles.transformer();
-                    double featureValue = feature.value();
-                    percentileInCohort = transformer.featureValueToPercentile(featureValue);
-                }
-
-                VisSampleData visData = new VisSampleData(
-                        sampleFeatures.sampleId(),
-                        sampleFeatures.sampleType(),
-                        feature, percentileInCohort
-                );
-
+                VisSampleData visData = new VisSampleData(sampleFeatures.sampleId(), sampleFeatures.sampleType(), feature);
                 visSampleData.add(visData);
             }
         }
@@ -118,7 +100,6 @@ public class QseePrep
             header.add(COL_FEATURE_TYPE);
             header.add(COL_FEATURE_NAME);
             header.add(COL_FEATURE_VALUE);
-            header.add(COL_PERCENTILE_IN_COHORT);
             header.add(COL_PLOT_METADATA);
 
             writer.write(header.toString());
@@ -138,9 +119,6 @@ public class QseePrep
 
                 String featureValue = QseeFileCommon.DECIMAL_FORMAT.format(feature.value());
                 line.add(featureValue);
-
-                String percentileInCohort = QseeFileCommon.DECIMAL_FORMAT.format(entry.percentileInCohort());
-                line.add(percentileInCohort);
 
                 line.add(feature.plotMetadata().toString());
 
@@ -173,8 +151,6 @@ public class QseePrep
     {
         QC_LOGGER.info("Running {}", this.getClass().getSimpleName());
 
-        CohortPercentiles cohortPercentiles = CohortPercentilesFile.read(mConfig.CohortPercentilesFile);
-
         List<SampleFeatures> multiSampleFeatures = new ArrayList<>();
         multiSampleFeatures.addAll(runFeaturePrepFor(SampleType.TUMOR));
         multiSampleFeatures.addAll(runFeaturePrepFor(SampleType.NORMAL));
@@ -182,7 +158,12 @@ public class QseePrep
         if(!mConfig.CommonPrep.isSinglePatient())
             multiSampleFeatures.sort(Comparator.comparing(SampleFeatures::sampleId));
 
+        CohortPercentiles cohortPercentiles = (mConfig.CohortPercentilesFile != null)
+                ? CohortPercentilesFile.read(mConfig.CohortPercentilesFile)
+                : null;
+
         List<VisSampleData> visDataEntries = getVisSampleData(multiSampleFeatures, cohortPercentiles);
+
         String outputFile = formOutputFilename(mConfig.CommonPrep);
         writeToFile(outputFile, visDataEntries);
     }
