@@ -512,27 +512,18 @@ PLOTS[[FEATURE_TYPE$MS_INDEL_ERROR_BIAS]] <- local({
    
    plot_data <- get_plot_data(FEATURE_TYPE$MS_INDEL_ERROR_BIAS)
    
-   plot_labels <- labs(title = "Microsatellite indel error bias", x = "Repeat units", y = "Phred score diff.")
+   plot_labels <- labs(
+      title = "Microsatellite indel error bias",
+      x = "Repeat units",
+      y = expression(atop("Phred score diff.",atop("more del. errors <-> more ins. errors")))
+   )
    
    if(nrow(plot_data) == 0){
       return(plot_missing_data(plot_labels))
    }
    
-   text_data <- data.frame(
-      SampleType     = SAMPLE_TYPE$TUMOR$name,
-      RepeatUnitType = plot_data$RepeatUnitType[1],
-      RefNumUnits    = c(-Inf, -Inf),
-      FeatureValue   = c( Inf, -Inf),
-      Label          = c("More ins. errors", "More del. errors"),
-      Vjust          = c(1.5, -0.5)
-   )
-   
    plot_boxplot(plot_data, x = "RefNumUnits", hlines = 0, plot_type = "pointrange") +
       facet_grid("ConsensusType ~ RepeatUnitType") +
-      geom_text(
-         data = text_data, mapping = aes(label = Label, vjust = Vjust), 
-         hjust = -0.05, size = 2.5
-      ) +
       scale_x_discrete(breaks = function(x) ifelse(as.numeric(x) %% 3 == 0, x, "") ) +
       scale_y_continuous(
          labels = function(x){ ifelse(x > 0, paste0("+",x), x) },
