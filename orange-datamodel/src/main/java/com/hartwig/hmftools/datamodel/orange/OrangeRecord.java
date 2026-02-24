@@ -52,17 +52,11 @@ public interface OrangeRecord
     @NotNull
     OrangeSample tumorSample();
 
-    @Nullable
-    Map<String, Double> germlineMVLHPerGene();
-
     @NotNull
     PurpleRecord purple();
 
     @NotNull
     LinxRecord linx();
-
-    @NotNull
-    List<WildTypeGene> wildTypeGenes();
 
     @Nullable
     IsofoxRecord isofox();
@@ -95,4 +89,5 @@ public interface OrangeRecord
     {
         return refSample() == null;
     }
+    default boolean hasRna() { return isofox() != null; }
 }

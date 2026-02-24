@@ -64,7 +64,7 @@ public final class VariantEntryFactory
 
         return ImmutableVariantEntry.builder()
                 .gene(variant.gene())
-                .vaf(min(variant.adjustedVAF(), 0))
+                .vaf(variant.tumorDepth().alleleFrequency())
                 .depth(variant.tumorDepth().totalReadCount())
                 .somaticLikelihood(variant.somaticLikelihood().toString())
                 .isCanonical(driver == null || driver.transcript().equals(variant.canonicalImpact().transcript()))

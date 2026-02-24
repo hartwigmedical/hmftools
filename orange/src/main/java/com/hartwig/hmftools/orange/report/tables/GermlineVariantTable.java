@@ -47,14 +47,11 @@ public final class GermlineVariantTable
         addEntry(cells, widths, cellEntries, 1, COL_VCN);
         addEntry(cells, widths, cellEntries, 1, COL_CN);
         addEntry(cells, widths, cellEntries, 1, COL_MACN);
-        addEntry(cells, widths, cellEntries, 1, COL_BIALLELIC);
         addEntry(cells, widths, cellEntries, 1, COL_HOTSPOT);
+        addEntry(cells, widths, cellEntries, 1, COL_BIALLELIC);
         addEntry(cells, widths, cellEntries, 1, COL_GENOTYPE);
 
-        float[] widthArray = floatArray(widths);
-        Cell[] cellArray = cellArray(cellEntries);
-
-        Table table = Tables.createContent(width, widthArray, cellArray);
+        Table table = Tables.createContent(width, floatArray(widths), cellArray(cellEntries));
 
         for(VariantEntry variant : Variants.sort(variants))
         {
@@ -64,8 +61,8 @@ public final class GermlineVariantTable
             table.addCell(cells.createContent(formatSingleDigitDecimal(variant.variantCopyNumber())));
             table.addCell(cells.createContent(formatSingleDigitDecimal(variant.totalCopyNumber())));
             table.addCell(cells.createContent(formatSingleDigitDecimal(variant.minorAlleleCopyNumber())));
-            table.addCell(cells.createContent(variant.biallelic() ? "Yes" : "No"));
             table.addCell(cells.createContent(Variants.hotspotField(variant)));
+            table.addCell(cells.createContent(variant.biallelic() ? "Yes" : "No"));
             table.addCell(cells.createContent(simplifiedDisplay(variant.genotypeStatus())));
         }
 

@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.orange.report.interpretation;
 
+import static com.hartwig.hmftools.orange.report.ReportResources.formatPercentileField;
+import static com.hartwig.hmftools.orange.report.ReportResources.formatTpmField;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
@@ -20,15 +23,13 @@ public class ExpressionsTest
     public void canCalcFoldChange()
     {
         GeneExpression normal = builder().tpm(1).medianTpmCancer(2D).medianTpmCohort(3D).build();
-        assertEquals("0.5", Expressions.foldChangeType(normal));
-        assertEquals("0.3", Expressions.foldChangeDatabase(normal));
+        assertEquals("0.3", Expressions.formatFoldChange(normal)); // uses pan-cancer values for now
 
         GeneExpression zeroMedian = builder().tpm(0).medianTpmCancer(0D).medianTpmCohort(0D).build();
-        assertEquals(ReportResources.NOT_AVAILABLE, Expressions.foldChangeType(zeroMedian));
-        assertEquals(ReportResources.NOT_AVAILABLE, Expressions.foldChangeDatabase(zeroMedian));
+        assertEquals(ReportResources.NOT_AVAILABLE, Expressions.formatFoldChangeCancer(zeroMedian));
 
         GeneExpression missingCancerTPM = builder().tpm(1).medianTpmCancer(null).medianTpmCohort(3D).build();
-        assertEquals(ReportResources.NOT_AVAILABLE, Expressions.foldChangeType(missingCancerTPM));
+        assertEquals(ReportResources.NOT_AVAILABLE, Expressions.formatFoldChangeCancer(missingCancerTPM));
     }
 
     @Test
@@ -46,12 +47,9 @@ public class ExpressionsTest
     {
         GeneExpression expression = builder().tpm(1.234).percentileCancer(0.12345).percentileCohort(0.23445).build();
 
-        assertEquals("1.2", Expressions.tpm(expression));
-        assertEquals("0.12", Expressions.percentileType(expression));
-        assertEquals("0.23", Expressions.percentileDatabase(expression));
-
-        GeneExpression cancerExpressionMissing = builder().tpm(0).percentileCancer(null).percentileCohort(0).build();
-        assertEquals(ReportResources.NOT_AVAILABLE, Expressions.percentileType(cancerExpressionMissing));
+        assertEquals("1.2", formatTpmField(expression.tpm()));
+        assertEquals("0.12", formatPercentileField(expression.percentileCancer()));
+        assertEquals("0.23", formatPercentileField(expression.percentileCohort()));
     }
 
     @NotNull

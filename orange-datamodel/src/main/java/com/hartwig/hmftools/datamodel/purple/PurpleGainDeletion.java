@@ -13,9 +13,6 @@ public interface PurpleGainDeletion
     @NotNull
     PurpleDriver driver();
 
-    @NotNull
-    CopyNumberInterpretation interpretation();
-
     // only populated for germline amp dels
     @Nullable
     GermlineAmpDelFields germlineAmpDelFields();
@@ -33,6 +30,9 @@ public interface PurpleGainDeletion
     String chromosomeBand();
 
     @NotNull
+    String exonRange();
+
+    @NotNull
     default String transcript()
     {
         return driver().transcript();
@@ -44,9 +44,18 @@ public interface PurpleGainDeletion
     }
 
     // these are the tumor copies
-    double minCopies();
-
-    double maxCopies();
+    double minCopyNumber();
+    double maxCopyNumber();
+    double relativeCopyNumber();
 
     double minMinorAlleleCopies();
+
+    @Nullable
+    Double tpm();
+
+    @Nullable
+    Double tpmPercentile();
+
+    @Nullable
+    Double tpmFoldChange();
 }

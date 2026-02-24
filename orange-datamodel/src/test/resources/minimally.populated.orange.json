@@ -230,9 +230,14 @@
         "germlineAmpDelFields": null,
         "chromosome": "5",
         "chromosomeBand": "q2.2",
-        "minCopies": 0.1,
-        "maxCopies": 1.2,
-        "minMinorAlleleCopies": 0.1
+        "exonRange": "FULL",
+        "minCopyNumber": 0.1,
+        "maxCopyNumber": 1.2,
+        "relativeCopyNumber": 0.1,
+        "minMinorAlleleCopies": 0.1,
+        "tpm": 0,
+        "tpmPercentile": 0,
+        "tpmFoldChange": 0
       }
     ],
     "germlineGainsDels": null

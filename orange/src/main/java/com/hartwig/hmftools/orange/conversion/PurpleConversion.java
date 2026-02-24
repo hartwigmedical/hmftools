@@ -1,6 +1,13 @@
 package com.hartwig.hmftools.orange.conversion;
 
+import static com.hartwig.hmftools.common.variant.CodingEffect.MISSENSE;
+import static com.hartwig.hmftools.common.variant.CodingEffect.NONE;
+import static com.hartwig.hmftools.common.variant.CodingEffect.NONSENSE_OR_FRAMESHIFT;
+import static com.hartwig.hmftools.common.variant.CodingEffect.SPLICE;
+import static com.hartwig.hmftools.common.variant.CodingEffect.SYNONYMOUS;
+
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
@@ -36,9 +43,6 @@ import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleSomaticLikelihood;
 import com.hartwig.hmftools.datamodel.purple.PurpleTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariantEffect;
-import com.hartwig.hmftools.orange.algo.purple.CodingEffectDeterminer;
-
-import org.jetbrains.annotations.NotNull;
 
 public final class PurpleConversion
 {
@@ -147,7 +151,7 @@ public final class PurpleConversion
     {
         List<VariantEffect> effectsList = VariantEffect.effectsToList(impact.Effects);
         List<PurpleVariantEffect> purpleEffects = ConversionUtil.mapToList(effectsList, PurpleConversion::convert);
-        PurpleCodingEffect purpleCodingEffect = convert(CodingEffectDeterminer.determineCodingEffect(effectsList));
+        PurpleCodingEffect purpleCodingEffect = convert(determineCodingEffect(effectsList));
 
         return ImmutablePurpleTranscriptImpact.builder()
                 .transcript(impact.Transcript)
@@ -159,6 +163,34 @@ public final class PurpleConversion
                 .reported(reported)
                 .build();
     }
+
+    public static CodingEffect determineCodingEffect(final List<VariantEffect> variantEffects)
+    {
+        List<CodingEffect> simplifiedEffects = variantEffects.stream().map(CodingEffect::effect).collect(Collectors.toList());
+
+        if(simplifiedEffects.stream().anyMatch(x -> x.equals(NONSENSE_OR_FRAMESHIFT)))
+        {
+            return NONSENSE_OR_FRAMESHIFT;
+        }
+
+        if(simplifiedEffects.stream().anyMatch(x -> x.equals(SPLICE)))
+        {
+            return SPLICE;
+        }
+
+        if(simplifiedEffects.stream().anyMatch(x -> x.equals(MISSENSE)))
+        {
+            return MISSENSE;
+        }
+
+        if(simplifiedEffects.stream().anyMatch(x -> x.equals(SYNONYMOUS)))
+        {
+            return SYNONYMOUS;
+        }
+
+        return NONE;
+    }
+
 
     public static PurpleGermlineStatus convert(final GermlineStatus germlineStatus)
     {

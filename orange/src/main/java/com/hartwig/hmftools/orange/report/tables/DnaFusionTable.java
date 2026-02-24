@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.orange.report.tables;
 
+import static com.hartwig.hmftools.orange.report.ReportResources.formatPercentileField;
 import static com.hartwig.hmftools.orange.report.ReportResources.formatSingleDigitDecimal;
+import static com.hartwig.hmftools.orange.report.ReportResources.formatTpmField;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -27,7 +29,7 @@ import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.property.UnitValue;
 
 import com.google.common.collect.Lists;
-import org.jetbrains.annotations.NotNull;
+
 import org.jetbrains.annotations.Nullable;
 
 public final class DnaFusionTable
@@ -186,13 +188,13 @@ public final class DnaFusionTable
             return new Paragraph("None");
         }
 
-        String tpmString = "TPM " + Expressions.tpm(geneEndExpression);
-        String fcTypeString = "FC " + Expressions.foldChangeType(geneEndExpression);
-        String typeString = " Type percentile " + Expressions.percentileType(geneEndExpression) + " (" + fcTypeString + ")";
-        String fcDbString = "FC " + Expressions.foldChangeDatabase(geneEndExpression);
-        String dbString = " DB percentile " + Expressions.percentileDatabase(geneEndExpression) + " (" + fcDbString + ")";
+        String tpmString = "TPM " + formatTpmField(geneEndExpression.tpm());
+        String fcTypeString = "FC " + Expressions.formatFoldChange(geneEndExpression);
+        String typeString = " Type percentile " + formatPercentileField(geneEndExpression.percentileCohort()) + " (" + fcTypeString + ")";
+        // String fcDbString = "FC " + Expressions.foldChangeDatabase(geneEndExpression);
+        // String dbString = " DB percentile " + Expressions.percentileDatabase(geneEndExpression) + " (" + fcDbString + ")";
 
-        return new Paragraph(geneEndExpression.gene() + " " + tpmString + ", " + typeString + ", " + dbString);
+        return new Paragraph(geneEndExpression.gene() + " " + tpmString + ", " + typeString);
     }
 
     private static IBlockElement supportFromSpliceJunctions(final IsofoxRecord isofox, final LinxFusion fusion, final Cells cells)

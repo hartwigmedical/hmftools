@@ -12,81 +12,79 @@ import com.itextpdf.kernel.pdf.PdfOutline;
 import com.itextpdf.kernel.pdf.PdfPage;
 import com.itextpdf.kernel.pdf.navigation.PdfExplicitRemoteGoToDestination;
 
-import org.jetbrains.annotations.NotNull;
-
 public class PageEventHandler implements IEventHandler
 {
-    @NotNull
-    private final Header header;
-    @NotNull
-    private final Footer footer;
-    @NotNull
-    private final SidePanel sidePanel;
+    private final Header mHeader;
+    private final Footer mFooter;
+    private final SidePanel mSidePanel;
 
-    private String chapterTitle = "Undefined";
-    private boolean firstPageOfChapter = true;
-    private PdfOutline outline = null;
+    private String mChapterTitle;
+    private boolean mFirstPageOfChapter;
+    private PdfOutline mOutline;
 
-    @NotNull
-    static PageEventHandler create(@NotNull String sampleId, @NotNull String pipelineVersion, @NotNull ReportResources reportResources,
-            boolean addDisclaimer)
+    static PageEventHandler create(
+            final String sampleId, final String pipelineVersion, final ReportResources reportResources, boolean addDisclaimer)
     {
         return new PageEventHandler(new Header(Resources.getResource("orange_circos.png"), reportResources, addDisclaimer),
                 new Footer(reportResources, addDisclaimer),
                 new SidePanel(sampleId, pipelineVersion, reportResources));
     }
 
-    private PageEventHandler(@NotNull final Header header, @NotNull final Footer footer, @NotNull final SidePanel sidePanel)
+    private PageEventHandler(final Header header, final Footer footer, final SidePanel sidePanel)
     {
-        this.header = header;
-        this.footer = footer;
-        this.sidePanel = sidePanel;
+        mHeader = header;
+        mFooter = footer;
+        mSidePanel = sidePanel;
+
+        mChapterTitle = "Undefined";
+        mFirstPageOfChapter = true;
+        mOutline = null;
     }
 
     @Override
-    public void handleEvent(@NotNull Event event)
+    public void handleEvent(final Event event)
     {
         PdfDocumentEvent documentEvent = (PdfDocumentEvent) event;
         if(documentEvent.getType().equals(PdfDocumentEvent.START_PAGE))
         {
             PdfPage page = documentEvent.getPage();
 
-            header.renderHeader(page);
-            if(firstPageOfChapter)
+            mHeader.renderHeader(page);
+            if(mFirstPageOfChapter)
             {
-                firstPageOfChapter = false;
+                mFirstPageOfChapter = false;
 
-                createChapterBookmark(documentEvent.getDocument(), chapterTitle);
+                createChapterBookmark(documentEvent.getDocument(), mChapterTitle);
             }
 
-            sidePanel.renderSidePanel(page);
-            footer.renderFooter(page);
+            mSidePanel.renderSidePanel(page);
+            mFooter.renderFooter(page);
         }
     }
 
-    void chapterTitle(@NotNull String chapterTitle)
+    void chapterTitle(final String chapterTitle)
     {
-        this.chapterTitle = chapterTitle;
+        this.mChapterTitle = chapterTitle;
     }
 
     void resetChapterPageCounter()
     {
-        firstPageOfChapter = true;
+        mFirstPageOfChapter = true;
     }
 
-    void writeFooters(@NotNull PdfDocument document)
+    void writeFooters(final PdfDocument document)
     {
-        footer.writeFooters(document);
+        mFooter.writeFooters(document);
     }
 
-    private void createChapterBookmark(@NotNull PdfDocument pdf, @NotNull String title)
+    private void createChapterBookmark(final PdfDocument pdf, final String title)
     {
-        if(outline == null)
+        if(mOutline == null)
         {
-            outline = pdf.getOutlines(false);
+            mOutline = pdf.getOutlines(false);
         }
 
-        PdfOutline chapterItem = outline.addOutline(title);
+        PdfOutline chapterItem = mOutline.addOutline(title);
         chapterItem.addDestination(PdfExplicitRemoteGoToDestination.createFitH(pdf.getNumberOfPages(), 0));
     }
 }

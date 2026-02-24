@@ -54,7 +54,6 @@ import com.hartwig.hmftools.orange.algo.isofox.OrangeIsofoxTestFactory;
 import com.hartwig.hmftools.orange.algo.linx.TestLinxInterpretationFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleInterpretationFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleVariantFactory;
-import com.hartwig.hmftools.orange.algo.wildtype.TestWildTypeFactory;
 import com.hartwig.hmftools.orange.conversion.LinxConversion;
 import com.hartwig.hmftools.orange.conversion.OrangeConversion;
 
@@ -98,10 +97,8 @@ public final class TestOrangeReportFactory
                 .addConfiguredPrimaryTumor(OrangeConversion.convert(DoidTestFactory.createDoidNode("1", "cancer type")))
                 .pipelineVersion("v6.1")
                 .refSample(createMinimalOrangeSample())
-                .germlineMVLHPerGene(createTestGermlineMVLHPerGene())
                 .purple(createTestPurpleData())
                 .linx(createTestLinxData())
-                .addWildTypeGenes(TestWildTypeFactory.create("gene"))
                 .isofox(createTestIsofoxData())
                 .lilac(createTestLilacData())
                 .immuneEscape(createTestImmuneEscapeRecord())
@@ -132,14 +129,6 @@ public final class TestOrangeReportFactory
                 .purplePurityRangePlot(DUMMY_IMAGE)
                 .purpleKataegisPlot(DUMMY_IMAGE)
                 .build();
-    }
-
-    @NotNull
-    private static Map<String, Double> createTestGermlineMVLHPerGene()
-    {
-        Map<String, Double> germlineMVLHPerGene = Maps.newHashMap();
-        germlineMVLHPerGene.put("gene", 0.01);
-        return germlineMVLHPerGene;
     }
 
     @NotNull

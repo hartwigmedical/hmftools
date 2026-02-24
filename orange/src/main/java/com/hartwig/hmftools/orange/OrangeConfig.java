@@ -252,6 +252,9 @@ public class OrangeConfig
         LOGGER.info("experiment type has been resolved to '{}'", RunType);
     }
 
+    public boolean hasReference() { return ReferenceId != null; }
+    public boolean hasRNA() { return RnaSampleId != null; }
+
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addConfigItem(EXPERIMENT_TYPE, true, "The type of the experiment, one of WGS or PANEL");

@@ -25,7 +25,6 @@ public final class ReportLimiter
     {
         return ImmutableOrangeRecord.builder()
                 .from(report)
-                .germlineMVLHPerGene(limitGermlineMVLHToOne(report.germlineMVLHPerGene()))
                 .purple(limitPurpleDataToOne(report.purple()))
                 .linx(limitLinxDataToOne(report.linx()))
                 .isofox(limitIsofoxDataToOne(report.isofox()))

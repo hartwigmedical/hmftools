@@ -11,48 +11,45 @@ import com.itextpdf.layout.Canvas;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Text;
 
-import org.jetbrains.annotations.NotNull;
-
 public class Header
 {
-    @NotNull
-    private final PdfImageXObject orangeCircosObject;
-    private final ReportResources reportResources;
-    private final boolean addDisclaimer;
+    private final PdfImageXObject mOrangeCircosObject;
+    private final ReportResources mReportResources;
+    private final boolean mAddDisclaimer;
 
-    public Header(@NotNull URL orangeCircosPath, @NotNull ReportResources reportResources, boolean addDisclaimer)
+    public Header(final URL orangeCircosPath, final ReportResources reportResources, boolean addDisclaimer)
     {
-        this.orangeCircosObject = new PdfImageXObject(ImageDataFactory.create(orangeCircosPath));
-        this.reportResources = reportResources;
-        this.addDisclaimer = addDisclaimer;
+        mOrangeCircosObject = new PdfImageXObject(ImageDataFactory.create(orangeCircosPath));
+        mReportResources = reportResources;
+        mAddDisclaimer = addDisclaimer;
     }
 
-    public void renderHeader(@NotNull PdfPage page)
+    public void renderHeader(final PdfPage page)
     {
         PdfCanvas pdfCanvas = new PdfCanvas(page.getLastContentStream(), page.getResources(), page.getDocument());
         Canvas canvas = new Canvas(pdfCanvas, page.getDocument(), page.getPageSize());
 
-        pdfCanvas.addXObject(orangeCircosObject, 50, page.getPageSize().getHeight() - 70, 60, false);
+        pdfCanvas.addXObject(mOrangeCircosObject, 50, page.getPageSize().getHeight() - 70, 60, false);
 
-        Paragraph title = new Paragraph().add(new Text("O").setFont(reportResources.fontBold())
+        Paragraph title = new Paragraph().add(new Text("O").setFont(mReportResources.fontBold())
                         .setFontSize(11)
                         .setFontColor(ReportResources.PALETTE_ORANGE_1))
-                .add(new Text("R").setFont(reportResources.fontBold()).setFontSize(11).setFontColor(ReportResources.PALETTE_ORANGE_2))
-                .add(new Text("A").setFont(reportResources.fontBold()).setFontSize(11).setFontColor(ReportResources.PALETTE_ORANGE_3))
-                .add(new Text("N").setFont(reportResources.fontBold()).setFontSize(11).setFontColor(ReportResources.PALETTE_ORANGE_4))
-                .add(new Text("G").setFont(reportResources.fontBold()).setFontSize(11).setFontColor(ReportResources.PALETTE_ORANGE_5))
-                .add(new Text("E").setFont(reportResources.fontBold()).setFontSize(11).setFontColor(ReportResources.PALETTE_ORANGE_6))
-                .add(new Text(" Report").setFont(reportResources.fontBold()).setFontSize(11).setFontColor(ReportResources.PALETTE_BLACK));
+                .add(new Text("R").setFont(mReportResources.fontBold()).setFontSize(11).setFontColor(ReportResources.PALETTE_ORANGE_2))
+                .add(new Text("A").setFont(mReportResources.fontBold()).setFontSize(11).setFontColor(ReportResources.PALETTE_ORANGE_3))
+                .add(new Text("N").setFont(mReportResources.fontBold()).setFontSize(11).setFontColor(ReportResources.PALETTE_ORANGE_4))
+                .add(new Text("G").setFont(mReportResources.fontBold()).setFontSize(11).setFontColor(ReportResources.PALETTE_ORANGE_5))
+                .add(new Text("E").setFont(mReportResources.fontBold()).setFontSize(11).setFontColor(ReportResources.PALETTE_ORANGE_6))
+                .add(new Text(" Report").setFont(mReportResources.fontBold()).setFontSize(11).setFontColor(ReportResources.PALETTE_BLACK));
 
-        if(addDisclaimer)
+        if(mAddDisclaimer)
         {
-            title = title.add(new Text(" (Research Use Only)").setFont(reportResources.fontBold())
+            title = title.add(new Text(" (Research Use Only)").setFont(mReportResources.fontBold())
                     .setFontSize(9)
                     .setFontColor(ReportResources.PALETTE_BLACK));
         }
 
-        float left = addDisclaimer ? 150 : 180;
-        float width = addDisclaimer ? 370 : 300;
+        float left = mAddDisclaimer ? 150 : 180;
+        float width = mAddDisclaimer ? 370 : 300;
 
         canvas.add(title.setFixedPosition(left, page.getPageSize().getHeight() - 40, width));
 

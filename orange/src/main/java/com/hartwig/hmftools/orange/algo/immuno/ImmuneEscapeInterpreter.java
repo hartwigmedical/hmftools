@@ -8,8 +8,8 @@ import com.hartwig.hmftools.datamodel.immuno.ImmuneEscapeRecord;
 import com.hartwig.hmftools.datamodel.immuno.ImmutableImmuneEscapeRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
-import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
 import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
+import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
@@ -114,8 +114,7 @@ public final class ImmuneEscapeInterpreter
         {
             if(somaticGainDel.gene().equals(geneToCheck) && somaticGainDel.isCanonical())
             {
-                return somaticGainDel.interpretation() == CopyNumberInterpretation.FULL_DEL
-                        || somaticGainDel.interpretation() == CopyNumberInterpretation.PARTIAL_DEL;
+                return somaticGainDel.driver().type() == PurpleDriverType.DEL;
             }
         }
 
@@ -153,7 +152,7 @@ public final class ImmuneEscapeInterpreter
         {
             if(somaticGainDel.gene().equals(geneToCheck) && somaticGainDel.isCanonical())
             {
-                return somaticGainDel.interpretation() == CopyNumberInterpretation.FULL_GAIN;
+                return somaticGainDel.driver().type() == PurpleDriverType.AMP;
             }
         }
         return false;

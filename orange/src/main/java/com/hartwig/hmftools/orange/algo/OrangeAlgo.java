@@ -26,6 +26,7 @@ import com.hartwig.hmftools.common.driver.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.genome.chromosome.CytoBands;
 import com.hartwig.hmftools.common.hla.LilacSummaryData;
 import com.hartwig.hmftools.common.redux.BqrFile;
+import com.hartwig.hmftools.datamodel.orange.ExperimentType;
 import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeDoidNode;
 import com.hartwig.hmftools.datamodel.orange.OrangeDoidNode;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxData;
@@ -72,7 +73,6 @@ import com.hartwig.hmftools.orange.algo.sigs.SigsEtiologiesLoader;
 import com.hartwig.hmftools.orange.algo.sigs.SigsInterpreter;
 import com.hartwig.hmftools.orange.algo.util.ReportLimiter;
 import com.hartwig.hmftools.orange.algo.virus.VirusInterpreter;
-import com.hartwig.hmftools.orange.algo.wildtype.WildTypeAlgo;
 import com.hartwig.hmftools.orange.cohort.datamodel.ImmutableSample;
 import com.hartwig.hmftools.orange.cohort.datamodel.Sample;
 import com.hartwig.hmftools.orange.conversion.ConversionUtil;
@@ -122,7 +122,6 @@ public class OrangeAlgo
 
         PurpleData purpleData = loadPurpleData(config);
         LinxData linxData = loadLinxData(config);
-        Map<String, Double> mvlhPerGene = loadGermlineMVLHPerGene(config, mDriverGenes);
         ChordData chord = loadChordAnalysis(config);
         LilacSummaryData lilac = loadLilacData(config);
         VirusInterpreterData virusInterpreter = loadVirusInterpreterData(config);
@@ -141,7 +140,7 @@ public class OrangeAlgo
 
         PurpleInterpreter purpleInterpreter = new PurpleInterpreter();
 
-        PurpleRecord purple = purpleInterpreter.interpret(purpleData);
+        PurpleRecord purple = purpleInterpreter.interpret(purpleData, isofoxData);
 
         ImmuneEscapeRecord immuneEscape = ImmuneEscapeInterpreter.interpret(purple, linx);
 
@@ -154,22 +153,6 @@ public class OrangeAlgo
 
         List<WildTypeGene> wildTypeGenes = Lists.newArrayList();
 
-        if(WildTypeAlgo.wildTypeCallingAllowed(purple.fit().qc().status()))
-        {
-            wildTypeGenes = WildTypeAlgo.determineWildTypeGenes(
-                    mDriverGenes,
-                    purple.somaticVariants(), purple.germlineVariants(), purple.somaticGainsDels(),
-                    linx.fusions(), linx.somaticHomozygousDisruptions(), linx.somaticBreakends());
-
-            LOGGER.info("Identified {} of {} driver genes to be wild-type", wildTypeGenes.size(), driverGenes.size());
-        }
-        else
-        {
-            LOGGER.info("Wild-type calling skipped due to insufficient tumor sample quality");
-        }
-
-        boolean hasRefSample = config.ReferenceId != null;
-
         OrangeRecord orangeRecord = ImmutableOrangeRecord.builder()
                 .sampleId(config.TumorId)
                 .samplingDate(config.SamplingDate)
@@ -179,12 +162,10 @@ public class OrangeAlgo
                 .pipelineVersion(pipelineVersion)
                 .refSample(refSample)
                 .tumorSample(tumorSample)
-                .germlineMVLHPerGene(mvlhPerGene)
                 .purple(purple)
                 .linx(linx)
-                .wildTypeGenes(wildTypeGenes)
                 .isofox(isofox)
-                .lilac(lilac != null ? OrangeConversion.convert(lilac, hasRefSample, config.RnaSampleId != null) : null)
+                .lilac(lilac != null ? OrangeConversion.convert(lilac, config.hasReference(), config.hasRNA()) : null)
                 .immuneEscape(immuneEscape)
                 .virusInterpreter(virusInterpreter != null ? VirusInterpreter.interpret(virusInterpreter) : null)
                 .chord(chord != null ? OrangeConversion.convert(chord) : null)
@@ -314,26 +295,6 @@ public class OrangeAlgo
         return ImmutableOrangeSample.builder().metrics(metrics).flagstat(flagstat).build();
     }
 
-    @Nullable
-    private static Map<String, Double> loadGermlineMVLHPerGene(final OrangeConfig config, final Map<String,DriverGene> driverGenes)
-            throws IOException
-    {
-        if(config.ReferenceId == null)
-            return null;
-
-        String geneCoverageFile = generateGeneCoverageFilename(config.ReferenceBamMetricsDir, config.ReferenceId);
-        if(!Files.exists(Paths.get(geneCoverageFile)))
-        {
-            LOGGER.info("Skipping loading of germline MVLH as no germline gene coverage has been provided");
-            return null;
-        }
-
-        Map<String, Double> mvlhPerGene = GermlineMVLHFactory.loadGermlineMVLHPerGene(geneCoverageFile, driverGenes);
-        LOGGER.info("Loaded MVLH data for {} genes", mvlhPerGene.keySet().size());
-
-        return mvlhPerGene;
-    }
-
     private PurpleData loadPurpleData(final OrangeConfig config) throws IOException
     {
         LOGGER.info("Loading PURPLE data from {}", config.PurpleDataDirectory);
@@ -433,6 +394,9 @@ public class OrangeAlgo
     @Nullable
     private static ChordData loadChordAnalysis(final OrangeConfig config) throws IOException
     {
+        if(!config.hasReference() || config.RunType == ExperimentType.TARGETED)
+            return null;
+
         if(config.ChordDir == null || !Files.exists(Paths.get(config.ChordDir)))
         {
             LOGGER.debug("Skipping Chord loading as no input has been provided");
@@ -449,7 +413,7 @@ public class OrangeAlgo
     @Nullable
     private static CuppaData loadCuppaData(final OrangeConfig config) throws Exception
     {
-        if(config.ReferenceId == null) // may change, esp if vCuppa is used
+        if(config.ReferenceId == null || config.RunType == ExperimentType.TARGETED) // may change, esp if vCuppa is used
             return null;
 
         if(config.CuppaDir == null || !Files.exists(Paths.get(config.CuppaDir)))
@@ -490,6 +454,9 @@ public class OrangeAlgo
     @Nullable
     private static List<SignatureAllocation> loadSigAllocations(final OrangeConfig config) throws IOException
     {
+        if(!config.hasReference() || config.RunType == ExperimentType.TARGETED)
+            return null;
+
         if(config.SigsDir == null || !Files.exists(Paths.get(config.SigsDir)))
         {
             LOGGER.debug("Skipping Signature loading as no input has been provided");

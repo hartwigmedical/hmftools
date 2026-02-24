@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.orange.report.tables;
 
+import static com.hartwig.hmftools.orange.report.ReportResources.formatPercentageField;
 import static com.hartwig.hmftools.orange.report.ReportResources.formatSingleDigitDecimal;
 import static com.hartwig.hmftools.orange.report.ReportResources.formatTwoDigitDecimal;
 import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_AF;
@@ -10,10 +11,10 @@ import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_DL;
 import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_DP;
 import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_HOTSPOT;
 import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_MACN;
-import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_RNA;
 import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_SL;
 import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_VARIANT;
 import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_VCN;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_RNA;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.cellArray;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.floatArray;
@@ -51,8 +52,8 @@ public final class SomaticVariantTable
         addEntry(cells, widths, cellEntries, 1, COL_VCN);
         addEntry(cells, widths, cellEntries, 1, COL_CN);
         addEntry(cells, widths, cellEntries, 1, COL_MACN);
-        addEntry(cells, widths, cellEntries, 1, COL_BIALLELIC);
         addEntry(cells, widths, cellEntries, 1, COL_HOTSPOT);
+        addEntry(cells, widths, cellEntries, 1, COL_BIALLELIC);
         addEntry(cells, widths, cellEntries, 1, COL_DL);
         addEntry(cells, widths, cellEntries, 1, COL_CL);
 
@@ -66,10 +67,7 @@ public final class SomaticVariantTable
             addEntry(cells, widths, cellEntries, 1, COL_RNA);
         }
 
-        float[] widthArray = floatArray(widths);
-        Cell[] cellArray = cellArray(cellEntries);
-
-        Table table = Tables.createContent(width, widthArray, cellArray);
+        Table table = Tables.createContent(width, floatArray(widths), cellArray(cellEntries));
 
         for(VariantEntry variant : Variants.sort(variants))
         {
@@ -79,10 +77,10 @@ public final class SomaticVariantTable
             table.addCell(cells.createContent(formatSingleDigitDecimal(variant.variantCopyNumber())));
             table.addCell(cells.createContent(formatSingleDigitDecimal(variant.totalCopyNumber())));
             table.addCell(cells.createContent(formatSingleDigitDecimal(variant.minorAlleleCopyNumber())));
-            table.addCell(cells.createContent(Variants.biallelicLikelihoodField(variant)));
             table.addCell(cells.createContent(Variants.hotspotField(variant)));
-            table.addCell(cells.createContent(Variants.driverLikelihoodField(variant)));
-            table.addCell(cells.createContent(Variants.clonalLikelihoodField(variant)));
+            table.addCell(cells.createContent(formatPercentageField(variant.biallelicProbability())));
+            table.addCell(cells.createContent(formatPercentageField(variant.driverLikelihood())));
+            table.addCell(cells.createContent(formatPercentageField(variant.clonalLikelihood())));
 
             if(tumorOnly)
                 table.addCell(cells.createContent(variant.somaticLikelihood()));

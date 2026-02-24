@@ -12,4 +12,9 @@ public interface PurpleAllelicDepth
 {
     int totalReadCount();
     int alleleReadCount();
+
+    default double alleleFrequency()
+    {
+        return totalReadCount() > 0 ? alleleReadCount() / (double)totalReadCount() : 0;
+    }
 }

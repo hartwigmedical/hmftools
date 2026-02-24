@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.impact.VariantEffect;
+import com.hartwig.hmftools.orange.conversion.PurpleConversion;
 
 import org.junit.Test;
 
@@ -16,7 +17,7 @@ public class CodingEffectDeterminerTest
     {
         List<VariantEffect> emptyVariantEffectList = List.of();
 
-        CodingEffect actualCodingEffect = CodingEffectDeterminer.determineCodingEffect(emptyVariantEffectList);
+        CodingEffect actualCodingEffect = PurpleConversion.determineCodingEffect(emptyVariantEffectList);
 
         assertEquals(CodingEffect.NONE, actualCodingEffect);
     }
@@ -26,7 +27,7 @@ public class CodingEffectDeterminerTest
     {
         List<VariantEffect> variantEffects = List.of(VariantEffect.START_LOST);
 
-        CodingEffect actualCodingEffect = CodingEffectDeterminer.determineCodingEffect(variantEffects);
+        CodingEffect actualCodingEffect = PurpleConversion.determineCodingEffect(variantEffects);
 
         assertEquals(CodingEffect.NONSENSE_OR_FRAMESHIFT, actualCodingEffect);
     }
@@ -36,7 +37,7 @@ public class CodingEffectDeterminerTest
     {
         List<VariantEffect> variantEffects = List.of(VariantEffect.SPLICE_DONOR);
 
-        CodingEffect actualCodingEffect = CodingEffectDeterminer.determineCodingEffect(variantEffects);
+        CodingEffect actualCodingEffect = PurpleConversion.determineCodingEffect(variantEffects);
 
         assertEquals(CodingEffect.SPLICE, actualCodingEffect);
     }
@@ -46,7 +47,7 @@ public class CodingEffectDeterminerTest
     {
         List<VariantEffect> variantEffects = List.of(VariantEffect.MISSENSE);
 
-        CodingEffect actualCodingEffect = CodingEffectDeterminer.determineCodingEffect(variantEffects);
+        CodingEffect actualCodingEffect = PurpleConversion.determineCodingEffect(variantEffects);
 
         assertEquals(CodingEffect.MISSENSE, actualCodingEffect);
     }
@@ -56,7 +57,7 @@ public class CodingEffectDeterminerTest
     {
         List<VariantEffect> variantEffects = List.of(VariantEffect.SYNONYMOUS);
 
-        CodingEffect actualCodingEffect = CodingEffectDeterminer.determineCodingEffect(variantEffects);
+        CodingEffect actualCodingEffect = PurpleConversion.determineCodingEffect(variantEffects);
 
         assertEquals(CodingEffect.SYNONYMOUS, actualCodingEffect);
     }
@@ -66,7 +67,7 @@ public class CodingEffectDeterminerTest
     {
         List<VariantEffect> variantEffects = List.of(VariantEffect.INTRONIC);
 
-        CodingEffect actualCodingEffect = CodingEffectDeterminer.determineCodingEffect(variantEffects);
+        CodingEffect actualCodingEffect = PurpleConversion.determineCodingEffect(variantEffects);
 
         assertEquals(CodingEffect.NONE, actualCodingEffect);
     }
@@ -76,7 +77,7 @@ public class CodingEffectDeterminerTest
     {
         List<VariantEffect> variantEffects = List.of(VariantEffect.START_LOST, VariantEffect.SPLICE_DONOR);
 
-        CodingEffect actualCodingEffect = CodingEffectDeterminer.determineCodingEffect(variantEffects);
+        CodingEffect actualCodingEffect = PurpleConversion.determineCodingEffect(variantEffects);
 
         assertEquals(CodingEffect.NONSENSE_OR_FRAMESHIFT, actualCodingEffect);
     }
@@ -86,7 +87,7 @@ public class CodingEffectDeterminerTest
     {
         List<VariantEffect> variantEffects = List.of(VariantEffect.MISSENSE, VariantEffect.SPLICE_DONOR);
 
-        CodingEffect actualCodingEffect = CodingEffectDeterminer.determineCodingEffect(variantEffects);
+        CodingEffect actualCodingEffect = PurpleConversion.determineCodingEffect(variantEffects);
 
         assertEquals(CodingEffect.SPLICE, actualCodingEffect);
     }
@@ -96,7 +97,7 @@ public class CodingEffectDeterminerTest
     {
         List<VariantEffect> variantEffects = List.of(VariantEffect.MISSENSE, VariantEffect.SYNONYMOUS);
 
-        CodingEffect actualCodingEffect = CodingEffectDeterminer.determineCodingEffect(variantEffects);
+        CodingEffect actualCodingEffect = PurpleConversion.determineCodingEffect(variantEffects);
 
         assertEquals(CodingEffect.MISSENSE, actualCodingEffect);
     }
@@ -106,7 +107,7 @@ public class CodingEffectDeterminerTest
     {
         List<VariantEffect> variantEffects = List.of(VariantEffect.INTRONIC, VariantEffect.SYNONYMOUS);
 
-        CodingEffect actualCodingEffect = CodingEffectDeterminer.determineCodingEffect(variantEffects);
+        CodingEffect actualCodingEffect = PurpleConversion.determineCodingEffect(variantEffects);
 
         assertEquals(CodingEffect.SYNONYMOUS, actualCodingEffect);
     }

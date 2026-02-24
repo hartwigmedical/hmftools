@@ -14,58 +14,54 @@ import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Text;
 import com.itextpdf.layout.property.TextAlignment;
 
-import org.jetbrains.annotations.NotNull;
-
 public class Footer
 {
-    private final List<FooterTemplate> footerTemplates = Lists.newArrayList();
-    @NotNull
-    private final ReportResources reportResources;
-    private final boolean addDisclaimer;
+    private final List<FooterTemplate> mFooterTemplates;
+    private final ReportResources mReportResources;
+    private final boolean mAddDisclaimer;
 
-    public Footer(@NotNull ReportResources reportResources, boolean addDisclaimer)
+    public Footer(final ReportResources reportResources, boolean addDisclaimer)
     {
-        this.reportResources = reportResources;
-        this.addDisclaimer = addDisclaimer;
+        mFooterTemplates = Lists.newArrayList();
+        mReportResources = reportResources;
+        mAddDisclaimer = addDisclaimer;
     }
 
-    public void renderFooter(@NotNull PdfPage page)
+    public void renderFooter(final PdfPage page)
     {
         PdfCanvas canvas = new PdfCanvas(page.getLastContentStream(), page.getResources(), page.getDocument());
 
         int pageNumber = page.getDocument().getPageNumber(page);
         PdfFormXObject pageNumberTemplate = new PdfFormXObject(new Rectangle(0, 0, 465, 20));
         canvas.addXObject(pageNumberTemplate, 58, 20);
-        footerTemplates.add(new FooterTemplate(pageNumber, pageNumberTemplate, addDisclaimer));
+        mFooterTemplates.add(new FooterTemplate(pageNumber, pageNumberTemplate, mAddDisclaimer));
 
         canvas.release();
     }
 
-    public void writeFooters(@NotNull PdfDocument document)
+    public void writeFooters(final PdfDocument document)
     {
         int totalPageCount = document.getNumberOfPages();
-        for(FooterTemplate tpl : footerTemplates)
+        for(FooterTemplate tpl : mFooterTemplates)
         {
-            tpl.renderFooter(totalPageCount, document, reportResources);
+            tpl.renderFooter(totalPageCount, document, mReportResources);
         }
     }
 
     private static class FooterTemplate
     {
-
         private final int pageNumber;
-        @NotNull
         private final PdfFormXObject template;
         private final boolean addDisclaimer;
 
-        FooterTemplate(int pageNumber, @NotNull PdfFormXObject template, boolean addDisclaimer)
+        FooterTemplate(int pageNumber, final PdfFormXObject template, boolean addDisclaimer)
         {
             this.pageNumber = pageNumber;
             this.template = template;
             this.addDisclaimer = addDisclaimer;
         }
 
-        void renderFooter(int totalPageCount, @NotNull PdfDocument document, @NotNull ReportResources reportResources)
+        void renderFooter(int totalPageCount, final PdfDocument document, final ReportResources reportResources)
         {
             String displayString = pageNumber + "/" + totalPageCount;
 

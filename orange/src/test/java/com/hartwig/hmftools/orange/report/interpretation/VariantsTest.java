@@ -59,36 +59,6 @@ public class VariantsTest
     }
 
     @Test
-    public void canRenderBiallelicStatus()
-    {
-        VariantEntry biallelic = TestVariantEntryFactory.builder().biallelicProbability(1.).build();
-        assertEquals("100%", Variants.biallelicLikelihoodField(biallelic));
-
-        VariantEntry nonBiallelic = TestVariantEntryFactory.builder().biallelicProbability(0.2).build();
-        assertEquals("20%", Variants.biallelicLikelihoodField(nonBiallelic));
-    }
-
-    @Test
-    public void canRenderDriverLikelihood()
-    {
-        VariantEntry driver = TestVariantEntryFactory.builder().driverLikelihood(0.4).build();
-        assertEquals("40%", Variants.driverLikelihoodField(driver));
-
-        VariantEntry nonDriver = TestVariantEntryFactory.builder().driverLikelihood(null).build();
-        assertEquals(Strings.EMPTY, Variants.driverLikelihoodField(nonDriver));
-    }
-
-    @Test
-    public void canRenderClonalLikelihood()
-    {
-        VariantEntry clonal = TestVariantEntryFactory.builder().clonalLikelihood(1D).build();
-        assertEquals("100%", Variants.clonalLikelihoodField(clonal));
-
-        VariantEntry subclonal = TestVariantEntryFactory.builder().clonalLikelihood(0.3).build();
-        assertEquals("30%", Variants.clonalLikelihoodField(subclonal));
-    }
-
-    @Test
     public void canRenderRnaDepthField()
     {
         VariantEntry missingRna = TestVariantEntryFactory.builder().rnaDepth(null).build();

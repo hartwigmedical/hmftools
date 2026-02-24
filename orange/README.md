@@ -28,12 +28,10 @@ on [https://github.com/hartwigmedical/hmftools](https://github.com/hartwigmedica
 The front page of the ORANGE report lists all high-level stats about the sample along with genome-wide visualisations of all mutations and
 SNV/Indel clonality. In addition to this front page, the following chapters are present in the ORANGE report:
 
-- [Somatic Findings](#somatic-findings): What potentially relevant mutations have been found in the tumor specifically?
-- [Germline Findings](#germline-findings): What potentially relevant mutations have been found in the germline data?
-- [Immunology](#immunology): What can we tell about the immunogenicity of the tumor sample?
-- [RNA Findings](#rna-findings): What potentially relevant findings have we detected in RNA?
-- [Cohort Comparison](#cohort-comparison): How do the various properties of this tumor compare to existing cancer cohorts?
-- [Quality Control](#quality-control): Various stats and graphs regarding the quality of the data and interpretation thereof.
+- Somatic Findings - reportable mutations found in the tumor
+- Germline Findings - reportable mutations found in the germline
+- Immunology - findings on immunogenicity in the tumor sample
+- RNA Findings - relevant findings have detected in RNA
 
 Note that the JSON file contains every mutation found in the analysis and hence is much more extensive than the PDF.
 The JSON file is meant to be used by downstream applications who wish to further interpret the results of the molecular analysis.

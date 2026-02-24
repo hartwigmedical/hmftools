@@ -211,8 +211,14 @@
         "chromosomeBand": "q23.31",
         "transcript": "ENST00000371953",
         "isCanonical": true,
-        "minCopies": 0.0,
-        "maxCopies": 2.0158
+        "exonRange": "FULL",
+        "minCopyNumber": 0.0,
+        "maxCopyNumber": 2.0158,
+        "relativeCopyNumber": 0.1,
+        "minMinorAlleleCopies": 0,
+        "tpm": 0,
+        "tpmPercentile": 0,
+        "tpmFoldChange": 0
       }
     ],
     "germlineGainsDels": []

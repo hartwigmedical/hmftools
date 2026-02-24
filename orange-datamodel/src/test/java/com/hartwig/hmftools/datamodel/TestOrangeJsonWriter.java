@@ -44,7 +44,6 @@ import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
 import com.hartwig.hmftools.datamodel.orange.OrangeSample;
 import com.hartwig.hmftools.datamodel.peach.ImmutablePeachGenotype;
-import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
 import com.hartwig.hmftools.datamodel.purple.HotspotType;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleAllelicDepth;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleCharacteristics;
@@ -327,12 +326,16 @@ public class TestOrangeJsonWriter
                 )
                 .somaticGainsDels(List.of(ImmutablePurpleGainDeletion.builder()
                                 .driver(deletionDriver)
-                        .interpretation(CopyNumberInterpretation.FULL_DEL)
                         .chromosome("5")
                         .chromosomeBand("q2.2")
-                        .minCopies(0.1)
-                        .maxCopies(1.2)
+                        .minCopyNumber(0.1)
+                        .maxCopyNumber(1.2)
+                        .relativeCopyNumber(1.2)
                         .minMinorAlleleCopies(0.1)
+                        .exonRange("FULL")
+                        .tpm(null)
+                        .tpmPercentile(null)
+                        .tpmFoldChange(null)
                         .build()))
                 .build();
     }

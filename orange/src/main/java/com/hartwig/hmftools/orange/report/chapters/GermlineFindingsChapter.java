@@ -95,7 +95,8 @@ public class GermlineFindingsChapter implements ReportChapter
         if(reportableGermlineFullDels != null)
         {
             String title = "Potentially pathogenic germline deletions (" + reportableGermlineFullDels.size() + ")";
-            document.add(GainDeletionTable.build(title, contentWidth(), reportableGermlineFullDels, mReport.isofox(), mReportResources));
+            document.add(GainDeletionTable.build(
+                    title, contentWidth(), reportableGermlineFullDels, mReportResources, mReport.hasRna()));
         }
     }
 

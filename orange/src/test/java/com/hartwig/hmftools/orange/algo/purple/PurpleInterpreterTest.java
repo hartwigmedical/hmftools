@@ -35,7 +35,7 @@ public class PurpleInterpreterTest
     public void canInterpretMinimalPurpleData()
     {
         PurpleInterpreter interpreter = new PurpleInterpreter();
-        assertNotNull(interpreter.interpret(PurpleTestFactory.createMinimalTestPurpleData()));
+        assertNotNull(interpreter.interpret(PurpleTestFactory.createMinimalTestPurpleData(), null));
     }
 
     @Test
@@ -48,7 +48,7 @@ public class PurpleInterpreterTest
         PurpleData purple = createPurpleTestData(Lists.newArrayList(hetReported, homReported));
 
         PurpleInterpreter interpreter = new PurpleInterpreter();
-        PurpleRecord interpreted = interpreter.interpret(purple);
+        PurpleRecord interpreted = interpreter.interpret(purple, null);
         List<PurpleGainDeletion> germlineGainsDels = interpreted.germlineGainsDels();
         assertNotNull(germlineGainsDels);
         assertEquals(1, germlineGainsDels.size());
@@ -64,7 +64,7 @@ public class PurpleInterpreterTest
         PurpleData purple = createPurpleTestData(Lists.newArrayList(hetUnreported, homReported));
 
         PurpleInterpreter interpreter = new PurpleInterpreter();
-        PurpleRecord interpreted = interpreter.interpret(purple);
+        PurpleRecord interpreted = interpreter.interpret(purple, null);
         List<PurpleGainDeletion> germlineGainsDels = interpreted.germlineGainsDels();
         assertNotNull(germlineGainsDels);
         assertEquals(1, germlineGainsDels.size());

@@ -143,11 +143,9 @@ public class SomaticFindingsChapter implements ReportChapter
         else
         {
             String titleDrivers = driverAmpsDelsTitle + " (" + mReport.purple().somaticGainsDels().size() + ")";
-            document.add(GainDeletionTable.build(titleDrivers,
-                    contentWidth(),
-                    mReport.purple().somaticGainsDels(),
-                    mReport.isofox(),
-                    mReportResources));
+
+            document.add(GainDeletionTable.build(
+                    titleDrivers, contentWidth(), mReport.purple().somaticGainsDels(), mReportResources, mReport.hasRna()));
         }
     }
 
