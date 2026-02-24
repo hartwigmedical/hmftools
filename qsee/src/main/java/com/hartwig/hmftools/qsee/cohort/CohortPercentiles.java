@@ -9,6 +9,8 @@ import java.util.Map;
 import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.FeatureKey;
 
+import org.jetbrains.annotations.Nullable;
+
 public class CohortPercentiles
 {
     private final Map<SampleType, Map<FeatureKey, FeaturePercentiles>> mCohortData = new LinkedHashMap<>();
@@ -32,15 +34,21 @@ public class CohortPercentiles
         }
     }
 
+    @Nullable
     public FeaturePercentiles getFeaturePercentiles(SampleType sampleType, FeatureKey featureKey)
     {
         FeaturePercentiles percentiles = mCohortData.get(sampleType).get(featureKey);
 
         if(percentiles == null)
         {
-            QC_LOGGER.error("No cohort percentiles found for sampleType({}) feature({})", sampleType, featureKey);
+            QC_LOGGER.warn("Missing cohort percentiles for sampleType({}) feature({})", sampleType, featureKey);
         }
 
         return mCohortData.get(sampleType).get(featureKey);
+    }
+
+    public void warnIfMissing(SampleType sampleType, FeatureKey featureKey)
+    {
+        getFeaturePercentiles(sampleType, featureKey);
     }
 }
