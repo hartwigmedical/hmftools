@@ -5,7 +5,6 @@ import com.beust.jcommander.Parameter
 import com.beust.jcommander.ParameterException
 import com.beust.jcommander.UnixStyleUsageFormatter
 import com.hartwig.hmftools.cider.*
-import com.hartwig.hmftools.cider.CiderConstants.BLASTN_PRIMARY_ASSEMBLY_NAME
 import com.hartwig.hmftools.cider.CiderConstants.BLAST_REF_GENOME_VERSION
 import com.hartwig.hmftools.cider.annotation.ImgtSequenceFile
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.ANCHOR_MISMATCH_MAX
@@ -54,6 +53,7 @@ const val ANCHOR_DNA_LENGTH: Int = 30
 
 data class ProcessedGeneAllele(
     val imgt: ImgtGeneAllele,
+    val ensemblGene: GeneData?,
     val locationV38: GenomicLocation?,
     val locationV37: GenomicLocation?,
     val anchorSequence: String?,
@@ -183,6 +183,9 @@ class ImgtGeneCurator
         val outputFastaV37 = Paths.get(outputDir, "igtcr_gene.37.fasta").toString()
         writeVDJFasta(outputFastaV37, processedGeneAlleles, geneAggregateInfo, false)
 
+        sLogger.info("Writing gene debug info")
+        writeGeneAlleleDebugFile(Paths.get(outputDir, "gene_allele_debug.tsv").toString(), processedGeneAlleles)
+
         return 0
     }
 
@@ -208,8 +211,11 @@ class ImgtGeneCurator
 
         val ambiguousSequence = alleles.any { it != allele && it.sequenceWithoutGaps == allele.sequenceWithoutGaps }
 
+        val ensemblGene = ensemblDataCache.getGeneDataByName(toEnsemblGeneName(allele.geneName))
+
         return ProcessedGeneAllele(
             allele,
+            ensemblGene,
             alleleLocationInfoV38?.location,
             alleleLocationV37,
             anchorInfo?.sequence,
@@ -238,7 +244,7 @@ class ImgtGeneCurator
         val constantAlleles = alleles.withIndex().filter { (_, gene) -> gene.region == IgTcrRegion.CONSTANT }
         for ((index, allele) in constantAlleles)
         {
-            val ensemblGene = ensemblDataCache.getGeneDataByName(allele.geneName) ?: continue
+            val ensemblGene = ensemblDataCache.getGeneDataByName(toEnsemblGeneName(allele.geneName)) ?: continue
             locations[index] = LocationInfo(toGenomicLocation(ensemblGene), null, false, true)
         }
 
@@ -886,6 +892,18 @@ class ImgtGeneCurator
         {
             require(seq1.length == seq2.length) { "Sequences must be same length" }
             return seq1.zip(seq2).count { it.first != it.second }
+        }
+
+        private fun writeGeneAlleleDebugFile(path: String, alleles: List<ProcessedGeneAllele>)
+        {
+            File(path).printWriter().use { file ->
+                file.println("Gene\tAllele\tFunctionality\tRegion\tPartial\tSequence\tEnsemblChr\tEnsemblStart\tEnsemblEnd\tEnsemblStrand")
+                alleles.forEach {
+                    val imgt = it.imgt
+                    val ensembl = it.ensemblGene
+                    file.println("${imgt.geneName}\t${imgt.allele}\t${imgt.functionality}\t${imgt.region}\t${imgt.partial}\t${imgt.sequenceWithoutGaps}\t${ensembl?.Chromosome}\t${ensembl?.GeneStart}\t${ensembl?.GeneEnd}\t${if (ensembl?.forwardStrand() == true) "+" else "-"}")
+                }
+            }
         }
     }
 }
