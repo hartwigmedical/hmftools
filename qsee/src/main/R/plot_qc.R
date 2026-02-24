@@ -233,8 +233,8 @@ get_plot_data <- function(feature_type){
    LOGGER$info("Plotting featureType(%s)", feature_type)
    
    ## Select rows
-   cohort_data <- COHORT_DATA %>% dplyr::filter(FeatureType == feature_type)
-   sample_data <- SAMPLE_DATA %>% dplyr::filter(FeatureType == feature_type)
+   cohort_data <- COHORT_DATA %>% dplyr::filter(FeatureType == feature_type) %>% select(-SourceTool)
+   sample_data <- SAMPLE_DATA %>% dplyr::filter(FeatureType == feature_type) %>% select(-SourceTool)
    
    if(nrow(sample_data) == 0){
       return(data.frame())
@@ -243,7 +243,7 @@ get_plot_data <- function(feature_type){
    ## Sample and cohort data as one data frame
    merged_data <- merge(
       sample_data, cohort_data, 
-      by=c("SampleType", "SourceTool", "FeatureType", "FeatureName"), 
+      by=c("SampleType", "FeatureType", "FeatureName"), 
       all.x = TRUE, ## Only select the features in the cohort data that are present in the sample
       sort = FALSE
    )
@@ -818,7 +818,7 @@ PLOTS[[FEATURE_TYPE$SUMMARY_TABLE]] <- local({
    plots[[plot_index]] <- plot_sub_table(
       feature_group = feature_group, 
       number_format = number_format,
-      show_title = is_first_group_plot,
+      show_title = TRUE,
       show_sample_type_label = TRUE
    )
    
