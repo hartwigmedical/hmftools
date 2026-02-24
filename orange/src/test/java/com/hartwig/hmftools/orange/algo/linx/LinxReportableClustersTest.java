@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.linx.DriverEventType;
 import com.hartwig.hmftools.common.linx.ImmutableLinxDriver;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
@@ -70,17 +72,20 @@ public class LinxReportableClustersTest
         List<LinxBreakend> breakends = new ArrayList<>();
         breakends.add(LinxTestFactory.breakendBuilder().svId(15).reportedStatus(ReportedStatus.REPORTED).build());
 
-        List<LinxDriver> drivers = new ArrayList<>();
-        drivers.add(ImmutableLinxDriver.builder().clusterId(10).gene("Gene A").eventType(DriverEventType.DEL).build());
+        List<LinxDriver> driverEventData = new ArrayList<>();
+        driverEventData.add(ImmutableLinxDriver.builder().clusterId(10).gene("Gene A").eventType(DriverEventType.DEL).build());
 
         List<Integer> fusions = List.of(50);
         Map<Integer, Integer> svToCluster = Map.of(15, 100);
         Map<Integer, Integer> clusterIdToLinkCount = Map.of(10, 2, 50, 2, 100, 2);
         Map<Integer, Integer> clusterIdToExonCount = Map.of(10, 1, 50, 1, 100, 1);
 
+        List<DriverCatalog> somaticDrivers = Lists.newArrayList();
+
         return ImmutableLinxData.builder()
                 .somaticBreakends(breakends)
-                .somaticDrivers(drivers)
+                .somaticDrivers(somaticDrivers)
+                .somaticDriverData(driverEventData)
                 .fusionClusterIds(fusions)
                 .svIdToClusterId(svToCluster)
                 .clusterIdToLinkCount(clusterIdToLinkCount)

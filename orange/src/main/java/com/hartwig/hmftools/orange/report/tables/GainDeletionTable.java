@@ -4,6 +4,12 @@ import static com.hartwig.hmftools.orange.report.ReportResources.formatFoldChang
 import static com.hartwig.hmftools.orange.report.ReportResources.formatPercentileField;
 import static com.hartwig.hmftools.orange.report.ReportResources.formatSingleDigitDecimal;
 import static com.hartwig.hmftools.orange.report.ReportResources.formatTpmField;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_DRIVER;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_GENE;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_LOCATION;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_RANGE;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_TPM;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_TYPE;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.cellArray;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.floatArray;
@@ -38,31 +44,23 @@ public final class GainDeletionTable
         List<Integer> widths = Lists.newArrayList();
         List<Cell> cellEntries = Lists.newArrayList();
 
-        addEntry(cells, widths, cellEntries, 1, "Location");
-        addEntry(cells, widths, cellEntries, 1, "Gene");
-        addEntry(cells, widths, cellEntries, 1, "Type");
-        addEntry(cells, widths, cellEntries, 1, "Range"); // if known
+        addEntry(cells, widths, cellEntries, 1, COL_LOCATION);
+        addEntry(cells, widths, cellEntries, 1, COL_GENE);
+        addEntry(cells, widths, cellEntries, 1, COL_TYPE);
+        addEntry(cells, widths, cellEntries, 1, COL_RANGE); // if known
         addEntry(cells, widths, cellEntries, 1, "Min CN");
         addEntry(cells, widths, cellEntries, 1, "Max CN");
         addEntry(cells, widths, cellEntries, 1, "Rel CN");
-        addEntry(cells, widths, cellEntries, 1, "Driver");
+        addEntry(cells, widths, cellEntries, 1, COL_DRIVER);
 
         if(hasRna)
         {
-            addEntry(cells, widths, cellEntries, 1, "TPM");
+            addEntry(cells, widths, cellEntries, 1, COL_TPM);
             addEntry(cells, widths, cellEntries, 1, "Percentile");
             addEntry(cells, widths, cellEntries, 1, "Fold Change");
         }
 
         Table table = Tables.createContent(width, floatArray(widths), cellArray(cellEntries));
-
-        /*
-        Table table = Tables.createContent(width,
-                new float[] { 1, 1, 1, 1, 1, 1, 1, 1, 1 },
-                new Cell[] { cells.createHeader("Location"), cells.createHeader("Gene"),
-                        cells.createHeader("Type"), cells.createHeader("CN"), cells.createHeader("TPM"), cells.createHeader("Perc (Type)"),
-                        cells.createHeader("FC (Type)"), cells.createHeader("Perc (DB)"), cells.createHeader("FC (DB)") });
-        */
 
         for(PurpleGainDeletion gainDel : sort(gainsDels))
         {

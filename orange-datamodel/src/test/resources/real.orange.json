@@ -341,21 +341,15 @@
         "orientation": 1,
         "exonUp": 5,
         "exonDown": 6,
-        "junctionCopyNumber": 2.00875
+        "junctionCopyNumber": 2.00875,
+        "driverType": "HOM_DEL_DISRUPTION",
+        "driverLikelihood": 1.0
       }
     ],
     "germlineBreakends": [],
     "somaticHomozygousDisruptions": [],
     "germlineHomozygousDisruptions": []
   },
-  "wildTypeGenes": [
-    {
-      "gene": "GENE1"
-    },
-    {
-      "gene": "GENE2"
-    }
-  ],
   "isofox": null,
   "lilac": {
     "qc": "PASS",

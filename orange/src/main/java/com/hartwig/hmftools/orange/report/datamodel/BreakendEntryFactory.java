@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.orange.report.datamodel;
 
+import static java.lang.Math.max;
+
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 
 import java.util.List;
@@ -16,24 +18,34 @@ import org.apache.logging.log4j.util.Strings;
 
 public final class BreakendEntryFactory
 {
-    public static List<BreakendEntry> create(
-            final List<LinxBreakend> breakends, final List<LinxSvAnnotation> variants, final List<LinxDriver> drivers)
+    public static List<BreakendEntry> create(final List<LinxBreakend> breakends)
     {
         List<BreakendEntry> entries = Lists.newArrayList();
+
         for(LinxBreakend breakend : breakends)
         {
+            double undisruptedCopyNumber = breakend.undisruptedCopyNumber();
+            double driverLikelihood = 0;
+
+            if(breakend.type() == LinxBreakendType.DUP)
+            {
+                // TODO: check if this is still required
+                undisruptedCopyNumber = max(0.0, breakend.undisruptedCopyNumber() - breakend.junctionCopyNumber());
+            }
+
             entries.add(ImmutableBreakendEntry.builder()
-                    .location(breakend.chromosome() + breakend.chromosomeBand())
-                    .gene(breakend.gene())
-                    .canonical(breakend.isCanonical())
-                    .exonUp(breakend.exonUp())
-                    .type(breakend.type())
-                    .range(range(breakend))
-                    .clusterId(determineClusterId(breakend, variants))
-                    .junctionCopyNumber(breakend.junctionCopyNumber())
-                    .undisruptedCopyNumber(correctUndisruptedCopyNumber(breakend, drivers))
-                    .build());
+                .location(breakend.chromosome() + breakend.chromosomeBand())
+                .gene(breakend.gene())
+                .canonical(breakend.isCanonical())
+                .exonUp(breakend.exonUp())
+                .type(breakend.type())
+                .range(range(breakend))
+                .junctionCopyNumber(breakend.junctionCopyNumber())
+                .undisruptedCopyNumber(undisruptedCopyNumber)
+                .driverLikelihood(driverLikelihood)
+                .build());
         }
+
         return entries;
     }
 
@@ -69,34 +81,5 @@ public final class BreakendEntryFactory
         };
 
         return exonRange + " " + geneOrientation;
-    }
-
-    private static int determineClusterId(final LinxBreakend breakend, final List<LinxSvAnnotation> variants)
-    {
-        for(LinxSvAnnotation variant : variants)
-        {
-            if(variant.svId() == breakend.svId())
-            {
-                return variant.clusterId();
-            }
-        }
-
-        throw new IllegalStateException("Could not find structural variant that underlies breakend: " + breakend);
-    }
-
-    private static double correctUndisruptedCopyNumber(final LinxBreakend breakend, final List<LinxDriver> drivers)
-    {
-        if(breakend.type() == LinxBreakendType.DUP)
-        {
-            for(LinxDriver driver : drivers)
-            {
-                if(driver.gene().equals(breakend.gene()) && driver.type() == LinxDriverType.HOM_DUP_DISRUPTION)
-                {
-                    return Math.max(0.0, breakend.undisruptedCopyNumber() - breakend.junctionCopyNumber());
-                }
-            }
-        }
-
-        return breakend.undisruptedCopyNumber();
     }
 }

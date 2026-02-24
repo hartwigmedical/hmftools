@@ -26,7 +26,7 @@ public final class LinxReportableClusters
         Map<Integer, Integer> svToCluster = linx.svIdToClusterId();
         svIds.stream().filter(svToCluster::containsKey).map(svToCluster::get).forEach(clusterIds::add);
 
-        linx.somaticDrivers().stream().filter(x -> x.clusterId() >= 0).forEach(x -> clusterIds.add(x.clusterId()));
+        linx.somaticDriverData().stream().filter(x -> x.clusterId() >= 0).forEach(x -> clusterIds.add(x.clusterId()));
 
         return clusterIds.stream().filter(x -> !isSimpleClusterAffectingNoExons(linx, x)).collect(toSet());
     }

@@ -16,5 +16,5 @@ public interface LinxDriver
     String gene();
 
     @NotNull
-    LinxDriverType type();
+    LinxDriverEventType type();
 }

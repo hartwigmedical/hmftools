@@ -38,13 +38,11 @@ public class BreakendEntryFactoryTest
                 .type(LinxBreakendType.DEL)
                 .junctionCopyNumber(1.2)
                 .undisruptedCopyNumber(1.4)
+                .driverType(LinxDriverType.DISRUPTION)
+                .driverLikelihood(0)
                 .build();
 
-        LinxSvAnnotation variant = LinxOrangeTestFactory.svAnnotationBuilder().svId(1).clusterId(2).build();
-
-        List<BreakendEntry> entries = BreakendEntryFactory.create(Lists.newArrayList(breakend),
-                Lists.newArrayList(variant),
-                Lists.newArrayList());
+        List<BreakendEntry> entries = BreakendEntryFactory.create(Lists.newArrayList(breakend));
 
         assertEquals(1, entries.size());
 
@@ -55,20 +53,8 @@ public class BreakendEntryFactoryTest
         assertEquals(12, entry.exonUp());
         assertEquals(LinxBreakendType.DEL, entry.type());
         assertEquals("Exon 12 Upstream", entry.range());
-        assertEquals(2, entry.clusterId());
         assertEquals(1.2, entry.junctionCopyNumber(), EPSILON);
         assertEquals(1.4, entry.undisruptedCopyNumber(), EPSILON);
-    }
-
-    @Test(expected = IllegalStateException.class)
-    public void crashOnMissingSvAnnotation()
-    {
-        LinxBreakend breakend = LinxOrangeTestFactory.breakendBuilder().svId(1).build();
-        LinxSvAnnotation variant = LinxOrangeTestFactory.svAnnotationBuilder().svId(2).build();
-
-        BreakendEntryFactory.create(Lists.newArrayList(breakend),
-                Lists.newArrayList(variant),
-                Lists.newArrayList());
     }
 
     @Test
@@ -91,11 +77,10 @@ public class BreakendEntryFactoryTest
                 .svId(1)
                 .build();
 
-        LinxSvAnnotation variant = LinxOrangeTestFactory.svAnnotationBuilder().svId(1).clusterId(2).build();
-        LinxDriver driver = LinxDriverTestFactory.builder().gene("gene").type(LinxDriverType.HOM_DUP_DISRUPTION).build();
+        // LinxSvAnnotation variant = LinxOrangeTestFactory.svAnnotationBuilder().svId(1).clusterId(2).build();
+        // LinxDriver driver = LinxDriverTestFactory.builder().gene("gene").type(LinxDriverType.HOM_DUP_DISRUPTION).build();
 
-        List<BreakendEntry> entries =
-                BreakendEntryFactory.create(Lists.newArrayList(breakend), Lists.newArrayList(variant), Lists.newArrayList(driver));
+        List<BreakendEntry> entries = BreakendEntryFactory.create(Lists.newArrayList(breakend));
 
         assertEquals(0.2, entries.get(0).undisruptedCopyNumber(), 0.001);
     }

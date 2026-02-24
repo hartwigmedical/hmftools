@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.orange.algo;
 
-import static com.hartwig.hmftools.common.metrics.GeneDepthFile.generateGeneCoverageFilename;
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 
 import java.io.File;
@@ -55,7 +54,6 @@ import com.hartwig.hmftools.datamodel.orange.OrangePlots;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangeSample;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
-import com.hartwig.hmftools.datamodel.wildtype.WildTypeGene;
 import com.hartwig.hmftools.orange.OrangeConfig;
 import com.hartwig.hmftools.orange.algo.cuppa.CuppaDataFactory;
 import com.hartwig.hmftools.orange.algo.immuno.ImmuneEscapeInterpreter;
@@ -68,7 +66,6 @@ import com.hartwig.hmftools.orange.algo.plot.PlotManager;
 import com.hartwig.hmftools.orange.algo.purple.PurpleData;
 import com.hartwig.hmftools.orange.algo.purple.PurpleDataLoader;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpreter;
-import com.hartwig.hmftools.orange.algo.sage.GermlineMVLHFactory;
 import com.hartwig.hmftools.orange.algo.sigs.SigsEtiologiesLoader;
 import com.hartwig.hmftools.orange.algo.sigs.SigsInterpreter;
 import com.hartwig.hmftools.orange.algo.util.ReportLimiter;
@@ -150,8 +147,6 @@ public class OrangeAlgo
             IsofoxInterpreter isofoxInterpreter = new IsofoxInterpreter(driverGenes, linx);
             isofox = isofoxInterpreter.interpret(isofoxData);
         }
-
-        List<WildTypeGene> wildTypeGenes = Lists.newArrayList();
 
         OrangeRecord orangeRecord = ImmutableOrangeRecord.builder()
                 .sampleId(config.TumorId)
@@ -329,11 +324,10 @@ public class OrangeAlgo
         LinxData linx = LinxDataLoader.load(config);
 
         LOGGER.info(" Loaded {} somatic structural variants", linx.somaticSvAnnotations().size());
-        LOGGER.info(" Loaded {} somatic structural drivers", linx.somaticDrivers().size());
+        LOGGER.info(" Loaded {} somatic structural drivers", linx.somaticDriverData().size());
         LOGGER.info(" Loaded {} somatic fusions", linx.fusions().size());
 
         LOGGER.info(" Loaded {} somatic breakends", linx.somaticBreakends().size());
-        LOGGER.info(" Loaded {} somatic reportable homozygous disruptions", linx.somaticHomozygousDisruptions().size());
 
         if(linxGermlineDataDirectory != null)
         {

@@ -20,6 +20,13 @@ public final class TableCommon
     public static final String COL_GENE = "Gene";
     public static final String COL_RNA = "RNA";
     public static final String COL_TPM = "TPM";
+    public static final String COL_LOCATION = "Location";
+    public static final String COL_RANGE = "Range";
+    public static final String COL_TYPE = "Type";
+    public static final String COL_DRIVER = "Driver";
+
+    public static final String VALUE_HET = "HET";
+    public static final String VALUE_HOM = "HOM";
 
     protected static void addEntry(final Cells cells, final List<Integer> widths, final List<Cell> cellEntries, int width, final String column)
     {

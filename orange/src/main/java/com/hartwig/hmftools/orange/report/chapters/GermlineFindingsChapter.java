@@ -18,7 +18,7 @@ import com.hartwig.hmftools.orange.report.datamodel.BreakendEntry;
 import com.hartwig.hmftools.orange.report.datamodel.BreakendEntryFactory;
 import com.hartwig.hmftools.orange.report.datamodel.VariantEntry;
 import com.hartwig.hmftools.orange.report.datamodel.VariantEntryFactory;
-import com.hartwig.hmftools.orange.report.tables.BreakendTable;
+import com.hartwig.hmftools.orange.report.tables.DisruptionTable;
 import com.hartwig.hmftools.orange.report.tables.GainDeletionTable;
 import com.hartwig.hmftools.orange.report.tables.GermlineVariantTable;
 import com.hartwig.hmftools.orange.report.tables.HomozygousDisruptionTable;
@@ -30,8 +30,6 @@ import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.property.UnitValue;
-
-import org.jetbrains.annotations.NotNull;
 
 public class GermlineFindingsChapter implements ReportChapter
 {
@@ -112,17 +110,15 @@ public class GermlineFindingsChapter implements ReportChapter
 
     private void addGermlineBreakends(final Document document)
     {
-        List<LinxSvAnnotation> allGermlineStructuralVariants = mReport.linx().germlineStructuralVariants();
+        // List<LinxSvAnnotation> allGermlineStructuralVariants = mReport.linx().germlineStructuralVariants();
         List<LinxBreakend> reportableGermlineBreakends = mReport.linx().germlineBreakends();
 
-        if(allGermlineStructuralVariants != null && reportableGermlineBreakends != null)
+        if(reportableGermlineBreakends != null)
         {
-            // TODO: Load Linx germline drivers properly
-            List<BreakendEntry> reportableBreakends =
-                    BreakendEntryFactory.create(reportableGermlineBreakends, allGermlineStructuralVariants, List.of());
+            List<BreakendEntry> reportableBreakends = BreakendEntryFactory.create(reportableGermlineBreakends);
 
             String title = "Potentially pathogenic germline gene disruptions (" + reportableBreakends.size() + ")";
-            document.add(BreakendTable.build(title, contentWidth(), reportableBreakends, mReportResources));
+            document.add(DisruptionTable.build(title, contentWidth(), reportableBreakends, mReportResources));
         }
     }
 

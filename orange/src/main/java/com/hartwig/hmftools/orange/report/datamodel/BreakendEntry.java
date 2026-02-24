@@ -26,10 +26,10 @@ public abstract class BreakendEntry
     @NotNull
     public abstract String range();
 
-    public abstract int clusterId();
-
     public abstract double junctionCopyNumber();
 
     public abstract double undisruptedCopyNumber();
+
+    public abstract double driverLikelihood();
 
 }

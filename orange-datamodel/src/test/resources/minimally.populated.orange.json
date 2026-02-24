@@ -312,7 +312,9 @@
         "orientation": -1,
         "exonUp": 1,
         "exonDown": 2,
-        "junctionCopyNumber": 1.1
+        "junctionCopyNumber": 1.1,
+        "driverType": "HOM_DUP_DISRUPTION",
+        "driverLikelihood": 1.0
       }
     ],
     "germlineBreakends": null,
@@ -327,7 +329,6 @@
     ],
     "germlineHomozygousDisruptions": null
   },
-  "wildTypeGenes": [],
   "isofox": null,
   "lilac": {
     "qc": "PASS",
