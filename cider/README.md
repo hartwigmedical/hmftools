@@ -185,7 +185,7 @@ Using the v38 genome for gene annotation is recommended for completeness.
 
 Following briefly describe the annotation logic:
 1. CIDER would run alignment and query the sequences against the human genome and IMGT V/D/J gene sequences. We use match/mismatch/gapopen/gapextend scores of
-   1/-4/-5/-2 and word size of 9.
+   1/-4/-5/-2 and word size of 8.
 2. If there is one alignment against the reference genome which covers the whole sequence with >= 95% identity, select it and indicate that the sequence matches the reference genome.
 3. Otherwise, filter alignments to find the V, D, J gene matches. The rules to choose the alignment is follows:
    - If the gene is V or J, the alignment must have >= 90% identity to the sequence.
