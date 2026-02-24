@@ -13,6 +13,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.purple.ChrArmCopyNumber;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.segmentation.Arm;
 import com.hartwig.hmftools.common.segmentation.ChrArm;
@@ -31,9 +32,9 @@ public class ChromosomeCopyNumbers
         mChrArmLocator = chrArmLocator;
     }
 
-    public List<ChromosomeArmCopyNumber> data()
+    public List<ChrArmCopyNumber> data()
     {
-        List<ChromosomeArmCopyNumber> result = new ArrayList<>();
+        List<ChrArmCopyNumber> result = new ArrayList<>();
         List<PurpleCopyNumber> currentArmCopyNumbers = new ArrayList<>();
         HumanChromosome currentChromosome = null;
         Arm currentArm = null;
@@ -49,7 +50,7 @@ public class ChromosomeCopyNumbers
                 if(!currentArmCopyNumbers.isEmpty())
                 {
                     Statistics statistics = calculateStats(currentArmCopyNumbers);
-                    result.add(new ChromosomeArmCopyNumber(currentChromosome, currentArm, statistics.mean, statistics.median, statistics.min, statistics.max));
+                    result.add(new ChrArmCopyNumber(currentChromosome, currentArm, statistics.mean, statistics.median, statistics.min, statistics.max));
                 }
                 currentChromosome = purpleCopyNumber.chr();
                 currentArm = segmentArm;
@@ -60,9 +61,9 @@ public class ChromosomeCopyNumbers
         if(!currentArmCopyNumbers.isEmpty())
         {
             Statistics statistics = calculateStats(currentArmCopyNumbers);
-            result.add(new ChromosomeArmCopyNumber(currentChromosome, currentArm, statistics.mean, statistics.median, statistics.min, statistics.max));
+            result.add(new ChrArmCopyNumber(currentChromosome, currentArm, statistics.mean, statistics.median, statistics.min, statistics.max));
         }
-        return result.stream().filter(ChromosomeArmCopyNumber::includeInReport).toList();
+        return result.stream().filter(ChrArmCopyNumber::includeInReport).toList();
     }
 
     private Arm armForSegment(final PurpleCopyNumber purpleCopyNumber)

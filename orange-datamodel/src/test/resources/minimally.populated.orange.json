@@ -190,6 +190,15 @@
         "minMinorAlleleCopyNumber": 0.4
       }
     ],
+    "chrArmCopyNumbers": [
+      {
+        "chromosome": "12",
+        "arm": "P",
+        "type": "GAIN",
+        "copyNumber": 3.0,
+        "relativeCopyNumber": 1.5
+      }
+    ],
     "somaticGainsDels": [
       {
         "driver": {

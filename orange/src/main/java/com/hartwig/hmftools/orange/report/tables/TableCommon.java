@@ -18,6 +18,9 @@ import org.jetbrains.annotations.Nullable;
 public final class TableCommon
 {
     public static final String COL_GENE = "Gene";
+    public static final String COL_CHR = "Chromosome";
+    public static final String COL_CN = "CN";
+    public static final String COL_REL_CN = "Rel CN";
     public static final String COL_RNA = "RNA";
     public static final String COL_TPM = "TPM";
     public static final String COL_LOCATION = "Location";

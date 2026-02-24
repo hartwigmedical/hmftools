@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_DRIVER;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_GENE;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_LOCATION;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_RANGE;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_REL_CN;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_TPM;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_TYPE;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
@@ -50,7 +51,7 @@ public final class GainDeletionTable
         addEntry(cells, widths, cellEntries, 1, COL_RANGE); // if known
         addEntry(cells, widths, cellEntries, 1, "Min CN");
         addEntry(cells, widths, cellEntries, 1, "Max CN");
-        addEntry(cells, widths, cellEntries, 1, "Rel CN");
+        addEntry(cells, widths, cellEntries, 1, COL_REL_CN);
         addEntry(cells, widths, cellEntries, 1, COL_DRIVER);
 
         if(hasRna)

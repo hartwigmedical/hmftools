@@ -17,36 +17,13 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.purple.ChrArmCopyNumber;
 import com.hartwig.hmftools.common.segmentation.Arm;
 
 import org.junit.Test;
 
-public class ChromosomeArmCopyNumberTest
+public class ChrArmCopyNumberTest
 {
-    @Test
-    public void headingsTest()
-    {
-        String expected = "chromosome\tarm\tmeanCopyNumber\tmedianCopyNumber\tminCopyNumber\tmaxCopyNumber";
-        assertEquals(expected, ChromosomeArmCopyNumber.tsvFileHeader());
-    }
-
-    @Test
-    public void toTsvTest()
-    {
-        ChromosomeArmCopyNumber o1 = new ChromosomeArmCopyNumber(
-                _1, Arm.P, 0.663333333333, 0.600000001, 0.320092, 0.90002000200025);
-        assertEquals("1\tP\t0.6633\t0.6000\t0.3201\t0.9000", o1.toTSV());
-    }
-
-    @Test
-    public void fromTsvTest()
-    {
-        ChromosomeArmCopyNumber original = new ChromosomeArmCopyNumber(
-                _1, Arm.P, 0.6633, 0.6000, 0.3201, 0.9000);
-        ChromosomeArmCopyNumber rebuilt = ChromosomeArmCopyNumber.fromTsv(original.toTSV());
-        assertEquals(original, rebuilt);
-    }
-
     @Test
     public void isReportable()
     {
@@ -74,8 +51,8 @@ public class ChromosomeArmCopyNumberTest
         assertTrue(cn(_Y, Arm.Q).includeInReport());
     }
 
-    private ChromosomeArmCopyNumber cn(final HumanChromosome chromosome, final Arm arm)
+    private ChrArmCopyNumber cn(final HumanChromosome chromosome, final Arm arm)
     {
-        return new ChromosomeArmCopyNumber(chromosome, arm, 0.0, 0.0, 0.0, 0.0);
+        return new ChrArmCopyNumber(chromosome, arm, 0.0, 0.0, 0.0, 0.0);
     }
 }

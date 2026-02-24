@@ -4,13 +4,15 @@ import static com.hartwig.hmftools.orange.report.ReportResources.formatSingleDig
 import static com.hartwig.hmftools.orange.report.ReportResources.formatTwoDigitDecimal;
 import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_AF;
 import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_BIALLELIC;
-import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_CN;
 import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_DP;
 import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_GENOTYPE;
 import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_HOTSPOT;
 import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_MACN;
 import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_VARIANT;
 import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_VCN;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_CN;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.VALUE_HET;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.VALUE_HOM;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.cellArray;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.floatArray;
@@ -75,9 +77,9 @@ public final class GermlineVariantTable
         {
             case HOM_REF:
             case HOM_ALT:
-                return "HOM";
+                return VALUE_HOM;
             case HET:
-                return "HET";
+                return VALUE_HET;
             case UNKNOWN:
                 return "UNKNOWN";
         }

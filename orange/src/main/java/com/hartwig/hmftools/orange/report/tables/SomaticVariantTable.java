@@ -6,7 +6,6 @@ import static com.hartwig.hmftools.orange.report.ReportResources.formatTwoDigitD
 import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_AF;
 import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_BIALLELIC;
 import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_CL;
-import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_CN;
 import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_DL;
 import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_DP;
 import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_HOTSPOT;
@@ -14,6 +13,7 @@ import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_MAC
 import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_SL;
 import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_VARIANT;
 import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_VCN;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_CN;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_RNA;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.cellArray;

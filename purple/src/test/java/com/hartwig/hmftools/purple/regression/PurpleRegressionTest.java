@@ -30,8 +30,8 @@ import com.hartwig.hmftools.common.purple.PurpleSegment;
 import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.purple.PurpleApplication;
-import com.hartwig.hmftools.purple.copynumber.ChromosomeArmCopyNumber;
-import com.hartwig.hmftools.purple.copynumber.ChromosomeArmCopyNumbersFile;
+import com.hartwig.hmftools.common.purple.ChrArmCopyNumber;
+import com.hartwig.hmftools.common.purple.ChrArmCopyNumbersFile;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
@@ -124,21 +124,21 @@ public class PurpleRegressionTest
 
     private void checkChromosomeArmCopyNumbers() throws Exception
     {
-        List<ChromosomeArmCopyNumber> armCopyNumbers =
-                ChromosomeArmCopyNumbersFile.read(ChromosomeArmCopyNumbersFile.generateFilename(OutputDir.getAbsolutePath(), tumor));
-        List<ChromosomeArmCopyNumber> baselineCopyNumbers =
-                ChromosomeArmCopyNumbersFile.read(ChromosomeArmCopyNumbersFile.generateFilename(ConfiguredResultsDir.getAbsolutePath(), tumor));
+        List<ChrArmCopyNumber> armCopyNumbers =
+                ChrArmCopyNumbersFile.read(ChrArmCopyNumbersFile.generateFilename(OutputDir.getAbsolutePath(), tumor));
+        List<ChrArmCopyNumber> baselineCopyNumbers =
+                ChrArmCopyNumbersFile.read(ChrArmCopyNumbersFile.generateFilename(ConfiguredResultsDir.getAbsolutePath(), tumor));
         assertEquals(armCopyNumbers.size(), baselineCopyNumbers.size());
-        for(ChromosomeArmCopyNumber armCopyNumber : armCopyNumbers)
+        for(ChrArmCopyNumber armCopyNumber : armCopyNumbers)
         {
-            ChromosomeArmCopyNumber baseline = findCopyNumber(baselineCopyNumbers, armCopyNumber);
+            ChrArmCopyNumber baseline = findCopyNumber(baselineCopyNumbers, armCopyNumber);
             checkObjectsHaveSameData(baseline, armCopyNumber);
         }
     }
 
-    private static ChromosomeArmCopyNumber findCopyNumber(List<ChromosomeArmCopyNumber> copyNumbers, ChromosomeArmCopyNumber toMatch)
+    private static ChrArmCopyNumber findCopyNumber(List<ChrArmCopyNumber> copyNumbers, ChrArmCopyNumber toMatch)
     {
-        List<ChromosomeArmCopyNumber> matches =
+        List<ChrArmCopyNumber> matches =
                 copyNumbers.stream().filter(cn -> cn.chromosome().equals(toMatch.chromosome()) && cn.arm().equals(toMatch.arm())).toList();
         assertEquals(
                 "Copy numbers matching " + toMatch.chromosome() + " " + toMatch.arm() + " has size " + matches.size(), 1, matches.size());

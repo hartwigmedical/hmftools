@@ -14,7 +14,6 @@ import org.apache.logging.log4j.util.Strings;
 public final class Variants
 {
     public static final String COL_VCN = "VCN";
-    public static final String COL_CN = "CN";
     public static final String COL_MACN = "MACN";
     public static final String COL_CL = "Clonal";
     public static final String COL_DL = "Driver";

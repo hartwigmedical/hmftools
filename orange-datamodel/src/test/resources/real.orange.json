@@ -158,6 +158,15 @@
         "minMinorAlleleCopyNumber": 0.8112
       }
     ],
+    "chrArmCopyNumbers": [
+      {
+        "chromosome": "12",
+        "arm": "P",
+        "type": "GAIN",
+        "copyNumber": 3.0,
+        "relativeCopyNumber": 1.5
+      }
+    ],
     "somaticGainsDels": [
       {
         "interpretation": "PARTIAL_DEL",

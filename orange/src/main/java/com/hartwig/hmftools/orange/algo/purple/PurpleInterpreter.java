@@ -6,6 +6,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
@@ -17,6 +18,7 @@ import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleFit;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleCharacteristics;
+import com.hartwig.hmftools.datamodel.purple.PurpleChrArmCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleFit;
 import com.hartwig.hmftools.datamodel.purple.PurpleFittedPurityMethod;
@@ -56,6 +58,11 @@ public class PurpleInterpreter
                     purple.germlineDeletions(), Objects.requireNonNull(germlineDrivers), purple.somaticGeneCopyNumbers(), isofoxData);
         }
 
+        double ploidy = purple.purityContext().bestFit().ploidy();
+
+        List<PurpleChrArmCopyNumber> chrArmCopyNumbers = purple.chrArmCopyNumbers().stream()
+                .map(x -> PurpleConversion.convert(x, ploidy)).collect(Collectors.toList());
+
         return ImmutablePurpleRecord.builder()
                 .fit(createFit(purple))
                 .tumorStats(TumorStatsFactory.compute(purple))
@@ -66,6 +73,7 @@ public class PurpleInterpreter
                 .germlineVariants(germlineVariants)
                 .somaticCopyNumbers(ConversionUtil.mapToIterable(purple.somaticCopyNumbers(), PurpleConversion::convert))
                 .somaticGeneCopyNumbers(ConversionUtil.mapToIterable(purple.somaticGeneCopyNumbers(), PurpleConversion::convert))
+                .chrArmCopyNumbers(chrArmCopyNumbers)
                 .somaticGainsDels(driverSomaticGainsDels)
                 .germlineGainsDels(driverGermlineAmpDels)
                 .build();

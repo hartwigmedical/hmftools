@@ -44,4 +44,7 @@ public interface PurpleRecord
 
     @Nullable
     List<PurpleGainDeletion> germlineGainsDels();
+
+    @NotNull
+    List<PurpleChrArmCopyNumber> chrArmCopyNumbers();
 }

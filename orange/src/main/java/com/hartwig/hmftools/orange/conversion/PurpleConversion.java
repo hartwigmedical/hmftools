@@ -11,6 +11,9 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.purple.ChrArmCopyNumber;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GermlineAmpDel;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
@@ -21,6 +24,7 @@ import com.hartwig.hmftools.common.variant.impact.VariantEffect;
 import com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact;
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleAllelicDepth;
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleChrArmCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGeneCopyNumber;
@@ -28,6 +32,7 @@ import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGermlineDeletion;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleQC;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.PurpleAllelicDepth;
+import com.hartwig.hmftools.datamodel.purple.PurpleChrArmCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
 import com.hartwig.hmftools.datamodel.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
@@ -201,4 +206,29 @@ public final class PurpleConversion
     {
         return PurpleSomaticLikelihood.valueOf(somaticLikelihood.name());
     }
+
+    public static PurpleChrArmCopyNumber convert(final ChrArmCopyNumber chrArmCopyNumber, final double ploidy)
+    {
+        String type = "DIPLOID";
+
+        if(chrArmCopyNumber.meanCopyNumber() > 1.4 * ploidy)
+        {
+            type = "GAIN";
+        }
+        else if(chrArmCopyNumber.meanCopyNumber() < 0.6 * ploidy)
+        {
+            type = "LOSS";
+        }
+
+        String chromosome = RefGenomeFunctions.enforceChrPrefix(chrArmCopyNumber.chromosome().toString());
+
+        return ImmutablePurpleChrArmCopyNumber.builder()
+                .chromosome(chromosome)
+                .arm(chrArmCopyNumber.arm().toString())
+                .type(type)
+                .copyNumber(chrArmCopyNumber.medianCopyNumber())
+                .relativeCopyNumber(ploidy > 0 ? chrArmCopyNumber.medianCopyNumber() / ploidy : 0)
+                .build();
+    }
+
 }

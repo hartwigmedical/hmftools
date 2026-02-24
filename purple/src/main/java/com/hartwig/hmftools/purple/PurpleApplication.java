@@ -26,7 +26,6 @@ import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.driver.DriverCatalogFile;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
@@ -54,7 +53,7 @@ import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
 import com.hartwig.hmftools.common.segmentation.ChrArmLocator;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.VersionInfo;
-import com.hartwig.hmftools.purple.copynumber.ChromosomeArmCopyNumbersFile;
+import com.hartwig.hmftools.common.purple.ChrArmCopyNumbersFile;
 import com.hartwig.hmftools.purple.copynumber.ChromosomeCopyNumbers;
 import com.hartwig.hmftools.purple.drivers.AmplificationDrivers;
 import com.hartwig.hmftools.purple.drivers.DeletionDrivers;
@@ -382,8 +381,8 @@ public class PurpleApplication
         }
 
         ChromosomeCopyNumbers ccm = new ChromosomeCopyNumbers(copyNumbers, ChrArmLocator.defaultLocator(mReferenceData.RefGenVersion));
-        String fileName = ChromosomeArmCopyNumbersFile.generateFilename(mConfig.OutputDir, tumorId);
-        ChromosomeArmCopyNumbersFile.write(fileName, ccm.data());
+        String fileName = ChrArmCopyNumbersFile.generateFilename(mConfig.OutputDir, tumorId);
+        ChrArmCopyNumbersFile.write(fileName, ccm.data());
 
         if(mConfig.RunDrivers)
         {

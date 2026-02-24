@@ -13,6 +13,7 @@ import com.hartwig.hmftools.orange.report.datamodel.BreakendEntry;
 import com.hartwig.hmftools.orange.report.datamodel.BreakendEntryFactory;
 import com.hartwig.hmftools.orange.report.datamodel.VariantEntry;
 import com.hartwig.hmftools.orange.report.datamodel.VariantEntryFactory;
+import com.hartwig.hmftools.orange.report.tables.ChrArmCopyNumberTable;
 import com.hartwig.hmftools.orange.report.tables.DisruptionTable;
 import com.hartwig.hmftools.orange.report.tables.DnaFusionTable;
 import com.hartwig.hmftools.orange.report.tables.GainDeletionTable;
@@ -66,13 +67,15 @@ public class SomaticFindingsChapter implements ReportChapter
         addSomaticAmpDels(document);
         addFusions(document);
 
+        // addHomozygousDisruptions(document);
+        addBreakendDisruptions(document);
+
         if(!mReport.tumorOnlyMode())
         {
             addViralPresence(document);
         }
 
-        // addHomozygousDisruptions(document);
-        addBreakendDisruptions(document);
+        addChrArmCopyNumbers(document);
 
         if(!mReport.tumorOnlyMode())
         {
@@ -145,6 +148,21 @@ public class SomaticFindingsChapter implements ReportChapter
 
             document.add(GainDeletionTable.build(
                     titleDrivers, contentWidth(), mReport.purple().somaticGainsDels(), mReportResources, mReport.hasRna()));
+        }
+    }
+
+    private void addChrArmCopyNumbers(final Document document)
+    {
+        String title = "Chromosome Arm Copy Number";
+
+        if(PurpleQCInterpretation.isContaminated(mReport.purple().fit().qc()))
+        {
+            Tables tables = new Tables(mReportResources);
+            document.add(tables.createNotAvailable(title, contentWidth()));
+        }
+        else
+        {
+            document.add(ChrArmCopyNumberTable.build(title, contentWidth(), mReport.purple().chrArmCopyNumbers(), mReportResources));
         }
     }
 

@@ -9,6 +9,8 @@ import java.util.stream.Collectors;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.driver.DriverCatalogFile;
 import com.hartwig.hmftools.common.driver.panel.DriverGene;
+import com.hartwig.hmftools.common.purple.ChrArmCopyNumber;
+import com.hartwig.hmftools.common.purple.ChrArmCopyNumbersFile;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.purple.GermlineAmpDel;
@@ -43,32 +45,8 @@ public final class PurpleDataLoader
         String geneCopyNumberTsv = GeneCopyNumberFile.generateFilename(purpleDir, tumorId);
         String germlineDeletionTsv = GermlineAmpDel.generateFilename(purpleDir, tumorId);
 
-        return load(
-                tumorId, config.ReferenceId, config.RnaSampleId, qcFile, purityTsv,
-                somaticDriverCatalogTsv, somaticVariantVcf, germlineDriverCatalogTsv, germlineVariantVcf,
-                copyNumberTsv, geneCopyNumberTsv, germlineDeletionTsv, driverGenes);
-    }
+        String chrArmCopyNumberTsv = ChrArmCopyNumbersFile.generateFilename(purpleDir, tumorId);
 
-    private static String resolveVcfPath(final String vcfPath)
-    {
-        if(!new File(vcfPath).exists() && vcfPath.endsWith(".gz"))
-        {
-            String unzippedVcfPath = vcfPath.substring(0, vcfPath.length() - 3);
-            if(new File(unzippedVcfPath).exists())
-            {
-                return unzippedVcfPath;
-            }
-        }
-        return vcfPath;
-    }
-
-    private static PurpleData load(
-            final String tumorSample, @Nullable String referenceSample, @Nullable String rnaSample,
-            final String qcFile, final String purityTsv, final String somaticDriverCatalogTsv, final String somaticVariantVcf,
-            final String germlineDriverCatalogTsv, final String germlineVariantVcf,
-            final String copyNumberTsv, final String geneCopyNumberTsv,
-            final String germlineDeletionTsv, final Map<String,DriverGene> driverGenes) throws IOException
-    {
         PurityContext purityContext = PurityContextFile.readWithQC(qcFile, purityTsv);
 
         List<DriverCatalog> somaticDrivers = DriverCatalogFile.read(somaticDriverCatalogTsv);
@@ -77,7 +55,7 @@ public final class PurpleDataLoader
         somaticDrivers = somaticDrivers.stream().filter(x -> x.reportedStatus() != ReportedStatus.NOT_REPORTED).collect(Collectors.toList());
 
         List<SmallVariant> allSomaticVariants = SmallVariantFactory.passOnlyInstance().fromVCFFile(
-                tumorSample, referenceSample, rnaSample, somaticVariantVcf);
+                tumorId, config.ReferenceId, config.RnaSampleId, somaticVariantVcf);
 
         List<SmallVariant> panelSomaticVariants = allSomaticVariants.stream().filter(x -> x.reported()).collect(Collectors.toList());
 
@@ -85,17 +63,20 @@ public final class PurpleDataLoader
 
         geneCopyNumbers = geneCopyNumbers.stream().filter(x -> driverGenes.containsKey(x.GeneName)).collect(Collectors.toList());
 
+        List<ChrArmCopyNumber> chrArmCopyNumbers = ChrArmCopyNumbersFile.read(chrArmCopyNumberTsv);
+
         List<DriverCatalog> germlineDrivers = null;
         List<SmallVariant> panelGermlineVariants = null;
         List<GermlineAmpDel> panelGermlineDeletions = null;
 
-        if(referenceSample != null)
+        if(config.hasReference())
         {
             germlineDrivers = DriverCatalogFile.read(germlineDriverCatalogTsv);
 
             germlineDrivers = germlineDrivers.stream().filter(x -> x.reportedStatus() != ReportedStatus.NOT_REPORTED).collect(Collectors.toList());
 
-            List<SmallVariant> germlineVariants = new SmallVariantFactory().fromVCFFile(tumorSample, referenceSample, rnaSample, germlineVariantVcf);
+            List<SmallVariant> germlineVariants = new SmallVariantFactory().fromVCFFile(
+                    tumorId, config.ReferenceId, config.RnaSampleId, germlineVariantVcf);
 
             panelGermlineVariants = germlineVariants.stream().filter(x -> x.reported()).collect(Collectors.toList());
 
@@ -114,6 +95,20 @@ public final class PurpleDataLoader
                 .somaticCopyNumbers(PurpleCopyNumberFile.read(copyNumberTsv))
                 .somaticGeneCopyNumbers(geneCopyNumbers)
                 .germlineDeletions(panelGermlineDeletions)
+                .chrArmCopyNumbers(chrArmCopyNumbers)
                 .build();
+    }
+
+    private static String resolveVcfPath(final String vcfPath)
+    {
+        if(!new File(vcfPath).exists() && vcfPath.endsWith(".gz"))
+        {
+            String unzippedVcfPath = vcfPath.substring(0, vcfPath.length() - 3);
+            if(new File(unzippedVcfPath).exists())
+            {
+                return unzippedVcfPath;
+            }
+        }
+        return vcfPath;
     }
 }
