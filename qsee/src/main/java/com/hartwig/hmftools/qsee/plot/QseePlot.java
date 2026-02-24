@@ -10,7 +10,6 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.utils.RExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.qsee.cohort.CohortPercentilesFile;
 import com.hartwig.hmftools.qsee.prep.QseePrep;
 import com.hartwig.hmftools.qsee.prep.QseePrepConfig;
 
@@ -26,7 +25,7 @@ public class QseePlot
 
     private static final String SCRIPT_PATH = "plot_qc.R";
 
-    private static final String MISSING_SAMPLE_ID = "NA";
+    private static final String NO_ARG = "NA";
 
     private QseePlot(List<String> tumorIds, List<String> referenceIds,
             String sampleFeaturesFile, String cohortPercentilesFile, String outputDir)
@@ -65,9 +64,9 @@ public class QseePlot
         {
             String[] scriptArgs = {
                     tumorId,
-                    referenceId == null ? MISSING_SAMPLE_ID : referenceId,
+                    referenceId == null ? NO_ARG : referenceId,
                     mSampleFeaturesFile,
-                    mCohortPercentilesFile,
+                    mCohortPercentilesFile == null ? NO_ARG : mCohortPercentilesFile,
                     formOutputFilename(tumorId),
                     QC_LOGGER.getLevel().toString()
             };
@@ -95,7 +94,7 @@ public class QseePlot
         if(isSingleSample)
         {
             String tumorId = mTumorIds.get(0);
-            String referenceId = mReferenceIds.isEmpty() ? MISSING_SAMPLE_ID : mReferenceIds.get(0);
+            String referenceId = mReferenceIds.isEmpty() ? NO_ARG : mReferenceIds.get(0);
             plotOneSample(tumorId, referenceId);
         }
         else

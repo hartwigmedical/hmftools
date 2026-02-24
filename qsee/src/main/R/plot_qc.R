@@ -18,9 +18,9 @@ library(scales)
 args <- commandArgs(trailingOnly = TRUE)
 
 TUMOR_ID <- args[1]
-NORMAL_ID <- ifelse(args[2] == "NA", NA, args[2])
+NORMAL_ID <- if(args[2] == "NA") NA else args[2]
 SAMPLE_FEATURES_FILE <- args[3]
-COHORT_PERCENTILES_FILE <- args[4]
+COHORT_PERCENTILES_FILE <- if(args[4] == "NA") NA else args[4]
 OUTPUT_PATH <- args[5]
 GLOBAL_LOG_LEVEL <- args[6]
 
@@ -137,6 +137,11 @@ QC_STATUS <- list(
 
 load_cohort_percentiles <- function(){
    
+   if(is.na(COHORT_PERCENTILES_FILE)){
+      LOGGER$info("No cohort percentiles provided - skipping plotting cohort data")
+      return(NULL)
+   }
+   
    LOGGER$info("Loading cohort percentiles from: %s", COHORT_PERCENTILES_FILE)
    
    cohort_percentiles <- read.delim(COHORT_PERCENTILES_FILE, na.strings = c("NA", "null"))
@@ -236,21 +241,29 @@ get_plot_data <- function(feature_type){
    
    LOGGER$info("Plotting featureType(%s)", feature_type)
    
-   ## Select rows
-   cohort_data <- COHORT_DATA %>% dplyr::filter(FeatureType == feature_type) %>% select(-SourceTool)
+   ## Select and merge sample/cohort data
    sample_data <- SAMPLE_DATA %>% dplyr::filter(FeatureType == feature_type) %>% select(-SourceTool)
    
    if(nrow(sample_data) == 0){
-      return(data.frame())
+      return(NULL)
    }
    
-   ## Sample and cohort data as one data frame
-   merged_data <- merge(
-      sample_data, cohort_data, 
-      by=c("SampleType", "FeatureType", "FeatureName"), 
-      all.x = TRUE, ## Only select the features in the cohort data that are present in the sample
-      sort = FALSE
-   )
+   if(!is.null(COHORT_DATA)){
+      cohort_data <- COHORT_DATA %>% dplyr::filter(FeatureType == feature_type) %>% select(-SourceTool)
+      
+      merged_data <- merge(
+         sample_data, cohort_data, 
+         by=c("SampleType", "FeatureType", "FeatureName"), 
+         all.x = TRUE, ## Only select the features in the cohort data that are present in the sample
+         sort = FALSE
+      )
+   } else {
+      merged_data <- sample_data
+      
+      for(named_percentile in NAMED_PERCENTILES){
+         merged_data[[named_percentile$name]] <- NA
+      }
+   }
 
    ## Split multi-field strings
    for(colname in colnames(merged_data)){
@@ -287,7 +300,10 @@ plot_missing_data <- function(plot_labels = labs()){
 ## Box plots
 ## =============================
 
-plot_boxplot <- function(plot_data, x, y = "FeatureValue", plot_type = "boxplot", hlines = NULL, vlines = NULL){
+plot_pairwise_comparison <- function(
+   plot_data, x, y = "FeatureValue", plot_type = "boxplot", 
+   hlines = NULL, vlines = NULL
+){
    
    if(FALSE){
       plot_type = "boxplot"
@@ -297,11 +313,11 @@ plot_boxplot <- function(plot_data, x, y = "FeatureValue", plot_type = "boxplot"
       x = "OriginalQualBin"
       y = "FeatureValue"
 
-      plot_data <- get_plot_data(FEATURE_TYPE$BQR_BY_ORIG_QUAL$name)
+      plot_data <- get_plot_data(FEATURE_TYPE$BQR_BY_ORIG_QUAL)
       gg_facet <- facet_grid("ReadType ~ StandardMutation")
    }
    
-   if(nrow(plot_data) == 0){
+   if(is.null(plot_data)){
       LOGGER$error("Box plot failed - empty data frame")
    }
    
@@ -344,7 +360,7 @@ plot_boxplot <- function(plot_data, x, y = "FeatureValue", plot_type = "boxplot"
       scale_fill_manual(values = sample_type_colors) +
       scale_color_manual(values = sample_type_colors) +
       
-      #gg_facet +
+      # gg_facet +
       
       theme(
          panel.grid.minor = element_blank(),
@@ -362,13 +378,13 @@ PLOTS[[FEATURE_TYPE$DUPLICATE_FREQ]] <- local({
    
    plot_labels <- labs(title = "Duplicate frequency", x = "Duplicate read count", y = "Prop. of read groups")
    
-   if(nrow(plot_data) == 0){
+   if(is.null(plot_data)){
       return(plot_missing_data(plot_labels))
    }
    
    plot_data <- plot_data %>% dplyr::mutate(ReadCount = reverse_levels(ReadCount))
    
-   plot_boxplot(plot_data, x = "ReadCount") +
+   plot_pairwise_comparison(plot_data, x = "ReadCount") +
       plot_labels +
       coord_flip() +
       theme(
@@ -386,16 +402,16 @@ PLOTS[[FEATURE_TYPE$DISCORDANT_FRAG_FREQ]] <- local({
       y = "Prop. of reads"
    )
    
-   if(nrow(plot_data) == 0){
+   if(is.null(plot_data)){
       return(plot_missing_data(plot_labels))
    }
    
    plot_data <- plot_data %>% dplyr::mutate(DiscordantFragType = reverse_levels(DiscordantFragType))
    
-   plot_boxplot(plot_data, x = "DiscordantFragType") + 
+   plot_pairwise_comparison(plot_data, x = "DiscordantFragType") + 
       scale_y_continuous(
-         transform = "log10", 
-         labels = scales::trans_format("log10", scales::math_format(10^.x))
+         transform = "log10",
+         labels = function(x) format(x, scientific = FALSE, drop0trailing = TRUE)
       ) +
       plot_labels +
       coord_flip() +
@@ -417,7 +433,7 @@ PLOTS[[FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD]] <- local({
       y = "Missed variant likelihood"
    )
    
-   if(nrow(plot_data) == 0){
+   if(is.null(plot_data)){
       return(plot_missing_data(plot_labels))
    }
    
@@ -436,7 +452,7 @@ PLOTS[[FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD]] <- local({
       dplyr::mutate(Gene = factor(Gene, sample_genes_of_interest)) %>%
       dplyr::mutate(Gene = reverse_levels(Gene))
    
-   plot_boxplot(plot_data, x = "Gene") + 
+   plot_pairwise_comparison(plot_data, x = "Gene") + 
       plot_labels +
       coord_flip()
 })
@@ -451,11 +467,11 @@ PLOTS[[FEATURE_TYPE$BQR_BY_ORIG_QUAL]] <- local({
       y = "Phred score adjustment"
    )
    
-   if(nrow(plot_data) == 0){
+   if(is.null(plot_data)){
       return(plot_missing_data(plot_labels))
    }
    
-   plot_boxplot(plot_data, x = "OriginalQualBin", hlines = 0) +
+   plot_pairwise_comparison(plot_data, x = "OriginalQualBin", hlines = 0) +
       facet_grid("ReadType ~ StandardMutation") +
       scale_y_continuous(
          labels = function(x){ ifelse(x > 0, paste0("+",x), x) },
@@ -477,7 +493,7 @@ PLOTS[[FEATURE_TYPE$BQR_BY_SNV96_CONTEXT]] <- local({
       plot_labels$title <- paste0(plot_labels$title, ", base quality: ", plot_data$OriginalQualBin[1])
    }
    
-   plot_boxplot(
+   plot_pairwise_comparison(
       plot_data, x = "StandardTrinucContext", plot_type = "pointrange", 
       hlines = 0, vlines = c(4, 8, 12) + 0.5
    ) +
@@ -498,7 +514,7 @@ PLOTS[[FEATURE_TYPE$MS_INDEL_ERROR_RATES]] <- local({
    
    plot_labels <- labs(title = "Microsatellite indel error rates", x = "Repeat units", y = "Phred score") 
    
-   plot_boxplot(plot_data, x = "RefNumUnits", plot_type = "pointrange") +
+   plot_pairwise_comparison(plot_data, x = "RefNumUnits", plot_type = "pointrange") +
       facet_grid("ConsensusType ~ RepeatUnitType") +
       scale_x_discrete(breaks = function(x) ifelse(as.numeric(x) %% 3 == 0, x, "") ) +
       scale_y_continuous(limits = c(0, NA), sec.axis = dup_axis(name = "Consensus type")) +
@@ -518,18 +534,21 @@ PLOTS[[FEATURE_TYPE$MS_INDEL_ERROR_BIAS]] <- local({
       y = expression(atop("Phred score diff.",atop("more del. errors <-> more ins. errors")))
    )
    
-   if(nrow(plot_data) == 0){
+   if(is.null(plot_data)){
       return(plot_missing_data(plot_labels))
    }
    
-   plot_boxplot(plot_data, x = "RefNumUnits", hlines = 0, plot_type = "pointrange") +
+   plot_pairwise_comparison(plot_data, x = "RefNumUnits", plot_type = "pointrange") +
       facet_grid("ConsensusType ~ RepeatUnitType") +
       scale_x_discrete(breaks = function(x) ifelse(as.numeric(x) %% 3 == 0, x, "") ) +
       scale_y_continuous(
          labels = function(x){ ifelse(x > 0, paste0("+",x), x) },
          sec.axis = dup_axis(name = "Consensus type")
       ) +
-      plot_labels
+      plot_labels +
+      theme(
+         panel.grid.major = element_line(color = "grey90", linewidth = 0.25)
+      )
 })
 
 ## =============================
@@ -543,7 +562,7 @@ plot_distribution <- function(plot_data, x, invert_normal = FALSE, mark_sample_p
       x = "ReadDepth"
    }
    
-   if(nrow(plot_data) == 0){
+   if(is.null(plot_data)){
       LOGGER$error("Line/distribution plot failed - empty data frame")
    }
    
@@ -611,7 +630,7 @@ PLOTS[[FEATURE_TYPE$COVERAGE_DISTRIBUTION]] <- local({
    
    plot_labels <- labs(title = "Coverage", x = "Coverage", y = "Prop. of bases")
    
-   if(nrow(plot_data) == 0){
+   if(is.null(plot_data)){
       return(plot_missing_data(plot_labels))
    }
    
@@ -625,7 +644,7 @@ PLOTS[[FEATURE_TYPE$FRAG_LENGTH_DISTRIBUTION]] <- local({
    
    plot_labels <- labs(title = "Fragment length", x = "Fragment length", y = "Prop. of fragments")
    
-   if(nrow(plot_data) == 0){
+   if(is.null(plot_data)){
       return(plot_missing_data(plot_labels))
    }
    
@@ -639,7 +658,7 @@ PLOTS[[FEATURE_TYPE$GC_BIAS]] <- local({
    
    plot_labels <- labs(title = "GC bias", x = "GC percentage", y = "Read depth")
    
-   if(nrow(plot_data) == 0){
+   if(is.null(plot_data)){
       return(plot_missing_data(plot_labels))
    }
    
@@ -658,8 +677,9 @@ plot_sub_table <- function(feature_group, number_format = "NUMBER", show_title =
    if(FALSE){
       show_title = TRUE
       show_sample_type_label = TRUE
-      feature_group = "Mutational burden"; number_format = "LOG"
+      feature_group = "Copy number"; number_format = "LOG"
       feature_group = "Contamination"; number_format = "PERCENT"
+      feature_group = "Mutational burden"; number_format = "LOG"
    }
 
    ## Prep data =============================
@@ -755,7 +775,7 @@ plot_sub_table <- function(feature_group, number_format = "NUMBER", show_title =
       )
 
    ## Sample vs cohort =============================
-   subplot_boxplot <- plot_boxplot(plot_data, x = "PlotLabel", y = "FeatureValue") +
+   subplot_boxplot <- plot_pairwise_comparison(plot_data, x = "PlotLabel", y = "FeatureValue") +
       gg_div_lines("vertical") + 
       scale_y_continuous(
          trans = axis_trans,

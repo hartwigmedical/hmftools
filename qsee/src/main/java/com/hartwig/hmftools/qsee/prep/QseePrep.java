@@ -27,6 +27,8 @@ import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.Feature;
 import com.hartwig.hmftools.qsee.feature.FeatureKey;
 
+import org.jetbrains.annotations.Nullable;
+
 public class QseePrep
 {
     private final QseePrepConfig mConfig;
@@ -62,17 +64,19 @@ public class QseePrep
         }
     }
 
-    private List<VisSampleData> getVisSampleData(List<SampleFeatures> multiSampleFeatures, CohortPercentiles cohortPercentiles)
+    private List<VisSampleData> getVisSampleData(List<SampleFeatures> multiSampleFeatures, @Nullable CohortPercentiles cohortPercentiles)
     {
         List<VisSampleData> visSampleData = new ArrayList<>();
 
         for(SampleFeatures sampleFeatures : multiSampleFeatures)
         {
-            QC_LOGGER.info("Creating vis data entries - sampleType({}) sample({})", sampleFeatures.sampleType(), sampleFeatures.sampleId());
+            QC_LOGGER.info("Creating vis data entries - sampleType({}) sample({})",
+                    sampleFeatures.sampleType(), sampleFeatures.sampleId());
 
             for(Feature feature : sampleFeatures.features())
             {
-                cohortPercentiles.warnIfMissing(sampleFeatures.sampleType(), feature.key());
+                if(cohortPercentiles != null)
+                    cohortPercentiles.warnIfMissing(sampleFeatures.sampleType(), feature.key());
 
                 VisSampleData visData = new VisSampleData(sampleFeatures.sampleId(), sampleFeatures.sampleType(), feature);
                 visSampleData.add(visData);
@@ -154,7 +158,9 @@ public class QseePrep
         if(!mConfig.CommonPrep.isSinglePatient())
             multiSampleFeatures.sort(Comparator.comparing(SampleFeatures::sampleId));
 
-        CohortPercentiles cohortPercentiles = CohortPercentilesFile.read(mConfig.CohortPercentilesFile);
+        CohortPercentiles cohortPercentiles = (mConfig.CohortPercentilesFile != null)
+                ? CohortPercentilesFile.read(mConfig.CohortPercentilesFile)
+                : null;
 
         List<VisSampleData> visDataEntries = getVisSampleData(multiSampleFeatures, cohortPercentiles);
 

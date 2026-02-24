@@ -19,6 +19,6 @@ public class QseePrepConfig
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
         CommonPrepConfig.registerConfig(configBuilder);
-        configBuilder.addPath(COHORT_PERCENTILES_FILE_CFG, true, COHORT_PERCENTILES_FILE_CFG_DESC);
+        configBuilder.addPath(COHORT_PERCENTILES_FILE_CFG, false, COHORT_PERCENTILES_FILE_CFG_DESC);
     }
 }
