@@ -723,9 +723,10 @@ plot_sub_table <- function(feature_group, number_format = "NUMBER", show_title =
       ),
       QcStatusEnum = factor(QcStatusEnum, sapply(QC_STATUS, `[[`, "name"))
    )
-
-   sample_type_colors <- sapply(SAMPLE_TYPE, `[[`, "color")
+   
    qc_status_colors <- sapply(QC_STATUS, `[[`, "color")
+   sample_type_colors <- sapply(SAMPLE_TYPE, `[[`, "color")
+   sample_type_names <- sapply(SAMPLE_TYPE, `[[`, "human_readable_name")
    
    subplot_values <- ggplot(plot_data, aes(y = PlotLabel, x = SampleType, group = SampleType, color = SampleType)) +
       
@@ -739,7 +740,7 @@ plot_sub_table <- function(feature_group, number_format = "NUMBER", show_title =
       
       gg_div_lines("horizontal") +
       
-      scale_x_discrete(position = "bottom", limits = rev, drop = FALSE) +
+      scale_x_discrete(position = "bottom", limits = rev, drop = FALSE, labels = sample_type_names) +
       guides(color = "none") +
       labs(title = feature_group) +
       
