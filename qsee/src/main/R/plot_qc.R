@@ -170,17 +170,6 @@ PLOTS <- list()
 ## String functions
 ## =============================
 
-preordered_factor <- function(x){ factor(x, unique(x)) }
-
-preordered_factors <- function(df){ 
-   as.data.frame(lapply(df, function(x){
-      if(is.character(x)){
-         x <- factor(x, unique(x))
-      }
-      return(x)
-   }))
-}
-
 KEY_VALUE_SEP <- "="
 GROUP_SEP <- ";"
 
@@ -222,6 +211,21 @@ has_multiple_fields <- function(strings, key_value_sep = KEY_VALUE_SEP, group_se
    }
    
    return(all(is_multifield_string))
+}
+
+preordered_factor <- function(x){ factor(x, unique(x)) }
+
+preordered_factors <- function(df){ 
+   as.data.frame(lapply(df, function(x){
+      if(is.character(x)){
+         x <- factor(x, unique(x))
+      }
+      return(x)
+   }))
+}
+
+reverse_levels <- function(fct){
+   factor(fct, rev(levels(fct)))
 }
 
 ## =============================
@@ -303,25 +307,22 @@ plot_boxplot <- function(plot_data, x, y = "FeatureValue", plot_type = "boxplot"
    
    sample_type_colors <- sapply(SAMPLE_TYPE, `[[`, "color")
    gg_position_dodge <- position_dodge(width = 0.5)
-   boxplot_width <- 0.2 * (plot_data$SampleType %>% unique() %>% length())
    
    geom_sample <- geom_blank()
    geom_cohort <- geom_blank()
    
    if(plot_type == "boxplot"){
-      geom_sample <- geom_point(
-         shape = 21, position = gg_position_dodge, size = 1.5
-      )
+      geom_sample <- geom_point(shape = 21, position = gg_position_dodge, size = 1.8)
       
       geom_cohort <- geom_boxplot(
          aes(ymin = PctMin, lower = PctLower, middle = PctMid, upper = PctUpper, ymax = PctMax),
-         position = gg_position_dodge, width = boxplot_width,
+         position = gg_position_dodge, width = 0.4,
          stat = "identity", alpha = 0.3, size = 0.25, color = "grey70"
       )
    } else if(plot_type == "pointrange") {
       geom_sample <- geom_point(
          aes(color = SampleType), 
-         shape = 21, position = gg_position_dodge, size = 1
+         shape = 21, position = gg_position_dodge, size = 0.8
       )
       
       geom_cohort <- geom_linerange(
@@ -356,6 +357,7 @@ plot_boxplot <- function(plot_data, x, y = "FeatureValue", plot_type = "boxplot"
 }
 
 PLOTS[[FEATURE_TYPE$DUPLICATE_FREQ]] <- local({
+   
    plot_data <- get_plot_data(FEATURE_TYPE$DUPLICATE_FREQ)
    
    plot_labels <- labs(title = "Duplicate frequency", x = "Duplicate read count", y = "Prop. of read groups")
@@ -364,11 +366,13 @@ PLOTS[[FEATURE_TYPE$DUPLICATE_FREQ]] <- local({
       return(plot_missing_data(plot_labels))
    }
    
+   plot_data <- plot_data %>% dplyr::mutate(ReadCount = reverse_levels(ReadCount))
+   
    plot_boxplot(plot_data, x = "ReadCount") +
       plot_labels +
+      coord_flip() +
       theme(
-         panel.grid.major.y = element_line(color = "grey90", linewidth = 0.25),
-         axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1)
+         panel.grid.major.x = element_line(color = "grey90", linewidth = 0.25),
       )
 })
 
@@ -386,14 +390,17 @@ PLOTS[[FEATURE_TYPE$DISCORDANT_FRAG_FREQ]] <- local({
       return(plot_missing_data(plot_labels))
    }
    
+   plot_data <- plot_data %>% dplyr::mutate(DiscordantFragType = reverse_levels(DiscordantFragType))
+   
    plot_boxplot(plot_data, x = "DiscordantFragType") + 
       scale_y_continuous(
          transform = "log10", 
          labels = scales::trans_format("log10", scales::math_format(10^.x))
       ) +
       plot_labels +
+      coord_flip() +
       theme(
-         axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1),
+         panel.grid.major.x = element_line(color = "grey90", linewidth = 0.25),
       )
 })
 
@@ -426,13 +433,12 @@ PLOTS[[FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD]] <- local({
    
    plot_data <- plot_data %>% 
       dplyr::filter(Gene %in% sample_genes_of_interest) %>% 
-      dplyr::mutate(Gene = factor(Gene, sample_genes_of_interest))
+      dplyr::mutate(Gene = factor(Gene, sample_genes_of_interest)) %>%
+      dplyr::mutate(Gene = reverse_levels(Gene))
    
    plot_boxplot(plot_data, x = "Gene") + 
       plot_labels +
-      theme(
-         axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1),
-      )
+      coord_flip()
 })
 
 PLOTS[[FEATURE_TYPE$BQR_BY_ORIG_QUAL]] <- local({
@@ -457,7 +463,7 @@ PLOTS[[FEATURE_TYPE$BQR_BY_ORIG_QUAL]] <- local({
       ) +
       plot_labels + 
       theme(
-         axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1),
+         axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1, size = 7),
       )
 })
 
@@ -482,7 +488,7 @@ PLOTS[[FEATURE_TYPE$BQR_BY_SNV96_CONTEXT]] <- local({
       ) +
       plot_labels +
       theme(
-         axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, size = 5),
+         axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, size = 6),
       )
 })
 
@@ -496,6 +502,7 @@ PLOTS[[FEATURE_TYPE$MS_INDEL_ERROR_RATES]] <- local({
       facet_grid("ConsensusType ~ RepeatUnitType") +
       scale_x_discrete(breaks = function(x) ifelse(as.numeric(x) %% 3 == 0, x, "") ) +
       scale_y_continuous(limits = c(0, NA), sec.axis = dup_axis(name = "Consensus type")) +
+      plot_labels +
       theme(
          panel.grid.major = element_line(color = "grey90", linewidth = 0.25)
       )
@@ -557,7 +564,7 @@ plot_distribution <- function(plot_data, x, invert_normal = FALSE, mark_sample_p
       
       signs <- ifelse(plot_data$SampleType == SAMPLE_TYPE$NORMAL$name, -1, 1)
       
-      plot_data <- plot_data %>% mutate(
+      plot_data <- plot_data %>% dplyr::mutate(
          PctMin   = signs * PctMin,
          PctLower = signs * PctLower,
          PctMid   = signs * PctMid,
@@ -668,8 +675,8 @@ plot_sub_table <- function(feature_group, number_format = "NUMBER", show_title =
    plot_data <- SUMMARY_TABLE_DATA %>%
       dplyr::filter(FeatureGroup == feature_group & NumberFormat == number_format) %>%
       dplyr::mutate(
-         PlotLabel = factor(PlotLabel, rev(levels(PlotLabel))),
-         SampleType = factor(SampleType, rev(levels(SampleType)))
+         PlotLabel = reverse_levels(PlotLabel),
+         SampleType = reverse_levels(SampleType)
       )
    
    n_rows <- plot_data$PlotLabel %>% unique() %>% length()
@@ -862,7 +869,7 @@ PLOTS[[PLOT_NAME_LEGEND]] <- local({
          SAMPLE_TYPE$NORMAL$color %>% adjustcolor(alpha.f = 0.2)
       )
    ) %>% 
-      mutate(Index = 1:dplyr::n())
+      dplyr::mutate(Index = 1:dplyr::n())
    
    plot_data_qc_status <- data.frame(
       Index = 1:length(QC_STATUS),
@@ -958,16 +965,14 @@ create_report <- local({
    
    LOGGER$info("Combining plots")
    
-   plots <- lapply(PLOTS, function(p){ patchwork::free(p, "label") })
-
-   plot_letter_name_map <- c(
+   plot_order <- c(
       "A" = FEATURE_TYPE$SUMMARY_TABLE,
       
       "B" = FEATURE_TYPE$COVERAGE_DISTRIBUTION,
       "C" = FEATURE_TYPE$FRAG_LENGTH_DISTRIBUTION,
       "D" = FEATURE_TYPE$GC_BIAS,
-      "E" = FEATURE_TYPE$DISCORDANT_FRAG_FREQ,
-      "F" = FEATURE_TYPE$DUPLICATE_FREQ,
+      "E" = FEATURE_TYPE$DUPLICATE_FREQ,
+      "F" = FEATURE_TYPE$DISCORDANT_FRAG_FREQ,
       "G" = FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD,
       
       "H" = FEATURE_TYPE$BQR_BY_ORIG_QUAL,
@@ -975,16 +980,28 @@ create_report <- local({
       "J" = FEATURE_TYPE$MS_INDEL_ERROR_RATES,
       "K" = FEATURE_TYPE$MS_INDEL_ERROR_BIAS,
       
-      "L" = PLOT_NAME_LEGEND
+      "Z" = PLOT_NAME_LEGEND
    )
 
-   plots <- plots[plot_letter_name_map]
-   
+   plots <- lapply(plot_order, function(feature_type){
+
+      p <- PLOTS[[feature_type]]
+
+      has_wide_y_axis <- feature_type == FEATURE_TYPE$DISCORDANT_FRAG_FREQ
+      if(has_wide_y_axis){
+         p <- patchwork::free(p, "panel", side = "l")
+      } else {
+         p <- patchwork::free(p, "label")
+      }
+
+      return(p)
+   })
+
    design <- "
       AABBCCDD
       AAEEFFGG
       AAHHIIII
-      AAJJKKLL
+      AAJJKKZZ
    "
    
    plots_combined <- patchwork::wrap_plots(plots, design = design) + REPORT_TITLE
