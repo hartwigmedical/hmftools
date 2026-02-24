@@ -536,7 +536,7 @@ PLOTS[[FEATURE_TYPE$MS_INDEL_ERROR_BIAS]] <- local({
 ## Line / PDF
 ## =============================
 
-plot_distribution <- function(plot_data, x, invert_normal = FALSE, mark_sample_peak = FALSE){
+plot_distribution <- function(plot_data, x, invert_normal = FALSE, mark_sample_peak = FALSE, hlines = NULL){
    
    if(FALSE){
       plot_data = get_plot_data(FEATURE_TYPE$COVERAGE_DISTRIBUTION)
@@ -548,10 +548,10 @@ plot_distribution <- function(plot_data, x, invert_normal = FALSE, mark_sample_p
    }
    
    plot_data[[x]] <- as.numeric(plot_data[[x]])
-   
-   gg_hline <- geom_blank()
+
    gg_scale_y_continuous <- geom_blank()
-   if(invert_normal){
+   sample_type_count <- plot_data$SampleType %>% levels() %>% length()
+   if(invert_normal && sample_type_count > 1){
       
       signs <- ifelse(plot_data$SampleType == SAMPLE_TYPE$NORMAL$name, -1, 1)
       
@@ -564,7 +564,6 @@ plot_distribution <- function(plot_data, x, invert_normal = FALSE, mark_sample_p
          FeatureValue = signs * FeatureValue
       )
       
-      gg_hline <- geom_hline(yintercept = 0, linewidth = 0.25)
       gg_scale_y_continuous <- scale_y_continuous(labels = function(x) abs(x))
    }
    
@@ -593,6 +592,8 @@ plot_distribution <- function(plot_data, x, invert_normal = FALSE, mark_sample_p
    
    ggplot(plot_data, aes(x = .data[[x]], y = FeatureValue, group = SampleType)) +
       
+      { if(!is.null(hlines)) geom_hline(linewidth = 0.25, color = "grey70", yintercept = hlines) } +
+      
       geom_ribbon(aes(ymin = PctMin, ymax = PctMax, fill = SampleType), alpha = 0.1) +
       geom_line(aes(color = SampleType)) +
       geom_sample_peak +
@@ -600,7 +601,6 @@ plot_distribution <- function(plot_data, x, invert_normal = FALSE, mark_sample_p
       scale_color_manual(values = sample_type_colors) +
       scale_fill_manual(values = sample_type_colors) +
       
-      gg_hline + 
       gg_scale_y_continuous +
       theme(legend.position = "none")
 }
@@ -615,7 +615,7 @@ PLOTS[[FEATURE_TYPE$COVERAGE_DISTRIBUTION]] <- local({
       return(plot_missing_data(plot_labels))
    }
    
-   plot_distribution(plot_data, x = "ReadDepth", mark_sample_peak = TRUE, invert_normal = TRUE) +
+   plot_distribution(plot_data, x = "ReadDepth", mark_sample_peak = TRUE, invert_normal = TRUE, hlines = 0) +
       plot_labels
 })
 
@@ -629,7 +629,7 @@ PLOTS[[FEATURE_TYPE$FRAG_LENGTH_DISTRIBUTION]] <- local({
       return(plot_missing_data(plot_labels))
    }
    
-   plot_distribution(plot_data, x = "FragLength", mark_sample_peak = TRUE, invert_normal = TRUE) +
+   plot_distribution(plot_data, x = "FragLength", mark_sample_peak = TRUE, invert_normal = TRUE, hlines = 0) +
       plot_labels
 })
 
