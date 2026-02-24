@@ -13,14 +13,10 @@ import static com.hartwig.hmftools.orange.TestOrangeConfigFactory.PEACH_DIR;
 import static com.hartwig.hmftools.orange.TestOrangeConfigFactory.PIPELINE_VERSION_FILE;
 import static com.hartwig.hmftools.orange.TestOrangeConfigFactory.PURPLE_DATA_DIRECTORY;
 import static com.hartwig.hmftools.orange.TestOrangeConfigFactory.PURPLE_PLOT_DIRECTORY;
-import static com.hartwig.hmftools.orange.TestOrangeConfigFactory.REFERENCE_SAMPLE_BAM_METRICS_DIR;
 import static com.hartwig.hmftools.orange.TestOrangeConfigFactory.REFERENCE_SAMPLE_ID;
-import static com.hartwig.hmftools.orange.TestOrangeConfigFactory.REFERENCE_SAMPLE_REDUX_DIR;
 import static com.hartwig.hmftools.orange.TestOrangeConfigFactory.SIGNATURES_ETIOLOGY_TSV;
 import static com.hartwig.hmftools.orange.TestOrangeConfigFactory.SIGS_DIR;
-import static com.hartwig.hmftools.orange.TestOrangeConfigFactory.TUMOR_SAMPLE_BAM_METRICS_DIR;
 import static com.hartwig.hmftools.orange.TestOrangeConfigFactory.TUMOR_SAMPLE_ID;
-import static com.hartwig.hmftools.orange.TestOrangeConfigFactory.TUMOR_SAMPLE_REDUX_DIR;
 import static com.hartwig.hmftools.orange.TestOrangeConfigFactory.VIRUS_DIR;
 
 import java.io.File;
@@ -142,9 +138,8 @@ public class ReportGeneratorTestApplication
                 RefGenomeVersion.V37, Collections.emptySet(), LocalDate.now(),
                 null, MELANOMA_DOID, SIGNATURES_ETIOLOGY_TSV, DRIVER_GENE_PANEL_TSV,
                 PIPELINE_VERSION_FILE, PURPLE_DATA_DIRECTORY, PURPLE_PLOT_DIRECTORY, LINX_SOMATIC_DATA_DIRECTORY,
-                LINX_GERMLINE_DATA_DIRECTORY, LINX_PLOT_DIRECTORY, TUMOR_SAMPLE_BAM_METRICS_DIR, REFERENCE_SAMPLE_BAM_METRICS_DIR,
-                TUMOR_SAMPLE_REDUX_DIR, REFERENCE_SAMPLE_REDUX_DIR, LILAC_DIR, CHORD_DIR, CUPPA_DIR, PEACH_DIR, SIGS_DIR, VIRUS_DIR,
-                ISOFOX_DIR, false, true);
+                LINX_GERMLINE_DATA_DIRECTORY, LINX_PLOT_DIRECTORY, LILAC_DIR, CHORD_DIR, CUPPA_DIR, PEACH_DIR, SIGS_DIR,
+                VIRUS_DIR, ISOFOX_DIR, false, true);
     }
 
     private static OrangeRecord removeUnreported(final OrangeRecord report)

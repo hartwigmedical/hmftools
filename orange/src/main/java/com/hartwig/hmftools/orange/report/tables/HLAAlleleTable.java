@@ -1,12 +1,18 @@
 package com.hartwig.hmftools.orange.report.tables;
 
 import static com.hartwig.hmftools.orange.report.ReportResources.formatSingleDigitDecimal;
+import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_VARIANT;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_RNA;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.cellArray;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.floatArray;
 
 import java.util.Comparator;
 import java.util.List;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.datamodel.hla.LilacAllele;
 import com.hartwig.hmftools.orange.report.ReportResources;
@@ -21,7 +27,7 @@ import org.jetbrains.annotations.Nullable;
 public final class HLAAlleleTable
 {
     public static Table build(
-            final String title, float width, final List<LilacAllele> alleles, final ReportResources reportResources, boolean isTumorFail)
+            final String title, float width, final List<LilacAllele> alleles, final ReportResources reportResources, boolean hasRna)
     {
         if(alleles.isEmpty())
         {
@@ -29,25 +35,42 @@ public final class HLAAlleleTable
         }
 
         Cells cells = new Cells(reportResources);
-        Table table = Tables.createContent(width,
-                new float[] { 1, 1, 1, 1, 1, 3 },
-                new Cell[] { cells.createHeader("Allele"), cells.createHeader("Ref Frags"), cells.createHeader("Tumor Frags"),
-                        cells.createHeader("RNA Frags"), cells.createHeader("Tumor CN"), cells.createHeader("Somatic #mutations") });
+
+        List<Integer> widths = Lists.newArrayList();
+        List<Cell> cellEntries = Lists.newArrayList();
+
+        addEntry(cells, widths, cellEntries, 1, "Allele");
+        addEntry(cells, widths, cellEntries, 1, "QC Status");
+        addEntry(cells, widths, cellEntries, 1, "Ref Frags");
+        addEntry(cells, widths, cellEntries, 1, "Tumor Frags");
+
+        if(hasRna)
+        {
+            addEntry(cells, widths, cellEntries, 1, "RNA Frags");
+        }
+
+        addEntry(cells, widths, cellEntries, 1, "Tumor CN");
+        addEntry(cells, widths, cellEntries, 3, "Somatic Mutations");
+
+        Table table = Tables.createContent(width, floatArray(widths), cellArray(cellEntries));
 
         for(LilacAllele allele : sort(alleles))
         {
             table.addCell(cells.createContent(allele.allele()));
-            table.addCell(cells.createContent(fragmentString(allele.refFragments(), false)));
-            table.addCell(cells.createContent(fragmentString(allele.tumorFragments(), isTumorFail)));
-            table.addCell(cells.createContent(fragmentString(allele.rnaFragments(), isTumorFail)));
-            table.addCell(cells.createContent(copyNumberString(allele.tumorCopyNumber(), isTumorFail)));
-            table.addCell(cells.createContent(mutationString(allele, isTumorFail)));
+            table.addCell(cells.createContent(allele.qcStatus()));
+            table.addCell(cells.createContent(fragmentString(allele.refFragments())));
+            table.addCell(cells.createContent(fragmentString(allele.tumorFragments())));
+
+            if(hasRna)
+                table.addCell(cells.createContent(fragmentString(allele.rnaFragments())));
+
+            table.addCell(cells.createContent(formatSingleDigitDecimal(allele.tumorCopyNumber())));
+            table.addCell(cells.createContent(mutationString(allele)));
         }
 
         return new Tables(reportResources).createWrapping(table, title);
     }
 
-    @NotNull
     private static List<LilacAllele> sort(final List<LilacAllele> alleles)
     {
         return alleles.stream()
@@ -56,10 +79,9 @@ public final class HLAAlleleTable
                 .collect(Collectors.toList());
     }
 
-    @NotNull
-    private static String fragmentString(@Nullable Integer fragments, boolean isTumorFail)
+    private static String fragmentString(@Nullable final Integer fragments)
     {
-        if(fragments == null || isTumorFail)
+        if(fragments == null)
         {
             return ReportResources.NOT_AVAILABLE;
         }
@@ -69,20 +91,8 @@ public final class HLAAlleleTable
         }
     }
 
-    @NotNull
-    private static String copyNumberString(double tumorCopyNumber, boolean isTumorFail)
+    private static String mutationString(final LilacAllele allele)
     {
-        return !isTumorFail ? ReportResources.formatSingleDigitDecimal(tumorCopyNumber) : ReportResources.NOT_AVAILABLE;
-    }
-
-    @NotNull
-    private static String mutationString(final LilacAllele allele, boolean isTumorFail)
-    {
-        if(isTumorFail)
-        {
-            return ReportResources.NOT_AVAILABLE;
-        }
-
         StringJoiner joiner = new StringJoiner(", ");
         if(Doubles.positive(allele.somaticMissense()))
         {

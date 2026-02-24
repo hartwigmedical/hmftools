@@ -23,11 +23,14 @@ import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.driver.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.genome.chromosome.CytoBands;
-import com.hartwig.hmftools.common.hla.LilacSummaryData;
-import com.hartwig.hmftools.common.redux.BqrFile;
+import com.hartwig.hmftools.common.hla.LilacAllele;
+import com.hartwig.hmftools.common.hla.LilacQcData;
+import com.hartwig.hmftools.datamodel.hla.ImmutableLilacRecord;
+import com.hartwig.hmftools.datamodel.hla.LilacRecord;
 import com.hartwig.hmftools.datamodel.orange.ExperimentType;
 import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeDoidNode;
 import com.hartwig.hmftools.datamodel.orange.OrangeDoidNode;
+import com.hartwig.hmftools.orange.algo.immuno.LilacInterpreter;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxData;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxDataLoader;
 import com.hartwig.hmftools.orange.algo.linx.LinxData;
@@ -114,13 +117,11 @@ public class OrangeAlgo
         Set<OrangeDoidNode> primaryTumorDoids = formConfiguredPrimaryTumorDoid(config);
 
         String pipelineVersion = determinePipelineVersion(config);
-        OrangeSample refSample = loadSampleData(config, false);
-        OrangeSample tumorSample = loadSampleData(config, true);
 
         PurpleData purpleData = loadPurpleData(config);
         LinxData linxData = loadLinxData(config);
         ChordData chord = loadChordAnalysis(config);
-        LilacSummaryData lilac = loadLilacData(config);
+        LilacRecord lilac = loadLilacData(config);
         VirusInterpreterData virusInterpreter = loadVirusInterpreterData(config);
         CuppaData cuppa = loadCuppaData(config);
         List<PeachGenotype> peach = loadPeachData(config);
@@ -150,17 +151,16 @@ public class OrangeAlgo
 
         OrangeRecord orangeRecord = ImmutableOrangeRecord.builder()
                 .sampleId(config.TumorId)
+                .referenceId(config.ReferenceId)
                 .samplingDate(config.SamplingDate)
                 .experimentType(config.RunType)
                 .configuredPrimaryTumor(primaryTumorDoids)
                 .refGenomeVersion(config.orangeRefGenomeVersion())
                 .pipelineVersion(pipelineVersion)
-                .refSample(refSample)
-                .tumorSample(tumorSample)
                 .purple(purple)
                 .linx(linx)
                 .isofox(isofox)
-                .lilac(lilac != null ? OrangeConversion.convert(lilac, config.hasReference(), config.hasRNA()) : null)
+                .lilac(lilac)
                 .immuneEscape(immuneEscape)
                 .virusInterpreter(virusInterpreter != null ? VirusInterpreter.interpret(virusInterpreter) : null)
                 .chord(chord != null ? OrangeConversion.convert(chord) : null)
@@ -254,42 +254,6 @@ public class OrangeAlgo
         return pipelineVersion;
     }
 
-    @Nullable
-    private static OrangeSample loadSampleData(final OrangeConfig config, boolean loadTumorSample) throws IOException
-    {
-        if(loadTumorSample)
-        {
-            LOGGER.info("Loading tumor metrics data");
-        }
-        else
-        {
-            if(config.ReferenceId != null)
-            {
-                LOGGER.info("Loading reference metrics data");
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        String metricsFile = loadTumorSample ?
-                BamMetricSummary.generateFilename(config.TumorBamMetricsDir, config.TumorId) :
-                BamMetricSummary.generateFilename(config.ReferenceBamMetricsDir, config.ReferenceId);
-
-        String flagstatFile = loadTumorSample ?
-                BamFlagStats.generateFilename(config.TumorBamMetricsDir, config.TumorId) :
-                BamFlagStats.generateFilename(config.ReferenceBamMetricsDir, config.ReferenceId);
-
-        WGSMetrics metrics = OrangeConversion.convert(BamMetricSummary.read(metricsFile));
-        LOGGER.info(" Loaded bam metrics from {}", metricsFile);
-
-        Flagstat flagstat = OrangeConversion.convert(BamFlagStats.read(flagstatFile));
-        LOGGER.info(" Loaded bam flagstats from {}", flagstatFile);
-
-        return ImmutableOrangeSample.builder().metrics(metrics).flagstat(flagstat).build();
-    }
-
     private PurpleData loadPurpleData(final OrangeConfig config) throws IOException
     {
         LOGGER.info("Loading PURPLE data from {}", config.PurpleDataDirectory);
@@ -360,7 +324,7 @@ public class OrangeAlgo
     }
 
     @Nullable
-    private static LilacSummaryData loadLilacData(final OrangeConfig config) throws IOException
+    private static LilacRecord loadLilacData(final OrangeConfig config) throws IOException
     {
         if(config.LilacDir == null || !Files.exists(Paths.get(config.LilacDir)))
         {
@@ -370,7 +334,7 @@ public class OrangeAlgo
 
         LOGGER.info("Loading Lilac data from {}", config.LilacDir);
 
-        return LilacSummaryData.read(config.LilacDir, config.TumorId);
+        return LilacInterpreter.build(config);
     }
 
     @Nullable
@@ -485,14 +449,6 @@ public class OrangeAlgo
             LOGGER.info(" Loaded {} linx plots from {}", linxDriverPlots.size(), linxPlotDir);
         }
 
-        String tumorBqrPlot = mPlotManager.processPlotFile(BqrFile.generatePlotFilename(config.TumorReduxDir, config.TumorId));
-
-        if(tumorBqrPlot == null)
-            tumorBqrPlot = "";
-
-        String refBqrPlot = config.ReferenceId != null ?
-                mPlotManager.processPlotFile(BqrFile.generatePlotFilename(config.ReferenceReduxDir, config.ReferenceId)) : "";
-
         String purplePlotBasePath = config.PurplePlotDirectory + File.separator + config.TumorId;
         String purpleInputPlot = mPlotManager.processPlotFile(purplePlotBasePath + ".input.png");
         String purpleFinalCircosPlot = mPlotManager.processPlotFile(purplePlotBasePath + ".circos.png");
@@ -515,8 +471,6 @@ public class OrangeAlgo
                 config.ReferenceId != null ? CuppaPredictions.generateVisPlotFilename(config.CuppaDir, config.TumorId) : null);
 
         return ImmutableOrangePlots.builder()
-                .sageReferenceBQRPlot(refBqrPlot)
-                .sageTumorBQRPlot(tumorBqrPlot)
                 .purpleInputPlot(purpleInputPlot)
                 .purpleFinalCircosPlot(purpleFinalCircosPlot)
                 .purpleClonalityPlot(purpleClonalityPlot)

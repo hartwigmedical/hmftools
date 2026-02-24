@@ -1,5 +1,11 @@
 package com.hartwig.hmftools.orange.report.chapters;
 
+import static com.hartwig.hmftools.common.hla.HlaCommon.MHC_CLASS_I;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+import com.hartwig.hmftools.datamodel.hla.LilacAllele;
 import com.hartwig.hmftools.datamodel.hla.LilacRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.orange.report.ReportResources;
@@ -53,16 +59,17 @@ public class ImmunologyChapter implements ReportChapter
         if(lilacData == null)
             return;
 
-        Cells cells = new Cells(mReportResources);
-        Table qc = new Table(UnitValue.createPercentArray(new float[] { 1, 1 }));
-        qc.addCell(cells.createKey("QC Status:"));
-        qc.addCell(cells.createValue(lilacData.qc()));
+        // Cells cells = new Cells(mReportResources);
+        // Table qc = new Table(UnitValue.createPercentArray(new float[] { 1, 1 }));
 
-        document.add(new Tables(mReportResources).createWrapping(qc, "HLA QC"));
+        String title = "HLA Class I Alleles";
 
-        String title = "HLA Alleles (" + lilacData.alleles().size() + ")";
-        boolean isTumorFail = PurpleQCInterpretation.isFail(mReport.purple().fit().qc());
-        document.add(HLAAlleleTable.build(title, contentWidth(), lilacData.alleles(), mReportResources, isTumorFail));
+        List<LilacAllele> classIAlleles = lilacData.alleles().stream().filter(x -> x.geneClass().equals(MHC_CLASS_I)).collect(Collectors.toList());
+        document.add(HLAAlleleTable.build(title, contentWidth(), classIAlleles, mReportResources, mReport.hasRna()));
+
+        title = "HLA Class II Alleles";
+        List<LilacAllele> classIIAlleles = lilacData.alleles().stream().filter(x -> !x.geneClass().equals(MHC_CLASS_I)).collect(Collectors.toList());
+        document.add(HLAAlleleTable.build(title, contentWidth(), classIIAlleles, mReportResources, mReport.hasRna()));
     }
 
     private void addImmuneEscapeData(final Document document)

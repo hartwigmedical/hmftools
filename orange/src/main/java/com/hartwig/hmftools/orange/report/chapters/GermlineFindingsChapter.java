@@ -59,7 +59,7 @@ public class GermlineFindingsChapter implements ReportChapter
     {
         document.add(new Paragraph(name()).addStyle(mReportResources.chapterTitleStyle()));
 
-        if(mReport.refSample() != null)
+        if(mReport.referenceId() != null)
         {
             addGermlineVariants(document);
             addGermlineDeletions(document);

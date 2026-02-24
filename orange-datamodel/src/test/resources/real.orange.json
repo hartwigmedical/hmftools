@@ -14,51 +14,6 @@
   ],
   "refGenomeVersion": "V37",
   "pipelineVersion": "6.0",
-  "refSample": {
-    "metrics": {
-      "meanCoverage": 31.256,
-      "sdCoverage": 9.43,
-      "medianCoverage": 32,
-      "madCoverage": 5,
-      "pctExcAdapter": 0.0,
-      "pctExcMapQ": 0.01978,
-      "pctExcDupe": 0.10657,
-      "pctExcUnpaired": 0.00284,
-      "pctExcBaseQ": 1.3E-4,
-      "pctExcOverlap": 0.00498,
-      "pctExcCapped": 1.7E-4,
-      "pctExcTotal": 0.13447
-    },
-    "flagstat": {
-      "uniqueReadCount": 691880238,
-      "secondaryCount": 0,
-      "supplementaryCount": 871753,
-      "mappedProportion": 0.995733
-    }
-  },
-  "tumorSample": {
-    "metrics": {
-      "meanCoverage": 107.641,
-      "sdCoverage": 34.909,
-      "medianCoverage": 109,
-      "madCoverage": 23,
-      "pctExcAdapter": 0.0,
-      "pctExcMapQ": 0.0191,
-      "pctExcDupe": 0.1461,
-      "pctExcUnpaired": 0.00296,
-      "pctExcBaseQ": 1.4E-4,
-      "pctExcOverlap": 0.00743,
-      "pctExcCapped": 0.00328,
-      "pctExcTotal": 0.17901
-    },
-    "flagstat": {
-      "uniqueReadCount": 2513301754,
-      "secondaryCount": 0,
-      "supplementaryCount": 3179178,
-      "mappedProportion": 0.995531
-    }
-  },
-  "germlineMVLHPerGene": {},
   "purple": {
     "fit": {
       "qc": {
@@ -352,10 +307,11 @@
   },
   "isofox": null,
   "lilac": {
-    "qc": "PASS",
     "alleles": [
       {
+        "geneClass": "PASS",
         "allele": "A*01:01",
+        "qcStatus": "PASS",
         "tumorCopyNumber": 2.0,
         "refFragments": 210,
         "tumorFragments": 1609,
@@ -920,8 +876,6 @@
     }
   },
   "plots": {
-    "sageReferenceBQRPlot": "plot/ref_sample.sage.bqr.png",
-    "sageTumorBQRPlot": "plot/tumor_sample.sage.bqr.png",
     "purpleInputPlot": "plot/tumor_sample.input.png",
     "purpleFinalCircosPlot": "plot/tumor_sample.circos.png",
     "purpleClonalityPlot": "plot/tumor_sample.somatic.clonality.png",

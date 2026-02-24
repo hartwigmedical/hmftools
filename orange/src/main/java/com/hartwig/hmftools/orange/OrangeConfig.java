@@ -100,12 +100,6 @@ public class OrangeConfig
     public final String LinxGermlineDataDirectory;
     public final String LinxPlotDirectory;
 
-    public final String TumorBamMetricsDir;
-    public final String ReferenceBamMetricsDir;
-
-    public final String TumorReduxDir;
-    public final String ReferenceReduxDir;
-
     public final String LilacDir;
     public final String ChordDir;
     public final String CuppaDir;
@@ -134,12 +128,6 @@ public class OrangeConfig
     private static final String PIPELINE_VERSION_FILE = "pipeline_version_file";
 
     private static String RNA_SAMPLE_ID = "rna_sample_id";
-
-    private static final String TUMOR_REDUX_DIR_CFG = "tumor_redux_dir";
-    private static final String TUMOR_REDUX_DIR_DESC = "Path to Redux tumor files";
-
-    private static String REFERENCE_REDUX_DIR_CFG = "ref_redux_dir";
-    private static String REFERENCE_REDUX_DIR_DESC = "Path to Redux reference files";
 
     // Some additional optional params and flags
     private static final String LIMIT_JSON_OUTPUT = "limit_json_output";
@@ -189,20 +177,11 @@ public class OrangeConfig
         {
             LinxGermlineDataDirectory = pathResolver.resolveMandatoryToolDirectory(
                     LINX_GERMLINE_DIR_CFG, defaultToolDirectories.linxGermlineDir());
-
-            ReferenceBamMetricsDir = pathResolver.resolveMandatoryToolDirectory(REF_METRICS_DIR_CFG, defaultToolDirectories.germlineMetricsDir());
-
-            ReferenceReduxDir = configBuilder.getValue(REFERENCE_REDUX_DIR_CFG);
         }
         else
         {
             LinxGermlineDataDirectory = null;
-            ReferenceBamMetricsDir = null;
-            ReferenceReduxDir = null;
         }
-
-        TumorBamMetricsDir = pathResolver.resolveMandatoryToolDirectory(TUMOR_METRICS_DIR_CFG, defaultToolDirectories.tumorMetricsDir());
-        TumorReduxDir = configBuilder.getValue(TUMOR_REDUX_DIR_CFG);
 
         LilacDir = pathResolver.resolveOptionalToolDirectory(LILAC_DIR_CFG, defaultToolDirectories.lilacDir());
         ChordDir = pathResolver.resolveMandatoryToolDirectory(CHORD_DIR_CFG, defaultToolDirectories.chordDir());
@@ -285,9 +264,6 @@ public class OrangeConfig
         // subdirectories or a single directory containing all pipeline output
         configBuilder.addPath(PIPELINE_SAMPLE_ROOT_DIR, false, PIPELINE_SAMPLE_ROOT_DESC);
         configBuilder.addPath(SAMPLE_DATA_DIR_CFG, false, SAMPLE_DATA_DIR_DESC);
-
-        configBuilder.addPath(TUMOR_REDUX_DIR_CFG, false, TUMOR_REDUX_DIR_DESC);
-        configBuilder.addPath(REFERENCE_REDUX_DIR_CFG, false, REFERENCE_REDUX_DIR_DESC);
 
         configBuilder.addPath(LINX_GERMLINE_DIR_CFG, false, LINX_GERMLINE_DIR_DESC);
         configBuilder.addPath(VIRUS_DIR_CFG, false, VIRUS_DIR_DESC);
@@ -373,9 +349,9 @@ public class OrangeConfig
             final String doidJsonFile, final String signaturesEtiologyTsv, final String driverGenePanelTsv,
             final String pipelineVersionFile, final String purpleDataDirectory, final String purplePlotDirectory,
             final String linxSomaticDataDirectory, final String linxGermlineDataDirectory, final String linxPlotDirectory,
-            final String tumorBamMetricsDir, final String referenceBamMetricsDir, final String tumorReduxDir,
-            final String referenceReduxDir, final String lilacDir, final String chordDir, final String cuppaDir, final String peachDir,
-            final String sigsDir, final String virusDir, final String isofoxDir, final boolean limitJsonOutput, final boolean addDisclaimer)
+            final String lilacDir, final String chordDir,
+            final String cuppaDir, final String peachDir, final String sigsDir, final String virusDir, final String isofoxDir,
+            final boolean limitJsonOutput, final boolean addDisclaimer)
     {
         RunType = runType;
         TumorId = tumorId;
@@ -396,10 +372,6 @@ public class OrangeConfig
         LinxSomaticDataDirectory = linxSomaticDataDirectory;
         LinxGermlineDataDirectory = linxGermlineDataDirectory;
         LinxPlotDirectory = linxPlotDirectory;
-        TumorBamMetricsDir = tumorBamMetricsDir;
-        ReferenceBamMetricsDir = referenceBamMetricsDir;
-        TumorReduxDir = tumorReduxDir;
-        ReferenceReduxDir = referenceReduxDir;
         LilacDir = lilacDir;
         ChordDir = chordDir;
         CuppaDir = cuppaDir;

@@ -97,10 +97,10 @@ public class TestOrangeJsonWriter
     {
         return ImmutableOrangeRecord.builder()
                 .sampleId("TEST")
+                .referenceId("REFERENCE")
                 .samplingDate(LocalDate.of(2022, 1, 20))
                 .experimentType(ExperimentType.WHOLE_GENOME)
                 .refGenomeVersion(OrangeRefGenomeVersion.V37)
-                .tumorSample(createOrangeSample())
                 .purple(createPurpleRecord())
                 .linx(createLinxRecord())
                 .lilac(createLilacRecord())
@@ -127,7 +127,6 @@ public class TestOrangeJsonWriter
                 .cuppa(createCuppaData())
                 .plots(ImmutableOrangePlots.builder()
                         .purpleFinalCircosPlot("plot/empty.circos.png")
-                        .sageTumorBQRPlot("")
                         .purpleInputPlot("")
                         .purpleClonalityPlot("")
                         .purpleCopyNumberPlot("")
@@ -474,7 +473,9 @@ public class TestOrangeJsonWriter
     public static LilacRecord createLilacRecord()
     {
         LilacAllele lilacAllele = ImmutableLilacAllele.builder()
+                .geneClass("MHC_CLASS_I")
                 .allele("A*01:01")
+                .qcStatus("PASS")
                 .tumorCopyNumber(6.1)
                 .somaticMissense(5.0)
                 .somaticNonsenseOrFrameshift(4.0)
@@ -486,7 +487,6 @@ public class TestOrangeJsonWriter
                 .rnaFragments(0)
                 .build();
         return ImmutableLilacRecord.builder()
-                .qc("PASS")
                 .addAlleles(lilacAllele)
                 .build();
     }

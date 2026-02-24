@@ -25,11 +25,6 @@ public final class TestOrangeConfigFactory
     public static final String RUN_DIRECTORY = Resources.getResource("test_run").getPath();
     public static final String PIPELINE_VERSION_FILE = RUN_DIRECTORY + "/pipeline.version";
 
-    public static final String TUMOR_SAMPLE_BAM_METRICS_DIR = RUN_DIRECTORY + "/tumor_sample/bam_metrics/";
-    public static final String REFERENCE_SAMPLE_BAM_METRICS_DIR = RUN_DIRECTORY + "/ref_sample/bam_metrics/";
-    public static final String TUMOR_SAMPLE_REDUX_DIR = RUN_DIRECTORY + "/redux/";
-    public static final String REFERENCE_SAMPLE_REDUX_DIR = RUN_DIRECTORY + "/redux/";
-
     public static final String PURPLE_DATA_DIRECTORY = RUN_DIRECTORY + "/purple";
     public static final String PURPLE_PLOT_DIRECTORY = RUN_DIRECTORY + "/purple/plot";
     public static final String LINX_SOMATIC_DATA_DIRECTORY = RUN_DIRECTORY + "/linx";
@@ -50,9 +45,8 @@ public final class TestOrangeConfigFactory
                 RefGenomeVersion.V37, Collections.emptySet(), LocalDate.now(),
                 "", DOID_JSON, SIGNATURES_ETIOLOGY_TSV, DRIVER_GENE_PANEL_TSV,
                 PIPELINE_VERSION_FILE, PURPLE_DATA_DIRECTORY, PURPLE_PLOT_DIRECTORY, LINX_SOMATIC_DATA_DIRECTORY,
-                LINX_GERMLINE_DATA_DIRECTORY, LINX_PLOT_DIRECTORY, TUMOR_SAMPLE_BAM_METRICS_DIR, REFERENCE_SAMPLE_BAM_METRICS_DIR,
-                TUMOR_SAMPLE_REDUX_DIR, REFERENCE_SAMPLE_REDUX_DIR, LILAC_DIR, CHORD_DIR, CUPPA_DIR, PEACH_DIR,SIGS_DIR, VIRUS_DIR,
-                ISOFOX_DIR, false, false);
+                LINX_GERMLINE_DATA_DIRECTORY, LINX_PLOT_DIRECTORY,
+                LILAC_DIR, CHORD_DIR, CUPPA_DIR, PEACH_DIR,SIGS_DIR, VIRUS_DIR, ISOFOX_DIR, false, false);
     }
 
     public static OrangeConfig createTargetedConfig()
@@ -62,9 +56,8 @@ public final class TestOrangeConfigFactory
                 RefGenomeVersion.V37, Set.of(MELANOMA_DOID), LocalDate.now(),
                 "", DOID_JSON, SIGNATURES_ETIOLOGY_TSV, DRIVER_GENE_PANEL_TSV,
                 PIPELINE_VERSION_FILE, PURPLE_DATA_DIRECTORY, PURPLE_PLOT_DIRECTORY, LINX_SOMATIC_DATA_DIRECTORY,
-                LINX_GERMLINE_DATA_DIRECTORY, LINX_PLOT_DIRECTORY, TUMOR_SAMPLE_BAM_METRICS_DIR, REFERENCE_SAMPLE_BAM_METRICS_DIR,
-                TUMOR_SAMPLE_REDUX_DIR, REFERENCE_SAMPLE_REDUX_DIR, LILAC_DIR, CHORD_DIR, CUPPA_DIR, PEACH_DIR,SIGS_DIR, VIRUS_DIR,
-                ISOFOX_DIR, false, true);
+                LINX_GERMLINE_DATA_DIRECTORY, LINX_PLOT_DIRECTORY,
+                LILAC_DIR, CHORD_DIR, CUPPA_DIR, PEACH_DIR,SIGS_DIR, VIRUS_DIR, ISOFOX_DIR, false, true);
     }
 
     public static OrangeConfig createWGSConfigTumorOnly()
@@ -74,9 +67,8 @@ public final class TestOrangeConfigFactory
                 RefGenomeVersion.V37, Collections.emptySet(), LocalDate.now(),
                 "", DOID_JSON, SIGNATURES_ETIOLOGY_TSV, DRIVER_GENE_PANEL_TSV,
                 PIPELINE_VERSION_FILE, PURPLE_DATA_DIRECTORY, PURPLE_PLOT_DIRECTORY, LINX_SOMATIC_DATA_DIRECTORY,
-                LINX_GERMLINE_DATA_DIRECTORY, LINX_PLOT_DIRECTORY, TUMOR_SAMPLE_BAM_METRICS_DIR, REFERENCE_SAMPLE_BAM_METRICS_DIR,
-                TUMOR_SAMPLE_REDUX_DIR, REFERENCE_SAMPLE_REDUX_DIR, LILAC_DIR, CHORD_DIR, CUPPA_DIR, PEACH_DIR,SIGS_DIR, VIRUS_DIR,
-                ISOFOX_DIR, false, true);
+                LINX_GERMLINE_DATA_DIRECTORY, LINX_PLOT_DIRECTORY,
+                LILAC_DIR, CHORD_DIR, CUPPA_DIR, PEACH_DIR,SIGS_DIR, VIRUS_DIR, ISOFOX_DIR, false, true);
     }
 
     public static OrangeConfig createWGSConfigTumorNormal()
@@ -86,9 +78,8 @@ public final class TestOrangeConfigFactory
                 RefGenomeVersion.V37, Set.of(MELANOMA_DOID), LocalDate.now(),
                 "", DOID_JSON, SIGNATURES_ETIOLOGY_TSV, DRIVER_GENE_PANEL_TSV,
                 PIPELINE_VERSION_FILE, PURPLE_DATA_DIRECTORY, PURPLE_PLOT_DIRECTORY, LINX_SOMATIC_DATA_DIRECTORY,
-                LINX_GERMLINE_DATA_DIRECTORY, LINX_PLOT_DIRECTORY, TUMOR_SAMPLE_BAM_METRICS_DIR, REFERENCE_SAMPLE_BAM_METRICS_DIR,
-                TUMOR_SAMPLE_REDUX_DIR, REFERENCE_SAMPLE_REDUX_DIR, LILAC_DIR, CHORD_DIR, CUPPA_DIR, PEACH_DIR,SIGS_DIR, VIRUS_DIR,
-                ISOFOX_DIR, false, true);
+                LINX_GERMLINE_DATA_DIRECTORY, LINX_PLOT_DIRECTORY,
+                LILAC_DIR, CHORD_DIR, CUPPA_DIR, PEACH_DIR,SIGS_DIR, VIRUS_DIR, ISOFOX_DIR, false, true);
     }
 
     @NotNull
@@ -99,8 +90,7 @@ public final class TestOrangeConfigFactory
                 RefGenomeVersion.V37, Set.of(MELANOMA_DOID), LocalDate.now(),
                 "", DOID_JSON, SIGNATURES_ETIOLOGY_TSV, DRIVER_GENE_PANEL_TSV,
                 PIPELINE_VERSION_FILE, PURPLE_DATA_DIRECTORY, PURPLE_PLOT_DIRECTORY, LINX_SOMATIC_DATA_DIRECTORY,
-                LINX_GERMLINE_DATA_DIRECTORY, LINX_PLOT_DIRECTORY, TUMOR_SAMPLE_BAM_METRICS_DIR, REFERENCE_SAMPLE_BAM_METRICS_DIR,
-                TUMOR_SAMPLE_REDUX_DIR, REFERENCE_SAMPLE_REDUX_DIR, LILAC_DIR, CHORD_DIR, CUPPA_DIR, PEACH_DIR,SIGS_DIR, VIRUS_DIR,
-                ISOFOX_DIR, false, true);
+                LINX_GERMLINE_DATA_DIRECTORY, LINX_PLOT_DIRECTORY,
+                LILAC_DIR, CHORD_DIR, CUPPA_DIR, PEACH_DIR,SIGS_DIR, VIRUS_DIR, ISOFOX_DIR, false, true);
     }
 }

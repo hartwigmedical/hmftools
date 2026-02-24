@@ -2,19 +2,17 @@ package com.hartwig.hmftools.orange;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.chord.ChordTestFactory;
 import com.hartwig.hmftools.common.doid.DoidTestFactory;
 import com.hartwig.hmftools.common.metrics.FlagstatTestFactory;
-import com.hartwig.hmftools.common.lilac.LilacTestFactory;
 import com.hartwig.hmftools.common.linx.LinxTestFactory;
 import com.hartwig.hmftools.common.metrics.BamMetricsTestFactory;
 import com.hartwig.hmftools.common.peach.PeachTestFactory;
+import com.hartwig.hmftools.datamodel.hla.ImmutableLilacAllele;
 import com.hartwig.hmftools.datamodel.hla.ImmutableLilacRecord;
 import com.hartwig.hmftools.datamodel.hla.LilacAllele;
 import com.hartwig.hmftools.datamodel.hla.LilacRecord;
@@ -63,6 +61,7 @@ import org.jetbrains.annotations.NotNull;
 public final class TestOrangeReportFactory
 {
     private static final String TEST_SAMPLE = "TEST";
+    private static final String REFERENCE_SAMPLE = "REFERENCE";
     private static final String DUMMY_IMAGE = Resources.getResource("test_images/white.png").getPath();
 
     @NotNull
@@ -70,13 +69,13 @@ public final class TestOrangeReportFactory
     {
         return ImmutableOrangeRecord.builder()
                 .sampleId(TEST_SAMPLE)
+                .referenceId(REFERENCE_SAMPLE)
                 .samplingDate(LocalDate.of(2021, 11, 19))
                 .experimentType(ExperimentType.TARGETED)
                 .refGenomeVersion(OrangeRefGenomeVersion.V37)
-                .tumorSample(createMinimalOrangeSample())
                 .purple(TestPurpleInterpretationFactory.createMinimalTestPurpleData())
                 .linx(TestLinxInterpretationFactory.createMinimalTestLinxData())
-                .lilac(ImmutableLilacRecord.builder().qc(Strings.EMPTY).build())
+                .lilac(ImmutableLilacRecord.builder().build())
                 .immuneEscape(TestImmuneEscapeFactory.builder().build())
                 .virusInterpreter(ImmutableVirusInterpreterData.builder().build())
                 .chord(OrangeConversion.convert(ChordTestFactory.createMinimalTestChordAnalysis()))
@@ -96,7 +95,6 @@ public final class TestOrangeReportFactory
         return builder().experimentType(ExperimentType.WHOLE_GENOME)
                 .addConfiguredPrimaryTumor(OrangeConversion.convert(DoidTestFactory.createDoidNode("1", "cancer type")))
                 .pipelineVersion("v6.1")
-                .refSample(createMinimalOrangeSample())
                 .purple(createTestPurpleData())
                 .linx(createTestLinxData())
                 .isofox(createTestIsofoxData())
@@ -120,7 +118,6 @@ public final class TestOrangeReportFactory
     private static OrangePlots createMinimalOrangePlots()
     {
         return ImmutableOrangePlots.builder()
-                .sageTumorBQRPlot(DUMMY_IMAGE)
                 .purpleInputPlot(DUMMY_IMAGE)
                 .purpleFinalCircosPlot(DUMMY_IMAGE)
                 .purpleClonalityPlot(DUMMY_IMAGE)
@@ -181,13 +178,38 @@ public final class TestOrangeReportFactory
     private static LilacRecord createTestLilacData()
     {
         List<LilacAllele> alleles = Lists.newArrayList();
-        alleles.add(OrangeConversion.convert(LilacTestFactory.alleleBuilder().allele("Allele 1").build(), true, true));
+
+        alleles.add(alleleBuilder().allele("Allele 1").build());
+        alleles.add(alleleBuilder().allele("Allele 2").build());
+
+        /*
+        LilacRecord lilacRecord = LilacInterpreter.
+
+        alleles.add(OrangeConversion.convert(alleleBuilder().allele("Allele 1").build(), true, true));
         alleles.add(OrangeConversion.convert(LilacTestFactory.alleleBuilder()
                 .allele("Allele 2")
                 .somaticInframeIndel(1D)
                 .build(), true, true));
+        */
 
-        return ImmutableLilacRecord.builder().qc("PASS").alleles(alleles).build();
+        return ImmutableLilacRecord.builder().alleles(alleles).build();
+    }
+
+    private static ImmutableLilacAllele.Builder alleleBuilder()
+    {
+        return ImmutableLilacAllele.builder()
+                .geneClass("")
+                .allele(Strings.EMPTY)
+                .qcStatus("PASS")
+                .refFragments(0)
+                .tumorFragments(0)
+                .rnaFragments(0)
+                .tumorCopyNumber(0D)
+                .somaticMissense(0D)
+                .somaticNonsenseOrFrameshift(0D)
+                .somaticSplice(0D)
+                .somaticSynonymous(0D)
+                .somaticInframeIndel(0D);
     }
 
     @NotNull

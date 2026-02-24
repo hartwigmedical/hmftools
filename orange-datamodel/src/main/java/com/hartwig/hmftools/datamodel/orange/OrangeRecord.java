@@ -30,6 +30,9 @@ public interface OrangeRecord
     @NotNull
     String sampleId();
 
+    @Nullable
+    String referenceId();
+
     @NotNull
     LocalDate samplingDate();
 
@@ -44,12 +47,6 @@ public interface OrangeRecord
 
     @Nullable
     String pipelineVersion();
-
-    @Nullable
-    OrangeSample refSample();
-
-    @NotNull
-    OrangeSample tumorSample();
 
     @NotNull
     PurpleRecord purple();
@@ -86,7 +83,8 @@ public interface OrangeRecord
 
     default boolean tumorOnlyMode()
     {
-        return refSample() == null;
+        return referenceId() == null;
     }
+
     default boolean hasRna() { return isofox() != null; }
 }
