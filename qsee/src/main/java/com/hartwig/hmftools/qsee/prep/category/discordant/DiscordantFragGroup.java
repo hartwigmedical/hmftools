@@ -7,7 +7,7 @@ public enum DiscordantFragGroup
     DEL_DUP_SHORT("Del/Dup 1K-5K"),
     DEL_DUP_MEDIUM("Del/Dup 5K-100K"),
     DEL_DUP_LONG("Del/Dup >100K"),
-    INV_SHORT("Inv <=1K"),
+    INV_SHORT("Inv ≤1K"),
     INV_MEDIUM("Inv 1K-100K"),
     INV_LONG("Inv >100K"),
     TRANSLOCATION("Translocation");
