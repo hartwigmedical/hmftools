@@ -137,8 +137,7 @@ public class SummaryTableBamMetricsPrep implements CategoryPrep
 
         if(!bamMetricsData.missingInputPaths().isEmpty())
         {
-            CategoryPrepTask.missingInputFilesError(mConfig.AllowMissingInput, this, sampleType, sampleId,
-                    bamMetricsData.formMissingInputsString());
+            CategoryPrepTask.missingInputFilesError(mConfig.AllowMissingInput, this, sampleType, bamMetricsData.formMissingInputsString());
         }
 
         List<Feature> features = createFeatures(bamMetricsData, sampleType);
