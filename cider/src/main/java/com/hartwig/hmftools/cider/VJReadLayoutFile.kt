@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.cider
 
+import com.hartwig.hmftools.cider.genes.VJGeneType
 import com.hartwig.hmftools.cider.layout.ReadLayout
 import com.hartwig.hmftools.common.codon.Codons
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils.createGzipBufferedWriter
@@ -12,14 +13,10 @@ object VJReadLayoutFile
     private const val FILE_EXTENSION = ".cider.layout.gz"
 
     const val ANSI_RESET = "\u001B[0m"
-    const val ANSI_BLACK = "\u001B[30m"
     const val ANSI_RED = "\u001B[31m"
     const val ANSI_GREEN = "\u001B[32m"
     const val ANSI_YELLOW = "\u001B[33m"
-    const val ANSI_BLUE = "\u001B[34m"
     const val ANSI_PURPLE = "\u001B[35m"
-    const val ANSI_CYAN = "\u001B[36m"
-    const val ANSI_WHITE = "\u001B[37m"
 
     private fun generateFilename(basePath: String, sample: String): String
     {

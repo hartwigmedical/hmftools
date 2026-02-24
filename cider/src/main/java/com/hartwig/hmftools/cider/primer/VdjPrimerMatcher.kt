@@ -56,25 +56,6 @@ class VdjPrimerMatcher(private val maxMismatch: Int)
         return matchList
     }
 
-    /*
-    fun matchPrimerList(vdj: VDJSequence, primerList: List<Primer>)
-    {
-        // in order to match primer list, we need to build up the layout again
-        val fullLayout: ReadLayout = vjLayoutAdaptor.buildFullLayout(vdj.layout)
-
-        // now go through each list and see if anything matches
-        val sequence = fullLayout.consensusSequence()
-
-        for (primer in primerList)
-        {
-            val i = sequence.indexOf(primer.sequence)
-            if (i != -1)
-            {
-                sLogger.info("vdj seq matches primer: {}, full vdj seq: {}", primer, vdj.sequenceFormatted)
-            }
-        }
-    }*/
-
     companion object
     {
         private val sLogger = LogManager.getLogger(VdjPrimerMatcher::class.java)

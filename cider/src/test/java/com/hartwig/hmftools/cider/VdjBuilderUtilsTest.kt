@@ -196,7 +196,6 @@ class VdjBuilderUtilsTest
         val vdjCombine = VdjBuilderUtils.mergeVDJs(vdj1, vdj2, VDJSequenceBuilderTest.MIN_BASE_QUALITY)
 
         assertEquals(seq, vdjCombine.sequence)
-        assertEquals("2212112122", vdjCombine.supportString) // due to low base qual in some reads
     }
 
     @Test

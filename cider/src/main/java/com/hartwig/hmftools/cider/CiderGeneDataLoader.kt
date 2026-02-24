@@ -1,8 +1,13 @@
 package com.hartwig.hmftools.cider
 
-import com.hartwig.hmftools.cider.IgTcrGene.Companion.fromCommonIgTcrGene
 import com.hartwig.hmftools.cider.genes.GenomicLocation
 import com.hartwig.hmftools.cider.genes.IgTcrConstantDiversityRegion
+import com.hartwig.hmftools.cider.genes.IgTcrGene
+import com.hartwig.hmftools.cider.genes.IgTcrGene.Companion.fromCommonIgTcrGene
+import com.hartwig.hmftools.cider.genes.IgTcrLocus
+import com.hartwig.hmftools.cider.genes.IgTcrRegion
+import com.hartwig.hmftools.cider.genes.VJAnchorTemplate
+import com.hartwig.hmftools.cider.genes.VJGeneType
 import com.hartwig.hmftools.common.cider.IgTcrGeneFile
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion
 import org.apache.logging.log4j.LogManager

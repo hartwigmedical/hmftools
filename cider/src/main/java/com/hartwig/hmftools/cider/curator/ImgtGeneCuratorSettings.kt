@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.cider.curator
 
-import com.hartwig.hmftools.cider.VJGeneType
 import com.hartwig.hmftools.cider.genes.GenomicLocation
+import com.hartwig.hmftools.cider.genes.VJGeneType
+import com.hartwig.hmftools.common.bam.CigarUtils.cigarElementsFromStr
 import com.hartwig.hmftools.common.genome.region.Strand
 
-// some extra settings to do with the gene curator
 object ImgtGeneCuratorSettings
 {
     const val SPECIES = "Homo sapiens"
@@ -13,13 +13,24 @@ object ImgtGeneCuratorSettings
     const val BLASTN_EVALUE_CUTOFF = 1000.0
     const val BLASTN_MAX_MISMATCH = 1
 
-    // shift the V anchor index such that it starts at the first base
-    val IGKINTR_SEQ = ".".repeat(IMGT_V_ANCHOR_INDEX) + "CACCGCGCTCTTGGGGCAGCCGCCTTGCCGCTAGTGGCCGTGGCCACCCTGTGTCTGCCCGATT"
-    val IGKDEL_SEQ = "GGAGCCCTAGTGGCAGCCCAGGGCGACTCCTCATGAGTCTGCAGCTGCATTTTTGCCATATCCACTATTTGGAGTCTGACCTCCCTAGGAAGCCTCCCTGC"
+    const val ANCHOR_MISMATCH_MAX = 6
+
+    const val FASTA_REF_CONTEXT_BASE = 0
+    const val FASTA_REF_CONTEXT_AMBIGUOUS = 50
+    const val REF_CONTEXT_CHECK = 5
+    const val REF_CONTEXT_CHECK_MISMATCH_MAX = 1
+
+    // Region which is often included on the V side of a rearrangement and produces a nonfunctional rearrangement.
+    // It's useful to track but is not a real gene. We kind of hack it in to treat it uniformly with the other genes.
+    const val IGKINTR_RAW_SEQ = "TGTAGACAGAGCCGCGGTCTTTCTCGATTGAGTGGCTTTGGTGGCCATGCCACCGCGCTCTTGGGGCAGCCGCCTTGCCGCTAGTGGCCGTGGCCACCCTGTGTCTGCCCGATTGATGCTGCCGTAGCCAGCTTTCCTGATGCACAGTGATACAAATAATGCCA"
+    // Shift the V anchor index such that it's somewhere in the middle. Doesn't really matter where, it's not a real anchor.
+    val IGKINTR_IMGT_SEQ = ".".repeat(IMGT_V_ANCHOR_INDEX - IGKINTR_RAW_SEQ.length / 2) + IGKINTR_RAW_SEQ
+
+    const val IGKDEL_IMGT_SEQ = "GGAGCCCTAGTGGCAGCCCAGGGCGACTCCTCATGAGTCTGCAGCTGCATTTTTGCCATATCCACTATTTGGAGTCTGACCTCCCTAGGAAGCCTCCCTGC"
 
     // extra override for this one gene that does not seem to map nicely
     val genomicLocationOverrides = mapOf(
-        "IGHV3-54" to GenomicLocation("chr14", 106601338, 106601641, Strand.REVERSE)
+        "IGHV3-54" to LocationInfo(GenomicLocation("chr14", 106601338, 106601641, Strand.REVERSE), cigarElementsFromStr("1X14=1X4=1X2=1X100=1X12=1X41=1X73=8D43="), false,true)
     )
 
     // following genes liftover from v38 to v37 produce incorrect genomic locations
@@ -27,7 +38,7 @@ object ImgtGeneCuratorSettings
         "IGKV1/OR1-1"
     )
 
-    fun getGenomicLocationOverrides(geneName: String): GenomicLocation?
+    fun getGenomicLocationOverrides(geneName: String): LocationInfo?
     {
         return genomicLocationOverrides[geneName]
     }

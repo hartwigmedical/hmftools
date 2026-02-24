@@ -68,7 +68,8 @@ public class BlastnRunner
         evalue,
         bitscore,
         qseq,
-        sseq
+        sseq,
+        btop
     }
 
     private final String task;
@@ -269,7 +270,9 @@ public class BlastnRunner
                         row.getDouble(BlastColumns.evalue),
                         row.getDouble(BlastColumns.bitscore),
                         row.get(BlastColumns.qseq),         // aligned subsequence of query sequence
-                        row.get(BlastColumns.sseq));        // aligned sequence in ref
+                        row.get(BlastColumns.sseq),         // aligned sequence in ref
+                        row.get(BlastColumns.btop)          // similar to CIGAR but different format
+                );
 
                 blastnResults.put(qseqid, blastnMatch);
             }
