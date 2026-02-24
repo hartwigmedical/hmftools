@@ -277,6 +277,16 @@ class ImgtGeneCurator
         val locations = ArrayList<LocationInfo?>()
         for ((alleleIndex, allele) in alleles.withIndex())
         {
+            val ensemblGene = ensemblDataCache.getGeneDataByName(toEnsemblGeneName(allele.geneName))
+            if (ensemblGene != null)
+            {
+                sLogger.debug(
+                    "Ensembl gene: {}  location={}:{}-{}({})",
+                    allele.geneAllele,
+                    ensemblGene.Chromosome, ensemblGene.GeneStart, ensemblGene.GeneEnd,
+                    if (ensemblGene.forwardStrand()) "+" else "-")
+            }
+
             // Filter by full match and not too many mismatches, then
             // We sort the matches by
             // 1. match quality
@@ -285,81 +295,94 @@ class ImgtGeneCurator
                 .filter { m ->
                     m.numMismatch <= BLASTN_MAX_MISMATCH &&
                             m.querySeqLen - (m.queryAlignEnd - m.queryAlignStart + 1) <= BLASTN_MAX_MISMATCH }
-                .sortedWith(Comparator.comparingDouble { m: BlastnMatch -> m.expectedValue }
-                    .thenComparingInt { m: BlastnMatch -> if (m.subjectTitle.endsWith(BLASTN_PRIMARY_ASSEMBLY_NAME)) 0 else 1 })
+                .mapNotNull { m ->
+                    blastnMatchtoGenomicLocation(m)?.let { location -> Pair(m, location) } }
+                .sortedWith(compareBy({ (m, _) -> m.expectedValue }, { (_, l) -> if (l.inPrimaryAssembly) 0 else 1 }))
 
-            // find the gene in the ensembl
-            val ensemblGene = ensemblDataCache.getGeneDataByName(toEnsemblGeneName(allele.geneName))
-            var bestMatch: BlastnMatch? = null
-            var multipleAlignments = false
-            var usedEnsembl = false
-            var locationMethod: String? = null
-
-            for (match in matches)
+            for ((match, location) in matches)
             {
-                val matchLocation = blastnMatchtoGenomicLocation(match)
-
                 sLogger.debug(
-                    "Gene alignment: {}  contig=\"{}\" start={} end={} cigar={} location={}",
-                    allele.geneAllele, matchLocation,
-                    match.subjectTitle, match.subjectAlignStart, match.subjectAlignEnd,
-                    match.cigar?.joinToString(""))
-
-                if (matchLocation == null)
-                {
-                    continue
-                }
-
-                if (bestMatch == null)
-                {
-                    bestMatch = match
-                }
-                else if (Doubles.equal(bestMatch.bitScore, match.bitScore))
-                {
-                    // if they have same score, we want to choose the one that overlaps with ensembl gene
-                    if (ensemblGene != null &&
-                        ensemblGene.Chromosome == matchLocation.chromosome &&
-                        ensemblGene.forwardStrand() == (matchLocation.strand == Strand.FORWARD) &&
-                        ensemblGene.GeneStart <= matchLocation.posEnd &&
-                        ensemblGene.GeneEnd >= matchLocation.posStart)
-                    {
-                        bestMatch = match
-                        usedEnsembl = true
-                        locationMethod = "AlignmentOverlapsEnsembl"
-                    }
-                    multipleAlignments = true
-                }
+                    "Gene alignment: {}  contig=\"{}\" start={} end={} cigar={} bitscore={} location={}",
+                    allele.geneAllele, match.subjectTitle, match.subjectAlignStart, match.subjectAlignEnd,
+                    match.cigar?.joinToString(""), match.bitScore, location)
             }
 
-            val location: LocationInfo?
-            if (bestMatch == null)
+            val locationInfo: LocationInfo?
+            val bestMatch: BlastnMatch?
+            val locationMethod: String?
+            if (matches.isEmpty())
             {
+                // No suitable alignment found.
                 if (ensemblGene != null && allele.region == IgTcrRegion.D_REGION)
                 {
                     // use ensembl for D region since they may be unalignable.
-                    usedEnsembl = true
                     locationMethod = "DRegionEnsembl"
-                    location = LocationInfo(toGenomicLocation(ensemblGene), null, multipleAlignments, usedEnsembl)
+                    locationInfo = LocationInfo(toGenomicLocation(ensemblGene), null, tiedAlignments = false, usedEnsembl = true)
                 }
                 else
                 {
-                    location = null
+                    locationInfo = null
+                    locationMethod = null
                 }
+                bestMatch = null
             }
             else
             {
+                val bestBitScore = matches[0].first.bitScore
+                val bestMatches = matches.filter { (match, _) -> Doubles.equal(match.bitScore, bestBitScore) }
+                var usedEnsembl = false
+                if (bestMatches.size == 1)
+                {
+                    // Only 1 best alignment.
+                    bestMatch = bestMatches[0].first
+                    locationMethod = "BestAlignment"
+                }
+                else
+                {
+                    // Multiple possible best alignments. Try to use the one that agrees with Ensembl.
+                    if (ensemblGene == null)
+                    {
+                        sLogger.warn("Multiple alignments for {} and no Ensembl data", allele.geneAllele)
+                        bestMatch = bestMatches[0].first
+                        locationMethod = "AmbiguousNoEnsemblGene"
+                    }
+                    else
+                    {
+                        val agreesWithEnsembl = bestMatches.map { (_, location) -> locationOverlapsEnsembl(location, ensemblGene) }
+                        val agreesWithEnsemblCount = agreesWithEnsembl.count { it }
+                        when (agreesWithEnsemblCount) {
+                            0 -> {
+                                // None of the alignments agree with the Ensembl location. Should find out how often this occurs.
+                                // For now, default to the first alignment.
+                                sLogger.warn("Multiple alignments for {} and none overlap Ensembl", allele.geneAllele)
+                                bestMatch = bestMatches[0].first
+                                locationMethod = "AmbiguousNoEnsemblOverlap"
+                            }
+                            1 -> {
+                                // Only one of the alignments agrees with Ensembl, so use it.
+                                bestMatch = bestMatches[agreesWithEnsembl.indexOf(true)].first
+                                locationMethod = "AlignmentOverlapsEnsembl"
+                                usedEnsembl = true
+                            }
+                            else -> {
+                                // Surely this cannot happen, would imply significant homology within the gene sequence.
+                                throw RuntimeException("Gene allele has multiple alignments that agree with Ensembl: " + allele.geneAllele)
+                            }
+                        }
+                    }
+                }
+
                 val genomicLocation = matchToQueryGenomicLocation(bestMatch)
-                location = LocationInfo(genomicLocation, bestMatch.cigar, multipleAlignments, usedEnsembl)
-                locationMethod = locationMethod ?: "Alignment"
+                locationInfo = LocationInfo(genomicLocation, bestMatch.cigar, tiedAlignments = bestMatches.size > 1, usedEnsembl)
             }
 
             sLogger.info(
-                "Gene location: {}  method={} location={} contig=\"{}\" start={} end={} cigar={} multipleAlignments={}",
-                allele.geneAllele, locationMethod, location?.location,
+                "Gene location: {}  method={} location={} contig=\"{}\" start={} end={} cigar={} tiedAlignments={} usedEnsembl={}",
+                allele.geneAllele, locationMethod, locationInfo?.location,
                 bestMatch?.subjectTitle, bestMatch?.subjectAlignStart, bestMatch?.subjectAlignEnd, bestMatch?.cigar?.joinToString(""),
-                multipleAlignments)
+                locationInfo?.tiedAlignments, locationInfo?.usedEnsembl)
 
-            locations.add(location)
+            locations.add(locationInfo)
         }
         return locations
     }
@@ -574,6 +597,8 @@ class ImgtGeneCurator
             }
         }
 
+        assert(seq.contains(alleleSeq))
+
         return ImgtSequenceFile.Sequence(allele.imgt.geneName, allele.imgt.allele, seq, refBeforeLength, refAfterLength)
     }
 
@@ -632,6 +657,15 @@ class ImgtGeneCurator
         }
 
         private fun toEnsemblGeneName(name: String) = name.replace("/", "").uppercase()
+
+        private fun locationOverlapsEnsembl(location: GenomicLocation, ensemblGene: GeneData): Boolean
+        {
+            return location.inPrimaryAssembly &&
+                    ensemblGene.forwardStrand() == (location.strand == Strand.FORWARD) &&
+                    ensemblGene.Chromosome == location.chromosome &&
+                    ensemblGene.GeneStart <= location.posEnd &&
+                    ensemblGene.GeneEnd >= location.posStart
+        }
 
         private fun findVAnchor(allele: ImgtGeneAllele, alleleLocationInfo: LocationInfo?): AnchorInfo?
         {
