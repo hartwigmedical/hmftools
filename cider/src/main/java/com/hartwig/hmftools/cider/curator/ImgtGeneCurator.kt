@@ -60,8 +60,8 @@ data class ProcessedGeneAllele(
     val anchorLocationV38: GenomicLocation?,
     val anchorLocationV37: GenomicLocation?,
     val duplicateSequence: Boolean,
-    val tiedAlignments: Boolean,
-    val usedEnsembl: Boolean
+    val tiedAlignments: Boolean?,
+    val usedEnsembl: Boolean?
 )
 
 data class LocationInfo(
@@ -77,7 +77,6 @@ data class AnchorInfo(
 )
 
 data class GeneAggregateInfo(
-    val geneName: String,
     val alleles: Int,
     val alleleLocations: Int,
     val usedEnsembl: Boolean
@@ -217,8 +216,8 @@ class ImgtGeneCurator
             anchorInfo?.location,
             anchorLocationV37,
             ambiguousSequence,
-            alleleLocationInfoV38?.tiedAlignments ?: false,
-            alleleLocationInfoV38?.usedEnsembl ?: false)
+            alleleLocationInfoV38?.tiedAlignments,
+            alleleLocationInfoV38?.usedEnsembl)
     }
 
     private fun findAlleleLocations(alleles: List<ImgtGeneAllele>): List<LocationInfo?>
@@ -549,7 +548,7 @@ class ImgtGeneCurator
 
             // If there are multiple best alignments for this sequence, then ensure there are some ref bases surrounding to disambiguate it.
             // However, we can't add ref if there are multiple locations for the alleles, because then we could pick ref from a different gene.
-            val needsRef = (allele.duplicateSequence || allele.tiedAlignments) && geneInfo.alleleLocations == 1 && geneInfo.usedEnsembl
+            val needsRef = (allele.duplicateSequence || (allele.tiedAlignments == true)) && geneInfo.alleleLocations == 1 && geneInfo.usedEnsembl
             val refContext = if (needsRef) max(FASTA_REF_CONTEXT_BASE, FASTA_REF_CONTEXT_AMBIGUOUS) else FASTA_REF_CONTEXT_BASE
             if (needsRef)
             {
@@ -818,14 +817,15 @@ class ImgtGeneCurator
         private fun createGeneAggregateInfo(geneAlleles: List<ProcessedGeneAllele>): Map<String, GeneAggregateInfo>
         {
             val allelesByGene = geneAlleles.groupBy { it.imgt.geneName }
-            return allelesByGene.mapValues { (geneName, alleles) ->
+            val infos = allelesByGene.mapValues { (_, alleles) ->
                 GeneAggregateInfo(
-                    geneName = geneName,
                     alleles = alleles.size,
-                    alleleLocations = alleles.map { allele -> allele.locationV38 }.distinct().size,
-                    usedEnsembl = alleles.all { allele -> allele.usedEnsembl }
+                    alleleLocations = alleles.mapNotNull { allele -> allele.locationV38 }.distinct().size,
+                    usedEnsembl = alleles.all { allele -> allele.usedEnsembl ?: true }
                 )
             }
+            infos.forEach { (geneName, info) -> sLogger.info("Gene aggregate info {}: {}", geneName, info) }
+            return infos
         }
 
         private fun validateAnchorLocations(igTcrGeneList: List<IgTcrGene>, refGenome: RefGenomeSource)
