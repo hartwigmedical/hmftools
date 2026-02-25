@@ -112,8 +112,8 @@ public class AssemblyVisualiser
 
     public record SegmentViewModel(Integer breakendId, String chromosome, @Nullable Integer position, BaseRegion refRegion,
                                    BaseRegion viewRegion, BaseRegion refViewRegion, BaseSeqViewModel refViewModel,
-				   boolean isRefReversed, boolean isAssemblyReversed, BaseSeqViewModel assemblyViewModel,
-				   boolean isInsert, int leftDelLength, BaseRegion assemblyRegion) {}
+                                   boolean isRefReversed, boolean isAssemblyReversed, BaseSeqViewModel assemblyViewModel,
+                                   boolean isInsert, int leftDelLength, BaseRegion assemblyRegion) {}
 
     public record PairedSegmentViewModel(List<SegmentViewModel> viewModels, int readStartOffset, int prevBoxWidth) {}
 
@@ -334,7 +334,7 @@ public class AssemblyVisualiser
                 sampleSupportInfo.computeIfAbsent("REFPAIR", k -> Lists.newArrayList()).add("TODO");
 
                 sampleSupportInfo.computeIfAbsent("SB", k -> Lists.newArrayList())
-                        .add(format("%.3f", tumorGenotype.getExtendedAttribute("SB")));
+                        .add(format("%.3f", (double) tumorGenotype.getExtendedAttribute("SB")));
                 sampleSupportInfo.computeIfAbsent(SPLIT_FRAGS, k -> Lists.newArrayList()).add(String.valueOf(totalSplitFrags));
             }
         }
