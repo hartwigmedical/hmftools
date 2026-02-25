@@ -239,14 +239,11 @@ Clonal IG/TCR rearrangements may be useful biomarkers to monitor tumor presence 
 ### Bam extraction:
 - **Reads mapped to other locations** - We only use reads where the alignment overlaps a known V/D/J/C gene coordinate as aligned with Blastn, which means the program is fast. We could also look for more reads with sequences that precisely or partially match known anchors but which have not been mapped to the expected locations.    
 - **GRCh37 genome incompleteness** - Some genes have locations which do not lift over from GRCh38 to GRCh37. Gene curation should align directly to the GRCh37 genome.
-- **Mate overlap** - Where fragment lengths are short the reads may overlap (particularly relevant for RNA). For each extracted read pair test for overlap by searching for an exact match for the innermost 10 bases of each read (allowing for differences if base quality < 25). If a match is found then check that the full overlapped region is identical (again allowing for base quality trimming). Create a consensus sequence for the 2 reads, using the highest base quality where the sequences differ.  
 - **Fragments with both reads unmapped reads** - these are not queried and extracted.
-- **Extrapolation of anchor location inside soft clipped part of read** - needs more thought.
 
 ### CDR3 calling:
-- **Full receptor sequence** - We could assemble outwards from the CDR3 to predict the full receptor sequence.  We should also search for rearrangements that delete both anchor sequeneces 
 - **Error tolerance in collapsing** - We collapse sequences with up to 1 high quality sequencing difference across the anchors + CDR3 sequence. We still see a small number of artefacts from very highly supported sequences which could be cleaned up further.  
-- **Multiple CDR3s in consensus sequence** - A single consensus sequence may have 2 anchor locations that lead to plausible high scoring CDR3 sequences. Currently we choose the highest scoring, but both could be functional.
+- **Multiple CDR3s in consensus sequence** - A single consensus sequence may have multiple plausible anchor locations that lead to multiple CDR3 sequences. Currently, it is arbitrary which anchor is chosen. Anchors could be refined at the gene annotation step with precise alignment.
 - **Longer CDR3 sequences artefacts with indels sometimes reported where indel sequencing errors occur in anchor** - we observe this when we have >>100 reads support for a CDR3 sequence, we sometimes get a handful of reads with a longer CDR3 sequence containing the main sequence, but cannot find the anchror due to indel in the base sequence.
 
 ### Gene annotation:
@@ -256,7 +253,6 @@ Clonal IG/TCR rearrangements may be useful biomarkers to monitor tumor presence 
 
 ### Other:
 - Downsampling may cause bias between locus.
-- Support AIRR format output.
 
 # Version History and Download Links
 - 1.2
