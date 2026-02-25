@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.common.vis.HtmlUtil.renderReadInfoTable;
 import static com.hartwig.hmftools.common.vis.SvgRender.BOX_PADDING;
 import static com.hartwig.hmftools.common.vis.SvgRender.renderBaseSeq;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.assembly.vis.AssemblyVisConstants.DBG_READ_INFO;
 import static com.hartwig.hmftools.esvee.assembly.vis.AssemblyVisConstants.INDEL_CORRECTION;
 import static com.hartwig.hmftools.esvee.assembly.vis.AssemblyVisConstants.READ_HEIGHT_PX;
 
@@ -472,32 +473,23 @@ public final class ReadViewModel
         String trimCountStr = format("%d,%d", mSupportRead.trimCountStart(), mSupportRead.trimCountEnd());
         extraInfo.add(Pair.of("Trim count:", trimCountStr));
 
-        // TODO(mkcmkc): Remove
-        extraInfo.add(Pair.of("Full assembly index start:", String.valueOf(mSupportRead.fullAssemblyIndexStart())));
+        if(DBG_READ_INFO)
+        {
+            extraInfo.add(Pair.of("Full assembly index start:", String.valueOf(mSupportRead.fullAssemblyIndexStart())));
+            extraInfo.add(Pair.of("Full assembly seq start:", mFullAssemblyStr.substring(mSupportRead.fullAssemblyIndexStart(), min(
+                    mSupportRead.fullAssemblyIndexEnd() + 1, mSupportRead.fullAssemblyIndexStart() + 10))));
 
-        // TODO(mkcmkc): Remove
-        extraInfo.add(Pair.of("Full assembly seq start:", mFullAssemblyStr.substring(mSupportRead.fullAssemblyIndexStart(), min(
-                mSupportRead.fullAssemblyIndexEnd() + 1, mSupportRead.fullAssemblyIndexStart() + 10))));
+            SupplementaryReadData suppData = mSupportRead.supplementaryData();
+            extraInfo.add(Pair.of("Supplementary Data:", suppData == null ? "None" : suppData.toString()));
 
-        // TODO(mkcmkc): Remove
-        SupplementaryReadData suppData = mSupportRead.supplementaryData();
-        extraInfo.add(Pair.of("Supplementary Data:", suppData == null ? "None" : suppData.toString()));
+            String mismatchesStr = mSupportRead.cachedRead().mismatches().toString();
+            extraInfo.add(Pair.of("Mismatches:", mismatchesStr));
 
-        // TODO(mkcmkc): Remove
-        String mismatchesStr = mSupportRead.cachedRead().mismatches().toString();
-        extraInfo.add(Pair.of("Mismatches:", mismatchesStr));
-
-        // TODO(mkcmkc): Remove
-        extraInfo.add(Pair.of("Full assembly orientation:", mSupportRead.fullAssemblyOrientation().name()));
-
-        // TODO(mkcmkc): Remove
-        extraInfo.add(Pair.of("Indel offset:", String.valueOf(mIndelOffset)));
-
-        // TODO(mkcmkc): Remove
-        extraInfo.add(Pair.of("Reverse complemented:", String.valueOf(mIsReverseComplemented)));
-
-        // TODO(mkcmkc): Remove
-        extraInfo.add(Pair.of("Ref view model index:", String.valueOf(mRefViewModelIndex)));
+            extraInfo.add(Pair.of("Full assembly orientation:", mSupportRead.fullAssemblyOrientation().name()));
+            extraInfo.add(Pair.of("Indel offset:", String.valueOf(mIndelOffset)));
+            extraInfo.add(Pair.of("Reverse complemented:", String.valueOf(mIsReverseComplemented)));
+            extraInfo.add(Pair.of("Ref view model index:", String.valueOf(mRefViewModelIndex)));
+        }
 
         CssBuilder baseDivStyle = CssBuilder.EMPTY.padding(CssSize.ZERO).margin(CssSize.ZERO);
 

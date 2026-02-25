@@ -444,19 +444,20 @@ public class AssemblyApplication
     {
         for(AssemblyAlignment assembly : assemblyAlignments)
         {
-            // TODO(mkcmkc): remove try/catch.
-            AssemblyVisualiser visualiser = null;
+            // TODO(mkcmkc): This try/catch is temporary to catch assemblies where the vis fails
+            AssemblyVisualiser visualiser;
             try
             {
                 visualiser = new AssemblyVisualiser(mConfig, assembly);
             }
             catch(Exception e)
             {
+                e.printStackTrace();
                 visualiser = null;
             }
 
             if(visualiser != null)
-                visualiser.writeVisFiles();
+                visualiser.writeVisFile();
         }
     }
 
