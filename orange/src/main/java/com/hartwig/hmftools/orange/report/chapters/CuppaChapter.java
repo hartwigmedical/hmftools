@@ -44,7 +44,7 @@ public class CuppaChapter implements ReportChapter
         document.add(new Paragraph(name()).addStyle(mReportResources.chapterTitleStyle()));
 
         boolean isFail = PurpleQCInterpretation.isFail(mReport.purple().fit().qc());
-        if(!isFail && mReport.plots().cuppaSummaryPdf() != null)
+        if(!isFail && mReport.plots().cuppaSummaryPlot() != null)
         {
             addCuppaSummaryPlot(document);
         }
@@ -56,7 +56,7 @@ public class CuppaChapter implements ReportChapter
 
     private void addCuppaSummaryPlot(@NotNull Document document)
     {
-        Image cuppaSummaryPlot = Images.build(mPlotPathResolver.resolve(mReport.plots().cuppaSummaryPdf()));
+        Image cuppaSummaryPlot = Images.build(mPlotPathResolver.resolve(mReport.plots().cuppaSummaryPlot()));
         cuppaSummaryPlot.setMaxWidth(740);
         cuppaSummaryPlot.setMaxHeight(420);
         cuppaSummaryPlot.setHorizontalAlignment(HorizontalAlignment.CENTER);

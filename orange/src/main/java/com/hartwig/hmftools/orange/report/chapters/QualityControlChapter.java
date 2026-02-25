@@ -42,9 +42,9 @@ public class QualityControlChapter implements ReportChapter
         document.add(new Paragraph(name()).addStyle(mReportResources.chapterTitleStyle()));
 
         boolean isFail = PurpleQCInterpretation.isFail(mReport.purple().fit().qc());
-        if(!isFail && mReport.plots().cuppaSummaryPdf() != null)
+        if(!isFail && mReport.plots().cuppaSummaryPlot() != null)
         {
-            // addQSeePdf(document);
+            addQSeePdf(document);
         }
         else
         {
@@ -54,7 +54,10 @@ public class QualityControlChapter implements ReportChapter
 
     private void addQSeePdf(final Document document)
     {
-        Image qSeePdf = Images.build(mPlotPathResolver.resolve(mReport.plots().qSeePdf()));
+        if(mReport.plots().qSeePlot() == null)
+            return;
+
+        Image qSeePdf = Images.build(mPlotPathResolver.resolve(mReport.plots().qSeePlot()));
         qSeePdf.setMaxWidth(740);
         qSeePdf.setMaxHeight(420);
         qSeePdf.setHorizontalAlignment(HorizontalAlignment.CENTER);

@@ -17,12 +17,11 @@ public class FileBasedPlotManager implements PlotManager
 {
     private static final String PLOT_DIRECTORY = "plot";
 
-    @NotNull
-    private final String outputDir;
+    private final String mOutputDir;
 
-    public FileBasedPlotManager(@NotNull final String outputDir)
+    public FileBasedPlotManager(final String outputDir)
     {
-        this.outputDir = outputDir;
+        mOutputDir = outputDir;
     }
 
     @Override
@@ -78,25 +77,25 @@ public class FileBasedPlotManager implements PlotManager
             Files.copy(new File(sourcePlotPath).toPath(), new File(targetPath).toPath());
         }
 
-        return relativePath(targetPath, outputDir);
+        return relativePath(targetPath, mOutputDir);
     }
 
-    @NotNull
+    @Override
+    public String plotDirectory() { return plotDirectoryPath(); }
+
     private String plotDirectoryPath()
     {
-        return outputDir + File.separator + PLOT_DIRECTORY;
+        return mOutputDir + File.separator + PLOT_DIRECTORY;
     }
 
-    @NotNull
     @VisibleForTesting
     static String extractFileName(@NotNull String sourcePlotPath)
     {
         return sourcePlotPath.substring(sourcePlotPath.lastIndexOf(File.separator) + 1);
     }
 
-    @NotNull
     @VisibleForTesting
-    static String relativePath(@NotNull String target, @NotNull String rootDir)
+    static String relativePath(final String target, @NotNull String rootDir)
     {
         String pathToRemove = rootDir.endsWith(File.separator) ? rootDir : rootDir + File.separator;
 

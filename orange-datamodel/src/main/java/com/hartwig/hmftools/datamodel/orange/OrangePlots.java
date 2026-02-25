@@ -37,11 +37,11 @@ public interface OrangePlots
     List<String> linxDriverPlots();
 
     @Nullable
-    String cuppaSummaryPdf();
+    String cuppaSummaryPlot();
 
     @Nullable
-    String qSeePdf();
+    String qSeePlot();
 
     @Nullable
-    String purplePdf();
+    String purplePlot();
 }

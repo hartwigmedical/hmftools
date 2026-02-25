@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.orange.algo;
 
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.filenamePart;
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
+import static com.hartwig.hmftools.orange.report.PdfConverter.convertPdfToPng;
 
 import java.io.File;
 import java.io.IOException;
@@ -441,6 +443,13 @@ public class OrangeAlgo
         }
 
         String qSeePdf = config.QSeeDirectory + File.separator + config.TumorId + ".qsee.vis.report.pdf";
+        String qSeePlot = null;
+
+        if(mPlotManager.plotDirectory() != null && Files.exists(Paths.get(qSeePdf)))
+        {
+            qSeePlot = mPlotManager.plotDirectory() + File.separator + config.TumorId + ".qsee.report.png";
+            convertPdfToPng(qSeePdf, qSeePlot);
+        }
 
         String purplePlotBasePath = config.PurplePlotDirectory + File.separator + config.TumorId;
         String purpleInputPlot = mPlotManager.processPlotFile(purplePlotBasePath + ".input.png");
@@ -452,7 +461,7 @@ public class OrangeAlgo
         String purpleKataegisPlot = mPlotManager.processPlotFile(purplePlotBasePath + ".somatic.rainfall.png");
 
         // TODO: remove Purple plots and only add its PDF
-        String purplePlotPdf = mPlotManager.processPlotFile(purplePlotBasePath + ".somatic.rainfall.png");
+        String purplePlotPlot = mPlotManager.processPlotFile(purplePlotBasePath + ".somatic.rainfall.png");
 
         List<String> purplePlots = Arrays.asList(purpleInputPlot, purpleFinalCircosPlot, purpleClonalityPlot, purpleCopyNumberPlot,
                 purpleVariantCopyNumberPlot, purplePurityRangePlot, purpleKataegisPlot);
@@ -463,7 +472,7 @@ public class OrangeAlgo
             System.exit(0);
         }
 
-        String cuppaSummaryPdf = mPlotManager.processPlotFile(
+        String cuppaSummaryPlot = mPlotManager.processPlotFile(
                 config.ReferenceId != null ? CuppaPredictions.generateVisPlotFilename(config.CuppaDir, config.TumorId) : null);
 
         return ImmutableOrangePlots.builder()
@@ -475,9 +484,9 @@ public class OrangeAlgo
                 .purplePurityRangePlot(purplePurityRangePlot)
                 .purpleKataegisPlot(purpleKataegisPlot)
                 .linxDriverPlots(linxDriverPlots)
-                .cuppaSummaryPdf(cuppaSummaryPdf)
-                .purplePdf(purplePlotPdf)
-                .qSeePdf(qSeePdf)
+                .cuppaSummaryPlot(cuppaSummaryPlot)
+                .purplePlot(purplePlotPlot)
+                .qSeePlot(qSeePlot)
                 .build();
     }
 
