@@ -86,13 +86,6 @@ public class SomaticFindingsChapter implements ReportChapter
         {
             addStructuralDriverPlots(document);
         }
-
-        /*
-        if(!PurpleQCInterpretation.isContaminated(mReport.purple().fit().qc()))
-        {
-            addKataegisPlot(document);
-        }
-        */
     }
 
     private void addSomaticVariants(final Document document)
@@ -114,24 +107,6 @@ public class SomaticFindingsChapter implements ReportChapter
 
             document.add(SomaticVariantTable.build(
                     titleDrivers, contentWidth(), reportableVariants, mReportResources, mReport.tumorOnlyMode(), mReport.isofox() != null));
-        }
-    }
-
-    private void addKataegisPlot(final Document document)
-    {
-        document.add(new Paragraph("Kataegis plot").addStyle(mReportResources.tableTitleStyle()));
-        String kataegisPlot = mReport.plots().purpleKataegisPlot();
-        if(kataegisPlot != null)
-        {
-            Image image = Images.build(mPlotPathResolver.resolve(kataegisPlot));
-            image.setMaxWidth(contentWidth());
-            image.setHorizontalAlignment(HorizontalAlignment.CENTER);
-            document.add(image);
-        }
-        else
-        {
-            document.add(new Paragraph("No kataegis plot could be generated for this sample")
-                    .addStyle(mReportResources.tableContentStyle()));
         }
     }
 

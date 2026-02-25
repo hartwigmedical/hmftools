@@ -73,7 +73,6 @@ public class PurpleInterpreter
 
         return ImmutablePurpleRecord.builder()
                 .fit(createFit(purple))
-                .tumorStats(TumorStatsFactory.compute(purple))
                 .characteristics(createCharacteristics(purple))
                 .somaticDrivers(ConversionUtil.mapToIterable(purple.somaticDrivers(), PurpleConversion::convert))
                 .germlineDrivers(germlineDrivers)
@@ -196,6 +195,7 @@ public class PurpleInterpreter
                 .tumorMutationalLoad(purple.purityContext().tumorMutationalLoad())
                 .tumorMutationalLoadStatus(PurpleTumorMutationalStatus.valueOf(purple.purityContext().tumorMutationalLoadStatus().name()))
                 .svTumorMutationalBurden(purple.purityContext().svTumorMutationalBurden())
+                .lohPercentage(purple.purityContext().qc().lohPercent())
                 .build();
     }
 }

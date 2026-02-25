@@ -190,6 +190,82 @@ public class FrontPageChapter implements ReportChapter
     {
         Table topTable = new Table(UnitValue.createPercentArray(new float[] { 1, 1 })).setWidth(contentWidth() - 5);
 
+        Table summaryLeft = new Table(UnitValue.createPercentArray(new float[] { 1, 1 }));
+        Cells cellsLeft = new Cells(mReportResources);
+
+        boolean includeGermline = !mReport.tumorOnlyMode();
+
+        addCellEntry(summaryLeft, cellsLeft, "Purity:", purityString());
+        addCellEntry(summaryLeft, cellsLeft, "Ploidy:", ploidyString());
+        addCellEntry(summaryLeft, cellsLeft, "Whole genome duplicated:", wgdString());
+
+        addCellEntry(summaryLeft, cellsLeft, "Somatic variant:", somaticVariantDriverString());
+        addCellEntry(summaryLeft, cellsLeft, "Somatic copy number:", somaticCopyNumberDriverString());
+        addCellEntry(summaryLeft, cellsLeft, "Somatic disruption:", somaticDisruptionDriverString());
+
+        if(includeGermline)
+        {
+            addCellEntry(summaryLeft, cellsLeft, "Germline variant:", germlineVariantDriverString());
+            addCellEntry(summaryLeft, cellsLeft, "Germline copy number:", germlineCopyNumberDriverString());
+            addCellEntry(summaryLeft, cellsLeft, "Germline disruption:", germlineDisruptionDriverString());
+        }
+
+        addCellEntry(summaryLeft, cellsLeft, "Fusion drivers:", fusionDriverString());
+
+        if(mReport.virusInterpreter() != null)
+        {
+            addCellEntry(summaryLeft, cellsLeft, "Viral presence:", virusString());
+        }
+
+        Table summaryRight = new Table(UnitValue.createPercentArray(new float[] { 1, 1 }));
+        Cells cellsRight = new Cells(mReportResources);
+
+        addCellEntry(summaryRight, cellsRight, "Microsatellite indels per Mb:", msiString());
+        addCellEntry(summaryRight, cellsRight, "Tumor mutations per Mb:", tmbString());
+        addCellEntry(summaryRight, cellsRight, "Tumor mutational load:", tmlString());
+
+        if(includeGermline) // will change once we solve HRD for targeted mode
+        {
+            addCellEntry(summaryRight, cellsRight, "HR deficiency score:", hrDeficiencyString());
+        }
+
+        addCellEntry(summaryRight, cellsRight, "LOH proportion:", lohPercentageString());
+        addCellEntry(summaryRight, cellsRight, "Number of SVs:", svTmbString());
+        addCellEntry(summaryRight, cellsRight, "Max complex cluster size:", maxComplexSizeString());
+        addCellEntry(summaryRight, cellsRight, "Telomeric SGLs:", telomericSGLString());
+        addCellEntry(summaryRight, cellsRight, "Number of LINE insertions:", lineCountString());
+
+        if(includeGermline) // will change once we solve HRD for targeted mode
+        {
+            addCellEntry(summaryRight, cellsRight, "DPYD status:", geneStatus("DPYD"));
+            addCellEntry(summaryRight, cellsRight, "UGT1A1 status:", geneStatus("UGT1A1"));
+        }
+
+        topTable.addCell(summaryLeft);
+        topTable.addCell(summaryRight);
+
+        Table table = new Table(UnitValue.createPercentArray(new float[] { 1 })).setWidth(contentWidth()).setPadding(0);
+        table.addCell(topTable);
+
+        Image circosImage = Images.build(mPlotPathResolver.resolve(mReport.plots().purpleFinalCircosPlot()));
+        circosImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
+        circosImage.setMaxHeight(400);
+        table.addCell(circosImage);
+
+        /*
+        Image clonalityImage = Images.build(mPlotPathResolver.resolve(mReport.plots().purpleClonalityPlot()));
+        clonalityImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
+        clonalityImage.setMaxHeight(270);
+        table.addCell(clonalityImage);
+        */
+
+        document.add(table);
+    }
+
+    private void addDetailsAndPlotsOld(final Document document)
+    {
+        Table topTable = new Table(UnitValue.createPercentArray(new float[] { 1, 1 })).setWidth(contentWidth() - 5);
+
         Table summary = new Table(UnitValue.createPercentArray(new float[] { 1, 1 }));
         Cells cells = new Cells(mReportResources);
 
@@ -233,15 +309,14 @@ public class FrontPageChapter implements ReportChapter
         if(includeGermline) // will change once we solve HRD for targeted mode
         {
             addCellEntry(summary, cells, "HR deficiency score:", hrDeficiencyString());
-
             addCellEntry(summary, cells, "DPYD status:", geneStatus("DPYD"));
             addCellEntry(summary, cells, "UGT1A1 status:", geneStatus("UGT1A1"));
-
-            addCellEntry(summary, cells, "Number of SVs:", svTmbString());
-            addCellEntry(summary, cells, "Max complex cluster size:", maxComplexSizeString());
-            addCellEntry(summary, cells, "Telomeric SGLs:", telomericSGLString());
-            addCellEntry(summary, cells, "Number of LINE insertions:", lineCountString());
         }
+
+        addCellEntry(summary, cells, "Number of SVs:", svTmbString());
+        addCellEntry(summary, cells, "Max complex cluster size:", maxComplexSizeString());
+        addCellEntry(summary, cells, "Telomeric SGLs:", telomericSGLString());
+        addCellEntry(summary, cells, "Number of LINE insertions:", lineCountString());
 
         Image circosImage = Images.build(mPlotPathResolver.resolve(mReport.plots().purpleFinalCircosPlot()));
         circosImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
@@ -256,8 +331,8 @@ public class FrontPageChapter implements ReportChapter
         Image clonalityImage = Images.build(mPlotPathResolver.resolve(mReport.plots().purpleClonalityPlot()));
         clonalityImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
         clonalityImage.setMaxHeight(270);
-
         table.addCell(clonalityImage);
+
         document.add(table);
     }
 
@@ -266,7 +341,6 @@ public class FrontPageChapter implements ReportChapter
         summary.addCell(cells.createKey(name));
         summary.addCell(cells.createValue(value));
     }
-
 
     private String purityString()
     {
@@ -593,10 +667,20 @@ public class FrontPageChapter implements ReportChapter
         }
 
         String svTmb = String.valueOf(mReport.purple().characteristics().svTumorMutationalBurden());
-
         String addon = Strings.EMPTY;
-
         return svTmb + addon;
+    }
+
+    private String lohPercentageString()
+    {
+        if(PurpleQCInterpretation.isFail(mReport.purple().fit().qc()))
+        {
+            return ReportResources.NOT_AVAILABLE;
+        }
+
+        String lohPerc = formatPercentage(mReport.purple().characteristics().lohPercentage());
+        String addon = Strings.EMPTY;
+        return lohPerc + addon;
     }
 
     private String maxComplexSizeString()
