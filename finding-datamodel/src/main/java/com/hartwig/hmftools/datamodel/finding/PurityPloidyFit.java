@@ -44,6 +44,11 @@ public record PurityPloidyFit(
         return qc().status().contains(PurpleQCStatus.FAIL_CONTAMINATION);
     }
 
+    public boolean isLowPurity()
+    {
+        return qc().status().contains(PurpleQCStatus.WARN_LOW_PURITY);
+    }
+
     public boolean isFailNoTumor()
     {
         return qc().status().contains(PurpleQCStatus.FAIL_NO_TUMOR);
