@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.datamodel.finding;
 
+import java.time.LocalDate;
+
 import com.hartwig.hmftools.datamodel.orange.ExperimentType;
 import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
 
@@ -13,7 +15,8 @@ public record MetaProperties(
         @NotNull ExperimentType experimentType,
         @Nullable String pipelineVersion,
         @NotNull String version,
-        @NotNull OrangeRefGenomeVersion refGenomeVersion
-)
+        @NotNull OrangeRefGenomeVersion refGenomeVersion,
+        @NotNull String sampleId,
+        @NotNull LocalDate samplingDate)
 {
 }

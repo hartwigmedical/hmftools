@@ -72,6 +72,8 @@ public class FindingRecordFactory
                         .refGenomeVersion(orangeRecord.refGenomeVersion())
                         .experimentType(orangeRecord.experimentType())
                         .pipelineVersion(orangeRecord.pipelineVersion())
+                        .sampleId(orangeRecord.sampleId())
+                        .samplingDate(orangeRecord.samplingDate())
                         .build())
                 .somaticDisruptions(createSomaticDisruptions(hasReliablePurity, linx))
                 .germlineDisruptions(createGermlineDisruptions(orangeRecord.refSample() != null, linx))
