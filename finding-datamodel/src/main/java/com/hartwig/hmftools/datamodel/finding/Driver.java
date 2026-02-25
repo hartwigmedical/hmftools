@@ -7,7 +7,7 @@ import com.hartwig.hmftools.datamodel.driver.DriverSource;
 
 import jakarta.validation.constraints.NotNull;
 
-public interface Driver extends Finding
+public interface Driver extends Event
 {
     @NotNull DriverSource driverSource();
 

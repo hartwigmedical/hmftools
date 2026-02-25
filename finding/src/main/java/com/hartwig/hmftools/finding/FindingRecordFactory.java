@@ -44,17 +44,17 @@ import org.jetbrains.annotations.Nullable;
 public class FindingRecordFactory
 {
     public static FindingRecord fromOrangeJsonWithTranscriptFile(Path orangeJson, @Nullable Path clinicalTranscriptsTsv,
-            @Nullable Path driverGeneTsv) throws IOException
+            @Nullable Path driverGeneTsv, EventFactory eventFactory) throws IOException
     {
         try(Reader reader = Files.newBufferedReader(orangeJson))
         {
             OrangeRecord orangeRecord = com.hartwig.hmftools.datamodel.OrangeJson.getInstance().read(reader);
-            return fromOrangeRecord(orangeRecord, clinicalTranscriptsTsv, driverGeneTsv);
+            return fromOrangeRecord(orangeRecord, clinicalTranscriptsTsv, driverGeneTsv, eventFactory);
         }
     }
 
     public static FindingRecord fromOrangeRecord(OrangeRecord orangeRecord, @Nullable Path clinicalTranscriptsTsv,
-            @Nullable Path driverGeneTsv) throws IOException
+            @Nullable Path driverGeneTsv, EventFactory eventFactory) throws IOException
     {
         ClinicalTranscriptsModel clinicalTranscriptsModel = clinicalTranscriptsTsv != null ?
                 ClinicalTranscriptFile.buildFromTsv(orangeRecord.refGenomeVersion(), clinicalTranscriptsTsv) : null;
@@ -75,18 +75,18 @@ public class FindingRecordFactory
                         .sampleId(orangeRecord.sampleId())
                         .samplingDate(orangeRecord.samplingDate())
                         .build())
-                .somaticDisruptions(createSomaticDisruptions(hasReliablePurity, linx))
-                .germlineDisruptions(createGermlineDisruptions(orangeRecord.refSample() != null, linx))
-                .fusions(createFusionsFindings(orangeRecord.linx()));
+                .somaticDisruptions(createSomaticDisruptions(hasReliablePurity, linx, eventFactory))
+                .germlineDisruptions(createGermlineDisruptions(orangeRecord.refSample() != null, linx, eventFactory))
+                .fusions(createFusionsFindings(orangeRecord.linx(), eventFactory));
 
-        DriverFindingList<GainDeletion> somaticGainDeletions = addPurpleFindings(builder, orangeRecord, clinicalTranscriptsModel, driverGenes);
+        DriverFindingList<GainDeletion> somaticGainDeletions = addPurpleFindings(builder, orangeRecord, clinicalTranscriptsModel, driverGenes, eventFactory);
 
         VisualisationFiles visualisationFiles = VisualisationFilesFactory.create(orangeRecord.plots());
 
         return builder.predictedTumorOrigin(createPredictedTumorOrigin(orangeRecord.cuppa()))
                 .homologousRecombination(createHomologousRecombination(orangeRecord.chord(), purple, linx, somaticGainDeletions))
-                .viruses(createVirusFindings(orangeRecord.virusInterpreter()))
-                .hlaAlleles(HlaAlleleFactory.createHlaAllelesFindings(orangeRecord, hasReliablePurity))
+                .viruses(createVirusFindings(orangeRecord.virusInterpreter(), eventFactory))
+                .hlaAlleles(HlaAlleleFactory.createHlaAllelesFindings(orangeRecord, hasReliablePurity, eventFactory))
                 .pharmocoGenotypes(createPharmcoGenotypesFindings(orangeRecord.peach(), hasContainmination))
                 .visualisationFiles(visualisationFiles)
                 .build();
@@ -94,7 +94,7 @@ public class FindingRecordFactory
 
     // return the gain deletions cause they are needed by HRD, will see if we can find a better way
     private static DriverFindingList<GainDeletion> addPurpleFindings(FindingRecordBuilder builder, final OrangeRecord orangeRecord,
-            final @Nullable ClinicalTranscriptsModel clinicalTranscriptsModel, Map<String, DriverGene> driverGenes)
+            final @Nullable ClinicalTranscriptsModel clinicalTranscriptsModel, Map<String, DriverGene> driverGenes, EventFactory eventFactory)
     {
         boolean hasRefSample = orangeRecord.refSample() != null;
 
@@ -124,12 +124,12 @@ public class FindingRecordFactory
                 .build());
 
         DriverFindingList<GainDeletion> somaticGainDeletions =
-                GainDeletionFactory.somaticGainDeletionFindings(orangeRecord.refGenomeVersion(), findingsStatus, purple);
+                GainDeletionFactory.somaticGainDeletionFindings(orangeRecord.refGenomeVersion(), findingsStatus, purple, eventFactory);
 
-        builder.somaticSmallVariants(SmallVariantFactory.somaticSmallVariantFindings(purple, findingsStatus, clinicalTranscriptsModel, driverGenes))
-                .germlineSmallVariants(SmallVariantFactory.germlineSmallVariantFindings(hasRefSample, purple, clinicalTranscriptsModel, driverGenes))
+        builder.somaticSmallVariants(SmallVariantFactory.somaticSmallVariantFindings(purple, findingsStatus, clinicalTranscriptsModel, driverGenes, eventFactory))
+                .germlineSmallVariants(SmallVariantFactory.germlineSmallVariantFindings(hasRefSample, purple, clinicalTranscriptsModel, driverGenes, eventFactory))
                 .somaticGainDeletions(somaticGainDeletions)
-                .germlineGainDeletions(GainDeletionFactory.germlineGainDeletionFindings(hasRefSample, orangeRecord.refGenomeVersion(), purple))
+                .germlineGainDeletions(GainDeletionFactory.germlineGainDeletionFindings(hasRefSample, orangeRecord.refGenomeVersion(), purple, eventFactory))
                 .microsatelliteStability(createMicrosatelliteStability(purple, orangeRecord.linx(), somaticGainDeletions))
                 .tumorMutationStatus(createTumorMutationStatus(purple));
 
@@ -233,16 +233,16 @@ public class FindingRecordFactory
         return purpleRecord.fit().qc().status().equals(Set.of(PurpleQCStatus.PASS)) ? FindingsStatus.OK : FindingsStatus.NOT_AVAILABLE;
     }
 
-    public static DriverFindingList<Fusion> createFusionsFindings(LinxRecord linx)
+    public static DriverFindingList<Fusion> createFusionsFindings(LinxRecord linx, EventFactory eventFactory)
     {
         return DriverFindingListBuilder.<Fusion>builder()
                 .status(FindingsStatus.OK)
                 .findings(linx.reportableSomaticFusions().stream()
-                        .map(o -> convertFusion(o, DriverSource.SOMATIC)).sorted(Fusion.COMPARATOR).toList())
+                        .map(o -> convertFusion(o, DriverSource.SOMATIC, eventFactory)).sorted(Fusion.COMPARATOR).toList())
                 .build();
     }
 
-    public static Fusion convertFusion(LinxFusion fusion, DriverSource sampleType)
+    public static Fusion convertFusion(LinxFusion fusion, DriverSource sampleType, EventFactory eventFactory)
     {
         DriverInterpretation driverInterpretation = toDriverInterpretation(fusion.driverLikelihood());
 
@@ -251,6 +251,7 @@ public class FindingRecordFactory
         return FusionBuilder.builder()
                 .driver(DriverFieldsBuilder.builder()
                         .findingKey(FindingKeys.fusion(sampleType, fusion))
+                        .event(eventFactory.fusionEvent(fusion))
                         .driverSource(sampleType)
                         .reportedStatus(DriverUtil.reportedStatus(isDriverGene, fusion.reported(), driverInterpretation))
                         .driverInterpretation(driverInterpretation)
@@ -286,13 +287,13 @@ public class FindingRecordFactory
         };
     }
 
-    private static DriverFindingList<Virus> createVirusFindings(@Nullable VirusInterpreterData virusInterpreter)
+    private static DriverFindingList<Virus> createVirusFindings(@Nullable VirusInterpreterData virusInterpreter, EventFactory eventFactory)
     {
         if(virusInterpreter != null)
         {
             return DriverFindingListBuilder.<Virus>builder()
                     .status(FindingsStatus.OK)
-                    .findings(convertViruses(virusInterpreter.allViruses()))
+                    .findings(convertViruses(virusInterpreter.allViruses(), eventFactory))
                     .build();
 
         }
@@ -302,12 +303,13 @@ public class FindingRecordFactory
         }
     }
 
-    private static List<Virus> convertViruses(List<VirusInterpreterEntry> viruses)
+    private static List<Virus> convertViruses(List<VirusInterpreterEntry> viruses, EventFactory eventFactory)
     {
         return viruses.stream()
                 .map(v -> VirusBuilder.builder()
                         .driver(DriverFieldsBuilder.builder()
                                 .findingKey(FindingKeys.virus(v))
+                                .event(eventFactory.virusEvent(v))
                                 .driverSource(DriverSource.SOMATIC)
                                 .reportedStatus(DriverUtil.reportedStatus(
                                         true,

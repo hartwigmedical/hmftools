@@ -43,6 +43,13 @@ public record Fusion(
 
     @NotNull
     @Override
+    public String event()
+    {
+        return driver.event();
+    }
+
+    @NotNull
+    @Override
     public DriverSource driverSource()
     {
         return driver.driverSource();

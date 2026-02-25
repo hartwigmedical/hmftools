@@ -44,7 +44,7 @@ public class FindingApplication
 
         FindingRecord findingRecord = FindingRecordFactory.fromOrangeRecord(orangeRecord,
                 config.ClinicalTranscriptsPath != null ? Path.of(config.ClinicalTranscriptsPath) : null,
-                Path.of(config.DriverGenePath));
+                Path.of(config.DriverGenePath), new DefaultEventFactory());
 
         new FindingsJson().write(findingRecord, Path.of(config.FindingJsonPath));
 

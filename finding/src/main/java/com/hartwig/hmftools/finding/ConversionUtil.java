@@ -15,7 +15,8 @@ public class ConversionUtil
             @Nullable Path driverGeneTsv) throws IOException
     {
         FindingRecord
-                findingRecord = FindingRecordFactory.fromOrangeJsonWithTranscriptFile(orangeJson, clinicalTranscriptsTsv, driverGeneTsv);
+                findingRecord = FindingRecordFactory.fromOrangeJsonWithTranscriptFile(orangeJson, clinicalTranscriptsTsv, driverGeneTsv,
+                new DefaultEventFactory());
         new FindingsJson().write(findingRecord, findingsJson);
     }
 }

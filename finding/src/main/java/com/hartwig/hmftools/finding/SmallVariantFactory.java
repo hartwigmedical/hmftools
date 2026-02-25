@@ -24,13 +24,14 @@ final class SmallVariantFactory
             PurpleRecord purpleRecord,
             FindingsStatus findingsStatus,
             @Nullable ClinicalTranscriptsModel clinicalTranscriptsModel,
-            Map<String, DriverGene> driverGeneMap)
+            Map<String, DriverGene> driverGeneMap,
+            EventFactory eventFactory)
     {
         return DriverFindingListBuilder.<SmallVariant>builder()
                 .status(findingsStatus)
                 .findings(SmallVariantFactory.create(
                         DriverSource.SOMATIC, purpleRecord.reportableSomaticVariants(), purpleRecord.somaticDrivers(),
-                        clinicalTranscriptsModel, driverGeneMap))
+                        clinicalTranscriptsModel, driverGeneMap, eventFactory))
                 .build();
     }
 
@@ -38,7 +39,7 @@ final class SmallVariantFactory
             boolean hasGermlineSample,
             PurpleRecord purpleRecord,
             @Nullable ClinicalTranscriptsModel clinicalTranscriptsModel,
-            Map<String, DriverGene> driverGeneMap)
+            Map<String, DriverGene> driverGeneMap, EventFactory eventFactory)
     {
         if(!hasGermlineSample)
         {
@@ -54,14 +55,15 @@ final class SmallVariantFactory
         return DriverFindingListBuilder.<SmallVariant>builder()
                 .status(FindingsStatus.OK)
                 .findings(SmallVariantFactory.create(
-                        DriverSource.GERMLINE, germlineVariants, germlineDrivers, clinicalTranscriptsModel, driverGeneMap))
+                        DriverSource.GERMLINE, germlineVariants, germlineDrivers, clinicalTranscriptsModel, driverGeneMap, eventFactory))
                 .build();
     }
 
     private static List<SmallVariant> create(
             DriverSource sampleType, List<PurpleVariant> variants, List<PurpleDriver> drivers,
             @Nullable ClinicalTranscriptsModel clinicalTranscriptsModel,
-            Map<String, DriverGene> driverGeneMap)
+            Map<String, DriverGene> driverGeneMap,
+            EventFactory eventFactory)
     {
         List<SmallVariant> entries = new ArrayList<>();
         for(PurpleVariant variant : variants)
@@ -72,7 +74,7 @@ final class SmallVariantFactory
                 PurpleDriver driver = Drivers.canonicalMutationEntryForGene(drivers, variant.gene());
                 if(driver != null)
                 {
-                    entries.add(toSmallVariant(variant, driver, sampleType, clinicalTranscriptsModel, driverGeneMap));
+                    entries.add(toSmallVariant(variant, driver, sampleType, clinicalTranscriptsModel, driverGeneMap, eventFactory));
                 }
             }
         }
@@ -82,7 +84,7 @@ final class SmallVariantFactory
             List<PurpleVariant> nonCanonicalVariants = findReportedVariantsForDriver(variants, nonCanonicalDriver);
             for(PurpleVariant nonCanonicalVariant : nonCanonicalVariants)
             {
-                entries.add(toSmallVariant(nonCanonicalVariant, nonCanonicalDriver, sampleType, clinicalTranscriptsModel, driverGeneMap));
+                entries.add(toSmallVariant(nonCanonicalVariant, nonCanonicalDriver, sampleType, clinicalTranscriptsModel, driverGeneMap, eventFactory));
             }
         }
         entries.sort(SmallVariant.COMPARATOR);
@@ -91,7 +93,7 @@ final class SmallVariantFactory
 
     private static SmallVariant toSmallVariant(PurpleVariant variant, PurpleDriver driver,
             DriverSource sampleType, @Nullable ClinicalTranscriptsModel clinicalTranscriptsModel,
-            Map<String, DriverGene> driverGeneMap)
+            Map<String, DriverGene> driverGeneMap, EventFactory eventFactory)
     {
         PurpleTranscriptImpact transcriptImpact;
 
@@ -117,6 +119,7 @@ final class SmallVariantFactory
         return SmallVariantBuilder.builder()
                 .driver(DriverFieldsBuilder.builder()
                         .findingKey(FindingKeys.smallVariant(sampleType, variant, transcriptImpact, isCanonical))
+                        .event(eventFactory.variantEvent(variant))
                         .driverSource(sampleType)
                         .reportedStatus(reportedStatus)
                         .driverInterpretation(driverInterpretation)
