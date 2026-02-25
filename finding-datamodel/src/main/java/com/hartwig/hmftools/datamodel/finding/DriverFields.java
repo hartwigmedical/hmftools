@@ -15,4 +15,8 @@ public record DriverFields(
         double driverLikelihood
 )
 {
+    boolean isReported()
+    {
+        return reportedStatus == ReportedStatus.REPORTED;
+    }
 }

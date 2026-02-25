@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.datamodel.finding;
 
+import java.util.Set;
+
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.driver.DriverSource;
 import com.hartwig.hmftools.datamodel.virus.VirusBreakendQCStatus;
@@ -54,5 +56,17 @@ public record Virus(
     public double driverLikelihood()
     {
         return driver.driverLikelihood();
+    }
+
+    @Override
+    public boolean isReported()
+    {
+        return driver.isReported();
+    }
+
+    @Override
+    public Set<String> genes()
+    {
+        return Set.of();
     }
 }

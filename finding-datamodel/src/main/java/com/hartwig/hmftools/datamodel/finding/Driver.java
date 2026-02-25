@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.datamodel.finding;
 
+import java.util.Set;
+
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.driver.DriverSource;
 
@@ -14,4 +16,8 @@ public interface Driver extends Finding
     @NotNull DriverInterpretation driverInterpretation();
 
     double driverLikelihood();
+
+    boolean isReported();
+
+    Set<String> genes();
 }

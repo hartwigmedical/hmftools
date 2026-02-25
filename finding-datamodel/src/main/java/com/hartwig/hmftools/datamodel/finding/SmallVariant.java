@@ -102,6 +102,18 @@ public record SmallVariant(
         return driver.driverLikelihood();
     }
 
+    @Override
+    public boolean isReported()
+    {
+        return driver.isReported();
+    }
+
+    @Override
+    public Set<String> genes()
+    {
+        return Set.of(gene());
+    }
+
     public double clonalLikelihood()
     {
         return 1 - subclonalLikelihood;

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.datamodel.finding;
 
+import java.util.Set;
+
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.driver.DriverSource;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
@@ -78,6 +80,18 @@ public record Disruption(
     public DriverInterpretation driverInterpretation()
     {
         return driver.driverInterpretation();
+    }
+
+    @Override
+    public boolean isReported()
+    {
+        return driver.isReported();
+    }
+
+    @Override
+    public Set<String> genes()
+    {
+        return Set.of(gene());
     }
 
     @Override
