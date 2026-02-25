@@ -9,7 +9,8 @@ import jakarta.validation.constraints.NotNull;
 public record HlaAllele(
         @NotNull String findingKey,
         @NotNull String gene,
-        @NotNull String allele,
+        @NotNull String alleleGroup,
+        @NotNull String hlaProtein,
         int germlineCopyNumber,
         @Nullable Double tumorCopyNumber,
         @Nullable Integer refFragments,

@@ -3,6 +3,7 @@ package com.hartwig.hmftools.finding;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.datamodel.finding.*;
@@ -22,6 +23,8 @@ public class HlaAlleleFactory
 {
     private static final Logger LOGGER = LogManager.getLogger(HlaAlleleFactory.class);
 
+    private static final Pattern HLA_REGEX = Pattern.compile("""
+            ^(?<gene>[A-Z]+)\\*(?<alleleGroup>\\d{2}):(?<hlaProtein>\\d{2,3})N?$""");
     private static final String PASS = "PASS";
 
     private HlaAlleleFactory()
@@ -58,11 +61,18 @@ public class HlaAlleleFactory
         {
             LilacAllele lilacAllele = keyMap.getValue().get(0);
 
+            var matcher = HLA_REGEX.matcher(lilacAllele.allele());
+                    //throw IllegalStateException("Can't extract HLA gene, alleleGroup and hlaProtein from ${allele.allele()}")
+            String gene = matcher.group("gene");
+            String alleleGroup = matcher.group("alleleGroup");
+            String hlaProtein = matcher.group("hlaProtein");
+
             // NOTE: the fragment counts are doubled in lilac if an allele is present twice
             HlaAlleleBuilder builder = HlaAlleleBuilder.builder()
                     .findingKey(FindingKeys.hlaAllele(lilacAllele))
-                    .allele(lilacAllele.allele())
-                    .gene(extractHLAGene(lilacAllele.allele()))
+                    .gene(gene)
+                    .alleleGroup(alleleGroup)
+                    .hlaProtein(hlaProtein)
                     .refFragments(hasRef ? lilacAllele.refFragments() : null)
                     .tumorFragments(lilacAllele.tumorFragments())
                     .rnaFragments(hasRna ? lilacAllele.rnaFragments() : null)
