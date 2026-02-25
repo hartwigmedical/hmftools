@@ -5,6 +5,10 @@ final class Doubles
 {
     private static final double EPSILON = 1e-10;
 
+    public static boolean positive(double value) {
+        return greaterThan(value, 0);
+    }
+
     public static boolean equal(double first, double second)
     {
         return Math.abs(first - second) < EPSILON;

@@ -14,6 +14,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 
+import jakarta.validation.constraints.NotNull;
+
 // lilac shows two copies of HLA alleles even if they are the
 // same allele. This class combine the alleles and sum the copies
 public class HlaAlleleFactory
@@ -68,7 +70,8 @@ public class HlaAlleleFactory
                     .somaticNonsenseOrFrameshift(lilacAllele.somaticNonsenseOrFrameshift())
                     .somaticSplice(lilacAllele.somaticSplice())
                     .somaticSynonymous(lilacAllele.somaticSynonymous())
-                    .somaticInframeIndel(lilacAllele.somaticInframeIndel());
+                    .somaticInframeIndel(lilacAllele.somaticInframeIndel())
+                    .hasSomaticVariants(hasSomaticMutations(lilacAllele));
 
             if(keyMap.getValue().size() == 1)
             {
@@ -117,5 +120,11 @@ public class HlaAlleleFactory
             LOGGER.warn("Unknown HLA gene name '{}' present! ", allele);
             return Strings.EMPTY;
         }
+    }
+
+    static boolean hasSomaticMutations(@NotNull LilacAllele allele)
+    {
+        return Doubles.positive(allele.somaticMissense()) || Doubles.positive(allele.somaticNonsenseOrFrameshift()) || Doubles.positive(
+                allele.somaticSplice()) || Doubles.positive(allele.somaticInframeIndel());
     }
 }

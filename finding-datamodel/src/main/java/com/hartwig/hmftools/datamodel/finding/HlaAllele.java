@@ -19,7 +19,8 @@ public record HlaAllele(
         double somaticNonsenseOrFrameshift,
         double somaticSplice,
         double somaticSynonymous,
-        double somaticInframeIndel
+        double somaticInframeIndel,
+        boolean hasSomaticVariants
 ) implements Finding
 {
 }
