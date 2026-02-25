@@ -15,6 +15,7 @@ public class PlotMetadata
     public static final String FIELD_PLOT_LABEL = "PlotLabel";
     public static final String FIELD_NUMBER_FORMAT = "NumberFormat";
     public static final String FIELD_QC_STATUS = "QcStatus";
+    public static final String FIELD_QC_THRESHOLD = "QcThreshold";
 
     public PlotMetadata(String featureGroup, String plotLabel, NumberFormat numberFormat, QcStatus qcStatus)
     {
@@ -39,16 +40,26 @@ public class PlotMetadata
 
         builder.add(FIELD_FEATURE_GROUP, mFeatureGroup);
         builder.add(FIELD_PLOT_LABEL, mPlotLabel);
-        builder.add(FIELD_NUMBER_FORMAT, mNumberFormat.toString());
-        builder.add(FIELD_QC_STATUS, getFormattedQcStatus());
+        builder.add(FIELD_NUMBER_FORMAT, getNumberFormatString());
+        builder.add(FIELD_QC_STATUS, getQcStatusString());
+        builder.add(FIELD_QC_THRESHOLD, getQcThresholdString());
 
         return builder.toString();
     }
 
-    private String getFormattedQcStatus()
+    private String getNumberFormatString()
     {
-        QcStatusType qcStatusType = mQcStatus.type();
-        if(qcStatusType == QcStatusType.NONE)
+        return mNumberFormat == null ? "" : mNumberFormat.toString();
+    }
+
+    private String getQcStatusString()
+    {
+        return mQcStatus.type() == QcStatusType.NONE ? "" : mQcStatus.type().toString();
+    }
+
+    private String getQcThresholdString()
+    {
+        if(mQcStatus.type() == QcStatusType.NONE)
             return "";
 
         double thresholdValue = mQcStatus.threshold();
@@ -66,14 +77,14 @@ public class PlotMetadata
         if(isPercent)
             thresholdString = thresholdString + "%";
 
-        return qcStatusType + " " + mQcStatus.operator().operatorString() + thresholdString;
+        return mQcStatus.operator().operatorString() + thresholdString;
     }
 
     public static class Builder
     {
         private String mFeatureGroup = "";
         private String mPlotLabel = "";
-        private NumberFormat mNumberFormat = NumberFormat.NUMBER;
+        private NumberFormat mNumberFormat = null;
         private QcStatus mQcStatus = QcStatus.createEmpty();
 
         public Builder featureGroup(String featureGroup)

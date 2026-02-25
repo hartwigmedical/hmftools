@@ -720,6 +720,19 @@ get_div_lines <- function(n_table_rows, direction = "horizontal"){
    }
 }
 
+get_qc_status_enums <- function(qc_status_strings){
+   #qc_status_strings = SUMMARY_TABLE_DATA$QcStatus
+   qc_status_strings <- as.character(qc_status_strings)
+   
+   qc_status_enums <- dplyr::case_when(
+      startsWith(qc_status_strings, QC_STATUS$FAIL$name) ~ QC_STATUS$FAIL$name,
+      startsWith(qc_status_strings, QC_STATUS$WARN$name) ~ QC_STATUS$WARN$name,
+      .default = QC_STATUS$PASS$name
+   )
+   
+   factor(qc_status_enums, sapply(QC_STATUS, `[[`, "name"))
+}
+
 plot_sub_table <- function(plot_data, show_title = FALSE, show_sample_type_label = FALSE, axis_limits = c(NA, NA)){
 
    if(FALSE){
@@ -752,13 +765,7 @@ plot_sub_table <- function(plot_data, show_title = FALSE, show_sample_type_label
    
    ## Prep data
    plot_data <- plot_data %>% dplyr::mutate(
-      
-      QcStatus = as.character(QcStatus),
-      QcStatusEnum = case_when(
-         startsWith(QcStatus, QC_STATUS$FAIL$name) ~ QC_STATUS$FAIL$name,
-         startsWith(QcStatus, QC_STATUS$WARN$name) ~ QC_STATUS$WARN$name,
-         .default = QC_STATUS$PASS$name
-      ),
+      QcStatusEnum = get_qc_status_enums(QcStatus),
       QcStatusEnum = factor(QcStatusEnum, sapply(QC_STATUS, `[[`, "name"))
    )
    
@@ -983,30 +990,47 @@ PLOTS[[PLOT_NAME_LEGEND]] <- local({
 
 REPORT_TITLE <- local({
    
-   get_qc_string <- function(sample_type){
-      
+   qc_status_enums <- get_qc_status_enums(SUMMARY_TABLE_DATA$QcStatus)
+   
+   form_qc_string <- function(qc_status_level, sample_type){
       df <- SUMMARY_TABLE_DATA %>% filter(
          SampleType == sample_type$name & 
-         nchar(as.character(QcStatus)) != 0
+         qc_status_enums == qc_status_level$name
       )
       
       if(nrow(df) == 0)
          return(character())
       
-      qc_string <- sprintf("[%s: %s]", df$PlotLabel, df$QcStatus) %>% paste(collapse = ", ")
-      qc_string <- paste0(sample_type$human_readable_name, " QC status: ", qc_string)
-      return(qc_string)
+      paste0(
+         qc_status_level$name, ": ",
+         sprintf("%s (%s)", df$PlotLabel, df$QcThreshold) %>% paste(collapse = ", ")
+      )
+   }
+   
+   form_sample_type_qc_string <- function(sample_type){
+      qc_strings <- c(
+         form_qc_string(QC_STATUS$FAIL, sample_type),
+         form_qc_string(QC_STATUS$WARN, sample_type)
+      )
+      
+      if(length(qc_strings) == 0){
+         return(character())
+      }
+      
+      paste(c(sample_type$human_readable_name, qc_strings), collapse = " - ")
    }
    
    qc_strings <- c(
-      get_qc_string(SAMPLE_TYPE$TUMOR), 
-      get_qc_string(SAMPLE_TYPE$NORMAL)
+      form_sample_type_qc_string(SAMPLE_TYPE$TUMOR),
+      form_sample_type_qc_string(SAMPLE_TYPE$NORMAL)
    )
-   
    subtitle <- if(length(qc_strings) > 0) paste(qc_strings, collapse = "\n") else waiver()
    
+   most_severe_qc_status <- qc_status_enums %>% sort() %>% head(1)
+   title <- paste0(TUMOR_ID, ": ", most_severe_qc_status)
+   
    patchwork::plot_annotation(
-      title = TUMOR_ID,
+      title = title,
       subtitle = subtitle,
       theme = theme(plot.title = element_text(size = 16, face = "bold"))
    )
