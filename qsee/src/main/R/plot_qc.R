@@ -287,262 +287,6 @@ plot_missing_data <- function(plot_labels = labs()){
 }
 
 ## =============================
-## Box plots
-## =============================
-
-plot_pairwise_comparison <- function(
-   plot_data, x, y = "FeatureValue", plot_type = "boxplot", 
-   hlines = NULL, vlines = NULL, boxplot_width_scale = 1
-){
-   
-   if(FALSE){
-      plot_type = "boxplot"
-      hlines = NULL
-      vlines = NULL
-      
-      x = "OriginalQualBin"
-      y = "FeatureValue"
-
-      plot_data <- get_plot_data(FEATURE_TYPE$BQR_BY_ORIG_QUAL)
-      gg_facet <- facet_grid("ReadType ~ StandardMutation")
-   }
-   
-   if(is.null(plot_data)){
-      LOGGER$error("Box plot failed - empty data frame")
-   }
-   
-   sample_type_colors <- sapply(SAMPLE_TYPE, `[[`, "color")
-   gg_position_dodge <- position_dodge(width = 0.5, preserve = "single")
-   
-   geom_sample <- geom_blank()
-   geom_cohort <- geom_blank()
-   
-   if(plot_type == "boxplot"){
-      geom_sample <- geom_point(shape = 21, position = gg_position_dodge, size = 1.8)
-      
-      geom_cohort <- geom_boxplot(
-         aes(ymin = PctMin, lower = PctLower, middle = PctMid, upper = PctUpper, ymax = PctMax),
-         position = gg_position_dodge, width = 0.4 * boxplot_width_scale,
-         stat = "identity", alpha = 0.3, size = 0.25, color = "grey70"
-      )
-   } else if(plot_type == "pointrange") {
-      geom_sample <- geom_point(
-         aes(color = SampleType), 
-         shape = 21, position = gg_position_dodge, size = 0.8
-      )
-      
-      geom_cohort <- geom_linerange(
-         aes(color = SampleType, ymin = PctMin, ymax = PctMax),
-         position = gg_position_dodge, linewidth = 0.3, linetype = "11"
-      )
-   } else {
-      LOGGER$error("`plot_type` must be 'boxplot' or 'pointrange'")
-   }
-   
-   ggplot(plot_data, aes(x = .data[[x]], y = .data[[y]], fill = SampleType)) + 
-      
-      { if(!is.null(hlines)) geom_hline(linewidth = 0.25, color = "grey70", yintercept = hlines) } +
-      { if(!is.null(vlines)) geom_vline(linewidth = 0.25, color = "grey70", xintercept = vlines) } +
-      
-      geom_cohort +
-      geom_sample +
-      
-      scale_fill_manual(values = sample_type_colors, drop = FALSE) +
-      scale_color_manual(values = sample_type_colors, drop = FALSE) +
-      
-      # gg_facet +
-      
-      theme(
-         panel.grid.minor = element_blank(),
-         panel.grid.major = element_blank(),
-         panel.spacing.x = unit(-0.5, "pt"),
-         axis.text.y.right = element_blank(),
-         axis.ticks.y.right = element_blank(),
-         legend.position = "none"
-      )
-}
-
-PLOTS[[FEATURE_TYPE$DUPLICATE_FREQ]] <- local({
-   
-   plot_data <- get_plot_data(FEATURE_TYPE$DUPLICATE_FREQ)
-   
-   plot_labels <- labs(title = "Duplicate frequency", x = "Duplicate read count", y = "Prop. of read groups")
-   
-   if(is.null(plot_data)){
-      return(plot_missing_data(plot_labels))
-   }
-   
-   plot_data <- plot_data %>% dplyr::mutate(ReadCount = reverse_levels(ReadCount))
-   
-   plot_pairwise_comparison(plot_data, x = "ReadCount") +
-      plot_labels +
-      coord_flip() +
-      theme(
-         panel.grid.major.x = element_line(color = "grey90", linewidth = 0.25),
-      )
-})
-
-PLOTS[[FEATURE_TYPE$DISCORDANT_FRAG_FREQ]] <- local({
-   
-   plot_data <- get_plot_data(FEATURE_TYPE$DISCORDANT_FRAG_FREQ)
-   
-   plot_labels <- labs(
-      title = "Discordant fragment frequency", 
-      x = "Discordant fragment type", 
-      y = "Prop. of reads"
-   )
-   
-   if(is.null(plot_data)){
-      return(plot_missing_data(plot_labels))
-   }
-   
-   plot_data <- plot_data %>% dplyr::mutate(DiscordantFragType = reverse_levels(DiscordantFragType))
-   
-   plot_pairwise_comparison(plot_data, x = "DiscordantFragType") + 
-      scale_y_continuous(
-         transform = "log10",
-         labels = function(x) format(x, scientific = FALSE, drop0trailing = TRUE, trim = TRUE)
-      ) +
-      plot_labels +
-      coord_flip() +
-      theme(
-         panel.grid.major.x = element_line(color = "grey90", linewidth = 0.25),
-      )
-})
-
-PLOTS[[FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD]] <- local({
-   
-   plot_data <- get_plot_data(FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD)
-   
-   MIN_MISSED_VARIANT_LIKELIHOOD <- 0.01
-   TOP_N_GENES <- 20
-   
-   plot_labels <- labs(
-      title = sprintf("Genes (top %s) with potential missed variants (P>%s)", TOP_N_GENES, MIN_MISSED_VARIANT_LIKELIHOOD),
-      x = "Gene", 
-      y = "Missed variant likelihood"
-   )
-   
-   if(is.null(plot_data)){
-      return(plot_missing_data(plot_labels))
-   }
-   
-   sample_genes_of_interest <- plot_data %>% 
-      dplyr::filter(
-         FeatureValue >= MIN_MISSED_VARIANT_LIKELIHOOD | 
-         PctMid >= MIN_MISSED_VARIANT_LIKELIHOOD
-      ) %>%
-      dplyr::arrange(-FeatureValue) %>%
-      dplyr::pull(Gene) %>% 
-      unique() %>% 
-      head(TOP_N_GENES)
-   
-   plot_data <- plot_data %>% 
-      dplyr::filter(Gene %in% sample_genes_of_interest) %>% 
-      dplyr::mutate(Gene = factor(Gene, sample_genes_of_interest)) %>%
-      dplyr::mutate(Gene = reverse_levels(Gene))
-   
-   plot_pairwise_comparison(plot_data, x = "Gene") + 
-      plot_labels +
-      coord_flip(ylim = c(0, NA)) +
-      theme(plot.title = element_text(hjust = 0.5))
-})
-
-PLOTS[[FEATURE_TYPE$BQR_BY_ORIG_QUAL]] <- local({
-   
-   plot_data <- get_plot_data(FEATURE_TYPE$BQR_BY_ORIG_QUAL)
-   
-   plot_labels <- labs(
-      title = "BQR by original base quality", 
-      x = "Original base quality", 
-      y = "Phred score adjustment"
-   )
-   
-   if(is.null(plot_data)){
-      return(plot_missing_data(plot_labels))
-   }
-   
-   plot_pairwise_comparison(plot_data, x = "OriginalQualBin", hlines = 0) +
-      facet_grid("ReadType ~ StandardMutation") +
-      scale_y_continuous(
-         labels = function(x){ ifelse(x > 0, paste0("+",x), x) },
-         sec.axis = dup_axis(name = "Consensus type")
-      ) +
-      plot_labels + 
-      theme(
-         axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1, size = 7),
-      )
-})
-
-PLOTS[[FEATURE_TYPE$BQR_BY_SNV96_CONTEXT]] <- local({
-   
-   plot_data <- get_plot_data(FEATURE_TYPE$BQR_BY_SNV96_CONTEXT)
-   
-   plot_labels <- labs(title = "BQR by SNV96 context", x = "Mutation context", y = "Phred score adjustment")
-   
-   if(nrow(plot_data) > 0){
-      plot_labels$title <- paste0(plot_labels$title, ", base quality: ", plot_data$OriginalQualBin[1])
-   }
-   
-   plot_pairwise_comparison(
-      plot_data, x = "StandardTrinucContext", plot_type = "pointrange", 
-      hlines = 0, vlines = c(4, 8, 12) + 0.5
-   ) +
-      facet_grid("ReadType ~ StandardMutation", scales = "free_x") +
-      scale_y_continuous(
-         labels = function(x){ ifelse(x > 0, paste0("+",x), x) },
-         sec.axis = dup_axis(name = "Consensus type")
-      ) +
-      plot_labels +
-      theme(
-         axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, size = 6),
-      )
-})
-
-PLOTS[[FEATURE_TYPE$MS_INDEL_ERROR_RATES]] <- local({
-   
-   plot_data <- get_plot_data(FEATURE_TYPE$MS_INDEL_ERROR_RATES)
-   
-   plot_labels <- labs(title = "Microsatellite indel error rates", x = "Repeat units", y = "Phred score") 
-   
-   plot_pairwise_comparison(plot_data, x = "RefNumUnits", plot_type = "pointrange") +
-      facet_grid("ConsensusType ~ RepeatUnitType") +
-      scale_x_discrete(breaks = function(x) ifelse(as.numeric(x) %% 3 == 0, x, "") ) +
-      scale_y_continuous(limits = c(0, NA), sec.axis = dup_axis(name = "Consensus type")) +
-      plot_labels +
-      theme(
-         panel.grid.major = element_line(color = "grey90", linewidth = 0.25)
-      )
-})
-
-PLOTS[[FEATURE_TYPE$MS_INDEL_ERROR_BIAS]] <- local({
-   
-   plot_data <- get_plot_data(FEATURE_TYPE$MS_INDEL_ERROR_BIAS)
-   
-   plot_labels <- labs(
-      title = "Microsatellite indel error bias",
-      x = "Repeat units",
-      y = expression(atop("Phred score diff.",atop("more del. errors <-> more ins. errors")))
-   )
-   
-   if(is.null(plot_data)){
-      return(plot_missing_data(plot_labels))
-   }
-   
-   plot_pairwise_comparison(plot_data, x = "RefNumUnits", plot_type = "pointrange") +
-      facet_grid("ConsensusType ~ RepeatUnitType") +
-      scale_x_discrete(breaks = function(x) ifelse(as.numeric(x) %% 3 == 0, x, "") ) +
-      scale_y_continuous(
-         labels = function(x){ ifelse(x > 0, paste0("+",x), x) },
-         sec.axis = dup_axis(name = "Consensus type")
-      ) +
-      plot_labels +
-      theme(
-         panel.grid.major = element_line(color = "grey90", linewidth = 0.25)
-      )
-})
-
-## =============================
 ## Line / PDF
 ## =============================
 
@@ -558,7 +302,7 @@ plot_distribution <- function(plot_data, x, invert_normal = FALSE, mark_sample_p
    }
    
    plot_data[[x]] <- as.numeric(plot_data[[x]])
-
+   
    gg_scale_y_continuous <- geom_blank()
    sample_type_count <- plot_data$SampleType %>% levels() %>% length()
    if(invert_normal && sample_type_count > 1){
@@ -655,6 +399,250 @@ PLOTS[[FEATURE_TYPE$GC_BIAS]] <- local({
    
    plot_distribution(plot_data, x = "GCBucket", mark_sample_peak = FALSE, invert_normal = FALSE) +
       plot_labels
+})
+
+## =============================
+## Box plots
+## =============================
+
+plot_pairwise_comparison <- function(plot_data, x, y = "FeatureValue", plot_type = "boxplot", hlines = NULL, vlines = NULL, boxplot_width_scale = 1){
+   
+   if(FALSE){
+      plot_type = "boxplot"
+      hlines = NULL
+      vlines = NULL
+      
+      x = "OriginalQualBin"
+      y = "FeatureValue"
+
+      plot_data <- get_plot_data(FEATURE_TYPE$BQR_BY_ORIG_QUAL)
+      gg_facet <- facet_grid("ReadType ~ StandardMutation")
+   }
+   
+   if(is.null(plot_data)){
+      LOGGER$error("Box plot failed - empty data frame")
+   }
+   
+   sample_type_colors <- sapply(SAMPLE_TYPE, `[[`, "color")
+   gg_position_dodge <- position_dodge(width = 0.5, preserve = "single")
+   
+   geom_sample <- geom_blank()
+   geom_cohort <- geom_blank()
+   
+   if(plot_type == "boxplot"){
+      geom_sample <- geom_point(shape = 21, position = gg_position_dodge, size = 1.8)
+      
+      geom_cohort <- geom_boxplot(
+         aes(ymin = PctMin, lower = PctLower, middle = PctMid, upper = PctUpper, ymax = PctMax),
+         position = gg_position_dodge, width = 0.4 * boxplot_width_scale,
+         stat = "identity", alpha = 0.3, size = 0.25, color = "grey70"
+      )
+   } else if(plot_type == "pointrange") {
+      geom_sample <- geom_point(
+         aes(color = SampleType), 
+         shape = 21, position = gg_position_dodge, size = 0.8
+      )
+      
+      geom_cohort <- geom_linerange(
+         aes(color = SampleType, ymin = PctMin, ymax = PctMax),
+         position = gg_position_dodge, linewidth = 0.3, linetype = "11"
+      )
+   } else {
+      LOGGER$error("`plot_type` must be 'boxplot' or 'pointrange'")
+   }
+   
+   ggplot(plot_data, aes(x = .data[[x]], y = .data[[y]], fill = SampleType)) + 
+      
+      { if(!is.null(hlines)) geom_hline(linewidth = 0.25, color = "grey70", yintercept = hlines) } +
+      { if(!is.null(vlines)) geom_vline(linewidth = 0.25, color = "grey70", xintercept = vlines) } +
+      
+      geom_cohort +
+      geom_sample +
+      
+      scale_fill_manual(values = sample_type_colors, drop = FALSE) +
+      scale_color_manual(values = sample_type_colors, drop = FALSE) +
+      
+      # gg_facet +
+      
+      theme(
+         panel.grid.minor = element_blank(),
+         panel.grid.major = element_blank(),
+         panel.spacing.x = unit(-0.5, "pt"),
+         axis.text.y.right = element_blank(),
+         axis.ticks.y.right = element_blank(),
+         legend.position = "none"
+      )
+}
+
+PLOTS[[FEATURE_TYPE$DUPLICATE_FREQ]] <- local({
+   
+   plot_data <- get_plot_data(FEATURE_TYPE$DUPLICATE_FREQ)
+   
+   plot_labels <- labs(title = "Duplicate frequency", x = "Duplicate read count", y = "Prop. of read groups")
+   
+   if(is.null(plot_data)){
+      return(plot_missing_data(plot_labels))
+   }
+   
+   plot_data <- plot_data %>% dplyr::mutate(ReadCount = reverse_levels(ReadCount))
+   
+   plot_pairwise_comparison(plot_data, x = "ReadCount") +
+      plot_labels +
+      coord_flip() +
+      theme(
+         panel.grid.major.x = element_line(color = "grey90", linewidth = 0.25),
+      )
+})
+
+PLOTS[[FEATURE_TYPE$DISCORDANT_FRAG_FREQ]] <- local({
+   
+   plot_data <- get_plot_data(FEATURE_TYPE$DISCORDANT_FRAG_FREQ)
+   
+   plot_labels <- labs(title = "Discordant fragment frequency", x = "Discordant fragment type", y = "Prop. of reads")
+   
+   if(is.null(plot_data)){
+      return(plot_missing_data(plot_labels))
+   }
+   
+   plot_data <- plot_data %>% dplyr::mutate(DiscordantFragType = reverse_levels(DiscordantFragType))
+   
+   plot_pairwise_comparison(plot_data, x = "DiscordantFragType") + 
+      scale_y_continuous(
+         transform = "log10",
+         labels = function(x) format(x, scientific = FALSE, drop0trailing = TRUE, trim = TRUE)
+      ) +
+      plot_labels +
+      coord_flip() +
+      theme(
+         panel.grid.major.x = element_line(color = "grey90", linewidth = 0.25),
+      )
+})
+
+PLOTS[[FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD]] <- local({
+   
+   plot_data <- get_plot_data(FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD)
+   
+   MIN_MISSED_VARIANT_LIKELIHOOD <- 0.01
+   TOP_N_GENES <- 20
+   
+   plot_labels <- labs(
+      title = sprintf("Genes (top %s) with potential missed variants (P>%s)", TOP_N_GENES, MIN_MISSED_VARIANT_LIKELIHOOD),
+      x = "Gene", y = "Missed variant likelihood"
+   )
+   
+   if(is.null(plot_data)){
+      return(plot_missing_data(plot_labels))
+   }
+   
+   sample_genes_of_interest <- plot_data %>% 
+      dplyr::filter(
+         FeatureValue >= MIN_MISSED_VARIANT_LIKELIHOOD | 
+         PctMid >= MIN_MISSED_VARIANT_LIKELIHOOD
+      ) %>%
+      dplyr::arrange(-FeatureValue) %>%
+      dplyr::pull(Gene) %>% 
+      unique() %>% 
+      head(TOP_N_GENES)
+   
+   plot_data <- plot_data %>% 
+      dplyr::filter(Gene %in% sample_genes_of_interest) %>% 
+      dplyr::mutate(Gene = factor(Gene, sample_genes_of_interest)) %>%
+      dplyr::mutate(Gene = reverse_levels(Gene))
+   
+   plot_pairwise_comparison(plot_data, x = "Gene") + 
+      plot_labels +
+      coord_flip(ylim = c(0, NA)) +
+      theme(plot.title = element_text(hjust = 0.5))
+})
+
+PLOTS[[FEATURE_TYPE$BQR_BY_ORIG_QUAL]] <- local({
+   
+   plot_data <- get_plot_data(FEATURE_TYPE$BQR_BY_ORIG_QUAL)
+   
+   plot_labels <- labs(title = "BQR by original base quality", x = "Original base quality", y = "Phred score adjustment")
+   
+   if(is.null(plot_data)){
+      return(plot_missing_data(plot_labels))
+   }
+   
+   plot_pairwise_comparison(plot_data, x = "OriginalQualBin", hlines = 0) +
+      facet_grid("ReadType ~ StandardMutation") +
+      scale_y_continuous(
+         labels = function(x){ ifelse(x > 0, paste0("+",x), x) },
+         sec.axis = dup_axis(name = "Consensus type")
+      ) +
+      plot_labels + 
+      theme(
+         axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1, size = 7),
+      )
+})
+
+PLOTS[[FEATURE_TYPE$BQR_BY_SNV96_CONTEXT]] <- local({
+   
+   plot_data <- get_plot_data(FEATURE_TYPE$BQR_BY_SNV96_CONTEXT)
+   
+   plot_labels <- labs(title = "BQR by SNV96 context", x = "Mutation context", y = "Phred score adjustment")
+   
+   if(nrow(plot_data) > 0){
+      plot_labels$title <- paste0(plot_labels$title, ", base quality: ", plot_data$OriginalQualBin[1])
+   }
+   
+   plot_pairwise_comparison(
+      plot_data, x = "StandardTrinucContext", plot_type = "pointrange", 
+      hlines = 0, vlines = c(4, 8, 12) + 0.5
+   ) +
+      facet_grid("ReadType ~ StandardMutation", scales = "free_x") +
+      scale_y_continuous(
+         labels = function(x){ ifelse(x > 0, paste0("+",x), x) },
+         sec.axis = dup_axis(name = "Consensus type")
+      ) +
+      plot_labels +
+      theme(
+         axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, size = 6),
+      )
+})
+
+PLOTS[[FEATURE_TYPE$MS_INDEL_ERROR_RATES]] <- local({
+   
+   plot_data <- get_plot_data(FEATURE_TYPE$MS_INDEL_ERROR_RATES)
+   
+   plot_labels <- labs(title = "Microsatellite indel error rates", x = "Repeat units", y = "Phred score") 
+   
+   plot_pairwise_comparison(plot_data, x = "RefNumUnits", plot_type = "pointrange") +
+      facet_grid("ConsensusType ~ RepeatUnitType") +
+      scale_x_discrete(breaks = function(x) ifelse(as.numeric(x) %% 3 == 0, x, "") ) +
+      scale_y_continuous(limits = c(0, NA), sec.axis = dup_axis(name = "Consensus type")) +
+      plot_labels +
+      theme(
+         panel.grid.major = element_line(color = "grey90", linewidth = 0.25)
+      )
+})
+
+PLOTS[[FEATURE_TYPE$MS_INDEL_ERROR_BIAS]] <- local({
+   
+   plot_data <- get_plot_data(FEATURE_TYPE$MS_INDEL_ERROR_BIAS)
+   
+   plot_labels <- labs(
+      title = "Microsatellite indel error bias",
+      x = "Repeat units",
+      y = expression(atop("Phred score diff.",atop("more del. errors <-> more ins. errors")))
+   )
+   
+   if(is.null(plot_data)){
+      return(plot_missing_data(plot_labels))
+   }
+   
+   plot_pairwise_comparison(plot_data, x = "RefNumUnits", plot_type = "pointrange") +
+      facet_grid("ConsensusType ~ RepeatUnitType") +
+      scale_x_discrete(breaks = function(x) ifelse(as.numeric(x) %% 3 == 0, x, "") ) +
+      scale_y_continuous(
+         labels = function(x){ ifelse(x > 0, paste0("+",x), x) },
+         sec.axis = dup_axis(name = "Consensus type")
+      ) +
+      plot_labels +
+      theme(
+         panel.grid.major = element_line(color = "grey90", linewidth = 0.25)
+      )
 })
 
 ## =============================
