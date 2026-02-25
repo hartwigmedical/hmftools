@@ -165,7 +165,7 @@ PLOTS <- list()
 ## String functions
 ## =============================
 
-KEY_VALUE_SEP <- "="
+KEY_VALUE_SEP <- ":"
 GROUP_SEP <- ";"
 
 df_to_strings <- function(df, key_value_sep = KEY_VALUE_SEP, group_sep = GROUP_SEP){

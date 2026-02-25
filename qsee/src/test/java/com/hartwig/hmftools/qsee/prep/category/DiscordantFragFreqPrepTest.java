@@ -61,7 +61,7 @@ public class DiscordantFragFreqPrepTest
 
     private static Feature createExpectedFeature(DiscordantFragGroup discordantFragGroup)
     {
-        String featureName = FIELD_FRAG_TYPE + "=" + discordantFragGroup.toString();
+        String featureName = FIELD_FRAG_TYPE + ":" + discordantFragGroup.toString();
         double featureValue = TYPES_PER_GROUP.get(discordantFragGroup) * DUMMY_BASE_PROPORTION;
 
         return new Feature(featureName, featureValue, FeatureType.DISCORDANT_FRAG_FREQ, SourceTool.ESVEE, null);

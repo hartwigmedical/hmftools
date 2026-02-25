@@ -119,7 +119,7 @@ public class MsIndelErrorPrep implements CategoryPrep
             return "2bp repeat";
 
         else if(repeatUnit.matches("^\\d+bp repeat"))
-            return "≥3bp repeat";
+            return ">=3bp repeat";
 
         else
             throw new IllegalArgumentException("Unexpected repeat unit: " + repeatUnit);
