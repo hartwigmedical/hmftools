@@ -292,7 +292,7 @@ plot_missing_data <- function(plot_labels = labs()){
 
 plot_pairwise_comparison <- function(
    plot_data, x, y = "FeatureValue", plot_type = "boxplot", 
-   hlines = NULL, vlines = NULL
+   hlines = NULL, vlines = NULL, boxplot_width_scale = 1
 ){
    
    if(FALSE){
@@ -312,7 +312,7 @@ plot_pairwise_comparison <- function(
    }
    
    sample_type_colors <- sapply(SAMPLE_TYPE, `[[`, "color")
-   gg_position_dodge <- position_dodge(width = 0.5)
+   gg_position_dodge <- position_dodge(width = 0.5, preserve = "single")
    
    geom_sample <- geom_blank()
    geom_cohort <- geom_blank()
@@ -322,7 +322,7 @@ plot_pairwise_comparison <- function(
       
       geom_cohort <- geom_boxplot(
          aes(ymin = PctMin, lower = PctLower, middle = PctMid, upper = PctUpper, ymax = PctMax),
-         position = gg_position_dodge, width = 0.4,
+         position = gg_position_dodge, width = 0.4 * boxplot_width_scale,
          stat = "identity", alpha = 0.3, size = 0.25, color = "grey70"
       )
    } else if(plot_type == "pointrange") {
@@ -347,8 +347,8 @@ plot_pairwise_comparison <- function(
       geom_cohort +
       geom_sample +
       
-      scale_fill_manual(values = sample_type_colors) +
-      scale_color_manual(values = sample_type_colors) +
+      scale_fill_manual(values = sample_type_colors, drop = FALSE) +
+      scale_color_manual(values = sample_type_colors, drop = FALSE) +
       
       # gg_facet +
       
@@ -812,7 +812,10 @@ plot_sub_table <- function(plot_data, show_title = FALSE, show_sample_type_label
       LOGGER$error("Lower axis limit must be >0 for numberFormat(%s)", NUMBER_FORMAT$LOG)
    }
    
-   subplot_boxplot <- plot_pairwise_comparison(plot_data, x = "PlotLabel", y = "FeatureValue") +
+   boxplot_width_scale <- length(unique(plot_data$SampleType)) / length(levels(plot_data$SampleType))
+   
+   subplot_boxplot <- 
+      plot_pairwise_comparison(plot_data, x = "PlotLabel", y = "FeatureValue", boxplot_width_scale = boxplot_width_scale) +
       get_div_lines(n_rows, "vertical") + 
       scale_y_continuous(
          
