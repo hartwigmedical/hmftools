@@ -1,4 +1,20 @@
 
+* ACTIN related
+    * Add sampleId + samplingDate
+    * Add lowPurity flag? (based on purple outfit)
+    * More details on Cuppa that are not in findings model (complete list vs best prediction)
+    * tumor mutational burden / load split
+    * Variant dedup should move into findings?
+    * Difference in matching of drivers?
+    * Something of a gene filter is used for homozygous disruptions? Also fusions
+    * isReported convenience function?
+
+
+* IFindingsList?
+
+(actin datamodel is not public)
+
+* "all" versions is not really consistent as it loses status
 * Handling of CDKN2A/CDKN2A (p16)/CDKN2A (p14ARF) which should also move to the findings model (but could be optional for NL).
 * Shared interface for "GeneFindings"
     * Naming in OncoAct is inconsistent (also in the report). I think it's good to make clear that this is the same thing by using a shared interface
