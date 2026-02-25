@@ -506,7 +506,7 @@ PLOTS[[FEATURE_TYPE$DISCORDANT_FRAG_FREQ]] <- local({
    
    plot_data <- plot_data %>% dplyr::mutate(DiscordantFragType = reverse_levels(DiscordantFragType))
    
-   plot_pairwise_comparison(plot_data, x = "DiscordantFragType") + 
+   plot_pairwise_comparison(plot_data, x = "DisplayName") + 
       scale_y_continuous(
          transform = "log10",
          labels = function(x) format(x, scientific = FALSE, drop0trailing = TRUE, trim = TRUE)
