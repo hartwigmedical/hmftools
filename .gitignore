@@ -32,3 +32,6 @@ patient-db/patient-db-logs/*.log
 
 # Ignore lsp generated files
 .factorypath
+
+# Ignore R files
+.Rhistory
