@@ -112,8 +112,8 @@ public class AssemblyVisualiser
 
     public record SegmentViewModel(Integer breakendId, String chromosome, @Nullable Integer position, BaseRegion refRegion,
                                    BaseRegion viewRegion, BaseRegion refViewRegion, BaseSeqViewModel refViewModel,
-				   boolean isRefReversed, boolean isAssemblyReversed, BaseSeqViewModel assemblyViewModel,
-				   boolean isInsert, int leftDelLength, BaseRegion assemblyRegion) {}
+                                   boolean isRefReversed, boolean isAssemblyReversed, BaseSeqViewModel assemblyViewModel,
+                                   boolean isInsert, int leftDelLength, BaseRegion assemblyRegion) {}
 
     public record PairedSegmentViewModel(List<SegmentViewModel> viewModels, int readStartOffset, int prevBoxWidth) {}
 
@@ -148,7 +148,7 @@ public class AssemblyVisualiser
         }
     }
 
-    public void writeVisFiles()
+    public void writeVisFile()
     {
         String info = mAssemblyAlignment.info();
         String filename = getFilename(info);
@@ -159,18 +159,7 @@ public class AssemblyVisualiser
         DomContent verticalSpacer = div().withStyle(verticalSpacerStyle.toString());
         DomContent variantInfo = renderVariantInfo();
 
-        // TODO(mkcmkc): remove try/catch
-        List<DomContent> readTableRows;
-        try
-        {
-            readTableRows = renderReadTable();
-        }
-        catch(Exception e)
-        {
-            e.printStackTrace();
-            return;
-        }
-
+        List<DomContent> readTableRows = renderReadTable();
         List<DomContent> bodyElements = Lists.newArrayList();
         bodyElements.add(variantInfo);
         bodyElements.add(verticalSpacer);
@@ -345,7 +334,7 @@ public class AssemblyVisualiser
                 sampleSupportInfo.computeIfAbsent("REFPAIR", k -> Lists.newArrayList()).add("TODO");
 
                 sampleSupportInfo.computeIfAbsent("SB", k -> Lists.newArrayList())
-                        .add(format("%.3f", tumorGenotype.getExtendedAttribute("SB")));
+                        .add(format("%.3f", (double) tumorGenotype.getExtendedAttribute("SB")));
                 sampleSupportInfo.computeIfAbsent(SPLIT_FRAGS, k -> Lists.newArrayList()).add(String.valueOf(totalSplitFrags));
             }
         }
@@ -516,22 +505,13 @@ public class AssemblyVisualiser
                 if(read.isSupplementary())
                     continue;
 
-                // TODO(mkcmkc): remove try
-                try
+                for(PairedSegmentViewModel pairedRefEl : mRefViewModel)
                 {
-                    for(PairedSegmentViewModel pairedRefEl : mRefViewModel)
-                    {
-                        ReadViewModel readViewModel = ReadViewModel.create(pairedRefEl, read, assembly, mFullAssemblyStr);
-                        if(readViewModel == null)
-                            continue;
+                    ReadViewModel readViewModel = ReadViewModel.create(pairedRefEl, read, assembly, mFullAssemblyStr);
+                    if(readViewModel == null)
+                        continue;
 
-                        readViewModels.add(readViewModel);
-                    }
-                }
-                catch(Exception e)
-                {
-                    e.printStackTrace();
-                    throw e;
+                    readViewModels.add(readViewModel);
                 }
             }
         }
@@ -710,7 +690,7 @@ public class AssemblyVisualiser
     {
         List<Breakend> breakends = assemblyAlignment.breakends();
 
-        // TODO(mkcmkc): remove
+        // TODO(mkcmkc): handle single breakends?
         if(breakends.stream().anyMatch(Breakend::isSingle))
             throw new RuntimeException("Got a single breakend");
 

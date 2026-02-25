@@ -444,19 +444,18 @@ public class AssemblyApplication
     {
         for(AssemblyAlignment assembly : assemblyAlignments)
         {
-            // TODO(mkcmkc): remove try/catch.
-            AssemblyVisualiser visualiser = null;
+            // TODO(mkcmkc): This try/catch is temporary to catch assemblies where the vis fails
             try
             {
-                visualiser = new AssemblyVisualiser(mConfig, assembly);
+                AssemblyVisualiser visualiser = new AssemblyVisualiser(mConfig, assembly);
+                if(visualiser != null)
+                    visualiser.writeVisFile();
             }
             catch(Exception e)
             {
-                visualiser = null;
+                SV_LOGGER.debug("EsveeVis failed for assemblyAlignments({})", assemblyAlignments.toString());
+                e.printStackTrace();
             }
-
-            if(visualiser != null)
-                visualiser.writeVisFiles();
         }
     }
 

@@ -14,4 +14,5 @@ public final class AssemblyVisConstants
 
     // debug flags
     public static final boolean INDEL_CORRECTION = true;
+    public static final boolean DBG_READ_INFO = false;
 }
