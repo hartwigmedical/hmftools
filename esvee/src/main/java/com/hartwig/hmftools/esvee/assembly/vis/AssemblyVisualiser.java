@@ -127,7 +127,7 @@ public class AssemblyVisualiser
     private final Map<String, Integer> mSampleNameIndex;
     private final Set<String> mTumorIds;
 
-    public AssemblyVisualiser(final AssemblyConfig config, final AssemblyAlignment assemblyAlignment)
+    private AssemblyVisualiser(final AssemblyConfig config, final AssemblyAlignment assemblyAlignment)
     {
         mConfig = config;
         mAssemblyAlignment = assemblyAlignment;
@@ -146,6 +146,16 @@ public class AssemblyVisualiser
             String sampleId = configSampleIds.get(i);
             mSampleNameIndex.put(sampleId, i);
         }
+    }
+
+    @Nullable
+    public static AssemblyVisualiser create(final AssemblyConfig config, final AssemblyAlignment assemblyAlignment)
+    {
+        List<Breakend> breakends = assemblyAlignment.breakends();
+        if(breakends == null || breakends.isEmpty())
+            return null;
+
+        return new AssemblyVisualiser(config, assemblyAlignment);
     }
 
     public void writeVisFile()

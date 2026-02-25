@@ -190,6 +190,9 @@ public final class ReadViewModel
                 for(int i = 0; i < insertLength; i++)
                 {
                     int baseIdx = mismatch.ReadIndex + i * (isBuiltForward ? 1 : -1);
+                    if(!mappedCigarOps.containsKey(baseIdx))
+                        continue;
+
                     mappedCigarOps.get(baseIdx).set(0, I);
                 }
 
@@ -220,6 +223,9 @@ public final class ReadViewModel
                     for(int i = 0; i < insertLength; i++)
                     {
                         int baseIdx = mismatch.ReadIndex + (isBuiltForward ? 0 : 1) + (i + 1) * (isBuiltForward ? 1 : -1);
+                        if(!mappedCigarOps.containsKey(baseIdx))
+                            continue;
+
                         mappedCigarOps.get(baseIdx).set(0, I);
                     }
                 }
@@ -230,8 +236,11 @@ public final class ReadViewModel
                         indelOffset -= delLength;
 
                     int baseIdx = mismatch.ReadIndex - (isBuiltForward ? 0 : 1);
-                    for(int i = 0; i < delLength; i++)
-                        mappedCigarOps.get(baseIdx).add(D);
+                    if(mappedCigarOps.containsKey(baseIdx))
+                    {
+                        for(int i = 0; i < delLength; i++)
+                            mappedCigarOps.get(baseIdx).add(D);
+                    }
                 }
 
                 continue;
@@ -449,7 +458,8 @@ public final class ReadViewModel
         String readName = mSupportRead.id();
         ChrBaseRegion alignment = new ChrBaseRegion(mSupportRead.chromosome(), mSupportRead.alignmentStart(), mSupportRead.alignmentEnd());
         ChrBaseRegion mateAlignment = null;
-        if(!mSupportRead.mateChromosome().equals(NO_CHROMOSOME_NAME))
+        String mateChromosome = mSupportRead.mateChromosome();
+        if(mateChromosome != null && !mateChromosome.equals(NO_CHROMOSOME_NAME))
             mateAlignment = new ChrBaseRegion(
                     mSupportRead.mateChromosome(), mSupportRead.mateAlignmentStart(), mSupportRead.mateAlignmentEnd());
 
