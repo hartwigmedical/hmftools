@@ -321,7 +321,8 @@ plot_distribution <- function(plot_data, x, invert_normal = FALSE, mark_sample_p
       gg_scale_y_continuous <- scale_y_continuous(labels = function(x) abs(x))
    }
    
-   geom_sample_peak <- geom_blank()
+   gg_geom_line <- geom_line(aes(color = SampleType))
+   gg_geom_segment <- geom_blank()
    if(mark_sample_peak){
       
       peak_data <- plot_data %>% 
@@ -335,25 +336,34 @@ plot_distribution <- function(plot_data, x, invert_normal = FALSE, mark_sample_p
             Height = FeatureValue[which.max(abs(FeatureValue))]
          )
       
-      geom_sample_peak <- geom_segment(
+      gg_geom_segment <- geom_segment(
          data = peak_data, 
          mapping = aes(x = XPos, xend = XPos, y = 0, yend = Height, color = SampleType),
          show.legend = FALSE
       )
    }
    
+   gg_geom_ribbon <- geom_ribbon(aes(ymin = PctMin, ymax = PctMax, fill = SampleType), alpha = 0.1)
+   
    sample_type_colors <- sapply(SAMPLE_TYPE, `[[`, "color")
+   gg_scale_fill_manual <- scale_fill_manual(values = sample_type_colors)
+   gg_scale_color_manual <- scale_color_manual(values = sample_type_colors)
+   
+   if(is.na(COHORT_PERCENTILES_FILE)){
+      gg_geom_ribbon <- geom_blank()
+      gg_scale_fill_manual <- geom_blank()
+   }
    
    ggplot(plot_data, aes(x = .data[[x]], y = FeatureValue, group = SampleType)) +
       
       { if(!is.null(hlines)) geom_hline(linewidth = 0.25, color = "grey70", yintercept = hlines) } +
       
-      geom_ribbon(aes(ymin = PctMin, ymax = PctMax, fill = SampleType), alpha = 0.1) +
-      geom_line(aes(color = SampleType)) +
-      geom_sample_peak +
+      gg_geom_ribbon +
+      gg_geom_line +
+      gg_geom_segment +
       
-      scale_color_manual(values = sample_type_colors) +
-      scale_fill_manual(values = sample_type_colors) +
+      gg_scale_color_manual +
+      gg_scale_fill_manual +
       
       gg_scale_y_continuous +
       theme(legend.position = "none")
@@ -408,13 +418,13 @@ PLOTS[[FEATURE_TYPE$GC_BIAS]] <- local({
 plot_pairwise_comparison <- function(plot_data, x, y = "FeatureValue", plot_type = "boxplot", hlines = NULL, vlines = NULL, boxplot_width_scale = 1){
    
    if(FALSE){
+      y = "FeatureValue"
       plot_type = "boxplot"
       hlines = NULL
       vlines = NULL
+      boxplot_width_scale = 1
       
       x = "OriginalQualBin"
-      y = "FeatureValue"
-
       plot_data <- get_plot_data(FEATURE_TYPE$BQR_BY_ORIG_QUAL)
       gg_facet <- facet_grid("ReadType ~ StandardMutation")
    }
@@ -423,27 +433,30 @@ plot_pairwise_comparison <- function(plot_data, x, y = "FeatureValue", plot_type
       LOGGER$error("Box plot failed - empty data frame")
    }
    
-   sample_type_colors <- sapply(SAMPLE_TYPE, `[[`, "color")
+   gg_geom_point <- geom_blank()
+   gg_geom_boxplot <- geom_blank()
+   gg_geom_linerange <- geom_blank()
    gg_position_dodge <- position_dodge(width = 0.5, preserve = "single")
    
-   geom_sample <- geom_blank()
-   geom_cohort <- geom_blank()
+   sample_type_colors <- sapply(SAMPLE_TYPE, `[[`, "color")
+   gg_scale_fill_manual <- scale_fill_manual(values = sample_type_colors, drop = FALSE)
+   gg_scale_color_manual <- scale_color_manual(values = sample_type_colors, drop = FALSE)
    
    if(plot_type == "boxplot"){
-      geom_sample <- geom_point(shape = 21, position = gg_position_dodge, size = 1.8)
+      gg_geom_point <- geom_point(shape = 21, position = gg_position_dodge, size = 1.8)
       
-      geom_cohort <- geom_boxplot(
+      gg_geom_boxplot <- geom_boxplot(
          aes(ymin = PctMin, lower = PctLower, middle = PctMid, upper = PctUpper, ymax = PctMax),
          position = gg_position_dodge, width = 0.4 * boxplot_width_scale,
          stat = "identity", alpha = 0.3, size = 0.25, color = "grey70"
       )
-   } else if(plot_type == "pointrange") {
-      geom_sample <- geom_point(
-         aes(color = SampleType), 
-         shape = 21, position = gg_position_dodge, size = 0.8
-      )
       
-      geom_cohort <- geom_linerange(
+      gg_scale_color_manual <- geom_blank()
+      
+   } else if(plot_type == "pointrange") {
+      gg_geom_point <- geom_point(aes(color = SampleType), shape = 21, position = gg_position_dodge, size = 0.8)
+      
+      gg_geom_linerange <- geom_linerange(
          aes(color = SampleType, ymin = PctMin, ymax = PctMax),
          position = gg_position_dodge, linewidth = 0.3, linetype = "11"
       )
@@ -451,16 +464,21 @@ plot_pairwise_comparison <- function(plot_data, x, y = "FeatureValue", plot_type
       LOGGER$error("`plot_type` must be 'boxplot' or 'pointrange'")
    }
    
+   if(is.na(COHORT_PERCENTILES_FILE)){
+      gg_geom_boxplot <- geom_blank()
+      gg_geom_linerange <- geom_blank()
+   }
+   
    ggplot(plot_data, aes(x = .data[[x]], y = .data[[y]], fill = SampleType)) + 
       
       { if(!is.null(hlines)) geom_hline(linewidth = 0.25, color = "grey70", yintercept = hlines) } +
       { if(!is.null(vlines)) geom_vline(linewidth = 0.25, color = "grey70", xintercept = vlines) } +
       
-      geom_cohort +
-      geom_sample +
+      gg_geom_boxplot + gg_geom_linerange +
+      gg_geom_point +
       
-      scale_fill_manual(values = sample_type_colors, drop = FALSE) +
-      scale_color_manual(values = sample_type_colors, drop = FALSE) +
+      gg_scale_fill_manual +
+      gg_scale_color_manual +
       
       # gg_facet +
       
