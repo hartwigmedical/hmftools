@@ -46,7 +46,7 @@ object VdjPrimerMatchTsv
 
     private fun writePrimerMatch(csvPrinter: CSVPrinter, match: VdjPrimerMatch)
     {
-        for (c in Column.values())
+        for (c in Column.entries)
         {
             when (c)
             {

@@ -7,6 +7,8 @@ import com.hartwig.hmftools.cider.annotation.AlignmentAnnotation
 import com.hartwig.hmftools.cider.annotation.AlignmentAnnotator
 import com.hartwig.hmftools.cider.annotation.AlignmentStatus
 import com.hartwig.hmftools.cider.genes.IgTcrConstantDiversityRegion
+import com.hartwig.hmftools.cider.genes.VJAnchorGenomeLocation
+import com.hartwig.hmftools.cider.genes.VJGeneType
 import com.hartwig.hmftools.cider.primer.PrimerTsvFile
 import com.hartwig.hmftools.cider.primer.VdjPrimerMatch
 import com.hartwig.hmftools.cider.primer.VdjPrimerMatchTsv
@@ -81,7 +83,7 @@ class CiderApplication(configBuilder: ConfigBuilder)
 
         if (mParams.primerCsv != null)
         {
-            val primerList = PrimerTsvFile.load(mParams.primerCsv!!)
+            val primerList = PrimerTsvFile.load(mParams.primerCsv)
             // if we are provided a list of primers, match those against the input
             val vdjPrimerMatcher = VdjPrimerMatcher(mParams.primerMismatchMax)
             primerMatchList = vdjPrimerMatcher.matchVdjPrimer(vdjSequences, primerList)
@@ -90,7 +92,7 @@ class CiderApplication(configBuilder: ConfigBuilder)
             VdjPrimerMatchTsv.writePrimerMatches(mParams.outputDir, mParams.sampleId, primerMatchList)
         }
 
-        val vdjAnnotator = VdjAnnotator(vjReadLayoutAdaptor, vdjBuilderBlosumSearcher)
+        val vdjAnnotator = VdjAnnotator(vjReadLayoutAdaptor)
         val alignmentAnnotations: Collection<AlignmentAnnotation>
 
         if (mParams.refGenomePath != null && mParams.bwaIndexImagePath != null)
@@ -254,8 +256,8 @@ class CiderApplication(configBuilder: ConfigBuilder)
                     return false
                 }
             }
-            else if (vdjAnnotation.alignmentAnnotation!!.alignmentStatus == AlignmentStatus.V_ONLY ||
-                    vdjAnnotation.alignmentAnnotation!!.alignmentStatus == AlignmentStatus.J_ONLY)
+            else if (vdjAnnotation.alignmentAnnotation!!.status == AlignmentStatus.V_ONLY ||
+                    vdjAnnotation.alignmentAnnotation!!.status == AlignmentStatus.J_ONLY)
             {
                 return false
             }
@@ -267,13 +269,13 @@ class CiderApplication(configBuilder: ConfigBuilder)
     companion object
     {
         val sLogger = LogManager.getLogger(CiderApplication::class.java)
+
         private fun readerFactory(params: CiderParams): SamReaderFactory
         {
             val readerFactory = SamReaderFactory.make()
             return if (params.refGenomePath != null)
-            {
-                readerFactory.referenceSource(ReferenceSource(File(params.refGenomePath!!)))
-            } else readerFactory
+                readerFactory.referenceSource(ReferenceSource(File(params.refGenomePath)))
+            else readerFactory
         }
 
         @Throws(IOException::class, InterruptedException::class)

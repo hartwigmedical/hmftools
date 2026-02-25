@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.cider
 
+import com.hartwig.hmftools.cider.genes.IgTcrLocus
+import com.hartwig.hmftools.cider.genes.VJGeneType
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVPrinter
@@ -38,7 +40,7 @@ object CiderLocusStatsWriter
             .build()
 
         csvFormat.print(FileWriterUtils.createBufferedWriter(filePath)).use { printer: CSVPrinter ->
-            for (locus in IgTcrLocus.values())
+            for (locus in IgTcrLocus.entries)
             {
                 writeLocusStats(printer, locus, layoutBuildResults, vdjAnnotations)
             }
@@ -69,7 +71,7 @@ object CiderLocusStatsWriter
         val numSequences = locusVdjAnnotations.size
         val numPassSequences = locusVdjAnnotations.count { vdjAnnotation -> vdjAnnotation.passesFilter }
 
-        for (c in Column.values())
+        for (c in Column.entries)
         {
             when (c)
             {

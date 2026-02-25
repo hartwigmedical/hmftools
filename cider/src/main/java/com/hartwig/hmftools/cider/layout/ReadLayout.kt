@@ -9,7 +9,6 @@ import htsjdk.samtools.util.SequenceUtil.C
 import htsjdk.samtools.util.SequenceUtil.G
 import java.util.*
 import kotlin.collections.ArrayList
-import kotlin.collections.HashMap
 import kotlin.collections.HashSet
 
 open class ReadLayout(var id: String = String())
@@ -108,21 +107,6 @@ open class ReadLayout(var id: String = String())
         private var cCount: Int = 0
         private var gCount: Int = 0
         private var tCount: Int = 0
-
-        fun generateCountMap() : Map<Byte, Int>
-        {
-            val countMap: MutableMap<Byte, Int> = HashMap()
-
-            for (base in arrayOf(A, C, G, T))
-            {
-                val baseCount = count(base)
-
-                if (baseCount > 0)
-                    countMap[base] = baseCount
-            }
-
-            return countMap
-        }
 
         fun count(base: Byte): Int
         {
