@@ -34,11 +34,11 @@ The key configuration values to set are:
 | db_source_ref & db_source_new     | DB connection details for ref and new sample data - see format below                                                                       |
 | output_dir                        | Path for output file                                                                                                                       |
 
-** set of tools are: linx, linx_germline, purple, chord, cuppa, lilac, peach, virus (i.e. virus-interpreter), snp_genotype, tumor_flagstat, germline_flagstat, tumor_bam_metrics and germline_bam_metrics.
+** set of tools are: linx, linx_germline, purple, chord, cuppa, isofox, lilac, peach, virus (i.e. virus-interpreter), snp_genotype, tumor_flagstat, germline_flagstat, tumor_bam_metrics and germline_bam_metrics.
 
-The available categories are: PURITY, DRIVER, SOMATIC_VARIANT, GERMLINE_VARIANT, GERMLINE_DELETION, GERMLINE_SV, FUSION, DISRUPTION, CUPPA, 
+The available categories are: PURITY, DRIVER, SOMATIC_VARIANT, GERMLINE_VARIANT, GERMLINE_AMP_DEL, GERMLINE_SV, FUSION, DISRUPTION, CUPPA,
 CHORD, LILAC, PEACH, VIRUS, TUMOR_FLAGSTAT, GERMLINE_FLAGSTAT, TUMOR_BAM_METRICS, GERMLINE_BAM_METRICS, SNP_GENOTYPE, COPY_NUMBER, GENE_COPY_NUMBER,
-CDR3_SEQUENCE, CDR3_LOCUS_SUMMARY, TELOMERE_LENGTH, V_CHORD.
+CDR3_SEQUENCE, CDR3_LOCUS_SUMMARY, TELOMERE_LENGTH, V_CHORD, ISOFOX_SUMMARY, ISOFOX_GENE_DATA, ISOFOX_TRANSCRIPT_DATA, NOVEL_SPLICE_JUNCTION, RNA_FUSION.
 
 The category PANEL is equivalent to PURITY, DRIVER, SOMATIC_VARIANT, FUSION, DISRUPTION, TUMOR_FLAGSTAT, TUMOR_BAM_METRICS and SNP_GENOTYPE, V_CHORD.
 
@@ -79,19 +79,20 @@ output in a subdirectory as per the standard HMF pipeline.
 
 Specify one or more tool directories to override the pipeline default paths.
 
-| Category                                                     | Config Path Id    |
-|--------------------------------------------------------------|-------------------|
-| PURITY, SOMATIC_VARIANT, GERMLINE_VARIANT, GERMLINE_DELETION | purple_dir        |
-| FUSION, DISRUPTION                                           | linx_dir          |
-| GERMLINE_SV                                                  | linx_germline_dir |
-| CUPPA                                                        | cuppa_dir         |
-| CHORD                                                        | chord_dir         |
-| LILAC                                                        | lilac_dir         |
-| PEACH                                                        | peach_dir         |
-| VIRUS                                                        | virus_dir         |
-| CIDER                                                        | cider_dir         |
-| TEAL                                                         | teal_dir          |
-| V_CHORD                                                      | v_chord_dir       |
+| Category                                                                                     | Config Path Id    |
+|----------------------------------------------------------------------------------------------|-------------------|
+| PURITY, SOMATIC_VARIANT, GERMLINE_VARIANT, GERMLINE_AMP_DEL                                  | purple_dir        |
+| FUSION, DISRUPTION                                                                           | linx_dir          |
+| GERMLINE_SV                                                                                  | linx_germline_dir |
+| CUPPA                                                                                        | cuppa_dir         |
+| CHORD                                                                                        | chord_dir         |
+| LILAC                                                                                        | lilac_dir         |
+| PEACH                                                                                        | peach_dir         |
+| VIRUS                                                                                        | virus_dir         |
+| CIDER                                                                                        | cider_dir         |
+| TEAL                                                                                         | teal_dir          |
+| V_CHORD                                                                                      | v_chord_dir       |
+| ISOFOX_SUMMARY, ISOFOX_GENE_DATA, ISOFOX_TRANSCRIPT_DATA, NOVEL_SPLICE_JUNCTION, RNA_FUSION  | isofox_dir        |
 
 Wildcards '*' can be used in place of sampleIds, in which case Compar will replace the wildcard with the sampleId for each path.
 Similarly, '$' can be used in place of germline sample IDs.
@@ -205,7 +206,7 @@ Data key: SampleId, Chromosome, Position, Ref, Alt and VariantType (SNP/MNP/INDE
 | tumorTotalReadCount        | Threshold [1, 20%]      |
 | purityAdjustedVaf          | Threshold [0.2]         |
 
-### Germline Deletion
+### Germline Amp-Del
 Data key: SampleId, Gene
 
 | Field              | Match Type & Thresholds |
@@ -400,6 +401,76 @@ Data key: SampleId
 | pancreaticCancerScore | Threshold [0.1]         | 
 | prostateCancerScore   | Threshold [0.1]         | 
 | otherCancerScore      | Threshold [0.1]         | 
+
+### Isofox Summary
+Only runs in DETAILED mode.
+
+Data key: SampleId
+
+| Field                 | Match Type & Thresholds |
+|-----------------------|-------------------------|
+| QcStatus              | Exact                   |
+| TotalFragments        | Threshold [10, 1%]      |
+| DuplicateFragments    | Threshold [10, 1%]      |
+| SplicedFragmentPerc   | Threshold [0.01, 5%]    |
+| UnsplicedFragmentPerc | Threshold [0.01, 5%]    |
+| AltFragmentPerc       | Threshold [0.01, 5%]    |
+| ChimericFragmentPerc  | Threshold [0.01, 5%]    |
+| SplicedGeneCount      | Threshold [10, 1%]      |
+| ReadLength            | Exact                   |
+| FragLength5th         | Threshold [5%]          |
+| FragLength50th        | Threshold [5%]          |
+| FragLength95th        | Threshold [5%]          |
+| EnrichedGenePercent   | Threshold [0.01]        |
+| MedianGCRatio         | Threshold [0.01]        |
+| ForwardStrandPercent  | Threshold [0.01]        |
+
+### Isofox Gene Data
+Only runs in DETAILED mode.
+
+Data key: SampleId, GeneName
+
+| Field              | Match Type & Thresholds |
+|--------------------|-------------------------|
+| SplicedFragments   | Threshold [10, 5%]      |
+| UnsplicedFragments | Threshold [10, 5%]      |
+| AdjTPM             | Threshold [5%]          |
+
+### Isofox Transcript Data
+Only runs in DETAILED mode.
+
+Data key: SampleId, TranscriptName
+
+| Field    | Match Type & Thresholds |
+|----------|-------------------------|
+| GeneName | Exact                   |
+| AdjTPM   | Threshold [5%]          |
+
+### Novel Splice Junction
+Only runs in DETAILED mode.
+
+Data key: SampleId, GeneName, Chromosome, JunctionStart, JunctionEnd
+
+| Field       | Match Type & Thresholds |
+|-------------|-------------------------|
+| Type        | Exact                   |
+| FragCount   | Threshold [5, 5%]       |
+| RegionStart | Exact                   |
+| RegionEnd   | Exact                   |
+
+### RNA Fusion
+Only runs in DETAILED mode.
+
+Data key: SampleId, FusionName, ChromosomeUp, PositionUp, ChromosomeDown, PositionDown
+
+| Field           | Match Type & Thresholds |
+|-----------------|-------------------------|
+| KnownFusionType | Exact                   |
+| JuncTypeUp      | Exact                   |
+| JuncTypeDown    | Exact                   |
+| SplitFrags      | Threshold [5, 5%]       |
+| RealignedFrags  | Threshold [5, 5%]       |
+| DiscordantFrags | Threshold [5, 5%]       |
 
 ### Copy Number
 Only runs in DETAILED mode.
