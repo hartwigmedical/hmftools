@@ -87,8 +87,8 @@ LOGGER$debug("  log_level: %s", GLOBAL_LOG_LEVEL)
 ## =============================
 
 SAMPLE_TYPE <- list(
-   TUMOR = list(name = "TUMOR", human_readable_name = "Tumor", color = "#D1392C"),
-   NORMAL = list(name = "NORMAL", human_readable_name = "Normal", color = "#4A7DB4")
+   TUMOR = list(name = "TUMOR", display_name = "Tumor", color = "#D1392C"),
+   NORMAL = list(name = "NORMAL", display_name = "Normal", color = "#4A7DB4")
 )
 
 FEATURE_TYPE <- list(
@@ -669,7 +669,7 @@ get_sub_table_data <- function(feature_group, number_format){
    plot_data <- SUMMARY_TABLE_DATA %>%
       dplyr::filter(FeatureGroup == feature_group & NumberFormat == number_format) %>%
       dplyr::mutate(
-         PlotLabel = reverse_levels(PlotLabel),
+         DisplayName = reverse_levels(DisplayName),
          SampleType = reverse_levels(SampleType)
       )
 
@@ -752,7 +752,7 @@ plot_sub_table <- function(plot_data, show_title = FALSE, show_sample_type_label
 
    feature_group <- attr(plot_data, "feature_group")
    number_format <- attr(plot_data, "number_format")
-   n_rows <- plot_data$PlotLabel %>% unique() %>% length()
+   n_rows <- plot_data$DisplayName %>% unique() %>% length()
 
    LOGGER$debug("  featureGroup(%s) numberFormat(%s)", feature_group, number_format)
       
@@ -772,10 +772,10 @@ plot_sub_table <- function(plot_data, show_title = FALSE, show_sample_type_label
    ## Aesthetics
    qc_status_colors <- sapply(QC_STATUS, `[[`, "color")
    sample_type_colors <- sapply(SAMPLE_TYPE, `[[`, "color")
-   sample_type_names <- sapply(SAMPLE_TYPE, `[[`, "human_readable_name")
+   sample_type_names <- sapply(SAMPLE_TYPE, `[[`, "display_name")
    
    ## Plot
-   subplot_values <- ggplot(plot_data, aes(y = PlotLabel, x = SampleType, group = SampleType, color = SampleType)) +
+   subplot_values <- ggplot(plot_data, aes(y = DisplayName, x = SampleType, group = SampleType, color = SampleType)) +
       
       geom_label(
          aes(label = value_fmt_func(FeatureValue), fill = QcStatusEnum), 
@@ -810,7 +810,7 @@ plot_sub_table <- function(plot_data, show_title = FALSE, show_sample_type_label
    boxplot_width_scale <- length(unique(plot_data$SampleType)) / length(levels(plot_data$SampleType))
    
    subplot_boxplot <- 
-      plot_pairwise_comparison(plot_data, x = "PlotLabel", y = "FeatureValue", boxplot_width_scale = boxplot_width_scale) +
+      plot_pairwise_comparison(plot_data, x = "DisplayName", y = "FeatureValue", boxplot_width_scale = boxplot_width_scale) +
       get_div_lines(n_rows, "vertical") + 
       scale_y_continuous(
          
@@ -918,10 +918,10 @@ PLOTS[[PLOT_NAME_LEGEND]] <- local({
    
    plot_data_sample_type <- data.frame(
       SampleType = c(
-         paste(SAMPLE_TYPE$TUMOR$human_readable_name, "sample"),
-         paste(SAMPLE_TYPE$TUMOR$human_readable_name, "cohort"),
-         paste(SAMPLE_TYPE$NORMAL$human_readable_name, "sample"),
-         paste(SAMPLE_TYPE$NORMAL$human_readable_name, "cohort")
+         paste(SAMPLE_TYPE$TUMOR$display_name, "sample"),
+         paste(SAMPLE_TYPE$TUMOR$display_name, "cohort"),
+         paste(SAMPLE_TYPE$NORMAL$display_name, "sample"),
+         paste(SAMPLE_TYPE$NORMAL$display_name, "cohort")
       ),
       
       Color = c(
@@ -1003,7 +1003,7 @@ REPORT_TITLE <- local({
       
       paste0(
          qc_status_level$name, ": ",
-         sprintf("%s (%s)", df$PlotLabel, df$QcThreshold) %>% paste(collapse = ", ")
+         sprintf("%s (%s)", df$DisplayName, df$QcThreshold) %>% paste(collapse = ", ")
       )
    }
    
@@ -1017,7 +1017,7 @@ REPORT_TITLE <- local({
          return(character())
       }
       
-      paste(c(sample_type$human_readable_name, qc_strings), collapse = " - ")
+      paste(c(sample_type$display_name, qc_strings), collapse = " - ")
    }
    
    qc_strings <- c(

@@ -12,14 +12,14 @@ public enum DiscordantFragGroup
     INV_LONG("Inv >100K"),
     TRANSLOCATION("Translocation");
 
-    public final String mName;
+    private final String mDisplayName;
 
-    DiscordantFragGroup(String name)
+    DiscordantFragGroup(String displayName)
     {
-        mName = name;
+        mDisplayName = displayName;
     }
 
-    public String getName(){ return mName; }
+    public String getDisplayName(){ return mDisplayName; }
 
     public static DiscordantFragGroup fromType(DiscordantFragType type)
     {

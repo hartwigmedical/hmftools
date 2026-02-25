@@ -47,14 +47,14 @@ public enum SummaryTableFeature
 
     private final SourceTool mSourceTool;
     private final SummaryTableGroup mGroup;
-    private final String mPlotLabel;
+    private final String mDisplayName;
     private final NumberFormat mNumberFormat;
 
-    SummaryTableFeature(SourceTool sourceTool, SummaryTableGroup group, String plotLabel, NumberFormat numberFormat)
+    SummaryTableFeature(SourceTool sourceTool, SummaryTableGroup group, String displayName, NumberFormat numberFormat)
     {
         mSourceTool = sourceTool;
         mGroup = group;
-        mPlotLabel = plotLabel;
+        mDisplayName = displayName;
         mNumberFormat = numberFormat;
     }
 
@@ -65,7 +65,7 @@ public enum SummaryTableFeature
 
     public SourceTool sourceTool() { return mSourceTool; }
     public SummaryTableGroup group() { return mGroup; }
-    public String plotLabel() { return mPlotLabel; }
+    public String displayName() { return mDisplayName; }
     public NumberFormat numberFormat() { return mNumberFormat; }
 
     public static void putFeature(EnumMap<SummaryTableFeature, Feature> featuresMap, SummaryTableFeature summaryTableFeature,
@@ -74,8 +74,8 @@ public enum SummaryTableFeature
         FeatureKey key = new FeatureKey(summaryTableFeature.toString(), FeatureType.SUMMARY_TABLE, summaryTableFeature.sourceTool());
 
         PlotMetadata metadata = PlotMetadata.builder()
-                .featureGroup(summaryTableFeature.group().humanReadableName())
-                .plotLabel(summaryTableFeature.plotLabel())
+                .featureGroup(summaryTableFeature.group().displayName())
+                .displayName(summaryTableFeature.displayName())
                 .numberFormat(summaryTableFeature.numberFormat())
                 .qcStatus(qcStatus)
                 .build();

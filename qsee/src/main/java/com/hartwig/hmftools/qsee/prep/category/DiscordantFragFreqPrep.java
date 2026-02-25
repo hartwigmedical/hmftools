@@ -93,7 +93,7 @@ public class DiscordantFragFreqPrep implements CategoryPrep
         List<Feature> features = new ArrayList<>();
         for(DiscordantFragGroup group : discPropPerGroup.keySet())
         {
-            String featureName = MultiFieldStringBuilder.formSingleField(FIELD_FRAG_TYPE, group.getName());
+            String featureName = MultiFieldStringBuilder.formSingleField(FIELD_FRAG_TYPE, group.getDisplayName());
             FeatureKey key = new FeatureKey(featureName, FeatureType.DISCORDANT_FRAG_FREQ, SOURCE_TOOL);
             Feature feature = new Feature(key, discPropPerGroup.get(group));
             features.add(feature);
