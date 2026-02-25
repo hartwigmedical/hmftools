@@ -2,20 +2,11 @@ package com.hartwig.hmftools.wisp.purity.variant;
 
 import static java.lang.Math.max;
 import static java.lang.String.format;
-import static java.lang.String.valueOf;
 
 import static com.hartwig.hmftools.common.genome.gc.GcCalcs.calcGcPercent;
 import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.probabilityToPhredQual;
-import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_ALT;
-import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
-import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION;
-import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_REF;
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.filenamePart;
-import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELIHOOD_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_RECALIBRATED_BASE_QUAL;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LIST_SEPARATOR;
@@ -26,13 +17,10 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.DEFAULT_PROBE_LENGTH;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.generateMutationSequence;
-import static com.hartwig.hmftools.wisp.purity.FileType.SOMATICS;
-import static com.hartwig.hmftools.wisp.purity.FileType.SOMATIC_PEAK;
-import static com.hartwig.hmftools.wisp.purity.FileType.SUMMARY;
 import static com.hartwig.hmftools.wisp.purity.PurityConfig.isUltima;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.MIN_AVG_EDGE_DISTANCE;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.MIN_AVG_EDGE_DISTANCE_DUAL_ULTIMA;
-import static com.hartwig.hmftools.wisp.purity.PurityConstants.MIN_DUAL_QUAL;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.MIN_DUAL_QUAL_FILTER_THRESHOLD;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.OUTLIER_MIN_ALLELE_FRAGS;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.OUTLIER_MIN_ALLELE_FRAGS_WITH_DUAL;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.OUTLIER_MIN_AVG_VAF_MULTIPLE;
@@ -42,8 +30,6 @@ import static com.hartwig.hmftools.wisp.purity.PurityConstants.MAX_SUBCLONAL_LIK
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.SUBCLONAL_VCN_THRESHOLD;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.HIGH_GERMLINE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.MAX_GERMLINE_AF;
-import static com.hartwig.hmftools.wisp.purity.ResultsWriter.addCommonFields;
-import static com.hartwig.hmftools.wisp.purity.ResultsWriter.addCommonHeaderFields;
 import static com.hartwig.hmftools.wisp.purity.WriteType.FRAG_LENGTHS;
 import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.AVG_EDGE_DIST;
 import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.DUAL_ERROR_RATE;
@@ -60,16 +46,12 @@ import static com.hartwig.hmftools.wisp.purity.variant.SomaticPurityResult.INVAL
 import static com.hartwig.hmftools.wisp.purity.variant.UmiTypeCounts.NO_UMI_COUNTS;
 
 import java.io.BufferedWriter;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.StringJoiner;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bam.ConsensusType;
-import com.hartwig.hmftools.common.utils.RExecutor;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.PaveVcfTags;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
@@ -84,8 +66,6 @@ import com.hartwig.hmftools.wisp.purity.ResultsWriter;
 import com.hartwig.hmftools.wisp.purity.SampleData;
 import com.hartwig.hmftools.wisp.purity.PurityConstants;
 
-import org.apache.commons.math3.ode.events.FilterType;
-
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFHeader;
@@ -99,17 +79,20 @@ public class SomaticVariants
     private final List<SomaticVariant> mVariants;
     private final List<SimpleVariant> mProbeVariants;
     private final SomaticPurityEstimator mEstimator;
+    private final BqrAdjustment mBqrAdjustment;
     private final BufferedWriter mSomaticWriter;
     private final SampleFragmentLengths mFragmentLengths;
 
-    public SomaticVariants(final PurityConfig config, final ResultsWriter resultsWriter, final SampleData sample)
+    public SomaticVariants(final PurityConfig config, final ResultsWriter resultsWriter, final SampleData sampleData)
     {
         mConfig = config;
         mResultsWriter = resultsWriter;
-        mSample = sample;
-        mEstimator = new SomaticPurityEstimator(mConfig, resultsWriter, sample);
+        mSample = sampleData;
+        mBqrAdjustment = new BqrAdjustment(mConfig);
+        mEstimator = new SomaticPurityEstimator(mConfig, resultsWriter, sampleData, mBqrAdjustment);
+
         mSomaticWriter = mResultsWriter.getSomaticWriter();
-        mFragmentLengths = new SampleFragmentLengths(config, resultsWriter, sample);
+        mFragmentLengths = new SampleFragmentLengths(config, resultsWriter, sampleData);
 
         mVariants = Lists.newArrayList();
 
@@ -314,6 +297,10 @@ public class SomaticVariants
 
     public SomaticPurityResult processSample(final String sampleId)
     {
+        // BQR values are used both in filters and purity calcs
+        if(!mConfig.SkipBqr)
+            mBqrAdjustment.loadBqrData(sampleId);
+
         List<SomaticVariant> filteredVariants = Lists.newArrayList();
 
         double sampleTotalAD = 0; // this value will be normalised by copy number
@@ -356,15 +343,13 @@ public class SomaticVariants
 
                 if(sampleFragData != null && tumorFragData != null)
                 {
-                    writeVariant(mSomaticWriter, mConfig, mSample, sampleId, variant, sampleFragData, tumorFragData);
+                    SomaticWriter.writeVariant(mSomaticWriter, mConfig, mSample, sampleId, variant, sampleFragData, tumorFragData);
                 }
             }
         }
 
         return purityResult;
     }
-
-    private static final String RECAL_ABQ_OLD_TAG = "ABQ";
 
     private List<FilterReason> checkFilters(final VariantContextDecorator variant, double subclonalLikelihood, double sequenceGcRatio)
     {
@@ -377,9 +362,7 @@ public class SomaticVariants
             AllelicDepth refAllelicDepth = AllelicDepth.fromGenotype(refGenotype);
             double germlineAF = refAllelicDepth.alleleFrequency();
 
-            String recalBqTag = refGenotype.hasAnyAttribute(AVG_RECALIBRATED_BASE_QUAL) ? AVG_RECALIBRATED_BASE_QUAL : RECAL_ABQ_OLD_TAG;
-
-            double germlineABQ = Double.parseDouble(refGenotype.getAnyAttribute(recalBqTag).toString().split(CSV_DELIM)[1]);
+            double germlineABQ = Double.parseDouble(refGenotype.getAnyAttribute(AVG_RECALIBRATED_BASE_QUAL).toString().split(CSV_DELIM)[1]);
 
             if(germlineAF >= MAX_GERMLINE_AF && germlineABQ >= HIGH_GERMLINE_QUAL_THRESHOLD)
                 filters.add(GERMLINE_AF);
@@ -439,11 +422,22 @@ public class SomaticVariants
                     sampleFragData.addDualFilterReason(AVG_EDGE_DIST);
             }
 
-            double dualBqrErrorRate = mEstimator.getBqrErrorRate(variant, sampleFragData, ConsensusType.DUAL);
-            double dualBqrErrorQual = probabilityToPhredQual(dualBqrErrorRate);
+            if(variant.Type == VariantType.SNP)
+            {
+                if(!mConfig.SkipBqr && !mBqrAdjustment.hasErrorRate(variant.TriNucContext, variant.Alt, ConsensusType.DUAL))
+                {
+                    CT_LOGGER.error("variant({}) missing dual BQR data", variant);
+                    System.exit(1);
+                }
 
-            if(dualBqrErrorQual < MIN_DUAL_QUAL)
-                sampleFragData.addDualFilterReason(DUAL_ERROR_RATE);
+                double dualBqrErrorRate = mEstimator.getBqrErrorRate(variant, sampleFragData, ConsensusType.DUAL);
+                sampleFragData.setDualBqrErrorRate(dualBqrErrorRate);
+
+                double dualBqrErrorQual = probabilityToPhredQual(dualBqrErrorRate);
+
+                if(dualBqrErrorQual < MIN_DUAL_QUAL_FILTER_THRESHOLD)
+                    sampleFragData.addDualFilterReason(DUAL_ERROR_RATE);
+            }
         }
     }
 
@@ -519,116 +513,5 @@ public class SomaticVariants
         }
 
         return allOutlierVariants;
-    }
-
-    public static BufferedWriter initialiseVariantWriter(final PurityConfig config)
-    {
-        try
-        {
-            String fileName = config.formFilename(SOMATICS);
-
-            BufferedWriter writer = createBufferedWriter(fileName, false);
-
-            StringJoiner sj = new StringJoiner(TSV_DELIM);
-
-            addCommonHeaderFields(sj, config);
-
-            sj.add(FLD_CHROMOSOME).add(FLD_POSITION).add(FLD_REF).add(FLD_ALT).add("IsProbe");
-            sj.add("Filter").add("Tier").add("Type").add("TNC");
-            sj.add("Mappability").add("SubclonalPerc").add("RepeatCount");
-            sj.add("Gene").add("CodingEffect").add("Hotspot").add("Reported");
-            sj.add("VCN").add("CopyNumber");
-            sj.add("TumorDP").add("TumorAD");
-            sj.add("SampleDP").add("SampleAD");
-
-            sj.add("DualFilter").add("SampleDualDP").add("SampleDualAD").add("SampleQualPerAD");
-            sj.add("SeqGcRatio").add("BqrErrorRate").add("AvgReadDistance");
-
-            writer.write(sj.toString());
-            writer.newLine();
-
-            return writer;
-        }
-        catch(IOException e)
-        {
-            CT_LOGGER.error("failed to initialise variant output file: {}", e.toString());
-            return null;
-        }
-    }
-
-    private static synchronized void writeVariant(
-            final BufferedWriter writer, final PurityConfig config,
-            final SampleData sampleData, final String sampleId, final SomaticVariant variant,
-            final GenotypeFragments sampleFragData, final GenotypeFragments tumorData)
-    {
-        if(writer == null)
-            return;
-
-        try
-        {
-            StringJoiner sj = new StringJoiner(TSV_DELIM);
-
-            addCommonFields(sj, config, sampleData, sampleId);
-
-            sj.add(variant.Chromosome).add(valueOf(variant.Position)).add(variant.Ref).add(variant.Alt);
-            sj.add(valueOf(variant.isProbeVariant()));
-
-            List<FilterReason> filterReasons = Lists.newArrayList(variant.filterReasons());
-            filterReasons.addAll(sampleFragData.filterReasons());
-
-            String filtersStr = !filterReasons.isEmpty() ?
-                    filterReasons.stream().map(x -> x.toString()).collect(Collectors.joining(ITEM_DELIM)) : PASS_FILTER;
-
-            sj.add(filtersStr).add(variant.Tier.toString()).add(variant.Type.toString()).add(variant.TriNucContext);
-            sj.add(format("%.2f", variant.Mappability)).add(format("%.2f", variant.SubclonalPerc)).add(valueOf(variant.RepeatCount));
-            sj.add(variant.CanonicalGeneName).add(variant.CanonicalCodingEffect).add(valueOf(variant.Hotspot)).add(valueOf(variant.Reported));
-            sj.add(format("%.2f", variant.VariantCopyNumber)).add(format("%.2f", variant.CopyNumber));
-
-            sj.add(valueOf(tumorData.Depth)).add(valueOf(tumorData.AlleleCount));
-            sj.add(valueOf(sampleFragData.Depth)).add(valueOf(sampleFragData.AlleleCount));
-
-            String dualFiltersStr = !sampleFragData.dualFilterReasons().isEmpty() ?
-                    sampleFragData.dualFilterReasons().stream().map(x -> x.toString()).collect(Collectors.joining(ITEM_DELIM)) : PASS_FILTER;
-
-            sj.add(dualFiltersStr).add(valueOf(sampleFragData.UmiCounts.TotalDual)).add(valueOf(sampleFragData.UmiCounts.AlleleDual));
-            sj.add(format("%.1f", sampleFragData.qualPerAlleleFragment()));
-            sj.add(format("%.3f", variant.sequenceGcRatio()));
-            sj.add(format("%.6f", sampleFragData.bqrErrorRate()));
-            sj.add(format("%.2f", sampleFragData.averageReadDistance()));
-
-            writer.write(sj.toString());
-
-            writer.newLine();
-        }
-        catch(IOException e)
-        {
-            CT_LOGGER.error("failed to write output file: {}", e.toString());
-            System.exit(1);
-        }
-    }
-
-    public static boolean plotSomaticVafs(final String patientId, final String sampleId, final PurityConfig config)
-    {
-        try
-        {
-            String summaryFile = config.formFilename(SUMMARY);
-            String somaticPeaksFile = config.formFilename(SOMATIC_PEAK);
-
-            if(!Files.exists(Paths.get(summaryFile)) || !Files.exists(Paths.get(somaticPeaksFile)))
-            {
-                CT_LOGGER.warn("plots missing required files: summary({}) somatics({})", summaryFile, somaticPeaksFile);
-                return false;
-            }
-
-            int runCode = RExecutor.executeFromClasspath(
-                    "plots/SomaticVafPlot.R", patientId, sampleId, summaryFile, somaticPeaksFile, config.PlotDir);
-
-            return runCode == 0;
-        }
-        catch(Exception e)
-        {
-            CT_LOGGER.error("failed to generate CN plot with R script: {}", e.toString());
-            return false;
-        }
     }
 }

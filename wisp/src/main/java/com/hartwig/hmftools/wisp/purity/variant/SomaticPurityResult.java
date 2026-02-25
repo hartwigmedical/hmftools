@@ -138,8 +138,8 @@ public class SomaticPurityResult
 
         sj.add(OutlierVariantInfo);
 
-        sj.add(format("%.6f", PurityCalcs.ErrorRate));
-        sj.add(format("%.6f", PurityCalcs.RawBqrErrorRate));
+        sj.add(format("%4.3e", PurityCalcs.ErrorRate));
+        sj.add(format("%4.3e", PurityCalcs.RawBqrErrorRate));
         sj.add(format("%d", PurityCalcs.BqrQualThreshold));
 
         String bqrDataStr = PurityCalcs.BqrExtraInfo.stream().collect(Collectors.joining(";"));

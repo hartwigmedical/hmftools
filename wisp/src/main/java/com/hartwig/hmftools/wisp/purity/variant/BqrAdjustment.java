@@ -2,9 +2,12 @@ package com.hartwig.hmftools.wisp.purity.variant;
 
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.common.bam.ConsensusType.DUAL;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.BQR_MIN_ERROR_RATE;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.BQR_MIN_ERROR_RATE_DUAL;
+import static com.hartwig.hmftools.wisp.purity.variant.BqrContextData.ZERO_ALT_COUNT_FLOOR;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -50,17 +53,33 @@ public class BqrAdjustment
                 bqrContextData : bqrContextData.stream().filter(x -> x.calculatedQual() >= qualThreshold).collect(Collectors.toList());
     }
 
-    public double calcErrorRate(final String triNucContext, final String alt, final ConsensusType consensusType)
+    public boolean hasErrorRate(final String triNucContext, final String alt, final ConsensusType consensusType)
     {
         List<BqrContextData> bqrContextData = mBqrContextData.get(consensusType);
 
         if(bqrContextData == null)
-            return BQR_MIN_ERROR_RATE;
+            return false;
+
+        return bqrContextData.stream().anyMatch(x -> x.TrinucleotideContext.equals(triNucContext) && x.Alt.equals(alt));
+    }
+
+    public double calcErrorRate(final String triNucContext, final String alt, final ConsensusType consensusType)
+    {
+        List<BqrContextData> bqrContextData = mBqrContextData.get(consensusType);
 
         BqrContextData bqrData = bqrContextData.stream()
                 .filter(x -> x.TrinucleotideContext.equals(triNucContext) && x.Alt.equals(alt)).findFirst().orElse(null);
 
-        return bqrData != null ? max(bqrData.errorRate(), BQR_MIN_ERROR_RATE) : BQR_MIN_ERROR_RATE;
+        if(bqrData == null)
+        {
+            // for type NONE, this should not occur since Redux ensures all contexts are written
+            // for DUAL, this condition should have been checked earlier
+            CT_LOGGER.error("missing BQR data: tnc({}) alt({}) consensusType({})", triNucContext, alt, consensusType);
+            System.exit(1);
+        }
+
+        double maxErrorRate = consensusType == DUAL ? BQR_MIN_ERROR_RATE_DUAL : BQR_MIN_ERROR_RATE;
+        return max(bqrData.errorRate(), maxErrorRate);
     }
 
     public static double calcErrorRate(final List<BqrContextData> bqrContextData)
@@ -84,7 +103,7 @@ public class BqrAdjustment
             }
         }
 
-        return depthTotal > 0 ? fragmentTotal / (double)depthTotal : 0;
+        return depthTotal > 0 ? max(fragmentTotal, ZERO_ALT_COUNT_FLOOR) / (double)depthTotal : 0;
     }
 
     public static boolean hasVariantContext(
@@ -126,7 +145,7 @@ public class BqrAdjustment
                 continue;
 
             // merge none and single
-            ConsensusType consensusType = bqrRecord.Key.ReadType == ConsensusType.DUAL ? ConsensusType.DUAL : ConsensusType.NONE;
+            ConsensusType consensusType = bqrRecord.Key.ReadType == DUAL ? DUAL : ConsensusType.NONE;
 
             BqrKey noAltKey = new BqrKey(key.Ref, NO_KEY_VALUE, key.TrinucleotideContext, key.Quality, consensusType);
 

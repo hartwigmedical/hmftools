@@ -25,6 +25,7 @@ public class GenotypeFragments
     public final UmiTypeCounts UmiCounts;
 
     private double mBqrErrorRate; // only used for output data
+    private double mDualBqrErrorRate; // only used for output data
 
     private final List<FilterReason> mFilterReasons;
     private final List<FilterReason> mDualFilterReasons;
@@ -41,6 +42,7 @@ public class GenotypeFragments
         GenotypeData = genotype;
 
         mBqrErrorRate = 0;
+        mDualBqrErrorRate = 0;
         mFilterReasons = Lists.newArrayList();
         mDualFilterReasons = Lists.newArrayList();
     }
@@ -51,6 +53,9 @@ public class GenotypeFragments
 
     public void setBqrErrorRate(double errorRate) { mBqrErrorRate = errorRate; }
     public double bqrErrorRate() { return mBqrErrorRate; }
+
+    public void setDualBqrErrorRate(double errorRate) { mDualBqrErrorRate = errorRate; }
+    public double dualBqrErrorRate() { return mDualBqrErrorRate; }
 
     public void markOutlier()
     {

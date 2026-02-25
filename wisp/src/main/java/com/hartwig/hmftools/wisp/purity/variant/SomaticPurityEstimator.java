@@ -46,12 +46,13 @@ public class SomaticPurityEstimator
     private final SampleData mSample;
     private final BqrAdjustment mBqrAdjustment;
 
-    public SomaticPurityEstimator(final PurityConfig config, final ResultsWriter resultsWriter, final SampleData sample)
+    public SomaticPurityEstimator(
+            final PurityConfig config, final ResultsWriter resultsWriter, final SampleData sampleData, final BqrAdjustment bqrAdjustment)
     {
         mConfig = config;
         mResultsWriter = resultsWriter;
-        mSample = sample;
-        mBqrAdjustment = new BqrAdjustment(mConfig);
+        mSample = sampleData;
+        mBqrAdjustment = bqrAdjustment;
     }
 
     public SomaticPurityResult calculatePurity(
@@ -93,9 +94,6 @@ public class SomaticPurityEstimator
         if(fragmentTotals.sampleDepthTotal() == 0)
             return INVALID_RESULT;
 
-        if(!mConfig.SkipBqr)
-            mBqrAdjustment.loadBqrData(sampleId);
-
         if(mConfig.hasSyntheticTumor())
         {
             fragmentTotals.setTumorVafOverride(SYNTHETIC_TUMOR_VAF);
@@ -104,7 +102,7 @@ public class SomaticPurityEstimator
         PurityCalcData purityCalcData = new PurityCalcData();
 
         // firstly estimate raw purity without consideration of clonal peaks
-        double noiseRate = mConfig.noiseRate(false);
+        double noiseRate;
 
         // calculate a limit-of-detection (LOD), being the number of fragments that would return a 99% confidence of a tumor presence
         if(!mConfig.SkipBqr)
@@ -124,6 +122,7 @@ public class SomaticPurityEstimator
         }
         else
         {
+            noiseRate = mConfig.noiseRate(false);
             purityCalcData.RawPurityEstimate = estimatedPurity(fragmentTotals.rawSampleVaf(), noiseRate, fragmentTotals);
             purityCalcData.Probability = estimatedProbability(fragmentTotals, noiseRate);
             purityCalcData.LodPurityEstimate = calcLimitOfDetection(fragmentTotals, noiseRate);
