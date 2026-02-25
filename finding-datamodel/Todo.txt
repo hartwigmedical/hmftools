@@ -11,6 +11,7 @@
 
 
 * IFindingsList?
+* Move handling of UGT1A1 into findings model?
 
 (actin datamodel is not public)
 
