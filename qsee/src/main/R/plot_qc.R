@@ -418,7 +418,7 @@ PLOTS[[FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD]] <- local({
    TOP_N_GENES <- 20
    
    plot_labels <- labs(
-      title = sprintf("Top %s genes with potential missed variants", TOP_N_GENES),
+      title = sprintf("Genes (top %s) with potential missed variants (P>%s)", TOP_N_GENES, MIN_MISSED_VARIANT_LIKELIHOOD),
       x = "Gene", 
       y = "Missed variant likelihood"
    )
@@ -444,7 +444,8 @@ PLOTS[[FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD]] <- local({
    
    plot_pairwise_comparison(plot_data, x = "Gene") + 
       plot_labels +
-      coord_flip(ylim = c(0, NA))
+      coord_flip(ylim = c(0, NA)) +
+      theme(plot.title = element_text(hjust = 0.5))
 })
 
 PLOTS[[FEATURE_TYPE$BQR_BY_ORIG_QUAL]] <- local({
