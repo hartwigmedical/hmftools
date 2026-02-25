@@ -29,6 +29,8 @@ public interface PurpleVariant
     @NotNull
     String alt();
 
+    double driverLikelihood();
+
     @NotNull
     PurpleCodingEffect worstCodingEffect();
 
@@ -53,7 +55,6 @@ public interface PurpleVariant
     double variantCopyNumber();
     boolean biallelic();
 
-    // make regular double in the future
     @Nullable
     Double biallelicProbability();
 
@@ -68,6 +69,13 @@ public interface PurpleVariant
 
     @Nullable
     List<Integer> localPhaseSets();
+
+    // germline fields
+    @Nullable
+    String clinvarPathogenicity();
+
+    @Nullable
+    Double gnomadFrequency();
 
     @Value.Derived
     default boolean reported()

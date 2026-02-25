@@ -1,6 +1,11 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
+import static com.hartwig.hmftools.common.driver.DriverType.GERMLINE_MUTATION;
+import static com.hartwig.hmftools.common.driver.DriverType.MUTATION;
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
+import static com.hartwig.hmftools.orange.algo.OrangeConstants.PURPLE_AMP_DEL_FULL;
+import static com.hartwig.hmftools.orange.algo.OrangeConstants.PURPLE_AMP_DEL_PARTIAL;
+import static com.hartwig.hmftools.orange.algo.OrangeConstants.PURPLE_ARM_CN_DIPLOID;
 
 import java.util.EnumSet;
 import java.util.List;
@@ -13,6 +18,7 @@ import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.driver.DriverType;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.rna.GeneExpression;
+import com.hartwig.hmftools.common.variant.SmallVariant;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleCharacteristics;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleFit;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGainDeletion;
@@ -41,9 +47,9 @@ public class PurpleInterpreter
     {
         LOGGER.info("Analysing Purple data");
 
-        List<PurpleVariant> somaticVariants = PurpleVariantFactory.fromPurpleVariants(purple.somaticVariants(), purple.somaticDrivers());
+        List<PurpleVariant> somaticVariants = buildPurpleVariants(purple.somaticVariants(), purple.somaticDrivers(), false);
 
-        List<PurpleVariant> germlineVariants = PurpleVariantFactory.fromPurpleVariants(purple.germlineVariants(), purple.germlineDrivers());
+        List<PurpleVariant> germlineVariants = buildPurpleVariants(purple.germlineVariants(), purple.germlineDrivers(), true);
 
         List<PurpleDriver> germlineDrivers = ConversionUtil.mapToNullableList(purple.germlineDrivers(), PurpleConversion::convert);
 
@@ -60,8 +66,10 @@ public class PurpleInterpreter
 
         double ploidy = purple.purityContext().bestFit().ploidy();
 
-        List<PurpleChrArmCopyNumber> chrArmCopyNumbers = purple.chrArmCopyNumbers().stream()
-                .map(x -> PurpleConversion.convert(x, ploidy)).collect(Collectors.toList());
+        List<PurpleChrArmCopyNumber> armCopyNumberAbberations = purple.chrArmCopyNumbers().stream()
+                .map(x -> PurpleConversion.convert(x, ploidy))
+                .filter(x -> !x.type().equals(PURPLE_ARM_CN_DIPLOID))
+                .collect(Collectors.toList());
 
         return ImmutablePurpleRecord.builder()
                 .fit(createFit(purple))
@@ -73,10 +81,30 @@ public class PurpleInterpreter
                 .germlineVariants(germlineVariants)
                 .somaticCopyNumbers(ConversionUtil.mapToIterable(purple.somaticCopyNumbers(), PurpleConversion::convert))
                 .somaticGeneCopyNumbers(ConversionUtil.mapToIterable(purple.somaticGeneCopyNumbers(), PurpleConversion::convert))
-                .chrArmCopyNumbers(chrArmCopyNumbers)
+                .armCopyNumberAbberations(armCopyNumberAbberations)
                 .somaticGainsDels(driverSomaticGainsDels)
                 .germlineGainsDels(driverGermlineAmpDels)
                 .build();
+    }
+
+    private static List<PurpleVariant> buildPurpleVariants(
+            final List<SmallVariant> variants, final List<DriverCatalog> drivers, boolean isGermline)
+    {
+        if(variants == null)
+            return null;
+
+        List<PurpleVariant> purpleVariants = Lists.newArrayListWithCapacity(variants.size());
+
+        DriverType requiredDriverType = isGermline ? GERMLINE_MUTATION : MUTATION;
+
+        for(SmallVariant variant : variants)
+        {
+            DriverCatalog driver = drivers.stream().filter(x -> x.driver() == requiredDriverType).findFirst().orElse(null);
+            PurpleVariant purpleVariant = PurpleVariantFactory.buildPurpleVariant(variant, driver, isGermline);
+            purpleVariants.add(purpleVariant);
+        }
+
+        return purpleVariants;
     }
 
     private static final Set<DriverType> AMP_DEL_TYPES = EnumSet.of(
@@ -119,11 +147,11 @@ public class PurpleInterpreter
             tpmFoldChange = geneExpression.medianTpmCohort() > 0 ? tpm / geneExpression.medianTpmCohort() : 0;
         }
 
-        String exonRange = "PARTIAL";
+        String exonRange = PURPLE_AMP_DEL_PARTIAL;
 
         if(driver.driver() == DriverType.AMP)
         {
-            exonRange = "FULL";
+            exonRange = PURPLE_AMP_DEL_FULL;
         }
 
         return ImmutablePurpleGainDeletion.builder()

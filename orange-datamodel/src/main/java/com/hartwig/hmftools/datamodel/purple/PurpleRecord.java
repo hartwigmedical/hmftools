@@ -46,5 +46,5 @@ public interface PurpleRecord
     List<PurpleGainDeletion> germlineGainsDels();
 
     @NotNull
-    List<PurpleChrArmCopyNumber> chrArmCopyNumbers();
+    List<PurpleChrArmCopyNumber> armCopyNumberAbberations();
 }

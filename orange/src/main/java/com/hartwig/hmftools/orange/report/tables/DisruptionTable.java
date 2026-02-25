@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_GENE;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_LOCATION;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_RANGE;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_TYPE;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_ZYGOSITY;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.VALUE_HET;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.VALUE_HOM;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
@@ -45,7 +46,7 @@ public final class DisruptionTable
 
         addEntry(cells, widths, cellEntries, 1, COL_LOCATION);
         addEntry(cells, widths, cellEntries, 1, COL_GENE);
-        addEntry(cells, widths, cellEntries, 1, "ZYGOSITY");
+        addEntry(cells, widths, cellEntries, 1, COL_ZYGOSITY);
         addEntry(cells, widths, cellEntries, 1, COL_RANGE);
         addEntry(cells, widths, cellEntries, 1, COL_TYPE);
         addEntry(cells, widths, cellEntries, 1, "JCN");

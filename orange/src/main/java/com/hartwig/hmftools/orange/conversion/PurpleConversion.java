@@ -5,6 +5,11 @@ import static com.hartwig.hmftools.common.variant.CodingEffect.NONE;
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONSENSE_OR_FRAMESHIFT;
 import static com.hartwig.hmftools.common.variant.CodingEffect.SPLICE;
 import static com.hartwig.hmftools.common.variant.CodingEffect.SYNONYMOUS;
+import static com.hartwig.hmftools.orange.algo.OrangeConstants.PURPLE_ARM_CN_DIPLOID;
+import static com.hartwig.hmftools.orange.algo.OrangeConstants.PURPLE_ARM_CN_GAIN;
+import static com.hartwig.hmftools.orange.algo.OrangeConstants.PURPLE_ARM_CN_GAIN_THRESHOLD;
+import static com.hartwig.hmftools.orange.algo.OrangeConstants.PURPLE_ARM_CN_LOSS;
+import static com.hartwig.hmftools.orange.algo.OrangeConstants.PURPLE_ARM_CN_LOSS_THRESHOLD;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -12,7 +17,6 @@ import java.util.stream.Collectors;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.purple.ChrArmCopyNumber;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GermlineAmpDel;
@@ -209,15 +213,15 @@ public final class PurpleConversion
 
     public static PurpleChrArmCopyNumber convert(final ChrArmCopyNumber chrArmCopyNumber, final double ploidy)
     {
-        String type = "DIPLOID";
+        String type = PURPLE_ARM_CN_DIPLOID;
 
-        if(chrArmCopyNumber.meanCopyNumber() > 1.4 * ploidy)
+        if(chrArmCopyNumber.meanCopyNumber() > PURPLE_ARM_CN_GAIN_THRESHOLD * ploidy)
         {
-            type = "GAIN";
+            type = PURPLE_ARM_CN_GAIN;
         }
-        else if(chrArmCopyNumber.meanCopyNumber() < 0.6 * ploidy)
+        else if(chrArmCopyNumber.meanCopyNumber() < PURPLE_ARM_CN_LOSS_THRESHOLD * ploidy)
         {
-            type = "LOSS";
+            type = PURPLE_ARM_CN_LOSS;
         }
 
         String chromosome = RefGenomeFunctions.enforceChrPrefix(chrArmCopyNumber.chromosome().toString());

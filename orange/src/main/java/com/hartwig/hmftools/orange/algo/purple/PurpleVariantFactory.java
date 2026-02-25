@@ -26,16 +26,7 @@ import org.jetbrains.annotations.Nullable;
 
 public final class PurpleVariantFactory
 {
-    @Nullable
-    public static List<PurpleVariant> fromPurpleVariants(@Nullable final List<SmallVariant> variants, final List<DriverCatalog> drivers)
-    {
-        if(variants == null)
-            return null;
-
-        return variants.stream().map(x -> fromPurpleVariant(x, drivers)).collect(Collectors.toList());
-    }
-
-    public static PurpleVariant fromPurpleVariant(final SmallVariant variant, final List<DriverCatalog> drivers)
+    public static PurpleVariant buildPurpleVariant(final SmallVariant variant, @Nullable final DriverCatalog driver, boolean isGermline)
     {
         List<AltTranscriptReportableInfo> altTransEffects = parseAltTranscriptInfo(variant.otherReportedEffects());
 
@@ -62,6 +53,7 @@ public final class PurpleVariantFactory
                 .position(variant.position())
                 .ref(variant.ref())
                 .alt(variant.alt())
+                .driverLikelihood(driver != null ? driver.driverLikelihood() : 0)
                 .worstCodingEffect(PurpleConversion.convert(variant.worstCodingEffect()))
                 .canonicalImpact(canonicalImpact)
                 .otherImpacts(nonCanonicalTransImpacts)
@@ -79,6 +71,8 @@ public final class PurpleVariantFactory
                 .subclonalLikelihood(variant.subclonalLikelihood())
                 .somaticLikelihood(PurpleConversion.convert(variant.somaticLikelihood()))
                 .localPhaseSets(variant.localPhaseSets())
+                .clinvarPathogenicity(isGermline ? variant.pathogenicity() : null)
+                .gnomadFrequency(isGermline ? variant.gnomadFrequency() : null)
                 .build();
     }
 

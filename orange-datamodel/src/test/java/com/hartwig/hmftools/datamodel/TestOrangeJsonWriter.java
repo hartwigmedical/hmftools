@@ -195,6 +195,7 @@ public class TestOrangeJsonWriter
                 .position(198266779)
                 .ref("G")
                 .alt("A")
+                .driverLikelihood(1.0)
                 .worstCodingEffect(PurpleCodingEffect.MISSENSE)
                 .variantCopyNumber(2.03)
                 .minorAlleleCopyNumber(0.4)

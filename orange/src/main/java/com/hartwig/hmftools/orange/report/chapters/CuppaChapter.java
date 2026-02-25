@@ -13,23 +13,23 @@ import com.itextpdf.layout.property.HorizontalAlignment;
 
 import org.jetbrains.annotations.NotNull;
 
-public class CohortComparisonChapter implements ReportChapter
+public class CuppaChapter implements ReportChapter
 {
     private final OrangeRecord mReport;
     private final PlotPathResolver mPlotPathResolver;
     private final ReportResources mReportResources;
 
-    public CohortComparisonChapter(final OrangeRecord report, final PlotPathResolver plotPathResolver, final ReportResources reportResources)
+    public CuppaChapter(final OrangeRecord report, final PlotPathResolver plotPathResolver, final ReportResources reportResources)
     {
-        this.mReport = report;
-        this.mPlotPathResolver = plotPathResolver;
-        this.mReportResources = reportResources;
+        mReport = report;
+        mPlotPathResolver = plotPathResolver;
+        mReportResources = reportResources;
     }
 
     @Override
     public String name()
     {
-        return "Cohort Comparison";
+        return "Tissue of Origin";
     }
 
     @Override
@@ -44,7 +44,7 @@ public class CohortComparisonChapter implements ReportChapter
         document.add(new Paragraph(name()).addStyle(mReportResources.chapterTitleStyle()));
 
         boolean isFail = PurpleQCInterpretation.isFail(mReport.purple().fit().qc());
-        if(!isFail && mReport.plots().cuppaSummaryPlot() != null)
+        if(!isFail && mReport.plots().cuppaSummaryPdf() != null)
         {
             addCuppaSummaryPlot(document);
         }
@@ -56,7 +56,7 @@ public class CohortComparisonChapter implements ReportChapter
 
     private void addCuppaSummaryPlot(@NotNull Document document)
     {
-        Image cuppaSummaryPlot = Images.build(mPlotPathResolver.resolve(mReport.plots().cuppaSummaryPlot()));
+        Image cuppaSummaryPlot = Images.build(mPlotPathResolver.resolve(mReport.plots().cuppaSummaryPdf()));
         cuppaSummaryPlot.setMaxWidth(740);
         cuppaSummaryPlot.setMaxHeight(420);
         cuppaSummaryPlot.setHorizontalAlignment(HorizontalAlignment.CENTER);

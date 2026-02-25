@@ -51,7 +51,7 @@
     "somaticCopyNumbers": [],
     "somaticGeneCopyNumbers": [],
     "somaticGainsDels": [],
-    "chrArmCopyNumbers": []
+    "armCopyNumberAbberations": []
   },
   "linx": {
     "somaticStructuralVariants": [],

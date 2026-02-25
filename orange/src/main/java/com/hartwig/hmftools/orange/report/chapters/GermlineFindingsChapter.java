@@ -82,7 +82,7 @@ public class GermlineFindingsChapter implements ReportChapter
         if(drivers != null && reportableVariants != null)
         {
             List<VariantEntry> reportableEntries = VariantEntryFactory.create(reportableVariants, drivers);
-            String titleDrivers = "Driver variants (" + reportableEntries.size() + ")";
+            String titleDrivers = "Small variants (" + reportableEntries.size() + ")";
             document.add(GermlineVariantTable.build(titleDrivers, contentWidth(), reportableEntries, mReportResources));
         }
     }
@@ -92,7 +92,7 @@ public class GermlineFindingsChapter implements ReportChapter
         List<PurpleGainDeletion> reportableGermlineFullDels = mReport.purple().germlineGainsDels();
         if(reportableGermlineFullDels != null)
         {
-            String title = "Potentially pathogenic germline deletions (" + reportableGermlineFullDels.size() + ")";
+            String title = "Amplifications and Deletions (" + reportableGermlineFullDels.size() + ")";
             document.add(GainDeletionTable.build(
                     title, contentWidth(), reportableGermlineFullDels, mReportResources, mReport.hasRna()));
         }
@@ -117,7 +117,7 @@ public class GermlineFindingsChapter implements ReportChapter
         {
             List<BreakendEntry> reportableBreakends = BreakendEntryFactory.create(reportableGermlineBreakends);
 
-            String title = "Potentially pathogenic germline gene disruptions (" + reportableBreakends.size() + ")";
+            String title = "Disruptions (" + reportableBreakends.size() + ")";
             document.add(DisruptionTable.build(title, contentWidth(), reportableBreakends, mReportResources));
         }
     }

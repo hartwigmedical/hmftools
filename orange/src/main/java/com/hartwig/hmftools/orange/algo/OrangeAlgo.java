@@ -23,9 +23,6 @@ import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.driver.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.genome.chromosome.CytoBands;
-import com.hartwig.hmftools.common.hla.LilacAllele;
-import com.hartwig.hmftools.common.hla.LilacQcData;
-import com.hartwig.hmftools.datamodel.hla.ImmutableLilacRecord;
 import com.hartwig.hmftools.datamodel.hla.LilacRecord;
 import com.hartwig.hmftools.datamodel.orange.ExperimentType;
 import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeDoidNode;
@@ -35,8 +32,6 @@ import com.hartwig.hmftools.orange.algo.isofox.IsofoxData;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxDataLoader;
 import com.hartwig.hmftools.orange.algo.linx.LinxData;
 import com.hartwig.hmftools.orange.algo.linx.LinxDataLoader;
-import com.hartwig.hmftools.common.metrics.BamFlagStats;
-import com.hartwig.hmftools.common.metrics.BamMetricSummary;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.peach.PeachGenotypeFile;
 import com.hartwig.hmftools.common.pipeline.PipelineVersionFile;
@@ -45,17 +40,13 @@ import com.hartwig.hmftools.common.sigs.SignatureAllocationFile;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
 import com.hartwig.hmftools.common.virus.VirusInterpreterDataLoader;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
-import com.hartwig.hmftools.datamodel.flagstat.Flagstat;
 import com.hartwig.hmftools.datamodel.immuno.ImmuneEscapeRecord;
 import com.hartwig.hmftools.datamodel.isofox.IsofoxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
-import com.hartwig.hmftools.datamodel.metrics.WGSMetrics;
 import com.hartwig.hmftools.datamodel.orange.ImmutableOrangePlots;
 import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeRecord;
-import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeSample;
 import com.hartwig.hmftools.datamodel.orange.OrangePlots;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
-import com.hartwig.hmftools.datamodel.orange.OrangeSample;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.orange.OrangeConfig;
 import com.hartwig.hmftools.orange.algo.cuppa.CuppaDataFactory;
@@ -449,6 +440,8 @@ public class OrangeAlgo
             LOGGER.info(" Loaded {} linx plots from {}", linxDriverPlots.size(), linxPlotDir);
         }
 
+        String qSeePdf = config.QSeeDirectory + File.separator + config.TumorId + ".qsee.vis.report.pdf";
+
         String purplePlotBasePath = config.PurplePlotDirectory + File.separator + config.TumorId;
         String purpleInputPlot = mPlotManager.processPlotFile(purplePlotBasePath + ".input.png");
         String purpleFinalCircosPlot = mPlotManager.processPlotFile(purplePlotBasePath + ".circos.png");
@@ -457,6 +450,9 @@ public class OrangeAlgo
         String purpleVariantCopyNumberPlot = mPlotManager.processPlotFile(purplePlotBasePath + ".somatic.png");
         String purplePurityRangePlot = mPlotManager.processPlotFile(purplePlotBasePath + ".purity.range.png");
         String purpleKataegisPlot = mPlotManager.processPlotFile(purplePlotBasePath + ".somatic.rainfall.png");
+
+        // TODO: remove Purple plots and only add its PDF
+        String purplePlotPdf = mPlotManager.processPlotFile(purplePlotBasePath + ".somatic.rainfall.png");
 
         List<String> purplePlots = Arrays.asList(purpleInputPlot, purpleFinalCircosPlot, purpleClonalityPlot, purpleCopyNumberPlot,
                 purpleVariantCopyNumberPlot, purplePurityRangePlot, purpleKataegisPlot);
@@ -467,7 +463,7 @@ public class OrangeAlgo
             System.exit(0);
         }
 
-        String cuppaSummaryPlot = mPlotManager.processPlotFile(
+        String cuppaSummaryPdf = mPlotManager.processPlotFile(
                 config.ReferenceId != null ? CuppaPredictions.generateVisPlotFilename(config.CuppaDir, config.TumorId) : null);
 
         return ImmutableOrangePlots.builder()
@@ -479,7 +475,9 @@ public class OrangeAlgo
                 .purplePurityRangePlot(purplePurityRangePlot)
                 .purpleKataegisPlot(purpleKataegisPlot)
                 .linxDriverPlots(linxDriverPlots)
-                .cuppaSummaryPlot(cuppaSummaryPlot)
+                .cuppaSummaryPdf(cuppaSummaryPdf)
+                .purplePdf(purplePlotPdf)
+                .qSeePdf(qSeePdf)
                 .build();
     }
 

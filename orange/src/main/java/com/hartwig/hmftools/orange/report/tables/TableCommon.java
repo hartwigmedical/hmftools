@@ -27,6 +27,7 @@ public final class TableCommon
     public static final String COL_RANGE = "Range";
     public static final String COL_TYPE = "Type";
     public static final String COL_DRIVER = "Driver";
+    public static final String COL_ZYGOSITY = "Zygosity";
 
     public static final String VALUE_HET = "HET";
     public static final String VALUE_HOM = "HOM";

@@ -76,6 +76,7 @@
         "position": 198266779,
         "ref": "G",
         "alt": "A",
+        "driverLikelihood": 1.0,
         "worstCodingEffect": "MISSENSE",
         "canonicalImpact": {
           "transcript": "ENST00000335508",
@@ -158,7 +159,7 @@
         "minMinorAlleleCopyNumber": 0.8112
       }
     ],
-    "chrArmCopyNumbers": [
+    "armCopyNumberAbberations": [
       {
         "chromosome": "12",
         "arm": "P",
@@ -897,8 +898,8 @@
       "plot/tumor_sample.cluster2.png",
       "plot/tumor_sample.cluster1.png"
     ],
-    "cuppaSummaryPlot": "plot/tumor_sample.cuppa.vis.png",
-    "cuppaFeaturePlot": null,
-    "cuppaChartPlot": null
+    "cuppaSummaryPdf": "plot/tumor_sample.cuppa.vis.png",
+    "purplePdf": null,
+    "qSeePdf": null
   }
 }

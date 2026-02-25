@@ -80,6 +80,8 @@ public final class VariantEntryFactory
                 .clonalLikelihood(1 - variant.subclonalLikelihood())
                 .rnaDepth(variant.rnaDepth())
                 .genotypeStatus(variant.genotypeStatus())
+                .clinvarPathogenicity(variant.clinvarPathogenicity())
+                .gnomadFrequency(variant.gnomadFrequency())
                 .build();
     }
 

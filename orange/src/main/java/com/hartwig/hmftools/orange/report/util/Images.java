@@ -10,8 +10,7 @@ import org.jetbrains.annotations.NotNull;
 
 public final class Images
 {
-    @NotNull
-    public static Image build(@NotNull String path)
+    public static Image build(final String path)
     {
         try
         {

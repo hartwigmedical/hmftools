@@ -7,11 +7,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 import com.hartwig.hmftools.datamodel.OrangeJson;
 import com.hartwig.hmftools.datamodel.isofox.IsofoxRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
-import com.hartwig.hmftools.orange.report.chapters.CohortComparisonChapter;
+import com.hartwig.hmftools.orange.report.chapters.CuppaChapter;
 import com.hartwig.hmftools.orange.report.chapters.FrontPageChapter;
 import com.hartwig.hmftools.orange.report.chapters.GermlineFindingsChapter;
 import com.hartwig.hmftools.orange.report.chapters.ImmunologyChapter;
@@ -82,7 +81,7 @@ public class ReportWriter
 
         if(!report.tumorOnlyMode())
         {
-            chapters.add(new CohortComparisonChapter(report, mPlotPathResolver, reportResources));
+            chapters.add(new CuppaChapter(report, mPlotPathResolver, reportResources));
         }
 
         chapters.add(new QualityControlChapter(report, mPlotPathResolver, reportResources));

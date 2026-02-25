@@ -37,13 +37,11 @@ public interface OrangePlots
     List<String> linxDriverPlots();
 
     @Nullable
-    String cuppaSummaryPlot();
+    String cuppaSummaryPdf();
 
-    @Deprecated
     @Nullable
-    String cuppaFeaturePlot();
+    String qSeePdf();
 
-    @Deprecated
     @Nullable
-    String cuppaChartPlot();
+    String purplePdf();
 }

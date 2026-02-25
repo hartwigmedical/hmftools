@@ -90,6 +90,7 @@
         "position": 198266779,
         "ref": "G",
         "alt": "A",
+        "driverLikelihood": 1.0,
         "worstCodingEffect": "MISSENSE",
         "canonicalImpact": {
           "transcript": "ENST00000335508",
@@ -132,6 +133,7 @@
         "position": 41209068,
         "ref": "C",
         "alt": "T",
+        "driverLikelihood": 1.0,
         "worstCodingEffect": "SPLICE",
         "canonicalImpact": {
           "transcript": "ENST00000471181",
@@ -167,7 +169,9 @@
           1,
           2
         ],
-        "reported": true
+        "reported": true,
+        "gnomadFrequency": 0.001,
+        "clinvarPathogenicity": "PATHOGENIC"
       }
     ],
     "somaticCopyNumbers": [
@@ -190,7 +194,7 @@
         "minMinorAlleleCopyNumber": 0.4
       }
     ],
-    "chrArmCopyNumbers": [
+    "armCopyNumberAbberations": [
       {
         "chromosome": "12",
         "arm": "P",
@@ -438,8 +442,8 @@
     "purplePurityRangePlot": "",
     "purpleKataegisPlot": "",
     "linxDriverPlots": [],
-    "cuppaSummaryPlot": null,
-    "cuppaFeaturePlot": null,
-    "cuppaChartPlot": null
+    "cuppaSummaryPdf": null,
+    "purplePdf": null,
+    "qSeePdf": null
   }
 }

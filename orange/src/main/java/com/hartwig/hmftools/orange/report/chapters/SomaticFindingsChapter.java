@@ -87,10 +87,12 @@ public class SomaticFindingsChapter implements ReportChapter
             addStructuralDriverPlots(document);
         }
 
+        /*
         if(!PurpleQCInterpretation.isContaminated(mReport.purple().fit().qc()))
         {
             addKataegisPlot(document);
         }
+        */
     }
 
     private void addSomaticVariants(final Document document)
@@ -153,7 +155,7 @@ public class SomaticFindingsChapter implements ReportChapter
 
     private void addChrArmCopyNumbers(final Document document)
     {
-        String title = "Chromosome Arm Copy Number";
+        String title = "Arm Copy Number Abberations";
 
         if(PurpleQCInterpretation.isContaminated(mReport.purple().fit().qc()))
         {
@@ -162,7 +164,7 @@ public class SomaticFindingsChapter implements ReportChapter
         }
         else
         {
-            document.add(ChrArmCopyNumberTable.build(title, contentWidth(), mReport.purple().chrArmCopyNumbers(), mReportResources));
+            document.add(ChrArmCopyNumberTable.build(title, contentWidth(), mReport.purple().armCopyNumberAbberations(), mReportResources));
         }
     }
 

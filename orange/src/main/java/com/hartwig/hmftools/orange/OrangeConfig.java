@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.orange;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL;
 import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.addGenePanelOption;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeVersion;
@@ -27,6 +29,8 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_C
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_PLOT_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_PLOT_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.QSEE_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.QSEE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REF_METRICS_DIR_CFG;
@@ -54,6 +58,8 @@ import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import static com.hartwig.hmftools.orange.util.PathUtil.mandatoryPath;
 import static com.hartwig.hmftools.orange.util.PathUtil.optionalPath;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -95,6 +101,7 @@ public class OrangeConfig
 
     public final String PurpleDataDirectory;
     public final String PurplePlotDirectory;
+    public final String QSeeDirectory;
 
     public final String LinxSomaticDataDirectory;
     public final String LinxGermlineDataDirectory;
@@ -156,13 +163,25 @@ public class OrangeConfig
         RefGenVersion = RefGenomeVersion.from(configBuilder);
         DriverGenePanelTsv = configBuilder.getValue(DRIVER_GENE_PANEL);
         SignaturesEtiologyTsv = configBuilder.getValue(SIGNATURES_ETIOLOGY_TSV);
-        PipelineVersionFile = configBuilder.getValue(PIPELINE_VERSION_FILE);
+
+        String pipelineVersionFile = configBuilder.getValue(PIPELINE_VERSION_FILE);
+
+        if(pipelineVersionFile == null && configBuilder.hasValue(PIPELINE_SAMPLE_ROOT_DIR))
+        {
+            String testPipelineVersionFile = format("%s/orange_pipeline.version.txt", configBuilder.getValue(PIPELINE_SAMPLE_ROOT_DIR));
+
+            if(Files.exists(Paths.get(testPipelineVersionFile)))
+                pipelineVersionFile = testPipelineVersionFile;
+        }
+
+        PipelineVersionFile = pipelineVersionFile;
 
         OutputDir = parseOutputDir(configBuilder);
         checkCreateOutputDir(OutputDir);
         OutputId = configBuilder.getValue(OUTPUT_ID);
 
-        PathResolver pathResolver = new PathResolver(configBuilder,
+        PathResolver pathResolver = new PathResolver(
+                configBuilder,
                 configBuilder.getValue(PIPELINE_SAMPLE_ROOT_DIR),
                 configBuilder.getValue(SAMPLE_DATA_DIR_CFG));
 
@@ -172,6 +191,8 @@ public class OrangeConfig
         PurplePlotDirectory = pathResolver.resolveMandatoryToolPlotsDirectory(PURPLE_PLOT_DIR_CFG, defaultToolDirectories.purpleDir());
         LinxSomaticDataDirectory = pathResolver.resolveMandatoryToolDirectory(LINX_DIR_CFG, defaultToolDirectories.linxSomaticDir());
         LinxPlotDirectory = optionalPath(pathResolver.resolveOptionalToolPlotsDirectory(LINX_PLOT_DIR_CFG, defaultToolDirectories.linxSomaticDir()));
+
+        QSeeDirectory = pathResolver.resolveMandatoryToolDirectory(QSEE_DIR_CFG, defaultToolDirectories.qsSeeDir());
 
         if(ReferenceId != null)
         {
@@ -279,6 +300,7 @@ public class OrangeConfig
         configBuilder.addPath(LINX_DIR_CFG, false, LINX_DIR_DESC);
         configBuilder.addPath(LINX_PLOT_DIR_CFG, false, LINX_PLOT_DIR_DESC);
         configBuilder.addPath(LILAC_DIR_CFG, false, LILAC_DIR_DESC);
+        configBuilder.addPath(QSEE_DIR_CFG, false, QSEE_DIR_DESC);
         PipelineToolDirectories.addPipelineFormatOptions(configBuilder);
 
         configBuilder.addConfigItem(RNA_SAMPLE_ID, false, "(Optional) The RNA sample of the tumor sample for which ORANGE will run");
@@ -369,6 +391,7 @@ public class OrangeConfig
         PipelineVersionFile = pipelineVersionFile;
         PurpleDataDirectory = purpleDataDirectory;
         PurplePlotDirectory = purplePlotDirectory;
+        QSeeDirectory = null;
         LinxSomaticDataDirectory = linxSomaticDataDirectory;
         LinxGermlineDataDirectory = linxGermlineDataDirectory;
         LinxPlotDirectory = linxPlotDirectory;
