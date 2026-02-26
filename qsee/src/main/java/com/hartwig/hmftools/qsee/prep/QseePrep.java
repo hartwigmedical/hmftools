@@ -36,8 +36,6 @@ public class QseePrep
     private static final String COL_FEATURE_VALUE = "FeatureValue";
     private static final String COL_PLOT_METADATA = "PlotMetadata";
 
-    private static final String SAMPLE_ID_MULTI = "MULTI_SAMPLE";
-
     public QseePrep(QseePrepConfig config)
     {
         mConfig = config;
@@ -133,18 +131,25 @@ public class QseePrep
         }
     }
 
-    public static String formOutputFilename(String basePath, String sampleId)
+    public static String formOutputFilename(String basePath, String sampleId, @Nullable String outputId)
     {
-        return checkAddDirSeparator(basePath) + sampleId + "." + QSEE_FILE_ID + ".vis.features.tsv.gz";
+        String filename = checkAddDirSeparator(basePath) + sampleId + "." + QSEE_FILE_ID + ".vis.features";
+
+        if(outputId != null)
+            filename += "." + outputId;
+
+        filename += ".tsv.gz";
+
+        return filename;
     }
 
     public static String formOutputFilename(CommonPrepConfig config)
     {
         String sampleId = config.isSinglePatient() ?
                 config.getSampleIds(SampleType.TUMOR).get(0) :
-                SAMPLE_ID_MULTI;
+                "multisample";
 
-        return formOutputFilename(config.OutputDir, sampleId);
+        return formOutputFilename(config.OutputDir, sampleId, config.OutputId);
     }
 
     public void run()

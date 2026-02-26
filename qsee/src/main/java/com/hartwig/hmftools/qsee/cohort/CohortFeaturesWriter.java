@@ -3,7 +3,6 @@ package com.hartwig.hmftools.qsee.cohort;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.qsee.common.QseeConstants.QC_LOGGER;
-import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COHORT_FILE_ID;
 import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_FEATURE_NAME;
 import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_FEATURE_TYPE;
 import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_SOURCE_TOOL;
@@ -41,8 +40,15 @@ public class CohortFeaturesWriter
     {
         List<String> sampleIds = mCommonPrepConfig.getSampleIds(mSampleType);
 
-        mOutputFile = FileWriterUtils.checkAddDirSeparator(mCommonPrepConfig.OutputDir) +
-                COHORT_FILE_ID + "." + QSEE_FILE_ID + ".features." + mSampleType.toString().toLowerCase() + ".tsv.gz";
+        String outputFile = FileWriterUtils.checkAddDirSeparator(mCommonPrepConfig.OutputDir) +
+                "cohort." + QSEE_FILE_ID + ".features." + mSampleType.toString().toLowerCase();
+
+        if(mCommonPrepConfig.OutputId != null)
+            outputFile += "." + mCommonPrepConfig.OutputId;
+
+        outputFile += ".tsv.gz";
+
+        mOutputFile = outputFile;
 
         try
         {

@@ -131,7 +131,7 @@ public class CohortPercentilesTrainer
 
         try
         {
-            String outputFile = CohortPercentilesFile.generateFilename(mCommonPrepConfig.OutputDir);
+            String outputFile = CohortPercentilesFile.generateFilename(mCommonPrepConfig.OutputDir, mCommonPrepConfig.OutputId);
             QC_LOGGER.info("Writing cohort percentiles file: {}", outputFile);
             CohortPercentilesFile.write(outputFile, mPercentiles, cohortPercentiles);
         }

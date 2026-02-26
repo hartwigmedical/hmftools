@@ -133,7 +133,7 @@ public class FeaturePrep
                 QC_LOGGER.error("failed prep as no samples had data for sampleType({}) category({})",
                         sampleType, categoryPrep.name());
 
-                System.exit(1);
+                //System.exit(1);
             }
             else if(samplesMissingInputCount.get() > 0)
             {

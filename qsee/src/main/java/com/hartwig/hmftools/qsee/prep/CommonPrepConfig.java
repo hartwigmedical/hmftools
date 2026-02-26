@@ -28,6 +28,7 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FIL
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 
 import java.util.List;
@@ -61,6 +62,7 @@ public class CommonPrepConfig
     public final boolean AllowMissingInput;
 
     public final String OutputDir;
+    public final String OutputId;
 
     public final int Threads;
 
@@ -87,6 +89,7 @@ public class CommonPrepConfig
         AllowMissingInput = configBuilder.hasFlag(ALLOW_MISSING_INPUT);
 
         OutputDir = parseOutputDir(configBuilder);
+        OutputId = configBuilder.getValue(OUTPUT_ID);
 
         Threads = TaskExecutor.parseThreads(configBuilder);
     }
@@ -113,6 +116,7 @@ public class CommonPrepConfig
         configBuilder.addFlag(ALLOW_MISSING_INPUT, ALLOW_MISSING_INPUT_DESC);
 
         configBuilder.addPath(OUTPUT_DIR, true, OUTPUT_DIR_DESC);
+        configBuilder.addConfigItem(OUTPUT_ID, false, OUTPUT_DIR_DESC);
 
         configBuilder.addConfigItem(THREADS, false, THREADS_DESC, "1");
         ConfigUtils.addLoggingOptions(configBuilder);

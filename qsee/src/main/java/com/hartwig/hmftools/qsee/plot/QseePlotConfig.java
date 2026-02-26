@@ -29,6 +29,7 @@ public class QseePlotConfig
 
     public final String CohortPercentilesFile;
     public final String OutputDir;
+    public final String OutputId;
 
     public static final String SAMPLE_FEATURES_FILE = "sample_features_file";
     public static final String SAMPLE_FEATURES_FILE_DESC = "Path to the sample features file";
@@ -43,6 +44,7 @@ public class QseePlotConfig
 
         CohortPercentilesFile = configBuilder.getValue(COHORT_PERCENTILES_FILE_CFG);
         OutputDir = parseOutputDir(configBuilder);
+        OutputId = configBuilder.getValue(OUTPUT_DIR);
     }
 
     public static void registerConfig(final ConfigBuilder configBuilder)
@@ -55,6 +57,7 @@ public class QseePlotConfig
 
         configBuilder.addPath(COHORT_PERCENTILES_FILE_CFG, true, COHORT_PERCENTILES_FILE_CFG_DESC);
         configBuilder.addPath(OUTPUT_DIR, true, OUTPUT_DIR_DESC);
+        configBuilder.addConfigItem(OUTPUT_DIR, false, OUTPUT_DIR_DESC);
 
         configBuilder.addConfigItem(THREADS, false, THREADS_DESC, "1");
         ConfigUtils.addLoggingOptions(configBuilder);
