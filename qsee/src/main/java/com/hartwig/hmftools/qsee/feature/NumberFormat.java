@@ -6,7 +6,7 @@ public enum NumberFormat
 
     NUMBER,
     PERCENT,
-    LOG;
+    LOG10;
 
     public String displayString()
     {

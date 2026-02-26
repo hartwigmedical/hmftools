@@ -714,7 +714,7 @@ FEATURE_GROUP <- list(
 NUMBER_FORMAT <- list(
    NUMBER = "NUMBER",
    PERCENT = "PERCENT",
-   LOG = "LOG"
+   LOG10 = "LOG10"
 )
 
 SUMMARY_TABLE_DATA <- get_plot_data(FEATURE_TYPE$SUMMARY_TABLE)
@@ -737,7 +737,7 @@ get_sub_table_data <- function(feature_group, number_format){
 get_outer_axis_limits <- function(plot_data, outer_limits = c(NA, NA)){
 
    if(FALSE){
-      plot_data = get_sub_table_data(FEATURE_GROUP$MUTATIONAL_BURDEN, NUMBER_FORMAT$LOG)
+      plot_data = get_sub_table_data(FEATURE_GROUP$MUTATIONAL_BURDEN, NUMBER_FORMAT$LOG1010)
       minimal_limits = c(0, NA)
    }
 
@@ -812,10 +812,10 @@ plot_sub_table <- function(plot_data, show_title = FALSE, show_sample_type_label
       plot_data = get_sub_table_data(FEATURE_GROUP$MAPPING, NUMBER_FORMAT$NUMBER)
       axis_limits = get_outer_axis_limits(plot_data, c(0, 100))
       
-      plot_data = get_sub_table_data(FEATURE_GROUP$COPY_NUMBER, NUMBER_FORMAT$LOG)
+      plot_data = get_sub_table_data(FEATURE_GROUP$COPY_NUMBER, NUMBER_FORMAT$LOG10)
       axis_limits = get_outer_axis_limits(plot_data, c(NA, 1000))
       
-      plot_data = get_sub_table_data(FEATURE_GROUP$MUTATIONAL_BURDEN, NUMBER_FORMAT$LOG)
+      plot_data = get_sub_table_data(FEATURE_GROUP$MUTATIONAL_BURDEN, NUMBER_FORMAT$LOG10)
       axis_limits = get_outer_axis_limits(plot_data, c(NA, 1000))
    }
 
@@ -880,11 +880,11 @@ plot_sub_table <- function(plot_data, show_title = FALSE, show_sample_type_label
       scale_y_continuous(
          
          limits = axis_limits,
-         transform = if(number_format == NUMBER_FORMAT$LOG) "log10" else "identity",
+         transform = if(number_format == NUMBER_FORMAT$LOG10) "log10" else "identity",
          
          label = if(number_format == NUMBER_FORMAT$PERCENT){ 
             scales::label_percent()
-         } else if(number_format == NUMBER_FORMAT$LOG) {
+         } else if(number_format == NUMBER_FORMAT$LOG10) {
             function(x) format(x, scientific = FALSE, drop0trailing = TRUE, trim = TRUE)
          } else {
             waiver()
@@ -932,7 +932,7 @@ PLOTS[[FEATURE_TYPE$SUMMARY_TABLE]] <- local({
       plot_sub_table(axis_limits = c(0, 1))
    
    plots[[5]] <- 
-      get_sub_table_data(FEATURE_GROUP$COPY_NUMBER, NUMBER_FORMAT$LOG) %>% 
+      get_sub_table_data(FEATURE_GROUP$COPY_NUMBER, NUMBER_FORMAT$LOG10) %>% 
       plot_sub_table(axis_limits = get_outer_axis_limits(., c(NA, 1000)))
    
    ## Contamination ================================
@@ -941,7 +941,7 @@ PLOTS[[FEATURE_TYPE$SUMMARY_TABLE]] <- local({
    
    ## Mutational burden ================================
    plots[[7]] <- 
-      get_sub_table_data(FEATURE_GROUP$MUTATIONAL_BURDEN, NUMBER_FORMAT$LOG) %>% 
+      get_sub_table_data(FEATURE_GROUP$MUTATIONAL_BURDEN, NUMBER_FORMAT$LOG10) %>% 
       plot_sub_table(show_title = TRUE, show_sample_type_label = TRUE, axis_limits = get_outer_axis_limits(., c(NA, 1000)))
    
    heights <- sapply(plots, function(p){ p$height })
