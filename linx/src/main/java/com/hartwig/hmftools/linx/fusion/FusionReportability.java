@@ -15,7 +15,8 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_3;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_5;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.FUSION_MAX_CHAIN_LINKS;
-import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_UPSTREAM_DISTANCE_IG_KNOWN;
+import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_ENHANCER_PARTNER_GENE_DISTANCE_NO_ORIENT;
+import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_UPSTREAM_DISTANCE_ENHANCER_KNOWN;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_UPSTREAM_DISTANCE_KNOWN;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_UPSTREAM_DISTANCE_OTHER;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.PROTEINS_REQUIRED_KEPT;
@@ -88,19 +89,22 @@ public class FusionReportability
         // set limits on how far upstream the breakend can be - adjusted for whether the fusions is known or not
         int maxUpstreamDistance = getMaxUpstreamDistance(fusion);
 
-        if(upTrans.getDistanceUpstream() > maxUpstreamDistance || downTrans.getDistanceUpstream() > maxUpstreamDistance)
+        if(upTrans.getDistanceUpstream() > maxUpstreamDistance)
+            nonReportableReasons.add(PRE_GENE_DISTANCE);
+
+        if(!fusion.isHighImpactPromiscuous() && downTrans.getDistanceUpstream() > maxUpstreamDistance)
             nonReportableReasons.add(PRE_GENE_DISTANCE);
 
         if(downTrans.bioType().equals(BIOTYPE_NONSENSE_MED_DECAY))
             nonReportableReasons.add(NMD);
 
-        if(!fusion.isIG() && downTrans.hasNegativePrevSpliceAcceptorDistance())
+        if(!fusion.isEnhancer() && downTrans.hasNegativePrevSpliceAcceptorDistance())
             nonReportableReasons.add(NEG_SPLICE_ACC_DISTANCE);
 
         if(!permittedExonSkipping(fusion))
             nonReportableReasons.add(EXON_SKIPPING);
 
-        if(fusion.isTerminated() && !allowSuspectChains(fusion.knownType()))
+        if(fusion.isTerminated() && !allowSuspectChains(fusion.knownType()) && !fusion.isHighImpactPromiscuous())
             nonReportableReasons.add(CHAIN_TERMINATED);
 
         if(fusion.nonDisruptiveChain())
@@ -118,9 +122,11 @@ public class FusionReportability
     private static int getMaxUpstreamDistance(final GeneFusion fusion)
     {
         if(fusion.knownType() == ENHANCER_KNOWN_PAIR)
-            return MAX_UPSTREAM_DISTANCE_IG_KNOWN;
+            return MAX_UPSTREAM_DISTANCE_ENHANCER_KNOWN;
         else if(fusion.knownType() == KNOWN_PAIR  || fusion.isHighImpactPromiscuous())
             return MAX_UPSTREAM_DISTANCE_KNOWN;
+        else if(fusion.knownType() == ENHANCER_PROMISCUOUS)
+            return MAX_ENHANCER_PARTNER_GENE_DISTANCE_NO_ORIENT;
         else
             return MAX_UPSTREAM_DISTANCE_OTHER;
     }
@@ -271,7 +277,7 @@ public class FusionReportability
     private static boolean permittedExonSkipping(final GeneFusion fusion)
     {
         if(fusion.knownType() == KNOWN_PAIR || fusion.knownType() == ENHANCER_KNOWN_PAIR
-                || fusion.knownType() == ENHANCER_PROMISCUOUS || fusion.knownType() == EXON_DEL_DUP)
+        || fusion.knownType() == ENHANCER_PROMISCUOUS || fusion.knownType() == EXON_DEL_DUP)
             return true;
 
         if(fusion.isHighImpactPromiscuous() || fusion.knownExons())

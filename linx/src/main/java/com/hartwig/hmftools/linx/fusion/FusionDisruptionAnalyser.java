@@ -836,7 +836,7 @@ public class FusionDisruptionAnalyser
         if(!fusion.validChainTraversal() && !allowSuspectChains(fusion.knownType()))
             return false;
 
-        if(!fusion.isIG() && fusion.downstreamTrans().hasNegativePrevSpliceAcceptorDistance())
+        if(!fusion.isEnhancer() && fusion.downstreamTrans().hasNegativePrevSpliceAcceptorDistance())
             return false;
 
         return true;
