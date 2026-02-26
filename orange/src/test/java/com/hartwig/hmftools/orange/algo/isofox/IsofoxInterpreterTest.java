@@ -3,7 +3,6 @@ package com.hartwig.hmftools.orange.algo.isofox;
 import static org.junit.Assert.assertNotNull;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.orange.algo.linx.TestLinxInterpretationFactory;
 
 import org.jetbrains.annotations.NotNull;
