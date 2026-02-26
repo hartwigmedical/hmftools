@@ -583,22 +583,16 @@ PLOTS[[FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD]] <- local({
       return(plot_missing_data(plot_labels))
    }
    
-   sample_genes_of_interest <- plot_data %>% 
-      dplyr::filter(
-         FeatureValue >= MIN_MISSED_VARIANT_LIKELIHOOD | 
-         PctMid >= MIN_MISSED_VARIANT_LIKELIHOOD
-      ) %>%
-      dplyr::arrange(-FeatureValue) %>%
-      dplyr::pull(Gene) %>% 
-      unique() %>% 
-      head(TOP_N_GENES)
-   
    plot_data <- plot_data %>% 
-      dplyr::filter(Gene %in% sample_genes_of_interest) %>% 
-      dplyr::mutate(Gene = factor(Gene, sample_genes_of_interest)) %>%
+      dplyr::filter(FeatureValue >= MIN_MISSED_VARIANT_LIKELIHOOD) %>%
+      
+      dplyr::group_by(SampleType) %>% 
+      dplyr::slice_max(order_by = FeatureValue, n = TOP_N_GENES) %>%
+      dplyr::ungroup() %>%
+      
       dplyr::mutate(
-         Gene = reverse_levels(Gene),
-         SampleType = reverse_levels(SampleType)
+         Gene = Gene %>% preordered_factor() %>% reverse_levels(),
+         SampleType = SampleType %>% preordered_factor() %>% reverse_levels()
       )
    
    plot_pairwise_comparison(plot_data, x = "Gene", plot_type = box_or_bar_plot()) + 
