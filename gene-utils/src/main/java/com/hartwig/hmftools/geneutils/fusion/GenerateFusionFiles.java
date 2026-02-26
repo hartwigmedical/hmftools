@@ -7,11 +7,10 @@ import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.add
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.KnownFusionData.OVERRIDE_DOWN_DISTANCE;
-import static com.hartwig.hmftools.common.fusion.KnownFusionData.OVERRIDE_IG_RANGE;
-import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_KNOWN_PAIR;
+import static com.hartwig.hmftools.common.fusion.KnownFusionData.OVERRIDE_ENHANCER_RANGE;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.ENHANCER_KNOWN_PAIR;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_ENHANCER_TARGET;
-import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.lowerChromosome;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
@@ -55,7 +54,8 @@ public class GenerateFusionFiles
     private final String mOutputDir;
 
     private static final String KNOWN_FUSION_DB_FILE = "known_fusion_db_file";
-    private static final int PRE_GENE_BUFFER = 10000;
+
+    protected static final int PRE_GENE_BUFFER = 10000;
 
     public GenerateFusionFiles(final ConfigBuilder configBuilder)
     {
@@ -116,6 +116,9 @@ public class GenerateFusionFiles
         GU_LOGGER.info("fusion reference file generation complete");
     }
 
+    private static final List<String> ENHANCER_GENE_PREFIXES = List.of("IG", "TR");
+    private static final List<String> THREE_PRIME_GENE_EXCEPTIONS = List.of("C19MC");
+
     private void createFusionFiles(
             final RefGenomeVersion refGenomeVersion, final List<FusionRefData> fusionRefData, final List<DriverGene> driverGenes)
     {
@@ -130,7 +133,7 @@ public class GenerateFusionFiles
         // step 4: check all genes are in Ensembl
         for(FusionRefData fusion : fusionRefData)
         {
-            if(!fusion.FiveGene.isEmpty() && !fusion.FiveGene.startsWith("IG"))
+            if(!fusion.FiveGene.isEmpty() && ENHANCER_GENE_PREFIXES.stream().noneMatch(x -> fusion.FiveGene.startsWith(x)))
             {
                 if(ensemblDataCache.getGeneDataByName(fusion.FiveGene) == null)
                 {
@@ -140,7 +143,7 @@ public class GenerateFusionFiles
 
             }
 
-            if(!fusion.ThreeGene.isEmpty() && !fusion.ThreeGene.equals("C19MC"))
+            if(!fusion.ThreeGene.isEmpty() && !THREE_PRIME_GENE_EXCEPTIONS.contains(fusion.ThreeGene))
             {
                 if(ensemblDataCache.getGeneDataByName(fusion.ThreeGene) == null)
                 {
@@ -221,90 +224,6 @@ public class GenerateFusionFiles
         }
     }
 
-    private static class FusionBedData implements Comparable<FusionBedData>
-    {
-        public final String Name;
-        public final String ChrUp;
-        public final String ChrDown;
-        public final byte StrandUp;
-        public final byte StrandDown;
-        public final int PositionUpStart;
-        public final int PositionUpEnd;
-        public final int PositionDownStart;
-        public final int PositionDownEnd;
-
-        private final boolean mUpIsStart;
-
-        public FusionBedData(
-                final String name, final String chrUp, final String chrDown, final byte strandUp, final byte strandDown,
-                final int positionUpStart, final int positionUpEnd, final int positionDownStart, final int positionDownEnd)
-        {
-            Name = name;
-            ChrUp = chrUp;
-            ChrDown = chrDown;
-            StrandUp = strandUp;
-            StrandDown = strandDown;
-            PositionUpStart = positionUpStart;
-            PositionUpEnd = positionUpEnd;
-            PositionDownStart = positionDownStart;
-            PositionDownEnd = positionDownEnd;
-
-            if(lowerChromosome(ChrUp, ChrDown))
-                mUpIsStart = true;
-            else if(ChrUp.equals(ChrDown))
-                mUpIsStart = adjustedUpStart() < adjustedDownStart();
-            else
-                mUpIsStart = false;
-        }
-
-        // methods for sorting
-        public int adjustedUpStart() { return StrandUp == POS_STRAND ? PositionUpStart - PRE_GENE_BUFFER - 1 : PositionUpStart - 1; }
-        public int adjustedUpEnd() { return StrandUp == POS_STRAND ? PositionUpEnd : PositionUpEnd + PRE_GENE_BUFFER; }
-        public int adjustedDownStart() { return StrandDown == POS_STRAND ? PositionDownStart - PRE_GENE_BUFFER - 1 : PositionDownStart - 1; }
-        public int adjustedDownEnd() { return StrandDown == POS_STRAND ? PositionDownEnd : PositionDownEnd + PRE_GENE_BUFFER; }
-
-        public char strandUpChar() { return StrandUp == POS_STRAND ? '+' : '-'; }
-
-        // REVERSE STRAND2 since for the downstream genes the orientation is opposite to upstream (ie +ve strand = -ve orientation and vice versa)
-        public char strandDownChar() { return StrandDown == POS_STRAND ? '-' : '+'; }
-
-        // ordered for the BED
-        public String chrStart() { return mUpIsStart ? ChrUp : ChrDown; }
-        public String chrEnd() { return !mUpIsStart ? ChrUp : ChrDown; }
-        public int posStartStart() { return mUpIsStart ? adjustedUpStart() : adjustedDownStart(); }
-        public int posStartEnd() { return mUpIsStart ? adjustedUpEnd() : adjustedDownEnd(); }
-        public int posEndStart() { return !mUpIsStart ? adjustedUpStart() : adjustedDownStart(); }
-        public int posEndEnd() { return !mUpIsStart ? adjustedUpEnd() : adjustedDownEnd(); }
-        public char strandStart() { return mUpIsStart ? strandUpChar() : strandDownChar(); }
-        public char strandEnd() { return !mUpIsStart ? strandUpChar() : strandDownChar(); }
-
-        public String toString()
-        {
-            return format("%s start(%s:%d-%d) end(%s:%d-%d) upIsStart(%s)",
-                    Name, chrStart(), posStartStart(), posStartEnd(), chrEnd(), posEndStart(), posEndEnd(), mUpIsStart);
-        }
-
-        @Override
-        public int compareTo(final FusionBedData other)
-        {
-            if(lowerChromosome(chrStart(), other.chrStart()))
-            {
-                return -1;
-            }
-            else if(chrStart().equals(other.chrStart()))
-            {
-                if(posStartStart() == other.posStartStart())
-                    return Name.compareTo(other.Name);
-
-                return posStartStart() < other.posStartStart() ? -1 : 1;
-            }
-            else
-            {
-                return 1;
-            }
-        }
-    }
-
     private void writeFusionBedFiles(
             final RefGenomeVersion refGenomeVersion, final List<FusionRefData> fusionRefData, final List<DriverGene> driverGenes,
             final EnsemblDataCache ensemblDataCache)
@@ -365,7 +284,7 @@ public class GenerateFusionFiles
             final RefGenomeVersion refGenomeVersion, final EnsemblDataCache ensemblDataCache, final FusionRefData fusion,
             final List<FusionBedData> bedEntries)
     {
-        if(fusion.Type != KNOWN_PAIR && fusion.Type != IG_KNOWN_PAIR)
+        if(fusion.Type != KNOWN_PAIR && fusion.Type != ENHANCER_KNOWN_PAIR)
             return;
 
         String chrUp;
@@ -403,9 +322,9 @@ public class GenerateFusionFiles
             String overrides = refGenomeVersion.is37() ? fusion.Overrides : fusion.OverridesRef38;
             String[] overridesStr = overrides.split(" ", -1);
 
-            String igRangeStr = overridesStr[0].replaceAll(OVERRIDE_IG_RANGE + "=", "");
+            String igRangeStr = overridesStr[0].replaceAll(OVERRIDE_ENHANCER_RANGE + "=", "");
             String[] igRangeItems = igRangeStr.split(ITEM_DELIM);
-            strandUp = Byte.parseByte(igRangeItems[0]);
+            strandUp = igRangeItems[0].equals(KnownFusionData.NO_ORIENTATION) ? POS_STRAND : Byte.parseByte(igRangeItems[0]);
             byte upStrandReversed = strandUp == POS_STRAND ? NEG_STRAND : POS_STRAND;
             chrUp = igRangeItems[1];
             posUpStart = Integer.parseInt(igRangeItems[2]);
@@ -484,23 +403,31 @@ public class GenerateFusionFiles
                     return Collections.emptyList();
                 }
 
-                KnownFusionType type = KnownFusionType.valueOf(values[fieldsIndexMap.get(KnownFusionData.FLD_TYPE)]);
+                try
+                {
+                    KnownFusionType type = KnownFusionType.parse(values[fieldsIndexMap.get(KnownFusionData.FLD_TYPE)]);
 
-                fusions.add(new FusionRefData(
-                        type,
-                        values[fieldsIndexMap.get(KnownFusionData.FLD_FIVE_GENE)],
-                        values[fieldsIndexMap.get(KnownFusionData.FLD_THREE_GENE)],
-                        values[fieldsIndexMap.get(KnownFusionData.FLD_CANCER_TYPES)],
-                        values[fieldsIndexMap.get(KnownFusionData.FLD_PUB_MED)],
-                        values[fieldsIndexMap.get(KnownFusionData.FLD_KNOWN_EXON_TRANS)],
-                        values[fieldsIndexMap.get(KnownFusionData.FLD_KNOWN_EXON_UP_RANGE)],
-                        values[fieldsIndexMap.get(KnownFusionData.FLD_KNOWN_EXON_DOWN_RANGE)],
-                        values[fieldsIndexMap.get(KnownFusionData.FLD_HIGH_IMPACT_PROM)],
-                        values[fieldsIndexMap.get(KnownFusionData.FLD_OVERRIDES)],
-                        values[fieldsIndexMap.get("KnownExonTranscriptRef38")],
-                        values[fieldsIndexMap.get("KnownExonUpRangeRef38")],
-                        values[fieldsIndexMap.get("KnownExonDownRangeRef38")],
-                        values[fieldsIndexMap.get("OverridesRef38")]));
+                    fusions.add(new FusionRefData(
+                            type,
+                            values[fieldsIndexMap.get(KnownFusionData.FLD_FIVE_GENE)],
+                            values[fieldsIndexMap.get(KnownFusionData.FLD_THREE_GENE)],
+                            values[fieldsIndexMap.get(KnownFusionData.FLD_CANCER_TYPES)],
+                            values[fieldsIndexMap.get(KnownFusionData.FLD_PUB_MED)],
+                            values[fieldsIndexMap.get(KnownFusionData.FLD_KNOWN_EXON_TRANS)],
+                            values[fieldsIndexMap.get(KnownFusionData.FLD_KNOWN_EXON_UP_RANGE)],
+                            values[fieldsIndexMap.get(KnownFusionData.FLD_KNOWN_EXON_DOWN_RANGE)],
+                            values[fieldsIndexMap.get(KnownFusionData.FLD_HIGH_IMPACT_PROM)],
+                            values[fieldsIndexMap.get(KnownFusionData.FLD_OVERRIDES)],
+                            values[fieldsIndexMap.get("KnownExonTranscriptRef38")],
+                            values[fieldsIndexMap.get("KnownExonUpRangeRef38")],
+                            values[fieldsIndexMap.get("KnownExonDownRangeRef38")],
+                            values[fieldsIndexMap.get("OverridesRef38")]));
+                }
+                catch(Exception e)
+                {
+                    GU_LOGGER.error("invalid fusion data line({}): {}", line, e.toString());
+                    System.exit(1);
+                }
             }
 
             GU_LOGGER.info("loaded {} fusion entries from file: {}", fusions.size(), mKnownFusionDbFile);
@@ -513,74 +440,12 @@ public class GenerateFusionFiles
         }
     }
 
-    private static class FusionRefData
-    {
-        public final KnownFusionType Type;
-        public final String FiveGene;
-        public final String ThreeGene;
-        public final String CancerTypes;
-        public final String PubMedId;
-        public final String KnownExonTranscript;
-        public final String KnownExonUpRange;
-        public final String KnownExonDownRange;
-        public final String HighImpactPromiscuous;
-        public final String Overrides;
-        public final String KnownExonTranscriptRef38;
-        public final String KnownExonUpRangeRef38;
-        public final String KnownExonDownRangeRef38;
-        public final String OverridesRef38;
-
-        public FusionRefData(
-                final KnownFusionType type, final String fiveGene, final String threeGene, final String cancerTypes, final String pubMedId,
-                final String knownExonTranscript, final String knownExonUpRange, final String knownExonDownRange,
-                final String highImpactPromiscuous, final String overrides, final String knownExonTranscriptRef38,
-                final String knownExonUpRangeRef38, final String knownExonDownRangeRef38, final String overridesRef38)
-        {
-            Type = type;
-            FiveGene = fiveGene;
-            ThreeGene = threeGene;
-            CancerTypes = cancerTypes;
-            PubMedId = pubMedId;
-            KnownExonTranscript = knownExonTranscript;
-            KnownExonUpRange = knownExonUpRange;
-            KnownExonDownRange = knownExonDownRange;
-            HighImpactPromiscuous = highImpactPromiscuous;
-            Overrides = overrides;
-            KnownExonTranscriptRef38 = knownExonTranscriptRef38;
-            KnownExonUpRangeRef38 = knownExonUpRangeRef38;
-            KnownExonDownRangeRef38 = knownExonDownRangeRef38;
-            OverridesRef38 = overridesRef38;
-        }
-
-        public boolean isDuplicate(final FusionRefData other)
-        {
-            if(Type != other.Type)
-                return false;
-
-            if(!FiveGene.equals(other.FiveGene) || !ThreeGene.equals(other.ThreeGene))
-                return false;
-
-            boolean equalKnownExonRange37 =
-                    KnownExonTranscript.equals(other.KnownExonTranscript) && KnownExonUpRange.equals(other.KnownExonUpRange)
-                            && KnownExonDownRange.equals(other.KnownExonDownRange);
-            boolean equalKnownExonRange38 = KnownExonTranscriptRef38.equals(other.KnownExonTranscriptRef38)
-                    && KnownExonUpRangeRef38.equals(other.KnownExonUpRangeRef38)
-                    && KnownExonDownRangeRef38.equals(other.KnownExonDownRangeRef38);
-            return equalKnownExonRange37 || equalKnownExonRange38;
-        }
-
-        public String toString()
-        {
-            return format("%s: %s-%s", Type, FiveGene, ThreeGene);
-        }
-    }
-
     public static void main(final String[] args)
     {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
         addGenePanelOption(configBuilder, false);
-        configBuilder.addPath(KNOWN_FUSION_DB_FILE, true, "File containing the driver gene panel for 37");
+        configBuilder.addPath(KNOWN_FUSION_DB_FILE, true, "Known fusion database TSV");
         configBuilder.addPath(RESOURCE_REPO_DIR, true, RESOURCE_REPO_DIR_DESC);
         addOutputDir(configBuilder);
         addLoggingOptions(configBuilder);

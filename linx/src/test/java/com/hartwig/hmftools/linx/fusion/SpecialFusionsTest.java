@@ -11,8 +11,8 @@ import static com.hartwig.hmftools.common.gene.TranscriptProteinData.BIOTYPE_PRO
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.EXON_DEL_DUP;
-import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_KNOWN_PAIR;
-import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_PROMISCUOUS;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.ENHANCER_KNOWN_PAIR;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.ENHANCER_PROMISCUOUS;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_3;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
@@ -208,7 +208,7 @@ public class SpecialFusionsTest
     }
 
     @Test
-    public void testIgRegionFusion()
+    public void testEnhancerRegionFusion()
     {
         LinxTester tester = new LinxTester();
 
@@ -258,14 +258,14 @@ public class SpecialFusionsTest
 
         addTransExonData(geneTransCache, geneId3, transDataList);
 
-        final String igRegion = String.format("IG_RANGE=%d;%s;%d;%d", NEG_STRAND, chromosome, 50, 2000);
+        final String igRegion = String.format("ENHANCER_RANGE=%d;%s;%d;%d", NEG_STRAND, chromosome, 50, 2000);
 
-        KnownFusionData kfData = new KnownFusionData(IG_KNOWN_PAIR, geneName, geneName2, "", "");
+        KnownFusionData kfData = new KnownFusionData(ENHANCER_KNOWN_PAIR, geneName, geneName2, "", "");
         kfData.applyOverrides(igRegion);
 
         tester.FusionAnalyser.getFusionFinder().getKnownFusionCache().addData(kfData);
 
-        kfData = new KnownFusionData(IG_PROMISCUOUS, geneName, "", "", "");
+        kfData = new KnownFusionData(ENHANCER_PROMISCUOUS, geneName, "", "", "");
         kfData.applyOverrides(igRegion);
 
         tester.FusionAnalyser.getFusionFinder().getKnownFusionCache().addData(kfData);
@@ -299,14 +299,14 @@ public class SpecialFusionsTest
 
         GeneFusion fusion = tester.FusionAnalyser.getFusionFinder().findTopReportableFusion(fusions);
         assertTrue(fusion != null);
-        assertEquals(IG_KNOWN_PAIR, fusion.knownType());
+        assertEquals(ENHANCER_KNOWN_PAIR, fusion.knownType());
 
         // the selected fusion is the longest for coding bases and without any exon skipping
         assertEquals(200, fusion.upstreamTrans().breakendGeneData().position());
         assertEquals(9500, fusion.downstreamTrans().breakendGeneData().position());
         assertTrue(fusion.reportable());
 
-        fusion = fusions.stream().filter(x -> x.knownType() == IG_PROMISCUOUS).findFirst().orElse(null);
+        fusion = fusions.stream().filter(x -> x.knownType() == ENHANCER_PROMISCUOUS).findFirst().orElse(null);
         assertTrue(fusion != null);
 
         // the selected fusion is the longest for coding bases and without any exon skipping
@@ -545,7 +545,7 @@ public class SpecialFusionsTest
 
         // first fusion goes from
 
-        final String igRegionStr = String.format("IG_RANGE=%d;%s;%d;%d", POS_STRAND, CHR_4, 50, 2000);
+        final String igRegionStr = String.format("ENHANCER_RANGE=%d;%s;%d;%d", POS_STRAND, CHR_4, 50, 2000);
 
         // set known fusion gene for the SGL breakend
         // the 3' gene's alt mapping is about expanding its range beyond the Ensembl-defined one
@@ -555,7 +555,7 @@ public class SpecialFusionsTest
         kfData.applyOverrides(threeAltMapping);
         tester.FusionAnalyser.getFusionFinder().getKnownFusionCache().addData(kfData);
 
-        kfData = new KnownFusionData(IG_KNOWN_PAIR, igGeneName, GENE_NAME_3, "", "");
+        kfData = new KnownFusionData(ENHANCER_KNOWN_PAIR, igGeneName, GENE_NAME_3, "", "");
         kfData.applyOverrides(String.format("%s %s", igRegionStr, threeAltMapping));
 
         tester.FusionAnalyser.getFusionFinder().getKnownFusionCache().addData(kfData);
@@ -630,7 +630,7 @@ public class SpecialFusionsTest
 
         fusion = tester.FusionAnalyser.getFusions().get(0);
         assertTrue(fusion.reportable());
-        assertEquals(IG_KNOWN_PAIR, fusion.knownType());
+        assertEquals(ENHANCER_KNOWN_PAIR, fusion.knownType());
         assertEquals(igGeneName, fusion.upstreamTrans().geneName());
         assertEquals(GENE_NAME_3, fusion.downstreamTrans().geneName());
     }

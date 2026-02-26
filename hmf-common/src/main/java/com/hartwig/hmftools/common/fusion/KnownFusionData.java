@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.fusion;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KF_LOGGER;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_PAIR;
@@ -12,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 public class KnownFusionData
@@ -35,9 +37,9 @@ public class KnownFusionData
     private int[] mFiveExonRange;
     private int[] mThreeExonRange;
 
-    // IG or other specific region
+    // IG / enhancer or other specific region
     private ChrBaseRegion mGeneRegion;
-    private byte mGeneStrand;
+    private Orientation mGeneOrientation; // null means either is permitted
 
     // 3' gene alternative mappings
     private final List<ChrBaseRegion> mThreeGeneAltRegions;
@@ -53,16 +55,18 @@ public class KnownFusionData
     public static final String FLD_HIGH_IMPACT_PROM = "HighImpactPromiscuous";
     public static final String FLD_OVERRIDES = "Overrides";
 
-    public static final String OVERRIDE_IG_RANGE = "IG_RANGE";
+    public static final String OVERRIDE_ENHANCER_RANGE = "ENHANCER_RANGE";
     public static final String OVERRIDE_THREE_PRIME_RANGE = "THREE_PRIME_RANGE";
     public static final String OVERRIDE_ALTS = "ALTS";
     public static final String OVERRIDE_UP_DISTANCE = "UP_GENE_DOWNSTREAM_DISTANCE";
     public static final String OVERRIDE_DOWN_DISTANCE = "DOWN_GENE_DOWNSTREAM_DISTANCE";
     public static final String ALT_DATA = "ALT";
 
-    public static final String FILE_DELIM = ",";
+    public static final String FILE_DELIM = CSV_DELIM;
     private static final String OVERRIDES_DELIM = " ";
     private static final String OVERRIDES_ID_DELIM = "=";
+
+    public static final String NO_ORIENTATION = "0";
 
     public KnownFusionData(
             final KnownFusionType type, final String fiveGene, final String threeGene, final String cancerTypes, final String pubMedId)
@@ -78,7 +82,7 @@ public class KnownFusionData
         mFiveExonRange = new int[SE_PAIR];
         mThreeExonRange = new int[SE_PAIR];
         mGeneRegion = null;
-        mGeneStrand = 0;
+        mGeneOrientation = null;
         mDownstreamDistance = new int[] {0, 0};
         mThreeGeneAltRegions = Lists.newArrayList();
 
@@ -179,10 +183,12 @@ public class KnownFusionData
                     index += 3;
                 }
             }
-            else if(overrideName.equals(OVERRIDE_IG_RANGE) || overrideName.equals(OVERRIDE_THREE_PRIME_RANGE))
+            else if(overrideName.equals(OVERRIDE_ENHANCER_RANGE) || overrideName.equals(OVERRIDE_THREE_PRIME_RANGE))
             {
                 final String[] rangeItems = overrideData.split(ITEM_DELIM, -1);
-                mGeneStrand = Byte.parseByte(rangeItems[0]);
+
+                String orientationStr = rangeItems[0];
+                mGeneOrientation = orientationStr.equals(NO_ORIENTATION) ? null : Orientation.fromByteStr(orientationStr);
                 mGeneRegion = new ChrBaseRegion(rangeItems[1], Integer.parseInt(rangeItems[2]), Integer.parseInt(rangeItems[3]));
             }
         }
@@ -199,7 +205,7 @@ public class KnownFusionData
     public int[] threeGeneExonRange() { return mThreeExonRange; }
 
     public ChrBaseRegion geneRegion() { return mGeneRegion; }
-    public byte geneStrand() { return mGeneStrand; }
+    public Orientation geneStrand() { return mGeneOrientation; }
 
     public boolean withinGeneRegion(final String chromosome, int position)
     {

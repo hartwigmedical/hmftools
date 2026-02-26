@@ -31,6 +31,7 @@ import java.util.StringJoiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -121,6 +122,8 @@ public class FileLiftover
                 String[] values = line.split(delim, -1);
 
                 String chromosome = values[chrIndex];
+
+                chromosome = sourceVersion.versionedChromosome(chromosome);
 
                 if(!currentChromosome.equals(chromosome))
                 {

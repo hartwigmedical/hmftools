@@ -10,8 +10,6 @@ import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.linx.fusion.rna.RnaFusionData;
 
-import org.apache.commons.cli.CommandLine;
-
 public class FusionResources
 {
     private final KnownFusionCache mKnownFusionCache;
