@@ -59,6 +59,7 @@ import com.hartwig.hmftools.compar.purple.CopyNumberComparer;
 import com.hartwig.hmftools.compar.purple.GeneCopyNumberComparer;
 import com.hartwig.hmftools.compar.purple.GermlineAmpDelComparer;
 import com.hartwig.hmftools.compar.purple.PurityComparer;
+import com.hartwig.hmftools.compar.sigs.SigsComparer;
 import com.hartwig.hmftools.compar.snpgenotype.SnpGenotypeComparer;
 import com.hartwig.hmftools.compar.teal.TealComparer;
 import com.hartwig.hmftools.compar.vchord.VChordComparer;
@@ -184,6 +185,9 @@ public class CommonUtils
 
             case V_CHORD:
                 return new VChordComparer(config);
+
+            case SIGS:
+                return new SigsComparer(config);
 
             case ISOFOX_SUMMARY:
                 return new IsofoxSummaryComparer(config);
