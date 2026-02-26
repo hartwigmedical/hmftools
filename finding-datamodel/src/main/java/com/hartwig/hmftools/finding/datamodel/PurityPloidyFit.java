@@ -1,0 +1,56 @@
+package com.hartwig.hmftools.finding.datamodel;
+
+import java.util.Set;
+
+import com.hartwig.hmftools.datamodel.purple.PurpleFittedPurityMethod;
+import com.hartwig.hmftools.datamodel.purple.PurpleGermlineAberration;
+import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
+
+import io.soabase.recordbuilder.core.RecordBuilder;
+import jakarta.validation.constraints.NotNull;
+
+@RecordBuilder
+public record PurityPloidyFit(
+        @NotNull Qc qc,
+        @NotNull PurpleFittedPurityMethod fittedPurityMethod,
+        double purity,
+        double minPurity,
+        double maxPurity,
+        double ploidy,
+        double minPloidy,
+        double maxPloidy
+)
+{
+    @RecordBuilder
+    public record Qc(
+            @NotNull Set<PurpleQCStatus> status,
+            @NotNull Set<PurpleGermlineAberration> germlineAberrations,
+            int amberMeanDepth,
+            double contamination,
+            int totalCopyNumberSegments,
+            int unsupportedCopyNumberSegments,
+            int deletedGenes
+    )
+    {
+    }
+
+    public boolean isFail()
+    {
+        return isFailNoTumor() || isContaminated();
+    }
+
+    public boolean isContaminated()
+    {
+        return qc().status().contains(PurpleQCStatus.FAIL_CONTAMINATION);
+    }
+
+    public boolean isFailNoTumor()
+    {
+        return qc().status().contains(PurpleQCStatus.FAIL_NO_TUMOR);
+    }
+
+    public boolean containsTumorCells()
+    {
+        return !isFailNoTumor();
+    }
+}
