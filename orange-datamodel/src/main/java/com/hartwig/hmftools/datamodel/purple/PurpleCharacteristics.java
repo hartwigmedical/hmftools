@@ -28,4 +28,6 @@ public interface PurpleCharacteristics
     PurpleTumorMutationalStatus tumorMutationalLoadStatus();
 
     int svTumorMutationalBurden();
+
+    double lohPercentage();
 }

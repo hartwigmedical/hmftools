@@ -37,14 +37,6 @@
       "minPloidy": 3.05,
       "maxPloidy": 3.15
     },
-    "tumorStats": {
-      "maxDiploidProportion": 0.0211,
-      "hotspotMutationCount": 3,
-      "hotspotStructuralVariantCount": 0,
-      "smallVariantAlleleReadCount": 2287733,
-      "structuralVariantTumorFragmentCount": 6408,
-      "bafCount": 682755
-    },
     "characteristics": {
       "wholeGenomeDuplication": true,
       "microsatelliteIndelsPerMb": 0.0951,
@@ -53,7 +45,8 @@
       "tumorMutationalBurdenStatus": "HIGH",
       "tumorMutationalLoad": 184,
       "tumorMutationalLoadStatus": "HIGH",
-      "svTumorMutationalBurden": 86
+      "svTumorMutationalBurden": 86,
+      "lohPercentage": 0
     },
     "somaticDrivers": [
       {
