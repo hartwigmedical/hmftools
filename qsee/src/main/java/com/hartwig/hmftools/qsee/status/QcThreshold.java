@@ -41,9 +41,10 @@ public class QcThreshold
 
         return sampleFailsThreshold
                 ? new QcStatus(mKey.qcStatusType(), mOperator, mThreshold)
-                : QcStatus.createEmpty();
+                : new QcStatus(QcStatusType.PASS, mOperator, mThreshold);
     }
 
+    @Override
     public String toString()
     {
         return String.format("%s threshold(%s %s)",

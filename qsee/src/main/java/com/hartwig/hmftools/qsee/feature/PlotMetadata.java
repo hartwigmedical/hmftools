@@ -2,7 +2,6 @@ package com.hartwig.hmftools.qsee.feature;
 
 import com.hartwig.hmftools.qsee.common.MultiFieldStringBuilder;
 import com.hartwig.hmftools.qsee.status.QcStatus;
-import com.hartwig.hmftools.qsee.status.QcStatusType;
 
 public class PlotMetadata
 {
@@ -34,57 +33,27 @@ public class PlotMetadata
     public NumberFormat numberFormat() { return mNumberFormat; }
     public QcStatus qcStatus() { return mQcStatus; }
 
-    public String toString()
+    public String displayString()
     {
         MultiFieldStringBuilder builder = new MultiFieldStringBuilder();
 
         builder.add(FIELD_FEATURE_GROUP, mFeatureGroup);
         builder.add(FIELD_DISPLAY_NAME, mDisplayName);
-        builder.add(FIELD_NUMBER_FORMAT, getNumberFormatString());
-        builder.add(FIELD_QC_STATUS, getQcStatusString());
-        builder.add(FIELD_QC_THRESHOLD, getQcThresholdString());
+        builder.add(FIELD_NUMBER_FORMAT, mNumberFormat.displayString());
+        builder.add(FIELD_QC_STATUS, mQcStatus.type().displayString());
+        builder.add(FIELD_QC_THRESHOLD, mQcStatus.displayString(mNumberFormat));
 
         return builder.toString();
     }
 
-    private String getNumberFormatString()
-    {
-        return mNumberFormat == null ? "" : mNumberFormat.toString();
-    }
-
-    private String getQcStatusString()
-    {
-        return mQcStatus.type() == QcStatusType.NONE ? "" : mQcStatus.type().toString();
-    }
-
-    private String getQcThresholdString()
-    {
-        if(mQcStatus.type() == QcStatusType.NONE)
-            return "";
-
-        double thresholdValue = mQcStatus.threshold();
-        boolean isPercent = mNumberFormat == NumberFormat.PERCENT;
-
-        if(isPercent)
-            thresholdValue = thresholdValue * 100;
-
-        boolean isInteger = thresholdValue % 1 == 0;
-
-        String thresholdString = isInteger
-                ? String.valueOf((int) thresholdValue)
-                : String.valueOf(thresholdValue);
-
-        if(isPercent)
-            thresholdString = thresholdString + "%";
-
-        return mQcStatus.operator().operatorString() + thresholdString;
-    }
+    @Override
+    public String toString(){ return displayString(); }
 
     public static class Builder
     {
         private String mFeatureGroup = "";
         private String mDisplayName = "";
-        private NumberFormat mNumberFormat = null;
+        private NumberFormat mNumberFormat = NumberFormat.NONE;
         private QcStatus mQcStatus = QcStatus.createEmpty();
 
         public Builder featureGroup(String featureGroup)
