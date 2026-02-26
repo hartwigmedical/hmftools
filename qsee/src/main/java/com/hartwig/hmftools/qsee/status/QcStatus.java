@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.qsee.status;
 
+import java.math.BigDecimal;
+
 import com.hartwig.hmftools.qsee.feature.NumberFormat;
 
 public class QcStatus
@@ -54,20 +56,23 @@ public class QcStatus
             return "";
 
         boolean isPercent = numberFormat == NumberFormat.PERCENT;
-        if(isPercent)
-            thresholdValue = thresholdValue * 100;
-
-        boolean isInteger = thresholdValue % 1 == 0;
-        String thresholdString = isInteger
-                ? String.valueOf((int) thresholdValue)
-                : String.valueOf(thresholdValue);
-
-        if(isPercent && !Double.isNaN(thresholdValue))
-            thresholdString = thresholdString + "%";
 
         String operatorString = Double.isNaN(thresholdValue)
                 ? ""
                 : operator.operatorString();
+
+        if(Double.isNaN(thresholdValue))
+            return operatorString;
+
+        BigDecimal value = BigDecimal.valueOf(thresholdValue);
+        if(isPercent)
+            value = value.multiply(BigDecimal.valueOf(100));
+
+        value = value.stripTrailingZeros();
+        String thresholdString = value.toPlainString();
+
+        if(isPercent)
+            thresholdString = thresholdString + "%";
 
         return operatorString + thresholdString;
     }
