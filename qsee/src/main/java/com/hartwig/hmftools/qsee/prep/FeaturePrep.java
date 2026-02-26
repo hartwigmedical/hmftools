@@ -26,14 +26,14 @@ import com.hartwig.hmftools.qsee.prep.category.SummaryTablePurplePrep;
 
 public class FeaturePrep
 {
-    private final CommonPrepConfig mConfig;
+    private final QseePrepConfig mConfig;
 
-    public FeaturePrep(CommonPrepConfig config)
+    public FeaturePrep(QseePrepConfig config)
     {
         mConfig = config;
     }
 
-    public static List<CategoryPrep> createCategoryPreps(CommonPrepConfig config)
+    public static List<CategoryPrep> createCategoryPreps(QseePrepConfig config)
     {
         return List.of(
                 new SummaryTableBamMetricsPrep(config),

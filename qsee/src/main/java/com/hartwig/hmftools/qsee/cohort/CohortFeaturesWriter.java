@@ -17,20 +17,20 @@ import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 import com.hartwig.hmftools.qsee.common.QseeFileCommon;
 import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.FeatureKey;
-import com.hartwig.hmftools.qsee.prep.CommonPrepConfig;
+import com.hartwig.hmftools.qsee.prep.QseePrepConfig;
 
 public class CohortFeaturesWriter
 {
     // Feature matrix is written transposed: rows as features, columns as samples
 
-    private final CommonPrepConfig mCommonPrepConfig;
+    private final QseePrepConfig mConfig;
     private final SampleType mSampleType;
     private String mOutputFile;
     private BufferedWriter mWriter;
 
-    public CohortFeaturesWriter(CommonPrepConfig config, SampleType sampleType)
+    public CohortFeaturesWriter(QseePrepConfig config, SampleType sampleType)
     {
-        mCommonPrepConfig = config;
+        mConfig = config;
         mSampleType = sampleType;
 
         initialise();
@@ -38,13 +38,13 @@ public class CohortFeaturesWriter
 
     public void initialise()
     {
-        List<String> sampleIds = mCommonPrepConfig.getSampleIds(mSampleType);
+        List<String> sampleIds = mConfig.getSampleIds(mSampleType);
 
-        String outputFile = FileWriterUtils.checkAddDirSeparator(mCommonPrepConfig.OutputDir) +
+        String outputFile = FileWriterUtils.checkAddDirSeparator(mConfig.OutputDir) +
                 "cohort." + QSEE_FILE_ID + ".features." + mSampleType.toString().toLowerCase();
 
-        if(mCommonPrepConfig.OutputId != null)
-            outputFile += "." + mCommonPrepConfig.OutputId;
+        if(mConfig.OutputId != null)
+            outputFile += "." + mConfig.OutputId;
 
         outputFile += ".tsv.gz";
 

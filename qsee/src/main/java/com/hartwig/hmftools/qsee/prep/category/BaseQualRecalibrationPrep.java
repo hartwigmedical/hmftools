@@ -23,13 +23,13 @@ import com.hartwig.hmftools.qsee.feature.Feature;
 import com.hartwig.hmftools.qsee.common.MultiFieldStringBuilder;
 import com.hartwig.hmftools.qsee.feature.SourceTool;
 import com.hartwig.hmftools.qsee.prep.CategoryPrep;
-import com.hartwig.hmftools.qsee.prep.CommonPrepConfig;
+import com.hartwig.hmftools.qsee.prep.QseePrepConfig;
 import com.hartwig.hmftools.qsee.prep.category.bqr.BaseQualBin;
 import com.hartwig.hmftools.qsee.prep.category.bqr.BaseQualBinner;
 
 public class BaseQualRecalibrationPrep implements CategoryPrep
 {
-    private final CommonPrepConfig mConfig;
+    private final QseePrepConfig mConfig;
     private final BaseQualBinner mBaseQualBinner;
 
     private static final SourceTool SOURCE_TOOL = SourceTool.REDUX;
@@ -47,7 +47,7 @@ public class BaseQualRecalibrationPrep implements CategoryPrep
      */
     private static final int PSEUDOCOUNT = 5;
 
-    public BaseQualRecalibrationPrep(CommonPrepConfig config)
+    public BaseQualRecalibrationPrep(QseePrepConfig config)
     {
         mConfig = config;
         mBaseQualBinner = new BaseQualBinner(config.SEQUENCING_TYPE);

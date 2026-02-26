@@ -47,12 +47,12 @@ public class QseePlot
     public QseePlot(QseePrepConfig config)
     {
         this(
-                config.CommonPrep.TumorIds,
-                config.CommonPrep.ReferenceIds,
-                QseePrep.formOutputFilename(config.CommonPrep),
+                config.TumorIds,
+                config.ReferenceIds,
+                QseePrep.formOutputFilename(config),
                 config.CohortPercentilesFile,
-                config.CommonPrep.OutputDir,
-                config.CommonPrep.OutputId
+                config.OutputDir,
+                config.OutputId
         );
     }
 

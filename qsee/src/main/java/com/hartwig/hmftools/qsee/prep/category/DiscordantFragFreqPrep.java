@@ -19,20 +19,20 @@ import com.hartwig.hmftools.qsee.common.MultiFieldStringBuilder;
 import com.hartwig.hmftools.qsee.feature.PlotMetadata;
 import com.hartwig.hmftools.qsee.feature.SourceTool;
 import com.hartwig.hmftools.qsee.prep.CategoryPrep;
-import com.hartwig.hmftools.qsee.prep.CommonPrepConfig;
+import com.hartwig.hmftools.qsee.prep.QseePrepConfig;
 import com.hartwig.hmftools.qsee.prep.category.discordant.DiscordantFragGroup;
 
 import org.jetbrains.annotations.NotNull;
 
 public class DiscordantFragFreqPrep implements CategoryPrep
 {
-    private final CommonPrepConfig mConfig;
+    private final QseePrepConfig mConfig;
 
     private static final SourceTool SOURCE_TOOL = SourceTool.ESVEE;
 
     static final String FIELD_FRAG_TYPE = "DiscordantFragType";
 
-    public DiscordantFragFreqPrep(CommonPrepConfig config)
+    public DiscordantFragFreqPrep(QseePrepConfig config)
     {
         mConfig = config;
     }

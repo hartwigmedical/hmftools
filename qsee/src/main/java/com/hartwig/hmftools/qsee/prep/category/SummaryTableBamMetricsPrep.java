@@ -28,7 +28,7 @@ import com.hartwig.hmftools.qsee.feature.Feature;
 import com.hartwig.hmftools.qsee.feature.SourceTool;
 import com.hartwig.hmftools.qsee.prep.CategoryPrep;
 import com.hartwig.hmftools.qsee.prep.CategoryPrepTask;
-import com.hartwig.hmftools.qsee.prep.CommonPrepConfig;
+import com.hartwig.hmftools.qsee.prep.QseePrepConfig;
 import com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature;
 import com.hartwig.hmftools.qsee.prep.category.table.BamMetricsData;
 import com.hartwig.hmftools.qsee.status.QcStatus;
@@ -40,11 +40,11 @@ import org.jetbrains.annotations.NotNull;
 
 public class SummaryTableBamMetricsPrep implements CategoryPrep
 {
-    private final CommonPrepConfig mConfig;
+    private final QseePrepConfig mConfig;
 
     private static final SourceTool SOURCE_TOOL = SourceTool.BAM_METRICS;
 
-    public SummaryTableBamMetricsPrep(CommonPrepConfig config) { mConfig = config; }
+    public SummaryTableBamMetricsPrep(QseePrepConfig config) { mConfig = config; }
 
     public SourceTool sourceTool() { return SOURCE_TOOL; }
 
@@ -143,7 +143,8 @@ public class SummaryTableBamMetricsPrep implements CategoryPrep
 
         if(!bamMetricsData.missingInputPaths().isEmpty())
         {
-            CategoryPrepTask.missingInputFilesError(mConfig.AllowMissingInput, this, sampleType, bamMetricsData.formMissingInputsString());
+            CategoryPrepTask.missingInputFilesError(
+                    mConfig.AllowMissingInput, this, sampleType, bamMetricsData.formMissingInputsString());
         }
 
         List<Feature> features = createFeatures(bamMetricsData, sampleType, mConfig.QcThresholds);

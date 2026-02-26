@@ -15,19 +15,19 @@ import com.hartwig.hmftools.qsee.feature.FeatureType;
 import com.hartwig.hmftools.qsee.common.MultiFieldStringBuilder;
 import com.hartwig.hmftools.qsee.feature.SourceTool;
 import com.hartwig.hmftools.qsee.prep.CategoryPrep;
-import com.hartwig.hmftools.qsee.prep.CommonPrepConfig;
+import com.hartwig.hmftools.qsee.prep.QseePrepConfig;
 
 import org.jetbrains.annotations.NotNull;
 
 public class MissedGeneVariantPrep implements CategoryPrep
 {
-    private final CommonPrepConfig mConfig;
+    private final QseePrepConfig mConfig;
 
     private static final SourceTool SOURCE_TOOL = SourceTool.BAM_METRICS;
 
     private static final String FIELD_GENE = "Gene";
 
-    public MissedGeneVariantPrep(CommonPrepConfig config)
+    public MissedGeneVariantPrep(QseePrepConfig config)
     {
         mConfig = config;
     }

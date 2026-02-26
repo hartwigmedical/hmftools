@@ -14,6 +14,9 @@ import com.hartwig.hmftools.qsee.feature.FeatureType;
 
 public class ThresholdOverridesFile
 {
+    public static final String THRESHOLD_OVERRIDES_FILE_CFG = "threshold_overrides_file";
+    public static final String THRESHOLD_OVERRIDES_FILE_CFG_DESC = "Path to threshold overrides file";
+
     private static final String COL_QC_STATUS_TYPE = "QcStatusType";
     private static final String COL_COMPARISON_OPERATOR = "ComparisonOperator";
     private static final String COL_THRESHOLD = "Threshold";
