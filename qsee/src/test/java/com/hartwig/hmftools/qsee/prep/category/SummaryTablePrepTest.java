@@ -52,7 +52,7 @@ public class SummaryTablePrepTest
     {
         EnumMap<SummaryTableFeature, Feature> featuresMap = new EnumMap<>(SummaryTableFeature.class);
         BamMetricCoverage bamMetricCoverage = createTestBamMetricCoverage();
-        ThresholdRegistry qcThresholds = ThresholdRegistry.createDefault();
+        ThresholdRegistry qcThresholds = ThresholdRegistry.createWithoutThresholds();
         SummaryTableBamMetricsPrep.putFeatures(featuresMap, bamMetricCoverage, SampleType.TUMOR, qcThresholds);
 
         assertEquals(0.9, featuresMap.get(SummaryTableFeature.COVERAGE_ABOVE_10).value(), 0.01);
@@ -84,7 +84,7 @@ public class SummaryTablePrepTest
                 List.of()
         );
 
-        ThresholdRegistry qcThresholds = ThresholdRegistry.createDefault();
+        ThresholdRegistry qcThresholds = ThresholdRegistry.createWithoutThresholds();
         List<Feature> features = SummaryTableBamMetricsPrep.createFeatures(bamMetricsData, SampleType.TUMOR, qcThresholds);
 
         List<SummaryTableFeature> expectedFeatures = Stream.of(SummaryTableFeature.values())

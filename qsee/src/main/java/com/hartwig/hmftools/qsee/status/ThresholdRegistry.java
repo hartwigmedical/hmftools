@@ -25,6 +25,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.FeatureType;
 import com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature;
@@ -32,44 +33,42 @@ import com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature;
 public final class ThresholdRegistry
 {
     private final Map<ThresholdKey, QcThreshold> mThresholds;
+    private final boolean mFrozen;
 
     private static final double NO_THRESHOLD = Double.NaN;
 
-    private ThresholdRegistry(Map<ThresholdKey, QcThreshold> thresholds)
+    private ThresholdRegistry(Map<ThresholdKey, QcThreshold> thresholds, boolean frozen)
     {
         mThresholds = thresholds;
+        mFrozen = frozen;
     }
 
     private ThresholdRegistry()
     {
-        this(new LinkedHashMap<>());
+        mThresholds = new LinkedHashMap<>();
+        mFrozen = false;
     }
 
     public static ThresholdRegistry createDefault()
     {
-        ThresholdRegistry registry = new ThresholdRegistry();
-        registry.setDefaults();
-        return new ThresholdRegistry(Collections.unmodifiableMap(registry.mThresholds));
+        return new ThresholdRegistry().setDefaults().freeze();
     }
 
-    private void setThreshold(
-            SampleType sampleType, FeatureType featureType, String featureName, QcStatusType qcStatusType,
-            ComparisonOperator operator, double thresholdValue
-    ){
-        ThresholdKey key = new ThresholdKey(sampleType, featureType, featureName, qcStatusType);
-        QcThreshold threshold = new QcThreshold(key, operator, thresholdValue);
-        mThresholds.put(key, threshold);
+    @VisibleForTesting
+    public static ThresholdRegistry createWithoutThresholds()
+    {
+        ThresholdRegistry thresholdRegistry = new ThresholdRegistry().setDefaults();
+
+        for(QcThreshold threshold : thresholdRegistry.mThresholds.values())
+        {
+            ThresholdKey key = threshold.key();
+            thresholdRegistry.mThresholds.put(key, new QcThreshold(key, threshold.operator(), NO_THRESHOLD));
+        }
+
+        return thresholdRegistry.freeze();
     }
 
-    private void setCommonThreshold(
-            FeatureType featureType, String featureName, QcStatusType qcStatusType,
-            ComparisonOperator operator, double thresholdValue
-    ){
-        setThreshold(TUMOR, featureType, featureName, qcStatusType, operator, thresholdValue);
-        setThreshold(NORMAL, featureType, featureName, qcStatusType, operator, thresholdValue);
-    }
-
-    private void setDefaults()
+    private ThresholdRegistry setDefaults()
     {
         setCommonThreshold(SUMMARY_TABLE, MAPPED_PROPORTION.name(), FAIL, LESS_THAN, 0.95);
         setCommonThreshold(SUMMARY_TABLE, LOW_MAP_QUAL.name(), WARN, GREATER_THAN, 0.05);
@@ -94,10 +93,39 @@ public final class ThresholdRegistry
         setThreshold(NORMAL, SUMMARY_TABLE, COVERAGE_ABOVE_250.name(), WARN, LESS_THAN, NO_THRESHOLD);
 
         // NOTE: PURPLE QC thresholds are not handled by Qsee
+
+        return this;
+    }
+
+    private ThresholdRegistry freeze()
+    {
+        return new ThresholdRegistry(Collections.unmodifiableMap(mThresholds), true);
+    }
+
+    private void setThreshold(
+            SampleType sampleType, FeatureType featureType, String featureName, QcStatusType qcStatusType,
+            ComparisonOperator operator, double thresholdValue
+    ){
+        ThresholdKey key = new ThresholdKey(sampleType, featureType, featureName, qcStatusType);
+        QcThreshold threshold = new QcThreshold(key, operator, thresholdValue);
+        mThresholds.put(key, threshold);
+    }
+
+    private void setCommonThreshold(
+            FeatureType featureType, String featureName, QcStatusType qcStatusType,
+            ComparisonOperator operator, double thresholdValue
+    ){
+        setThreshold(TUMOR, featureType, featureName, qcStatusType, operator, thresholdValue);
+        setThreshold(NORMAL, featureType, featureName, qcStatusType, operator, thresholdValue);
     }
 
     public QcThreshold getThreshold(ThresholdKey key)
     {
+        if(!mFrozen)
+        {
+            throw new IllegalStateException("ThresholdRegistry must be frozen before thresholds can be accessed");
+        }
+
         if(!mThresholds.containsKey(key))
         {
             throw new NoSuchElementException(String.format("No threshold defined for %s", key));
