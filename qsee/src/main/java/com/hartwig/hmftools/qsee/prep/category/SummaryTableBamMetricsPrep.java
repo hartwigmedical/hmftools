@@ -28,49 +28,51 @@ import com.hartwig.hmftools.qsee.feature.Feature;
 import com.hartwig.hmftools.qsee.feature.SourceTool;
 import com.hartwig.hmftools.qsee.prep.CategoryPrep;
 import com.hartwig.hmftools.qsee.prep.CategoryPrepTask;
-import com.hartwig.hmftools.qsee.prep.CommonPrepConfig;
+import com.hartwig.hmftools.qsee.prep.QseePrepConfig;
 import com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature;
 import com.hartwig.hmftools.qsee.prep.category.table.BamMetricsData;
 import com.hartwig.hmftools.qsee.status.QcStatus;
+import com.hartwig.hmftools.qsee.status.QcStatusType;
 import com.hartwig.hmftools.qsee.status.QcThreshold;
-import com.hartwig.hmftools.qsee.status.QcThresholdRegistry;
-import com.hartwig.hmftools.qsee.status.ThresholdGroup;
+import com.hartwig.hmftools.qsee.status.ThresholdRegistry;
 
 import org.jetbrains.annotations.NotNull;
 
 public class SummaryTableBamMetricsPrep implements CategoryPrep
 {
-    private final CommonPrepConfig mConfig;
+    private final QseePrepConfig mConfig;
 
     private static final SourceTool SOURCE_TOOL = SourceTool.BAM_METRICS;
 
-    public SummaryTableBamMetricsPrep(CommonPrepConfig config) { mConfig = config; }
+    public SummaryTableBamMetricsPrep(QseePrepConfig config) { mConfig = config; }
 
     public SourceTool sourceTool() { return SOURCE_TOOL; }
 
-    private static void putFeatures(EnumMap<SummaryTableFeature, Feature> featuresMap, BamMetricSummary bamMetricSummary, SampleType sampleType)
+    private static void putFeatures(EnumMap<SummaryTableFeature, Feature> featuresMap, BamMetricSummary bamMetricSummary,
+            SampleType sampleType, ThresholdRegistry qcThresholds)
     {
         if(bamMetricSummary == null)
             return;
 
         putFeature(featuresMap, MEAN_COVERAGE, bamMetricSummary.meanCoverage(),
-                QcThresholdRegistry.getThreshold(sampleType, MEAN_COVERAGE));
+                qcThresholds.getThreshold(sampleType, MEAN_COVERAGE, QcStatusType.WARN));
 
         putFeature(featuresMap, LOW_MAP_QUAL, bamMetricSummary.lowMapQualPercent(),
-                QcThresholdRegistry.getCommonThreshold(LOW_MAP_QUAL));
+                qcThresholds.getThreshold(sampleType, LOW_MAP_QUAL, QcStatusType.WARN));
 
         putFeature(featuresMap, LOW_BASE_QUAL, bamMetricSummary.lowBaseQualPercent(),
-                QcThresholdRegistry.getCommonThreshold(LOW_BASE_QUAL));
+                qcThresholds.getThreshold(sampleType, LOW_BASE_QUAL, QcStatusType.WARN));
 
         putFeature(featuresMap, DUPLICATE_READS, (double) bamMetricSummary.duplicateReads() / bamMetricSummary.totalReads(),
-                QcThresholdRegistry.getCommonThreshold(DUPLICATE_READS));
+                qcThresholds.getThreshold(sampleType, DUPLICATE_READS, QcStatusType.WARN));
 
         putFeature(featuresMap, DUAL_STRAND_READS, (double) bamMetricSummary.dualStrandReads() / bamMetricSummary.totalReads(),
-                QcThresholdRegistry.getCommonThreshold(DUAL_STRAND_READS));
+                qcThresholds.getThreshold(sampleType, DUAL_STRAND_READS, QcStatusType.WARN));
     }
 
     @VisibleForTesting
-    static void putFeatures(EnumMap<SummaryTableFeature, Feature> featuresMap, BamMetricCoverage bamMetricCoverage, SampleType sampleType)
+    static void putFeatures(EnumMap<SummaryTableFeature, Feature> featuresMap, BamMetricCoverage bamMetricCoverage,
+            SampleType sampleType, ThresholdRegistry qcThresholds)
     {
         if(bamMetricCoverage == null)
             return;
@@ -102,30 +104,34 @@ public class SummaryTableBamMetricsPrep implements CategoryPrep
 
             double propBasesAboveCoverage = (double) basesAboveCoverage / totalBases;
 
-            QcThreshold qcThreshold = QcThresholdRegistry.getThreshold(sampleType, coverageAboveXFeature);
+            QcThreshold qcThreshold = qcThresholds.getThreshold(sampleType, coverageAboveXFeature, QcStatusType.WARN);
             QcStatus qcStatus = qcThreshold.getQcStatus(propBasesAboveCoverage);
 
             putFeature(featuresMap, coverageAboveXFeature, propBasesAboveCoverage, qcStatus);
         }
     }
 
-    private static void putFeatures(EnumMap<SummaryTableFeature, Feature> featuresMap, BamFlagStats bamFlagStats)
+    private static void putFeatures(EnumMap<SummaryTableFeature, Feature> featuresMap, BamFlagStats bamFlagStats,
+            SampleType sampleType, ThresholdRegistry qcThresholds)
     {
         if(bamFlagStats == null)
             return;
 
-        QcStatus qcStatus = QcThresholdRegistry.getThreshold(ThresholdGroup.COMMON, MAPPED_PROPORTION).getQcStatus(bamFlagStats.mappedProportion());
+        QcStatus qcStatus = qcThresholds
+                .getThreshold(sampleType, MAPPED_PROPORTION, QcStatusType.FAIL)
+                .getQcStatus(bamFlagStats.mappedProportion());
+
         putFeature(featuresMap, MAPPED_PROPORTION, bamFlagStats.mappedProportion(), qcStatus);
     }
 
     @VisibleForTesting
-    static List<Feature> createFeatures(BamMetricsData bamMetricsData, SampleType sampleType)
+    static List<Feature> createFeatures(BamMetricsData bamMetricsData, SampleType sampleType, ThresholdRegistry qcThresholds)
     {
         EnumMap<SummaryTableFeature, Feature> featuresMap = new EnumMap<>(SummaryTableFeature.class);
 
-        putFeatures(featuresMap, bamMetricsData.bamMetricSummary(), sampleType);
-        putFeatures(featuresMap, bamMetricsData.bamMetricCoverage(), sampleType);
-        putFeatures(featuresMap, bamMetricsData.bamFlagStats());
+        putFeatures(featuresMap, bamMetricsData.bamMetricSummary(), sampleType, qcThresholds);
+        putFeatures(featuresMap, bamMetricsData.bamMetricCoverage(), sampleType, qcThresholds);
+        putFeatures(featuresMap, bamMetricsData.bamFlagStats(), sampleType, qcThresholds);
 
         return featuresMap.values().stream().toList();
     }
@@ -137,10 +143,11 @@ public class SummaryTableBamMetricsPrep implements CategoryPrep
 
         if(!bamMetricsData.missingInputPaths().isEmpty())
         {
-            CategoryPrepTask.missingInputFilesError(mConfig.AllowMissingInput, this, sampleType, bamMetricsData.formMissingInputsString());
+            CategoryPrepTask.missingInputFilesError(
+                    mConfig.AllowMissingInput, this, sampleType, bamMetricsData.formMissingInputsString());
         }
 
-        List<Feature> features = createFeatures(bamMetricsData, sampleType);
+        List<Feature> features = createFeatures(bamMetricsData, sampleType, mConfig.QcThresholds);
 
         return features;
     }

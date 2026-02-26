@@ -28,7 +28,7 @@ if(FALSE){
     TUMOR_ID <- "TUMOR"
     NORMAL_ID <- "TUMOR-ref"
 
-    COHORT_PERCENTILES_FILE <- "COHORT.qsee.percentiles.tsv.gz"
+    COHORT_PERCENTILES_FILE <- "cohort.qsee.percentiles.tsv.gz"
 
     output_dir <- ""
     SAMPLE_FEATURES_FILE <- sprintf("%s/%s.qsee.vis.features.tsv.gz", output_dir, TUMOR_ID)

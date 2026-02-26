@@ -26,14 +26,14 @@ import com.hartwig.hmftools.qsee.prep.category.SummaryTablePurplePrep;
 
 public class FeaturePrep
 {
-    private final CommonPrepConfig mConfig;
+    private final QseePrepConfig mConfig;
 
-    public FeaturePrep(final CommonPrepConfig config)
+    public FeaturePrep(QseePrepConfig config)
     {
         mConfig = config;
     }
 
-    public static List<CategoryPrep> createCategoryPreps(CommonPrepConfig config)
+    public static List<CategoryPrep> createCategoryPreps(QseePrepConfig config)
     {
         return List.of(
                 new SummaryTableBamMetricsPrep(config),
@@ -133,7 +133,7 @@ public class FeaturePrep
                 QC_LOGGER.error("failed prep as no samples had data for sampleType({}) category({})",
                         sampleType, categoryPrep.name());
 
-                System.exit(1);
+                //System.exit(1);
             }
             else if(samplesMissingInputCount.get() > 0)
             {

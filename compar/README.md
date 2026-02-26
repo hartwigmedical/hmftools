@@ -34,11 +34,11 @@ The key configuration values to set are:
 | db_source_ref & db_source_new     | DB connection details for ref and new sample data - see format below                                                                       |
 | output_dir                        | Path for output file                                                                                                                       |
 
-** set of tools are: linx, linx_germline, purple, chord, cuppa, isofox, lilac, peach, virus (i.e. virus-interpreter), snp_genotype, tumor_flagstat, germline_flagstat, tumor_bam_metrics and germline_bam_metrics.
+** set of tools are: linx, linx_germline, purple, chord, cuppa, isofox, lilac, peach, virus (i.e. virus-interpreter), sigs, snp_genotype, tumor_flagstat, germline_flagstat, tumor_bam_metrics and germline_bam_metrics.
 
 The available categories are: PURITY, DRIVER, SOMATIC_VARIANT, GERMLINE_VARIANT, GERMLINE_AMP_DEL, GERMLINE_SV, FUSION, DISRUPTION, CUPPA,
 CHORD, LILAC, PEACH, VIRUS, TUMOR_FLAGSTAT, GERMLINE_FLAGSTAT, TUMOR_BAM_METRICS, GERMLINE_BAM_METRICS, SNP_GENOTYPE, COPY_NUMBER, GENE_COPY_NUMBER,
-CDR3_SEQUENCE, CDR3_LOCUS_SUMMARY, TELOMERE_LENGTH, V_CHORD, ISOFOX_SUMMARY, ISOFOX_GENE_DATA, ISOFOX_TRANSCRIPT_DATA, NOVEL_SPLICE_JUNCTION, RNA_FUSION.
+CDR3_SEQUENCE, CDR3_LOCUS_SUMMARY, TELOMERE_LENGTH, V_CHORD, SIGS, ISOFOX_SUMMARY, ISOFOX_GENE_DATA, ISOFOX_TRANSCRIPT_DATA, NOVEL_SPLICE_JUNCTION, RNA_FUSION.
 
 The category PANEL is equivalent to PURITY, DRIVER, SOMATIC_VARIANT, FUSION, DISRUPTION, TUMOR_FLAGSTAT, TUMOR_BAM_METRICS and SNP_GENOTYPE, V_CHORD.
 
@@ -92,6 +92,7 @@ Specify one or more tool directories to override the pipeline default paths.
 | CIDER                                                                                        | cider_dir         |
 | TEAL                                                                                         | teal_dir          |
 | V_CHORD                                                                                      | v_chord_dir       |
+| SIGS                                                                                         | sigs_dir          |
 | ISOFOX_SUMMARY, ISOFOX_GENE_DATA, ISOFOX_TRANSCRIPT_DATA, NOVEL_SPLICE_JUNCTION, RNA_FUSION  | isofox_dir        |
 
 Wildcards '*' can be used in place of sampleIds, in which case Compar will replace the wildcard with the sampleId for each path.
@@ -401,6 +402,15 @@ Data key: SampleId
 | pancreaticCancerScore | Threshold [0.1]         | 
 | prostateCancerScore   | Threshold [0.1]         | 
 | otherCancerScore      | Threshold [0.1]         | 
+
+### Sigs
+Only runs in DETAILED mode.
+
+Data key: SampleId, Signature
+
+| Field   | Match Type & Thresholds |
+|---------|-------------------------|
+| percent | Threshold [0.1]         |
 
 ### Isofox Summary
 Only runs in DETAILED mode.

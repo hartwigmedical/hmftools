@@ -11,13 +11,13 @@ import com.hartwig.hmftools.common.metrics.BamFlagStats;
 import com.hartwig.hmftools.common.metrics.BamMetricCoverage;
 import com.hartwig.hmftools.common.metrics.BamMetricSummary;
 import com.hartwig.hmftools.qsee.common.SampleType;
-import com.hartwig.hmftools.qsee.prep.CommonPrepConfig;
+import com.hartwig.hmftools.qsee.prep.QseePrepConfig;
 
 import org.jetbrains.annotations.Nullable;
 
 public class BamMetricsData
 {
-    private final CommonPrepConfig mConfig;
+    private final QseePrepConfig mConfig;
     private final String mSampleId;
     private final SampleType mSampleType;
 
@@ -27,7 +27,7 @@ public class BamMetricsData
 
     private final List<String> mMissingInputPaths;
 
-    public BamMetricsData(CommonPrepConfig config, String sampleId, SampleType sampleType)
+    public BamMetricsData(QseePrepConfig config, String sampleId, SampleType sampleType)
     {
         mConfig = config;
         mSampleId = sampleId;

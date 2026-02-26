@@ -3,7 +3,6 @@ package com.hartwig.hmftools.qsee.cohort;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.qsee.common.QseeConstants.QC_LOGGER;
-import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COHORT_FILE_ID;
 import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_FEATURE_NAME;
 import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_FEATURE_TYPE;
 import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_SOURCE_TOOL;
@@ -18,20 +17,20 @@ import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 import com.hartwig.hmftools.qsee.common.QseeFileCommon;
 import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.FeatureKey;
-import com.hartwig.hmftools.qsee.prep.CommonPrepConfig;
+import com.hartwig.hmftools.qsee.prep.QseePrepConfig;
 
 public class CohortFeaturesWriter
 {
     // Feature matrix is written transposed: rows as features, columns as samples
 
-    private final CommonPrepConfig mCommonPrepConfig;
+    private final QseePrepConfig mConfig;
     private final SampleType mSampleType;
     private String mOutputFile;
     private BufferedWriter mWriter;
 
-    public CohortFeaturesWriter(CommonPrepConfig config, SampleType sampleType)
+    public CohortFeaturesWriter(QseePrepConfig config, SampleType sampleType)
     {
-        mCommonPrepConfig = config;
+        mConfig = config;
         mSampleType = sampleType;
 
         initialise();
@@ -39,10 +38,17 @@ public class CohortFeaturesWriter
 
     public void initialise()
     {
-        List<String> sampleIds = mCommonPrepConfig.getSampleIds(mSampleType);
+        List<String> sampleIds = mConfig.getSampleIds(mSampleType);
 
-        mOutputFile = FileWriterUtils.checkAddDirSeparator(mCommonPrepConfig.OutputDir) +
-                COHORT_FILE_ID + "." + QSEE_FILE_ID + ".features." + mSampleType.toString().toLowerCase() + ".tsv.gz";
+        String outputFile = FileWriterUtils.checkAddDirSeparator(mConfig.OutputDir) +
+                "cohort." + QSEE_FILE_ID + ".features." + mSampleType.toString().toLowerCase();
+
+        if(mConfig.OutputId != null)
+            outputFile += "." + mConfig.OutputId;
+
+        outputFile += ".tsv.gz";
+
+        mOutputFile = outputFile;
 
         try
         {

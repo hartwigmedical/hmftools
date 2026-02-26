@@ -1,21 +1,32 @@
 package com.hartwig.hmftools.qsee.status;
 
+import com.hartwig.hmftools.qsee.common.SampleType;
+import com.hartwig.hmftools.qsee.feature.FeatureType;
+
 public class QcThreshold
 {
-    private final QcStatusType mType;
+    private final ThresholdKey mKey;
     private final ComparisonOperator mOperator;
     private final double mThreshold;
 
-    public QcThreshold(QcStatusType type, ComparisonOperator operator, double threshold)
+    public QcThreshold(ThresholdKey key, ComparisonOperator operator, double threshold)
     {
-        mType = type;
+        mKey = key;
+        mOperator = operator;
+        mThreshold = threshold;
+    }
+
+    public QcThreshold(SampleType sampleType, FeatureType featureType, String featureName,
+            QcStatusType qcStatusType, ComparisonOperator operator, double threshold)
+    {
+        mKey = new ThresholdKey(sampleType, featureType, featureName, qcStatusType);
         mOperator = operator;
         mThreshold = threshold;
     }
 
     public QcStatus getQcStatus(double sampleValue)
     {
-        if(mType == QcStatusType.NONE)
+        if(mKey.qcStatusType() == QcStatusType.NONE)
         {
             return QcStatus.createEmpty();
         }
@@ -29,20 +40,43 @@ public class QcThreshold
         };
 
         return sampleFailsThreshold
-                ? new QcStatus(mType, mOperator, mThreshold)
+                ? new QcStatus(mKey.qcStatusType(), mOperator, mThreshold)
                 : QcStatus.createEmpty();
     }
 
-    public static QcThreshold createNoThreshold()
-    {
-        return new QcThreshold(QcStatusType.NONE, null, Double.NaN);
-    }
-
-    public static QcThreshold determinedElsewhere() { return createNoThreshold(); }
-    public static QcThreshold notSet() { return createNoThreshold(); }
-
     public String toString()
     {
-        return String.format("type(%s) operator(%s) threshold(%s)", mType, mOperator.operatorString(), mThreshold);
+        return String.format("%s threshold(%s %s)",
+                mKey,
+                mOperator != null ? mOperator.operatorString() : "",
+                mThreshold
+        );
+    }
+
+    public ThresholdKey key() { return mKey; }
+    public ComparisonOperator operator() { return mOperator; }
+    public double threshold() { return mThreshold; }
+
+    @Override
+    public boolean equals(Object o)
+    {
+        if(o == null || getClass() != o.getClass())
+        {
+            return false;
+        }
+
+        QcThreshold other = (QcThreshold) o;
+
+        boolean thresholdValuesEqual = mThreshold == other.mThreshold || Double.isNaN(mThreshold) && Double.isNaN(other.mThreshold);
+
+        return mKey.equals(other.mKey) &&
+                mOperator == other.mOperator &&
+                thresholdValuesEqual;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return mKey.hashCode();
     }
 }

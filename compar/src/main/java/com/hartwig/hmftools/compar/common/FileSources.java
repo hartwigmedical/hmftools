@@ -26,6 +26,8 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.PEACH_DIR_CF
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PEACH_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SIGS_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SIGS_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TEAL_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TEAL_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_CFG;
@@ -65,6 +67,7 @@ public class FileSources
     public final String Cider;
     public final String Teal;
     public final String VChord;
+    public final String Sigs;
     public final String Isofox;
 
     private static final String SAMPLE_DIR = "sample_dir";
@@ -81,7 +84,7 @@ public class FileSources
             final String lilac, final String chord, final String peach, final String virus, final String somaticVcf,
             final String somaticUnfilteredVcf, final String tumorFlagstat, final String germlineFlagstat, final String tumorBamMetrics,
             final String germlineBamMetrics, final String snpGenotype, final String cider, final String teal, final String vChord,
-            final String isofox)
+            final String sigs, final String isofox)
     {
         Source = source;
         Linx = linx;
@@ -103,6 +106,7 @@ public class FileSources
         Cider = cider;
         Teal = teal;
         VChord = vChord;
+        Sigs = sigs;
         Isofox = isofox;
     }
 
@@ -129,6 +133,7 @@ public class FileSources
                 convertWildcardSamplePath(fileSources.Cider, sampleId, germlineSampleId),
                 convertWildcardSamplePath(fileSources.Teal, sampleId, germlineSampleId),
                 convertWildcardSamplePath(fileSources.VChord, sampleId, germlineSampleId),
+                convertWildcardSamplePath(fileSources.Sigs, sampleId, germlineSampleId),
                 convertWildcardSamplePath(fileSources.Isofox, sampleId, germlineSampleId));
     }
 
@@ -161,6 +166,7 @@ public class FileSources
             addPathConfig(configBuilder, CIDER_DIR_CFG, CIDER_DIR_DESC, sourceName);
             addPathConfig(configBuilder, TEAL_DIR_CFG, TEAL_DIR_DESC, sourceName);
             addPathConfig(configBuilder, V_CHORD_DIR_CFG, V_CHORD_DIR_DESC, sourceName);
+            addPathConfig(configBuilder, SIGS_DIR_CFG, SIGS_DIR_DESC, sourceName);
             addPathConfig(configBuilder, ISOFOX_DIR_CFG, ISOFOX_DIR_DESC, sourceName);
             addPathConfig(configBuilder, TUMOR_FLAGSTAT, formSourceDescription("Tumor flagstat", sourceName), sourceName);
             addPathConfig(configBuilder, GERMLINE_FLAGSTAT, formSourceDescription("Germline flagstat", sourceName), sourceName);
@@ -230,11 +236,12 @@ public class FileSources
         String ciderDir = getDirectory(configBuilder, sampleDir, defaultToolDirs.ciderDir(), CIDER_DIR_CFG, sourceName);
         String tealDir = getDirectory(configBuilder, sampleDir, defaultToolDirs.tealDir(), TEAL_DIR_CFG, sourceName);
         String vChordDir = getDirectory(configBuilder, sampleDir, defaultToolDirs.vChordDir(), V_CHORD_DIR_CFG, sourceName);
+        String sigsDir = getDirectory(configBuilder, sampleDir, defaultToolDirs.sigsDir(), SIGS_DIR_CFG, sourceName);
         String isofoxDir = getDirectory(configBuilder, sampleDir, defaultToolDirs.isofoxDir(), ISOFOX_DIR_CFG, sourceName);
 
         return new FileSources(sourceName, linxDir, cobaltDir, purpleDir, linxGermlineDir, cuppaDir, lilacDir, chordDir, peachDir, virusDir,
                 somaticVcf, somaticUnfilteredVcf, tumorFlagstat, germlineFlagstat, tumorBamMetrics, germlineBamMetrics, snpGenotype,
-                ciderDir, tealDir, vChordDir, isofoxDir);
+                ciderDir, tealDir, vChordDir, sigsDir, isofoxDir);
     }
 
     private static PipelineToolDirectories resolveDefaultToolDirs(final ConfigBuilder configBuilder, final String sourceName)

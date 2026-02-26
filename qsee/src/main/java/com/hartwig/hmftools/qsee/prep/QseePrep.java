@@ -36,8 +36,6 @@ public class QseePrep
     private static final String COL_FEATURE_VALUE = "FeatureValue";
     private static final String COL_PLOT_METADATA = "PlotMetadata";
 
-    private static final String SAMPLE_ID_MULTI = "MULTI_SAMPLE";
-
     public QseePrep(QseePrepConfig config)
     {
         mConfig = config;
@@ -45,7 +43,7 @@ public class QseePrep
 
     private List<SampleFeatures> runFeaturePrepFor(SampleType sampleType)
     {
-        List<String> sampleIds = mConfig.CommonPrep.getSampleIds(sampleType);
+        List<String> sampleIds = mConfig.getSampleIds(sampleType);
 
         boolean hasSampleType = !sampleIds.isEmpty();
         if(!hasSampleType)
@@ -55,12 +53,12 @@ public class QseePrep
 
         if(sampleIds.size() == 1)
         {
-            SampleFeatures sampleFeatures = new FeaturePrep(mConfig.CommonPrep).prepSample(sampleType, sampleIds.get(0));
+            SampleFeatures sampleFeatures = new FeaturePrep(mConfig).prepSample(sampleType, sampleIds.get(0));
             return List.of(sampleFeatures);
         }
         else
         {
-            return new FeaturePrep(mConfig.CommonPrep).prepMultiSample(sampleType);
+            return new FeaturePrep(mConfig).prepMultiSample(sampleType);
         }
     }
 
@@ -133,18 +131,25 @@ public class QseePrep
         }
     }
 
-    public static String formOutputFilename(String basePath, String sampleId)
+    public static String formOutputFilename(String basePath, String sampleId, @Nullable String outputId)
     {
-        return checkAddDirSeparator(basePath) + sampleId + "." + QSEE_FILE_ID + ".vis.features.tsv.gz";
+        String filename = checkAddDirSeparator(basePath) + sampleId + "." + QSEE_FILE_ID + ".vis.features";
+
+        if(outputId != null)
+            filename += "." + outputId;
+
+        filename += ".tsv.gz";
+
+        return filename;
     }
 
-    public static String formOutputFilename(CommonPrepConfig config)
+    public static String formOutputFilename(QseePrepConfig config)
     {
         String sampleId = config.isSinglePatient() ?
                 config.getSampleIds(SampleType.TUMOR).get(0) :
-                SAMPLE_ID_MULTI;
+                "multisample";
 
-        return formOutputFilename(config.OutputDir, sampleId);
+        return formOutputFilename(config.OutputDir, sampleId, config.OutputId);
     }
 
     public void run()
@@ -155,7 +160,7 @@ public class QseePrep
         multiSampleFeatures.addAll(runFeaturePrepFor(SampleType.TUMOR));
         multiSampleFeatures.addAll(runFeaturePrepFor(SampleType.NORMAL));
 
-        if(!mConfig.CommonPrep.isSinglePatient())
+        if(!mConfig.isSinglePatient())
             multiSampleFeatures.sort(Comparator.comparing(SampleFeatures::sampleId));
 
         CohortPercentiles cohortPercentiles = (mConfig.CohortPercentilesFile != null)
@@ -164,7 +169,7 @@ public class QseePrep
 
         List<VisSampleData> visDataEntries = getVisSampleData(multiSampleFeatures, cohortPercentiles);
 
-        String outputFile = formOutputFilename(mConfig.CommonPrep);
+        String outputFile = formOutputFilename(mConfig);
         writeToFile(outputFile, visDataEntries);
     }
 

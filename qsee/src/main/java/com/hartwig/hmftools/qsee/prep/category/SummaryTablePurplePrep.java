@@ -29,7 +29,7 @@ import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.Feature;
 import com.hartwig.hmftools.qsee.feature.SourceTool;
 import com.hartwig.hmftools.qsee.prep.CategoryPrep;
-import com.hartwig.hmftools.qsee.prep.CommonPrepConfig;
+import com.hartwig.hmftools.qsee.prep.QseePrepConfig;
 import com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature;
 import com.hartwig.hmftools.qsee.status.ComparisonOperator;
 import com.hartwig.hmftools.qsee.status.QcStatus;
@@ -39,11 +39,11 @@ import org.jetbrains.annotations.NotNull;
 
 public class SummaryTablePurplePrep implements CategoryPrep
 {
-    private final CommonPrepConfig mConfig;
+    private final QseePrepConfig mConfig;
 
     private static final SourceTool SOURCE_TOOL = SourceTool.PURPLE;
 
-    public SummaryTablePurplePrep(CommonPrepConfig config) { mConfig = config; }
+    public SummaryTablePurplePrep(QseePrepConfig config) { mConfig = config; }
 
     public SourceTool sourceTool() { return SOURCE_TOOL; }
 
