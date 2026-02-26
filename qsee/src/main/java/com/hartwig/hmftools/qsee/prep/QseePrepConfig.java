@@ -32,6 +32,8 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.qsee.cohort.CohortPercentilesFile.COHORT_PERCENTILES_FILE_CFG;
 import static com.hartwig.hmftools.qsee.cohort.CohortPercentilesFile.COHORT_PERCENTILES_FILE_CFG_DESC;
+import static com.hartwig.hmftools.qsee.status.ThresholdOverridesFile.THRESHOLD_OVERRIDES_FILE_CFG;
+import static com.hartwig.hmftools.qsee.status.ThresholdOverridesFile.THRESHOLD_OVERRIDES_FILE_CFG_DESC;
 
 import java.util.List;
 
@@ -44,6 +46,7 @@ import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 
 import com.hartwig.hmftools.qsee.common.SampleIdsLoader;
 import com.hartwig.hmftools.qsee.common.SampleType;
+import com.hartwig.hmftools.qsee.status.ThresholdOverridesFile;
 import com.hartwig.hmftools.qsee.status.ThresholdRegistry;
 
 public class QseePrepConfig
@@ -60,12 +63,12 @@ public class QseePrepConfig
     public final String RefMetricsDir;
 
     public final List<DriverGene> DriverGenes;
+    public final String CohortPercentilesFile;
+    public final String ThresholdsFile;
+    public final ThresholdRegistry QcThresholds;
 
     public final SequencingType SEQUENCING_TYPE;
     public final boolean AllowMissingInput;
-
-    public final String CohortPercentilesFile;
-    public final ThresholdRegistry QcThresholds = ThresholdRegistry.createDefault();;
 
     public final String OutputDir;
     public final String OutputId;
@@ -90,8 +93,12 @@ public class QseePrepConfig
         RefMetricsDir = configBuilder.getValue(REF_METRICS_DIR_CFG);
 
         DriverGenes = DriverGenePanelConfig.loadDriverGenes(configBuilder);
-
         CohortPercentilesFile = configBuilder.getValue(COHORT_PERCENTILES_FILE_CFG);
+        ThresholdsFile = configBuilder.getValue(THRESHOLD_OVERRIDES_FILE_CFG);
+
+        QcThresholds = ThresholdsFile == null
+                ? ThresholdRegistry.createDefault()
+                : ThresholdOverridesFile.read(ThresholdsFile);
 
         SEQUENCING_TYPE = SequencingType.valueOf(configBuilder.getValue(SEQUENCING_TYPE_CFG));
         AllowMissingInput = configBuilder.hasFlag(ALLOW_MISSING_INPUT);
@@ -119,6 +126,7 @@ public class QseePrepConfig
         SequencingType.registerConfig(configBuilder);
         configBuilder.addPath(DRIVER_GENE_PANEL, false, DRIVER_GENE_PANEL_DESC);
         configBuilder.addPath(COHORT_PERCENTILES_FILE_CFG, false, COHORT_PERCENTILES_FILE_CFG_DESC);
+        configBuilder.addPath(THRESHOLD_OVERRIDES_FILE_CFG, false, THRESHOLD_OVERRIDES_FILE_CFG_DESC);
 
         configBuilder.addFlag(ALLOW_MISSING_INPUT, ALLOW_MISSING_INPUT_DESC);
 
