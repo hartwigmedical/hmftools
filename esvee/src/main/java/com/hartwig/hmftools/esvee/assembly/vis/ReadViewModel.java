@@ -61,7 +61,8 @@ public final class ReadViewModel
     private final int mRefViewModelIndex;
     private final String mFullAssemblyStr;
 
-    private ReadViewModel(final SupportRead supportRead, final PairedSegmentViewModel refViewModel, final BaseSeqViewModel readViewModel, int indelOffset, boolean isReverseComplemented, int refViewModelIndex, final String fullAssemblyStr)
+    private ReadViewModel(final SupportRead supportRead, final PairedSegmentViewModel refViewModel, final BaseSeqViewModel readViewModel,
+            int indelOffset, boolean isReverseComplemented, int refViewModelIndex, final String fullAssemblyStr)
     {
         mSupportRead = supportRead;
         mRefViewModel = refViewModel;
@@ -258,7 +259,8 @@ public final class ReadViewModel
     private record HandleDelResult(BaseSeqViewModel readViewModel, int indelOffset, List<CigarElement> cigarEls) {}
 
     @Nullable
-    private static HandleDelResult handleDel(final PairedSegmentViewModel refViewModel, final SupportRead read, int indelOffset, final List<CigarElement> cigarEls, final byte[] readBases, final byte[] readBaseQuals, boolean readNegativeStrandFlag)
+    private static HandleDelResult handleDel(final PairedSegmentViewModel refViewModel, final SupportRead read, int indelOffset,
+            final List<CigarElement> cigarEls, final byte[] readBases, final byte[] readBaseQuals, boolean readNegativeStrandFlag)
     {
         int delLength = refViewModel.viewModels().get(0).leftDelLength() + refViewModel.viewModels()
                 .get(refViewModel.viewModels().size() - 1)
