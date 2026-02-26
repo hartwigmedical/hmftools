@@ -28,7 +28,7 @@ public class FeaturePrep
 {
     private final CommonPrepConfig mConfig;
 
-    public FeaturePrep(final CommonPrepConfig config)
+    public FeaturePrep(CommonPrepConfig config)
     {
         mConfig = config;
     }

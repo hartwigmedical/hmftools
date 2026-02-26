@@ -32,6 +32,7 @@ import com.hartwig.hmftools.qsee.feature.SourceTool;
 import com.hartwig.hmftools.qsee.prep.category.table.BamMetricsData;
 import com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature;
 import com.hartwig.hmftools.qsee.status.QcStatus;
+import com.hartwig.hmftools.qsee.status.ThresholdRegistry;
 
 import org.junit.Test;
 
@@ -51,7 +52,8 @@ public class SummaryTablePrepTest
     {
         EnumMap<SummaryTableFeature, Feature> featuresMap = new EnumMap<>(SummaryTableFeature.class);
         BamMetricCoverage bamMetricCoverage = createTestBamMetricCoverage();
-        SummaryTableBamMetricsPrep.putFeatures(featuresMap, bamMetricCoverage, SampleType.TUMOR);
+        ThresholdRegistry qcThresholds = ThresholdRegistry.createDefault();
+        SummaryTableBamMetricsPrep.putFeatures(featuresMap, bamMetricCoverage, SampleType.TUMOR, qcThresholds);
 
         assertEquals(0.9, featuresMap.get(SummaryTableFeature.COVERAGE_ABOVE_10).value(), 0.01);
         assertEquals(0.7, featuresMap.get(SummaryTableFeature.COVERAGE_ABOVE_30).value(), 0.01);
@@ -82,7 +84,8 @@ public class SummaryTablePrepTest
                 List.of()
         );
 
-        List<Feature> features = SummaryTableBamMetricsPrep.createFeatures(bamMetricsData, SampleType.TUMOR);
+        ThresholdRegistry qcThresholds = ThresholdRegistry.createDefault();
+        List<Feature> features = SummaryTableBamMetricsPrep.createFeatures(bamMetricsData, SampleType.TUMOR, qcThresholds);
 
         List<SummaryTableFeature> expectedFeatures = Stream.of(SummaryTableFeature.values())
                 .filter(f -> f.sourceTool() == SourceTool.BAM_METRICS)

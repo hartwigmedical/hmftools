@@ -42,6 +42,7 @@ import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 
 import com.hartwig.hmftools.qsee.common.SampleIdsLoader;
 import com.hartwig.hmftools.qsee.common.SampleType;
+import com.hartwig.hmftools.qsee.status.ThresholdRegistry;
 
 public class CommonPrepConfig
 {
@@ -65,6 +66,8 @@ public class CommonPrepConfig
     public final String OutputId;
 
     public final int Threads;
+
+    public final ThresholdRegistry QcThresholds = ThresholdRegistry.createDefault();
 
     public static final String ALLOW_MISSING_INPUT = "allow_missing_input";
     public static final String ALLOW_MISSING_INPUT_DESC = "Continue sample data extraction even if some input files are missing";
