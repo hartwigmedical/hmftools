@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.orange.report.tables;
 
+import static com.hartwig.hmftools.orange.report.ReportResources.formatPercentileField;
 import static com.hartwig.hmftools.orange.report.ReportResources.formatSingleDigitDecimal;
+import static com.hartwig.hmftools.orange.report.ReportResources.formatTpmField;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -27,14 +29,14 @@ import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.property.UnitValue;
 
 import com.google.common.collect.Lists;
-import org.jetbrains.annotations.NotNull;
+
 import org.jetbrains.annotations.Nullable;
 
 public final class DnaFusionTable
 {
-    @NotNull
-    public static Table build(@NotNull String title, float width, @NotNull List<LinxFusion> fusions, @Nullable IsofoxRecord isofox,
-            @NotNull ReportResources reportResources)
+    public static Table build(
+            final String title, float width, final List<LinxFusion> fusions, @Nullable final IsofoxRecord isofox,
+            final ReportResources reportResources)
     {
         if(fusions.isEmpty())
         {
@@ -76,7 +78,6 @@ public final class DnaFusionTable
         return new Tables(reportResources).createWrapping(table, title);
     }
 
-    @NotNull
     private static String display(FusionPhasedType fusionPhasedType)
     {
         switch(fusionPhasedType)
@@ -91,7 +92,6 @@ public final class DnaFusionTable
         throw new IllegalStateException();
     }
 
-    @NotNull
     private static String display(FusionLikelihoodType fusionLikelihoodType)
     {
         switch(fusionLikelihoodType)
@@ -106,8 +106,7 @@ public final class DnaFusionTable
         throw new IllegalStateException();
     }
 
-    @NotNull
-    private static String display(@NotNull List<LinxUnreportableReason> unreportedReasons)
+    private static String display(final List<LinxUnreportableReason> unreportedReasons)
     {
         return unreportedReasons.stream().map(item ->
         {
@@ -149,20 +148,17 @@ public final class DnaFusionTable
         }).collect(Collectors.joining(", "));
     }
 
-    @NotNull
-    private static String fiveEndString(@NotNull LinxFusion fusion)
+    private static String fiveEndString(final LinxFusion fusion)
     {
         return fusion.geneStart() + " " + fusion.geneContextStart() + " (" + fusion.geneTranscriptStart() + ")";
     }
 
-    @NotNull
-    private static String threeStartString(@NotNull LinxFusion fusion)
+    private static String threeStartString(final LinxFusion fusion)
     {
         return fusion.geneEnd() + " " + fusion.geneContextEnd() + " (" + fusion.geneTranscriptEnd() + ")";
     }
 
-    @NotNull
-    private static IBlockElement rnaFragmentSupportTable(@Nullable IsofoxRecord isofox, @NotNull LinxFusion fusion, @NotNull Cells cells)
+    private static IBlockElement rnaFragmentSupportTable(@Nullable final IsofoxRecord isofox, final LinxFusion fusion, final Cells cells)
     {
         if(isofox == null)
         {
@@ -183,8 +179,7 @@ public final class DnaFusionTable
         }
     }
 
-    @NotNull
-    private static IBlockElement supportFromExpressionOfGeneEnd(@NotNull IsofoxRecord isofox, @NotNull LinxFusion fusion)
+    private static IBlockElement supportFromExpressionOfGeneEnd(final IsofoxRecord isofox, final LinxFusion fusion)
     {
         GeneExpression geneEndExpression = Expressions.findByGene(isofox.allGeneExpressions(), fusion.geneEnd());
 
@@ -193,18 +188,16 @@ public final class DnaFusionTable
             return new Paragraph("None");
         }
 
-        String tpmString = "TPM " + Expressions.tpm(geneEndExpression);
-        String fcTypeString = "FC " + Expressions.foldChangeType(geneEndExpression);
-        String typeString = " Type percentile " + Expressions.percentileType(geneEndExpression) + " (" + fcTypeString + ")";
-        String fcDbString = "FC " + Expressions.foldChangeDatabase(geneEndExpression);
-        String dbString = " DB percentile " + Expressions.percentileDatabase(geneEndExpression) + " (" + fcDbString + ")";
+        String tpmString = "TPM " + formatTpmField(geneEndExpression.tpm());
+        String fcTypeString = "FC " + Expressions.formatFoldChange(geneEndExpression);
+        String typeString = " Type percentile " + formatPercentileField(geneEndExpression.percentileCohort()) + " (" + fcTypeString + ")";
+        // String fcDbString = "FC " + Expressions.foldChangeDatabase(geneEndExpression);
+        // String dbString = " DB percentile " + Expressions.percentileDatabase(geneEndExpression) + " (" + fcDbString + ")";
 
-        return new Paragraph(geneEndExpression.gene() + " " + tpmString + ", " + typeString + ", " + dbString);
+        return new Paragraph(geneEndExpression.gene() + " " + tpmString + ", " + typeString);
     }
 
-    @NotNull
-    private static IBlockElement supportFromSpliceJunctions(@NotNull IsofoxRecord isofox, @NotNull LinxFusion fusion,
-            @NotNull Cells cells)
+    private static IBlockElement supportFromSpliceJunctions(final IsofoxRecord isofox, final LinxFusion fusion, final Cells cells)
     {
         List<NovelSpliceJunction> matches = Lists.newArrayList();
         for(NovelSpliceJunction junction : isofox.allNovelSpliceJunctions())
@@ -232,16 +225,14 @@ public final class DnaFusionTable
         return fragmentSupportTable;
     }
 
-    @NotNull
-    private static List<NovelSpliceJunction> sortNovelSpliceJunctions(@NotNull List<NovelSpliceJunction> novelSpliceJunctions)
+    private static List<NovelSpliceJunction> sortNovelSpliceJunctions(final List<NovelSpliceJunction> novelSpliceJunctions)
     {
         return novelSpliceJunctions.stream()
                 .sorted((junction1, junction2) -> Integer.compare(junction2.fragmentCount(), junction1.fragmentCount()))
                 .collect(Collectors.toList());
     }
 
-    @NotNull
-    private static IBlockElement supportFromRnaFusions(@NotNull IsofoxRecord isofox, @NotNull LinxFusion fusion, @NotNull Cells cells)
+    private static IBlockElement supportFromRnaFusions(final IsofoxRecord isofox, final LinxFusion fusion, final Cells cells)
     {
         List<RnaFusion> matches = Lists.newArrayList();
         for(RnaFusion rnaFusion : isofox.allFusions())
@@ -276,8 +267,7 @@ public final class DnaFusionTable
         return fragmentSupportTable;
     }
 
-    @NotNull
-    private static List<RnaFusion> sortRnaFusions(@NotNull List<RnaFusion> rnaFusions)
+    private static List<RnaFusion> sortRnaFusions(final List<RnaFusion> rnaFusions)
     {
         return rnaFusions.stream().sorted((fusion1, fusion2) ->
         {
@@ -287,8 +277,7 @@ public final class DnaFusionTable
         }).collect(Collectors.toList());
     }
 
-    @NotNull
-    private static List<LinxFusion> sortLinxFusions(@NotNull List<LinxFusion> fusions)
+    private static List<LinxFusion> sortLinxFusions(final List<LinxFusion> fusions)
     {
         return fusions.stream().sorted((fusion1, fusion2) ->
         {
@@ -310,8 +299,7 @@ public final class DnaFusionTable
         }).collect(Collectors.toList());
     }
 
-    @NotNull
-    private static <T> List<T> max5(@NotNull List<T> elements)
+    private static <T> List<T> max5(final List<T> elements)
     {
         return elements.subList(0, Math.min(5, elements.size()));
     }

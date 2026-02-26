@@ -104,6 +104,9 @@ public final class CommonConfig
     public static final String PURPLE_PLOT_DIR_CFG = toolDirectory("purple_plot");
     public static final String PURPLE_PLOT_DIR_DESC = toolPlotsDirectoryDesc("Purple");
 
+    public static final String QSEE_DIR_CFG = toolDirectory("qsee");
+    public static final String QSEE_DIR_DESC = toolDirectoryDesc("QSee");
+
     public static final String REDUX_DIR_CFG = toolDirectory("redux");
     public static final String REDUX_DIR_DESC = toolDirectoryDesc("Redux");
 

@@ -12,11 +12,11 @@ import com.hartwig.hmftools.qsee.feature.FeatureType;
 import com.hartwig.hmftools.qsee.common.MultiFieldStringBuilder;
 import com.hartwig.hmftools.qsee.feature.SourceTool;
 import com.hartwig.hmftools.qsee.prep.CategoryPrep;
-import com.hartwig.hmftools.qsee.prep.CommonPrepConfig;
+import com.hartwig.hmftools.qsee.prep.QseePrepConfig;
 
 public class DuplicateFreqPrep implements CategoryPrep
 {
-    private final CommonPrepConfig mConfig;
+    private final QseePrepConfig mConfig;
 
     private static final SourceTool SOURCE_TOOL = SourceTool.REDUX;
 
@@ -24,7 +24,7 @@ public class DuplicateFreqPrep implements CategoryPrep
 
     private static final int MAX_DUP_READS = 100;
 
-    public DuplicateFreqPrep(CommonPrepConfig config)
+    public DuplicateFreqPrep(QseePrepConfig config)
     {
         mConfig = config;
     }
@@ -58,7 +58,7 @@ public class DuplicateFreqPrep implements CategoryPrep
             }
         }
 
-        String aboveMaxDupName = MultiFieldStringBuilder.formSingleField(FIELD_READ_COUNT, String.format("≥%s",MAX_DUP_READS));
+        String aboveMaxDupName = MultiFieldStringBuilder.formSingleField(FIELD_READ_COUNT, String.format(">=%s",MAX_DUP_READS));
         FeatureKey aboveMaxDupKey = new FeatureKey(aboveMaxDupName, FeatureType.DUPLICATE_FREQ, SOURCE_TOOL);
         features.add(new Feature(aboveMaxDupKey, (double) aboveMaxDupReadsCount / totalCount));
 

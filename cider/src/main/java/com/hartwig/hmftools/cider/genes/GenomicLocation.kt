@@ -24,13 +24,6 @@ data class GenomicLocation(val chromosome: String,
         return posEnd - posStart + 1
     }
 
-    /*
-    operator fun compareTo(other: GenomicLocation): Int
-    {
-        val baseRegionCompare = super.compareTo(other)
-        return if (baseRegionCompare == 0) strand.compareTo(other.strand) else baseRegionCompare
-    }*/
-
     override fun toString(): String
     {
         return "${if (inPrimaryAssembly) "" else ("$altAssemblyName ") }${chromosome}:${posStart}-${posEnd}(${strand.asChar()})"

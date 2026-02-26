@@ -3,9 +3,8 @@ package com.hartwig.hmftools.qsee.prep.category;
 import static org.junit.Assert.*;
 
 import java.util.EnumMap;
-import java.util.EnumSet;
 import java.util.List;
-import java.util.Set;
+import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.metrics.BamFlagStats;
 import com.hartwig.hmftools.common.metrics.BamMetricCoverage;
@@ -29,8 +28,11 @@ import com.hartwig.hmftools.common.purple.RunMode;
 import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
 import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.Feature;
+import com.hartwig.hmftools.qsee.feature.SourceTool;
+import com.hartwig.hmftools.qsee.prep.category.table.BamMetricsData;
 import com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature;
 import com.hartwig.hmftools.qsee.status.QcStatus;
+import com.hartwig.hmftools.qsee.status.ThresholdRegistry;
 
 import org.junit.Test;
 
@@ -41,7 +43,7 @@ public class SummaryTablePrepTest
     {
         List<PurpleQCStatus> purpleQcStatuses = List.of(PurpleQCStatus.values());
         PurityContext purityContext = createTestPurityContext(purpleQcStatuses);
-        EnumMap<PurpleQCStatus, QcStatus> qcStatuses = SummaryTablePrep.qcStatusFrom(purityContext);
+        EnumMap<PurpleQCStatus, QcStatus> qcStatuses = SummaryTablePurplePrep.qcStatusFrom(purityContext);
         assertEquals(purpleQcStatuses.size(), qcStatuses.size());
     }
 
@@ -50,7 +52,8 @@ public class SummaryTablePrepTest
     {
         EnumMap<SummaryTableFeature, Feature> featuresMap = new EnumMap<>(SummaryTableFeature.class);
         BamMetricCoverage bamMetricCoverage = createTestBamMetricCoverage();
-        SummaryTablePrep.putFeatures(featuresMap, bamMetricCoverage, SampleType.TUMOR);
+        ThresholdRegistry qcThresholds = ThresholdRegistry.createWithoutThresholds();
+        SummaryTableBamMetricsPrep.putFeatures(featuresMap, bamMetricCoverage, SampleType.TUMOR, qcThresholds);
 
         assertEquals(0.9, featuresMap.get(SummaryTableFeature.COVERAGE_ABOVE_10).value(), 0.01);
         assertEquals(0.7, featuresMap.get(SummaryTableFeature.COVERAGE_ABOVE_30).value(), 0.01);
@@ -59,24 +62,36 @@ public class SummaryTablePrepTest
     }
 
     @Test
-    public void allSummaryTableFeaturesExtracted()
-    {
+    public void canExtractPurpleFeatures(){
         PurityContext purityContext = createTestPurityContext(List.of(PurpleQCStatus.PASS));
-        BamMetricSummary bamMetricSummary = createTestBamMetricSummary();
-        BamMetricCoverage bamMetricCoverage = createTestBamMetricCoverage();
-        BamFlagStats bamFlagStats = createTestBamFlagStats();
 
-        EnumMap<SummaryTableFeature, Feature> featuresMap = new EnumMap<>(SummaryTableFeature.class);
-        SummaryTablePrep.putFeatures(featuresMap, purityContext);
-        SummaryTablePrep.putFeatures(featuresMap, bamMetricSummary, SampleType.TUMOR);
-        SummaryTablePrep.putFeatures(featuresMap, bamMetricCoverage, SampleType.TUMOR);
-        SummaryTablePrep.putFeatures(featuresMap, bamFlagStats);
+        List<Feature> features = SummaryTablePurplePrep.createFeatures(purityContext);
 
-        Set<SummaryTableFeature> allFeatures = EnumSet.allOf(SummaryTableFeature.class);
-        Set<SummaryTableFeature> populatedFeatures = featuresMap.keySet();
+        List<SummaryTableFeature> expectedFeatures = Stream.of(SummaryTableFeature.values())
+                .filter(f -> f.sourceTool() == SourceTool.PURPLE)
+                .toList();
 
-        assertEquals(SummaryTableFeature.values().length, featuresMap.size());
-        assertEquals(allFeatures, populatedFeatures);
+        assertEquals(expectedFeatures.size(), features.size());
+    }
+
+    @Test
+    public void canExtractBamMetricsFeatures()
+    {
+        BamMetricsData bamMetricsData = new BamMetricsData(
+                createTestBamMetricSummary(),
+                createTestBamMetricCoverage(),
+                createTestBamFlagStats(),
+                List.of()
+        );
+
+        ThresholdRegistry qcThresholds = ThresholdRegistry.createWithoutThresholds();
+        List<Feature> features = SummaryTableBamMetricsPrep.createFeatures(bamMetricsData, SampleType.TUMOR, qcThresholds);
+
+        List<SummaryTableFeature> expectedFeatures = Stream.of(SummaryTableFeature.values())
+                .filter(f -> f.sourceTool() == SourceTool.BAM_METRICS)
+                .toList();
+
+        assertEquals(expectedFeatures.size(), features.size());
     }
 
     private PurityContext createTestPurityContext(List<PurpleQCStatus> purpleQcStatuses)

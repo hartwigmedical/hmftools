@@ -12,12 +12,6 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public interface OrangePlots
 {
-    @Nullable
-    String sageReferenceBQRPlot();
-
-    @NotNull
-    String sageTumorBQRPlot();
-
     @NotNull
     String purpleInputPlot();
 
@@ -45,11 +39,9 @@ public interface OrangePlots
     @Nullable
     String cuppaSummaryPlot();
 
-    @Deprecated
     @Nullable
-    String cuppaFeaturePlot();
+    String qSeePlot();
 
-    @Deprecated
     @Nullable
-    String cuppaChartPlot();
+    String purplePlot();
 }

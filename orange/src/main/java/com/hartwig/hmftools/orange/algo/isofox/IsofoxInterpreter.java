@@ -21,8 +21,8 @@ public class IsofoxInterpreter
 
     public IsofoxInterpreter(final List<DriverGene> driverGenes, final LinxRecord linx)
     {
-        this.mDriverGenes = driverGenes;
-        this.mLinxRecord = linx;
+        mDriverGenes = driverGenes;
+        mLinxRecord = linx;
     }
 
     public IsofoxRecord interpret(final IsofoxData isofox)

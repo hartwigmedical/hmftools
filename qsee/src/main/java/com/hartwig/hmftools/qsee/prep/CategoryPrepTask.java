@@ -64,13 +64,15 @@ public class CategoryPrepTask implements Runnable
         if(mTotalSampleCount == 1)
             return;
 
-        int PROGRESS_INTERVAL = 100;
+        boolean hasManySamples = mTotalSampleCount > 100;
 
-        boolean hasManySamples = mTotalSampleCount >= PROGRESS_INTERVAL * 2;
+        int progressInterval = 100;
+        if(mTotalSampleCount > 1000) progressInterval = 1000;
+        if(mTotalSampleCount > 10000) progressInterval = 10000;
 
         if(hasManySamples)
         {
-            boolean isSampleAtInterval = (mSampleIndex + 1) % PROGRESS_INTERVAL == 0;
+            boolean isSampleAtInterval = (mSampleIndex + 1) % progressInterval == 0;
             boolean isLastSample = mSampleIndex == mTotalSampleCount - 1;
 
             if(isSampleAtInterval || isLastSample)
@@ -81,14 +83,11 @@ public class CategoryPrepTask implements Runnable
         }
     }
 
-    public static void missingInputFilesError(
-            boolean allowMissingInput, CategoryPrep categoryPrep, SampleType sampleType, String sampleId, String missingFilePath)
+    public static void missingInputFilesError(boolean allowMissingInput, CategoryPrep categoryPrep, SampleType sampleType, String missingFilePath)
     {
-        QC_LOGGER.log(
-                allowMissingInput ? Level.WARN : Level.ERROR,
-                "sampleType({}) category({}) - sample({}) missing input file: {}",
-                sampleType, categoryPrep.name(), sampleId, missingFilePath
-        );
+        QC_LOGGER.log(allowMissingInput ? Level.WARN : Level.ERROR,
+                "sampleType({}) category({}) - missing input file: {}",
+                sampleType, categoryPrep.name(), missingFilePath);
 
         if(!allowMissingInput)
             System.exit(1);
@@ -104,7 +103,7 @@ public class CategoryPrepTask implements Runnable
         }
         catch(IOException e)
         {
-            missingInputFilesError(mAllowMissingInput, mCategoryPrep, mSampleType, mSampleId, e.getMessage());
+            missingInputFilesError(mAllowMissingInput, mCategoryPrep, mSampleType, e.getMessage());
 
             if(mSamplesMissingInputCount != null)
                 mSamplesMissingInputCount.incrementAndGet();

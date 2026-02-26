@@ -126,7 +126,7 @@ object AsyncBamReader
                     {
                         Thread.sleep(1000)
                     }
-                    catch (ex: InterruptedException)
+                    catch (_: InterruptedException)
                     {
                         Thread.currentThread().interrupt()
                     }
@@ -150,7 +150,7 @@ object AsyncBamReader
                 {
                     bamRecordQ.take()
                 }
-                catch (e: InterruptedException)
+                catch (_: InterruptedException)
                 {
                     break
                 }

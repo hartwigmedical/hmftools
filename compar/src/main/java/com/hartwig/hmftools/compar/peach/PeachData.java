@@ -54,17 +54,6 @@ public class PeachData implements ComparableItem
     }
 
     @Override
-    public boolean reportable()
-    {
-        return true;
-    }
-
-    @Override
-    public boolean isPass() {
-        return true;
-    }
-
-    @Override
     public boolean matches(final ComparableItem other)
     {
         final PeachData otherData = (PeachData) other;

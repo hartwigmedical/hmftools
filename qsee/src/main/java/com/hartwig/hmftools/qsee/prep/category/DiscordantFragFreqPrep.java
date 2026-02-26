@@ -8,6 +8,7 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.sv.DiscordantFragType;
 import com.hartwig.hmftools.common.sv.EsveeDiscordantStats;
 import com.hartwig.hmftools.qsee.common.SampleType;
@@ -15,22 +16,23 @@ import com.hartwig.hmftools.qsee.feature.Feature;
 import com.hartwig.hmftools.qsee.feature.FeatureKey;
 import com.hartwig.hmftools.qsee.feature.FeatureType;
 import com.hartwig.hmftools.qsee.common.MultiFieldStringBuilder;
+import com.hartwig.hmftools.qsee.feature.PlotMetadata;
 import com.hartwig.hmftools.qsee.feature.SourceTool;
 import com.hartwig.hmftools.qsee.prep.CategoryPrep;
-import com.hartwig.hmftools.qsee.prep.CommonPrepConfig;
+import com.hartwig.hmftools.qsee.prep.QseePrepConfig;
 import com.hartwig.hmftools.qsee.prep.category.discordant.DiscordantFragGroup;
 
 import org.jetbrains.annotations.NotNull;
 
 public class DiscordantFragFreqPrep implements CategoryPrep
 {
-    private final CommonPrepConfig mConfig;
+    private final QseePrepConfig mConfig;
 
     private static final SourceTool SOURCE_TOOL = SourceTool.ESVEE;
 
-    private static final String FIELD_FRAG_TYPE = "DiscordantFragType";
+    static final String FIELD_FRAG_TYPE = "DiscordantFragType";
 
-    public DiscordantFragFreqPrep(CommonPrepConfig config)
+    public DiscordantFragFreqPrep(QseePrepConfig config)
     {
         mConfig = config;
     }
@@ -61,6 +63,7 @@ public class DiscordantFragFreqPrep implements CategoryPrep
         return EsveeDiscordantStats.read(filePath);
     }
 
+    @VisibleForTesting
     static Map<DiscordantFragGroup, Double> calcDiscordantProportions(EsveeDiscordantStats discordantStats)
     {
         Map<DiscordantFragGroup, Long> discCountPerGroup = new EnumMap<>(DiscordantFragGroup.class);
@@ -85,14 +88,18 @@ public class DiscordantFragFreqPrep implements CategoryPrep
         return discPropPerGroup;
     }
 
-    private static List<Feature> formFeatures(Map<DiscordantFragGroup, Double> discPropPerGroup)
+    @VisibleForTesting
+    static List<Feature> formFeatures(Map<DiscordantFragGroup, Double> discPropPerGroup)
     {
         List<Feature> features = new ArrayList<>();
         for(DiscordantFragGroup group : discPropPerGroup.keySet())
         {
-            String featureName = MultiFieldStringBuilder.formSingleField(FIELD_FRAG_TYPE, group.getName());
+            String featureName = MultiFieldStringBuilder.formSingleField(FIELD_FRAG_TYPE, group.toString());
+
+            PlotMetadata metadata = PlotMetadata.builder().displayName(group.getDisplayName()).build();
             FeatureKey key = new FeatureKey(featureName, FeatureType.DISCORDANT_FRAG_FREQ, SOURCE_TOOL);
-            Feature feature = new Feature(key, discPropPerGroup.get(group));
+
+            Feature feature = new Feature(key, discPropPerGroup.get(group), metadata);
             features.add(feature);
         }
 

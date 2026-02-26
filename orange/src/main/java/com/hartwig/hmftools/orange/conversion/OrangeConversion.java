@@ -4,16 +4,13 @@ import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.common.metrics.BamFlagStats;
 import com.hartwig.hmftools.common.metrics.BamMetricSummary;
-import com.hartwig.hmftools.common.hla.LilacSummaryData;
 import com.hartwig.hmftools.common.virus.VirusType;
 import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.chord.ChordStatus;
 import com.hartwig.hmftools.datamodel.chord.ImmutableChordRecord;
 import com.hartwig.hmftools.datamodel.flagstat.ImmutableFlagstat;
 import com.hartwig.hmftools.datamodel.hla.ImmutableLilacAllele;
-import com.hartwig.hmftools.datamodel.hla.ImmutableLilacRecord;
 import com.hartwig.hmftools.datamodel.hla.LilacAllele;
-import com.hartwig.hmftools.datamodel.hla.LilacRecord;
 import com.hartwig.hmftools.datamodel.metrics.ImmutableWGSMetrics;
 import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeDoidNode;
 import com.hartwig.hmftools.datamodel.orange.OrangeDoidNode;
@@ -24,8 +21,6 @@ import com.hartwig.hmftools.datamodel.virus.VirusBreakendQCStatus;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
 import com.hartwig.hmftools.datamodel.virus.VirusLikelihoodType;
-
-import org.jetbrains.annotations.NotNull;
 
 public final class OrangeConversion
 {
@@ -60,33 +55,6 @@ public final class OrangeConversion
     public static OrangeDoidNode convert(final DoidNode doidNode)
     {
         return ImmutableOrangeDoidNode.builder().doid(doidNode.doid()).doidTerm(doidNode.doidTerm()).build();
-    }
-
-    public static LilacRecord convert(final LilacSummaryData lilacSummaryData, boolean hasRef, boolean hasRna)
-    {
-        return ImmutableLilacRecord.builder()
-                .qc(lilacSummaryData.qc())
-                .alleles(() -> lilacSummaryData.alleles()
-                        .stream()
-                        .map(allele -> OrangeConversion.convert(allele, hasRef, hasRna))
-                        .iterator())
-                .build();
-    }
-
-    public static LilacAllele convert(final com.hartwig.hmftools.common.hla.LilacAllele allele, boolean hasRef, boolean hasRna)
-    {
-        return ImmutableLilacAllele.builder()
-                .allele(allele.allele())
-                .tumorCopyNumber(allele.tumorCopyNumber())
-                .refFragments(hasRef ? allele.refFragments() : null)
-                .tumorFragments(allele.tumorFragments())
-                .rnaFragments(hasRna ? allele.rnaFragments() : null)
-                .somaticMissense(allele.somaticMissense())
-                .somaticNonsenseOrFrameshift(allele.somaticNonsenseOrFrameshift())
-                .somaticSplice(allele.somaticSplice())
-                .somaticSynonymous(allele.somaticSynonymous())
-                .somaticInframeIndel(allele.somaticInframeIndel())
-                .build();
     }
 
     public static VirusInterpreterEntry convert(final com.hartwig.hmftools.common.virus.AnnotatedVirus annotatedVirus)

@@ -15,10 +15,12 @@ import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_END;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_START;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -31,6 +33,7 @@ import java.util.StringJoiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -65,11 +68,11 @@ public class FileLiftover
 
         try
         {
-            List<String> lines = Files.readAllLines(Paths.get(inputFile));
+            BufferedReader reader = createBufferedReader(inputFile);
+
             String delim = FileDelimiters.inferFileDelimiter(inputFile);
 
-            String header = lines.get(0);
-            lines.remove(0);
+            String header = reader.readLine();
             Map<String,Integer> fieldIndexMap = FileReaderUtils.createFieldsIndexMap(header, delim);
 
             int chrIndex = getChromosomeFieldIndex(fieldIndexMap);
@@ -116,11 +119,15 @@ public class FileLiftover
             String currentChromosome = "";
             List<RegionEntry> currentRegions = null;
 
-            for(String line : lines)
+            String line = null;
+
+            while((line = reader.readLine()) != null)
             {
                 String[] values = line.split(delim, -1);
 
                 String chromosome = values[chrIndex];
+
+                chromosome = sourceVersion.versionedChromosome(chromosome);
 
                 if(!currentChromosome.equals(chromosome))
                 {

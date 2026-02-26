@@ -1,31 +1,39 @@
 package com.hartwig.hmftools.orange.report.tables;
 
-import static com.hartwig.hmftools.orange.algo.purple.CopyNumberInterpretationUtil.display;
+import static com.hartwig.hmftools.orange.report.ReportResources.formatFoldChangeField;
+import static com.hartwig.hmftools.orange.report.ReportResources.formatPercentileField;
 import static com.hartwig.hmftools.orange.report.ReportResources.formatSingleDigitDecimal;
+import static com.hartwig.hmftools.orange.report.ReportResources.formatTpmField;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_DRIVER;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_GENE;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_LOCATION;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_RANGE;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_REL_CN;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_TPM;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_TYPE;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.cellArray;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.floatArray;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.datamodel.isofox.IsofoxRecord;
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
-import com.hartwig.hmftools.datamodel.isofox.GeneExpression;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.interpretation.Chromosomes;
-import com.hartwig.hmftools.orange.report.interpretation.Expressions;
 import com.hartwig.hmftools.orange.report.util.Cells;
 import com.hartwig.hmftools.orange.report.util.Tables;
 import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Table;
 
 import org.apache.logging.log4j.util.Strings;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public final class GainDeletionTable
 {
-    @NotNull
-    public static Table build(@NotNull String title, float width, @NotNull List<PurpleGainDeletion> gainsDels,
-            @Nullable IsofoxRecord isofox, @NotNull ReportResources reportResources)
+    public static Table build(
+            final String title, float width, final List<PurpleGainDeletion> gainsDels, final ReportResources reportResources,
+            boolean hasRna)
     {
         if(gainsDels.isEmpty())
         {
@@ -33,54 +41,52 @@ public final class GainDeletionTable
         }
 
         Cells cells = new Cells(reportResources);
-        Table table = Tables.createContent(width,
-                new float[] { 1, 1, 1, 1, 1, 1, 1, 1, 1 },
-                new Cell[] { cells.createHeader("Location"), cells.createHeader("Gene"),
-                        cells.createHeader("Type"), cells.createHeader("CN"), cells.createHeader("TPM"), cells.createHeader("Perc (Type)"),
-                        cells.createHeader("FC (Type)"), cells.createHeader("Perc (DB)"), cells.createHeader("FC (DB)") });
+
+        List<Integer> widths = Lists.newArrayList();
+        List<Cell> cellEntries = Lists.newArrayList();
+
+        addEntry(cells, widths, cellEntries, 1, COL_LOCATION);
+        addEntry(cells, widths, cellEntries, 1, COL_GENE);
+        addEntry(cells, widths, cellEntries, 1, COL_TYPE);
+        addEntry(cells, widths, cellEntries, 1, COL_RANGE); // if known
+        addEntry(cells, widths, cellEntries, 1, "Min CN");
+        addEntry(cells, widths, cellEntries, 1, "Max CN");
+        addEntry(cells, widths, cellEntries, 1, COL_REL_CN);
+        addEntry(cells, widths, cellEntries, 1, COL_DRIVER);
+
+        if(hasRna)
+        {
+            addEntry(cells, widths, cellEntries, 1, COL_TPM);
+            addEntry(cells, widths, cellEntries, 1, "Percentile");
+            addEntry(cells, widths, cellEntries, 1, "Fold Change");
+        }
+
+        Table table = Tables.createContent(width, floatArray(widths), cellArray(cellEntries));
 
         for(PurpleGainDeletion gainDel : sort(gainsDels))
         {
             table.addCell(cells.createContent(gainDel.chromosome() + gainDel.chromosomeBand()));
             table.addCell(cells.createContent(displayGene(gainDel)));
-            table.addCell(cells.createContent(display(gainDel.interpretation())));
-            table.addCell(cells.createContent(formatSingleDigitDecimal(gainDel.minCopies())));
+            table.addCell(cells.createContent(gainDel.driver().type().toString()));
+            table.addCell(cells.createContent(gainDel.exonRange()));
+            table.addCell(cells.createContent(formatSingleDigitDecimal(gainDel.minCopyNumber())));
+            table.addCell(cells.createContent(formatSingleDigitDecimal(gainDel.maxCopyNumber())));
+            table.addCell(cells.createContent(formatSingleDigitDecimal(gainDel.relativeCopyNumber())));
 
-            GeneExpression expression = findExpressionForGene(isofox, gainDel.gene());
-            if(expression != null)
+            table.addCell(cells.createContent(gainDel.driver().driverInterpretation().toString()));
+
+            if(hasRna)
             {
-                table.addCell(cells.createContent(Expressions.tpm(expression)));
-                table.addCell(cells.createContent(Expressions.percentileType(expression)));
-                table.addCell(cells.createContent(Expressions.foldChangeType(expression)));
-                table.addCell(cells.createContent(Expressions.percentileDatabase(expression)));
-                table.addCell(cells.createContent(Expressions.foldChangeDatabase(expression)));
-            }
-            else
-            {
-                table.addCell(cells.createContent(ReportResources.NOT_AVAILABLE));
-                table.addCell(cells.createContent(ReportResources.NOT_AVAILABLE));
-                table.addCell(cells.createContent(ReportResources.NOT_AVAILABLE));
-                table.addCell(cells.createContent(ReportResources.NOT_AVAILABLE));
-                table.addCell(cells.createContent(ReportResources.NOT_AVAILABLE));
+                table.addCell(cells.createContent(formatTpmField(gainDel.tpm())));
+                table.addCell(cells.createContent(formatPercentileField(gainDel.tpmPercentile())));
+                table.addCell(cells.createContent(formatFoldChangeField(gainDel.tpmFoldChange())));
             }
         }
 
         return new Tables(reportResources).createWrapping(table, title);
     }
 
-    @Nullable
-    private static GeneExpression findExpressionForGene(@Nullable IsofoxRecord isofox, @NotNull String geneToFind)
-    {
-        if(isofox == null)
-        {
-            return null;
-        }
-
-        return Expressions.findByGene(isofox.allGeneExpressions(), geneToFind);
-    }
-
-    @NotNull
-    private static List<PurpleGainDeletion> sort(@NotNull List<PurpleGainDeletion> gainsAndDels)
+    private static List<PurpleGainDeletion> sort(final List<PurpleGainDeletion> gainsAndDels)
     {
         return gainsAndDels.stream().sorted((gainDel1, gainDel2) ->
         {
@@ -98,8 +104,7 @@ public final class GainDeletionTable
         }).collect(Collectors.toList());
     }
 
-    @NotNull
-    private static String displayGene(@NotNull PurpleGainDeletion gainDel)
+    private static String displayGene(final PurpleGainDeletion gainDel)
     {
         String addon = Strings.EMPTY;
         if(!gainDel.isCanonical())

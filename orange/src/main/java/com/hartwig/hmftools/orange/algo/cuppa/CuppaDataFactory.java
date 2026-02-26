@@ -98,13 +98,18 @@ public final class CuppaDataFactory
 
         return (int) Math.round(predictionEntry.FeatureValue);
     }
+
     static CuppaMode getCuppaMode(ClassifierName mainCombinedClassifierName) throws IllegalArgumentException
     {
-        if (mainCombinedClassifierName == ClassifierName.COMBINED) {
+        if (mainCombinedClassifierName == ClassifierName.COMBINED)
+        {
             return CuppaMode.WGTS;
-        } else if (mainCombinedClassifierName == ClassifierName.DNA_COMBINED) {
+        } else if (mainCombinedClassifierName == ClassifierName.DNA_COMBINED)
+        {
             return CuppaMode.WGS;
-        } else {
+        }
+        else
+        {
             throw new IllegalArgumentException("MainCombinedClassifierName should only be COMBINED or DNA_COMBINED");
         }
     }

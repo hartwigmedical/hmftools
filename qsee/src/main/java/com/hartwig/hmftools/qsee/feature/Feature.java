@@ -13,6 +13,13 @@ public class Feature
         mPlotMetadata = plotMetadata;
     }
 
+    public Feature(String name, double value, FeatureType type, SourceTool sourceTool)
+    {
+        mKey = new FeatureKey(name, type, sourceTool);
+        mValue = value;
+        mPlotMetadata = PlotMetadata.createEmpty();
+    }
+
     public Feature(FeatureKey key, double value, PlotMetadata plotMetadata)
     {
         mKey = key;

@@ -2,7 +2,6 @@ package com.hartwig.hmftools.orange.algo.purple;
 
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
-import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
@@ -14,23 +13,25 @@ import org.jetbrains.annotations.NotNull;
 
 public final class TestPurpleGainDeletionFactory
 {
-    @NotNull
-    public static PurpleGainDeletion createGainDel(@NotNull String gene, @NotNull CopyNumberInterpretation interpretation)
+    public static PurpleGainDeletion createGainDel(final String gene)
     {
-        return builder(gene).interpretation(interpretation).build();
+        return builder(gene).build();
     }
 
-    @NotNull
     public static ImmutablePurpleGainDeletion.Builder builder()
     {
         return ImmutablePurpleGainDeletion.builder()
                 .driver(driverBuilder().build())
-                .interpretation(CopyNumberInterpretation.FULL_GAIN)
                 .chromosome(Strings.EMPTY)
                 .chromosomeBand(Strings.EMPTY)
-                .minCopies(0)
-                .maxCopies(0)
-                .minMinorAlleleCopies(0);
+                .minCopyNumber(0)
+                .maxCopyNumber(0)
+                .relativeCopyNumber(0)
+                .exonRange("")
+                .minMinorAlleleCopies(0)
+                .tpm(null)
+                .tpmPercentile(null)
+                .tpmFoldChange(null);
     }
 
     @NotNull

@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.cider.primer
 
 import com.hartwig.hmftools.cider.VDJSequence
-import com.hartwig.hmftools.cider.VJ
+import com.hartwig.hmftools.cider.genes.VJ
 
 data class Primer(val target: String, val name: String, val sequence: String, val vj: VJ)
 

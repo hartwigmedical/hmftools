@@ -8,8 +8,8 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.fsIndex;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.EXON_DEL_DUP;
-import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_KNOWN_PAIR;
-import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_PROMISCUOUS;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.ENHANCER_KNOWN_PAIR;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.ENHANCER_PROMISCUOUS;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_3;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_5;
@@ -116,7 +116,7 @@ public class GeneFusion
 
     public KnownFusionType knownType() { return mKnownFusionType; }
     public boolean[] isPromiscuous() { return mIsPromiscuous; }
-    public boolean isIG() { return mKnownFusionType == IG_KNOWN_PAIR || mKnownFusionType == IG_PROMISCUOUS; }
+    public boolean isIG() { return mKnownFusionType == ENHANCER_KNOWN_PAIR || mKnownFusionType == ENHANCER_PROMISCUOUS; }
 
     public void setKnownType(KnownFusionType type) { mKnownFusionType = type; }
 
@@ -135,7 +135,7 @@ public class GeneFusion
         if(!mIsReportable)
             return FusionLikelihoodType.NA;
 
-        if(mKnownFusionType == KNOWN_PAIR || mKnownFusionType == EXON_DEL_DUP || mKnownFusionType == IG_KNOWN_PAIR || mKnownExons)
+        if(mKnownFusionType == KNOWN_PAIR || mKnownFusionType == EXON_DEL_DUP || mKnownFusionType == ENHANCER_KNOWN_PAIR || mKnownExons)
             return FusionLikelihoodType.HIGH;
         else
             return FusionLikelihoodType.LOW;

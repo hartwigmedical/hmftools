@@ -6,8 +6,8 @@ import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_NONE;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.EXON_DEL_DUP;
-import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_KNOWN_PAIR;
-import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_PROMISCUOUS;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.ENHANCER_KNOWN_PAIR;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.ENHANCER_PROMISCUOUS;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.NONE;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_3;
@@ -90,19 +90,19 @@ public class FusionFinder
         {
             // left is upstream, right is downstream
             boolean startUpstream = startGene.isUpstream();
-            boolean startIsIgRegion = mKnownFusionCache.withinIgRegion(startGene.chromosome(), startGene.position());
+            boolean startIsIgRegion = mKnownFusionCache.withinEnhancerRegion(startGene.chromosome(), startGene.position());
 
             for(final BreakendGeneData endGene : breakendGenes2)
             {
                 boolean endUpstream = endGene.isUpstream();
-                boolean endIsIgRegion = mKnownFusionCache.withinIgRegion(endGene.chromosome(), endGene.position());
+                boolean endIsIgRegion = mKnownFusionCache.withinEnhancerRegion(endGene.chromosome(), endGene.position());
 
                 if(startIsIgRegion || endIsIgRegion)
                 {
                     if(startIsIgRegion && endIsIgRegion)
                         continue;
 
-                    checkIgFusion(startGene, endGene, potentialFusions);
+                    checkEnhancerFusion(startGene, endGene, potentialFusions);
                     continue;
                 }
 
@@ -439,21 +439,22 @@ public class FusionFinder
         return tickPhaseForward(upPhase) == downPhase;
     }
 
-    private void checkIgFusion(final BreakendGeneData startGene, final BreakendGeneData endGene, final List<GeneFusion> potentialFusions)
+    private void checkEnhancerFusion(
+            final BreakendGeneData startGene, final BreakendGeneData endGene, final List<GeneFusion> potentialFusions)
     {
         // These are allowed to fuse with 5’UTR splice donors from 100kb upstream. Phasing is assumed to be -1
-        // In some specific cases, allow fusions in the 3’UTR region or even downstream of the gene (eg BCL2 (common in Folicular Lymphomas[PP1])
+        // In some specific cases, allow fusions in the 3’UTR region or even downstream of the gene (eg BCL2)
         // in which case the 3' gene's orientation must be facing back upstream into the coding region
 
         // orientation in the IG region is no longer checked
-        boolean startIsIgGene = mKnownFusionCache.withinIgRegion(startGene.chromosome(), startGene.position()); // matchesIgGene startGene.orientation()
-        boolean endIsIgGene = !startIsIgGene && mKnownFusionCache.withinIgRegion(endGene.chromosome(), endGene.position()); // endGene.orientation()
+        boolean startIsIgGene = mKnownFusionCache.withinEnhancerRegion(startGene.chromosome(), startGene.position()); // matchesIgGene startGene.orientation()
+        boolean endIsIgGene = !startIsIgGene && mKnownFusionCache.withinEnhancerRegion(endGene.chromosome(), endGene.position()); // endGene.orientation()
 
         if(!startIsIgGene && !endIsIgGene)
             return;
 
-        final BreakendGeneData igGene = startIsIgGene ? startGene : endGene;
-        final BreakendGeneData downGene = startIsIgGene ? endGene : startGene;
+        BreakendGeneData igGene = startIsIgGene ? startGene : endGene;
+        BreakendGeneData downGene = startIsIgGene ? endGene : startGene;
 
         KnownFusionType knownType = NONE;
 
@@ -461,7 +462,7 @@ public class FusionFinder
                 .filter(x -> x.CodingBases == 0 && !x.isUpstream())
                 .collect(Collectors.toList());
 
-        KnownFusionData kfData = mKnownFusionCache.getDataByType(IG_KNOWN_PAIR).stream()
+        KnownFusionData kfData = mKnownFusionCache.getDataByType(ENHANCER_KNOWN_PAIR).stream()
                 .filter(x -> x.ThreeGene.equals(downGene.geneName()))
                 .filter(x -> x.withinGeneRegion(igGene.chromosome(), igGene.position()))
                 .findFirst().orElse(null);
@@ -477,11 +478,11 @@ public class FusionFinder
                         .collect(Collectors.toList()));
             }
 
-            knownType = IG_KNOWN_PAIR;
+            knownType = ENHANCER_KNOWN_PAIR;
         }
         else
         {
-            kfData = mKnownFusionCache.getDataByType(IG_PROMISCUOUS).stream()
+            kfData = mKnownFusionCache.getDataByType(ENHANCER_PROMISCUOUS).stream()
                     .filter(x -> x.withinGeneRegion(igGene.chromosome(), igGene.position()))
                     .findFirst().orElse(null);
 
@@ -489,7 +490,7 @@ public class FusionFinder
             if(kfData == null)
                 return;
 
-            knownType = IG_PROMISCUOUS;
+            knownType = ENHANCER_PROMISCUOUS;
         }
 
         final BreakendTransData upTrans = generateIgTranscript(igGene, kfData);
@@ -621,7 +622,7 @@ public class FusionFinder
         if(downTrans.nonCoding())
             return;
 
-        if(fusion.knownType() == IG_KNOWN_PAIR || fusion.knownType() == IG_PROMISCUOUS)
+        if(fusion.knownType() == ENHANCER_KNOWN_PAIR || fusion.knownType() == ENHANCER_PROMISCUOUS)
         {
             // ignore proteins lost for downstream transcripts since the IG region functions as a promotor
             if(downTrans.postCoding())

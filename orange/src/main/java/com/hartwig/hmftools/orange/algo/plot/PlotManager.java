@@ -10,4 +10,7 @@ public interface PlotManager
 
     @Nullable
     String processPlotFile(@Nullable String sourcePlotPath) throws IOException;
+
+    @Nullable
+    String plotDirectory();
 }

@@ -8,12 +8,10 @@ import com.hartwig.hmftools.datamodel.immuno.ImmuneEscapeRecord;
 import com.hartwig.hmftools.datamodel.immuno.ImmutableImmuneEscapeRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
-import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
-import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
+import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
-import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -87,35 +85,13 @@ public final class ImmuneEscapeInterpreter
         return false;
     }
 
-    private static boolean hasAnyInactivationVariant(final List<PurpleVariant> allSomaticVariants, final String geneToCheck)
-    {
-        for(PurpleVariant somaticVariant : allSomaticVariants)
-        {
-            if(somaticVariant.gene().equals(geneToCheck))
-            {
-                PurpleCodingEffect canonicalCodingEffect = somaticVariant.canonicalImpact().codingEffect();
-                boolean hasLOFImpact = canonicalCodingEffect == PurpleCodingEffect.SPLICE ||
-                        canonicalCodingEffect == PurpleCodingEffect.NONSENSE_OR_FRAMESHIFT;
-                boolean hasBiallelicMissenseImpact = canonicalCodingEffect == PurpleCodingEffect.MISSENSE && somaticVariant.biallelic();
-
-                boolean isClonal = somaticVariant.subclonalLikelihood() < 0.5;
-                if(isClonal && (hasLOFImpact || hasBiallelicMissenseImpact))
-                {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
     private static boolean isDeleted(final List<PurpleGainDeletion> allSomaticGainDels, final String geneToCheck)
     {
         for(PurpleGainDeletion somaticGainDel : allSomaticGainDels)
         {
             if(somaticGainDel.gene().equals(geneToCheck) && somaticGainDel.isCanonical())
             {
-                return somaticGainDel.interpretation() == CopyNumberInterpretation.FULL_DEL
-                        || somaticGainDel.interpretation() == CopyNumberInterpretation.PARTIAL_DEL;
+                return somaticGainDel.driver().type() == PurpleDriverType.DEL;
             }
         }
 
@@ -153,7 +129,7 @@ public final class ImmuneEscapeInterpreter
         {
             if(somaticGainDel.gene().equals(geneToCheck) && somaticGainDel.isCanonical())
             {
-                return somaticGainDel.interpretation() == CopyNumberInterpretation.FULL_GAIN;
+                return somaticGainDel.driver().type() == PurpleDriverType.AMP;
             }
         }
         return false;

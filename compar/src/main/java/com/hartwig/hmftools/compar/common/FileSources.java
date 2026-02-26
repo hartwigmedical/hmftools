@@ -14,6 +14,8 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.COBALT_DIR_C
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.COBALT_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.CUPPA_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.CUPPA_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.ISOFOX_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.ISOFOX_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LILAC_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LILAC_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_DIR_CFG;
@@ -24,6 +26,8 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.PEACH_DIR_CF
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PEACH_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SIGS_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SIGS_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TEAL_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TEAL_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_CFG;
@@ -63,6 +67,8 @@ public class FileSources
     public final String Cider;
     public final String Teal;
     public final String VChord;
+    public final String Sigs;
+    public final String Isofox;
 
     private static final String SAMPLE_DIR = "sample_dir";
     private static final String SOMATIC_VCF = "somatic_vcf";
@@ -77,7 +83,8 @@ public class FileSources
             final String source, final String linx, final String cobalt, final String purple, final String linxGermline, final String cuppa,
             final String lilac, final String chord, final String peach, final String virus, final String somaticVcf,
             final String somaticUnfilteredVcf, final String tumorFlagstat, final String germlineFlagstat, final String tumorBamMetrics,
-            final String germlineBamMetrics, final String snpGenotype, final String cider, final String teal, final String vChord)
+            final String germlineBamMetrics, final String snpGenotype, final String cider, final String teal, final String vChord,
+            final String sigs, final String isofox)
     {
         Source = source;
         Linx = linx;
@@ -99,6 +106,8 @@ public class FileSources
         Cider = cider;
         Teal = teal;
         VChord = vChord;
+        Sigs = sigs;
+        Isofox = isofox;
     }
 
     public static FileSources sampleInstance(final FileSources fileSources, final String sampleId, final String germlineSampleId)
@@ -123,7 +132,9 @@ public class FileSources
                 convertWildcardSamplePath(fileSources.SnpGenotype, sampleId, germlineSampleId),
                 convertWildcardSamplePath(fileSources.Cider, sampleId, germlineSampleId),
                 convertWildcardSamplePath(fileSources.Teal, sampleId, germlineSampleId),
-                convertWildcardSamplePath(fileSources.VChord, sampleId, germlineSampleId));
+                convertWildcardSamplePath(fileSources.VChord, sampleId, germlineSampleId),
+                convertWildcardSamplePath(fileSources.Sigs, sampleId, germlineSampleId),
+                convertWildcardSamplePath(fileSources.Isofox, sampleId, germlineSampleId));
     }
 
     private static void addPathConfig(final ConfigBuilder configBuilder, final String toolDir, final String toolDesc, final String sourceName)
@@ -155,6 +166,8 @@ public class FileSources
             addPathConfig(configBuilder, CIDER_DIR_CFG, CIDER_DIR_DESC, sourceName);
             addPathConfig(configBuilder, TEAL_DIR_CFG, TEAL_DIR_DESC, sourceName);
             addPathConfig(configBuilder, V_CHORD_DIR_CFG, V_CHORD_DIR_DESC, sourceName);
+            addPathConfig(configBuilder, SIGS_DIR_CFG, SIGS_DIR_DESC, sourceName);
+            addPathConfig(configBuilder, ISOFOX_DIR_CFG, ISOFOX_DIR_DESC, sourceName);
             addPathConfig(configBuilder, TUMOR_FLAGSTAT, formSourceDescription("Tumor flagstat", sourceName), sourceName);
             addPathConfig(configBuilder, GERMLINE_FLAGSTAT, formSourceDescription("Germline flagstat", sourceName), sourceName);
             addPathConfig(configBuilder, TUMOR_BAM_METRICS, formSourceDescription("Tumor BAM metrics", sourceName), sourceName);
@@ -223,10 +236,12 @@ public class FileSources
         String ciderDir = getDirectory(configBuilder, sampleDir, defaultToolDirs.ciderDir(), CIDER_DIR_CFG, sourceName);
         String tealDir = getDirectory(configBuilder, sampleDir, defaultToolDirs.tealDir(), TEAL_DIR_CFG, sourceName);
         String vChordDir = getDirectory(configBuilder, sampleDir, defaultToolDirs.vChordDir(), V_CHORD_DIR_CFG, sourceName);
+        String sigsDir = getDirectory(configBuilder, sampleDir, defaultToolDirs.sigsDir(), SIGS_DIR_CFG, sourceName);
+        String isofoxDir = getDirectory(configBuilder, sampleDir, defaultToolDirs.isofoxDir(), ISOFOX_DIR_CFG, sourceName);
 
         return new FileSources(sourceName, linxDir, cobaltDir, purpleDir, linxGermlineDir, cuppaDir, lilacDir, chordDir, peachDir, virusDir,
                 somaticVcf, somaticUnfilteredVcf, tumorFlagstat, germlineFlagstat, tumorBamMetrics, germlineBamMetrics, snpGenotype,
-                ciderDir, tealDir, vChordDir);
+                ciderDir, tealDir, vChordDir, sigsDir, isofoxDir);
     }
 
     private static PipelineToolDirectories resolveDefaultToolDirs(final ConfigBuilder configBuilder, final String sourceName)

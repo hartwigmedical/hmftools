@@ -2,7 +2,7 @@ package com.hartwig.hmftools.linx.fusion;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
-import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_PROMISCUOUS;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.ENHANCER_PROMISCUOUS;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.NONE;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
@@ -91,7 +91,7 @@ public class FusionDisruptionAnalyser
         mUniqueFusions = Lists.newArrayList();
         mInvalidFusions = Maps.newHashMap();
 
-        mSpecialFusions = new SpecialFusions(mGeneDataCache, mFusionFinder, mFusionConfig);
+        mSpecialFusions = new SpecialFusions(mGeneDataCache, mFusionFinder);
 
         mRnaFusionMapper = null;
 
@@ -296,8 +296,8 @@ public class FusionDisruptionAnalyser
             if(var.getCluster().getSvCount() > 1 && var.getCluster().findChain(var) != null)
             {
                 boolean igCandidate = !var.isSglBreakend()
-                        && (mFusionFinder.getKnownFusionCache().withinIgRegion(var.chromosome(true), var.position(true))
-                        != mFusionFinder.getKnownFusionCache().withinIgRegion(var.chromosome(false), var.position(false)));
+                        && (mFusionFinder.getKnownFusionCache().withinEnhancerRegion(var.chromosome(true), var.position(true))
+                        != mFusionFinder.getKnownFusionCache().withinEnhancerRegion(var.chromosome(false), var.position(false)));
 
                 if(!igCandidate)
                     continue;
@@ -764,7 +764,7 @@ public class FusionDisruptionAnalyser
             final List<BreakendGeneData> genesList = var.getGenesList(false);
 
             // take the genes if any are in an IG region
-            if(var.getSglMappings().stream().anyMatch(x -> mFusionFinder.getKnownFusionCache().withinIgRegion(x.Chromosome, x.Position)))
+            if(var.getSglMappings().stream().anyMatch(x -> mFusionFinder.getKnownFusionCache().withinEnhancerRegion(x.Chromosome, x.Position)))
                 return genesList;
 
             // otherwise check known pairs (including IG pair 3' genes)
@@ -870,7 +870,7 @@ public class FusionDisruptionAnalyser
 
             // IG promiscuous fusions are not reportable but need to all be recorded
             List<GeneFusion> candidates = similarFusions.stream()
-                    .filter(x -> x.knownType() == IG_PROMISCUOUS)
+                    .filter(x -> x.knownType() == ENHANCER_PROMISCUOUS)
                     .filter(x -> x.downstreamTrans().TransData.IsCanonical)
                     .collect(Collectors.toList());
 

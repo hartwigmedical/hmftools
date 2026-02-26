@@ -11,6 +11,7 @@ import com.hartwig.hmftools.datamodel.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.linx.LinxDriver;
+import com.hartwig.hmftools.datamodel.linx.LinxDriverEventType;
 import com.hartwig.hmftools.datamodel.linx.LinxDriverType;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.linx.LinxFusionType;
@@ -27,7 +28,7 @@ public final class LinxConversion
     {
         return ImmutableLinxDriver.builder()
                 .gene(driver.gene())
-                .type(LinxDriverType.valueOf(driver.eventType().name()))
+                .type(LinxDriverEventType.valueOf(driver.eventType().name()))
                 .build();
     }
 

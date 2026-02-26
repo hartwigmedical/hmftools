@@ -1,9 +1,23 @@
 package com.hartwig.hmftools.orange.conversion;
 
+import static com.hartwig.hmftools.common.variant.CodingEffect.MISSENSE;
+import static com.hartwig.hmftools.common.variant.CodingEffect.NONE;
+import static com.hartwig.hmftools.common.variant.CodingEffect.NONSENSE_OR_FRAMESHIFT;
+import static com.hartwig.hmftools.common.variant.CodingEffect.SPLICE;
+import static com.hartwig.hmftools.common.variant.CodingEffect.SYNONYMOUS;
+import static com.hartwig.hmftools.orange.algo.OrangeConstants.PURPLE_ARM_CN_DIPLOID;
+import static com.hartwig.hmftools.orange.algo.OrangeConstants.PURPLE_ARM_CN_GAIN;
+import static com.hartwig.hmftools.orange.algo.OrangeConstants.PURPLE_ARM_CN_GAIN_THRESHOLD;
+import static com.hartwig.hmftools.orange.algo.OrangeConstants.PURPLE_ARM_CN_LOSS;
+import static com.hartwig.hmftools.orange.algo.OrangeConstants.PURPLE_ARM_CN_LOSS_THRESHOLD;
+
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
+import com.hartwig.hmftools.common.purple.ChrArmCopyNumber;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GermlineAmpDel;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
@@ -14,6 +28,7 @@ import com.hartwig.hmftools.common.variant.impact.VariantEffect;
 import com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact;
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleAllelicDepth;
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleChrArmCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGeneCopyNumber;
@@ -21,6 +36,7 @@ import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGermlineDeletion;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleQC;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.PurpleAllelicDepth;
+import com.hartwig.hmftools.datamodel.purple.PurpleChrArmCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
 import com.hartwig.hmftools.datamodel.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
@@ -36,9 +52,6 @@ import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleSomaticLikelihood;
 import com.hartwig.hmftools.datamodel.purple.PurpleTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariantEffect;
-import com.hartwig.hmftools.orange.algo.purple.CodingEffectDeterminer;
-
-import org.jetbrains.annotations.NotNull;
 
 public final class PurpleConversion
 {
@@ -147,7 +160,7 @@ public final class PurpleConversion
     {
         List<VariantEffect> effectsList = VariantEffect.effectsToList(impact.Effects);
         List<PurpleVariantEffect> purpleEffects = ConversionUtil.mapToList(effectsList, PurpleConversion::convert);
-        PurpleCodingEffect purpleCodingEffect = convert(CodingEffectDeterminer.determineCodingEffect(effectsList));
+        PurpleCodingEffect purpleCodingEffect = convert(determineCodingEffect(effectsList));
 
         return ImmutablePurpleTranscriptImpact.builder()
                 .transcript(impact.Transcript)
@@ -160,6 +173,34 @@ public final class PurpleConversion
                 .build();
     }
 
+    public static CodingEffect determineCodingEffect(final List<VariantEffect> variantEffects)
+    {
+        List<CodingEffect> simplifiedEffects = variantEffects.stream().map(CodingEffect::effect).collect(Collectors.toList());
+
+        if(simplifiedEffects.stream().anyMatch(x -> x.equals(NONSENSE_OR_FRAMESHIFT)))
+        {
+            return NONSENSE_OR_FRAMESHIFT;
+        }
+
+        if(simplifiedEffects.stream().anyMatch(x -> x.equals(SPLICE)))
+        {
+            return SPLICE;
+        }
+
+        if(simplifiedEffects.stream().anyMatch(x -> x.equals(MISSENSE)))
+        {
+            return MISSENSE;
+        }
+
+        if(simplifiedEffects.stream().anyMatch(x -> x.equals(SYNONYMOUS)))
+        {
+            return SYNONYMOUS;
+        }
+
+        return NONE;
+    }
+
+
     public static PurpleGermlineStatus convert(final GermlineStatus germlineStatus)
     {
         return PurpleGermlineStatus.valueOf(germlineStatus.name());
@@ -169,4 +210,29 @@ public final class PurpleConversion
     {
         return PurpleSomaticLikelihood.valueOf(somaticLikelihood.name());
     }
+
+    public static PurpleChrArmCopyNumber convert(final ChrArmCopyNumber chrArmCopyNumber, final double ploidy)
+    {
+        String type = PURPLE_ARM_CN_DIPLOID;
+
+        if(chrArmCopyNumber.meanCopyNumber() > PURPLE_ARM_CN_GAIN_THRESHOLD * ploidy)
+        {
+            type = PURPLE_ARM_CN_GAIN;
+        }
+        else if(chrArmCopyNumber.meanCopyNumber() < PURPLE_ARM_CN_LOSS_THRESHOLD * ploidy)
+        {
+            type = PURPLE_ARM_CN_LOSS;
+        }
+
+        String chromosome = RefGenomeFunctions.enforceChrPrefix(chrArmCopyNumber.chromosome().toString());
+
+        return ImmutablePurpleChrArmCopyNumber.builder()
+                .chromosome(chromosome)
+                .arm(chrArmCopyNumber.arm().toString())
+                .type(type)
+                .copyNumber(chrArmCopyNumber.medianCopyNumber())
+                .relativeCopyNumber(ploidy > 0 ? chrArmCopyNumber.medianCopyNumber() / ploidy : 0)
+                .build();
+    }
+
 }

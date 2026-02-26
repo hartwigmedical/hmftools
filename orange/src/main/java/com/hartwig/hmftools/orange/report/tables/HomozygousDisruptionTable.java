@@ -1,8 +1,15 @@
 package com.hartwig.hmftools.orange.report.tables;
 
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_GENE;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_LOCATION;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.cellArray;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.floatArray;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.interpretation.Chromosomes;
@@ -12,13 +19,12 @@ import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Table;
 
 import org.apache.logging.log4j.util.Strings;
-import org.jetbrains.annotations.NotNull;
 
 public final class HomozygousDisruptionTable
 {
-    @NotNull
-    public static Table build(@NotNull String title, float width, @NotNull List<LinxHomozygousDisruption> homozygousDisruptions,
-            @NotNull ReportResources reportResources)
+    public static Table build(
+            final String title, float width, final List<LinxHomozygousDisruption> homozygousDisruptions,
+            final ReportResources reportResources)
     {
         if(homozygousDisruptions.isEmpty())
         {
@@ -26,9 +32,15 @@ public final class HomozygousDisruptionTable
         }
 
         Cells cells = new Cells(reportResources);
-        Table table = Tables.createContent(width,
-                new float[] { 1, 1, 4 },
-                new Cell[] { cells.createHeader("Location"), cells.createHeader("Gene"), cells.createHeader(Strings.EMPTY) });
+
+        List<Integer> widths = Lists.newArrayList();
+        List<Cell> cellEntries = Lists.newArrayList();
+
+        addEntry(cells, widths, cellEntries, 1, COL_LOCATION);
+        addEntry(cells, widths, cellEntries, 1, COL_GENE);
+        addEntry(cells, widths, cellEntries, 4, Strings.EMPTY);
+
+        Table table = Tables.createContent(width, floatArray(widths), cellArray(cellEntries));
 
         for(LinxHomozygousDisruption homozygousDisruption : sort(homozygousDisruptions))
         {
@@ -40,8 +52,7 @@ public final class HomozygousDisruptionTable
         return new Tables(reportResources).createWrapping(table, title);
     }
 
-    @NotNull
-    private static List<LinxHomozygousDisruption> sort(@NotNull List<LinxHomozygousDisruption> homozygousDisruptions)
+    private static List<LinxHomozygousDisruption> sort(final List<LinxHomozygousDisruption> homozygousDisruptions)
     {
         return homozygousDisruptions.stream().sorted((disruption1, disruption2) ->
         {
@@ -59,8 +70,7 @@ public final class HomozygousDisruptionTable
         }).collect(Collectors.toList());
     }
 
-    @NotNull
-    private static String gene(@NotNull LinxHomozygousDisruption homozygousDisruption)
+    private static String gene(final LinxHomozygousDisruption homozygousDisruption)
     {
         String addon = Strings.EMPTY;
         if(!homozygousDisruption.isCanonical())

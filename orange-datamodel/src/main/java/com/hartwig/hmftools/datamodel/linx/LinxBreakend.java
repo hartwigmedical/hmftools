@@ -59,4 +59,8 @@ public interface LinxBreakend
     int exonDown();
 
     double junctionCopyNumber();
+
+    @NotNull
+    LinxDriverType driverType();
+    double driverLikelihood();
 }

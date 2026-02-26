@@ -14,7 +14,8 @@ import com.itextpdf.kernel.font.PdfFont;
 import com.itextpdf.kernel.font.PdfFontFactory;
 import com.itextpdf.layout.Style;
 
-import org.jetbrains.annotations.NotNull;
+import org.apache.logging.log4j.util.Strings;
+import org.jetbrains.annotations.Nullable;
 
 public class ReportResources
 {
@@ -47,153 +48,138 @@ public class ReportResources
     private static final String FONT_REGULAR_PATH = "fonts/nimbus-sans/NimbusSansL-Regular.ttf";
     private static final String FONT_BOLD_PATH = "fonts/nimbus-sans/NimbusSansL-Bold.ttf";
 
-    @NotNull
     private final PdfFont fontRegular;
-    @NotNull
     private final PdfFont fontBold;
 
-    private ReportResources(@NotNull PdfFont fontRegular, @NotNull PdfFont fontBold)
+    private ReportResources(final PdfFont fontRegular, final PdfFont fontBold)
     {
         this.fontRegular = fontRegular;
         this.fontBold = fontBold;
     }
 
-    @NotNull
     public static ReportResources create()
     {
         return new ReportResources(createFontFromProgram(loadFontProgram(FONT_REGULAR_PATH)),
                 createFontFromProgram(loadFontProgram(FONT_BOLD_PATH)));
     }
 
-    @NotNull
+    // value formatting
     public static String formatSingleDigitDecimal(double num)
     {
         return formatDecimal(num, "0.0");
     }
-
-    @NotNull
     public static String formatTwoDigitDecimal(double num)
     {
         return formatDecimal(num, "0.00");
     }
-
-    @NotNull
     public static String formatPercentage(double num)
     {
         return formatPercentage(num, true);
     }
 
-    @NotNull
     public static String formatPercentage(double num, boolean multiplyBy100)
     {
         return formatDecimal(multiplyBy100 ? num * 100 : num, "0'%'");
     }
 
-    @NotNull
     public static String formatPercentageOneDecimal(double num)
     {
         return formatDecimal(num * 100, "0.0'%'");
     }
 
-    @NotNull
-    private static String formatDecimal(double num, @NotNull String format)
+    private static String formatDecimal(double num, final String format)
     {
         // To make sure every decimal format uses a dot as separator rather than a comma.
         return new DecimalFormat(format, DecimalFormatSymbols.getInstance(Locale.ENGLISH)).format(num);
     }
 
-    @NotNull
+    // formatting
+    public static final DecimalFormat PERCENTAGE_FORMAT = new DecimalFormat("#'%'");
+
+    public static String formatPercentageField(final double value)
+    {
+        return PERCENTAGE_FORMAT.format(value * 100);
+    }
+
+    public static String formatTpmField(final double tpm) { return formatSingleDigitDecimal(tpm); }
+
+    public static String formatPercentileField(final double percentile) { return formatTwoDigitDecimal(percentile); }
+
+    public static String formatFoldChangeField(final double foldChange)
+    {
+        return foldChange > 1000 ? ">1000" : formatSingleDigitDecimal(foldChange);
+    }
+
     public PdfFont fontBold()
     {
         return fontBold;
     }
 
-    @NotNull
     public Style chapterTitleStyle()
     {
         return new Style().setFont(fontBold).setFontSize(10).setFontColor(ReportResources.PALETTE_ORANGE);
     }
 
-    @NotNull
     public Style tableTitleStyle()
     {
         return new Style().setFont(fontBold).setFontSize(8).setFontColor(ReportResources.PALETTE_ORANGE);
     }
 
-    @NotNull
     public Style tableHeaderStyle()
     {
         return new Style().setFont(fontRegular).setFontSize(7).setFontColor(ReportResources.PALETTE_MID_GREY);
     }
 
-    @NotNull
     public Style tableContentStyle()
     {
         return new Style().setFont(fontRegular).setFontSize(7).setFontColor(ReportResources.PALETTE_DARK_GREY);
     }
 
-    @NotNull
     public Style keyStyle()
     {
         return new Style().setFont(fontRegular).setFontSize(7).setFontColor(ReportResources.PALETTE_MID_GREY);
     }
-
-    @NotNull
     public Style valueStyle()
     {
         return new Style().setFont(fontRegular).setFontSize(7).setFontColor(ReportResources.PALETTE_MID_GREY);
     }
-
-    @NotNull
     public Style subTextStyle()
     {
         return new Style().setFont(fontRegular).setFontSize(6).setFontColor(ReportResources.PALETTE_BLACK);
     }
-
-    @NotNull
     public Style pageNumberStyle()
     {
         return new Style().setFont(fontBold).setFontSize(7).setFontColor(ReportResources.PALETTE_ORANGE);
     }
 
-    @NotNull
     public Style disclaimerStyle()
     {
         return new Style().setFont(fontRegular).setFontSize(6).setFontColor(ReportResources.PALETTE_MID_GREY);
     }
 
-    @NotNull
     public Style qcWarningStyle()
     {
         return new Style().setFont(fontBold).setFontSize(7).setFontColor(ReportResources.PALETTE_DARK_GREY);
     }
-
-    @NotNull
     public Style sidePanelLabelStyle()
     {
         return new Style().setFont(fontBold).setFontSize(7).setFontColor(ReportResources.PALETTE_WHITE);
     }
-
-    @NotNull
     public Style sidePanelValueStyle()
     {
         return new Style().setFont(fontBold).setFontSize(10).setFontColor(ReportResources.PALETTE_WHITE);
     }
-
-    @NotNull
     public Style urlStyle()
     {
         return new Style().setFont(fontRegular).setFontSize(7).setFontColor(ReportResources.PALETTE_BLUE);
     }
 
-    @NotNull
-    private static PdfFont createFontFromProgram(@NotNull FontProgram program)
+    private static PdfFont createFontFromProgram(final FontProgram program)
     {
         return PdfFontFactory.createFont(program, PdfEncodings.IDENTITY_H);
     }
 
-    @NotNull
-    private static FontProgram loadFontProgram(@NotNull String resourcePath)
+    private static FontProgram loadFontProgram(final String resourcePath)
     {
         try
         {

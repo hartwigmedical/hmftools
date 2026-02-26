@@ -42,7 +42,7 @@ public final class SignatureAllocationFile
 
     private static final String SIGNATURE_FLD = "signature";
     private static final String ALLOCATION_FLD = "allocation";
-    private static final String PERCENT_FLD = "percent";
+    public static final String PERCENT_FLD = "percent";
 
     public static List<SignatureAllocation> fromLines(final List<String> lines)
     {

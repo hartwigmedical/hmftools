@@ -4,7 +4,6 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.qsee.common.QseeConstants.QC_LOGGER;
-import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COHORT_FILE_ID;
 import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_FEATURE_NAME;
 import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_FEATURE_TYPE;
 import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_SAMPLE_TYPE;
@@ -27,19 +26,31 @@ import com.hartwig.hmftools.qsee.feature.FeatureKey;
 import com.hartwig.hmftools.qsee.feature.FeatureType;
 import com.hartwig.hmftools.qsee.feature.SourceTool;
 
+import org.jetbrains.annotations.Nullable;
+
 public class CohortPercentilesFile
 {
     public static final String COHORT_PERCENTILES_FILE_CFG = "cohort_percentiles_file";
     public static final String COHORT_PERCENTILES_FILE_CFG_DESC = "Path to the cohort percentiles file";
 
-    public static final String COHORT_PERCENTILES_FILE_SUFFIX = COHORT_FILE_ID + "." + QSEE_FILE_ID + ".percentiles.tsv.gz";
-
     public static final String COL_PERCENTILE_PREFIX = "Pct";
     public static final String COL_PERCENTILE_DELIM = "_";
 
-    public static String generateFilename(final String basePath)
+    public static String generateFilename(String basePath, @Nullable String outputId)
     {
-        return checkAddDirSeparator(basePath) + COHORT_PERCENTILES_FILE_SUFFIX;
+        String filename = checkAddDirSeparator(basePath) + QSEE_FILE_ID + ".cohort.percentiles";
+
+        if(outputId != null)
+            filename += "." + outputId;
+
+        filename += ".tsv.gz";
+
+        return filename;
+    }
+
+    public static String generateFilename(String basePath)
+    {
+        return generateFilename(basePath, null);
     }
 
     public static List<String> getPercentileNames(double[] percentiles)

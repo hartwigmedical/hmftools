@@ -7,18 +7,7 @@ import com.hartwig.hmftools.common.redux.BaseQualAdjustment;
 
 public class PurityConstants
 {
-    public static final double MAX_SUBCLONAL_LIKELIHOOD = 0.5;
-    public static final double SUBCLONAL_VCN_THRESHOLD = 0.7;
-    public static final double MAX_REPEAT_COUNT = 3;
-    public static final double MIN_AVG_EDGE_DISTANCE = 0.06;
-    public static final double MIN_AVG_EDGE_DISTANCE_DUAL_ULTIMA = 0.1;
-    public static final double MAX_GERMLINE_AF = 0.01;
-    public static final int HIGH_GERMLINE_QUAL_THRESHOLD = 30;
-
-    public static final int MIN_QUAL_PER_AD = 18;
-    public static final int MIN_QUAL_PER_AD_DUAL_ULTIMA = 34;
-    public static final byte MIN_DUAL_QUAL = 50;
-
+    // copy number method
     public static final double COPY_NUMBER_MAX = 6;
     public static final double COPY_NUMBER_CLONAL_MARGIN = 0.2;
     public static final double COPY_NUMBER_LOD_FACTOR = 0.004;
@@ -33,6 +22,23 @@ public class PurityConstants
     public static final double LOD_MIN_PROB_DIFF_PERC = 0.001;
 
     // somatic variants
+    public static final double MAX_SUBCLONAL_LIKELIHOOD = 0.5;
+    public static final double SUBCLONAL_VCN_THRESHOLD = 0.7;
+    public static final double MAX_REPEAT_COUNT = 3;
+    public static final double MIN_AVG_EDGE_DISTANCE = 0.06;
+    public static final double MIN_AVG_EDGE_DISTANCE_DUAL_ULTIMA = 0.1;
+    public static final double MAX_GERMLINE_AF = 0.01;
+    public static final int HIGH_GERMLINE_QUAL_THRESHOLD = 30;
+
+    public static final int MIN_QUAL_PER_AD = 18;
+    public static final int MIN_QUAL_PER_AD_DUAL_ULTIMA = 34;
+    public static final byte MIN_DUAL_QUAL_FILTER_THRESHOLD = 50;
+    public static final double BQR_MIN_ERROR_RATE = 1e-5;
+    public static final double BQR_MIN_ERROR_RATE_DUAL = 1e-7;
+    public static final List<Integer> SNV_QUAL_THRESHOLDS = Lists.newArrayList(0, 38, 42, 45);
+    public static final int DEFAULT_BQR_MIN_QUAL = 30;
+    public static final double INDEL_ERROR_RATE = BaseQualAdjustment.phredQualToProbability((byte)45);
+
     public static final int SOMATIC_PEAK_MIN_VARIANTS = 10;
     public static final double SOMATIC_PEAK_MIN_DEPTH_PERC = 0.1;
     public static final int SOMATIC_PEAK_MIN_PEAK_VARIANTS = 3;
@@ -54,11 +60,6 @@ public class PurityConstants
     public static final double LOW_COUNT_MODEL_MIN_2_PLUS_FRAG_PERC = 0.002;
 
     public static final double DROPOUT_RATE_INCREMENT = 0.1;
-
-    public static final List<Integer> SNV_QUAL_THRESHOLDS = Lists.newArrayList(0, 38, 42, 45);
-    public static final int DEFAULT_BQR_MIN_QUAL = 30;
-    public static final double BQR_MIN_ERROR_RATE = 1e-5;
-    public static final double INDEL_ERROR_RATE = BaseQualAdjustment.phredQualToProbability((byte)45);
 
     public static final double SYNTHETIC_TUMOR_VAF = 0.5;
 

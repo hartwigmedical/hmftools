@@ -19,9 +19,7 @@ import org.jetbrains.annotations.NotNull;
 
 public final class PharmacogeneticsTable
 {
-    @NotNull
-    public static Table build(@NotNull String title, float width, @NotNull Set<PeachGenotype> genotypes,
-            @NotNull ReportResources reportResources)
+    public static Table build(final String title, float width, final Set<PeachGenotype> genotypes, final ReportResources reportResources)
     {
         if(genotypes.isEmpty())
         {
@@ -49,8 +47,7 @@ public final class PharmacogeneticsTable
         return new Tables(reportResources).createWrapping(contentTable, title);
     }
 
-    @NotNull
-    private static List<PeachGenotype> sort(@NotNull Set<PeachGenotype> genotypes)
+    private static List<PeachGenotype> sort(final Set<PeachGenotype> genotypes)
     {
         return genotypes.stream().sorted((genotype1, genotype2) ->
         {
@@ -69,13 +66,16 @@ public final class PharmacogeneticsTable
         }).collect(Collectors.toList());
     }
 
-    @NotNull
-    private static String sourceName(@NotNull String urlPrescriptionInfo)
+    private static final String PHARMGKB_URL = "https://www.pharmgkb.org";
+    private static final String PHARMGKB_NAME = "PHARMGKB";
+
+
+    private static String sourceName(final String urlPrescriptionInfo)
     {
         String url = extractUrl(urlPrescriptionInfo);
-        if(url.startsWith("https://www.pharmgkb.org"))
+        if(url.startsWith(PHARMGKB_URL))
         {
-            return "PHARMGKB";
+            return PHARMGKB_NAME;
         }
         else
         {
@@ -83,11 +83,10 @@ public final class PharmacogeneticsTable
         }
     }
 
-    @NotNull
-    private static String url(@NotNull String urlPrescriptionInfo)
+    private static String url(final String urlPrescriptionInfo)
     {
         String url = extractUrl(urlPrescriptionInfo);
-        if(url.startsWith("https://www.pharmgkb.org"))
+        if(url.startsWith(PHARMGKB_URL))
         {
             return url;
         }
@@ -98,7 +97,7 @@ public final class PharmacogeneticsTable
     }
 
     @NotNull
-    private static String extractUrl(@NotNull String urlPrescriptionInfo)
+    private static String extractUrl(final String urlPrescriptionInfo)
     {
         return urlPrescriptionInfo.split(";")[0];
     }

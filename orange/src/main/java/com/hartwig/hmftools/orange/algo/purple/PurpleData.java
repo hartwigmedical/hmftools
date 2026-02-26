@@ -3,6 +3,7 @@ package com.hartwig.hmftools.orange.algo.purple;
 import java.util.List;
 
 import com.hartwig.hmftools.common.driver.DriverCatalog;
+import com.hartwig.hmftools.common.purple.ChrArmCopyNumber;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GermlineAmpDel;
 import com.hartwig.hmftools.common.purple.PurityContext;
@@ -37,4 +38,6 @@ public interface PurpleData
     List<GermlineAmpDel> germlineDeletions();
 
     List<Segment> segments();
+
+    List<ChrArmCopyNumber> chrArmCopyNumbers();
 }

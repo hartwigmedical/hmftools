@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.common.fusion;
 
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.EXON_DEL_DUP;
-import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_KNOWN_PAIR;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.ENHANCER_KNOWN_PAIR;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.NONE;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_3;
@@ -23,7 +23,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
-import org.apache.commons.cli.CommandLine;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -34,7 +33,7 @@ public class KnownFusionCache
 
     // cached since so commonly checked
     private final List<KnownFusionData> mKnownPairData;
-    private final List<KnownFusionData> mIgRegionData;
+    private final List<KnownFusionData> mEnhancerRegionData;
     private final List<KnownFusionData> mHighImpactPromiscuousData;
 
     private boolean mHasValidData;
@@ -49,7 +48,7 @@ public class KnownFusionCache
     {
         mData = Lists.newArrayList();
         mDataByType = Maps.newHashMap();
-        mIgRegionData = Lists.newArrayList();
+        mEnhancerRegionData = Lists.newArrayList();
         mKnownPairData = Lists.newArrayList();
         mHighImpactPromiscuousData = Lists.newArrayList();
         mHasValidData = true;
@@ -65,7 +64,6 @@ public class KnownFusionCache
 
     public boolean hasValidData() { return mHasValidData; }
     public List<KnownFusionData> getData() { return mData; }
-    public List<KnownFusionData> knownPairData() { return mKnownPairData; }
     public List<KnownFusionData> getDataByType(final KnownFusionType type) { return mDataByType.get(type); }
 
     public boolean hasKnownFusion(final String fiveGene, final String threeGene)
@@ -88,7 +86,7 @@ public class KnownFusionCache
             return true;
         }
 
-        if(mDataByType.get(IG_KNOWN_PAIR).stream()
+        if(mDataByType.get(ENHANCER_KNOWN_PAIR).stream()
                 .filter(x -> !x.getThreeGeneAltRegions().isEmpty())
                 .anyMatch(x -> !isUpstream && x.ThreeGene.equals(geneName)))
         {
@@ -108,9 +106,9 @@ public class KnownFusionCache
         return mDataByType.get(PROMISCUOUS_3).stream().anyMatch(x -> x.ThreeGene.equals(gene));
     }
 
-    public boolean hasAnyIgFusion(final String gene)
+    public boolean hasAnyEnhancerFusion(final String gene)
     {
-        return mDataByType.get(IG_KNOWN_PAIR).stream().anyMatch(x -> x.FiveGene.equals(gene) || x.ThreeGene.equals(gene));
+        return mDataByType.get(ENHANCER_KNOWN_PAIR).stream().anyMatch(x -> x.FiveGene.equals(gene) || x.ThreeGene.equals(gene));
     }
 
     public boolean hasExonDelDup(final String gene)
@@ -148,7 +146,8 @@ public class KnownFusionCache
     }
 
     public boolean withinKnownExonRanges(
-            final KnownFusionType knownType, final String transName, int breakendExonUp, int fusedExonUp, int breakendExonDown, int fusedExonDown)
+            final KnownFusionType knownType, final String transName, int breakendExonUp, int fusedExonUp,
+            int breakendExonDown, int fusedExonDown)
     {
         for(final KnownFusionData knownData : mDataByType.get(knownType))
         {
@@ -187,9 +186,9 @@ public class KnownFusionCache
         return false;
     }
 
-    public boolean withinIgRegion(final String chromosome, int position)
+    public boolean withinEnhancerRegion(final String chromosome, int position)
     {
-        return mIgRegionData.stream().anyMatch(x -> x.withinGeneRegion(chromosome, position));
+        return mEnhancerRegionData.stream().anyMatch(x -> x.withinGeneRegion(chromosome, position));
     }
 
     public boolean loadFromFile(final ConfigBuilder configBuilder)
@@ -198,14 +197,6 @@ public class KnownFusionCache
             return true;
 
         return loadFromFile(configBuilder.getValue(KNOWN_FUSIONS_FILE));
-    }
-
-    public boolean loadFromFile(final CommandLine cmd)
-    {
-        if(cmd == null || !cmd.hasOption(KNOWN_FUSIONS_FILE))
-            return true;
-
-        return loadFromFile(cmd.getOptionValue(KNOWN_FUSIONS_FILE));
     }
 
     public boolean loadFromFile(final String filename)
@@ -238,7 +229,7 @@ public class KnownFusionCache
             mKnownPairData.add(data);
 
         if(data.geneRegion() != null)
-            mIgRegionData.add(data);
+            mEnhancerRegionData.add(data);
 
         if(data.isHighImpactPromiscuous())
             mHighImpactPromiscuousData.add(data);

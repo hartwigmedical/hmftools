@@ -10,7 +10,6 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.utils.RExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.qsee.cohort.CohortPercentilesFile;
 import com.hartwig.hmftools.qsee.prep.QseePrep;
 import com.hartwig.hmftools.qsee.prep.QseePrepConfig;
 
@@ -21,54 +20,64 @@ public class QseePlot
     private final List<String> mTumorIds;
     private final List<String> mReferenceIds;
     private final String mSampleFeaturesFile;
-    private final String mCohortPercentilesFile;
+    @Nullable private final String mCohortPercentilesFile;
     private final String mOutputDir;
+    @Nullable private final String mOutputId;
 
     private static final String SCRIPT_PATH = "plot_qc.R";
 
-    private static final String MISSING_SAMPLE_ID = "NA";
+    private static final String NO_ARG = "NA";
 
-    private QseePlot(List<String> tumorIds, List<String> referenceIds,
-            String sampleFeaturesFile, String cohortPercentilesFile, String outputDir)
+    private QseePlot(List<String> tumorIds, List<String> referenceIds, String sampleFeaturesFile,
+            @Nullable String cohortPercentilesFile, String outputDir, @Nullable String outputId)
     {
         mTumorIds = tumorIds;
         mReferenceIds = referenceIds;
         mSampleFeaturesFile = sampleFeaturesFile;
         mCohortPercentilesFile = cohortPercentilesFile;
         mOutputDir = outputDir;
+        mOutputId = outputId;
     }
 
     public QseePlot(QseePlotConfig config)
     {
-        this(config.TumorIds, config.ReferenceIds, config.SampleFeaturesFile, config.CohortPercentilesFile, config.OutputDir);
+        this(config.TumorIds, config.ReferenceIds, config.SampleFeaturesFile, config.CohortPercentilesFile, config.OutputDir, config.OutputId);
     }
 
     public QseePlot(QseePrepConfig config)
     {
         this(
-                config.CommonPrep.TumorIds,
-                config.CommonPrep.ReferenceIds,
-                QseePrep.formOutputFilename(config.CommonPrep),
+                config.TumorIds,
+                config.ReferenceIds,
+                QseePrep.formOutputFilename(config),
                 config.CohortPercentilesFile,
-                config.CommonPrep.OutputDir
+                config.OutputDir,
+                config.OutputId
         );
     }
 
-    private String formOutputFilename(String tumorId)
+    private String formOutputFilename(String tumorId, @Nullable String outputId)
     {
-        return checkAddDirSeparator(mOutputDir) + tumorId + "." + QSEE_FILE_ID + ".vis.report.pdf";
+        String filename = checkAddDirSeparator(mOutputDir) + tumorId + "." + QSEE_FILE_ID + ".vis.report";
+
+        if(outputId != null)
+            filename += "." + outputId;
+
+        filename += ".pdf";
+
+        return filename;
     }
 
-    public void plotOneSample(String tumorId, @Nullable String referenceId)
+    public void plotOneSample(String tumorId, @Nullable String referenceId, @Nullable String outputId)
     {
         try
         {
             String[] scriptArgs = {
                     tumorId,
-                    referenceId == null ? MISSING_SAMPLE_ID : referenceId,
+                    referenceId == null ? NO_ARG : referenceId,
                     mSampleFeaturesFile,
-                    mCohortPercentilesFile,
-                    formOutputFilename(tumorId),
+                    mCohortPercentilesFile == null ? NO_ARG : mCohortPercentilesFile,
+                    formOutputFilename(tumorId, outputId),
                     QC_LOGGER.getLevel().toString()
             };
 
@@ -95,8 +104,8 @@ public class QseePlot
         if(isSingleSample)
         {
             String tumorId = mTumorIds.get(0);
-            String referenceId = mReferenceIds.isEmpty() ? MISSING_SAMPLE_ID : mReferenceIds.get(0);
-            plotOneSample(tumorId, referenceId);
+            String referenceId = mReferenceIds.isEmpty() ? NO_ARG : mReferenceIds.get(0);
+            plotOneSample(tumorId, referenceId, mOutputId);
         }
         else
         {
@@ -107,7 +116,7 @@ public class QseePlot
 
                 QC_LOGGER.debug("Plotting sample {}", tumorId);
 
-                plotOneSample(tumorId, referenceId);
+                plotOneSample(tumorId, referenceId, mOutputId);
             }
         }
 

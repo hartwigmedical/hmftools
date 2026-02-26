@@ -1,7 +1,8 @@
 package com.hartwig.hmftools.orange.algo;
 
-import static com.hartwig.hmftools.common.metrics.GeneDepthFile.generateGeneCoverageFilename;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.filenamePart;
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
+import static com.hartwig.hmftools.orange.report.PdfConverter.convertPdfToPng;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,22 +21,19 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.chord.ChordDataFile;
 import com.hartwig.hmftools.common.cuppa.CuppaPredictions;
-import com.hartwig.hmftools.common.doid.DiseaseOntology;
-import com.hartwig.hmftools.common.doid.DoidEntry;
 import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.driver.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.genome.chromosome.CytoBands;
-import com.hartwig.hmftools.common.hla.LilacSummaryData;
-import com.hartwig.hmftools.common.redux.BqrFile;
+import com.hartwig.hmftools.datamodel.hla.LilacRecord;
+import com.hartwig.hmftools.datamodel.orange.ExperimentType;
 import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeDoidNode;
 import com.hartwig.hmftools.datamodel.orange.OrangeDoidNode;
+import com.hartwig.hmftools.orange.algo.immuno.LilacInterpreter;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxData;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxDataLoader;
 import com.hartwig.hmftools.orange.algo.linx.LinxData;
 import com.hartwig.hmftools.orange.algo.linx.LinxDataLoader;
-import com.hartwig.hmftools.common.metrics.BamFlagStats;
-import com.hartwig.hmftools.common.metrics.BamMetricSummary;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.peach.PeachGenotypeFile;
 import com.hartwig.hmftools.common.pipeline.PipelineVersionFile;
@@ -44,19 +42,14 @@ import com.hartwig.hmftools.common.sigs.SignatureAllocationFile;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
 import com.hartwig.hmftools.common.virus.VirusInterpreterDataLoader;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
-import com.hartwig.hmftools.datamodel.flagstat.Flagstat;
 import com.hartwig.hmftools.datamodel.immuno.ImmuneEscapeRecord;
 import com.hartwig.hmftools.datamodel.isofox.IsofoxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
-import com.hartwig.hmftools.datamodel.metrics.WGSMetrics;
 import com.hartwig.hmftools.datamodel.orange.ImmutableOrangePlots;
 import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeRecord;
-import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeSample;
 import com.hartwig.hmftools.datamodel.orange.OrangePlots;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
-import com.hartwig.hmftools.datamodel.orange.OrangeSample;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
-import com.hartwig.hmftools.datamodel.wildtype.WildTypeGene;
 import com.hartwig.hmftools.orange.OrangeConfig;
 import com.hartwig.hmftools.orange.algo.cuppa.CuppaDataFactory;
 import com.hartwig.hmftools.orange.algo.immuno.ImmuneEscapeInterpreter;
@@ -69,12 +62,10 @@ import com.hartwig.hmftools.orange.algo.plot.PlotManager;
 import com.hartwig.hmftools.orange.algo.purple.PurpleData;
 import com.hartwig.hmftools.orange.algo.purple.PurpleDataLoader;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpreter;
-import com.hartwig.hmftools.orange.algo.sage.GermlineMVLHFactory;
 import com.hartwig.hmftools.orange.algo.sigs.SigsEtiologiesLoader;
 import com.hartwig.hmftools.orange.algo.sigs.SigsInterpreter;
 import com.hartwig.hmftools.orange.algo.util.ReportLimiter;
 import com.hartwig.hmftools.orange.algo.virus.VirusInterpreter;
-import com.hartwig.hmftools.orange.algo.wildtype.WildTypeAlgo;
 import com.hartwig.hmftools.orange.cohort.datamodel.ImmutableSample;
 import com.hartwig.hmftools.orange.cohort.datamodel.Sample;
 import com.hartwig.hmftools.orange.conversion.ConversionUtil;
@@ -119,14 +110,11 @@ public class OrangeAlgo
         Set<OrangeDoidNode> primaryTumorDoids = formConfiguredPrimaryTumorDoid(config);
 
         String pipelineVersion = determinePipelineVersion(config);
-        OrangeSample refSample = loadSampleData(config, false);
-        OrangeSample tumorSample = loadSampleData(config, true);
 
         PurpleData purpleData = loadPurpleData(config);
         LinxData linxData = loadLinxData(config);
-        Map<String, Double> mvlhPerGene = loadGermlineMVLHPerGene(config, mDriverGenes);
         ChordData chord = loadChordAnalysis(config);
-        LilacSummaryData lilac = loadLilacData(config);
+        LilacRecord lilac = loadLilacData(config);
         VirusInterpreterData virusInterpreter = loadVirusInterpreterData(config);
         CuppaData cuppa = loadCuppaData(config);
         List<PeachGenotype> peach = loadPeachData(config);
@@ -143,7 +131,7 @@ public class OrangeAlgo
 
         PurpleInterpreter purpleInterpreter = new PurpleInterpreter();
 
-        PurpleRecord purple = purpleInterpreter.interpret(purpleData);
+        PurpleRecord purple = purpleInterpreter.interpret(purpleData, isofoxData);
 
         ImmuneEscapeRecord immuneEscape = ImmuneEscapeInterpreter.interpret(purple, linx);
 
@@ -154,39 +142,18 @@ public class OrangeAlgo
             isofox = isofoxInterpreter.interpret(isofoxData);
         }
 
-        List<WildTypeGene> wildTypeGenes = Lists.newArrayList();
-
-        if(WildTypeAlgo.wildTypeCallingAllowed(purple.fit().qc().status()))
-        {
-            wildTypeGenes = WildTypeAlgo.determineWildTypeGenes(
-                    mDriverGenes,
-                    purple.somaticVariants(), purple.germlineVariants(), purple.somaticGainsDels(),
-                    linx.fusions(), linx.somaticHomozygousDisruptions(), linx.somaticBreakends());
-
-            LOGGER.info("Identified {} of {} driver genes to be wild-type", wildTypeGenes.size(), driverGenes.size());
-        }
-        else
-        {
-            LOGGER.info("Wild-type calling skipped due to insufficient tumor sample quality");
-        }
-
-        boolean hasRefSample = config.ReferenceId != null;
-
         OrangeRecord orangeRecord = ImmutableOrangeRecord.builder()
                 .sampleId(config.TumorId)
+                .referenceId(config.ReferenceId)
                 .samplingDate(config.SamplingDate)
                 .experimentType(config.RunType)
                 .configuredPrimaryTumor(primaryTumorDoids)
                 .refGenomeVersion(config.orangeRefGenomeVersion())
                 .pipelineVersion(pipelineVersion)
-                .refSample(refSample)
-                .tumorSample(tumorSample)
-                .germlineMVLHPerGene(mvlhPerGene)
                 .purple(purple)
                 .linx(linx)
-                .wildTypeGenes(wildTypeGenes)
                 .isofox(isofox)
-                .lilac(lilac != null ? OrangeConversion.convert(lilac, hasRefSample, config.RnaSampleId != null) : null)
+                .lilac(lilac)
                 .immuneEscape(immuneEscape)
                 .virusInterpreter(virusInterpreter != null ? VirusInterpreter.interpret(virusInterpreter) : null)
                 .chord(chord != null ? OrangeConversion.convert(chord) : null)
@@ -280,62 +247,6 @@ public class OrangeAlgo
         return pipelineVersion;
     }
 
-    @Nullable
-    private static OrangeSample loadSampleData(final OrangeConfig config, boolean loadTumorSample) throws IOException
-    {
-        if(loadTumorSample)
-        {
-            LOGGER.info("Loading tumor metrics data");
-        }
-        else
-        {
-            if(config.ReferenceId != null)
-            {
-                LOGGER.info("Loading reference metrics data");
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        String metricsFile = loadTumorSample ?
-                BamMetricSummary.generateFilename(config.TumorBamMetricsDir, config.TumorId) :
-                BamMetricSummary.generateFilename(config.ReferenceBamMetricsDir, config.ReferenceId);
-
-        String flagstatFile = loadTumorSample ?
-                BamFlagStats.generateFilename(config.TumorBamMetricsDir, config.TumorId) :
-                BamFlagStats.generateFilename(config.ReferenceBamMetricsDir, config.ReferenceId);
-
-        WGSMetrics metrics = OrangeConversion.convert(BamMetricSummary.read(metricsFile));
-        LOGGER.info(" Loaded bam metrics from {}", metricsFile);
-
-        Flagstat flagstat = OrangeConversion.convert(BamFlagStats.read(flagstatFile));
-        LOGGER.info(" Loaded bam flagstats from {}", flagstatFile);
-
-        return ImmutableOrangeSample.builder().metrics(metrics).flagstat(flagstat).build();
-    }
-
-    @Nullable
-    private static Map<String, Double> loadGermlineMVLHPerGene(final OrangeConfig config, final Map<String,DriverGene> driverGenes)
-            throws IOException
-    {
-        if(config.ReferenceId == null)
-            return null;
-
-        String geneCoverageFile = generateGeneCoverageFilename(config.ReferenceBamMetricsDir, config.ReferenceId);
-        if(!Files.exists(Paths.get(geneCoverageFile)))
-        {
-            LOGGER.info("Skipping loading of germline MVLH as no germline gene coverage has been provided");
-            return null;
-        }
-
-        Map<String, Double> mvlhPerGene = GermlineMVLHFactory.loadGermlineMVLHPerGene(geneCoverageFile, driverGenes);
-        LOGGER.info("Loaded MVLH data for {} genes", mvlhPerGene.keySet().size());
-
-        return mvlhPerGene;
-    }
-
     private PurpleData loadPurpleData(final OrangeConfig config) throws IOException
     {
         LOGGER.info("Loading PURPLE data from {}", config.PurpleDataDirectory);
@@ -370,11 +281,10 @@ public class OrangeAlgo
         LinxData linx = LinxDataLoader.load(config);
 
         LOGGER.info(" Loaded {} somatic structural variants", linx.somaticSvAnnotations().size());
-        LOGGER.info(" Loaded {} somatic structural drivers", linx.somaticDrivers().size());
+        LOGGER.info(" Loaded {} somatic structural drivers", linx.somaticDriverData().size());
         LOGGER.info(" Loaded {} somatic fusions", linx.fusions().size());
 
         LOGGER.info(" Loaded {} somatic breakends", linx.somaticBreakends().size());
-        LOGGER.info(" Loaded {} somatic reportable homozygous disruptions", linx.somaticHomozygousDisruptions().size());
 
         if(linxGermlineDataDirectory != null)
         {
@@ -407,7 +317,7 @@ public class OrangeAlgo
     }
 
     @Nullable
-    private static LilacSummaryData loadLilacData(final OrangeConfig config) throws IOException
+    private static LilacRecord loadLilacData(final OrangeConfig config) throws IOException
     {
         if(config.LilacDir == null || !Files.exists(Paths.get(config.LilacDir)))
         {
@@ -417,7 +327,7 @@ public class OrangeAlgo
 
         LOGGER.info("Loading Lilac data from {}", config.LilacDir);
 
-        return LilacSummaryData.read(config.LilacDir, config.TumorId);
+        return LilacInterpreter.build(config);
     }
 
     @Nullable
@@ -435,6 +345,9 @@ public class OrangeAlgo
     @Nullable
     private static ChordData loadChordAnalysis(final OrangeConfig config) throws IOException
     {
+        if(!config.hasReference() || config.RunType == ExperimentType.TARGETED)
+            return null;
+
         if(config.ChordDir == null || !Files.exists(Paths.get(config.ChordDir)))
         {
             LOGGER.debug("Skipping Chord loading as no input has been provided");
@@ -451,7 +364,7 @@ public class OrangeAlgo
     @Nullable
     private static CuppaData loadCuppaData(final OrangeConfig config) throws Exception
     {
-        if(config.ReferenceId == null) // may change, esp if vCuppa is used
+        if(config.ReferenceId == null || config.RunType == ExperimentType.TARGETED) // may change, esp if vCuppa is used
             return null;
 
         if(config.CuppaDir == null || !Files.exists(Paths.get(config.CuppaDir)))
@@ -492,6 +405,9 @@ public class OrangeAlgo
     @Nullable
     private static List<SignatureAllocation> loadSigAllocations(final OrangeConfig config) throws IOException
     {
+        if(!config.hasReference() || config.RunType == ExperimentType.TARGETED)
+            return null;
+
         if(config.SigsDir == null || !Files.exists(Paths.get(config.SigsDir)))
         {
             LOGGER.debug("Skipping Signature loading as no input has been provided");
@@ -526,13 +442,14 @@ public class OrangeAlgo
             LOGGER.info(" Loaded {} linx plots from {}", linxDriverPlots.size(), linxPlotDir);
         }
 
-        String tumorBqrPlot = mPlotManager.processPlotFile(BqrFile.generatePlotFilename(config.TumorReduxDir, config.TumorId));
+        String qSeePdf = config.QSeeDirectory + File.separator + config.TumorId + ".qsee.vis.report.pdf";
+        String qSeePlot = null;
 
-        if(tumorBqrPlot == null)
-            tumorBqrPlot = "";
-
-        String refBqrPlot = config.ReferenceId != null ?
-                mPlotManager.processPlotFile(BqrFile.generatePlotFilename(config.ReferenceReduxDir, config.ReferenceId)) : "";
+        if(mPlotManager.plotDirectory() != null && Files.exists(Paths.get(qSeePdf)))
+        {
+            qSeePlot = mPlotManager.plotDirectory() + File.separator + config.TumorId + ".qsee.report.png";
+            convertPdfToPng(qSeePdf, qSeePlot);
+        }
 
         String purplePlotBasePath = config.PurplePlotDirectory + File.separator + config.TumorId;
         String purpleInputPlot = mPlotManager.processPlotFile(purplePlotBasePath + ".input.png");
@@ -542,6 +459,9 @@ public class OrangeAlgo
         String purpleVariantCopyNumberPlot = mPlotManager.processPlotFile(purplePlotBasePath + ".somatic.png");
         String purplePurityRangePlot = mPlotManager.processPlotFile(purplePlotBasePath + ".purity.range.png");
         String purpleKataegisPlot = mPlotManager.processPlotFile(purplePlotBasePath + ".somatic.rainfall.png");
+
+        // TODO: remove Purple plots and only add its PDF
+        String purplePlotPlot = mPlotManager.processPlotFile(purplePlotBasePath + ".somatic.rainfall.png");
 
         List<String> purplePlots = Arrays.asList(purpleInputPlot, purpleFinalCircosPlot, purpleClonalityPlot, purpleCopyNumberPlot,
                 purpleVariantCopyNumberPlot, purplePurityRangePlot, purpleKataegisPlot);
@@ -556,8 +476,6 @@ public class OrangeAlgo
                 config.ReferenceId != null ? CuppaPredictions.generateVisPlotFilename(config.CuppaDir, config.TumorId) : null);
 
         return ImmutableOrangePlots.builder()
-                .sageReferenceBQRPlot(refBqrPlot)
-                .sageTumorBQRPlot(tumorBqrPlot)
                 .purpleInputPlot(purpleInputPlot)
                 .purpleFinalCircosPlot(purpleFinalCircosPlot)
                 .purpleClonalityPlot(purpleClonalityPlot)
@@ -567,6 +485,8 @@ public class OrangeAlgo
                 .purpleKataegisPlot(purpleKataegisPlot)
                 .linxDriverPlots(linxDriverPlots)
                 .cuppaSummaryPlot(cuppaSummaryPlot)
+                .purplePlot(purplePlotPlot)
+                .qSeePlot(qSeePlot)
                 .build();
     }
 

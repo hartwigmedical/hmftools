@@ -18,4 +18,9 @@ public class DummyPlotManager implements PlotManager
         LOGGER.debug("Dummy-processing plot file '{}'", sourcePlotPath);
         return sourcePlotPath;
     }
+
+    @Nullable
+    @Override
+    public String plotDirectory() { return null; }
+
 }

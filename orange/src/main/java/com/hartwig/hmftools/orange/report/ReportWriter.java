@@ -7,11 +7,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 import com.hartwig.hmftools.datamodel.OrangeJson;
 import com.hartwig.hmftools.datamodel.isofox.IsofoxRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
-import com.hartwig.hmftools.orange.report.chapters.CohortComparisonChapter;
+import com.hartwig.hmftools.orange.report.chapters.CuppaChapter;
 import com.hartwig.hmftools.orange.report.chapters.FrontPageChapter;
 import com.hartwig.hmftools.orange.report.chapters.GermlineFindingsChapter;
 import com.hartwig.hmftools.orange.report.chapters.ImmunologyChapter;
@@ -37,13 +36,17 @@ public class ReportWriter
 
     @Nullable
     private final String mOutputDir;
+    private final String mOutputId;
     private final PlotPathResolver mPlotPathResolver;
     private final boolean mAddDisclaimer;
 
-    ReportWriter(boolean writeToDisk, @Nullable String outputDir, final PlotPathResolver plotPathResolver, boolean addDisclaimer)
+    public ReportWriter(
+            boolean writeToDisk, @Nullable final String outputDir, @Nullable final String outputId,
+            final PlotPathResolver plotPathResolver, boolean addDisclaimer)
     {
         mWriteToDisk = writeToDisk;
         mOutputDir = outputDir;
+        mOutputId = outputId;
         mPlotPathResolver = plotPathResolver;
         mAddDisclaimer = addDisclaimer;
     }
@@ -78,7 +81,7 @@ public class ReportWriter
 
         if(!report.tumorOnlyMode())
         {
-            chapters.add(new CohortComparisonChapter(report, mPlotPathResolver, reportResources));
+            chapters.add(new CuppaChapter(report, mPlotPathResolver, reportResources));
         }
 
         chapters.add(new QualityControlChapter(report, mPlotPathResolver, reportResources));
@@ -87,15 +90,24 @@ public class ReportWriter
         writePdfChapters(report.sampleId(), pipelineVersion, chapters, reportResources);
     }
 
+    private String formOutputFile(final String sampleId, final String fileId)
+    {
+        String filename = mOutputDir + sampleId + ".orange.";
+
+        if(mOutputId != null)
+            filename += mOutputId + ".";
+
+        return filename + fileId;
+    }
+
     private void writeJson(final OrangeRecord report) throws IOException
     {
         if(mWriteToDisk && mOutputDir != null)
         {
-            String basePath = FileWriterUtils.checkAddDirSeparator(mOutputDir);
-            String outputFilePath = basePath + report.sampleId() + ".orange.json";
-            LOGGER.info("Writing JSON report to {} ", outputFilePath);
+            String outputFilename = formOutputFile(report.sampleId(), "json");
+            LOGGER.info("Writing JSON report to {} ", outputFilename);
 
-            OrangeJson.getInstance().write(report, outputFilePath);
+            OrangeJson.getInstance().write(report, outputFilename);
         }
         else
         {
@@ -142,10 +154,9 @@ public class ReportWriter
                 .useSmartMode();
         if(mWriteToDisk)
         {
-            String basePath = FileWriterUtils.checkAddDirSeparator(mOutputDir);
-            String outputFilePath = basePath + sampleId + ".orange.pdf";
-            LOGGER.info("Writing PDF report to {}", outputFilePath);
-            writer = new PdfWriter(outputFilePath, properties);
+            String outputFilename = formOutputFile(sampleId, "pdf");
+            LOGGER.info("Writing PDF report to {}", outputFilename);
+            writer = new PdfWriter(outputFilename, properties);
         }
         else
         {

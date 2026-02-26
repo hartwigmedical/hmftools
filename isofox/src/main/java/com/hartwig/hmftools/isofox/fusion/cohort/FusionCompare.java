@@ -345,7 +345,7 @@ public class FusionCompare
         if(mKnownFusionCache.hasKnownFusion(fusion.GeneNames[FS_UP], fusion.GeneNames[FS_DOWN]))
             return false;
 
-        if(mKnownFusionCache.hasAnyIgFusion(fusion.GeneNames[FS_UP]) || mKnownFusionCache.hasAnyIgFusion(fusion.GeneNames[FS_DOWN]))
+        if(mKnownFusionCache.hasAnyEnhancerFusion(fusion.GeneNames[FS_UP]) || mKnownFusionCache.hasAnyEnhancerFusion(fusion.GeneNames[FS_DOWN]))
             return false;
 
         if(mKnownFusionCache.hasPromiscuousThreeGene(fusion.GeneNames[FS_DOWN]))

@@ -11,113 +11,99 @@ import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.property.VerticalAlignment;
 
-import org.jetbrains.annotations.NotNull;
-
 public class Cells
 {
-    @NotNull
-    private final ReportResources reportResources;
+    private final ReportResources mReportResources;
 
-    public Cells(@NotNull ReportResources reportResources)
+    public Cells(final ReportResources reportResources)
     {
-        this.reportResources = reportResources;
+        mReportResources = reportResources;
     }
 
-    @NotNull
-    public Cell createHeader(@NotNull String text)
+    public Cell createHeader(final String text)
     {
         Cell cell = new Cell(1, 1);
         cell.setHeight(23); // Set fixed height to create consistent spacing between table title and header
         cell.setBorder(Border.NO_BORDER);
         cell.setVerticalAlignment(VerticalAlignment.BOTTOM);
-        cell.addStyle(reportResources.tableHeaderStyle());
+        cell.addStyle(mReportResources.tableHeaderStyle());
         cell.add(new Paragraph(text.toUpperCase()));
         return cell;
     }
 
-    @NotNull
-    public Cell createSpanningEntry(@NotNull Table table, @NotNull String text)
+    public Cell createSpanningEntry(final Table table, final String text)
     {
         Cell cell = new Cell(1, table.getNumberOfColumns());
         cell.add(new Paragraph(text));
         cell.setBorder(Border.NO_BORDER);
         cell.setBorderBottom(new SolidBorder(ReportResources.PALETTE_MID_GREY, 0.25F));
-        cell.addStyle(reportResources.tableContentStyle());
+        cell.addStyle(mReportResources.tableContentStyle());
         return cell;
     }
 
-    @NotNull
-    public Cell createSpanningWarning(@NotNull Table table, @NotNull String text)
+    public Cell createSpanningWarning(final Table table, final String text)
     {
         Cell cell = new Cell(1, table.getNumberOfColumns());
         cell.add(new Paragraph(text));
         cell.setBorder(Border.NO_BORDER);
-        cell.addStyle(reportResources.qcWarningStyle());
+        cell.addStyle(mReportResources.qcWarningStyle());
         return cell;
     }
 
-    @NotNull
-    public Cell createUrl(@NotNull String text, @NotNull String url)
+    public Cell createUrl(final String text, final String url)
     {
         Cell cell = createBorderlessBase();
         cell.setBorderBottom(new SolidBorder(ReportResources.PALETTE_MID_GREY, 0.25F));
-        cell.addStyle(reportResources.urlStyle());
+        cell.addStyle(mReportResources.urlStyle());
         cell.add(new Paragraph(text));
         cell.setAction(PdfAction.createURI(url));
         return cell;
     }
 
-    @NotNull
-    public Cell createContent(@NotNull String text)
+    public Cell createContent(final String text)
     {
         return createContent(new Paragraph(text));
     }
 
-    @NotNull
-    public Cell createContent(@NotNull IBlockElement element)
+    public Cell createContent(final IBlockElement element)
     {
         Cell cell = createBorderlessBase();
         cell.setBorderBottom(new SolidBorder(ReportResources.PALETTE_MID_GREY, 0.25F));
-        cell.addStyle(reportResources.tableContentStyle());
+        cell.addStyle(mReportResources.tableContentStyle());
         cell.add(element);
         return cell;
     }
 
-    @NotNull
-    public Cell createImage(@NotNull Image image)
+    public Cell createImage(final Image image)
     {
         Cell cell = createBorderlessBase();
         cell.setBorderBottom(new SolidBorder(ReportResources.PALETTE_MID_GREY, 0.25F));
-        cell.addStyle(reportResources.tableContentStyle());
+        cell.addStyle(mReportResources.tableContentStyle());
         cell.add(image);
         return cell;
     }
 
-    @NotNull
-    public Cell createKey(@NotNull String text)
+    public Cell createKey(final String text)
     {
         Cell cell = createBorderlessBase();
-        cell.addStyle(reportResources.keyStyle());
+        cell.addStyle(mReportResources.keyStyle());
         cell.add(new Paragraph(text));
         return cell;
     }
 
-    @NotNull
-    public Cell createValue(@NotNull String text)
+    public Cell createValue(final String text)
     {
         return createValue(new Paragraph(text));
     }
 
-    @NotNull
-    public Cell createValue(@NotNull IBlockElement element)
+    public Cell createValue(final IBlockElement element)
     {
         Cell cell = createBorderlessBase();
-        cell.addStyle(reportResources.valueStyle());
+        cell.addStyle(mReportResources.valueStyle());
         cell.add(element);
         return cell;
     }
 
-    @NotNull
     private static Cell createBorderlessBase()
     {
         Cell cell = new Cell();

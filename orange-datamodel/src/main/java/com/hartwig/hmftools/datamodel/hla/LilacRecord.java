@@ -13,8 +13,5 @@ import org.jetbrains.annotations.Nullable;
 public interface LilacRecord
 {
     @NotNull
-    String qc();
-
-    @NotNull
     List<LilacAllele> alleles();
 }

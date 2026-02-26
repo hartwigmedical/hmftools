@@ -12,19 +12,19 @@ import com.hartwig.hmftools.qsee.feature.FeatureType;
 import com.hartwig.hmftools.qsee.common.MultiFieldStringBuilder;
 import com.hartwig.hmftools.qsee.feature.SourceTool;
 import com.hartwig.hmftools.qsee.prep.CategoryPrep;
-import com.hartwig.hmftools.qsee.prep.CommonPrepConfig;
+import com.hartwig.hmftools.qsee.prep.QseePrepConfig;
 
 import org.jetbrains.annotations.NotNull;
 
 public class FragLengthDistributionPrep implements CategoryPrep
 {
-    private final CommonPrepConfig mConfig;
+    private final QseePrepConfig mConfig;
 
     private final static SourceTool SOURCE_TOOL = SourceTool.BAM_METRICS;
 
     private final static String FIELD_FRAG_LENGTH = "FragLength";
 
-    public FragLengthDistributionPrep(CommonPrepConfig config)
+    public FragLengthDistributionPrep(QseePrepConfig config)
     {
         mConfig = config;
     }

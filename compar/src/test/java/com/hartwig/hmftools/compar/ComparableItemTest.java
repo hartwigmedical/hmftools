@@ -34,17 +34,21 @@ public abstract class ComparableItemTest<I extends ComparableItem, C extends Ite
     // Alternate object should still be pass.
     protected TestComparableItemBuilder<B, I> builder;
 
-    // Map from name of compared field in "findMismatch" to initializer that changes that field from the default value.
+    // Map from name of field compared in "findMismatch" to initializer that changes that field from the default value.
     // This is meant for causing "VALUE" differences in testing.
     protected Map<String, Consumer<B>> fieldToAlternateValueInitializer;
 
-    // Map from name of field used in "matches" method to initializer that changes that field from the default value.
+    // Map from name of field or fields used in "matches" method to initializer that changes that field from the default value.
     // This is meant for creating non-matching objects in testing.
     protected Map<String, Consumer<B>> nameToAlternateIndexInitializer;
 
-    // Map from field used in "reportable" method to initializer that changes that field from the default value.
+    // Map from name of field used in "reportable" method to initializer that changes that field from the default value.
     // This is meant for causing differences in reportability in testing.
     protected Map<String, Consumer<B>> reportabilityFieldToFalseReportabilityInitializer;
+
+    // Map from name of field or fields used in "isPass" method to initializer that causes "isPass" to be false.
+    // This is meant for causing differences in PASS status in testing.
+    protected Map<String, Consumer<B>> nameToNonPassInitializer;
 
     @Test
     public void fullyMatchesSelfInDetailedMode()
@@ -146,6 +150,47 @@ public abstract class ComparableItemTest<I extends ComparableItem, C extends Ite
     public void hasKeyIfItShould()
     {
         assertEquals(nameToAlternateIndexInitializer.isEmpty(), builder.create().key().isEmpty());
+    }
+
+    @Test
+    public void doubleNonPassIsIgnored()
+    {
+        for(Map.Entry<String, Consumer<B>> entry : nameToNonPassInitializer.entrySet())
+        {
+            String name = entry.getKey();
+            final Consumer<B> initializer = entry.getValue();
+            I refVictim = builder.create(initializer);
+            I newVictim = builder.createWithAlternateDefaults(initializer);
+
+            DiffThresholds diffThresholds = createDefaultThresholds();
+            assertNull("Test non-PASS due to " + name + " is ignored when not including matches",
+                    refVictim.findMismatch(newVictim, MatchLevel.DETAILED, diffThresholds, false));
+            assertNull("Test non-PASS due to " + name + " is ignored when including matches",
+                    refVictim.findMismatch(newVictim, MatchLevel.DETAILED, diffThresholds, true));
+        }
+    }
+
+    @Test
+    public void nonPassIsNotCallInDetailedMode()
+    {
+        for(Map.Entry<String, Consumer<B>> entry : nameToNonPassInitializer.entrySet())
+        {
+            String name = entry.getKey();
+            final Consumer<B> initializer = entry.getValue();
+            I passVictim = builder.create();
+            I nonPassVictim = builder.createWithAlternateDefaults(initializer);
+
+            DiffThresholds diffThresholds = createDefaultThresholds();
+            assertEquals("Test non-PASS due to " + name + " can cause REF_ONLY when not including matches",
+                    MismatchType.REF_ONLY, passVictim.findMismatch(nonPassVictim, MatchLevel.DETAILED, diffThresholds, false).Type);
+            assertEquals("Test non-PASS due to " + name + " can cause REF_ONLY when including matches",
+                    MismatchType.REF_ONLY, passVictim.findMismatch(nonPassVictim, MatchLevel.DETAILED, diffThresholds, true).Type);
+
+            assertEquals("Test non-PASS due to " + name + " can cause NEW_ONLY when not including matches",
+                    MismatchType.NEW_ONLY, nonPassVictim.findMismatch(passVictim, MatchLevel.DETAILED, diffThresholds, false).Type);
+            assertEquals("Test non-PASS due to " + name + " can cause NEW_ONLY when including matches",
+                    MismatchType.NEW_ONLY, nonPassVictim.findMismatch(passVictim, MatchLevel.DETAILED, diffThresholds, true).Type);
+        }
     }
 
     private void assertFullyMatchesSelf(final MatchLevel matchLevel)

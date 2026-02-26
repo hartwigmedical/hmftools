@@ -37,6 +37,7 @@ import com.hartwig.hmftools.wisp.purity.loh.AmberLohCalcs;
 import com.hartwig.hmftools.wisp.purity.loh.AmberLohResult;
 import com.hartwig.hmftools.wisp.purity.variant.SomaticPurityResult;
 import com.hartwig.hmftools.wisp.purity.variant.SomaticVariants;
+import com.hartwig.hmftools.wisp.purity.variant.SomaticWriter;
 
 public class PurityEstimator
 {
@@ -317,7 +318,7 @@ public class PurityEstimator
 
                 if(plotSomatics(mConfig.WriteTypes))
                 {
-                    if(!SomaticVariants.plotSomaticVafs(sample.PatientId, sampleId, mConfig))
+                    if(!SomaticWriter.plotSomaticVafs(sample.PatientId, sampleId, mConfig))
                     {
                         CT_LOGGER.error("patient({}) sample({}) somatic plot failed", sample.PatientId, sampleId);
                     }

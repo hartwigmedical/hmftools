@@ -8,7 +8,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 public class MultiFieldStringBuilder
 {
-    private static final String FIELD_KEY_VALUE_SEPARATOR = "=";
+    private static final String FIELD_KEY_VALUE_SEPARATOR = ":";
     private static final String FIELD_SEPARATOR = ";";
 
     private final List<Pair<String, String>> mKeyValuePairs;

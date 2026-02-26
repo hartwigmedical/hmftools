@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.cider
 
 import com.google.common.collect.ImmutableList
+import com.hartwig.hmftools.cider.genes.VJGeneType
 import org.junit.Before
 import kotlin.test.*
 

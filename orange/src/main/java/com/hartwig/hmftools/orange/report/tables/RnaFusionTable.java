@@ -15,9 +15,7 @@ import org.jetbrains.annotations.NotNull;
 
 public final class RnaFusionTable
 {
-    @NotNull
-    public static Table build(@NotNull String title, float width, @NotNull List<RnaFusion> fusions,
-            @NotNull ReportResources reportResources)
+    public static Table build(final String title, float width, final List<RnaFusion> fusions, final ReportResources reportResources)
     {
         if(fusions.isEmpty())
         {
@@ -46,8 +44,7 @@ public final class RnaFusionTable
         return new Tables(reportResources).createWrapping(table, title);
     }
 
-    @NotNull
-    private static List<RnaFusion> sort(@NotNull List<RnaFusion> fusions)
+    private static List<RnaFusion> sort(final List<RnaFusion> fusions)
     {
         return fusions.stream().sorted((fusion1, fusion2) ->
         {

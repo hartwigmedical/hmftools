@@ -22,9 +22,8 @@ public final class SignatureAllocationTable
 {
     static final String MISALLOC_SIGNATURE = "MISALLOC";
 
-    @NotNull
-    public static Table build(@NotNull String title, float width, @NotNull List<SignatureAllocation> signatureAllocations,
-            @NotNull ReportResources reportResources)
+    public static Table build(
+            final String title, float width, final List<SignatureAllocation> signatureAllocations, final ReportResources reportResources)
     {
         if(signatureAllocations.isEmpty())
         {
@@ -52,7 +51,7 @@ public final class SignatureAllocationTable
 
     @NotNull
     @VisibleForTesting
-    static List<SignatureAllocation> sort(@NotNull List<SignatureAllocation> signatureAllocations)
+    static List<SignatureAllocation> sort(final List<SignatureAllocation> signatureAllocations)
     {
         return signatureAllocations.stream().sorted((allocation1, allocation2) ->
         {

@@ -7,12 +7,12 @@ public enum SummaryTableGroup
     COPY_NUMBER("Copy number"),
     MAPPING("Mapping");
 
-    private final String mHumanReadableName;
+    private final String mDisplayName;
 
-    SummaryTableGroup(String humanReadableName)
+    SummaryTableGroup(String displayName)
     {
-        mHumanReadableName = humanReadableName;
+        mDisplayName = displayName;
     }
 
-    public String humanReadableName() { return mHumanReadableName; }
+    public String displayName() { return mDisplayName; }
 }

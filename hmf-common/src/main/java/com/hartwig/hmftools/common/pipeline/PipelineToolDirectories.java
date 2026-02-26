@@ -35,8 +35,9 @@ public record PipelineToolDirectories(
         String tumorMetricsDir,
         String vChordDir,
         String virusBreakendDir,
-        String virusInterpreterDir
-) {
+        String virusInterpreterDir,
+        String qsSeeDir)
+{
     public static final String PIPELINE_FORMAT_CFG = "pipeline_format";
     public static final String PIPELINE_FORMAT_DESC =
             "Assumed directory structure for tool directories. Possible values: " + Arrays.stream(PipelineOutputStructure.values())
@@ -72,7 +73,8 @@ public record PipelineToolDirectories(
             "bamtools/*_bamtools",
             "vchord",  // not yet implemented in this version
             "virusbreakend",
-            "virusinterpreter"
+            "virusinterpreter",
+            ""
     );
 
     public static final PipelineToolDirectories OA_V2_2_FORMAT = new PipelineToolDirectories(
@@ -102,8 +104,8 @@ public record PipelineToolDirectories(
             "bamtools/*_bamtools",
             "vchord",  // not yet implemented in this version
             "virusbreakend",
-            "virusinterpreter"
-    );
+            "virusinterpreter",
+            "qsee");
 
     public static final PipelineToolDirectories OA_V2_3_FORMAT = OA_V2_2_FORMAT;
     public static final PipelineToolDirectories OA_V3_0_FORMAT = OA_V2_2_FORMAT;
@@ -135,8 +137,8 @@ public record PipelineToolDirectories(
             "*/bam_metrics",
             "vchord",
             "virusbreakend",
-            "virusintrprtr"
-    );
+            "virusintrprtr",
+            "qsee");
 
     public static final PipelineToolDirectories DB_V6_0_FORMAT = new PipelineToolDirectories(
             "amber",
@@ -165,8 +167,8 @@ public record PipelineToolDirectories(
             "bamtools/*_bamtools",
             "vchord",  // not yet implemented in this version
             "virusbreakend",
-            "virusinterpreter"
-    );
+            "virusinterpreter",
+            "qsee");
 
     public static PipelineToolDirectories resolveToolDirectories(
             final ConfigBuilder configBuilder, final String pipelineFormatConfigStr,
@@ -263,7 +265,8 @@ public record PipelineToolDirectories(
                 convertWildcardSamplePath(tumorMetricsDir, tumorSampleId, normalSampleId),
                 convertWildcardSamplePath(vChordDir, tumorSampleId, normalSampleId),
                 convertWildcardSamplePath(virusBreakendDir, tumorSampleId, normalSampleId),
-                convertWildcardSamplePath(virusInterpreterDir, tumorSampleId, normalSampleId)
+                convertWildcardSamplePath(virusInterpreterDir, tumorSampleId, normalSampleId),
+                convertWildcardSamplePath(qsSeeDir, tumorSampleId, normalSampleId)
         );
     }
 }

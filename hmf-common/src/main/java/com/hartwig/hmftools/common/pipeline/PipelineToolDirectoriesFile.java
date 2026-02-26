@@ -37,6 +37,7 @@ public class PipelineToolDirectoriesFile
     public static final String V_CHORD_DIR = "vChordDir";
     public static final String VIRUS_BREAKEND_DIR = "virusBreakendDir";
     public static final String VIRUS_INTERPRETER_DIR = "virusInterpreterDir";
+    public static final String QSEE_DIR = "qSeeDir";
 
     public static final String DEFAULT_DIR = "";
 
@@ -75,7 +76,8 @@ public class PipelineToolDirectoriesFile
                 getValue(lines, TUMOR_METRICS_DIR, DEFAULT_DIR, TSV_DELIM),
                 getValue(lines, V_CHORD_DIR, DEFAULT_DIR, TSV_DELIM),
                 getValue(lines, VIRUS_BREAKEND_DIR, DEFAULT_DIR, TSV_DELIM),
-                getValue(lines, VIRUS_INTERPRETER_DIR, DEFAULT_DIR, TSV_DELIM)
+                getValue(lines, VIRUS_INTERPRETER_DIR, DEFAULT_DIR, TSV_DELIM),
+                getValue(lines, QSEE_DIR, DEFAULT_DIR, TSV_DELIM)
         );
     }
 }

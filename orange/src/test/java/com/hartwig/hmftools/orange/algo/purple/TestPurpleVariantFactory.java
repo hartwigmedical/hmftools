@@ -32,6 +32,7 @@ public final class TestPurpleVariantFactory
                 .position(0)
                 .ref(Strings.EMPTY)
                 .alt(Strings.EMPTY)
+                .driverLikelihood(1.0)
                 .worstCodingEffect(PurpleCodingEffect.UNDEFINED)
                 .canonicalImpact(impactBuilder().build())
                 .hotspot(com.hartwig.hmftools.datamodel.purple.HotspotType.NON_HOTSPOT)

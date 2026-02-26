@@ -9,6 +9,7 @@ import com.hartwig.hmftools.datamodel.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
+import com.hartwig.hmftools.datamodel.linx.LinxDriverType;
 import com.hartwig.hmftools.datamodel.linx.LinxGeneOrientation;
 import com.hartwig.hmftools.orange.conversion.LinxConversion;
 
@@ -53,7 +54,9 @@ public final class LinxOrangeTestFactory
                 .orientation(0)
                 .exonUp(0)
                 .exonDown(0)
-                .junctionCopyNumber(0D);
+                .junctionCopyNumber(0D)
+                .driverType(LinxDriverType.DISRUPTION)
+                .driverLikelihood(0);
     }
 
     public static ImmutableHomozygousDisruption.Builder homozygousDisruptionBuilder()

@@ -16,7 +16,7 @@ import static com.hartwig.hmftools.wisp.purity.cn.CopyNumberProfile.initialiseCn
 import static com.hartwig.hmftools.wisp.purity.cn.CopyNumberProfile.initialiseCnRatioWriter;
 import static com.hartwig.hmftools.wisp.purity.variant.PurityCalcData.CALC_NO_SET;
 import static com.hartwig.hmftools.wisp.purity.variant.SampleFragmentLengths.initialiseFragmentLengthWriter;
-import static com.hartwig.hmftools.wisp.purity.variant.SomaticVariants.initialiseVariantWriter;
+import static com.hartwig.hmftools.wisp.purity.variant.SomaticWriter.initialiseVariantWriter;
 import static com.hartwig.hmftools.wisp.purity.variant.VafPeakModel.initialiseSomaticPeakWriter;
 
 import java.io.BufferedWriter;

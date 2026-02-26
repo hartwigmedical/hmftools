@@ -2,36 +2,27 @@ package com.hartwig.hmftools.orange.report.interpretation;
 
 import static java.lang.String.format;
 
-import java.text.DecimalFormat;
 import java.util.List;
-import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.datamodel.purple.PurpleAllelicDepth;
-import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.datamodel.VariantEntry;
 
 import org.apache.logging.log4j.util.Strings;
-import org.jetbrains.annotations.NotNull;
 
 public final class Variants
 {
-    private static final DecimalFormat PERCENTAGE_FORMAT = new DecimalFormat("#'%'");
-
     public static final String COL_VCN = "VCN";
-    public static final String COL_CN = "CN";
     public static final String COL_MACN = "MACN";
-    public static final String COL_CL = "CL";
-    public static final String COL_DL = "DL";
+    public static final String COL_CL = "Clonal";
+    public static final String COL_DL = "Driver";
     public static final String COL_AF = "AF";
-    public static final String COL_DP = "DEPTH";
-    public static final String COL_SL = "SL";
+    public static final String COL_DP = "Depth";
+    public static final String COL_SL = "Somatic";
     public static final String COL_VARIANT = "Variant";
-    public static final String COL_GENOTYPE = "Genotype";
     public static final String COL_BIALLELIC = "Biallelic";
     public static final String COL_HOTSPOT = "Hotspot";
-    public static final String COL_RNA = "RNA";
 
     public static List<VariantEntry> sort(final List<VariantEntry> variants)
     {
@@ -94,21 +85,6 @@ public final class Variants
             default:
                 return "No";
         }
-    }
-
-    public static String biallelicLikelihoodField(final VariantEntry variant)
-    {
-        return PERCENTAGE_FORMAT.format(variant.biallelicProbability() * 100);
-    }
-
-    public static String driverLikelihoodField(final VariantEntry variant)
-    {
-        return variant.driverLikelihood() != null ? PERCENTAGE_FORMAT.format(variant.driverLikelihood() * 100) : Strings.EMPTY;
-    }
-
-    public static String clonalLikelihoodField(final VariantEntry variant)
-    {
-        return PERCENTAGE_FORMAT.format(100 * variant.clonalLikelihood());
     }
 
     public static String rnaInfoField(final VariantEntry variant)

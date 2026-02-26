@@ -11,7 +11,13 @@ import org.jetbrains.annotations.Nullable;
 public interface LilacAllele
 {
     @NotNull
+    String geneClass();
+
+    @NotNull
     String allele();
+
+    @NotNull
+    String qcStatus();
 
     double tumorCopyNumber();
 

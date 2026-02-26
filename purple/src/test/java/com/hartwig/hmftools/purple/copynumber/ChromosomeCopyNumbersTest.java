@@ -25,6 +25,7 @@ import java.util.Map;
 
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
+import com.hartwig.hmftools.common.purple.ChrArmCopyNumber;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.SegmentSupport;
 import com.hartwig.hmftools.common.segmentation.Arm;
@@ -51,9 +52,9 @@ public class ChromosomeCopyNumbersTest
         final double copyNumber = 0.55;
         PurpleCopyNumber pcn1 = pcn(_1, 10_000_000, 100_000_000, copyNumber, TELOMERE);
         ChromosomeCopyNumbers copyNumbers = new ChromosomeCopyNumbers(of(pcn1), mChrArmLocator);
-        List<ChromosomeArmCopyNumber> results = copyNumbers.data();
+        List<ChrArmCopyNumber> results = copyNumbers.data();
         assertEquals(1, results.size());
-        ChromosomeArmCopyNumber result = results.get(0);
+        ChrArmCopyNumber result = results.get(0);
         assertEquals(_1, result.chromosome());
         assertEquals(Arm.P, result.arm());
         assertEquals(copyNumber, result.meanCopyNumber(), EPSILON);
@@ -72,9 +73,9 @@ public class ChromosomeCopyNumbersTest
         PurpleCopyNumber pcn5 = pcn(_1, 40_000_001, 50_000_000, 0.8, NONE);
 
         ChromosomeCopyNumbers copyNumbers = new ChromosomeCopyNumbers(of(pcn1, pcn2, pcn3, pcn4, pcn5), mChrArmLocator);
-        List<ChromosomeArmCopyNumber> results = copyNumbers.data();
+        List<ChrArmCopyNumber> results = copyNumbers.data();
         assertEquals(1, results.size());
-        ChromosomeArmCopyNumber result = results.get(0);
+        ChrArmCopyNumber result = results.get(0);
         assertEquals(_1, result.chromosome());
         assertEquals(P, result.arm());
         assertEquals(0.6, result.meanCopyNumber(), EPSILON);
@@ -93,8 +94,8 @@ public class ChromosomeCopyNumbersTest
         PurpleCopyNumber pcn5 = pcn(_1, 1001, 2000, 0.8, NONE); // 1000 * 0.8 = 800
 
         ChromosomeCopyNumbers copyNumbers = new ChromosomeCopyNumbers(of(pcn1, pcn2, pcn3, pcn4, pcn5), mChrArmLocator);
-        List<ChromosomeArmCopyNumber> results = copyNumbers.data();
-        ChromosomeArmCopyNumber result = results.get(0);
+        List<ChrArmCopyNumber> results = copyNumbers.data();
+        ChrArmCopyNumber result = results.get(0);
         // 40 + 150 + 60 + 350 + 800 = 1400, total length = 2000, so weighted average = 0.7
         assertEquals(0.7, result.meanCopyNumber(), EPSILON);
         // There are 2000 positions, so the median is the 1000th
@@ -114,8 +115,8 @@ public class ChromosomeCopyNumbersTest
         PurpleCopyNumber pcn8 = pcn(_1, 1701, 1900, 0.8, NONE); // 200 @ 0.8
 
         ChromosomeCopyNumbers copyNumbers = new ChromosomeCopyNumbers(of(pcn1, pcn2, pcn3, pcn4, pcn5, pcn6, pcn7, pcn8), mChrArmLocator);
-        List<ChromosomeArmCopyNumber> results = copyNumbers.data();
-        ChromosomeArmCopyNumber result = results.get(0);
+        List<ChrArmCopyNumber> results = copyNumbers.data();
+        ChrArmCopyNumber result = results.get(0);
         // 200 100 200 300 100 400 400 200, total is 1700, median value is 950th
         assertEquals(0.7, result.medianCopyNumber(), EPSILON);
     }
@@ -135,9 +136,9 @@ public class ChromosomeCopyNumbersTest
         mChrArmLocator.put(_2, 90_000_000);
         ChromosomeCopyNumbers copyNumbers =
                 new ChromosomeCopyNumbers(of(pcn1p1, pcn1p2, pcn1q1, pcn1q2, pcn2p1, pcn2p2, pcn2q1, pcn2q2), mChrArmLocator);
-        List<ChromosomeArmCopyNumber> results = copyNumbers.data();
+        List<ChrArmCopyNumber> results = copyNumbers.data();
         assertEquals(4, results.size());
-        ChromosomeArmCopyNumber p1 = results.get(0);
+        ChrArmCopyNumber p1 = results.get(0);
         assertEquals(_1, p1.chromosome());
         assertEquals(Arm.P, p1.arm());
         assertEquals(0.6, p1.meanCopyNumber(), EPSILON);
@@ -145,7 +146,7 @@ public class ChromosomeCopyNumbersTest
         assertEquals(0.7, p1.maxCopyNumber(), EPSILON);
         assertEquals(0.5, p1.minCopyNumber(), EPSILON);
 
-        ChromosomeArmCopyNumber q1 = results.get(1);
+        ChrArmCopyNumber q1 = results.get(1);
         assertEquals(_1, q1.chromosome());
         assertEquals(Arm.Q, q1.arm());
         assertEquals(0.5, q1.meanCopyNumber(), EPSILON);
@@ -153,7 +154,7 @@ public class ChromosomeCopyNumbersTest
         assertEquals(0.6, q1.maxCopyNumber(), EPSILON);
         assertEquals(0.4, q1.minCopyNumber(), EPSILON);
 
-        ChromosomeArmCopyNumber p2 = results.get(2);
+        ChrArmCopyNumber p2 = results.get(2);
         assertEquals(_2, p2.chromosome());
         assertEquals(Arm.P, p2.arm());
         assertEquals(0.65, p2.meanCopyNumber(), EPSILON);
@@ -161,7 +162,7 @@ public class ChromosomeCopyNumbersTest
         assertEquals(0.75, p2.maxCopyNumber(), EPSILON);
         assertEquals(0.55, p2.minCopyNumber(), EPSILON);
 
-        ChromosomeArmCopyNumber q2 = results.get(3);
+        ChrArmCopyNumber q2 = results.get(3);
         assertEquals(_2, q2.chromosome());
         assertEquals(Arm.Q, q2.arm());
         assertEquals(0.55, q2.meanCopyNumber(), EPSILON);
@@ -186,17 +187,17 @@ public class ChromosomeCopyNumbersTest
 
         ChromosomeCopyNumbers copyNumbers =
                 new ChromosomeCopyNumbers(of(pcn1p1, pcn1p2, pcn1p3, pcn2p1, pcn2p2, pcn3q1, pcn3q2), mChrArmLocator);
-        List<ChromosomeArmCopyNumber> results = copyNumbers.data();
+        List<ChrArmCopyNumber> results = copyNumbers.data();
         assertEquals(3, results.size());
-        ChromosomeArmCopyNumber p1 = results.get(0);
+        ChrArmCopyNumber p1 = results.get(0);
         assertEquals(_1, p1.chromosome());
         assertEquals(Arm.P, p1.arm());
 
-        ChromosomeArmCopyNumber p2 = results.get(1);
+        ChrArmCopyNumber p2 = results.get(1);
         assertEquals(_2, p2.chromosome());
         assertEquals(Arm.Q, p2.arm());
 
-        ChromosomeArmCopyNumber p3 = results.get(2);
+        ChrArmCopyNumber p3 = results.get(2);
         assertEquals(_3, p3.chromosome());
         assertEquals(Arm.Q, p3.arm());
     }
@@ -218,22 +219,22 @@ public class ChromosomeCopyNumbersTest
         mChrArmLocator.put(_11, 45_000_000);
         ChromosomeCopyNumbers copyNumbers =
                 new ChromosomeCopyNumbers(of(pcn14p1, pcn14p2, pcn14q1, pcn14q2, pcn14q3, pcn16p1, pcn16q1), mChrArmLocator);
-        List<ChromosomeArmCopyNumber> results = copyNumbers.data();
+        List<ChrArmCopyNumber> results = copyNumbers.data();
         assertEquals(4, results.size());
-        ChromosomeArmCopyNumber p1 = results.get(0);
+        ChrArmCopyNumber p1 = results.get(0);
         assertEquals(_10, p1.chromosome());
         assertEquals(Arm.P, p1.arm());
 
-        ChromosomeArmCopyNumber p2 = results.get(1);
+        ChrArmCopyNumber p2 = results.get(1);
         assertEquals(_10, p2.chromosome());
         assertEquals(Arm.Q, p2.arm());
         assertEquals(0.3, p2.minCopyNumber(), EPSILON);
 
-        ChromosomeArmCopyNumber p3 = results.get(2);
+        ChrArmCopyNumber p3 = results.get(2);
         assertEquals(_11, p3.chromosome());
         assertEquals(Arm.P, p3.arm());
 
-        ChromosomeArmCopyNumber p4 = results.get(3);
+        ChrArmCopyNumber p4 = results.get(3);
         assertEquals(_11, p4.chromosome());
         assertEquals(Arm.Q, p4.arm());
     }
@@ -250,17 +251,17 @@ public class ChromosomeCopyNumbersTest
         mChrArmLocator.put(_12, 50_000_000);
 
         ChromosomeCopyNumbers copyNumbers = new ChromosomeCopyNumbers(of(pcn14p1, pcn14p2, pcn15p1, pcn16q1), mChrArmLocator);
-        List<ChromosomeArmCopyNumber> results = copyNumbers.data();
+        List<ChrArmCopyNumber> results = copyNumbers.data();
         assertEquals(3, results.size());
-        ChromosomeArmCopyNumber p1 = results.get(0);
+        ChrArmCopyNumber p1 = results.get(0);
         assertEquals(_10, p1.chromosome());
         assertEquals(Arm.P, p1.arm());
 
-        ChromosomeArmCopyNumber p2 = results.get(1);
+        ChrArmCopyNumber p2 = results.get(1);
         assertEquals(_11, p2.chromosome());
         assertEquals(Arm.P, p2.arm());
 
-        ChromosomeArmCopyNumber p3 = results.get(2);
+        ChrArmCopyNumber p3 = results.get(2);
         assertEquals(_12, p3.chromosome());
         assertEquals(Arm.Q, p3.arm());
     }
@@ -275,7 +276,7 @@ public class ChromosomeCopyNumbersTest
             copyNumbers.add(pcn(humanChromosome, 1, 100, 0.5, CENTROMERE)); // Q
         }
         ChromosomeCopyNumbers ccn = new ChromosomeCopyNumbers(copyNumbers, mChrArmLocator);
-        List<ChromosomeArmCopyNumber> results = ccn.data();
+        List<ChrArmCopyNumber> results = ccn.data();
         results.forEach(copyNumber -> assertTrue(copyNumber.includeInReport()));
     }
 

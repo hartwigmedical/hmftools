@@ -16,9 +16,6 @@ public interface PurpleRecord
     PurpleFit fit();
 
     @NotNull
-    TumorStats tumorStats();
-
-    @NotNull
     PurpleCharacteristics characteristics();
 
     @NotNull
@@ -44,4 +41,7 @@ public interface PurpleRecord
 
     @Nullable
     List<PurpleGainDeletion> germlineGainsDels();
+
+    @NotNull
+    List<PurpleChrArmCopyNumber> armCopyNumberAbberations();
 }

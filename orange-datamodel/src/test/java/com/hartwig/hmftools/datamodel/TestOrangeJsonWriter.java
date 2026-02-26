@@ -44,7 +44,6 @@ import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
 import com.hartwig.hmftools.datamodel.orange.OrangeSample;
 import com.hartwig.hmftools.datamodel.peach.ImmutablePeachGenotype;
-import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
 import com.hartwig.hmftools.datamodel.purple.HotspotType;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleAllelicDepth;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleCharacteristics;
@@ -98,10 +97,10 @@ public class TestOrangeJsonWriter
     {
         return ImmutableOrangeRecord.builder()
                 .sampleId("TEST")
+                .referenceId("REFERENCE")
                 .samplingDate(LocalDate.of(2022, 1, 20))
                 .experimentType(ExperimentType.WHOLE_GENOME)
                 .refGenomeVersion(OrangeRefGenomeVersion.V37)
-                .tumorSample(createOrangeSample())
                 .purple(createPurpleRecord())
                 .linx(createLinxRecord())
                 .lilac(createLilacRecord())
@@ -128,7 +127,6 @@ public class TestOrangeJsonWriter
                 .cuppa(createCuppaData())
                 .plots(ImmutableOrangePlots.builder()
                         .purpleFinalCircosPlot("plot/empty.circos.png")
-                        .sageTumorBQRPlot("")
                         .purpleInputPlot("")
                         .purpleClonalityPlot("")
                         .purpleCopyNumberPlot("")
@@ -197,6 +195,7 @@ public class TestOrangeJsonWriter
                 .position(198266779)
                 .ref("G")
                 .alt("A")
+                .driverLikelihood(1.0)
                 .worstCodingEffect(PurpleCodingEffect.MISSENSE)
                 .variantCopyNumber(2.03)
                 .minorAlleleCopyNumber(0.4)
@@ -276,14 +275,6 @@ public class TestOrangeJsonWriter
                         .minPloidy(3.1)
                         .maxPloidy(3.15)
                         .build())
-                .tumorStats(ImmutableTumorStats.builder()
-                        .maxDiploidProportion(0.0211)
-                        .hotspotMutationCount(3)
-                        .hotspotStructuralVariantCount(0)
-                        .smallVariantAlleleReadCount(2_273_196)
-                        .structuralVariantTumorFragmentCount(4_908)
-                        .bafCount(675_344)
-                        .build())
                 .characteristics(ImmutablePurpleCharacteristics.builder()
                         .wholeGenomeDuplication(true)
                         .microsatelliteIndelsPerMb(0.1)
@@ -293,6 +284,7 @@ public class TestOrangeJsonWriter
                         .tumorMutationalLoad(185)
                         .tumorMutationalLoadStatus(PurpleTumorMutationalStatus.HIGH)
                         .svTumorMutationalBurden(75)
+                        .lohPercentage(0.1)
                         .build())
                 .somaticDrivers(List.of(mutationDriver, deletionDriver))
                 .germlineDrivers(List.of(ImmutablePurpleDriver.builder()
@@ -327,12 +319,16 @@ public class TestOrangeJsonWriter
                 )
                 .somaticGainsDels(List.of(ImmutablePurpleGainDeletion.builder()
                                 .driver(deletionDriver)
-                        .interpretation(CopyNumberInterpretation.FULL_DEL)
                         .chromosome("5")
                         .chromosomeBand("q2.2")
-                        .minCopies(0.1)
-                        .maxCopies(1.2)
+                        .minCopyNumber(0.1)
+                        .maxCopyNumber(1.2)
+                        .relativeCopyNumber(1.2)
                         .minMinorAlleleCopies(0.1)
+                        .exonRange("FULL")
+                        .tpm(null)
+                        .tpmPercentile(null)
+                        .tpmFoldChange(null)
                         .build()))
                 .build();
     }
@@ -471,7 +467,9 @@ public class TestOrangeJsonWriter
     public static LilacRecord createLilacRecord()
     {
         LilacAllele lilacAllele = ImmutableLilacAllele.builder()
+                .geneClass("MHC_CLASS_I")
                 .allele("A*01:01")
+                .qcStatus("PASS")
                 .tumorCopyNumber(6.1)
                 .somaticMissense(5.0)
                 .somaticNonsenseOrFrameshift(4.0)
@@ -483,7 +481,6 @@ public class TestOrangeJsonWriter
                 .rnaFragments(0)
                 .build();
         return ImmutableLilacRecord.builder()
-                .qc("PASS")
                 .addAlleles(lilacAllele)
                 .build();
     }

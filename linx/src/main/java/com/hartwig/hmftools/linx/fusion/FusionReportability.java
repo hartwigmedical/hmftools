@@ -7,8 +7,8 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_ENH
 import static com.hartwig.hmftools.common.gene.TranscriptProteinData.BIOTYPE_NONSENSE_MED_DECAY;
 import static com.hartwig.hmftools.common.gene.TranscriptProteinData.BIOTYPE_PROTEIN_CODING;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.EXON_DEL_DUP;
-import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_KNOWN_PAIR;
-import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_PROMISCUOUS;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.ENHANCER_KNOWN_PAIR;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.ENHANCER_PROMISCUOUS;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.NONE;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_3;
@@ -52,7 +52,7 @@ public class FusionReportability
     public static List<FusionReportableReason> determineReportability(final GeneFusion fusion)
     {
         // first check whether a fusion is known or not - a key requirement of it being potentially reportable
-        if(fusion.knownType() == NONE || fusion.knownType() == IG_PROMISCUOUS)
+        if(fusion.knownType() == NONE || fusion.knownType() == ENHANCER_PROMISCUOUS)
             return Lists.newArrayList(NOT_KNOWN);
 
         List<FusionReportableReason> nonReportableReasons = Lists.newArrayList();
@@ -81,7 +81,7 @@ public class FusionReportability
 
         if(upTrans.breakendGeneData().svType() == SGL || downTrans.breakendGeneData().svType() == SGL)
         {
-            if(fusion.knownType() != KNOWN_PAIR && fusion.knownType() != IG_KNOWN_PAIR)
+            if(fusion.knownType() != KNOWN_PAIR && fusion.knownType() != ENHANCER_KNOWN_PAIR)
                 nonReportableReasons.add(SGL_NOT_KNOWN);
         }
 
@@ -117,7 +117,7 @@ public class FusionReportability
 
     private static int getMaxUpstreamDistance(final GeneFusion fusion)
     {
-        if(fusion.knownType() == IG_KNOWN_PAIR)
+        if(fusion.knownType() == ENHANCER_KNOWN_PAIR)
             return MAX_UPSTREAM_DISTANCE_IG_KNOWN;
         else if(fusion.knownType() == KNOWN_PAIR  || fusion.isHighImpactPromiscuous())
             return MAX_UPSTREAM_DISTANCE_KNOWN;
@@ -127,7 +127,7 @@ public class FusionReportability
 
     public static boolean allowSuspectChains(final KnownFusionType type)
     {
-        return (type == KNOWN_PAIR || type == EXON_DEL_DUP || type == IG_KNOWN_PAIR);
+        return (type == KNOWN_PAIR || type == EXON_DEL_DUP || type == ENHANCER_KNOWN_PAIR);
     }
 
     public static GeneFusion findTopPriorityFusion(final List<GeneFusion> fusions)
@@ -250,7 +250,7 @@ public class FusionReportability
 
     public static boolean isHighPriorityType(final KnownFusionType type)
     {
-        return (type == KNOWN_PAIR || type == IG_KNOWN_PAIR || type == EXON_DEL_DUP || type == PROMISCUOUS_ENHANCER_TARGET);
+        return (type == KNOWN_PAIR || type == ENHANCER_KNOWN_PAIR || type == EXON_DEL_DUP || type == PROMISCUOUS_ENHANCER_TARGET);
     }
 
     public static boolean checkProteinDomains(final KnownFusionType type)
@@ -270,7 +270,8 @@ public class FusionReportability
 
     private static boolean permittedExonSkipping(final GeneFusion fusion)
     {
-        if(fusion.knownType() == KNOWN_PAIR || fusion.knownType() == IG_KNOWN_PAIR || fusion.knownType() == IG_PROMISCUOUS || fusion.knownType() == EXON_DEL_DUP)
+        if(fusion.knownType() == KNOWN_PAIR || fusion.knownType() == ENHANCER_KNOWN_PAIR
+                || fusion.knownType() == ENHANCER_PROMISCUOUS || fusion.knownType() == EXON_DEL_DUP)
             return true;
 
         if(fusion.isHighImpactPromiscuous() || fusion.knownExons())

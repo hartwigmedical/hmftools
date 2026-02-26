@@ -31,5 +31,6 @@ public class VChordDataTest extends ComparableItemTest<VChordData, VChordCompare
         );
         nameToAlternateIndexInitializer = Collections.emptyMap();
         reportabilityFieldToFalseReportabilityInitializer = Collections.emptyMap();
+        nameToNonPassInitializer = Collections.emptyMap();
     }
 }

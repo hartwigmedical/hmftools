@@ -16,8 +16,7 @@ public class PlotPathResolver
         this.outputDir = outputDir;
     }
 
-    @NotNull
-    public String resolve(@NotNull String path)
+    public String resolve(final String path)
     {
         if(outputDir == null || Files.exists(new File(path).toPath()))
         {

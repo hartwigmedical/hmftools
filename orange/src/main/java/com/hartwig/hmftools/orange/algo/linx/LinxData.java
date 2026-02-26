@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxDriver;
 import com.hartwig.hmftools.common.linx.LinxFusion;
@@ -22,7 +23,10 @@ public interface LinxData
     List<LinxSvAnnotation> somaticSvAnnotations(); // used in interpreter to form final LinxBreakend info
 
     @NotNull
-    List<LinxDriver> somaticDrivers();
+    List<LinxDriver> somaticDriverData();
+
+    @NotNull
+    List<DriverCatalog> somaticDrivers();
 
     @NotNull
     List<LinxFusion> fusions();
@@ -30,8 +34,8 @@ public interface LinxData
     @NotNull
     List<LinxBreakend> somaticBreakends();
 
-    @NotNull
-    List<HomozygousDisruption> somaticHomozygousDisruptions();
+    @Nullable
+    List<DriverCatalog> germlineDrivers();
 
     @Nullable
     List<LinxBreakend> germlineBreakends();

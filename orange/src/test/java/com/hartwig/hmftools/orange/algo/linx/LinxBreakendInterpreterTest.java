@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.orange.TestDataUtils.CYTO_BANDS;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.Collections;
 import java.util.List;
 
 import com.hartwig.hmftools.common.gene.TranscriptRegionType;
@@ -86,6 +87,6 @@ public class LinxBreakendInterpreterTest
 
     private static LinxBreakendInterpreter createInterpreter(final List<LinxSvAnnotation> linxSvAnnotations)
     {
-        return new LinxBreakendInterpreter(linxSvAnnotations, CYTO_BANDS);
+        return new LinxBreakendInterpreter(linxSvAnnotations, Collections.emptyList(), CYTO_BANDS);
     }
 }

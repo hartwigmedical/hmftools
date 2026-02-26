@@ -50,4 +50,10 @@ public abstract class VariantEntry
 
     public abstract PurpleGenotypeStatus genotypeStatus();
 
+    // germline
+    @Nullable
+    public abstract Double gnomadFrequency();
+
+    @Nullable
+    public abstract String clinvarPathogenicity();
 }

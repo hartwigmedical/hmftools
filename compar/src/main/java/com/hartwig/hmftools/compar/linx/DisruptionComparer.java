@@ -35,6 +35,8 @@ import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
+import htsjdk.tribble.TribbleException;
+
 public class DisruptionComparer implements ItemComparer
 {
     private final ComparConfig mConfig;
@@ -97,7 +99,7 @@ public class DisruptionComparer implements ItemComparer
             return buildBreakends(svDataList, breakends, fileSources.Source);
 
         }
-        catch(IOException e)
+        catch(IOException | TribbleException e)
         {
             CMP_LOGGER.warn("sample({}) failed to load Linx breakend disruption data: {}", sampleId, e.toString());
             return null;

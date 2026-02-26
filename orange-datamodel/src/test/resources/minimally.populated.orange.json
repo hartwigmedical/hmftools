@@ -9,30 +9,6 @@
   "configuredPrimaryTumor": [],
   "refGenomeVersion": "V37",
   "pipelineVersion": null,
-  "refSample": null,
-  "tumorSample": {
-    "metrics": {
-      "meanCoverage": 0.0,
-      "sdCoverage": 0.0,
-      "medianCoverage": 0,
-      "madCoverage": 0,
-      "pctExcAdapter": 0.0,
-      "pctExcMapQ": 0.0,
-      "pctExcDupe": 0.0,
-      "pctExcUnpaired": 0.0,
-      "pctExcBaseQ": 0.0,
-      "pctExcOverlap": 0.0,
-      "pctExcCapped": 0.0,
-      "pctExcTotal": 0.0
-    },
-    "flagstat": {
-      "uniqueReadCount": 0,
-      "secondaryCount": 0,
-      "supplementaryCount": 0,
-      "mappedProportion": 0.0
-    }
-  },
-  "germlineMVLHPerGene": null,
   "purple": {
     "fit": {
       "qc": {
@@ -54,14 +30,6 @@
       "minPloidy": 3.1,
       "maxPloidy": 3.15
     },
-    "tumorStats": {
-      "maxDiploidProportion": 0.0211,
-      "hotspotMutationCount": 3,
-      "hotspotStructuralVariantCount": 0,
-      "smallVariantAlleleReadCount": 2273196,
-      "structuralVariantTumorFragmentCount": 4908,
-      "bafCount": 675344
-    },
     "characteristics": {
       "wholeGenomeDuplication": true,
       "microsatelliteIndelsPerMb": 0.1,
@@ -70,7 +38,8 @@
       "tumorMutationalBurdenStatus": "HIGH",
       "tumorMutationalLoad": 185,
       "tumorMutationalLoadStatus": "HIGH",
-      "svTumorMutationalBurden": 75
+      "svTumorMutationalBurden": 75,
+      "lohPercentage": 0
     },
     "somaticDrivers": [
       {
@@ -114,6 +83,7 @@
         "position": 198266779,
         "ref": "G",
         "alt": "A",
+        "driverLikelihood": 1.0,
         "worstCodingEffect": "MISSENSE",
         "canonicalImpact": {
           "transcript": "ENST00000335508",
@@ -156,6 +126,7 @@
         "position": 41209068,
         "ref": "C",
         "alt": "T",
+        "driverLikelihood": 1.0,
         "worstCodingEffect": "SPLICE",
         "canonicalImpact": {
           "transcript": "ENST00000471181",
@@ -191,7 +162,9 @@
           1,
           2
         ],
-        "reported": true
+        "reported": true,
+        "gnomadFrequency": 0.001,
+        "clinvarPathogenicity": "PATHOGENIC"
       }
     ],
     "somaticCopyNumbers": [
@@ -214,6 +187,15 @@
         "minMinorAlleleCopyNumber": 0.4
       }
     ],
+    "armCopyNumberAbberations": [
+      {
+        "chromosome": "12",
+        "arm": "P",
+        "type": "GAIN",
+        "copyNumber": 3.0,
+        "relativeCopyNumber": 1.5
+      }
+    ],
     "somaticGainsDels": [
       {
         "driver": {
@@ -230,9 +212,14 @@
         "germlineAmpDelFields": null,
         "chromosome": "5",
         "chromosomeBand": "q2.2",
-        "minCopies": 0.1,
-        "maxCopies": 1.2,
-        "minMinorAlleleCopies": 0.1
+        "exonRange": "FULL",
+        "minCopyNumber": 0.1,
+        "maxCopyNumber": 1.2,
+        "relativeCopyNumber": 0.1,
+        "minMinorAlleleCopies": 0.1,
+        "tpm": 0,
+        "tpmPercentile": 0,
+        "tpmFoldChange": 0
       }
     ],
     "germlineGainsDels": null
@@ -307,7 +294,9 @@
         "orientation": -1,
         "exonUp": 1,
         "exonDown": 2,
-        "junctionCopyNumber": 1.1
+        "junctionCopyNumber": 1.1,
+        "driverType": "HOM_DUP_DISRUPTION",
+        "driverLikelihood": 1.0
       }
     ],
     "germlineBreakends": null,
@@ -322,13 +311,13 @@
     ],
     "germlineHomozygousDisruptions": null
   },
-  "wildTypeGenes": [],
   "isofox": null,
   "lilac": {
-    "qc": "PASS",
     "alleles": [
       {
+        "geneClass": "PASS",
         "allele": "A*01:01",
+        "qcStatus": "PASS",
         "tumorCopyNumber": 6.1,
         "refFragments": 210,
         "tumorFragments": 1602,
@@ -438,8 +427,6 @@
   "sigAllocations": null,
   "cohortEvaluations": {},
   "plots": {
-    "sageReferenceBQRPlot": null,
-    "sageTumorBQRPlot": "",
     "purpleInputPlot": "",
     "purpleFinalCircosPlot": "plot/empty.circos.png",
     "purpleClonalityPlot": "",
@@ -449,7 +436,7 @@
     "purpleKataegisPlot": "",
     "linxDriverPlots": [],
     "cuppaSummaryPlot": null,
-    "cuppaFeaturePlot": null,
-    "cuppaChartPlot": null
+    "purplePlot": null,
+    "qSeePlot": null
   }
 }

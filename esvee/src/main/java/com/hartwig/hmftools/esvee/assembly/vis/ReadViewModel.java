@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.esvee.assembly.vis;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.collapseCigarOps;
@@ -11,6 +12,7 @@ import static com.hartwig.hmftools.common.vis.HtmlUtil.renderReadInfoTable;
 import static com.hartwig.hmftools.common.vis.SvgRender.BOX_PADDING;
 import static com.hartwig.hmftools.common.vis.SvgRender.renderBaseSeq;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.assembly.vis.AssemblyVisConstants.DBG_READ_INFO;
 import static com.hartwig.hmftools.esvee.assembly.vis.AssemblyVisConstants.INDEL_CORRECTION;
 import static com.hartwig.hmftools.esvee.assembly.vis.AssemblyVisConstants.READ_HEIGHT_PX;
 
@@ -27,6 +29,7 @@ import java.util.NavigableMap;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.vis.BaseSeqViewModel;
@@ -36,6 +39,7 @@ import com.hartwig.hmftools.esvee.assembly.SequenceDiffInfo;
 import com.hartwig.hmftools.esvee.assembly.SequenceDiffType;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
+import com.hartwig.hmftools.esvee.assembly.vis.AssemblyVisualiser.PairedSegmentViewModel;
 import com.hartwig.hmftools.esvee.assembly.vis.AssemblyVisualiser.SegmentViewModel;
 
 import org.apache.commons.lang3.NotImplementedException;
@@ -50,13 +54,15 @@ import j2html.tags.DomContent;
 public final class ReadViewModel
 {
     private final SupportRead mSupportRead;
-    private final List<SegmentViewModel> mRefViewModel;
+    private final PairedSegmentViewModel mRefViewModel;
     private final BaseSeqViewModel mReadViewModel;
     private final int mIndelOffset;
     private final boolean mIsReverseComplemented;
     private final int mRefViewModelIndex;
+    private final String mFullAssemblyStr;
 
-    private ReadViewModel(final SupportRead supportRead, final List<SegmentViewModel> refViewModel, final BaseSeqViewModel readViewModel, int indelOffset, boolean isReverseComplemented, int refViewModelIndex)
+    private ReadViewModel(final SupportRead supportRead, final PairedSegmentViewModel refViewModel, final BaseSeqViewModel readViewModel,
+            int indelOffset, boolean isReverseComplemented, int refViewModelIndex, final String fullAssemblyStr)
     {
         mSupportRead = supportRead;
         mRefViewModel = refViewModel;
@@ -64,6 +70,12 @@ public final class ReadViewModel
         mIndelOffset = indelOffset;
         mIsReverseComplemented = isReverseComplemented;
         mRefViewModelIndex = refViewModelIndex;
+        mFullAssemblyStr = fullAssemblyStr;
+    }
+
+    public int firstBaseIndex()
+    {
+        return mReadViewModel.FirstBasePos;
     }
 
     private static NavigableMap<Integer, List<CigarOperator>> mapCigarOperators(final List<CigarElement> cigarEls)
@@ -125,26 +137,24 @@ public final class ReadViewModel
         return cigarEls;
     }
 
-    private static int getRefViewModelIndex(final List<SegmentViewModel> refViewModel, final SupportRead read)
+    private static Integer getRefViewModelIndex(final List<SegmentViewModel> refViewModel, final SupportRead read)
     {
-        BaseRegion alignment = new BaseRegion(read.alignmentStart(), read.alignmentEnd());
+        BaseRegion refAlignment = new BaseRegion(read.alignmentStart(), read.alignmentEnd());
+        BaseRegion assemblyAlignment = new BaseRegion(read.fullAssemblyIndexStart(), read.fullAssemblyIndexEnd());
         for(int i = 0; i < refViewModel.size(); i++)
         {
             SegmentViewModel refEl = refViewModel.get(i);
             String chromosome = refEl.chromosome();
             BaseRegion refRegion = refEl.refRegion();
+            BaseRegion assemblyRegion = refEl.assemblyRegion();
             if(refRegion == null)
                 continue;
 
-            if(read.chromosome().equals(chromosome) && alignment.overlaps(refRegion))
+            if(read.chromosome().equals(chromosome) && refAlignment.overlaps(refRegion) && assemblyAlignment.overlaps(assemblyRegion))
                 return i;
         }
 
-        // TODO(mkcmkc): investigate error
-        throw new RuntimeException(format("Cannot find matching refViewModel for read: %s", read.id()));
-        //        SV_LOGGER.error("Cannot find matching refViewModel for read: {}", read.id());
-        //        System.exit(1);
-        //        return 0;
+        return null;
     }
 
     private record CorrectIndelsResult(List<CigarElement> cigarEls, int indexOffset) {}
@@ -152,19 +162,15 @@ public final class ReadViewModel
     private static CorrectIndelsResult correctIndels(final List<SegmentViewModel> refViewModel, final SupportRead read,
             final List<CigarElement> cigarEls)
     {
-        Boolean isBuiltForward = null;
-        int refViewModelIndex = getRefViewModelIndex(refViewModel, read);
-        if(refViewModelIndex == 0)
-            isBuiltForward = true;
-        else if(refViewModelIndex == refViewModel.size() - 1)
-            isBuiltForward = false;
 
-        if(isBuiltForward == null)
+        Integer refViewModelIndex = getRefViewModelIndex(refViewModel, read);
+        if(refViewModelIndex == null)
         {
             SV_LOGGER.error("Cannot find matching junction for read: {}", read.id());
             System.exit(0);
         }
 
+        boolean isBuiltForward = refViewModelIndex == 0;
         List<SequenceDiffInfo> mismatches = read.cachedRead().mismatches();
         if(mismatches == null || mismatches.isEmpty())
             return new CorrectIndelsResult(cigarEls, 0);
@@ -185,6 +191,9 @@ public final class ReadViewModel
                 for(int i = 0; i < insertLength; i++)
                 {
                     int baseIdx = mismatch.ReadIndex + i * (isBuiltForward ? 1 : -1);
+                    if(!mappedCigarOps.containsKey(baseIdx))
+                        continue;
+
                     mappedCigarOps.get(baseIdx).set(0, I);
                 }
 
@@ -215,6 +224,9 @@ public final class ReadViewModel
                     for(int i = 0; i < insertLength; i++)
                     {
                         int baseIdx = mismatch.ReadIndex + (isBuiltForward ? 0 : 1) + (i + 1) * (isBuiltForward ? 1 : -1);
+                        if(!mappedCigarOps.containsKey(baseIdx))
+                            continue;
+
                         mappedCigarOps.get(baseIdx).set(0, I);
                     }
                 }
@@ -225,8 +237,11 @@ public final class ReadViewModel
                         indelOffset -= delLength;
 
                     int baseIdx = mismatch.ReadIndex - (isBuiltForward ? 0 : 1);
-                    for(int i = 0; i < delLength; i++)
-                        mappedCigarOps.get(baseIdx).add(D);
+                    if(mappedCigarOps.containsKey(baseIdx))
+                    {
+                        for(int i = 0; i < delLength; i++)
+                            mappedCigarOps.get(baseIdx).add(D);
+                    }
                 }
 
                 continue;
@@ -244,9 +259,12 @@ public final class ReadViewModel
     private record HandleDelResult(BaseSeqViewModel readViewModel, int indelOffset, List<CigarElement> cigarEls) {}
 
     @Nullable
-    private static HandleDelResult handleDel(final List<SegmentViewModel> refViewModel, final SupportRead read, int indelOffset, final List<CigarElement> cigarEls, final byte[] readBases, final byte[] readBaseQuals, boolean readNegativeStrandFlag)
+    private static HandleDelResult handleDel(final PairedSegmentViewModel refViewModel, final SupportRead read, int indelOffset,
+            final List<CigarElement> cigarEls, final byte[] readBases, final byte[] readBaseQuals, boolean readNegativeStrandFlag)
     {
-        int delLength = refViewModel.get(0).leftDelLength() + refViewModel.get(refViewModel.size() - 1).leftDelLength();
+        int delLength = refViewModel.viewModels().get(0).leftDelLength() + refViewModel.viewModels()
+                .get(refViewModel.viewModels().size() - 1)
+                .leftDelLength();
         if(delLength <= 0)
             return null;
 
@@ -257,8 +275,8 @@ public final class ReadViewModel
                 cigarOps.add(cigarEl.getOperator());
         }
 
-        int readStartIdx = read.fullAssemblyIndexStart() + indelOffset;
-        int lastIdxBeforeBreak = refViewModel.get(0).assemblyViewModel().LastBasePos;
+        int readStartIdx = read.fullAssemblyIndexStart() + indelOffset + refViewModel.readStartOffset();
+        int lastIdxBeforeBreak = refViewModel.viewModels().get(0).assemblyViewModel().LastBasePos;
         int opIdx = 0;
         List<CigarOperator> newCigarOps = Lists.newArrayList();
         int baseIdx = readStartIdx;
@@ -290,10 +308,11 @@ public final class ReadViewModel
         List<CigarElement> newCigarEls = collapseCigarOps(newCigarOps);
 
         BaseSeqViewModel unshiftedReadViewModel = BaseSeqViewModel.create(
-                read.fullAssemblyIndexStart() + indelOffset, newCigarEls, readBases, readBaseQuals, readNegativeStrandFlag);
+                read.fullAssemblyIndexStart() + indelOffset
+                        + refViewModel.readStartOffset(), newCigarEls, readBases, readBaseQuals, readNegativeStrandFlag);
         unshiftedReadViewModel.clearSoftClips();
         int unshiftedMismatchCount = 0;
-        for(SegmentViewModel refEl : refViewModel)
+        for(SegmentViewModel refEl : refViewModel.viewModels())
         {
             if(refEl.refViewModel() != null)
                 unshiftedMismatchCount += unshiftedReadViewModel.mismatchCount(refEl.refViewModel());
@@ -301,10 +320,11 @@ public final class ReadViewModel
 
         indelOffset -= readDelLength;
         BaseSeqViewModel shiftedReadViewModel = BaseSeqViewModel.create(
-                read.fullAssemblyIndexStart() + indelOffset, newCigarEls, readBases, readBaseQuals, readNegativeStrandFlag);
+                read.fullAssemblyIndexStart() + indelOffset
+                        + refViewModel.readStartOffset(), newCigarEls, readBases, readBaseQuals, readNegativeStrandFlag);
         shiftedReadViewModel.clearSoftClips();
         int shiftedMismatchCount = 0;
-        for(SegmentViewModel refEl : refViewModel)
+        for(SegmentViewModel refEl : refViewModel.viewModels())
         {
             if(refEl.refViewModel() != null)
                 shiftedMismatchCount += shiftedReadViewModel.mismatchCount(refEl.refViewModel());
@@ -319,19 +339,26 @@ public final class ReadViewModel
         return new HandleDelResult(shiftedReadViewModel, indelOffset, newCigarEls);
     }
 
-    public static ReadViewModel create(final List<SegmentViewModel> refViewModel, final SupportRead read,
-            final JunctionAssembly junctionAssembly)
+    @Nullable
+    public static ReadViewModel create(final PairedSegmentViewModel refViewModel, final SupportRead read,
+            final JunctionAssembly junctionAssembly, final String fullAssemblyStr)
     {
         boolean readNegativeStrandFlag = read.orientation() == REVERSE;
         byte[] readBases = read.cachedRead().getBases();
         byte[] readBaseQuals = read.cachedRead().getBaseQuality();
         List<CigarElement> cigarEls = read.cachedRead().cigarElements();
 
-        int refViewModelIndex = getRefViewModelIndex(refViewModel, read);
-        SegmentViewModel readRefViewModel = refViewModel.get(refViewModelIndex);
+        Integer refViewModelIndex = getRefViewModelIndex(refViewModel.viewModels(), read);
+        if(refViewModelIndex == null)
+            return null;
+
+        SegmentViewModel readRefViewModel = refViewModel.viewModels().get(refViewModelIndex);
+        boolean reverseComplemented = readRefViewModel.isRefReversed();
+        if(readRefViewModel.isAssemblyReversed())
+            reverseComplemented = !reverseComplemented;
 
         boolean isForwardJunction = junctionAssembly.isForwardJunction();
-        if(readRefViewModel.isRefReversed())
+        if(reverseComplemented)
             isForwardJunction = !isForwardJunction;
 
         int indelOffset = 0;
@@ -348,12 +375,12 @@ public final class ReadViewModel
 
         if(INDEL_CORRECTION)
         {
-            CorrectIndelsResult correctIndelsResult = correctIndels(refViewModel, read, cigarEls);
+            CorrectIndelsResult correctIndelsResult = correctIndels(refViewModel.viewModels(), read, cigarEls);
             cigarEls = correctIndelsResult.cigarEls;
             indelOffset += correctIndelsResult.indexOffset;
         }
 
-        if(readRefViewModel.isRefReversed())
+        if(reverseComplemented)
         {
             readNegativeStrandFlag = !readNegativeStrandFlag;
             readBases = reverseComplementBases(readBases);
@@ -377,7 +404,8 @@ public final class ReadViewModel
         if(handleDelResult == null)
         {
             readViewModel = BaseSeqViewModel.create(
-                    read.fullAssemblyIndexStart() + indelOffset, cigarEls, readBases, readBaseQuals, readNegativeStrandFlag);
+                    read.fullAssemblyIndexStart() + indelOffset
+                            + refViewModel.readStartOffset(), cigarEls, readBases, readBaseQuals, readNegativeStrandFlag);
             readViewModel.clearSoftClips();
         }
         else
@@ -386,7 +414,7 @@ public final class ReadViewModel
             indelOffset = handleDelResult.indelOffset;
         }
 
-        return new ReadViewModel(read, refViewModel, readViewModel, indelOffset, readRefViewModel.isRefReversed(), refViewModelIndex);
+        return new ReadViewModel(read, refViewModel, readViewModel, indelOffset, reverseComplemented, refViewModelIndex, fullAssemblyStr);
     }
 
     @Nullable
@@ -394,17 +422,17 @@ public final class ReadViewModel
     {
         BaseRegion readRegion = new BaseRegion(mReadViewModel.FirstBasePos, mReadViewModel.LastBasePos);
 
-        int totalBoxWidth = 0;
-        for(SegmentViewModel refViewModel : mRefViewModel)
+        int totalBoxWidth = mRefViewModel.prevBoxWidth();
+        for(SegmentViewModel refViewModel : mRefViewModel.viewModels())
             totalBoxWidth += refViewModel.viewRegion().baseLength() + 2 * BOX_PADDING;
 
         SVGGraphics2D svgCanvas = new SVGGraphics2D(READ_HEIGHT_PX * totalBoxWidth, READ_HEIGHT_PX);
         AffineTransform initTransform = svgCanvas.getTransform();
-        double xBoxOffset = 0.0d;
+        double xBoxOffset = mRefViewModel.prevBoxWidth();
         int renderCount = 0;
-        for(int i = 0; i < mRefViewModel.size(); i += 1)
+        for(int i = 0; i < mRefViewModel.viewModels().size(); i += 1)
         {
-            SegmentViewModel refEl = mRefViewModel.get(i);
+            SegmentViewModel refEl = mRefViewModel.viewModels().get(i);
             BaseRegion viewRegion = refEl.viewRegion();
 
             if(!viewRegion.overlaps(readRegion))
@@ -418,7 +446,7 @@ public final class ReadViewModel
                 refViewModel = refEl.assemblyViewModel();
 
             boolean renderLeftOrientationMarker = i == 0;
-            boolean renderRightOrientationMarker = i == mRefViewModel.size() - 1;
+            boolean renderRightOrientationMarker = i == mRefViewModel.viewModels().size() - 1;
             svgCanvas.setTransform(initTransform);
             renderBaseSeq(svgCanvas, new Point2D.Double(xBoxOffset, 0.0d), READ_HEIGHT_PX, viewRegion, mReadViewModel, true, Maps.newHashMap(), refViewModel, renderLeftOrientationMarker, renderRightOrientationMarker, refEl.isRefReversed());
             renderCount += 1;
@@ -432,7 +460,8 @@ public final class ReadViewModel
         String readName = mSupportRead.id();
         ChrBaseRegion alignment = new ChrBaseRegion(mSupportRead.chromosome(), mSupportRead.alignmentStart(), mSupportRead.alignmentEnd());
         ChrBaseRegion mateAlignment = null;
-        if(!mSupportRead.mateChromosome().equals(NO_CHROMOSOME_NAME))
+        String mateChromosome = mSupportRead.mateChromosome();
+        if(mateChromosome != null && !mateChromosome.equals(NO_CHROMOSOME_NAME))
             mateAlignment = new ChrBaseRegion(
                     mSupportRead.mateChromosome(), mSupportRead.mateAlignmentStart(), mSupportRead.mateAlignmentEnd());
 
@@ -456,21 +485,23 @@ public final class ReadViewModel
         String trimCountStr = format("%d,%d", mSupportRead.trimCountStart(), mSupportRead.trimCountEnd());
         extraInfo.add(Pair.of("Trim count:", trimCountStr));
 
-        // TODO(mkcmkc): Remove
-        String mismatchesStr = mSupportRead.cachedRead().mismatches().toString();
-        extraInfo.add(Pair.of("Mismatches:", mismatchesStr));
+        if(DBG_READ_INFO)
+        {
+            extraInfo.add(Pair.of("Full assembly index start:", String.valueOf(mSupportRead.fullAssemblyIndexStart())));
+            extraInfo.add(Pair.of("Full assembly seq start:", mFullAssemblyStr.substring(mSupportRead.fullAssemblyIndexStart(), min(
+                    mSupportRead.fullAssemblyIndexEnd() + 1, mSupportRead.fullAssemblyIndexStart() + 10))));
 
-        // TODO(mkcmkc): Remove
-        extraInfo.add(Pair.of("Full assembly orientation:", mSupportRead.fullAssemblyOrientation().name()));
+            SupplementaryReadData suppData = mSupportRead.supplementaryData();
+            extraInfo.add(Pair.of("Supplementary Data:", suppData == null ? "None" : suppData.toString()));
 
-        // TODO(mkcmkc): Remove
-        extraInfo.add(Pair.of("Indel offset:", String.valueOf(mIndelOffset)));
+            String mismatchesStr = mSupportRead.cachedRead().mismatches().toString();
+            extraInfo.add(Pair.of("Mismatches:", mismatchesStr));
 
-        // TODO(mkcmkc): Remove
-        extraInfo.add(Pair.of("Reverse complemented:", String.valueOf(mIsReverseComplemented)));
-
-        // TODO(mkcmkc): Remove
-        extraInfo.add(Pair.of("Ref view model index:", String.valueOf(mRefViewModelIndex)));
+            extraInfo.add(Pair.of("Full assembly orientation:", mSupportRead.fullAssemblyOrientation().name()));
+            extraInfo.add(Pair.of("Indel offset:", String.valueOf(mIndelOffset)));
+            extraInfo.add(Pair.of("Reverse complemented:", String.valueOf(mIsReverseComplemented)));
+            extraInfo.add(Pair.of("Ref view model index:", String.valueOf(mRefViewModelIndex)));
+        }
 
         CssBuilder baseDivStyle = CssBuilder.EMPTY.padding(CssSize.ZERO).margin(CssSize.ZERO);
 

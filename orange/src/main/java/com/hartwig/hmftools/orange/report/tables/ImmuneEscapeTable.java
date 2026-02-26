@@ -12,9 +12,8 @@ import org.jetbrains.annotations.NotNull;
 
 public final class ImmuneEscapeTable
 {
-    @NotNull
-    public static Table build(@NotNull String title, float width, @NotNull ImmuneEscapeRecord immuneEscape,
-            @NotNull ReportResources reportResources, boolean isTumorFail)
+    public static Table build(
+            final String title, float width, final ImmuneEscapeRecord immuneEscape, final ReportResources reportResources, boolean isTumorFail)
     {
         Cells cells = new Cells(reportResources);
         Table table = Tables.createContent(width,

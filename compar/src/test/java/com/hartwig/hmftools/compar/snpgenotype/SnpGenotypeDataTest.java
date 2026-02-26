@@ -51,6 +51,7 @@ public class SnpGenotypeDataTest extends ComparableItemTest<SnpGenotypeData, Snp
                 "Ref", b -> b.ref = alternateValueSource.Ref
         );
         reportabilityFieldToFalseReportabilityInitializer = Collections.emptyMap();
+        nameToNonPassInitializer = Collections.emptyMap();
     }
 
     @Test

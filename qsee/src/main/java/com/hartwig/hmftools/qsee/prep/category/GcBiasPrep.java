@@ -20,17 +20,17 @@ import com.hartwig.hmftools.qsee.feature.Feature;
 import com.hartwig.hmftools.qsee.common.MultiFieldStringBuilder;
 import com.hartwig.hmftools.qsee.feature.SourceTool;
 import com.hartwig.hmftools.qsee.prep.CategoryPrep;
-import com.hartwig.hmftools.qsee.prep.CommonPrepConfig;
+import com.hartwig.hmftools.qsee.prep.QseePrepConfig;
 
 public class GcBiasPrep implements CategoryPrep
 {
-    private final CommonPrepConfig mConfig;
+    private final QseePrepConfig mConfig;
 
     private static final SourceTool SOURCE_TOOL = SourceTool.COBALT;
 
     private static final String FIELD_GC_BUCKET = "GCBucket";
 
-    public GcBiasPrep(CommonPrepConfig config)
+    public GcBiasPrep(QseePrepConfig config)
     {
         mConfig = config;
     }
