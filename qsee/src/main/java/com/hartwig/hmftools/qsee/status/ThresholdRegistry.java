@@ -43,32 +43,15 @@ public final class ThresholdRegistry
         mFrozen = frozen;
     }
 
-    private ThresholdRegistry()
+    ThresholdRegistry()
     {
         mThresholds = new LinkedHashMap<>();
+        initialise();
+
         mFrozen = false;
     }
 
-    public static ThresholdRegistry createDefault()
-    {
-        return new ThresholdRegistry().setDefaults().freeze();
-    }
-
-    @VisibleForTesting
-    public static ThresholdRegistry createWithoutThresholds()
-    {
-        ThresholdRegistry thresholdRegistry = new ThresholdRegistry().setDefaults();
-
-        for(QcThreshold threshold : thresholdRegistry.mThresholds.values())
-        {
-            ThresholdKey key = threshold.key();
-            thresholdRegistry.mThresholds.put(key, new QcThreshold(key, threshold.operator(), NO_THRESHOLD));
-        }
-
-        return thresholdRegistry.freeze();
-    }
-
-    private ThresholdRegistry setDefaults()
+    private ThresholdRegistry initialise()
     {
         setCommonThreshold(SUMMARY_TABLE, MAPPED_PROPORTION.name(), FAIL, LESS_THAN, 0.95);
         setCommonThreshold(SUMMARY_TABLE, LOW_MAP_QUAL.name(), WARN, GREATER_THAN, 0.05);
@@ -97,9 +80,27 @@ public final class ThresholdRegistry
         return this;
     }
 
-    private ThresholdRegistry freeze()
+    ThresholdRegistry freeze()
     {
         return new ThresholdRegistry(Collections.unmodifiableMap(mThresholds), true);
+    }
+
+    public static ThresholdRegistry createDefault()
+    {
+        return new ThresholdRegistry().initialise().freeze();
+    }
+
+    @VisibleForTesting
+    public static ThresholdRegistry createWithoutThresholds()
+    {
+        ThresholdRegistry thresholdRegistry = new ThresholdRegistry().initialise();
+        for(QcThreshold threshold : thresholdRegistry.mThresholds.values())
+        {
+            ThresholdKey key = threshold.key();
+            thresholdRegistry.mThresholds.put(key, new QcThreshold(key, threshold.operator(), NO_THRESHOLD));
+        }
+
+        return thresholdRegistry.freeze();
     }
 
     private void setThreshold(
@@ -119,9 +120,12 @@ public final class ThresholdRegistry
         setThreshold(NORMAL, featureType, featureName, qcStatusType, operator, thresholdValue);
     }
 
-    public QcThreshold getThreshold(ThresholdKey key)
+    boolean containsKey(ThresholdKey key) { return mThresholds.containsKey(key); }
+    void overrideThreshold(ThresholdKey key, QcThreshold threshold) { mThresholds.put(key, threshold); }
+
+    QcThreshold getThreshold(ThresholdKey key, boolean requireFrozen)
     {
-        if(!mFrozen)
+        if(requireFrozen && !mFrozen)
         {
             throw new IllegalStateException("ThresholdRegistry must be frozen before thresholds can be accessed");
         }
@@ -132,6 +136,11 @@ public final class ThresholdRegistry
         }
 
         return mThresholds.get(key);
+    }
+
+    public QcThreshold getThreshold(ThresholdKey key)
+    {
+        return getThreshold(key, true);
     }
 
     public QcThreshold getThreshold(SampleType sampleType, FeatureType featureType, String featureName, QcStatusType qcStatusType)

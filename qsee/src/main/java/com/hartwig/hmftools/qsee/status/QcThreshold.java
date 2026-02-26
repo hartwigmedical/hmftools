@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.qsee.status;
 
+import com.hartwig.hmftools.qsee.common.SampleType;
+import com.hartwig.hmftools.qsee.feature.FeatureType;
+
 public class QcThreshold
 {
     private final ThresholdKey mKey;
@@ -9,6 +12,14 @@ public class QcThreshold
     public QcThreshold(ThresholdKey key, ComparisonOperator operator, double threshold)
     {
         mKey = key;
+        mOperator = operator;
+        mThreshold = threshold;
+    }
+
+    public QcThreshold(SampleType sampleType, FeatureType featureType, String featureName,
+            QcStatusType qcStatusType, ComparisonOperator operator, double threshold)
+    {
+        mKey = new ThresholdKey(sampleType, featureType, featureName, qcStatusType);
         mOperator = operator;
         mThreshold = threshold;
     }
@@ -35,7 +46,7 @@ public class QcThreshold
 
     public String toString()
     {
-        return String.format("%s threshold(%s%s)",
+        return String.format("%s threshold(%s %s)",
                 mKey,
                 mOperator != null ? mOperator.operatorString() : "",
                 mThreshold
@@ -45,4 +56,27 @@ public class QcThreshold
     public ThresholdKey key() { return mKey; }
     public ComparisonOperator operator() { return mOperator; }
     public double threshold() { return mThreshold; }
+
+    @Override
+    public boolean equals(Object o)
+    {
+        if(o == null || getClass() != o.getClass())
+        {
+            return false;
+        }
+
+        QcThreshold other = (QcThreshold) o;
+
+        boolean thresholdValuesEqual = mThreshold == other.mThreshold || Double.isNaN(mThreshold) && Double.isNaN(other.mThreshold);
+
+        return mKey.equals(other.mKey) &&
+                mOperator == other.mOperator &&
+                thresholdValuesEqual;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return mKey.hashCode();
+    }
 }
