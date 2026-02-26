@@ -87,8 +87,8 @@ LOGGER$debug("  log_level: %s", GLOBAL_LOG_LEVEL)
 ## =============================
 
 SAMPLE_TYPE <- list(
-   TUMOR = list(name = "TUMOR", human_readable_name = "Tumor", color = "#D1392C"),
-   NORMAL = list(name = "NORMAL", human_readable_name = "Normal", color = "#4A7DB4")
+   TUMOR = list(name = "TUMOR", display_name = "Tumor", color = "#D1392C"),
+   NORMAL = list(name = "NORMAL", display_name = "Normal", color = "#4A7DB4")
 )
 
 FEATURE_TYPE <- list(
@@ -108,21 +108,11 @@ FEATURE_TYPE <- list(
 PERCENTILE_PREFIX <- "Pct_"
 
 NAMED_PERCENTILES <- list(
-   LIM_LOWER = list(name = "PctLimLower", colname = paste0(PERCENTILE_PREFIX, 0)),
-   
    MIN   = list(name = "PctMin"  , colname = paste0(PERCENTILE_PREFIX,  5)),
    LOWER = list(name = "PctLower", colname = paste0(PERCENTILE_PREFIX, 25)),
    MID   = list(name = "PctMid"  , colname = paste0(PERCENTILE_PREFIX, 50)),
    UPPER = list(name = "PctUpper", colname = paste0(PERCENTILE_PREFIX, 75)),
-   MAX   = list(name = "PctMax"  , colname = paste0(PERCENTILE_PREFIX, 95)),
-   
-   LIM_UPPER = list(name = "PctLimUpper", colname = paste0(PERCENTILE_PREFIX, 100))
-)
-
-NUMBER_FORMATS <- list(
-   NUMBER = "NUMBER",
-   PERCENT = "PERCENT",
-   LOG = "LOG"
+   MAX   = list(name = "PctMax"  , colname = paste0(PERCENTILE_PREFIX, 95))
 )
 
 QC_STATUS <- list(
@@ -175,7 +165,7 @@ PLOTS <- list()
 ## String functions
 ## =============================
 
-KEY_VALUE_SEP <- "="
+KEY_VALUE_SEP <- ":"
 GROUP_SEP <- ";"
 
 df_to_strings <- function(df, key_value_sep = KEY_VALUE_SEP, group_sep = GROUP_SEP){
@@ -251,36 +241,36 @@ get_plot_data <- function(feature_type){
    if(!is.null(COHORT_DATA)){
       cohort_data <- COHORT_DATA %>% dplyr::filter(FeatureType == feature_type) %>% select(-SourceTool)
       
-      merged_data <- merge(
+      plot_data <- merge(
          sample_data, cohort_data, 
          by=c("SampleType", "FeatureType", "FeatureName"), 
          all.x = TRUE, ## Only select the features in the cohort data that are present in the sample
          sort = FALSE
       )
    } else {
-      merged_data <- sample_data
+      plot_data <- sample_data
       
       for(named_percentile in NAMED_PERCENTILES){
-         merged_data[[named_percentile$name]] <- NA
+         plot_data[[named_percentile$name]] <- NA
       }
    }
 
    ## Split multi-field strings
-   for(colname in colnames(merged_data)){
-      column <- merged_data[[colname]]
+   for(colname in colnames(plot_data)){
+      column <- plot_data[[colname]]
       
       if(!has_multiple_fields(column))
          next
       
       column_as_df <- strings_to_df(column)
       
-      merged_data[[colname]] <- NULL
-      merged_data <- cbind(merged_data, column_as_df)
+      plot_data[[colname]] <- NULL
+      plot_data <- cbind(plot_data, column_as_df)
    }
 
-   merged_data <- preordered_factors(merged_data)
+   plot_data <- preordered_factors(plot_data)
    
-   return(merged_data)
+   return(plot_data)
 }
 
 plot_missing_data <- function(plot_labels = labs()){
@@ -295,261 +285,6 @@ plot_missing_data <- function(plot_labels = labs()){
          axis.ticks = element_blank()
       )
 }
-
-## =============================
-## Box plots
-## =============================
-
-plot_pairwise_comparison <- function(
-   plot_data, x, y = "FeatureValue", plot_type = "boxplot", 
-   hlines = NULL, vlines = NULL
-){
-   
-   if(FALSE){
-      plot_type = "boxplot"
-      hlines = NULL
-      vlines = NULL
-      
-      x = "OriginalQualBin"
-      y = "FeatureValue"
-
-      plot_data <- get_plot_data(FEATURE_TYPE$BQR_BY_ORIG_QUAL)
-      gg_facet <- facet_grid("ReadType ~ StandardMutation")
-   }
-   
-   if(is.null(plot_data)){
-      LOGGER$error("Box plot failed - empty data frame")
-   }
-   
-   sample_type_colors <- sapply(SAMPLE_TYPE, `[[`, "color")
-   gg_position_dodge <- position_dodge(width = 0.5)
-   
-   geom_sample <- geom_blank()
-   geom_cohort <- geom_blank()
-   
-   if(plot_type == "boxplot"){
-      geom_sample <- geom_point(shape = 21, position = gg_position_dodge, size = 1.8)
-      
-      geom_cohort <- geom_boxplot(
-         aes(ymin = PctMin, lower = PctLower, middle = PctMid, upper = PctUpper, ymax = PctMax),
-         position = gg_position_dodge, width = 0.4,
-         stat = "identity", alpha = 0.3, size = 0.25, color = "grey70"
-      )
-   } else if(plot_type == "pointrange") {
-      geom_sample <- geom_point(
-         aes(color = SampleType), 
-         shape = 21, position = gg_position_dodge, size = 0.8
-      )
-      
-      geom_cohort <- geom_linerange(
-         aes(color = SampleType, ymin = PctMin, ymax = PctMax),
-         position = gg_position_dodge, linewidth = 0.3, linetype = "11"
-      )
-   } else {
-      LOGGER$error("`plot_type` must be 'boxplot' or 'pointrange'")
-   }
-   
-   ggplot(plot_data, aes(x = .data[[x]], y = .data[[y]], fill = SampleType)) + 
-      
-      { if(!is.null(hlines)) geom_hline(linewidth = 0.25, color = "grey70", yintercept = hlines) } +
-      { if(!is.null(vlines)) geom_vline(linewidth = 0.25, color = "grey70", xintercept = vlines) } +
-      
-      geom_cohort +
-      geom_sample +
-      
-      scale_fill_manual(values = sample_type_colors) +
-      scale_color_manual(values = sample_type_colors) +
-      
-      # gg_facet +
-      
-      theme(
-         panel.grid.minor = element_blank(),
-         panel.grid.major = element_blank(),
-         panel.spacing.x = unit(-0.5, "pt"),
-         axis.text.y.right = element_blank(),
-         axis.ticks.y.right = element_blank(),
-         legend.position = "none"
-      )
-}
-
-PLOTS[[FEATURE_TYPE$DUPLICATE_FREQ]] <- local({
-   
-   plot_data <- get_plot_data(FEATURE_TYPE$DUPLICATE_FREQ)
-   
-   plot_labels <- labs(title = "Duplicate frequency", x = "Duplicate read count", y = "Prop. of read groups")
-   
-   if(is.null(plot_data)){
-      return(plot_missing_data(plot_labels))
-   }
-   
-   plot_data <- plot_data %>% dplyr::mutate(ReadCount = reverse_levels(ReadCount))
-   
-   plot_pairwise_comparison(plot_data, x = "ReadCount") +
-      plot_labels +
-      coord_flip() +
-      theme(
-         panel.grid.major.x = element_line(color = "grey90", linewidth = 0.25),
-      )
-})
-
-PLOTS[[FEATURE_TYPE$DISCORDANT_FRAG_FREQ]] <- local({
-   
-   plot_data <- get_plot_data(FEATURE_TYPE$DISCORDANT_FRAG_FREQ)
-   
-   plot_labels <- labs(
-      title = "Discordant fragment frequency", 
-      x = "Discordant fragment type", 
-      y = "Prop. of reads"
-   )
-   
-   if(is.null(plot_data)){
-      return(plot_missing_data(plot_labels))
-   }
-   
-   plot_data <- plot_data %>% dplyr::mutate(DiscordantFragType = reverse_levels(DiscordantFragType))
-   
-   plot_pairwise_comparison(plot_data, x = "DiscordantFragType") + 
-      scale_y_continuous(
-         transform = "log10",
-         labels = function(x) format(x, scientific = FALSE, drop0trailing = TRUE)
-      ) +
-      plot_labels +
-      coord_flip() +
-      theme(
-         panel.grid.major.x = element_line(color = "grey90", linewidth = 0.25),
-      )
-})
-
-PLOTS[[FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD]] <- local({
-   
-   plot_data <- get_plot_data(FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD)
-   
-   MIN_MISSED_VARIANT_LIKELIHOOD <- 0.01
-   TOP_N_GENES <- 20
-   
-   plot_labels <- labs(
-      title = sprintf("Top %s genes with potential missed variants", TOP_N_GENES),
-      x = "Gene", 
-      y = "Missed variant likelihood"
-   )
-   
-   if(is.null(plot_data)){
-      return(plot_missing_data(plot_labels))
-   }
-   
-   sample_genes_of_interest <- plot_data %>% 
-      dplyr::filter(
-         FeatureValue >= MIN_MISSED_VARIANT_LIKELIHOOD | 
-         PctMid >= MIN_MISSED_VARIANT_LIKELIHOOD
-      ) %>%
-      dplyr::arrange(-FeatureValue) %>%
-      dplyr::pull(Gene) %>% 
-      unique() %>% 
-      head(TOP_N_GENES)
-   
-   plot_data <- plot_data %>% 
-      dplyr::filter(Gene %in% sample_genes_of_interest) %>% 
-      dplyr::mutate(Gene = factor(Gene, sample_genes_of_interest)) %>%
-      dplyr::mutate(Gene = reverse_levels(Gene))
-   
-   plot_pairwise_comparison(plot_data, x = "Gene") + 
-      plot_labels +
-      coord_flip()
-})
-
-PLOTS[[FEATURE_TYPE$BQR_BY_ORIG_QUAL]] <- local({
-   
-   plot_data <- get_plot_data(FEATURE_TYPE$BQR_BY_ORIG_QUAL)
-   
-   plot_labels <- labs(
-      title = "BQR by original base quality", 
-      x = "Original base quality", 
-      y = "Phred score adjustment"
-   )
-   
-   if(is.null(plot_data)){
-      return(plot_missing_data(plot_labels))
-   }
-   
-   plot_pairwise_comparison(plot_data, x = "OriginalQualBin", hlines = 0) +
-      facet_grid("ReadType ~ StandardMutation") +
-      scale_y_continuous(
-         labels = function(x){ ifelse(x > 0, paste0("+",x), x) },
-         sec.axis = dup_axis(name = "Consensus type")
-      ) +
-      plot_labels + 
-      theme(
-         axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1, size = 7),
-      )
-})
-
-PLOTS[[FEATURE_TYPE$BQR_BY_SNV96_CONTEXT]] <- local({
-   
-   plot_data <- get_plot_data(FEATURE_TYPE$BQR_BY_SNV96_CONTEXT)
-   
-   plot_labels <- labs(title = "BQR by SNV96 context", x = "Mutation context", y = "Phred score adjustment")
-   
-   if(nrow(plot_data) > 0){
-      plot_labels$title <- paste0(plot_labels$title, ", base quality: ", plot_data$OriginalQualBin[1])
-   }
-   
-   plot_pairwise_comparison(
-      plot_data, x = "StandardTrinucContext", plot_type = "pointrange", 
-      hlines = 0, vlines = c(4, 8, 12) + 0.5
-   ) +
-      facet_grid("ReadType ~ StandardMutation", scales = "free_x") +
-      scale_y_continuous(
-         labels = function(x){ ifelse(x > 0, paste0("+",x), x) },
-         sec.axis = dup_axis(name = "Consensus type")
-      ) +
-      plot_labels +
-      theme(
-         axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, size = 6),
-      )
-})
-
-PLOTS[[FEATURE_TYPE$MS_INDEL_ERROR_RATES]] <- local({
-   
-   plot_data <- get_plot_data(FEATURE_TYPE$MS_INDEL_ERROR_RATES)
-   
-   plot_labels <- labs(title = "Microsatellite indel error rates", x = "Repeat units", y = "Phred score") 
-   
-   plot_pairwise_comparison(plot_data, x = "RefNumUnits", plot_type = "pointrange") +
-      facet_grid("ConsensusType ~ RepeatUnitType") +
-      scale_x_discrete(breaks = function(x) ifelse(as.numeric(x) %% 3 == 0, x, "") ) +
-      scale_y_continuous(limits = c(0, NA), sec.axis = dup_axis(name = "Consensus type")) +
-      plot_labels +
-      theme(
-         panel.grid.major = element_line(color = "grey90", linewidth = 0.25)
-      )
-})
-
-PLOTS[[FEATURE_TYPE$MS_INDEL_ERROR_BIAS]] <- local({
-   
-   plot_data <- get_plot_data(FEATURE_TYPE$MS_INDEL_ERROR_BIAS)
-   
-   plot_labels <- labs(
-      title = "Microsatellite indel error bias",
-      x = "Repeat units",
-      y = expression(atop("Phred score diff.",atop("more del. errors <-> more ins. errors")))
-   )
-   
-   if(is.null(plot_data)){
-      return(plot_missing_data(plot_labels))
-   }
-   
-   plot_pairwise_comparison(plot_data, x = "RefNumUnits", plot_type = "pointrange") +
-      facet_grid("ConsensusType ~ RepeatUnitType") +
-      scale_x_discrete(breaks = function(x) ifelse(as.numeric(x) %% 3 == 0, x, "") ) +
-      scale_y_continuous(
-         labels = function(x){ ifelse(x > 0, paste0("+",x), x) },
-         sec.axis = dup_axis(name = "Consensus type")
-      ) +
-      plot_labels +
-      theme(
-         panel.grid.major = element_line(color = "grey90", linewidth = 0.25)
-      )
-})
 
 ## =============================
 ## Line / PDF
@@ -567,7 +302,7 @@ plot_distribution <- function(plot_data, x, invert_normal = FALSE, mark_sample_p
    }
    
    plot_data[[x]] <- as.numeric(plot_data[[x]])
-
+   
    gg_scale_y_continuous <- geom_blank()
    sample_type_count <- plot_data$SampleType %>% levels() %>% length()
    if(invert_normal && sample_type_count > 1){
@@ -586,7 +321,8 @@ plot_distribution <- function(plot_data, x, invert_normal = FALSE, mark_sample_p
       gg_scale_y_continuous <- scale_y_continuous(labels = function(x) abs(x))
    }
    
-   geom_sample_peak <- geom_blank()
+   gg_geom_line <- geom_line(aes(color = SampleType))
+   gg_geom_segment <- geom_blank()
    if(mark_sample_peak){
       
       peak_data <- plot_data %>% 
@@ -600,25 +336,34 @@ plot_distribution <- function(plot_data, x, invert_normal = FALSE, mark_sample_p
             Height = FeatureValue[which.max(abs(FeatureValue))]
          )
       
-      geom_sample_peak <- geom_segment(
+      gg_geom_segment <- geom_segment(
          data = peak_data, 
          mapping = aes(x = XPos, xend = XPos, y = 0, yend = Height, color = SampleType),
          show.legend = FALSE
       )
    }
    
+   gg_geom_ribbon <- geom_ribbon(aes(ymin = PctMin, ymax = PctMax, fill = SampleType), alpha = 0.1)
+   
    sample_type_colors <- sapply(SAMPLE_TYPE, `[[`, "color")
+   gg_scale_fill_manual <- scale_fill_manual(values = sample_type_colors)
+   gg_scale_color_manual <- scale_color_manual(values = sample_type_colors)
+   
+   if(is.na(COHORT_PERCENTILES_FILE)){
+      gg_geom_ribbon <- geom_blank()
+      gg_scale_fill_manual <- geom_blank()
+   }
    
    ggplot(plot_data, aes(x = .data[[x]], y = FeatureValue, group = SampleType)) +
       
       { if(!is.null(hlines)) geom_hline(linewidth = 0.25, color = "grey70", yintercept = hlines) } +
       
-      geom_ribbon(aes(ymin = PctMin, ymax = PctMax, fill = SampleType), alpha = 0.1) +
-      geom_line(aes(color = SampleType)) +
-      geom_sample_peak +
+      gg_geom_ribbon +
+      gg_geom_line +
+      gg_geom_segment +
       
-      scale_color_manual(values = sample_type_colors) +
-      scale_fill_manual(values = sample_type_colors) +
+      gg_scale_color_manual +
+      gg_scale_fill_manual +
       
       gg_scale_y_continuous +
       theme(legend.position = "none")
@@ -667,98 +412,449 @@ PLOTS[[FEATURE_TYPE$GC_BIAS]] <- local({
 })
 
 ## =============================
+## Box plots
+## =============================
+PAIRWISE_PLOT_TYPE <- list(
+   BOX = "box",
+   POINT_RANGE = "point_range",
+   BAR = "bar"
+)
+
+plot_pairwise_comparison <- function(
+   plot_data, x, y = "FeatureValue", plot_type = PAIRWISE_PLOT_TYPE$BOX, hlines = NULL, vlines = NULL, box_width_scale = 1, bar_baseline = 0
+){
+   
+   if(FALSE){
+      y = "FeatureValue"
+      plot_type = PAIRWISE_PLOT_TYPE$BOX
+      hlines = NULL
+      vlines = NULL
+      box_width_scale = 1
+      bar_baseline = 0
+      
+      x = "ReadCount"; plot_data = get_plot_data(FEATURE_TYPE$DUPLICATE_FREQ)
+      x = "OriginalQualBin"; plot_data = get_plot_data(FEATURE_TYPE$BQR_BY_ORIG_QUAL); gg_facet = facet_grid("ReadType ~ StandardMutation")
+   }
+   
+   valid_plot_types <- unlist(PAIRWISE_PLOT_TYPE, use.names = FALSE)
+   if(!(plot_type %in% valid_plot_types)){
+      LOGGER$error("`plot_type` must be one of: %s", paste(valid_plot_types, collapse = ", "))
+   }
+   
+   gg_geom_point <- geom_blank()
+   gg_geom_boxplot <- geom_blank()
+   gg_geom_linerange <- geom_blank()
+   gg_geom_bar <- geom_blank()
+   gg_position_dodge <- position_dodge(width = 0.5, preserve = "single")
+   
+   sample_type_colors <- sapply(SAMPLE_TYPE, `[[`, "color")
+   gg_scale_fill_manual <- scale_fill_manual(values = sample_type_colors, drop = FALSE)
+   gg_scale_color_manual <- scale_color_manual(values = sample_type_colors, drop = FALSE)
+   
+   if(plot_type == PAIRWISE_PLOT_TYPE$BOX){
+      gg_geom_point <- geom_point(shape = 21, position = gg_position_dodge, size = 1.8)
+      
+      gg_geom_boxplot <- geom_boxplot(
+         aes(ymin = PctMin, lower = PctLower, middle = PctMid, upper = PctUpper, ymax = PctMax),
+         position = gg_position_dodge, width = 0.4 * box_width_scale,
+         stat = "identity", alpha = 0.3, size = 0.25, color = "grey70"
+      )
+      
+      gg_scale_color_manual <- geom_blank()
+   }
+   
+   if(plot_type == PAIRWISE_PLOT_TYPE$POINT_RANGE){ ## Used when boxplot would be too cluttered
+      
+      gg_geom_point <- geom_point(aes(color = SampleType), shape = 21, position = gg_position_dodge, size = 0.8)
+      
+      gg_geom_linerange <- geom_linerange(
+         aes(color = SampleType, ymin = PctMin, ymax = PctMax),
+         position = gg_position_dodge, linewidth = 0.3, linetype = "11"
+      )
+   }
+   
+   if(plot_type == PAIRWISE_PLOT_TYPE$BAR){
+      
+      if(!is.na(COHORT_PERCENTILES_FILE)){
+         LOGGER$error("plot_type '%s' not allowed when cohort data is available", PAIRWISE_PLOT_TYPE$BAR)
+      }
+      
+      ## Use geom_crossbar instead of geom_bar here so that bars are not inverted when values are <1 when in log scale
+      gg_geom_bar <- geom_crossbar(
+         aes(ymin = bar_baseline, ymax = .data[[y]]), position = gg_position_dodge,
+         color = "black", middle.color = NA, linewidth = 0.3, width = 0.5*box_width_scale
+      )
+      
+      gg_scale_color_manual <- geom_blank()
+   }
+   
+   if(is.na(COHORT_PERCENTILES_FILE)){
+      gg_geom_boxplot <- geom_blank()
+      gg_geom_linerange <- geom_blank()
+   }
+   
+   ggplot(plot_data, aes(x = .data[[x]], y = .data[[y]], fill = SampleType)) + 
+      
+      { if(!is.null(hlines)) geom_hline(linewidth = 0.25, color = "grey70", yintercept = hlines) } +
+      { if(!is.null(vlines)) geom_vline(linewidth = 0.25, color = "grey70", xintercept = vlines) } +
+      
+      gg_geom_boxplot + 
+      gg_geom_linerange +
+      gg_geom_bar +
+      gg_geom_point +
+      
+      gg_scale_fill_manual +
+      gg_scale_color_manual +
+      
+      # gg_facet +
+      
+      theme(
+         panel.grid.minor = element_blank(),
+         panel.grid.major = element_blank(),
+         panel.spacing.x = unit(-0.5, "pt"),
+         axis.text.y.right = element_blank(),
+         axis.ticks.y.right = element_blank(),
+         legend.position = "none"
+      )
+}
+
+box_or_bar_plot <- function(){
+   if(is.na(COHORT_PERCENTILES_FILE)){ 
+      PAIRWISE_PLOT_TYPE$BAR
+   } else { 
+      PAIRWISE_PLOT_TYPE$BOX
+   }
+}
+
+PLOTS[[FEATURE_TYPE$DUPLICATE_FREQ]] <- local({
+   
+   plot_data <- get_plot_data(FEATURE_TYPE$DUPLICATE_FREQ)
+   
+   plot_labels <- labs(title = "Duplicate frequency", x = "Duplicate read count", y = "Prop. of read groups")
+   
+   if(is.null(plot_data)){
+      return(plot_missing_data(plot_labels))
+   }
+   
+   plot_data <- plot_data %>% dplyr::mutate(ReadCount = reverse_levels(ReadCount))
+   
+   plot_pairwise_comparison(plot_data, x = "ReadCount", plot_type = box_or_bar_plot()) +
+      plot_labels +
+      coord_flip() +
+      theme(
+         panel.grid.major.x = element_line(color = "grey90", linewidth = 0.25),
+      )
+})
+
+PLOTS[[FEATURE_TYPE$DISCORDANT_FRAG_FREQ]] <- local({
+   
+   plot_data <- get_plot_data(FEATURE_TYPE$DISCORDANT_FRAG_FREQ)
+   
+   plot_labels <- labs(title = "Discordant fragment frequency", x = "Discordant fragment type", y = "Prop. of reads")
+   
+   if(is.null(plot_data)){
+      return(plot_missing_data(plot_labels))
+   }
+   
+   plot_data <- plot_data %>% dplyr::mutate(DiscordantFragType = reverse_levels(DiscordantFragType))
+   
+   plot_pairwise_comparison(plot_data, x = "DisplayName", plot_type = box_or_bar_plot()) + 
+      scale_y_continuous(transform = "log10", labels = function(x) format(x, scientific = FALSE, drop0trailing = TRUE, trim = TRUE)) +
+      plot_labels +
+      coord_flip() +
+      theme(
+         panel.grid.major.x = element_line(color = "grey90", linewidth = 0.25),
+      )
+})
+
+PLOTS[[FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD]] <- local({
+   
+   plot_data <- get_plot_data(FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD)
+   
+   MIN_MISSED_VARIANT_LIKELIHOOD <- 0.01
+   TOP_N_GENES <- 20
+   
+   plot_labels <- labs(
+      title = sprintf("Genes (top %s) with potential missed variants (P>%s)", TOP_N_GENES, MIN_MISSED_VARIANT_LIKELIHOOD),
+      x = "Gene", y = "Missed variant likelihood"
+   )
+   
+   if(is.null(plot_data)){
+      return(plot_missing_data(plot_labels))
+   }
+   
+   sample_genes_of_interest <- plot_data %>% 
+      dplyr::filter(
+         FeatureValue >= MIN_MISSED_VARIANT_LIKELIHOOD | 
+         PctMid >= MIN_MISSED_VARIANT_LIKELIHOOD
+      ) %>%
+      dplyr::arrange(-FeatureValue) %>%
+      dplyr::pull(Gene) %>% 
+      unique() %>% 
+      head(TOP_N_GENES)
+   
+   plot_data <- plot_data %>% 
+      dplyr::filter(Gene %in% sample_genes_of_interest) %>% 
+      dplyr::mutate(Gene = factor(Gene, sample_genes_of_interest)) %>%
+      dplyr::mutate(
+         Gene = reverse_levels(Gene),
+         SampleType = reverse_levels(SampleType)
+      )
+   
+   plot_pairwise_comparison(plot_data, x = "Gene", plot_type = box_or_bar_plot()) + 
+      plot_labels +
+      coord_flip(ylim = c(0, NA)) +
+      theme(
+         panel.grid.major.x = element_line(color = "grey90", linewidth = 0.25),
+         plot.title = element_text(hjust = 0.5)
+      )
+})
+
+PLOTS[[FEATURE_TYPE$BQR_BY_ORIG_QUAL]] <- local({
+   
+   plot_data <- get_plot_data(FEATURE_TYPE$BQR_BY_ORIG_QUAL)
+   
+   plot_labels <- labs(title = "BQR by original base quality", x = "Original base quality", y = "Phred score adjustment")
+   
+   if(is.null(plot_data)){
+      return(plot_missing_data(plot_labels))
+   }
+   
+   plot_pairwise_comparison(plot_data, x = "OriginalQualBin", hlines = 0) +
+      facet_grid("ReadType ~ StandardMutation") +
+      scale_y_continuous(
+         labels = function(x){ ifelse(x > 0, paste0("+",x), x) },
+         sec.axis = dup_axis(name = "Consensus type")
+      ) +
+      plot_labels + 
+      theme(
+         axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1, size = 7),
+      )
+})
+
+PLOTS[[FEATURE_TYPE$BQR_BY_SNV96_CONTEXT]] <- local({
+   
+   plot_data <- get_plot_data(FEATURE_TYPE$BQR_BY_SNV96_CONTEXT)
+   
+   plot_labels <- labs(title = "BQR by SNV96 context", x = "Mutation context", y = "Phred score adjustment")
+   
+   if(nrow(plot_data) > 0){
+      plot_labels$title <- paste0(plot_labels$title, ", base quality: ", plot_data$OriginalQualBin[1])
+   }
+   
+   plot_pairwise_comparison(
+      plot_data, x = "StandardTrinucContext", plot_type = PAIRWISE_PLOT_TYPE$POINT_RANGE, 
+      hlines = 0, vlines = c(4, 8, 12) + 0.5
+   ) +
+      facet_grid("ReadType ~ StandardMutation", scales = "free_x") +
+      scale_y_continuous(
+         labels = function(x){ ifelse(x > 0, paste0("+",x), x) },
+         sec.axis = dup_axis(name = "Consensus type")
+      ) +
+      plot_labels +
+      theme(
+         axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, size = 6),
+      )
+})
+
+PLOTS[[FEATURE_TYPE$MS_INDEL_ERROR_RATES]] <- local({
+   
+   plot_data <- get_plot_data(FEATURE_TYPE$MS_INDEL_ERROR_RATES)
+   
+   plot_labels <- labs(title = "Microsatellite indel error rates", x = "Repeat units", y = "Phred score") 
+   
+   plot_pairwise_comparison(plot_data, x = "RefNumUnits", plot_type = PAIRWISE_PLOT_TYPE$POINT_RANGE) +
+      facet_grid("ConsensusType ~ RepeatUnitType") +
+      scale_x_discrete(breaks = function(x) ifelse(as.numeric(x) %% 3 == 0, x, "") ) +
+      scale_y_continuous(limits = c(0, NA), sec.axis = dup_axis(name = "Consensus type")) +
+      plot_labels +
+      theme(
+         panel.grid.major = element_line(color = "grey90", linewidth = 0.25)
+      )
+})
+
+PLOTS[[FEATURE_TYPE$MS_INDEL_ERROR_BIAS]] <- local({
+   
+   plot_data <- get_plot_data(FEATURE_TYPE$MS_INDEL_ERROR_BIAS)
+   
+   plot_labels <- labs(
+      title = "Microsatellite indel error bias",
+      x = "Repeat units",
+      y = expression(atop("Phred score diff.",atop("more del. errors <-> more ins. errors")))
+   )
+   
+   if(is.null(plot_data)){
+      return(plot_missing_data(plot_labels))
+   }
+   
+   plot_pairwise_comparison(plot_data, x = "RefNumUnits", plot_type = PAIRWISE_PLOT_TYPE$POINT_RANGE) +
+      facet_grid("ConsensusType ~ RepeatUnitType") +
+      scale_x_discrete(breaks = function(x) ifelse(as.numeric(x) %% 3 == 0, x, "") ) +
+      scale_y_continuous(
+         labels = function(x){ ifelse(x > 0, paste0("+",x), x) },
+         sec.axis = dup_axis(name = "Consensus type")
+      ) +
+      plot_labels +
+      theme(
+         panel.grid.major = element_line(color = "grey90", linewidth = 0.25)
+      )
+})
+
+## =============================
 ## Summary table
 ## =============================
 
+FEATURE_GROUP <- list(
+   MAPPING = "Mapping",
+   COPY_NUMBER = "Copy number",
+   CONTAMINATION = "Contamination",
+   MUTATIONAL_BURDEN = "Mutational burden"
+)
+
+NUMBER_FORMAT <- list(
+   NUMBER = "NUMBER",
+   PERCENT = "PERCENT",
+   LOG = "LOG"
+)
+
 SUMMARY_TABLE_DATA <- get_plot_data(FEATURE_TYPE$SUMMARY_TABLE)
 
-plot_sub_table <- function(feature_group, number_format = "NUMBER", show_title = TRUE, show_sample_type_label = TRUE){
+get_sub_table_data <- function(feature_group, number_format){
+
+   plot_data <- SUMMARY_TABLE_DATA %>%
+      dplyr::filter(FeatureGroup == feature_group & NumberFormat == number_format) %>%
+      dplyr::mutate(
+         DisplayName = reverse_levels(DisplayName),
+         SampleType = reverse_levels(SampleType)
+      )
+
+   attr(plot_data, "number_format") <- number_format
+   attr(plot_data, "feature_group") <- feature_group
+
+   return(plot_data)
+}
+
+get_outer_axis_limits <- function(plot_data, outer_limits = c(NA, NA)){
+
+   if(FALSE){
+      plot_data = get_sub_table_data(FEATURE_GROUP$MUTATIONAL_BURDEN, NUMBER_FORMAT$LOG)
+      minimal_limits = c(0, NA)
+   }
+
+   #' Setting outer limits ensures that the y axis limits are wide enough to show pretty breaks.
+   #' outer limits :    A=====B
+   #' range in data:  C===D
+   #'
+   #' chosen: limits: C and B
+   #'
+   #' For example, the min/max TMB (based on  sample and/or cohort data) could be 0.5 to 1, but we
+   #' know TMB can go form 0 to 100s/1000s. We would therefore so the minimal limits to
+   #' e.g. c(0, 1000).
+   #'
+   #' Providing NA limit values lets ggplot decide the limits based on the min/max of the data
+   #' 
+   minimal_lower <- outer_limits[1]
+   minimal_upper <- outer_limits[2]
+   
+   limit_lower <- NA
+   if(!is.na(minimal_lower)){
+      values_lower <- c(minimal_lower, plot_data$FeatureValue, plot_data$PctMin)
+      limit_lower <- if(all(is.na(values_lower))) NA else min(values_lower, na.rm = TRUE)
+   }
+
+   limit_upper <- NA
+   if(!is.na(minimal_upper)){
+      values_upper <- c(minimal_upper, plot_data$FeatureValue, plot_data$PctMax)
+      limit_upper <- if(all(is.na(values_upper))) NA else max(values_upper, na.rm = TRUE)
+   }
+
+   c(limit_lower, limit_upper)
+}
+
+get_div_lines <- function(n_table_rows, direction = "horizontal"){
+   
+   positions <- seq(1.5, n_table_rows)
+   color <- if(n_table_rows > 1) "grey70" else "white"
+   linetype <- "dotted"
+   
+   if(direction == "horizontal"){
+      geom_hline(yintercept = positions, color = color, linetype = linetype)
+   } else if(direction == "vertical"){
+      geom_vline(xintercept = positions, color = color, linetype = linetype)
+   } else {
+      LOGGER$error("`direction` must be 'horizontal' or 'vertical'")
+   }
+}
+
+get_qc_status_enums <- function(qc_status_strings){
+   #qc_status_strings = SUMMARY_TABLE_DATA$QcStatus
+   qc_status_strings <- as.character(qc_status_strings)
+   
+   qc_status_enums <- dplyr::case_when(
+      startsWith(qc_status_strings, QC_STATUS$FAIL$name) ~ QC_STATUS$FAIL$name,
+      startsWith(qc_status_strings, QC_STATUS$WARN$name) ~ QC_STATUS$WARN$name,
+      .default = QC_STATUS$PASS$name
+   )
+   
+   factor(qc_status_enums, sapply(QC_STATUS, `[[`, "name"))
+}
+
+plot_sub_table <- function(plot_data, show_title = FALSE, show_sample_type_label = FALSE, axis_limits = waiver()){
 
    if(FALSE){
       show_title = TRUE
       show_sample_type_label = TRUE
-      feature_group = "Copy number"; number_format = "LOG"
-      feature_group = "Contamination"; number_format = "PERCENT"
-      feature_group = "Mutational burden"; number_format = "LOG"
-   }
-
-   ## Prep data =============================
-   plot_data <- SUMMARY_TABLE_DATA %>%
-      dplyr::filter(FeatureGroup == feature_group & NumberFormat == number_format) %>%
-      dplyr::mutate(
-         PlotLabel = reverse_levels(PlotLabel),
-         SampleType = reverse_levels(SampleType)
-      )
-   
-   n_rows <- plot_data$PlotLabel %>% unique() %>% length()
-   
-   if(n_rows == 0)
-      return(NULL)
-
-   ## Plot config =============================
-   axis_trans <- "identity"
-   axis_breaks <- waiver()
-   
-   axis_limits <- c(
-      min(c(0, plot_data$PctLimLower)), 
-      max(plot_data$PctLimUpper)
-   )
-   
-   axis_fmt_func <- function(x) return(x)
-   value_fmt_func <- function(x) ifelse(x < 1, signif(x, 2), round(x, 1))
-
-   if(number_format == "PERCENT"){
-      value_fmt_func <- scales::label_percent(accuracy = 0.1)
-      axis_fmt_func <- scales::label_percent()
-      axis_limits <- c(0, 1)
-   } else if(number_format == "LOG"){
-      axis_trans <- "log1p"
-      axis_breaks <- 10^(0:10)
-   }
-
-   gg_div_lines <- function(direction = "horizontal"){
+      axis_limits = c(NA, NA)
       
-      positions <- seq(1.5, n_rows)
-      color <- if(n_rows > 1) "grey70" else "white"
-      linetype <- "dotted"
+      plot_data = get_sub_table_data(FEATURE_GROUP$MAPPING, NUMBER_FORMAT$PERCENT)
+      axis_limits = c(0,1)
       
-      if(direction == "horizontal"){
-         geom_hline(yintercept = positions, color = color, linetype = linetype)
-      } else if(direction == "vertical"){
-         geom_vline(xintercept = positions, color = color, linetype = linetype)
-      } else {
-         LOGGER$error("`direction` must be 'horizontal' or 'vertical'")
-      }
+      plot_data = get_sub_table_data(FEATURE_GROUP$MAPPING, NUMBER_FORMAT$NUMBER)
+      axis_limits = get_outer_axis_limits(plot_data, c(0, 100))
+      
+      plot_data = get_sub_table_data(FEATURE_GROUP$COPY_NUMBER, NUMBER_FORMAT$LOG)
+      axis_limits = get_outer_axis_limits(plot_data, c(NA, 1000))
+      
+      plot_data = get_sub_table_data(FEATURE_GROUP$MUTATIONAL_BURDEN, NUMBER_FORMAT$LOG)
+      axis_limits = get_outer_axis_limits(plot_data, c(NA, 1000))
    }
-   
+
+   feature_group <- attr(plot_data, "feature_group")
+   number_format <- attr(plot_data, "number_format")
+   n_rows <- plot_data$DisplayName %>% unique() %>% length()
+
+   LOGGER$debug("  featureGroup(%s) numberFormat(%s)", feature_group, number_format)
+      
    ## Feature values =============================
+   if(number_format == NUMBER_FORMAT$PERCENT){
+      value_fmt_func <- scales::label_percent(accuracy = 0.1)
+   } else {
+      value_fmt_func <- function(x) ifelse(x < 1, signif(x, 2), round(x, 1))
+   }
+   
+   ## Prep data
    plot_data <- plot_data %>% dplyr::mutate(
-      ValueLabel = value_fmt_func(FeatureValue),
-      
-      QcStatus = as.character(QcStatus),
-      QcStatusEnum = case_when(
-         startsWith(QcStatus, QC_STATUS$FAIL$name) ~ QC_STATUS$FAIL$name,
-         startsWith(QcStatus, QC_STATUS$WARN$name) ~ QC_STATUS$WARN$name,
-         .default = QC_STATUS$PASS$name
-      ),
+      QcStatusEnum = get_qc_status_enums(QcStatus),
       QcStatusEnum = factor(QcStatusEnum, sapply(QC_STATUS, `[[`, "name"))
    )
    
+   ## Aesthetics
    qc_status_colors <- sapply(QC_STATUS, `[[`, "color")
    sample_type_colors <- sapply(SAMPLE_TYPE, `[[`, "color")
-   sample_type_names <- sapply(SAMPLE_TYPE, `[[`, "human_readable_name")
+   sample_type_names <- sapply(SAMPLE_TYPE, `[[`, "display_name")
    
-   subplot_values <- ggplot(plot_data, aes(y = PlotLabel, x = SampleType, group = SampleType, color = SampleType)) +
+   ## Plot
+   subplot_values <- ggplot(plot_data, aes(y = DisplayName, x = SampleType, group = SampleType, color = SampleType)) +
       
       geom_label(
-         aes(label = ValueLabel, fill = QcStatusEnum), 
+         aes(label = value_fmt_func(FeatureValue), fill = QcStatusEnum), 
          size = 3, label.padding = unit(4, "pt"),
          border.colour = ifelse(plot_data$QcStatusEnum == QC_STATUS$PASS$name, "#FFFFFF00", "black")
       ) +
       scale_color_manual(values = sample_type_colors) +
       scale_fill_manual(values = qc_status_colors) +
       
-      gg_div_lines("horizontal") +
+      get_div_lines(n_rows, "horizontal") +
       
       scale_x_discrete(position = "bottom", limits = rev, drop = FALSE, labels = sample_type_names) +
       guides(color = "none") +
@@ -775,13 +871,24 @@ plot_sub_table <- function(feature_group, number_format = "NUMBER", show_title =
       )
 
    ## Sample vs cohort =============================
-   subplot_boxplot <- plot_pairwise_comparison(plot_data, x = "PlotLabel", y = "FeatureValue") +
-      gg_div_lines("vertical") + 
+   box_width_scale <- length(unique(plot_data$SampleType)) / length(levels(plot_data$SampleType))
+   plot_type <- if(is.na(COHORT_PERCENTILES_FILE)) PAIRWISE_PLOT_TYPE$BAR else PAIRWISE_PLOT_TYPE$BOX
+   
+   subplot_pairwise_comparison <- 
+      plot_pairwise_comparison(plot_data, x = "DisplayName", y = "FeatureValue", box_width_scale = box_width_scale, plot_type = plot_type) +
+      get_div_lines(n_rows, "vertical") + 
       scale_y_continuous(
-         trans = axis_trans,
-         breaks = axis_breaks,
+         
          limits = axis_limits,
-         label = axis_fmt_func
+         transform = if(number_format == NUMBER_FORMAT$LOG) "log10" else "identity",
+         
+         label = if(number_format == NUMBER_FORMAT$PERCENT){ 
+            scales::label_percent()
+         } else if(number_format == NUMBER_FORMAT$LOG) {
+            function(x) format(x, scientific = FALSE, drop0trailing = TRUE, trim = TRUE)
+         } else {
+            waiver()
+         }
       ) +
       coord_flip() +
       theme(
@@ -795,7 +902,7 @@ plot_sub_table <- function(feature_group, number_format = "NUMBER", show_title =
       )
 
    ## Combine plots =============================
-   subplots_combined <- patchwork::wrap_plots(subplot_values, subplot_boxplot, nrow = 1)
+   subplots_combined <- patchwork::wrap_plots(subplot_values, subplot_pairwise_comparison, nrow = 1)
    
    subplots_combined$height <- n_rows
    
@@ -806,42 +913,39 @@ PLOTS[[FEATURE_TYPE$SUMMARY_TABLE]] <- local({
    
    plots <- list()
    
-   plot_index <- 0
+   ## Mapping ================================
+   plots[[1]] <- 
+      get_sub_table_data(FEATURE_GROUP$MAPPING, NUMBER_FORMAT$NUMBER) %>% 
+      plot_sub_table(show_title = TRUE, axis_limits = get_outer_axis_limits(., c(0, 100)))
    
-   for(feature_group in SUMMARY_TABLE_DATA$FeatureGroup %>% unique()){
-      
-      is_first_group_plot <- TRUE
-      
-      for(number_format in NUMBER_FORMATS){
-         subplot <- plot_sub_table(feature_group = feature_group, number_format = number_format)
-         
-         if(is.null(subplot))
-            next
-         
-         LOGGER$debug("  featureGroup(%s) numberFormat(%s)", feature_group, number_format)
-         
-         plot_index <- plot_index + 1
-         
-         plots[[plot_index]] <- plot_sub_table(
-            feature_group = feature_group, 
-            number_format = number_format,
-            show_title = is_first_group_plot,
-            show_sample_type_label = FALSE
-         )
-         
-         is_first_group_plot <- FALSE
-      }
-   }
+   plots[[2]] <- 
+      get_sub_table_data(FEATURE_GROUP$MAPPING, NUMBER_FORMAT$PERCENT) %>% 
+      plot_sub_table(axis_limits = c(0, 1))
    
-   ## Show sample type only in the last plot
-   plots[[plot_index]] <- plot_sub_table(
-      feature_group = feature_group, 
-      number_format = number_format,
-      show_title = TRUE,
-      show_sample_type_label = TRUE
-   )
+   ## Copy number ================================
+   plots[[3]] <- 
+      get_sub_table_data(FEATURE_GROUP$COPY_NUMBER, NUMBER_FORMAT$NUMBER) %>% 
+      plot_sub_table(show_title = TRUE, axis_limits = c(0, NA))
+   
+   plots[[4]] <- 
+      get_sub_table_data(FEATURE_GROUP$COPY_NUMBER, NUMBER_FORMAT$PERCENT) %>% 
+      plot_sub_table(axis_limits = c(0, 1))
+   
+   plots[[5]] <- 
+      get_sub_table_data(FEATURE_GROUP$COPY_NUMBER, NUMBER_FORMAT$LOG) %>% 
+      plot_sub_table(axis_limits = get_outer_axis_limits(., c(NA, 1000)))
+   
+   ## Contamination ================================
+   plots[[6]] <- get_sub_table_data(FEATURE_GROUP$CONTAMINATION, NUMBER_FORMAT$PERCENT) %>% 
+      plot_sub_table(show_title = TRUE, axis_limits = c(0, 1))
+   
+   ## Mutational burden ================================
+   plots[[7]] <- 
+      get_sub_table_data(FEATURE_GROUP$MUTATIONAL_BURDEN, NUMBER_FORMAT$LOG) %>% 
+      plot_sub_table(show_title = TRUE, show_sample_type_label = TRUE, axis_limits = get_outer_axis_limits(., c(NA, 1000)))
    
    heights <- sapply(plots, function(p){ p$height })
+   
    plots_combined <- patchwork::wrap_plots(plots, ncol = 1, heights = heights)
    plots_combined
 })
@@ -868,10 +972,10 @@ PLOTS[[PLOT_NAME_LEGEND]] <- local({
    
    plot_data_sample_type <- data.frame(
       SampleType = c(
-         paste(SAMPLE_TYPE$TUMOR$human_readable_name, "sample"),
-         paste(SAMPLE_TYPE$TUMOR$human_readable_name, "cohort"),
-         paste(SAMPLE_TYPE$NORMAL$human_readable_name, "sample"),
-         paste(SAMPLE_TYPE$NORMAL$human_readable_name, "cohort")
+         paste(SAMPLE_TYPE$TUMOR$display_name, "sample"),
+         paste(SAMPLE_TYPE$TUMOR$display_name, "cohort"),
+         paste(SAMPLE_TYPE$NORMAL$display_name, "sample"),
+         paste(SAMPLE_TYPE$NORMAL$display_name, "cohort")
       ),
       
       Color = c(
@@ -940,30 +1044,47 @@ PLOTS[[PLOT_NAME_LEGEND]] <- local({
 
 REPORT_TITLE <- local({
    
-   get_qc_string <- function(sample_type){
-      
+   qc_status_enums <- get_qc_status_enums(SUMMARY_TABLE_DATA$QcStatus)
+   
+   form_qc_string <- function(qc_status_level, sample_type){
       df <- SUMMARY_TABLE_DATA %>% filter(
          SampleType == sample_type$name & 
-         nchar(as.character(QcStatus)) != 0
+         qc_status_enums == qc_status_level$name
       )
       
       if(nrow(df) == 0)
          return(character())
       
-      qc_string <- sprintf("[%s: %s]", df$PlotLabel, df$QcStatus) %>% paste(collapse = ", ")
-      qc_string <- paste0(sample_type$human_readable_name, " QC status: ", qc_string)
-      return(qc_string)
+      paste0(
+         qc_status_level$name, ": ",
+         sprintf("%s (%s)", df$DisplayName, df$QcThreshold) %>% paste(collapse = ", ")
+      )
+   }
+   
+   form_sample_type_qc_string <- function(sample_type){
+      qc_strings <- c(
+         form_qc_string(QC_STATUS$FAIL, sample_type),
+         form_qc_string(QC_STATUS$WARN, sample_type)
+      )
+      
+      if(length(qc_strings) == 0){
+         return(character())
+      }
+      
+      paste(c(sample_type$display_name, qc_strings), collapse = " - ")
    }
    
    qc_strings <- c(
-      get_qc_string(SAMPLE_TYPE$TUMOR), 
-      get_qc_string(SAMPLE_TYPE$NORMAL)
+      form_sample_type_qc_string(SAMPLE_TYPE$TUMOR),
+      form_sample_type_qc_string(SAMPLE_TYPE$NORMAL)
    )
-   
    subtitle <- if(length(qc_strings) > 0) paste(qc_strings, collapse = "\n") else waiver()
    
+   most_severe_qc_status <- qc_status_enums %>% sort() %>% head(1)
+   title <- paste0(TUMOR_ID, ": ", most_severe_qc_status)
+   
    patchwork::plot_annotation(
-      title = TUMOR_ID,
+      title = title,
       subtitle = subtitle,
       theme = theme(plot.title = element_text(size = 16, face = "bold"))
    )

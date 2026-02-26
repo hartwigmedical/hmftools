@@ -58,7 +58,7 @@ public class DuplicateFreqPrep implements CategoryPrep
             }
         }
 
-        String aboveMaxDupName = MultiFieldStringBuilder.formSingleField(FIELD_READ_COUNT, String.format("≥%s",MAX_DUP_READS));
+        String aboveMaxDupName = MultiFieldStringBuilder.formSingleField(FIELD_READ_COUNT, String.format(">=%s",MAX_DUP_READS));
         FeatureKey aboveMaxDupKey = new FeatureKey(aboveMaxDupName, FeatureType.DUPLICATE_FREQ, SOURCE_TOOL);
         features.add(new Feature(aboveMaxDupKey, (double) aboveMaxDupReadsCount / totalCount));
 

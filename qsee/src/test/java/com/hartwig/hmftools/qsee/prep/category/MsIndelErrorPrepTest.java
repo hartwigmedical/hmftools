@@ -70,7 +70,7 @@ public class MsIndelErrorPrepTest
                 createJitterTableRow(1, "A/T repeat", ConsensusType.NONE, 6, 6, 12),
                 createJitterTableRow(1, "C/G repeat", ConsensusType.NONE, 8, 8, 16),
                 createJitterTableRow(1, "2bp repeat", ConsensusType.NONE, 10, 10, 20),
-                createJitterTableRow(1, "≥3bp repeat", ConsensusType.NONE, 18, 18, 36)
+                createJitterTableRow(1, ">=3bp repeat", ConsensusType.NONE, 18, 18, 36)
         );
 
         List<JitterTableRow> actualOutput = MsIndelErrorPrep.aggregateByRepeatType(table);

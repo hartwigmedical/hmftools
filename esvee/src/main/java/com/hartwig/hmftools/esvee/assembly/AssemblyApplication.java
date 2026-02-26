@@ -447,7 +447,7 @@ public class AssemblyApplication
             // TODO(mkcmkc): This try/catch is temporary to catch assemblies where the vis fails
             try
             {
-                AssemblyVisualiser visualiser = new AssemblyVisualiser(mConfig, assembly);
+                AssemblyVisualiser visualiser = AssemblyVisualiser.create(mConfig, assembly);
                 if(visualiser != null)
                     visualiser.writeVisFile();
             }

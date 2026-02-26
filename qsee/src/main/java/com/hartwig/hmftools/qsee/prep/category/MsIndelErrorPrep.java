@@ -15,7 +15,6 @@ import com.hartwig.hmftools.common.redux.JitterCountsTableFile;
 import com.hartwig.hmftools.common.redux.JitterTableRow;
 
 import com.hartwig.hmftools.qsee.feature.Feature;
-import com.hartwig.hmftools.qsee.feature.FeatureKey;
 import com.hartwig.hmftools.qsee.feature.FeatureType;
 import com.hartwig.hmftools.qsee.common.MultiFieldStringBuilder;
 import com.hartwig.hmftools.qsee.feature.SourceTool;
@@ -120,7 +119,7 @@ public class MsIndelErrorPrep implements CategoryPrep
             return "2bp repeat";
 
         else if(repeatUnit.matches("^\\d+bp repeat"))
-            return "≥3bp repeat";
+            return ">=3bp repeat";
 
         else
             throw new IllegalArgumentException("Unexpected repeat unit: " + repeatUnit);
@@ -217,14 +216,20 @@ public class MsIndelErrorPrep implements CategoryPrep
             );
 
             double indelPhredScore = calcPhredScore(indelReadCount, totalReadCount);
-            FeatureKey indelPhredKey = new FeatureKey(featureName, FeatureType.MS_INDEL_ERROR_RATES, SOURCE_TOOL);
-            indelPhredScores.add(new Feature(indelPhredKey, indelPhredScore));
+            if(!Double.isNaN(indelPhredScore))
+            {
+                Feature feature = new Feature(featureName, indelPhredScore, FeatureType.MS_INDEL_ERROR_RATES, SOURCE_TOOL);
+                indelPhredScores.add(feature);
+            }
 
             double insertionPhredScore = calcPhredScore(insertionReadCount, totalReadCount);
             double deletionPhredScore = calcPhredScore(deletionReadCount, totalReadCount);
             double indelPhredScoreDiff = deletionPhredScore - insertionPhredScore;
-            FeatureKey indelPhredScoreDiffKey = new FeatureKey(featureName, FeatureType.MS_INDEL_ERROR_BIAS, SOURCE_TOOL);
-            indelPhredScoreDiffs.add(new Feature(indelPhredScoreDiffKey, indelPhredScoreDiff));
+            if(!Double.isNaN(indelPhredScoreDiff))
+            {
+                Feature feature = new Feature(featureName, indelPhredScoreDiff, FeatureType.MS_INDEL_ERROR_BIAS, SOURCE_TOOL);
+                indelPhredScoreDiffs.add(feature);
+            }
         }
 
         List<Feature> features = new ArrayList<>();

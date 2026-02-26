@@ -21,12 +21,12 @@ public enum SummaryTableFeature
 {
     MEAN_COVERAGE(SourceTool.BAM_METRICS, SummaryTableGroup.MAPPING, "Mean coverage", NUMBER),
     MAPPED_PROPORTION(SourceTool.BAM_METRICS, SummaryTableGroup.MAPPING, "Mapped proportion", PERCENT),
-    COVERAGE_ABOVE_10(SourceTool.BAM_METRICS, SummaryTableGroup.MAPPING, "Coverage > 10", PERCENT),
-    COVERAGE_ABOVE_20(SourceTool.BAM_METRICS, SummaryTableGroup.MAPPING, "Coverage > 20", PERCENT),
-    COVERAGE_ABOVE_30(SourceTool.BAM_METRICS, SummaryTableGroup.MAPPING, "Coverage > 30", PERCENT),
-    COVERAGE_ABOVE_60(SourceTool.BAM_METRICS, SummaryTableGroup.MAPPING, "Coverage > 60", PERCENT),
-    COVERAGE_ABOVE_100(SourceTool.BAM_METRICS, SummaryTableGroup.MAPPING, "Coverage > 100", PERCENT),
-    COVERAGE_ABOVE_250(SourceTool.BAM_METRICS, SummaryTableGroup.MAPPING, "Coverage > 250", PERCENT),
+    COVERAGE_ABOVE_10(SourceTool.BAM_METRICS, SummaryTableGroup.MAPPING, "Coverage >10x", PERCENT),
+    COVERAGE_ABOVE_20(SourceTool.BAM_METRICS, SummaryTableGroup.MAPPING, "Coverage >20x", PERCENT),
+    COVERAGE_ABOVE_30(SourceTool.BAM_METRICS, SummaryTableGroup.MAPPING, "Coverage >30x", PERCENT),
+    COVERAGE_ABOVE_60(SourceTool.BAM_METRICS, SummaryTableGroup.MAPPING, "Coverage >60x", PERCENT),
+    COVERAGE_ABOVE_100(SourceTool.BAM_METRICS, SummaryTableGroup.MAPPING, "Coverage >100x", PERCENT),
+    COVERAGE_ABOVE_250(SourceTool.BAM_METRICS, SummaryTableGroup.MAPPING, "Coverage >250x", PERCENT),
     LOW_BASE_QUAL(SourceTool.BAM_METRICS, SummaryTableGroup.MAPPING, "Low quality bases", PERCENT),
     LOW_MAP_QUAL(SourceTool.BAM_METRICS, SummaryTableGroup.MAPPING, "Low map quality reads", PERCENT),
     DUPLICATE_READS(SourceTool.BAM_METRICS, SummaryTableGroup.MAPPING, "Duplicate reads", PERCENT),
@@ -47,14 +47,14 @@ public enum SummaryTableFeature
 
     private final SourceTool mSourceTool;
     private final SummaryTableGroup mGroup;
-    private final String mPlotLabel;
+    private final String mDisplayName;
     private final NumberFormat mNumberFormat;
 
-    SummaryTableFeature(SourceTool sourceTool, SummaryTableGroup group, String plotLabel, NumberFormat numberFormat)
+    SummaryTableFeature(SourceTool sourceTool, SummaryTableGroup group, String displayName, NumberFormat numberFormat)
     {
         mSourceTool = sourceTool;
         mGroup = group;
-        mPlotLabel = plotLabel;
+        mDisplayName = displayName;
         mNumberFormat = numberFormat;
     }
 
@@ -65,7 +65,7 @@ public enum SummaryTableFeature
 
     public SourceTool sourceTool() { return mSourceTool; }
     public SummaryTableGroup group() { return mGroup; }
-    public String plotLabel() { return mPlotLabel; }
+    public String displayName() { return mDisplayName; }
     public NumberFormat numberFormat() { return mNumberFormat; }
 
     public static void putFeature(EnumMap<SummaryTableFeature, Feature> featuresMap, SummaryTableFeature summaryTableFeature,
@@ -74,8 +74,8 @@ public enum SummaryTableFeature
         FeatureKey key = new FeatureKey(summaryTableFeature.toString(), FeatureType.SUMMARY_TABLE, summaryTableFeature.sourceTool());
 
         PlotMetadata metadata = PlotMetadata.builder()
-                .featureGroup(summaryTableFeature.group().humanReadableName())
-                .plotLabel(summaryTableFeature.plotLabel())
+                .featureGroup(summaryTableFeature.group().displayName())
+                .displayName(summaryTableFeature.displayName())
                 .numberFormat(summaryTableFeature.numberFormat())
                 .qcStatus(qcStatus)
                 .build();

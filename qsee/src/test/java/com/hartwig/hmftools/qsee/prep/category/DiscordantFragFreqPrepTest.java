@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.qsee.prep.category;
 
+import static com.hartwig.hmftools.qsee.prep.category.DiscordantFragFreqPrep.FIELD_FRAG_TYPE;
+
 import static org.junit.Assert.assertEquals;
 
 import java.util.EnumMap;
@@ -59,7 +61,7 @@ public class DiscordantFragFreqPrepTest
 
     private static Feature createExpectedFeature(DiscordantFragGroup discordantFragGroup)
     {
-        String featureName = "DiscordantFragType=" + discordantFragGroup.getName();
+        String featureName = FIELD_FRAG_TYPE + ":" + discordantFragGroup.toString();
         double featureValue = TYPES_PER_GROUP.get(discordantFragGroup) * DUMMY_BASE_PROPORTION;
 
         return new Feature(featureName, featureValue, FeatureType.DISCORDANT_FRAG_FREQ, SourceTool.ESVEE, null);

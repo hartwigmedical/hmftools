@@ -7,19 +7,20 @@ import com.hartwig.hmftools.qsee.status.QcStatusType;
 public class PlotMetadata
 {
     private final String mFeatureGroup;
-    private final String mPlotLabel;
+    private final String mDisplayName;
     private final NumberFormat mNumberFormat;
     private final QcStatus mQcStatus;
 
     public static final String FIELD_FEATURE_GROUP = "FeatureGroup";
-    public static final String FIELD_PLOT_LABEL = "PlotLabel";
+    public static final String FIELD_DISPLAY_NAME = "DisplayName";
     public static final String FIELD_NUMBER_FORMAT = "NumberFormat";
     public static final String FIELD_QC_STATUS = "QcStatus";
+    public static final String FIELD_QC_THRESHOLD = "QcThreshold";
 
-    public PlotMetadata(String featureGroup, String plotLabel, NumberFormat numberFormat, QcStatus qcStatus)
+    public PlotMetadata(String featureGroup, String displayName, NumberFormat numberFormat, QcStatus qcStatus)
     {
         mFeatureGroup = featureGroup;
-        mPlotLabel = plotLabel;
+        mDisplayName = displayName;
         mNumberFormat = numberFormat;
         mQcStatus = qcStatus;
     }
@@ -29,7 +30,7 @@ public class PlotMetadata
     public static PlotMetadata createEmpty(){ return builder().build(); }
 
     public String featureGroup() { return mFeatureGroup; }
-    public String plotLabel() { return mPlotLabel; }
+    public String displayName() { return mDisplayName; }
     public NumberFormat numberFormat() { return mNumberFormat; }
     public QcStatus qcStatus() { return mQcStatus; }
 
@@ -38,17 +39,27 @@ public class PlotMetadata
         MultiFieldStringBuilder builder = new MultiFieldStringBuilder();
 
         builder.add(FIELD_FEATURE_GROUP, mFeatureGroup);
-        builder.add(FIELD_PLOT_LABEL, mPlotLabel);
-        builder.add(FIELD_NUMBER_FORMAT, mNumberFormat.toString());
-        builder.add(FIELD_QC_STATUS, getFormattedQcStatus());
+        builder.add(FIELD_DISPLAY_NAME, mDisplayName);
+        builder.add(FIELD_NUMBER_FORMAT, getNumberFormatString());
+        builder.add(FIELD_QC_STATUS, getQcStatusString());
+        builder.add(FIELD_QC_THRESHOLD, getQcThresholdString());
 
         return builder.toString();
     }
 
-    private String getFormattedQcStatus()
+    private String getNumberFormatString()
     {
-        QcStatusType qcStatusType = mQcStatus.type();
-        if(qcStatusType == QcStatusType.NONE)
+        return mNumberFormat == null ? "" : mNumberFormat.toString();
+    }
+
+    private String getQcStatusString()
+    {
+        return mQcStatus.type() == QcStatusType.NONE ? "" : mQcStatus.type().toString();
+    }
+
+    private String getQcThresholdString()
+    {
+        if(mQcStatus.type() == QcStatusType.NONE)
             return "";
 
         double thresholdValue = mQcStatus.threshold();
@@ -66,14 +77,14 @@ public class PlotMetadata
         if(isPercent)
             thresholdString = thresholdString + "%";
 
-        return qcStatusType + " " + mQcStatus.operator().operatorString() + thresholdString;
+        return mQcStatus.operator().operatorString() + thresholdString;
     }
 
     public static class Builder
     {
         private String mFeatureGroup = "";
-        private String mPlotLabel = "";
-        private NumberFormat mNumberFormat = NumberFormat.NUMBER;
+        private String mDisplayName = "";
+        private NumberFormat mNumberFormat = null;
         private QcStatus mQcStatus = QcStatus.createEmpty();
 
         public Builder featureGroup(String featureGroup)
@@ -82,9 +93,9 @@ public class PlotMetadata
             return this;
         }
 
-        public Builder plotLabel(String plotLabel)
+        public Builder displayName(String displayName)
         {
-            mPlotLabel = plotLabel;
+            mDisplayName = displayName;
             return this;
         }
 
@@ -102,7 +113,7 @@ public class PlotMetadata
 
         public PlotMetadata build()
         {
-            return new PlotMetadata(mFeatureGroup, mPlotLabel, mNumberFormat, mQcStatus);
+            return new PlotMetadata(mFeatureGroup, mDisplayName, mNumberFormat, mQcStatus);
         }
     }
 }
