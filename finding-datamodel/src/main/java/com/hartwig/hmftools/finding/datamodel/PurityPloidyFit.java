@@ -9,6 +9,7 @@ import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
 import io.soabase.recordbuilder.core.RecordBuilder;
 import jakarta.validation.constraints.NotNull;
 
+@SuppressWarnings("unused")
 @RecordBuilder
 public record PurityPloidyFit(
         @NotNull Qc qc,
