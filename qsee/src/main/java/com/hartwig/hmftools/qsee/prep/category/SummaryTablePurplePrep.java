@@ -31,8 +31,8 @@ import com.hartwig.hmftools.qsee.feature.SourceTool;
 import com.hartwig.hmftools.qsee.prep.CategoryPrep;
 import com.hartwig.hmftools.qsee.prep.QseePrepConfig;
 import com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature;
+import com.hartwig.hmftools.qsee.status.PurpleQCStatusConverter;
 import com.hartwig.hmftools.qsee.status.QcStatus;
-import com.hartwig.hmftools.qsee.status.QcStatusType;
 import com.hartwig.hmftools.qsee.status.ThresholdRegistry;
 
 import org.jetbrains.annotations.NotNull;
@@ -61,53 +61,20 @@ public class SummaryTablePurplePrep implements CategoryPrep
     {
         EnumMap<PurpleQCStatus, QcStatus> qcStatuses = new EnumMap<>(PurpleQCStatus.class);
 
+        PurpleQCStatusConverter converter = new PurpleQCStatusConverter(thresholds);
+
         for(PurpleQCStatus purpleQcStatus : PurpleQCStatus.values())
         {
             boolean purpleQcStatusExists = purityContext.qc().status().contains(purpleQcStatus);
 
             QcStatus qcStatus = purpleQcStatusExists
-                    ? convertQcStatus(purpleQcStatus, thresholds)
+                    ? converter.toQseeQcStatus(purpleQcStatus)
                     : QcStatus.createEmpty();
 
             qcStatuses.put(purpleQcStatus, qcStatus);
         }
 
         return qcStatuses;
-    }
-
-    private static QcStatus convertQcStatus(PurpleQCStatus purpleQCStatus, ThresholdRegistry thresholds)
-    {
-        return switch(purpleQCStatus)
-        {
-            case PASS -> QcStatus.createEmpty();
-
-            case WARN_DELETED_GENES ->
-                    thresholds.getThreshold(SampleType.TUMOR, SummaryTableFeature.DELETED_GENES, QcStatusType.WARN).getQcStatus();
-
-            case WARN_HIGH_COPY_NUMBER_NOISE ->
-                    thresholds.getThreshold(SampleType.TUMOR, SummaryTableFeature.UNSUPPORTED_CN_SEGMENTS, QcStatusType.WARN).getQcStatus();
-
-            case WARN_LOW_PURITY ->
-                    thresholds.getThreshold(SampleType.TUMOR, SummaryTableFeature.PURITY, QcStatusType.WARN).getQcStatus();
-
-            case WARN_TINC ->
-                    thresholds.getThreshold(SampleType.TUMOR, SummaryTableFeature.TINC, QcStatusType.WARN).getQcStatus();
-
-            case FAIL_TINC ->
-                    thresholds.getThreshold(SampleType.TUMOR, SummaryTableFeature.TINC, QcStatusType.FAIL).getQcStatus();
-
-            case FAIL_CONTAMINATION ->
-                    thresholds.getThreshold(SampleType.TUMOR, SummaryTableFeature.CONTAMINATION, QcStatusType.FAIL).getQcStatus();
-
-            case FAIL_NO_TUMOR ->
-                    thresholds.getThreshold(SampleType.TUMOR, SummaryTableFeature.TINC, QcStatusType.FAIL).getQcStatus();
-
-            case WARN_GENDER_MISMATCH ->
-                    thresholds.getThreshold(SampleType.TUMOR, SummaryTableFeature.TINC, QcStatusType.WARN).getQcStatus();
-
-            default ->
-                    throw new IllegalArgumentException("QC threshold not defined for PurpleQCStatus(" + purpleQCStatus + ")");
-        };
     }
 
     private static QcStatus getTincQcStatus(EnumMap<PurpleQCStatus, QcStatus> qcStatuses)

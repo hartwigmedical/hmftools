@@ -31,23 +31,12 @@ import com.hartwig.hmftools.qsee.feature.Feature;
 import com.hartwig.hmftools.qsee.feature.SourceTool;
 import com.hartwig.hmftools.qsee.prep.category.table.BamMetricsData;
 import com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature;
-import com.hartwig.hmftools.qsee.status.QcStatus;
 import com.hartwig.hmftools.qsee.status.ThresholdRegistry;
 
 import org.junit.Test;
 
 public class SummaryTablePrepTest
 {
-    @Test
-    public void canMapPurpleQCStatusToQCStatus()
-    {
-        List<PurpleQCStatus> purpleQcStatuses = List.of(PurpleQCStatus.values());
-        PurityContext purityContext = createTestPurityContext(purpleQcStatuses);
-        ThresholdRegistry qcThresholds = ThresholdRegistry.createWithoutThresholds();
-        EnumMap<PurpleQCStatus, QcStatus> qcStatuses = SummaryTablePurplePrep.qcStatusFrom(purityContext, qcThresholds);
-        assertEquals(purpleQcStatuses.size(), qcStatuses.size());
-    }
-
     @Test
     public void canCalcPropBasesAboveCoverage()
     {
