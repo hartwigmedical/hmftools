@@ -3,6 +3,7 @@ package com.hartwig.hmftools.finding;
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.finding.ReportedStatus;
 
+@SuppressWarnings("unused")
 final class DriverUtil
 {
     static ReportedStatus reportedStatus(boolean isDriverGene, boolean isReportable, DriverInterpretation driverInterpretation)

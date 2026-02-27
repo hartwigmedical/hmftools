@@ -9,6 +9,7 @@ import org.jspecify.annotations.Nullable;
 import io.soabase.recordbuilder.core.RecordBuilder;
 import jakarta.validation.constraints.NotNull;
 
+@SuppressWarnings("unused")
 @RecordBuilder
 public record Disruption(
         @NotNull DriverFields driver,
