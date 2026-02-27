@@ -10,8 +10,8 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.utils.RExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.qsee.prep.QseePrep;
 import com.hartwig.hmftools.qsee.prep.QseePrepConfig;
+import com.hartwig.hmftools.qsee.prep.VisDataFile;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -49,7 +49,7 @@ public class QseePlot
         this(
                 config.TumorIds,
                 config.ReferenceIds,
-                QseePrep.formOutputFilename(config),
+                VisDataFile.generateFilename(config),
                 config.CohortPercentilesFile,
                 config.OutputDir,
                 config.OutputId

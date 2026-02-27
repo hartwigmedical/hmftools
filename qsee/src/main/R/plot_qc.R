@@ -31,7 +31,7 @@ if(FALSE){
     COHORT_PERCENTILES_FILE <- "cohort.qsee.percentiles.tsv.gz"
 
     output_dir <- ""
-    SAMPLE_FEATURES_FILE <- sprintf("%s/%s.qsee.vis.features.tsv.gz", output_dir, TUMOR_ID)
+    SAMPLE_FEATURES_FILE <- sprintf("%s/%s.qsee.vis.data.tsv.gz", output_dir, TUMOR_ID)
     OUTPUT_PATH <- sprintf("%s/%s.qsee.vis.report.pdf", output_dir, TUMOR_ID)
 
     GLOBAL_LOG_LEVEL <- "DEBUG"
