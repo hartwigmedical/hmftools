@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBuffe
 import static com.hartwig.hmftools.qsee.common.QseeConstants.QC_LOGGER;
 import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_FEATURE_NAME;
 import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_FEATURE_TYPE;
+import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_FEATURE_VALUE;
 import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_SAMPLE_ID;
 import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_SAMPLE_TYPE;
 import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_SOURCE_TOOL;
@@ -25,7 +26,6 @@ import org.jetbrains.annotations.Nullable;
 
 public class VisDataFile
 {
-    private static final String COL_FEATURE_VALUE = "FeatureValue";
     private static final String COL_PLOT_METADATA = "PlotMetadata";
 
     public static String generateFilename(String basePath, String sampleId, @Nullable String outputId)

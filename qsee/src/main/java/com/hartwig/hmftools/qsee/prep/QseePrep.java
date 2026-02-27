@@ -12,6 +12,7 @@ import com.hartwig.hmftools.qsee.cohort.CohortPercentiles;
 import com.hartwig.hmftools.qsee.cohort.CohortPercentilesFile;
 import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.Feature;
+import com.hartwig.hmftools.qsee.status.QcSummaryFile;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -84,8 +85,11 @@ public class QseePrep
 
         List<VisSampleData> visDataEntries = getVisSampleData(multiSampleFeatures, cohortPercentiles);
 
-        String outputFile = VisDataFile.generateFilename(mConfig);
-        VisDataFile.write(outputFile, visDataEntries);
+        String visDataFile = VisDataFile.generateFilename(mConfig);
+        VisDataFile.write(visDataFile, visDataEntries);
+
+        String qcSummaryFile = QcSummaryFile.generateFilename(mConfig);
+        QcSummaryFile.write(qcSummaryFile, visDataEntries);
     }
 
     public static void main(String[] args)

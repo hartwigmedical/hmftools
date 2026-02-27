@@ -13,6 +13,7 @@ public class QseeFileCommon
     public static final String COL_FEATURE_TYPE = "FeatureType";
     public static final String COL_FEATURE_NAME = "FeatureName";
     public static final String COL_SOURCE_TOOL = "SourceTool";
+    public static final String COL_FEATURE_VALUE = "FeatureValue";
 
     public static final DecimalFormat DECIMAL_FORMAT = QseeFileCommon.createDecimalFormat();
 
