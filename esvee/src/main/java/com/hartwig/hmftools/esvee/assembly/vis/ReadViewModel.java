@@ -259,13 +259,13 @@ public final class ReadViewModel
     private record HandleDelResult(BaseSeqViewModel readViewModel, int indelOffset, List<CigarElement> cigarEls) {}
 
     @Nullable
-    private static HandleDelResult handleDel(final PairedSegmentViewModel refViewModel, final SupportRead read, int indelOffset,
+    private static HandleDelResult handleHomology(final PairedSegmentViewModel refViewModel, final SupportRead read, int indelOffset,
             final List<CigarElement> cigarEls, final byte[] readBases, final byte[] readBaseQuals, boolean readNegativeStrandFlag)
     {
-        int delLength = refViewModel.viewModels().get(0).leftDelLength() + refViewModel.viewModels()
+        int homologyLength = refViewModel.viewModels().get(0).leftHomologyLength() + refViewModel.viewModels()
                 .get(refViewModel.viewModels().size() - 1)
-                .leftDelLength();
-        if(delLength <= 0)
+                .leftHomologyLength();
+        if(homologyLength <= 0)
             return null;
 
         List<CigarOperator> cigarOps = Lists.newArrayList();
@@ -280,7 +280,7 @@ public final class ReadViewModel
         int opIdx = 0;
         List<CigarOperator> newCigarOps = Lists.newArrayList();
         int baseIdx = readStartIdx;
-        if(baseIdx <= lastIdxBeforeBreak + delLength)
+        if(baseIdx <= lastIdxBeforeBreak + homologyLength)
         {
             while(baseIdx <= lastIdxBeforeBreak && opIdx < cigarOps.size())
             {
@@ -295,7 +295,7 @@ public final class ReadViewModel
         if(baseIdx <= lastIdxBeforeBreak)
             return null;
 
-        int readDelLength = delLength - (baseIdx - lastIdxBeforeBreak - 1);
+        int readDelLength = homologyLength - (baseIdx - lastIdxBeforeBreak - 1);
         for(int i = 0; i < readDelLength; i++)
             newCigarOps.add(D);
 
@@ -398,7 +398,7 @@ public final class ReadViewModel
             }
         }
 
-        HandleDelResult handleDelResult = handleDel(
+        HandleDelResult handleDelResult = handleHomology(
                 refViewModel, read, indelOffset, cigarEls, readBases, readBases, readNegativeStrandFlag);
         BaseSeqViewModel readViewModel;
         if(handleDelResult == null)
