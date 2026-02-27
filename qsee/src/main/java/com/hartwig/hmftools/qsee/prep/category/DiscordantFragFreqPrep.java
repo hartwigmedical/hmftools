@@ -16,7 +16,7 @@ import com.hartwig.hmftools.qsee.feature.Feature;
 import com.hartwig.hmftools.qsee.feature.FeatureKey;
 import com.hartwig.hmftools.qsee.feature.FeatureType;
 import com.hartwig.hmftools.qsee.common.MultiFieldStringBuilder;
-import com.hartwig.hmftools.qsee.feature.PlotMetadata;
+import com.hartwig.hmftools.qsee.feature.FeatureMetadata;
 import com.hartwig.hmftools.qsee.feature.SourceTool;
 import com.hartwig.hmftools.qsee.prep.CategoryPrep;
 import com.hartwig.hmftools.qsee.prep.QseePrepConfig;
@@ -96,7 +96,7 @@ public class DiscordantFragFreqPrep implements CategoryPrep
         {
             String featureName = MultiFieldStringBuilder.formSingleField(FIELD_FRAG_TYPE, group.toString());
 
-            PlotMetadata metadata = PlotMetadata.builder().displayName(group.getDisplayName()).build();
+            FeatureMetadata metadata = FeatureMetadata.builder().displayName(group.getDisplayName()).build();
             FeatureKey key = new FeatureKey(featureName, FeatureType.DISCORDANT_FRAG_FREQ, SOURCE_TOOL);
 
             Feature feature = new Feature(key, discPropPerGroup.get(group), metadata);

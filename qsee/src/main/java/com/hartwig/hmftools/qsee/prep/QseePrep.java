@@ -118,7 +118,7 @@ public class QseePrep
                 String featureValue = QseeFileCommon.DECIMAL_FORMAT.format(feature.value());
                 line.add(featureValue);
 
-                line.add(feature.plotMetadata().displayString());
+                line.add(feature.metadata().displayString());
 
                 writer.write(line.toString());
                 writer.newLine();

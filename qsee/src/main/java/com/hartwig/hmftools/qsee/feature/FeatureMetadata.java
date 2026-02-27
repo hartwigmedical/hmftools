@@ -3,7 +3,7 @@ package com.hartwig.hmftools.qsee.feature;
 import com.hartwig.hmftools.qsee.common.MultiFieldStringBuilder;
 import com.hartwig.hmftools.qsee.status.QcStatus;
 
-public class PlotMetadata
+public class FeatureMetadata
 {
     private final String mFeatureGroup;
     private final String mDisplayName;
@@ -16,7 +16,7 @@ public class PlotMetadata
     public static final String FIELD_QC_STATUS = "QcStatus";
     public static final String FIELD_QC_THRESHOLD = "QcThreshold";
 
-    public PlotMetadata(String featureGroup, String displayName, NumberFormat numberFormat, QcStatus qcStatus)
+    public FeatureMetadata(String featureGroup, String displayName, NumberFormat numberFormat, QcStatus qcStatus)
     {
         mFeatureGroup = featureGroup;
         mDisplayName = displayName;
@@ -26,7 +26,7 @@ public class PlotMetadata
 
     public static Builder builder() { return new Builder(); }
 
-    public static PlotMetadata createEmpty(){ return builder().build(); }
+    public static FeatureMetadata createEmpty(){ return builder().build(); }
 
     public String featureGroup() { return mFeatureGroup; }
     public String displayName() { return mDisplayName; }
@@ -80,9 +80,9 @@ public class PlotMetadata
             return this;
         }
 
-        public PlotMetadata build()
+        public FeatureMetadata build()
         {
-            return new PlotMetadata(mFeatureGroup, mDisplayName, mNumberFormat, mQcStatus);
+            return new FeatureMetadata(mFeatureGroup, mDisplayName, mNumberFormat, mQcStatus);
         }
     }
 }

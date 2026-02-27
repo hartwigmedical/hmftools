@@ -12,7 +12,7 @@ import com.hartwig.hmftools.qsee.feature.Feature;
 import com.hartwig.hmftools.qsee.feature.FeatureKey;
 import com.hartwig.hmftools.qsee.feature.FeatureType;
 import com.hartwig.hmftools.qsee.feature.NumberFormat;
-import com.hartwig.hmftools.qsee.feature.PlotMetadata;
+import com.hartwig.hmftools.qsee.feature.FeatureMetadata;
 import com.hartwig.hmftools.qsee.feature.SourceTool;
 import com.hartwig.hmftools.qsee.status.QcStatus;
 import com.hartwig.hmftools.qsee.status.QcThreshold;
@@ -73,7 +73,7 @@ public enum SummaryTableFeature
     {
         FeatureKey key = new FeatureKey(summaryTableFeature.toString(), FeatureType.SUMMARY_TABLE, summaryTableFeature.sourceTool());
 
-        PlotMetadata metadata = PlotMetadata.builder()
+        FeatureMetadata metadata = FeatureMetadata.builder()
                 .featureGroup(summaryTableFeature.group().displayName())
                 .displayName(summaryTableFeature.displayName())
                 .numberFormat(summaryTableFeature.numberFormat())
