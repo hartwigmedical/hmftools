@@ -1,19 +1,18 @@
 package com.hartwig.hmftools.qsee.status;
 
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_FEATURE_NAME;
 import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_FEATURE_TYPE;
 import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_FEATURE_VALUE;
 import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_SAMPLE_ID;
 import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_SAMPLE_TYPE;
 import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_SOURCE_TOOL;
-import static com.hartwig.hmftools.qsee.common.QseeFileCommon.QSEE_FILE_ID;
 import static com.hartwig.hmftools.qsee.feature.FeatureMetadata.FIELD_QC_STATUS;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import com.hartwig.hmftools.common.utils.file.DelimFileWriter;
+import com.hartwig.hmftools.qsee.common.QseeFileCommon;
 import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.FeatureKey;
 import com.hartwig.hmftools.qsee.feature.NumberFormat;
@@ -29,14 +28,7 @@ public class QcSummaryFile
 
     public static String generateFilename(String basePath, String sampleId, @Nullable String outputId)
     {
-        String filename = checkAddDirSeparator(basePath) + sampleId + "." + QSEE_FILE_ID + ".summary";
-
-        if(outputId != null)
-            filename += "." + outputId;
-
-        filename += ".tsv.gz";
-
-        return filename;
+        return QseeFileCommon.generateFilename(basePath, sampleId, "summary", outputId, "tsv.gz");
     }
 
     public static String generateFilename(QseePrepConfig config)

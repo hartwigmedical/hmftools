@@ -10,6 +10,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.utils.RExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.qsee.common.QseeFileCommon;
 import com.hartwig.hmftools.qsee.prep.QseePrepConfig;
 import com.hartwig.hmftools.qsee.prep.VisDataFile;
 
@@ -56,16 +57,9 @@ public class QseePlot
         );
     }
 
-    private String formOutputFilename(String tumorId, @Nullable String outputId)
+    private String generateFilename(String tumorId, @Nullable String outputId)
     {
-        String filename = checkAddDirSeparator(mOutputDir) + tumorId + "." + QSEE_FILE_ID + ".vis.report";
-
-        if(outputId != null)
-            filename += "." + outputId;
-
-        filename += ".pdf";
-
-        return filename;
+        return QseeFileCommon.generateFilename(mOutputDir, tumorId, "vis.report", outputId, "pdf");
     }
 
     public void plotOneSample(String tumorId, @Nullable String referenceId, @Nullable String outputId)
@@ -77,7 +71,7 @@ public class QseePlot
                     referenceId == null ? NO_ARG : referenceId,
                     mSampleFeaturesFile,
                     mCohortPercentilesFile == null ? NO_ARG : mCohortPercentilesFile,
-                    formOutputFilename(tumorId, outputId),
+                    generateFilename(tumorId, outputId),
                     QC_LOGGER.getLevel().toString()
             };
 

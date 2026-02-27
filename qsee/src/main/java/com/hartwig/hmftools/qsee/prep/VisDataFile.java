@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.qsee.prep;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.qsee.common.QseeConstants.QC_LOGGER;
 import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_FEATURE_NAME;
@@ -10,7 +9,6 @@ import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_FEATURE_VALUE;
 import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_SAMPLE_ID;
 import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_SAMPLE_TYPE;
 import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_SOURCE_TOOL;
-import static com.hartwig.hmftools.qsee.common.QseeFileCommon.QSEE_FILE_ID;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -30,14 +28,7 @@ public class VisDataFile
 
     public static String generateFilename(String basePath, String sampleId, @Nullable String outputId)
     {
-        String filename = checkAddDirSeparator(basePath) + sampleId + "." + QSEE_FILE_ID + ".vis.data";
-
-        if(outputId != null)
-            filename += "." + outputId;
-
-        filename += ".tsv.gz";
-
-        return filename;
+        return QseeFileCommon.generateFilename(basePath, sampleId, "vis.data", outputId, "tsv.gz");
     }
 
     public static String generateFilename(QseePrepConfig config)

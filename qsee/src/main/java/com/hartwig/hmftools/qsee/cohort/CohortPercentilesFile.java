@@ -2,13 +2,11 @@ package com.hartwig.hmftools.qsee.cohort;
 
 import static java.util.Objects.requireNonNull;
 
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.qsee.common.QseeConstants.QC_LOGGER;
 import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_FEATURE_NAME;
 import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_FEATURE_TYPE;
 import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_SAMPLE_TYPE;
 import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_SOURCE_TOOL;
-import static com.hartwig.hmftools.qsee.common.QseeFileCommon.QSEE_FILE_ID;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -35,14 +33,7 @@ public class CohortPercentilesFile
 
     public static String generateFilename(String basePath, @Nullable String outputId)
     {
-        String filename = checkAddDirSeparator(basePath) + QSEE_FILE_ID + ".cohort.percentiles";
-
-        if(outputId != null)
-            filename += "." + outputId;
-
-        filename += ".tsv.gz";
-
-        return filename;
+        return QseeFileCommon.generateCohortFilename(basePath, "percentiles", outputId, "tsv.gz");
     }
 
     public static String generateFilename(String basePath)
