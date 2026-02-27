@@ -105,7 +105,7 @@ public class SummaryTableBamMetricsPrep implements CategoryPrep
             double propBasesAboveCoverage = (double) basesAboveCoverage / totalBases;
 
             QcThreshold qcThreshold = qcThresholds.getThreshold(sampleType, coverageAboveXFeature, QcStatusType.WARN);
-            QcStatus qcStatus = qcThreshold.getQcStatus(propBasesAboveCoverage);
+            QcStatus qcStatus = qcThreshold.getSampleQcStatus(propBasesAboveCoverage);
 
             putFeature(featuresMap, coverageAboveXFeature, propBasesAboveCoverage, qcStatus);
         }
@@ -119,7 +119,7 @@ public class SummaryTableBamMetricsPrep implements CategoryPrep
 
         QcStatus qcStatus = qcThresholds
                 .getThreshold(sampleType, MAPPED_PROPORTION, QcStatusType.FAIL)
-                .getQcStatus(bamFlagStats.mappedProportion());
+                .getSampleQcStatus(bamFlagStats.mappedProportion());
 
         putFeature(featuresMap, MAPPED_PROPORTION, bamFlagStats.mappedProportion(), qcStatus);
     }

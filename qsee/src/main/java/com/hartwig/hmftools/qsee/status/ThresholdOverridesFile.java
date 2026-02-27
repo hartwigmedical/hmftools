@@ -64,7 +64,11 @@ public class ThresholdOverridesFile
                         thresholds.getThreshold(key, false).threshold(),
                         threshold);
 
-                QcThreshold thresholdOverride = new QcThreshold(key, comparisonOperator, threshold);
+                QcThreshold thresholdOverride = QcThreshold.builder(key)
+                        .comparisonOperator(comparisonOperator)
+                        .threshold(threshold)
+                        .build();
+
                 thresholds.overrideThreshold(key, thresholdOverride);
 
                 seenKeys.add(key);

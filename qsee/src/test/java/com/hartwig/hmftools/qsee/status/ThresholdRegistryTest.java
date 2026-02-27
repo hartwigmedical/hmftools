@@ -28,11 +28,12 @@ public class ThresholdRegistryTest
         QcThreshold expectedThreshold;
 
         key = new ThresholdKey(SampleType.TUMOR, FeatureType.SUMMARY_TABLE, SummaryTableFeature.MAPPED_PROPORTION.name(), QcStatusType.FAIL);
-        expectedThreshold = new QcThreshold(key, ComparisonOperator.LESS_THAN, Double.NEGATIVE_INFINITY);
+
+        expectedThreshold = QcThreshold.builder(key).comparisonOperator(ComparisonOperator.LESS_THAN).threshold(Double.NEGATIVE_INFINITY).build();
         assertEquals(thresholds.getThreshold(key), expectedThreshold);
 
         key = new ThresholdKey(SampleType.TUMOR, FeatureType.SUMMARY_TABLE, SummaryTableFeature.LOW_MAP_QUAL.name(), QcStatusType.WARN);
-        expectedThreshold = new QcThreshold(key, ComparisonOperator.GREATER_THAN, Double.NaN);
+        expectedThreshold = QcThreshold.builder(key).comparisonOperator(ComparisonOperator.GREATER_THAN).threshold(Double.NaN).build();
         assertEquals(thresholds.getThreshold(key), expectedThreshold);
     }
 }

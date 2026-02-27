@@ -87,6 +87,6 @@ public enum SummaryTableFeature
     public static void putFeature(EnumMap<SummaryTableFeature, Feature> featuresMap, SummaryTableFeature summaryTableFeature,
             double value, QcThreshold qcThreshold)
     {
-        putFeature(featuresMap, summaryTableFeature, value, qcThreshold.getQcStatus(value));
+        putFeature(featuresMap, summaryTableFeature, value, qcThreshold.getSampleQcStatus(value));
     }
 }

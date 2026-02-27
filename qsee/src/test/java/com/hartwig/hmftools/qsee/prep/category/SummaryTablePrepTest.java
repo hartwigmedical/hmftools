@@ -43,7 +43,8 @@ public class SummaryTablePrepTest
     {
         List<PurpleQCStatus> purpleQcStatuses = List.of(PurpleQCStatus.values());
         PurityContext purityContext = createTestPurityContext(purpleQcStatuses);
-        EnumMap<PurpleQCStatus, QcStatus> qcStatuses = SummaryTablePurplePrep.qcStatusFrom(purityContext);
+        ThresholdRegistry qcThresholds = ThresholdRegistry.createWithoutThresholds();
+        EnumMap<PurpleQCStatus, QcStatus> qcStatuses = SummaryTablePurplePrep.qcStatusFrom(purityContext, qcThresholds);
         assertEquals(purpleQcStatuses.size(), qcStatuses.size());
     }
 
@@ -65,7 +66,8 @@ public class SummaryTablePrepTest
     public void canExtractPurpleFeatures(){
         PurityContext purityContext = createTestPurityContext(List.of(PurpleQCStatus.PASS));
 
-        List<Feature> features = SummaryTablePurplePrep.createFeatures(purityContext);
+        ThresholdRegistry qcThresholds = ThresholdRegistry.createWithoutThresholds();
+        List<Feature> features = SummaryTablePurplePrep.createFeatures(purityContext, qcThresholds);
 
         List<SummaryTableFeature> expectedFeatures = Stream.of(SummaryTableFeature.values())
                 .filter(f -> f.sourceTool() == SourceTool.PURPLE)
