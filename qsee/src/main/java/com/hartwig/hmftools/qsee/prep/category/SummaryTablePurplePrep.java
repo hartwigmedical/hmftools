@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature.
 import java.io.IOException;
 import java.util.EnumMap;
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.purple.FittedPurity;
@@ -56,22 +57,21 @@ public class SummaryTablePurplePrep implements CategoryPrep
         return PurityContextFile.readWithQC(qcFile, purityFile);
     }
 
-    @VisibleForTesting
-    static EnumMap<PurpleQCStatus, QcStatus> qcStatusFrom(PurityContext purityContext, ThresholdRegistry thresholds)
+    private static EnumMap<PurpleQCStatus, QcStatus> qcStatusFrom(Set<PurpleQCStatus> purpleQCStatuses, ThresholdRegistry thresholds)
     {
-        EnumMap<PurpleQCStatus, QcStatus> qcStatuses = new EnumMap<>(PurpleQCStatus.class);
-
         PurpleQCStatusConverter converter = new PurpleQCStatusConverter(thresholds);
 
-        for(PurpleQCStatus purpleQcStatus : PurpleQCStatus.values())
+        EnumMap<PurpleQCStatus, QcStatus> qcStatuses = new EnumMap<>(PurpleQCStatus.class);
+
+        for(PurpleQCStatus purpleQCStatus : PurpleQCStatus.values())
         {
-            boolean purpleQcStatusExists = purityContext.qc().status().contains(purpleQcStatus);
+            QcStatus qseeQCStatus = converter.toQseeQcStatus(purpleQCStatus);
 
-            QcStatus qcStatus = purpleQcStatusExists
-                    ? converter.toQseeQcStatus(purpleQcStatus)
-                    : QcStatus.createEmpty();
+            QcStatus qcStatus = purpleQCStatuses.contains(purpleQCStatus)
+                    ? qseeQCStatus
+                    : QcStatus.createPass(qseeQCStatus);
 
-            qcStatuses.put(purpleQcStatus, qcStatus);
+            qcStatuses.put(purpleQCStatus, qcStatus);
         }
 
         return qcStatuses;
@@ -79,13 +79,14 @@ public class SummaryTablePurplePrep implements CategoryPrep
 
     private static QcStatus getTincQcStatus(EnumMap<PurpleQCStatus, QcStatus> qcStatuses)
     {
-        QcStatus tincStatus = qcStatuses.get(PurpleQCStatus.FAIL_NO_TUMOR);
+        QcStatus passStatus = QcStatus.createPass(qcStatuses.get(PurpleQCStatus.FAIL_TINC));
 
+        QcStatus tincStatus = qcStatuses.get(PurpleQCStatus.FAIL_TINC);
         if(tincStatus == null)
             tincStatus = qcStatuses.get(PurpleQCStatus.WARN_TINC);
 
         if(tincStatus == null)
-            tincStatus = QcStatus.createEmpty();
+            tincStatus = passStatus;
 
         return tincStatus;
     }
@@ -96,7 +97,7 @@ public class SummaryTablePurplePrep implements CategoryPrep
         PurpleQC purpleQC = purityContext.qc();
         FittedPurity purpleFit = purityContext.bestFit();
 
-        EnumMap<PurpleQCStatus, QcStatus> qcStatuses = qcStatusFrom(purityContext, thresholds);
+        EnumMap<PurpleQCStatus, QcStatus> qcStatuses = qcStatusFrom(purityContext.qc().status(), thresholds);
 
         EnumMap<SummaryTableFeature, Feature> featuresMap = new EnumMap<>(SummaryTableFeature.class);
 
