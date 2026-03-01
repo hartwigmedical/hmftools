@@ -86,7 +86,7 @@ public class CategoryPrepTask implements Runnable
     public static void missingInputFilesError(boolean allowMissingInput, CategoryPrep categoryPrep, SampleType sampleType, String missingFilePath)
     {
         QC_LOGGER.log(allowMissingInput ? Level.WARN : Level.ERROR,
-                "sampleType({}) category({}) - missing input file: {}",
+                "sampleType({}) category({}) - missing input file(s): {}",
                 sampleType, categoryPrep.name(), missingFilePath);
 
         if(!allowMissingInput)
