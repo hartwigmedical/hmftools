@@ -19,6 +19,8 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.REF_METRICS_
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REF_METRICS_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_IDS_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_METRICS_DIR_CFG;
@@ -54,6 +56,8 @@ public class QseePrepConfig
     public final List<String> TumorIds;
     public final List<String> ReferenceIds;
 
+    public final String SampleDataDir;
+
     public final String CobaltDir;
     public final String EsveeDir;
     public final String PurpleDir;
@@ -84,13 +88,15 @@ public class QseePrepConfig
         TumorIds = sampleIdsLoader.tumorIds();
         ReferenceIds = sampleIdsLoader.referenceIds();
 
-        CobaltDir = configBuilder.getValue(COBALT_DIR_CFG);
-        EsveeDir = configBuilder.getValue(ESVEE_DIR_CFG);
-        PurpleDir = configBuilder.getValue(PURPLE_DIR_CFG);
-        ReduxDir = configBuilder.getValue(REDUX_DIR_CFG);
-        SageDir = configBuilder.getValue(SAGE_DIR_CFG);
-        TumorMetricsDir = configBuilder.getValue(TUMOR_METRICS_DIR_CFG);
-        RefMetricsDir = configBuilder.getValue(REF_METRICS_DIR_CFG);
+        SampleDataDir = configBuilder.getValue(SAMPLE_DATA_DIR_CFG, "");
+
+        CobaltDir = configBuilder.getValue(COBALT_DIR_CFG, SampleDataDir);
+        EsveeDir = configBuilder.getValue(ESVEE_DIR_CFG, SampleDataDir);
+        PurpleDir = configBuilder.getValue(PURPLE_DIR_CFG, SampleDataDir);
+        ReduxDir = configBuilder.getValue(REDUX_DIR_CFG, SampleDataDir);
+        SageDir = configBuilder.getValue(SAGE_DIR_CFG, SampleDataDir);
+        TumorMetricsDir = configBuilder.getValue(TUMOR_METRICS_DIR_CFG, SampleDataDir);
+        RefMetricsDir = configBuilder.getValue(REF_METRICS_DIR_CFG, SampleDataDir);
 
         DriverGenes = DriverGenePanelConfig.loadDriverGenes(configBuilder);
         CohortPercentilesFile = configBuilder.getValue(COHORT_PERCENTILES_FILE_CFG);
@@ -114,6 +120,8 @@ public class QseePrepConfig
         configBuilder.addConfigItem(TUMOR, false, TUMOR_IDS_DESC);
         configBuilder.addConfigItem(REFERENCE, false, REFERENCE_IDS_DESC);
         configBuilder.addPath(SAMPLE_ID_FILE, false, SAMPLE_ID_FILE_DESC);
+
+        configBuilder.addPath(SAMPLE_DATA_DIR_CFG, false, SAMPLE_DATA_DIR_DESC);
 
         configBuilder.addPath(COBALT_DIR_CFG, false, COBALT_DIR_DESC);
         configBuilder.addPath(ESVEE_DIR_CFG, false, ESVEE_DIR_DESC);
