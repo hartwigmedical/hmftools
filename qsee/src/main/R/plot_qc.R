@@ -632,8 +632,9 @@ PLOTS[[FEATURE_TYPE$BQR_BY_SNV96_CONTEXT]] <- local({
    
    plot_labels <- labs(title = "BQR by SNV96 context", x = "Mutation context", y = "Phred score adjustment")
    
-   if(nrow(plot_data) > 0){
+   if(is.null(plot_data)){
       plot_labels$title <- paste0(plot_labels$title, ", base quality: ", plot_data$OriginalQualBin[1])
+      return(plot_missing_data(plot_labels))
    }
    
    plot_pairwise_comparison(
@@ -656,6 +657,10 @@ PLOTS[[FEATURE_TYPE$MS_INDEL_ERROR_RATES]] <- local({
    plot_data <- get_plot_data(FEATURE_TYPE$MS_INDEL_ERROR_RATES)
    
    plot_labels <- labs(title = "Microsatellite indel error rates", x = "Repeat units", y = "Phred score") 
+   
+   if(is.null(plot_data)){
+      return(plot_missing_data(plot_labels))
+   }
    
    plot_pairwise_comparison(plot_data, x = "RefNumUnits", plot_type = PAIRWISE_PLOT_TYPE$POINT_RANGE) +
       facet_grid("ConsensusType ~ RepeatUnitType") +
