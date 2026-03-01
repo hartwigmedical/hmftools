@@ -38,6 +38,7 @@ public class DiscordantFragFreqPrep implements CategoryPrep
     }
 
     public SourceTool sourceTool() { return SOURCE_TOOL; }
+    public PrepCategory category() { return PrepCategory.DISCORDANT_FRAG_FREQ; }
 
     private String findBackwardsCompatibleDiscStatsFile(String sampleId) throws IOException
     {

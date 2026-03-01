@@ -35,7 +35,7 @@ public class FeaturePrep
 
     public static List<CategoryPrep> createCategoryPreps(QseePrepConfig config)
     {
-        return List.of(
+        List<CategoryPrep> preliminaryCategories = List.of(
                 new SummaryTableBamMetricsPrep(config),
                 new SummaryTablePurplePrep(config),
                 new CoverageDistributionPrep(config),
@@ -47,6 +47,21 @@ public class FeaturePrep
                 new BaseQualRecalibrationPrep(config),
                 new MsIndelErrorPrep(config)
         );
+
+        List<CategoryPrep> selectedCategories = new ArrayList<>();
+        for(CategoryPrep categoryPrep : preliminaryCategories)
+        {
+            boolean categorySkipped = !config.Categories.contains(categoryPrep.category());
+            if(categorySkipped)
+            {
+                QC_LOGGER.info("Skipping unselected category({})", categoryPrep.category());
+                continue;
+            }
+
+            selectedCategories.add(categoryPrep);
+        }
+
+        return selectedCategories;
     }
 
     public SampleFeatures prepSample(SampleType sampleType, String sampleId)
@@ -58,7 +73,7 @@ public class FeaturePrep
         List<CategoryPrep> categoryPreps = createCategoryPreps(mConfig);
         for(CategoryPrep categoryPrep : categoryPreps)
         {
-            QC_LOGGER.debug("Extracting category({})", categoryPrep.name());
+            QC_LOGGER.debug("Extracting category({})", categoryPrep.category());
 
             CategoryPrepTask task = new CategoryPrepTask(categoryPrep, sampleId, sampleType, mConfig.AllowMissingInput);
 
@@ -82,7 +97,7 @@ public class FeaturePrep
         List<CategoryPrep> categoryPreps = createCategoryPreps(mConfig);
         for(CategoryPrep categoryPrep : categoryPreps)
         {
-            QC_LOGGER.info("Extracting category({})", categoryPrep.name());
+            QC_LOGGER.info("Extracting category({})", categoryPrep.category());
             prepCohortCategory(categoryPrep, sampleType, sampleFeatureMatrix, false);
         }
 
@@ -131,14 +146,14 @@ public class FeaturePrep
             if(samplesMissingInputCount.get() == sampleIds.size())
             {
                 QC_LOGGER.error("failed prep as no samples had data for sampleType({}) category({})",
-                        sampleType, categoryPrep.name());
+                        sampleType, categoryPrep.category());
 
                 System.exit(1);
             }
             else if(samplesMissingInputCount.get() > 0)
             {
                 QC_LOGGER.warn("sampleType({}) category({}) - {}/{} samples had missing input files",
-                        sampleType, categoryPrep.name(), samplesMissingInputCount.get(), sampleIds.size());
+                        sampleType, categoryPrep.category(), samplesMissingInputCount.get(), sampleIds.size());
             }
         }
     }

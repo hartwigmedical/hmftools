@@ -47,6 +47,7 @@ public class SummaryTableBamMetricsPrep implements CategoryPrep
     public SummaryTableBamMetricsPrep(QseePrepConfig config) { mConfig = config; }
 
     public SourceTool sourceTool() { return SOURCE_TOOL; }
+    public PrepCategory category() { return PrepCategory.SUMMARY_TABLE_BAM_METRICS; }
 
     private static void putFeatures(EnumMap<SummaryTableFeature, Feature> featuresMap, BamMetricSummary bamMetricSummary,
             SampleType sampleType, ThresholdRegistry qcThresholds)

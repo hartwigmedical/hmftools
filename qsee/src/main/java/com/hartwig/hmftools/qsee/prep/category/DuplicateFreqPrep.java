@@ -30,6 +30,7 @@ public class DuplicateFreqPrep implements CategoryPrep
     }
 
     public SourceTool sourceTool() { return SOURCE_TOOL; }
+    public PrepCategory category() { return PrepCategory.DUPLICATE_FREQ; }
 
     private List<DuplicateFrequency> loadDuplicateFrequencies(String sampleId) throws IOException
     {

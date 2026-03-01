@@ -36,6 +36,7 @@ public class GcBiasPrep implements CategoryPrep
     }
 
     public SourceTool sourceTool() { return SourceTool.COBALT; }
+    public PrepCategory category() { return PrepCategory.GC_BIAS; }
 
     private GcMedianReadDepth loadCobaltGcMedianFile(String sampleId) throws IOException
     {

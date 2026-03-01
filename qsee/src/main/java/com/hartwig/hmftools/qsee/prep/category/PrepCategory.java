@@ -1,0 +1,15 @@
+package com.hartwig.hmftools.qsee.prep.category;
+
+public enum PrepCategory
+{
+    BASE_QUAL_RECALIBRATION,
+    COVERAGE_DISTRIBUTION,
+    DISCORDANT_FRAG_FREQ,
+    DUPLICATE_FREQ,
+    FRAG_LENGTH_DISTRIBUTION,
+    GC_BIAS,
+    MISSED_GENE_VARIANT,
+    MS_INDEL_ERROR,
+    SUMMARY_TABLE_BAM_METRICS,
+    SUMMARY_TABLE_PURPLE;
+}

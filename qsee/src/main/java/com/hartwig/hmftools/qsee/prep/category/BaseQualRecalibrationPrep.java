@@ -54,6 +54,7 @@ public class BaseQualRecalibrationPrep implements CategoryPrep
     }
 
     public SourceTool sourceTool() { return SOURCE_TOOL; }
+    public PrepCategory category() { return PrepCategory.BASE_QUAL_RECALIBRATION; }
 
     private String findBackwardsCompatibleBqrFile(String sampleId) throws NoSuchFileException
     {

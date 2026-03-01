@@ -47,6 +47,7 @@ public class SummaryTablePurplePrep implements CategoryPrep
     public SummaryTablePurplePrep(QseePrepConfig config) { mConfig = config; }
 
     public SourceTool sourceTool() { return SOURCE_TOOL; }
+    public PrepCategory category() { return PrepCategory.SUMMARY_TABLE_PURPLE; }
 
     private PurityContext loadPurplePurity(String sampleId) throws IOException
     {

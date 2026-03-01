@@ -34,10 +34,13 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.qsee.cohort.CohortPercentilesFile.COHORT_PERCENTILES_FILE_CFG;
 import static com.hartwig.hmftools.qsee.cohort.CohortPercentilesFile.COHORT_PERCENTILES_FILE_CFG_DESC;
+import static com.hartwig.hmftools.qsee.common.QseeConstants.QC_LOGGER;
 import static com.hartwig.hmftools.qsee.status.ThresholdOverridesFile.THRESHOLD_OVERRIDES_FILE_CFG;
 import static com.hartwig.hmftools.qsee.status.ThresholdOverridesFile.THRESHOLD_OVERRIDES_FILE_CFG_DESC;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig;
@@ -48,6 +51,7 @@ import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 
 import com.hartwig.hmftools.qsee.common.SampleIdsLoader;
 import com.hartwig.hmftools.qsee.common.SampleType;
+import com.hartwig.hmftools.qsee.prep.category.PrepCategory;
 import com.hartwig.hmftools.qsee.status.ThresholdOverridesFile;
 import com.hartwig.hmftools.qsee.status.ThresholdRegistry;
 
@@ -72,12 +76,17 @@ public class QseePrepConfig
     public final ThresholdRegistry QcThresholds;
 
     public final SequencingType SEQUENCING_TYPE;
+    public final List<PrepCategory> Categories;
     public final boolean AllowMissingInput;
 
     public final String OutputDir;
     public final String OutputId;
 
     public final int Threads;
+
+    public static final String SKIP_CATEGORIES = "skip_categories";
+    public static final String SKIP_CATEGORIES_DESC = "Comma-separated list of categories to skip";
+    public static final String SKIP_CATEGORIES_DELIM = ",";
 
     public static final String ALLOW_MISSING_INPUT = "allow_missing_input";
     public static final String ALLOW_MISSING_INPUT_DESC = "Continue sample data extraction even if some input files are missing";
@@ -107,6 +116,7 @@ public class QseePrepConfig
                 : ThresholdOverridesFile.read(ThresholdsFile);
 
         SEQUENCING_TYPE = SequencingType.valueOf(configBuilder.getValue(SEQUENCING_TYPE_CFG));
+        Categories = parseCategories(configBuilder.getValue(SKIP_CATEGORIES));
         AllowMissingInput = configBuilder.hasFlag(ALLOW_MISSING_INPUT);
 
         OutputDir = parseOutputDir(configBuilder);
@@ -136,6 +146,7 @@ public class QseePrepConfig
         configBuilder.addPath(COHORT_PERCENTILES_FILE_CFG, false, COHORT_PERCENTILES_FILE_CFG_DESC);
         configBuilder.addPath(THRESHOLD_OVERRIDES_FILE_CFG, false, THRESHOLD_OVERRIDES_FILE_CFG_DESC);
 
+        configBuilder.addConfigItem(SKIP_CATEGORIES, false, SKIP_CATEGORIES_DESC, null);
         configBuilder.addFlag(ALLOW_MISSING_INPUT, ALLOW_MISSING_INPUT_DESC);
 
         configBuilder.addPath(OUTPUT_DIR, true, OUTPUT_DIR_DESC);
@@ -157,5 +168,28 @@ public class QseePrepConfig
     {
         String baseDir = sampleType == SampleType.TUMOR ? TumorMetricsDir : RefMetricsDir;
         return convertWildcardSamplePath(baseDir, sampleId);
+    }
+
+    public static List<PrepCategory> parseCategories(String skipCategoriesString)
+    {
+        if(skipCategoriesString == null)
+            return List.of(PrepCategory.values());
+
+        List<PrepCategory> requiredCategories = List.of(PrepCategory.SUMMARY_TABLE_PURPLE, PrepCategory.SUMMARY_TABLE_BAM_METRICS);
+        List<PrepCategory> categoriesToSkip = new ArrayList<>();
+        for(String string : skipCategoriesString.split(SKIP_CATEGORIES_DELIM))
+        {
+            PrepCategory categoryToSkip = PrepCategory.valueOf(string.toUpperCase());
+
+            if(requiredCategories.contains(categoryToSkip))
+            {
+                QC_LOGGER.error("Skipping category({}) is not supported", categoryToSkip);
+                System.exit(1);
+            }
+
+            categoriesToSkip.add(categoryToSkip);
+        }
+
+        return Stream.of(PrepCategory.values()).filter(c -> !categoriesToSkip.contains(c)).toList();
     }
 }

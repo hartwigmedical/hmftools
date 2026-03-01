@@ -39,6 +39,7 @@ public class MsIndelErrorPrep implements CategoryPrep
     }
 
     public SourceTool sourceTool(){ return SOURCE_TOOL; }
+    public PrepCategory category() { return PrepCategory.MS_INDEL_ERROR; }
 
     private String findBackwardsCompatibleJitterFile(String sampleId) throws NoSuchFileException
     {
