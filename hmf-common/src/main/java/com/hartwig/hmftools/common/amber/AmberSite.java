@@ -14,16 +14,24 @@ public class AmberSite implements GenomePosition
     public final int Position;
     public final String Ref;
     public final String Alt;
+    public double VariantAlleleFrequency;
 
     private boolean mSnpCheck;
 
     public AmberSite(final String chromosome, final int position, final String ref, final String alt, final boolean snpCheck)
+    {
+        this(chromosome, position, ref, alt, snpCheck, 0.5);
+    }
+
+    public AmberSite(final String chromosome, final int position, final String ref, final String alt, final boolean snpCheck,
+            final double variantAlleleFrequency)
     {
         Chromosome = chromosome;
         Position = position;
         Ref = ref;
         Alt = alt;
         mSnpCheck = snpCheck;
+        VariantAlleleFrequency = variantAlleleFrequency;
     }
 
     @Override
@@ -59,18 +67,14 @@ public class AmberSite implements GenomePosition
         return mSnpCheck;
     }
 
-    ;
-
     public void setSnpCheck(boolean value)
     {
         mSnpCheck = value;
     }
 
-    ;
-
     public String toString()
     {
-        return format("%s:%d %s>%s %s", Chromosome, Position, Ref, Alt, mSnpCheck ? "snpcheck" : "");
+        return format("%s:%d %s>%s %s %.3f", Chromosome, Position, Ref, Alt, mSnpCheck ? "snpcheck" : "", VariantAlleleFrequency);
     }
 
     @Override

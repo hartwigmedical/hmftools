@@ -10,8 +10,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.google.common.base.Preconditions;
+import com.hartwig.hmftools.amber.VafReading;
+import com.hartwig.hmftools.common.amber.AmberBase;
 import com.hartwig.hmftools.common.amber.BaseDepthData;
-import com.hartwig.hmftools.common.amber.ImmutableBaseDepthData;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.segmentation.Arm;
@@ -34,10 +35,10 @@ public class PerArmVafConsistencyCheckerTest
             return new ChrArm(position.chr(), arm);
         }
     };
-    private final VafPredicate classifier = contamination -> contamination.Tumor.refSupport() % 10 == 3;
+    private final VafPredicate trueIf3Mod10 = contamination -> contamination.refSupport() % 10 == 3;
 
     @Test
-    public void giniTest()
+    public void unevenDistributionCostTest()
     {
         // ChrArm TotalPoints EvidencePoints
         // 1P 10 2
@@ -50,48 +51,48 @@ public class PerArmVafConsistencyCheckerTest
         // 4P -> 15 * 5 * 0.5 + 15 * 4
         // Total area is: 5 + 37.5 + 97.5 = 140
         // Area of triangle from (0, 0) to (40, 9) = 180
-        // Gini = 1.0 - (140 / 180) = 1.0 - 0.7778 = 0.2222
-        PerArmVafConsistencyChecker perArmVafConsistencyChecker = new PerArmVafConsistencyChecker(classifier, chrArmLocatorP);
+        // Gini = (140 / 180) = 0.7778
+        PerArmVafConsistencyChecker perArmVafConsistencyChecker = new PerArmVafConsistencyChecker(trueIf3Mod10, chrArmLocatorP);
 
         // 1P
         for(int i = 1; i <= 8; i++)
         {
-            perArmVafConsistencyChecker.offer(tc(_1, i * 1000, 5));
+            perArmVafConsistencyChecker.offer(tcDepth10(_1, i * 1000, 5));
         }
-        perArmVafConsistencyChecker.offer(tc(_1, 9000, 3));
-        perArmVafConsistencyChecker.offer(tc(_1, 10000, 3));
+        perArmVafConsistencyChecker.offer(tcDepth10(_1, 9000, 3));
+        perArmVafConsistencyChecker.offer(tcDepth10(_1, 10000, 3));
 
         // 2P
         for(int i = 1; i <= 9; i++)
         {
-            perArmVafConsistencyChecker.offer(tc(_2, i * 1000, 4));
+            perArmVafConsistencyChecker.offer(tcDepth10(_2, i * 1000, 4));
         }
-        perArmVafConsistencyChecker.offer(tc(_2, 10000, 3));
+        perArmVafConsistencyChecker.offer(tcDepth10(_2, 10000, 3));
 
         // 3P
         for(int i = 1; i <= 4; i++)
         {
-            perArmVafConsistencyChecker.offer(tc(_3, i * 1000, 9));
+            perArmVafConsistencyChecker.offer(tcDepth10(_3, i * 1000, 9));
         }
-        perArmVafConsistencyChecker.offer(tc(_3, 5000, 3));
+        perArmVafConsistencyChecker.offer(tcDepth10(_3, 5000, 3));
 
         // 4P
         for(int i = 1; i <= 10; i++)
         {
-            perArmVafConsistencyChecker.offer(tc(_4, i * 1000, 2));
+            perArmVafConsistencyChecker.offer(tcDepth10(_4, i * 1000, 2));
         }
         for(int i = 11; i <= 15; i++)
         {
-            perArmVafConsistencyChecker.offer(tc(_4, i * 1000, 3));
+            perArmVafConsistencyChecker.offer(tcDepth10(_4, i * 1000, 3));
         }
 
-        Assert.assertEquals(0.2222, perArmVafConsistencyChecker.gini().gini(), 0.0001);
+        Assert.assertEquals(0.7778, perArmVafConsistencyChecker.unevenDistributionCost().unevenDistributionCost(), 0.0001);
     }
 
     @Test
     public void sameContaminationOnAllChromosomeArms()
     {
-        List<TumorContamination> data = new ArrayList<>();
+        List<VafReading> data = new ArrayList<>();
         for(HumanChromosome chromosome : HumanChromosome.values())
         {
             // P arm
@@ -99,14 +100,14 @@ public class PerArmVafConsistencyCheckerTest
             // Q arm
             data.addAll(createEvenlySpacedDataPointsWithContamination(chromosome, CENTRE + 1000, 30, 10, 100, 20, 100));
         }
-        double factor = PerArmVafConsistencyChecker.calculateConfirmationFactor(chrArmLocatorPQ, 0.2, data).gini();
-        Assert.assertEquals(0.0, factor, 0.0001);
+        double factor = PerArmVafConsistencyChecker.calculateConfirmationFactor(chrArmLocatorPQ, 0.2, data).unevenDistributionCost();
+        Assert.assertEquals(1.0, factor, 0.0001);
     }
 
     @Test
     public void allContaminationIn1P()
     {
-        List<TumorContamination> data = new ArrayList<>();
+        List<VafReading> data = new ArrayList<>();
         for(HumanChromosome chromosome : HumanChromosome.values())
         {
             if(chromosome == HumanChromosome._1)
@@ -117,8 +118,12 @@ public class PerArmVafConsistencyCheckerTest
             data.addAll(createEvenlySpacedDataPointsWithContamination(chromosome, 1000, 50, 0, 100, 20, 100));
             data.addAll(createEvenlySpacedDataPointsWithContamination(chromosome, CENTRE + 1000, 30, 0, 100, 20, 100));
         }
-        double factor = PerArmVafConsistencyChecker.calculateConfirmationFactor(chrArmLocatorPQ, 0.2, data).gini();
-        Assert.assertEquals(0.0, factor, 0.0001);
+        double factor = PerArmVafConsistencyChecker.calculateConfirmationFactor(chrArmLocatorPQ, 0.2, data).unevenDistributionCost();
+        // chromosomes 1-Y have 5000 in P, 3000 in Q, no contamination
+        // 1P has 10,000 and 500 contamination, 1Q has 6000, no contamination
+        // total area = 192000*500*0.5, 1P area = 10000*500*0.5
+        // unevenDistributionCost = 10 / 192
+        Assert.assertEquals(0.05, factor, 0.0001);
     }
 
     @Test
@@ -127,27 +132,29 @@ public class PerArmVafConsistencyCheckerTest
         // Same number of data points in each arm.
         // P arms have 20% of data points with contamination.
         // Q arms have 0% of data points with contamination.
-        List<TumorContamination> data = new ArrayList<>();
+        List<VafReading> data = new ArrayList<>();
         for(HumanChromosome chromosome : HumanChromosome.values())
         {
-            data.addAll(createEvenlySpacedDataPointsWithContamination(chromosome, 1000, 100, 20, 100, 10, 50));
-            data.addAll(createEvenlySpacedDataPointsWithContamination(chromosome, CENTRE + 1000, 100, 0, 100, 0, 40));
+            data.addAll(createEvenlySpacedDataPointsWithContamination(chromosome, 1000, 10, 20, 100, 10, 50));
+            data.addAll(createEvenlySpacedDataPointsWithContamination(chromosome, CENTRE + 1000, 10, 0, 100, 0, 40));
         }
-        double factor = PerArmVafConsistencyChecker.calculateConfirmationFactor(chrArmLocatorPQ, 0.2, data).gini();
-        Assert.assertEquals(0.0, factor, 0.0001);
+        // factor = (46 - 23) / 46 = 0.5
+        double factor = PerArmVafConsistencyChecker.calculateConfirmationFactor(chrArmLocatorPQ, 0.2, data).unevenDistributionCost();
+        Assert.assertEquals(0.5, factor, 0.0001);
     }
 
     @Test
     public void noContamination()
     {
-        List<TumorContamination> data = new ArrayList<>();
+        List<VafReading> data = new ArrayList<>();
         for(HumanChromosome chromosome : HumanChromosome.values())
         {
             data.addAll(createEvenlySpacedDataPointsWithContamination(chromosome, 1000, 50, 0, 100, 20, 100));
             data.addAll(createEvenlySpacedDataPointsWithContamination(chromosome, CENTRE + 1000, 30, 0, 100, 20, 100));
         }
-        double factor = PerArmVafConsistencyChecker.calculateConfirmationFactor(chrArmLocatorPQ, 0.2, data).gini();
-        Assert.assertEquals(0.0, factor, 0.0001);
+        double factor = PerArmVafConsistencyChecker.calculateConfirmationFactor(chrArmLocatorPQ, 0.2, data).unevenDistributionCost();
+        // Height is 0
+        Assert.assertEquals(Double.NaN, factor, 0.0001);
     }
 
     @Test
@@ -157,7 +164,7 @@ public class PerArmVafConsistencyCheckerTest
         // how many arms do we need?
     }
 
-    private List<TumorContamination> createEvenlySpacedDataPointsWithContamination(
+    private List<VafReading> createEvenlySpacedDataPointsWithContamination(
             HumanChromosome chromosome,
             int startPosition,
             int numberOfBlocks,
@@ -168,7 +175,7 @@ public class PerArmVafConsistencyCheckerTest
     )
     {
         Preconditions.checkArgument(altReadsInContaminatedPoints <= totalReadsInContaminatedPoints);
-        List<TumorContamination> result = new ArrayList<>();
+        List<VafReading> result = new ArrayList<>();
         int currentPosition = startPosition;
         for(int block = 0; block < numberOfBlocks; block++)
         {
@@ -177,14 +184,14 @@ public class PerArmVafConsistencyCheckerTest
                 if(point < numberOfContaminationPointsPerBlock)
                 {
                     int refSupport = totalReadsInContaminatedPoints - altReadsInContaminatedPoints;
-                    TumorContamination tc =
+                    VafReading tc =
                             tc(chromosome, currentPosition, refSupport, altReadsInContaminatedPoints, totalReadsInContaminatedPoints);
                     result.add(tc);
                 }
                 else
                 {
                     int altSupport = 0;
-                    TumorContamination tc =
+                    VafReading tc =
                             tc(chromosome, currentPosition, totalReadsInContaminatedPoints, altSupport, totalReadsInContaminatedPoints);
                     result.add(tc);
                 }
@@ -194,29 +201,13 @@ public class PerArmVafConsistencyCheckerTest
         return result;
     }
 
-    private TumorContamination tc(HumanChromosome chromosome, int position, int refSupport)
+    private VafReading tcDepth10(HumanChromosome chromosome, int position, int refSupport)
     {
-        BaseDepthData bdd = ImmutableBaseDepthData.builder()
-                .ref(BaseDepthData.Base.A)
-                .alt(BaseDepthData.Base.C)
-                .readDepth(10)
-                .refSupport(refSupport)
-                .altSupport(10 - refSupport)
-                .indelCount(0)
-                .build();
-        return new TumorContamination(V38.versionedChromosome(chromosome), position, null, bdd);
+        return new VafReading(V38.versionedChromosome(chromosome), position, 10, refSupport, 10 - refSupport);
     }
 
-    private TumorContamination tc(HumanChromosome chromosome, int position, int refSupport, int altSupport, int readDepth)
+    private VafReading tc(HumanChromosome chromosome, int position, int refSupport, int altSupport, int readDepth)
     {
-        BaseDepthData bdd = ImmutableBaseDepthData.builder()
-                .ref(BaseDepthData.Base.A)
-                .alt(BaseDepthData.Base.C)
-                .readDepth(readDepth)
-                .refSupport(refSupport)
-                .altSupport(altSupport)
-                .indelCount(0)
-                .build();
-        return new TumorContamination(V38.versionedChromosome(chromosome), position, null, bdd);
+        return new VafReading(V38.versionedChromosome(chromosome), position, readDepth, refSupport, altSupport);
     }
 }

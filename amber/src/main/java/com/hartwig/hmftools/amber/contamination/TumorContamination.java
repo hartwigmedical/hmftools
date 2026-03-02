@@ -31,10 +31,10 @@ public class TumorContamination implements GenomePosition
 
     public double tumorVaf()
     {
-        if(Tumor.readDepth() == 0)
+        if(this.Tumor.readDepth() == 0)
         {
             return -1.0;
         }
-        return Tumor.refSupport() / (double) Tumor.readDepth();
+        return (double) this.Tumor.altSupport() / (double) this.Tumor.readDepth();
     }
 }

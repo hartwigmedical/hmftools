@@ -1,8 +1,10 @@
 package com.hartwig.hmftools.amber.contamination;
 
+import com.hartwig.hmftools.amber.VafReading;
+
 interface VafPredicate
 {
-    boolean test(TumorContamination contamination);
+    boolean test(VafReading contamination);
 }
 
 class BinomialVafPredicate implements VafPredicate
@@ -15,17 +17,17 @@ class BinomialVafPredicate implements VafPredicate
     }
 
     @Override
-    public boolean test(final TumorContamination contamination)
+    public boolean test(final VafReading contamination)
     {
-        final int tumorReadDepth = contamination.Tumor.readDepth();
+        final int tumorReadDepth = contamination.readDepth();
         final double twoSD = 2 * Math.sqrt(tumorReadDepth * ContaminationLevel * (1 - ContaminationLevel));
         final double mean = ContaminationLevel * tumorReadDepth;
         double rawLowerBound = mean - twoSD;
         double lowerBound = Math.max(Math.ceil(0.003 * tumorReadDepth), rawLowerBound);
-        if(contamination.Tumor.altSupport() < lowerBound)
+        if(contamination.altSupport() < lowerBound)
         {
             return false;
         }
-        return contamination.Tumor.altSupport() <= mean + twoSD;
+        return contamination.altSupport() <= mean + twoSD;
     }
 }

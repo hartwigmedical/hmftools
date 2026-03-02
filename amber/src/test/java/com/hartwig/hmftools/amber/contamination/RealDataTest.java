@@ -5,8 +5,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
+import com.hartwig.hmftools.amber.VafReading;
+import com.hartwig.hmftools.common.amber.AmberBase;
 import com.hartwig.hmftools.common.amber.BaseDepthData;
-import com.hartwig.hmftools.common.amber.ImmutableBaseDepthData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.segmentation.ChrArmLocator;
 import com.hartwig.hmftools.common.utils.file.DelimFileReader;
@@ -99,7 +100,7 @@ public class RealDataTest
         for(VafResult vafResult : factors)
         {
             VafConsistencyCheckResult factor = vafResult.check();
-            if(factor.gini() > 0.3)
+            if(factor.unevenDistributionCost() > 0.3)
             {
                 continue;
             }
@@ -194,16 +195,17 @@ public class RealDataTest
 
     private List<VafResult> runSample(File sampleFile, final List<Double> vafs)
     {
-        List<TumorContamination> data = readSample(sampleFile)
+        List<VafReading> data = readSample(sampleFile)
                 .stream()
                 .filter(t -> !t.chromosome().endsWith("X"))
                 .filter(t -> !t.chromosome().endsWith("Y"))
                 .filter(t -> t.Tumor.readDepth() > 20)
+                .map(x -> new VafReading(x.chromosome(), x.position(), x.Tumor.readDepth(), x.Tumor.refSupport(), x.Tumor.altSupport()))
                 .toList();
         //        List<TumorContamination> data = readSample(sampleId);
 
         DescriptiveStatistics depthStats = new DescriptiveStatistics();
-        data.forEach(t -> depthStats.addValue(t.Tumor.readDepth()));
+        data.forEach(t -> depthStats.addValue(t.readDepth()));
         //        System.out.println(
         //                "Depth stats: " + depthStats.getMin() + "-" + depthStats.getMax() + ", mean: " + depthStats.getMean() + ", median: "
         //                        + depthStats.getPercentile(50) + ", sd: " + depthStats.getStandardDeviation());
@@ -222,7 +224,7 @@ public class RealDataTest
     {
         System.out.printf("%.3f %.5f %d %d%n",
                 vaf,
-                factor.gini(),
+                factor.unevenDistributionCost(),
                 factor.totalWeightInBand(),
                 factor.totalWeightAcrossAllVafValues());
     }
@@ -238,14 +240,13 @@ class RowReader implements Function<DelimFileReader.Row, TumorContamination>
     @Override
     public TumorContamination apply(DelimFileReader.Row row)
     {
-        BaseDepthData tumorBDD = ImmutableBaseDepthData.builder()
-                .ref(BaseDepthData.Base.valueOf(row.get(2)))
-                .alt(BaseDepthData.Base.valueOf(row.get(3)))
-                .readDepth(row.getInt(4))
-                .indelCount(row.getInt(5))
-                .refSupport(row.getInt(6))
-                .altSupport(row.getInt(7))
-                .build();
+        BaseDepthData tumorBDD = new BaseDepthData(
+                AmberBase.valueOf(row.get(2)),
+                AmberBase.valueOf(row.get(3)),
+                row.getInt(4),
+                row.getInt(5),
+                row.getInt(6),
+                row.getInt(7));
         return new TumorContamination(row.get(0), row.getInt(1), null, tumorBDD);
     }
 }

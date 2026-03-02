@@ -2,25 +2,16 @@ package com.hartwig.hmftools.amber;
 
 import static java.lang.String.format;
 
-import com.hartwig.hmftools.common.amber.AmberSite;
+import com.hartwig.hmftools.common.amber.AmberBase;
 import com.hartwig.hmftools.common.amber.BaseDepthData;
-import com.hartwig.hmftools.common.amber.ImmutableBaseDepthData;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 
 public class PositionEvidence implements GenomePosition
 {
-    enum Base {
-        G,
-        A,
-        T,
-        C,
-        N
-    }
-
     public final String Chromosome;
     public final int Position;
-    public final Base Ref;
-    public final Base Alt;
+    public final AmberBase Ref;
+    public final AmberBase Alt;
 
     public int ReadDepth;
     public int IndelCount;
@@ -33,8 +24,8 @@ public class PositionEvidence implements GenomePosition
     {
         Chromosome = chromosome;
         Position = position;
-        Ref = Base.valueOf(ref);
-        Alt = Base.valueOf(alt);
+        Ref = AmberBase.valueOf(ref);
+        Alt = AmberBase.valueOf(alt);
         ReadDepth = 0;
         IndelCount = 0;
         RefSupport = 0;
@@ -48,7 +39,10 @@ public class PositionEvidence implements GenomePosition
         return new PositionEvidence(other.Chromosome, other.Position, other.ref(), other.alt());
     }
 
-    public boolean isValid() { return IndelCount == 0; }
+    public boolean isValid()
+    {
+        return IndelCount == 0;
+    }
 
     public String toString()
     {
@@ -57,24 +51,50 @@ public class PositionEvidence implements GenomePosition
     }
 
     @Override
-    public String chromosome() { return Chromosome; }
-    public int position() { return Position; }
+    public String chromosome()
+    {
+        return Chromosome;
+    }
 
-    public String ref() { return Ref.toString(); }
-    public String alt() { return Alt.toString(); }
+    public int position()
+    {
+        return Position;
+    }
 
-    public boolean equalsRef(final char base) { return Base.valueOf(String.valueOf(base)) == Ref; }
-    public boolean equalsAlt(final char base) { return Base.valueOf(String.valueOf(base)) == Alt; }
+    public double vaf()
+    {
+        if(ReadDepth == 0)
+        {
+            return Double.NaN;
+        }
+        return (double) AltSupport / ReadDepth;
+    }
+
+    public String ref()
+    {
+        return Ref.toString();
+    }
+
+    public String alt()
+    {
+        return Alt.toString();
+    }
+
+    public boolean equalsRef(final char base)
+    {
+        return AmberBase.valueOf(String.valueOf(base)) == Ref;
+    }
+
+    public boolean equalsAlt(final char base)
+    {
+        return AmberBase.valueOf(String.valueOf(base)) == Alt;
+    }
 
     public BaseDepthData toBaseDepthData()
     {
-        return ImmutableBaseDepthData.builder()
-                .ref(BaseDepthData.Base.valueOf(ref()))
-                .alt(BaseDepthData.Base.valueOf(alt()))
-                .readDepth(ReadDepth)
-                .refSupport(RefSupport)
-                .altSupport(AltSupport)
-                .indelCount(IndelCount)
-                .build();
+        return new BaseDepthData(
+                AmberBase.valueOf(ref()),
+                AmberBase.valueOf(alt()),
+                ReadDepth, RefSupport, AltSupport, IndelCount);
     }
 }

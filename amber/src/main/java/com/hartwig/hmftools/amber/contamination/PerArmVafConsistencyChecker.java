@@ -6,24 +6,25 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.hartwig.hmftools.amber.VafReading;
 import com.hartwig.hmftools.common.segmentation.ChrArm;
 import com.hartwig.hmftools.common.segmentation.ChrArmLocator;
 
 public class PerArmVafConsistencyChecker
 {
-    public static VafConsistencyCheckResult calculateConfirmationFactor(final ChrArmLocator chrArmLocator,
+    public static VafConsistencyCheckResult<ChrArm> calculateConfirmationFactor(final ChrArmLocator chrArmLocator,
             double vaf,
-            List<TumorContamination> data)
+            List<VafReading> data)
     {
         VafPredicate classifier = new BinomialVafPredicate(vaf);
         PerArmVafConsistencyChecker confirmation = new PerArmVafConsistencyChecker(classifier, chrArmLocator);
         data.forEach(confirmation::offer);
-        return confirmation.gini();
+        return confirmation.unevenDistributionCost();
     }
 
     private final VafPredicate Classifier;
     private final ChrArmLocator mChrArmLocator;
-    private final Map<ChrArm, ArmEvidence> ArmToEvidence = new HashMap<>();
+    private final Map<ChrArm, CategoryEvidence<ChrArm>> ArmToEvidence = new HashMap<>();
 
     PerArmVafConsistencyChecker(final VafPredicate classifier, final ChrArmLocator chrArmLocator)
     {
@@ -31,22 +32,22 @@ public class PerArmVafConsistencyChecker
         mChrArmLocator = chrArmLocator;
     }
 
-    void offer(TumorContamination contamination)
+    void offer(VafReading contamination)
     {
-        ChrArm chrArm = mChrArmLocator.map(contamination.Chromosome, contamination.Position);
+        ChrArm chrArm = mChrArmLocator.map(contamination.chromosome(), contamination.position());
         boolean isEvidenceOfContamination = Classifier.test(contamination);
-        ArmToEvidence.computeIfAbsent(chrArm, ArmEvidence::new).register(isEvidenceOfContamination);
+        ArmToEvidence.computeIfAbsent(chrArm, CategoryEvidence::new).register(isEvidenceOfContamination);
     }
 
-    VafConsistencyCheckResult gini()
+    VafConsistencyCheckResult<ChrArm> unevenDistributionCost()
     {
-        Set<ArmEvidence> armEvidenceValues = new HashSet<>(ArmToEvidence.values());
-        ArmEvidenceIntegral integral = new ArmEvidenceIntegral(armEvidenceValues);
+        Set<CategoryEvidence<ChrArm>> categoryEvidenceValues = new HashSet<>(ArmToEvidence.values());
+        CategoryEvidenceIntegral<ChrArm> integral = new CategoryEvidenceIntegral<>(categoryEvidenceValues);
         double integralValue = integral.value();
         final int totalHits = integral.totalHits();
         final int totalPoints = integral.totalPoints();
         double possibleMax = 0.5 * totalHits * totalPoints;
-        double gini = 1.0 - (integralValue / possibleMax);
-        return new VafConsistencyCheckResult(gini, totalHits, totalPoints);
+        double cost = integralValue / possibleMax;
+        return new VafConsistencyCheckResult<>(cost, totalHits, totalPoints, integral.mCategoryEvidence);
     }
 }

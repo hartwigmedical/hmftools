@@ -27,17 +27,8 @@ public class TumorContaminationModel
 
     public double calcContamination(final List<TumorContamination> unfilteredTumorContamination, long amberSiteCount)
     {
-        //        List<TumorContamination> contaminationSites = unfilteredTumorContamination.stream()
-        //                .filter(x -> x.Normal.readDepth() > MIN_NORMAL_READ_DEPTH).collect(Collectors.toList());
-
         List<TumorContamination> contaminationSites = unfilteredTumorContamination.stream()
-                .filter(x -> x.Tumor.readDepth() > MIN_NORMAL_READ_DEPTH)
-                .filter(x ->
-                {
-                    double v = x.tumorVaf();
-                    return v > 0.001 && v < 0.2;
-                })
-                .collect(Collectors.toList());
+                .filter(x -> x.Normal.readDepth() > MIN_NORMAL_READ_DEPTH).collect(Collectors.toList());
 
         int medianTumorReadDepth = medianDepth(contaminationSites);
 

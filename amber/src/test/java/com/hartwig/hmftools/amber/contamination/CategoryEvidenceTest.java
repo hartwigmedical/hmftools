@@ -14,15 +14,15 @@ import com.hartwig.hmftools.common.segmentation.ChrArm;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class ArmEvidenceTest
+public class CategoryEvidenceTest
 {
     @Test
     public void equalsTest()
     {
-        ArmEvidence evidence1 = new ArmEvidence(new ChrArm(_1, Arm.P));
-        ArmEvidence evidence2 = new ArmEvidence(new ChrArm(_1, Arm.P));
-        ArmEvidence evidence3 = new ArmEvidence(new ChrArm(_1, Arm.Q));
-        ArmEvidence evidence4 = new ArmEvidence(new ChrArm(_2, Arm.P));
+        CategoryEvidence<ChrArm> evidence1 = new CategoryEvidence<>(new ChrArm(_1, Arm.P));
+        CategoryEvidence<ChrArm> evidence2 = new CategoryEvidence<>(new ChrArm(_1, Arm.P));
+        CategoryEvidence<ChrArm> evidence3 = new CategoryEvidence<>(new ChrArm(_1, Arm.Q));
+        CategoryEvidence<ChrArm> evidence4 = new CategoryEvidence<>(new ChrArm(_2, Arm.P));
 
         assertEquals(evidence1, evidence2);
         assertNotEquals(evidence1, evidence3);
@@ -32,8 +32,8 @@ public class ArmEvidenceTest
     @Test
     public void hashCodeTest()
     {
-        ArmEvidence evidence1 = new ArmEvidence(new ChrArm(_1, Arm.P));
-        ArmEvidence evidence2 = new ArmEvidence(new ChrArm(_1, Arm.P));
+        CategoryEvidence<ChrArm> evidence1 = new CategoryEvidence<>(new ChrArm(_1, Arm.P));
+        CategoryEvidence<ChrArm> evidence2 = new CategoryEvidence<>(new ChrArm(_1, Arm.P));
 
         assertEquals(evidence1.hashCode(), evidence2.hashCode());
     }
@@ -41,7 +41,7 @@ public class ArmEvidenceTest
     @Test
     public void ratioTest()
     {
-        ArmEvidence evidence = new ArmEvidence(new ChrArm(_1, Arm.P));
+        CategoryEvidence<ChrArm> evidence = new CategoryEvidence<>(new ChrArm(_1, Arm.P));
         assertEquals(Double.NaN, evidence.ratio(), 0.0001);
         evidence.register(false);
         assertEquals(0.0, evidence.ratio(), 0.001);
@@ -52,12 +52,12 @@ public class ArmEvidenceTest
     @Test
     public void comparisonTest()
     {
-        ArmEvidence ae1p = new ArmEvidence(new ChrArm(_1, Arm.P));
-        ArmEvidence ae1q = new ArmEvidence(new ChrArm(_1, Arm.Q));
-        ArmEvidence ae2p = new ArmEvidence(new ChrArm(_2, Arm.P));
-        ArmEvidence ae2q = new ArmEvidence(new ChrArm(_2, Arm.Q));
-        ArmEvidence ae3p = new ArmEvidence(new ChrArm(_3, Arm.P));
-        ArmEvidence ae3q = new ArmEvidence(new ChrArm(_3, Arm.Q));
+        CategoryEvidence<ChrArm> ae1p = new CategoryEvidence<>(new ChrArm(_1, Arm.P));
+        CategoryEvidence<ChrArm> ae1q = new CategoryEvidence<>(new ChrArm(_1, Arm.Q));
+        CategoryEvidence<ChrArm> ae2p = new CategoryEvidence<>(new ChrArm(_2, Arm.P));
+        CategoryEvidence<ChrArm> ae2q = new CategoryEvidence<>(new ChrArm(_2, Arm.Q));
+        CategoryEvidence<ChrArm> ae3p = new CategoryEvidence<>(new ChrArm(_3, Arm.P));
+        CategoryEvidence<ChrArm> ae3q = new CategoryEvidence<>(new ChrArm(_3, Arm.Q));
 
         setValues(ae1p, 1, 10);
         setValues(ae2q, 10, 100);
@@ -73,7 +73,7 @@ public class ArmEvidenceTest
         Assert.assertTrue(ae3p.compareTo(ae3q) < 0);
     }
 
-    static void setValues(ArmEvidence evidence, int hits, int totalPoints)
+    static void setValues(CategoryEvidence<ChrArm> evidence, int hits, int totalPoints)
     {
         Preconditions.checkArgument(hits <= totalPoints);
 

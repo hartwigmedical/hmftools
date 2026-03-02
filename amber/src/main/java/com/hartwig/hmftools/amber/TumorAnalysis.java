@@ -118,6 +118,5 @@ public class TumorAnalysis
                         new TumorContamination(normal.Chromosome, normal.Position, normal.toBaseDepthData(), tumor.toBaseDepthData()));
             }
         }
-        System.out.println(mContamination.size());
     }
 }

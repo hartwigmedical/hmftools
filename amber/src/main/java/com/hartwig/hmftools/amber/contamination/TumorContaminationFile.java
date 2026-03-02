@@ -10,8 +10,8 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.amber.PositionEvidence;
+import com.hartwig.hmftools.common.amber.AmberBase;
 import com.hartwig.hmftools.common.amber.BaseDepthData;
-import com.hartwig.hmftools.common.amber.ImmutableBaseDepthData;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -53,21 +53,21 @@ public final class TumorContaminationFile
 
         PositionEvidence template = new PositionEvidence(values[0], Integer.parseInt(values[1]), values[2], values[3]);
 
-        BaseDepthData normalDepth = ImmutableBaseDepthData.builder()
-                .ref(BaseDepthData.Base.valueOf(template.ref()))
-                .alt(BaseDepthData.Base.valueOf(template.alt()))
-                .readDepth(Integer.parseInt(values[4]))
-                .refSupport(Integer.parseInt(values[5]))
-                .altSupport(Integer.parseInt(values[6]))
-                .build();
+        BaseDepthData normalDepth = new BaseDepthData(
+                AmberBase.valueOf(template.ref()),
+                AmberBase.valueOf(template.alt()),
+                Integer.parseInt(values[4]),
+                0,
+                Integer.parseInt(values[5]),
+                Integer.parseInt(values[6]));
 
-        BaseDepthData tumorDepth = ImmutableBaseDepthData.builder()
-                .ref(BaseDepthData.Base.valueOf(template.ref()))
-                .alt(BaseDepthData.Base.valueOf(template.alt()))
-                .readDepth(Integer.parseInt(values[7]))
-                .refSupport(Integer.parseInt(values[8]))
-                .altSupport(Integer.parseInt(values[9]))
-                .build();
+        BaseDepthData tumorDepth = new BaseDepthData(
+                AmberBase.valueOf(template.ref()),
+                AmberBase.valueOf(template.alt()),
+                Integer.parseInt(values[7]),
+                0,
+                Integer.parseInt(values[8]),
+                Integer.parseInt(values[9]));
 
         return new TumorContamination(template.Chromosome, template.Position, normalDepth, tumorDepth);
     }

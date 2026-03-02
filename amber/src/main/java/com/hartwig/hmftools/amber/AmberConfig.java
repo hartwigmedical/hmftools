@@ -227,11 +227,6 @@ public class AmberConfig
         return ReferenceBams.isEmpty() && TumorBam != null;
     }
 
-    public boolean isTumorOnly()
-    {
-        return ReferenceBams.isEmpty() && TumorBam != null;
-    }
-
     public boolean isGermlineOnly()
     {
         return !ReferenceBams.isEmpty() && TumorBam == null;

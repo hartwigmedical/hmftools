@@ -2,19 +2,22 @@ package com.hartwig.hmftools.amber.contamination;
 
 import java.util.Objects;
 
-import com.hartwig.hmftools.common.segmentation.ChrArm;
-
 import org.jetbrains.annotations.NotNull;
 
-class ArmEvidence implements Comparable<ArmEvidence>
+public class CategoryEvidence<T extends Comparable<T>> implements Comparable<CategoryEvidence<T>>
 {
-    private final ChrArm chrArm;
+    private final T Category;
     private int TotalPoints = 0;
     private int EvidencePoints = 0;
 
-    ArmEvidence(final ChrArm chrArm)
+    public CategoryEvidence(final T Category)
     {
-        this.chrArm = chrArm;
+        this.Category = Category;
+    }
+
+    public T category()
+    {
+        return Category;
     }
 
     public void register(boolean isEvidence)
@@ -37,12 +40,12 @@ class ArmEvidence implements Comparable<ArmEvidence>
     }
 
     @Override
-    public int compareTo(@NotNull final ArmEvidence o)
+    public int compareTo(@NotNull final CategoryEvidence<T> o)
     {
         int result = Double.compare(ratio(), o.ratio());
         if(result == 0)
         {
-            result = chrArm.compareTo(o.chrArm);
+            result = Category.compareTo(o.Category);
         }
         return result;
     }
@@ -63,13 +66,19 @@ class ArmEvidence implements Comparable<ArmEvidence>
         {
             return false;
         }
-        final ArmEvidence that = (ArmEvidence) o;
-        return Objects.equals(chrArm, that.chrArm);
+        final CategoryEvidence<?> that = (CategoryEvidence<?>) o;
+        return Objects.equals(Category, that.Category);
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hashCode(chrArm);
+        return Objects.hashCode(Category);
+    }
+
+    @Override
+    public String toString()
+    {
+        return String.format("%s: %d/%d", Category, EvidencePoints, TotalPoints);
     }
 }

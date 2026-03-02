@@ -16,7 +16,6 @@ import static com.hartwig.hmftools.common.region.BedFileReader.loadBedFileChrMap
 import static com.hartwig.hmftools.common.utils.config.VersionInfo.fromAppName;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -28,22 +27,24 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.amber.contamination.CategoryEvidence;
+import com.hartwig.hmftools.amber.contamination.ArmEvidenceFile;
+import com.hartwig.hmftools.amber.contamination.PositionBasedFrequencySupplier;
 import com.hartwig.hmftools.amber.contamination.TumorContamination;
 import com.hartwig.hmftools.amber.contamination.TumorContaminationModel;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.amber.blacklist.AmberBlacklistFile;
 import com.hartwig.hmftools.amber.blacklist.AmberBlacklistPoint;
+import com.hartwig.hmftools.amber.contamination.TumorOnlyContaminationAnalysis;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.amber.AmberSite;
 import com.hartwig.hmftools.common.amber.AmberSitesFile;
-import com.hartwig.hmftools.common.amber.BaseDepthData;
-import com.hartwig.hmftools.common.amber.ImmutableBaseDepthData;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
-import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.position.GenomePositionImpl;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.segmentation.ChrArm;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.VersionInfo;
@@ -98,7 +99,7 @@ public class AmberApplication implements AutoCloseable
         return 0;
     }
 
-    private ImmutableListMultimap<Chromosome, AmberSite> loadAmberSites() throws IOException
+    private ImmutableListMultimap<Chromosome, AmberSite> loadAmberSites() throws Exception
     {
         ListMultimap<Chromosome, AmberSite> amberSitesMap = AmberSitesFile.sites(mConfig.BafLociPath);
 
@@ -249,7 +250,20 @@ public class AmberApplication implements AutoCloseable
         // no homozygous sites
         TumorAnalysis tumor = new TumorAnalysis(mConfig, readerFactory, allNormal, ArrayListMultimap.create());
 
-        double contamination = persistRawTumorBAFs(tumor.getBafs());
+        List<TumorBAF> readDepthAndQualityFiltered = tumor.getBafs().values()
+                .stream()
+                .sorted().toList();
+
+        PositionBasedFrequencySupplier frequencySupplier = new PositionBasedFrequencySupplier(mChromosomeSites.values());
+        TumorOnlyContaminationAnalysis contaminationAnalysis =
+                new TumorOnlyContaminationAnalysis(readDepthAndQualityFiltered, mConfig.RefGenVersion, frequencySupplier);
+        double contamination = contaminationAnalysis.getApproximateContamination();
+        List<TumorContamination> contaminationEvidenceList = contaminationAnalysis.getContaminationPoints();
+        mPersistence.persistContamination(contaminationEvidenceList);
+
+        List<CategoryEvidence<ChrArm>> categoryEvidence = contaminationAnalysis.getArmEvidence();
+        ArmEvidenceFile.write(ArmEvidenceFile.generateFilename(mConfig.OutputDir, mConfig.TumorId), categoryEvidence);
+
         List<TumorBAF> tumorBAFList = tumor.getBafs().values()
                 .stream()
                 .filter(x -> x.TumorEvidence.ReadDepth >= mConfig.TumorMinDepth)
@@ -258,8 +272,7 @@ public class AmberApplication implements AutoCloseable
                 .filter(x -> x.TumorEvidence.AltSupport >= mConfig.TumorOnlyMinSupport)
                 .filter(x -> isFinite(x.refFrequency()) && Doubles.greaterOrEqual(x.refFrequency(), mConfig.TumorOnlyMinVaf))
                 .filter(x -> isFinite(x.altFrequency()) && Doubles.greaterOrEqual(x.altFrequency(), mConfig.TumorOnlyMinVaf))
-                .sorted()
-                .toList();
+                .sorted().toList();
 
         List<AmberBAF> amberBAFList = tumorBAFList.stream()
                 .map(AmberUtils::fromTumorBaf).filter(x -> Double.isFinite(x.tumorBAF())).collect(toList());
@@ -267,67 +280,6 @@ public class AmberApplication implements AutoCloseable
         mPersistence.persistQC(0, contamination, null);
         mPersistence.persistVersionInfo(mVersionInfo);
         mPersistence.persistBAF(amberBAFList);
-    }
-
-    private double persistRawTumorBAFs(ListMultimap<Chromosome, TumorBAF> tumorBAFs) throws IOException
-    {
-        List<PositionEvidence> dataList = new ArrayList<>();
-        for(HumanChromosome chromosome : HumanChromosome.values())
-        {
-            if(!tumorBAFs.containsKey(chromosome))
-            {
-                continue;
-            }
-            List<TumorBAF> chromosomeBAFs = tumorBAFs.get(chromosome);
-            dataList.addAll(chromosomeBAFs.stream().map(x -> x.TumorEvidence).toList());
-        }
-
-        List<TumorContamination> contaminationList = new ArrayList<>();
-        dataList.forEach(x ->
-        {
-            BaseDepthData bdd = ImmutableBaseDepthData.builder()
-                    .ref(switchBases(x.Ref))
-                    .alt(switchBases(x.Alt))
-                    .refSupport(x.RefSupport)
-                    .altSupport(x.AltSupport)
-                    .readDepth(x.ReadDepth)
-                    .indelCount(x.IndelCount)
-                    .build();
-            contaminationList.add(new TumorContamination(x.Chromosome, x.Position, null, bdd));
-        });
-
-        long sampleHetCount = dataList.size(); // TODO
-
-        double contamination = new TumorContaminationModel().calcContamination(contaminationList, sampleHetCount);
-
-        AMB_LOGGER.info("tumor contamination: {}", contamination);
-        mPersistence.persistContamination(contaminationList);
-
-        String filename = PositionEvidenceFile.generateAmberFilenameForWriting(mConfig.OutputDir, mConfig.TumorId);
-        PositionEvidenceFile.write(filename, dataList);
-
-        return contamination;
-    }
-
-    static BaseDepthData.Base switchBases(PositionEvidence.Base base)
-    {
-        if(base == PositionEvidence.Base.A)
-        {
-            return BaseDepthData.Base.A;
-        }
-        if(base == PositionEvidence.Base.C)
-        {
-            return BaseDepthData.Base.C;
-        }
-        if(base == PositionEvidence.Base.G)
-        {
-            return BaseDepthData.Base.G;
-        }
-        if(base == PositionEvidence.Base.T)
-        {
-            return BaseDepthData.Base.T;
-        }
-        return BaseDepthData.Base.N;
     }
 
     // the heterozygous loci snp list that we use contains some regions that could be noisy.
@@ -342,7 +294,7 @@ public class AmberApplication implements AutoCloseable
         // filter out everything in loaded genome positions that are in these regions
         for(Map.Entry<Chromosome, AmberSite> entry : mChromosomeSites.entries())
         {
-            // check against black list
+            // check against blacklist
             boolean blacklisted = false;
             for(GenomeRegion gr : excludedRegions)
             {

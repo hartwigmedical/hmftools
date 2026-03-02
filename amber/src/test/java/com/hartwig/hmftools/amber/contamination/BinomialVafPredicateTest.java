@@ -5,8 +5,9 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.hartwig.hmftools.amber.VafReading;
+import com.hartwig.hmftools.common.amber.AmberBase;
 import com.hartwig.hmftools.common.amber.BaseDepthData;
-import com.hartwig.hmftools.common.amber.ImmutableBaseDepthData;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
 import org.junit.Test;
@@ -37,16 +38,8 @@ public class BinomialVafPredicateTest
         assertFalse(pred.test(tc(1000, 900, 5)));
     }
 
-    private TumorContamination tc(int readDepth, int refSupport, int altSupport)
+    private VafReading tc(int readDepth, int refSupport, int altSupport)
     {
-        BaseDepthData bdd = ImmutableBaseDepthData.builder()
-                .ref(BaseDepthData.Base.A)
-                .alt(BaseDepthData.Base.C)
-                .readDepth(readDepth)
-                .refSupport(refSupport)
-                .altSupport(altSupport)
-                .indelCount(0)
-                .build();
-        return new TumorContamination(V38.versionedChromosome(HumanChromosome._2), 100_000_000, null, bdd);
+        return new VafReading(V38.versionedChromosome(HumanChromosome._2), 100_000_000, readDepth, refSupport, altSupport);
     }
 }
