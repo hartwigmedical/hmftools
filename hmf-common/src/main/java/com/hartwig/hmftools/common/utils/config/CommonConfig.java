@@ -110,6 +110,12 @@ public final class CommonConfig
     public static final String REDUX_DIR_CFG = toolDirectory("redux");
     public static final String REDUX_DIR_DESC = toolDirectoryDesc("Redux");
 
+    public static final String REDUX_TUMOR_DIR_CFG = toolDirectory("redux_tumor");
+    public static final String REDUX_TUMOR_DIR_DESC = toolDirectoryDesc("Redux tumor");
+
+    public static final String REDUX_REF_DIR_CFG = toolDirectory("redux_ref");
+    public static final String REDUX_REF_DIR_DESC = toolDirectoryDesc("Redux reference");
+
     public static final String SAGE_DIR_CFG = toolDirectory("sage");
     public static final String SAGE_DIR_DESC = toolDirectoryDesc("Sage");
 
