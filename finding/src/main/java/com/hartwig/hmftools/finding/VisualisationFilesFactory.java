@@ -3,8 +3,8 @@ package com.hartwig.hmftools.finding;
 import java.nio.file.Path;
 import java.util.List;
 
-import com.hartwig.hmftools.datamodel.finding.VisualisationFiles;
-import com.hartwig.hmftools.datamodel.finding.VisualisationFilesBuilder;
+import com.hartwig.hmftools.finding.datamodel.VisualisationFiles;
+import com.hartwig.hmftools.finding.datamodel.VisualisationFilesBuilder;
 import com.hartwig.hmftools.datamodel.orange.OrangePlots;
 
 import org.apache.logging.log4j.LogManager;

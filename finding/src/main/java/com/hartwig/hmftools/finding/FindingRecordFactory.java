@@ -18,9 +18,9 @@ import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.driver.panel.DriverGeneFile;
 import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
+import com.hartwig.hmftools.finding.datamodel.PredictedTumorOriginBuilder;
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.driver.DriverSource;
-import com.hartwig.hmftools.datamodel.finding.*;
 import com.hartwig.hmftools.finding.clinicaltranscript.ClinicalTranscriptFile;
 import com.hartwig.hmftools.finding.clinicaltranscript.ClinicalTranscriptsModel;
 import com.hartwig.hmftools.datamodel.linx.FusionLikelihoodType;
@@ -36,6 +36,34 @@ import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
 import com.hartwig.hmftools.datamodel.virus.VirusLikelihoodType;
+import com.hartwig.hmftools.finding.datamodel.DriverFieldsBuilder;
+import com.hartwig.hmftools.finding.datamodel.DriverFindingList;
+import com.hartwig.hmftools.finding.datamodel.DriverFindingListBuilder;
+import com.hartwig.hmftools.finding.datamodel.FindingItem;
+import com.hartwig.hmftools.finding.datamodel.FindingItemBuilder;
+import com.hartwig.hmftools.finding.datamodel.FindingList;
+import com.hartwig.hmftools.finding.datamodel.FindingListBuilder;
+import com.hartwig.hmftools.finding.datamodel.FindingRecord;
+import com.hartwig.hmftools.finding.datamodel.FindingRecordBuilder;
+import com.hartwig.hmftools.finding.datamodel.FindingsStatus;
+import com.hartwig.hmftools.finding.datamodel.Fusion;
+import com.hartwig.hmftools.finding.datamodel.FusionBuilder;
+import com.hartwig.hmftools.finding.datamodel.GainDeletion;
+import com.hartwig.hmftools.finding.datamodel.HomologousRecombination;
+import com.hartwig.hmftools.finding.datamodel.HomologousRecombinationBuilder;
+import com.hartwig.hmftools.finding.datamodel.MetaPropertiesBuilder;
+import com.hartwig.hmftools.finding.datamodel.MicrosatelliteStability;
+import com.hartwig.hmftools.finding.datamodel.MicrosatelliteStabilityBuilder;
+import com.hartwig.hmftools.finding.datamodel.PharmocoGenotype;
+import com.hartwig.hmftools.finding.datamodel.PharmocoGenotypeBuilder;
+import com.hartwig.hmftools.finding.datamodel.PredictedTumorOrigin;
+import com.hartwig.hmftools.finding.datamodel.PurityPloidyFitBuilder;
+import com.hartwig.hmftools.finding.datamodel.PurityPloidyFitQcBuilder;
+import com.hartwig.hmftools.finding.datamodel.TumorMutationStatus;
+import com.hartwig.hmftools.finding.datamodel.TumorMutationStatusBuilder;
+import com.hartwig.hmftools.finding.datamodel.Virus;
+import com.hartwig.hmftools.finding.datamodel.VirusBuilder;
+import com.hartwig.hmftools.finding.datamodel.VisualisationFiles;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -66,7 +94,8 @@ public class FindingRecordFactory
         boolean hasReliablePurity = purple.fit().containsTumorCells();
         boolean hasContamination = purple.fit().qc().status().contains(PurpleQCStatus.FAIL_CONTAMINATION);
 
-        FindingRecordBuilder builder = FindingRecordBuilder.builder()
+        FindingRecordBuilder
+                builder = FindingRecordBuilder.builder()
                 .metaProperties(MetaPropertiesBuilder.builder()
                         .version("1.0")
                         .refGenomeVersion(orangeRecord.refGenomeVersion())
@@ -79,7 +108,8 @@ public class FindingRecordFactory
                 .germlineDisruptions(createGermlineDisruptions(orangeRecord.refSample() != null, linx, eventFactory))
                 .fusions(createFusionsFindings(orangeRecord.linx(), eventFactory));
 
-        DriverFindingList<GainDeletion> somaticGainDeletions = addPurpleFindings(builder, orangeRecord, clinicalTranscriptsModel, driverGenes, eventFactory);
+        DriverFindingList<GainDeletion>
+                somaticGainDeletions = addPurpleFindings(builder, orangeRecord, clinicalTranscriptsModel, driverGenes, eventFactory);
 
         VisualisationFiles visualisationFiles = VisualisationFilesFactory.create(orangeRecord.plots());
 
@@ -93,7 +123,8 @@ public class FindingRecordFactory
     }
 
     // return the gain deletions cause they are needed by HRD, will see if we can find a better way
-    private static DriverFindingList<GainDeletion> addPurpleFindings(FindingRecordBuilder builder, final OrangeRecord orangeRecord,
+    private static DriverFindingList<GainDeletion> addPurpleFindings(
+            FindingRecordBuilder builder, final OrangeRecord orangeRecord,
             final @Nullable ClinicalTranscriptsModel clinicalTranscriptsModel, Map<String, DriverGene> driverGenes, EventFactory eventFactory)
     {
         boolean hasRefSample = orangeRecord.refSample() != null;
@@ -123,7 +154,8 @@ public class FindingRecordFactory
                 .maxPloidy(purpleFit.maxPloidy())
                 .build());
 
-        DriverFindingList<GainDeletion> somaticGainDeletions =
+        DriverFindingList<GainDeletion>
+                somaticGainDeletions =
                 GainDeletionFactory.somaticGainDeletionFindings(orangeRecord.refGenomeVersion(), findingsStatus, purple, eventFactory);
 
         builder.somaticSmallVariants(SmallVariantFactory.somaticSmallVariantFindings(purple, findingsStatus, clinicalTranscriptsModel, driverGenes, eventFactory))
@@ -219,7 +251,8 @@ public class FindingRecordFactory
                 .build();
     }
 
-    private static List<GainDeletion> filterLohGainDeletions(DriverFindingList<GainDeletion> gainDeletions, Set<String> geneNames)
+    private static List<GainDeletion> filterLohGainDeletions(
+            DriverFindingList<GainDeletion> gainDeletions, Set<String> geneNames)
     {
         return gainDeletions.findings().stream()
                 .filter(x -> geneNames.contains(x.gene()))

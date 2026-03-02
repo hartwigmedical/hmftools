@@ -3,7 +3,7 @@ package com.hartwig.hmftools.finding;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.hartwig.hmftools.datamodel.finding.Doubles;
+import com.hartwig.hmftools.finding.datamodel.Doubles;
 import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
 import com.hartwig.hmftools.datamodel.purple.PurpleCopyNumber;
 

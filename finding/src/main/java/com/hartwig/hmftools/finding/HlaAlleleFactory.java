@@ -6,11 +6,11 @@ import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.datamodel.finding.FindingList;
-import com.hartwig.hmftools.datamodel.finding.FindingListBuilder;
-import com.hartwig.hmftools.datamodel.finding.FindingsStatus;
-import com.hartwig.hmftools.datamodel.finding.HlaAllele;
-import com.hartwig.hmftools.datamodel.finding.HlaAlleleBuilder;
+import com.hartwig.hmftools.finding.datamodel.FindingList;
+import com.hartwig.hmftools.finding.datamodel.FindingListBuilder;
+import com.hartwig.hmftools.finding.datamodel.FindingsStatus;
+import com.hartwig.hmftools.finding.datamodel.HlaAllele;
+import com.hartwig.hmftools.finding.datamodel.HlaAlleleBuilder;
 import com.hartwig.hmftools.datamodel.hla.LilacAllele;
 import com.hartwig.hmftools.datamodel.hla.LilacRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;

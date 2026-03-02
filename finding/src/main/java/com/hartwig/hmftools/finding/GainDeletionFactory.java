@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import com.hartwig.hmftools.finding.datamodel.GainDeletion;
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.driver.DriverSource;
-import com.hartwig.hmftools.datamodel.finding.*;
 import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
 import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
@@ -15,6 +15,12 @@ import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.PurpleLossOfHeterozygosity;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
+import com.hartwig.hmftools.finding.datamodel.DriverFieldsBuilder;
+import com.hartwig.hmftools.finding.datamodel.DriverFindingList;
+import com.hartwig.hmftools.finding.datamodel.DriverFindingListBuilder;
+import com.hartwig.hmftools.finding.datamodel.FindingsStatus;
+import com.hartwig.hmftools.finding.datamodel.GainDeletionBuilder;
+import com.hartwig.hmftools.finding.datamodel.ReportedStatus;
 
 final class GainDeletionFactory
 {

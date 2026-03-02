@@ -4,8 +4,8 @@ import java.nio.file.Path;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.datamodel.OrangeJson;
-import com.hartwig.hmftools.datamodel.finding.FindingRecord;
-import com.hartwig.hmftools.datamodel.finding.FindingsJson;
+import com.hartwig.hmftools.finding.datamodel.FindingRecord;
+import com.hartwig.hmftools.finding.datamodel.FindingsJson;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 
 import org.apache.logging.log4j.LogManager;

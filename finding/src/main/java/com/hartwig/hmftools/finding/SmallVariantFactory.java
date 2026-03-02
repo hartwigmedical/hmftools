@@ -6,15 +6,24 @@ import java.util.Map;
 import java.util.Objects;
 
 import com.hartwig.hmftools.common.driver.panel.DriverGene;
+import com.hartwig.hmftools.finding.datamodel.SmallVariant;
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.driver.DriverSource;
-import com.hartwig.hmftools.datamodel.finding.*;
 import com.hartwig.hmftools.finding.clinicaltranscript.ClinicalTranscriptsModel;
 import com.hartwig.hmftools.datamodel.purple.PurpleAllelicDepth;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
+import com.hartwig.hmftools.finding.datamodel.DriverCategory;
+import com.hartwig.hmftools.finding.datamodel.DriverFieldsBuilder;
+import com.hartwig.hmftools.finding.datamodel.DriverFindingList;
+import com.hartwig.hmftools.finding.datamodel.DriverFindingListBuilder;
+import com.hartwig.hmftools.finding.datamodel.FindingsStatus;
+import com.hartwig.hmftools.finding.datamodel.ReportedStatus;
+import com.hartwig.hmftools.finding.datamodel.SmallVariantAllelicDepthBuilder;
+import com.hartwig.hmftools.finding.datamodel.SmallVariantBuilder;
+import com.hartwig.hmftools.finding.datamodel.SmallVariantTranscriptImpactBuilder;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -110,7 +119,8 @@ final class SmallVariantFactory
                         : null;
 
         DriverGene driverGene = driverGeneMap.get(variant.gene());
-        DriverCategory driverCategory = driverGene != null ? driverLikelihoodType(driverGene.likelihoodType()) : null;
+        DriverCategory
+                driverCategory = driverGene != null ? driverLikelihoodType(driverGene.likelihoodType()) : null;
 
         boolean reportable = transcriptImpact.reported() || (otherImpact != null && otherImpact.reported());
         DriverInterpretation driverInterpretation = DriverInterpretation.interpret(driver.driverLikelihood());
