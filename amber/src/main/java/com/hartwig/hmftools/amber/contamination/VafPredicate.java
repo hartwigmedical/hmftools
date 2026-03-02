@@ -2,7 +2,7 @@ package com.hartwig.hmftools.amber.contamination;
 
 import com.hartwig.hmftools.amber.VafReading;
 
-interface VafPredicate
+public interface VafPredicate
 {
     boolean test(VafReading contamination);
 }

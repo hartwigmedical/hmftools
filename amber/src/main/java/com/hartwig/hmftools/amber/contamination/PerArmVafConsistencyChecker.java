@@ -26,20 +26,20 @@ public class PerArmVafConsistencyChecker
     private final ChrArmLocator mChrArmLocator;
     private final Map<ChrArm, CategoryEvidence<ChrArm>> ArmToEvidence = new HashMap<>();
 
-    PerArmVafConsistencyChecker(final VafPredicate classifier, final ChrArmLocator chrArmLocator)
+    public PerArmVafConsistencyChecker(final VafPredicate classifier, final ChrArmLocator chrArmLocator)
     {
         Classifier = classifier;
         mChrArmLocator = chrArmLocator;
     }
 
-    void offer(VafReading contamination)
+    public void offer(VafReading contamination)
     {
         ChrArm chrArm = mChrArmLocator.map(contamination.chromosome(), contamination.position());
         boolean isEvidenceOfContamination = Classifier.test(contamination);
         ArmToEvidence.computeIfAbsent(chrArm, CategoryEvidence::new).register(isEvidenceOfContamination);
     }
 
-    VafConsistencyCheckResult<ChrArm> unevenDistributionCost()
+    public VafConsistencyCheckResult<ChrArm> unevenDistributionCost()
     {
         Set<CategoryEvidence<ChrArm>> categoryEvidenceValues = new HashSet<>(ArmToEvidence.values());
         CategoryEvidenceIntegral<ChrArm> integral = new CategoryEvidenceIntegral<>(categoryEvidenceValues);

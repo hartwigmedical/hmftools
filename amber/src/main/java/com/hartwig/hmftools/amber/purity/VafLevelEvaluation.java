@@ -21,11 +21,11 @@ public class VafLevelEvaluation implements Callable<VafLevelEvaluationResult>
     public VafLevelEvaluationResult call()
     {
         List<PositionEvidence> testable = Evidence.stream().filter(Level::hasSufficientDepthForEventDetection).toList();
-
-        // TODO does testable have a minimum size? Obviously, 0, but....
-
+        if(testable.size() < MINIMUM_CAPTURED_POINTS)
+        {
+            return VafLevelEvaluationResult.tooFewPointsOfSufficientDepth(Level, Level.numberOfCapturedEvidencePoints());
+        }
         testable.forEach(Level::test);
-
         if(Level.numberOfCapturedEvidencePoints() < MINIMUM_CAPTURED_POINTS)
         {
             Result = VafLevelEvaluationResult.tooFewPointsCaptured(Level, Level.numberOfCapturedEvidencePoints());

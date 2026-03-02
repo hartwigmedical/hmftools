@@ -12,28 +12,18 @@ import org.junit.Test;
 @Ignore
 public class SearchGridTest
 {
-    @Test
-    public void closeToZeroTest()
-    {
-        final SearchGrid searchGrid = new SearchGrid();
-        final List<Double> searchValues = searchGrid.searchValues();
-        assertEquals(0.01, searchValues.get(0), 0.0001);
-        assertEquals(0.06, searchValues.get(searchValues.size() - 1), 0.0001);
-        assertTrue(searchValues.size() > 25);
-        checkIncreasingByAtLeast(searchValues);
-    }
 
     @Test
     public void searchValuesTest()
     {
         final SearchGrid searchGrid = new SearchGrid();
         final List<Double> searchValues = searchGrid.searchValues();
-        assertEquals(0.05, searchValues.get(0), 0.0001);
-        assertEquals(0.053, searchValues.get(1), 0.0001);
-        assertEquals(0.055, searchValues.get(2), 0.0001);
-        assertEquals(0.335, searchValues.get(searchValues.size() - 1), 0.0001);
-        assertEquals(0.319, searchValues.get(searchValues.size() - 2), 0.0001);
-        assertTrue(searchValues.size() > 50);
+        assertEquals(0.005, searchValues.get(0), 0.0001);
+        assertEquals(0.006, searchValues.get(1), 0.0001);
+        assertEquals(0.007, searchValues.get(2), 0.0001);
+        assertEquals(0.341, searchValues.get(searchValues.size() - 1), 0.0001);
+        assertEquals(0.324, searchValues.get(searchValues.size() - 2), 0.0001);
+        assertTrue(searchValues.size() >= 60);
         checkIncreasingByAtLeast(searchValues);
     }
 

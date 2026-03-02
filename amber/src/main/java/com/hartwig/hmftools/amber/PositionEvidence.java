@@ -2,6 +2,8 @@ package com.hartwig.hmftools.amber;
 
 import static java.lang.String.format;
 
+import java.util.Objects;
+
 import com.hartwig.hmftools.common.amber.AmberBase;
 import com.hartwig.hmftools.common.amber.BaseDepthData;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
@@ -96,5 +98,27 @@ public class PositionEvidence implements GenomePosition
                 AmberBase.valueOf(ref()),
                 AmberBase.valueOf(alt()),
                 ReadDepth, RefSupport, AltSupport, IndelCount);
+    }
+
+    @Override
+    public boolean equals(final Object o)
+    {
+        if(o == null || getClass() != o.getClass())
+        {
+            return false;
+        }
+        final PositionEvidence that = (PositionEvidence) o;
+        return Position == that.Position && Objects.equals(Chromosome, that.Chromosome) && Ref == that.Ref && Alt == that.Alt;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(Chromosome, Position, Ref, Alt);
+    }
+
+    public VafReading convertToVafReading()
+    {
+        return new VafReading(Chromosome, Position, ReadDepth, RefSupport, AltSupport);
     }
 }
