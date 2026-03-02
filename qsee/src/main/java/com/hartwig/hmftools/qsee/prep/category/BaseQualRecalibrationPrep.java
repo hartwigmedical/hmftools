@@ -51,7 +51,7 @@ public class BaseQualRecalibrationPrep implements CategoryPrep
     public BaseQualRecalibrationPrep(QseePrepConfig config)
     {
         mConfig = config;
-        mBaseQualBinner = new BaseQualBinner(config.SEQUENCING_TYPE);
+        mBaseQualBinner = new BaseQualBinner(config.SequencingTech);
     }
 
     public SourceTool sourceTool() { return SOURCE_TOOL; }

@@ -79,7 +79,7 @@ public class QseePrepConfig
     public final String ThresholdsFile;
     public final ThresholdRegistry QcThresholds;
 
-    public final SequencingType SEQUENCING_TYPE;
+    public final SequencingType SequencingTech;
     public final List<PrepCategory> Categories;
     public final boolean AllowMissingInput;
 
@@ -121,7 +121,7 @@ public class QseePrepConfig
                 ? ThresholdRegistry.createDefault()
                 : ThresholdOverridesFile.read(ThresholdsFile);
 
-        SEQUENCING_TYPE = SequencingType.valueOf(configBuilder.getValue(SEQUENCING_TYPE_CFG));
+        SequencingTech = SequencingType.valueOf(configBuilder.getValue(SEQUENCING_TYPE_CFG));
         Categories = parseCategories(configBuilder.getValue(SKIP_CATEGORIES));
         AllowMissingInput = configBuilder.hasFlag(ALLOW_MISSING_INPUT);
 
@@ -154,6 +154,7 @@ public class QseePrepConfig
         configBuilder.addPath(COHORT_PERCENTILES_FILE_CFG, false, COHORT_PERCENTILES_FILE_CFG_DESC);
         configBuilder.addPath(THRESHOLD_OVERRIDES_FILE_CFG, false, THRESHOLD_OVERRIDES_FILE_CFG_DESC);
 
+        configBuilder.addConfigItem(SEQUENCING_TYPE_CFG, false, SequencingType.ILLUMINA.toString());
         configBuilder.addConfigItem(SKIP_CATEGORIES, false, SKIP_CATEGORIES_DESC, null);
         configBuilder.addFlag(ALLOW_MISSING_INPUT, ALLOW_MISSING_INPUT_DESC);
 
