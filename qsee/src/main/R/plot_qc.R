@@ -1,3 +1,5 @@
+options(warn = 1)
+
 suppressPackageStartupMessages(library(dplyr))
 
 library(ggplot2)
@@ -286,6 +288,12 @@ plot_missing_data <- function(plot_labels = labs()){
       )
 }
 
+force_render <- function(p) {
+   ## Force warnings to be shown immediately
+   invisible(ggplot2::ggplotGrob(p))
+   return(p)
+}
+
 ## =============================
 ## Line / PDF
 ## =============================
@@ -493,7 +501,7 @@ plot_pairwise_comparison <- function(
       gg_geom_linerange <- geom_blank()
    }
    
-   ggplot(plot_data, aes(x = .data[[x]], y = .data[[y]], fill = SampleType)) + 
+   ggplot(plot_data, aes(x = .data[[x]], y = .data[[y]], fill = SampleType)) +
       
       { if(!is.null(hlines)) geom_hline(linewidth = 0.25, color = "grey70", yintercept = hlines) } +
       { if(!is.null(vlines)) geom_vline(linewidth = 0.25, color = "grey70", xintercept = vlines) } +
@@ -558,13 +566,15 @@ PLOTS[[FEATURE_TYPE$DISCORDANT_FRAG_FREQ]] <- local({
    
    plot_data <- plot_data %>% dplyr::mutate(DiscordantFragType = reverse_levels(DiscordantFragType))
    
-   plot_pairwise_comparison(plot_data, x = "DisplayName", plot_type = box_or_bar_plot()) + 
+   p <- plot_pairwise_comparison(plot_data, x = "DisplayName", plot_type = box_or_bar_plot()) + 
       scale_y_continuous(transform = "log10", labels = function(x) format(x, scientific = FALSE, drop0trailing = TRUE, trim = TRUE)) +
       plot_labels +
       coord_flip() +
       theme(
          panel.grid.major.x = element_line(color = "grey90", linewidth = 0.25),
       )
+   
+   force_render(p)
 })
 
 PLOTS[[FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD]] <- local({
@@ -899,6 +909,8 @@ plot_sub_table <- function(plot_data, show_title = FALSE, show_sample_type_label
          plot.margin = margin(b = 10, r = 15, l = 2),
          legend.position = "none"
       )
+   
+   subplot_pairwise_comparison <- force_render(subplot_pairwise_comparison)
 
    ## Combine plots =============================
    subplots_combined <- patchwork::wrap_plots(subplot_values, subplot_pairwise_comparison, nrow = 1)
