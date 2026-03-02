@@ -6,16 +6,17 @@ import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.datamodel.finding.*;
+import com.hartwig.hmftools.datamodel.finding.FindingList;
+import com.hartwig.hmftools.datamodel.finding.FindingListBuilder;
+import com.hartwig.hmftools.datamodel.finding.FindingsStatus;
+import com.hartwig.hmftools.datamodel.finding.HlaAllele;
+import com.hartwig.hmftools.datamodel.finding.HlaAlleleBuilder;
 import com.hartwig.hmftools.datamodel.hla.LilacAllele;
 import com.hartwig.hmftools.datamodel.hla.LilacRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
-
-import jakarta.validation.constraints.NotNull;
 
 // lilac shows two copies of HLA alleles even if they are the
 // same allele. This class combine the alleles and sum the copies
@@ -112,26 +113,5 @@ public class HlaAlleleFactory
 
         hlaAlleles.sort(HlaAllele.COMPARATOR);
         return hlaAlleles;
-    }
-
-    public static String extractHLAGene(String allele)
-    {
-        if(allele.startsWith("A*"))
-        {
-            return "HLA-A";
-        }
-        else if(allele.startsWith("B*"))
-        {
-            return "HLA-B";
-        }
-        else if(allele.startsWith("C*"))
-        {
-            return "HLA-C";
-        }
-        else
-        {
-            LOGGER.warn("Unknown HLA gene name '{}' present! ", allele);
-            return Strings.EMPTY;
-        }
     }
 }
