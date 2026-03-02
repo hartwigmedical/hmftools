@@ -16,6 +16,7 @@ RUN micromamba install -y -n base -c bioconda -c conda-forge \
     "openjdk>=8,<=21" \
     r-dplyr \
     r-ggplot2 \
+    r-patchwork \
     r-scales \
     && micromamba clean --all --yes
 
