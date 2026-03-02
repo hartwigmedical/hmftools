@@ -13,23 +13,16 @@
     <artifactId>qsee</artifactId>
     <packaging>jar</packaging>
     <version>${qsee.version}</version>
-    <name>HMF Tools - QSee</name>
+    <name>HMF Tools - Qsee</name>
 
     <dependencies>
         <dependency>
             <groupId>com.hartwig</groupId>
             <artifactId>hmf-common</artifactId>
         </dependency>
-
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.hartwig</groupId>
-            <artifactId>qsee</artifactId>
-            <version>1.0</version>
-            <scope>compile</scope>
         </dependency>
     </dependencies>
 
