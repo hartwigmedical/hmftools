@@ -128,12 +128,12 @@ public class KnownFusionCache
 
     public boolean withinPromiscuousExonRange(final KnownFusionType knownType, final String transName, int breakendExon, int fusedExon)
     {
-        for(final KnownFusionData knownData : mDataByType.get(knownType))
+        for(KnownFusionData knownData : mDataByType.get(knownType))
         {
             if(!knownData.specificExonsTransName().equals(transName))
                 continue;
 
-            final int[] knownExonRange = knownType == PROMISCUOUS_5 ? knownData.fiveGeneExonRange() : knownData.threeGeneExonRange();
+            int[] knownExonRange = knownType == PROMISCUOUS_5 ? knownData.fiveGeneExonRange() : knownData.threeGeneExonRange();
 
              if(breakendExon >= knownExonRange[SE_START] && breakendExon <= knownExonRange[SE_END]
              && fusedExon >= knownExonRange[SE_START] && fusedExon <= knownExonRange[SE_END])
@@ -149,7 +149,7 @@ public class KnownFusionCache
             final KnownFusionType knownType, final String transName, int breakendExonUp, int fusedExonUp,
             int breakendExonDown, int fusedExonDown)
     {
-        for(final KnownFusionData knownData : mDataByType.get(knownType))
+        for(KnownFusionData knownData : mDataByType.get(knownType))
         {
             if(!knownData.specificExonsTransName().equals(transName))
                 continue;
@@ -171,7 +171,7 @@ public class KnownFusionCache
 
     public boolean isHighImpactPromiscuous(final KnownFusionType knownType, final String fiveGene, final String threeGene)
     {
-        for(final KnownFusionData knownData : mHighImpactPromiscuousData)
+        for(KnownFusionData knownData : mHighImpactPromiscuousData)
         {
             if(knownData.Type != knownType)
                 continue;

@@ -188,7 +188,7 @@ public class BreakendTransData
         if(mBreakendGeneData.strand() == POS_STRAND)
             return svPosition() - TransData.TransEnd;
         else
-        return TransData.TransStart - svPosition();
+            return TransData.TransStart - svPosition();
     }
 
     public final TranscriptCodingType codingType() { return mCodingType; }

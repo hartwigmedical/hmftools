@@ -28,7 +28,8 @@ import com.hartwig.hmftools.linx.types.SvVarData;
 
 public final class BreakendGenePrep
 {
-    public static void setSvGeneData(final List<SvVarData> svList, final EnsemblDataCache ensemblDataCache,
+    public static void setSvGeneData(
+            final List<SvVarData> svList, final EnsemblDataCache ensemblDataCache,
             int defaultPreGeneDistance, final Map<String,Integer> specificPreGeneDistances)
     {
         List<ChrBaseRegion> specificPreGeneRanges = Lists.newArrayList();
@@ -50,7 +51,7 @@ public final class BreakendGenePrep
         }
 
         // associate breakends with transcripts
-        for(final SvVarData var : svList)
+        for( SvVarData var : svList)
         {
             for(int be = SE_START; be <= SE_END; ++be)
             {
@@ -65,7 +66,7 @@ public final class BreakendGenePrep
                         int preGeneDistance = getPreGeneDistance(
                                 mapping.Chromosome, mapping.Position, defaultPreGeneDistance, specificPreGeneDistance, specificPreGeneRanges);
 
-                        final List<BreakendGeneData> mappingGenes = findGeneAnnotationsBySv(
+                        List<BreakendGeneData> mappingGenes = findGeneAnnotationsBySv(
                                 ensemblDataCache, var.id(), isStart, mapping.Chromosome, mapping.Position, mapping.Orientation,
                                 preGeneDistance);
 
@@ -79,9 +80,11 @@ public final class BreakendGenePrep
                     int preGeneDistance = getPreGeneDistance(
                             var.chromosome(isStart), var.position(isStart), defaultPreGeneDistance, specificPreGeneDistance, specificPreGeneRanges);
 
-                    genesList.addAll(findGeneAnnotationsBySv(
+                    List<BreakendGeneData> breakendGenes = findGeneAnnotationsBySv(
                             ensemblDataCache, var.id(), isStart, var.chromosome(isStart), var.position(isStart), var.orientation(isStart),
-                            preGeneDistance));
+                            preGeneDistance);
+
+                    genesList.addAll(breakendGenes);
 
                     for(BreakendGeneData gene : genesList)
                     {
