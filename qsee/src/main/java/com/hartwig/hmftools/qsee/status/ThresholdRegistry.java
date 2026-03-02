@@ -28,6 +28,7 @@ import static com.hartwig.hmftools.qsee.status.QcStatusType.WARN;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
@@ -192,4 +193,6 @@ public final class ThresholdRegistry
     {
         return getThreshold(sampleType, SUMMARY_TABLE, summaryTableFeature.name(), qcStatusType);
     }
+
+    public List<QcThreshold> getAll(){ return mThresholds.values().stream().toList(); }
 }
