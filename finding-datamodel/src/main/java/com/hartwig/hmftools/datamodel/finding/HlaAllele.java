@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.datamodel.finding;
 
+import com.hartwig.hmftools.datamodel.hla.LilacAllele;
+
 import org.jspecify.annotations.Nullable;
 
 import io.soabase.recordbuilder.core.RecordBuilder;
@@ -10,6 +12,7 @@ public record HlaAllele(
         @NotNull String findingKey,
         @NotNull String event,
         @NotNull String gene,
+        @NotNull String allele,
         @NotNull String alleleGroup,
         @NotNull String hlaProtein,
         int germlineCopyNumber,
@@ -21,8 +24,12 @@ public record HlaAllele(
         double somaticNonsenseOrFrameshift,
         double somaticSplice,
         double somaticSynonymous,
-        double somaticInframeIndel,
-        boolean hasSomaticVariants
+        double somaticInframeIndel
 ) implements Event
 {
+    public boolean hasSomaticVariants()
+    {
+        return Doubles.positive(somaticMissense()) || Doubles.positive(somaticNonsenseOrFrameshift()) || Doubles.positive(
+                somaticSplice()) || Doubles.positive(somaticInframeIndel());
+    }
 }

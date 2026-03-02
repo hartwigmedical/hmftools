@@ -1,7 +1,7 @@
-package com.hartwig.hmftools.finding;
+package com.hartwig.hmftools.datamodel.finding;
 
 @SuppressWarnings("unused")
-final class Doubles
+public final class Doubles
 {
     private static final double EPSILON = 1e-10;
 

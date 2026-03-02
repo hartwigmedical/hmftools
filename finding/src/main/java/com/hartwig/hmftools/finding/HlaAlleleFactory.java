@@ -74,6 +74,7 @@ public class HlaAlleleFactory
                     .findingKey(FindingKeys.hlaAllele(lilacAllele))
                     .event(eventFactory.immunologyEvent(lilacAllele))
                     .gene(gene)
+                    .allele(lilacAllele.allele())
                     .alleleGroup(alleleGroup)
                     .hlaProtein(hlaProtein)
                     .refFragments(hasRef ? lilacAllele.refFragments() : null)
@@ -83,8 +84,7 @@ public class HlaAlleleFactory
                     .somaticNonsenseOrFrameshift(lilacAllele.somaticNonsenseOrFrameshift())
                     .somaticSplice(lilacAllele.somaticSplice())
                     .somaticSynonymous(lilacAllele.somaticSynonymous())
-                    .somaticInframeIndel(lilacAllele.somaticInframeIndel())
-                    .hasSomaticVariants(hasSomaticMutations(lilacAllele));
+                    .somaticInframeIndel(lilacAllele.somaticInframeIndel());
 
             if(keyMap.getValue().size() == 1)
             {
@@ -133,11 +133,5 @@ public class HlaAlleleFactory
             LOGGER.warn("Unknown HLA gene name '{}' present! ", allele);
             return Strings.EMPTY;
         }
-    }
-
-    static boolean hasSomaticMutations(@NotNull LilacAllele allele)
-    {
-        return Doubles.positive(allele.somaticMissense()) || Doubles.positive(allele.somaticNonsenseOrFrameshift()) || Doubles.positive(
-                allele.somaticSplice()) || Doubles.positive(allele.somaticInframeIndel());
     }
 }
