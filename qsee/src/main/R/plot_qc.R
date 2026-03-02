@@ -1,3 +1,5 @@
+options(warn = 1)
+
 suppressPackageStartupMessages(library(dplyr))
 
 library(ggplot2)
@@ -28,10 +30,10 @@ if(FALSE){
     TUMOR_ID <- "TUMOR"
     NORMAL_ID <- "TUMOR-ref"
 
-    COHORT_PERCENTILES_FILE <- "cohort.qsee.percentiles.tsv.gz"
+    COHORT_PERCENTILES_FILE <- "qsee.cohort.percentiles.tsv.gz"
 
     output_dir <- ""
-    SAMPLE_FEATURES_FILE <- sprintf("%s/%s.qsee.vis.features.tsv.gz", output_dir, TUMOR_ID)
+    SAMPLE_FEATURES_FILE <- sprintf("%s/%s.qsee.vis.data.tsv.gz", output_dir, TUMOR_ID)
     OUTPUT_PATH <- sprintf("%s/%s.qsee.vis.report.pdf", output_dir, TUMOR_ID)
 
     GLOBAL_LOG_LEVEL <- "DEBUG"
@@ -286,6 +288,12 @@ plot_missing_data <- function(plot_labels = labs()){
       )
 }
 
+force_render <- function(p) {
+   ## Force warnings to be shown immediately
+   invisible(ggplot2::ggplotGrob(p))
+   return(p)
+}
+
 ## =============================
 ## Line / PDF
 ## =============================
@@ -493,7 +501,7 @@ plot_pairwise_comparison <- function(
       gg_geom_linerange <- geom_blank()
    }
    
-   ggplot(plot_data, aes(x = .data[[x]], y = .data[[y]], fill = SampleType)) + 
+   ggplot(plot_data, aes(x = .data[[x]], y = .data[[y]], fill = SampleType)) +
       
       { if(!is.null(hlines)) geom_hline(linewidth = 0.25, color = "grey70", yintercept = hlines) } +
       { if(!is.null(vlines)) geom_vline(linewidth = 0.25, color = "grey70", xintercept = vlines) } +
@@ -558,13 +566,15 @@ PLOTS[[FEATURE_TYPE$DISCORDANT_FRAG_FREQ]] <- local({
    
    plot_data <- plot_data %>% dplyr::mutate(DiscordantFragType = reverse_levels(DiscordantFragType))
    
-   plot_pairwise_comparison(plot_data, x = "DisplayName", plot_type = box_or_bar_plot()) + 
+   p <- plot_pairwise_comparison(plot_data, x = "DisplayName", plot_type = box_or_bar_plot()) + 
       scale_y_continuous(transform = "log10", labels = function(x) format(x, scientific = FALSE, drop0trailing = TRUE, trim = TRUE)) +
       plot_labels +
       coord_flip() +
       theme(
          panel.grid.major.x = element_line(color = "grey90", linewidth = 0.25),
       )
+   
+   force_render(p)
 })
 
 PLOTS[[FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD]] <- local({
@@ -583,22 +593,16 @@ PLOTS[[FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD]] <- local({
       return(plot_missing_data(plot_labels))
    }
    
-   sample_genes_of_interest <- plot_data %>% 
-      dplyr::filter(
-         FeatureValue >= MIN_MISSED_VARIANT_LIKELIHOOD | 
-         PctMid >= MIN_MISSED_VARIANT_LIKELIHOOD
-      ) %>%
-      dplyr::arrange(-FeatureValue) %>%
-      dplyr::pull(Gene) %>% 
-      unique() %>% 
-      head(TOP_N_GENES)
-   
    plot_data <- plot_data %>% 
-      dplyr::filter(Gene %in% sample_genes_of_interest) %>% 
-      dplyr::mutate(Gene = factor(Gene, sample_genes_of_interest)) %>%
+      dplyr::filter(FeatureValue >= MIN_MISSED_VARIANT_LIKELIHOOD) %>%
+      
+      dplyr::group_by(SampleType) %>% 
+      dplyr::slice_max(order_by = FeatureValue, n = TOP_N_GENES) %>%
+      dplyr::ungroup() %>%
+      
       dplyr::mutate(
-         Gene = reverse_levels(Gene),
-         SampleType = reverse_levels(SampleType)
+         Gene = Gene %>% preordered_factor() %>% reverse_levels(),
+         SampleType = SampleType %>% preordered_factor() %>% reverse_levels()
       )
    
    plot_pairwise_comparison(plot_data, x = "Gene", plot_type = box_or_bar_plot()) + 
@@ -638,8 +642,9 @@ PLOTS[[FEATURE_TYPE$BQR_BY_SNV96_CONTEXT]] <- local({
    
    plot_labels <- labs(title = "BQR by SNV96 context", x = "Mutation context", y = "Phred score adjustment")
    
-   if(nrow(plot_data) > 0){
+   if(is.null(plot_data)){
       plot_labels$title <- paste0(plot_labels$title, ", base quality: ", plot_data$OriginalQualBin[1])
+      return(plot_missing_data(plot_labels))
    }
    
    plot_pairwise_comparison(
@@ -662,6 +667,10 @@ PLOTS[[FEATURE_TYPE$MS_INDEL_ERROR_RATES]] <- local({
    plot_data <- get_plot_data(FEATURE_TYPE$MS_INDEL_ERROR_RATES)
    
    plot_labels <- labs(title = "Microsatellite indel error rates", x = "Repeat units", y = "Phred score") 
+   
+   if(is.null(plot_data)){
+      return(plot_missing_data(plot_labels))
+   }
    
    plot_pairwise_comparison(plot_data, x = "RefNumUnits", plot_type = PAIRWISE_PLOT_TYPE$POINT_RANGE) +
       facet_grid("ConsensusType ~ RepeatUnitType") +
@@ -714,7 +723,7 @@ FEATURE_GROUP <- list(
 NUMBER_FORMAT <- list(
    NUMBER = "NUMBER",
    PERCENT = "PERCENT",
-   LOG = "LOG"
+   LOG10 = "LOG10"
 )
 
 SUMMARY_TABLE_DATA <- get_plot_data(FEATURE_TYPE$SUMMARY_TABLE)
@@ -737,7 +746,7 @@ get_sub_table_data <- function(feature_group, number_format){
 get_outer_axis_limits <- function(plot_data, outer_limits = c(NA, NA)){
 
    if(FALSE){
-      plot_data = get_sub_table_data(FEATURE_GROUP$MUTATIONAL_BURDEN, NUMBER_FORMAT$LOG)
+      plot_data = get_sub_table_data(FEATURE_GROUP$MUTATIONAL_BURDEN, NUMBER_FORMAT$LOG1010)
       minimal_limits = c(0, NA)
    }
 
@@ -812,10 +821,10 @@ plot_sub_table <- function(plot_data, show_title = FALSE, show_sample_type_label
       plot_data = get_sub_table_data(FEATURE_GROUP$MAPPING, NUMBER_FORMAT$NUMBER)
       axis_limits = get_outer_axis_limits(plot_data, c(0, 100))
       
-      plot_data = get_sub_table_data(FEATURE_GROUP$COPY_NUMBER, NUMBER_FORMAT$LOG)
+      plot_data = get_sub_table_data(FEATURE_GROUP$COPY_NUMBER, NUMBER_FORMAT$LOG10)
       axis_limits = get_outer_axis_limits(plot_data, c(NA, 1000))
       
-      plot_data = get_sub_table_data(FEATURE_GROUP$MUTATIONAL_BURDEN, NUMBER_FORMAT$LOG)
+      plot_data = get_sub_table_data(FEATURE_GROUP$MUTATIONAL_BURDEN, NUMBER_FORMAT$LOG10)
       axis_limits = get_outer_axis_limits(plot_data, c(NA, 1000))
    }
 
@@ -880,11 +889,11 @@ plot_sub_table <- function(plot_data, show_title = FALSE, show_sample_type_label
       scale_y_continuous(
          
          limits = axis_limits,
-         transform = if(number_format == NUMBER_FORMAT$LOG) "log10" else "identity",
+         transform = if(number_format == NUMBER_FORMAT$LOG10) "log10" else "identity",
          
          label = if(number_format == NUMBER_FORMAT$PERCENT){ 
             scales::label_percent()
-         } else if(number_format == NUMBER_FORMAT$LOG) {
+         } else if(number_format == NUMBER_FORMAT$LOG10) {
             function(x) format(x, scientific = FALSE, drop0trailing = TRUE, trim = TRUE)
          } else {
             waiver()
@@ -900,6 +909,8 @@ plot_sub_table <- function(plot_data, show_title = FALSE, show_sample_type_label
          plot.margin = margin(b = 10, r = 15, l = 2),
          legend.position = "none"
       )
+   
+   subplot_pairwise_comparison <- force_render(subplot_pairwise_comparison)
 
    ## Combine plots =============================
    subplots_combined <- patchwork::wrap_plots(subplot_values, subplot_pairwise_comparison, nrow = 1)
@@ -932,7 +943,7 @@ PLOTS[[FEATURE_TYPE$SUMMARY_TABLE]] <- local({
       plot_sub_table(axis_limits = c(0, 1))
    
    plots[[5]] <- 
-      get_sub_table_data(FEATURE_GROUP$COPY_NUMBER, NUMBER_FORMAT$LOG) %>% 
+      get_sub_table_data(FEATURE_GROUP$COPY_NUMBER, NUMBER_FORMAT$LOG10) %>% 
       plot_sub_table(axis_limits = get_outer_axis_limits(., c(NA, 1000)))
    
    ## Contamination ================================
@@ -941,7 +952,7 @@ PLOTS[[FEATURE_TYPE$SUMMARY_TABLE]] <- local({
    
    ## Mutational burden ================================
    plots[[7]] <- 
-      get_sub_table_data(FEATURE_GROUP$MUTATIONAL_BURDEN, NUMBER_FORMAT$LOG) %>% 
+      get_sub_table_data(FEATURE_GROUP$MUTATIONAL_BURDEN, NUMBER_FORMAT$LOG10) %>% 
       plot_sub_table(show_title = TRUE, show_sample_type_label = TRUE, axis_limits = get_outer_axis_limits(., c(NA, 1000)))
    
    heights <- sapply(plots, function(p){ p$height })

@@ -91,7 +91,7 @@ public class CohortPercentilesTrainer
 
         for(CategoryPrep categoryPrep : categoryPreps)
         {
-            QC_LOGGER.info("Extracting cohort features - sampleType({}) category({})", sampleType, categoryPrep.name());
+            QC_LOGGER.info("Extracting cohort features - sampleType({}) category({})", sampleType, categoryPrep.category());
             FeaturePrep featurePrep = new FeaturePrep(mPrepConfig);
 
             FeatureMatrix sampleFeatureMatrix = new FeatureMatrix(new ConcurrentHashMap<>(), sampleIds);
@@ -101,11 +101,11 @@ public class CohortPercentilesTrainer
 
             if(writeCohortFeatures)
             {
-                QC_LOGGER.info("Writing cohort features - sampleType({}) category({})", sampleType, categoryPrep.name());
+                QC_LOGGER.info("Writing cohort features - sampleType({}) category({})", sampleType, categoryPrep.category());
                 cohortFeaturesWriter.writeCategory(sampleFeatureMatrix);
             }
 
-            QC_LOGGER.info("Calculating percentiles - sampleType({}) category({})", sampleType, categoryPrep.name());
+            QC_LOGGER.info("Calculating percentiles - sampleType({}) category({})", sampleType, categoryPrep.category());
             List<FeaturePercentiles> categoryPercentiles = calcPercentiles(sampleFeatureMatrix, sampleType);
 
             cohortPercentiles.addAll(categoryPercentiles);

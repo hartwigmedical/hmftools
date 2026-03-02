@@ -4,37 +4,37 @@ public class Feature
 {
     private final FeatureKey mKey;
     private final double mValue;
-    private final PlotMetadata mPlotMetadata;
+    private final FeatureMetadata mFeatureMetadata;
 
-    public Feature(String name, double value, FeatureType type, SourceTool sourceTool, PlotMetadata plotMetadata)
+    public Feature(String name, double value, FeatureType type, SourceTool sourceTool, FeatureMetadata featureMetadata)
     {
         mKey = new FeatureKey(name, type, sourceTool);
         mValue = value;
-        mPlotMetadata = plotMetadata;
+        mFeatureMetadata = featureMetadata;
     }
 
     public Feature(String name, double value, FeatureType type, SourceTool sourceTool)
     {
         mKey = new FeatureKey(name, type, sourceTool);
         mValue = value;
-        mPlotMetadata = PlotMetadata.createEmpty();
+        mFeatureMetadata = FeatureMetadata.createEmpty();
     }
 
-    public Feature(FeatureKey key, double value, PlotMetadata plotMetadata)
+    public Feature(FeatureKey key, double value, FeatureMetadata featureMetadata)
     {
         mKey = key;
         mValue = value;
-        mPlotMetadata = plotMetadata;
+        mFeatureMetadata = featureMetadata;
     }
 
     public Feature(FeatureKey key, double value)
     {
         mKey = key;
         mValue = value;
-        mPlotMetadata = PlotMetadata.createEmpty();
+        mFeatureMetadata = FeatureMetadata.createEmpty();
     }
 
     public FeatureKey key() { return mKey; }
     public double value() { return mValue; }
-    public PlotMetadata plotMetadata() { return mPlotMetadata; }
+    public FeatureMetadata metadata() { return mFeatureMetadata; }
 }

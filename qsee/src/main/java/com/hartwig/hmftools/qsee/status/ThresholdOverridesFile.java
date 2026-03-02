@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.hartwig.hmftools.common.utils.file.DelimFileReader;
+import com.hartwig.hmftools.common.utils.file.DelimFileWriter;
 import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.FeatureType;
 
@@ -20,6 +21,7 @@ public class ThresholdOverridesFile
     private static final String COL_QC_STATUS_TYPE = "QcStatusType";
     private static final String COL_COMPARISON_OPERATOR = "ComparisonOperator";
     private static final String COL_THRESHOLD = "Threshold";
+    private static final String COL_OVERRIDABLE = "Overridable";
 
     public static ThresholdRegistry read(String filename)
     {
@@ -64,7 +66,11 @@ public class ThresholdOverridesFile
                         thresholds.getThreshold(key, false).threshold(),
                         threshold);
 
-                QcThreshold thresholdOverride = new QcThreshold(key, comparisonOperator, threshold);
+                QcThreshold thresholdOverride = QcThreshold.builder(key)
+                        .comparisonOperator(comparisonOperator)
+                        .threshold(threshold)
+                        .build();
+
                 thresholds.overrideThreshold(key, thresholdOverride);
 
                 seenKeys.add(key);
@@ -77,5 +83,31 @@ public class ThresholdOverridesFile
 
             return thresholds.freeze();
         }
+    }
+
+    public static void write(String filename, List<QcThreshold> thresholds)
+    {
+        List<String> columns = new ArrayList<>();
+        columns.add(COL_SAMPLE_TYPE);
+        columns.add(COL_FEATURE_TYPE);
+        columns.add(COL_FEATURE_NAME);
+        columns.add(COL_QC_STATUS_TYPE);
+        columns.add(COL_COMPARISON_OPERATOR);
+        columns.add(COL_THRESHOLD);
+        columns.add(COL_OVERRIDABLE);
+
+        DelimFileWriter.write(filename, columns, thresholds, (threshold, row) -> {
+            ThresholdKey key = threshold.key();
+
+            row.set(COL_SAMPLE_TYPE, key.sampleType().name());
+            row.set(COL_FEATURE_TYPE, key.featureType().name());
+            row.set(COL_FEATURE_NAME, key.featureName());
+            row.set(COL_QC_STATUS_TYPE, key.qcStatusType().name());
+
+            row.set(COL_COMPARISON_OPERATOR, threshold.determinedElsewhere() ? "NA" : threshold.operator().name());
+
+            row.set(COL_THRESHOLD, threshold.threshold());
+            row.set(COL_OVERRIDABLE, threshold.determinedElsewhere() ? Boolean.FALSE.toString() : Boolean.TRUE.toString());
+        });
     }
 }

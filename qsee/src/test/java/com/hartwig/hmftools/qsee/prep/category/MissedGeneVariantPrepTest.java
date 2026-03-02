@@ -139,6 +139,6 @@ public class MissedGeneVariantPrepTest
 
     private static Feature createExpectedFeature(String geneName)
     {
-        return new Feature("Gene=" + geneName, 0.0, FeatureType.MISSED_VARIANT_LIKELIHOOD, SourceTool.BAM_METRICS, null);
+        return new Feature("Gene:" + geneName, 0.0, FeatureType.MISSED_VARIANT_LIKELIHOOD, SourceTool.BAM_METRICS, null);
     }
 }

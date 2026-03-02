@@ -30,10 +30,11 @@ public class DuplicateFreqPrep implements CategoryPrep
     }
 
     public SourceTool sourceTool() { return SOURCE_TOOL; }
+    public PrepCategory category() { return PrepCategory.DUPLICATE_FREQ; }
 
-    private List<DuplicateFrequency> loadDuplicateFrequencies(String sampleId) throws IOException
+    private List<DuplicateFrequency> loadDuplicateFrequencies(String sampleId, SampleType sampleType) throws IOException
     {
-        String baseDir = mConfig.getReduxDir(sampleId);
+        String baseDir = mConfig.getReduxDir(sampleId, sampleType);
         String filePath = DuplicateFrequency.generateFilename(baseDir, sampleId);
         return DuplicateFrequency.read(filePath);
     }
@@ -73,7 +74,7 @@ public class DuplicateFreqPrep implements CategoryPrep
             return List.of();
         }
 
-        List<DuplicateFrequency> dupFreqs = loadDuplicateFrequencies(sampleId);
+        List<DuplicateFrequency> dupFreqs = loadDuplicateFrequencies(sampleId, sampleType);
         List<Feature> features = normaliseAndBinCounts(dupFreqs);
         return features;
     }

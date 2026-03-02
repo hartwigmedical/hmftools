@@ -1,40 +1,24 @@
 package com.hartwig.hmftools.qsee.prep;
 
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.qsee.common.QseeConstants.APP_NAME;
 import static com.hartwig.hmftools.qsee.common.QseeConstants.QC_LOGGER;
-import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_FEATURE_NAME;
-import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_FEATURE_TYPE;
-import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_SAMPLE_ID;
-import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_SAMPLE_TYPE;
-import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_SOURCE_TOOL;
-import static com.hartwig.hmftools.qsee.common.QseeFileCommon.QSEE_FILE_ID;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.qsee.cohort.CohortPercentiles;
 import com.hartwig.hmftools.qsee.cohort.CohortPercentilesFile;
-import com.hartwig.hmftools.qsee.common.QseeFileCommon;
 import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.Feature;
-import com.hartwig.hmftools.qsee.feature.FeatureKey;
+import com.hartwig.hmftools.qsee.status.QcStatusFile;
 
 import org.jetbrains.annotations.Nullable;
 
 public class QseePrep
 {
     private final QseePrepConfig mConfig;
-
-    private static final String COL_FEATURE_VALUE = "FeatureValue";
-    private static final String COL_PLOT_METADATA = "PlotMetadata";
 
     public QseePrep(QseePrepConfig config)
     {
@@ -48,7 +32,7 @@ public class QseePrep
         boolean hasSampleType = !sampleIds.isEmpty();
         if(!hasSampleType)
         {
-            return new ArrayList<>();
+            return List.of();
         }
 
         if(sampleIds.size() == 1)
@@ -84,74 +68,6 @@ public class QseePrep
         return visSampleData;
     }
 
-    private void writeToFile(String outputFile, List<VisSampleData> visSampleDataEntries)
-    {
-        try(BufferedWriter writer = createBufferedWriter(outputFile))
-        {
-            QC_LOGGER.info("Writing sample vis data to: {}", outputFile);
-
-            StringJoiner header = new StringJoiner(TSV_DELIM);
-
-            header.add(COL_SAMPLE_ID);
-            header.add(COL_SAMPLE_TYPE);
-            header.add(COL_SOURCE_TOOL);
-            header.add(COL_FEATURE_TYPE);
-            header.add(COL_FEATURE_NAME);
-            header.add(COL_FEATURE_VALUE);
-            header.add(COL_PLOT_METADATA);
-
-            writer.write(header.toString());
-            writer.newLine();
-
-            for(VisSampleData entry : visSampleDataEntries)
-            {
-                Feature feature = entry.feature();
-                FeatureKey featureKey = feature.key();
-
-                StringJoiner line = new StringJoiner(TSV_DELIM);
-                line.add(entry.sampleId());
-                line.add(entry.sampleType().name());
-                line.add(featureKey.sourceTool().name());
-                line.add(featureKey.type().name());
-                line.add(featureKey.name());
-
-                String featureValue = QseeFileCommon.DECIMAL_FORMAT.format(feature.value());
-                line.add(featureValue);
-
-                line.add(feature.plotMetadata().toString());
-
-                writer.write(line.toString());
-                writer.newLine();
-            }
-        }
-        catch(IOException e)
-        {
-            QC_LOGGER.error("Failed to write to file: {}", outputFile, e);
-            System.exit(1);
-        }
-    }
-
-    public static String formOutputFilename(String basePath, String sampleId, @Nullable String outputId)
-    {
-        String filename = checkAddDirSeparator(basePath) + sampleId + "." + QSEE_FILE_ID + ".vis.features";
-
-        if(outputId != null)
-            filename += "." + outputId;
-
-        filename += ".tsv.gz";
-
-        return filename;
-    }
-
-    public static String formOutputFilename(QseePrepConfig config)
-    {
-        String sampleId = config.isSinglePatient() ?
-                config.getSampleIds(SampleType.TUMOR).get(0) :
-                "multisample";
-
-        return formOutputFilename(config.OutputDir, sampleId, config.OutputId);
-    }
-
     public void run()
     {
         QC_LOGGER.info("Running {}", this.getClass().getSimpleName());
@@ -169,8 +85,11 @@ public class QseePrep
 
         List<VisSampleData> visDataEntries = getVisSampleData(multiSampleFeatures, cohortPercentiles);
 
-        String outputFile = formOutputFilename(mConfig);
-        writeToFile(outputFile, visDataEntries);
+        String visDataFile = VisDataFile.generateFilename(mConfig);
+        VisDataFile.write(visDataFile, visDataEntries);
+
+        String qcStatusFile = QcStatusFile.generateFilename(mConfig);
+        QcStatusFile.write(qcStatusFile, visDataEntries);
     }
 
     public static void main(String[] args)

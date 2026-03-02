@@ -17,6 +17,7 @@ import com.hartwig.hmftools.common.redux.BqrFile;
 import com.hartwig.hmftools.common.redux.BqrKey;
 import com.hartwig.hmftools.common.redux.BqrRecord;
 
+import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.FeatureKey;
 import com.hartwig.hmftools.qsee.feature.FeatureType;
 import com.hartwig.hmftools.qsee.feature.Feature;
@@ -50,16 +51,18 @@ public class BaseQualRecalibrationPrep implements CategoryPrep
     public BaseQualRecalibrationPrep(QseePrepConfig config)
     {
         mConfig = config;
-        mBaseQualBinner = new BaseQualBinner(config.SEQUENCING_TYPE);
+        mBaseQualBinner = new BaseQualBinner(config.SequencingTech);
     }
 
     public SourceTool sourceTool() { return SOURCE_TOOL; }
+    public PrepCategory category() { return PrepCategory.BASE_QUAL_RECALIBRATION; }
 
-    private String findBackwardsCompatibleBqrFile(String sampleId) throws NoSuchFileException
+    private String findBackwardsCompatibleBqrFile(String sampleId, SampleType sampleType) throws NoSuchFileException
     {
         // TODO: Remove this temporary method. In WiGiTS 3.0, the (new) REDUX BQR file path will be used.
 
-        File reduxBqrFile = new File(BqrFile.generateFilename(mConfig.getReduxDir(sampleId), sampleId));
+        File reduxBqrFile = new File(BqrFile.generateFilename(mConfig.getReduxDir(sampleId, sampleType), sampleId));
+
         File sageBqrFile = new File(mConfig.getSageDir(sampleId) + File.separator + sampleId + SAGE_FILE_ID + ".bqr.tsv");
 
         if(reduxBqrFile.isFile())
@@ -100,9 +103,9 @@ public class BaseQualRecalibrationPrep implements CategoryPrep
 
     private static String formMutationString(BqrKey key) { return String.format("%c>%c", key.Ref, key.Alt); }
 
-    private List<BqrRecord> loadSnvBqrRecords(String sampleId) throws NoSuchFileException
+    private List<BqrRecord> loadSnvBqrRecords(String sampleId, SampleType sampleType) throws NoSuchFileException
     {
-        String filePath = findBackwardsCompatibleBqrFile(sampleId);
+        String filePath = findBackwardsCompatibleBqrFile(sampleId, sampleType);
 
         List<BqrRecord> records = BqrFile.read(filePath);
         List<BqrRecord> recordsFiltered = records.stream().filter(x -> x.Key.Ref != x.Key.Alt).toList();
@@ -198,9 +201,9 @@ public class BaseQualRecalibrationPrep implements CategoryPrep
     }
 
     @Override
-    public List<Feature> extractSampleData(String sampleId) throws NoSuchFileException
+    public List<Feature> extractSampleData(String sampleId, SampleType sampleType) throws NoSuchFileException
     {
-        List<BqrRecord> bqrRecords = loadSnvBqrRecords(sampleId);
+        List<BqrRecord> bqrRecords = loadSnvBqrRecords(sampleId, sampleType);
 
         List<Feature> features = new ArrayList<>();
         features.addAll(calcChangeInQualPerOriginalQual(bqrRecords, mBaseQualBinner));

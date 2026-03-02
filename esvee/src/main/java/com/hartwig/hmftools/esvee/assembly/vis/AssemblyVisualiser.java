@@ -113,7 +113,7 @@ public final class AssemblyVisualiser
     public record SegmentViewModel(Integer breakendId, String chromosome, @Nullable Integer position, BaseRegion refRegion,
                                    BaseRegion viewRegion, BaseRegion refViewRegion, BaseSeqViewModel refViewModel,
                                    boolean isRefReversed, boolean isAssemblyReversed, BaseSeqViewModel assemblyViewModel,
-                                   boolean isInsert, int leftDelLength, BaseRegion assemblyRegion) {}
+                                   boolean isInsert, int leftHomologyLength, BaseRegion assemblyRegion) {}
 
     public record PairedSegmentViewModel(List<SegmentViewModel> viewModels, int readStartOffset, int prevBoxWidth) {}
 
@@ -541,17 +541,17 @@ public final class AssemblyVisualiser
 
     private record BreakendInfo(Integer id, String chromosome, List<CigarElement> cigarElements, String insertedBases,
                                 BaseRegion refRegion, String assemblySeq, String refSeq, boolean isRefReversed, boolean isAssemblyReversed,
-                                BaseRegion assemblyRegion, int leftDelLength) {}
+                                BaseRegion assemblyRegion, int leftHomologyLength) {}
 
     private static BreakendInfo extractBreakendInfo(final RefGenomeInterface refGenome, final PairedBreakendInfo pairedBreakend,
-            final String fullAssemblySeq, @Nullable final Integer lastSeqEnd)
+            boolean isRefReversed, final String fullAssemblySeq, @Nullable final Integer lastSeqEnd)
     {
         Breakend breakend = pairedBreakend.Breakend;
         AlignData alignment = breakend.segments().get(0).Alignment;
         List<CigarElement> cigarEls = alignment.cigarElements();
-        int leftDelLength = 0;
+        int leftHomologyLength = 0;
         if(lastSeqEnd != null && lastSeqEnd >= alignment.sequenceStart())
-            leftDelLength = lastSeqEnd - alignment.sequenceStart() + 1;
+            leftHomologyLength = lastSeqEnd - alignment.sequenceStart() + 1;
 
         String assemblySeq = fullAssemblySeq.substring(alignment.sequenceStart(), alignment.sequenceEnd() + 1);
         if(breakend.Orient == FORWARD)
@@ -566,7 +566,7 @@ public final class AssemblyVisualiser
         }
 
         boolean reverseAssemblySeq = pairedBreakend.IsAssemblyReversed;
-        if(pairedBreakend.IsRefReversed)
+        if(isRefReversed)
         {
             Collections.reverse(cigarEls);
             reverseAssemblySeq = !reverseAssemblySeq;
@@ -581,11 +581,11 @@ public final class AssemblyVisualiser
         String chromosome = alignment.refLocation().chromosome();
         BaseRegion refRegion = alignment.refLocation().baseRegion();
         String refSeq = refGenome.getBaseString(chromosome, refRegion.start(), refRegion.end());
-        if(pairedBreakend.IsRefReversed)
+        if(isRefReversed)
             refSeq = reverseComplementBases(refSeq);
 
         BaseRegion assemblyRegion = new BaseRegion(alignment.sequenceStart(), alignment.sequenceEnd());
-        return new BreakendInfo(breakend.id(), chromosome, cigarEls, breakend.InsertedBases, refRegion, assemblySeq, refSeq, pairedBreakend.IsRefReversed, reverseAssemblySeq, assemblyRegion, leftDelLength);
+        return new BreakendInfo(breakend.id(), chromosome, cigarEls, breakend.InsertedBases, refRegion, assemblySeq, refSeq, isRefReversed, reverseAssemblySeq, assemblyRegion, leftHomologyLength);
     }
 
     private record PairedRefViewModel(List<SegmentViewModel> refViewModelPair, int baseIdx, int boxWidth) {}
@@ -600,7 +600,9 @@ public final class AssemblyVisualiser
         for(int i = 0; i < 2; i++)
         {
             PairedBreakendInfo pairedBreakend = i == 0 ? breakendPair.getLeft() : breakendPair.getRight();
-            BreakendInfo breakendInfo = extractBreakendInfo(config.RefGenome, pairedBreakend, fullAssemblySeq, lastSequenceEnd);
+            boolean isRefReversed = i == 0 ? pairedBreakend.IsRefReversed : !pairedBreakend.IsRefReversed;
+            BreakendInfo breakendInfo = extractBreakendInfo(
+                    config.RefGenome, pairedBreakend, isRefReversed, fullAssemblySeq, lastSequenceEnd);
             lastSequenceEnd = breakendInfo.assemblyRegion.end();
 
             BaseSeqViewModel refSeqViewModel = BaseSeqViewModel.fromStr(breakendInfo.refSeq, baseIdx);
@@ -645,12 +647,12 @@ public final class AssemblyVisualiser
             }
 
             refViewModelPair.add(new SegmentViewModel(breakendInfo.id, breakendInfo.chromosome, pos, breakendInfo.refRegion,
-                    viewRegion, refViewRegion, refSeqViewModel, pairedBreakend.IsRefReversed, breakendInfo.isAssemblyReversed, assemblySeqViewModel, false, breakendInfo.leftDelLength, breakendInfo.assemblyRegion));
+                    viewRegion, refViewRegion, refSeqViewModel, breakendInfo.isRefReversed, breakendInfo.isAssemblyReversed, assemblySeqViewModel, false, breakendInfo.leftHomologyLength, breakendInfo.assemblyRegion));
             boxWidth += refViewRegion.baseLength() + 2 * BOX_PADDING;
             if(i == 0 && breakendInfo.insertedBases != null && !breakendInfo.insertedBases.isEmpty())
             {
                 String insertBases = breakendInfo.insertedBases;
-                if(pairedBreakend.IsRefReversed)
+                if(breakendInfo.isRefReversed)
                     insertBases = reverseComplementBases(insertBases);
 
                 BaseSeqViewModel insertSeqViewModel = BaseSeqViewModel.fromStr(insertBases, baseIdx);
@@ -694,6 +696,18 @@ public final class AssemblyVisualiser
         public int hashCode()
         {
             return AssemblySeqStart + 31 * AssemblySeqEnd;
+        }
+
+        @Override
+        public String toString()
+        {
+            return "PairedBreakendInfo[" +
+                    "Breakend=" + Breakend +
+                    ", IsRefReversed=" + IsRefReversed +
+                    ", IsAssemblyReversed=" + IsAssemblyReversed +
+                    ", AssemblySeqStart=" + AssemblySeqStart +
+                    ", AssemblySeqEnd=" + AssemblySeqEnd +
+                    ']';
         }
     }
 

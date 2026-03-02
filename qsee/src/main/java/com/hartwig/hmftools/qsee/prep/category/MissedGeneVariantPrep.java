@@ -32,10 +32,8 @@ public class MissedGeneVariantPrep implements CategoryPrep
         mConfig = config;
     }
 
-    public SourceTool sourceTool()
-    {
-        return SOURCE_TOOL;
-    }
+    public SourceTool sourceTool() { return SOURCE_TOOL; }
+    public PrepCategory category() { return PrepCategory.MISSED_GENE_VARIANT; }
 
     private List<GeneDepth> loadGeneCoverage(String sampleId, SampleType sampleType) throws IOException
     {

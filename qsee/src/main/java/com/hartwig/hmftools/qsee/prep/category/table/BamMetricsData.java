@@ -113,13 +113,15 @@ public class BamMetricsData
         if(mMissingInputPaths.isEmpty())
             return "";
 
-        StringJoiner toolsMissingInput = new StringJoiner(", ");
+        StringJoiner missingFilesString = new StringJoiner(", ");
         for(String path : missingInputPaths())
         {
             String basename = new File(path).getName();
-            toolsMissingInput.add(basename);
+            missingFilesString.add(basename);
         }
 
-        return toolsMissingInput.toString();
+        String baseDir = mConfig.getBamMetricsDir(mSampleId, mSampleType);
+
+        return missingFilesString + " in dir: " + baseDir;
     }
 }
