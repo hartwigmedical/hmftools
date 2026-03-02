@@ -49,7 +49,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>com.hartwig.hmftools.qsee.QSeeApplication</mainClass>
+                            <mainClass>com.hartwig.hmftools.qsee.QseeApplication</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
