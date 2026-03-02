@@ -14,6 +14,7 @@ import com.hartwig.hmftools.common.redux.JitterCountsTable;
 import com.hartwig.hmftools.common.redux.JitterCountsTableFile;
 import com.hartwig.hmftools.common.redux.JitterTableRow;
 
+import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.Feature;
 import com.hartwig.hmftools.qsee.feature.FeatureType;
 import com.hartwig.hmftools.qsee.common.MultiFieldStringBuilder;
@@ -41,12 +42,12 @@ public class MsIndelErrorPrep implements CategoryPrep
     public SourceTool sourceTool(){ return SOURCE_TOOL; }
     public PrepCategory category() { return PrepCategory.MS_INDEL_ERROR; }
 
-    private String findBackwardsCompatibleJitterFile(String sampleId) throws NoSuchFileException
+    private String findBackwardsCompatibleJitterFile(String sampleId, SampleType sampleType) throws NoSuchFileException
     {
         // TODO: Remove this temporary method. In WiGiTS 3.0, the (new) REDUX jitter file path will be used.
 
-        File newJitterFile = new File(JitterCountsTableFile.generateFilename(mConfig.getReduxDir(sampleId), sampleId));
-        File oldJitterFile = new File(mConfig.getReduxDir(sampleId) + File.separator + sampleId + ".ms_table.tsv.gz");
+        File newJitterFile = new File(JitterCountsTableFile.generateFilename(mConfig.getReduxDir(sampleId, sampleType), sampleId));
+        File oldJitterFile = new File(mConfig.getReduxDir(sampleId, sampleType) + File.separator + sampleId + ".ms_table.tsv.gz");
 
         if(newJitterFile.isFile())
         {
@@ -62,9 +63,9 @@ public class MsIndelErrorPrep implements CategoryPrep
                 sampleId, newJitterFile.getName(), oldJitterFile.getName()));
     }
 
-    private List<JitterTableRow> loadJitterCountsTable(String sampleId) throws IOException
+    private List<JitterTableRow> loadJitterCountsTable(String sampleId, SampleType sampleType) throws IOException
     {
-        String filePath = findBackwardsCompatibleJitterFile(sampleId);
+        String filePath = findBackwardsCompatibleJitterFile(sampleId, sampleType);
         Collection<JitterCountsTable> tables = JitterCountsTableFile.read(filePath);
 
         List<JitterTableRow> tablesFlattened = new ArrayList<>();
@@ -241,9 +242,9 @@ public class MsIndelErrorPrep implements CategoryPrep
     }
 
     @Override
-    public List<Feature> extractSampleData(String sampleId) throws IOException
+    public List<Feature> extractSampleData(String sampleId, SampleType sampleType) throws IOException
     {
-        List<JitterTableRow> table = loadJitterCountsTable(sampleId);
+        List<JitterTableRow> table = loadJitterCountsTable(sampleId, sampleType);
 
         List<JitterTableRow> tableAggregated;
         tableAggregated = aggregateByJitter(table);

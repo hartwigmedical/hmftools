@@ -11,8 +11,10 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.ESVEE_DIR_CF
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.ESVEE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_DESC;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.REDUX_DIR_CFG;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.REDUX_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REDUX_REF_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REDUX_REF_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REDUX_TUMOR_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REDUX_TUMOR_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_IDS_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REF_METRICS_DIR_CFG;
@@ -62,13 +64,15 @@ public class QseePrepConfig
 
     public final String SampleDataDir;
 
+    public final String BamMetricsDirTumor;
+    public final String BamMetricsDirRef;
+    public final String ReduxDirTumor;
+    public final String ReduxDirRef;
+
     public final String CobaltDir;
     public final String EsveeDir;
     public final String PurpleDir;
-    public final String ReduxDir;
     public final String SageDir;
-    public final String TumorMetricsDir;
-    public final String RefMetricsDir;
 
     public final List<DriverGene> DriverGenes;
     public final String CohortPercentilesFile;
@@ -99,13 +103,15 @@ public class QseePrepConfig
 
         SampleDataDir = configBuilder.getValue(SAMPLE_DATA_DIR_CFG, "");
 
+        BamMetricsDirTumor = configBuilder.getValue(TUMOR_METRICS_DIR_CFG, SampleDataDir);
+        BamMetricsDirRef = configBuilder.getValue(REF_METRICS_DIR_CFG, SampleDataDir);
+        ReduxDirTumor = configBuilder.getValue(REDUX_TUMOR_DIR_CFG, SampleDataDir);
+        ReduxDirRef = configBuilder.getValue(REDUX_REF_DIR_CFG, SampleDataDir);
+
         CobaltDir = configBuilder.getValue(COBALT_DIR_CFG, SampleDataDir);
         EsveeDir = configBuilder.getValue(ESVEE_DIR_CFG, SampleDataDir);
         PurpleDir = configBuilder.getValue(PURPLE_DIR_CFG, SampleDataDir);
-        ReduxDir = configBuilder.getValue(REDUX_DIR_CFG, SampleDataDir);
         SageDir = configBuilder.getValue(SAGE_DIR_CFG, SampleDataDir);
-        TumorMetricsDir = configBuilder.getValue(TUMOR_METRICS_DIR_CFG, SampleDataDir);
-        RefMetricsDir = configBuilder.getValue(REF_METRICS_DIR_CFG, SampleDataDir);
 
         DriverGenes = DriverGenePanelConfig.loadDriverGenes(configBuilder);
         CohortPercentilesFile = configBuilder.getValue(COHORT_PERCENTILES_FILE_CFG);
@@ -133,13 +139,15 @@ public class QseePrepConfig
 
         configBuilder.addPath(SAMPLE_DATA_DIR_CFG, false, SAMPLE_DATA_DIR_DESC);
 
+        configBuilder.addPath(TUMOR_METRICS_DIR_CFG, false, TUMOR_METRICS_DIR_DESC);
+        configBuilder.addPath(REF_METRICS_DIR_CFG, false, REF_METRICS_DIR_DESC);
+        configBuilder.addPath(REDUX_TUMOR_DIR_CFG, false, REDUX_TUMOR_DIR_DESC);
+        configBuilder.addPath(REDUX_REF_DIR_CFG, false, REDUX_REF_DIR_DESC);
+
         configBuilder.addPath(COBALT_DIR_CFG, false, COBALT_DIR_DESC);
         configBuilder.addPath(ESVEE_DIR_CFG, false, ESVEE_DIR_DESC);
         configBuilder.addPath(PURPLE_DIR_CFG, false, PURPLE_DIR_DESC);
-        configBuilder.addPath(REDUX_DIR_CFG, false, REDUX_DIR_DESC);
         configBuilder.addPath(SAGE_DIR_CFG, false, SAGE_DIR_DESC);
-        configBuilder.addPath(TUMOR_METRICS_DIR_CFG, false, TUMOR_METRICS_DIR_DESC);
-        configBuilder.addPath(REF_METRICS_DIR_CFG, false, REF_METRICS_DIR_DESC);
 
         SequencingType.registerConfig(configBuilder);
         configBuilder.addPath(DRIVER_GENE_PANEL, false, DRIVER_GENE_PANEL_DESC);
@@ -159,14 +167,20 @@ public class QseePrepConfig
     public List<String> getSampleIds(SampleType sampleType) { return sampleType == SampleType.TUMOR ? TumorIds : ReferenceIds; }
 
     public boolean isSinglePatient() { return TumorIds.size() <= 1 && ReferenceIds.size() <= 1; }
-    public String getCobaltDir(final String sampleId) { return convertWildcardSamplePath(CobaltDir, sampleId); }
-    public String getEsveeDir(final String sampleId) { return convertWildcardSamplePath(EsveeDir, sampleId); }
-    public String getPurpleDir(final String sampleId) { return convertWildcardSamplePath(PurpleDir, sampleId); }
-    public String getReduxDir(final String sampleId) { return convertWildcardSamplePath(ReduxDir, sampleId); }
-    public String getSageDir(final String sampleId) { return convertWildcardSamplePath(SageDir, sampleId); }
-    public String getBamMetricsDir(final String sampleId, final SampleType sampleType)
+    public String getCobaltDir(String sampleId) { return convertWildcardSamplePath(CobaltDir, sampleId); }
+    public String getEsveeDir(String sampleId) { return convertWildcardSamplePath(EsveeDir, sampleId); }
+    public String getPurpleDir(String sampleId) { return convertWildcardSamplePath(PurpleDir, sampleId); }
+    public String getSageDir(String sampleId) { return convertWildcardSamplePath(SageDir, sampleId); }
+
+    public String getBamMetricsDir(String sampleId, SampleType sampleType)
     {
-        String baseDir = sampleType == SampleType.TUMOR ? TumorMetricsDir : RefMetricsDir;
+        String baseDir = sampleType == SampleType.TUMOR ? BamMetricsDirTumor : BamMetricsDirRef;
+        return convertWildcardSamplePath(baseDir, sampleId);
+    }
+
+    public String getReduxDir(String sampleId, SampleType sampleType)
+    {
+        String baseDir = sampleType == SampleType.TUMOR ? ReduxDirTumor : ReduxDirRef;
         return convertWildcardSamplePath(baseDir, sampleId);
     }
 
