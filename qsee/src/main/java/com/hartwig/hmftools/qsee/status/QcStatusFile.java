@@ -21,14 +21,14 @@ import com.hartwig.hmftools.qsee.prep.VisSampleData;
 
 import org.jetbrains.annotations.Nullable;
 
-public class QcSummaryFile
+public class QcStatusFile
 {
     public static final String COL_QC_STATUS = FIELD_QC_STATUS;
     public static final String COL_FAIL_CONDITION = "FailCondition";
 
     public static String generateFilename(String basePath, String sampleId, @Nullable String outputId)
     {
-        return QseeFileCommon.generateFilename(basePath, sampleId, "summary", outputId, "tsv.gz");
+        return QseeFileCommon.generateFilename(basePath, sampleId, "status", outputId, "tsv.gz");
     }
 
     public static String generateFilename(QseePrepConfig config)

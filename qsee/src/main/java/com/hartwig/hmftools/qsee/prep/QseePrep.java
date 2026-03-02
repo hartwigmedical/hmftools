@@ -12,7 +12,7 @@ import com.hartwig.hmftools.qsee.cohort.CohortPercentiles;
 import com.hartwig.hmftools.qsee.cohort.CohortPercentilesFile;
 import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.Feature;
-import com.hartwig.hmftools.qsee.status.QcSummaryFile;
+import com.hartwig.hmftools.qsee.status.QcStatusFile;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -88,8 +88,8 @@ public class QseePrep
         String visDataFile = VisDataFile.generateFilename(mConfig);
         VisDataFile.write(visDataFile, visDataEntries);
 
-        String qcSummaryFile = QcSummaryFile.generateFilename(mConfig);
-        QcSummaryFile.write(qcSummaryFile, visDataEntries);
+        String qcStatusFile = QcStatusFile.generateFilename(mConfig);
+        QcStatusFile.write(qcStatusFile, visDataEntries);
     }
 
     public static void main(String[] args)
