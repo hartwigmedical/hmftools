@@ -64,7 +64,7 @@ public class FindingRecordFactory
         PurpleRecord purple = orangeRecord.purple();
 
         boolean hasReliablePurity = purple.fit().containsTumorCells();
-        boolean hasContainmination = purple.fit().qc().status().contains(PurpleQCStatus.FAIL_CONTAMINATION);
+        boolean hasContamination = purple.fit().qc().status().contains(PurpleQCStatus.FAIL_CONTAMINATION);
 
         FindingRecordBuilder builder = FindingRecordBuilder.builder()
                 .metaProperties(MetaPropertiesBuilder.builder()
@@ -87,7 +87,7 @@ public class FindingRecordFactory
                 .homologousRecombination(createHomologousRecombination(orangeRecord.chord(), purple, linx, somaticGainDeletions))
                 .viruses(createVirusFindings(orangeRecord.virusInterpreter(), eventFactory))
                 .hlaAlleles(HlaAlleleFactory.createHlaAllelesFindings(orangeRecord, hasReliablePurity, eventFactory))
-                .pharmocoGenotypes(createPharmcoGenotypesFindings(orangeRecord.peach(), hasContainmination))
+                .pharmocoGenotypes(createPharmcoGenotypesFindings(orangeRecord.peach(), hasContamination))
                 .visualisationFiles(visualisationFiles)
                 .build();
     }
