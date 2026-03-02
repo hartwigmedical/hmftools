@@ -20,6 +20,8 @@ public enum CanonicalSnvType
     public static CanonicalSnvType type(AmberBase ref, AmberBase alt)
     {
         Preconditions.checkArgument(ref != alt);
+        Preconditions.checkArgument(ref != AmberBase.N);
+        Preconditions.checkArgument(alt != AmberBase.N);
         AmberBase canonicalRef = ref;
         AmberBase canonicalAlt = alt;
         if(ref == A || ref == G)
@@ -52,6 +54,7 @@ public enum CanonicalSnvType
                     return T_G;
             }
         }
+        Preconditions.checkArgument(false);
         return null;
     }
 }

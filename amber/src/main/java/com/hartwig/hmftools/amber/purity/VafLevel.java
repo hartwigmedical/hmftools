@@ -1,25 +1,23 @@
 package com.hartwig.hmftools.amber.purity;
 
-import static java.util.stream.Collectors.toSet;
-
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.amber.PositionEvidence;
-import com.hartwig.hmftools.amber.VafReading;
-import com.hartwig.hmftools.amber.contamination.CategoryEvidence;
-import com.hartwig.hmftools.amber.contamination.PerArmVafConsistencyChecker;
+import com.hartwig.hmftools.amber.contamination.PerClassVafConsistencyChecker;
+import com.hartwig.hmftools.amber.contamination.VafClassifier;
 import com.hartwig.hmftools.amber.contamination.VafPredicate;
+import com.hartwig.hmftools.common.segmentation.ChrArm;
 import com.hartwig.hmftools.common.segmentation.ChrArmLocator;
 
 import org.apache.commons.math3.distribution.BinomialDistribution;
 
 public class VafLevel
 {
+    private static final double LOWER_CDF_BOUND_FOR_CAPTURE = 0.16;
+    private static final double UPPER_CDF_BOUND_FOR_CAPTURE = 0.84;
     private final double Level;
     private final List<PositionEvidence> PointsTested = new ArrayList<>();
     private final List<PositionEvidence> PointsInHomozygousBand = new ArrayList<>();
@@ -32,7 +30,8 @@ public class VafLevel
 
     public boolean hasSufficientDepthForEventDetection(PositionEvidence evidence)
     {
-        BinomialDistribution binomial = new BinomialDistribution(evidence.ReadDepth, Level);
+        // We want het points to be above the depth-2 noise floor.
+        BinomialDistribution binomial = new BinomialDistribution(evidence.ReadDepth, Level / 2);
         return binomial.cumulativeProbability(2) < 0.16;
     }
 
@@ -48,7 +47,7 @@ public class VafLevel
         }
         BinomialDistribution binomialHomozygous = new BinomialDistribution(n, Level);
         double cdfHomozygous = binomialHomozygous.cumulativeProbability(k);
-        if(cdfHomozygous > 0.25 && cdfHomozygous < 0.75)
+        if(cdfHomozygous > LOWER_CDF_BOUND_FOR_CAPTURE && cdfHomozygous < UPPER_CDF_BOUND_FOR_CAPTURE)
         {
             PointsInHomozygousBand.add(evidence);
         }
@@ -56,7 +55,7 @@ public class VafLevel
         {
             BinomialDistribution binomialHeterozygous = new BinomialDistribution(n, Level / 2);
             double cdfHeterozygous = binomialHeterozygous.cumulativeProbability(k);
-            if(cdfHeterozygous > 0.25 && cdfHeterozygous < 0.75)
+            if(cdfHeterozygous > LOWER_CDF_BOUND_FOR_CAPTURE && cdfHeterozygous < UPPER_CDF_BOUND_FOR_CAPTURE)
             {
                 PointsInHeterozygousBand.add(evidence);
             }
@@ -65,19 +64,15 @@ public class VafLevel
 
     public double perArmConsistencyFactor(final ChrArmLocator chrArmLocator)
     {
-        final Set<VafReading> capturedEvents = allCapturedPoints().stream().map(PositionEvidence::convertToVafReading).collect(toSet());
-        VafPredicate classifier = capturedEvents::contains;
-        PerArmVafConsistencyChecker checker = new PerArmVafConsistencyChecker(classifier, chrArmLocator);
-        for(PositionEvidence evidence : PointsTested)
-        {
-            checker.offer(evidence.convertToVafReading());
-        }
-        return checker.unevenDistributionCost().unevenDistributionCost();
+        VafClassifier<PositionEvidence, ChrArm> chrArmClassifier = VafClassifier.chrArmPositionEvidenceClassifier(chrArmLocator);
+        return calculateAucForClassifier(chrArmClassifier);
     }
 
     public double perMutationTypeConsistencyFactor()
     {
-        return 0;
+        VafClassifier<PositionEvidence, CanonicalSnvType> mutationTypeClassifier = VafClassifier.mutationTypeClassifier();
+        return calculateAucForClassifier(mutationTypeClassifier);
+
     }
 
     public Set<PositionEvidence> homozygousEvidencePoints()
@@ -103,6 +98,23 @@ public class VafLevel
     public double homozygousProportion()
     {
         return (double) PointsInHomozygousBand.size() / (allCapturedPoints().size());
+    }
+
+    @Override
+    public String toString()
+    {
+        return String.format("VafLevel{vaf=%.2f, tested: %d, homozygous: %d, heterozygous: %d}", Level, PointsTested.size(), PointsInHomozygousBand.size(), PointsInHeterozygousBand.size());
+    }
+
+    private <T extends Comparable<T>> double calculateAucForClassifier(final VafClassifier<PositionEvidence, T> chrArmClassifier)
+    {
+        VafPredicate<PositionEvidence> classifier = allCapturedPoints()::contains;
+        PerClassVafConsistencyChecker<PositionEvidence, T> checker = new PerClassVafConsistencyChecker<>(classifier, chrArmClassifier);
+        for(PositionEvidence evidence : PointsTested)
+        {
+            checker.offer(evidence);
+        }
+        return checker.unevenDistributionCost().unevenDistributionCost();
     }
 
     private Set<PositionEvidence> allCapturedPoints()

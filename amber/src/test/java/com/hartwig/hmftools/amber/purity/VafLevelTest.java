@@ -3,6 +3,7 @@ package com.hartwig.hmftools.amber.purity;
 import static com.hartwig.hmftools.common.amber.AmberBase.A;
 import static com.hartwig.hmftools.common.amber.AmberBase.C;
 import static com.hartwig.hmftools.common.amber.AmberBase.G;
+import static com.hartwig.hmftools.common.amber.AmberBase.N;
 import static com.hartwig.hmftools.common.amber.AmberBase.T;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._1;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._3;
@@ -18,7 +19,6 @@ import com.hartwig.hmftools.common.segmentation.Arm;
 import com.hartwig.hmftools.common.segmentation.ChrArm;
 import com.hartwig.hmftools.common.segmentation.ChrArmLocator;
 
-import org.apache.commons.math3.distribution.BinomialDistribution;
 import org.junit.Test;
 
 public class VafLevelTest extends PurityTestBase
@@ -33,54 +33,50 @@ public class VafLevelTest extends PurityTestBase
     @Test
     public void hasSufficientDepthForEventDetectionTest()
     {
-        BinomialDistribution binomial = new BinomialDistribution(34, 0.35);
-        var v = binomial.cumulativeProbability(2);
         // 16th percentile of het peak @ 2 AD
         VafLevel level35 = new VafLevel(0.35);
         assertFalse(level35.hasSufficientDepthForEventDetection(evidenceWithDepth(0)));
         assertFalse(level35.hasSufficientDepthForEventDetection(evidenceWithDepth(1)));
-        assertFalse(level35.hasSufficientDepthForEventDetection(evidenceWithDepth(11)));
-        assertTrue(level35.hasSufficientDepthForEventDetection(evidenceWithDepth(12)));
+        assertFalse(level35.hasSufficientDepthForEventDetection(evidenceWithDepth(20)));
+        assertFalse(level35.hasSufficientDepthForEventDetection(evidenceWithDepth(25)));
+        assertTrue(level35.hasSufficientDepthForEventDetection(evidenceWithDepth(26)));
+        assertTrue(level35.hasSufficientDepthForEventDetection(evidenceWithDepth(30)));
 
         VafLevel level10 = new VafLevel(0.1);
         assertFalse(level10.hasSufficientDepthForEventDetection(evidenceWithDepth(0)));
         assertFalse(level10.hasSufficientDepthForEventDetection(evidenceWithDepth(1)));
-        assertFalse(level10.hasSufficientDepthForEventDetection(evidenceWithDepth(10)));
-        assertFalse(level10.hasSufficientDepthForEventDetection(evidenceWithDepth(44)));
-        assertTrue(level10.hasSufficientDepthForEventDetection(evidenceWithDepth(45)));
-        assertTrue(level10.hasSufficientDepthForEventDetection(evidenceWithDepth(125)));
-
-        VafLevel level1 = new VafLevel(0.01);
-        assertFalse(level1.hasSufficientDepthForEventDetection(evidenceWithDepth(0)));
-        assertFalse(level1.hasSufficientDepthForEventDetection(evidenceWithDepth(1)));
-        assertFalse(level1.hasSufficientDepthForEventDetection(evidenceWithDepth(1)));
-        assertFalse(level1.hasSufficientDepthForEventDetection(evidenceWithDepth(100)));
-        assertFalse(level1.hasSufficientDepthForEventDetection(evidenceWithDepth(450)));
-        assertFalse(level1.hasSufficientDepthForEventDetection(evidenceWithDepth(461)));
-        assertTrue(level1.hasSufficientDepthForEventDetection(evidenceWithDepth(462)));
+        assertFalse(level10.hasSufficientDepthForEventDetection(evidenceWithDepth(91)));
+        assertTrue(level10.hasSufficientDepthForEventDetection(evidenceWithDepth(92)));
+        assertTrue(level10.hasSufficientDepthForEventDetection(evidenceWithDepth(1000)));
     }
 
     @Test
     public void testTest()
     {
         checkNotCaptured(0.1, 1000, 20);
-        checkNotCaptured(0.1, 1000, 44);
-        checkCapturedHet(0.1, 1000, 45);
-        checkCapturedHet(0.1, 1000, 54);
-        checkNotCaptured(0.1, 1000, 55);
-        checkNotCaptured(0.1, 1000, 80);
-        //        checkNotCaptured(0.1, 1000, 94); TODO
-        checkCapturedHom(0.1, 1000, 95);
+        checkNotCaptured(0.1, 1000, 42);
+        checkCapturedHet(0.1, 1000, 50);
+        checkCapturedHet(0.1, 1000, 56);
+        checkNotCaptured(0.1, 1000, 57);
+        checkNotCaptured(0.1, 1000, 79);
+        checkNotCaptured(0.1, 1000, 90);
+        checkCapturedHom(0.1, 1000, 91);
         checkCapturedHom(0.1, 1000, 100);
-        checkCapturedHom(0.1, 1000, 105);
-        checkNotCaptured(0.1, 1000, 106);
+        checkCapturedHom(0.1, 1000, 108);
+        checkNotCaptured(0.1, 1000, 110);
 
+        checkNotCaptured(0.30, 100, 5);
+        checkNotCaptured(0.30, 100, 10);
+        checkCapturedHet(0.30, 100, 11);
+        checkCapturedHet(0.30, 100, 15);
+        checkCapturedHet(0.30, 100, 18);
+        checkNotCaptured(0.30, 100, 19);
         checkNotCaptured(0.30, 100, 20);
-        checkNotCaptured(0.30, 100, 26);
-        checkCapturedHom(0.30, 100, 27);
+        checkNotCaptured(0.30, 100, 24);
+        checkCapturedHom(0.30, 100, 25);
         checkCapturedHom(0.30, 100, 30);
-        checkCapturedHom(0.30, 100, 32);
-        checkNotCaptured(0.30, 100, 34);
+        checkCapturedHom(0.30, 100, 34);
+        checkNotCaptured(0.30, 100, 35);
     }
 
     @Test
@@ -136,9 +132,13 @@ public class VafLevelTest extends PurityTestBase
         // For each possible SNV create 10 reads, of which 1 is captured.
         for(AmberBase ref : AmberBase.values())
         {
+            if(ref == N)
+            {
+                continue;
+            }
             for(AmberBase alt : AmberBase.values())
             {
-                if(ref == alt)
+                if(alt == N || ref == alt)
                 {
                     continue;
                 }
@@ -162,9 +162,13 @@ public class VafLevelTest extends PurityTestBase
         int position = 1_000_000;
         for(AmberBase ref : AmberBase.values())
         {
+            if(ref == N)
+            {
+                continue;
+            }
             for(AmberBase alt : AmberBase.values())
             {
-                if(ref == alt)
+                if(alt == N || ref == alt)
                 {
                     continue;
                 }
@@ -229,6 +233,17 @@ public class VafLevelTest extends PurityTestBase
 
         level.test(evidenceWithDepthAndAltCount(_3, 7_000_000, 1000, 100)); // hom
         assertEquals(0.5, level.homozygousProportion(), 0.0001);
+    }
+
+    @Test
+    public void toStringTest()
+    {
+        VafLevel level = new VafLevel(0.1);
+        level.test(evidenceWithDepthAndAltCount(_3, 1_000_000, 1000, 100));
+        level.test(evidenceWithDepthAndAltCount(_3, 2_000_000, 1000, 50));
+        level.test(evidenceWithDepthAndAltCount(_3, 2_001_000, 1000, 50));
+        level.test(evidenceWithDepthAndAltCount(_3, 3_000_000, 1000, 10));
+        assertEquals("VafLevel{vaf=0.10, tested: 4, homozygous: 1, heterozygous: 2}", level.toString());
     }
 
     private void checkNotCaptured(double vafLevel, int readDepth, int altDepth)

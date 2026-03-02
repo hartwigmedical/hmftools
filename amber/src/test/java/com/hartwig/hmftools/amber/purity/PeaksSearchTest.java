@@ -63,20 +63,22 @@ public class PeaksSearchTest extends PurityTestBase
         }
         PeakSearch search = new PeakSearch(evidence);
         List<VafLevelEvaluationResult> peaks = search.peaks();
-        assertEquals(1, peaks.size());
-        assertEquals(0.2, peaks.get(0).Vaf.vaf(), 0.0001);
+        assertEquals(2, peaks.size());
+        assertEquals(0.1, peaks.get(0).Vaf().vaf(), 0.01);
+        assertEquals(0.2, peaks.get(1).Vaf().vaf(), 0.01);
 
-        // Now add a copy number event with a peak at 8%.
+        // Now add a copy number event with a peak at 30%.
         start = 1_000_000;
         for(int i = 0; i < 100; i++)
         {
             int position = start + i * 1000;
-            evidence.add(evidenceWithDepthAndAltCount(HumanChromosome._3, position, 1000, 80));
+            evidence.add(evidenceWithDepthAndAltCount(HumanChromosome._3, position, 1000, 300));
         }
         search = new PeakSearch(evidence);
         peaks = search.peaks();
-        assertEquals(2, peaks.size());
-        assertEquals(0.08, peaks.get(0).Vaf.vaf(), 0.0001);
-        assertEquals(0.2, peaks.get(0).Vaf.vaf(), 0.0001);
+        assertEquals(3, peaks.size());
+        assertEquals(0.1, peaks.get(0).Vaf().vaf(), 0.01);
+        assertEquals(0.2, peaks.get(1).Vaf().vaf(), 0.01);
+        assertEquals(0.3, peaks.get(2).Vaf().vaf(), 0.01);
     }
 }

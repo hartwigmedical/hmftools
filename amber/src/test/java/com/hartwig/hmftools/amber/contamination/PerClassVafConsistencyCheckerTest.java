@@ -11,10 +11,7 @@ import java.util.List;
 
 import com.google.common.base.Preconditions;
 import com.hartwig.hmftools.amber.VafReading;
-import com.hartwig.hmftools.common.amber.AmberBase;
-import com.hartwig.hmftools.common.amber.BaseDepthData;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.segmentation.Arm;
 import com.hartwig.hmftools.common.segmentation.ChrArm;
 import com.hartwig.hmftools.common.segmentation.ChrArmLocator;
@@ -22,20 +19,16 @@ import com.hartwig.hmftools.common.segmentation.ChrArmLocator;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class PerArmVafConsistencyCheckerTest
+public class PerClassVafConsistencyCheckerTest
 {
     private final static int CENTRE = 10_000_000;
     private final ChrArmLocator chrArmLocatorP = cobaltRatio -> new ChrArm(cobaltRatio.chr(), Arm.P);
-    private final ChrArmLocator chrArmLocatorPQ = new ChrArmLocator()
+    private final ChrArmLocator chrArmLocatorPQ = position ->
     {
-        @Override
-        public ChrArm map(final GenomePosition position)
-        {
-            Arm arm = position.position() < CENTRE ? Arm.P : Arm.Q;
-            return new ChrArm(position.chr(), arm);
-        }
+        Arm arm = position.position() < CENTRE ? Arm.P : Arm.Q;
+        return new ChrArm(position.chr(), arm);
     };
-    private final VafPredicate trueIf3Mod10 = contamination -> contamination.refSupport() % 10 == 3;
+    private final VafPredicate<VafReading> trueIf3Mod10 = contamination -> contamination.refSupport() % 10 == 3;
 
     @Test
     public void unevenDistributionCostTest()
@@ -52,7 +45,9 @@ public class PerArmVafConsistencyCheckerTest
         // Total area is: 5 + 37.5 + 97.5 = 140
         // Area of triangle from (0, 0) to (40, 9) = 180
         // Gini = (140 / 180) = 0.7778
-        PerArmVafConsistencyChecker perArmVafConsistencyChecker = new PerArmVafConsistencyChecker(trueIf3Mod10, chrArmLocatorP);
+        VafClassifier<VafReading, ChrArm> chrArmVafClassifier = VafClassifier.chrArmClassifier(chrArmLocatorP);
+        PerClassVafConsistencyChecker<VafReading, ChrArm> perArmVafConsistencyChecker =
+                new PerClassVafConsistencyChecker<>(trueIf3Mod10, chrArmVafClassifier);
 
         // 1P
         for(int i = 1; i <= 8; i++)
@@ -100,7 +95,7 @@ public class PerArmVafConsistencyCheckerTest
             // Q arm
             data.addAll(createEvenlySpacedDataPointsWithContamination(chromosome, CENTRE + 1000, 30, 10, 100, 20, 100));
         }
-        double factor = PerArmVafConsistencyChecker.calculateConfirmationFactor(chrArmLocatorPQ, 0.2, data).unevenDistributionCost();
+        double factor = PerClassVafConsistencyChecker.calculateConfirmationFactor(chrArmLocatorPQ, 0.2, data).unevenDistributionCost();
         Assert.assertEquals(1.0, factor, 0.0001);
     }
 
@@ -118,7 +113,7 @@ public class PerArmVafConsistencyCheckerTest
             data.addAll(createEvenlySpacedDataPointsWithContamination(chromosome, 1000, 50, 0, 100, 20, 100));
             data.addAll(createEvenlySpacedDataPointsWithContamination(chromosome, CENTRE + 1000, 30, 0, 100, 20, 100));
         }
-        double factor = PerArmVafConsistencyChecker.calculateConfirmationFactor(chrArmLocatorPQ, 0.2, data).unevenDistributionCost();
+        double factor = PerClassVafConsistencyChecker.calculateConfirmationFactor(chrArmLocatorPQ, 0.2, data).unevenDistributionCost();
         // chromosomes 1-Y have 5000 in P, 3000 in Q, no contamination
         // 1P has 10,000 and 500 contamination, 1Q has 6000, no contamination
         // total area = 192000*500*0.5, 1P area = 10000*500*0.5
@@ -139,7 +134,7 @@ public class PerArmVafConsistencyCheckerTest
             data.addAll(createEvenlySpacedDataPointsWithContamination(chromosome, CENTRE + 1000, 10, 0, 100, 0, 40));
         }
         // factor = (46 - 23) / 46 = 0.5
-        double factor = PerArmVafConsistencyChecker.calculateConfirmationFactor(chrArmLocatorPQ, 0.2, data).unevenDistributionCost();
+        double factor = PerClassVafConsistencyChecker.calculateConfirmationFactor(chrArmLocatorPQ, 0.2, data).unevenDistributionCost();
         Assert.assertEquals(0.5, factor, 0.0001);
     }
 
@@ -152,7 +147,7 @@ public class PerArmVafConsistencyCheckerTest
             data.addAll(createEvenlySpacedDataPointsWithContamination(chromosome, 1000, 50, 0, 100, 20, 100));
             data.addAll(createEvenlySpacedDataPointsWithContamination(chromosome, CENTRE + 1000, 30, 0, 100, 20, 100));
         }
-        double factor = PerArmVafConsistencyChecker.calculateConfirmationFactor(chrArmLocatorPQ, 0.2, data).unevenDistributionCost();
+        double factor = PerClassVafConsistencyChecker.calculateConfirmationFactor(chrArmLocatorPQ, 0.2, data).unevenDistributionCost();
         // Height is 0
         Assert.assertEquals(Double.NaN, factor, 0.0001);
     }

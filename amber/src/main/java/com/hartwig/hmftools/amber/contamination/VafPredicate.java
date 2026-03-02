@@ -2,12 +2,12 @@ package com.hartwig.hmftools.amber.contamination;
 
 import com.hartwig.hmftools.amber.VafReading;
 
-public interface VafPredicate
+public interface VafPredicate<S>
 {
-    boolean test(VafReading contamination);
+    boolean test(S contamination);
 }
 
-class BinomialVafPredicate implements VafPredicate
+class BinomialVafPredicate implements VafPredicate<VafReading>
 {
     private final double ContaminationLevel;
 

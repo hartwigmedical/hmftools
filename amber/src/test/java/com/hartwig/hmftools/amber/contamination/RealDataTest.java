@@ -213,7 +213,7 @@ public class RealDataTest
         List<VafResult> results = new ArrayList<>();
         for(double vaf : vafs)
         {
-            var factor = PerArmVafConsistencyChecker.calculateConfirmationFactor(mChrArmLocator, vaf, data);
+            var factor = PerClassVafConsistencyChecker.calculateConfirmationFactor(mChrArmLocator, vaf, data);
             //            printResult(vaf, factor);
             results.add(new VafResult(vaf, factor));
         }

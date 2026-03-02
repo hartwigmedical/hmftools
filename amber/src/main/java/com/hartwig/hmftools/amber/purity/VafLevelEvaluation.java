@@ -40,7 +40,7 @@ public class VafLevelEvaluation implements Callable<VafLevelEvaluationResult>
 
     public boolean hasScore()
     {
-        return Result != null && Result.Score != null;
+        return Result != null && Result.Score() != null;
     }
 
     public VafLevelEvaluationResult result()

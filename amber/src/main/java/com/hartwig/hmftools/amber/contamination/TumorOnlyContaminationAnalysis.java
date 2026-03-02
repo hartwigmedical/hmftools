@@ -3,7 +3,7 @@ package com.hartwig.hmftools.amber.contamination;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.amber.AmberConfig.AMB_LOGGER;
-import static com.hartwig.hmftools.amber.contamination.PerArmVafConsistencyChecker.calculateConfirmationFactor;
+import static com.hartwig.hmftools.amber.contamination.PerClassVafConsistencyChecker.calculateConfirmationFactor;
 import static com.hartwig.hmftools.common.segmentation.ChrArmLocator.defaultLocator;
 
 import java.util.ArrayList;

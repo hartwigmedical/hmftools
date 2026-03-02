@@ -4,6 +4,7 @@ import static java.lang.String.format;
 
 import java.util.Objects;
 
+import com.google.common.base.Preconditions;
 import com.hartwig.hmftools.common.amber.AmberBase;
 import com.hartwig.hmftools.common.amber.BaseDepthData;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
@@ -28,6 +29,7 @@ public class PositionEvidence implements GenomePosition
         Position = position;
         Ref = AmberBase.valueOf(ref);
         Alt = AmberBase.valueOf(alt);
+        Preconditions.checkArgument(Ref != Alt);
         ReadDepth = 0;
         IndelCount = 0;
         RefSupport = 0;

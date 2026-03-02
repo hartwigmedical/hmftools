@@ -2,6 +2,8 @@ package com.hartwig.hmftools.amber.contamination;
 
 import java.util.Objects;
 
+import com.google.common.base.Preconditions;
+
 import org.jetbrains.annotations.NotNull;
 
 public class CategoryEvidence<T extends Comparable<T>> implements Comparable<CategoryEvidence<T>>
@@ -12,6 +14,7 @@ public class CategoryEvidence<T extends Comparable<T>> implements Comparable<Cat
 
     public CategoryEvidence(final T Category)
     {
+        Preconditions.checkNotNull(Category);
         this.Category = Category;
     }
 
