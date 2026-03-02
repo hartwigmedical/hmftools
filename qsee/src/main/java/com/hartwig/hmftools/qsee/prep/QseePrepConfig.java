@@ -28,7 +28,6 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_IDS_DE
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_METRICS_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_METRICS_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR_DESC;
@@ -87,6 +86,8 @@ public class QseePrepConfig
     public final String OutputId;
 
     public final int Threads;
+
+    public static final String SAMPLE_ID_FILE_DESC = "Sample ID TSV file containing columns TumorId and optionally ReferenceId";
 
     public static final String SKIP_CATEGORIES = "skip_categories";
     public static final String SKIP_CATEGORIES_DESC = "Comma-separated list of categories to skip";
