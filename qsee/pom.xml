@@ -38,6 +38,9 @@
             <resource>
                 <directory>src/main/R</directory>
                 <filtering>false</filtering>
+                <excludes>
+                    <exclude>**/.Rhistory</exclude>
+                </excludes>
             </resource>
         </resources>
 
