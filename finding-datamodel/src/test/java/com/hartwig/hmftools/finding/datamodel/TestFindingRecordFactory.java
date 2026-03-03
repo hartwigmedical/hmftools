@@ -38,7 +38,6 @@ public class TestFindingRecordFactory {
                 .hlaAlleles(TestFindingFactory.buildFindingsList(FindingsStatus.OK, List.of()))
                 .pharmocoGenotypes(TestFindingFactory.buildFindingsList(FindingsStatus.OK, List.of()))
                 .visualisationFiles(VisualisationFilesBuilder.builder()
-                        .tumorBqrPlot("")
                         .purpleInputPlot("")
                         .purpleFinalCircosPlot("")
                         .purpleClonalityPlot("")
@@ -48,7 +47,7 @@ public class TestFindingRecordFactory {
                         .purpleKataegisPlot("")
                         .qseePlot("")
                         .linxDriverPlots(List.of())
-                        .sageVisualisations(Map.of())
+                        .sageVisualisations(List.of())
                         .build());
     }
 }
