@@ -7,8 +7,8 @@ import com.hartwig.hmftools.datamodel.driver.DriverSource;
 import com.hartwig.hmftools.datamodel.hla.LilacAllele;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
-import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
 import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
+import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
 import com.hartwig.hmftools.datamodel.purple.PurpleMicrosatelliteStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.PurpleTumorMutationalStatus;
@@ -24,15 +24,15 @@ final class FindingKeys
     public static String smallVariant(DriverSource sampleType, PurpleVariant variant,
             PurpleTranscriptImpact transcriptImpact, boolean isCanonical)
     {
-        return String.format("smallVariant[%s %s %s]", sampleType, geneTranscriptLabel(variant.gene(), isCanonical,
-                transcriptImpact.transcript()), impact(transcriptImpact));
+        return String.format("smallVariant[%s %s %s:%d %s %s]", sampleType, geneTranscriptLabel(variant.gene(), isCanonical,
+                transcriptImpact.transcript()), variant.chromosome(), variant.position(), variant.ref(), variant.alt());
     }
 
-    public static String gainDeletion(DriverSource sampleType, String gene, CopyNumberInterpretation copyNumberInterpretation,
+    public static String gainDeletion(DriverSource sampleType, String gene, PurpleDriverType driverType,
             boolean isCanonical, String transcriptId)
     {
         return String.format("gainDeletion[%s %s %s]", sampleType, geneTranscriptLabel(gene, isCanonical, transcriptId),
-                copyNumberInterpretation.name());
+                driverType.name());
     }
 
     public static String disruption(DriverSource sampleType, LinxBreakend breakend)

@@ -202,7 +202,6 @@ public class FindingRecordFactory
         }
     }
 
-    @NotNull
     private static PredictedTumorOrigin createPredictedTumorOrigin(CuppaPrediction prediction)
     {
         return PredictedTumorOriginBuilder.builder()
@@ -265,7 +264,7 @@ public class FindingRecordFactory
     {
         return gainDeletions.findings().stream()
                 .filter(x -> geneNames.contains(x.gene()))
-                .filter(x -> x.type() == GainDeletion.Type.SOMATIC_LOH)
+                .filter(GainDeletion::isLossOfHeterozygosity)
                 .sorted(Comparator.comparing(GainDeletion::gene))
                 .collect(Collectors.toList());
     }

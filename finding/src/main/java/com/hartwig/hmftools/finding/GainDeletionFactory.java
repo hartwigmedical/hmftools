@@ -22,6 +22,8 @@ import com.hartwig.hmftools.finding.datamodel.FindingsStatus;
 import com.hartwig.hmftools.finding.datamodel.GainDeletionBuilder;
 import com.hartwig.hmftools.finding.datamodel.ReportedStatus;
 
+import org.jetbrains.annotations.Nullable;
+
 final class GainDeletionFactory
 {
 
@@ -84,7 +86,9 @@ final class GainDeletionFactory
             final PurpleGeneCopyNumber geneCopyNumber =
                     findPurpleGeneCopyNumber(somaticGeneCopyNumbers, fullDels.gene(), fullDels.transcript());
 
-            gainDeletions.add(toGainDel(fullDels, driver, GainDeletion.Type.GERMLINE_DEL_HOM_IN_TUMOR, DriverSource.GERMLINE, geneCopyNumber, cnPerChromosome, eventFactory));
+            gainDeletions.add(toGainDel(fullDels, driver, DriverSource.GERMLINE,
+                    GainDeletion.Type.HOM_DEL, GainDeletion.Type.HOM_DEL,
+                    geneCopyNumber, cnPerChromosome, eventFactory));
         }
 
         for(PurpleLossOfHeterozygosity loh : reportableGermlineLossOfHeterozygosities)
@@ -95,7 +99,7 @@ final class GainDeletionFactory
 
             final PurpleGeneCopyNumber geneCopyNumber = findPurpleGeneCopyNumber(somaticGeneCopyNumbers, loh.gene(), loh.transcript());
 
-            gainDeletions.add(toGainDel(loh, driver, geneCopyNumber, cnPerChromosome, eventFactory));
+            gainDeletions.add(germlineLohToGainDel(loh, driver, geneCopyNumber, cnPerChromosome, eventFactory));
         }
 
         gainDeletions.sort(GainDeletion.COMPARATOR);
@@ -132,16 +136,20 @@ final class GainDeletionFactory
 
             PurpleDriver driver = findDriver(drivers, gainDeletion.gene(), gainDeletion.transcript(), purpleDriverType);
 
-            final GainDeletion.Type type = switch(gainDeletion.interpretation())
+            final GainDeletion.Type somaticGainDelType = switch(gainDeletion.interpretation())
             {
-                case FULL_GAIN, PARTIAL_GAIN -> GainDeletion.Type.SOMATIC_GAIN;
-                case FULL_DEL, PARTIAL_DEL -> GainDeletion.Type.SOMATIC_DEL;
+                case FULL_GAIN, PARTIAL_GAIN -> GainDeletion.Type.GAIN;
+                case FULL_DEL, PARTIAL_DEL -> GainDeletion.Type.HOM_DEL;
             };
 
             final PurpleGeneCopyNumber geneCopyNumber =
                     findPurpleGeneCopyNumber(somaticGeneCopyNumbers, gainDeletion.gene(), gainDeletion.transcript());
 
-            somaticGainsDels.add(toGainDel(gainDeletion, driver, type, DriverSource.SOMATIC, geneCopyNumber, cnPerChromosome, eventFactory));
+            somaticGainsDels.add(toGainDel(gainDeletion, driver, DriverSource.SOMATIC,
+                    somaticGainDelType,
+                    null,
+                    geneCopyNumber,
+                    cnPerChromosome, eventFactory));
         }
         return somaticGainsDels;
     }
@@ -149,17 +157,18 @@ final class GainDeletionFactory
     public static List<GainDeletion> somaticLoh(List<PurpleGeneCopyNumber> lohGeneCopyNumbers, ChromosomeArmCopyNumberMap cnPerChromosome,
             EventFactory eventFactory)
     {
-        return lohGeneCopyNumbers.stream().map(o -> toGainDel(o, cnPerChromosome, eventFactory)).toList();
+        return lohGeneCopyNumbers.stream().map(o -> somaticLohToGainDel(
+                o, cnPerChromosome, eventFactory)).toList();
     }
 
-    private static GainDeletion toGainDel(PurpleGeneCopyNumber geneCopyNumber, ChromosomeArmCopyNumberMap cnPerChromosome,
+    private static GainDeletion somaticLohToGainDel(PurpleGeneCopyNumber geneCopyNumber, ChromosomeArmCopyNumberMap cnPerChromosome,
             EventFactory eventFactory)
     {
         return GainDeletionBuilder.builder()
                 .driver(DriverFieldsBuilder.builder()
                         .findingKey(FindingKeys.gainDeletion(DriverSource.SOMATIC,
                                 geneCopyNumber.gene(),
-                                CopyNumberInterpretation.FULL_DEL,
+                                PurpleDriverType.DEL,
                                 geneCopyNumber.isCanonical(),
                                 geneCopyNumber.transcript()))
                         .event(eventFactory.gainDeletionEvent(geneCopyNumber))
@@ -169,13 +178,13 @@ final class GainDeletionFactory
                         .driverLikelihood(0)
                         .build()
                 )
-                .type(GainDeletion.Type.SOMATIC_LOH)
                 .chromosome(geneCopyNumber.chromosome())
                 .chromosomeBand(geneCopyNumber.chromosomeBand())
                 .gene(geneCopyNumber.gene())
                 .transcript(geneCopyNumber.transcript())
                 .isCanonical(geneCopyNumber.isCanonical())
-                .interpretation(CopyNumberInterpretation.FULL_DEL)
+                .somaticType(GainDeletion.Type.HET_DEL)
+                .geneExtent(GainDeletion.GeneExtent.FULL_GENE) // not strictly correct
                 .tumorMinCopies(geneCopyNumber.minCopyNumber())
                 .tumorMaxCopies(geneCopyNumber.maxCopyNumber())
                 .tumorMinMinorAlleleCopies(geneCopyNumber.minMinorAlleleCopyNumber())
@@ -195,8 +204,9 @@ final class GainDeletionFactory
 
     private static GainDeletion toGainDel(PurpleGainDeletion purpleGainDeletion,
             final PurpleDriver driver,
-            GainDeletion.Type type,
             DriverSource sourceSample,
+            GainDeletion.Type somaticType,
+            @Nullable GainDeletion.Type germlineType,
             PurpleGeneCopyNumber geneCopyNumber,
             ChromosomeArmCopyNumberMap cnPerChromosome,
             EventFactory eventFactory)
@@ -205,7 +215,7 @@ final class GainDeletionFactory
                 .driver(DriverFieldsBuilder.builder()
                         .findingKey(FindingKeys.gainDeletion(sourceSample,
                                 purpleGainDeletion.gene(),
-                                purpleGainDeletion.interpretation(),
+                                driver.type(),
                                 driver.isCanonical(),
                                 purpleGainDeletion.transcript()))
                         .event(eventFactory.gainDeletionEvent(purpleGainDeletion))
@@ -215,13 +225,14 @@ final class GainDeletionFactory
                         .driverLikelihood(driver.driverLikelihood())
                         .build()
                 )
-                .type(type)
                 .chromosome(purpleGainDeletion.chromosome())
                 .chromosomeBand(purpleGainDeletion.chromosomeBand())
                 .gene(purpleGainDeletion.gene())
                 .transcript(purpleGainDeletion.transcript())
                 .isCanonical(driver.isCanonical())
-                .interpretation(purpleGainDeletion.interpretation())
+                .somaticType(somaticType)
+                .germlineType(germlineType)
+                .geneExtent(toGeneExtent(purpleGainDeletion.interpretation()))
                 .tumorMinCopies(purpleGainDeletion.minCopies())
                 .tumorMaxCopies(purpleGainDeletion.maxCopies())
                 .tumorMinMinorAlleleCopies(geneCopyNumber.minMinorAlleleCopyNumber())
@@ -229,21 +240,22 @@ final class GainDeletionFactory
                 .build();
     }
 
-    private static GainDeletion toGainDel(PurpleLossOfHeterozygosity loh, final PurpleDriver driver, PurpleGeneCopyNumber geneCopyNumber,
+    private static GainDeletion germlineLohToGainDel(PurpleLossOfHeterozygosity loh, final PurpleDriver driver,
+            PurpleGeneCopyNumber geneCopyNumber,
             ChromosomeArmCopyNumberMap cnPerChromosome, EventFactory eventFactory)
     {
 
-        CopyNumberInterpretation copyNumberInterpretation = switch(loh.geneProportion())
+        GainDeletion.GeneExtent geneExtent = switch(loh.geneProportion())
         {
-            case FULL_GENE -> CopyNumberInterpretation.FULL_GAIN;
-            case PARTIAL_GENE -> CopyNumberInterpretation.PARTIAL_DEL;
+            case FULL_GENE -> GainDeletion.GeneExtent.FULL_GENE;
+            case PARTIAL_GENE -> GainDeletion.GeneExtent.PARTIAL_GENE;
         };
 
         return GainDeletionBuilder.builder()
                 .driver(DriverFieldsBuilder.builder()
                         .findingKey(FindingKeys.gainDeletion(DriverSource.GERMLINE,
                                 loh.gene(),
-                                copyNumberInterpretation,
+                                PurpleDriverType.GERMLINE_DELETION,
                                 driver.isCanonical(),
                                 loh.transcript()))
                         .event(eventFactory.gainDeletionEvent(loh))
@@ -253,17 +265,27 @@ final class GainDeletionFactory
                         .driverLikelihood(driver.driverLikelihood())
                         .build()
                 )
-                .type(GainDeletion.Type.GERMLINE_DEL_HET_IN_TUMOR)
                 .chromosome(loh.chromosome())
                 .chromosomeBand(loh.chromosomeBand())
                 .gene(loh.gene())
                 .transcript(loh.transcript())
                 .isCanonical(driver.isCanonical())
-                .interpretation(copyNumberInterpretation)
+                .somaticType(GainDeletion.Type.HET_DEL)
+                .germlineType(GainDeletion.Type.HET_DEL)
+                .geneExtent(geneExtent)
                 .tumorMinCopies(loh.minCopies())
                 .tumorMaxCopies(loh.maxCopies())
                 .tumorMinMinorAlleleCopies(geneCopyNumber.minMinorAlleleCopyNumber())
                 .chromosomeArmCopies(cnPerChromosome.chromosomeArmCopyNumber(loh.chromosome(), loh.chromosomeBand()))
                 .build();
+    }
+
+    private static GainDeletion.GeneExtent toGeneExtent(CopyNumberInterpretation copyNumberInterpretation)
+    {
+        return switch (copyNumberInterpretation)
+        {
+            case FULL_GAIN, FULL_DEL -> GainDeletion.GeneExtent.FULL_GENE;
+            case PARTIAL_GAIN, PARTIAL_DEL -> GainDeletion.GeneExtent.PARTIAL_GENE;
+        };
     }
 }

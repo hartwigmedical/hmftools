@@ -9,7 +9,6 @@ import com.hartwig.hmftools.datamodel.driver.DriverSource;
 import com.hartwig.hmftools.datamodel.linx.FusionPhasedType;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
 import com.hartwig.hmftools.datamodel.linx.LinxFusionType;
-import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
 import com.hartwig.hmftools.datamodel.purple.HotspotType;
 import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
 import com.hartwig.hmftools.datamodel.purple.PurpleGenotypeStatus;
@@ -170,12 +169,12 @@ public class TestFindingFactory {
                 .gene(Strings.EMPTY)
                 .transcript(Strings.EMPTY)
                 .isCanonical(false)
-                .interpretation(CopyNumberInterpretation.FULL_DEL)
+                .somaticType(GainDeletion.Type.GAIN)
+                .geneExtent(GainDeletion.GeneExtent.FULL_GENE)
                 .tumorMinCopies(0)
                 .tumorMaxCopies(0)
                 .tumorMinMinorAlleleCopies(0)
-                .chromosomeArmCopies(0)
-                .type(GainDeletion.Type.SOMATIC_GAIN);
+                .chromosomeArmCopies(0);
     }
 
     @NotNull
