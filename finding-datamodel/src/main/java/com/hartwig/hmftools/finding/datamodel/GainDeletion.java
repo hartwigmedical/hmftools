@@ -9,6 +9,7 @@ import io.soabase.recordbuilder.core.RecordBuilder;
 import jakarta.validation.constraints.NotNull;
 
 @RecordBuilder
+@RecordBuilder.Options(nullableAnnotationClass = "org.jspecify.annotations.Nullable", defaultNotNull = true)
 public record GainDeletion(
         @NotNull DriverFields driver,
         @NotNull String gene,
@@ -16,8 +17,8 @@ public record GainDeletion(
         @NotNull String chromosomeBand,
         @NotNull String transcript,
         boolean isCanonical,
-        @Nullable Type germlineType,
         @NotNull Type somaticType,
+        @Nullable Type germlineType,
         @NotNull GeneExtent geneExtent,
         @Nullable ExonRange exonRange, // null if exon range info not available
         double tumorMinCopies,
@@ -29,9 +30,10 @@ public record GainDeletion(
     public enum Type
     {
         GAIN,
-        DEL,
-        HEL_DEL,
-        CN_NEUTRAL_LOH
+        HOM_DEL,
+        HET_DEL,
+        CN_NEUTRAL_LOH,
+        NONE
     }
 
     public enum GeneExtent
@@ -41,8 +43,8 @@ public record GainDeletion(
     }
 
     public record ExonRange(
-            @Nullable Integer exonStart, // null if starts before first exon
-            @Nullable Integer exonEnd    // null if ends after last exon
+        @Nullable Integer exonStart, // null if starts before first exon
+        @Nullable Integer exonEnd    // null if ends after last exon
     )
     {}
 
@@ -78,5 +80,11 @@ public record GainDeletion(
     public double driverLikelihood()
     {
         return driver.driverLikelihood();
+    }
+
+    public boolean isLossOfHeterozygosity()
+    {
+        return (somaticType() == Type.CN_NEUTRAL_LOH) ||
+               (somaticType() == Type.HET_DEL && tumorMinMinorAlleleCopies() < 0.5);
     }
 }
