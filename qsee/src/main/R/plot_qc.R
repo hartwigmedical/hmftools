@@ -1160,15 +1160,11 @@ create_report <- local({
    
    plots_combined <- patchwork::wrap_plots(plots, design = design) + REPORT_TITLE
 
-   ## Prevent ggplot build warnings showing again - these are already shown when calling render_now().
-   ## Draw/device warnings still can be shown with ggsave().
-   plots_combined <- ggplotGrob(plots_combined)
-
    LOGGER$info("Writing report to: %s", OUTPUT_PATH)
-   ggsave(
-      filename = OUTPUT_PATH, plot = plots_combined,
-      device = "pdf", width = 20, height = 12, units = "in"
-   )
+   suppressWarnings({ ## Prevent ggplot build warnings showing again - these are already shown when calling render_now()
+      ggsave(filename = OUTPUT_PATH, plot = plots_combined, width = 20, height = 12, units = "in")   
+   })
+   
 })
 
 
