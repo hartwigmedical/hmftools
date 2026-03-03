@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.compar.sigs;
 
-import static com.hartwig.hmftools.common.sigs.SignatureAllocationFile.PERCENT_FLD;
+import static com.hartwig.hmftools.compar.sigs.SigsData.FLD_PERCENT;
 
 import java.util.Collections;
 import java.util.Map;
@@ -21,7 +21,7 @@ public class SigsDataTest extends ComparableItemTest<SigsData, SigsComparer, Tes
         SigsData alternateValueSource = builder.createWithAlternateDefaults();
 
         fieldToAlternateValueInitializer = Map.of(
-                PERCENT_FLD, b -> b.percent = alternateValueSource.SignatureAllocation().percent()
+                FLD_PERCENT, b -> b.percent = alternateValueSource.SignatureAllocation().percent()
         );
         nameToAlternateIndexInitializer = Map.of(
                 "Signature", b -> b.signature = alternateValueSource.SignatureAllocation().signature()

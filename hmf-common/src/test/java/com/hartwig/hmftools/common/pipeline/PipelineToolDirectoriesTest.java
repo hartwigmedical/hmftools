@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.pipeline;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.DB_V6_0_FORMAT;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.OA_V2_0_FORMAT;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.OA_V2_2_FORMAT;
+import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.OA_V3_0_FORMAT;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.PIP5_V6_0_FORMAT;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.PIPELINE_FORMAT_CFG;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.PIPELINE_FORMAT_FILE_CFG;
@@ -23,7 +24,7 @@ public class PipelineToolDirectoriesTest
     private static final String COMPLETE_TEST_CONFIG_FILE = RESOURCE_DIR + File.separator + "completeToolDirectoryConfig.tsv";
 
     @Test
-    public void defaultsToPipeline5Structure()
+    public void defaultsToOncoAnalyserStructure()
     {
         ConfigBuilder configBuilder = new ConfigBuilder();
         PipelineToolDirectories.addPipelineFormatOptions(configBuilder);
@@ -31,7 +32,7 @@ public class PipelineToolDirectoriesTest
         PipelineToolDirectories victim = PipelineToolDirectories.resolveToolDirectories(
                 configBuilder, PIPELINE_FORMAT_CFG, PIPELINE_FORMAT_FILE_CFG);
         assertEquals("pave", victim.paveGermlineDir());
-        assertEqualDirectories(OA_V2_2_FORMAT, victim);
+        assertEqualDirectories(OA_V3_0_FORMAT, victim);
     }
 
     @Test
