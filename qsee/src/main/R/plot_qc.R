@@ -1,9 +1,9 @@
 options(warn = 1)
 
 if(!interactive()){
-  ## Prevent empty file Rplots.pdf from being written
-  ## See: https://stackoverflow.com/questions/6535927/how-do-i-prevent-rplots-pdf-from-being-generated
-  pdf(NULL)
+   ## Prevent empty file Rplots.pdf from being written
+   ## See: https://stackoverflow.com/questions/6535927/how-do-i-prevent-rplots-pdf-from-being-generated
+   pdf(NULL)
 }
 
 suppressPackageStartupMessages(library(dplyr))
@@ -31,16 +31,16 @@ OUTPUT_PATH <- args[5]
 GLOBAL_LOG_LEVEL <- args[6]
 
 if(FALSE){
-    TUMOR_ID <- "TUMOR"
-    NORMAL_ID <- "TUMOR-ref"
-
-    COHORT_PERCENTILES_FILE <- "qsee.cohort.percentiles.tsv.gz"
-
-    output_dir <- ""
-    SAMPLE_FEATURES_FILE <- sprintf("%s/%s.qsee.vis.data.tsv.gz", output_dir, TUMOR_ID)
-    OUTPUT_PATH <- sprintf("%s/%s.qsee.vis.report.pdf", output_dir, TUMOR_ID)
-
-    GLOBAL_LOG_LEVEL <- "DEBUG"
+   TUMOR_ID <- "TUMOR"
+   NORMAL_ID <- "TUMOR-ref"
+   
+   COHORT_PERCENTILES_FILE <- "qsee.cohort.percentiles.tsv.gz"
+   
+   output_dir <- ""
+   SAMPLE_FEATURES_FILE <- sprintf("%s/%s.qsee.vis.data.tsv.gz", output_dir, TUMOR_ID)
+   OUTPUT_PATH <- sprintf("%s/%s.qsee.vis.report.pdf", output_dir, TUMOR_ID)
+   
+   GLOBAL_LOG_LEVEL <- "DEBUG"
 }
 
 ## =============================
@@ -61,23 +61,23 @@ LOG_LEVEL <- list(
 log_message <- function(log_level, fmt, ...){
 
    current_time <- format(Sys.time(), "%H:%H:%OS3")
-
+   
    log_message <- sprintf("%s [R] [%-5s] %s", current_time, log_level$name, sprintf(fmt, ...))
-
+   
    if(log_level$severity >= LOG_LEVEL[[LOG_LEVEL$ERROR$name]]$severity)
       stop(log_message)
-
+   
    if(log_level$severity >= LOG_LEVEL[[GLOBAL_LOG_LEVEL]]$severity)
       message(log_message)
 }
 
 LOGGER <- list(
-    trace = function(fmt, ...){ log_message(LOG_LEVEL$TRACE, fmt, ...) },
-    debug = function(fmt, ...){ log_message(LOG_LEVEL$DEBUG, fmt, ...) },
-    info  = function(fmt, ...){ log_message(LOG_LEVEL$INFO , fmt, ...) },
-    warn  = function(fmt, ...){ log_message(LOG_LEVEL$WARN , fmt, ...) },
-    error = function(fmt, ...){ log_message(LOG_LEVEL$ERROR, fmt, ...) },
-    fatal = function(fmt, ...){ log_message(LOG_LEVEL$FATAL, fmt, ...) }
+   trace = function(fmt, ...){ log_message(LOG_LEVEL$TRACE, fmt, ...) },
+   debug = function(fmt, ...){ log_message(LOG_LEVEL$DEBUG, fmt, ...) },
+   info  = function(fmt, ...){ log_message(LOG_LEVEL$INFO , fmt, ...) },
+   warn  = function(fmt, ...){ log_message(LOG_LEVEL$WARN , fmt, ...) },
+   error = function(fmt, ...){ log_message(LOG_LEVEL$ERROR, fmt, ...) },
+   fatal = function(fmt, ...){ log_message(LOG_LEVEL$FATAL, fmt, ...) }
 )
 
 LOGGER$debug("Running script with args:")
