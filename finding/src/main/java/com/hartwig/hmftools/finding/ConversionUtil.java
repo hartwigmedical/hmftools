@@ -3,8 +3,8 @@ package com.hartwig.hmftools.finding;
 import java.io.IOException;
 import java.nio.file.Path;
 
-import com.hartwig.hmftools.datamodel.finding.FindingRecord;
-import com.hartwig.hmftools.datamodel.finding.FindingsJson;
+import com.hartwig.hmftools.finding.datamodel.FindingRecord;
+import com.hartwig.hmftools.finding.datamodel.FindingsJson;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -17,7 +17,6 @@ public class ConversionUtil
     {
         FindingRecord
                 findingRecord = FindingRecordFactory.fromOrangeJsonWithTranscriptFile(orangeJson, clinicalTranscriptsTsv, driverGeneTsv);
-        FindingsJson.getInstance().write(findingRecord, findingsJson);
-    }
-     */
+        new FindingsJson().write(findingRecord, findingsJson);
+    }*/
 }

@@ -11,13 +11,21 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.driver.DriverSource;
-import com.hartwig.hmftools.datamodel.finding.*;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxDriver;
 import com.hartwig.hmftools.datamodel.linx.LinxGeneOrientation;
 import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
+import com.hartwig.hmftools.finding.datamodel.Breakend;
+import com.hartwig.hmftools.finding.datamodel.BreakendBuilder;
+import com.hartwig.hmftools.finding.datamodel.Disruption;
+import com.hartwig.hmftools.finding.datamodel.DisruptionBuilder;
+import com.hartwig.hmftools.finding.datamodel.DriverFieldsBuilder;
+import com.hartwig.hmftools.finding.datamodel.DriverFindingList;
+import com.hartwig.hmftools.finding.datamodel.DriverFindingListBuilder;
+import com.hartwig.hmftools.finding.datamodel.FindingsStatus;
+import com.hartwig.hmftools.finding.datamodel.ReportedStatus;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

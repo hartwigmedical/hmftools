@@ -21,6 +21,7 @@ import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.driver.DriverSource;
 import com.hartwig.hmftools.datamodel.finding.*;
+import com.hartwig.hmftools.finding.clinicaltranscript.ClinicalTranscriptFile;
 import com.hartwig.hmftools.finding.clinicaltranscript.ClinicalTranscriptsModel;
 import com.hartwig.hmftools.datamodel.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
@@ -35,6 +36,35 @@ import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
 import com.hartwig.hmftools.datamodel.virus.VirusLikelihoodType;
+import com.hartwig.hmftools.finding.datamodel.DriverFieldsBuilder;
+import com.hartwig.hmftools.finding.datamodel.DriverFindingList;
+import com.hartwig.hmftools.finding.datamodel.DriverFindingListBuilder;
+import com.hartwig.hmftools.finding.datamodel.FindingItem;
+import com.hartwig.hmftools.finding.datamodel.FindingItemBuilder;
+import com.hartwig.hmftools.finding.datamodel.FindingList;
+import com.hartwig.hmftools.finding.datamodel.FindingListBuilder;
+import com.hartwig.hmftools.finding.datamodel.FindingRecord;
+import com.hartwig.hmftools.finding.datamodel.FindingRecordBuilder;
+import com.hartwig.hmftools.finding.datamodel.FindingsStatus;
+import com.hartwig.hmftools.finding.datamodel.Fusion;
+import com.hartwig.hmftools.finding.datamodel.FusionBuilder;
+import com.hartwig.hmftools.finding.datamodel.GainDeletion;
+import com.hartwig.hmftools.finding.datamodel.HomologousRecombination;
+import com.hartwig.hmftools.finding.datamodel.HomologousRecombinationBuilder;
+import com.hartwig.hmftools.finding.datamodel.MetaPropertiesBuilder;
+import com.hartwig.hmftools.finding.datamodel.MicrosatelliteStability;
+import com.hartwig.hmftools.finding.datamodel.MicrosatelliteStabilityBuilder;
+import com.hartwig.hmftools.finding.datamodel.PharmocoGenotype;
+import com.hartwig.hmftools.finding.datamodel.PharmocoGenotypeBuilder;
+import com.hartwig.hmftools.finding.datamodel.PredictedTumorOrigin;
+import com.hartwig.hmftools.finding.datamodel.PredictedTumorOriginBuilder;
+import com.hartwig.hmftools.finding.datamodel.PurityPloidyFitBuilder;
+import com.hartwig.hmftools.finding.datamodel.PurityPloidyFitQcBuilder;
+import com.hartwig.hmftools.finding.datamodel.TumorMutationStatus;
+import com.hartwig.hmftools.finding.datamodel.TumorMutationStatusBuilder;
+import com.hartwig.hmftools.finding.datamodel.Virus;
+import com.hartwig.hmftools.finding.datamodel.VirusBuilder;
+import com.hartwig.hmftools.finding.datamodel.VisualisationFiles;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -42,19 +72,21 @@ import org.jetbrains.annotations.Nullable;
 // various part of the orange record
 public class FindingRecordFactory
 {
-    public static FindingRecord fromOrangeJsonWithTranscriptFile(Path orangeJson, FindingApplicationConfig config) throws IOException
+    public static FindingRecord fromOrangeJsonWithTranscriptFile(Path orangeJson, @Nullable Path clinicalTranscriptsTsv,
+            @Nullable Path driverGeneTsv) throws IOException
     {
         try(Reader reader = Files.newBufferedReader(orangeJson))
         {
             OrangeRecord orangeRecord = com.hartwig.hmftools.datamodel.OrangeJson.getInstance().read(reader);
-            return fromOrangeRecord(orangeRecord, config);
+            return fromOrangeRecord(orangeRecord, clinicalTranscriptsTsv, driverGeneTsv);
         }
     }
 
-    public static FindingRecord fromOrangeRecord(OrangeRecord orangeRecord, FindingApplicationConfig config) throws IOException
+    public static FindingRecord fromOrangeRecord(OrangeRecord orangeRecord, @Nullable Path clinicalTranscriptsTsv,
+            @Nullable Path driverGeneTsv) throws IOException
     {
-        @Nullable Path driverGeneTsv = Path.of(config.DriverGenePath);
-
+        ClinicalTranscriptsModel clinicalTranscriptsModel = clinicalTranscriptsTsv != null ?
+                ClinicalTranscriptFile.buildFromTsv(orangeRecord.refGenomeVersion(), clinicalTranscriptsTsv) : null;
         Map<String, DriverGene> driverGenes = driverGenesMap(driverGeneTsv);
 
         LinxRecord linx = orangeRecord.linx();
@@ -71,10 +103,10 @@ public class FindingRecordFactory
                         .pipelineVersion(orangeRecord.pipelineVersion())
                         .build())
                 .somaticDisruptions(createSomaticDisruptions(hasReliablePurity, linx))
-                .germlineDisruptions(createGermlineDisruptions(orangeRecord.refSample() != null, linx))
+                .germlineDisruptions(createGermlineDisruptions(orangeRecord.referenceId() != null, linx))
                 .fusions(createFusionsFindings(orangeRecord.linx()));
 
-        DriverFindingList<GainDeletion> somaticGainDeletions = addPurpleFindings(builder, orangeRecord, null, driverGenes);
+        DriverFindingList<GainDeletion> somaticGainDeletions = addPurpleFindings(builder, orangeRecord, clinicalTranscriptsModel, driverGenes);
 
         VisualisationFiles visualisationFiles = VisualisationFilesFactory.create(orangeRecord.plots());
 
@@ -91,7 +123,7 @@ public class FindingRecordFactory
     private static DriverFindingList<GainDeletion> addPurpleFindings(FindingRecordBuilder builder, final OrangeRecord orangeRecord,
             final @Nullable ClinicalTranscriptsModel clinicalTranscriptsModel, Map<String, DriverGene> driverGenes)
     {
-        boolean hasRefSample = orangeRecord.refSample() != null;
+        boolean hasRefSample = orangeRecord.referenceId() != null;
 
         PurpleRecord purple = orangeRecord.purple();
 
@@ -218,7 +250,7 @@ public class FindingRecordFactory
     {
         return gainDeletions.findings().stream()
                 .filter(x -> geneNames.contains(x.gene()))
-                .filter(x -> x.type() == GainDeletion.Type.SOMATIC_LOH)
+                .filter(GainDeletion::isLossOfHeterozygosity)
                 .sorted(Comparator.comparing(GainDeletion::gene))
                 .collect(Collectors.toList());
     }
