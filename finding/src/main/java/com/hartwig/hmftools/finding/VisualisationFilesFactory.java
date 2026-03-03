@@ -3,9 +3,9 @@ package com.hartwig.hmftools.finding;
 import java.nio.file.Path;
 import java.util.List;
 
-import com.hartwig.hmftools.datamodel.finding.VisualisationFiles;
-import com.hartwig.hmftools.datamodel.finding.VisualisationFilesBuilder;
 import com.hartwig.hmftools.datamodel.orange.OrangePlots;
+import com.hartwig.hmftools.finding.datamodel.VisualisationFiles;
+import com.hartwig.hmftools.finding.datamodel.VisualisationFilesBuilder;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -27,10 +27,6 @@ public class VisualisationFilesFactory
                 .map(VisualisationFilesFactory::processFilePath)
                 .toList();
 
-        String referenceBqrPlot = processNullableFilePath(orangePlots.sageReferenceBQRPlot());
-
-        String tumorBqrPlot = processFilePath(orangePlots.sageTumorBQRPlot());
-
         String purpleInputPlot = processFilePath(orangePlots.purpleInputPlot());
         String purpleFinalCircosPlot = processFilePath(orangePlots.purpleFinalCircosPlot());
         String purpleClonalityPlot = processFilePath(orangePlots.purpleClonalityPlot());
@@ -40,10 +36,9 @@ public class VisualisationFilesFactory
         String purpleKataegisPlot = processFilePath(orangePlots.purpleKataegisPlot());
 
         String cuppaSummaryPlot = processNullableFilePath(orangePlots.cuppaSummaryPlot());
+        String qseePlot = processNullableFilePath(orangePlots.qSeePlot());
 
         return VisualisationFilesBuilder.builder()
-                .referenceBqrPlot(referenceBqrPlot)
-                .tumorBqrPlot(tumorBqrPlot)
                 .purpleInputPlot(purpleInputPlot)
                 .purpleFinalCircosPlot(purpleFinalCircosPlot)
                 .purpleClonalityPlot(purpleClonalityPlot)
@@ -51,7 +46,7 @@ public class VisualisationFilesFactory
                 .purpleVariantCopyNumberPlot(purpleVariantCopyNumberPlot)
                 .purplePurityRangePlot(purplePurityRangePlot)
                 .purpleKataegisPlot(purpleKataegisPlot)
-                .qseePlot(null)
+                .qseePlot(qseePlot)
                 .linxDriverPlots(linxDriverPlots)
                 .cuppaSummaryPlot(cuppaSummaryPlot)
                 .build();

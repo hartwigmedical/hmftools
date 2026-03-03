@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
-import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
+import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 
@@ -28,9 +28,7 @@ class GeneListUtil
                 PurpleVariant::gene));
 
         genesDisplay.addAll(filteredMapped(gainDeletions,
-                gainDeletion -> genes.contains(gainDeletion.gene()) && (
-                        gainDeletion.interpretation() == CopyNumberInterpretation.PARTIAL_DEL
-                                || gainDeletion.interpretation() == CopyNumberInterpretation.FULL_DEL),
+                gainDeletion -> genes.contains(gainDeletion.gene()) && gainDeletion.driver().type() == PurpleDriverType.DEL,
                 PurpleGainDeletion::gene));
 
         if(homozygousDisruptions != null)

@@ -4,9 +4,9 @@ import java.nio.file.Path;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.datamodel.OrangeJson;
-import com.hartwig.hmftools.datamodel.finding.FindingRecord;
-import com.hartwig.hmftools.datamodel.finding.FindingsJson;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
+import com.hartwig.hmftools.finding.datamodel.FindingRecord;
+import com.hartwig.hmftools.finding.datamodel.FindingsJson;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -42,7 +42,9 @@ public class FindingApplication
 
         OrangeRecord orangeRecord = OrangeJson.getInstance().read(config.OrangeJsonPath);
 
-        FindingRecord findingRecord = FindingRecordFactory.fromOrangeRecord(orangeRecord, config);
+        FindingRecord findingRecord = FindingRecordFactory.fromOrangeRecord(orangeRecord,
+                config.ClinicalTranscriptsPath != null ? Path.of(config.ClinicalTranscriptsPath) : null,
+                Path.of(config.DriverGenePath));
 
         new FindingsJson().write(findingRecord, Path.of(config.FindingJsonPath));
 

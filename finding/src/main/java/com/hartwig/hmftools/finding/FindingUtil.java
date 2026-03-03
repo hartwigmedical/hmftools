@@ -2,12 +2,12 @@ package com.hartwig.hmftools.finding;
 
 import java.util.List;
 
-import com.hartwig.hmftools.datamodel.finding.Driver;
-import com.hartwig.hmftools.datamodel.finding.DriverFindingList;
-import com.hartwig.hmftools.datamodel.finding.Finding;
-import com.hartwig.hmftools.datamodel.finding.FindingItem;
-import com.hartwig.hmftools.datamodel.finding.FindingList;
-import com.hartwig.hmftools.datamodel.finding.FindingsStatus;
+import com.hartwig.hmftools.finding.datamodel.Driver;
+import com.hartwig.hmftools.finding.datamodel.DriverFindingList;
+import com.hartwig.hmftools.finding.datamodel.Finding;
+import com.hartwig.hmftools.finding.datamodel.FindingItem;
+import com.hartwig.hmftools.finding.datamodel.FindingList;
+import com.hartwig.hmftools.finding.datamodel.FindingsStatus;
 
 class FindingUtil
 {
