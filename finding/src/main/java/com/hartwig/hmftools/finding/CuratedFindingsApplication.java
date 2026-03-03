@@ -5,10 +5,10 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOpt
 import java.nio.file.Path;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.datamodel.finding.CurationApplier;
-import com.hartwig.hmftools.datamodel.finding.CurationRecord;
-import com.hartwig.hmftools.datamodel.finding.FindingRecord;
-import com.hartwig.hmftools.datamodel.finding.FindingsJson;
+import com.hartwig.hmftools.finding.datamodel.CurationApplier;
+import com.hartwig.hmftools.finding.datamodel.CurationRecord;
+import com.hartwig.hmftools.finding.datamodel.FindingRecord;
+import com.hartwig.hmftools.finding.datamodel.FindingsJson;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

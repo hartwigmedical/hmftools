@@ -5,10 +5,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.datamodel.finding.*;
 import com.hartwig.hmftools.datamodel.hla.LilacAllele;
 import com.hartwig.hmftools.datamodel.hla.LilacRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
+import com.hartwig.hmftools.finding.datamodel.FindingList;
+import com.hartwig.hmftools.finding.datamodel.FindingListBuilder;
+import com.hartwig.hmftools.finding.datamodel.FindingsStatus;
+import com.hartwig.hmftools.finding.datamodel.HlaAllele;
+import com.hartwig.hmftools.finding.datamodel.HlaAlleleBuilder;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -31,7 +35,7 @@ public class HlaAlleleFactory
         if(lilac != null)
         {
             return FindingListBuilder.<HlaAllele>builder()
-                    .status(lilac.qc().equals(PASS) ? FindingsStatus.OK : FindingsStatus.NOT_RELIABLE)
+                    .status(FindingsStatus.OK)
                     .findings(HlaAlleleFactory.convertHlaAlleles(lilac,
                             hasReliablePurity,
                             !orangeRecord.tumorOnlyMode(),
