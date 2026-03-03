@@ -226,7 +226,7 @@ public class UmiGroupJitterTest
         refGenome.RefGenomeMap.put(CHR_1, "A".repeat(1_000));
         refGenome.ChromosomeLengths.put(CHR_1, 1_000);
 
-        UmiConfig umiConfig = new UmiConfig(true, true, TWIST_DUPEX_DELIM, false);
+        UmiConfig umiConfig = new UmiConfig(true, true, TWIST_DUPEX_DELIM, true, false);
         UmiGroupBuilder umiGroupBuilder = new UmiGroupBuilder(umiConfig, new UmiStatistics());
 
         String umi1 = "AAAAA_CCCCC";
@@ -319,7 +319,7 @@ public class UmiGroupJitterTest
         refGenome.RefGenomeMap.put(CHR_2, "A".repeat(1_000));
         refGenome.ChromosomeLengths.put(CHR_2, 1_000);
 
-        UmiConfig umiConfig = new UmiConfig(true, true, TWIST_DUPEX_DELIM, false);
+        UmiConfig umiConfig = new UmiConfig(true, true, TWIST_DUPEX_DELIM, true, false);
         UmiGroupBuilder umiGroupBuilder = new UmiGroupBuilder(umiConfig, new UmiStatistics());
 
         List<ReadInfo> chr1SingleReads = chr1FragmentCoordsReads.SingleReads;
