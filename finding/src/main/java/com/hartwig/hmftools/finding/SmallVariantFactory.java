@@ -4,10 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.driver.panel.DriverGene;
-import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
-import com.hartwig.hmftools.datamodel.driver.DriverSource;
 import com.hartwig.hmftools.datamodel.purple.PurpleAllelicDepth;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
@@ -18,6 +17,8 @@ import com.hartwig.hmftools.finding.datamodel.DriverCategory;
 import com.hartwig.hmftools.finding.datamodel.DriverFieldsBuilder;
 import com.hartwig.hmftools.finding.datamodel.DriverFindingList;
 import com.hartwig.hmftools.finding.datamodel.DriverFindingListBuilder;
+import com.hartwig.hmftools.finding.datamodel.DriverInterpretation;
+import com.hartwig.hmftools.finding.datamodel.DriverSource;
 import com.hartwig.hmftools.finding.datamodel.FindingsStatus;
 import com.hartwig.hmftools.finding.datamodel.ReportedStatus;
 import com.hartwig.hmftools.finding.datamodel.SmallVariant;
@@ -120,7 +121,7 @@ final class SmallVariantFactory
         DriverCategory driverCategory = driverGene != null ? driverLikelihoodType(driverGene.likelihoodType()) : null;
 
         boolean reportable = transcriptImpact.reported() || (otherImpact != null && otherImpact.reported());
-        DriverInterpretation driverInterpretation = DriverInterpretation.interpret(driver.driverLikelihood());
+        DriverInterpretation driverInterpretation = DriverInterpretation.valueOf(driver.driverInterpretation().name());
         ReportedStatus reportedStatus = DriverUtil.reportedStatus(true, reportable, driverInterpretation);
 
         return SmallVariantBuilder.builder()
@@ -136,14 +137,14 @@ final class SmallVariantFactory
                 .transcriptImpact(Objects.requireNonNull(convertTranscriptImpact(transcriptImpact)))
                 .otherImpact(convertTranscriptImpact(otherImpact))
                 .isCanonical(isCanonical)
-                .type(variant.type())
+                .type(SmallVariant.VariantType.valueOf(variant.type().name()))
                 .gene(variant.gene())
                 .chromosome(variant.chromosome())
                 .position(variant.position())
                 .ref(variant.ref())
                 .alt(variant.alt())
-                .worstCodingEffect(variant.worstCodingEffect())
-                .hotspot(variant.hotspot())
+                .worstCodingEffect(SmallVariant.CodingEffect.valueOf(variant.worstCodingEffect().name()))
+                .hotspot(SmallVariant.HotspotType.valueOf(variant.hotspot().name()))
                 .allelicDepth(Objects.requireNonNull(convertAllelicDepth(variant.tumorDepth())))
                 .rnaDepth(convertAllelicDepth(variant.rnaDepth()))
                 .adjustedCopyNumber(variant.adjustedCopyNumber())
@@ -152,7 +153,7 @@ final class SmallVariantFactory
                 .variantCopyNumber(variant.variantCopyNumber())
                 .biallelic(variant.biallelic())
                 .biallelicProbability(Objects.requireNonNull(variant.biallelicProbability()))
-                .genotypeStatus(variant.genotypeStatus())
+                .genotypeStatus(SmallVariant.GenotypeStatus.valueOf(variant.genotypeStatus().name()))
                 .repeatCount(variant.repeatCount())
                 .subclonalLikelihood(variant.subclonalLikelihood())
                 .localPhaseSets(variant.localPhaseSets())
@@ -174,8 +175,10 @@ final class SmallVariantFactory
                 .affectedCodon(transcriptImpact.affectedCodon())
                 .affectedExon(transcriptImpact.affectedExon())
                 .inSpliceRegion(transcriptImpact.inSpliceRegion())
-                .effects(transcriptImpact.effects())
-                .codingEffect(transcriptImpact.codingEffect())
+                .effects(transcriptImpact.effects().stream()
+                        .map(o -> SmallVariant.VariantEffect.valueOf(o.name()))
+                        .collect(Collectors.toSet()))
+                .codingEffect(SmallVariant.CodingEffect.valueOf(transcriptImpact.codingEffect().name()))
                 .reported(transcriptImpact.reported())
                 .build();
     }

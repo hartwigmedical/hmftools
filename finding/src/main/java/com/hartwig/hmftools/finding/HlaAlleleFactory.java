@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.finding;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -22,8 +23,6 @@ import org.apache.logging.log4j.Logger;
 public class HlaAlleleFactory
 {
     private static final Logger LOGGER = LogManager.getLogger(HlaAlleleFactory.class);
-
-    private static final String PASS = "PASS";
 
     private HlaAlleleFactory()
     {
@@ -62,8 +61,12 @@ public class HlaAlleleFactory
             // NOTE: the fragment counts are doubled in lilac if an allele is present twice
             HlaAlleleBuilder builder = HlaAlleleBuilder.builder()
                     .findingKey(FindingKeys.hlaAllele(lilacAllele))
-                    .allele(lilacAllele.allele())
+                    .geneClass(lilacAllele.geneClass())
                     .gene(extractHLAGene(lilacAllele.allele()))
+                    .allele(lilacAllele.allele())
+                    .qcStatus(Arrays.stream(lilacAllele.qcStatus().split(";"))
+                                    .map(HlaAllele.QcStatus::valueOf)
+                                    .collect(Collectors.toSet()))
                     .refFragments(hasRef ? lilacAllele.refFragments() : null)
                     .tumorFragments(lilacAllele.tumorFragments())
                     .rnaFragments(hasRna ? lilacAllele.rnaFragments() : null)

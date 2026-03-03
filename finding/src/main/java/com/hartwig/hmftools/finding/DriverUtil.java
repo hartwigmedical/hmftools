@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.finding;
 
-import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
+import com.hartwig.hmftools.finding.datamodel.DriverInterpretation;
 import com.hartwig.hmftools.finding.datamodel.ReportedStatus;
 
 @SuppressWarnings("unused")

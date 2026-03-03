@@ -3,7 +3,7 @@ package com.hartwig.hmftools.finding;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.datamodel.chord.ChordStatus;
-import com.hartwig.hmftools.datamodel.driver.DriverSource;
+import com.hartwig.hmftools.finding.datamodel.DriverSource;
 import com.hartwig.hmftools.datamodel.hla.LilacAllele;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;

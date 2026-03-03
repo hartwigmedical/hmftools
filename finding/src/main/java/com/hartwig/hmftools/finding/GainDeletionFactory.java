@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
-import com.hartwig.hmftools.datamodel.driver.DriverSource;
+import com.hartwig.hmftools.finding.datamodel.DriverInterpretation;
+import com.hartwig.hmftools.finding.datamodel.DriverSource;
 import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
 import com.hartwig.hmftools.datamodel.purple.GermlineAmpDelFields;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
@@ -114,7 +114,7 @@ final class GainDeletionFactory
                                 purpleGainDeletion.transcript()))
                         .driverSource(sourceSample)
                         .reportedStatus(DriverUtil.reportedStatus(purpleGainDeletion.driver().reportedStatus()))
-                        .driverInterpretation(DriverInterpretation.interpret(driver.driverLikelihood()))
+                        .driverInterpretation(DriverInterpretation.valueOf(driver.driverInterpretation().name()))
                         .driverLikelihood(driver.driverLikelihood())
                         .build()
                 )
@@ -136,7 +136,7 @@ final class GainDeletionFactory
 
     private static GainDeletion.GeneExtent interpretGeneExtent(String exonRange)
     {
-        return exonRange.equals("FULL") ? GainDeletion.GeneExtent.WHOLE_GENE : GainDeletion.GeneExtent.PARTIAL_GENE;
+        return exonRange.equals("FULL") ? GainDeletion.GeneExtent.FULL_GENE : GainDeletion.GeneExtent.PARTIAL_GENE;
     }
 
     private static GainDeletion.Type germlineGainDelType(PurpleDriverType purpleDriverType, PurpleGermlineStatus purpleGermlineStatus)
