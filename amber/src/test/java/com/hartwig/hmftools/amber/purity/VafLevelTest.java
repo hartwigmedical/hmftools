@@ -283,12 +283,12 @@ public class VafLevelTest extends PurityTestBase
     @Test
     public void toStringTest()
     {
-        VafLevel level = new VafLevel(0.1);
+        VafLevel level = new VafLevel(0.1, 0.02);
         level.test(evidenceWithDepthAndAltCount(_3, 1_000_000, 1000, 100));
         level.test(evidenceWithDepthAndAltCount(_3, 2_000_000, 1000, 50));
         level.test(evidenceWithDepthAndAltCount(_3, 2_001_000, 1000, 50));
         level.test(evidenceWithDepthAndAltCount(_3, 3_000_000, 1000, 10));
-        assertEquals("VafLevel{vaf=0.10, tested: 4, homozygous: 1, heterozygous: 2}", level.toString());
+        assertEquals("VafLevel{vaf=0.10, step=0.02, tested: 4, homozygous: 1, heterozygous: 2}", level.toString());
     }
 
     private void checkNotCaptured(double vafLevel, int readDepth, int altDepth)

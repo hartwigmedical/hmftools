@@ -36,7 +36,7 @@ public class SearchGrid
     public List<Pair<Double, Double>> searchValuesAndSteps()
     {
         final double start = 0.005;
-        final double end = 0.35;
+        final double end = 0.37;
         final double stepRatio = 1.05;
         double step = 0.001;
         List<Pair<Double, Double>> result = new ArrayList<>(60);

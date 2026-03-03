@@ -258,7 +258,7 @@ public class AmberApplication implements AutoCloseable
         {
 
         }
-        TumorOnlyNoiseFloorAnalysis noiseFloorAnalysis = new TumorOnlyNoiseFloorAnalysis(rawData, mConfig.RefGenVersion, mChromosomeSites);
+        TumorOnlyNoiseFloorAnalysis noiseFloorAnalysis = new TumorOnlyNoiseFloorAnalysis(rawData, mChromosomeSites, mConfig);
         double noiseFloor = noiseFloorAnalysis.cutoff();
         double contamination = noiseFloorAnalysis.contaminationPeaks().stream().map(VafLevel::vaf).max(Double::compare).orElse(0.0);
 

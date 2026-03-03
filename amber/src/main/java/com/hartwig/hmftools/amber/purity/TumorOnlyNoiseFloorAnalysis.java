@@ -8,7 +8,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.google.common.collect.ListMultimap;
+import com.hartwig.hmftools.amber.AmberConfig;
 import com.hartwig.hmftools.amber.PositionEvidence;
+import com.hartwig.hmftools.amber.PositionEvidenceFile;
 import com.hartwig.hmftools.common.amber.AmberSite;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
@@ -32,15 +34,20 @@ public class TumorOnlyNoiseFloorAnalysis
     private List<VafLevel> CopyNumberPeaks = new ArrayList<>();
     private List<VafLevel> ContaminationPeaks = new ArrayList<>();
 
-    public TumorOnlyNoiseFloorAnalysis(final List<PositionEvidence> evidence,
-            final RefGenomeVersion refGenomeVersion,
-            final ListMultimap<Chromosome, AmberSite> amberSites)
+    public TumorOnlyNoiseFloorAnalysis(
+            final List<PositionEvidence> evidence,
+            final ListMultimap<Chromosome, AmberSite> amberSites,
+            final AmberConfig config) throws Exception
     {
-        List<ChrBaseRegion> immuneRegions = getExcludedImmuneRegions(refGenomeVersion);
+        String rawDataFileName = PositionEvidenceFile.generateTumorDataFilename(config.OutputDir, config.TumorId);
+        PositionEvidenceFile.write(rawDataFileName, evidence);
+        AMB_LOGGER.debug(format("Evaluating noise floor with %d evidence points", evidence.size()));
+        List<ChrBaseRegion> immuneRegions = getExcludedImmuneRegions(config.RefGenVersion);
         RegionsFilter immuneRegionsFilter = new RegionsFilter(immuneRegions);
         List<PositionEvidence> filteredEvidence = immuneRegionsFilter.filter(evidence);
+        AMB_LOGGER.debug(format("Immune region data removed leaving %d evidence points", filteredEvidence.size()));
         PeakSearch search = new PeakSearch(filteredEvidence);
-        GnomadFrequencySupplier frequencySupplier = new DefaultGnomadFrequencySupplier(amberSites, refGenomeVersion);
+        GnomadFrequencySupplier frequencySupplier = new DefaultGnomadFrequencySupplier(amberSites, config.RefGenVersion);
         double baselineHetGnomadFrequency = getBaselineHetGnomadFrequency(filteredEvidence, frequencySupplier);
         AMB_LOGGER.debug(format("Baseline Het Gnomad Frequency: %.3f", baselineHetGnomadFrequency));
 
@@ -48,14 +55,14 @@ public class TumorOnlyNoiseFloorAnalysis
         {
             VafLevel peak = evaluationResult.Vaf();
             PeakGnomadFrequenciesChecker gnomadChecker = new PeakGnomadFrequenciesChecker(peak);
-            boolean ok = gnomadChecker.checkGnomadFrequencies(frequencySupplier, baselineHetGnomadFrequency);
-            if(!ok)
+            boolean okByGnomadFrequencies = gnomadChecker.checkGnomadFrequencies(frequencySupplier, baselineHetGnomadFrequency);
+            if(!okByGnomadFrequencies)
             {
                 AMB_LOGGER.debug(format("Peak %.3f failed Gnomad frequency check", peak.vaf()));
                 continue;
             }
             double homozygousProportion = peak.homozygousProportion();
-            double chrArmAuc = peak.perArmConsistencyFactor(ChrArmLocator.defaultLocator(refGenomeVersion));
+            double chrArmAuc = peak.perArmConsistencyFactor(ChrArmLocator.defaultLocator(config.RefGenVersion));
             double mutationAuc = peak.perMutationTypeConsistencyFactor();
             AMB_LOGGER.debug(format("Peak %.3f, homProportion: %.3f, chrArmAUC: %.3f, mutationAUC: %.3f", peak.vaf(), homozygousProportion, chrArmAuc, mutationAuc));
             if(homozygousProportion > HOMOZYGOUS_PROPORTION_LOWER_BOUND_FOR_CONTAMINATION
