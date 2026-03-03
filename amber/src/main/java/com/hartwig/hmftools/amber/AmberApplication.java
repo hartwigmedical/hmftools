@@ -253,6 +253,11 @@ public class AmberApplication implements AutoCloseable
         TumorAnalysis tumor = new TumorAnalysis(mConfig, readerFactory, allNormal, ArrayListMultimap.create());
 
         List<PositionEvidence> rawData = tumor.getBafs().values().stream().map(x -> x.TumorEvidence).toList();
+        List<PositionEvidence> dataForNoiseAnalysis = new ArrayList<>();
+        for(TumorBAF baf : tumor.getBafs().values())
+        {
+
+        }
         TumorOnlyNoiseFloorAnalysis noiseFloorAnalysis = new TumorOnlyNoiseFloorAnalysis(rawData, mConfig.RefGenVersion, mChromosomeSites);
         double noiseFloor = noiseFloorAnalysis.cutoff();
         double contamination = noiseFloorAnalysis.contaminationPeaks().stream().map(VafLevel::vaf).max(Double::compare).orElse(0.0);

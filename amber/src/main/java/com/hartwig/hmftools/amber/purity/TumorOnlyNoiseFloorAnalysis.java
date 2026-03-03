@@ -13,7 +13,11 @@ import com.hartwig.hmftools.common.amber.AmberSite;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.immune.ImmuneRegions;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.segmentation.ChrArmLocator;
+
+import org.jetbrains.annotations.NotNull;
 
 public class TumorOnlyNoiseFloorAnalysis
 {
@@ -28,13 +32,16 @@ public class TumorOnlyNoiseFloorAnalysis
     private List<VafLevel> CopyNumberPeaks = new ArrayList<>();
     private List<VafLevel> ContaminationPeaks = new ArrayList<>();
 
-    public TumorOnlyNoiseFloorAnalysis(List<PositionEvidence> evidence,
-            RefGenomeVersion refGenomeVersion,
-            ListMultimap<Chromosome, AmberSite> amberSites)
+    public TumorOnlyNoiseFloorAnalysis(final List<PositionEvidence> evidence,
+            final RefGenomeVersion refGenomeVersion,
+            final ListMultimap<Chromosome, AmberSite> amberSites)
     {
-        PeakSearch search = new PeakSearch(evidence);
+        List<ChrBaseRegion> immuneRegions = getExcludedImmuneRegions(refGenomeVersion);
+        RegionsFilter immuneRegionsFilter = new RegionsFilter(immuneRegions);
+        List<PositionEvidence> filteredEvidence = immuneRegionsFilter.filter(evidence);
+        PeakSearch search = new PeakSearch(filteredEvidence);
         GnomadFrequencySupplier frequencySupplier = new DefaultGnomadFrequencySupplier(amberSites, refGenomeVersion);
-        double baselineHetGnomadFrequency = getBaselineHetGnomadFrequency(evidence, frequencySupplier);
+        double baselineHetGnomadFrequency = getBaselineHetGnomadFrequency(filteredEvidence, frequencySupplier);
         AMB_LOGGER.debug(format("Baseline Het Gnomad Frequency: %.3f", baselineHetGnomadFrequency));
 
         for(VafLevelEvaluationResult evaluationResult : search.peaks())
@@ -69,6 +76,16 @@ public class TumorOnlyNoiseFloorAnalysis
                 CopyNumberPeaks.add(peak);
             }
         }
+    }
+
+    @NotNull
+    private static List<ChrBaseRegion> getExcludedImmuneRegions(final RefGenomeVersion refGenomeVersion)
+    {
+        List<ChrBaseRegion> immuneRegions = new ArrayList<>();
+        immuneRegions.addAll(ImmuneRegions.getHlaRegions(refGenomeVersion));
+        immuneRegions.addAll(ImmuneRegions.getIgRegions(refGenomeVersion));
+        immuneRegions.addAll(ImmuneRegions.getTrRegions(refGenomeVersion));
+        return immuneRegions;
     }
 
     public double cutoff()
