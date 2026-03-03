@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.amber.contamination;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -15,7 +16,7 @@ public class PerClassVafConsistencyChecker<S, T extends Comparable<T>>
 {
     public static VafConsistencyCheckResult<ChrArm> calculateConfirmationFactor(final ChrArmLocator chrArmLocator,
             double vaf,
-            List<VafReading> data)
+            Collection<VafReading> data)
     {
         VafPredicate<VafReading> classifier = new BinomialVafPredicate(vaf);
         VafClassifier<VafReading, ChrArm> chrArmClassifier = VafClassifier.chrArmClassifier(chrArmLocator);

@@ -4,23 +4,16 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.amber.AmberConfig.AMB_LOGGER;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 import com.hartwig.hmftools.amber.PositionEvidence;
-import com.hartwig.hmftools.amber.contamination.SearchGrid;
-import com.hartwig.hmftools.common.segmentation.ChrArmLocator;
 
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
-public class PeakClassifier
+public class PeakGnomadFrequenciesChecker
 {
     private static final double GNOMAD_FREQUENCY_TOLERANCE = 0.15;
     private final VafLevel Peak;
 
-    public PeakClassifier(final VafLevel peak)
+    public PeakGnomadFrequenciesChecker(final VafLevel peak)
     {
         Peak = peak;
     }
@@ -56,10 +49,4 @@ public class PeakClassifier
         }
         return true;
     }
-
-    public boolean checkConsistencyAcrossChromosomeArms(ChrArmLocator locator)
-    {
-        return false;
-    }
-
 }

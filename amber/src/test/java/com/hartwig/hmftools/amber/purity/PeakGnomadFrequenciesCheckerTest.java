@@ -8,7 +8,7 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.Test;
 
-public class PeakClassifierTest extends PurityTestBase
+public class PeakGnomadFrequenciesCheckerTest extends PurityTestBase
 {
     VafLevel level1 = new VafLevel(0.1);
 
@@ -33,7 +33,7 @@ public class PeakClassifierTest extends PurityTestBase
             }
             return 0.5;
         };
-        PeakClassifier classifier = new PeakClassifier(level1);
+        PeakGnomadFrequenciesChecker classifier = new PeakGnomadFrequenciesChecker(level1);
         assertFalse(classifier.checkGnomadFrequencies(supplier, 0.45));
     }
 
@@ -48,7 +48,7 @@ public class PeakClassifierTest extends PurityTestBase
             }
             return 0.5;
         };
-        PeakClassifier classifier = new PeakClassifier(level1);
+        PeakGnomadFrequenciesChecker classifier = new PeakGnomadFrequenciesChecker(level1);
         assertFalse(classifier.checkGnomadFrequencies(supplier, 0.45));
     }
 
@@ -56,7 +56,7 @@ public class PeakClassifierTest extends PurityTestBase
     public void lowAndHighVariantsAreSkewedTest()
     {
         GnomadFrequencySupplier supplier = (chromosome, position) -> 0.9;
-        PeakClassifier classifier = new PeakClassifier(level1);
+        PeakGnomadFrequenciesChecker classifier = new PeakGnomadFrequenciesChecker(level1);
         assertFalse(classifier.checkGnomadFrequencies(supplier, 0.45));
     }
 
@@ -64,7 +64,7 @@ public class PeakClassifierTest extends PurityTestBase
     public void variantMeansMatchExpectedTest()
     {
         GnomadFrequencySupplier supplier = (chromosome, position) -> 0.5;
-        PeakClassifier classifier = new PeakClassifier(level1);
+        PeakGnomadFrequenciesChecker classifier = new PeakGnomadFrequenciesChecker(level1);
         assertTrue(classifier.checkGnomadFrequencies(supplier, 0.45));
     }
 
@@ -72,7 +72,7 @@ public class PeakClassifierTest extends PurityTestBase
     public void checkToleranceTest()
     {
         GnomadFrequencySupplier supplier = (chromosome, position) -> 0.5;
-        PeakClassifier classifier = new PeakClassifier(level1);
+        PeakGnomadFrequenciesChecker classifier = new PeakGnomadFrequenciesChecker(level1);
         assertTrue(classifier.checkGnomadFrequencies(supplier, 0.36));
         assertTrue(classifier.checkGnomadFrequencies(supplier, 0.64));
     }
@@ -91,7 +91,7 @@ public class PeakClassifierTest extends PurityTestBase
             }
             return 0.35;
         };
-        PeakClassifier classifier = new PeakClassifier(level1);
+        PeakGnomadFrequenciesChecker classifier = new PeakGnomadFrequenciesChecker(level1);
         assertFalse(classifier.checkGnomadFrequencies(supplier, 0.95));
         assertFalse(classifier.checkGnomadFrequencies(supplier, 0.35));
     }
@@ -102,7 +102,7 @@ public class PeakClassifierTest extends PurityTestBase
         level1 = new VafLevel(0.1);
         level1.test(evidenceWithDepthAndAltCount(_1, 2000, 1000, 50)); // het
         GnomadFrequencySupplier supplier = (chromosome, position) -> 0.5;
-        PeakClassifier classifier = new PeakClassifier(level1);
+        PeakGnomadFrequenciesChecker classifier = new PeakGnomadFrequenciesChecker(level1);
         assertFalse(classifier.checkGnomadFrequencies(supplier, 0.5));
     }
 
@@ -112,7 +112,7 @@ public class PeakClassifierTest extends PurityTestBase
         level1 = new VafLevel(0.1);
         level1.test(evidenceWithDepthAndAltCount(_1, 2000, 1000, 950)); // het
         GnomadFrequencySupplier supplier = (chromosome, position) -> 0.5;
-        PeakClassifier classifier = new PeakClassifier(level1);
+        PeakGnomadFrequenciesChecker classifier = new PeakGnomadFrequenciesChecker(level1);
         assertFalse(classifier.checkGnomadFrequencies(supplier, 0.5));
     }
 

@@ -2,6 +2,7 @@ package com.hartwig.hmftools.amber.purity;
 
 import static com.hartwig.hmftools.amber.AmberConfig.AMB_LOGGER;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -12,6 +13,8 @@ import com.hartwig.hmftools.amber.contamination.SearchGrid;
 public class PeakSearch
 {
     private final List<VafLevelEvaluationResult> Peaks;
+    private final List<VafLevel> ContaminationPeaks = new ArrayList<>();
+    private final List<VafLevel> CopyNumberPeaks = new ArrayList<>();
 
     public PeakSearch(List<PositionEvidence> evidence)
     {
@@ -27,16 +30,18 @@ public class PeakSearch
         {
             AMB_LOGGER.error("Peak search interrupted", e);
         }
-
+        executor.shutdown();
         List<VafLevelEvaluationResult> results = evaluations.stream()
                 .filter(VafLevelEvaluation::hasScore)
                 .map(VafLevelEvaluation::result)
                 .toList();
         Peaks = new LocalMaximaFinder<>(results).maxima();
+
     }
 
     public List<VafLevelEvaluationResult> peaks()
     {
         return Peaks;
     }
+
 }

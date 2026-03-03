@@ -36,6 +36,8 @@ import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.amber.blacklist.AmberBlacklistFile;
 import com.hartwig.hmftools.amber.blacklist.AmberBlacklistPoint;
 import com.hartwig.hmftools.amber.contamination.TumorOnlyContaminationAnalysis;
+import com.hartwig.hmftools.amber.purity.TumorOnlyNoiseFloorAnalysis;
+import com.hartwig.hmftools.amber.purity.VafLevel;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.amber.AmberSite;
 import com.hartwig.hmftools.common.amber.AmberSitesFile;
@@ -250,19 +252,24 @@ public class AmberApplication implements AutoCloseable
         // no homozygous sites
         TumorAnalysis tumor = new TumorAnalysis(mConfig, readerFactory, allNormal, ArrayListMultimap.create());
 
-        List<TumorBAF> readDepthAndQualityFiltered = tumor.getBafs().values()
-                .stream()
-                .sorted().toList();
+        List<PositionEvidence> rawData = tumor.getBafs().values().stream().map(x -> x.TumorEvidence).toList();
+        TumorOnlyNoiseFloorAnalysis noiseFloorAnalysis = new TumorOnlyNoiseFloorAnalysis(rawData, mConfig.RefGenVersion, mChromosomeSites);
+        double noiseFloor = noiseFloorAnalysis.cutoff();
+        double contamination = noiseFloorAnalysis.contaminationPeaks().stream().map(VafLevel::vaf).max(Double::compare).orElse(0.0);
 
-        PositionBasedFrequencySupplier frequencySupplier = new PositionBasedFrequencySupplier(mChromosomeSites.values());
-        TumorOnlyContaminationAnalysis contaminationAnalysis =
-                new TumorOnlyContaminationAnalysis(readDepthAndQualityFiltered, mConfig.RefGenVersion, frequencySupplier);
-        double contamination = contaminationAnalysis.getApproximateContamination();
-        List<TumorContamination> contaminationEvidenceList = contaminationAnalysis.getContaminationPoints();
-        mPersistence.persistContamination(contaminationEvidenceList);
+        //        List<TumorBAF> readDepthAndQualityFiltered = tumor.getBafs().values()
+        //                .stream()
+        //                .sorted().toList();
 
-        List<CategoryEvidence<ChrArm>> categoryEvidence = contaminationAnalysis.getArmEvidence();
-        ArmEvidenceFile.write(ArmEvidenceFile.generateFilename(mConfig.OutputDir, mConfig.TumorId), categoryEvidence);
+        //        PositionBasedFrequencySupplier frequencySupplier = new PositionBasedFrequencySupplier(mChromosomeSites.values());
+        //        TumorOnlyContaminationAnalysis contaminationAnalysis =
+        //                new TumorOnlyContaminationAnalysis(readDepthAndQualityFiltered, mConfig.RefGenVersion, frequencySupplier);
+        //        double contamination = contaminationAnalysis.getApproximateContamination();
+        //        List<TumorContamination> contaminationEvidenceList = contaminationAnalysis.getContaminationPoints();
+        //        mPersistence.persistContamination(contaminationEvidenceList);
+        //
+        //        List<CategoryEvidence<ChrArm>> categoryEvidence = contaminationAnalysis.getArmEvidence();
+        //        ArmEvidenceFile.write(ArmEvidenceFile.generateFilename(mConfig.OutputDir, mConfig.TumorId), categoryEvidence);
 
         List<TumorBAF> tumorBAFList = tumor.getBafs().values()
                 .stream()
@@ -270,8 +277,8 @@ public class AmberApplication implements AutoCloseable
                 .filter(x -> aboveQualFilter(x.TumorEvidence))
                 .filter(x -> x.TumorEvidence.RefSupport >= mConfig.TumorOnlyMinSupport)
                 .filter(x -> x.TumorEvidence.AltSupport >= mConfig.TumorOnlyMinSupport)
-                .filter(x -> isFinite(x.refFrequency()) && Doubles.greaterOrEqual(x.refFrequency(), mConfig.TumorOnlyMinVaf))
-                .filter(x -> isFinite(x.altFrequency()) && Doubles.greaterOrEqual(x.altFrequency(), mConfig.TumorOnlyMinVaf))
+                .filter(x -> isFinite(x.refFrequency()) && Doubles.greaterOrEqual(x.refFrequency(), noiseFloor))
+                .filter(x -> isFinite(x.altFrequency()) && Doubles.greaterOrEqual(x.altFrequency(), noiseFloor))
                 .sorted().toList();
 
         List<AmberBAF> amberBAFList = tumorBAFList.stream()
