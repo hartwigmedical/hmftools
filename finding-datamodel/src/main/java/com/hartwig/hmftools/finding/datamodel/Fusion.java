@@ -3,12 +3,6 @@ package com.hartwig.hmftools.finding.datamodel;
 import java.util.List;
 import java.util.Set;
 
-import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
-import com.hartwig.hmftools.datamodel.driver.DriverSource;
-import com.hartwig.hmftools.datamodel.linx.FusionPhasedType;
-import com.hartwig.hmftools.datamodel.linx.LinxFusionType;
-import com.hartwig.hmftools.datamodel.linx.LinxUnreportableReason;
-
 import io.soabase.recordbuilder.core.RecordBuilder;
 import jakarta.validation.constraints.NotNull;
 
@@ -21,8 +15,8 @@ public record Fusion(
         @NotNull String geneEnd,
         @NotNull String geneContextEnd,
         @NotNull String geneTranscriptEnd,
-        @NotNull LinxFusionType reportedType,
-        @NotNull List<LinxUnreportableReason> unreportedReasons,
+        @NotNull FusionType reportedType,
+        @NotNull List<UnreportableReason> unreportedReasons,
         @NotNull FusionPhasedType phased,
         int fusedExonUp,
         int fusedExonDown,
@@ -33,6 +27,44 @@ public record Fusion(
         double junctionCopyNumber
 ) implements Driver
 {
+    public enum FusionType
+    {
+        NONE,
+        PROMISCUOUS_3,
+        PROMISCUOUS_5,
+        PROMISCUOUS_BOTH,
+        IG_PROMISCUOUS,
+        KNOWN_PAIR,
+        IG_KNOWN_PAIR,
+        EXON_DEL_DUP,
+        PROMISCUOUS_ENHANCER_TARGET
+    }
+
+    public enum UnreportableReason
+    {
+        NONE,
+        NOT_KNOWN,
+        UNPHASED_NOT_KNOWN,
+        UNPHASED_5P_UTR,
+        UNPHASED_SHORT,
+        SGL_NOT_KNOWN,
+        PRE_GENE_DISTANCE,
+        NONSENSE_MEDIATED_DECAY,
+        NEG_SPLICE_ACC_DISTANCE,
+        EXON_SKIPPING,
+        CHAIN_TERMINATED,
+        NON_DISRUPTIVE_CHAIN,
+        INVALID_TRAVERSAL,
+        CHAIN_LINKS,
+        DISRUPTED_PROTEIN_DOMAINS
+    }
+
+    public enum FusionPhasedType
+    {
+        INFRAME,
+        SKIPPED_EXONS,
+        OUT_OF_FRAME
+    }
 
     @NotNull
     @Override

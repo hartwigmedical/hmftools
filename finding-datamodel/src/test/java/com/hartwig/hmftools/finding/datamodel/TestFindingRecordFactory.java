@@ -1,10 +1,6 @@
 package com.hartwig.hmftools.finding.datamodel;
 
 import java.util.List;
-import java.util.Map;
-
-import com.hartwig.hmftools.datamodel.orange.ExperimentType;
-import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -19,8 +15,8 @@ public class TestFindingRecordFactory {
     public static FindingRecordBuilder createMinimalTestFindingRecordBuilder() {
         return FindingRecordBuilder.builder()
                 .metaProperties(MetaPropertiesBuilder.builder()
-                        .experimentType(ExperimentType.WHOLE_GENOME)
-                        .refGenomeVersion(OrangeRefGenomeVersion.V37)
+                        .sequencingScope(SequencingScope.WHOLE_GENOME)
+                        .refGenomeVersion(RefGenomeVersion.V37)
                         .build())
                 .purityPloidyFit(TestFindingFactory.purityPloidyFitBuilder().build())
                 .predictedTumorOrigins(TestFindingFactory.buildFindingsList(FindingsStatus.OK, List.of(TestFindingFactory.predictedTumorOriginBuilder().build())))

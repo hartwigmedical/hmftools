@@ -3,19 +3,6 @@ package com.hartwig.hmftools.finding.datamodel;
 import java.util.List;
 import java.util.Set;
 
-import com.hartwig.hmftools.datamodel.chord.ChordStatus;
-import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
-import com.hartwig.hmftools.datamodel.driver.DriverSource;
-import com.hartwig.hmftools.datamodel.linx.FusionPhasedType;
-import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
-import com.hartwig.hmftools.datamodel.linx.LinxFusionType;
-import com.hartwig.hmftools.datamodel.purple.HotspotType;
-import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
-import com.hartwig.hmftools.datamodel.purple.PurpleGenotypeStatus;
-import com.hartwig.hmftools.datamodel.purple.PurpleMicrosatelliteStatus;
-import com.hartwig.hmftools.datamodel.purple.PurpleTumorMutationalStatus;
-import com.hartwig.hmftools.datamodel.purple.PurpleVariantType;
-
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
@@ -54,7 +41,7 @@ public class TestFindingFactory {
                 .findingKey("")
                 .hrdType("")
                 .hrdValue(0)
-                .hrStatus(ChordStatus.UNKNOWN)
+                .hrStatus(HomologousRecombination.HrStatus.UNKNOWN)
                 .brca1Value(0)
                 .brca2Value(0)
                 .lohCopyNumbers(List.of())
@@ -65,7 +52,7 @@ public class TestFindingFactory {
     public static MicrosatelliteStabilityBuilder microsatelliteStabilityBuilder() {
         return MicrosatelliteStabilityBuilder.builder()
                 .findingKey("")
-                .microsatelliteStatus(PurpleMicrosatelliteStatus.UNKNOWN)
+                .microsatelliteStatus(MicrosatelliteStability.MicrosatelliteStatus.UNKNOWN)
                 .lohCopyNumbers(List.of())
                 .genes(List.of());
     }
@@ -75,10 +62,10 @@ public class TestFindingFactory {
         return TumorMutationStatusBuilder.builder()
                 .findingKey("")
                 .tumorMutationalLoad(0)
-                .tumorMutationalBurdenStatus(PurpleTumorMutationalStatus.UNKNOWN)
+                .tumorMutationalBurdenStatus(TumorMutationStatus.Status.UNKNOWN)
                 .tumorMutationalBurdenPerMb(0)
                 .svTumorMutationalBurden(0)
-                .tumorMutationalLoadStatus(PurpleTumorMutationalStatus.UNKNOWN);
+                .tumorMutationalLoadStatus(TumorMutationStatus.Status.UNKNOWN);
     }
 
     @NotNull
@@ -90,7 +77,7 @@ public class TestFindingFactory {
     public static SmallVariantBuilder variantBuilder() {
         return SmallVariantBuilder.builder()
                 .driver(driverFields(true, DriverInterpretation.HIGH))
-                .type(PurpleVariantType.SNP)
+                .type(SmallVariant.VariantType.SNP)
                 .gene(Strings.EMPTY)
                 .chromosome(Strings.EMPTY)
                 .position(0)
@@ -99,13 +86,13 @@ public class TestFindingFactory {
                 .adjustedCopyNumber(0D)
                 .minorAlleleCopyNumber(0D)
                 .variantCopyNumber(0D)
-                .hotspot(HotspotType.NON_HOTSPOT)
+                .hotspot(SmallVariant.HotspotType.NON_HOTSPOT)
                 .allelicDepth(depthBuilder().build())
                 .subclonalLikelihood(0D)
                 .biallelic(false)
                 .biallelicProbability(0D)
-                .genotypeStatus(PurpleGenotypeStatus.UNKNOWN)
-                .worstCodingEffect(PurpleCodingEffect.SPLICE)
+                .genotypeStatus(SmallVariant.GenotypeStatus.UNKNOWN)
+                .worstCodingEffect(SmallVariant.CodingEffect.SPLICE)
                 .adjustedVAF(0)
                 .repeatCount(0)
                 .transcriptImpact(transcriptImpactBuilder().reported(false).build());
@@ -123,7 +110,7 @@ public class TestFindingFactory {
                 .hgvsCodingImpact(Strings.EMPTY)
                 .hgvsProteinImpact(Strings.EMPTY)
                 .inSpliceRegion(false)
-                .codingEffect(PurpleCodingEffect.UNDEFINED)
+                .codingEffect(SmallVariant.CodingEffect.UNDEFINED)
                 .effects(Set.of())
                 .reported(true);
     }
@@ -135,7 +122,7 @@ public class TestFindingFactory {
                 .gene(Strings.EMPTY)
                 .chromosome(Strings.EMPTY)
                 .chromosomeBand(Strings.EMPTY)
-                .breakendType(LinxBreakendType.BND)
+                .breakendType(Breakend.Type.BND)
                 .transcript(Strings.EMPTY)
                 .isCanonical(true)
                 .breakendStart(breakendBuilder().build())
@@ -156,7 +143,7 @@ public class TestFindingFactory {
                 .chromosome("")
                 .transcript("")
                 .isCanonical(true)
-                .breakendType(LinxBreakendType.DEL)
+                .breakendType(Breakend.Type.DEL)
                 .type(Disruption.Type.SOMATIC_HOM_DEL_DISRUPTION);
     }
 
@@ -169,7 +156,7 @@ public class TestFindingFactory {
                 .gene(Strings.EMPTY)
                 .transcript(Strings.EMPTY)
                 .isCanonical(false)
-                .somaticType(GainDeletion.Type.GAIN)
+                .somaticType(GainDeletion.Type.HOM_DEL)
                 .geneExtent(GainDeletion.GeneExtent.FULL_GENE)
                 .tumorMinCopies(0)
                 .tumorMaxCopies(0)
@@ -181,7 +168,7 @@ public class TestFindingFactory {
     public static FusionBuilder fusionBuilder() {
         return FusionBuilder.builder()
                 .driver(driverFields(true, DriverInterpretation.HIGH))
-                .reportedType(LinxFusionType.NONE)
+                .reportedType(Fusion.FusionType.NONE)
                 .geneStart(Strings.EMPTY)
                 .geneTranscriptStart(Strings.EMPTY)
                 .geneContextStart(Strings.EMPTY)
@@ -190,7 +177,7 @@ public class TestFindingFactory {
                 .geneTranscriptEnd(Strings.EMPTY)
                 .geneContextEnd(Strings.EMPTY)
                 .fusedExonDown(0)
-                .phased(FusionPhasedType.OUT_OF_FRAME)
+                .phased(Fusion.FusionPhasedType.OUT_OF_FRAME)
                 .junctionCopyNumber(0D)
                 .chainLinks(0)
                 .chainTerminated(false)

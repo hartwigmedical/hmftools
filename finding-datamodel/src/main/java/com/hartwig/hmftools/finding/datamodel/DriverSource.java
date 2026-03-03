@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.datamodel.driver;
+package com.hartwig.hmftools.finding.datamodel;
 
 public enum DriverSource
 {

@@ -6,9 +6,6 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
-import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
-import com.hartwig.hmftools.datamodel.driver.DriverSource;
-
 import org.junit.Test;
 
 public class CurationApplierTest

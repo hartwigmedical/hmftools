@@ -3,14 +3,6 @@ package com.hartwig.hmftools.finding.datamodel;
 import java.util.List;
 import java.util.Set;
 
-import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
-import com.hartwig.hmftools.datamodel.driver.DriverSource;
-import com.hartwig.hmftools.datamodel.purple.HotspotType;
-import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
-import com.hartwig.hmftools.datamodel.purple.PurpleGenotypeStatus;
-import com.hartwig.hmftools.datamodel.purple.PurpleVariantEffect;
-import com.hartwig.hmftools.datamodel.purple.PurpleVariantType;
-
 import org.jspecify.annotations.Nullable;
 
 import io.soabase.recordbuilder.core.RecordBuilder;
@@ -23,13 +15,13 @@ public record SmallVariant(
         @NotNull TranscriptImpact transcriptImpact,
         @Nullable TranscriptImpact otherImpact,
         boolean isCanonical,
-        @NotNull PurpleVariantType type,
+        @NotNull VariantType type,
         @NotNull String gene,
         @NotNull String chromosome,
         int position,
         @NotNull String ref,
         @NotNull String alt,
-        @NotNull PurpleCodingEffect worstCodingEffect,
+        @NotNull CodingEffect worstCodingEffect,
         @NotNull HotspotType hotspot,
         @NotNull AllelicDepth allelicDepth,
         @Nullable AllelicDepth rnaDepth,
@@ -39,7 +31,7 @@ public record SmallVariant(
         double variantCopyNumber,
         boolean biallelic,
         double biallelicProbability,
-        @NotNull PurpleGenotypeStatus genotypeStatus,
+        @NotNull GenotypeStatus genotypeStatus,
         int repeatCount,
         double subclonalLikelihood,
         @Nullable List<Integer> localPhaseSets
@@ -53,8 +45,8 @@ public record SmallVariant(
             @Nullable Integer affectedCodon,
             @Nullable Integer affectedExon,
             boolean inSpliceRegion,
-            @NotNull Set<PurpleVariantEffect> effects,
-            @NotNull PurpleCodingEffect codingEffect,
+            @NotNull Set<VariantEffect> effects,
+            @NotNull CodingEffect codingEffect,
             boolean reported
     )
     {
@@ -66,6 +58,63 @@ public record SmallVariant(
             int alleleReadCount
     )
     {
+    }
+
+    public enum VariantType
+    {
+        MNP,
+        SNP,
+        INDEL,
+        UNDEFINED
+    }
+
+    public enum CodingEffect
+    {
+        NONSENSE_OR_FRAMESHIFT,
+        SPLICE,
+        MISSENSE,
+        SYNONYMOUS,
+        NONE,
+        UNDEFINED
+    }
+
+    public enum VariantEffect
+    {
+        STOP_GAINED,
+        STOP_LOST,
+        START_LOST,
+        FRAMESHIFT,
+        SPLICE_ACCEPTOR,
+        SPLICE_DONOR,
+        INFRAME_INSERTION,
+        INFRAME_DELETION,
+        MISSENSE,
+        PHASED_MISSENSE,
+        PHASED_INFRAME_INSERTION,
+        PHASED_INFRAME_DELETION,
+        SYNONYMOUS,
+        PHASED_SYNONYMOUS,
+        INTRONIC,
+        FIVE_PRIME_UTR,
+        THREE_PRIME_UTR,
+        UPSTREAM_GENE,
+        NON_CODING_TRANSCRIPT,
+        OTHER
+    }
+
+    public enum HotspotType
+    {
+        HOTSPOT,
+        NEAR_HOTSPOT,
+        NON_HOTSPOT
+    }
+
+    public enum GenotypeStatus
+    {
+        HOM_REF,
+        HET,
+        HOM_ALT,
+        UNKNOWN
     }
 
     @NotNull

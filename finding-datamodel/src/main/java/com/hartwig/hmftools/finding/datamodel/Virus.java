@@ -2,11 +2,6 @@ package com.hartwig.hmftools.finding.datamodel;
 
 import java.util.Set;
 
-import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
-import com.hartwig.hmftools.datamodel.driver.DriverSource;
-import com.hartwig.hmftools.datamodel.virus.VirusBreakendQCStatus;
-import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
-
 import org.jspecify.annotations.Nullable;
 
 import io.soabase.recordbuilder.core.RecordBuilder;
@@ -18,12 +13,31 @@ public record Virus(
         @NotNull String name,
         @NotNull VirusBreakendQCStatus qcStatus,
         int integrations,
-        @Nullable VirusInterpretation interpretation,
+        @Nullable OncogenicVirus oncogenicVirus,
         double percentageCovered,
         double meanCoverage,
         @Nullable Double expectedClonalCoverage
 ) implements Driver
 {
+    public enum VirusBreakendQCStatus
+    {
+        NO_ABNORMALITIES,
+        LOW_VIRAL_COVERAGE,
+        EXCESSIVE_VIRAL_COVERAGE,
+        ASSEMBLY_DOWNSAMPLED,
+        CHILD_TAXID_REFERENCE,
+        UNCLEAR_TAXID_ASSIGNMENT
+    }
+
+    public enum OncogenicVirus
+    {
+        MCV,
+        EBV,
+        HPV,
+        HBV,
+        HHV8
+    }
+
     @NotNull
     @Override
     public String findingKey()
