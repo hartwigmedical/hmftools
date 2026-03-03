@@ -31,7 +31,7 @@ public class PipelineToolDirectoriesTest
 
         PipelineToolDirectories victim = PipelineToolDirectories.resolveToolDirectories(
                 configBuilder, PIPELINE_FORMAT_CFG, PIPELINE_FORMAT_FILE_CFG);
-        assertEquals("pave", victim.paveGermlineDir());
+        assertEquals("pave/germline", victim.paveGermlineDir());
         assertEqualDirectories(OA_V3_0_FORMAT, victim);
     }
 
