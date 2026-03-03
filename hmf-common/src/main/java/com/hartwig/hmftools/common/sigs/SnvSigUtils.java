@@ -1,10 +1,19 @@
 package com.hartwig.hmftools.common.sigs;
 
 import static com.hartwig.hmftools.common.codon.Nucleotides.swapDnaBase;
+import static com.hartwig.hmftools.common.utils.MatrixFile.loadMatrixDataFile;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.utils.Matrix;
 import com.hartwig.hmftools.common.variant.SmallVariant;
 
 import org.jetbrains.annotations.Nullable;
@@ -12,6 +21,41 @@ import org.jetbrains.annotations.Nullable;
 public class SnvSigUtils
 {
     public static final int SNV_TRINUCLEOTIDE_BUCKET_COUNT = 96;
+
+    public static Matrix loadSnvSignatures()
+    {
+        List<String> signatureNames = Lists.newArrayList();
+        return loadSnvSignatures(signatureNames);
+    }
+
+    public static Matrix loadSnvSignatures(final List<String> signatureNames)
+    {
+        String sigDefinitionsFile = "/sigs/snv_cosmic_signatures.csv";
+
+        List<String> sigDefinitionLines = new BufferedReader(new InputStreamReader(
+                SnvSigUtils.class.getResourceAsStream(sigDefinitionsFile))).lines().collect(Collectors.toList());
+
+        return loadMatrixDataFile(sigDefinitionLines, signatureNames, Lists.newArrayList(), false);
+    }
+
+    public static Map<String,String> loadSnvSignatureEtiologies()
+    {
+        String sigEtiologiesFile = "/sigs/signatures_etiology.tsv";
+        Map<String,String> sigEtiologies = Maps.newHashMap();
+
+        List<String> lines = new BufferedReader(new InputStreamReader(
+                SnvSigUtils.class.getResourceAsStream(sigEtiologiesFile))).lines().collect(Collectors.toList());
+
+        Map<String,Integer> fields = createFieldsIndexMap(lines.get(0), TSV_DELIM);
+
+        for(String line : lines.subList(1, lines.size()))
+        {
+            String[] values = line.split(TSV_DELIM, -1);
+            sigEtiologies.put(values[fields.get("signature")], values[fields.get("etiology")]);
+        }
+
+        return sigEtiologies;
+    }
 
     public static void populateBucketMap(final Map<String,Integer> bucketNameIndexMap)
     {

@@ -19,8 +19,6 @@ public final class TestOrangeConfigFactory
     public static final String DOID_JSON = Resources.getResource("doid/example_doid.json").getPath();
     public static final String MELANOMA_DOID = "8923";
     public static final String DRIVER_GENE_PANEL_TSV = Resources.getResource("driver/example.DriverGenePanel.tsv").getPath();
-    public static final String SIGNATURES_ETIOLOGY_TSV =
-            Resources.getResource("test_run_resources/sigs/signatures_etiology.tsv").getPath();
 
     public static final String RUN_DIRECTORY = Resources.getResource("test_run").getPath();
     public static final String PIPELINE_VERSION_FILE = RUN_DIRECTORY + "/pipeline.version";
@@ -43,7 +41,7 @@ public final class TestOrangeConfigFactory
         return new OrangeConfig(
                 ExperimentType.TARGETED, TUMOR_SAMPLE_ID, null, null,
                 RefGenomeVersion.V37, Collections.emptySet(), LocalDate.now(),
-                "", DOID_JSON, SIGNATURES_ETIOLOGY_TSV, DRIVER_GENE_PANEL_TSV,
+                "", DOID_JSON, DRIVER_GENE_PANEL_TSV,
                 PIPELINE_VERSION_FILE, PURPLE_DATA_DIRECTORY, PURPLE_PLOT_DIRECTORY, LINX_SOMATIC_DATA_DIRECTORY,
                 LINX_GERMLINE_DATA_DIRECTORY, LINX_PLOT_DIRECTORY,
                 LILAC_DIR, CHORD_DIR, CUPPA_DIR, PEACH_DIR,SIGS_DIR, VIRUS_DIR, ISOFOX_DIR, false, false);
@@ -54,7 +52,7 @@ public final class TestOrangeConfigFactory
         return new OrangeConfig(
                 ExperimentType.TARGETED, TUMOR_SAMPLE_ID, null, null,
                 RefGenomeVersion.V37, Set.of(MELANOMA_DOID), LocalDate.now(),
-                "", DOID_JSON, SIGNATURES_ETIOLOGY_TSV, DRIVER_GENE_PANEL_TSV,
+                "", DOID_JSON, DRIVER_GENE_PANEL_TSV,
                 PIPELINE_VERSION_FILE, PURPLE_DATA_DIRECTORY, PURPLE_PLOT_DIRECTORY, LINX_SOMATIC_DATA_DIRECTORY,
                 LINX_GERMLINE_DATA_DIRECTORY, LINX_PLOT_DIRECTORY,
                 LILAC_DIR, CHORD_DIR, CUPPA_DIR, PEACH_DIR,SIGS_DIR, VIRUS_DIR, ISOFOX_DIR, false, true);
@@ -65,7 +63,7 @@ public final class TestOrangeConfigFactory
         return new OrangeConfig(
                 ExperimentType.WHOLE_GENOME, TUMOR_SAMPLE_ID, null, null,
                 RefGenomeVersion.V37, Collections.emptySet(), LocalDate.now(),
-                "", DOID_JSON, SIGNATURES_ETIOLOGY_TSV, DRIVER_GENE_PANEL_TSV,
+                "", DOID_JSON, DRIVER_GENE_PANEL_TSV,
                 PIPELINE_VERSION_FILE, PURPLE_DATA_DIRECTORY, PURPLE_PLOT_DIRECTORY, LINX_SOMATIC_DATA_DIRECTORY,
                 LINX_GERMLINE_DATA_DIRECTORY, LINX_PLOT_DIRECTORY,
                 LILAC_DIR, CHORD_DIR, CUPPA_DIR, PEACH_DIR,SIGS_DIR, VIRUS_DIR, ISOFOX_DIR, false, true);
@@ -76,7 +74,7 @@ public final class TestOrangeConfigFactory
         return new OrangeConfig(
                 ExperimentType.WHOLE_GENOME, TUMOR_SAMPLE_ID, REFERENCE_SAMPLE_ID, null,
                 RefGenomeVersion.V37, Set.of(MELANOMA_DOID), LocalDate.now(),
-                "", DOID_JSON, SIGNATURES_ETIOLOGY_TSV, DRIVER_GENE_PANEL_TSV,
+                "", DOID_JSON, DRIVER_GENE_PANEL_TSV,
                 PIPELINE_VERSION_FILE, PURPLE_DATA_DIRECTORY, PURPLE_PLOT_DIRECTORY, LINX_SOMATIC_DATA_DIRECTORY,
                 LINX_GERMLINE_DATA_DIRECTORY, LINX_PLOT_DIRECTORY,
                 LILAC_DIR, CHORD_DIR, CUPPA_DIR, PEACH_DIR,SIGS_DIR, VIRUS_DIR, ISOFOX_DIR, false, true);
@@ -88,7 +86,7 @@ public final class TestOrangeConfigFactory
         return new OrangeConfig(
                 ExperimentType.WHOLE_GENOME, TUMOR_SAMPLE_ID, REFERENCE_SAMPLE_ID, "tumor_sample",
                 RefGenomeVersion.V37, Set.of(MELANOMA_DOID), LocalDate.now(),
-                "", DOID_JSON, SIGNATURES_ETIOLOGY_TSV, DRIVER_GENE_PANEL_TSV,
+                "", DOID_JSON, DRIVER_GENE_PANEL_TSV,
                 PIPELINE_VERSION_FILE, PURPLE_DATA_DIRECTORY, PURPLE_PLOT_DIRECTORY, LINX_SOMATIC_DATA_DIRECTORY,
                 LINX_GERMLINE_DATA_DIRECTORY, LINX_PLOT_DIRECTORY,
                 LILAC_DIR, CHORD_DIR, CUPPA_DIR, PEACH_DIR,SIGS_DIR, VIRUS_DIR, ISOFOX_DIR, false, true);

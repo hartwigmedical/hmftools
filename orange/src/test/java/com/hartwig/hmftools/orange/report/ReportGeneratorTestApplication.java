@@ -14,7 +14,6 @@ import static com.hartwig.hmftools.orange.TestOrangeConfigFactory.PIPELINE_VERSI
 import static com.hartwig.hmftools.orange.TestOrangeConfigFactory.PURPLE_DATA_DIRECTORY;
 import static com.hartwig.hmftools.orange.TestOrangeConfigFactory.PURPLE_PLOT_DIRECTORY;
 import static com.hartwig.hmftools.orange.TestOrangeConfigFactory.REFERENCE_SAMPLE_ID;
-import static com.hartwig.hmftools.orange.TestOrangeConfigFactory.SIGNATURES_ETIOLOGY_TSV;
 import static com.hartwig.hmftools.orange.TestOrangeConfigFactory.SIGS_DIR;
 import static com.hartwig.hmftools.orange.TestOrangeConfigFactory.TUMOR_SAMPLE_ID;
 import static com.hartwig.hmftools.orange.TestOrangeConfigFactory.VIRUS_DIR;
@@ -136,7 +135,7 @@ public class ReportGeneratorTestApplication
         return new OrangeConfig(
                 ExperimentType.WHOLE_GENOME, TUMOR_SAMPLE_ID, TUMOR_ONLY ? null : REFERENCE_SAMPLE_ID, null,
                 RefGenomeVersion.V37, Collections.emptySet(), LocalDate.now(),
-                null, MELANOMA_DOID, SIGNATURES_ETIOLOGY_TSV, DRIVER_GENE_PANEL_TSV,
+                null, MELANOMA_DOID, DRIVER_GENE_PANEL_TSV,
                 PIPELINE_VERSION_FILE, PURPLE_DATA_DIRECTORY, PURPLE_PLOT_DIRECTORY, LINX_SOMATIC_DATA_DIRECTORY,
                 LINX_GERMLINE_DATA_DIRECTORY, LINX_PLOT_DIRECTORY, LILAC_DIR, CHORD_DIR, CUPPA_DIR, PEACH_DIR, SIGS_DIR,
                 VIRUS_DIR, ISOFOX_DIR, false, true);

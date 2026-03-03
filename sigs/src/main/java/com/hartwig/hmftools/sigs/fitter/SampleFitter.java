@@ -40,6 +40,7 @@ import com.hartwig.hmftools.common.sigs.SigResiduals;
 import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 import com.hartwig.hmftools.common.sigs.SignatureAllocationFile;
 import com.hartwig.hmftools.common.sigs.LeastSquaresFit;
+import com.hartwig.hmftools.common.sigs.SnvSigUtils;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.Matrix;
 import com.hartwig.hmftools.sigs.loaders.PositionFreqBuilder;
@@ -140,12 +141,6 @@ public class SampleFitter
     
     private boolean initialise()
     {
-        if(mSignaturesFile == null)
-        {
-            SIG_LOGGER.error("missing mSignatures file");
-            return false;
-        }
-
         if(mSampleIdList.isEmpty())
         {
             SIG_LOGGER.error("no sample ID(s) configured");
@@ -158,7 +153,15 @@ public class SampleFitter
             return false;
         }
 
-        mSignatures = loadMatrixDataFile(mSignaturesFile, mSignatureNames, false);
+        if(mSignaturesFile == null)
+        {
+            SIG_LOGGER.info("using default SNV Cosmic signatures");
+            mSignatures = SnvSigUtils.loadSnvSignatures(mSignatureNames);
+        }
+        else
+        {
+            mSignatures = loadMatrixDataFile(mSignaturesFile, mSignatureNames, false);
+        }
 
         if(mSnvCountsFile != null)
         {

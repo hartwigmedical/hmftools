@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.orange.algo;
 
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.filenamePart;
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import static com.hartwig.hmftools.orange.report.PdfConverter.convertPdfToPng;
 
@@ -25,6 +24,7 @@ import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.driver.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.genome.chromosome.CytoBands;
+import com.hartwig.hmftools.common.sigs.SnvSigUtils;
 import com.hartwig.hmftools.datamodel.hla.LilacRecord;
 import com.hartwig.hmftools.datamodel.orange.ExperimentType;
 import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeDoidNode;
@@ -62,7 +62,6 @@ import com.hartwig.hmftools.orange.algo.plot.PlotManager;
 import com.hartwig.hmftools.orange.algo.purple.PurpleData;
 import com.hartwig.hmftools.orange.algo.purple.PurpleDataLoader;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpreter;
-import com.hartwig.hmftools.orange.algo.sigs.SigsEtiologiesLoader;
 import com.hartwig.hmftools.orange.algo.sigs.SigsInterpreter;
 import com.hartwig.hmftools.orange.algo.util.ReportLimiter;
 import com.hartwig.hmftools.orange.algo.virus.VirusInterpreter;
@@ -85,8 +84,7 @@ public class OrangeAlgo
         List<DriverGene> driverGenes = DriverGeneFile.read(config.DriverGenePanelTsv);
         LOGGER.info(" Read {} driver genes", driverGenes.size());
 
-        LOGGER.info("Reading signatures etiology from {}", config.SignaturesEtiologyTsv);
-        Map<String, String> etiologyPerSignature = SigsEtiologiesLoader.read(config.SignaturesEtiologyTsv);
+        Map<String,String> etiologyPerSignature = SnvSigUtils.loadSnvSignatureEtiologies();
         LOGGER.info(" Read {} signatures etiology", etiologyPerSignature.size());
 
         String outputDir = config.OutputDir;

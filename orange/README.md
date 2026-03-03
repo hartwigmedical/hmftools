@@ -48,15 +48,10 @@ found [here](https://resources.hartwigmedicalfoundation.nl) for either 37 or 38 
 java -jar orange.jar \
     -experiment_type "PANEL"
     -tumor tumor_sample \
-    -primary_tumor_doids "doid1;doid2" \
+    -primary_tumor_location Skin \
     -ref_genome_version "37" \
-    -doid_json /path/to/input_doid_tree.json \
     -driver_gene_panel /path/to/driver_gene_panel.tsv \
     -pipeline_sample_root_dir /sample_oa_results/
-    -tumor_metrics_dir /sample_oa_results/bamtools/tumor/
-    -ref_metrics_dir /sample_oa_results/bamtools/reference/
-    -tumor_redux_dir /sample_oa_results/alignments/tumor/
-    -ref_redux_dir /sample_oa_results/alignments/reference/
     -output_dir /path/to/where/to/write/output \
 ```
 

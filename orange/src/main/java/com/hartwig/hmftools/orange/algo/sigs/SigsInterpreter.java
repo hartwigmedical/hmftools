@@ -7,7 +7,6 @@ import java.util.stream.Collectors;
 import com.hartwig.hmftools.datamodel.sigs.ImmutableSignatureAllocation;
 import com.hartwig.hmftools.datamodel.sigs.SignatureAllocation;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class SigsInterpreter
@@ -15,7 +14,7 @@ public final class SigsInterpreter
     @Nullable
     public static List<SignatureAllocation> interpret(
             @Nullable List<com.hartwig.hmftools.common.sigs.SignatureAllocation> signatureAllocation,
-            @NotNull Map<String, String> etiologyPerSignature)
+            final Map<String, String> etiologyPerSignature)
     {
         if(signatureAllocation == null)
         {
@@ -31,9 +30,9 @@ public final class SigsInterpreter
                 .collect(Collectors.toList());
     }
 
-    @NotNull
-    public static String annotateWithEtiology(@NotNull com.hartwig.hmftools.common.sigs.SignatureAllocation signatureAllocation,
-            @NotNull Map<String, String> etiologyPerSignature)
+    public static String annotateWithEtiology(
+            final  com.hartwig.hmftools.common.sigs.SignatureAllocation signatureAllocation,
+            final  Map<String,String> etiologyPerSignature)
     {
         String signatureName = signatureAllocation.signature();
         if(etiologyPerSignature.containsKey(signatureName))

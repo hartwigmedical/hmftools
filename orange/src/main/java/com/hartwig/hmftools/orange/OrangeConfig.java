@@ -93,7 +93,6 @@ public class OrangeConfig
     public final String OutputId;
 
     public final String DoidJsonFile;
-    public final String SignaturesEtiologyTsv;
     public final String DriverGenePanelTsv;
 
     public final String PipelineVersionFile;
@@ -128,7 +127,6 @@ public class OrangeConfig
 
     // Input files used by the algorithm
     private static final String DOID_JSON = "doid_json";
-    private static final String SIGNATURES_ETIOLOGY_TSV = "signatures_etiology_tsv";
 
     // Files containing the actual genomic results for this sample.
     private static final String PIPELINE_VERSION_FILE = "pipeline_version_file";
@@ -161,7 +159,6 @@ public class OrangeConfig
 
         RefGenVersion = RefGenomeVersion.from(configBuilder);
         DriverGenePanelTsv = configBuilder.getValue(DRIVER_GENE_PANEL);
-        SignaturesEtiologyTsv = configBuilder.getValue(SIGNATURES_ETIOLOGY_TSV);
 
         String pipelineVersionFile = configBuilder.getValue(PIPELINE_VERSION_FILE);
 
@@ -271,7 +268,6 @@ public class OrangeConfig
         addOutputOptions(configBuilder);
 
         configBuilder.addPath(DOID_JSON, false, "Path to JSON file containing the full DOID tree");
-        configBuilder.addPath(SIGNATURES_ETIOLOGY_TSV, true, "Path to signatures etiology TSV");
         addGenePanelOption(configBuilder, true);
 
         configBuilder.addPath(PIPELINE_VERSION_FILE, false, "Path towards the pipeline version file.");
@@ -367,12 +363,11 @@ public class OrangeConfig
     public OrangeConfig(
             final ExperimentType runType, final String tumorId, final String referenceId, final String rnaSampleId,
             final RefGenomeVersion refGenVersion, final Set<String> primaryTumorDoids, final LocalDate samplingDate, final String outputDir,
-            final String doidJsonFile, final String signaturesEtiologyTsv, final String driverGenePanelTsv,
+            final String doidJsonFile, final String driverGenePanelTsv,
             final String pipelineVersionFile, final String purpleDataDirectory, final String purplePlotDirectory,
             final String linxSomaticDataDirectory, final String linxGermlineDataDirectory, final String linxPlotDirectory,
-            final String lilacDir, final String chordDir,
-            final String cuppaDir, final String peachDir, final String sigsDir, final String virusDir, final String isofoxDir,
-            final boolean limitJsonOutput, final boolean addDisclaimer)
+            final String lilacDir, final String chordDir, final String cuppaDir, final String peachDir, final String sigsDir,
+            final String virusDir, final String isofoxDir, final boolean limitJsonOutput, final boolean addDisclaimer)
     {
         RunType = runType;
         TumorId = tumorId;
@@ -385,7 +380,6 @@ public class OrangeConfig
         OutputId = null;
         DoidJsonFile = doidJsonFile;
         PrimaryTumorLocation = "";
-        SignaturesEtiologyTsv = signaturesEtiologyTsv;
         DriverGenePanelTsv = driverGenePanelTsv;
         PipelineVersionFile = pipelineVersionFile;
         PurpleDataDirectory = purpleDataDirectory;
