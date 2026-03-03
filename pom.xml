@@ -235,7 +235,7 @@
             <dependency>
                 <groupId>com.hartwig</groupId>
                 <artifactId>finding-datamodel</artifactId>
-                <version>${finding-datamodel.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>
