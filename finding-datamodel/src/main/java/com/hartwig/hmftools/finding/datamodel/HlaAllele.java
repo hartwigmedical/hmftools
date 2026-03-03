@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.finding.datamodel;
 
+import java.util.Set;
+
 import org.jspecify.annotations.Nullable;
 
 import io.soabase.recordbuilder.core.RecordBuilder;
@@ -8,8 +10,10 @@ import jakarta.validation.constraints.NotNull;
 @RecordBuilder
 public record HlaAllele(
         @NotNull String findingKey,
+        @NotNull String geneClass,
         @NotNull String gene,
         @NotNull String allele,
+        @NotNull Set<QcStatus> qcStatus,
         int germlineCopyNumber,
         @Nullable Double tumorCopyNumber,
         @Nullable Integer refFragments,
@@ -22,4 +26,16 @@ public record HlaAllele(
         double somaticInframeIndel
 ) implements Finding
 {
+    public enum QcStatus
+    {
+        PASS,
+        FAIL,
+        WARN_UNMATCHED_ALLELE,
+        WARN_UNMATCHED_SOMATIC_VARIANT,
+        WARN_UNMATCHED_HAPLOTYPE,
+        WARN_UNMATCHED_AMINO_ACID,
+        WARN_LOW_COVERAGE,
+        WARN_LOW_BASE_QUAL,
+        WARN_UNMATCHED_INDEL;
+    }
 }
