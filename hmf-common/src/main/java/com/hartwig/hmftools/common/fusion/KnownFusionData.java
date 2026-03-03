@@ -34,7 +34,7 @@ public class KnownFusionData
     // exon deletion
     private String mSpecificExonsTransName;
 
-    private int[] mFiveExonRange;
+    private int[] mFiveExonRange; // initialised to 0-0 and then won't match any exons
     private int[] mThreeExonRange;
 
     // IG / enhancer or other specific region

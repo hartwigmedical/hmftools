@@ -126,6 +126,22 @@ public class KnownFusionCache
         return mDataByType.get(EXON_DEL_DUP).stream().anyMatch(x -> x.specificExonsTransName().equals(transName));
     }
 
+    public boolean requiresPromiscuousExonRange(final KnownFusionType knownType, final String transName)
+    {
+        for(KnownFusionData knownData : mDataByType.get(knownType))
+        {
+            if(!knownData.specificExonsTransName().equals(transName))
+                continue;
+
+            int[] knownExonRange = knownType == PROMISCUOUS_5 ? knownData.fiveGeneExonRange() : knownData.threeGeneExonRange();
+
+            if(knownExonRange[SE_START] >= 1)
+                return true;
+        }
+
+        return false;
+    }
+
     public boolean withinPromiscuousExonRange(final KnownFusionType knownType, final String transName, int breakendExon, int fusedExon)
     {
         for(KnownFusionData knownData : mDataByType.get(knownType))

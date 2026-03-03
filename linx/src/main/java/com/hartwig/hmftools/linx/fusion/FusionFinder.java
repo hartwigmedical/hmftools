@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.linx.fusion;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_NONE;
@@ -21,6 +22,7 @@ import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.fusion.FusionConfig.LOG_INVALID_REASON;
 import static com.hartwig.hmftools.linx.fusion.FusionConfig.processSvGeneDebug;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_ENHANCER_PARTNER_GENE_DISTANCE_NO_ORIENT;
+import static com.hartwig.hmftools.linx.fusion.FusionConstants.MIN_ENHANCER_PARTNER_GENE_DISTANCE;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.REQUIRED_BIOTYPES;
 import static com.hartwig.hmftools.linx.fusion.FusionReportability.checkProteinDomains;
 import static com.hartwig.hmftools.linx.fusion.FusionReportability.determineReportability;
@@ -481,6 +483,14 @@ public class FusionFinder
             // check within the promiscuous region bounds
             if(kfData == null)
                 return;
+
+            if(enhancerGene.chromosome().equals(downGene.chromosome()))
+            {
+                int distance = abs(enhancerGene.position() - downGene.position());
+
+                if(distance < MIN_ENHANCER_PARTNER_GENE_DISTANCE)
+                    return;
+            }
         }
 
         knownType = kfData.Type;
@@ -758,14 +768,18 @@ public class FusionFinder
             return;
         }
 
+        boolean requiresExonRange = false;
+
         if(mKnownFusionCache.hasPromiscuousThreeGene(downGene))
         {
             geneFusion.setKnownType(PROMISCUOUS_3);
             geneFusion.isPromiscuous()[FS_DOWN] = true;
 
+            String transName = geneFusion.transcripts()[FS_DOWN].transName();
+            requiresExonRange = mKnownFusionCache.requiresPromiscuousExonRange(PROMISCUOUS_3, transName);
+
             if(mKnownFusionCache.withinPromiscuousExonRange(
-                    PROMISCUOUS_3, geneFusion.transcripts()[FS_DOWN].transName(),
-                    geneFusion.getBreakendExon(false), geneFusion.getFusedExon(false)))
+                    PROMISCUOUS_3, transName, geneFusion.getBreakendExon(false), geneFusion.getFusedExon(false)))
             {
                 geneFusion.setKnownExons();
             }
@@ -777,9 +791,11 @@ public class FusionFinder
             geneFusion.setKnownType(PROMISCUOUS_5);
             geneFusion.isPromiscuous()[FS_UP] = true;
 
+            String transName = geneFusion.transcripts()[FS_UP].transName();
+            requiresExonRange = mKnownFusionCache.requiresPromiscuousExonRange(PROMISCUOUS_5, transName);
+
             if(mKnownFusionCache.withinPromiscuousExonRange(
-                    PROMISCUOUS_5, geneFusion.transcripts()[FS_UP].transName(),
-                    geneFusion.getBreakendExon(true), geneFusion.getFusedExon(true)))
+                    PROMISCUOUS_5, transName, geneFusion.getBreakendExon(true), geneFusion.getFusedExon(true)))
             {
                 geneFusion.setKnownExons();
             }
@@ -787,7 +803,8 @@ public class FusionFinder
 
         if(geneFusion.knownType() == PROMISCUOUS_5 || geneFusion.knownType() == PROMISCUOUS_3)
         {
-            if(mKnownFusionCache.isHighImpactPromiscuous(geneFusion.knownType(), geneFusion.geneName(FS_UP), geneFusion.geneName(FS_DOWN)))
+            if(mKnownFusionCache.isHighImpactPromiscuous(geneFusion.knownType(), geneFusion.geneName(FS_UP), geneFusion.geneName(FS_DOWN))
+            && (!requiresExonRange || geneFusion.knownExons()))
             {
                 geneFusion.setHighImpactPromiscuous();
             }

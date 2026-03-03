@@ -178,7 +178,7 @@ public class FusionWriter implements CohortFileInterface
 
             StringJoiner sj = new StringJoiner(TSV_DELIM);
 
-            sj.add("SampleId").add("Reportable").add("ReportableReason").add("KnownType").add("Phased").add("KnownExons");
+            sj.add("SampleId").add("Reportable").add("ReportableReason").add("KnownType").add("Likelihood").add("Phased").add("KnownExons");
             sj.add("ClusterId").add("ClusterCount").add("ResolvedType");
 
             for(int se = SE_START; se <= SE_END; ++se)
@@ -244,6 +244,7 @@ public class FusionWriter implements CohortFileInterface
         sj.add(valueOf(fusion.reportable()));
         sj.add(reportableReasonsToStr(fusion.reportableReasons()));
         sj.add(fusion.knownTypeStr());
+        sj.add(String.valueOf(fusion.likelihoodType()));
 
         sj.add(valueOf(fusion.phaseType()));
         sj.add(valueOf(fusion.knownExons()));
