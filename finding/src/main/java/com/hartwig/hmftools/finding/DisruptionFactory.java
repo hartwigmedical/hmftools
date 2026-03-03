@@ -9,15 +9,13 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.finding.datamodel.Breakend;
-import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
-import com.hartwig.hmftools.datamodel.driver.DriverSource;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxDriver;
 import com.hartwig.hmftools.datamodel.linx.LinxGeneOrientation;
 import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
+import com.hartwig.hmftools.finding.datamodel.Breakend;
 import com.hartwig.hmftools.finding.datamodel.BreakendBuilder;
 import com.hartwig.hmftools.finding.datamodel.Disruption;
 import com.hartwig.hmftools.finding.datamodel.DisruptionBuilder;
@@ -25,6 +23,8 @@ import com.hartwig.hmftools.finding.datamodel.Doubles;
 import com.hartwig.hmftools.finding.datamodel.DriverFieldsBuilder;
 import com.hartwig.hmftools.finding.datamodel.DriverFindingList;
 import com.hartwig.hmftools.finding.datamodel.DriverFindingListBuilder;
+import com.hartwig.hmftools.finding.datamodel.DriverInterpretation;
+import com.hartwig.hmftools.finding.datamodel.DriverSource;
 import com.hartwig.hmftools.finding.datamodel.FindingsStatus;
 import com.hartwig.hmftools.finding.datamodel.ReportedStatus;
 
@@ -206,7 +206,7 @@ final class DisruptionFactory
                 .gene(breakend.gene())
                 .isCanonical(breakend.isCanonical())
                 .transcript(breakend.transcript())
-                .breakendType(breakend.type())
+                .breakendType(Breakend.Type.valueOf(breakend.type().name()))
                 .disruptedCopies(hasReliablePurity ? breakend.junctionCopyNumber() : null)
                 .undisruptedCopies(hasReliablePurity ? undisruptedCopyNumber : null)
                 .clusterId(determineClusterId(structuralVariants, breakend))
@@ -222,6 +222,13 @@ final class DisruptionFactory
         {
             return null;
         }
+
+        Breakend.GeneOrientation orientation = switch(linxBreakend.geneOrientation())
+        {
+            case Upstream -> Breakend.GeneOrientation.UPSTREAM;
+            case Downstream -> Breakend.GeneOrientation.DOWNSTREAM;
+        };
+
         return BreakendBuilder.builder()
                 .id(linxBreakend.id())
                 .svId(linxBreakend.svId())
@@ -230,13 +237,13 @@ final class DisruptionFactory
                 .chromosomeBand(linxBreakend.chromosomeBand())
                 .transcript(linxBreakend.transcript())
                 .isCanonical(linxBreakend.isCanonical())
-                .geneOrientation(linxBreakend.geneOrientation())
+                .geneOrientation(orientation)
                 .disruptive(linxBreakend.disruptive())
                 .reported(linxBreakend.reported())
                 .undisruptedCopyNumber(linxBreakend.undisruptedCopyNumber())
-                .type(linxBreakend.type())
-                .regionType(linxBreakend.regionType())
-                .codingType(linxBreakend.codingType())
+                .type(Breakend.Type.valueOf(linxBreakend.type().name()))
+                .regionType(Breakend.TranscriptRegionType.valueOf(linxBreakend.regionType().name()))
+                .codingType(Breakend.TranscriptCodingType.valueOf(linxBreakend.codingType().name()))
                 .nextSpliceExonRank(linxBreakend.nextSpliceExonRank())
                 .orientation(linxBreakend.orientation())
                 .exonUp(linxBreakend.exonUp())

@@ -1,8 +1,10 @@
 package com.hartwig.hmftools.finding;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -59,6 +61,11 @@ public class HlaAlleleFactory
                 .stream()
                 .collect(Collectors.groupingBy(LilacAllele::allele));
 
+        // newer version of Lilac puts acStatus in alleles instead. This backport version will do the same
+        Set<HlaAllele.QcStatus> qcStatus = Arrays.stream(lilac.qc().split(";"))
+                .map(HlaAllele.QcStatus::valueOf)
+                .collect(Collectors.toSet());
+
         List<HlaAllele> hlaAlleles = new ArrayList<>();
         for(Map.Entry<String, List<LilacAllele>> keyMap : hlaAllelesMap.entrySet())
         {
@@ -67,6 +74,7 @@ public class HlaAlleleFactory
             var matcher = HLA_REGEX.matcher(lilacAllele.allele());
             //throw IllegalStateException("Can't extract HLA gene, alleleGroup and hlaProtein from ${allele.allele()}")
             String gene = matcher.group("gene");
+            String geneClass = "HLA_" + gene;
             String alleleGroup = matcher.group("alleleGroup");
             String hlaProtein = matcher.group("hlaProtein");
 
@@ -74,10 +82,12 @@ public class HlaAlleleFactory
             HlaAlleleBuilder builder = HlaAlleleBuilder.builder()
                     .findingKey(FindingKeys.hlaAllele(lilacAllele))
                     .event(eventFactory.immunologyEvent(lilacAllele))
+                    .geneClass(geneClass)
                     .gene(gene)
                     .allele(lilacAllele.allele())
                     .alleleGroup(alleleGroup)
                     .hlaProtein(hlaProtein)
+                    .qcStatus(qcStatus)
                     .refFragments(hasRef ? lilacAllele.refFragments() : null)
                     .tumorFragments(lilacAllele.tumorFragments())
                     .rnaFragments(hasRna ? lilacAllele.rnaFragments() : null)

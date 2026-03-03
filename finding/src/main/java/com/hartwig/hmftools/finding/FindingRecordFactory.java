@@ -10,6 +10,7 @@ import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -19,8 +20,10 @@ import com.hartwig.hmftools.common.driver.panel.DriverGeneFile;
 import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
-import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
-import com.hartwig.hmftools.datamodel.driver.DriverSource;
+import com.hartwig.hmftools.finding.datamodel.DriverInterpretation;
+import com.hartwig.hmftools.finding.datamodel.DriverSource;
+import com.hartwig.hmftools.finding.clinicaltranscript.ClinicalTranscriptFile;
+import com.hartwig.hmftools.finding.clinicaltranscript.ClinicalTranscriptsModel;
 import com.hartwig.hmftools.datamodel.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
@@ -58,15 +61,17 @@ import com.hartwig.hmftools.finding.datamodel.PharmocoGenotype;
 import com.hartwig.hmftools.finding.datamodel.PharmocoGenotypeBuilder;
 import com.hartwig.hmftools.finding.datamodel.PredictedTumorOrigin;
 import com.hartwig.hmftools.finding.datamodel.PredictedTumorOriginBuilder;
+import com.hartwig.hmftools.finding.datamodel.PurityPloidyFit;
 import com.hartwig.hmftools.finding.datamodel.PurityPloidyFitBuilder;
 import com.hartwig.hmftools.finding.datamodel.PurityPloidyFitQcBuilder;
+import com.hartwig.hmftools.finding.datamodel.RefGenomeVersion;
+import com.hartwig.hmftools.finding.datamodel.SequencingScope;
 import com.hartwig.hmftools.finding.datamodel.TumorMutationStatus;
 import com.hartwig.hmftools.finding.datamodel.TumorMutationStatusBuilder;
 import com.hartwig.hmftools.finding.datamodel.Virus;
 import com.hartwig.hmftools.finding.datamodel.VirusBuilder;
 import com.hartwig.hmftools.finding.datamodel.VisualisationFiles;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 // to reduce duplication, the findings are collected from
@@ -100,8 +105,8 @@ public class FindingRecordFactory
                 builder = FindingRecordBuilder.builder()
                 .metaProperties(MetaPropertiesBuilder.builder()
                         .version("1.0")
-                        .refGenomeVersion(orangeRecord.refGenomeVersion())
-                        .experimentType(orangeRecord.experimentType())
+                        .refGenomeVersion(RefGenomeVersion.valueOf(orangeRecord.refGenomeVersion().name()))
+                        .sequencingScope(SequencingScope.valueOf(orangeRecord.experimentType().name()))
                         .pipelineVersion(orangeRecord.pipelineVersion())
                         .sampleId(orangeRecord.sampleId())
                         .samplingDate(orangeRecord.samplingDate())
@@ -137,18 +142,24 @@ public class FindingRecordFactory
         FindingsStatus findingsStatus = purpleFindingsStatus(purple);
 
         PurpleFit purpleFit = purple.fit();
+        Set<PurityPloidyFit.QCStatus> qcStatuses = purpleFit.qc().status().stream()
+                .map(o -> PurityPloidyFit.QCStatus.valueOf(o.name()))
+                .collect(Collectors.toSet());
+        Set<PurityPloidyFit.GermlineAberration> germlineAberrations = purpleFit.qc().germlineAberrations().stream()
+                .map(o -> PurityPloidyFit.GermlineAberration.valueOf(o.name()))
+                .collect(Collectors.toSet());
 
         builder.purityPloidyFit(PurityPloidyFitBuilder.builder()
                 .qc(PurityPloidyFitQcBuilder.builder()
-                        .status(purpleFit.qc().status())
-                        .germlineAberrations(purpleFit.qc().germlineAberrations())
+                        .status(qcStatuses)
+                        .germlineAberrations(germlineAberrations)
                         .amberMeanDepth(purpleFit.qc().amberMeanDepth())
                         .contamination(purpleFit.qc().contamination())
                         .totalCopyNumberSegments(purpleFit.qc().totalCopyNumberSegments())
                         .unsupportedCopyNumberSegments(purpleFit.qc().unsupportedCopyNumberSegments())
                         .deletedGenes(purpleFit.qc().deletedGenes())
                         .build())
-                .fittedPurityMethod(purpleFit.fittedPurityMethod())
+                .fittedPurityMethod(PurityPloidyFit.FittedPurityMethod.valueOf(purpleFit.fittedPurityMethod().name()))
                 .purity(purpleFit.purity())
                 .minPurity(purpleFit.minPurity())
                 .maxPurity(purpleFit.maxPurity())
@@ -179,9 +190,11 @@ public class FindingRecordFactory
                         .findingKey(FindingKeys.tumorMutationStatus(purple.characteristics().tumorMutationalBurdenStatus(),
                                 purple.characteristics().tumorMutationalLoadStatus()))
                         .tumorMutationalBurdenPerMb(purple.characteristics().tumorMutationalBurdenPerMb())
-                        .tumorMutationalBurdenStatus(purple.characteristics().tumorMutationalBurdenStatus())
+                        .tumorMutationalBurdenStatus(
+                                TumorMutationStatus.Status.valueOf(purple.characteristics().tumorMutationalBurdenStatus().name()))
                         .tumorMutationalLoad(purple.characteristics().tumorMutationalLoad())
-                        .tumorMutationalLoadStatus(purple.characteristics().tumorMutationalLoadStatus())
+                        .tumorMutationalLoadStatus(
+                                TumorMutationStatus.Status.valueOf(purple.characteristics().tumorMutationalLoadStatus().name()))
                         .svTumorMutationalBurden(purple.characteristics().svTumorMutationalBurden())
                         .build())
                 .build();
@@ -225,7 +238,7 @@ public class FindingRecordFactory
                             .brca1Value(chord.brca1Value())
                             .brca2Value(chord.brca2Value())
                             .hrdValue(chord.hrdValue())
-                            .hrStatus(chord.hrStatus())
+                            .hrStatus(HomologousRecombination.HrStatus.valueOf(chord.hrStatus().name()))
                             .hrdType(chord.hrdType())
                             .lohCopyNumbers(filterLohGainDeletions(gainDeletions, Genes.HRD_GENES))
                             .genes(GeneListUtil.genes(purple.reportableSomaticVariants(),
@@ -248,7 +261,8 @@ public class FindingRecordFactory
                 .status(FindingsStatus.OK)
                 .finding(MicrosatelliteStabilityBuilder.builder()
                         .findingKey(FindingKeys.microsatelliteStability(purple.characteristics().microsatelliteStatus()))
-                        .microsatelliteStatus(purple.characteristics().microsatelliteStatus())
+                        .microsatelliteStatus(
+                                MicrosatelliteStability.MicrosatelliteStatus.valueOf(purple.characteristics().microsatelliteStatus().name()))
                         .microsatelliteIndelsPerMb(purple.characteristics().microsatelliteIndelsPerMb())
                         .lohCopyNumbers(filterLohGainDeletions(gainDeletions, Genes.MSI_GENES))
                         .genes(GeneListUtil.genes(purple.reportableSomaticVariants(),
@@ -288,6 +302,9 @@ public class FindingRecordFactory
         DriverInterpretation driverInterpretation = toDriverInterpretation(fusion.driverLikelihood());
 
         boolean isDriverGene = !fusion.unreportedReasons().contains(LinxUnreportableReason.NOT_KNOWN);
+        List<Fusion.UnreportableReason> unreportableReasons = fusion.unreportedReasons().stream()
+                .map(o -> Fusion.UnreportableReason.valueOf(o.name()))
+                .toList();
 
         return FusionBuilder.builder()
                 .driver(DriverFieldsBuilder.builder()
@@ -305,9 +322,9 @@ public class FindingRecordFactory
                 .geneEnd(fusion.geneEnd())
                 .geneContextEnd(fusion.geneContextEnd())
                 .geneTranscriptEnd(fusion.geneTranscriptEnd())
-                .reportedType(fusion.reportedType())
-                .unreportedReasons(fusion.unreportedReasons())
-                .phased(fusion.phased())
+                .reportedType(Fusion.FusionType.valueOf(fusion.reportedType().name()))
+                .unreportedReasons(unreportableReasons)
+                .phased(Fusion.FusionPhasedType.valueOf(fusion.phased().name()))
                 .fusedExonUp(fusion.fusedExonUp())
                 .fusedExonDown(fusion.fusedExonDown())
                 .chainLinks(fusion.chainLinks())
@@ -361,9 +378,11 @@ public class FindingRecordFactory
                                 .build()
                         )
                         .name(v.name())
-                        .qcStatus(v.qcStatus())
+                        .qcStatus(Virus.VirusBreakendQCStatus.valueOf(v.qcStatus().name()))
                         .integrations(v.integrations())
-                        .interpretation(v.interpretation())
+                        .oncogenicVirus(v.interpretation() != null ?
+                                Virus.OncogenicVirus.valueOf(Objects.requireNonNull(v.interpretation()).name())
+                                : null)
                         .percentageCovered(v.percentageCovered())
                         .meanCoverage(v.meanCoverage())
                         .expectedClonalCoverage(v.expectedClonalCoverage())
