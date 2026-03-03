@@ -4,10 +4,12 @@ import static com.hartwig.hmftools.amber.AmberConfig.AMB_LOGGER;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.google.common.base.Preconditions;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 
 public class SearchGrid
@@ -31,21 +33,27 @@ public class SearchGrid
         ValueScore calculate(double value);
     }
 
-    public List<Double> searchValues()
+    public List<Pair<Double, Double>> searchValuesAndSteps()
     {
         final double start = 0.005;
         final double end = 0.35;
         final double stepRatio = 1.05;
         double step = 0.001;
-        List<Double> result = new ArrayList<>(60);
+        List<Pair<Double, Double>> result = new ArrayList<>(60);
         double current = start;
         while(current <= end + 0.0001)
         {
-            result.add(Math.round(current * 1000.0) / 1000.0);
+            final double currentValue = Math.round(current * 1000.0) / 1000.0;
             current += step;
             step *= stepRatio;
+            result.add(Pair.of(currentValue, step));
         }
         return result;
+    }
+
+    public List<Double> searchValues()
+    {
+        return searchValuesAndSteps().stream().map(Pair::getLeft).collect(Collectors.toList());
     }
 
     public ValueScore findBestValue(final Calculator calculator)

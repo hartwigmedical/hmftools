@@ -19,6 +19,7 @@ import com.hartwig.hmftools.common.segmentation.Arm;
 import com.hartwig.hmftools.common.segmentation.ChrArm;
 import com.hartwig.hmftools.common.segmentation.ChrArmLocator;
 
+import org.apache.commons.math3.distribution.BinomialDistribution;
 import org.junit.Test;
 
 public class VafLevelTest extends PurityTestBase
@@ -51,7 +52,7 @@ public class VafLevelTest extends PurityTestBase
     }
 
     @Test
-    public void testTest()
+    public void testCaptureByBinomialTest()
     {
         checkNotCaptured(0.1, 1000, 20);
         checkNotCaptured(0.1, 1000, 42);
@@ -77,6 +78,50 @@ public class VafLevelTest extends PurityTestBase
         checkCapturedHom(0.30, 100, 30);
         checkCapturedHom(0.30, 100, 34);
         checkNotCaptured(0.30, 100, 35);
+    }
+
+    @Test
+    public void captureByNextLevelStepTest()
+    {
+        new BinomialDistribution(1000, 0.1).cumulativeProbability(90);
+        checkNotCaptured(0.1, 0.018, 1000, 40);
+        checkNotCaptured(0.1, 0.019, 1000, 40);
+        checkNotCaptured(0.1, 0.020, 1000, 40);
+        checkCapturedHet(0.1, 0.020001, 1000, 40);
+
+        checkNotCaptured(0.1, 0.018, 1000, 60);
+        checkNotCaptured(0.1, 0.019, 1000, 60);
+        checkNotCaptured(0.1, 0.019999, 1000, 60);
+        checkCapturedHet(0.1, 0.02, 1000, 60);
+
+        checkNotCaptured(0.1, 0.02, 1000, 79);
+        checkNotCaptured(0.1, 0.019, 1000, 80);
+        checkNotCaptured(0.1, 0.02, 1000, 80);
+        checkCapturedHom(0.1, 0.020001, 1000, 80);
+        checkCapturedHom(0.1, 0.02, 1000, 120);
+        checkNotCaptured(0.1, 0.02, 1000, 121);
+    }
+
+    @Test
+    public void captureByNextLevelStepWhenVafCloseTo1Test()
+    {
+        new BinomialDistribution(1000, 0.1).cumulativeProbability(90);
+        checkNotCaptured(0.1, 0.018, 1000, 960);
+        checkNotCaptured(0.1, 0.019, 1000, 960);
+        checkNotCaptured(0.1, 0.020, 1000, 960);
+        checkCapturedHet(0.1, 0.020001, 1000, 960);
+
+        checkNotCaptured(0.1, 0.018, 1000, 940);
+        checkNotCaptured(0.1, 0.019, 1000, 940);
+        checkNotCaptured(0.1, 0.019999, 1000, 940);
+        checkCapturedHet(0.1, 0.02, 1000, 940);
+
+        checkNotCaptured(0.1, 0.02, 1000, 921);
+        checkNotCaptured(0.1, 0.019, 1000, 920);
+        checkNotCaptured(0.1, 0.02, 1000, 920);
+        checkCapturedHom(0.1, 0.020001, 1000, 920);
+        checkCapturedHom(0.1, 0.02, 1000, 880);
+        checkNotCaptured(0.1, 0.02, 1000, 879);
     }
 
     @Test
@@ -249,6 +294,17 @@ public class VafLevelTest extends PurityTestBase
     private void checkNotCaptured(double vafLevel, int readDepth, int altDepth)
     {
         VafLevel level = new VafLevel(vafLevel);
+        checkNotCaptured(readDepth, altDepth, level);
+    }
+
+    private void checkNotCaptured(double vafLevel, double gap, int readDepth, int altDepth)
+    {
+        VafLevel level = new VafLevel(vafLevel, gap);
+        checkNotCaptured(readDepth, altDepth, level);
+    }
+
+    private void checkNotCaptured(final int readDepth, final int altDepth, final VafLevel level)
+    {
         final PositionEvidence positionEvidence = evidenceWithDepthAndAltCount(readDepth, altDepth);
         level.test(positionEvidence);
         assertTrue(level.homozygousEvidencePoints().isEmpty());
@@ -258,6 +314,17 @@ public class VafLevelTest extends PurityTestBase
     private void checkCapturedHom(double vafLevel, int readDepth, int altDepth)
     {
         VafLevel level = new VafLevel(vafLevel);
+        checkCapturedHom(readDepth, altDepth, level);
+    }
+
+    private void checkCapturedHom(double vafLevel, double gap, int readDepth, int altDepth)
+    {
+        VafLevel level = new VafLevel(vafLevel, gap);
+        checkCapturedHom(readDepth, altDepth, level);
+    }
+
+    private void checkCapturedHom(final int readDepth, final int altDepth, final VafLevel level)
+    {
         final PositionEvidence positionEvidence = evidenceWithDepthAndAltCount(readDepth, altDepth);
         level.test(positionEvidence);
         assertTrue(level.homozygousEvidencePoints().contains(positionEvidence));
@@ -266,6 +333,17 @@ public class VafLevelTest extends PurityTestBase
     private void checkCapturedHet(double vafLevel, int readDepth, int altDepth)
     {
         VafLevel level = new VafLevel(vafLevel);
+        checkCapturedHet(readDepth, altDepth, level);
+    }
+
+    private void checkCapturedHet(double vafLevel, double gap, int readDepth, int altDepth)
+    {
+        VafLevel level = new VafLevel(vafLevel, gap);
+        checkCapturedHet(readDepth, altDepth, level);
+    }
+
+    private void checkCapturedHet(final int readDepth, final int altDepth, final VafLevel level)
+    {
         final PositionEvidence positionEvidence = evidenceWithDepthAndAltCount(readDepth, altDepth);
         level.test(positionEvidence);
         assertTrue(level.heterozygousEvidencePoints().contains(positionEvidence));

@@ -59,4 +59,25 @@ public class PositionEvidenceTest
         Assert.assertEquals(10, converted.altSupport());
     }
 
+    @Test
+    public void vafTest()
+    {
+        PositionEvidence pe0 = new PositionEvidence("1", 1000, "A", "C");
+        Assert.assertEquals(Double.NaN, pe0.vaf(), 0.0001);
+        pe0.AltSupport = 10;
+        pe0.RefSupport = 90;
+        pe0.ReadDepth = 100;
+        Assert.assertEquals(0.1, pe0.vaf(), 0.0001);
+    }
+
+    @Test
+    public void symmetricVafTest()
+    {
+        PositionEvidence pe0 = new PositionEvidence("1", 1000, "A", "C");
+        Assert.assertEquals(Double.NaN, pe0.symmetricVaf(), 0.0001);
+        pe0.AltSupport = 90;
+        pe0.RefSupport = 10;
+        pe0.ReadDepth = 100;
+        Assert.assertEquals(0.1, pe0.symmetricVaf(), 0.0001);
+    }
 }

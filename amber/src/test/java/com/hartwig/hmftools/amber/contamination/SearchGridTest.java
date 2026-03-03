@@ -5,6 +5,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -12,6 +13,25 @@ import org.junit.Test;
 @Ignore
 public class SearchGridTest
 {
+
+    @Test
+    public void searchValuesAndStepsTest()
+    {
+        final double delta = 0.00001;
+        final SearchGrid searchGrid = new SearchGrid();
+        final List<Pair<Double, Double>> searchValues = searchGrid.searchValuesAndSteps();
+        assertEquals(0.0050, searchValues.get(0).getLeft(), delta);
+        assertEquals(0.00105, searchValues.get(0).getRight(), delta);
+        assertEquals(0.0060, searchValues.get(1).getLeft(), delta);
+        assertEquals(0.0011, searchValues.get(1).getRight(), delta);
+        assertEquals(0.007, searchValues.get(2).getLeft(), delta);
+        assertEquals(0.00116, searchValues.get(2).getRight(), delta);
+        assertEquals(0.341, searchValues.get(searchValues.size() - 1).getLeft(), delta);
+        assertEquals(0.324, searchValues.get(searchValues.size() - 2).getLeft(), delta);
+        assertEquals(1.05,
+                searchValues.get(searchValues.size() - 1).getRight() / searchValues.get(searchValues.size() - 2).getRight(), delta);
+        assertTrue(searchValues.size() >= 60);
+    }
 
     @Test
     public void searchValuesTest()

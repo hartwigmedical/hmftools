@@ -9,6 +9,8 @@ import com.hartwig.hmftools.common.amber.AmberBase;
 import com.hartwig.hmftools.common.amber.BaseDepthData;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 
+import org.checkerframework.checker.units.qual.A;
+
 public class PositionEvidence implements GenomePosition
 {
     public final String Chromosome;
@@ -72,6 +74,20 @@ public class PositionEvidence implements GenomePosition
             return Double.NaN;
         }
         return (double) AltSupport / ReadDepth;
+    }
+
+    public double symmetricVaf()
+    {
+        if(ReadDepth == 0)
+        {
+            return Double.NaN;
+        }
+        int k = AltSupport;
+        if(k > ReadDepth / 2)
+        {
+            k = ReadDepth - k;
+        }
+        return (double) k / ReadDepth;
     }
 
     public String ref()

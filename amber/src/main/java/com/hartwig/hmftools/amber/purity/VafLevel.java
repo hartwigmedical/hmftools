@@ -19,6 +19,7 @@ public class VafLevel
     private static final double LOWER_CDF_BOUND_FOR_CAPTURE = 0.16;
     private static final double UPPER_CDF_BOUND_FOR_CAPTURE = 0.84;
     private final double Level;
+    private final double StepToNextLevel;
     private final List<PositionEvidence> PointsTested = new ArrayList<>();
     private final List<PositionEvidence> PointsInHomozygousBand = new ArrayList<>();
     private final List<PositionEvidence> PointsInHeterozygousBand = new ArrayList<>();
@@ -26,6 +27,13 @@ public class VafLevel
     public VafLevel(double Level)
     {
         this.Level = Level;
+        StepToNextLevel = 0.00001;
+    }
+
+    public VafLevel(double Level, double StepToNextLevel)
+    {
+        this.Level = Level;
+        this.StepToNextLevel = StepToNextLevel;
     }
 
     public boolean hasSufficientDepthForEventDetection(PositionEvidence evidence)
@@ -47,7 +55,9 @@ public class VafLevel
         }
         BinomialDistribution binomialHomozygous = new BinomialDistribution(n, Level);
         double cdfHomozygous = binomialHomozygous.cumulativeProbability(k);
-        if(cdfHomozygous > LOWER_CDF_BOUND_FOR_CAPTURE && cdfHomozygous < UPPER_CDF_BOUND_FOR_CAPTURE)
+        final boolean capturedByCdfHom = cdfHomozygous > LOWER_CDF_BOUND_FOR_CAPTURE && cdfHomozygous < UPPER_CDF_BOUND_FOR_CAPTURE;
+        final boolean capturedByStepHom = Math.abs(evidence.symmetricVaf() - Level) < StepToNextLevel;
+        if(capturedByCdfHom || capturedByStepHom)
         {
             PointsInHomozygousBand.add(evidence);
         }
@@ -55,7 +65,9 @@ public class VafLevel
         {
             BinomialDistribution binomialHeterozygous = new BinomialDistribution(n, Level / 2);
             double cdfHeterozygous = binomialHeterozygous.cumulativeProbability(k);
-            if(cdfHeterozygous > LOWER_CDF_BOUND_FOR_CAPTURE && cdfHeterozygous < UPPER_CDF_BOUND_FOR_CAPTURE)
+            final boolean capturedByCdfHet = cdfHeterozygous > LOWER_CDF_BOUND_FOR_CAPTURE && cdfHeterozygous < UPPER_CDF_BOUND_FOR_CAPTURE;
+            final boolean capturedByStepHet = Math.abs(evidence.symmetricVaf() - Level / 2) < StepToNextLevel / 2;
+            if(capturedByCdfHet || capturedByStepHet)
             {
                 PointsInHeterozygousBand.add(evidence);
             }
@@ -103,7 +115,15 @@ public class VafLevel
     @Override
     public String toString()
     {
-        return String.format("VafLevel{vaf=%.2f, tested: %d, homozygous: %d, heterozygous: %d}", Level, PointsTested.size(), PointsInHomozygousBand.size(), PointsInHeterozygousBand.size());
+        return String.format("VafLevel{vaf=%.2f, step=%.2f, tested: %d, homozygous: %d, heterozygous: %d}", Level, StepToNextLevel, PointsTested.size(), PointsInHomozygousBand.size(), PointsInHeterozygousBand.size());
+    }
+
+    public Set<PositionEvidence> allCapturedPoints()
+    {
+        Set<PositionEvidence> result = new HashSet<>();
+        result.addAll(PointsInHomozygousBand);
+        result.addAll(PointsInHeterozygousBand);
+        return result;
     }
 
     private <T extends Comparable<T>> double calculateAucForClassifier(final VafClassifier<PositionEvidence, T> chrArmClassifier)
@@ -115,13 +135,5 @@ public class VafLevel
             checker.offer(evidence);
         }
         return checker.unevenDistributionCost().unevenDistributionCost();
-    }
-
-    private Set<PositionEvidence> allCapturedPoints()
-    {
-        Set<PositionEvidence> result = new HashSet<>();
-        result.addAll(PointsInHomozygousBand);
-        result.addAll(PointsInHeterozygousBand);
-        return result;
     }
 }
