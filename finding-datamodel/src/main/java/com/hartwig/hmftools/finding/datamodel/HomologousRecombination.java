@@ -2,8 +2,6 @@ package com.hartwig.hmftools.finding.datamodel;
 
 import java.util.List;
 
-import com.hartwig.hmftools.datamodel.chord.ChordStatus;
-
 import io.soabase.recordbuilder.core.RecordBuilder;
 import jakarta.validation.constraints.NotNull;
 
@@ -13,10 +11,31 @@ public record HomologousRecombination(
         double brca1Value,
         double brca2Value,
         double hrdValue,
-        @NotNull ChordStatus hrStatus,
+        @NotNull HrStatus hrStatus,
         @NotNull String hrdType,
         @NotNull List<GainDeletion> lohCopyNumbers,
         @NotNull List<String> genes
 ) implements Finding
 {
+    public enum HrStatus
+    {
+        CANNOT_BE_DETERMINED("Cannot be determined"),
+        HR_PROFICIENT("Proficient"),
+        HR_DEFICIENT("Deficient"),
+        UNKNOWN("Unknown");
+
+        @NotNull
+        private final String display;
+
+        HrStatus(@NotNull final String display)
+        {
+            this.display = display;
+        }
+
+        @NotNull
+        public String display()
+        {
+            return display;
+        }
+    }
 }

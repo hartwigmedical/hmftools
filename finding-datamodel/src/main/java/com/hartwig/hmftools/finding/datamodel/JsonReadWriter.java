@@ -18,7 +18,6 @@ import java.util.zip.GZIPOutputStream;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.TypeAdapterFactory;
-import com.hartwig.hmftools.datamodel.LocalDateAdapter;
 
 import jakarta.validation.constraints.NotNull;
 
@@ -37,7 +36,6 @@ public class JsonReadWriter<T>
         }
 
         gson = gsonBuilder.serializeNulls().serializeSpecialFloatingPointValues().setPrettyPrinting()
-                .registerTypeAdapter(LocalDate.class, new LocalDateAdapter())
                 .create();
     }
 
