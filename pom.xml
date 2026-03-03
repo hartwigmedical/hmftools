@@ -229,7 +229,7 @@
             <dependency>
                 <groupId>com.hartwig</groupId>
                 <artifactId>hmf-common</artifactId>
-                <version>${hmf-common.version}</version>
+                <version>local-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>
@@ -239,12 +239,12 @@
             <dependency>
                 <groupId>com.hartwig</groupId>
                 <artifactId>finding-datamodel</artifactId>
-                <version>${finding-datamodel.version}</version>
+                <version>local-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>
                 <artifactId>orange-datamodel</artifactId>
-                <version>${orange-datamodel.version}</version>
+                <version>local-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>com.github.samtools</groupId>

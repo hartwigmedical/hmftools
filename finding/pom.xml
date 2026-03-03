@@ -10,7 +10,8 @@
 
     <artifactId>finding</artifactId>
     <packaging>jar</packaging>
-    <version>${finding.version}</version>
+    <!--suppress MavenRedundantVersion -->
+    <version>local-SNAPSHOT</version>
     <name>HMF Tools - Finding</name>
 
     <dependencies>
