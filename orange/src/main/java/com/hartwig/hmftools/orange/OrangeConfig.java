@@ -55,7 +55,6 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOp
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreateOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
-import static com.hartwig.hmftools.orange.util.PathUtil.mandatoryPath;
 import static com.hartwig.hmftools.orange.util.PathUtil.optionalPath;
 
 import java.nio.file.Files;
@@ -192,7 +191,7 @@ public class OrangeConfig
         LinxSomaticDataDirectory = pathResolver.resolveMandatoryToolDirectory(LINX_DIR_CFG, defaultToolDirectories.linxSomaticDir());
         LinxPlotDirectory = optionalPath(pathResolver.resolveOptionalToolPlotsDirectory(LINX_PLOT_DIR_CFG, defaultToolDirectories.linxSomaticDir()));
 
-        QSeeDirectory = pathResolver.resolveMandatoryToolDirectory(QSEE_DIR_CFG, defaultToolDirectories.qsSeeDir());
+        QSeeDirectory = pathResolver.resolveMandatoryToolDirectory(QSEE_DIR_CFG, defaultToolDirectories.qseeDir());
 
         if(ReferenceId != null)
         {

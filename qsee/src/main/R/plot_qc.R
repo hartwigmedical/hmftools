@@ -288,10 +288,13 @@ plot_missing_data <- function(plot_labels = labs()){
       )
 }
 
-force_render <- function(p) {
-   ## Force warnings to be shown immediately
-   invisible(ggplot2::ggplotGrob(p))
-   return(p)
+render_now <- function() structure(list(), class = "render_now")
+
+ggplot_add.render_now <- function(object, plot, object_name) {
+   #' Force warnings to be shown immediately.
+   #' Usage: plot + render_now()
+   ggplot2::ggplotGrob(plot)
+   plot
 }
 
 ## =============================
@@ -388,7 +391,8 @@ PLOTS[[FEATURE_TYPE$COVERAGE_DISTRIBUTION]] <- local({
    }
    
    plot_distribution(plot_data, x = "ReadDepth", mark_sample_peak = TRUE, invert_normal = TRUE, hlines = 0) +
-      plot_labels
+      plot_labels +
+      render_now()
 })
 
 PLOTS[[FEATURE_TYPE$FRAG_LENGTH_DISTRIBUTION]] <- local({
@@ -402,7 +406,8 @@ PLOTS[[FEATURE_TYPE$FRAG_LENGTH_DISTRIBUTION]] <- local({
    }
    
    plot_distribution(plot_data, x = "FragLength", mark_sample_peak = TRUE, invert_normal = TRUE, hlines = 0) +
-      plot_labels
+      plot_labels +
+      render_now()
 })
 
 PLOTS[[FEATURE_TYPE$GC_BIAS]] <- local({
@@ -416,7 +421,8 @@ PLOTS[[FEATURE_TYPE$GC_BIAS]] <- local({
    }
    
    plot_distribution(plot_data, x = "GCBucket", mark_sample_peak = FALSE, invert_normal = FALSE) +
-      plot_labels
+      plot_labels +
+      render_now()
 })
 
 ## =============================
@@ -551,7 +557,8 @@ PLOTS[[FEATURE_TYPE$DUPLICATE_FREQ]] <- local({
       coord_flip() +
       theme(
          panel.grid.major.x = element_line(color = "grey90", linewidth = 0.25),
-      )
+      ) +
+      render_now()
 })
 
 PLOTS[[FEATURE_TYPE$DISCORDANT_FRAG_FREQ]] <- local({
@@ -566,15 +573,14 @@ PLOTS[[FEATURE_TYPE$DISCORDANT_FRAG_FREQ]] <- local({
    
    plot_data <- plot_data %>% dplyr::mutate(DiscordantFragType = reverse_levels(DiscordantFragType))
    
-   p <- plot_pairwise_comparison(plot_data, x = "DisplayName", plot_type = box_or_bar_plot()) + 
+   plot_pairwise_comparison(plot_data, x = "DisplayName", plot_type = box_or_bar_plot()) + 
       scale_y_continuous(transform = "log10", labels = function(x) format(x, scientific = FALSE, drop0trailing = TRUE, trim = TRUE)) +
       plot_labels +
       coord_flip() +
       theme(
          panel.grid.major.x = element_line(color = "grey90", linewidth = 0.25),
-      )
-   
-   force_render(p)
+      ) +
+      render_now()
 })
 
 PLOTS[[FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD]] <- local({
@@ -611,7 +617,8 @@ PLOTS[[FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD]] <- local({
       theme(
          panel.grid.major.x = element_line(color = "grey90", linewidth = 0.25),
          plot.title = element_text(hjust = 0.5)
-      )
+      ) +
+      render_now()
 })
 
 PLOTS[[FEATURE_TYPE$BQR_BY_ORIG_QUAL]] <- local({
@@ -633,7 +640,8 @@ PLOTS[[FEATURE_TYPE$BQR_BY_ORIG_QUAL]] <- local({
       plot_labels + 
       theme(
          axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1, size = 7),
-      )
+      ) +
+      render_now()
 })
 
 PLOTS[[FEATURE_TYPE$BQR_BY_SNV96_CONTEXT]] <- local({
@@ -659,7 +667,8 @@ PLOTS[[FEATURE_TYPE$BQR_BY_SNV96_CONTEXT]] <- local({
       plot_labels +
       theme(
          axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, size = 6),
-      )
+      ) +
+      render_now()
 })
 
 PLOTS[[FEATURE_TYPE$MS_INDEL_ERROR_RATES]] <- local({
@@ -679,7 +688,8 @@ PLOTS[[FEATURE_TYPE$MS_INDEL_ERROR_RATES]] <- local({
       plot_labels +
       theme(
          panel.grid.major = element_line(color = "grey90", linewidth = 0.25)
-      )
+      ) +
+      render_now()
 })
 
 PLOTS[[FEATURE_TYPE$MS_INDEL_ERROR_BIAS]] <- local({
@@ -706,7 +716,8 @@ PLOTS[[FEATURE_TYPE$MS_INDEL_ERROR_BIAS]] <- local({
       plot_labels +
       theme(
          panel.grid.major = element_line(color = "grey90", linewidth = 0.25)
-      )
+      ) +
+      render_now()
 })
 
 ## =============================
@@ -908,9 +919,8 @@ plot_sub_table <- function(plot_data, show_title = FALSE, show_sample_type_label
          axis.line.y = element_blank(),
          plot.margin = margin(b = 10, r = 15, l = 2),
          legend.position = "none"
-      )
-   
-   subplot_pairwise_comparison <- force_render(subplot_pairwise_comparison)
+      ) +
+      render_now()
 
    ## Combine plots =============================
    subplots_combined <- patchwork::wrap_plots(subplot_values, subplot_pairwise_comparison, nrow = 1)
@@ -1149,10 +1159,14 @@ create_report <- local({
    "
    
    plots_combined <- patchwork::wrap_plots(plots, design = design) + REPORT_TITLE
-   
+
+   ## Prevent ggplot build warnings showing again - these are already shown when calling render_now().
+   ## Draw/device warnings still can be shown with ggsave().
+   plots_combined <- ggplotGrob(plots_combined)
+
    LOGGER$info("Writing report to: %s", OUTPUT_PATH)
    ggsave(
-      filename = OUTPUT_PATH, plot = plots_combined, 
+      filename = OUTPUT_PATH, plot = plots_combined,
       device = "pdf", width = 20, height = 12, units = "in"
    )
 })
