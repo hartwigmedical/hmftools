@@ -18,6 +18,7 @@
             <artifactId>orange-datamodel</artifactId>
         </dependency>
         <dependency>
+            <!-- need jakarta validation for typescript generator, until we can use jspecify -->
             <groupId>jakarta.validation</groupId>
             <artifactId>jakarta.validation-api</artifactId>
             <version>3.0.2</version>
