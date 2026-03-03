@@ -23,7 +23,7 @@ public class TestFindingRecordFactory {
                         .refGenomeVersion(OrangeRefGenomeVersion.V37)
                         .build())
                 .purityPloidyFit(TestFindingFactory.purityPloidyFitBuilder().build())
-                .predictedTumorOrigin(TestFindingFactory.buildFindingItem(FindingsStatus.OK, TestFindingFactory.predictedTumorOriginBuilder().build()))
+                .predictedTumorOrigins(TestFindingFactory.buildFindingsList(FindingsStatus.OK, List.of(TestFindingFactory.predictedTumorOriginBuilder().build())))
                 .homologousRecombination(TestFindingFactory.buildFindingItem(FindingsStatus.OK, TestFindingFactory.homologousRecombinationBuilder().build()))
                 .microsatelliteStability(TestFindingFactory.buildFindingItem(FindingsStatus.OK, TestFindingFactory.microsatelliteStabilityBuilder().build()))
                 .tumorMutationStatus(TestFindingFactory.buildFindingItem(FindingsStatus.OK, TestFindingFactory.mutationStatusBuilder().build()))

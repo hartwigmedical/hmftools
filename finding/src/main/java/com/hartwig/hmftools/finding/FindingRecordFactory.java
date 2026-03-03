@@ -18,11 +18,9 @@ import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.driver.panel.DriverGeneFile;
 import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
-import com.hartwig.hmftools.finding.datamodel.PredictedTumorOriginBuilder;
+import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.driver.DriverSource;
-import com.hartwig.hmftools.finding.clinicaltranscript.ClinicalTranscriptFile;
-import com.hartwig.hmftools.finding.clinicaltranscript.ClinicalTranscriptsModel;
 import com.hartwig.hmftools.datamodel.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
@@ -36,6 +34,8 @@ import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
 import com.hartwig.hmftools.datamodel.virus.VirusLikelihoodType;
+import com.hartwig.hmftools.finding.clinicaltranscript.ClinicalTranscriptFile;
+import com.hartwig.hmftools.finding.clinicaltranscript.ClinicalTranscriptsModel;
 import com.hartwig.hmftools.finding.datamodel.DriverFieldsBuilder;
 import com.hartwig.hmftools.finding.datamodel.DriverFindingList;
 import com.hartwig.hmftools.finding.datamodel.DriverFindingListBuilder;
@@ -57,6 +57,7 @@ import com.hartwig.hmftools.finding.datamodel.MicrosatelliteStabilityBuilder;
 import com.hartwig.hmftools.finding.datamodel.PharmocoGenotype;
 import com.hartwig.hmftools.finding.datamodel.PharmocoGenotypeBuilder;
 import com.hartwig.hmftools.finding.datamodel.PredictedTumorOrigin;
+import com.hartwig.hmftools.finding.datamodel.PredictedTumorOriginBuilder;
 import com.hartwig.hmftools.finding.datamodel.PurityPloidyFitBuilder;
 import com.hartwig.hmftools.finding.datamodel.PurityPloidyFitQcBuilder;
 import com.hartwig.hmftools.finding.datamodel.TumorMutationStatus;
@@ -65,6 +66,7 @@ import com.hartwig.hmftools.finding.datamodel.Virus;
 import com.hartwig.hmftools.finding.datamodel.VirusBuilder;
 import com.hartwig.hmftools.finding.datamodel.VisualisationFiles;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 // to reduce duplication, the findings are collected from
@@ -113,7 +115,7 @@ public class FindingRecordFactory
 
         VisualisationFiles visualisationFiles = VisualisationFilesFactory.create(orangeRecord.plots());
 
-        return builder.predictedTumorOrigin(createPredictedTumorOrigin(orangeRecord.cuppa()))
+        return builder.predictedTumorOrigins(createPredictedTumorOriginList(orangeRecord.cuppa()))
                 .homologousRecombination(createHomologousRecombination(orangeRecord.chord(), purple, linx, somaticGainDeletions))
                 .viruses(createVirusFindings(orangeRecord.virusInterpreter(), eventFactory))
                 .hlaAlleles(HlaAlleleFactory.createHlaAllelesFindings(orangeRecord, hasReliablePurity, eventFactory))
@@ -125,7 +127,8 @@ public class FindingRecordFactory
     // return the gain deletions cause they are needed by HRD, will see if we can find a better way
     private static DriverFindingList<GainDeletion> addPurpleFindings(
             FindingRecordBuilder builder, final OrangeRecord orangeRecord,
-            final @Nullable ClinicalTranscriptsModel clinicalTranscriptsModel, Map<String, DriverGene> driverGenes, EventFactory eventFactory)
+            final @Nullable ClinicalTranscriptsModel clinicalTranscriptsModel, Map<String, DriverGene> driverGenes,
+            EventFactory eventFactory)
     {
         boolean hasRefSample = orangeRecord.refSample() != null;
 
@@ -184,23 +187,29 @@ public class FindingRecordFactory
                 .build();
     }
 
-    private static FindingItem<PredictedTumorOrigin> createPredictedTumorOrigin(@Nullable CuppaData cuppa)
+    private static FindingList<PredictedTumorOrigin> createPredictedTumorOriginList(@Nullable CuppaData cuppa)
     {
         if(cuppa != null)
         {
-            return FindingItemBuilder.<PredictedTumorOrigin>builder()
+            return FindingListBuilder.<PredictedTumorOrigin>builder()
                     .status(FindingsStatus.OK)
-                    .finding(PredictedTumorOriginBuilder.builder()
-                            .findingKey(FindingKeys.predictedTumorOrigin(cuppa.bestPrediction().cancerType()))
-                            .cancerType(cuppa.bestPrediction().cancerType())
-                            .likelihood(cuppa.bestPrediction().likelihood())
-                            .build())
+                    .findings(List.of(createPredictedTumorOrigin(cuppa.bestPrediction())))
                     .build();
         }
         else
         {
-            return FindingUtil.notAvailableFindingItem();
+            return FindingUtil.notAvailableFindingList();
         }
+    }
+
+    @NotNull
+    private static PredictedTumorOrigin createPredictedTumorOrigin(CuppaPrediction prediction)
+    {
+        return PredictedTumorOriginBuilder.builder()
+                .findingKey(FindingKeys.predictedTumorOrigin(prediction.cancerType()))
+                .cancerType(prediction.cancerType())
+                .likelihood(prediction.likelihood())
+                .build();
     }
 
     private static FindingItem<HomologousRecombination> createHomologousRecombination(@Nullable ChordRecord chord,
