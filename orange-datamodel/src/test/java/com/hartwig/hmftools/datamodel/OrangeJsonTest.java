@@ -8,7 +8,9 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.chord.ChordStatus;
@@ -222,6 +224,20 @@ public class OrangeJsonTest
         for(PurpleDriver driver : drivers)
         {
             if(driver.gene().equals(geneToFind))
+            {
+                return driver;
+            }
+        }
+
+        throw new IllegalStateException("Could not find driver for gene: " + geneToFind);
+    }
+
+    @NotNull
+    private static PurpleDriver findDriverByGeneTranscript(final Iterable<PurpleDriver> drivers, final String geneToFind, final String transcriptToFind)
+    {
+        for(PurpleDriver driver : drivers)
+        {
+            if(driver.gene().equals(geneToFind) && driver.transcript().equals(transcriptToFind))
             {
                 return driver;
             }
