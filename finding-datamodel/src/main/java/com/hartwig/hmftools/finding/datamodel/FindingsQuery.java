@@ -3,8 +3,6 @@ package com.hartwig.hmftools.finding.datamodel;
 import java.util.List;
 import java.util.Set;
 
-import com.hartwig.hmftools.datamodel.driver.DriverSource;
-
 @SuppressWarnings("unused")
 public class FindingsQuery<T extends Driver>
 {

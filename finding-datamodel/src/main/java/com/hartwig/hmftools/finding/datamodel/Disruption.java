@@ -1,9 +1,5 @@
 package com.hartwig.hmftools.finding.datamodel;
 
-import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
-import com.hartwig.hmftools.datamodel.driver.DriverSource;
-import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
-
 import org.jspecify.annotations.Nullable;
 
 import io.soabase.recordbuilder.core.RecordBuilder;
@@ -19,7 +15,7 @@ public record Disruption(
         @NotNull String gene,
         @NotNull String transcript,
         boolean isCanonical,
-        @NotNull LinxBreakendType breakendType,
+        @NotNull Breakend.Type breakendType,
         @Nullable Double disruptedCopies,
         @Nullable Double undisruptedCopies,
         @Nullable Integer clusterId,

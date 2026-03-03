@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.finding.datamodel;
 
-import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
-import com.hartwig.hmftools.datamodel.driver.DriverSource;
-
 import org.jspecify.annotations.Nullable;
 
 import io.soabase.recordbuilder.core.RecordBuilder;
@@ -38,7 +35,7 @@ public record GainDeletion(
 
     public enum GeneExtent
     {
-        WHOLE_GENE,
+        FULL_GENE,
         PARTIAL_GENE
     }
 

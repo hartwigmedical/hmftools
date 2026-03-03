@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.finding.datamodel;
 
-import com.hartwig.hmftools.datamodel.purple.PurpleTumorMutationalStatus;
-
 import io.soabase.recordbuilder.core.RecordBuilder;
 import jakarta.validation.constraints.NotNull;
 
@@ -9,10 +7,30 @@ import jakarta.validation.constraints.NotNull;
 public record TumorMutationStatus(
         @NotNull String findingKey,
         double tumorMutationalBurdenPerMb,
-        @NotNull PurpleTumorMutationalStatus tumorMutationalBurdenStatus,
+        @NotNull Status tumorMutationalBurdenStatus,
         int tumorMutationalLoad,
-        @NotNull PurpleTumorMutationalStatus tumorMutationalLoadStatus,
+        @NotNull Status tumorMutationalLoadStatus,
         int svTumorMutationalBurden
 ) implements Finding
 {
+    public enum Status
+    {
+        HIGH("High"),
+        LOW("Low"),
+        UNKNOWN("Unknown");
+
+        @NotNull
+        private final String display;
+
+        Status(@NotNull final String display)
+        {
+            this.display = display;
+        }
+
+        @NotNull
+        public String display()
+        {
+            return display;
+        }
+    }
 }

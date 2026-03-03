@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.finding.datamodel;
 
-import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
-import com.hartwig.hmftools.datamodel.driver.DriverSource;
-
 import jakarta.validation.constraints.NotNull;
 
 public interface Driver extends Finding

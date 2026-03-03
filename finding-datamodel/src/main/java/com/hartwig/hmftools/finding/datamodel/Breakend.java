@@ -1,10 +1,5 @@
 package com.hartwig.hmftools.finding.datamodel;
 
-import com.hartwig.hmftools.datamodel.gene.TranscriptCodingType;
-import com.hartwig.hmftools.datamodel.gene.TranscriptRegionType;
-import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
-import com.hartwig.hmftools.datamodel.linx.LinxGeneOrientation;
-
 import io.soabase.recordbuilder.core.RecordBuilder;
 import jakarta.validation.constraints.NotNull;
 
@@ -17,10 +12,10 @@ public record Breakend(
     @NotNull String chromosomeBand,
     @NotNull String transcript,
     boolean isCanonical,
-    @NotNull LinxGeneOrientation geneOrientation,
+    @NotNull GeneOrientation geneOrientation,
     boolean disruptive,
     double undisruptedCopyNumber,
-    @NotNull LinxBreakendType type,
+    @NotNull Type type,
     @NotNull TranscriptRegionType regionType,
     @NotNull TranscriptCodingType codingType,
     int nextSpliceExonRank,
@@ -29,4 +24,40 @@ public record Breakend(
     int exonDown,
     double junctionCopyNumber)
 {
+    public enum Type
+    {
+        BND,
+        DEL,
+        DUP,
+        INF,
+        INS,
+        INV,
+        SGL
+    }
+
+    public enum GeneOrientation
+    {
+        UPSTREAM,
+        DOWNSTREAM
+    }
+
+    public enum TranscriptRegionType
+    {
+        UNKNOWN,
+        UPSTREAM,
+        EXONIC,
+        INTRONIC,
+        IG,
+        DOWNSTREAM
+    }
+
+    public enum TranscriptCodingType
+    {
+        UNKNOWN,
+        CODING,
+        UTR_5P,
+        UTR_3P,
+        NON_CODING,
+        ENHANCER
+    }
 }
