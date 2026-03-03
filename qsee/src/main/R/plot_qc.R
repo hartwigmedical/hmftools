@@ -1,13 +1,17 @@
 options(warn = 1)
 
+if(!interactive()){
+  ## Prevent empty file Rplots.pdf from being written
+  ## See: https://stackoverflow.com/questions/6535927/how-do-i-prevent-rplots-pdf-from-being-generated
+  pdf(NULL)
+}
+
 suppressPackageStartupMessages(library(dplyr))
 
 library(ggplot2)
 theme_set(
    theme_bw() +
-   theme(
-      panel.grid = element_blank()
-   )
+   theme(panel.grid = element_blank())
 )
 
 library(patchwork)
