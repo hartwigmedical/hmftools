@@ -75,17 +75,15 @@ import org.jetbrains.annotations.Nullable;
 public class OrangeAlgo
 {
     private final Map<String,DriverGene> mDriverGenes;
-    private final Map<String, String> mEtiologyPerSignature;
+    private final Map<String,String> mEtiologyPerSignature;
     private final PlotManager mPlotManager;
 
     public static OrangeAlgo fromConfig(final OrangeConfig config) throws IOException
     {
-        LOGGER.info("Reading driver genes from {}", config.DriverGenePanelTsv);
         List<DriverGene> driverGenes = DriverGeneFile.read(config.DriverGenePanelTsv);
-        LOGGER.info(" Read {} driver genes", driverGenes.size());
+        LOGGER.info(" Read {} driver genes from ", driverGenes.size(), config.DriverGenePanelTsv);
 
         Map<String,String> etiologyPerSignature = SnvSigUtils.loadSnvSignatureEtiologies();
-        LOGGER.info(" Read {} signatures etiology", etiologyPerSignature.size());
 
         String outputDir = config.OutputDir;
         PlotManager plotManager = !outputDir.isEmpty() ? new FileBasedPlotManager(outputDir) : new DummyPlotManager();
@@ -94,7 +92,7 @@ public class OrangeAlgo
     }
 
     private OrangeAlgo(
-            final List<DriverGene> driverGenes, final Map<String, String> etiologyPerSignature, final PlotManager plotManager)
+            final List<DriverGene> driverGenes, final Map<String,String> etiologyPerSignature, final PlotManager plotManager)
     {
         mDriverGenes = Maps.newHashMap();
         driverGenes.forEach(x -> mDriverGenes.put(x.gene(), x));

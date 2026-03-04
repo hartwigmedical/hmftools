@@ -871,13 +871,6 @@
       "percent": 0.12212
     }
   ],
-  "cohortEvaluations": {
-    "SV_TMB": {
-      "cancerType": "Skin",
-      "panCancerPercentile": 0.22,
-      "cancerTypePercentile": 0.34
-    }
-  },
   "plots": {
     "purpleInputPlot": "plot/tumor_sample.input.png",
     "purpleFinalCircosPlot": "plot/tumor_sample.circos.png",

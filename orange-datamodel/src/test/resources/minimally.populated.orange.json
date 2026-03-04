@@ -425,7 +425,6 @@
     }
   ],
   "sigAllocations": null,
-  "cohortEvaluations": {},
   "plots": {
     "purpleInputPlot": "",
     "purpleFinalCircosPlot": "plot/empty.circos.png",
