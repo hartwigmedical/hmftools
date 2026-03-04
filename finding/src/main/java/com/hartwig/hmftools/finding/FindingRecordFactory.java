@@ -19,6 +19,8 @@ import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.driver.panel.DriverGeneFile;
 import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
+import com.hartwig.hmftools.finding.datamodel.ChromosomeArmCopyNumber;
+import com.hartwig.hmftools.finding.datamodel.ChromosomeArmCopyNumberBuilder;
 import com.hartwig.hmftools.finding.datamodel.DriverInterpretation;
 import com.hartwig.hmftools.finding.datamodel.DriverSource;
 import com.hartwig.hmftools.finding.clinicaltranscript.ClinicalTranscriptFile;
@@ -162,12 +164,36 @@ public class FindingRecordFactory
         DriverFindingList<GainDeletion> somaticGainDeletions =
                 GainDeletionFactory.somaticGainDeletionFindings(orangeRecord.refGenomeVersion(), findingsStatus, purple);
 
+        FindingList<ChromosomeArmCopyNumber> chrArmCopyNumber = new FindingList<>(
+                FindingsStatus.OK,
+                purple.armCopyNumberAbberations().stream()
+                        .map(o -> ChromosomeArmCopyNumberBuilder.builder()
+                                .findingKey(FindingKeys.chromosomeArmCopyNumber(o.chromosome(), o.arm()))
+                                .chromosome(o.chromosome())
+                                .arm(switch (o.arm()) {
+                                    case "P" -> ChromosomeArmCopyNumber.ChromosomeArm.P;
+                                    case "Q" -> ChromosomeArmCopyNumber.ChromosomeArm.Q;
+                                    default -> throw new IllegalArgumentException("Unknown arm: " + o.arm());
+                                })
+                                .type(switch (o.type()) {
+                                    case "GAIN" -> ChromosomeArmCopyNumber.Type.GAIN;
+                                    case "LOSS" -> ChromosomeArmCopyNumber.Type.LOSS;
+                                    case "DIPLOID" -> ChromosomeArmCopyNumber.Type.DIPLOID;
+                                    default -> throw new IllegalArgumentException("Unknown type: " + o.type());
+                                })
+                                .copyNumber(o.copyNumber())
+                                .relativeCopyNumber(o.relativeCopyNumber())
+                                .build())
+                        .toList());
+
+
         builder.somaticSmallVariants(SmallVariantFactory.somaticSmallVariantFindings(purple, findingsStatus, clinicalTranscriptsModel, driverGenes))
                 .germlineSmallVariants(SmallVariantFactory.germlineSmallVariantFindings(hasRefSample, purple, clinicalTranscriptsModel, driverGenes))
                 .somaticGainDeletions(somaticGainDeletions)
                 .germlineGainDeletions(GainDeletionFactory.germlineGainDeletionFindings(hasRefSample, orangeRecord.refGenomeVersion(), purple))
                 .microsatelliteStability(createMicrosatelliteStability(purple, orangeRecord.linx(), somaticGainDeletions))
-                .tumorMutationStatus(createTumorMutationStatus(purple));
+                .tumorMutationStatus(createTumorMutationStatus(purple))
+                .chromosomeArmCopyNumbers(chrArmCopyNumber);
 
         return somaticGainDeletions;
     }
