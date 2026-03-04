@@ -2,7 +2,6 @@ package com.hartwig.hmftools.finding.datamodel;
 
 import java.util.Set;
 
-import io.soabase.recordbuilder.core.RecordBuilder;
 import jakarta.validation.constraints.NotNull;
 
 @SuppressWarnings("unused")
@@ -51,7 +50,7 @@ public record PurityPloidyFit(
 
         FAIL_CONTAMINATION,
         FAIL_NO_TUMOR,
-        FAIL_TINC;
+        FAIL_TINC
     }
 
     public enum GermlineAberration

@@ -4,7 +4,6 @@ import java.util.Set;
 
 import org.jspecify.annotations.Nullable;
 
-import io.soabase.recordbuilder.core.RecordBuilder;
 import jakarta.validation.constraints.NotNull;
 
 @RecordBuilder
@@ -36,6 +35,6 @@ public record HlaAllele(
         WARN_UNMATCHED_AMINO_ACID,
         WARN_LOW_COVERAGE,
         WARN_LOW_BASE_QUAL,
-        WARN_UNMATCHED_INDEL;
+        WARN_UNMATCHED_INDEL
     }
 }

@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.finding.datamodel;
 
-import io.soabase.recordbuilder.core.RecordBuilder;
 import jakarta.validation.constraints.NotNull;
 
 @RecordBuilder
