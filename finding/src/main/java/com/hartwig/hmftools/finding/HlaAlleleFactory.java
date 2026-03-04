@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -19,6 +20,7 @@ import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 
 // lilac shows two copies of HLA alleles even if they are the
 // same allele. This class combine the alleles and sum the copies
@@ -26,7 +28,7 @@ public class HlaAlleleFactory
 {
     private static final Logger LOGGER = LogManager.getLogger(HlaAlleleFactory.class);
 
-    static final Pattern HLA_REGEX = Pattern.compile("""
+    private static final Pattern HLA_REGEX = Pattern.compile("""
             ^(?<gene>[A-Z]+)\\*(?<alleleGroup>\\d{2}):(?<hlaProtein>\\d{2,3})N?$""");
     private static final String PASS = "PASS";
 
@@ -71,11 +73,7 @@ public class HlaAlleleFactory
         {
             LilacAllele lilacAllele = keyMap.getValue().get(0);
 
-            var matcher = HLA_REGEX.matcher(lilacAllele.allele());
-            if (!matcher.matches())
-            {
-                throw new IllegalStateException("Can't extract HLA gene, alleleGroup and hlaProtein from " + lilacAllele.allele());
-            }
+            var matcher = matchHlaRegEx(lilacAllele.allele());
             String gene = "HLA-" + matcher.group("gene");
             String geneClass = "MHC_CLASS_1";
             String alleleGroup = matcher.group("alleleGroup");
@@ -126,5 +124,16 @@ public class HlaAlleleFactory
 
         hlaAlleles.sort(HlaAllele.COMPARATOR);
         return hlaAlleles;
+    }
+
+    @NotNull
+    static Matcher matchHlaRegEx(String allele)
+    {
+        var matcher = HLA_REGEX.matcher(allele);
+        if(!matcher.matches())
+        {
+            throw new IllegalStateException("Can't extract HLA gene, alleleGroup and hlaProtein from " + allele);
+        }
+        return matcher;
     }
 }
