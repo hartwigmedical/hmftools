@@ -6,9 +6,9 @@
     * tumor mutational burden / load split
     * Variant dedup should move into findings?
     * Difference in matching of drivers?
-    * Something of a gene filter is used for homozygous disruptions? Also fusions
-    * isReported convenience function?
-
+    * Look into this variant logic  hgvsProteinImpact = if (shouldAnnotateAsSpliceOverNonsenseOrFrameshift) "p.?" else AminoAcid.forceSingleLetterAminoAcids(
+                                transcriptImpact.hgvsProteinImpact()
+                            ),
 
 * IFindingsList?
 * Move handling of UGT1A1 into findings model?
