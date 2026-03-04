@@ -76,7 +76,7 @@ public class HlaAlleleFactory
             {
                 throw new IllegalStateException("Can't extract HLA gene, alleleGroup and hlaProtein from " + lilacAllele.allele());
             }
-            String gene = matcher.group("gene");
+            String gene = "HLA-" + matcher.group("gene");
             String geneClass = "MHC_CLASS_1";
             String alleleGroup = matcher.group("alleleGroup");
             String hlaProtein = matcher.group("hlaProtein");
