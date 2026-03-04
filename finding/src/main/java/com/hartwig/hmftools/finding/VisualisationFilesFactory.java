@@ -54,6 +54,8 @@ public class VisualisationFilesFactory
                 .qseePlot(null)
                 .linxDriverPlots(linxDriverPlots)
                 .cuppaSummaryPlot(cuppaSummaryPlot)
+                //TODO: Fill this in
+                .qseePlot("")
                 .build();
     }
 

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.finding.datamodel;
 
+import java.util.Comparator;
+
 import jakarta.validation.constraints.NotNull;
 
 public enum DriverInterpretation
@@ -23,5 +25,9 @@ public enum DriverInterpretation
             return MEDIUM;
 
         return LOW;
+    }
+
+    public static Comparator<DriverInterpretation> highToLow() {
+        return Comparator.comparing(DriverInterpretation::ordinal).reversed();
     }
 }

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.finding.datamodel;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -16,6 +17,9 @@ public class TestFindingRecordFactory {
     public static FindingRecordBuilder createMinimalTestFindingRecordBuilder() {
         return FindingRecordBuilder.builder()
                 .metaProperties(MetaPropertiesBuilder.builder()
+                        .version("")
+                        .sampleId("")
+                        .samplingDate(LocalDate.of(2026, 1, 1))
                         .sequencingScope(SequencingScope.WHOLE_GENOME)
                         .refGenomeVersion(RefGenomeVersion.V37)
                         .build())

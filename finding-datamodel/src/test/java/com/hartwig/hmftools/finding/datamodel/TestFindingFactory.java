@@ -1,42 +1,51 @@
 package com.hartwig.hmftools.finding.datamodel;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 @SuppressWarnings("unused")
-public class TestFindingFactory {
+public class TestFindingFactory
+{
 
     @NotNull
-    public static <T extends Finding> FindingList<T> buildFindingsList(@NotNull FindingsStatus findingsStatus, @NotNull List<T> findings) {
+    public static <T extends Finding> FindingList<T> buildFindingsList(@NotNull FindingsStatus findingsStatus, @NotNull List<T> findings)
+    {
         return FindingListBuilder.<T>builder().status(findingsStatus).findings(findings).build();
     }
 
     @NotNull
     public static <T extends Driver> DriverFindingList<T> buildDriverFindingsList(@NotNull FindingsStatus findingsStatus,
-            @NotNull List<T> findings) {
+            @NotNull List<T> findings)
+    {
         return DriverFindingListBuilder.<T>builder().status(findingsStatus).findings(findings).build();
     }
 
     @NotNull
-    public static <T> FindingItem<T> buildFindingItem(@NotNull FindingsStatus findingsStatus, @NotNull T finding) {
+    public static <T> FindingItem<T> buildFindingItem(@NotNull FindingsStatus findingsStatus, @NotNull T finding)
+    {
         return FindingItemBuilder.<T>builder().status(findingsStatus).finding(finding).build();
     }
 
     @NotNull
-    public static PurityPloidyFitBuilder purityPloidyFitBuilder() {
-        return PurityPloidyFitBuilder.builder().qc(TestFindingFactory.qcBuilder().status(Set.of()).build());
+    public static PurityPloidyFitBuilder purityPloidyFitBuilder()
+    {
+        return PurityPloidyFitBuilder.builder()
+                .qc(TestFindingFactory.qcBuilder().status(Set.of()).build())
+                .fittedPurityMethod(PurityPloidyFit.FittedPurityMethod.NORMAL);
     }
 
     @NotNull
-    public static PurityPloidyFitQcBuilder qcBuilder() {
+    public static PurityPloidyFitQcBuilder qcBuilder()
+    {
         return PurityPloidyFitQcBuilder.builder();
     }
 
     @NotNull
-    public static HomologousRecombinationBuilder homologousRecombinationBuilder() {
+    public static HomologousRecombinationBuilder homologousRecombinationBuilder()
+    {
         return HomologousRecombinationBuilder.builder()
                 .findingKey("")
                 .hrdType("")
@@ -49,7 +58,8 @@ public class TestFindingFactory {
     }
 
     @NotNull
-    public static MicrosatelliteStabilityBuilder microsatelliteStabilityBuilder() {
+    public static MicrosatelliteStabilityBuilder microsatelliteStabilityBuilder()
+    {
         return MicrosatelliteStabilityBuilder.builder()
                 .findingKey("")
                 .microsatelliteStatus(MicrosatelliteStability.MicrosatelliteStatus.UNKNOWN)
@@ -58,7 +68,8 @@ public class TestFindingFactory {
     }
 
     @NotNull
-    public static TumorMutationStatusBuilder mutationStatusBuilder() {
+    public static TumorMutationStatusBuilder mutationStatusBuilder()
+    {
         return TumorMutationStatusBuilder.builder()
                 .findingKey("")
                 .tumorMutationalLoad(0)
@@ -69,20 +80,30 @@ public class TestFindingFactory {
     }
 
     @NotNull
-    public static PredictedTumorOriginBuilder predictedTumorOriginBuilder() {
-        return PredictedTumorOriginBuilder.builder().findingKey("");
+    public static PredictedTumorOriginBuilder predictedTumorOriginBuilder()
+    {
+        return PredictedTumorOriginBuilder.builder()
+                .findingKey("")
+                .mode(PredictedTumorOrigin.CuppaMode.WGS)
+                .cancerType("")
+                .snvPairwiseClassifier(0.0)
+                .genomicPositionClassifier(0.0)
+                .featureClassifier(0.0)
+                .altSjCohortClassifier(0.0)
+                .expressionPairwiseClassifier(0.0);
     }
 
     @NotNull
-    public static SmallVariantBuilder variantBuilder() {
+    public static SmallVariantBuilder variantBuilder()
+    {
         return SmallVariantBuilder.builder()
                 .driver(driverFields(true, DriverInterpretation.HIGH))
                 .type(SmallVariant.VariantType.SNP)
-                .gene(Strings.EMPTY)
-                .chromosome(Strings.EMPTY)
+                .gene("")
+                .chromosome("")
                 .position(0)
-                .ref(Strings.EMPTY)
-                .alt(Strings.EMPTY)
+                .ref("")
+                .alt("")
                 .adjustedCopyNumber(0D)
                 .minorAlleleCopyNumber(0D)
                 .variantCopyNumber(0D)
@@ -99,16 +120,18 @@ public class TestFindingFactory {
     }
 
     @NotNull
-    public static SmallVariantAllelicDepthBuilder depthBuilder() {
+    public static SmallVariantAllelicDepthBuilder depthBuilder()
+    {
         return SmallVariantAllelicDepthBuilder.builder().totalReadCount(0).alleleReadCount(0);
     }
 
     @NotNull
-    public static SmallVariantTranscriptImpactBuilder transcriptImpactBuilder() {
+    public static SmallVariantTranscriptImpactBuilder transcriptImpactBuilder()
+    {
         return SmallVariantTranscriptImpactBuilder.builder()
-                .transcript(Strings.EMPTY)
-                .hgvsCodingImpact(Strings.EMPTY)
-                .hgvsProteinImpact(Strings.EMPTY)
+                .transcript("")
+                .hgvsCodingImpact("")
+                .hgvsProteinImpact("")
                 .inSpliceRegion(false)
                 .codingEffect(SmallVariant.CodingEffect.UNDEFINED)
                 .effects(Set.of())
@@ -116,14 +139,15 @@ public class TestFindingFactory {
     }
 
     @NotNull
-    public static DisruptionBuilder disruptionBuilder() {
+    public static DisruptionBuilder disruptionBuilder()
+    {
         return DisruptionBuilder.builder()
                 .driver(driverFields(true, DriverInterpretation.HIGH))
-                .gene(Strings.EMPTY)
-                .chromosome(Strings.EMPTY)
-                .chromosomeBand(Strings.EMPTY)
+                .gene("")
+                .chromosome("")
+                .chromosomeBand("")
                 .breakendType(Breakend.Type.BND)
-                .transcript(Strings.EMPTY)
+                .transcript("")
                 .isCanonical(true)
                 .breakendStart(breakendBuilder().build())
                 .breakendEnd(breakendBuilder().build())
@@ -131,12 +155,22 @@ public class TestFindingFactory {
     }
 
     @NotNull
-    public static BreakendBuilder breakendBuilder() {
-        return BreakendBuilder.builder();
+    public static BreakendBuilder breakendBuilder()
+    {
+        return BreakendBuilder.builder()
+                .gene("")
+                .chromosome("")
+                .chromosomeBand("")
+                .transcript("")
+                .geneOrientation(Breakend.GeneOrientation.UPSTREAM)
+                .type(Breakend.Type.BND)
+                .regionType(Breakend.TranscriptRegionType.DOWNSTREAM)
+                .codingType(Breakend.TranscriptCodingType.CODING);
     }
 
     @NotNull
-    public static DisruptionBuilder homozygousDisruptionBuilder() {
+    public static DisruptionBuilder homozygousDisruptionBuilder()
+    {
         return DisruptionBuilder.builder()
                 .driver(driverFields(true, DriverInterpretation.HIGH))
                 .chromosomeBand("")
@@ -148,13 +182,14 @@ public class TestFindingFactory {
     }
 
     @NotNull
-    public static GainDeletionBuilder gainDeletionBuilder() {
+    public static GainDeletionBuilder gainDeletionBuilder()
+    {
         return GainDeletionBuilder.builder()
                 .driver(driverFields(true, DriverInterpretation.HIGH))
                 .chromosome("1")
                 .chromosomeBand("p")
-                .gene(Strings.EMPTY)
-                .transcript(Strings.EMPTY)
+                .gene("")
+                .transcript("")
                 .isCanonical(false)
                 .somaticType(GainDeletion.Type.HOM_DEL)
                 .geneExtent(GainDeletion.GeneExtent.FULL_GENE)
@@ -165,43 +200,52 @@ public class TestFindingFactory {
     }
 
     @NotNull
-    public static FusionBuilder fusionBuilder() {
+    public static FusionBuilder fusionBuilder()
+    {
         return FusionBuilder.builder()
                 .driver(driverFields(true, DriverInterpretation.HIGH))
                 .reportedType(Fusion.FusionType.NONE)
-                .geneStart(Strings.EMPTY)
-                .geneTranscriptStart(Strings.EMPTY)
-                .geneContextStart(Strings.EMPTY)
+                .geneStart("")
+                .geneTranscriptStart("")
+                .geneContextStart("")
                 .fusedExonUp(0)
-                .geneEnd(Strings.EMPTY)
-                .geneTranscriptEnd(Strings.EMPTY)
-                .geneContextEnd(Strings.EMPTY)
+                .geneEnd("")
+                .geneTranscriptEnd("")
+                .geneContextEnd("")
                 .fusedExonDown(0)
                 .phased(Fusion.FusionPhasedType.OUT_OF_FRAME)
                 .junctionCopyNumber(0D)
                 .chainLinks(0)
                 .chainTerminated(false)
-                .domainsKept(Strings.EMPTY)
-                .domainsLost(Strings.EMPTY);
+                .domainsKept("")
+                .domainsLost("");
     }
 
-    public static <T extends Driver> DriverFindingListBuilder<T> driverFindingsBuilder(List<T> findings) {
+    public static <T extends Driver> DriverFindingListBuilder<T> driverFindingsBuilder(List<T> findings)
+    {
         return DriverFindingListBuilder.<T>builder().status(FindingsStatus.OK).findings(findings);
     }
 
     @NotNull
-    public static VirusBuilder virusBuilder(boolean reported, DriverInterpretation driverInterpretation) {
-        return VirusBuilder.builder().driver(driverFields(reported, driverInterpretation));
+    public static VirusBuilder virusBuilder(boolean reported, DriverInterpretation driverInterpretation)
+    {
+        return VirusBuilder.builder()
+                .driver(driverFields(reported, driverInterpretation))
+                .name("")
+                .qcStatus(Virus.VirusBreakendQCStatus.NO_ABNORMALITIES);
     }
 
     @NotNull
-    public static HlaAlleleBuilder hlaAlleleBuilder() {
+    public static HlaAlleleBuilder hlaAlleleBuilder()
+    {
         return HlaAlleleBuilder.builder()
                 .findingKey("")
+                .event("")
                 .gene("")
+                .geneClass("")
                 .germlineCopyNumber(0)
-                .alleleGroup(Strings.EMPTY)
-                .hlaProtein(Strings.EMPTY)
+                .alleleGroup("")
+                .hlaProtein("")
                 .tumorCopyNumber(0D)
                 .refFragments(0)
                 .tumorFragments(0)
@@ -213,9 +257,11 @@ public class TestFindingFactory {
                 .somaticInframeIndel(0D);
     }
 
-    public static DriverFields driverFields(boolean reported, DriverInterpretation interpretation) {
+    public static DriverFields driverFields(boolean reported, DriverInterpretation interpretation)
+    {
         return DriverFieldsBuilder.builder()
                 .findingKey("")
+                .event("")
                 .driverSource(DriverSource.SOMATIC)
                 .driverInterpretation(interpretation)
                 .reportedStatus(reported ? ReportedStatus.REPORTED : ReportedStatus.NOT_REPORTED)
