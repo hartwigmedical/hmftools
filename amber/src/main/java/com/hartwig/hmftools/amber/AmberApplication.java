@@ -265,6 +265,7 @@ public class AmberApplication implements AutoCloseable
         double noiseFloor = noiseFloorAnalysis.cutoff();
         AMB_LOGGER.debug(format("Noise floor: %.3f", noiseFloor));
         double contamination = noiseFloorAnalysis.contaminationPeaks().stream().map(VafLevel::vaf).max(Double::compare).orElse(0.0);
+        AMB_LOGGER.debug(format("Contamination level: %.3f", contamination));
 
         List<TumorBAF> tumorBAFList = readDepthAndQualityFiltered
                 .stream()
