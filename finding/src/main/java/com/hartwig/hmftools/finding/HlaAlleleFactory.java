@@ -74,7 +74,7 @@ public class HlaAlleleFactory
             var matcher = HLA_REGEX.matcher(lilacAllele.allele());
             //throw IllegalStateException("Can't extract HLA gene, alleleGroup and hlaProtein from ${allele.allele()}")
             String gene = matcher.group("gene");
-            String geneClass = "HLA_" + gene;
+            String geneClass = "MHC_CLASS_1";
             String alleleGroup = matcher.group("alleleGroup");
             String hlaProtein = matcher.group("hlaProtein");
 
