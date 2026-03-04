@@ -4,11 +4,9 @@ import java.util.Set;
 
 import org.jspecify.annotations.Nullable;
 
-import io.soabase.recordbuilder.core.RecordBuilder;
 import jakarta.validation.constraints.NotNull;
 
 @RecordBuilder
-@RecordBuilder.Options(nullableAnnotationClass = "org.jspecify.annotations.Nullable", defaultNotNull = true)
 public record GainDeletion(
     @NotNull DriverFields driver,
     @NotNull String gene,

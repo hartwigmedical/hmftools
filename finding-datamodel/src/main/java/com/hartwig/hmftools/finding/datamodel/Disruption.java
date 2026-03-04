@@ -4,7 +4,6 @@ import java.util.Set;
 
 import org.jspecify.annotations.Nullable;
 
-import io.soabase.recordbuilder.core.RecordBuilder;
 import jakarta.validation.constraints.NotNull;
 
 @RecordBuilder
