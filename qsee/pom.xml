@@ -13,23 +13,16 @@
     <artifactId>qsee</artifactId>
     <packaging>jar</packaging>
     <version>${qsee.version}</version>
-    <name>HMF Tools - QSee</name>
+    <name>HMF Tools - Qsee</name>
 
     <dependencies>
         <dependency>
             <groupId>com.hartwig</groupId>
             <artifactId>hmf-common</artifactId>
         </dependency>
-
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.hartwig</groupId>
-            <artifactId>esvee</artifactId>
-            <version>2.0</version>
-            <scope>compile</scope>
         </dependency>
     </dependencies>
 
@@ -38,10 +31,16 @@
             <resource>
                 <directory>src/main/resources</directory>
                 <filtering>true</filtering>
+                <excludes>
+                    <exclude>**/*.pdf</exclude>
+                </excludes>
             </resource>
             <resource>
                 <directory>src/main/R</directory>
                 <filtering>false</filtering>
+                <excludes>
+                    <exclude>**/.Rhistory</exclude>
+                </excludes>
             </resource>
         </resources>
 
@@ -53,7 +52,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>com.hartwig.hmftools.qsee.QSeeApplication</mainClass>
+                            <mainClass>com.hartwig.hmftools.qsee.QseeApplication</mainClass>
                         </manifest>
                     </archive>
                 </configuration>

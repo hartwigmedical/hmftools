@@ -3,17 +3,15 @@ package com.hartwig.hmftools.cup.somatics;
 import static com.hartwig.hmftools.common.utils.VectorUtils.sumVector;
 import static com.hartwig.hmftools.common.utils.MatrixFile.loadMatrixDataFile;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sigs.LeastSquaresFit;
+import com.hartwig.hmftools.common.sigs.SnvSigUtils;
 import com.hartwig.hmftools.common.utils.Matrix;
 
 public class SomaticSigs
@@ -50,12 +48,7 @@ public class SomaticSigs
         }
         else
         {
-            String sigDefinitionsFile = "/ref/cosmic_signatures.csv";
-
-            final List<String> sigDefinitionLines = new BufferedReader(new InputStreamReader(
-                    SomaticSigs.class.getResourceAsStream(sigDefinitionsFile))).lines().collect(Collectors.toList());
-
-            mSignatures = loadMatrixDataFile(sigDefinitionLines, mSignatureNames, Lists.newArrayList(), false);
+            mSignatures = SnvSigUtils.loadSnvSignatures(mSignatureNames);
         }
 
         mLeastSquaresFitter = mSignatures != null ? new LeastSquaresFit(mSignatures.Rows, mSignatures.Cols) : null;

@@ -28,7 +28,7 @@ public class UmiGroupsTest
 {
     public static final String FIXED_READ_ID = "123:ABC:1:4455:";
 
-    private static final UmiConfig UMI_CONFIG = new UmiConfig(true, false, "", false);
+    private static final UmiConfig UMI_CONFIG = new UmiConfig(true, false, "", true, false);
 
     @Test
     public void testUmiUtils()
@@ -58,7 +58,7 @@ public class UmiGroupsTest
     @Test
     public void testDuplexUmis()
     {
-        UmiConfig umiConfig = new UmiConfig(true, true, String.valueOf(DEFAULT_DUPLEX_UMI_DELIM), false);
+        UmiConfig umiConfig = new UmiConfig(true, true, String.valueOf(DEFAULT_DUPLEX_UMI_DELIM), true, false);
 
         String umiId1 = "TATCGC_AAGTCG";
         assertFalse(hasDuplexUmiMatch(umiId1, umiId1, umiConfig.DuplexDelim, umiConfig.PermittedBaseDiff));
@@ -179,7 +179,7 @@ public class UmiGroupsTest
     @Test
     public void testDefinedUmis()
     {
-        UmiConfig umiConfig = new UmiConfig(true, false, "", false);
+        UmiConfig umiConfig = new UmiConfig(true, false, "", true, false);
         String definedUmi1 = "AAAGGG";
         String definedUmi2 = "TTTAAA";
         String definedUmi3 = "CCCAAA";

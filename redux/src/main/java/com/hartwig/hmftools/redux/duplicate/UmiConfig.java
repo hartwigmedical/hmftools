@@ -2,6 +2,7 @@ package com.hartwig.hmftools.redux.duplicate;
 
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.ReduxConstants.DEFAULT_MAX_UMI_BASE_DIFF;
+import static com.hartwig.hmftools.redux.duplicate.UmiType.MSK_DUPEX_DELIM;
 import static com.hartwig.hmftools.redux.duplicate.UmiType.SINGLE;
 import static com.hartwig.hmftools.redux.duplicate.UmiType.TSO500_DUPEX_DELIM;
 import static com.hartwig.hmftools.redux.duplicate.UmiType.TWIST_DUPEX_DELIM;
@@ -25,6 +26,7 @@ public class UmiConfig
     public final boolean Duplex; // collapse duplex UMI groups
     public final String DuplexDelim;
     public final boolean BaseStats;
+    public final boolean UsesFixedUmi;
     public final int PermittedBaseDiff;
 
     private int mUmiLength; // set and accessed in a thread-safe way
@@ -36,17 +38,19 @@ public class UmiConfig
     private static final String UMI_ENABLED = "umi_enabled";
     private static final String UMI_DUPLEX = "umi_duplex";
     private static final String UMI_DUPLEX_DELIM = "umi_duplex_delim";
+    private static final String UMI_VARIABLE_LENGTH = "umi_variable_length";
     private static final String UMI_DEFINED_IDS = "umi_defined_ids";
     private static final String UMI_BASE_DIFF_STATS = "umi_base_diff_stats";
 
     public static final char READ_ID_DELIM = ':';
     public static final String READ_ID_DELIM_STR = String.valueOf(READ_ID_DELIM);
 
-    public UmiConfig(boolean enabled, boolean duplex, final String duplexDelim, boolean baseStats)
+    public UmiConfig(boolean enabled, boolean duplex, final String duplexDelim, final boolean usesFixed, boolean baseStats)
     {
         Enabled = enabled;
         Duplex = duplex;
         DuplexDelim = duplexDelim;
+        UsesFixedUmi = usesFixed;
         BaseStats = baseStats;
         PermittedBaseDiff = DEFAULT_MAX_UMI_BASE_DIFF;
         mUmiLength = 0;
@@ -61,6 +65,7 @@ public class UmiConfig
         boolean umiEnabled = configBuilder.hasFlag(UMI_ENABLED);
         boolean duplexUmi = configBuilder.hasFlag(UMI_DUPLEX);
         String duplexUmiDelim = configBuilder.getValue(UMI_DUPLEX_DELIM);
+        boolean usesFixedUmis = !configBuilder.hasFlag(UMI_VARIABLE_LENGTH);
 
         if(configBuilder.hasValue(UMI_TYPE))
         {
@@ -72,11 +77,18 @@ public class UmiConfig
                 duplexUmi = true;
                 duplexUmiDelim = TWIST_DUPEX_DELIM;
             }
-            else if(umiType == UmiType.TSO500_DUPEX)
+            else if(umiType == UmiType.TSO500_DUPLEX)
             {
                 umiEnabled = true;
                 duplexUmi = true;
                 duplexUmiDelim = TSO500_DUPEX_DELIM;
+            }
+            else if(umiType == UmiType.MSK_DUPLEX)
+            {
+                umiEnabled = true;
+                duplexUmi = true;
+                duplexUmiDelim = MSK_DUPEX_DELIM;
+                usesFixedUmis = false;
             }
             else if(umiType == SINGLE)
             {
@@ -85,7 +97,7 @@ public class UmiConfig
             }
         }
 
-        UmiConfig umiConfig = new UmiConfig(umiEnabled, duplexUmi, duplexUmiDelim, configBuilder.hasFlag(UMI_BASE_DIFF_STATS));
+        UmiConfig umiConfig = new UmiConfig(umiEnabled, duplexUmi, duplexUmiDelim, usesFixedUmis, configBuilder.hasFlag(UMI_BASE_DIFF_STATS));
 
         if(configBuilder.hasValue(UMI_DEFINED_IDS))
         {
@@ -107,8 +119,14 @@ public class UmiConfig
 
     public String extractUmiId(final String readId)
     {
-        int umiLength = checkAndGetUmiLength(readId);
-        return extractUmiId(readId, umiLength);
+        if(UsesFixedUmi)
+        {
+            int umiLength = checkAndGetUmiLength(readId);
+            return extractUmiId(readId, umiLength);
+        }
+
+        int startUmiIndex = readId.lastIndexOf(READ_ID_DELIM) + 1;
+        return startUmiIndex < readId.length() ? readId.substring(startUmiIndex) : "";
     }
 
     public String matchDefinedUmiId(final String umiId)
@@ -154,6 +172,7 @@ public class UmiConfig
         // or set them individually
         configBuilder.addFlag(UMI_ENABLED, "Use UMIs for duplicates");
         configBuilder.addFlag(UMI_DUPLEX, "UMI duplex enabled");
+        configBuilder.addFlag(UMI_VARIABLE_LENGTH, "UMI lengths are variable");
         configBuilder.addPath(UMI_DEFINED_IDS, false, "Optional set of defined UMI IDs in file");
         configBuilder.addFlag(UMI_BASE_DIFF_STATS, "Record base difference stats");
 

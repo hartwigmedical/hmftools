@@ -225,9 +225,6 @@ public class CohortDataWriter
                     continue;
                 }
 
-                // if(mConfig.IsGermline && var.getGenesList(true).isEmpty() && var.getGenesList(false).isEmpty())
-                //    continue;
-
                 final StructuralVariantData dbData = var.getSvData();
 
                 final ArmCluster armClusterStart = cluster.findArmCluster(var.getBreakend(true));
@@ -362,7 +359,7 @@ public class CohortDataWriter
                         sj.add(format("%.2f", !var.isSglBreakend() ? var.getBreakend(false).minorAlleleJcn(false) : 0));
                     }
 
-                    final String insSeqAlignments = dbData.insertSequenceAlignments().replaceAll(",", ";");
+                    String insSeqAlignments = dbData.insertSequenceAlignments().replaceAll(",", ";");
 
                     sj.add(dbData.startHomologySequence());
                     sj.add(dbData.endHomologySequence());

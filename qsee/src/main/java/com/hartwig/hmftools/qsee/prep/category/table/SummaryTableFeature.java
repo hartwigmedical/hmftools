@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.qsee.prep.category.table;
 
-import static com.hartwig.hmftools.qsee.feature.NumberFormat.LOG;
+import static com.hartwig.hmftools.qsee.feature.NumberFormat.LOG10;
 import static com.hartwig.hmftools.qsee.feature.NumberFormat.NUMBER;
 import static com.hartwig.hmftools.qsee.feature.NumberFormat.PERCENT;
 
@@ -12,7 +12,7 @@ import com.hartwig.hmftools.qsee.feature.Feature;
 import com.hartwig.hmftools.qsee.feature.FeatureKey;
 import com.hartwig.hmftools.qsee.feature.FeatureType;
 import com.hartwig.hmftools.qsee.feature.NumberFormat;
-import com.hartwig.hmftools.qsee.feature.PlotMetadata;
+import com.hartwig.hmftools.qsee.feature.FeatureMetadata;
 import com.hartwig.hmftools.qsee.feature.SourceTool;
 import com.hartwig.hmftools.qsee.status.QcStatus;
 import com.hartwig.hmftools.qsee.status.QcThreshold;
@@ -35,15 +35,15 @@ public enum SummaryTableFeature
     PURITY(SourceTool.PURPLE, SummaryTableGroup.COPY_NUMBER, "Purity", PERCENT),
     PLOIDY(SourceTool.PURPLE, SummaryTableGroup.COPY_NUMBER, "Ploidy", NUMBER),
     LOH_PERCENT(SourceTool.PURPLE, SummaryTableGroup.COPY_NUMBER, "LOH", PERCENT),
-    DELETED_GENES(SourceTool.PURPLE, SummaryTableGroup.COPY_NUMBER, "Deleted genes", LOG),
-    UNSUPPORTED_CN_SEGMENTS(SourceTool.PURPLE, SummaryTableGroup.COPY_NUMBER, "Unsupported CN segments", LOG),
+    DELETED_GENES(SourceTool.PURPLE, SummaryTableGroup.COPY_NUMBER, "Deleted genes", LOG10),
+    UNSUPPORTED_CN_SEGMENTS(SourceTool.PURPLE, SummaryTableGroup.COPY_NUMBER, "Unsupported CN segments", LOG10),
 
     TINC(SourceTool.PURPLE, SummaryTableGroup.CONTAMINATION, "Tumor in normal contamination", PERCENT),
     CONTAMINATION(SourceTool.PURPLE, SummaryTableGroup.CONTAMINATION, "Other DNA contamination", PERCENT),
 
-    TMB_SMALL_VARIANTS(SourceTool.PURPLE, SummaryTableGroup.TMB, "SNVs/indels per MB", LOG),
-    TMB_MS_INDELS(SourceTool.PURPLE, SummaryTableGroup.TMB, "MS indels per MB", LOG),
-    TMB_STRUCTURAL_VARIANTS(SourceTool.PURPLE, SummaryTableGroup.TMB, "SVs per MB", LOG);
+    TMB_SMALL_VARIANTS(SourceTool.PURPLE, SummaryTableGroup.TMB, "SNVs/indels per MB", LOG10),
+    TMB_MS_INDELS(SourceTool.PURPLE, SummaryTableGroup.TMB, "MS indels per MB", LOG10),
+    TMB_STRUCTURAL_VARIANTS(SourceTool.PURPLE, SummaryTableGroup.TMB, "SVs per MB", LOG10);
 
     private final SourceTool mSourceTool;
     private final SummaryTableGroup mGroup;
@@ -73,7 +73,7 @@ public enum SummaryTableFeature
     {
         FeatureKey key = new FeatureKey(summaryTableFeature.toString(), FeatureType.SUMMARY_TABLE, summaryTableFeature.sourceTool());
 
-        PlotMetadata metadata = PlotMetadata.builder()
+        FeatureMetadata metadata = FeatureMetadata.builder()
                 .featureGroup(summaryTableFeature.group().displayName())
                 .displayName(summaryTableFeature.displayName())
                 .numberFormat(summaryTableFeature.numberFormat())
@@ -87,6 +87,6 @@ public enum SummaryTableFeature
     public static void putFeature(EnumMap<SummaryTableFeature, Feature> featuresMap, SummaryTableFeature summaryTableFeature,
             double value, QcThreshold qcThreshold)
     {
-        putFeature(featuresMap, summaryTableFeature, value, qcThreshold.getQcStatus(value));
+        putFeature(featuresMap, summaryTableFeature, value, qcThreshold.getSampleQcStatus(value));
     }
 }

@@ -510,7 +510,7 @@ public class UmiDuplicatesTest
 
         SAMRecord mate2 = cloneSamRecord(mate1, readName2);
 
-        UmiConfig umiConfig = new UmiConfig(true, true, TWIST_DUPEX_DELIM, false);
+        UmiConfig umiConfig = new UmiConfig(true, true, TWIST_DUPEX_DELIM, true, false);
         PolyGUmiMerger polyGUmiMerger = new PolyGUmiMerger(umiConfig);
 
         List<ReadInfo> singleFragments = formSingleFragments(List.of(read1, mate1, read2, mate2));

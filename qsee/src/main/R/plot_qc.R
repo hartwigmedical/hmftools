@@ -1,11 +1,17 @@
+options(warn = 1)
+
+if(!interactive()){
+   ## Prevent empty file Rplots.pdf from being written
+   ## See: https://stackoverflow.com/questions/6535927/how-do-i-prevent-rplots-pdf-from-being-generated
+   pdf(NULL)
+}
+
 suppressPackageStartupMessages(library(dplyr))
 
 library(ggplot2)
 theme_set(
    theme_bw() +
-   theme(
-      panel.grid = element_blank()
-   )
+   theme(panel.grid = element_blank())
 )
 
 library(patchwork)
@@ -25,16 +31,16 @@ OUTPUT_PATH <- args[5]
 GLOBAL_LOG_LEVEL <- args[6]
 
 if(FALSE){
-    TUMOR_ID <- "TUMOR"
-    NORMAL_ID <- "TUMOR-ref"
-
-    COHORT_PERCENTILES_FILE <- "cohort.qsee.percentiles.tsv.gz"
-
-    output_dir <- ""
-    SAMPLE_FEATURES_FILE <- sprintf("%s/%s.qsee.vis.features.tsv.gz", output_dir, TUMOR_ID)
-    OUTPUT_PATH <- sprintf("%s/%s.qsee.vis.report.pdf", output_dir, TUMOR_ID)
-
-    GLOBAL_LOG_LEVEL <- "DEBUG"
+   TUMOR_ID <- "TUMOR"
+   NORMAL_ID <- "TUMOR-ref"
+   
+   COHORT_PERCENTILES_FILE <- "qsee.cohort.percentiles.tsv.gz"
+   
+   output_dir <- ""
+   SAMPLE_FEATURES_FILE <- sprintf("%s/%s.qsee.vis.data.tsv.gz", output_dir, TUMOR_ID)
+   OUTPUT_PATH <- sprintf("%s/%s.qsee.vis.report.pdf", output_dir, TUMOR_ID)
+   
+   GLOBAL_LOG_LEVEL <- "DEBUG"
 }
 
 ## =============================
@@ -55,23 +61,23 @@ LOG_LEVEL <- list(
 log_message <- function(log_level, fmt, ...){
 
    current_time <- format(Sys.time(), "%H:%H:%OS3")
-
+   
    log_message <- sprintf("%s [R] [%-5s] %s", current_time, log_level$name, sprintf(fmt, ...))
-
+   
    if(log_level$severity >= LOG_LEVEL[[LOG_LEVEL$ERROR$name]]$severity)
       stop(log_message)
-
+   
    if(log_level$severity >= LOG_LEVEL[[GLOBAL_LOG_LEVEL]]$severity)
       message(log_message)
 }
 
 LOGGER <- list(
-    trace = function(fmt, ...){ log_message(LOG_LEVEL$TRACE, fmt, ...) },
-    debug = function(fmt, ...){ log_message(LOG_LEVEL$DEBUG, fmt, ...) },
-    info  = function(fmt, ...){ log_message(LOG_LEVEL$INFO , fmt, ...) },
-    warn  = function(fmt, ...){ log_message(LOG_LEVEL$WARN , fmt, ...) },
-    error = function(fmt, ...){ log_message(LOG_LEVEL$ERROR, fmt, ...) },
-    fatal = function(fmt, ...){ log_message(LOG_LEVEL$FATAL, fmt, ...) }
+   trace = function(fmt, ...){ log_message(LOG_LEVEL$TRACE, fmt, ...) },
+   debug = function(fmt, ...){ log_message(LOG_LEVEL$DEBUG, fmt, ...) },
+   info  = function(fmt, ...){ log_message(LOG_LEVEL$INFO , fmt, ...) },
+   warn  = function(fmt, ...){ log_message(LOG_LEVEL$WARN , fmt, ...) },
+   error = function(fmt, ...){ log_message(LOG_LEVEL$ERROR, fmt, ...) },
+   fatal = function(fmt, ...){ log_message(LOG_LEVEL$FATAL, fmt, ...) }
 )
 
 LOGGER$debug("Running script with args:")
@@ -286,6 +292,15 @@ plot_missing_data <- function(plot_labels = labs()){
       )
 }
 
+render_now <- function() structure(list(), class = "render_now")
+
+ggplot_add.render_now <- function(object, plot, object_name) {
+   #' Force warnings to be shown immediately.
+   #' Usage: plot + render_now()
+   ggplot2::ggplotGrob(plot)
+   plot
+}
+
 ## =============================
 ## Line / PDF
 ## =============================
@@ -380,7 +395,8 @@ PLOTS[[FEATURE_TYPE$COVERAGE_DISTRIBUTION]] <- local({
    }
    
    plot_distribution(plot_data, x = "ReadDepth", mark_sample_peak = TRUE, invert_normal = TRUE, hlines = 0) +
-      plot_labels
+      plot_labels +
+      render_now()
 })
 
 PLOTS[[FEATURE_TYPE$FRAG_LENGTH_DISTRIBUTION]] <- local({
@@ -394,7 +410,8 @@ PLOTS[[FEATURE_TYPE$FRAG_LENGTH_DISTRIBUTION]] <- local({
    }
    
    plot_distribution(plot_data, x = "FragLength", mark_sample_peak = TRUE, invert_normal = TRUE, hlines = 0) +
-      plot_labels
+      plot_labels +
+      render_now()
 })
 
 PLOTS[[FEATURE_TYPE$GC_BIAS]] <- local({
@@ -408,7 +425,8 @@ PLOTS[[FEATURE_TYPE$GC_BIAS]] <- local({
    }
    
    plot_distribution(plot_data, x = "GCBucket", mark_sample_peak = FALSE, invert_normal = FALSE) +
-      plot_labels
+      plot_labels +
+      render_now()
 })
 
 ## =============================
@@ -493,7 +511,7 @@ plot_pairwise_comparison <- function(
       gg_geom_linerange <- geom_blank()
    }
    
-   ggplot(plot_data, aes(x = .data[[x]], y = .data[[y]], fill = SampleType)) + 
+   ggplot(plot_data, aes(x = .data[[x]], y = .data[[y]], fill = SampleType)) +
       
       { if(!is.null(hlines)) geom_hline(linewidth = 0.25, color = "grey70", yintercept = hlines) } +
       { if(!is.null(vlines)) geom_vline(linewidth = 0.25, color = "grey70", xintercept = vlines) } +
@@ -543,7 +561,8 @@ PLOTS[[FEATURE_TYPE$DUPLICATE_FREQ]] <- local({
       coord_flip() +
       theme(
          panel.grid.major.x = element_line(color = "grey90", linewidth = 0.25),
-      )
+      ) +
+      render_now()
 })
 
 PLOTS[[FEATURE_TYPE$DISCORDANT_FRAG_FREQ]] <- local({
@@ -564,7 +583,8 @@ PLOTS[[FEATURE_TYPE$DISCORDANT_FRAG_FREQ]] <- local({
       coord_flip() +
       theme(
          panel.grid.major.x = element_line(color = "grey90", linewidth = 0.25),
-      )
+      ) +
+      render_now()
 })
 
 PLOTS[[FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD]] <- local({
@@ -583,22 +603,16 @@ PLOTS[[FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD]] <- local({
       return(plot_missing_data(plot_labels))
    }
    
-   sample_genes_of_interest <- plot_data %>% 
-      dplyr::filter(
-         FeatureValue >= MIN_MISSED_VARIANT_LIKELIHOOD | 
-         PctMid >= MIN_MISSED_VARIANT_LIKELIHOOD
-      ) %>%
-      dplyr::arrange(-FeatureValue) %>%
-      dplyr::pull(Gene) %>% 
-      unique() %>% 
-      head(TOP_N_GENES)
-   
    plot_data <- plot_data %>% 
-      dplyr::filter(Gene %in% sample_genes_of_interest) %>% 
-      dplyr::mutate(Gene = factor(Gene, sample_genes_of_interest)) %>%
+      dplyr::filter(FeatureValue >= MIN_MISSED_VARIANT_LIKELIHOOD) %>%
+      
+      dplyr::group_by(SampleType) %>% 
+      dplyr::slice_max(order_by = FeatureValue, n = TOP_N_GENES) %>%
+      dplyr::ungroup() %>%
+      
       dplyr::mutate(
-         Gene = reverse_levels(Gene),
-         SampleType = reverse_levels(SampleType)
+         Gene = Gene %>% preordered_factor() %>% reverse_levels(),
+         SampleType = SampleType %>% preordered_factor() %>% reverse_levels()
       )
    
    plot_pairwise_comparison(plot_data, x = "Gene", plot_type = box_or_bar_plot()) + 
@@ -607,7 +621,8 @@ PLOTS[[FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD]] <- local({
       theme(
          panel.grid.major.x = element_line(color = "grey90", linewidth = 0.25),
          plot.title = element_text(hjust = 0.5)
-      )
+      ) +
+      render_now()
 })
 
 PLOTS[[FEATURE_TYPE$BQR_BY_ORIG_QUAL]] <- local({
@@ -629,7 +644,8 @@ PLOTS[[FEATURE_TYPE$BQR_BY_ORIG_QUAL]] <- local({
       plot_labels + 
       theme(
          axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1, size = 7),
-      )
+      ) +
+      render_now()
 })
 
 PLOTS[[FEATURE_TYPE$BQR_BY_SNV96_CONTEXT]] <- local({
@@ -638,8 +654,9 @@ PLOTS[[FEATURE_TYPE$BQR_BY_SNV96_CONTEXT]] <- local({
    
    plot_labels <- labs(title = "BQR by SNV96 context", x = "Mutation context", y = "Phred score adjustment")
    
-   if(nrow(plot_data) > 0){
+   if(is.null(plot_data)){
       plot_labels$title <- paste0(plot_labels$title, ", base quality: ", plot_data$OriginalQualBin[1])
+      return(plot_missing_data(plot_labels))
    }
    
    plot_pairwise_comparison(
@@ -654,7 +671,8 @@ PLOTS[[FEATURE_TYPE$BQR_BY_SNV96_CONTEXT]] <- local({
       plot_labels +
       theme(
          axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, size = 6),
-      )
+      ) +
+      render_now()
 })
 
 PLOTS[[FEATURE_TYPE$MS_INDEL_ERROR_RATES]] <- local({
@@ -663,6 +681,10 @@ PLOTS[[FEATURE_TYPE$MS_INDEL_ERROR_RATES]] <- local({
    
    plot_labels <- labs(title = "Microsatellite indel error rates", x = "Repeat units", y = "Phred score") 
    
+   if(is.null(plot_data)){
+      return(plot_missing_data(plot_labels))
+   }
+   
    plot_pairwise_comparison(plot_data, x = "RefNumUnits", plot_type = PAIRWISE_PLOT_TYPE$POINT_RANGE) +
       facet_grid("ConsensusType ~ RepeatUnitType") +
       scale_x_discrete(breaks = function(x) ifelse(as.numeric(x) %% 3 == 0, x, "") ) +
@@ -670,7 +692,8 @@ PLOTS[[FEATURE_TYPE$MS_INDEL_ERROR_RATES]] <- local({
       plot_labels +
       theme(
          panel.grid.major = element_line(color = "grey90", linewidth = 0.25)
-      )
+      ) +
+      render_now()
 })
 
 PLOTS[[FEATURE_TYPE$MS_INDEL_ERROR_BIAS]] <- local({
@@ -697,7 +720,8 @@ PLOTS[[FEATURE_TYPE$MS_INDEL_ERROR_BIAS]] <- local({
       plot_labels +
       theme(
          panel.grid.major = element_line(color = "grey90", linewidth = 0.25)
-      )
+      ) +
+      render_now()
 })
 
 ## =============================
@@ -714,7 +738,7 @@ FEATURE_GROUP <- list(
 NUMBER_FORMAT <- list(
    NUMBER = "NUMBER",
    PERCENT = "PERCENT",
-   LOG = "LOG"
+   LOG10 = "LOG10"
 )
 
 SUMMARY_TABLE_DATA <- get_plot_data(FEATURE_TYPE$SUMMARY_TABLE)
@@ -737,7 +761,7 @@ get_sub_table_data <- function(feature_group, number_format){
 get_outer_axis_limits <- function(plot_data, outer_limits = c(NA, NA)){
 
    if(FALSE){
-      plot_data = get_sub_table_data(FEATURE_GROUP$MUTATIONAL_BURDEN, NUMBER_FORMAT$LOG)
+      plot_data = get_sub_table_data(FEATURE_GROUP$MUTATIONAL_BURDEN, NUMBER_FORMAT$LOG1010)
       minimal_limits = c(0, NA)
    }
 
@@ -812,10 +836,10 @@ plot_sub_table <- function(plot_data, show_title = FALSE, show_sample_type_label
       plot_data = get_sub_table_data(FEATURE_GROUP$MAPPING, NUMBER_FORMAT$NUMBER)
       axis_limits = get_outer_axis_limits(plot_data, c(0, 100))
       
-      plot_data = get_sub_table_data(FEATURE_GROUP$COPY_NUMBER, NUMBER_FORMAT$LOG)
+      plot_data = get_sub_table_data(FEATURE_GROUP$COPY_NUMBER, NUMBER_FORMAT$LOG10)
       axis_limits = get_outer_axis_limits(plot_data, c(NA, 1000))
       
-      plot_data = get_sub_table_data(FEATURE_GROUP$MUTATIONAL_BURDEN, NUMBER_FORMAT$LOG)
+      plot_data = get_sub_table_data(FEATURE_GROUP$MUTATIONAL_BURDEN, NUMBER_FORMAT$LOG10)
       axis_limits = get_outer_axis_limits(plot_data, c(NA, 1000))
    }
 
@@ -880,11 +904,11 @@ plot_sub_table <- function(plot_data, show_title = FALSE, show_sample_type_label
       scale_y_continuous(
          
          limits = axis_limits,
-         transform = if(number_format == NUMBER_FORMAT$LOG) "log10" else "identity",
+         transform = if(number_format == NUMBER_FORMAT$LOG10) "log10" else "identity",
          
          label = if(number_format == NUMBER_FORMAT$PERCENT){ 
             scales::label_percent()
-         } else if(number_format == NUMBER_FORMAT$LOG) {
+         } else if(number_format == NUMBER_FORMAT$LOG10) {
             function(x) format(x, scientific = FALSE, drop0trailing = TRUE, trim = TRUE)
          } else {
             waiver()
@@ -899,7 +923,8 @@ plot_sub_table <- function(plot_data, show_title = FALSE, show_sample_type_label
          axis.line.y = element_blank(),
          plot.margin = margin(b = 10, r = 15, l = 2),
          legend.position = "none"
-      )
+      ) +
+      render_now()
 
    ## Combine plots =============================
    subplots_combined <- patchwork::wrap_plots(subplot_values, subplot_pairwise_comparison, nrow = 1)
@@ -932,7 +957,7 @@ PLOTS[[FEATURE_TYPE$SUMMARY_TABLE]] <- local({
       plot_sub_table(axis_limits = c(0, 1))
    
    plots[[5]] <- 
-      get_sub_table_data(FEATURE_GROUP$COPY_NUMBER, NUMBER_FORMAT$LOG) %>% 
+      get_sub_table_data(FEATURE_GROUP$COPY_NUMBER, NUMBER_FORMAT$LOG10) %>% 
       plot_sub_table(axis_limits = get_outer_axis_limits(., c(NA, 1000)))
    
    ## Contamination ================================
@@ -941,7 +966,7 @@ PLOTS[[FEATURE_TYPE$SUMMARY_TABLE]] <- local({
    
    ## Mutational burden ================================
    plots[[7]] <- 
-      get_sub_table_data(FEATURE_GROUP$MUTATIONAL_BURDEN, NUMBER_FORMAT$LOG) %>% 
+      get_sub_table_data(FEATURE_GROUP$MUTATIONAL_BURDEN, NUMBER_FORMAT$LOG10) %>% 
       plot_sub_table(show_title = TRUE, show_sample_type_label = TRUE, axis_limits = get_outer_axis_limits(., c(NA, 1000)))
    
    heights <- sapply(plots, function(p){ p$height })
@@ -1138,12 +1163,12 @@ create_report <- local({
    "
    
    plots_combined <- patchwork::wrap_plots(plots, design = design) + REPORT_TITLE
-   
+
    LOGGER$info("Writing report to: %s", OUTPUT_PATH)
-   ggsave(
-      filename = OUTPUT_PATH, plot = plots_combined, 
-      device = "pdf", width = 20, height = 12, units = "in"
-   )
+   suppressWarnings({ ## Prevent ggplot build warnings showing again - these are already shown when calling render_now()
+      ggsave(filename = OUTPUT_PATH, plot = plots_combined, width = 20, height = 12, units = "in")   
+   })
+   
 })
 
 

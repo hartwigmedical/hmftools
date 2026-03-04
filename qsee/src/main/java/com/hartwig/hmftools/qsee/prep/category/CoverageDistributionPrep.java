@@ -30,6 +30,7 @@ public class CoverageDistributionPrep implements CategoryPrep
     }
 
     public SourceTool sourceTool() { return SOURCE_TOOL; }
+    public PrepCategory category() { return PrepCategory.COVERAGE_DISTRIBUTION; }
 
     private BamMetricCoverage loadCoverage(String sampleId, SampleType sampleType) throws IOException
     {

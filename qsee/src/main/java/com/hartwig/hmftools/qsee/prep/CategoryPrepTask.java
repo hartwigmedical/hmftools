@@ -78,7 +78,7 @@ public class CategoryPrepTask implements Runnable
             if(isSampleAtInterval || isLastSample)
             {
                 QC_LOGGER.debug("category({}) - Progress: {}/{} - current sample: {}",
-                        mCategoryPrep.name(), mSampleIndex + 1, mTotalSampleCount, mSampleId);
+                        mCategoryPrep.category(), mSampleIndex + 1, mTotalSampleCount, mSampleId);
             }
         }
     }
@@ -86,8 +86,8 @@ public class CategoryPrepTask implements Runnable
     public static void missingInputFilesError(boolean allowMissingInput, CategoryPrep categoryPrep, SampleType sampleType, String missingFilePath)
     {
         QC_LOGGER.log(allowMissingInput ? Level.WARN : Level.ERROR,
-                "sampleType({}) category({}) - missing input file: {}",
-                sampleType, categoryPrep.name(), missingFilePath);
+                "sampleType({}) category({}) - missing input file(s): {}",
+                sampleType, categoryPrep.category(), missingFilePath);
 
         if(!allowMissingInput)
             System.exit(1);
@@ -112,7 +112,7 @@ public class CategoryPrepTask implements Runnable
         }
         catch(Exception e)
         {
-            QC_LOGGER.error("sampleType({}) category({}) - Failed to run prep for sample({})", mCategoryPrep.name(), mSampleId, e);
+            QC_LOGGER.error("sampleType({}) category({}) - Failed to run prep for sample({})", mCategoryPrep.category(), mSampleId, e);
             e.printStackTrace();
             System.exit(1);
         }

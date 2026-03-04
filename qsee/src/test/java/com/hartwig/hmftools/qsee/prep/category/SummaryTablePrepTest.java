@@ -31,22 +31,12 @@ import com.hartwig.hmftools.qsee.feature.Feature;
 import com.hartwig.hmftools.qsee.feature.SourceTool;
 import com.hartwig.hmftools.qsee.prep.category.table.BamMetricsData;
 import com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature;
-import com.hartwig.hmftools.qsee.status.QcStatus;
 import com.hartwig.hmftools.qsee.status.ThresholdRegistry;
 
 import org.junit.Test;
 
 public class SummaryTablePrepTest
 {
-    @Test
-    public void canMapPurpleQCStatusToQCStatus()
-    {
-        List<PurpleQCStatus> purpleQcStatuses = List.of(PurpleQCStatus.values());
-        PurityContext purityContext = createTestPurityContext(purpleQcStatuses);
-        EnumMap<PurpleQCStatus, QcStatus> qcStatuses = SummaryTablePurplePrep.qcStatusFrom(purityContext);
-        assertEquals(purpleQcStatuses.size(), qcStatuses.size());
-    }
-
     @Test
     public void canCalcPropBasesAboveCoverage()
     {
@@ -65,7 +55,8 @@ public class SummaryTablePrepTest
     public void canExtractPurpleFeatures(){
         PurityContext purityContext = createTestPurityContext(List.of(PurpleQCStatus.PASS));
 
-        List<Feature> features = SummaryTablePurplePrep.createFeatures(purityContext);
+        ThresholdRegistry qcThresholds = ThresholdRegistry.createWithoutThresholds();
+        List<Feature> features = SummaryTablePurplePrep.createFeatures(purityContext, qcThresholds);
 
         List<SummaryTableFeature> expectedFeatures = Stream.of(SummaryTableFeature.values())
                 .filter(f -> f.sourceTool() == SourceTool.PURPLE)

@@ -14,7 +14,7 @@ import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.switchIndex;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.ENHANCER_PROMISCUOUS_MIN_DISTANCE;
-import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_UPSTREAM_DISTANCE_IG_KNOWN;
+import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_UPSTREAM_DISTANCE_ENHANCER_KNOWN;
 
 import java.util.List;
 import java.util.Map;
@@ -52,8 +52,8 @@ public class SpecialFusions
     public Map<String,Integer> getSpecificPreGeneDistances()
     {
         Map<String,Integer> specificGeneDistances = Maps.newHashMap();
-        List<KnownFusionData> igKnownPairs = mKnownFusionCache.getDataByType(ENHANCER_KNOWN_PAIR);
-        igKnownPairs.forEach(x -> specificGeneDistances.put(x.ThreeGene, MAX_UPSTREAM_DISTANCE_IG_KNOWN));
+        List<KnownFusionData> enhancerKnownPairs = mKnownFusionCache.getDataByType(ENHANCER_KNOWN_PAIR);
+        enhancerKnownPairs.forEach(x -> specificGeneDistances.put(x.ThreeGene, MAX_UPSTREAM_DISTANCE_ENHANCER_KNOWN));
         return specificGeneDistances;
     }
 

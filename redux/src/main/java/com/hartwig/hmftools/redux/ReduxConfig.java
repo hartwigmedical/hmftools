@@ -455,7 +455,7 @@ public class ReduxConfig
         BamStringency = ValidationStringency.STRICT;
         mReadLength = DEFAULT_READ_LENGTH;
 
-        UMIs = new UmiConfig(umiEnabled, duplexUmi, String.valueOf(DEFAULT_DUPLEX_UMI_DELIM), false);
+        UMIs = new UmiConfig(umiEnabled, duplexUmi, String.valueOf(DEFAULT_DUPLEX_UMI_DELIM), true, false);
         FormConsensus = umiEnabled || formConsensus;
 
         BQR = new BqrConfig();

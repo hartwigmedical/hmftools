@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.linx.fusion;
 
+import static java.lang.String.format;
 import static java.lang.String.valueOf;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
@@ -53,7 +54,7 @@ public class FusionWriter implements CohortFileInterface
         int breakendId = 0;
         Map<BreakendTransData, Integer> transIdMap = Maps.newHashMap();
 
-        for(final BreakendTransData transcript : transcripts)
+        for(BreakendTransData transcript : transcripts)
         {
             transIdMap.put(transcript, breakendId);
 
@@ -95,7 +96,7 @@ public class FusionWriter implements CohortFileInterface
                     .build());
         }
 
-        for(final GeneFusion geneFusion : geneFusions)
+        for(GeneFusion geneFusion : geneFusions)
         {
             BreakendGeneData upGeneData = geneFusion.upstreamTrans().breakendGeneData();
             BreakendGeneData downGeneData = geneFusion.downstreamTrans().breakendGeneData();
@@ -146,10 +147,10 @@ public class FusionWriter implements CohortFileInterface
         try
         {
             // write flat files for database loading
-            final String breakendsFile = LinxBreakend.generateFilename(mOutputDir, sampleId);
+            String breakendsFile = LinxBreakend.generateFilename(mOutputDir, sampleId);
             LinxBreakend.write(breakendsFile, breakends);
 
-            final String fusionsFile = LinxFusion.generateFilename(mOutputDir, sampleId);
+            String fusionsFile = LinxFusion.generateFilename(mOutputDir, sampleId);
             LinxFusion.write(fusionsFile, fusions);
         }
         catch(IOException e)
@@ -177,7 +178,7 @@ public class FusionWriter implements CohortFileInterface
 
             StringJoiner sj = new StringJoiner(TSV_DELIM);
 
-            sj.add("SampleId").add("Reportable").add("ReportableReason").add("KnownType").add("Phased").add("KnownExons");
+            sj.add("SampleId").add("Reportable").add("ReportableReason").add("KnownType").add("Likelihood").add("Phased").add("KnownExons");
             sj.add("ClusterId").add("ClusterCount").add("ResolvedType");
 
             for(int se = SE_START; se <= SE_END; ++se)
@@ -243,6 +244,7 @@ public class FusionWriter implements CohortFileInterface
         sj.add(valueOf(fusion.reportable()));
         sj.add(reportableReasonsToStr(fusion.reportableReasons()));
         sj.add(fusion.knownTypeStr());
+        sj.add(String.valueOf(fusion.likelihoodType()));
 
         sj.add(valueOf(fusion.phaseType()));
         sj.add(valueOf(fusion.knownExons()));
@@ -254,15 +256,15 @@ public class FusionWriter implements CohortFileInterface
         for(int fs = FS_UP; fs <= FS_DOWN; ++fs)
         {
             boolean isUpstream = (fs == FS_UP);
-            final BreakendTransData trans = fusion.transcripts()[fs];
-            final BreakendGeneData gene = trans.breakendGeneData();
+            BreakendTransData trans = fusion.transcripts()[fs];
+            BreakendGeneData gene = trans.breakendGeneData();
 
             sj.add(valueOf(gene.varId()));
             sj.add(gene.chromosome());
             sj.add(valueOf(gene.position()));
             sj.add(valueOf(gene.orientation()));
             sj.add(valueOf(gene.svType()));
-            sj.add(valueOf(gene.jcn()));
+            sj.add(format("%.3f", gene.jcn()));
 
             sj.add(gene.geneId());
             sj.add(fusion.geneName(fs));
@@ -294,11 +296,11 @@ public class FusionWriter implements CohortFileInterface
         sj.add(valueOf(fusion.priority()));
         sj.add(valueOf(fusion.id()));
 
-        String chainInfo = String.format(",%s,%s", annotations.terminatedUp(), annotations.terminatedDown());
+        String chainInfo = format(",%s,%s", annotations.terminatedUp(), annotations.terminatedDown());
 
         if(annotations.chainInfo() != null)
         {
-            chainInfo += String.format(",%d;%d;%d;%s;%s",
+            chainInfo += format(",%d;%d;%d;%s;%s",
                     annotations.chainInfo().chainId(), annotations.chainInfo().chainLinks(), annotations.chainInfo().chainLength(),
                     annotations.chainInfo().validTraversal(), annotations.chainInfo().traversalAssembled());
         }
@@ -307,7 +309,7 @@ public class FusionWriter implements CohortFileInterface
             chainInfo += ",-1;0;0;true;false";
         }
 
-        sj.add(String.format("%s", chainInfo));
+        sj.add(format("%s", chainInfo));
 
         mCohortDataWriter.write(this, Lists.newArrayList(sj.toString()));
     }

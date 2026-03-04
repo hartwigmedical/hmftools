@@ -30,6 +30,7 @@ public class FragLengthDistributionPrep implements CategoryPrep
     }
 
     public SourceTool sourceTool() { return SOURCE_TOOL; }
+    public PrepCategory category() { return PrepCategory.FRAG_LENGTH_DISTRIBUTION; }
 
     private BamMetricFragmentLength loadFragmentLengths(String sampleId, SampleType sampleType) throws IOException
     {

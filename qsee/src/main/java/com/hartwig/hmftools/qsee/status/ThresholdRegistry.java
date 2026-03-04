@@ -3,6 +3,8 @@ package com.hartwig.hmftools.qsee.status;
 import static com.hartwig.hmftools.qsee.common.SampleType.NORMAL;
 import static com.hartwig.hmftools.qsee.common.SampleType.TUMOR;
 import static com.hartwig.hmftools.qsee.feature.FeatureType.SUMMARY_TABLE;
+import static com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature.CONTAMINATION;
+import static com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature.DELETED_GENES;
 import static com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature.DUAL_STRAND_READS;
 import static com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature.DUPLICATE_READS;
 import static com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature.LOW_BASE_QUAL;
@@ -15,17 +17,23 @@ import static com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature.
 import static com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature.COVERAGE_ABOVE_250;
 import static com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature.COVERAGE_ABOVE_30;
 import static com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature.COVERAGE_ABOVE_60;
+import static com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature.PURITY;
+import static com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature.TINC;
+import static com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature.UNSUPPORTED_CN_SEGMENTS;
 import static com.hartwig.hmftools.qsee.status.ComparisonOperator.GREATER_THAN;
+import static com.hartwig.hmftools.qsee.status.ComparisonOperator.GREATER_THAN_OR_EQUAL;
 import static com.hartwig.hmftools.qsee.status.ComparisonOperator.LESS_THAN;
 import static com.hartwig.hmftools.qsee.status.QcStatusType.FAIL;
 import static com.hartwig.hmftools.qsee.status.QcStatusType.WARN;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.FeatureType;
 import com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature;
@@ -35,6 +43,7 @@ public final class ThresholdRegistry
     private final Map<ThresholdKey, QcThreshold> mThresholds;
     private final boolean mFrozen;
 
+    private static final double THRESHOLD_NOT_SET = Double.NaN;
     private static final double NO_THRESHOLD = Double.NaN;
 
     private ThresholdRegistry(Map<ThresholdKey, QcThreshold> thresholds, boolean frozen)
@@ -59,23 +68,32 @@ public final class ThresholdRegistry
         setCommonThreshold(SUMMARY_TABLE, DUPLICATE_READS.name(), WARN, GREATER_THAN, 0.3);
         setCommonThreshold(SUMMARY_TABLE, DUAL_STRAND_READS.name(), WARN, GREATER_THAN, 0.5);
 
+        // PURPLE QC thresholds are not handled by Qsee
+        setThresholdHandledElsewhere(TUMOR, SUMMARY_TABLE, PURITY.name(), WARN, LESS_THAN, PurpleQCStatus.MIN_PURITY);
+        setThresholdHandledElsewhere(TUMOR, SUMMARY_TABLE, DELETED_GENES.name(), WARN, GREATER_THAN, PurpleQCStatus.MAX_DELETED_GENES);
+        setThresholdHandledElsewhere(TUMOR, SUMMARY_TABLE, UNSUPPORTED_CN_SEGMENTS.name(), WARN, GREATER_THAN, PurpleQCStatus.MAX_UNSUPPORTED_SEGMENTS);
+        setThresholdHandledElsewhere(TUMOR, SUMMARY_TABLE, CONTAMINATION.name(), FAIL, GREATER_THAN, PurpleQCStatus.MAX_CONTAMINATION);
+        setThresholdHandledElsewhere(TUMOR, SUMMARY_TABLE, TINC.name(), WARN, GREATER_THAN, PurpleQCStatus.TINC_WARN_LEVEL);
+        setThresholdHandledElsewhere(TUMOR, SUMMARY_TABLE, TINC.name(), FAIL, GREATER_THAN_OR_EQUAL, PurpleQCStatus.TINC_FAIL_LEVEL);
+
+        setThresholdHandledElsewhere(TUMOR, SUMMARY_TABLE, PurpleQCStatus.FAIL_NO_TUMOR.name(), FAIL, null, NO_THRESHOLD);
+        setThresholdHandledElsewhere(TUMOR, SUMMARY_TABLE, PurpleQCStatus.WARN_GENDER_MISMATCH.name(), WARN, null, NO_THRESHOLD);
+
         setThreshold(TUMOR, SUMMARY_TABLE, MEAN_COVERAGE.name(), WARN, LESS_THAN, 70);
         setThreshold(TUMOR, SUMMARY_TABLE, COVERAGE_ABOVE_10.name(), WARN, LESS_THAN, 0.9);
         setThreshold(TUMOR, SUMMARY_TABLE, COVERAGE_ABOVE_20.name(), WARN, LESS_THAN, 0.9);
         setThreshold(TUMOR, SUMMARY_TABLE, COVERAGE_ABOVE_30.name(), WARN, LESS_THAN, 0.9);
         setThreshold(TUMOR, SUMMARY_TABLE, COVERAGE_ABOVE_60.name(), WARN, LESS_THAN, 0.8);
         setThreshold(TUMOR, SUMMARY_TABLE, COVERAGE_ABOVE_100.name(), WARN, LESS_THAN, 0.1);
-        setThreshold(TUMOR, SUMMARY_TABLE, COVERAGE_ABOVE_250.name(), WARN, LESS_THAN, NO_THRESHOLD);
+        setThreshold(TUMOR, SUMMARY_TABLE, COVERAGE_ABOVE_250.name(), WARN, LESS_THAN, THRESHOLD_NOT_SET);
 
         setThreshold(NORMAL, SUMMARY_TABLE, MEAN_COVERAGE.name(), WARN, LESS_THAN, 20);
         setThreshold(NORMAL, SUMMARY_TABLE, COVERAGE_ABOVE_10.name(), WARN, LESS_THAN, 0.9);
         setThreshold(NORMAL, SUMMARY_TABLE, COVERAGE_ABOVE_20.name(), WARN, LESS_THAN, 0.8);
         setThreshold(NORMAL, SUMMARY_TABLE, COVERAGE_ABOVE_30.name(), WARN, LESS_THAN, 0.4);
-        setThreshold(NORMAL, SUMMARY_TABLE, COVERAGE_ABOVE_60.name(), WARN, LESS_THAN, NO_THRESHOLD);
-        setThreshold(NORMAL, SUMMARY_TABLE, COVERAGE_ABOVE_100.name(), WARN, LESS_THAN, NO_THRESHOLD);
-        setThreshold(NORMAL, SUMMARY_TABLE, COVERAGE_ABOVE_250.name(), WARN, LESS_THAN, NO_THRESHOLD);
-
-        // NOTE: PURPLE QC thresholds are not handled by Qsee
+        setThreshold(NORMAL, SUMMARY_TABLE, COVERAGE_ABOVE_60.name(), WARN, LESS_THAN, THRESHOLD_NOT_SET);
+        setThreshold(NORMAL, SUMMARY_TABLE, COVERAGE_ABOVE_100.name(), WARN, LESS_THAN, THRESHOLD_NOT_SET);
+        setThreshold(NORMAL, SUMMARY_TABLE, COVERAGE_ABOVE_250.name(), WARN, LESS_THAN, THRESHOLD_NOT_SET);
 
         return this;
     }
@@ -97,7 +115,8 @@ public final class ThresholdRegistry
         for(QcThreshold threshold : thresholdRegistry.mThresholds.values())
         {
             ThresholdKey key = threshold.key();
-            thresholdRegistry.mThresholds.put(key, new QcThreshold(key, threshold.operator(), NO_THRESHOLD));
+            QcThreshold noQcThreshold = QcThreshold.builder(threshold).threshold(THRESHOLD_NOT_SET).build();
+            thresholdRegistry.mThresholds.put(key, noQcThreshold);
         }
 
         return thresholdRegistry.freeze();
@@ -105,11 +124,26 @@ public final class ThresholdRegistry
 
     private void setThreshold(
             SampleType sampleType, FeatureType featureType, String featureName, QcStatusType qcStatusType,
+            ComparisonOperator operator, double thresholdValue, boolean determinedElsewhere
+    ){
+        QcThreshold threshold = QcThreshold.builder()
+                .sampleType(sampleType)
+                .featureType(featureType)
+                .featureName(featureName)
+                .qcStatusType(qcStatusType)
+                .comparisonOperator(operator)
+                .threshold(thresholdValue)
+                .determinedElsewhere(determinedElsewhere)
+                .build();
+
+        mThresholds.put(threshold.key(), threshold);
+    }
+
+    private void setThreshold(
+            SampleType sampleType, FeatureType featureType, String featureName, QcStatusType qcStatusType,
             ComparisonOperator operator, double thresholdValue
     ){
-        ThresholdKey key = new ThresholdKey(sampleType, featureType, featureName, qcStatusType);
-        QcThreshold threshold = new QcThreshold(key, operator, thresholdValue);
-        mThresholds.put(key, threshold);
+        setThreshold(sampleType, featureType, featureName, qcStatusType, operator, thresholdValue, false);
     }
 
     private void setCommonThreshold(
@@ -118,6 +152,13 @@ public final class ThresholdRegistry
     ){
         setThreshold(TUMOR, featureType, featureName, qcStatusType, operator, thresholdValue);
         setThreshold(NORMAL, featureType, featureName, qcStatusType, operator, thresholdValue);
+    }
+
+    private void setThresholdHandledElsewhere(
+            SampleType sampleType, FeatureType featureType, String featureName, QcStatusType qcStatusType,
+            ComparisonOperator operator, double thresholdValue)
+    {
+        setThreshold(sampleType, featureType, featureName, qcStatusType, operator, thresholdValue, true);
     }
 
     boolean containsKey(ThresholdKey key) { return mThresholds.containsKey(key); }
@@ -152,4 +193,6 @@ public final class ThresholdRegistry
     {
         return getThreshold(sampleType, SUMMARY_TABLE, summaryTableFeature.name(), qcStatusType);
     }
+
+    public List<QcThreshold> getAll(){ return mThresholds.values().stream().toList(); }
 }

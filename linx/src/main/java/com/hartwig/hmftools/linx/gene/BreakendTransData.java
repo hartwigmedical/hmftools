@@ -180,6 +180,17 @@ public class BreakendTransData
             return svPosition() - TransData.TransEnd;
     }
 
+    public int getDistanceDownstream()
+    {
+        if(mCodingType != UTR_3P)
+            return 0;
+
+        if(mBreakendGeneData.strand() == POS_STRAND)
+            return svPosition() - TransData.TransEnd;
+        else
+            return TransData.TransStart - svPosition();
+    }
+
     public final TranscriptCodingType codingType() { return mCodingType; }
     public final TranscriptRegionType regionType() { return mRegionType; }
 

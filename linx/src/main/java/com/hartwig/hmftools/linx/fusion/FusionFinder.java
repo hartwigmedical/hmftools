@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.linx.fusion;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_NONE;
@@ -13,11 +14,15 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionType.NONE;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_3;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_5;
 
+import static com.hartwig.hmftools.common.gene.TranscriptCodingType.CODING;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.ENHANCER;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.UTR_3P;
 import static com.hartwig.hmftools.common.gene.TranscriptUtils.tickPhaseForward;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.fusion.FusionConfig.LOG_INVALID_REASON;
+import static com.hartwig.hmftools.linx.fusion.FusionConfig.processSvGeneDebug;
+import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_ENHANCER_PARTNER_GENE_DISTANCE_NO_ORIENT;
+import static com.hartwig.hmftools.linx.fusion.FusionConstants.MIN_ENHANCER_PARTNER_GENE_DISTANCE;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.REQUIRED_BIOTYPES;
 import static com.hartwig.hmftools.linx.fusion.FusionReportability.checkProteinDomains;
 import static com.hartwig.hmftools.linx.fusion.FusionReportability.determineReportability;
@@ -79,27 +84,33 @@ public class FusionFinder
     public void reset() { mNextFusionId = 0; }
     public int nextFusionId() { return mNextFusionId++; }
 
-    public final List<GeneFusion> findFusions(final List<BreakendGeneData> breakendGenes1, final List<BreakendGeneData> breakendGenes2)
+    public List<GeneFusion> findFusions(final List<BreakendGeneData> breakendGenes1, final List<BreakendGeneData> breakendGenes2)
     {
-        final List<GeneFusion> potentialFusions = Lists.newArrayList();
+        List<GeneFusion> potentialFusions = Lists.newArrayList();
 
         if(!hasValidConfigData())
             return potentialFusions;
 
-        for(final BreakendGeneData startGene : breakendGenes1)
+        for(BreakendGeneData startGene : breakendGenes1)
         {
+            if(!processSvGeneDebug(startGene.geneName(), startGene.varId()))
+                continue;
+
             // left is upstream, right is downstream
             boolean startUpstream = startGene.isUpstream();
-            boolean startIsIgRegion = mKnownFusionCache.withinEnhancerRegion(startGene.chromosome(), startGene.position());
+            boolean startIsEnhancerRegion = mKnownFusionCache.withinEnhancerRegion(startGene.chromosome(), startGene.position());
 
-            for(final BreakendGeneData endGene : breakendGenes2)
+            for(BreakendGeneData endGene : breakendGenes2)
             {
-                boolean endUpstream = endGene.isUpstream();
-                boolean endIsIgRegion = mKnownFusionCache.withinEnhancerRegion(endGene.chromosome(), endGene.position());
+                if(!processSvGeneDebug(endGene.geneName(), endGene.varId()))
+                    continue;
 
-                if(startIsIgRegion || endIsIgRegion)
+                boolean endUpstream = endGene.isUpstream();
+                boolean endIsEnhancerRegion = mKnownFusionCache.withinEnhancerRegion(endGene.chromosome(), endGene.position());
+
+                if(startIsEnhancerRegion || endIsEnhancerRegion)
                 {
-                    if(startIsIgRegion && endIsIgRegion)
+                    if(startIsEnhancerRegion && endIsEnhancerRegion)
                         continue;
 
                     checkEnhancerFusion(startGene, endGene, potentialFusions);
@@ -114,13 +125,13 @@ public class FusionFinder
                     continue;
                 }
 
-                final BreakendGeneData upGene = startUpstream ? startGene : endGene;
-                final BreakendGeneData downGene = !startUpstream ? startGene : endGene;
+                BreakendGeneData upGene = startUpstream ? startGene : endGene;
+                BreakendGeneData downGene = !startUpstream ? startGene : endGene;
 
                 boolean knownPair = mKnownFusionCache.hasKnownFusion(upGene.geneName(), downGene.geneName());
                 boolean knownUnmappable3Pair = mKnownFusionCache.hasKnownUnmappable3Fusion(upGene.geneName(), downGene.geneName());
 
-                for(final BreakendTransData upstreamTrans : upGene.transcripts())
+                for(BreakendTransData upstreamTrans : upGene.transcripts())
                 {
                     if(!isValidUpstreamTranscript(upstreamTrans, !knownPair, mConfig.RequireUpstreamBiotypes))
                     {
@@ -128,7 +139,7 @@ public class FusionFinder
                         continue;
                     }
 
-                    for(final BreakendTransData downstreamTrans : downGene.transcripts())
+                    for(BreakendTransData downstreamTrans : downGene.transcripts())
                     {
                         GeneFusion fusion;
 
@@ -447,59 +458,87 @@ public class FusionFinder
         // in which case the 3' gene's orientation must be facing back upstream into the coding region
 
         // orientation in the IG region is no longer checked
-        boolean startIsIgGene = mKnownFusionCache.withinEnhancerRegion(startGene.chromosome(), startGene.position()); // matchesIgGene startGene.orientation()
-        boolean endIsIgGene = !startIsIgGene && mKnownFusionCache.withinEnhancerRegion(endGene.chromosome(), endGene.position()); // endGene.orientation()
+        boolean startIsEnhancerGene = mKnownFusionCache.withinEnhancerRegion(startGene.chromosome(), startGene.position());
+        boolean endIsEnhancerGene = mKnownFusionCache.withinEnhancerRegion(endGene.chromosome(), endGene.position());
 
-        if(!startIsIgGene && !endIsIgGene)
+        if(startIsEnhancerGene == endIsEnhancerGene) // only one end can be
             return;
 
-        BreakendGeneData igGene = startIsIgGene ? startGene : endGene;
-        BreakendGeneData downGene = startIsIgGene ? endGene : startGene;
+        BreakendGeneData enhancerGene = startIsEnhancerGene ? startGene : endGene;
+        BreakendGeneData downGene = startIsEnhancerGene ? endGene : startGene;
 
         KnownFusionType knownType = NONE;
 
-        final List<BreakendTransData> candidateTranscripts = downGene.transcripts().stream()
-                .filter(x -> x.CodingBases == 0 && !x.isUpstream())
-                .collect(Collectors.toList());
-
         KnownFusionData kfData = mKnownFusionCache.getDataByType(ENHANCER_KNOWN_PAIR).stream()
                 .filter(x -> x.ThreeGene.equals(downGene.geneName()))
-                .filter(x -> x.withinGeneRegion(igGene.chromosome(), igGene.position()))
+                .filter(x -> x.withinGeneRegion(enhancerGene.chromosome(), enhancerGene.position()))
                 .findFirst().orElse(null);
 
-        if(kfData != null)
-        {
-            // a known IG-partner gene
-            if(kfData.downstreamDistance(FS_DOWN) > 0)
-            {
-                // must face back to the coding region if 3' UTR or downstream of the gene
-                candidateTranscripts.addAll(downGene.transcripts().stream()
-                        .filter(x -> x.codingType().equals(UTR_3P) && x.isUpstream())
-                        .collect(Collectors.toList()));
-            }
-
-            knownType = ENHANCER_KNOWN_PAIR;
-        }
-        else
+        if(kfData == null)
         {
             kfData = mKnownFusionCache.getDataByType(ENHANCER_PROMISCUOUS).stream()
-                    .filter(x -> x.withinGeneRegion(igGene.chromosome(), igGene.position()))
+                    .filter(x -> x.withinGeneRegion(enhancerGene.chromosome(), enhancerGene.position()))
                     .findFirst().orElse(null);
 
             // check within the promiscuous region bounds
             if(kfData == null)
                 return;
 
-            knownType = ENHANCER_PROMISCUOUS;
+            if(enhancerGene.chromosome().equals(downGene.chromosome()))
+            {
+                int distance = abs(enhancerGene.position() - downGene.position());
+
+                if(distance < MIN_ENHANCER_PARTNER_GENE_DISTANCE)
+                    return;
+            }
         }
 
-        final BreakendTransData upTrans = generateIgTranscript(igGene, kfData);
+        knownType = kfData.Type;
+
+        List<BreakendTransData> downGeneTranscripts = Lists.newArrayList();
+
+        int maxDownStreamDistance = -1;
+        boolean allowCoding = false;
+
+        if(kfData.geneStrand() == null)
+        {
+            maxDownStreamDistance = MAX_ENHANCER_PARTNER_GENE_DISTANCE_NO_ORIENT;
+            allowCoding = true;
+        }
+        else
+        {
+            if(kfData.downstreamDistance(FS_DOWN) > 0)
+                maxDownStreamDistance = kfData.downstreamDistance(FS_DOWN);
+        }
+
+        for(BreakendTransData transData : downGene.transcripts())
+        {
+            // typically must be prior to the 1st coding base of the 3’ gene partner
+            if(transData.CodingBases == 0 && !transData.isUpstream())
+            {
+                if(transData.getDistanceUpstream() <= MAX_ENHANCER_PARTNER_GENE_DISTANCE_NO_ORIENT)
+                    downGeneTranscripts.add(transData);
+            }
+            else if(transData.codingType() == CODING && allowCoding)
+            {
+                downGeneTranscripts.add(transData);
+            }
+            else if(transData.codingType() == UTR_3P && transData.isUpstream() && maxDownStreamDistance > 0)
+            {
+                int downstreamDistance = transData.getDistanceDownstream();
+
+                if(downstreamDistance <= maxDownStreamDistance)
+                    downGeneTranscripts.add(transData);
+            }
+        }
+
+        BreakendTransData upTrans = generateEnhancerTranscript(enhancerGene, kfData);
 
         // add new candidates only if no matching IG fusion has already been created
         // this is done since multiple upstream genes in the IG region can be processed, but all creating identical IG fusions
-        for(final BreakendTransData downTrans : candidateTranscripts)
+        for(BreakendTransData downTrans : downGeneTranscripts)
         {
-            if(hasMatchingIgFusion(potentialFusions, knownType, upTrans, downTrans))
+            if(hasMatchingEnhancerFusion(potentialFusions, knownType, upTrans, downTrans))
                 continue;
 
             GeneFusion fusion = new GeneFusion(upTrans, downTrans, true);
@@ -509,7 +548,7 @@ public class FusionFinder
         }
     }
 
-    private static boolean hasMatchingIgFusion(
+    private static boolean hasMatchingEnhancerFusion(
             final List<GeneFusion> potentialFusions, final KnownFusionType knownType,
             final BreakendTransData upTrans, final BreakendTransData downTrans)
     {
@@ -531,7 +570,7 @@ public class FusionFinder
         return false;
     }
 
-    private BreakendTransData generateIgTranscript(final BreakendGeneData gene, final KnownFusionData knownFusionData)
+    private BreakendTransData generateEnhancerTranscript(final BreakendGeneData gene, final KnownFusionData knownFusionData)
     {
         TranscriptData transData = new TranscriptData(
                 0, String.format("@%s", knownFusionData.FiveGene), gene.geneId(), false, gene.strand(),
@@ -565,7 +604,6 @@ public class FusionFinder
         return false;
     }
 
-
     public GeneFusion findTopReportableFusion(final List<GeneFusion> fusions)
     {
         // find candidate reportable fusions, and then set protein domain info for these
@@ -574,6 +612,7 @@ public class FusionFinder
         for(GeneFusion fusion : fusions)
         {
             List<FusionReportableReason> reportabilityReasons = determineReportability(fusion);
+
             fusion.setReportableReasons(reportabilityReasons);
 
             if(!reportabilityReasons.isEmpty())
@@ -729,14 +768,18 @@ public class FusionFinder
             return;
         }
 
+        boolean requiresExonRange = false;
+
         if(mKnownFusionCache.hasPromiscuousThreeGene(downGene))
         {
             geneFusion.setKnownType(PROMISCUOUS_3);
             geneFusion.isPromiscuous()[FS_DOWN] = true;
 
+            String transName = geneFusion.transcripts()[FS_DOWN].transName();
+            requiresExonRange = mKnownFusionCache.requiresPromiscuousExonRange(PROMISCUOUS_3, transName);
+
             if(mKnownFusionCache.withinPromiscuousExonRange(
-                    PROMISCUOUS_3, geneFusion.transcripts()[FS_DOWN].transName(),
-                    geneFusion.getBreakendExon(false), geneFusion.getFusedExon(false)))
+                    PROMISCUOUS_3, transName, geneFusion.getBreakendExon(false), geneFusion.getFusedExon(false)))
             {
                 geneFusion.setKnownExons();
             }
@@ -748,9 +791,11 @@ public class FusionFinder
             geneFusion.setKnownType(PROMISCUOUS_5);
             geneFusion.isPromiscuous()[FS_UP] = true;
 
+            String transName = geneFusion.transcripts()[FS_UP].transName();
+            requiresExonRange = mKnownFusionCache.requiresPromiscuousExonRange(PROMISCUOUS_5, transName);
+
             if(mKnownFusionCache.withinPromiscuousExonRange(
-                    PROMISCUOUS_5, geneFusion.transcripts()[FS_UP].transName(),
-                    geneFusion.getBreakendExon(true), geneFusion.getFusedExon(true)))
+                    PROMISCUOUS_5, transName, geneFusion.getBreakendExon(true), geneFusion.getFusedExon(true)))
             {
                 geneFusion.setKnownExons();
             }
@@ -758,7 +803,8 @@ public class FusionFinder
 
         if(geneFusion.knownType() == PROMISCUOUS_5 || geneFusion.knownType() == PROMISCUOUS_3)
         {
-            if(mKnownFusionCache.isHighImpactPromiscuous(geneFusion.knownType(), geneFusion.geneName(FS_UP), geneFusion.geneName(FS_DOWN)))
+            if(mKnownFusionCache.isHighImpactPromiscuous(geneFusion.knownType(), geneFusion.geneName(FS_UP), geneFusion.geneName(FS_DOWN))
+            && (!requiresExonRange || geneFusion.knownExons()))
             {
                 geneFusion.setHighImpactPromiscuous();
             }

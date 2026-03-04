@@ -57,8 +57,7 @@ public class OrangeAlgoTest
         assertNotNull(algo.run(config));
     }
 
-    @NotNull
-    private static OrangeAlgo createOrangeAlgo(@NotNull OrangeConfig config) throws IOException
+    private static OrangeAlgo createOrangeAlgo(final OrangeConfig config) throws IOException
     {
         OrangeAlgo algo = OrangeAlgo.fromConfig(config);
         return algo;

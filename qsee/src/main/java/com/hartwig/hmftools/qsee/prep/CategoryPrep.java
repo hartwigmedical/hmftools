@@ -7,16 +7,13 @@ import org.jetbrains.annotations.Nullable;
 import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.Feature;
 import com.hartwig.hmftools.qsee.feature.SourceTool;
+import com.hartwig.hmftools.qsee.prep.category.PrepCategory;
 
 public interface CategoryPrep
 {
-    default String name()
-    {
-        String className = this.getClass().getSimpleName();
-        return className.replaceAll("Prep$", "");
-    }
-
     SourceTool sourceTool();
+
+    PrepCategory category();
 
     default @Nullable List<Feature> extractSampleData(String sampleId) throws Exception
     {

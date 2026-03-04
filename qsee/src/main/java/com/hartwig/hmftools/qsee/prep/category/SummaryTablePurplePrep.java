@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature.
 import java.io.IOException;
 import java.util.EnumMap;
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.purple.FittedPurity;
@@ -31,9 +32,9 @@ import com.hartwig.hmftools.qsee.feature.SourceTool;
 import com.hartwig.hmftools.qsee.prep.CategoryPrep;
 import com.hartwig.hmftools.qsee.prep.QseePrepConfig;
 import com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature;
-import com.hartwig.hmftools.qsee.status.ComparisonOperator;
+import com.hartwig.hmftools.qsee.status.PurpleQCStatusConverter;
 import com.hartwig.hmftools.qsee.status.QcStatus;
-import com.hartwig.hmftools.qsee.status.QcStatusType;
+import com.hartwig.hmftools.qsee.status.ThresholdRegistry;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -46,6 +47,7 @@ public class SummaryTablePurplePrep implements CategoryPrep
     public SummaryTablePurplePrep(QseePrepConfig config) { mConfig = config; }
 
     public SourceTool sourceTool() { return SOURCE_TOOL; }
+    public PrepCategory category() { return PrepCategory.SUMMARY_TABLE_PURPLE; }
 
     private PurityContext loadPurplePurity(String sampleId) throws IOException
     {
@@ -56,78 +58,47 @@ public class SummaryTablePurplePrep implements CategoryPrep
         return PurityContextFile.readWithQC(qcFile, purityFile);
     }
 
-    @VisibleForTesting
-    static EnumMap<PurpleQCStatus, QcStatus> qcStatusFrom(PurityContext purityContext)
+    private static EnumMap<PurpleQCStatus, QcStatus> qcStatusFrom(Set<PurpleQCStatus> purpleQCStatuses, ThresholdRegistry thresholds)
     {
+        PurpleQCStatusConverter converter = new PurpleQCStatusConverter(thresholds);
+
         EnumMap<PurpleQCStatus, QcStatus> qcStatuses = new EnumMap<>(PurpleQCStatus.class);
 
-        for(PurpleQCStatus purpleQcStatus : PurpleQCStatus.values())
+        for(PurpleQCStatus purpleQCStatus : PurpleQCStatus.values())
         {
-            boolean purpleQcStatusExists = purityContext.qc().status().contains(purpleQcStatus);
+            QcStatus qseeQCStatus = converter.toQseeQcStatus(purpleQCStatus);
 
-            QcStatus qcStatus = purpleQcStatusExists
-                    ? convertQcStatus(purpleQcStatus)
-                    : QcStatus.createEmpty();
+            QcStatus qcStatus = purpleQCStatuses.contains(purpleQCStatus)
+                    ? qseeQCStatus
+                    : QcStatus.createPass(qseeQCStatus);
 
-            qcStatuses.put(purpleQcStatus, qcStatus);
+            qcStatuses.put(purpleQCStatus, qcStatus);
         }
 
         return qcStatuses;
     }
 
-    private static QcStatus convertQcStatus(PurpleQCStatus purpleQCStatus)
-    {
-        return switch(purpleQCStatus)
-        {
-            case PASS -> QcStatus.createEmpty();
-
-            case WARN_DELETED_GENES ->
-                    new QcStatus(QcStatusType.WARN, ComparisonOperator.GREATER_THAN, PurpleQCStatus.MAX_DELETED_GENES);
-
-            case WARN_HIGH_COPY_NUMBER_NOISE ->
-                    new QcStatus(QcStatusType.WARN, ComparisonOperator.GREATER_THAN, PurpleQCStatus.MAX_UNSUPPORTED_SEGMENTS);
-
-            case WARN_LOW_PURITY ->
-                    new QcStatus(QcStatusType.WARN, ComparisonOperator.LESS_THAN, PurpleQCStatus.MIN_PURITY);
-
-            case WARN_TINC ->
-                    new QcStatus(QcStatusType.WARN, ComparisonOperator.GREATER_THAN, PurpleQCStatus.TINC_WARN_LEVEL);
-
-            case FAIL_TINC ->
-                    new QcStatus(QcStatusType.FAIL, ComparisonOperator.GREATER_THAN_OR_EQUAL, PurpleQCStatus.TINC_FAIL_LEVEL);
-
-            case FAIL_CONTAMINATION ->
-                    new QcStatus(QcStatusType.FAIL, ComparisonOperator.GREATER_THAN, PurpleQCStatus.MAX_CONTAMINATION);
-
-            case FAIL_NO_TUMOR -> new QcStatus(QcStatusType.FAIL, null, Double.NaN);
-
-            case WARN_GENDER_MISMATCH -> new QcStatus(QcStatusType.WARN, null, Double.NaN);
-
-            default ->
-                    throw new IllegalArgumentException("QC threshold not defined for PurpleQCStatus(" + purpleQCStatus + ")");
-        };
-    }
-
     private static QcStatus getTincQcStatus(EnumMap<PurpleQCStatus, QcStatus> qcStatuses)
     {
-        QcStatus tincStatus = qcStatuses.get(PurpleQCStatus.FAIL_NO_TUMOR);
+        QcStatus passStatus = QcStatus.createPass(qcStatuses.get(PurpleQCStatus.FAIL_TINC));
 
+        QcStatus tincStatus = qcStatuses.get(PurpleQCStatus.FAIL_TINC);
         if(tincStatus == null)
             tincStatus = qcStatuses.get(PurpleQCStatus.WARN_TINC);
 
         if(tincStatus == null)
-            tincStatus = QcStatus.createEmpty();
+            tincStatus = passStatus;
 
         return tincStatus;
     }
 
     @VisibleForTesting
-    static List<Feature> createFeatures(PurityContext purityContext)
+    static List<Feature> createFeatures(PurityContext purityContext, ThresholdRegistry thresholds)
     {
         PurpleQC purpleQC = purityContext.qc();
         FittedPurity purpleFit = purityContext.bestFit();
 
-        EnumMap<PurpleQCStatus, QcStatus> qcStatuses = qcStatusFrom(purityContext);
+        EnumMap<PurpleQCStatus, QcStatus> qcStatuses = qcStatusFrom(purityContext.qc().status(), thresholds);
 
         EnumMap<SummaryTableFeature, Feature> featuresMap = new EnumMap<>(SummaryTableFeature.class);
 
@@ -154,7 +125,7 @@ public class SummaryTablePurplePrep implements CategoryPrep
             return List.of();
 
         PurityContext purityContext = loadPurplePurity(sampleId);
-        List<Feature> features = createFeatures(purityContext);
+        List<Feature> features = createFeatures(purityContext, mConfig.QcThresholds);
         return features;
     }
 }

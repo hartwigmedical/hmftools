@@ -100,7 +100,6 @@ public class DisruptionFinder implements CohortFileInterface
 
         for(DriverGene driverGene : driverGenes)
         {
-            // TODO: take all genes and then later on set reportable status
             if(onlyReportable && !driverGene.reportDisruption())
                 continue;
 

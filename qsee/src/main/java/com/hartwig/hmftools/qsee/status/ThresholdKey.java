@@ -22,7 +22,7 @@ public class ThresholdKey
         mQcStatusType = qcStatusType;
     }
 
-    public SampleType thresholdGroup(){ return mSampleType;}
+    public SampleType sampleType(){ return mSampleType;}
     public FeatureType featureType() { return mFeatureType; }
     @Nullable public String featureName() { return mFeatureName; }
     public QcStatusType qcStatusType() { return mQcStatusType; }

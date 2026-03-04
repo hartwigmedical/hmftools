@@ -18,9 +18,11 @@ public class UmiConfig
     public final int AdapterLength;
     public final int AdapterUmiLength;
     public final String AdapterSequence;
+
     public final String KnownUmiFile;
+    public final int KnownUmiBaseDiff;
+
     public final String AdapterSequenceReversed;
-    public final Integer SpecificRead;
 
     private static final String FASTQ_FILES = "fastq_files";
     private static final String UMI_LENGTH = "umi_length";
@@ -28,20 +30,25 @@ public class UmiConfig
     private static final String ADAPTER_LENGTH = "adapter_length";
     private static final String ADAPTER_SEQUENCE = "adapter_seq";
     private static final String KNOWN_UMI_FILE = "known_umi_file";
-    private static final String SPECIFIC_READ = "specific_read";
+    private static final String KNOWN_UMI_BASE_DIFF = "known_umi_base_diff";
+
+    private static final int DEFAULT_KNOWN_UMI_BASE_DIFF = 1;
 
     public UmiConfig(final ConfigBuilder configBuilder)
     {
         FastqFiles = configBuilder.getValue(FASTQ_FILES);
         OutputDir = parseOutputDir(configBuilder);
-        OutputId = configBuilder.getValue(OUTPUT_ID);
+        OutputId = configBuilder.getValue(OUTPUT_ID, "umi");
+
         UmiLength = configBuilder.getInteger(UMI_LENGTH);
+
         AdapterLength = configBuilder.getInteger(ADAPTER_LENGTH);
         AdapterSequence = configBuilder.getValue(ADAPTER_SEQUENCE);
-        KnownUmiFile = configBuilder.getValue(KNOWN_UMI_FILE);
-        UmiDelim = configBuilder.getValue(UMI_DELIM);
 
-        SpecificRead = configBuilder.hasValue(SPECIFIC_READ) ? configBuilder.getInteger(SPECIFIC_READ) : null;
+        KnownUmiFile = configBuilder.getValue(KNOWN_UMI_FILE);
+        KnownUmiBaseDiff = configBuilder.getInteger(KNOWN_UMI_BASE_DIFF);
+
+        UmiDelim = configBuilder.getValue(UMI_DELIM);
 
         if(AdapterSequence != null)
         {
@@ -57,11 +64,12 @@ public class UmiConfig
 
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addConfigItem(FASTQ_FILES, true, "Fastq file-pair path, separated by delim ','");
-        configBuilder.addRequiredInteger(UMI_LENGTH, "UMI length");
+        configBuilder.addConfigItem(FASTQ_FILES, true, "Fastq file-pair path, separated by delim ';'");
+        configBuilder.addPath(KNOWN_UMI_FILE, false, "File with known UMI sequences");
+        configBuilder.addInteger(UMI_LENGTH,"UMI length", 0);
         configBuilder.addConfigItem(ADAPTER_SEQUENCE, "Adapter sequence (optional)");
         configBuilder.addConfigItem(UMI_DELIM, "UMI delimiter");
-        configBuilder.addInteger(SPECIFIC_READ, "Specific read to extract from (optional)", 0);
+        configBuilder.addInteger(KNOWN_UMI_BASE_DIFF, "Max permitted base difference for known UMI", DEFAULT_KNOWN_UMI_BASE_DIFF);
         configBuilder.addInteger(ADAPTER_LENGTH, "Adapter length", 0);
 
         addOutputOptions(configBuilder);

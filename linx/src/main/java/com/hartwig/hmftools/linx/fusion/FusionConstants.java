@@ -19,8 +19,10 @@ public class FusionConstants
 
     // maximum distance from breakend to transcript start for known and other fusions
     public static final int MAX_UPSTREAM_DISTANCE_KNOWN = 100000;
-    public static final int MAX_UPSTREAM_DISTANCE_IG_KNOWN = 250000;
+    public static final int MAX_UPSTREAM_DISTANCE_ENHANCER_KNOWN = 250000;
     public static final int MAX_UPSTREAM_DISTANCE_OTHER = 10000;
+    public static final int MAX_ENHANCER_PARTNER_GENE_DISTANCE_NO_ORIENT = 50000;
+    public static final int MIN_ENHANCER_PARTNER_GENE_DISTANCE = 1_000_000;
 
     public static final int SHORT_UNPHASED_DISTANCE_KNOWN = 1000000;
 

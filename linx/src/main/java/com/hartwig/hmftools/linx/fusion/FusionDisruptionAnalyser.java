@@ -287,7 +287,7 @@ public class FusionDisruptionAnalyser
     private void findSingleSVFusions(final List<SvVarData> svList)
     {
         // always report SVs by themselves
-        for(final SvVarData var : svList)
+        for(SvVarData var : svList)
         {
             if(var.isSglBreakend() && var.getSglMappings().isEmpty())
                 continue;
@@ -303,8 +303,8 @@ public class FusionDisruptionAnalyser
                     continue;
             }
 
-            final List<BreakendGeneData> genesListStart = getBreakendGeneList(var, true);
-            final List<BreakendGeneData> genesListEnd =  getBreakendGeneList(var, false);
+            List<BreakendGeneData> genesListStart = getBreakendGeneList(var, true);
+            List<BreakendGeneData> genesListEnd =  getBreakendGeneList(var, false);
 
             if(genesListStart.isEmpty() || genesListEnd.isEmpty())
                 continue;
@@ -836,7 +836,7 @@ public class FusionDisruptionAnalyser
         if(!fusion.validChainTraversal() && !allowSuspectChains(fusion.knownType()))
             return false;
 
-        if(!fusion.isIG() && fusion.downstreamTrans().hasNegativePrevSpliceAcceptorDistance())
+        if(!fusion.isEnhancer() && fusion.downstreamTrans().hasNegativePrevSpliceAcceptorDistance())
             return false;
 
         return true;
