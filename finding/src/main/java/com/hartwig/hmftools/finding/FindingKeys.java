@@ -1,23 +1,17 @@
 package com.hartwig.hmftools.finding;
 
-import java.util.stream.Collectors;
-
 import com.hartwig.hmftools.datamodel.chord.ChordStatus;
 import com.hartwig.hmftools.finding.datamodel.DriverSource;
 import com.hartwig.hmftools.datamodel.hla.LilacAllele;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
-import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
 import com.hartwig.hmftools.datamodel.purple.PurpleMicrosatelliteStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.PurpleTumorMutationalStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
-import com.hartwig.hmftools.datamodel.purple.PurpleVariantEffect;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
-
-import org.jetbrains.annotations.Nullable;
 
 final class FindingKeys
 {
@@ -59,6 +53,11 @@ final class FindingKeys
         return String.format("hlaAllele[%s]", allele.allele());
     }
 
+    public static String chromosomeArmCopyNumber(String chromosome, String arm)
+    {
+        return String.format("chrArmCopyNumber[%s%s]", chromosome, arm);
+    }
+
     public static String microsatelliteStability(PurpleMicrosatelliteStatus status)
     {
         return String.format("microsatelliteStability[%s]", status.name());
@@ -88,30 +87,5 @@ final class FindingKeys
     private static String geneTranscriptLabel(String gene, boolean isCanonical, String transcriptId)
     {
         return isCanonical ? gene : String.format("%s(%s)", gene, transcriptId);
-    }
-
-    private static String impact(PurpleTranscriptImpact transcriptImpact)
-    {
-        return determineVariantAnnotation(transcriptImpact.hgvsCodingImpact(),
-                transcriptImpact.hgvsProteinImpact(),
-                transcriptImpact.effects().stream().map(Enum::toString).collect(Collectors.joining("&")),
-                transcriptImpact.codingEffect() == PurpleCodingEffect.SPLICE,
-                transcriptImpact.effects().contains(PurpleVariantEffect.UPSTREAM_GENE));
-    }
-
-    public static String determineVariantAnnotation(@Nullable String hgvsCoding, @Nullable String hgvsProtein, String effects,
-            boolean isSplice, boolean isUpstream)
-    {
-        if(hgvsProtein != null && !hgvsProtein.isEmpty() && !hgvsProtein.equals("p.?"))
-        {
-            return hgvsProtein;
-        }
-
-        if(hgvsCoding != null && !hgvsCoding.isEmpty())
-        {
-            return isSplice ? hgvsCoding + " splice" : hgvsCoding;
-        }
-
-        return isUpstream ? "upstream" : effects;
     }
 }
