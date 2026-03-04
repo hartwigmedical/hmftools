@@ -3,8 +3,9 @@ package com.hartwig.hmftools.orange.conversion;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.hartwig.hmftools.common.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.common.linx.FusionReportableReason;
-import com.hartwig.hmftools.datamodel.linx.FusionLikelihoodType;
+import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.linx.FusionPhasedType;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxDriver;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxFusion;
@@ -12,15 +13,12 @@ import com.hartwig.hmftools.datamodel.linx.ImmutableLinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.linx.LinxDriver;
 import com.hartwig.hmftools.datamodel.linx.LinxDriverEventType;
-import com.hartwig.hmftools.datamodel.linx.LinxDriverType;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.linx.LinxFusionType;
 import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.linx.LinxUnreportableReason;
 import com.hartwig.hmftools.orange.algo.linx.HomozygousDisruption;
-
-import org.jetbrains.annotations.NotNull;
 
 public final class LinxConversion
 {
@@ -70,7 +68,7 @@ public final class LinxConversion
                 .reportedType(LinxFusionType.valueOf(linxFusion.reportedType()))
                 .unreportedReasons(convertUnreportableReasons(linxFusion.reportableReasons()))
                 .phased(FusionPhasedType.valueOf(linxFusion.phased().name()))
-                .driverLikelihood(FusionLikelihoodType.valueOf(linxFusion.likelihood().name()))
+                .driverInterpretation(fromFusionLikelihood(linxFusion.likelihood()))
                 .fusedExonUp(linxFusion.fusedExonUp())
                 .fusedExonDown(linxFusion.fusedExonDown())
                 .chainLinks(linxFusion.chainLinks())
@@ -79,6 +77,17 @@ public final class LinxConversion
                 .domainsLost(linxFusion.domainsLost())
                 .junctionCopyNumber(linxFusion.junctionCopyNumber())
                 .build();
+    }
+
+    private static DriverInterpretation fromFusionLikelihood(final FusionLikelihoodType fusionLikelihoodType)
+    {
+        switch(fusionLikelihoodType)
+        {
+            case HIGH: return DriverInterpretation.HIGH;
+            case LOW: return DriverInterpretation.LOW;
+            default: return DriverInterpretation.UNKNOWN;
+        }
+
     }
 
     private static List<LinxUnreportableReason> convertUnreportableReasons(final List<FusionReportableReason> reasons)

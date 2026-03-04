@@ -12,6 +12,7 @@ import com.hartwig.hmftools.common.metrics.FlagstatTestFactory;
 import com.hartwig.hmftools.common.linx.LinxTestFactory;
 import com.hartwig.hmftools.common.metrics.BamMetricsTestFactory;
 import com.hartwig.hmftools.common.peach.PeachTestFactory;
+import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.hla.ImmutableLilacAllele;
 import com.hartwig.hmftools.datamodel.hla.ImmutableLilacRecord;
 import com.hartwig.hmftools.datamodel.hla.LilacAllele;
@@ -45,7 +46,6 @@ import com.hartwig.hmftools.datamodel.virus.VirusBreakendQCStatus;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
-import com.hartwig.hmftools.datamodel.virus.VirusLikelihoodType;
 import com.hartwig.hmftools.orange.algo.cuppa.TestCuppaFactory;
 import com.hartwig.hmftools.orange.algo.immuno.TestImmuneEscapeFactory;
 import com.hartwig.hmftools.orange.algo.isofox.OrangeIsofoxTestFactory;
@@ -334,7 +334,7 @@ public final class TestOrangeReportFactory
                 .meanCoverage(42D)
                 .expectedClonalCoverage(3D)
                 .reported(true)
-                .driverLikelihood(VirusLikelihoodType.UNKNOWN)
+                .driverInterpretation(DriverInterpretation.UNKNOWN)
                 .build());
 
         return ImmutableVirusInterpreterData.builder().reportableViruses(reportableViruses).build();

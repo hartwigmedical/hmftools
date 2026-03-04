@@ -88,7 +88,7 @@ public class VariantEntryFactoryTest
         assertEquals(0.4, entry2.driverLikelihood(), EPSILON);
 
         VariantEntry entry3 = findByGeneAndImpact(entries, "gene 2", "impact 3");
-        assertNull(entry3.driverLikelihood());
+        assertEquals(0, entry3.driverLikelihood(), 0.1);
     }
 
     @Test

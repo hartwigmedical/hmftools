@@ -264,7 +264,7 @@
           "NONE"
         ],
         "phased": "INFRAME",
-        "driverLikelihood": "HIGH",
+        "driverInterpretation": "HIGH",
         "fusedExonUp": 1,
         "fusedExonDown": 2,
         "chainLinks": 0,
@@ -349,7 +349,7 @@
         "meanCoverage": 0.0,
         "expectedClonalCoverage": null,
         "reported": true,
-        "driverLikelihood": "HIGH"
+        "driverInterpretation": "HIGH"
       },
       {
         "name": "Human betaherpesvirus 6B",
@@ -360,7 +360,7 @@
         "meanCoverage": 0.0,
         "expectedClonalCoverage": null,
         "reported": false,
-        "driverLikelihood": "LOW"
+        "driverInterpretation": "LOW"
       }
     ],
     "reportableViruses": [
@@ -373,7 +373,7 @@
         "meanCoverage": 0.0,
         "expectedClonalCoverage": null,
         "reported": true,
-        "driverLikelihood": "HIGH"
+        "driverInterpretation": "HIGH"
       }
     ]
   },

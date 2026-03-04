@@ -22,7 +22,6 @@ import com.hartwig.hmftools.datamodel.hla.LilacAllele;
 import com.hartwig.hmftools.datamodel.hla.LilacRecord;
 import com.hartwig.hmftools.datamodel.immuno.ImmuneEscapeRecord;
 import com.hartwig.hmftools.datamodel.immuno.ImmutableImmuneEscapeRecord;
-import com.hartwig.hmftools.datamodel.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.datamodel.linx.FusionPhasedType;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxFusion;
@@ -77,7 +76,6 @@ import com.hartwig.hmftools.datamodel.virus.VirusBreakendQCStatus;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
-import com.hartwig.hmftools.datamodel.virus.VirusLikelihoodType;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -382,7 +380,7 @@ public class TestOrangeJsonWriter
                         .build())
                 .addFusions(ImmutableLinxFusion.builder()
                         .reported(true)
-                        .driverLikelihood(FusionLikelihoodType.HIGH)
+                        .driverInterpretation(DriverInterpretation.HIGH)
                         .reportedType(LinxFusionType.KNOWN_PAIR)
                         .addUnreportedReasons(LinxUnreportableReason.NONE)
                         .fusedExonUp(1)
@@ -419,7 +417,7 @@ public class TestOrangeJsonWriter
                 .integrations(1)
                 .interpretation(VirusInterpretation.HPV)
                 .reported(true)
-                .driverLikelihood(VirusLikelihoodType.HIGH)
+                .driverInterpretation(DriverInterpretation.HIGH)
                 .percentageCovered(0.9)
                 .meanCoverage(0)
                 .build();
@@ -430,7 +428,7 @@ public class TestOrangeJsonWriter
                 .integrations(0)
                 .interpretation(null)     // nullable field
                 .reported(false)
-                .driverLikelihood(VirusLikelihoodType.LOW)
+                .driverInterpretation(DriverInterpretation.LOW)
                 .percentageCovered(0.4)
                 .meanCoverage(0)
                 .build();

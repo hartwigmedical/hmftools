@@ -269,7 +269,7 @@
           "NOT_KNOWN"
         ],
         "phased": "INFRAME",
-        "driverLikelihood": "NA",
+        "driverInterpretation": "NA",
         "fusedExonUp": 67,
         "fusedExonDown": 70,
         "chainLinks": 0,

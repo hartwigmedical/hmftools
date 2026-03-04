@@ -3,6 +3,7 @@ package com.hartwig.hmftools.orange.report;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+import java.util.List;
 import java.util.Locale;
 
 import com.hartwig.hmftools.orange.OrangeApplication;
@@ -13,9 +14,7 @@ import com.itextpdf.kernel.colors.DeviceRgb;
 import com.itextpdf.kernel.font.PdfFont;
 import com.itextpdf.kernel.font.PdfFontFactory;
 import com.itextpdf.layout.Style;
-
-import org.apache.logging.log4j.util.Strings;
-import org.jetbrains.annotations.Nullable;
+import com.itextpdf.layout.element.Cell;
 
 public class ReportResources
 {
@@ -35,6 +34,7 @@ public class ReportResources
 
     public static final DeviceRgb PALETTE_DARK_GREY = new DeviceRgb(39, 47, 50);
     public static final DeviceRgb PALETTE_MID_GREY = new DeviceRgb(101, 106, 108);
+    public static final DeviceRgb PALETTE_LIGHT_GREY = new DeviceRgb(211, 211, 211);
     public static final DeviceRgb PALETTE_BLUE = new DeviceRgb(38, 90, 166);
 
     public static final DeviceRgb PALETTE_ORANGE = new DeviceRgb(242, 139, 31);
@@ -48,13 +48,13 @@ public class ReportResources
     private static final String FONT_REGULAR_PATH = "fonts/nimbus-sans/NimbusSansL-Regular.ttf";
     private static final String FONT_BOLD_PATH = "fonts/nimbus-sans/NimbusSansL-Bold.ttf";
 
-    private final PdfFont fontRegular;
-    private final PdfFont fontBold;
+    private final PdfFont mFontRegular;
+    private final PdfFont mFontBold;
 
     private ReportResources(final PdfFont fontRegular, final PdfFont fontBold)
     {
-        this.fontRegular = fontRegular;
-        this.fontBold = fontBold;
+        mFontRegular = fontRegular;
+        mFontBold = fontBold;
     }
 
     public static ReportResources create()
@@ -112,66 +112,76 @@ public class ReportResources
 
     public PdfFont fontBold()
     {
-        return fontBold;
+        return mFontBold;
     }
 
     public Style chapterTitleStyle()
     {
-        return new Style().setFont(fontBold).setFontSize(10).setFontColor(ReportResources.PALETTE_ORANGE);
+        return new Style().setFont(mFontBold).setFontSize(10).setFontColor(ReportResources.PALETTE_ORANGE);
     }
 
     public Style tableTitleStyle()
     {
-        return new Style().setFont(fontBold).setFontSize(8).setFontColor(ReportResources.PALETTE_ORANGE);
+        return new Style().setFont(mFontBold).setFontSize(8).setFontColor(ReportResources.PALETTE_ORANGE);
     }
 
     public Style tableHeaderStyle()
     {
-        return new Style().setFont(fontRegular).setFontSize(7).setFontColor(ReportResources.PALETTE_MID_GREY);
+        return new Style().setFont(mFontRegular).setFontSize(7).setFontColor(ReportResources.PALETTE_MID_GREY);
     }
 
     public Style tableContentStyle()
     {
-        return new Style().setFont(fontRegular).setFontSize(7).setFontColor(ReportResources.PALETTE_DARK_GREY);
+        return new Style().setFont(mFontRegular).setFontSize(7).setFontColor(ReportResources.PALETTE_DARK_GREY);
     }
 
     public Style keyStyle()
     {
-        return new Style().setFont(fontRegular).setFontSize(7).setFontColor(ReportResources.PALETTE_MID_GREY);
+        return new Style().setFont(mFontRegular).setFontSize(7).setFontColor(ReportResources.PALETTE_MID_GREY);
     }
     public Style valueStyle()
     {
-        return new Style().setFont(fontRegular).setFontSize(7).setFontColor(ReportResources.PALETTE_MID_GREY);
+        return new Style().setFont(mFontRegular).setFontSize(7).setFontColor(ReportResources.PALETTE_MID_GREY);
     }
     public Style subTextStyle()
     {
-        return new Style().setFont(fontRegular).setFontSize(6).setFontColor(ReportResources.PALETTE_BLACK);
+        return new Style().setFont(mFontRegular).setFontSize(6).setFontColor(ReportResources.PALETTE_BLACK);
     }
     public Style pageNumberStyle()
     {
-        return new Style().setFont(fontBold).setFontSize(7).setFontColor(ReportResources.PALETTE_ORANGE);
+        return new Style().setFont(mFontBold).setFontSize(7).setFontColor(ReportResources.PALETTE_ORANGE);
     }
 
     public Style disclaimerStyle()
     {
-        return new Style().setFont(fontRegular).setFontSize(6).setFontColor(ReportResources.PALETTE_MID_GREY);
+        return new Style().setFont(mFontRegular).setFontSize(6).setFontColor(ReportResources.PALETTE_MID_GREY);
     }
 
     public Style qcWarningStyle()
     {
-        return new Style().setFont(fontBold).setFontSize(7).setFontColor(ReportResources.PALETTE_DARK_GREY);
+        return new Style().setFont(mFontBold).setFontSize(7).setFontColor(ReportResources.PALETTE_DARK_GREY);
     }
     public Style sidePanelLabelStyle()
     {
-        return new Style().setFont(fontBold).setFontSize(7).setFontColor(ReportResources.PALETTE_WHITE);
+        return new Style().setFont(mFontBold).setFontSize(7).setFontColor(ReportResources.PALETTE_WHITE);
     }
     public Style sidePanelValueStyle()
     {
-        return new Style().setFont(fontBold).setFontSize(10).setFontColor(ReportResources.PALETTE_WHITE);
+        return new Style().setFont(mFontBold).setFontSize(10).setFontColor(ReportResources.PALETTE_WHITE);
     }
     public Style urlStyle()
     {
-        return new Style().setFont(fontRegular).setFontSize(7).setFontColor(ReportResources.PALETTE_BLUE);
+        return new Style().setFont(mFontRegular).setFontSize(7).setFontColor(ReportResources.PALETTE_BLUE);
+    }
+
+    public Style candidateDriverBackground()
+    {
+        return new Style().setBackgroundColor(ReportResources.PALETTE_LIGHT_GREY);
+    }
+
+    public void shadeCandidateCells(final List<Cell> cells)
+    {
+        cells.forEach(x -> x.addStyle(candidateDriverBackground()));
     }
 
     private static PdfFont createFontFromProgram(final FontProgram program)

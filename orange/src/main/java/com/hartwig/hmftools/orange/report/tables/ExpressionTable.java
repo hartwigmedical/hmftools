@@ -23,7 +23,7 @@ import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_GENE;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_TPM;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.cellArray;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.floatArray;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.intToFloatArray;
 
 public final class ExpressionTable
 {
@@ -45,7 +45,7 @@ public final class ExpressionTable
         addEntry(cells, widths, cellEntries, 1, "Percentile");
         addEntry(cells, widths, cellEntries, 1, "Fold Change");
 
-        Table table = Tables.createContent(width, floatArray(widths), cellArray(cellEntries));
+        Table table = Tables.createContent(width, intToFloatArray(widths), cellArray(cellEntries));
         
         for(GeneExpression expression : sort(expressions, sortAscending))
         {

@@ -2,6 +2,8 @@ package com.hartwig.hmftools.datamodel.linx;
 
 import java.util.List;
 
+import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
+
 import org.immutables.gson.Gson;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -48,7 +50,7 @@ public interface LinxFusion
     FusionPhasedType phased();
 
     @NotNull
-    FusionLikelihoodType driverLikelihood();
+    DriverInterpretation driverInterpretation();
 
     int fusedExonUp();
 

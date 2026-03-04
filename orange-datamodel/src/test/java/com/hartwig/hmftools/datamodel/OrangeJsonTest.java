@@ -12,6 +12,7 @@ import java.util.Collection;
 
 import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.chord.ChordStatus;
+import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
@@ -19,7 +20,6 @@ import com.hartwig.hmftools.datamodel.gene.TranscriptCodingType;
 import com.hartwig.hmftools.datamodel.gene.TranscriptRegionType;
 import com.hartwig.hmftools.datamodel.hla.LilacAllele;
 import com.hartwig.hmftools.datamodel.hla.LilacRecord;
-import com.hartwig.hmftools.datamodel.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.datamodel.linx.FusionPhasedType;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
@@ -52,7 +52,6 @@ import com.hartwig.hmftools.datamodel.virus.VirusBreakendQCStatus;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
-import com.hartwig.hmftools.datamodel.virus.VirusLikelihoodType;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -310,7 +309,7 @@ public class OrangeJsonTest
         assertEquals("ENST00000319349", fusion.geneTranscriptEnd());
         assertEquals("Exon 2", fusion.geneContextEnd());
         assertEquals(2, fusion.fusedExonDown());
-        assertEquals(FusionLikelihoodType.HIGH, fusion.driverLikelihood());
+        assertEquals(DriverInterpretation.HIGH, fusion.driverInterpretation());
         assertEquals(FusionPhasedType.INFRAME, fusion.phased());
         assertEquals(1.1, fusion.junctionCopyNumber(), EPSILON);
     }
@@ -351,7 +350,7 @@ public class OrangeJsonTest
         assertEquals(VirusBreakendQCStatus.NO_ABNORMALITIES, virus1.qcStatus());
         assertEquals(VirusInterpretation.HPV, virus1.interpretation());
         assertEquals(1, virus1.integrations());
-        assertEquals(VirusLikelihoodType.HIGH, virus1.driverLikelihood());
+        assertEquals(DriverInterpretation.HIGH, virus1.driverInterpretation());
         assertEquals(0.9, virus1.percentageCovered(), EPSILON);
 
         VirusInterpreterEntry virus2 = findVirusByName(virusInterpreter.allViruses(), "Human betaherpesvirus 6B");
@@ -359,7 +358,7 @@ public class OrangeJsonTest
         assertEquals(VirusBreakendQCStatus.NO_ABNORMALITIES, virus2.qcStatus());
         assertNull(virus2.interpretation());
         assertEquals(0, virus2.integrations());
-        assertEquals(VirusLikelihoodType.LOW, virus2.driverLikelihood());
+        assertEquals(DriverInterpretation.LOW, virus2.driverInterpretation());
         assertEquals(0.4, virus2.percentageCovered(), EPSILON);
 
         assertEquals(1, virusInterpreter.reportableViruses().size());

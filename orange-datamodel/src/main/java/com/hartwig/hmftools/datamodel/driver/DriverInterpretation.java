@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.datamodel.driver;
 
-import org.jetbrains.annotations.NotNull;
-
 public enum DriverInterpretation
 {
     // must be listed from low to high for comparison
@@ -13,7 +11,6 @@ public enum DriverInterpretation
     public static final double DRIVER_LIKELIHOOD_LOW_THRESHOLD = 0.2;
     public static final double DRIVER_LIKELIHOOD_MEDIUM_THRESHOLD = 0.8;
 
-    @NotNull
     public static DriverInterpretation interpret(double driverLikelihood)
     {
         if(driverLikelihood >= DRIVER_LIKELIHOOD_MEDIUM_THRESHOLD)
