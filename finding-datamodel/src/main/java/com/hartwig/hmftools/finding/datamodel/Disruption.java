@@ -2,7 +2,6 @@ package com.hartwig.hmftools.finding.datamodel;
 
 import org.jspecify.annotations.Nullable;
 
-import io.soabase.recordbuilder.core.RecordBuilder;
 import jakarta.validation.constraints.NotNull;
 
 @SuppressWarnings("unused")
