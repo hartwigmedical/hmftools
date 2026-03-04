@@ -78,7 +78,7 @@ public record PurityPloidyFit(
 
     public boolean isLowPurity()
     {
-        return qc().status().contains(PurpleQCStatus.WARN_LOW_PURITY);
+        return qc().status().contains(QCStatus.WARN_LOW_PURITY);
     }
 
     public boolean isFailNoTumor()

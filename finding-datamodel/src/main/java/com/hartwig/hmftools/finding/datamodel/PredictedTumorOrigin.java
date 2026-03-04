@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.finding.datamodel;
 
-import com.hartwig.hmftools.datamodel.cuppa.CuppaMode;
-
 import io.soabase.recordbuilder.core.RecordBuilder;
 import jakarta.validation.constraints.NotNull;
 
@@ -18,4 +16,9 @@ public record PredictedTumorOrigin(
         Double expressionPairwiseClassifier
 ) implements Finding
 {
+    public enum CuppaMode
+    {
+        WGS,
+        WGTS
+    }
 }
