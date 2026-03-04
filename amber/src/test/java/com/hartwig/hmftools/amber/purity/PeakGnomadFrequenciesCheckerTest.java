@@ -10,12 +10,12 @@ import org.junit.Test;
 
 public class PeakGnomadFrequenciesCheckerTest extends PurityTestBase
 {
-    VafLevel level1 = new VafLevel(0.1);
+    CandidatePeak level1 = new CandidatePeak(0.1);
 
     @Before
     public void setup()
     {
-        level1 = new VafLevel(0.1);
+        level1 = new CandidatePeak(0.1);
         level1.test(evidenceWithDepthAndAltCount(_1, 1000, 100, 90));
         level1.test(evidenceWithDepthAndAltCount(_1, 2000, 100, 91));
         level1.test(evidenceWithDepthAndAltCount(_1, 3000, 100, 10));
@@ -80,7 +80,7 @@ public class PeakGnomadFrequenciesCheckerTest extends PurityTestBase
     @Test
     public void includeHetAndHomCapturesTest()
     {
-        level1 = new VafLevel(0.1);
+        level1 = new CandidatePeak(0.1);
         level1.test(evidenceWithDepthAndAltCount(_1, 1000, 1000, 900)); // hom
         level1.test(evidenceWithDepthAndAltCount(_1, 2000, 1000, 50)); // het
         GnomadFrequencySupplier supplier = (chromosome, position) ->
@@ -99,7 +99,7 @@ public class PeakGnomadFrequenciesCheckerTest extends PurityTestBase
     @Test
     public void handleNoHighAlleleDepthVariantsTest()
     {
-        level1 = new VafLevel(0.1);
+        level1 = new CandidatePeak(0.1);
         level1.test(evidenceWithDepthAndAltCount(_1, 2000, 1000, 50)); // het
         GnomadFrequencySupplier supplier = (chromosome, position) -> 0.5;
         PeakGnomadFrequenciesChecker classifier = new PeakGnomadFrequenciesChecker(level1);
@@ -109,7 +109,7 @@ public class PeakGnomadFrequenciesCheckerTest extends PurityTestBase
     @Test
     public void handleNoLowAlleleDepthVariantsTest()
     {
-        level1 = new VafLevel(0.1);
+        level1 = new CandidatePeak(0.1);
         level1.test(evidenceWithDepthAndAltCount(_1, 2000, 1000, 950)); // het
         GnomadFrequencySupplier supplier = (chromosome, position) -> 0.5;
         PeakGnomadFrequenciesChecker classifier = new PeakGnomadFrequenciesChecker(level1);

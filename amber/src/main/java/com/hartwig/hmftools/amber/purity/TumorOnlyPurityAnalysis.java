@@ -21,7 +21,7 @@ import com.hartwig.hmftools.common.segmentation.ChrArmLocator;
 
 import org.jetbrains.annotations.NotNull;
 
-public class TumorOnlyNoiseFloorAnalysis
+public class TumorOnlyPurityAnalysis
 {
     private static final double HET_VAF_LOWER_BOUND = 0.35;
     private static final double HET_VAF_UPPER_BOUND = 0.65;
@@ -31,10 +31,10 @@ public class TumorOnlyNoiseFloorAnalysis
     private static final double CHR_ARM_LOWER_BOUND_FOR_CONTAMINATION = 0.3;
     private static final double CHR_ARM_AUC_UPPER_BOUND_FOR_COPY_NUMBER_EVENTS = 0.1;
     private static final double MIN_CUTOFF = 0.04;
-    private List<VafLevel> CopyNumberPeaks = new ArrayList<>();
-    private List<VafLevel> ContaminationPeaks = new ArrayList<>();
+    private final List<CandidatePeak> CopyNumberPeaks = new ArrayList<>();
+    private final List<CandidatePeak> ContaminationPeaks = new ArrayList<>();
 
-    public TumorOnlyNoiseFloorAnalysis(
+    public TumorOnlyPurityAnalysis(
             final List<PositionEvidence> evidence,
             final ListMultimap<Chromosome, AmberSite> amberSites,
             final AmberConfig config) throws Exception
@@ -51,9 +51,9 @@ public class TumorOnlyNoiseFloorAnalysis
         double baselineHetGnomadFrequency = getBaselineHetGnomadFrequency(filteredEvidence, frequencySupplier);
         AMB_LOGGER.debug(format("Baseline Het Gnomad Frequency: %.3f", baselineHetGnomadFrequency));
 
-        for(VafLevelEvaluationResult evaluationResult : search.peaks())
+        for(CandidatePeakEvaluationResult evaluationResult : search.peaks())
         {
-            VafLevel peak = evaluationResult.Vaf();
+            CandidatePeak peak = evaluationResult.candidatePeak();
             PeakGnomadFrequenciesChecker gnomadChecker = new PeakGnomadFrequenciesChecker(peak);
             boolean okByGnomadFrequencies = gnomadChecker.checkGnomadFrequencies(frequencySupplier, baselineHetGnomadFrequency);
             if(!okByGnomadFrequencies)
@@ -97,20 +97,15 @@ public class TumorOnlyNoiseFloorAnalysis
 
     public double cutoff()
     {
-        double minCopyNumberPeak = CopyNumberPeaks.stream().map(VafLevel::vaf).min(Double::compare).orElse(0.0);
+        double minCopyNumberPeak = CopyNumberPeaks.stream().map(CandidatePeak::vaf).min(Double::compare).orElse(0.0);
         if(minCopyNumberPeak == 0.0)
         {
             return MIN_CUTOFF;
         }
-        return minCopyNumberPeak / 3.0;
+        return Math.min(MIN_CUTOFF, minCopyNumberPeak / 3.0);
     }
 
-    public List<VafLevel> copyNumberPeaks()
-    {
-        return CopyNumberPeaks;
-    }
-
-    public List<VafLevel> contaminationPeaks()
+    public List<CandidatePeak> contaminationPeaks()
     {
         return ContaminationPeaks;
     }

@@ -62,10 +62,10 @@ public class PeaksSearchTest extends PurityTestBase
             }
         }
         PeakSearch search = new PeakSearch(evidence, 4);
-        List<VafLevelEvaluationResult> peaks = search.peaks();
+        List<CandidatePeakEvaluationResult> peaks = search.peaks();
         assertEquals(2, peaks.size());
-        assertEquals(0.1, peaks.get(0).Vaf().vaf(), 0.01);
-        assertEquals(0.2, peaks.get(1).Vaf().vaf(), 0.01);
+        assertEquals(0.1, peaks.get(0).candidatePeak().vaf(), 0.01);
+        assertEquals(0.2, peaks.get(1).candidatePeak().vaf(), 0.01);
 
         // Now add a copy number event with a peak at 30%.
         start = 1_000_000;
@@ -77,8 +77,8 @@ public class PeaksSearchTest extends PurityTestBase
         search = new PeakSearch(evidence, 4);
         peaks = search.peaks();
         assertEquals(3, peaks.size());
-        assertEquals(0.1, peaks.get(0).Vaf().vaf(), 0.01);
-        assertEquals(0.2, peaks.get(1).Vaf().vaf(), 0.01);
-        assertEquals(0.3, peaks.get(2).Vaf().vaf(), 0.01);
+        assertEquals(0.1, peaks.get(0).candidatePeak().vaf(), 0.01);
+        assertEquals(0.2, peaks.get(1).candidatePeak().vaf(), 0.01);
+        assertEquals(0.3, peaks.get(2).candidatePeak().vaf(), 0.01);
     }
 }

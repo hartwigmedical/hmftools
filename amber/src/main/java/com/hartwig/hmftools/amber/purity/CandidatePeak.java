@@ -14,7 +14,7 @@ import com.hartwig.hmftools.common.segmentation.ChrArmLocator;
 
 import org.apache.commons.math3.distribution.BinomialDistribution;
 
-public class VafLevel
+public class CandidatePeak
 {
     private static final double LOWER_CDF_BOUND_FOR_CAPTURE = 0.16;
     private static final double UPPER_CDF_BOUND_FOR_CAPTURE = 0.84;
@@ -24,13 +24,13 @@ public class VafLevel
     private final List<PositionEvidence> PointsInHomozygousBand = new ArrayList<>();
     private final List<PositionEvidence> PointsInHeterozygousBand = new ArrayList<>();
 
-    public VafLevel(double Level)
+    public CandidatePeak(double Level)
     {
         this.Level = Level;
         StepToNextLevel = 0.00001;
     }
 
-    public VafLevel(double Level, double StepToNextLevel)
+    public CandidatePeak(double Level, double StepToNextLevel)
     {
         this.Level = Level;
         this.StepToNextLevel = StepToNextLevel;

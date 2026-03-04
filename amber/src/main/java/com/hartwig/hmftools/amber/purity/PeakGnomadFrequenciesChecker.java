@@ -11,9 +11,9 @@ import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 public class PeakGnomadFrequenciesChecker
 {
     private static final double GNOMAD_FREQUENCY_TOLERANCE = 0.15;
-    private final VafLevel Peak;
+    private final CandidatePeak Peak;
 
-    public PeakGnomadFrequenciesChecker(final VafLevel peak)
+    public PeakGnomadFrequenciesChecker(final CandidatePeak peak)
     {
         Peak = peak;
     }

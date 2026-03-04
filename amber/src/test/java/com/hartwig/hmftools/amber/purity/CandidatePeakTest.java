@@ -22,7 +22,7 @@ import com.hartwig.hmftools.common.segmentation.ChrArmLocator;
 import org.apache.commons.math3.distribution.BinomialDistribution;
 import org.junit.Test;
 
-public class VafLevelTest extends PurityTestBase
+public class CandidatePeakTest extends PurityTestBase
 {
     private static final int CENTRE = 10_000_000;
     private final ChrArmLocator Locator = position ->
@@ -35,7 +35,7 @@ public class VafLevelTest extends PurityTestBase
     public void hasSufficientDepthForEventDetectionTest()
     {
         // 16th percentile of het peak @ 2 AD
-        VafLevel level35 = new VafLevel(0.35);
+        CandidatePeak level35 = new CandidatePeak(0.35);
         assertFalse(level35.hasSufficientDepthForEventDetection(evidenceWithDepth(0)));
         assertFalse(level35.hasSufficientDepthForEventDetection(evidenceWithDepth(1)));
         assertFalse(level35.hasSufficientDepthForEventDetection(evidenceWithDepth(20)));
@@ -43,7 +43,7 @@ public class VafLevelTest extends PurityTestBase
         assertTrue(level35.hasSufficientDepthForEventDetection(evidenceWithDepth(26)));
         assertTrue(level35.hasSufficientDepthForEventDetection(evidenceWithDepth(30)));
 
-        VafLevel level10 = new VafLevel(0.1);
+        CandidatePeak level10 = new CandidatePeak(0.1);
         assertFalse(level10.hasSufficientDepthForEventDetection(evidenceWithDepth(0)));
         assertFalse(level10.hasSufficientDepthForEventDetection(evidenceWithDepth(1)));
         assertFalse(level10.hasSufficientDepthForEventDetection(evidenceWithDepth(91)));
@@ -127,30 +127,30 @@ public class VafLevelTest extends PurityTestBase
     @Test
     public void altAndRefDepthAreUsedToCalculateVafTest()
     {
-        VafLevel vafLevel = new VafLevel(0.2);
+        CandidatePeak candidatePeak = new CandidatePeak(0.2);
         PositionEvidence pe = new PositionEvidence("1", 1000, "A", "T");
         pe.AltSupport = 10;
         pe.RefSupport = 40;
         pe.ReadDepth = 10000;
-        vafLevel.test(pe);
-        assertTrue(vafLevel.allCapturedPoints().contains(pe));
+        candidatePeak.test(pe);
+        assertTrue(candidatePeak.allCapturedPoints().contains(pe));
     }
 
     @Test
     public void altAndRefDepthAreEffectiveReadDepthTest()
     {
-        VafLevel vafLevel = new VafLevel(0.02);
+        CandidatePeak candidatePeak = new CandidatePeak(0.02);
         PositionEvidence pe = new PositionEvidence("1", 1000, "A", "T");
         pe.AltSupport = 10;
         pe.RefSupport = 40;
         pe.ReadDepth = 10000;
-        assertFalse(vafLevel.hasSufficientDepthForEventDetection(pe));
+        assertFalse(candidatePeak.hasSufficientDepthForEventDetection(pe));
     }
 
     @Test
     public void evenCaptureAcrossChromosomeArmsTest()
     {
-        VafLevel level = new VafLevel(0.1);
+        CandidatePeak level = new CandidatePeak(0.1);
         // 10 reads per chromosome arm, 2 of which are captured.
         for(HumanChromosome chromosome : HumanChromosome.values())
         {
@@ -172,7 +172,7 @@ public class VafLevelTest extends PurityTestBase
     @Test
     public void allCapturedEventsAreInASingleChromosomeArmTest()
     {
-        VafLevel level = new VafLevel(0.1);
+        CandidatePeak level = new CandidatePeak(0.1);
         // 8 reads per chromosome arm, none of which are captured.
         for(HumanChromosome chromosome : HumanChromosome.values())
         {
@@ -195,7 +195,7 @@ public class VafLevelTest extends PurityTestBase
     @Test
     public void eventsEvenlyCapturedAccordingToMutationTypeTest()
     {
-        VafLevel level = new VafLevel(0.2);
+        CandidatePeak level = new CandidatePeak(0.2);
         int position = 1_000_000;
         // For each possible SNV create 10 reads, of which 1 is captured.
         for(AmberBase ref : AmberBase.values())
@@ -226,7 +226,7 @@ public class VafLevelTest extends PurityTestBase
     @Test
     public void eventsOnlyCapturedInCAMutationsTest()
     {
-        VafLevel level = new VafLevel(0.3);
+        CandidatePeak level = new CandidatePeak(0.3);
         int position = 1_000_000;
         for(AmberBase ref : AmberBase.values())
         {
@@ -264,7 +264,7 @@ public class VafLevelTest extends PurityTestBase
     @Test
     public void numberOfEventsCapturedTest()
     {
-        VafLevel level = new VafLevel(0.1);
+        CandidatePeak level = new CandidatePeak(0.1);
         assertEquals(0, level.numberOfCapturedEvidencePoints());
         level.test(evidenceWithDepthAndAltCount(_3, 1_000_000, 1000, 100));
         assertEquals(1, level.numberOfCapturedEvidencePoints());
@@ -277,14 +277,14 @@ public class VafLevelTest extends PurityTestBase
     @Test
     public void vafTest()
     {
-        VafLevel level = new VafLevel(0.1);
+        CandidatePeak level = new CandidatePeak(0.1);
         assertEquals(0.1, level.vaf(), 0.0001);
     }
 
     @Test
     public void homozygousProportionTest()
     {
-        VafLevel level = new VafLevel(0.1);
+        CandidatePeak level = new CandidatePeak(0.1);
         assertEquals(Double.NaN, level.homozygousProportion(), 0.0001);
 
         level.test(evidenceWithDepthAndAltCount(_3, 3_000_000, 1000, 10));
@@ -306,7 +306,7 @@ public class VafLevelTest extends PurityTestBase
     @Test
     public void toStringTest()
     {
-        VafLevel level = new VafLevel(0.1, 0.02);
+        CandidatePeak level = new CandidatePeak(0.1, 0.02);
         level.test(evidenceWithDepthAndAltCount(_3, 1_000_000, 1000, 100));
         level.test(evidenceWithDepthAndAltCount(_3, 2_000_000, 1000, 50));
         level.test(evidenceWithDepthAndAltCount(_3, 2_001_000, 1000, 50));
@@ -316,17 +316,17 @@ public class VafLevelTest extends PurityTestBase
 
     private void checkNotCaptured(double vafLevel, int readDepth, int altDepth)
     {
-        VafLevel level = new VafLevel(vafLevel);
+        CandidatePeak level = new CandidatePeak(vafLevel);
         checkNotCaptured(readDepth, altDepth, level);
     }
 
     private void checkNotCaptured(double vafLevel, double gap, int readDepth, int altDepth)
     {
-        VafLevel level = new VafLevel(vafLevel, gap);
+        CandidatePeak level = new CandidatePeak(vafLevel, gap);
         checkNotCaptured(readDepth, altDepth, level);
     }
 
-    private void checkNotCaptured(final int readDepth, final int altDepth, final VafLevel level)
+    private void checkNotCaptured(final int readDepth, final int altDepth, final CandidatePeak level)
     {
         final PositionEvidence positionEvidence = evidenceWithDepthAndAltCount(readDepth, altDepth);
         level.test(positionEvidence);
@@ -336,17 +336,17 @@ public class VafLevelTest extends PurityTestBase
 
     private void checkCapturedHom(double vafLevel, int readDepth, int altDepth)
     {
-        VafLevel level = new VafLevel(vafLevel);
+        CandidatePeak level = new CandidatePeak(vafLevel);
         checkCapturedHom(readDepth, altDepth, level);
     }
 
     private void checkCapturedHom(double vafLevel, double gap, int readDepth, int altDepth)
     {
-        VafLevel level = new VafLevel(vafLevel, gap);
+        CandidatePeak level = new CandidatePeak(vafLevel, gap);
         checkCapturedHom(readDepth, altDepth, level);
     }
 
-    private void checkCapturedHom(final int readDepth, final int altDepth, final VafLevel level)
+    private void checkCapturedHom(final int readDepth, final int altDepth, final CandidatePeak level)
     {
         final PositionEvidence positionEvidence = evidenceWithDepthAndAltCount(readDepth, altDepth);
         level.test(positionEvidence);
@@ -355,17 +355,17 @@ public class VafLevelTest extends PurityTestBase
 
     private void checkCapturedHet(double vafLevel, int readDepth, int altDepth)
     {
-        VafLevel level = new VafLevel(vafLevel);
+        CandidatePeak level = new CandidatePeak(vafLevel);
         checkCapturedHet(readDepth, altDepth, level);
     }
 
     private void checkCapturedHet(double vafLevel, double gap, int readDepth, int altDepth)
     {
-        VafLevel level = new VafLevel(vafLevel, gap);
+        CandidatePeak level = new CandidatePeak(vafLevel, gap);
         checkCapturedHet(readDepth, altDepth, level);
     }
 
-    private void checkCapturedHet(final int readDepth, final int altDepth, final VafLevel level)
+    private void checkCapturedHet(final int readDepth, final int altDepth, final CandidatePeak level)
     {
         final PositionEvidence positionEvidence = evidenceWithDepthAndAltCount(readDepth, altDepth);
         level.test(positionEvidence);

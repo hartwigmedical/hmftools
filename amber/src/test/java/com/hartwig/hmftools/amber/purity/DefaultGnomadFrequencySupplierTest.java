@@ -32,11 +32,20 @@ public class DefaultGnomadFrequencySupplierTest
         addSite(_1, 2_000, 0.02);
         addSite(_1, 3_000, 0.03);
         addSite(_1, 4_000, 0.04);
+        addSite(_1, 40_000, 0.041);
+        addSite(_1, 50_000, 0.042);
+        addSite(_1, 60_000, 0.043);
+        addSite(_1, 70_000, 0.044);
+        addSite(_1, 80_000, 0.043);
         addSite(_2, 2_000, 0.02);
         addSite(_3, 3_000, 0.24);
         DefaultGnomadFrequencySupplier supplier = new DefaultGnomadFrequencySupplier(sites, V38);
         Assert.assertEquals(0.01, supplier.getFrequency(V38.versionedChromosome(_1), 1000), 0.00001);
         Assert.assertEquals(0.02, supplier.getFrequency(V38.versionedChromosome(_1), 2000), 0.00001);
+        Assert.assertEquals(0.03, supplier.getFrequency(V38.versionedChromosome(_1), 3000), 0.00001);
+        Assert.assertEquals(0.042, supplier.getFrequency(V38.versionedChromosome(_1), 50_000), 0.00001);
+        Assert.assertEquals(0.043, supplier.getFrequency(V38.versionedChromosome(_1), 60_000), 0.00001);
+        Assert.assertEquals(0.043, supplier.getFrequency(V38.versionedChromosome(_1), 80_000), 0.00001);
         Assert.assertEquals(0.24, supplier.getFrequency(V38.versionedChromosome(_3), 3000), 0.00001);
     }
 
@@ -45,6 +54,15 @@ public class DefaultGnomadFrequencySupplierTest
     {
         DefaultGnomadFrequencySupplier supplier = new DefaultGnomadFrequencySupplier(sites, V38);
         Assert.assertThrows(IllegalArgumentException.class, () -> supplier.getFrequency(V38.versionedChromosome(_1), 1000));
+    }
+
+    @Test
+    public void throwExceptionForPositionNotInSitesTest()
+    {
+        addSite(_1, 1_000, 0.01);
+        addSite(_1, 3_000, 0.03);
+        DefaultGnomadFrequencySupplier supplier = new DefaultGnomadFrequencySupplier(sites, V38);
+        Assert.assertThrows(IllegalArgumentException.class, () -> supplier.getFrequency(V38.versionedChromosome(_1), 2_000));
     }
 
     @Test

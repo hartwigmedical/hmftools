@@ -27,17 +27,13 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.amber.contamination.CategoryEvidence;
-import com.hartwig.hmftools.amber.contamination.ArmEvidenceFile;
-import com.hartwig.hmftools.amber.contamination.PositionBasedFrequencySupplier;
 import com.hartwig.hmftools.amber.contamination.TumorContamination;
 import com.hartwig.hmftools.amber.contamination.TumorContaminationModel;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.amber.blacklist.AmberBlacklistFile;
 import com.hartwig.hmftools.amber.blacklist.AmberBlacklistPoint;
-import com.hartwig.hmftools.amber.contamination.TumorOnlyContaminationAnalysis;
-import com.hartwig.hmftools.amber.purity.TumorOnlyNoiseFloorAnalysis;
-import com.hartwig.hmftools.amber.purity.VafLevel;
+import com.hartwig.hmftools.amber.purity.TumorOnlyPurityAnalysis;
+import com.hartwig.hmftools.amber.purity.CandidatePeak;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.amber.AmberSite;
 import com.hartwig.hmftools.common.amber.AmberSitesFile;
@@ -46,7 +42,6 @@ import com.hartwig.hmftools.common.genome.position.GenomePositionImpl;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.segmentation.ChrArm;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.VersionInfo;
@@ -261,10 +256,10 @@ public class AmberApplication implements AutoCloseable
                 .sorted().toList();
 
         List<PositionEvidence> rawData = readDepthAndQualityFiltered.stream().map(x -> x.TumorEvidence).toList();
-        TumorOnlyNoiseFloorAnalysis noiseFloorAnalysis = new TumorOnlyNoiseFloorAnalysis(rawData, mChromosomeSites, mConfig);
+        TumorOnlyPurityAnalysis noiseFloorAnalysis = new TumorOnlyPurityAnalysis(rawData, mChromosomeSites, mConfig);
         double noiseFloor = noiseFloorAnalysis.cutoff();
         AMB_LOGGER.debug(format("Noise floor: %.3f", noiseFloor));
-        double contamination = noiseFloorAnalysis.contaminationPeaks().stream().map(VafLevel::vaf).max(Double::compare).orElse(0.0);
+        double contamination = noiseFloorAnalysis.contaminationPeaks().stream().map(CandidatePeak::vaf).max(Double::compare).orElse(0.0);
         AMB_LOGGER.debug(format("Contamination level: %.3f", contamination));
 
         List<TumorBAF> tumorBAFList = readDepthAndQualityFiltered

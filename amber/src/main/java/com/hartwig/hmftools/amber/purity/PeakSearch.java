@@ -16,18 +16,18 @@ import org.apache.commons.lang3.tuple.Pair;
 
 public class PeakSearch
 {
-    private final List<VafLevelEvaluationResult> Peaks;
-    private final List<VafLevel> ContaminationPeaks = new ArrayList<>();
-    private final List<VafLevel> CopyNumberPeaks = new ArrayList<>();
+    private final List<CandidatePeakEvaluationResult> Peaks;
+    private final List<CandidatePeak> ContaminationPeaks = new ArrayList<>();
+    private final List<CandidatePeak> CopyNumberPeaks = new ArrayList<>();
 
     public PeakSearch(List<PositionEvidence> evidence, final int nThreads)
     {
         List<Pair<Double, Double>> searchValues = new SearchGrid().searchValuesAndSteps();
-        List<VafLevelEvaluation> evaluations = new ArrayList<>();
+        List<CandidatePeakEvaluation> evaluations = new ArrayList<>();
         for(Pair<Double, Double> pair : searchValues)
         {
-            VafLevel level = new VafLevel(pair.getLeft(), pair.getRight());
-            evaluations.add(new VafLevelEvaluation(level, evidence));
+            CandidatePeak level = new CandidatePeak(pair.getLeft(), pair.getRight());
+            evaluations.add(new CandidatePeakEvaluation(level, evidence));
         }
         try
         {
@@ -39,22 +39,21 @@ public class PeakSearch
         {
             AMB_LOGGER.error("Peak search interrupted", e);
         }
-        List<VafLevelEvaluationResult> results = evaluations.stream()
-                .filter(VafLevelEvaluation::hasScore)
-                .map(VafLevelEvaluation::result)
+        List<CandidatePeakEvaluationResult> results = evaluations.stream()
+                .map(CandidatePeakEvaluation::result)
                 .toList();
-        for(VafLevelEvaluationResult result : results)
+        for(CandidatePeakEvaluationResult result : results)
         {
-            AMB_LOGGER.debug(format("Potential peak at %.3f with score: %.3f ", result.Vaf().vaf(), result.Score()));
+            AMB_LOGGER.debug(format("Potential peak at %.3f with score: %.3f ", result.candidatePeak().vaf(), result.score()));
         }
         Peaks = new LocalMaximaFinder<>(results).maxima();
-        for(VafLevelEvaluationResult peak : Peaks)
+        for(CandidatePeakEvaluationResult peak : Peaks)
         {
-            AMB_LOGGER.debug(format("Actual peak at %.3f with score: %.3f ", peak.Vaf().vaf(), peak.Score()));
+            AMB_LOGGER.debug(format("Actual peak at %.3f with score: %.3f ", peak.candidatePeak().vaf(), peak.score()));
         }
     }
 
-    public List<VafLevelEvaluationResult> peaks()
+    public List<CandidatePeakEvaluationResult> peaks()
     {
         return Peaks;
     }
