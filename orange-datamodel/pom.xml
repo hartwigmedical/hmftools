@@ -10,7 +10,6 @@
 
     <artifactId>orange-datamodel</artifactId>
     <packaging>jar</packaging>
-    <version>${orange-datamodel.version}</version>
     <name>HMF Tools - ORANGE datamodel</name>
 
     <dependencies>
