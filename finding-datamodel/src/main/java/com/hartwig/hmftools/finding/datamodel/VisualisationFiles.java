@@ -18,7 +18,7 @@ public record VisualisationFiles(
         @NotNull String purpleVariantCopyNumberPlot,
         @NotNull String purplePurityRangePlot,
         @NotNull String purpleKataegisPlot,
-        @NotNull String qseePlot,
+        @Nullable String qseePlot,
         @NotNull List<String> linxDriverPlots,
         @NotNull Map<String, String> sageVisualisations,
         @Nullable String cuppaSummaryPlot)
