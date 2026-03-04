@@ -19,11 +19,8 @@ import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.driver.panel.DriverGeneFile;
 import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
+import com.hartwig.hmftools.datamodel.cuppa.CuppaMode;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
-import com.hartwig.hmftools.finding.datamodel.DriverInterpretation;
-import com.hartwig.hmftools.finding.datamodel.DriverSource;
-import com.hartwig.hmftools.finding.clinicaltranscript.ClinicalTranscriptFile;
-import com.hartwig.hmftools.finding.clinicaltranscript.ClinicalTranscriptsModel;
 import com.hartwig.hmftools.datamodel.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
@@ -42,6 +39,8 @@ import com.hartwig.hmftools.finding.clinicaltranscript.ClinicalTranscriptsModel;
 import com.hartwig.hmftools.finding.datamodel.DriverFieldsBuilder;
 import com.hartwig.hmftools.finding.datamodel.DriverFindingList;
 import com.hartwig.hmftools.finding.datamodel.DriverFindingListBuilder;
+import com.hartwig.hmftools.finding.datamodel.DriverInterpretation;
+import com.hartwig.hmftools.finding.datamodel.DriverSource;
 import com.hartwig.hmftools.finding.datamodel.FindingItem;
 import com.hartwig.hmftools.finding.datamodel.FindingItemBuilder;
 import com.hartwig.hmftools.finding.datamodel.FindingList;
@@ -206,7 +205,7 @@ public class FindingRecordFactory
         {
             return FindingListBuilder.<PredictedTumorOrigin>builder()
                     .status(FindingsStatus.OK)
-                    .findings(List.of(createPredictedTumorOrigin(cuppa.bestPrediction())))
+                    .findings(List.of(createPredictedTumorOrigin(cuppa.bestPrediction(), cuppaMode(cuppa.mode()))))
                     .build();
         }
         else
@@ -215,13 +214,26 @@ public class FindingRecordFactory
         }
     }
 
-    private static PredictedTumorOrigin createPredictedTumorOrigin(CuppaPrediction prediction)
+    private static PredictedTumorOrigin createPredictedTumorOrigin(CuppaPrediction prediction, PredictedTumorOrigin.CuppaMode cuppaMode)
     {
         return PredictedTumorOriginBuilder.builder()
                 .findingKey(FindingKeys.predictedTumorOrigin(prediction.cancerType()))
+                .mode(cuppaMode)
                 .cancerType(prediction.cancerType())
                 .likelihood(prediction.likelihood())
+                .snvPairwiseClassifier(prediction.snvPairwiseClassifier())
+                .genomicPositionClassifier(prediction.genomicPositionClassifier())
+                .featureClassifier(prediction.featureClassifier())
+                .altSjCohortClassifier(prediction.altSjCohortClassifier())
+                .expressionPairwiseClassifier(prediction.expressionPairwiseClassifier())
                 .build();
+    }
+
+    private static PredictedTumorOrigin.CuppaMode cuppaMode(CuppaMode cuppaMode) {
+        return switch(cuppaMode) {
+            case WGS -> PredictedTumorOrigin.CuppaMode.WGS;
+            case WGTS -> PredictedTumorOrigin.CuppaMode.WGTS;
+        };
     }
 
     private static FindingItem<HomologousRecombination> createHomologousRecombination(@Nullable ChordRecord chord,
