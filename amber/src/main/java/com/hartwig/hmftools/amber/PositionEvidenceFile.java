@@ -24,7 +24,7 @@ public final class PositionEvidenceFile
     private static final String REF = "Ref";
     private static final String ALT = "Alt";
     private static final String READ_DEPTH = "ReadDepth";
-    private static final String INDEL_COUNT = "iIndelCount";
+    private static final String INDEL_COUNT = "IndelCount";
     private static final String REF_COUNT = "RefCount";
     private static final String ALT_COUNT = "AltCount";
     private static final String BASE_QUAL_FILTERED = "BaseQualFiltered";

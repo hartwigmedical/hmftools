@@ -11,7 +11,12 @@ import java.util.Collection;
 import java.util.List;
 import java.util.StringJoiner;
 
+import com.hartwig.hmftools.amber.PositionEvidence;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.segmentation.Arm;
 import com.hartwig.hmftools.common.segmentation.ChrArm;
+import com.hartwig.hmftools.common.utils.file.DelimFileReader;
+import com.hartwig.hmftools.common.utils.file.DelimFileWriter;
 
 public final class ArmEvidenceFile
 {
@@ -27,42 +32,39 @@ public final class ArmEvidenceFile
     private static final String TOTAL_POINTS = "totalPoints";
     private static final String EVIDENCE_POINTS = "evidencePoints";
 
+    private static List<String> columns()
+    {
+        return List.of(CHROMOSOME, ARM, TOTAL_POINTS, EVIDENCE_POINTS);
+    }
+
     public static void write(final String filename, final Collection<CategoryEvidence<ChrArm>> categoryEvidences) throws IOException
     {
-        try(Writer writer = createBufferedWriter(filename))
+        List<CategoryEvidence<ChrArm>> sorted = categoryEvidences.stream().sorted().toList();
+        DelimFileWriter.write(filename, columns(), sorted, (baf, row) ->
         {
-            for(String line : toLines(categoryEvidences))
+            row.set(CHROMOSOME, baf.category().chromosome().shortName());
+            row.set(ARM, baf.category().arm().name());
+            row.set(TOTAL_POINTS, baf.totalPoints());
+            row.set(EVIDENCE_POINTS, baf.evidencePoints());
+        });
+    }
+
+    public static List<CategoryEvidence<ChrArm>> read(String filename)
+    {
+        List<CategoryEvidence<ChrArm>> result = new ArrayList<>();
+        try(DelimFileReader reader = new DelimFileReader(filename))
+        {
+            for(DelimFileReader.Row row : reader)
             {
-                writer.write(line + '\n');
+                HumanChromosome chromosome = HumanChromosome.fromString(row.get(CHROMOSOME));
+                Arm arm = Arm.fromString(row.get(ARM));
+                int totalPoints = Integer.parseInt(row.get(TOTAL_POINTS));
+                int evidencePoints = Integer.parseInt(row.get(EVIDENCE_POINTS));
+                CategoryEvidence<ChrArm> evidence = new CategoryEvidence<ChrArm>(new ChrArm(chromosome, arm));
+                evidence.set(totalPoints, evidencePoints);
+                result.add(evidence);
             }
         }
-    }
-
-    private static List<String> toLines(final Collection<CategoryEvidence<ChrArm>> categoryEvidences)
-    {
-        final List<String> lines = new ArrayList<>();
-        lines.add(header());
-        categoryEvidences.stream().sorted().map(ArmEvidenceFile::toString).forEach(lines::add);
-        return lines;
-    }
-
-    private static String header()
-    {
-        return new StringJoiner(TSV_DELIM)
-                .add(CHROMOSOME)
-                .add(ARM)
-                .add(EVIDENCE_POINTS)
-                .add(TOTAL_POINTS)
-                .toString();
-    }
-
-    private static String toString(final CategoryEvidence<ChrArm> categoryEvidence)
-    {
-        return new StringJoiner(TSV_DELIM)
-                .add(categoryEvidence.category().chromosome().toString())
-                .add(categoryEvidence.category().arm().toString())
-                .add(String.valueOf(categoryEvidence.evidencePoints()))
-                .add(String.valueOf(categoryEvidence.totalPoints()))
-                .toString();
+        return result;
     }
 }

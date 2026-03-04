@@ -32,6 +32,12 @@ public class CategoryEvidence<T extends Comparable<T>> implements Comparable<Cat
         }
     }
 
+    void set(int totalPoints, int evidencePoints)
+    {
+        TotalPoints = totalPoints;
+        EvidencePoints = evidencePoints;
+    }
+
     public int totalPoints()
     {
         return TotalPoints;

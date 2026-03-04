@@ -252,36 +252,22 @@ public class AmberApplication implements AutoCloseable
         // no homozygous sites
         TumorAnalysis tumor = new TumorAnalysis(mConfig, readerFactory, allNormal, ArrayListMultimap.create());
 
-        List<PositionEvidence> rawData = tumor.getBafs().values().stream().map(x -> x.TumorEvidence).toList();
-        List<PositionEvidence> dataForNoiseAnalysis = new ArrayList<>();
-        for(TumorBAF baf : tumor.getBafs().values())
-        {
-
-        }
-        TumorOnlyNoiseFloorAnalysis noiseFloorAnalysis = new TumorOnlyNoiseFloorAnalysis(rawData, mChromosomeSites, mConfig);
-        double noiseFloor = noiseFloorAnalysis.cutoff();
-        double contamination = noiseFloorAnalysis.contaminationPeaks().stream().map(VafLevel::vaf).max(Double::compare).orElse(0.0);
-
-        //        List<TumorBAF> readDepthAndQualityFiltered = tumor.getBafs().values()
-        //                .stream()
-        //                .sorted().toList();
-
-        //        PositionBasedFrequencySupplier frequencySupplier = new PositionBasedFrequencySupplier(mChromosomeSites.values());
-        //        TumorOnlyContaminationAnalysis contaminationAnalysis =
-        //                new TumorOnlyContaminationAnalysis(readDepthAndQualityFiltered, mConfig.RefGenVersion, frequencySupplier);
-        //        double contamination = contaminationAnalysis.getApproximateContamination();
-        //        List<TumorContamination> contaminationEvidenceList = contaminationAnalysis.getContaminationPoints();
-        //        mPersistence.persistContamination(contaminationEvidenceList);
-        //
-        //        List<CategoryEvidence<ChrArm>> categoryEvidence = contaminationAnalysis.getArmEvidence();
-        //        ArmEvidenceFile.write(ArmEvidenceFile.generateFilename(mConfig.OutputDir, mConfig.TumorId), categoryEvidence);
-
-        List<TumorBAF> tumorBAFList = tumor.getBafs().values()
+        List<TumorBAF> readDepthAndQualityFiltered = tumor.getBafs().values()
                 .stream()
                 .filter(x -> x.TumorEvidence.ReadDepth >= mConfig.TumorMinDepth)
                 .filter(x -> aboveQualFilter(x.TumorEvidence))
                 .filter(x -> x.TumorEvidence.RefSupport >= mConfig.TumorOnlyMinSupport)
                 .filter(x -> x.TumorEvidence.AltSupport >= mConfig.TumorOnlyMinSupport)
+                .sorted().toList();
+
+        List<PositionEvidence> rawData = readDepthAndQualityFiltered.stream().map(x -> x.TumorEvidence).toList();
+        TumorOnlyNoiseFloorAnalysis noiseFloorAnalysis = new TumorOnlyNoiseFloorAnalysis(rawData, mChromosomeSites, mConfig);
+        double noiseFloor = noiseFloorAnalysis.cutoff();
+        AMB_LOGGER.debug(format("Noise floor: %.3f", noiseFloor));
+        double contamination = noiseFloorAnalysis.contaminationPeaks().stream().map(VafLevel::vaf).max(Double::compare).orElse(0.0);
+
+        List<TumorBAF> tumorBAFList = readDepthAndQualityFiltered
+                .stream()
                 .filter(x -> isFinite(x.refFrequency()) && Doubles.greaterOrEqual(x.refFrequency(), noiseFloor))
                 .filter(x -> isFinite(x.altFrequency()) && Doubles.greaterOrEqual(x.altFrequency(), noiseFloor))
                 .sorted().toList();

@@ -61,7 +61,7 @@ public class PeaksSearchTest extends PurityTestBase
                     evidence.add(evidenceWithDepthAndAltCount(HumanChromosome._3, position, 1000, 1000));
             }
         }
-        PeakSearch search = new PeakSearch(evidence);
+        PeakSearch search = new PeakSearch(evidence, 4);
         List<VafLevelEvaluationResult> peaks = search.peaks();
         assertEquals(2, peaks.size());
         assertEquals(0.1, peaks.get(0).Vaf().vaf(), 0.01);
@@ -74,7 +74,7 @@ public class PeaksSearchTest extends PurityTestBase
             int position = start + i * 1000;
             evidence.add(evidenceWithDepthAndAltCount(HumanChromosome._3, position, 1000, 300));
         }
-        search = new PeakSearch(evidence);
+        search = new PeakSearch(evidence, 4);
         peaks = search.peaks();
         assertEquals(3, peaks.size());
         assertEquals(0.1, peaks.get(0).Vaf().vaf(), 0.01);

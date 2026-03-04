@@ -125,6 +125,29 @@ public class VafLevelTest extends PurityTestBase
     }
 
     @Test
+    public void altAndRefDepthAreUsedToCalculateVafTest()
+    {
+        VafLevel vafLevel = new VafLevel(0.2);
+        PositionEvidence pe = new PositionEvidence("1", 1000, "A", "T");
+        pe.AltSupport = 10;
+        pe.RefSupport = 40;
+        pe.ReadDepth = 10000;
+        vafLevel.test(pe);
+        assertTrue(vafLevel.allCapturedPoints().contains(pe));
+    }
+
+    @Test
+    public void altAndRefDepthAreEffectiveReadDepthTest()
+    {
+        VafLevel vafLevel = new VafLevel(0.02);
+        PositionEvidence pe = new PositionEvidence("1", 1000, "A", "T");
+        pe.AltSupport = 10;
+        pe.RefSupport = 40;
+        pe.ReadDepth = 10000;
+        assertFalse(vafLevel.hasSufficientDepthForEventDetection(pe));
+    }
+
+    @Test
     public void evenCaptureAcrossChromosomeArmsTest()
     {
         VafLevel level = new VafLevel(0.1);

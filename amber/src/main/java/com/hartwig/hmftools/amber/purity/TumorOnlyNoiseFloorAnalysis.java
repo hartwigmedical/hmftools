@@ -46,7 +46,7 @@ public class TumorOnlyNoiseFloorAnalysis
         RegionsFilter immuneRegionsFilter = new RegionsFilter(immuneRegions);
         List<PositionEvidence> filteredEvidence = immuneRegionsFilter.filter(evidence);
         AMB_LOGGER.debug(format("Immune region data removed leaving %d evidence points", filteredEvidence.size()));
-        PeakSearch search = new PeakSearch(filteredEvidence);
+        PeakSearch search = new PeakSearch(filteredEvidence, config.Threads);
         GnomadFrequencySupplier frequencySupplier = new DefaultGnomadFrequencySupplier(amberSites, config.RefGenVersion);
         double baselineHetGnomadFrequency = getBaselineHetGnomadFrequency(filteredEvidence, frequencySupplier);
         AMB_LOGGER.debug(format("Baseline Het Gnomad Frequency: %.3f", baselineHetGnomadFrequency));

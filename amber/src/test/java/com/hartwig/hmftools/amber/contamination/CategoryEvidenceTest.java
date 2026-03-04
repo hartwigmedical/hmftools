@@ -73,6 +73,15 @@ public class CategoryEvidenceTest
         Assert.assertTrue(ae3p.compareTo(ae3q) < 0);
     }
 
+    @Test
+    public void setTest()
+    {
+        CategoryEvidence<ChrArm> e = new CategoryEvidence<>(new ChrArm(_1, Arm.P));
+        e.set(12, 6);
+        assertEquals(12, e.totalPoints());
+        assertEquals(6, e.evidencePoints());
+    }
+
     static void setValues(CategoryEvidence<ChrArm> evidence, int hits, int totalPoints)
     {
         Preconditions.checkArgument(hits <= totalPoints);

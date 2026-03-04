@@ -20,7 +20,7 @@ public class PeakSearch
     private final List<VafLevel> ContaminationPeaks = new ArrayList<>();
     private final List<VafLevel> CopyNumberPeaks = new ArrayList<>();
 
-    public PeakSearch(List<PositionEvidence> evidence)
+    public PeakSearch(List<PositionEvidence> evidence, final int nThreads)
     {
         List<Pair<Double, Double>> searchValues = new SearchGrid().searchValuesAndSteps();
         List<VafLevelEvaluation> evaluations = new ArrayList<>();
@@ -29,16 +29,16 @@ public class PeakSearch
             VafLevel level = new VafLevel(pair.getLeft(), pair.getRight());
             evaluations.add(new VafLevelEvaluation(level, evidence));
         }
-        ExecutorService executor = Executors.newFixedThreadPool(4); // TODO thread count
         try
         {
+            ExecutorService executor = Executors.newFixedThreadPool(nThreads);
             executor.invokeAll(evaluations);
+            executor.shutdown();
         }
         catch(InterruptedException e)
         {
             AMB_LOGGER.error("Peak search interrupted", e);
         }
-        executor.shutdown();
         List<VafLevelEvaluationResult> results = evaluations.stream()
                 .filter(VafLevelEvaluation::hasScore)
                 .map(VafLevelEvaluation::result)

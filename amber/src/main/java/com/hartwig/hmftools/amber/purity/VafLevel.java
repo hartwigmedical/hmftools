@@ -39,7 +39,7 @@ public class VafLevel
     public boolean hasSufficientDepthForEventDetection(PositionEvidence evidence)
     {
         // We want het points to be above the depth-2 noise floor.
-        BinomialDistribution binomial = new BinomialDistribution(evidence.ReadDepth, Level / 2);
+        BinomialDistribution binomial = new BinomialDistribution(evidence.RefSupport + evidence.AltSupport, Level / 2);
         return binomial.cumulativeProbability(2) < 0.16;
     }
 
@@ -47,7 +47,7 @@ public class VafLevel
     {
         PointsTested.add(evidence);
 
-        int n = evidence.ReadDepth;
+        int n = evidence.RefSupport + evidence.AltSupport;
         int k = evidence.AltSupport;
         if(k > n / 2)
         {
