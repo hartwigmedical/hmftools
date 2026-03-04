@@ -10,7 +10,6 @@
 
     <artifactId>orange</artifactId>
     <packaging>jar</packaging>
-    <version>${orange.version}</version>
     <name>HMF Tools - ORANGE</name>
 
     <dependencies>
