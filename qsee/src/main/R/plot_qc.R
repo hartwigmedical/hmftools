@@ -589,15 +589,16 @@ PLOTS[[FEATURE_TYPE$DISCORDANT_FRAG_FREQ]] <- local({
 
 PLOTS[[FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD]] <- local({
    
-   plot_data <- get_plot_data(FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD)
-   
    MIN_MISSED_VARIANT_LIKELIHOOD <- 0.01
    TOP_N_GENES <- 20
    
    plot_labels <- labs(
-      title = sprintf("Genes (top %s) with potential missed variants (P>%s)", TOP_N_GENES, MIN_MISSED_VARIANT_LIKELIHOOD),
-      x = "Gene", y = "Missed variant likelihood"
+      title = "Genes with potential missed variants",
+      x = sprintf("Genes (top %s per sample type)", TOP_N_GENES), 
+      y = sprintf("Missed variant likelihood (>%s)", MIN_MISSED_VARIANT_LIKELIHOOD)
    )
+   
+   plot_data <- get_plot_data(FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD)
    
    if(is.null(plot_data)){
       return(plot_missing_data(plot_labels))
@@ -607,7 +608,8 @@ PLOTS[[FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD]] <- local({
       dplyr::filter(FeatureValue >= MIN_MISSED_VARIANT_LIKELIHOOD) %>%
       
       dplyr::group_by(SampleType) %>% 
-      dplyr::slice_max(order_by = FeatureValue, n = TOP_N_GENES) %>%
+      dplyr::arrange(-FeatureValue) %>%
+      dplyr::slice_head(n = TOP_N_GENES) %>%
       dplyr::ungroup() %>%
       
       dplyr::mutate(
@@ -615,12 +617,33 @@ PLOTS[[FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD]] <- local({
          SampleType = SampleType %>% preordered_factor() %>% reverse_levels()
       )
    
+   unique_genes <- unique(as.character(plot_data$Gene))
+   gene_count <- length(unique_genes)
+
+   ## Split plot into 2 panels if there are too many genes
+   N_GENES_TO_SPLIT_PANEL <- 15
+   gg_facet_wrap <- geom_blank()
+   if(gene_count > N_GENES_TO_SPLIT_PANEL){
+      midpoint <- round(gene_count / 2)
+      gene_group <- as.integer(1:gene_count > midpoint); names(gene_group) <- unique_genes
+      
+      plot_data$GeneGroup <- gene_group[as.character(plot_data$Gene)]
+      gg_facet_wrap <- facet_wrap(". ~ GeneGroup", scales = "free_y")
+   }
+   
    plot_pairwise_comparison(plot_data, x = "Gene", plot_type = box_or_bar_plot()) + 
       plot_labels +
+      gg_facet_wrap +
+      scale_y_continuous(labels = scales::label_number(drop0trailing=TRUE)) +
       coord_flip(ylim = c(0, NA)) +
       theme(
          panel.grid.major.x = element_line(color = "grey90", linewidth = 0.25),
-         plot.title = element_text(hjust = 0.5)
+         plot.title = element_text(hjust = 0.5),
+         axis.title.y = element_text(size = 10),
+         axis.text.y = element_text(size = 8),
+         panel.spacing.x = unit(3, "pt"),
+         strip.text.x = element_blank(),
+         strip.background = element_blank(),
       ) +
       render_now()
 })
@@ -1145,7 +1168,7 @@ create_report <- local({
 
       p <- PLOTS[[feature_type]]
 
-      has_wide_y_axis <- feature_type == FEATURE_TYPE$DISCORDANT_FRAG_FREQ
+      has_wide_y_axis <- feature_type %in% c(FEATURE_TYPE$DISCORDANT_FRAG_FREQ, FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD)
       if(has_wide_y_axis){
          p <- patchwork::free(p, "panel", side = "l")
       } else {
