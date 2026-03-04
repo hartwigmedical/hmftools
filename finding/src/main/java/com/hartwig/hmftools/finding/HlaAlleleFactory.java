@@ -26,7 +26,7 @@ public class HlaAlleleFactory
 {
     private static final Logger LOGGER = LogManager.getLogger(HlaAlleleFactory.class);
 
-    private static final Pattern HLA_REGEX = Pattern.compile("""
+    static final Pattern HLA_REGEX = Pattern.compile("""
             ^(?<gene>[A-Z]+)\\*(?<alleleGroup>\\d{2}):(?<hlaProtein>\\d{2,3})N?$""");
     private static final String PASS = "PASS";
 
@@ -72,7 +72,10 @@ public class HlaAlleleFactory
             LilacAllele lilacAllele = keyMap.getValue().get(0);
 
             var matcher = HLA_REGEX.matcher(lilacAllele.allele());
-            //throw IllegalStateException("Can't extract HLA gene, alleleGroup and hlaProtein from ${allele.allele()}")
+            if (!matcher.matches())
+            {
+                throw new IllegalStateException("Can't extract HLA gene, alleleGroup and hlaProtein from " + lilacAllele.allele());
+            }
             String gene = matcher.group("gene");
             String geneClass = "MHC_CLASS_1";
             String alleleGroup = matcher.group("alleleGroup");
