@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.fastqtools.umi;
 
 import static java.lang.Math.max;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadDelimitedIdFile;
@@ -40,6 +41,9 @@ public class FastqUmiExtracter
     private static final String FASTQ_FILES_DELIM = ";";
     private static final int LINE_LOG_COUNT = 1000000;
 
+    private long mReadCount;
+    private long mKnownUmiMatchCount;
+
     public FastqUmiExtracter(final ConfigBuilder configBuilder)
     {
         mConfig = new UmiConfig(configBuilder);
@@ -48,6 +52,9 @@ public class FastqUmiExtracter
 
         if(mConfig.KnownUmiFile != null)
             loadKnownUmis();
+
+        mReadCount = 0;
+        mKnownUmiMatchCount = 0;
     }
 
     private void loadKnownUmis()
@@ -100,7 +107,13 @@ public class FastqUmiExtracter
 
         processFiles(fastqFiles[0], fastqFiles[1]);
 
-        FQ_LOGGER.info("extraction complete, mins({})", runTimeMinsStr(startTimeMs));
+        if(!mKnownUmis.isEmpty())
+        {
+            double matchedPerc = mReadCount > 0 ? mKnownUmiMatchCount / (double)mReadCount : 0;
+            FQ_LOGGER.info("known UMI matched({} {}%)", mKnownUmiMatchCount, format("%.2f", matchedPerc * 100));
+        }
+
+        FQ_LOGGER.info("extraction complete, totalReads({}), mins({})", mReadCount, runTimeMinsStr(startTimeMs));
     }
 
     private static final int READ_ITEM_ID = 0;
@@ -173,6 +186,8 @@ public class FastqUmiExtracter
                     }
 
                     readLineCount = 0;
+
+                    ++mReadCount;
                 }
 
                 ++lineCount;
@@ -267,6 +282,9 @@ public class FastqUmiExtracter
         // make UMIs of the form 4+5, where integers are the length of the UMIs
         int umiLength1 = umiBases1.length();
         int umiLength2 = umiBases2.length();
+
+        if(umiLength1 > 0 && umiLength2 > 0)
+            ++mKnownUmiMatchCount;
 
         // append UMIs to read Id and remove from bases and quals
         String duplexUmiId = umiLength1 + mConfig.UmiDelim + umiLength2;
