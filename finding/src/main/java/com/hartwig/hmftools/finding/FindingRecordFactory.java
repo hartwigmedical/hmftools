@@ -70,7 +70,6 @@ import com.hartwig.hmftools.finding.datamodel.TumorMutationStatusBuilder;
 import com.hartwig.hmftools.finding.datamodel.Virus;
 import com.hartwig.hmftools.finding.datamodel.VirusBuilder;
 import com.hartwig.hmftools.finding.datamodel.VisualisationFiles;
-import com.hartwig.hmftools.finding.util.EventFactory;
 
 import org.jetbrains.annotations.Nullable;
 
