@@ -35,7 +35,7 @@ public class FastqUmiExtracter
     private BufferedWriter mWriterR2;
 
     private final List<String> mKnownUmis;
-    private final int mMaxKnownUmiLength;
+    private final List<String> mKnownUmisReversed;
 
     private static final String FASTQ_FILES_DELIM = ";";
     private static final int LINE_LOG_COUNT = 1000000;
@@ -44,11 +44,10 @@ public class FastqUmiExtracter
     {
         mConfig = new UmiConfig(configBuilder);
         mKnownUmis = Lists.newArrayList();
+        mKnownUmisReversed = Lists.newArrayList();
 
         if(mConfig.KnownUmiFile != null)
             loadKnownUmis();
-
-        mMaxKnownUmiLength = mKnownUmis.stream().mapToInt(x -> x.length()).max().orElse(0);
     }
 
     private void loadKnownUmis()
@@ -57,6 +56,8 @@ public class FastqUmiExtracter
         knownUmis.forEach(x -> mKnownUmis.add(x));
 
         Collections.sort(mKnownUmis, Comparator.comparingInt(x -> -x.length()));
+
+        mKnownUmis.forEach(x -> mKnownUmisReversed.add(Nucleotides.reverseComplementBases(x)));
 
         if(!knownUmis.isEmpty())
         {
@@ -342,27 +343,33 @@ public class FastqUmiExtracter
 
     private String findKnownUmiMatch(final String readBases, boolean requiresReverse)
     {
-        for(String umi : mKnownUmis)
+        for(int i = 0; i < mKnownUmis.size(); ++i)
         {
+            String umi = mKnownUmis.get(i);
             String readUmi = readBases.substring(0, umi.length());
-
-            if(requiresReverse)
-                readUmi = Nucleotides.reverseComplementBases(readUmi);
 
             if(readUmi.equals(umi))
                 return umi;
+
+            String umiReversed = mKnownUmisReversed.get(i);
+
+            if(readUmi.equals(umiReversed))
+                return umiReversed;
         }
 
         // check for a 1-base mismatch
-        for(String umi : mKnownUmis)
+        for(int i = 0; i < mKnownUmis.size(); ++i)
         {
+            String umi = mKnownUmis.get(i);
             String readUmi = readBases.substring(0, umi.length());
-
-            if(requiresReverse)
-                readUmi = Nucleotides.reverseComplementBases(readUmi);
 
             if(!exceedsUmiDiff(readUmi, umi, mConfig.KnownUmiBaseDiff))
                 return umi;
+
+            String umiReversed = mKnownUmisReversed.get(i);
+
+            if(!exceedsUmiDiff(readUmi, umiReversed, mConfig.KnownUmiBaseDiff))
+                return umiReversed;
         }
 
         return "";
