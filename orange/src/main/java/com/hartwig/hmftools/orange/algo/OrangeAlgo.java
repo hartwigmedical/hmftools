@@ -65,8 +65,6 @@ import com.hartwig.hmftools.orange.algo.purple.PurpleInterpreter;
 import com.hartwig.hmftools.orange.algo.sigs.SigsInterpreter;
 import com.hartwig.hmftools.orange.algo.util.ReportLimiter;
 import com.hartwig.hmftools.orange.algo.virus.VirusInterpreter;
-import com.hartwig.hmftools.orange.cohort.datamodel.ImmutableSample;
-import com.hartwig.hmftools.orange.cohort.datamodel.Sample;
 import com.hartwig.hmftools.orange.conversion.ConversionUtil;
 import com.hartwig.hmftools.orange.conversion.OrangeConversion;
 
@@ -75,17 +73,13 @@ import org.jetbrains.annotations.Nullable;
 public class OrangeAlgo
 {
     private final Map<String,DriverGene> mDriverGenes;
-    private final Map<String, String> mEtiologyPerSignature;
+    private final Map<String,String> mEtiologyPerSignature;
     private final PlotManager mPlotManager;
 
     public static OrangeAlgo fromConfig(final OrangeConfig config) throws IOException
     {
-        LOGGER.info("Reading driver genes from {}", config.DriverGenePanelTsv);
         List<DriverGene> driverGenes = DriverGeneFile.read(config.DriverGenePanelTsv);
-        LOGGER.info(" Read {} driver genes", driverGenes.size());
-
         Map<String,String> etiologyPerSignature = SnvSigUtils.loadSnvSignatureEtiologies();
-        LOGGER.info(" Read {} signatures etiology", etiologyPerSignature.size());
 
         String outputDir = config.OutputDir;
         PlotManager plotManager = !outputDir.isEmpty() ? new FileBasedPlotManager(outputDir) : new DummyPlotManager();
@@ -94,7 +88,7 @@ public class OrangeAlgo
     }
 
     private OrangeAlgo(
-            final List<DriverGene> driverGenes, final Map<String, String> etiologyPerSignature, final PlotManager plotManager)
+            final List<DriverGene> driverGenes, final Map<String,String> etiologyPerSignature, final PlotManager plotManager)
     {
         mDriverGenes = Maps.newHashMap();
         driverGenes.forEach(x -> mDriverGenes.put(x.gene(), x));
@@ -247,13 +241,11 @@ public class OrangeAlgo
 
     private PurpleData loadPurpleData(final OrangeConfig config) throws IOException
     {
-        LOGGER.info("Loading PURPLE data from {}", config.PurpleDataDirectory);
+        LOGGER.info("Loading Purple data from {}", config.PurpleDataDirectory);
 
         PurpleData purple = PurpleDataLoader.load(config, mDriverGenes);
         LOGGER.info(" Loaded {} somatic driver catalog entries", purple.somaticDrivers().size());
         LOGGER.info(" Loaded {} somatic variants", purple.somaticVariants().size());
-        LOGGER.info(" Loaded {} somatic copy numbers entries", purple.somaticCopyNumbers().size());
-        LOGGER.info(" Loaded {} somatic gene copy numbers entries", purple.somaticGeneCopyNumbers().size());
 
         if(config.ReferenceId != null)
         {
@@ -272,7 +264,7 @@ public class OrangeAlgo
 
     private static LinxData loadLinxData(final OrangeConfig config) throws IOException
     {
-        LOGGER.info("Loading LINX somatic data from {}", config.LinxSomaticDataDirectory);
+        LOGGER.info("Loading Linx somatic data from {}", config.LinxSomaticDataDirectory);
 
         String linxGermlineDataDirectory = config.ReferenceId != null ? config.LinxGermlineDataDirectory : null;
 
@@ -286,7 +278,7 @@ public class OrangeAlgo
 
         if(linxGermlineDataDirectory != null)
         {
-            LOGGER.info("Loading LINX germline data from {}", linxGermlineDataDirectory);
+            LOGGER.info("Loading Linx germline data from {}", linxGermlineDataDirectory);
             LOGGER.info(" Loaded {} germline structural variants", linx.germlineSvAnnotations().size());
             LOGGER.info(" Loaded {} germline breakends (of which {} are reportable)",
                     linx.germlineBreakends().size(),
@@ -296,7 +288,7 @@ public class OrangeAlgo
         }
         else
         {
-            LOGGER.info(" Skipped loading LINX germline data as no linx germline data directory has been provided");
+            LOGGER.info(" Skipped loading Linx germline data as no linx germline data directory has been provided");
         }
 
         return linx;
@@ -353,7 +345,7 @@ public class OrangeAlgo
         }
 
         String chordFile = ChordDataFile.generateFilename(config.ChordDir, config.TumorId);
-        LOGGER.info("Loading CHORD data from {}", chordFile);
+        LOGGER.info("Loading Chord data from {}", chordFile);
         ChordData chordData = ChordDataFile.read(chordFile);
         LOGGER.info(" HR Status: {} with type '{}'", chordData.hrStatus().display(), chordData.hrdType());
         return chordData;
@@ -372,9 +364,9 @@ public class OrangeAlgo
         }
 
         String cuppaVisDataTsv = CuppaPredictions.generateVisDataTsvFilename(config.CuppaDir, config.TumorId);
-        LOGGER.info("Loading CUPPA predictions from {}", cuppaVisDataTsv);
+        LOGGER.info("Loading Cuppa predictions from {}", cuppaVisDataTsv);
         CuppaData cuppaData = CuppaDataFactory.create(cuppaVisDataTsv);
-        LOGGER.info(" Loaded {} CUPPA predictions from {}", cuppaData.predictions().size(), cuppaVisDataTsv);
+        LOGGER.info(" Loaded {} Cuppa predictions from {}", cuppaData.predictions().size(), cuppaVisDataTsv);
 
         return cuppaData;
     }
@@ -496,13 +488,5 @@ public class OrangeAlgo
         {
             LOGGER.warn("Expected {} linx plots, but found {}", linxVisualizedClusters.size(), orangePlots.linxDriverPlots().size());
         }
-    }
-
-    private static Sample createSample(final OrangeConfig config)
-    {
-        return ImmutableSample.builder()
-                .sampleId(config.TumorId)
-                .doids(config.PrimaryTumorDoids)
-                .build();
     }
 }

@@ -14,8 +14,8 @@ import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariantEffect;
+import com.hartwig.hmftools.orange.algo.purple.PurpleTestFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleVariantFactory;
-import com.hartwig.hmftools.orange.algo.util.PurpleDriverTestFactory;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -51,7 +51,7 @@ public class VariantEntryFactoryTest
                 .canonicalImpact(TestPurpleVariantFactory.impactBuilder().transcript("transcript 3").hgvsProteinImpact("impact 3").build())
                 .build();
 
-        PurpleDriver canonicalDriver = PurpleDriverTestFactory.builder()
+        PurpleDriver canonicalDriver = PurpleTestFactory.purpleDriverBuilder()
                 .type(PurpleDriverType.MUTATION)
                 .gene("gene 1")
                 .transcript("transcript 1")
@@ -59,7 +59,7 @@ public class VariantEntryFactoryTest
                 .driverLikelihood(0.5)
                 .build();
 
-        PurpleDriver nonCanonicalDriver = PurpleDriverTestFactory.builder()
+        PurpleDriver nonCanonicalDriver = PurpleTestFactory.purpleDriverBuilder()
                 .type(PurpleDriverType.MUTATION)
                 .gene("gene 1")
                 .transcript("transcript 2")
@@ -88,7 +88,7 @@ public class VariantEntryFactoryTest
         assertEquals(0.4, entry2.driverLikelihood(), EPSILON);
 
         VariantEntry entry3 = findByGeneAndImpact(entries, "gene 2", "impact 3");
-        assertNull(entry3.driverLikelihood());
+        assertEquals(0, entry3.driverLikelihood(), 0.1);
     }
 
     @Test
@@ -147,7 +147,7 @@ public class VariantEntryFactoryTest
                 .addOtherImpacts(TestPurpleVariantFactory.impactBuilder().transcript("transcript 2").hgvsProteinImpact("impact 4").build())
                 .build();
 
-        PurpleDriver canonicalDriver = PurpleDriverTestFactory.builder()
+        PurpleDriver canonicalDriver = PurpleTestFactory.purpleDriverBuilder()
                 .type(PurpleDriverType.MUTATION)
                 .gene("gene 1")
                 .transcript("transcript 1")
@@ -155,7 +155,7 @@ public class VariantEntryFactoryTest
                 .driverLikelihood(0.5)
                 .build();
 
-        PurpleDriver nonCanonicalDriver = PurpleDriverTestFactory.builder()
+        PurpleDriver nonCanonicalDriver = PurpleTestFactory.purpleDriverBuilder()
                 .type(PurpleDriverType.MUTATION)
                 .gene("gene 1")
                 .transcript("transcript 2")
@@ -216,7 +216,7 @@ public class VariantEntryFactoryTest
                         .build())
                 .build();
 
-        PurpleDriver canonicalDriver = PurpleDriverTestFactory.builder()
+        PurpleDriver canonicalDriver = PurpleTestFactory.purpleDriverBuilder()
                 .type(PurpleDriverType.MUTATION)
                 .gene("gene 1")
                 .transcript("transcript 1")
@@ -224,7 +224,7 @@ public class VariantEntryFactoryTest
                 .driverLikelihood(0.5)
                 .build();
 
-        PurpleDriver nonCanonicalDriver = PurpleDriverTestFactory.builder()
+        PurpleDriver nonCanonicalDriver = PurpleTestFactory.purpleDriverBuilder()
                 .type(PurpleDriverType.MUTATION)
                 .gene("gene 1")
                 .transcript("transcript 2")

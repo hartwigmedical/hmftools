@@ -3,7 +3,7 @@ package com.hartwig.hmftools.orange.algo.isofox;
 import static org.junit.Assert.assertNotNull;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.orange.algo.linx.TestLinxInterpretationFactory;
+import com.hartwig.hmftools.orange.algo.linx.TestLinxFactory;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -20,6 +20,6 @@ public class IsofoxInterpreterTest
     @NotNull
     private static IsofoxInterpreter createTestInterpreter()
     {
-        return new IsofoxInterpreter(Lists.newArrayList(), TestLinxInterpretationFactory.createMinimalTestLinxData());
+        return new IsofoxInterpreter(Lists.newArrayList(), TestLinxFactory.createMinimalTestLinxData());
     }
 }

@@ -56,8 +56,6 @@ public final class ReportLimiter
                 .germlineDrivers(max1(purple.germlineDrivers()))
                 .somaticVariants(max1(purple.somaticVariants()))
                 .germlineVariants(max1(purple.germlineVariants()))
-                .somaticCopyNumbers(max1(purple.somaticCopyNumbers()))
-                .somaticGeneCopyNumbers(max1(purple.somaticGeneCopyNumbers()))
                 .somaticGainsDels(max1(purple.somaticGainsDels()))
                 .germlineGainsDels(max1(purple.germlineGainsDels()))
                 .build();

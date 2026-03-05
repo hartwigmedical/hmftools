@@ -29,19 +29,15 @@ import com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact;
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleAllelicDepth;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleChrArmCopyNumber;
-import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleDriver;
-import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGeneCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGermlineDeletion;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleQC;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.PurpleAllelicDepth;
 import com.hartwig.hmftools.datamodel.purple.PurpleChrArmCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
-import com.hartwig.hmftools.datamodel.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
-import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.PurpleGermlineAberration;
 import com.hartwig.hmftools.datamodel.purple.PurpleGermlineDeletion;
 import com.hartwig.hmftools.datamodel.purple.PurpleGermlineDetectionMethod;
@@ -55,30 +51,6 @@ import com.hartwig.hmftools.datamodel.purple.PurpleVariantEffect;
 
 public final class PurpleConversion
 {
-    public static PurpleCopyNumber convert(final com.hartwig.hmftools.common.purple.PurpleCopyNumber copyNumber)
-    {
-        return ImmutablePurpleCopyNumber.builder()
-                .chromosome(copyNumber.chromosome())
-                .start(copyNumber.start())
-                .end(copyNumber.end())
-                .averageTumorCopyNumber(copyNumber.averageTumorCopyNumber())
-                .build();
-    }
-
-    public static PurpleGeneCopyNumber convert(final GeneCopyNumber geneCopyNumber)
-    {
-        return ImmutablePurpleGeneCopyNumber.builder()
-                .gene(geneCopyNumber.geneName())
-                .chromosome(geneCopyNumber.chromosome())
-                .chromosomeBand(geneCopyNumber.ChromosomeBand)
-                .transcript(geneCopyNumber.TransName)
-                .isCanonical(geneCopyNumber.IsCanonical)
-                .minCopyNumber(geneCopyNumber.minCopyNumber())
-                .maxCopyNumber(geneCopyNumber.maxCopyNumber())
-                .minMinorAlleleCopyNumber(geneCopyNumber.MinMinorAlleleCopyNumber)
-                .build();
-    }
-
     public static PurpleDriver convert(final DriverCatalog catalog)
     {
         return ImmutablePurpleDriver.builder()

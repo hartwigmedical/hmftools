@@ -45,7 +45,7 @@ public final class RnaFusionSelector
     {
         for(LinxFusion linxFusion : linxFusions)
         {
-            if(linxFusion.geneStart().equals(geneUp) && linxFusion.geneEnd().equals(geneDown))
+            if(linxFusion.geneUp().equals(geneUp) && linxFusion.geneDown().equals(geneDown))
             {
                 return true;
             }

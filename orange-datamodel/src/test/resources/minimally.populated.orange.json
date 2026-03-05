@@ -163,26 +163,6 @@
         "clinvarPathogenicity": "PATHOGENIC"
       }
     ],
-    "somaticCopyNumbers": [
-      {
-        "chromosome": "1",
-        "start": 10,
-        "end": 20,
-        "averageTumorCopyNumber": 4.1
-      }
-    ],
-    "somaticGeneCopyNumbers": [
-      {
-        "gene": "gene",
-        "chromosome": "12",
-        "chromosomeBand": "p13",
-        "transcript": "trans",
-        "isCanonical": true,
-        "minCopyNumber": 1.2,
-        "maxCopyNumber": 1.2,
-        "minMinorAlleleCopyNumber": 0.4
-      }
-    ],
     "armCopyNumberAbberations": [
       {
         "chromosome": "12",
@@ -208,7 +188,7 @@
         "germlineAmpDelFields": null,
         "chromosome": "5",
         "chromosomeBand": "q2.2",
-        "exonRange": "FULL",
+        "geneRange": "FULL",
         "minCopyNumber": 0.1,
         "maxCopyNumber": 1.2,
         "relativeCopyNumber": 0.1,
@@ -248,19 +228,15 @@
     "somaticDrivers": [],
     "fusions": [
       {
-        "geneStart": "TMPRSS2",
-        "geneContextStart": "Exon 1",
-        "geneTranscriptStart": "ENST00000332149",
-        "geneEnd": "ETV4",
-        "geneContextEnd": "Exon 2",
-        "geneTranscriptEnd": "ENST00000319349",
-        "reported": true,
+        "geneUp": "TMPRSS2",
+        "contextUp": "Exon 1",
+        "transcriptUp": "ENST00000332149",
+        "geneDown": "ETV4",
+        "contextDown": "Exon 2",
+        "transcriptDown": "ENST00000319349",
         "reportedType": "KNOWN_PAIR",
-        "unreportedReasons": [
-          "NONE"
-        ],
         "phased": "INFRAME",
-        "driverLikelihood": "HIGH",
+        "driverInterpretation": "HIGH",
         "fusedExonUp": 1,
         "fusedExonDown": 2,
         "chainLinks": 0,
@@ -345,7 +321,7 @@
         "meanCoverage": 0.0,
         "expectedClonalCoverage": null,
         "reported": true,
-        "driverLikelihood": "HIGH"
+        "driverInterpretation": "HIGH"
       },
       {
         "name": "Human betaherpesvirus 6B",
@@ -356,7 +332,7 @@
         "meanCoverage": 0.0,
         "expectedClonalCoverage": null,
         "reported": false,
-        "driverLikelihood": "LOW"
+        "driverInterpretation": "LOW"
       }
     ],
     "reportableViruses": [
@@ -369,7 +345,7 @@
         "meanCoverage": 0.0,
         "expectedClonalCoverage": null,
         "reported": true,
-        "driverLikelihood": "HIGH"
+        "driverInterpretation": "HIGH"
       }
     ]
   },
@@ -421,7 +397,6 @@
     }
   ],
   "sigAllocations": null,
-  "cohortEvaluations": {},
   "plots": {
     "purpleInputPlot": "",
     "purpleFinalCircosPlot": "plot/empty.circos.png",
