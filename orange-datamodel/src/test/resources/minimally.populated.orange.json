@@ -1,10 +1,6 @@
 {
   "sampleId": "TEST",
-  "samplingDate": {
-    "year": 2022,
-    "month": 1,
-    "day": 20
-  },
+  "samplingDate": "2022-01-20",
   "experimentType": "WHOLE_GENOME",
   "configuredPrimaryTumor": [],
   "refGenomeVersion": "V37",

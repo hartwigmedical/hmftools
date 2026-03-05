@@ -589,15 +589,16 @@ PLOTS[[FEATURE_TYPE$DISCORDANT_FRAG_FREQ]] <- local({
 
 PLOTS[[FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD]] <- local({
    
-   plot_data <- get_plot_data(FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD)
-   
    MIN_MISSED_VARIANT_LIKELIHOOD <- 0.01
    TOP_N_GENES <- 20
    
    plot_labels <- labs(
-      title = sprintf("Genes (top %s) with potential missed variants (P>%s)", TOP_N_GENES, MIN_MISSED_VARIANT_LIKELIHOOD),
-      x = "Gene", y = "Missed variant likelihood"
+      title = "Genes with potential missed variants",
+      x = sprintf("Genes (top %s per sample type)", TOP_N_GENES), 
+      y = sprintf("Missed variant likelihood (>%s)", MIN_MISSED_VARIANT_LIKELIHOOD)
    )
+   
+   plot_data <- get_plot_data(FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD)
    
    if(is.null(plot_data)){
       return(plot_missing_data(plot_labels))
@@ -607,7 +608,8 @@ PLOTS[[FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD]] <- local({
       dplyr::filter(FeatureValue >= MIN_MISSED_VARIANT_LIKELIHOOD) %>%
       
       dplyr::group_by(SampleType) %>% 
-      dplyr::slice_max(order_by = FeatureValue, n = TOP_N_GENES) %>%
+      dplyr::arrange(-FeatureValue) %>%
+      dplyr::slice_head(n = TOP_N_GENES) %>%
       dplyr::ungroup() %>%
       
       dplyr::mutate(
@@ -615,12 +617,33 @@ PLOTS[[FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD]] <- local({
          SampleType = SampleType %>% preordered_factor() %>% reverse_levels()
       )
    
+   unique_genes <- unique(as.character(plot_data$Gene))
+   gene_count <- length(unique_genes)
+
+   ## Split plot into 2 panels if there are too many genes
+   N_GENES_TO_SPLIT_PANEL <- 15
+   gg_facet_wrap <- geom_blank()
+   if(gene_count > N_GENES_TO_SPLIT_PANEL){
+      midpoint <- round(gene_count / 2)
+      gene_group <- as.integer(1:gene_count > midpoint); names(gene_group) <- unique_genes
+      
+      plot_data$GeneGroup <- gene_group[as.character(plot_data$Gene)]
+      gg_facet_wrap <- facet_wrap(". ~ GeneGroup", scales = "free_y")
+   }
+   
    plot_pairwise_comparison(plot_data, x = "Gene", plot_type = box_or_bar_plot()) + 
       plot_labels +
+      gg_facet_wrap +
+      scale_y_continuous(labels = scales::label_number(drop0trailing=TRUE)) +
       coord_flip(ylim = c(0, NA)) +
       theme(
          panel.grid.major.x = element_line(color = "grey90", linewidth = 0.25),
-         plot.title = element_text(hjust = 0.5)
+         plot.title = element_text(hjust = 0.5),
+         axis.title.y = element_text(size = 10),
+         axis.text.y = element_text(size = 8),
+         panel.spacing.x = unit(3, "pt"),
+         strip.text.x = element_blank(),
+         strip.background = element_blank(),
       ) +
       render_now()
 })
@@ -685,9 +708,14 @@ PLOTS[[FEATURE_TYPE$MS_INDEL_ERROR_RATES]] <- local({
       return(plot_missing_data(plot_labels))
    }
    
+   plot_data$RefNumUnits <- as.numeric(plot_data$RefNumUnits)
+
    plot_pairwise_comparison(plot_data, x = "RefNumUnits", plot_type = PAIRWISE_PLOT_TYPE$POINT_RANGE) +
       facet_grid("ConsensusType ~ RepeatUnitType") +
-      scale_x_discrete(breaks = function(x) ifelse(as.numeric(x) %% 3 == 0, x, "") ) +
+      scale_x_continuous(
+         breaks = scales::breaks_width(3), 
+         limits = range(c(3, 12, plot_data$RefNumUnits), na.rm = TRUE)
+      ) +
       scale_y_continuous(limits = c(0, NA), sec.axis = dup_axis(name = "Consensus type")) +
       plot_labels +
       theme(
@@ -710,9 +738,14 @@ PLOTS[[FEATURE_TYPE$MS_INDEL_ERROR_BIAS]] <- local({
       return(plot_missing_data(plot_labels))
    }
    
+   plot_data$RefNumUnits <- as.numeric(plot_data$RefNumUnits)
+   
    plot_pairwise_comparison(plot_data, x = "RefNumUnits", plot_type = PAIRWISE_PLOT_TYPE$POINT_RANGE) +
       facet_grid("ConsensusType ~ RepeatUnitType") +
-      scale_x_discrete(breaks = function(x) ifelse(as.numeric(x) %% 3 == 0, x, "") ) +
+      scale_x_continuous(
+         breaks = scales::breaks_width(3), 
+         limits = range(c(3, 12, plot_data$RefNumUnits), na.rm = TRUE)
+      ) +
       scale_y_continuous(
          labels = function(x){ ifelse(x > 0, paste0("+",x), x) },
          sec.axis = dup_axis(name = "Consensus type")
@@ -758,41 +791,38 @@ get_sub_table_data <- function(feature_group, number_format){
    return(plot_data)
 }
 
-get_outer_axis_limits <- function(plot_data, outer_limits = c(NA, NA)){
-
-   if(FALSE){
-      plot_data = get_sub_table_data(FEATURE_GROUP$MUTATIONAL_BURDEN, NUMBER_FORMAT$LOG1010)
-      minimal_limits = c(0, NA)
-   }
-
-   #' Setting outer limits ensures that the y axis limits are wide enough to show pretty breaks.
-   #' outer limits :    A=====B
-   #' range in data:  C===D
+get_limits <- function(plot_data, minimal_limits = c(NA, NA)){
+   
+   #' Ensure y axis limits are wide enough to show pretty breaks.
+   #' 
+   #' Given:
+   #'   minimal limits : A=====B
+   #'   range in cohort:    C====D
+   #'   value in sample:          E
    #'
-   #' chosen: limits: C and B
+   #' Chosen limits are: A and E
    #'
    #' For example, the min/max TMB (based on  sample and/or cohort data) could be 0.5 to 1, but we
    #' know TMB can go form 0 to 100s/1000s. We would therefore so the minimal limits to
    #' e.g. c(0, 1000).
    #'
-   #' Providing NA limit values lets ggplot decide the limits based on the min/max of the data
+   #' Providing NA minimal limit values lets ggplot decide the limits based on the min/max of the data
    #' 
-   minimal_lower <- outer_limits[1]
-   minimal_upper <- outer_limits[2]
    
-   limit_lower <- NA
-   if(!is.na(minimal_lower)){
-      values_lower <- c(minimal_lower, plot_data$FeatureValue, plot_data$PctMin)
-      limit_lower <- if(all(is.na(values_lower))) NA else min(values_lower, na.rm = TRUE)
-   }
-
-   limit_upper <- NA
-   if(!is.na(minimal_upper)){
-      values_upper <- c(minimal_upper, plot_data$FeatureValue, plot_data$PctMax)
-      limit_upper <- if(all(is.na(values_upper))) NA else max(values_upper, na.rm = TRUE)
-   }
-
-   c(limit_lower, limit_upper)
+   values <- c(minimal_limits, plot_data$FeatureValue, plot_data$PctMin, plot_data$PctMax)
+   limits <- range(values, na.rm = TRUE)
+   
+   ## Let ggplot handle limits with infinite values
+   limits[!is.finite(limits)] <- NA 
+   
+   ## User intends to let ggplot handle limits
+   if(is.na(minimal_limits[1]))
+      limits[1] <- NA
+   
+   if(is.na(minimal_limits[2]))
+      limits[2] <- NA
+   
+   return(limits)
 }
 
 get_div_lines <- function(n_table_rows, direction = "horizontal"){
@@ -834,13 +864,13 @@ plot_sub_table <- function(plot_data, show_title = FALSE, show_sample_type_label
       axis_limits = c(0,1)
       
       plot_data = get_sub_table_data(FEATURE_GROUP$MAPPING, NUMBER_FORMAT$NUMBER)
-      axis_limits = get_outer_axis_limits(plot_data, c(0, 100))
+      axis_limits = get_limits(plot_data, c(0, 100))
       
       plot_data = get_sub_table_data(FEATURE_GROUP$COPY_NUMBER, NUMBER_FORMAT$LOG10)
-      axis_limits = get_outer_axis_limits(plot_data, c(NA, 1000))
+      axis_limits = get_limits(plot_data, c(NA, 1000))
       
       plot_data = get_sub_table_data(FEATURE_GROUP$MUTATIONAL_BURDEN, NUMBER_FORMAT$LOG10)
-      axis_limits = get_outer_axis_limits(plot_data, c(NA, 1000))
+      axis_limits = get_limits(plot_data, c(NA, 1000))
    }
 
    feature_group <- attr(plot_data, "feature_group")
@@ -941,7 +971,7 @@ PLOTS[[FEATURE_TYPE$SUMMARY_TABLE]] <- local({
    ## Mapping ================================
    plots[[1]] <- 
       get_sub_table_data(FEATURE_GROUP$MAPPING, NUMBER_FORMAT$NUMBER) %>% 
-      plot_sub_table(show_title = TRUE, axis_limits = get_outer_axis_limits(., c(0, 100)))
+      plot_sub_table(show_title = TRUE, axis_limits = get_limits(., minimal_limits = c(0, 100)))
    
    plots[[2]] <- 
       get_sub_table_data(FEATURE_GROUP$MAPPING, NUMBER_FORMAT$PERCENT) %>% 
@@ -958,7 +988,7 @@ PLOTS[[FEATURE_TYPE$SUMMARY_TABLE]] <- local({
    
    plots[[5]] <- 
       get_sub_table_data(FEATURE_GROUP$COPY_NUMBER, NUMBER_FORMAT$LOG10) %>% 
-      plot_sub_table(axis_limits = get_outer_axis_limits(., c(NA, 1000)))
+      plot_sub_table(axis_limits = get_limits(., minimal_limits =c(NA, 1000)))
    
    ## Contamination ================================
    plots[[6]] <- get_sub_table_data(FEATURE_GROUP$CONTAMINATION, NUMBER_FORMAT$PERCENT) %>% 
@@ -967,7 +997,7 @@ PLOTS[[FEATURE_TYPE$SUMMARY_TABLE]] <- local({
    ## Mutational burden ================================
    plots[[7]] <- 
       get_sub_table_data(FEATURE_GROUP$MUTATIONAL_BURDEN, NUMBER_FORMAT$LOG10) %>% 
-      plot_sub_table(show_title = TRUE, show_sample_type_label = TRUE, axis_limits = get_outer_axis_limits(., c(NA, 1000)))
+      plot_sub_table(show_title = TRUE, show_sample_type_label = TRUE, axis_limits = get_limits(., minimal_limits = c(NA, 1000)))
    
    heights <- sapply(plots, function(p){ p$height })
    
@@ -1145,7 +1175,7 @@ create_report <- local({
 
       p <- PLOTS[[feature_type]]
 
-      has_wide_y_axis <- feature_type == FEATURE_TYPE$DISCORDANT_FRAG_FREQ
+      has_wide_y_axis <- feature_type %in% c(FEATURE_TYPE$DISCORDANT_FRAG_FREQ, FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD)
       if(has_wide_y_axis){
          p <- patchwork::free(p, "panel", side = "l")
       } else {

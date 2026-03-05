@@ -1,10 +1,6 @@
 {
   "sampleId": "Test",
-  "samplingDate": {
-    "year": 2025,
-    "month": 4,
-    "day": 22
-  },
+  "samplingDate": "2022-01-20",
   "experimentType": "WHOLE_GENOME",
   "configuredPrimaryTumor": [
     {
