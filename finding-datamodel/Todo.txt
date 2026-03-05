@@ -2,16 +2,15 @@
 * ACTIN related
     * Add sampleId + samplingDate
     * Add lowPurity flag? (based on purple outfit)
-    * More details on Cuppa that are not in findings model (complete list vs best prediction)
     * tumor mutational burden / load split
     * Variant dedup should move into findings?
-    * Difference in matching of drivers?
     * Look into this variant logic  hgvsProteinImpact = if (shouldAnnotateAsSpliceOverNonsenseOrFrameshift) "p.?" else AminoAcid.forceSingleLetterAminoAcids(
                                 transcriptImpact.hgvsProteinImpact()
                             ),
 
 * IFindingsList?
 * Move handling of UGT1A1 into findings model?
+* HRStatus UNKNOWN / CANNOT_BE_DETERMINED -> Solve through finding status?
 
 (actin datamodel is not public)
 
