@@ -23,54 +23,21 @@ public class LocalDateAdapter extends TypeAdapter<LocalDate>
             jsonWriter.nullValue();
             return;
         }
-        jsonWriter.beginObject();
-        jsonWriter.name("year").value(localDate.getYear());
-        jsonWriter.name("month").value(localDate.getMonthValue());
-        jsonWriter.name("day").value(localDate.getDayOfMonth());
-        jsonWriter.endObject();
+        // localDate toString always write in ISO date format:
+        // https://docs.oracle.com/javase/8/docs/api/java/time/LocalDate.html#toString--
+        jsonWriter.value(localDate.toString());
     }
 
     @Override
-    public LocalDate read(@NotNull JsonReader jsonReader) throws IOException
+    public @Nullable LocalDate read(@NotNull JsonReader jsonReader) throws IOException
     {
         if(jsonReader.peek() == JsonToken.NULL)
         {
             jsonReader.nextNull();
             return null;
         }
-
-        int year = -1;
-        int month = -1;
-        int day = -1;
-
-        jsonReader.beginObject();
-        while(jsonReader.hasNext())
-        {
-            String name = jsonReader.nextName();
-            if(name.equals("year"))
-            {
-                year = jsonReader.nextInt();
-            }
-            else if(name.equals("month"))
-            {
-                month = jsonReader.nextInt();
-            }
-            else if(name.equals("day"))
-            {
-                day = jsonReader.nextInt();
-            }
-            else
-            {
-                jsonReader.skipValue(); // Ignore unexpected fields
-            }
-        }
-        jsonReader.endObject();
-
-        if(year == -1 && month == -1 && day == -1)
-        {
-            throw new IllegalArgumentException("Invalid JSON format");
-        }
-
-        return LocalDate.of(year, month, day);
+        // localDate parse expects ISO date format:
+        // https://docs.oracle.com/javase/8/docs/api/java/time/LocalDate.html#parse-java.lang.CharSequence-
+        return LocalDate.parse(jsonReader.nextString());
     }
 }
