@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.orange.report.tables;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.orange.report.ReportResources.formatPercentileField;
 import static com.hartwig.hmftools.orange.report.ReportResources.formatSingleDigitDecimal;
 import static com.hartwig.hmftools.orange.report.ReportResources.formatTpmField;
@@ -9,7 +11,6 @@ import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_RNA;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.cellArray;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.floatArray;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.intToFloatArray;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -55,13 +56,10 @@ public final class DnaFusionTable
         boolean hasRna = isofox != null;
 
         addEntry(cells, widths, cellEntries, 2, "Fusion");
-        addEntry(cells, widths, cellEntries, 2, "5' End");
-        addEntry(cells, widths, cellEntries, 2, "3' End");
+        addEntry(cells, widths, cellEntries, 2, "Junctions");
         addEntry(cells, widths, cellEntries, 0.8, COL_JCN);
         addEntry(cells, widths, cellEntries, 1.2, "Phasing");
         addEntry(cells, widths, cellEntries, 2, "Type");
-        addEntry(cells, widths, cellEntries, 2, "Domains kept");
-        addEntry(cells, widths, cellEntries, 2, "Domains lost");
 
         if(hasRna)
             addEntry(cells, widths, cellEntries, 1, COL_RNA);
@@ -74,14 +72,11 @@ public final class DnaFusionTable
         {
             List<Cell> rowCells = Lists.newArrayList();
 
-            rowCells.add(cells.createContent(fusion.display()));
-            rowCells.add(cells.createValue(fiveEndString(fusion)));
-            rowCells.add(cells.createValue(threeStartString(fusion)));
+            rowCells.add(cells.createContent(fusionDisplay(fusion)));
+            rowCells.add(cells.createValue(transcriptJunctions(fusion)));
             rowCells.add(cells.createValue(formatSingleDigitDecimal(fusion.junctionCopyNumber())));
             rowCells.add(cells.createValue(display(fusion.phased())));
             rowCells.add(cells.createValue(fusion.reportedType().toString()));
-            rowCells.add(cells.createValue(!fusion.domainsKept().isEmpty() ? fusion.domainsKept() : "-"));
-            rowCells.add(cells.createValue(!fusion.domainsLost().isEmpty() ? fusion.domainsLost() : "-"));
 
             if(hasRna)
                 rowCells.add(cells.createValue(rnaFragmentSupportTable(isofox, fusion, cells)));
@@ -99,6 +94,18 @@ public final class DnaFusionTable
         return new Tables(reportResources).createWrapping(table, title);
     }
 
+    private static String fusionDisplay(final LinxFusion fusion)
+    {
+        return format("%s::%s", fusion.geneUp(), fusion.geneDown());
+    }
+
+    private static String transcriptJunctions(final LinxFusion fusion)
+    {
+        return format("%s (%s) - %s (%s)",
+                fusion.contextUp(), fusion.transcriptUp(), fusion.contextDown(), fusion.transcriptDown());
+
+    }
+
     private static String display(FusionPhasedType fusionPhasedType)
     {
         switch(fusionPhasedType)
@@ -113,6 +120,7 @@ public final class DnaFusionTable
         throw new IllegalStateException();
     }
 
+    /*
     private static String fiveEndString(final LinxFusion fusion)
     {
         return fusion.geneStart() + " " + fusion.geneContextStart() + " (" + fusion.geneTranscriptStart() + ")";
@@ -122,6 +130,7 @@ public final class DnaFusionTable
     {
         return fusion.geneEnd() + " " + fusion.geneContextEnd() + " (" + fusion.geneTranscriptEnd() + ")";
     }
+    */
 
     private static IBlockElement rnaFragmentSupportTable(@Nullable final IsofoxRecord isofox, final LinxFusion fusion, final Cells cells)
     {
@@ -134,7 +143,7 @@ public final class DnaFusionTable
         {
             return supportFromExpressionOfGeneEnd(isofox, fusion);
         }
-        else if(fusion.geneStart().equals(fusion.geneEnd()))
+        else if(fusion.geneUp().equals(fusion.geneDown()))
         {
             return supportFromSpliceJunctions(isofox, fusion, cells);
         }
@@ -146,7 +155,7 @@ public final class DnaFusionTable
 
     private static IBlockElement supportFromExpressionOfGeneEnd(final IsofoxRecord isofox, final LinxFusion fusion)
     {
-        GeneExpression geneEndExpression = Expressions.findByGene(isofox.allGeneExpressions(), fusion.geneEnd());
+        GeneExpression geneEndExpression = Expressions.findByGene(isofox.allGeneExpressions(), fusion.geneDown());
 
         if(geneEndExpression == null)
         {
@@ -165,7 +174,7 @@ public final class DnaFusionTable
         List<NovelSpliceJunction> matches = Lists.newArrayList();
         for(NovelSpliceJunction junction : isofox.allNovelSpliceJunctions())
         {
-            if(junction.gene().equals(fusion.geneStart()) && junction.gene().equals(fusion.geneEnd()))
+            if(junction.gene().equals(fusion.geneUp()) && junction.gene().equals(fusion.geneDown()))
             {
                 matches.add(junction);
             }
@@ -246,13 +255,13 @@ public final class DnaFusionTable
         {
             if(fusion1.driverInterpretation() == fusion2.driverInterpretation())
             {
-                if(fusion1.geneStart().equals(fusion2.geneStart()))
+                if(fusion1.geneUp().equals(fusion2.geneUp()))
                 {
-                    return fusion1.geneEnd().compareTo(fusion2.geneEnd());
+                    return fusion1.geneDown().compareTo(fusion2.geneDown());
                 }
                 else
                 {
-                    return fusion1.geneStart().compareTo(fusion2.geneStart());
+                    return fusion1.geneUp().compareTo(fusion2.geneUp());
                 }
             }
             else

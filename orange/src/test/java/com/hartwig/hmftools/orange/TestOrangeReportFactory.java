@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.orange;
 
+import static com.hartwig.hmftools.orange.algo.linx.LinxOrangeTestFactory.fusionBuilder;
+
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
@@ -8,6 +10,7 @@ import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.chord.ChordTestFactory;
 import com.hartwig.hmftools.common.doid.DoidTestFactory;
+import com.hartwig.hmftools.common.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.common.metrics.FlagstatTestFactory;
 import com.hartwig.hmftools.common.linx.LinxTestFactory;
 import com.hartwig.hmftools.common.metrics.BamMetricsTestFactory;
@@ -158,7 +161,8 @@ public final class TestOrangeReportFactory
     @NotNull
     private static LinxRecord createTestLinxData()
     {
-        LinxFusion fusion = LinxConversion.convert(LinxTestFactory.createMinimalTestFusion());
+        LinxFusion fusion = fusionBuilder().build();
+
         return ImmutableLinxRecord.builder()
                 .from(TestLinxFactory.createMinimalTestLinxData())
                 .addFusions(fusion)
@@ -181,16 +185,6 @@ public final class TestOrangeReportFactory
 
         alleles.add(alleleBuilder().allele("Allele 1").build());
         alleles.add(alleleBuilder().allele("Allele 2").build());
-
-        /*
-        LilacRecord lilacRecord = LilacInterpreter.
-
-        alleles.add(OrangeConversion.convert(alleleBuilder().allele("Allele 1").build(), true, true));
-        alleles.add(OrangeConversion.convert(LilacTestFactory.alleleBuilder()
-                .allele("Allele 2")
-                .somaticInframeIndel(1D)
-                .build(), true, true));
-        */
 
         return ImmutableLilacRecord.builder().alleles(alleles).build();
     }

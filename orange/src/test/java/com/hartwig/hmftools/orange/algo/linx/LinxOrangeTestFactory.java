@@ -1,15 +1,19 @@
 package com.hartwig.hmftools.orange.algo.linx;
 
+import static com.hartwig.hmftools.datamodel.driver.DriverInterpretation.HIGH;
+
 import com.hartwig.hmftools.common.linx.LinxTestFactory;
 import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
 import com.hartwig.hmftools.datamodel.gene.TranscriptCodingType;
 import com.hartwig.hmftools.datamodel.gene.TranscriptRegionType;
+import com.hartwig.hmftools.datamodel.linx.FusionPhasedType;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
 import com.hartwig.hmftools.datamodel.linx.LinxDriverType;
+import com.hartwig.hmftools.datamodel.linx.LinxFusionType;
 import com.hartwig.hmftools.datamodel.linx.LinxGeneOrientation;
 import com.hartwig.hmftools.orange.conversion.LinxConversion;
 
@@ -18,21 +22,33 @@ import org.jetbrains.annotations.NotNull;
 
 public final class LinxOrangeTestFactory
 {
-    @NotNull
     public static ImmutableLinxSvAnnotation.Builder svAnnotationBuilder()
     {
         return ImmutableLinxSvAnnotation.builder()
                 .from(LinxConversion.convert(LinxTestFactory.svAnnotationBuilder().build()));
     }
 
-    @NotNull
     public static ImmutableLinxFusion.Builder fusionBuilder()
     {
         return ImmutableLinxFusion.builder()
-                .from(LinxConversion.convert(LinxTestFactory.fusionBuilder().build()));
+                .geneUp("GENE_UP")
+                .contextUp("")
+                .transcriptUp("")
+                .geneDown("GENE_DOWN")
+                .contextDown("")
+                .transcriptDown("")
+                .reportedType(LinxFusionType.EXON_DEL_DUP)
+                .phased(FusionPhasedType.INFRAME)
+                .driverInterpretation(HIGH)
+                .fusedExonUp(1)
+                .fusedExonDown(2)
+                .domainsKept("")
+                .domainsLost("")
+                .junctionCopyNumber(1)
+                .chainLinks(0)
+                .chainTerminated(false);
     }
 
-    @NotNull
     public static ImmutableLinxBreakend.Builder breakendBuilder()
     {
         return ImmutableLinxBreakend.builder()

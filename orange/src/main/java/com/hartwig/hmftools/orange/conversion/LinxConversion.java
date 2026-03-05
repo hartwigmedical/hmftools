@@ -55,6 +55,7 @@ public final class LinxConversion
                 .build();
     }
 
+    /*
     public static LinxFusion convert(final com.hartwig.hmftools.common.linx.LinxFusion linxFusion)
     {
         return ImmutableLinxFusion.builder()
@@ -78,29 +79,8 @@ public final class LinxConversion
                 .junctionCopyNumber(linxFusion.junctionCopyNumber())
                 .build();
     }
+    */
 
-    private static DriverInterpretation fromFusionLikelihood(final FusionLikelihoodType fusionLikelihoodType)
-    {
-        switch(fusionLikelihoodType)
-        {
-            case HIGH: return DriverInterpretation.HIGH;
-            case LOW: return DriverInterpretation.LOW;
-            default: return DriverInterpretation.UNKNOWN;
-        }
-
-    }
-
-    private static List<LinxUnreportableReason> convertUnreportableReasons(final List<FusionReportableReason> reasons)
-    {
-        return reasons.stream()
-                .map(item -> switch(item)
-                {
-                    case OK -> LinxUnreportableReason.NONE;
-                    case PROTEIN_DOMAINS -> LinxUnreportableReason.DISRUPTED_PROTEIN_DOMAINS;
-                    case NMD -> LinxUnreportableReason.NONSENSE_MEDIATED_DECAY;
-                    default -> LinxUnreportableReason.valueOf(item.name());
-                }).collect(Collectors.toList());
-    }
 
     public static LinxHomozygousDisruption convert(final HomozygousDisruption homozygousDisruption)
     {

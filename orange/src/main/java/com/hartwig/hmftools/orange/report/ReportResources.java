@@ -34,7 +34,7 @@ public class ReportResources
 
     public static final DeviceRgb PALETTE_DARK_GREY = new DeviceRgb(39, 47, 50);
     public static final DeviceRgb PALETTE_MID_GREY = new DeviceRgb(101, 106, 108);
-    public static final DeviceRgb PALETTE_LIGHT_GREY = new DeviceRgb(211, 211, 211);
+    public static final DeviceRgb PALETTE_LIGHT_GREY = new DeviceRgb(220, 220, 220);
     public static final DeviceRgb PALETTE_BLUE = new DeviceRgb(38, 90, 166);
 
     public static final DeviceRgb PALETTE_ORANGE = new DeviceRgb(242, 139, 31);

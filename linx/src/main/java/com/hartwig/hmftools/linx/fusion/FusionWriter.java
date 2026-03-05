@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.linx.LinxBreakend.BREAKEND_ORIENTATION_DOWNSTREAM;
 import static com.hartwig.hmftools.common.linx.LinxBreakend.BREAKEND_ORIENTATION_UPSTREAM;
 import static com.hartwig.hmftools.common.linx.LinxFusion.context;
-import static com.hartwig.hmftools.common.linx.LinxFusion.fusionJcn;
 import static com.hartwig.hmftools.common.linx.LinxFusion.reportableReasonsToStr;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
@@ -26,11 +25,13 @@ import java.util.StringJoiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.driver.panel.DriverGene;
+import com.hartwig.hmftools.common.linx.FusionReportableReason;
 import com.hartwig.hmftools.common.linx.ImmutableLinxBreakend;
 import com.hartwig.hmftools.common.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.common.purple.ReportedStatus;
+import com.hartwig.hmftools.common.utils.file.FileDelimiters;
 import com.hartwig.hmftools.linx.CohortDataWriter;
 import com.hartwig.hmftools.linx.CohortFileInterface;
 import com.hartwig.hmftools.linx.gene.BreakendGeneData;
@@ -126,15 +127,6 @@ public class FusionWriter implements CohortFileInterface
                     .skippedExonsDown(geneFusion.getExonsSkipped(false))
                     .fusedExonUp(geneFusion.getFusedExon(true))
                     .fusedExonDown(geneFusion.getFusedExon(false))
-                    .geneStart(geneFusion.geneName(FS_UP))
-                    .geneTranscriptStart(geneFusion.upstreamTrans().transName())
-                    .geneContextStart(context(geneFusion.upstreamTrans()
-                            .regionType(), geneFusion.knownType(), geneFusion.getFusedExon(true)))
-                    .geneEnd(geneFusion.geneName(FS_DOWN))
-                    .geneTranscriptEnd(geneFusion.downstreamTrans().transName())
-                    .geneContextEnd(context(geneFusion.downstreamTrans()
-                            .regionType(), geneFusion.knownType(), geneFusion.getFusedExon(false)))
-                    .junctionCopyNumber(fusionJcn(geneFusion.upstreamTrans().breakendGeneData().jcn(), geneFusion.downstreamTrans().breakendGeneData().jcn()))
                     .build());
         }
     }

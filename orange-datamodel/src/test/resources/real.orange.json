@@ -237,19 +237,15 @@
     ],
     "fusions": [
       {
-        "geneStart": "DMD",
-        "geneContextStart": "Exon 67",
-        "geneTranscriptStart": "ENST00000357033",
-        "geneEnd": "DMD",
-        "geneContextEnd": "Exon 70",
-        "geneTranscriptEnd": "ENST00000357033",
-        "reported": true,
+        "geneUp": "DMD",
+        "contextUp": "Exon 67",
+        "transcriptUp": "ENST00000357033",
+        "geneDown": "DMD",
+        "contextDown": "Exon 70",
+        "transcriptDown": "ENST00000357033",
         "reportedType": "NONE",
-        "unreportedReasons": [
-          "NOT_KNOWN"
-        ],
         "phased": "INFRAME",
-        "driverInterpretation": "NA",
+        "driverInterpretation": "HIGH",
         "fusedExonUp": 67,
         "fusedExonDown": 70,
         "chainLinks": 0,

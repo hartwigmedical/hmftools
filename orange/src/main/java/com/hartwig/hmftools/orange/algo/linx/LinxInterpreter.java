@@ -5,8 +5,17 @@ import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import java.util.List;
 import java.util.Objects;
 
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.gene.TranscriptRegionType;
 import com.hartwig.hmftools.common.genome.chromosome.CytoBands;
+import com.hartwig.hmftools.common.linx.FusionLikelihoodType;
+import com.hartwig.hmftools.common.linx.LinxBreakend;
+import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
+import com.hartwig.hmftools.datamodel.linx.FusionPhasedType;
+import com.hartwig.hmftools.datamodel.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxRecord;
+import com.hartwig.hmftools.datamodel.linx.LinxFusion;
+import com.hartwig.hmftools.datamodel.linx.LinxFusionType;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.orange.conversion.ConversionUtil;
 import com.hartwig.hmftools.orange.conversion.LinxConversion;
@@ -32,11 +41,99 @@ public class LinxInterpreter
         return ImmutableLinxRecord.builder()
                 .somaticStructuralVariants(ConversionUtil.mapToIterable(linx.somaticSvAnnotations(), LinxConversion::convert))
                 .somaticDrivers(ConversionUtil.mapToIterable(linx.somaticDriverData(), LinxConversion::convert))
-                .fusions(ConversionUtil.mapToIterable(linx.fusions(), LinxConversion::convert))
+                .fusions(buildFusions(linx.fusions(), linx.somaticBreakends()))
                 .somaticBreakends(ConversionUtil.mapToIterable(linx.somaticBreakends(), somaticBreakendInterpreter::interpret))
                 .germlineStructuralVariants(ConversionUtil.mapToIterable(linx.germlineSvAnnotations(), LinxConversion::convert))
                 .germlineBreakends(ConversionUtil.mapToIterable(linx.germlineBreakends(), germlineBreakendInterpreter::interpret))
                 .germlineHomozygousDisruptions(ConversionUtil.mapToIterable(linx.germlineHomozygousDisruptions(), LinxConversion::convert))
                 .build();
     }
+
+    private static List<LinxFusion> buildFusions(
+            final List<com.hartwig.hmftools.common.linx.LinxFusion> fusions, final List<LinxBreakend> breakends)
+    {
+        List<LinxFusion> convertedFusions = Lists.newArrayListWithCapacity(fusions.size());
+
+        for(com.hartwig.hmftools.common.linx.LinxFusion fusion : fusions)
+        {
+            LinxBreakend breakendUp = breakends.stream().filter(x -> x.id() == fusion.fivePrimeBreakendId()).findFirst().orElse(null);
+            LinxBreakend breakendDown = breakends.stream().filter(x -> x.id() == fusion.threePrimeBreakendId()).findFirst().orElse(null);
+
+            if(breakendUp == null || breakendDown == null)
+            {
+                LOGGER.error("fusion({}) missing corresponding breakends", fusion);
+                continue;
+            }
+
+            LinxFusionType fusionType = LinxFusionType.valueOf(fusion.reportedType().toString());
+
+            String contextUp = buildContextStr(breakendUp.regionType(), fusionType, fusion.fusedExonUp());
+            String contextDown = buildContextStr(breakendDown.regionType(), fusionType, fusion.fusedExonDown());
+
+            double avgJcn = (breakendUp.undisruptedCopyNumber() + breakendDown.undisruptedCopyNumber()) * 0.5;
+
+            LinxFusion convertedFusion = ImmutableLinxFusion.builder()
+                    .geneUp(breakendUp.gene())
+                    .contextUp(contextUp)
+                    .transcriptUp(breakendUp.transcriptId())
+                    .geneDown(breakendDown.gene())
+                    .contextDown(contextDown)
+                    .transcriptDown(breakendDown.transcriptId())
+                    .reportedType(LinxFusionType.valueOf(fusion.reportedType()))
+                    .phased(FusionPhasedType.valueOf(fusion.phased().name()))
+                    .driverInterpretation(fromFusionLikelihood(fusion.likelihood()))
+                    .fusedExonUp(fusion.fusedExonUp())
+                    .fusedExonDown(fusion.fusedExonDown())
+                    .chainLinks(fusion.chainLinks())
+                    .chainTerminated(fusion.chainTerminated())
+                    .domainsKept(fusion.domainsKept())
+                    .domainsLost(fusion.domainsLost())
+                    .junctionCopyNumber(avgJcn).build();
+
+
+            convertedFusions.add(convertedFusion);
+        }
+
+        return convertedFusions;
+    }
+
+    private static DriverInterpretation fromFusionLikelihood(final FusionLikelihoodType fusionLikelihoodType)
+    {
+        switch(fusionLikelihoodType)
+        {
+            case HIGH: return DriverInterpretation.HIGH;
+            case LOW: return DriverInterpretation.LOW;
+            default: return DriverInterpretation.UNKNOWN;
+        }
+    }
+
+    private static String buildContextStr(final TranscriptRegionType regionType, final LinxFusionType knownType, int fusedExon)
+    {
+        switch(regionType)
+        {
+            case UPSTREAM:
+                return "Promoter Region";
+            case DOWNSTREAM:
+                return "Post-coding";
+            case IG:
+                return "IG";
+            case EXONIC:
+            case INTRONIC:
+                return String.format("Exon %d", fusedExon);
+            case UNKNOWN:
+            {
+                if(knownType == LinxFusionType.PROMISCUOUS_ENHANCER_TARGET)
+                {
+                    return "Unknown";
+                }
+                else
+                {
+                    return String.format("ERROR: %s", regionType);
+                }
+            }
+        }
+
+        throw new IllegalStateException("TranscriptRegionType not supported in determination of fusion context: " + regionType);
+    }
+
 }

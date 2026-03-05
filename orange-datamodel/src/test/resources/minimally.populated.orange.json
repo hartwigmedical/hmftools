@@ -232,17 +232,13 @@
     "somaticDrivers": [],
     "fusions": [
       {
-        "geneStart": "TMPRSS2",
-        "geneContextStart": "Exon 1",
-        "geneTranscriptStart": "ENST00000332149",
-        "geneEnd": "ETV4",
-        "geneContextEnd": "Exon 2",
-        "geneTranscriptEnd": "ENST00000319349",
-        "reported": true,
+        "geneUp": "TMPRSS2",
+        "contextUp": "Exon 1",
+        "transcriptUp": "ENST00000332149",
+        "geneDown": "ETV4",
+        "contextDown": "Exon 2",
+        "transcriptDown": "ENST00000319349",
         "reportedType": "KNOWN_PAIR",
-        "unreportedReasons": [
-          "NONE"
-        ],
         "phased": "INFRAME",
         "driverInterpretation": "HIGH",
         "fusedExonUp": 1,
