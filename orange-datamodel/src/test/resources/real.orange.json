@@ -132,26 +132,6 @@
       }
     ],
     "germlineVariants": [],
-    "somaticCopyNumbers": [
-      {
-        "chromosome": "1",
-        "start": 1,
-        "end": 87337011,
-        "averageTumorCopyNumber": 2.8141
-      }
-    ],
-    "somaticGeneCopyNumbers": [
-      {
-        "gene": "DDX11L1",
-        "chromosome": "1",
-        "chromosomeBand": "p36.33",
-        "transcript": "ENST00000456328",
-        "isCanonical": true,
-        "minCopyNumber": 2.8141,
-        "maxCopyNumber": 2.8141,
-        "minMinorAlleleCopyNumber": 0.8112
-      }
-    ],
     "armCopyNumberAbberations": [
       {
         "chromosome": "12",
@@ -169,7 +149,7 @@
         "chromosomeBand": "q23.31",
         "transcript": "ENST00000371953",
         "isCanonical": true,
-        "exonRange": "FULL",
+        "geneRange": "FULL",
         "minCopyNumber": 0.0,
         "maxCopyNumber": 2.0158,
         "relativeCopyNumber": 0.1,

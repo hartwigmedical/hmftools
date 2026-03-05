@@ -49,7 +49,7 @@ import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
 import com.hartwig.hmftools.orange.algo.cuppa.TestCuppaFactory;
 import com.hartwig.hmftools.orange.algo.immuno.TestImmuneEscapeFactory;
 import com.hartwig.hmftools.orange.algo.isofox.OrangeIsofoxTestFactory;
-import com.hartwig.hmftools.orange.algo.linx.TestLinxInterpretationFactory;
+import com.hartwig.hmftools.orange.algo.linx.TestLinxFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleInterpretationFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleVariantFactory;
 import com.hartwig.hmftools.orange.conversion.LinxConversion;
@@ -74,7 +74,7 @@ public final class TestOrangeReportFactory
                 .experimentType(ExperimentType.TARGETED)
                 .refGenomeVersion(OrangeRefGenomeVersion.V37)
                 .purple(TestPurpleInterpretationFactory.createMinimalTestPurpleData())
-                .linx(TestLinxInterpretationFactory.createMinimalTestLinxData())
+                .linx(TestLinxFactory.createMinimalTestLinxData())
                 .lilac(ImmutableLilacRecord.builder().build())
                 .immuneEscape(TestImmuneEscapeFactory.builder().build())
                 .virusInterpreter(ImmutableVirusInterpreterData.builder().build())
@@ -160,7 +160,7 @@ public final class TestOrangeReportFactory
     {
         LinxFusion fusion = LinxConversion.convert(LinxTestFactory.createMinimalTestFusion());
         return ImmutableLinxRecord.builder()
-                .from(TestLinxInterpretationFactory.createMinimalTestLinxData())
+                .from(TestLinxFactory.createMinimalTestLinxData())
                 .addFusions(fusion)
                 .addFusions(fusion)
                 .addFusions(fusion)

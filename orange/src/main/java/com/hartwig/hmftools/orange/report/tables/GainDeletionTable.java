@@ -71,7 +71,7 @@ public final class GainDeletionTable
             rowCells.add(cells.createContent(gainDel.chromosome() + gainDel.chromosomeBand()));
             rowCells.add(cells.createContent(displayGene(gainDel)));
             rowCells.add(cells.createContent(gainDel.driver().type().toString()));
-            rowCells.add(cells.createContent(gainDel.exonRange()));
+            rowCells.add(cells.createContent(gainDel.geneRange()));
             rowCells.add(cells.createContent(formatSingleDigitDecimal(gainDel.minCopyNumber())));
             rowCells.add(cells.createContent(formatSingleDigitDecimal(gainDel.maxCopyNumber())));
             rowCells.add(cells.createContent(formatSingleDigitDecimal(gainDel.relativeCopyNumber())));

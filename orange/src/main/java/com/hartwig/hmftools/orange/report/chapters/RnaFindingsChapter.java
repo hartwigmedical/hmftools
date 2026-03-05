@@ -133,17 +133,17 @@ public class RnaFindingsChapter implements ReportChapter
         }
         else
         {
-            List<PurpleGeneCopyNumber> somaticGeneCopyNumbers = mPurpleRecord.somaticGeneCopyNumbers();
-
             List<GeneExpression> reportableHighExpression = mIsofoxRecord.reportableHighExpression();
             String titleHighExpression = highExpressionTitle + " (" + reportableHighExpression.size() + ")";
-            document.add(ExpressionTable.build(titleHighExpression, contentWidth(), reportableHighExpression, false, somaticGeneCopyNumbers,
-                    mReportResources));
+
+            document.add(ExpressionTable.build(
+                    titleHighExpression, contentWidth(), reportableHighExpression, false, mReportResources));
 
             List<GeneExpression> reportableLowExpression = mIsofoxRecord.reportableLowExpression();
             String titleLowExpression = lowExpressionTitle + " (" + reportableLowExpression.size() + ")";
-            document.add(ExpressionTable.build(titleLowExpression, contentWidth(), reportableLowExpression, true, somaticGeneCopyNumbers,
-                    mReportResources));
+
+            document.add(ExpressionTable.build(
+                    titleLowExpression, contentWidth(), reportableLowExpression, true, mReportResources));
         }
     }
 

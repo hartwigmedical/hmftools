@@ -46,7 +46,6 @@ import com.hartwig.hmftools.datamodel.peach.ImmutablePeachGenotype;
 import com.hartwig.hmftools.datamodel.purple.HotspotType;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleAllelicDepth;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleCharacteristics;
-import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleFit;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGainDeletion;
@@ -55,7 +54,6 @@ import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleQC;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleVariant;
-import com.hartwig.hmftools.datamodel.purple.ImmutableTumorStats;
 import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
@@ -297,24 +295,6 @@ public class TestOrangeJsonWriter
                         .build()))
                 .somaticVariants(List.of(somaticVariant))
                 .germlineVariants(List.of(germlineVariant))
-                .somaticCopyNumbers(List.of(ImmutablePurpleCopyNumber.builder()
-                        .chromosome("1")
-                        .start(10)
-                        .end(20)
-                        .averageTumorCopyNumber(4.1)
-                        .build())
-                )
-                .somaticGeneCopyNumbers(List.of(ImmutablePurpleGeneCopyNumber.builder()
-                        .gene("gene")
-                        .chromosome("12")
-                        .chromosomeBand("p13")
-                        .transcript("trans")
-                        .isCanonical(true)
-                        .minCopyNumber(1.2)
-                        .maxCopyNumber(1.2)
-                        .minMinorAlleleCopyNumber(0.4)
-                        .build())
-                )
                 .somaticGainsDels(List.of(ImmutablePurpleGainDeletion.builder()
                                 .driver(deletionDriver)
                         .chromosome("5")
@@ -323,7 +303,9 @@ public class TestOrangeJsonWriter
                         .maxCopyNumber(1.2)
                         .relativeCopyNumber(1.2)
                         .minMinorAlleleCopies(0.1)
-                        .exonRange("FULL")
+                        .geneRange("FULL")
+                        .exonStart(null)
+                        .exonEnd(null)
                         .tpm(null)
                         .tpmPercentile(null)
                         .tpmFoldChange(null)

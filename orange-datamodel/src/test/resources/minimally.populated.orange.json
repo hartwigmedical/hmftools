@@ -167,26 +167,6 @@
         "clinvarPathogenicity": "PATHOGENIC"
       }
     ],
-    "somaticCopyNumbers": [
-      {
-        "chromosome": "1",
-        "start": 10,
-        "end": 20,
-        "averageTumorCopyNumber": 4.1
-      }
-    ],
-    "somaticGeneCopyNumbers": [
-      {
-        "gene": "gene",
-        "chromosome": "12",
-        "chromosomeBand": "p13",
-        "transcript": "trans",
-        "isCanonical": true,
-        "minCopyNumber": 1.2,
-        "maxCopyNumber": 1.2,
-        "minMinorAlleleCopyNumber": 0.4
-      }
-    ],
     "armCopyNumberAbberations": [
       {
         "chromosome": "12",
@@ -212,7 +192,7 @@
         "germlineAmpDelFields": null,
         "chromosome": "5",
         "chromosomeBand": "q2.2",
-        "exonRange": "FULL",
+        "geneRange": "FULL",
         "minCopyNumber": 0.1,
         "maxCopyNumber": 1.2,
         "relativeCopyNumber": 0.1,

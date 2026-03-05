@@ -147,9 +147,6 @@ public class ReportGeneratorTestApplication
                 .from(report)
                 .purple(ImmutablePurpleRecord.builder()
                         .from(report.purple())
-                        .somaticCopyNumbers(Lists.newArrayList())
-                        .somaticGeneCopyNumbers(retainReportableCopyNumbers(report.purple().somaticGeneCopyNumbers(),
-                                report.purple().somaticDrivers()))
                         .build())
                 .linx(ImmutableLinxRecord.builder()
                         .from(report.linx())

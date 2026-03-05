@@ -78,8 +78,6 @@ public class PurpleInterpreter
                 .germlineDrivers(germlineDrivers)
                 .somaticVariants(somaticVariants)
                 .germlineVariants(germlineVariants)
-                .somaticCopyNumbers(ConversionUtil.mapToIterable(purple.somaticCopyNumbers(), PurpleConversion::convert))
-                .somaticGeneCopyNumbers(ConversionUtil.mapToIterable(purple.somaticGeneCopyNumbers(), PurpleConversion::convert))
                 .armCopyNumberAbberations(armCopyNumberAbberations)
                 .somaticGainsDels(driverSomaticGainsDels)
                 .germlineGainsDels(driverGermlineAmpDels)
@@ -146,11 +144,11 @@ public class PurpleInterpreter
             tpmFoldChange = geneExpression.medianTpmCohort() > 0 ? tpm / geneExpression.medianTpmCohort() : 0;
         }
 
-        String exonRange = PURPLE_AMP_DEL_PARTIAL;
+        String geneRange = PURPLE_AMP_DEL_PARTIAL;
 
         if(driver.driver() == DriverType.AMP)
         {
-            exonRange = PURPLE_AMP_DEL_FULL;
+            geneRange = PURPLE_AMP_DEL_FULL;
         }
 
         return ImmutablePurpleGainDeletion.builder()
@@ -159,7 +157,9 @@ public class PurpleInterpreter
                 .chromosomeBand(driver.chromosomeBand())
                 .minCopyNumber(Math.max(0, driver.minCopyNumber()))
                 .maxCopyNumber(Math.max(0, driver.maxCopyNumber()))
-                .exonRange(exonRange)
+                .geneRange(geneRange)
+                .exonStart(null)
+                .exonEnd(null)
                 .relativeCopyNumber(geneCopyNumber.RelativeMinCopyNumber)
                 .minMinorAlleleCopies(geneCopyNumber.MinMinorAlleleCopyNumber)
                 .tpm(tpm)

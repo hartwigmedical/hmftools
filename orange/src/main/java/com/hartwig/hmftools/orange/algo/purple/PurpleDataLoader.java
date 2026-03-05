@@ -92,7 +92,6 @@ public final class PurpleDataLoader
                 .germlineDrivers(germlineDrivers)
                 .somaticVariants(panelSomaticVariants)
                 .germlineVariants(panelGermlineVariants)
-                .somaticCopyNumbers(PurpleCopyNumberFile.read(copyNumberTsv))
                 .somaticGeneCopyNumbers(geneCopyNumbers)
                 .germlineDeletions(panelGermlineDeletions)
                 .chrArmCopyNumbers(chrArmCopyNumbers)

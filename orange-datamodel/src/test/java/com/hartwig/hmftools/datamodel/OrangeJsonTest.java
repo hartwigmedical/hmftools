@@ -36,10 +36,8 @@ import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
 import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
 import com.hartwig.hmftools.datamodel.purple.HotspotType;
 import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
-import com.hartwig.hmftools.datamodel.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
-import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.PurpleGenotypeStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleMicrosatelliteStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
@@ -196,21 +194,6 @@ public class OrangeJsonTest
 
         assertEquals(1, purple.germlineVariants().size());
         assertEquals(germlineVariant, purple.germlineVariants().iterator().next());
-
-        assertEquals(1, purple.somaticCopyNumbers().size());
-        PurpleCopyNumber copyNumber = purple.somaticCopyNumbers().iterator().next();
-        assertEquals("1", copyNumber.chromosome());
-        assertEquals(10, copyNumber.start());
-        assertEquals(20, copyNumber.end());
-        assertEquals(4.1, copyNumber.averageTumorCopyNumber(), EPSILON);
-
-        assertEquals(1, purple.somaticGeneCopyNumbers().size());
-        PurpleGeneCopyNumber geneCopyNumber = purple.somaticGeneCopyNumbers().iterator().next();
-        assertEquals("gene", geneCopyNumber.gene());
-        assertEquals("12", geneCopyNumber.chromosome());
-        assertEquals("p13", geneCopyNumber.chromosomeBand());
-        assertEquals(1.2, geneCopyNumber.minCopyNumber(), EPSILON);
-        assertEquals(0.4, geneCopyNumber.minMinorAlleleCopyNumber(), EPSILON);
 
         assertEquals(1, purple.somaticGainsDels().size());
     }

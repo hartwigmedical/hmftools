@@ -246,8 +246,6 @@ public class OrangeAlgo
         PurpleData purple = PurpleDataLoader.load(config, mDriverGenes);
         LOGGER.info(" Loaded {} somatic driver catalog entries", purple.somaticDrivers().size());
         LOGGER.info(" Loaded {} somatic variants", purple.somaticVariants().size());
-        LOGGER.info(" Loaded {} somatic copy numbers entries", purple.somaticCopyNumbers().size());
-        LOGGER.info(" Loaded {} somatic gene copy numbers entries", purple.somaticGeneCopyNumbers().size());
 
         if(config.ReferenceId != null)
         {
