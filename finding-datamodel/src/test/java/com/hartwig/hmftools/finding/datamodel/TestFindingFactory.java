@@ -259,12 +259,17 @@ public class TestFindingFactory
 
     public static DriverFields driverFields(boolean reported, DriverInterpretation interpretation)
     {
-        return DriverFieldsBuilder.builder()
-                .findingKey("")
-                .event("")
-                .driverSource(DriverSource.SOMATIC)
+        return driverFieldsBuilder()
                 .driverInterpretation(interpretation)
                 .reportedStatus(reported ? ReportedStatus.REPORTED : ReportedStatus.NOT_REPORTED)
                 .build();
+    }
+
+    public static DriverFieldsBuilder driverFieldsBuilder()
+    {
+        return DriverFieldsBuilder.builder()
+                .findingKey("")
+                .event("")
+                .driverSource(DriverSource.SOMATIC);
     }
 }

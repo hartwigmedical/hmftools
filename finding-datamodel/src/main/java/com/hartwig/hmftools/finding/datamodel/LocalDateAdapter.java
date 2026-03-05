@@ -2,33 +2,75 @@ package com.hartwig.hmftools.finding.datamodel;
 
 import java.io.IOException;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
 
-public final class LocalDateAdapter extends TypeAdapter<LocalDate>
-{
-    private static final DateTimeFormatter FMT = DateTimeFormatter.ISO_LOCAL_DATE;
+import org.jspecify.annotations.Nullable;
 
+import jakarta.validation.constraints.NotNull;
+
+// TODO: This is a copy of com.hartwig.hmftools.datamodel.LocalDateAdapter but did not want to add the dependency
+public class LocalDateAdapter extends TypeAdapter<LocalDate>
+{
     @Override
-    public void write(JsonWriter out, LocalDate value) throws IOException
+    public void write(@NotNull JsonWriter jsonWriter, @Nullable LocalDate localDate) throws IOException
     {
-        if (value == null) {
-            out.nullValue();
-        } else {
-            out.value(value.format(FMT));
+        if(localDate == null)
+        {
+            jsonWriter.nullValue();
+            return;
         }
+        jsonWriter.beginObject();
+        jsonWriter.name("year").value(localDate.getYear());
+        jsonWriter.name("month").value(localDate.getMonthValue());
+        jsonWriter.name("day").value(localDate.getDayOfMonth());
+        jsonWriter.endObject();
     }
 
     @Override
-    public LocalDate read(JsonReader in) throws IOException {
-        if (in.peek() == JsonToken.NULL) {
-            in.nextNull();
+    public LocalDate read(@NotNull JsonReader jsonReader) throws IOException
+    {
+        if(jsonReader.peek() == JsonToken.NULL)
+        {
+            jsonReader.nextNull();
             return null;
         }
-        return LocalDate.parse(in.nextString(), FMT);
+
+        int year = -1;
+        int month = -1;
+        int day = -1;
+
+        jsonReader.beginObject();
+        while(jsonReader.hasNext())
+        {
+            String name = jsonReader.nextName();
+            if(name.equals("year"))
+            {
+                year = jsonReader.nextInt();
+            }
+            else if(name.equals("month"))
+            {
+                month = jsonReader.nextInt();
+            }
+            else if(name.equals("day"))
+            {
+                day = jsonReader.nextInt();
+            }
+            else
+            {
+                jsonReader.skipValue(); // Ignore unexpected fields
+            }
+        }
+        jsonReader.endObject();
+
+        if(year == -1 && month == -1 && day == -1)
+        {
+            throw new IllegalArgumentException("Invalid JSON format");
+        }
+
+        return LocalDate.of(year, month, day);
     }
 }

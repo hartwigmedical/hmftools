@@ -49,6 +49,7 @@ public class CurationApplier
         ReportedStatus newStatus = curation.reportableOverride() ? ReportedStatus.REPORTED : ReportedStatus.CANDIDATE;
         DriverFields updatedDriver = DriverFieldsBuilder.builder()
                 .findingKey(driver.findingKey())
+                .event(driver.event())
                 .driverSource(driver.driverSource())
                 .reportedStatus(newStatus)
                 .driverInterpretation(driver.driverInterpretation())

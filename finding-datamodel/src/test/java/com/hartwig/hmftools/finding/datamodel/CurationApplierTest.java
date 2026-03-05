@@ -152,7 +152,7 @@ public class CurationApplierTest
     @Test
     public void applyPreservesOtherFieldsOnDriver()
     {
-        DriverFields originalDriver = DriverFieldsBuilder.builder()
+        DriverFields originalDriver = TestFindingFactory.driverFieldsBuilder()
                 .findingKey("variant-1")
                 .driverSource(DriverSource.GERMLINE)
                 .reportedStatus(ReportedStatus.CANDIDATE)
@@ -204,7 +204,7 @@ public class CurationApplierTest
 
     private static DriverFields driverFields(String findingKey, ReportedStatus reportedStatus)
     {
-        return DriverFieldsBuilder.builder()
+        return TestFindingFactory.driverFieldsBuilder()
                 .findingKey(findingKey)
                 .driverSource(DriverSource.SOMATIC)
                 .reportedStatus(reportedStatus)
