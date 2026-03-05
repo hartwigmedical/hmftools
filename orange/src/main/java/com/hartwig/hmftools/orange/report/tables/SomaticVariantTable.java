@@ -104,6 +104,5 @@ public final class SomaticVariantTable
 
         return new Tables(reportResources).createWrapping(table, title);
     }
-
 }
 

@@ -56,9 +56,9 @@ public final class DnaFusionTable
         boolean hasRna = isofox != null;
 
         addEntry(cells, widths, cellEntries, 2, "Fusion");
-        addEntry(cells, widths, cellEntries, 2, "Junctions");
-        addEntry(cells, widths, cellEntries, 0.8, COL_JCN);
-        addEntry(cells, widths, cellEntries, 1.2, "Phasing");
+        addEntry(cells, widths, cellEntries, 5, "Junctions");
+        addEntry(cells, widths, cellEntries, 1, COL_JCN);
+        addEntry(cells, widths, cellEntries, 1, "Phasing");
         addEntry(cells, widths, cellEntries, 2, "Type");
 
         if(hasRna)
@@ -73,15 +73,15 @@ public final class DnaFusionTable
             List<Cell> rowCells = Lists.newArrayList();
 
             rowCells.add(cells.createContent(fusionDisplay(fusion)));
-            rowCells.add(cells.createValue(transcriptJunctions(fusion)));
-            rowCells.add(cells.createValue(formatSingleDigitDecimal(fusion.junctionCopyNumber())));
-            rowCells.add(cells.createValue(display(fusion.phased())));
-            rowCells.add(cells.createValue(fusion.reportedType().toString()));
+            rowCells.add(cells.createContent(transcriptJunctions(fusion)));
+            rowCells.add(cells.createContent(formatSingleDigitDecimal(fusion.junctionCopyNumber())));
+            rowCells.add(cells.createContent(display(fusion.phased())));
+            rowCells.add(cells.createContent(fusion.reportedType().toString()));
 
             if(hasRna)
-                rowCells.add(cells.createValue(rnaFragmentSupportTable(isofox, fusion, cells)));
+                rowCells.add(cells.createContent(rnaFragmentSupportTable(isofox, fusion, cells)));
 
-            rowCells.add(cells.createValue(fusion.driverInterpretation().toString()));
+            rowCells.add(cells.createContent(fusion.driverInterpretation().toString()));
 
             if(fusion.driverInterpretation() == DriverInterpretation.LOW)
             {
@@ -119,18 +119,6 @@ public final class DnaFusionTable
         }
         throw new IllegalStateException();
     }
-
-    /*
-    private static String fiveEndString(final LinxFusion fusion)
-    {
-        return fusion.geneStart() + " " + fusion.geneContextStart() + " (" + fusion.geneTranscriptStart() + ")";
-    }
-
-    private static String threeStartString(final LinxFusion fusion)
-    {
-        return fusion.geneEnd() + " " + fusion.geneContextEnd() + " (" + fusion.geneTranscriptEnd() + ")";
-    }
-    */
 
     private static IBlockElement rnaFragmentSupportTable(@Nullable final IsofoxRecord isofox, final LinxFusion fusion, final Cells cells)
     {
