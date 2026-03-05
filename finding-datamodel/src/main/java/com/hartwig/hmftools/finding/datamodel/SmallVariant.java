@@ -34,7 +34,11 @@ public record SmallVariant(
         @NotNull GenotypeStatus genotypeStatus,
         int repeatCount,
         double subclonalLikelihood,
-        @Nullable List<Integer> localPhaseSets
+        @Nullable SomaticLikelihood somaticLikelihood,
+        @Nullable List<Integer> localPhaseSets,
+        // germline fields
+        @Nullable String clinvarPathogenicity,
+        @Nullable Double gnomadFrequency
 ) implements Driver
 {
     @RecordBuilder
@@ -115,6 +119,14 @@ public record SmallVariant(
         HET,
         HOM_ALT,
         UNKNOWN
+    }
+
+    public enum SomaticLikelihood
+    {
+        UNKNOWN,
+        LOW,
+        MEDIUM,
+        HIGH
     }
 
     @NotNull
