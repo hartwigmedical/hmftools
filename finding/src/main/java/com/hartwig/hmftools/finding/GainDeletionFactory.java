@@ -30,17 +30,16 @@ final class GainDeletionFactory
     public static DriverFindingList<GainDeletion> somaticGainDeletionFindings(
             OrangeRefGenomeVersion orangeRefGenomeVersion,
             FindingsStatus findingsStatus,
-            PurpleRecord purple,
-            EventFactory eventFactory)
+            PurpleRecord purple)
     {
         ChromosomeArmCopyNumberMap cnPerChromosome =
                 ChromosomeArmCopyNumberMap.create(purple.allSomaticCopyNumbers(), orangeRefGenomeVersion);
 
         List<GainDeletion> gainDeletions = new ArrayList<>();
-        gainDeletions.addAll(somaticDriverGainDels(purple.reportableSomaticGainsDels(), purple.somaticDrivers(), purple.allSomaticGeneCopyNumbers(), cnPerChromosome, eventFactory));
+        gainDeletions.addAll(somaticDriverGainDels(purple.reportableSomaticGainsDels(), purple.somaticDrivers(), purple.allSomaticGeneCopyNumbers(), cnPerChromosome));
 
         // we are going to add somatic LOH to purple. For this backported version we will reverse engineer how they might look
-        gainDeletions.addAll(somaticLoh(purple.suspectGeneCopyNumbersWithLOH(), cnPerChromosome, eventFactory));
+        gainDeletions.addAll(somaticLoh(purple.suspectGeneCopyNumbersWithLOH(), cnPerChromosome));
 
         gainDeletions.sort(GainDeletion.COMPARATOR);
 
@@ -55,8 +54,7 @@ final class GainDeletionFactory
     public static DriverFindingList<GainDeletion> germlineGainDeletionFindings(
             boolean hasGermlineSample,
             OrangeRefGenomeVersion orangeRefGenomeVersion,
-            PurpleRecord purple,
-            EventFactory eventFactory)
+            PurpleRecord purple)
     {
         if(!hasGermlineSample)
         {
@@ -88,7 +86,7 @@ final class GainDeletionFactory
 
             gainDeletions.add(toGainDel(fullDels, driver, DriverSource.GERMLINE,
                     GainDeletion.Type.HOM_DEL, GainDeletion.Type.HOM_DEL,
-                    geneCopyNumber, cnPerChromosome, eventFactory));
+                    geneCopyNumber, cnPerChromosome));
         }
 
         for(PurpleLossOfHeterozygosity loh : reportableGermlineLossOfHeterozygosities)
@@ -99,7 +97,7 @@ final class GainDeletionFactory
 
             final PurpleGeneCopyNumber geneCopyNumber = findPurpleGeneCopyNumber(somaticGeneCopyNumbers, loh.gene(), loh.transcript());
 
-            gainDeletions.add(germlineLohToGainDel(loh, driver, geneCopyNumber, cnPerChromosome, eventFactory));
+            gainDeletions.add(germlineLohToGainDel(loh, driver, geneCopyNumber, cnPerChromosome));
         }
 
         gainDeletions.sort(GainDeletion.COMPARATOR);
@@ -121,7 +119,7 @@ final class GainDeletionFactory
     private static List<GainDeletion> somaticDriverGainDels(
             List<PurpleGainDeletion> gainDeletions, final List<PurpleDriver> drivers,
             List<PurpleGeneCopyNumber> somaticGeneCopyNumbers,
-            ChromosomeArmCopyNumberMap cnPerChromosome, EventFactory eventFactory)
+            ChromosomeArmCopyNumberMap cnPerChromosome)
     {
         List<GainDeletion> somaticGainsDels = new ArrayList<>();
         for(PurpleGainDeletion gainDeletion : gainDeletions)
@@ -149,20 +147,18 @@ final class GainDeletionFactory
                     somaticGainDelType,
                     null,
                     geneCopyNumber,
-                    cnPerChromosome, eventFactory));
+                    cnPerChromosome));
         }
         return somaticGainsDels;
     }
 
-    public static List<GainDeletion> somaticLoh(List<PurpleGeneCopyNumber> lohGeneCopyNumbers, ChromosomeArmCopyNumberMap cnPerChromosome,
-            EventFactory eventFactory)
+    public static List<GainDeletion> somaticLoh(List<PurpleGeneCopyNumber> lohGeneCopyNumbers, ChromosomeArmCopyNumberMap cnPerChromosome)
     {
         return lohGeneCopyNumbers.stream().map(o -> somaticLohToGainDel(
-                o, cnPerChromosome, eventFactory)).toList();
+                o, cnPerChromosome)).toList();
     }
 
-    private static GainDeletion somaticLohToGainDel(PurpleGeneCopyNumber geneCopyNumber, ChromosomeArmCopyNumberMap cnPerChromosome,
-            EventFactory eventFactory)
+    private static GainDeletion somaticLohToGainDel(PurpleGeneCopyNumber geneCopyNumber, ChromosomeArmCopyNumberMap cnPerChromosome)
     {
         return GainDeletionBuilder.builder()
                 .driver(DriverFieldsBuilder.builder()
@@ -171,7 +167,6 @@ final class GainDeletionFactory
                                 PurpleDriverType.DEL,
                                 geneCopyNumber.isCanonical(),
                                 geneCopyNumber.transcript()))
-                        .event(eventFactory.gainDeletionEvent(geneCopyNumber))
                         .driverSource(DriverSource.SOMATIC)
                         .reportedStatus(ReportedStatus.REPORTED)
                         .driverInterpretation(DriverInterpretation.LOW)
@@ -208,8 +203,7 @@ final class GainDeletionFactory
             GainDeletion.Type somaticType,
             @Nullable GainDeletion.Type germlineType,
             PurpleGeneCopyNumber geneCopyNumber,
-            ChromosomeArmCopyNumberMap cnPerChromosome,
-            EventFactory eventFactory)
+            ChromosomeArmCopyNumberMap cnPerChromosome)
     {
         return GainDeletionBuilder.builder()
                 .driver(DriverFieldsBuilder.builder()
@@ -218,7 +212,6 @@ final class GainDeletionFactory
                                 driver.type(),
                                 driver.isCanonical(),
                                 purpleGainDeletion.transcript()))
-                        .event(eventFactory.gainDeletionEvent(purpleGainDeletion))
                         .driverSource(sourceSample)
                         .reportedStatus(ReportedStatus.REPORTED)
                         .driverInterpretation(DriverInterpretation.interpret(driver.driverLikelihood()))
@@ -242,7 +235,7 @@ final class GainDeletionFactory
 
     private static GainDeletion germlineLohToGainDel(PurpleLossOfHeterozygosity loh, final PurpleDriver driver,
             PurpleGeneCopyNumber geneCopyNumber,
-            ChromosomeArmCopyNumberMap cnPerChromosome, EventFactory eventFactory)
+            ChromosomeArmCopyNumberMap cnPerChromosome)
     {
 
         GainDeletion.GeneExtent geneExtent = switch(loh.geneProportion())
@@ -258,7 +251,6 @@ final class GainDeletionFactory
                                 PurpleDriverType.GERMLINE_DELETION,
                                 driver.isCanonical(),
                                 loh.transcript()))
-                        .event(eventFactory.gainDeletionEvent(loh))
                         .driverSource(DriverSource.GERMLINE)
                         .reportedStatus(ReportedStatus.REPORTED)
                         .driverInterpretation(DriverInterpretation.interpret(driver.driverLikelihood()))

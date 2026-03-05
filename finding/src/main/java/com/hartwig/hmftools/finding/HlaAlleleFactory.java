@@ -9,14 +9,14 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import com.hartwig.hmftools.datamodel.hla.LilacAllele;
+import com.hartwig.hmftools.datamodel.hla.LilacRecord;
+import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.finding.datamodel.FindingList;
 import com.hartwig.hmftools.finding.datamodel.FindingListBuilder;
 import com.hartwig.hmftools.finding.datamodel.FindingsStatus;
 import com.hartwig.hmftools.finding.datamodel.HlaAllele;
 import com.hartwig.hmftools.finding.datamodel.HlaAlleleBuilder;
-import com.hartwig.hmftools.datamodel.hla.LilacAllele;
-import com.hartwig.hmftools.datamodel.hla.LilacRecord;
-import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -36,8 +36,7 @@ public class HlaAlleleFactory
     {
     }
 
-    public static FindingList<HlaAllele> createHlaAllelesFindings(OrangeRecord orangeRecord, boolean hasReliablePurity,
-            EventFactory eventFactory)
+    public static FindingList<HlaAllele> createHlaAllelesFindings(OrangeRecord orangeRecord, boolean hasReliablePurity)
     {
         LilacRecord lilac = orangeRecord.lilac();
         if(lilac != null)
@@ -47,7 +46,7 @@ public class HlaAlleleFactory
                     .findings(HlaAlleleFactory.convertHlaAlleles(lilac,
                             hasReliablePurity,
                             !orangeRecord.tumorOnlyMode(),
-                            orangeRecord.isofox() != null, eventFactory))
+                            orangeRecord.isofox() != null))
                     .build();
         }
         else
@@ -56,8 +55,7 @@ public class HlaAlleleFactory
         }
     }
 
-    public static List<HlaAllele> convertHlaAlleles(LilacRecord lilac, boolean hasReliablePurity, boolean hasRef, boolean hasRna,
-            EventFactory eventFactory)
+    public static List<HlaAllele> convertHlaAlleles(LilacRecord lilac, boolean hasReliablePurity, boolean hasRef, boolean hasRna)
     {
         Map<String, List<LilacAllele>> hlaAllelesMap = lilac.alleles()
                 .stream()
@@ -82,7 +80,6 @@ public class HlaAlleleFactory
             // NOTE: the fragment counts are doubled in lilac if an allele is present twice
             HlaAlleleBuilder builder = HlaAlleleBuilder.builder()
                     .findingKey(FindingKeys.hlaAllele(lilacAllele))
-                    .event(eventFactory.immunologyEvent(lilacAllele))
                     .geneClass(geneClass)
                     .gene(gene)
                     .allele(lilacAllele.allele())

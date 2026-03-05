@@ -4,7 +4,7 @@ import java.util.Set;
 
 import jakarta.validation.constraints.NotNull;
 
-public interface Driver extends Event
+public interface Driver extends Finding
 {
     @NotNull DriverSource driverSource();
 

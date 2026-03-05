@@ -67,7 +67,7 @@ final class DisruptionFactory
     // back to the breakends, it probably will work by just selecting first reportable disruption with the same gene / transcript.
     // We can do it for the backport version if that makes it easier.
 
-    public static DriverFindingList<Disruption> createGermlineDisruptions(boolean hasRefSample, LinxRecord linx, EventFactory eventFactory)
+    public static DriverFindingList<Disruption> createGermlineDisruptions(boolean hasRefSample, LinxRecord linx)
     {
         if(!hasRefSample)
         {
@@ -89,11 +89,11 @@ final class DisruptionFactory
 
         return DriverFindingListBuilder.<Disruption>builder()
                 .status(FindingsStatus.OK)
-                .findings(createDisruptions(DriverSource.GERMLINE, breakends, structuralVariants, true, findDisruptionType, eventFactory))
+                .findings(createDisruptions(DriverSource.GERMLINE, breakends, structuralVariants, true, findDisruptionType))
                 .build();
     }
 
-    public static DriverFindingList<Disruption> createSomaticDisruptions(boolean hasReliablePurity, LinxRecord linx, EventFactory eventFactory)
+    public static DriverFindingList<Disruption> createSomaticDisruptions(boolean hasReliablePurity, LinxRecord linx)
     {
         @NotNull Collection<LinxBreakend> breakends = linx.reportableSomaticBreakends();
         @NotNull Collection<LinxSvAnnotation> structuralVariants = linx.allSomaticStructuralVariants();
@@ -115,7 +115,7 @@ final class DisruptionFactory
 
         return DriverFindingListBuilder.<Disruption>builder()
                 .status(FindingsStatus.OK)
-                .findings(createDisruptions(DriverSource.SOMATIC, breakends, structuralVariants, hasReliablePurity, findDisruptionType, eventFactory))
+                .findings(createDisruptions(DriverSource.SOMATIC, breakends, structuralVariants, hasReliablePurity, findDisruptionType))
                 .build();
     }
 
@@ -124,7 +124,7 @@ final class DisruptionFactory
             Collection<LinxBreakend> breakends,
             Collection<LinxSvAnnotation> structuralVariants,
             boolean hasReliablePurity,
-            DisruptionTypeFinder disruptionTypeFinder, EventFactory eventFactory)
+            DisruptionTypeFinder disruptionTypeFinder)
     {
         List<Disruption> disruptions = new ArrayList<>();
         Map<SvAndTranscriptKey, Pair<LinxBreakend, LinxBreakend>> pairedMap = mapBreakendsPerStructuralVariant(breakends);
@@ -163,8 +163,7 @@ final class DisruptionFactory
                     primaryBreakendEnd,
                     undisruptedCopyNumber,
                     structuralVariants,
-                    hasReliablePurity,
-                    eventFactory));
+                    hasReliablePurity));
         }
         disruptions.sort(Disruption.COMPARATOR);
 
@@ -177,7 +176,7 @@ final class DisruptionFactory
             @Nullable LinxBreakend breakendStart,
             @Nullable LinxBreakend breakendEnd,
             double undisruptedCopyNumber,
-            Collection<LinxSvAnnotation> structuralVariants, boolean hasReliablePurity, EventFactory eventFactory)
+            Collection<LinxSvAnnotation> structuralVariants, boolean hasReliablePurity)
     {
         LinxBreakend breakend = breakendStart == null ? breakendEnd : breakendStart;
 
@@ -191,7 +190,6 @@ final class DisruptionFactory
                 .driver(
                         DriverFieldsBuilder.builder()
                                 .findingKey(FindingKeys.disruption(sourceSample, breakend))
-                                .event(eventFactory.disruptionEvent(breakend))
                                 .driverSource(sourceSample)
                                 .reportedStatus(breakend.reported() ? ReportedStatus.REPORTED : ReportedStatus.NOT_REPORTED)
                                 .driverInterpretation(breakend.reported()

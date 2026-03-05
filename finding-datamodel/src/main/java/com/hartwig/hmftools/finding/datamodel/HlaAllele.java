@@ -9,7 +9,6 @@ import jakarta.validation.constraints.NotNull;
 @RecordBuilder
 public record HlaAllele(
         @NotNull String findingKey,
-        @NotNull String event,
         @NotNull String geneClass,
         @NotNull String gene,
         @NotNull String allele,
@@ -26,7 +25,7 @@ public record HlaAllele(
         double somaticSplice,
         double somaticSynonymous,
         double somaticInframeIndel
-) implements Event
+) implements Finding
 {
     public enum QcStatus
     {

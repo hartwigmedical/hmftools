@@ -7,7 +7,6 @@ import com.hartwig.hmftools.datamodel.OrangeJson;
 import com.hartwig.hmftools.finding.datamodel.FindingRecord;
 import com.hartwig.hmftools.finding.datamodel.FindingsJson;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -44,7 +43,7 @@ public class FindingApplication
 
         FindingRecord findingRecord = FindingRecordFactory.fromOrangeRecord(orangeRecord,
                 config.ClinicalTranscriptsPath != null ? Path.of(config.ClinicalTranscriptsPath) : null,
-                Path.of(config.DriverGenePath), new DefaultEventFactory());
+                Path.of(config.DriverGenePath));
 
         new FindingsJson().write(findingRecord, Path.of(config.FindingJsonPath));
 

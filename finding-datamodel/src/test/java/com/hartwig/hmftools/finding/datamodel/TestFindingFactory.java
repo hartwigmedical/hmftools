@@ -240,7 +240,6 @@ public class TestFindingFactory
     {
         return HlaAlleleBuilder.builder()
                 .findingKey("")
-                .event("")
                 .gene("")
                 .geneClass("")
                 .germlineCopyNumber(0)
@@ -269,7 +268,6 @@ public class TestFindingFactory
     {
         return DriverFieldsBuilder.builder()
                 .findingKey("")
-                .event("")
                 .driverSource(DriverSource.SOMATIC);
     }
 }
