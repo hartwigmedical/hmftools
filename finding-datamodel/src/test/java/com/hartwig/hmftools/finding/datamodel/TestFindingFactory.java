@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.finding.datamodel;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 
 import org.jetbrains.annotations.NotNull;
