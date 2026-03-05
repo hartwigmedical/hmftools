@@ -17,8 +17,6 @@ import org.apache.commons.lang3.tuple.Pair;
 public class PeakSearch
 {
     private final List<CandidatePeakEvaluationResult> Peaks;
-    private final List<CandidatePeak> ContaminationPeaks = new ArrayList<>();
-    private final List<CandidatePeak> CopyNumberPeaks = new ArrayList<>();
 
     public PeakSearch(List<PositionEvidence> evidence, final int nThreads)
     {
@@ -57,5 +55,4 @@ public class PeakSearch
     {
         return Peaks;
     }
-
 }

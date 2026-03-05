@@ -66,7 +66,7 @@ public class PositionEvidenceTest
         Assert.assertEquals(Double.NaN, pe0.vaf(), 0.0001);
         pe0.AltSupport = 10;
         pe0.RefSupport = 90;
-        pe0.ReadDepth = 100;
+        pe0.ReadDepth = 120;
         Assert.assertEquals(0.1, pe0.vaf(), 0.0001);
     }
 
@@ -77,7 +77,14 @@ public class PositionEvidenceTest
         Assert.assertEquals(Double.NaN, pe0.symmetricVaf(), 0.0001);
         pe0.AltSupport = 90;
         pe0.RefSupport = 10;
-        pe0.ReadDepth = 100;
+        pe0.ReadDepth = 110;
         Assert.assertEquals(0.1, pe0.symmetricVaf(), 0.0001);
+
+        PositionEvidence pe1 = new PositionEvidence("1", 1000, "A", "C");
+        Assert.assertEquals(Double.NaN, pe1.symmetricVaf(), 0.0001);
+        pe1.AltSupport = 20;
+        pe1.RefSupport = 80;
+        pe1.ReadDepth = 110;
+        Assert.assertEquals(0.2, pe1.symmetricVaf(), 0.0001);
     }
 }

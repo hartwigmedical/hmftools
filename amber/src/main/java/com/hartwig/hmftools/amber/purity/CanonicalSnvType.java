@@ -54,7 +54,6 @@ public enum CanonicalSnvType
                     return T_G;
             }
         }
-        Preconditions.checkArgument(false);
         return null;
     }
 }

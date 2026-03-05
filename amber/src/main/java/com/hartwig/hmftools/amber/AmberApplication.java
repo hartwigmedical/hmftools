@@ -32,6 +32,7 @@ import com.hartwig.hmftools.amber.contamination.TumorContaminationModel;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.amber.blacklist.AmberBlacklistFile;
 import com.hartwig.hmftools.amber.blacklist.AmberBlacklistPoint;
+import com.hartwig.hmftools.amber.purity.PurityAnalysisConfig;
 import com.hartwig.hmftools.amber.purity.TumorOnlyPurityAnalysis;
 import com.hartwig.hmftools.amber.purity.CandidatePeak;
 import com.hartwig.hmftools.common.amber.AmberBAF;
@@ -256,7 +257,8 @@ public class AmberApplication implements AutoCloseable
                 .sorted().toList();
 
         List<PositionEvidence> rawData = readDepthAndQualityFiltered.stream().map(x -> x.TumorEvidence).toList();
-        TumorOnlyPurityAnalysis noiseFloorAnalysis = new TumorOnlyPurityAnalysis(rawData, mChromosomeSites, mConfig);
+        PurityAnalysisConfig purityAnalysisConfig = new PurityAnalysisConfig(mConfig);
+        TumorOnlyPurityAnalysis noiseFloorAnalysis = new TumorOnlyPurityAnalysis(rawData, mChromosomeSites, purityAnalysisConfig);
         double noiseFloor = noiseFloorAnalysis.cutoff();
         AMB_LOGGER.debug(format("Noise floor: %.3f", noiseFloor));
         double contamination = noiseFloorAnalysis.contaminationPeaks().stream().map(CandidatePeak::vaf).max(Double::compare).orElse(0.0);

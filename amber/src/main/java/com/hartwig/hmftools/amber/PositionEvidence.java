@@ -73,21 +73,22 @@ public class PositionEvidence implements GenomePosition
         {
             return Double.NaN;
         }
-        return (double) AltSupport / ReadDepth;
+        return (double) AltSupport / (AltSupport + RefSupport);
     }
 
     public double symmetricVaf()
     {
-        if(ReadDepth == 0)
+        int vafDepth = AltSupport + RefSupport;
+        if(vafDepth == 0)
         {
             return Double.NaN;
         }
         int k = AltSupport;
-        if(k > ReadDepth / 2)
+        if(k > vafDepth / 2)
         {
-            k = ReadDepth - k;
+            k = RefSupport;
         }
-        return (double) k / ReadDepth;
+        return (double) k / vafDepth;
     }
 
     public String ref()
