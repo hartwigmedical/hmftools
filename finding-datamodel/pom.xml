@@ -10,6 +10,7 @@
 
     <artifactId>finding-datamodel</artifactId>
     <packaging>jar</packaging>
+    <version>${finding-datamodel.version}</version>
     <name>HMF Tools - Finding datamodel</name>
 
     <dependencies>
