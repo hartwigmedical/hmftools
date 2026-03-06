@@ -71,6 +71,7 @@ import com.hartwig.hmftools.finding.datamodel.Virus;
 import com.hartwig.hmftools.finding.datamodel.VirusBuilder;
 import com.hartwig.hmftools.finding.datamodel.VisualisationFiles;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 // to reduce duplication, the findings are collected from
@@ -137,37 +138,12 @@ public class FindingRecordFactory
 
         PurpleRecord purple = orangeRecord.purple();
 
+        builder.purityPloidyFit(createPurityPloidyFit(purple));
+
         DriverFindingList<GainDeletion> somaticGainDeletions;
         FindingsStatus findingsStatus = purpleFindingsStatus(purple);
         if(findingsStatus == FindingsStatus.OK)
         {
-            PurpleFit purpleFit = purple.fit();
-            Set<PurityPloidyFit.QCStatus> qcStatuses = purpleFit.qc().status().stream()
-                    .map(o -> PurityPloidyFit.QCStatus.valueOf(o.name()))
-                    .collect(Collectors.toSet());
-            Set<PurityPloidyFit.GermlineAberration> germlineAberrations = purpleFit.qc().germlineAberrations().stream()
-                    .map(o -> PurityPloidyFit.GermlineAberration.valueOf(o.name()))
-                    .collect(Collectors.toSet());
-
-            builder.purityPloidyFit(PurityPloidyFitBuilder.builder()
-                    .qc(PurityPloidyFitQcBuilder.builder()
-                            .status(qcStatuses)
-                            .germlineAberrations(germlineAberrations)
-                            .amberMeanDepth(purpleFit.qc().amberMeanDepth())
-                            .contamination(purpleFit.qc().contamination())
-                            .totalCopyNumberSegments(purpleFit.qc().totalCopyNumberSegments())
-                            .unsupportedCopyNumberSegments(purpleFit.qc().unsupportedCopyNumberSegments())
-                            .deletedGenes(purpleFit.qc().deletedGenes())
-                            .build())
-                    .fittedPurityMethod(PurityPloidyFit.FittedPurityMethod.valueOf(purpleFit.fittedPurityMethod().name()))
-                    .purity(purpleFit.purity())
-                    .minPurity(purpleFit.minPurity())
-                    .maxPurity(purpleFit.maxPurity())
-                    .ploidy(purpleFit.ploidy())
-                    .minPloidy(purpleFit.minPloidy())
-                    .maxPloidy(purpleFit.maxPloidy())
-                    .build());
-
             somaticGainDeletions =
                     GainDeletionFactory.somaticGainDeletionFindings(orangeRecord.refGenomeVersion(), findingsStatus, purple);
 
@@ -188,8 +164,38 @@ public class FindingRecordFactory
                     .microsatelliteStability(FindingUtil.notAvailableFindingItem())
                     .tumorMutationStatus(FindingUtil.notAvailableFindingItem());
         }
-
         return somaticGainDeletions;
+    }
+
+    @NotNull
+    private static PurityPloidyFit createPurityPloidyFit(@NotNull PurpleRecord purple)
+    {
+        PurpleFit purpleFit = purple.fit();
+        Set<PurityPloidyFit.QCStatus> qcStatuses = purpleFit.qc().status().stream()
+                .map(o -> PurityPloidyFit.QCStatus.valueOf(o.name()))
+                .collect(Collectors.toSet());
+        Set<PurityPloidyFit.GermlineAberration> germlineAberrations = purpleFit.qc().germlineAberrations().stream()
+                .map(o -> PurityPloidyFit.GermlineAberration.valueOf(o.name()))
+                .collect(Collectors.toSet());
+
+        return PurityPloidyFitBuilder.builder()
+                .qc(PurityPloidyFitQcBuilder.builder()
+                        .status(qcStatuses)
+                        .germlineAberrations(germlineAberrations)
+                        .amberMeanDepth(purpleFit.qc().amberMeanDepth())
+                        .contamination(purpleFit.qc().contamination())
+                        .totalCopyNumberSegments(purpleFit.qc().totalCopyNumberSegments())
+                        .unsupportedCopyNumberSegments(purpleFit.qc().unsupportedCopyNumberSegments())
+                        .deletedGenes(purpleFit.qc().deletedGenes())
+                        .build())
+                .fittedPurityMethod(PurityPloidyFit.FittedPurityMethod.valueOf(purpleFit.fittedPurityMethod().name()))
+                .purity(purpleFit.purity())
+                .minPurity(purpleFit.minPurity())
+                .maxPurity(purpleFit.maxPurity())
+                .ploidy(purpleFit.ploidy())
+                .minPloidy(purpleFit.minPloidy())
+                .maxPloidy(purpleFit.maxPloidy())
+                .build();
     }
 
     private static FindingItem<TumorMutationStatus> createTumorMutationStatus(PurpleRecord purple)
