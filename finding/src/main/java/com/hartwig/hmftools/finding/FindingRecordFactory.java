@@ -134,68 +134,81 @@ public class FindingRecordFactory
 
         PurpleRecord purple = orangeRecord.purple();
 
+        DriverFindingList<GainDeletion> somaticGainDeletions;
         FindingsStatus findingsStatus = purpleFindingsStatus(purple);
+        if(findingsStatus == FindingsStatus.OK)
+        {
+            PurpleFit purpleFit = purple.fit();
+            Set<PurityPloidyFit.QCStatus> qcStatuses = purpleFit.qc().status().stream()
+                    .map(o -> PurityPloidyFit.QCStatus.valueOf(o.name()))
+                    .collect(Collectors.toSet());
+            Set<PurityPloidyFit.GermlineAberration> germlineAberrations = purpleFit.qc().germlineAberrations().stream()
+                    .map(o -> PurityPloidyFit.GermlineAberration.valueOf(o.name()))
+                    .collect(Collectors.toSet());
 
-        PurpleFit purpleFit = purple.fit();
-        Set<PurityPloidyFit.QCStatus> qcStatuses = purpleFit.qc().status().stream()
-                .map(o -> PurityPloidyFit.QCStatus.valueOf(o.name()))
-                .collect(Collectors.toSet());
-        Set<PurityPloidyFit.GermlineAberration> germlineAberrations = purpleFit.qc().germlineAberrations().stream()
-                .map(o -> PurityPloidyFit.GermlineAberration.valueOf(o.name()))
-                .collect(Collectors.toSet());
+            builder.purityPloidyFit(PurityPloidyFitBuilder.builder()
+                    .qc(PurityPloidyFitQcBuilder.builder()
+                            .status(qcStatuses)
+                            .germlineAberrations(germlineAberrations)
+                            .amberMeanDepth(purpleFit.qc().amberMeanDepth())
+                            .contamination(purpleFit.qc().contamination())
+                            .totalCopyNumberSegments(purpleFit.qc().totalCopyNumberSegments())
+                            .unsupportedCopyNumberSegments(purpleFit.qc().unsupportedCopyNumberSegments())
+                            .deletedGenes(purpleFit.qc().deletedGenes())
+                            .build())
+                    .fittedPurityMethod(PurityPloidyFit.FittedPurityMethod.valueOf(purpleFit.fittedPurityMethod().name()))
+                    .purity(purpleFit.purity())
+                    .minPurity(purpleFit.minPurity())
+                    .maxPurity(purpleFit.maxPurity())
+                    .ploidy(purpleFit.ploidy())
+                    .minPloidy(purpleFit.minPloidy())
+                    .maxPloidy(purpleFit.maxPloidy())
+                    .build());
 
-        builder.purityPloidyFit(PurityPloidyFitBuilder.builder()
-                .qc(PurityPloidyFitQcBuilder.builder()
-                        .status(qcStatuses)
-                        .germlineAberrations(germlineAberrations)
-                        .amberMeanDepth(purpleFit.qc().amberMeanDepth())
-                        .contamination(purpleFit.qc().contamination())
-                        .totalCopyNumberSegments(purpleFit.qc().totalCopyNumberSegments())
-                        .unsupportedCopyNumberSegments(purpleFit.qc().unsupportedCopyNumberSegments())
-                        .deletedGenes(purpleFit.qc().deletedGenes())
-                        .build())
-                .fittedPurityMethod(PurityPloidyFit.FittedPurityMethod.valueOf(purpleFit.fittedPurityMethod().name()))
-                .purity(purpleFit.purity())
-                .minPurity(purpleFit.minPurity())
-                .maxPurity(purpleFit.maxPurity())
-                .ploidy(purpleFit.ploidy())
-                .minPloidy(purpleFit.minPloidy())
-                .maxPloidy(purpleFit.maxPloidy())
-                .build());
+            somaticGainDeletions =
+                    GainDeletionFactory.somaticGainDeletionFindings(orangeRecord.refGenomeVersion(), findingsStatus, purple);
 
-        DriverFindingList<GainDeletion> somaticGainDeletions =
-                GainDeletionFactory.somaticGainDeletionFindings(orangeRecord.refGenomeVersion(), findingsStatus, purple);
+            FindingList<ChromosomeArmCopyNumber> chrArmCopyNumber = new FindingList<>(
+                    FindingsStatus.OK,
+                    purple.armCopyNumberAbberations().stream()
+                            .map(o -> ChromosomeArmCopyNumberBuilder.builder()
+                                    .findingKey(FindingKeys.chromosomeArmCopyNumber(o.chromosome(), o.arm()))
+                                    .chromosome(o.chromosome())
+                                    .arm(switch (o.arm()) {
+                                        case "P" -> ChromosomeArmCopyNumber.ChromosomeArm.P;
+                                        case "Q" -> ChromosomeArmCopyNumber.ChromosomeArm.Q;
+                                        default -> throw new IllegalArgumentException("Unknown arm: " + o.arm());
+                                    })
+                                    .type(switch (o.type()) {
+                                        case "GAIN" -> ChromosomeArmCopyNumber.Type.GAIN;
+                                        case "LOSS" -> ChromosomeArmCopyNumber.Type.LOSS;
+                                        case "DIPLOID" -> ChromosomeArmCopyNumber.Type.DIPLOID;
+                                        default -> throw new IllegalArgumentException("Unknown type: " + o.type());
+                                    })
+                                    .copyNumber(o.copyNumber())
+                                    .relativeCopyNumber(o.relativeCopyNumber())
+                                    .build())
+                            .toList());
 
-        FindingList<ChromosomeArmCopyNumber> chrArmCopyNumber = new FindingList<>(
-                FindingsStatus.OK,
-                purple.armCopyNumberAbberations().stream()
-                        .map(o -> ChromosomeArmCopyNumberBuilder.builder()
-                                .findingKey(FindingKeys.chromosomeArmCopyNumber(o.chromosome(), o.arm()))
-                                .chromosome(o.chromosome())
-                                .arm(switch (o.arm()) {
-                                    case "P" -> ChromosomeArmCopyNumber.ChromosomeArm.P;
-                                    case "Q" -> ChromosomeArmCopyNumber.ChromosomeArm.Q;
-                                    default -> throw new IllegalArgumentException("Unknown arm: " + o.arm());
-                                })
-                                .type(switch (o.type()) {
-                                    case "GAIN" -> ChromosomeArmCopyNumber.Type.GAIN;
-                                    case "LOSS" -> ChromosomeArmCopyNumber.Type.LOSS;
-                                    case "DIPLOID" -> ChromosomeArmCopyNumber.Type.DIPLOID;
-                                    default -> throw new IllegalArgumentException("Unknown type: " + o.type());
-                                })
-                                .copyNumber(o.copyNumber())
-                                .relativeCopyNumber(o.relativeCopyNumber())
-                                .build())
-                        .toList());
-
-
-        builder.somaticSmallVariants(SmallVariantFactory.somaticSmallVariantFindings(purple, findingsStatus, clinicalTranscriptsModel, driverGenes))
-                .germlineSmallVariants(SmallVariantFactory.germlineSmallVariantFindings(hasRefSample, purple, clinicalTranscriptsModel, driverGenes))
-                .somaticGainDeletions(somaticGainDeletions)
-                .germlineGainDeletions(GainDeletionFactory.germlineGainDeletionFindings(hasRefSample, orangeRecord.refGenomeVersion(), purple))
-                .microsatelliteStability(createMicrosatelliteStability(purple, orangeRecord.linx(), somaticGainDeletions))
-                .tumorMutationStatus(createTumorMutationStatus(purple))
-                .chromosomeArmCopyNumbers(chrArmCopyNumber);
+            builder.somaticSmallVariants(SmallVariantFactory.somaticSmallVariantFindings(purple, findingsStatus, clinicalTranscriptsModel, driverGenes))
+                    .germlineSmallVariants(SmallVariantFactory.germlineSmallVariantFindings(hasRefSample, purple, clinicalTranscriptsModel, driverGenes))
+                    .somaticGainDeletions(somaticGainDeletions)
+                    .germlineGainDeletions(GainDeletionFactory.germlineGainDeletionFindings(hasRefSample, orangeRecord.refGenomeVersion(), purple))
+                    .microsatelliteStability(createMicrosatelliteStability(purple, orangeRecord.linx(), somaticGainDeletions))
+                    .tumorMutationStatus(createTumorMutationStatus(purple))
+                    .chromosomeArmCopyNumbers(chrArmCopyNumber);
+        }
+        else
+        {
+            somaticGainDeletions = FindingUtil.notAvailableDriverFindingList();
+            builder.somaticSmallVariants(FindingUtil.notAvailableDriverFindingList())
+                    .germlineSmallVariants(FindingUtil.notAvailableDriverFindingList())
+                    .somaticGainDeletions(somaticGainDeletions)
+                    .germlineGainDeletions(FindingUtil.notAvailableDriverFindingList())
+                    .microsatelliteStability(FindingUtil.notAvailableFindingItem())
+                    .tumorMutationStatus(FindingUtil.notAvailableFindingItem())
+                    .chromosomeArmCopyNumbers(FindingUtil.notAvailableFindingList());
+        }
 
         return somaticGainDeletions;
     }
@@ -264,6 +277,10 @@ public class FindingRecordFactory
     {
         if(chord != null)
         {
+            HomologousRecombination.HrStatus hrStatus = HomologousRecombination.HrStatus.valueOf(chord.hrStatus().name());
+            List<GainDeletion> lohGainDeletions = hrStatus == HomologousRecombination.HrStatus.HR_DEFICIENT
+                    ? filterLohGainDeletions(gainDeletions, Genes.HRD_GENES)
+                    : List.of();
             return FindingItemBuilder.<HomologousRecombination>builder()
                     .status(FindingsStatus.OK)
                     .finding(HomologousRecombinationBuilder.builder()
@@ -271,9 +288,9 @@ public class FindingRecordFactory
                             .brca1Value(chord.brca1Value())
                             .brca2Value(chord.brca2Value())
                             .hrdValue(chord.hrdValue())
-                            .hrStatus(HomologousRecombination.HrStatus.valueOf(chord.hrStatus().name()))
+                            .hrStatus(hrStatus)
                             .hrdType(chord.hrdType())
-                            .lohCopyNumbers(filterLohGainDeletions(gainDeletions, Genes.HRD_GENES))
+                            .lohCopyNumbers(lohGainDeletions)
                             .genes(GeneListUtil.genes(purple.somaticVariants(),
                                     purple.somaticGainsDels(),
                                     linx.somaticHomozygousDisruptions(),
@@ -290,14 +307,20 @@ public class FindingRecordFactory
     private static FindingItem<MicrosatelliteStability> createMicrosatelliteStability(PurpleRecord purple,
             LinxRecord linx, DriverFindingList<GainDeletion> gainDeletions)
     {
+        MicrosatelliteStability.MicrosatelliteStatus microsatelliteStatus =
+                MicrosatelliteStability.MicrosatelliteStatus.valueOf(purple.characteristics()
+                        .microsatelliteStatus()
+                        .name());
+        List<GainDeletion> lohGainDeletions = microsatelliteStatus == MicrosatelliteStability.MicrosatelliteStatus.MSI
+                ? filterLohGainDeletions(gainDeletions, Genes.MSI_GENES)
+                : List.of();
         return FindingItemBuilder.<MicrosatelliteStability>builder()
                 .status(FindingsStatus.OK)
                 .finding(MicrosatelliteStabilityBuilder.builder()
                         .findingKey(FindingKeys.microsatelliteStability(purple.characteristics().microsatelliteStatus()))
-                        .microsatelliteStatus(
-                                MicrosatelliteStability.MicrosatelliteStatus.valueOf(purple.characteristics().microsatelliteStatus().name()))
+                        .microsatelliteStatus(microsatelliteStatus)
                         .microsatelliteIndelsPerMb(purple.characteristics().microsatelliteIndelsPerMb())
-                        .lohCopyNumbers(filterLohGainDeletions(gainDeletions, Genes.MSI_GENES))
+                        .lohCopyNumbers(lohGainDeletions)
                         .genes(GeneListUtil.genes(purple.somaticVariants(),
                                 purple.somaticGainsDels(),
                                 linx.somaticHomozygousDisruptions(),
