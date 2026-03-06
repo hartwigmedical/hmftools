@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.amber.contamination;
+package com.hartwig.hmftools.amber;
 
 import com.hartwig.hmftools.common.amber.BaseDepthData;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
@@ -19,22 +19,7 @@ public class TumorContamination implements GenomePosition
     }
 
     @Override
-    public String chromosome()
-    {
-        return Chromosome;
-    }
+    public String chromosome() { return Chromosome; }
+    public int position() { return Position; }
 
-    public int position()
-    {
-        return Position;
-    }
-
-    public double tumorVaf()
-    {
-        if(this.Tumor.readDepth() == 0)
-        {
-            return -1.0;
-        }
-        return (double) this.Tumor.altSupport() / (double) this.Tumor.readDepth();
-    }
 }

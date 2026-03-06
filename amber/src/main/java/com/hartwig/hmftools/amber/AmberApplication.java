@@ -10,12 +10,13 @@ import static com.hartwig.hmftools.amber.AmberConstants.TARGET_REGION_SITE_BUFFE
 import static com.hartwig.hmftools.amber.AmberUtils.aboveQualFilter;
 import static com.hartwig.hmftools.amber.AmberUtils.fromBaseDepth;
 import static com.hartwig.hmftools.amber.AmberUtils.isValid;
+import static com.hartwig.hmftools.common.region.BedFileReader.loadBedFileChrMap;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
-import static com.hartwig.hmftools.common.region.BedFileReader.loadBedFileChrMap;
 import static com.hartwig.hmftools.common.utils.config.VersionInfo.fromAppName;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -26,25 +27,21 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ListMultimap;
+
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.amber.contamination.TumorContamination;
-import com.hartwig.hmftools.amber.contamination.TumorContaminationModel;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.amber.blacklist.AmberBlacklistFile;
 import com.hartwig.hmftools.amber.blacklist.AmberBlacklistPoint;
-import com.hartwig.hmftools.amber.purity.PurityAnalysisConfig;
-import com.hartwig.hmftools.amber.purity.TumorOnlyPurityAnalysis;
-import com.hartwig.hmftools.amber.purity.CandidatePeak;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.amber.AmberSite;
 import com.hartwig.hmftools.common.amber.AmberSitesFile;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.position.GenomePositionImpl;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.utils.config.VersionInfo;
 
 import htsjdk.samtools.SamReaderFactory;
@@ -97,7 +94,7 @@ public class AmberApplication implements AutoCloseable
         return 0;
     }
 
-    private ImmutableListMultimap<Chromosome, AmberSite> loadAmberSites() throws Exception
+    private ImmutableListMultimap<Chromosome, AmberSite> loadAmberSites() throws IOException
     {
         ListMultimap<Chromosome, AmberSite> amberSitesMap = AmberSitesFile.sites(mConfig.BafLociPath);
 
@@ -128,11 +125,6 @@ public class AmberApplication implements AutoCloseable
                 List<BaseRegion> regions = entry.getValue();
 
                 Collection<AmberSite> amberSites = amberSitesMap.get(chromosome);
-
-                if(amberSites == null)
-                {
-                    continue;
-                }
 
                 int regionIndex = 0;
                 BaseRegion currentRegion = regions.get(0);
@@ -248,32 +240,21 @@ public class AmberApplication implements AutoCloseable
         // no homozygous sites
         TumorAnalysis tumor = new TumorAnalysis(mConfig, readerFactory, allNormal, ArrayListMultimap.create());
 
-        List<TumorBAF> readDepthAndQualityFiltered = tumor.getBafs().values()
+        List<TumorBAF> tumorBAFList = tumor.getBafs().values()
                 .stream()
                 .filter(x -> x.TumorEvidence.ReadDepth >= mConfig.TumorMinDepth)
                 .filter(x -> aboveQualFilter(x.TumorEvidence))
                 .filter(x -> x.TumorEvidence.RefSupport >= mConfig.TumorOnlyMinSupport)
                 .filter(x -> x.TumorEvidence.AltSupport >= mConfig.TumorOnlyMinSupport)
-                .sorted().toList();
-
-        List<PositionEvidence> rawData = readDepthAndQualityFiltered.stream().map(x -> x.TumorEvidence).toList();
-        PurityAnalysisConfig purityAnalysisConfig = new PurityAnalysisConfig(mConfig);
-        TumorOnlyPurityAnalysis noiseFloorAnalysis = new TumorOnlyPurityAnalysis(rawData, mChromosomeSites, purityAnalysisConfig);
-        double noiseFloor = noiseFloorAnalysis.cutoff();
-        AMB_LOGGER.debug(format("Noise floor: %.3f", noiseFloor));
-        double contamination = noiseFloorAnalysis.contaminationPeaks().stream().map(CandidatePeak::vaf).max(Double::compare).orElse(0.0);
-        AMB_LOGGER.debug(format("Contamination level: %.3f", contamination));
-
-        List<TumorBAF> tumorBAFList = readDepthAndQualityFiltered
-                .stream()
-                .filter(x -> isFinite(x.refFrequency()) && Doubles.greaterOrEqual(x.refFrequency(), noiseFloor))
-                .filter(x -> isFinite(x.altFrequency()) && Doubles.greaterOrEqual(x.altFrequency(), noiseFloor))
-                .sorted().toList();
+                .filter(x -> isFinite(x.refFrequency()) && Doubles.greaterOrEqual(x.refFrequency(), mConfig.TumorOnlyMinVaf))
+                .filter(x -> isFinite(x.altFrequency()) && Doubles.greaterOrEqual(x.altFrequency(), mConfig.TumorOnlyMinVaf))
+                .sorted()
+                .toList();
 
         List<AmberBAF> amberBAFList = tumorBAFList.stream()
                 .map(AmberUtils::fromTumorBaf).filter(x -> Double.isFinite(x.tumorBAF())).collect(toList());
 
-        mPersistence.persistQC(0, contamination, null);
+        mPersistence.persistQC(0, 0.0, null);
         mPersistence.persistVersionInfo(mVersionInfo);
         mPersistence.persistBAF(amberBAFList);
     }
@@ -290,7 +271,7 @@ public class AmberApplication implements AutoCloseable
         // filter out everything in loaded genome positions that are in these regions
         for(Map.Entry<Chromosome, AmberSite> entry : mChromosomeSites.entries())
         {
-            // check against blacklist
+            // check against black list
             boolean blacklisted = false;
             for(GenomeRegion gr : excludedRegions)
             {

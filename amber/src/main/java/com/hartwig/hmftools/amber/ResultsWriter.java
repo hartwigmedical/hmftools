@@ -9,8 +9,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import com.google.common.collect.ListMultimap;
-import com.hartwig.hmftools.amber.contamination.TumorContamination;
-import com.hartwig.hmftools.amber.contamination.TumorContaminationFile;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.amber.AmberBAFFile;
 import com.hartwig.hmftools.common.amber.AmberQC;
@@ -39,7 +37,6 @@ public class ResultsWriter
     public void persistBAF(final List<AmberBAF> result) throws Exception
     {
         final String filename = AmberBAFFile.generateAmberFilenameForWriting(mConfig.OutputDir, mConfig.getSampleId());
-        AmberBAFFile.write(filename, result);
         AmberBAFFile.write(filename, result);
 
         if(mConfig.TumorId != null && !mConfig.SkipBafSegmentation)

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.amber.contamination;
+package com.hartwig.hmftools.amber;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 
@@ -9,9 +9,8 @@ import java.util.List;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.amber.PositionEvidence;
-import com.hartwig.hmftools.common.amber.AmberBase;
 import com.hartwig.hmftools.common.amber.BaseDepthData;
+import com.hartwig.hmftools.common.amber.ImmutableBaseDepthData;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -53,21 +52,21 @@ public final class TumorContaminationFile
 
         PositionEvidence template = new PositionEvidence(values[0], Integer.parseInt(values[1]), values[2], values[3]);
 
-        BaseDepthData normalDepth = new BaseDepthData(
-                AmberBase.valueOf(template.ref()),
-                AmberBase.valueOf(template.alt()),
-                Integer.parseInt(values[4]),
-                0,
-                Integer.parseInt(values[5]),
-                Integer.parseInt(values[6]));
+        BaseDepthData normalDepth = ImmutableBaseDepthData.builder()
+                .ref(BaseDepthData.Base.valueOf(template.ref()))
+                .alt(BaseDepthData.Base.valueOf(template.alt()))
+                .readDepth(Integer.parseInt(values[4]))
+                .refSupport(Integer.parseInt(values[5]))
+                .altSupport(Integer.parseInt(values[6]))
+                .build();
 
-        BaseDepthData tumorDepth = new BaseDepthData(
-                AmberBase.valueOf(template.ref()),
-                AmberBase.valueOf(template.alt()),
-                Integer.parseInt(values[7]),
-                0,
-                Integer.parseInt(values[8]),
-                Integer.parseInt(values[9]));
+        BaseDepthData tumorDepth = ImmutableBaseDepthData.builder()
+                .ref(BaseDepthData.Base.valueOf(template.ref()))
+                .alt(BaseDepthData.Base.valueOf(template.alt()))
+                .readDepth(Integer.parseInt(values[7]))
+                .refSupport(Integer.parseInt(values[8]))
+                .altSupport(Integer.parseInt(values[9]))
+                .build();
 
         return new TumorContamination(template.Chromosome, template.Position, normalDepth, tumorDepth);
     }
@@ -104,12 +103,9 @@ public final class TumorContaminationFile
                 .add(String.valueOf(ratio.position()))
                 .add(String.valueOf(ratio.Tumor.ref()))
                 .add(String.valueOf(ratio.Tumor.alt()))
-                //                .add(String.valueOf(ratio.Normal.readDepth()))
-                .add("0")
-                //                .add(String.valueOf(ratio.Normal.refSupport()))
-                .add("0")
-                //                .add(String.valueOf(ratio.Normal.altSupport()))
-                .add("0")
+                .add(String.valueOf(ratio.Normal.readDepth()))
+                .add(String.valueOf(ratio.Normal.refSupport()))
+                .add(String.valueOf(ratio.Normal.altSupport()))
                 .add(String.valueOf(ratio.Tumor.readDepth()))
                 .add(String.valueOf(ratio.Tumor.refSupport()))
                 .add(String.valueOf(ratio.Tumor.altSupport()))
