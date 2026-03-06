@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.fastqtools.umi;
 
 import static java.lang.Math.max;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadDelimitedIdFile;
@@ -35,20 +36,25 @@ public class FastqUmiExtracter
     private BufferedWriter mWriterR2;
 
     private final List<String> mKnownUmis;
-    private final int mMaxKnownUmiLength;
+    private final List<String> mKnownUmisReversed;
 
     private static final String FASTQ_FILES_DELIM = ";";
     private static final int LINE_LOG_COUNT = 1000000;
+
+    private long mReadCount;
+    private long mKnownUmiMatchCount;
 
     public FastqUmiExtracter(final ConfigBuilder configBuilder)
     {
         mConfig = new UmiConfig(configBuilder);
         mKnownUmis = Lists.newArrayList();
+        mKnownUmisReversed = Lists.newArrayList();
 
         if(mConfig.KnownUmiFile != null)
             loadKnownUmis();
 
-        mMaxKnownUmiLength = mKnownUmis.stream().mapToInt(x -> x.length()).max().orElse(0);
+        mReadCount = 0;
+        mKnownUmiMatchCount = 0;
     }
 
     private void loadKnownUmis()
@@ -57,6 +63,8 @@ public class FastqUmiExtracter
         knownUmis.forEach(x -> mKnownUmis.add(x));
 
         Collections.sort(mKnownUmis, Comparator.comparingInt(x -> -x.length()));
+
+        mKnownUmis.forEach(x -> mKnownUmisReversed.add(Nucleotides.reverseComplementBases(x)));
 
         if(!knownUmis.isEmpty())
         {
@@ -99,7 +107,13 @@ public class FastqUmiExtracter
 
         processFiles(fastqFiles[0], fastqFiles[1]);
 
-        FQ_LOGGER.info("extraction complete, mins({})", runTimeMinsStr(startTimeMs));
+        if(!mKnownUmis.isEmpty())
+        {
+            double matchedPerc = mReadCount > 0 ? mKnownUmiMatchCount / (double)mReadCount : 0;
+            FQ_LOGGER.info("known UMI matched({} {}%)", mKnownUmiMatchCount, format("%.2f", matchedPerc * 100));
+        }
+
+        FQ_LOGGER.info("extraction complete, totalReads({}), mins({})", mReadCount, runTimeMinsStr(startTimeMs));
     }
 
     private static final int READ_ITEM_ID = 0;
@@ -172,6 +186,8 @@ public class FastqUmiExtracter
                     }
 
                     readLineCount = 0;
+
+                    ++mReadCount;
                 }
 
                 ++lineCount;
@@ -267,6 +283,9 @@ public class FastqUmiExtracter
         int umiLength1 = umiBases1.length();
         int umiLength2 = umiBases2.length();
 
+        if(umiLength1 > 0 && umiLength2 > 0)
+            ++mKnownUmiMatchCount;
+
         // append UMIs to read Id and remove from bases and quals
         String duplexUmiId = umiLength1 + mConfig.UmiDelim + umiLength2;
         String newReadId = readId1 + READ_ID_DELIM + duplexUmiId;
@@ -342,27 +361,33 @@ public class FastqUmiExtracter
 
     private String findKnownUmiMatch(final String readBases, boolean requiresReverse)
     {
-        for(String umi : mKnownUmis)
+        for(int i = 0; i < mKnownUmis.size(); ++i)
         {
+            String umi = mKnownUmis.get(i);
             String readUmi = readBases.substring(0, umi.length());
-
-            if(requiresReverse)
-                readUmi = Nucleotides.reverseComplementBases(readUmi);
 
             if(readUmi.equals(umi))
                 return umi;
+
+            String umiReversed = mKnownUmisReversed.get(i);
+
+            if(readUmi.equals(umiReversed))
+                return umiReversed;
         }
 
         // check for a 1-base mismatch
-        for(String umi : mKnownUmis)
+        for(int i = 0; i < mKnownUmis.size(); ++i)
         {
+            String umi = mKnownUmis.get(i);
             String readUmi = readBases.substring(0, umi.length());
-
-            if(requiresReverse)
-                readUmi = Nucleotides.reverseComplementBases(readUmi);
 
             if(!exceedsUmiDiff(readUmi, umi, mConfig.KnownUmiBaseDiff))
                 return umi;
+
+            String umiReversed = mKnownUmisReversed.get(i);
+
+            if(!exceedsUmiDiff(readUmi, umiReversed, mConfig.KnownUmiBaseDiff))
+                return umiReversed;
         }
 
         return "";

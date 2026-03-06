@@ -38,11 +38,8 @@ public abstract class VariantEntry
 
     public abstract HotspotType hotspot();
 
-    @Nullable
-    public abstract Double driverLikelihood();
-
+    public abstract double driverLikelihood();
     public abstract double clonalLikelihood();
-
     public abstract String somaticLikelihood();
 
     @Nullable

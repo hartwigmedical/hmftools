@@ -1,14 +1,12 @@
 package com.hartwig.hmftools.orange.report.tables;
 
 import static com.hartwig.hmftools.orange.report.ReportResources.formatPercentileField;
-import static com.hartwig.hmftools.orange.report.ReportResources.formatSingleDigitDecimal;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Doubles;
-import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
 import com.hartwig.hmftools.datamodel.isofox.GeneExpression;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.interpretation.Expressions;
@@ -17,18 +15,17 @@ import com.hartwig.hmftools.orange.report.util.Tables;
 import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Table;
 
-import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import static com.hartwig.hmftools.orange.report.ReportResources.formatTpmField;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_GENE;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_TPM;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.cellArray;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.floatArray;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.intToFloatArray;
 
 public final class ExpressionTable
 {
-    public static Table build(final String title, float width, final List<GeneExpression> expressions, boolean sortAscending,
-            final List<PurpleGeneCopyNumber> allSomaticGeneCopyNumbers, final ReportResources reportResources)
+    public static Table build(
+            final String title, float width, final List<GeneExpression> expressions, boolean sortAscending, final ReportResources reportResources)
     {
         if(expressions.isEmpty())
         {
@@ -45,12 +42,11 @@ public final class ExpressionTable
         addEntry(cells, widths, cellEntries, 1, "Percentile");
         addEntry(cells, widths, cellEntries, 1, "Fold Change");
 
-        Table table = Tables.createContent(width, floatArray(widths), cellArray(cellEntries));
+        Table table = Tables.createContent(width, intToFloatArray(widths), cellArray(cellEntries));
         
         for(GeneExpression expression : sort(expressions, sortAscending))
         {
             table.addCell(cells.createContent(expression.gene()));
-            // table.addCell(cells.createContent(lookupTumorCN(allSomaticGeneCopyNumbers, expression.gene())));
             table.addCell(cells.createContent(formatTpmField(expression.tpm())));
 
             if(expression.percentileCancer() != null && expression.medianTpmCancer() != null)
@@ -67,31 +63,6 @@ public final class ExpressionTable
         }
 
         return new Tables(reportResources).createWrapping(table, title);
-    }
-
-    private static String lookupTumorCN(final List<PurpleGeneCopyNumber> geneCopyNumbers, final String geneToFind)
-    {
-        PurpleGeneCopyNumber geneCopyNumber = findByGene(geneCopyNumbers, geneToFind);
-        if(geneCopyNumber == null)
-        {
-            LOGGER.warn("Could not find gene copy number for '{}'", geneToFind);
-            return ReportResources.NOT_AVAILABLE;
-        }
-
-        return formatSingleDigitDecimal(Math.max(0, geneCopyNumber.minCopyNumber()));
-    }
-
-    private static PurpleGeneCopyNumber findByGene(final List<PurpleGeneCopyNumber> geneCopyNumbers, final String geneToFind)
-    {
-        for(PurpleGeneCopyNumber geneCopyNumber : geneCopyNumbers)
-        {
-            if(geneCopyNumber.gene().equals(geneToFind))
-            {
-                return geneCopyNumber;
-            }
-        }
-
-        return null;
     }
 
     private static List<GeneExpression> sort(final List<GeneExpression> expressions, boolean sortDescending)

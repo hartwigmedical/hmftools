@@ -1,22 +1,25 @@
 package com.hartwig.hmftools.orange.algo.immuno;
 
 import static com.hartwig.hmftools.orange.algo.linx.LinxOrangeTestFactory.linxHomozygousDisruptionBuilder;
+import static com.hartwig.hmftools.orange.algo.purple.PurpleTestFactory.purpleDriverBuilder;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Collections;
+
 import com.hartwig.hmftools.datamodel.immuno.ImmuneEscapeRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
+import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
-import com.hartwig.hmftools.orange.algo.linx.TestLinxInterpretationFactory;
+import com.hartwig.hmftools.orange.algo.linx.TestLinxFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleGainDeletionFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleGeneCopyNumberFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleInterpretationFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleVariantFactory;
 
-import org.jetbrains.annotations.NotNull;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -26,7 +29,7 @@ public class ImmuneEscapeInterpreterTest
     public void doesNotCrashOnMinimalData()
     {
         PurpleRecord purple = TestPurpleInterpretationFactory.createMinimalTestPurpleData();
-        LinxRecord linx = TestLinxInterpretationFactory.createMinimalTestLinxData();
+        LinxRecord linx = TestLinxFactory.createMinimalTestLinxData();
 
         assertNotNull(ImmuneEscapeInterpreter.interpret(purple, linx));
     }
@@ -59,7 +62,7 @@ public class ImmuneEscapeInterpreterTest
                         .build())
                 .build();
 
-        LinxRecord linx = TestLinxInterpretationFactory.builder()
+        LinxRecord linx = TestLinxFactory.linxRecordBuilder()
                 .addSomaticHomozygousDisruptions(linxHomozygousDisruptionBuilder()
                         .gene("IFNGR2")
                         .isCanonical(true)
@@ -184,7 +187,7 @@ public class ImmuneEscapeInterpreterTest
 
     private static ImmuneEscapeRecord runWithPurple(final PurpleRecord purple)
     {
-        return ImmuneEscapeInterpreter.interpret(purple, TestLinxInterpretationFactory.createMinimalTestLinxData());
+        return ImmuneEscapeInterpreter.interpret(purple, TestLinxFactory.createMinimalTestLinxData());
     }
 
     private static ImmuneEscapeRecord runWithLinx(final LinxRecord linx)
@@ -194,17 +197,15 @@ public class ImmuneEscapeInterpreterTest
 
     private static PurpleRecord withLOH(final String gene)
     {
-        return TestPurpleInterpretationFactory.builder().addSomaticGeneCopyNumbers(
-                        TestPurpleGeneCopyNumberFactory.builder()
-                                .gene(gene).minMinorAlleleCopyNumber(0D).minCopyNumber(1D).build())
+        return TestPurpleInterpretationFactory.builder().addSomaticDrivers(
+                        purpleDriverBuilder().gene(gene).type(PurpleDriverType.LOH).build())
                 .build();
     }
 
     private static PurpleRecord withoutLOH(final String gene)
     {
-        return TestPurpleInterpretationFactory.builder().addSomaticGeneCopyNumbers(
-                        TestPurpleGeneCopyNumberFactory.builder()
-                                .gene(gene).minMinorAlleleCopyNumber(1D).minCopyNumber(2D).build())
+        return TestPurpleInterpretationFactory.builder().addSomaticDrivers(
+                        purpleDriverBuilder().gene(gene).type(PurpleDriverType.AMP).build())
                 .build();
     }
 
@@ -259,7 +260,7 @@ public class ImmuneEscapeInterpreterTest
 
     private static LinxRecord withHomozygousDisruption(final String gene)
     {
-        return TestLinxInterpretationFactory.builder()
+        return TestLinxFactory.linxRecordBuilder()
                 .addSomaticHomozygousDisruptions(linxHomozygousDisruptionBuilder()
                         .gene(gene)
                         .isCanonical(true)

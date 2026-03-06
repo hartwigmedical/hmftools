@@ -13,12 +13,13 @@ import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_TPM;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_TYPE;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.cellArray;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.floatArray;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.intToFloatArray;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.interpretation.Chromosomes;
@@ -61,26 +62,35 @@ public final class GainDeletionTable
             addEntry(cells, widths, cellEntries, 1, "Fold Change");
         }
 
-        Table table = Tables.createContent(width, floatArray(widths), cellArray(cellEntries));
+        Table table = Tables.createContent(width, intToFloatArray(widths), cellArray(cellEntries));
 
         for(PurpleGainDeletion gainDel : sort(gainsDels))
         {
-            table.addCell(cells.createContent(gainDel.chromosome() + gainDel.chromosomeBand()));
-            table.addCell(cells.createContent(displayGene(gainDel)));
-            table.addCell(cells.createContent(gainDel.driver().type().toString()));
-            table.addCell(cells.createContent(gainDel.exonRange()));
-            table.addCell(cells.createContent(formatSingleDigitDecimal(gainDel.minCopyNumber())));
-            table.addCell(cells.createContent(formatSingleDigitDecimal(gainDel.maxCopyNumber())));
-            table.addCell(cells.createContent(formatSingleDigitDecimal(gainDel.relativeCopyNumber())));
+            List<Cell> rowCells = Lists.newArrayList();
 
-            table.addCell(cells.createContent(gainDel.driver().driverInterpretation().toString()));
+            rowCells.add(cells.createContent(gainDel.chromosome() + gainDel.chromosomeBand()));
+            rowCells.add(cells.createContent(displayGene(gainDel)));
+            rowCells.add(cells.createContent(gainDel.driver().type().toString()));
+            rowCells.add(cells.createContent(gainDel.geneRange()));
+            rowCells.add(cells.createContent(formatSingleDigitDecimal(gainDel.minCopyNumber())));
+            rowCells.add(cells.createContent(formatSingleDigitDecimal(gainDel.maxCopyNumber())));
+            rowCells.add(cells.createContent(formatSingleDigitDecimal(gainDel.relativeCopyNumber())));
+
+            rowCells.add(cells.createContent(gainDel.driver().driverInterpretation().toString()));
 
             if(hasRna)
             {
-                table.addCell(cells.createContent(formatTpmField(gainDel.tpm())));
-                table.addCell(cells.createContent(formatPercentileField(gainDel.tpmPercentile())));
-                table.addCell(cells.createContent(formatFoldChangeField(gainDel.tpmFoldChange())));
+                rowCells.add(cells.createContent(formatTpmField(gainDel.tpm())));
+                rowCells.add(cells.createContent(formatPercentileField(gainDel.tpmPercentile())));
+                rowCells.add(cells.createContent(formatFoldChangeField(gainDel.tpmFoldChange())));
             }
+
+            if(gainDel.driver().driverInterpretation() == DriverInterpretation.LOW)
+            {
+                reportResources.shadeCandidateCells(rowCells);
+            }
+
+            rowCells.forEach(x -> table.addCell(x));
         }
 
         return new Tables(reportResources).createWrapping(table, title);

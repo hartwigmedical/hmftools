@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.orange.algo.immuno;
 
+import static com.hartwig.hmftools.datamodel.purple.PurpleDriverType.LOH;
+
 import java.util.List;
 import java.util.Set;
 
@@ -8,9 +10,9 @@ import com.hartwig.hmftools.datamodel.immuno.ImmuneEscapeRecord;
 import com.hartwig.hmftools.datamodel.immuno.ImmutableImmuneEscapeRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
+import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
-import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 
 import org.apache.logging.log4j.LogManager;
@@ -45,7 +47,7 @@ public final class ImmuneEscapeInterpreter
     {
         for(String geneToCheck : genesToCheck)
         {
-            if(hasLOH(purple.somaticGeneCopyNumbers(), geneToCheck))
+            if(hasLOH(purple.somaticDrivers(), geneToCheck))
             {
                 return true;
             }
@@ -54,22 +56,22 @@ public final class ImmuneEscapeInterpreter
         return false;
     }
 
-    private static boolean hasLOH(final List<PurpleGeneCopyNumber> allSomaticGeneCopyNumbers, final String geneToCheck)
+    private static final List<PurpleDriverType> DELETION_TYPES = List.of(LOH, PurpleDriverType.DEL, PurpleDriverType.HET_DEL);
+
+    private static boolean hasLOH(final List<PurpleDriver> somaticDrivers, final String geneToCheck)
     {
-        for(PurpleGeneCopyNumber somaticGeneCopyNumber : allSomaticGeneCopyNumbers)
+        for(PurpleDriver somaticDriver : somaticDrivers)
         {
-            if(somaticGeneCopyNumber.gene().equals(geneToCheck))
+            if(somaticDriver.gene().equals(geneToCheck) && DELETION_TYPES.contains(somaticDriver.type()))
             {
-                return somaticGeneCopyNumber.minCopyNumber() > 0.5  && somaticGeneCopyNumber.minMinorAlleleCopyNumber() < 0.3;
+                return true;
             }
         }
 
-        LOGGER.warn("Could not find gene copy number data for gene: {}", geneToCheck);
         return false;
     }
 
-    private static boolean anyGeneWithInactivation(final PurpleRecord purple, final LinxRecord linx,
-            final Set<String> genesToCheck)
+    private static boolean anyGeneWithInactivation(final PurpleRecord purple, final LinxRecord linx, final Set<String> genesToCheck)
     {
         for(String geneToCheck : genesToCheck)
         {

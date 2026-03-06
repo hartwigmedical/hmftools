@@ -224,13 +224,6 @@ public class StructuralVariantFusionDAO
                     .skippedExonsDown(record.getValue(SVFUSION.SKIPPEDEXONSDOWN))
                     .fusedExonUp(record.getValue(SVFUSION.FUSEDEXONUP))
                     .fusedExonDown(record.getValue(SVFUSION.FUSEDEXONDOWN))
-                    .geneStart("")
-                    .geneContextStart("")
-                    .geneTranscriptStart("")
-                    .geneEnd("")
-                    .geneContextEnd("")
-                    .geneTranscriptEnd("")
-                    .junctionCopyNumber(0.0)
                     .build();
 
             fusionList.add(fusion);

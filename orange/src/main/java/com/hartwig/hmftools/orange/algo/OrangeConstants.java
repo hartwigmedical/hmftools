@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.orange.algo;
 
+import static com.hartwig.hmftools.datamodel.driver.DriverInterpretation.DRIVER_LIKELIHOOD_LOW_THRESHOLD;
+
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 
 public final class OrangeConstants
@@ -14,4 +16,6 @@ public final class OrangeConstants
 
     public static final String PURPLE_AMP_DEL_PARTIAL = "PARTIAL";
     public static final String PURPLE_AMP_DEL_FULL = "FULL";
+
+    public static boolean isCandidateLikelihood(final double likelihood) { return likelihood <= DRIVER_LIKELIHOOD_LOW_THRESHOLD; }
 }
