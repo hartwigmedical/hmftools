@@ -16,6 +16,7 @@ import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.chord.ChordStatus;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
+import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.orange.OrangeDoidNode;
@@ -457,7 +458,7 @@ public class FrontPageChapter implements ReportChapter
             return ReportResources.NOT_AVAILABLE;
         }
 
-        return disruptionDriverString(mReport.linx().somaticHomozygousDisruptions());
+        return homDisruptionDriverString(mReport.linx().somaticHomozygousDisruptions());
     }
 
     private String germlineDisruptionDriverString()
@@ -467,15 +468,15 @@ public class FrontPageChapter implements ReportChapter
             return ReportResources.NOT_AVAILABLE;
         }
 
-        List<LinxHomozygousDisruption> germlineHomozygousDisruptions = mReport.linx().germlineHomozygousDisruptions();
-        if(germlineHomozygousDisruptions == null)
+        List<LinxBreakend> germlineDisruptions = mReport.linx().germlineBreakends();
+        if(germlineDisruptions == null)
         {
             return ReportResources.NOT_AVAILABLE;
         }
-        return disruptionDriverString(germlineHomozygousDisruptions);
+        return disruptionDriverString(germlineDisruptions);
     }
 
-    private static String disruptionDriverString(final List<LinxHomozygousDisruption> homozygousDisruptions)
+    private static String homDisruptionDriverString(final List<LinxHomozygousDisruption> homozygousDisruptions)
     {
         if(homozygousDisruptions.isEmpty())
         {
@@ -488,6 +489,21 @@ public class FrontPageChapter implements ReportChapter
             genes.add(homozygousDisruption.gene());
         }
         return homozygousDisruptions.size() + " (" + concat(genes) + ")";
+    }
+
+    private static String disruptionDriverString(final List<LinxBreakend> breakends)
+    {
+        if(breakends.isEmpty())
+        {
+            return NONE;
+        }
+
+        Set<String> genes = Sets.newTreeSet(Comparator.naturalOrder());
+        for(LinxBreakend breakend : breakends)
+        {
+            genes.add(breakend.gene());
+        }
+        return breakends.size() + " (" + concat(genes) + ")";
     }
 
     private String fusionDriverString()

@@ -75,7 +75,6 @@ public final class ReportLimiter
                 .somaticBreakends(filteredSomaticBreakends)
                 .somaticHomozygousDisruptions(max1(linx.somaticHomozygousDisruptions()))
                 .germlineBreakends(filteredGermlineBreakends)
-                .germlineHomozygousDisruptions(max1(linx.germlineHomozygousDisruptions()))
                 .build();
     }
 

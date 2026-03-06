@@ -65,7 +65,7 @@ public final class PurpleDataLoader
 
         List<DriverCatalog> germlineDrivers = null;
         List<SmallVariant> panelGermlineVariants = null;
-        List<GermlineAmpDel> panelGermlineDeletions = null;
+        List<GermlineAmpDel> panelGermlineAmpDels = null;
 
         if(config.hasReference())
         {
@@ -78,10 +78,10 @@ public final class PurpleDataLoader
 
             panelGermlineVariants = germlineVariants.stream().filter(x -> x.reported()).collect(Collectors.toList());
 
-            List<GermlineAmpDel> germlineDeletions = GermlineAmpDel.read(germlineDeletionTsv).stream()
+            List<GermlineAmpDel> germlineAmpDels = GermlineAmpDel.read(germlineDeletionTsv).stream()
                     .filter(x -> x.Filter.equals(CommonVcfTags.PASS_FILTER)).collect(Collectors.toList());
 
-            panelGermlineDeletions = germlineDeletions.stream().filter(x -> driverGenes.containsKey(x.GeneName)).collect(Collectors.toList());
+            panelGermlineAmpDels = germlineAmpDels.stream().filter(x -> x.Reported == ReportedStatus.REPORTED).collect(Collectors.toList());
         }
 
         return ImmutablePurpleData.builder()
@@ -91,7 +91,7 @@ public final class PurpleDataLoader
                 .somaticVariants(panelSomaticVariants)
                 .germlineVariants(panelGermlineVariants)
                 .somaticGeneCopyNumbers(geneCopyNumbers)
-                .germlineDeletions(panelGermlineDeletions)
+                .germlineAmpDels(panelGermlineAmpDels)
                 .chrArmCopyNumbers(chrArmCopyNumbers)
                 .build();
     }

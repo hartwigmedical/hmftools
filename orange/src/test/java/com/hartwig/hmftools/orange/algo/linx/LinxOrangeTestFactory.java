@@ -3,6 +3,7 @@ package com.hartwig.hmftools.orange.algo.linx;
 import static com.hartwig.hmftools.datamodel.driver.DriverInterpretation.HIGH;
 
 import com.hartwig.hmftools.common.linx.LinxTestFactory;
+import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
 import com.hartwig.hmftools.datamodel.gene.TranscriptCodingType;
 import com.hartwig.hmftools.datamodel.gene.TranscriptRegionType;
@@ -88,7 +89,11 @@ public final class LinxOrangeTestFactory
     public static ImmutableLinxHomozygousDisruption.Builder linxHomozygousDisruptionBuilder()
     {
         return ImmutableLinxHomozygousDisruption.builder()
-                .from(LinxConversion.convert(homozygousDisruptionBuilder().build()));
+                .chromosome(Strings.EMPTY)
+                .chromosomeBand(Strings.EMPTY)
+                .gene(Strings.EMPTY)
+                .transcript(Strings.EMPTY)
+                .isCanonical(false)
+                .driverInterpretation(DriverInterpretation.HIGH);
     }
-
 }

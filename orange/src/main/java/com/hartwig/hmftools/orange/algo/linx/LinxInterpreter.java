@@ -43,9 +43,9 @@ public class LinxInterpreter
                 .somaticDrivers(ConversionUtil.mapToIterable(linx.somaticDriverData(), LinxConversion::convert))
                 .fusions(buildFusions(linx.fusions(), linx.somaticBreakends()))
                 .somaticBreakends(ConversionUtil.mapToIterable(linx.somaticBreakends(), somaticBreakendInterpreter::interpret))
+                .somaticHomozygousDisruptions(ConversionUtil.mapToIterable(linx.somaticHomozygousDisruptions(), LinxConversion::convert))
                 .germlineStructuralVariants(ConversionUtil.mapToIterable(linx.germlineSvAnnotations(), LinxConversion::convert))
                 .germlineBreakends(ConversionUtil.mapToIterable(linx.germlineBreakends(), germlineBreakendInterpreter::interpret))
-                .germlineHomozygousDisruptions(ConversionUtil.mapToIterable(linx.germlineHomozygousDisruptions(), LinxConversion::convert))
                 .build();
     }
 

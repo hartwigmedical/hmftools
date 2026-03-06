@@ -277,8 +277,7 @@
       }
     ],
     "germlineBreakends": [],
-    "somaticHomozygousDisruptions": [],
-    "germlineHomozygousDisruptions": []
+    "somaticHomozygousDisruptions": []
   },
   "isofox": null,
   "lilac": {

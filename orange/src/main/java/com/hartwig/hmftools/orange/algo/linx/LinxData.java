@@ -34,6 +34,9 @@ public interface LinxData
     @NotNull
     List<LinxBreakend> somaticBreakends();
 
+    @NotNull
+    List<DriverCatalog> somaticHomozygousDisruptions();
+
     @Nullable
     List<DriverCatalog> germlineDrivers();
 
@@ -42,9 +45,6 @@ public interface LinxData
 
     @Nullable
     List<LinxGermlineDisruption> germlineDisruptions();
-
-    @Nullable
-    List<HomozygousDisruption> germlineHomozygousDisruptions();
 
     @Nullable
     List<LinxSvAnnotation> germlineSvAnnotations();

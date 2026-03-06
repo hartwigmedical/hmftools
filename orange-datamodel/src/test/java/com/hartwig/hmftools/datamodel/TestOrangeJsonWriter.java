@@ -385,6 +385,7 @@ public class TestOrangeJsonWriter
                         .gene("NF1")
                         .transcript("ENST00000358273")
                         .isCanonical(true)
+                        .driverInterpretation(DriverInterpretation.HIGH)
                         .build())
                 .build();
     }

@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
+import com.hartwig.hmftools.common.driver.DriverType;
 import com.hartwig.hmftools.common.genome.chromosome.CytoBands;
 import com.hartwig.hmftools.common.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
@@ -50,7 +51,9 @@ public class LinxBreakendInterpreter
 
         if(driverCatalog != null)
         {
-            driverType = LinxDriverType.valueOf(driverCatalog.driver().toString());
+            if(driverCatalog.driver() != DriverType.GERMLINE_DISRUPTION)
+                driverType = LinxDriverType.valueOf(driverCatalog.driver().toString());
+
             driverLikelihood = driverCatalog.driverLikelihood();
         }
 

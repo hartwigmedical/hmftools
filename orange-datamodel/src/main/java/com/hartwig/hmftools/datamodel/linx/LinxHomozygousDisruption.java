@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.datamodel.linx;
 
+import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
+
 import org.immutables.gson.Gson;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -23,4 +25,10 @@ public interface LinxHomozygousDisruption
     String transcript();
 
     boolean isCanonical();
+
+    @NotNull
+    String type();
+
+    @NotNull
+    DriverInterpretation driverInterpretation();
 }

@@ -1,8 +1,11 @@
 package com.hartwig.hmftools.linx.drivers;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.driver.DriverCategory.TSG;
 import static com.hartwig.hmftools.common.driver.DriverType.PARTIAL_AMP;
 import static com.hartwig.hmftools.common.segmentation.Arm.P;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
@@ -15,6 +18,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -205,14 +209,16 @@ public class DriverGeneAnnotator implements CohortFileInterface
     {
         try
         {
-            String outputFileName = outputDir + "LNX_DRIVERS.csv";
+            String outputFileName = outputDir + "LNX_DRIVERS.tsv";
 
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
 
-            writer.write("SampleId,Gene,Category,DriverType,LikelihoodMethod,Likelihood");
-            writer.write(",FullyMatched,EventType,ClusterId,ClusterCount,ResolvedType");
-            writer.write(",Chromosome,Arm,SamplePloidy,GeneMinCN,CentromereCN,TelomereCN,CNGain");
-            writer.write(",SvIdStart,SvIdEnd,SvPosStart,SvPosEnd,SvMatchType");
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
+            sj.add("SampleId").add("Gene").add("Category").add("DriverType").add("LikelihoodMethod").add("Likelihood");
+            sj.add("FullyMatched").add("EventType").add("ClusterId").add("ClusterCount").add("ResolvedType");
+            sj.add("Chromosome").add("Arm").add("SamplePloidy").add("GeneMinCN").add("CentromereCN").add("TelomereCN").add("CNGain");
+            sj.add("SvIdStart").add("SvIdEnd").add("SvPosStart").add("SvPosEnd").add("SvMatchType");
+            writer.write(sj.toString());
             writer.newLine();
             return writer;
         }
@@ -249,10 +255,10 @@ public class DriverGeneAnnotator implements CohortFileInterface
         if(!mConfig.hasMultipleSamples())
             return;
 
-        final DriverCatalog driverGene = dgData.DriverData;
-        final GeneData geneData = dgData.GeneInfo;
+        DriverCatalog driverGene = dgData.DriverData;
+        GeneData geneData = dgData.GeneInfo;
 
-        final TelomereCentromereCnData tcData = mDataCache.CopyNumberData.getChrTeleCentroData().get(dgData.GeneInfo.Chromosome);
+        TelomereCentromereCnData tcData = mDataCache.CopyNumberData.getChrTeleCentroData().get(dgData.GeneInfo.Chromosome);
 
         double centromereCopyNumber = 0;
         double telomereCopyNumber = 0;
@@ -269,44 +275,57 @@ public class DriverGeneAnnotator implements CohortFileInterface
 
         List<String> outputLines = Lists.newArrayList();
 
-        for(final DriverGeneEvent driverEvent : dgData.getEvents())
+        for(DriverGeneEvent driverEvent : dgData.getEvents())
         {
-            final SvBreakend[] breakendPair = driverEvent.getBreakendPair();
+            SvBreakend[] breakendPair = driverEvent.getBreakendPair();
 
-            StringBuilder sb = new StringBuilder();
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
+            sj.add(mSampleId);
+            sj.add(driverGene.gene());
+            sj.add(driverGene.category().toString());
+            sj.add(driverGene.driver().toString());
+            sj.add(driverGene.likelihoodMethod().toString());
+            sj.add(format("%.2f", driverGene.driverLikelihood()));
+            sj.add(String.valueOf(dgData.fullyMatched()));
+            sj.add(driverEvent.Type.toString());
 
-            sb.append(String.format("%s,%s,%s,%s,%s,%.2f,%s,%s",
-                    mSampleId, driverGene.gene(), driverGene.category(), driverGene.driver(),
-                    driverGene.likelihoodMethod(), driverGene.driverLikelihood(), dgData.fullyMatched(), driverEvent.Type));
-
-            final SvCluster cluster = driverEvent.getCluster();
+            SvCluster cluster = driverEvent.getCluster();
 
             if(cluster != null)
             {
-                sb.append(String.format(",%d,%d,%s", cluster.id(), cluster.getSvCount(), cluster.getResolvedType()));
+                sj.add(String.valueOf(cluster.id()));
+                sj.add(String.valueOf(cluster.getSvCount()));
+                sj.add(cluster.getResolvedType().toString());
             }
             else
             {
-                sb.append(String.format(",-1,0,"));
+                sj.add(String.valueOf(-1));
+                sj.add(String.valueOf(0));
+                sj.add("");
             }
 
+            sj.add(geneData.Chromosome);
+            sj.add(dgData.ChrArm.toString());
+            sj.add(format("%.2f", mDataCache.samplePloidy()));
+            sj.add(format("%.2f", dgData.CopyNumberRegion.MinCopyNumber));
+            sj.add(format("%.2f", centromereCopyNumber));
+            sj.add(format("%.2f", telomereCopyNumber));
+            sj.add(format("%.2f", driverEvent.getCopyNumberGain()));
+            sj.add("");
+
             // breakend info if present
-
-            // Chromosome,Arm,SamplePloidy,GeneMinCN,CentromereCN,TelomereCN,CNGain,SvIdStart,SvIdEnd,SvPosStart,SvPosEnd,SvMatchType
-
-            sb.append(String.format(",%s,%s,%.2f,%.2f,%.2f,%.2f,%.2f",
-                    geneData.Chromosome, dgData.ChrArm, mDataCache.samplePloidy(), dgData.CopyNumberRegion.MinCopyNumber,
-                    centromereCopyNumber, telomereCopyNumber, driverEvent.getCopyNumberGain()));
-
             int posStart = breakendPair[SE_START] != null ? breakendPair[SE_START].position() : 0;
             int posEnd = breakendPair[SE_END] != null ? breakendPair[SE_END].position() : 0;
             String svIdStart = breakendPair[SE_START] != null ? breakendPair[SE_START].getSV().idStr() : "-1";
             String svIdEnd = breakendPair[SE_END] != null ? breakendPair[SE_END].getSV().idStr() : "-1";
 
-            sb.append(String.format(",%s,%s,%d,%d,%s",
-                    svIdStart, svIdEnd, posStart, posEnd, driverEvent.getSvInfo()));
+            sj.add(String.valueOf(svIdStart));
+            sj.add(String.valueOf(svIdEnd));
+            sj.add(String.valueOf(posStart));
+            sj.add(String.valueOf(posEnd));
+            sj.add(driverEvent.getSvInfo());
 
-            outputLines.add(sb.toString());
+            outputLines.add(sj.toString());
         }
 
         mCohortDataWriter.write(this, outputLines);

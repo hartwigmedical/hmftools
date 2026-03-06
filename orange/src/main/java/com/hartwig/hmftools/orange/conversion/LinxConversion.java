@@ -3,6 +3,8 @@ package com.hartwig.hmftools.orange.conversion;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.hartwig.hmftools.common.driver.DriverCatalog;
+import com.hartwig.hmftools.common.driver.DriverType;
 import com.hartwig.hmftools.common.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.common.linx.FusionReportableReason;
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
@@ -55,41 +57,18 @@ public final class LinxConversion
                 .build();
     }
 
-    /*
-    public static LinxFusion convert(final com.hartwig.hmftools.common.linx.LinxFusion linxFusion)
+    public static LinxHomozygousDisruption convert(final DriverCatalog homozygousDisruption)
     {
-        return ImmutableLinxFusion.builder()
-                .geneStart(linxFusion.geneStart())
-                .geneContextStart(linxFusion.geneContextStart())
-                .geneTranscriptStart(linxFusion.geneTranscriptStart())
-                .geneEnd(linxFusion.geneEnd())
-                .geneContextEnd(linxFusion.geneContextEnd())
-                .geneTranscriptEnd(linxFusion.geneTranscriptEnd())
-                .reported(linxFusion.reported())
-                .reportedType(LinxFusionType.valueOf(linxFusion.reportedType()))
-                .unreportedReasons(convertUnreportableReasons(linxFusion.reportableReasons()))
-                .phased(FusionPhasedType.valueOf(linxFusion.phased().name()))
-                .driverInterpretation(fromFusionLikelihood(linxFusion.likelihood()))
-                .fusedExonUp(linxFusion.fusedExonUp())
-                .fusedExonDown(linxFusion.fusedExonDown())
-                .chainLinks(linxFusion.chainLinks())
-                .chainTerminated(linxFusion.chainTerminated())
-                .domainsKept(linxFusion.domainsKept())
-                .domainsLost(linxFusion.domainsLost())
-                .junctionCopyNumber(linxFusion.junctionCopyNumber())
-                .build();
-    }
-    */
+        String typeStr = homozygousDisruption.driver() == DriverType.HOM_DEL_DISRUPTION ? "DEL" : "DUP";
 
-
-    public static LinxHomozygousDisruption convert(final HomozygousDisruption homozygousDisruption)
-    {
         return ImmutableLinxHomozygousDisruption.builder()
                 .gene(homozygousDisruption.gene())
                 .chromosome(homozygousDisruption.chromosome())
                 .chromosomeBand(homozygousDisruption.chromosomeBand())
                 .transcript(homozygousDisruption.transcript())
                 .isCanonical(homozygousDisruption.isCanonical())
+                .driverInterpretation(DriverInterpretation.interpret(homozygousDisruption.driverLikelihood()))
+                .type(typeStr)
                 .build();
     }
 }

@@ -21,9 +21,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.driver.DriverCatalogFile;
+import com.hartwig.hmftools.common.driver.DriverType;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxDriver;
 import com.hartwig.hmftools.common.linx.LinxFusion;
@@ -89,8 +91,9 @@ public final class LinxDataLoader
         List<LinxSvAnnotation> somaticSvAnnotations = LinxSvAnnotation.read(somaticSvAnnotationFile);
         restrictToMatchingBreakends(somaticSvAnnotations, somaticBreakends);
 
-        // deprecated and covered now by disruptions
-        // List<HomozygousDisruption> somaticHomozygousDisruptions = extractHomozygousDisruptions(somaticDriverCatalogTsv);
+        List<DriverCatalog> somaticHomozygousDisruptions = somaticDrivers.stream()
+                .filter(x -> x.driver() == DriverType.HOM_DUP_DISRUPTION || x.driver() == DriverType.HOM_DEL_DISRUPTION)
+                .collect(Collectors.toList());
 
         Set<Integer> fusionClusterIds = loadFusionClusters(somaticVisFusionTsv);
 
@@ -104,7 +107,6 @@ public final class LinxDataLoader
         List<LinxBreakend> reportableGermlineBreakends = null;
         List<DriverCatalog> germlineDrivers = null;
         List<LinxGermlineDisruption> reportableGermlineDisruptions = null;
-        List<HomozygousDisruption> germlineHomozygousDisruptions = Collections.emptyList();
 
         if(germlineSvAnnotationFile != null && germlineBreakendTsv != null && germlineDisruptionTsv != null)
         {
@@ -126,6 +128,7 @@ public final class LinxDataLoader
                 .somaticDriverData(somaticDriverData)
                 .fusions(fusions)
                 .somaticBreakends(somaticBreakends)
+                .somaticHomozygousDisruptions(somaticHomozygousDisruptions)
                 .fusionClusterIds(fusionClusterIds)
                 .svIdToClusterId(svIdToClusterId)
                 .clusterIdToLinkCount(clusterIdToLinkCount)
@@ -134,7 +137,6 @@ public final class LinxDataLoader
                 .germlineSvAnnotations(germlineSvAnnotations)
                 .germlineBreakends(reportableGermlineBreakends)
                 .germlineDisruptions(reportableGermlineDisruptions)
-                .germlineHomozygousDisruptions(germlineHomozygousDisruptions)
                 .build();
     }
 
@@ -210,8 +212,7 @@ public final class LinxDataLoader
         }
     }
 
-    /*
-    private static List<HomozygousDisruption> extractSomaticHomozygousDisruptions(final List<DriverCatalog> driverCatalog)
+    private static List<HomozygousDisruption> loadSomaticHomozygousDisruptions(final List<DriverCatalog> driverCatalog)
     {
         List<HomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
 
@@ -219,24 +220,20 @@ public final class LinxDataLoader
         {
             if(driver.driver() == DriverType.HOM_DUP_DISRUPTION || driver.driver() == DriverType.HOM_DEL_DISRUPTION)
             {
-                homozygousDisruptions.add(create(driver));
+                HomozygousDisruption homDisruption = ImmutableHomozygousDisruption.builder()
+                        .chromosome(driver.chromosome())
+                        .chromosomeBand(driver.chromosomeBand())
+                        .gene(driver.gene())
+                        .transcript(driver.transcript())
+                        .isCanonical(driver.isCanonical())
+                        .build();
+
+                homozygousDisruptions.add(homDisruption);
             }
         }
 
         return homozygousDisruptions;
     }
-
-    private static HomozygousDisruption create(final DriverCatalog driverCatalog)
-    {
-        return ImmutableHomozygousDisruption.builder()
-                .chromosome(driverCatalog.chromosome())
-                .chromosomeBand(driverCatalog.chromosomeBand())
-                .gene(driverCatalog.gene())
-                .transcript(driverCatalog.transcript())
-                .isCanonical(driverCatalog.isCanonical())
-                .build();
-    }
-    */
 
     private static Set<Integer> loadFusionClusters(final String filename) throws IOException
     {

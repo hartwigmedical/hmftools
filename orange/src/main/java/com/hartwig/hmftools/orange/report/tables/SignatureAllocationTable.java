@@ -1,13 +1,18 @@
 package com.hartwig.hmftools.orange.report.tables;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import static com.hartwig.hmftools.orange.report.ReportResources.formatPercentage;
-import static com.hartwig.hmftools.orange.report.ReportResources.formatSingleDigitDecimal;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.cellArray;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.intToFloatArray;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.datamodel.sigs.SignatureAllocation;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.util.Cells;
@@ -16,7 +21,6 @@ import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Table;
 
 import org.apache.logging.log4j.util.Strings;
-import org.jetbrains.annotations.NotNull;
 
 public final class SignatureAllocationTable
 {
@@ -31,17 +35,31 @@ public final class SignatureAllocationTable
         }
 
         Cells cells = new Cells(reportResources);
+
+        List<Integer> widths = Lists.newArrayList();
+        List<Cell> cellEntries = Lists.newArrayList();
+
+        addEntry(cells, widths, cellEntries, 1, "Signature");
+        addEntry(cells, widths, cellEntries, 2, "Etiology");
+        addEntry(cells, widths, cellEntries, 1, "Allocation");
+        addEntry(cells, widths, cellEntries, 1, "Percent");
+        addEntry(cells, widths, cellEntries, 4, Strings.EMPTY); // to space things out
+
+        /*
         Table table = Tables.createContent(width,
                 new float[] { 10, 23, 10, 10, 10 },
                 new Cell[] { cells.createHeader("Signature"), cells.createHeader("Etiology"), cells.createHeader("Allocation"),
                         cells.createHeader("Percent"),
                         cells.createHeader(Strings.EMPTY) });
+        */
+
+        Table table = Tables.createContent(width, intToFloatArray(widths), cellArray(cellEntries));
 
         for(SignatureAllocation signatureAllocation : sort(signatureAllocations))
         {
             table.addCell(cells.createContent(signatureAllocation.signature()));
             table.addCell(cells.createContent(signatureAllocation.etiology()));
-            table.addCell(cells.createContent(formatSingleDigitDecimal(signatureAllocation.allocation())));
+            table.addCell(cells.createContent(format("%.0f", signatureAllocation.allocation())));
             table.addCell(cells.createContent(formatPercentage(signatureAllocation.percent())));
             table.addCell(cells.createContent(Strings.EMPTY));
         }
@@ -49,7 +67,6 @@ public final class SignatureAllocationTable
         return new Tables(reportResources).createWrapping(table, title);
     }
 
-    @NotNull
     @VisibleForTesting
     static List<SignatureAllocation> sort(final List<SignatureAllocation> signatureAllocations)
     {

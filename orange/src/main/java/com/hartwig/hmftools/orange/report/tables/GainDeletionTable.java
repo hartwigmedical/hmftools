@@ -53,7 +53,6 @@ public final class GainDeletionTable
         addEntry(cells, widths, cellEntries, 1, "Min CN");
         addEntry(cells, widths, cellEntries, 1, "Max CN");
         addEntry(cells, widths, cellEntries, 1, COL_REL_CN);
-        addEntry(cells, widths, cellEntries, 1, COL_DRIVER);
 
         if(hasRna)
         {
@@ -61,6 +60,8 @@ public final class GainDeletionTable
             addEntry(cells, widths, cellEntries, 1, "Percentile");
             addEntry(cells, widths, cellEntries, 1, "Fold Change");
         }
+
+        addEntry(cells, widths, cellEntries, 1, COL_DRIVER);
 
         Table table = Tables.createContent(width, intToFloatArray(widths), cellArray(cellEntries));
 
@@ -76,14 +77,14 @@ public final class GainDeletionTable
             rowCells.add(cells.createContent(formatSingleDigitDecimal(gainDel.maxCopyNumber())));
             rowCells.add(cells.createContent(formatSingleDigitDecimal(gainDel.relativeCopyNumber())));
 
-            rowCells.add(cells.createContent(gainDel.driver().driverInterpretation().toString()));
-
             if(hasRna)
             {
                 rowCells.add(cells.createContent(formatTpmField(gainDel.tpm())));
                 rowCells.add(cells.createContent(formatPercentileField(gainDel.tpmPercentile())));
                 rowCells.add(cells.createContent(formatFoldChangeField(gainDel.tpmFoldChange())));
             }
+
+            rowCells.add(cells.createContent(gainDel.driver().driverInterpretation().toString()));
 
             if(gainDel.driver().driverInterpretation() == DriverInterpretation.LOW)
             {
@@ -100,6 +101,14 @@ public final class GainDeletionTable
     {
         return gainsAndDels.stream().sorted((gainDel1, gainDel2) ->
         {
+            double likelihood1 = gainDel1.driver().driverLikelihood();
+            double likelihood2 = gainDel2.driver().driverLikelihood();
+
+            int likelihoodCompare = Double.compare(-likelihood1, -likelihood2);
+
+            if(likelihoodCompare != 0)
+                return likelihoodCompare;
+
             String location1 = Chromosomes.zeroPrefixed(gainDel1.chromosome() + gainDel1.chromosomeBand());
             String location2 = Chromosomes.zeroPrefixed(gainDel2.chromosome() + gainDel2.chromosomeBand());
 

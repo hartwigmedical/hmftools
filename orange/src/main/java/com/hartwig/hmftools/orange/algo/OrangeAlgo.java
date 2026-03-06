@@ -252,7 +252,7 @@ public class OrangeAlgo
             LOGGER.info(" Loaded {} germline driver catalog entries", purple.germlineDrivers().size());
             LOGGER.info(" Loaded {} reportable germline variants", purple.germlineVariants().size());
 
-            LOGGER.info(" Loaded {} reportable germline copy-number events", purple.germlineDeletions().size());
+            LOGGER.info(" Loaded {} reportable germline copy-number events", purple.germlineAmpDels().size());
         }
         else
         {
@@ -284,7 +284,6 @@ public class OrangeAlgo
                     linx.germlineBreakends().size(),
                     linx.germlineBreakends().size());
             LOGGER.info(" Loaded {} germline disruptions", linx.germlineDisruptions().size());
-            LOGGER.info(" Loaded {} germline reportable homozygous disruptions", linx.germlineHomozygousDisruptions().size());
         }
         else
         {

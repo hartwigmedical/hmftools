@@ -38,7 +38,7 @@ public class OrangeApplication
 
     private void run() throws Exception
     {
-        LOGGER.info("Generating ORANGE report data");
+        LOGGER.info("Generating report data");
 
         OrangeAlgo algo = OrangeAlgo.fromConfig(mConfig);
         OrangeRecord orangeRecord = algo.run(mConfig);

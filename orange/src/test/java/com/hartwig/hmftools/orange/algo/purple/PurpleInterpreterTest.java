@@ -70,14 +70,12 @@ public class PurpleInterpreterTest
         assertEquals(1, germlineGainsDels.size());
     }
 
-    @NotNull
-    private static ImmutablePurpleData createPurpleTestData(@NotNull List<GermlineAmpDel> allGermlineDeletions)
+    private static ImmutablePurpleData createPurpleTestData(final List<GermlineAmpDel> allGermlineDeletions)
     {
         return ImmutablePurpleData.builder()
                 .from(PurpleTestFactory.createMinimalTestPurpleData())
                 .addSomaticGeneCopyNumbers(GeneCopyNumberTestFactory.createGeneCopyNumber("1", TEST_GENE, 0, 0))
-                .addAllGermlineDeletions(allGermlineDeletions)
-                .germlineDeletions(allGermlineDeletions.stream().filter(d -> d.Reported == ReportedStatus.REPORTED).collect(Collectors.toList()))
+                .germlineAmpDels(allGermlineDeletions.stream().filter(d -> d.Reported == ReportedStatus.REPORTED).collect(Collectors.toList()))
                 .addGermlineDrivers(DriverCatalogTestFactory.builder()
                         .gene(TEST_GENE)
                         .driver(DriverType.GERMLINE_DELETION)

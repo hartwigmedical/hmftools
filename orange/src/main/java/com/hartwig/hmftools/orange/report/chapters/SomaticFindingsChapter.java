@@ -17,6 +17,7 @@ import com.hartwig.hmftools.orange.report.tables.ChrArmCopyNumberTable;
 import com.hartwig.hmftools.orange.report.tables.DisruptionTable;
 import com.hartwig.hmftools.orange.report.tables.DnaFusionTable;
 import com.hartwig.hmftools.orange.report.tables.GainDeletionTable;
+import com.hartwig.hmftools.orange.report.tables.HomozygousDisruptionTable;
 import com.hartwig.hmftools.orange.report.tables.SignatureAllocationTable;
 import com.hartwig.hmftools.orange.report.tables.SomaticVariantTable;
 import com.hartwig.hmftools.orange.report.tables.ViralPresenceTable;
@@ -67,7 +68,7 @@ public class SomaticFindingsChapter implements ReportChapter
         addSomaticAmpDels(document);
         addFusions(document);
 
-        // addHomozygousDisruptions(document);
+        addHomozygousDisruptions(document);
         addBreakendDisruptions(document);
 
         if(!mReport.tumorOnlyMode())
@@ -184,10 +185,9 @@ public class SomaticFindingsChapter implements ReportChapter
         }
     }
 
-    /*
     private void addHomozygousDisruptions(final Document document)
     {
-        String homozygousDisruptionTitle = "Disruptions";
+        String homozygousDisruptionTitle = "Homozygous Disruptions";
 
         if(PurpleQCInterpretation.isContaminated(mReport.purple().fit().qc()))
         {
@@ -203,7 +203,6 @@ public class SomaticFindingsChapter implements ReportChapter
                     mReportResources));
         }
     }
-    */
 
     private void addBreakendDisruptions(final Document document)
     {

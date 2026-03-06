@@ -278,10 +278,11 @@
         "chromosome": "4",
         "chromosomeBand": "p1.12",
         "transcript": "ENST00000358273",
-        "isCanonical": true
+        "isCanonical": true,
+        "type": "DEL",
+        "driverInterpretation": "HIGH"
       }
-    ],
-    "germlineHomozygousDisruptions": null
+    ]
   },
   "isofox": null,
   "lilac": {

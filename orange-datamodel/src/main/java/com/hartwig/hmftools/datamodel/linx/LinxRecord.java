@@ -32,7 +32,4 @@ public interface LinxRecord
 
     @NotNull
     List<LinxHomozygousDisruption> somaticHomozygousDisruptions();
-
-    @Nullable
-    List<LinxHomozygousDisruption> germlineHomozygousDisruptions();
 }

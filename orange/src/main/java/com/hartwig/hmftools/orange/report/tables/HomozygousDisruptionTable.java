@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.orange.report.tables;
 
+import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_DRIVER;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_GENE;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_LOCATION;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_TYPE;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.cellArray;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.intToFloatArray;
@@ -38,7 +40,9 @@ public final class HomozygousDisruptionTable
 
         addEntry(cells, widths, cellEntries, 1, COL_LOCATION);
         addEntry(cells, widths, cellEntries, 1, COL_GENE);
-        addEntry(cells, widths, cellEntries, 4, Strings.EMPTY);
+        addEntry(cells, widths, cellEntries, 1, COL_TYPE);
+        addEntry(cells, widths, cellEntries, 1, COL_DRIVER);
+        addEntry(cells, widths, cellEntries, 3, Strings.EMPTY); // to space things out
 
         Table table = Tables.createContent(width, intToFloatArray(widths), cellArray(cellEntries));
 
@@ -46,6 +50,8 @@ public final class HomozygousDisruptionTable
         {
             table.addCell(cells.createContent(homozygousDisruption.chromosome() + homozygousDisruption.chromosomeBand()));
             table.addCell(cells.createContent(gene(homozygousDisruption)));
+            table.addCell(cells.createContent(homozygousDisruption.type()));
+            table.addCell(cells.createContent(homozygousDisruption.driverInterpretation().toString()));
             table.addCell(cells.createContent(Strings.EMPTY));
         }
 

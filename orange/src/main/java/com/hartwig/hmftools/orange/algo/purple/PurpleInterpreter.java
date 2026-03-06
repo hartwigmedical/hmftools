@@ -58,10 +58,10 @@ public class PurpleInterpreter
 
         List<PurpleGainDeletion> driverGermlineAmpDels = null;
 
-        if(purple.germlineDeletions() != null)
+        if(purple.germlineAmpDels() != null)
         {
             driverGermlineAmpDels = GermlineGainDeletionFactory.createGermlineGainDeletions(
-                    purple.germlineDeletions(), Objects.requireNonNull(germlineDrivers), purple.somaticGeneCopyNumbers(), isofoxData);
+                    purple.germlineAmpDels(), Objects.requireNonNull(germlineDrivers), purple.somaticGeneCopyNumbers(), isofoxData);
         }
 
         double ploidy = purple.purityContext().bestFit().ploidy();

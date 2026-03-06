@@ -7,7 +7,6 @@ import com.hartwig.hmftools.common.purple.ChrArmCopyNumber;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GermlineAmpDel;
 import com.hartwig.hmftools.common.purple.PurityContext;
-import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.variant.SmallVariant;
 
 import org.immutables.value.Value;
@@ -33,7 +32,7 @@ public interface PurpleData
     List<GeneCopyNumber> somaticGeneCopyNumbers();
 
     @Nullable
-    List<GermlineAmpDel> germlineDeletions();
+    List<GermlineAmpDel> germlineAmpDels();
 
     List<Segment> segments();
 
