@@ -32,7 +32,7 @@ public class NovelSpliceJunctionSelectorTest
         List<NovelSpliceJunction> junctions =
                 Lists.newArrayList(match, tooFewFragments, tooHighCohortFreq, alreadyHasFusion, noKnownFusion);
 
-        List<LinxFusion> linxFusions = Lists.newArrayList(LinxOrangeTestFactory.fusionBuilder().geneUp("gene 2").geneDown("gene 2").build());
+        List<LinxFusion> linxFusions = Lists.newArrayList(LinxOrangeTestFactory.fusionBuilder().geneStart("gene 2").geneEnd("gene 2").build());
 
         RnaFusion knownExonDelDup = IsofoxTestFactory.rnaFusionBuilder().name("A_A").knownType(KnownFusionType.KNOWN_PAIR).build();
         List<RnaFusion> rnaFusions = Lists.newArrayList(knownExonDelDup);

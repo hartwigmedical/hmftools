@@ -4,7 +4,7 @@ import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_GENE;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_LOCATION;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.cellArray;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.intToFloatArray;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.floatArray;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -40,7 +40,7 @@ public final class HomozygousDisruptionTable
         addEntry(cells, widths, cellEntries, 1, COL_GENE);
         addEntry(cells, widths, cellEntries, 4, Strings.EMPTY);
 
-        Table table = Tables.createContent(width, intToFloatArray(widths), cellArray(cellEntries));
+        Table table = Tables.createContent(width, floatArray(widths), cellArray(cellEntries));
 
         for(LinxHomozygousDisruption homozygousDisruption : sort(homozygousDisruptions))
         {

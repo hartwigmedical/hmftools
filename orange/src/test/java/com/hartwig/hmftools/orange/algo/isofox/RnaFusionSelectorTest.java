@@ -24,7 +24,7 @@ public class RnaFusionSelectorTest
         RnaFusion noKnownFusion = IsofoxTestFactory.rnaFusionBuilder().name("E_F").build();
         List<RnaFusion> rnaFusions = Lists.newArrayList(match, hasLinxFusionAlready, noKnownFusion);
 
-        List<LinxFusion> linxFusions = Lists.newArrayList(LinxOrangeTestFactory.fusionBuilder().geneUp("C").geneDown("D").build());
+        List<LinxFusion> linxFusions = Lists.newArrayList(LinxOrangeTestFactory.fusionBuilder().geneStart("C").geneEnd("D").build());
 
         List<RnaFusion> novelFusions = RnaFusionSelector.selectNovelKnownFusions(rnaFusions, linxFusions);
         assertEquals(1, novelFusions.size());

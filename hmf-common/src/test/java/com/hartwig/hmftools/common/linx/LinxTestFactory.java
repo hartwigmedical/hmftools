@@ -11,6 +11,7 @@ import org.jetbrains.annotations.NotNull;
 
 public final class LinxTestFactory
 {
+    @NotNull
     public static ImmutableLinxSvAnnotation.Builder svAnnotationBuilder()
     {
         return ImmutableLinxSvAnnotation.builder()
@@ -39,6 +40,13 @@ public final class LinxTestFactory
                 .localTICountEnd(0);
     }
 
+    @NotNull
+    public static LinxFusion createMinimalTestFusion()
+    {
+        return fusionBuilder().build();
+    }
+
+    @NotNull
     public static ImmutableLinxFusion.Builder fusionBuilder()
     {
         return ImmutableLinxFusion.builder()
@@ -62,9 +70,17 @@ public final class LinxTestFactory
                 .skippedExonsUp(0)
                 .skippedExonsDown(0)
                 .fusedExonUp(0)
-                .fusedExonDown(0);
+                .fusedExonDown(0)
+                .geneStart(Strings.EMPTY)
+                .geneContextStart(Strings.EMPTY)
+                .geneTranscriptStart(Strings.EMPTY)
+                .geneEnd(Strings.EMPTY)
+                .geneContextEnd(Strings.EMPTY)
+                .geneTranscriptEnd(Strings.EMPTY)
+                .junctionCopyNumber(0D);
     }
 
+    @NotNull
     public static ImmutableLinxBreakend.Builder breakendBuilder()
     {
         return ImmutableLinxBreakend.builder()

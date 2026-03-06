@@ -128,6 +128,26 @@
       }
     ],
     "germlineVariants": [],
+    "somaticCopyNumbers": [
+      {
+        "chromosome": "1",
+        "start": 1,
+        "end": 87337011,
+        "averageTumorCopyNumber": 2.8141
+      }
+    ],
+    "somaticGeneCopyNumbers": [
+      {
+        "gene": "DDX11L1",
+        "chromosome": "1",
+        "chromosomeBand": "p36.33",
+        "transcript": "ENST00000456328",
+        "isCanonical": true,
+        "minCopyNumber": 2.8141,
+        "maxCopyNumber": 2.8141,
+        "minMinorAlleleCopyNumber": 0.8112
+      }
+    ],
     "armCopyNumberAbberations": [
       {
         "chromosome": "12",
@@ -145,7 +165,7 @@
         "chromosomeBand": "q23.31",
         "transcript": "ENST00000371953",
         "isCanonical": true,
-        "geneRange": "FULL",
+        "exonRange": "FULL",
         "minCopyNumber": 0.0,
         "maxCopyNumber": 2.0158,
         "relativeCopyNumber": 0.1,
@@ -233,15 +253,19 @@
     ],
     "fusions": [
       {
-        "geneUp": "DMD",
-        "contextUp": "Exon 67",
-        "transcriptUp": "ENST00000357033",
-        "geneDown": "DMD",
-        "contextDown": "Exon 70",
-        "transcriptDown": "ENST00000357033",
+        "geneStart": "DMD",
+        "geneContextStart": "Exon 67",
+        "geneTranscriptStart": "ENST00000357033",
+        "geneEnd": "DMD",
+        "geneContextEnd": "Exon 70",
+        "geneTranscriptEnd": "ENST00000357033",
+        "reported": true,
         "reportedType": "NONE",
+        "unreportedReasons": [
+          "NOT_KNOWN"
+        ],
         "phased": "INFRAME",
-        "driverInterpretation": "HIGH",
+        "driverLikelihood": "NA",
         "fusedExonUp": 67,
         "fusedExonDown": 70,
         "chainLinks": 0,
@@ -843,6 +867,13 @@
       "percent": 0.12212
     }
   ],
+  "cohortEvaluations": {
+    "SV_TMB": {
+      "cancerType": "Skin",
+      "panCancerPercentile": 0.22,
+      "cancerTypePercentile": 0.34
+    }
+  },
   "plots": {
     "purpleInputPlot": "plot/tumor_sample.input.png",
     "purpleFinalCircosPlot": "plot/tumor_sample.circos.png",

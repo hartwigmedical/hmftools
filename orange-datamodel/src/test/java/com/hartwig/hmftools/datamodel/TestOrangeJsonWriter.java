@@ -22,6 +22,7 @@ import com.hartwig.hmftools.datamodel.hla.LilacAllele;
 import com.hartwig.hmftools.datamodel.hla.LilacRecord;
 import com.hartwig.hmftools.datamodel.immuno.ImmuneEscapeRecord;
 import com.hartwig.hmftools.datamodel.immuno.ImmutableImmuneEscapeRecord;
+import com.hartwig.hmftools.datamodel.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.datamodel.linx.FusionPhasedType;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxFusion;
@@ -46,6 +47,7 @@ import com.hartwig.hmftools.datamodel.peach.ImmutablePeachGenotype;
 import com.hartwig.hmftools.datamodel.purple.HotspotType;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleAllelicDepth;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleCharacteristics;
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleFit;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGainDeletion;
@@ -54,6 +56,7 @@ import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleQC;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleVariant;
+import com.hartwig.hmftools.datamodel.purple.ImmutableTumorStats;
 import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
@@ -74,6 +77,7 @@ import com.hartwig.hmftools.datamodel.virus.VirusBreakendQCStatus;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
+import com.hartwig.hmftools.datamodel.virus.VirusLikelihoodType;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -295,6 +299,24 @@ public class TestOrangeJsonWriter
                         .build()))
                 .somaticVariants(List.of(somaticVariant))
                 .germlineVariants(List.of(germlineVariant))
+                .somaticCopyNumbers(List.of(ImmutablePurpleCopyNumber.builder()
+                        .chromosome("1")
+                        .start(10)
+                        .end(20)
+                        .averageTumorCopyNumber(4.1)
+                        .build())
+                )
+                .somaticGeneCopyNumbers(List.of(ImmutablePurpleGeneCopyNumber.builder()
+                        .gene("gene")
+                        .chromosome("12")
+                        .chromosomeBand("p13")
+                        .transcript("trans")
+                        .isCanonical(true)
+                        .minCopyNumber(1.2)
+                        .maxCopyNumber(1.2)
+                        .minMinorAlleleCopyNumber(0.4)
+                        .build())
+                )
                 .somaticGainsDels(List.of(ImmutablePurpleGainDeletion.builder()
                                 .driver(deletionDriver)
                         .chromosome("5")
@@ -303,9 +325,7 @@ public class TestOrangeJsonWriter
                         .maxCopyNumber(1.2)
                         .relativeCopyNumber(1.2)
                         .minMinorAlleleCopies(0.1)
-                        .geneRange("FULL")
-                        .exonStart(null)
-                        .exonEnd(null)
+                        .exonRange("FULL")
                         .tpm(null)
                         .tpmPercentile(null)
                         .tpmFoldChange(null)
@@ -361,16 +381,18 @@ public class TestOrangeJsonWriter
                         .localTICountEnd(4)
                         .build())
                 .addFusions(ImmutableLinxFusion.builder()
-                        .driverInterpretation(DriverInterpretation.HIGH)
+                        .reported(true)
+                        .driverLikelihood(FusionLikelihoodType.HIGH)
                         .reportedType(LinxFusionType.KNOWN_PAIR)
+                        .addUnreportedReasons(LinxUnreportableReason.NONE)
                         .fusedExonUp(1)
                         .fusedExonDown(2)
-                        .geneUp("TMPRSS2")
-                        .transcriptUp("ENST00000332149")
-                        .contextUp("Exon 1")
-                        .geneDown("ETV4")
-                        .transcriptDown("ENST00000319349")
-                        .contextDown("Exon 2")
+                        .geneStart("TMPRSS2")
+                        .geneTranscriptStart("ENST00000332149")
+                        .geneContextStart("Exon 1")
+                        .geneEnd("ETV4")
+                        .geneTranscriptEnd("ENST00000319349")
+                        .geneContextEnd("Exon 2")
                         .phased(FusionPhasedType.INFRAME)
                         .junctionCopyNumber(1.1)
                         .chainLinks(0)
@@ -397,7 +419,7 @@ public class TestOrangeJsonWriter
                 .integrations(1)
                 .interpretation(VirusInterpretation.HPV)
                 .reported(true)
-                .driverInterpretation(DriverInterpretation.HIGH)
+                .driverLikelihood(VirusLikelihoodType.HIGH)
                 .percentageCovered(0.9)
                 .meanCoverage(0)
                 .build();
@@ -408,7 +430,7 @@ public class TestOrangeJsonWriter
                 .integrations(0)
                 .interpretation(null)     // nullable field
                 .reported(false)
-                .driverInterpretation(DriverInterpretation.LOW)
+                .driverLikelihood(VirusLikelihoodType.LOW)
                 .percentageCovered(0.4)
                 .meanCoverage(0)
                 .build();

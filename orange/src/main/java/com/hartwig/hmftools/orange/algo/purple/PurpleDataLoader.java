@@ -17,6 +17,7 @@ import com.hartwig.hmftools.common.purple.GermlineAmpDel;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurityContextFile;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
+import com.hartwig.hmftools.common.purple.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.purple.PurplePurity;
 import com.hartwig.hmftools.common.purple.PurpleQCFile;
 import com.hartwig.hmftools.common.purple.ReportedStatus;
@@ -40,6 +41,7 @@ public final class PurpleDataLoader
         String somaticVariantVcf = resolveVcfPath(PurpleCommon.purpleSomaticVcfFile(purpleDir, tumorId));
         String germlineDriverCatalogTsv = DriverCatalogFile.generateGermlineFilename(purpleDir, tumorId);
         String germlineVariantVcf = resolveVcfPath(PurpleCommon.purpleGermlineVcfFile(purpleDir, tumorId));
+        String copyNumberTsv = PurpleCopyNumberFile.generateFilenameForReading(purpleDir, tumorId);
         String geneCopyNumberTsv = GeneCopyNumberFile.generateFilename(purpleDir, tumorId);
         String germlineDeletionTsv = GermlineAmpDel.generateFilename(purpleDir, tumorId);
 
@@ -90,6 +92,7 @@ public final class PurpleDataLoader
                 .germlineDrivers(germlineDrivers)
                 .somaticVariants(panelSomaticVariants)
                 .germlineVariants(panelGermlineVariants)
+                .somaticCopyNumbers(PurpleCopyNumberFile.read(copyNumberTsv))
                 .somaticGeneCopyNumbers(geneCopyNumbers)
                 .germlineDeletions(panelGermlineDeletions)
                 .chrArmCopyNumbers(chrArmCopyNumbers)

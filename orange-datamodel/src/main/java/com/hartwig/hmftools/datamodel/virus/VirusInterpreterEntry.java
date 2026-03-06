@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.datamodel.virus;
 
-import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
-
 import org.immutables.gson.Gson;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -33,5 +31,5 @@ public interface VirusInterpreterEntry
     boolean reported();
 
     @NotNull
-    DriverInterpretation driverInterpretation();
+    VirusLikelihoodType driverLikelihood();
 }

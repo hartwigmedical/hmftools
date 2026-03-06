@@ -62,7 +62,8 @@ public final class GermlineGainDeletionFactory
     {
         GermlineAmpDel firstGermlineAmpDel = germlineAmpDels.get(0);
 
-        String geneRange = firstGermlineAmpDel.IsPartial ? "PARTIAL" : "FULL";
+        String exonRange = firstGermlineAmpDel.IsPartial ?
+                format("%d_%d", firstGermlineAmpDel.ExonStart, firstGermlineAmpDel.ExonEnd) : "FULL";
 
         double minCopies = firstGermlineAmpDel.TumorCopyNumber;
 
@@ -106,9 +107,7 @@ public final class GermlineGainDeletionFactory
                 .minCopyNumber(minCopies)
                 .maxCopyNumber(maxCopies)
                 .relativeCopyNumber(geneCopyNumber.RelativeMinCopyNumber)
-                .geneRange(geneRange)
-                .exonStart(firstGermlineAmpDel.ExonStart)
-                .exonEnd(firstGermlineAmpDel.ExonEnd)
+                .exonRange(exonRange)
                 .minMinorAlleleCopies(geneCopyNumber.MinMinorAlleleCopyNumber)
                 .tpm(tpm)
                 .tpmPercentile(tpmPercentile)

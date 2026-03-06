@@ -31,6 +31,12 @@ public interface PurpleRecord
     List<PurpleVariant> germlineVariants();
 
     @NotNull
+    List<PurpleCopyNumber> somaticCopyNumbers();
+
+    @NotNull
+    List<PurpleGeneCopyNumber> somaticGeneCopyNumbers();
+
+    @NotNull
     List<PurpleGainDeletion> somaticGainsDels();
 
     @Nullable

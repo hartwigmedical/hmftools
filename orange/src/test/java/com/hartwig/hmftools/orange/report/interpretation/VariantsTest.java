@@ -24,8 +24,8 @@ public class VariantsTest
         VariantEntry entry2 = TestVariantEntryFactory.builder().gene("gene A").driverLikelihood(1D).affectedCodon(700).build();
         VariantEntry entry3 = TestVariantEntryFactory.builder().gene("gene B").driverLikelihood(1D).affectedCodon(600).build();
         VariantEntry entry4 = TestVariantEntryFactory.builder().gene("gene B").driverLikelihood(0.5).affectedCodon(600).build();
-        VariantEntry entry5 = TestVariantEntryFactory.builder().gene("gene B").driverLikelihood(0).affectedCodon(600).build();
-        VariantEntry entry6 = TestVariantEntryFactory.builder().gene("gene B").driverLikelihood(0).affectedCodon(null).build();
+        VariantEntry entry5 = TestVariantEntryFactory.builder().gene("gene B").driverLikelihood(null).affectedCodon(600).build();
+        VariantEntry entry6 = TestVariantEntryFactory.builder().gene("gene B").driverLikelihood(null).affectedCodon(null).build();
 
         List<VariantEntry> entries = Lists.newArrayList(entry5, entry6, entry1, entry3, entry2, entry4);
         List<VariantEntry> sorted = Variants.sort(entries);

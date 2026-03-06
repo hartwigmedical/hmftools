@@ -30,13 +30,7 @@ public interface PurpleGainDeletion
     String chromosomeBand();
 
     @NotNull
-    String geneRange();
-
-    @Nullable
-    Integer exonStart();
-
-    @Nullable
-    Integer exonEnd();
+    String exonRange();
 
     @NotNull
     default String transcript()

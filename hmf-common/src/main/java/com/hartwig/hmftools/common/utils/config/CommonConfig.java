@@ -95,12 +95,6 @@ public final class CommonConfig
     public static final String NEO_DIR_CFG = toolDirectory("neo");
     public static final String NEO_DIR_DESC = toolDirectoryDesc("Neo");
 
-    public static final String PAVE_SOMATIC_DIR_CFG = toolDirectory("pave_somatic");
-    public static final String PAVE_SOMATIC_DIR_DESC = toolDirectoryDesc("Pave somatic");
-
-    public static final String PAVE_GERMLINE_DIR_CFG = toolDirectory("pave_germline");
-    public static final String PAVE_GERMLINE_DIR_DESC = toolDirectoryDesc("Pave germline");
-
     public static final String PEACH_DIR_CFG = toolDirectory("peach");
     public static final String PEACH_DIR_DESC = toolDirectoryDesc("Peach");
 

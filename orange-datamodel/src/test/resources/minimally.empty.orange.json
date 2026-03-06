@@ -37,6 +37,8 @@
     "germlineDrivers": null,
     "somaticVariants": [],
     "germlineVariants": null,
+    "somaticCopyNumbers": [],
+    "somaticGeneCopyNumbers": [],
     "somaticGainsDels": [],
     "armCopyNumberAbberations": []
   },

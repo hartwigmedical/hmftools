@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.orange;
 
-import static com.hartwig.hmftools.orange.algo.linx.LinxOrangeTestFactory.fusionBuilder;
-
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
@@ -10,12 +8,10 @@ import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.chord.ChordTestFactory;
 import com.hartwig.hmftools.common.doid.DoidTestFactory;
-import com.hartwig.hmftools.common.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.common.metrics.FlagstatTestFactory;
 import com.hartwig.hmftools.common.linx.LinxTestFactory;
 import com.hartwig.hmftools.common.metrics.BamMetricsTestFactory;
 import com.hartwig.hmftools.common.peach.PeachTestFactory;
-import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.hla.ImmutableLilacAllele;
 import com.hartwig.hmftools.datamodel.hla.ImmutableLilacRecord;
 import com.hartwig.hmftools.datamodel.hla.LilacAllele;
@@ -49,10 +45,11 @@ import com.hartwig.hmftools.datamodel.virus.VirusBreakendQCStatus;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
+import com.hartwig.hmftools.datamodel.virus.VirusLikelihoodType;
 import com.hartwig.hmftools.orange.algo.cuppa.TestCuppaFactory;
 import com.hartwig.hmftools.orange.algo.immuno.TestImmuneEscapeFactory;
 import com.hartwig.hmftools.orange.algo.isofox.OrangeIsofoxTestFactory;
-import com.hartwig.hmftools.orange.algo.linx.TestLinxFactory;
+import com.hartwig.hmftools.orange.algo.linx.TestLinxInterpretationFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleInterpretationFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleVariantFactory;
 import com.hartwig.hmftools.orange.conversion.LinxConversion;
@@ -77,7 +74,7 @@ public final class TestOrangeReportFactory
                 .experimentType(ExperimentType.TARGETED)
                 .refGenomeVersion(OrangeRefGenomeVersion.V37)
                 .purple(TestPurpleInterpretationFactory.createMinimalTestPurpleData())
-                .linx(TestLinxFactory.createMinimalTestLinxData())
+                .linx(TestLinxInterpretationFactory.createMinimalTestLinxData())
                 .lilac(ImmutableLilacRecord.builder().build())
                 .immuneEscape(TestImmuneEscapeFactory.builder().build())
                 .virusInterpreter(ImmutableVirusInterpreterData.builder().build())
@@ -161,10 +158,9 @@ public final class TestOrangeReportFactory
     @NotNull
     private static LinxRecord createTestLinxData()
     {
-        LinxFusion fusion = fusionBuilder().build();
-
+        LinxFusion fusion = LinxConversion.convert(LinxTestFactory.createMinimalTestFusion());
         return ImmutableLinxRecord.builder()
-                .from(TestLinxFactory.createMinimalTestLinxData())
+                .from(TestLinxInterpretationFactory.createMinimalTestLinxData())
                 .addFusions(fusion)
                 .addFusions(fusion)
                 .addFusions(fusion)
@@ -185,6 +181,16 @@ public final class TestOrangeReportFactory
 
         alleles.add(alleleBuilder().allele("Allele 1").build());
         alleles.add(alleleBuilder().allele("Allele 2").build());
+
+        /*
+        LilacRecord lilacRecord = LilacInterpreter.
+
+        alleles.add(OrangeConversion.convert(alleleBuilder().allele("Allele 1").build(), true, true));
+        alleles.add(OrangeConversion.convert(LilacTestFactory.alleleBuilder()
+                .allele("Allele 2")
+                .somaticInframeIndel(1D)
+                .build(), true, true));
+        */
 
         return ImmutableLilacRecord.builder().alleles(alleles).build();
     }
@@ -328,7 +334,7 @@ public final class TestOrangeReportFactory
                 .meanCoverage(42D)
                 .expectedClonalCoverage(3D)
                 .reported(true)
-                .driverInterpretation(DriverInterpretation.UNKNOWN)
+                .driverLikelihood(VirusLikelihoodType.UNKNOWN)
                 .build());
 
         return ImmutableVirusInterpreterData.builder().reportableViruses(reportableViruses).build();

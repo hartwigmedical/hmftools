@@ -83,6 +83,6 @@ public class VirusInterpreterTest
         assertEquals(input.meanCoverage(), converted.meanCoverage(), EPSILON);
         assertEquals(input.expectedClonalCoverage(), converted.expectedClonalCoverage());
         assertEquals(input.reported(), converted.reported());
-        assertEquals(input.virusDriverLikelihoodType().name(), converted.driverInterpretation().name());
+        assertEquals(input.virusDriverLikelihoodType().name(), converted.driverLikelihood().name());
     }
 }

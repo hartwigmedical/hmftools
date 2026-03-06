@@ -7,7 +7,7 @@ import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_REL_CN;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_TYPE;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.cellArray;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.intToFloatArray;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.floatArray;
 
 import java.util.List;
 
@@ -40,7 +40,7 @@ public final class ChrArmCopyNumberTable
         addEntry(cells, widths, cellEntries, 1, COL_CN);
         addEntry(cells, widths, cellEntries, 1, COL_REL_CN);
 
-        Table table = Tables.createContent(width, intToFloatArray(widths), cellArray(cellEntries));
+        Table table = Tables.createContent(width, floatArray(widths), cellArray(cellEntries));
 
         for(PurpleChrArmCopyNumber chrArmCopyNumber : chrArmCopyNumbers)
         {

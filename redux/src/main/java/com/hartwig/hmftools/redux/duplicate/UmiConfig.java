@@ -2,6 +2,7 @@ package com.hartwig.hmftools.redux.duplicate;
 
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.ReduxConstants.DEFAULT_MAX_UMI_BASE_DIFF;
+import static com.hartwig.hmftools.redux.duplicate.UmiType.MSK_DUPEX_DELIM;
 import static com.hartwig.hmftools.redux.duplicate.UmiType.SINGLE;
 import static com.hartwig.hmftools.redux.duplicate.UmiType.TSO500_DUPEX_DELIM;
 import static com.hartwig.hmftools.redux.duplicate.UmiType.TWIST_DUPEX_DELIM;
@@ -82,10 +83,11 @@ public class UmiConfig
                 duplexUmi = true;
                 duplexUmiDelim = TSO500_DUPEX_DELIM;
             }
-            else if(umiType == UmiType.MSK)
+            else if(umiType == UmiType.MSK_DUPLEX)
             {
                 umiEnabled = true;
-                duplexUmi = false;
+                duplexUmi = true;
+                duplexUmiDelim = MSK_DUPEX_DELIM;
                 usesFixedUmis = false;
             }
             else if(umiType == SINGLE)

@@ -27,7 +27,7 @@ public final class TestPurpleGainDeletionFactory
                 .minCopyNumber(0)
                 .maxCopyNumber(0)
                 .relativeCopyNumber(0)
-                .geneRange("")
+                .exonRange("")
                 .minMinorAlleleCopies(0)
                 .tpm(null)
                 .tpmPercentile(null)

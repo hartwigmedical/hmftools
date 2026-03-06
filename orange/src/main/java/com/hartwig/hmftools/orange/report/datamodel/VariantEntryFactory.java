@@ -76,7 +76,7 @@ public final class VariantEntryFactory
                 .biallelic(variant.biallelic())
                 .biallelicProbability(variant.biallelicProbability())
                 .hotspot(variant.hotspot())
-                .driverLikelihood(driver != null ? driver.driverLikelihood() : 0)
+                .driverLikelihood(driver != null ? driver.driverLikelihood() : null)
                 .clonalLikelihood(1 - variant.subclonalLikelihood())
                 .rnaDepth(variant.rnaDepth())
                 .genotypeStatus(variant.genotypeStatus())

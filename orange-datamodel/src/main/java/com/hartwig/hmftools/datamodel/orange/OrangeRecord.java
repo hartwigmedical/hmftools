@@ -2,9 +2,11 @@ package com.hartwig.hmftools.datamodel.orange;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.hartwig.hmftools.datamodel.chord.ChordRecord;
+import com.hartwig.hmftools.datamodel.cohort.Evaluation;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.hla.LilacRecord;
 import com.hartwig.hmftools.datamodel.immuno.ImmuneEscapeRecord;

@@ -8,8 +8,9 @@ import com.hartwig.hmftools.common.virus.VirusType;
 import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.chord.ChordStatus;
 import com.hartwig.hmftools.datamodel.chord.ImmutableChordRecord;
-import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.flagstat.ImmutableFlagstat;
+import com.hartwig.hmftools.datamodel.hla.ImmutableLilacAllele;
+import com.hartwig.hmftools.datamodel.hla.LilacAllele;
 import com.hartwig.hmftools.datamodel.metrics.ImmutableWGSMetrics;
 import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeDoidNode;
 import com.hartwig.hmftools.datamodel.orange.OrangeDoidNode;
@@ -19,6 +20,7 @@ import com.hartwig.hmftools.datamodel.virus.ImmutableVirusInterpreterEntry;
 import com.hartwig.hmftools.datamodel.virus.VirusBreakendQCStatus;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
+import com.hartwig.hmftools.datamodel.virus.VirusLikelihoodType;
 
 public final class OrangeConversion
 {
@@ -67,7 +69,7 @@ public final class OrangeConversion
                 .meanCoverage(annotatedVirus.meanCoverage())
                 .expectedClonalCoverage(annotatedVirus.expectedClonalCoverage())
                 .reported(annotatedVirus.reported())
-                .driverInterpretation(DriverInterpretation.valueOf(annotatedVirus.virusDriverLikelihoodType().name()))
+                .driverLikelihood(VirusLikelihoodType.valueOf(annotatedVirus.virusDriverLikelihoodType().name()))
                 .build();
     }
 

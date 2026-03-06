@@ -15,7 +15,8 @@ import org.jetbrains.annotations.NotNull;
 
 public final class VirusInterpreter
 {
-    public static VirusInterpreterData interpret(final com.hartwig.hmftools.common.virus.VirusInterpreterData interpreterData)
+    @NotNull
+    public static VirusInterpreterData interpret(@NotNull com.hartwig.hmftools.common.virus.VirusInterpreterData interpreterData)
     {
         return com.hartwig.hmftools.datamodel.virus.ImmutableVirusInterpreterData.builder()
                 .allViruses(ConversionUtil.mapToIterable(filterBlacklistedViruses(interpreterData.allViruses()), OrangeConversion::convert))
@@ -24,7 +25,8 @@ public final class VirusInterpreter
                 .build();
     }
 
-    public static List<AnnotatedVirus> filterBlacklistedViruses(final List<AnnotatedVirus> allViruses)
+    @NotNull
+    public static List<AnnotatedVirus> filterBlacklistedViruses(@NotNull List<AnnotatedVirus> allViruses)
     {
         Optional<AnnotatedVirus> virusWithBlacklistStatusUnknown =
                 allViruses.stream().filter(virus -> virus.blacklisted() == null).findFirst();

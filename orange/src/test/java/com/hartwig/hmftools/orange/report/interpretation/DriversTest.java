@@ -9,7 +9,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
-import com.hartwig.hmftools.orange.algo.purple.PurpleTestFactory;
+import com.hartwig.hmftools.orange.algo.util.PurpleDriverTestFactory;
 
 import org.junit.Test;
 
@@ -18,9 +18,9 @@ public class DriversTest
     @Test
     public void canSelectNonCanonicalMutationEntries()
     {
-        PurpleDriver canonicalMutation = PurpleTestFactory.purpleDriverBuilder().type(PurpleDriverType.MUTATION).isCanonical(true).build();
-        PurpleDriver nonCanonicalMutation = PurpleTestFactory.purpleDriverBuilder().type(PurpleDriverType.MUTATION).isCanonical(false).build();
-        PurpleDriver nonCanonicalAmp = PurpleTestFactory.purpleDriverBuilder().type(PurpleDriverType.AMP).isCanonical(false).build();
+        PurpleDriver canonicalMutation = PurpleDriverTestFactory.builder().type(PurpleDriverType.MUTATION).isCanonical(true).build();
+        PurpleDriver nonCanonicalMutation = PurpleDriverTestFactory.builder().type(PurpleDriverType.MUTATION).isCanonical(false).build();
+        PurpleDriver nonCanonicalAmp = PurpleDriverTestFactory.builder().type(PurpleDriverType.AMP).isCanonical(false).build();
 
         List<PurpleDriver> drivers = Lists.newArrayList(canonicalMutation, nonCanonicalMutation, nonCanonicalAmp);
         List<PurpleDriver> nonCanonicalMutationDrivers = Drivers.nonCanonicalMutationEntries(drivers);
@@ -32,21 +32,21 @@ public class DriversTest
     @Test
     public void canSelectCanonicalMutationEntryForGene()
     {
-        PurpleDriver canonicalMatchLowDL = PurpleTestFactory.purpleDriverBuilder()
+        PurpleDriver canonicalMatchLowDL = PurpleDriverTestFactory.builder()
                 .type(PurpleDriverType.MUTATION)
                 .gene("gene 1")
                 .isCanonical(true)
                 .driverLikelihood(0.3)
                 .build();
 
-        PurpleDriver canonicalMatchHighDL = PurpleTestFactory.purpleDriverBuilder()
+        PurpleDriver canonicalMatchHighDL = PurpleDriverTestFactory.builder()
                 .type(PurpleDriverType.MUTATION)
                 .gene("gene 1")
                 .isCanonical(true)
                 .driverLikelihood(0.4)
                 .build();
 
-        PurpleDriver nonCanonicalMatch = PurpleTestFactory.purpleDriverBuilder()
+        PurpleDriver nonCanonicalMatch = PurpleDriverTestFactory.builder()
                 .type(PurpleDriverType.MUTATION)
                 .gene("gene 1")
                 .isCanonical(false)
@@ -54,7 +54,7 @@ public class DriversTest
                 .build();
 
         PurpleDriver canonicalOtherDriver =
-                PurpleTestFactory.purpleDriverBuilder()
+                PurpleDriverTestFactory.builder()
                         .type(PurpleDriverType.AMP)
                         .gene("gene 1")
                         .isCanonical(true)
@@ -62,7 +62,7 @@ public class DriversTest
                         .build();
 
         PurpleDriver canonicalOtherGene =
-                PurpleTestFactory.purpleDriverBuilder()
+                PurpleDriverTestFactory.builder()
                         .type(PurpleDriverType.AMP)
                         .gene("gene 2")
                         .isCanonical(true)

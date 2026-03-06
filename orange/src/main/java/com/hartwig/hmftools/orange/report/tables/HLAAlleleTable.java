@@ -1,9 +1,11 @@
 package com.hartwig.hmftools.orange.report.tables;
 
 import static com.hartwig.hmftools.orange.report.ReportResources.formatSingleDigitDecimal;
+import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_VARIANT;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_RNA;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.cellArray;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.intToFloatArray;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.floatArray;
 
 import java.util.Comparator;
 import java.util.List;
@@ -19,6 +21,7 @@ import com.hartwig.hmftools.orange.report.util.Tables;
 import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Table;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class HLAAlleleTable
@@ -49,7 +52,7 @@ public final class HLAAlleleTable
         addEntry(cells, widths, cellEntries, 1, "Tumor CN");
         addEntry(cells, widths, cellEntries, 3, "Somatic Mutations");
 
-        Table table = Tables.createContent(width, intToFloatArray(widths), cellArray(cellEntries));
+        Table table = Tables.createContent(width, floatArray(widths), cellArray(cellEntries));
 
         for(LilacAllele allele : sort(alleles))
         {

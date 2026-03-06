@@ -6,9 +6,10 @@ public enum UmiType
     SINGLE,
     TWIST_DUPLEX,
     TSO500_DUPLEX,
-    MSK,
+    MSK_DUPLEX,
     OTHER_DUPLEX;
 
     public static final String TSO500_DUPEX_DELIM = "+";
     public static final String TWIST_DUPEX_DELIM = "_";
+    public static final String MSK_DUPEX_DELIM = "+";
 }

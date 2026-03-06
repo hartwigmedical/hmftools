@@ -12,7 +12,6 @@ import java.util.Collection;
 
 import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.chord.ChordStatus;
-import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
@@ -20,6 +19,7 @@ import com.hartwig.hmftools.datamodel.gene.TranscriptCodingType;
 import com.hartwig.hmftools.datamodel.gene.TranscriptRegionType;
 import com.hartwig.hmftools.datamodel.hla.LilacAllele;
 import com.hartwig.hmftools.datamodel.hla.LilacRecord;
+import com.hartwig.hmftools.datamodel.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.datamodel.linx.FusionPhasedType;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
@@ -29,14 +29,17 @@ import com.hartwig.hmftools.datamodel.linx.LinxGeneOrientation;
 import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
+import com.hartwig.hmftools.datamodel.linx.LinxUnreportableReason;
 import com.hartwig.hmftools.datamodel.orange.OrangePlots;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
 import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
 import com.hartwig.hmftools.datamodel.purple.HotspotType;
 import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
+import com.hartwig.hmftools.datamodel.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
+import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.PurpleGenotypeStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleMicrosatelliteStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
@@ -49,6 +52,7 @@ import com.hartwig.hmftools.datamodel.virus.VirusBreakendQCStatus;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
+import com.hartwig.hmftools.datamodel.virus.VirusLikelihoodType;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -194,6 +198,21 @@ public class OrangeJsonTest
         assertEquals(1, purple.germlineVariants().size());
         assertEquals(germlineVariant, purple.germlineVariants().iterator().next());
 
+        assertEquals(1, purple.somaticCopyNumbers().size());
+        PurpleCopyNumber copyNumber = purple.somaticCopyNumbers().iterator().next();
+        assertEquals("1", copyNumber.chromosome());
+        assertEquals(10, copyNumber.start());
+        assertEquals(20, copyNumber.end());
+        assertEquals(4.1, copyNumber.averageTumorCopyNumber(), EPSILON);
+
+        assertEquals(1, purple.somaticGeneCopyNumbers().size());
+        PurpleGeneCopyNumber geneCopyNumber = purple.somaticGeneCopyNumbers().iterator().next();
+        assertEquals("gene", geneCopyNumber.gene());
+        assertEquals("12", geneCopyNumber.chromosome());
+        assertEquals("p13", geneCopyNumber.chromosomeBand());
+        assertEquals(1.2, geneCopyNumber.minCopyNumber(), EPSILON);
+        assertEquals(0.4, geneCopyNumber.minMinorAlleleCopyNumber(), EPSILON);
+
         assertEquals(1, purple.somaticGainsDels().size());
     }
 
@@ -278,17 +297,20 @@ public class OrangeJsonTest
 
         assertEquals(1, linx.fusions().size());
         LinxFusion fusion = linx.fusions().iterator().next();
+        assertTrue(fusion.reported());
         assertEquals(LinxFusionType.KNOWN_PAIR, fusion.reportedType());
+        assertEquals(LinxUnreportableReason.NONE, fusion.unreportedReasons().iterator().next());
+        assertEquals(1, fusion.unreportedReasons().size());
         assertEquals("TMPRSS2::ETV4", fusion.display());
-        assertEquals("TMPRSS2", fusion.geneUp());
-        assertEquals("ENST00000332149", fusion.transcriptUp());
-        assertEquals("Exon 1", fusion.contextUp());
+        assertEquals("TMPRSS2", fusion.geneStart());
+        assertEquals("ENST00000332149", fusion.geneTranscriptStart());
+        assertEquals("Exon 1", fusion.geneContextStart());
         assertEquals(1, fusion.fusedExonUp());
-        assertEquals("ETV4", fusion.geneDown());
-        assertEquals("ENST00000319349", fusion.transcriptDown());
-        assertEquals("Exon 2", fusion.contextDown());
+        assertEquals("ETV4", fusion.geneEnd());
+        assertEquals("ENST00000319349", fusion.geneTranscriptEnd());
+        assertEquals("Exon 2", fusion.geneContextEnd());
         assertEquals(2, fusion.fusedExonDown());
-        assertEquals(DriverInterpretation.HIGH, fusion.driverInterpretation());
+        assertEquals(FusionLikelihoodType.HIGH, fusion.driverLikelihood());
         assertEquals(FusionPhasedType.INFRAME, fusion.phased());
         assertEquals(1.1, fusion.junctionCopyNumber(), EPSILON);
     }
@@ -329,7 +351,7 @@ public class OrangeJsonTest
         assertEquals(VirusBreakendQCStatus.NO_ABNORMALITIES, virus1.qcStatus());
         assertEquals(VirusInterpretation.HPV, virus1.interpretation());
         assertEquals(1, virus1.integrations());
-        assertEquals(DriverInterpretation.HIGH, virus1.driverInterpretation());
+        assertEquals(VirusLikelihoodType.HIGH, virus1.driverLikelihood());
         assertEquals(0.9, virus1.percentageCovered(), EPSILON);
 
         VirusInterpreterEntry virus2 = findVirusByName(virusInterpreter.allViruses(), "Human betaherpesvirus 6B");
@@ -337,7 +359,7 @@ public class OrangeJsonTest
         assertEquals(VirusBreakendQCStatus.NO_ABNORMALITIES, virus2.qcStatus());
         assertNull(virus2.interpretation());
         assertEquals(0, virus2.integrations());
-        assertEquals(DriverInterpretation.LOW, virus2.driverInterpretation());
+        assertEquals(VirusLikelihoodType.LOW, virus2.driverLikelihood());
         assertEquals(0.4, virus2.percentageCovered(), EPSILON);
 
         assertEquals(1, virusInterpreter.reportableViruses().size());

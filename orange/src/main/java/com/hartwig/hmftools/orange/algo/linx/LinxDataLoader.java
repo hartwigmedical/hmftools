@@ -80,7 +80,7 @@ public final class LinxDataLoader
     {
         List<LinxDriver> somaticDriverData = LinxDriver.read(somaticDriverTsv);
         List<LinxFusion> fusions = loadReportableFusions(fusionTsv);
-        List<LinxBreakend> somaticBreakends = loadReportableBreakends(somaticBreakendTsv, fusions);
+        List<LinxBreakend> somaticBreakends = loadReportableBreakends(somaticBreakendTsv);
 
         List<DriverCatalog> somaticDrivers = DriverCatalogFile.read(somaticDriverCatalogTsv).stream()
                 .filter(x -> DRIVERS_LINX_SOMATIC.contains(x.driver())).collect(Collectors.toList());
@@ -112,7 +112,7 @@ public final class LinxDataLoader
                     .filter(x -> DRIVERS_LINX_GERMLINE.contains(x.driver())).collect(Collectors.toList());
 
             germlineSvAnnotations = LinxSvAnnotation.read(germlineSvAnnotationFile);
-            reportableGermlineBreakends = loadReportableBreakends(germlineBreakendTsv, Collections.emptyList());
+            reportableGermlineBreakends = loadReportableBreakends(germlineBreakendTsv);
 
             restrictToMatchingBreakends(germlineSvAnnotations, reportableGermlineBreakends);
 
@@ -153,7 +153,7 @@ public final class LinxDataLoader
         return reportableFusions;
     }
 
-    private static List<LinxBreakend> loadReportableBreakends(final String somaticBreakendTsv, final List<LinxFusion> fusions) throws IOException
+    private static List<LinxBreakend> loadReportableBreakends(final String somaticBreakendTsv) throws IOException
     {
         List<LinxBreakend> breakends = LinxBreakend.read(somaticBreakendTsv);
 
@@ -164,12 +164,7 @@ public final class LinxDataLoader
             {
                 reportableBreakends.add(breakend);
             }
-            else if(fusions.stream().anyMatch(x -> x.fivePrimeBreakendId() == breakend.id() || x.threePrimeBreakendId() == breakend.id()))
-            {
-                reportableBreakends.add(breakend);
-            }
         }
-
         return reportableBreakends;
     }
 

@@ -2,16 +2,11 @@ package com.hartwig.hmftools.orange.report.tables;
 
 import static com.hartwig.hmftools.orange.report.ReportResources.formatPercentage;
 import static com.hartwig.hmftools.orange.report.ReportResources.formatSingleDigitDecimal;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_DRIVER;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.cellArray;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.intToFloatArray;
 
 import java.util.List;
 
-import com.google.common.collect.Lists;
-import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
+import com.hartwig.hmftools.datamodel.virus.VirusLikelihoodType;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.util.Cells;
 import com.hartwig.hmftools.orange.report.util.Tables;
@@ -19,6 +14,7 @@ import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Table;
 
 import org.apache.logging.log4j.util.Strings;
+import org.jetbrains.annotations.NotNull;
 
 public final class ViralPresenceTable
 {
@@ -31,43 +27,39 @@ public final class ViralPresenceTable
         }
 
         Cells cells = new Cells(reportResources);
-
-        List<Integer> widths = Lists.newArrayList();
-        List<Cell> cellEntries = Lists.newArrayList();
-
-        addEntry(cells, widths, cellEntries, 3, "Virus");
-        addEntry(cells, widths, cellEntries, 3, "QC Status");
-        addEntry(cells, widths, cellEntries, 1, "Type");
-        addEntry(cells, widths, cellEntries, 1, "Int");
-        addEntry(cells, widths, cellEntries, 2, "% Covered");
-        addEntry(cells, widths, cellEntries, 2, "Mean Cov");
-        addEntry(cells, widths, cellEntries, 2, "Exp Clon Cov");
-        addEntry(cells, widths, cellEntries, 2, COL_DRIVER);
-
-        Table table = Tables.createContent(width, intToFloatArray(widths), cellArray(cellEntries));
+        Table table = Tables.createContent(width,
+                new float[] { 4, 3, 1, 1, 2, 2, 2, 2 },
+                new Cell[] { cells.createHeader("Virus"), cells.createHeader("QC Status"), cells.createHeader("Type"),
+                        cells.createHeader("Int"), cells.createHeader("% Covered"), cells.createHeader("Mean Cov"),
+                        cells.createHeader("Exp Clon Cov"), cells.createHeader("Driver") });
 
         for(VirusInterpreterEntry virus : viruses)
         {
-            List<Cell> rowCells = Lists.newArrayList();
-
-            rowCells.add(cells.createContent(virus.name()));
-            rowCells.add(cells.createContent(virus.qcStatus().toString()));
-            rowCells.add(cells.createContent(virus.interpretation() != null ? virus.interpretation().name() : Strings.EMPTY));
-            rowCells.add(cells.createContent(String.valueOf(virus.integrations())));
-            rowCells.add(cells.createContent(formatPercentage(virus.percentageCovered(), false)));
-            rowCells.add(cells.createContent(formatSingleDigitDecimal(virus.meanCoverage())));
-            rowCells.add(cells.createContent(expectedClonalCoverageField(virus)));
-            rowCells.add(cells.createContent(virus.driverInterpretation().toString()));
-
-            if(virus.driverInterpretation() == DriverInterpretation.LOW)
-            {
-                reportResources.shadeCandidateCells(rowCells);
-            }
-
-            rowCells.forEach(x -> table.addCell(x));
+            table.addCell(cells.createContent(virus.name()));
+            table.addCell(cells.createContent(virus.qcStatus().toString()));
+            table.addCell(cells.createContent(virus.interpretation() != null ? virus.interpretation().name() : Strings.EMPTY));
+            table.addCell(cells.createContent(String.valueOf(virus.integrations())));
+            table.addCell(cells.createContent(formatPercentage(virus.percentageCovered(), false)));
+            table.addCell(cells.createContent(formatSingleDigitDecimal(virus.meanCoverage())));
+            table.addCell(cells.createContent(expectedClonalCoverageField(virus)));
+            table.addCell(cells.createContent(display(virus.driverLikelihood())));
         }
 
         return new Tables(reportResources).createWrapping(table, title);
+    }
+
+    private static String display(final VirusLikelihoodType virusLikelihoodType)
+    {
+        switch(virusLikelihoodType)
+        {
+            case HIGH:
+                return "High";
+            case LOW:
+                return "Low";
+            case UNKNOWN:
+                return "Unknown";
+        }
+        throw new IllegalStateException();
     }
 
     private static String expectedClonalCoverageField(final VirusInterpreterEntry virus)

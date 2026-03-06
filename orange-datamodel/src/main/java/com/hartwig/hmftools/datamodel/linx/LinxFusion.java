@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.datamodel.linx;
 
-import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
+import java.util.List;
 
 import org.immutables.gson.Gson;
 import org.immutables.value.Value;
@@ -15,35 +15,40 @@ public interface LinxFusion
     @NotNull
     default String display()
     {
-        return String.format("%s::%s", geneUp(), geneDown());
+        return String.format("%s::%s", geneStart(), geneEnd());
     }
 
     @NotNull
-    String geneUp();
+    String geneStart();
 
     @NotNull
-    String contextUp();
+    String geneContextStart();
 
     @NotNull
-    String transcriptUp();
+    String geneTranscriptStart();
 
     @NotNull
-    String geneDown();
+    String geneEnd();
 
     @NotNull
-    String contextDown();
+    String geneContextEnd();
 
     @NotNull
-    String transcriptDown();
+    String geneTranscriptEnd();
+
+    boolean reported();
 
     @NotNull
     LinxFusionType reportedType();
 
     @NotNull
+    List<LinxUnreportableReason> unreportedReasons();
+
+    @NotNull
     FusionPhasedType phased();
 
     @NotNull
-    DriverInterpretation driverInterpretation();
+    FusionLikelihoodType driverLikelihood();
 
     int fusedExonUp();
 

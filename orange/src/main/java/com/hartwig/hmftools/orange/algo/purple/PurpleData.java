@@ -30,6 +30,8 @@ public interface PurpleData
     @Nullable
     List<SmallVariant> germlineVariants();
 
+    List<PurpleCopyNumber> somaticCopyNumbers();
+
     List<GeneCopyNumber> somaticGeneCopyNumbers();
 
     @Nullable
