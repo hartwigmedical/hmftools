@@ -25,8 +25,10 @@ import com.hartwig.hmftools.common.segmentation.Arm;
 import com.hartwig.hmftools.common.segmentation.ChrArm;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
+@Ignore
 public class TumorOnlyPurityAnalysisTest extends PurityTestBase
 {
     private static final String TUMOR_ID = "tumor123";

@@ -5,7 +5,7 @@ import static java.util.stream.Collectors.toList;
 import java.util.List;
 import java.util.Set;
 
-class CategoryEvidenceIntegral<T extends Comparable<T>>
+public class CategoryEvidenceIntegral<T extends Comparable<T>>
 {
     final List<CategoryEvidence<T>> mCategoryEvidence;
 

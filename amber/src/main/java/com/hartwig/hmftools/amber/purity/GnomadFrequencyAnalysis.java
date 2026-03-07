@@ -14,7 +14,7 @@ public class GnomadFrequencyAnalysis
         GnomadData = gnomadFrequencySupplier;
     }
 
-    public double getMeanFrequency(final Collection<GenomePosition> positions)
+    public double getMeanFrequency(final Collection<? extends GenomePosition> positions)
     {
         return positions.stream().mapToDouble(pos -> GnomadData.getFrequency(pos.chromosome(), pos.position())).average().orElse(0);
     }

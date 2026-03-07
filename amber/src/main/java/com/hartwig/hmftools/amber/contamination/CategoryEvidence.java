@@ -32,7 +32,7 @@ public class CategoryEvidence<T extends Comparable<T>> implements Comparable<Cat
         }
     }
 
-    void set(int totalPoints, int evidencePoints)
+    public void set(int totalPoints, int evidencePoints)
     {
         TotalPoints = totalPoints;
         EvidencePoints = evidencePoints;
@@ -63,7 +63,7 @@ public class CategoryEvidence<T extends Comparable<T>> implements Comparable<Cat
     {
         if(TotalPoints == 0)
         {
-            return Double.NaN;
+            return Double.MAX_VALUE;
         }
         return (double) EvidencePoints / (double) TotalPoints;
     }

@@ -42,7 +42,7 @@ public class CategoryEvidenceTest
     public void ratioTest()
     {
         CategoryEvidence<ChrArm> evidence = new CategoryEvidence<>(new ChrArm(_1, Arm.P));
-        assertEquals(Double.NaN, evidence.ratio(), 0.0001);
+        assertEquals(Double.MAX_VALUE, evidence.ratio(), 0.0001);
         evidence.register(false);
         assertEquals(0.0, evidence.ratio(), 0.001);
         evidence.register(true);
