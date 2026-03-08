@@ -2,7 +2,6 @@ package com.hartwig.hmftools.finding;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -12,7 +11,6 @@ import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
-import com.hartwig.hmftools.finding.clinicaltranscript.ClinicalTranscriptsModel;
 import com.hartwig.hmftools.finding.datamodel.DriverCategory;
 import com.hartwig.hmftools.finding.datamodel.DriverFieldsBuilder;
 import com.hartwig.hmftools.finding.datamodel.DriverFindingList;
@@ -26,6 +24,7 @@ import com.hartwig.hmftools.finding.datamodel.SmallVariantAllelicDepthBuilder;
 import com.hartwig.hmftools.finding.datamodel.SmallVariantBuilder;
 import com.hartwig.hmftools.finding.datamodel.SmallVariantTranscriptImpactBuilder;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 final class SmallVariantFactory
@@ -33,22 +32,20 @@ final class SmallVariantFactory
     public static DriverFindingList<SmallVariant> somaticSmallVariantFindings(
             PurpleRecord purpleRecord,
             FindingsStatus findingsStatus,
-            @Nullable ClinicalTranscriptsModel clinicalTranscriptsModel,
-            Map<String, DriverGene> driverGeneMap)
+            FindingConfig findingConfig)
     {
         return DriverFindingListBuilder.<SmallVariant>builder()
                 .status(findingsStatus)
                 .findings(SmallVariantFactory.create(
                         DriverSource.SOMATIC, purpleRecord.somaticVariants(), purpleRecord.somaticDrivers(),
-                        clinicalTranscriptsModel, driverGeneMap))
+                        findingConfig))
                 .build();
     }
 
     public static DriverFindingList<SmallVariant> germlineSmallVariantFindings(
             boolean hasGermlineSample,
             PurpleRecord purpleRecord,
-            @Nullable ClinicalTranscriptsModel clinicalTranscriptsModel,
-            Map<String, DriverGene> driverGeneMap)
+            FindingConfig findingConfig)
     {
         if(!hasGermlineSample)
         {
@@ -64,14 +61,13 @@ final class SmallVariantFactory
         return DriverFindingListBuilder.<SmallVariant>builder()
                 .status(FindingsStatus.OK)
                 .findings(SmallVariantFactory.create(
-                        DriverSource.GERMLINE, germlineVariants, germlineDrivers, clinicalTranscriptsModel, driverGeneMap))
+                        DriverSource.GERMLINE, germlineVariants, germlineDrivers, findingConfig))
                 .build();
     }
 
     private static List<SmallVariant> create(
             DriverSource sampleType, List<PurpleVariant> variants, List<PurpleDriver> drivers,
-            @Nullable ClinicalTranscriptsModel clinicalTranscriptsModel,
-            Map<String, DriverGene> driverGeneMap)
+            FindingConfig findingConfig)
     {
         List<SmallVariant> entries = new ArrayList<>();
         for(PurpleVariant variant : variants)
@@ -82,7 +78,7 @@ final class SmallVariantFactory
                 PurpleDriver driver = Drivers.canonicalMutationEntryForGene(drivers, variant.gene());
                 if(driver != null)
                 {
-                    entries.add(toSmallVariant(variant, driver, sampleType, clinicalTranscriptsModel, driverGeneMap));
+                    entries.add(toSmallVariant(variant, driver, sampleType, findingConfig));
                 }
             }
         }
@@ -92,7 +88,7 @@ final class SmallVariantFactory
             List<PurpleVariant> nonCanonicalVariants = findReportedVariantsForDriver(variants, nonCanonicalDriver);
             for(PurpleVariant nonCanonicalVariant : nonCanonicalVariants)
             {
-                entries.add(toSmallVariant(nonCanonicalVariant, nonCanonicalDriver, sampleType, clinicalTranscriptsModel, driverGeneMap));
+                entries.add(toSmallVariant(nonCanonicalVariant, nonCanonicalDriver, sampleType, findingConfig));
             }
         }
         entries.sort(SmallVariant.COMPARATOR);
@@ -100,8 +96,7 @@ final class SmallVariantFactory
     }
 
     private static SmallVariant toSmallVariant(PurpleVariant variant, PurpleDriver driver,
-            DriverSource sampleType, @Nullable ClinicalTranscriptsModel clinicalTranscriptsModel,
-            Map<String, DriverGene> driverGeneMap)
+            DriverSource sampleType, FindingConfig findingConfig)
     {
         PurpleTranscriptImpact transcriptImpact;
 
@@ -113,12 +108,11 @@ final class SmallVariantFactory
 
         boolean isCanonical = driver.transcript().equals(variant.canonicalImpact().transcript());
 
-        PurpleTranscriptImpact otherImpact =
-                isCanonical && clinicalTranscriptsModel != null ? findOtherImpactClinical(variant, clinicalTranscriptsModel)
-                        : null;
+        PurpleTranscriptImpact otherImpact = isCanonical ? findOtherImpactClinical(variant, findingConfig) : null;
 
-        DriverGene driverGene = driverGeneMap.get(variant.gene());
-        DriverCategory driverCategory = driverGene != null ? driverLikelihoodType(driverGene.likelihoodType()) : null;
+        DriverGene driverGene = findingConfig.getDriverGene(variant.gene());
+        DriverCategory
+                driverCategory = driverGene != null ? driverLikelihoodType(driverGene.likelihoodType()) : null;
 
         boolean reportable = transcriptImpact.reported() || (otherImpact != null && otherImpact.reported());
         DriverInterpretation driverInterpretation = DriverInterpretation.valueOf(driver.driverInterpretation().name());
@@ -255,9 +249,9 @@ final class SmallVariantFactory
 
     @Nullable
     private static PurpleTranscriptImpact findOtherImpactClinical(PurpleVariant variant,
-            ClinicalTranscriptsModel clinicalTranscriptsModel)
+            @NotNull FindingConfig findingConfig)
     {
-        String transcriptOverride = clinicalTranscriptsModel.findCanonicalTranscriptForGene(variant.gene());
+        String transcriptOverride = findingConfig.findCanonicalTranscriptForGene(variant.gene());
         if(transcriptOverride != null)
         {
             PurpleTranscriptImpact otherImpactClinical = findOtherTranscriptImpact(variant, transcriptOverride);

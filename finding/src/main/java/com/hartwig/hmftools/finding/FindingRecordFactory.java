@@ -9,14 +9,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.driver.panel.DriverGene;
-import com.hartwig.hmftools.common.driver.panel.DriverGeneFile;
 import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaMode;
@@ -26,8 +22,6 @@ import com.hartwig.hmftools.finding.datamodel.ChromosomeArmCopyNumber;
 import com.hartwig.hmftools.finding.datamodel.ChromosomeArmCopyNumberBuilder;
 import com.hartwig.hmftools.finding.datamodel.DriverInterpretation;
 import com.hartwig.hmftools.finding.datamodel.DriverSource;
-import com.hartwig.hmftools.finding.clinicaltranscript.ClinicalTranscriptFile;
-import com.hartwig.hmftools.finding.clinicaltranscript.ClinicalTranscriptsModel;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
@@ -92,9 +86,8 @@ public class FindingRecordFactory
     public static FindingRecord fromOrangeRecord(OrangeRecord orangeRecord, @Nullable Path clinicalTranscriptsTsv,
             @Nullable Path driverGeneTsv) throws IOException
     {
-        ClinicalTranscriptsModel clinicalTranscriptsModel = clinicalTranscriptsTsv != null ?
-                ClinicalTranscriptFile.buildFromTsv(orangeRecord.refGenomeVersion(), clinicalTranscriptsTsv) : null;
-        Map<String, DriverGene> driverGenes = driverGenesMap(driverGeneTsv);
+        FindingConfig findingConfig =
+                FindingConfig.createFindingConfig(clinicalTranscriptsTsv, driverGeneTsv, orangeRecord.refGenomeVersion());
 
         LinxRecord linx = orangeRecord.linx();
         PurpleRecord purple = orangeRecord.purple();
@@ -114,7 +107,8 @@ public class FindingRecordFactory
                 .germlineDisruptions(createGermlineDisruptions(orangeRecord.referenceId() != null, linx))
                 .fusions(createFusionsFindings(orangeRecord.linx()));
 
-        DriverFindingList<GainDeletion> somaticGainDeletions = addPurpleFindings(builder, orangeRecord, clinicalTranscriptsModel, driverGenes);
+        DriverFindingList<GainDeletion>
+                somaticGainDeletions = addPurpleFindings(builder, orangeRecord, findingConfig);
 
         VisualisationFiles visualisationFiles = VisualisationFilesFactory.create(orangeRecord.plots());
 
@@ -128,8 +122,9 @@ public class FindingRecordFactory
     }
 
     // return the gain deletions cause they are needed by HRD, will see if we can find a better way
-    private static DriverFindingList<GainDeletion> addPurpleFindings(FindingRecordBuilder builder, final OrangeRecord orangeRecord,
-            final @Nullable ClinicalTranscriptsModel clinicalTranscriptsModel, Map<String, DriverGene> driverGenes)
+    private static DriverFindingList<GainDeletion> addPurpleFindings(
+            FindingRecordBuilder builder, final OrangeRecord orangeRecord,
+            FindingConfig findingConfig)
     {
         boolean hasRefSample = orangeRecord.referenceId() != null;
 
@@ -140,14 +135,15 @@ public class FindingRecordFactory
         DriverFindingList<GainDeletion> somaticGainDeletions;
         FindingsStatus findingsStatus = purpleFindingsStatus(purple);
 
-        DriverFindingList<SmallVariant> smallVariants = SmallVariantFactory.somaticSmallVariantFindings(purple, findingsStatus, clinicalTranscriptsModel, driverGenes);
+        DriverFindingList<SmallVariant> smallVariants =
+                SmallVariantFactory.somaticSmallVariantFindings(purple, findingsStatus, findingConfig);
         if(findingsStatus == FindingsStatus.OK)
         {
             somaticGainDeletions =
                     GainDeletionFactory.somaticGainDeletionFindings(orangeRecord.refGenomeVersion(), findingsStatus, purple);
 
             builder.somaticSmallVariants(smallVariants)
-                    .germlineSmallVariants(com.hartwig.hmftools.finding.SmallVariantFactory.germlineSmallVariantFindings(hasRefSample, purple, clinicalTranscriptsModel, driverGenes))
+                    .germlineSmallVariants(com.hartwig.hmftools.finding.SmallVariantFactory.germlineSmallVariantFindings(hasRefSample, purple, findingConfig))
                     .somaticGainDeletions(somaticGainDeletions)
                     .germlineGainDeletions(GainDeletionFactory.germlineGainDeletionFindings(hasRefSample, orangeRecord.refGenomeVersion(), purple))
                     .microsatelliteStability(createMicrosatelliteStability(purple, orangeRecord.linx(), somaticGainDeletions))
@@ -472,12 +468,5 @@ public class FindingRecordFactory
         {
             return FindingUtil.notAvailableFindingList();
         }
-    }
-
-    private static Map<String, DriverGene> driverGenesMap(@Nullable Path driverGeneTsv) throws IOException
-    {
-        return driverGeneTsv != null ? DriverGeneFile.read(driverGeneTsv)
-                .stream()
-                .collect(Collectors.toMap(DriverGene::gene, Function.identity())) : Map.of();
     }
 }
