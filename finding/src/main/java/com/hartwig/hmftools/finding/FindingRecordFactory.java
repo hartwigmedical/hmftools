@@ -92,7 +92,9 @@ public class FindingRecordFactory
         LinxRecord linx = orangeRecord.linx();
         PurpleRecord purple = orangeRecord.purple();
 
-        boolean hasContamination = purple.fit().qc().status().contains(PurpleQCStatus.FAIL_CONTAMINATION);
+        Set<PurpleQCStatus> purpleQCStatuses = purple.fit().qc().status();
+        boolean hasContamination = purpleQCStatuses.contains(PurpleQCStatus.FAIL_CONTAMINATION);
+        boolean isLowPurity = purpleQCStatuses.contains(PurpleQCStatus.WARN_LOW_PURITY);
 
         FindingRecordBuilder builder = FindingRecordBuilder.builder()
                 .metaProperties(MetaPropertiesBuilder.builder()
@@ -103,18 +105,29 @@ public class FindingRecordFactory
                         .sampleId(orangeRecord.sampleId())
                         .samplingDate(orangeRecord.samplingDate())
                         .build())
-                .somaticDisruptions(createSomaticDisruptions(linx))
-                .germlineDisruptions(createGermlineDisruptions(orangeRecord.referenceId() != null, linx))
                 .fusions(createFusionsFindings(orangeRecord.linx()));
 
         DriverFindingList<GainDeletion>
-                somaticGainDeletions = addPurpleFindings(builder, orangeRecord, findingConfig);
+                somaticGainDeletions = addPurpleFindings(builder, orangeRecord, findingConfig, isLowPurity);
+
+        if(!isLowPurity)
+        {
+            builder.somaticDisruptions(createSomaticDisruptions(linx))
+                    .germlineDisruptions(createGermlineDisruptions(orangeRecord.referenceId() != null, linx))
+                    .viruses(createVirusFindings(orangeRecord.virusInterpreter()))
+                    .homologousRecombination(createHomologousRecombination(orangeRecord.chord(), purple, linx, somaticGainDeletions));
+        }
+        else
+        {
+            builder.somaticDisruptions(FindingUtil.notAvailableDriverFindingList())
+                    .germlineDisruptions(FindingUtil.notAvailableDriverFindingList())
+                    .viruses(FindingUtil.notAvailableDriverFindingList())
+                    .homologousRecombination(FindingUtil.notAvailableFindingItem());
+        }
 
         VisualisationFiles visualisationFiles = VisualisationFilesFactory.create(orangeRecord.plots());
 
         return builder.predictedTumorOrigins(createPredictedTumorOriginList(orangeRecord.cuppa()))
-                .homologousRecombination(createHomologousRecombination(orangeRecord.chord(), purple, linx, somaticGainDeletions))
-                .viruses(createVirusFindings(orangeRecord.virusInterpreter()))
                 .hlaAlleles(HlaAlleleFactory.createHlaAllelesFindings(orangeRecord))
                 .pharmocoGenotypes(createPharmcoGenotypesFindings(orangeRecord.peach(), hasContamination))
                 .visualisationFiles(visualisationFiles)
@@ -124,7 +137,8 @@ public class FindingRecordFactory
     // return the gain deletions cause they are needed by HRD, will see if we can find a better way
     private static DriverFindingList<GainDeletion> addPurpleFindings(
             FindingRecordBuilder builder, final OrangeRecord orangeRecord,
-            FindingConfig findingConfig)
+            FindingConfig findingConfig,
+            boolean isLowPurity)
     {
         boolean hasRefSample = orangeRecord.referenceId() != null;
 
@@ -133,14 +147,13 @@ public class FindingRecordFactory
         builder.purityPloidyFit(createPurityPloidyFit(purple));
 
         DriverFindingList<GainDeletion> somaticGainDeletions;
-        FindingsStatus findingsStatus = purpleFindingsStatus(purple);
 
         DriverFindingList<SmallVariant> smallVariants =
-                SmallVariantFactory.somaticSmallVariantFindings(purple, findingsStatus, findingConfig);
-        if(findingsStatus == FindingsStatus.OK)
+                SmallVariantFactory.somaticSmallVariantFindings(purple, FindingsStatus.OK, findingConfig);
+        if(!isLowPurity)
         {
             somaticGainDeletions =
-                    GainDeletionFactory.somaticGainDeletionFindings(orangeRecord.refGenomeVersion(), findingsStatus, purple);
+                    GainDeletionFactory.somaticGainDeletionFindings(orangeRecord.refGenomeVersion(), FindingsStatus.OK, purple);
 
             builder.somaticSmallVariants(smallVariants)
                     .germlineSmallVariants(com.hartwig.hmftools.finding.SmallVariantFactory.germlineSmallVariantFindings(hasRefSample, purple, findingConfig))
@@ -398,7 +411,6 @@ public class FindingRecordFactory
                     .status(FindingsStatus.OK)
                     .findings(convertViruses(virusInterpreter.allViruses()))
                     .build();
-
         }
         else
         {
