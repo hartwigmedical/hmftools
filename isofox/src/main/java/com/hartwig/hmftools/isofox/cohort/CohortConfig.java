@@ -28,8 +28,6 @@ import static com.hartwig.hmftools.isofox.cohort.AnalysisType.GENE_EXPRESSION_CO
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.GENE_EXPRESSION_MATRIX;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.TRANSCRIPT_EXPRESSION_MATRIX;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.getIsofoxFileId;
-import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
-import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -51,7 +49,6 @@ import com.hartwig.hmftools.isofox.novel.cohort.RecurrentVariantFinder;
 import com.hartwig.hmftools.isofox.novel.cohort.SpliceSiteCache;
 import com.hartwig.hmftools.isofox.novel.cohort.SpliceVariantMatcher;
 import com.hartwig.hmftools.isofox.unmapped.UmrCohortAnalyser;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class CohortConfig
 {
@@ -76,8 +73,6 @@ public class CohortConfig
     public final boolean ConvertUnmatchedCancerToOther;
 
     public final List<AnalysisType> AnalysisTypes;
-
-    public final DatabaseAccess DbAccess;
 
     public final String EnsemblDataCache;
     public final RefGenomeInterface RefGenome;
@@ -139,8 +134,6 @@ public class CohortConfig
         Fusions = AnalysisTypes.contains(FUSION) ? new FusionCohortConfig(configBuilder) : null;
 
         Expression = requiresExpressionConfig(AnalysisTypes) ? new ExpressionCohortConfig(configBuilder) : null;
-
-        DbAccess = createDatabaseAccess(configBuilder);
 
         Threads = parseThreads(configBuilder);
     }
@@ -226,8 +219,6 @@ public class CohortConfig
         RecurrentVariantFinder.registerConfig(configBuilder);
         UmrCohortAnalyser.registerConfig(configBuilder);
         GeneratePanelNormalisation.registerConfig(configBuilder);
-
-        addDatabaseCmdLineArgs(configBuilder, false);
 
         addOutputDir(configBuilder);
         addLoggingOptions(configBuilder);

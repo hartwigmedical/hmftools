@@ -18,8 +18,6 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.localPhaseSetsStringToList;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.ALT_SPLICE_JUNCTION;
 import static com.hartwig.hmftools.isofox.cohort.CohortConfig.formSampleFilenames;
@@ -33,12 +31,12 @@ import static com.hartwig.hmftools.isofox.novel.cohort.SpliceSiteCache.SS_TRAVER
 import static com.hartwig.hmftools.isofox.novel.cohort.SpliceSiteCache.calcSupportRate;
 import static com.hartwig.hmftools.isofox.novel.cohort.SpliceVariantMatchType.DISRUPTION;
 import static com.hartwig.hmftools.isofox.novel.cohort.SpliceVariantMatchType.NOVEL;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATICVARIANT;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -54,14 +52,7 @@ import com.hartwig.hmftools.common.rna.AltSpliceJunctionContext;
 import com.hartwig.hmftools.isofox.novel.AltSpliceJunctionFile;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionType;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.variant.VariantType;
-import com.hartwig.hmftools.common.sv.StructuralVariantData;
-import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
-import com.hartwig.hmftools.patientdb.database.hmfpatients.Tables;
-
-import org.jooq.Record;
-import org.jooq.Result;
 
 public class SpliceVariantMatcher
 {
@@ -150,7 +141,7 @@ public class SpliceVariantMatcher
             return;
         }
 
-        if(!mDataCache.hasCachedSomaticVariants() && mConfig.DbAccess == null)
+        if(!mDataCache.hasCachedSomaticVariants())
         {
             ISF_LOGGER.error("missing DB connection or cached somatic variants,");
             return;
@@ -238,6 +229,7 @@ public class SpliceVariantMatcher
         if(mDataCache.hasCachedSomaticVariants())
             return mDataCache.retrieveSomaticVariants(sampleId);
 
+        /*
         final List<SpliceVariant> spliceVariants = Lists.newArrayList();
 
         final Result<Record> result = mConfig.DbAccess.context().select().from(Tables.SOMATICVARIANT)
@@ -271,6 +263,9 @@ public class SpliceVariantMatcher
         }
 
         return spliceVariants;
+         */
+
+        return null;
     }
 
     private Map<String,List<Integer>> getStructuralVariants(final String sampleId)
@@ -278,34 +273,7 @@ public class SpliceVariantMatcher
         if(mDataCache.hasCachedSvBreakends())
             return mDataCache.retrieveSvBreakends(sampleId);
 
-        final Map<String,List<Integer>> svBreakends = Maps.newHashMap();
-
-        if(mConfig.DbAccess == null)
-            return svBreakends;
-
-        final List<StructuralVariantData> structuralVariants = mConfig.DbAccess.readStructuralVariantData(sampleId);
-
-        for(StructuralVariantData sv : structuralVariants)
-        {
-            List<Integer> positions = svBreakends.get(sv.startChromosome());
-
-            if(positions == null)
-                svBreakends.put(sv.startChromosome(), Lists.newArrayList(sv.startPosition()));
-            else
-                positions.add(sv.startPosition());
-
-            if(sv.type() != StructuralVariantType.INF && sv.type() != StructuralVariantType.SGL)
-            {
-                positions = svBreakends.get(sv.endChromosome());
-
-                if(positions == null)
-                    svBreakends.put(sv.endChromosome(), Lists.newArrayList(sv.endPosition()));
-                else
-                    positions.add(sv.endPosition());
-            }
-        }
-
-        return svBreakends;
+        return Collections.emptyMap();
     }
 
     private void evaluateSpliceVariant(
