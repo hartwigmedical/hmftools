@@ -65,6 +65,7 @@ import com.hartwig.hmftools.finding.datamodel.PurityPloidyFitBuilder;
 import com.hartwig.hmftools.finding.datamodel.PurityPloidyFitQcBuilder;
 import com.hartwig.hmftools.finding.datamodel.RefGenomeVersion;
 import com.hartwig.hmftools.finding.datamodel.SequencingScope;
+import com.hartwig.hmftools.finding.datamodel.SmallVariant;
 import com.hartwig.hmftools.finding.datamodel.TumorMutationStatus;
 import com.hartwig.hmftools.finding.datamodel.TumorMutationStatusBuilder;
 import com.hartwig.hmftools.finding.datamodel.Virus;
@@ -139,45 +140,25 @@ public class FindingRecordFactory
 
         DriverFindingList<GainDeletion> somaticGainDeletions;
         FindingsStatus findingsStatus = purpleFindingsStatus(purple);
+
+        DriverFindingList<SmallVariant> smallVariants = SmallVariantFactory.somaticSmallVariantFindings(purple, findingsStatus, clinicalTranscriptsModel, driverGenes);
         if(findingsStatus == FindingsStatus.OK)
         {
             somaticGainDeletions =
                     GainDeletionFactory.somaticGainDeletionFindings(orangeRecord.refGenomeVersion(), findingsStatus, purple);
 
-            FindingList<ChromosomeArmCopyNumber> chrArmCopyNumber = new FindingList<>(
-                    FindingsStatus.OK,
-                    purple.armCopyNumberAbberations().stream()
-                            .map(o -> ChromosomeArmCopyNumberBuilder.builder()
-                                    .findingKey(FindingKeys.chromosomeArmCopyNumber(o.chromosome(), o.arm()))
-                                    .chromosome(o.chromosome())
-                                    .arm(switch (o.arm()) {
-                                        case "P" -> ChromosomeArmCopyNumber.ChromosomeArm.P;
-                                        case "Q" -> ChromosomeArmCopyNumber.ChromosomeArm.Q;
-                                        default -> throw new IllegalArgumentException("Unknown arm: " + o.arm());
-                                    })
-                                    .type(switch (o.type()) {
-                                        case "GAIN" -> ChromosomeArmCopyNumber.Type.GAIN;
-                                        case "LOSS" -> ChromosomeArmCopyNumber.Type.LOSS;
-                                        case "DIPLOID" -> ChromosomeArmCopyNumber.Type.DIPLOID;
-                                        default -> throw new IllegalArgumentException("Unknown type: " + o.type());
-                                    })
-                                    .copyNumber(o.copyNumber())
-                                    .relativeCopyNumber(o.relativeCopyNumber())
-                                    .build())
-                            .toList());
-
-            builder.somaticSmallVariants(SmallVariantFactory.somaticSmallVariantFindings(purple, findingsStatus, clinicalTranscriptsModel, driverGenes))
-                    .germlineSmallVariants(SmallVariantFactory.germlineSmallVariantFindings(hasRefSample, purple, clinicalTranscriptsModel, driverGenes))
+            builder.somaticSmallVariants(smallVariants)
+                    .germlineSmallVariants(com.hartwig.hmftools.finding.SmallVariantFactory.germlineSmallVariantFindings(hasRefSample, purple, clinicalTranscriptsModel, driverGenes))
                     .somaticGainDeletions(somaticGainDeletions)
                     .germlineGainDeletions(GainDeletionFactory.germlineGainDeletionFindings(hasRefSample, orangeRecord.refGenomeVersion(), purple))
                     .microsatelliteStability(createMicrosatelliteStability(purple, orangeRecord.linx(), somaticGainDeletions))
                     .tumorMutationStatus(createTumorMutationStatus(purple))
-                    .chromosomeArmCopyNumbers(chrArmCopyNumber);
+                    .chromosomeArmCopyNumbers(createChromosomeArmCopyNumber(purple));
         }
         else
         {
             somaticGainDeletions = FindingUtil.notAvailableDriverFindingList();
-            builder.somaticSmallVariants(FindingUtil.notAvailableDriverFindingList())
+            builder.somaticSmallVariants(smallVariants)
                     .germlineSmallVariants(FindingUtil.notAvailableDriverFindingList())
                     .somaticGainDeletions(somaticGainDeletions)
                     .germlineGainDeletions(FindingUtil.notAvailableDriverFindingList())
@@ -235,6 +216,31 @@ public class FindingRecordFactory
                         .svTumorMutationalBurden(purple.characteristics().svTumorMutationalBurden())
                         .build())
                 .build();
+    }
+
+    private static FindingList<ChromosomeArmCopyNumber> createChromosomeArmCopyNumber(PurpleRecord purple)
+    {
+        return new FindingList<>(
+                FindingsStatus.OK,
+                purple.armCopyNumberAbberations().stream()
+                        .map(o -> ChromosomeArmCopyNumberBuilder.builder()
+                                .findingKey(FindingKeys.chromosomeArmCopyNumber(o.chromosome(), o.arm()))
+                                .chromosome(o.chromosome())
+                                .arm(switch (o.arm()) {
+                                    case "P" -> ChromosomeArmCopyNumber.ChromosomeArm.P;
+                                    case "Q" -> ChromosomeArmCopyNumber.ChromosomeArm.Q;
+                                    default -> throw new IllegalArgumentException("Unknown arm: " + o.arm());
+                                })
+                                .type(switch (o.type()) {
+                                    case "GAIN" -> ChromosomeArmCopyNumber.Type.GAIN;
+                                    case "LOSS" -> ChromosomeArmCopyNumber.Type.LOSS;
+                                    case "DIPLOID" -> ChromosomeArmCopyNumber.Type.DIPLOID;
+                                    default -> throw new IllegalArgumentException("Unknown type: " + o.type());
+                                })
+                                .copyNumber(o.copyNumber())
+                                .relativeCopyNumber(o.relativeCopyNumber())
+                                .build())
+                        .toList());
     }
 
     private static FindingList<PredictedTumorOrigin> createPredictedTumorOriginList(@Nullable CuppaData cuppa)
