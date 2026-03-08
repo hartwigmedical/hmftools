@@ -16,8 +16,8 @@ public record Disruption(
         @NotNull String transcript,
         boolean isCanonical,
         @NotNull Breakend.Type breakendType,
-        @Nullable Double disruptedCopies,
-        @Nullable Double undisruptedCopies,
+        double disruptedCopies,
+        double undisruptedCopies,
         @Nullable Integer clusterId,
         @Nullable Breakend breakendStart,
         @Nullable Breakend breakendEnd
