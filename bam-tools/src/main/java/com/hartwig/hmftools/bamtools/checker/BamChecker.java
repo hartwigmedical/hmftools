@@ -93,15 +93,20 @@ public class BamChecker
 
             if(mConfig.WriteIncompleteFragments)
             {
-                writeIncompleteReads(incompleteReads);
+                writeIncompleteReads(incompleteReads, mConfig.MaxWriteIncompleteFragments);
             }
 
             fragmentCache.clear();
         }
 
+        writeIncompleteReads(partitionThreads, incompleteReads);
+        incompleteReads.clear();
+
+        partitionThreads.forEach(x -> x.close());
+
         if(mConfig.writeBam())
         {
-            finaliseBam(partitionThreads, incompleteReads);
+            finaliseBam(partitionThreads);
         }
 
         BT_LOGGER.info("BamChecker complete, mins({})", runTimeMinsStr(startTimeMs));
@@ -132,10 +137,11 @@ public class BamChecker
         return partitionThreads;
     }
 
-    private void finaliseBam(final List<PartitionThread> partitionThreads, final List<SAMRecord> incompleteReads)
+    private void writeIncompleteReads(final List<PartitionThread> partitionThreads, final List<SAMRecord> incompleteReads)
     {
         if(!incompleteReads.isEmpty() && !mConfig.DropIncompleteFragments)
         {
+            BT_LOGGER.debug("writing {} incomplete reads", incompleteReads.size());
             partitionThreads.get(0).writeIncompleteReads(incompleteReads);
         }
 
@@ -147,9 +153,10 @@ public class BamChecker
             PartitionThread writerThread = partitionThreads.size() > 1 ? partitionThreads.get(1) : partitionThreads.get(0);
             writerThread.writeUnmappedReads();
         }
+    }
 
-        partitionThreads.forEach(x -> x.close());
-
+    private void finaliseBam(final List<PartitionThread> partitionThreads)
+    {
         // sort and merge the interim BAMs
         BT_LOGGER.debug("sorting {} thread BAMs", partitionThreads.size());
 
@@ -236,7 +243,7 @@ public class BamChecker
         }
     }
 
-    private void writeIncompleteReads(final List<SAMRecord> incompleteReads)
+    private void writeIncompleteReads(final List<SAMRecord> incompleteReads, int maxWriteCount)
     {
         try
         {
@@ -252,6 +259,8 @@ public class BamChecker
             writer.write(sj.toString());
 
             writer.newLine();
+
+            int writeCount = 0;
 
             for(SAMRecord read : incompleteReads)
             {
@@ -287,6 +296,11 @@ public class BamChecker
 
                 writer.write(sj.toString());
                 writer.newLine();
+
+                ++writeCount;
+
+                if(maxWriteCount > 0 && writeCount >= maxWriteCount)
+                    break;
             }
 
             writer.close();
