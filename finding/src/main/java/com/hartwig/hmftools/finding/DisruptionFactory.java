@@ -58,26 +58,25 @@ final class DisruptionFactory
 
         return DriverFindingListBuilder.<Disruption>builder()
                 .status(FindingsStatus.OK)
-                .findings(createDisruptions(DriverSource.GERMLINE, breakends, structuralVariants, true))
+                .findings(createDisruptions(DriverSource.GERMLINE, breakends, structuralVariants))
                 .build();
     }
 
-    public static DriverFindingList<Disruption> createSomaticDisruptions(boolean hasReliablePurity, LinxRecord linx)
+    public static DriverFindingList<Disruption> createSomaticDisruptions(LinxRecord linx)
     {
         @NotNull Collection<LinxBreakend> breakends = linx.somaticBreakends();
         @NotNull Collection<LinxSvAnnotation> structuralVariants = linx.somaticStructuralVariants();
 
         return  DriverFindingListBuilder.<Disruption>builder()
                 .status(FindingsStatus.OK)
-                .findings(createDisruptions(DriverSource.SOMATIC, breakends, structuralVariants, hasReliablePurity))
+                .findings(createDisruptions(DriverSource.SOMATIC, breakends, structuralVariants))
                 .build();
     }
 
     private static List<Disruption> createDisruptions(
             DriverSource sampleType,
             Collection<LinxBreakend> breakends,
-            Collection<LinxSvAnnotation> structuralVariants,
-            boolean hasReliablePurity)
+            Collection<LinxSvAnnotation> structuralVariants)
     {
         List<Disruption> disruptions = new ArrayList<>();
         Map<SvAndTranscriptKey, Pair<LinxBreakend, LinxBreakend>> pairedMap = mapBreakendsPerStructuralVariant(breakends);
@@ -120,8 +119,7 @@ final class DisruptionFactory
                     primaryBreakendStart,
                     primaryBreakendEnd,
                     undisruptedCopyNumber,
-                    structuralVariants,
-                    hasReliablePurity));
+                    structuralVariants));
         }
         disruptions.sort(Disruption.COMPARATOR);
 
@@ -134,7 +132,7 @@ final class DisruptionFactory
             @Nullable LinxBreakend breakendStart,
             @Nullable LinxBreakend breakendEnd,
             double undisruptedCopyNumber,
-            Collection<LinxSvAnnotation> structuralVariants, boolean hasReliablePurity)
+            Collection<LinxSvAnnotation> structuralVariants)
     {
         List<LinxBreakend> breakends = new ArrayList<>();
         if(breakendStart != null)
@@ -181,8 +179,8 @@ final class DisruptionFactory
                 .isCanonical(breakend.isCanonical())
                 .transcript(breakend.transcript())
                 .breakendType(Breakend.Type.valueOf(breakend.type().name()))
-                .disruptedCopies(hasReliablePurity ? breakend.junctionCopyNumber() : null)
-                .undisruptedCopies(hasReliablePurity ? undisruptedCopyNumber : null)
+                .disruptedCopies(breakend.junctionCopyNumber())
+                .undisruptedCopies(undisruptedCopyNumber)
                 .clusterId(determineClusterId(structuralVariants, breakend))
                 .breakendStart(convert(breakendStart))
                 .breakendEnd(convert(breakendEnd))

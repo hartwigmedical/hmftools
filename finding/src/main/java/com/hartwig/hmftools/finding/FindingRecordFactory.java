@@ -99,8 +99,7 @@ public class FindingRecordFactory
         LinxRecord linx = orangeRecord.linx();
         PurpleRecord purple = orangeRecord.purple();
 
-        boolean hasReliablePurity = purple.fit().containsTumorCells();
-        boolean hasContainmination = purple.fit().qc().status().contains(PurpleQCStatus.FAIL_CONTAMINATION);
+        boolean hasContamination = purple.fit().qc().status().contains(PurpleQCStatus.FAIL_CONTAMINATION);
 
         FindingRecordBuilder builder = FindingRecordBuilder.builder()
                 .metaProperties(MetaPropertiesBuilder.builder()
@@ -111,7 +110,7 @@ public class FindingRecordFactory
                         .sampleId(orangeRecord.sampleId())
                         .samplingDate(orangeRecord.samplingDate())
                         .build())
-                .somaticDisruptions(createSomaticDisruptions(hasReliablePurity, linx))
+                .somaticDisruptions(createSomaticDisruptions(linx))
                 .germlineDisruptions(createGermlineDisruptions(orangeRecord.referenceId() != null, linx))
                 .fusions(createFusionsFindings(orangeRecord.linx()));
 
@@ -122,8 +121,8 @@ public class FindingRecordFactory
         return builder.predictedTumorOrigins(createPredictedTumorOriginList(orangeRecord.cuppa()))
                 .homologousRecombination(createHomologousRecombination(orangeRecord.chord(), purple, linx, somaticGainDeletions))
                 .viruses(createVirusFindings(orangeRecord.virusInterpreter()))
-                .hlaAlleles(HlaAlleleFactory.createHlaAllelesFindings(orangeRecord, hasReliablePurity))
-                .pharmocoGenotypes(createPharmcoGenotypesFindings(orangeRecord.peach(), hasContainmination))
+                .hlaAlleles(HlaAlleleFactory.createHlaAllelesFindings(orangeRecord))
+                .pharmocoGenotypes(createPharmcoGenotypesFindings(orangeRecord.peach(), hasContamination))
                 .visualisationFiles(visualisationFiles)
                 .build();
     }
