@@ -65,6 +65,7 @@ import com.hartwig.hmftools.finding.datamodel.PurityPloidyFitBuilder;
 import com.hartwig.hmftools.finding.datamodel.PurityPloidyFitQcBuilder;
 import com.hartwig.hmftools.finding.datamodel.RefGenomeVersion;
 import com.hartwig.hmftools.finding.datamodel.SequencingScope;
+import com.hartwig.hmftools.finding.datamodel.SmallVariant;
 import com.hartwig.hmftools.finding.datamodel.TumorMutationStatus;
 import com.hartwig.hmftools.finding.datamodel.TumorMutationStatusBuilder;
 import com.hartwig.hmftools.finding.datamodel.Virus;
@@ -142,13 +143,15 @@ public class FindingRecordFactory
 
         DriverFindingList<GainDeletion> somaticGainDeletions;
         FindingsStatus findingsStatus = purpleFindingsStatus(purple);
+
+        DriverFindingList<SmallVariant> smallVariants = SmallVariantFactory.somaticSmallVariantFindings(purple, findingsStatus, clinicalTranscriptsModel, driverGenes);
         if(findingsStatus == FindingsStatus.OK)
         {
             somaticGainDeletions =
                     GainDeletionFactory.somaticGainDeletionFindings(orangeRecord.refGenomeVersion(), findingsStatus, purple);
 
-            builder.somaticSmallVariants(SmallVariantFactory.somaticSmallVariantFindings(purple, findingsStatus, clinicalTranscriptsModel, driverGenes))
-                    .germlineSmallVariants(SmallVariantFactory.germlineSmallVariantFindings(hasRefSample, purple, clinicalTranscriptsModel, driverGenes))
+            builder.somaticSmallVariants(smallVariants)
+                    .germlineSmallVariants(com.hartwig.hmftools.finding.SmallVariantFactory.germlineSmallVariantFindings(hasRefSample, purple, clinicalTranscriptsModel, driverGenes))
                     .somaticGainDeletions(somaticGainDeletions)
                     .germlineGainDeletions(GainDeletionFactory.germlineGainDeletionFindings(hasRefSample, orangeRecord.refGenomeVersion(), purple))
                     .microsatelliteStability(createMicrosatelliteStability(purple, orangeRecord.linx(), somaticGainDeletions))
@@ -157,7 +160,7 @@ public class FindingRecordFactory
         else
         {
             somaticGainDeletions = FindingUtil.notAvailableDriverFindingList();
-            builder.somaticSmallVariants(FindingUtil.notAvailableDriverFindingList())
+            builder.somaticSmallVariants(smallVariants)
                     .germlineSmallVariants(FindingUtil.notAvailableDriverFindingList())
                     .somaticGainDeletions(somaticGainDeletions)
                     .germlineGainDeletions(FindingUtil.notAvailableDriverFindingList())
