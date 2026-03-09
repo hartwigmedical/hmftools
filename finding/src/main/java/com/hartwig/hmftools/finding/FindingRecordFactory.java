@@ -19,16 +19,15 @@ import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.driver.panel.DriverGeneFile;
 import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
+import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
 import com.hartwig.hmftools.finding.datamodel.ChromosomeArmCopyNumber;
 import com.hartwig.hmftools.finding.datamodel.ChromosomeArmCopyNumberBuilder;
 import com.hartwig.hmftools.finding.datamodel.DriverInterpretation;
 import com.hartwig.hmftools.finding.datamodel.DriverSource;
 import com.hartwig.hmftools.finding.clinicaltranscript.ClinicalTranscriptFile;
 import com.hartwig.hmftools.finding.clinicaltranscript.ClinicalTranscriptsModel;
-import com.hartwig.hmftools.datamodel.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
-import com.hartwig.hmftools.datamodel.linx.LinxUnreportableReason;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
 import com.hartwig.hmftools.datamodel.purple.Genes;
@@ -37,7 +36,6 @@ import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
-import com.hartwig.hmftools.datamodel.virus.VirusLikelihoodType;
 import com.hartwig.hmftools.finding.datamodel.DriverFieldsBuilder;
 import com.hartwig.hmftools.finding.datamodel.DriverFindingList;
 import com.hartwig.hmftools.finding.datamodel.DriverFindingListBuilder;
@@ -254,7 +252,7 @@ public class FindingRecordFactory
                             .lohCopyNumbers(filterLohGainDeletions(gainDeletions, Genes.HRD_GENES))
                             .genes(GeneListUtil.genes(purple.somaticVariants(),
                                     purple.somaticGainsDels(),
-                                    linx.germlineHomozygousDisruptions(),
+                                    linx.somaticHomozygousDisruptions(),
                                     Genes.HRD_GENES).stream().toList())
                             .build())
                     .build();
@@ -278,7 +276,7 @@ public class FindingRecordFactory
                         .lohCopyNumbers(filterLohGainDeletions(gainDeletions, Genes.MSI_GENES))
                         .genes(GeneListUtil.genes(purple.somaticVariants(),
                                 purple.somaticGainsDels(),
-                                linx.germlineHomozygousDisruptions(),
+                                linx.somaticHomozygousDisruptions(),
                                 Genes.MSI_GENES).stream().toList())
                         .build())
                 .build();
@@ -309,30 +307,24 @@ public class FindingRecordFactory
 
     public static Fusion convertFusion(LinxFusion fusion, DriverSource sampleType)
     {
-        DriverInterpretation driverInterpretation = toDriverInterpretation(fusion.driverLikelihood());
-
-        boolean isDriverGene = !fusion.unreportedReasons().contains(LinxUnreportableReason.NOT_KNOWN);
-        List<Fusion.UnreportableReason> unreportableReasons = fusion.unreportedReasons().stream()
-                .map(o -> Fusion.UnreportableReason.valueOf(o.name()))
-                .toList();
+        DriverInterpretation driverInterpretation = DriverUtil.convert(fusion.driverInterpretation());
 
         return FusionBuilder.builder()
                 .driver(DriverFieldsBuilder.builder()
                         .findingKey(FindingKeys.fusion(sampleType, fusion))
                         .driverSource(sampleType)
-                        .reportedStatus(DriverUtil.reportedStatus(isDriverGene, fusion.reported(), driverInterpretation))
+                        .reportedStatus(DriverUtil.reportedStatus(ReportedStatus.REPORTED, driverInterpretation))
                         .driverInterpretation(driverInterpretation)
-                        .driverLikelihood(fusion.driverLikelihood() == FusionLikelihoodType.HIGH ? 1.0 : 0.0)
+                        .driverLikelihood(driverInterpretation == DriverInterpretation.HIGH ? 1.0 : 0.0)
                         .build()
                 )
-                .geneStart(fusion.geneStart())
-                .geneContextStart(fusion.geneContextStart())
-                .geneTranscriptStart(fusion.geneTranscriptStart())
-                .geneEnd(fusion.geneEnd())
-                .geneContextEnd(fusion.geneContextEnd())
-                .geneTranscriptEnd(fusion.geneTranscriptEnd())
+                .geneStart(fusion.geneUp())
+                .geneContextStart(fusion.contextUp())
+                .geneTranscriptStart(fusion.transcriptUp())
+                .geneEnd(fusion.geneDown())
+                .geneContextEnd(fusion.contextDown())
+                .geneTranscriptEnd(fusion.transcriptDown())
                 .reportedType(Fusion.FusionType.valueOf(fusion.reportedType().name()))
-                .unreportedReasons(unreportableReasons)
                 .phased(Fusion.FusionPhasedType.valueOf(fusion.phased().name()))
                 .fusedExonUp(fusion.fusedExonUp())
                 .fusedExonDown(fusion.fusedExonDown())
@@ -342,16 +334,6 @@ public class FindingRecordFactory
                 .domainsLost(fusion.domainsLost())
                 .junctionCopyNumber(fusion.junctionCopyNumber())
                 .build();
-    }
-
-    private static DriverInterpretation toDriverInterpretation(FusionLikelihoodType likelihood)
-    {
-        return switch(likelihood)
-        {
-            case HIGH -> DriverInterpretation.HIGH;
-            case LOW -> DriverInterpretation.LOW;
-            case NA -> DriverInterpretation.LOW;
-        };
     }
 
     private static DriverFindingList<Virus> createVirusFindings(@Nullable VirusInterpreterData virusInterpreter)
@@ -373,39 +355,37 @@ public class FindingRecordFactory
     private static List<Virus> convertViruses(List<VirusInterpreterEntry> viruses)
     {
         return viruses.stream()
-                .map(v -> VirusBuilder.builder()
-                        .driver(DriverFieldsBuilder.builder()
-                                .findingKey(FindingKeys.virus(v))
-                                .driverSource(DriverSource.SOMATIC)
-                                .reportedStatus(DriverUtil.reportedStatus(
-                                        true,
-                                        v.reported(),
-                                        virusDriverInterpretation(v.driverLikelihood())))
-                                .driverInterpretation(virusDriverInterpretation(v.driverLikelihood()))
-                                .driverLikelihood(v.driverLikelihood() == VirusLikelihoodType.HIGH ? 1.0 : 0.0)
-                                .build()
-                        )
-                        .name(v.name())
-                        .qcStatus(Virus.VirusBreakendQCStatus.valueOf(v.qcStatus().name()))
-                        .integrations(v.integrations())
-                        .oncogenicVirus(v.interpretation() != null ?
-                                Virus.OncogenicVirus.valueOf(Objects.requireNonNull(v.interpretation()).name())
-                                : null)
-                        .percentageCovered(v.percentageCovered())
-                        .meanCoverage(v.meanCoverage())
-                        .expectedClonalCoverage(v.expectedClonalCoverage())
-                        .build()
-                ).sorted(Virus.COMPARATOR).toList();
+                .map(FindingRecordFactory::convertVirus)
+                .sorted(Virus.COMPARATOR)
+                .toList();
     }
 
-    private static DriverInterpretation virusDriverInterpretation(VirusLikelihoodType virusLikelihoodType)
+    private static Virus convertVirus(VirusInterpreterEntry v)
     {
-        return switch(virusLikelihoodType)
-        {
-            case LOW -> DriverInterpretation.LOW;
-            case HIGH -> DriverInterpretation.HIGH;
-            case UNKNOWN -> DriverInterpretation.UNKNOWN;
-        };
+        DriverInterpretation driverInterpretation = DriverUtil.convert(v.driverInterpretation());
+
+        return VirusBuilder.builder()
+            .driver(DriverFieldsBuilder.builder()
+            .findingKey(FindingKeys.virus(v))
+            .driverSource(DriverSource.SOMATIC)
+            .reportedStatus(DriverUtil.reportedStatus(
+                            true,
+                            v.reported(),
+                            driverInterpretation))
+                    .driverInterpretation(driverInterpretation)
+                    .driverLikelihood(driverInterpretation == DriverInterpretation.HIGH ? 1.0 : 0.0)
+                    .build()
+            )
+            .name(v.name())
+            .qcStatus(Virus.VirusBreakendQCStatus.valueOf(v.qcStatus().name()))
+            .integrations(v.integrations())
+            .oncogenicVirus(v.interpretation() != null ?
+                    Virus.OncogenicVirus.valueOf(Objects.requireNonNull(v.interpretation()).name())
+                    : null)
+            .percentageCovered(v.percentageCovered())
+            .meanCoverage(v.meanCoverage())
+            .expectedClonalCoverage(v.expectedClonalCoverage())
+            .build();
     }
 
     private static FindingList<PharmocoGenotype> createPharmcoGenotypesFindings(@Nullable Set<PeachGenotype> peachGenotypes,
