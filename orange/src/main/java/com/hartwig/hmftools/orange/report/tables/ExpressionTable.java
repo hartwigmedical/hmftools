@@ -26,8 +26,21 @@ import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.cellArray;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.intToFloatArray;
 
+import org.apache.logging.log4j.util.Strings;
+
 public final class ExpressionTable
 {
+    private static String COL_QC = "QC";
+    private static String COL_TOTAL_FRAGS = "Total Fragments";
+    private static String COL_DUP_RATE = "Duplicate Rate";
+    private static String COL_SPLICED_RATE = "Spliced Rate";
+    private static String COL_UNSPLICED_RATE = "Unspliced Rate";
+    private static String COL_ALT_RATE = "Alt-sliced Rate";
+    private static String COL_CHIMERIC_RATE = "Chimeric Rate";
+
+    private static String COL_PERCENTILE = "Percentile";
+    private static String COL_FOLD_CHANGE = "Fold Change";
+
     public static Table buildRnaSummary(
             final String title, float width, final RnaStatistics rnaStatistics, final ReportResources reportResources)
     {
@@ -36,10 +49,13 @@ public final class ExpressionTable
         List<Integer> widths = Lists.newArrayList();
         List<Cell> cellEntries = Lists.newArrayList();
 
-        addEntry(cells, widths, cellEntries, 1, "QC");
-        addEntry(cells, widths, cellEntries, 1, "Total Fragments");
-        addEntry(cells, widths, cellEntries, 1, "Non-Duplicate Fragments");
-        addEntry(cells, widths, cellEntries, 1, "Duplicate Rate");
+        addEntry(cells, widths, cellEntries, 1, COL_QC);
+        addEntry(cells, widths, cellEntries, 1, COL_TOTAL_FRAGS);
+        addEntry(cells, widths, cellEntries, 1, COL_DUP_RATE);
+        addEntry(cells, widths, cellEntries, 1, COL_SPLICED_RATE);
+        addEntry(cells, widths, cellEntries, 1, COL_UNSPLICED_RATE);
+        addEntry(cells, widths, cellEntries, 1, COL_ALT_RATE);
+        addEntry(cells, widths, cellEntries, 1, COL_CHIMERIC_RATE);
 
         Table table = Tables.createContent(width, intToFloatArray(widths), cellArray(cellEntries));
 
@@ -52,13 +68,13 @@ public final class ExpressionTable
         table.addCell(cells.createContent(qcSj.toString()));
         table.addCell(cells.createContent(String.valueOf(rnaStatistics.totalFragments())));
 
-        long nonDuplicates = rnaStatistics.totalFragments() - rnaStatistics.duplicateFragments();
-        table.addCell(cells.createContent(String.valueOf(nonDuplicates)));
-
         double duplicateRate = rnaStatistics.duplicateFragments() / (double) rnaStatistics.totalFragments();
         table.addCell(cells.createContent(formatPercentage(duplicateRate)));
 
-        // addQCWarningInCaseOfFail(table, cells);
+        table.addCell(cells.createContent(formatPercentage(rnaStatistics.splicedFragmentPerc())));
+        table.addCell(cells.createContent(formatPercentage(rnaStatistics.unsplicedFragmentPerc())));
+        table.addCell(cells.createContent(formatPercentage(rnaStatistics.altFragmentPerc())));
+        table.addCell(cells.createContent(formatPercentage(rnaStatistics.chimericFragmentPerc())));
 
         return new Tables(reportResources).createWrapping(table, title);
     }
@@ -96,8 +112,9 @@ public final class ExpressionTable
 
         addEntry(cells, widths, cellEntries, 1, COL_GENE);
         addEntry(cells, widths, cellEntries, 1, COL_TPM);
-        addEntry(cells, widths, cellEntries, 1, "Percentile");
-        addEntry(cells, widths, cellEntries, 1, "Fold Change");
+        addEntry(cells, widths, cellEntries, 1, COL_PERCENTILE);
+        addEntry(cells, widths, cellEntries, 1, COL_FOLD_CHANGE);
+        addEntry(cells, widths, cellEntries, 3, Strings.EMPTY);
 
         Table table = Tables.createContent(width, intToFloatArray(widths), cellArray(cellEntries));
         
@@ -110,13 +127,14 @@ public final class ExpressionTable
             {
                 table.addCell(cells.createContent(formatPercentileField(expression.percentileCancer())));
                 table.addCell(cells.createContent(Expressions.formatFoldChangeCancer(expression)));
-
             }
             else
             {
                 table.addCell(cells.createContent(formatPercentileField(expression.percentileCohort())));
                 table.addCell(cells.createContent(Expressions.formatFoldChange(expression)));
             }
+
+            table.addCell(cells.createContent(Strings.EMPTY));
         }
 
         return new Tables(reportResources).createWrapping(table, title);

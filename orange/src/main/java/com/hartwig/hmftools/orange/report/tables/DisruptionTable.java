@@ -6,7 +6,6 @@ import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_DRIVER;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_GENE;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_JCN;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_LOCATION;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_RANGE;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_TYPE;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_ZYGOSITY;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.VALUE_HET;
@@ -32,6 +31,9 @@ import org.apache.logging.log4j.util.Strings;
 
 public final class DisruptionTable
 {
+    private static final String COL_CONTEXT = "Context";
+    private static final String COL_UNDISRUPTED_CN = "Undisrupted CN";
+
     public static Table build(
             final String title, float width, final List<BreakendEntry> breakends, final ReportResources reportResources)
     {
@@ -48,10 +50,10 @@ public final class DisruptionTable
         addEntry(cells, widths, cellEntries, 1, COL_LOCATION);
         addEntry(cells, widths, cellEntries, 1, COL_GENE);
         addEntry(cells, widths, cellEntries, 1, COL_ZYGOSITY);
-        addEntry(cells, widths, cellEntries, 2, COL_RANGE);
+        addEntry(cells, widths, cellEntries, 2, COL_CONTEXT);
         addEntry(cells, widths, cellEntries, 1, COL_TYPE);
         addEntry(cells, widths, cellEntries, 1, COL_JCN);
-        addEntry(cells, widths, cellEntries, 2, "Undisrupted CN");
+        addEntry(cells, widths, cellEntries, 2, COL_UNDISRUPTED_CN);
         addEntry(cells, widths, cellEntries, 1, COL_DRIVER);
 
         Table table = Tables.createContent(width, intToFloatArray(widths), cellArray(cellEntries));

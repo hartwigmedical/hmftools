@@ -49,13 +49,13 @@ public class RnaFindingsChapter implements ReportChapter
     {
         document.add(new Paragraph(name()).addStyle(mReportResources.chapterTitleStyle()));
 
-        addKeyQC(document);
+        addStatistics(document);
         addExpressionTables(document);
         addRnaFusionTables(document);
         addNovelSpliceJunctionTables(document);
     }
 
-    private void addKeyQC(final Document document)
+    private void addStatistics(final Document document)
     {
         String title = "QC";
 

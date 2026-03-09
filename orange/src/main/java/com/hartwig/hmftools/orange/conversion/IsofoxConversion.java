@@ -46,11 +46,12 @@ public final class IsofoxConversion
 
     public static GeneExpression convert(final com.hartwig.hmftools.common.rna.GeneExpression geneExpression)
     {
+        boolean hasCancerCohortData = geneExpression.medianTpmCancer() > 0;
         return ImmutableGeneExpression.builder()
                 .gene(geneExpression.geneName())
                 .tpm(geneExpression.tpm())
-                .medianTpmCancer(geneExpression.medianTpmCancer() >= 0 ? geneExpression.medianTpmCancer() : null)
-                .percentileCancer(geneExpression.percentileCancer() >= 0 ? geneExpression.percentileCancer() : null)
+                .medianTpmCancer(hasCancerCohortData ? geneExpression.medianTpmCancer() : null)
+                .percentileCancer(hasCancerCohortData ? geneExpression.percentileCancer() : null)
                 .medianTpmCohort(geneExpression.medianTpmCohort())
                 .percentileCohort(geneExpression.percentileCohort())
                 .build();
