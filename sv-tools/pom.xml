@@ -5,7 +5,7 @@
     <parent>
         <artifactId>hmftools</artifactId>
         <groupId>com.hartwig</groupId>
-        <version>local-SNAPSHOT</version>
+        <version>${revision}</version>
     </parent>
 
     <artifactId>sv-tools</artifactId>
