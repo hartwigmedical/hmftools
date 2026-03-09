@@ -75,13 +75,13 @@ public class RnaFindingsChapter implements ReportChapter
         }
         else
         {
-            List<GeneExpression> reportableHighExpression = mIsofoxRecord.reportableHighExpression();
+            List<GeneExpression> reportableHighExpression = mIsofoxRecord.highExpressionGenes();
             String titleHighExpression = highExpressionTitle + " (" + reportableHighExpression.size() + ")";
 
             document.add(ExpressionTable.build(
                     titleHighExpression, contentWidth(), reportableHighExpression, false, mReportResources));
 
-            List<GeneExpression> reportableLowExpression = mIsofoxRecord.reportableLowExpression();
+            List<GeneExpression> reportableLowExpression = mIsofoxRecord.lowExpressionGenes();
             String titleLowExpression = lowExpressionTitle + " (" + reportableLowExpression.size() + ")";
 
             document.add(ExpressionTable.build(
@@ -102,13 +102,15 @@ public class RnaFindingsChapter implements ReportChapter
         }
         else
         {
-            List<RnaFusion> reportableNovelKnownFusions = mIsofoxRecord.reportableNovelKnownFusions();
+            List<RnaFusion> reportableNovelKnownFusions = mIsofoxRecord.fusions();
             String titleKnownFusions = knownFusionsTitle + " (" + reportableNovelKnownFusions.size() + ")";
             document.add(RnaFusionTable.build(titleKnownFusions, contentWidth(), reportableNovelKnownFusions, mReportResources));
 
+            /*
             List<RnaFusion> reportableNovelPromiscuous = mIsofoxRecord.reportableNovelPromiscuousFusions();
             String titlePromiscuousFusions = promiscuousFusionsTitle + " (" + reportableNovelPromiscuous.size() + ")";
             document.add(RnaFusionTable.build(titlePromiscuousFusions, contentWidth(), reportableNovelPromiscuous, mReportResources));
+            */
         }
     }
 
@@ -125,14 +127,16 @@ public class RnaFindingsChapter implements ReportChapter
         }
         else
         {
-            List<NovelSpliceJunction> reportableSkippedExons = mIsofoxRecord.reportableSkippedExons();
+            List<NovelSpliceJunction> reportableSkippedExons = mIsofoxRecord.novelSpliceJunctions();
             String titleSkippedExonJunctions = skippedExonsTitle + " (" + reportableSkippedExons.size() + ")";
             document.add(NovelSpliceJunctionTable.build(titleSkippedExonJunctions, contentWidth(), reportableSkippedExons, mReportResources));
 
+            /*
             List<NovelSpliceJunction> reportableNovelExonsIntrons = mIsofoxRecord.reportableNovelExonsIntrons();
             String titleNovelExonIntronJunctions = novelExonsIntronsTitle + " (" + reportableNovelExonsIntrons.size() + ")";
             document.add(NovelSpliceJunctionTable.build(titleNovelExonIntronJunctions, contentWidth(), reportableNovelExonsIntrons,
                     mReportResources));
+            */
         }
     }
 }

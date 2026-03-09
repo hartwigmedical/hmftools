@@ -114,15 +114,10 @@ public final class ReportLimiter
 
         return ImmutableIsofoxRecord.builder()
                 .from(isofox)
-                .allGeneExpressions(max1(isofox.allGeneExpressions()))
-                .reportableHighExpression(max1(isofox.reportableHighExpression()))
-                .reportableLowExpression(max1(isofox.reportableLowExpression()))
-                .allFusions(max1(isofox.allFusions()))
-                .reportableNovelKnownFusions(max1(isofox.reportableNovelKnownFusions()))
-                .reportableNovelPromiscuousFusions(max1(isofox.reportableNovelPromiscuousFusions()))
-                .allNovelSpliceJunctions(max1(isofox.allNovelSpliceJunctions()))
-                .reportableSkippedExons(max1(isofox.reportableSkippedExons()))
-                .reportableNovelExonsIntrons(max1(isofox.reportableNovelExonsIntrons()))
+                .highExpressionGenes(max1(isofox.highExpressionGenes()))
+                .lowExpressionGenes(max1(isofox.lowExpressionGenes()))
+                .fusions(max1(isofox.fusions()))
+                .novelSpliceJunctions(max1(isofox.novelSpliceJunctions()))
                 .build();
     }
 

@@ -57,7 +57,10 @@ public final class DriverGeneFile
         reportGermlineDeletion,
         reportGermlineAmplification,
         additionalReportedTranscripts,
-        reportPGX;
+        reportPGX,
+        reportHighExpression,
+        reportLowExpression,
+        reportNovelSpliceJunctions;
     }
 
     public static List<DriverGene> fromLines(final List<String> lines)
@@ -90,6 +93,10 @@ public final class DriverGeneFile
         Integer germlineAmpIndex = fieldsIndexMap.get(Columns.reportGermlineAmplification.toString());
         int altTransIndex = fieldsIndexMap.get(Columns.additionalReportedTranscripts.toString());
         int reportPGXIndex = fieldsIndexMap.get(Columns.reportPGX.toString());
+
+        Integer rnaExpLowIndex = fieldsIndexMap.get(Columns.reportLowExpression.toString());
+        Integer rnaExpHighIndex = fieldsIndexMap.get(Columns.reportHighExpression.toString());
+        Integer rnaNovelSjIndex = fieldsIndexMap.get(Columns.reportNovelSpliceJunctions.toString());
 
         ImmutableDriverGene.Builder builder = ImmutableDriverGene.builder();
 
@@ -135,7 +142,10 @@ public final class DriverGeneFile
                     .reportGermlineDeletion(reportGermlineDeletion)
                     .reportGermlineAmplification(germlineAmpIndex != null ? Boolean.parseBoolean(values[germlineAmpIndex]) : false)
                     .additionalReportedTranscripts(otherReportableTrans)
-                    .reportPGX(Boolean.parseBoolean(values[reportPGXIndex]));
+                    .reportPGX(Boolean.parseBoolean(values[reportPGXIndex]))
+                    .reportLowExpression(rnaExpLowIndex != null ? Boolean.parseBoolean(values[rnaExpLowIndex]) : false)
+                    .reportHighExpression(rnaExpHighIndex != null ? Boolean.parseBoolean(values[rnaExpHighIndex]) : false)
+                    .reportNovelSpliceJunctions(germlineAmpIndex != null ? Boolean.parseBoolean(values[rnaNovelSjIndex]) : false);
 
             driverGenes.add(builder.build());
         }
@@ -188,6 +198,9 @@ public final class DriverGeneFile
                 .add(String.valueOf(gene.reportGermlineAmplification()))
                 .add(otherReportableTransStr(gene.additionalReportedTranscripts()))
                 .add(String.valueOf(gene.reportPGX()))
+                .add(String.valueOf(gene.reportLowExpression()))
+                .add(String.valueOf(gene.reportHighExpression()))
+                .add(String.valueOf(gene.reportNovelSpliceJunctions()))
                 .toString();
     }
 

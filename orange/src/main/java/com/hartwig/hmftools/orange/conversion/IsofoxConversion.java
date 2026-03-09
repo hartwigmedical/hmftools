@@ -1,31 +1,41 @@
 package com.hartwig.hmftools.orange.conversion;
 
+import static com.hartwig.hmftools.datamodel.isofox.RnaFusionType.EXON_DEL_DUP;
+import static com.hartwig.hmftools.datamodel.isofox.RnaFusionType.KNOWN_PAIR;
+import static com.hartwig.hmftools.datamodel.isofox.RnaFusionType.NONE;
+import static com.hartwig.hmftools.datamodel.isofox.RnaFusionType.PROMISCUOUS_3;
+import static com.hartwig.hmftools.datamodel.isofox.RnaFusionType.PROMISCUOUS_5;
+import static com.hartwig.hmftools.datamodel.isofox.RnaFusionType.PROMISCUOUS_BOTH;
 import static com.hartwig.hmftools.orange.algo.isofox.RnaFusionSelector.geneDown;
 import static com.hartwig.hmftools.orange.algo.isofox.RnaFusionSelector.geneUp;
 
 import com.hartwig.hmftools.common.rna.NovelSpliceJunction;
 import com.hartwig.hmftools.common.rna.RnaFusion;
+import com.hartwig.hmftools.common.rna.RnaFusionFile;
 import com.hartwig.hmftools.common.rna.RnaQcFilter;
-import com.hartwig.hmftools.common.rna.RnaStatistics;
 import com.hartwig.hmftools.datamodel.isofox.AltSpliceJunctionContext;
 import com.hartwig.hmftools.datamodel.isofox.AltSpliceJunctionType;
 import com.hartwig.hmftools.datamodel.isofox.GeneExpression;
 import com.hartwig.hmftools.datamodel.isofox.ImmutableGeneExpression;
-import com.hartwig.hmftools.datamodel.isofox.ImmutableIsofoxRnaStatistics;
 import com.hartwig.hmftools.datamodel.isofox.ImmutableNovelSpliceJunction;
 import com.hartwig.hmftools.datamodel.isofox.ImmutableRnaFusion;
-import com.hartwig.hmftools.datamodel.isofox.IsofoxRnaStatistics;
+import com.hartwig.hmftools.datamodel.isofox.ImmutableRnaStatistics;
+import com.hartwig.hmftools.datamodel.isofox.RnaStatistics;
 import com.hartwig.hmftools.datamodel.isofox.RnaQCStatus;
 import com.hartwig.hmftools.datamodel.isofox.StructuralVariantType;
 
 public final class IsofoxConversion
 {
-    public static IsofoxRnaStatistics convert(final RnaStatistics rnaStatistics)
+    public static RnaStatistics convert(final com.hartwig.hmftools.common.rna.RnaStatistics rnaStatistics)
     {
-        return ImmutableIsofoxRnaStatistics.builder()
+        return ImmutableRnaStatistics.builder()
+                .qcStatus(ConversionUtil.mapToIterable(rnaStatistics.qcStatus(), IsofoxConversion::convert))
                 .totalFragments(rnaStatistics.totalFragments())
                 .duplicateFragments(rnaStatistics.duplicateFragments())
-                .qcStatus(ConversionUtil.mapToIterable(rnaStatistics.qcStatus(), IsofoxConversion::convert))
+                .splicedFragmentPerc(rnaStatistics.splicedFragmentPerc())
+                .unsplicedFragmentPerc(rnaStatistics.unsplicedFragmentPerc())
+                .altFragmentPerc(rnaStatistics.altFragmentPerc())
+                .chimericFragmentPerc(rnaStatistics.chimericFragmentPerc())
                 .build();
     }
 
@@ -58,6 +68,7 @@ public final class IsofoxConversion
                 .junctionTypeStart(rnaFusion.junctionTypeUp())
                 .junctionTypeEnd(rnaFusion.junctionTypeDown())
                 .svType(StructuralVariantType.valueOf(rnaFusion.svType().name()))
+                .knownType(convertKnownType(rnaFusion))
                 .splitFragments(rnaFusion.splitFragments())
                 .realignedFrags(rnaFusion.realignedFrags())
                 .discordantFrags(rnaFusion.discordantFrags())
@@ -65,6 +76,30 @@ public final class IsofoxConversion
                 .depthEnd(rnaFusion.depthDown())
                 .cohortFrequency(rnaFusion.cohortFrequency())
                 .build();
+    }
+
+    private static com.hartwig.hmftools.datamodel.isofox.RnaFusionType convertKnownType(final RnaFusion rnaFusion)
+    {
+        String[] geneNames = RnaFusionFile.geneNames(rnaFusion);
+
+        if(geneNames.length == 2 && geneNames[0].equals(geneNames[1]))
+            return EXON_DEL_DUP;
+
+        switch(rnaFusion.knownType())
+        {
+            case KNOWN_PAIR: return KNOWN_PAIR;
+            case PROM5_PROM3: return PROMISCUOUS_BOTH;
+
+            case KNOWN_PROM3:
+            case OTHER_PROM3:
+                return PROMISCUOUS_3;
+
+            case PROM5_KNOWN:
+            case PROM5_OTHER:
+                return PROMISCUOUS_5;
+
+            default: return NONE;
+        }
     }
 
     public static com.hartwig.hmftools.datamodel.isofox.NovelSpliceJunction convert(final NovelSpliceJunction novelSpliceJunction)

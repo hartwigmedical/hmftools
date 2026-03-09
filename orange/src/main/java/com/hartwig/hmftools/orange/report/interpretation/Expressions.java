@@ -24,7 +24,6 @@ public final class Expressions
             }
         }
 
-        LOGGER.warn("Could not find expression data for gene '{}'", geneToFind);
         return null;
     }
 

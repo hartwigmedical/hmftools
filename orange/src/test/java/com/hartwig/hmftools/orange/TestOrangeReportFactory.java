@@ -10,9 +10,7 @@ import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.chord.ChordTestFactory;
 import com.hartwig.hmftools.common.doid.DoidTestFactory;
-import com.hartwig.hmftools.common.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.common.metrics.FlagstatTestFactory;
-import com.hartwig.hmftools.common.linx.LinxTestFactory;
 import com.hartwig.hmftools.common.metrics.BamMetricsTestFactory;
 import com.hartwig.hmftools.common.peach.PeachTestFactory;
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
@@ -26,7 +24,7 @@ import com.hartwig.hmftools.datamodel.isofox.AltSpliceJunctionType;
 import com.hartwig.hmftools.datamodel.isofox.GeneExpression;
 import com.hartwig.hmftools.datamodel.isofox.ImmutableIsofoxRecord;
 import com.hartwig.hmftools.datamodel.isofox.IsofoxRecord;
-import com.hartwig.hmftools.datamodel.isofox.IsofoxRnaStatistics;
+import com.hartwig.hmftools.datamodel.isofox.RnaStatistics;
 import com.hartwig.hmftools.datamodel.isofox.NovelSpliceJunction;
 import com.hartwig.hmftools.datamodel.isofox.RnaFusion;
 import com.hartwig.hmftools.datamodel.isofox.StructuralVariantType;
@@ -55,7 +53,6 @@ import com.hartwig.hmftools.orange.algo.isofox.OrangeIsofoxTestFactory;
 import com.hartwig.hmftools.orange.algo.linx.TestLinxFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleInterpretationFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleVariantFactory;
-import com.hartwig.hmftools.orange.conversion.LinxConversion;
 import com.hartwig.hmftools.orange.conversion.OrangeConversion;
 
 import org.apache.logging.log4j.util.Strings;
@@ -215,7 +212,7 @@ public final class TestOrangeReportFactory
     @NotNull
     private static IsofoxRecord createTestIsofoxData()
     {
-        IsofoxRnaStatistics statistics =
+        RnaStatistics statistics =
                 OrangeIsofoxTestFactory.rnaStatisticsBuilder().totalFragments(120000).duplicateFragments(60000).build();
 
         GeneExpression highExpression = OrangeIsofoxTestFactory.geneExpressionBuilder()
@@ -302,15 +299,10 @@ public final class TestOrangeReportFactory
 
         return ImmutableIsofoxRecord.builder()
                 .summary(statistics)
-                .addAllAllGeneExpressions(Lists.newArrayList(highExpression, lowExpression))
-                .addReportableHighExpression(highExpression)
-                .addReportableLowExpression(lowExpression)
-                .addAllAllFusions(Lists.newArrayList(novelKnownFusion, novelPromiscuousFusion))
-                .addReportableNovelKnownFusions(novelKnownFusion)
-                .addReportableNovelPromiscuousFusions(novelPromiscuousFusion)
-                .addAllAllNovelSpliceJunctions(Lists.newArrayList(novelSkippedExon, novelIntron))
-                .addReportableSkippedExons(novelSkippedExon)
-                .addReportableNovelExonsIntrons(novelIntron)
+                .addHighExpressionGenes(highExpression)
+                .addLowExpressionGenes(lowExpression)
+                .addAllFusions(Lists.newArrayList(novelKnownFusion, novelPromiscuousFusion))
+                .addAllNovelSpliceJunctions(Lists.newArrayList(novelSkippedExon, novelIntron))
                 .build();
     }
 

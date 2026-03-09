@@ -156,9 +156,10 @@ public class ReportGeneratorTestApplication
         {
             builder.isofox(ImmutableIsofoxRecord.builder()
                     .from(report.isofox())
-                    .allGeneExpressions(Lists.newArrayList())
-                    .allFusions(Lists.newArrayList())
-                    .allNovelSpliceJunctions(Lists.newArrayList())
+                    .addAllHighExpressionGenes(Lists.newArrayList())
+                    .addAllLowExpressionGenes(Lists.newArrayList())
+                    .addAllFusions(Lists.newArrayList())
+                    .addAllNovelSpliceJunctions(Lists.newArrayList())
                     .build());
         }
 

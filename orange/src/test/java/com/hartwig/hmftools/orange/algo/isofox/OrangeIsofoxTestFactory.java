@@ -1,12 +1,11 @@
 package com.hartwig.hmftools.orange.algo.isofox;
 
-import com.hartwig.hmftools.common.rna.RnaStatistics;
 import com.hartwig.hmftools.datamodel.isofox.GeneExpression;
 import com.hartwig.hmftools.datamodel.isofox.ImmutableGeneExpression;
-import com.hartwig.hmftools.datamodel.isofox.ImmutableIsofoxRnaStatistics;
 import com.hartwig.hmftools.datamodel.isofox.ImmutableNovelSpliceJunction;
 import com.hartwig.hmftools.datamodel.isofox.ImmutableRnaFusion;
-import com.hartwig.hmftools.datamodel.isofox.IsofoxRnaStatistics;
+import com.hartwig.hmftools.datamodel.isofox.ImmutableRnaStatistics;
+import com.hartwig.hmftools.datamodel.isofox.RnaStatistics;
 import com.hartwig.hmftools.datamodel.isofox.NovelSpliceJunction;
 import com.hartwig.hmftools.datamodel.isofox.RnaFusion;
 import com.hartwig.hmftools.orange.conversion.IsofoxConversion;
@@ -21,11 +20,11 @@ public class OrangeIsofoxTestFactory
     }
 
     @NotNull
-    public static ImmutableIsofoxRnaStatistics.Builder rnaStatisticsBuilder()
+    public static ImmutableRnaStatistics.Builder rnaStatisticsBuilder()
     {
-        RnaStatistics common = IsofoxTestFactory.rnaStatisticsBuilder().build();
-        IsofoxRnaStatistics converted = IsofoxConversion.convert(common);
-        return ImmutableIsofoxRnaStatistics.builder().from(converted);
+        com.hartwig.hmftools.common.rna.RnaStatistics common = IsofoxTestFactory.rnaStatisticsBuilder().build();
+        RnaStatistics converted = IsofoxConversion.convert(common);
+        return ImmutableRnaStatistics.builder().from(converted);
     }
 
     @NotNull

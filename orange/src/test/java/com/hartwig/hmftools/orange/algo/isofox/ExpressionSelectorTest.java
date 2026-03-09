@@ -1,91 +1,67 @@
 package com.hartwig.hmftools.orange.algo.isofox;
 
+import static com.hartwig.hmftools.common.test.GeneTestUtils.GENE_NAME_1;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.GENE_NAME_2;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.GENE_NAME_3;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.driver.DriverCategory;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.driver.panel.DriverGeneTestFactory;
 import com.hartwig.hmftools.datamodel.isofox.GeneExpression;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class ExpressionSelectorTest
 {
-    @Ignore
     @Test
-    public void shouldSelectHighExpressionGenes()
+    public void testSelectReportableExpressionGenes()
     {
-        GeneExpression highExpressionGene1 = create("gene 1", 0.95, 0.95);
-        GeneExpression nonHighExpressionGene1 = create("gene 1", 0.85, 0.95);
-        GeneExpression highExpressionGene2 = create("gene 2", 0.95, 0.95);
-        List<GeneExpression> expressions = Lists.newArrayList(highExpressionGene1, nonHighExpressionGene1, highExpressionGene2);
+        com.hartwig.hmftools.common.rna.GeneExpression common = IsofoxTestFactory.geneExpressionBuilder().build();
 
-        DriverGene driver1 = DriverGeneTestFactory.builder().gene("gene 1").likelihoodType(DriverCategory.ONCO).build();
-        DriverGene driver2 = DriverGeneTestFactory.builder().gene("gene 2").likelihoodType(DriverCategory.TSG).build();
-        List<DriverGene> drivers = Lists.newArrayList(driver1, driver2);
+        com.hartwig.hmftools.common.rna.GeneExpression highExpressionGene = create(GENE_NAME_1, 0.995, 0.95);
+        com.hartwig.hmftools.common.rna.GeneExpression nonHighExpressionGene = create(GENE_NAME_2, 0.85, 0.95);
+        com.hartwig.hmftools.common.rna.GeneExpression lowExpressionGene = create(GENE_NAME_3, 0.002, 0.95);
 
-        List<GeneExpression> highExpression = ExpressionSelector.selectHighExpressionGenes(expressions, drivers);
+        List<com.hartwig.hmftools.common.rna.GeneExpression> geneGxpressions = Lists.newArrayList(
+                highExpressionGene, nonHighExpressionGene, lowExpressionGene );
 
-        assertEquals(1, highExpression.size());
-        assertTrue(highExpression.contains(highExpressionGene1));
+        Map<String,DriverGene> drivers = Maps.newHashMap();
+
+        List<GeneExpression> highExpressionGenes = Lists.newArrayList();
+        List<GeneExpression> lowExpressionGenes = Lists.newArrayList();
+
+        IsofoxInterpreter.findExpressionOutliers(geneGxpressions, drivers, highExpressionGenes, lowExpressionGenes);
+
+        assertTrue(highExpressionGenes.isEmpty());
+        assertTrue(lowExpressionGenes.isEmpty());
+
+        DriverGene driver1 = DriverGeneTestFactory.builder().gene(GENE_NAME_1).reportHighExpression(true).build();
+        DriverGene driver2 = DriverGeneTestFactory.builder().gene(GENE_NAME_3).reportLowExpression(true).build();
+        drivers.put(driver1.gene(), driver1);
+        drivers.put(driver2.gene(), driver2);
+
+        IsofoxInterpreter.findExpressionOutliers(geneGxpressions, drivers, highExpressionGenes, lowExpressionGenes);
+
+        assertEquals(1, highExpressionGenes.size());
+        assertTrue(highExpressionGenes.stream().anyMatch(x -> x.gene().equals(GENE_NAME_1)));
+
+        assertEquals(1, lowExpressionGenes.size());
+        assertTrue(lowExpressionGenes.stream().anyMatch(x -> x.gene().equals(GENE_NAME_3)));
     }
 
-    @Ignore
-    @Test
-    public void shouldSelectHighExpressionGeneWithoutCohort()
+    private static com.hartwig.hmftools.common.rna.GeneExpression create(
+            final String gene, double percentileCohort, @Nullable Double percentileCancer)
     {
-        GeneExpression highExpressionGene = create("gene 1", 0.95, null);
-        DriverGene driver = DriverGeneTestFactory.builder().gene("gene 1").likelihoodType(DriverCategory.ONCO).build();
-
-        List<GeneExpression> highExpression = ExpressionSelector.selectHighExpressionGenes(List.of(highExpressionGene), List.of(driver));
-
-        assertEquals(1, highExpression.size());
-        assertTrue(highExpression.contains(highExpressionGene));
-    }
-
-    @Ignore
-    @Test
-    public void shouldSelectLowExpressionGenes()
-    {
-        GeneExpression lowExpressionGene1 = create("gene 1", 0.02, 0.02);
-        GeneExpression nonLowExpressionGene1 = create("gene 1", 0.02, 0.08);
-        GeneExpression lowExpressionGene2 = create("gene 2", 0.02, 0.02);
-        List<GeneExpression> expressions = Lists.newArrayList(lowExpressionGene1, nonLowExpressionGene1, lowExpressionGene2);
-
-        DriverGene driver1 = DriverGeneTestFactory.builder().gene("gene 1").likelihoodType(DriverCategory.ONCO).build();
-        DriverGene driver2 = DriverGeneTestFactory.builder().gene("gene 2").likelihoodType(DriverCategory.TSG).build();
-        List<DriverGene> drivers = Lists.newArrayList(driver1, driver2);
-
-        List<GeneExpression> lowExpression = ExpressionSelector.selectLowExpressionGenes(expressions, drivers);
-
-        assertEquals(1, lowExpression.size());
-        assertTrue(lowExpression.contains(lowExpressionGene2));
-    }
-
-    @Test
-    public void shouldSelectLowExpressionGenesWithoutCohort()
-    {
-        GeneExpression lowExpressionGene = create("gene 2", 0.002, null);
-        DriverGene driver = DriverGeneTestFactory.builder().gene("gene 2").likelihoodType(DriverCategory.TSG).build();
-
-        List<GeneExpression> lowExpression = ExpressionSelector.selectLowExpressionGenes(List.of(lowExpressionGene), List.of(driver));
-
-        assertEquals(1, lowExpression.size());
-        assertTrue(lowExpression.contains(lowExpressionGene));
-    }
-
-    @NotNull
-    private static GeneExpression create(@NotNull String gene, double percentileCohort, @Nullable Double percentileCancer)
-    {
-        return OrangeIsofoxTestFactory.geneExpressionBuilder()
-                .gene(gene)
+        return IsofoxTestFactory.geneExpressionBuilder()
+                .geneName(gene)
                 .percentileCohort(percentileCohort)
                 .percentileCancer(percentileCancer)
                 .build();

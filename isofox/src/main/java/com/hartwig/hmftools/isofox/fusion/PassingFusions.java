@@ -14,6 +14,8 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBuffe
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
+import static com.hartwig.hmftools.isofox.fusion.FusionConstants.FILTER_COHORT_LIMIT_KNOWN;
+import static com.hartwig.hmftools.isofox.fusion.FusionConstants.FILTER_COHORT_LIMIT_NOT_KNOWN;
 import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_COHORT_COUNT;
 import static com.hartwig.hmftools.isofox.fusion.FusionData.formStreamField;
 import static com.hartwig.hmftools.isofox.fusion.FusionFilterType.PASS;
@@ -214,7 +216,7 @@ public class PassingFusions
             return false;
         }
 
-        int cohortFreqLimit = hasKnownPairGene(knownType) ? 5 : 2;
+        int cohortFreqLimit = hasKnownPairGene(knownType) ? FILTER_COHORT_LIMIT_KNOWN : FILTER_COHORT_LIMIT_NOT_KNOWN;
 
         if(fusion.cohortFrequency() >= cohortFreqLimit)
         {

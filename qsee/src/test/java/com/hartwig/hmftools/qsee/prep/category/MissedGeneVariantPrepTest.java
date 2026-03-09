@@ -87,6 +87,9 @@ public class MissedGeneVariantPrepTest
                 .reportGermlineDeletion(DriverGeneGermlineReporting.NONE)
                 .reportGermlineAmplification(false)
                 .reportPGX(false)
+                .reportHighExpression(false)
+                .reportLowExpression(false)
+                .reportNovelSpliceJunctions(false)
                 .build();
 
         DriverGene geneBRCA1 = ImmutableDriverGene.builder()
@@ -109,6 +112,9 @@ public class MissedGeneVariantPrepTest
                 .reportGermlineDeletion(DriverGeneGermlineReporting.ANY)
                 .reportGermlineAmplification(false)
                 .reportPGX(false)
+                .reportHighExpression(false)
+                .reportLowExpression(false)
+                .reportNovelSpliceJunctions(false)
                 .build();
 
         return List.of(geneAR, geneBRCA1);

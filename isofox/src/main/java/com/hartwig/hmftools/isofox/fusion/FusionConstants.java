@@ -12,4 +12,7 @@ public class FusionConstants
     public static final int DEFAULT_HARD_FILTER_MIN_FRAGS = 2;
 
     public static final int HIGH_LOG_COUNT = 10000;
+
+    public static final int FILTER_COHORT_LIMIT_KNOWN = 5;
+    public static final int FILTER_COHORT_LIMIT_NOT_KNOWN = 2;
 }

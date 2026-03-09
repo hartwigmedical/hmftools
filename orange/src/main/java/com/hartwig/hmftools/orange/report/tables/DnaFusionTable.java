@@ -125,6 +125,8 @@ public final class DnaFusionTable
         throw new IllegalStateException();
     }
 
+        /*
+
     private static IBlockElement rnaFragmentSupportTable(@Nullable final IsofoxRecord isofox, final LinxFusion fusion, final Cells cells)
     {
         if(isofox == null)
@@ -165,7 +167,7 @@ public final class DnaFusionTable
     private static IBlockElement supportFromSpliceJunctions(final IsofoxRecord isofox, final LinxFusion fusion, final Cells cells)
     {
         List<NovelSpliceJunction> matches = Lists.newArrayList();
-        for(NovelSpliceJunction junction : isofox.allNovelSpliceJunctions())
+        for(NovelSpliceJunction junction : isofox.novelSpliceJunctions())
         {
             if(junction.gene().equals(fusion.geneUp()) && junction.gene().equals(fusion.geneDown()))
             {
@@ -241,6 +243,7 @@ public final class DnaFusionTable
             return Integer.compare(sumFragments2, sumFragments1);
         }).collect(Collectors.toList());
     }
+     */
 
     private static List<LinxFusion> sortLinxFusions(final List<LinxFusion> fusions)
     {

@@ -19,7 +19,7 @@ public final class OrangeConstants
 
     // RNA
     public static final double HIGH_EXPRESSION_PERCENTILE_CUTOFF = 0.99;
-    public static final double LOW_EXPRESSION_PERCENTILE_CUTOFF = 0.005;
+    public static final double LOW_EXPRESSION_PERCENTILE_CUTOFF = 0.01;
     public static final int MAX_EXPRESSION_GENE_COUNT = 100; // TEMP
 
     public static boolean isCandidateLikelihood(final double likelihood) { return likelihood <= DRIVER_LIKELIHOOD_LOW_THRESHOLD; }

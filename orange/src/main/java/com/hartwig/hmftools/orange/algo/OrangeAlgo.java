@@ -119,8 +119,6 @@ public class OrangeAlgo
 
         LinxRecord linx = linxInterpreter.interpret(linxData);
 
-        List<DriverGene> driverGenes = new ArrayList<>(mDriverGenes.values());
-
         PurpleInterpreter purpleInterpreter = new PurpleInterpreter();
 
         PurpleRecord purple = purpleInterpreter.interpret(purpleData, isofoxData);
@@ -130,7 +128,7 @@ public class OrangeAlgo
         IsofoxRecord isofox = null;
         if(isofoxData != null)
         {
-            IsofoxInterpreter isofoxInterpreter = new IsofoxInterpreter(driverGenes, linx);
+            IsofoxInterpreter isofoxInterpreter = new IsofoxInterpreter(mDriverGenes, linx);
             isofox = isofoxInterpreter.interpret(isofoxData);
         }
 

@@ -168,6 +168,9 @@ public class GeneTestUtils
                 .reportGermlineDisruption(DriverGeneGermlineReporting.ANY)
                 .reportGermlineDeletion(DriverGeneGermlineReporting.ANY)
                 .reportGermlineAmplification(false)
+                .reportHighExpression(false)
+                .reportLowExpression(false)
+                .reportNovelSpliceJunctions(false)
                 .build();
     }
 

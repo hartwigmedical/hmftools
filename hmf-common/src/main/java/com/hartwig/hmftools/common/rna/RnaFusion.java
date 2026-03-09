@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.rna;
 
+import static com.hartwig.hmftools.common.rna.RnaFusionFile.FUSION_GENE_DELIM;
+
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 
 import org.immutables.value.Value;

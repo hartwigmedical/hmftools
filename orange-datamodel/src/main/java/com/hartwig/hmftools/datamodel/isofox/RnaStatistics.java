@@ -10,12 +10,17 @@ import org.jetbrains.annotations.Nullable;
 @Gson.TypeAdapters
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface IsofoxRnaStatistics
+public interface RnaStatistics
 {
+    @NotNull
+    Set<RnaQCStatus> qcStatus();
+
     long totalFragments();
 
     long duplicateFragments();
 
-    @NotNull
-    Set<RnaQCStatus> qcStatus();
+    double splicedFragmentPerc();
+    double unsplicedFragmentPerc();
+    double altFragmentPerc();
+    double chimericFragmentPerc();
 }

@@ -39,6 +39,9 @@ public interface RnaFusion
     String junctionTypeEnd();
 
     @NotNull
+    RnaFusionType knownType();
+
+    @NotNull
     StructuralVariantType svType();
 
     int splitFragments();

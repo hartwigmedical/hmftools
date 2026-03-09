@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Doubles;
 import com.hartwig.hmftools.datamodel.isofox.GeneExpression;
-import com.hartwig.hmftools.datamodel.isofox.IsofoxRnaStatistics;
+import com.hartwig.hmftools.datamodel.isofox.RnaStatistics;
 import com.hartwig.hmftools.datamodel.isofox.RnaQCStatus;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.interpretation.Expressions;
@@ -29,7 +29,7 @@ import static com.hartwig.hmftools.orange.report.tables.TableCommon.intToFloatAr
 public final class ExpressionTable
 {
     public static Table buildRnaSummary(
-            final String title, float width, final IsofoxRnaStatistics rnaStatistics, final ReportResources reportResources)
+            final String title, float width, final RnaStatistics rnaStatistics, final ReportResources reportResources)
     {
         Cells cells = new Cells(reportResources);
 

@@ -41,6 +41,22 @@ public final class RnaFusionFile
     public static final String FLD_COHORT_COUNT = "CohortCount";
     public static final String FLD_FILTER = "Filter";
 
+    public static final String FUSION_GENE_DELIM = "_";
+
+    public static String[] geneNames(final RnaFusion fusion) { return fusion.name().split(FUSION_GENE_DELIM, 2); }
+
+    public static String geneUp(final RnaFusion fusion)
+    {
+        String[] genes = fusion.name().split(FUSION_GENE_DELIM, 2);
+        return genes.length == 2 ? genes[0] : null;
+    }
+
+    public static String geneDown(final RnaFusion fusion)
+    {
+        String[] genes = fusion.name().split(FUSION_GENE_DELIM, 2);
+        return genes.length == 2 ? genes[1] : null;
+    }
+
     public static List<RnaFusion> read(final String filename)
     {
         try
