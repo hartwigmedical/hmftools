@@ -358,11 +358,6 @@ public class FindingRecordFactory
                 .collect(Collectors.toList());
     }
 
-    private static FindingsStatus purpleFindingsStatus(PurpleRecord purpleRecord)
-    {
-        return purpleRecord.fit().qc().status().equals(Set.of(PurpleQCStatus.PASS)) ? FindingsStatus.OK : FindingsStatus.NOT_AVAILABLE;
-    }
-
     public static DriverFindingList<Fusion> createFusionsFindings(LinxRecord linx)
     {
         return DriverFindingListBuilder.<Fusion>builder()
