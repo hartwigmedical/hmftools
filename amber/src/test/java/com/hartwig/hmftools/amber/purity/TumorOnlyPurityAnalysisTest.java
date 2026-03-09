@@ -9,6 +9,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,24 +25,28 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.segmentation.Arm;
 import com.hartwig.hmftools.common.segmentation.ChrArm;
 
+import org.apache.commons.lang3.tuple.Pair;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
-@Ignore
 public class TumorOnlyPurityAnalysisTest extends PurityTestBase
 {
     private static final String TUMOR_ID = "tumor123";
-    private Map<Chromosome, SortedSet<AmberSite>> sitesByChromosome;
-    private Map<Chromosome, SortedSet<PositionEvidence>> evidenceByChromosome;
+    private static final int BASELINE_READINGS_PER_ARM = 100;
+    private static final int BASELINE_DEPTH = 1000;
+    private Map<Chromosome, SortedSet<AmberSite>> SitesByChromosome;
+    private Map<HumanChromosome, SortedSet<PositionEvidence>> EvidenceByChromosome;
+    private Map<PositionEvidence, Double> GnomadFrequencyByEvidence;
     private File outputDir;
     private TumorOnlyPurityAnalysis analysis;
 
     @Before
     public void setup() throws Exception
     {
-        sitesByChromosome = new HashMap<>();
-        evidenceByChromosome = new HashMap<>();
+        SitesByChromosome = new HashMap<>();
+        EvidenceByChromosome = new HashMap<>();
+        GnomadFrequencyByEvidence = new HashMap<>();
         outputDir = Files.createTempDirectory("amber").toFile();
         outputDir.deleteOnExit();
     }
@@ -60,7 +65,7 @@ public class TumorOnlyPurityAnalysisTest extends PurityTestBase
     {
         createBaselineReadings();
         final double vaf = 0.21;
-        createContaminationPoints(vaf);
+        createCopyNumberEventPoints(vaf);
         createAnalysis();
         assertEquals(TumorOnlyPurityAnalysis.MIN_CUTOFF, analysis.cutoff(), 0.001);
         assertEquals(0, analysis.contaminationPeaks().size());
@@ -69,28 +74,46 @@ public class TumorOnlyPurityAnalysisTest extends PurityTestBase
     }
 
     @Test
-    public void onePeakBelowMinimumCutoff() throws Exception
+    public void oneCnEventBelowMinimumCutoff() throws Exception
     {
         createBaselineReadings();
         final double vaf = 0.1;
         // Add a 20 point copy number peak on 1P.
-        createContaminationPoints(vaf);
+        createCopyNumberEventPoints(vaf);
         createAnalysis();
         assertEquals(vaf / 3, analysis.cutoff(), 0.01);
         assertEquals(0, analysis.contaminationPeaks().size());
-        //        assertEquals(1, analysis.copyNumberPeaks().size());
-        assertEquals(vaf, analysis.copyNumberPeaks().get(0).vaf(), 0.01);
+        assertEquals(2, analysis.copyNumberPeaks().size());
+        CandidatePeak peak0 = analysis.copyNumberPeaks().get(0);
+        assertEquals(1.0, peak0.homozygousProportion(), 0.01);
+        assertEquals(vaf, peak0.vaf(), 0.01);
+        assertEquals(20, peak0.homozygousEvidencePoints().size());
+        assertEquals(0, peak0.heterozygousEvidencePoints().size());
+        CandidatePeak peak1 = analysis.copyNumberPeaks().get(1);
+        assertEquals(vaf * 2.0, peak1.vaf(), 0.1);
+        assertEquals(0.0, peak1.homozygousProportion(), 0.01);
+        assertEquals(0, peak1.homozygousEvidencePoints().size());
+        assertEquals(20, peak1.heterozygousEvidencePoints().size());
     }
 
-    private void createContaminationPoints(final double vaf)
+    @Test
+    public void contaminationTest() throws Exception
+    {
+        createBaselineReadings();
+        addInContaminationData(0.25);
+        createAnalysis();
+        assertEquals(1, analysis.contaminationPeaks().size());
+    }
+
+    private void createCopyNumberEventPoints(final double vaf)
     {
         // Add a 20 point copy number peak on 1P.
         int position = startPosition(new ChrArm(HumanChromosome._1, Arm.P)) + 50; // offset so as not to interfere with baseline points
         boolean low = false;
         for(int i = 0; i < 20; i++)
         {
-            addPeakPoint(HumanChromosome._1, position, 1000, vaf, 0.5, low);
-            position += 1000;
+            addPeakPoint(HumanChromosome._1, position, BASELINE_DEPTH, vaf, 0.5, low);
+            position += BASELINE_DEPTH;
             low = !low;
         }
     }
@@ -100,10 +123,28 @@ public class TumorOnlyPurityAnalysisTest extends PurityTestBase
         for(ChrArm chrArm : chromosomeArms())
         {
             int position = startPosition(chrArm);
-            for(int i = 0; i < 100; i++)
+            for(int i = 0; i < BASELINE_READINGS_PER_ARM; i++)
             {
-                addBaselinePoint(chrArm.chromosome(), position, 1000, 0.5);
+                addBaselinePoint(chrArm.chromosome(), position, BASELINE_DEPTH, 0.5);
                 position += 1000;
+            }
+        }
+    }
+
+    private void addInContaminationData(double contamination)
+    {
+        int depth = (int) (BASELINE_DEPTH * contamination);
+        for(HumanChromosome chromosome : EvidenceByChromosome.keySet())
+        {
+            for(PositionEvidence baselineEvidence : EvidenceByChromosome.get(chromosome))
+            {
+                double gnomadFrequency = GnomadFrequencyByEvidence.get(baselineEvidence);
+                PositionEvidence contaminationEvidence =
+                        createGermlinePositionEvidence(chromosome, baselineEvidence.position(), baselineEvidence.ref(), baselineEvidence.alt(), depth, gnomadFrequency);
+                baselineEvidence.ReadDepth += contaminationEvidence.ReadDepth;
+                baselineEvidence.RefSupport += contaminationEvidence.RefSupport;
+                baselineEvidence.AltSupport += contaminationEvidence.AltSupport;
+
             }
         }
     }
@@ -111,14 +152,14 @@ public class TumorOnlyPurityAnalysisTest extends PurityTestBase
     private void createAnalysis() throws Exception
     {
         List<PositionEvidence> evidence = new ArrayList<>();
-        for(Chromosome chromosome : evidenceByChromosome.keySet())
+        for(HumanChromosome chromosome : EvidenceByChromosome.keySet())
         {
-            evidence.addAll(evidenceByChromosome.get(chromosome));
+            evidence.addAll(EvidenceByChromosome.get(chromosome));
         }
         ListMultimap<Chromosome, AmberSite> sites = ArrayListMultimap.create();
-        for(Chromosome chromosome : sitesByChromosome.keySet())
+        for(Chromosome chromosome : SitesByChromosome.keySet())
         {
-            sites.putAll(chromosome, sitesByChromosome.get(chromosome));
+            sites.putAll(chromosome, SitesByChromosome.get(chromosome));
         }
         PurityAnalysisConfig config = new PurityAnalysisConfig(TUMOR_ID, V38, outputDir.getAbsolutePath(), 8);
         analysis = new TumorOnlyPurityAnalysis(evidence, sites, config);
@@ -150,35 +191,55 @@ public class TumorOnlyPurityAnalysisTest extends PurityTestBase
 
     private void addBaselinePoint(HumanChromosome chromosome, int position, int depth, double gnomadFrequencyOfSite)
     {
-        createAndAddAmberSite(chromosome, position, gnomadFrequencyOfSite);
+        Pair<String, String> refAndAlt = randomRefAndAltBases();
+        String ref = refAndAlt.getLeft();
+        String alt = refAndAlt.getRight();
 
-        PositionEvidence evidence = new PositionEvidence(V38.versionedChromosome(chromosome), position, "A", "G");
-        int altDepth = altDepthForNonContaminationPoint(gnomadFrequencyOfSite, depth);
+        createAndAddAmberSite(chromosome, position, ref, alt, gnomadFrequencyOfSite);
+
+        PositionEvidence evidence = createGermlinePositionEvidence(chromosome, position, ref, alt, depth, gnomadFrequencyOfSite);
+        EvidenceByChromosome.computeIfAbsent(chromosome, k -> new TreeSet<>()).add(evidence);
+        GnomadFrequencyByEvidence.put(evidence, gnomadFrequencyOfSite);
+    }
+
+    @NotNull
+    private static PositionEvidence createGermlinePositionEvidence(final HumanChromosome chromosome, final int position,
+            final String ref, final String alt,
+            final int depth,
+            final double gnomadFrequencyOfSite)
+    {
+        PositionEvidence evidence = new PositionEvidence(V38.versionedChromosome(chromosome), position, ref, alt);
+        int altDepth = altDepthForGermlinePoint(gnomadFrequencyOfSite, depth);
         evidence.ReadDepth = depth;
         evidence.RefSupport = depth - altDepth;
         evidence.AltSupport = altDepth;
-        evidenceByChromosome.computeIfAbsent(chromosome, k -> new TreeSet<>()).add(evidence);
+        return evidence;
     }
 
     private void addPeakPoint(HumanChromosome chromosome, int position, int depth, double vaf, double gnomadFrequencyOfSite, boolean low)
     {
-        createAndAddAmberSite(chromosome, position, gnomadFrequencyOfSite);
+        Pair<String, String> refAndAlt = randomRefAndAltBases();
+        String ref = refAndAlt.getLeft();
+        String alt = refAndAlt.getRight();
 
-        PositionEvidence evidence = new PositionEvidence(V38.versionedChromosome(chromosome), position, "A", "G");
+        createAndAddAmberSite(chromosome, position, ref, alt, gnomadFrequencyOfSite);
+
+        PositionEvidence evidence = new PositionEvidence(V38.versionedChromosome(chromosome), position, ref, alt);
         int altDepth = low ? (int) (depth * vaf) : (int) (depth * (1 - vaf));
         evidence.ReadDepth = depth;
         evidence.RefSupport = depth - altDepth;
         evidence.AltSupport = altDepth;
-        evidenceByChromosome.computeIfAbsent(chromosome, k -> new TreeSet<>()).add(evidence);
+        EvidenceByChromosome.computeIfAbsent(chromosome, k -> new TreeSet<>()).add(evidence);
     }
 
-    private void createAndAddAmberSite(final HumanChromosome chromosome, final int position, final double gnomadFrequencyOfSite)
+    private void createAndAddAmberSite(final HumanChromosome chromosome, final int position,
+            String ref, String alt, final double gnomadFrequencyOfSite)
     {
-        AmberSite site = new AmberSite(V38.versionedChromosome(chromosome), position, "A", "G", false, gnomadFrequencyOfSite);
-        sitesByChromosome.computeIfAbsent(chromosome, k -> new TreeSet<>()).add(site);
+        AmberSite site = new AmberSite(V38.versionedChromosome(chromosome), position, ref, alt, false, gnomadFrequencyOfSite);
+        SitesByChromosome.computeIfAbsent(chromosome, k -> new TreeSet<>()).add(site);
     }
 
-    private static int altDepthForNonContaminationPoint(double gnomadFrequency, int depth)
+    private static int altDepthForGermlinePoint(double gnomadFrequency, int depth)
     {
         int altCount = 0;
         for(int i = 0; i < 2; i++)
@@ -197,5 +258,12 @@ public class TumorOnlyPurityAnalysisTest extends PurityTestBase
             return depth;
         }
         return depth / 2;
+    }
+
+    private static Pair<String, String> randomRefAndAltBases()
+    {
+        List<String> bases = new ArrayList<>(List.of("A", "C", "G", "T"));
+        Collections.shuffle(bases);
+        return Pair.of(bases.get(0), bases.get(1));
     }
 }

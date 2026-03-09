@@ -70,8 +70,7 @@ public class AucCalculator<S, T extends Comparable<T>>
         final int totalHits = integral.totalHits();
         final int totalPoints = integral.totalPoints();
         double possibleMax = 0.5 * totalHits * totalPoints;
-        double cost = integral.value() / possibleMax;
-        return cost;
+        return integral.value() / possibleMax;
     }
 
     private Map<T, Integer> getCounts(Collection<S> samples)

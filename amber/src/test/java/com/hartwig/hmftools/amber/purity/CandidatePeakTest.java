@@ -31,6 +31,16 @@ public class CandidatePeakTest extends PurityTestBase
         return new ChrArm(position.chr(), arm);
     };
 
+    //    @Test
+    public void shouldGoInBucketToWhichItIsClosest()
+    {
+        CandidatePeak peak = new CandidatePeak(0.006);
+
+        peak.test(evidenceWithDepthAndAltCount(_1, 1000, 1746, 7));
+        assertEquals(1, peak.heterozygousEvidencePoints().size());
+        assertEquals(1, peak.homozygousEvidencePoints().size());
+    }
+
     @Test
     public void hasSufficientDepthForEventDetectionTest()
     {

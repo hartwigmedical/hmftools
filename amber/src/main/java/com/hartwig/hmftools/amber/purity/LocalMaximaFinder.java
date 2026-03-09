@@ -22,6 +22,11 @@ public class LocalMaximaFinder<T extends Score>
     public List<T> maxima()
     {
         List<T> maxima = new ArrayList<>();
+        T firstNonZero = Scores.stream().filter(score -> score.score() != 0.0).findFirst().orElse(null);
+        if(firstNonZero == null)
+        {
+            return maxima;
+        }
         Direction previousDirection = null;
         Direction currentDirection = null;
         T previousScore = null;
@@ -53,6 +58,7 @@ public class LocalMaximaFinder<T extends Score>
             previousDirection = currentDirection;
             previousScore = score;
         }
+        maxima.remove(firstNonZero);
         return maxima;
     }
 }

@@ -81,6 +81,42 @@ public class LocalMaximaFinderTest
     }
 
     @Test
+    public void skipInitialZeroesTest()
+    {
+        addScore("A", 0.000);
+        addScore("B", 0.000);
+        addScore("C", 0.001);
+        addScore("D", 0.000);
+        List<DummyScore> maxima = getMaxima();
+        assertEquals(0, maxima.size());
+    }
+
+    @Test
+    public void skipInitialZeroes2Test()
+    {
+        addScore("A", 0.000);
+        addScore("B", 0.000);
+        addScore("C", 0.002);
+        addScore("D", 0.001);
+        addScore("E", 0.000);
+        List<DummyScore> maxima = getMaxima();
+        assertEquals(0, maxima.size());
+    }
+
+    @Test
+    public void skipInitialZeroes3Test()
+    {
+        addScore("A", 0.000);
+        addScore("B", 0.000);
+        addScore("C", 0.001);
+        addScore("D", 0.002);
+        addScore("E", 0.000);
+        List<DummyScore> maxima = getMaxima();
+        assertEquals(1, maxima.size());
+        assertEquals(maxima.get(0), Inputs.get(3));
+    }
+
+    @Test
     public void typicalCaseTest()
     {
         addScore("A", 100.0);

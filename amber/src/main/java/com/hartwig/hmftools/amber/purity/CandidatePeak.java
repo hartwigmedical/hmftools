@@ -53,24 +53,46 @@ public class CandidatePeak
         {
             k = n - k;
         }
-        BinomialDistribution binomialHomozygous = new BinomialDistribution(n, Level);
-        double cdfHomozygous = binomialHomozygous.cumulativeProbability(k);
-        final boolean capturedByCdfHom = cdfHomozygous > LOWER_CDF_BOUND_FOR_CAPTURE && cdfHomozygous < UPPER_CDF_BOUND_FOR_CAPTURE;
-        final boolean capturedByStepHom = Math.abs(evidence.symmetricVaf() - Level) < StepToNextLevel;
-        if(capturedByCdfHom || capturedByStepHom)
+        RangeStepPeak homPeak = new RangeStepPeak(n, k, Level, StepToNextLevel);
+        final double hetLevel = Level / 2;
+        RangeStepPeak hetPeak = new RangeStepPeak(n, k, hetLevel, StepToNextLevel / 2);
+        final double symmetricVaf = evidence.symmetricVaf();
+        if(homPeak.isCaptured(symmetricVaf))
         {
-            PointsInHomozygousBand.add(evidence);
+            if(hetPeak.isCaptured(symmetricVaf))
+            {
+                if(symmetricVaf > Level * 0.75)
+                {
+                    PointsInHomozygousBand.add(evidence);
+                }
+                else
+                {
+                    PointsInHeterozygousBand.add(evidence);
+                }
+            }
+            else
+            {
+                PointsInHomozygousBand.add(evidence);
+            }
         }
         else
         {
-            BinomialDistribution binomialHeterozygous = new BinomialDistribution(n, Level / 2);
-            double cdfHeterozygous = binomialHeterozygous.cumulativeProbability(k);
-            final boolean capturedByCdfHet = cdfHeterozygous > LOWER_CDF_BOUND_FOR_CAPTURE && cdfHeterozygous < UPPER_CDF_BOUND_FOR_CAPTURE;
-            final boolean capturedByStepHet = Math.abs(evidence.symmetricVaf() - Level / 2) < StepToNextLevel / 2;
-            if(capturedByCdfHet || capturedByStepHet)
+            if(hetPeak.isCaptured(symmetricVaf))
             {
                 PointsInHeterozygousBand.add(evidence);
             }
+        }
+    }
+
+    record RangeStepPeak(int depth, int count, double vaf, double step)
+    {
+        public boolean isCaptured(double symmetricVaf)
+        {
+            BinomialDistribution binomialHomozygous = new BinomialDistribution(depth, vaf);
+            double cdfHomozygous = binomialHomozygous.cumulativeProbability(count);
+            final boolean capturedByCdfHom = cdfHomozygous > LOWER_CDF_BOUND_FOR_CAPTURE && cdfHomozygous < UPPER_CDF_BOUND_FOR_CAPTURE;
+            final boolean capturedByStepHom = Math.abs(symmetricVaf - vaf) < step;
+            return capturedByCdfHom || capturedByStepHom;
         }
     }
 

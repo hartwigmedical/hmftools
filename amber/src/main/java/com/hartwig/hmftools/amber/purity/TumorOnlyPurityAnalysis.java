@@ -2,6 +2,7 @@ package com.hartwig.hmftools.amber.purity;
 
 import static java.lang.String.format;
 
+import static com.google.common.collect.Range.open;
 import static com.hartwig.hmftools.amber.AmberConfig.AMB_LOGGER;
 import static com.hartwig.hmftools.amber.purity.AucCalculator.chrArmAucCalculator;
 import static com.hartwig.hmftools.amber.purity.AucCalculator.mutationTypeAucCalculator;
@@ -10,16 +11,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Range;
 import com.hartwig.hmftools.amber.PositionEvidence;
-import com.hartwig.hmftools.amber.PositionEvidenceFile;
 import com.hartwig.hmftools.common.amber.AmberSite;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
-import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.immune.ImmuneRegions;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.segmentation.ChrArm;
-import com.hartwig.hmftools.common.segmentation.ChrArmLocator;
+import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -33,6 +33,8 @@ public class TumorOnlyPurityAnalysis
     private static final double CHR_ARM_LOWER_BOUND_FOR_CONTAMINATION = 0.5;
     private static final double CHR_ARM_AUC_UPPER_BOUND_FOR_COPY_NUMBER_EVENTS = 0.1;
     public static final double MIN_CUTOFF = 0.04;
+    private static final Range<Double> HOM_PROP_RANGE =
+            open(HOMOZYGOUS_PROPORTION_LOWER_BOUND_FOR_CONTAMINATION, HOMOZYGOUS_PROPORTION_UPPER_BOUND_FOR_CONTAMINATION);
     private final List<CandidatePeak> CopyNumberPeaks = new ArrayList<>();
     private final List<CandidatePeak> ContaminationPeaks = new ArrayList<>();
 
@@ -41,15 +43,10 @@ public class TumorOnlyPurityAnalysis
             final ListMultimap<Chromosome, AmberSite> amberSites,
             final PurityAnalysisConfig config) throws Exception
     {
-        String rawDataFileName = PositionEvidenceFile.generateTumorDataFilename(config.outputDir(), config.tumorId());
-        PositionEvidenceFile.write(rawDataFileName, evidence);
         AMB_LOGGER.debug(format("Evaluating noise floor with %d evidence points", evidence.size()));
-        List<ChrBaseRegion> immuneRegions = getExcludedImmuneRegions(config.refGenomeVersion());
-        RegionsFilter immuneRegionsFilter = new RegionsFilter(immuneRegions);
-        List<PositionEvidence> filteredEvidence = immuneRegionsFilter.filter(evidence);
+        List<PositionEvidence> filteredEvidence = filterOutExcludedRegions(evidence, config);
         AMB_LOGGER.debug(format("Immune region data removed leaving %d evidence points", filteredEvidence.size()));
         List<PositionEvidence> hetVariants = getBaselineHetVariants(filteredEvidence);
-        PeakSearch search = new PeakSearch(filteredEvidence, config.threads());
         GnomadFrequencySupplier frequencySupplier = new DefaultGnomadFrequencySupplier(amberSites, config.refGenomeVersion());
         GnomadFrequencyAnalysis baselineGnomadAnalysis = new GnomadFrequencyAnalysis(frequencySupplier);
         double baselineHetGnomadFrequency = baselineGnomadAnalysis.getMeanFrequency(hetVariants);
@@ -57,23 +54,20 @@ public class TumorOnlyPurityAnalysis
 
         AucCalculator<PositionEvidence, ChrArm> chrArmAucCalculator = chrArmAucCalculator(config.refGenomeVersion(), hetVariants);
         AucCalculator<PositionEvidence, CanonicalSnvType> mutationTypeAucCalculator = mutationTypeAucCalculator(hetVariants);
-        for(CandidatePeakEvaluationResult evaluationResult : search.peaks())
+        for(CandidatePeakEvaluationResult evaluationResult : new PeakSearch(filteredEvidence, config.threads()).peaks())
         {
             CandidatePeak peak = evaluationResult.candidatePeak();
             PeakGnomadFrequenciesChecker gnomadChecker = new PeakGnomadFrequenciesChecker(peak);
-            boolean okByGnomadFrequencies = gnomadChecker.checkGnomadFrequencies(frequencySupplier, baselineHetGnomadFrequency);
-            if(!okByGnomadFrequencies)
+            if(!gnomadChecker.checkGnomadFrequencies(frequencySupplier, baselineHetGnomadFrequency))
             {
                 AMB_LOGGER.debug(format("Peak %.3f failed Gnomad frequency check", peak.vaf()));
                 continue;
             }
             double homozygousProportion = peak.homozygousProportion();
-            //            double chrArmAuc = peak.perArmConsistencyFactor(ChrArmLocator.defaultLocator(config.refGenomeVersion()));
             double chrArmAuc = chrArmAucCalculator.calculateAuc(peak.allCapturedPoints());
             double mutationAuc = mutationTypeAucCalculator.calculateAuc(peak.allCapturedPoints());
             AMB_LOGGER.debug(format("Peak %.3f, homProportion: %.3f, chrArmAUC: %.3f, mutationAUC: %.3f", peak.vaf(), homozygousProportion, chrArmAuc, mutationAuc));
-            if(homozygousProportion > HOMOZYGOUS_PROPORTION_LOWER_BOUND_FOR_CONTAMINATION
-                    && homozygousProportion < HOMOZYGOUS_PROPORTION_UPPER_BOUND_FOR_CONTAMINATION)
+            if(HOM_PROP_RANGE.contains(homozygousProportion))
             {
                 if(mutationAuc > MUTATION_AUC_LOWER_BOUND_FOR_CONTAMINATION
                         && chrArmAuc > CHR_ARM_LOWER_BOUND_FOR_CONTAMINATION)
@@ -92,6 +86,13 @@ public class TumorOnlyPurityAnalysis
         }
     }
 
+    private static List<PositionEvidence> filterOutExcludedRegions(final List<PositionEvidence> evidence, final PurityAnalysisConfig config)
+    {
+        List<ChrBaseRegion> immuneRegions = getExcludedImmuneRegions(config.refGenomeVersion());
+        RegionsFilter immuneRegionsFilter = new RegionsFilter(immuneRegions);
+        return immuneRegionsFilter.filter(evidence);
+    }
+
     @NotNull
     private static List<ChrBaseRegion> getExcludedImmuneRegions(final RefGenomeVersion refGenomeVersion)
     {
@@ -105,7 +106,7 @@ public class TumorOnlyPurityAnalysis
     public double cutoff()
     {
         double minCopyNumberPeak = CopyNumberPeaks.stream().map(CandidatePeak::vaf).min(Double::compare).orElse(0.0);
-        if(minCopyNumberPeak < 0.01)
+        if(Doubles.isZero(minCopyNumberPeak))
         {
             return MIN_CUTOFF;
         }
