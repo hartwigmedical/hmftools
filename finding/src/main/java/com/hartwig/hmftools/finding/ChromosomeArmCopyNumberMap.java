@@ -38,7 +38,7 @@ final class ChromosomeArmCopyNumberMap
         if(copyNumber == null)
         {
             throw new IllegalArgumentException(String.format(
-                    "Copy number not found for chromsome: %s, band: %s", chromosome, chromosomeBand));
+                    "Copy number not found for chromosome: %s, band: %s", chromosome, chromosomeBand));
         }
         return copyNumber;
     }
