@@ -384,7 +384,7 @@
             <dependency>
                 <groupId>com.hartwig</groupId>
                 <artifactId>hmf-common</artifactId>
-                <version>${hmf-common.version}</version>
+                <version>${revision}</version>
                 <scope>test</scope>
                 <type>test-jar</type>
             </dependency>

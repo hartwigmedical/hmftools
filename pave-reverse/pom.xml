@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.hartwig</groupId>
         <artifactId>hmftools</artifactId>
-        <version>local-SNAPSHOT</version>
+        <version>${revision}</version>
     </parent>
 
     <artifactId>pave-reverse</artifactId>
