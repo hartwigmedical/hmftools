@@ -63,7 +63,6 @@ import com.hartwig.hmftools.orange.algo.purple.PurpleData;
 import com.hartwig.hmftools.orange.algo.purple.PurpleDataLoader;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpreter;
 import com.hartwig.hmftools.orange.algo.sigs.SigsInterpreter;
-import com.hartwig.hmftools.orange.algo.util.ReportLimiter;
 import com.hartwig.hmftools.orange.algo.virus.VirusInterpreter;
 import com.hartwig.hmftools.orange.conversion.ConversionUtil;
 import com.hartwig.hmftools.orange.conversion.OrangeConversion;
@@ -154,11 +153,6 @@ public class OrangeAlgo
                 .build();
 
         verifyPlots(orangeRecord.plots(), linxData);
-
-        if(config.LimitJsonOutput)
-        {
-            orangeRecord = ReportLimiter.limitAllListsToMaxOne(orangeRecord);
-        }
 
         return orangeRecord;
     }

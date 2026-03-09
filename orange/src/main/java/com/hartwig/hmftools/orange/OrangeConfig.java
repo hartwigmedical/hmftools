@@ -114,7 +114,6 @@ public class OrangeConfig
 
     public final String IsofoxDir;
 
-    public final boolean LimitJsonOutput;
     public final boolean AddDisclaimer;
 
     private static final String DOID_SEPARATOR = ";";
@@ -134,7 +133,6 @@ public class OrangeConfig
     private static String RNA_SAMPLE_ID = "rna_sample_id";
 
     // Some additional optional params and flags
-    private static final String LIMIT_JSON_OUTPUT = "limit_json_output";
     private static final String ADD_DISCLAIMER = "add_disclaimer";
 
     public OrangeConfig(final ConfigBuilder configBuilder)
@@ -228,12 +226,6 @@ public class OrangeConfig
             LOGGER.debug("disclaimer will be included in footer");
         }
 
-        LimitJsonOutput = configBuilder.hasFlag(LIMIT_JSON_OUTPUT);
-        if(LimitJsonOutput)
-        {
-            LOGGER.info("JSON limitation has been enabled");
-        }
-
         if(configBuilder.hasValue(SAMPLING_DATE))
         {
             SamplingDate = interpretSamplingDateParam(configBuilder.getValue(SAMPLING_DATE));
@@ -301,8 +293,7 @@ public class OrangeConfig
         configBuilder.addConfigItem(RNA_SAMPLE_ID, false, "(Optional) The RNA sample of the tumor sample for which ORANGE will run");
         configBuilder.addPath(ISOFOX_DIR_CFG, false, ISOFOX_DIR_DESC);
 
-        configBuilder.addFlag(LIMIT_JSON_OUTPUT, "If set, limits every list in the json output to 1 entry.");
-        configBuilder.addFlag(ADD_DISCLAIMER, "If set, prints a disclaimer on each page.");
+        configBuilder.addFlag(ADD_DISCLAIMER, "Prints a disclaimer on each page");
         addLoggingOptions(configBuilder);
     }
 
@@ -367,7 +358,7 @@ public class OrangeConfig
             final String pipelineVersionFile, final String purpleDataDirectory, final String purplePlotDirectory,
             final String linxSomaticDataDirectory, final String linxGermlineDataDirectory, final String linxPlotDirectory,
             final String lilacDir, final String chordDir, final String cuppaDir, final String peachDir, final String sigsDir,
-            final String virusDir, final String isofoxDir, final boolean limitJsonOutput, final boolean addDisclaimer)
+            final String virusDir, final String isofoxDir, final boolean addDisclaimer)
     {
         RunType = runType;
         TumorId = tumorId;
@@ -395,7 +386,6 @@ public class OrangeConfig
         SigsDir = sigsDir;
         VirusDir = virusDir;
         IsofoxDir = isofoxDir;
-        LimitJsonOutput = limitJsonOutput;
         AddDisclaimer = addDisclaimer;
     }
 }
