@@ -49,10 +49,7 @@ final class SmallVariantFactory
     {
         if(!hasGermlineSample)
         {
-            return DriverFindingListBuilder.<SmallVariant>builder()
-                    .status(FindingsStatus.NOT_AVAILABLE)
-                    .findings(List.of())
-                    .build();
+            return FindingUtil.notAvailableDriverFindingList();
         }
 
         List<PurpleVariant> germlineVariants = Objects.requireNonNull(purpleRecord.reportableGermlineVariants());

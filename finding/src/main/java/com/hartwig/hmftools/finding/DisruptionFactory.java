@@ -71,10 +71,7 @@ final class DisruptionFactory
     {
         if(!hasRefSample)
         {
-            return DriverFindingListBuilder.<Disruption>builder()
-                    .status(FindingsStatus.NOT_AVAILABLE)
-                    .findings(List.of())
-                    .build();
+            return FindingUtil.notAvailableDriverFindingList();
         }
 
         List<LinxBreakend> breakends = Objects.requireNonNull(linx.reportableGermlineBreakends());

@@ -58,10 +58,7 @@ final class GainDeletionFactory
     {
         if(!hasGermlineSample)
         {
-            return DriverFindingListBuilder.<GainDeletion>builder()
-                    .status(FindingsStatus.NOT_AVAILABLE)
-                    .findings(List.of())
-                    .build();
+            return FindingUtil.notAvailableDriverFindingList();
         }
 
         List<PurpleGeneCopyNumber> somaticGeneCopyNumbers = purple.allSomaticGeneCopyNumbers();
