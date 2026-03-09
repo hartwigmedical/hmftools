@@ -37,7 +37,8 @@ final class ChromosomeArmCopyNumberMap
         Double copyNumber = cnPerChromosomeArm.get(new CopyNumberKey(chromosome, getChromosomeArm(chromosomeBand)));
         if(copyNumber == null)
         {
-            throw new IllegalArgumentException("Copy number not found for chromosome band: " + chromosomeBand + "!");
+            throw new IllegalArgumentException(String.format(
+                    "Copy number not found for chromosome: %s, band: %s", chromosome, chromosomeBand));
         }
         return copyNumber;
     }
