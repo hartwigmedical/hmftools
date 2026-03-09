@@ -215,6 +215,8 @@ public class ComparConfig
         {
             List<String> ignoredGenes = loadDelimitedIdFile(configBuilder.getValue(IGNORE_GENES), FLD_GENE_NAME, TSV_DELIM);
             ignoredGenes.forEach(x -> IgnoreGenes.add(x));
+
+            CMP_LOGGER.info("ignoring {} genes", IgnoreGenes.size());
         }
 
         RestrictToDrivers = !DriverGenes.isEmpty() && configBuilder.hasFlag(RESTRICT_TO_DRIVERS);
