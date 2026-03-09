@@ -36,14 +36,15 @@ public class HlaAlleleFactory
     {
     }
 
-    public static FindingList<HlaAllele> createHlaAllelesFindings(OrangeRecord orangeRecord)
+    public static FindingList<HlaAllele> createHlaAllelesFindings(OrangeRecord orangeRecord, boolean hasReliablePurity, boolean hasContamination)
     {
         LilacRecord lilac = orangeRecord.lilac();
-        if(lilac != null)
+        if(lilac != null && !hasContamination)
         {
             return FindingListBuilder.<HlaAllele>builder()
                     .status(lilac.qc().equals(PASS) ? FindingsStatus.OK : FindingsStatus.NOT_RELIABLE)
                     .findings(HlaAlleleFactory.convertHlaAlleles(lilac,
+                            hasReliablePurity,
                             !orangeRecord.tumorOnlyMode(),
                             orangeRecord.isofox() != null))
                     .build();
@@ -54,7 +55,7 @@ public class HlaAlleleFactory
         }
     }
 
-    public static List<HlaAllele> convertHlaAlleles(LilacRecord lilac, boolean hasRef, boolean hasRna)
+    public static List<HlaAllele> convertHlaAlleles(LilacRecord lilac, boolean hasReliablePurity, boolean hasRef, boolean hasRna)
     {
         Map<String, List<LilacAllele>> hlaAllelesMap = lilac.alleles()
                 .stream()
@@ -98,7 +99,7 @@ public class HlaAlleleFactory
             {
                 hlaAlleles.add(builder
                         .germlineCopyNumber(1)
-                        .tumorCopyNumber(lilacAllele.tumorCopyNumber())
+                        .tumorCopyNumber(hasReliablePurity ? lilacAllele.tumorCopyNumber() : null)
                         .build());
 
             }
@@ -109,7 +110,7 @@ public class HlaAlleleFactory
 
                 hlaAlleles.add(builder
                         .germlineCopyNumber(2)
-                        .tumorCopyNumber(tumorCopies)
+                        .tumorCopyNumber(hasReliablePurity ? tumorCopies : null)
                         .build());
             }
             else

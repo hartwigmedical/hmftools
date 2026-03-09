@@ -94,7 +94,7 @@ public class FindingRecordFactory
 
         Set<PurpleQCStatus> purpleQCStatuses = purple.fit().qc().status();
         boolean hasContamination = purpleQCStatuses.contains(PurpleQCStatus.FAIL_CONTAMINATION);
-        boolean isLowPurity = purpleQCStatuses.contains(PurpleQCStatus.WARN_LOW_PURITY);
+        boolean hasReliablePurity = !purpleQCStatuses.contains(PurpleQCStatus.FAIL_NO_TUMOR) && !purpleQCStatuses.contains(PurpleQCStatus.WARN_LOW_PURITY);
 
         FindingRecordBuilder
                 builder = FindingRecordBuilder.builder()
@@ -109,9 +109,9 @@ public class FindingRecordFactory
                 .fusions(createFusionsFindings(orangeRecord.linx()));
 
         DriverFindingList<GainDeletion>
-                somaticGainDeletions = addPurpleFindings(builder, orangeRecord, findingConfig, isLowPurity);
+                somaticGainDeletions = addPurpleFindings(builder, orangeRecord, findingConfig, hasReliablePurity);
 
-        if(!isLowPurity)
+        if(hasReliablePurity)
         {
             builder.somaticDisruptions(createSomaticDisruptions(linx))
                     .germlineDisruptions(createGermlineDisruptions(orangeRecord.refSample() != null, linx))
@@ -129,7 +129,7 @@ public class FindingRecordFactory
         VisualisationFiles visualisationFiles = VisualisationFilesFactory.create(orangeRecord.plots());
 
         return builder.predictedTumorOrigins(createPredictedTumorOriginList(orangeRecord.cuppa()))
-                .hlaAlleles(HlaAlleleFactory.createHlaAllelesFindings(orangeRecord))
+                .hlaAlleles(HlaAlleleFactory.createHlaAllelesFindings(orangeRecord, hasReliablePurity, hasContamination))
                 .pharmocoGenotypes(createPharmcoGenotypesFindings(orangeRecord.peach(), hasContamination))
                 .visualisationFiles(visualisationFiles)
                 .build();
@@ -139,7 +139,7 @@ public class FindingRecordFactory
     private static DriverFindingList<GainDeletion> addPurpleFindings(
             FindingRecordBuilder builder, final OrangeRecord orangeRecord,
             FindingConfig findingConfig,
-            boolean isLowPurity)
+            boolean hasReliablePurity)
     {
         boolean hasRefSample = orangeRecord.refSample() != null;
 
@@ -151,7 +151,7 @@ public class FindingRecordFactory
 
         DriverFindingList<SmallVariant> smallVariants =
                 SmallVariantFactory.somaticSmallVariantFindings(purple, FindingsStatus.OK, findingConfig);
-        if(!isLowPurity)
+        if(hasReliablePurity)
         {
             somaticGainDeletions =
                     GainDeletionFactory.somaticGainDeletionFindings(orangeRecord.refGenomeVersion(), FindingsStatus.OK, purple);
