@@ -83,7 +83,8 @@ public final class DnaFusionTable
                 rowCells.add(cells.createContent(rnaFragmentSupportTable(isofox, fusion, cells)));
             */
 
-            rowCells.add(cells.createContent(format("SR=%d DF=%d", 10, 30)));
+            if(hasRna)
+                rowCells.add(cells.createContent(format("SR=%d DF=%d", 10, 30))); // TODO: fix to use actual RNA support
 
             rowCells.add(cells.createContent(fusion.driverInterpretation().toString()));
 

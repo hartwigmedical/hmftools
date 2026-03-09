@@ -25,7 +25,6 @@ import com.hartwig.hmftools.datamodel.immuno.ImmutableImmuneEscapeRecord;
 import com.hartwig.hmftools.datamodel.linx.FusionPhasedType;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxFusion;
-import com.hartwig.hmftools.datamodel.linx.ImmutableLinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxRecord;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
@@ -33,7 +32,6 @@ import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
 import com.hartwig.hmftools.datamodel.linx.LinxFusionType;
 import com.hartwig.hmftools.datamodel.linx.LinxGeneOrientation;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
-import com.hartwig.hmftools.datamodel.linx.LinxUnreportableReason;
 import com.hartwig.hmftools.datamodel.metrics.ImmutableWGSMetrics;
 import com.hartwig.hmftools.datamodel.orange.ExperimentType;
 import com.hartwig.hmftools.datamodel.orange.ImmutableOrangePlots;
@@ -379,14 +377,6 @@ public class TestOrangeJsonWriter
                         .domainsLost("")
                         .build())
                 .addSomaticBreakends(somaticBreakend)
-                .addSomaticHomozygousDisruptions(ImmutableLinxHomozygousDisruption.builder()
-                        .chromosome("4")
-                        .chromosomeBand("p1.12")
-                        .gene("NF1")
-                        .transcript("ENST00000358273")
-                        .isCanonical(true)
-                        .driverInterpretation(DriverInterpretation.HIGH)
-                        .build())
                 .build();
     }
 

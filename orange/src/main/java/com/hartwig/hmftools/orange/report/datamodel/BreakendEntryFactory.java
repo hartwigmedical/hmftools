@@ -42,7 +42,7 @@ public final class BreakendEntryFactory
                 .range(range(breakend))
                 .junctionCopyNumber(breakend.junctionCopyNumber())
                 .undisruptedCopyNumber(undisruptedCopyNumber)
-                .driverLikelihood(driverLikelihood)
+                .driverLikelihood(breakend.driverLikelihood())
                 .build());
         }
 

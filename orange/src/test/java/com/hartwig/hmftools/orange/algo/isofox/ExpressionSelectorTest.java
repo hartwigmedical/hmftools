@@ -72,7 +72,7 @@ public class ExpressionSelectorTest
     @Test
     public void shouldSelectLowExpressionGenesWithoutCohort()
     {
-        GeneExpression lowExpressionGene = create("gene 2", 0.02, null);
+        GeneExpression lowExpressionGene = create("gene 2", 0.002, null);
         DriverGene driver = DriverGeneTestFactory.builder().gene("gene 2").likelihoodType(DriverCategory.TSG).build();
 
         List<GeneExpression> lowExpression = ExpressionSelector.selectLowExpressionGenes(List.of(lowExpressionGene), List.of(driver));

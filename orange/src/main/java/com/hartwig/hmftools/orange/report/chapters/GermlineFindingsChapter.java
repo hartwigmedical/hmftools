@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.StringJoiner;
 
-import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
@@ -20,7 +19,6 @@ import com.hartwig.hmftools.orange.report.datamodel.VariantEntryFactory;
 import com.hartwig.hmftools.orange.report.tables.DisruptionTable;
 import com.hartwig.hmftools.orange.report.tables.GainDeletionTable;
 import com.hartwig.hmftools.orange.report.tables.GermlineVariantTable;
-import com.hartwig.hmftools.orange.report.tables.HomozygousDisruptionTable;
 import com.hartwig.hmftools.orange.report.tables.PharmacogeneticsTable;
 import com.hartwig.hmftools.orange.report.util.Cells;
 import com.hartwig.hmftools.orange.report.util.Tables;

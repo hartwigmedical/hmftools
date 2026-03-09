@@ -29,7 +29,4 @@ public interface LinxRecord
 
     @Nullable
     List<LinxBreakend> germlineBreakends();
-
-    @NotNull
-    List<LinxHomozygousDisruption> somaticHomozygousDisruptions();
 }

@@ -37,11 +37,6 @@ public class FileBasedPlotManager implements PlotManager
                         "Plot directory of [%s] is not a directory. Please check configured plot directory.",
                         plotDirectoryPath()));
             }
-            else if(files.length > 0)
-            {
-                LOGGER.warn("Plot directory already existed at path [{}], continuing, but output may be mixed with older files. "
-                        + "It is recommended to start ORANGE with a clean output directory", plotDirectoryPath());
-            }
         }
         else
         {

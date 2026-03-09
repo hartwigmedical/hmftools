@@ -73,7 +73,6 @@ public final class ReportLimiter
                 .germlineStructuralVariants(filterStructuralVariants(linx.germlineStructuralVariants(), filteredGermlineBreakends))
                 .fusions(max1(linx.fusions()))
                 .somaticBreakends(filteredSomaticBreakends)
-                .somaticHomozygousDisruptions(max1(linx.somaticHomozygousDisruptions()))
                 .germlineBreakends(filteredGermlineBreakends)
                 .build();
     }

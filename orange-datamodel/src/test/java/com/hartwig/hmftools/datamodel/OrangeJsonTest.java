@@ -26,7 +26,6 @@ import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.linx.LinxFusionType;
 import com.hartwig.hmftools.datamodel.linx.LinxGeneOrientation;
-import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.orange.OrangePlots;
@@ -247,14 +246,6 @@ public class OrangeJsonTest
         assertEquals("ISOLATED_BE", structuralVariant.localTopologyEnd());
         assertEquals(3, structuralVariant.localTICountStart());
         assertEquals(4, structuralVariant.localTICountEnd());
-
-        assertEquals(1, linx.somaticHomozygousDisruptions().size());
-        LinxHomozygousDisruption homozygousDisruption = linx.somaticHomozygousDisruptions().iterator().next();
-        assertEquals("4", homozygousDisruption.chromosome());
-        assertEquals("p1.12", homozygousDisruption.chromosomeBand());
-        assertEquals("NF1", homozygousDisruption.gene());
-        assertEquals("ENST00000358273", homozygousDisruption.transcript());
-        assertTrue(homozygousDisruption.isCanonical());
 
         assertEquals(1, linx.somaticBreakends().size());
         LinxBreakend breakend = linx.somaticBreakends().iterator().next();

@@ -18,7 +18,6 @@ import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
-import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.orange.OrangeDoidNode;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
@@ -202,7 +201,7 @@ public class FrontPageChapter implements ReportChapter
 
         addCellEntry(summaryLeft, cellsLeft, "Somatic variant:", somaticVariantDriverString());
         addCellEntry(summaryLeft, cellsLeft, "Somatic copy number:", somaticCopyNumberDriverString());
-        addCellEntry(summaryLeft, cellsLeft, "Somatic disruption:", somaticDisruptionDriverString());
+        // addCellEntry(summaryLeft, cellsLeft, "Somatic disruption:", somaticDisruptionDriverString());
 
         if(includeGermline)
         {
@@ -287,8 +286,6 @@ public class FrontPageChapter implements ReportChapter
         {
             addCellEntry(summary, cells, "Germline copy number drivers:", germlineCopyNumberDriverString());
         }
-
-        addCellEntry(summary, cells, "Somatic disruption drivers:", somaticDisruptionDriverString());
 
         if(includeGermline)
         {
@@ -451,6 +448,7 @@ public class FrontPageChapter implements ReportChapter
         return gainsDels.size() + " (" + concat(genes) + ")";
     }
 
+    /*
     private String somaticDisruptionDriverString()
     {
         if(PurpleQCInterpretation.isContaminated(mReport.purple().fit().qc()))
@@ -460,6 +458,7 @@ public class FrontPageChapter implements ReportChapter
 
         return homDisruptionDriverString(mReport.linx().somaticHomozygousDisruptions());
     }
+    */
 
     private String germlineDisruptionDriverString()
     {
@@ -474,21 +473,6 @@ public class FrontPageChapter implements ReportChapter
             return ReportResources.NOT_AVAILABLE;
         }
         return disruptionDriverString(germlineDisruptions);
-    }
-
-    private static String homDisruptionDriverString(final List<LinxHomozygousDisruption> homozygousDisruptions)
-    {
-        if(homozygousDisruptions.isEmpty())
-        {
-            return NONE;
-        }
-
-        Set<String> genes = Sets.newTreeSet(Comparator.naturalOrder());
-        for(LinxHomozygousDisruption homozygousDisruption : homozygousDisruptions)
-        {
-            genes.add(homozygousDisruption.gene());
-        }
-        return homozygousDisruptions.size() + " (" + concat(genes) + ")";
     }
 
     private static String disruptionDriverString(final List<LinxBreakend> breakends)

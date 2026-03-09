@@ -17,7 +17,6 @@ import com.hartwig.hmftools.orange.report.tables.ChrArmCopyNumberTable;
 import com.hartwig.hmftools.orange.report.tables.DisruptionTable;
 import com.hartwig.hmftools.orange.report.tables.DnaFusionTable;
 import com.hartwig.hmftools.orange.report.tables.GainDeletionTable;
-import com.hartwig.hmftools.orange.report.tables.HomozygousDisruptionTable;
 import com.hartwig.hmftools.orange.report.tables.SignatureAllocationTable;
 import com.hartwig.hmftools.orange.report.tables.SomaticVariantTable;
 import com.hartwig.hmftools.orange.report.tables.ViralPresenceTable;
@@ -68,7 +67,6 @@ public class SomaticFindingsChapter implements ReportChapter
         addSomaticAmpDels(document);
         addFusions(document);
 
-        addHomozygousDisruptions(document);
         addBreakendDisruptions(document);
 
         if(!mReport.tumorOnlyMode())
@@ -182,25 +180,6 @@ public class SomaticFindingsChapter implements ReportChapter
                 String titleDrivers = driverVirusTitle + " (" + virusInterpreter.reportableViruses().size() + ")";
                 document.add(ViralPresenceTable.build(titleDrivers, contentWidth(), virusInterpreter.reportableViruses(), mReportResources));
             }
-        }
-    }
-
-    private void addHomozygousDisruptions(final Document document)
-    {
-        String homozygousDisruptionTitle = "Homozygous Disruptions";
-
-        if(PurpleQCInterpretation.isContaminated(mReport.purple().fit().qc()))
-        {
-            Tables tables = new Tables(mReportResources);
-            document.add(tables.createNotAvailable(homozygousDisruptionTitle, contentWidth()));
-        }
-        else
-        {
-            String title = homozygousDisruptionTitle + " (" + mReport.linx().somaticHomozygousDisruptions().size() + ")";
-            document.add(HomozygousDisruptionTable.build(title,
-                    contentWidth(),
-                    mReport.linx().somaticHomozygousDisruptions(),
-                    mReportResources));
         }
     }
 

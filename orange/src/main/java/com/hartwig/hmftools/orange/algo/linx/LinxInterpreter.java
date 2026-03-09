@@ -33,7 +33,8 @@ public class LinxInterpreter
     {
         LOGGER.info("Analysing Linx data");
 
-        LinxBreakendInterpreter somaticBreakendInterpreter = new LinxBreakendInterpreter(linx.somaticSvAnnotations(), linx.somaticDrivers(), mCytoBands);
+        LinxBreakendInterpreter somaticBreakendInterpreter = new LinxBreakendInterpreter(
+                linx.somaticSvAnnotations(), linx.somaticDrivers(), mCytoBands);
 
         LinxBreakendInterpreter germlineBreakendInterpreter = new LinxBreakendInterpreter(
                 Objects.requireNonNullElse(linx.germlineSvAnnotations(), List.of()), linx.germlineDrivers(), mCytoBands);
@@ -42,10 +43,9 @@ public class LinxInterpreter
                 .somaticStructuralVariants(ConversionUtil.mapToIterable(linx.somaticSvAnnotations(), LinxConversion::convert))
                 .somaticDrivers(ConversionUtil.mapToIterable(linx.somaticDriverData(), LinxConversion::convert))
                 .fusions(buildFusions(linx.fusions(), linx.somaticBreakends()))
-                .somaticBreakends(ConversionUtil.mapToIterable(linx.somaticBreakends(), somaticBreakendInterpreter::interpret))
-                .somaticHomozygousDisruptions(ConversionUtil.mapToIterable(linx.somaticHomozygousDisruptions(), LinxConversion::convert))
+                .somaticBreakends(somaticBreakendInterpreter.convertBreakends(linx.somaticBreakends()))
                 .germlineStructuralVariants(ConversionUtil.mapToIterable(linx.germlineSvAnnotations(), LinxConversion::convert))
-                .germlineBreakends(ConversionUtil.mapToIterable(linx.germlineBreakends(), germlineBreakendInterpreter::interpret))
+                .germlineBreakends(germlineBreakendInterpreter.convertBreakends(linx.germlineBreakends()))
                 .build();
     }
 
@@ -135,5 +135,4 @@ public class LinxInterpreter
 
         throw new IllegalStateException("TranscriptRegionType not supported in determination of fusion context: " + regionType);
     }
-
 }

@@ -43,8 +43,7 @@
   "linx": {
     "somaticStructuralVariants": [],
     "fusions": [],
-    "somaticBreakends": [],
-    "somaticHomozygousDisruptions": []
+    "somaticBreakends": []
   },
   "virusInterpreter": {
     "allViruses": [],

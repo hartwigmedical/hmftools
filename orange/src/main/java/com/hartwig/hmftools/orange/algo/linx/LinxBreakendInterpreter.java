@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.driver.DriverType;
 import com.hartwig.hmftools.common.genome.chromosome.CytoBands;
@@ -32,7 +33,22 @@ public class LinxBreakendInterpreter
         mCytoBands = cytoBands;
     }
 
-    public LinxBreakend interpret(com.hartwig.hmftools.common.linx.LinxBreakend linxBreakend)
+    public List<LinxBreakend> convertBreakends(List<com.hartwig.hmftools.common.linx.LinxBreakend> linxBreakends)
+    {
+        List<LinxBreakend> reportedBreakends = Lists.newArrayList();
+
+        for(com.hartwig.hmftools.common.linx.LinxBreakend linxBreakend : linxBreakends)
+        {
+            if(linxBreakend.reportedStatus() != com.hartwig.hmftools.common.purple.ReportedStatus.REPORTED)
+                continue;
+
+            reportedBreakends.add(build(linxBreakend));
+        }
+
+        return reportedBreakends;
+    }
+
+    public LinxBreakend build(com.hartwig.hmftools.common.linx.LinxBreakend linxBreakend)
     {
         LinxSvAnnotation svAnnotation = mLinxSvAnnotationsMap.get(linxBreakend.svId());
 

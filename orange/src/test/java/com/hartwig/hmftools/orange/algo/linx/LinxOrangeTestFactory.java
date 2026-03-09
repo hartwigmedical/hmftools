@@ -10,7 +10,6 @@ import com.hartwig.hmftools.datamodel.gene.TranscriptRegionType;
 import com.hartwig.hmftools.datamodel.linx.FusionPhasedType;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxFusion;
-import com.hartwig.hmftools.datamodel.linx.ImmutableLinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
 import com.hartwig.hmftools.datamodel.linx.LinxDriverType;
@@ -74,26 +73,5 @@ public final class LinxOrangeTestFactory
                 .junctionCopyNumber(0D)
                 .driverType(LinxDriverType.DISRUPTION)
                 .driverLikelihood(0);
-    }
-
-    public static ImmutableHomozygousDisruption.Builder homozygousDisruptionBuilder()
-    {
-        return ImmutableHomozygousDisruption.builder()
-                .chromosome(Strings.EMPTY)
-                .chromosomeBand(Strings.EMPTY)
-                .gene(Strings.EMPTY)
-                .transcript(Strings.EMPTY)
-                .isCanonical(false);
-    }
-
-    public static ImmutableLinxHomozygousDisruption.Builder linxHomozygousDisruptionBuilder()
-    {
-        return ImmutableLinxHomozygousDisruption.builder()
-                .chromosome(Strings.EMPTY)
-                .chromosomeBand(Strings.EMPTY)
-                .gene(Strings.EMPTY)
-                .transcript(Strings.EMPTY)
-                .isCanonical(false)
-                .driverInterpretation(DriverInterpretation.HIGH);
     }
 }

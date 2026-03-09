@@ -276,8 +276,7 @@
         "driverLikelihood": 1.0
       }
     ],
-    "germlineBreakends": [],
-    "somaticHomozygousDisruptions": []
+    "germlineBreakends": []
   },
   "isofox": null,
   "lilac": {

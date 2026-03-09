@@ -30,14 +30,14 @@ public class LinxBreakendInterpreterTest
         List<LinxBreakend> breakends = createBreakends();
 
         LinxBreakendInterpreter interpreter = createInterpreter(linxSvAnnotations);
-        com.hartwig.hmftools.datamodel.linx.LinxBreakend left = interpreter.interpret(breakends.get(0));
+        com.hartwig.hmftools.datamodel.linx.LinxBreakend left = interpreter.build(breakends.get(0));
         assertEquals("1", left.chromosome());
         assertEquals("p36.33", left.chromosomeBand());
         assertEquals(LinxBreakendType.DEL, left.type());
         assertEquals(1, left.orientation());
         assertEquals(1.5D, left.junctionCopyNumber(), EPSILON);
 
-        com.hartwig.hmftools.datamodel.linx.LinxBreakend right = interpreter.interpret(breakends.get(1));
+        com.hartwig.hmftools.datamodel.linx.LinxBreakend right = interpreter.build(breakends.get(1));
         assertEquals("1", right.chromosome());
         assertEquals("p36.33", right.chromosomeBand());
         assertEquals(LinxBreakendType.DEL, right.type());

@@ -81,8 +81,8 @@ public final class LinxDataLoader
             throws IOException
     {
         List<LinxDriver> somaticDriverData = LinxDriver.read(somaticDriverTsv);
-        List<LinxFusion> fusions = loadReportableFusions(fusionTsv);
-        List<LinxBreakend> somaticBreakends = loadReportableBreakends(somaticBreakendTsv, fusions);
+        List<LinxFusion> fusions = loadFusions(fusionTsv);
+        List<LinxBreakend> somaticBreakends = loadBreakends(somaticBreakendTsv, fusions);
 
         List<DriverCatalog> somaticDrivers = DriverCatalogFile.read(somaticDriverCatalogTsv).stream()
                 .filter(x -> DRIVERS_LINX_SOMATIC.contains(x.driver())).collect(Collectors.toList());
@@ -114,12 +114,12 @@ public final class LinxDataLoader
                     .filter(x -> DRIVERS_LINX_GERMLINE.contains(x.driver())).collect(Collectors.toList());
 
             germlineSvAnnotations = LinxSvAnnotation.read(germlineSvAnnotationFile);
-            reportableGermlineBreakends = loadReportableBreakends(germlineBreakendTsv, Collections.emptyList());
+            reportableGermlineBreakends = loadBreakends(germlineBreakendTsv, Collections.emptyList());
 
             restrictToMatchingBreakends(germlineSvAnnotations, reportableGermlineBreakends);
 
             List<LinxGermlineDisruption> allGermlineDisruptions = LinxGermlineDisruption.read(germlineDisruptionTsv);
-            reportableGermlineDisruptions = selectReportableGermlineSvs(allGermlineDisruptions, reportableGermlineBreakends);
+            reportableGermlineDisruptions = selectGermlineSvs(allGermlineDisruptions, reportableGermlineBreakends);
         }
 
         return ImmutableLinxData.builder()
@@ -140,7 +140,7 @@ public final class LinxDataLoader
                 .build();
     }
 
-    private static List<LinxFusion> loadReportableFusions(final String fusionTsv) throws IOException
+    private static List<LinxFusion> loadFusions(final String fusionTsv) throws IOException
     {
         List<LinxFusion> fusions = LinxFusion.read(fusionTsv);
 
@@ -155,7 +155,7 @@ public final class LinxDataLoader
         return reportableFusions;
     }
 
-    private static List<LinxBreakend> loadReportableBreakends(final String somaticBreakendTsv, final List<LinxFusion> fusions) throws IOException
+    private static List<LinxBreakend> loadBreakends(final String somaticBreakendTsv, final List<LinxFusion> fusions) throws IOException
     {
         List<LinxBreakend> breakends = LinxBreakend.read(somaticBreakendTsv);
 
@@ -175,7 +175,7 @@ public final class LinxDataLoader
         return reportableBreakends;
     }
 
-    private static List<LinxGermlineDisruption> selectReportableGermlineSvs(
+    private static List<LinxGermlineDisruption> selectGermlineSvs(
             final List<LinxGermlineDisruption> germlineSvs, final List<LinxBreakend> reportableGermlineBreakends)
     {
         List<LinxGermlineDisruption> reportableGermlineSvs = new ArrayList<>();
@@ -210,29 +210,6 @@ public final class LinxDataLoader
                 svAnnotations.remove(index);
             }
         }
-    }
-
-    private static List<HomozygousDisruption> loadSomaticHomozygousDisruptions(final List<DriverCatalog> driverCatalog)
-    {
-        List<HomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
-
-        for(DriverCatalog driver : driverCatalog)
-        {
-            if(driver.driver() == DriverType.HOM_DUP_DISRUPTION || driver.driver() == DriverType.HOM_DEL_DISRUPTION)
-            {
-                HomozygousDisruption homDisruption = ImmutableHomozygousDisruption.builder()
-                        .chromosome(driver.chromosome())
-                        .chromosomeBand(driver.chromosomeBand())
-                        .gene(driver.gene())
-                        .transcript(driver.transcript())
-                        .isCanonical(driver.isCanonical())
-                        .build();
-
-                homozygousDisruptions.add(homDisruption);
-            }
-        }
-
-        return homozygousDisruptions;
     }
 
     private static Set<Integer> loadFusionClusters(final String filename) throws IOException

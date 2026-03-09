@@ -271,18 +271,7 @@
         "driverLikelihood": 1.0
       }
     ],
-    "germlineBreakends": null,
-    "somaticHomozygousDisruptions": [
-      {
-        "gene": "NF1",
-        "chromosome": "4",
-        "chromosomeBand": "p1.12",
-        "transcript": "ENST00000358273",
-        "isCanonical": true,
-        "type": "DEL",
-        "driverInterpretation": "HIGH"
-      }
-    ]
+    "germlineBreakends": null
   },
   "isofox": null,
   "lilac": {

@@ -188,7 +188,7 @@ public class OrangeConfig
         LinxSomaticDataDirectory = pathResolver.resolveMandatoryToolDirectory(LINX_DIR_CFG, defaultToolDirectories.linxSomaticDir());
         LinxPlotDirectory = optionalPath(pathResolver.resolveOptionalToolPlotsDirectory(LINX_PLOT_DIR_CFG, defaultToolDirectories.linxSomaticDir()));
 
-        QSeeDirectory = pathResolver.resolveMandatoryToolDirectory(QSEE_DIR_CFG, defaultToolDirectories.qseeDir());
+        QSeeDirectory = pathResolver.resolveOptionalToolPlotsDirectory(QSEE_DIR_CFG, defaultToolDirectories.qseeDir());
 
         if(ReferenceId != null)
         {
