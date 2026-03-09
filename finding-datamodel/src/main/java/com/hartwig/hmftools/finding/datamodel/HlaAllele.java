@@ -14,7 +14,7 @@ public record HlaAllele(
         @NotNull String allele,
         @NotNull Set<QcStatus> qcStatus,
         int germlineCopyNumber,
-        double tumorCopyNumber,
+        @Nullable Double tumorCopyNumber,
         @Nullable Integer refFragments,
         int tumorFragments,
         @Nullable Integer rnaFragments,
