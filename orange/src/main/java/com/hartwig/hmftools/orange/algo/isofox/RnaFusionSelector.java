@@ -53,7 +53,7 @@ public final class RnaFusionSelector
         return false;
     }
 
-    public static List<RnaFusion> selectNovelKnownFusions(final List<RnaFusion> rnaFusions, final List<LinxFusion> linxFusions)
+    public static List<RnaFusion> selectKnownFusions(final List<RnaFusion> rnaFusions, final List<LinxFusion> linxFusions)
     {
         List<RnaFusion> result = Lists.newArrayList();
 

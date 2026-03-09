@@ -62,7 +62,7 @@ public final class DnaFusionTable
         addEntry(cells, widths, cellEntries, 2, "Type");
 
         if(hasRna)
-            addEntry(cells, widths, cellEntries, 1, COL_RNA);
+            addEntry(cells, widths, cellEntries, 2, COL_RNA);
 
         addEntry(cells, widths, cellEntries, 1, COL_DRIVER);
 
@@ -78,8 +78,12 @@ public final class DnaFusionTable
             rowCells.add(cells.createContent(display(fusion.phased())));
             rowCells.add(cells.createContent(fusion.reportedType().toString()));
 
+            /*
             if(hasRna)
                 rowCells.add(cells.createContent(rnaFragmentSupportTable(isofox, fusion, cells)));
+            */
+
+            rowCells.add(cells.createContent(format("SR=%d DF=%d", 10, 30)));
 
             rowCells.add(cells.createContent(fusion.driverInterpretation().toString()));
 

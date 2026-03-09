@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.orange.report.chapters;
 
+import static com.hartwig.hmftools.orange.report.ReportResources.FULL_PAGE_IMAGE_HEIGHT;
+import static com.hartwig.hmftools.orange.report.ReportResources.FULL_PAGE_IMAGE_WIDTH;
+
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.orange.report.PlotPathResolver;
 import com.hartwig.hmftools.orange.report.ReportResources;
@@ -57,8 +60,8 @@ public class CuppaChapter implements ReportChapter
     private void addCuppaSummaryPlot(@NotNull Document document)
     {
         Image cuppaSummaryPlot = Images.build(mPlotPathResolver.resolve(mReport.plots().cuppaSummaryPlot()));
-        cuppaSummaryPlot.setMaxWidth(740);
-        cuppaSummaryPlot.setMaxHeight(420);
+        cuppaSummaryPlot.setMaxWidth(FULL_PAGE_IMAGE_WIDTH);
+        cuppaSummaryPlot.setMaxHeight(FULL_PAGE_IMAGE_HEIGHT);
         cuppaSummaryPlot.setHorizontalAlignment(HorizontalAlignment.CENTER);
         document.add(cuppaSummaryPlot);
     }

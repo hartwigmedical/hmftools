@@ -32,9 +32,10 @@ public class IsofoxInterpreter
         LOGGER.info(" Found {} genes with high expression", highExpressionGenes.size());
 
         List<GeneExpression> lowExpressionGenes = ExpressionSelector.selectLowExpressionGenes(geneExpressions, mDriverGenes);
+
         LOGGER.info(" Found {} genes with low expression", lowExpressionGenes.size());
 
-        List<RnaFusion> novelKnownFusions = RnaFusionSelector.selectNovelKnownFusions(isofox.fusions(), mLinxRecord.fusions());
+        List<RnaFusion> novelKnownFusions = RnaFusionSelector.selectKnownFusions(isofox.fusions(), mLinxRecord.fusions());
         LOGGER.info(" Found {} novel known fusions in RNA", novelKnownFusions.size());
 
         List<RnaFusion> novelPromiscuousFusions = RnaFusionSelector.selectNovelPromiscuousFusions(isofox.fusions(), mLinxRecord.fusions());

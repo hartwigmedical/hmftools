@@ -29,6 +29,9 @@ public class ReportResources
     public static final float PAGE_MARGIN_RIGHT = 30;
     public static final float PAGE_MARGIN_BOTTOM = 40;
 
+    public static final int FULL_PAGE_IMAGE_WIDTH = 750; // was 740
+    public static final int FULL_PAGE_IMAGE_HEIGHT = 430; // was 420
+
     public static final DeviceRgb PALETTE_WHITE = new DeviceRgb(255, 255, 255);
     public static final DeviceRgb PALETTE_BLACK = new DeviceRgb(0, 0, 0);
 
@@ -36,7 +39,8 @@ public class ReportResources
     public static final DeviceRgb PALETTE_MID_GREY = new DeviceRgb(101, 106, 108);
     public static final DeviceRgb PALETTE_LIGHT_GREY = new DeviceRgb(211, 211, 211);
     public static final DeviceRgb PALETTE_GAINSBORO_GREY = new DeviceRgb(220, 220, 220);
-    public static final DeviceRgb PALETTE_SMOKE_GREY = new DeviceRgb(235, 235, 235);
+    private static final int GREY_FACTOR = 240;
+    public static final DeviceRgb PALETTE_SMOKE_GREY = new DeviceRgb(GREY_FACTOR, GREY_FACTOR, GREY_FACTOR);
     public static final DeviceRgb PALETTE_BLUE = new DeviceRgb(38, 90, 166);
 
     public static final DeviceRgb PALETTE_ORANGE = new DeviceRgb(242, 139, 31);

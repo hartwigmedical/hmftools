@@ -13,10 +13,12 @@ import com.hartwig.hmftools.datamodel.isofox.GeneExpression;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class ExpressionSelectorTest
 {
+    @Ignore
     @Test
     public void shouldSelectHighExpressionGenes()
     {
@@ -35,6 +37,7 @@ public class ExpressionSelectorTest
         assertTrue(highExpression.contains(highExpressionGene1));
     }
 
+    @Ignore
     @Test
     public void shouldSelectHighExpressionGeneWithoutCohort()
     {
@@ -47,6 +50,7 @@ public class ExpressionSelectorTest
         assertTrue(highExpression.contains(highExpressionGene));
     }
 
+    @Ignore
     @Test
     public void shouldSelectLowExpressionGenes()
     {

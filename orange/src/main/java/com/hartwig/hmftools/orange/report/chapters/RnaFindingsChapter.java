@@ -1,32 +1,23 @@
 package com.hartwig.hmftools.orange.report.chapters;
 
-import static com.hartwig.hmftools.orange.report.ReportResources.formatPercentage;
+import static com.hartwig.hmftools.orange.report.tables.ExpressionTable.buildRnaSummary;
 
 import java.util.List;
-import java.util.Set;
-import java.util.StringJoiner;
 
 import com.hartwig.hmftools.datamodel.isofox.GeneExpression;
 import com.hartwig.hmftools.datamodel.isofox.IsofoxRecord;
 import com.hartwig.hmftools.datamodel.isofox.NovelSpliceJunction;
 import com.hartwig.hmftools.datamodel.isofox.RnaFusion;
-import com.hartwig.hmftools.datamodel.isofox.RnaQCStatus;
-import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.datamodel.purple.PurpleQCInterpretation;
 import com.hartwig.hmftools.orange.report.tables.ExpressionTable;
 import com.hartwig.hmftools.orange.report.tables.NovelSpliceJunctionTable;
 import com.hartwig.hmftools.orange.report.tables.RnaFusionTable;
-import com.hartwig.hmftools.orange.report.util.Cells;
 import com.hartwig.hmftools.orange.report.util.Tables;
 import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.layout.Document;
-import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Paragraph;
-import com.itextpdf.layout.element.Table;
-
-import org.jetbrains.annotations.NotNull;
 
 public class RnaFindingsChapter implements ReportChapter
 {
@@ -66,58 +57,9 @@ public class RnaFindingsChapter implements ReportChapter
 
     private void addKeyQC(final Document document)
     {
-        Cells cells = new Cells(mReportResources);
-        Table table = Tables.createContent(contentWidth(),
-                new float[] { 1, 1, 1, 1 },
-                new Cell[] { cells.createHeader("QC"), cells.createHeader("Total Fragments"), cells.createHeader("Non-Duplicate Fragments"),
-                        cells.createHeader("Duplicate rate") });
+        String title = "QC";
 
-        if(PurpleQCInterpretation.isContaminated(mPurpleRecord.fit().qc()))
-        {
-            table.addCell(cells.createSpanningEntry(table, ReportResources.NOT_AVAILABLE));
-        }
-        else
-        {
-            table.addCell(cells.createContent(qcValue(mIsofoxRecord.summary().qcStatus())));
-            table.addCell(cells.createContent(String.valueOf(mIsofoxRecord.summary().totalFragments())));
-
-            long nonDuplicates = mIsofoxRecord.summary().totalFragments() - mIsofoxRecord.summary().duplicateFragments();
-            table.addCell(cells.createContent(String.valueOf(nonDuplicates)));
-
-            double duplicateRate = mIsofoxRecord.summary().duplicateFragments() / (double) mIsofoxRecord.summary().totalFragments();
-            table.addCell(cells.createContent(formatPercentage(duplicateRate)));
-
-            addQCWarningInCaseOfFail(table, cells);
-        }
-
-        document.add(new Tables(mReportResources).createWrapping(table));
-    }
-
-    @NotNull
-    private static String qcValue(Set<RnaQCStatus> qcStatus)
-    {
-        StringJoiner joiner = new StringJoiner(", ");
-        for(RnaQCStatus status : qcStatus)
-        {
-            joiner.add(status.name());
-        }
-        return joiner.toString();
-    }
-
-    private void addQCWarningInCaseOfFail(Table table, Cells cells)
-    {
-        boolean isRnaFail = !mIsofoxRecord.summary().qcStatus().contains(RnaQCStatus.PASS);
-        boolean isDnaFailNoTumor = PurpleQCInterpretation.isFailNoTumor(mPurpleRecord.fit().qc());
-
-        if(isRnaFail || isDnaFailNoTumor)
-        {
-            String warning = isRnaFail ?
-                    "The RNA QC status of this sample is not a pass. All presented RNA data should be interpreted with caution"
-                    : "The DNA QC status of this sample is fail (no tumor). "
-                            + "In addition to DNA findings, all RNA findings should be interpreted with caution";
-
-            table.addCell(cells.createSpanningWarning(table, warning));
-        }
+        document.add(buildRnaSummary(title, contentWidth(), mIsofoxRecord.summary(), mReportResources));
     }
 
     private void addExpressionTables(final Document document)

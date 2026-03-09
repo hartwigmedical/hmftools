@@ -26,7 +26,7 @@ public class RnaFusionSelectorTest
 
         List<LinxFusion> linxFusions = Lists.newArrayList(LinxOrangeTestFactory.fusionBuilder().geneUp("C").geneDown("D").build());
 
-        List<RnaFusion> novelFusions = RnaFusionSelector.selectNovelKnownFusions(rnaFusions, linxFusions);
+        List<RnaFusion> novelFusions = RnaFusionSelector.selectKnownFusions(rnaFusions, linxFusions);
         assertEquals(1, novelFusions.size());
         assertEquals(match, novelFusions.get(0));
     }

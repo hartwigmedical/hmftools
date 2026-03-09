@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.orange.algo.isofox;
 
+import static com.hartwig.hmftools.orange.algo.OrangeConstants.HIGH_EXPRESSION_PERCENTILE_CUTOFF;
+import static com.hartwig.hmftools.orange.algo.OrangeConstants.LOW_EXPRESSION_PERCENTILE_CUTOFF;
+import static com.hartwig.hmftools.orange.algo.OrangeConstants.MAX_EXPRESSION_GENE_COUNT;
+
 import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -11,9 +15,6 @@ import com.hartwig.hmftools.datamodel.isofox.GeneExpression;
 
 final class ExpressionSelector
 {
-    private static final double HIGH_EXPRESSION_PERCENTILE_CUTOFF = 0.9;
-    private static final double LOW_EXPRESSION_PERCENTILE_CUTOFF = 0.05;
-
     public static List<GeneExpression> selectHighExpressionGenes(
             final List<GeneExpression> expressions, final List<DriverGene> driverGenes)
     {
@@ -25,9 +26,14 @@ final class ExpressionSelector
     public static List<GeneExpression> selectLowExpressionGenes(
             final List<GeneExpression> expressions, final List<DriverGene> driverGenes)
     {
-        return selectGenesMatchingCriteria(expressions,
+        List<GeneExpression> lowGeneExpressions = selectGenesMatchingCriteria(expressions,
                 extractGenesOfType(driverGenes, DriverCategory.TSG),
                 percentile -> percentile <= LOW_EXPRESSION_PERCENTILE_CUTOFF);
+
+        if(lowGeneExpressions.size() > MAX_EXPRESSION_GENE_COUNT)
+            lowGeneExpressions = lowGeneExpressions.subList(0, MAX_EXPRESSION_GENE_COUNT);
+
+        return lowGeneExpressions;
     }
 
     private static List<GeneExpression> selectGenesMatchingCriteria(
