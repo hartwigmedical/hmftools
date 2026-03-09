@@ -54,4 +54,15 @@ final class DriverUtil
             case REPORTED -> ReportedStatus.REPORTED;
         };
     }
+
+    static DriverInterpretation convert(com.hartwig.hmftools.datamodel.driver.DriverInterpretation driverInterpretation)
+    {
+        return switch (driverInterpretation)
+        {
+            case UNKNOWN -> DriverInterpretation.UNKNOWN;
+            case LOW -> DriverInterpretation.LOW;
+            case MEDIUM -> DriverInterpretation.MEDIUM;
+            case HIGH -> DriverInterpretation.HIGH;
+        };
+    }
 }

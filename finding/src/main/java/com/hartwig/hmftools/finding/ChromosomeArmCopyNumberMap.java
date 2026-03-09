@@ -3,9 +3,10 @@ package com.hartwig.hmftools.finding;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
-import com.hartwig.hmftools.datamodel.purple.PurpleCopyNumber;
 
+/*
 final class ChromosomeArmCopyNumberMap
 {
     private enum ChromosomeArm
@@ -301,3 +302,4 @@ final class ChromosomeArmCopyNumberMap
     {
     }
 }
+ */

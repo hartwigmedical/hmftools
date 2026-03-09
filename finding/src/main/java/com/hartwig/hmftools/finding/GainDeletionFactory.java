@@ -30,10 +30,7 @@ final class GainDeletionFactory
             FindingsStatus findingsStatus,
             PurpleRecord purple)
     {
-        ChromosomeArmCopyNumberMap cnPerChromosome =
-                com.hartwig.hmftools.finding.ChromosomeArmCopyNumberMap.create(purple.somaticCopyNumbers(), orangeRefGenomeVersion);
-
-        List<GainDeletion> gainDeletions = somaticDriverGainDels(purple.somaticGainsDels(), cnPerChromosome);
+        List<GainDeletion> gainDeletions = somaticDriverGainDels(purple.somaticGainsDels());
 
         gainDeletions.sort(GainDeletion.COMPARATOR);
 
@@ -56,14 +53,11 @@ final class GainDeletionFactory
                     .build();
         }
 
-        ChromosomeArmCopyNumberMap cnPerChromosome =
-                ChromosomeArmCopyNumberMap.create(purple.somaticCopyNumbers(), orangeRefGenomeVersion);
-
         List<GainDeletion> gainDeletions = new ArrayList<>();
 
         for(PurpleGainDeletion gainDels : Objects.requireNonNull(purple.germlineGainsDels()))
         {
-            gainDeletions.add(toGainDel(gainDels, DriverSource.GERMLINE, cnPerChromosome));
+            gainDeletions.add(toGainDel(gainDels, DriverSource.GERMLINE));
         }
 
         gainDeletions.sort(GainDeletion.COMPARATOR);
@@ -82,20 +76,17 @@ final class GainDeletionFactory
                 .orElseThrow(() -> new IllegalStateException("No gene copy number found for " + gene + " transcript " + transcript));
     }
 
-    private static List<GainDeletion> somaticDriverGainDels(
-            List<PurpleGainDeletion> gainDeletions, ChromosomeArmCopyNumberMap cnPerChromosome)
+    private static List<GainDeletion> somaticDriverGainDels(List<PurpleGainDeletion> gainDeletions)
     {
         List<GainDeletion> somaticGainsDels = new ArrayList<>();
         for(PurpleGainDeletion gainDeletion : gainDeletions)
         {
-            somaticGainsDels.add(toGainDel(gainDeletion, DriverSource.SOMATIC, cnPerChromosome));
+            somaticGainsDels.add(toGainDel(gainDeletion, DriverSource.SOMATIC));
         }
         return somaticGainsDels;
     }
 
-    private static GainDeletion toGainDel(PurpleGainDeletion purpleGainDeletion,
-            DriverSource sourceSample,
-            ChromosomeArmCopyNumberMap cnPerChromosome)
+    private static GainDeletion toGainDel(PurpleGainDeletion purpleGainDeletion, DriverSource sourceSample)
     {
         PurpleDriver driver = purpleGainDeletion.driver();
         GermlineAmpDelFields germlineAmpDelFields = purpleGainDeletion.germlineAmpDelFields();
@@ -125,18 +116,28 @@ final class GainDeletionFactory
                 .isCanonical(driver.isCanonical())
                 .somaticType(somaticType)
                 .germlineType(germlineType)
-                .geneExtent(interpretGeneExtent(purpleGainDeletion.exonRange()))
+                .geneExtent(interpretGeneExtent(purpleGainDeletion.geneRange()))
+                .exonRange(interpretExonRange(purpleGainDeletion.exonStart(), purpleGainDeletion.exonEnd()))
                 .tumorMinCopies(purpleGainDeletion.minCopyNumber())
                 .tumorMaxCopies(purpleGainDeletion.maxCopyNumber())
                 .tumorMinMinorAlleleCopies(purpleGainDeletion.minMinorAlleleCopies())
-                .chromosomeArmCopies(cnPerChromosome.chromosomeArmCopyNumber(
-                        purpleGainDeletion.chromosome(), purpleGainDeletion.chromosomeBand()))
+                .chromosomeArmCopies(2) // TODO fix later
                 .build();
     }
 
-    private static GainDeletion.GeneExtent interpretGeneExtent(String exonRange)
+    private static GainDeletion.GeneExtent interpretGeneExtent(String geneRange)
     {
-        return exonRange.equals("FULL") ? GainDeletion.GeneExtent.FULL_GENE : GainDeletion.GeneExtent.PARTIAL_GENE;
+        return geneRange.equals("FULL") ? GainDeletion.GeneExtent.FULL_GENE : GainDeletion.GeneExtent.PARTIAL_GENE;
+    }
+
+    private static GainDeletion.@Nullable ExonRange interpretExonRange(@Nullable Integer exonStart, @Nullable Integer exonEnd)
+    {
+        if (exonStart == null && exonEnd == null)
+        {
+            return null;
+        }
+
+        return new GainDeletion.ExonRange(exonStart, exonEnd);
     }
 
     private static GainDeletion.Type germlineGainDelType(PurpleDriverType purpleDriverType, PurpleGermlineStatus purpleGermlineStatus)
