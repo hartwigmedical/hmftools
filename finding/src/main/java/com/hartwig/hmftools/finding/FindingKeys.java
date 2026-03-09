@@ -39,7 +39,7 @@ final class FindingKeys
 
     public static String fusion(DriverSource sampleType, LinxFusion fusion)
     {
-        return String.format("fusion[%s %s %s]", sampleType, fusion.geneStart(), fusion.geneEnd());
+        return String.format("fusion[%s %s %s]", sampleType, fusion.geneUp(), fusion.geneDown());
     }
 
     public static String virus(VirusInterpreterEntry virus)

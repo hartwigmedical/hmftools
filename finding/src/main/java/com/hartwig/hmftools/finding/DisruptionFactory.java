@@ -10,9 +10,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
-import com.hartwig.hmftools.datamodel.linx.LinxDriver;
 import com.hartwig.hmftools.datamodel.linx.LinxGeneOrientation;
-import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.finding.datamodel.Breakend;
@@ -35,13 +33,6 @@ import org.jetbrains.annotations.Nullable;
 // create Disruption findings from Linx breakends
 final class DisruptionFactory
 {
-    // when can we move to kotlin
-    @FunctionalInterface
-    private interface DisruptionTypeFinder
-    {
-        Disruption.Type apply(String gene, String transcript);
-    }
-
     public static final Logger LOGGER = LogManager.getLogger(DisruptionFactory.class);
 
     private record Pair<A, B>(@Nullable A left, @Nullable B right)
@@ -51,21 +42,7 @@ final class DisruptionFactory
     // for the types of disruptions, see hmftools.common.driver.DriverType, they are:
     // germline: GERMLINE_DISRUPTION
     // somatic: HOM_DUP_DISRUPTION, HOM_DEL_DISRUPTION, DISRUPTION
-
-    // we can work out which disruption type it was by the following logic:
-    // Somatic:
-    //  1. check if the disruption exists in the drivers list, and if it is, use the driver type if the type is HOM_DUP_DISRUPTION or HOM_DEL_DISRUPTION.
-    //  2. if not, use SOMATIC_DISRUPTION as the type.
-    // Germline:
-    //  1. check if the disruption exists in the homozygous disruption list, if it is, then type is GERMLINE_HOM_DUP_DISRUPTION.
-    //  2. if not, then type is GERMLINE_DISRUPTION.
-
-    // more note on Homozygous disruptions:
-    // right now it is created from linx driver catalog entries instead of the linx breakends.
-    // It select HOM_DUP_DISRUPTION, HOM_DEL_DISRUPTION. Unfortunately there is no foolproof way to link
-    // back to the breakends, it probably will work by just selecting first reportable disruption with the same gene / transcript.
-    // We can do it for the backport version if that makes it easier.
-
+    // We can check the breakend types to know which type it is
     public static DriverFindingList<Disruption> createGermlineDisruptions(boolean hasRefSample, LinxRecord linx)
     {
         if(!hasRefSample)
@@ -78,17 +55,10 @@ final class DisruptionFactory
 
         List<LinxBreakend> breakends = Objects.requireNonNull(linx.germlineBreakends());
         List<LinxSvAnnotation> structuralVariants = Objects.requireNonNull(linx.germlineStructuralVariants());
-        List<LinxHomozygousDisruption> germlineHomozygousDisruptions = Objects.requireNonNull(linx.germlineHomozygousDisruptions());
-
-        DisruptionTypeFinder findDisruptionType = (gene, transcript) ->
-                germlineHomozygousDisruptions.stream()
-                        .anyMatch(o -> o.gene().equals(gene) && o.transcript().equals(transcript))
-                        ? Disruption.Type.GERMLINE_HOM_DUP_DISRUPTION
-                        : Disruption.Type.GERMLINE_DISRUPTION;
 
         return DriverFindingListBuilder.<Disruption>builder()
                 .status(FindingsStatus.OK)
-                .findings(createDisruptions(DriverSource.GERMLINE, breakends, structuralVariants, true, findDisruptionType))
+                .findings(createDisruptions(DriverSource.GERMLINE, breakends, structuralVariants, true))
                 .build();
     }
 
@@ -96,25 +66,10 @@ final class DisruptionFactory
     {
         @NotNull Collection<LinxBreakend> breakends = linx.somaticBreakends();
         @NotNull Collection<LinxSvAnnotation> structuralVariants = linx.somaticStructuralVariants();
-        @NotNull List<LinxDriver> linxDrivers = linx.somaticDrivers();
-
-        Map<String, Disruption.Type> geneDriverTypeMap = new HashMap<>();
-        for(LinxDriver linxDriver : linxDrivers)
-        {
-            Disruption.Type disruptionType = switch(linxDriver.type())
-            {
-                case HOM_DUP_DISRUPTION -> Disruption.Type.SOMATIC_HOM_DUP_DISRUPTION;
-                case HOM_DEL_DISRUPTION -> Disruption.Type.SOMATIC_HOM_DEL_DISRUPTION;
-                default -> Disruption.Type.SOMATIC_DISRUPTION;
-            };
-            geneDriverTypeMap.put(linxDriver.gene(), disruptionType);
-        }
-        DisruptionTypeFinder findDisruptionType = (gene, transcript) ->
-                geneDriverTypeMap.getOrDefault(gene, Disruption.Type.SOMATIC_DISRUPTION);
 
         return  DriverFindingListBuilder.<Disruption>builder()
                 .status(FindingsStatus.OK)
-                .findings(createDisruptions(DriverSource.SOMATIC, breakends, structuralVariants, hasReliablePurity, findDisruptionType))
+                .findings(createDisruptions(DriverSource.SOMATIC, breakends, structuralVariants, hasReliablePurity))
                 .build();
     }
 
@@ -122,8 +77,7 @@ final class DisruptionFactory
             DriverSource sampleType,
             Collection<LinxBreakend> breakends,
             Collection<LinxSvAnnotation> structuralVariants,
-            boolean hasReliablePurity,
-            DisruptionTypeFinder disruptionTypeFinder)
+            boolean hasReliablePurity)
     {
         List<Disruption> disruptions = new ArrayList<>();
         Map<SvAndTranscriptKey, Pair<LinxBreakend, LinxBreakend>> pairedMap = mapBreakendsPerStructuralVariant(breakends);
@@ -153,7 +107,12 @@ final class DisruptionFactory
                 undisruptedCopyNumber = breakend.undisruptedCopyNumber();
             }
 
-            Disruption.Type disruptionType = disruptionTypeFinder.apply(breakend.gene(), breakend.transcript());
+            Disruption.Type disruptionType = switch(breakend.driverType())
+            {
+                case DISRUPTION -> Disruption.Type.DISRUPTION;
+                case HOM_DEL_DISRUPTION -> Disruption.Type.HOM_DEL_DISRUPTION;
+                case HOM_DUP_DISRUPTION -> Disruption.Type.HOM_DUP_DISRUPTION;
+            };
 
             disruptions.add(createDisruption(
                     sampleType,
