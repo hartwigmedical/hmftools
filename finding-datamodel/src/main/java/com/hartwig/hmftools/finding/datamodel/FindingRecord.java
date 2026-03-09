@@ -20,9 +20,9 @@ public record FindingRecord(
         @NotNull FindingList<ChromosomeArmCopyNumber> chromosomeArmCopyNumbers,
         @NotNull FindingList<HlaAllele> hlaAlleles,
         @NotNull FindingList<PharmocoGenotype> pharmocoGenotypes,
+        @NotNull FindingList<PredictedTumorOrigin> predictedTumorOrigins,
         @NotNull FindingItem<MicrosatelliteStability> microsatelliteStability,
         @NotNull FindingItem<TumorMutationStatus> tumorMutationStatus,
-        @NotNull FindingItem<PredictedTumorOrigin> predictedTumorOrigin,
         @NotNull FindingItem<HomologousRecombination> homologousRecombination,
         @NotNull VisualisationFiles visualisationFiles)
 {
