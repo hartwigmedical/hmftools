@@ -130,7 +130,7 @@ final class SmallVariantFactory
                 .isCanonical(isCanonical)
                 .type(SmallVariant.VariantType.valueOf(variant.type().name()))
                 .gene(variant.gene())
-                .chromosome(variant.chromosome())
+                .chromosome(ChromosomeUtil.normalize(variant.chromosome()))
                 .position(variant.position())
                 .ref(variant.ref())
                 .alt(variant.alt())
