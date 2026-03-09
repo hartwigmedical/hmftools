@@ -81,8 +81,8 @@ final class DisruptionFactory
         DisruptionTypeFinder findDisruptionType = (gene, transcript) ->
                 germlineHomozygousDisruptions.stream()
                         .anyMatch(o -> o.gene().equals(gene) && o.transcript().equals(transcript))
-                        ? Disruption.Type.GERMLINE_HOM_DUP_DISRUPTION
-                        : Disruption.Type.GERMLINE_DISRUPTION;
+                        ? Disruption.Type.HOM_DUP_DISRUPTION
+                        : Disruption.Type.DISRUPTION;
 
         return DriverFindingListBuilder.<Disruption>builder()
                 .status(FindingsStatus.OK)
@@ -101,14 +101,14 @@ final class DisruptionFactory
         {
             Disruption.Type disruptionType = switch(linxDriver.type())
             {
-                case HOM_DUP_DISRUPTION -> Disruption.Type.SOMATIC_HOM_DUP_DISRUPTION;
-                case HOM_DEL_DISRUPTION -> Disruption.Type.SOMATIC_HOM_DEL_DISRUPTION;
-                default -> Disruption.Type.SOMATIC_DISRUPTION;
+                case HOM_DUP_DISRUPTION -> Disruption.Type.HOM_DUP_DISRUPTION;
+                case HOM_DEL_DISRUPTION -> Disruption.Type.HOM_DEL_DISRUPTION;
+                default -> Disruption.Type.DISRUPTION;
             };
             geneDriverTypeMap.put(linxDriver.gene(), disruptionType);
         }
         DisruptionTypeFinder findDisruptionType = (gene, transcript) ->
-                geneDriverTypeMap.getOrDefault(gene, Disruption.Type.SOMATIC_DISRUPTION);
+                geneDriverTypeMap.getOrDefault(gene, Disruption.Type.DISRUPTION);
 
         return DriverFindingListBuilder.<Disruption>builder()
                 .status(FindingsStatus.OK)

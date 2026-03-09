@@ -6,6 +6,7 @@ import org.jspecify.annotations.Nullable;
 
 import jakarta.validation.constraints.NotNull;
 
+@SuppressWarnings("unused")
 @RecordBuilder
 public record Disruption(
         @NotNull DriverFields driver,
@@ -25,27 +26,14 @@ public record Disruption(
 {
     public enum Type
     {
-        SOMATIC_DISRUPTION,
-        SOMATIC_HOM_DUP_DISRUPTION,
-        SOMATIC_HOM_DEL_DISRUPTION,
-        GERMLINE_DISRUPTION,
-        GERMLINE_HOM_DUP_DISRUPTION;
-
-        public boolean isSomatic()
-        {
-            return !isGermline();
-        }
-
-        public boolean isGermline()
-        {
-            return this == GERMLINE_DISRUPTION || this == GERMLINE_HOM_DUP_DISRUPTION;
-        }
+        DISRUPTION,
+        HOM_DUP_DISRUPTION,
+        HOM_DEL_DISRUPTION;
 
         public boolean isHomozygous()
         {
-            return this == SOMATIC_HOM_DUP_DISRUPTION ||
-                    this == SOMATIC_HOM_DEL_DISRUPTION ||
-                    this == GERMLINE_HOM_DUP_DISRUPTION;
+            return this == HOM_DUP_DISRUPTION ||
+                    this == HOM_DEL_DISRUPTION;
         }
     }
 

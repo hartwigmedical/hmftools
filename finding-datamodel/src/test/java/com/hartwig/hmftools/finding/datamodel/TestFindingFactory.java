@@ -150,7 +150,7 @@ public class TestFindingFactory
                 .isCanonical(true)
                 .breakendStart(breakendBuilder().build())
                 .breakendEnd(breakendBuilder().build())
-                .type(Disruption.Type.SOMATIC_DISRUPTION);
+                .type(Disruption.Type.DISRUPTION);
     }
 
     @NotNull
@@ -177,7 +177,7 @@ public class TestFindingFactory
                 .transcript("")
                 .isCanonical(true)
                 .breakendType(Breakend.Type.DEL)
-                .type(Disruption.Type.SOMATIC_HOM_DEL_DISRUPTION);
+                .type(Disruption.Type.HOM_DEL_DISRUPTION);
     }
 
     @NotNull
