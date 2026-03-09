@@ -5,12 +5,12 @@
     <parent>
         <artifactId>hmftools</artifactId>
         <groupId>com.hartwig</groupId>
-        <version>local-SNAPSHOT</version>
+        <version>${revision}</version>
     </parent>
 
     <artifactId>finding-datamodel</artifactId>
     <packaging>jar</packaging>
-    <version>local-SNAPSHOT</version>
+    <version>${revision}</version>
     <name>HMF Tools - Finding datamodel</name>
 
     <dependencies>

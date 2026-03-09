@@ -5,12 +5,12 @@
     <parent>
         <artifactId>hmftools</artifactId>
         <groupId>com.hartwig</groupId>
-        <version>local-SNAPSHOT</version>
+        <version>${revision}</version>
     </parent>
 
     <artifactId>hmf-common</artifactId>
     <packaging>jar</packaging>
-    <version>${hmf-common.version}</version>
+    <version>${revision}</version>
     <name>HMF Tools - Common</name>
 
     <dependencies>

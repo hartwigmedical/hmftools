@@ -5,7 +5,7 @@
     <groupId>com.hartwig</groupId>
     <artifactId>hmftools</artifactId>
     <packaging>pom</packaging>
-    <version>local-SNAPSHOT</version>
+    <version>${revision}</version>
     <name>HMF Genomics Tools</name>
 
     <modules>
@@ -63,7 +63,7 @@
         <maven.site.plugin.version>3.7.1</maven.site.plugin.version>
         <maven.shade.plugin.version>3.2.4</maven.shade.plugin.version>
 
-        <hmf-common.version>local-SNAPSHOT</hmf-common.version>
+        <revision>local-SNAPSHOT</revision>
 
         <amber.version>4.3</amber.version>
         <bam-tools.version>1.5</bam-tools.version>
@@ -229,7 +229,7 @@
             <dependency>
                 <groupId>com.hartwig</groupId>
                 <artifactId>hmf-common</artifactId>
-                <version>${hmf-common.version}</version>
+                <version>${revision}</version>
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>
@@ -239,12 +239,12 @@
             <dependency>
                 <groupId>com.hartwig</groupId>
                 <artifactId>finding-datamodel</artifactId>
-                <version>${project.version}</version>
+                <version>${revision}</version>
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>
                 <artifactId>orange-datamodel</artifactId>
-                <version>${project.version}</version>
+                <version>${revision}</version>
             </dependency>
             <dependency>
                 <groupId>com.github.samtools</groupId>
