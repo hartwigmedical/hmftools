@@ -28,6 +28,7 @@ import com.hartwig.hmftools.common.purple.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurityContextFile;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
+import com.hartwig.hmftools.linx.gene.BreakendTransData;
 
 public class DriverDataCache
 {
@@ -118,7 +119,7 @@ public class DriverDataCache
 
         ReportedStatus reportedStatus = driverGene.reportDisruption() ? ReportedStatus.REPORTED : ReportedStatus.NOT_REPORTED;
 
-        final DriverCatalog driverRecord = ImmutableDriverCatalog.builder()
+        DriverCatalog driverRecord = ImmutableDriverCatalog.builder()
                 .driver(driverType)
                 .category(driverGene.likelihoodType())
                 .gene(gene.geneName())
@@ -141,7 +142,7 @@ public class DriverDataCache
 
         mDriverCatalog.add(driverRecord);
 
-        final GeneData geneData = GeneTransCache.getGeneDataByName(gene.geneName());
+        GeneData geneData = GeneTransCache.getGeneDataByName(gene.geneName());
 
         if(geneData == null)
         {
