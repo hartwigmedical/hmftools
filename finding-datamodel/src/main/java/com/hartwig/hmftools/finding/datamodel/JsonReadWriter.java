@@ -10,6 +10,7 @@ import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDate;
 import java.util.ServiceLoader;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -33,6 +34,7 @@ public class JsonReadWriter<T>
         {
             gsonBuilder.registerTypeAdapterFactory(factory);
         }
+        gsonBuilder.registerTypeAdapter(LocalDate.class, new LocalDateAdapter());
 
         gson = gsonBuilder.serializeNulls().serializeSpecialFloatingPointValues().setPrettyPrinting()
                 .create();

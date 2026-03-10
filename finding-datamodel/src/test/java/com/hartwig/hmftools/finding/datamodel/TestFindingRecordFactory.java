@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.finding.datamodel;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.jetbrains.annotations.NotNull;
@@ -15,12 +16,14 @@ public class TestFindingRecordFactory {
     public static FindingRecordBuilder createMinimalTestFindingRecordBuilder() {
         return FindingRecordBuilder.builder()
                 .metaProperties(MetaPropertiesBuilder.builder()
+                        .version("")
+                        .sampleId("")
+                        .samplingDate(LocalDate.of(2026, 1, 1))
                         .sequencingScope(SequencingScope.WHOLE_GENOME)
-                        .pipelineVersion("3.0")
-                        .version("0.1.0")
                         .refGenomeVersion(RefGenomeVersion.V37)
                         .build())
                 .purityPloidyFit(TestFindingFactory.purityPloidyFitBuilder().build())
+                .predictedTumorOrigins(TestFindingFactory.buildFindingsList(FindingsStatus.OK, List.of(TestFindingFactory.predictedTumorOriginBuilder().build())))
                 .homologousRecombination(TestFindingFactory.buildFindingItem(FindingsStatus.OK, TestFindingFactory.homologousRecombinationBuilder().build()))
                 .microsatelliteStability(TestFindingFactory.buildFindingItem(FindingsStatus.OK, TestFindingFactory.microsatelliteStabilityBuilder().build()))
                 .tumorMutationStatus(TestFindingFactory.buildFindingItem(FindingsStatus.OK, TestFindingFactory.mutationStatusBuilder().build()))
@@ -32,7 +35,6 @@ public class TestFindingRecordFactory {
                 .germlineDisruptions(TestFindingFactory.buildDriverFindingsList(FindingsStatus.OK, List.of()))
                 .fusions(TestFindingFactory.buildDriverFindingsList(FindingsStatus.OK, List.of()))
                 .viruses(TestFindingFactory.buildDriverFindingsList(FindingsStatus.OK, List.of()))
-                .predictedTumorOrigins(TestFindingFactory.buildFindingsList(FindingsStatus.OK, List.of()))
                 .chromosomeArmCopyNumbers(TestFindingFactory.buildFindingsList(FindingsStatus.OK, List.of()))
                 .hlaAlleles(TestFindingFactory.buildFindingsList(FindingsStatus.OK, List.of()))
                 .pharmocoGenotypes(TestFindingFactory.buildFindingsList(FindingsStatus.OK, List.of()))
