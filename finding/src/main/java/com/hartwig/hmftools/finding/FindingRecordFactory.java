@@ -106,6 +106,8 @@ public class FindingRecordFactory
                         .refGenomeVersion(RefGenomeVersion.valueOf(orangeRecord.refGenomeVersion().name()))
                         .sequencingScope(SequencingScope.valueOf(orangeRecord.experimentType().name()))
                         .pipelineVersion(orangeRecord.pipelineVersion())
+                        .sampleId(orangeRecord.sampleId())
+                        .samplingDate(orangeRecord.samplingDate())
                         .build())
                 .somaticDisruptions(createSomaticDisruptions(hasReliablePurity, linx))
                 .germlineDisruptions(createGermlineDisruptions(orangeRecord.referenceId() != null, linx))
