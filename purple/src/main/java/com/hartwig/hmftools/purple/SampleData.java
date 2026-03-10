@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.purple;
 
+import com.hartwig.hmftools.common.amber.AmberQC;
 import com.hartwig.hmftools.purple.somatic.SomaticVariantCache;
 import com.hartwig.hmftools.purple.sv.SomaticSvCache;
 

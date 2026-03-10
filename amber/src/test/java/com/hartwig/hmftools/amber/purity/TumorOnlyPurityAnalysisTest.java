@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.amber.purity;
 
+import static com.hartwig.hmftools.amber.purity.TumorOnlyPurityAnalysis.snvTypeClassifier;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates.COORDS_38;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 
@@ -38,8 +39,8 @@ public class TumorOnlyPurityAnalysisTest extends PurityTestBase
     private Map<Chromosome, SortedSet<AmberSite>> SitesByChromosome;
     private Map<HumanChromosome, SortedSet<PositionEvidence>> EvidenceByChromosome;
     private Map<PositionEvidence, Double> GnomadFrequencyByEvidence;
-    private File outputDir;
-    private TumorOnlyPurityAnalysis analysis;
+    private File OutputDir;
+    private TumorOnlyPurityAnalysis Analysis;
 
     @Before
     public void setup() throws Exception
@@ -47,49 +48,57 @@ public class TumorOnlyPurityAnalysisTest extends PurityTestBase
         SitesByChromosome = new HashMap<>();
         EvidenceByChromosome = new HashMap<>();
         GnomadFrequencyByEvidence = new HashMap<>();
-        outputDir = Files.createTempDirectory("amber").toFile();
-        outputDir.deleteOnExit();
+        OutputDir = Files.createTempDirectory("amber").toFile();
+        OutputDir.deleteOnExit();
     }
 
     @Test
-    public void noPeaks() throws Exception
+    public void mutationTypeClassifierTest()
+    {
+        assertEquals(CanonicalSnvType.C_A, snvTypeClassifier().apply(pe("C", "A", 0.5)));
+        assertEquals(CanonicalSnvType.C_A, snvTypeClassifier().apply(pe("C", "A", 0.65)));
+        assertEquals(CanonicalSnvType.T_G, snvTypeClassifier().apply(pe("C", "A", 0.66)));
+    }
+
+    @Test
+    public void noPeaks()
     {
         createBaselineReadings();
         createAnalysis();
-        assertEquals(0.04, analysis.cutoff(), 0.001);
-        assertTrue(analysis.contaminationPeaks().isEmpty());
+        assertEquals(0.04, Analysis.cutoff(), 0.001);
+        assertTrue(Analysis.contaminationPeaks().isEmpty());
     }
 
     @Test
-    public void onePeakAboveMinimumCutoff() throws Exception
+    public void onePeakAboveMinimumCutoff()
     {
         createBaselineReadings();
         final double vaf = 0.21;
         createCopyNumberEventPoints(vaf);
         createAnalysis();
-        assertEquals(TumorOnlyPurityAnalysis.MIN_CUTOFF, analysis.cutoff(), 0.001);
-        assertEquals(0, analysis.contaminationPeaks().size());
-        assertEquals(1, analysis.copyNumberPeaks().size());
-        assertEquals(vaf, analysis.copyNumberPeaks().get(0).vaf(), 0.01);
+        assertEquals(TumorOnlyPurityAnalysis.MIN_CUTOFF, Analysis.cutoff(), 0.001);
+        assertEquals(0, Analysis.contaminationPeaks().size());
+        assertEquals(1, Analysis.copyNumberPeaks().size());
+        assertEquals(vaf, Analysis.copyNumberPeaks().get(0).vaf(), 0.01);
     }
 
     @Test
-    public void oneCnEventBelowMinimumCutoff() throws Exception
+    public void oneCnEventBelowMinimumCutoff()
     {
         createBaselineReadings();
         final double vaf = 0.1;
         // Add a 20 point copy number peak on 1P.
         createCopyNumberEventPoints(vaf);
         createAnalysis();
-        assertEquals(vaf / 3, analysis.cutoff(), 0.01);
-        assertEquals(0, analysis.contaminationPeaks().size());
-        assertEquals(2, analysis.copyNumberPeaks().size());
-        CandidatePeak peak0 = analysis.copyNumberPeaks().get(0);
+        assertEquals(vaf / 3, Analysis.cutoff(), 0.01);
+        assertEquals(0, Analysis.contaminationPeaks().size());
+        assertEquals(2, Analysis.copyNumberPeaks().size());
+        CandidatePeak peak0 = Analysis.copyNumberPeaks().get(0);
         assertEquals(1.0, peak0.homozygousProportion(), 0.01);
         assertEquals(vaf, peak0.vaf(), 0.01);
         assertEquals(20, peak0.homozygousEvidencePoints().size());
         assertEquals(0, peak0.heterozygousEvidencePoints().size());
-        CandidatePeak peak1 = analysis.copyNumberPeaks().get(1);
+        CandidatePeak peak1 = Analysis.copyNumberPeaks().get(1);
         assertEquals(vaf * 2.0, peak1.vaf(), 0.1);
         assertEquals(0.0, peak1.homozygousProportion(), 0.01);
         assertEquals(0, peak1.homozygousEvidencePoints().size());
@@ -97,12 +106,12 @@ public class TumorOnlyPurityAnalysisTest extends PurityTestBase
     }
 
     @Test
-    public void contaminationTest() throws Exception
+    public void contaminationTest()
     {
         createBaselineReadings();
         addInContaminationData(0.25);
         createAnalysis();
-        assertEquals(1, analysis.contaminationPeaks().size());
+        assertEquals(1, Analysis.contaminationPeaks().size());
     }
 
     private void createCopyNumberEventPoints(final double vaf)
@@ -149,7 +158,7 @@ public class TumorOnlyPurityAnalysisTest extends PurityTestBase
         }
     }
 
-    private void createAnalysis() throws Exception
+    private void createAnalysis()
     {
         List<PositionEvidence> evidence = new ArrayList<>();
         for(HumanChromosome chromosome : EvidenceByChromosome.keySet())
@@ -161,8 +170,8 @@ public class TumorOnlyPurityAnalysisTest extends PurityTestBase
         {
             sites.putAll(chromosome, SitesByChromosome.get(chromosome));
         }
-        PurityAnalysisConfig config = new PurityAnalysisConfig(TUMOR_ID, V38, outputDir.getAbsolutePath(), 8);
-        analysis = new TumorOnlyPurityAnalysis(evidence, sites, config);
+        PurityAnalysisConfig config = new PurityAnalysisConfig(TUMOR_ID, V38, OutputDir.getAbsolutePath(), 8);
+        Analysis = new TumorOnlyPurityAnalysis(evidence, sites, config);
     }
 
     private int startPosition(ChrArm chrArm)
@@ -265,5 +274,14 @@ public class TumorOnlyPurityAnalysisTest extends PurityTestBase
         List<String> bases = new ArrayList<>(List.of("A", "C", "G", "T"));
         Collections.shuffle(bases);
         return Pair.of(bases.get(0), bases.get(1));
+    }
+
+    private PositionEvidence pe(String ref, String alt, double vaf)
+    {
+        final PositionEvidence pe = new PositionEvidence("1", 1000, ref, alt);
+        pe.ReadDepth = 1000;
+        pe.AltSupport = (int) (1000 * vaf);
+        pe.RefSupport = 1000 - pe.AltSupport;
+        return pe;
     }
 }

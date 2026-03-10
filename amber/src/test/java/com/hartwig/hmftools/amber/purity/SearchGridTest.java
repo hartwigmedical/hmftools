@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.amber.contamination;
+package com.hartwig.hmftools.amber.purity;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -6,14 +6,11 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
-@Ignore
 public class SearchGridTest
 {
-
     @Test
     public void searchValuesAndStepsTest()
     {
@@ -26,25 +23,14 @@ public class SearchGridTest
         assertEquals(0.0011, searchValues.get(1).getRight(), delta);
         assertEquals(0.007, searchValues.get(2).getLeft(), delta);
         assertEquals(0.00116, searchValues.get(2).getRight(), delta);
-        assertEquals(0.341, searchValues.get(searchValues.size() - 1).getLeft(), delta);
-        assertEquals(0.324, searchValues.get(searchValues.size() - 2).getLeft(), delta);
+        assertEquals(0.359, searchValues.get(searchValues.size() - 1).getLeft(), delta);
+        assertEquals(0.341, searchValues.get(searchValues.size() - 2).getLeft(), delta);
         assertEquals(1.05,
                 searchValues.get(searchValues.size() - 1).getRight() / searchValues.get(searchValues.size() - 2).getRight(), delta);
         assertTrue(searchValues.size() >= 60);
-    }
 
-    @Test
-    public void searchValuesTest()
-    {
-        final SearchGrid searchGrid = new SearchGrid();
-        final List<Double> searchValues = searchGrid.searchValues();
-        assertEquals(0.005, searchValues.get(0), 0.0001);
-        assertEquals(0.006, searchValues.get(1), 0.0001);
-        assertEquals(0.007, searchValues.get(2), 0.0001);
-        assertEquals(0.341, searchValues.get(searchValues.size() - 1), 0.0001);
-        assertEquals(0.324, searchValues.get(searchValues.size() - 2), 0.0001);
-        assertTrue(searchValues.size() >= 60);
-        checkIncreasingByAtLeast(searchValues);
+        List<Double> scores = searchValues.stream().map(Pair::getLeft).toList();
+        checkIncreasingByAtLeast(scores);
     }
 
     @Test

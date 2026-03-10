@@ -17,14 +17,7 @@ import org.junit.Test;
 
 public class GnomadFrequencyAnalysisTest
 {
-    private final GnomadFrequencySupplier Frequencies = new GnomadFrequencySupplier()
-    {
-        @Override
-        public double getFrequency(String chromosome, int position)
-        {
-            return position * 1.0 / 1000;
-        }
-    };
+    private final GnomadFrequencySupplier Frequencies = (chromosome, position) -> position * 1.0 / 1000;
 
     @Test
     public void getMeanTest()

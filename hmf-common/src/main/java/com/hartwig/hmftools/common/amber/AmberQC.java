@@ -6,9 +6,7 @@ import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-@Value.Immutable
-@Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class AmberQC
+public record AmberQC(double contamination, double consanguinityProportion, String uniparentalDisomy)
 {
     private static final double CONTAMINATION_MAX_FAIL = 0.1;
 
@@ -26,11 +24,4 @@ public abstract class AmberQC
 
         return AmberQCStatus.PASS;
     }
-
-    public abstract double contamination();
-
-    public abstract double consanguinityProportion();
-
-    @Nullable
-    public abstract String uniparentalDisomy();
 }

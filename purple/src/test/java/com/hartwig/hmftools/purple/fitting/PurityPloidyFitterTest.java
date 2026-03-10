@@ -52,7 +52,7 @@ public class PurityPloidyFitterTest extends FittingTestBase
         List<ObservedRegion> observedRegions = buildDefaultObservedRegions();
 
         PurityPloidyFitter fitter = new PurityPloidyFitter(
-                mConfig, mReferenceData, mSampleData, null, mRegionFitCalculator, observedRegions, Gender.FEMALE, false);
+                mConfig, mReferenceData, mSampleData, null, mRegionFitCalculator, observedRegions, Gender.FEMALE);
 
         assertTrue(fitter.isValid());
 

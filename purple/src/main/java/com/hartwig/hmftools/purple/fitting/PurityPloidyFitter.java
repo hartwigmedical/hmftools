@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.purple.PurpleConstants.MIN_PURITY_DEFAULT;
 import static com.hartwig.hmftools.purple.PurpleConstants.SOMATIC_FIT_ANEUPLOIDIC_RATIO_CUTOFF;
 import static com.hartwig.hmftools.purple.PurpleConstants.SOMATIC_FIT_ANEUPLOIDIC_REGION_CUTOFF;
 import static com.hartwig.hmftools.purple.PurpleConstants.SOMATIC_FIT_ANEUPLOIDIC_REGION_MIN_BAF_COUNT;
+import static com.hartwig.hmftools.purple.PurpleConstants.SOMATIC_FIT_CONTAMINATION_CUTOFF;
 import static com.hartwig.hmftools.purple.PurpleConstants.SOMATIC_FIT_TUMOR_ONLY_PLOIDY_MAX;
 import static com.hartwig.hmftools.purple.PurpleConstants.SOMATIC_FIT_TUMOR_ONLY_PLOIDY_MIN;
 import static com.hartwig.hmftools.purple.PurpleConstants.SOMATIC_FIT_TUMOR_ONLY_PURITY_MIN;
@@ -70,14 +71,13 @@ public class PurityPloidyFitter
     private BestFit mBestFit;
     private PurityAdjuster mPurityAdjuster;
 
-    private final boolean mHasChimerism;
+    private final double ContaminationLevel;
     private boolean mIsValid;
 
     public PurityPloidyFitter(
             final PurpleConfig config, final ReferenceData referenceData, final SampleData sampleData,
             final ExecutorService executorService,
-            final RegionFitCalculator regionFitCalculator, final List<ObservedRegion> observedRegions, final Gender gender,
-            final boolean hasChimerism)
+            final RegionFitCalculator regionFitCalculator, final List<ObservedRegion> observedRegions, final Gender gender)
     {
         mSampleData = sampleData;
         mConfig = config;
@@ -86,7 +86,7 @@ public class PurityPloidyFitter
         mRegionFitCalculator = regionFitCalculator;
         mObservedRegions = observedRegions;
         mGender = gender;
-        mHasChimerism = hasChimerism;
+        ContaminationLevel = sampleData.Amber.Contamination;
 
         mCopyNumbers = Lists.newArrayList();
         mFittedRegions = Lists.newArrayList();
@@ -266,9 +266,10 @@ public class PurityPloidyFitter
         {
             boolean noSignificantAneuploidy = noSignificantAneuploidy();
             boolean diploidHighPurity = isCloseToDiploidAndHighPurity(mCopyNumberPurityFit);
-            if(mHasChimerism || (noSignificantAneuploidy && (diploidHighPurity || highlyDiploid)))
+            final boolean significantContamination = ContaminationLevel > SOMATIC_FIT_CONTAMINATION_CUTOFF;
+            if(significantContamination || (noSignificantAneuploidy && (diploidHighPurity || highlyDiploid)))
             {
-                PPL_LOGGER.debug("Searching for somatic fit for non-chimeric diploid sample");
+                PPL_LOGGER.debug("Searching for somatic fit for non-chimeric diploid sample. Significant contamination: {}", significantContamination);
                 mSomaticPurityFit = mVariantPurityFitter.calcSomaticOnlyFit(mCopyNumberFitCandidates);
 
                 if(mSomaticPurityFit != null)

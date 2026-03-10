@@ -65,7 +65,6 @@ public class CandidatePeakEvaluationTest
     public void capturedPointsCanBeInHetPeakTest()
     {
         List<PositionEvidence> points = createHetPeakEvidencePointsWithDepth(15, 1000);
-        CandidatePeakEvaluation evaluation = new CandidatePeakEvaluation(Peak, points);
         CandidatePeakEvaluationResult result = calculateResult(points);
         Assert.assertTrue(result.score() > 0.0);
     }

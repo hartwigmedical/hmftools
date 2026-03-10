@@ -15,7 +15,6 @@ import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.amber.AmberBAFFile;
 import com.hartwig.hmftools.common.amber.AmberQC;
 import com.hartwig.hmftools.common.amber.AmberQCFile;
-import com.hartwig.hmftools.common.amber.ImmutableAmberQC;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.utils.config.VersionInfo;
 import com.hartwig.hmftools.common.utils.pcf.PCFFile;
@@ -63,10 +62,8 @@ public class ResultsWriter
 
     public void persistQC(double consanguinityProportion, double contamination, @Nullable Chromosome uniparentalDisomy) throws IOException
     {
-        AmberQC qcStats = ImmutableAmberQC.builder()
-                .contamination(contamination)
-                .consanguinityProportion(consanguinityProportion)
-                .uniparentalDisomy(uniparentalDisomy != null ? uniparentalDisomy.toString() : null).build();
+        final String uniparentalDisomyString = uniparentalDisomy != null ? uniparentalDisomy.toString() : null;
+        AmberQC qcStats = new AmberQC(contamination, consanguinityProportion, uniparentalDisomyString);
 
         final String qcFilename = AmberQCFile.generateFilename(mConfig.OutputDir, mConfig.getSampleId());
         AmberQCFile.write(qcFilename, qcStats);

@@ -31,7 +31,7 @@ public final class PurpleSummaryData
     public static PurpleQC createQC(
             double contamination, final BestFit bestFit, final Gender amberGender, final Gender cobaltGender,
             final List<PurpleCopyNumber> copyNumbers, final List<GeneCopyNumber> geneCopyNumbers,
-            final Set<GermlineAberration> aberrations, int amberMeanDepth, int maxDeletedGenes, double tincLevel, final double chimerismPercentage)
+            final Set<GermlineAberration> aberrations, int amberMeanDepth, int maxDeletedGenes, double tincLevel)
     {
         boolean containsAnySvSupport = copyNumbers.stream().anyMatch(PurpleCopyNumber::svSupport);
 
@@ -61,7 +61,7 @@ public final class PurpleSummaryData
                 .amberMeanDepth(amberMeanDepth)
                 .lohPercent(lohCalcData.lohPercent())
                 .tincLevel(tincLevel)
-                .chimerismPercentage(chimerismPercentage)
+                .chimerismPercentage(0.0)
                 .build();
     }
 

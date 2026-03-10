@@ -6,11 +6,6 @@ import java.util.List;
 import java.util.Set;
 
 import com.hartwig.hmftools.amber.PositionEvidence;
-import com.hartwig.hmftools.amber.contamination.PerClassVafConsistencyChecker;
-import com.hartwig.hmftools.amber.contamination.VafClassifier;
-import com.hartwig.hmftools.amber.contamination.VafPredicate;
-import com.hartwig.hmftools.common.segmentation.ChrArm;
-import com.hartwig.hmftools.common.segmentation.ChrArmLocator;
 
 import org.apache.commons.math3.distribution.BinomialDistribution;
 
@@ -61,6 +56,7 @@ public class CandidatePeak
         {
             if(hetPeak.isCaptured(symmetricVaf))
             {
+                // Add it to the band to which it is closest.
                 if(symmetricVaf > Level * 0.75)
                 {
                     PointsInHomozygousBand.add(evidence);
@@ -94,19 +90,6 @@ public class CandidatePeak
             final boolean capturedByStepHom = Math.abs(symmetricVaf - vaf) < step;
             return capturedByCdfHom || capturedByStepHom;
         }
-    }
-
-    public double perArmConsistencyFactor(final ChrArmLocator chrArmLocator)
-    {
-        VafClassifier<PositionEvidence, ChrArm> chrArmClassifier = VafClassifier.chrArmPositionEvidenceClassifier(chrArmLocator);
-        return calculateAucForClassifier(chrArmClassifier);
-    }
-
-    public double perMutationTypeConsistencyFactor()
-    {
-        VafClassifier<PositionEvidence, CanonicalSnvType> mutationTypeClassifier = VafClassifier.mutationTypeClassifier();
-        return calculateAucForClassifier(mutationTypeClassifier);
-
     }
 
     public Set<PositionEvidence> homozygousEvidencePoints()
@@ -146,16 +129,5 @@ public class CandidatePeak
         result.addAll(PointsInHomozygousBand);
         result.addAll(PointsInHeterozygousBand);
         return result;
-    }
-
-    private <T extends Comparable<T>> double calculateAucForClassifier(final VafClassifier<PositionEvidence, T> chrArmClassifier)
-    {
-        VafPredicate<PositionEvidence> classifier = allCapturedPoints()::contains;
-        PerClassVafConsistencyChecker<PositionEvidence, T> checker = new PerClassVafConsistencyChecker<>(classifier, chrArmClassifier);
-        for(PositionEvidence evidence : PointsTested)
-        {
-            checker.offer(evidence);
-        }
-        return checker.unevenDistributionCost().unevenDistributionCost();
     }
 }

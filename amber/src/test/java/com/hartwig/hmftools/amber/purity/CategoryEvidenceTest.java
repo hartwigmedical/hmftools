@@ -1,10 +1,11 @@
-package com.hartwig.hmftools.amber.contamination;
+package com.hartwig.hmftools.amber.purity;
 
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._1;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._2;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._3;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 
 import com.google.common.base.Preconditions;
@@ -27,6 +28,8 @@ public class CategoryEvidenceTest
         assertEquals(evidence1, evidence2);
         assertNotEquals(evidence1, evidence3);
         assertNotEquals(evidence1, evidence4);
+        assertFalse(evidence1.equals("whatever"));
+        assertFalse(evidence1.equals(null));
     }
 
     @Test
@@ -36,6 +39,13 @@ public class CategoryEvidenceTest
         CategoryEvidence<ChrArm> evidence2 = new CategoryEvidence<>(new ChrArm(_1, Arm.P));
 
         assertEquals(evidence1.hashCode(), evidence2.hashCode());
+    }
+
+    @Test
+    public void toStringTest()
+    {
+        CategoryEvidence<ChrArm> evidence = new CategoryEvidence<>(new ChrArm(_1, Arm.P));
+        Assert.assertNotNull(evidence.toString());
     }
 
     @Test

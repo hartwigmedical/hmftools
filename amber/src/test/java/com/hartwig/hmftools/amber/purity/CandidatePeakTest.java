@@ -1,10 +1,5 @@
 package com.hartwig.hmftools.amber.purity;
 
-import static com.hartwig.hmftools.common.amber.AmberBase.A;
-import static com.hartwig.hmftools.common.amber.AmberBase.C;
-import static com.hartwig.hmftools.common.amber.AmberBase.G;
-import static com.hartwig.hmftools.common.amber.AmberBase.N;
-import static com.hartwig.hmftools.common.amber.AmberBase.T;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._1;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._3;
 
@@ -13,31 +8,24 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.hartwig.hmftools.amber.PositionEvidence;
-import com.hartwig.hmftools.common.amber.AmberBase;
-import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.segmentation.Arm;
-import com.hartwig.hmftools.common.segmentation.ChrArm;
-import com.hartwig.hmftools.common.segmentation.ChrArmLocator;
 
 import org.apache.commons.math3.distribution.BinomialDistribution;
 import org.junit.Test;
 
 public class CandidatePeakTest extends PurityTestBase
 {
-    private static final int CENTRE = 10_000_000;
-    private final ChrArmLocator Locator = position ->
-    {
-        Arm arm = position.position() < CENTRE ? Arm.P : Arm.Q;
-        return new ChrArm(position.chr(), arm);
-    };
 
-    //    @Test
+    @Test
     public void shouldGoInBucketToWhichItIsClosest()
     {
-        CandidatePeak peak = new CandidatePeak(0.006);
-
+        CandidatePeak peak = new CandidatePeak(0.006, 0.01);
         peak.test(evidenceWithDepthAndAltCount(_1, 1000, 1746, 7));
         assertEquals(1, peak.heterozygousEvidencePoints().size());
+        assertEquals(0, peak.homozygousEvidencePoints().size());
+
+        peak = new CandidatePeak(0.006, 0.01);
+        peak.test(evidenceWithDepthAndAltCount(_1, 1000, 1746, 8));
+        assertEquals(0, peak.heterozygousEvidencePoints().size());
         assertEquals(1, peak.homozygousEvidencePoints().size());
     }
 
@@ -155,120 +143,6 @@ public class CandidatePeakTest extends PurityTestBase
         pe.RefSupport = 40;
         pe.ReadDepth = 10000;
         assertFalse(candidatePeak.hasSufficientDepthForEventDetection(pe));
-    }
-
-    @Test
-    public void evenCaptureAcrossChromosomeArmsTest()
-    {
-        CandidatePeak level = new CandidatePeak(0.1);
-        // 10 reads per chromosome arm, 2 of which are captured.
-        for(HumanChromosome chromosome : HumanChromosome.values())
-        {
-            int startPos_P = 1_000_000;
-            int startPos_Q = CENTRE + 1_000_000;
-            for(int i = 0; i < 8; i++)
-            {
-                level.test(evidenceWithDepthAndAltCount(chromosome, startPos_P + i * 1000, 1000, 10));
-                level.test(evidenceWithDepthAndAltCount(chromosome, startPos_Q + i * 1000, 1000, 10));
-            }
-            level.test(evidenceWithDepthAndAltCount(chromosome, startPos_P + 8 * 1000, 1000, 100));
-            level.test(evidenceWithDepthAndAltCount(chromosome, startPos_Q + 8 * 1000, 1000, 100));
-            level.test(evidenceWithDepthAndAltCount(chromosome, startPos_P + 9 * 1000, 1000, 100));
-            level.test(evidenceWithDepthAndAltCount(chromosome, startPos_Q + 9 * 1000, 1000, 100));
-        }
-        assertEquals(1.0, level.perArmConsistencyFactor(Locator), 0.0001);
-    }
-
-    @Test
-    public void allCapturedEventsAreInASingleChromosomeArmTest()
-    {
-        CandidatePeak level = new CandidatePeak(0.1);
-        // 8 reads per chromosome arm, none of which are captured.
-        for(HumanChromosome chromosome : HumanChromosome.values())
-        {
-            int startPos_P = 1_000_000;
-            int startPos_Q = CENTRE + 1_000_000;
-            for(int i = 0; i < 8; i++)
-            {
-                level.test(evidenceWithDepthAndAltCount(chromosome, startPos_P + i * 1000, 1000, 10));
-                level.test(evidenceWithDepthAndAltCount(chromosome, startPos_Q + i * 1000, 1000, 10));
-            }
-        }
-        // Two events in 1P that are captured
-        level.test(evidenceWithDepthAndAltCount(_1, 2_000_000, 1000, 100));
-        level.test(evidenceWithDepthAndAltCount(_1, 2_001_000, 1000, 100));
-
-        // 10/(46 * 8 + 2)
-        assertEquals(0.0259, level.perArmConsistencyFactor(Locator), 0.0001);
-    }
-
-    @Test
-    public void eventsEvenlyCapturedAccordingToMutationTypeTest()
-    {
-        CandidatePeak level = new CandidatePeak(0.2);
-        int position = 1_000_000;
-        // For each possible SNV create 10 reads, of which 1 is captured.
-        for(AmberBase ref : AmberBase.values())
-        {
-            if(ref == N)
-            {
-                continue;
-            }
-            for(AmberBase alt : AmberBase.values())
-            {
-                if(alt == N || ref == alt)
-                {
-                    continue;
-                }
-                for(int i = 0; i < 9; i++)
-                {
-                    position += 1000;
-                    level.test(evidenceWithDepthAndAltCount(ref, alt, position, 1000, 10));
-                }
-                position += 1000;
-                level.test(evidenceWithDepthAndAltCount(ref, alt, position, 1000, 200));
-            }
-        }
-        // Each of the 6 canonical SNV types has 10 reads, of which 1 is in the peak's hom range.
-        assertEquals(1.0, level.perMutationTypeConsistencyFactor(), 0.0001);
-    }
-
-    @Test
-    public void eventsOnlyCapturedInCAMutationsTest()
-    {
-        CandidatePeak level = new CandidatePeak(0.3);
-        int position = 1_000_000;
-        for(AmberBase ref : AmberBase.values())
-        {
-            if(ref == N)
-            {
-                continue;
-            }
-            for(AmberBase alt : AmberBase.values())
-            {
-                if(alt == N || ref == alt)
-                {
-                    continue;
-                }
-                for(int i = 0; i < 4; i++)
-                {
-                    position += 1000;
-                    level.test(evidenceWithDepthAndAltCount(ref, alt, position, 1000, 10));
-                }
-                position += 1000;
-                if(ref == C && alt == A || ref == G && alt == T)
-                {
-                    level.test(evidenceWithDepthAndAltCount(ref, alt, position, 1000, 300));
-                }
-                else
-                {
-                    level.test(evidenceWithDepthAndAltCount(ref, alt, position, 1000, 10));
-                }
-            }
-        }
-        // Each of the 6 canonical SNV types has 10 reads. For C>A, 2 of these are captured in the value's hom peak.
-        // So expected = 1/6.
-        assertEquals(0.1667, level.perMutationTypeConsistencyFactor(), 0.0001);
     }
 
     @Test

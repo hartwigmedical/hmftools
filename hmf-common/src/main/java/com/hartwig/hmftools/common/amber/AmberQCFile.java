@@ -47,16 +47,16 @@ public final class AmberQCFile
     {
         try
         {
+            double contamination = Double.parseDouble(getValue(lines, CONTAMINATION, "0", TSV_DELIM));
+            double consanguinityProportion = Double.parseDouble(getValue(lines, CONSANGUINITY_PROPORTION, "0", TSV_DELIM));
             String uniparentalDisomy = getValue(lines, UNIPARENTAL_DISOMY, null, TSV_DELIM);
 
             if(uniparentalDisomy != null && uniparentalDisomy.equals(UNIPARENTAL_DISOMY_NONE))
+            {
                 uniparentalDisomy = null;
+            }
 
-            return ImmutableAmberQC.builder()
-                    .contamination(Double.parseDouble(getValue(lines, CONTAMINATION, "0", TSV_DELIM)))
-                    .consanguinityProportion(Double.parseDouble(getValue(lines, CONSANGUINITY_PROPORTION, "0", TSV_DELIM)))
-                    .uniparentalDisomy(uniparentalDisomy)
-                    .build();
+            return new AmberQC(contamination, consanguinityProportion, uniparentalDisomy);
         }
         catch(Exception e)
         {
@@ -72,7 +72,8 @@ public final class AmberQCFile
         result.add(QC_STATUS + TSV_DELIM + check.status());
         result.add(CONTAMINATION + TSV_DELIM + FORMAT.format(check.contamination()));
         result.add(CONSANGUINITY_PROPORTION + TSV_DELIM + FORMAT.format(check.consanguinityProportion()));
-        result.add(UNIPARENTAL_DISOMY + TSV_DELIM + (check.uniparentalDisomy() != null ? check.uniparentalDisomy() : UNIPARENTAL_DISOMY_NONE));
+        result.add(
+                UNIPARENTAL_DISOMY + TSV_DELIM + (check.uniparentalDisomy() != null ? check.uniparentalDisomy() : UNIPARENTAL_DISOMY_NONE));
 
         return result;
     }

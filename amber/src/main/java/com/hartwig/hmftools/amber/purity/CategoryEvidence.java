@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.amber.contamination;
+package com.hartwig.hmftools.amber.purity;
 
 import java.util.Objects;
 
@@ -16,11 +16,6 @@ public class CategoryEvidence<T extends Comparable<T>> implements Comparable<Cat
     {
         Preconditions.checkNotNull(Category);
         this.Category = Category;
-    }
-
-    public T category()
-    {
-        return Category;
     }
 
     public void register(boolean isEvidence)

@@ -81,10 +81,11 @@ public class PurpleConstants
     public static final double SOMATIC_FIT_TUMOR_ONLY_PLOIDY_MAX = 2.2;
     public static final double SOMATIC_FIT_TUMOR_ONLY_VAF_MIN = 0.05;
     public static final double SOMATIC_FIT_TUMOR_ONLY_VAF_MAX = 0.35;
+    public static final double SOMATIC_FIT_CONTAMINATION_CUTOFF = 0.04;
     public static final double SOMATIC_FIT_TUMOR_ONLY_HOTSPOT_VAF_CUTOFF = 0.50;
     public static final double SOMATIC_FIT_ANEUPLOIDIC_REGION_CUTOFF = 0.57;
     public static final double SOMATIC_FIT_ANEUPLOIDIC_REGION_MIN_BAF_COUNT = 1;
-    public static final double SOMATIC_FIT_ANEUPLOIDIC_RATIO_CUTOFF = 0.008;
+    public static final double SOMATIC_FIT_ANEUPLOIDIC_RATIO_CUTOFF = 0.01;
 
     // somatic fitting readjustment
     public static final double SNV_READJUST_CN_MIN = 1.8;

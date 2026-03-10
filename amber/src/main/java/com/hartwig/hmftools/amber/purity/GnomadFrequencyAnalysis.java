@@ -6,7 +6,6 @@ import com.hartwig.hmftools.common.genome.position.GenomePosition;
 
 public class GnomadFrequencyAnalysis
 {
-
     private final GnomadFrequencySupplier GnomadData;
 
     public GnomadFrequencyAnalysis(final GnomadFrequencySupplier gnomadFrequencySupplier)

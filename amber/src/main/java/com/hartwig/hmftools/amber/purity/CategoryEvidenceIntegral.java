@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.amber.contamination;
+package com.hartwig.hmftools.amber.purity;
 
 import static java.util.stream.Collectors.toList;
 

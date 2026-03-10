@@ -1,13 +1,8 @@
-package com.hartwig.hmftools.amber.contamination;
-
-import static com.hartwig.hmftools.amber.AmberConfig.AMB_LOGGER;
+package com.hartwig.hmftools.amber.purity;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import com.google.common.base.Preconditions;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
@@ -28,11 +23,6 @@ public class SearchGrid
         }
     }
 
-    public interface Calculator
-    {
-        ValueScore calculate(double value);
-    }
-
     public List<Pair<Double, Double>> searchValuesAndSteps()
     {
         final double start = 0.005;
@@ -49,29 +39,6 @@ public class SearchGrid
             result.add(Pair.of(currentValue, step));
         }
         return result;
-    }
-
-    public List<Double> searchValues()
-    {
-        return searchValuesAndSteps().stream().map(Pair::getLeft).collect(Collectors.toList());
-    }
-
-    public ValueScore findBestValue(final Calculator calculator)
-    {
-        List<ValueScore> scores = new ArrayList<>();
-        for(double value : searchValues())
-        {
-            ValueScore valueScore = calculator.calculate(value);
-            scores.add(valueScore);
-            //            System.out.println(value + "\t" + valueScore.score());
-        }
-        final List<ValueScore> sorted = scores.stream().sorted().toList();
-        if(sorted.isEmpty())
-        {
-            return null;
-        }
-        AMB_LOGGER.debug("Best contamination score is {}, worst is {}", sorted.get(0), sorted.get(sorted.size() - 1));
-        return sorted.get(0);
     }
 }
 

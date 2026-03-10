@@ -63,7 +63,6 @@ import com.hartwig.hmftools.purple.fitting.PurityPloidyFitter;
 import com.hartwig.hmftools.purple.fitting.RegionFitCalculator;
 import com.hartwig.hmftools.purple.fittingsnv.PeakModelFile;
 import com.hartwig.hmftools.purple.gene.GeneCopyNumberBuilder;
-import com.hartwig.hmftools.purple.germline.ChimerismDetection;
 import com.hartwig.hmftools.purple.germline.GermlineAmpDelFinder;
 import com.hartwig.hmftools.purple.germline.GermlineDrivers;
 import com.hartwig.hmftools.purple.germline.GermlineSvCache;
@@ -264,25 +263,12 @@ public class PurpleApplication
 
         RegionFitCalculator regionFitCalculator = new RegionFitCalculator(cobaltChromosomes, mConfig.Fitting, amberData.AverageTumorDepth);
 
-        double chimerismPercentage = 0;
-
         if(mConfig.runTumor())
         {
-            ChimerismDetection chimerismDetection = new ChimerismDetection(
-                    amberData, cobaltData, observedRegions, mReferenceData.RefGenVersion);
-
-            chimerismDetection.run();
-
-            if(chimerismDetection.isDetected())
-            {
-                chimerismPercentage = chimerismDetection.chimerismLevel();
-            }
-
             PPL_LOGGER.info("fitting purity");
 
-            PurityPloidyFitter purityPloidyFitter = new PurityPloidyFitter(
-                    mConfig, mReferenceData, sampleData, mExecutorService, regionFitCalculator, observedRegions, gender,
-                    chimerismPercentage > 0);
+            PurityPloidyFitter purityPloidyFitter =
+                    new PurityPloidyFitter(mConfig, mReferenceData, sampleData, mExecutorService, regionFitCalculator, observedRegions, gender);
 
             purityPloidyFitter.run();
 
@@ -334,7 +320,7 @@ public class PurpleApplication
         PurpleQC qcChecks = PurpleSummaryData.createQC(
                 amberData.Contamination, bestFit, amberGender, cobaltGender, copyNumbers, geneCopyNumbers,
                 cobaltChromosomes.germlineAberrations(), amberData.AverageTumorDepth,
-                mConfig.TargetRegionsMode ? TARGET_REGIONS_MAX_DELETED_GENES : MAX_DELETED_GENES, tincLevel, chimerismPercentage);
+                mConfig.TargetRegionsMode ? TARGET_REGIONS_MAX_DELETED_GENES : MAX_DELETED_GENES, tincLevel);
 
         PurityContext purityContext = createPurity(bestFit, gender, mConfig, qcChecks, copyNumbers, somaticStream, sampleData.SvCache);
 
@@ -435,7 +421,7 @@ public class PurpleApplication
         PPL_LOGGER.info("generating drivers");
 
         // convert to a map to make look-up from drivers faster. A list of entries per gene exists for additional transcripts.
-        Map<String,List<GeneCopyNumber>> geneCopyNumberMap = GeneCopyNumberFile.listToMap(geneCopyNumbers);
+        Map<String, List<GeneCopyNumber>> geneCopyNumberMap = GeneCopyNumberFile.listToMap(geneCopyNumbers);
 
         if(mConfig.runTumor())
         {

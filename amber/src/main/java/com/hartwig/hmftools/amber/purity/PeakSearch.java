@@ -10,7 +10,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import com.hartwig.hmftools.amber.PositionEvidence;
-import com.hartwig.hmftools.amber.contamination.SearchGrid;
 
 import org.apache.commons.lang3.tuple.Pair;
 

@@ -22,11 +22,11 @@ import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.jetbrains.annotations.NotNull;
 
-public class CobaltChromosomes
+public class CobaltChromosomes implements PerChromosomeData
 {
     private final Gender mGender;
     private final Set<GermlineAberration> mAberrations;
-    private final Map<String,CobaltChromosome> mChromosomeMap;
+    private final Map<String, CobaltChromosome> mChromosomeMap;
 
     public static final int MIN_Y_COUNT = 1000;
 
@@ -100,7 +100,9 @@ public class CobaltChromosomes
             HumanChromosome chromosome = HumanChromosome.fromString(medianRatio.Chromosome);
 
             if(chromosome == _Y && medianRatio.Count < MIN_Y_COUNT)
+            {
                 continue;
+            }
 
             GermlineAberration aberration = calcAberrations ?
                     aberration(isFemale, chromosome, medianRatio.MedianRatio, minAutosomeRatio) : GermlineAberration.NONE;
@@ -115,7 +117,8 @@ public class CobaltChromosomes
 
             if(Doubles.positive(typicalRatio))
             {
-                CobaltChromosome cobaltChromosome = new CobaltChromosome(chromosome,typicalRatio,actualRatio, aberration == GermlineAberration.MOSAIC_X);
+                CobaltChromosome cobaltChromosome =
+                        new CobaltChromosome(chromosome, typicalRatio, actualRatio, aberration == GermlineAberration.MOSAIC_X);
 
                 mChromosomeMap.put(medianRatio.Chromosome, cobaltChromosome);
             }
@@ -127,16 +130,37 @@ public class CobaltChromosomes
         }
     }
 
-    public boolean hasGermlineAberrations() { return !noAberrations(); }
-    public Set<GermlineAberration> germlineAberrations() { return mAberrations; }
+    public boolean hasGermlineAberrations()
+    {
+        return !noAberrations();
+    }
 
-    public Gender gender() { return mGender; }
+    public Set<GermlineAberration> germlineAberrations()
+    {
+        return mAberrations;
+    }
+
+    public Gender gender()
+    {
+        return mGender;
+    }
 
     @NotNull
-    public CobaltChromosome get(final String chromosome) { return mChromosomeMap.get(chromosome); }
-    public boolean hasChromosome(final String chromosome) { return mChromosomeMap.containsKey(chromosome); }
+    public CobaltChromosome get(final String chromosome)
+    {
+        return mChromosomeMap.get(chromosome);
+    }
 
-    public Collection<CobaltChromosome> chromosomes() { return mChromosomeMap.values(); }
+    @Override
+    public boolean hasChromosome(final String chromosome)
+    {
+        return mChromosomeMap.containsKey(chromosome);
+    }
+
+    public Collection<CobaltChromosome> chromosomes()
+    {
+        return mChromosomeMap.values();
+    }
 
     private static double actualRatio(final GermlineAberration aberration, double typicalRatio, double medianRatio)
     {
@@ -166,25 +190,41 @@ public class CobaltChromosomes
         if(isTrisomy(chromosome, medianRatio))
         {
             if(chromosome == _13)
+            {
                 return GermlineAberration.TRISOMY_13;
+            }
             else if(chromosome == _15)
+            {
                 return GermlineAberration.TRISOMY_15;
+            }
             else if(chromosome == _18)
+            {
                 return GermlineAberration.TRISOMY_18;
+            }
             else if(chromosome == _21)
+            {
                 return GermlineAberration.TRISOMY_21;
+            }
             else if(chromosome == _X)
+            {
                 return GermlineAberration.TRISOMY_X;
+            }
         }
 
         if(isXYY(isFemale, chromosome, medianRatio))
+        {
             return GermlineAberration.XYY;
+        }
 
         if(isMosiacX(isFemale, chromosome, medianRatio, minAutosomeRatio))
+        {
             return GermlineAberration.MOSAIC_X;
+        }
 
         if(isKlinefelterXXY(isFemale, chromosome, medianRatio))
+        {
             return GermlineAberration.KLINEFELTER;
+        }
 
         return GermlineAberration.NONE;
     }
@@ -219,7 +259,9 @@ public class CobaltChromosomes
     private static double typicalRatio(boolean isFemale, final HumanChromosome chromosome)
     {
         if(isFemale)
+        {
             return chromosome == _Y ? 0d : 1d;
+        }
 
         return chromosome.isAllosome() ? 0.5 : 1d;
     }
