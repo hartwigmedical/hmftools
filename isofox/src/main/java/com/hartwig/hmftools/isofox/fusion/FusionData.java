@@ -105,7 +105,6 @@ public class FusionData
         TransData = transData;
         RelatedSplicedIds = relatedFusionIds;
 
-        // mRawData = null;
         mKnownFusionType = KnownFusionType.OTHER;
         mRelatedFusionIds = Lists.newArrayList();
 
@@ -208,11 +207,11 @@ public class FusionData
 
         if(isFiltered)
         {
-            sj.add(FLD_FILTER);
             sj.add(FLD_KNOWN_TYPE);
         }
         else
         {
+            sj.add(FLD_FILTER);
             sj.add(FLD_READ_TYPE);
             sj.add(FLD_INIT_READ_ID);
         }
@@ -258,11 +257,11 @@ public class FusionData
 
         if(isFiltered)
         {
-            sj.add(mFilter.toString());
             sj.add(getKnownFusionType().toString());
         }
         else
         {
+            sj.add(mFilter.toString());
             sj.add(ReadType);
             sj.add(InitReadId);
         }

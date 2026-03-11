@@ -116,7 +116,7 @@ public class OrangeAlgo
 
         LinxInterpreter linxInterpreter = new LinxInterpreter(cytoBands);
 
-        LinxRecord linx = linxInterpreter.interpret(linxData);
+        LinxRecord linx = linxInterpreter.interpret(linxData, isofoxData);
 
         PurpleInterpreter purpleInterpreter = new PurpleInterpreter();
 

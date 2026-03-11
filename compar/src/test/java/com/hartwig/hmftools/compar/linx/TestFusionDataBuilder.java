@@ -50,21 +50,18 @@ public class TestFusionDataBuilder
 
     private FusionData build()
     {
-        final LinxFusion fusion = ImmutableLinxFusion.builder()
+        LinxFusion fusion = ImmutableLinxFusion.builder()
                 .name(fusionName)
                 .reported(reported)
                 .reportedType(reportedType)
                 .phased(phased)
                 .likelihood(likelihood)
-                .geneTranscriptStart(transcriptUp)
                 .fusedExonUp(exonUp)
-                .geneTranscriptEnd(transcriptDown)
                 .fusedExonDown(exonDown)
                 .chainLinks(chainLinks)
                 .chainTerminated(chainTerminated)
                 .domainsKept(domainsKept)
                 .domainsLost(domainsLost)
-                .junctionCopyNumber(junctionCopyNumber)
                 .fivePrimeBreakendId(-1)
                 .threePrimeBreakendId(-1)
                 .fivePrimeVcfId("")
@@ -75,10 +72,6 @@ public class TestFusionDataBuilder
                 .chainLength(-1)
                 .skippedExonsUp(-1)
                 .skippedExonsDown(-1)
-                .geneStart("")
-                .geneContextStart("")
-                .geneEnd("")
-                .geneContextEnd("")
                 .build();
         return new FusionData(fusion, fusionName);
     }

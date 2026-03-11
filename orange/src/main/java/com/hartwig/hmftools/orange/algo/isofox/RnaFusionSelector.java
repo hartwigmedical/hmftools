@@ -14,6 +14,7 @@ import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 
 import org.jetbrains.annotations.Nullable;
 
+@Deprecated
 public final class RnaFusionSelector
 {
     private static final Set<StructuralVariantType> ALWAYS_VALID_FOR_PROMISCUOUS = Sets.newHashSet();

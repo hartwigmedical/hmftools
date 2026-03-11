@@ -2,9 +2,9 @@ package com.hartwig.hmftools.orange.report.chapters;
 
 import static com.hartwig.hmftools.common.peach.PeachUtil.UNKNOWN_ALLELE_STRING;
 import static com.hartwig.hmftools.common.peach.PeachUtil.convertToZygosityString;
-import static com.hartwig.hmftools.orange.report.ReportResources.formatPercentage;
-import static com.hartwig.hmftools.orange.report.ReportResources.formatSingleDigitDecimal;
-import static com.hartwig.hmftools.orange.report.ReportResources.formatTwoDigitDecimal;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatPercentage;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatSingleDigitDecimal;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatTwoDigitDecimal;
 
 import java.util.Comparator;
 import java.util.List;

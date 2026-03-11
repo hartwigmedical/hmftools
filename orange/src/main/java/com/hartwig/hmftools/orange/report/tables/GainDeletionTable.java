@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.orange.report.tables;
 
-import static com.hartwig.hmftools.orange.report.ReportResources.formatFoldChangeField;
-import static com.hartwig.hmftools.orange.report.ReportResources.formatPercentileField;
-import static com.hartwig.hmftools.orange.report.ReportResources.formatSingleDigitDecimal;
-import static com.hartwig.hmftools.orange.report.ReportResources.formatTpmField;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatFoldChangeField;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatPercentileField;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatSingleDigitDecimal;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatTpmField;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_DRIVER;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_GENE;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_LOCATION;

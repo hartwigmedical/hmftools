@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.orange.report.tables;
 
-import static com.hartwig.hmftools.orange.report.ReportResources.formatSingleDigitDecimal;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatSingleDigitDecimal;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.cellArray;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.intToFloatArray;

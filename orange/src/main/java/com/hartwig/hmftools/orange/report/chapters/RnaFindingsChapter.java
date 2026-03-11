@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.orange.report.chapters;
 
-import static com.hartwig.hmftools.orange.report.tables.ExpressionTable.buildRnaSummary;
-
 import java.util.List;
 
 import com.hartwig.hmftools.datamodel.isofox.GeneExpression;
@@ -14,6 +12,7 @@ import com.hartwig.hmftools.datamodel.purple.PurpleQCInterpretation;
 import com.hartwig.hmftools.orange.report.tables.ExpressionTable;
 import com.hartwig.hmftools.orange.report.tables.NovelSpliceJunctionTable;
 import com.hartwig.hmftools.orange.report.tables.RnaFusionTable;
+import com.hartwig.hmftools.orange.report.tables.RnaStatisticsTable;
 import com.hartwig.hmftools.orange.report.util.Tables;
 import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.layout.Document;
@@ -59,7 +58,7 @@ public class RnaFindingsChapter implements ReportChapter
     {
         String title = "QC";
 
-        document.add(buildRnaSummary(title, contentWidth(), mIsofoxRecord.summary(), mReportResources));
+        document.add(RnaStatisticsTable.build(title, contentWidth(), mIsofoxRecord.summary(), mReportResources));
     }
 
     private void addExpressionTables(final Document document)
@@ -91,52 +90,35 @@ public class RnaFindingsChapter implements ReportChapter
 
     private void addRnaFusionTables(final Document document)
     {
-        String knownFusionsTitle = "Known fusions detected in RNA and not in DNA";
-        String promiscuousFusionsTitle = "Promiscuous fusions detected in RNA and not in DNA";
+        String fusionsTitle = "Fusions detected in RNA and not in DNA";
 
         if(PurpleQCInterpretation.isContaminated(mPurpleRecord.fit().qc()))
         {
             Tables tables = new Tables(mReportResources);
-            document.add(tables.createNotAvailable(knownFusionsTitle, contentWidth()));
-            document.add(tables.createNotAvailable(promiscuousFusionsTitle, contentWidth()));
+            document.add(tables.createNotAvailable(fusionsTitle, contentWidth()));
         }
         else
         {
             List<RnaFusion> reportableNovelKnownFusions = mIsofoxRecord.fusions();
-            String titleKnownFusions = knownFusionsTitle + " (" + reportableNovelKnownFusions.size() + ")";
+            String titleKnownFusions = fusionsTitle + " (" + reportableNovelKnownFusions.size() + ")";
             document.add(RnaFusionTable.build(titleKnownFusions, contentWidth(), reportableNovelKnownFusions, mReportResources));
-
-            /*
-            List<RnaFusion> reportableNovelPromiscuous = mIsofoxRecord.reportableNovelPromiscuousFusions();
-            String titlePromiscuousFusions = promiscuousFusionsTitle + " (" + reportableNovelPromiscuous.size() + ")";
-            document.add(RnaFusionTable.build(titlePromiscuousFusions, contentWidth(), reportableNovelPromiscuous, mReportResources));
-            */
         }
     }
 
     private void addNovelSpliceJunctionTables(final Document document)
     {
-        String skippedExonsTitle = "Potentially interesting novel splice junctions - Skipped exons";
-        String novelExonsIntronsTitle = "Potentially interesting novel splice junctions - Novel exon/intron";
+        String novelSplicJunctionsTitle = "Novel splice junctions";
 
         if(PurpleQCInterpretation.isContaminated(mPurpleRecord.fit().qc()))
         {
             Tables tables = new Tables(mReportResources);
-            document.add(tables.createNotAvailable(skippedExonsTitle, contentWidth()));
-            document.add(tables.createNotAvailable(novelExonsIntronsTitle, contentWidth()));
+            document.add(tables.createNotAvailable(novelSplicJunctionsTitle, contentWidth()));
         }
         else
         {
             List<NovelSpliceJunction> reportableSkippedExons = mIsofoxRecord.novelSpliceJunctions();
-            String titleSkippedExonJunctions = skippedExonsTitle + " (" + reportableSkippedExons.size() + ")";
+            String titleSkippedExonJunctions = novelSplicJunctionsTitle + " (" + reportableSkippedExons.size() + ")";
             document.add(NovelSpliceJunctionTable.build(titleSkippedExonJunctions, contentWidth(), reportableSkippedExons, mReportResources));
-
-            /*
-            List<NovelSpliceJunction> reportableNovelExonsIntrons = mIsofoxRecord.reportableNovelExonsIntrons();
-            String titleNovelExonIntronJunctions = novelExonsIntronsTitle + " (" + reportableNovelExonsIntrons.size() + ")";
-            document.add(NovelSpliceJunctionTable.build(titleNovelExonIntronJunctions, contentWidth(), reportableNovelExonsIntrons,
-                    mReportResources));
-            */
         }
     }
 }

@@ -145,7 +145,7 @@ public final class DriverGeneFile
                     .reportPGX(Boolean.parseBoolean(values[reportPGXIndex]))
                     .reportLowExpression(rnaExpLowIndex != null ? Boolean.parseBoolean(values[rnaExpLowIndex]) : false)
                     .reportHighExpression(rnaExpHighIndex != null ? Boolean.parseBoolean(values[rnaExpHighIndex]) : false)
-                    .reportNovelSpliceJunctions(germlineAmpIndex != null ? Boolean.parseBoolean(values[rnaNovelSjIndex]) : false);
+                    .reportNovelSpliceJunctions(rnaNovelSjIndex != null ? Boolean.parseBoolean(values[rnaNovelSjIndex]) : false);
 
             driverGenes.add(builder.build());
         }

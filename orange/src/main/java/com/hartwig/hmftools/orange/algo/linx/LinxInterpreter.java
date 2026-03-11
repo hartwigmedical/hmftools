@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.orange.algo.linx;
 
+import static java.lang.Math.min;
+import static java.lang.Math.round;
+
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 
 import java.util.List;
@@ -10,6 +13,7 @@ import com.hartwig.hmftools.common.gene.TranscriptRegionType;
 import com.hartwig.hmftools.common.genome.chromosome.CytoBands;
 import com.hartwig.hmftools.common.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
+import com.hartwig.hmftools.common.rna.RnaFusion;
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.linx.FusionPhasedType;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxFusion;
@@ -17,8 +21,13 @@ import com.hartwig.hmftools.datamodel.linx.ImmutableLinxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.linx.LinxFusionType;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleAllelicDepth;
+import com.hartwig.hmftools.datamodel.purple.PurpleAllelicDepth;
+import com.hartwig.hmftools.orange.algo.isofox.IsofoxData;
 import com.hartwig.hmftools.orange.conversion.ConversionUtil;
 import com.hartwig.hmftools.orange.conversion.LinxConversion;
+
+import org.jetbrains.annotations.Nullable;
 
 public class LinxInterpreter
 {
@@ -29,7 +38,7 @@ public class LinxInterpreter
         mCytoBands = cytoBands;
     }
 
-    public LinxRecord interpret(final LinxData linx)
+    public LinxRecord interpret(final LinxData linx, @Nullable final IsofoxData isofoxData)
     {
         LOGGER.info("Analysing Linx data");
 
@@ -42,7 +51,7 @@ public class LinxInterpreter
         return ImmutableLinxRecord.builder()
                 .somaticStructuralVariants(ConversionUtil.mapToIterable(linx.somaticSvAnnotations(), LinxConversion::convert))
                 .somaticDrivers(ConversionUtil.mapToIterable(linx.somaticDriverData(), LinxConversion::convert))
-                .fusions(buildFusions(linx.fusions(), linx.somaticBreakends()))
+                .fusions(buildFusions(linx.fusions(), linx.somaticBreakends(), isofoxData))
                 .somaticBreakends(somaticBreakendInterpreter.convertBreakends(linx.somaticBreakends()))
                 .germlineStructuralVariants(ConversionUtil.mapToIterable(linx.germlineSvAnnotations(), LinxConversion::convert))
                 .germlineBreakends(germlineBreakendInterpreter.convertBreakends(linx.germlineBreakends()))
@@ -50,7 +59,8 @@ public class LinxInterpreter
     }
 
     private static List<LinxFusion> buildFusions(
-            final List<com.hartwig.hmftools.common.linx.LinxFusion> fusions, final List<LinxBreakend> breakends)
+            final List<com.hartwig.hmftools.common.linx.LinxFusion> fusions, final List<LinxBreakend> breakends,
+            @Nullable final IsofoxData isofoxData)
     {
         List<LinxFusion> convertedFusions = Lists.newArrayListWithCapacity(fusions.size());
 
@@ -72,6 +82,8 @@ public class LinxInterpreter
 
             double avgJcn = (breakendUp.undisruptedCopyNumber() + breakendDown.undisruptedCopyNumber()) * 0.5;
 
+            PurpleAllelicDepth rnaSupport = findRnaSupport(fusion, isofoxData);
+
             LinxFusion convertedFusion = ImmutableLinxFusion.builder()
                     .geneUp(breakendUp.gene())
                     .contextUp(contextUp)
@@ -88,13 +100,40 @@ public class LinxInterpreter
                     .chainTerminated(fusion.chainTerminated())
                     .domainsKept(fusion.domainsKept())
                     .domainsLost(fusion.domainsLost())
-                    .junctionCopyNumber(avgJcn).build();
+                    .junctionCopyNumber(avgJcn)
+                    .rnaSupport(rnaSupport)
+                    .build();
 
 
             convertedFusions.add(convertedFusion);
         }
 
         return convertedFusions;
+    }
+
+    private static PurpleAllelicDepth findRnaSupport(com.hartwig.hmftools.common.linx.LinxFusion fusion, final IsofoxData isofoxData)
+    {
+        if(isofoxData == null)
+            return null;
+
+        int totalCoverage = 0;
+        int totalFragments = 0;
+
+        for(RnaFusion rnaFusion : isofoxData.fusions())
+        {
+            if(rnaFusion.name().equals(fusion.name()))
+            {
+                int fragments = rnaFusion.splitFragments();
+                int averageDepth = min((int)round((rnaFusion.depthUp() + rnaFusion.depthDown()) * 0.5), fragments);
+                totalCoverage += averageDepth;
+                totalFragments += fragments;
+            }
+        }
+
+        return ImmutablePurpleAllelicDepth.builder()
+                .alleleReadCount(totalFragments)
+                .totalReadCount(totalCoverage)
+                .build();
     }
 
     private static DriverInterpretation fromFusionLikelihood(final FusionLikelihoodType fusionLikelihoodType)

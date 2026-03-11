@@ -1,8 +1,24 @@
 package com.hartwig.hmftools.orange.report.tables;
 
+import static java.lang.Math.min;
+import static java.lang.Math.round;
+
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_COHOR_FREQ;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_FUSION;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_JUNC_END;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_JUNC_START;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_SUPPORT;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_SV_TYPE;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_TYPE;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.cellArray;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatSupportField;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.intToFloatArray;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.datamodel.isofox.RnaFusion;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.interpretation.Chromosomes;
@@ -11,10 +27,10 @@ import com.hartwig.hmftools.orange.report.util.Tables;
 import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Table;
 
-import org.jetbrains.annotations.NotNull;
-
 public final class RnaFusionTable
 {
+    private static final String COL_OTHER_FRAGS = "Non-Split Support";
+
     public static Table build(final String title, float width, final List<RnaFusion> fusions, final ReportResources reportResources)
     {
         if(fusions.isEmpty())
@@ -23,21 +39,35 @@ public final class RnaFusionTable
         }
 
         Cells cells = new Cells(reportResources);
-        Table table = Tables.createContent(width,
-                new float[] { 2, 2, 2, 1, 2, 1, 2, 1 },
-                new Cell[] { cells.createHeader("Name"), cells.createHeader("Pos (Up)"), cells.createHeader("Pos (Down)"),
-                        cells.createHeader("SV Type"), cells.createHeader("Junction U/D"), cells.createHeader("Depth U/D"),
-                        cells.createHeader("Frags (spl./re./disc.)"), cells.createHeader("Cohort freq") });
+
+        List<Integer> widths = Lists.newArrayList();
+        List<Cell> cellEntries = Lists.newArrayList();
+
+        addEntry(cells, widths, cellEntries, 2, COL_FUSION);
+        addEntry(cells, widths, cellEntries, 2, COL_TYPE);
+        addEntry(cells, widths, cellEntries, 1, COL_SV_TYPE);
+        addEntry(cells, widths, cellEntries, 1, COL_JUNC_START);
+        addEntry(cells, widths, cellEntries, 1, COL_JUNC_END);
+        addEntry(cells, widths, cellEntries, 1, COL_SUPPORT);
+        addEntry(cells, widths, cellEntries, 1, COL_OTHER_FRAGS);
+        addEntry(cells, widths, cellEntries, 1, COL_COHOR_FREQ);
+
+        Table table = Tables.createContent(width, intToFloatArray(widths), cellArray(cellEntries));
 
         for(RnaFusion fusion : sort(fusions))
         {
             table.addCell(cells.createContent(fusion.display()));
-            table.addCell(cells.createContent(fusion.chromosomeStart() + ":" + fusion.positionStart()));
-            table.addCell(cells.createContent(fusion.chromosomeEnd() + ":" + fusion.positionEnd()));
+
+            table.addCell(cells.createContent(fusion.knownType().toString()));
             table.addCell(cells.createContent(fusion.svType().toString()));
-            table.addCell(cells.createContent(fusion.junctionTypeStart() + "/" + fusion.junctionTypeEnd()));
-            table.addCell(cells.createContent(fusion.depthStart() + "/" + fusion.depthEnd()));
-            table.addCell(cells.createContent(fusion.splitFragments() + "/" + fusion.realignedFrags() + "/" + fusion.discordantFrags()));
+            table.addCell(cells.createContent(fusion.junctionTypeStart()));
+            table.addCell(cells.createContent(fusion.junctionTypeEnd()));
+
+            int splitFragments = fusion.splitFragments();
+            int averageDepth = min((int)round((fusion.depthStart() + fusion.depthEnd()) * 0.5), splitFragments);
+            table.addCell(cells.createContent(formatSupportField(splitFragments, averageDepth)));
+
+            table.addCell(cells.createContent(String.valueOf(fusion.realignedFrags() + fusion.discordantFrags())));
             table.addCell(cells.createContent(String.valueOf(fusion.cohortFrequency())));
         }
 

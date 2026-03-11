@@ -26,7 +26,6 @@ public class TestRnaFusionDataBuilder
     public int comparisonPositionUp = 1000;
     public String comparisonChromosomeDown = "21";
     public int comparisonPositionDown = 2000;
-    public String filter = "PASS";
 
     private static final Consumer<TestRnaFusionDataBuilder> ALTERNATE_INITIALIZER = b ->
     {
@@ -45,7 +44,6 @@ public class TestRnaFusionDataBuilder
         b.comparisonPositionUp = 3000;
         b.comparisonChromosomeDown = "2";
         b.comparisonPositionDown = 4000;
-        b.filter = "PASS";
     };
 
     public static final TestComparableItemBuilder<TestRnaFusionDataBuilder, RnaFusionData> BUILDER =
@@ -73,7 +71,6 @@ public class TestRnaFusionDataBuilder
                 .maxAnchorLengthUp(-1)
                 .maxAnchorLengthDown(-1)
                 .cohortFrequency(-1)
-                .filter(filter)
                 .build();
 
         return new RnaFusionData(fusion,

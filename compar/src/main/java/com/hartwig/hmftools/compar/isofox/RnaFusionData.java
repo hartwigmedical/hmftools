@@ -73,7 +73,7 @@ public record RnaFusionData(RnaFusion RnaFusion, BasePosition ComparisonPosition
     @Override
     public boolean isPass()
     {
-        return RnaFusion.filter().equals("PASS");
+        return true;
     }
 
     @Override
@@ -100,8 +100,8 @@ public record RnaFusionData(RnaFusion RnaFusion, BasePosition ComparisonPosition
     }
 
     @Override
-    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds,
-            final boolean includeMatches)
+    public Mismatch findMismatch(
+            final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds, final boolean includeMatches)
     {
         final RnaFusion ref = RnaFusion;
         final RnaFusion otherData = ((RnaFusionData) other).RnaFusion;

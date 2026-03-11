@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.datamodel.linx;
 
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
+import com.hartwig.hmftools.datamodel.purple.PurpleAllelicDepth;
 
 import org.immutables.gson.Gson;
 import org.immutables.value.Value;
@@ -60,4 +61,7 @@ public interface LinxFusion
     String domainsLost();
 
     double junctionCopyNumber();
+
+    @Nullable
+    PurpleAllelicDepth rnaSupport();
 }

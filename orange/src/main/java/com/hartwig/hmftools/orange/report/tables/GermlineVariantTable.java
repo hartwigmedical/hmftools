@@ -3,17 +3,17 @@ package com.hartwig.hmftools.orange.report.tables;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.orange.algo.OrangeConstants.isCandidateLikelihood;
-import static com.hartwig.hmftools.orange.report.ReportResources.formatPercentageField;
-import static com.hartwig.hmftools.orange.report.ReportResources.formatSingleDigitDecimal;
-import static com.hartwig.hmftools.orange.report.ReportResources.formatTwoDigitDecimal;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatPercentageField;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatSingleDigitDecimal;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatTwoDigitDecimal;
 import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_AF;
 import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_BIALLELIC;
-import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_DP;
 import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_HOTSPOT;
 import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_MACN;
 import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_VARIANT;
 import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_VCN;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_CN;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_DP;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_DRIVER;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_ZYGOSITY;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.VALUE_HET;
@@ -21,7 +21,6 @@ import static com.hartwig.hmftools.orange.report.tables.TableCommon.VALUE_HOM;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.cellArray;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.floatArray;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.intToFloatArray;
 
 import java.util.List;
 

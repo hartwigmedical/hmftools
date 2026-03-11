@@ -81,8 +81,7 @@ public final class IsofoxTestFactory
                 .depthDown(0)
                 .maxAnchorLengthUp(0)
                 .maxAnchorLengthDown(0)
-                .cohortFrequency(0)
-                .filter("PASS");
+                .cohortFrequency(0);
     }
 
     @NotNull

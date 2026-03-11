@@ -68,9 +68,7 @@ public class RnaFusionDataTest extends ComparableItemTest<RnaFusionData, RnaFusi
                 }
         );
         reportabilityFieldToFalseReportabilityInitializer = Collections.emptyMap();
-        nameToNonPassInitializer = Map.of(
-                FLD_FILTER, b -> b.filter = "Filter"
-        );
+        nameToNonPassInitializer = Collections.emptyMap();
     }
 
     @Override

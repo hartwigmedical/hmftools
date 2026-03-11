@@ -157,7 +157,6 @@ public class SomaticFindingsChapter implements ReportChapter
             document.add(DnaFusionTable.build(titleDrivers,
                     contentWidth(),
                     mReport.linx().fusions(),
-                    mReport.isofox(),
                     mReportResources));
         }
     }

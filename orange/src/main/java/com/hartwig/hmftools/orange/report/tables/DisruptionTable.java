@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.orange.report.tables;
 
 import static com.hartwig.hmftools.orange.algo.OrangeConstants.isCandidateLikelihood;
-import static com.hartwig.hmftools.orange.report.ReportResources.formatSingleDigitDecimal;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatSingleDigitDecimal;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_DRIVER;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_GENE;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_JCN;

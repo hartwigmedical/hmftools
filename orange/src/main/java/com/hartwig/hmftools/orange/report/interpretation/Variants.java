@@ -18,7 +18,6 @@ public final class Variants
     public static final String COL_CL = "Clonal";
     public static final String COL_DRIVER = "Driver";
     public static final String COL_AF = "AF";
-    public static final String COL_DP = "Depth";
     public static final String COL_SL = "Somatic";
     public static final String COL_VARIANT = "Variant";
     public static final String COL_BIALLELIC = "Biallelic";

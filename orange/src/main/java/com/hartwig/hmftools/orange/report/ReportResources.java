@@ -69,53 +69,6 @@ public class ReportResources
                 createFontFromProgram(loadFontProgram(FONT_BOLD_PATH)));
     }
 
-    // value formatting
-    public static String formatSingleDigitDecimal(double num)
-    {
-        return formatDecimal(num, "0.0");
-    }
-    public static String formatTwoDigitDecimal(double num)
-    {
-        return formatDecimal(num, "0.00");
-    }
-    public static String formatPercentage(double num)
-    {
-        return formatPercentage(num, true);
-    }
-
-    public static String formatPercentage(double num, boolean multiplyBy100)
-    {
-        return formatDecimal(multiplyBy100 ? num * 100 : num, "0'%'");
-    }
-
-    public static String formatPercentageOneDecimal(double num)
-    {
-        return formatDecimal(num * 100, "0.0'%'");
-    }
-
-    private static String formatDecimal(double num, final String format)
-    {
-        // To make sure every decimal format uses a dot as separator rather than a comma.
-        return new DecimalFormat(format, DecimalFormatSymbols.getInstance(Locale.ENGLISH)).format(num);
-    }
-
-    // formatting
-    public static final DecimalFormat PERCENTAGE_FORMAT = new DecimalFormat("#'%'");
-
-    public static String formatPercentageField(final double value)
-    {
-        return PERCENTAGE_FORMAT.format(value * 100);
-    }
-
-    public static String formatTpmField(final double tpm) { return formatSingleDigitDecimal(tpm); }
-
-    public static String formatPercentileField(final double percentile) { return formatTwoDigitDecimal(percentile); }
-
-    public static String formatFoldChangeField(final double foldChange)
-    {
-        return foldChange > 1000 ? ">1000" : formatSingleDigitDecimal(foldChange);
-    }
-
     public PdfFont fontBold()
     {
         return mFontBold;

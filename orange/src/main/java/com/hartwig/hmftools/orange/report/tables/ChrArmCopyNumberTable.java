@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.orange.report.tables;
 
-import static com.hartwig.hmftools.orange.report.ReportResources.formatSingleDigitDecimal;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatSingleDigitDecimal;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_CHR;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_CN;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_REL_CN;

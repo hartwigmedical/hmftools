@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.orange.report.interpretation;
 
-import static com.hartwig.hmftools.orange.report.ReportResources.formatFoldChangeField;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatFoldChangeField;
 
 import java.util.List;
 

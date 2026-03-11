@@ -3,7 +3,7 @@ package com.hartwig.hmftools.orange.report.tables;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
-import static com.hartwig.hmftools.orange.report.ReportResources.formatPercentage;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatPercentage;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.cellArray;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.intToFloatArray;
