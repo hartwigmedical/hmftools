@@ -17,6 +17,7 @@ import com.hartwig.hmftools.common.rna.NovelSpliceJunction;
 import com.hartwig.hmftools.common.rna.RnaFusion;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 
+@Deprecated
 final class NovelSpliceJunctionSelector
 {
     public static List<NovelSpliceJunction> selectSkippedExons(

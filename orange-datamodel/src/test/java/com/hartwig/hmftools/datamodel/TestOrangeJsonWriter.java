@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.datamodel.chord.ChordStatus;
 import com.hartwig.hmftools.datamodel.chord.ImmutableChordRecord;
+import com.hartwig.hmftools.datamodel.common.ImmutableAllelicDepth;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaMode;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
@@ -42,12 +43,10 @@ import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
 import com.hartwig.hmftools.datamodel.orange.OrangeSample;
 import com.hartwig.hmftools.datamodel.peach.ImmutablePeachGenotype;
 import com.hartwig.hmftools.datamodel.purple.HotspotType;
-import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleAllelicDepth;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleCharacteristics;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleFit;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGainDeletion;
-import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGeneCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleQC;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleTranscriptImpact;
@@ -196,7 +195,7 @@ public class TestOrangeJsonWriter
                 .adjustedCopyNumber(3.02)
                 .adjustedVAF(1.2)
                 .hotspot(HotspotType.NON_HOTSPOT)
-                .tumorDepth(ImmutablePurpleAllelicDepth.builder().totalReadCount(20).alleleReadCount(10).build())
+                .tumorDepth(ImmutableAllelicDepth.builder().totalReadCount(20).alleleReadCount(10).build())
                 .subclonalLikelihood(0.0)
                 .somaticLikelihood(PurpleSomaticLikelihood.MEDIUM)
                 .biallelic(false)
@@ -229,7 +228,7 @@ public class TestOrangeJsonWriter
                 .adjustedCopyNumber(2.0)
                 .adjustedVAF(1.2)
                 .hotspot(HotspotType.HOTSPOT)
-                .tumorDepth(ImmutablePurpleAllelicDepth.builder().totalReadCount(30).alleleReadCount(20).build())
+                .tumorDepth(ImmutableAllelicDepth.builder().totalReadCount(30).alleleReadCount(20).build())
                 .subclonalLikelihood(0.2)
                 .somaticLikelihood(PurpleSomaticLikelihood.UNKNOWN)
                 .biallelic(false)

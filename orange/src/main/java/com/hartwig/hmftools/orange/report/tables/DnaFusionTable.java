@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.linx.FusionPhasedType;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
-import com.hartwig.hmftools.datamodel.purple.PurpleAllelicDepth;
+import com.hartwig.hmftools.datamodel.common.AllelicDepth;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.util.Cells;
 import com.hartwig.hmftools.orange.report.util.Tables;
@@ -111,10 +111,10 @@ public final class DnaFusionTable
         throw new IllegalStateException();
     }
 
-    private static String rnaSupportField(final PurpleAllelicDepth rnaSupport)
+    private static String rnaSupportField(final AllelicDepth rnaSupport)
     {
         if(rnaSupport == null)
-            return formatSupportField(0, 0);
+            return ReportResources.NOT_AVAILABLE;
         else
             return formatSupportField(rnaSupport.alleleReadCount(), rnaSupport.totalReadCount());
     }

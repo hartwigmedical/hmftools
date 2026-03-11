@@ -1,9 +1,7 @@
 package com.hartwig.hmftools.orange.report.datamodel;
 
-import java.util.List;
-
 import com.hartwig.hmftools.datamodel.purple.HotspotType;
-import com.hartwig.hmftools.datamodel.purple.PurpleAllelicDepth;
+import com.hartwig.hmftools.datamodel.common.AllelicDepth;
 import com.hartwig.hmftools.datamodel.purple.PurpleGenotypeStatus;
 
 import org.immutables.value.Value;
@@ -43,7 +41,7 @@ public abstract class VariantEntry
     public abstract String somaticLikelihood();
 
     @Nullable
-    public abstract PurpleAllelicDepth rnaDepth();
+    public abstract AllelicDepth rnaDepth();
 
     public abstract PurpleGenotypeStatus genotypeStatus();
 

@@ -14,6 +14,7 @@ import com.hartwig.hmftools.common.genome.chromosome.CytoBands;
 import com.hartwig.hmftools.common.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.rna.RnaFusion;
+import com.hartwig.hmftools.datamodel.common.AllelicDepth;
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.linx.FusionPhasedType;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxFusion;
@@ -21,8 +22,7 @@ import com.hartwig.hmftools.datamodel.linx.ImmutableLinxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.linx.LinxFusionType;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
-import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleAllelicDepth;
-import com.hartwig.hmftools.datamodel.purple.PurpleAllelicDepth;
+import com.hartwig.hmftools.datamodel.common.ImmutableAllelicDepth;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxData;
 import com.hartwig.hmftools.orange.conversion.ConversionUtil;
 import com.hartwig.hmftools.orange.conversion.LinxConversion;
@@ -82,7 +82,7 @@ public class LinxInterpreter
 
             double avgJcn = (breakendUp.undisruptedCopyNumber() + breakendDown.undisruptedCopyNumber()) * 0.5;
 
-            PurpleAllelicDepth rnaSupport = findRnaSupport(fusion, isofoxData);
+            AllelicDepth rnaSupport = findRnaSupport(fusion, isofoxData);
 
             LinxFusion convertedFusion = ImmutableLinxFusion.builder()
                     .geneUp(breakendUp.gene())
@@ -111,18 +111,21 @@ public class LinxInterpreter
         return convertedFusions;
     }
 
-    private static PurpleAllelicDepth findRnaSupport(com.hartwig.hmftools.common.linx.LinxFusion fusion, final IsofoxData isofoxData)
+    private static AllelicDepth findRnaSupport(com.hartwig.hmftools.common.linx.LinxFusion fusion, final IsofoxData isofoxData)
     {
         if(isofoxData == null)
             return null;
 
         int totalCoverage = 0;
         int totalFragments = 0;
+        boolean matched = false;
 
         for(RnaFusion rnaFusion : isofoxData.fusions())
         {
             if(rnaFusion.name().equals(fusion.name()))
             {
+                matched = true;
+
                 int fragments = rnaFusion.splitFragments();
                 int averageDepth = min((int)round((rnaFusion.depthUp() + rnaFusion.depthDown()) * 0.5), fragments);
                 totalCoverage += averageDepth;
@@ -130,7 +133,10 @@ public class LinxInterpreter
             }
         }
 
-        return ImmutablePurpleAllelicDepth.builder()
+        if(!matched)
+            return null;
+
+        return ImmutableAllelicDepth.builder()
                 .alleleReadCount(totalFragments)
                 .totalReadCount(totalCoverage)
                 .build();
