@@ -52,7 +52,7 @@ public class TestFindingFactory
                 .brca1Value(0)
                 .brca2Value(0)
                 .lohCopyNumbers(List.of())
-                .genes(List.of());
+                .relatedGenes(List.of());
     }
 
     @NotNull
@@ -62,7 +62,7 @@ public class TestFindingFactory
                 .findingKey("")
                 .microsatelliteStatus(MicrosatelliteStability.MicrosatelliteStatus.UNKNOWN)
                 .lohCopyNumbers(List.of())
-                .genes(List.of());
+                .relatedGenes(List.of());
     }
 
     @NotNull

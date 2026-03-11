@@ -314,7 +314,7 @@ public class FindingRecordFactory
                             .hrStatus(hrStatus)
                             .hrdType(chord.hrdType())
                             .lohCopyNumbers(lohGainDeletions)
-                            .genes(GeneListUtil.genes(purple.reportableSomaticVariants(),
+                            .relatedGenes(GeneListUtil.genes(purple.reportableSomaticVariants(),
                                     purple.reportableSomaticGainsDels(),
                                     linx.germlineHomozygousDisruptions(),
                                     Genes.HRD_GENES).stream().toList())
@@ -344,7 +344,7 @@ public class FindingRecordFactory
                         .microsatelliteStatus(microsatelliteStatus)
                         .microsatelliteIndelsPerMb(purple.characteristics().microsatelliteIndelsPerMb())
                         .lohCopyNumbers(lohGainDeletions)
-                        .genes(GeneListUtil.genes(purple.reportableSomaticVariants(),
+                        .relatedGenes(GeneListUtil.genes(purple.reportableSomaticVariants(),
                                 purple.reportableSomaticGainsDels(),
                                 linx.germlineHomozygousDisruptions(),
                                 Genes.MSI_GENES).stream().toList())
