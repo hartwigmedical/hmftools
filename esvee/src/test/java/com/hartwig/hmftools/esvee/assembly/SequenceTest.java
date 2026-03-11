@@ -26,6 +26,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.redux.BaseQualAdjustment;
 import com.hartwig.hmftools.common.sequencing.SbxBamUtils;
+import com.hartwig.hmftools.common.utils.StartEndPair;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.RepeatInfo;
@@ -263,9 +264,9 @@ public class SequenceTest
         int consensusRepeatCount = 6;
         List<Integer> readRepeatCounts = List.of(consensusRepeatCount, consensusRepeatCount, 4, 5, 7, 8);
 
-        for(int i = 0; i <= 1; ++i)
+        for(StartEndPair se : StartEndPair.values())
         {
-            boolean buildForwards = (i == 0);
+            boolean buildForwards = se.isStart();
 
             for(int test = 0; test < repeats.size(); ++test)
             {

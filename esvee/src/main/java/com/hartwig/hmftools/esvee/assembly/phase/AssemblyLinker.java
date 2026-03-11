@@ -4,6 +4,7 @@ import static java.lang.Math.abs;
 import static java.lang.Math.floor;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.utils.StartEndPair.Start;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_LINK_DISC_ONLY_OVERLAP_BASES;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_LINK_OVERLAP_BASES;
@@ -28,6 +29,7 @@ import java.util.Set;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.utils.StartEndPair;
 import com.hartwig.hmftools.esvee.assembly.SequenceCompare;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
@@ -131,10 +133,10 @@ public final class AssemblyLinker
                 boolean matched = false;
 
                 // require a shared split, concordant read in either of the assemblies
-                for(int i = 0; i <= 1; ++i)
+                for(StartEndPair se : StartEndPair.values())
                 {
-                    List<SupportRead> splitSupport = (i == 0) ? first.support() : second.support();
-                    List<SupportRead> otherSupport = (i == 0) ? second.support() : first.support();
+                    List<SupportRead> splitSupport = se.isStart() ? first.support() : second.support();
+                    List<SupportRead> otherSupport = se.isStart() ? second.support() : first.support();
 
                     for(SupportRead support : splitSupport)
                     {

@@ -19,6 +19,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.utils.StartEndPair;
 import com.hartwig.hmftools.esvee.assembly.AssemblyConfig;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
@@ -160,11 +161,11 @@ public class LocalGroupBuilder extends ThreadTask
             return false;
 
         // finally check supporting reads and mates for ref-side soft-clips which match or extend beyond (thereby disqualifying them)
-        for(int i = 0; i <= 1; ++i)
+        for(StartEndPair se : StartEndPair.values())
         {
-            JunctionAssembly assembly = (i == 0) ? lower : upper;
-            JunctionAssembly otherAssembly = (i == 0) ? upper : lower;
-            boolean otherIsUpper = (i == 0);
+            JunctionAssembly assembly = se.isStart() ? lower : upper;
+            JunctionAssembly otherAssembly = se.isStart() ? upper : lower;
+            boolean otherIsUpper = se.isStart();
 
             int otherJunctionPosition = otherAssembly.junction().Position;
 

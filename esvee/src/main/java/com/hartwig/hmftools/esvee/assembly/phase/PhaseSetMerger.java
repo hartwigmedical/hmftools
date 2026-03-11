@@ -16,6 +16,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.region.Orientation;
+import com.hartwig.hmftools.common.utils.StartEndPair;
 import com.hartwig.hmftools.esvee.assembly.alignment.AssemblyAlignment;
 import com.hartwig.hmftools.esvee.assembly.SequenceCompare;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
@@ -78,9 +79,9 @@ public final class PhaseSetMerger
         String primarySequence = primaryAssembly.fullSequence();
         String otherFullSequence = otherAssembly.fullSequence();
 
-        for(int i = 0; i <= 1; ++i)
+        for(StartEndPair se : StartEndPair.values())
         {
-            Orientation otherOrientation = (i == 0) ? FORWARD : REVERSE;
+            Orientation otherOrientation = se.isStart() ? FORWARD : REVERSE;
 
             String otherSequence = otherOrientation == FORWARD ?
                     otherFullSequence : Nucleotides.reverseComplementBases(otherFullSequence);

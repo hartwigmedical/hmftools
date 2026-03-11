@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.esvee.assembly.types.BaseType.G;
 import static com.hartwig.hmftools.esvee.assembly.types.BaseType.C;
 
 import com.hartwig.hmftools.common.redux.BaseQualAdjustment;
+import com.hartwig.hmftools.common.utils.StartEndPair;
 
 public final class ReadAdjustments
 {
@@ -53,9 +54,9 @@ public final class ReadAdjustments
 
     public static void markLineSoftClips(final Read read)
     {
-        for(int i = 0; i <= 1; ++i)
+        for(StartEndPair se : StartEndPair.values())
         {
-            boolean fromStart = (i == 0);
+            boolean fromStart = se.isStart();
             int scBaseCount = fromStart ? read.leftClipLength() : read.rightClipLength();
 
             if(scBaseCount == 0)
