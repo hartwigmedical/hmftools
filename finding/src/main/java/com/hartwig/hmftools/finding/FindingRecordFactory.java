@@ -13,6 +13,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.hartwig.hmftools.datamodel.OrangeJson;
 import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaMode;
@@ -50,13 +51,14 @@ import com.hartwig.hmftools.finding.datamodel.HomologousRecombinationBuilder;
 import com.hartwig.hmftools.finding.datamodel.MetaPropertiesBuilder;
 import com.hartwig.hmftools.finding.datamodel.MicrosatelliteStability;
 import com.hartwig.hmftools.finding.datamodel.MicrosatelliteStabilityBuilder;
-import com.hartwig.hmftools.finding.datamodel.PharmocoGenotype;
-import com.hartwig.hmftools.finding.datamodel.PharmocoGenotypeBuilder;
+import com.hartwig.hmftools.finding.datamodel.PharmacoGenotype;
+import com.hartwig.hmftools.finding.datamodel.PharmacoGenotypeBuilder;
 import com.hartwig.hmftools.finding.datamodel.PredictedTumorOrigin;
 import com.hartwig.hmftools.finding.datamodel.PredictedTumorOriginBuilder;
 import com.hartwig.hmftools.finding.datamodel.PurityPloidyFit;
 import com.hartwig.hmftools.finding.datamodel.PurityPloidyFitBuilder;
-import com.hartwig.hmftools.finding.datamodel.PurityPloidyFitQcBuilder;
+import com.hartwig.hmftools.finding.datamodel.Qc;
+import com.hartwig.hmftools.finding.datamodel.QcBuilder;
 import com.hartwig.hmftools.finding.datamodel.RefGenomeVersion;
 import com.hartwig.hmftools.finding.datamodel.SequencingScope;
 import com.hartwig.hmftools.finding.datamodel.SmallVariant;
@@ -66,7 +68,6 @@ import com.hartwig.hmftools.finding.datamodel.Virus;
 import com.hartwig.hmftools.finding.datamodel.VirusBuilder;
 import com.hartwig.hmftools.finding.datamodel.VisualisationFiles;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 // to reduce duplication, the findings are collected from
@@ -78,7 +79,7 @@ public class FindingRecordFactory
     {
         try(Reader reader = Files.newBufferedReader(orangeJson))
         {
-            OrangeRecord orangeRecord = com.hartwig.hmftools.datamodel.OrangeJson.getInstance().read(reader);
+            OrangeRecord orangeRecord = OrangeJson.getInstance().read(reader);
             return fromOrangeRecord(orangeRecord, clinicalTranscriptsTsv, driverGeneTsv);
         }
     }
@@ -98,14 +99,15 @@ public class FindingRecordFactory
 
         FindingRecordBuilder
                 builder = FindingRecordBuilder.builder()
+                .version("1.0")
                 .metaProperties(MetaPropertiesBuilder.builder()
-                        .version("1.0")
                         .refGenomeVersion(RefGenomeVersion.valueOf(orangeRecord.refGenomeVersion().name()))
                         .sequencingScope(SequencingScope.valueOf(orangeRecord.experimentType().name()))
                         .pipelineVersion(orangeRecord.pipelineVersion())
                         .sampleId(orangeRecord.sampleId())
                         .samplingDate(orangeRecord.samplingDate())
                         .build())
+                .qc(createQc(purple))
                 .fusions(createFusionsFindings(orangeRecord.linx()));
 
         DriverFindingList<GainDeletion>
@@ -130,7 +132,7 @@ public class FindingRecordFactory
 
         return builder.predictedTumorOrigins(createPredictedTumorOriginList(orangeRecord.cuppa()))
                 .hlaAlleles(HlaAlleleFactory.createHlaAllelesFindings(orangeRecord, hasReliablePurity, hasContamination))
-                .pharmocoGenotypes(createPharmcoGenotypesFindings(orangeRecord.peach(), hasContamination))
+                .pharmacoGenotypes(createPharmacoGenotypesFindings(orangeRecord.peach(), hasContamination))
                 .visualisationFiles(visualisationFiles)
                 .build();
     }
@@ -157,7 +159,7 @@ public class FindingRecordFactory
                     GainDeletionFactory.somaticGainDeletionFindings(orangeRecord.refGenomeVersion(), FindingsStatus.OK, purple);
 
             builder.somaticSmallVariants(smallVariants)
-                    .germlineSmallVariants(com.hartwig.hmftools.finding.SmallVariantFactory.germlineSmallVariantFindings(hasRefSample, purple, findingConfig))
+                    .germlineSmallVariants(SmallVariantFactory.germlineSmallVariantFindings(hasRefSample, purple, findingConfig))
                     .somaticGainDeletions(somaticGainDeletions)
                     .germlineGainDeletions(GainDeletionFactory.germlineGainDeletionFindings(hasRefSample, orangeRecord.refGenomeVersion(), purple))
                     .microsatelliteStability(createMicrosatelliteStability(purple, orangeRecord.linx(), somaticGainDeletions))
@@ -175,28 +177,55 @@ public class FindingRecordFactory
         }
         return somaticGainDeletions;
     }
-
-    @NotNull
-    private static PurityPloidyFit createPurityPloidyFit(@NotNull PurpleRecord purple)
+    
+    private static Qc createQc(PurpleRecord purple)
     {
         PurpleFit purpleFit = purple.fit();
-        Set<PurityPloidyFit.QCStatus> qcStatuses = purpleFit.qc().status().stream()
-                .map(o -> PurityPloidyFit.QCStatus.valueOf(o.name()))
+        Set<Qc.QCStatus> qcStatuses = purpleFit.qc().status().stream()
+                .map(o -> switch (o)
+                {
+                    case PASS -> Qc.QCStatus.PASS;
+                    case WARN_DELETED_GENES -> Qc.QCStatus.WARN_DELETED_GENES;
+                    case WARN_HIGH_COPY_NUMBER_NOISE -> Qc.QCStatus.WARN_HIGH_COPY_NUMBER_NOISE;
+                    case WARN_GENDER_MISMATCH -> Qc.QCStatus.WARN_GENDER_MISMATCH;
+                    case WARN_LOW_PURITY -> Qc.QCStatus.WARN_LOW_PURITY;
+                    case WARN_TINC -> Qc.QCStatus.WARN_TUMOR_IN_NORMAL_CONTAMINATION;
+                    case FAIL_CONTAMINATION -> Qc.QCStatus.FAIL_CONTAMINATION;
+                    case FAIL_NO_TUMOR -> Qc.QCStatus.FAIL_NO_TUMOR;
+                    case FAIL_TINC -> Qc.QCStatus.FAIL_TUMOR_IN_NORMAL_CONTAMINATION;
+                })
                 .collect(Collectors.toSet());
-        Set<PurityPloidyFit.GermlineAberration> germlineAberrations = purpleFit.qc().germlineAberrations().stream()
-                .map(o -> PurityPloidyFit.GermlineAberration.valueOf(o.name()))
+        Set<Qc.GermlineAberration> germlineAberrations = purpleFit.qc().germlineAberrations().stream()
+                .map(o -> switch (o)
+                {
+                    case NONE -> Qc.GermlineAberration.NONE;
+                    case MOSAIC_X -> Qc.GermlineAberration.MOSAIC_X;
+                    case KLINEFELTER -> Qc.GermlineAberration.KLINEFELTER;
+                    case XYY -> Qc.GermlineAberration.XYY;
+                    case TRISOMY_X -> Qc.GermlineAberration.TRISOMY_X;
+                    case TRISOMY_13 -> Qc.GermlineAberration.TRISOMY_13;
+                    case TRISOMY_15 -> Qc.GermlineAberration.TRISOMY_15;
+                    case TRISOMY_18 -> Qc.GermlineAberration.TRISOMY_18;
+                    case TRISOMY_21 -> Qc.GermlineAberration.TRISOMY_21;
+                })
                 .collect(Collectors.toSet());
 
+        return QcBuilder.builder()
+                .status(qcStatuses)
+                .germlineAberrations(germlineAberrations)
+                .amberMeanDepth(purpleFit.qc().amberMeanDepth())
+                .contamination(purpleFit.qc().contamination())
+                .totalCopyNumberSegments(purpleFit.qc().totalCopyNumberSegments())
+                .unsupportedCopyNumberSegments(purpleFit.qc().unsupportedCopyNumberSegments())
+                .deletedGenes(purpleFit.qc().deletedGenes())
+                .build();
+    }
+
+    private static PurityPloidyFit createPurityPloidyFit(PurpleRecord purple)
+    {
+        PurpleFit purpleFit = purple.fit();
+
         return PurityPloidyFitBuilder.builder()
-                .qc(PurityPloidyFitQcBuilder.builder()
-                        .status(qcStatuses)
-                        .germlineAberrations(germlineAberrations)
-                        .amberMeanDepth(purpleFit.qc().amberMeanDepth())
-                        .contamination(purpleFit.qc().contamination())
-                        .totalCopyNumberSegments(purpleFit.qc().totalCopyNumberSegments())
-                        .unsupportedCopyNumberSegments(purpleFit.qc().unsupportedCopyNumberSegments())
-                        .deletedGenes(purpleFit.qc().deletedGenes())
-                        .build())
                 .fittedPurityMethod(PurityPloidyFit.FittedPurityMethod.valueOf(purpleFit.fittedPurityMethod().name()))
                 .purity(purpleFit.purity())
                 .minPurity(purpleFit.minPurity())
@@ -373,8 +402,8 @@ public class FindingRecordFactory
                 .fusedExonDown(fusion.fusedExonDown())
                 .chainLinks(fusion.chainLinks())
                 .chainTerminated(fusion.chainTerminated())
-                .domainsKept(fusion.domainsKept())
-                .domainsLost(fusion.domainsLost())
+                .domainsKept(List.of(fusion.domainsKept().split(";")))
+                .domainsLost(List.of(fusion.domainsLost().split(";")))
                 .junctionCopyNumber(fusion.junctionCopyNumber())
                 .build();
     }
@@ -442,15 +471,15 @@ public class FindingRecordFactory
         };
     }
 
-    private static FindingList<PharmocoGenotype> createPharmcoGenotypesFindings(@Nullable Set<PeachGenotype> peachGenotypes,
+    private static FindingList<PharmacoGenotype> createPharmacoGenotypesFindings(@Nullable Set<PeachGenotype> peachGenotypes,
             boolean hasContamination)
     {
         if(peachGenotypes != null)
         {
-            return FindingListBuilder.<PharmocoGenotype>builder()
+            return FindingListBuilder.<PharmacoGenotype>builder()
                     .status(hasContamination ? FindingsStatus.NOT_RELIABLE : FindingsStatus.OK)
                     .findings(peachGenotypes.stream().map(o ->
-                                    PharmocoGenotypeBuilder.builder()
+                                    PharmacoGenotypeBuilder.builder()
                                             .findingKey(FindingKeys.pharmacoGenotype(o.gene(), o.allele()))
                                             .gene(o.gene())
                                             .allele(o.allele())
@@ -460,7 +489,7 @@ public class FindingRecordFactory
                                             .linkedDrugs(o.linkedDrugs())
                                             .urlPrescriptionInfo(o.urlPrescriptionInfo())
                                             .build())
-                            .sorted(PharmocoGenotype.COMPARATOR)
+                            .sorted(PharmacoGenotype.COMPARATOR)
                             .toList())
                     .build();
         }

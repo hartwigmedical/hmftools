@@ -7,7 +7,9 @@ import jakarta.validation.constraints.NotNull;
 
 @RecordBuilder
 public record FindingRecord(
+        @NotNull String version,
         @NotNull MetaProperties metaProperties,
+        @NotNull Qc qc,
         @NotNull PurityPloidyFit purityPloidyFit,
         @NotNull DriverFindingList<SmallVariant> somaticSmallVariants,
         @NotNull DriverFindingList<SmallVariant> germlineSmallVariants,
@@ -18,7 +20,7 @@ public record FindingRecord(
         @NotNull DriverFindingList<Fusion> fusions,
         @NotNull DriverFindingList<Virus> viruses,
         @NotNull FindingList<HlaAllele> hlaAlleles,
-        @NotNull FindingList<PharmocoGenotype> pharmocoGenotypes,
+        @NotNull FindingList<PharmacoGenotype> pharmacoGenotypes,
         @NotNull FindingList<PredictedTumorOrigin> predictedTumorOrigins,
         @NotNull FindingItem<MicrosatelliteStability> microsatelliteStability,
         @NotNull FindingItem<TumorMutationStatus> tumorMutationStatus,

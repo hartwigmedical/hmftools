@@ -177,10 +177,10 @@ final class GainDeletionFactory
                 .isCanonical(geneCopyNumber.isCanonical())
                 .somaticType(GainDeletion.Type.HET_DEL)
                 .geneExtent(GainDeletion.GeneExtent.FULL_GENE) // not strictly correct
-                .tumorMinCopies(geneCopyNumber.minCopyNumber())
-                .tumorMaxCopies(geneCopyNumber.maxCopyNumber())
-                .tumorMinMinorAlleleCopies(geneCopyNumber.minMinorAlleleCopyNumber())
-                .chromosomeArmCopies(cnPerChromosome.chromosomeArmCopyNumber(geneCopyNumber.chromosome(), geneCopyNumber.chromosomeBand()))
+                .tumorMinCopyNumber(geneCopyNumber.minCopyNumber())
+                .tumorMaxCopyNumber(geneCopyNumber.maxCopyNumber())
+                .tumorMinMinorAlleleCopyNumber(geneCopyNumber.minMinorAlleleCopyNumber())
+                .chromosomeArmCopyNumber(cnPerChromosome.chromosomeArmCopyNumber(geneCopyNumber.chromosome(), geneCopyNumber.chromosomeBand()))
                 .build();
     }
 
@@ -223,10 +223,10 @@ final class GainDeletionFactory
                 .somaticType(somaticType)
                 .germlineType(germlineType)
                 .geneExtent(toGeneExtent(purpleGainDeletion.interpretation()))
-                .tumorMinCopies(purpleGainDeletion.minCopies())
-                .tumorMaxCopies(purpleGainDeletion.maxCopies())
-                .tumorMinMinorAlleleCopies(geneCopyNumber.minMinorAlleleCopyNumber())
-                .chromosomeArmCopies(cnPerChromosome.chromosomeArmCopyNumber(geneCopyNumber.chromosome(), geneCopyNumber.chromosomeBand()))
+                .tumorMinCopyNumber(purpleGainDeletion.minCopies())
+                .tumorMaxCopyNumber(purpleGainDeletion.maxCopies())
+                .tumorMinMinorAlleleCopyNumber(geneCopyNumber.minMinorAlleleCopyNumber())
+                .chromosomeArmCopyNumber(cnPerChromosome.chromosomeArmCopyNumber(geneCopyNumber.chromosome(), geneCopyNumber.chromosomeBand()))
                 .build();
     }
 
@@ -262,10 +262,10 @@ final class GainDeletionFactory
                 .somaticType(GainDeletion.Type.HET_DEL)
                 .germlineType(GainDeletion.Type.HET_DEL)
                 .geneExtent(geneExtent)
-                .tumorMinCopies(loh.minCopies())
-                .tumorMaxCopies(loh.maxCopies())
-                .tumorMinMinorAlleleCopies(geneCopyNumber.minMinorAlleleCopyNumber())
-                .chromosomeArmCopies(cnPerChromosome.chromosomeArmCopyNumber(loh.chromosome(), loh.chromosomeBand()))
+                .tumorMinCopyNumber(loh.minCopies())
+                .tumorMaxCopyNumber(loh.maxCopies())
+                .tumorMinMinorAlleleCopyNumber(geneCopyNumber.minMinorAlleleCopyNumber())
+                .chromosomeArmCopyNumber(cnPerChromosome.chromosomeArmCopyNumber(loh.chromosome(), loh.chromosomeBand()))
                 .build();
     }
 

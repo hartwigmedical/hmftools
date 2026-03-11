@@ -18,11 +18,14 @@ public record GainDeletion(
     @Nullable Type germlineType,
     @NotNull GeneExtent geneExtent,
     @Nullable ExonRange exonRange, // null if exon range info not available
-    double tumorMinCopies,
-    double tumorMaxCopies,
-    double tumorMinMinorAlleleCopies,
-    double chromosomeArmCopies,
-    @Nullable Double germlineMinCopyNumber) implements Driver
+    double tumorMinCopyNumber,
+    double tumorMaxCopyNumber,
+    double tumorMinMinorAlleleCopyNumber,
+    double chromosomeArmCopyNumber,
+    @Nullable Double germlineMinCopyNumber,
+    @Nullable Double tpm,
+    @Nullable Double tpmPercentile,
+    @Nullable Double tpmFoldChange) implements Driver
 {
     public enum Type
     {
@@ -94,6 +97,6 @@ public record GainDeletion(
     public boolean isLossOfHeterozygosity()
     {
         return (somaticType() == Type.CN_NEUTRAL_LOH) ||
-               (somaticType() == Type.HET_DEL && tumorMinMinorAlleleCopies() < 0.5);
+               (somaticType() == Type.HET_DEL && tumorMinMinorAlleleCopyNumber() < 0.5);
     }
 }
