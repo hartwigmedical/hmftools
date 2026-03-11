@@ -14,9 +14,9 @@ public record Disruption(
         @NotNull String gene,
         @NotNull String transcript,
         boolean isCanonical,
-        @NotNull Breakend.Type breakendType,
-        double disruptedCopies,
-        double undisruptedCopies,
+        @NotNull BreakendType breakendType,
+        double disruptedCopyNumber,
+        double undisruptedCopyNumber,
         @Nullable Integer clusterId,
         @Nullable Breakend breakendStart,
         @Nullable Breakend breakendEnd
@@ -33,6 +33,17 @@ public record Disruption(
             return this == HOM_DUP_DISRUPTION ||
                     this == HOM_DEL_DISRUPTION;
         }
+    }
+
+    public enum BreakendType
+    {
+        BND,
+        DEL,
+        DUP,
+        INF,
+        INS,
+        INV,
+        SGL
     }
 
     @NotNull

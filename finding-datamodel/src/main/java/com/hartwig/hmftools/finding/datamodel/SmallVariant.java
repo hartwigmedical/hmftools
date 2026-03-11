@@ -30,7 +30,7 @@ public record SmallVariant(
         double minorAlleleCopyNumber,
         double variantCopyNumber,
         boolean biallelic,
-        double biallelicProbability,
+        double biallelicLikelihood,
         @NotNull GenotypeStatus genotypeStatus,
         int repeatCount,
         double subclonalLikelihood,

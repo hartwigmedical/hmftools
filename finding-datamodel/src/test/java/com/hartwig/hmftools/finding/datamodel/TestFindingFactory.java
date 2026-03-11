@@ -32,14 +32,13 @@ public class TestFindingFactory
     public static PurityPloidyFitBuilder purityPloidyFitBuilder()
     {
         return PurityPloidyFitBuilder.builder()
-                .qc(TestFindingFactory.qcBuilder().status(Set.of()).build())
                 .fittedPurityMethod(PurityPloidyFit.FittedPurityMethod.NORMAL);
     }
 
     @NotNull
-    public static PurityPloidyFitQcBuilder qcBuilder()
+    public static QcBuilder qcBuilder()
     {
-        return PurityPloidyFitQcBuilder.builder();
+        return QcBuilder.builder();
     }
 
     @NotNull
@@ -110,7 +109,7 @@ public class TestFindingFactory
                 .allelicDepth(depthBuilder().build())
                 .subclonalLikelihood(0D)
                 .biallelic(false)
-                .biallelicProbability(0D)
+                .biallelicLikelihood(0D)
                 .genotypeStatus(SmallVariant.GenotypeStatus.UNKNOWN)
                 .worstCodingEffect(SmallVariant.CodingEffect.SPLICE)
                 .adjustedVAF(0)
@@ -145,7 +144,7 @@ public class TestFindingFactory
                 .gene("")
                 .chromosome("")
                 .chromosomeBand("")
-                .breakendType(Breakend.Type.BND)
+                .breakendType(Disruption.BreakendType.BND)
                 .transcript("")
                 .isCanonical(true)
                 .breakendStart(breakendBuilder().build())
@@ -157,12 +156,7 @@ public class TestFindingFactory
     public static BreakendBuilder breakendBuilder()
     {
         return BreakendBuilder.builder()
-                .gene("")
-                .chromosome("")
-                .chromosomeBand("")
-                .transcript("")
                 .geneOrientation(Breakend.GeneOrientation.UPSTREAM)
-                .type(Breakend.Type.BND)
                 .regionType(Breakend.TranscriptRegionType.DOWNSTREAM)
                 .codingType(Breakend.TranscriptCodingType.CODING);
     }
@@ -176,7 +170,7 @@ public class TestFindingFactory
                 .chromosome("")
                 .transcript("")
                 .isCanonical(true)
-                .breakendType(Breakend.Type.DEL)
+                .breakendType(Disruption.BreakendType.DEL)
                 .type(Disruption.Type.HOM_DEL_DISRUPTION);
     }
 
@@ -192,10 +186,10 @@ public class TestFindingFactory
                 .isCanonical(false)
                 .somaticType(GainDeletion.Type.HOM_DEL)
                 .geneExtent(GainDeletion.GeneExtent.FULL_GENE)
-                .tumorMinCopies(0)
-                .tumorMaxCopies(0)
-                .tumorMinMinorAlleleCopies(0)
-                .chromosomeArmCopies(0);
+                .tumorMinCopyNumber(0)
+                .tumorMaxCopyNumber(0)
+                .tumorMinMinorAlleleCopyNumber(0)
+                .chromosomeArmCopyNumber(0);
     }
 
     @NotNull
@@ -216,8 +210,8 @@ public class TestFindingFactory
                 .junctionCopyNumber(0D)
                 .chainLinks(0)
                 .chainTerminated(false)
-                .domainsKept("")
-                .domainsLost("");
+                .domainsKept(List.of())
+                .domainsLost(List.of());
     }
 
     public static <T extends Driver> DriverFindingListBuilder<T> driverFindingsBuilder(List<T> findings)

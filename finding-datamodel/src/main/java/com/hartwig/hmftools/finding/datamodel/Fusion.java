@@ -20,8 +20,8 @@ public record Fusion(
         int fusedExonDown,
         int chainLinks,
         boolean chainTerminated,
-        @NotNull String domainsKept,
-        @NotNull String domainsLost,
+        @NotNull List<String> domainsKept,
+        @NotNull List<String> domainsLost,
         double junctionCopyNumber
 ) implements Driver
 {
