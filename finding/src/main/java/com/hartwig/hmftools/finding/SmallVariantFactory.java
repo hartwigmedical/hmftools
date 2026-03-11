@@ -24,7 +24,6 @@ import com.hartwig.hmftools.finding.datamodel.SmallVariantAllelicDepthBuilder;
 import com.hartwig.hmftools.finding.datamodel.SmallVariantBuilder;
 import com.hartwig.hmftools.finding.datamodel.SmallVariantTranscriptImpactBuilder;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 final class SmallVariantFactory
@@ -130,7 +129,7 @@ final class SmallVariantFactory
                 .isCanonical(isCanonical)
                 .type(SmallVariant.VariantType.valueOf(variant.type().name()))
                 .gene(variant.gene())
-                .chromosome(ChromosomeUtil.normalize(variant.chromosome()))
+                .chromosome(variant.chromosome())
                 .position(variant.position())
                 .ref(variant.ref())
                 .alt(variant.alt())

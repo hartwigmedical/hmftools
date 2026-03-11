@@ -200,7 +200,7 @@ final class DisruptionFactory
                                 .build()
                 )
                 .type(disruptionType)
-                .chromosome(ChromosomeUtil.normalize(breakend.chromosome()))
+                .chromosome(breakend.chromosome())
                 .chromosomeBand(breakend.chromosomeBand())
                 .gene(breakend.gene())
                 .isCanonical(breakend.isCanonical())
