@@ -131,7 +131,7 @@ public final class AssemblyLinker
                 boolean matched = false;
 
                 // require a shared split, concordant read in either of the assemblies
-                for(int i = 0; i <= 0; ++i)
+                for(int i = 0; i <= 1; ++i)
                 {
                     List<SupportRead> splitSupport = (i == 0) ? first.support() : second.support();
                     List<SupportRead> otherSupport = (i == 0) ? second.support() : first.support();
@@ -166,6 +166,9 @@ public final class AssemblyLinker
                             if(matched)
                                 break;
                         }
+
+                        if(matched)
+                            break;
                     }
                 }
 
