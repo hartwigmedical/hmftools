@@ -13,7 +13,6 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
 import com.hartwig.hmftools.common.purple.Gender;
-import com.hartwig.hmftools.common.purple.ImmutableFittedPurity;
 import com.hartwig.hmftools.common.purple.ImmutableFittedPurityScore;
 import com.hartwig.hmftools.common.purple.ImmutablePurityContext;
 import com.hartwig.hmftools.common.purple.ImmutablePurpleQC;
@@ -55,14 +54,13 @@ class PurityDAO
 
         final double actualPurity = result.getValue(PURITY.PURITY_);
 
-        FittedPurity purity = ImmutableFittedPurity.builder()
-                .purity(actualPurity)
-                .normFactor(result.getValue(PURITY.NORMFACTOR))
-                .score(result.getValue(PURITY.SCORE))
-                .diploidProportion(result.getValue(PURITY.DIPLOIDPROPORTION))
-                .ploidy(result.getValue(PURITY.PLOIDY))
-                .somaticPenalty(result.getValue(PURITY.SOMATICPENALTY))
-                .build();
+        FittedPurity purity = new FittedPurity(
+                actualPurity,
+                result.getValue(PURITY.NORMFACTOR),
+                result.getValue(PURITY.PLOIDY),
+                result.getValue(PURITY.SCORE),
+                result.getValue(PURITY.DIPLOIDPROPORTION),
+                result.getValue(PURITY.SOMATICPENALTY));
 
         FittedPurityScore score = ImmutableFittedPurityScore.builder()
                 .minPurity(result.getValue(PURITY.MINPURITY))

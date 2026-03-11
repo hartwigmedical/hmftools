@@ -130,21 +130,30 @@ public class RegionFitCalculator
     private double impliedBaf(final PurityAdjuster purityAdjuster, final String chromosome, double copyNumber, double observedBAF)
     {
         if(!mCobaltChromosomes.hasChromosome(chromosome))
+        {
             return 1;
+        }
 
         CobaltChromosome cobaltChromosome = mCobaltChromosomes.get(chromosome);
 
         if(!cobaltChromosome.isNormal() || !cobaltChromosome.isDiploid() || Doubles.lessOrEqual(copyNumber, MIN_CN_THRESHOLD))
+        {
             return 1;
+        }
 
         if(Doubles.lessOrEqual(observedBAF, mAmbiguousBaf))
+        {
             return bafToMinimiseDeviation(purityAdjuster, chromosome, copyNumber, observedBAF);
+        }
         else
+        {
             return purityAdjuster.purityAdjustedBAFSimple(chromosome, copyNumber, observedBAF);
+        }
     }
 
     @VisibleForTesting
-    public double bafToMinimiseDeviation(final PurityAdjuster purityAdjuster, final String chromosome, double copyNumber, double observedBAF)
+    public double bafToMinimiseDeviation(final PurityAdjuster purityAdjuster, final String chromosome, double copyNumber,
+            double observedBAF)
     {
         double minBAF = max(0, min(1, purityAdjuster.purityAdjustedBAFSimple(chromosome, copyNumber, BAF_PNT_5)));
         double maxBAF = max(0, min(1, purityAdjuster.purityAdjustedBAFSimple(chromosome, copyNumber, observedBAF)));
@@ -152,7 +161,9 @@ public class RegionFitCalculator
         double estimatedBaf = estimateMinMaxBaf(copyNumber, minBAF, maxBAF);
 
         if(estimatedBaf != NO_CALC_BAF)
+        {
             return estimatedBaf;
+        }
 
         double majorAcnMin = minBAF * copyNumber;
         double majorAcnMax = maxBAF * copyNumber;
@@ -164,10 +175,10 @@ public class RegionFitCalculator
 
         // minimise
         double minBAFTotalDeviation = mPloidyDeviation.majorAlleleDeviation(purity, normFactor, majorAcnMin)
-                        + mPloidyDeviation.minorAlleleDeviation(purity, normFactor, minorAcnMin);
+                + mPloidyDeviation.minorAlleleDeviation(purity, normFactor, minorAcnMin);
 
         double maxBAFTotalDeviation = mPloidyDeviation.majorAlleleDeviation(purity, normFactor, majorAcnMax)
-                        + mPloidyDeviation.minorAlleleDeviation(purity,normFactor, minorAcnMax);
+                + mPloidyDeviation.minorAlleleDeviation(purity, normFactor, minorAcnMax);
 
         return Doubles.lessThan(minBAFTotalDeviation, maxBAFTotalDeviation) ? BAF_PNT_5 : observedBAF;
     }
@@ -194,7 +205,9 @@ public class RegionFitCalculator
                 signum(majorAcnMinCeil - majorAcnMin), signum(majorAcnMinCeil - majorAcnMax));
 
         if(!minorDiffIntegers && !majorDiffIntegers)
+        {
             return NO_CALC_BAF;
+        }
 
         // test for use of either only major or minor
         if(!minorDiffIntegers)
@@ -236,7 +249,9 @@ public class RegionFitCalculator
                 double previousFloor = floor(majorAcn + 1);
 
                 if(previousFloor >= majorLowerBound)
+                {
                     majorAcnEstimateLow = previousFloor;
+                }
 
                 break;
             }

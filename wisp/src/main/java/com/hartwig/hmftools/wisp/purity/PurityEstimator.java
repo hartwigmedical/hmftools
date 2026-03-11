@@ -19,7 +19,6 @@ import com.hartwig.hmftools.common.purple.FittedPurity;
 import com.hartwig.hmftools.common.purple.FittedPurityMethod;
 import com.hartwig.hmftools.common.purple.FittedPurityScore;
 import com.hartwig.hmftools.common.purple.Gender;
-import com.hartwig.hmftools.common.purple.ImmutableFittedPurity;
 import com.hartwig.hmftools.common.purple.ImmutableFittedPurityScore;
 import com.hartwig.hmftools.common.purple.ImmutablePurityContext;
 import com.hartwig.hmftools.common.purple.ImmutablePurpleQC;
@@ -49,7 +48,9 @@ public class PurityEstimator
         mConfig = new PurityConfig(configBuilder);
 
         if(mConfig.Samples.isEmpty())
+        {
             System.exit(1);
+        }
 
         mResultsWriter = new ResultsWriter(mConfig);
     }
@@ -70,19 +71,25 @@ public class PurityEstimator
                 purityCalcTasks.add(new PurityTask());
 
                 if(requirePlots)
+                {
                     plotTasks.add(new PlotTask());
+                }
             }
 
             int taskIndex = 0;
             for(SampleData sample : mConfig.Samples)
             {
                 if(taskIndex >= purityCalcTasks.size())
+                {
                     taskIndex = 0;
+                }
 
                 purityCalcTasks.get(taskIndex).Samples.add(sample);
 
                 if(requirePlots)
+                {
                     plotTasks.get(taskIndex).Samples.add(sample);
+                }
 
                 ++taskIndex;
             }
@@ -176,7 +183,9 @@ public class PurityEstimator
                 if(!somaticVariants.loadVariants())
                 {
                     if(!mConfig.AllowMissingSamples)
+                    {
                         System.exit(1);
+                    }
                 }
             }
 
@@ -188,7 +197,9 @@ public class PurityEstimator
                 if(!copyNumberProfile.hasValidData())
                 {
                     if(!mConfig.AllowMissingSamples)
+                    {
                         System.exit(1);
+                    }
 
                     CT_LOGGER.warn("sample({}) has missing Cobalt data", sample);
                 }
@@ -202,7 +213,9 @@ public class PurityEstimator
                 if(!amberLohCalcs.hasValidData())
                 {
                     if(!mConfig.AllowMissingSamples)
+                    {
                         System.exit(1);
+                    }
 
                     CT_LOGGER.warn("sample({}) has missing Amber data", sample);
                 }
@@ -253,9 +266,7 @@ public class PurityEstimator
                 double purity = 1;
                 double ploidy = 2;
 
-                FittedPurity fittedPurity = ImmutableFittedPurity.builder()
-                        .purity(purity).normFactor(1).ploidy(ploidy).score(0.0D).diploidProportion(0.0D).somaticPenalty(0.0D)
-                        .build();
+                FittedPurity fittedPurity = new FittedPurity(purity, 1, ploidy, 0.0, 0.0, 0.0);
 
                 PurpleQC purpleQC = ImmutablePurpleQC.builder()
                         .method(FittedPurityMethod.NORMAL).amberMeanDepth(0).copyNumberSegments(1).unsupportedCopyNumberSegments(0)
@@ -266,7 +277,12 @@ public class PurityEstimator
                         .build();
 
                 FittedPurityScore fittedPurityScore = ImmutableFittedPurityScore.builder()
-                        .minPurity(0.0D).maxPurity(0.0D).minPloidy(0.0D).maxPloidy(0.0D).minDiploidProportion(0.0D).maxDiploidProportion(0.0D)
+                        .minPurity(0.0D)
+                        .maxPurity(0.0D)
+                        .minPloidy(0.0D)
+                        .maxPloidy(0.0D)
+                        .minDiploidProportion(0.0D)
+                        .maxDiploidProportion(0.0D)
                         .build();
 
                 PurityContext genericContext = ImmutablePurityContext.builder()
@@ -313,7 +329,9 @@ public class PurityEstimator
                 if(!sample.IsPanel && plotCopyNumber(mConfig.WriteTypes))
                 {
                     if(!CopyNumberProfile.plotCopyNumberGcRatioFit(sample.PatientId, sampleId, mConfig))
+                    {
                         return;
+                    }
                 }
 
                 if(plotSomatics(mConfig.WriteTypes))

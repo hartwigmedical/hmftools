@@ -39,10 +39,6 @@ public class PeakSearch
         List<CandidatePeakEvaluationResult> results = evaluations.stream()
                 .map(CandidatePeakEvaluation::result)
                 .toList();
-        for(CandidatePeakEvaluationResult result : results)
-        {
-            AMB_LOGGER.debug(format("Potential peak at %.3f with score: %.3f ", result.candidatePeak().vaf(), result.score()));
-        }
         Peaks = new LocalMaximaFinder<>(results).maxima();
         for(CandidatePeakEvaluationResult peak : Peaks)
         {

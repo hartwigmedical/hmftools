@@ -16,7 +16,6 @@ import com.hartwig.hmftools.common.purple.FittedPurity;
 import com.hartwig.hmftools.common.purple.FittedPurityMethod;
 import com.hartwig.hmftools.common.purple.FittedPurityScore;
 import com.hartwig.hmftools.common.purple.Gender;
-import com.hartwig.hmftools.common.purple.ImmutableFittedPurity;
 import com.hartwig.hmftools.common.purple.ImmutableFittedPurityScore;
 import com.hartwig.hmftools.common.purple.ImmutablePurityContext;
 import com.hartwig.hmftools.common.purple.ImmutablePurpleQC;
@@ -52,7 +51,8 @@ public class SummaryTablePrepTest
     }
 
     @Test
-    public void canExtractPurpleFeatures(){
+    public void canExtractPurpleFeatures()
+    {
         PurityContext purityContext = createTestPurityContext(List.of(PurpleQCStatus.PASS));
 
         ThresholdRegistry qcThresholds = ThresholdRegistry.createWithoutThresholds();
@@ -87,14 +87,7 @@ public class SummaryTablePrepTest
 
     private PurityContext createTestPurityContext(List<PurpleQCStatus> purpleQcStatuses)
     {
-        FittedPurity fittedPurity = ImmutableFittedPurity.builder()
-                .purity(0.85)
-                .ploidy(2.0)
-                .normFactor(1.0)
-                .score(0.95)
-                .diploidProportion(1.0)
-                .somaticPenalty(0.0)
-                .build();
+        FittedPurity fittedPurity = new FittedPurity(0.85, 1.0, 2.0, 0.95, 1.0, 0.0);
 
         FittedPurityScore score = ImmutableFittedPurityScore.builder()
                 .minPurity(0.80)

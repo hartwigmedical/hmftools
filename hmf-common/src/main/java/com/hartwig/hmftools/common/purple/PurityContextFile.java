@@ -25,15 +25,14 @@ public final class PurityContextFile
 
         builder.qc(qc);
 
-        FittedPurity fittedPurity = ImmutableFittedPurity.builder()
-                .purity(purplePurity.Purity)
-                .normFactor(purplePurity.NormFactor)
-                .score(purplePurity.Score)
-                .diploidProportion(purplePurity.DiploidProportion)
-                .ploidy(purplePurity.Ploidy)
-                .somaticPenalty(purplePurity.SomaticPenalty)
-                .build();
-
+        FittedPurity fittedPurity = new FittedPurity(
+                purplePurity.Purity,
+                purplePurity.NormFactor,
+                purplePurity.Ploidy,
+                purplePurity.Score,
+                purplePurity.DiploidProportion,
+                purplePurity.SomaticPenalty
+        );
         FittedPurityScore score = ImmutableFittedPurityScore.builder()
                 .minPurity(purplePurity.MinPurity)
                 .maxPurity(purplePurity.MaxPurity)

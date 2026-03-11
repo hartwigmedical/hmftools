@@ -91,7 +91,7 @@ public final class PurpleQCFile
         result.add(AMBER_GENDER + TSV_DELIM + purpleQC.amberGender());
         result.add(COBALT_GENDER + TSV_DELIM + purpleQC.cobaltGender());
         result.add(DELETED_GENES + TSV_DELIM + purpleQC.deletedGenes());
-        result.add(CONTAMINATION + TSV_DELIM + purpleQC.contamination());
+        result.add(CONTAMINATION + TSV_DELIM + FORMAT.format(purpleQC.contamination()));
         result.add(GERMLINE_ABERRATIONS + TSV_DELIM + GermlineAberration.toString(purpleQC.germlineAberrations()));
         result.add(AMBER_MEAN_DEPTH + TSV_DELIM + purpleQC.amberMeanDepth());
         result.add(LOH_PERCENT + TSV_DELIM + FORMAT.format(purpleQC.lohPercent()));

@@ -21,7 +21,6 @@ import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.FittedPurity;
 import com.hartwig.hmftools.common.purple.Gender;
-import com.hartwig.hmftools.common.purple.ImmutableFittedPurity;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.pcf.PCFPosition;
 import com.hartwig.hmftools.purple.AmberData;
@@ -97,12 +96,6 @@ public class FittingTestBase
 
     protected FittedPurity createFittedPurity(double purity, double score, double ploidy)
     {
-        return ImmutableFittedPurity.builder()
-                .purity(purity)
-                .normFactor(0.95)
-                .score(score)
-                .diploidProportion(1.0)
-                .ploidy(ploidy)
-                .somaticPenalty(0).build();
+        return new FittedPurity(purity, 0.95, ploidy, score, 1.0, 0.0);
     }
 }
