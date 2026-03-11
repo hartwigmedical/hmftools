@@ -115,10 +115,14 @@ final class GainDeletionFactory
                 .germlineType(germlineType)
                 .geneExtent(interpretGeneExtent(purpleGainDeletion.geneRange()))
                 .exonRange(interpretExonRange(purpleGainDeletion.exonStart(), purpleGainDeletion.exonEnd()))
-                .tumorMinCopies(purpleGainDeletion.minCopyNumber())
-                .tumorMaxCopies(purpleGainDeletion.maxCopyNumber())
-                .tumorMinMinorAlleleCopies(purpleGainDeletion.minMinorAlleleCopies())
-                .chromosomeArmCopies(2) // TODO fix later
+                .tumorMinCopyNumber(purpleGainDeletion.minCopyNumber())
+                .tumorMaxCopyNumber(purpleGainDeletion.maxCopyNumber())
+                .tumorMinMinorAlleleCopyNumber(purpleGainDeletion.minMinorAlleleCopies())
+                .chromosomeArmCopyNumber(2) // TODO fix later
+                .germlineMinCopyNumber(germlineAmpDelFields != null ? germlineAmpDelFields.germlineMinCopyNumber() : null)
+                .tpm(purpleGainDeletion.tpm())
+                .tpmPercentile(purpleGainDeletion.tpmPercentile())
+                .tpmFoldChange(purpleGainDeletion.tpmFoldChange())
                 .build();
     }
 

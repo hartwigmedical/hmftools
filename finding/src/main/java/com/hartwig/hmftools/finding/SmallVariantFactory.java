@@ -143,7 +143,7 @@ final class SmallVariantFactory
                 .minorAlleleCopyNumber(variant.minorAlleleCopyNumber())
                 .variantCopyNumber(variant.variantCopyNumber())
                 .biallelic(variant.biallelic())
-                .biallelicProbability(Objects.requireNonNull(variant.biallelicProbability()))
+                .biallelicLikelihood(Objects.requireNonNull(variant.biallelicProbability()))
                 .genotypeStatus(SmallVariant.GenotypeStatus.valueOf(variant.genotypeStatus().name()))
                 .repeatCount(variant.repeatCount())
                 .subclonalLikelihood(variant.subclonalLikelihood())
@@ -245,8 +245,7 @@ final class SmallVariantFactory
     }
 
     @Nullable
-    private static PurpleTranscriptImpact findOtherImpactClinical(PurpleVariant variant,
-            @NotNull FindingConfig findingConfig)
+    private static PurpleTranscriptImpact findOtherImpactClinical(PurpleVariant variant, FindingConfig findingConfig)
     {
         String transcriptOverride = findingConfig.findCanonicalTranscriptForGene(variant.gene());
         if(transcriptOverride != null)

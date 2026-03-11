@@ -25,6 +25,7 @@ import com.hartwig.hmftools.finding.datamodel.DriverSource;
 import com.hartwig.hmftools.finding.datamodel.FindingsStatus;
 import com.hartwig.hmftools.finding.datamodel.ReportedStatus;
 
+import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -147,6 +148,11 @@ final class DisruptionFactory
             throw new IllegalStateException("Disruption with no breakend");
         }
 
+        if(breakendStart != null && breakendEnd != null)
+        {
+            validateBreakends(breakendStart, breakendEnd);
+        }
+
         LinxBreakend breakend = breakends.get(0);
 
         ReportedStatus reportedStatus = ReportedStatus.NON_DRIVER_GENE;
@@ -175,9 +181,9 @@ final class DisruptionFactory
                 .gene(breakend.gene())
                 .isCanonical(breakend.isCanonical())
                 .transcript(breakend.transcript())
-                .breakendType(Breakend.Type.valueOf(breakend.type().name()))
-                .disruptedCopies(breakend.junctionCopyNumber())
-                .undisruptedCopies(undisruptedCopyNumber)
+                .breakendType(Disruption.BreakendType.valueOf(breakend.type().name()))
+                .disruptedCopyNumber(breakend.junctionCopyNumber())
+                .undisruptedCopyNumber(undisruptedCopyNumber)
                 .clusterId(determineClusterId(structuralVariants, breakend))
                 .breakendStart(convert(breakendStart))
                 .breakendEnd(convert(breakendEnd))
@@ -188,19 +194,21 @@ final class DisruptionFactory
     static Breakend convert(@Nullable LinxBreakend linxBreakend)
     {
         if(linxBreakend == null)
+        {
             return null;
+        }
+
+        Breakend.GeneOrientation orientation = switch(linxBreakend.geneOrientation())
+        {
+            case UPSTREAM -> Breakend.GeneOrientation.UPSTREAM;
+            case DOWNSTREAM -> Breakend.GeneOrientation.DOWNSTREAM;
+        };
+
         return BreakendBuilder.builder()
                 .id(linxBreakend.id())
                 .svId(linxBreakend.svId())
-                .gene(linxBreakend.gene())
-                .chromosome(linxBreakend.chromosome())
-                .chromosomeBand(linxBreakend.chromosomeBand())
-                .transcript(linxBreakend.transcript())
-                .isCanonical(linxBreakend.isCanonical())
-                .geneOrientation(Breakend.GeneOrientation.valueOf(linxBreakend.geneOrientation().name()))
+                .geneOrientation(orientation)
                 .disruptive(linxBreakend.disruptive())
-                .undisruptedCopyNumber(linxBreakend.undisruptedCopyNumber())
-                .type(Breakend.Type.valueOf(linxBreakend.type().name()))
                 .regionType(Breakend.TranscriptRegionType.valueOf(linxBreakend.regionType().name()))
                 .codingType(Breakend.TranscriptCodingType.valueOf(linxBreakend.codingType().name()))
                 .nextSpliceExonRank(linxBreakend.nextSpliceExonRank())
@@ -278,6 +286,14 @@ final class DisruptionFactory
         }
 
         return pairedMap;
+    }
+
+    private static void validateBreakends(LinxBreakend breakendStart, LinxBreakend breakendEnd)
+    {
+        Validate.isTrue(breakendStart.svId() == breakendEnd.svId());
+        Validate.isTrue(breakendStart.type().equals(breakendEnd.type()));
+        Validate.isTrue(breakendStart.transcript().equals(breakendEnd.transcript()));
+        Validate.isTrue(breakendStart.undisruptedCopyNumber() == breakendEnd.undisruptedCopyNumber());
     }
 
     private record SvAndTranscriptKey(int variantId, String transcriptId)

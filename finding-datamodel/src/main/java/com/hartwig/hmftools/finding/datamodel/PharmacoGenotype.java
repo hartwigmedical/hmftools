@@ -3,7 +3,7 @@ package com.hartwig.hmftools.finding.datamodel;
 import jakarta.validation.constraints.NotNull;
 
 @RecordBuilder
-public record PharmocoGenotype(
+public record PharmacoGenotype(
         @NotNull String findingKey,
         @NotNull String gene,
         @NotNull String allele,

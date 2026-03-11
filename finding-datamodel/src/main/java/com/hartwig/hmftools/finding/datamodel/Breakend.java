@@ -6,15 +6,8 @@ import jakarta.validation.constraints.NotNull;
 public record Breakend(
     int id,
     int svId,
-    @NotNull String gene,
-    @NotNull String chromosome,
-    @NotNull String chromosomeBand,
-    @NotNull String transcript,
-    boolean isCanonical,
     @NotNull GeneOrientation geneOrientation,
     boolean disruptive,
-    double undisruptedCopyNumber,
-    @NotNull Type type,
     @NotNull TranscriptRegionType regionType,
     @NotNull TranscriptCodingType codingType,
     int nextSpliceExonRank,
@@ -23,17 +16,6 @@ public record Breakend(
     int exonDown,
     double junctionCopyNumber)
 {
-    public enum Type
-    {
-        BND,
-        DEL,
-        DUP,
-        INF,
-        INS,
-        INV,
-        SGL
-    }
-
     public enum GeneOrientation
     {
         UPSTREAM,
