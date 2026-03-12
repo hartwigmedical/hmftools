@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.linx;
 
+import static java.lang.String.format;
+
 import java.io.File;
 
 public final class LinxCommonTypes
@@ -14,7 +16,14 @@ public final class LinxCommonTypes
     public static final String SUPER_TYPE_INCOMPLETE = "INCOMPLETE";
     public static final String SUPER_TYPE_ARTIFACT = "ARTIFACT";
 
-    // Visualiser file suffixes
+    private static final String SV_VIS_CLUSTER_PREFIX = ".cluster";
+
+    // Visualiser file suffixes and file naming
+    public static String formVisPlotClusterPrefix(final String clusterIds)
+    {
+        return format("%s-%s", SV_VIS_CLUSTER_PREFIX, clusterIds);
+    }
+
     private static final String SV_FILE_EXTENSION = ".linx.vis_sv_data.tsv";
     private static final String SV_GERMLINE_FILE_EXTENSION = ".linx.germline.vis_sv_data.tsv";
 

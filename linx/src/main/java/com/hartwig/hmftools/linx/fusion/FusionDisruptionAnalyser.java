@@ -973,9 +973,9 @@ public class FusionDisruptionAnalyser
         if(mVisSampleData == null || !mConfig.Output.writeVisualisationData())
             return;
 
-        final List<VisFusion> visFusions = Lists.newArrayList();
+        List<VisFusion> visFusions = Lists.newArrayList();
 
-        for(final GeneFusion fusion : fusionList)
+        for(GeneFusion fusion : fusionList)
         {
             if(fusion.reportable() || mFusionConfig.WriteAllVisFusions)
             {
