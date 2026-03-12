@@ -15,21 +15,7 @@ public record MicrosatelliteStability(
 {
     public enum Status
     {
-        MSI("Unstable"),
-        MSS("Stable");
-
-        @NotNull
-        private final String display;
-
-        Status(@NotNull final String display)
-        {
-            this.display = display;
-        }
-
-        @NotNull
-        public String display()
-        {
-            return display;
-        }
+        MSI,
+        MSS
     }
 }
