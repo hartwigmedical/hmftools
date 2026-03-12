@@ -80,6 +80,7 @@ public class QseePrepConfig
 
     public final SequencingType SequencingTech;
     public final List<PrepCategory> Categories;
+    public final boolean TargetedMode;
     public final boolean AllowMissingInput;
 
     public final String OutputDir;
@@ -92,6 +93,9 @@ public class QseePrepConfig
     public static final String SKIP_CATEGORIES = "skip_categories";
     public static final String SKIP_CATEGORIES_DESC = "Comma-separated list of categories to skip";
     public static final String SKIP_CATEGORIES_DELIM = ",";
+
+    public static final String TARGETED_MODE = "targeted_mode";
+    public static final String TARGETED_MODE_DESC = "Run in targeted mode (use different threshold defaults for targeted mode)";
 
     public static final String ALLOW_MISSING_INPUT = "allow_missing_input";
     public static final String ALLOW_MISSING_INPUT_DESC = "Continue sample data extraction even if some input files are missing";
@@ -118,9 +122,10 @@ public class QseePrepConfig
         CohortPercentilesFile = configBuilder.getValue(COHORT_PERCENTILES_FILE_CFG);
         ThresholdsFile = configBuilder.getValue(THRESHOLD_OVERRIDES_FILE_CFG);
 
+        TargetedMode = configBuilder.hasFlag(TARGETED_MODE);
         QcThresholds = ThresholdsFile == null
-                ? ThresholdRegistry.createDefault()
-                : ThresholdOverridesFile.read(ThresholdsFile);
+                ? ThresholdRegistry.createDefault(TargetedMode)
+                : ThresholdOverridesFile.read(ThresholdsFile, TargetedMode);
 
         SequencingTech = SequencingType.valueOf(configBuilder.getValue(SEQUENCING_TYPE_CFG));
         Categories = parseCategories(configBuilder.getValue(SKIP_CATEGORIES));
@@ -157,6 +162,7 @@ public class QseePrepConfig
 
         configBuilder.addConfigItem(SEQUENCING_TYPE_CFG, false, SequencingType.ILLUMINA.toString());
         configBuilder.addConfigItem(SKIP_CATEGORIES, false, SKIP_CATEGORIES_DESC, null);
+        configBuilder.addFlag(TARGETED_MODE, TARGETED_MODE_DESC);
         configBuilder.addFlag(ALLOW_MISSING_INPUT, ALLOW_MISSING_INPUT_DESC);
 
         configBuilder.addPath(OUTPUT_DIR, true, OUTPUT_DIR_DESC);

@@ -41,32 +41,51 @@ import com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature;
 public final class ThresholdRegistry
 {
     private final Map<ThresholdKey, QcThreshold> mThresholds;
-    private final boolean mFrozen;
 
     private static final double THRESHOLD_NOT_SET = Double.NaN;
     private static final double NO_THRESHOLD = Double.NaN;
 
-    private ThresholdRegistry(Map<ThresholdKey, QcThreshold> thresholds, boolean frozen)
+    ThresholdRegistry(Map<ThresholdKey, QcThreshold> thresholds)
     {
         mThresholds = thresholds;
-        mFrozen = frozen;
     }
 
-    ThresholdRegistry()
+    static ThresholdRegistry createEmptyModifiable()
     {
-        mThresholds = new LinkedHashMap<>();
-        initialise();
-
-        mFrozen = false;
+        return new ThresholdRegistry(new LinkedHashMap<>());
     }
 
-    private ThresholdRegistry initialise()
+    ThresholdRegistry freeze()
+    {
+        return new ThresholdRegistry(Collections.unmodifiableMap(mThresholds));
+    }
+
+    public static ThresholdRegistry createDefault(boolean targetedMode)
+    {
+        return createEmptyModifiable().setDefaults(targetedMode).freeze();
+    }
+
+    @VisibleForTesting
+    public static ThresholdRegistry createWithoutThresholds()
+    {
+        ThresholdRegistry thresholdRegistry = createEmptyModifiable().setDefaults(false);
+        for(QcThreshold threshold : thresholdRegistry.mThresholds.values())
+        {
+            ThresholdKey key = threshold.key();
+            QcThreshold noQcThreshold = QcThreshold.builder(threshold).threshold(THRESHOLD_NOT_SET).build();
+            thresholdRegistry.mThresholds.put(key, noQcThreshold);
+        }
+
+        return thresholdRegistry.freeze();
+    }
+
+    ThresholdRegistry setDefaults(boolean targetedMode)
     {
         setCommonThreshold(SUMMARY_TABLE, MAPPED_PROPORTION.name(), FAIL, LESS_THAN, 0.95);
         setCommonThreshold(SUMMARY_TABLE, LOW_MAP_QUAL.name(), WARN, GREATER_THAN, 0.05);
         setCommonThreshold(SUMMARY_TABLE, LOW_BASE_QUAL.name(), WARN, GREATER_THAN, 0.05);
-        setCommonThreshold(SUMMARY_TABLE, DUPLICATE_READS.name(), WARN, GREATER_THAN, 0.3);
-        setCommonThreshold(SUMMARY_TABLE, DUAL_STRAND_READS.name(), WARN, GREATER_THAN, 0.5);
+        setCommonThreshold(SUMMARY_TABLE, DUPLICATE_READS.name(), WARN, GREATER_THAN, chooseThreshold(0.3, 0.99, targetedMode));
+        setCommonThreshold(SUMMARY_TABLE, DUAL_STRAND_READS.name(), WARN, GREATER_THAN, chooseThreshold(0.5, THRESHOLD_NOT_SET, targetedMode));
 
         // PURPLE QC thresholds are not handled by Qsee
         setThresholdHandledElsewhere(TUMOR, SUMMARY_TABLE, PURITY.name(), WARN, LESS_THAN, PurpleQCStatus.MIN_PURITY);
@@ -80,12 +99,12 @@ public final class ThresholdRegistry
         setThresholdHandledElsewhere(TUMOR, SUMMARY_TABLE, PurpleQCStatus.WARN_GENDER_MISMATCH.name(), WARN, null, NO_THRESHOLD);
 
         setThreshold(TUMOR, SUMMARY_TABLE, MEAN_COVERAGE.name(), WARN, LESS_THAN, 70);
-        setThreshold(TUMOR, SUMMARY_TABLE, COVERAGE_ABOVE_10.name(), WARN, LESS_THAN, 0.9);
-        setThreshold(TUMOR, SUMMARY_TABLE, COVERAGE_ABOVE_20.name(), WARN, LESS_THAN, 0.9);
-        setThreshold(TUMOR, SUMMARY_TABLE, COVERAGE_ABOVE_30.name(), WARN, LESS_THAN, 0.9);
-        setThreshold(TUMOR, SUMMARY_TABLE, COVERAGE_ABOVE_60.name(), WARN, LESS_THAN, 0.8);
-        setThreshold(TUMOR, SUMMARY_TABLE, COVERAGE_ABOVE_100.name(), WARN, LESS_THAN, 0.1);
-        setThreshold(TUMOR, SUMMARY_TABLE, COVERAGE_ABOVE_250.name(), WARN, LESS_THAN, THRESHOLD_NOT_SET);
+        setThreshold(TUMOR, SUMMARY_TABLE, COVERAGE_ABOVE_10.name(), WARN, LESS_THAN, chooseThreshold(0.9, 0.99, targetedMode));
+        setThreshold(TUMOR, SUMMARY_TABLE, COVERAGE_ABOVE_20.name(), WARN, LESS_THAN, chooseThreshold(0.9, 0.99, targetedMode));
+        setThreshold(TUMOR, SUMMARY_TABLE, COVERAGE_ABOVE_30.name(), WARN, LESS_THAN, chooseThreshold(0.9, 0.99, targetedMode));
+        setThreshold(TUMOR, SUMMARY_TABLE, COVERAGE_ABOVE_60.name(), WARN, LESS_THAN, chooseThreshold(0.8, 0.99, targetedMode));
+        setThreshold(TUMOR, SUMMARY_TABLE, COVERAGE_ABOVE_100.name(), WARN, LESS_THAN, chooseThreshold(0.1, 0.99, targetedMode));
+        setThreshold(TUMOR, SUMMARY_TABLE, COVERAGE_ABOVE_250.name(), WARN, LESS_THAN, chooseThreshold(THRESHOLD_NOT_SET, 0.99, targetedMode));
 
         setThreshold(NORMAL, SUMMARY_TABLE, MEAN_COVERAGE.name(), WARN, LESS_THAN, 20);
         setThreshold(NORMAL, SUMMARY_TABLE, COVERAGE_ABOVE_10.name(), WARN, LESS_THAN, 0.9);
@@ -96,30 +115,6 @@ public final class ThresholdRegistry
         setThreshold(NORMAL, SUMMARY_TABLE, COVERAGE_ABOVE_250.name(), WARN, LESS_THAN, THRESHOLD_NOT_SET);
 
         return this;
-    }
-
-    ThresholdRegistry freeze()
-    {
-        return new ThresholdRegistry(Collections.unmodifiableMap(mThresholds), true);
-    }
-
-    public static ThresholdRegistry createDefault()
-    {
-        return new ThresholdRegistry().initialise().freeze();
-    }
-
-    @VisibleForTesting
-    public static ThresholdRegistry createWithoutThresholds()
-    {
-        ThresholdRegistry thresholdRegistry = new ThresholdRegistry().initialise();
-        for(QcThreshold threshold : thresholdRegistry.mThresholds.values())
-        {
-            ThresholdKey key = threshold.key();
-            QcThreshold noQcThreshold = QcThreshold.builder(threshold).threshold(THRESHOLD_NOT_SET).build();
-            thresholdRegistry.mThresholds.put(key, noQcThreshold);
-        }
-
-        return thresholdRegistry.freeze();
     }
 
     private void setThreshold(
@@ -161,16 +156,16 @@ public final class ThresholdRegistry
         setThreshold(sampleType, featureType, featureName, qcStatusType, operator, thresholdValue, true);
     }
 
+    private static double chooseThreshold(double wgs, double targeted, boolean targetedMode)
+    {
+        return targetedMode ? targeted : wgs;
+    }
+
     boolean containsKey(ThresholdKey key) { return mThresholds.containsKey(key); }
     void overrideThreshold(ThresholdKey key, QcThreshold threshold) { mThresholds.put(key, threshold); }
 
     QcThreshold getThreshold(ThresholdKey key, boolean requireFrozen)
     {
-        if(requireFrozen && !mFrozen)
-        {
-            throw new IllegalStateException("ThresholdRegistry must be frozen before thresholds can be accessed");
-        }
-
         if(!mThresholds.containsKey(key))
         {
             throw new NoSuchElementException(String.format("No threshold defined for %s", key));

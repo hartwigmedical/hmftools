@@ -22,7 +22,7 @@ public class ThresholdRegistryTest
     @Test
     public void canOverrideThresholdsFromFile()
     {
-        ThresholdRegistry thresholds = ThresholdOverridesFile.read(TEST_THRESHOLD_OVERRIDES_FILE);
+        ThresholdRegistry thresholds = ThresholdOverridesFile.read(TEST_THRESHOLD_OVERRIDES_FILE, false);
 
         ThresholdKey key;
         QcThreshold expectedThreshold;
