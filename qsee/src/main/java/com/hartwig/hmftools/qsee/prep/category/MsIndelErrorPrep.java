@@ -21,6 +21,7 @@ import com.hartwig.hmftools.qsee.common.MultiFieldStringBuilder;
 import com.hartwig.hmftools.qsee.feature.SourceTool;
 import com.hartwig.hmftools.qsee.prep.CategoryPrep;
 import com.hartwig.hmftools.qsee.prep.QseePrepConfig;
+import com.hartwig.hmftools.qsee.prep.category.msindel.RepeatType;
 
 public class MsIndelErrorPrep implements CategoryPrep
 {
@@ -112,19 +113,9 @@ public class MsIndelErrorPrep implements CategoryPrep
         return newTable;
     }
 
-    private static String getRepeatType(String repeatUnit)
+    private static String getRepeatTypeString(String repeatUnit)
     {
-        if(repeatUnit.matches("^\\w/\\w$"))
-            return repeatUnit + " repeat";
-
-        else if(repeatUnit.matches("^\\w{2}/.*"))
-            return "2bp repeat";
-
-        else if(repeatUnit.matches("^\\d+bp repeat"))
-            return ">=3bp repeat";
-
-        else
-            throw new IllegalArgumentException("Unexpected repeat unit: " + repeatUnit);
+        return RepeatType.fromRepeatUnit(repeatUnit).displayName();
     }
 
     @VisibleForTesting
@@ -135,7 +126,7 @@ public class MsIndelErrorPrep implements CategoryPrep
         {
             String groupName = MultiFieldStringBuilder.formMultiField(
                     FIELD_CONSENSUS_TYPE, row.getConsensusType().toString(),
-                    FIELD_REPEAT_TYPE, getRepeatType(row.getRepeatUnit()),
+                    FIELD_REPEAT_TYPE, getRepeatTypeString(row.getRepeatUnit()),
                     FIELD_REF_NUM_UNITS, String.valueOf(row.refNumUnits())
             );
 
@@ -152,7 +143,7 @@ public class MsIndelErrorPrep implements CategoryPrep
 
             JitterTableRow newRow = new JitterTableRow(
                     oldFirstRow.refNumUnits(),
-                    getRepeatType(oldFirstRow.getRepeatUnit()),
+                    getRepeatTypeString(oldFirstRow.getRepeatUnit()),
                     oldFirstRow.getConsensusType()
             );
 

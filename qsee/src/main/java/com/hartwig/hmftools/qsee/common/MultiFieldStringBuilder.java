@@ -63,4 +63,20 @@ public class MultiFieldStringBuilder
         }
         return builder.toString();
     }
+
+    public static List<Pair<String, String>> parseMultiFieldAsPairs(String fields)
+    {
+        List<Pair<String, String>> keyValuePairs = new ArrayList<>();
+        for(String field : fields.split(FIELD_SEPARATOR))
+        {
+            String[] keyValue = field.split(FIELD_KEY_VALUE_SEPARATOR);
+            keyValuePairs.add(Pair.of(keyValue[0], keyValue[1]));
+        }
+        return keyValuePairs;
+    }
+
+    public static String[] parseMultiFieldAsArray(String fields)
+    {
+        return fields.split(String.format("%s|%s", FIELD_SEPARATOR, FIELD_KEY_VALUE_SEPARATOR));
+    }
 }
