@@ -17,16 +17,16 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.REDUX_TUMOR_
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REDUX_TUMOR_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_IDS_DESC;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.REF_METRICS_DIR_CFG;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.REF_METRICS_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.BAM_METRICS_REF_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.BAM_METRICS_REF_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_IDS_DESC;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_METRICS_DIR_CFG;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_METRICS_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.BAM_METRICS_TUMOR_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.BAM_METRICS_TUMOR_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
@@ -108,8 +108,8 @@ public class QseePrepConfig
 
         SampleDataDir = configBuilder.getValue(SAMPLE_DATA_DIR_CFG, "");
 
-        BamMetricsDirTumor = configBuilder.getValue(TUMOR_METRICS_DIR_CFG, SampleDataDir);
-        BamMetricsDirRef = configBuilder.getValue(REF_METRICS_DIR_CFG, SampleDataDir);
+        BamMetricsDirTumor = configBuilder.getValue(BAM_METRICS_TUMOR_DIR_CFG, SampleDataDir);
+        BamMetricsDirRef = configBuilder.getValue(BAM_METRICS_REF_DIR_CFG, SampleDataDir);
         ReduxDirTumor = configBuilder.getValue(REDUX_TUMOR_DIR_CFG, SampleDataDir);
         ReduxDirRef = configBuilder.getValue(REDUX_REF_DIR_CFG, SampleDataDir);
 
@@ -145,8 +145,8 @@ public class QseePrepConfig
 
         configBuilder.addPath(SAMPLE_DATA_DIR_CFG, false, SAMPLE_DATA_DIR_DESC);
 
-        configBuilder.addPath(TUMOR_METRICS_DIR_CFG, false, TUMOR_METRICS_DIR_DESC);
-        configBuilder.addPath(REF_METRICS_DIR_CFG, false, REF_METRICS_DIR_DESC);
+        configBuilder.addPath(BAM_METRICS_TUMOR_DIR_CFG, false, BAM_METRICS_TUMOR_DIR_DESC);
+        configBuilder.addPath(BAM_METRICS_REF_DIR_CFG, false, BAM_METRICS_REF_DIR_DESC);
         configBuilder.addPath(REDUX_TUMOR_DIR_CFG, false, REDUX_TUMOR_DIR_DESC);
         configBuilder.addPath(REDUX_REF_DIR_CFG, false, REDUX_REF_DIR_DESC);
 
