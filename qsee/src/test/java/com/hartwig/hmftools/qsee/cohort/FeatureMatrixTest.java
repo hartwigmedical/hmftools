@@ -48,7 +48,7 @@ public class FeatureMatrixTest
         matrix.addRow("sample4", sample4Features);
 
         List<String> expectedSampleIds = List.of("sample1", "sample2", "sample3", "sample4");
-        List<String> actualSampleIds = matrix.getRowIds();
+        List<String> actualSampleIds = matrix.getSampleIds();
         assertEquals(expectedSampleIds, actualSampleIds);
 
         List<String> actualFeatureNames = matrix.getFeatureKeys().stream().map(x -> x.name()).toList();
@@ -92,7 +92,7 @@ public class FeatureMatrixTest
         }
 
         // Check row names order
-        List<String> actualSampleIds = matrix.getRowIds();
+        List<String> actualSampleIds = matrix.getSampleIds();
 
         printDiffs(expectedSampleIds, actualSampleIds);
         assertEquals(expectedSampleIds, actualSampleIds);
