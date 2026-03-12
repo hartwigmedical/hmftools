@@ -16,6 +16,11 @@ public record HomologousRecombination(
         @NotNull List<String> relatedGenes
 ) implements Finding
 {
+    public static final double RANGE_MIN = 0;
+    public static final double RANGE_MAX = 1;
+    // TODO: Lookup proper threshold
+    public static final double THRESHOLD = 0.5;
+
     public enum Status
     {
         HR_PROFICIENT,

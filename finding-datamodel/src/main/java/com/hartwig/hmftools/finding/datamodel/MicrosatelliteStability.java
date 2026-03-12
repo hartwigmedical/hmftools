@@ -13,6 +13,11 @@ public record MicrosatelliteStability(
         @NotNull List<String> relatedGenes
 ) implements Finding
 {
+    public static final double RANGE_MIN = 1;
+    public static final double RANGE_MAX = 100;
+    // TODO: Lookup proper threshold
+    public static final double THRESHOLD = 4.0;
+
     public enum Status
     {
         MSI,
