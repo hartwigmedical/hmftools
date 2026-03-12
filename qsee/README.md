@@ -56,8 +56,8 @@ java -jar qsee.jar \
 -purple_dir purple/ \
 -redux_tumor_dir redux/TUMOR_ID/ \
 -redux_ref_dir redux/REFERENCE_ID/ \
--tumor_metrics_dir bamtools/TUMOR_ID/ \
--ref_metrics_dir bamtools/REFERENCE_ID/ \
+-bam_metrics_tumor_dir bamtools/TUMOR_ID/ \
+-bam_metrics_ref_dir bamtools/REFERENCE_ID/ \
 -driver_gene_panel DriverGenePanel.38.tsv \
 -cohort_percentiles_file qsee.cohort.percentiles.tsv.gz \
 -output_dir output/
@@ -179,19 +179,19 @@ java -cp qsee.jar com.hartwig.hmftools.qsee.cohort.CohortPercentilesTrainer \
 
 ### Input/output
 
-| Argument             | Description                                           |
-|:---------------------|:------------------------------------------------------|
-| `-output_dir`        | Output directory                                      |
-| `-output_id`         | Suffix to add to all output files                     |
-| `-sample_data_dir`   | Directory containing all input files                  |
-| `-tumor_metrics_dir` | BamMetrics output dir for tumor sample                |
-| `-ref_metrics_dir`   | BamMetrics output dir for reference sample            |
-| `-redux_tumor_dir`   | REDUX output dir for tumor sample                     |
-| `-redux_ref_dir`     | REDUX output dir for reference sample                 |
-| `-cobalt_dir`        | COBALT output dir                                     |
-| `-esvee_dir`         | ESVEE output dir                                      |
-| `-purple_dir`        | PURPLE output dir                                     |
-| `-sage_dir`          | SAGE somatic output dir (for backwards compatibility) |
+| Argument                 | Description                                           |
+|:-------------------------|:------------------------------------------------------|
+| `-output_dir`            | Output directory                                      |
+| `-output_id`             | Suffix to add to all output files                     |
+| `-sample_data_dir`       | Directory containing all input files                  |
+| `-bam_metrics_tumor_dir` | BamMetrics output dir for tumor sample                |
+| `-bam_metrics_ref_dir`   | BamMetrics output dir for reference sample            |
+| `-redux_tumor_dir`       | REDUX output dir for tumor sample                     |
+| `-redux_ref_dir`         | REDUX output dir for reference sample                 |
+| `-cobalt_dir`            | COBALT output dir                                     |
+| `-esvee_dir`             | ESVEE output dir                                      |
+| `-purple_dir`            | PURPLE output dir                                     |
+| `-sage_dir`              | SAGE somatic output dir (for backwards compatibility) |
 
 ### Resource files
 
