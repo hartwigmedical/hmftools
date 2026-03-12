@@ -11,21 +11,7 @@ public record TumorMutationalLoad(
 {
     public enum Status
     {
-        HIGH("High"),
-        LOW("Low");
-
-        @NotNull
-        private final String display;
-
-        Status(@NotNull final String display)
-        {
-            this.display = display;
-        }
-
-        @NotNull
-        public String display()
-        {
-            return display;
-        }
+        HIGH,
+        LOW
     }
 }
