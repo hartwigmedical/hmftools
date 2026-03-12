@@ -1,22 +1,19 @@
 package com.hartwig.hmftools.finding.datamodel;
 
-import java.util.List;
-
 import jakarta.validation.constraints.NotNull;
 
 @RecordBuilder
-public record MicrosatelliteStability(
+public record TumorMutationalBurden(
         @NotNull String findingKey,
-        @NotNull MicrosatelliteStability.Status status,
-        double indelsPerMb,
-        @NotNull List<GainDeletion> lohCopyNumbers,
-        @NotNull List<String> genes
+        @NotNull Status status,
+        double burdenPerMb,
+        int svBurden
 ) implements Finding
 {
     public enum Status
     {
-        MSI("Unstable"),
-        MSS("Stable");
+        HIGH("High"),
+        LOW("Low");
 
         @NotNull
         private final String display;
