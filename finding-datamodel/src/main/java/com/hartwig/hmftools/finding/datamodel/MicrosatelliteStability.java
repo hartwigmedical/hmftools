@@ -16,8 +16,7 @@ public record MicrosatelliteStability(
     public enum MicrosatelliteStatus
     {
         MSI("Unstable"),
-        MSS("Stable"),
-        UNKNOWN("Unknown");
+        MSS("Stable");
 
         @NotNull
         private final String display;

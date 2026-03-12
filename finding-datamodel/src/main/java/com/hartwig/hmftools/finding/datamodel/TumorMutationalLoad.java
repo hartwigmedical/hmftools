@@ -3,20 +3,16 @@ package com.hartwig.hmftools.finding.datamodel;
 import jakarta.validation.constraints.NotNull;
 
 @RecordBuilder
-public record TumorMutationStatus(
+public record TumorMutationalLoad(
         @NotNull String findingKey,
-        double tumorMutationalBurdenPerMb,
-        @NotNull Status tumorMutationalBurdenStatus,
-        int tumorMutationalLoad,
-        @NotNull Status tumorMutationalLoadStatus,
-        int svTumorMutationalBurden
+        @NotNull Status status,
+        int load
 ) implements Finding
 {
     public enum Status
     {
         HIGH("High"),
-        LOW("Low"),
-        UNKNOWN("Unknown");
+        LOW("Low");
 
         @NotNull
         private final String display;

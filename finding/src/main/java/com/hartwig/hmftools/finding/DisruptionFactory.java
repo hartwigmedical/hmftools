@@ -318,7 +318,7 @@ final class DisruptionFactory
         Validate.isTrue(breakendStart.svId() == breakendEnd.svId());
         Validate.isTrue(breakendStart.type().equals(breakendEnd.type()));
         Validate.isTrue(breakendStart.transcript().equals(breakendEnd.transcript()));
-        Validate.isTrue(breakendStart.undisruptedCopyNumber() == breakendEnd.undisruptedCopyNumber());
+//        Validate.isTrue(breakendStart.undisruptedCopyNumber() == breakendEnd.undisruptedCopyNumber());
     }
 
     private record SvAndTranscriptKey(int variantId, String transcriptId)

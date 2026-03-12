@@ -18,10 +18,8 @@ public record HomologousRecombination(
 {
     public enum HrStatus
     {
-        CANNOT_BE_DETERMINED("Cannot be determined"),
         HR_PROFICIENT("Proficient"),
-        HR_DEFICIENT("Deficient"),
-        UNKNOWN("Unknown");
+        HR_DEFICIENT("Deficient");
 
         @NotNull
         private final String display;

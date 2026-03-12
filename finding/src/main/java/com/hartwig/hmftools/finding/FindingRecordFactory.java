@@ -26,8 +26,10 @@ import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
 import com.hartwig.hmftools.datamodel.purple.Genes;
 import com.hartwig.hmftools.datamodel.purple.PurpleFit;
+import com.hartwig.hmftools.datamodel.purple.PurpleMicrosatelliteStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
+import com.hartwig.hmftools.datamodel.purple.PurpleTumorMutationalStatus;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
 import com.hartwig.hmftools.datamodel.virus.VirusLikelihoodType;
@@ -62,8 +64,10 @@ import com.hartwig.hmftools.finding.datamodel.QcBuilder;
 import com.hartwig.hmftools.finding.datamodel.RefGenomeVersion;
 import com.hartwig.hmftools.finding.datamodel.SequencingScope;
 import com.hartwig.hmftools.finding.datamodel.SmallVariant;
-import com.hartwig.hmftools.finding.datamodel.TumorMutationStatus;
-import com.hartwig.hmftools.finding.datamodel.TumorMutationStatusBuilder;
+import com.hartwig.hmftools.finding.datamodel.TumorMutationalBurden;
+import com.hartwig.hmftools.finding.datamodel.TumorMutationalBurdenBuilder;
+import com.hartwig.hmftools.finding.datamodel.TumorMutationalLoad;
+import com.hartwig.hmftools.finding.datamodel.TumorMutationalLoadBuilder;
 import com.hartwig.hmftools.finding.datamodel.Virus;
 import com.hartwig.hmftools.finding.datamodel.VirusBuilder;
 import com.hartwig.hmftools.finding.datamodel.VisualisationFiles;
@@ -95,7 +99,8 @@ public class FindingRecordFactory
 
         Set<PurpleQCStatus> purpleQCStatuses = purple.fit().qc().status();
         boolean hasContamination = purpleQCStatuses.contains(PurpleQCStatus.FAIL_CONTAMINATION);
-        boolean hasReliablePurity = !purpleQCStatuses.contains(PurpleQCStatus.FAIL_NO_TUMOR) && !purpleQCStatuses.contains(PurpleQCStatus.WARN_LOW_PURITY);
+        boolean hasReliablePurity =
+                !purpleQCStatuses.contains(PurpleQCStatus.FAIL_NO_TUMOR) && !purpleQCStatuses.contains(PurpleQCStatus.WARN_LOW_PURITY);
 
         FindingRecordBuilder
                 builder = FindingRecordBuilder.builder()
@@ -163,7 +168,9 @@ public class FindingRecordFactory
                     .somaticGainDeletions(somaticGainDeletions)
                     .germlineGainDeletions(GainDeletionFactory.germlineGainDeletionFindings(hasRefSample, orangeRecord.refGenomeVersion(), purple))
                     .microsatelliteStability(createMicrosatelliteStability(purple, orangeRecord.linx(), somaticGainDeletions))
-                    .tumorMutationStatus(createTumorMutationStatus(purple));
+                    .tumorMutationalLoad(createTumorMutationalLoad(purple))
+                    .tumorMutationalBurden(createTumorMutationalBurden(purple));
+
         }
         else
         {
@@ -173,16 +180,17 @@ public class FindingRecordFactory
                     .somaticGainDeletions(somaticGainDeletions)
                     .germlineGainDeletions(FindingUtil.notAvailableDriverFindingList())
                     .microsatelliteStability(FindingUtil.notAvailableFindingItem())
-                    .tumorMutationStatus(FindingUtil.notAvailableFindingItem());
+                    .tumorMutationalLoad(FindingUtil.notAvailableFindingItem())
+                    .tumorMutationalBurden(FindingUtil.notAvailableFindingItem());
         }
         return somaticGainDeletions;
     }
-    
+
     private static Qc createQc(PurpleRecord purple)
     {
         PurpleFit purpleFit = purple.fit();
         Set<Qc.QCStatus> qcStatuses = purpleFit.qc().status().stream()
-                .map(o -> switch (o)
+                .map(o -> switch(o)
                 {
                     case PASS -> Qc.QCStatus.PASS;
                     case WARN_DELETED_GENES -> Qc.QCStatus.WARN_DELETED_GENES;
@@ -196,7 +204,7 @@ public class FindingRecordFactory
                 })
                 .collect(Collectors.toSet());
         Set<Qc.GermlineAberration> germlineAberrations = purpleFit.qc().germlineAberrations().stream()
-                .map(o -> switch (o)
+                .map(o -> switch(o)
                 {
                     case NONE -> Qc.GermlineAberration.NONE;
                     case MOSAIC_X -> Qc.GermlineAberration.MOSAIC_X;
@@ -233,24 +241,6 @@ public class FindingRecordFactory
                 .ploidy(purpleFit.ploidy())
                 .minPloidy(purpleFit.minPloidy())
                 .maxPloidy(purpleFit.maxPloidy())
-                .build();
-    }
-
-    private static FindingItem<TumorMutationStatus> createTumorMutationStatus(PurpleRecord purple)
-    {
-        return FindingItemBuilder.<TumorMutationStatus>builder()
-                .status(FindingsStatus.OK)
-                .finding(TumorMutationStatusBuilder.builder()
-                        .findingKey(FindingKeys.tumorMutationStatus(purple.characteristics().tumorMutationalBurdenStatus(),
-                                purple.characteristics().tumorMutationalLoadStatus()))
-                        .tumorMutationalBurdenPerMb(purple.characteristics().tumorMutationalBurdenPerMb())
-                        .tumorMutationalBurdenStatus(
-                                TumorMutationStatus.Status.valueOf(purple.characteristics().tumorMutationalBurdenStatus().name()))
-                        .tumorMutationalLoad(purple.characteristics().tumorMutationalLoad())
-                        .tumorMutationalLoadStatus(
-                                TumorMutationStatus.Status.valueOf(purple.characteristics().tumorMutationalLoadStatus().name()))
-                        .svTumorMutationalBurden(purple.characteristics().svTumorMutationalBurden())
-                        .build())
                 .build();
     }
 
@@ -293,14 +283,78 @@ public class FindingRecordFactory
         };
     }
 
+    private static FindingItem<TumorMutationalBurden> createTumorMutationalBurden(PurpleRecord purple)
+    {
+        TumorMutationalBurden.Status status = tumorMutationalBurdenStatus(purple.characteristics().tumorMutationalBurdenStatus());
+        if(status != null)
+        {
+            return FindingItemBuilder.<TumorMutationalBurden>builder()
+                    .status(FindingsStatus.OK)
+                    .finding(TumorMutationalBurdenBuilder.builder()
+                            .findingKey(FindingKeys.tumorMutationBurdenStatus(purple.characteristics().tumorMutationalBurdenStatus()))
+                            .burdenPerMb(purple.characteristics().tumorMutationalBurdenPerMb())
+                            .status(status)
+                            .svBurden(purple.characteristics().svTumorMutationalBurden())
+                            .build())
+                    .build();
+        }
+        else
+        {
+            return FindingUtil.notAvailableFindingItem();
+        }
+    }
+
+    @Nullable
+    private static TumorMutationalBurden.Status tumorMutationalBurdenStatus(PurpleTumorMutationalStatus status)
+    {
+        return switch(status)
+        {
+            case HIGH -> TumorMutationalBurden.Status.HIGH;
+            case LOW -> TumorMutationalBurden.Status.LOW;
+            case UNKNOWN -> null;
+        };
+    }
+
+    private static FindingItem<TumorMutationalLoad> createTumorMutationalLoad(PurpleRecord purple)
+    {
+        TumorMutationalLoad.Status status = tumorMutationalLoadStatus(purple.characteristics().tumorMutationalLoadStatus());
+        if(status != null)
+        {
+            return FindingItemBuilder.<TumorMutationalLoad>builder()
+                    .status(FindingsStatus.OK)
+                    .finding(TumorMutationalLoadBuilder.builder()
+                            .findingKey(FindingKeys.tumorMutationLoadStatus(purple.characteristics().tumorMutationalLoadStatus()))
+                            .load(purple.characteristics().tumorMutationalLoad())
+                            .status(status)
+                            .build())
+                    .build();
+        }
+        else
+        {
+            return FindingUtil.notAvailableFindingItem();
+        }
+    }
+
+    @Nullable
+    private static TumorMutationalLoad.Status tumorMutationalLoadStatus(PurpleTumorMutationalStatus status)
+    {
+        return switch(status)
+        {
+            case HIGH -> TumorMutationalLoad.Status.HIGH;
+            case LOW -> TumorMutationalLoad.Status.LOW;
+            case UNKNOWN -> null;
+        };
+    }
+
     private static FindingItem<HomologousRecombination> createHomologousRecombination(@Nullable ChordRecord chord,
             PurpleRecord purple,
             LinxRecord linx,
             DriverFindingList<GainDeletion> gainDeletions)
     {
-        if(chord != null)
+        // TODO: Should distinguish between unknown and cannot be determined?
+        HomologousRecombination.HrStatus hrStatus = hrStatus(chord);
+        if(hrStatus != null)
         {
-            HomologousRecombination.HrStatus hrStatus = HomologousRecombination.HrStatus.valueOf(chord.hrStatus().name());
             List<GainDeletion> lohGainDeletions = hrStatus == HomologousRecombination.HrStatus.HR_DEFICIENT
                     ? filterLohGainDeletions(gainDeletions, Genes.HRD_GENES)
                     : List.of();
@@ -327,29 +381,56 @@ public class FindingRecordFactory
         }
     }
 
+    @Nullable
+    private static HomologousRecombination.HrStatus hrStatus(@Nullable ChordRecord chord)
+    {
+        return chord != null ? switch(chord.hrStatus())
+        {
+            case HR_DEFICIENT -> HomologousRecombination.HrStatus.HR_DEFICIENT;
+            case HR_PROFICIENT -> HomologousRecombination.HrStatus.HR_PROFICIENT;
+            default -> null;
+        } : null;
+    }
+
     private static FindingItem<MicrosatelliteStability> createMicrosatelliteStability(PurpleRecord purple,
             LinxRecord linx, DriverFindingList<GainDeletion> gainDeletions)
     {
         MicrosatelliteStability.MicrosatelliteStatus microsatelliteStatus =
-                MicrosatelliteStability.MicrosatelliteStatus.valueOf(purple.characteristics()
-                        .microsatelliteStatus()
-                        .name());
-        List<GainDeletion> lohGainDeletions = microsatelliteStatus == MicrosatelliteStability.MicrosatelliteStatus.MSI
-                ? filterLohGainDeletions(gainDeletions, Genes.MSI_GENES)
-                : List.of();
-        return FindingItemBuilder.<MicrosatelliteStability>builder()
-                .status(FindingsStatus.OK)
-                .finding(MicrosatelliteStabilityBuilder.builder()
-                        .findingKey(FindingKeys.microsatelliteStability(purple.characteristics().microsatelliteStatus()))
-                        .microsatelliteStatus(microsatelliteStatus)
-                        .microsatelliteIndelsPerMb(purple.characteristics().microsatelliteIndelsPerMb())
-                        .lohCopyNumbers(lohGainDeletions)
-                        .relatedGenes(GeneListUtil.genes(purple.reportableSomaticVariants(),
-                                purple.reportableSomaticGainsDels(),
-                                linx.germlineHomozygousDisruptions(),
-                                Genes.MSI_GENES).stream().toList())
-                        .build())
-                .build();
+                microsatelliteStatus(purple.characteristics().microsatelliteStatus());
+        if(microsatelliteStatus != null)
+        {
+            List<GainDeletion> lohGainDeletions = microsatelliteStatus == MicrosatelliteStability.MicrosatelliteStatus.MSI
+                    ? filterLohGainDeletions(gainDeletions, Genes.MSI_GENES)
+                    : List.of();
+            return FindingItemBuilder.<MicrosatelliteStability>builder()
+                    .status(FindingsStatus.OK)
+                    .finding(MicrosatelliteStabilityBuilder.builder()
+                            .findingKey(FindingKeys.microsatelliteStability(purple.characteristics().microsatelliteStatus()))
+                            .microsatelliteStatus(microsatelliteStatus)
+                            .microsatelliteIndelsPerMb(purple.characteristics().microsatelliteIndelsPerMb())
+                            .lohCopyNumbers(lohGainDeletions)
+                            .relatedGenes(GeneListUtil.genes(purple.reportableSomaticVariants(),
+                                    purple.reportableSomaticGainsDels(),
+                                    linx.germlineHomozygousDisruptions(),
+                                    Genes.MSI_GENES).stream().toList())
+                            .build())
+                    .build();
+        }
+        else
+        {
+            return FindingUtil.notAvailableFindingItem();
+        }
+    }
+
+    @Nullable
+    private static MicrosatelliteStability.MicrosatelliteStatus microsatelliteStatus(PurpleMicrosatelliteStatus status)
+    {
+        return switch(status)
+        {
+            case MSS -> MicrosatelliteStability.MicrosatelliteStatus.MSS;
+            case MSI -> MicrosatelliteStability.MicrosatelliteStatus.MSI;
+            default -> null;
+        };
     }
 
     private static List<GainDeletion> filterLohGainDeletions(

@@ -48,7 +48,7 @@ public class TestFindingFactory
                 .findingKey("")
                 .hrdType("")
                 .hrdValue(0)
-                .hrStatus(HomologousRecombination.HrStatus.UNKNOWN)
+                .hrStatus(HomologousRecombination.HrStatus.HR_DEFICIENT)
                 .brca1Value(0)
                 .brca2Value(0)
                 .lohCopyNumbers(List.of())
@@ -60,21 +60,28 @@ public class TestFindingFactory
     {
         return MicrosatelliteStabilityBuilder.builder()
                 .findingKey("")
-                .microsatelliteStatus(MicrosatelliteStability.MicrosatelliteStatus.UNKNOWN)
+                .microsatelliteStatus(MicrosatelliteStability.MicrosatelliteStatus.MSI)
                 .lohCopyNumbers(List.of())
                 .relatedGenes(List.of());
     }
 
     @NotNull
-    public static TumorMutationStatusBuilder mutationStatusBuilder()
+    public static TumorMutationalBurdenBuilder tumorMutationalBurdenBuilder()
     {
-        return TumorMutationStatusBuilder.builder()
+        return TumorMutationalBurdenBuilder.builder()
                 .findingKey("")
-                .tumorMutationalLoad(0)
-                .tumorMutationalBurdenStatus(TumorMutationStatus.Status.UNKNOWN)
-                .tumorMutationalBurdenPerMb(0)
-                .svTumorMutationalBurden(0)
-                .tumorMutationalLoadStatus(TumorMutationStatus.Status.UNKNOWN);
+                .status(TumorMutationalBurden.Status.HIGH)
+                .burdenPerMb(0)
+                .svBurden(0);
+    }
+
+    @NotNull
+    public static TumorMutationalLoadBuilder tumorMutationalLoadBuilder()
+    {
+        return TumorMutationalLoadBuilder.builder()
+                .findingKey("")
+                .load(0)
+                .status(TumorMutationalLoad.Status.HIGH);
     }
 
     @NotNull

@@ -69,9 +69,14 @@ final class FindingKeys
         return String.format("homologousRecombination[%s]", status.name());
     }
 
-    public static String tumorMutationStatus(PurpleTumorMutationalStatus tmbStatus, PurpleTumorMutationalStatus tmlStatus)
+    public static String tumorMutationLoadStatus(PurpleTumorMutationalStatus status)
     {
-        return String.format("tumorMutationStatus[TMB_%s TML_%s]", tmbStatus, tmlStatus);
+        return String.format("tumorMutationLoadStatus[TML_%s]", status);
+    }
+
+    public static String tumorMutationBurdenStatus(PurpleTumorMutationalStatus status)
+    {
+        return String.format("tumorMutationBurdenStatus[TMB_%s]", status);
     }
 
     public static String predictedTumorOrigin(String cancerType)

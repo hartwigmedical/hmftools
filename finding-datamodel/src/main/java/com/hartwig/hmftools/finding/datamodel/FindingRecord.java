@@ -23,7 +23,8 @@ public record FindingRecord(
         @NotNull FindingList<PharmacoGenotype> pharmacoGenotypes,
         @NotNull FindingList<PredictedTumorOrigin> predictedTumorOrigins,
         @NotNull FindingItem<MicrosatelliteStability> microsatelliteStability,
-        @NotNull FindingItem<TumorMutationStatus> tumorMutationStatus,
+        @NotNull FindingItem<TumorMutationalLoad> tumorMutationalLoad,
+        @NotNull FindingItem<TumorMutationalBurden> tumorMutationalBurden,
         @NotNull FindingItem<HomologousRecombination> homologousRecombination,
         @NotNull VisualisationFiles visualisationFiles)
 {
