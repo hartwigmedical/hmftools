@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.isofox.cohort;
 
+import static com.hartwig.hmftools.isofox.fusion.FusionWriter.UNFILTERED_FUSION_FILE_ID;
 import static com.hartwig.hmftools.isofox.novel.CanonicalSpliceJunctionFile.CANONICAL_SJ_FILE_ID;
 import static com.hartwig.hmftools.common.rna.GeneExpressionFile.GENE_EXPRESSION_FILE_ID;
 import static com.hartwig.hmftools.common.rna.NovelSpliceJunctionFile.ALT_SJ_FILE_ID;
 import static com.hartwig.hmftools.common.rna.RnaFusionFile.PASS_FUSION_FILE_ID;
-import static com.hartwig.hmftools.common.rna.RnaFusionFile.UNFILTERED_FUSION_FILE_ID;
 import static com.hartwig.hmftools.common.rna.RnaStatisticFile.SUMMARY_FILE_ID;
 import static com.hartwig.hmftools.common.rna.TranscriptExpressionFile.TRANSCRIPT_EXPRESSION_FILE_ID;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.SPLICE_SITE_FILE;

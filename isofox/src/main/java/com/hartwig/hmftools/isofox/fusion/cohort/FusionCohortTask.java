@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.isofox.fusion.cohort;
 
 import static com.hartwig.hmftools.common.rna.RnaFusionFile.PASS_FUSION_FILE_ID;
-import static com.hartwig.hmftools.common.rna.RnaFusionFile.UNFILTERED_FUSION_FILE_ID;
 import static com.hartwig.hmftools.common.rna.RnaCommon.ISF_FILE_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
+import static com.hartwig.hmftools.isofox.fusion.FusionWriter.UNFILTERED_FUSION_FILE_ID;
 import static com.hartwig.hmftools.isofox.fusion.cohort.FusionCohort.writeCombinedFusions;
 
 import java.io.BufferedWriter;
@@ -66,7 +66,7 @@ public class FusionCohortTask implements Callable<Void>
 
             // ISF_LOGGER.debug("task {}: sample({}:{}) loading fusion data", mTaskId, totalProcessed, sampleId);
 
-            final List<FusionData> sampleFusions = FusionData.loadFromFile(fusionFile);
+            List<FusionData> sampleFusions = FusionData.loadFromFile(fusionFile);
 
             ISF_LOGGER.info("task {}: sample({}:{}) loaded {} fusions", mTaskId, totalProcessed, sampleId, sampleFusions.size());
 
@@ -129,12 +129,12 @@ public class FusionCohortTask implements Callable<Void>
         try
         {
             BufferedWriter writer = createBufferedWriter(outputFile, false);
-            writer.write(FusionData.header(includeFilterFields));
+            writer.write(FusionData.header());
             writer.newLine();
 
             for(FusionData fusion : fusions)
             {
-                writer.write(fusion.toTsv(includeFilterFields));
+                writer.write(fusion.toTsv());
                 writer.newLine();
             }
 

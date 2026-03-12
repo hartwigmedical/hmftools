@@ -23,8 +23,9 @@ import com.hartwig.hmftools.compar.common.Mismatch;
 public record RnaFusionData(RnaFusion RnaFusion, BasePosition ComparisonPositionUp,
                             BasePosition ComparisonPositionDown) implements ComparableItem
 {
-    public static String FLD_JUNC_TYPE_UP = "JuncTypeUp";
-    public static String FLD_JUNC_TYPE_DOWN = "JuncTypeDown";
+    public static final String FLD_KNOWN_TYPE = "KnownFusionType";
+    public static final String FLD_JUNC_TYPE_UP = "JuncTypeUp";
+    public static final String FLD_JUNC_TYPE_DOWN = "JuncTypeDown";
 
     @Override
     public CategoryType category()

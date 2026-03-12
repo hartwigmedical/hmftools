@@ -271,9 +271,9 @@ public class OrangeAlgo
                     linx.germlineBreakends().size());
             LOGGER.debug(" loaded {} germline disruptions", linx.germlineDisruptions().size());
         }
-        else
+        else if(config.hasReference())
         {
-            LOGGER.info(" Skipped loading Linx germline data as no linx germline data directory has been provided");
+            LOGGER.warn(" skipped loading Linx germline data as no linx germline data directory has been provided");
         }
 
         return linx;

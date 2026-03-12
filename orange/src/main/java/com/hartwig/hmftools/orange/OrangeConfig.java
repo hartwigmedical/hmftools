@@ -199,10 +199,10 @@ public class OrangeConfig
         }
 
         LilacDir = pathResolver.resolveOptionalToolDirectory(LILAC_DIR_CFG, defaultToolDirectories.lilacDir());
-        ChordDir = pathResolver.resolveMandatoryToolDirectory(CHORD_DIR_CFG, defaultToolDirectories.chordDir());
+        ChordDir = pathResolver.resolveOptionalToolDirectory(CHORD_DIR_CFG, defaultToolDirectories.chordDir());
         CuppaDir = pathResolver.resolveOptionalToolDirectory(CUPPA_DIR_CFG, defaultToolDirectories.cuppaDir());
         PeachDir = pathResolver.resolveOptionalToolDirectory(PEACH_DIR_CFG, defaultToolDirectories.peachDir());
-        SigsDir = pathResolver.resolveMandatoryToolDirectory(SIGS_DIR_CFG, defaultToolDirectories.sigsDir());
+        SigsDir = pathResolver.resolveOptionalToolDirectory(SIGS_DIR_CFG, defaultToolDirectories.sigsDir());
         VirusDir = pathResolver.resolveOptionalToolDirectory(VIRUS_DIR_CFG, defaultToolDirectories.virusInterpreterDir());
 
         if(!configBuilder.hasValue(RNA_SAMPLE_ID) || !configBuilder.hasValue(ISOFOX_DIR_CFG))
@@ -210,12 +210,18 @@ public class OrangeConfig
             RnaSampleId = null;
             IsofoxDir = null;
 
-            LOGGER.info("RNA config not present, will continue without RNA configuration");
+            LOGGER.info("RNA config not present");
         }
         else
         {
             RnaSampleId = configBuilder.getValue(RNA_SAMPLE_ID);
             IsofoxDir = pathResolver.resolveMandatoryToolDirectory(ISOFOX_DIR_CFG, defaultToolDirectories.isofoxDir());
+
+            if(DriverGenePanelTsv == null)
+            {
+                LOGGER.error("driver gene panel currently required for RNA analysis");
+                System.exit(1);
+            }
         }
 
         LOGGER.debug("RNA sample configured as {}", RnaSampleId);
@@ -260,7 +266,7 @@ public class OrangeConfig
         addOutputOptions(configBuilder);
 
         configBuilder.addPath(DOID_JSON, false, "Path to JSON file containing the full DOID tree");
-        addGenePanelOption(configBuilder, true);
+        addGenePanelOption(configBuilder, false); // only used for RNA
 
         configBuilder.addPath(PIPELINE_VERSION_FILE, false, "Path towards the pipeline version file.");
 

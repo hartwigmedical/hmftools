@@ -1,19 +1,10 @@
 package com.hartwig.hmftools.orange.algo.isofox;
 
-import static java.lang.Math.abs;
-
-import static com.hartwig.hmftools.common.rna.KnownFusionType.KNOWN_PAIR;
-import static com.hartwig.hmftools.common.rna.KnownFusionType.hasKnownPairGene;
-import static com.hartwig.hmftools.common.rna.KnownFusionType.hasPromiscousGene;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
 import static com.hartwig.hmftools.common.rna.RnaFusionFile.geneNames;
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.BND;
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 import static com.hartwig.hmftools.orange.algo.OrangeConstants.ALT_SJ_MIN_FRAGMENTS;
 import static com.hartwig.hmftools.orange.algo.OrangeConstants.HIGH_EXPRESSION_PERCENTILE_CUTOFF;
 import static com.hartwig.hmftools.orange.algo.OrangeConstants.LOW_EXPRESSION_PERCENTILE_CUTOFF;
-import static com.hartwig.hmftools.orange.algo.OrangeConstants.RNA_MIN_PROMISCOUS_DISTANCE;
 
 import java.util.List;
 import java.util.Map;
@@ -132,7 +123,7 @@ public class IsofoxInterpreter
             if(matchesDnaFusion(linxFusions, geneUp, geneDown))
                 continue;
 
-            // can expand the set of interesting fusions once Isofox sets this field similarly to Linx
+            // can expand the set of interesting fusions once Isofox sets this field similarly to Linx and a likelihood
             if(rnaFusion.knownType() == KNOWN_PAIR)
             {
                 reportableFusions.add(IsofoxConversion.convert(rnaFusion));

@@ -1071,9 +1071,9 @@ public class FusionFinder implements Callable<Void>
 
             for(List<FusionReadData> fusionCandidates : mFusionCandidates.values())
             {
-                for(final FusionReadData fusion : fusionCandidates)
+                for(FusionReadData fusion : fusionCandidates)
                 {
-                    FusionData fusionData = fusion.toFusionData();
+                    FusionData fusionData = fusion.toFusionData(mGeneTransCache);
                     allFusions.add(fusionData);
                 }
             }

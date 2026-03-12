@@ -35,8 +35,10 @@ import java.util.StringJoiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.isofox.common.TransExonRef;
@@ -382,16 +384,6 @@ public class FusionReadData
 
     public FusionFragment getInitialFragment() { return mFragment; }
 
-    /*
-    public void cacheTranscriptData()
-    {
-        for(int se = SE_START; se <= SE_END; ++se)
-        {
-            mTransExonRefs[se].addAll(mFragment.getTransExonRefs()[se]);
-        }
-    }
-    */
-
     public boolean canAddDiscordantFragment(final FusionFragment fragment, int maxFragmentDistance)
     {
         // a discordant read spans both genes and cannot be outside the standard long fragment length either in intronic terms
@@ -432,7 +424,7 @@ public class FusionReadData
             if(reads.isEmpty())
                 return false;
 
-            final FusionRead read = reads.get(0);
+            FusionRead read = reads.get(0);
 
             int fragmentPosition = read.getCoordsBoundary(switchIndex(se));
 
@@ -583,7 +575,7 @@ public class FusionReadData
 
     public static String fusionId(int id) { return String.format("%s%d", FUSION_ID_PREFIX, id); }
 
-    public FusionData toFusionData()
+    public FusionData toFusionData(final EnsemblDataCache geneTransCache)
     {
         boolean isValid = hasViableGenes() && !hasIncompleteData();
 
@@ -601,7 +593,9 @@ public class FusionReadData
 
         int[] coverage = new int[FS_PAIR];
         int[] anchorDistance = new int[FS_PAIR];
-        String[] transData = new String[] {"", ""};
+        int[] exons = new int[FS_PAIR];
+        String[] transcripts = new String[] {"", ""};
+        String[] allTransData = new String[] {"", ""};
 
         int splitFragments = 0;
         int realignedFragments = 0;
@@ -627,13 +621,17 @@ public class FusionReadData
             junctionOrientations[fs] = mJunctionOrientations[mStreamIndices[fs]];
             junctionTypes[fs] = sampleFragment.junctionTypes()[mStreamIndices[fs]];
 
-            final GeneData geneData = mFusionGenes[fs];
+            GeneData geneData = mFusionGenes[fs];
+
+            TranscriptData canonicalTranscript = null;
 
             if(geneData != null)
             {
                 geneIds[fs] = geneData.GeneId;
                 geneNames[fs] = geneData.GeneName;
                 strands[fs] = geneData.Strand;
+
+                canonicalTranscript = geneTransCache.getCanonicalTranscriptData(geneData.GeneId);
             }
 
             // since depth of 1 may have been discarded from the BaseDepth, correct for this
@@ -641,20 +639,33 @@ public class FusionReadData
 
             anchorDistance[fs] = mMaxSplitLengths[mStreamIndices[fs]];
 
-            final List<TransExonRef> transExonRefs = getTransExonRefsByStream(fs);
+            List<TransExonRef> transExonRefs = getTransExonRefsByStream(fs);
             if(transExonRefs.isEmpty())
             {
-                transData[fs] = FUSION_NONE;
+                allTransData[fs] = FUSION_NONE;
             }
             else
             {
                 StringJoiner td = new StringJoiner(ITEM_DELIM);
-                for(final TransExonRef transExonRef : transExonRefs)
+                for(TransExonRef transExonRef : transExonRefs)
                 {
                     td.add(String.format("%s-%d", transExonRef.TransName, transExonRef.ExonRank));
+
+                    if(canonicalTranscript != null && transExonRef.TransId == canonicalTranscript.TransId)
+                    {
+                        transcripts[fs] = transExonRef.TransName;
+                        exons[fs] = transExonRef.ExonRank;
+                    }
                 }
 
-                transData[fs] = td.toString();
+                if(transcripts[fs].isEmpty())
+                {
+                    // set to first
+                    transcripts[fs] = transExonRefs.get(0).TransName;
+                    exons[fs] = transExonRefs.get(0).ExonRank;
+                }
+
+                allTransData[fs] = td.toString();
             }
         }
 
@@ -677,7 +688,8 @@ public class FusionReadData
 
         return new FusionData(
                 mId, isValid, chromosomes, junctionPositions, junctionOrientations, junctionTypes, getImpliedSvType().toString(),
-                readType, geneIds, geneNames, strands, totalFragments, splitFragments, realignedFragments, discordantFragments, coverage,
-                anchorDistance, transData, relatedFusionIds, getInitialFragment().readId());
+                readType, geneIds, geneNames, transcripts, strands, exons, totalFragments,
+                splitFragments, realignedFragments, discordantFragments, coverage,
+                anchorDistance, allTransData, relatedFusionIds, getInitialFragment().readId());
     }
 }

@@ -6,8 +6,6 @@ import static com.hartwig.hmftools.datamodel.isofox.RnaFusionType.NONE;
 import static com.hartwig.hmftools.datamodel.isofox.RnaFusionType.PROMISCUOUS_3;
 import static com.hartwig.hmftools.datamodel.isofox.RnaFusionType.PROMISCUOUS_5;
 import static com.hartwig.hmftools.datamodel.isofox.RnaFusionType.PROMISCUOUS_BOTH;
-import static com.hartwig.hmftools.orange.algo.isofox.RnaFusionSelector.geneDown;
-import static com.hartwig.hmftools.orange.algo.isofox.RnaFusionSelector.geneUp;
 
 import com.hartwig.hmftools.common.rna.NovelSpliceJunction;
 import com.hartwig.hmftools.common.rna.RnaFusion;
@@ -59,9 +57,11 @@ public final class IsofoxConversion
 
     public static com.hartwig.hmftools.datamodel.isofox.RnaFusion convert(final RnaFusion rnaFusion)
     {
+        String[] geneNames = RnaFusionFile.geneNames(rnaFusion);
+
         return ImmutableRnaFusion.builder()
-                .geneStart(geneUp(rnaFusion))
-                .geneEnd(geneDown(rnaFusion))
+                .geneStart(geneNames[0])
+                .geneEnd(geneNames[1])
                 .chromosomeStart(rnaFusion.chromosomeUp())
                 .chromosomeEnd(rnaFusion.chromosomeDown())
                 .positionStart(rnaFusion.positionUp())
@@ -89,15 +89,8 @@ public final class IsofoxConversion
         switch(rnaFusion.knownType())
         {
             case KNOWN_PAIR: return KNOWN_PAIR;
-            case PROM5_PROM3: return PROMISCUOUS_BOTH;
-
-            case KNOWN_PROM3:
-            case OTHER_PROM3:
-                return PROMISCUOUS_3;
-
-            case PROM5_KNOWN:
-            case PROM5_OTHER:
-                return PROMISCUOUS_5;
+            case PROMISCUOUS_5: return PROMISCUOUS_5;
+            case PROMISCUOUS_3: return PROMISCUOUS_3;
 
             default: return NONE;
         }

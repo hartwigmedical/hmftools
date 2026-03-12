@@ -19,6 +19,8 @@ import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
 import com.hartwig.hmftools.datamodel.linx.LinxDriverType;
 import com.hartwig.hmftools.datamodel.linx.LinxGeneOrientation;
 
+import org.jetbrains.annotations.Nullable;
+
 public class LinxBreakendInterpreter
 {
     private final Map<Integer, LinxSvAnnotation> mLinxSvAnnotationsMap;
@@ -33,8 +35,11 @@ public class LinxBreakendInterpreter
         mCytoBands = cytoBands;
     }
 
-    public List<LinxBreakend> convertBreakends(List<com.hartwig.hmftools.common.linx.LinxBreakend> linxBreakends)
+    public List<LinxBreakend> convertBreakends(@Nullable final List<com.hartwig.hmftools.common.linx.LinxBreakend> linxBreakends)
     {
+        if(linxBreakends == null)
+            return null;
+
         List<LinxBreakend> reportedBreakends = Lists.newArrayList();
 
         for(com.hartwig.hmftools.common.linx.LinxBreakend linxBreakend : linxBreakends)
@@ -48,7 +53,7 @@ public class LinxBreakendInterpreter
         return reportedBreakends;
     }
 
-    public LinxBreakend build(com.hartwig.hmftools.common.linx.LinxBreakend linxBreakend)
+    public LinxBreakend build(final com.hartwig.hmftools.common.linx.LinxBreakend linxBreakend)
     {
         LinxSvAnnotation svAnnotation = mLinxSvAnnotationsMap.get(linxBreakend.svId());
 

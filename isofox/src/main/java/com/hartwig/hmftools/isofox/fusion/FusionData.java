@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_CHR;
 import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_COVERAGE;
 import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_DISCORD_FRAGS;
+import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_EXON;
 import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_JUNC_TYPE;
 import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_KNOWN_TYPE;
 import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_ORIENT;
@@ -14,6 +15,8 @@ import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_POS;
 import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_REALIGN_FRAGS;
 import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_SPLIT_FRAGS;
 import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_SV_TYPE;
+import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_TRANSCRIPT;
+import static com.hartwig.hmftools.common.rna.RnaFusionFile.formFusionName;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
@@ -39,12 +42,17 @@ import java.util.Map;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.rna.KnownFusionType;
+import com.hartwig.hmftools.common.fusion.KnownFusionType;
+import com.hartwig.hmftools.common.rna.ImmutableRnaFusion;
+import com.hartwig.hmftools.common.rna.RnaFusion;
+import com.hartwig.hmftools.common.rna.RnaFusionFile;
+import com.hartwig.hmftools.common.rna.RnaKnownFusionType;
+import com.hartwig.hmftools.common.sv.StructuralVariantType;
 
 public class FusionData
 {
     public final int Id;
-    public final boolean Valid;
+    public final boolean ValidGenes;
     public final String[] Chromosomes;
     public final int[] JunctionPositions;
     public final byte[] JunctionOrientations;
@@ -57,18 +65,23 @@ public class FusionData
     public final int[] Coverage;
     public final int[] AnchorDistance;
 
+    // selected transcript and exon if identified
+    public final String[] Transcripts;
+    public final int[] Exons;
+
     public final int TotalFrags;
     public final int SplitFrags;
     public final int RealignedFrags;
     public final int DiscordantFrags;
     public final String RelatedSplicedIds;
     public final String InitReadId;
-    public final String[] TransData;
+    public final String[] AllTransData;
 
     private final List<Integer> mRelatedFusionIds;
 
     // annotations from filtering
 
+    private RnaKnownFusionType mRnaKnownFusionType;
     private KnownFusionType mKnownFusionType;
     private boolean mHasRelatedKnownSpliceSites;
     private int mCohortFrequency;
@@ -76,12 +89,12 @@ public class FusionData
 
     public FusionData(int id, boolean isValid, final String[] chromosomes, final int[] junctionPositions, final byte[] junctionOrientations,
             final FusionJunctionType[] junctionTypes, final String svType, final String readType,
-            final String[] geneIds, final String[] geneNames, final byte[] strands,
+            final String[] geneIds, final String[] geneNames, final String[] transcripts, final byte[] strands, final int[] exons,
             int totalFrags, int splitFrags, int realignedFrags, int discordantFrags, final int[] coverage, final int[] anchorDistance,
-            final String[] transData, final String relatedFusionIds, final String initReadId)
+            final String[] allTransData, final String relatedFusionIds, final String initReadId)
     {
         Id = id;
-        Valid = isValid;
+        ValidGenes = isValid;
 
         Chromosomes = chromosomes;
         JunctionPositions = junctionPositions;
@@ -102,10 +115,13 @@ public class FusionData
         Coverage = coverage;
         AnchorDistance = anchorDistance;
         InitReadId = initReadId;
-        TransData = transData;
+        Transcripts = transcripts;
+        Exons = exons;
+        AllTransData = allTransData;
         RelatedSplicedIds = relatedFusionIds;
 
-        mKnownFusionType = KnownFusionType.OTHER;
+        mRnaKnownFusionType = RnaKnownFusionType.OTHER;
+        mKnownFusionType = KnownFusionType.NONE;
         mRelatedFusionIds = Lists.newArrayList();
 
         if(!relatedFusionIds.isEmpty() && !relatedFusionIds.equals(FUSION_NONE))
@@ -124,8 +140,11 @@ public class FusionData
 
     public List<Integer> relatedFusionIds() { return mRelatedFusionIds; }
 
-    public final KnownFusionType getKnownFusionType() { return mKnownFusionType; }
-    public void setKnownFusionType(KnownFusionType type) { mKnownFusionType = type; }
+    public final RnaKnownFusionType getRnaKnownType() { return mRnaKnownFusionType; }
+    public void setRnaKnownType(final RnaKnownFusionType type) { mRnaKnownFusionType = type; }
+
+    public final KnownFusionType getKnownType() { return mKnownFusionType; }
+    public void setKnownType(final KnownFusionType type) { mKnownFusionType = type; }
 
     public boolean isRelated(final FusionData other)
     {
@@ -160,7 +179,8 @@ public class FusionData
     }
 
     public static final String FLD_FUSION_ID = "FusionId";
-    private static final String FLD_VALID = "Valid";
+    private static final String FLD_VALID_GENES = "ValidGenes";
+    public static final String FLD_RNA_KNOWN_TYPE = "RnaKnownFusionType";
     public static final String FLD_STRAND = "Strand";
     public static final String FLD_MAX_ANCHOR = "MaxAnchorLength";
     public static final String FLD_TOTAL_FRAGS = "TotalFragments";
@@ -173,11 +193,11 @@ public class FusionData
     public static final String FLD_FILTER = "Filter";
     public static final String FLD_COHORT_COUNT = "CohortCount";
 
-    public static String header(boolean isFiltered)
+    public static String header()
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);
         sj.add(FLD_FUSION_ID);
-        sj.add(FLD_VALID);
+        sj.add(FLD_KNOWN_TYPE);
 
         for(int fs = FS_UP; fs <= FS_DOWN; ++fs)
         {
@@ -188,44 +208,36 @@ public class FusionData
             sj.add(formStreamField(FLD_GENE_NAME, fs));
             sj.add(formStreamField(FLD_STRAND, fs));
             sj.add(formStreamField(FLD_JUNC_TYPE, fs));
+            sj.add(formStreamField(FLD_TRANSCRIPT, fs));
+            sj.add(formStreamField(FLD_EXON, fs));
             sj.add(formStreamField(FLD_COVERAGE, fs));
             sj.add(formStreamField(FLD_MAX_ANCHOR, fs));
-
-            if(!isFiltered)
-            {
-                sj.add(formStreamField(FLD_TRANS_DATA, fs));
-            }
+            sj.add(formStreamField(FLD_TRANS_DATA, fs));
         }
 
         sj.add(FLD_SV_TYPE);
+        sj.add(FLD_RNA_KNOWN_TYPE);
         sj.add(FLD_TOTAL_FRAGS);
         sj.add(FLD_SPLIT_FRAGS);
         sj.add(FLD_REALIGN_FRAGS);
         sj.add(FLD_DISCORD_FRAGS);
         sj.add(FLD_REL_SPLICED_IDS);
         sj.add(FLD_COHORT_COUNT);
-
-        if(isFiltered)
-        {
-            sj.add(FLD_KNOWN_TYPE);
-        }
-        else
-        {
-            sj.add(FLD_FILTER);
-            sj.add(FLD_READ_TYPE);
-            sj.add(FLD_INIT_READ_ID);
-        }
+        sj.add(FLD_VALID_GENES);
+        sj.add(FLD_FILTER);
+        sj.add(FLD_READ_TYPE);
+        sj.add(FLD_INIT_READ_ID);
 
         return sj.toString();
     }
 
-    public String toTsv(boolean isFiltered)
+    public String toTsv()
     {
         // consider building a RnaFusion object and then writing this plus any additional fields for debug
         StringJoiner sj = new StringJoiner(TSV_DELIM);
 
         sj.add(fusionId(Id));
-        sj.add(String.valueOf(Valid));
+        sj.add(mKnownFusionType.toString());
 
         for(int fs = FS_UP; fs <= FS_DOWN; ++fs)
         {
@@ -236,16 +248,15 @@ public class FusionData
             sj.add(GeneNames[fs]);
             sj.add(String.valueOf(Strands[fs]));
             sj.add(String.valueOf(JunctionTypes[fs]));
+            sj.add(String.valueOf(Transcripts[fs]));
+            sj.add(String.valueOf(Exons[fs]));
             sj.add(String.valueOf(Coverage[fs]));
             sj.add(String.valueOf(AnchorDistance[fs]));
-
-            if(!isFiltered)
-            {
-                sj.add(TransData[fs]);
-            }
+            sj.add(AllTransData[fs]);
         }
 
         sj.add(SvType);
+        sj.add(String.valueOf(mRnaKnownFusionType));
         sj.add(String.valueOf(TotalFrags));
         sj.add(String.valueOf(SplitFrags));
         sj.add(String.valueOf(RealignedFrags));
@@ -255,18 +266,41 @@ public class FusionData
 
         // could write an additional fields - eg RelatedProxIds, HomologyOffset were previously written
 
-        if(isFiltered)
-        {
-            sj.add(getKnownFusionType().toString());
-        }
-        else
-        {
-            sj.add(mFilter.toString());
-            sj.add(ReadType);
-            sj.add(InitReadId);
-        }
+        sj.add(String.valueOf(ValidGenes));
+        sj.add(mFilter.toString());
+        sj.add(ReadType);
+        sj.add(InitReadId);
 
         return sj.toString();
+    }
+
+    public RnaFusion buildRnaFusion()
+    {
+        return ImmutableRnaFusion.builder()
+                .name(formFusionName(GeneNames[FS_UP], GeneNames[FS_DOWN]))
+                .knownType(mKnownFusionType)
+                .chromosomeUp(Chromosomes[FS_UP])
+                .chromosomeDown(Chromosomes[FS_DOWN])
+                .positionUp(JunctionPositions[FS_UP])
+                .positionDown(JunctionPositions[FS_DOWN])
+                .orientationUp(JunctionOrientations[FS_UP])
+                .orientationDown(JunctionOrientations[FS_DOWN])
+                .junctionTypeUp(JunctionTypes[FS_UP].toString())
+                .junctionTypeDown(JunctionTypes[FS_DOWN].toString())
+                .transcriptUp(Transcripts[FS_UP])
+                .transcriptDown(Transcripts[FS_DOWN])
+                .exonUp(Exons[FS_UP])
+                .exonDown(Exons[FS_DOWN])
+                .svType(StructuralVariantType.valueOf(SvType))
+                .splitFragments(SplitFrags)
+                .realignedFrags(RealignedFrags)
+                .discordantFrags(DiscordantFrags)
+                .depthUp(Coverage[FS_UP])
+                .depthDown(Coverage[FS_DOWN])
+                .maxAnchorLengthUp(AnchorDistance[FS_UP])
+                .maxAnchorLengthDown(AnchorDistance[FS_DOWN])
+                .cohortFrequency(mCohortFrequency)
+                .build();
     }
 
     public static String formStreamField(final String field, final int stream)
@@ -286,7 +320,7 @@ public class FusionData
             lines.remove(0);
 
             int fusionIdIndex = fieldsIndexMap.get(FLD_FUSION_ID);
-            int validIndex = fieldsIndexMap.get(FLD_VALID);
+            int validIndex = fieldsIndexMap.containsKey(FLD_VALID_GENES) ? fieldsIndexMap.get(FLD_VALID_GENES) : fieldsIndexMap.get("Valid");
             int chrUpIndex = fieldsIndexMap.get(formStreamField(FLD_CHR, FS_UP));
             int chrDownIndex = fieldsIndexMap.get(formStreamField(FLD_CHR, FS_DOWN));
             int posUpIndex = fieldsIndexMap.get(formStreamField(FLD_POS, FS_UP));
@@ -331,39 +365,42 @@ public class FusionData
                 int fusionId = Integer.parseInt(values[fusionIdIndex].replaceAll(FUSION_ID_PREFIX, ""));
                 boolean isValid = Boolean.parseBoolean(values[validIndex]);
 
-                final String[] chromosomes = new String[] { values[chrUpIndex], values[chrDownIndex] };
+                String[] chromosomes = new String[] { values[chrUpIndex], values[chrDownIndex] };
 
-                final int[] junctionPositions =
+                int[] junctionPositions =
                         new int[] { Integer.parseInt(values[posUpIndex]), Integer.parseInt(values[posDownIndex]) };
 
-                final byte[] junctionOrientations =
+                byte[] junctionOrientations =
                         new byte[] { Byte.parseByte(values[orientUpIndex]), Byte.parseByte(values[orientDownIndex]) };
 
-                final FusionJunctionType[] junctionTypes = new FusionJunctionType[] {
+                FusionJunctionType[] junctionTypes = new FusionJunctionType[] {
                         FusionJunctionType.valueOf(values[juncTypeUpIndex]), FusionJunctionType.valueOf(values[juncTypeDownIndex]) };
 
-                final String[] geneIds = new String[] { values[geneIdUpIndex], values[geneIdDownIndex] };
-                final String[] geneNames = new String[] { values[geneNameUpIndex], values[geneNameDownIndex] };
+                String[] geneIds = new String[] { values[geneIdUpIndex], values[geneIdDownIndex] };
+                String[] geneNames = new String[] { values[geneNameUpIndex], values[geneNameDownIndex] };
 
-                final byte[] strands =
+                byte[] strands =
                         new byte[] { Byte.parseByte(values[strandUpIndex]), Byte.parseByte(values[strandDownIndex]) };
 
-                final String svType = values[svTypeIndex];
+                String svType = values[svTypeIndex];
 
-                final String readType = readTypeIndex != null ? values[readTypeIndex] : "";
+                String readType = readTypeIndex != null ? values[readTypeIndex] : "";
 
-                final int[] coverage = new int[] { Integer.parseInt(values[covUpIndex]), Integer.parseInt(values[covDownIndex]) };
+                int[] coverage = new int[] { Integer.parseInt(values[covUpIndex]), Integer.parseInt(values[covDownIndex]) };
 
-                final int[] anchorDistance = new int[] { Integer.parseInt(values[ancDistUpIndex]), Integer.parseInt(values[ancDistDownIndex]) };
+                int[] anchorDistance = new int[] { Integer.parseInt(values[ancDistUpIndex]), Integer.parseInt(values[ancDistDownIndex]) };
 
-                final String[] transData = transUpIndex != null && transDownIndex != null ?
+                int[] exons = {-1, -1};
+                String[] transcripts = {"", ""};
+
+                String[] transData = transUpIndex != null && transDownIndex != null ?
                         new String[] { values[transUpIndex], values[transDownIndex] } : new String[] { "", "" };
 
                 String initReadId = initReadIndex != null ? values[initReadIndex] : "";
 
                 FusionData fusion = new FusionData(
                         fusionId, isValid, chromosomes, junctionPositions, junctionOrientations, junctionTypes,
-                        svType, readType, geneIds, geneNames, strands,
+                        svType, readType, geneIds, geneNames, transcripts, strands, exons,
                         Integer.parseInt(values[totalFragsIndex]), Integer.parseInt(values[splitFragsIndex]),
                         Integer.parseInt(values[realignedFragsIndex]), Integer.parseInt(values[discordantFragsIndex]),
                         coverage, anchorDistance, transData, values[relatedFusionIdsIndex], initReadId);

@@ -15,6 +15,7 @@ import org.junit.Test;
 
 public class RnaFusionSelectorTest
 {
+    /*
     @Ignore
     @Test
     public void canSelectNovelKnownFusions()
@@ -52,4 +53,5 @@ public class RnaFusionSelectorTest
         assertEquals(1, novelPromiscuous.size());
         assertEquals(match, novelPromiscuous.get(0));
     }
+    */
 }
