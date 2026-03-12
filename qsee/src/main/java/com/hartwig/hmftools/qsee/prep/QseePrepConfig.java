@@ -174,7 +174,7 @@ public class QseePrepConfig
 
     public List<String> getSampleIds(SampleType sampleType) { return sampleType == SampleType.TUMOR ? TumorIds : ReferenceIds; }
 
-    public boolean isSinglePatient() { return TumorIds.size() == 1 && ReferenceIds.size() == 1; }
+    public boolean isSinglePatient() { return TumorIds.size() <= 1 && ReferenceIds.size() <= 1; }
     public String getCobaltDir(String sampleId) { return convertWildcardSamplePath(CobaltDir, sampleId); }
     public String getEsveeDir(String sampleId) { return convertWildcardSamplePath(EsveeDir, sampleId); }
     public String getPurpleDir(String sampleId) { return convertWildcardSamplePath(PurpleDir, sampleId); }

@@ -44,7 +44,7 @@ public class QseePlot
         return QseeFileCommon.generateFilename(mOutputDir, tumorId, "vis.report", outputId, "pdf");
     }
 
-    private boolean isSinglePatient() { return mTumorIds.size() == 1 && mReferenceIds.size() == 1; }
+    public boolean isSinglePatient() { return mTumorIds.size() <= 1 && mReferenceIds.size() <= 1; }
     private boolean isTumorOnly() { return mReferenceIds.isEmpty(); }
 
     private String getVisDataPath(String outputId, String tumorId)
