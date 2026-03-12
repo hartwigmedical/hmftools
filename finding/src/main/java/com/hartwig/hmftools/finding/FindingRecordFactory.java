@@ -19,6 +19,7 @@ import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaMode;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
 import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
+import com.hartwig.hmftools.datamodel.linx.LinxDriverType;
 import com.hartwig.hmftools.finding.datamodel.ChromosomeArmCopyNumber;
 import com.hartwig.hmftools.finding.datamodel.ChromosomeArmCopyNumberBuilder;
 import com.hartwig.hmftools.finding.datamodel.DriverInterpretation;
@@ -343,7 +344,10 @@ public class FindingRecordFactory
                             .lohCopyNumbers(lohGainDeletions)
                             .genes(GeneListUtil.genes(purple.somaticVariants(),
                                     purple.somaticGainsDels(),
-                                    linx.somaticHomozygousDisruptions(),
+                                    linx.somaticBreakends().stream()
+                                            .filter(o ->o.driverType() == LinxDriverType.HOM_DEL_DISRUPTION ||
+                                                    o.driverType() == LinxDriverType.HOM_DUP_DISRUPTION)
+                                            .toList(),
                                     Genes.HRD_GENES).stream().toList())
                             .build())
                     .build();
@@ -373,7 +377,10 @@ public class FindingRecordFactory
                         .lohCopyNumbers(lohGainDeletions)
                         .genes(GeneListUtil.genes(purple.somaticVariants(),
                                 purple.somaticGainsDels(),
-                                linx.somaticHomozygousDisruptions(),
+                                linx.somaticBreakends().stream()
+                                        .filter(o ->o.driverType() == LinxDriverType.HOM_DEL_DISRUPTION ||
+                                                o.driverType() == LinxDriverType.HOM_DUP_DISRUPTION)
+                                        .toList(),
                                 Genes.MSI_GENES).stream().toList())
                         .build())
                 .build();
