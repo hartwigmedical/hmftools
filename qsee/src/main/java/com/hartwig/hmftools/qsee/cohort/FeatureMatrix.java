@@ -2,7 +2,7 @@ package com.hartwig.hmftools.qsee.cohort;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -18,8 +18,8 @@ public class FeatureMatrix
     Visual representation:
 
              feature1  feature2  feature3  ...
-    sample1     f1_s1     f2_s1     f3_s1  ...
-    sample2     f1_s2     f2_s2     f3_s2  ...
+    sample1     s1_f1     s1_f2     s1_f3  ...
+    sample2     s2_f1     s2_f2     s2_f3  ...
         ...       ...       ...       ...
      */
 
@@ -86,21 +86,9 @@ public class FeatureMatrix
         }
     }
 
-    public synchronized void addColumn(FeatureKey key, Feature[] features)
-    {
-        if(mFeatureKeys.contains(key))
-        {
-            throw new IllegalArgumentException("Cannot add a column with an already existing key");
-        }
-
-        mFeatureKeys.add(key);
-        mFeatureValuesMap.put(key, features);
-    }
-
     public void sortFeatureKeys()
     {
-        Comparator<FeatureKey> comparator = Comparator.comparing(FeatureKey::type, Comparator.nullsLast(Comparator.naturalOrder()));
-        mFeatureKeys.sort(comparator);
+        Collections.sort(mFeatureKeys);
     }
 
     public int numRows() { return mNumRows; }
@@ -110,21 +98,6 @@ public class FeatureMatrix
     public List<String> getRowIds() { return mRowIds; }
 
     public List<FeatureKey> getFeatureKeys() { return mFeatureKeys; }
-
-    @VisibleForTesting
-    double[][] getFeatureValues()
-    {
-        double[][] matrix = new double[numRows()][numFeatures()];
-
-        for(int rowIndex = 0; rowIndex < numRows(); rowIndex++)
-        {
-            Feature[] features = getRow(rowIndex);
-            double[] featureValues = Stream.of(features).mapToDouble(Feature::value).toArray();
-            matrix[rowIndex] = featureValues;
-        }
-
-        return matrix;
-    }
 
     public Feature[] getRow(int index)
     {
@@ -158,5 +131,20 @@ public class FeatureMatrix
     public Feature[] getColumn(FeatureKey key)
     {
         return mFeatureValuesMap.get(key);
+    }
+
+    @VisibleForTesting
+    double[][] getFeatureValues()
+    {
+        double[][] matrix = new double[numRows()][numFeatures()];
+
+        for(int rowIndex = 0; rowIndex < numRows(); rowIndex++)
+        {
+            Feature[] features = getRow(rowIndex);
+            double[] featureValues = Stream.of(features).mapToDouble(Feature::value).toArray();
+            matrix[rowIndex] = featureValues;
+        }
+
+        return matrix;
     }
 }
