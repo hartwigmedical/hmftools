@@ -8,13 +8,20 @@ public class TransExonRef
     public final int TransId;
     public final String TransName;
     public final int ExonRank;
+    private final Boolean mIsCanonical;
 
     public TransExonRef(final String geneId, final int transId, final String transName, final int exonRank)
+    {
+        this(geneId, transId, transName, exonRank, null);
+    }
+
+    public TransExonRef(final String geneId, final int transId, final String transName, final int exonRank, final Boolean isCanonical)
     {
         GeneId = geneId;
         TransId = transId;
         TransName = transName;
         ExonRank = exonRank;
+        mIsCanonical = isCanonical;
     }
 
     public boolean matches(final TransExonRef other)
@@ -33,6 +40,8 @@ public class TransExonRef
         else
             return other.ExonRank >= ExonRank + maxDiffVsOther && other.ExonRank <= ExonRank;
     }
+
+    public boolean isCanonical() { return mIsCanonical != null && mIsCanonical; }
 
     public static boolean hasMatch(final List<TransExonRef> list1, final List<TransExonRef> list2)
     {

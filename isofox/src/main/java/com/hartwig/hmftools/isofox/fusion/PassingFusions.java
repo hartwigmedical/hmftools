@@ -5,9 +5,6 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
-import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_CHR;
-import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_ORIENT;
-import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_POS;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferFileDelimiter;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
@@ -16,7 +13,10 @@ import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.FILTER_COHORT_LIMIT_KNOWN;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.FILTER_COHORT_LIMIT_NOT_KNOWN;
+import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_CHR;
 import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_COHORT_COUNT;
+import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_ORIENT;
+import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_POS;
 import static com.hartwig.hmftools.isofox.fusion.FusionData.formStreamField;
 import static com.hartwig.hmftools.isofox.fusion.FusionFilterType.PASS;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formChromosomePair;
@@ -24,15 +24,15 @@ import static com.hartwig.hmftools.isofox.fusion.FusionFilterType.ALLELE_FREQUEN
 import static com.hartwig.hmftools.isofox.fusion.FusionFilterType.ANCHOR_DISTANCE;
 import static com.hartwig.hmftools.isofox.fusion.FusionFilterType.COHORT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFilterType.FRAGMENT_COUNT;
-import static com.hartwig.hmftools.common.rna.RnaKnownFusionType.KNOWN_OTHER;
-import static com.hartwig.hmftools.common.rna.RnaKnownFusionType.KNOWN_PAIR;
-import static com.hartwig.hmftools.common.rna.RnaKnownFusionType.KNOWN_PROM3;
-import static com.hartwig.hmftools.common.rna.RnaKnownFusionType.OTHER;
-import static com.hartwig.hmftools.common.rna.RnaKnownFusionType.OTHER_PROM3;
-import static com.hartwig.hmftools.common.rna.RnaKnownFusionType.PROM5_KNOWN;
-import static com.hartwig.hmftools.common.rna.RnaKnownFusionType.PROM5_OTHER;
-import static com.hartwig.hmftools.common.rna.RnaKnownFusionType.PROM5_PROM3;
-import static com.hartwig.hmftools.common.rna.RnaKnownFusionType.hasKnownPairGene;
+import static com.hartwig.hmftools.isofox.fusion.MixedKnownType.KNOWN_OTHER;
+import static com.hartwig.hmftools.isofox.fusion.MixedKnownType.KNOWN_PAIR;
+import static com.hartwig.hmftools.isofox.fusion.MixedKnownType.KNOWN_PROM3;
+import static com.hartwig.hmftools.isofox.fusion.MixedKnownType.OTHER;
+import static com.hartwig.hmftools.isofox.fusion.MixedKnownType.OTHER_PROM3;
+import static com.hartwig.hmftools.isofox.fusion.MixedKnownType.PROM5_KNOWN;
+import static com.hartwig.hmftools.isofox.fusion.MixedKnownType.PROM5_OTHER;
+import static com.hartwig.hmftools.isofox.fusion.MixedKnownType.PROM5_PROM3;
+import static com.hartwig.hmftools.isofox.fusion.MixedKnownType.hasKnownPairGene;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -44,7 +44,6 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.fusion.KnownFusionData;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
-import com.hartwig.hmftools.common.rna.RnaKnownFusionType;
 
 public class PassingFusions
 {
@@ -128,7 +127,7 @@ public class PassingFusions
                 if(fusion.isRelated(passingFusion) && passingFusion.hasKnownSpliceSites())
                 {
                     // use the same filters as for the passing fusion by using it's known and splice types
-                    if(isPassingFusion(fusion, passingFusion.getRnaKnownType(), passingFusion.hasKnownSpliceSites()))
+                    if(isPassingFusion(fusion, passingFusion.getMixedKnownType(), passingFusion.hasKnownSpliceSites()))
                     {
                         matchesPassing = true;
                         fusion.setHasRelatedKnownSpliceSites();
@@ -156,10 +155,10 @@ public class PassingFusions
 
     private boolean isPassingFusion(final FusionData fusion)
     {
-        return isPassingFusion(fusion, fusion.getRnaKnownType(), fusion.hasKnownSpliceSites());
+        return isPassingFusion(fusion, fusion.getMixedKnownType(), fusion.hasKnownSpliceSites());
     }
 
-    private boolean isPassingFusion(final FusionData fusion, final RnaKnownFusionType knownType, boolean hasKnownSpliceSites)
+    private boolean isPassingFusion(final FusionData fusion, final MixedKnownType knownType, boolean hasKnownSpliceSites)
     {
         if(knownType == KNOWN_PAIR && !isShortLocalFusion(fusion))
         {
@@ -266,9 +265,6 @@ public class PassingFusions
 
     private void markKnownType(final FusionData fusion)
     {
-        String geneUp = fusion.GeneNames[SE_START];
-        String geneDown = fusion.GeneNames[SE_END];
-
         for(KnownFusionData knownFusionData : mKnownFusionCache.getDataByType(KnownFusionType.KNOWN_PAIR))
         {
             if(knownFusionData.FiveGene.equals(fusion.GeneNames[SE_START]) && knownFusionData.ThreeGene.equals(fusion.GeneNames[SE_END]))
@@ -296,6 +292,9 @@ public class PassingFusions
             }
         }
 
+        // String geneUp = fusion.GeneNames[SE_START];
+        // String geneDown = fusion.GeneNames[SE_END];
+
         // consider setting enhancer region fusions
     }
 
@@ -307,7 +306,7 @@ public class PassingFusions
         {
             if(knownFusionData.FiveGene.equals(fusion.GeneNames[SE_START]) && knownFusionData.ThreeGene.equals(fusion.GeneNames[SE_END]))
             {
-                fusion.setRnaKnownType(KNOWN_PAIR);
+                fusion.setMixedKnownType(KNOWN_PAIR);
                 return;
             }
 
@@ -329,31 +328,31 @@ public class PassingFusions
         if(isKnown[SE_START])
         {
             if(isProm[SE_END])
-                fusion.setRnaKnownType(KNOWN_PROM3);
+                fusion.setMixedKnownType(KNOWN_PROM3);
             else
-                fusion.setRnaKnownType(KNOWN_OTHER);
+                fusion.setMixedKnownType(KNOWN_OTHER);
         }
         else if(isKnown[SE_END])
         {
             if(isProm[SE_START])
-                fusion.setRnaKnownType(PROM5_KNOWN);
+                fusion.setMixedKnownType(PROM5_KNOWN);
             else
-                fusion.setRnaKnownType(KNOWN_OTHER);
+                fusion.setMixedKnownType(KNOWN_OTHER);
         }
         else if(isProm[SE_START])
         {
             if(isProm[SE_END])
-                fusion.setRnaKnownType(PROM5_PROM3);
+                fusion.setMixedKnownType(PROM5_PROM3);
             else
-                fusion.setRnaKnownType(PROM5_OTHER);
+                fusion.setMixedKnownType(PROM5_OTHER);
         }
         else if(isProm[SE_END])
         {
-            fusion.setRnaKnownType(OTHER_PROM3);
+            fusion.setMixedKnownType(OTHER_PROM3);
         }
         else
         {
-            fusion.setRnaKnownType(OTHER);
+            fusion.setMixedKnownType(OTHER);
         }
     }
 

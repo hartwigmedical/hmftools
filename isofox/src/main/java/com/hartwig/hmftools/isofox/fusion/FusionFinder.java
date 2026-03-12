@@ -487,8 +487,8 @@ public class FusionFinder implements Callable<Void>
     private void setGeneData(final FusionReadData fusionData)
     {
         // get the genes supporting the splice junction in the terms of an SV (ie lower chromosome and lower position first)
-        final List<GeneData>[] genesByPosition = new List[] { Lists.newArrayList(), Lists.newArrayList() };
-        final List<TranscriptData>[] validTransDataList = new List[] { Lists.newArrayList(), Lists.newArrayList() };
+        List<GeneData>[] genesByPosition = new List[] { Lists.newArrayList(), Lists.newArrayList() };
+        List<TranscriptData>[] validTransDataList = new List[] { Lists.newArrayList(), Lists.newArrayList() };
 
         FusionFragment initialFragment = fusionData.getInitialFragment();
 
@@ -519,7 +519,7 @@ public class FusionFinder implements Callable<Void>
                     transDataList.add(transData);
 
                 fusionData.getTransExonRefsByPos(se).add(new TransExonRef(
-                        transData.GeneId, transData.TransId, transData.TransName, transExonRef.ExonRank));
+                        transData.GeneId, transData.TransId, transData.TransName, transExonRef.ExonRank, transData.IsCanonical));
 
                 spliceGeneIds.add(transData.GeneId);
             }
@@ -1073,7 +1073,7 @@ public class FusionFinder implements Callable<Void>
             {
                 for(FusionReadData fusion : fusionCandidates)
                 {
-                    FusionData fusionData = fusion.toFusionData(mGeneTransCache);
+                    FusionData fusionData = fusion.toFusionData();
                     allFusions.add(fusionData);
                 }
             }

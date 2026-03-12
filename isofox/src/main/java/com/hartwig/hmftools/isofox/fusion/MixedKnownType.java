@@ -1,6 +1,6 @@
-package com.hartwig.hmftools.common.rna;
+package com.hartwig.hmftools.isofox.fusion;
 
-public enum RnaKnownFusionType
+public enum MixedKnownType
 {
     KNOWN_PAIR,
     KNOWN_PROM3,
@@ -11,12 +11,12 @@ public enum RnaKnownFusionType
     OTHER_PROM3,
     OTHER;
 
-    public static boolean hasKnownPairGene(final RnaKnownFusionType type)
+    public static boolean hasKnownPairGene(final MixedKnownType type)
     {
         return type == KNOWN_PAIR || type == KNOWN_PROM3 || type == KNOWN_OTHER || type == PROM5_KNOWN;
     }
 
-    public static boolean hasPromiscousGene(final RnaKnownFusionType type)
+    public static boolean hasPromiscousGene(final MixedKnownType type)
     {
         return type == PROM5_PROM3 || type == PROM5_KNOWN || type == PROM5_OTHER
             ||  type == KNOWN_PROM3 || type == OTHER_PROM3;

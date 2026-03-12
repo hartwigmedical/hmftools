@@ -11,7 +11,6 @@ import com.hartwig.hmftools.common.rna.ImmutableGeneExpression;
 import com.hartwig.hmftools.common.rna.ImmutableNovelSpliceJunction;
 import com.hartwig.hmftools.common.rna.ImmutableRnaFusion;
 import com.hartwig.hmftools.common.rna.ImmutableRnaStatistics;
-import com.hartwig.hmftools.common.rna.RnaKnownFusionType;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 
 import org.apache.logging.log4j.util.Strings;

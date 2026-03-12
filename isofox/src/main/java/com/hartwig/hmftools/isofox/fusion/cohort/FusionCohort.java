@@ -70,6 +70,8 @@ public class FusionCohort
 
         List<Path> filenames = Lists.newArrayList();
 
+        // when building fusion cohort frequency files, the unfiltered (ie not just passing) fusions are used
+        // but to compare to another cohort, only passing are used at the moment
         AnalysisType fileType = mConfig.Fusions.ComparisonSource != null ? PASSING_FUSION : FUSION;
 
         if(!formSampleFilenames(mConfig, fileType, filenames))

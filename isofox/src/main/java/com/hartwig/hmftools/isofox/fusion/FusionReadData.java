@@ -575,7 +575,7 @@ public class FusionReadData
 
     public static String fusionId(int id) { return String.format("%s%d", FUSION_ID_PREFIX, id); }
 
-    public FusionData toFusionData(final EnsemblDataCache geneTransCache)
+    public FusionData toFusionData()
     {
         boolean isValid = hasViableGenes() && !hasIncompleteData();
 
@@ -623,15 +623,11 @@ public class FusionReadData
 
             GeneData geneData = mFusionGenes[fs];
 
-            TranscriptData canonicalTranscript = null;
-
             if(geneData != null)
             {
                 geneIds[fs] = geneData.GeneId;
                 geneNames[fs] = geneData.GeneName;
                 strands[fs] = geneData.Strand;
-
-                canonicalTranscript = geneTransCache.getCanonicalTranscriptData(geneData.GeneId);
             }
 
             // since depth of 1 may have been discarded from the BaseDepth, correct for this
@@ -651,7 +647,7 @@ public class FusionReadData
                 {
                     td.add(String.format("%s-%d", transExonRef.TransName, transExonRef.ExonRank));
 
-                    if(canonicalTranscript != null && transExonRef.TransId == canonicalTranscript.TransId)
+                    if(transExonRef.isCanonical())
                     {
                         transcripts[fs] = transExonRef.TransName;
                         exons[fs] = transExonRef.ExonRank;
