@@ -18,21 +18,7 @@ public record HomologousRecombination(
 {
     public enum Status
     {
-        HR_PROFICIENT("Proficient"),
-        HR_DEFICIENT("Deficient");
-
-        @NotNull
-        private final String display;
-
-        Status(@NotNull final String display)
-        {
-            this.display = display;
-        }
-
-        @NotNull
-        public String display()
-        {
-            return display;
-        }
+        HR_PROFICIENT,
+        HR_DEFICIENT
     }
 }
