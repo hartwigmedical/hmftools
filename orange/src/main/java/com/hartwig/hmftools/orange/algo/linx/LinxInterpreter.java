@@ -40,7 +40,7 @@ public class LinxInterpreter
 
     public LinxRecord interpret(final LinxData linx, @Nullable final IsofoxData isofoxData)
     {
-        LOGGER.info("Analysing Linx data");
+        LOGGER.debug("analysing Linx data");
 
         LinxBreakendInterpreter somaticBreakendInterpreter = new LinxBreakendInterpreter(
                 linx.somaticSvAnnotations(), linx.somaticDrivers(), mCytoBands);
@@ -103,7 +103,6 @@ public class LinxInterpreter
                     .junctionCopyNumber(avgJcn)
                     .rnaSupport(rnaSupport)
                     .build();
-
 
             convertedFusions.add(convertedFusion);
         }

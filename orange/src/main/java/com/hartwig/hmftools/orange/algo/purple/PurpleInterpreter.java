@@ -45,8 +45,6 @@ public class PurpleInterpreter
 
     public PurpleRecord interpret(final PurpleData purple, @Nullable final IsofoxData isofoxData)
     {
-        LOGGER.info("Analysing Purple data");
-
         List<PurpleVariant> somaticVariants = buildPurpleVariants(purple.somaticVariants(), purple.somaticDrivers(), false);
 
         List<PurpleVariant> germlineVariants = buildPurpleVariants(purple.germlineVariants(), purple.germlineDrivers(), true);

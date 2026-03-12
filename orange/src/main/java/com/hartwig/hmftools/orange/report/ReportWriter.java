@@ -105,7 +105,7 @@ public class ReportWriter
         if(mWriteToDisk && mOutputDir != null)
         {
             String outputFilename = formOutputFile(report.sampleId(), "json");
-            LOGGER.info("Writing JSON report to {} ", outputFilename);
+            LOGGER.info("writing JSON report to {} ", outputFilename);
 
             OrangeJson.getInstance().write(report, outputFilename);
         }
@@ -155,7 +155,7 @@ public class ReportWriter
         if(mWriteToDisk)
         {
             String outputFilename = formOutputFile(sampleId, "pdf");
-            LOGGER.info("Writing PDF report to {}", outputFilename);
+            LOGGER.info("writing PDF report to {}", outputFilename);
             writer = new PdfWriter(outputFilename, properties);
         }
         else
