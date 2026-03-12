@@ -352,10 +352,10 @@ public class FindingRecordFactory
             DriverFindingList<GainDeletion> gainDeletions)
     {
         // TODO: Should distinguish between unknown and cannot be determined?
-        HomologousRecombination.HrStatus hrStatus = hrStatus(chord);
+        HomologousRecombination.Status hrStatus = hrStatus(chord);
         if(hrStatus != null)
         {
-            List<GainDeletion> lohGainDeletions = hrStatus == HomologousRecombination.HrStatus.HR_DEFICIENT
+            List<GainDeletion> lohGainDeletions = hrStatus == HomologousRecombination.Status.HR_DEFICIENT
                     ? filterLohGainDeletions(gainDeletions, Genes.HRD_GENES)
                     : List.of();
             return FindingItemBuilder.<HomologousRecombination>builder()
@@ -365,7 +365,7 @@ public class FindingRecordFactory
                             .brca1Value(chord.brca1Value())
                             .brca2Value(chord.brca2Value())
                             .hrdValue(chord.hrdValue())
-                            .hrStatus(hrStatus)
+                            .status(hrStatus)
                             .hrdType(chord.hrdType())
                             .lohCopyNumbers(lohGainDeletions)
                             .relatedGenes(GeneListUtil.genes(purple.reportableSomaticVariants(),
@@ -382,12 +382,12 @@ public class FindingRecordFactory
     }
 
     @Nullable
-    private static HomologousRecombination.HrStatus hrStatus(@Nullable ChordRecord chord)
+    private static HomologousRecombination.Status hrStatus(@Nullable ChordRecord chord)
     {
         return chord != null ? switch(chord.hrStatus())
         {
-            case HR_DEFICIENT -> HomologousRecombination.HrStatus.HR_DEFICIENT;
-            case HR_PROFICIENT -> HomologousRecombination.HrStatus.HR_PROFICIENT;
+            case HR_DEFICIENT -> HomologousRecombination.Status.HR_DEFICIENT;
+            case HR_PROFICIENT -> HomologousRecombination.Status.HR_PROFICIENT;
             default -> null;
         } : null;
     }
@@ -395,19 +395,19 @@ public class FindingRecordFactory
     private static FindingItem<MicrosatelliteStability> createMicrosatelliteStability(PurpleRecord purple,
             LinxRecord linx, DriverFindingList<GainDeletion> gainDeletions)
     {
-        MicrosatelliteStability.MicrosatelliteStatus microsatelliteStatus =
+        MicrosatelliteStability.Status microsatelliteStatus =
                 microsatelliteStatus(purple.characteristics().microsatelliteStatus());
         if(microsatelliteStatus != null)
         {
-            List<GainDeletion> lohGainDeletions = microsatelliteStatus == MicrosatelliteStability.MicrosatelliteStatus.MSI
+            List<GainDeletion> lohGainDeletions = microsatelliteStatus == MicrosatelliteStability.Status.MSI
                     ? filterLohGainDeletions(gainDeletions, Genes.MSI_GENES)
                     : List.of();
             return FindingItemBuilder.<MicrosatelliteStability>builder()
                     .status(FindingsStatus.OK)
                     .finding(MicrosatelliteStabilityBuilder.builder()
                             .findingKey(FindingKeys.microsatelliteStability(purple.characteristics().microsatelliteStatus()))
-                            .microsatelliteStatus(microsatelliteStatus)
-                            .microsatelliteIndelsPerMb(purple.characteristics().microsatelliteIndelsPerMb())
+                            .status(microsatelliteStatus)
+                            .indelsPerMb(purple.characteristics().microsatelliteIndelsPerMb())
                             .lohCopyNumbers(lohGainDeletions)
                             .relatedGenes(GeneListUtil.genes(purple.reportableSomaticVariants(),
                                     purple.reportableSomaticGainsDels(),
@@ -423,12 +423,12 @@ public class FindingRecordFactory
     }
 
     @Nullable
-    private static MicrosatelliteStability.MicrosatelliteStatus microsatelliteStatus(PurpleMicrosatelliteStatus status)
+    private static MicrosatelliteStability.Status microsatelliteStatus(PurpleMicrosatelliteStatus status)
     {
         return switch(status)
         {
-            case MSS -> MicrosatelliteStability.MicrosatelliteStatus.MSS;
-            case MSI -> MicrosatelliteStability.MicrosatelliteStatus.MSI;
+            case MSS -> MicrosatelliteStability.Status.MSS;
+            case MSI -> MicrosatelliteStability.Status.MSI;
             default -> null;
         };
     }

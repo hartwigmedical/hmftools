@@ -10,13 +10,13 @@ public record HomologousRecombination(
         double brca1Value,
         double brca2Value,
         double hrdValue,
-        @NotNull HrStatus hrStatus,
+        @NotNull HomologousRecombination.Status status,
         @NotNull String hrdType,
         @NotNull List<GainDeletion> lohCopyNumbers,
         @NotNull List<String> relatedGenes
 ) implements Finding
 {
-    public enum HrStatus
+    public enum Status
     {
         HR_PROFICIENT("Proficient"),
         HR_DEFICIENT("Deficient");
@@ -24,7 +24,7 @@ public record HomologousRecombination(
         @NotNull
         private final String display;
 
-        HrStatus(@NotNull final String display)
+        Status(@NotNull final String display)
         {
             this.display = display;
         }

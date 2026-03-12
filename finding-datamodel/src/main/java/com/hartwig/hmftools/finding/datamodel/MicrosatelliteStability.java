@@ -7,13 +7,13 @@ import jakarta.validation.constraints.NotNull;
 @RecordBuilder
 public record MicrosatelliteStability(
         @NotNull String findingKey,
-        double microsatelliteIndelsPerMb,
-        @NotNull MicrosatelliteStatus microsatelliteStatus,
+        @NotNull MicrosatelliteStability.Status status,
+        double indelsPerMb,
         @NotNull List<GainDeletion> lohCopyNumbers,
         @NotNull List<String> relatedGenes
 ) implements Finding
 {
-    public enum MicrosatelliteStatus
+    public enum Status
     {
         MSI("Unstable"),
         MSS("Stable");
@@ -21,7 +21,7 @@ public record MicrosatelliteStability(
         @NotNull
         private final String display;
 
-        MicrosatelliteStatus(@NotNull final String display)
+        Status(@NotNull final String display)
         {
             this.display = display;
         }

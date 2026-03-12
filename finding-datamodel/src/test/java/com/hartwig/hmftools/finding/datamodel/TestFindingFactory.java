@@ -48,7 +48,7 @@ public class TestFindingFactory
                 .findingKey("")
                 .hrdType("")
                 .hrdValue(0)
-                .hrStatus(HomologousRecombination.HrStatus.HR_DEFICIENT)
+                .status(HomologousRecombination.Status.HR_DEFICIENT)
                 .brca1Value(0)
                 .brca2Value(0)
                 .lohCopyNumbers(List.of())
@@ -60,7 +60,7 @@ public class TestFindingFactory
     {
         return MicrosatelliteStabilityBuilder.builder()
                 .findingKey("")
-                .microsatelliteStatus(MicrosatelliteStability.MicrosatelliteStatus.MSI)
+                .status(MicrosatelliteStability.Status.MSI)
                 .lohCopyNumbers(List.of())
                 .relatedGenes(List.of());
     }
