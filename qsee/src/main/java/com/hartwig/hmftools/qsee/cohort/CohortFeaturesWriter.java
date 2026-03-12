@@ -85,9 +85,9 @@ public class CohortFeaturesWriter
                 line.add(featureKey.type().toString());
                 line.add(featureKey.name());
 
-                Feature[] sampleFeatures = featureMatrix.getColumn(featureIndex);
-                double[] sampleFeatureValues = Stream.of(sampleFeatures).mapToDouble(Feature::value).toArray();
-                for(double featureValue : sampleFeatureValues)
+                Feature[] featuresAcrossSamples = featureMatrix.getColumn(featureIndex);
+                double[] featureValuesAcrossSamples = Stream.of(featuresAcrossSamples).mapToDouble(Feature::value).toArray();
+                for(double featureValue : featureValuesAcrossSamples)
                 {
                     String featureValueStr = QseeFileCommon.DECIMAL_FORMAT.format(featureValue);
                     line.add(featureValueStr);

@@ -48,11 +48,11 @@ public class CohortPercentilesTrainer
         List<FeaturePercentiles> cohortPercentiles = new ArrayList<>();
         for(FeatureKey featureKey : sampleFeatureMatrix.getFeatureKeys())
         {
-            Feature[] features = sampleFeatureMatrix.getColumn(featureKey);
-            double[] featureValues = Stream.of(features).mapToDouble(Feature::value).toArray();
+            Feature[] featuresAcrossSamples = sampleFeatureMatrix.getColumn(featureKey);
+            double[] featureValuesAcrossSamples = Stream.of(featuresAcrossSamples).mapToDouble(Feature::value).toArray();
 
             PercentileTransformer transformer = createTransformer();
-            transformer.fit(featureValues, featureKey);
+            transformer.fit(featureValuesAcrossSamples, featureKey);
 
             double[] refValues = transformer.getRefValues();
             FeaturePercentiles featurePercentiles = new FeaturePercentiles(sampleType, featureKey, mPercentiles, refValues);
