@@ -7,7 +7,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
+import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
@@ -18,7 +18,7 @@ class GeneListUtil
 {
     static Set<String> genes(List<PurpleVariant> reportableVariants,
             List<PurpleGainDeletion> gainDeletions,
-            @Nullable List<LinxHomozygousDisruption> homozygousDisruptions,
+            @Nullable List<LinxBreakend> homozygousDisruptions,
             Set<String> genes)
     {
         Set<String> genesDisplay = Sets.newTreeSet();
@@ -35,7 +35,7 @@ class GeneListUtil
         {
             genesDisplay.addAll(filteredMapped(homozygousDisruptions,
                     homozygousDisruption -> genes.contains(homozygousDisruption.gene()),
-                    LinxHomozygousDisruption::gene));
+                    LinxBreakend::gene));
         }
 
         return genesDisplay;
