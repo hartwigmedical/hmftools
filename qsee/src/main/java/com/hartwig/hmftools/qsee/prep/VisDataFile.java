@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_FEATURE_VALUE;
 import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_SAMPLE_ID;
 import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_SAMPLE_TYPE;
 import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_SOURCE_TOOL;
+import static com.hartwig.hmftools.qsee.common.QseeFileCommon.MULTISAMPLE_SAMPLE_ID;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -35,7 +36,7 @@ public class VisDataFile
     {
         String sampleId = config.isSinglePatient() ?
                 config.getSampleIds(SampleType.TUMOR).get(0) :
-                "multisample";
+                MULTISAMPLE_SAMPLE_ID;
 
         return generateFilename(config.OutputDir, sampleId, config.OutputId);
     }

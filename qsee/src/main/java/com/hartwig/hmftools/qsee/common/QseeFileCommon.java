@@ -22,6 +22,8 @@ public class QseeFileCommon
 
     public static final DecimalFormat DECIMAL_FORMAT = QseeFileCommon.createDecimalFormat();
 
+    public static final String MULTISAMPLE_SAMPLE_ID = "multisample";
+
     private static DecimalFormat createDecimalFormat()
     {
         DecimalFormatSymbols symbols = new DecimalFormatSymbols(Locale.ENGLISH);
