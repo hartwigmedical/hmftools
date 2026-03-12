@@ -403,7 +403,7 @@ public class FragmentSizeCalcs implements Callable<Void>
             }
 
             lengthFrequency.Frequency = lengthCount;
-            ISF_LOGGER.info("fragmentLength({}) frequency({})", lengthFrequency.Length, lengthCount);
+            ISF_LOGGER.debug("fragmentLength({}) frequency({})", lengthFrequency.Length, lengthCount);
         }
     }
 

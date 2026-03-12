@@ -229,7 +229,7 @@ public class ChromosomeTaskExecutor implements Callable<Void>
 
             mPerfCounters[PERF_TOTAL].stop();
 
-            ISF_LOGGER.debug("chr({}) gene({}) processed({} of {})",
+            ISF_LOGGER.trace("chr({}) gene({}) processed({} of {})",
                     mChromosome, geneCollection.geneNames(10), mCurrentGeneIndex, mGeneDataList.size());
 
             mGenesProcessed += geneCollection.genes().size();

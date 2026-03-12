@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.utils.config;
 
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_SAMPLE_ID;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
@@ -77,7 +78,7 @@ public class ConfigUtils
 
     public static List<String> loadGeneIdsFile(final String filename)
     {
-        return loadDelimitedIdFile(filename, "GeneId", CSV_DELIM);
+        return loadDelimitedIdFile(filename, FLD_GENE_ID, CSV_DELIM);
     }
 
     public static List<String> loadDelimitedIdFile(final String filename, final String idColumn, final String delim)

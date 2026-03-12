@@ -1080,7 +1080,11 @@ public class FusionFinder implements Callable<Void>
 
             List<FusionData> passingFusions = mPassingFusions.findPassingFusions(allFusions);
 
-            ISF_LOGGER.debug("chr({}) passing fusions({}) from total({})", mChromosome, passingFusions.size(), allFusions.size());
+            if(!passingFusions.isEmpty())
+            {
+                ISF_LOGGER.debug("chr({}) passing fusions({}) from total({})",
+                        mChromosome, passingFusions.size(), allFusions.size());
+            }
 
             mFusionWriter.writeFusionData(allFusions, passingFusions, mFusionCandidates);
         }

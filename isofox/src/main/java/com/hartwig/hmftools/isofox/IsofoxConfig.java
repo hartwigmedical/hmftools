@@ -8,6 +8,8 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.rna.RnaCommon.ISF_FILE_ID;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.NEO_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.NEO_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
@@ -134,6 +136,7 @@ public class IsofoxConfig
     public final FusionConfig Fusions;
 
     // debugging and performance options
+    public static boolean PerfDebug;
     public final int GeneReadLimit;
     public final boolean RunValidations;
     public final boolean RunPerfChecks;
@@ -226,6 +229,8 @@ public class IsofoxConfig
         FragmentSizeData = loadFragmentSizeConfig(configBuilder);
 
         Fusions = Functions.contains(FUSIONS) ? new FusionConfig(configBuilder) : new FusionConfig();
+
+        PerfDebug = configBuilder.hasFlag(PERF_DEBUG);
 
         RunValidations = configBuilder.hasValue(RUN_VALIDATIONS);
         RunPerfChecks = configBuilder.hasValue(PERF_CHECKS);
@@ -400,5 +405,6 @@ public class IsofoxConfig
         GeneRegionFilters.registerConfig(configBuilder);
         FusionConfig.registerConfig(configBuilder);
         addThreadOptions(configBuilder);
+        configBuilder.addFlag(PERF_DEBUG, PERF_DEBUG_DESC);
     }
 }

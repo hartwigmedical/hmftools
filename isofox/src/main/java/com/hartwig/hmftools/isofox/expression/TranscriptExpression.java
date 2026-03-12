@@ -105,17 +105,17 @@ public class TranscriptExpression
         if(!checkCached && mConfig.applyGcBiasAdjust()) // cache the generated data since it will be used again in GC adjustment calcs
             mExpectedRatesDataMap.put(geneSummaryData.ChrId, mCurrentExpRatesData);
 
-        final double[] transComboCounts = generateReadCounts(geneSummaryData);
+        double[] transComboCounts = generateReadCounts(geneSummaryData);
 
         double totalCounts = sumVector(transComboCounts);
 
         if(totalCounts == 0)
             return;
 
-        final List<String> transcriptIds = mCurrentExpRatesData.TranscriptIds;
+        List<String> transcriptIds = mCurrentExpRatesData.TranscriptIds;
 
-        final double[] fitAllocations = ExpectationMaxFit.performFit(transComboCounts, mCurrentExpRatesData.getTranscriptDefinitions());
-        final double[] fittedCounts = calculateFittedCounts(mCurrentExpRatesData.getTranscriptDefinitions(), fitAllocations);
+        double[] fitAllocations = ExpectationMaxFit.performFit(transComboCounts, mCurrentExpRatesData.getTranscriptDefinitions());
+        double[] fittedCounts = calculateFittedCounts(mCurrentExpRatesData.getTranscriptDefinitions(), fitAllocations);
         double fitTotal = sumVector(fitAllocations);
 
         SigResiduals residuals = calcResiduals(transComboCounts, fittedCounts, totalCounts);
@@ -125,12 +125,12 @@ public class TranscriptExpression
 
         geneSummaryData.setFitResiduals(residuals.Total);
 
-        final Map<String,Double> transAllocations = geneSummaryData.getFitAllocations();
+        Map<String,Double> transAllocations = geneSummaryData.getFitAllocations();
 
         for(int transIndex = 0; transIndex < transcriptIds.size(); ++transIndex)
         {
-            final String transGeneId = transcriptIds.get(transIndex);
-            final String transName = hasGeneIdentifier(transGeneId) ? transGeneId : transIdMap.get(Integer.parseInt(transGeneId));
+            String transGeneId = transcriptIds.get(transIndex);
+            String transName = hasGeneIdentifier(transGeneId) ? transGeneId : transIdMap.get(Integer.parseInt(transGeneId));
 
             double transAllocation = fitAllocations[transIndex];
 
@@ -139,7 +139,8 @@ public class TranscriptExpression
                 ISF_LOGGER.trace("transcript({}) allocated count({})", transName, format("%.2f", transAllocation));
             }
 
-            transAllocations.put(transName, transAllocation);
+            if(transName != null)
+                transAllocations.put(transName, transAllocation);
         }
 
         if(mConfig.WriteTransComboData)
@@ -278,6 +279,9 @@ public class TranscriptExpression
     public static void setCohortDistributionValues(
             final List<GeneCollectionSummary> allGeneSummaries, final CohortGenePercentiles cohortGenePercentiles, final String cancerType)
     {
+        if(cohortGenePercentiles == null)
+            return;
+
         boolean useCancerType = cancerType != null && cohortGenePercentiles.hasCancerType(cancerType);
 
         for(GeneCollectionSummary geneSummary : allGeneSummaries)
