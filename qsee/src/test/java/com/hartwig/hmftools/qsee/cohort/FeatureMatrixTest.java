@@ -9,8 +9,6 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.IntStream;
 
-import com.hartwig.hmftools.qsee.cohort.FeatureMatrix;
-
 import org.junit.Test;
 
 import com.hartwig.hmftools.qsee.feature.Feature;
@@ -63,18 +61,8 @@ public class FeatureMatrixTest
                 { 3.1, 3.2, 3.3 },
                 { 4.1, 4.2, 4.3 },
         };
-        double[][] actualValues = matrix.getValues();
+        double[][] actualValues = matrix.getFeatureValues();
         assertArrayEquals(expectedValues, actualValues);
-
-        double[][] expectedValuesTransposed = {
-                { 1.1, 2.1, 3.1, 4.1 },
-                { 1.2, 2.2, 3.2, 4.2 },
-                { Double.NaN, Double.NaN, 3.3, 4.3 },
-        };
-        double[][] actualValuesTransposed = matrix.getValuesTransposed();
-
-        assertArrayEquals(expectedValuesTransposed, actualValuesTransposed);
-
     }
 
     @Test
@@ -118,7 +106,7 @@ public class FeatureMatrixTest
 
         // Check values
         double[][] expectedValues = createExpectedValues(NUM_SAMPLE_THREADS, NUM_FEATURES);
-        double[][] actualValues = matrix.getValues();
+        double[][] actualValues = matrix.getFeatureValues();
         assertArrayEquals(expectedValues, actualValues);
     }
 

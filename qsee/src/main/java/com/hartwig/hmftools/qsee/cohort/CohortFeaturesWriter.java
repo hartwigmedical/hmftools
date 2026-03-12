@@ -11,9 +11,11 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.StringJoiner;
+import java.util.stream.Stream;
 
 import com.hartwig.hmftools.qsee.common.QseeFileCommon;
 import com.hartwig.hmftools.qsee.common.SampleType;
+import com.hartwig.hmftools.qsee.feature.Feature;
 import com.hartwig.hmftools.qsee.feature.FeatureKey;
 import com.hartwig.hmftools.qsee.prep.QseePrepConfig;
 
@@ -83,8 +85,9 @@ public class CohortFeaturesWriter
                 line.add(featureKey.type().toString());
                 line.add(featureKey.name());
 
-                double[] featureValuesPerSample = featureMatrix.getColumnValues(featureIndex);
-                for(double featureValue : featureValuesPerSample)
+                Feature[] sampleFeatures = featureMatrix.getColumn(featureIndex);
+                double[] sampleFeatureValues = Stream.of(sampleFeatures).mapToDouble(Feature::value).toArray();
+                for(double featureValue : sampleFeatureValues)
                 {
                     String featureValueStr = QseeFileCommon.DECIMAL_FORMAT.format(featureValue);
                     line.add(featureValueStr);

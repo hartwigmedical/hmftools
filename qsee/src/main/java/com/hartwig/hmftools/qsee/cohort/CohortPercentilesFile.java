@@ -41,14 +41,11 @@ public class CohortPercentilesFile
         return generateFilename(basePath, null);
     }
 
-    public static List<String> getPercentileNames(double[] percentiles)
-    {
-        return Arrays.stream(percentiles).mapToObj(QseeFileCommon.DECIMAL_FORMAT::format).toList();
-    }
-
     public static void write(String filename, double[] percentiles, List<FeaturePercentiles> cohortPercentiles) throws IOException
     {
-        List<String> percentileNames = getPercentileNames(percentiles);
+        List<String> percentileNames = Arrays.stream(percentiles)
+                .mapToObj(QseeFileCommon.DECIMAL_FORMAT::format)
+                .toList();
 
         List<String> columns = new ArrayList<>();
         columns.add(COL_SAMPLE_TYPE);
