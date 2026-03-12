@@ -4,8 +4,8 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_C
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_METRICS_DIR_CFG;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_METRICS_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.BAM_METRICS_TUMOR_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.BAM_METRICS_TUMOR_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
@@ -36,7 +36,7 @@ public class VirusInterpreterConfig
         configBuilder.addPath(TAXONOMY_DB_TSV, true, "Path towards a TSV containing a mapping from taxid to taxonomy name");
         configBuilder.addPath(VIRUS_REPORTING_DB_TSV, true, "Path towards a TSV containing reported of viruses");
         configBuilder.addPath(VIRUS_BLACKLISTING_DB_TSV, true, "Path towards a TSV containing viruses to blacklist");
-        configBuilder.addPath(TUMOR_METRICS_DIR_CFG, true, TUMOR_METRICS_DIR_DESC);
+        configBuilder.addPath(BAM_METRICS_TUMOR_DIR_CFG, true, BAM_METRICS_TUMOR_DIR_DESC);
 
         addOutputDir(configBuilder);
         addLoggingOptions(configBuilder);
@@ -50,7 +50,7 @@ public class VirusInterpreterConfig
         TaxonomyDbTsv = configBuilder.getValue(TAXONOMY_DB_TSV);
         VirusReportedDbTsv = configBuilder.getValue(VIRUS_REPORTING_DB_TSV);
         VirusBlacklistedDbTsv = configBuilder.getValue(VIRUS_BLACKLISTING_DB_TSV);
-        TumorMetricsDir = configBuilder.getValue(TUMOR_METRICS_DIR_CFG);
+        TumorMetricsDir = configBuilder.getValue(BAM_METRICS_TUMOR_DIR_CFG);
         OutputDir = parseOutputDir(configBuilder);
     }
 }

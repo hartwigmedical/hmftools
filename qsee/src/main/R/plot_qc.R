@@ -25,10 +25,11 @@ args <- commandArgs(trailingOnly = TRUE)
 
 TUMOR_ID <- args[1]
 NORMAL_ID <- if(args[2] == "NA") NA else args[2]
-SAMPLE_FEATURES_FILE <- args[3]
+VIS_DATA_FILE <- args[3]
 COHORT_PERCENTILES_FILE <- if(args[4] == "NA") NA else args[4]
 OUTPUT_PATH <- args[5]
-GLOBAL_LOG_LEVEL <- args[6]
+SHOW_PLOT_WARNINGS <- as.logical(args[6])
+GLOBAL_LOG_LEVEL <- args[7]
 
 if(FALSE){
    TUMOR_ID <- "TUMOR"
@@ -37,7 +38,7 @@ if(FALSE){
    COHORT_PERCENTILES_FILE <- "qsee.cohort.percentiles.tsv.gz"
    
    output_dir <- ""
-   SAMPLE_FEATURES_FILE <- sprintf("%s/%s.qsee.vis.data.tsv.gz", output_dir, TUMOR_ID)
+   VIS_DATA_FILE <- sprintf("%s/%s.qsee.vis.data.tsv.gz", output_dir, TUMOR_ID)
    OUTPUT_PATH <- sprintf("%s/%s.qsee.vis.report.pdf", output_dir, TUMOR_ID)
    
    GLOBAL_LOG_LEVEL <- "DEBUG"
@@ -83,9 +84,10 @@ LOGGER <- list(
 LOGGER$debug("Running script with args:")
 LOGGER$debug("  tumor_id: %s", TUMOR_ID)
 LOGGER$debug("  normal_id: %s", NORMAL_ID)
-LOGGER$debug("  sample_features_file: %s", SAMPLE_FEATURES_FILE)
+LOGGER$debug("  vis_data_file: %s", VIS_DATA_FILE)
 LOGGER$debug("  cohort_percentiles_file: %s", COHORT_PERCENTILES_FILE)
 LOGGER$debug("  output_path: %s", OUTPUT_PATH)
+LOGGER$debug("  show_plot_warnings: %s", SHOW_PLOT_WARNINGS)
 LOGGER$debug("  log_level: %s", GLOBAL_LOG_LEVEL)
 
 ## =============================
@@ -154,9 +156,9 @@ load_cohort_percentiles <- function(){
 }
 
 load_sample_features <- function(){
-   LOGGER$info("Loading sample features from: %s", SAMPLE_FEATURES_FILE)
+   LOGGER$info("Loading sample features from: %s", VIS_DATA_FILE)
    
-   sample_features <- read.delim(SAMPLE_FEATURES_FILE, na.strings = c("NA", "null"))
+   sample_features <- read.delim(VIS_DATA_FILE, na.strings = c("NA", "null"))
    sample_features <- sample_features %>% dplyr::filter(SampleId %in% c(TUMOR_ID, NORMAL_ID))
    
    return(sample_features)
@@ -297,7 +299,10 @@ render_now <- function() structure(list(), class = "render_now")
 ggplot_add.render_now <- function(object, plot, object_name) {
    #' Force warnings to be shown immediately.
    #' Usage: plot + render_now()
-   ggplot2::ggplotGrob(plot)
+   if(SHOW_PLOT_WARNINGS){
+      ggplot2::ggplotGrob(plot)
+   }
+
    plot
 }
 

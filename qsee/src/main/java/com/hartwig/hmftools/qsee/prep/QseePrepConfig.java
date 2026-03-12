@@ -17,16 +17,16 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.REDUX_TUMOR_
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REDUX_TUMOR_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_IDS_DESC;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.REF_METRICS_DIR_CFG;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.REF_METRICS_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.BAM_METRICS_REF_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.BAM_METRICS_REF_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_IDS_DESC;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_METRICS_DIR_CFG;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_METRICS_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.BAM_METRICS_TUMOR_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.BAM_METRICS_TUMOR_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
@@ -80,6 +80,7 @@ public class QseePrepConfig
 
     public final SequencingType SequencingTech;
     public final List<PrepCategory> Categories;
+    public final boolean TargetedMode;
     public final boolean AllowMissingInput;
 
     public final String OutputDir;
@@ -93,6 +94,9 @@ public class QseePrepConfig
     public static final String SKIP_CATEGORIES_DESC = "Comma-separated list of categories to skip";
     public static final String SKIP_CATEGORIES_DELIM = ",";
 
+    public static final String TARGETED_MODE = "targeted_mode";
+    public static final String TARGETED_MODE_DESC = "Run in targeted mode (use different threshold defaults for targeted mode)";
+
     public static final String ALLOW_MISSING_INPUT = "allow_missing_input";
     public static final String ALLOW_MISSING_INPUT_DESC = "Continue sample data extraction even if some input files are missing";
 
@@ -104,8 +108,8 @@ public class QseePrepConfig
 
         SampleDataDir = configBuilder.getValue(SAMPLE_DATA_DIR_CFG, "");
 
-        BamMetricsDirTumor = configBuilder.getValue(TUMOR_METRICS_DIR_CFG, SampleDataDir);
-        BamMetricsDirRef = configBuilder.getValue(REF_METRICS_DIR_CFG, SampleDataDir);
+        BamMetricsDirTumor = configBuilder.getValue(BAM_METRICS_TUMOR_DIR_CFG, SampleDataDir);
+        BamMetricsDirRef = configBuilder.getValue(BAM_METRICS_REF_DIR_CFG, SampleDataDir);
         ReduxDirTumor = configBuilder.getValue(REDUX_TUMOR_DIR_CFG, SampleDataDir);
         ReduxDirRef = configBuilder.getValue(REDUX_REF_DIR_CFG, SampleDataDir);
 
@@ -118,9 +122,10 @@ public class QseePrepConfig
         CohortPercentilesFile = configBuilder.getValue(COHORT_PERCENTILES_FILE_CFG);
         ThresholdsFile = configBuilder.getValue(THRESHOLD_OVERRIDES_FILE_CFG);
 
+        TargetedMode = configBuilder.hasFlag(TARGETED_MODE);
         QcThresholds = ThresholdsFile == null
-                ? ThresholdRegistry.createDefault()
-                : ThresholdOverridesFile.read(ThresholdsFile);
+                ? ThresholdRegistry.createDefault(TargetedMode)
+                : ThresholdOverridesFile.read(ThresholdsFile, TargetedMode);
 
         SequencingTech = SequencingType.valueOf(configBuilder.getValue(SEQUENCING_TYPE_CFG));
         Categories = parseCategories(configBuilder.getValue(SKIP_CATEGORIES));
@@ -140,8 +145,8 @@ public class QseePrepConfig
 
         configBuilder.addPath(SAMPLE_DATA_DIR_CFG, false, SAMPLE_DATA_DIR_DESC);
 
-        configBuilder.addPath(TUMOR_METRICS_DIR_CFG, false, TUMOR_METRICS_DIR_DESC);
-        configBuilder.addPath(REF_METRICS_DIR_CFG, false, REF_METRICS_DIR_DESC);
+        configBuilder.addPath(BAM_METRICS_TUMOR_DIR_CFG, false, BAM_METRICS_TUMOR_DIR_DESC);
+        configBuilder.addPath(BAM_METRICS_REF_DIR_CFG, false, BAM_METRICS_REF_DIR_DESC);
         configBuilder.addPath(REDUX_TUMOR_DIR_CFG, false, REDUX_TUMOR_DIR_DESC);
         configBuilder.addPath(REDUX_REF_DIR_CFG, false, REDUX_REF_DIR_DESC);
 
@@ -157,6 +162,7 @@ public class QseePrepConfig
 
         configBuilder.addConfigItem(SEQUENCING_TYPE_CFG, false, SequencingType.ILLUMINA.toString());
         configBuilder.addConfigItem(SKIP_CATEGORIES, false, SKIP_CATEGORIES_DESC, null);
+        configBuilder.addFlag(TARGETED_MODE, TARGETED_MODE_DESC);
         configBuilder.addFlag(ALLOW_MISSING_INPUT, ALLOW_MISSING_INPUT_DESC);
 
         configBuilder.addPath(OUTPUT_DIR, true, OUTPUT_DIR_DESC);
@@ -168,7 +174,7 @@ public class QseePrepConfig
 
     public List<String> getSampleIds(SampleType sampleType) { return sampleType == SampleType.TUMOR ? TumorIds : ReferenceIds; }
 
-    public boolean isSinglePatient() { return TumorIds.size() <= 1 && ReferenceIds.size() <= 1; }
+    public boolean isSinglePatient() { return TumorIds.size() == 1 && ReferenceIds.size() == 1; }
     public String getCobaltDir(String sampleId) { return convertWildcardSamplePath(CobaltDir, sampleId); }
     public String getEsveeDir(String sampleId) { return convertWildcardSamplePath(EsveeDir, sampleId); }
     public String getPurpleDir(String sampleId) { return convertWildcardSamplePath(PurpleDir, sampleId); }
