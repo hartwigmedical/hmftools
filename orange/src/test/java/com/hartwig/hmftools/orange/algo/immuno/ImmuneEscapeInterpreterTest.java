@@ -15,7 +15,6 @@ import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.orange.algo.linx.TestLinxFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleGainDeletionFactory;
-import com.hartwig.hmftools.orange.algo.purple.TestPurpleGeneCopyNumberFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleInterpretationFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleVariantFactory;
 

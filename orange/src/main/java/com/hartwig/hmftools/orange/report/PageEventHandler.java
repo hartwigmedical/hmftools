@@ -22,8 +22,7 @@ public class PageEventHandler implements IEventHandler
     private boolean mFirstPageOfChapter;
     private PdfOutline mOutline;
 
-    static PageEventHandler create(
-            final String sampleId, final String pipelineVersion, final ReportResources reportResources, boolean addDisclaimer)
+    static PageEventHandler create(final String sampleId, final ReportResources reportResources, boolean addDisclaimer)
     {
         return new PageEventHandler(new Header(Resources.getResource("orange_circos.png"), reportResources, addDisclaimer),
                 new Footer(reportResources, addDisclaimer),

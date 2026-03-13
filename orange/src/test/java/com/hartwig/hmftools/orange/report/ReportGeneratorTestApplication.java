@@ -22,24 +22,18 @@ import java.io.File;
 import java.nio.file.Files;
 import java.time.LocalDate;
 import java.util.Collections;
-import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.datamodel.isofox.ImmutableIsofoxRecord;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxRecord;
-import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
-import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.orange.ExperimentType;
 import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleFit;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleQC;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleRecord;
-import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
-import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
-import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
 import com.hartwig.hmftools.orange.OrangeConfig;
 import com.hartwig.hmftools.orange.TestOrangeReportFactory;
@@ -49,7 +43,6 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
-import org.jetbrains.annotations.Nullable;
 
 public class ReportGeneratorTestApplication
 {
@@ -164,63 +157,6 @@ public class ReportGeneratorTestApplication
         }
 
         return builder.build();
-    }
-
-    private static List<PurpleGeneCopyNumber> retainReportableCopyNumbers(
-            final List<PurpleGeneCopyNumber> geneCopyNumbers, final List<PurpleDriver> drivers)
-    {
-        List<String> copyNumberDriverGenes = Lists.newArrayList();
-        for(PurpleDriver driver : drivers)
-        {
-            if(driver.type() == PurpleDriverType.AMP || driver.type() == PurpleDriverType.PARTIAL_AMP
-                    || driver.type() == PurpleDriverType.DEL
-                    || driver.type() == PurpleDriverType.GERMLINE_DELETION)
-            {
-                copyNumberDriverGenes.add(driver.gene());
-            }
-        }
-
-        List<PurpleGeneCopyNumber> reportable = Lists.newArrayList();
-        for(PurpleGeneCopyNumber geneCopyNumber : geneCopyNumbers)
-        {
-            if(copyNumberDriverGenes.contains(geneCopyNumber.gene()))
-            {
-                reportable.add(geneCopyNumber);
-            }
-        }
-        return reportable;
-    }
-
-    @Nullable
-    private static List<LinxSvAnnotation> retainReportableStructuralVariants(@Nullable List<LinxSvAnnotation> structuralVariants,
-            @Nullable List<LinxBreakend> reportableBreakends)
-    {
-        if(structuralVariants == null || reportableBreakends == null)
-        {
-            return null;
-        }
-
-        List<LinxSvAnnotation> reportable = Lists.newArrayList();
-        for(LinxSvAnnotation structuralVariant : structuralVariants)
-        {
-            if(isReportableSv(structuralVariant, reportableBreakends))
-            {
-                reportable.add(structuralVariant);
-            }
-        }
-        return reportable;
-    }
-
-    private static boolean isReportableSv(final LinxSvAnnotation structuralVariant, final List<LinxBreakend> reportableBreakends)
-    {
-        for(LinxBreakend breakend : reportableBreakends)
-        {
-            if(breakend.svId() == structuralVariant.svId())
-            {
-                return true;
-            }
-        }
-        return false;
     }
 
     private static void deleteDir(final File file)

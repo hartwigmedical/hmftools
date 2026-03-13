@@ -170,7 +170,6 @@ public final class TestOrangeReportFactory
                 .addFusions(fusion)
                 .addFusions(fusion)
                 .addFusions(fusion)
-                .germlineStructuralVariants(Lists.newArrayList())
                 .germlineBreakends(Lists.newArrayList())
                 .build();
     }

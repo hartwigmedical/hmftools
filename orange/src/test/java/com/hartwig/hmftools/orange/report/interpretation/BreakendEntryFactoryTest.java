@@ -6,15 +6,11 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.datamodel.linx.ImmutableLinxDriver;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
-import com.hartwig.hmftools.datamodel.linx.LinxDriverEventType;
 import com.hartwig.hmftools.datamodel.linx.LinxDriverType;
 import com.hartwig.hmftools.datamodel.linx.LinxGeneOrientation;
 import com.hartwig.hmftools.orange.algo.linx.LinxOrangeTestFactory;
-import com.hartwig.hmftools.orange.report.interpretation.BreakendEntry;
-import com.hartwig.hmftools.orange.report.interpretation.BreakendEntryFactory;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -67,11 +63,6 @@ public class BreakendEntryFactoryTest
         assertEquals(Strings.EMPTY, BreakendEntryFactory.range(create(-1, -1, LinxGeneOrientation.UPSTREAM)));
     }
 
-    private static ImmutableLinxDriver.Builder builder()
-    {
-        return ImmutableLinxDriver.builder().gene("").type(LinxDriverEventType.UNCLEAR);
-    }
-
     @Test
     public void canGenerateUndisruptedCopyNumberForHomDupDisruptions()
     {
@@ -82,9 +73,6 @@ public class BreakendEntryFactoryTest
                 .undisruptedCopyNumber(1.4)
                 .svId(1)
                 .build();
-
-        // LinxSvAnnotation variant = LinxOrangeTestFactory.svAnnotationBuilder().svId(1).clusterId(2).build();
-        // LinxDriver driver = LinxDriverTestFactory.builder().gene("gene").type(LinxDriverType.HOM_DUP_DISRUPTION).build();
 
         List<BreakendEntry> entries = BreakendEntryFactory.create(Lists.newArrayList(breakend));
 

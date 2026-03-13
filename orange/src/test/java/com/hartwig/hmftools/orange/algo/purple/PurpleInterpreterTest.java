@@ -18,7 +18,6 @@ import com.hartwig.hmftools.common.sv.ImmutableStructuralVariantImpl;
 import com.hartwig.hmftools.common.sv.ImmutableStructuralVariantLegImpl;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
-import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.orange.algo.linx.LinxOrangeTestFactory;
@@ -107,11 +106,5 @@ public class PurpleInterpreterTest
                 .qualityScore(0D)
                 .hotspot(false)
                 .build();
-    }
-
-    @NotNull
-    private static LinxSvAnnotation createSvAnnotation(@NotNull StructuralVariant sv)
-    {
-        return LinxOrangeTestFactory.svAnnotationBuilder().svId(1).vcfId(sv.id()).build();
     }
 }

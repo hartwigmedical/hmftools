@@ -10,24 +10,15 @@ import com.hartwig.hmftools.datamodel.gene.TranscriptRegionType;
 import com.hartwig.hmftools.datamodel.linx.FusionPhasedType;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxFusion;
-import com.hartwig.hmftools.datamodel.linx.ImmutableLinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
 import com.hartwig.hmftools.datamodel.linx.LinxDriverType;
 import com.hartwig.hmftools.datamodel.linx.LinxFusionType;
 import com.hartwig.hmftools.datamodel.linx.LinxGeneOrientation;
-import com.hartwig.hmftools.orange.conversion.LinxConversion;
 
 import org.apache.logging.log4j.util.Strings;
-import org.jetbrains.annotations.NotNull;
 
 public final class LinxOrangeTestFactory
 {
-    public static ImmutableLinxSvAnnotation.Builder svAnnotationBuilder()
-    {
-        return ImmutableLinxSvAnnotation.builder()
-                .from(LinxConversion.convert(LinxTestFactory.svAnnotationBuilder().build()));
-    }
-
     public static ImmutableLinxFusion.Builder fusionBuilder()
     {
         return ImmutableLinxFusion.builder()

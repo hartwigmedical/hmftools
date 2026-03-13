@@ -63,4 +63,7 @@ public interface LinxBreakend
     @NotNull
     LinxDriverType driverType();
     double driverLikelihood();
+
+    @Nullable
+    String plotFilename();
 }

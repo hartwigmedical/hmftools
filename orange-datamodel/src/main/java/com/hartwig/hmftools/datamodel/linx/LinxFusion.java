@@ -64,4 +64,7 @@ public interface LinxFusion
 
     @Nullable
     AllelicDepth rnaSupport();
+
+    @Nullable
+    String plotFilename();
 }

@@ -27,7 +27,6 @@ import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.linx.LinxFusionType;
 import com.hartwig.hmftools.datamodel.linx.LinxGeneOrientation;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
-import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.orange.OrangePlots;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
@@ -225,28 +224,6 @@ public class OrangeJsonTest
 
     private static void assertLinx(final LinxRecord linx)
     {
-        assertEquals(1, linx.somaticStructuralVariants().size());
-        LinxSvAnnotation structuralVariant = linx.somaticStructuralVariants().iterator().next();
-        assertEquals("id", structuralVariant.vcfId());
-        assertEquals(1, structuralVariant.svId());
-        assertEquals(2, structuralVariant.clusterId());
-        assertEquals("", structuralVariant.clusterReason());
-        assertFalse(structuralVariant.fragileSiteStart());
-        assertFalse(structuralVariant.fragileSiteEnd());
-        assertFalse(structuralVariant.isFoldback());
-        assertEquals("NONE", structuralVariant.lineTypeStart());
-        assertEquals("NONE", structuralVariant.lineTypeEnd());
-        assertEquals(2, structuralVariant.junctionCopyNumberMin(), 0.01);
-        assertEquals(3, structuralVariant.junctionCopyNumberMax(), 0.01);
-        assertEquals("PTENR", structuralVariant.geneStart());
-        assertEquals("PTEN", structuralVariant.geneEnd());
-        assertEquals(0, structuralVariant.localTopologyIdStart());
-        assertEquals(1, structuralVariant.localTopologyIdEnd());
-        assertEquals("ISOLATED_S", structuralVariant.localTopologyStart());
-        assertEquals("ISOLATED_BE", structuralVariant.localTopologyEnd());
-        assertEquals(3, structuralVariant.localTICountStart());
-        assertEquals(4, structuralVariant.localTICountEnd());
-
         assertEquals(1, linx.somaticBreakends().size());
         LinxBreakend breakend = linx.somaticBreakends().iterator().next();
         assertEquals(breakend.reportedStatus(), ReportedStatus.NOT_REPORTED);

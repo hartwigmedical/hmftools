@@ -101,9 +101,13 @@ public class FrontPageChapter implements ReportChapter
         List<Integer> widths = Lists.newArrayList();
         List<Cell> cellEntries = Lists.newArrayList();
 
-        addEntry(cells, widths, cellEntries, 2, "Pipeline Version");
+        if(mReport.pipelineVersion() != null)
+            addEntry(cells, widths, cellEntries, 2, "Pipeline Version");
 
-        boolean showPanelName = mReport.experimentType() == ExperimentType.TARGETED && mConfig.PanelName != null;
+        String panelName = mConfig != null ? mConfig.PanelName : null;
+        String configuredPrimaryTumorLocation = mConfig != null ? mConfig.PrimaryTumorLocation : null;
+
+        boolean showPanelName = mReport.experimentType() == ExperimentType.TARGETED && panelName != null;
 
         if(showPanelName)
             addEntry(cells, widths, cellEntries, 1, "Panel");
@@ -117,15 +121,16 @@ public class FrontPageChapter implements ReportChapter
 
         addEntry(cells, widths, cellEntries, 2, "QC");
 
-        String configuredCancerType = mConfig.PrimaryTumorLocation != null ?
-                mConfig.PrimaryTumorLocation :  configuredPrimaryTumor(mReport.configuredPrimaryTumor());
+        String configuredCancerType = configuredPrimaryTumorLocation != null ?
+                configuredPrimaryTumorLocation :  configuredPrimaryTumor(mReport.configuredPrimaryTumor());
 
         Table table = Tables.createContent(contentWidth(), intToFloatArray(widths), cellArray(cellEntries));
 
-        table.addCell(cells.createContent(mReport.pipelineVersion()));
+        if(mReport.pipelineVersion() != null)
+            table.addCell(cells.createContent(mReport.pipelineVersion()));
 
         if(showPanelName)
-            table.addCell(cells.createContent(mConfig.PanelName));
+            table.addCell(cells.createContent(panelName));
 
         table.addCell(cells.createContent(configuredCancerType));
 
@@ -296,78 +301,6 @@ public class FrontPageChapter implements ReportChapter
         document.add(table);
     }
 
-    private void addDetailsAndPlotsOld(final Document document)
-    {
-        Table topTable = new Table(UnitValue.createPercentArray(new float[] { 1, 1 })).setWidth(contentWidth() - 5);
-
-        Table summary = new Table(UnitValue.createPercentArray(new float[] { 1, 1 }));
-        Cells cells = new Cells(mReportResources);
-
-        boolean includeGermline = !mReport.tumorOnlyMode();
-
-        addCellEntry(summary, cells, "Purity:", purityString());
-        addCellEntry(summary, cells, "Ploidy:", ploidyString());
-        addCellEntry(summary, cells, "Somatic variant drivers:", somaticVariantDriverString());
-
-        if(includeGermline)
-        {
-            addCellEntry(summary, cells, "Germline variant drivers:", germlineVariantDriverString());
-        }
-
-        addCellEntry(summary, cells, "Somatic copy number drivers:", somaticCopyNumberDriverString());
-
-        if(includeGermline)
-        {
-            addCellEntry(summary, cells, "Germline copy number drivers:", germlineCopyNumberDriverString());
-        }
-
-        if(includeGermline)
-        {
-            addCellEntry(summary, cells, "Germline disruption drivers:", germlineDisruptionDriverString());
-        }
-
-        addCellEntry(summary, cells, "Fusion drivers:", fusionDriverString());
-
-        if(includeGermline)
-        {
-            addCellEntry(summary, cells, "Viral presence:", virusString());
-        }
-
-        addCellEntry(summary, cells, "Whole genome duplicated:", wgdString());
-        addCellEntry(summary, cells, "Microsatellite indels per Mb:", msiString());
-        addCellEntry(summary, cells, "Tumor mutations per Mb:", tmbString());
-        addCellEntry(summary, cells, "Tumor mutational load:", tmlString());
-
-        if(includeGermline) // will change once we solve HRD for targeted mode
-        {
-            addCellEntry(summary, cells, "HR deficiency score:", hrDeficiencyString());
-            addCellEntry(summary, cells, "DPYD status:", geneStatus("DPYD"));
-            addCellEntry(summary, cells, "UGT1A1 status:", geneStatus("UGT1A1"));
-        }
-
-        addCellEntry(summary, cells, "Number of SVs:", svTmbString());
-        addCellEntry(summary, cells, "Max complex cluster size:", maxComplexSizeString());
-        addCellEntry(summary, cells, "Telomeric SGLs:", telomericSGLString());
-        addCellEntry(summary, cells, "Number of LINE insertions:", lineCountString());
-
-        Image circosImage = Images.build(mPlotPathResolver.resolve(mReport.plots().purpleFinalCircosPlot()));
-        circosImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
-        circosImage.setMaxHeight(290);
-
-        topTable.addCell(summary);
-        topTable.addCell(circosImage);
-
-        Table table = new Table(UnitValue.createPercentArray(new float[] { 1 })).setWidth(contentWidth()).setPadding(0);
-        table.addCell(topTable);
-
-        Image clonalityImage = Images.build(mPlotPathResolver.resolve(mReport.plots().purpleClonalityPlot()));
-        clonalityImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
-        clonalityImage.setMaxHeight(270);
-        table.addCell(clonalityImage);
-
-        document.add(table);
-    }
-
     private static void addCellEntry(final Table summary, final Cells cells, final String name, final String value)
     {
         summary.addCell(cells.createKey(name));
@@ -382,7 +315,6 @@ public class FrontPageChapter implements ReportChapter
                 formatPercentage(mReport.purple().fit().maxPurity()));
     }
 
-
     private String ploidyString()
     {
         return String.format("%s (%s-%s)",
@@ -390,7 +322,6 @@ public class FrontPageChapter implements ReportChapter
                 formatTwoDigitDecimal(mReport.purple().fit().minPloidy()),
                 formatTwoDigitDecimal(mReport.purple().fit().maxPloidy()));
     }
-
 
     private String somaticVariantDriverString()
     {
@@ -401,7 +332,6 @@ public class FrontPageChapter implements ReportChapter
 
         return variantDriverString(mReport.purple().somaticVariants(), mReport.purple().somaticDrivers());
     }
-
 
     private String germlineVariantDriverString()
     {

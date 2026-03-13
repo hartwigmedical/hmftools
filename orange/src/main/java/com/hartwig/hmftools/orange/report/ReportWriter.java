@@ -87,8 +87,7 @@ public class ReportWriter
 
         chapters.add(new QualityControlChapter(report, mPlotPathResolver, reportResources));
 
-        String pipelineVersion = report.pipelineVersion() != null ? report.pipelineVersion() : ReportResources.NOT_AVAILABLE;
-        writePdfChapters(report.sampleId(), pipelineVersion, chapters, reportResources);
+        writePdfChapters(report.sampleId(), chapters, reportResources);
     }
 
     private String formOutputFile(final String sampleId, final String fileId)
@@ -117,14 +116,14 @@ public class ReportWriter
     }
 
     private void writePdfChapters(
-            final String sampleId, final String pipelineVersion, final List<ReportChapter> chapters,
-            final ReportResources reportResources) throws IOException
+            final String sampleId, final List<ReportChapter> chapters, final ReportResources reportResources) throws IOException
     {
         Document doc = initializeReport(sampleId);
         PdfDocument pdfDocument = doc.getPdfDocument();
 
         PageEventHandler pageEventHandler = PageEventHandler.create(
-                mConfig.DisplaySampleId, pipelineVersion, reportResources, mConfig.AddDisclaimer);
+                mConfig != null ? mConfig.DisplaySampleId : sampleId, reportResources,
+                mConfig != null ? mConfig.AddDisclaimer : false);
 
         pdfDocument.addEventHandler(PdfDocumentEvent.START_PAGE, pageEventHandler);
 

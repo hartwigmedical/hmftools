@@ -27,7 +27,6 @@ import com.hartwig.hmftools.datamodel.linx.FusionPhasedType;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxRecord;
-import com.hartwig.hmftools.datamodel.linx.ImmutableLinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
 import com.hartwig.hmftools.datamodel.linx.LinxFusionType;
@@ -336,27 +335,6 @@ public class TestOrangeJsonWriter
                 .build();
 
         return ImmutableLinxRecord.builder()
-                .addSomaticStructuralVariants(ImmutableLinxSvAnnotation.builder()
-                        .vcfId("id")
-                        .svId(1)
-                        .clusterId(2)
-                        .clusterReason("")
-                        .fragileSiteStart(false)
-                        .fragileSiteEnd(false)
-                        .isFoldback(false)
-                        .lineTypeStart("NONE")
-                        .lineTypeEnd("NONE")
-                        .junctionCopyNumberMin(2.0)
-                        .junctionCopyNumberMax(3.0)
-                        .geneStart("PTENR")
-                        .geneEnd("PTEN")
-                        .localTopologyIdStart(0)
-                        .localTopologyIdEnd(1)
-                        .localTopologyStart("ISOLATED_S")
-                        .localTopologyEnd("ISOLATED_BE")
-                        .localTICountStart(3)
-                        .localTICountEnd(4)
-                        .build())
                 .addFusions(ImmutableLinxFusion.builder()
                         .driverInterpretation(DriverInterpretation.HIGH)
                         .reportedType(LinxFusionType.KNOWN_PAIR)

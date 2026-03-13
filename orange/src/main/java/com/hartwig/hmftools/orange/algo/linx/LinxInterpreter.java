@@ -24,8 +24,6 @@ import com.hartwig.hmftools.datamodel.linx.LinxFusionType;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.common.ImmutableAllelicDepth;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxData;
-import com.hartwig.hmftools.orange.conversion.ConversionUtil;
-import com.hartwig.hmftools.orange.conversion.LinxConversion;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -49,11 +47,8 @@ public class LinxInterpreter
                 Objects.requireNonNullElse(linx.germlineSvAnnotations(), List.of()), linx.germlineDrivers(), mCytoBands);
 
         return ImmutableLinxRecord.builder()
-                .somaticStructuralVariants(ConversionUtil.mapToIterable(linx.somaticSvAnnotations(), LinxConversion::convert))
-                .somaticDrivers(ConversionUtil.mapToIterable(linx.somaticDriverData(), LinxConversion::convert))
                 .fusions(buildFusions(linx.fusions(), linx.somaticBreakends(), isofoxData))
                 .somaticBreakends(somaticBreakendInterpreter.convertBreakends(linx.somaticBreakends()))
-                .germlineStructuralVariants(ConversionUtil.mapToIterable(linx.germlineSvAnnotations(), LinxConversion::convert))
                 .germlineBreakends(germlineBreakendInterpreter.convertBreakends(linx.germlineBreakends()))
                 .build();
     }
