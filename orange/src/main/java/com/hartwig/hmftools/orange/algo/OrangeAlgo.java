@@ -125,7 +125,7 @@ public class OrangeAlgo
 
         PurpleInterpreter purpleInterpreter = new PurpleInterpreter();
 
-        PurpleRecord purple = purpleInterpreter.interpret(purpleData, isofoxData);
+        PurpleRecord purple = purpleInterpreter.interpret(purpleData, linxData, isofoxData);
 
         ImmuneEscapeRecord immuneEscape = ImmuneEscapeInterpreter.interpret(purple, linx);
 
@@ -135,6 +135,8 @@ public class OrangeAlgo
             IsofoxInterpreter isofoxInterpreter = new IsofoxInterpreter(mDriverGenes, linx);
             isofox = isofoxInterpreter.interpret(isofoxData);
         }
+
+        OrangePlots plots = buildPlots(config, linxData);
 
         OrangeRecord orangeRecord = ImmutableOrangeRecord.builder()
                 .sampleId(config.TumorId)
@@ -154,7 +156,7 @@ public class OrangeAlgo
                 .cuppa(cuppa)
                 .peach(ConversionUtil.mapToIterable(peach, OrangeConversion::convert))
                 .sigAllocations(SigsInterpreter.interpret(sigAllocations, mEtiologyPerSignature))
-                .plots(buildPlots(config, linxData))
+                .plots(plots)
                 .build();
 
         return orangeRecord;
@@ -405,7 +407,6 @@ public class OrangeAlgo
 
         mPlotManager.createPlotDirectory();
 
-        // String linxPlotDir = config.LinxPlotDirectory;
         List<String> linxDriverPlots = Lists.newArrayList();
 
         for(String linxPlot : linxData.reportableEventPlots())
@@ -413,25 +414,12 @@ public class OrangeAlgo
             linxDriverPlots.add(mPlotManager.processPlotFile(linxPlot));
         }
 
-        /*
-        if(linxPlotDir != null)
-        {
-            for(String file : new File(linxPlotDir).list())
-            {
-                linxDriverPlots.add(mPlotManager.processPlotFile(linxPlotDir + File.separator + file));
-            }
-
-            LOGGER.debug(" loaded {} Linx plots from {}", linxDriverPlots.size(), linxPlotDir);
-        }
-        */
-
-        String qSeePdf = config.QSeeDirectory + File.separator + config.TumorId + ".qsee.vis.report.pdf";
+        String qSeeSourcePlot = config.QSeeDirectory + File.separator + config.TumorId + ".qsee.vis.report.png";
         String qSeePlot = null;
 
-        if(mPlotManager.plotDirectory() != null && Files.exists(Paths.get(qSeePdf)))
+        if(Files.exists(Paths.get(qSeeSourcePlot)))
         {
-            qSeePlot = mPlotManager.plotDirectory() + File.separator + config.TumorId + ".qsee.report.png";
-            convertPdfToPng(qSeePdf, qSeePlot);
+            qSeePlot = mPlotManager.processPlotFile(qSeeSourcePlot);
         }
 
         String purplePlotBasePath = config.PurplePlotDirectory + File.separator + config.TumorId;
@@ -442,8 +430,6 @@ public class OrangeAlgo
         String purpleVariantCopyNumberPlot = mPlotManager.processPlotFile(purplePlotBasePath + ".somatic.png");
         String purplePurityRangePlot = mPlotManager.processPlotFile(purplePlotBasePath + ".purity.range.png");
         String purpleKataegisPlot = mPlotManager.processPlotFile(purplePlotBasePath + ".somatic.rainfall.png");
-
-        // TODO: remove Purple plots and only add its PDF
         String purplePlotPlot = mPlotManager.processPlotFile(purplePlotBasePath + ".somatic.rainfall.png");
 
         List<String> purplePlots = Arrays.asList(purpleInputPlot, purpleFinalCircosPlot, purpleClonalityPlot, purpleCopyNumberPlot,
@@ -451,8 +437,8 @@ public class OrangeAlgo
 
         if(purplePlots.stream().anyMatch(Objects::isNull))
         {
-            LOGGER.warn("Skipping making ORANGE report: missing one or more PURPLE plot paths, likely because the input sample(s) has no or extremely sparse data");
-            System.exit(0);
+            LOGGER.warn("missing one or more Purple plots");
+            System.exit(1);
         }
 
         String cuppaSummaryPlot = mPlotManager.processPlotFile(

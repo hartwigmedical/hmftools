@@ -2,17 +2,6 @@ package com.hartwig.hmftools.orange.algo.isofox;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.List;
-
-import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.rna.RnaFusion;
-import com.hartwig.hmftools.common.sv.StructuralVariantType;
-import com.hartwig.hmftools.datamodel.linx.LinxFusion;
-import com.hartwig.hmftools.orange.algo.linx.LinxOrangeTestFactory;
-
-import org.junit.Ignore;
-import org.junit.Test;
-
 public class RnaFusionSelectorTest
 {
     /*

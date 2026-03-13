@@ -3,16 +3,17 @@ package com.hartwig.hmftools.orange.algo.linx;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.common.linx.LinxCommonTypes.formVisPlotClusterPrefix;
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 
 import java.util.List;
-import java.util.Objects;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gene.TranscriptRegionType;
 import com.hartwig.hmftools.common.genome.chromosome.CytoBands;
 import com.hartwig.hmftools.common.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
+import com.hartwig.hmftools.common.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.common.rna.RnaFusion;
 import com.hartwig.hmftools.datamodel.common.AllelicDepth;
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
@@ -40,35 +41,59 @@ public class LinxInterpreter
     {
         LOGGER.debug("analysing Linx data");
 
-        LinxBreakendInterpreter somaticBreakendInterpreter = new LinxBreakendInterpreter(
-                linx.somaticSvAnnotations(), linx.somaticDrivers(), mCytoBands);
+        List<com.hartwig.hmftools.datamodel.linx.LinxBreakend> somaticBreakends = LinxBreakendInterpreter.buildSomaticBreakends(
+                linx, mCytoBands);
 
-        LinxBreakendInterpreter germlineBreakendInterpreter = new LinxBreakendInterpreter(
-                Objects.requireNonNullElse(linx.germlineSvAnnotations(), List.of()), linx.germlineDrivers(), mCytoBands);
+        List<com.hartwig.hmftools.datamodel.linx.LinxBreakend> germlineBreakends = LinxBreakendInterpreter.buildGermlineBreakends(
+                linx, mCytoBands);
 
         return ImmutableLinxRecord.builder()
-                .fusions(buildFusions(linx.fusions(), linx.somaticBreakends(), isofoxData))
-                .somaticBreakends(somaticBreakendInterpreter.convertBreakends(linx.somaticBreakends()))
-                .germlineBreakends(germlineBreakendInterpreter.convertBreakends(linx.germlineBreakends()))
+                .fusions(buildFusions(linx, isofoxData))
+                .somaticBreakends(somaticBreakends)
+                .germlineBreakends(germlineBreakends)
                 .build();
     }
 
-    private static List<LinxFusion> buildFusions(
-            final List<com.hartwig.hmftools.common.linx.LinxFusion> fusions, final List<LinxBreakend> breakends,
-            @Nullable final IsofoxData isofoxData)
+    private static LinxBreakend findBreakend(final int breakendId, final List<LinxBreakend> breakends)
     {
-        List<LinxFusion> convertedFusions = Lists.newArrayListWithCapacity(fusions.size());
+        return breakends.stream().filter(x -> x.id() == breakendId).findFirst().orElse(null);
+    }
 
-        for(com.hartwig.hmftools.common.linx.LinxFusion fusion : fusions)
+    private static LinxSvAnnotation findSvAnnotation(final LinxBreakend breakend, final List<LinxSvAnnotation> svAnnotations)
+    {
+        return svAnnotations.stream().filter(x -> x.svId() == breakend.svId()).findFirst().orElse(null);
+    }
+
+    public static String findReportableLinxPlot(final List<String> linxPlots, final int clusterId)
+    {
+        String plotPrefix = formVisPlotClusterPrefix(String.valueOf(clusterId));
+        return linxPlots.stream().filter(x -> x.contains(plotPrefix)).findFirst().orElse(null);
+    }
+
+    private static List<LinxFusion> buildFusions(final LinxData linx, @Nullable final IsofoxData isofoxData)
+    {
+        List<LinxFusion> convertedFusions = Lists.newArrayListWithCapacity(linx.fusions().size());
+
+        for(com.hartwig.hmftools.common.linx.LinxFusion fusion : linx.fusions())
         {
-            LinxBreakend breakendUp = breakends.stream().filter(x -> x.id() == fusion.fivePrimeBreakendId()).findFirst().orElse(null);
-            LinxBreakend breakendDown = breakends.stream().filter(x -> x.id() == fusion.threePrimeBreakendId()).findFirst().orElse(null);
+            LinxBreakend breakendUp = findBreakend(fusion.fivePrimeBreakendId(), linx.somaticBreakends());
+            LinxBreakend breakendDown = findBreakend(fusion.threePrimeBreakendId(), linx.somaticBreakends());
 
             if(breakendUp == null || breakendDown == null)
             {
                 LOGGER.error("fusion({}) missing corresponding breakends", fusion);
                 continue;
             }
+
+            LinxSvAnnotation svAnnotation = findSvAnnotation(breakendUp, linx.somaticSvAnnotations());
+
+            if(svAnnotation == null)
+            {
+                LOGGER.error("fusion({}) missing corresponding svAnnotation", fusion);
+                continue;
+            }
+
+            String plotFilename = findReportableLinxPlot(linx.reportableEventPlots(), svAnnotation.clusterId());
 
             LinxFusionType fusionType = LinxFusionType.valueOf(fusion.reportedType().toString());
 
@@ -97,6 +122,7 @@ public class LinxInterpreter
                     .domainsLost(fusion.domainsLost())
                     .junctionCopyNumber(avgJcn)
                     .rnaSupport(rnaSupport)
+                    .plotFilename(plotFilename)
                     .build();
 
             convertedFusions.add(convertedFusion);

@@ -91,4 +91,12 @@ public final class LinxTestFactory
                 .exonUp(0)
                 .exonDown(0);
     }
+
+    public static ImmutableLinxDriver.Builder driverEventBuilder()
+    {
+        return ImmutableLinxDriver.builder()
+                .clusterId(0)
+                .eventType(DriverEventType.DEL)
+                .gene("");
+    }
 }
