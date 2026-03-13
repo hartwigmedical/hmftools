@@ -517,7 +517,7 @@ plot_pairwise_comparison <- function(
       ## Use geom_crossbar instead of geom_bar here so that bars are not inverted when values are <1 when in log scale
       gg_geom_bar <- geom_crossbar(
          aes(ymin = bar_baseline, ymax = .data[[y]]), position = gg_position_dodge,
-         color = "black", middle.color = NA, linewidth = 0.3, width = 0.5*box_width_scale
+         color = NA, middle.color = NA, linewidth = 0.3, width = 0.2 * box_width_scale
       )
       
       gg_scale_color_manual <- geom_blank()
