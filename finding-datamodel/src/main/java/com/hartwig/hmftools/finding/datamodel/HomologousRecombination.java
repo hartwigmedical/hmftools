@@ -13,11 +13,12 @@ public record HomologousRecombination(
         @NotNull HomologousRecombination.Status status,
         @NotNull String hrdType,
         @NotNull List<GainDeletion> lohCopyNumbers,
-        @NotNull List<String> genes
+        @NotNull List<String> drivingGenes
 ) implements Finding
 {
     public enum Status
     {
+        UNDETERMINED,
         HR_PROFICIENT,
         HR_DEFICIENT
     }

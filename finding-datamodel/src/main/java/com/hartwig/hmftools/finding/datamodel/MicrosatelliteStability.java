@@ -10,7 +10,7 @@ public record MicrosatelliteStability(
         @NotNull MicrosatelliteStability.Status status,
         double indelsPerMb,
         @NotNull List<GainDeletion> lohCopyNumbers,
-        @NotNull List<String> genes
+        @NotNull List<String> drivingGenes
 ) implements Finding
 {
     public enum Status

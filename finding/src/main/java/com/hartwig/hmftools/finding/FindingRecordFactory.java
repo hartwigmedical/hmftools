@@ -430,6 +430,7 @@ public class FindingRecordFactory
         {
             case HR_DEFICIENT -> HomologousRecombination.Status.HR_DEFICIENT;
             case HR_PROFICIENT -> HomologousRecombination.Status.HR_PROFICIENT;
+            case CANNOT_BE_DETERMINED -> HomologousRecombination.Status.UNDETERMINED;
             default -> null;
         } : null;
     }
