@@ -446,6 +446,25 @@ PLOTS[[FEATURE_TYPE$GC_BIAS]] <- local({
       render_now()
 })
 
+PLOTS[[FEATURE_TYPE$DUPLICATE_FREQ]] <- local({
+   
+   plot_data <- get_plot_data(FEATURE_TYPE$DUPLICATE_FREQ)
+   
+   plot_labels <- labs(title = "Duplicate frequency", x = "Duplicate read count", y = "Prop. of read groups")
+   
+   if(is.null(plot_data)){
+      return(plot_missing_data(plot_labels))
+   }
+   
+   plot_distribution(plot_data, x = "ReadCount") +
+      plot_labels +
+      scale_x_log10() +
+      theme(
+         panel.grid.major.x = element_line(color = "grey90", linewidth = 0.25),
+      ) +
+      render_now()
+})
+
 ## =============================
 ## Box plots
 ## =============================
@@ -560,27 +579,6 @@ box_or_bar_plot <- function(){
       PAIRWISE_PLOT_TYPE$BOX
    }
 }
-
-PLOTS[[FEATURE_TYPE$DUPLICATE_FREQ]] <- local({
-   
-   plot_data <- get_plot_data(FEATURE_TYPE$DUPLICATE_FREQ)
-   
-   plot_labels <- labs(title = "Duplicate frequency", x = "Duplicate read count", y = "Prop. of read groups")
-   
-   if(is.null(plot_data)){
-      return(plot_missing_data(plot_labels))
-   }
-   
-   plot_data <- plot_data %>% dplyr::mutate(ReadCount = reverse_levels(ReadCount))
-   
-   plot_pairwise_comparison(plot_data, x = "ReadCount", plot_type = box_or_bar_plot()) +
-      plot_labels +
-      coord_flip() +
-      theme(
-         panel.grid.major.x = element_line(color = "grey90", linewidth = 0.25),
-      ) +
-      render_now()
-})
 
 PLOTS[[FEATURE_TYPE$DISCORDANT_FRAG_FREQ]] <- local({
    
