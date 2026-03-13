@@ -83,6 +83,9 @@ public class OrangeConfig
     public final String ReferenceId;
     public final String RnaSampleId;
 
+    public final String DisplaySampleId;
+    public final String PanelName;
+
     public final RefGenomeVersion RefGenVersion;
 
     public final Set<String> PrimaryTumorDoids;
@@ -100,18 +103,15 @@ public class OrangeConfig
     public final String PurpleDataDirectory;
     public final String PurplePlotDirectory;
     public final String QSeeDirectory;
-
     public final String LinxSomaticDataDirectory;
     public final String LinxGermlineDataDirectory;
     public final String LinxPlotDirectory;
-
     public final String LilacDir;
     public final String ChordDir;
     public final String CuppaDir;
     public final String PeachDir;
     public final String SigsDir;
     public final String VirusDir;
-
     public final String IsofoxDir;
 
     public final boolean AddDisclaimer;
@@ -123,6 +123,8 @@ public class OrangeConfig
     private static final String PRIMARY_TUMOR_DOIDS = "primary_tumor_doids";
     private static final String PRIMARY_TUMOR_LOCATION = "primary_tumor_location";
     private static final String SAMPLING_DATE = "sampling_date";
+    private static final String DISPLAY_SAMPLE_ID = "display_sample";
+    private static final String PANEL_NAME = "panel_name";
 
     // Input files used by the algorithm
     private static final String DOID_JSON = "doid_json";
@@ -186,7 +188,7 @@ public class OrangeConfig
         LinxSomaticDataDirectory = pathResolver.resolveMandatoryToolDirectory(LINX_DIR_CFG, defaultToolDirectories.linxSomaticDir());
         LinxPlotDirectory = optionalPath(pathResolver.resolveOptionalToolPlotsDirectory(LINX_PLOT_DIR_CFG, defaultToolDirectories.linxSomaticDir()));
 
-        QSeeDirectory = pathResolver.resolveOptionalToolPlotsDirectory(QSEE_DIR_CFG, defaultToolDirectories.qseeDir());
+        QSeeDirectory = pathResolver.resolveOptionalToolDirectory(QSEE_DIR_CFG, defaultToolDirectories.qseeDir());
 
         if(ReferenceId != null)
         {
@@ -225,6 +227,9 @@ public class OrangeConfig
         }
 
         LOGGER.debug("RNA sample configured as {}", RnaSampleId);
+
+        DisplaySampleId = configBuilder.getValue(DISPLAY_SAMPLE_ID, TumorId);
+        PanelName = configBuilder.getValue(PANEL_NAME);
 
         AddDisclaimer = configBuilder.hasFlag(ADD_DISCLAIMER);
         if(AddDisclaimer)
@@ -296,6 +301,8 @@ public class OrangeConfig
         configBuilder.addPath(QSEE_DIR_CFG, false, QSEE_DIR_DESC);
         PipelineToolDirectories.addPipelineFormatOptions(configBuilder);
 
+        configBuilder.addConfigItem(DISPLAY_SAMPLE_ID, false, "Sample ID for display instead of Tumor ID for demo purposes");
+        configBuilder.addConfigItem(PANEL_NAME, false, "Panel name if known");
         configBuilder.addConfigItem(RNA_SAMPLE_ID, false, "(Optional) The RNA sample of the tumor sample for which ORANGE will run");
         configBuilder.addPath(ISOFOX_DIR_CFG, false, ISOFOX_DIR_DESC);
 
@@ -393,5 +400,7 @@ public class OrangeConfig
         VirusDir = virusDir;
         IsofoxDir = isofoxDir;
         AddDisclaimer = addDisclaimer;
+        DisplaySampleId = tumorId;
+        PanelName = "";
     }
 }

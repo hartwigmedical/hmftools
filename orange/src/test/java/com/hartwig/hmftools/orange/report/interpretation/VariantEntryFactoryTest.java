@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.orange.report.datamodel;
+package com.hartwig.hmftools.orange.report.interpretation;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -16,6 +16,8 @@ import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariantEffect;
 import com.hartwig.hmftools.orange.algo.purple.PurpleTestFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleVariantFactory;
+import com.hartwig.hmftools.orange.report.interpretation.VariantEntry;
+import com.hartwig.hmftools.orange.report.interpretation.VariantEntryFactory;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;

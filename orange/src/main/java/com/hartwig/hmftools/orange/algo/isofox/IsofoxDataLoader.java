@@ -24,25 +24,23 @@ public final class IsofoxDataLoader
 
     public static IsofoxData load(final String tumorSampleId, final String isofoxDir) throws IOException
     {
-        LOGGER.info("Loading Isofox data from {}", isofoxDir);
-
         String summaryFile = PathUtil.mandatoryPath(RnaStatisticFile.generateFilename(isofoxDir, tumorSampleId));
         List<String> summaryLines = Files.readAllLines(Paths.get(summaryFile));
         RnaStatistics summary = RnaStatisticFile.fromLines(summaryLines);
 
-        LOGGER.info((" Loaded summary from " + summaryFile));
+        LOGGER.debug((" loaded summary from " + summaryFile));
 
         String isofoxGeneFile = PathUtil.mandatoryPath(GeneExpressionFile.generateFilename(isofoxDir, tumorSampleId));
         List<GeneExpression> geneExpressions = GeneExpressionFile.read(isofoxGeneFile);
-        LOGGER.info(" Loaded {} gene expressions from {}", geneExpressions.size(), isofoxGeneFile);
+        LOGGER.debug(" loaded {} gene expressions from {}", geneExpressions.size(), isofoxGeneFile);
 
         String fusionFile = PathUtil.mandatoryPath(RnaFusionFile.generateFilename(isofoxDir, tumorSampleId));
         List<RnaFusion> fusions = RnaFusionFile.read(fusionFile);
-        LOGGER.info(" Loaded {} fusions from {}", fusions.size(), fusionFile);
+        LOGGER.debug(" loaded {} fusions from {}", fusions.size(), fusionFile);
 
         String altSpliceJunctionFile = PathUtil.mandatoryPath(NovelSpliceJunctionFile.generateFilename(isofoxDir, tumorSampleId));
         List<NovelSpliceJunction> novelSpliceJunctions = NovelSpliceJunctionFile.read(altSpliceJunctionFile);
-        LOGGER.info(" Loaded {} novel splice junctions from {}", novelSpliceJunctions.size(), altSpliceJunctionFile);
+        LOGGER.debug(" loaded {} novel splice junctions from {}", novelSpliceJunctions.size(), altSpliceJunctionFile);
 
         return ImmutableIsofoxData.builder()
                 .summary(summary)

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.orange.report.datamodel;
+package com.hartwig.hmftools.orange.report.interpretation;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -13,6 +13,8 @@ import com.hartwig.hmftools.datamodel.linx.LinxDriverEventType;
 import com.hartwig.hmftools.datamodel.linx.LinxDriverType;
 import com.hartwig.hmftools.datamodel.linx.LinxGeneOrientation;
 import com.hartwig.hmftools.orange.algo.linx.LinxOrangeTestFactory;
+import com.hartwig.hmftools.orange.report.interpretation.BreakendEntry;
+import com.hartwig.hmftools.orange.report.interpretation.BreakendEntryFactory;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;

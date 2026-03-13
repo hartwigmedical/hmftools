@@ -45,7 +45,7 @@ public final class RnaFusionFile
         ExonUp,
         ExonDown,
         SvType,
-        SplitFragments,
+        SplitFrags,
         RealignedFrags,
         DiscordantFrags,
         DepthUp,
@@ -122,30 +122,76 @@ public final class RnaFusionFile
             String fileDelim = inferFileDelimiter(filename);
             Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), fileDelim);
 
+            // pre v2.0 columns
+            Integer geneUpIndex = fieldsIndexMap.get("GeneNameUp");
+            Integer geneDownIndex = fieldsIndexMap.get("GeneNameDown");
+
+            int chrUpIndex = fieldsIndexMap.getOrDefault(Columns.ChromosomeUp.toString(), fieldsIndexMap.get("ChrUp"));
+            int chrDownIndex = fieldsIndexMap.getOrDefault(Columns.ChromosomeDown.toString(), fieldsIndexMap.get("ChrDown"));
+            int posUpIndex = fieldsIndexMap.getOrDefault(Columns.PositionUp.toString(), fieldsIndexMap.get("PosUp"));
+            int posDownIndex = fieldsIndexMap.getOrDefault(Columns.PositionDown.toString(), fieldsIndexMap.get("PosDown"));
+            int orientUpIndex = fieldsIndexMap.getOrDefault(Columns.OrientationUp.toString(), fieldsIndexMap.get("OrientUp"));
+            int orientDownIndex = fieldsIndexMap.getOrDefault(Columns.OrientationDown.toString(), fieldsIndexMap.get("OrientDown"));
+            int juncTypeUpIndex = fieldsIndexMap.getOrDefault(Columns.JunctionTypeUp.toString(), fieldsIndexMap.get("JuncTypeUp"));
+            int juncTypeDownIndex = fieldsIndexMap.getOrDefault(Columns.JunctionTypeDown.toString(), fieldsIndexMap.get("JuncTypeDown"));
+            int svTypeIndex = fieldsIndexMap.getOrDefault(Columns.SvType.toString(), fieldsIndexMap.get("SVType"));
+            int depthUpIndex = fieldsIndexMap.getOrDefault(Columns.DepthUp.toString(), fieldsIndexMap.get("CoverageUp"));
+            int depthDownIndex = fieldsIndexMap.getOrDefault(Columns.DepthDown.toString(), fieldsIndexMap.get("CoverageDown"));
+            int cohortIndex = fieldsIndexMap.getOrDefault(Columns.CohortFrequency.toString(), fieldsIndexMap.get("CohortCount"));
+
+            // v2.0 columns
+            Integer transcriptUpIndex = fieldsIndexMap.get(Columns.TranscriptUp);
+            Integer transcriptDownIndex = fieldsIndexMap.get(Columns.TranscriptDown);
+            Integer exonUpIndex = fieldsIndexMap.get(Columns.ExonUp);
+            Integer exonDownIndex = fieldsIndexMap.get(Columns.ExonDown);
+            Integer knownTypeIndex = fieldsIndexMap.get(Columns.KnownType);
+
             for(String line : lines.subList(1, lines.size()))
             {
                 String[] values = line.split(fileDelim, -1);
 
+                String transcriptUp = transcriptUpIndex != null ? values[transcriptUpIndex] : "";
+                String transcriptDown = transcriptDownIndex != null ? values[transcriptDownIndex] : "";
+                int exonUp = exonUpIndex != null ? Integer.parseInt(values[exonUpIndex]) : -1;
+                int exonDown = exonDownIndex != null ? Integer.parseInt(values[exonDownIndex]) : -1;
+
+                String fusionName;
+
+                if(geneUpIndex != null && geneDownIndex != null)
+                {
+                    fusionName = formFusionName(values[geneUpIndex], values[geneDownIndex]);
+                }
+                else
+                {
+                    fusionName = values[fieldsIndexMap.get(Columns.Name.toString())];
+                }
+
+                KnownFusionType knownFusionType = knownTypeIndex != null ? parseKnownType(values[knownTypeIndex]) : KnownFusionType.NONE;
+
                 fusions.add(ImmutableRnaFusion.builder()
-                        .name(values[fieldsIndexMap.get(Columns.Name.toString())])
-                        .chromosomeUp(values[fieldsIndexMap.get(Columns.ChromosomeUp.toString())])
-                        .chromosomeDown(values[fieldsIndexMap.get(Columns.ChromosomeDown.toString())])
-                        .positionUp(Integer.parseInt(values[fieldsIndexMap.get(Columns.PositionUp)]))
-                        .positionDown(Integer.parseInt(values[fieldsIndexMap.get(Columns.PositionDown)]))
-                        .orientationUp(Byte.parseByte(values[fieldsIndexMap.get(Columns.OrientationUp)]))
-                        .orientationDown(Byte.parseByte(values[fieldsIndexMap.get(Columns.OrientationDown)]))
-                        .junctionTypeUp(values[fieldsIndexMap.get(Columns.JunctionTypeUp)])
-                        .junctionTypeDown(values[fieldsIndexMap.get(Columns.JunctionTypeDown)])
-                        .knownType(KnownFusionType.valueOf(values[fieldsIndexMap.get(Columns.KnownType)]))
-                        .svType(StructuralVariantType.valueOf(values[fieldsIndexMap.get(Columns.SvType)]))
-                        .splitFragments(Integer.parseInt(values[fieldsIndexMap.get(Columns.SplitFragments)]))
-                        .realignedFrags(Integer.parseInt(values[fieldsIndexMap.get(Columns.RealignedFrags)]))
-                        .discordantFrags(Integer.parseInt(values[fieldsIndexMap.get(Columns.DiscordantFrags)]))
-                        .depthUp(Integer.parseInt(values[fieldsIndexMap.get(Columns.DepthUp)]))
-                        .depthDown(Integer.parseInt(values[fieldsIndexMap.get(Columns.DepthDown)]))
-                        .maxAnchorLengthUp(Integer.parseInt(values[fieldsIndexMap.get(Columns.MaxAnchorLengthUp)]))
-                        .maxAnchorLengthDown(Integer.parseInt(values[fieldsIndexMap.get(Columns.MaxAnchorLengthDown)]))
-                        .cohortFrequency(Integer.parseInt(values[fieldsIndexMap.get(Columns.CohortFrequency)]))
+                        .name(fusionName)
+                        .knownType(knownFusionType)
+                        .chromosomeUp(values[chrUpIndex])
+                        .chromosomeDown(values[chrDownIndex])
+                        .positionUp(Integer.parseInt(values[posUpIndex]))
+                        .positionDown(Integer.parseInt(values[posDownIndex]))
+                        .orientationUp(Byte.parseByte(values[orientUpIndex]))
+                        .orientationDown(Byte.parseByte(values[orientDownIndex]))
+                        .junctionTypeUp(values[juncTypeUpIndex])
+                        .junctionTypeDown(values[juncTypeDownIndex])
+                        .transcriptUp(transcriptUp)
+                        .transcriptDown(transcriptDown)
+                        .exonUp(exonUp)
+                        .exonDown(exonDown)
+                        .svType(StructuralVariantType.valueOf(values[svTypeIndex]))
+                        .splitFragments(Integer.parseInt(values[fieldsIndexMap.get(Columns.SplitFrags.toString())]))
+                        .realignedFrags(Integer.parseInt(values[fieldsIndexMap.get(Columns.RealignedFrags.toString())]))
+                        .discordantFrags(Integer.parseInt(values[fieldsIndexMap.get(Columns.DiscordantFrags.toString())]))
+                        .depthUp(Integer.parseInt(values[depthUpIndex]))
+                        .depthDown(Integer.parseInt(values[depthDownIndex]))
+                        .maxAnchorLengthUp(Integer.parseInt(values[fieldsIndexMap.get(Columns.MaxAnchorLengthUp.toString())]))
+                        .maxAnchorLengthDown(Integer.parseInt(values[fieldsIndexMap.get(Columns.MaxAnchorLengthDown.toString())]))
+                        .cohortFrequency(Integer.parseInt(values[cohortIndex]))
                         .build());
             }
 
@@ -155,6 +201,24 @@ public final class RnaFusionFile
         {
             RNA_LOGGER.error("failed to load Isofox fusion file({}): {}", filename, e.toString());
             return null;
+        }
+    }
+
+    private static KnownFusionType parseKnownType(final String knownTypeStr)
+    {
+        try
+        {
+            return KnownFusionType.valueOf(knownTypeStr);
+        }
+        catch(Exception e)
+        {
+            if(knownTypeStr.contains("PROM5"))
+                return KnownFusionType.PROMISCUOUS_5;
+
+            if(knownTypeStr.contains("PROM3"))
+                return KnownFusionType.PROMISCUOUS_3;
+
+            return KnownFusionType.NONE;
         }
     }
 }

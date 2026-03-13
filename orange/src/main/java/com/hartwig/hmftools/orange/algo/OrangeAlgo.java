@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.orange.algo;
 
+import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.DEFAULT_PIPELINE_OUTPUT;
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import static com.hartwig.hmftools.orange.report.PdfConverter.convertPdfToPng;
 
@@ -9,6 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -76,7 +78,9 @@ public class OrangeAlgo
 
     public static OrangeAlgo fromConfig(final OrangeConfig config) throws IOException
     {
-        List<DriverGene> driverGenes = DriverGeneFile.read(config.DriverGenePanelTsv);
+        List<DriverGene> driverGenes = config.DriverGenePanelTsv != null ?
+                DriverGeneFile.read(config.DriverGenePanelTsv) : Collections.emptyList();
+
         Map<String,String> etiologyPerSignature = SnvSigUtils.loadSnvSignatureEtiologies();
 
         String outputDir = config.OutputDir;
@@ -214,8 +218,9 @@ public class OrangeAlgo
         String pipelineVersionFile = config.PipelineVersionFile;
         if(pipelineVersionFile == null)
         {
-            LOGGER.warn("no pipeline version could be determined as pipeline version file was not passed");
-            return null;
+            String pipelineVersion = DEFAULT_PIPELINE_OUTPUT.toString();
+            LOGGER.info("no pipeline version file, defaulting to {}", pipelineVersion);
+            return pipelineVersion;
         }
 
         String pipelineVersion = PipelineVersionFile.majorDotMinorVersion(pipelineVersionFile);

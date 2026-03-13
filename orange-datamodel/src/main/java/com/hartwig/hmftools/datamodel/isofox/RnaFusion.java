@@ -45,13 +45,10 @@ public interface RnaFusion
     StructuralVariantType svType();
 
     int splitFragments();
-
     int realignedFrags();
-
     int discordantFrags();
 
     int depthStart();
-
     int depthEnd();
 
     int cohortFrequency();

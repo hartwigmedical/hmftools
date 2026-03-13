@@ -7,7 +7,6 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.datamodel.common.AllelicDepth;
 import com.hartwig.hmftools.orange.report.ReportResources;
-import com.hartwig.hmftools.orange.report.datamodel.VariantEntry;
 
 import org.apache.logging.log4j.util.Strings;
 

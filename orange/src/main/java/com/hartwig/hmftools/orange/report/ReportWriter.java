@@ -9,7 +9,9 @@ import java.util.List;
 
 import com.hartwig.hmftools.datamodel.OrangeJson;
 import com.hartwig.hmftools.datamodel.isofox.IsofoxRecord;
+import com.hartwig.hmftools.datamodel.orange.ExperimentType;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
+import com.hartwig.hmftools.orange.OrangeConfig;
 import com.hartwig.hmftools.orange.report.chapters.CuppaChapter;
 import com.hartwig.hmftools.orange.report.chapters.FrontPageChapter;
 import com.hartwig.hmftools.orange.report.chapters.GermlineFindingsChapter;
@@ -35,20 +37,19 @@ public class ReportWriter
     private final boolean mWriteToDisk;
 
     @Nullable
+    private final OrangeConfig mConfig;
     private final String mOutputDir;
     private final String mOutputId;
-    private final PlotPathResolver mPlotPathResolver;
-    private final boolean mAddDisclaimer;
 
-    public ReportWriter(
-            boolean writeToDisk, @Nullable final String outputDir, @Nullable final String outputId,
-            final PlotPathResolver plotPathResolver, boolean addDisclaimer)
+    private final PlotPathResolver mPlotPathResolver;
+
+    public ReportWriter(boolean writeToDisk, @Nullable final OrangeConfig config, final PlotPathResolver plotPathResolver)
     {
         mWriteToDisk = writeToDisk;
-        mOutputDir = outputDir;
-        mOutputId = outputId;
+        mConfig = config;
+        mOutputDir = config != null ? config.OutputDir : null;
+        mOutputId = config != null ? config.OutputId : null;
         mPlotPathResolver = plotPathResolver;
-        mAddDisclaimer = addDisclaimer;
     }
 
     public void write(final OrangeRecord report) throws IOException
@@ -63,7 +64,7 @@ public class ReportWriter
 
         List<ReportChapter> chapters = new ArrayList<>();
 
-        chapters.add(new FrontPageChapter(report, mPlotPathResolver, reportResources));
+        chapters.add(new FrontPageChapter(mConfig, report, mPlotPathResolver, reportResources));
         chapters.add(new SomaticFindingsChapter(report, mPlotPathResolver, reportResources));
 
         if(!report.tumorOnlyMode())
@@ -122,7 +123,9 @@ public class ReportWriter
         Document doc = initializeReport(sampleId);
         PdfDocument pdfDocument = doc.getPdfDocument();
 
-        PageEventHandler pageEventHandler = PageEventHandler.create(sampleId, pipelineVersion, reportResources, mAddDisclaimer);
+        PageEventHandler pageEventHandler = PageEventHandler.create(
+                mConfig.DisplaySampleId, pipelineVersion, reportResources, mConfig.AddDisclaimer);
+
         pdfDocument.addEventHandler(PdfDocumentEvent.START_PAGE, pageEventHandler);
 
         for(int i = 0; i < chapters.size(); i++)
