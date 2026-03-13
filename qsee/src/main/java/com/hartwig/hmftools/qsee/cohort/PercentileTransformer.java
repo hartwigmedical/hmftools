@@ -11,6 +11,7 @@ import java.util.stream.IntStream;
 
 import org.jetbrains.annotations.Nullable;
 
+import com.hartwig.hmftools.qsee.common.LinearInterpolation;
 import com.hartwig.hmftools.qsee.feature.FeatureKey;
 
 public class PercentileTransformer
@@ -153,7 +154,7 @@ public class PercentileTransformer
         else
         {
             double fraction = position - lowerIndex;
-            return linearInterpolate(cohortValues[lowerIndex], cohortValues[upperIndex], fraction);
+            return LinearInterpolation.interpolate1D(cohortValues[lowerIndex], cohortValues[upperIndex], fraction);
         }
     }
 
@@ -193,7 +194,7 @@ public class PercentileTransformer
         if(mFittedWithAllNaN || Double.isNaN(featureValue))
             return Double.NaN;
 
-        return linearInterpolate2D(featureValue, mRefValuesDeduped, mPercentilesDeduped);
+        return LinearInterpolation.interpolate2D(featureValue, mRefValuesDeduped, mPercentilesDeduped);
     }
 
     public double percentileToFeatureValue(double percentile)
@@ -207,43 +208,7 @@ public class PercentileTransformer
         if(mFittedWithAllNaN)
             return Double.NaN;
 
-        return linearInterpolate2D(percentile, mPercentiles, mRefValues);
-    }
-
-    private static double linearInterpolate2D(double inputXValue, double[] XValues, double[] YValues)
-    {
-        if(inputXValue < XValues[0])
-            return Double.NEGATIVE_INFINITY;
-
-        if(inputXValue > XValues[XValues.length - 1])
-            return Double.POSITIVE_INFINITY;
-
-        int matchIndex = Arrays.binarySearch(XValues, inputXValue);
-        if(matchIndex >= 0)
-        {
-            return YValues[matchIndex];
-        }
-
-        int upperIndex = -matchIndex - 1; // When no exact match is found with binary search, a negative match index is returned encoding the insertion point
-        int lowerIndex =  upperIndex - 1;
-
-        double lowerXValue = XValues[lowerIndex];
-        double upperXValue = XValues[upperIndex];
-        double lowerYValue = YValues[lowerIndex];
-        double upperYValue = YValues[upperIndex];
-
-        if(lowerXValue == inputXValue)
-        {
-            return YValues[lowerIndex];
-        }
-
-        double fraction = (inputXValue - lowerXValue) / (upperXValue - lowerXValue);
-        return linearInterpolate(lowerYValue, upperYValue, fraction);
-    }
-
-    private static double linearInterpolate(double lowerValue, double upperValue, double fraction)
-    {
-        return lowerValue + fraction * (upperValue - lowerValue);
+        return LinearInterpolation.interpolate2D(percentile, mPercentiles, mRefValues);
     }
 
     public double[] getPercentiles() { return mPercentiles; }
