@@ -333,7 +333,7 @@ plot_distribution <- function(plot_data, x, invert_normal = FALSE, mark_sample_p
       LOGGER$error("Line/distribution plot failed - empty data frame")
    }
    
-   plot_data[[x]] <- as.numeric(plot_data[[x]])
+   plot_data[[x]] <- as.numeric(as.character(plot_data[[x]]))
    
    gg_scale_y_continuous <- geom_blank()
    sample_type_count <- plot_data$SampleType %>% levels() %>% length()
