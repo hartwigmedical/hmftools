@@ -7,12 +7,12 @@ import jakarta.validation.constraints.NotNull;
 @RecordBuilder
 public record Fusion(
         @NotNull DriverFields driver,
-        @NotNull String geneStart,
-        @NotNull String geneContextStart,
-        @NotNull String geneTranscriptStart,
-        @NotNull String geneEnd,
-        @NotNull String geneContextEnd,
-        @NotNull String geneTranscriptEnd,
+        @NotNull String geneUp,
+        @NotNull String geneContextUp,
+        @NotNull String geneTranscriptUp,
+        @NotNull String geneDown,
+        @NotNull String geneContextDown,
+        @NotNull String geneTranscriptDown,
         @NotNull FusionType reportedType,
         @NotNull List<UnreportableReason> unreportedReasons,
         @NotNull FusionPhasedType phased,
@@ -98,9 +98,21 @@ public record Fusion(
         return driver.driverLikelihood();
     }
 
+    @Override
+    public boolean isReported()
+    {
+        return driver.isReported();
+    }
+
+    @Override
+    public Set<String> genes()
+    {
+        return Set.of(geneUp(), geneDown());
+    }
+
     @NotNull
     public String display()
     {
-        return String.format("%s::%s", geneStart, geneEnd);
+        return String.format("%s::%s", geneUp, geneDown);
     }
 }
