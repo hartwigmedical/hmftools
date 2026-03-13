@@ -33,6 +33,7 @@ public class QseePlotConfig
     public final String CohortPercentilesFile;
 
     public final boolean ShowPlotWarnings;
+    public final boolean MergePlots;
 
     public final String OutputDir;
     public final String OutputId;
@@ -45,6 +46,9 @@ public class QseePlotConfig
     public static final String SHOW_PLOT_WARNINGS = "show_plot_warnings";
     public static final String SHOW_PLOT_WARNINGS_DESC = "Show ggplot2 warnings";
 
+    public static final String MERGE_PLOTS = "merge_plots";
+    public static final String MERGE_PLOTS_DESC = "In multisample mode, merge plots into one file and delete the individual plot files";
+
     public QseePlotConfig(final ConfigBuilder configBuilder)
     {
         VisDataFile = configBuilder.getValue(VIS_DATA_FILE);
@@ -56,6 +60,7 @@ public class QseePlotConfig
         CohortPercentilesFile = configBuilder.getValue(COHORT_PERCENTILES_FILE_CFG);
 
         ShowPlotWarnings = configBuilder.hasFlag(SHOW_PLOT_WARNINGS);
+        MergePlots = configBuilder.hasFlag(MERGE_PLOTS);
 
         OutputDir = parseOutputDir(configBuilder);
         OutputId = configBuilder.getValue(OUTPUT_ID);
@@ -72,6 +77,7 @@ public class QseePlotConfig
         configBuilder.addPath(SAMPLE_ID_FILE, false, SAMPLE_ID_FILE_DESC);
 
         configBuilder.addFlag(SHOW_PLOT_WARNINGS, SHOW_PLOT_WARNINGS_DESC);
+        configBuilder.addFlag(MERGE_PLOTS, MERGE_PLOTS_DESC);
 
         configBuilder.addPath(COHORT_PERCENTILES_FILE_CFG, false, COHORT_PERCENTILES_FILE_CFG_DESC);
         configBuilder.addPath(OUTPUT_DIR, true, OUTPUT_DIR_DESC);
