@@ -23,13 +23,18 @@ library(scales)
 
 args <- commandArgs(trailingOnly = TRUE)
 
+parseOptionalArg <- function(arg){
+   if(arg == "NA") NA  else arg
+}
+
 TUMOR_ID <- args[1]
-NORMAL_ID <- if(args[2] == "NA") NA else args[2]
+NORMAL_ID <- parseOptionalArg(args[2])
 VIS_DATA_FILE <- args[3]
-COHORT_PERCENTILES_FILE <- if(args[4] == "NA") NA else args[4]
+COHORT_PERCENTILES_FILE <- parseOptionalArg(args[4])
 OUTPUT_PATH <- args[5]
 SHOW_PLOT_WARNINGS <- as.logical(args[6])
 GLOBAL_LOG_LEVEL <- args[7]
+GLOBAL_LOG_PREFIX <- args[8]
 
 if(FALSE){
    TUMOR_ID <- "TUMOR"
@@ -42,6 +47,7 @@ if(FALSE){
    OUTPUT_PATH <- sprintf("%s/%s.qsee.vis.report.pdf", output_dir, TUMOR_ID)
    
    GLOBAL_LOG_LEVEL <- "DEBUG"
+   GLOBAL_LOG_PREFIX <- ""
 }
 
 ## =============================
@@ -63,7 +69,8 @@ log_message <- function(log_level, fmt, ...){
 
    current_time <- format(Sys.time(), "%H:%H:%OS3")
    
-   log_message <- sprintf("%s [R] [%-5s] %s", current_time, log_level$name, sprintf(fmt, ...))
+   log_message <- sprintf("%s [R] [%-5s] %s%s",
+      current_time, log_level$name, GLOBAL_LOG_PREFIX, sprintf(fmt, ...))
    
    if(log_level$severity >= LOG_LEVEL[[LOG_LEVEL$ERROR$name]]$severity)
       stop(log_message)

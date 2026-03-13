@@ -18,6 +18,7 @@ import static com.hartwig.hmftools.qsee.cohort.CohortPercentilesFile.COHORT_PERC
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.qsee.common.SampleIdsLoader;
@@ -35,6 +36,8 @@ public class QseePlotConfig
 
     public final String OutputDir;
     public final String OutputId;
+
+    public final int Threads;
 
     public static final String VIS_DATA_FILE = "vis_data_file";
     public static final String VIS_DATA_FILE_DESC = "Path to the vis data file";
@@ -56,6 +59,8 @@ public class QseePlotConfig
 
         OutputDir = parseOutputDir(configBuilder);
         OutputId = configBuilder.getValue(OUTPUT_ID);
+
+        Threads = TaskExecutor.parseThreads(configBuilder);
     }
 
     public static void registerConfig(final ConfigBuilder configBuilder)
