@@ -39,12 +39,12 @@ GLOBAL_LOG_LEVEL <- args[8]
 if(FALSE){
    TUMOR_ID <- "TUMOR"
    NORMAL_ID <- "TUMOR-ref"
-   
-   COHORT_PERCENTILES_FILE <- "qsee.cohort.percentiles.tsv.gz"
-   
    VIS_DATA_FILE <- "TUMOR.qsee.vis.data.tsv.gz"
+   COHORT_PERCENTILES_FILE <- "qsee.cohort.percentiles.tsv.gz"
    PLOT_PATH <- "TUMOR.qsee.vis.report.pdf"
    
+   SHOW_PLOT_WARNINGS <- TRUE
+   SINGLE_PATIENT_MODE <- TRUE
    GLOBAL_LOG_LEVEL <- "DEBUG"
 }
 
@@ -88,15 +88,19 @@ LOGGER <- list(
    fatal = function(fmt, ...){ log_message(LOG_LEVEL$FATAL, fmt, ...) }
 )
 
+print_arg <- function(arg){
+   LOGGER$debug("  %s: %s", tolower(deparse(substitute(arg))), arg)
+}
+
 LOGGER$debug("Running script with args:")
-LOGGER$debug("  tumor_id: %s", TUMOR_ID)
-LOGGER$debug("  normal_id: %s", NORMAL_ID)
-LOGGER$debug("  vis_data_file: %s", VIS_DATA_FILE)
-LOGGER$debug("  cohort_percentiles_file: %s", COHORT_PERCENTILES_FILE)
-LOGGER$debug("  output_file_prefix: %s", PLOT_PATH)
-LOGGER$debug("  show_plot_warnings: %s", SHOW_PLOT_WARNINGS)
-LOGGER$debug("  single_patient_mode: %s", SHOW_PLOT_WARNINGS)
-LOGGER$debug("  log_level: %s", GLOBAL_LOG_LEVEL)
+print_arg(TUMOR_ID)
+print_arg(NORMAL_ID)
+print_arg(VIS_DATA_FILE)
+print_arg(COHORT_PERCENTILES_FILE)
+print_arg(PLOT_PATH)
+print_arg(SHOW_PLOT_WARNINGS)
+print_arg(SINGLE_PATIENT_MODE)
+print_arg(GLOBAL_LOG_LEVEL)
 
 ## =============================
 ## Constants
