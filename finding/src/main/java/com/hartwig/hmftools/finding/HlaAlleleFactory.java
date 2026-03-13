@@ -51,7 +51,7 @@ public class HlaAlleleFactory
         }
         else
         {
-            return FindingUtil.notAvailableFindingList();
+            return FindingUtil.emptyFindingList(FindingsStatus.NOT_AVAILABLE_RESULT_MISSING);
         }
     }
 

@@ -127,10 +127,10 @@ public class FindingRecordFactory
         }
         else
         {
-            builder.somaticDisruptions(FindingUtil.notAvailableDriverFindingList())
-                    .germlineDisruptions(FindingUtil.notAvailableDriverFindingList())
-                    .viruses(FindingUtil.notAvailableDriverFindingList())
-                    .homologousRecombination(FindingUtil.notAvailableFindingItem());
+            builder.somaticDisruptions(FindingUtil.emptyDriverFindingList(FindingsStatus.NOT_RELIABLE_LOW_PURITY))
+                    .germlineDisruptions(FindingUtil.emptyDriverFindingList(FindingsStatus.NOT_RELIABLE_LOW_PURITY))
+                    .viruses(FindingUtil.emptyDriverFindingList(FindingsStatus.NOT_RELIABLE_LOW_PURITY))
+                    .homologousRecombination(FindingUtil.nullFindingItem(FindingsStatus.NOT_RELIABLE_LOW_PURITY));
         }
 
         VisualisationFiles visualisationFiles = VisualisationFilesFactory.create(orangeRecord.plots());
@@ -174,14 +174,14 @@ public class FindingRecordFactory
         }
         else
         {
-            somaticGainDeletions = FindingUtil.notAvailableDriverFindingList();
+            somaticGainDeletions = FindingUtil.emptyDriverFindingList(FindingsStatus.NOT_RELIABLE_LOW_PURITY);
             builder.somaticSmallVariants(smallVariants)
-                    .germlineSmallVariants(FindingUtil.notAvailableDriverFindingList())
+                    .germlineSmallVariants(FindingUtil.emptyDriverFindingList(FindingsStatus.NOT_RELIABLE_LOW_PURITY))
                     .somaticGainDeletions(somaticGainDeletions)
-                    .germlineGainDeletions(FindingUtil.notAvailableDriverFindingList())
-                    .microsatelliteStability(FindingUtil.notAvailableFindingItem())
-                    .tumorMutationalLoad(FindingUtil.notAvailableFindingItem())
-                    .tumorMutationalBurden(FindingUtil.notAvailableFindingItem());
+                    .germlineGainDeletions(FindingUtil.emptyDriverFindingList(FindingsStatus.NOT_RELIABLE_LOW_PURITY))
+                    .microsatelliteStability(FindingUtil.nullFindingItem(FindingsStatus.NOT_RELIABLE_LOW_PURITY))
+                    .tumorMutationalLoad(FindingUtil.nullFindingItem(FindingsStatus.NOT_RELIABLE_LOW_PURITY))
+                    .tumorMutationalBurden(FindingUtil.nullFindingItem(FindingsStatus.NOT_RELIABLE_LOW_PURITY));
         }
         return somaticGainDeletions;
     }
@@ -255,7 +255,7 @@ public class FindingRecordFactory
         }
         else
         {
-            return FindingUtil.notAvailableFindingList();
+            return FindingUtil.emptyFindingList(FindingsStatus.NOT_AVAILABLE_RESULT_MISSING);
         }
     }
 
@@ -300,7 +300,7 @@ public class FindingRecordFactory
         }
         else
         {
-            return FindingUtil.notAvailableFindingItem();
+            return FindingUtil.nullFindingItem(FindingsStatus.NOT_AVAILABLE_RESULT_MISSING);
         }
     }
 
@@ -331,7 +331,7 @@ public class FindingRecordFactory
         }
         else
         {
-            return FindingUtil.notAvailableFindingItem();
+            return FindingUtil.nullFindingItem(FindingsStatus.NOT_AVAILABLE_RESULT_MISSING);
         }
     }
 
@@ -377,7 +377,7 @@ public class FindingRecordFactory
         }
         else
         {
-            return FindingUtil.notAvailableFindingItem();
+            return FindingUtil.nullFindingItem(FindingsStatus.NOT_AVAILABLE_RESULT_MISSING);
         }
     }
 
@@ -388,6 +388,7 @@ public class FindingRecordFactory
         {
             case HR_DEFICIENT -> HomologousRecombination.Status.HR_DEFICIENT;
             case HR_PROFICIENT -> HomologousRecombination.Status.HR_PROFICIENT;
+            case CANNOT_BE_DETERMINED -> HomologousRecombination.Status.UNDETERMINED;
             default -> null;
         } : null;
     }
@@ -418,7 +419,7 @@ public class FindingRecordFactory
         }
         else
         {
-            return FindingUtil.notAvailableFindingItem();
+            return FindingUtil.nullFindingItem(FindingsStatus.NOT_AVAILABLE_RESULT_MISSING);
         }
     }
 
@@ -510,7 +511,7 @@ public class FindingRecordFactory
         }
         else
         {
-            return FindingUtil.notAvailableDriverFindingList();
+            return FindingUtil.emptyDriverFindingList(FindingsStatus.NOT_AVAILABLE_RESULT_MISSING);
         }
     }
 
@@ -558,7 +559,7 @@ public class FindingRecordFactory
         if(peachGenotypes != null)
         {
             return FindingListBuilder.<PharmacoGenotype>builder()
-                    .status(hasContamination ? FindingsStatus.NOT_RELIABLE : FindingsStatus.OK)
+                    .status(hasContamination ? FindingsStatus.NOT_AVAILABLE_CONTAMINATION : FindingsStatus.OK)
                     .findings(peachGenotypes.stream().map(o ->
                                     PharmacoGenotypeBuilder.builder()
                                             .findingKey(FindingKeys.pharmacoGenotype(o.gene(), o.allele()))
@@ -576,7 +577,7 @@ public class FindingRecordFactory
         }
         else
         {
-            return FindingUtil.notAvailableFindingList();
+            return FindingUtil.emptyFindingList(FindingsStatus.NOT_AVAILABLE_RESULT_MISSING);
         }
     }
 }

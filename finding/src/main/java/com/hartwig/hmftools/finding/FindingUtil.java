@@ -11,18 +11,18 @@ import com.hartwig.hmftools.finding.datamodel.FindingsStatus;
 
 class FindingUtil
 {
-    static <T extends Finding> FindingList<T> notAvailableFindingList()
+    static <T extends Finding> FindingList<T> emptyFindingList(FindingsStatus status)
     {
-        return new FindingList<>(FindingsStatus.NOT_AVAILABLE, List.of());
+        return new FindingList<>(status, List.of());
     }
 
-    static <T extends Driver> DriverFindingList<T> notAvailableDriverFindingList()
+    static <T extends Driver> DriverFindingList<T> emptyDriverFindingList(FindingsStatus status)
     {
-        return new DriverFindingList<>(FindingsStatus.NOT_AVAILABLE, List.of());
+        return new DriverFindingList<>(status, List.of());
     }
 
-    static <T> FindingItem<T> notAvailableFindingItem()
+    static <T> FindingItem<T> nullFindingItem(FindingsStatus status)
     {
-        return new FindingItem<>(FindingsStatus.NOT_AVAILABLE, null);
+        return new FindingItem<>(status, null);
     }
 }

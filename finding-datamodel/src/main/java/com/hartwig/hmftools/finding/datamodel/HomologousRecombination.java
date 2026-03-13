@@ -13,7 +13,7 @@ public record HomologousRecombination(
         @NotNull HomologousRecombination.Status status,
         @NotNull String hrdType,
         @NotNull List<GainDeletion> lohCopyNumbers,
-        @NotNull List<String> relatedGenes
+        @NotNull List<String> drivingGenes
 ) implements Finding
 {
     public static final double RANGE_MIN = 0;
@@ -23,6 +23,7 @@ public record HomologousRecombination(
 
     public enum Status
     {
+        UNDETERMINED,
         HR_PROFICIENT,
         HR_DEFICIENT
     }

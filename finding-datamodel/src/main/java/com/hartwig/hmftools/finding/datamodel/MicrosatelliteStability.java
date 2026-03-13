@@ -10,7 +10,7 @@ public record MicrosatelliteStability(
         @NotNull MicrosatelliteStability.Status status,
         double indelsPerMb,
         @NotNull List<GainDeletion> lohCopyNumbers,
-        @NotNull List<String> relatedGenes
+        @NotNull List<String> drivingGenes
 ) implements Finding
 {
     public static final double RANGE_MIN = 1;
