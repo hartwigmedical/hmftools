@@ -39,11 +39,6 @@ public class QseePlot
         mOutputId = config.OutputId;
     }
 
-    public static String generateFilename(String basePath, String tumorId, @Nullable String outputId)
-    {
-        return QseeFileCommon.generateFilename(basePath, tumorId, "vis.report", outputId, "pdf");
-    }
-
     private boolean isSinglePatient() { return mTumorIds.size() <= 1 && mReferenceIds.size() <= 1; }
 
     private String getVisDataPath(String tumorId)
@@ -65,17 +60,22 @@ public class QseePlot
         return isTumorOnlyMode ? null : mReferenceIds.get(sampleIndex);
     }
 
+    private static String formPlotPath(String basePath, String tumorId, @Nullable String outputId)
+    {
+        return QseeFileCommon.generateFilename(basePath, tumorId, "vis.report", outputId, "pdf");
+    }
+
     private void plotOnePatient()
     {
         String visDataPath = getVisDataPath(mTumorIds.get(0));
-        String plotPath = generateFilename(mOutputDir, mTumorIds.get(0), mOutputId);
+        String plotPath = formPlotPath(mOutputDir, mTumorIds.get(0), mOutputId);
 
         QseePlotTask plotTask = new QseePlotTask(
-                visDataPath,
-                plotPath,
                 mTumorIds.get(0),
                 getReferenceId(0),
+                visDataPath,
                 mConfig.CohortPercentilesFile,
+                plotPath,
                 mConfig.ShowPlotWarnings,
                 true
         );
@@ -86,20 +86,23 @@ public class QseePlot
     private void plotMultiplePatients()
     {
         List<Runnable> plotTasks = new ArrayList<>();
-        List<File> plotPaths = new ArrayList<>();
+        List<File> plotPathsToMerge = new ArrayList<>();
 
         for(int sampleIndex = 0; sampleIndex < mTumorIds.size(); sampleIndex++)
         {
-            String visDataPath = getVisDataPath(mTumorIds.get(sampleIndex));
-            String plotPath = generateFilename(mOutputDir, mTumorIds.get(sampleIndex), mOutputId);
-            plotPaths.add(new File(plotPath));
+            String tumorId = mTumorIds.get(sampleIndex);
+
+            String visDataPath = getVisDataPath(tumorId);
+            String plotPath = formPlotPath(mOutputDir, tumorId, mOutputId);
+
+            plotPathsToMerge.add(new File(plotPath));
 
             QseePlotTask plotTask = new QseePlotTask(
-                    visDataPath,
-                    plotPath,
                     mTumorIds.get(sampleIndex),
                     getReferenceId(sampleIndex),
+                    visDataPath,
                     mConfig.CohortPercentilesFile,
+                    plotPath,
                     mConfig.ShowPlotWarnings,
                     false
             );
@@ -110,13 +113,13 @@ public class QseePlot
 
         if(mConfig.MergePlots)
         {
-            mergePlots(plotPaths);
+            mergePlots(plotPathsToMerge);
         }
     }
 
     private void mergePlots(List<File> plotPaths)
     {
-        String destinationPath = generateFilename(mOutputDir, MULTISAMPLE_SAMPLE_ID, mOutputId);
+        String destinationPath = formPlotPath(mOutputDir, MULTISAMPLE_SAMPLE_ID, mOutputId);
 
         try
         {

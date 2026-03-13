@@ -24,11 +24,11 @@ public class QseePlotTask implements Runnable
     private final boolean mIsSinglePatient;
 
     public QseePlotTask(
-            String visDataPath,
-            String plotPath,
             String tumorId,
             @Nullable String referenceId,
+            String visDataPath,
             @Nullable String cohortPercentilesFile,
+            String plotPath,
             boolean showPlotWarnings,
             boolean isSinglePatient
     ){
@@ -48,20 +48,11 @@ public class QseePlotTask implements Runnable
     {
         try
         {
-            String referenceIdArg = mReferenceId == null
-                    ? NO_ARG
-                    : mReferenceId;
-
-            String cohortPercentilesFile = mCohortPercentilesFile == null
-                    ? NO_ARG
-                    : mCohortPercentilesFile;
-
+            String referenceIdArg = (mReferenceId == null) ? NO_ARG : mReferenceId;
+            String cohortPercentilesFile = (mCohortPercentilesFile == null) ? NO_ARG : mCohortPercentilesFile;
             String showPlotWarnings = Boolean.toString(mShowPlotWarnings);
-
             String logLevel = QC_LOGGER.getLevel().toString();
-            String logPrefix = mIsSinglePatient
-                    ? ""
-                    : String.format("[%s] ", mTumorId);
+            String isSinglePatient = Boolean.toString(mIsSinglePatient);
 
             String[] scriptArgs = {
                     mTumorId,
@@ -70,8 +61,8 @@ public class QseePlotTask implements Runnable
                     cohortPercentilesFile,
                     mPlotPath,
                     showPlotWarnings,
-                    logLevel,
-                    logPrefix
+                    isSinglePatient,
+                    logLevel
             };
 
             int exitCode = RExecutor.executeFromClasspath(SCRIPT_PATH, true, scriptArgs);

@@ -31,10 +31,10 @@ TUMOR_ID <- args[1]
 NORMAL_ID <- parseOptionalArg(args[2])
 VIS_DATA_FILE <- args[3]
 COHORT_PERCENTILES_FILE <- parseOptionalArg(args[4])
-OUTPUT_PATH <- args[5]
+PLOT_PATH <- args[5]
 SHOW_PLOT_WARNINGS <- as.logical(args[6])
-GLOBAL_LOG_LEVEL <- args[7]
-GLOBAL_LOG_PREFIX <- args[8]
+SINGLE_PATIENT_MODE <- as.logical(args[7])
+GLOBAL_LOG_LEVEL <- args[8]
 
 if(FALSE){
    TUMOR_ID <- "TUMOR"
@@ -42,12 +42,10 @@ if(FALSE){
    
    COHORT_PERCENTILES_FILE <- "qsee.cohort.percentiles.tsv.gz"
    
-   output_dir <- ""
-   VIS_DATA_FILE <- sprintf("%s/%s.qsee.vis.data.tsv.gz", output_dir, TUMOR_ID)
-   OUTPUT_PATH <- sprintf("%s/%s.qsee.vis.report.pdf", output_dir, TUMOR_ID)
+   VIS_DATA_FILE <- "TUMOR.qsee.vis.data.tsv.gz"
+   PLOT_PATH <- "TUMOR.qsee.vis.report.pdf"
    
    GLOBAL_LOG_LEVEL <- "DEBUG"
-   GLOBAL_LOG_PREFIX <- ""
 }
 
 ## =============================
@@ -68,9 +66,11 @@ LOG_LEVEL <- list(
 log_message <- function(log_level, fmt, ...){
 
    current_time <- format(Sys.time(), "%H:%H:%OS3")
-   
+
+   log_prefix <- if(SINGLE_PATIENT_MODE) "" else sprintf("[%s] ", TUMOR_ID)
+
    log_message <- sprintf("%s [R] [%-5s] %s%s",
-      current_time, log_level$name, GLOBAL_LOG_PREFIX, sprintf(fmt, ...))
+      current_time, log_level$name, log_prefix, sprintf(fmt, ...))
    
    if(log_level$severity >= LOG_LEVEL[[LOG_LEVEL$ERROR$name]]$severity)
       stop(log_message)
@@ -93,8 +93,9 @@ LOGGER$debug("  tumor_id: %s", TUMOR_ID)
 LOGGER$debug("  normal_id: %s", NORMAL_ID)
 LOGGER$debug("  vis_data_file: %s", VIS_DATA_FILE)
 LOGGER$debug("  cohort_percentiles_file: %s", COHORT_PERCENTILES_FILE)
-LOGGER$debug("  output_path: %s", OUTPUT_PATH)
+LOGGER$debug("  output_file_prefix: %s", PLOT_PATH)
 LOGGER$debug("  show_plot_warnings: %s", SHOW_PLOT_WARNINGS)
+LOGGER$debug("  single_patient_mode: %s", SHOW_PLOT_WARNINGS)
 LOGGER$debug("  log_level: %s", GLOBAL_LOG_LEVEL)
 
 ## =============================
@@ -1206,11 +1207,25 @@ create_report <- local({
    
    plots_combined <- patchwork::wrap_plots(plots, design = design) + REPORT_TITLE
 
-   LOGGER$info("Writing report to: %s", OUTPUT_PATH)
-   suppressWarnings({ ## Prevent ggplot build warnings showing again - these are already shown when calling render_now()
-      ggsave(filename = OUTPUT_PATH, plot = plots_combined, width = 20, height = 12, units = "in")   
+   plot_width <- 20
+   plot_height <- 12
+
+   ## Suppress warnings to prevent ggplot build warnings showing again - these are already shown when calling render_now()
+
+   LOGGER$info("Writing PDF: %s", PLOT_PATH)
+   suppressWarnings({
+      ggsave(filename = PLOT_PATH, plot = plots_combined, width = plot_width, height = plot_height, units = "in")
    })
-   
+
+   if(SINGLE_PATIENT_MODE)
+   {
+      ## PNGs are easier to embed in downstream reports (e.g. on a website)
+      png_path <- sub("pdf$", "png", PLOT_PATH)
+      LOGGER$info("Writing PNG: %s", png_path)
+      suppressWarnings({
+         ggsave(filename = png_path, plot = plots_combined, width = plot_width, height = plot_height, units = "in")
+      })
+   }
 })
 
 
