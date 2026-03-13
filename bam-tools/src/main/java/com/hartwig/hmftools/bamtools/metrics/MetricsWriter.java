@@ -68,6 +68,8 @@ public class MetricsWriter
     private BufferedWriter mTargetRegionsWriter;
     private BufferedWriter mOffTargetHighFragmentOverlapWriter;
 
+    private static final int LONG_DISTRIBUTION_THRESHOLD = 3000;
+
     public MetricsWriter(final MetricsConfig config)
     {
         mTargetRegionsWriter = !config.TargetRegions.isEmpty() ? TargetRegionStats.initialiseWriter(config) : null;
@@ -157,16 +159,18 @@ public class MetricsWriter
             List<ValueFrequency> coverageLevels = Lists.newArrayList();
 
             // collapse for long distributions
-            if(metrics.CoverageFrequency.length > 3000)
+            if(metrics.CoverageFrequency.length > LONG_DISTRIBUTION_THRESHOLD)
             {
                 int currentCoverage = 0;
                 long coverageTotal = metrics.CoverageFrequency[0];
 
+                int[] coverageBuckets = CoverageMetrics.createCoverageBuckets(metrics.CoverageFrequency.length);
+
                 for(int i = 1; i < metrics.CoverageFrequency.length; ++i)
                 {
-                    int nextCoverage = CoverageMetrics.getCoverageBucket(i);
+                    int nextCoverage = CoverageMetrics.getNextCoverageBucket(i, coverageBuckets);
 
-                    if(nextCoverage > currentCoverage)
+                    if(currentCoverage < nextCoverage)
                     {
                         coverageLevels.add(new ValueFrequency(currentCoverage, coverageTotal));
 

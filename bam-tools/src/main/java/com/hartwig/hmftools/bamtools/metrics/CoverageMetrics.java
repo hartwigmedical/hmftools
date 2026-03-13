@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.bamtools.metrics;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.ceil;
 import static java.lang.Math.pow;
 import static java.lang.Math.round;
 import static java.lang.Math.sqrt;
@@ -226,18 +227,31 @@ public class CoverageMetrics
         return format("counts(%s)", sj);
     }
 
-    public static int getCoverageBucket(int coverage)
+    static int[] createCoverageBuckets(int distributionLength)
     {
-        // round to nearest unit up to 1000, then 10s up to 3000 then 100s
-        if(coverage <= 100)
-            return coverage;
+        int currentBucket = 1;
+        List<Integer> buckets = Lists.newArrayList();
 
-        if(coverage <= 1000)
-            return 10 * (int)round(coverage/10.0);
+        while(currentBucket < distributionLength)
+        {
+            currentBucket += (int)ceil(currentBucket * 0.01);
+            buckets.add(currentBucket);
+        }
 
-        if(coverage <= 10000)
-            return 100 * (int)round(coverage/100.0);
+        return buckets.stream().mapToInt(Integer::intValue).toArray();
+    }
 
-        return 1000;
+    static int getNextCoverageBucket(int coverage, int[] buckets)
+    {
+        if(coverage < buckets[0])
+            return buckets[0];
+
+        for(int i = 0; i < buckets.length; i++)
+        {
+            if(buckets[i] > coverage)
+                return buckets[i-1];
+        }
+
+        return buckets[buckets.length - 1];
     }
 }
