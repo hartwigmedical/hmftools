@@ -407,7 +407,7 @@ public class FindingRecordFactory
                             .status(hrStatus)
                             .hrdType(chord.hrdType())
                             .lohCopyNumbers(lohGainDeletions)
-                            .genes(GeneListUtil.genes(purple.somaticVariants(),
+                            .drivingGenes(GeneListUtil.genes(purple.somaticVariants(),
                                     purple.somaticGainsDels(),
                                     linx.somaticBreakends().stream()
                                             .filter(o ->o.driverType() == LinxDriverType.HOM_DEL_DISRUPTION ||
@@ -452,7 +452,7 @@ public class FindingRecordFactory
                             .status(microsatelliteStatus)
                             .indelsPerMb(purple.characteristics().microsatelliteIndelsPerMb())
                             .lohCopyNumbers(lohGainDeletions)
-                            .genes(GeneListUtil.genes(purple.somaticVariants(),
+                            .drivingGenes(GeneListUtil.genes(purple.somaticVariants(),
                                     purple.somaticGainsDels(),
                                     linx.somaticBreakends().stream()
                                             .filter(o ->o.driverType() == LinxDriverType.HOM_DEL_DISRUPTION ||
