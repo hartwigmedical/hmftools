@@ -209,8 +209,8 @@ final class DisruptionFactory
                 .disruptedCopyNumber(breakend.junctionCopyNumber())
                 .undisruptedCopyNumber(undisruptedCopyNumber)
                 .clusterId(determineClusterId(structuralVariants, breakend))
-                .breakendStart(convert(breakendStart))
-                .breakendEnd(convert(breakendEnd))
+                .breakendUp(convert(breakendStart))
+                .breakendDown(convert(breakendEnd))
                 .build();
     }
 

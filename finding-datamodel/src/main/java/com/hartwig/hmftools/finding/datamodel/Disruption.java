@@ -20,8 +20,8 @@ public record Disruption(
         double disruptedCopyNumber,
         double undisruptedCopyNumber,
         @Nullable Integer clusterId,
-        @Nullable Breakend breakendStart,
-        @Nullable Breakend breakendEnd
+        @Nullable Breakend breakendUp,
+        @Nullable Breakend breakendDown
 ) implements Driver
 {
     public enum Type
@@ -102,19 +102,19 @@ public record Disruption(
     @NotNull
     public String disruptedRange()
     {
-        if(breakendStart != null && breakendEnd != null)
+        if(breakendUp != null && breakendDown != null)
         {
-            return exonDescription(breakendStart.exonUp(), breakendStart.exonDown()) + " -> " + exonDescription(breakendEnd.exonUp(),
-                    breakendEnd.exonDown());
+            return exonDescription(breakendUp.exonUp(), breakendUp.exonDown()) + " -> " + exonDescription(breakendDown.exonUp(),
+                    breakendDown.exonDown());
         }
-        if(breakendEnd == null)
+        if(breakendDown == null)
         {
-            assert breakendStart != null;
-            return exonDescription(breakendStart.exonUp(), breakendStart.exonDown()) + " Upstream";
+            assert breakendUp != null;
+            return exonDescription(breakendUp.exonUp(), breakendUp.exonDown()) + " Upstream";
         }
         else
         {
-            return exonDescription(breakendEnd.exonUp(), breakendEnd.exonDown()) + " Downstream";
+            return exonDescription(breakendDown.exonUp(), breakendDown.exonDown()) + " Downstream";
         }
     }
 
