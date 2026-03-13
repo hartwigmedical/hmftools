@@ -3,11 +3,17 @@ package com.hartwig.hmftools.qsee.feature;
 import static com.hartwig.hmftools.qsee.common.MultiFieldStringBuilder.FIELD_KEY_VALUE_SEPARATOR;
 
 import java.util.Comparator;
+import java.util.List;
 import java.util.Objects;
 
+import com.hartwig.hmftools.common.bam.ConsensusType;
+import com.hartwig.hmftools.qsee.common.MultiFieldStringBuilder;
+import com.hartwig.hmftools.qsee.prep.category.bqr.BaseQualBin;
 import com.hartwig.hmftools.qsee.prep.category.discordant.DiscordantFragGroup;
+import com.hartwig.hmftools.qsee.prep.category.msindel.RepeatType;
 import com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 
 public class FeatureKey implements Comparable<FeatureKey>
@@ -60,38 +66,86 @@ public class FeatureKey implements Comparable<FeatureKey>
     {
         int typeDiff = Comparator.nullsLast(Comparator.<FeatureType>naturalOrder()).compare(this.mType, other.mType);
         if(typeDiff != 0)
-        {
             return typeDiff;
-        }
 
         int sourceToolDiff = Comparator.nullsLast(Comparator.<SourceTool>naturalOrder()).compare(this.mSourceTool, other.mSourceTool);
         if(sourceToolDiff != 0)
-        {
             return sourceToolDiff;
-        }
 
-        // Handle feature names that are composed of enums
         if(this.mType == FeatureType.SUMMARY_TABLE)
-        {
             return SummaryTableFeature.valueOf(this.mName).compareTo(SummaryTableFeature.valueOf(other.mName));
-        }
 
         if(this.mType == FeatureType.DISCORDANT_FRAG_FREQ)
-        {
-            DiscordantFragGroup discordantFragGroup = DiscordantFragGroup.valueOf(this.mName.split(FIELD_KEY_VALUE_SEPARATOR)[1]);
-            DiscordantFragGroup discordantFragGroupOther = DiscordantFragGroup.valueOf(other.mName.split(FIELD_KEY_VALUE_SEPARATOR)[1]);
-            return discordantFragGroup.compareTo(discordantFragGroupOther);
-        }
+            return compareNameDiscordantFragFreq(this.mName, other.mName);
 
-        // Default to numeric feature value aware string comparison
-        boolean comparingMultiFields = this.mName.contains(FIELD_KEY_VALUE_SEPARATOR) && other.mName.contains(FIELD_KEY_VALUE_SEPARATOR);
-        if(!comparingMultiFields)
-        {
-            return Comparator.nullsLast(Comparator.<String>naturalOrder()).compare(this.mName, other.mName);
-        }
+        if(this.mType == FeatureType.BQR_PER_ORIG_QUAL || this.mType == FeatureType.BQR_PER_SNV96_CONTEXT)
+            return compareNameBqr(this.mName, other.mName);
 
-        String[] nameParts = this.mName.split(FIELD_KEY_VALUE_SEPARATOR);
-        String[] namePartsOther = other.mName.split(FIELD_KEY_VALUE_SEPARATOR);
+        if(this.mType == FeatureType.MS_INDEL_ERROR_RATES || this.mType == FeatureType.MS_INDEL_ERROR_BIAS)
+            return compareNameMsIndels(this.mName, other.mName);
+
+        if(this.mName.contains(FIELD_KEY_VALUE_SEPARATOR) && other.mName.contains(FIELD_KEY_VALUE_SEPARATOR))
+            return compareNameWithNumericalValues(this.mName, other.mName);
+
+        return Comparator.nullsLast(Comparator.<String>naturalOrder()).compare(this.mName, other.mName);
+    }
+
+    private static int compareNameDiscordantFragFreq(String name, String nameOther)
+    {
+        DiscordantFragGroup group = DiscordantFragGroup.valueOf(name.split(FIELD_KEY_VALUE_SEPARATOR)[1]);
+        DiscordantFragGroup groupOther = DiscordantFragGroup.valueOf(nameOther.split(FIELD_KEY_VALUE_SEPARATOR)[1]);
+
+        return group.compareTo(groupOther);
+    }
+
+    private static int compareNameBqr(String name, String nameOther)
+    {
+        List<Pair<String, String>> nameParts = MultiFieldStringBuilder.parseMultiFieldAsPairs(name);
+        List<Pair<String, String>> namePartsOther = MultiFieldStringBuilder.parseMultiFieldAsPairs(nameOther);
+
+        BaseQualBin qualBin = BaseQualBin.valueOf(nameParts
+                .get(nameParts.size()-1)
+                .getValue()
+                .split(" ")[0]
+        );
+
+        BaseQualBin qualBinOther = BaseQualBin.valueOf(namePartsOther
+                .get(namePartsOther.size()-1)
+                .getValue()
+                .split(" ")[0]
+        );
+
+        return qualBin.compareTo(qualBinOther);
+    }
+
+    private static int compareNameMsIndels(String name, String nameOther)
+    {
+        List<Pair<String, String>> nameParts = MultiFieldStringBuilder.parseMultiFieldAsPairs(name);
+        List<Pair<String, String>> namePartsOther = MultiFieldStringBuilder.parseMultiFieldAsPairs(nameOther);
+
+        ConsensusType consensusType = ConsensusType.valueOf(nameParts.get(0).getValue());
+        ConsensusType consensusTypeOther = ConsensusType.valueOf(namePartsOther.get(0).getValue());
+
+        int consensusTypeDiff = consensusType.compareTo(consensusTypeOther);
+        if(consensusTypeDiff != 0)
+            return consensusTypeDiff;
+
+        RepeatType repeatType = RepeatType.fromDisplayName(nameParts.get(1).getValue());
+        RepeatType repeatTypeOther = RepeatType.fromDisplayName(namePartsOther.get(1).getValue());
+
+        int repeatTypeDiff = repeatType.compareTo(repeatTypeOther);
+        if(repeatTypeDiff != 0)
+            return repeatTypeDiff;
+
+        double numUnits = Double.parseDouble(nameParts.get(2).getValue());
+        double numUnitsOther = Double.parseDouble(namePartsOther.get(2).getValue());
+        return Double.compare(numUnits, numUnitsOther);
+    }
+
+    private static int compareNameWithNumericalValues(String name, String nameOther)
+    {
+        String[] nameParts = MultiFieldStringBuilder.parseMultiFieldAsArray(name);
+        String[] namePartsOther = MultiFieldStringBuilder.parseMultiFieldAsArray(nameOther);
 
         int minNumParts = Math.min(nameParts.length, namePartsOther.length);
 

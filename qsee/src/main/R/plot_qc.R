@@ -23,24 +23,28 @@ library(scales)
 
 args <- commandArgs(trailingOnly = TRUE)
 
+parseOptionalArg <- function(arg){
+   if(arg == "NA") NA  else arg
+}
+
 TUMOR_ID <- args[1]
-NORMAL_ID <- if(args[2] == "NA") NA else args[2]
+NORMAL_ID <- parseOptionalArg(args[2])
 VIS_DATA_FILE <- args[3]
-COHORT_PERCENTILES_FILE <- if(args[4] == "NA") NA else args[4]
-OUTPUT_PATH <- args[5]
+COHORT_PERCENTILES_FILE <- parseOptionalArg(args[4])
+PLOT_PATH <- args[5]
 SHOW_PLOT_WARNINGS <- as.logical(args[6])
-GLOBAL_LOG_LEVEL <- args[7]
+SINGLE_PATIENT_MODE <- as.logical(args[7])
+GLOBAL_LOG_LEVEL <- args[8]
 
 if(FALSE){
    TUMOR_ID <- "TUMOR"
    NORMAL_ID <- "TUMOR-ref"
-   
+   VIS_DATA_FILE <- "TUMOR.qsee.vis.data.tsv.gz"
    COHORT_PERCENTILES_FILE <- "qsee.cohort.percentiles.tsv.gz"
+   PLOT_PATH <- "TUMOR.qsee.vis.report.pdf"
    
-   output_dir <- ""
-   VIS_DATA_FILE <- sprintf("%s/%s.qsee.vis.data.tsv.gz", output_dir, TUMOR_ID)
-   OUTPUT_PATH <- sprintf("%s/%s.qsee.vis.report.pdf", output_dir, TUMOR_ID)
-   
+   SHOW_PLOT_WARNINGS <- TRUE
+   SINGLE_PATIENT_MODE <- TRUE
    GLOBAL_LOG_LEVEL <- "DEBUG"
 }
 
@@ -62,8 +66,11 @@ LOG_LEVEL <- list(
 log_message <- function(log_level, fmt, ...){
 
    current_time <- format(Sys.time(), "%H:%H:%OS3")
-   
-   log_message <- sprintf("%s [R] [%-5s] %s", current_time, log_level$name, sprintf(fmt, ...))
+
+   log_prefix <- if(SINGLE_PATIENT_MODE) "" else sprintf("[%s] ", TUMOR_ID)
+
+   log_message <- sprintf("%s [R] [%-5s] %s%s",
+      current_time, log_level$name, log_prefix, sprintf(fmt, ...))
    
    if(log_level$severity >= LOG_LEVEL[[LOG_LEVEL$ERROR$name]]$severity)
       stop(log_message)
@@ -81,14 +88,19 @@ LOGGER <- list(
    fatal = function(fmt, ...){ log_message(LOG_LEVEL$FATAL, fmt, ...) }
 )
 
+print_arg <- function(arg){
+   LOGGER$debug("  %s: %s", tolower(deparse(substitute(arg))), arg)
+}
+
 LOGGER$debug("Running script with args:")
-LOGGER$debug("  tumor_id: %s", TUMOR_ID)
-LOGGER$debug("  normal_id: %s", NORMAL_ID)
-LOGGER$debug("  vis_data_file: %s", VIS_DATA_FILE)
-LOGGER$debug("  cohort_percentiles_file: %s", COHORT_PERCENTILES_FILE)
-LOGGER$debug("  output_path: %s", OUTPUT_PATH)
-LOGGER$debug("  show_plot_warnings: %s", SHOW_PLOT_WARNINGS)
-LOGGER$debug("  log_level: %s", GLOBAL_LOG_LEVEL)
+print_arg(TUMOR_ID)
+print_arg(NORMAL_ID)
+print_arg(VIS_DATA_FILE)
+print_arg(COHORT_PERCENTILES_FILE)
+print_arg(PLOT_PATH)
+print_arg(SHOW_PLOT_WARNINGS)
+print_arg(SINGLE_PATIENT_MODE)
+print_arg(GLOBAL_LOG_LEVEL)
 
 ## =============================
 ## Constants
@@ -321,7 +333,7 @@ plot_distribution <- function(plot_data, x, invert_normal = FALSE, mark_sample_p
       LOGGER$error("Line/distribution plot failed - empty data frame")
    }
    
-   plot_data[[x]] <- as.numeric(plot_data[[x]])
+   plot_data[[x]] <- as.numeric(as.character(plot_data[[x]]))
    
    gg_scale_y_continuous <- geom_blank()
    sample_type_count <- plot_data$SampleType %>% levels() %>% length()
@@ -505,7 +517,7 @@ plot_pairwise_comparison <- function(
       ## Use geom_crossbar instead of geom_bar here so that bars are not inverted when values are <1 when in log scale
       gg_geom_bar <- geom_crossbar(
          aes(ymin = bar_baseline, ymax = .data[[y]]), position = gg_position_dodge,
-         color = "black", middle.color = NA, linewidth = 0.3, width = 0.5*box_width_scale
+         color = NA, middle.color = NA, linewidth = 0.3, width = 0.2 * box_width_scale
       )
       
       gg_scale_color_manual <- geom_blank()
@@ -580,7 +592,7 @@ PLOTS[[FEATURE_TYPE$DISCORDANT_FRAG_FREQ]] <- local({
       return(plot_missing_data(plot_labels))
    }
    
-   plot_data <- plot_data %>% dplyr::mutate(DiscordantFragType = reverse_levels(DiscordantFragType))
+   plot_data <- plot_data %>% dplyr::mutate(DisplayName = reverse_levels(DisplayName))
    
    plot_pairwise_comparison(plot_data, x = "DisplayName", plot_type = box_or_bar_plot()) + 
       scale_y_continuous(transform = "log10", labels = function(x) format(x, scientific = FALSE, drop0trailing = TRUE, trim = TRUE)) +
@@ -1199,11 +1211,25 @@ create_report <- local({
    
    plots_combined <- patchwork::wrap_plots(plots, design = design) + REPORT_TITLE
 
-   LOGGER$info("Writing report to: %s", OUTPUT_PATH)
-   suppressWarnings({ ## Prevent ggplot build warnings showing again - these are already shown when calling render_now()
-      ggsave(filename = OUTPUT_PATH, plot = plots_combined, width = 20, height = 12, units = "in")   
+   plot_width <- 20
+   plot_height <- 12
+
+   ## Suppress warnings to prevent ggplot build warnings showing again - these are already shown when calling render_now()
+
+   LOGGER$info("Writing PDF: %s", PLOT_PATH)
+   suppressWarnings({
+      ggsave(filename = PLOT_PATH, plot = plots_combined, width = plot_width, height = plot_height, units = "in")
    })
-   
+
+   if(SINGLE_PATIENT_MODE)
+   {
+      ## PNGs are easier to embed in downstream reports (e.g. on a website)
+      png_path <- sub("pdf$", "png", PLOT_PATH)
+      LOGGER$info("Writing PNG: %s", png_path)
+      suppressWarnings({
+         ggsave(filename = png_path, plot = plots_combined, width = plot_width, height = plot_height, units = "in")
+      })
+   }
 })
 
 
