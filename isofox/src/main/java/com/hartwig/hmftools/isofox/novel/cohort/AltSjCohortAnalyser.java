@@ -24,8 +24,8 @@ import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.ALT_SPLICE_JUNCTION;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.CANONICAL_SPLICE_JUNCTION;
 import static com.hartwig.hmftools.isofox.cohort.CohortConfig.formSampleFilenames;
-import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionFile.FLD_TRANS_END;
-import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionFile.FLD_TRANS_START;
+import static com.hartwig.hmftools.isofox.novel.AltSpliceJunction.FLD_TRANS_END;
+import static com.hartwig.hmftools.isofox.novel.AltSpliceJunction.FLD_TRANS_START;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -121,13 +121,13 @@ public class AltSjCohortAnalyser
                     if(altSJFile == null)
                         continue;
 
-                    final List<AltSpliceJunctionFile> altSJs = mLoadCanonical ?
+                    List<AltSpliceJunctionFile> altSJs = mLoadCanonical ?
                             loadCanonicalSpliceFile(altSJFile, null, mAltSjFilter) :
                             loadFile(altSJFile, null, mAltSjFilter);
 
                     ++sampleCount;
 
-                    ISF_LOGGER.debug("{}: sample({}) loaded {} splice-junction records", sampleCount, sampleId, altSJs.size());
+                    ISF_LOGGER.debug("{}: sample({}) loaded {} alt-splice-junctions", sampleCount, sampleId, altSJs.size());
 
                     altSJs.forEach(x -> addAltSpliceJunction(x, sampleId, cancerType));
                 }
@@ -272,11 +272,11 @@ public class AltSjCohortAnalyser
             int depthStartIndex = fieldsIndexMap.get(FLD_DEPTH_START);
             int depthEndIndex = fieldsIndexMap.get(FLD_DEPTH_END);
 
-            final List<AltSpliceJunctionFile> altSJs = Lists.newArrayList();
+            List<AltSpliceJunctionFile> altSJs = Lists.newArrayList();
 
-            final AltSpliceJunctionContext[] emptyRegionContexts = { SPLICE_JUNC, SPLICE_JUNC };
-            final String[] emptyBaseContexts = {"", ""};
-            final String[] emptyTranscriptNames = {"", ""};
+            AltSpliceJunctionContext[] emptyRegionContexts = { SPLICE_JUNC, SPLICE_JUNC };
+            String[] emptyBaseContexts = {"", ""};
+            String[] emptyTranscriptNames = {"", ""};
 
             for(String data : lines)
             {

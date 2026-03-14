@@ -194,16 +194,16 @@ public class AltSjWriter
         {
             for(Map.Entry<String,Map<String,List<AltSjCohortData>>> chrEntry : altSpliceJunctions.entrySet())
             {
-                final String chromosome = chrEntry.getKey();
-                final Map<String,List<AltSjCohortData>> geneMap = chrEntry.getValue();
+                String chromosome = chrEntry.getKey();
+                Map<String,List<AltSjCohortData>> geneMap = chrEntry.getValue();
 
                 for(Map.Entry<String,List<AltSjCohortData>> geneEntry : geneMap.entrySet())
                 {
                     final String geneId = geneEntry.getKey();
 
-                    for (AltSjCohortData altSjData : geneEntry.getValue())
+                    for(AltSjCohortData altSjData : geneEntry.getValue())
                     {
-                        final AltSpliceJunctionFile altSJ = altSjData.AltSJ;
+                        AltSpliceJunctionFile altSJ = altSjData.AltSJ;
 
                         for(Map.Entry<String,List<String>> entry : altSjData.cancerSampleIds().entrySet())
                         {
@@ -228,7 +228,7 @@ public class AltSjWriter
                                 StringJoiner sj = new StringJoiner(ITEM_DELIM);
                                 entry.getValue().forEach(x -> sj.add(x));
 
-                                mCohortFrequencyWriter.write(String.format(",%s", sj.toString()));
+                                mCohortFrequencyWriter.write(String.format(",%s", sj));
                             }
 
                             mCohortFrequencyWriter.newLine();

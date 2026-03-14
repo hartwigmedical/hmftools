@@ -5,6 +5,8 @@ import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.isofox.novel.AltSpliceJunction.FLD_TRANS_END;
+import static com.hartwig.hmftools.isofox.novel.AltSpliceJunction.FLD_TRANS_START;
 
 import java.util.StringJoiner;
 
@@ -12,6 +14,7 @@ import com.hartwig.hmftools.common.rna.AltSpliceJunctionContext;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionType;
 import com.hartwig.hmftools.common.rna.NovelSpliceJunctionFile;
 
+@Deprecated
 public class AltSpliceJunctionFile
 {
     // has more fields than the commonly used NovelSpliceJunction, used internally by Isofox for cohort and other analyses
@@ -28,10 +31,6 @@ public class AltSpliceJunctionFile
     public final String[] TranscriptNames;
     public final String[] BaseContexts;
     public final int CohortFrequency;
-
-    public static final String FLD_TRANS_START = "TransStart";
-    public static final String FLD_TRANS_END = "TransEnd";
-
 
     public AltSpliceJunctionFile(
             final String geneId, final String geneName, final String chromosome, final int[] spliceJunction,
@@ -75,7 +74,7 @@ public class AltSpliceJunctionFile
 
     public String key() { return formKey(Chromosome, SpliceJunction[SE_START], SpliceJunction[SE_END]); }
 
-    public String toLine()
+    public String write()
     {
         return new StringJoiner(TSV_DELIM)
                 .add(GeneId)

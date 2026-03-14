@@ -86,12 +86,12 @@ public class RegionReadData implements Comparable<RegionReadData>
         return mTransExonRefs.stream().anyMatch(x -> x.TransName.equals(transName));
     }
 
-    public void addExonRef(final String geneId, int transId, final String transName, int exonRank)
+    public void addExonRef(final String geneId, int transId, final String transName, int exonRank, boolean isCanonical)
     {
         if(mTransExonRefs.stream().anyMatch(x -> x.TransId == transId && x.ExonRank == exonRank))
             return;
 
-        mTransExonRefs.add(new TransExonRef(geneId, transId, transName, exonRank));
+        mTransExonRefs.add(new TransExonRef(geneId, transId, transName, exonRank, isCanonical));
     }
 
     public final String refBases() { return mRefBases; }
@@ -321,7 +321,7 @@ public class RegionReadData implements Comparable<RegionReadData>
                     regions.add(exonReadData);
                 }
 
-                exonReadData.addExonRef(geneId, transData.TransId, transData.TransName, exon.Rank);
+                exonReadData.addExonRef(geneId, transData.TransId, transData.TransName, exon.Rank, transData.IsCanonical);
 
                 if(prevRegionReadData != null)
                 {

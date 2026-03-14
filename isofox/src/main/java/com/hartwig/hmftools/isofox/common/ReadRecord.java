@@ -770,7 +770,8 @@ public class ReadRecord
                 if(mMappedCoords.stream().anyMatch(x -> positionsWithin(x[SE_START], x[SE_END], exon.End, nextExon.Start)))
                 {
                     int minExonRank = min(exon.Rank, nextExon.Rank);
-                    transRefList.add(new TransExonRef(transData.GeneId, transData.TransId, transData.TransName, minExonRank));
+                    transRefList.add(new TransExonRef(
+                            transData.GeneId, transData.TransId, transData.TransName, minExonRank, transData.IsCanonical));
                     break;
                 }
             }

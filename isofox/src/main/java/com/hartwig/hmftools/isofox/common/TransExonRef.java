@@ -56,7 +56,7 @@ public class TransExonRef
 
     public String toString()
     {
-        return String.format("%d:%s:%d", TransId, TransName, ExonRank);
+        return String.format("%d:%s:%d %s", TransId, TransName, ExonRank, isCanonical() ? "canonical" : "");
     }
 
 }
