@@ -99,7 +99,7 @@ public final class NovelSpliceJunctionFile
                 .toString();
     }
 
-    static List<NovelSpliceJunction> read(final String filename)
+    public static List<NovelSpliceJunction> read(final String filename)
     {
         try
         {

@@ -67,6 +67,8 @@ public class AltSpliceJunctionFinder
     private final AltSjCohortCache mAltSjCohortCache;
     private final Set<String> mReportableGenes;
 
+    public static final String ALT_SJ_UNFILTERED_FILE_ID = "alt_splice_junc_unfiltered.tsv";
+
     public AltSpliceJunctionFinder(
             final IsofoxConfig config, final AltSjCohortCache altSjCohortCache,
             final BufferedWriter unfilteredWriter, final BufferedWriter passWriter)
@@ -664,8 +666,6 @@ public class AltSpliceJunctionFinder
             }
         }
     }
-
-    public static final String ALT_SJ_UNFILTERED_FILE_ID = "alt_splice_junc_unfiltered.tsv";
 
     public static BufferedWriter createUnfilteredWriter(final IsofoxConfig config)
     {

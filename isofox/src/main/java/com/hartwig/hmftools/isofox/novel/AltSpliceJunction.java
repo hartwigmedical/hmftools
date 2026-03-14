@@ -88,7 +88,7 @@ public class AltSpliceJunction
         mDonorAcceptorBases = "";
 
         mSelectedTranscripts = new String[SE_PAIR];
-        mSelectedExons = new int[SE_PAIR];
+        mSelectedExons = new int[] {-1, -1};
         mCohortFrequency = -1;
         mFilter = "";
     }
@@ -403,8 +403,8 @@ public class AltSpliceJunction
                 .junctionStart(SpliceJunction[SE_START])
                 .junctionEnd(SpliceJunction[SE_END])
                 .type(mType)
-                .transcriptStart(mSelectedTranscripts[SE_START])
-                .transcriptEnd(mSelectedTranscripts[SE_END])
+                .transcriptStart(mSelectedTranscripts[SE_START] != null ? mSelectedTranscripts[SE_START] : "")
+                .transcriptEnd(mSelectedTranscripts[SE_END] != null ? mSelectedTranscripts[SE_END] : "")
                 .exonStart(mSelectedExons[SE_START])
                 .exonEnd(mSelectedExons[SE_END])
                 .fragmentCount(mFragmentCount)
