@@ -27,7 +27,6 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.rna.NovelSpliceJunctionFile;
-import com.hartwig.hmftools.isofox.novel.AltSpliceJunctionFile;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
 
@@ -172,7 +171,7 @@ public class SpliceVariantCache
         }
     }
 
-    public int getCohortAltSjFrequency(final AltSpliceJunctionFile altSJ)
+    public int getCohortAltSjFrequency(final AltSpliceJuncData altSJ)
     {
         if(mCohortAltSJs.isEmpty())
             return 0;

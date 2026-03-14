@@ -9,7 +9,6 @@ import static com.hartwig.hmftools.common.rna.NovelSpliceJunctionFile.FLD_BASES_
 import static com.hartwig.hmftools.common.rna.NovelSpliceJunctionFile.FLD_COHORT_FREQUENCY;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_REGION_END;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_REGION_START;
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_DEPTH_END;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_DEPTH_START;
@@ -36,7 +35,6 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionContext;
-import com.hartwig.hmftools.isofox.novel.AltSpliceJunctionFile;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionType;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.isofox.cohort.AnalysisType;
@@ -121,7 +119,7 @@ public class AltSjCohortAnalyser
                     if(altSJFile == null)
                         continue;
 
-                    List<AltSpliceJunctionFile> altSJs = mLoadCanonical ?
+                    List<AltSpliceJuncData> altSJs = mLoadCanonical ?
                             loadCanonicalSpliceFile(altSJFile, null, mAltSjFilter) :
                             loadFile(altSJFile, null, mAltSjFilter);
 
@@ -149,7 +147,7 @@ public class AltSjCohortAnalyser
                 final String sampleId = mConfig.SampleData.SampleIds.get(i);
                 final Path altSJFile = filenames.get(i);
 
-                final List<AltSpliceJunctionFile> altSJs = loadFile(altSJFile, null, mAltSjFilter);
+                final List<AltSpliceJuncData> altSJs = loadFile(altSJFile, null, mAltSjFilter);
 
                 ISF_LOGGER.debug("{}: sample({}) loaded {} alt-SJ records", i, sampleId, altSJs.size());
                 totalProcessed += altSJs.size();
@@ -178,7 +176,7 @@ public class AltSjCohortAnalyser
         mWriter.close();
     }
 
-    public static List<AltSpliceJunctionFile> loadFile(final Path filename, final Map<String,Integer> refFieldsIndexMap, final AltSjFilter filter)
+    public static List<AltSpliceJuncData> loadFile(final Path filename, final Map<String,Integer> refFieldsIndexMap, final AltSjFilter filter)
     {
         try
         {
@@ -206,7 +204,7 @@ public class AltSjCohortAnalyser
             int transEndIndex = fieldsIndexMap.get(FLD_TRANS_END);
             int cohortFreqIndex = fieldsIndexMap.get(FLD_COHORT_FREQUENCY);
 
-            final List<AltSpliceJunctionFile> altSJs = Lists.newArrayList();
+            final List<AltSpliceJuncData> altSJs = Lists.newArrayList();
 
             for(String data : lines)
             {
@@ -236,12 +234,12 @@ public class AltSjCohortAnalyser
         }
     }
 
-    private static AltSpliceJunctionFile parseLine(
+    private static AltSpliceJuncData parseLine(
             final String[] values,
             int geneId, int geneName, int chr, int posStart, int posEnd, int type, int fragCount, int depthStart, int depthEnd,
             int regionStart, int regionEnd, int basesStart, int basesEnd, int transStart, int transEnd, int cohortFrequency)
     {
-        return new AltSpliceJunctionFile(
+        return new AltSpliceJuncData(
                 values[geneId], values[geneName], values[chr], new int[] { Integer.parseInt(values[posStart]), Integer.parseInt(values[posEnd]) },
                 AltSpliceJunctionType.valueOf(values[type]),
                 Integer.parseInt(values[fragCount]), new int[] { Integer.parseInt(values[depthStart]), Integer.parseInt(values[depthEnd]) },
@@ -251,7 +249,7 @@ public class AltSjCohortAnalyser
     }
 
 
-    public static List<AltSpliceJunctionFile> loadCanonicalSpliceFile(
+    public static List<AltSpliceJuncData> loadCanonicalSpliceFile(
             final Path filename, final Map<String,Integer> refFieldsIndexMap, final AltSjFilter filter)
     {
         try
@@ -272,7 +270,7 @@ public class AltSjCohortAnalyser
             int depthStartIndex = fieldsIndexMap.get(FLD_DEPTH_START);
             int depthEndIndex = fieldsIndexMap.get(FLD_DEPTH_END);
 
-            List<AltSpliceJunctionFile> altSJs = Lists.newArrayList();
+            List<AltSpliceJuncData> altSJs = Lists.newArrayList();
 
             AltSpliceJunctionContext[] emptyRegionContexts = { SPLICE_JUNC, SPLICE_JUNC };
             String[] emptyBaseContexts = {"", ""};
@@ -291,7 +289,7 @@ public class AltSjCohortAnalyser
                 int[] spliceJunction = new int[] { Integer.parseInt(values[posStartIndex]), Integer.parseInt(values[posEndIndex]) };
                 int[] depthCounts = new int[] { Integer.parseInt(values[depthStartIndex]), Integer.parseInt(values[depthEndIndex]) };
 
-                altSJs.add(new AltSpliceJunctionFile(
+                altSJs.add(new AltSpliceJuncData(
                         geneId, values[geneNameIndex], values[chrIndex], spliceJunction, AltSpliceJunctionType.CANONICAL,
                         fragCount, depthCounts, emptyRegionContexts, emptyBaseContexts, emptyTranscriptNames, 0));
             }
@@ -305,7 +303,7 @@ public class AltSjCohortAnalyser
         }
     }
 
-    private void addAltSpliceJunction(final AltSpliceJunctionFile altSJ, final String sampleId, final String cancerType)
+    private void addAltSpliceJunction(final AltSpliceJuncData altSJ, final String sampleId, final String cancerType)
     {
         if(mKnownSitesOnly)
         {

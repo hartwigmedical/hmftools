@@ -13,11 +13,10 @@ import java.util.StringJoiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.isofox.novel.AltSpliceJunctionFile;
 
 public class AltSjCohortData
 {
-    public final AltSpliceJunctionFile AltSJ;
+    public final AltSpliceJuncData AltSJ;
 
     // cohort data
     private final Set<String> mSampleIds;
@@ -29,7 +28,7 @@ public class AltSjCohortData
     private int mMaxFragmentCount;
     private final int[] mPositionCounts; // counts at the start and end
 
-    public AltSjCohortData(final AltSpliceJunctionFile altSJ)
+    public AltSjCohortData(final AltSpliceJuncData altSJ)
     {
         AltSJ = altSJ;
         mSampleIds = Sets.newHashSet();

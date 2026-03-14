@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 
-import com.hartwig.hmftools.isofox.novel.AltSpliceJunctionFile;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
 
@@ -72,7 +71,7 @@ public class AltSjWriter
         }
     }
 
-    public void writeCombinedSampleData(final String sampleId, final AltSpliceJunctionFile altSJ, final int minFragments)
+    public void writeCombinedSampleData(final String sampleId, final AltSpliceJuncData altSJ, final int minFragments)
     {
         if(mCombinedDataWriter == null || altSJ.FragmentCount < minFragments)
             return;
@@ -85,8 +84,7 @@ public class AltSjWriter
 
             mCombinedDataWriter.write(String.format(",%d,%d,%d,%s,%s,%s,%s",
                     altSJ.FragmentCount, altSJ.DepthCounts[SE_START], altSJ.DepthCounts[SE_END],
-                    altSJ.RegionContexts[SE_START], altSJ.RegionContexts[SE_END],
-                    altSJ.TranscriptNames[SE_START], altSJ.TranscriptNames[SE_END]));
+                    altSJ.RegionContexts[SE_START], altSJ.RegionContexts[SE_END]));
 
             mCombinedDataWriter.newLine();
         }
@@ -150,7 +148,7 @@ public class AltSjWriter
 
                     for (AltSjCohortData altSjData : geneEntry.getValue())
                     {
-                        final AltSpliceJunctionFile altSJ = altSjData.AltSJ;
+                        final AltSpliceJuncData altSJ = altSjData.AltSJ;
 
                         int sampleCount = altSjData.getSampleIds().size();
 
@@ -203,7 +201,7 @@ public class AltSjWriter
 
                     for(AltSjCohortData altSjData : geneEntry.getValue())
                     {
-                        AltSpliceJunctionFile altSJ = altSjData.AltSJ;
+                        AltSpliceJuncData altSJ = altSjData.AltSJ;
 
                         for(Map.Entry<String,List<String>> entry : altSjData.cancerSampleIds().entrySet())
                         {
