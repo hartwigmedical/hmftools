@@ -90,10 +90,10 @@ public class ComplexBuilder
             }
         }
 
-        LL_LOGGER.info("  confirmed {} unique allele groups{}{}",
+        LL_LOGGER.debug("  confirmed {} unique allele groups{}{}",
                 uniqueGroups.size(), uniqueGroups.isEmpty() ? "" : ": ", AlleleCoverage.toString(uniqueGroups));
 
-        LL_LOGGER.info("  found {} insufficiently unique allele groups{}{}",
+        LL_LOGGER.debug("  found {} insufficiently unique allele groups{}{}",
                 lowConfGroups.size(), lowConfGroups.isEmpty() ? "" : ": ", AlleleCoverage.toString(lowConfGroups));
 
         LL_LOGGER.debug("  discarded {} allele groups{}{}",
@@ -156,7 +156,7 @@ public class ComplexBuilder
         if(!mConfirmedRecoveredAlleles.isEmpty())
         {
             Collections.sort(mConfirmedRecoveredAlleles);
-            LL_LOGGER.info("  keeping {} recovered alleles from insufficiently unique groups: {}",
+            LL_LOGGER.debug("  keeping {} recovered alleles from insufficiently unique groups: {}",
                     mConfirmedRecoveredAlleles.size(), HlaAllele.toString(mConfirmedRecoveredAlleles));
         }
         else if(!recoveredAlleles.isEmpty())
@@ -220,6 +220,7 @@ public class ComplexBuilder
 
             Map<HlaGene, Integer> geneOnlyComplexeSizes =
                     geneOnlyComplexes.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, x -> x.getValue().size()));
+
             LL_LOGGER.info("candidate permutations exceeds threshold, candidates({}) common({})",
                     geneOnlyComplexeSizes, commonAlleles.size());
 
@@ -237,7 +238,7 @@ public class ComplexBuilder
             List<HlaAllele> rejected = mUniqueProteinAlleles.stream()
                     .filter(x -> !topCandidates.contains(x)).collect(Collectors.toList());
 
-            LL_LOGGER.info("  discarding {} unlikely candidates: {}", rejected.size(), HlaAllele.toString(rejected));
+            LL_LOGGER.debug("  discarding {} unlikely candidates: {}", rejected.size(), HlaAllele.toString(rejected));
 
             complexes = buildAlleleComplexes(mUniqueGroupAlleles, topCandidates);
         }

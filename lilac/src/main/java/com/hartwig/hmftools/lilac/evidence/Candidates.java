@@ -66,7 +66,7 @@ public final class Candidates
             return commonAllles.stream().filter(x -> x.Gene == context.Gene).collect(Collectors.toList());
         }
 
-        LL_LOGGER.info("gene({}) {} candidates after amino acid filtering", context.geneName(), aminoAcidCandidates.size());
+        LL_LOGGER.debug("gene({}) {} candidates after amino acid filtering", context.geneName(), aminoAcidCandidates.size());
 
         // Nucleotide filtering
         NucleotideFiltering nucleotideFiltering = new NucleotideFiltering(aminoAcidBoundary);
@@ -87,7 +87,7 @@ public final class Candidates
             return aminoAcidCandidateAlleles;
         }
 
-        LL_LOGGER.info("gene({}) {} candidates after exon boundary filtering",
+        LL_LOGGER.debug("gene({}) {} candidates after exon boundary filtering",
                 context.geneName(), nucleotideSpecificAllelesCandidates.size());
 
         return nucleotideSpecificAllelesCandidates;
@@ -148,7 +148,7 @@ public final class Candidates
                 unphasedCandidates, phasedEvidence, RAW_REF_AMINO_ACID_COUNTS.get(context.Gene));
         List<HlaAllele> phasedAlleles = phasedCandidates.stream().map(x -> x.Allele).collect(Collectors.toList());
 
-        LL_LOGGER.info("gene({}) has {} candidates after phasing: {}",
+        LL_LOGGER.debug("gene({}) has {} candidates after phasing: {}",
                 context.geneName(), phasedCandidates.size(), HlaAllele.toString(phasedAlleles, 100));
 
         return phasedAlleles;

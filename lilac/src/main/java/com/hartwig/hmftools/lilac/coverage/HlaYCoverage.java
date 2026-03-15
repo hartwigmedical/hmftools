@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.lilac.coverage;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
@@ -297,38 +298,46 @@ public class HlaYCoverage
 
             String outcome = (miscCounts[Y0101_X] == 0 && miscCounts[EXON_3] > 0) ? "NOVEL" : "REF";
 
-            LL_LOGGER.info("HLA-Y_MISC_COUNTS:{},{},{},{},{}",
+            LL_LOGGER.debug("HLA-Y_MISC_COUNTS:{},{},{},{},{}",
                     sampleId, source, miscCounts[Y0101_X], miscCounts[EXON_3], outcome);
         }
 
         String fileName = mConfig.formFileId(LILAC_FILE_HLA_Y_COVERAGE);
+
         try
         {
             BufferedWriter writer = createBufferedWriter(fileName, false);
 
-            writer.write("Source\tAllele\tTotal\tShared\tHlaYShared\tUnique");
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
+            sj.add("Source").add("Allele").add("Total").add("Shared").add("HlaYShared").add("Unique");
+            writer.write(sj.toString());
             writer.newLine();
 
             for(Map.Entry<FragmentSource, Map<HlaAllele, int[]>> sourceEntry : mSourceAlleleFragmentCounts.entrySet())
             {
                 FragmentSource source = sourceEntry.getKey();
+
                 for(Map.Entry<HlaAllele, int[]> alleleEntry : sourceEntry.getValue().entrySet())
                 {
-                    final HlaAllele allele = alleleEntry.getKey();
-                    final int[] counts = alleleEntry.getValue();
+                     HlaAllele allele = alleleEntry.getKey();
+                    int[] counts = alleleEntry.getValue();
 
                     int total = counts[SHARED] + counts[SHARED_HLAY] + counts[UNIQUE];
 
-                    writer.write(String.format("%s\t%s\t%d\t%d\t%d\t%d",
-                            source, allele, total, counts[SHARED], counts[SHARED_HLAY], counts[UNIQUE]));
+                    sj = new StringJoiner(TSV_DELIM);
+                    sj.add(source.toString());
+                    sj.add(allele.toString());
+                    sj.add(String.valueOf(total));
+                    sj.add(String.valueOf(counts[SHARED]));
+                    sj.add(String.valueOf(counts[SHARED_HLAY]));
+                    sj.add(String.valueOf(counts[UNIQUE]));
+                    writer.write(sj.toString());
 
                     writer.newLine();
                 }
             }
 
             writer.close();
-
-            closeBufferedWriter(mWriter);
         }
         catch(IOException e)
         {
@@ -349,7 +358,9 @@ public class HlaYCoverage
                 String fileName = mConfig.formFileId(LILAC_FILE_HLA_Y_FRAGMENTS);
                 mWriter = createBufferedWriter(fileName, false);
 
-                mWriter.write("ReadId\tReadInfo\tAlleles\tShared\tLoci");
+                StringJoiner sj = new StringJoiner(TSV_DELIM);
+                sj.add("ReadId").add("ReadInfo").add("Alleles").add("Shared").add("Loci");
+                mWriter.write(sj.toString());
                 mWriter.newLine();
             }
 
@@ -359,8 +370,14 @@ public class HlaYCoverage
             StringJoiner sjLoci = new StringJoiner(ITEM_DELIM);
             fragAminoAcidLoci.forEach(x -> sjLoci.add(x.toString()));
 
-            mWriter.write(String.format("%s\t%s\t%s\t%s\t%s",
-                    fragment.id(), fragment.readInfo(), sjAlleles, isShared, sjLoci));
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
+            sj.add(fragment.id());
+            sj.add(fragment.readInfo());
+            sj.add(sjAlleles.toString());
+            sj.add(String.valueOf(isShared));
+            sj.add(sjLoci.toString());
+
+            mWriter.write(sj.toString());
             mWriter.newLine();
 
         }
