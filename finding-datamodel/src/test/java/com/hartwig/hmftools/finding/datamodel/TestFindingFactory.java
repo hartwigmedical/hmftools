@@ -32,7 +32,14 @@ public class TestFindingFactory
     public static PurityPloidyFitBuilder purityPloidyFitBuilder()
     {
         return PurityPloidyFitBuilder.builder()
-                .fittedPurityMethod(PurityPloidyFit.FittedPurityMethod.NORMAL);
+                .fittedPurityMethod(PurityPloidyFit.FittedPurityMethod.NORMAL)
+                .purpleInputPlot(new VisualisationFile("purpleInputPlot.png"))
+                .purpleCircosPlot(new VisualisationFile("purpleCircosPlot.png"))
+                .purpleClonalityPlot(new VisualisationFile("purpleClonalityPlot.png"))
+                .purpleCopyNumberPlot(new VisualisationFile("purpleCopyNumberPlot.png"))
+                .purpleVariantCopyNumberPlot(new VisualisationFile("purpleVariantCopyNumberPlot.png"))
+                .purplePurityRangePlot(new VisualisationFile("purplePurityRangePlot.png"))
+                .purpleKataegisPlot(new VisualisationFile("purpleKataegisPlot.png"));
     }
 
     @NotNull

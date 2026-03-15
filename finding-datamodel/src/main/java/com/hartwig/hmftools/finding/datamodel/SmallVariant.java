@@ -38,7 +38,8 @@ public record SmallVariant(
         @Nullable List<Integer> localPhaseSets,
         // germline fields
         @Nullable String clinvarPathogenicity,
-        @Nullable Double gnomadFrequency
+        @Nullable Double gnomadFrequency,
+        @Nullable VisualisationFile visualisationFile
 ) implements Driver
 {
     @RecordBuilder

@@ -2,6 +2,8 @@ package com.hartwig.hmftools.finding.datamodel;
 
 import java.util.List;
 
+import org.jspecify.annotations.Nullable;
+
 import jakarta.validation.constraints.NotNull;
 
 @RecordBuilder
@@ -22,7 +24,8 @@ public record Fusion(
         boolean chainTerminated,
         @NotNull List<String> domainsKept,
         @NotNull List<String> domainsLost,
-        double junctionCopyNumber
+        double junctionCopyNumber,
+        @Nullable VisualisationFile visualisationFile
 ) implements Driver
 {
     public enum FusionType
