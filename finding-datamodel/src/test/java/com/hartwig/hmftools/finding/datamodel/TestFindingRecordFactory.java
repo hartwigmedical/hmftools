@@ -39,18 +39,6 @@ public class TestFindingRecordFactory {
                 .viruses(TestFindingFactory.buildDriverFindingsList(FindingsStatus.OK, List.of()))
                 .chromosomeArmCopyNumbers(TestFindingFactory.buildFindingsList(FindingsStatus.OK, List.of()))
                 .hlaAlleles(TestFindingFactory.buildFindingsList(FindingsStatus.OK, List.of()))
-                .pharmacoGenotypes(TestFindingFactory.buildFindingsList(FindingsStatus.OK, List.of()))
-                .visualisationFiles(VisualisationFilesBuilder.builder()
-                        .purpleInputPlot("")
-                        .purpleFinalCircosPlot("")
-                        .purpleClonalityPlot("")
-                        .purpleCopyNumberPlot("")
-                        .purpleVariantCopyNumberPlot("")
-                        .purplePurityRangePlot("")
-                        .purpleKataegisPlot("")
-                        .qseePlot("")
-                        .linxDriverPlots(List.of())
-                        .sageVisualisations(List.of())
-                        .build());
+                .pharmacoGenotypes(TestFindingFactory.buildFindingsList(FindingsStatus.OK, List.of()));
     }
 }

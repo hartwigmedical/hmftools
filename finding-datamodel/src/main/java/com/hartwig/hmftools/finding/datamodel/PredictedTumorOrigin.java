@@ -14,7 +14,8 @@ public record PredictedTumorOrigin(
         @Nullable Double genomicPositionClassifier,
         @Nullable Double featureClassifier,
         @Nullable Double altSjCohortClassifier,
-        @Nullable Double expressionPairwiseClassifier
+        @Nullable Double expressionPairwiseClassifier,
+        @Nullable VisualisationFile visualisationFile
 ) implements Finding
 {
     public enum CuppaMode
