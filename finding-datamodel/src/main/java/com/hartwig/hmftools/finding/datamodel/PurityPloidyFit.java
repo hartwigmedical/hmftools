@@ -10,7 +10,14 @@ public record PurityPloidyFit(
         double maxPurity,
         double ploidy,
         double minPloidy,
-        double maxPloidy
+        double maxPloidy,
+        @NotNull VisualisationFile purpleInputPlot,
+        @NotNull VisualisationFile purpleCircosPlot,
+        @NotNull VisualisationFile purpleClonalityPlot,
+        @NotNull VisualisationFile purpleCopyNumberPlot,
+        @NotNull VisualisationFile purpleVariantCopyNumberPlot,
+        @NotNull VisualisationFile purplePurityRangePlot,
+        @NotNull VisualisationFile purpleKataegisPlot
 )
 {
     public enum FittedPurityMethod

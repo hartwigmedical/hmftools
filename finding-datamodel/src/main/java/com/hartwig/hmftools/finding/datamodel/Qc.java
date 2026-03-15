@@ -2,6 +2,8 @@ package com.hartwig.hmftools.finding.datamodel;
 
 import java.util.Set;
 
+import org.jspecify.annotations.Nullable;
+
 import jakarta.validation.constraints.NotNull;
 
 @SuppressWarnings("unused")
@@ -13,7 +15,8 @@ public record Qc(
         double contamination,
         int totalCopyNumberSegments,
         int unsupportedCopyNumberSegments,
-        int deletedGenes
+        int deletedGenes,
+        @Nullable VisualisationFile visualisationFile
 )
 {
     public enum QCStatus

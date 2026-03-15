@@ -25,8 +25,7 @@ public record FindingRecord(
         @NotNull FindingItem<MicrosatelliteStability> microsatelliteStability,
         @NotNull FindingItem<TumorMutationalLoad> tumorMutationalLoad,
         @NotNull FindingItem<TumorMutationalBurden> tumorMutationalBurden,
-        @NotNull FindingItem<HomologousRecombination> homologousRecombination,
-        @NotNull VisualisationFiles visualisationFiles)
+        @NotNull FindingItem<HomologousRecombination> homologousRecombination)
 {
     @NotNull
     public List<SmallVariant> allSmallVariants()

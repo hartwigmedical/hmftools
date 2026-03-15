@@ -25,7 +25,8 @@ public record GainDeletion(
     @Nullable Double germlineMinCopyNumber,
     @Nullable Double tpm,
     @Nullable Double tpmPercentile,
-    @Nullable Double tpmFoldChange) implements Driver
+    @Nullable Double tpmFoldChange,
+    @Nullable VisualisationFile visualisationFile) implements Driver
 {
     public enum Type
     {

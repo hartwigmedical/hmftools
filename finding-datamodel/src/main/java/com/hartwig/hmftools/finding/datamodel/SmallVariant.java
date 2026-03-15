@@ -33,7 +33,8 @@ public record SmallVariant(
         @NotNull GenotypeStatus genotypeStatus,
         int repeatCount,
         double subclonalLikelihood,
-        @Nullable List<Integer> localPhaseSets
+        @Nullable List<Integer> localPhaseSets,
+        @Nullable VisualisationFile visualisationFile
 ) implements Driver
 {
     @RecordBuilder

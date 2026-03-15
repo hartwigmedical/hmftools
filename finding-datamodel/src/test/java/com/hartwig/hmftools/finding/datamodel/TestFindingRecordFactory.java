@@ -2,7 +2,6 @@ package com.hartwig.hmftools.finding.datamodel;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -39,19 +38,6 @@ public class TestFindingRecordFactory {
                 .fusions(TestFindingFactory.buildDriverFindingsList(FindingsStatus.OK, List.of()))
                 .viruses(TestFindingFactory.buildDriverFindingsList(FindingsStatus.OK, List.of()))
                 .hlaAlleles(TestFindingFactory.buildFindingsList(FindingsStatus.OK, List.of()))
-                .pharmacoGenotypes(TestFindingFactory.buildFindingsList(FindingsStatus.OK, List.of()))
-                .visualisationFiles(VisualisationFilesBuilder.builder()
-                        .tumorBqrPlot("")
-                        .purpleInputPlot("")
-                        .purpleFinalCircosPlot("")
-                        .purpleClonalityPlot("")
-                        .purpleCopyNumberPlot("")
-                        .purpleVariantCopyNumberPlot("")
-                        .purplePurityRangePlot("")
-                        .purpleKataegisPlot("")
-                        .qseePlot("")
-                        .linxDriverPlots(List.of())
-                        .sageVisualisations(Map.of())
-                        .build());
+                .pharmacoGenotypes(TestFindingFactory.buildFindingsList(FindingsStatus.OK, List.of()));
     }
 }
