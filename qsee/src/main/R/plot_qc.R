@@ -458,7 +458,7 @@ PLOTS[[FEATURE_TYPE$DUPLICATE_FREQ]] <- local({
    
    plot_distribution(plot_data, x = "ReadCount") +
       plot_labels +
-      scale_x_log10() +
+      scale_x_log10(guide = "axis_logticks") +
       theme(
          panel.grid.major.x = element_line(color = "grey90", linewidth = 0.25),
       ) +
@@ -593,7 +593,10 @@ PLOTS[[FEATURE_TYPE$DISCORDANT_FRAG_FREQ]] <- local({
    plot_data <- plot_data %>% dplyr::mutate(DisplayName = reverse_levels(DisplayName))
    
    plot_pairwise_comparison(plot_data, x = "DisplayName", plot_type = box_or_bar_plot()) + 
-      scale_y_continuous(transform = "log10", labels = function(x) format(x, scientific = FALSE, drop0trailing = TRUE, trim = TRUE)) +
+      scale_y_continuous(
+         transform = "log10", guide = "axis_logticks",
+         labels = function(x) format(x, scientific = FALSE, drop0trailing = TRUE, trim = TRUE),
+      ) +
       plot_labels +
       coord_flip() +
       theme(
@@ -943,22 +946,22 @@ plot_sub_table <- function(plot_data, show_title = FALSE, show_sample_type_label
    box_width_scale <- length(unique(plot_data$SampleType)) / length(levels(plot_data$SampleType))
    plot_type <- if(is.na(COHORT_PERCENTILES_FILE)) PAIRWISE_PLOT_TYPE$BAR else PAIRWISE_PLOT_TYPE$BOX
    
+   gg_scale_y_continuous <- if(number_format == NUMBER_FORMAT$LOG10){
+      scale_y_continuous(
+         limits = axis_limits,
+         transform = "log10", guide = "axis_logticks",
+         label = function(x) format(x, scientific = FALSE, drop0trailing = TRUE, trim = TRUE)
+      )
+   } else if(number_format == NUMBER_FORMAT$PERCENT){
+      scale_y_continuous(limits = axis_limits, label = scales::label_percent())
+   } else {
+      scale_y_continuous(limits = axis_limits)
+   }
+   
    subplot_pairwise_comparison <- 
       plot_pairwise_comparison(plot_data, x = "DisplayName", y = "FeatureValue", box_width_scale = box_width_scale, plot_type = plot_type) +
       get_div_lines(n_rows, "vertical") + 
-      scale_y_continuous(
-         
-         limits = axis_limits,
-         transform = if(number_format == NUMBER_FORMAT$LOG10) "log10" else "identity",
-         
-         label = if(number_format == NUMBER_FORMAT$PERCENT){ 
-            scales::label_percent()
-         } else if(number_format == NUMBER_FORMAT$LOG10) {
-            function(x) format(x, scientific = FALSE, drop0trailing = TRUE, trim = TRUE)
-         } else {
-            waiver()
-         }
-      ) +
+      gg_scale_y_continuous +
       coord_flip() +
       theme(
          axis.title.x = element_blank(),
