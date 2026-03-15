@@ -2,24 +2,27 @@ package com.hartwig.hmftools.pavereverse.base;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.List;
+
 import com.hartwig.hmftools.pavereverse.ReversePaveTestBase;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.junit.Assert;
 import org.junit.Test;
 
 public class PaddedExonTest extends ReversePaveTestBase
 {
-    PaddedExon ec1 = new PaddedExon(0,"", "", "TTTAAACCCGGG", 100, "CATG", "TACG");
+    PaddedExon ec1 = new PaddedExon(0, "", "", "TTTAAACCCGGG", 100, "CATG", "TACG");
     PaddedExon ec2 = new PaddedExon(2, "A", "", "TTTAAACCCGG", 100, "CATG", "TACG");
     PaddedExon ec3 = new PaddedExon(3, "", "A", "TTAAACCCGGG", 100, "CATG", "TACG");
     PaddedExon ec6 = new PaddedExon(6, "TA", "AT", "TTAACCGG", 100, "CATG", "TACG");
-    PaddedExon ec7 = new PaddedExon(0,"", "", "ACGTAC", 100, "CATG", "TAGC");
-    PaddedExon ec8 = new PaddedExon(0,"T", "AG", "ACGTAC", 100, "CCCC", "TTTT");
+    PaddedExon ec7 = new PaddedExon(0, "", "", "ACGTAC", 100, "CATG", "TAGC");
+    PaddedExon ec8 = new PaddedExon(0, "T", "AG", "ACGTAC", 100, "CCCC", "TTTT");
 
     @Test
     public void baseSequenceWithBasesReplacedAtStrandLocTest()
     {
-        assertEquals("GTGCACAAACCCGGG", ec1.baseSequenceWithBasesReplacedAtStrandLocation(100,"TTT", "GTGCAC"));
+        assertEquals("GTGCACAAACCCGGG", ec1.baseSequenceWithBasesReplacedAtStrandLocation(100, "TTT", "GTGCAC"));
         assertEquals("TGAACCCGGG", ec1.baseSequenceWithBasesReplacedAtStrandLocation(101, "TTA", "G"));
         assertEquals("TTTCCCTTTAAACCCGGG", ec1.baseSequenceWithBasesReplacedAtStrandLocation(103, "AAA", "CCCTTTAAA"));
         assertEquals("TTTAAACCCTACTAC", ec1.baseSequenceWithBasesReplacedAtStrandLocation(109, "GGG", "TACTAC"));
@@ -42,10 +45,37 @@ public class PaddedExonTest extends ReversePaveTestBase
         assertEquals("TACGTC", ec7.baseSequenceWithSingleBaseRemoved(0, false));
         // T  C AC TAC AG >> CTGTAGTGA
         assertEquals("CTGTAGTGA", ec8.baseSequenceWithSingleBaseRemoved(3, false));
-
     }
 
-   @Test
+    @Test
+    public void baseSequenceWithSingleBaseInsertedTest()
+    {
+        /// ec7 = new PaddedExon(0,"", "", "ACGTAC", 100, "CATG", "TAGC");
+        // ACGTAC
+        assertEquals("ACGTAA", ec7.baseSequenceWithSingleBaseInserted(5, "A", true));
+        assertEquals("ACGTAC", ec7.baseSequenceWithSingleBaseInserted(5, "C", true));
+        assertEquals("GTACGT", ec7.baseSequenceWithSingleBaseInserted(5, "A", false));
+        assertEquals("GTACGG", ec7.baseSequenceWithSingleBaseInserted(5, "C", false));
+
+        assertEquals("ACGTGA", ec7.baseSequenceWithSingleBaseInserted(4, "G", true));
+        assertEquals("ACGTTA", ec7.baseSequenceWithSingleBaseInserted(4, "T", true));
+
+        assertEquals("ACGCTA", ec7.baseSequenceWithSingleBaseInserted(3, "C", true));
+        assertEquals("ACGTTA", ec7.baseSequenceWithSingleBaseInserted(3, "T", true));
+
+        assertEquals("AGCGTA", ec7.baseSequenceWithSingleBaseInserted(1, "G", true));
+        assertEquals("ATCGTA", ec7.baseSequenceWithSingleBaseInserted(1, "T", true));
+        assertEquals("GCTACG", ec7.baseSequenceWithSingleBaseInserted(1, "G", false));
+        assertEquals("GATACG", ec7.baseSequenceWithSingleBaseInserted(1, "T", false));
+
+        // ec8 = new PaddedExon(0, "T", "AG", "ACGTAC", 100, "CCCC", "TTTT");
+        assertEquals("TAGCGTACA", ec8.baseSequenceWithSingleBaseInserted(1, "G", true));
+        assertEquals("TATCGTACA", ec8.baseSequenceWithSingleBaseInserted(1, "T", true));
+        assertEquals("CTGCTACGT", ec8.baseSequenceWithSingleBaseInserted(1, "G", false));
+        assertEquals("CTGATACGT", ec8.baseSequenceWithSingleBaseInserted(1, "T", false));
+    }
+
+    @Test
     public void forwardStrandBaseAndLeftNeighbourTest()
     {
         assertEquals(Pair.of("G", "A"), ec7.forwardStrandBaseAndLeftNeighbour(0, true));
@@ -82,12 +112,12 @@ public class PaddedExonTest extends ReversePaveTestBase
         assertEquals(102, ec1.toStrandCoordinates(10, false));
         assertEquals(106, ec2.toStrandCoordinates(5, false));
 
-        for(int i=0; i<12; i++)
+        for(int i = 0; i < 12; i++)
         {
-            assertEquals(i, ec1.fromStrandCoordinates(ec1.toStrandCoordinates(i, true),true));
-            assertEquals(i, ec3.fromStrandCoordinates(ec3.toStrandCoordinates(i, true),true));
-            assertEquals(i, ec1.fromStrandCoordinates(ec1.toStrandCoordinates(i, false),false));
-            assertEquals(i, ec3.fromStrandCoordinates(ec3.toStrandCoordinates(i, false),false));
+            assertEquals(i, ec1.fromStrandCoordinates(ec1.toStrandCoordinates(i, true), true));
+            assertEquals(i, ec3.fromStrandCoordinates(ec3.toStrandCoordinates(i, true), true));
+            assertEquals(i, ec1.fromStrandCoordinates(ec1.toStrandCoordinates(i, false), false));
+            assertEquals(i, ec3.fromStrandCoordinates(ec3.toStrandCoordinates(i, false), false));
         }
     }
 
@@ -136,9 +166,9 @@ public class PaddedExonTest extends ReversePaveTestBase
         assertEquals(6, ec3.codonLocationInExonBody(1, false));
         assertEquals(3, ec3.codonLocationInExonBody(2, false));
         assertEquals(0, ec3.codonLocationInExonBody(3, false));
-//        assertEquals(-2, ec6.codonLocationInExonBody(0, false));
-//        assertEquals(1, ec6.codonLocationInExonBody(1, false));
-//        assertEquals(4, ec6.codonLocationInExonBody(2, false));
+        //        assertEquals(-2, ec6.codonLocationInExonBody(0, false));
+        //        assertEquals(1, ec6.codonLocationInExonBody(1, false));
+        //        assertEquals(4, ec6.codonLocationInExonBody(2, false));
     }
 
     @Test
@@ -160,7 +190,7 @@ public class PaddedExonTest extends ReversePaveTestBase
     {
         CodonWithinExons cwe = ec1.getCodon(2, true);
         assertEquals("AAA", cwe.codon());
-        assertEquals( 103, cwe.strandLocationOfStartOfVariablePart());
+        assertEquals(103, cwe.strandLocationOfStartOfVariablePart());
         assertEquals("AAA", cwe.variablePart());
         assertEquals("", cwe.fixedPrefix());
         assertEquals("", cwe.fixedSuffix());
@@ -263,9 +293,9 @@ public class PaddedExonTest extends ReversePaveTestBase
     @Test
     public void basesBetweenTest()
     {
-        assertEquals("T", ec1.basesBetween(0,0));
-        assertEquals("TT", ec1.basesBetween(0,1));
-        assertEquals("TTTAAACCCGGG", ec1.basesBetween(0,11));
+        assertEquals("T", ec1.basesBetween(0, 0));
+        assertEquals("TT", ec1.basesBetween(0, 1));
+        assertEquals("TTTAAACCCGGG", ec1.basesBetween(0, 11));
     }
 
     @Test
@@ -279,19 +309,19 @@ public class PaddedExonTest extends ReversePaveTestBase
     @Test
     public void getSplitSequenceTest()
     {
-        assertEquals(new SplitCodonSequence("GGG", "", 109), ec1.getSplitSequenceForCodons(4,1, true));
-        assertEquals(new SplitCodonSequence("CCC", "", 106), ec1.getSplitSequenceForCodons(3,1, true));
-        assertEquals(new SplitCodonSequence("CCCGGG", "", 106), ec1.getSplitSequenceForCodons(3,2, true));
-        assertEquals(new SplitCodonSequence("TTTAAA", "", 100), ec1.getSplitSequenceForCodons(1,2, true));
-        assertEquals(new SplitCodonSequence("A", "TTTAA", 100), ec2.getSplitSequenceForCodons(0,2, true));
-        assertEquals(new SplitCodonSequence("TAAACC", "", 102), ec2.getSplitSequenceForCodons(1,2, true));
-        assertEquals(new SplitCodonSequence("TA", "TTAACCG", 100), ec6.getSplitSequenceForCodons(0,3, true));
+        assertEquals(new SplitCodonSequence("GGG", "", 109), ec1.getSplitSequenceForCodons(4, 1, true));
+        assertEquals(new SplitCodonSequence("CCC", "", 106), ec1.getSplitSequenceForCodons(3, 1, true));
+        assertEquals(new SplitCodonSequence("CCCGGG", "", 106), ec1.getSplitSequenceForCodons(3, 2, true));
+        assertEquals(new SplitCodonSequence("TTTAAA", "", 100), ec1.getSplitSequenceForCodons(1, 2, true));
+        assertEquals(new SplitCodonSequence("A", "TTTAA", 100), ec2.getSplitSequenceForCodons(0, 2, true));
+        assertEquals(new SplitCodonSequence("TAAACC", "", 102), ec2.getSplitSequenceForCodons(1, 2, true));
+        assertEquals(new SplitCodonSequence("TA", "TTAACCG", 100), ec6.getSplitSequenceForCodons(0, 3, true));
     }
 
     @Test
     public void splitAtEndTest()
     {
-        assertEquals(new SplitCodonSequence("GG", "A", 109), ec3.getSplitSequenceForCodons(4,1, true));
-        assertEquals(new SplitCodonSequence("CCGGG", "A", 106), ec3.getSplitSequenceForCodons(3,2, true));
+        assertEquals(new SplitCodonSequence("GG", "A", 109), ec3.getSplitSequenceForCodons(4, 1, true));
+        assertEquals(new SplitCodonSequence("CCGGG", "A", 106), ec3.getSplitSequenceForCodons(3, 2, true));
     }
 }

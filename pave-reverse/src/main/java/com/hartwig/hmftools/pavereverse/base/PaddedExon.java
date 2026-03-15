@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.pavereverse.base;
 
 import static com.hartwig.hmftools.common.utils.Strings.last;
+import static com.hartwig.hmftools.pavereverse.util.Checks.isNucleotide;
 
 import java.util.Objects;
 
@@ -136,6 +137,26 @@ public class PaddedExon
         // the result, even though it might correspond to lost junction.
         String rightPadding = mIntronicSuffix.substring(0, 1);
         return mBasesOfFirstCodonInPreviousExon + left + right + rightPadding + mBasesOfLastCodonInFollowingExon;
+    }
+
+    public String baseSequenceWithSingleBaseInserted(int position, String base, boolean isPositiveStrand)
+    {
+        Preconditions.checkArgument(position >= 0);
+        Preconditions.checkArgument(isNucleotide(base));
+        Preconditions.checkArgument(position < mExonBases.length());
+        if(!isPositiveStrand)
+        {
+            String rightPart = mExonBases.substring(mExonBases.length() - position) + mBasesOfLastCodonInFollowingExon;
+            String leftPart = mBasesOfFirstCodonInPreviousExon + mExonBases.substring(0, mExonBases.length() - position);
+            // To return a whole number of codons we remove the first base.
+            leftPart = leftPart.substring(1);
+            return Nucleotides.reverseComplementBases(leftPart + base + rightPart);
+        }
+        String leftPart = mBasesOfFirstCodonInPreviousExon + mExonBases.substring(0, position);
+        String rightPart = mExonBases.substring(position) + mBasesOfLastCodonInFollowingExon;
+        // To return a whole number of codons we remove the last base.
+        rightPart = rightPart.substring(0, rightPart.length() - 1);
+        return leftPart + base + rightPart;
     }
 
     public String baseSequenceWithBasesReplacedAtStrandLocation(int location, String current, String replacementBases)

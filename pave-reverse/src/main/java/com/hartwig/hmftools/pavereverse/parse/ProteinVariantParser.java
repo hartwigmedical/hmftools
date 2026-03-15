@@ -51,7 +51,7 @@ public class ProteinVariantParser extends VariantParser
         return parseGeneVariant(geneVar[0], variantDescription);
     }
 
-    private static String trimInitialPdot(String variant)
+    public static String trimInitialPdot(String variant)
     {
         if(variant.startsWith("p."))
         {
