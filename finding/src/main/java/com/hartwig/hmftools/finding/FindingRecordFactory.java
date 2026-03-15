@@ -22,6 +22,7 @@ import com.hartwig.hmftools.datamodel.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxUnreportableReason;
+import com.hartwig.hmftools.datamodel.orange.OrangePlots;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
 import com.hartwig.hmftools.datamodel.purple.Genes;
@@ -70,7 +71,6 @@ import com.hartwig.hmftools.finding.datamodel.TumorMutationalLoad;
 import com.hartwig.hmftools.finding.datamodel.TumorMutationalLoadBuilder;
 import com.hartwig.hmftools.finding.datamodel.Virus;
 import com.hartwig.hmftools.finding.datamodel.VirusBuilder;
-import com.hartwig.hmftools.finding.datamodel.VisualisationFiles;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -133,12 +133,9 @@ public class FindingRecordFactory
                     .homologousRecombination(FindingUtil.nullFindingItem(FindingsStatus.NOT_RELIABLE_LOW_PURITY));
         }
 
-        VisualisationFiles visualisationFiles = VisualisationFilesFactory.create(orangeRecord.plots());
-
         return builder.predictedTumorOrigins(createPredictedTumorOriginList(orangeRecord.cuppa()))
                 .hlaAlleles(HlaAlleleFactory.createHlaAllelesFindings(orangeRecord, hasReliablePurity, hasContamination))
                 .pharmacoGenotypes(createPharmacoGenotypesFindings(orangeRecord.peach(), hasContamination))
-                .visualisationFiles(visualisationFiles)
                 .build();
     }
 
@@ -152,7 +149,7 @@ public class FindingRecordFactory
 
         PurpleRecord purple = orangeRecord.purple();
 
-        builder.purityPloidyFit(createPurityPloidyFit(purple));
+        builder.purityPloidyFit(createPurityPloidyFit(purple, orangeRecord.plots()));
 
         DriverFindingList<GainDeletion> somaticGainDeletions;
 
@@ -229,7 +226,7 @@ public class FindingRecordFactory
                 .build();
     }
 
-    private static PurityPloidyFit createPurityPloidyFit(PurpleRecord purple)
+    private static PurityPloidyFit createPurityPloidyFit(PurpleRecord purple, OrangePlots orangePlots)
     {
         PurpleFit purpleFit = purple.fit();
 
@@ -241,6 +238,13 @@ public class FindingRecordFactory
                 .ploidy(purpleFit.ploidy())
                 .minPloidy(purpleFit.minPloidy())
                 .maxPloidy(purpleFit.maxPloidy())
+                .purpleInputPlot(VisualisationFileUtil.create(orangePlots.purpleInputPlot()))
+                .purpleCircosPlot(VisualisationFileUtil.create(orangePlots.purpleFinalCircosPlot()))
+                .purpleClonalityPlot(VisualisationFileUtil.create(orangePlots.purpleClonalityPlot()))
+                .purpleCopyNumberPlot(VisualisationFileUtil.create(orangePlots.purpleCopyNumberPlot()))
+                .purpleVariantCopyNumberPlot(VisualisationFileUtil.create(orangePlots.purpleVariantCopyNumberPlot()))
+                .purplePurityRangePlot(VisualisationFileUtil.create(orangePlots.purplePurityRangePlot()))
+                .purpleKataegisPlot(VisualisationFileUtil.create(orangePlots.purpleKataegisPlot()))
                 .build();
     }
 
