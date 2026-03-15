@@ -809,40 +809,6 @@ get_sub_table_data <- function(feature_group, number_format){
    return(plot_data)
 }
 
-get_limits <- function(plot_data, minimal_limits = c(NA, NA)){
-   
-   #' Ensure y axis limits are wide enough to show pretty breaks.
-   #' 
-   #' Given:
-   #'   minimal limits : A=====B
-   #'   range in cohort:    C====D
-   #'   value in sample:          E
-   #'
-   #' Chosen limits are: A and E
-   #'
-   #' For example, the min/max TMB (based on  sample and/or cohort data) could be 0.5 to 1, but we
-   #' know TMB can go form 0 to 100s/1000s. We would therefore so the minimal limits to
-   #' e.g. c(0, 1000).
-   #'
-   #' Providing NA minimal limit values lets ggplot decide the limits based on the min/max of the data
-   #' 
-   
-   values <- c(minimal_limits, plot_data$FeatureValue, plot_data$PctMin, plot_data$PctMax)
-   limits <- range(values, na.rm = TRUE)
-   
-   ## Let ggplot handle limits with infinite values
-   limits[!is.finite(limits)] <- NA 
-   
-   ## User intends to let ggplot handle limits
-   if(is.na(minimal_limits[1]))
-      limits[1] <- NA
-   
-   if(is.na(minimal_limits[2]))
-      limits[2] <- NA
-   
-   return(limits)
-}
-
 get_div_lines <- function(n_table_rows, direction = "horizontal"){
    
    positions <- seq(1.5, n_table_rows)
@@ -871,24 +837,20 @@ get_qc_status_enums <- function(qc_status_strings){
    factor(qc_status_enums, sapply(QC_STATUS, `[[`, "name"))
 }
 
-plot_sub_table <- function(plot_data, show_title = FALSE, show_sample_type_label = FALSE, axis_limits = waiver()){
+plot_sub_table <- function(plot_data, min_upper_limit, show_title = FALSE, show_sample_type_label = FALSE){
 
    if(FALSE){
       show_title = TRUE
       show_sample_type_label = TRUE
-      axis_limits = c(NA, NA)
-      
-      plot_data = get_sub_table_data(FEATURE_GROUP$MAPPING, NUMBER_FORMAT$PERCENT)
-      axis_limits = c(0,1)
       
       plot_data = get_sub_table_data(FEATURE_GROUP$MAPPING, NUMBER_FORMAT$NUMBER)
-      axis_limits = get_limits(plot_data, c(0, 100))
+      min_upper_limit = 100
       
-      plot_data = get_sub_table_data(FEATURE_GROUP$COPY_NUMBER, NUMBER_FORMAT$LOG10)
-      axis_limits = get_limits(plot_data, c(NA, 1000))
+      plot_data = get_sub_table_data(FEATURE_GROUP$MAPPING, NUMBER_FORMAT$PERCENT)
+      min_upper_limit = 1
       
       plot_data = get_sub_table_data(FEATURE_GROUP$MUTATIONAL_BURDEN, NUMBER_FORMAT$LOG10)
-      axis_limits = get_limits(plot_data, c(NA, 1000))
+      min_upper_limit = 1000
    }
 
    feature_group <- attr(plot_data, "feature_group")
@@ -898,16 +860,11 @@ plot_sub_table <- function(plot_data, show_title = FALSE, show_sample_type_label
    LOGGER$debug("  featureGroup(%s) numberFormat(%s)", feature_group, number_format)
       
    ## Feature values =============================
-   if(number_format == NUMBER_FORMAT$PERCENT){
-      value_fmt_func <- scales::label_percent(accuracy = 0.1)
-   } else {
-      value_fmt_func <- function(x) ifelse(x < 1, signif(x, 2), round(x, 1))
-   }
-   
-   ## Prep data
+   ## Enum annotations
    plot_data <- plot_data %>% dplyr::mutate(
       QcStatusEnum = get_qc_status_enums(QcStatus),
-      QcStatusEnum = factor(QcStatusEnum, sapply(QC_STATUS, `[[`, "name"))
+      QcStatusEnum = factor(QcStatusEnum, sapply(QC_STATUS, `[[`, "name")),
+      LabelBorderColor = ifelse(QcStatusEnum == QC_STATUS$PASS$name, "#FFFFFF00", "black")
    )
    
    ## Aesthetics
@@ -916,12 +873,17 @@ plot_sub_table <- function(plot_data, show_title = FALSE, show_sample_type_label
    sample_type_names <- sapply(SAMPLE_TYPE, `[[`, "display_name")
    
    ## Plot
+   if(number_format == NUMBER_FORMAT$PERCENT){
+      value_fmt_func <- scales::label_percent(accuracy = 0.1)
+   } else {
+      value_fmt_func <- function(x) ifelse(x < 1, signif(x, 2), round(x, 1))
+   }
+   
    subplot_values <- ggplot(plot_data, aes(y = DisplayName, x = SampleType, group = SampleType, color = SampleType)) +
       
       geom_label(
-         aes(label = value_fmt_func(FeatureValue), fill = QcStatusEnum), 
-         size = 3, label.padding = unit(4, "pt"),
-         border.colour = ifelse(plot_data$QcStatusEnum == QC_STATUS$PASS$name, "#FFFFFF00", "black")
+         aes(label = value_fmt_func(FeatureValue), fill = QcStatusEnum), border.color = plot_data$LabelBorderColor,
+         size = 3, label.padding = unit(4, "pt")
       ) +
       scale_color_manual(values = sample_type_colors) +
       scale_fill_manual(values = qc_status_colors) +
@@ -943,24 +905,32 @@ plot_sub_table <- function(plot_data, show_title = FALSE, show_sample_type_label
       )
 
    ## Sample vs cohort =============================
-   box_width_scale <- length(unique(plot_data$SampleType)) / length(levels(plot_data$SampleType))
    plot_type <- if(is.na(COHORT_PERCENTILES_FILE)) PAIRWISE_PLOT_TYPE$BAR else PAIRWISE_PLOT_TYPE$BOX
+   box_width_scale <- length(unique(plot_data$SampleType)) / length(levels(plot_data$SampleType))
    
-   gg_scale_y_continuous <- if(number_format == NUMBER_FORMAT$LOG10){
-      scale_y_continuous(
-         limits = axis_limits,
+   gg_scale_y_continuous <- scale_y_continuous()
+   dummy_point_lower_limit <- geom_point(aes(x = 1, y = 0), alpha = 0)
+   dummy_point_upper_limit <- geom_point(aes(x = 1, y = min_upper_limit), alpha = 0) ## Expand y-axis out to at least `min_upper_limit`
+
+   if(number_format == NUMBER_FORMAT$PERCENT){
+      gg_scale_y_continuous <- scale_y_continuous(label = scales::label_percent())
+   }
+
+   if(number_format == NUMBER_FORMAT$LOG10){
+      gg_scale_y_continuous <- scale_y_continuous(
          transform = "log10", guide = "axis_logticks",
          label = function(x) format(x, scientific = FALSE, drop0trailing = TRUE, trim = TRUE)
       )
-   } else if(number_format == NUMBER_FORMAT$PERCENT){
-      scale_y_continuous(limits = axis_limits, label = scales::label_percent())
-   } else {
-      scale_y_continuous(limits = axis_limits)
+
+      ## Force lower end of the log scale y-axis to not be truncated
+      dummy_point_lower_limit <- geom_point(aes(x = 1, y = 1), alpha = 0)
    }
    
    subplot_pairwise_comparison <- 
-      plot_pairwise_comparison(plot_data, x = "DisplayName", y = "FeatureValue", box_width_scale = box_width_scale, plot_type = plot_type) +
+      plot_pairwise_comparison(plot_data, x = "DisplayName", y = "FeatureValue", plot_type = plot_type, box_width_scale = box_width_scale) +
       get_div_lines(n_rows, "vertical") + 
+      dummy_point_lower_limit + 
+      dummy_point_upper_limit +
       gg_scale_y_continuous +
       coord_flip() +
       theme(
@@ -989,33 +959,33 @@ PLOTS[[FEATURE_TYPE$SUMMARY_TABLE]] <- local({
    ## Mapping ================================
    plots[[1]] <- 
       get_sub_table_data(FEATURE_GROUP$MAPPING, NUMBER_FORMAT$NUMBER) %>% 
-      plot_sub_table(show_title = TRUE, axis_limits = get_limits(., minimal_limits = c(0, 100)))
+      plot_sub_table(min_upper_limit = 100, show_title = TRUE)
    
    plots[[2]] <- 
       get_sub_table_data(FEATURE_GROUP$MAPPING, NUMBER_FORMAT$PERCENT) %>% 
-      plot_sub_table(axis_limits = c(0, 1))
+      plot_sub_table(min_upper_limit = 1)
    
    ## Copy number ================================
    plots[[3]] <- 
       get_sub_table_data(FEATURE_GROUP$COPY_NUMBER, NUMBER_FORMAT$NUMBER) %>% 
-      plot_sub_table(show_title = TRUE, axis_limits = c(0, NA))
+      plot_sub_table(min_upper_limit = 4, show_title = TRUE)
    
    plots[[4]] <- 
       get_sub_table_data(FEATURE_GROUP$COPY_NUMBER, NUMBER_FORMAT$PERCENT) %>% 
-      plot_sub_table(axis_limits = c(0, 1))
+      plot_sub_table(min_upper_limit = 1)
    
    plots[[5]] <- 
       get_sub_table_data(FEATURE_GROUP$COPY_NUMBER, NUMBER_FORMAT$LOG10) %>% 
-      plot_sub_table(axis_limits = get_limits(., minimal_limits =c(NA, 1000)))
+      plot_sub_table(min_upper_limit = 1000)
    
    ## Contamination ================================
    plots[[6]] <- get_sub_table_data(FEATURE_GROUP$CONTAMINATION, NUMBER_FORMAT$PERCENT) %>% 
-      plot_sub_table(show_title = TRUE, axis_limits = c(0, 1))
+      plot_sub_table(min_upper_limit = 1, show_title = TRUE)
    
    ## Mutational burden ================================
    plots[[7]] <- 
       get_sub_table_data(FEATURE_GROUP$MUTATIONAL_BURDEN, NUMBER_FORMAT$LOG10) %>% 
-      plot_sub_table(show_title = TRUE, show_sample_type_label = TRUE, axis_limits = get_limits(., minimal_limits = c(NA, 1000)))
+      plot_sub_table(min_upper_limit = 1000, show_title = TRUE, show_sample_type_label = TRUE)
    
    heights <- sapply(plots, function(p){ p$height })
    
