@@ -32,10 +32,13 @@ public class PanelTpmNormaliser
         if(!mEnabled)
             return;
 
-        for(final GeneCollectionSummary geneSummary : allGeneSummaries)
+        for(GeneCollectionSummary geneSummary : allGeneSummaries)
         {
             for(GeneResult geneResult : geneSummary.GeneResults)
             {
+                if(geneResult.adjustedTpm() == 0)
+                    continue;
+
                 Double adjustFactor = mGeneNormFactors.get(geneResult.Gene.GeneId);
 
                 if(adjustFactor == null || adjustFactor <= 0)

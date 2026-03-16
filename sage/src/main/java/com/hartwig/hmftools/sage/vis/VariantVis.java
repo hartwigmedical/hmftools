@@ -266,7 +266,8 @@ public class VariantVis
         return new BaseSeqViewModel(bases, posStart, null, null);
     }
 
-    public static void writeToHtmlFile(final SageVariant sageVariant, final List<String> tumorIds, final List<String> referenceIds,
+    public static void writeToHtmlFile(
+            final SageVariant sageVariant, final List<String> tumorIds, final List<String> referenceIds,
             final VisConfig config, @Nullable final ReferenceData refData)
     {
         if(config.PassOnly && !sageVariant.isPassing())
@@ -341,12 +342,7 @@ public class VariantVis
 
         String htmlStr = html(
                 header(JQUERY_SCRIPT),
-                body(
-                        variantInfo,
-                        verticalSpacer,
-                        sampleInfo,
-                        readTable,
-                        getJavascript()).withStyle(BASE_FONT_STYLE.toString())).render();
+                body(variantInfo, verticalSpacer, sampleInfo, readTable, getJavascript()).withStyle(BASE_FONT_STYLE.toString())).render();
 
         String filePath = (new File(firstVis.mConfig.OutputDir, filename)).toString();
 

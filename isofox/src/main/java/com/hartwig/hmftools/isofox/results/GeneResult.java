@@ -73,7 +73,6 @@ public class GeneResult
     }
 
     public double adjustedTpm() { return mAdjustedTpm; }
-
     public void applyTpmAdjustFactor(double factor) { mAdjustedTpm /= factor; }
 
     public void setFitResiduals(double residuals) { mFitResiduals = residuals; }
