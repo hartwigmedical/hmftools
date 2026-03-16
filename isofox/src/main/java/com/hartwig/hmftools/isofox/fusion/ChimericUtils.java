@@ -38,8 +38,8 @@ public final class ChimericUtils
             else if(!existingChromosome.equals(read.Chromosome))
                 return false;
 
-            int scLeft = read.isSoftClipped(SE_START) ? read.Cigar.getFirstCigarElement().getLength() : 0;
-            int scRight = read.isSoftClipped(SE_END) ? read.Cigar.getLastCigarElement().getLength() : 0;
+            int scLeft = read.isSoftClipped(SE_START) ? read.leftClipLength() : 0;
+            int scRight = read.isSoftClipped(SE_END) ? read.rightClipLength() : 0;
 
             if(scLeft == 0 && scRight == 0)
                 return false;
@@ -60,11 +60,11 @@ public final class ChimericUtils
         if(!read.containsSplit())
             return null;
 
-        final int maxSplitLength = read.Cigar.getCigarElements().stream()
+        int maxSplitLength = read.cigarElements().stream()
                 .filter(x -> x.getOperator() == CigarOperator.N)
                 .mapToInt(x -> x.getLength()).max().orElse(0);
 
-        final List<int[]> mappedCoords = read.getMappedRegionCoords();
+        List<int[]> mappedCoords = read.getMappedRegionCoords();
         for(int i = 0; i < mappedCoords.size() - 1; ++i)
         {
             final int[] lowerCoords = mappedCoords.get(i);
@@ -84,7 +84,7 @@ public final class ChimericUtils
         if(!read.isSoftClipped(se))
             return false;
 
-        int scLength = se == SE_START ? read.Cigar.getFirstCigarElement().getLength() : read.Cigar.getLastCigarElement().getLength();
+        int scLength = se == SE_START ? read.leftClipLength() : read.rightClipLength();
 
         return (scLength >= REALIGN_MIN_SOFT_CLIP_BASE_LENGTH && (!checkMax || scLength <= REALIGN_MAX_SOFT_CLIP_BASE_LENGTH));
     }

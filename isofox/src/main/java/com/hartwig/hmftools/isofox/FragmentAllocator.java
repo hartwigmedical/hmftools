@@ -339,6 +339,9 @@ public class FragmentAllocator
             - not supporting any transcript - eg alternative splice sites or unspliced reads
         */
 
+        read1.trimAdapterSoftClipBases(read2);
+        read2.trimAdapterSoftClipBases(read1);
+
         boolean isDuplicate = read1.isDuplicate() || read2.isDuplicate();
         int minMapQuality = min(read1.mapQuality(), read2.mapQuality());
         boolean isMultiMapped = minMapQuality <= MULTI_MAP_QUALITY_THRESHOLD;
@@ -798,7 +801,7 @@ public class FragmentAllocator
 
     private void processIntronicReads(final List<GeneReadData> genes, final Read read1, final Read read2)
     {
-        if(read1.Cigar.containsOperator(CigarOperator.N) || read2.Cigar.containsOperator(CigarOperator.N))
+        if(read1.containsSplit() || read2.containsSplit())
         {
             mCurrentGenes.addCount(ALT, 1);
 
@@ -948,7 +951,7 @@ public class FragmentAllocator
                     }
 
                     writer.write(String.format(",%s,%d,%d,%s,%d,%d",
-                            read.Chromosome, read.PosStart, read.PosEnd, read.Cigar.toString(),
+                            read.Chromosome, read.PosStart, read.PosEnd, read.cigarStr(),
                             read.fragmentInsertSize(), calcFragmentLength));
 
                     writer.write(String.format(",%s,%d,%s,%s,%s",

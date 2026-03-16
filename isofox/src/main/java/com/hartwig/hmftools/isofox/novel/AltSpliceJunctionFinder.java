@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.MAX_NOVEL_SJ_DISTANCE;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.ALT_SPLICE_JUNCTIONS;
+import static com.hartwig.hmftools.isofox.common.Read.clippedSide;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_BOUNDARY;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionContext.EXONIC;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionContext.SPLICE_JUNC;
@@ -159,7 +160,7 @@ public class AltSpliceJunctionFinder
 
     private static boolean isCandidate(final Read read)
     {
-        if(!read.Cigar.containsOperator(CigarOperator.N))
+        if(!read.containsSplit())
             return false;
 
         if(read.getTranscriptClassifications().values().contains(TransMatchType.SPLICE_JUNCTION))
@@ -314,7 +315,7 @@ public class AltSpliceJunctionFinder
             final Read read = (i == 0) ? read1 : read2;
 
             // take the longer of the 2 soft-clippings
-            ClippedSide clippedSide = ClippedSide.from(read.Cigar, read.isSoftClipped(SE_START), read.isSoftClipped(SE_END));
+            ClippedSide clippedSide = clippedSide(read);
 
             boolean useLeft = clippedSide != null && clippedSide.isLeft();
 

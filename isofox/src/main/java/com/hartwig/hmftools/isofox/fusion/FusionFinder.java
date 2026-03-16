@@ -279,7 +279,7 @@ public class FusionFinder implements Callable<Void>
         String scope = isInterChromosomal ? "inter-chromosome" : "local";
 
         // first turn them into fragments, then look for fusions
-        Level logLevel = isInterChromosomal ? Level.INFO : Level.DEBUG;
+        Level logLevel = isInterChromosomal ? Level.DEBUG : Level.TRACE;
         ISF_LOGGER.log(logLevel, "chr({}) processing {} {} chimeric read groups", mChromosome, readGroups.size(), scope);
 
         int readGroupCount = 0;

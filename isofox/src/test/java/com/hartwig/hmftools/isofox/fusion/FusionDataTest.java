@@ -744,8 +744,8 @@ public class FusionDataTest
         read2.setFlag(FIRST_OF_PAIR, true);
         read3.setFlag(SECOND_OF_PAIR, false);
         read3.setStrand(true, false);
-        read2.setSuppAlignment(String.format("%s;%d;%s", read3.Chromosome, read3.PosStart, read3.Cigar.toString()));
-        read3.setSuppAlignment(String.format("%s;%d;%s", read2.Chromosome, read2.PosStart, read2.Cigar.toString()));
+        read2.setSuppAlignment(String.format("%s;%d;%s", read3.Chromosome, read3.PosStart, read3.cigarStr()));
+        read3.setSuppAlignment(String.format("%s;%d;%s", read2.Chromosome, read2.PosStart, read2.cigarStr()));
 
         readGroups1.put(read1.Id, createGroup(read1, read2));
         readGroups2.put(read1.Id, createGroup(read3));
@@ -766,8 +766,8 @@ public class FusionDataTest
         read2.setFlag(FIRST_OF_PAIR, true);
         read3.setFlag(SECOND_OF_PAIR, false);
         read3.setStrand(true, false);
-        read2.setSuppAlignment(String.format("%s;%d;%s", read3.Chromosome, read3.PosStart, read3.Cigar.toString()));
-        read3.setSuppAlignment(String.format("%s;%d;%s", read2.Chromosome, read2.PosStart, read2.Cigar.toString()));
+        read2.setSuppAlignment(String.format("%s;%d;%s", read3.Chromosome, read3.PosStart, read3.cigarStr()));
+        read3.setSuppAlignment(String.format("%s;%d;%s", read2.Chromosome, read2.PosStart, read2.cigarStr()));
 
         readGroups1.put(read1.Id, createGroup(read1, read2));
         readGroups2.put(read1.Id, createGroup(read3));

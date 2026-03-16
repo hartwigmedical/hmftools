@@ -185,13 +185,18 @@ public final class SamRecordUtils
 
     public static List<int[]> generateMappedCoords(final Cigar cigar, int posStart)
     {
+        return generateMappedCoords(cigar.getCigarElements(), posStart);
+    }
+
+    public static List<int[]> generateMappedCoords(final List<CigarElement> cigarElements, int posStart)
+    {
         final List<int[]> mappedCoords = Lists.newArrayList();
 
         // first establish whether the read is split across 2 distant regions, and if so which it maps to
         int posOffset = 0;
         boolean continueRegion = false;
 
-        for(CigarElement element : cigar.getCigarElements())
+        for(CigarElement element : cigarElements)
         {
             if(element.getOperator() == CigarOperator.S)
             {

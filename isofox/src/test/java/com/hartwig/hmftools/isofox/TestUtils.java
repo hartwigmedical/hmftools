@@ -301,13 +301,13 @@ public class TestUtils
 
         // note: strand is not currently set correctly
         SupplementaryReadData suppData1 = new SupplementaryReadData(
-                read2.Chromosome, read2.PosStart, '+', read2.Cigar.toString(), 255);
+                read2.Chromosome, read2.PosStart, '+', read2.cigarStr(), 255);
 
         read1.setSuppAlignment(suppData1.asDelimStr());
         // read1.setSuppAlignment(String.format("%s;%d;%s", read2.Chromosome, read2.PosStart, read2.Cigar.toString()));
 
         SupplementaryReadData suppData2 = new SupplementaryReadData(
-                read1.Chromosome, read1.PosStart, '+', read1.Cigar.toString(), 255);
+                read1.Chromosome, read1.PosStart, '+', read1.cigarStr(), 255);
 
         read2.setSuppAlignment(suppData2.asDelimStr());
         // read2.setSuppAlignment(String.format("%s;%d;%s", read1.Chromosome, read1.PosStart, read1.Cigar.toString()));

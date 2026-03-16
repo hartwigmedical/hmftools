@@ -67,15 +67,15 @@ public class NeoFragmentMatcher
             if(read.isSoftClipped(junctionSide))
             {
                 final String postJuncCodingBases = neData.getFusionSoftClippedBases(stream);
-                int softClipLength = junctionSide == SE_START ?
-                        read.Cigar.getFirstCigarElement().getLength() : read.Cigar.getLastCigarElement().getLength();
+
+                int softClipLength = junctionSide == SE_START ? read.leftClipLength() : read.rightClipLength();
 
                 if(softClipLength >= MIN_BASE_OVERLAP / 2)
                 {
                     final String readSoftClippedBases = junctionSide == SE_START
                             ?
-                            read.ReadBases.substring(0, softClipLength)
-                            : read.ReadBases.substring(read.ReadBases.length() - softClipLength);
+                            read.readBases().substring(0, softClipLength)
+                            : read.readBases().substring(read.baseLength() - softClipLength);
 
                     matchLevel = calcBaseMatch(postJuncCodingBases, readSoftClippedBases);
 
@@ -272,7 +272,7 @@ public class NeoFragmentMatcher
         String readBases = "";
 
         if(read.isSoftClipped(SE_START))
-            readBaseIndex += read.Cigar.getFirstCigarElement().getLength();
+            readBaseIndex += read.leftClipLength();
 
         for(int[] mappedCoords : read.getMappedRegionCoords())
         {
@@ -296,10 +296,10 @@ public class NeoFragmentMatcher
 
             for(; basePos <= mappedCoords[SE_END]; ++basePos)
             {
-                if(basePos > posEnd || readBaseIndex >= read.ReadBases.length())
+                if(basePos > posEnd || readBaseIndex >= read.baseLength())
                     break;
 
-                readBases += read.ReadBases.substring(readBaseIndex, readBaseIndex + 1);
+                readBases += read.readBases().substring(readBaseIndex, readBaseIndex + 1);
                 ++readBaseIndex;
             }
 

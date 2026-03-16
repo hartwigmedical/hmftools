@@ -63,11 +63,11 @@ public class FusionRead
     {
         Chromosome = read.Chromosome;
         Positions = new int[] { read.PosStart, read.PosEnd};
-        Orientation = read.orientation();
+        Orientation = read.orientByte();
         MateChromosome = read.mateChromosome();
         MatePosStart = read.mateStartPosition();
         MappedCoords = read.getMappedRegionCoords(false);
-        Cigar = read.Cigar.toString();
+        Cigar = read.cigarStr();
         GeneCollections = read.getGeneCollectons();
         IsGenicRegion = read.getIsGenicRegion();
         HasInterGeneSplit = read.hasInterGeneSplit();
@@ -79,15 +79,14 @@ public class FusionRead
         SuppData = read.hasSuppAlignment() ? SupplementaryReadData.extractAlignment(read.getSuppAlignment()) : null;
 
         SoftClipLengths = new int[]
-                { read.isSoftClipped(SE_START) ? read.Cigar.getFirstCigarElement().getLength() : 0,
-                  read.isSoftClipped(SE_END) ? read.Cigar.getLastCigarElement().getLength() : 0 };
+                { read.isSoftClipped(SE_START) ? read.leftClipLength() : 0, read.isSoftClipped(SE_END) ? read.rightClipLength() : 0 };
 
-        ReadBaseLength = read.Length;
+        ReadBaseLength = read.baseLength();
         int extraBasesBuffer = 5;
-        int startBases = min(SoftClipLengths[SE_START] + extraBasesBuffer, read.Length);
-        int endBases = min(SoftClipLengths[SE_END] + extraBasesBuffer, read.Length);
+        int startBases = min(SoftClipLengths[SE_START] + extraBasesBuffer, ReadBaseLength);
+        int endBases = min(SoftClipLengths[SE_END] + extraBasesBuffer, ReadBaseLength);
 
-        BoundaryBases = new String[] { read.ReadBases.substring(0, startBases), read.ReadBases.substring(read.Length - endBases) };
+        BoundaryBases = new String[] { read.readBases().substring(0, startBases), read.readBases().substring(ReadBaseLength - endBases) };
 
         mTransExonRefs = Lists.newArrayList();
         mRegionMatchType = NONE;
