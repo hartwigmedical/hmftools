@@ -1,12 +1,9 @@
 package com.hartwig.hmftools.compar.isofox;
 
-import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_DISCORD_FRAGS;
-import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_FILTER;
-import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_KNOWN_TYPE;
-import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_REALIGN_FRAGS;
-import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_SPLIT_FRAGS;
 import static com.hartwig.hmftools.compar.isofox.RnaFusionData.FLD_JUNC_TYPE_DOWN;
 import static com.hartwig.hmftools.compar.isofox.RnaFusionData.FLD_JUNC_TYPE_UP;
+import static com.hartwig.hmftools.compar.isofox.RnaFusionData.FLD_KNOWN_TYPE;
+import static com.hartwig.hmftools.compar.isofox.RnaFusionData.FLD_SPLIT_FRAGS;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -40,9 +37,7 @@ public class RnaFusionDataTest extends ComparableItemTest<RnaFusionData, RnaFusi
                 FLD_KNOWN_TYPE, b -> b.knownType = alternateValueSource.RnaFusion().knownType(),
                 FLD_JUNC_TYPE_UP, b -> b.junctionTypeUp = alternateValueSource.RnaFusion().junctionTypeUp(),
                 FLD_JUNC_TYPE_DOWN, b -> b.junctionTypeDown = alternateValueSource.RnaFusion().junctionTypeDown(),
-                FLD_SPLIT_FRAGS, b -> b.splitFragments = alternateValueSource.RnaFusion().splitFragments(),
-                FLD_REALIGN_FRAGS, b -> b.realignedFrags = alternateValueSource.RnaFusion().realignedFrags(),
-                FLD_DISCORD_FRAGS, b -> b.discordantFrags = alternateValueSource.RnaFusion().discordantFrags()
+                FLD_SPLIT_FRAGS, b -> b.splitFragments = alternateValueSource.RnaFusion().splitFragments()
         );
         nameToAlternateIndexInitializer = Map.of(
                 "FusionName", b -> b.name = alternateValueSource.RnaFusion().name(),

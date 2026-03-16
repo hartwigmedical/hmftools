@@ -6,15 +6,16 @@ import static com.hartwig.hmftools.qsee.common.QseeConstants.QC_LOGGER;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import com.hartwig.hmftools.qsee.common.QseeFileCommon;
 import com.hartwig.hmftools.qsee.common.SampleType;
+import com.hartwig.hmftools.qsee.feature.Feature;
 import com.hartwig.hmftools.qsee.feature.FeatureKey;
 import com.hartwig.hmftools.qsee.prep.CategoryPrep;
 import com.hartwig.hmftools.qsee.prep.FeaturePrep;
@@ -44,28 +45,17 @@ public class CohortPercentilesTrainer
 
     private List<FeaturePercentiles> calcPercentiles(FeatureMatrix sampleFeatureMatrix, SampleType sampleType)
     {
-        List<String> percentileNames = CohortPercentilesFile.getPercentileNames(mPercentiles);
-        FeatureMatrix percentileFeatureMatrix = new FeatureMatrix(new HashMap<>(), percentileNames);
-
-        for(int featureIndex = 0; featureIndex < sampleFeatureMatrix.numFeatures(); ++featureIndex)
-        {
-            PercentileTransformer transformer = createTransformer();
-
-            double[] featureValues = sampleFeatureMatrix.getColumnValues(featureIndex);
-            FeatureKey featureKey = sampleFeatureMatrix.getFeatureKeys().get(featureIndex);
-
-            transformer.fit(featureValues, featureKey);
-            percentileFeatureMatrix.addColumn(featureKey, transformer.getRefValues(), featureKey.sourceTool());
-        }
-
-        percentileFeatureMatrix.sortFeatureKeys();
-
         List<FeaturePercentiles> cohortPercentiles = new ArrayList<>();
-        for(FeatureKey key : percentileFeatureMatrix.getFeatureKeys())
+        for(FeatureKey featureKey : sampleFeatureMatrix.getFeatureKeys())
         {
-            FeaturePercentiles featurePercentiles = new FeaturePercentiles(
-                    sampleType, key, mPercentiles, percentileFeatureMatrix.getColumnValues(key));
+            Feature[] featuresAcrossSamples = sampleFeatureMatrix.getColumn(featureKey);
+            double[] featureValuesAcrossSamples = Stream.of(featuresAcrossSamples).mapToDouble(Feature::value).toArray();
 
+            PercentileTransformer transformer = createTransformer();
+            transformer.fit(featureValuesAcrossSamples, featureKey);
+
+            double[] refValues = transformer.getRefValues();
+            FeaturePercentiles featurePercentiles = new FeaturePercentiles(sampleType, featureKey, mPercentiles, refValues);
             cohortPercentiles.add(featurePercentiles);
         }
 

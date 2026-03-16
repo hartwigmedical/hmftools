@@ -9,10 +9,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.datamodel.purple.HotspotType;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleVariantFactory;
 import com.hartwig.hmftools.orange.report.ReportResources;
-import com.hartwig.hmftools.orange.report.datamodel.TestVariantEntryFactory;
-import com.hartwig.hmftools.orange.report.datamodel.VariantEntry;
 
-import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 
 public class VariantsTest

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.pipeline;
 
+import static com.hartwig.hmftools.common.pipeline.PipelineOutputStructure.OA_V3_0;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
 
 import java.io.IOException;
@@ -38,11 +39,13 @@ public record PipelineToolDirectories(
         String virusInterpreterDir,
         String qseeDir)
 {
+    public static final PipelineOutputStructure DEFAULT_PIPELINE_OUTPUT = OA_V3_0;
+
     public static final String PIPELINE_FORMAT_CFG = "pipeline_format";
     public static final String PIPELINE_FORMAT_DESC =
             "Assumed directory structure for tool directories. Possible values: " + Arrays.stream(PipelineOutputStructure.values())
                     .map(Enum::name)
-                    .collect(Collectors.joining(", ")) + ". Default: " + PipelineOutputStructure.PIP5_V6_0.name();
+                    .collect(Collectors.joining(", ")) + ". Default: " + DEFAULT_PIPELINE_OUTPUT.name();
     public static final String PIPELINE_FORMAT_FILE_CFG = "pipeline_format_file";
     public static final String PIPELINE_FORMAT_FILE_DESC = "File describing expected tool directory structure.";
 
@@ -230,7 +233,7 @@ public record PipelineToolDirectories(
         }
         else
         {
-            return PipelineToolDirectories.resolveToolDirectoriesFromDefault(PipelineOutputStructure.OA_V3_0);
+            return PipelineToolDirectories.resolveToolDirectoriesFromDefault(DEFAULT_PIPELINE_OUTPUT);
         }
     }
 

@@ -5,9 +5,6 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
-import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_CHR;
-import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_ORIENT;
-import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_POS;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferFileDelimiter;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
@@ -16,7 +13,10 @@ import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.FILTER_COHORT_LIMIT_KNOWN;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.FILTER_COHORT_LIMIT_NOT_KNOWN;
+import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_CHR;
 import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_COHORT_COUNT;
+import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_ORIENT;
+import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_POS;
 import static com.hartwig.hmftools.isofox.fusion.FusionData.formStreamField;
 import static com.hartwig.hmftools.isofox.fusion.FusionFilterType.PASS;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formChromosomePair;
@@ -24,15 +24,15 @@ import static com.hartwig.hmftools.isofox.fusion.FusionFilterType.ALLELE_FREQUEN
 import static com.hartwig.hmftools.isofox.fusion.FusionFilterType.ANCHOR_DISTANCE;
 import static com.hartwig.hmftools.isofox.fusion.FusionFilterType.COHORT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFilterType.FRAGMENT_COUNT;
-import static com.hartwig.hmftools.common.rna.KnownFusionType.KNOWN_OTHER;
-import static com.hartwig.hmftools.common.rna.KnownFusionType.KNOWN_PAIR;
-import static com.hartwig.hmftools.common.rna.KnownFusionType.KNOWN_PROM3;
-import static com.hartwig.hmftools.common.rna.KnownFusionType.OTHER;
-import static com.hartwig.hmftools.common.rna.KnownFusionType.OTHER_PROM3;
-import static com.hartwig.hmftools.common.rna.KnownFusionType.PROM5_KNOWN;
-import static com.hartwig.hmftools.common.rna.KnownFusionType.PROM5_OTHER;
-import static com.hartwig.hmftools.common.rna.KnownFusionType.PROM5_PROM3;
-import static com.hartwig.hmftools.common.rna.KnownFusionType.hasKnownPairGene;
+import static com.hartwig.hmftools.isofox.fusion.MixedKnownType.KNOWN_OTHER;
+import static com.hartwig.hmftools.isofox.fusion.MixedKnownType.KNOWN_PAIR;
+import static com.hartwig.hmftools.isofox.fusion.MixedKnownType.KNOWN_PROM3;
+import static com.hartwig.hmftools.isofox.fusion.MixedKnownType.OTHER;
+import static com.hartwig.hmftools.isofox.fusion.MixedKnownType.OTHER_PROM3;
+import static com.hartwig.hmftools.isofox.fusion.MixedKnownType.PROM5_KNOWN;
+import static com.hartwig.hmftools.isofox.fusion.MixedKnownType.PROM5_OTHER;
+import static com.hartwig.hmftools.isofox.fusion.MixedKnownType.PROM5_PROM3;
+import static com.hartwig.hmftools.isofox.fusion.MixedKnownType.hasKnownPairGene;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -43,7 +43,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.fusion.KnownFusionData;
-import com.hartwig.hmftools.common.rna.KnownFusionType;
+import com.hartwig.hmftools.common.fusion.KnownFusionType;
 
 public class PassingFusions
 {
@@ -74,12 +74,13 @@ public class PassingFusions
     public List<FusionData> findPassingFusions(final List<FusionData> allFusions)
     {
         // mark passing fusions, and then include any which are related to them
-        final List<FusionData> passingFusions = Lists.newArrayList();
-        final List<FusionData> nonPassingFusionsWithRelated = Lists.newArrayList();
-        final Map<String, List<FusionData>> lowSupportKnownFusions = Maps.newHashMap();
+        List<FusionData> passingFusions = Lists.newArrayList();
+        List<FusionData> nonPassingFusionsWithRelated = Lists.newArrayList();
+        Map<String, List<FusionData>> lowSupportKnownFusions = Maps.newHashMap();
 
         for(FusionData fusion : allFusions)
         {
+            markKnownType(fusion);
             markKnownGeneTypes(fusion);
 
             CohortFusionData cohortMatch = findCohortFusion(fusion);
@@ -99,7 +100,7 @@ public class PassingFusions
                     nonPassingFusionsWithRelated.add(fusion);
 
                 // combine fragment support for non-local known-pair fusions
-                if(fusion.getKnownFusionType() == KnownFusionType.KNOWN_PAIR && fusion.getFilter() == FRAGMENT_COUNT && !isShortLocal)
+                if(fusion.getKnownType() == KnownFusionType.KNOWN_PAIR && fusion.getFilter() == FRAGMENT_COUNT && !isShortLocal)
                 {
                     List<FusionData> fusions = lowSupportKnownFusions.get(fusion.name());
                     if(fusions == null)
@@ -110,7 +111,7 @@ public class PassingFusions
             }
         }
 
-        for(final List<FusionData> fusions : lowSupportKnownFusions.values())
+        for(List<FusionData> fusions : lowSupportKnownFusions.values())
         {
             if(hasSufficientKnownFusionFragments(fusions))
             {
@@ -126,7 +127,7 @@ public class PassingFusions
                 if(fusion.isRelated(passingFusion) && passingFusion.hasKnownSpliceSites())
                 {
                     // use the same filters as for the passing fusion by using it's known and splice types
-                    if(isPassingFusion(fusion, passingFusion.getKnownFusionType(), passingFusion.hasKnownSpliceSites()))
+                    if(isPassingFusion(fusion, passingFusion.getMixedKnownType(), passingFusion.hasKnownSpliceSites()))
                     {
                         matchesPassing = true;
                         fusion.setHasRelatedKnownSpliceSites();
@@ -154,10 +155,10 @@ public class PassingFusions
 
     private boolean isPassingFusion(final FusionData fusion)
     {
-        return isPassingFusion(fusion, fusion.getKnownFusionType(), fusion.hasKnownSpliceSites());
+        return isPassingFusion(fusion, fusion.getMixedKnownType(), fusion.hasKnownSpliceSites());
     }
 
-    private boolean isPassingFusion(final FusionData fusion, final KnownFusionType knownType, boolean hasKnownSpliceSites)
+    private boolean isPassingFusion(final FusionData fusion, final MixedKnownType knownType, boolean hasKnownSpliceSites)
     {
         if(knownType == KNOWN_PAIR && !isShortLocalFusion(fusion))
         {
@@ -262,15 +263,50 @@ public class PassingFusions
         return fusionsByPosition.stream().filter(x -> x.matches(fusion)).findFirst().orElse(null);
     }
 
+    private void markKnownType(final FusionData fusion)
+    {
+        for(KnownFusionData knownFusionData : mKnownFusionCache.getDataByType(KnownFusionType.KNOWN_PAIR))
+        {
+            if(knownFusionData.FiveGene.equals(fusion.GeneNames[SE_START]) && knownFusionData.ThreeGene.equals(fusion.GeneNames[SE_END]))
+            {
+                fusion.setKnownType(KnownFusionType.KNOWN_PAIR);
+                return;
+            }
+        }
+
+        for(KnownFusionData knownFusionData : mKnownFusionCache.getDataByType(KnownFusionType.PROMISCUOUS_5))
+        {
+            if(knownFusionData.FiveGene.equals(fusion.GeneNames[SE_START]))
+            {
+                fusion.setKnownType(KnownFusionType.PROMISCUOUS_5);
+                return;
+            }
+        }
+
+        for(KnownFusionData knownFusionData : mKnownFusionCache.getDataByType(KnownFusionType.PROMISCUOUS_3))
+        {
+            if(knownFusionData.ThreeGene.equals(fusion.GeneNames[SE_END]))
+            {
+                fusion.setKnownType(KnownFusionType.PROMISCUOUS_3);
+                return;
+            }
+        }
+
+        // String geneUp = fusion.GeneNames[SE_START];
+        // String geneDown = fusion.GeneNames[SE_END];
+
+        // consider setting enhancer region fusions
+    }
+
     private void markKnownGeneTypes(final FusionData fusion)
     {
         boolean[] isKnown = {false, false};
 
-        for(KnownFusionData knownFusionData : mKnownFusionCache.getDataByType(com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR))
+        for(KnownFusionData knownFusionData : mKnownFusionCache.getDataByType(KnownFusionType.KNOWN_PAIR))
         {
             if(knownFusionData.FiveGene.equals(fusion.GeneNames[SE_START]) && knownFusionData.ThreeGene.equals(fusion.GeneNames[SE_END]))
             {
-                fusion.setKnownFusionType(KNOWN_PAIR);
+                fusion.setMixedKnownType(KNOWN_PAIR);
                 return;
             }
 
@@ -292,31 +328,31 @@ public class PassingFusions
         if(isKnown[SE_START])
         {
             if(isProm[SE_END])
-                fusion.setKnownFusionType(KNOWN_PROM3);
+                fusion.setMixedKnownType(KNOWN_PROM3);
             else
-                fusion.setKnownFusionType(KNOWN_OTHER);
+                fusion.setMixedKnownType(KNOWN_OTHER);
         }
         else if(isKnown[SE_END])
         {
             if(isProm[SE_START])
-                fusion.setKnownFusionType(PROM5_KNOWN);
+                fusion.setMixedKnownType(PROM5_KNOWN);
             else
-                fusion.setKnownFusionType(KNOWN_OTHER);
+                fusion.setMixedKnownType(KNOWN_OTHER);
         }
         else if(isProm[SE_START])
         {
             if(isProm[SE_END])
-                fusion.setKnownFusionType(PROM5_PROM3);
+                fusion.setMixedKnownType(PROM5_PROM3);
             else
-                fusion.setKnownFusionType(PROM5_OTHER);
+                fusion.setMixedKnownType(PROM5_OTHER);
         }
         else if(isProm[SE_END])
         {
-            fusion.setKnownFusionType(OTHER_PROM3);
+            fusion.setMixedKnownType(OTHER_PROM3);
         }
         else
         {
-            fusion.setKnownFusionType(OTHER);
+            fusion.setMixedKnownType(OTHER);
         }
     }
 

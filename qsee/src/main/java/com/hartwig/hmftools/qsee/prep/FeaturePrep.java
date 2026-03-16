@@ -6,13 +6,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.IntStream;
 
 import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.qsee.cohort.FeatureMatrix;
 import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.Feature;
-import com.hartwig.hmftools.qsee.feature.FeatureKey;
 import com.hartwig.hmftools.qsee.prep.category.BaseQualRecalibrationPrep;
 import com.hartwig.hmftools.qsee.prep.category.CoverageDistributionPrep;
 import com.hartwig.hmftools.qsee.prep.category.DiscordantFragFreqPrep;
@@ -106,14 +104,9 @@ public class FeaturePrep
         List<SampleFeatures> multiSampleFeatures = new ArrayList<>();
         for(String sampleId : sampleIds)
         {
-            List<FeatureKey> featureKeys = sampleFeatureMatrix.getFeatureKeys();
-            double[] featureValues = sampleFeatureMatrix.getRowValues(sampleId);
+            Feature[] features = sampleFeatureMatrix.getRow(sampleId);
 
-            List<Feature> features = IntStream.range(0, featureKeys.size())
-                    .mapToObj(featureIndex -> new Feature(featureKeys.get(featureIndex), featureValues[featureIndex]))
-                    .toList();
-
-            SampleFeatures sampleFeatures = new SampleFeatures(sampleId, sampleType, features);
+            SampleFeatures sampleFeatures = new SampleFeatures(sampleId, sampleType, List.of(features));
             multiSampleFeatures.add(sampleFeatures);
         }
 

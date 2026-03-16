@@ -1,10 +1,7 @@
 package com.hartwig.hmftools.orange.report;
 
 import java.io.IOException;
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
 import java.util.List;
-import java.util.Locale;
 
 import com.hartwig.hmftools.orange.OrangeApplication;
 import com.itextpdf.io.font.FontProgram;
@@ -65,7 +62,8 @@ public class ReportResources
 
     public static ReportResources create()
     {
-        return new ReportResources(createFontFromProgram(loadFontProgram(FONT_REGULAR_PATH)),
+        return new ReportResources(
+                createFontFromProgram(loadFontProgram(FONT_REGULAR_PATH)),
                 createFontFromProgram(loadFontProgram(FONT_BOLD_PATH)));
     }
 

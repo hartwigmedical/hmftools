@@ -158,7 +158,10 @@ public class FragmentAllocator
         mSpliceSiteCounter = new SpliceSiteCounter(resultsWriter.getSpliceSiteWriter());
 
         mExpressionReadTracker = new ExpressionReadTracker(mConfig);
-        mAltSpliceJunctionFinder = new AltSpliceJunctionFinder(mConfig, resultsWriter.getAltSpliceJunctionWriter(), altSjCohortCache);
+
+        mAltSpliceJunctionFinder = new AltSpliceJunctionFinder(
+                mConfig, altSjCohortCache, resultsWriter.getAltSjUnfilteredWriter(), resultsWriter.getAltSjPassingWriter());
+
         mRetainedIntronFinder = new RetainedIntronFinder(mConfig, resultsWriter.getRetainedIntronWriter());
         mUmrFinder = new UmrFinder(mConfig, resultsWriter.getUnmappedReadsWriter());
     }
@@ -889,6 +892,7 @@ public class FragmentAllocator
         if(mAltSpliceJunctionFinder.enabled())
         {
             mAltSpliceJunctionFinder.prioritiseGenes();
+            mAltSpliceJunctionFinder.finalise();
             mAltSpliceJunctionFinder.writeAltSpliceJunctions();
         }
 

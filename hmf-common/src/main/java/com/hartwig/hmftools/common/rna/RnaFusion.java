@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.common.rna;
 
-import static com.hartwig.hmftools.common.rna.RnaFusionFile.FUSION_GENE_DELIM;
-
+import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 
 import org.immutables.value.Value;
@@ -10,6 +9,7 @@ import org.immutables.value.Value;
 public abstract class RnaFusion
 {
     public abstract String name();
+    public abstract KnownFusionType knownType();
     public abstract String chromosomeUp();
     public abstract String chromosomeDown();
     public abstract int positionUp();
@@ -18,7 +18,10 @@ public abstract class RnaFusion
     public abstract byte orientationDown();
     public abstract String junctionTypeUp();
     public abstract String junctionTypeDown();
-    public abstract KnownFusionType knownType();
+    public abstract String transcriptUp();
+    public abstract String transcriptDown();
+    public abstract int exonUp();
+    public abstract int exonDown();
     public abstract StructuralVariantType svType();
     public abstract int splitFragments();
     public abstract int realignedFrags();

@@ -49,7 +49,7 @@ public final class RnaFusionTable
         addEntry(cells, widths, cellEntries, 1, COL_JUNC_START);
         addEntry(cells, widths, cellEntries, 1, COL_JUNC_END);
         addEntry(cells, widths, cellEntries, 1, COL_SUPPORT);
-        addEntry(cells, widths, cellEntries, 1, COL_OTHER_FRAGS);
+        // addEntry(cells, widths, cellEntries, 1, COL_OTHER_FRAGS);
         addEntry(cells, widths, cellEntries, 1, COL_COHOR_FREQ);
 
         Table table = Tables.createContent(width, intToFloatArray(widths), cellArray(cellEntries));
@@ -67,7 +67,7 @@ public final class RnaFusionTable
             int averageDepth = min((int)round((fusion.depthStart() + fusion.depthEnd()) * 0.5), splitFragments);
             table.addCell(cells.createContent(formatSupportField(splitFragments, averageDepth)));
 
-            table.addCell(cells.createContent(String.valueOf(fusion.realignedFrags() + fusion.discordantFrags())));
+            // table.addCell(cells.createContent(String.valueOf(fusion.realignedFrags() + fusion.discordantFrags())));
             table.addCell(cells.createContent(String.valueOf(fusion.cohortFrequency())));
         }
 

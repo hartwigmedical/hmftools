@@ -6,16 +6,13 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import java.util.Collections;
-
 import com.hartwig.hmftools.datamodel.immuno.ImmuneEscapeRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
-import com.hartwig.hmftools.orange.algo.linx.TestLinxFactory;
+import com.hartwig.hmftools.orange.algo.linx.TestLinxRecordFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleGainDeletionFactory;
-import com.hartwig.hmftools.orange.algo.purple.TestPurpleGeneCopyNumberFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleInterpretationFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleVariantFactory;
 
@@ -28,7 +25,7 @@ public class ImmuneEscapeInterpreterTest
     public void doesNotCrashOnMinimalData()
     {
         PurpleRecord purple = TestPurpleInterpretationFactory.createMinimalTestPurpleData();
-        LinxRecord linx = TestLinxFactory.createMinimalTestLinxData();
+        LinxRecord linx = TestLinxRecordFactory.createMinimalTestLinxData();
 
         assertNotNull(ImmuneEscapeInterpreter.interpret(purple, linx));
     }
@@ -61,7 +58,7 @@ public class ImmuneEscapeInterpreterTest
                         .build())
                 .build();
 
-        LinxRecord linx = TestLinxFactory.linxRecordBuilder()
+        LinxRecord linx = TestLinxRecordFactory.linxRecordBuilder()
                 .build();
 
         ImmuneEscapeRecord immuneEscape = ImmuneEscapeInterpreter.interpret(purple, linx);
@@ -182,7 +179,7 @@ public class ImmuneEscapeInterpreterTest
 
     private static ImmuneEscapeRecord runWithPurple(final PurpleRecord purple)
     {
-        return ImmuneEscapeInterpreter.interpret(purple, TestLinxFactory.createMinimalTestLinxData());
+        return ImmuneEscapeInterpreter.interpret(purple, TestLinxRecordFactory.createMinimalTestLinxData());
     }
 
     private static ImmuneEscapeRecord runWithLinx(final LinxRecord linx)
@@ -255,7 +252,7 @@ public class ImmuneEscapeInterpreterTest
 
     private static LinxRecord withHomozygousDisruption(final String gene)
     {
-        return TestLinxFactory.linxRecordBuilder()
+        return TestLinxRecordFactory.linxRecordBuilder()
                 .build();
     }
 }

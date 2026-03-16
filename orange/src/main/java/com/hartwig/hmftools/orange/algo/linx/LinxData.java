@@ -2,7 +2,6 @@ package com.hartwig.hmftools.orange.algo.linx;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
@@ -32,7 +31,13 @@ public interface LinxData
     List<LinxFusion> fusions();
 
     @NotNull
+    Map<LinxFusion,Integer> fusionClusterIds();
+
+    @NotNull
     List<LinxBreakend> somaticBreakends();
+
+    @NotNull
+    Map<LinxBreakend,Integer> somaticBreakendClusterIds();
 
     @NotNull
     List<DriverCatalog> somaticHomozygousDisruptions();
@@ -50,14 +55,5 @@ public interface LinxData
     List<LinxSvAnnotation> germlineSvAnnotations();
 
     @NotNull
-    Set<Integer> fusionClusterIds();
-
-    @NotNull
-    Map<Integer, Integer> svIdToClusterId();
-
-    @NotNull
-    Map<Integer, Integer> clusterIdToLinkCount();
-
-    @NotNull
-    Map<Integer, Integer> clusterIdToExonCount();
+    List<String> reportableEventPlots();
 }

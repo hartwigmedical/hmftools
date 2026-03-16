@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.linx.drivers;
 
-import static com.hartwig.hmftools.common.driver.DriverCategory.TSG;
 import static com.hartwig.hmftools.common.driver.DriverType.DRIVERS_PURPLE_SOMATIC;
 import static com.hartwig.hmftools.common.driver.LikelihoodMethod.DISRUPTION;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
@@ -28,7 +27,6 @@ import com.hartwig.hmftools.common.purple.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurityContextFile;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
-import com.hartwig.hmftools.linx.gene.BreakendTransData;
 
 public class DriverDataCache
 {
@@ -108,7 +106,7 @@ public class DriverDataCache
         mIsMale = isMale;
     }
 
-    public DriverGeneData createDisruptionDriver(final BreakendGeneData gene, final TranscriptData transData, final DriverType driverType)
+    public DriverGeneData createHomDisruptionDriver(final BreakendGeneData gene, final TranscriptData transData, final DriverType driverType)
     {
         GeneCopyNumber gcnData = findGeneCopyNumber(gene.geneName());
 

@@ -97,19 +97,19 @@ public final class TableCommon
         return format("%d/%d", fragments, depth);
     }
 
-    protected static void addEntry(final Cells cells, final List<Integer> widths, final List<Cell> cellEntries, int width, final String column)
+    public static void addEntry(final Cells cells, final List<Integer> widths, final List<Cell> cellEntries, int width, final String column)
     {
         cellEntries.add(cells.createHeader(column));
         widths.add(width);
     }
 
-    protected static void addEntry(final Cells cells, final List<Float> widths, final List<Cell> cellEntries, double width, final String column)
+    public static void addEntry(final Cells cells, final List<Float> widths, final List<Cell> cellEntries, double width, final String column)
     {
         cellEntries.add(cells.createHeader(column));
         widths.add((float)width);
     }
 
-    protected static float[] intToFloatArray(final List<Integer> widths)
+    public static float[] intToFloatArray(final List<Integer> widths)
     {
         float[] widthArray = new float[widths.size()];
 
@@ -121,7 +121,7 @@ public final class TableCommon
         return widthArray;
     }
 
-    protected static float[] floatArray(final List<Float> widths)
+    public static float[] floatArray(final List<Float> widths)
     {
         float[] widthArray = new float[widths.size()];
 
@@ -133,7 +133,7 @@ public final class TableCommon
         return widthArray;
     }
 
-    protected static Cell[] cellArray(final List<Cell> cellEntries)
+    public static Cell[] cellArray(final List<Cell> cellEntries)
     {
         Cell[] cellArray = new Cell[cellEntries.size()];
 

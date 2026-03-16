@@ -64,4 +64,7 @@ public interface PurpleGainDeletion
 
     @Nullable
     Double tpmFoldChange();
+
+    @Nullable
+    String plotFilename();
 }

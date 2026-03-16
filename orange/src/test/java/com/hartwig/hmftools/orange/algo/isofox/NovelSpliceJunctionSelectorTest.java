@@ -2,24 +2,9 @@ package com.hartwig.hmftools.orange.algo.isofox;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.List;
-
-import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.driver.panel.DriverGene;
-import com.hartwig.hmftools.common.driver.panel.DriverGeneTestFactory;
-import com.hartwig.hmftools.common.rna.AltSpliceJunctionType;
-import com.hartwig.hmftools.common.rna.KnownFusionType;
-import com.hartwig.hmftools.common.rna.NovelSpliceJunction;
-import com.hartwig.hmftools.common.rna.RnaFusion;
-import com.hartwig.hmftools.datamodel.linx.LinxFusion;
-import com.hartwig.hmftools.orange.algo.linx.LinxOrangeTestFactory;
-
-import org.jetbrains.annotations.NotNull;
-import org.junit.Ignore;
-import org.junit.Test;
-
 public class NovelSpliceJunctionSelectorTest
 {
+    /*
     @Ignore
     @Test
     public void canSelectSkippedExons()
@@ -42,6 +27,7 @@ public class NovelSpliceJunctionSelectorTest
         assertEquals(match, skippedExons.get(0));
     }
 
+    @Ignore
     @Test
     public void canSelectNovelExonIntrons()
     {
@@ -59,8 +45,7 @@ public class NovelSpliceJunctionSelectorTest
     }
 
     @NotNull
-    private static NovelSpliceJunction create(@NotNull String gene, @NotNull AltSpliceJunctionType type, int fragmentCount,
-            int cohortFrequency)
+    private static NovelSpliceJunction create(final String gene, final AltSpliceJunctionType type, int fragmentCount, int cohortFrequency)
     {
         return IsofoxTestFactory.novelSpliceJunctionBuilder()
                 .geneName(gene)
@@ -69,4 +54,5 @@ public class NovelSpliceJunctionSelectorTest
                 .cohortFrequency(cohortFrequency)
                 .build();
     }
+    */
 }

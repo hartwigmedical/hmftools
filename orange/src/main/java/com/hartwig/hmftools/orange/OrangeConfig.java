@@ -33,8 +33,8 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.QSEE_DIR_CFG
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.QSEE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_DESC;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.REF_METRICS_DIR_CFG;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.REF_METRICS_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.BAM_METRICS_REF_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.BAM_METRICS_REF_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_GERMLINE_DIR_CFG;
@@ -45,8 +45,8 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.SIGS_DIR_CFG
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SIGS_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_DESC;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_METRICS_DIR_CFG;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_METRICS_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.BAM_METRICS_TUMOR_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.BAM_METRICS_TUMOR_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
@@ -83,6 +83,9 @@ public class OrangeConfig
     public final String ReferenceId;
     public final String RnaSampleId;
 
+    public final String DisplaySampleId;
+    public final String PanelName;
+
     public final RefGenomeVersion RefGenVersion;
 
     public final Set<String> PrimaryTumorDoids;
@@ -100,18 +103,15 @@ public class OrangeConfig
     public final String PurpleDataDirectory;
     public final String PurplePlotDirectory;
     public final String QSeeDirectory;
-
     public final String LinxSomaticDataDirectory;
     public final String LinxGermlineDataDirectory;
     public final String LinxPlotDirectory;
-
     public final String LilacDir;
     public final String ChordDir;
     public final String CuppaDir;
     public final String PeachDir;
     public final String SigsDir;
     public final String VirusDir;
-
     public final String IsofoxDir;
 
     public final boolean AddDisclaimer;
@@ -123,6 +123,8 @@ public class OrangeConfig
     private static final String PRIMARY_TUMOR_DOIDS = "primary_tumor_doids";
     private static final String PRIMARY_TUMOR_LOCATION = "primary_tumor_location";
     private static final String SAMPLING_DATE = "sampling_date";
+    private static final String DISPLAY_SAMPLE_ID = "display_sample";
+    private static final String PANEL_NAME = "panel_name";
 
     // Input files used by the algorithm
     private static final String DOID_JSON = "doid_json";
@@ -186,7 +188,7 @@ public class OrangeConfig
         LinxSomaticDataDirectory = pathResolver.resolveMandatoryToolDirectory(LINX_DIR_CFG, defaultToolDirectories.linxSomaticDir());
         LinxPlotDirectory = optionalPath(pathResolver.resolveOptionalToolPlotsDirectory(LINX_PLOT_DIR_CFG, defaultToolDirectories.linxSomaticDir()));
 
-        QSeeDirectory = pathResolver.resolveOptionalToolPlotsDirectory(QSEE_DIR_CFG, defaultToolDirectories.qseeDir());
+        QSeeDirectory = pathResolver.resolveOptionalToolDirectory(QSEE_DIR_CFG, defaultToolDirectories.qseeDir());
 
         if(ReferenceId != null)
         {
@@ -199,10 +201,10 @@ public class OrangeConfig
         }
 
         LilacDir = pathResolver.resolveOptionalToolDirectory(LILAC_DIR_CFG, defaultToolDirectories.lilacDir());
-        ChordDir = pathResolver.resolveMandatoryToolDirectory(CHORD_DIR_CFG, defaultToolDirectories.chordDir());
+        ChordDir = pathResolver.resolveOptionalToolDirectory(CHORD_DIR_CFG, defaultToolDirectories.chordDir());
         CuppaDir = pathResolver.resolveOptionalToolDirectory(CUPPA_DIR_CFG, defaultToolDirectories.cuppaDir());
         PeachDir = pathResolver.resolveOptionalToolDirectory(PEACH_DIR_CFG, defaultToolDirectories.peachDir());
-        SigsDir = pathResolver.resolveMandatoryToolDirectory(SIGS_DIR_CFG, defaultToolDirectories.sigsDir());
+        SigsDir = pathResolver.resolveOptionalToolDirectory(SIGS_DIR_CFG, defaultToolDirectories.sigsDir());
         VirusDir = pathResolver.resolveOptionalToolDirectory(VIRUS_DIR_CFG, defaultToolDirectories.virusInterpreterDir());
 
         if(!configBuilder.hasValue(RNA_SAMPLE_ID) || !configBuilder.hasValue(ISOFOX_DIR_CFG))
@@ -210,15 +212,24 @@ public class OrangeConfig
             RnaSampleId = null;
             IsofoxDir = null;
 
-            LOGGER.info("RNA config not present, will continue without RNA configuration");
+            LOGGER.info("RNA config not present");
         }
         else
         {
             RnaSampleId = configBuilder.getValue(RNA_SAMPLE_ID);
             IsofoxDir = pathResolver.resolveMandatoryToolDirectory(ISOFOX_DIR_CFG, defaultToolDirectories.isofoxDir());
+
+            if(DriverGenePanelTsv == null)
+            {
+                LOGGER.error("driver gene panel currently required for RNA analysis");
+                System.exit(1);
+            }
         }
 
         LOGGER.debug("RNA sample configured as {}", RnaSampleId);
+
+        DisplaySampleId = configBuilder.getValue(DISPLAY_SAMPLE_ID, TumorId);
+        PanelName = configBuilder.getValue(PANEL_NAME);
 
         AddDisclaimer = configBuilder.hasFlag(ADD_DISCLAIMER);
         if(AddDisclaimer)
@@ -260,13 +271,13 @@ public class OrangeConfig
         addOutputOptions(configBuilder);
 
         configBuilder.addPath(DOID_JSON, false, "Path to JSON file containing the full DOID tree");
-        addGenePanelOption(configBuilder, true);
+        addGenePanelOption(configBuilder, false); // only used for RNA
 
         configBuilder.addPath(PIPELINE_VERSION_FILE, false, "Path towards the pipeline version file.");
 
         // tool output
-        configBuilder.addPath(TUMOR_METRICS_DIR_CFG, false, TUMOR_METRICS_DIR_DESC);
-        configBuilder.addPath(REF_METRICS_DIR_CFG, false, REF_METRICS_DIR_DESC);
+        configBuilder.addPath(BAM_METRICS_TUMOR_DIR_CFG, false, BAM_METRICS_TUMOR_DIR_DESC);
+        configBuilder.addPath(BAM_METRICS_REF_DIR_CFG, false, BAM_METRICS_REF_DIR_DESC);
 
         // per tool directory config options are supported, but simpler is to specific the root sample directory containing all tool
         // subdirectories or a single directory containing all pipeline output
@@ -290,6 +301,8 @@ public class OrangeConfig
         configBuilder.addPath(QSEE_DIR_CFG, false, QSEE_DIR_DESC);
         PipelineToolDirectories.addPipelineFormatOptions(configBuilder);
 
+        configBuilder.addConfigItem(DISPLAY_SAMPLE_ID, false, "Sample ID for display instead of Tumor ID for demo purposes");
+        configBuilder.addConfigItem(PANEL_NAME, false, "Panel name if known");
         configBuilder.addConfigItem(RNA_SAMPLE_ID, false, "(Optional) The RNA sample of the tumor sample for which ORANGE will run");
         configBuilder.addPath(ISOFOX_DIR_CFG, false, ISOFOX_DIR_DESC);
 
@@ -387,5 +400,7 @@ public class OrangeConfig
         VirusDir = virusDir;
         IsofoxDir = isofoxDir;
         AddDisclaimer = addDisclaimer;
+        DisplaySampleId = tumorId;
+        PanelName = "";
     }
 }

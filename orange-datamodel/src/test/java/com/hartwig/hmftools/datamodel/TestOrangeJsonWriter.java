@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.datamodel.chord.ChordStatus;
 import com.hartwig.hmftools.datamodel.chord.ImmutableChordRecord;
+import com.hartwig.hmftools.datamodel.common.ImmutableAllelicDepth;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaMode;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
@@ -26,7 +27,6 @@ import com.hartwig.hmftools.datamodel.linx.FusionPhasedType;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxRecord;
-import com.hartwig.hmftools.datamodel.linx.ImmutableLinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
 import com.hartwig.hmftools.datamodel.linx.LinxFusionType;
@@ -42,12 +42,10 @@ import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
 import com.hartwig.hmftools.datamodel.orange.OrangeSample;
 import com.hartwig.hmftools.datamodel.peach.ImmutablePeachGenotype;
 import com.hartwig.hmftools.datamodel.purple.HotspotType;
-import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleAllelicDepth;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleCharacteristics;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleFit;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGainDeletion;
-import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGeneCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleQC;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleTranscriptImpact;
@@ -196,7 +194,7 @@ public class TestOrangeJsonWriter
                 .adjustedCopyNumber(3.02)
                 .adjustedVAF(1.2)
                 .hotspot(HotspotType.NON_HOTSPOT)
-                .tumorDepth(ImmutablePurpleAllelicDepth.builder().totalReadCount(20).alleleReadCount(10).build())
+                .tumorDepth(ImmutableAllelicDepth.builder().totalReadCount(20).alleleReadCount(10).build())
                 .subclonalLikelihood(0.0)
                 .somaticLikelihood(PurpleSomaticLikelihood.MEDIUM)
                 .biallelic(false)
@@ -229,7 +227,7 @@ public class TestOrangeJsonWriter
                 .adjustedCopyNumber(2.0)
                 .adjustedVAF(1.2)
                 .hotspot(HotspotType.HOTSPOT)
-                .tumorDepth(ImmutablePurpleAllelicDepth.builder().totalReadCount(30).alleleReadCount(20).build())
+                .tumorDepth(ImmutableAllelicDepth.builder().totalReadCount(30).alleleReadCount(20).build())
                 .subclonalLikelihood(0.2)
                 .somaticLikelihood(PurpleSomaticLikelihood.UNKNOWN)
                 .biallelic(false)
@@ -337,27 +335,6 @@ public class TestOrangeJsonWriter
                 .build();
 
         return ImmutableLinxRecord.builder()
-                .addSomaticStructuralVariants(ImmutableLinxSvAnnotation.builder()
-                        .vcfId("id")
-                        .svId(1)
-                        .clusterId(2)
-                        .clusterReason("")
-                        .fragileSiteStart(false)
-                        .fragileSiteEnd(false)
-                        .isFoldback(false)
-                        .lineTypeStart("NONE")
-                        .lineTypeEnd("NONE")
-                        .junctionCopyNumberMin(2.0)
-                        .junctionCopyNumberMax(3.0)
-                        .geneStart("PTENR")
-                        .geneEnd("PTEN")
-                        .localTopologyIdStart(0)
-                        .localTopologyIdEnd(1)
-                        .localTopologyStart("ISOLATED_S")
-                        .localTopologyEnd("ISOLATED_BE")
-                        .localTICountStart(3)
-                        .localTICountEnd(4)
-                        .build())
                 .addFusions(ImmutableLinxFusion.builder()
                         .driverInterpretation(DriverInterpretation.HIGH)
                         .reportedType(LinxFusionType.KNOWN_PAIR)

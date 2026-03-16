@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.datamodel.hla.LilacAllele;
 import com.hartwig.hmftools.datamodel.hla.LilacRecord;
+import com.hartwig.hmftools.datamodel.orange.ExperimentType;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.datamodel.purple.PurpleQCInterpretation;
@@ -49,7 +50,11 @@ public class ImmunologyChapter implements ReportChapter
         document.add(new Paragraph(name()).addStyle(mReportResources.chapterTitleStyle()));
 
         addHLAData(document);
-        addImmuneEscapeData(document);
+
+        if(mReport.experimentType() == ExperimentType.WHOLE_GENOME)
+        {
+            addImmuneEscapeData(document);
+        }
     }
 
     private void addHLAData(final Document document)
@@ -67,9 +72,13 @@ public class ImmunologyChapter implements ReportChapter
         List<LilacAllele> classIAlleles = lilacData.alleles().stream().filter(x -> x.geneClass().equals(MHC_CLASS_I)).collect(Collectors.toList());
         document.add(HLAAlleleTable.build(title, contentWidth(), classIAlleles, mReportResources, mReport.hasRna()));
 
-        title = "HLA Class II Alleles";
-        List<LilacAllele> classIIAlleles = lilacData.alleles().stream().filter(x -> !x.geneClass().equals(MHC_CLASS_I)).collect(Collectors.toList());
-        document.add(HLAAlleleTable.build(title, contentWidth(), classIIAlleles, mReportResources, mReport.hasRna()));
+        if(mReport.experimentType() == ExperimentType.WHOLE_GENOME)
+        {
+            title = "HLA Class II Alleles";
+            List<LilacAllele> classIIAlleles =
+                    lilacData.alleles().stream().filter(x -> !x.geneClass().equals(MHC_CLASS_I)).collect(Collectors.toList());
+            document.add(HLAAlleleTable.build(title, contentWidth(), classIIAlleles, mReportResources, mReport.hasRna()));
+        }
     }
 
     private void addImmuneEscapeData(final Document document)

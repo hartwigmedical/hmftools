@@ -18,16 +18,14 @@ public class SidePanel
     private static final float MAX_WIDTH = 120;
 
     private static final float RECTANGLE_WIDTH = 170;
-    private static final float RECTANGLE_HEIGHT = 84;
+    private static final float RECTANGLE_HEIGHT = 60; // was 84 when showed pipeline version too
 
     private final String mSampleId;
-    private final String mPipelineVersion;
     private final ReportResources mReportResources;
 
-    public SidePanel(final String sampleId, final String pipelineVersion, final ReportResources reportResources)
+    public SidePanel(final String sampleId, final ReportResources reportResources)
     {
         mSampleId = sampleId;
-        mPipelineVersion = pipelineVersion;
         mReportResources = reportResources;
     }
 
@@ -43,7 +41,6 @@ public class SidePanel
         Canvas cv = new Canvas(canvas, page.getDocument(), page.getPageSize());
 
         cv.add(createSidePanelDiv(pageSize, ++sideTextIndex, "Sample", mSampleId));
-        cv.add(createSidePanelDiv(pageSize, ++sideTextIndex, "Pipeline version", mPipelineVersion));
 
         canvas.release();
     }

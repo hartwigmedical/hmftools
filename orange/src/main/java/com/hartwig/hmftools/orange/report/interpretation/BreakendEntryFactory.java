@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.orange.report.datamodel;
+package com.hartwig.hmftools.orange.report.interpretation;
 
 import static java.lang.Math.max;
 
@@ -10,9 +10,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
-import com.hartwig.hmftools.datamodel.linx.LinxDriver;
-import com.hartwig.hmftools.datamodel.linx.LinxDriverType;
-import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
 
 import org.apache.logging.log4j.util.Strings;
 

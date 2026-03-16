@@ -27,6 +27,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.codon.Nucleotides;
+import com.hartwig.hmftools.common.utils.StartEndPair;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
@@ -94,9 +95,9 @@ public final class LineUtils
         if(cigarElements.size() <= 1)
             return false;
 
-        for(int i = 0; i <= 1; ++i)
+        for(StartEndPair se : StartEndPair.values())
         {
-            boolean fromStart = (i == 0);
+            boolean fromStart = se.isStart();
             CigarElement element = fromStart ? cigarElements.get(0) : cigarElements.get(cigarElements.size() - 1);
 
             if(element.getOperator() != CigarOperator.S)

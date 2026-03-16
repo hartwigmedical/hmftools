@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.isofox;
 
+import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL;
+import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.addGenePanelOption;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
@@ -8,11 +10,12 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.rna.RnaCommon.ISF_FILE_ID;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.NEO_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.NEO_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadDelimitedIdFile;
-import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CANCER_TYPE;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
@@ -35,12 +38,15 @@ import static com.hartwig.hmftools.isofox.expression.ExpectedRatesCommon.ER_FRAG
 import static com.hartwig.hmftools.isofox.expression.ExpectedRatesCommon.loadFragmentSizeConfig;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.driver.panel.DriverGene;
+import com.hartwig.hmftools.common.driver.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -109,6 +115,8 @@ public class IsofoxConfig
     public final GeneRegionFilters Filters;
     public final String CancerType;
 
+    public final List<DriverGene> DriverGenes;
+
     public int ReadLength;
     public int MaxFragmentLength;
     public final boolean DropDuplicates;
@@ -134,6 +142,7 @@ public class IsofoxConfig
     public final FusionConfig Fusions;
 
     // debugging and performance options
+    public static boolean PerfDebug;
     public final int GeneReadLimit;
     public final boolean RunValidations;
     public final boolean RunPerfChecks;
@@ -177,6 +186,21 @@ public class IsofoxConfig
         RefGenome = loadRefGenome(refGenomeFilename);
 
         RefGenVersion = RefGenomeVersion.from(configBuilder);
+
+        DriverGenes = Lists.newArrayList();
+
+        if(configBuilder.hasValue(DRIVER_GENE_PANEL))
+        {
+            try
+            {
+                DriverGenes.addAll(DriverGeneFile.read(configBuilder.getValue(DRIVER_GENE_PANEL)));
+            }
+            catch(IOException e)
+            {
+                ISF_LOGGER.error("failed to read driver gene file: {}", e.toString());
+                System.exit(1);
+            }
+        }
 
         Filters = new GeneRegionFilters(RefGenVersion);
         Filters.loadConfig(configBuilder);
@@ -226,6 +250,8 @@ public class IsofoxConfig
         FragmentSizeData = loadFragmentSizeConfig(configBuilder);
 
         Fusions = Functions.contains(FUSIONS) ? new FusionConfig(configBuilder) : new FusionConfig();
+
+        PerfDebug = configBuilder.hasFlag(PERF_DEBUG);
 
         RunValidations = configBuilder.hasValue(RUN_VALIDATIONS);
         RunPerfChecks = configBuilder.hasValue(PERF_CHECKS);
@@ -324,6 +350,7 @@ public class IsofoxConfig
 
         GeneDistributionFile = "";
         AltSjCohortFile = "";
+        DriverGenes = Lists.newArrayList();
         CancerType = "";
 
         ReadLength = 0;
@@ -359,6 +386,8 @@ public class IsofoxConfig
         addEnsemblDir(configBuilder);
         addOutputOptions(configBuilder);
         addLoggingOptions(configBuilder);
+
+        addGenePanelOption(configBuilder, false);
 
         configBuilder.addConfigItem(FUNCTIONS, false, "List of functional routines to run (see documentation)");
         configBuilder.addFlag(CANONICAL_ONLY, "Check all transcripts, not just canonical");
@@ -400,5 +429,6 @@ public class IsofoxConfig
         GeneRegionFilters.registerConfig(configBuilder);
         FusionConfig.registerConfig(configBuilder);
         addThreadOptions(configBuilder);
+        configBuilder.addFlag(PERF_DEBUG, PERF_DEBUG_DESC);
     }
 }

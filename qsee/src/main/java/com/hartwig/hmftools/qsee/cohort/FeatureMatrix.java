@@ -2,52 +2,49 @@ package com.hartwig.hmftools.qsee.cohort;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.qsee.feature.Feature;
 import com.hartwig.hmftools.qsee.feature.FeatureKey;
-import com.hartwig.hmftools.qsee.feature.SourceTool;
 
 public class FeatureMatrix
 {
-    private final Map<FeatureKey, double[]> mFeatureValuesMap;
+    private final Map<FeatureKey, Feature[]> mFeatureValuesMap;
     /*
     Visual representation:
 
-             feature1     feature2     feature3  ...
-    row1  array1_val1  array2_val1  array3_val1  ...
-    row2  array1_val2  array2_val2  array3_val2  ...
-     ...          ...          ...          ...
+             feature1  feature2  feature3  ...
+    sample1     s1_f1     s1_f2     s1_f3  ...
+    sample2     s2_f1     s2_f2     s2_f3  ...
+        ...       ...       ...       ...
      */
 
-    private final List<String> mRowIds = new ArrayList<>();
-    private final int mNumRows;
+    private final List<String> mSampleIds = new ArrayList<>();
+    private final int mNumSamples;
 
     // There is no concurrent implementation of LinkedHashMap.
     // Therefore, store feature keys (= Map keys) in a list to store the insertion order of features.
     private final List<FeatureKey> mFeatureKeys = new ArrayList<>();
 
-    private static final double EMPTY_VALUE = Double.NaN;
-
-    public FeatureMatrix(Map<FeatureKey, double[]> featureValuesMap, List<String> expectedRowIds)
+    public FeatureMatrix(Map<FeatureKey, Feature[]> featureValuesMap, List<String> expectedSampleIds)
     {
         mFeatureValuesMap = featureValuesMap;
         checkMapEmpty();
 
-        mRowIds.addAll(expectedRowIds);
-        mNumRows = expectedRowIds.size();
+        mSampleIds.addAll(expectedSampleIds);
+        mNumSamples = expectedSampleIds.size();
     }
 
-    public FeatureMatrix(Map<FeatureKey, double[]> featureValuesMap, int numRows)
+    public FeatureMatrix(Map<FeatureKey, Feature[]> featureValuesMap, int numSamples)
     {
         mFeatureValuesMap = featureValuesMap;
         checkMapEmpty();
 
-        mNumRows = numRows;
+        mNumSamples = numSamples;
     }
 
     private void checkMapEmpty()
@@ -60,114 +57,91 @@ public class FeatureMatrix
 
     public synchronized void addRow(String rowId, List<Feature> features)
     {
-        if(!mRowIds.contains(rowId))
+        if(!mSampleIds.contains(rowId))
         {
-            mRowIds.add(rowId);
+            mSampleIds.add(rowId);
         }
 
-        int rowIndex = mRowIds.indexOf(rowId);
+        int rowIndex = mSampleIds.indexOf(rowId);
 
         for(Feature feature : features)
         {
             FeatureKey key = feature.key();
-            addColumnIfMissing(key);
-            mFeatureValuesMap.get(key)[rowIndex] = feature.value();
+
+            if(!mFeatureKeys.contains(key))
+            {
+                mFeatureKeys.add(key);
+
+                Feature emptyFeature = new Feature(key, Double.NaN);
+                Feature[] emptyArray = new Feature[numSamples()];
+                Arrays.fill(emptyArray, emptyFeature);
+
+                mFeatureValuesMap.put(key, emptyArray);
+            }
+
+            mFeatureValuesMap.get(key)[rowIndex] = feature;
         }
-    }
-
-    private void addColumnIfMissing(FeatureKey key)
-    {
-        if(!mFeatureKeys.contains(key))
-        {
-            mFeatureKeys.add(key);
-
-            double[] emptyArray = new double[numRows()];
-            Arrays.fill(emptyArray, EMPTY_VALUE);
-
-            mFeatureValuesMap.put(key, emptyArray);
-        }
-    }
-
-    public synchronized void addColumn(FeatureKey key, double[] features, SourceTool sourceTool)
-    {
-        if(mFeatureKeys.contains(key))
-        {
-            throw new IllegalArgumentException("Cannot add a column with an already existing key");
-        }
-
-        mFeatureKeys.add(key);
-        mFeatureValuesMap.put(key, features);
     }
 
     public void sortFeatureKeys()
     {
-        Comparator<FeatureKey> comparator = Comparator.comparing(FeatureKey::type, Comparator.nullsLast(Comparator.naturalOrder()));
-        mFeatureKeys.sort(comparator);
+        Collections.sort(mFeatureKeys);
     }
 
-    public int numRows() { return mNumRows; }
+    public int numSamples() { return mNumSamples; }
 
     public int numFeatures() { return mFeatureKeys.size(); }
 
-    public List<String> getRowIds() { return mRowIds; }
+    public List<String> getSampleIds() { return mSampleIds; }
 
     public List<FeatureKey> getFeatureKeys() { return mFeatureKeys; }
 
-    public double[][] getValues()
+    public Feature[] getRow(int index)
     {
-        double[][] matrix = new double[numRows()][numFeatures()];
-
-        for(int rowIndex = 0; rowIndex < numRows(); rowIndex++)
-        {
-            matrix[rowIndex] = getRowValues(rowIndex);
-        }
-
-        return matrix;
-    }
-
-    public double[][] getValuesTransposed()
-    {
-        double[][] matrix = new double[numFeatures()][numRows()];
+        Feature[] row = new Feature[numFeatures()];
 
         for(int featureIndex = 0; featureIndex < numFeatures(); featureIndex++)
         {
-            matrix[featureIndex] = getColumnValues(mFeatureKeys.get(featureIndex));
+            row[featureIndex] = mFeatureValuesMap.get(mFeatureKeys.get(featureIndex))[index];
         }
 
-        return matrix;
+        return row;
     }
 
-    public double[] getRowValues(int index)
+    public Feature[] getRow(String rowId)
     {
-        double[] rowValues = new double[numFeatures()];
-
-        for(int featureIndex = 0; featureIndex < numFeatures(); featureIndex++)
-        {
-            rowValues[featureIndex] = mFeatureValuesMap.get(mFeatureKeys.get(featureIndex))[index];
-        }
-
-        return rowValues;
-    }
-
-    public double[] getRowValues(String rowId)
-    {
-        int rowIndex = mRowIds.indexOf(rowId);
+        int rowIndex = mSampleIds.indexOf(rowId);
 
         if(rowIndex < 0)
         {
             throw new IllegalArgumentException(String.format("RowId(%s) not found", rowId));
         }
 
-        return getRowValues(rowIndex);
+        return getRow(rowIndex);
     }
 
-    public double[] getColumnValues(int index)
+    public Feature[] getColumn(int index)
     {
-        return getColumnValues(mFeatureKeys.get(index));
+        return getColumn(mFeatureKeys.get(index));
     }
 
-    public double[] getColumnValues(FeatureKey key)
+    public Feature[] getColumn(FeatureKey key)
     {
         return mFeatureValuesMap.get(key);
+    }
+
+    @VisibleForTesting
+    double[][] getFeatureValues()
+    {
+        double[][] matrix = new double[numSamples()][numFeatures()];
+
+        for(int rowIndex = 0; rowIndex < numSamples(); rowIndex++)
+        {
+            Feature[] features = getRow(rowIndex);
+            double[] featureValues = Stream.of(features).mapToDouble(Feature::value).toArray();
+            matrix[rowIndex] = featureValues;
+        }
+
+        return matrix;
     }
 }

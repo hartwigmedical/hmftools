@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.isofox.fusion;
 
 import static com.hartwig.hmftools.common.rna.RnaFusionFile.PASS_FUSION_FILE_ID;
-import static com.hartwig.hmftools.common.rna.RnaFusionFile.UNFILTERED_FUSION_FILE_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
@@ -14,6 +13,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import com.hartwig.hmftools.common.rna.RnaFusion;
+import com.hartwig.hmftools.common.rna.RnaFusionFile;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 
 public class FusionWriter
@@ -27,6 +28,8 @@ public class FusionWriter
     private final boolean mWriteFragments;
 
     private int mNextFusionId;
+
+    public static final String UNFILTERED_FUSION_FILE_ID = "fusions.tsv";
 
     public FusionWriter(final IsofoxConfig config)
     {
@@ -61,11 +64,11 @@ public class FusionWriter
         try
         {
             mFusionWriter = createBufferedWriter(mConfig.formOutputFile(UNFILTERED_FUSION_FILE_ID), false);
-            mFusionWriter.write(FusionData.header(false));
+            mFusionWriter.write(FusionData.header());
             mFusionWriter.newLine();
 
             mPassingFusionWriter = createBufferedWriter(mConfig.formOutputFile(PASS_FUSION_FILE_ID), false);
-            mPassingFusionWriter.write(FusionData.header(true));
+            mPassingFusionWriter.write(RnaFusionFile.header());
             mPassingFusionWriter.newLine();
         }
         catch(IOException e)
@@ -84,13 +87,14 @@ public class FusionWriter
         {
             for(FusionData fusionData : fusions)
             {
-                mFusionWriter.write(fusionData.toTsv(false));
+                mFusionWriter.write(fusionData.toTsv());
                 mFusionWriter.newLine();
             }
 
             for(FusionData fusionData : passingFusions)
             {
-                mPassingFusionWriter.write(fusionData.toTsv(true));
+                RnaFusion fusion = fusionData.buildRnaFusion();
+                mPassingFusionWriter.write(RnaFusionFile.write(fusion));
                 mPassingFusionWriter.newLine();
             }
 

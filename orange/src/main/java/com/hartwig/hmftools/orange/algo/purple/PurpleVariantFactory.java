@@ -3,17 +3,16 @@ package com.hartwig.hmftools.orange.algo.purple;
 import static com.hartwig.hmftools.common.variant.impact.AltTranscriptReportableInfo.parseAltTranscriptInfo;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.variant.SmallVariant;
 import com.hartwig.hmftools.common.variant.impact.AltTranscriptReportableInfo;
 import com.hartwig.hmftools.common.variant.impact.VariantEffect;
+import com.hartwig.hmftools.datamodel.common.AllelicDepth;
 import com.hartwig.hmftools.datamodel.purple.HotspotType;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleVariant;
-import com.hartwig.hmftools.datamodel.purple.PurpleAllelicDepth;
 import com.hartwig.hmftools.datamodel.purple.PurpleGenotypeStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
@@ -44,7 +43,7 @@ public final class PurpleVariantFactory
             }
         }
 
-        PurpleAllelicDepth rnaDepth = variant.rnaDepth() != null ? PurpleConversion.convert(variant.rnaDepth()) : null;
+        AllelicDepth rnaDepth = variant.rnaDepth() != null ? PurpleConversion.convert(variant.rnaDepth()) : null;
 
         return ImmutablePurpleVariant.builder()
                 .type(PurpleVariantType.valueOf(variant.type().name()))

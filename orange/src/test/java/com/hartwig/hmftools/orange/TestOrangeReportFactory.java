@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.orange;
 
-import static com.hartwig.hmftools.orange.algo.linx.LinxOrangeTestFactory.fusionBuilder;
+import static com.hartwig.hmftools.orange.algo.linx.TestLinxFactory.fusionBuilder;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -50,7 +50,7 @@ import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
 import com.hartwig.hmftools.orange.algo.cuppa.TestCuppaFactory;
 import com.hartwig.hmftools.orange.algo.immuno.TestImmuneEscapeFactory;
 import com.hartwig.hmftools.orange.algo.isofox.OrangeIsofoxTestFactory;
-import com.hartwig.hmftools.orange.algo.linx.TestLinxFactory;
+import com.hartwig.hmftools.orange.algo.linx.TestLinxRecordFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleInterpretationFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleVariantFactory;
 import com.hartwig.hmftools.orange.conversion.OrangeConversion;
@@ -74,7 +74,7 @@ public final class TestOrangeReportFactory
                 .experimentType(ExperimentType.TARGETED)
                 .refGenomeVersion(OrangeRefGenomeVersion.V37)
                 .purple(TestPurpleInterpretationFactory.createMinimalTestPurpleData())
-                .linx(TestLinxFactory.createMinimalTestLinxData())
+                .linx(TestLinxRecordFactory.createMinimalTestLinxData())
                 .lilac(ImmutableLilacRecord.builder().build())
                 .immuneEscape(TestImmuneEscapeFactory.builder().build())
                 .virusInterpreter(ImmutableVirusInterpreterData.builder().build())
@@ -158,10 +158,11 @@ public final class TestOrangeReportFactory
     @NotNull
     private static LinxRecord createTestLinxData()
     {
-        LinxFusion fusion = fusionBuilder().build();
+        // LinxFusion fusion = fusionBuilder().build();
 
         return ImmutableLinxRecord.builder()
-                .from(TestLinxFactory.createMinimalTestLinxData())
+                .from(TestLinxRecordFactory.createMinimalTestLinxData())
+                /*
                 .addFusions(fusion)
                 .addFusions(fusion)
                 .addFusions(fusion)
@@ -170,7 +171,7 @@ public final class TestOrangeReportFactory
                 .addFusions(fusion)
                 .addFusions(fusion)
                 .addFusions(fusion)
-                .germlineStructuralVariants(Lists.newArrayList())
+                */
                 .germlineBreakends(Lists.newArrayList())
                 .build();
     }

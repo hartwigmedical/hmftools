@@ -18,6 +18,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDir
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
@@ -35,12 +36,33 @@ public final class NovelSpliceJunctionFile
         return checkAddDirSeparator(basePath) + sample + ISF_FILE_ID + ALT_SJ_FILE_ID;
     }
 
-    public static final String FLD_ALT_SJ_POS_START = "SjStart";
-    public static final String FLD_ALT_SJ_POS_END = "SjEnd";
-    public static final String FLD_ALT_SJ_TYPE = "Type";
-    public static final String FLD_BASES_START = "BaseStart";
-    public static final String FLD_BASES_END = "BaseEnd";
-    public static final String FLD_COHORT_FREQUENCY = "CohortFrequency";
+    private enum Columns
+    {
+        GeneName,
+        Chromosome,
+        SjStart,
+        SjEnd,
+        Type,
+        TranscriptStart,
+        TranscriptEnd,
+        ExonStart,
+        ExonEnd,
+        FragCount,
+        DepthStart,
+        DepthEnd,
+        RegionStart,
+        RegionEnd,
+        BaseStart,
+        BaseEnd,
+        CohortFrequency;
+    }
+
+    public static final String FLD_ALT_SJ_POS_START = Columns.SjStart.toString();
+    public static final String FLD_ALT_SJ_POS_END = Columns.SjEnd.toString();
+    public static final String FLD_ALT_SJ_TYPE = Columns.Type.toString();
+    public static final String FLD_BASES_START = Columns.BaseStart.toString();
+    public static final String FLD_BASES_END = Columns.BaseEnd.toString();
+    public static final String FLD_COHORT_FREQUENCY = Columns.CohortFrequency.toString();
 
     public static String formKey(final String chromosome, int posStart, int posEnd)
     {
@@ -49,20 +71,31 @@ public final class NovelSpliceJunctionFile
 
     public static String header()
     {
+        StringJoiner sj = new StringJoiner(TSV_DELIM);
+        Arrays.stream(Columns.values()).forEach(x -> sj.add(x.toString()));
+        return sj.toString();
+    }
+
+    public static String write(final NovelSpliceJunction novelSpliceJunction)
+    {
         return new StringJoiner(TSV_DELIM)
-                .add(FLD_GENE_NAME)
-                .add(FLD_CHROMOSOME)
-                .add(FLD_ALT_SJ_POS_START)
-                .add(FLD_ALT_SJ_POS_END)
-                .add(FLD_ALT_SJ_TYPE)
-                .add(FLD_FRAG_COUNT)
-                .add(FLD_DEPTH_START)
-                .add(FLD_DEPTH_END)
-                .add(FLD_REGION_START)
-                .add(FLD_REGION_END)
-                .add(FLD_BASES_START)
-                .add(FLD_BASES_END)
-                .add(FLD_COHORT_FREQUENCY)
+                .add(novelSpliceJunction.geneName())
+                .add(novelSpliceJunction.chromosome())
+                .add(String.valueOf(novelSpliceJunction.junctionStart()))
+                .add(String.valueOf(novelSpliceJunction.junctionEnd()))
+                .add(novelSpliceJunction.type().toString())
+                .add(novelSpliceJunction.transcriptStart())
+                .add(novelSpliceJunction.transcriptEnd())
+                .add(String.valueOf(novelSpliceJunction.exonStart()))
+                .add(String.valueOf(novelSpliceJunction.exonEnd()))
+                .add(String.valueOf(novelSpliceJunction.fragmentCount()))
+                .add(String.valueOf(novelSpliceJunction.depthStart()))
+                .add(String.valueOf(novelSpliceJunction.depthEnd()))
+                .add(novelSpliceJunction.regionStart().toString())
+                .add(novelSpliceJunction.regionEnd().toString())
+                .add(novelSpliceJunction.basesStart())
+                .add(novelSpliceJunction.basesEnd())
+                .add(String.valueOf(novelSpliceJunction.cohortFrequency()))
                 .toString();
     }
 

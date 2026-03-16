@@ -24,6 +24,7 @@ import static com.hartwig.hmftools.isofox.expression.TranscriptExpression.setCoh
 import static com.hartwig.hmftools.isofox.expression.TranscriptExpression.setTranscriptsPerMillion;
 import static com.hartwig.hmftools.isofox.results.SummaryStats.createSummaryStats;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +33,8 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.driver.panel.DriverGene;
+import com.hartwig.hmftools.common.driver.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
@@ -221,10 +224,14 @@ public class Isofox
             mFusionTaskManager.close();
         }
 
-        final List<PerformanceCounter[]> perfCounters = chrTasks.stream().map(x -> x.getPerfCounters()).collect(Collectors.toList());
-        chrTasks.clear();
+        if(IsofoxConfig.PerfDebug)
+        {
+            List<PerformanceCounter[]> perfCounters = chrTasks.stream().map(x -> x.getPerfCounters()).collect(Collectors.toList());
+            chrTasks.clear();
 
-        mPerfTracking.logPerformanceStats(perfCounters);
+            mPerfTracking.logPerformanceStats(perfCounters);
+        }
+
         return true;
     }
 
@@ -309,10 +316,10 @@ public class Isofox
             int lowCoverageThreshold = LOW_COVERAGE_THRESHOLD;
             int splicedGeneThreshold = SPLICE_GENE_THRESHOLD;
 
-            if(!mConfig.Filters.RestrictedGeneIds.isEmpty() && !mConfig.PanelTpmNormFile.isEmpty())
+            if(!mConfig.Filters.RestrictedGeneIds.isEmpty())
             {
                 // could be adjusted for the specific panel
-                double panelGeneCoverage = mConfig.Filters.RestrictedGeneIds.size() / 37000.0; // total gene count
+                double panelGeneCoverage = mConfig.Filters.RestrictedGeneIds.size() / 38000.0; // total gene count
                 lowCoverageThreshold = (int) (lowCoverageThreshold * panelGeneCoverage * PANEL_LOW_COVERAGE_FACTOR);
                 splicedGeneThreshold = (int) (panelGeneCoverage * SPLICE_GENE_THRESHOLD);
             }
@@ -398,7 +405,7 @@ public class Isofox
             return;
 
         // merge results from all chromosomes
-        for(final FragmentSizeCalcs fragSizeCalc : fragSizeCalcs)
+        for(FragmentSizeCalcs fragSizeCalc : fragSizeCalcs)
         {
             mMaxObservedReadLength = max(mMaxObservedReadLength, fragSizeCalc.getMaxReadLength());
             FragmentSizeCalcs.mergeData(mFragmentLengthDistribution, fragSizeCalc);
@@ -415,14 +422,17 @@ public class Isofox
             FragmentSizeCalcs.writeFragmentLengths(mConfig, mFragmentLengthDistribution);
         }
 
-        final PerformanceCounter combinedPc = fragSizeCalcs.get(0).getPerformanceCounter();
-
-        for(int i = 1; i < fragSizeCalcs.size(); ++i)
+        if(IsofoxConfig.PerfDebug)
         {
-            combinedPc.merge(fragSizeCalcs.get(i).getPerformanceCounter());
-        }
+            PerformanceCounter combinedPc = fragSizeCalcs.get(0).getPerformanceCounter();
 
-        combinedPc.logStats();
+            for(int i = 1; i < fragSizeCalcs.size(); ++i)
+            {
+                combinedPc.merge(fragSizeCalcs.get(i).getPerformanceCounter());
+            }
+
+            combinedPc.logStats();
+        }
     }
 
     private boolean countBamReads(final Map<String, List<GeneData>> chrGeneMap)

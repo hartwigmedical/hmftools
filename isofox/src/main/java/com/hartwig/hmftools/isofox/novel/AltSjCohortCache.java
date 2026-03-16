@@ -29,7 +29,7 @@ public class AltSjCohortCache
     public int getCohortFrequency(final String asjKey)
     {
         Integer cohortFrequency = mCohortFrequency.get(asjKey);
-        return cohortFrequency != null ? cohortFrequency : 1;
+        return cohortFrequency != null ? cohortFrequency : 0;
     }
 
     public static String formKey(final String chromosome, int posStart, int posEnd)
@@ -71,7 +71,7 @@ public class AltSjCohortCache
                 mCohortFrequency.put(asjKey, sampleCount);
             }
 
-            ISF_LOGGER.debug("loaded {} alt-SJ sites from cohort file({})", mCohortFrequency.size(), cohortFile);
+            ISF_LOGGER.info("loaded {} alt-SJ sites from cohort file({})", mCohortFrequency.size(), cohortFile);
         }
         catch(IOException e)
         {

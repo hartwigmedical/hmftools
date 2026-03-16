@@ -18,10 +18,8 @@ import com.hartwig.hmftools.common.sv.ImmutableStructuralVariantImpl;
 import com.hartwig.hmftools.common.sv.ImmutableStructuralVariantLegImpl;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
-import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
-import com.hartwig.hmftools.orange.algo.linx.LinxOrangeTestFactory;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -35,7 +33,7 @@ public class PurpleInterpreterTest
     public void canInterpretMinimalPurpleData()
     {
         PurpleInterpreter interpreter = new PurpleInterpreter();
-        assertNotNull(interpreter.interpret(PurpleTestFactory.createMinimalTestPurpleData(), null));
+        assertNotNull(interpreter.interpret(PurpleTestFactory.createMinimalTestPurpleData(), null, null));
     }
 
     @Test
@@ -48,7 +46,7 @@ public class PurpleInterpreterTest
         PurpleData purple = createPurpleTestData(Lists.newArrayList(hetReported, homReported));
 
         PurpleInterpreter interpreter = new PurpleInterpreter();
-        PurpleRecord interpreted = interpreter.interpret(purple, null);
+        PurpleRecord interpreted = interpreter.interpret(purple, null, null);
         List<PurpleGainDeletion> germlineGainsDels = interpreted.germlineGainsDels();
         assertNotNull(germlineGainsDels);
         assertEquals(1, germlineGainsDels.size());
@@ -64,7 +62,7 @@ public class PurpleInterpreterTest
         PurpleData purple = createPurpleTestData(Lists.newArrayList(hetUnreported, homReported));
 
         PurpleInterpreter interpreter = new PurpleInterpreter();
-        PurpleRecord interpreted = interpreter.interpret(purple, null);
+        PurpleRecord interpreted = interpreter.interpret(purple, null, null);
         List<PurpleGainDeletion> germlineGainsDels = interpreted.germlineGainsDels();
         assertNotNull(germlineGainsDels);
         assertEquals(1, germlineGainsDels.size());
@@ -107,11 +105,5 @@ public class PurpleInterpreterTest
                 .qualityScore(0D)
                 .hotspot(false)
                 .build();
-    }
-
-    @NotNull
-    private static LinxSvAnnotation createSvAnnotation(@NotNull StructuralVariant sv)
-    {
-        return LinxOrangeTestFactory.svAnnotationBuilder().svId(1).vcfId(sv.id()).build();
     }
 }

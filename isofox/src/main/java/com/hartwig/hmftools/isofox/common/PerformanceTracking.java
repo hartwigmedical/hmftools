@@ -29,7 +29,6 @@ public class PerformanceTracking
 
     public boolean enabled() { return mConfig.RunPerfChecks; }
 
-
     public final static PerformanceCounter[] createPerfCounters()
     {
         PerformanceCounter[] perfCounters = new PerformanceCounter[PERF_MAX];

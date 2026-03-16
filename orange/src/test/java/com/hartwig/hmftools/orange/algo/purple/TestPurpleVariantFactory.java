@@ -6,10 +6,9 @@ import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.HotspotType;
 import com.hartwig.hmftools.common.variant.ImmutableSmallVariantImpl;
-import com.hartwig.hmftools.common.variant.SomaticLikelihood;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
-import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleAllelicDepth;
+import com.hartwig.hmftools.datamodel.common.ImmutableAllelicDepth;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleVariant;
 import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
@@ -52,9 +51,9 @@ public final class TestPurpleVariantFactory
     }
 
     @NotNull
-    public static ImmutablePurpleAllelicDepth.Builder depthBuilder()
+    public static ImmutableAllelicDepth.Builder depthBuilder()
     {
-        return ImmutablePurpleAllelicDepth.builder().alleleReadCount(0).totalReadCount(0);
+        return ImmutableAllelicDepth.builder().alleleReadCount(0).totalReadCount(0);
     }
 
     @NotNull

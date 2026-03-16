@@ -61,18 +61,18 @@ public class FusionCohort
 
     public void processFusionFiles()
     {
-        if(!mConfig.Fusions.GenerateCohort
-                && mConfig.Fusions.ComparisonSource == null
-                && !mConfig.Fusions.WriteFilteredFusions
-                && !mConfig.Fusions.FindUnknownSplice)
+        if(!mConfig.Fusions.GenerateCohort && mConfig.Fusions.ComparisonSource == null
+        && !mConfig.Fusions.WriteFilteredFusions && !mConfig.Fusions.FindUnknownSplice)
         {
             ISF_LOGGER.warn("no fusion functions configured");
             return;
         }
 
-        final List<Path> filenames = Lists.newArrayList();
+        List<Path> filenames = Lists.newArrayList();
 
-        final AnalysisType fileType = mConfig.Fusions.ComparisonSource != null ? PASSING_FUSION : FUSION;
+        // when building fusion cohort frequency files, the unfiltered (ie not just passing) fusions are used
+        // but to compare to another cohort, only passing are used at the moment
+        AnalysisType fileType = mConfig.Fusions.ComparisonSource != null ? PASSING_FUSION : FUSION;
 
         if(!formSampleFilenames(mConfig, fileType, filenames))
             return;
@@ -143,7 +143,7 @@ public class FusionCohort
         try
         {
             mWriter = createBufferedWriter(outputFile, false);
-            mWriter.write(String.format("SampleId,%s", FusionData.header(true)));
+            mWriter.write(String.format("SampleId,%s", FusionData.header()));
             mWriter.newLine();
         }
         catch(IOException e)
@@ -161,7 +161,7 @@ public class FusionCohort
         {
             for(FusionData fusion : fusions)
             {
-                writer.write(String.format("%s,%s", sampleId, fusion.toTsv(true)));
+                writer.write(String.format("%s,%s", sampleId, fusion.toTsv()));
                 writer.newLine();
             }
         }

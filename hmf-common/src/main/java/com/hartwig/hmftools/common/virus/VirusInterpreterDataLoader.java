@@ -21,7 +21,6 @@ public final class VirusInterpreterDataLoader
 
     public static VirusInterpreterData load(final String annotatedVirusTsv) throws IOException
     {
-        LOGGER.info("Loading VirusInterpreter data from {}", new File(annotatedVirusTsv).getParent());
         List<AnnotatedVirus> viruses = AnnotatedVirusFile.read(annotatedVirusTsv);
 
         List<AnnotatedVirus> reportable = Lists.newArrayList();
@@ -33,10 +32,8 @@ public final class VirusInterpreterDataLoader
             }
         }
 
-        LOGGER.info(" Loaded {} annotated viruses (of which {} are reportable) from {}",
-                viruses.size(),
-                reportable.size(),
-                annotatedVirusTsv);
+        LOGGER.debug(" loaded {} annotated viruses, reportable({}) from {}",
+                viruses.size(), reportable.size(), annotatedVirusTsv);
 
         return ImmutableVirusInterpreterData.builder().allViruses(viruses).reportableViruses(reportable).build();
     }

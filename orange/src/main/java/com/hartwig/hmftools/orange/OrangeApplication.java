@@ -38,14 +38,12 @@ public class OrangeApplication
 
     private void run() throws Exception
     {
-        LOGGER.info("Generating report data");
-
         OrangeAlgo algo = OrangeAlgo.fromConfig(mConfig);
         OrangeRecord orangeRecord = algo.run(mConfig);
 
         ReportWriter writer = ReportWriterFactory.createToDiskWriter(mConfig);
         writer.write(orangeRecord);
 
-        LOGGER.info("Done!");
+        LOGGER.info("Orange complete");
     }
 }

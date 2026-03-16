@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.orange.report.ReportResources;
-import com.hartwig.hmftools.orange.report.datamodel.BreakendEntry;
+import com.hartwig.hmftools.orange.report.interpretation.BreakendEntry;
 import com.hartwig.hmftools.orange.report.interpretation.Chromosomes;
 import com.hartwig.hmftools.orange.report.util.Cells;
 import com.hartwig.hmftools.orange.report.util.Tables;
