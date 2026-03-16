@@ -50,7 +50,7 @@ public class DuplicateFreqPrep implements CategoryPrep
         BinnedFrequencies readGroupSizeFrequencies = new BinnedFrequencies(readGroupSizes, frequencies);
 
         List<Feature> features = readGroupSizeFrequencies.formProportionalDensityFeatures(
-                FIELD_READ_COUNT, FeatureType.COVERAGE_DISTRIBUTION, SOURCE_TOOL);
+                FIELD_READ_COUNT, FeatureType.DUPLICATE_FREQ, SOURCE_TOOL);
 
         return features;
     }
