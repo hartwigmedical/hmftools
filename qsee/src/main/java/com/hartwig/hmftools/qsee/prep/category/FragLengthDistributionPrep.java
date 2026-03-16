@@ -5,11 +5,10 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.metrics.BamMetricFragmentLength;
 import com.hartwig.hmftools.common.metrics.ValueFrequency;
+import com.hartwig.hmftools.qsee.common.BinnedFrequencies;
 import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.Feature;
-import com.hartwig.hmftools.qsee.feature.FeatureKey;
 import com.hartwig.hmftools.qsee.feature.FeatureType;
-import com.hartwig.hmftools.qsee.common.MultiFieldStringBuilder;
 import com.hartwig.hmftools.qsee.feature.SourceTool;
 import com.hartwig.hmftools.qsee.prep.CategoryPrep;
 import com.hartwig.hmftools.qsee.prep.QseePrepConfig;
@@ -39,18 +38,14 @@ public class FragLengthDistributionPrep implements CategoryPrep
         return BamMetricFragmentLength.read(filePath);
     }
 
-    private static List<Feature> calcPropFragmentsWithLength(List<ValueFrequency> fragmentLengthCounts)
+    private static List<Feature> calcPropFragmentsWithLength(List<ValueFrequency> fragmentLengths)
     {
-        long totalFragments = fragmentLengthCounts.stream().mapToLong(x -> x.Count).sum();
+        BinnedFrequencies fragmentLengthFrequencies = BinnedFrequencies.fromValueFrequencies(fragmentLengths);
 
-        return fragmentLengthCounts.stream().map(x -> {
-            double propBases = (double) x.Count / totalFragments;
+        List<Feature> features = fragmentLengthFrequencies.formProportionalDensityFeatures(
+                FIELD_FRAG_LENGTH, FeatureType.FRAG_LENGTH_DISTRIBUTION, SOURCE_TOOL);
 
-            String featureName = MultiFieldStringBuilder.formSingleField(FIELD_FRAG_LENGTH, String.valueOf(x.Value));
-            FeatureKey key = new FeatureKey(featureName, FeatureType.FRAG_LENGTH_DISTRIBUTION, SOURCE_TOOL);
-
-            return new Feature(key, propBases);
-        }).toList();
+        return features;
     }
 
     @Override

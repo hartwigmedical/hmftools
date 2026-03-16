@@ -20,7 +20,10 @@ public class SplitCodonSequence
     public SplitCodonSequence(String left, String right, int positionOfChange)
     {
         mPositionOfChange = positionOfChange;
-        Preconditions.checkArgument(isNucleotideSequence(left));
+        if(!left.isBlank())
+        {
+            Preconditions.checkArgument(isNucleotideSequence(left));
+        }
         if(!right.isBlank())
         {
             Preconditions.checkArgument(isNucleotideSequence(right));

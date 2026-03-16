@@ -21,11 +21,11 @@ import com.hartwig.hmftools.pavereverse.aminoacids.AminoAcidSpecification;
 import com.hartwig.hmftools.pavereverse.base.BaseSequence;
 import com.hartwig.hmftools.pavereverse.base.CodonWithinExons;
 import com.hartwig.hmftools.pavereverse.base.SplitCodonSequence;
+import com.hartwig.hmftools.pavereverse.protein.SingleAminoAcidSilentVariant;
 import com.hartwig.hmftools.pavereverse.protein.SingleAminoAcidVariant;
 
 public class ReversePaveTestBase
 {
-    private File ensemblDataDir = Paths.get("src","test","resources","ensembl").toFile();
     public final ReversePave reversePave;
     public final RefGenomeInterface genome = new SmallGenome();
     protected final String braf = "BRAF";
@@ -37,6 +37,7 @@ public class ReversePaveTestBase
 
     public ReversePaveTestBase()
     {
+        final File ensemblDataDir = Paths.get("src", "test", "resources", "ensembl").toFile();
         reversePave = new ReversePave(ensemblDataDir, RefGenomeVersion.V38, genome);
     }
 
@@ -49,6 +50,11 @@ public class ReversePaveTestBase
     public SingleAminoAcidVariant saav(String definition)
     {
         return (SingleAminoAcidVariant) reversePave.proteinVariantParser().parse(definition);
+    }
+
+    public SingleAminoAcidSilentVariant saasv(String definition)
+    {
+        return (SingleAminoAcidSilentVariant) reversePave.proteinVariantParser().parse(definition);
     }
 
     protected SplitCodonSequence seq(String left, String right)

@@ -95,7 +95,12 @@ public class ProteinVariantParser extends VariantParser
         Pattern variationPattern = Pattern.compile("^" + BLANK_OR_AA_GROUP + NAT + SINGLE_AA_GROUP + "$");
         final Matcher matcher = Checks.matchPattern(variationPattern, variant);
         int position = Integer.parseInt(matcher.group(3));
+        AminoAcidSpecification refSpec = new AminoAcidSpecification(position, matcher.group(1));
         AminoAcidSpecification altSpec = new AminoAcidSpecification(position, matcher.group(4));
+        if(refSpec.symbol().equals(altSpec.symbol()))
+        {
+            return parseFactory(gene, variant, transcriptRetriever).buildSingleAminoAcidSilentVariants(altSpec);
+        }
         return parseFactory(gene, variant, transcriptRetriever).buildSingleAminoAcidVariants(altSpec);
     }
 

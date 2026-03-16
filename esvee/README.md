@@ -457,7 +457,7 @@ invShortIsolated | All (targeted panel only) | Candidate inversion distance to n
 
 <sup>5. Only applied to variants with type=INV and LEN<3kb. ShortINVRate = proportion of fragments genome wide that support a short INV < 5kb </sup>
 
-<sup>6. Only for SGL 5' end contains GCCGTATCATTAAAAA or GTAGATCTCGGTGGTC OR SGL 3' containing TTTTTAATGATACGGC or GACCACCGAGATCTAC </sup>
+<sup>6. Only for fully + strand variants with ins sequence containing contains GCCGTATCATTAAAAA or GTAGATCTCGGTGGTC OR fully - strand variants with ins sequence containing TTTTTAATGATACGGC or GACCACCGAGATCTAC </sup>
 
 <sup>7. Only applied to variants with type=INV and LEN<300bp. ShortINVRate = proportion of fragments genome wide that support a short INV < 1kb </sup>
 
