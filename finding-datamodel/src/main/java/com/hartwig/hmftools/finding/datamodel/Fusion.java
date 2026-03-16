@@ -101,18 +101,6 @@ public record Fusion(
         return driver.driverLikelihood();
     }
 
-    @Override
-    public boolean isReported()
-    {
-        return driver.isReported();
-    }
-
-    @Override
-    public Set<String> genes()
-    {
-        return Set.of(geneUp(), geneDown());
-    }
-
     @NotNull
     public String display()
     {
