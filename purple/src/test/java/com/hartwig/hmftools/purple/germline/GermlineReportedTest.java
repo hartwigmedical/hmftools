@@ -300,6 +300,9 @@ public class GermlineReportedTest
                 .reportGermlineDeletion(ANY)
                 .reportGermlineAmplification(false)
                 .reportPGX(false)
+                .reportHighExpression(false)
+                .reportLowExpression(false)
+                .reportNovelSpliceJunctions(false)
                 .build();
     }
 }

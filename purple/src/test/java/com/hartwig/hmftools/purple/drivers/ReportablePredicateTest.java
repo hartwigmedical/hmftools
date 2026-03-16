@@ -63,6 +63,9 @@ public class ReportablePredicateTest
                 .reportGermlineVariant(DriverGeneGermlineReporting.NONE)
                 .reportGermlineAmplification(false)
                 .reportPGX(false)
+                .reportHighExpression(false)
+                .reportLowExpression(false)
+                .reportNovelSpliceJunctions(false)
                 .build());
 
         ReportablePredicate predicate = new ReportablePredicate(ONCO, driverGenes);

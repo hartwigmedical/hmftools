@@ -46,15 +46,6 @@ public abstract class LinxFusion
     public abstract int fusedExonUp();
     public abstract int fusedExonDown();
 
-    // for patient report
-    public abstract String geneStart();
-    public abstract String geneContextStart();
-    public abstract String geneTranscriptStart();
-    public abstract String geneEnd();
-    public abstract String geneContextEnd();
-    public abstract String geneTranscriptEnd();
-    public abstract Double junctionCopyNumber();
-
     private static final String FILE_EXTENSION = ".linx.fusion.tsv";
 
     public static String generateFilename(final String basePath, final String sample)
@@ -121,13 +112,6 @@ public abstract class LinxFusion
                     .skippedExonsDown(Integer.parseInt(values[fieldsIndexMap.get("skippedExonsDown")]))
                     .fusedExonUp(Integer.parseInt(values[fieldsIndexMap.get("fusedExonUp")]))
                     .fusedExonDown(Integer.parseInt(values[fieldsIndexMap.get("fusedExonDown")]))
-                    .geneStart(values[fieldsIndexMap.get("geneStart")])
-                    .geneContextStart(values[fieldsIndexMap.get("geneContextStart")])
-                    .geneTranscriptStart(values[fieldsIndexMap.get("transcriptStart")])
-                    .geneEnd(values[fieldsIndexMap.get("geneEnd")])
-                    .geneContextEnd(values[fieldsIndexMap.get("geneContextEnd")])
-                    .geneTranscriptEnd(values[fieldsIndexMap.get("transcriptEnd")])
-                    .junctionCopyNumber(Double.parseDouble(values[fieldsIndexMap.get("junctionCopyNumber")]))
                     .build());
         }
 
@@ -158,13 +142,6 @@ public abstract class LinxFusion
                 .add("skippedExonsDown")
                 .add("fusedExonUp")
                 .add("fusedExonDown")
-                .add("geneStart")
-                .add("geneContextStart")
-                .add("transcriptStart")
-                .add("geneEnd")
-                .add("geneContextEnd")
-                .add("transcriptEnd")
-                .add("junctionCopyNumber")
                 .toString();
     }
 
@@ -192,48 +169,7 @@ public abstract class LinxFusion
                 .add(String.valueOf(fusion.skippedExonsDown()))
                 .add(String.valueOf(fusion.fusedExonUp()))
                 .add(String.valueOf(fusion.fusedExonDown()))
-                .add(String.valueOf(fusion.geneStart()))
-                .add(String.valueOf(fusion.geneContextStart()))
-                .add(String.valueOf(fusion.geneTranscriptStart()))
-                .add(String.valueOf(fusion.geneEnd()))
-                .add(String.valueOf(fusion.geneContextEnd()))
-                .add(String.valueOf(fusion.geneTranscriptEnd()))
-                .add(String.format("%.4f", fusion.junctionCopyNumber()))
                 .toString();
-    }
-
-    public static String context(final TranscriptRegionType regionType, final KnownFusionType knownType, int fusedExon)
-    {
-        switch(regionType)
-        {
-            case UPSTREAM:
-                return "Promoter Region";
-            case DOWNSTREAM:
-                return "Post-coding";
-            case IG:
-                return "IG";
-            case EXONIC:
-            case INTRONIC:
-                return String.format("Exon %d", fusedExon);
-            case UNKNOWN:
-            {
-                if(knownType == KnownFusionType.PROMISCUOUS_ENHANCER_TARGET)
-                {
-                    return "Unknown";
-                }
-                else
-                {
-                    return String.format("ERROR: %s", regionType);
-                }
-            }
-        }
-
-        throw new IllegalStateException("TranscriptRegionType not supported in determination of fusion context: " + regionType);
-    }
-
-    public static double fusionJcn(double downstreamJcn, double upstreamJcn)
-    {
-        return (upstreamJcn + downstreamJcn) * 0.5;
     }
 
     public static String reportableReasonsToStr(final List<FusionReportableReason> reasons)

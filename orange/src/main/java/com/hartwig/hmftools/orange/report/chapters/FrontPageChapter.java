@@ -2,22 +2,29 @@ package com.hartwig.hmftools.orange.report.chapters;
 
 import static com.hartwig.hmftools.common.peach.PeachUtil.UNKNOWN_ALLELE_STRING;
 import static com.hartwig.hmftools.common.peach.PeachUtil.convertToZygosityString;
-import static com.hartwig.hmftools.orange.report.ReportResources.formatPercentage;
-import static com.hartwig.hmftools.orange.report.ReportResources.formatSingleDigitDecimal;
-import static com.hartwig.hmftools.orange.report.ReportResources.formatTwoDigitDecimal;
+import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_VARIANT;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.cellArray;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.floatArray;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatPercentage;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatSingleDigitDecimal;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatTwoDigitDecimal;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.intToFloatArray;
 
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.StringJoiner;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.chord.ChordStatus;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
+import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
-import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
+import com.hartwig.hmftools.datamodel.orange.ExperimentType;
 import com.hartwig.hmftools.datamodel.orange.OrangeDoidNode;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
@@ -30,6 +37,7 @@ import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
+import com.hartwig.hmftools.orange.OrangeConfig;
 import com.hartwig.hmftools.orange.report.PlotPathResolver;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.interpretation.Drivers;
@@ -53,12 +61,15 @@ public class FrontPageChapter implements ReportChapter
 {
     private static final String NONE = "None";
 
+    private final OrangeConfig mConfig;
     private final OrangeRecord mReport;
     private final PlotPathResolver mPlotPathResolver;
     private final ReportResources mReportResources;
 
-    public FrontPageChapter(final OrangeRecord report, final PlotPathResolver plotPathResolver, final ReportResources reportResources)
+    public FrontPageChapter(
+            final OrangeConfig config, final OrangeRecord report, final PlotPathResolver plotPathResolver, final ReportResources reportResources)
     {
+        mConfig = config;
         mReport = report;
         mPlotPathResolver = plotPathResolver;
         mReportResources = reportResources;
@@ -87,17 +98,45 @@ public class FrontPageChapter implements ReportChapter
     {
         Cells cells = new Cells(mReportResources);
 
-        float[] headerComponents = new float[] { 3, 2, 1 };
+        List<Integer> widths = Lists.newArrayList();
+        List<Cell> cellEntries = Lists.newArrayList();
 
-        Cell[] headerCells = new Cell[] {
-                cells.createHeader("Configured Primary Tumor"),
-                cells.createHeader(!mReport.tumorOnlyMode() ? "Cuppa Cancer Type" : "Tumor-Only"),
-                cells.createHeader("QC") };
+        if(mReport.pipelineVersion() != null)
+            addEntry(cells, widths, cellEntries, 2, "Pipeline Version");
 
-        Table table = Tables.createContent(contentWidth(), headerComponents, headerCells);
+        String panelName = mConfig != null ? mConfig.PanelName : null;
+        String configuredPrimaryTumorLocation = mConfig != null ? mConfig.PrimaryTumorLocation : null;
 
-        table.addCell(cells.createContent(configuredPrimaryTumor(mReport.configuredPrimaryTumor())));
-        table.addCell(cells.createContent(cuppaCancerTypeString()));
+        boolean showPanelName = mReport.experimentType() == ExperimentType.TARGETED && panelName != null;
+
+        if(showPanelName)
+            addEntry(cells, widths, cellEntries, 1, "Panel");
+
+        addEntry(cells, widths, cellEntries, 2, "Configured Primary Tumor");
+
+        boolean showCuppaCancerType = mReport.cuppa() != null;
+
+        if(showCuppaCancerType)
+            addEntry(cells, widths, cellEntries, 2, "Cuppa Cancer Type");
+
+        addEntry(cells, widths, cellEntries, 2, "QC");
+
+        String configuredCancerType = configuredPrimaryTumorLocation != null ?
+                configuredPrimaryTumorLocation :  configuredPrimaryTumor(mReport.configuredPrimaryTumor());
+
+        Table table = Tables.createContent(contentWidth(), intToFloatArray(widths), cellArray(cellEntries));
+
+        if(mReport.pipelineVersion() != null)
+            table.addCell(cells.createContent(mReport.pipelineVersion()));
+
+        if(showPanelName)
+            table.addCell(cells.createContent(panelName));
+
+        table.addCell(cells.createContent(configuredCancerType));
+
+        if(showCuppaCancerType)
+            table.addCell(cells.createContent(cuppaCancerTypeString()));
+
         table.addCell(cells.createContent(purpleQCString()));
 
         addQCWarningInCaseOfFail(table, cells);
@@ -201,7 +240,7 @@ public class FrontPageChapter implements ReportChapter
 
         addCellEntry(summaryLeft, cellsLeft, "Somatic variant:", somaticVariantDriverString());
         addCellEntry(summaryLeft, cellsLeft, "Somatic copy number:", somaticCopyNumberDriverString());
-        addCellEntry(summaryLeft, cellsLeft, "Somatic disruption:", somaticDisruptionDriverString());
+        // addCellEntry(summaryLeft, cellsLeft, "Somatic disruption:", somaticDisruptionDriverString());
 
         if(includeGermline)
         {
@@ -262,80 +301,6 @@ public class FrontPageChapter implements ReportChapter
         document.add(table);
     }
 
-    private void addDetailsAndPlotsOld(final Document document)
-    {
-        Table topTable = new Table(UnitValue.createPercentArray(new float[] { 1, 1 })).setWidth(contentWidth() - 5);
-
-        Table summary = new Table(UnitValue.createPercentArray(new float[] { 1, 1 }));
-        Cells cells = new Cells(mReportResources);
-
-        boolean includeGermline = !mReport.tumorOnlyMode();
-
-        addCellEntry(summary, cells, "Purity:", purityString());
-        addCellEntry(summary, cells, "Ploidy:", ploidyString());
-        addCellEntry(summary, cells, "Somatic variant drivers:", somaticVariantDriverString());
-
-        if(includeGermline)
-        {
-            addCellEntry(summary, cells, "Germline variant drivers:", germlineVariantDriverString());
-        }
-
-        addCellEntry(summary, cells, "Somatic copy number drivers:", somaticCopyNumberDriverString());
-
-        if(includeGermline)
-        {
-            addCellEntry(summary, cells, "Germline copy number drivers:", germlineCopyNumberDriverString());
-        }
-
-        addCellEntry(summary, cells, "Somatic disruption drivers:", somaticDisruptionDriverString());
-
-        if(includeGermline)
-        {
-            addCellEntry(summary, cells, "Germline disruption drivers:", germlineDisruptionDriverString());
-        }
-
-        addCellEntry(summary, cells, "Fusion drivers:", fusionDriverString());
-
-        if(includeGermline)
-        {
-            addCellEntry(summary, cells, "Viral presence:", virusString());
-        }
-
-        addCellEntry(summary, cells, "Whole genome duplicated:", wgdString());
-        addCellEntry(summary, cells, "Microsatellite indels per Mb:", msiString());
-        addCellEntry(summary, cells, "Tumor mutations per Mb:", tmbString());
-        addCellEntry(summary, cells, "Tumor mutational load:", tmlString());
-
-        if(includeGermline) // will change once we solve HRD for targeted mode
-        {
-            addCellEntry(summary, cells, "HR deficiency score:", hrDeficiencyString());
-            addCellEntry(summary, cells, "DPYD status:", geneStatus("DPYD"));
-            addCellEntry(summary, cells, "UGT1A1 status:", geneStatus("UGT1A1"));
-        }
-
-        addCellEntry(summary, cells, "Number of SVs:", svTmbString());
-        addCellEntry(summary, cells, "Max complex cluster size:", maxComplexSizeString());
-        addCellEntry(summary, cells, "Telomeric SGLs:", telomericSGLString());
-        addCellEntry(summary, cells, "Number of LINE insertions:", lineCountString());
-
-        Image circosImage = Images.build(mPlotPathResolver.resolve(mReport.plots().purpleFinalCircosPlot()));
-        circosImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
-        circosImage.setMaxHeight(290);
-
-        topTable.addCell(summary);
-        topTable.addCell(circosImage);
-
-        Table table = new Table(UnitValue.createPercentArray(new float[] { 1 })).setWidth(contentWidth()).setPadding(0);
-        table.addCell(topTable);
-
-        Image clonalityImage = Images.build(mPlotPathResolver.resolve(mReport.plots().purpleClonalityPlot()));
-        clonalityImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
-        clonalityImage.setMaxHeight(270);
-        table.addCell(clonalityImage);
-
-        document.add(table);
-    }
-
     private static void addCellEntry(final Table summary, final Cells cells, final String name, final String value)
     {
         summary.addCell(cells.createKey(name));
@@ -350,7 +315,6 @@ public class FrontPageChapter implements ReportChapter
                 formatPercentage(mReport.purple().fit().maxPurity()));
     }
 
-
     private String ploidyString()
     {
         return String.format("%s (%s-%s)",
@@ -358,7 +322,6 @@ public class FrontPageChapter implements ReportChapter
                 formatTwoDigitDecimal(mReport.purple().fit().minPloidy()),
                 formatTwoDigitDecimal(mReport.purple().fit().maxPloidy()));
     }
-
 
     private String somaticVariantDriverString()
     {
@@ -369,7 +332,6 @@ public class FrontPageChapter implements ReportChapter
 
         return variantDriverString(mReport.purple().somaticVariants(), mReport.purple().somaticDrivers());
     }
-
 
     private String germlineVariantDriverString()
     {
@@ -450,6 +412,7 @@ public class FrontPageChapter implements ReportChapter
         return gainsDels.size() + " (" + concat(genes) + ")";
     }
 
+    /*
     private String somaticDisruptionDriverString()
     {
         if(PurpleQCInterpretation.isContaminated(mReport.purple().fit().qc()))
@@ -457,8 +420,9 @@ public class FrontPageChapter implements ReportChapter
             return ReportResources.NOT_AVAILABLE;
         }
 
-        return disruptionDriverString(mReport.linx().somaticHomozygousDisruptions());
+        return homDisruptionDriverString(mReport.linx().somaticHomozygousDisruptions());
     }
+    */
 
     private String germlineDisruptionDriverString()
     {
@@ -467,27 +431,27 @@ public class FrontPageChapter implements ReportChapter
             return ReportResources.NOT_AVAILABLE;
         }
 
-        List<LinxHomozygousDisruption> germlineHomozygousDisruptions = mReport.linx().germlineHomozygousDisruptions();
-        if(germlineHomozygousDisruptions == null)
+        List<LinxBreakend> germlineDisruptions = mReport.linx().germlineBreakends();
+        if(germlineDisruptions == null)
         {
             return ReportResources.NOT_AVAILABLE;
         }
-        return disruptionDriverString(germlineHomozygousDisruptions);
+        return disruptionDriverString(germlineDisruptions);
     }
 
-    private static String disruptionDriverString(final List<LinxHomozygousDisruption> homozygousDisruptions)
+    private static String disruptionDriverString(final List<LinxBreakend> breakends)
     {
-        if(homozygousDisruptions.isEmpty())
+        if(breakends.isEmpty())
         {
             return NONE;
         }
 
         Set<String> genes = Sets.newTreeSet(Comparator.naturalOrder());
-        for(LinxHomozygousDisruption homozygousDisruption : homozygousDisruptions)
+        for(LinxBreakend breakend : breakends)
         {
-            genes.add(homozygousDisruption.gene());
+            genes.add(breakend.gene());
         }
-        return homozygousDisruptions.size() + " (" + concat(genes) + ")";
+        return breakends.size() + " (" + concat(genes) + ")";
     }
 
     private String fusionDriverString()

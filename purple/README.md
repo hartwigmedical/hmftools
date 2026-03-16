@@ -71,8 +71,8 @@ PURPLE requires Java 17+ and can be run as follows:
 java -jar purple.jar \
    -reference COLO829R \
    -tumor COLO829T \
-   -amber /path/COLO829/amber \
-   -cobalt /path/COLO829/cobalt \
+   -amber_dir /path/COLO829/amber \
+   -cobalt_dir /path/COLO829/cobalt \
    -somatic_vcf /sample_data/COLO829T.pave.somatic.vcf.gz \
    -germline_sv_vcf /sample_data/COLO829T.pave.germline.vcf.gz \
    -somatic_sv_vcf /sample_data/COLO829T.esvee.somatic.vcf.gz \
@@ -98,8 +98,6 @@ java -jar purple.jar \
 | reference          | Name of the reference sample. This should correspond to the value used in AMBER and COBALT. |
 | tumor              | Name of the tumor sample. This should correspond to the value used in AMBER and COBALT.     |
 | output_dir         | Path to the output directory. This directory will be created if it does not already exist.  |
-| amber              | Path to AMBER output. This should correspond to the output_dir used in AMBER.               |
-| cobalt             | Path to COBALT output. This should correspond to the output_dir used in COBALT.             |
 | gc_profile         | Path to GC profile.                                                                         |
 | ref_genome         | Path to reference genome fasta file.                                                        |
 | ref_genome_version | 37 (default) or 38                                                                          |
@@ -108,16 +106,17 @@ java -jar purple.jar \
 
 ### Optional Arguments
 
-| Argument               | Default | Description                                                                                                  |
-|------------------------|---------|--------------------------------------------------------------------------------------------------------------|
-| threads                | 2       | Number of threads to use for ploidy & purity fitting routine                                                 |
-| germline_vcf           | None    | Optional location of germline variants VCF. Sample names must match reference parameter. GZ files supported. |
-| somatic_vcf            | None    | Optional location of somatic variants vcf                                                                    |
-| somatic_sv_vcf         | None    | Optional location of somatic structural variants VCF for fitting and annotation                              |
-| germline_sv_vcf        | None    | Optional location of germline structural variants variants VCF for annotation                                |
-| germline_del_freq_file | None    | Provide a cohort frequency for germline deletions                                                            |
-| circos                 | None    | Optional path to circos binary. When supplied, circos graphs will be written to <output_dir>/plot            |
-| no_charts              | NA      | Disables creation of (non-circos) charts                                                                     |
+| Argument               | Default | Description                                                                                                    |
+|------------------------|---------|----------------------------------------------------------------------------------------------------------------|
+| threads                | 2       | Number of threads to use for ploidy & purity fitting routine                                                   |
+| sample_dir             | None    | Root directory for sample pipeline directory, will then look for Amber, Cobalt, Pave and Esvee sub-directories |
+| germline_vcf           | None    | Optional location of germline variants VCF. Sample names must match reference parameter. GZ files supported.   |
+| somatic_vcf            | None    | Optional location of somatic variants vcf                                                                      |
+| somatic_sv_vcf         | None    | Optional location of somatic structural variants VCF for fitting and annotation                                |
+| germline_sv_vcf        | None    | Optional location of germline structural variants variants VCF for annotation                                  |
+| germline_del_freq_file | None    | Provide a cohort frequency for germline deletions                                                              |
+| circos                 | None    | Optional path to circos binary. When supplied, circos graphs will be written to <output_dir>/plot              |
+| no_charts              | NA      | Disables creation of (non-circos) charts                                                                       |
 
 #### Optional Somatic Fit Arguments
 
@@ -184,17 +183,17 @@ Note that generating the driver catalog for SNVs assumes that the VCF has been a
 ## Input
 
 The PURPLE algorithm relies on the BAF and read depth ratio output
-from [AMBER](https://github.com/hartwigmedical/hmftools/tree/master/amber)
-and [COBALT](https://github.com/hartwigmedical/hmftools/tree/master/cobalt) respectively.
+from [Amber](https://github.com/hartwigmedical/hmftools/tree/master/amber)
+and [Cobalt](https://github.com/hartwigmedical/hmftools/tree/master/cobalt) respectively.
 They should both be run before running PURPLE.
 
 It is also strongly recommended to run PURPLE with a high quality set of somatic SNV and INDEL calls and somatic structural variant calls.
 
-### COBALT
+### Cobalt
 
-COBALT determines the read depth ratios of the supplied tumor and reference genomes.
+Cobalt determines the read depth ratios of the supplied tumor and reference genomes.
 
-COBALT starts with the raw read counts per 1,000 base window for both normal and tumor samples by counting the number of alignment starts in
+Cobalt starts with the raw read counts per 1,000 base window for both normal and tumor samples by counting the number of alignment starts in
 the respective bam files with a mapping quality score of at least 10 that is neither unmapped, duplicated, secondary, nor supplementary.
 Windows with a GC content less than 0.24 or greater than 0.68 or with an average mappability below 0.85 are excluded from further analysis.
 
@@ -208,9 +207,9 @@ sex chromosomes in males in the germline sample.
 
 For more information on how to run COBALT please refer to the [readme](https://github.com/hartwigmedical/hmftools/tree/master/cobalt).
 
-### AMBER
+### Amber
 
-AMBER calculates the BAF of the tumor sample by finding heterozygous locations in the reference sample from a panel of several million
+Amber calculates the BAF of the tumor sample by finding heterozygous locations in the reference sample from a panel of several million
 common germline heterozygous SNP loci.
 
 To ensure that we only capture heterozygous points, we filter the panel to only loci with allelic frequencies in the reference sample
@@ -218,13 +217,13 @@ between 40% and 65% and with depth between 50% and 150% of the reference sample 
 Furthermore, we filter any loci with a mapping quality < 1 or base quality < 13.
 This typically yields 500k-540k heterozygous germline variants per patient.
 
-As part of a contamination check, AMBER also finds sites in the tumor that are homozygous in the reference sample using the same panel as
+As part of a contamination check, Amber also finds sites in the tumor that are homozygous in the reference sample using the same panel as
 above.
 A sample is considered contaminated if at least 2000 of these sites contain 3 or more reads supporting an alt in the tumor.
 In this case we model the expected number of non-homozygous sites using a poisson distribution and estimate a contamination percent.
 The result of this is included in the amber QC output file.
 
-For more information on how to run AMBER please refer to the [readme](https://github.com/hartwigmedical/hmftools/tree/master/amber).
+For more information on how to run Amber please refer to the [readme](https://github.com/hartwigmedical/hmftools/tree/master/amber).
 
 ### Structural Variant Input VCFs (optional)
 
@@ -235,8 +234,8 @@ where a depth based estimation is inaccurate or impractical.
 A VCF with germline structural variants can also be provided. PURPLE can annotate such variants with purity adjusted local and variant copy
 number estimations in the tumor. Also, this information can be used to make calling of germline deletions more accurate.
 
-For these purposes, PURPLE provides full support and integration with the structural variant
-caller [ESVEE](https://github.com/hartwigmedical/hmftools/tree/53f14f3651bd3026a76095a835b9c2ea6c6dc149/esvee).
+For these purposes, Purple provides full support and integration with the structural variant
+caller [Esvee](https://github.com/hartwigmedical/hmftools/tree/53f14f3651bd3026a76095a835b9c2ea6c6dc149/esvee).
 
 ### Small Variant Input VCFs (optional)
 
@@ -248,7 +247,7 @@ Secondly, for highly diploid samples, the VAFs of the somatic variants are used 
 
 For both purposes, accurate VAF estimation is essential thus PURPLE requires the ‘AD’ (Allelic Depth) and 'DP' (Depth) fields in the vcf.
 High quality filtering of artifacts and false positive calls is also critical to achieving an accurate
-fit.    [SAGE](https://github.com/hartwigmedical/hmftools/tree/master/sage) is the recommended input somatic variant caller.
+fit.    [Sage](https://github.com/hartwigmedical/hmftools/tree/master/sage) is the recommended input somatic variant caller.
 
 If a similar VCF of germline SNV and INDEL variants is provided, PURPLE will annotate them with additional fields
 described [here](#11-germline-enrichment).

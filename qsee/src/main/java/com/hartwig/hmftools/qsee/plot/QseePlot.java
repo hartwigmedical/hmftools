@@ -1,91 +1,153 @@
 package com.hartwig.hmftools.qsee.plot;
 
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.qsee.common.QseeConstants.APP_NAME;
 import static com.hartwig.hmftools.qsee.common.QseeConstants.QC_LOGGER;
-import static com.hartwig.hmftools.qsee.common.QseeFileCommon.QSEE_FILE_ID;
+import static com.hartwig.hmftools.qsee.common.QseeFileCommon.MULTISAMPLE_SAMPLE_ID;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
-import com.hartwig.hmftools.common.utils.RExecutor;
+import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.qsee.common.QseeFileCommon;
-import com.hartwig.hmftools.qsee.prep.QseePrepConfig;
 import com.hartwig.hmftools.qsee.prep.VisDataFile;
 
+import org.apache.pdfbox.io.MemoryUsageSetting;
+import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.jetbrains.annotations.Nullable;
 
 public class QseePlot
 {
+    private final QseePlotConfig mConfig;
+
     private final List<String> mTumorIds;
     private final List<String> mReferenceIds;
-    private final String mSampleFeaturesFile;
-    @Nullable private final String mCohortPercentilesFile;
+    private final String mVisDataFile;
     private final String mOutputDir;
     @Nullable private final String mOutputId;
 
-    private static final String SCRIPT_PATH = "plot_qc.R";
-
-    private static final String NO_ARG = "NA";
-
-    private QseePlot(List<String> tumorIds, List<String> referenceIds, String sampleFeaturesFile,
-            @Nullable String cohortPercentilesFile, String outputDir, @Nullable String outputId)
-    {
-        mTumorIds = tumorIds;
-        mReferenceIds = referenceIds;
-        mSampleFeaturesFile = sampleFeaturesFile;
-        mCohortPercentilesFile = cohortPercentilesFile;
-        mOutputDir = outputDir;
-        mOutputId = outputId;
-    }
-
     public QseePlot(QseePlotConfig config)
     {
-        this(config.TumorIds, config.ReferenceIds, config.SampleFeaturesFile, config.CohortPercentilesFile, config.OutputDir, config.OutputId);
+        mConfig = config;
+
+        mTumorIds = config.TumorIds;
+        mReferenceIds = config.ReferenceIds;
+        mVisDataFile = config.VisDataFile;
+        mOutputDir = config.OutputDir;
+        mOutputId = config.OutputId;
     }
 
-    public QseePlot(QseePrepConfig config)
+    private boolean isSinglePatient() { return mTumorIds.size() <= 1 && mReferenceIds.size() <= 1; }
+
+    private String getVisDataPath(String tumorId)
     {
-        this(
-                config.TumorIds,
-                config.ReferenceIds,
-                VisDataFile.generateFilename(config),
-                config.CohortPercentilesFile,
-                config.OutputDir,
-                config.OutputId
+        if(mVisDataFile != null)
+        {
+            QC_LOGGER.debug("Using existing vis data file: {}", mVisDataFile);
+            return mVisDataFile;
+        }
+
+        return isSinglePatient()
+                ? VisDataFile.generateFilename(mOutputDir, tumorId, mOutputId)
+                : VisDataFile.generateFilename(mOutputDir, MULTISAMPLE_SAMPLE_ID, mOutputId);
+    }
+
+    private String getReferenceId(int sampleIndex)
+    {
+        boolean isTumorOnlyMode = mReferenceIds.isEmpty();
+        return isTumorOnlyMode ? null : mReferenceIds.get(sampleIndex);
+    }
+
+    private static String formPlotPath(String basePath, String tumorId, @Nullable String outputId)
+    {
+        return QseeFileCommon.generateFilename(basePath, tumorId, "vis.report", outputId, "pdf");
+    }
+
+    private void plotOnePatient()
+    {
+        String visDataPath = getVisDataPath(mTumorIds.get(0));
+        String plotPath = formPlotPath(mOutputDir, mTumorIds.get(0), mOutputId);
+
+        QseePlotTask plotTask = new QseePlotTask(
+                mTumorIds.get(0),
+                getReferenceId(0),
+                visDataPath,
+                mConfig.CohortPercentilesFile,
+                plotPath,
+                mConfig.ShowPlotWarnings,
+                true
         );
+
+        plotTask.run();
     }
 
-    private String generateFilename(String tumorId, @Nullable String outputId)
+    private void plotMultiplePatients()
     {
-        return QseeFileCommon.generateFilename(mOutputDir, tumorId, "vis.report", outputId, "pdf");
+        List<Runnable> plotTasks = new ArrayList<>();
+        List<File> plotPathsToMerge = new ArrayList<>();
+
+        for(int sampleIndex = 0; sampleIndex < mTumorIds.size(); sampleIndex++)
+        {
+            String tumorId = mTumorIds.get(sampleIndex);
+
+            String visDataPath = getVisDataPath(tumorId);
+            String plotPath = formPlotPath(mOutputDir, tumorId, mOutputId);
+
+            plotPathsToMerge.add(new File(plotPath));
+
+            QseePlotTask plotTask = new QseePlotTask(
+                    mTumorIds.get(sampleIndex),
+                    getReferenceId(sampleIndex),
+                    visDataPath,
+                    mConfig.CohortPercentilesFile,
+                    plotPath,
+                    mConfig.ShowPlotWarnings,
+                    false
+            );
+            plotTasks.add(plotTask);
+        }
+
+        TaskExecutor.executeRunnables(plotTasks, mConfig.Threads);
+
+        if(mConfig.MergePlots)
+        {
+            mergePlots(plotPathsToMerge);
+        }
     }
 
-    public void plotOneSample(String tumorId, @Nullable String referenceId, @Nullable String outputId)
+    private void mergePlots(List<File> plotPaths)
     {
+        String destinationPath = formPlotPath(mOutputDir, MULTISAMPLE_SAMPLE_ID, mOutputId);
+
         try
         {
-            String[] scriptArgs = {
-                    tumorId,
-                    referenceId == null ? NO_ARG : referenceId,
-                    mSampleFeaturesFile,
-                    mCohortPercentilesFile == null ? NO_ARG : mCohortPercentilesFile,
-                    generateFilename(tumorId, outputId),
-                    QC_LOGGER.getLevel().toString()
-            };
+            QC_LOGGER.info("Merging plots to file: {}", destinationPath);
 
-            int exitCode = RExecutor.executeFromClasspath(SCRIPT_PATH, true, scriptArgs);
+            PDFMergerUtility merger = new PDFMergerUtility();
+            merger.setDestinationFileName(destinationPath);
 
-            if(exitCode != 0)
-            {
-                throw new RuntimeException();
-            }
+            for(File plotPath : plotPaths)
+                merger.addSource(plotPath);
+
+            merger.mergeDocuments(MemoryUsageSetting.setupMainMemoryOnly());
         }
-        catch(IOException | InterruptedException e)
+        catch(IOException e)
         {
-            QC_LOGGER.error("Failed to run QC plot script", e);
+            QC_LOGGER.error("Failed to merge plots to file: {}", destinationPath, e);
             System.exit(1);
+        }
+        finally
+        {
+            for(File plotPath : plotPaths)
+            {
+                if(!plotPath.exists())
+                    continue;
+
+                QC_LOGGER.debug("Deleting plot file: {}", plotPath);
+                plotPath.delete();
+            }
         }
     }
 
@@ -93,25 +155,10 @@ public class QseePlot
     {
         QC_LOGGER.info("Plotting QC metrics");
 
-        boolean isSingleSample = mTumorIds.size() == 1;
-
-        if(isSingleSample)
-        {
-            String tumorId = mTumorIds.get(0);
-            String referenceId = mReferenceIds.isEmpty() ? NO_ARG : mReferenceIds.get(0);
-            plotOneSample(tumorId, referenceId, mOutputId);
-        }
-        else
-        {
-            for(int sampleIndex = 0; sampleIndex < mTumorIds.size(); sampleIndex++)
-            {
-                String tumorId = mTumorIds.get(sampleIndex);
-                String referenceId = mReferenceIds.get(sampleIndex);
-
-                QC_LOGGER.debug("Plotting sample {}", tumorId);
-
-                plotOneSample(tumorId, referenceId, mOutputId);
-            }
+        if(isSinglePatient()) {
+            plotOnePatient();
+        } else {
+            plotMultiplePatients();
         }
 
         QC_LOGGER.info("Completed plotting QC metrics");

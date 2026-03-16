@@ -2,9 +2,9 @@ package com.hartwig.hmftools.compar.isofox;
 
 import java.util.function.Consumer;
 
+import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.rna.ImmutableRnaFusion;
-import com.hartwig.hmftools.common.rna.KnownFusionType;
 import com.hartwig.hmftools.common.rna.RnaFusion;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.compar.TestComparableItemBuilder;
@@ -19,6 +19,10 @@ public class TestRnaFusionDataBuilder
     public KnownFusionType knownType = KnownFusionType.KNOWN_PAIR;
     public String junctionTypeUp = "KNOWN";
     public String junctionTypeDown = "KNOWN";
+    public String transcriptUp = "TRANS_02";
+    public String transcriptDown = "TRANS_01";
+    public int exonUp = 2;
+    public int exonDown = 4;
     public int splitFragments = 100;
     public int realignedFrags = 50;
     public int discordantFrags = 20;
@@ -26,7 +30,6 @@ public class TestRnaFusionDataBuilder
     public int comparisonPositionUp = 1000;
     public String comparisonChromosomeDown = "21";
     public int comparisonPositionDown = 2000;
-    public String filter = "PASS";
 
     private static final Consumer<TestRnaFusionDataBuilder> ALTERNATE_INITIALIZER = b ->
     {
@@ -35,9 +38,13 @@ public class TestRnaFusionDataBuilder
         b.positionUp = 3000;
         b.chromosomeDown = "2";
         b.positionDown = 4000;
-        b.knownType = KnownFusionType.KNOWN_PROM3;
+        b.knownType = KnownFusionType.PROMISCUOUS_3;
         b.junctionTypeUp = "CANONICAL";
         b.junctionTypeDown = "CANONICAL";
+        b.transcriptUp = "TRANS_03";
+        b.transcriptDown = "TRANS_04";
+        b.exonUp = 3;
+        b.exonDown = 5;
         b.splitFragments = 10;
         b.realignedFrags = 5;
         b.discordantFrags = 2;
@@ -45,7 +52,6 @@ public class TestRnaFusionDataBuilder
         b.comparisonPositionUp = 3000;
         b.comparisonChromosomeDown = "2";
         b.comparisonPositionDown = 4000;
-        b.filter = "PASS";
     };
 
     public static final TestComparableItemBuilder<TestRnaFusionDataBuilder, RnaFusionData> BUILDER =
@@ -53,7 +59,7 @@ public class TestRnaFusionDataBuilder
 
     private RnaFusionData build()
     {
-        final RnaFusion fusion = ImmutableRnaFusion.builder()
+        RnaFusion fusion = ImmutableRnaFusion.builder()
                 .name(name)
                 .chromosomeUp(chromosomeUp)
                 .chromosomeDown(chromosomeDown)
@@ -63,6 +69,10 @@ public class TestRnaFusionDataBuilder
                 .orientationDown((byte) -1)
                 .junctionTypeUp(junctionTypeUp)
                 .junctionTypeDown(junctionTypeDown)
+                .transcriptUp(transcriptUp)
+                .transcriptDown(transcriptDown)
+                .exonUp(exonUp)
+                .exonDown(exonDown)
                 .knownType(knownType)
                 .svType(StructuralVariantType.BND)
                 .splitFragments(splitFragments)
@@ -73,7 +83,6 @@ public class TestRnaFusionDataBuilder
                 .maxAnchorLengthUp(-1)
                 .maxAnchorLengthDown(-1)
                 .cohortFrequency(-1)
-                .filter(filter)
                 .build();
 
         return new RnaFusionData(fusion,

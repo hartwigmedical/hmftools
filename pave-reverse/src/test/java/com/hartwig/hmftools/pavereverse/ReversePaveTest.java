@@ -25,7 +25,8 @@ public final class ReversePaveTest extends ReversePaveTestBase
     @Test
     public void handleMultipleMatchingNonCanonicalTranscriptsThatReturnSameChanges()
     {
-        BaseSequenceVariants variant = reversePave.calculateProteinVariantAllowingMultipleNonCanonicalTranscriptMatches("KIT", "N560_Y574del");
+        BaseSequenceVariants variant =
+                reversePave.calculateProteinVariantAllowingMultipleNonCanonicalTranscriptMatches("KIT", "N560_Y574del");
         checkChanges(variant,
                 basesChange("TAAATGGAAACAATTATGTTTACATAGACCCAACACAACTTCCTTA", "T", "chr4", 54727456),
                 basesChange("AAATGGAAACAATTATGTTTACATAGACCCAACACAACTTCCTTAT", "A", "chr4", 54727457)
@@ -55,13 +56,45 @@ public final class ReversePaveTest extends ReversePaveTestBase
         // ...V N Q T...     ...GTT AAC CAA ACT...
         // AC>A at 565 gives ...GTT AA C AA ACT... which is ...V N K ....
         // Note that transvar gives CC>C @566
-        checkSingleChange(variant, "AC", "A", "chr3", 10_146_565);
+        checkChanges(variant,
+                basesChange("AC", "A", "chr3", 10_146_565),
+                basesChange("C", "CT", "chr3", 10_146_566),
+                basesChange("C", "CA", "chr3", 10_146_566),
+                basesChange("C", "CG", "chr3", 10_146_566),
+                basesChange("A", "AC", "chr3", 10_146_565),
+                basesChange("A", "AT", "chr3", 10_146_565)
+        );
 
         // Similarly: VHL D9fs
         // ...N W D...     ...AAC TGG GAC G... the W starts at 10141869
         // TG>T @869 gives ...AAC TG GAC G...  which is ...N W T ....
         variant = reversePave.calculateProteinVariant("VHL", "D9fs");
-        checkSingleChange(variant, "TG", "T", "chr3", 10_141_869);
+        checkChanges(variant,
+                basesChange("TG", "T", "chr3", 10_141_869),
+                basesChange("T", "TG", "chr3", 10_141_869),
+                basesChange("G", "GA", "chr3", 10_141_871),
+                basesChange("G", "GC", "chr3", 10_141_871),
+                basesChange("G", "GT", "chr3", 10_141_871)
+        );
+    }
+
+    @Test
+    public void frameshiftForwardStrandWithNoDeletionCausePossible()
+    {
+        BaseSequenceVariants variant = reversePave.calculateProteinVariant("BRCA2", "F2000fs");
+        // ...R   Q   V   F   S
+        //...AGA CAA GTG TTT TCT
+        //   |         |
+        //   32340344  |
+        //             32340352
+        checkChanges(variant,
+                basesChange("G", "GA", "chr13", 32_340_352),
+                basesChange("G", "GC", "chr13", 32_340_352),
+                basesChange("T", "TA", "chr13", 32_340_351),
+                basesChange("T", "TC", "chr13", 32_340_351),
+                basesChange("T", "TG", "chr13", 32_340_351),
+                basesChange("G", "GT", "chr13", 32_340_350)
+        );
     }
 
     @Test
@@ -71,13 +104,27 @@ public final class ReversePaveTest extends ReversePaveTestBase
         checkChanges(variant,
                 basesChange("CA", "C", "chr7", 140_753_379),
                 basesChange("AT", "A", "chr7", 140_753_380),
-                basesChange("TG", "T", "chr7", 140_753_381)
+                basesChange("C", "CC", "chr7", 140_753_380),
+                basesChange("C", "CT", "chr7", 140_753_380),
+                basesChange("TG", "T", "chr7", 140_753_381),
+                basesChange("TG", "T", "chr7", 140_753_381),
+                basesChange("A", "AG", "chr7", 140_753_381),
+                basesChange("A", "AA", "chr7", 140_753_381),
+                basesChange("T", "TA", "chr7", 140_753_382),
+                basesChange("T", "TT", "chr7", 140_753_382),
+                basesChange("T", "TC", "chr7", 140_753_382)
         );
 
         variant = reversePave.calculateProteinVariant("BRAF", "V600fs");
         checkChanges(variant,
                 basesChange("CA", "C", "chr7", 140_753_335),
-                basesChange("AC", "A", "chr7", 140_753_336)
+                basesChange("AC", "A", "chr7", 140_753_336),
+                basesChange("C", "CG", "chr7", 140_753_336),
+                basesChange("C", "CT", "chr7", 140_753_336),
+                basesChange("C", "CC", "chr7", 140_753_336),
+                basesChange("A", "AT", "chr7", 140_753_337),
+                basesChange("A", "AG", "chr7", 140_753_337),
+                basesChange("A", "AA", "chr7", 140_753_337)
         );
     }
 

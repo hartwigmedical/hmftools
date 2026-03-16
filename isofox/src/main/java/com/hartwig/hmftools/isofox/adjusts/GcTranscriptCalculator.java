@@ -54,17 +54,17 @@ public class GcTranscriptCalculator
         // use expected GC ratio counts and 1st-pass transcript fits to derive expected GC counts
         final double[] frequencies = mTranscriptFitGcCounts.getCounts();
 
-        for(final GeneCollectionSummary geneSummary : geneSummaries)
+        for(GeneCollectionSummary geneSummary : geneSummaries)
         {
-            final Map<String,Double> fitAllocations = geneSummary.getFitAllocations();
+            Map<String,Double> fitAllocations = geneSummary.getFitAllocations();
 
             for(Map.Entry<String,Double> entry : fitAllocations.entrySet())
             {
-                final String transName = entry.getKey();
+                String transName = entry.getKey();
 
                 double fitAlloc = entry.getValue();
 
-                final GcRatioCounts transGcCounts = mTranscriptGcRatioCache.get(transName);
+                GcRatioCounts transGcCounts = mTranscriptGcRatioCache.get(transName);
 
                 if(transGcCounts == null)
                 {
@@ -73,7 +73,7 @@ public class GcTranscriptCalculator
                     return;
                 }
 
-                final double[] transFrequencies = transGcCounts.getCounts();
+                double[] transFrequencies = transGcCounts.getCounts();
 
                 for(int i = 0; i < frequencies.length; ++i)
                 {
@@ -122,7 +122,7 @@ public class GcTranscriptCalculator
             else
                 mGcRatioAdjustments[i] = MIN_ADJUST_FACTOR;
 
-            ISF_LOGGER.debug(format("ratio(%.2f) actual(%.6f) expected(%.6f) adjustment(%.3f)",
+            ISF_LOGGER.trace(format("ratio(%.2f) actual(%.6f) expected(%.6f) adjustment(%.3f)",
                     globalGcCounts.getRatios()[i], actualPerc, expectedPerc, mGcRatioAdjustments[i]));
         }
     }

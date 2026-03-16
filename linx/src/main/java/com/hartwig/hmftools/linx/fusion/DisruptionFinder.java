@@ -767,7 +767,7 @@ public class DisruptionFinder implements CohortFileInterface
                 if(be == SE_END && var.isSglBreakend())
                     continue;
 
-                final List<BreakendGeneData> tsgGenesList = var.getGenesList(isStart(be)).stream()
+                List<BreakendGeneData> tsgGenesList = var.getGenesList(isStart(be)).stream()
                         .filter(x -> matchesDisruptionGene(x.geneId())).collect(Collectors.toList());
 
                 if(tsgGenesList.isEmpty())
@@ -795,7 +795,7 @@ public class DisruptionFinder implements CohortFileInterface
                         transcript.setReportableDisruption(true);
 
                         SvDisruptionData disruptionData = new SvDisruptionData(
-                                var,  gene.isStart(), gene.GeneData, transcript.TransData,
+                                var, gene.isStart(), gene.GeneData, transcript.TransData,
                                 new int[] { transcript.ExonUpstream, transcript.ExonDownstream },
                                 transcript.codingType(), transcript.regionType(), transcript.undisruptedCopyNumber(),
                                 breakend.copyNumber());

@@ -4,13 +4,13 @@ import static com.hartwig.hmftools.common.rna.RnaQcFilter.PASS;
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionContext;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionType;
 import com.hartwig.hmftools.common.rna.ImmutableGeneExpression;
 import com.hartwig.hmftools.common.rna.ImmutableNovelSpliceJunction;
 import com.hartwig.hmftools.common.rna.ImmutableRnaFusion;
 import com.hartwig.hmftools.common.rna.ImmutableRnaStatistics;
-import com.hartwig.hmftools.common.rna.KnownFusionType;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 
 import org.apache.logging.log4j.util.Strings;
@@ -72,6 +72,10 @@ public final class IsofoxTestFactory
                 .orientationDown((byte) 0)
                 .junctionTypeUp(Strings.EMPTY)
                 .junctionTypeDown(Strings.EMPTY)
+                .transcriptUp(Strings.EMPTY)
+                .transcriptDown(Strings.EMPTY)
+                .exonUp(1)
+                .exonDown(2)
                 .knownType(KnownFusionType.KNOWN_PAIR)
                 .svType(StructuralVariantType.BND)
                 .splitFragments(0)
@@ -81,8 +85,7 @@ public final class IsofoxTestFactory
                 .depthDown(0)
                 .maxAnchorLengthUp(0)
                 .maxAnchorLengthDown(0)
-                .cohortFrequency(0)
-                .filter("PASS");
+                .cohortFrequency(0);
     }
 
     @NotNull

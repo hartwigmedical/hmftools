@@ -9,10 +9,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.datamodel.purple.HotspotType;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleVariantFactory;
 import com.hartwig.hmftools.orange.report.ReportResources;
-import com.hartwig.hmftools.orange.report.datamodel.TestVariantEntryFactory;
-import com.hartwig.hmftools.orange.report.datamodel.VariantEntry;
 
-import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 
 public class VariantsTest
@@ -24,8 +21,8 @@ public class VariantsTest
         VariantEntry entry2 = TestVariantEntryFactory.builder().gene("gene A").driverLikelihood(1D).affectedCodon(700).build();
         VariantEntry entry3 = TestVariantEntryFactory.builder().gene("gene B").driverLikelihood(1D).affectedCodon(600).build();
         VariantEntry entry4 = TestVariantEntryFactory.builder().gene("gene B").driverLikelihood(0.5).affectedCodon(600).build();
-        VariantEntry entry5 = TestVariantEntryFactory.builder().gene("gene B").driverLikelihood(null).affectedCodon(600).build();
-        VariantEntry entry6 = TestVariantEntryFactory.builder().gene("gene B").driverLikelihood(null).affectedCodon(null).build();
+        VariantEntry entry5 = TestVariantEntryFactory.builder().gene("gene B").driverLikelihood(0).affectedCodon(600).build();
+        VariantEntry entry6 = TestVariantEntryFactory.builder().gene("gene B").driverLikelihood(0).affectedCodon(null).build();
 
         List<VariantEntry> entries = Lists.newArrayList(entry5, entry6, entry1, entry3, entry2, entry4);
         List<VariantEntry> sorted = Variants.sort(entries);

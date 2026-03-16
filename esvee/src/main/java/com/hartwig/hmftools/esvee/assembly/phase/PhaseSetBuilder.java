@@ -50,6 +50,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.sv.SvUtils;
 import com.hartwig.hmftools.common.utils.Integers;
+import com.hartwig.hmftools.common.utils.StartEndPair;
 import com.hartwig.hmftools.esvee.assembly.AssemblyConfig;
 import com.hartwig.hmftools.esvee.assembly.AssemblyUtils;
 import com.hartwig.hmftools.esvee.assembly.RefBaseExtender;
@@ -968,10 +969,10 @@ public class PhaseSetBuilder
             return;
 
         // look for concordant mate reads which are on the other side of the junction and so were initially excluded
-        for(int i = 0; i <= 1; ++i)
+        for(StartEndPair se : StartEndPair.values())
         {
-            JunctionAssembly assembly = (i == 0) ? assembly1 : assembly2;
-            JunctionAssembly otherAssembly = (i == 0) ? assembly2 : assembly1;
+            JunctionAssembly assembly = se.isStart() ? assembly1 : assembly2;
+            JunctionAssembly otherAssembly = se.isStart() ? assembly2 : assembly1;
 
             for(Read mateRead : assembly.concordantCandidates())
             {
@@ -1229,10 +1230,10 @@ public class PhaseSetBuilder
         if(!phaseSet.assembliesFaceInPhaseSet(assembly1, assembly2))
             return;
 
-        for(int i = 0; i <= 1; ++i)
+        for(StartEndPair se : StartEndPair.values())
         {
-            final JunctionAssembly assembly = (i == 0) ? assembly1 : assembly2;
-            final JunctionAssembly otherAssembly = (i == 0) ? assembly2 : assembly1;
+            final JunctionAssembly assembly = se.isStart() ? assembly1 : assembly2;
+            final JunctionAssembly otherAssembly = se.isStart() ? assembly2 : assembly1;
 
             int index = 0;
 
@@ -1258,7 +1259,7 @@ public class PhaseSetBuilder
                 }
 
                 // otherwise check for candidate matches
-                if(i == 0)
+                if(se.isStart())
                 {
                     Read matchedCandidate = otherAssembly.candidateSupport().stream()
                             .filter(x -> x.matchesFragment(candidateRead, false)).findFirst().orElse(null);

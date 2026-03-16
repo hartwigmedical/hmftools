@@ -23,13 +23,13 @@ public class ThresholdOverridesFile
     private static final String COL_THRESHOLD = "Threshold";
     private static final String COL_OVERRIDABLE = "Overridable";
 
-    public static ThresholdRegistry read(String filename)
+    public static ThresholdRegistry read(String filename, boolean targetedMode)
     {
         try(DelimFileReader reader = new DelimFileReader(filename))
         {
             QC_LOGGER.info("Reading threshold overrides from: {}", filename);
 
-            ThresholdRegistry thresholds = new ThresholdRegistry();
+            ThresholdRegistry thresholds = ThresholdRegistry.createEmptyModifiable().setDefaults(targetedMode);
             boolean hasUnsupportedThresholds = false;
             List<ThresholdKey> seenKeys = new ArrayList<>();
 

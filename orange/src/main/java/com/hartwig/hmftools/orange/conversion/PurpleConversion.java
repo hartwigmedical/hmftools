@@ -18,32 +18,26 @@ import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.common.purple.ChrArmCopyNumber;
-import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GermlineAmpDel;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.ReportedStatus;
-import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.impact.VariantEffect;
 import com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact;
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
-import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleAllelicDepth;
+import com.hartwig.hmftools.datamodel.common.ImmutableAllelicDepth;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleChrArmCopyNumber;
-import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleDriver;
-import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGeneCopyNumber;
-import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGermlineDeletion;
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGermlineAmpDel;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleQC;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleTranscriptImpact;
-import com.hartwig.hmftools.datamodel.purple.PurpleAllelicDepth;
+import com.hartwig.hmftools.datamodel.common.AllelicDepth;
 import com.hartwig.hmftools.datamodel.purple.PurpleChrArmCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
-import com.hartwig.hmftools.datamodel.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
-import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.PurpleGermlineAberration;
-import com.hartwig.hmftools.datamodel.purple.PurpleGermlineDeletion;
+import com.hartwig.hmftools.datamodel.purple.PurpleGermlineAmpDel;
 import com.hartwig.hmftools.datamodel.purple.PurpleGermlineDetectionMethod;
 import com.hartwig.hmftools.datamodel.purple.PurpleGermlineStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleLikelihoodMethod;
@@ -55,30 +49,6 @@ import com.hartwig.hmftools.datamodel.purple.PurpleVariantEffect;
 
 public final class PurpleConversion
 {
-    public static PurpleCopyNumber convert(final com.hartwig.hmftools.common.purple.PurpleCopyNumber copyNumber)
-    {
-        return ImmutablePurpleCopyNumber.builder()
-                .chromosome(copyNumber.chromosome())
-                .start(copyNumber.start())
-                .end(copyNumber.end())
-                .averageTumorCopyNumber(copyNumber.averageTumorCopyNumber())
-                .build();
-    }
-
-    public static PurpleGeneCopyNumber convert(final GeneCopyNumber geneCopyNumber)
-    {
-        return ImmutablePurpleGeneCopyNumber.builder()
-                .gene(geneCopyNumber.geneName())
-                .chromosome(geneCopyNumber.chromosome())
-                .chromosomeBand(geneCopyNumber.ChromosomeBand)
-                .transcript(geneCopyNumber.TransName)
-                .isCanonical(geneCopyNumber.IsCanonical)
-                .minCopyNumber(geneCopyNumber.minCopyNumber())
-                .maxCopyNumber(geneCopyNumber.maxCopyNumber())
-                .minMinorAlleleCopyNumber(geneCopyNumber.MinMinorAlleleCopyNumber)
-                .build();
-    }
-
     public static PurpleDriver convert(final DriverCatalog catalog)
     {
         return ImmutablePurpleDriver.builder()
@@ -106,17 +76,17 @@ public final class PurpleConversion
                 .build();
     }
 
-    public static PurpleAllelicDepth convert(final AllelicDepth allelicDepth)
+    public static AllelicDepth convert(final com.hartwig.hmftools.common.variant.AllelicDepth allelicDepth)
     {
-        return ImmutablePurpleAllelicDepth.builder()
+        return ImmutableAllelicDepth.builder()
                 .totalReadCount(allelicDepth.TotalReadCount)
                 .alleleReadCount(allelicDepth.AlleleReadCount)
                 .build();
     }
 
-    public static PurpleGermlineDeletion convert(final GermlineAmpDel germlineDeletion)
+    public static PurpleGermlineAmpDel convert(final GermlineAmpDel germlineDeletion)
     {
-        return ImmutablePurpleGermlineDeletion.builder()
+        return ImmutablePurpleGermlineAmpDel.builder()
                 .gene(germlineDeletion.GeneName)
                 .chromosome(germlineDeletion.Chromosome)
                 .chromosomeBand(germlineDeletion.ChromosomeBand)

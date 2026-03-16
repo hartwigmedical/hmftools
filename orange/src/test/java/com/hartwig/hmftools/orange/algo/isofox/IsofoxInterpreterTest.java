@@ -2,8 +2,8 @@ package com.hartwig.hmftools.orange.algo.isofox;
 
 import static org.junit.Assert.assertNotNull;
 
-import com.google.common.collect.Lists;
-import com.hartwig.hmftools.orange.algo.linx.TestLinxInterpretationFactory;
+import com.google.common.collect.Maps;
+import com.hartwig.hmftools.orange.algo.linx.TestLinxRecordFactory;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -20,6 +20,6 @@ public class IsofoxInterpreterTest
     @NotNull
     private static IsofoxInterpreter createTestInterpreter()
     {
-        return new IsofoxInterpreter(Lists.newArrayList(), TestLinxInterpretationFactory.createMinimalTestLinxData());
+        return new IsofoxInterpreter(Maps.newHashMap(), TestLinxRecordFactory.createMinimalTestLinxData());
     }
 }

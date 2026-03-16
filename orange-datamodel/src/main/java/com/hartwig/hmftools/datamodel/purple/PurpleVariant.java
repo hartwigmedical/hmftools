@@ -2,6 +2,8 @@ package com.hartwig.hmftools.datamodel.purple;
 
 import java.util.List;
 
+import com.hartwig.hmftools.datamodel.common.AllelicDepth;
+
 import org.immutables.gson.Gson;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -44,10 +46,10 @@ public interface PurpleVariant
     HotspotType hotspot();
 
     @NotNull
-    PurpleAllelicDepth tumorDepth();
+    AllelicDepth tumorDepth();
 
     @Nullable
-    PurpleAllelicDepth rnaDepth();
+    AllelicDepth rnaDepth();
 
     double adjustedCopyNumber();
     double adjustedVAF();

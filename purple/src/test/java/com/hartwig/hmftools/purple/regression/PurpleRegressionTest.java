@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.purple.regression;
 
-import static com.hartwig.hmftools.purple.SampleDataFiles.AMBER;
-import static com.hartwig.hmftools.purple.SampleDataFiles.COBALT;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.AMBER_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.COBALT_DIR_CFG;
 import static com.hartwig.hmftools.purple.SampleDataFiles.GERMLINE_SV_VCF;
 import static com.hartwig.hmftools.purple.SampleDataFiles.GERMLINE_VARIANTS;
 import static com.hartwig.hmftools.purple.SampleDataFiles.SOMATIC_SV_VCF;
@@ -361,8 +361,8 @@ public class PurpleRegressionTest
                 "-" + SOMATIC_VARIANTS, somatic_vcf,
                 "-" + GERMLINE_VARIANTS, germline_vcf,
                 "-driver_gene_panel", driver_gene_panel,
-                "-" + AMBER, amber,
-                "-" + COBALT, cobalt,
+                "-" + AMBER_DIR_CFG, amber,
+                "-" + COBALT_DIR_CFG, cobalt,
                 "-ref_genome", ref_genome,
                 "-ref_genome_version", ref_genome_version,
                 "-gc_profile", gc_profile,

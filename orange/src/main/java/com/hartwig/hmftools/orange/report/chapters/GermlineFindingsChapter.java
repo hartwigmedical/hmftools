@@ -4,9 +4,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.StringJoiner;
 
-import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
-import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
@@ -14,14 +12,13 @@ import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.PurpleGermlineAberration;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.orange.report.ReportResources;
-import com.hartwig.hmftools.orange.report.datamodel.BreakendEntry;
-import com.hartwig.hmftools.orange.report.datamodel.BreakendEntryFactory;
-import com.hartwig.hmftools.orange.report.datamodel.VariantEntry;
-import com.hartwig.hmftools.orange.report.datamodel.VariantEntryFactory;
+import com.hartwig.hmftools.orange.report.interpretation.BreakendEntry;
+import com.hartwig.hmftools.orange.report.interpretation.BreakendEntryFactory;
+import com.hartwig.hmftools.orange.report.interpretation.VariantEntry;
+import com.hartwig.hmftools.orange.report.interpretation.VariantEntryFactory;
 import com.hartwig.hmftools.orange.report.tables.DisruptionTable;
 import com.hartwig.hmftools.orange.report.tables.GainDeletionTable;
 import com.hartwig.hmftools.orange.report.tables.GermlineVariantTable;
-import com.hartwig.hmftools.orange.report.tables.HomozygousDisruptionTable;
 import com.hartwig.hmftools.orange.report.tables.PharmacogeneticsTable;
 import com.hartwig.hmftools.orange.report.util.Cells;
 import com.hartwig.hmftools.orange.report.util.Tables;
@@ -62,8 +59,7 @@ public class GermlineFindingsChapter implements ReportChapter
         if(mReport.referenceId() != null)
         {
             addGermlineVariants(document);
-            addGermlineDeletions(document);
-            addGermlineHomozygousDisruptions(document);
+            addGermlineAmpDels(document);
             addGermlineBreakends(document);
             addGermlineCNAberrations(document);
             addPharmacogenetics(document);
@@ -87,30 +83,20 @@ public class GermlineFindingsChapter implements ReportChapter
         }
     }
 
-    private void addGermlineDeletions(final Document document)
+    private void addGermlineAmpDels(final Document document)
     {
         List<PurpleGainDeletion> reportableGermlineFullDels = mReport.purple().germlineGainsDels();
         if(reportableGermlineFullDels != null)
         {
             String title = "Amplifications and Deletions (" + reportableGermlineFullDels.size() + ")";
+
             document.add(GainDeletionTable.build(
                     title, contentWidth(), reportableGermlineFullDels, mReportResources, mReport.hasRna()));
         }
     }
 
-    private void addGermlineHomozygousDisruptions(final Document document)
-    {
-        List<LinxHomozygousDisruption> germlineHomozygousDisruptions = mReport.linx().germlineHomozygousDisruptions();
-        if(germlineHomozygousDisruptions != null)
-        {
-            String title = "Potentially pathogenic germline homozygous disruptions (" + germlineHomozygousDisruptions.size() + ")";
-            document.add(HomozygousDisruptionTable.build(title, contentWidth(), germlineHomozygousDisruptions, mReportResources));
-        }
-    }
-
     private void addGermlineBreakends(final Document document)
     {
-        // List<LinxSvAnnotation> allGermlineStructuralVariants = mReport.linx().germlineStructuralVariants();
         List<LinxBreakend> reportableGermlineBreakends = mReport.linx().germlineBreakends();
 
         if(reportableGermlineBreakends != null)

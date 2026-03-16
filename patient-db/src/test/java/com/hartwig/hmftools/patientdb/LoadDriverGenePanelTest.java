@@ -53,6 +53,9 @@ public class LoadDriverGenePanelTest extends DatabaseTestBase
                 .reportGermlineDisruption(DriverGeneGermlineReporting.NONE)
                 .additionalReportedTranscripts(List.of())
                 .reportPGX(false)
+                .reportHighExpression(false)
+                .reportLowExpression(false)
+                .reportNovelSpliceJunctions(false)
                 .build();
     }
 }

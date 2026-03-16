@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.orange.report.chapters;
 
+import static com.hartwig.hmftools.orange.report.ReportResources.FULL_PAGE_IMAGE_HEIGHT;
+import static com.hartwig.hmftools.orange.report.ReportResources.FULL_PAGE_IMAGE_WIDTH;
+
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleQCInterpretation;
 import com.hartwig.hmftools.orange.report.PlotPathResolver;
@@ -42,7 +45,7 @@ public class QualityControlChapter implements ReportChapter
         document.add(new Paragraph(name()).addStyle(mReportResources.chapterTitleStyle()));
 
         boolean isFail = PurpleQCInterpretation.isFail(mReport.purple().fit().qc());
-        if(!isFail && mReport.plots().cuppaSummaryPlot() != null)
+        if(!isFail && mReport.plots().qSeePlot() != null)
         {
             addQSeePdf(document);
         }
@@ -54,12 +57,9 @@ public class QualityControlChapter implements ReportChapter
 
     private void addQSeePdf(final Document document)
     {
-        if(mReport.plots().qSeePlot() == null)
-            return;
-
         Image qSeePdf = Images.build(mPlotPathResolver.resolve(mReport.plots().qSeePlot()));
-        qSeePdf.setMaxWidth(740);
-        qSeePdf.setMaxHeight(420);
+        qSeePdf.setMaxWidth(FULL_PAGE_IMAGE_WIDTH);
+        qSeePdf.setMaxHeight(FULL_PAGE_IMAGE_HEIGHT);
         qSeePdf.setHorizontalAlignment(HorizontalAlignment.CENTER);
         document.add(qSeePdf);
     }

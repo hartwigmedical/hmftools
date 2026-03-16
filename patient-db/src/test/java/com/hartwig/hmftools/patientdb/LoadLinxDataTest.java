@@ -155,13 +155,6 @@ public class LoadLinxDataTest extends DatabaseTestBase
                 .skippedExonsDown(0)
                 .fusedExonUp(0)
                 .fusedExonDown(0)
-                .geneStart("")
-                .geneContextStart("")
-                .geneTranscriptStart("")
-                .geneEnd("")
-                .geneContextEnd("")
-                .geneTranscriptEnd("")
-                .junctionCopyNumber(0.0)
                 .build();
 
         databaseAccess.writeBreakendsAndFusions(TEST_SAMPLE_ID, List.of(breakend5, breakend3), List.of(fusion));

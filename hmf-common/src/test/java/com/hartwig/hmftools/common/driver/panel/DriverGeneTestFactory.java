@@ -31,6 +31,9 @@ public final class DriverGeneTestFactory
                 .reportGermlineDisruption(NONE)
                 .reportGermlineDeletion(NONE)
                 .reportGermlineAmplification(false)
-                .reportPGX(false);
+                .reportPGX(false)
+                .reportHighExpression(false)
+                .reportLowExpression(false)
+                .reportNovelSpliceJunctions(false);
     }
 }

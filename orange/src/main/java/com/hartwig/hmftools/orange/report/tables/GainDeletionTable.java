@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.orange.report.tables;
 
-import static com.hartwig.hmftools.orange.report.ReportResources.formatFoldChangeField;
-import static com.hartwig.hmftools.orange.report.ReportResources.formatPercentileField;
-import static com.hartwig.hmftools.orange.report.ReportResources.formatSingleDigitDecimal;
-import static com.hartwig.hmftools.orange.report.ReportResources.formatTpmField;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatFoldChangeField;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatPercentileField;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatSingleDigitDecimal;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatTpmField;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_DRIVER;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_GENE;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_LOCATION;
@@ -13,12 +13,13 @@ import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_TPM;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_TYPE;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.cellArray;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.floatArray;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.intToFloatArray;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.interpretation.Chromosomes;
@@ -52,7 +53,6 @@ public final class GainDeletionTable
         addEntry(cells, widths, cellEntries, 1, "Min CN");
         addEntry(cells, widths, cellEntries, 1, "Max CN");
         addEntry(cells, widths, cellEntries, 1, COL_REL_CN);
-        addEntry(cells, widths, cellEntries, 1, COL_DRIVER);
 
         if(hasRna)
         {
@@ -61,26 +61,37 @@ public final class GainDeletionTable
             addEntry(cells, widths, cellEntries, 1, "Fold Change");
         }
 
-        Table table = Tables.createContent(width, floatArray(widths), cellArray(cellEntries));
+        addEntry(cells, widths, cellEntries, 1, COL_DRIVER);
+
+        Table table = Tables.createContent(width, intToFloatArray(widths), cellArray(cellEntries));
 
         for(PurpleGainDeletion gainDel : sort(gainsDels))
         {
-            table.addCell(cells.createContent(gainDel.chromosome() + gainDel.chromosomeBand()));
-            table.addCell(cells.createContent(displayGene(gainDel)));
-            table.addCell(cells.createContent(gainDel.driver().type().toString()));
-            table.addCell(cells.createContent(gainDel.exonRange()));
-            table.addCell(cells.createContent(formatSingleDigitDecimal(gainDel.minCopyNumber())));
-            table.addCell(cells.createContent(formatSingleDigitDecimal(gainDel.maxCopyNumber())));
-            table.addCell(cells.createContent(formatSingleDigitDecimal(gainDel.relativeCopyNumber())));
+            List<Cell> rowCells = Lists.newArrayList();
 
-            table.addCell(cells.createContent(gainDel.driver().driverInterpretation().toString()));
+            rowCells.add(cells.createContent(gainDel.chromosome() + gainDel.chromosomeBand()));
+            rowCells.add(cells.createContent(displayGene(gainDel)));
+            rowCells.add(cells.createContent(gainDel.driver().type().toString()));
+            rowCells.add(cells.createContent(gainDel.geneRange()));
+            rowCells.add(cells.createContent(formatSingleDigitDecimal(gainDel.minCopyNumber())));
+            rowCells.add(cells.createContent(formatSingleDigitDecimal(gainDel.maxCopyNumber())));
+            rowCells.add(cells.createContent(formatSingleDigitDecimal(gainDel.relativeCopyNumber())));
 
             if(hasRna)
             {
-                table.addCell(cells.createContent(formatTpmField(gainDel.tpm())));
-                table.addCell(cells.createContent(formatPercentileField(gainDel.tpmPercentile())));
-                table.addCell(cells.createContent(formatFoldChangeField(gainDel.tpmFoldChange())));
+                rowCells.add(cells.createContent(formatTpmField(gainDel.tpm())));
+                rowCells.add(cells.createContent(formatPercentileField(gainDel.tpmPercentile())));
+                rowCells.add(cells.createContent(formatFoldChangeField(gainDel.tpmFoldChange())));
             }
+
+            rowCells.add(cells.createContent(gainDel.driver().driverInterpretation().toString()));
+
+            if(gainDel.driver().driverInterpretation() == DriverInterpretation.LOW)
+            {
+                reportResources.shadeCandidateCells(rowCells);
+            }
+
+            rowCells.forEach(x -> table.addCell(x));
         }
 
         return new Tables(reportResources).createWrapping(table, title);
@@ -90,6 +101,14 @@ public final class GainDeletionTable
     {
         return gainsAndDels.stream().sorted((gainDel1, gainDel2) ->
         {
+            double likelihood1 = gainDel1.driver().driverLikelihood();
+            double likelihood2 = gainDel2.driver().driverLikelihood();
+
+            int likelihoodCompare = Double.compare(-likelihood1, -likelihood2);
+
+            if(likelihoodCompare != 0)
+                return likelihoodCompare;
+
             String location1 = Chromosomes.zeroPrefixed(gainDel1.chromosome() + gainDel1.chromosomeBand());
             String location2 = Chromosomes.zeroPrefixed(gainDel2.chromosome() + gainDel2.chromosomeBand());
 

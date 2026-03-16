@@ -361,10 +361,11 @@ public class TestUtils
         return read;
     }
 
-    public static RegionReadData createRegion(final String geneId, int trans, int exonRank, final String chromosome, int posStart, int posEnd)
+    public static RegionReadData createRegion(
+            final String geneId, int trans, int exonRank, final String chromosome, int posStart, int posEnd)
     {
         RegionReadData region = new RegionReadData(chromosome, posStart, posEnd);
-        region.addExonRef(geneId, trans, String.valueOf(trans), exonRank);
+        region.addExonRef(geneId, trans, String.valueOf(trans), exonRank, true);
         return region;
     }
 

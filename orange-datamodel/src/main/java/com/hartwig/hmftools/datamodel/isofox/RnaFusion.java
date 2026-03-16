@@ -39,16 +39,16 @@ public interface RnaFusion
     String junctionTypeEnd();
 
     @NotNull
+    RnaFusionType knownType();
+
+    @NotNull
     StructuralVariantType svType();
 
     int splitFragments();
-
     int realignedFrags();
-
     int discordantFrags();
 
     int depthStart();
-
     int depthEnd();
 
     int cohortFrequency();

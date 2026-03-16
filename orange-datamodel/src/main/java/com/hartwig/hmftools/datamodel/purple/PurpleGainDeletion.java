@@ -30,7 +30,13 @@ public interface PurpleGainDeletion
     String chromosomeBand();
 
     @NotNull
-    String exonRange();
+    String geneRange();
+
+    @Nullable
+    Integer exonStart();
+
+    @Nullable
+    Integer exonEnd();
 
     @NotNull
     default String transcript()
@@ -58,4 +64,7 @@ public interface PurpleGainDeletion
 
     @Nullable
     Double tpmFoldChange();
+
+    @Nullable
+    String plotFilename();
 }

@@ -801,6 +801,9 @@ public class GermlineAmpDelFinderTest
                 .likelihoodType(DriverCategory.TSG)
                 .reportGermlineDisruption(DriverGeneGermlineReporting.ANY)
                 .reportPGX(true)
+                .reportHighExpression(false)
+                .reportLowExpression(false)
+                .reportNovelSpliceJunctions(false)
                 .build();
         Preconditions.checkState(Objects.equals(result.gene(), geneName));
         Preconditions.checkState(Objects.equals(result.reportGermlineDeletion(), reporting));

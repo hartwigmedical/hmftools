@@ -9,10 +9,10 @@ import com.hartwig.hmftools.datamodel.sigs.SignatureAllocation;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 import com.hartwig.hmftools.orange.report.PlotPathResolver;
 import com.hartwig.hmftools.orange.report.ReportResources;
-import com.hartwig.hmftools.orange.report.datamodel.BreakendEntry;
-import com.hartwig.hmftools.orange.report.datamodel.BreakendEntryFactory;
-import com.hartwig.hmftools.orange.report.datamodel.VariantEntry;
-import com.hartwig.hmftools.orange.report.datamodel.VariantEntryFactory;
+import com.hartwig.hmftools.orange.report.interpretation.BreakendEntry;
+import com.hartwig.hmftools.orange.report.interpretation.BreakendEntryFactory;
+import com.hartwig.hmftools.orange.report.interpretation.VariantEntry;
+import com.hartwig.hmftools.orange.report.interpretation.VariantEntryFactory;
 import com.hartwig.hmftools.orange.report.tables.ChrArmCopyNumberTable;
 import com.hartwig.hmftools.orange.report.tables.DisruptionTable;
 import com.hartwig.hmftools.orange.report.tables.DnaFusionTable;
@@ -67,7 +67,6 @@ public class SomaticFindingsChapter implements ReportChapter
         addSomaticAmpDels(document);
         addFusions(document);
 
-        // addHomozygousDisruptions(document);
         addBreakendDisruptions(document);
 
         if(!mReport.tumorOnlyMode())
@@ -158,7 +157,6 @@ public class SomaticFindingsChapter implements ReportChapter
             document.add(DnaFusionTable.build(titleDrivers,
                     contentWidth(),
                     mReport.linx().fusions(),
-                    mReport.isofox(),
                     mReportResources));
         }
     }
@@ -183,27 +181,6 @@ public class SomaticFindingsChapter implements ReportChapter
             }
         }
     }
-
-    /*
-    private void addHomozygousDisruptions(final Document document)
-    {
-        String homozygousDisruptionTitle = "Disruptions";
-
-        if(PurpleQCInterpretation.isContaminated(mReport.purple().fit().qc()))
-        {
-            Tables tables = new Tables(mReportResources);
-            document.add(tables.createNotAvailable(homozygousDisruptionTitle, contentWidth()));
-        }
-        else
-        {
-            String title = homozygousDisruptionTitle + " (" + mReport.linx().somaticHomozygousDisruptions().size() + ")";
-            document.add(HomozygousDisruptionTable.build(title,
-                    contentWidth(),
-                    mReport.linx().somaticHomozygousDisruptions(),
-                    mReportResources));
-        }
-    }
-    */
 
     private void addBreakendDisruptions(final Document document)
     {

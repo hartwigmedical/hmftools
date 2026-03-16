@@ -2,12 +2,12 @@ package com.hartwig.hmftools.patientdb;
 
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_DESC;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.REF_METRICS_DIR_CFG;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.REF_METRICS_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.BAM_METRICS_REF_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.BAM_METRICS_REF_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_METRICS_DIR_CFG;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_METRICS_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.BAM_METRICS_TUMOR_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.BAM_METRICS_TUMOR_DIR_DESC;
 import static com.hartwig.hmftools.patientdb.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.patientdb.CommonUtils.LOGGER;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
@@ -31,8 +31,8 @@ public class LoadFlagstatData
 
         configBuilder.addConfigItem(SAMPLE, SAMPLE_DESC);
         configBuilder.addConfigItem(REFERENCE, REFERENCE_DESC);
-        configBuilder.addPath(REF_METRICS_DIR_CFG, true, REF_METRICS_DIR_DESC);
-        configBuilder.addPath(TUMOR_METRICS_DIR_CFG, true, TUMOR_METRICS_DIR_DESC);
+        configBuilder.addPath(BAM_METRICS_REF_DIR_CFG, true, BAM_METRICS_REF_DIR_DESC);
+        configBuilder.addPath(BAM_METRICS_TUMOR_DIR_CFG, true, BAM_METRICS_TUMOR_DIR_DESC);
         addDatabaseCmdLineArgs(configBuilder, true);
 
         configBuilder.checkAndParseCommandLine(args);
@@ -40,11 +40,11 @@ public class LoadFlagstatData
         String sample = configBuilder.getValue(SAMPLE);
 
         String tumor = configBuilder.getValue(SAMPLE);
-        String tumorMetricsDir = configBuilder.getValue(TUMOR_METRICS_DIR_CFG);
+        String tumorMetricsDir = configBuilder.getValue(BAM_METRICS_TUMOR_DIR_CFG);
         String tumorFlagstatFile = BamFlagStats.generateFilename(tumorMetricsDir, tumor);
 
         String reference = configBuilder.getValue(REFERENCE);
-        String refMetricsDir = configBuilder.getValue(REF_METRICS_DIR_CFG);
+        String refMetricsDir = configBuilder.getValue(BAM_METRICS_REF_DIR_CFG);
         String refFlagstatFile = BamFlagStats.generateFilename(refMetricsDir, reference);
 
         try(DatabaseAccess dbWriter = databaseAccess(configBuilder))

@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.datamodel.chord.ChordStatus;
 import com.hartwig.hmftools.datamodel.chord.ImmutableChordRecord;
+import com.hartwig.hmftools.datamodel.common.ImmutableAllelicDepth;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaMode;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
@@ -22,19 +23,15 @@ import com.hartwig.hmftools.datamodel.hla.LilacAllele;
 import com.hartwig.hmftools.datamodel.hla.LilacRecord;
 import com.hartwig.hmftools.datamodel.immuno.ImmuneEscapeRecord;
 import com.hartwig.hmftools.datamodel.immuno.ImmutableImmuneEscapeRecord;
-import com.hartwig.hmftools.datamodel.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.datamodel.linx.FusionPhasedType;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxFusion;
-import com.hartwig.hmftools.datamodel.linx.ImmutableLinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxRecord;
-import com.hartwig.hmftools.datamodel.linx.ImmutableLinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
 import com.hartwig.hmftools.datamodel.linx.LinxFusionType;
 import com.hartwig.hmftools.datamodel.linx.LinxGeneOrientation;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
-import com.hartwig.hmftools.datamodel.linx.LinxUnreportableReason;
 import com.hartwig.hmftools.datamodel.metrics.ImmutableWGSMetrics;
 import com.hartwig.hmftools.datamodel.orange.ExperimentType;
 import com.hartwig.hmftools.datamodel.orange.ImmutableOrangePlots;
@@ -45,18 +42,14 @@ import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
 import com.hartwig.hmftools.datamodel.orange.OrangeSample;
 import com.hartwig.hmftools.datamodel.peach.ImmutablePeachGenotype;
 import com.hartwig.hmftools.datamodel.purple.HotspotType;
-import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleAllelicDepth;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleCharacteristics;
-import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleFit;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGainDeletion;
-import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGeneCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleQC;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleVariant;
-import com.hartwig.hmftools.datamodel.purple.ImmutableTumorStats;
 import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
@@ -77,7 +70,6 @@ import com.hartwig.hmftools.datamodel.virus.VirusBreakendQCStatus;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
-import com.hartwig.hmftools.datamodel.virus.VirusLikelihoodType;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -202,7 +194,7 @@ public class TestOrangeJsonWriter
                 .adjustedCopyNumber(3.02)
                 .adjustedVAF(1.2)
                 .hotspot(HotspotType.NON_HOTSPOT)
-                .tumorDepth(ImmutablePurpleAllelicDepth.builder().totalReadCount(20).alleleReadCount(10).build())
+                .tumorDepth(ImmutableAllelicDepth.builder().totalReadCount(20).alleleReadCount(10).build())
                 .subclonalLikelihood(0.0)
                 .somaticLikelihood(PurpleSomaticLikelihood.MEDIUM)
                 .biallelic(false)
@@ -235,7 +227,7 @@ public class TestOrangeJsonWriter
                 .adjustedCopyNumber(2.0)
                 .adjustedVAF(1.2)
                 .hotspot(HotspotType.HOTSPOT)
-                .tumorDepth(ImmutablePurpleAllelicDepth.builder().totalReadCount(30).alleleReadCount(20).build())
+                .tumorDepth(ImmutableAllelicDepth.builder().totalReadCount(30).alleleReadCount(20).build())
                 .subclonalLikelihood(0.2)
                 .somaticLikelihood(PurpleSomaticLikelihood.UNKNOWN)
                 .biallelic(false)
@@ -299,24 +291,6 @@ public class TestOrangeJsonWriter
                         .build()))
                 .somaticVariants(List.of(somaticVariant))
                 .germlineVariants(List.of(germlineVariant))
-                .somaticCopyNumbers(List.of(ImmutablePurpleCopyNumber.builder()
-                        .chromosome("1")
-                        .start(10)
-                        .end(20)
-                        .averageTumorCopyNumber(4.1)
-                        .build())
-                )
-                .somaticGeneCopyNumbers(List.of(ImmutablePurpleGeneCopyNumber.builder()
-                        .gene("gene")
-                        .chromosome("12")
-                        .chromosomeBand("p13")
-                        .transcript("trans")
-                        .isCanonical(true)
-                        .minCopyNumber(1.2)
-                        .maxCopyNumber(1.2)
-                        .minMinorAlleleCopyNumber(0.4)
-                        .build())
-                )
                 .somaticGainsDels(List.of(ImmutablePurpleGainDeletion.builder()
                                 .driver(deletionDriver)
                         .chromosome("5")
@@ -325,7 +299,9 @@ public class TestOrangeJsonWriter
                         .maxCopyNumber(1.2)
                         .relativeCopyNumber(1.2)
                         .minMinorAlleleCopies(0.1)
-                        .exonRange("FULL")
+                        .geneRange("FULL")
+                        .exonStart(null)
+                        .exonEnd(null)
                         .tpm(null)
                         .tpmPercentile(null)
                         .tpmFoldChange(null)
@@ -359,40 +335,17 @@ public class TestOrangeJsonWriter
                 .build();
 
         return ImmutableLinxRecord.builder()
-                .addSomaticStructuralVariants(ImmutableLinxSvAnnotation.builder()
-                        .vcfId("id")
-                        .svId(1)
-                        .clusterId(2)
-                        .clusterReason("")
-                        .fragileSiteStart(false)
-                        .fragileSiteEnd(false)
-                        .isFoldback(false)
-                        .lineTypeStart("NONE")
-                        .lineTypeEnd("NONE")
-                        .junctionCopyNumberMin(2.0)
-                        .junctionCopyNumberMax(3.0)
-                        .geneStart("PTENR")
-                        .geneEnd("PTEN")
-                        .localTopologyIdStart(0)
-                        .localTopologyIdEnd(1)
-                        .localTopologyStart("ISOLATED_S")
-                        .localTopologyEnd("ISOLATED_BE")
-                        .localTICountStart(3)
-                        .localTICountEnd(4)
-                        .build())
                 .addFusions(ImmutableLinxFusion.builder()
-                        .reported(true)
-                        .driverLikelihood(FusionLikelihoodType.HIGH)
+                        .driverInterpretation(DriverInterpretation.HIGH)
                         .reportedType(LinxFusionType.KNOWN_PAIR)
-                        .addUnreportedReasons(LinxUnreportableReason.NONE)
                         .fusedExonUp(1)
                         .fusedExonDown(2)
-                        .geneStart("TMPRSS2")
-                        .geneTranscriptStart("ENST00000332149")
-                        .geneContextStart("Exon 1")
-                        .geneEnd("ETV4")
-                        .geneTranscriptEnd("ENST00000319349")
-                        .geneContextEnd("Exon 2")
+                        .geneUp("TMPRSS2")
+                        .transcriptUp("ENST00000332149")
+                        .contextUp("Exon 1")
+                        .geneDown("ETV4")
+                        .transcriptDown("ENST00000319349")
+                        .contextDown("Exon 2")
                         .phased(FusionPhasedType.INFRAME)
                         .junctionCopyNumber(1.1)
                         .chainLinks(0)
@@ -401,13 +354,6 @@ public class TestOrangeJsonWriter
                         .domainsLost("")
                         .build())
                 .addSomaticBreakends(somaticBreakend)
-                .addSomaticHomozygousDisruptions(ImmutableLinxHomozygousDisruption.builder()
-                        .chromosome("4")
-                        .chromosomeBand("p1.12")
-                        .gene("NF1")
-                        .transcript("ENST00000358273")
-                        .isCanonical(true)
-                        .build())
                 .build();
     }
 
@@ -419,7 +365,7 @@ public class TestOrangeJsonWriter
                 .integrations(1)
                 .interpretation(VirusInterpretation.HPV)
                 .reported(true)
-                .driverLikelihood(VirusLikelihoodType.HIGH)
+                .driverInterpretation(DriverInterpretation.HIGH)
                 .percentageCovered(0.9)
                 .meanCoverage(0)
                 .build();
@@ -430,7 +376,7 @@ public class TestOrangeJsonWriter
                 .integrations(0)
                 .interpretation(null)     // nullable field
                 .reported(false)
-                .driverLikelihood(VirusLikelihoodType.LOW)
+                .driverInterpretation(DriverInterpretation.LOW)
                 .percentageCovered(0.4)
                 .meanCoverage(0)
                 .build();

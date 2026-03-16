@@ -10,7 +10,6 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.amber.contamination.TumorContamination;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
@@ -22,15 +21,8 @@ public class TumorAnalysis
     private ListMultimap<Chromosome, TumorBAF> mBafs;
     private ListMultimap<Chromosome, TumorContamination> mContamination;
 
-    public ListMultimap<Chromosome, TumorBAF> getBafs()
-    {
-        return mBafs;
-    }
-
-    public ListMultimap<Chromosome, TumorContamination> getContamination()
-    {
-        return mContamination;
-    }
+    public ListMultimap<Chromosome, TumorBAF> getBafs() { return mBafs; }
+    public ListMultimap<Chromosome, TumorContamination> getContamination() { return mContamination; }
 
     public TumorAnalysis(
             final AmberConfig config, SamReaderFactory readerFactory,
@@ -50,7 +42,7 @@ public class TumorAnalysis
         AMB_LOGGER.info("processing tumor germline heterozygous({}) and homozygous({}) sites",
                 germlineHetLoci.values().size(), germlineHomLoci.size());
 
-        Map<Chromosome, List<PositionEvidence>> chrPositionEvidence = Maps.newHashMap();
+        Map<Chromosome,List<PositionEvidence>> chrPositionEvidence = Maps.newHashMap();
         Map<PositionEvidence, PositionEvidence> contaminationBafMap = Maps.newHashMap();
         List<TumorBAF> tumorBAFs = Lists.newArrayList();
 
@@ -100,9 +92,7 @@ public class TumorAnalysis
 
         mBafs = ArrayListMultimap.create();
 
-        tumorBAFs.stream()
-                .filter(x -> x.TumorEvidence.IndelCount == 0)
-                .forEach(x -> mBafs.put(HumanChromosome.fromString(x.chromosome()), x));
+        tumorBAFs.stream().filter(x -> x.TumorEvidence.IndelCount == 0).forEach(x -> mBafs.put(HumanChromosome.fromString(x.chromosome()), x));
 
         mContamination = ArrayListMultimap.create();
 

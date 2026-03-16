@@ -35,23 +35,4 @@ public class IsofoxConversionTest
         assertNull(convertedFlagged.medianTpmCancer());
         assertNull(convertedFlagged.percentileCancer());
     }
-
-    @Test
-    public void shouldConvertFusionsWithoutGeneNames()
-    {
-        ImmutableRnaFusion fusion = IsofoxTestFactory.rnaFusionBuilder()
-                .chromosomeUp("1")
-                .chromosomeDown("1")
-                .positionUp(100)
-                .positionDown(200)
-                .junctionTypeUp("UNKNOWN")
-                .junctionTypeDown("UNKNOWN")
-                .svType(StructuralVariantType.DEL)
-                .build();
-
-        RnaFusion convertedFusion = convert(fusion);
-        assertNull(convertedFusion.geneStart());
-        assertNull(convertedFusion.geneEnd());
-        assertEquals("::", convertedFusion.display());
-    }
 }

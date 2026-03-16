@@ -223,7 +223,7 @@ public class AmberConfig
 
     public String primaryReference()
     {
-        return ReferenceIds.isEmpty() ? "" : ReferenceIds.get(0);
+        return ReferenceIds.get(0);
     }
 
     public boolean isTumorOnly()

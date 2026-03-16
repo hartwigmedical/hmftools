@@ -1,13 +1,13 @@
 package com.hartwig.hmftools.orange.report.tables;
 
-import static com.hartwig.hmftools.orange.report.ReportResources.formatSingleDigitDecimal;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatSingleDigitDecimal;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_CHR;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_CN;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_REL_CN;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_TYPE;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.cellArray;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.floatArray;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.intToFloatArray;
 
 import java.util.List;
 
@@ -18,6 +18,8 @@ import com.hartwig.hmftools.orange.report.util.Cells;
 import com.hartwig.hmftools.orange.report.util.Tables;
 import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Table;
+
+import org.apache.logging.log4j.util.Strings;
 
 public final class ChrArmCopyNumberTable
 {
@@ -39,8 +41,9 @@ public final class ChrArmCopyNumberTable
         addEntry(cells, widths, cellEntries, 1, COL_TYPE);
         addEntry(cells, widths, cellEntries, 1, COL_CN);
         addEntry(cells, widths, cellEntries, 1, COL_REL_CN);
+        addEntry(cells, widths, cellEntries, 3, Strings.EMPTY); // to space things out
 
-        Table table = Tables.createContent(width, floatArray(widths), cellArray(cellEntries));
+        Table table = Tables.createContent(width, intToFloatArray(widths), cellArray(cellEntries));
 
         for(PurpleChrArmCopyNumber chrArmCopyNumber : chrArmCopyNumbers)
         {
@@ -49,6 +52,7 @@ public final class ChrArmCopyNumberTable
             table.addCell(cells.createContent(chrArmCopyNumber.type()));
             table.addCell(cells.createContent(formatSingleDigitDecimal(chrArmCopyNumber.copyNumber())));
             table.addCell(cells.createContent(formatSingleDigitDecimal(chrArmCopyNumber.relativeCopyNumber())));
+            table.addCell(cells.createContent(Strings.EMPTY));
         }
 
         return new Tables(reportResources).createWrapping(table, title);

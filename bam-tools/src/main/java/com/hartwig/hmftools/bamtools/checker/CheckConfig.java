@@ -50,6 +50,7 @@ public class CheckConfig
     public final String BamToolPath;
     public final boolean SkipUnmapped;
     public final boolean WriteIncompleteFragments;
+    public final int MaxWriteIncompleteFragments;
     public final boolean DropIncompleteFragments;
 
     // debug
@@ -60,6 +61,7 @@ public class CheckConfig
     public static final String OUTPUT_BAM_FILE = "output_bam";
     public static final String SKIP_UNMAPPED = "skip_unmapped";
     public static final String WRITE_INCOMPLETE_FRAGS = "write_incompletes";
+    public static final String MAX_WRITE_INCOMPLETE_FRAGS = "max_write_incompletes";
     public static final String DROP_INCOMPLETE_FRAGS = "drop_incompletes";
     public static final String CFG_LOG_READ_COUNT = "log_read_count";
 
@@ -99,7 +101,9 @@ public class CheckConfig
 
         PerfDebug = configBuilder.hasFlag(PERF_DEBUG);
         SkipUnmapped = configBuilder.hasFlag(SKIP_UNMAPPED);
-        WriteIncompleteFragments = configBuilder.hasFlag(WRITE_INCOMPLETE_FRAGS);
+
+        MaxWriteIncompleteFragments = configBuilder.getInteger(MAX_WRITE_INCOMPLETE_FRAGS);
+        WriteIncompleteFragments = configBuilder.hasFlag(WRITE_INCOMPLETE_FRAGS) || MaxWriteIncompleteFragments > 0;
         DropIncompleteFragments = configBuilder.hasFlag(DROP_INCOMPLETE_FRAGS);
 
         LOG_READ_COUNT = configBuilder.getInteger(CFG_LOG_READ_COUNT);
@@ -134,6 +138,7 @@ public class CheckConfig
 
         configBuilder.addInteger(PARTITION_SIZE, "Partition size", DEFAULT_CHR_PARTITION_SIZE);
         configBuilder.addInteger(CFG_LOG_READ_COUNT, "Log partition processed read count frequency", LOG_READ_COUNT);
+        configBuilder.addInteger(MAX_WRITE_INCOMPLETE_FRAGS, "Max incomplete fragments to write (0 means unlimited)", 0);
         configBuilder.addFlag(PERF_DEBUG, PERF_DEBUG_DESC);
         configBuilder.addFlag(SKIP_UNMAPPED, "Skip full unmapped reads");
         configBuilder.addFlag(WRITE_INCOMPLETE_FRAGS, "Write incomplete fragments to TSV");

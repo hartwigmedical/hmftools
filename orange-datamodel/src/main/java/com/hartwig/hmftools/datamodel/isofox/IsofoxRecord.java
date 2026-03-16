@@ -13,33 +13,17 @@ import org.jetbrains.annotations.Nullable;
 public interface IsofoxRecord
 {
     @NotNull
-    IsofoxRnaStatistics summary();
+    RnaStatistics summary();
 
     @NotNull
-    List<GeneExpression> allGeneExpressions();
+    List<GeneExpression> highExpressionGenes();
 
     @NotNull
-    List<GeneExpression> reportableHighExpression();
+    List<GeneExpression> lowExpressionGenes();
 
     @NotNull
-    List<GeneExpression> reportableLowExpression();
+    List<RnaFusion> fusions();
 
     @NotNull
-    List<RnaFusion> allFusions();
-
-    @NotNull
-    List<RnaFusion> reportableNovelKnownFusions();
-
-    @NotNull
-    List<RnaFusion> reportableNovelPromiscuousFusions();
-
-    @NotNull
-    List<NovelSpliceJunction> allNovelSpliceJunctions();
-
-    @NotNull
-    List<NovelSpliceJunction> reportableSkippedExons();
-
-    @NotNull
-    List<NovelSpliceJunction> reportableNovelExonsIntrons();
-
+    List<NovelSpliceJunction> novelSpliceJunctions();
 }

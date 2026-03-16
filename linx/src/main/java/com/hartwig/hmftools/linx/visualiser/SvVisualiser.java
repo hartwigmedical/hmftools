@@ -3,6 +3,7 @@ package com.hartwig.hmftools.linx.visualiser;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
+import static com.hartwig.hmftools.common.linx.LinxCommonTypes.formVisPlotClusterPrefix;
 import static com.hartwig.hmftools.linx.LinxApplication.APP_NAME;
 
 import java.io.File;
@@ -84,7 +85,7 @@ public class SvVisualiser implements AutoCloseable
 
         if(mConfig.EnsemblDataDir != null)
         {
-            VIS_LOGGER.info("loading Ensembl data");
+            VIS_LOGGER.debug("loading Ensembl data");
             mEnsemblDataCache = new EnsemblDataCache(mConfig.EnsemblDataDir, mConfig.RefGenVersion);
             mEnsemblDataCache.setRequiredData(true, false, false, true);
             mEnsemblDataCache.load(false);
@@ -133,7 +134,7 @@ public class SvVisualiser implements AutoCloseable
     private void submitDefaultEvents()
     {
         List<Integer> clusterIds = mSampleData.SvData.stream().map(x -> x.ClusterId).distinct().sorted().collect(toList());
-        submitClusters(clusterIds);
+        submitClusters(clusterIds, false);
 
         Set<String> chromosomes = Sets.newHashSet();
         mSampleData.SvData.stream().map(x -> x.ChrStart).filter(HumanChromosome::contains).forEach(chromosomes::add);
@@ -149,7 +150,7 @@ public class SvVisualiser implements AutoCloseable
     private void submitReportableEvents()
     {
         Set<Integer> reportableClusterIds = mSampleData.findReportableClusters();
-        submitClusters(Lists.newArrayList(reportableClusterIds));
+        submitClusters(Lists.newArrayList(reportableClusterIds), true);
 
         submitGeneCNVs();
     }
@@ -158,7 +159,7 @@ public class SvVisualiser implements AutoCloseable
     {
         if(!mConfig.ClusterIds.isEmpty())
         {
-            submitCluster(mConfig.ClusterIds, mConfig.ChainIds, false);
+            submitCluster(mConfig.ClusterIds, mConfig.ChainIds, false, false);
         }
 
         if(!mConfig.Chromosomes.isEmpty())
@@ -181,7 +182,7 @@ public class SvVisualiser implements AutoCloseable
                 if(matchedGeneCnvEntry != null)
                 {
                     geneDriverType = matchedGeneCnvEntry.driver();
-                    VIS_LOGGER.debug("found CNV entry({}) in PURPLE driver catalog for manually selected gene({})",
+                    VIS_LOGGER.debug("found CNV entry({}) in Purple driver catalog for manually selected gene({})",
                             geneDriverType, geneName);
                 }
 
@@ -190,11 +191,11 @@ public class SvVisualiser implements AutoCloseable
         }
     }
 
-    private void submitClusters(List<Integer> clusterIds)
+    private void submitClusters(final List<Integer> clusterIds, boolean reportable)
     {
         for(Integer clusterId : clusterIds)
         {
-            submitCluster(Lists.newArrayList(clusterId), Collections.EMPTY_LIST, true);
+            submitCluster(List.of(clusterId), Collections.EMPTY_LIST, true, reportable);
         }
     }
 
@@ -335,14 +336,20 @@ public class SvVisualiser implements AutoCloseable
         return exonList;
     }
 
-    private void submitCluster(final List<Integer> clusterIds, final List<Integer> chainIds, boolean skipSingles)
+    private void submitCluster(final List<Integer> clusterIds, final List<Integer> chainIds, boolean skipSingles, boolean reportable)
     {
         List<VisSvData> clusterSvs = mSampleData.SvData.stream()
                 .filter(x -> clusterIds.contains(x.ClusterId))
                 .filter(x -> chainIds.isEmpty() || chainIds.contains(x.ChainId))
                 .collect(toList());
 
-        String clusterIdsStr = clusterIds.stream().map(x -> String.valueOf(x)).collect(Collectors.joining("-"));
+        String clusterIdsStr = clusterIds.stream().map(x -> String.valueOf(x)).collect(Collectors.joining("_"));
+
+        if(clusterSvs.isEmpty())
+        {
+            VIS_LOGGER.warn("cluster({}) not present in svAnnotations file", clusterIdsStr);
+            return;
+        }
 
         if(mCircosConfig.exceedsMaxPlotSvCount(clusterSvs.size()))
         {
@@ -356,18 +363,12 @@ public class SvVisualiser implements AutoCloseable
                 .filter(x -> chainIds.isEmpty() || chainIds.contains(x.ChainId))
                 .collect(toList());
 
-        List<VisGeneExon> clusterExons =
-                mSampleData.Exons.stream().filter(x -> clusterIds.contains(x.ClusterId)).distinct().collect(toList());
-
-        if(clusterSvs.isEmpty())
-        {
-            VIS_LOGGER.warn("cluster {} not present in file", clusterIdsStr);
-            return;
-        }
+        List<VisGeneExon> clusterExons = mSampleData.Exons.stream()
+                .filter(x -> clusterIds.contains(x.ClusterId)).distinct().collect(toList());
 
         if(clusterSvs.size() == 1 && skipSingles && clusterExons.isEmpty())
         {
-            VIS_LOGGER.debug("skipping simple cluster {}", clusterIdsStr);
+            VIS_LOGGER.debug("skipping simple cluster({})", clusterIdsStr);
             return;
         }
 
@@ -376,7 +377,7 @@ public class SvVisualiser implements AutoCloseable
         segmentChainIds.removeAll(linkChainIds);
         if(!segmentChainIds.isEmpty())
         {
-            VIS_LOGGER.warn("Cluster {} contains chain ids {} not found in the links", clusterIdsStr, segmentChainIds);
+            VIS_LOGGER.warn("cluster({}) contains chain ids({}) not found in the links", clusterIdsStr, segmentChainIds);
             return;
         }
 
@@ -392,38 +393,37 @@ public class SvVisualiser implements AutoCloseable
         }
         else
         {
-            fileId += clusterIds.size() > 1 ? ".clusters-" : ".cluster-";
-            fileId += clusterIdsStr;
+            fileId += formVisPlotClusterPrefix(clusterIdsStr);
 
-            if(clusterIds.size() == 1)
+            if(clusterIds.size() == 1 && !reportable)
             {
                 String resolvedTypeString = clusterSvs.get(0).ClusterResolvedType.toString();
                 fileId += ".resolved_type-" + resolvedTypeString;
             }
         }
 
-        fileId += ".sv_count-" + clusterSvs.size();
+        if(!reportable)
+            fileId += ".sv_count-" + clusterSvs.size();
 
         if(mConfig.Debug)
             fileId += ".debug";
 
-        List<VisProteinDomain> clusterProteinDomains =
-                mSampleData.ProteinDomains.stream().filter(x -> clusterIds.contains(x.ClusterId)).distinct().collect(toList());
+        List<VisProteinDomain> clusterProteinDomains = mSampleData.ProteinDomains.stream()
+                .filter(x -> clusterIds.contains(x.ClusterId)).distinct().collect(toList());
 
         List<VisFusion> clusterFusions = mSampleData.Fusions.stream().filter(x -> clusterIds.contains(x.ClusterId)).collect(toList());
 
-        submitFiltered(clusterIds.size() == 1 ? ColorPicker::chainColors : ColorPicker::clusterColors,
-                fileId, clusterSvs, clusterSegments, clusterExons, clusterProteinDomains, clusterFusions, true);
+        ColorPickerFactory colorPickerFactory = clusterIds.size() == 1 ? ColorPicker::chainColors : ColorPicker::clusterColors;
+
+        submitFiltered(
+                colorPickerFactory, fileId, clusterSvs, clusterSegments, clusterExons, clusterProteinDomains,
+                clusterFusions, true);
     }
 
-    private void submitFiltered(final ColorPickerFactory colorPickerFactory,
-            final String fileId,
-            final List<VisSvData> filteredLinks,
-            final List<VisSegment> filteredSegments,
-            final List<VisGeneExon> filteredExons,
-            final List<VisProteinDomain> filteredProteinDomains,
-            final List<VisFusion> filteredFusions,
-            boolean showSimpleSvSegments)
+    private void submitFiltered(
+            final ColorPickerFactory colorPickerFactory, final String fileId, final List<VisSvData> filteredLinks,
+            final List<VisSegment> filteredSegments, final List<VisGeneExon> filteredExons, final List<VisProteinDomain> filteredProteinDomains,
+            final List<VisFusion> filteredFusions, boolean showSimpleSvSegments)
     {
         List<GenomePosition> positionsToCover = Lists.newArrayList();
         positionsToCover.addAll(VisLinks.allPositions(filteredLinks));

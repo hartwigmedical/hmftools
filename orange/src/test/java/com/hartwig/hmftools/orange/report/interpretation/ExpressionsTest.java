@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.orange.report.interpretation;
 
-import static com.hartwig.hmftools.orange.report.ReportResources.formatPercentileField;
-import static com.hartwig.hmftools.orange.report.ReportResources.formatTpmField;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatPercentileField;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatTpmField;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;

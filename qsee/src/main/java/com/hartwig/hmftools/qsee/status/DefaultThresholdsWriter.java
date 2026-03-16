@@ -4,6 +4,8 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.qsee.common.QseeConstants.APP_NAME;
 import static com.hartwig.hmftools.qsee.common.QseeConstants.QC_LOGGER;
+import static com.hartwig.hmftools.qsee.prep.QseePrepConfig.TARGETED_MODE;
+import static com.hartwig.hmftools.qsee.prep.QseePrepConfig.TARGETED_MODE_DESC;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -21,9 +23,9 @@ public class DefaultThresholdsWriter
         return checkAddDirSeparator(basePath) + "qsee.thresholds.default.tsv";
     }
 
-    private static void writeDefaults(String filename, boolean overridableOnly)
+    private static void writeDefaults(String filename, boolean overridableOnly, boolean targetedMode)
     {
-        ThresholdRegistry defaultThresholds = ThresholdRegistry.createDefault();
+        ThresholdRegistry defaultThresholds = ThresholdRegistry.createDefault(targetedMode);
 
         List<QcThreshold> thresholdsToWrite = new ArrayList<>(defaultThresholds.getAll());
 
@@ -47,14 +49,16 @@ public class DefaultThresholdsWriter
 
         configBuilder.addPath(OUTPUT_DIR, false, OUTPUT_DIR);
         configBuilder.addFlag(NO_OVERRIDABLE_ONLY, NO_OVERRIDABLE_ONLY_DESC);
+        configBuilder.addFlag(TARGETED_MODE, TARGETED_MODE_DESC);
         configBuilder.checkAndParseCommandLine(args);
 
         String outputDir = configBuilder.getValue(OUTPUT_DIR, "");
         String outputFile = generateFilename(outputDir);
 
         boolean overridableOnly = !configBuilder.hasFlag(NO_OVERRIDABLE_ONLY);
+        boolean targetedMode = !configBuilder.hasFlag(TARGETED_MODE);
 
         QC_LOGGER.info("Writing default thresholds to: {}", outputFile);
-        writeDefaults(outputFile, overridableOnly);
+        writeDefaults(outputFile, overridableOnly, targetedMode);
     }
 }

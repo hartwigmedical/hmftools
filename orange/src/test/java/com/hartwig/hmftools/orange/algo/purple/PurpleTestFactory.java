@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
+import com.hartwig.hmftools.common.driver.DriverCatalog;
+import com.hartwig.hmftools.common.driver.DriverCatalogTestFactory;
 import com.hartwig.hmftools.common.purple.FittedPurity;
 import com.hartwig.hmftools.common.purple.FittedPurityMethod;
 import com.hartwig.hmftools.common.purple.FittedPurityScore;
@@ -12,18 +14,24 @@ import com.hartwig.hmftools.common.purple.PurpleQC;
 import com.hartwig.hmftools.common.purple.RunMode;
 import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
 import com.hartwig.hmftools.common.purple.MicrosatelliteStatus;
-
-import org.jetbrains.annotations.NotNull;
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleDriver;
+import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
+import com.hartwig.hmftools.orange.conversion.PurpleConversion;
 
 public final class PurpleTestFactory
 {
-    @NotNull
     public static PurpleData createMinimalTestPurpleData()
     {
         return createMinimalTestPurpleDataBuilder().build();
     }
 
-    @NotNull
+    public static ImmutablePurpleDriver.Builder purpleDriverBuilder()
+    {
+        DriverCatalog catalog = DriverCatalogTestFactory.builder().build();
+        PurpleDriver driver = PurpleConversion.convert(catalog);
+        return ImmutablePurpleDriver.builder().from(driver);
+    }
+
     public static ImmutablePurpleData.Builder createMinimalTestPurpleDataBuilder()
     {
         PurityContext minimalContext = ImmutablePurityContext.builder()
@@ -48,13 +56,11 @@ public final class PurpleTestFactory
         return ImmutablePurpleData.builder().purityContext(minimalContext);
     }
 
-    @NotNull
     private static FittedPurity emptyFit()
     {
         return new FittedPurity(0, 0, 0, 0, 0, 0);
     }
 
-    @NotNull
     private static FittedPurityScore emptyScore()
     {
         return ImmutableFittedPurityScore.builder()
@@ -67,7 +73,6 @@ public final class PurpleTestFactory
                 .build();
     }
 
-    @NotNull
     private static PurpleQC qcPass()
     {
         return ImmutablePurpleQC.builder()

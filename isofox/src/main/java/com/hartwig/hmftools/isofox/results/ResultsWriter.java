@@ -80,7 +80,8 @@ public class ResultsWriter
 
     // controlled by other components but instantiated once for output synchronisation
     private BufferedWriter mReadDataWriter;
-    private BufferedWriter mAltSpliceJunctionWriter;
+    private BufferedWriter mAltSjUnfilteredWriter;
+    private BufferedWriter mAltSjPassingWriter;
     private BufferedWriter mGeneFragLengthWriter;
     private BufferedWriter mReadGcRatioWriter;
     private BufferedWriter mRetainedIntronWriter;
@@ -98,7 +99,8 @@ public class ResultsWriter
         mSpliceJunctionWriter = null;
         mCategoryCountsWriter = null;
         mReadDataWriter = null;
-        mAltSpliceJunctionWriter = null;
+        mAltSjUnfilteredWriter = null;
+        mAltSjPassingWriter = null;
         mGeneFragLengthWriter = null;
         mReadGcRatioWriter = null;
         mRetainedIntronWriter = null;
@@ -123,7 +125,8 @@ public class ResultsWriter
         closeBufferedWriter(mSpliceJunctionWriter);
         closeBufferedWriter(mCategoryCountsWriter);
         closeBufferedWriter(mReadDataWriter);
-        closeBufferedWriter(mAltSpliceJunctionWriter);
+        closeBufferedWriter(mAltSjUnfilteredWriter);
+        closeBufferedWriter(mAltSjPassingWriter);
         closeBufferedWriter(mGeneFragLengthWriter);
         closeBufferedWriter(mReadGcRatioWriter);
         closeBufferedWriter(mRetainedIntronWriter);
@@ -154,7 +157,10 @@ public class ResultsWriter
             mSpliceSiteWriter = SpliceSiteCounter.createWriter(mConfig);
 
         if(mConfig.runFunction(ALT_SPLICE_JUNCTIONS))
-            mAltSpliceJunctionWriter = AltSpliceJunctionFinder.createWriter(mConfig);
+        {
+            mAltSjUnfilteredWriter = AltSpliceJunctionFinder.createUnfilteredWriter(mConfig);
+            mAltSjPassingWriter = AltSpliceJunctionFinder.createPassingWriter(mConfig);
+        }
 
         if(mConfig.runFunction(RETAINED_INTRONS))
             mRetainedIntronWriter = RetainedIntronFinder.createWriter(mConfig);
@@ -170,7 +176,8 @@ public class ResultsWriter
     }
 
     public BufferedWriter getCategoryCountsWriter() { return mCategoryCountsWriter;}
-    public BufferedWriter getAltSpliceJunctionWriter() { return mAltSpliceJunctionWriter;}
+    public BufferedWriter getAltSjUnfilteredWriter() { return mAltSjUnfilteredWriter;}
+    public BufferedWriter getAltSjPassingWriter() { return mAltSjPassingWriter;}
     public BufferedWriter getRetainedIntronWriter() { return mRetainedIntronWriter;}
     public BufferedWriter getReadDataWriter() { return mReadDataWriter; }
     public BufferedWriter getSpliceSiteWriter() { return mSpliceSiteWriter; }

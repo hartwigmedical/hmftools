@@ -62,6 +62,12 @@ public final class CommonConfig
     public static final String AMBER_DIR_CFG = toolDirectory("amber");
     public static final String AMBER_DIR_DESC = toolDirectoryDesc("Amber");
 
+    public static final String BAM_METRICS_TUMOR_DIR_CFG = toolDirectory("bam_metrics_tumor");
+    public static final String BAM_METRICS_TUMOR_DIR_DESC = toolDirectoryDesc("BamMetrics tumor");
+
+    public static final String BAM_METRICS_REF_DIR_CFG = toolDirectory("bam_metrics_ref");
+    public static final String BAM_METRICS_REF_DIR_DESC = toolDirectoryDesc("BamMetrics reference");
+
     public static final String CHORD_DIR_CFG = toolDirectory("chord");
     public static final String CHORD_DIR_DESC = toolDirectoryDesc("Chord");
 
@@ -94,6 +100,12 @@ public final class CommonConfig
 
     public static final String NEO_DIR_CFG = toolDirectory("neo");
     public static final String NEO_DIR_DESC = toolDirectoryDesc("Neo");
+
+    public static final String PAVE_SOMATIC_DIR_CFG = toolDirectory("pave_somatic");
+    public static final String PAVE_SOMATIC_DIR_DESC = toolDirectoryDesc("Pave somatic");
+
+    public static final String PAVE_GERMLINE_DIR_CFG = toolDirectory("pave_germline");
+    public static final String PAVE_GERMLINE_DIR_DESC = toolDirectoryDesc("Pave germline");
 
     public static final String PEACH_DIR_CFG = toolDirectory("peach");
     public static final String PEACH_DIR_DESC = toolDirectoryDesc("Peach");
@@ -133,12 +145,6 @@ public final class CommonConfig
 
     public static final String V_CHORD_DIR_CFG = toolDirectory("vchord");
     public static final String V_CHORD_DIR_DESC = toolDirectoryDesc("vChord");
-
-    public static final String TUMOR_METRICS_DIR_CFG = "tumor_metrics_dir";
-    public static final String TUMOR_METRICS_DIR_DESC = "Path to sample metrics directory";
-
-    public static final String REF_METRICS_DIR_CFG = "ref_metrics_dir";
-    public static final String REF_METRICS_DIR_DESC = "Path to reference metrics directory";
 
     private static String toolDirectory(final String toolName)
     {

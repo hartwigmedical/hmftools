@@ -2,6 +2,17 @@ package com.hartwig.hmftools.purple;
 
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.PIPELINE_FORMAT_CFG;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.PIPELINE_FORMAT_FILE_CFG;
+import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectoriesFile.COBALT_DIR;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.AMBER_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.AMBER_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.COBALT_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.COBALT_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.ESVEE_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.ESVEE_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PAVE_GERMLINE_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PAVE_GERMLINE_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PAVE_SOMATIC_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PAVE_SOMATIC_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
@@ -25,23 +36,29 @@ public class SampleDataFiles
     public final String CobaltDirectory;
 
     public static final String SAMPLE_DIR = "sample_dir";
-    public static final String AMBER = "amber";
-    public static final String COBALT = "cobalt";
     public static final String SOMATIC_SV_VCF = "somatic_sv_vcf";
     public static final String GERMLINE_SV_VCF = "germline_sv_vcf";
     public static final String GERMLINE_VARIANTS = "germline_vcf";
     public static final String SOMATIC_VARIANTS = "somatic_vcf";
+
+    @Deprecated
+    private static final String AMBER = "amber";
+    private static final String COBALT = "cobalt";
 
     static void addConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addPath(SAMPLE_DIR, false,
                 "Sample data directory containing Cobalt, Amber, Pave and Esvee files");
 
-        configBuilder.addPath(COBALT, false,
-                "Cobalt directory - required if <run_dir> not set, otherwise defaults to <run_dir>/cobalt");
+        configBuilder.addPath(COBALT_DIR_CFG, false, COBALT_DIR_DESC);
+        configBuilder.addPath(COBALT, false, COBALT_DIR_DESC + " deprecated, use: " + COBALT_DIR_CFG);
 
-        configBuilder.addPath(AMBER, false,
-                "Amber directory - required if <run_dir> not set, otherwise defaults to <run_dir>/amber");
+        configBuilder.addPath(AMBER, false, AMBER_DIR_DESC + " deprecated, use: " + AMBER_DIR_CFG);
+        configBuilder.addPath(AMBER_DIR_CFG, false, AMBER_DIR_DESC);
+
+        configBuilder.addPath(ESVEE_DIR_CFG, false, ESVEE_DIR_DESC);
+        configBuilder.addPath(PAVE_SOMATIC_DIR_CFG, false, PAVE_SOMATIC_DIR_DESC);
+        configBuilder.addPath(PAVE_GERMLINE_DIR_CFG, false, PAVE_GERMLINE_DIR_DESC);
 
         configBuilder.addPath(SOMATIC_SV_VCF, false, "Somatic SV VCF");
         configBuilder.addPath(GERMLINE_SV_VCF, false, "Germline SV VCF to annotate");

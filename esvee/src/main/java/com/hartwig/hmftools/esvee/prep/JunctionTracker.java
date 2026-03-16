@@ -49,6 +49,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.perf.PerformanceCounter;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.utils.StartEndPair;
 import com.hartwig.hmftools.esvee.prep.types.DiscordantStats;
 import com.hartwig.hmftools.esvee.prep.types.JunctionData;
 import com.hartwig.hmftools.esvee.prep.types.ReadFilterConfig;
@@ -392,15 +393,15 @@ public class JunctionTracker
             if(ReadFilterType.isSet(read.filters(), SOFT_CLIP_LENGTH))
                 continue;
 
-            for(int i = 0; i <= 1; ++i)
+            for(StartEndPair se : StartEndPair.values())
             {
-                int scLength = (i == 0) ? read.leftClipLength() : read.rightClipLength();
+                int scLength = se.isStart() ? read.leftClipLength() : read.rightClipLength();
 
                 // check with the shorter LINE soft-clip length since the soft-clip filter has already been checked, which takes LINE into account
                 if(scLength < MIN_LINE_SOFT_CLIP_LENGTH)
                     continue;
 
-                Orientation orientation = (i == 0) ? REVERSE : FORWARD;
+                Orientation orientation = se.isStart() ? REVERSE : FORWARD;
 
                 int position = orientation.isReverse() ? read.AlignmentStart : read.AlignmentEnd;
 
@@ -487,9 +488,9 @@ public class JunctionTracker
         int readBoundsMax = max(read.AlignmentEnd, impliedUnclippedEnd);
 
         // reads with a sufficiently long indel only need to cover a junction with any of their read bases, not the indel itself
-        for(int i = 0; i <= 1; ++i)
+        for(StartEndPair upDown : StartEndPair.values())
         {
-            boolean searchUp = (i == 0);
+            boolean searchUp = upDown.isStart();
 
             int index = searchUp ? closeJunctionIndex : closeJunctionIndex - 1;
 
@@ -511,16 +512,16 @@ public class JunctionTracker
 
                 boolean hasExactSupport = false;
 
-                for(int se = SE_START; se <= SE_END; ++se)
+                for(StartEndPair se : StartEndPair.values())
                 {
-                    int indelPos = se == SE_START ? indelCoords.PosStart : indelCoords.PosEnd;
+                    int indelPos = se.isStart() ? indelCoords.PosStart : indelCoords.PosEnd;
 
                     if(indelPos != junctionData.Position)
                         continue;
 
-                    if(se == SE_START && junctionData.isReverse())
+                    if(se.isStart() && junctionData.isReverse())
                         continue;
-                    else if(se == SE_END && junctionData.isForward())
+                    else if(se.isEnd() && junctionData.isForward())
                         continue;
 
                     // indel coords support a junction
@@ -650,9 +651,9 @@ public class JunctionTracker
         setLastJunctionIndex(closeJuncIndex);
 
         // check up and down from this location
-        for(int i = 0; i <= 1; ++i)
+        for(StartEndPair se : StartEndPair.values())
         {
-            boolean searchUp = (i == 0);
+            boolean searchUp = se.isStart();
 
             int index = searchUp ? closeJuncIndex : closeJuncIndex - 1;
 

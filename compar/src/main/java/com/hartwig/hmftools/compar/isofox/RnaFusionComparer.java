@@ -1,12 +1,10 @@
 package com.hartwig.hmftools.compar.isofox;
 
-import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_DISCORD_FRAGS;
-import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_KNOWN_TYPE;
-import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_REALIGN_FRAGS;
-import static com.hartwig.hmftools.common.rna.RnaFusionFile.FLD_SPLIT_FRAGS;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.isofox.RnaFusionData.FLD_JUNC_TYPE_DOWN;
 import static com.hartwig.hmftools.compar.isofox.RnaFusionData.FLD_JUNC_TYPE_UP;
+import static com.hartwig.hmftools.compar.isofox.RnaFusionData.FLD_KNOWN_TYPE;
+import static com.hartwig.hmftools.compar.isofox.RnaFusionData.FLD_SPLIT_FRAGS;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -50,14 +48,12 @@ public record RnaFusionComparer(ComparConfig mConfig) implements ItemComparer
     public void registerThresholds(final DiffThresholds thresholds)
     {
         thresholds.addFieldThreshold(FLD_SPLIT_FRAGS, 5, 0.05);
-        thresholds.addFieldThreshold(FLD_REALIGN_FRAGS, 5, 0.05);
-        thresholds.addFieldThreshold(FLD_DISCORD_FRAGS, 5, 0.05);
     }
 
     @Override
     public List<String> comparedFieldNames()
     {
-        return List.of(FLD_KNOWN_TYPE, FLD_JUNC_TYPE_UP, FLD_JUNC_TYPE_DOWN, FLD_SPLIT_FRAGS, FLD_REALIGN_FRAGS, FLD_DISCORD_FRAGS);
+        return List.of(FLD_KNOWN_TYPE, FLD_JUNC_TYPE_UP, FLD_JUNC_TYPE_DOWN, FLD_SPLIT_FRAGS);
     }
 
     @Override

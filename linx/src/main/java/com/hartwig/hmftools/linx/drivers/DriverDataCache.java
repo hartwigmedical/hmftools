@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.linx.drivers;
 
-import static com.hartwig.hmftools.common.driver.DriverCategory.TSG;
 import static com.hartwig.hmftools.common.driver.DriverType.DRIVERS_PURPLE_SOMATIC;
 import static com.hartwig.hmftools.common.driver.LikelihoodMethod.DISRUPTION;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
@@ -107,7 +106,7 @@ public class DriverDataCache
         mIsMale = isMale;
     }
 
-    public DriverGeneData createDisruptionDriver(final BreakendGeneData gene, final TranscriptData transData, final DriverType driverType)
+    public DriverGeneData createHomDisruptionDriver(final BreakendGeneData gene, final TranscriptData transData, final DriverType driverType)
     {
         GeneCopyNumber gcnData = findGeneCopyNumber(gene.geneName());
 
@@ -118,7 +117,7 @@ public class DriverDataCache
 
         ReportedStatus reportedStatus = driverGene.reportDisruption() ? ReportedStatus.REPORTED : ReportedStatus.NOT_REPORTED;
 
-        final DriverCatalog driverRecord = ImmutableDriverCatalog.builder()
+        DriverCatalog driverRecord = ImmutableDriverCatalog.builder()
                 .driver(driverType)
                 .category(driverGene.likelihoodType())
                 .gene(gene.geneName())
@@ -141,7 +140,7 @@ public class DriverDataCache
 
         mDriverCatalog.add(driverRecord);
 
-        final GeneData geneData = GeneTransCache.getGeneDataByName(gene.geneName());
+        GeneData geneData = GeneTransCache.getGeneDataByName(gene.geneName());
 
         if(geneData == null)
         {

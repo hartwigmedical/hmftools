@@ -37,16 +37,13 @@
     "germlineDrivers": null,
     "somaticVariants": [],
     "germlineVariants": null,
-    "somaticCopyNumbers": [],
-    "somaticGeneCopyNumbers": [],
     "somaticGainsDels": [],
     "armCopyNumberAbberations": []
   },
   "linx": {
     "somaticStructuralVariants": [],
     "fusions": [],
-    "somaticBreakends": [],
-    "somaticHomozygousDisruptions": []
+    "somaticBreakends": []
   },
   "virusInterpreter": {
     "allViruses": [],

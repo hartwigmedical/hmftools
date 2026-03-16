@@ -56,6 +56,12 @@ public interface DriverGene extends Comparable<DriverGene>
 
     boolean reportPGX();
 
+    boolean reportHighExpression();
+
+    boolean reportLowExpression();
+
+    boolean reportNovelSpliceJunctions();
+
     @Override
     default int compareTo(@NotNull final DriverGene o)
     {

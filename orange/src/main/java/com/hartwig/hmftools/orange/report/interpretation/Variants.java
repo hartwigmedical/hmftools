@@ -5,9 +5,8 @@ import static java.lang.String.format;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.datamodel.purple.PurpleAllelicDepth;
+import com.hartwig.hmftools.datamodel.common.AllelicDepth;
 import com.hartwig.hmftools.orange.report.ReportResources;
-import com.hartwig.hmftools.orange.report.datamodel.VariantEntry;
 
 import org.apache.logging.log4j.util.Strings;
 
@@ -16,9 +15,8 @@ public final class Variants
     public static final String COL_VCN = "VCN";
     public static final String COL_MACN = "MACN";
     public static final String COL_CL = "Clonal";
-    public static final String COL_DL = "Driver";
+    public static final String COL_DRIVER = "Driver";
     public static final String COL_AF = "AF";
-    public static final String COL_DP = "Depth";
     public static final String COL_SL = "Somatic";
     public static final String COL_VARIANT = "Variant";
     public static final String COL_BIALLELIC = "Biallelic";
@@ -28,10 +26,7 @@ public final class Variants
     {
         return variants.stream().sorted((variant1, variant2) ->
         {
-            double driverLikelihood1 = variant1.driverLikelihood() != null ? variant1.driverLikelihood() : -1;
-            double driverLikelihood2 = variant2.driverLikelihood() != null ? variant2.driverLikelihood() : -1;
-
-            int driverCompare = Double.compare(driverLikelihood2, driverLikelihood1);
+            int driverCompare = Double.compare(variant2.driverLikelihood(), variant1.driverLikelihood());
             if(driverCompare != 0)
             {
                 return driverCompare;
@@ -89,7 +84,7 @@ public final class Variants
 
     public static String rnaInfoField(final VariantEntry variant)
     {
-        PurpleAllelicDepth rnaDepth = variant.rnaDepth();
+        AllelicDepth rnaDepth = variant.rnaDepth();
 
         if(rnaDepth == null)
         {

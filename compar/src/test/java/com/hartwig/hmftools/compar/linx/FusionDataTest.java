@@ -37,16 +37,17 @@ public class FusionDataTest extends ComparableItemTest<FusionData, FusionCompare
         fieldToAlternateValueInitializer.put(FLD_REPORTED_TYPE, b -> b.reportedType = alternateValueSource.Fusion.reportedType());
         fieldToAlternateValueInitializer.put(FLD_PHASED, b -> b.phased = alternateValueSource.Fusion.phased());
         fieldToAlternateValueInitializer.put(FLD_LIKELIHOOD, b -> b.likelihood = alternateValueSource.Fusion.likelihood());
-        fieldToAlternateValueInitializer.put(FLD_TRANSCRIPT_UP, b -> b.transcriptUp = alternateValueSource.Fusion.geneTranscriptStart());
+        //fieldToAlternateValueInitializer.put(FLD_TRANSCRIPT_UP, b -> b.transcriptUp = alternateValueSource.Fusion.geneTranscriptStart());
         fieldToAlternateValueInitializer.put(FLD_EXON_UP, b -> b.exonUp = alternateValueSource.Fusion.fusedExonUp());
-        fieldToAlternateValueInitializer.put(FLD_TRANSCRIPT_DOWN, b -> b.transcriptDown = alternateValueSource.Fusion.geneTranscriptEnd());
+        //fieldToAlternateValueInitializer.put(FLD_TRANSCRIPT_DOWN, b -> b.transcriptDown = alternateValueSource.Fusion.geneTranscriptEnd());
         fieldToAlternateValueInitializer.put(FLD_EXON_DOWN, b -> b.exonDown = alternateValueSource.Fusion.fusedExonDown());
         fieldToAlternateValueInitializer.put(FLD_CHAIN_LINKS, b -> b.chainLinks = alternateValueSource.Fusion.chainLinks());
         fieldToAlternateValueInitializer.put(FLD_CHAIN_TERM, b -> b.chainTerminated = alternateValueSource.Fusion.chainTerminated());
         fieldToAlternateValueInitializer.put(FLD_DOMAINS_KEPT, b -> b.domainsKept = alternateValueSource.Fusion.domainsKept());
         fieldToAlternateValueInitializer.put(FLD_DOMAINS_LOST, b -> b.domainsLost = alternateValueSource.Fusion.domainsLost());
-        fieldToAlternateValueInitializer.put(FLD_JUNCTION_COPY_NUMBER, b -> b.junctionCopyNumber =
-                alternateValueSource.Fusion.junctionCopyNumber());
+
+        //fieldToAlternateValueInitializer.put(FLD_JUNCTION_COPY_NUMBER, b -> b.junctionCopyNumber =
+        //        alternateValueSource.Fusion.junctionCopyNumber());
 
         nameToAlternateIndexInitializer = Map.of("FusionName", b -> b.fusionName = alternateValueSource.GeneMappedName);
         reportabilityFieldToFalseReportabilityInitializer = Map.of(FLD_REPORTED, b -> b.reported = false);

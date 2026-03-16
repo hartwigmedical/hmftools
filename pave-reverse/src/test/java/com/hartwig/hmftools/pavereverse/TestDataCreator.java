@@ -26,44 +26,65 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class TestDataCreator
 {
-//    @Test
+    //    @Test
     public void createReducedEnsemblDataSet() throws IOException
     {
-        File fullEnsemblDataDir = new File("/Users/timlavers/work/data/v6_0/ref/38/common/ensembl_data");
-        File outputDir = new File("/Users/timlavers/work/code/hmftools/purple/src/test/resources/ensembl");
+        File fullEnsemblDataDir = new File("/Users/timlavers/work/data/pipeline_resources_v2_3/38/hmftools/common/ensembl_data");
+        File outputDir = new File("/Users/timlavers/work/code/hmftools/pave-reverse/src/test/resources/ensembl");
 
         final Set<String> geneNames = Set.of(
-                "ETV6,"
-//                "TET2,",
-//                "VHL,",
-//                "BRAF,",
-//                "ADCK2,",
-//                "EGFR,",
-//                "RNU1-82P,",
-//                "ZYX,",
-//                "PIK3R1",
-//                "ARID1A",
-//                "KIT",
-//                "BRCA1",
-//                "DYRK1A",
-//                "TATDN2",
-//                "TERT",
-//                "SRGAP2,",
-//                "AP5Z1,"
+                "BRCA2,"
+                //                "ETV6,"
+                //                "TET2,",
+                //                "VHL,",
+                //                "BRAF,",
+                //                "ADCK2,",
+                //                "EGFR,",
+                //                "RNU1-82P,",
+                //                "ZYX,",
+                //                "PIK3R1",
+                //                "ARID1A",
+                //                "KIT",
+                //                "BRCA1",
+                //                "DYRK1A",
+                //                "TATDN2",
+                //                "TERT",
+                //                "SRGAP2,",
+                //                "AP5Z1,"
         );
-//        copyLinesMatching(new File(fullEnsemblDataDir, "ensembl_protein_features.csv"), outputDir, Set.of());
-                Set<String> geneIds = Set.of(
-                        "ENSG00000198793",
-                        "ENSG00000117713",
-                        "ENSG00000266028",
-                        "ENSG00000242802",
-                        "ENSG00000146648",
-                        "ENSG00000133597",
-                        "ENSG00000157764",
-                        "ENSG00000212153",
-                        "ENSG00000159840",
-                        "ENSG00000071564",
-        "ENSG00000139083"
+        //        copyLinesMatching(new File(fullEnsemblDataDir, "ensembl_protein_features.csv"), outputDir, Set.of());
+        Set<String> geneIds = Set.of(
+                "ENSG00000139618"
+                //                "ENSG00000198793",
+                //                "ENSG00000117713",
+                //                "ENSG00000266028",
+                //                "ENSG00000242802",
+                //                "ENSG00000146648",
+                //                "ENSG00000133597",
+                //                "ENSG00000157764",
+                //                "ENSG00000212153",
+                //                "ENSG00000159840",
+                //                "ENSG00000071564",
+                //                "ENSG00000139083"
+                //                "ENSG00000168769", // TET2
+                //                "ENSG00000134086",  // VHL
+                //                "ENSG00000133597", // ADCK2
+                //                "ENSG00000157764", // BRAF
+                //                "ENSG00000146648", // EGFR
+                //                "ENSG00000212153", // RNU-82P
+                //                "ENSG00000159840", // ZYX
+                //                "ENSG00000145675", // PIK3R1
+                //                "ENSG00000117713", // ARID1A
+                //                "ENSG00000157404", // KIT
+                //                "ENSG00000012048",  // BRCA1
+                //                "ENSG00000157540", // DYRK1A
+                //                "ENSG00000157014", // TATDN2
+                //                "ENSG00000164362", // TERT
+                //                "ENSG00000163486", // SRGAP2
+                //                "ENSG00000242802" // AP5Z1
+        );
+        //        Set<String> geneIds = Set.of(
+        //                "ENSG00000198793", // MTOR
         //                "ENSG00000168769", // TET2
         //                "ENSG00000134086",  // VHL
         //                "ENSG00000133597", // ADCK2
@@ -80,26 +101,7 @@ public class TestDataCreator
         //                "ENSG00000164362", // TERT
         //                "ENSG00000163486", // SRGAP2
         //                "ENSG00000242802" // AP5Z1
-                );
-//        Set<String> geneIds = Set.of(
-//                "ENSG00000198793", // MTOR
-//                "ENSG00000168769", // TET2
-//                "ENSG00000134086",  // VHL
-//                "ENSG00000133597", // ADCK2
-//                "ENSG00000157764", // BRAF
-//                "ENSG00000146648", // EGFR
-//                "ENSG00000212153", // RNU-82P
-//                "ENSG00000159840", // ZYX
-//                "ENSG00000145675", // PIK3R1
-//                "ENSG00000117713", // ARID1A
-//                "ENSG00000157404", // KIT
-//                "ENSG00000012048",  // BRCA1
-//                "ENSG00000157540", // DYRK1A
-//                "ENSG00000157014", // TATDN2
-//                "ENSG00000164362", // TERT
-//                "ENSG00000163486", // SRGAP2
-//                "ENSG00000242802" // AP5Z1
-//        );
+        //        );
         copyLinesMatching(new File(fullEnsemblDataDir, "ensembl_gene_data.csv"), outputDir, geneIds);
         copyLinesMatching(new File(fullEnsemblDataDir, "ensembl_trans_amino_acids.csv"), outputDir, geneIds);
         copyLinesMatching(new File(fullEnsemblDataDir, "ensembl_trans_exon_data.csv"), outputDir, geneIds);
@@ -110,35 +112,42 @@ public class TestDataCreator
     {
         File outputFile = new File(outputDir, input.getName());
         outputFile.createNewFile();
-        try (BufferedReader reader = new BufferedReader(new FileReader(input));
-                BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile))) {
+        try(BufferedReader reader = new BufferedReader(new FileReader(input));
+                BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile)))
+        {
 
             String line;
             boolean first = true; // Include the header
-            while ((line = reader.readLine()) != null) {
-                if (first) {
+            while((line = reader.readLine()) != null)
+            {
+                if(first)
+                {
                     writer.write(line);
                     writer.newLine();
                     first = false;
                 }
-                if (matches(line, toFind)) {
+                if(matches(line, toFind))
+                {
                     writer.write(line);
                     writer.newLine();
                 }
             }
-        } catch (IOException e) {
+        }
+        catch(IOException e)
+        {
             System.err.println("Error: " + e.getMessage());
         }
     }
 
     private static boolean matches(String line, Set<String> toFind)
     {
-        if (toFind.isEmpty()) {
+        if(toFind.isEmpty())
+        {
             return false;
         }
-        for (String s : toFind)
+        for(String s : toFind)
         {
-            if (line.contains(s))
+            if(line.contains(s))
             {
                 return true;
             }
@@ -146,17 +155,18 @@ public class TestDataCreator
         return false;
     }
 
-//    @Test
+    //    @Test
     public void produceReducedChrFile() throws IOException
     {
-        File outputDir = new File("/Users/timlavers/work/code/hmftools/cobalt/src/test/resources/tinygenome");
+        File outputDir = new File("/Users/timlavers/work/code/hmftools/pave-reverse/src/test/resources/tinygenome");
 
-        RefGenomeSource refGenomeSource = new RefGenomeSource(new IndexedFastaSequenceFile(new File("/Users/timlavers/work/data/reference_genome_no_alts/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna")));
-        int start = 10_000_000; //
+        RefGenomeSource refGenomeSource =
+                new RefGenomeSource(new IndexedFastaSequenceFile(new File("/Users/timlavers/work/data/reference_genomes/38/Homo_sapiens_assembly38.alt.masked.fasta")));
+        int start = 32_000_000; //
         int end = start + 1_000_000;
-        var chr = refGenomeSource.getBaseString("chr2", start, end);
-//        System.out.println(chr.substring(10000, 10100));
-        File chrFile = new File(outputDir, "chr2_part_10.txt");
+        var chr = refGenomeSource.getBaseString("chr13", start, end);
+        //        System.out.println(chr.substring(10000, 10100));
+        File chrFile = new File(outputDir, "chr13_part_32.txt");
         Files.writeString(chrFile.toPath(), chr, StandardCharsets.UTF_8);
     }
 }

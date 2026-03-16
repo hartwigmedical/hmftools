@@ -2,8 +2,6 @@ package com.hartwig.hmftools.isofox.novel.cohort;
 
 import java.util.List;
 
-import com.hartwig.hmftools.isofox.novel.AltSpliceJunctionFile;
-
 public class AltSjFilter
 {
     public final List<String> RestrictedGeneIds;
@@ -31,7 +29,7 @@ public class AltSjFilter
         return true;
     }
 
-    public boolean passesFilter(final AltSpliceJunctionFile altSJ)
+    public boolean passesFilter(final AltSpliceJuncData altSJ)
     {
         return passesFilter(altSJ.GeneId, altSJ.FragmentCount);
     }

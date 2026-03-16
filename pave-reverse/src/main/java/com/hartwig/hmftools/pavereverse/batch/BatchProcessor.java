@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.pavereverse.batch;
 
+import static com.hartwig.hmftools.pavereverse.ReversePaveConfig.RPV_LOGGER;
 import static com.hartwig.hmftools.pavereverse.batch.VariantsEncoder.columns;
+import static com.hartwig.hmftools.pavereverse.parse.ProteinVariantParser.trimInitialPdot;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,8 +35,17 @@ public class BatchProcessor
                 String gene = row.get(0);
                 String transcript = row.get(1);
                 String proteinVariant = row.get(2);
-                BaseSequenceVariants variants = mReversePave.calculateProteinVariant(gene, transcript, proteinVariant);
-                writer.writeRow(new VariantRow(gene, proteinVariant, variants));
+                try
+                {
+                    String trimmedVariant = trimInitialPdot(proteinVariant);
+                    BaseSequenceVariants variants =
+                            mReversePave.calculateProteinVariantAllowingMultipleNonCanonicalTranscriptMatches(gene, trimmedVariant);
+                    writer.writeRow(new VariantRow(gene, proteinVariant, variants));
+                }
+                catch(IllegalArgumentException e)
+                {
+                    RPV_LOGGER.error("Failed to compute variants for " + gene + ", " + proteinVariant + " and " + transcript, e);
+                }
             }
         }
     }
