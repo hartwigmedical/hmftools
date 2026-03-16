@@ -16,7 +16,6 @@ import static com.hartwig.hmftools.isofox.IsofoxFunction.ALT_SPLICE_JUNCTIONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.READ_COUNTS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.RETAINED_INTRONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.TRANSCRIPT_COUNTS;
-import static com.hartwig.hmftools.isofox.IsofoxFunction.UNMAPPED_READS;
 import static com.hartwig.hmftools.isofox.common.FragmentType.ALT;
 import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
 import static com.hartwig.hmftools.isofox.common.FragmentType.DUPLICATE;
@@ -59,7 +58,6 @@ import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
 import com.hartwig.hmftools.isofox.novel.AltSpliceJunctionFinder;
 import com.hartwig.hmftools.isofox.novel.RetainedIntronFinder;
 import com.hartwig.hmftools.isofox.novel.SpliceSiteCounter;
-import com.hartwig.hmftools.isofox.unmapped.UmrFinder;
 
 import com.google.common.collect.Lists;
 
@@ -86,7 +84,6 @@ public class ResultsWriter
     private BufferedWriter mReadGcRatioWriter;
     private BufferedWriter mRetainedIntronWriter;
     private BufferedWriter mSpliceSiteWriter;
-    private BufferedWriter mUnamppedReadsWriter;
 
     public ResultsWriter(final IsofoxConfig config)
     {
@@ -105,7 +102,6 @@ public class ResultsWriter
         mReadGcRatioWriter = null;
         mRetainedIntronWriter = null;
         mSpliceSiteWriter = null;
-        mUnamppedReadsWriter = null;
 
         if(mConfig.runFunction(TRANSCRIPT_COUNTS))
             initialiseGeneCollectionWriter();
@@ -131,7 +127,6 @@ public class ResultsWriter
         closeBufferedWriter(mReadGcRatioWriter);
         closeBufferedWriter(mRetainedIntronWriter);
         closeBufferedWriter(mSpliceSiteWriter);
-        closeBufferedWriter(mUnamppedReadsWriter);
     }
 
     private void initialiseExternalWriters()
@@ -170,9 +165,6 @@ public class ResultsWriter
 
         if(mConfig.WriteTransComboData)
             mCategoryCountsWriter = TranscriptExpression.createWriter(mConfig);
-
-        if(mConfig.runFunction(UNMAPPED_READS))
-            mUnamppedReadsWriter = UmrFinder.createWriter(mConfig);
     }
 
     public BufferedWriter getCategoryCountsWriter() { return mCategoryCountsWriter;}
@@ -183,7 +175,6 @@ public class ResultsWriter
     public BufferedWriter getSpliceSiteWriter() { return mSpliceSiteWriter; }
     public BufferedWriter getFragmentLengthWriter() { return mGeneFragLengthWriter; }
     public BufferedWriter getReadGcRatioWriter() { return mReadGcRatioWriter; }
-    public BufferedWriter getUnmappedReadsWriter() { return mUnamppedReadsWriter; }
 
     public void writeSummaryStats(final RnaStatistics summaryStats)
     {

@@ -4,12 +4,10 @@ import static com.hartwig.hmftools.isofox.fusion.FusionWriter.UNFILTERED_FUSION_
 import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionFinder.ALT_SJ_UNFILTERED_FILE_ID;
 import static com.hartwig.hmftools.isofox.novel.CanonicalSpliceJunctionFile.CANONICAL_SJ_FILE_ID;
 import static com.hartwig.hmftools.common.rna.GeneExpressionFile.GENE_EXPRESSION_FILE_ID;
-import static com.hartwig.hmftools.common.rna.NovelSpliceJunctionFile.ALT_SJ_FILE_ID;
 import static com.hartwig.hmftools.common.rna.RnaFusionFile.PASS_FUSION_FILE_ID;
 import static com.hartwig.hmftools.common.rna.RnaStatisticFile.SUMMARY_FILE_ID;
 import static com.hartwig.hmftools.common.rna.TranscriptExpressionFile.TRANSCRIPT_EXPRESSION_FILE_ID;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.SPLICE_SITE_FILE;
-import static com.hartwig.hmftools.isofox.unmapped.UmrFinder.UNMAPPED_READS_FILE_ID;
 
 public enum AnalysisType
 {
@@ -22,7 +20,6 @@ public enum AnalysisType
     SPLICE_VARIANT_MATCHING, // match alternate splice junctions with (candidate-splicing) somatic variants
     RECURRENT_SPLICE_VARIANTS, // find recurrent splice variants, input is a somatic table file
     SPLICE_SITE_PERCENTILES, // produce cohort percentage-spiced-in data from per-sample splice data files
-    UNMAPPED_READS, // combine and analyse unmapped (soft-clipped) reads for a cohort
 
     // fusions:
     FUSION, // process fusions for a cohort - filter passing fusions, form a cohort file, compare with external fusions
@@ -54,9 +51,6 @@ public enum AnalysisType
 
             case CANONICAL_SPLICE_JUNCTION:
                 return CANONICAL_SJ_FILE_ID;
-
-            case UNMAPPED_READS:
-                return UNMAPPED_READS_FILE_ID;
 
             case SPLICE_SITE_PERCENTILES:
                 return SPLICE_SITE_FILE;

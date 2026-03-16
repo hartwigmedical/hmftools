@@ -48,7 +48,6 @@ import com.hartwig.hmftools.isofox.novel.cohort.AltSjCohortMatrix;
 import com.hartwig.hmftools.isofox.novel.cohort.RecurrentVariantFinder;
 import com.hartwig.hmftools.isofox.novel.cohort.SpliceSiteCache;
 import com.hartwig.hmftools.isofox.novel.cohort.SpliceVariantMatcher;
-import com.hartwig.hmftools.isofox.unmapped.UmrCohortAnalyser;
 
 public class CohortConfig
 {
@@ -217,7 +216,6 @@ public class CohortConfig
         SpliceSiteCache.registerConfig(configBuilder);
         AltSjCohortMatrix.registerConfig(configBuilder);
         RecurrentVariantFinder.registerConfig(configBuilder);
-        UmrCohortAnalyser.registerConfig(configBuilder);
         GeneratePanelNormalisation.registerConfig(configBuilder);
 
         addOutputDir(configBuilder);

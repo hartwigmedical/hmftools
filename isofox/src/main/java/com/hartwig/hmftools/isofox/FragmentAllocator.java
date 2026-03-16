@@ -14,7 +14,6 @@ import static com.hartwig.hmftools.isofox.IsofoxConstants.SINGLE_MAP_QUALITY;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.ALT_SPLICE_JUNCTIONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.STATISTICS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.TRANSCRIPT_COUNTS;
-import static com.hartwig.hmftools.isofox.IsofoxFunction.UNMAPPED_READS;
 import static com.hartwig.hmftools.isofox.common.FragmentMatchType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.common.FragmentType.ALT;
 import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
@@ -76,7 +75,6 @@ import com.hartwig.hmftools.isofox.novel.AltSpliceJunctionFinder;
 import com.hartwig.hmftools.isofox.novel.RetainedIntronFinder;
 import com.hartwig.hmftools.isofox.novel.SpliceSiteCounter;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
-import com.hartwig.hmftools.isofox.unmapped.UmrFinder;
 
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMFlag;
@@ -103,14 +101,12 @@ public class FragmentAllocator
     private final RetainedIntronFinder mRetainedIntronFinder;
     private final ChimericReadTracker mChimericReads;
     private final SpliceSiteCounter mSpliceSiteCounter;
-    private final UmrFinder mUmrFinder;
     private final int[] mValidReadStartRegion;
     private final BaseDepth mBaseDepth;
 
     private final boolean mRunFusions;
     private final boolean mFusionsOnly;
     private final boolean mStatsOnly;
-    private final boolean mUnmappedOnly;
 
     private final BufferedWriter mReadDataWriter;
     private long mEnrichedGeneFragments;
@@ -129,7 +125,6 @@ public class FragmentAllocator
         mRunFusions = mConfig.Functions.contains(FUSIONS);
         mFusionsOnly = mConfig.runFusionsOnly();
         mStatsOnly = mConfig.runStatisticsOnly();
-        mUnmappedOnly = mConfig.runFunction(UNMAPPED_READS) && mConfig.Functions.size() == 1;
 
         mGeneReadCount = 0;
         mTotalBamReadCount = 0;
@@ -145,7 +140,7 @@ public class FragmentAllocator
         boolean keepDuplicates = (mConfig.runFunction(TRANSCRIPT_COUNTS) || mConfig.runFunction(STATISTICS)) && !mConfig.DropDuplicates;
 
         // reads with supplementary alignment data are only used for chimeric read handling (eg fusions & alt-SJs)
-        boolean keepSupplementaries = mRunFusions || mConfig.runFunction(ALT_SPLICE_JUNCTIONS) || mConfig.runFunction(UNMAPPED_READS);
+        boolean keepSupplementaries = mRunFusions || mConfig.runFunction(ALT_SPLICE_JUNCTIONS);
 
         boolean keepSecondaries = mConfig.runFunction(TRANSCRIPT_COUNTS);
         int minMapQuality = keepSecondaries ? 0 : SINGLE_MAP_QUALITY;
@@ -163,7 +158,6 @@ public class FragmentAllocator
                 mConfig, altSjCohortCache, resultsWriter.getAltSjUnfilteredWriter(), resultsWriter.getAltSjPassingWriter());
 
         mRetainedIntronFinder = new RetainedIntronFinder(mConfig, resultsWriter.getRetainedIntronWriter());
-        mUmrFinder = new UmrFinder(mConfig, resultsWriter.getUnmappedReadsWriter());
     }
 
     public int totalReadCount() { return mTotalBamReadCount; }
@@ -216,9 +210,6 @@ public class FragmentAllocator
         if(mRetainedIntronFinder.enabled())
             mRetainedIntronFinder.setGeneData(mCurrentGenes);
 
-        if(mUmrFinder.enabled())
-            mUmrFinder.setGeneData(mCurrentGenes);
-
         mValidReadStartRegion[SE_START] = geneRegion.start();
         mValidReadStartRegion[SE_END] = geneRegion.end();
 
@@ -244,12 +235,6 @@ public class FragmentAllocator
         {
             mChimericReads.postProcessChimericReads(mBaseDepth, mFragmentReads);
             processChimericNovelJunctions();
-        }
-
-        if(mUmrFinder.enabled())
-        {
-            mUmrFinder.processUnpairedReads(mFragmentReads);
-            mUmrFinder.writeUnmappedReads();
         }
 
         ISF_LOGGER.trace("genes({}) bamReadCount({}) depth(bases={} perc={} max={})",
@@ -279,9 +264,6 @@ public class FragmentAllocator
         }
 
         ReadRecord read = ReadRecord.from(record);
-
-        if(mUmrFinder.enabled())
-            read.setBaseQualities(record.getBaseQualities());
 
         processRead(read);
     }
@@ -397,7 +379,6 @@ public class FragmentAllocator
                     mCurrentGenes.addCount(CHIMERIC, 1);
             }
 
-            mUmrFinder.processReads(read1, read2, true);
             return;
         }
 
@@ -412,11 +393,6 @@ public class FragmentAllocator
             if(mFusionsOnly)
                 return;
         }
-
-        mUmrFinder.processReads(read1, read2, false);
-
-        if(mUnmappedOnly)
-            return;
 
         int readPosMin = min(read1.PosStart, read2.PosStart);
         int readPosMax = max(read1.PosEnd, read2.PosEnd);
