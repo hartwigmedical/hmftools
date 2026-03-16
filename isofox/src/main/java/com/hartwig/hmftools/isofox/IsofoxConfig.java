@@ -42,9 +42,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.driver.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
@@ -115,7 +117,7 @@ public class IsofoxConfig
     public final GeneRegionFilters Filters;
     public final String CancerType;
 
-    public final List<DriverGene> DriverGenes;
+    public final Map<String,DriverGene> DriverGenes;
 
     public int ReadLength;
     public int MaxFragmentLength;
@@ -187,13 +189,14 @@ public class IsofoxConfig
 
         RefGenVersion = RefGenomeVersion.from(configBuilder);
 
-        DriverGenes = Lists.newArrayList();
+        DriverGenes = Maps.newHashMap();
 
         if(configBuilder.hasValue(DRIVER_GENE_PANEL))
         {
             try
             {
-                DriverGenes.addAll(DriverGeneFile.read(configBuilder.getValue(DRIVER_GENE_PANEL)));
+                List<DriverGene> driverGenes = DriverGeneFile.read(configBuilder.getValue(DRIVER_GENE_PANEL));
+                driverGenes.forEach(x -> DriverGenes.put(x.gene(), x));
             }
             catch(IOException e)
             {
@@ -350,7 +353,7 @@ public class IsofoxConfig
 
         GeneDistributionFile = "";
         AltSjCohortFile = "";
-        DriverGenes = Lists.newArrayList();
+        DriverGenes = Maps.newHashMap();
         CancerType = "";
 
         ReadLength = 0;

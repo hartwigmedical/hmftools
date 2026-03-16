@@ -26,6 +26,7 @@ public final class GeneExpressionFile
     public static final String FLD_PERC_TPM_CANCER = "PercentileCancer";
     public static final String FLD_MEDIAN_TPM_COHORT = "MedianTpmCohort";
     public static final String FLD_PERC_TPM_COHORT = "PercentileCohort";
+    public static final String FLD_REPORTED_STATUS = "ReportedStatus";
 
     public static String generateFilename(final String basePath, final String sample)
     {

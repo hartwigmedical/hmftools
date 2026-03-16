@@ -100,7 +100,7 @@ public class RefDataConfig
 
             if(!RestrictedGeneIds.isEmpty())
             {
-                ISF_LOGGER.info("file({}) loaded {} restricted genes", inputFile, RestrictedGeneIds.size());
+                ISF_LOGGER.info("file({}) loaded {} restricted expression genes", inputFile, RestrictedGeneIds.size());
             }
         }
     }

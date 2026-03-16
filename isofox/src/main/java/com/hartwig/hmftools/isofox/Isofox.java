@@ -24,7 +24,6 @@ import static com.hartwig.hmftools.isofox.expression.TranscriptExpression.setCoh
 import static com.hartwig.hmftools.isofox.expression.TranscriptExpression.setTranscriptsPerMillion;
 import static com.hartwig.hmftools.isofox.results.SummaryStats.createSummaryStats;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -33,8 +32,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.driver.panel.DriverGene;
-import com.hartwig.hmftools.common.driver.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
@@ -86,11 +83,6 @@ public class Isofox
         mPerfTracking = new PerformanceTracking(mConfig);
 
         mGeneTransCache = new EnsemblDataCache(configBuilder);
-
-        if(!mConfig.Filters.RestrictedGeneIds.isEmpty())
-        {
-            mGeneTransCache.setRestrictedGeneIdList(mConfig.Filters.RestrictedGeneIds);
-        }
 
         mGeneTransCache.setRequiredData(true, false, false, mConfig.CanonicalTranscriptOnly);
         mGeneTransCache.load(false);
@@ -305,7 +297,7 @@ public class Isofox
 
             spliceGeneCount += chrTask.getGeneCollectionSummaryData().stream().mapToInt(x -> x.spliceGenesCount()).sum();
 
-            chrTask.writeResults();
+            chrTask.writeExpressionResults(mConfig.DriverGenes, panelTpmNormaliser.panelGeneIds());
         }
 
         // write summary statistics
@@ -318,8 +310,9 @@ public class Isofox
 
             if(!mConfig.Filters.RestrictedGeneIds.isEmpty())
             {
-                // could be adjusted for the specific panel
-                double panelGeneCoverage = mConfig.Filters.RestrictedGeneIds.size() / 38000.0; // total gene count
+                // could be adjusted for the specific panel or by bases instead of gene count
+                int totalGeneCount = mGeneTransCache.getChrGeneDataMap().values().stream().mapToInt(x -> x.size()).sum();
+                double panelGeneCoverage = mConfig.Filters.RestrictedGeneIds.size() / (double)totalGeneCount;
                 lowCoverageThreshold = (int) (lowCoverageThreshold * panelGeneCoverage * PANEL_LOW_COVERAGE_FACTOR);
                 splicedGeneThreshold = (int) (panelGeneCoverage * SPLICE_GENE_THRESHOLD);
             }

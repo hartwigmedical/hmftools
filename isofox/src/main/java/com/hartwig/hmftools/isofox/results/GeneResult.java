@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_MEDIAN_TPM_
 import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_MEDIAN_TPM_COHORT;
 import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_PERC_TPM_CANCER;
 import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_PERC_TPM_COHORT;
+import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_REPORTED_STATUS;
 import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_SPLICED_FRAGS;
 import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_ADJ_TPM;
 import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_UNSPLICED_FRAGS;
@@ -38,6 +39,8 @@ public class GeneResult
     private double mMedianTpmCancer;
     private double mPercentileTpmCancer;
 
+    private boolean mReported; // may change to a likelihood
+
     public GeneResult(final GeneCollection geneCollection, final GeneReadData geneReadData)
     {
         Gene = geneReadData.GeneData;
@@ -58,6 +61,7 @@ public class GeneResult
         mPercentileTpmCohort = 0;
         mMedianTpmCancer = 0;
         mPercentileTpmCancer = 0;
+        mReported = false;
     }
 
     public void setFitAllocation(double splicedAlloc, double unsplicedAlloc)
@@ -74,6 +78,9 @@ public class GeneResult
 
     public double adjustedTpm() { return mAdjustedTpm; }
     public void applyTpmAdjustFactor(double factor) { mAdjustedTpm /= factor; }
+
+    public boolean reported() { return mReported; }
+    public void markReported() { mReported = true; }
 
     public void setFitResiduals(double residuals) { mFitResiduals = residuals; }
     public double getFitResiduals() { return mFitResiduals; }
@@ -110,6 +117,7 @@ public class GeneResult
                 .add(FLD_PERC_TPM_CANCER)
                 .add(FLD_MEDIAN_TPM_COHORT)
                 .add(FLD_PERC_TPM_COHORT)
+                .add(FLD_REPORTED_STATUS)
                 .toString();
     }
 
@@ -133,6 +141,7 @@ public class GeneResult
                 .add(String.format("%.3f", mPercentileTpmCancer))
                 .add(String.format("%6.3e", mMedianTpmCohort))
                 .add(String.format("%.3f", mPercentileTpmCohort))
+                .add(String.valueOf(mReported))
                 .toString();
     }
 }

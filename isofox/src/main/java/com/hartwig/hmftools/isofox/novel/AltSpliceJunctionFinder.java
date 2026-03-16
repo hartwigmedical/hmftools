@@ -82,7 +82,7 @@ public class AltSpliceJunctionFinder
         mPassWriter = passWriter;
         mGenes = null;
 
-        mReportableGenes = config.DriverGenes.stream()
+        mReportableGenes = config.DriverGenes.values().stream()
                 .filter(x -> x.reportNovelSpliceJunctions()).map(x -> x.gene()).collect(Collectors.toSet());
     }
 

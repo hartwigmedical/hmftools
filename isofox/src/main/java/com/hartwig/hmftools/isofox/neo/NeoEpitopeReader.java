@@ -111,7 +111,7 @@ public class NeoEpitopeReader
             return true;
 
         return mConfig.Filters.RestrictedGeneIds.contains(neData.Source.GeneIds[FS_UP])
-                && mConfig.Filters.RestrictedGeneIds.contains(neData.Source.GeneIds[FS_DOWN]);
+            && mConfig.Filters.RestrictedGeneIds.contains(neData.Source.GeneIds[FS_DOWN]);
     }
 
     public void calcFragmentSupport()

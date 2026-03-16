@@ -199,7 +199,7 @@ public class ResultsWriter
         }
     }
 
-    public synchronized void writeGeneResult(final GeneResult geneResult)
+    public synchronized void writeGeneExpression(final GeneResult geneResult)
     {
         if(mConfig.OutputDir.isEmpty())
             return;
@@ -287,7 +287,7 @@ public class ResultsWriter
         }
     }
 
-    public synchronized void writeTranscriptResults(final GeneData geneData, final TranscriptResult transResults)
+    public synchronized void writeTranscriptExpression(final GeneData geneData, final TranscriptResult transResults)
     {
         if(mConfig.OutputDir.isEmpty())
             return;
