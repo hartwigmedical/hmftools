@@ -12,6 +12,20 @@ import com.hartwig.hmftools.qsee.feature.SourceTool;
 
 public class BinnedFrequencies
 {
+    /*
+    Given
+    - Bin starts = {0, 10, 25, ...}
+    - Bin values = {200, 200, 200, ...} -> sums to 1000
+
+    The first bin has width 10
+    -> Frequency density = 200/10 = 20 (i.e. each 'integer sub-bin' represents 20 counts)
+    -> Proportional density = 20/1000 = 0.02 (i.e. each 'integer sub-bin' represents 2% of all counts)
+
+    We only plot the bin start position vs the proportional density.
+
+    When making a line plot, the remaining proportional density values for 'integer sub-bins' are effectively interpolated.
+    */
+
     private final long[] mBinStarts;
     private final long[] mBinEnds;
     private final double[] mFrequencies;
