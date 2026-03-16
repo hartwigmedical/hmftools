@@ -6,7 +6,7 @@ import org.junit.Test;
 
 public class BinnedFrequenciesTest
 {
-    private static final double[] BIN_STARTS  = { 0  , 10 , 25 , 50 , 100 };
+    private static final long[] BIN_STARTS    = { 0  , 10 , 25 , 50 , 100 };
     private static final double[] FREQUENCIES = { 200, 200, 200, 200, 200 };
 
     private static final BinnedFrequencies BINNED_FREQUENCIES = new BinnedFrequencies(BIN_STARTS, FREQUENCIES);
@@ -14,9 +14,9 @@ public class BinnedFrequenciesTest
     @Test
     public void canCalcCorrectBinEnds()
     {
-        double[] binEnds = BINNED_FREQUENCIES.binEnds();
-        double[] binEndsExpected = new double[] { 10, 25, 50, 100, Double.POSITIVE_INFINITY };
-        assertArrayEquals(binEndsExpected, binEnds, 0.1);
+        long[] binEnds = BINNED_FREQUENCIES.binEnds();
+        long[] binEndsExpected = { 10, 25, 50, 100, Long.MAX_VALUE };
+        assertArrayEquals(binEndsExpected, binEnds);
     }
 
     @Test

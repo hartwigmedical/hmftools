@@ -12,30 +12,30 @@ import com.hartwig.hmftools.qsee.feature.SourceTool;
 
 public class BinnedFrequencies
 {
-    private final double[] mBinStarts;
-    private final double[] mBinEnds;
+    private final long[] mBinStarts;
+    private final long[] mBinEnds;
     private final double[] mFrequencies;
 
-    public BinnedFrequencies(double[] binStarts, double[] frequencies)
+    public BinnedFrequencies(long[] binStarts, double[] frequencies)
     {
         mBinStarts = binStarts;
         mBinEnds = createBinEndsRightOpen();
         mFrequencies = frequencies;
     }
 
-    private double[] createBinEndsRightOpen()
+    private long[] createBinEndsRightOpen()
     {
-        double[] binEnds = new double[mBinStarts.length];
+        long[] binEnds = new long[mBinStarts.length];
 
         System.arraycopy(mBinStarts, 1, binEnds, 0, mBinStarts.length-1);
-        binEnds[mBinStarts.length-1] = Double.POSITIVE_INFINITY;
+        binEnds[mBinStarts.length-1] = Long.MAX_VALUE;
 
         return binEnds;
     }
 
     public static BinnedFrequencies fromValueFrequencies(List<ValueFrequency> valueFrequencies)
     {
-        double[] binStarts = new double[valueFrequencies.size()];
+        long[] binStarts = new long[valueFrequencies.size()];
         double[] frequencies = new double[valueFrequencies.size()];
 
         for(int i = 0; i < valueFrequencies.size(); i++)
@@ -49,8 +49,8 @@ public class BinnedFrequencies
     }
 
     public double[] frequencies() { return mFrequencies; }
-    public double[] binStarts() { return mBinStarts; }
-    public double[] binEnds() { return mBinEnds; }
+    public long[] binStarts() { return mBinStarts; }
+    public long[] binEnds() { return mBinEnds; }
 
     public double[] calcFrequencyDensities()
     {
@@ -102,7 +102,7 @@ public class BinnedFrequencies
 
         for(int i = 0; i < proportionalDensities.length; i++)
         {
-            String binString = String.valueOf((int) mBinStarts[i]);
+            String binString = String.valueOf(mBinStarts[i]);
             String featureName = MultiFieldStringBuilder.formSingleField(binTitle, binString);
 
             FeatureKey key = new FeatureKey(featureName, featureType, sourceTool);

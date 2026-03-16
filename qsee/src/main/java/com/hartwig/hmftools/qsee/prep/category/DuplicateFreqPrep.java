@@ -37,7 +37,7 @@ public class DuplicateFreqPrep implements CategoryPrep
 
     private static List<Feature> normaliseAndBinCounts(List<DuplicateFrequency> dupFreqs)
     {
-        double[] readGroupSizes = new double[dupFreqs.size()];
+        long[] readGroupSizes = new long[dupFreqs.size()];
         double[] frequencies = new double[dupFreqs.size()];
 
         for(int i = 0; i < dupFreqs.size(); i++)
