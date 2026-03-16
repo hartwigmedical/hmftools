@@ -584,19 +584,16 @@ PLOTS[[FEATURE_TYPE$DISCORDANT_FRAG_FREQ]] <- local({
    
    plot_data <- get_plot_data(FEATURE_TYPE$DISCORDANT_FRAG_FREQ)
    
-   plot_labels <- labs(title = "Discordant fragment frequency", x = "Discordant fragment type", y = "Prop. of reads")
-   
+   plot_labels <- labs(title = "Discordant fragment frequency", x = "Discordant fragment type", y = "Reads")
+
    if(is.null(plot_data)){
       return(plot_missing_data(plot_labels))
    }
-   
+
    plot_data <- plot_data %>% dplyr::mutate(DisplayName = reverse_levels(DisplayName))
-   
-   plot_pairwise_comparison(plot_data, x = "DisplayName", plot_type = box_or_bar_plot()) + 
-      scale_y_continuous(
-         transform = "log10", guide = "axis_logticks",
-         labels = function(x) format(x, scientific = FALSE, drop0trailing = TRUE, trim = TRUE),
-      ) +
+
+   plot_pairwise_comparison(plot_data, x = "DisplayName", plot_type = box_or_bar_plot()) +
+      scale_y_continuous(transform = "log10", guide = "axis_logticks", labels = scales::label_percent(drop0trailing=TRUE)) +
       plot_labels +
       coord_flip() +
       theme(
