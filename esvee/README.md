@@ -444,7 +444,7 @@ delShortLowVaf<sup>8 | Any | min(AF[BE1],AF[BE2])  | 0.05 | NA | NA | NA
 minLength<sup>2</sup>  | All | EndPos-StartPos+InsSeqLength | 32 | NA | NA | 32
 shortFrags | All | Lengthmedian - NumSD * LengthstdDev/sqrt(VF)<sup>3</sup>   | 3 | NA | NA | 3 
 minAnchorLength | All | AlignLength – repeatLength – Homology | 50 | NA | 50<sup>4</sup>  | 50 
-sbArtefact<sup>6</sup> | All | SB | NA | NA | 1.0 | NA
+sbArtefact<sup>6</sup> | All | SB | NA | 1.0 | 1.0 | NA
 invShortIsolated | All (targeted panel only) | Candidate inversion distance to nearest non-artefact breakend<sup>9</sup> | 100 | NA | NA | NA
 
 <sup>1. For pairs of SGL breakends which resemble a likely LINE insertion site (see above) the SUM(Qual) is used for both breakends. </sup>

@@ -335,7 +335,6 @@ plot_distribution <- function(plot_data, x, invert_normal = FALSE, mark_sample_p
    
    plot_data[[x]] <- as.numeric(as.character(plot_data[[x]]))
    
-   gg_scale_y_continuous <- geom_blank()
    sample_type_count <- plot_data$SampleType %>% levels() %>% length()
    if(invert_normal && sample_type_count > 1){
       
@@ -349,8 +348,6 @@ plot_distribution <- function(plot_data, x, invert_normal = FALSE, mark_sample_p
          PctMax   = signs * PctMax,
          FeatureValue = signs * FeatureValue
       )
-      
-      gg_scale_y_continuous <- scale_y_continuous(labels = function(x) abs(x))
    }
    
    gg_geom_line <- geom_line(aes(color = SampleType))
@@ -397,7 +394,6 @@ plot_distribution <- function(plot_data, x, invert_normal = FALSE, mark_sample_p
       gg_scale_color_manual +
       gg_scale_fill_manual +
       
-      gg_scale_y_continuous +
       theme(legend.position = "none")
 }
 
@@ -412,7 +408,7 @@ PLOTS[[FEATURE_TYPE$COVERAGE_DISTRIBUTION]] <- local({
    }
    
    plot_distribution(plot_data, x = "ReadDepth", mark_sample_peak = TRUE, invert_normal = TRUE, hlines = 0) +
-      scale_y_continuous(label = scales::label_percent()) +
+      scale_y_continuous(label = function(x) scales::label_percent()(abs(x)) ) +
       plot_labels +
       render_now()
 })
@@ -428,7 +424,7 @@ PLOTS[[FEATURE_TYPE$FRAG_LENGTH_DISTRIBUTION]] <- local({
    }
    
    plot_distribution(plot_data, x = "FragLength", mark_sample_peak = TRUE, invert_normal = TRUE, hlines = 0) +
-      scale_y_continuous(label = scales::label_percent()) +
+      scale_y_continuous(label = function(x) scales::label_percent()(abs(x)) ) +
       plot_labels +
       render_now()
 })
@@ -588,19 +584,16 @@ PLOTS[[FEATURE_TYPE$DISCORDANT_FRAG_FREQ]] <- local({
    
    plot_data <- get_plot_data(FEATURE_TYPE$DISCORDANT_FRAG_FREQ)
    
-   plot_labels <- labs(title = "Discordant fragment frequency", x = "Discordant fragment type", y = "Prop. of reads")
-   
+   plot_labels <- labs(title = "Discordant fragment frequency", x = "Discordant fragment type", y = "Reads")
+
    if(is.null(plot_data)){
       return(plot_missing_data(plot_labels))
    }
-   
+
    plot_data <- plot_data %>% dplyr::mutate(DisplayName = reverse_levels(DisplayName))
-   
-   plot_pairwise_comparison(plot_data, x = "DisplayName", plot_type = box_or_bar_plot()) + 
-      scale_y_continuous(
-         transform = "log10", guide = "axis_logticks",
-         labels = function(x) format(x, scientific = FALSE, drop0trailing = TRUE, trim = TRUE),
-      ) +
+
+   plot_pairwise_comparison(plot_data, x = "DisplayName", plot_type = box_or_bar_plot()) +
+      scale_y_continuous(transform = "log10", guide = "axis_logticks", labels = scales::label_percent(drop0trailing=TRUE)) +
       plot_labels +
       coord_flip() +
       theme(
