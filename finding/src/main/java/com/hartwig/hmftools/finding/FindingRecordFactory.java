@@ -20,6 +20,7 @@ import com.hartwig.hmftools.datamodel.cuppa.CuppaMode;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
 import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
 import com.hartwig.hmftools.datamodel.linx.LinxDriverType;
+import com.hartwig.hmftools.datamodel.orange.OrangePlots;
 import com.hartwig.hmftools.finding.datamodel.ChromosomeArmCopyNumber;
 import com.hartwig.hmftools.finding.datamodel.ChromosomeArmCopyNumberBuilder;
 import com.hartwig.hmftools.finding.datamodel.DriverInterpretation;
@@ -442,7 +443,7 @@ public class FindingRecordFactory
                             .status(microsatelliteStatus)
                             .indelsPerMb(purple.characteristics().microsatelliteIndelsPerMb())
                             .lohCopyNumbers(lohGainDeletions)
-                            .relatedGenes(GeneListUtil.genes(purple.somaticVariants(),
+                            .genes(GeneListUtil.genes(purple.somaticVariants(),
                                     purple.somaticGainsDels(),
                                     linx.somaticBreakends().stream()
                                             .filter(o ->o.driverType() == LinxDriverType.HOM_DEL_DISRUPTION ||
@@ -501,11 +502,11 @@ public class FindingRecordFactory
                         .build()
                 )
                 .geneUp(fusion.geneUp())
-                .geneContextUp(fusion.geneContextUp())
-                .geneTranscriptUp(fusion.geneTranscriptUp())
+                .geneContextUp(fusion.contextUp())
+                .geneTranscriptUp(fusion.transcriptUp())
                 .geneDown(fusion.geneDown())
-                .geneContextDown(fusion.geneContextDown())
-                .geneTranscriptDown(fusion.geneTranscriptDown())
+                .geneContextDown(fusion.contextDown())
+                .geneTranscriptDown(fusion.transcriptDown())
                 .reportedType(Fusion.FusionType.valueOf(fusion.reportedType().name()))
                 .phased(Fusion.FusionPhasedType.valueOf(fusion.phased().name()))
                 .fusedExonUp(fusion.fusedExonUp())
