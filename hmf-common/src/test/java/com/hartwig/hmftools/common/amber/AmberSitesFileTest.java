@@ -64,9 +64,9 @@ public class AmberSitesFileTest
         // flag and the frequency, which will have been truncated.
         Assert.assertEquals(originalData, readData);
         List<AmberSite> readData1 = readData.get(_1);
-        Assert.assertEquals(originalData.get(_1).get(0).VariantAlleleFrequency, readData1.get(0).VariantAlleleFrequency, 0.0001);
+        Assert.assertEquals(originalData.get(_1).get(0).GnomadFrequency, readData1.get(0).GnomadFrequency, 0.0001);
         Assert.assertEquals(originalData.get(_1).get(0).snpCheck(), readData1.get(0).snpCheck());
-        Assert.assertEquals(originalData.get(_1).get(2).VariantAlleleFrequency, readData1.get(2).VariantAlleleFrequency, 0.0001);
+        Assert.assertEquals(originalData.get(_1).get(2).GnomadFrequency, readData1.get(2).GnomadFrequency, 0.0001);
         Assert.assertEquals(originalData.get(_1).get(2).snpCheck(), readData1.get(2).snpCheck());
     }
 

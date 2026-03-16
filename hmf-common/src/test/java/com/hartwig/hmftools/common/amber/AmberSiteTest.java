@@ -11,14 +11,14 @@ public class AmberSiteTest
     public void defaultFrequencyTest()
     {
         AmberSite site = new AmberSite("chr1", 100, "A", "T", true);
-        assertEquals(0.5, site.VariantAlleleFrequency, 0.00001);
+        assertEquals(0.5, site.GnomadFrequency, 0.00001);
     }
 
     @Test
     public void customFrequencyTest()
     {
         AmberSite site = new AmberSite("chr1", 100, "A", "T", true, 0.1);
-        assertEquals(0.1, site.VariantAlleleFrequency, 0.00001);
+        assertEquals(0.1, site.GnomadFrequency, 0.00001);
     }
 
     @Test

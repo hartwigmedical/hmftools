@@ -213,7 +213,6 @@ public class PurityPloidyFitter
             AneuploidyDetector aneuploidyDetector =
                     new AneuploidyDetector(mObservedRegions, mSampleData.Amber.ChromosomeBafs, mSampleData.Cobalt.CobaltChromosomes);
             boolean noSignificantAneuploidy = !aneuploidyDetector.hasAneuploidy();
-            //            boolean noSignificantAneuploidy = noSignificantAneuploidy();
             boolean diploidHighPurity = isCloseToDiploidAndHighPurity(mCopyNumberPurityFit);
             final boolean significantContamination = ContaminationLevel > SOMATIC_FIT_CONTAMINATION_CUTOFF;
             if(significantContamination || (noSignificantAneuploidy && (diploidHighPurity || highlyDiploid)))

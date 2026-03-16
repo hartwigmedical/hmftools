@@ -66,6 +66,7 @@ public class AmberConfig
     public final double MinHetAfPercent;
     public final double MaxHetAfPercent;
     public final boolean WriteUnfilteredGermline;
+    public final boolean WriteTumorData;
     public final int PositionGap;
 
     public final String OutputDir;
@@ -91,6 +92,7 @@ public class AmberConfig
     private static final String MIN_HIT_AT_PERC = "min_het_af_percent";
     private static final String MAX_HIT_AT_PERC = "max_het_af_percent";
     private static final String WRITE_UNFILTERED_GERMLINE = "write_unfiltered_germline";
+    private static final String WRITE_TUMOR_DATA = "write_tumor_data";
     private static final String POSITION_GAP = "position_gap";
     private static final String SKIP_BAF_SEGMENTATION = "skip_baf_segmentation";
     public static final String USE_OLD_SEGMENTER = "use_old_segmenter";
@@ -155,6 +157,7 @@ public class AmberConfig
         UseOldSegmenter = configBuilder.hasFlag(USE_OLD_SEGMENTER);
 
         WriteUnfilteredGermline = configBuilder.hasFlag(WRITE_UNFILTERED_GERMLINE);
+        WriteTumorData = configBuilder.hasFlag(WRITE_TUMOR_DATA);
 
         OutputDir = parseOutputDir(configBuilder);
         Threads = parseThreads(configBuilder);
@@ -208,6 +211,7 @@ public class AmberConfig
         configBuilder.addFlag(SKIP_BAF_SEGMENTATION, "Skip BAF segmentation");
 
         configBuilder.addFlag(WRITE_UNFILTERED_GERMLINE, "Write all (unfiltered) germline points");
+        configBuilder.addFlag(WRITE_TUMOR_DATA, "Write tumor points");
 
         addOutputDir(configBuilder);
         addThreadOptions(configBuilder);

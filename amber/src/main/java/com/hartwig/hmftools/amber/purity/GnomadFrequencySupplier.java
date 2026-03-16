@@ -40,7 +40,7 @@ class DefaultGnomadFrequencySupplier implements GnomadFrequencySupplier
             int index = binarySearch(sites, position);
             if(index >= 0)
             {
-                return sites[index].VariantAlleleFrequency;
+                return sites[index].GnomadFrequency;
             }
         }
         throw new IllegalArgumentException("No Gnomad data for: " + chromosome + ":" + position);

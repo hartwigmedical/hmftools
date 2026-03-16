@@ -5,11 +5,13 @@ import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_REF;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -17,7 +19,6 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.utils.file.DelimFileReader;
 import com.hartwig.hmftools.common.utils.file.DelimFileWriter;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 
@@ -96,26 +97,47 @@ public final class AmberSitesFile
     public static ListMultimap<Chromosome, AmberSite> loadFile(final String filename) throws IOException
     {
         final ListMultimap<Chromosome, AmberSite> result = ArrayListMultimap.create();
-        try(DelimFileReader reader = new DelimFileReader(filename))
+
+        BufferedReader reader = createBufferedReader(filename);
+
+        String header = reader.readLine();
+
+        Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
+
+        int chrIndex = fieldsIndexMap.get(FLD_CHROMOSOME);
+        int posIndex = fieldsIndexMap.get(FLD_POSITION);
+        int refIndex = fieldsIndexMap.get(FLD_REF);
+        int altIndex = fieldsIndexMap.get(FLD_ALT);
+        int infoIndex = fieldsIndexMap.get(FLD_SNP_CHECK);
+
+        String line;
+
+        while((line = reader.readLine()) != null)
         {
-            reader.stream().forEach(row ->
+            String[] values = line.split(TSV_DELIM, -1);
+
+            String chrStr = values[chrIndex];
+
+            if(!HumanChromosome.contains(chrStr))
             {
-                final String chrString = row.get(FLD_CHROMOSOME);
-                HumanChromosome chromosome = HumanChromosome.fromString(chrString);
-                int position = row.getInt(FLD_POSITION);
-                String ref = row.get(FLD_REF);
-                String alt = row.get(FLD_ALT);
-                boolean snpCheck = row.getBoolean(FLD_SNP_CHECK);
-                if(reader.hasColumn(FLD_FREQUENCY))
-                {
-                    double frequency = row.getDouble(FLD_FREQUENCY);
-                    result.put(chromosome, new AmberSite(chrString, position, ref, alt, snpCheck, frequency));
-                }
-                else
-                {
-                    result.put(chromosome, new AmberSite(chrString, position, ref, alt, snpCheck));
-                }
-            });
+                continue;
+            }
+
+            HumanChromosome chromosome = HumanChromosome.fromString(chrStr);
+
+            final int position = Integer.parseInt(values[posIndex]);
+            final boolean snpCheck = Boolean.parseBoolean(values[infoIndex]);
+            final String ref = values[refIndex];
+            final String alt = values[altIndex];
+            if(values.length == 5)
+            {
+                result.put(chromosome, new AmberSite(chrStr, position, ref, alt, snpCheck));
+            }
+            else
+            {
+                double gnomadFrequency = Double.parseDouble(values[5]);
+                result.put(chromosome, new AmberSite(chrStr, position, ref, alt, snpCheck, gnomadFrequency));
+            }
         }
         LOGGER.info("loaded {} Amber germline sites from {}", result.size(), filename);
         return result;
@@ -150,7 +172,7 @@ public final class AmberSitesFile
             row.set(FLD_REF, amberSite.Ref);
             row.set(FLD_ALT, amberSite.Alt);
             row.set(FLD_SNP_CHECK, amberSite.snpCheck());
-            row.set(FLD_FREQUENCY, amberSite.VariantAlleleFrequency);
+            row.set(FLD_FREQUENCY, amberSite.GnomadFrequency);
         }
     }
 }
