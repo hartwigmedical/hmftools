@@ -13,6 +13,7 @@ import com.hartwig.hmftools.pavereverse.protein.Duplication;
 import com.hartwig.hmftools.pavereverse.protein.Frameshift;
 import com.hartwig.hmftools.pavereverse.protein.Insertion;
 import com.hartwig.hmftools.pavereverse.protein.ProteinVariant;
+import com.hartwig.hmftools.pavereverse.protein.SingleAminoAcidSilentVariant;
 import com.hartwig.hmftools.pavereverse.protein.SingleAminoAcidVariant;
 import com.hartwig.hmftools.pavereverse.protein.StartLost;
 import com.hartwig.hmftools.pavereverse.protein.StopGained;
@@ -34,6 +35,13 @@ class ProteinVariantFactory
     {
         return mTranscripts.stream()
                 .map(t -> new SingleAminoAcidVariant(mGeneData, t.mTranscriptData, t.mAminoAcids, altSpec))
+                .collect(Collectors.toSet());
+    }
+
+    Set<ProteinVariant> buildSingleAminoAcidSilentVariants(AminoAcidSpecification altSpec)
+    {
+        return mTranscripts.stream()
+                .map(t -> new SingleAminoAcidSilentVariant(mGeneData, t.mTranscriptData, t.mAminoAcids, altSpec.Position))
                 .collect(Collectors.toSet());
     }
 
