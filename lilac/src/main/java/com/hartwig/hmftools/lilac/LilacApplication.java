@@ -519,9 +519,7 @@ public class LilacApplication
                     .forEach(x -> nextSolutionInfo.add(x.toString()));
         }
 
-        LL_LOGGER.info("WINNERS_REF: {}, {}, {}, {}, {}, {}",
-                mConfig.Sample, mRankedComplexes.size(), HlaAllele.toString(winningRefCoverage.getAlleles()), format("%.3f", scoreMargin),
-                nextSolutionInfo, totalCoverages);
+        LL_LOGGER.info("winning solution: {}", HlaAllele.toString(winningRefCoverage.getAlleles()));
 
         // write fragment assignment data
         for(FragmentAlleles fragAllele : mRefFragAlleles)
@@ -575,8 +573,7 @@ public class LilacApplication
         ComplexCoverage refCoverage = !mConfig.tumorOnly() ? winningRefCoverage
                 : ComplexCoverage.create(Lists.newArrayList());
 
-        mSolutionSummary = SolutionSummary.create(refCoverage, mTumorCoverage, mTumorCopyNumber,
-                mSomaticCodingCounts, mRnaCoverage);
+        mSolutionSummary = SolutionSummary.create(refCoverage, mTumorCoverage, mTumorCopyNumber, mSomaticCodingCounts, mRnaCoverage);
 
         writeFileOutputs();
 

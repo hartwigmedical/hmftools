@@ -45,6 +45,62 @@ public class SolutionSummary
         RnaCoverage = rnaCoverage;
     }
 
+    public static SolutionSummary create(
+            final ComplexCoverage referenceCoverage, final ComplexCoverage tumorCoverage,
+            final List<Double> tumorCopyNumber, final Iterable<SomaticCodingCount> somaticCodingCount, final ComplexCoverage rnaCoverage)
+    {
+        List<SomaticCodingCount> sortedCodingCount = Lists.newArrayList(somaticCodingCount);
+        Collections.sort(sortedCodingCount, new SomaticCodingCountSorter());
+
+        return new SolutionSummary(CURRENT_GENES, referenceCoverage, tumorCoverage, tumorCopyNumber, sortedCodingCount, rnaCoverage);
+    }
+
+    @Nullable
+    public static BufferedWriter initialiseWriter(final String fileName)
+    {
+        try
+        {
+            BufferedWriter writer = createBufferedWriter(fileName);
+            writer.write(LilacAllele.header());
+            writer.newLine();
+            return writer;
+        }
+        catch(IOException e)
+        {
+            LL_LOGGER.error("Failed to write to {}: {}", fileName, e.toString());
+            return null;
+        }
+    }
+
+    public void write(final BufferedWriter writer)
+    {
+        List<LilacAllele> alleles = Lists.newArrayList();
+
+        if(ReferenceCoverage != null)
+        {
+            int alleleCount = 0;
+
+            if(!ReferenceCoverage.getAlleles().isEmpty())
+                alleleCount = ReferenceCoverage.getAlleles().size();
+            else if(TumorCoverage != null && !TumorCoverage.getAlleles().isEmpty())
+                alleleCount = TumorCoverage.getAlleles().size();
+
+            for(int i = 0; i < alleleCount; ++i)
+            {
+                alleles.add(buildAlleleData(i));
+            }
+        }
+
+        try
+        {
+            LilacAllele.write(writer, alleles);
+        }
+        catch(Exception e)
+        {
+            LL_LOGGER.error("failed to write solution summary: {}", e.toString());
+        }
+    }
+
     private LilacAllele buildAlleleData(int index)
     {
         // ref will be empty in tumor-only mode
@@ -88,52 +144,6 @@ public class SolutionSummary
                 .somaticSynonymous(codingCount.synonymous())
                 .somaticInframeIndel(codingCount.inframeIndel())
                 .build();
-    }
-
-    public static SolutionSummary create(
-            final ComplexCoverage referenceCoverage, final ComplexCoverage tumorCoverage,
-            final List<Double> tumorCopyNumber, final Iterable<SomaticCodingCount> somaticCodingCount, final ComplexCoverage rnaCoverage)
-    {
-        List<SomaticCodingCount> sortedCodingCount = Lists.newArrayList(somaticCodingCount);
-        Collections.sort(sortedCodingCount, new SomaticCodingCountSorter());
-
-        return new SolutionSummary(CURRENT_GENES, referenceCoverage, tumorCoverage, tumorCopyNumber, sortedCodingCount, rnaCoverage);
-    }
-
-    @Nullable
-    public static BufferedWriter initialiseWriter(final String fileName)
-    {
-        try
-        {
-            BufferedWriter writer = createBufferedWriter(fileName);
-            writer.write(LilacAllele.header());
-            writer.newLine();
-            return writer;
-        }
-        catch(IOException e)
-        {
-            LL_LOGGER.error("Failed to write to {}: {}", fileName, e.toString());
-            return null;
-        }
-    }
-
-    public void write(final BufferedWriter writer)
-    {
-        List<LilacAllele> alleles = Lists.newArrayList();
-        if(ReferenceCoverage != null)
-        {
-            for(int i = 0; i < ReferenceCoverage.getAlleles().size(); ++i)
-                alleles.add(buildAlleleData(i));
-        }
-
-        try
-        {
-            LilacAllele.write(writer, alleles);
-        }
-        catch(Exception e)
-        {
-            LL_LOGGER.error("failed to write solution summary: {}", e.toString());
-        }
     }
 
     private static class SomaticCodingCountSorter implements Comparator<SomaticCodingCount>
