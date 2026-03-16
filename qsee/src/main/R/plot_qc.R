@@ -405,13 +405,14 @@ PLOTS[[FEATURE_TYPE$COVERAGE_DISTRIBUTION]] <- local({
    
    plot_data <- get_plot_data(FEATURE_TYPE$COVERAGE_DISTRIBUTION)
    
-   plot_labels <- labs(title = "Coverage", x = "Coverage", y = "Prop. of bases")
+   plot_labels <- labs(title = "Coverage", x = "Coverage", y = "Bases")
    
    if(is.null(plot_data)){
       return(plot_missing_data(plot_labels))
    }
    
    plot_distribution(plot_data, x = "ReadDepth", mark_sample_peak = TRUE, invert_normal = TRUE, hlines = 0) +
+      scale_y_continuous(label = scales::label_percent()) +
       plot_labels +
       render_now()
 })
@@ -420,16 +421,38 @@ PLOTS[[FEATURE_TYPE$FRAG_LENGTH_DISTRIBUTION]] <- local({
    
    plot_data <- get_plot_data(FEATURE_TYPE$FRAG_LENGTH_DISTRIBUTION)
    
-   plot_labels <- labs(title = "Fragment length", x = "Fragment length", y = "Prop. of fragments")
+   plot_labels <- labs(title = "Fragment length", x = "Fragment length", y = "Fragments")
    
    if(is.null(plot_data)){
       return(plot_missing_data(plot_labels))
    }
    
    plot_distribution(plot_data, x = "FragLength", mark_sample_peak = TRUE, invert_normal = TRUE, hlines = 0) +
+      scale_y_continuous(label = scales::label_percent()) +
       plot_labels +
       render_now()
 })
+
+PLOTS[[FEATURE_TYPE$DUPLICATE_FREQ]] <- local({
+   
+   plot_data <- get_plot_data(FEATURE_TYPE$DUPLICATE_FREQ)
+   
+   plot_labels <- labs(title = "Duplicate frequency", x = "Duplicate read count", y = "Read groups")
+
+   if(is.null(plot_data)){
+      return(plot_missing_data(plot_labels))
+   }
+   
+   plot_distribution(plot_data, x = "ReadCount") +
+      scale_x_continuous(transform = "log10", guide = "axis_logticks") +
+      scale_y_continuous(label = scales::label_percent()) +
+      plot_labels +
+      theme(
+         panel.grid.major.x = element_line(color = "grey90", linewidth = 0.25),
+      ) +
+      render_now()
+})
+
 
 PLOTS[[FEATURE_TYPE$GC_BIAS]] <- local({
    
@@ -443,25 +466,6 @@ PLOTS[[FEATURE_TYPE$GC_BIAS]] <- local({
    
    plot_distribution(plot_data, x = "GCBucket", mark_sample_peak = FALSE, invert_normal = FALSE) +
       plot_labels +
-      render_now()
-})
-
-PLOTS[[FEATURE_TYPE$DUPLICATE_FREQ]] <- local({
-   
-   plot_data <- get_plot_data(FEATURE_TYPE$DUPLICATE_FREQ)
-   
-   plot_labels <- labs(title = "Duplicate frequency", x = "Duplicate read count", y = "Prop. of read groups")
-   
-   if(is.null(plot_data)){
-      return(plot_missing_data(plot_labels))
-   }
-   
-   plot_distribution(plot_data, x = "ReadCount") +
-      plot_labels +
-      scale_x_log10(guide = "axis_logticks") +
-      theme(
-         panel.grid.major.x = element_line(color = "grey90", linewidth = 0.25),
-      ) +
       render_now()
 })
 
@@ -613,7 +617,7 @@ PLOTS[[FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD]] <- local({
    plot_labels <- labs(
       title = "Genes with potential missed variants",
       x = sprintf("Genes (top %s per sample type)", TOP_N_GENES), 
-      y = sprintf("Missed variant likelihood (>%s)", MIN_MISSED_VARIANT_LIKELIHOOD)
+      y = sprintf("Missed variant likelihood (>%s)", scales::label_percent()(MIN_MISSED_VARIANT_LIKELIHOOD))
    )
    
    plot_data <- get_plot_data(FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD)
@@ -652,7 +656,7 @@ PLOTS[[FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD]] <- local({
    plot_pairwise_comparison(plot_data, x = "Gene", plot_type = box_or_bar_plot()) + 
       plot_labels +
       gg_facet_wrap +
-      scale_y_continuous(labels = scales::label_number(drop0trailing=TRUE)) +
+      scale_y_continuous(labels = scales::label_percent(drop0trailing=TRUE)) +
       coord_flip(ylim = c(0, NA)) +
       theme(
          panel.grid.major.x = element_line(color = "grey90", linewidth = 0.25),
@@ -1146,8 +1150,8 @@ create_report <- local({
       
       "B" = FEATURE_TYPE$COVERAGE_DISTRIBUTION,
       "C" = FEATURE_TYPE$FRAG_LENGTH_DISTRIBUTION,
-      "D" = FEATURE_TYPE$GC_BIAS,
-      "E" = FEATURE_TYPE$DUPLICATE_FREQ,
+      "D" = FEATURE_TYPE$DUPLICATE_FREQ,
+      "E" = FEATURE_TYPE$GC_BIAS,
       "F" = FEATURE_TYPE$DISCORDANT_FRAG_FREQ,
       "G" = FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD,
       
