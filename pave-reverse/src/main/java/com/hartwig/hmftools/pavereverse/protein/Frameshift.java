@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.pavereverse.protein;
 
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import com.google.common.base.Preconditions;
@@ -30,17 +32,10 @@ public class Frameshift extends ProteinVariant
     @Override
     Set<ChangeResult> applyChange(ChangeContext context)
     {
-        Pair<String, String> baseToLeftAndBaseDeleted = context.forwardStrandBaseAndLeftNeighbour();
-        String newBases = context.Exon.baseSequenceWithSingleBaseRemoved(context.StartPositionInExon, context.IsPositiveStrand);
-        AminoAcidSequence newAminoAcids = AminoAcidSequence.fromNucleotides(newBases);
-        String alt = baseToLeftAndBaseDeleted.getLeft();
-        String ref = alt + baseToLeftAndBaseDeleted.getRight();
-        int changePosition = context.insertionPoint();
-        if(!context.IsPositiveStrand)
-        {
-            changePosition -= 1;
-        }
-        return Set.of(new ChangeResult(newAminoAcids, newBases, changePosition, ref, alt));
+        Set<ChangeResult> changeResults = new HashSet<>();
+        changeResults.add(deletionForChange(context));
+        changeResults.addAll(insertionsForChange(context));
+        return changeResults;
     }
 
     @Override
@@ -59,5 +54,38 @@ public class Frameshift extends ProteinVariant
             return false;
         }
         return !candidate.get(variantSequence().length()).equals(FirstChangedAminoAcid);
+    }
+
+    private ChangeResult deletionForChange(ChangeContext context)
+    {
+        Pair<String, String> baseToLeftAndBaseDeleted = context.forwardStrandBaseAndLeftNeighbour();
+        String newBases = context.Exon.baseSequenceWithSingleBaseRemoved(context.StartPositionInExon, context.IsPositiveStrand);
+        AminoAcidSequence newAminoAcids = AminoAcidSequence.fromNucleotides(newBases);
+        String alt = baseToLeftAndBaseDeleted.getLeft();
+        String ref = alt + baseToLeftAndBaseDeleted.getRight();
+        int changePosition = context.insertionPoint();
+        if(!context.IsPositiveStrand)
+        {
+            changePosition -= 1;
+        }
+        return new ChangeResult(newAminoAcids, newBases, changePosition, ref, alt);
+    }
+
+    private Set<ChangeResult> insertionsForChange(ChangeContext context)
+    {
+        Pair<String, String> baseToLeftAndBaseDeleted = context.forwardStrandBaseAndLeftNeighbour();
+        String ref = baseToLeftAndBaseDeleted.getLeft();
+        int changePosition = context.insertionPoint();
+        Set<ChangeResult> result = new HashSet<>();
+
+        List<String> bases = List.of("A", "C", "G", "T");
+        for(String b : bases)
+        {
+            String newBases = context.Exon.baseSequenceWithSingleBaseInserted(context.StartPositionInExon, b, context.IsPositiveStrand);
+            AminoAcidSequence newAminoAcids = AminoAcidSequence.fromNucleotides(newBases);
+            String alt = ref + b;
+            result.add(new ChangeResult(newAminoAcids, newBases, changePosition, ref, alt));
+        }
+        return result;
     }
 }

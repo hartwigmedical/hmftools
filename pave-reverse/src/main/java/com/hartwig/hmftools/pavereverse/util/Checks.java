@@ -32,7 +32,12 @@ public class Checks
         return isNucleotide(s.charAt(0)) && isNucleotide(s.charAt(1)) && isNucleotide(s.charAt(2));
     }
 
-    static boolean isNucleotide(char c)
+    public static boolean isNucleotide(String s)
+    {
+        return s.length() == 1 && isNucleotide(s.charAt(0));
+    }
+
+    public static boolean isNucleotide(char c)
     {
         return c == 'A' || c == 'C' || c == 'G' || c == 'T';
     }

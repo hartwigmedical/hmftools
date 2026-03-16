@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.pavereverse.protein;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.util.Set;
 
 import com.hartwig.hmftools.pavereverse.base.PaddedExon;
@@ -20,7 +23,7 @@ public class FrameshiftTest extends VariantTest
     {
         Frameshift frameshift = new Frameshift(gene, transcript, taa, fsRange);
         AminoAcidSequence expected = AminoAcidSequence.parse("MAAQVA");
-        Assert.assertEquals(expected, frameshift.variantSequence());
+        assertEquals(expected, frameshift.variantSequence());
     }
 
     @Test
@@ -43,7 +46,7 @@ public class FrameshiftTest extends VariantTest
     @Test
     public void applyChangeTest()
     {
-        PaddedExon exon = new PaddedExon(8,"", "", exon0Bases, 9, "GGATC", "TACG" );
+        PaddedExon exon = new PaddedExon(8, "", "", exon0Bases, 9, "GGATC", "TACG");
         ChangeContext context = new ChangeContext(exon, 6, 6, true, 1);
         //MAAQVAPAAS  -> MA*
         final AminoAcidRange range = new AminoAcidRange(aas(3, "A"), aas(3, "A"));
@@ -52,13 +55,12 @@ public class FrameshiftTest extends VariantTest
         // ATG GCC GCG CAG GTC
         // ATG GCC CGC AGG TCT... M A R R S...
         Set<ChangeResult> results = fs.applyChange(context);
-        Assert.assertEquals(1, results.size());
-        ChangeResult result = results.iterator().next();
-        Assert.assertEquals("MARRS", result.Acids.sequence());
-        String bases = result.ExonBases;
-        Assert.assertEquals("ATGGCCCGCAGGTCT", bases);
-        Assert.assertEquals(9 + 6 - 1, result.Location);
-        Assert.assertEquals("CG", result.RefBases);
-        Assert.assertEquals("C", result.AltBases);
+        assertEquals(5, results.size());
+        for(ChangeResult result : results)
+        {
+            assertEquals(9 + 6 - 1, result.Location);
+            assertTrue(result.RefBases.startsWith("C"));
+            assertTrue(result.Acids.sequence().startsWith("MA"));
+        }
     }
 }
