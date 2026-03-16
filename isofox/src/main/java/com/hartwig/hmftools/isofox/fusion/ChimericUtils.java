@@ -12,14 +12,14 @@ import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MIN_SOF
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.isofox.common.ReadRecord;
+import com.hartwig.hmftools.isofox.common.Read;
 import com.hartwig.hmftools.isofox.common.TransExonRef;
 
 import htsjdk.samtools.CigarOperator;
 
 public final class ChimericUtils
 {
-    public static boolean isInversion(final List<ReadRecord> reads)
+    public static boolean isInversion(final List<Read> reads)
     {
         // an inversion must a) be same chromosome b) have supplementary alignment c) have same orientations around the chimeric junction
         if(!reads.stream().anyMatch(x -> x.hasSuppAlignment()) || reads.size() != 3)
@@ -28,7 +28,7 @@ public final class ChimericUtils
         byte existingOrient = 0;
         String existingChromosome = "";
 
-        for(ReadRecord read : reads)
+        for(Read read : reads)
         {
             if(!read.hasSuppAlignment())
                 continue;
@@ -55,7 +55,7 @@ public final class ChimericUtils
         return false;
     }
 
-    public static int[] findSplitReadJunction(final ReadRecord read)
+    public static int[] findSplitReadJunction(final Read read)
     {
         if(!read.containsSplit())
             return null;
@@ -79,7 +79,7 @@ public final class ChimericUtils
         return null;
     }
 
-    public static boolean hasRealignableSoftClip(final ReadRecord read, int se, boolean checkMax)
+    public static boolean hasRealignableSoftClip(final Read read, int se, boolean checkMax)
     {
         if(!read.isSoftClipped(se))
             return false;
@@ -89,19 +89,19 @@ public final class ChimericUtils
         return (scLength >= REALIGN_MIN_SOFT_CLIP_BASE_LENGTH && (!checkMax || scLength <= REALIGN_MAX_SOFT_CLIP_BASE_LENGTH));
     }
 
-    public static boolean isRealignedFragmentCandidate(final ReadRecord read)
+    public static boolean isRealignedFragmentCandidate(final Read read)
     {
         return hasRealignableSoftClip(read, SE_START, true) || hasRealignableSoftClip(read, SE_END, true);
     }
 
-    public static boolean setHasMultipleKnownSpliceGenes(final List<ReadRecord> reads, final List<String[]> knownPairGeneIds)
+    public static boolean setHasMultipleKnownSpliceGenes(final List<Read> reads, final List<String[]> knownPairGeneIds)
     {
         // determines whether reads definitely span multiple genes based on the presence of known splice sites at the fragment junction
-        ReadRecord splitRead = null;
+        Read splitRead = null;
 
         final List<TransExonRef>[] junctionTransRefs = new List[] { Lists.newArrayList(), Lists.newArrayList()};
 
-        for(ReadRecord read : reads)
+        for(Read read : reads)
         {
             if(read.containsSplit())
             {

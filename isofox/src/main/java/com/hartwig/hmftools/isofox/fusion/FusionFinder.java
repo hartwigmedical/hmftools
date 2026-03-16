@@ -9,7 +9,7 @@ import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.switchIndex;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.common.ReadRecord.NO_GENE_ID;
+import static com.hartwig.hmftools.isofox.common.Read.NO_GENE_ID;
 import static com.hartwig.hmftools.isofox.common.TransExonRef.hasMatchWithinRange;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.HIGH_LOG_COUNT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;

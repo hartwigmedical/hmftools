@@ -16,7 +16,7 @@ import static com.hartwig.hmftools.isofox.neo.NeoFragmentSupport.PARTIAL_MATCH;
 
 import java.util.List;
 
-import com.hartwig.hmftools.isofox.common.ReadRecord;
+import com.hartwig.hmftools.isofox.common.Read;
 import com.hartwig.hmftools.isofox.fusion.ChimericReadGroup;
 
 import com.google.common.collect.Lists;
@@ -27,7 +27,7 @@ public class NeoFragmentMatcher
     public static final int NOVEL_BASE_OVERLAP = 5;
     private static final int MAX_BASE_MISMATCH = 2;
 
-    public static NeoFragmentSupport findFusionSupport(final NeoEpitopeData neData, int stream, final ReadRecord read)
+    public static NeoFragmentSupport findFusionSupport(final NeoEpitopeData neData, int stream, final Read read)
     {
         NeoFragmentSupport support = new NeoFragmentSupport();
 
@@ -266,7 +266,7 @@ public class NeoFragmentMatcher
     }
 
     public static int compareCodingBases(
-            final ReadRecord read, final String neoCodingBases, final List<int[]> neoCoords, int posStart, int posEnd)
+            final Read read, final String neoCodingBases, final List<int[]> neoCoords, int posStart, int posEnd)
     {
         int readBaseIndex = 0;
         String readBases = "";
@@ -396,7 +396,7 @@ public class NeoFragmentMatcher
             else
                 refBase = neData.getCodingBaseRange(fs)[neData.Orientations[fs] == ORIENT_FWD ? SE_END : SE_START];
 
-            for(ReadRecord read : readGroup.reads())
+            for(Read read : readGroup.reads())
             {
                 if(!read.Chromosome.equals(chromosome))
                     continue;

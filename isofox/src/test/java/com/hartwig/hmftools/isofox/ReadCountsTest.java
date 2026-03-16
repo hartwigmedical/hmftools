@@ -15,7 +15,7 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.isofox.common.ReadRecord;
+import com.hartwig.hmftools.isofox.common.Read;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
 
 import org.junit.Test;
@@ -33,7 +33,7 @@ public class ReadCountsTest
     public void testReadCoordinates()
     {
         // single matched region
-        ReadRecord read = createReadRecord(1, "1", 100, 119, REF_BASE_STR_1, createCigar(0, 20, 0));
+        Read read = createReadRecord(1, "1", 100, 119, REF_BASE_STR_1, createCigar(0, 20, 0));
 
         // simple matched read
         assertEquals(1, read.getMappedRegionCoords().size());
@@ -103,7 +103,7 @@ public class ReadCountsTest
         RegionReadData region = new RegionReadData("1", 100, 200);
 
         // read covers part of the exon
-        ReadRecord read = createReadRecord(1, "1", 110, 130, REF_BASE_STR_1, createCigar(0, 21, 0));
+        Read read = createReadRecord(1, "1", 110, 130, REF_BASE_STR_1, createCigar(0, 21, 0));
 
         assertEquals(1, read.getMappedRegionCoords().size());
         assertEquals(110, read.getMappedRegionCoords().get(0)[SE_START]);
@@ -160,7 +160,7 @@ public class ReadCountsTest
         region1.addPostRegion(region2);
         region2.addPreRegion(region1);
 
-        ReadRecord read = createReadRecord(1, "1", 200, 209, REF_BASE_STR_1.substring(5, 19),
+        Read read = createReadRecord(1, "1", 200, 209, REF_BASE_STR_1.substring(5, 19),
                 createCigar(5, 10, 0));
 
         List<RegionReadData> regions = Lists.newArrayList(region2);

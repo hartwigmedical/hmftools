@@ -21,7 +21,7 @@ import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
 import com.hartwig.hmftools.isofox.common.FragmentMatchType;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
-import com.hartwig.hmftools.isofox.common.ReadRecord;
+import com.hartwig.hmftools.isofox.common.Read;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
 
 public class ExpressionReadTracker
@@ -89,7 +89,7 @@ public class ExpressionReadTracker
         addGcCounts(catCounts, commonMappings, minMapQuality);
     }
 
-    public void processIntronicReads(final List<GeneReadData> genes, final ReadRecord read1, final ReadRecord read2)
+    public void processIntronicReads(final List<GeneReadData> genes, final Read read1, final Read read2)
     {
         if(!mEnabled)
             return;
@@ -154,11 +154,11 @@ public class ExpressionReadTracker
     }
 
 
-    public void processValidTranscript(int transId, final List<ReadRecord> reads, boolean isUniqueTrans)
+    public void processValidTranscript(int transId, final List<Read> reads, boolean isUniqueTrans)
     {
         final List<RegionReadData> processedRegions = Lists.newArrayList();
 
-        for(ReadRecord read : reads)
+        for(Read read : reads)
         {
             List<RegionReadData> regions = read.getMappedRegions().entrySet().stream()
                     .filter(x -> x.getKey().hasTransId(transId))

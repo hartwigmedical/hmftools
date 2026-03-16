@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.isofox.ReadCountsTest.REF_BASE_STR_1;
 import static com.hartwig.hmftools.isofox.TestUtils.createCigar;
 import static com.hartwig.hmftools.isofox.TestUtils.createReadRecord;
 import static com.hartwig.hmftools.isofox.TestUtils.createRegion;
-import static com.hartwig.hmftools.isofox.common.ReadRecord.markRegionBases;
+import static com.hartwig.hmftools.isofox.common.Read.markRegionBases;
 import static com.hartwig.hmftools.isofox.common.CommonUtils.deriveCommonRegions;
 import static com.hartwig.hmftools.isofox.common.CommonUtils.findStringOverlaps;
 
@@ -18,7 +18,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.isofox.common.FragmentTracker;
-import com.hartwig.hmftools.isofox.common.ReadRecord;
+import com.hartwig.hmftools.isofox.common.Read;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
 
 import org.junit.Test;
@@ -151,9 +151,9 @@ public class ReadUtilsTest
         assertTrue(fragTracker.checkReadId(readId3));
         assertEquals(0, fragTracker.readsCount());
 
-        ReadRecord read1 = createReadRecord(1, "1", 100, 200, REF_BASE_STR_1, createCigar(0, 50, 0));
-        ReadRecord read2 = createReadRecord(2, "1", 100, 200, REF_BASE_STR_1, createCigar(0, 50, 0));
-        ReadRecord read3 = createReadRecord(3, "1", 100, 200, REF_BASE_STR_1, createCigar(0, 50, 0));
+        Read read1 = createReadRecord(1, "1", 100, 200, REF_BASE_STR_1, createCigar(0, 50, 0));
+        Read read2 = createReadRecord(2, "1", 100, 200, REF_BASE_STR_1, createCigar(0, 50, 0));
+        Read read3 = createReadRecord(3, "1", 100, 200, REF_BASE_STR_1, createCigar(0, 50, 0));
 
         assertEquals(null, fragTracker.checkRead(read1));
         assertEquals(null, fragTracker.checkRead(read2));
@@ -161,9 +161,9 @@ public class ReadUtilsTest
 
         assertEquals(3, fragTracker.readsCount());
 
-        ReadRecord read1b = createReadRecord(1, "1", 100, 200, REF_BASE_STR_1, createCigar(0, 50, 0));
-        ReadRecord read2b = createReadRecord(2, "1", 100, 200, REF_BASE_STR_1, createCigar(0, 50, 0));
-        ReadRecord read3b = createReadRecord(3, "1", 100, 200, REF_BASE_STR_1, createCigar(0, 50, 0));
+        Read read1b = createReadRecord(1, "1", 100, 200, REF_BASE_STR_1, createCigar(0, 50, 0));
+        Read read2b = createReadRecord(2, "1", 100, 200, REF_BASE_STR_1, createCigar(0, 50, 0));
+        Read read3b = createReadRecord(3, "1", 100, 200, REF_BASE_STR_1, createCigar(0, 50, 0));
 
         assertEquals(read1, fragTracker.checkRead(read1b));
         assertEquals(read2, fragTracker.checkRead(read2b));

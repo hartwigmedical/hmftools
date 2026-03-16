@@ -29,7 +29,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.neo.NeoEpitopeFile;
 import com.hartwig.hmftools.common.neo.NeoEpitopeType;
-import com.hartwig.hmftools.isofox.common.ReadRecord;
+import com.hartwig.hmftools.isofox.common.Read;
 import com.hartwig.hmftools.isofox.neo.NeoEpitopeData;
 import com.hartwig.hmftools.isofox.neo.NeoFragmentSupport;
 
@@ -123,7 +123,7 @@ public class NeoEpitopesTest
         // first read has no overlap
         int rbStart = 80;
         int rbEnd = 100;
-        ReadRecord read = createReadRecord(1, CHR_1, rbStart, rbEnd, codingBases.substring(rbStart, rbEnd + 1),
+        Read read = createReadRecord(1, CHR_1, rbStart, rbEnd, codingBases.substring(rbStart, rbEnd + 1),
                 createCigar(0, rbEnd - rbStart + 1, 0));
 
         NeoFragmentSupport support = findFusionSupport(neData, FS_UP, read);

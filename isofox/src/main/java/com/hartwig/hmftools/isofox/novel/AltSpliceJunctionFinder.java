@@ -46,7 +46,7 @@ import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.BaseDepth;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
-import com.hartwig.hmftools.isofox.common.ReadRecord;
+import com.hartwig.hmftools.isofox.common.Read;
 import com.hartwig.hmftools.isofox.common.RegionMatchType;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
 import com.hartwig.hmftools.isofox.common.TransMatchType;
@@ -95,7 +95,7 @@ public class AltSpliceJunctionFinder
     }
 
     public void evaluateFragmentReads(
-            final List<GeneReadData> genes, final ReadRecord read1, final ReadRecord read2, final List<Integer> relatedTransIds)
+            final List<GeneReadData> genes, final Read read1, final Read read2, final List<Integer> relatedTransIds)
     {
         if(!mEnabled)
             return;
@@ -157,7 +157,7 @@ public class AltSpliceJunctionFinder
         }
     }
 
-    private static boolean isCandidate(final ReadRecord read)
+    private static boolean isCandidate(final Read read)
     {
         if(!read.Cigar.containsOperator(CigarOperator.N))
             return false;
@@ -171,7 +171,7 @@ public class AltSpliceJunctionFinder
         return true;
     }
 
-    private static boolean isCandidateCircular(final ReadRecord read1, final ReadRecord read2)
+    private static boolean isCandidateCircular(final Read read1, final Read read2)
     {
         return read1.hasSuppAlignment() && read2.hasSuppAlignment();
     }
@@ -197,7 +197,7 @@ public class AltSpliceJunctionFinder
         return false;
     }
 
-    public AltSpliceJunction createFromRead(final ReadRecord read, final List<Integer> relatedTransIds)
+    public AltSpliceJunction createFromRead(final Read read, final List<Integer> relatedTransIds)
     {
         // related transcripts will any of those where either read covers one or more of its exons
         int[] spliceJunction = new int[SE_PAIR];
@@ -300,7 +300,7 @@ public class AltSpliceJunctionFinder
         spliceJunction[SE_END] -= minDistance;
     }
 
-    public AltSpliceJunction createFromReads(final ReadRecord read1, final ReadRecord read2, final List<Integer> relatedTransIds)
+    public AltSpliceJunction createFromReads(final Read read1, final Read read2, final List<Integer> relatedTransIds)
     {
         // related transcripts will any of those where either read covers one or more of its exons
         int[] spliceJunction = new int[SE_PAIR];
@@ -311,7 +311,7 @@ public class AltSpliceJunctionFinder
 
         for(int i = 0; i <= 1; ++i)
         {
-            final ReadRecord read = (i == 0) ? read1 : read2;
+            final Read read = (i == 0) ? read1 : read2;
 
             // take the longer of the 2 soft-clippings
             ClippedSide clippedSide = ClippedSide.from(read.Cigar, read.isSoftClipped(SE_START), read.isSoftClipped(SE_END));
@@ -373,7 +373,7 @@ public class AltSpliceJunctionFinder
     }
 
     private void classifyRegions(
-            final ReadRecord read, final int[] spliceJunction,
+            final Read read, final int[] spliceJunction,
             final List<RegionReadData> sjStartRegions, final List<RegionReadData> sjEndRegions, final AltSpliceJunctionContext[] regionContexts)
     {
         // collect up all exon regions matching the observed novel splice junction
@@ -554,7 +554,7 @@ public class AltSpliceJunctionFinder
     }
 
     private AltSpliceJunction registerAltSpliceJunction(
-            final List<GeneReadData> candidateGenes, final ReadRecord read, final List<Integer> regionTranscripts)
+            final List<GeneReadData> candidateGenes, final Read read, final List<Integer> regionTranscripts)
     {
         AltSpliceJunction altSpliceJunc = createFromRead(read, regionTranscripts);
 
@@ -578,7 +578,7 @@ public class AltSpliceJunctionFinder
     }
 
     private AltSpliceJunction registerAltSpliceJunction(
-            final List<GeneReadData> candidateGenes, final ReadRecord read1, final ReadRecord read2, final List<Integer> regionTranscripts)
+            final List<GeneReadData> candidateGenes, final Read read1, final Read read2, final List<Integer> regionTranscripts)
     {
         AltSpliceJunction altSpliceJunc = createFromReads(read1, read2, regionTranscripts);
 

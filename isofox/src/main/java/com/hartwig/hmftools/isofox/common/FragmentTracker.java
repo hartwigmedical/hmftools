@@ -33,9 +33,9 @@ public class FragmentTracker
         return true;
     }
 
-    public ReadRecord checkRead(final ReadRecord read)
+    public Read checkRead(final Read read)
     {
-        ReadRecord otherRead = (ReadRecord)mReadMap.get(read.Id);
+        Read otherRead = (Read)mReadMap.get(read.Id);
 
         if(otherRead == null)
         {

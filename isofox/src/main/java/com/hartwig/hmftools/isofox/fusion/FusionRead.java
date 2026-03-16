@@ -19,7 +19,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.isofox.common.BaseDepth;
-import com.hartwig.hmftools.isofox.common.ReadRecord;
+import com.hartwig.hmftools.isofox.common.Read;
 import com.hartwig.hmftools.isofox.common.RegionMatchType;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
 
@@ -59,7 +59,7 @@ public class FusionRead
     private List<FusionTransExon> mUpperTransExonRefs; // TE refs for upper coords if a spanning read
     private RegionMatchType mUpperRegionMatchType;
 
-    public FusionRead(final ReadRecord read)
+    public FusionRead(final Read read)
     {
         Chromosome = read.Chromosome;
         Positions = new int[] { read.PosStart, read.PosEnd};
@@ -139,7 +139,7 @@ public class FusionRead
         return se == SE_END && mUpperTransExonRefs != null ? mUpperRegionMatchType : mRegionMatchType;
     }
 
-    private void extractReadTransExonRefs(final ReadRecord read)
+    private void extractReadTransExonRefs(final Read read)
     {
         if(!read.getMappedRegions().isEmpty())
         {
@@ -213,7 +213,7 @@ public class FusionRead
         return 0;
     }
 
-    public static List<FusionRead> convertReads(final List<ReadRecord> reads)
+    public static List<FusionRead> convertReads(final List<Read> reads)
     {
         List<FusionRead> fusionReads = reads.stream().map(x -> new FusionRead(x)).collect(Collectors.toList());
         return fusionReads;

@@ -101,9 +101,9 @@ public class GeneReadData
         return commonExonicRegions.stream().mapToInt(x -> x[SE_END] - x[SE_START]).sum();
     }
 
-    public List<RegionReadData> findOverlappingRegions(final ReadRecord read)
+    public List<RegionReadData> findOverlappingRegions(final Read read)
     {
-        return ReadRecord.findOverlappingRegions(mExonRegions, read);
+        return Read.findOverlappingRegions(mExonRegions, read);
     }
 
     public String toString()

@@ -12,7 +12,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.test.GeneTestUtils;
-import com.hartwig.hmftools.isofox.common.ReadRecord;
+import com.hartwig.hmftools.isofox.common.Read;
 
 public final class FusionTestUtils
 {
@@ -25,15 +25,15 @@ public final class FusionTestUtils
         return geneTransCache;
     }
 
-    public static FusionFragment fromReads(final List<ReadRecord> reads)
+    public static FusionFragment fromReads(final List<Read> reads)
     {
         setReadJunctions(reads);
         return new FusionFragment(new FusionReadGroup(reads.get(0).Id, convertReads(reads)));
     }
 
-    public static void setReadJunctions(final List<ReadRecord> reads)
+    public static void setReadJunctions(final List<Read> reads)
     {
-        for(ReadRecord read : reads)
+        for(Read read : reads)
         {
             if(read.containsSplit() && read.junctionPositions() == null)
             {
@@ -48,17 +48,17 @@ public final class FusionTestUtils
         }
     }
 
-    public static FusionReadGroup createGroup(final ReadRecord read)
+    public static FusionReadGroup createGroup(final Read read)
     {
-        final List<ReadRecord> reads = Lists.newArrayList(read);
+        final List<Read> reads = Lists.newArrayList(read);
         setReadJunctions(reads);
         List<FusionRead> fusionReads = FusionRead.convertReads(reads);
         return new FusionReadGroup(read.Id, fusionReads);
     }
 
-    public static FusionReadGroup createGroup(final ReadRecord read1, final ReadRecord read2)
+    public static FusionReadGroup createGroup(final Read read1, final Read read2)
     {
-        final List<ReadRecord> reads = Lists.newArrayList(read1, read2);
+        final List<Read> reads = Lists.newArrayList(read1, read2);
         setReadJunctions(reads);
         List<FusionRead> fusionReads = FusionRead.convertReads(reads);
         return new FusionReadGroup(read1.Id, fusionReads);

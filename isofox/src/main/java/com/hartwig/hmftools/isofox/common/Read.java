@@ -48,7 +48,7 @@ import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMFlag;
 import htsjdk.samtools.SAMRecord;
 
-public class ReadRecord
+public class Read
 {
     public final String Id;
     public final String Chromosome;
@@ -84,12 +84,12 @@ public class ReadRecord
 
     public static final int NO_GENE_ID = -1;
 
-    public static ReadRecord from(final SAMRecord record)
+    public static Read from(final SAMRecord record)
     {
         final String readId = record.isSecondaryAlignment() ? String.format("%s_%s",
                 record.getReadName(), record.getAttribute("HI")) : record.getReadName();
 
-        ReadRecord read = new ReadRecord(
+        Read read = new Read(
                 readId, record.getReferenceName(), record.getStart(), record.getEnd(),
                 record.getReadString(), record.getCigar(), record.getInferredInsertSize(), record.getFlags(),
                 record.getMateReferenceName(), record.getMateAlignmentStart());
@@ -99,7 +99,7 @@ public class ReadRecord
         return read;
     }
 
-    public ReadRecord(
+    public Read(
             final String id, final String chromosome, int posStart, int posEnd, final String readBases, @NotNull final Cigar cigar,
             int insertSize, int flags, final String mateChromosome, int matePosStart)
     {
@@ -165,7 +165,7 @@ public class ReadRecord
 
     public boolean hasSuppAlignment() { return mSupplementaryAlignment != null; }
 
-    public static ClippedSide clippedSide(final ReadRecord read)
+    public static ClippedSide clippedSide(final Read read)
     {
         // considers hard or soft clips
         boolean leftClipped = read.getSoftClipRegionsMatched()[SE_START] == 0 && read.Cigar.isLeftClipped();
@@ -216,7 +216,7 @@ public class ReadRecord
                 && mGeneCollections[SE_START] != NO_GENE_ID && mGeneCollections[SE_END] != NO_GENE_ID;
     }
 
-    public boolean matches(final ReadRecord other)
+    public boolean matches(final Read other)
     {
         return Id.equals(other.Id) && Cigar.toString().equals(other.Cigar.toString()) && PosStart == other.PosStart && PosEnd == other.PosEnd;
     }
@@ -445,7 +445,7 @@ public class ReadRecord
         return mFragmentInsertSize < Length;
     }
 
-    public static final List<RegionReadData> getUniqueValidRegion(final ReadRecord read1, final ReadRecord read2)
+    public static final List<RegionReadData> getUniqueValidRegion(final Read read1, final Read read2)
     {
         final List<RegionReadData> regions = read1.getMappedRegions().entrySet().stream()
                 .filter(x -> validExonMatch(x.getValue()))
@@ -746,7 +746,7 @@ public class ReadRecord
 
     public final Map<RegionReadData,RegionMatchType> getMappedRegions() { return mMappedRegions; }
 
-    public static List<RegionReadData> findOverlappingRegions(final List<RegionReadData> regions, final ReadRecord read)
+    public static List<RegionReadData> findOverlappingRegions(final List<RegionReadData> regions, final Read read)
     {
         return regions.stream()
                 .filter(x -> read.overlapsMappedReads(x.start(), x.end()))

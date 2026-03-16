@@ -49,7 +49,7 @@ import com.hartwig.hmftools.common.fusion.KnownFusionData;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.BaseDepth;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
-import com.hartwig.hmftools.isofox.common.ReadRecord;
+import com.hartwig.hmftools.isofox.common.Read;
 
 import org.junit.Test;
 
@@ -72,8 +72,8 @@ public class FusionDataTest
         final GeneCollection gc1 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_1)));
 
         // a DEL within the same gene collection is invalid
-        ReadRecord read1 = createMappedRead(1, gc1, 1081, 1100, createCigar(0, 20, 20));
-        ReadRecord read2 = createMappedRead(1, gc1, 1200, 1219, createCigar(20, 20, 0));
+        Read read1 = createMappedRead(1, gc1, 1081, 1100, createCigar(0, 20, 20));
+        Read read2 = createMappedRead(1, gc1, 1200, 1219, createCigar(20, 20, 0));
 
         final List<FusionReadGroup> chimericReadGroups = Lists.newArrayList();
         chimericReadGroups.add(createGroup(read1, read2));
@@ -104,9 +104,9 @@ public class FusionDataTest
 
         // 2 spliced fragments
         int readId = 0;
-        ReadRecord read1 = createMappedRead(readId, gc1, 1050, 1089, createCigar(0, 40, 0));
+        Read read1 = createMappedRead(readId, gc1, 1050, 1089, createCigar(0, 40, 0));
 
-        ReadRecord[] readPair = createSupplementaryReadPair(readId, gc1, gc2, 1081, 1100, 10200, 10219,
+        Read[] readPair = createSupplementaryReadPair(readId, gc1, gc2, 1081, 1100, 10200, 10219,
                 createCigar(0, 20, 20), createCigar(20, 20, 0), true);
 
         readPair[1].setStrand(true, false);
@@ -120,7 +120,7 @@ public class FusionDataTest
         readPair = createSupplementaryReadPair(++readId, gc1, gc2, 1081, 1100, 10200, 10219,
                 createCigar(0, 20, 20), createCigar(20, 20, 0), true);
 
-        ReadRecord read3 = createMappedRead(readId, gc2, 10210, 10249, createCigar(0, 40, 0));
+        Read read3 = createMappedRead(readId, gc2, 10210, 10249, createCigar(0, 40, 0));
 
         readPair[1].setStrand(true, false);
         read3.setStrand(true, false);
@@ -141,7 +141,7 @@ public class FusionDataTest
 
         // 1 discordant fragment supporting the spliced fusion
         read1 = createMappedRead(++readId, gc1, 1055, 1084, createCigar(0, 40, 0));
-        ReadRecord read2 = createMappedRead(readId, gc2, 10220, 10259, createCigar(0, 40, 0));
+        Read read2 = createMappedRead(readId, gc2, 10220, 10259, createCigar(0, 40, 0));
         read2.setStrand(true, false);
 
         readGroups1.put(read1.Id, createGroup(read1));
@@ -268,9 +268,9 @@ public class FusionDataTest
         final Map<String,FusionReadGroup> readGroups1 = Maps.newHashMap();
         final Map<String,FusionReadGroup> readGroups2 = Maps.newHashMap();
 
-        ReadRecord read1 = createMappedRead(readId, gc5, 10210, 10249, createCigar(0, 40, 20));
+        Read read1 = createMappedRead(readId, gc5, 10210, 10249, createCigar(0, 40, 20));
 
-        ReadRecord[] readPair = createSupplementaryReadPair(readId, gc5, gc3, 10200, 10219, 20281, 20300,
+        Read[] readPair = createSupplementaryReadPair(readId, gc5, gc3, 10200, 10219, 20281, 20300,
                 createCigar(20, 20, 0), createCigar(0, 20, 20), true);
 
         readPair[0].setStrand(true, false);
@@ -283,7 +283,7 @@ public class FusionDataTest
                 + config.RefGenome.getBaseString(gc5.chromosome(), 10200, 10202);
 
         read1 = createMappedRead(++readId, gc3, 20264, 20300, createCigar(0, 37, 3), junctionBases);
-        ReadRecord read2 = createMappedRead(readId, gc3, 20250, 20289, createCigar(0, 40, 0));
+        Read read2 = createMappedRead(readId, gc3, 20250, 20289, createCigar(0, 40, 0));
         read2.setStrand(true, false);
 
         addRacReadGroup(racFragmentCache, new ChimericReadGroup(read1, read2), ORIENT_FWD, 20300);
@@ -299,7 +299,7 @@ public class FusionDataTest
         addRacReadGroup(racFragmentCache, new ChimericReadGroup(read1, read2), ORIENT_REV, 10200);
 
         // 1 intronic discordant read
-        ReadRecord[] discordantReads = createReadPair(++readId, gc3, gc5, 20150, 20189, 10320, 10359,
+        Read[] discordantReads = createReadPair(++readId, gc3, gc5, 20150, 20189, 10320, 10359,
                 createCigar(0, 40, 0),  createCigar(0, 40, 0), POS_STRAND, NEG_STRAND);
 
         readGroups1.put(discordantReads[0].Id, createGroup(discordantReads[1]));
@@ -378,9 +378,9 @@ public class FusionDataTest
 
         // a spliced fragment to establish the fusion
         int readId = 0;
-        ReadRecord read1 = createMappedRead(readId, gc1, 1050, 1089, createCigar(0, 40, 0));
+        Read read1 = createMappedRead(readId, gc1, 1050, 1089, createCigar(0, 40, 0));
 
-        ReadRecord[] readPair = createSupplementaryReadPair(readId, gc1, gc2, 1081, 1100, 10200, 10219,
+        Read[] readPair = createSupplementaryReadPair(readId, gc1, gc2, 1081, 1100, 10200, 10219,
                 createCigar(0, 20, 20), createCigar(20, 20, 0), true);
 
         readPair[1].setStrand(true, false);
@@ -394,8 +394,8 @@ public class FusionDataTest
         // a soft-clipped read matching the other side of the fusion junction
         String junctionBases = config.RefGenome.getBaseString(gc1.chromosome(), 1071, 1100)
                 + config.RefGenome.getBaseString(gc1.chromosome(), 10200, 10209);
-        ReadRecord read4 = createMappedRead(++readId, gc1, 1071, 1100, createCigar(0, 30, 10), junctionBases);
-        ReadRecord read5 = createMappedRead(readId, gc1, 1051, 1090, createCigar(0, 40, 0));
+        Read read4 = createMappedRead(++readId, gc1, 1071, 1100, createCigar(0, 30, 10), junctionBases);
+        Read read5 = createMappedRead(readId, gc1, 1051, 1090, createCigar(0, 40, 0));
         read5.setStrand(true, false);
 
         addRacReadGroup(racFragmentCache, new ChimericReadGroup(read4, read4), ORIENT_FWD, 1100);
@@ -404,8 +404,8 @@ public class FusionDataTest
         junctionBases = config.RefGenome.getBaseString(gc1.chromosome(), 1091, 1100)
                 + config.RefGenome.getBaseString(gc1.chromosome(), 10200, 10229);
 
-        ReadRecord read6 = createMappedRead(++readId, gc2, 10198, 10229, createCigar(8, 32, 0), junctionBases);
-        ReadRecord read7 = createMappedRead(readId, gc2, 10210, 10249, createCigar(0, 40, 0));
+        Read read6 = createMappedRead(++readId, gc2, 10198, 10229, createCigar(8, 32, 0), junctionBases);
+        Read read7 = createMappedRead(readId, gc2, 10210, 10249, createCigar(0, 40, 0));
         read7.setStrand(true, false);
 
         addRacReadGroup(racFragmentCache, new ChimericReadGroup(read6, read7), ORIENT_REV, 10200);
@@ -454,8 +454,8 @@ public class FusionDataTest
 
         // a simple DEL, supported by 2 split fragments - the discordant read forming the known-pair fusion
         int readId = 0;
-        ReadRecord read1 = createMappedRead(readId, gc1, 1081, 1100, createCigar(0, 20, 20));
-        ReadRecord read2 = createMappedRead(readId, gc2, 10200, 10219, createCigar(20, 20, 0));
+        Read read1 = createMappedRead(readId, gc1, 1081, 1100, createCigar(0, 20, 20));
+        Read read2 = createMappedRead(readId, gc2, 10200, 10219, createCigar(20, 20, 0));
         read2.setStrand(true, false);
 
         readGroups1.put(read1.Id, createGroup(read1));
@@ -475,8 +475,8 @@ public class FusionDataTest
         String junctionBases = config.RefGenome.getBaseString(gc1.chromosome(), 1071, 1100)
                 + config.RefGenome.getBaseString(gc2.chromosome(), 10200, 10209);
 
-        ReadRecord read3 = createMappedRead(++readId, gc1, 1071, 1100, createCigar(0, 30, 10), junctionBases);
-        ReadRecord read4 = createMappedRead(readId, gc1, 1051, 1090, createCigar(0, 40, 0));
+        Read read3 = createMappedRead(++readId, gc1, 1071, 1100, createCigar(0, 30, 10), junctionBases);
+        Read read4 = createMappedRead(readId, gc1, 1051, 1090, createCigar(0, 40, 0));
         read4.setStrand(true, false);
 
         // readGroups1.put(read3.Id, new ReadGroup(read3, read4));
@@ -486,8 +486,8 @@ public class FusionDataTest
         junctionBases = config.RefGenome.getBaseString(gc1.chromosome(), 1091, 1100)
                 + config.RefGenome.getBaseString(gc2.chromosome(), 10200, 10229);
 
-        ReadRecord read5 = createMappedRead(++readId, gc2, 10200, 10229, createCigar(10, 30, 0), junctionBases);
-        ReadRecord read6 = createMappedRead(readId, gc2, 10210, 10249, createCigar(0, 40, 0));
+        Read read5 = createMappedRead(++readId, gc2, 10200, 10229, createCigar(10, 30, 0), junctionBases);
+        Read read6 = createMappedRead(readId, gc2, 10210, 10249, createCigar(0, 40, 0));
         read6.setStrand(true, false);
 
         readGroups1.put(read5.Id, createGroup(read5, read6));
@@ -546,10 +546,10 @@ public class FusionDataTest
         // handle reads from GC 1 and then 2 as the BamFragmentReader would
 
         int readId = 0;
-        ReadRecord read1 = createMappedRead(readId, gc1, 1081, 10219, createCigar(0, 20, 9099, 20, 0));
+        Read read1 = createMappedRead(readId, gc1, 1081, 10219, createCigar(0, 20, 9099, 20, 0));
         read1.setGeneCollection(SE_START, gc1.id(), true);
 
-        ReadRecord read2 = createMappedRead(readId, gc2, 10210, 10249, createCigar(0, 40, 0));
+        Read read2 = createMappedRead(readId, gc2, 10210, 10249, createCigar(0, 40, 0));
         read2.setStrand(true, false);
 
         // realigned and discordant reads which support it
@@ -559,8 +559,8 @@ public class FusionDataTest
                 + config.RefGenome.getBaseString(gc2.chromosome(), 10200, 10209);
 
         // first on GC1
-        ReadRecord read3 = createMappedRead(++readId, gc1, 1071, 1100, createCigar(0, 30, 10), junctionBases);
-        ReadRecord read4 = createMappedRead(readId, gc1, 1051, 1090, createCigar(0, 40, 0));
+        Read read3 = createMappedRead(++readId, gc1, 1071, 1100, createCigar(0, 30, 10), junctionBases);
+        Read read4 = createMappedRead(readId, gc1, 1051, 1090, createCigar(0, 40, 0));
         read4.setStrand(true, false);
 
         addRacReadGroup(racFragmentCache, new ChimericReadGroup(read3, read4), ORIENT_FWD, 1100);
@@ -568,20 +568,20 @@ public class FusionDataTest
         // then on GC2
         junctionBases = config.RefGenome.getBaseString(gc1.chromosome(), 1091, 1100)
                 + config.RefGenome.getBaseString(gc2.chromosome(), 10200, 10229);
-        ReadRecord read5 = createMappedRead(++readId, gc2, 10200, 10229, createCigar(10, 30, 0), junctionBases);
-        ReadRecord read6 = createMappedRead(readId, gc2, 10210, 10249, createCigar(0, 40, 0));
+        Read read5 = createMappedRead(++readId, gc2, 10200, 10229, createCigar(10, 30, 0), junctionBases);
+        Read read6 = createMappedRead(readId, gc2, 10210, 10249, createCigar(0, 40, 0));
         read6.setStrand(true, false);
 
         addRacReadGroup(racFragmentCache, new ChimericReadGroup(read5, read6), ORIENT_REV, 10200);
 
         // and a discordant fragment
-        ReadRecord read7 = createMappedRead(++readId, gc1, 1050, 1089, createCigar(0, 40, 0));
-        ReadRecord read8 = createMappedRead(readId, gc2, 10210, 10249, createCigar(0, 40, 0));
+        Read read7 = createMappedRead(++readId, gc1, 1050, 1089, createCigar(0, 40, 0));
+        Read read8 = createMappedRead(readId, gc2, 10210, 10249, createCigar(0, 40, 0));
         read8.setStrand(true, false);
 
         // another split read with both reads in the first GC
-        ReadRecord read9 = createMappedRead(++readId, gc1, 1081, 10219, createCigar(0, 20, 9099, 20, 0));
-        ReadRecord read10 = createMappedRead(readId, gc1, 1051, 1090, createCigar(0, 40, 0));
+        Read read9 = createMappedRead(++readId, gc1, 1081, 10219, createCigar(0, 20, 9099, 20, 0));
+        Read read10 = createMappedRead(readId, gc1, 1051, 1090, createCigar(0, 40, 0));
         read10.setStrand(true, false);
 
         final Map<String, FusionReadGroup> chimericReadGroups = Maps.newHashMap();
@@ -645,8 +645,8 @@ public class FusionDataTest
 
         // a simple DEL, supported by a split-read
         int readId = 0;
-        ReadRecord read1 = createMappedRead(readId, gc1, 581, 10219, createCigar(0, 20, 9599, 20, 0));
-        ReadRecord read2 = createMappedRead(readId, gc2, 10205, 10224, createCigar(0, 20, 0));
+        Read read1 = createMappedRead(readId, gc1, 581, 10219, createCigar(0, 20, 9599, 20, 0));
+        Read read2 = createMappedRead(readId, gc2, 10205, 10224, createCigar(0, 20, 0));
         read2.setStrand(true, false);
 
         readGroups1.put(read1.Id, createGroup(read1));
@@ -658,8 +658,8 @@ public class FusionDataTest
         String junctionBases = config.RefGenome.getBaseString(gc1.chromosome(), 571, 600)
                 + config.RefGenome.getBaseString(gc2.chromosome(), 10200, 10209);
 
-        ReadRecord read3 = createMappedRead(++readId, gc1, 571, 600, createCigar(0, 30, 10), junctionBases);
-        ReadRecord read4 = createMappedRead(readId, gc1, 551, 590, createCigar(0, 40, 0));
+        Read read3 = createMappedRead(++readId, gc1, 571, 600, createCigar(0, 30, 10), junctionBases);
+        Read read4 = createMappedRead(readId, gc1, 551, 590, createCigar(0, 40, 0));
         read4.setStrand(true, false);
 
         // readGroups1.put(read3.Id, new ReadGroup(read3, read4));
@@ -668,8 +668,8 @@ public class FusionDataTest
         junctionBases = config.RefGenome.getBaseString(gc1.chromosome(), 591, 600)
                 + config.RefGenome.getBaseString(gc2.chromosome(), 10200, 10229);
 
-        ReadRecord read5 = createMappedRead(++readId, gc2, 10200, 10229, createCigar(10, 30, 0), junctionBases);
-        ReadRecord read6 = createMappedRead(readId, gc2, 10210, 10249, createCigar(0, 40, 0));
+        Read read5 = createMappedRead(++readId, gc2, 10200, 10229, createCigar(10, 30, 0), junctionBases);
+        Read read6 = createMappedRead(readId, gc2, 10210, 10249, createCigar(0, 40, 0));
         read6.setStrand(true, false);
 
         readGroups1.put(read5.Id, createGroup(read5 ,read6));
@@ -725,7 +725,7 @@ public class FusionDataTest
 
         // a spliced fragment to establish the fusion
         int readId = 0;
-        ReadRecord read1 = createMappedRead(readId, gc1, 1050, 1089, createCigar(0, 40, 0));
+        Read read1 = createMappedRead(readId, gc1, 1050, 1089, createCigar(0, 40, 0));
 
         // create 3 bases of homology around the junction
         overrideRefGenome(config.RefGenome, CHR_1, 1101, "AGT");
@@ -734,12 +734,12 @@ public class FusionDataTest
         String junctionBases = config.RefGenome.getBaseString(gc1.chromosome(), 1071, 1100)
                 + config.RefGenome.getBaseString(gc1.chromosome(), 10200, 10209);
 
-        ReadRecord read2 = createMappedRead(readId, gc1, 1071, 1100, createCigar(0, 30, 10), junctionBases);
+        Read read2 = createMappedRead(readId, gc1, 1071, 1100, createCigar(0, 30, 10), junctionBases);
 
         junctionBases = config.RefGenome.getBaseString(gc1.chromosome(), 1091, 1100)
                 + config.RefGenome.getBaseString(gc1.chromosome(), 10200, 10229);
 
-        ReadRecord read3 = createMappedRead(readId, gc2, 10200, 102929, createCigar(10, 30, 0), junctionBases);
+        Read read3 = createMappedRead(readId, gc2, 10200, 102929, createCigar(10, 30, 0), junctionBases);
 
         read2.setFlag(FIRST_OF_PAIR, true);
         read3.setFlag(SECOND_OF_PAIR, false);
@@ -807,9 +807,9 @@ public class FusionDataTest
 
         // 3 different but close spliced fragments, one of them with more support than the others
         int readId = 0;
-        ReadRecord read1 = createMappedRead(readId, gc1, 1050, 1089, createCigar(0, 40, 0));
+        Read read1 = createMappedRead(readId, gc1, 1050, 1089, createCigar(0, 40, 0));
 
-        ReadRecord[] readPair = createSupplementaryReadPair(readId, gc1, gc2, 1081, 1100, 10200, 10219,
+        Read[] readPair = createSupplementaryReadPair(readId, gc1, gc2, 1081, 1100, 10200, 10219,
                 createCigar(0, 20, 20), createCigar(20, 20, 0), true);
 
         readPair[1].setStrand(true, false);
