@@ -1,9 +1,14 @@
 package com.hartwig.hmftools.qsee.common;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import com.hartwig.hmftools.common.metrics.ValueFrequency;
+import com.hartwig.hmftools.qsee.feature.Feature;
+import com.hartwig.hmftools.qsee.feature.FeatureKey;
+import com.hartwig.hmftools.qsee.feature.FeatureType;
+import com.hartwig.hmftools.qsee.feature.SourceTool;
 
 public class BinnedFrequencies
 {
@@ -87,5 +92,25 @@ public class BinnedFrequencies
         }
 
         return proportionalDensities;
+    }
+
+    public List<Feature> formProportionalDensityFeatures(String binTitle, FeatureType featureType, SourceTool sourceTool)
+    {
+        double[] proportionalDensities = calcProportionalDensities();
+
+        List<Feature> features = new ArrayList<>();
+
+        for(int i = 0; i < proportionalDensities.length; i++)
+        {
+            String binString = String.valueOf((int) mBinStarts[i]);
+            String featureName = MultiFieldStringBuilder.formSingleField(binTitle, binString);
+
+            FeatureKey key = new FeatureKey(featureName, featureType, sourceTool);
+            Feature feature = new Feature(key, proportionalDensities[i]);
+
+            features.add(feature);
+        }
+
+        return features;
     }
 }

@@ -49,16 +49,8 @@ public class DuplicateFreqPrep implements CategoryPrep
 
         BinnedFrequencies readGroupSizeFrequencies = new BinnedFrequencies(readGroupSizes, frequencies);
 
-        double[] propReadGroups = readGroupSizeFrequencies.calcProportionalDensities();
-
-        List<Feature> features = new ArrayList<>();
-        for(int i = 0; i < propReadGroups.length; i++)
-        {
-            String featureName = MultiFieldStringBuilder.formSingleField(FIELD_READ_COUNT, String.valueOf(readGroupSizes[i]));
-            FeatureKey key = new FeatureKey(featureName, FeatureType.COVERAGE_DISTRIBUTION, SOURCE_TOOL);
-            Feature feature = new Feature(key, propReadGroups[i]);
-            features.add(feature);
-        }
+        List<Feature> features = readGroupSizeFrequencies.formProportionalDensityFeatures(
+                FIELD_READ_COUNT, FeatureType.COVERAGE_DISTRIBUTION, SOURCE_TOOL);
 
         return features;
     }
