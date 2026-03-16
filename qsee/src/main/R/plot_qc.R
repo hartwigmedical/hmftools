@@ -371,7 +371,7 @@ plot_distribution <- function(plot_data, x, invert_normal = FALSE, mark_sample_p
       gg_geom_segment <- geom_segment(
          data = peak_data, 
          mapping = aes(x = XPos, xend = XPos, y = 0, yend = Height, color = SampleType),
-         show.legend = FALSE
+         show.legend = FALSE, linetype = "dotted"
       )
    }
    
