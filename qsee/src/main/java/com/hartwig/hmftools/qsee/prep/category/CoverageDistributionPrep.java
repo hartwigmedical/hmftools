@@ -1,10 +1,12 @@
 package com.hartwig.hmftools.qsee.prep.category;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.hartwig.hmftools.common.metrics.BamMetricCoverage;
 import com.hartwig.hmftools.common.metrics.ValueFrequency;
+import com.hartwig.hmftools.qsee.common.BinnedFrequencies;
 import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.Feature;
 import com.hartwig.hmftools.qsee.feature.FeatureKey;
@@ -41,17 +43,21 @@ public class CoverageDistributionPrep implements CategoryPrep
 
     private static List<Feature> calcPropBasesWithCoverage(List<ValueFrequency> coverageBaseCounts)
     {
-        long totalCount = coverageBaseCounts.stream().mapToLong(x -> x.Count).sum();
+        BinnedFrequencies coverageBaseFrequencies = BinnedFrequencies.fromValueFrequencies(coverageBaseCounts);
 
-        return coverageBaseCounts.stream().map(x -> {
+        double[] coverageBinStarts = coverageBaseFrequencies.binStarts();
+        double[] propBasesPerBinStart = coverageBaseFrequencies.calcProportionalDensities();
 
-            double propBases = (double) x.Count / totalCount;
-
-            String featureName = MultiFieldStringBuilder.formSingleField(FIELD_READ_DEPTH, String.valueOf(x.Value));
+        List<Feature> features = new ArrayList<>();
+        for(int i = 0; i < propBasesPerBinStart.length; i++)
+        {
+            String featureName = MultiFieldStringBuilder.formSingleField(FIELD_READ_DEPTH, String.valueOf(coverageBinStarts[i]));
             FeatureKey key = new FeatureKey(featureName, FeatureType.COVERAGE_DISTRIBUTION, SOURCE_TOOL);
+            Feature feature = new Feature(key, propBasesPerBinStart[i]);
+            features.add(feature);
+        }
 
-            return new Feature(key, propBases);
-        }).toList();
+        return features;
     }
 
     @Override
