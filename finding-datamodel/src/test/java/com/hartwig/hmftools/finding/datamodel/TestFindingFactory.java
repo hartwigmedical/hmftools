@@ -68,6 +68,7 @@ public class TestFindingFactory
         return MicrosatelliteStabilityBuilder.builder()
                 .findingKey("")
                 .status(MicrosatelliteStability.Status.MSI)
+                .indelsPerMb(emptyThresholdValue())
                 .lohCopyNumbers(List.of())
                 .drivingGenes(List.of());
     }
