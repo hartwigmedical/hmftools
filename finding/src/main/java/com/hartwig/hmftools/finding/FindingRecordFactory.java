@@ -58,6 +58,7 @@ import com.hartwig.hmftools.finding.datamodel.PharmacoGenotype;
 import com.hartwig.hmftools.finding.datamodel.PharmacoGenotypeBuilder;
 import com.hartwig.hmftools.finding.datamodel.PredictedTumorOrigin;
 import com.hartwig.hmftools.finding.datamodel.PredictedTumorOriginBuilder;
+import com.hartwig.hmftools.finding.datamodel.PredictedTumorOriginPredictionBuilder;
 import com.hartwig.hmftools.finding.datamodel.PurityPloidyFit;
 import com.hartwig.hmftools.finding.datamodel.PurityPloidyFitBuilder;
 import com.hartwig.hmftools.finding.datamodel.Qc;
@@ -133,7 +134,7 @@ public class FindingRecordFactory
                     .homologousRecombination(FindingUtil.nullFindingItem(FindingsStatus.NOT_RELIABLE_LOW_PURITY));
         }
 
-        return builder.predictedTumorOrigins(createPredictedTumorOriginList(orangeRecord.cuppa()))
+        return builder.predictedTumorOrigin(createPredictedTumorOrigin(orangeRecord.cuppa(), orangeRecord.plots()))
                 .hlaAlleles(HlaAlleleFactory.createHlaAllelesFindings(orangeRecord, hasReliablePurity, hasContamination))
                 .pharmacoGenotypes(createPharmacoGenotypesFindings(orangeRecord.peach(), hasContamination))
                 .build();
@@ -248,26 +249,33 @@ public class FindingRecordFactory
                 .build();
     }
 
-    private static FindingList<PredictedTumorOrigin> createPredictedTumorOriginList(@Nullable CuppaData cuppa)
+    private static FindingItem<PredictedTumorOrigin> createPredictedTumorOrigin(@Nullable CuppaData cuppa, OrangePlots orangePlots)
     {
         if(cuppa != null)
         {
-            return FindingListBuilder.<PredictedTumorOrigin>builder()
+            return FindingItemBuilder.<PredictedTumorOrigin>builder()
                     .status(FindingsStatus.OK)
-                    .findings(List.of(createPredictedTumorOrigin(cuppa.bestPrediction(), cuppaMode(cuppa.mode()))))
+                    .finding(PredictedTumorOriginBuilder.builder()
+                            .findingKey("predictedTumorOrigin")
+                            .mode(cuppaMode(cuppa.mode()))
+                            .predictions(cuppa.predictions().stream()
+                                    .map(FindingRecordFactory::createPredictedTumorOriginPrediction)
+                                    .toList())
+                            .visualisationFile(VisualisationFileUtil.createNullable(orangePlots.cuppaSummaryPlot()))
+                            .build()
+                    )
                     .build();
         }
         else
         {
-            return FindingUtil.emptyFindingList(FindingsStatus.NOT_AVAILABLE_RESULT_MISSING);
+            return FindingUtil.nullFindingItem(FindingsStatus.NOT_AVAILABLE_RESULT_MISSING);
         }
     }
 
-    private static PredictedTumorOrigin createPredictedTumorOrigin(CuppaPrediction prediction, PredictedTumorOrigin.CuppaMode cuppaMode)
+    private static PredictedTumorOrigin.Prediction createPredictedTumorOriginPrediction(CuppaPrediction prediction)
     {
-        return PredictedTumorOriginBuilder.builder()
+        return PredictedTumorOriginPredictionBuilder.builder()
                 .findingKey(FindingKeys.predictedTumorOrigin(prediction.cancerType()))
-                .mode(cuppaMode)
                 .cancerType(prediction.cancerType())
                 .likelihood(prediction.likelihood())
                 .snvPairwiseClassifier(prediction.snvPairwiseClassifier())

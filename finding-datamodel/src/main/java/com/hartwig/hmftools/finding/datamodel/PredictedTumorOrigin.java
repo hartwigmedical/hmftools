@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.finding.datamodel;
 
+import java.util.List;
+
 import org.jspecify.annotations.Nullable;
 
 import jakarta.validation.constraints.NotNull;
@@ -8,13 +10,7 @@ import jakarta.validation.constraints.NotNull;
 public record PredictedTumorOrigin(
         @NotNull String findingKey,
         @NotNull CuppaMode mode,
-        @NotNull String cancerType,
-        double likelihood,
-        @Nullable Double snvPairwiseClassifier,
-        @Nullable Double genomicPositionClassifier,
-        @Nullable Double featureClassifier,
-        @Nullable Double altSjCohortClassifier,
-        @Nullable Double expressionPairwiseClassifier,
+        @NotNull List<Prediction> predictions,
         @Nullable VisualisationFile visualisationFile
 ) implements Finding
 {
@@ -22,5 +18,19 @@ public record PredictedTumorOrigin(
     {
         WGS,
         WGTS
+    }
+
+    @RecordBuilder
+    public record Prediction(
+            @NotNull String findingKey,
+            @NotNull String cancerType,
+            double likelihood,
+            @Nullable Double snvPairwiseClassifier,
+            @Nullable Double genomicPositionClassifier,
+            @Nullable Double featureClassifier,
+            @Nullable Double altSjCohortClassifier,
+            @Nullable Double expressionPairwiseClassifier
+    ) implements Finding
+    {
     }
 }

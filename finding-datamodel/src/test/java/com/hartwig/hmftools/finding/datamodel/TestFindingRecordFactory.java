@@ -24,7 +24,7 @@ public class TestFindingRecordFactory {
                         .build())
                 .qc(TestFindingFactory.qcBuilder().build())
                 .purityPloidyFit(TestFindingFactory.purityPloidyFitBuilder().build())
-                .predictedTumorOrigins(TestFindingFactory.buildFindingsList(FindingsStatus.OK, List.of(TestFindingFactory.predictedTumorOriginBuilder().build())))
+                .predictedTumorOrigin(TestFindingFactory.buildFindingItem(FindingsStatus.OK, TestFindingFactory.predictedTumorOriginBuilder().build()))
                 .homologousRecombination(TestFindingFactory.buildFindingItem(FindingsStatus.OK, TestFindingFactory.homologousRecombinationBuilder().build()))
                 .microsatelliteStability(TestFindingFactory.buildFindingItem(FindingsStatus.OK, TestFindingFactory.microsatelliteStabilityBuilder().build()))
                 .tumorMutationalLoad(TestFindingFactory.buildFindingItem(FindingsStatus.OK, TestFindingFactory.tumorMutationalLoadBuilder().build()))

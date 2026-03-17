@@ -97,12 +97,16 @@ public class TestFindingFactory
         return PredictedTumorOriginBuilder.builder()
                 .findingKey("")
                 .mode(PredictedTumorOrigin.CuppaMode.WGS)
-                .cancerType("")
-                .snvPairwiseClassifier(0.0)
-                .genomicPositionClassifier(0.0)
-                .featureClassifier(0.0)
-                .altSjCohortClassifier(0.0)
-                .expressionPairwiseClassifier(0.0);
+                .predictions(List.of(PredictedTumorOriginPredictionBuilder.builder()
+                        .findingKey("")
+                        .cancerType("")
+                        .snvPairwiseClassifier(0.0)
+                        .genomicPositionClassifier(0.0)
+                        .featureClassifier(0.0)
+                        .altSjCohortClassifier(0.0)
+                        .expressionPairwiseClassifier(0.0)
+                        .build()))
+                .visualisationFile(new VisualisationFile("predictedTumorOrigin.png"));
     }
 
     @NotNull
