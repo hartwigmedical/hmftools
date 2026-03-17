@@ -6,13 +6,9 @@ import jakarta.validation.constraints.NotNull;
 public record TumorMutationalLoad(
         @NotNull String findingKey,
         @NotNull Status status,
-        int load
+        @NotNull ThresholdValue load
 ) implements Finding
 {
-    public static final double RANGE_MIN = 1;
-    public static final double RANGE_MAX = 1000;
-    // TODO: Lookup proper threshold
-    public static final double THRESHOLD = 10;
 
     public enum Status
     {

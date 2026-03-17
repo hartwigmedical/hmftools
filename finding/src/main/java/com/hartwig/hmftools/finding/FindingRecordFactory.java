@@ -304,7 +304,7 @@ public class FindingRecordFactory
                     .status(FindingsStatus.OK)
                     .finding(TumorMutationalBurdenBuilder.builder()
                             .findingKey(FindingKeys.tumorMutationBurdenStatus(purple.characteristics().tumorMutationalBurdenStatus()))
-                            .burdenPerMb(purple.characteristics().tumorMutationalBurdenPerMb())
+                            .burdenPerMb(ThresholdValueFactory.tmbValue(purple.characteristics().tumorMutationalBurdenPerMb()))
                             .status(status)
                             .svBurden(purple.characteristics().svTumorMutationalBurden())
                             .build())
@@ -336,7 +336,7 @@ public class FindingRecordFactory
                     .status(FindingsStatus.OK)
                     .finding(TumorMutationalLoadBuilder.builder()
                             .findingKey(FindingKeys.tumorMutationLoadStatus(purple.characteristics().tumorMutationalLoadStatus()))
-                            .load(purple.characteristics().tumorMutationalLoad())
+                            .load(ThresholdValueFactory.tmlValue(purple.characteristics().tumorMutationalLoad()))
                             .status(status)
                             .build())
                     .build();
@@ -374,10 +374,10 @@ public class FindingRecordFactory
                     .status(FindingsStatus.OK)
                     .finding(HomologousRecombinationBuilder.builder()
                             .findingKey(FindingKeys.homologousRecombination(chord.hrStatus()))
+                            .status(hrStatus)
+                            .hrdValue(ThresholdValueFactory.hrdValue(chord.hrdValue()))
                             .brca1Value(chord.brca1Value())
                             .brca2Value(chord.brca2Value())
-                            .hrdValue(chord.hrdValue())
-                            .status(hrStatus)
                             .hrdType(chord.hrdType())
                             .lohCopyNumbers(lohGainDeletions)
                             .drivingGenes(GeneListUtil.genes(purple.reportableSomaticVariants(),
@@ -420,7 +420,7 @@ public class FindingRecordFactory
                     .finding(MicrosatelliteStabilityBuilder.builder()
                             .findingKey(FindingKeys.microsatelliteStability(purple.characteristics().microsatelliteStatus()))
                             .status(microsatelliteStatus)
-                            .indelsPerMb(purple.characteristics().microsatelliteIndelsPerMb())
+                            .indelsPerMb(ThresholdValueFactory.mssValue(purple.characteristics().microsatelliteIndelsPerMb()))
                             .lohCopyNumbers(lohGainDeletions)
                             .drivingGenes(GeneListUtil.genes(purple.reportableSomaticVariants(),
                                     purple.reportableSomaticGainsDels(),
