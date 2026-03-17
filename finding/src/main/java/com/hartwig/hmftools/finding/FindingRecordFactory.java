@@ -295,30 +295,7 @@ public class FindingRecordFactory
         }
         else
         {
-            return FindingUtil.nullFindingItem(FindingsStatus.NOT_AVAILABLE_RESULT_MISSING);
-        }
-    }
-
-    private static FindingList<PredictedTumorOrigin> createPredictedTumorOriginList(@Nullable CuppaData cuppa)
-    {
-        if(cuppa != null)
-        {
-            return FindingItemBuilder.<PredictedTumorOrigin>builder()
-                    .status(FindingsStatus.OK)
-                    .finding(PredictedTumorOriginBuilder.builder()
-                            .findingKey("predictedTumorOrigin")
-                            .mode(cuppaMode(cuppa.mode()))
-                            .predictions(cuppa.predictions().stream()
-                                    .map(FindingRecordFactory::createPredictedTumorOriginPrediction)
-                                    .toList())
-                            .visualisationFile(VisualisationFileUtil.createNullable(orangePlots.cuppaSummaryPlot()))
-                            .build()
-                    )
-                    .build();
-        }
-        else
-        {
-            return FindingUtil.nullFindingItem(FindingsStatus.NOT_AVAILABLE_RESULT_MISSING);
+            return FindingUtil.notAvailableFindingItem();
         }
     }
 
