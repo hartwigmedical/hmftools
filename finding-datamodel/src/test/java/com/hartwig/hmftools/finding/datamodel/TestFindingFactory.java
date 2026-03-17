@@ -54,7 +54,7 @@ public class TestFindingFactory
         return HomologousRecombinationBuilder.builder()
                 .findingKey("")
                 .status(HomologousRecombination.Status.HR_DEFICIENT)
-                .hrdValue(emptyScore())
+                .hrdValue(emptyThresholdValue())
                 .hrdType("")
                 .brca1Value(0)
                 .brca2Value(0)
@@ -78,7 +78,7 @@ public class TestFindingFactory
         return TumorMutationalBurdenBuilder.builder()
                 .findingKey("")
                 .status(TumorMutationalBurden.Status.HIGH)
-                .burdenPerMb(emptyScore())
+                .burdenPerMb(emptyThresholdValue())
                 .svBurden(0);
     }
 
@@ -87,7 +87,7 @@ public class TestFindingFactory
     {
         return TumorMutationalLoadBuilder.builder()
                 .findingKey("")
-                .load(emptyScore())
+                .load(emptyThresholdValue())
                 .status(TumorMutationalLoad.Status.HIGH);
     }
 
@@ -287,7 +287,7 @@ public class TestFindingFactory
                 .driverSource(DriverSource.SOMATIC);
     }
 
-    private static ThresholdValue emptyScore() {
+    private static ThresholdValue emptyThresholdValue() {
         return new ThresholdValue(0,0,0,0);
     }
 }
