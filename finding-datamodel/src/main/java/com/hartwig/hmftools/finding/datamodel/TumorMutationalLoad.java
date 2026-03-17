@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotNull;
 public record TumorMutationalLoad(
         @NotNull String findingKey,
         @NotNull Status status,
-        int load
+        @NotNull ThresholdValue load
 ) implements Finding
 {
     public enum Status

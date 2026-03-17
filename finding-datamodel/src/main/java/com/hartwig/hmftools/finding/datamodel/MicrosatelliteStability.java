@@ -8,7 +8,7 @@ import jakarta.validation.constraints.NotNull;
 public record MicrosatelliteStability(
         @NotNull String findingKey,
         @NotNull MicrosatelliteStability.Status status,
-        double indelsPerMb,
+        @NotNull ThresholdValue indelsPerMb,
         @NotNull List<GainDeletion> lohCopyNumbers,
         @NotNull List<String> drivingGenes
 ) implements Finding

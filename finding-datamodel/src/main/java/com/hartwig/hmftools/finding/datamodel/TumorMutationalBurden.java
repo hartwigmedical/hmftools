@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotNull;
 public record TumorMutationalBurden(
         @NotNull String findingKey,
         @NotNull Status status,
-        double burdenPerMb,
+        @NotNull ThresholdValue burdenPerMb,
         int svBurden
 ) implements Finding
 {

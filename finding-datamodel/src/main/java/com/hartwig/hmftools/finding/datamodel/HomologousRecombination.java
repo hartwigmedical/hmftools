@@ -7,10 +7,10 @@ import jakarta.validation.constraints.NotNull;
 @RecordBuilder
 public record HomologousRecombination(
         @NotNull String findingKey,
+        @NotNull HomologousRecombination.Status status,
+        @NotNull ThresholdValue hrdValue,
         double brca1Value,
         double brca2Value,
-        double hrdValue,
-        @NotNull HomologousRecombination.Status status,
         @NotNull String hrdType,
         @NotNull List<GainDeletion> lohCopyNumbers,
         @NotNull List<String> drivingGenes
