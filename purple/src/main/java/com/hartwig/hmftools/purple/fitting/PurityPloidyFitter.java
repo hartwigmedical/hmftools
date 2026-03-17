@@ -217,18 +217,18 @@ public class PurityPloidyFitter
             final boolean significantContamination = ContaminationLevel > SOMATIC_FIT_CONTAMINATION_CUTOFF;
             if(significantContamination || (noSignificantAneuploidy && (diploidHighPurity || highlyDiploid)))
             {
-                PPL_LOGGER.debug("Searching for somatic fit for non-chimeric diploid sample. Significant contamination: {}", significantContamination);
+                PPL_LOGGER.debug("searching for somatic fit for non-chimeric diploid sample, significant contamination: {}", significantContamination);
                 mSomaticPurityFit = mVariantPurityFitter.calcSomaticOnlyFit(mCopyNumberFitCandidates);
 
                 if(mSomaticPurityFit != null)
                 {
                     mFinalPurityFit = mSomaticPurityFit;
                     mFitMethod = FittedPurityMethod.SOMATIC;
-                    PPL_LOGGER.debug("Somatic fit found.");
+                    PPL_LOGGER.debug("somatic fit found");
                 }
                 else
                 {
-                    PPL_LOGGER.debug("Somatic fit not found, reverting to lowest purity fit.");
+                    PPL_LOGGER.debug("somatic fit not found, reverting to lowest purity fit");
                     mFinalPurityFit =
                             new FittedPurity(MIN_PURITY_DEFAULT, lowestPurityFit.normFactor(), 2, lowestPurityFit.score(), lowestPurityFit.diploidProportion(), 0);
                     mFitMethod = FittedPurityMethod.NO_TUMOR;

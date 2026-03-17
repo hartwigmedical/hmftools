@@ -12,12 +12,12 @@ import org.junit.Test;
 
 public class LocalMaximaFinderTest
 {
-    private List<DummyScore> Inputs;
+    private List<DummyScore> mInputs;
 
     @Before
     public void setup()
     {
-        Inputs = new ArrayList<>();
+        mInputs = new ArrayList<>();
     }
 
     @Test
@@ -67,7 +67,7 @@ public class LocalMaximaFinderTest
         addScore("B", 10.0);
         addScore("C", 10.0);
         addScore("D", 5.0);
-        assertEquals(List.of(Inputs.get(2)), getMaxima());
+        assertEquals(List.of(mInputs.get(2)), getMaxima());
     }
 
     @Test
@@ -113,7 +113,7 @@ public class LocalMaximaFinderTest
         addScore("E", 0.000);
         List<DummyScore> maxima = getMaxima();
         assertEquals(1, maxima.size());
-        assertEquals(maxima.get(0), Inputs.get(3));
+        assertEquals(maxima.get(0), mInputs.get(3));
     }
 
     @Test
@@ -139,18 +139,18 @@ public class LocalMaximaFinderTest
         addScore("R", 30); // ? TODO
         List<DummyScore> maxima = getMaxima();
         assertEquals(2, maxima.size());
-        assertEquals(maxima.get(0), Inputs.get(7));
-        assertEquals(maxima.get(1), Inputs.get(14));
+        assertEquals(maxima.get(0), mInputs.get(7));
+        assertEquals(maxima.get(1), mInputs.get(14));
     }
 
     private List<DummyScore> getMaxima()
     {
-        return new LocalMaximaFinder<>(Inputs).maxima();
+        return new LocalMaximaFinder<>(mInputs).maxima();
     }
 
     private void addScore(String label, double score)
     {
-        Inputs.add(new DummyScore(score, label));
+        mInputs.add(new DummyScore(score, label));
     }
 }
 

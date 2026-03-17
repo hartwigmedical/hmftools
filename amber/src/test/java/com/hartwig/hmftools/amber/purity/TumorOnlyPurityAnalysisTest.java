@@ -19,6 +19,7 @@ import java.util.TreeSet;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
+import com.hartwig.hmftools.amber.AmberConstants;
 import com.hartwig.hmftools.amber.PositionEvidence;
 import com.hartwig.hmftools.common.amber.AmberSite;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
@@ -76,7 +77,7 @@ public class TumorOnlyPurityAnalysisTest extends PurityTestBase
         final double vaf = 0.21;
         createCopyNumberEventPoints(vaf);
         createAnalysis();
-        assertEquals(TumorOnlyPurityAnalysis.MIN_CUTOFF, Analysis.cutoff(), 0.001);
+        assertEquals(AmberConstants.MIN_CUTOFF, Analysis.cutoff(), 0.001);
         assertEquals(0, Analysis.contaminationPeaks().size());
         assertEquals(1, Analysis.copyNumberPeaks().size());
         assertEquals(vaf, Analysis.copyNumberPeaks().get(0).vaf(), 0.01);

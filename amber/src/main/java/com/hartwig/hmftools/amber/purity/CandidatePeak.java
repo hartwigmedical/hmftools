@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.amber.purity;
 
+import static com.hartwig.hmftools.amber.AmberConstants.LOWER_CDF_BOUND_FOR_CAPTURE;
+import static com.hartwig.hmftools.amber.AmberConstants.UPPER_CDF_BOUND_FOR_CAPTURE;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -11,36 +14,34 @@ import org.apache.commons.math3.distribution.BinomialDistribution;
 
 public class CandidatePeak
 {
-    private static final double LOWER_CDF_BOUND_FOR_CAPTURE = 0.16;
-    private static final double UPPER_CDF_BOUND_FOR_CAPTURE = 0.84;
-    private final double Level;
-    private final double StepToNextLevel;
-    private final List<PositionEvidence> PointsTested = new ArrayList<>();
-    private final List<PositionEvidence> PointsInHomozygousBand = new ArrayList<>();
-    private final List<PositionEvidence> PointsInHeterozygousBand = new ArrayList<>();
+    private final double mLevel;
+    private final double mStepToNextLevel;
+    private final List<PositionEvidence> mPointsTested = new ArrayList<>();
+    private final List<PositionEvidence> mPointsInHomozygousBand = new ArrayList<>();
+    private final List<PositionEvidence> mPointsInHeterozygousBand = new ArrayList<>();
 
-    public CandidatePeak(double Level)
+    public CandidatePeak(final double level)
     {
-        this.Level = Level;
-        StepToNextLevel = 0.00001;
+        this.mLevel = level;
+        mStepToNextLevel = 0.00001;
     }
 
-    public CandidatePeak(double Level, double StepToNextLevel)
+    public CandidatePeak(final double level, final double stepToNextLevel)
     {
-        this.Level = Level;
-        this.StepToNextLevel = StepToNextLevel;
+        this.mLevel = level;
+        this.mStepToNextLevel = stepToNextLevel;
     }
 
-    public boolean hasSufficientDepthForEventDetection(PositionEvidence evidence)
+    public boolean hasSufficientDepthForEventDetection(final PositionEvidence evidence)
     {
         // We want het points to be above the depth-2 noise floor.
-        BinomialDistribution binomial = new BinomialDistribution(evidence.RefSupport + evidence.AltSupport, Level / 2);
-        return binomial.cumulativeProbability(2) < 0.16;
+        BinomialDistribution binomial = new BinomialDistribution(evidence.RefSupport + evidence.AltSupport, mLevel / 2);
+        return binomial.cumulativeProbability(2) < LOWER_CDF_BOUND_FOR_CAPTURE;
     }
 
-    public void test(PositionEvidence evidence)
+    public void test(final PositionEvidence evidence)
     {
-        PointsTested.add(evidence);
+        mPointsTested.add(evidence);
 
         int n = evidence.RefSupport + evidence.AltSupport;
         int k = evidence.AltSupport;
@@ -48,34 +49,34 @@ public class CandidatePeak
         {
             k = n - k;
         }
-        RangeStepPeak homPeak = new RangeStepPeak(n, k, Level, StepToNextLevel);
-        final double hetLevel = Level / 2;
-        RangeStepPeak hetPeak = new RangeStepPeak(n, k, hetLevel, StepToNextLevel / 2);
+        RangeStepPeak homPeak = new RangeStepPeak(n, k, mLevel, mStepToNextLevel);
+        final double hetLevel = mLevel / 2;
+        RangeStepPeak hetPeak = new RangeStepPeak(n, k, hetLevel, mStepToNextLevel / 2);
         final double symmetricVaf = evidence.symmetricVaf();
         if(homPeak.isCaptured(symmetricVaf))
         {
             if(hetPeak.isCaptured(symmetricVaf))
             {
                 // Add it to the band to which it is closest.
-                if(symmetricVaf > Level * 0.75)
+                if(symmetricVaf > mLevel * 0.75)
                 {
-                    PointsInHomozygousBand.add(evidence);
+                    mPointsInHomozygousBand.add(evidence);
                 }
                 else
                 {
-                    PointsInHeterozygousBand.add(evidence);
+                    mPointsInHeterozygousBand.add(evidence);
                 }
             }
             else
             {
-                PointsInHomozygousBand.add(evidence);
+                mPointsInHomozygousBand.add(evidence);
             }
         }
         else
         {
             if(hetPeak.isCaptured(symmetricVaf))
             {
-                PointsInHeterozygousBand.add(evidence);
+                mPointsInHeterozygousBand.add(evidence);
             }
         }
     }
@@ -94,12 +95,12 @@ public class CandidatePeak
 
     public Set<PositionEvidence> homozygousEvidencePoints()
     {
-        return new HashSet<>(PointsInHomozygousBand);
+        return new HashSet<>(mPointsInHomozygousBand);
     }
 
     public Set<PositionEvidence> heterozygousEvidencePoints()
     {
-        return new HashSet<>(PointsInHeterozygousBand);
+        return new HashSet<>(mPointsInHeterozygousBand);
     }
 
     public int numberOfCapturedEvidencePoints()
@@ -109,25 +110,26 @@ public class CandidatePeak
 
     public double vaf()
     {
-        return Level;
+        return mLevel;
     }
 
     public double homozygousProportion()
     {
-        return (double) PointsInHomozygousBand.size() / (allCapturedPoints().size());
+        return (double) mPointsInHomozygousBand.size() / (allCapturedPoints().size());
     }
 
     @Override
     public String toString()
     {
-        return String.format("VafLevel{vaf=%.2f, step=%.2f, tested: %d, homozygous: %d, heterozygous: %d}", Level, StepToNextLevel, PointsTested.size(), PointsInHomozygousBand.size(), PointsInHeterozygousBand.size());
+        return String.format("VafLevel{vaf=%.2f, step=%.2f, tested: %d, homozygous: %d, heterozygous: %d}",
+                mLevel, mStepToNextLevel, mPointsTested.size(), mPointsInHomozygousBand.size(), mPointsInHeterozygousBand.size());
     }
 
     public Set<PositionEvidence> allCapturedPoints()
     {
         Set<PositionEvidence> result = new HashSet<>();
-        result.addAll(PointsInHomozygousBand);
-        result.addAll(PointsInHeterozygousBand);
+        result.addAll(mPointsInHomozygousBand);
+        result.addAll(mPointsInHeterozygousBand);
         return result;
     }
 }

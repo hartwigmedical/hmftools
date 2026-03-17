@@ -15,14 +15,14 @@ import org.junit.Test;
 public class CandidatePeakEvaluationTest
 {
     private static final double LEVEL = 0.1;
-    private CandidatePeak Peak;
-    private int currentEvidencePosition;
+    private CandidatePeak mPeak;
+    private int mCurrentEvidencePosition;
 
     @Before
     public void setup()
     {
-        Peak = new CandidatePeak(LEVEL);
-        currentEvidencePosition = 1000;
+        mPeak = new CandidatePeak(LEVEL);
+        mCurrentEvidencePosition = 1000;
     }
 
     @Test
@@ -84,7 +84,7 @@ public class CandidatePeakEvaluationTest
 
     private CandidatePeakEvaluationResult calculateResult(List<PositionEvidence> evidencePoints)
     {
-        CandidatePeakEvaluation evaluation = new CandidatePeakEvaluation(Peak, evidencePoints);
+        CandidatePeakEvaluation evaluation = new CandidatePeakEvaluation(mPeak, evidencePoints);
         evaluation.call();
         return evaluation.result();
     }
@@ -114,12 +114,12 @@ public class CandidatePeakEvaluationTest
         List<PositionEvidence> evidencePoints = new ArrayList<>(numberOfPoints);
         for(int i = 0; i < numberOfPoints; i++)
         {
-            PositionEvidence evidencePoint = new PositionEvidence("1", currentEvidencePosition, "A", "T");
+            PositionEvidence evidencePoint = new PositionEvidence("1", mCurrentEvidencePosition, "A", "T");
             evidencePoint.ReadDepth = depth;
             evidencePoint.RefSupport = refDepth;
             evidencePoint.AltSupport = altDepth;
             evidencePoints.add(evidencePoint);
-            currentEvidencePosition += 100;
+            mCurrentEvidencePosition += 100;
         }
         return evidencePoints;
     }

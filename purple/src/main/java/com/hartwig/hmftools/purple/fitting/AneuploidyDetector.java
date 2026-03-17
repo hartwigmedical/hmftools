@@ -44,33 +44,33 @@ public class AneuploidyDetector
         return cobaltChromosomes.hasChromosome(region.chromosome());
     }
 
-    private final List<? extends FittingRegion> Regions;
-    private final ListMultimap<Chromosome, AmberBAF> AmberData;
+    private final List<? extends FittingRegion> mRegions;
+    private final ListMultimap<Chromosome, AmberBAF> mAmberData;
 
     public AneuploidyDetector(
             final List<? extends FittingRegion> regions,
             final ListMultimap<Chromosome, AmberBAF> amberData,
             final PerChromosomeData cobaltChromosomes)
     {
-        Regions = regions.stream().filter(region -> useRegionToDetectAneuploidy(cobaltChromosomes, region)).toList();
-        AmberData = amberData;
+        mRegions = regions.stream().filter(region -> useRegionToDetectAneuploidy(cobaltChromosomes, region)).toList();
+        mAmberData = amberData;
     }
 
     public boolean hasAneuploidy()
     {
         int totalBafCount = 0;
         int highBafCount = 0;
-        for(FittingRegion region : Regions)
+        for(FittingRegion region : mRegions)
         {
             totalBafCount += region.bafCount();
-            PPL_LOGGER.debug(format("AR: region %s:%d-%d has %d total points", region.chromosome(), region.start(), region.end(), region.bafCount()));
+            PPL_LOGGER.trace(format("region %s:%d-%d has %d total points", region.chromosome(), region.start(), region.end(), region.bafCount()));
             if(showsAneuploidy(region))
             {
-                PPL_LOGGER.debug(format("AR: region contributes ratio: %d", region.bafCount()));
+                PPL_LOGGER.trace(format("region contributes ratio: %d", region.bafCount()));
                 highBafCount += region.bafCount();
             }
         }
-        PPL_LOGGER.debug(format("AR: high diploid baf count: %d, total diploid baf count: %d", highBafCount, totalBafCount));
+        PPL_LOGGER.trace(format("high diploid baf count: %d, total diploid baf count: %d", highBafCount, totalBafCount));
         double ratio = (double) highBafCount / totalBafCount;
         PPL_LOGGER.debug(format("aneuploidy ratio: %.3f", ratio));
         if(Doubles.greaterOrEqual(ratio, SOMATIC_FIT_ANEUPLOIDIC_RATIO_CUTOFF))
@@ -78,9 +78,9 @@ public class AneuploidyDetector
             return true;
         }
         List<FittingRegion> highlyAneuploidicRegions = new ArrayList<>();
-        AmberPointsProvider amberProvider = new AmberPointsProvider(AmberData);
+        AmberPointsProvider amberProvider = new AmberPointsProvider(mAmberData);
         double requiredPoints = Math.max(HIGHLY_ANEUPLOIDIC_REGION_MIN_BAF_COUNT, (totalBafCount * HIGHLY_ANEUPLOIDIC_RATIO_CUTOFF));
-        for(FittingRegion region : Regions)
+        for(FittingRegion region : mRegions)
         {
             if(region.observedBAF() < HIGHLY_ANEUPLOIDIC_REGION_CUTOFF)
             {
@@ -94,7 +94,7 @@ public class AneuploidyDetector
             if(isHighlyAneuploidic(amberPoints))
             {
                 highlyAneuploidicRegions.add(region);
-                PPL_LOGGER.debug(format("Highly aneuploidic region found: %.3f, %d", region.observedBAF(), region.bafCount()));
+                PPL_LOGGER.debug(format("highly aneuploidic region found: %.3f, %d", region.observedBAF(), region.bafCount()));
             }
         }
         return !highlyAneuploidicRegions.isEmpty();

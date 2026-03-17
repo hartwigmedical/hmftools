@@ -4,63 +4,61 @@ import java.util.Objects;
 
 import com.google.common.base.Preconditions;
 
-import org.jetbrains.annotations.NotNull;
-
 public class CategoryEvidence<T extends Comparable<T>> implements Comparable<CategoryEvidence<T>>
 {
-    private final T Category;
-    private int TotalPoints = 0;
-    private int EvidencePoints = 0;
+    private final T mCategory;
+    private int mTotalPoints = 0;
+    private int mEvidencePoints = 0;
 
     public CategoryEvidence(final T Category)
     {
         Preconditions.checkNotNull(Category);
-        this.Category = Category;
+        this.mCategory = Category;
     }
 
     public void register(boolean isEvidence)
     {
-        TotalPoints++;
+        mTotalPoints++;
         if(isEvidence)
         {
-            EvidencePoints++;
+            mEvidencePoints++;
         }
     }
 
     public void set(int totalPoints, int evidencePoints)
     {
-        TotalPoints = totalPoints;
-        EvidencePoints = evidencePoints;
+        mTotalPoints = totalPoints;
+        mEvidencePoints = evidencePoints;
     }
 
     public int totalPoints()
     {
-        return TotalPoints;
+        return mTotalPoints;
     }
 
     public int evidencePoints()
     {
-        return EvidencePoints;
+        return mEvidencePoints;
     }
 
     @Override
-    public int compareTo(@NotNull final CategoryEvidence<T> o)
+    public int compareTo(final CategoryEvidence<T> o)
     {
         int result = Double.compare(ratio(), o.ratio());
         if(result == 0)
         {
-            result = Category.compareTo(o.Category);
+            result = mCategory.compareTo(o.mCategory);
         }
         return result;
     }
 
     public double ratio()
     {
-        if(TotalPoints == 0)
+        if(mTotalPoints == 0)
         {
             return Double.MAX_VALUE;
         }
-        return (double) EvidencePoints / (double) TotalPoints;
+        return (double) mEvidencePoints / (double) mTotalPoints;
     }
 
     @Override
@@ -71,18 +69,18 @@ public class CategoryEvidence<T extends Comparable<T>> implements Comparable<Cat
             return false;
         }
         final CategoryEvidence<?> that = (CategoryEvidence<?>) o;
-        return Objects.equals(Category, that.Category);
+        return Objects.equals(mCategory, that.mCategory);
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hashCode(Category);
+        return Objects.hashCode(mCategory);
     }
 
     @Override
     public String toString()
     {
-        return String.format("%s: %d/%d", Category, EvidencePoints, TotalPoints);
+        return String.format("%s: %d/%d", mCategory, mEvidencePoints, mTotalPoints);
     }
 }

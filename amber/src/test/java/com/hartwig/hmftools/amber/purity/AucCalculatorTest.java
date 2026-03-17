@@ -97,8 +97,7 @@ public class AucCalculatorTest
         for(HumanChromosome chromosome : HumanChromosome.values())
         {
             // P arm
-            final Pair<List<PositionEvidence>, List<PositionEvidence>> pData =
-                    createEvenlySpacedDataPointsWithContamination(chromosome, 1000, 50, 10, 100, 20, 100);
+            final var pData = createEvenlySpacedDataPointsWithContamination(chromosome, 1000, 50, 10, 100, 20, 100);
             baselinePoints.addAll(pData.getLeft());
             contaminationPoints.addAll(pData.getRight());
             // Q arm

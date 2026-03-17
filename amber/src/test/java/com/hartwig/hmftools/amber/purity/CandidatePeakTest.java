@@ -14,7 +14,6 @@ import org.junit.Test;
 
 public class CandidatePeakTest extends PurityTestBase
 {
-
     @Test
     public void shouldGoInBucketToWhichItIsClosest()
     {

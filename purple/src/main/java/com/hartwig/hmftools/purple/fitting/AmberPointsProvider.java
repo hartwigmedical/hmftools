@@ -12,17 +12,17 @@ import com.hartwig.hmftools.purple.region.FittingRegion;
 
 public class AmberPointsProvider
 {
-    private final GenomePositionSelector<AmberBAF> BafSelector;
+    private final GenomePositionSelector<AmberBAF> mBafSelector;
 
     public AmberPointsProvider(final ListMultimap<Chromosome, AmberBAF> chromosomeBafs)
     {
-        BafSelector = GenomePositionSelectorFactory.create(chromosomeBafs);
+        mBafSelector = GenomePositionSelectorFactory.create(chromosomeBafs);
     }
 
     public List<AmberBAF> nextBlock(FittingRegion segment)
     {
         List<AmberBAF> result = new ArrayList<>();
-        BafSelector.select(segment, result::add);
+        mBafSelector.select(segment, result::add);
         return result;
     }
 }

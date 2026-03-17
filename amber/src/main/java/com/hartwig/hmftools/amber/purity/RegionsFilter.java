@@ -11,15 +11,15 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 public class RegionsFilter
 {
-    private final Map<String, List<ChrBaseRegion>> RegionsToExclude = new HashMap<>();
+    private final Map<String, List<ChrBaseRegion>> mRegionsToExclude = new HashMap<>();
 
     public RegionsFilter(List<ChrBaseRegion> regionsToExclude)
     {
         for(ChrBaseRegion region : regionsToExclude)
         {
-            RegionsToExclude.computeIfAbsent(region.chromosome(), k -> new ArrayList<>()).add(region);
+            mRegionsToExclude.computeIfAbsent(region.chromosome(), k -> new ArrayList<>()).add(region);
         }
-        for(List<ChrBaseRegion> regions : RegionsToExclude.values())
+        for(List<ChrBaseRegion> regions : mRegionsToExclude.values())
         {
             Collections.sort(regions);
         }
@@ -38,7 +38,7 @@ public class RegionsFilter
             if(!chromosome.equals(currentChromosome))
             {
                 currentChromosome = chromosome;
-                currentRegions = RegionsToExclude.get(chromosome);
+                currentRegions = mRegionsToExclude.get(chromosome);
                 regionIndex = 0;
             }
 

@@ -12,7 +12,7 @@ import org.junit.Test;
 
 public class RegionsFilterTest
 {
-    List<GenomePositionImpl> Positions = new ArrayList<>();
+    private final List<GenomePositionImpl> mPositions = new ArrayList<>();
 
     @Test
     public void multipleRegionsTest()
@@ -61,23 +61,23 @@ public class RegionsFilterTest
 
         addPosition("5", 2500); // in
 
-        List<GenomePositionImpl> filtered = filter.filter(Positions);
+        List<GenomePositionImpl> filtered = filter.filter(mPositions);
         assertEquals(16, filtered.size());
-        assertEquals(Positions.get(0), filtered.get(0));
-        assertEquals(Positions.get(1), filtered.get(1));
-        assertEquals(Positions.get(3), filtered.get(3));
-        assertEquals(Positions.get(9), filtered.get(4));
-        assertEquals(Positions.get(10), filtered.get(5));
-        assertEquals(Positions.get(11), filtered.get(6));
-        assertEquals(Positions.get(13), filtered.get(7));
-        assertEquals(Positions.get(14), filtered.get(8));
-        assertEquals(Positions.get(15), filtered.get(9));
-        assertEquals(Positions.get(17), filtered.get(10));
-        assertEquals(Positions.get(18), filtered.get(11));
-        assertEquals(Positions.get(21), filtered.get(12));
-        assertEquals(Positions.get(22), filtered.get(13));
-        assertEquals(Positions.get(24), filtered.get(14));
-        assertEquals(Positions.get(25), filtered.get(15));
+        assertEquals(mPositions.get(0), filtered.get(0));
+        assertEquals(mPositions.get(1), filtered.get(1));
+        assertEquals(mPositions.get(3), filtered.get(3));
+        assertEquals(mPositions.get(9), filtered.get(4));
+        assertEquals(mPositions.get(10), filtered.get(5));
+        assertEquals(mPositions.get(11), filtered.get(6));
+        assertEquals(mPositions.get(13), filtered.get(7));
+        assertEquals(mPositions.get(14), filtered.get(8));
+        assertEquals(mPositions.get(15), filtered.get(9));
+        assertEquals(mPositions.get(17), filtered.get(10));
+        assertEquals(mPositions.get(18), filtered.get(11));
+        assertEquals(mPositions.get(21), filtered.get(12));
+        assertEquals(mPositions.get(22), filtered.get(13));
+        assertEquals(mPositions.get(24), filtered.get(14));
+        assertEquals(mPositions.get(25), filtered.get(15));
     }
 
     private ChrBaseRegion region(String chromosome, int start, int end)
@@ -87,6 +87,6 @@ public class RegionsFilterTest
 
     private void addPosition(String chromosome, int position)
     {
-        Positions.add(new GenomePositionImpl(chromosome, position));
+        mPositions.add(new GenomePositionImpl(chromosome, position));
     }
 }

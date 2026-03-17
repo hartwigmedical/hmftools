@@ -15,9 +15,9 @@ import org.apache.commons.lang3.tuple.Pair;
 
 public class PeakSearch
 {
-    private final List<CandidatePeakEvaluationResult> Peaks;
+    private final List<CandidatePeakEvaluationResult> mPeaks;
 
-    public PeakSearch(List<PositionEvidence> evidence, final int nThreads)
+    public PeakSearch(final List<PositionEvidence> evidence, final int threads)
     {
         List<Pair<Double, Double>> searchValues = new SearchGrid().searchValuesAndSteps();
         List<CandidatePeakEvaluation> evaluations = new ArrayList<>();
@@ -28,26 +28,26 @@ public class PeakSearch
         }
         try
         {
-            ExecutorService executor = Executors.newFixedThreadPool(nThreads);
+            ExecutorService executor = Executors.newFixedThreadPool(threads);
             executor.invokeAll(evaluations);
             executor.shutdown();
         }
         catch(InterruptedException e)
         {
-            AMB_LOGGER.error("Peak search interrupted", e);
+            AMB_LOGGER.error("peak search interrupted", e);
         }
         List<CandidatePeakEvaluationResult> results = evaluations.stream()
                 .map(CandidatePeakEvaluation::result)
                 .toList();
-        Peaks = new LocalMaximaFinder<>(results).maxima();
-        for(CandidatePeakEvaluationResult peak : Peaks)
+        mPeaks = new LocalMaximaFinder<>(results).maxima();
+        for(CandidatePeakEvaluationResult peak : mPeaks)
         {
-            AMB_LOGGER.debug(format("Actual peak at %.3f with score: %.3f ", peak.candidatePeak().vaf(), peak.score()));
+            AMB_LOGGER.debug(format("actual peak at %.3f with score: %.3f ", peak.candidatePeak().vaf(), peak.score()));
         }
     }
 
     public List<CandidatePeakEvaluationResult> peaks()
     {
-        return Peaks;
+        return mPeaks;
     }
 }
