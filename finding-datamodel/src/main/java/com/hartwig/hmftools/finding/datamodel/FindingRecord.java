@@ -22,7 +22,7 @@ public record FindingRecord(
         @NotNull FindingList<ChromosomeArmCopyNumber> chromosomeArmCopyNumbers,
         @NotNull FindingList<HlaAllele> hlaAlleles,
         @NotNull FindingList<PharmacoGenotype> pharmacoGenotypes,
-        @NotNull FindingList<PredictedTumorOrigin> predictedTumorOrigins,
+        @NotNull FindingItem<PredictedTumorOrigin> predictedTumorOrigin,
         @NotNull FindingItem<MicrosatelliteStability> microsatelliteStability,
         @NotNull FindingItem<TumorMutationalLoad> tumorMutationalLoad,
         @NotNull FindingItem<TumorMutationalBurden> tumorMutationalBurden,
