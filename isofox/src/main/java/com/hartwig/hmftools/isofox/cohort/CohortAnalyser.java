@@ -30,7 +30,6 @@ import com.hartwig.hmftools.isofox.novel.cohort.AltSjCohortMatrix;
 import com.hartwig.hmftools.isofox.novel.cohort.RecurrentVariantFinder;
 import com.hartwig.hmftools.isofox.novel.cohort.SpliceSiteCache;
 import com.hartwig.hmftools.isofox.novel.cohort.SpliceVariantMatcher;
-import com.hartwig.hmftools.isofox.unmapped.UmrCohortAnalyser;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -76,13 +75,6 @@ public class CohortAnalyser
                 {
                     SpliceVariantMatcher spliceVariantMatcher = new SpliceVariantMatcher(mConfig, mCmdLineArgs);
                     spliceVariantMatcher.processAltSpliceJunctions();
-                    break;
-                }
-
-                case UNMAPPED_READS:
-                {
-                    UmrCohortAnalyser umrAnalyser = new UmrCohortAnalyser(mConfig, mCmdLineArgs);
-                    umrAnalyser.processSampleFiles();
                     break;
                 }
 

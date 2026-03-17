@@ -11,6 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.isofox.results.GeneResult;
@@ -27,15 +28,24 @@ public class PanelTpmNormaliser
         mEnabled = !mGeneNormFactors.isEmpty();
     }
 
+    public boolean panelHasGene(final String geneId) { return mGeneNormFactors.containsKey(geneId); }
+    public Set<String> panelGeneIds() { return mGeneNormFactors.keySet(); }
+
     public void applyNormalisation(final List<GeneCollectionSummary> allGeneSummaries)
     {
         if(!mEnabled)
             return;
 
-        for(final GeneCollectionSummary geneSummary : allGeneSummaries)
+        for(GeneCollectionSummary geneSummary : allGeneSummaries)
         {
             for(GeneResult geneResult : geneSummary.GeneResults)
             {
+                if(!panelHasGene(geneResult.Gene.GeneId))
+                    continue;
+
+                if(geneResult.adjustedTpm() == 0)
+                    continue;
+
                 Double adjustFactor = mGeneNormFactors.get(geneResult.Gene.GeneId);
 
                 if(adjustFactor == null || adjustFactor <= 0)

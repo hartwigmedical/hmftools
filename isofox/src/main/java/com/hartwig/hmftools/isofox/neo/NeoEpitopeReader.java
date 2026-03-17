@@ -10,7 +10,7 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.SINGLE_MAP_QUALITY;
 import static com.hartwig.hmftools.isofox.common.GeneReadData.createGeneReadData;
-import static com.hartwig.hmftools.isofox.common.ReadRecord.findOverlappingRegions;
+import static com.hartwig.hmftools.isofox.common.Read.findOverlappingRegions;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.validExonMatch;
 import static com.hartwig.hmftools.isofox.neo.NeoFragmentMatcher.checkBaseCoverage;
 import static com.hartwig.hmftools.isofox.neo.NeoFragmentMatcher.findFusionSupport;
@@ -32,7 +32,7 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
-import com.hartwig.hmftools.isofox.common.ReadRecord;
+import com.hartwig.hmftools.isofox.common.Read;
 import com.hartwig.hmftools.isofox.common.RegionMatchType;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
 import com.hartwig.hmftools.isofox.fusion.ChimericReadGroup;
@@ -111,7 +111,7 @@ public class NeoEpitopeReader
             return true;
 
         return mConfig.Filters.RestrictedGeneIds.contains(neData.Source.GeneIds[FS_UP])
-                && mConfig.Filters.RestrictedGeneIds.contains(neData.Source.GeneIds[FS_DOWN]);
+            && mConfig.Filters.RestrictedGeneIds.contains(neData.Source.GeneIds[FS_DOWN]);
     }
 
     public void calcFragmentSupport()
@@ -176,7 +176,7 @@ public class NeoEpitopeReader
 
     private void processSamRecord(final SAMRecord record)
     {
-        final ReadRecord read = ReadRecord.from(record);
+        final Read read = Read.from(record);
 
         read.processOverlappingRegions(findOverlappingRegions(mCurrentGenes.getExonRegions(), read));
         mCurrentGenes.setReadGeneCollections(read, mCurrentGenes.regionBounds());
@@ -244,7 +244,7 @@ public class NeoEpitopeReader
                 boolean hasTrans = false;
                 boolean hasSupport = true;
 
-                for(ReadRecord read : readGroup.reads())
+                for(Read read : readGroup.reads())
                 {
                     // any matched transcript needs to be fully exonic in every region, not just one
                     for(Map.Entry<RegionReadData,RegionMatchType> entry : read.getMappedRegions().entrySet())
@@ -279,7 +279,7 @@ public class NeoEpitopeReader
         {
             final int[] codingBaseRange = mCurrentNeoData.getCodingBaseRange(fs);
 
-            for(ReadRecord read : readGroup.reads())
+            for(Read read : readGroup.reads())
             {
                 if(!read.Chromosome.equals(mCurrentNeoData.Chromosomes[fs]))
                     continue;

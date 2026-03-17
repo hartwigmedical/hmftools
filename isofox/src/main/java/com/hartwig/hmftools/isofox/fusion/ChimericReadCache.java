@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.isofox.IsofoxConfig;
-import com.hartwig.hmftools.isofox.common.ReadRecord;
+import com.hartwig.hmftools.isofox.common.Read;
 import com.hartwig.hmftools.isofox.common.RegionMatchType;
 import com.hartwig.hmftools.isofox.common.TransExonRef;
 
@@ -207,7 +207,7 @@ public class ChimericReadCache
                     if(items[fusionGroup].contains("INVALID"))
                         continue;
 
-                    ReadRecord read = new ReadRecord(
+                    Read read = new Read(
                             items[readId],
                             items[chr],
                             Integer.parseInt(items[posStart]),

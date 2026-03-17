@@ -30,11 +30,10 @@ public class GeneRegionFilters
 {
     public final SpecificRegions SpecificChrRegions;
 
-    public final List<String> RestrictedGeneIds; // specific set of genes to process
+    public final List<String> RestrictedGeneIds; // limit expression analysis to a set of panel genes
     public final List<String> EnrichedGeneIds; // genes to count by not fully process for any functional purpose
     public final ChrBaseRegion ExcludedRegion;
 
-    public final List<ChrBaseRegion> RestrictedGeneRegions; // limit analysis to these regions only
     public final List<ChrBaseRegion> ImmuneGeneRegions;
 
     private final RefGenomeVersion mRefGenomeVersion;
@@ -50,7 +49,6 @@ public class GeneRegionFilters
         SpecificChrRegions = new SpecificRegions();
 
         mExcludedGeneRegions = Lists.newArrayList();
-        RestrictedGeneRegions = Lists.newArrayList();
         ImmuneGeneRegions = Lists.newArrayList();
 
         mRefGenomeVersion = refGenomeVersion;
@@ -115,9 +113,6 @@ public class GeneRegionFilters
         if(SpecificChrRegions.excludePosition(chromosome, position))
             return true;
 
-        if(!RestrictedGeneRegions.isEmpty() && !RestrictedGeneRegions.stream().anyMatch(x -> x.containsPosition(chromosome, position)))
-            return true;
-
         if(mExcludedGeneRegions.stream().anyMatch(x -> x.containsPosition(chromosome, position)))
             return true;
 
@@ -133,12 +128,6 @@ public class GeneRegionFilters
                 .filter(x -> x != null)
                 .forEach(x -> mExcludedGeneRegions.add(new ChrBaseRegion(
                         x.Chromosome, x.GeneStart - ENRICHED_GENE_BUFFER, x.GeneEnd + ENRICHED_GENE_BUFFER)));
-
-        RestrictedGeneIds.stream()
-                .map(x -> geneTransCache.getGeneDataById(x))
-                .filter(x -> x != null)
-                .forEach(x -> RestrictedGeneRegions.add(new ChrBaseRegion(
-                        x.Chromosome, x.GeneStart - 1000, x.GeneEnd + 1000)));
     }
 
     public static boolean inExcludedRegion(final ChrBaseRegion excludedRegion, final SAMRecord record)

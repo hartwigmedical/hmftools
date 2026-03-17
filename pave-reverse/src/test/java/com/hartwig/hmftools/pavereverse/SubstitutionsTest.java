@@ -168,4 +168,13 @@ public final class SubstitutionsTest extends ReversePaveTestBase
         variant = reversePave.calculateProteinVariant("BRAF:p.N581D");
         checkSingleChange(variant, "T", "C", "chr7", 140_754_187);
     }
+
+    @Test
+    public void brafSilentMutation()
+    {
+        BaseSequenceVariants variant = reversePave.calculateProteinVariant("BRAF:p.Q201Q");
+        checkChanges(variant,
+                basesChange("C", "T", "chr7", 140_808_897)
+        );
+    }
 }

@@ -10,7 +10,7 @@ import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.SINGLE_MAP_QUALITY;
-import static com.hartwig.hmftools.isofox.common.ReadRecord.findOverlappingRegions;
+import static com.hartwig.hmftools.isofox.common.Read.findOverlappingRegions;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.N;
@@ -27,7 +27,7 @@ import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
-import com.hartwig.hmftools.isofox.common.ReadRecord;
+import com.hartwig.hmftools.isofox.common.Read;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
 import com.hartwig.hmftools.isofox.fusion.ChimericReadGroup;
 import com.hartwig.hmftools.isofox.fusion.FusionFinder;
@@ -263,19 +263,19 @@ public class TestUtils
         return cigar;
     }
 
-    public static ReadRecord createReadRecord(
+    public static Read createReadRecord(
             final int id, final String chromosome, int posStart, int posEnd, final String readBases, final Cigar cigar)
     {
         return createReadRecord(id, chromosome, posStart, posEnd, readBases, cigar, 0, chromosome, posStart);
     }
 
-    public static ReadRecord createReadRecord(
+    public static Read createReadRecord(
             final int id, final String chromosome, int posStart, int posEnd, final String readBases, final Cigar cigar,
             int flags, final String mateChr, int mateStartPos)
     {
         Cigar readCigar = cigar != null ? cigar : createCigar(0, (int) (posEnd - posStart + 1), 0);
 
-        ReadRecord read = new ReadRecord(String.valueOf(id), chromosome, posStart, posEnd, readBases, readCigar,
+        Read read = new Read(String.valueOf(id), chromosome, posStart, posEnd, readBases, readCigar,
                 0, flags, mateChr, mateStartPos);
 
         read.setFlag(SAMFlag.PROPER_PAIR, true);
@@ -285,7 +285,7 @@ public class TestUtils
         return read;
     }
 
-    public static ReadRecord[] createSupplementaryReadPair(final int id, final GeneCollection gc1, final GeneCollection gc2,
+    public static Read[] createSupplementaryReadPair(final int id, final GeneCollection gc1, final GeneCollection gc2,
             int posStart1, int posEnd1, int posStart2, int posEnd2, final Cigar cigar1, final Cigar cigar2, boolean firstInPair)
     {
         int readBaseLength = cigar1.getCigarElements().stream()
@@ -294,28 +294,28 @@ public class TestUtils
 
         String readBases = generateRandomBases(readBaseLength);
 
-        ReadRecord read1 = createMappedRead(id, gc1, posStart1, posEnd1, cigar1, readBases);
-        ReadRecord read2 = createMappedRead(id, gc2, posStart2, posEnd2, cigar2, readBases);
+        Read read1 = createMappedRead(id, gc1, posStart1, posEnd1, cigar1, readBases);
+        Read read2 = createMappedRead(id, gc2, posStart2, posEnd2, cigar2, readBases);
         read1.setFlag(FIRST_OF_PAIR, firstInPair);
         read2.setFlag(SECOND_OF_PAIR, !firstInPair);
 
         // note: strand is not currently set correctly
         SupplementaryReadData suppData1 = new SupplementaryReadData(
-                read2.Chromosome, read2.PosStart, '+', read2.Cigar.toString(), 255);
+                read2.Chromosome, read2.PosStart, '+', read2.cigarStr(), 255);
 
         read1.setSuppAlignment(suppData1.asDelimStr());
         // read1.setSuppAlignment(String.format("%s;%d;%s", read2.Chromosome, read2.PosStart, read2.Cigar.toString()));
 
         SupplementaryReadData suppData2 = new SupplementaryReadData(
-                read1.Chromosome, read1.PosStart, '+', read1.Cigar.toString(), 255);
+                read1.Chromosome, read1.PosStart, '+', read1.cigarStr(), 255);
 
         read2.setSuppAlignment(suppData2.asDelimStr());
         // read2.setSuppAlignment(String.format("%s;%d;%s", read1.Chromosome, read1.PosStart, read1.Cigar.toString()));
 
-        return new ReadRecord[] { read1, read2 };
+        return new Read[] { read1, read2 };
     }
 
-    public static ReadRecord[] createReadPair(final int id, final GeneCollection gc1, final GeneCollection gc2,
+    public static Read[] createReadPair(final int id, final GeneCollection gc1, final GeneCollection gc2,
             int posStart1, int posEnd1, int posStart2, int posEnd2, final Cigar cigar1, final Cigar cigar2, byte orient1, byte orient2)
     {
         int readBaseLength = cigar1.getCigarElements().stream()
@@ -324,18 +324,18 @@ public class TestUtils
 
         String readBases = generateRandomBases(readBaseLength);
 
-        ReadRecord read1 = createMappedRead(id, gc1, posStart1, posEnd1, cigar1, readBases);
-        ReadRecord read2 = createMappedRead(id, gc2, posStart2, posEnd2, cigar2, readBases);
+        Read read1 = createMappedRead(id, gc1, posStart1, posEnd1, cigar1, readBases);
+        Read read2 = createMappedRead(id, gc2, posStart2, posEnd2, cigar2, readBases);
         read1.setFlag(FIRST_OF_PAIR, true);
         read2.setFlag(SECOND_OF_PAIR, true);
 
         read1.setStrand(orient1 == -1, orient2 == -1);
         read2.setStrand(orient2 == -1, orient1 == -1);
 
-        return new ReadRecord[] { read1, read2 };
+        return new Read[] { read1, read2 };
     }
 
-    public static ReadRecord createMappedRead(final int id, final GeneCollection geneCollection, int posStart, int posEnd, final Cigar cigar)
+    public static Read createMappedRead(final int id, final GeneCollection geneCollection, int posStart, int posEnd, final Cigar cigar)
     {
         int readBaseLength = cigar.getCigarElements().stream()
                 .filter(x -> x.getOperator() != N && x.getOperator() != D)
@@ -346,10 +346,10 @@ public class TestUtils
         return createMappedRead(id, geneCollection, posStart, posEnd, cigar, readBases);
     }
 
-    public static ReadRecord createMappedRead(
+    public static Read createMappedRead(
             final int id, final GeneCollection geneCollection, int posStart, int posEnd, final Cigar cigar, final String readBases)
     {
-        ReadRecord read = createReadRecord(id, geneCollection.chromosome(), posStart, posEnd, readBases, cigar);
+        Read read = createReadRecord(id, geneCollection.chromosome(), posStart, posEnd, readBases, cigar);
 
         read.processOverlappingRegions(findOverlappingRegions(geneCollection.getExonRegions(), read));
 

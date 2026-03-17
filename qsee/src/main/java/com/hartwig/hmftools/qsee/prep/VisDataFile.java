@@ -63,6 +63,10 @@ public class VisDataFile
             for(VisSampleData entry : visSampleDataEntries)
             {
                 Feature feature = entry.feature();
+
+                if(Double.isNaN(feature.value()))
+                    continue;
+
                 FeatureKey featureKey = feature.key();
 
                 StringJoiner line = new StringJoiner(TSV_DELIM);

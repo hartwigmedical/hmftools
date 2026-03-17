@@ -111,8 +111,8 @@ public class GeneratePanelNormalisation
         // load each sample's alt SJs and consolidate into a single list
         for(int i = 0; i < mConfig.SampleData.SampleIds.size(); ++i)
         {
-            final String sampleId = mConfig.SampleData.SampleIds.get(i);
-            final Path sampleFile = filenames.get(i);
+            String sampleId = mConfig.SampleData.SampleIds.get(i);
+            Path sampleFile = filenames.get(i);
 
             processSampleFile(sampleFile, geneTpms);
             ISF_LOGGER.debug("{}: sample({}) processed file", i, sampleId);
@@ -138,9 +138,9 @@ public class GeneratePanelNormalisation
 
             for(final String data : lines)
             {
-                final String[] values = data.split(fileDelim, -1);
+                String[] values = data.split(fileDelim, -1);
 
-                final String geneId = values[geneIdIndex];
+                String geneId = values[geneIdIndex];
 
                 if(!mGeneIds.contains(geneId))
                     continue;
@@ -184,9 +184,27 @@ public class GeneratePanelNormalisation
                 List<Double> tpms = geneTpms.get(geneId);
                 double panelMedian = Doubles.median(tpms);
 
+                if(panelMedian == 0)
+                {
+                    // interpolate between zero and non-zero values
+                    int zeroCount = 0;
+                    double minNonZeroValue = 0;
+
+                    for(double tpm : tpms)
+                    {
+                        if(tpm == 0)
+                            ++zeroCount;
+                        else if(minNonZeroValue == 0 || tpm < minNonZeroValue)
+                            minNonZeroValue = tpm;
+
+                    }
+
+                    int nonZeroCount = tpms.size() - zeroCount;
+                    panelMedian = nonZeroCount / (double)tpms.size() * minNonZeroValue;
+                }
+
                 double wgsMedian = max(mWgsCohortMedians.get(i), MIN_WGS_MEDIAN_TPM);
                 double adjustmentFactor = panelMedian / wgsMedian;
-
 
                 writer.write(String.format("%s,%s,%4.3e,%4.3e,%.6f",
                         geneId, geneName, wgsMedian, panelMedian, adjustmentFactor));

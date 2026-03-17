@@ -40,7 +40,7 @@ import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.BaseDepth;
 import com.hartwig.hmftools.isofox.common.FragmentTracker;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
-import com.hartwig.hmftools.isofox.common.ReadRecord;
+import com.hartwig.hmftools.isofox.common.Read;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
 
 import org.junit.Test;
@@ -72,9 +72,9 @@ public class ChimericReadTest
 
         // chimeric read pair (eg a BND)
         int readId = 0;
-        ReadRecord read1 = createMappedRead(readId, gc1, 1050, 1089, createCigar(0, 40, 0));
+        Read read1 = createMappedRead(readId, gc1, 1050, 1089, createCigar(0, 40, 0));
         read1.setFlag(FIRST_OF_PAIR, true);
-        ReadRecord read2 = createMappedRead(readId, gc1, 1081, 1100, createCigar(0, 20, 20));
+        Read read2 = createMappedRead(readId, gc1, 1081, 1100, createCigar(0, 20, 20));
         read2.setSuppAlignment(TEST_SUPP_DATA);
 
         chimericRT.addChimericReadPair(read1, read2);
@@ -88,7 +88,7 @@ public class ChimericReadTest
         // single read in this gene
         chimericRT.clear();
 
-        ReadRecord read3 = createMappedRead(++readId, gc1, 1081, 1100, createCigar(0, 20, 20));
+        Read read3 = createMappedRead(++readId, gc1, 1081, 1100, createCigar(0, 20, 20));
         read3.setSuppAlignment(TEST_SUPP_DATA);
         fragTracker.checkRead(read3);
 
@@ -137,9 +137,9 @@ public class ChimericReadTest
 
         // DEL only covering 1 gene isn't considered chimeric
         int readId = 0;
-        ReadRecord read1 = createMappedRead(readId, gc1, 1081, 1100, createCigar(0, 20, 20));
+        Read read1 = createMappedRead(readId, gc1, 1081, 1100, createCigar(0, 20, 20));
         read1.setFlag(FIRST_OF_PAIR, true);
-        ReadRecord read2 = createMappedRead(readId, gc1, 1500, 1519, createCigar(20, 20, 0));
+        Read read2 = createMappedRead(readId, gc1, 1500, 1519, createCigar(20, 20, 0));
         read2.setStrand(true, false);
 
         chimericRT.addChimericReadPair(read1, read2);
@@ -257,9 +257,9 @@ public class ChimericReadTest
 
         // pre and post reads are discarded since they don't affect the gene
         int readId = 0;
-        ReadRecord read1 = createMappedRead(readId, gc1, 481, 500, createCigar(0, 20, 20));
+        Read read1 = createMappedRead(readId, gc1, 481, 500, createCigar(0, 20, 20));
         read1.setFlag(FIRST_OF_PAIR, true);
-        ReadRecord read2 = createMappedRead(readId, gc1, 2000, 2019, createCigar(20, 20, 0));
+        Read read2 = createMappedRead(readId, gc1, 2000, 2019, createCigar(20, 20, 0));
         read2.setStrand(true, false);
 
         chimericRT.addChimericReadPair(read1, read2);
@@ -294,14 +294,14 @@ public class ChimericReadTest
         read2.setSuppAlignment("supp");
 
         // these post-gene reads will be skipped in this gene collection
-        ReadRecord read3 = createMappedRead(readId, gc1, 2010, 2049, createCigar(0, 40, 0));
+        Read read3 = createMappedRead(readId, gc1, 2010, 2049, createCigar(0, 40, 0));
 
         // will also be skipped since relates to next gene collection
-        ReadRecord read4 = createMappedRead(++readId, gc1, 2000, 2019, createCigar(20, 20, 0));
+        Read read4 = createMappedRead(++readId, gc1, 2000, 2019, createCigar(20, 20, 0));
 
         // will be processed (as local alt-SJ candidates) and the post gene read cached so as not to handle again in gc2
-        ReadRecord read5 = createMappedRead(++readId, gc1, 1081, 1100, createCigar(0, 20, 20));
-        ReadRecord read6 = createMappedRead(readId, gc1, 2100, 2119, createCigar(20, 20, 0));
+        Read read5 = createMappedRead(++readId, gc1, 1081, 1100, createCigar(0, 20, 20));
+        Read read6 = createMappedRead(readId, gc1, 2100, 2119, createCigar(20, 20, 0));
 
         fragTracker.checkRead(read1);
         fragTracker.checkRead(read4);
@@ -366,10 +366,10 @@ public class ChimericReadTest
         int readId = 0;
 
         // a split read between the first and second genes
-        ReadRecord read1 = createMappedRead(readId, gc1, 1081, 10219, createCigar(0, 20, 9100, 20, 0));
+        Read read1 = createMappedRead(readId, gc1, 1081, 10219, createCigar(0, 20, 9100, 20, 0));
         read1.setFlag(FIRST_OF_PAIR, true);
         // read1.setGeneCollection(SE_END, gc2.id(), true);
-        ReadRecord read2 = createMappedRead(readId, gc1, 1050, 1089, createCigar(0, 40, 0));
+        Read read2 = createMappedRead(readId, gc1, 1050, 1089, createCigar(0, 40, 0));
         read2.setStrand(true, false);
 
         chimericRT.addChimericReadPair(read1, read2);
@@ -453,11 +453,11 @@ public class ChimericReadTest
         region4.addPostRegion(region5);
         region5.addPreRegion(region4);
 
-        ReadRecord read = createReadRecord(1, CHR_1, 391, 409, REF_BASE_STR_1,
+        Read read = createReadRecord(1, CHR_1, 391, 409, REF_BASE_STR_1,
                 createCigar(0, 10, 99, 10, 0));
 
         List<RegionReadData> allRegions = Lists.newArrayList(region1, region2, region3, region4, region5);
-        read.processOverlappingRegions(ReadRecord.findOverlappingRegions(allRegions, read));
+        read.processOverlappingRegions(Read.findOverlappingRegions(allRegions, read));
 
         assertEquals(SPLICE_JUNCTION, read.getTranscriptClassification(trans1));
         assertEquals(SPLICE_JUNCTION, read.getTranscriptClassification(trans2));
@@ -469,7 +469,7 @@ public class ChimericReadTest
         read = createReadRecord(1, CHR_1, 191, 509, REF_BASE_STR_1,
                 createCigar(0, 10, 299, 10, 0));
 
-        read.processOverlappingRegions(ReadRecord.findOverlappingRegions(allRegions, read));
+        read.processOverlappingRegions(Read.findOverlappingRegions(allRegions, read));
         assertEquals(ALT, read.getTranscriptClassification(trans1));
 
         assertFalse(ChimericUtils.setHasMultipleKnownSpliceGenes(Lists.newArrayList(read), knownPairGeneIds));

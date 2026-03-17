@@ -36,7 +36,7 @@ import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.isofox.adjusts.FragmentSize;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
-import com.hartwig.hmftools.isofox.common.ReadRecord;
+import com.hartwig.hmftools.isofox.common.Read;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
 import com.hartwig.hmftools.isofox.novel.AltSpliceJunction;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionContext;
@@ -126,7 +126,7 @@ public class NovelJunctionsTest
         // test out various types of novel junctions:
 
         // known 5' to novel intronic 3'
-        ReadRecord read = createReadRecord(1, chromosome, 291, 369, REF_BASE_STR_1, createCigar(0, 10, 59, 10, 0));
+        Read read = createReadRecord(1, chromosome, 291, 369, REF_BASE_STR_1, createCigar(0, 10, 59, 10, 0));
 
         List<RegionReadData> overlappingRegions = gene.findOverlappingRegions(read);
 
@@ -207,8 +207,8 @@ public class NovelJunctionsTest
         assertEquals(-150, altSJ.calcNearestExonBoundary(SE_END, gene));
 
         // fragment reads making a novel exon
-        ReadRecord read1 = createReadRecord(1, chromosome, 991, 1209, REF_BASE_STR_1, createCigar(0, 10, 199, 10, 0));
-        ReadRecord read2 = createReadRecord(1, chromosome, 1291, 1409, REF_BASE_STR_1, createCigar(0, 10, 99, 10, 0));
+        Read read1 = createReadRecord(1, chromosome, 991, 1209, REF_BASE_STR_1, createCigar(0, 10, 199, 10, 0));
+        Read read2 = createReadRecord(1, chromosome, 1291, 1409, REF_BASE_STR_1, createCigar(0, 10, 99, 10, 0));
 
         read1.processOverlappingRegions(gene.findOverlappingRegions(read1));
         read2.processOverlappingRegions(gene.findOverlappingRegions(read2));
@@ -243,7 +243,7 @@ public class NovelJunctionsTest
         assertTrue(validTransIds.contains(transId2));
 
         // circular exon looking like a DP
-        ReadRecord[] readPair = createSupplementaryReadPair(1, genes, genes, 400, 419, 481, 500,
+        Read[] readPair = createSupplementaryReadPair(1, genes, genes, 400, 419, 481, 500,
                 createCigar(5, 20, 0), createCigar(0, 20, 5), true);
         readPair[0].processOverlappingRegions(gene.findOverlappingRegions(readPair[0]));
         readPair[1].processOverlappingRegions(gene.findOverlappingRegions(readPair[1]));
@@ -315,8 +315,8 @@ public class NovelJunctionsTest
         riFinder.setGeneData(genes);
 
         // first read doesn't span an exon-intron boundary for every transcript
-        ReadRecord read1 = createReadRecord(1, chromosome, 291, 310, REF_BASE_STR_1, createCigar(0, 20, 0));
-        ReadRecord read2 = createReadRecord(1, chromosome, 340, 360, REF_BASE_STR_1, createCigar(0, 20, 0));
+        Read read1 = createReadRecord(1, chromosome, 291, 310, REF_BASE_STR_1, createCigar(0, 20, 0));
+        Read read2 = createReadRecord(1, chromosome, 340, 360, REF_BASE_STR_1, createCigar(0, 20, 0));
 
         read1.processOverlappingRegions(gene.findOverlappingRegions(read1));
         read1.processOverlappingRegions(gene.findOverlappingRegions(read2));

@@ -23,10 +23,12 @@ import static com.hartwig.hmftools.isofox.common.RegionReadData.findUniqueBases;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
@@ -172,7 +174,7 @@ public class ChromosomeTaskExecutor implements Callable<Void>
         int nextLogCount = 100;
         int lastGeneCollectionEndPosition = 1;
 
-        boolean genesFiltered = !mConfig.Filters.RestrictedGeneIds.isEmpty() || mConfig.Filters.SpecificChrRegions.hasFilters();
+        boolean genesFiltered = mConfig.Filters.SpecificChrRegions.hasFilters();
 
         while(mCurrentGeneIndex < mGeneDataList.size())
         {
@@ -454,7 +456,7 @@ public class ChromosomeTaskExecutor implements Callable<Void>
     {
         mPerfCounters[PERF_GC_ADJUST].resume();
 
-        for(final GeneCollectionSummary geneSummaryData : mGeneCollectionSummaryData)
+        for(GeneCollectionSummary geneSummaryData : mGeneCollectionSummaryData)
         {
             final double[] gcAdjustments = mTranscriptGcRatios.getGcRatioAdjustments();
             geneSummaryData.applyGcAdjustments(gcAdjustments);
@@ -473,7 +475,7 @@ public class ChromosomeTaskExecutor implements Callable<Void>
     private void collectResults(
             final GeneCollection geneCollection, final GeneCollectionSummary geneCollectionSummary, final GeneReadData geneReadData)
     {
-        for(final TranscriptData transData : geneReadData.getTranscripts())
+        for(TranscriptData transData : geneReadData.getTranscripts())
         {
             final TranscriptResult results = new TranscriptResult(geneCollection, geneReadData, transData, mConfig.FragmentSizeData);
 
@@ -492,23 +494,35 @@ public class ChromosomeTaskExecutor implements Callable<Void>
     public FragmentTypeCounts getCombinedCounts() { return mCombinedFragmentCounts; }
     public GcRatioCounts getNonEnrichedGcRatioCounts() { return mNonEnrichedGcRatioCounts; }
 
-    public void writeResults()
+    public void writeExpressionResults(final Map<String,DriverGene> driverGenes, final Set<String> panelGeneIds)
     {
         for(GeneCollectionSummary geneCollectionResult : mGeneCollectionSummaryData)
         {
             for(GeneResult geneResult : geneCollectionResult.GeneResults)
             {
-                mResultsWriter.writeGeneResult(geneResult);
+                if(!panelGeneIds.isEmpty() && !panelGeneIds.contains(geneResult.Gene.GeneId))
+                    continue;
+
+                DriverGene driverGene = driverGenes.get(geneResult.Gene.GeneName);
+                boolean reported = driverGene != null && (driverGene.reportHighExpression() || driverGene.reportLowExpression());
+
+                if(reported)
+                    geneResult.markReported();
+
+                mResultsWriter.writeGeneExpression(geneResult);
             }
 
             for(TranscriptResult transResult : geneCollectionResult.TranscriptResults)
             {
-                final GeneData geneData = geneCollectionResult.GeneResults.stream()
+                if(!panelGeneIds.isEmpty() && !panelGeneIds.contains(transResult.Trans.GeneId))
+                    continue;
+
+                GeneData geneData = geneCollectionResult.GeneResults.stream()
                         .filter(x -> x.Gene.GeneId.equals(transResult.Trans.GeneId))
                         .map(x -> x.Gene)
                         .findFirst().orElse(null);
 
-                mResultsWriter.writeTranscriptResults(geneData, transResult);
+                mResultsWriter.writeTranscriptExpression(geneData, transResult);
             }
         }
     }

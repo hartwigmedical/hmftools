@@ -19,7 +19,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.isofox.common.BaseDepth;
-import com.hartwig.hmftools.isofox.common.ReadRecord;
+import com.hartwig.hmftools.isofox.common.Read;
 import com.hartwig.hmftools.isofox.common.RegionMatchType;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
 
@@ -59,15 +59,15 @@ public class FusionRead
     private List<FusionTransExon> mUpperTransExonRefs; // TE refs for upper coords if a spanning read
     private RegionMatchType mUpperRegionMatchType;
 
-    public FusionRead(final ReadRecord read)
+    public FusionRead(final Read read)
     {
         Chromosome = read.Chromosome;
         Positions = new int[] { read.PosStart, read.PosEnd};
-        Orientation = read.orientation();
+        Orientation = read.orientByte();
         MateChromosome = read.mateChromosome();
         MatePosStart = read.mateStartPosition();
         MappedCoords = read.getMappedRegionCoords(false);
-        Cigar = read.Cigar.toString();
+        Cigar = read.cigarStr();
         GeneCollections = read.getGeneCollectons();
         IsGenicRegion = read.getIsGenicRegion();
         HasInterGeneSplit = read.hasInterGeneSplit();
@@ -79,15 +79,14 @@ public class FusionRead
         SuppData = read.hasSuppAlignment() ? SupplementaryReadData.extractAlignment(read.getSuppAlignment()) : null;
 
         SoftClipLengths = new int[]
-                { read.isSoftClipped(SE_START) ? read.Cigar.getFirstCigarElement().getLength() : 0,
-                  read.isSoftClipped(SE_END) ? read.Cigar.getLastCigarElement().getLength() : 0 };
+                { read.isSoftClipped(SE_START) ? read.leftClipLength() : 0, read.isSoftClipped(SE_END) ? read.rightClipLength() : 0 };
 
-        ReadBaseLength = read.Length;
+        ReadBaseLength = read.baseLength();
         int extraBasesBuffer = 5;
-        int startBases = min(SoftClipLengths[SE_START] + extraBasesBuffer, read.Length);
-        int endBases = min(SoftClipLengths[SE_END] + extraBasesBuffer, read.Length);
+        int startBases = min(SoftClipLengths[SE_START] + extraBasesBuffer, ReadBaseLength);
+        int endBases = min(SoftClipLengths[SE_END] + extraBasesBuffer, ReadBaseLength);
 
-        BoundaryBases = new String[] { read.ReadBases.substring(0, startBases), read.ReadBases.substring(read.Length - endBases) };
+        BoundaryBases = new String[] { read.readBases().substring(0, startBases), read.readBases().substring(ReadBaseLength - endBases) };
 
         mTransExonRefs = Lists.newArrayList();
         mRegionMatchType = NONE;
@@ -139,7 +138,7 @@ public class FusionRead
         return se == SE_END && mUpperTransExonRefs != null ? mUpperRegionMatchType : mRegionMatchType;
     }
 
-    private void extractReadTransExonRefs(final ReadRecord read)
+    private void extractReadTransExonRefs(final Read read)
     {
         if(!read.getMappedRegions().isEmpty())
         {
@@ -213,7 +212,7 @@ public class FusionRead
         return 0;
     }
 
-    public static List<FusionRead> convertReads(final List<ReadRecord> reads)
+    public static List<FusionRead> convertReads(final List<Read> reads)
     {
         List<FusionRead> fusionReads = reads.stream().map(x -> new FusionRead(x)).collect(Collectors.toList());
         return fusionReads;

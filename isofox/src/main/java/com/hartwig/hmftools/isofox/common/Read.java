@@ -3,6 +3,7 @@ package com.hartwig.hmftools.isofox.common;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.bam.CigarUtils.cigarElementsToStr;
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipped;
 import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipped;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
@@ -28,6 +29,9 @@ import static com.hartwig.hmftools.isofox.common.TransMatchType.EXONIC;
 import static com.hartwig.hmftools.isofox.common.TransMatchType.SPLICE_JUNCTION;
 import static com.hartwig.hmftools.isofox.common.TransMatchType.UNKNOWN;
 
+import static htsjdk.samtools.CigarOperator.N;
+import static htsjdk.samtools.CigarOperator.S;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -40,28 +44,33 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.bam.ClippedSide;
+import com.hartwig.hmftools.common.genome.region.Orientation;
 
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.Cigar;
-import htsjdk.samtools.CigarOperator;
+import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMFlag;
 import htsjdk.samtools.SAMRecord;
 
-public class ReadRecord
+public class Read
 {
     public final String Id;
     public final String Chromosome;
     public final int PosStart;
     public final int PosEnd;
 
-    public final String ReadBases;
-    public final int Length; // of bases
-    public final Cigar Cigar;
-
+    private String mReadBases;
+    private final String mOriginalCigarStr;
+    private String mCigarStr;
+    private final List<CigarElement> mCigarElements;
     private int mFlags;
     private String mMateChromosome;
     private int mMatePosStart;
+
+    public int mUnclippedStart;
+    public int mUnclippedEnd;
+    public final boolean mHasSplit;
 
     private final int[] mGeneCollections;
     private final boolean[] mIsGenicRegion;
@@ -73,7 +82,6 @@ public class ReadRecord
     private String mSupplementaryAlignment;
     private boolean mHasInterGeneSplit;
     private short mMapQuality;
-    private byte[] mBaseQualities;
 
     private int[] mJunctionPositions; // chimeric junctions
 
@@ -84,12 +92,12 @@ public class ReadRecord
 
     public static final int NO_GENE_ID = -1;
 
-    public static ReadRecord from(final SAMRecord record)
+    public static Read from(final SAMRecord record)
     {
-        final String readId = record.isSecondaryAlignment() ? String.format("%s_%s",
+        String readId = record.isSecondaryAlignment() ? String.format("%s_%s",
                 record.getReadName(), record.getAttribute("HI")) : record.getReadName();
 
-        ReadRecord read = new ReadRecord(
+        Read read = new Read(
                 readId, record.getReferenceName(), record.getStart(), record.getEnd(),
                 record.getReadString(), record.getCigar(), record.getInferredInsertSize(), record.getFlags(),
                 record.getMateReferenceName(), record.getMateAlignmentStart());
@@ -99,7 +107,7 @@ public class ReadRecord
         return read;
     }
 
-    public ReadRecord(
+    public Read(
             final String id, final String chromosome, int posStart, int posEnd, final String readBases, @NotNull final Cigar cigar,
             int insertSize, int flags, final String mateChromosome, int matePosStart)
     {
@@ -107,9 +115,26 @@ public class ReadRecord
         Chromosome = chromosome;
         PosStart = posStart;
         PosEnd = posEnd;
-        ReadBases = readBases;
-        Length = ReadBases.length();
-        Cigar = cigar;
+        mReadBases = readBases;
+
+        mCigarElements = Lists.newArrayList(cigar.getCigarElements());
+        mOriginalCigarStr = cigarElementsToStr(mCigarElements);
+        mCigarStr = null;
+
+        mHasSplit = mCigarElements.stream().anyMatch(x -> x.getOperator() == N);
+
+        mUnclippedStart = PosStart;
+        if(!mCigarElements.isEmpty()&& mCigarElements.get(0).getOperator() == S)
+            mUnclippedStart -= mCigarElements.get(0).getLength();
+
+        mUnclippedEnd = PosEnd;
+
+        if(mCigarElements.size() >= 2)
+        {
+            int lastIndex = mCigarElements.size() - 1;
+            if(mCigarElements.get(lastIndex).getOperator() == S)
+                mUnclippedEnd += mCigarElements.get(lastIndex).getLength();
+        }
 
         mFlags = flags;
         mMateChromosome = mateChromosome;
@@ -118,7 +143,7 @@ public class ReadRecord
         mGeneCollections = new int[] { NO_GENE_ID, NO_GENE_ID };
         mIsGenicRegion = new boolean[] { false, false };
 
-        List<int[]> mappedCoords = generateMappedCoords(Cigar, PosStart);
+        List<int[]> mappedCoords = generateMappedCoords(mCigarElements, PosStart);
         mMappedCoords = Lists.newArrayListWithCapacity(mappedCoords.size());
         mMappedCoords.addAll(mappedCoords);
 
@@ -134,12 +159,25 @@ public class ReadRecord
         mHasInterGeneSplit = false;
         mMapQuality = 0;
         mJunctionPositions = null;
-        mBaseQualities = null;
     }
 
     public int range() { return PosEnd - PosStart; }
 
-    public byte orientation() { return !isReadReversed() ? ORIENT_FWD : ORIENT_REV; }
+    public byte orientByte() { return !isReadReversed() ? ORIENT_FWD : ORIENT_REV; }
+    public Orientation orientation() { return !isReadReversed() ? Orientation.FORWARD : Orientation.REVERSE; }
+    public List<CigarElement> cigarElements() { return mCigarElements; }
+    public String originalCigarStr() { return mCigarStr; }
+    public String cigarStr() { return mCigarStr != null ? mCigarStr : mOriginalCigarStr; }
+    public String readBases() { return mReadBases; }
+
+    public int unclippedStart() { return mUnclippedStart; }
+    public int unclippedEnd() { return mUnclippedEnd; }
+    public boolean isLeftClipped() { return mUnclippedStart != PosStart; }
+    public boolean isRightClipped() { return mUnclippedEnd != PosEnd; }
+    public int leftClipLength() { return max(PosStart - mUnclippedStart, 0); }
+    public int rightClipLength() { return max(mUnclippedEnd - PosEnd, 0); }
+
+    public boolean containsSplit() { return mHasSplit; }
 
     public int flags() { return mFlags; }
     public boolean isReadPaired() { return (mFlags & SAMFlag.READ_PAIRED.intValue()) != 0; }
@@ -165,12 +203,24 @@ public class ReadRecord
 
     public boolean hasSuppAlignment() { return mSupplementaryAlignment != null; }
 
-    public static ClippedSide clippedSide(final ReadRecord read)
+    public static ClippedSide clippedSide(final Read read)
     {
-        // considers hard or soft clips
-        boolean leftClipped = read.getSoftClipRegionsMatched()[SE_START] == 0 && read.Cigar.isLeftClipped();
-        boolean rightClipped = read.getSoftClipRegionsMatched()[SE_END] == 0 && read.Cigar.isRightClipped();
-        return ClippedSide.from(read.Cigar, leftClipped, rightClipped);
+        int leftScLength = read.leftClipLength();
+        int rightScLength = read.rightClipLength();
+
+        if(leftScLength > 0 && rightScLength > 0)
+        {
+            return leftScLength >= rightScLength ?
+                    new ClippedSide(SE_START, leftScLength, true) : new ClippedSide(SE_END, rightScLength, true);
+        }
+        else if(leftScLength > 0)
+        {
+            return new ClippedSide(SE_START, leftScLength, true);
+        }
+        else
+        {
+            return new ClippedSide(SE_END, rightScLength, rightScLength > 0);
+        }
     }
 
     public int[] getSoftClipRegionsMatched() { return mSoftClipRegionsMatched; }
@@ -180,16 +230,15 @@ public class ReadRecord
         if(mSoftClipRegionsMatched[se] > 0)
             return false;
 
-        return se == SE_START ? leftSoftClipped(Cigar) : rightSoftClipped(Cigar);
+        return se == SE_START ? isLeftClipped() : isRightClipped();
     }
 
-    public boolean containsSoftClipping() { return Cigar.containsOperator(CigarOperator.S); }
+    public boolean containsSoftClipping() { return isLeftClipped() || isRightClipped(); }
 
     public void setMapQuality(short mapQuality) { mMapQuality = mapQuality; }
     public short mapQuality() { return mMapQuality; }
 
-    public void setBaseQualities(final byte[] qualities) { mBaseQualities = qualities; }
-    public byte[] baseQualities() { return mBaseQualities; }
+    public int baseLength() { return mReadBases.length(); }
 
     public boolean isMultiMapped() { return mMapQuality <= MULTI_MAP_QUALITY_THRESHOLD; }
 
@@ -216,9 +265,9 @@ public class ReadRecord
                 && mGeneCollections[SE_START] != NO_GENE_ID && mGeneCollections[SE_END] != NO_GENE_ID;
     }
 
-    public boolean matches(final ReadRecord other)
+    public boolean matches(final Read other)
     {
-        return Id.equals(other.Id) && Cigar.toString().equals(other.Cigar.toString()) && PosStart == other.PosStart && PosEnd == other.PosEnd;
+        return Id.equals(other.Id) && cigarStr().equals(other.cigarStr().toString()) && PosStart == other.PosStart && PosEnd == other.PosEnd;
     }
 
     public boolean spansGeneCollections()
@@ -241,13 +290,6 @@ public class ReadRecord
     }
 
     public final Map<RegionMatchType,List<TransExonRef>> getReadTransExonRefs() { return mTransExonRefs; }
-    public final Map<RegionMatchType,List<TransExonRef>> getReadTransExonRefs(int se)
-    {
-        if(spansGeneCollections())
-            return se == SE_START ? mTransExonRefs : mUpperTransExonRefs;
-        else
-            return mTransExonRefs;
-    }
 
     public boolean isChimeric()
     {
@@ -292,6 +334,7 @@ public class ReadRecord
     {
         // process all regions for each transcript as a group to look for inconsistencies with the transcript definition
         Set<Integer> transcripts = Sets.newHashSet();
+        boolean hasSoftClipping = isLeftClipped() || isRightClipped();
 
         for(RegionReadData region : regions)
         {
@@ -303,7 +346,7 @@ public class ReadRecord
             RegionMatchType matchType = setRegionMatchType(region);
             mMappedRegions.put(region, matchType);
 
-            boolean checkMissedJunctions = matchType == EXON_INTRON || (Cigar.containsOperator(CigarOperator.S) && exonBoundary(matchType));
+            boolean checkMissedJunctions = matchType == EXON_INTRON || (hasSoftClipping && exonBoundary(matchType));
 
             if(checkMissedJunctions)
                 checkMissedJunctions(region);
@@ -430,9 +473,9 @@ public class ReadRecord
             // is classified as alt
             if(validTranscriptType(transMatchType) && containsSoftClipping() && !likelyAdaperSoftClipping())
             {
-                if(leftSoftClipped(Cigar) && mSoftClipRegionsMatched[SE_START] == 0)
+                if(isLeftClipped() && mSoftClipRegionsMatched[SE_START] == 0)
                     transMatchType = ALT;
-                else if(rightSoftClipped(Cigar) && mSoftClipRegionsMatched[SE_END] == 0)
+                else if(isRightClipped() && mSoftClipRegionsMatched[SE_END] == 0)
                     transMatchType = ALT;
             }
 
@@ -442,10 +485,10 @@ public class ReadRecord
 
     public boolean likelyAdaperSoftClipping()
     {
-        return mFragmentInsertSize < Length;
+        return mFragmentInsertSize < baseLength();
     }
 
-    public static final List<RegionReadData> getUniqueValidRegion(final ReadRecord read1, final ReadRecord read2)
+    public static final List<RegionReadData> getUniqueValidRegion(final Read read1, final Read read2)
     {
         final List<RegionReadData> regions = read1.getMappedRegions().entrySet().stream()
                 .filter(x -> validExonMatch(x.getValue()))
@@ -556,11 +599,6 @@ public class ReadRecord
         }
     }
 
-    public boolean containsSplit()
-    {
-        return Cigar.containsOperator(CigarOperator.N);
-    }
-
     public boolean hasInterGeneSplit() { return mHasInterGeneSplit; }
     public void setHasInterGeneSplit() { mHasInterGeneSplit = true; }
 
@@ -593,9 +631,9 @@ public class ReadRecord
             extraBaseLength = region.start() - readStartPos;
         }
 
-        if(Cigar.getFirstCigarElement().getOperator() == CigarOperator.S && readStartPos <= region.start())
+        if(isLeftClipped() && readStartPos <= region.start())
         {
-            scLength = Cigar.getFirstCigarElement().getLength();
+            scLength = leftClipLength();
             extraBaseLength += scLength;
         }
 
@@ -606,7 +644,7 @@ public class ReadRecord
         if(extraBaseLength >= 1 && extraBaseLength <= MAX_SC_BASE_MATCH && scLength <= MAX_SC_BASE_MATCH)
         {
             // first check for a match with the next exon on the lower side
-            final String extraBases = ReadBases.substring(0, extraBaseLength);
+            final String extraBases = mReadBases.substring(0, extraBaseLength);
 
             final List<RegionReadData> matchedRegions = region.getPreRegions().stream()
                     .filter(x -> matchesOtherRegionBases(extraBases, x, false)).collect(Collectors.toList());
@@ -652,9 +690,9 @@ public class ReadRecord
             extraBaseLength = readEndPos - region.end();
         }
 
-        if(Cigar.getLastCigarElement().getOperator() == CigarOperator.S && readEndPos >= region.end())
+        if(isRightClipped() && readEndPos >= region.end())
         {
-            scLength = Cigar.getLastCigarElement().getLength();
+            scLength = rightClipLength();
             extraBaseLength += scLength;
         }
 
@@ -663,7 +701,8 @@ public class ReadRecord
         if(extraBaseLength >= 1 && extraBaseLength <= MAX_SC_BASE_MATCH && scLength <= MAX_SC_BASE_MATCH)
         {
             // now check for a match to the next exon up
-            final String extraBases = ReadBases.substring(Length - extraBaseLength, Length);
+            int readLength = baseLength();
+            final String extraBases = mReadBases.substring(readLength - extraBaseLength, readLength);
 
             final List<RegionReadData> matchedRegions = region.getPostRegions().stream()
                     .filter(x -> matchesOtherRegionBases(extraBases, x, true)).collect(Collectors.toList());
@@ -746,7 +785,7 @@ public class ReadRecord
 
     public final Map<RegionReadData,RegionMatchType> getMappedRegions() { return mMappedRegions; }
 
-    public static List<RegionReadData> findOverlappingRegions(final List<RegionReadData> regions, final ReadRecord read)
+    public static List<RegionReadData> findOverlappingRegions(final List<RegionReadData> regions, final Read read)
     {
         return regions.stream()
                 .filter(x -> read.overlapsMappedReads(x.start(), x.end()))
@@ -781,7 +820,7 @@ public class ReadRecord
             mTransExonRefs.put(INTRON, transRefList);
     }
 
-    public final List<TransExonRef> getJunctionMatchingTransRefs(int junctionPosition, boolean isJunctionStart)
+    public List<TransExonRef> getJunctionMatchingTransRefs(int junctionPosition, boolean isJunctionStart)
     {
         final List<TransExonRef> matchedTransRefs = Lists.newArrayList();
 
@@ -794,7 +833,7 @@ public class ReadRecord
         return matchedTransRefs;
     }
 
-    public final Map<Integer,TransMatchType> getTranscriptClassifications() { return mTranscriptClassification; }
+    public Map<Integer,TransMatchType> getTranscriptClassifications() { return mTranscriptClassification; }
 
     public TransMatchType getTranscriptClassification(int transId)
     {
@@ -812,9 +851,66 @@ public class ReadRecord
         mJunctionPositions[se] = junctionPosition;
     }
 
+    public void trimAdapterSoftClipBases(final Read mateRead)
+    {
+        if(orientation() == mateRead.orientation())
+            return;
+
+        if(orientation().isForward())
+        {
+            if(mateRead.unclippedEnd() >= unclippedEnd())
+                return;
+
+            int trimLength = unclippedEnd() - mateRead.unclippedEnd();
+            int softClipLength = rightClipLength();
+            trimLength = min(trimLength, softClipLength);
+
+            // trim from upper end
+            mReadBases = mReadBases.substring(0, mReadBases.length() - trimLength);
+
+            mUnclippedEnd -= trimLength;
+
+            int lastIndex = mCigarElements.size() - 1;
+
+            if(trimLength < softClipLength)
+            {
+                mCigarElements.set(lastIndex, new CigarElement(softClipLength - trimLength, S));
+            }
+            else
+            {
+                mCigarElements.remove(lastIndex);
+            }
+        }
+        else
+        {
+            if(mateRead.unclippedStart() <= unclippedStart())
+                return;
+
+            int trimLength = mateRead.unclippedStart() - unclippedStart();
+            int softClipLength = leftClipLength();
+            trimLength = min(trimLength, softClipLength);
+
+            // trim from upper end
+            mReadBases = mReadBases.substring(trimLength);
+
+            mUnclippedStart += trimLength;
+
+            if(trimLength < softClipLength)
+            {
+                mCigarElements.set(0, new CigarElement(softClipLength - trimLength, S));
+            }
+            else
+            {
+                mCigarElements.remove(0);
+            }
+        }
+
+        mCigarStr = cigarElementsToStr(mCigarElements);
+    }
+
     public String toString()
     {
         return String.format("range(%s: %d -> %d, range=%d) length(%d) cigar(%s) id(%s)",
-                Chromosome, PosStart, PosEnd, range(), Length, Cigar != null ? Cigar.toString() : "", Id);
+                Chromosome, PosStart, PosEnd, range(), baseLength(), mCigarStr != null ? mCigarStr : "", Id);
     }
 }

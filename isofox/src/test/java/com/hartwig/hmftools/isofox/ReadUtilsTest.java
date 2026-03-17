@@ -3,10 +3,12 @@ package com.hartwig.hmftools.isofox;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.ReadCountsTest.REF_BASE_STR_1;
+import static com.hartwig.hmftools.isofox.ReadCountsTest.REF_BASE_STR_2;
+import static com.hartwig.hmftools.isofox.TestUtils.CHR_1;
 import static com.hartwig.hmftools.isofox.TestUtils.createCigar;
 import static com.hartwig.hmftools.isofox.TestUtils.createReadRecord;
 import static com.hartwig.hmftools.isofox.TestUtils.createRegion;
-import static com.hartwig.hmftools.isofox.common.ReadRecord.markRegionBases;
+import static com.hartwig.hmftools.isofox.common.Read.markRegionBases;
 import static com.hartwig.hmftools.isofox.common.CommonUtils.deriveCommonRegions;
 import static com.hartwig.hmftools.isofox.common.CommonUtils.findStringOverlaps;
 
@@ -18,12 +20,13 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.isofox.common.FragmentTracker;
-import com.hartwig.hmftools.isofox.common.ReadRecord;
+import com.hartwig.hmftools.isofox.common.Read;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
 
 import org.junit.Test;
 
 import htsjdk.samtools.Cigar;
+import htsjdk.samtools.SAMFlag;
 
 public class ReadUtilsTest
 {
@@ -151,9 +154,9 @@ public class ReadUtilsTest
         assertTrue(fragTracker.checkReadId(readId3));
         assertEquals(0, fragTracker.readsCount());
 
-        ReadRecord read1 = createReadRecord(1, "1", 100, 200, REF_BASE_STR_1, createCigar(0, 50, 0));
-        ReadRecord read2 = createReadRecord(2, "1", 100, 200, REF_BASE_STR_1, createCigar(0, 50, 0));
-        ReadRecord read3 = createReadRecord(3, "1", 100, 200, REF_BASE_STR_1, createCigar(0, 50, 0));
+        Read read1 = createReadRecord(1, "1", 100, 200, REF_BASE_STR_1, createCigar(0, 50, 0));
+        Read read2 = createReadRecord(2, "1", 100, 200, REF_BASE_STR_1, createCigar(0, 50, 0));
+        Read read3 = createReadRecord(3, "1", 100, 200, REF_BASE_STR_1, createCigar(0, 50, 0));
 
         assertEquals(null, fragTracker.checkRead(read1));
         assertEquals(null, fragTracker.checkRead(read2));
@@ -161,9 +164,9 @@ public class ReadUtilsTest
 
         assertEquals(3, fragTracker.readsCount());
 
-        ReadRecord read1b = createReadRecord(1, "1", 100, 200, REF_BASE_STR_1, createCigar(0, 50, 0));
-        ReadRecord read2b = createReadRecord(2, "1", 100, 200, REF_BASE_STR_1, createCigar(0, 50, 0));
-        ReadRecord read3b = createReadRecord(3, "1", 100, 200, REF_BASE_STR_1, createCigar(0, 50, 0));
+        Read read1b = createReadRecord(1, "1", 100, 200, REF_BASE_STR_1, createCigar(0, 50, 0));
+        Read read2b = createReadRecord(2, "1", 100, 200, REF_BASE_STR_1, createCigar(0, 50, 0));
+        Read read3b = createReadRecord(3, "1", 100, 200, REF_BASE_STR_1, createCigar(0, 50, 0));
 
         assertEquals(read1, fragTracker.checkRead(read1b));
         assertEquals(read2, fragTracker.checkRead(read2b));
@@ -224,5 +227,36 @@ public class ReadUtilsTest
 
         overlap = findStringOverlaps(str1, str2);
         assertEquals(19, overlap);
+    }
+
+    @Test
+    public void testAdapterTrimming()
+    {
+        Read read1 = createReadRecord(1, CHR_1, 105, 124, REF_BASE_STR_2, createCigar(10, 20, 10));
+        Read read2 = createReadRecord(1, CHR_1, 100, 119, REF_BASE_STR_2, createCigar(10, 20, 10));
+        read2.setFlag(SAMFlag.READ_REVERSE_STRAND, true);
+        
+        read1.trimAdapterSoftClipBases(read2);
+        read2.trimAdapterSoftClipBases(read1);
+
+        assertEquals(129, read1.unclippedEnd());
+        assertEquals(95, read2.unclippedStart());
+
+        assertEquals("10S20M5S", read1.cigarStr());
+        assertEquals("5S20M10S", read2.cigarStr());
+
+        // cap trimming at soft-clips
+        read1 = createReadRecord(1, CHR_1, 105, 124, REF_BASE_STR_2, createCigar(10, 20, 10));
+        read2 = createReadRecord(1, CHR_1, 94, 113, REF_BASE_STR_2, createCigar(10, 20, 10));
+        read2.setFlag(SAMFlag.READ_REVERSE_STRAND, true);
+
+        read1.trimAdapterSoftClipBases(read2);
+        read2.trimAdapterSoftClipBases(read1);
+
+        assertEquals(124, read1.unclippedEnd());
+        assertEquals(94, read2.unclippedStart());
+
+        assertEquals("10S20M", read1.cigarStr());
+        assertEquals("20M10S", read2.cigarStr());
     }
 }

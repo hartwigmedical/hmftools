@@ -16,7 +16,7 @@ import static com.hartwig.hmftools.isofox.neo.NeoFragmentSupport.PARTIAL_MATCH;
 
 import java.util.List;
 
-import com.hartwig.hmftools.isofox.common.ReadRecord;
+import com.hartwig.hmftools.isofox.common.Read;
 import com.hartwig.hmftools.isofox.fusion.ChimericReadGroup;
 
 import com.google.common.collect.Lists;
@@ -27,7 +27,7 @@ public class NeoFragmentMatcher
     public static final int NOVEL_BASE_OVERLAP = 5;
     private static final int MAX_BASE_MISMATCH = 2;
 
-    public static NeoFragmentSupport findFusionSupport(final NeoEpitopeData neData, int stream, final ReadRecord read)
+    public static NeoFragmentSupport findFusionSupport(final NeoEpitopeData neData, int stream, final Read read)
     {
         NeoFragmentSupport support = new NeoFragmentSupport();
 
@@ -67,15 +67,15 @@ public class NeoFragmentMatcher
             if(read.isSoftClipped(junctionSide))
             {
                 final String postJuncCodingBases = neData.getFusionSoftClippedBases(stream);
-                int softClipLength = junctionSide == SE_START ?
-                        read.Cigar.getFirstCigarElement().getLength() : read.Cigar.getLastCigarElement().getLength();
+
+                int softClipLength = junctionSide == SE_START ? read.leftClipLength() : read.rightClipLength();
 
                 if(softClipLength >= MIN_BASE_OVERLAP / 2)
                 {
                     final String readSoftClippedBases = junctionSide == SE_START
                             ?
-                            read.ReadBases.substring(0, softClipLength)
-                            : read.ReadBases.substring(read.ReadBases.length() - softClipLength);
+                            read.readBases().substring(0, softClipLength)
+                            : read.readBases().substring(read.baseLength() - softClipLength);
 
                     matchLevel = calcBaseMatch(postJuncCodingBases, readSoftClippedBases);
 
@@ -266,13 +266,13 @@ public class NeoFragmentMatcher
     }
 
     public static int compareCodingBases(
-            final ReadRecord read, final String neoCodingBases, final List<int[]> neoCoords, int posStart, int posEnd)
+            final Read read, final String neoCodingBases, final List<int[]> neoCoords, int posStart, int posEnd)
     {
         int readBaseIndex = 0;
         String readBases = "";
 
         if(read.isSoftClipped(SE_START))
-            readBaseIndex += read.Cigar.getFirstCigarElement().getLength();
+            readBaseIndex += read.leftClipLength();
 
         for(int[] mappedCoords : read.getMappedRegionCoords())
         {
@@ -296,10 +296,10 @@ public class NeoFragmentMatcher
 
             for(; basePos <= mappedCoords[SE_END]; ++basePos)
             {
-                if(basePos > posEnd || readBaseIndex >= read.ReadBases.length())
+                if(basePos > posEnd || readBaseIndex >= read.baseLength())
                     break;
 
-                readBases += read.ReadBases.substring(readBaseIndex, readBaseIndex + 1);
+                readBases += read.readBases().substring(readBaseIndex, readBaseIndex + 1);
                 ++readBaseIndex;
             }
 
@@ -396,7 +396,7 @@ public class NeoFragmentMatcher
             else
                 refBase = neData.getCodingBaseRange(fs)[neData.Orientations[fs] == ORIENT_FWD ? SE_END : SE_START];
 
-            for(ReadRecord read : readGroup.reads())
+            for(Read read : readGroup.reads())
             {
                 if(!read.Chromosome.equals(chromosome))
                     continue;

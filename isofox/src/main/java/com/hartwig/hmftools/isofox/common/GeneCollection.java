@@ -173,7 +173,7 @@ public class GeneCollection
         }
     }
 
-    public void setReadGeneCollections(final ReadRecord read, final int[] nonGenicBounds)
+    public void setReadGeneCollections(final Read read, final int[] nonGenicBounds)
     {
         if(positionsWithin(read.PosStart, read.PosEnd, mRegionBounds[SE_START], mRegionBounds[SE_END]))
         {

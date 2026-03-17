@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.orange.algo.linx;
 
 import static com.hartwig.hmftools.orange.TestDataUtils.CYTO_BANDS;
-import static com.hartwig.hmftools.orange.algo.linx.TestLinxFactory.breakendBuilder;
 import static com.hartwig.hmftools.orange.algo.linx.TestLinxFactory.linxDataBuilder;
 
 import static org.junit.Assert.assertEquals;
@@ -27,13 +26,8 @@ public class LinxBreakendInterpreterTest
     @Test
     public void canInterpretValidData()
     {
-        //List<LinxSvAnnotation> linxSvAnnotations = List.of(createSvAnnotation());
-        //List<LinxBreakend> breakends = createBreakends();
-
         List<LinxSvAnnotation> svAnnotations = Lists.newArrayList();
         List<LinxBreakend> breakends = Lists.newArrayList();
-
-        /// ImmutableLinxBreakend.Builder breakendBuilder = breakendBuilder();
 
         breakends.add(createBreakend(1, true));
         breakends.add(createBreakend(2, false));
@@ -48,8 +42,6 @@ public class LinxBreakendInterpreterTest
         List<com.hartwig.hmftools.datamodel.linx.LinxBreakend> convertedBreakends = LinxBreakendInterpreter.buildSomaticBreakends(
                 linxData, CYTO_BANDS);
 
-
-        // LinxBreakendInterpreter interpreter = createInterpreter(svAnnotations);
         com.hartwig.hmftools.datamodel.linx.LinxBreakend left = convertedBreakends.get(0);
         assertEquals("1", left.chromosome());
         assertEquals("p36.33", left.chromosomeBand());
@@ -73,16 +65,6 @@ public class LinxBreakendInterpreterTest
         double result = LinxBreakendInterpreter.junctionCopyNumber(svAnnotation);
         assertEquals(1.5, result, EPSILON);
     }
-
-    /*
-    private static List<LinxBreakend> createBreakends()
-    {
-        return List.of(
-                createBreakend(1, true),
-                createBreakend(2, false)
-        );
-    }
-    */
 
     private static LinxBreakend createBreakend(int id, boolean isStart)
     {

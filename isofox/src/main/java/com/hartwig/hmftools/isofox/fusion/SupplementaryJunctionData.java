@@ -16,7 +16,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bam.ClippedSide;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
-import com.hartwig.hmftools.isofox.common.ReadRecord;
+import com.hartwig.hmftools.isofox.common.Read;
 
 import htsjdk.samtools.Cigar;
 
@@ -55,7 +55,7 @@ public class SupplementaryJunctionData
 
     public static SupplementaryJunctionData fromReads(final ChimericReadGroup readGroup)
     {
-        ReadRecord read = readGroup.reads().stream().filter(x -> x.hasSuppAlignment()).findFirst().orElse(null);
+        Read read = readGroup.reads().stream().filter(x -> x.hasSuppAlignment()).findFirst().orElse(null);
         if(read == null)
             return null;
 
@@ -65,7 +65,7 @@ public class SupplementaryJunctionData
             return null;
 
         // find the junction from this read's SC and same for the supp mapping data
-        ClippedSide scSide = ReadRecord.clippedSide(read);
+        ClippedSide scSide = Read.clippedSide(read);
 
         SupplementaryJunctionData suppJuncData = new SupplementaryJunctionData(read.Id);
 

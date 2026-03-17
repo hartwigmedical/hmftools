@@ -41,7 +41,7 @@ public class IsofoxInterpreter
 
         List<RnaFusion> fusions = findFusions(isofox.fusions(), mLinxRecord.fusions());
 
-        List<NovelSpliceJunction> novelSpliceJunctions = findNovelSplceJunctions(isofox.novelSpliceJunctions(), fusions, mDriverGenes);
+        List<NovelSpliceJunction> novelSpliceJunctions = findNovelSplceJunctions(isofox.novelSpliceJunctions(), fusions);
 
         return ImmutableIsofoxRecord.builder()
                 .summary(IsofoxConversion.convert(isofox.summary()))
@@ -73,17 +73,12 @@ public class IsofoxInterpreter
 
     public static List<NovelSpliceJunction> findNovelSplceJunctions(
             final List<com.hartwig.hmftools.common.rna.NovelSpliceJunction> altSpliceJunctions,
-            final List<RnaFusion> fusions, final Map<String,DriverGene> driverGenes)
+            final List<RnaFusion> fusions)
     {
         List<NovelSpliceJunction> spliceJunctions = Lists.newArrayList();
 
         for(com.hartwig.hmftools.common.rna.NovelSpliceJunction altSpliceJunction : altSpliceJunctions)
         {
-            DriverGene driverGene = driverGenes.get(altSpliceJunction.geneName());
-
-            if(driverGene == null || !driverGene.reportNovelSpliceJunctions())
-                continue;
-
             // TODO: consider other criteria - eg cohort frequency, fragment support, types of junctions
 
             // previous was SKIPPED_EXONS: 6+ frags, cohort < 30, or NOVEL_INTRON/NOVEL_EXON: 6+ frags, cohort < 10
