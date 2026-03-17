@@ -58,7 +58,7 @@ final class GainDeletionFactory
     {
         if(!hasGermlineSample)
         {
-            return FindingUtil.emptyDriverFindingList(FindingsStatus.NOT_AVAILABLE_NO_REF_SAMPLE);
+            return FindingUtil.emptyDriverFindingList(FindingsStatus.NOT_AVAILABLE_REF_REQUIRED);
         }
 
         List<PurpleGeneCopyNumber> somaticGeneCopyNumbers = purple.allSomaticGeneCopyNumbers();

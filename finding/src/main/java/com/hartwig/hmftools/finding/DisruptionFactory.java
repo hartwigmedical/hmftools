@@ -72,7 +72,7 @@ final class DisruptionFactory
     {
         if(!hasRefSample)
         {
-            return FindingUtil.emptyDriverFindingList(FindingsStatus.NOT_AVAILABLE_NO_REF_SAMPLE);
+            return FindingUtil.emptyDriverFindingList(FindingsStatus.NOT_AVAILABLE_REF_REQUIRED);
         }
 
         List<LinxBreakend> breakends = Objects.requireNonNull(linx.reportableGermlineBreakends());

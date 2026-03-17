@@ -48,7 +48,7 @@ final class SmallVariantFactory
     {
         if(!hasGermlineSample)
         {
-            return FindingUtil.emptyDriverFindingList(FindingsStatus.NOT_AVAILABLE_NO_REF_SAMPLE);
+            return FindingUtil.emptyDriverFindingList(FindingsStatus.NOT_AVAILABLE_REF_REQUIRED);
         }
 
         List<PurpleVariant> germlineVariants = Objects.requireNonNull(purpleRecord.reportableGermlineVariants());
