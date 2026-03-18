@@ -394,9 +394,17 @@ public class FindingRecordFactory
         HomologousRecombination.Status hrStatus = hrStatus(chord);
         if(hrStatus != null)
         {
-            List<GainDeletion> lohGainDeletions = hrStatus == HomologousRecombination.Status.HR_DEFICIENT
+            boolean isPresent = hrStatus == HomologousRecombination.Status.HR_DEFICIENT;
+            List<GainDeletion> lohGainDeletions = isPresent
                     ? filterLohGainDeletions(gainDeletions, Genes.HRD_GENES)
                     : List.of();
+            List<String> drivingGenes = isPresent ? GeneListUtil.genes(purple.somaticVariants(),
+                    purple.somaticGainsDels(),
+                    linx.somaticBreakends().stream()
+                            .filter(o ->o.driverType() == LinxDriverType.HOM_DEL_DISRUPTION ||
+                                    o.driverType() == LinxDriverType.HOM_DUP_DISRUPTION)
+                            .toList(),
+                    Genes.HRD_GENES).stream().toList() : List.of();
             return FindingItemBuilder.<HomologousRecombination>builder()
                     .status(FindingsStatus.OK)
                     .finding(HomologousRecombinationBuilder.builder()
@@ -407,13 +415,7 @@ public class FindingRecordFactory
                             .brca2Value(chord.brca2Value())
                             .hrdType(chord.hrdType())
                             .lohCopyNumbers(lohGainDeletions)
-                            .drivingGenes(GeneListUtil.genes(purple.somaticVariants(),
-                                    purple.somaticGainsDels(),
-                                    linx.somaticBreakends().stream()
-                                            .filter(o ->o.driverType() == LinxDriverType.HOM_DEL_DISRUPTION ||
-                                                    o.driverType() == LinxDriverType.HOM_DUP_DISRUPTION)
-                                            .toList(),
-                                    Genes.HRD_GENES).stream().toList())
+                            .drivingGenes(drivingGenes)
                             .build())
                     .build();
         }
@@ -442,9 +444,17 @@ public class FindingRecordFactory
                 microsatelliteStatus(purple.characteristics().microsatelliteStatus());
         if(microsatelliteStatus != null)
         {
-            List<GainDeletion> lohGainDeletions = microsatelliteStatus == MicrosatelliteStability.Status.MSI
+            boolean isPresent = microsatelliteStatus == MicrosatelliteStability.Status.MSI;
+            List<GainDeletion> lohGainDeletions = isPresent
                     ? filterLohGainDeletions(gainDeletions, Genes.MSI_GENES)
                     : List.of();
+            List<String> drivingGenes = isPresent ? GeneListUtil.genes(purple.somaticVariants(),
+                    purple.somaticGainsDels(),
+                    linx.somaticBreakends().stream()
+                            .filter(o ->o.driverType() == LinxDriverType.HOM_DEL_DISRUPTION ||
+                                    o.driverType() == LinxDriverType.HOM_DUP_DISRUPTION)
+                            .toList(),
+                    Genes.MSI_GENES).stream().toList() : List.of();
             return FindingItemBuilder.<MicrosatelliteStability>builder()
                     .status(FindingsStatus.OK)
                     .finding(MicrosatelliteStabilityBuilder.builder()
@@ -452,13 +462,7 @@ public class FindingRecordFactory
                             .status(microsatelliteStatus)
                             .indelsPerMb(ThresholdValueFactory.mssValue(purple.characteristics().microsatelliteIndelsPerMb()))
                             .lohCopyNumbers(lohGainDeletions)
-                            .drivingGenes(GeneListUtil.genes(purple.somaticVariants(),
-                                    purple.somaticGainsDels(),
-                                    linx.somaticBreakends().stream()
-                                            .filter(o ->o.driverType() == LinxDriverType.HOM_DEL_DISRUPTION ||
-                                                    o.driverType() == LinxDriverType.HOM_DUP_DISRUPTION)
-                                            .toList(),
-                                    Genes.MSI_GENES).stream().toList())
+                            .drivingGenes(drivingGenes)
                             .build())
                     .build();
         }

@@ -16,7 +16,7 @@ import org.jetbrains.annotations.Nullable;
 
 class GeneListUtil
 {
-    static Set<String> genes(List<PurpleVariant> reportableVariants,
+    static List<String> genes(List<PurpleVariant> reportableVariants,
             List<PurpleGainDeletion> gainDeletions,
             @Nullable List<LinxBreakend> homozygousDisruptions,
             Set<String> genes)
@@ -38,7 +38,7 @@ class GeneListUtil
                     LinxBreakend::gene));
         }
 
-        return genesDisplay;
+        return genesDisplay.stream().sorted().toList();
     }
 
     private static <T> Set<String> filteredMapped(List<T> items, Predicate<T> filter, Function<T, String> mapper)
