@@ -230,7 +230,7 @@ public class ReduxConfig
         BQR = new BqrConfig(configBuilder);
 
         JitterConfig = MsJitterConfig.create(
-                SampleId, RefGenomeFile, RefGenVersion, SEQUENCING_TYPE, UMIs.Enabled && UMIs.Duplex, OutputDir, configBuilder);
+                SampleId, RefGenomeFile, RefGenVersion, UMIs.Enabled && UMIs.Duplex, OutputDir, configBuilder);
 
         if(configBuilder.hasFlag(BQR_JITTER_MSI_ONLY))
         {

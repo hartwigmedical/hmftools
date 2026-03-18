@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.redux;
 
+import static com.hartwig.hmftools.common.redux.ReduxCommon.LOGGER;
 import static com.hartwig.hmftools.common.redux.ReduxCommon.REDUX_FILE_ID;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
@@ -22,8 +23,6 @@ import org.apache.logging.log4j.Logger;
 
 public final class BqrFile
 {
-    private static final Logger LOGGER = LogManager.getLogger(BqrFile.class);
-
     private static String FILE_EXTENSION = REDUX_FILE_ID + ".bqr.tsv";
     private static String PLOT_EXTENSION = REDUX_FILE_ID + ".bqr.png";
 

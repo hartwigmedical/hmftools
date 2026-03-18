@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.redux;
 
+import static java.lang.String.format;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -33,7 +35,7 @@ public class JitterCountsTable
         return 3;
     }
 
-    public void mergeCounts(JitterTableRow rowToMerge)
+    public void mergeCounts(final JitterTableRow rowToMerge)
     {
         JitterTableRow row = getOrCreateRow(rowToMerge.refNumUnits());
 
@@ -92,4 +94,9 @@ public class JitterCountsTable
     }
 
     public int totalReadCount() { return mRows.stream().mapToInt(JitterTableRow::totalReadCount).sum(); }
+
+    public String toString()
+    {
+        return format("repeat(%s) consensus(%s) reads(%d)", RepeatUnit, ConsensusType, totalReadCount());
+    }
 }

@@ -35,8 +35,8 @@ public class MsModelConfig
 
     private static final String ROUTINES = "routines";
 
-    private static final String MODEL_COEFF_FILE = "model_coefficients";
-    private static final String MODEL_ERROR_RATES_FILE = "model_error_rates";
+    public static final String MODEL_COEFF_FILE = "msi_model_coefficients";
+    public static final String MODEL_ERROR_RATES_FILE = "msi_model_error_rates";
 
     protected enum TrainingRoutines
     {
@@ -71,13 +71,19 @@ public class MsModelConfig
         OutputId = configBuilder.getValue(OUTPUT_ID);
     }
 
+    public static void registerModelConfigFiles(final ConfigBuilder configBuilder)
+    {
+        configBuilder.addPath(MODEL_COEFF_FILE, false, "Model coefficients file");
+        configBuilder.addPath(MODEL_ERROR_RATES_FILE, false, "Model cohort error rates file");
+    }
+
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
+        registerModelConfigFiles(configBuilder);
+
         addSampleIdFile(configBuilder, true);
         configBuilder.addPath(PURPLE_DIR_CFG, true, PURPLE_DIR_DESC);
         configBuilder.addPath(REDUX_DIR_CFG, true, REDUX_DIR_DESC);
-        configBuilder.addPath(MODEL_COEFF_FILE, false, "Model coefficients file");
-        configBuilder.addPath(MODEL_ERROR_RATES_FILE, false, "Model cohort error rates file");
 
         MsModelParams.registerConfig(configBuilder);
 

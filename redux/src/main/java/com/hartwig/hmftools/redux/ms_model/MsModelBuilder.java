@@ -1,25 +1,35 @@
 package com.hartwig.hmftools.redux.ms_model;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_SAMPLE_ID;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.redux.ReduxConfig.APP_NAME;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.ms_model.MsModelConfig.TrainingRoutines.COEFFICIENTS;
 import static com.hartwig.hmftools.redux.ms_model.MsModelConfig.TrainingRoutines.ERROR_RATES;
 import static com.hartwig.hmftools.redux.ms_model.MsModelConfig.TrainingRoutines.VALIDATION;
-import static com.hartwig.hmftools.redux.ms_model.MsModelParams.DEFAULT_MODEL_PARAMS;
 
+import java.io.BufferedWriter;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.purple.PurplePurity;
 import com.hartwig.hmftools.common.redux.JitterCountsTable;
 import com.hartwig.hmftools.common.redux.JitterCountsTableFile;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+
+import org.apache.logging.log4j.Level;
 
 public class MsModelBuilder
 {
@@ -59,9 +69,7 @@ public class MsModelBuilder
         }
         else
         {
-            // load error rates
-            List<MsModelErrorRates> modelErrorRates = MsModelErrorRates.read(mConfig.ModelErroRatesFile);
-            modelCalculator.loadModelErrorRates(modelErrorRates);
+            modelCalculator.loadErrorRates(mConfig.ModelErroRatesFile);
         }
 
         if(mConfig.Routines.contains(COEFFICIENTS))
@@ -74,14 +82,12 @@ public class MsModelBuilder
         }
         else
         {
-            // load coefficients
-            List<MsModelCoefficients> modelCoefficients = MsModelCoefficients.read(mConfig.ModelCoefficientsFile);
-            modelCalculator.loadModelCoeffcients(modelCoefficients);
+            modelCalculator.loadCoefficients(mConfig.ModelCoefficientsFile);
         }
 
         if(mConfig.Routines.contains(VALIDATION))
         {
-            modelCalculator.runValidation(mSamplePurities, mSampleJitterCounts, mConfig);
+            runValidation(modelCalculator, mSamplePurities, mSampleJitterCounts, mConfig);
         }
 
         RD_LOGGER.info("MSI model builder, mins({})", runTimeMinsStr(startTimeMs));
@@ -129,6 +135,92 @@ public class MsModelBuilder
         catch(IOException e)
         {
             RD_LOGGER.error("failed to load sample file: {}", e.toString());
+        }
+    }
+
+    public void runValidation(
+            final MsModelCalculator modelCalculator, final Map<String,PurplePurity> samplePurities,
+            final Map<String,Collection<JitterCountsTable>> sampleJitterCounts, final MsModelConfig config)
+    {
+        RD_LOGGER.info("evaluating samples");
+
+        Level logLevel = mSamplePurities.size() > 100 ? Level.TRACE : Level.DEBUG;
+
+        try
+        {
+            String filename = config.OutputDir + File.separator + "ms_model_evaluation";
+            String calcsFilename = config.OutputDir + File.separator + "ms_model_calcs";
+
+            if(config.OutputId != null)
+            {
+                filename += "." + config.OutputId;
+                calcsFilename += "." + config.OutputId;
+            }
+
+            filename += TSV_EXTENSION;
+            calcsFilename += TSV_EXTENSION;
+
+            BufferedWriter writer = createBufferedWriter(filename, false);
+
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
+            sj.add(FLD_SAMPLE_ID).add("Purity").add("MsIndelsPerMb").add("PredictedValue");
+            writer.write(sj.toString());
+            writer.newLine();
+
+            BufferedWriter calcsWriter = createBufferedWriter(calcsFilename, false);
+            sj = new StringJoiner(TSV_DELIM);
+            sj.add(FLD_SAMPLE_ID).add("RepeatUnit").add("RepeatCount").add("AdjustedErrorRate").add("PredictedValue");
+            calcsWriter.write(sj.toString());
+            calcsWriter.newLine();
+
+            for(Map.Entry<String,PurplePurity> entry : samplePurities.entrySet())
+            {
+                String sampleId = entry.getKey();
+
+                PurplePurity purplePurity = entry.getValue();
+
+                Collection<JitterCountsTable> jitterCounts = sampleJitterCounts.get(sampleId);
+
+                List<RepeatUnitData> repeatUnitDataList = modelCalculator.buildRepeatUnitData(jitterCounts);
+
+                List<Double> repeatUnitPredictedValues = modelCalculator.calcMsIndelPerMbValues(repeatUnitDataList);
+
+                for(int i = 0; i < repeatUnitDataList.size(); ++i)
+                {
+                    RepeatUnitData repeatUnitData = repeatUnitDataList.get(i);
+                    double predictedValue = repeatUnitPredictedValues.get(i);
+
+                    sj = new StringJoiner(TSV_DELIM);
+                    sj.add(sampleId);
+                    sj.add(repeatUnitData.RepeatUnit);
+                    sj.add(String.valueOf(repeatUnitData.repeatCount()));
+                    sj.add(format("%4.3e", repeatUnitData.adjustedErrorRate()));
+                    sj.add(format("%.4f", predictedValue));
+                    calcsWriter.write(sj.toString());
+                    calcsWriter.newLine();
+                }
+
+                double predictedMsIndelsPerMb = modelCalculator.calcMsIndelPerMb(repeatUnitPredictedValues);
+
+                RD_LOGGER.log(logLevel, format("sample(%s) purity(%.3f) msIndelsPerMb(actual=%.4f predicted=%.4f)",
+                        sampleId, purplePurity.Purity, purplePurity.MsIndelsPerMb, predictedMsIndelsPerMb));
+
+                sj = new StringJoiner(TSV_DELIM);
+                sj.add(sampleId);
+                sj.add(format("%.4f", purplePurity.Purity));
+                sj.add(format("%.4f", purplePurity.MsIndelsPerMb));
+                sj.add(format("%.4f", predictedMsIndelsPerMb));
+                writer.write(sj.toString());
+                writer.newLine();
+            }
+
+            writer.close();
+            calcsWriter.close();
+        }
+        catch(IOException e)
+        {
+            RD_LOGGER.error(" failed to create sample evaluation file: {}", e.toString());
+            System.exit(1);
         }
     }
 

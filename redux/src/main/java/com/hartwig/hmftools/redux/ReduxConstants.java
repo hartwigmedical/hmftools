@@ -57,6 +57,7 @@ public class ReduxConstants
     public static final double BQR_INDEL_MED_QUAL_VAF = 0.04;
     public static final double BQR_INDEL_LOW_QUAL_VAF = 0.1;
     public static final double BQR_NUM_EVENTS_THRESHOLD = 0.05;
+    public static final double BQR_WGS_BAM_SIZE_ESTIMATE = 20e9;
 
     // duplicate group collapsing
     public static final int SINGLE_END_JITTER_COLLAPSE_DISTANCE = 10;

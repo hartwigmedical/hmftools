@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.redux.bqr;
 
-import static com.hartwig.hmftools.common.bam.ConsensusType.SINGLE;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 
 import java.util.Arrays;

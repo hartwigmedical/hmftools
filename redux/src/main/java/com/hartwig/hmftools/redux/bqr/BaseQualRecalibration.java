@@ -9,8 +9,11 @@ import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.probabilityTo
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.ReduxConstants.BQR_CHR_END_BUFFER;
 import static com.hartwig.hmftools.redux.ReduxConstants.BQR_SAMPLE_SIZE;
+import static com.hartwig.hmftools.redux.ReduxConstants.BQR_WGS_BAM_SIZE_ESTIMATE;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -60,6 +63,23 @@ public class BaseQualRecalibration
     public BaseQualityResults results() { return mResults; }
     public List<ChrBaseRegion> regions() { return mRegions; }
 
+    private boolean assumeWgsBams()
+    {
+        long totalBamSize = 0;
+
+        for(String bamFile : mConfig.BamFiles)
+        {
+            try
+            {
+                totalBamSize += Files.size(Paths.get(bamFile));
+            }
+            catch(IOException e) {}
+
+        }
+
+        return totalBamSize > BQR_WGS_BAM_SIZE_ESTIMATE;
+    }
+
     private void formRegions()
     {
         // mimic the regions created in Sage, or take them all if running over full BAM
@@ -72,6 +92,8 @@ public class BaseQualRecalibration
 
             return;
         }
+
+        boolean useAllRegions = mConfig.BQR.UseAllRegions || !assumeWgsBams();
 
         // form regions from 2MB per chromosome
         RefGenomeCoordinates refGenomeCoordinates = RefGenomeCoordinates.refGenomeCoordinates(mConfig.RefGenVersion);
@@ -92,7 +114,7 @@ public class BaseQualRecalibration
 
             int chrRegionStart, chrRegionEnd;
 
-            if(mConfig.BQR.UseAllRegions)
+            if(useAllRegions)
             {
                 chrRegionStart = BQR_CHR_END_BUFFER;
                 chrRegionEnd = chrLength - BQR_CHR_END_BUFFER;

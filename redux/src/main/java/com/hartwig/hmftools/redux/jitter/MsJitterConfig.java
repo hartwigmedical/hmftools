@@ -6,7 +6,11 @@ import static com.hartwig.hmftools.redux.jitter.JitterConstants.DEFAULT_MAX_SING
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.SBX;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ULTIMA;
+import static com.hartwig.hmftools.redux.ms_model.MsModelConfig.MODEL_COEFF_FILE;
+import static com.hartwig.hmftools.redux.ms_model.MsModelConfig.MODEL_ERROR_RATES_FILE;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.EnumSet;
 
@@ -16,6 +20,7 @@ import com.hartwig.hmftools.common.bam.ConsensusType;
 import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.redux.ms_model.MsModelConfig;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -33,6 +38,9 @@ public class MsJitterConfig
     public final int MaxSitesPerType;
     public final double MaxSingleSiteAltContribution;
     public final SpecificRegions SpecificChrRegions;
+
+    public final String MsModelCoefficientsFile;
+    public final String MsModelErroRatesFile;
 
     public static boolean JITTER_APPLY_BQ_FILTER = true;
 
@@ -74,6 +82,9 @@ public class MsJitterConfig
         MaxSitesPerType = configBuilder.getInteger(JITTER_MAX_SITES_PER_TYPE);
         MaxSingleSiteAltContribution = configBuilder.getDecimal(MAX_SINGLE_SITE_ALT_CONTRIBUTION);
 
+        MsModelCoefficientsFile = configBuilder.getValue(MODEL_COEFF_FILE);
+        MsModelErroRatesFile = configBuilder.getValue(MODEL_ERROR_RATES_FILE);
+
         SpecificChrRegions = SpecificRegions.from(configBuilder, false);
 
         WritePlots = configBuilder.hasFlag(JITTER_WRITE_MSI_PLOTS);
@@ -82,9 +93,15 @@ public class MsJitterConfig
         JITTER_APPLY_BQ_FILTER = !configBuilder.hasFlag(NO_BASE_QUAL_FILTER);
     }
 
+    public boolean runMsiPrediction()
+    {
+        return MsModelErroRatesFile != null && Files.exists(Paths.get(MsModelErroRatesFile))
+            && MsModelCoefficientsFile != null && Files.exists(Paths.get(MsModelCoefficientsFile));
+    }
+
     @Nullable
     public static MsJitterConfig create(final String sampleId, final String refGenomeFile, final RefGenomeVersion refGenVersion,
-            final SequencingType sequencing, boolean usesDuplexUMIs, final String outputDir, final ConfigBuilder configBuilder)
+            boolean usesDuplexUMIs, final String outputDir, final ConfigBuilder configBuilder)
     {
         if(!configBuilder.hasValue(JITTER_MSI_SITES_FILE))
             return null;
@@ -100,6 +117,8 @@ public class MsJitterConfig
         configBuilder.addDecimal(MAX_SINGLE_SITE_ALT_CONTRIBUTION, "Max percentage a single alt site can contribute", DEFAULT_MAX_SINGLE_SITE_ALT_CONTRIBUTION);
         configBuilder.addFlag(JITTER_WRITE_MSI_PLOTS, JITTER_WRITE_MSI_PLOTS_DESC);
         configBuilder.addFlag(JITTER_WRITE_SITE_FILE, JITTER_WRITE_SITE_FILE_DESC);
+
+        MsModelConfig.registerModelConfigFiles(configBuilder);
 
         configBuilder.addFlag(NO_BASE_QUAL_FILTER, "Include SBX medium base quals");
     }

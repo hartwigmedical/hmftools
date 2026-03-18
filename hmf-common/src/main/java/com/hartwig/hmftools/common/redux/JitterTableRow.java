@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.redux;
 
+import static java.lang.String.format;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -51,5 +53,10 @@ public class JitterTableRow
     public void setJitterReadCount(int jitter, int count)
     {
         mJitterCounts.put(jitter, count);
+    }
+
+    public String toString()
+    {
+        return format("repeat(%s) count(%d) consensus(%s) reads(%d)", mRepeatUnit, mRefNumUnits, mConsensusType, mTotalReadCount);
     }
 }
