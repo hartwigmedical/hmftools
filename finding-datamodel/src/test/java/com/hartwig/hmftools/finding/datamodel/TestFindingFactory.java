@@ -54,7 +54,7 @@ public class TestFindingFactory
         return HomologousRecombinationBuilder.builder()
                 .findingKey("")
                 .status(HomologousRecombination.Status.HR_DEFICIENT)
-                .hrdValue(emptyThresholdValue())
+                .hrdValue(thresholdValue(0))
                 .hrdType("")
                 .brca1Value(0)
                 .brca2Value(0)
@@ -68,7 +68,7 @@ public class TestFindingFactory
         return MicrosatelliteStabilityBuilder.builder()
                 .findingKey("")
                 .status(MicrosatelliteStability.Status.MSI)
-                .indelsPerMb(emptyThresholdValue())
+                .indelsPerMb(thresholdValue(0))
                 .lohCopyNumbers(List.of())
                 .drivingGenes(List.of());
     }
@@ -79,7 +79,7 @@ public class TestFindingFactory
         return TumorMutationalBurdenBuilder.builder()
                 .findingKey("")
                 .status(TumorMutationalBurden.Status.HIGH)
-                .burdenPerMb(emptyThresholdValue())
+                .burdenPerMb(thresholdValue(0))
                 .svBurden(0);
     }
 
@@ -88,7 +88,7 @@ public class TestFindingFactory
     {
         return TumorMutationalLoadBuilder.builder()
                 .findingKey("")
-                .load(emptyThresholdValue())
+                .load(thresholdValue(0))
                 .status(TumorMutationalLoad.Status.HIGH);
     }
 
@@ -288,7 +288,7 @@ public class TestFindingFactory
                 .driverSource(DriverSource.SOMATIC);
     }
 
-    private static ThresholdValue emptyThresholdValue() {
-        return new ThresholdValue(0,0,0,0);
+    public static ThresholdValue thresholdValue(double value) {
+        return new ThresholdValue(value,0,0,0);
     }
 }
