@@ -23,8 +23,8 @@ public class AmberSite implements GenomePosition
         this(chromosome, position, ref, alt, snpCheck, 0.5);
     }
 
-    public AmberSite(final String chromosome, final int position, final String ref, final String alt, final boolean snpCheck,
-            final double gnomadFrequency)
+    public AmberSite(
+            final String chromosome, final int position, final String ref, final String alt, boolean snpCheck, double gnomadFrequency)
     {
         Chromosome = chromosome;
         Position = position;

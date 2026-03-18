@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.segmentation;
 
+import static java.lang.String.format;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,11 +61,14 @@ public abstract class PerArmSegmenter<T extends GenomePosition>
                 System.arraycopy(data.valuesForSegmentation(), 0, allRatios, position, data.count());
                 position += data.count();
             }
-            SG_LOGGER.debug("Using uniform segmentation penalty, number of ratios: {}", allRatios.length);
+
+            SG_LOGGER.debug("using uniform segmentation penalty, number of ratios({})", allRatios.length);
+
             GammaPenaltyCalculator oneOffCalculation = new GammaPenaltyCalculator(gamma, true);
             final double penalty = oneOffCalculation.getPenalty(allRatios);
             mPenaltyCalculator = new FixedPenalty(penalty);
-            SG_LOGGER.debug("Uniform segmentation penalty: {}", penalty);
+
+            SG_LOGGER.debug("uniform segmentation penalty({})", format("%.3f", penalty));
         }
         else
         {

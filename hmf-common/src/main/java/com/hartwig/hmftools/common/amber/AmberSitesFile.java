@@ -109,6 +109,7 @@ public final class AmberSitesFile
         int refIndex = fieldsIndexMap.get(FLD_REF);
         int altIndex = fieldsIndexMap.get(FLD_ALT);
         int infoIndex = fieldsIndexMap.get(FLD_SNP_CHECK);
+        Integer freqIndex = fieldsIndexMap.get(FLD_FREQUENCY);
 
         String line;
 
@@ -119,26 +120,19 @@ public final class AmberSitesFile
             String chrStr = values[chrIndex];
 
             if(!HumanChromosome.contains(chrStr))
-            {
                 continue;
-            }
 
             HumanChromosome chromosome = HumanChromosome.fromString(chrStr);
 
-            final int position = Integer.parseInt(values[posIndex]);
-            final boolean snpCheck = Boolean.parseBoolean(values[infoIndex]);
-            final String ref = values[refIndex];
-            final String alt = values[altIndex];
-            if(values.length == 5)
-            {
-                result.put(chromosome, new AmberSite(chrStr, position, ref, alt, snpCheck));
-            }
-            else
-            {
-                double gnomadFrequency = Double.parseDouble(values[5]);
-                result.put(chromosome, new AmberSite(chrStr, position, ref, alt, snpCheck, gnomadFrequency));
-            }
+            int position = Integer.parseInt(values[posIndex]);
+            boolean snpCheck = Boolean.parseBoolean(values[infoIndex]);
+            String ref = values[refIndex];
+            String alt = values[altIndex];
+
+            double gnomadFrequency = freqIndex != null ? Double.parseDouble(values[freqIndex]) : 0;
+            result.put(chromosome, new AmberSite(chrStr, position, ref, alt, snpCheck, gnomadFrequency));
         }
+
         LOGGER.info("loaded {} Amber germline sites from {}", result.size(), filename);
         return result;
     }

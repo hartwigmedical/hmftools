@@ -63,12 +63,17 @@ public class TumorOnlyPurityAnalysis
             final PurityAnalysisConfig config)
     {
         AMB_LOGGER.debug(format("evaluating noise floor with %d evidence points", evidence.size()));
+
         List<PositionEvidence> filteredEvidence = filterOutExcludedRegions(evidence, config);
+
         AMB_LOGGER.debug(format("immune region data removed leaving %d evidence points", filteredEvidence.size()));
+
         List<PositionEvidence> hetVariants = getBaselineHetVariants(filteredEvidence);
         GnomadFrequencySupplier frequencySupplier = new DefaultGnomadFrequencySupplier(amberSites, config.refGenomeVersion());
         GnomadFrequencyAnalysis baselineGnomadAnalysis = new GnomadFrequencyAnalysis(frequencySupplier);
+
         double baselineHetGnomadFrequency = baselineGnomadAnalysis.getMeanFrequency(hetVariants);
+
         AMB_LOGGER.debug(format("baseline het gnomad frequency: %.3f", baselineHetGnomadFrequency));
 
         AucCalculator<PositionEvidence, ChrArm> chrArmAucCalculator =

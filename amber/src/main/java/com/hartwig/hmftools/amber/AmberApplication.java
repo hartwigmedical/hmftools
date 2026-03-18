@@ -262,9 +262,9 @@ public class AmberApplication implements AutoCloseable
         PurityAnalysisConfig purityAnalysisConfig = new PurityAnalysisConfig(mConfig);
         TumorOnlyPurityAnalysis noiseFloorAnalysis = new TumorOnlyPurityAnalysis(rawData, mChromosomeSites, purityAnalysisConfig);
         double noiseFloor = noiseFloorAnalysis.cutoff();
-        AMB_LOGGER.debug(format("Noise floor: %.3f", noiseFloor));
+
         double contamination = noiseFloorAnalysis.contaminationPeaks().stream().map(CandidatePeak::vaf).max(Double::compare).orElse(0.0);
-        AMB_LOGGER.debug(format("Contamination level: %.3f", contamination));
+        AMB_LOGGER.debug(format("contamination level(%.3f) noiseFloor(%.3f)", contamination, noiseFloor));
 
         List<TumorBAF> tumorBAFList = readDepthAndQualityFiltered
                 .stream()
@@ -312,7 +312,11 @@ public class AmberApplication implements AutoCloseable
             }
         }
 
-        AMB_LOGGER.info("removed {} blacklisted loci, {} remaining", numBlackListed, result.size());
+        if(numBlackListed > 0)
+        {
+            AMB_LOGGER.info("removed {} blacklisted loci, {} remaining", numBlackListed, result.size());
+        }
+
         return result;
     }
 
