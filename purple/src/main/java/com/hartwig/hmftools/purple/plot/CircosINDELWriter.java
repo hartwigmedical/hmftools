@@ -1,9 +1,11 @@
 package com.hartwig.hmftools.purple.plot;
 
+import static com.hartwig.hmftools.purple.plot.CircosFileWriter.circosContig;
 import static com.hartwig.hmftools.purple.plot.CircosFileWriter.writeCircosFile;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 
@@ -17,7 +19,12 @@ public final class CircosINDELWriter
 
     private static String transformPosition(final VariantContextDecorator position)
     {
-        return CircosFileWriter.transformPosition(position, CircosINDELWriter::color);
+        return new StringJoiner("\t").add(circosContig(position.chromosome()))
+                .add(String.valueOf(position.position()))
+                .add(String.valueOf(position.position()))
+                .add(String.valueOf(position.adjustedVaf()))
+                .add("fill_color=" + color(position))
+                .toString();
     }
 
     //    DEL REPEAT>=4  ORANGE

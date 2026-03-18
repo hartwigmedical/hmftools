@@ -42,7 +42,7 @@ public class Charts
 
         if(mCircosCharts != null)
         {
-            mCircosCharts.write(referenceId, sampleId, gender, copyNumbers, somaticVariants, structuralVariants, regions, bafs);
+            mCircosCharts.write(referenceId, sampleId, gender, copyNumbers, somaticVariants, structuralVariants, regions, bafs, driverSourceData);
             chartFutures.addAll(mCircosCharts.chartFutures());
         }
 

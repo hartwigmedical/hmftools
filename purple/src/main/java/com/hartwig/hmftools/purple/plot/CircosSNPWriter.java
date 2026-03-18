@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.purple.plot;
 
+import static com.hartwig.hmftools.purple.plot.CircosFileWriter.circosContig;
 import static com.hartwig.hmftools.purple.plot.CircosFileWriter.writeCircosFile;
 
 import java.io.IOException;
@@ -24,7 +25,11 @@ public final class CircosSNPWriter
 
     private static String transformPosition(final VariantContextDecorator position)
     {
-        return CircosFileWriter.transformPosition(position, CircosSNPWriter::color);
+        return String.join("\t", circosContig(position.chromosome()),
+                String.valueOf(position.position()),
+                String.valueOf(position.position()),
+                String.valueOf(position.adjustedVaf()),
+                String.join(",", "color=" + color(position), "glyph=" + glyph(position), "glyph_size=" + glyphSize(position)));
     }
 
     private static String color(final VariantContextDecorator variant)
@@ -66,5 +71,15 @@ public final class CircosSNPWriter
     private static String inverse(final String base)
     {
         return Nucleotides.swapDnaBase(base);
+    }
+
+    private static String glyph(final VariantContextDecorator variant)
+    {
+        return "circle";
+    }
+
+    private static int glyphSize(final VariantContextDecorator variant)
+    {
+        return 10;
     }
 }
