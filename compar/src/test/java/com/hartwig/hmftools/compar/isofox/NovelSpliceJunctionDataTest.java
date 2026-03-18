@@ -43,6 +43,7 @@ public class NovelSpliceJunctionDataTest
                 FLD_FRAG_COUNT, b -> b.fragmentCount = alternateValueSource.NovelSpliceJunction().fragmentCount(),
                 FLD_REGION_START, b -> b.regionStart = alternateValueSource.NovelSpliceJunction().regionStart(),
                 FLD_REGION_END, b -> b.regionEnd = alternateValueSource.NovelSpliceJunction().regionEnd());
+
         nameToAlternateIndexInitializer = Map.of(
                 FLD_GENE_NAME, b -> b.geneName = alternateValueSource.NovelSpliceJunction().geneName(),
                 FLD_CHROMOSOME, b -> {
