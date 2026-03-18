@@ -17,6 +17,8 @@ import static org.apache.logging.log4j.Level.ERROR;
 import static org.apache.logging.log4j.Level.WARN;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -49,6 +51,7 @@ import com.hartwig.hmftools.common.purple.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.purple.PurpleQC;
 import com.hartwig.hmftools.common.purple.PurpleSegment;
 import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
+import com.hartwig.hmftools.common.redux.MsiModelPrediction;
 import com.hartwig.hmftools.common.segmentation.ChrArmLocator;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.VersionInfo;
@@ -166,25 +169,39 @@ public class PurpleApplication
         SampleDataFiles sampleDataFiles = mConfig.SampleFiles;
         SampleData sampleData = null;
 
-        final SomaticVariantCache somaticVariantCache = new SomaticVariantCache(mConfig);
+        SomaticVariantCache somaticVariantCache = new SomaticVariantCache(mConfig);
 
         // load amber and cobalt sample data
-        final AmberData amberData = new AmberData(
+        AmberData amberData = new AmberData(
                 mConfig.germlineMode() ? referenceId : tumorId, sampleDataFiles.AmberDirectory, mConfig.germlineMode(),
                 mReferenceData.RefGenVersion);
 
-        final CobaltData cobaltData = new CobaltData(
+        CobaltData cobaltData = new CobaltData(
                 referenceId, tumorId, sampleDataFiles.CobaltDirectory, amberData.PatientGender,
                 mConfig.tumorOnlyMode(), mConfig.germlineMode());
 
         // load structural and somatic variants
-        final String outputVcf = purpleSomaticSvFile(mConfig.OutputDir, tumorId);
+        String outputVcf = purpleSomaticSvFile(mConfig.OutputDir, tumorId);
 
-        final SomaticSvCache svCache = !sampleDataFiles.SomaticSvVcfFile.isEmpty() ?
+        SomaticSvCache svCache = !sampleDataFiles.SomaticSvVcfFile.isEmpty() ?
                 new SomaticSvCache(mPurpleVersion.version(), sampleDataFiles.SomaticSvVcfFile, outputVcf, mConfig)
                 : new SomaticSvCache();
 
-        sampleData = new SampleData(referenceId, tumorId, amberData, cobaltData, svCache, somaticVariantCache);
+        MsiModelPrediction msiModelPrediction = null;
+        if(sampleDataFiles.ReduxTumorDirectory != null)
+        {
+            String msModelPredictionFile = MsiModelPrediction.generateFilename(sampleDataFiles.ReduxTumorDirectory, mConfig.TumorId);
+            msiModelPrediction = MsiModelPrediction.read(msModelPredictionFile);
+        }
+        else
+        {
+            if(mConfig.TargetRegionsMode)
+            {
+                PPL_LOGGER.warn("target mode running without Redux MSI prediction");
+            }
+        }
+
+        sampleData = new SampleData(referenceId, tumorId, amberData, cobaltData, svCache, somaticVariantCache, msiModelPrediction);
 
         if(mConfig.runTumor())
         {
@@ -300,7 +317,7 @@ public class PurpleApplication
             // if the read and write process were split then so could the fitting and enriching steps
             PPL_LOGGER.info("enriching somatic variants");
 
-            somaticStream = new SomaticStream(mConfig, mReferenceData, somaticCache);
+            somaticStream = new SomaticStream(mConfig, mReferenceData, somaticCache, sampleData.MsiPrediction);
 
             somaticStream.processAndWrite(purityAdjuster);
 
@@ -488,7 +505,7 @@ public class PurpleApplication
 
         if(mConfig.runTumor())
         {
-            SomaticStream somaticStream = new SomaticStream(mConfig, mReferenceData, sampleData.SomaticCache);
+            SomaticStream somaticStream = new SomaticStream(mConfig, mReferenceData, sampleData.SomaticCache, sampleData.MsiPrediction);
             somaticStream.processAndWrite(null);
 
             sampleData.SvCache.write(null, Collections.emptyList(), mConfig.tumorOnlyMode(), gender);

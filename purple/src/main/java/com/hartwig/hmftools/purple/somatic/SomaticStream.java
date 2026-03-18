@@ -26,6 +26,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
+import com.hartwig.hmftools.common.redux.MsiModelPrediction;
 import com.hartwig.hmftools.purple.DriverGeneResource;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.perf.TaskExecutor;
@@ -80,7 +81,8 @@ public class SomaticStream
     private static final int CHART_DOWNSAMPLE_FACTOR = 25000; // eg for 50K variants, only every second will be kept for plotting
 
     public SomaticStream(
-            final PurpleConfig config, final ReferenceData referenceData, final SomaticVariantCache somaticVariantCache)
+            final PurpleConfig config, final ReferenceData referenceData, final SomaticVariantCache somaticVariantCache,
+            final MsiModelPrediction msiPrediction)
     {
         mReferenceData = referenceData;
         mConfig = config;
@@ -92,7 +94,7 @@ public class SomaticStream
         mEnabled = somaticVariantCache.hasData();
         mTumorMutationalLoad = new TumorMutationalLoad(mReferenceData.TargetRegions, config.tumorOnlyMode());
         mSomaticGermlineLikelihood = new SomaticGermlineLikelihood(mConfig, somaticVariantCache.genotypeIds());
-        mMicrosatelliteIndels = new MicrosatelliteIndels(mReferenceData.TargetRegions);
+        mMicrosatelliteIndels = new MicrosatelliteIndels(mReferenceData.TargetRegions, msiPrediction);
         mDrivers = new SomaticVariantDrivers(mGenePanel);
         mRChartData = new RChartData(config, config.TumorId);
 

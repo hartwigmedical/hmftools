@@ -46,8 +46,6 @@ import com.hartwig.hmftools.purple.targeted.TargetRegionsData;
 
 import org.apache.logging.log4j.util.Strings;
 
-import htsjdk.samtools.reference.IndexedFastaSequenceFile;
-
 public class ReferenceData
 {
     public final RefGenomeVersion RefGenVersion;
@@ -74,7 +72,6 @@ public class ReferenceData
     private static final String GERMLINE_HOTSPOT = "germline_hotspots";
 
     private static final String TARGET_REGIONS_RATIOS = "target_regions_ratios";
-    private static final String TARGET_REGION_MSI_INDELS = "target_regions_msi_indels";
 
     public ReferenceData(final ConfigBuilder configBuilder, final PurpleConfig config)
     {
@@ -187,9 +184,7 @@ public class ReferenceData
         String germlineDeletionFreqFile = config.runGermline() ? configBuilder.getValue(COHORT_AMP_DEL_FREQ_FILE) : null;
         CohortGermlineDeletions = new GermlineAmpDelFrequencyCache(germlineDeletionFreqFile);
 
-        TargetRegions = new TargetRegionsData(
-                configBuilder.getValue(TARGET_REGIONS_RATIOS), configBuilder.getValue(TARGET_REGION_MSI_INDELS));
-
+        TargetRegions = new TargetRegionsData(configBuilder.getValue(TARGET_REGIONS_RATIOS));
         TargetRegions.loadTargetRegionsBed(configBuilder.getValue(TARGET_REGIONS_BED), GeneTransCache);
     }
 
@@ -238,7 +233,6 @@ public class ReferenceData
         configBuilder.addPath(COHORT_AMP_DEL_FREQ_FILE, false, "Path to cohort germline deletions frequency file");
         configBuilder.addPath(TARGET_REGIONS_BED, false, TARGET_REGIONS_BED_DESC);
         configBuilder.addPath(TARGET_REGIONS_RATIOS, false, "Path to target regions ratios file");
-        configBuilder.addPath(TARGET_REGION_MSI_INDELS, false, "Path to target regions MSI INDELs file");
         EnsemblDataCache.addEnsemblDir(configBuilder, true);
         DriverGenePanelConfig.addGenePanelOption(configBuilder, false);
     }
@@ -271,6 +265,6 @@ public class ReferenceData
         SomaticHotspots = ArrayListMultimap.create();
         GermlineHotspots = ArrayListMultimap.create();
         CohortGermlineDeletions = new GermlineAmpDelFrequencyCache(null);
-        TargetRegions = new TargetRegionsData(null, null);
+        TargetRegions = new TargetRegionsData(null);
     }
 }

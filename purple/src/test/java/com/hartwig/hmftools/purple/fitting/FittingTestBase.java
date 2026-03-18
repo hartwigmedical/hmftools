@@ -21,6 +21,7 @@ import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.FittedPurity;
 import com.hartwig.hmftools.common.purple.Gender;
+import com.hartwig.hmftools.common.redux.MsiModelPrediction;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.pcf.PCFPosition;
 import com.hartwig.hmftools.purple.AmberData;
@@ -69,7 +70,8 @@ public class FittingTestBase
 
         mReferenceData = new ReferenceData();
 
-        mSampleData = new SampleData(REF_SAMPLE_ID, SAMPLE_ID, mAmberData, mCobaltData, mSvCache, mSomaticCache);
+        mSampleData = new SampleData(
+                REF_SAMPLE_ID, SAMPLE_ID, mAmberData, mCobaltData, mSvCache, mSomaticCache, MsiModelPrediction.INVALID_PREDICTION);
 
         buildDefaultProfile();
     }

@@ -13,6 +13,8 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.PAVE_GERMLIN
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PAVE_GERMLINE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PAVE_SOMATIC_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PAVE_SOMATIC_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REDUX_TUMOR_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REDUX_TUMOR_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
@@ -34,6 +36,7 @@ public class SampleDataFiles
     public final String GermlineVcfFile;
     public final String AmberDirectory;
     public final String CobaltDirectory;
+    public final String ReduxTumorDirectory;
 
     public static final String SAMPLE_DIR = "sample_dir";
     public static final String SOMATIC_SV_VCF = "somatic_sv_vcf";
@@ -64,6 +67,7 @@ public class SampleDataFiles
         configBuilder.addPath(GERMLINE_SV_VCF, false, "Germline SV VCF to annotate");
         configBuilder.addPath(GERMLINE_VARIANTS, false, "Germline variant VCF");
         configBuilder.addPath(SOMATIC_VARIANTS, false, "Somatic variant VCF");
+        configBuilder.addPath(REDUX_TUMOR_DIR_CFG, false, REDUX_TUMOR_DIR_DESC);
 
         PipelineToolDirectories.addPipelineFormatOptions(configBuilder);
     }
@@ -112,6 +116,9 @@ public class SampleDataFiles
 
         GermlineVcfFile = getFilename(
                 configBuilder, GERMLINE_VARIANTS, pipelineToolDirectories.paveGermlineDir(), sampleId, ".pave.germline.vcf.gz");
+
+
+        ReduxTumorDirectory = configBuilder.getValue(REDUX_TUMOR_DIR_CFG);
     }
 
     public boolean hasValidSampleNames(final PurpleConfig config)
