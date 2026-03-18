@@ -383,18 +383,20 @@ public class SomaticStream
                 return;
         }
 
+        boolean reported = variant.decorator().reported();
+
         if(variant.type() == VariantType.INDEL)
         {
             mIndelCount++;
 
-            if(mIndelCount % mIndelMod == 0)
+            if(reported || (mIndelCount % mIndelMod == 0))
                 mPlottingVariants.add(variant.decorator());
         }
         else
         {
             mSnpCount++;
 
-            if(mSnpCount % mSnpMod == 0)
+            if(reported || (mSnpCount % mSnpMod == 0))
                 mPlottingVariants.add(variant.decorator());
         }
     }

@@ -5,6 +5,8 @@ import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.minBy;
 
+import static com.hartwig.hmftools.common.driver.DriverInterpretation.LOW;
+import static com.hartwig.hmftools.common.driver.DriverType.DRIVERS_PURPLE_SOMATIC;
 import static com.hartwig.hmftools.common.variant.VariantType.INDEL;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.plot.CircosFileWriter.circosContig;
@@ -12,81 +14,121 @@ import static com.hartwig.hmftools.purple.plot.CircosFileWriter.circosContig;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.driver.DriverInterpretation;
 import com.hartwig.hmftools.common.driver.DriverType;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.purple.DriverSourceData;
 import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 
-import org.jetbrains.annotations.NotNull;
-
 public final class CircosDriverWriter
 {
-    public static void writeDrivers(final String driverTextFilePath, final String driverLineFilePath,
-            final List<DriverSourceData> driverSourceData)
+    public static void writeDrivers(
+            final String driverTextFilePath, final String driverLineFilePath, final List<DriverSourceData> driverDataList)
             throws IOException
     {
-        List<DriverSourceData> filteredDriverSourceData = filterAndDropDup(driverSourceData);
+        List<DriverSourceData> filteredDriverSourceData = filterAndPrioritise(driverDataList);
 
         Files.write(new File(driverTextFilePath).toPath(), drivers(filteredDriverSourceData, CircosDriverWriter::driverText));
         Files.write(new File(driverLineFilePath).toPath(), drivers(filteredDriverSourceData, CircosDriverWriter::driverPointer));
     }
 
-    // rank them
-    private static List<DriverSourceData> filterAndDropDup(final List<DriverSourceData> driverSourceData)
+    private static List<DriverSourceData> filterAndPrioritise(final List<DriverSourceData> driverDataList)
     {
-        // First filter out germline ones, and driverlikelyhood < 0.8
-        // groupby gene and find the one with highest rank
-        Map<String, Optional<DriverSourceData>> m = driverSourceData.stream()
-                //.filter(o -> !DriverType.isGermline(o.DriverData.driver()) && o.DriverData.driverLikelihood() >= 0.8)
-                .collect(groupingBy(o -> o.DriverData.gene(), minBy(comparingInt(CircosDriverWriter::driverRank))));
+        // show reported events and only select one event per gene, prioritising copy-number events
+        List<DriverSourceData> filteredDriverData = driverDataList.stream()
+                .filter(x -> x.DriverData.reportedStatus() == ReportedStatus.REPORTED)
+                .filter(x -> DriverInterpretation.interpret(x.DriverData.driverLikelihood()) != LOW)
+                .filter(x -> DRIVERS_PURPLE_SOMATIC.contains(x.DriverData.driver()))
+                .collect(Collectors.toList());
 
-        // get all the resulting driver source data object into list
-        return m.values().stream().flatMap(Optional::stream).toList();
+        Collections.sort(filteredDriverData, new DriverSourceDataSorter());
+
+        Set<String> processedGenes = Sets.newHashSet();
+
+        int index = 0;
+
+        while(index < filteredDriverData.size())
+        {
+            DriverSourceData driver = filteredDriverData.get(index);
+
+            if(processedGenes.contains(driver.DriverData.gene()))
+            {
+                filteredDriverData.remove(index);
+                continue;
+            }
+
+            processedGenes.add(driver.DriverData.gene());
+            ++index;
+        }
+
+        return filteredDriverData;
     }
 
-    private static int driverRank(DriverSourceData driverSourceData)
+    private static class DriverSourceDataSorter implements Comparator<DriverSourceData>
     {
-        if(driverSourceData.SourceObject instanceof GeneCopyNumber)
+        public int compare(final DriverSourceData first, final DriverSourceData second)
         {
-            // copy number changes are ranked highest
-            return 1;
+            double likelihood1 = first.DriverData.driverLikelihood();
+            double likelihood2 = second.DriverData.driverLikelihood();
+
+            if(likelihood1 != likelihood2)
+                return likelihood1 > likelihood2 ? -1 : 1;
+
+            int driverRank1 = driverTypeRank(first.DriverData.driver());
+            int driverRank2 = driverTypeRank(second.DriverData.driver());
+
+            return Integer.compare(driverRank1, driverRank2);
         }
-        if(driverSourceData.SourceObject instanceof final SomaticVariant somaticVariant)
+    }
+
+    private static int driverTypeRank(final DriverType driverType)
+    {
+        switch(driverType)
         {
-            if(somaticVariant.type() == INDEL)
-            {
-                // indel is ranked higher than SNP
+            case AMP:
+            case PARTIAL_AMP:
+            case DEL:
+                return 0;
+
+            case LOH:
+            case HET_DEL:
+                return 1;
+
+            case MUTATION:
                 return 2;
-            }
-            else
-            {
+
+            default:
                 return 3;
-            }
         }
-        return 4;
     }
 
-    private static List<String> drivers(final List<DriverSourceData> driverSourceData,
-            final Function<DriverSourceData, String> driverSourceDataToLine)
+    private static List<String> drivers(
+            final List<DriverSourceData> driverDataList, final Function<DriverSourceData, String> driverSourceDataToLine)
     {
-        return driverSourceData.stream()
+        return driverDataList.stream()
                 .map(driverSourceDataToLine)
                 .toList();
     }
 
-    @NotNull
-    private static String driverText(final DriverSourceData o)
+    private static String driverText(final DriverSourceData driverData)
     {
-        if(o.SourceObject instanceof final GeneCopyNumber geneCopyNumber)
+        if(driverData.SourceObject instanceof final GeneCopyNumber geneCopyNumber)
         {
-            PPL_LOGGER.info("CNV gene: {}, driver: {}, biallellic: {}", geneCopyNumber.geneName(), o.DriverData.driver(),
-                    o.DriverData.biallelic());
+            //PPL_LOGGER.info("CNV gene: {}, driver: {}, biallellic: {}", geneCopyNumber.geneName(), o.DriverData.driver(),
+            //        o.DriverData.biallelic());
 
             int geneRegionMid = (geneCopyNumber.start() + geneCopyNumber.end()) / 2;
             return String.join("\t",
@@ -94,13 +136,10 @@ public final class CircosDriverWriter
                     String.valueOf(geneRegionMid),
                     String.valueOf(geneRegionMid),
                     geneCopyNumber.geneName(),
-                    format("color=%s", o.DriverData.driver() == DriverType.DEL ? "vdred" : "vdgreen"));
+                    format("color=%s", driverData.DriverData.driver() == DriverType.DEL ? "vdred" : "vdgreen"));
         }
-        else if(o.SourceObject instanceof final SomaticVariant somaticVariant)
+        else if(driverData.SourceObject instanceof final SomaticVariant somaticVariant)
         {
-            PPL_LOGGER.info("SV gene: {}, driver: {}, biallellic: {}", somaticVariant.gene(), o.DriverData.driver(),
-                    o.DriverData.biallelic());
-
             return String.join("\t",
                     circosContig(somaticVariant.chromosome()),
                     String.valueOf(somaticVariant.position()),
@@ -108,7 +147,7 @@ public final class CircosDriverWriter
                     somaticVariant.gene(),
                     format("color=black"));
         }
-        throw new IllegalStateException("Unexpected value: " + o.SourceObject);
+        throw new IllegalStateException("Unexpected value: " + driverData.SourceObject);
     }
 
     // from circos doc:
@@ -118,11 +157,11 @@ public final class CircosDriverWriter
     // - connecting line length (connects old to new position)
     // - inner line length (drawn at old position)
     // - inner padding
-    private static String driverPointer(final DriverSourceData o)
+    private static String driverPointer(final DriverSourceData driverData)
     {
-        if(o.SourceObject instanceof final GeneCopyNumber geneCopyNumber)
+        if(driverData.SourceObject instanceof final GeneCopyNumber geneCopyNumber)
         {
-            double r0 = switch(o.DriverData.driver())
+            double r0 = switch(driverData.DriverData.driver())
             {
                 case AMP, PARTIAL_AMP -> 0.7;
                 case DEL -> 0.55;
@@ -138,7 +177,7 @@ public final class CircosDriverWriter
                     geneCopyNumber.geneName(),
                     format("r0=%.2fr", r0));
         }
-        else if(o.SourceObject instanceof final SomaticVariant somaticVariant)
+        else if(driverData.SourceObject instanceof final SomaticVariant somaticVariant)
         {
             double r0;
 
@@ -157,6 +196,6 @@ public final class CircosDriverWriter
                     somaticVariant.gene(),
                     format("r0=%.2fr", r0));
         }
-        throw new IllegalStateException("Unexpected value: " + o.SourceObject);
+        throw new IllegalStateException("Unexpected value: " + driverData.SourceObject);
     }
 }

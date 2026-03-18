@@ -407,7 +407,8 @@ public class PurpleApplication
                 charts.write(
                         referenceId, tumorId, !sampleDataFiles.SomaticVcfFile.isEmpty(),
                         gender, copyNumbers, somaticStream.plottingVariants(), sampleData.SvCache.somaticVariants(),
-                        regionsForVis, Lists.newArrayList(amberData.ChromosomeBafs.values()), driverSourceData);
+                        regionsForVis, Lists.newArrayList(amberData.ChromosomeBafs.values()),
+                        mConfig.SkipCircosGenes ? Collections.emptyList() : driverSourceData);
 
                 // clean up any temporary files
                 RChartData.cleanupFiles(mConfig, tumorId);

@@ -76,12 +76,6 @@ public class SomaticVariantCache
             if(tumorOnly && HlaCommon.containsPosition(variant)) // ignore these completely
                 continue;
 
-            if(mConfig.FilterSomaticsOnGene)
-            {
-                if(variant.variantImpact() == null || variant.variantImpact().GeneName.isEmpty())
-                    continue;
-            }
-
             if(mConfig.excludeOnSpecificRegion(variant.chromosome(), variant.position()))
                 continue;
 

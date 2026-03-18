@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.utils;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.Math.pow;
 
 import java.util.Collection;
@@ -142,10 +144,8 @@ public final class Doubles
 
     public static double clamp(double val, double min, double max)
     {
-        // TODO: remove this after java 21, use Math.clamp instead
-        if (val < min) return min;
-        else if (val > max) return max;
-        else return val;
+        // use Math.clamp in java 21
+        return max(min(val, max), min);
     }
 
     public static double interpolatedMedian(Collection<Double> input)

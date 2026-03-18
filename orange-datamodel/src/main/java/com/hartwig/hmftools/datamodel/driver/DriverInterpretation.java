@@ -8,6 +8,7 @@ public enum DriverInterpretation
     MEDIUM,
     HIGH;
 
+    // replicated from hmf-common driver package, consider removing from model
     public static final double DRIVER_LIKELIHOOD_LOW_THRESHOLD = 0.2;
     public static final double DRIVER_LIKELIHOOD_MEDIUM_THRESHOLD = 0.8;
 

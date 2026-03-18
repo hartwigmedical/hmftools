@@ -114,12 +114,6 @@ public class GeneDataCache
                 if(!driverGene.additionalReportedTranscripts().isEmpty())
                     mOtherReportableTranscripts.put(driverGene.gene(), driverGene.additionalReportedTranscripts());
             }
-
-            if(!mOtherReportableTranscripts.isEmpty())
-            {
-                PV_LOGGER.debug("loaded {} driver alternative transcripts from {} genes",
-                        mOtherReportableTranscripts.values().stream().mapToInt(x -> x.size()).sum(), mOtherReportableTranscripts.size());
-            }
         }
         catch (IOException e)
         {

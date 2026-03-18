@@ -1,16 +1,8 @@
 package com.hartwig.hmftools.common.bam.testutilities;
 
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.*;
-import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._2;
 
 import java.io.File;
-
-import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
-
-import org.apache.commons.lang3.RandomUtils;
-
-import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class BamMaker
 {

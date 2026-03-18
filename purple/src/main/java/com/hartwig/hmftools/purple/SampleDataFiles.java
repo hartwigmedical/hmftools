@@ -182,12 +182,20 @@ public class SampleDataFiles
         String filename = SampleDataDir + toolDir + File.separator + sampleId + fileSuffix;
 
         if(Files.exists(Paths.get(filename)))
-        {
             return filename;
-        }
+
+        // handle earlier pave formats, for conveniences only
+        if(toolDir.contains(GERMLINE_SUB_DIR) && Files.exists(Paths.get(filename.replaceFirst(GERMLINE_SUB_DIR, ""))))
+            return filename.replaceFirst(GERMLINE_SUB_DIR, "");
+
+        if(toolDir.contains(SOMATIC_SUB_DIR) && Files.exists(Paths.get(filename.replaceFirst(SOMATIC_SUB_DIR, ""))))
+            return filename.replaceFirst(SOMATIC_SUB_DIR, "");
 
         filename = SampleDataDir + sampleId + fileSuffix;
 
         return Files.exists(Paths.get(filename)) ? filename : "";
     }
+
+    private static String GERMLINE_SUB_DIR = "/germline";
+    private static String SOMATIC_SUB_DIR = "/somatic";
 }
