@@ -6,7 +6,6 @@ import com.hartwig.hmftools.common.purple.FittedPurity;
 import com.hartwig.hmftools.common.purple.FittedPurityMethod;
 import com.hartwig.hmftools.common.purple.FittedPurityScore;
 import com.hartwig.hmftools.common.purple.Gender;
-import com.hartwig.hmftools.common.purple.ImmutableFittedPurity;
 import com.hartwig.hmftools.common.purple.ImmutableFittedPurityScore;
 import com.hartwig.hmftools.common.purple.ImmutablePurityContext;
 import com.hartwig.hmftools.common.purple.ImmutablePurpleQC;
@@ -59,14 +58,7 @@ public final class PurpleTestFactory
 
     private static FittedPurity emptyFit()
     {
-        return ImmutableFittedPurity.builder()
-                .purity(0D)
-                .normFactor(0D)
-                .ploidy(0D)
-                .score(0D)
-                .diploidProportion(0D)
-                .somaticPenalty(0D)
-                .build();
+        return new FittedPurity(0, 0, 0, 0, 0, 0);
     }
 
     private static FittedPurityScore emptyScore()

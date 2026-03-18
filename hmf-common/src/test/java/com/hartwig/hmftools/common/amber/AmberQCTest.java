@@ -24,9 +24,6 @@ public class AmberQCTest
     @NotNull
     private static AmberQC createWithContamination(double contamination)
     {
-        return ImmutableAmberQC.builder()
-                .contamination(contamination)
-                .consanguinityProportion(0)
-                .uniparentalDisomy(null).build();
+        return new AmberQC(contamination, 0, null);
     }
 }

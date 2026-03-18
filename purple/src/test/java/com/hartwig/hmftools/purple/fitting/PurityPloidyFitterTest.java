@@ -2,6 +2,7 @@ package com.hartwig.hmftools.purple.fitting;
 
 import static com.hartwig.hmftools.purple.FittingTestUtils.createObservedRegion;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -10,6 +11,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.purple.FittedPurity;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
@@ -52,12 +54,25 @@ public class PurityPloidyFitterTest extends FittingTestBase
         List<ObservedRegion> observedRegions = buildDefaultObservedRegions();
 
         PurityPloidyFitter fitter = new PurityPloidyFitter(
-                mConfig, mReferenceData, mSampleData, null, mRegionFitCalculator, observedRegions, Gender.FEMALE, false);
+                mConfig, mReferenceData, mSampleData, null, mRegionFitCalculator, observedRegions, Gender.FEMALE);
 
         assertTrue(fitter.isValid());
 
         fitter.run();
 
         assertNotNull(fitter.finalFit());
+    }
+
+    @Test
+    public void buildGermlineBestFitTest()
+    {
+        BestFit best = PurityPloidyFitter.buildGermlineBestFit();
+        FittedPurity fittedPurity = best.Fit;
+        assertEquals(1.0, fittedPurity.purity(), 0.001);
+        assertEquals(2.0, fittedPurity.ploidy(), 0.001);
+        assertEquals(1.0, fittedPurity.normFactor(), 0.001);
+        assertEquals(1.0, fittedPurity.diploidProportion(), 0.001);
+        assertEquals(0.0, fittedPurity.somaticPenalty(), 0.001);
+        assertEquals(0.0, fittedPurity.score(), 0.001);
     }
 }

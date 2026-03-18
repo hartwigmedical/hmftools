@@ -39,4 +39,22 @@ public class AmberConstants
 
     public static final int TARGET_REGION_SITE_BUFFER = 300;
 
+    // Purity analysis
+    public static final double LOWER_CDF_BOUND_FOR_CAPTURE = 0.16;
+    public static final double UPPER_CDF_BOUND_FOR_CAPTURE = 0.84;
+    public static final int MINIMUM_CAPTURED_POINTS = 15;
+    public static final double GNOMAD_FREQUENCY_TOLERANCE = 0.15;
+    public static final double PEAK_SEARCH_START = 0.005;
+    public static final double PEAK_SEARCH_END = 0.37;
+    public static final double PEAK_SEARCH_STEP_RATIO = 1.05;
+    public static final double PEAK_SEARCH_INITIAL_STEP = 0.001;
+    public static final double PEAK_SEARCH_OVERSHOOT = 0.0001;
+    public static final double HET_VAF_LOWER_BOUND = 0.35;
+    public static final double HET_VAF_UPPER_BOUND = 0.65;
+    public static final double MIN_CUTOFF = 0.04;
+    public static final double HOMOZYGOUS_PROPORTION_LOWER_BOUND_FOR_CONTAMINATION = 0.25;
+    public static final double HOMOZYGOUS_PROPORTION_UPPER_BOUND_FOR_CONTAMINATION = 0.75;
+    public static final double MUTATION_AUC_LOWER_BOUND_FOR_CONTAMINATION = 0.825;
+    public static final double CHR_ARM_LOWER_BOUND_FOR_CONTAMINATION = 0.5;
+    public static final double CHR_ARM_AUC_UPPER_BOUND_FOR_COPY_NUMBER_EVENTS = 0.1;
 }

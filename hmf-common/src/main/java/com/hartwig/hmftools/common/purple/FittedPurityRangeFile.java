@@ -45,21 +45,21 @@ public final class FittedPurityRangeFile
         List<String> lines = Files.readAllLines(new File(filePath).toPath());
 
         String header = lines.get(0);
-        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
+        Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
         lines.remove(0);
 
         for(String line : lines)
         {
             String[] values = line.split(TSV_DELIM, -1);
-
-            fittedPurities.add(ImmutableFittedPurity.builder()
-                    .purity(Double.parseDouble(values[fieldsIndexMap.get(PURITY)]))
-                    .normFactor(Double.parseDouble(values[fieldsIndexMap.get(NORM_FACTOR)]))
-                    .score(Double.parseDouble(values[fieldsIndexMap.get(SCORE)]))
-                    .diploidProportion(Double.parseDouble(values[fieldsIndexMap.get(DIPLOID_PROPORTION)]))
-                    .ploidy(Double.parseDouble(values[fieldsIndexMap.get(PLOIDY)]))
-                    .somaticPenalty(Double.parseDouble(values[fieldsIndexMap.get(SOMATIC_PENALTY)]))
-                    .build());
+            FittedPurity fittedPurity = new FittedPurity(
+                    Double.parseDouble(values[fieldsIndexMap.get(PURITY)]),
+                    Double.parseDouble(values[fieldsIndexMap.get(NORM_FACTOR)]),
+                    Double.parseDouble(values[fieldsIndexMap.get(PLOIDY)]),
+                    Double.parseDouble(values[fieldsIndexMap.get(SCORE)]),
+                    Double.parseDouble(values[fieldsIndexMap.get(DIPLOID_PROPORTION)]),
+                    Double.parseDouble(values[fieldsIndexMap.get(SOMATIC_PENALTY)])
+            );
+            fittedPurities.add(fittedPurity);
         }
 
         return fittedPurities;

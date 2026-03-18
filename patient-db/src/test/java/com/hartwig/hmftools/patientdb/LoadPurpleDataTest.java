@@ -21,7 +21,6 @@ import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GermlineAmpDel;
 import com.hartwig.hmftools.common.purple.GermlineDetectionMethod;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
-import com.hartwig.hmftools.common.purple.ImmutableFittedPurity;
 import com.hartwig.hmftools.common.purple.ImmutableFittedPurityScore;
 import com.hartwig.hmftools.common.purple.ImmutablePurityContext;
 import com.hartwig.hmftools.common.purple.ImmutablePurpleCopyNumber;
@@ -71,14 +70,7 @@ public class LoadPurpleDataTest extends DatabaseTestBase
                 .tincLevel(0)
                 .build();
 
-        FittedPurity fittedPurity = ImmutableFittedPurity.builder()
-                .purity(0)
-                .normFactor(0)
-                .score(0)
-                .diploidProportion(0)
-                .ploidy(0)
-                .somaticPenalty(0)
-                .build();
+        FittedPurity fittedPurity = new FittedPurity(0, 0, 0, 0, 0, 0);
 
         FittedPurityScore score = ImmutableFittedPurityScore.builder()
                 .minPurity(0)
@@ -290,7 +282,7 @@ public class LoadPurpleDataTest extends DatabaseTestBase
                 .insertSequenceAlignments("")
                 .insertSequenceRepeatClass("")
                 .insertSequenceRepeatType("")
-                .insertSequenceRepeatOrientation((byte) 0 )
+                .insertSequenceRepeatOrientation((byte) 0)
                 .insertSequenceRepeatCoverage(0)
                 .startAnchoringSupportDistance(0)
                 .endAnchoringSupportDistance(0)

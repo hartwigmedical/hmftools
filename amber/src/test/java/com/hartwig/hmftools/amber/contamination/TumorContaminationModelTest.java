@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.amber;
+package com.hartwig.hmftools.amber.contamination;
 
 import static org.junit.Assert.assertEquals;
 
@@ -26,7 +26,7 @@ public class TumorContaminationModelTest
     @Test
     public void testHighContamination() throws IOException
     {
-        Map<Integer,Long> contaminationMap = fromFile(CONTAMINATION_HIGH);
+        Map<Integer, Long> contaminationMap = fromFile(CONTAMINATION_HIGH);
         TumorContaminationModel model = new TumorContaminationModel();
         assertEquals(249329, TumorContaminationModel.calcAltReadCountAboveThreshold(2, contaminationMap));
         assertEquals(248936, TumorContaminationModel.calcAltReadCountAboveThreshold(3, contaminationMap));
@@ -38,7 +38,7 @@ public class TumorContaminationModelTest
     @Test
     public void testLowContamination() throws IOException
     {
-        Map<Integer,Long> contaminationMap = fromFile(CONTAMINATION_LOW);
+        Map<Integer, Long> contaminationMap = fromFile(CONTAMINATION_LOW);
         TumorContaminationModel model = new TumorContaminationModel();
         assertEquals(73058, TumorContaminationModel.calcAltReadCountAboveThreshold(2, contaminationMap));
         assertEquals(31170, TumorContaminationModel.calcAltReadCountAboveThreshold(3, contaminationMap));
@@ -68,9 +68,9 @@ public class TumorContaminationModelTest
     }
 
     @NotNull
-    private static Map<Integer,Long> fromFile(final String fileName) throws IOException
+    private static Map<Integer, Long> fromFile(final String fileName) throws IOException
     {
-        Map<Integer,Long> result = Maps.newHashMap();
+        Map<Integer, Long> result = Maps.newHashMap();
 
         List<String> lines = Files.readAllLines(new File(fileName).toPath());
 

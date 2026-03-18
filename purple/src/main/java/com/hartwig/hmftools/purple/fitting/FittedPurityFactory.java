@@ -20,7 +20,6 @@ import com.hartwig.hmftools.common.genome.position.GenomePositionSelectorFactory
 import com.hartwig.hmftools.common.purple.FittedPurity;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
-import com.hartwig.hmftools.common.purple.ImmutableFittedPurity;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.Downsample;
 import com.hartwig.hmftools.purple.FittingConfig;
@@ -176,7 +175,6 @@ public class FittedPurityFactory
 
     private FittedPurity fitPurity(final double purity, final double normFactor)
     {
-        ImmutableFittedPurity.Builder builder = ImmutableFittedPurity.builder().purity(purity).normFactor(normFactor);
         double eventPenalty = 0;
         double deviationPenalty = 0;
         double diploidProportion = 0;
@@ -221,11 +219,8 @@ public class FittedPurityFactory
 
         double somaticPenalty = mSomaticPenaltyWeight > 0 && somaticVariantCount > 0 ? somaticPenaltyTotal / somaticVariantCount : 0;
 
-        return builder.score(eventPenalty * deviationPenalty + somaticPenalty)
-                .diploidProportion(diploidProportion)
-                .ploidy(averagePloidy)
-                .somaticPenalty(somaticPenalty)
-                .build();
+        return new FittedPurity(purity, normFactor, averagePloidy,
+                eventPenalty * deviationPenalty + somaticPenalty, diploidProportion, somaticPenalty);
     }
 
     static boolean useRegionToFitPurity(boolean tumorOnlyMode,

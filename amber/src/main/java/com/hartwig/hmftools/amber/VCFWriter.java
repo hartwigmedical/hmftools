@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.amber.contamination.TumorContamination;
 
 import org.jetbrains.annotations.NotNull;
 

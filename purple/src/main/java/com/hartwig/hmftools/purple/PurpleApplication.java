@@ -38,7 +38,6 @@ import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.purple.GermlineAmpDel;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
-import com.hartwig.hmftools.common.purple.ImmutableFittedPurity;
 import com.hartwig.hmftools.common.purple.ImmutableFittedPurityScore;
 import com.hartwig.hmftools.common.purple.ImmutablePurityContext;
 import com.hartwig.hmftools.common.purple.ImmutablePurpleQC;
@@ -63,7 +62,6 @@ import com.hartwig.hmftools.purple.fitting.PurityPloidyFitter;
 import com.hartwig.hmftools.purple.fitting.RegionFitCalculator;
 import com.hartwig.hmftools.purple.fittingsnv.PeakModelFile;
 import com.hartwig.hmftools.purple.gene.GeneCopyNumberBuilder;
-import com.hartwig.hmftools.purple.germline.ChimerismDetection;
 import com.hartwig.hmftools.purple.germline.GermlineAmpDelFinder;
 import com.hartwig.hmftools.purple.germline.GermlineDrivers;
 import com.hartwig.hmftools.purple.germline.GermlineSvCache;
@@ -264,25 +262,12 @@ public class PurpleApplication
 
         RegionFitCalculator regionFitCalculator = new RegionFitCalculator(cobaltChromosomes, mConfig.Fitting, amberData.AverageTumorDepth);
 
-        double chimerismPercentage = 0;
-
         if(mConfig.runTumor())
         {
-            ChimerismDetection chimerismDetection = new ChimerismDetection(
-                    amberData, cobaltData, observedRegions, mReferenceData.RefGenVersion);
-
-            chimerismDetection.run();
-
-            if(chimerismDetection.isDetected())
-            {
-                chimerismPercentage = chimerismDetection.chimerismLevel();
-            }
-
             PPL_LOGGER.info("fitting purity");
 
-            PurityPloidyFitter purityPloidyFitter = new PurityPloidyFitter(
-                    mConfig, mReferenceData, sampleData, mExecutorService, regionFitCalculator, observedRegions, gender,
-                    chimerismPercentage > 0);
+            PurityPloidyFitter purityPloidyFitter =
+                    new PurityPloidyFitter(mConfig, mReferenceData, sampleData, mExecutorService, regionFitCalculator, observedRegions, gender);
 
             purityPloidyFitter.run();
 
@@ -334,7 +319,7 @@ public class PurpleApplication
         PurpleQC qcChecks = PurpleSummaryData.createQC(
                 amberData.Contamination, bestFit, amberGender, cobaltGender, copyNumbers, geneCopyNumbers,
                 cobaltChromosomes.germlineAberrations(), amberData.AverageTumorDepth,
-                mConfig.TargetRegionsMode ? TARGET_REGIONS_MAX_DELETED_GENES : MAX_DELETED_GENES, tincLevel, chimerismPercentage);
+                mConfig.TargetRegionsMode ? TARGET_REGIONS_MAX_DELETED_GENES : MAX_DELETED_GENES, tincLevel);
 
         PurityContext purityContext = createPurity(bestFit, gender, mConfig, qcChecks, copyNumbers, somaticStream, sampleData.SvCache);
 
@@ -435,7 +420,7 @@ public class PurpleApplication
         PPL_LOGGER.info("generating drivers");
 
         // convert to a map to make look-up from drivers faster. A list of entries per gene exists for additional transcripts.
-        Map<String,List<GeneCopyNumber>> geneCopyNumberMap = GeneCopyNumberFile.listToMap(geneCopyNumbers);
+        Map<String, List<GeneCopyNumber>> geneCopyNumberMap = GeneCopyNumberFile.listToMap(geneCopyNumbers);
 
         if(mConfig.runTumor())
         {
@@ -513,8 +498,7 @@ public class PurpleApplication
             GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilenameForWriting(mConfig.OutputDir, tumorId), Collections.emptyList());
             PeakModelFile.write(PeakModelFile.generateFilename(mConfig.OutputDir, tumorId), Collections.emptyList());
 
-            FittedPurity fittedPurity = ImmutableFittedPurity.builder()
-                    .purity(0).ploidy(0).score(0).diploidProportion(0).normFactor(0).somaticPenalty(0).build();
+            FittedPurity fittedPurity = new FittedPurity(0, 0, 0, 0, 0, 0);
 
             FittedPurityScore fittedPurityScore = ImmutableFittedPurityScore.builder()
                     .maxPurity(0).minPurity(0).maxPloidy(0).minPloidy(0).maxDiploidProportion(0).minDiploidProportion(0).build();

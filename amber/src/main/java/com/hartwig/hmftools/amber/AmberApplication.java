@@ -29,9 +29,14 @@ import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ListMultimap;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.amber.contamination.TumorContamination;
+import com.hartwig.hmftools.amber.contamination.TumorContaminationModel;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.amber.blacklist.AmberBlacklistFile;
 import com.hartwig.hmftools.amber.blacklist.AmberBlacklistPoint;
+import com.hartwig.hmftools.amber.purity.PurityAnalysisConfig;
+import com.hartwig.hmftools.amber.purity.TumorOnlyPurityAnalysis;
+import com.hartwig.hmftools.amber.purity.CandidatePeak;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.amber.AmberSite;
 import com.hartwig.hmftools.common.amber.AmberSitesFile;
@@ -240,21 +245,37 @@ public class AmberApplication implements AutoCloseable
         // no homozygous sites
         TumorAnalysis tumor = new TumorAnalysis(mConfig, readerFactory, allNormal, ArrayListMultimap.create());
 
-        List<TumorBAF> tumorBAFList = tumor.getBafs().values()
+        List<TumorBAF> readDepthAndQualityFiltered = tumor.getBafs().values()
                 .stream()
                 .filter(x -> x.TumorEvidence.ReadDepth >= mConfig.TumorMinDepth)
                 .filter(x -> aboveQualFilter(x.TumorEvidence))
                 .filter(x -> x.TumorEvidence.RefSupport >= mConfig.TumorOnlyMinSupport)
                 .filter(x -> x.TumorEvidence.AltSupport >= mConfig.TumorOnlyMinSupport)
-                .filter(x -> isFinite(x.refFrequency()) && Doubles.greaterOrEqual(x.refFrequency(), mConfig.TumorOnlyMinVaf))
-                .filter(x -> isFinite(x.altFrequency()) && Doubles.greaterOrEqual(x.altFrequency(), mConfig.TumorOnlyMinVaf))
-                .sorted()
-                .toList();
+                .sorted().toList();
+
+        List<PositionEvidence> rawData = readDepthAndQualityFiltered.stream().map(x -> x.TumorEvidence).toList();
+        if(mConfig.WriteTumorData)
+        {
+            String rawDataFileName = PositionEvidenceFile.generateTumorDataFilename(mConfig.OutputDir, mConfig.TumorId);
+            PositionEvidenceFile.write(rawDataFileName, rawData);
+        }
+        PurityAnalysisConfig purityAnalysisConfig = new PurityAnalysisConfig(mConfig);
+        TumorOnlyPurityAnalysis noiseFloorAnalysis = new TumorOnlyPurityAnalysis(rawData, mChromosomeSites, purityAnalysisConfig);
+        double noiseFloor = noiseFloorAnalysis.cutoff();
+        AMB_LOGGER.debug(format("Noise floor: %.3f", noiseFloor));
+        double contamination = noiseFloorAnalysis.contaminationPeaks().stream().map(CandidatePeak::vaf).max(Double::compare).orElse(0.0);
+        AMB_LOGGER.debug(format("Contamination level: %.3f", contamination));
+
+        List<TumorBAF> tumorBAFList = readDepthAndQualityFiltered
+                .stream()
+                .filter(x -> isFinite(x.refFrequency()) && Doubles.greaterOrEqual(x.refFrequency(), noiseFloor))
+                .filter(x -> isFinite(x.altFrequency()) && Doubles.greaterOrEqual(x.altFrequency(), noiseFloor))
+                .sorted().toList();
 
         List<AmberBAF> amberBAFList = tumorBAFList.stream()
                 .map(AmberUtils::fromTumorBaf).filter(x -> Double.isFinite(x.tumorBAF())).collect(toList());
 
-        mPersistence.persistQC(0, 0.0, null);
+        mPersistence.persistQC(0, contamination, null);
         mPersistence.persistVersionInfo(mVersionInfo);
         mPersistence.persistBAF(amberBAFList);
     }
