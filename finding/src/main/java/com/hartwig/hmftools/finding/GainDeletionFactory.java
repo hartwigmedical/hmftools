@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import com.hartwig.hmftools.finding.datamodel.DriverInterpretation;
-import com.hartwig.hmftools.finding.datamodel.DriverSource;
 import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
 import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
@@ -17,8 +15,9 @@ import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.finding.datamodel.DriverFieldsBuilder;
 import com.hartwig.hmftools.finding.datamodel.DriverFindingList;
 import com.hartwig.hmftools.finding.datamodel.DriverFindingListBuilder;
+import com.hartwig.hmftools.finding.datamodel.DriverInterpretation;
+import com.hartwig.hmftools.finding.datamodel.DriverSource;
 import com.hartwig.hmftools.finding.datamodel.FindingsStatus;
-import com.hartwig.hmftools.finding.datamodel.ResultStatus;
 import com.hartwig.hmftools.finding.datamodel.GainDeletion;
 import com.hartwig.hmftools.finding.datamodel.GainDeletionBuilder;
 import com.hartwig.hmftools.finding.datamodel.ReportedStatus;
@@ -60,7 +59,7 @@ final class GainDeletionFactory
     {
         if(!hasGermlineSample)
         {
-            return FindingUtil.emptyDriverFindingList(ResultStatus.NOT_AVAILABLE_REF_REQUIRED);
+            return FindingUtil.refRequired();
         }
 
         List<PurpleGeneCopyNumber> somaticGeneCopyNumbers = purple.allSomaticGeneCopyNumbers();
@@ -271,8 +270,10 @@ final class GainDeletionFactory
                 .build();
     }
 
-    private static GainDeletion.GeneExtent toGeneExtent(CopyNumberInterpretation copyNumberInterpretation) {
-        return switch (copyNumberInterpretation) {
+    private static GainDeletion.GeneExtent toGeneExtent(CopyNumberInterpretation copyNumberInterpretation)
+    {
+        return switch(copyNumberInterpretation)
+        {
             case FULL_GAIN, FULL_DEL -> GainDeletion.GeneExtent.FULL_GENE;
             case PARTIAL_GAIN, PARTIAL_DEL -> GainDeletion.GeneExtent.PARTIAL_GENE;
         };
