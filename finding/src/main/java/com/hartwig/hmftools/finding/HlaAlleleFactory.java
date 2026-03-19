@@ -11,6 +11,8 @@ import com.hartwig.hmftools.datamodel.hla.LilacRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.finding.datamodel.FindingList;
 import com.hartwig.hmftools.finding.datamodel.FindingListBuilder;
+import com.hartwig.hmftools.finding.datamodel.FindingsStatus;
+import com.hartwig.hmftools.finding.datamodel.FindingsStatusBuilder;
 import com.hartwig.hmftools.finding.datamodel.ResultStatus;
 import com.hartwig.hmftools.finding.datamodel.HlaAllele;
 import com.hartwig.hmftools.finding.datamodel.HlaAlleleBuilder;
@@ -28,15 +30,14 @@ public class HlaAlleleFactory
     {
     }
 
-    public static FindingList<HlaAllele> createHlaAllelesFindings(OrangeRecord orangeRecord, boolean hasReliablePurity)
+    public static FindingList<HlaAllele> createHlaAllelesFindings(OrangeRecord orangeRecord, FindingsStatus findingsStatus)
     {
         LilacRecord lilac = orangeRecord.lilac();
         if(lilac != null)
         {
             return FindingListBuilder.<HlaAllele>builder()
-                    .status(FindingUtil.findingsStatusOk())
+                    .status(findingsStatus)
                     .findings(HlaAlleleFactory.convertHlaAlleles(lilac,
-                            hasReliablePurity,
                             !orangeRecord.tumorOnlyMode(),
                             orangeRecord.isofox() != null))
                     .build();
@@ -47,7 +48,7 @@ public class HlaAlleleFactory
         }
     }
 
-    public static List<HlaAllele> convertHlaAlleles(LilacRecord lilac, boolean hasReliablePurity, boolean hasRef, boolean hasRna)
+    public static List<HlaAllele> convertHlaAlleles(LilacRecord lilac, boolean hasRef, boolean hasRna)
     {
         Map<String, List<LilacAllele>> hlaAllelesMap = lilac.alleles()
                 .stream()
@@ -80,7 +81,7 @@ public class HlaAlleleFactory
             {
                 hlaAlleles.add(builder
                         .germlineCopyNumber(1)
-                        .tumorCopyNumber(hasReliablePurity ? lilacAllele.tumorCopyNumber() : null)
+                        .tumorCopyNumber(lilacAllele.tumorCopyNumber())
                         .build());
 
             }
@@ -91,7 +92,7 @@ public class HlaAlleleFactory
 
                 hlaAlleles.add(builder
                         .germlineCopyNumber(2)
-                        .tumorCopyNumber(hasReliablePurity ? tumorCopies : null)
+                        .tumorCopyNumber(tumorCopies)
                         .build());
             }
             else

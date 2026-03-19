@@ -6,14 +6,17 @@ import java.util.List;
 import org.jetbrains.annotations.NotNull;
 
 @SuppressWarnings("unused")
-public class TestFindingRecordFactory {
+public class TestFindingRecordFactory
+{
     @NotNull
-    public static FindingRecord createMinimalTestFindingRecord() {
+    public static FindingRecord createMinimalTestFindingRecord()
+    {
         return createMinimalTestFindingRecordBuilder().build();
     }
 
     @NotNull
-    public static FindingRecordBuilder createMinimalTestFindingRecordBuilder() {
+    public static FindingRecordBuilder createMinimalTestFindingRecordBuilder()
+    {
         return FindingRecordBuilder.builder()
                 .version("")
                 .metaProperties(MetaPropertiesBuilder.builder()
@@ -24,11 +27,16 @@ public class TestFindingRecordFactory {
                         .build())
                 .qc(TestFindingFactory.qcBuilder().build())
                 .purityPloidyFit(TestFindingFactory.purityPloidyFitBuilder().build())
-                .predictedTumorOrigin(TestFindingFactory.buildFindingItem(ResultStatus.OK, TestFindingFactory.predictedTumorOriginBuilder().build()))
-                .homologousRecombination(TestFindingFactory.buildFindingItem(ResultStatus.OK, TestFindingFactory.homologousRecombinationBuilder().build()))
-                .microsatelliteStability(TestFindingFactory.buildFindingItem(ResultStatus.OK, TestFindingFactory.microsatelliteStabilityBuilder().build()))
-                .tumorMutationalLoad(TestFindingFactory.buildFindingItem(ResultStatus.OK, TestFindingFactory.tumorMutationalLoadBuilder().build()))
-                .tumorMutationalBurden(TestFindingFactory.buildFindingItem(ResultStatus.OK, TestFindingFactory.tumorMutationalBurdenBuilder().build()))
+                .predictedTumorOrigin(TestFindingFactory.buildFindingItem(ResultStatus.OK, TestFindingFactory.predictedTumorOriginBuilder()
+                        .build()))
+                .homologousRecombination(TestFindingFactory.buildFindingItem(ResultStatus.OK, TestFindingFactory.homologousRecombinationBuilder()
+                        .build()))
+                .microsatelliteStability(TestFindingFactory.buildFindingItem(ResultStatus.OK, TestFindingFactory.microsatelliteStabilityBuilder()
+                        .build()))
+                .tumorMutationalLoad(TestFindingFactory.buildFindingItem(ResultStatus.OK, TestFindingFactory.tumorMutationalLoadBuilder()
+                        .build()))
+                .tumorMutationalBurden(TestFindingFactory.buildFindingItem(ResultStatus.OK, TestFindingFactory.tumorMutationalBurdenBuilder()
+                        .build()))
                 .somaticSmallVariants(TestFindingFactory.buildDriverFindingsList(ResultStatus.OK, List.of()))
                 .germlineSmallVariants(TestFindingFactory.buildDriverFindingsList(ResultStatus.OK, List.of()))
                 .somaticGainDeletions(TestFindingFactory.buildDriverFindingsList(ResultStatus.OK, List.of()))

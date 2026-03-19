@@ -262,6 +262,7 @@ public class TestFindingFactory
                 .gene("")
                 .geneClass("")
                 .germlineCopyNumber(0)
+                .allele("")
                 .tumorCopyNumber(0D)
                 .refFragments(0)
                 .tumorFragments(0)
