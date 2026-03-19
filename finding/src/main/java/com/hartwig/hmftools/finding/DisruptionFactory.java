@@ -22,7 +22,7 @@ import com.hartwig.hmftools.finding.datamodel.DriverFindingList;
 import com.hartwig.hmftools.finding.datamodel.DriverFindingListBuilder;
 import com.hartwig.hmftools.finding.datamodel.DriverInterpretation;
 import com.hartwig.hmftools.finding.datamodel.DriverSource;
-import com.hartwig.hmftools.finding.datamodel.FindingsStatus;
+import com.hartwig.hmftools.finding.datamodel.ResultStatus;
 import com.hartwig.hmftools.finding.datamodel.ReportedStatus;
 
 import org.apache.commons.lang3.Validate;
@@ -66,7 +66,7 @@ final class DisruptionFactory
         @NotNull Collection<LinxSvAnnotation> structuralVariants = linx.somaticStructuralVariants();
 
         return  DriverFindingListBuilder.<Disruption>builder()
-                .status(FindingsStatus.OK)
+                .status(FindingUtil.findingsStatus(ResultStatus.OK))
                 .findings(createDisruptions(DriverSource.SOMATIC, breakends, structuralVariants))
                 .build();
     }

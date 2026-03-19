@@ -389,6 +389,13 @@
                 <type>test-jar</type>
             </dependency>
             <dependency>
+                <groupId>com.hartwig</groupId>
+                <artifactId>orange-datamodel</artifactId>
+                <version>local-SNAPSHOT</version>
+                <type>test-jar</type>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
                 <groupId>org.mockito</groupId>
                 <artifactId>mockito-core</artifactId>
                 <version>${mockito.version}</version>
