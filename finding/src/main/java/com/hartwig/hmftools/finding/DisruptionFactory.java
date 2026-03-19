@@ -26,7 +26,6 @@ import com.hartwig.hmftools.finding.datamodel.DriverFindingListBuilder;
 import com.hartwig.hmftools.finding.datamodel.DriverInterpretation;
 import com.hartwig.hmftools.finding.datamodel.DriverSource;
 import com.hartwig.hmftools.finding.datamodel.ReportedStatus;
-import com.hartwig.hmftools.finding.datamodel.ResultStatus;
 
 import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;
@@ -86,7 +85,7 @@ final class DisruptionFactory
                         : Disruption.Type.DISRUPTION;
 
         return DriverFindingListBuilder.<Disruption>builder()
-                .status(FindingUtil.findingsStatus(ResultStatus.OK))
+                .status(FindingUtil.okStatus())
                 .findings(createDisruptions(DriverSource.GERMLINE, breakends, structuralVariants, findDisruptionType))
                 .build();
     }
@@ -112,7 +111,7 @@ final class DisruptionFactory
                 geneDriverTypeMap.getOrDefault(gene, Disruption.Type.DISRUPTION);
 
         return DriverFindingListBuilder.<Disruption>builder()
-                .status(FindingUtil.findingsStatus(ResultStatus.OK))
+                .status(FindingUtil.okStatus())
                 .findings(createDisruptions(DriverSource.SOMATIC, breakends, structuralVariants, findDisruptionType))
                 .build();
     }
