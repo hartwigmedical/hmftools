@@ -2,6 +2,7 @@ package com.hartwig.hmftools.orange.report.tables;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_RNA_FRAGS;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatSingleDigitDecimal;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_DRIVER;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_FUSION;
@@ -51,7 +52,7 @@ public final class DnaFusionTable
         addEntry(cells, widths, cellEntries, 2, "Type");
 
         if(hasRna)
-            addEntry(cells, widths, cellEntries, 2, COL_RNA);
+            addEntry(cells, widths, cellEntries, 1, COL_RNA_FRAGS);
 
         addEntry(cells, widths, cellEntries, 1, COL_DRIVER);
 
@@ -69,7 +70,7 @@ public final class DnaFusionTable
 
             if(hasRna)
             {
-                rowCells.add(cells.createContent(rnaSupportField(fusion.rnaSupport())));
+                rowCells.add(cells.createContent(String.valueOf(fusion.rnaSupport().alleleReadCount())));
             }
 
             rowCells.add(cells.createContent(fusion.driverInterpretation().toString()));
@@ -111,6 +112,7 @@ public final class DnaFusionTable
         throw new IllegalStateException();
     }
 
+    /*
     private static String rnaSupportField(final AllelicDepth rnaSupport)
     {
         if(rnaSupport == null)
@@ -118,6 +120,7 @@ public final class DnaFusionTable
         else
             return formatSupportField(rnaSupport.alleleReadCount(), rnaSupport.totalReadCount());
     }
+    */
 
     private static List<LinxFusion> sortLinxFusions(final List<LinxFusion> fusions)
     {

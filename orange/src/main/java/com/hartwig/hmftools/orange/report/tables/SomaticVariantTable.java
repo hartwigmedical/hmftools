@@ -1,18 +1,24 @@
 package com.hartwig.hmftools.orange.report.tables;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.orange.algo.OrangeConstants.isCandidateLikelihood;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_HGVS;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.VALUE_NO;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.VALUE_YES;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.floatArray;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatPercentageField;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatSingleDigitDecimal;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatTwoDigitDecimal;
-import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_AF;
-import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_BIALLELIC;
-import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_CL;
-import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_DRIVER;
-import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_HOTSPOT;
-import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_MACN;
-import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_SL;
-import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_VARIANT;
-import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_VCN;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_AF;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_BIALLELIC;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_CL;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_DRIVER;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_HOTSPOT;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_MACN;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_SL;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_VARIANT;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_VCN;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_CN;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_DP;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_RNA;
@@ -21,11 +27,13 @@ import static com.hartwig.hmftools.orange.report.tables.TableCommon.cellArray;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.intToFloatArray;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.datamodel.common.AllelicDepth;
+import com.hartwig.hmftools.datamodel.purple.PurpleTranscriptImpact;
+import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.orange.report.ReportResources;
-import com.hartwig.hmftools.orange.report.interpretation.VariantEntry;
-import com.hartwig.hmftools.orange.report.interpretation.Variants;
 import com.hartwig.hmftools.orange.report.util.Cells;
 import com.hartwig.hmftools.orange.report.util.Tables;
 import com.itextpdf.layout.element.Cell;
@@ -34,7 +42,7 @@ import com.itextpdf.layout.element.Table;
 public final class SomaticVariantTable
 {
     public static Table build(
-            final String title, float width, final List<VariantEntry> variants, final ReportResources reportResources,
+            final String title, float width, final List<PurpleVariant> variants, final ReportResources reportResources,
             boolean tumorOnly, boolean hasRna)
     {
         if(variants.isEmpty())
@@ -44,17 +52,18 @@ public final class SomaticVariantTable
 
         Cells cells = new Cells(reportResources);
 
-        List<Integer> widths = Lists.newArrayList();
+        List<Float> widths = Lists.newArrayList();
         List<Cell> cellEntries = Lists.newArrayList();
 
         addEntry(cells, widths, cellEntries, 3, COL_VARIANT);
+        addEntry(cells, widths, cellEntries, 2, COL_HGVS);
         addEntry(cells, widths, cellEntries, 1, COL_AF);
         addEntry(cells, widths, cellEntries, 1, COL_DP);
         addEntry(cells, widths, cellEntries, 1, COL_VCN);
         addEntry(cells, widths, cellEntries, 1, COL_CN);
         addEntry(cells, widths, cellEntries, 1, COL_MACN);
-        addEntry(cells, widths, cellEntries, 1, COL_HOTSPOT);
-        addEntry(cells, widths, cellEntries, 1, COL_BIALLELIC);
+        addEntry(cells, widths, cellEntries, 1.25, COL_HOTSPOT);
+        addEntry(cells, widths, cellEntries, 1.25, COL_BIALLELIC);
         addEntry(cells, widths, cellEntries, 1, COL_CL);
 
         if(tumorOnly)
@@ -69,40 +78,102 @@ public final class SomaticVariantTable
 
         addEntry(cells, widths, cellEntries, 1, COL_DRIVER);
 
-        Table table = Tables.createContent(width, intToFloatArray(widths), cellArray(cellEntries));
+        Table table = Tables.createContent(width, floatArray(widths), cellArray(cellEntries));
 
-        for(VariantEntry variant : Variants.sort(variants))
+        for(PurpleVariant variant : sort(variants))
         {
-            List<Cell> rowCells = Lists.newArrayList();
+            List<PurpleTranscriptImpact> transcriptImpacts = Lists.newArrayList(variant.canonicalImpact());
+            transcriptImpacts.addAll(variant.otherImpacts());
 
-            rowCells.add(cells.createContent(Variants.variantField(variant)));
-            rowCells.add(cells.createContent(formatTwoDigitDecimal(variant.vaf())));
-            rowCells.add(cells.createContent(String.valueOf(variant.depth())));
-            rowCells.add(cells.createContent(formatSingleDigitDecimal(variant.variantCopyNumber())));
-            rowCells.add(cells.createContent(formatSingleDigitDecimal(variant.totalCopyNumber())));
-            rowCells.add(cells.createContent(formatSingleDigitDecimal(variant.minorAlleleCopyNumber())));
-            rowCells.add(cells.createContent(Variants.hotspotField(variant)));
-            rowCells.add(cells.createContent(formatPercentageField(variant.biallelicProbability())));
-
-            rowCells.add(cells.createContent(formatPercentageField(variant.clonalLikelihood())));
-
-            if(tumorOnly)
-                rowCells.add(cells.createContent(variant.somaticLikelihood()));
-
-            if(hasRna)
-                rowCells.add(cells.createContent(Variants.rnaInfoField(variant)));
-
-            rowCells.add(cells.createContent(formatPercentageField(variant.driverLikelihood())));
-
-            if(isCandidateLikelihood(variant.driverLikelihood()))
+            for(PurpleTranscriptImpact transcriptImpact : transcriptImpacts)
             {
-                reportResources.shadeCandidateCells(rowCells);
-            }
+                List<Cell> rowCells = Lists.newArrayList();
 
-            rowCells.forEach(x -> table.addCell(x));
+                rowCells.add(cells.createContent(formatVariantDisplay(variant)));
+                rowCells.add(cells.createContent(transcriptImpact.hgvsProteinImpact()));
+                rowCells.add(cells.createContent(formatTwoDigitDecimal(variant.tumorDepth().alleleFrequency())));
+                rowCells.add(cells.createContent(String.valueOf(variant.tumorDepth().totalReadCount())));
+                rowCells.add(cells.createContent(formatSingleDigitDecimal(variant.variantCopyNumber())));
+                rowCells.add(cells.createContent(formatSingleDigitDecimal(variant.adjustedCopyNumber())));
+                rowCells.add(cells.createContent(formatSingleDigitDecimal(variant.minorAlleleCopyNumber())));
+                rowCells.add(cells.createContent(hotspotDisplay(variant)));
+                rowCells.add(cells.createContent(formatPercentageField(variant.biallelicProbability())));
+
+                rowCells.add(cells.createContent(clonalLikelihood(variant)));
+
+                if(tumorOnly)
+                    rowCells.add(cells.createContent(variant.somaticLikelihood().toString()));
+
+                if(hasRna)
+                    rowCells.add(cells.createContent(rnaDisplay(variant)));
+
+                rowCells.add(cells.createContent(formatPercentageField(variant.driverLikelihood())));
+
+                if(isCandidateLikelihood(variant.driverLikelihood()))
+                {
+                    reportResources.shadeCandidateCells(rowCells);
+                }
+
+                rowCells.forEach(x -> table.addCell(x));
+            }
         }
 
         return new Tables(reportResources).createWrapping(table, title);
+    }
+
+    protected static List<PurpleVariant> sort(final List<PurpleVariant> variants)
+    {
+        return variants.stream().sorted((variant1, variant2) ->
+        {
+            int driverCompare = Double.compare(variant2.driverLikelihood(), variant1.driverLikelihood());
+            if(driverCompare != 0)
+            {
+                return driverCompare;
+            }
+
+            int geneCompare = variant1.gene().compareTo(variant2.gene());
+            if(geneCompare != 0)
+            {
+                return geneCompare;
+            }
+
+            return 0;
+        }).collect(Collectors.toList());
+    }
+
+    protected static String formatVariantDisplay(final PurpleVariant variant)
+    {
+        return format("%s:%d %s>%s", variant.chromosome(), variant.position(), variant.ref(), variant.alt());
+    }
+
+    protected static String clonalLikelihood(final PurpleVariant variant)
+    {
+        return formatPercentageField(1 - variant.subclonalLikelihood());
+    }
+
+    protected static String hotspotDisplay(final PurpleVariant variant)
+    {
+        switch(variant.hotspot())
+        {
+            case HOTSPOT:
+                return VALUE_YES;
+            case NEAR_HOTSPOT:
+                return "Near";
+            default:
+                return VALUE_NO;
+        }
+    }
+
+    protected static String rnaDisplay(final PurpleVariant variant)
+    {
+        AllelicDepth rnaDepth = variant.rnaDepth();
+
+        if(rnaDepth == null)
+        {
+            return ReportResources.NOT_AVAILABLE;
+        }
+
+        return format("%d/%d", rnaDepth.alleleReadCount(), rnaDepth.totalReadCount());
     }
 }
 

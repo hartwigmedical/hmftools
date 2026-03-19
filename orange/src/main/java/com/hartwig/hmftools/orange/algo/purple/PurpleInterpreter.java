@@ -13,10 +13,13 @@ import static com.hartwig.hmftools.common.linx.DriverEventType.LOH_ARM;
 import static com.hartwig.hmftools.common.linx.DriverEventType.LOH_CHR;
 import static com.hartwig.hmftools.common.linx.DriverEventType.LOH_SV_CENTRO;
 import static com.hartwig.hmftools.common.linx.DriverEventType.LOH_SV_TELO;
-import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
+import static com.hartwig.hmftools.common.purple.ChrArmCopyNumber.LOW_DRIVER_ARM_CN_GAIN_THRESHOLD;
+import static com.hartwig.hmftools.common.purple.ChrArmCopyNumber.LOW_DRIVER_ARM_CN_LOSS_THRESHOLD;
 import static com.hartwig.hmftools.orange.algo.OrangeConstants.PURPLE_AMP_DEL_FULL;
 import static com.hartwig.hmftools.orange.algo.OrangeConstants.PURPLE_AMP_DEL_PARTIAL;
 import static com.hartwig.hmftools.orange.algo.OrangeConstants.PURPLE_ARM_CN_DIPLOID;
+import static com.hartwig.hmftools.orange.algo.OrangeConstants.PURPLE_ARM_CN_GAIN;
+import static com.hartwig.hmftools.orange.algo.OrangeConstants.PURPLE_ARM_CN_LOSS;
 import static com.hartwig.hmftools.orange.algo.linx.LinxInterpreter.findReportableLinxPlot;
 
 import java.util.EnumSet;
@@ -28,12 +31,18 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.driver.DriverType;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.common.linx.DriverEventType;
 import com.hartwig.hmftools.common.linx.LinxDriver;
+import com.hartwig.hmftools.common.purple.ChrArmCopyNumber;
+import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.rna.GeneExpression;
 import com.hartwig.hmftools.common.variant.SmallVariant;
+import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleCharacteristics;
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleChrArmCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleFit;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleRecord;
@@ -77,12 +86,7 @@ public class PurpleInterpreter
                     purpleData.germlineAmpDels(), Objects.requireNonNull(germlineDrivers), purpleData.somaticGeneCopyNumbers(), isofoxData);
         }
 
-        double ploidy = purpleData.purityContext().bestFit().ploidy();
-
-        List<PurpleChrArmCopyNumber> armCopyNumberAbberations = purpleData.chrArmCopyNumbers().stream()
-                .map(x -> PurpleConversion.convert(x, ploidy))
-                .filter(x -> !x.type().equals(PURPLE_ARM_CN_DIPLOID))
-                .collect(Collectors.toList());
+        List<PurpleChrArmCopyNumber> armCopyNumberAbberations = buildArmAbberations(purpleData);
 
         return ImmutablePurpleRecord.builder()
                 .fit(createFit(purpleData))
@@ -219,34 +223,87 @@ public class PurpleInterpreter
         return clusterId != null ? findReportableLinxPlot(linxData.reportableEventPlots(), clusterId) : null;
     }
 
-    private static PurpleFit createFit(final PurpleData purple)
+    private static PurpleFit createFit(final PurpleData purpleData)
     {
         return ImmutablePurpleFit.builder()
-                .qc(PurpleConversion.convert(purple.purityContext().qc()))
-                .fittedPurityMethod(PurpleFittedPurityMethod.valueOf(purple.purityContext().method().name()))
-                .purity(purple.purityContext().bestFit().purity())
-                .minPurity(purple.purityContext().score().minPurity())
-                .maxPurity(purple.purityContext().score().maxPurity())
-                .ploidy(purple.purityContext().bestFit().ploidy())
-                .minPloidy(purple.purityContext().score().minPloidy())
-                .maxPloidy(purple.purityContext().score().maxPloidy())
+                .qc(PurpleConversion.convert(purpleData.purityContext().qc()))
+                .fittedPurityMethod(PurpleFittedPurityMethod.valueOf(purpleData.purityContext().method().name()))
+                .purity(purpleData.purityContext().bestFit().purity())
+                .minPurity(purpleData.purityContext().score().minPurity())
+                .maxPurity(purpleData.purityContext().score().maxPurity())
+                .ploidy(purpleData.purityContext().bestFit().ploidy())
+                .minPloidy(purpleData.purityContext().score().minPloidy())
+                .maxPloidy(purpleData.purityContext().score().maxPloidy())
                 .build();
     }
 
-    private static PurpleCharacteristics createCharacteristics(final PurpleData purple)
+    private static PurpleCharacteristics createCharacteristics(final PurpleData purpleData)
     {
         return ImmutablePurpleCharacteristics.builder()
-                .wholeGenomeDuplication(purple.purityContext().wholeGenomeDuplication())
-                .microsatelliteIndelsPerMb(purple.purityContext().microsatelliteIndelsPerMb())
-                .microsatelliteStatus(PurpleMicrosatelliteStatus.valueOf(purple.purityContext().microsatelliteStatus().name()))
-                .tumorMutationalBurdenPerMb(purple.purityContext().tumorMutationalBurdenPerMb())
-                .tumorMutationalBurdenStatus(PurpleTumorMutationalStatus.valueOf(purple.purityContext()
+                .wholeGenomeDuplication(purpleData.purityContext().wholeGenomeDuplication())
+                .microsatelliteIndelsPerMb(purpleData.purityContext().microsatelliteIndelsPerMb())
+                .microsatelliteStatus(PurpleMicrosatelliteStatus.valueOf(purpleData.purityContext().microsatelliteStatus().name()))
+                .tumorMutationalBurdenPerMb(purpleData.purityContext().tumorMutationalBurdenPerMb())
+                .tumorMutationalBurdenStatus(PurpleTumorMutationalStatus.valueOf(purpleData.purityContext()
                         .tumorMutationalBurdenStatus()
                         .name()))
-                .tumorMutationalLoad(purple.purityContext().tumorMutationalLoad())
-                .tumorMutationalLoadStatus(PurpleTumorMutationalStatus.valueOf(purple.purityContext().tumorMutationalLoadStatus().name()))
-                .svTumorMutationalBurden(purple.purityContext().svTumorMutationalBurden())
-                .lohPercentage(purple.purityContext().qc().lohPercent())
+                .tumorMutationalLoad(purpleData.purityContext().tumorMutationalLoad())
+                .tumorMutationalLoadStatus(PurpleTumorMutationalStatus.valueOf(purpleData.purityContext().tumorMutationalLoadStatus().name()))
+                .svTumorMutationalBurden(purpleData.purityContext().svTumorMutationalBurden())
+                .lohPercentage(purpleData.purityContext().qc().lohPercent())
                 .build();
+    }
+
+    private static List<PurpleChrArmCopyNumber> buildArmAbberations(final PurpleData purpleData)
+    {
+        double ploidy = purpleData.purityContext().bestFit().ploidy();
+
+        List<PurpleChrArmCopyNumber> armAbberations = Lists.newArrayList();
+
+        for(ChrArmCopyNumber chrArmCopyNumber : purpleData.chrArmCopyNumbers())
+        {
+            String type = null;
+
+            double expectedPloidy = ploidy;
+
+            if(chrArmCopyNumber.chromosome() == HumanChromosome._Y && purpleData.purityContext().gender() == Gender.FEMALE)
+                continue;
+
+            if(chrArmCopyNumber.chromosome().isAllosome() && purpleData.purityContext().gender() == Gender.MALE)
+            {
+                expectedPloidy *= 0.5;
+            }
+
+            if(chrArmCopyNumber.meanCopyNumber() > LOW_DRIVER_ARM_CN_GAIN_THRESHOLD * expectedPloidy)
+            {
+                type = PURPLE_ARM_CN_GAIN;
+            }
+            else if(chrArmCopyNumber.meanCopyNumber() < LOW_DRIVER_ARM_CN_LOSS_THRESHOLD * expectedPloidy)
+            {
+                type = PURPLE_ARM_CN_LOSS;
+            }
+            else
+            {
+                continue;
+            }
+
+            String chromosome = RefGenomeFunctions.enforceChrPrefix(chrArmCopyNumber.chromosome().toString());
+
+            com.hartwig.hmftools.common.driver.DriverInterpretation driverInterpretation = ChrArmCopyNumber.driverInterpretation(
+                    chrArmCopyNumber, expectedPloidy);
+
+            double relativeCopyNumber = expectedPloidy > 0 ? chrArmCopyNumber.meanCopyNumber() / expectedPloidy : 0;
+
+            armAbberations.add(ImmutablePurpleChrArmCopyNumber.builder()
+                    .chromosome(chromosome)
+                    .arm(chrArmCopyNumber.arm().toString())
+                    .type(type)
+                    .copyNumber(chrArmCopyNumber.medianCopyNumber())
+                    .relativeCopyNumber(relativeCopyNumber)
+                    .driverInterpretation(DriverInterpretation.valueOf(driverInterpretation.toString()))
+                    .build());
+        }
+
+        return armAbberations;
     }
 }

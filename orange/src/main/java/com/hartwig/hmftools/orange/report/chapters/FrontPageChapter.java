@@ -2,10 +2,8 @@ package com.hartwig.hmftools.orange.report.chapters;
 
 import static com.hartwig.hmftools.common.peach.PeachUtil.UNKNOWN_ALLELE_STRING;
 import static com.hartwig.hmftools.common.peach.PeachUtil.convertToZygosityString;
-import static com.hartwig.hmftools.orange.report.interpretation.Variants.COL_VARIANT;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.cellArray;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.floatArray;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatPercentage;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatSingleDigitDecimal;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatTwoDigitDecimal;

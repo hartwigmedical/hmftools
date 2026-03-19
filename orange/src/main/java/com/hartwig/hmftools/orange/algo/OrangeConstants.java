@@ -7,9 +7,6 @@ import com.hartwig.hmftools.common.purple.GermlineStatus;
 public final class OrangeConstants
 {
     // Purple
-    public static final double PURPLE_ARM_CN_GAIN_THRESHOLD = 1.25;
-    public static final double PURPLE_ARM_CN_LOSS_THRESHOLD = 0.75;
-
     public static final String PURPLE_ARM_CN_LOSS = "LOSS";
     public static final String PURPLE_ARM_CN_GAIN = "GAIN";
     public static final String PURPLE_ARM_CN_DIPLOID = GermlineStatus.DIPLOID.toString();
@@ -20,9 +17,7 @@ public final class OrangeConstants
     // RNA
     public static final double HIGH_EXPRESSION_PERCENTILE_CUTOFF = 0.99;
     public static final double LOW_EXPRESSION_PERCENTILE_CUTOFF = 0.01;
-    public static final int MAX_EXPRESSION_GENE_COUNT = 100; // TEMP
 
-    public static final int RNA_MIN_PROMISCOUS_DISTANCE = 1_000_000;
     public static final int ALT_SJ_MIN_FRAGMENTS = 50;
 
     public static boolean isCandidateLikelihood(final double likelihood) { return likelihood <= DRIVER_LIKELIHOOD_LOW_THRESHOLD; }

@@ -146,7 +146,7 @@ public class LinxInterpreter
             {
                 matched = true;
 
-                int fragments = rnaFusion.splitFragments();
+                int fragments = rnaFusion.splitFragments() + rnaFusion.discordantFrags() + rnaFusion.realignedFrags();
                 int averageDepth = min((int)round((rnaFusion.depthUp() + rnaFusion.depthDown()) * 0.5), fragments);
                 totalCoverage += averageDepth;
                 totalFragments += fragments;

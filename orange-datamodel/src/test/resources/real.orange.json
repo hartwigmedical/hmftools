@@ -133,8 +133,8 @@
         "chromosome": "12",
         "arm": "P",
         "type": "GAIN",
-        "copyNumber": 3.0,
-        "relativeCopyNumber": 1.5
+        "copyNumber": 2.0,
+        "relativeCopyNumber": 1.7
       }
     ],
     "somaticGainsDels": [

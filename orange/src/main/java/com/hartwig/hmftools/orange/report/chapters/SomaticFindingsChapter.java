@@ -11,8 +11,6 @@ import com.hartwig.hmftools.orange.report.PlotPathResolver;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.interpretation.BreakendEntry;
 import com.hartwig.hmftools.orange.report.interpretation.BreakendEntryFactory;
-import com.hartwig.hmftools.orange.report.interpretation.VariantEntry;
-import com.hartwig.hmftools.orange.report.interpretation.VariantEntryFactory;
 import com.hartwig.hmftools.orange.report.tables.ChrArmCopyNumberTable;
 import com.hartwig.hmftools.orange.report.tables.DisruptionTable;
 import com.hartwig.hmftools.orange.report.tables.DnaFusionTable;
@@ -98,14 +96,11 @@ public class SomaticFindingsChapter implements ReportChapter
         }
         else
         {
-            List<PurpleDriver> somaticDrivers = mReport.purple().somaticDrivers();
-
-            List<VariantEntry> reportableVariants = VariantEntryFactory.create(mReport.purple().somaticVariants(), somaticDrivers);
-
-            String titleDrivers = driverVariantsTitle + " (" + reportableVariants.size() + ")";
+            String titleDrivers = driverVariantsTitle + " (" + mReport.purple().somaticVariants().size() + ")";
 
             document.add(SomaticVariantTable.build(
-                    titleDrivers, contentWidth(), reportableVariants, mReportResources, mReport.tumorOnlyMode(), mReport.isofox() != null));
+                    titleDrivers, contentWidth(), mReport.purple().somaticVariants(), mReportResources,
+                    mReport.tumorOnlyMode(), mReport.isofox() != null));
         }
     }
 

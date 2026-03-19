@@ -14,8 +14,6 @@ import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.interpretation.BreakendEntry;
 import com.hartwig.hmftools.orange.report.interpretation.BreakendEntryFactory;
-import com.hartwig.hmftools.orange.report.interpretation.VariantEntry;
-import com.hartwig.hmftools.orange.report.interpretation.VariantEntryFactory;
 import com.hartwig.hmftools.orange.report.tables.DisruptionTable;
 import com.hartwig.hmftools.orange.report.tables.GainDeletionTable;
 import com.hartwig.hmftools.orange.report.tables.GermlineVariantTable;
@@ -77,9 +75,8 @@ public class GermlineFindingsChapter implements ReportChapter
         List<PurpleVariant> reportableVariants = mReport.purple().germlineVariants();
         if(drivers != null && reportableVariants != null)
         {
-            List<VariantEntry> reportableEntries = VariantEntryFactory.create(reportableVariants, drivers);
-            String titleDrivers = "Small variants (" + reportableEntries.size() + ")";
-            document.add(GermlineVariantTable.build(titleDrivers, contentWidth(), reportableEntries, mReportResources));
+            String titleDrivers = "Small variants (" + reportableVariants.size() + ")";
+            document.add(GermlineVariantTable.build(titleDrivers, contentWidth(), reportableVariants, mReportResources));
         }
     }
 

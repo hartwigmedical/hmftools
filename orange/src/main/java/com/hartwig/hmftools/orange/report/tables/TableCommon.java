@@ -17,8 +17,6 @@ public final class TableCommon
     public static final String COL_CN = "CN";
     public static final String COL_JCN = "JCN";
     public static final String COL_REL_CN = "Rel CN";
-    public static final String COL_RNA = "RNA";
-    public static final String COL_TPM = "TPM";
     public static final String COL_LOCATION = "Location";
     public static final String COL_RANGE = "Range";
     public static final String COL_TYPE = "Type";
@@ -34,15 +32,34 @@ public final class TableCommon
     public static final String COL_DEPTH_END = "Depth End";
     public static final String COL_FUSION = "Fusion";
 
+    // variants
+    public static final String COL_VARIANT = "Variant";
+    public static final String COL_HGVS = "HGVS";
+    public static final String COL_VCN = "VCN";
+    public static final String COL_MACN = "MACN";
+    public static final String COL_CL = "Clonal";
+    public static final String COL_AF = "AF";
+    public static final String COL_SL = "Somatic";
+    public static final String COL_BIALLELIC = "Biallelic";
+    public static final String COL_HOTSPOT = "Hotspot";
+
     public static final String COL_SUPPORT = "Support"; // for fields of type fragments / depth
     public static final String COL_SUPPORT_START = "Support Start";
     public static final String COL_SUPPORT_END = "Support End";
+
+    // RNA
+    public static final String COL_RNA = "RNA";
+    public static final String COL_RNA_FRAGS = "RNA Frags";
+    public static final String COL_TPM = "TPM";
 
     public static final String COL_JUNC_START = "Junc Start";
     public static final String COL_JUNC_END = "Junc End";
 
     public static final String VALUE_HET = "HET";
     public static final String VALUE_HOM = "HOM";
+
+    public static final String VALUE_YES = "Yes";
+    public static final String VALUE_NO = "No";
 
     // common field formatting
 

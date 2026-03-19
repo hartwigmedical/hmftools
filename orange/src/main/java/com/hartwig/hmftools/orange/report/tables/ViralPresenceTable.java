@@ -1,8 +1,10 @@
 package com.hartwig.hmftools.orange.report.tables;
 
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_DRIVER;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_TYPE;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.cellArray;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.floatArray;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatPercentage;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatSingleDigitDecimal;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.intToFloatArray;
@@ -22,6 +24,14 @@ import org.apache.logging.log4j.util.Strings;
 
 public final class ViralPresenceTable
 {
+    private static final String COL_INTEGRATIONS = "Integrations";
+    private static final String COL_QC = "QC Status";
+    private static final String COL_PERC_COV = "% Covered";
+    private static final String COL_MEAN_COV = "Mean Cov";
+    private static final String COL_CLONAL_COV = "Exp Clonal Cov";
+    private static final String COL_VIRUS = "Virus";
+
+
     public static Table build(
             final String title, float width, final List<VirusInterpreterEntry> viruses, final ReportResources reportResources)
     {
@@ -32,19 +42,19 @@ public final class ViralPresenceTable
 
         Cells cells = new Cells(reportResources);
 
-        List<Integer> widths = Lists.newArrayList();
+        List<Float> widths = Lists.newArrayList();
         List<Cell> cellEntries = Lists.newArrayList();
 
-        addEntry(cells, widths, cellEntries, 3, "Virus");
-        addEntry(cells, widths, cellEntries, 3, "QC Status");
-        addEntry(cells, widths, cellEntries, 1, "Type");
-        addEntry(cells, widths, cellEntries, 1, "Int");
-        addEntry(cells, widths, cellEntries, 2, "% Covered");
-        addEntry(cells, widths, cellEntries, 2, "Mean Cov");
-        addEntry(cells, widths, cellEntries, 2, "Exp Clon Cov");
-        addEntry(cells, widths, cellEntries, 2, COL_DRIVER);
+        addEntry(cells, widths, cellEntries, 2.5, COL_VIRUS);
+        addEntry(cells, widths, cellEntries, 2.5, COL_QC);
+        addEntry(cells, widths, cellEntries, 1, COL_TYPE);
+        addEntry(cells, widths, cellEntries, 2, COL_INTEGRATIONS);
+        addEntry(cells, widths, cellEntries, 1.5, COL_PERC_COV);
+        addEntry(cells, widths, cellEntries, 1.5, COL_MEAN_COV);
+        addEntry(cells, widths, cellEntries, 2, COL_CLONAL_COV);
+        addEntry(cells, widths, cellEntries, 1, COL_DRIVER);
 
-        Table table = Tables.createContent(width, intToFloatArray(widths), cellArray(cellEntries));
+        Table table = Tables.createContent(width, floatArray(widths), cellArray(cellEntries));
 
         for(VirusInterpreterEntry virus : viruses)
         {
