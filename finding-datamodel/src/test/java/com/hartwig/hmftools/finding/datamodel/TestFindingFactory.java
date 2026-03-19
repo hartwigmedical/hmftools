@@ -211,6 +211,7 @@ public class TestFindingFactory
                 .geneExtent(GainDeletion.GeneExtent.FULL_GENE)
                 .tumorMinCopyNumber(0)
                 .tumorMaxCopyNumber(0)
+                .tumorRelativeCopyNumber(0)
                 .tumorMinMinorAlleleCopyNumber(0)
                 .chromosomeArmCopyNumber(0);
     }

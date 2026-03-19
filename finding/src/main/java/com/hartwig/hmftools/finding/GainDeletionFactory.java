@@ -117,6 +117,7 @@ final class GainDeletionFactory
                 .exonRange(interpretExonRange(purpleGainDeletion.exonStart(), purpleGainDeletion.exonEnd()))
                 .tumorMinCopyNumber(purpleGainDeletion.minCopyNumber())
                 .tumorMaxCopyNumber(purpleGainDeletion.maxCopyNumber())
+                .tumorRelativeCopyNumber(purpleGainDeletion.relativeCopyNumber())
                 .tumorMinMinorAlleleCopyNumber(purpleGainDeletion.minMinorAlleleCopies())
                 .chromosomeArmCopyNumber(2) // TODO fix later
                 .germlineMinCopyNumber(germlineAmpDelFields != null ? germlineAmpDelFields.germlineMinCopyNumber() : null)

@@ -18,6 +18,7 @@ public record GainDeletion(
     @Nullable ExonRange exonRange, // null if exon range info not available
     double tumorMinCopyNumber,
     double tumorMaxCopyNumber,
+    double tumorRelativeCopyNumber,
     double tumorMinMinorAlleleCopyNumber,
     double chromosomeArmCopyNumber,
     @Nullable Double germlineMinCopyNumber,
