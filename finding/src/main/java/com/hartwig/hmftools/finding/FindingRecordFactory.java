@@ -32,7 +32,6 @@ import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
 import com.hartwig.hmftools.datamodel.purple.Genes;
 import com.hartwig.hmftools.datamodel.purple.PurpleFit;
 import com.hartwig.hmftools.datamodel.purple.PurpleMicrosatelliteStatus;
-import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleTumorMutationalStatus;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
@@ -105,10 +104,6 @@ public class FindingRecordFactory
         LinxRecord linx = orangeRecord.linx();
         PurpleRecord purple = orangeRecord.purple();
 
-        Set<PurpleQCStatus> purpleQCStatuses = purple.fit().qc().status();
-        boolean hasReliablePurity =
-                !purpleQCStatuses.contains(PurpleQCStatus.FAIL_NO_TUMOR) && !purpleQCStatuses.contains(PurpleQCStatus.WARN_LOW_PURITY);
-
         FindingsStatus findingsStatus = FindingsStatusFactory.toFindingsStatus(purple.fit().qc().status());
 
         boolean hasRefSample = orangeRecord.refSample() != null;
@@ -136,7 +131,7 @@ public class FindingRecordFactory
                 .homologousRecombination(createHomologousRecombination(orangeRecord.chord(), purple, linx, somaticGainDeletions, findingsStatus, experimentType, hasRefSample));
 
         return builder.predictedTumorOrigin(createPredictedTumorOrigin(orangeRecord.cuppa(), orangeRecord.plots(), experimentType))
-                .hlaAlleles(HlaAlleleFactory.createHlaAllelesFindings(orangeRecord, hasReliablePurity))
+                .hlaAlleles(HlaAlleleFactory.createHlaAllelesFindings(orangeRecord))
                 .pharmacoGenotypes(createPharmacoGenotypesFindings(orangeRecord.peach()))
                 .build();
     }
