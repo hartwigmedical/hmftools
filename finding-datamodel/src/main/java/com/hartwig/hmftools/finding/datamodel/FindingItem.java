@@ -10,4 +10,9 @@ public record FindingItem<T>(
         @Nullable T finding
 )
 {
+    @Nullable
+    public T findingIfOK()
+    {
+        return status.isOK() ? finding : null;
+    }
 }
