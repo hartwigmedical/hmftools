@@ -36,10 +36,10 @@ public class HlaAlleleFactory
     {
     }
 
-    public static FindingList<HlaAllele> createHlaAllelesFindings(OrangeRecord orangeRecord, boolean hasReliablePurity, boolean hasContamination)
+    public static FindingList<HlaAllele> createHlaAllelesFindings(OrangeRecord orangeRecord, boolean hasReliablePurity)
     {
         LilacRecord lilac = orangeRecord.lilac();
-        if(lilac != null && !hasContamination)
+        if(lilac != null)
         {
             return FindingListBuilder.<HlaAllele>builder()
                     .status(lilac.qc().equals(PASS) ? FindingsStatus.OK : FindingsStatus.NOT_RELIABLE)
@@ -51,7 +51,7 @@ public class HlaAlleleFactory
         }
         else
         {
-            return FindingUtil.emptyFindingList(FindingsStatus.NOT_AVAILABLE_RESULT_MISSING);
+            throw new IllegalStateException("Missing Lilac record in Orange record");
         }
     }
 
