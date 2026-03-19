@@ -114,6 +114,35 @@ public final class TableCommon
         return format("%d/%d", fragments, depth);
     }
 
+    public static String zeroPrefixed(final String location)
+    {
+        int armStart = location.indexOf("q");
+        if(armStart < 0)
+        {
+            armStart = location.indexOf("p");
+        }
+
+        String chromosome = armStart > 0 ? location.substring(0, armStart) : location;
+
+        try
+        {
+            int chromosomeIndex = Integer.parseInt(chromosome);
+            if(chromosomeIndex < 10)
+            {
+                return "0" + location;
+            }
+            else
+            {
+                return location;
+            }
+        }
+        catch(NumberFormatException exception)
+        {
+            // No need to prefix Y/X chromosomes
+            return location;
+        }
+    }
+
     public static void addEntry(final Cells cells, final List<Integer> widths, final List<Cell> cellEntries, int width, final String column)
     {
         cellEntries.add(cells.createHeader(column));

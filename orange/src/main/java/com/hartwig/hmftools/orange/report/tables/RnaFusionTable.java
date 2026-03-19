@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.cellArray;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatSupportField;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.intToFloatArray;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.zeroPrefixed;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -21,7 +22,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.datamodel.isofox.RnaFusion;
 import com.hartwig.hmftools.orange.report.ReportResources;
-import com.hartwig.hmftools.orange.report.interpretation.Chromosomes;
 import com.hartwig.hmftools.orange.report.util.Cells;
 import com.hartwig.hmftools.orange.report.util.Tables;
 import com.itextpdf.layout.element.Cell;
@@ -78,8 +78,8 @@ public final class RnaFusionTable
     {
         return fusions.stream().sorted((fusion1, fusion2) ->
         {
-            String locationUp1 = Chromosomes.zeroPrefixed(fusion1.chromosomeStart());
-            String locationUp2 = Chromosomes.zeroPrefixed(fusion2.chromosomeStart());
+            String locationUp1 = zeroPrefixed(fusion1.chromosomeStart());
+            String locationUp2 = zeroPrefixed(fusion2.chromosomeStart());
 
             if(locationUp1.equals(locationUp2))
             {

@@ -12,8 +12,6 @@ import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.PurpleGermlineAberration;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.orange.report.ReportResources;
-import com.hartwig.hmftools.orange.report.interpretation.BreakendEntry;
-import com.hartwig.hmftools.orange.report.interpretation.BreakendEntryFactory;
 import com.hartwig.hmftools.orange.report.tables.DisruptionTable;
 import com.hartwig.hmftools.orange.report.tables.GainDeletionTable;
 import com.hartwig.hmftools.orange.report.tables.GermlineVariantTable;
@@ -94,14 +92,12 @@ public class GermlineFindingsChapter implements ReportChapter
 
     private void addGermlineBreakends(final Document document)
     {
-        List<LinxBreakend> reportableGermlineBreakends = mReport.linx().germlineBreakends();
+        List<LinxBreakend> germlineBreakends = mReport.linx().germlineBreakends();
 
-        if(reportableGermlineBreakends != null)
+        if(germlineBreakends != null)
         {
-            List<BreakendEntry> reportableBreakends = BreakendEntryFactory.create(reportableGermlineBreakends);
-
-            String title = "Disruptions (" + reportableBreakends.size() + ")";
-            document.add(DisruptionTable.build(title, contentWidth(), reportableBreakends, mReportResources));
+            String title = "Disruptions (" + germlineBreakends.size() + ")";
+            document.add(DisruptionTable.build(title, contentWidth(), germlineBreakends, mReportResources));
         }
     }
 

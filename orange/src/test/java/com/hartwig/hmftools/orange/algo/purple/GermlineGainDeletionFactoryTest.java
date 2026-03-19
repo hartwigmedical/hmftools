@@ -1,14 +1,21 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
+import static com.hartwig.hmftools.orange.algo.purple.PurpleTestFactory.createArmCopyNumber;
+
 import static org.junit.Assert.assertEquals;
 
+import java.util.Collections;
 import java.util.List;
 
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.purple.ChrArmCopyNumber;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GeneCopyNumberTestFactory;
 import com.hartwig.hmftools.common.purple.GermlineAmpDel;
 import com.hartwig.hmftools.common.purple.GermlineDeletionTestFactory;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
+import com.hartwig.hmftools.common.segmentation.Arm;
+import com.hartwig.hmftools.common.segmentation.ChrArm;
 import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
@@ -26,13 +33,17 @@ public class GermlineGainDeletionFactoryTest
     {
         // Gene runs from 150 to 950
         // Exons are 250-350, 450-550 and 600-900
-        GermlineAmpDel reportablePartialHom1 =
-                GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION, 0D, 400, 700);
-        GermlineAmpDel reportablePartialHom2 =
-                GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION, 0D, 800, 1000);
+        GermlineAmpDel reportablePartialHom1 = GermlineDeletionTestFactory.create(
+                TEST_GENE, true, GermlineStatus.HOM_DELETION, 0D, 400, 700);
+
+        GermlineAmpDel reportablePartialHom2 = GermlineDeletionTestFactory.create(
+                TEST_GENE, true, GermlineStatus.HOM_DELETION, 0D, 800, 1000);
+
         List<GermlineAmpDel> deletions = List.of(reportablePartialHom1, reportablePartialHom2);
 
         GeneCopyNumber partialLoss = GeneCopyNumberTestFactory.createGeneCopyNumber(TEST_GENE, 1D, 4D);
+
+        ChrArmCopyNumber chrArmCopyNumber = createArmCopyNumber(partialLoss.Chromosome, Arm.P);
 
         PurpleDriver purpleDriver = TestPurpleGainDeletionFactory.driverBuilder()
                 .gene(TEST_GENE)
@@ -40,7 +51,7 @@ public class GermlineGainDeletionFactoryTest
                 .build();
 
         List<PurpleGainDeletion> gainDels = GermlineGainDeletionFactory.createGermlineGainDeletions(
-                deletions, List.of(purpleDriver), List.of(partialLoss), null);
+                deletions, List.of(purpleDriver), List.of(partialLoss), List.of(chrArmCopyNumber), null);
         PurpleGainDeletion gainDel = gainDels.get(0);
 
         assertEquals(1, gainDels.size());
@@ -55,8 +66,9 @@ public class GermlineGainDeletionFactoryTest
     public void canTransformReportableHomDeletionToFull()
     {
         // Gene runs from 150 to 950
-        GermlineAmpDel reportableFullHom =
-                GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION, 0D, 100, 1200);
+        GermlineAmpDel reportableFullHom = GermlineDeletionTestFactory.create(
+                TEST_GENE, true, GermlineStatus.HOM_DELETION, 0D, 100, 1200);
+
         GeneCopyNumber fullLoss = GeneCopyNumberTestFactory.createGeneCopyNumber(TEST_GENE, 1D, 1D);
 
         PurpleDriver purpleDriver = TestPurpleGainDeletionFactory.driverBuilder()
@@ -64,8 +76,10 @@ public class GermlineGainDeletionFactoryTest
                 .type(PurpleDriverType.GERMLINE_DELETION)
                 .build();
 
+        ChrArmCopyNumber chrArmCopyNumber = createArmCopyNumber(fullLoss.Chromosome, Arm.P);
+
         List<PurpleGainDeletion> gainDels = GermlineGainDeletionFactory.createGermlineGainDeletions(
-                List.of(reportableFullHom), List.of(purpleDriver), List.of(fullLoss), null);
+                List.of(reportableFullHom), List.of(purpleDriver), List.of(fullLoss), List.of(chrArmCopyNumber), null);
         PurpleGainDeletion gainDel = gainDels.get(0);
 
         assertEquals(1, gainDels.size());
@@ -81,14 +95,18 @@ public class GermlineGainDeletionFactoryTest
     {
         // Gene runs from 150 to 950
         // Exons are 250-350, 450-550 and 600-900
-        GermlineAmpDel reportablePartial1 =
-                GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION, 0.1D, 200, 300);
-        GermlineAmpDel reportablePartial2 =
-                GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION, 0D, 300, 500);
-        GermlineAmpDel reportablePartial3 =
-                GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION, 0D, 500, 800);
-        GermlineAmpDel reportablePartial4 =
-                GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION, 0.2D, 700, 2000);
+        GermlineAmpDel reportablePartial1 = GermlineDeletionTestFactory.create(
+                TEST_GENE, true, GermlineStatus.HOM_DELETION, 0.1D, 200, 300);
+
+        GermlineAmpDel reportablePartial2 = GermlineDeletionTestFactory.create(
+                TEST_GENE, true, GermlineStatus.HOM_DELETION, 0D, 300, 500);
+
+        GermlineAmpDel reportablePartial3 = GermlineDeletionTestFactory.create(
+                TEST_GENE, true, GermlineStatus.HOM_DELETION, 0D, 500, 800);
+
+        GermlineAmpDel reportablePartial4 = GermlineDeletionTestFactory.create(
+                TEST_GENE, true, GermlineStatus.HOM_DELETION, 0.2D, 700, 2000);
+
         List<GermlineAmpDel> deletions = List.of(reportablePartial1, reportablePartial2, reportablePartial3, reportablePartial4);
 
         GeneCopyNumber partialLoss = GeneCopyNumberTestFactory.createGeneCopyNumber(TEST_GENE, 1D, 4D);
@@ -98,8 +116,10 @@ public class GermlineGainDeletionFactoryTest
                 .type(PurpleDriverType.GERMLINE_DELETION)
                 .build();
 
+        ChrArmCopyNumber chrArmCopyNumber = createArmCopyNumber(partialLoss.Chromosome, Arm.P);
+
         List<PurpleGainDeletion> gainDels = GermlineGainDeletionFactory.createGermlineGainDeletions(
-                deletions, List.of(purpleDriver), List.of(partialLoss), null);
+                deletions, List.of(purpleDriver), List.of(partialLoss), List.of(chrArmCopyNumber), null);
         PurpleGainDeletion gainDel = gainDels.get(0);
 
         assertEquals(1, gainDels.size());

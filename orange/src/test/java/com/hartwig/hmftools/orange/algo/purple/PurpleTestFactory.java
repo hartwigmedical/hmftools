@@ -2,6 +2,8 @@ package com.hartwig.hmftools.orange.algo.purple;
 
 import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.driver.DriverCatalogTestFactory;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.purple.ChrArmCopyNumber;
 import com.hartwig.hmftools.common.purple.FittedPurity;
 import com.hartwig.hmftools.common.purple.FittedPurityMethod;
 import com.hartwig.hmftools.common.purple.FittedPurityScore;
@@ -14,6 +16,7 @@ import com.hartwig.hmftools.common.purple.PurpleQC;
 import com.hartwig.hmftools.common.purple.RunMode;
 import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
 import com.hartwig.hmftools.common.purple.MicrosatelliteStatus;
+import com.hartwig.hmftools.common.segmentation.Arm;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.orange.conversion.PurpleConversion;
@@ -90,4 +93,12 @@ public final class PurpleTestFactory
                 .chimerismPercentage(0)
                 .build();
     }
+
+    protected static ChrArmCopyNumber createArmCopyNumber(final String chromosome, final Arm arm)
+    {
+        return new ChrArmCopyNumber(
+                HumanChromosome.fromString(chromosome), arm, 2, 2, 2, 2);
+
+    }
+
 }

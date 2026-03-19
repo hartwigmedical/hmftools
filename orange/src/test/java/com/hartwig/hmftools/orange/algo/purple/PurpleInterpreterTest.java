@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.orange.algo.purple.PurpleTestFactory.createArmCopyNumber;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -14,6 +17,7 @@ import com.hartwig.hmftools.common.purple.GermlineAmpDel;
 import com.hartwig.hmftools.common.purple.GermlineDeletionTestFactory;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.ReportedStatus;
+import com.hartwig.hmftools.common.segmentation.Arm;
 import com.hartwig.hmftools.common.sv.ImmutableStructuralVariantImpl;
 import com.hartwig.hmftools.common.sv.ImmutableStructuralVariantLegImpl;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
@@ -72,7 +76,8 @@ public class PurpleInterpreterTest
     {
         return ImmutablePurpleData.builder()
                 .from(PurpleTestFactory.createMinimalTestPurpleData())
-                .addSomaticGeneCopyNumbers(GeneCopyNumberTestFactory.createGeneCopyNumber("1", TEST_GENE, 0, 0))
+                .addSomaticGeneCopyNumbers(GeneCopyNumberTestFactory.createGeneCopyNumber(CHR_1, TEST_GENE, 0, 0))
+                .addChrArmCopyNumbers(createArmCopyNumber(CHR_1, Arm.P))
                 .germlineAmpDels(allGermlineDeletions.stream().filter(d -> d.Reported == ReportedStatus.REPORTED).collect(Collectors.toList()))
                 .addGermlineDrivers(DriverCatalogTestFactory.builder()
                         .gene(TEST_GENE)

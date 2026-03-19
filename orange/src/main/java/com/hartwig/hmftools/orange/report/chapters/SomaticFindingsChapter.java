@@ -2,15 +2,13 @@ package com.hartwig.hmftools.orange.report.chapters;
 
 import java.util.List;
 
+import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
-import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleQCInterpretation;
 import com.hartwig.hmftools.datamodel.sigs.SignatureAllocation;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 import com.hartwig.hmftools.orange.report.PlotPathResolver;
 import com.hartwig.hmftools.orange.report.ReportResources;
-import com.hartwig.hmftools.orange.report.interpretation.BreakendEntry;
-import com.hartwig.hmftools.orange.report.interpretation.BreakendEntryFactory;
 import com.hartwig.hmftools.orange.report.tables.ChrArmCopyNumberTable;
 import com.hartwig.hmftools.orange.report.tables.DisruptionTable;
 import com.hartwig.hmftools.orange.report.tables.DnaFusionTable;
@@ -188,10 +186,10 @@ public class SomaticFindingsChapter implements ReportChapter
         }
         else
         {
-            List<BreakendEntry> reportableBreakends = BreakendEntryFactory.create(mReport.linx().somaticBreakends());
+            List<LinxBreakend> somaticBreakends = mReport.linx().somaticBreakends();
 
-            String titleDriver = driverGeneDisruptionsTitle + " (" + reportableBreakends.size() + ")";
-            document.add(DisruptionTable.build(titleDriver, contentWidth(), reportableBreakends, mReportResources));
+            String titleDriver = driverGeneDisruptionsTitle + " (" + somaticBreakends.size() + ")";
+            document.add(DisruptionTable.build(titleDriver, contentWidth(), somaticBreakends, mReportResources));
         }
     }
 

@@ -193,6 +193,7 @@
         "minCopyNumber": 0.1,
         "maxCopyNumber": 1.2,
         "relativeCopyNumber": 0.1,
+        "armCopyNumber": 1.0,
         "minMinorAlleleCopies": 0.1,
         "tpm": 0,
         "tpmPercentile": 0,

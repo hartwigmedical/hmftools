@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.cellArray;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatSupportField;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.intToFloatArray;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.zeroPrefixed;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -22,7 +23,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.datamodel.isofox.NovelSpliceJunction;
 import com.hartwig.hmftools.orange.report.ReportResources;
-import com.hartwig.hmftools.orange.report.interpretation.Chromosomes;
 import com.hartwig.hmftools.orange.report.util.Cells;
 import com.hartwig.hmftools.orange.report.util.Tables;
 import com.itextpdf.layout.element.Cell;
@@ -75,8 +75,8 @@ public final class NovelSpliceJunctionTable
     {
         return junctions.stream().sorted((junction1, junction2) ->
         {
-            String locationUp1 = Chromosomes.zeroPrefixed(junction1.chromosome());
-            String locationUp2 = Chromosomes.zeroPrefixed(junction2.chromosome());
+            String locationUp1 = zeroPrefixed(junction1.chromosome());
+            String locationUp2 = zeroPrefixed(junction2.chromosome());
 
             if(locationUp1.equals(locationUp2))
             {

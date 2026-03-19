@@ -53,6 +53,7 @@ public interface PurpleGainDeletion
     double minCopyNumber();
     double maxCopyNumber();
     double relativeCopyNumber();
+    double armCopyNumber();
 
     double minMinorAlleleCopies();
 

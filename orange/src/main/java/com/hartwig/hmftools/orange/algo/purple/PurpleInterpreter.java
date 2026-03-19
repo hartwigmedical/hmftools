@@ -39,6 +39,7 @@ import com.hartwig.hmftools.common.purple.ChrArmCopyNumber;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.rna.GeneExpression;
+import com.hartwig.hmftools.common.segmentation.Arm;
 import com.hartwig.hmftools.common.variant.SmallVariant;
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleCharacteristics;
@@ -76,17 +77,17 @@ public class PurpleInterpreter
         List<PurpleDriver> germlineDrivers = ConversionUtil.mapToNullableList(purpleData.germlineDrivers(), PurpleConversion::convert);
 
         List<PurpleGainDeletion> driverSomaticGainsDels = somaticGainsDelsFromDrivers(
-                purpleData.somaticDrivers(), purpleData.somaticGeneCopyNumbers(), linxData, isofoxData);
+                purpleData.somaticDrivers(), purpleData.somaticGeneCopyNumbers(), purpleData.chrArmCopyNumbers(), linxData, isofoxData);
+
+        List<PurpleChrArmCopyNumber> armCopyNumberAbberations = buildArmAbberations(purpleData);
 
         List<PurpleGainDeletion> driverGermlineAmpDels = null;
 
         if(purpleData.germlineAmpDels() != null)
         {
             driverGermlineAmpDels = GermlineGainDeletionFactory.createGermlineGainDeletions(
-                    purpleData.germlineAmpDels(), Objects.requireNonNull(germlineDrivers), purpleData.somaticGeneCopyNumbers(), isofoxData);
+                    purpleData, Objects.requireNonNull(germlineDrivers), isofoxData);
         }
-
-        List<PurpleChrArmCopyNumber> armCopyNumberAbberations = buildArmAbberations(purpleData);
 
         return ImmutablePurpleRecord.builder()
                 .fit(createFit(purpleData))
@@ -125,8 +126,8 @@ public class PurpleInterpreter
             DriverType.AMP, DriverType.PARTIAL_AMP, DriverType.DEL, DriverType.HET_DEL, DriverType.LOH);
 
     private static List<PurpleGainDeletion> somaticGainsDelsFromDrivers(
-            final List<DriverCatalog> drivers, final List<GeneCopyNumber> geneCopyNumbers, final LinxData linxData,
-            @Nullable final IsofoxData isofoxData)
+            final List<DriverCatalog> drivers, final List<GeneCopyNumber> geneCopyNumbers, final List<ChrArmCopyNumber> chrArmCopyNumbers,
+            final LinxData linxData, @Nullable final IsofoxData isofoxData)
     {
         List<PurpleGainDeletion> gainDeletions = Lists.newArrayList();
 
@@ -138,19 +139,32 @@ public class PurpleInterpreter
                         .filter(x -> x.GeneName.equals(driver.gene()) && driver.transcript().equals(x.TransName))
                         .findFirst().orElse(null);
 
+                if(geneCopyNumber == null)
+                    continue;
+
+                ChrArmCopyNumber chrArmCopyNumber = findChrArmCopyNumber(chrArmCopyNumbers, geneCopyNumber);
+
                 GeneExpression geneExpression = isofoxData != null ? isofoxData.geneExpressions().stream()
                         .filter(x -> x.geneName().equals(driver.gene())).findFirst().orElse(null) : null;
 
-                gainDeletions.add(toGainDel(driver, geneCopyNumber, linxData, geneExpression));
+                gainDeletions.add(toGainDel(driver, geneCopyNumber, chrArmCopyNumber, linxData, geneExpression));
             }
         }
 
         return gainDeletions;
     }
 
+    protected static ChrArmCopyNumber findChrArmCopyNumber(final List<ChrArmCopyNumber> armCopyNumbers, final GeneCopyNumber geneCopyNumber)
+    {
+        Arm arm = geneCopyNumber.ChromosomeBand.startsWith(Arm.P.toString().toLowerCase()) ? Arm.P : Arm.Q;
+
+        return armCopyNumbers.stream()
+                .filter(x -> x.chromosome().matches(geneCopyNumber.chromosome()) && x.arm() == arm).findFirst().orElse(null);
+    }
+
     private static PurpleGainDeletion toGainDel(
-            final DriverCatalog driver, final GeneCopyNumber geneCopyNumber, final LinxData linxData,
-            @Nullable final GeneExpression geneExpression)
+            final DriverCatalog driver, final GeneCopyNumber geneCopyNumber, final ChrArmCopyNumber chrArmCopyNumber,
+            final LinxData linxData, @Nullable final GeneExpression geneExpression)
     {
         Double tpm = null;
         Double tpmPercentile = null;
@@ -178,6 +192,7 @@ public class PurpleInterpreter
                 .chromosomeBand(driver.chromosomeBand())
                 .minCopyNumber(Math.max(0, driver.minCopyNumber()))
                 .maxCopyNumber(Math.max(0, driver.maxCopyNumber()))
+                .armCopyNumber(chrArmCopyNumber.meanCopyNumber())
                 .geneRange(geneRange)
                 .exonStart(null)
                 .exonEnd(null)

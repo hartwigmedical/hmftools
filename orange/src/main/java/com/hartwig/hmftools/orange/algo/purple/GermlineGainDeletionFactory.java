@@ -4,10 +4,15 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.orange.algo.purple.PurpleInterpreter.findChrArmCopyNumber;
+
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.purple.ChrArmCopyNumber;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GermlineAmpDel;
 import com.hartwig.hmftools.common.rna.GeneExpression;
@@ -25,10 +30,22 @@ import org.jetbrains.annotations.Nullable;
 public final class GermlineGainDeletionFactory
 {
     public static List<PurpleGainDeletion> createGermlineGainDeletions(
-            final List<GermlineAmpDel> germlineAmpDels, final List<PurpleDriver> germlineDrivers,
-            final List<GeneCopyNumber> geneCopyNumbers, @Nullable final IsofoxData isofoxData)
+            final PurpleData purpleData, final List<PurpleDriver> germlineDrivers, @Nullable final IsofoxData isofoxData)
+    {
+        return createGermlineGainDeletions(
+                purpleData.germlineAmpDels(), germlineDrivers, purpleData.somaticGeneCopyNumbers(), purpleData.chrArmCopyNumbers(),
+                isofoxData);
+    }
+
+    @VisibleForTesting
+    public static List<PurpleGainDeletion> createGermlineGainDeletions(
+            final List<GermlineAmpDel> germlineAmpDels, final List<PurpleDriver> germlineDrivers, final List<GeneCopyNumber> geneCopyNumbers,
+            final List<ChrArmCopyNumber> chrArmCopyNumbers, @Nullable final IsofoxData isofoxData)
     {
         List<PurpleGainDeletion> gainDeletions = Lists.newArrayList();
+
+        if(germlineDrivers == null || germlineAmpDels == null)
+            return Collections.emptyList();
 
         for(PurpleDriver driver : germlineDrivers)
         {
@@ -47,10 +64,12 @@ public final class GermlineGainDeletionFactory
             if(matchedGermlineAmpDels.isEmpty() || geneCopyNumber == null)
                 continue;
 
+            ChrArmCopyNumber chrArmCopyNumber = findChrArmCopyNumber(chrArmCopyNumbers, geneCopyNumber);
+
             GeneExpression geneExpression = isofoxData != null ? isofoxData.geneExpressions().stream()
                     .filter(x -> x.geneName().equals(driver.gene())).findFirst().orElse(null) : null;
 
-            gainDeletions.add(toGainDel(driver, matchedGermlineAmpDels, geneCopyNumber, geneExpression));
+            gainDeletions.add(toGainDel(driver, matchedGermlineAmpDels, geneCopyNumber, chrArmCopyNumber, geneExpression));
         }
 
         return gainDeletions;
@@ -58,7 +77,7 @@ public final class GermlineGainDeletionFactory
 
     private static PurpleGainDeletion toGainDel(
             final PurpleDriver driver, final List<GermlineAmpDel> germlineAmpDels, final GeneCopyNumber geneCopyNumber,
-            @Nullable final GeneExpression geneExpression)
+            final ChrArmCopyNumber chrArmCopyNumber, @Nullable final GeneExpression geneExpression)
     {
         GermlineAmpDel firstGermlineAmpDel = germlineAmpDels.get(0);
 
@@ -106,6 +125,7 @@ public final class GermlineGainDeletionFactory
                 .minCopyNumber(minCopies)
                 .maxCopyNumber(maxCopies)
                 .relativeCopyNumber(geneCopyNumber.RelativeMinCopyNumber)
+                .armCopyNumber(chrArmCopyNumber.meanCopyNumber())
                 .geneRange(geneRange)
                 .exonStart(firstGermlineAmpDel.ExonStart)
                 .exonEnd(firstGermlineAmpDel.ExonEnd)

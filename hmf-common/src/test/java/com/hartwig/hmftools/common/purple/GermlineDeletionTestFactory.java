@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.purple;
 
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
@@ -30,7 +32,7 @@ public final class GermlineDeletionTestFactory
     public static GermlineAmpDel create(
             final String geneName, boolean reported, final GermlineStatus tumorStatus, double tumorCopyNumber, int regionStart, int regionEnd)
     {
-        return create(geneName, reported, tumorStatus, tumorCopyNumber, regionStart, regionEnd, Strings.EMPTY, Strings.EMPTY);
+        return create(geneName, reported, tumorStatus, tumorCopyNumber, regionStart, regionEnd, CHR_1, "p36.13");
     }
 
     public static GermlineAmpDel create(

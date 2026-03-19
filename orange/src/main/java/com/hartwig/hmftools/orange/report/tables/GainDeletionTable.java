@@ -1,5 +1,11 @@
 package com.hartwig.hmftools.orange.report.tables;
 
+import static java.lang.String.format;
+
+import static com.hartwig.hmftools.datamodel.purple.PurpleDriverType.GERMLINE_AMP;
+import static com.hartwig.hmftools.datamodel.purple.PurpleDriverType.GERMLINE_DELETION;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.VALUE_HET;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.VALUE_HOM;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatFoldChangeField;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatPercentileField;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatSingleDigitDecimal;
@@ -14,6 +20,7 @@ import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_TYPE;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.cellArray;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.intToFloatArray;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.zeroPrefixed;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -21,8 +28,8 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
+import com.hartwig.hmftools.datamodel.purple.PurpleGermlineStatus;
 import com.hartwig.hmftools.orange.report.ReportResources;
-import com.hartwig.hmftools.orange.report.interpretation.Chromosomes;
 import com.hartwig.hmftools.orange.report.util.Cells;
 import com.hartwig.hmftools.orange.report.util.Tables;
 import com.itextpdf.layout.element.Cell;
@@ -32,6 +39,10 @@ import org.apache.logging.log4j.util.Strings;
 
 public final class GainDeletionTable
 {
+    private static String COL_MIN_CN = "Min CN";
+    private static String COL_MAX_CN = "Max CN";
+    private static String COL_ARM_CN = "Arm CN";
+
     public static Table build(
             final String title, float width, final List<PurpleGainDeletion> gainsDels, final ReportResources reportResources,
             boolean hasRna)
@@ -50,9 +61,10 @@ public final class GainDeletionTable
         addEntry(cells, widths, cellEntries, 1, COL_GENE);
         addEntry(cells, widths, cellEntries, 1, COL_TYPE);
         addEntry(cells, widths, cellEntries, 1, COL_RANGE); // if known
-        addEntry(cells, widths, cellEntries, 1, "Min CN");
-        addEntry(cells, widths, cellEntries, 1, "Max CN");
+        addEntry(cells, widths, cellEntries, 1, COL_MIN_CN);
+        addEntry(cells, widths, cellEntries, 1, COL_MAX_CN);
         addEntry(cells, widths, cellEntries, 1, COL_REL_CN);
+        addEntry(cells, widths, cellEntries, 1, COL_ARM_CN);
 
         if(hasRna)
         {
@@ -70,12 +82,13 @@ public final class GainDeletionTable
             List<Cell> rowCells = Lists.newArrayList();
 
             rowCells.add(cells.createContent(gainDel.chromosome() + gainDel.chromosomeBand()));
-            rowCells.add(cells.createContent(displayGene(gainDel)));
-            rowCells.add(cells.createContent(gainDel.driver().type().toString()));
-            rowCells.add(cells.createContent(gainDel.geneRange()));
+            rowCells.add(cells.createContent(geneDisplay(gainDel)));
+            rowCells.add(cells.createContent(typeDisplay(gainDel)));
+            rowCells.add(cells.createContent(rangeDisplay(gainDel)));
             rowCells.add(cells.createContent(formatSingleDigitDecimal(gainDel.minCopyNumber())));
             rowCells.add(cells.createContent(formatSingleDigitDecimal(gainDel.maxCopyNumber())));
             rowCells.add(cells.createContent(formatSingleDigitDecimal(gainDel.relativeCopyNumber())));
+            rowCells.add(cells.createContent(formatSingleDigitDecimal(gainDel.armCopyNumber())));
 
             if(hasRna)
             {
@@ -109,8 +122,8 @@ public final class GainDeletionTable
             if(likelihoodCompare != 0)
                 return likelihoodCompare;
 
-            String location1 = Chromosomes.zeroPrefixed(gainDel1.chromosome() + gainDel1.chromosomeBand());
-            String location2 = Chromosomes.zeroPrefixed(gainDel2.chromosome() + gainDel2.chromosomeBand());
+            String location1 = zeroPrefixed(gainDel1.chromosome() + gainDel1.chromosomeBand());
+            String location2 = zeroPrefixed(gainDel2.chromosome() + gainDel2.chromosomeBand());
 
             if(location1.equals(location2))
             {
@@ -123,7 +136,29 @@ public final class GainDeletionTable
         }).collect(Collectors.toList());
     }
 
-    private static String displayGene(final PurpleGainDeletion gainDel)
+    private static String rangeDisplay(final PurpleGainDeletion gainDel)
+    {
+        if(gainDel.exonStart() == null && gainDel.exonEnd() == null)
+            return gainDel.geneRange();
+
+        return format("Exon %d - Exon %d", gainDel.exonStart(), gainDel.exonEnd());
+    }
+
+    private static String typeDisplay(final PurpleGainDeletion gainDel)
+    {
+        if(gainDel.driver().type() == GERMLINE_AMP)
+        {
+            return "AMP";
+        }
+        else if(gainDel.driver().type() == GERMLINE_DELETION)
+        {
+            return gainDel.germlineAmpDelFields().germlineStatus() == PurpleGermlineStatus.HOM_DELETION ? VALUE_HOM : VALUE_HET;
+        }
+
+        return gainDel.driver().type().toString();
+    }
+
+    private static String geneDisplay(final PurpleGainDeletion gainDel)
     {
         String addon = Strings.EMPTY;
         if(!gainDel.isCanonical())
