@@ -18,7 +18,6 @@ import com.hartwig.hmftools.finding.datamodel.DriverFindingListBuilder;
 import com.hartwig.hmftools.finding.datamodel.DriverInterpretation;
 import com.hartwig.hmftools.finding.datamodel.DriverSource;
 import com.hartwig.hmftools.finding.datamodel.FindingsStatus;
-import com.hartwig.hmftools.finding.datamodel.ResultStatus;
 import com.hartwig.hmftools.finding.datamodel.ReportedStatus;
 import com.hartwig.hmftools.finding.datamodel.SmallVariant;
 import com.hartwig.hmftools.finding.datamodel.SmallVariantAllelicDepthBuilder;
@@ -51,7 +50,7 @@ final class SmallVariantFactory
     {
         if(!hasGermlineSample)
         {
-            return FindingUtil.emptyDriverFindingList(ResultStatus.NOT_AVAILABLE_REF_REQUIRED);
+            return FindingUtil.refRequired();
         }
 
         List<PurpleVariant> germlineVariants = Objects.requireNonNull(purpleRecord.germlineVariants());

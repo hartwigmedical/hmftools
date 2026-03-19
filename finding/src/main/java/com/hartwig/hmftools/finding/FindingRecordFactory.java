@@ -2,12 +2,15 @@ package com.hartwig.hmftools.finding;
 
 import static com.hartwig.hmftools.finding.DisruptionFactory.createGermlineDisruptions;
 import static com.hartwig.hmftools.finding.DisruptionFactory.createSomaticDisruptions;
+import static com.hartwig.hmftools.finding.datamodel.ResultIssue.REF_REQUIRED;
+import static com.hartwig.hmftools.finding.datamodel.ResultIssue.WGS_REQUIRED;
 
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -48,7 +51,6 @@ import com.hartwig.hmftools.finding.datamodel.FindingListBuilder;
 import com.hartwig.hmftools.finding.datamodel.FindingRecord;
 import com.hartwig.hmftools.finding.datamodel.FindingRecordBuilder;
 import com.hartwig.hmftools.finding.datamodel.FindingsStatus;
-import com.hartwig.hmftools.finding.datamodel.ResultStatus;
 import com.hartwig.hmftools.finding.datamodel.Fusion;
 import com.hartwig.hmftools.finding.datamodel.FusionBuilder;
 import com.hartwig.hmftools.finding.datamodel.GainDeletion;
@@ -67,6 +69,8 @@ import com.hartwig.hmftools.finding.datamodel.PurityPloidyFitBuilder;
 import com.hartwig.hmftools.finding.datamodel.Qc;
 import com.hartwig.hmftools.finding.datamodel.QcBuilder;
 import com.hartwig.hmftools.finding.datamodel.RefGenomeVersion;
+import com.hartwig.hmftools.finding.datamodel.ResultIssue;
+import com.hartwig.hmftools.finding.datamodel.ResultStatus;
 import com.hartwig.hmftools.finding.datamodel.SequencingScope;
 import com.hartwig.hmftools.finding.datamodel.SmallVariant;
 import com.hartwig.hmftools.finding.datamodel.TumorMutationalBurden;
@@ -282,7 +286,7 @@ public class FindingRecordFactory
         {
             if(experimentType == ExperimentType.TARGETED)
             {
-                return FindingUtil.nullFindingItem(ResultStatus.NOT_AVAILABLE_WGS_REQUIRED);
+                return FindingUtil.notAvailableFindingItem(Set.of(WGS_REQUIRED));
             }
             else
             {
@@ -401,13 +405,18 @@ public class FindingRecordFactory
         }
         else
         {
+            Set<ResultIssue> errors = new HashSet<>();
             if(experimentType == ExperimentType.TARGETED)
             {
-                return FindingUtil.nullFindingItem(ResultStatus.NOT_AVAILABLE_WGS_REQUIRED);
+                errors.add(WGS_REQUIRED);
             }
-            else if(!hasRefSample)
+            if(!hasRefSample)
             {
-                return FindingUtil.nullFindingItem(ResultStatus.NOT_AVAILABLE_REF_REQUIRED);
+                errors.add(REF_REQUIRED);
+            }
+            if(!errors.isEmpty())
+            {
+                return FindingUtil.notAvailableFindingItem(errors);
             }
             else
             {
@@ -531,7 +540,7 @@ public class FindingRecordFactory
         {
             if(experimentType == ExperimentType.TARGETED)
             {
-                return FindingUtil.emptyDriverFindingList(ResultStatus.NOT_AVAILABLE_WGS_REQUIRED);
+                return FindingUtil.notAvailableDriverFindingList(Set.of(WGS_REQUIRED));
             }
             else
             {

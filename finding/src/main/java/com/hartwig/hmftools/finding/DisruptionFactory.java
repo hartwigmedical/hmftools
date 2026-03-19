@@ -22,8 +22,8 @@ import com.hartwig.hmftools.finding.datamodel.DriverFindingList;
 import com.hartwig.hmftools.finding.datamodel.DriverFindingListBuilder;
 import com.hartwig.hmftools.finding.datamodel.DriverInterpretation;
 import com.hartwig.hmftools.finding.datamodel.DriverSource;
-import com.hartwig.hmftools.finding.datamodel.ResultStatus;
 import com.hartwig.hmftools.finding.datamodel.ReportedStatus;
+import com.hartwig.hmftools.finding.datamodel.ResultStatus;
 
 import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;
@@ -48,14 +48,14 @@ final class DisruptionFactory
     {
         if(!hasRefSample)
         {
-            return FindingUtil.notAvailableDriverFindingList();
+            return FindingUtil.refRequired();
         }
 
         List<LinxBreakend> breakends = Objects.requireNonNull(linx.germlineBreakends());
         List<LinxSvAnnotation> structuralVariants = Objects.requireNonNull(linx.germlineStructuralVariants());
 
         return DriverFindingListBuilder.<Disruption>builder()
-                .status(FindingsStatus.OK)
+                .status(FindingUtil.findingsStatus(ResultStatus.OK))
                 .findings(createDisruptions(DriverSource.GERMLINE, breakends, structuralVariants))
                 .build();
     }
