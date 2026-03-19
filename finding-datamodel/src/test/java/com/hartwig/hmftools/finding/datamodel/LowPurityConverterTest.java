@@ -5,7 +5,9 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 
 import com.hartwig.hmftools.finding.util.LowPurityConverter;
 
@@ -16,9 +18,18 @@ public class LowPurityConverterTest
     @Test
     public void testConvert()
     {
+        // TODO: Create this from actual orange record to make sure it's a representative finding record
         FindingRecord original = TestFindingRecordFactory.createMinimalTestFindingRecordBuilder()
                 .qc(TestFindingFactory.qcBuilder()
                         .status(Set.of(Qc.QCStatus.PASS, Qc.QCStatus.WARN_LOW_PURITY))
+                        .build())
+                .hlaAlleles(FindingListBuilder.<HlaAllele>builder()
+                        .status(FindingsStatusBuilder.builder()
+                                .status(ResultStatus.OK)
+                                .warnings(new TreeSet<>(Set.of(ResultIssue.LOW_PURITY)))
+                                .errors(new TreeSet<>())
+                                .build())
+                        .findings(List.of(TestFindingFactory.hlaAlleleBuilder().build()))
                         .build())
                 .build();
         FindingRecord converted = LowPurityConverter.convert(original);
@@ -26,6 +37,7 @@ public class LowPurityConverterTest
         assertFindingList(converted.somaticDisruptions());
         assertFindingList(converted.somaticGainDeletions());
         assertFindingList(converted.viruses());
+        assertHLA(converted.hlaAlleles());
 
         assertFindingItem(converted.homologousRecombination());
         assertFindingItem(converted.microsatelliteStability());
@@ -49,5 +61,18 @@ public class LowPurityConverterTest
         assertEquals(ResultStatus.NOT_RELIABLE, findingsStatus.status());
         assertTrue(findingsStatus.errors().contains(ResultIssue.LOW_PURITY));
         assertFalse(findingsStatus.warnings().contains(ResultIssue.LOW_PURITY));
+    }
+
+    private void assertHLA(FindingList<HlaAllele> findingList) {
+        FindingsStatus findingsStatus = findingList.status();
+        assertEquals(ResultStatus.OK, findingsStatus.status());
+        assertFalse(findingsStatus.errors().contains(ResultIssue.LOW_PURITY));
+        assertTrue(findingsStatus.warnings().contains(ResultIssue.LOW_PURITY));
+        List<HlaAllele> hlaAlleles = findingList.findings();
+        assertFalse(hlaAlleles.isEmpty());
+        for(HlaAllele hlaAllele : hlaAlleles)
+        {
+            assertNull(hlaAllele.tumorCopyNumber());
+        }
     }
 }

@@ -131,7 +131,7 @@ public class FindingRecordFactory
                 .homologousRecombination(createHomologousRecombination(orangeRecord.chord(), purple, linx, somaticGainDeletions, findingsStatus, experimentType, hasRefSample));
 
         return builder.predictedTumorOrigin(createPredictedTumorOrigin(orangeRecord.cuppa(), orangeRecord.plots(), experimentType))
-                .hlaAlleles(HlaAlleleFactory.createHlaAllelesFindings(orangeRecord))
+                .hlaAlleles(HlaAlleleFactory.createHlaAllelesFindings(orangeRecord, findingsStatus))
                 .pharmacoGenotypes(createPharmacoGenotypesFindings(orangeRecord.peach()))
                 .build();
     }

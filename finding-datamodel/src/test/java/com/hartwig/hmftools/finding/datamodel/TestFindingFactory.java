@@ -261,6 +261,7 @@ public class TestFindingFactory
                 .gene("")
                 .geneClass("")
                 .germlineCopyNumber(0)
+                .allele("")
                 .alleleGroup("")
                 .hlaProtein("")
                 .tumorCopyNumber(0D)
