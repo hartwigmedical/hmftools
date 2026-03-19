@@ -25,7 +25,7 @@ import com.hartwig.hmftools.finding.datamodel.DriverFindingList;
 import com.hartwig.hmftools.finding.datamodel.DriverFindingListBuilder;
 import com.hartwig.hmftools.finding.datamodel.DriverInterpretation;
 import com.hartwig.hmftools.finding.datamodel.DriverSource;
-import com.hartwig.hmftools.finding.datamodel.FindingsStatus;
+import com.hartwig.hmftools.finding.datamodel.ResultStatus;
 import com.hartwig.hmftools.finding.datamodel.ReportedStatus;
 
 import org.apache.commons.lang3.Validate;
@@ -72,7 +72,7 @@ final class DisruptionFactory
     {
         if(!hasRefSample)
         {
-            return FindingUtil.emptyDriverFindingList(FindingsStatus.NOT_AVAILABLE_REF_REQUIRED);
+            return FindingUtil.emptyDriverFindingList(ResultStatus.NOT_AVAILABLE_REF_REQUIRED);
         }
 
         List<LinxBreakend> breakends = Objects.requireNonNull(linx.reportableGermlineBreakends());
@@ -86,7 +86,7 @@ final class DisruptionFactory
                         : Disruption.Type.DISRUPTION;
 
         return DriverFindingListBuilder.<Disruption>builder()
-                .status(FindingsStatus.OK)
+                .status(FindingUtil.findingsStatus(ResultStatus.OK))
                 .findings(createDisruptions(DriverSource.GERMLINE, breakends, structuralVariants, findDisruptionType))
                 .build();
     }
@@ -112,7 +112,7 @@ final class DisruptionFactory
                 geneDriverTypeMap.getOrDefault(gene, Disruption.Type.DISRUPTION);
 
         return DriverFindingListBuilder.<Disruption>builder()
-                .status(FindingsStatus.OK)
+                .status(FindingUtil.findingsStatus(ResultStatus.OK))
                 .findings(createDisruptions(DriverSource.SOMATIC, breakends, structuralVariants, findDisruptionType))
                 .build();
     }

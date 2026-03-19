@@ -2,6 +2,7 @@ package com.hartwig.hmftools.finding.datamodel;
 
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -10,22 +11,22 @@ public class TestFindingFactory
 {
 
     @NotNull
-    public static <T extends Finding> FindingList<T> buildFindingsList(@NotNull FindingsStatus findingsStatus, @NotNull List<T> findings)
+    public static <T extends Finding> FindingList<T> buildFindingsList(@NotNull ResultStatus resultStatus, @NotNull List<T> findings)
     {
-        return FindingListBuilder.<T>builder().status(findingsStatus).findings(findings).build();
+        return FindingListBuilder.<T>builder().status(findingsStatus(resultStatus)).findings(findings).build();
     }
 
     @NotNull
-    public static <T extends Driver> DriverFindingList<T> buildDriverFindingsList(@NotNull FindingsStatus findingsStatus,
+    public static <T extends Driver> DriverFindingList<T> buildDriverFindingsList(@NotNull ResultStatus resultStatus,
             @NotNull List<T> findings)
     {
-        return DriverFindingListBuilder.<T>builder().status(findingsStatus).findings(findings).build();
+        return DriverFindingListBuilder.<T>builder().status(findingsStatus(resultStatus)).findings(findings).build();
     }
 
     @NotNull
-    public static <T> FindingItem<T> buildFindingItem(@NotNull FindingsStatus findingsStatus, @NotNull T finding)
+    public static <T> FindingItem<T> buildFindingItem(@NotNull ResultStatus resultStatus, @NotNull T finding)
     {
-        return FindingItemBuilder.<T>builder().status(findingsStatus).finding(finding).build();
+        return FindingItemBuilder.<T>builder().status(findingsStatus(resultStatus)).finding(finding).build();
     }
 
     @NotNull
@@ -240,7 +241,7 @@ public class TestFindingFactory
 
     public static <T extends Driver> DriverFindingListBuilder<T> driverFindingsBuilder(List<T> findings)
     {
-        return DriverFindingListBuilder.<T>builder().status(FindingsStatus.OK).findings(findings);
+        return DriverFindingListBuilder.<T>builder().status(findingsStatus(ResultStatus.OK)).findings(findings);
     }
 
     @NotNull
@@ -286,6 +287,15 @@ public class TestFindingFactory
         return DriverFieldsBuilder.builder()
                 .findingKey("")
                 .driverSource(DriverSource.SOMATIC);
+    }
+
+    static FindingsStatus findingsStatus(ResultStatus status)
+    {
+        return FindingsStatusBuilder.builder()
+                .status(status)
+                .errors(new TreeSet<>())
+                .warnings(new TreeSet<>())
+                .build();
     }
 
     public static ThresholdValue thresholdValue(double value) {

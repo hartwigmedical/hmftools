@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.finding.datamodel;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -34,13 +35,19 @@ public class LowPurityConverterTest
 
     private void assertFindingItem(FindingItem<?> item)
     {
-        assertEquals(FindingsStatus.NOT_RELIABLE, item.status());
+        assertFindingStatus(item.status());
         assertNull(item.finding());
     }
 
-    private void assertFindingList(DriverFindingList<?> item)
+    private void assertFindingList(DriverFindingList<?> list)
     {
-        assertEquals(FindingsStatus.NOT_RELIABLE, item.status());
-        assertTrue(item.findings().isEmpty());
+        assertFindingStatus(list.status());
+        assertTrue(list.findings().isEmpty());
+    }
+
+    private void assertFindingStatus(FindingsStatus findingsStatus) {
+        assertEquals(ResultStatus.NOT_RELIABLE, findingsStatus.status());
+        assertTrue(findingsStatus.errors().contains(ResultIssue.LOW_PURITY));
+        assertFalse(findingsStatus.warnings().contains(ResultIssue.LOW_PURITY));
     }
 }

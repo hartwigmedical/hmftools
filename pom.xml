@@ -83,7 +83,7 @@
         <linx.version>2.1</linx.version>
         <neo.version>1.2</neo.version>
         <orange.version>3.9.0</orange.version>
-        <orange-datamodel.version>3.0.0-findings</orange-datamodel.version>
+        <orange-datamodel.version>local-SNAPSHOT</orange-datamodel.version>
         <paddle.version>1.1</paddle.version>
         <patient-db.version>6.0</patient-db.version>
         <pave.version>1.8</pave.version>
@@ -388,6 +388,13 @@
                 <version>${hmf-common.version}</version>
                 <scope>test</scope>
                 <type>test-jar</type>
+            </dependency>
+            <dependency>
+                <groupId>com.hartwig</groupId>
+                <artifactId>orange-datamodel</artifactId>
+                <version>${orange-datamodel.version}</version>
+                <type>test-jar</type>
+                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>org.mockito</groupId>

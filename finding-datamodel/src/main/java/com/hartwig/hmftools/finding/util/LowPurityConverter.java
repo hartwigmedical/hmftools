@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.finding.util;
 
 import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import com.hartwig.hmftools.finding.datamodel.Driver;
 import com.hartwig.hmftools.finding.datamodel.DriverFindingList;
@@ -10,6 +12,9 @@ import com.hartwig.hmftools.finding.datamodel.FindingItemBuilder;
 import com.hartwig.hmftools.finding.datamodel.FindingRecord;
 import com.hartwig.hmftools.finding.datamodel.FindingRecordBuilder;
 import com.hartwig.hmftools.finding.datamodel.FindingsStatus;
+import com.hartwig.hmftools.finding.datamodel.FindingsStatusBuilder;
+import com.hartwig.hmftools.finding.datamodel.ResultIssue;
+import com.hartwig.hmftools.finding.datamodel.ResultStatus;
 
 import jakarta.validation.constraints.NotNull;
 
@@ -35,7 +40,7 @@ public class LowPurityConverter
         if(shouldConvert(driverFindingList.status(), isLowPurity))
         {
             return DriverFindingListBuilder.<T>builder()
-                    .status(FindingsStatus.NOT_RELIABLE)
+                    .status(convert(driverFindingList.status()))
                     .findings(List.of())
                     .build();
         }
@@ -51,7 +56,7 @@ public class LowPurityConverter
         if(shouldConvert(findingItem.status(), isLowPurity))
         {
             return FindingItemBuilder.<T>builder()
-                    .status(FindingsStatus.NOT_RELIABLE)
+                    .status(convert(findingItem.status()))
                     .build();
         }
         else
@@ -60,8 +65,31 @@ public class LowPurityConverter
         }
     }
 
+    private static FindingsStatus convert(FindingsStatus findingsStatus)
+    {
+        return FindingsStatusBuilder.builder()
+                .status(ResultStatus.NOT_RELIABLE)
+                .errors(addLowPurity(findingsStatus.errors()))
+                .warnings(removeLowPurity(findingsStatus.warnings()))
+                .build();
+    }
+
     private static boolean shouldConvert(FindingsStatus findingsStatus, boolean isLowPurity)
     {
-        return findingsStatus == FindingsStatus.OK && isLowPurity;
+        return findingsStatus.status() == ResultStatus.OK && isLowPurity;
+    }
+
+    private static SortedSet<ResultIssue> addLowPurity(SortedSet<ResultIssue> sortedSet)
+    {
+        SortedSet<ResultIssue> result = new TreeSet<>(sortedSet);
+        result.add(ResultIssue.LOW_PURITY);
+        return result;
+    }
+
+    private static SortedSet<ResultIssue> removeLowPurity(SortedSet<ResultIssue> sortedSet)
+    {
+        SortedSet<ResultIssue> result = new TreeSet<>(sortedSet);
+        result.remove(ResultIssue.LOW_PURITY);
+        return result;
     }
 }

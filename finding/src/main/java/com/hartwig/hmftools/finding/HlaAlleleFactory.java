@@ -14,7 +14,7 @@ import com.hartwig.hmftools.datamodel.hla.LilacRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.finding.datamodel.FindingList;
 import com.hartwig.hmftools.finding.datamodel.FindingListBuilder;
-import com.hartwig.hmftools.finding.datamodel.FindingsStatus;
+import com.hartwig.hmftools.finding.datamodel.ResultStatus;
 import com.hartwig.hmftools.finding.datamodel.HlaAllele;
 import com.hartwig.hmftools.finding.datamodel.HlaAlleleBuilder;
 
@@ -42,7 +42,7 @@ public class HlaAlleleFactory
         if(lilac != null)
         {
             return FindingListBuilder.<HlaAllele>builder()
-                    .status(lilac.qc().equals(PASS) ? FindingsStatus.OK : FindingsStatus.NOT_RELIABLE)
+                    .status(FindingUtil.findingsStatus(lilac.qc().equals(PASS) ? ResultStatus.OK : ResultStatus.NOT_RELIABLE))
                     .findings(HlaAlleleFactory.convertHlaAlleles(lilac,
                             hasReliablePurity,
                             !orangeRecord.tumorOnlyMode(),

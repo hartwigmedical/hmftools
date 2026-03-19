@@ -1,9 +1,14 @@
 package com.hartwig.hmftools.finding.datamodel;
 
-public enum FindingsStatus
+import java.util.SortedSet;
+
+import jakarta.validation.constraints.NotNull;
+
+@RecordBuilder
+public record FindingsStatus(@NotNull ResultStatus status, @NotNull SortedSet<ResultIssue> errors, @NotNull SortedSet<ResultIssue> warnings)
 {
-    NOT_AVAILABLE_REF_REQUIRED,
-    NOT_AVAILABLE_WGS_REQUIRED,
-    NOT_RELIABLE,
-    OK
+    public boolean isOK()
+    {
+        return status == ResultStatus.OK;
+    }
 }

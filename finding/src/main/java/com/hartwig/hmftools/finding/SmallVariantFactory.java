@@ -18,6 +18,7 @@ import com.hartwig.hmftools.finding.datamodel.DriverFindingListBuilder;
 import com.hartwig.hmftools.finding.datamodel.DriverInterpretation;
 import com.hartwig.hmftools.finding.datamodel.DriverSource;
 import com.hartwig.hmftools.finding.datamodel.FindingsStatus;
+import com.hartwig.hmftools.finding.datamodel.ResultStatus;
 import com.hartwig.hmftools.finding.datamodel.ReportedStatus;
 import com.hartwig.hmftools.finding.datamodel.SmallVariant;
 import com.hartwig.hmftools.finding.datamodel.SmallVariantAllelicDepthBuilder;
@@ -44,24 +45,25 @@ final class SmallVariantFactory
     public static DriverFindingList<SmallVariant> germlineSmallVariantFindings(
             boolean hasGermlineSample,
             PurpleRecord purpleRecord,
+            FindingsStatus findingsStatus,
             FindingConfig findingConfig)
     {
         if(!hasGermlineSample)
         {
-            return FindingUtil.emptyDriverFindingList(FindingsStatus.NOT_AVAILABLE_REF_REQUIRED);
+            return FindingUtil.emptyDriverFindingList(ResultStatus.NOT_AVAILABLE_REF_REQUIRED);
         }
 
         List<PurpleVariant> germlineVariants = Objects.requireNonNull(purpleRecord.reportableGermlineVariants());
         List<PurpleDriver> germlineDrivers = Objects.requireNonNull(purpleRecord.germlineDrivers());
 
         return DriverFindingListBuilder.<SmallVariant>builder()
-                .status(FindingsStatus.OK)
+                .status(findingsStatus)
                 .findings(SmallVariantFactory.create(
                         DriverSource.GERMLINE, germlineVariants, germlineDrivers, findingConfig))
                 .build();
     }
 
-    private static List<SmallVariant> create(
+    public static List<SmallVariant> create(
             DriverSource sampleType, List<PurpleVariant> variants, List<PurpleDriver> drivers,
             FindingConfig findingConfig)
     {
