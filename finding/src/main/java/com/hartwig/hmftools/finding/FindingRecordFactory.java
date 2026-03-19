@@ -69,7 +69,6 @@ import com.hartwig.hmftools.finding.datamodel.Qc;
 import com.hartwig.hmftools.finding.datamodel.QcBuilder;
 import com.hartwig.hmftools.finding.datamodel.RefGenomeVersion;
 import com.hartwig.hmftools.finding.datamodel.ResultIssue;
-import com.hartwig.hmftools.finding.datamodel.ResultStatus;
 import com.hartwig.hmftools.finding.datamodel.SequencingScope;
 import com.hartwig.hmftools.finding.datamodel.SmallVariant;
 import com.hartwig.hmftools.finding.datamodel.TumorMutationalBurden;
@@ -265,7 +264,7 @@ public class FindingRecordFactory
         if(cuppa != null)
         {
             return FindingItemBuilder.<PredictedTumorOrigin>builder()
-                    .status(FindingUtil.findingsStatus(ResultStatus.OK))
+                    .status(FindingUtil.okStatus())
                     .finding(PredictedTumorOriginBuilder.builder()
                             .findingKey("predictedTumorOrigin")
                             .mode(cuppaMode(cuppa.mode()))
@@ -484,7 +483,7 @@ public class FindingRecordFactory
     public static DriverFindingList<Fusion> createFusionsFindings(LinxRecord linx)
     {
         return DriverFindingListBuilder.<Fusion>builder()
-                .status(FindingUtil.findingsStatus(ResultStatus.OK))
+                .status(FindingUtil.okStatus())
                 .findings(linx.fusions().stream()
                         .map(o -> convertFusion(o, DriverSource.SOMATIC)).sorted(Fusion.COMPARATOR).toList())
                 .build();
@@ -527,7 +526,7 @@ public class FindingRecordFactory
         if(virusInterpreter != null)
         {
             return DriverFindingListBuilder.<Virus>builder()
-                    .status(FindingUtil.findingsStatus(ResultStatus.OK))
+                    .status(FindingUtil.okStatus())
                     .findings(convertViruses(virusInterpreter.allViruses()))
                     .build();
         }
@@ -585,7 +584,7 @@ public class FindingRecordFactory
         if(peachGenotypes != null)
         {
             return FindingListBuilder.<PharmacoGenotype>builder()
-                    .status(FindingUtil.findingsStatus(ResultStatus.OK))
+                    .status(FindingUtil.okStatus())
                     .findings(peachGenotypes.stream().map(o ->
                                     PharmacoGenotypeBuilder.builder()
                                             .findingKey(FindingKeys.pharmacoGenotype(o.gene(), o.allele()))

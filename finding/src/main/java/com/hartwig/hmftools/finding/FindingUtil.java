@@ -36,9 +36,9 @@ class FindingUtil
                 .build();
     }
 
-    static FindingsStatus findingsStatus(ResultStatus status)
+    static FindingsStatus okStatus()
     {
-        return findingsStatus(status, Set.of());
+        return findingsStatus(ResultStatus.OK, Set.of());
     }
 
     static FindingsStatus findingsStatus(ResultStatus status, Set<ResultIssue> errors)

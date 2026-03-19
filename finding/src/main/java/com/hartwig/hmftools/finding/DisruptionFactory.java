@@ -55,7 +55,7 @@ final class DisruptionFactory
         List<LinxSvAnnotation> structuralVariants = Objects.requireNonNull(linx.germlineStructuralVariants());
 
         return DriverFindingListBuilder.<Disruption>builder()
-                .status(FindingUtil.findingsStatus(ResultStatus.OK))
+                .status(FindingUtil.okStatus())
                 .findings(createDisruptions(DriverSource.GERMLINE, breakends, structuralVariants))
                 .build();
     }
@@ -65,8 +65,8 @@ final class DisruptionFactory
         @NotNull Collection<LinxBreakend> breakends = linx.somaticBreakends();
         @NotNull Collection<LinxSvAnnotation> structuralVariants = linx.somaticStructuralVariants();
 
-        return  DriverFindingListBuilder.<Disruption>builder()
-                .status(FindingUtil.findingsStatus(ResultStatus.OK))
+        return DriverFindingListBuilder.<Disruption>builder()
+                .status(FindingUtil.okStatus())
                 .findings(createDisruptions(DriverSource.SOMATIC, breakends, structuralVariants))
                 .build();
     }
