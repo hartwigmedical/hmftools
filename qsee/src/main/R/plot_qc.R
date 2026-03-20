@@ -650,19 +650,24 @@ PLOTS[[FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD]] <- local({
          Gene = Gene %>% preordered_factor() %>% reverse_levels(),
          SampleType = SampleType %>% preordered_factor() %>% reverse_levels()
       )
-   
+
+   ## Split plot into 2 panels if there are too many genes
    unique_genes <- unique(as.character(plot_data$Gene))
    gene_count <- length(unique_genes)
 
-   ## Split plot into 2 panels if there are too many genes
-   N_GENES_TO_SPLIT_PANEL <- 15
+   N_GENES_TO_SPLIT_PANEL <- TOP_N_GENES/2
    gg_facet_wrap <- geom_blank()
+   theme_axis_text_x <- element_text()
+   theme_axis_text_y <- element_text()
+
    if(gene_count > N_GENES_TO_SPLIT_PANEL){
       midpoint <- round(gene_count / 2)
       gene_group <- as.integer(1:gene_count > midpoint); names(gene_group) <- unique_genes
       
       plot_data$GeneGroup <- gene_group[as.character(plot_data$Gene)]
       gg_facet_wrap <- facet_wrap(". ~ GeneGroup", scales = "free_y")
+      theme_axis_text_x <- element_text(angle = 30, hjust = 1, vjust = 1)
+      theme_axis_text_y <- element_text(size = BASE_SIZE*0.5)
    }
    
    plot_pairwise_comparison(plot_data, x = "Gene", plot_type = box_or_bar_plot()) + 
@@ -675,6 +680,8 @@ PLOTS[[FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD]] <- local({
          panel.spacing.x = unit(3, "pt"),
          strip.text.x = element_blank(),
          strip.background = element_blank(),
+         axis.text.x = theme_axis_text_x,
+         axis.text.y = theme_axis_text_y,
       ) +
       render_now()
 })
