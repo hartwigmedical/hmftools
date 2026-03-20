@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.finding.datamodel.driver;
 
-import java.util.Set;
-
 import com.hartwig.hmftools.finding.datamodel.finding.Finding;
 import com.hartwig.hmftools.finding.datamodel.ReportedStatus;
 
@@ -21,5 +19,5 @@ public interface Driver extends Finding
 
     boolean isReported();
 
-    Set<String> genes();
+    void accept(@NotNull DriverVisitor visitor);
 }
