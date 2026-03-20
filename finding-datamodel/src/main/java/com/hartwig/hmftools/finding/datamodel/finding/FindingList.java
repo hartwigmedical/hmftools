@@ -9,7 +9,7 @@ import jakarta.validation.constraints.NotNull;
 
 @RecordBuilder
 public record FindingList<T extends Finding>(
-        @NotNull FindingsStatus status,
+        @NotNull FindingStatus status,
         @NotNull List<T> findings) implements IFindingList<T>
 {
 

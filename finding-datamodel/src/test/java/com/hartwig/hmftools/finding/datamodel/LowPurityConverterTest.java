@@ -13,8 +13,8 @@ import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingList;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingItem;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingList;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingListBuilder;
-import com.hartwig.hmftools.finding.datamodel.finding.FindingsStatus;
-import com.hartwig.hmftools.finding.datamodel.finding.FindingsStatusBuilder;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingStatusBuilder;
 import com.hartwig.hmftools.finding.datamodel.finding.ResultIssue;
 import com.hartwig.hmftools.finding.datamodel.finding.ResultStatus;
 import com.hartwig.hmftools.finding.util.LowPurityConverter;
@@ -32,7 +32,7 @@ public class LowPurityConverterTest
                         .status(Set.of(Qc.QCStatus.PASS, Qc.QCStatus.WARN_LOW_PURITY))
                         .build())
                 .hlaAlleles(FindingListBuilder.<HlaAllele>builder()
-                        .status(FindingsStatusBuilder.builder()
+                        .status(FindingStatusBuilder.builder()
                                 .status(ResultStatus.OK)
                                 .warnings(new TreeSet<>(Set.of(ResultIssue.LOW_PURITY)))
                                 .errors(new TreeSet<>())
@@ -65,17 +65,17 @@ public class LowPurityConverterTest
         assertTrue(list.findings().isEmpty());
     }
 
-    private void assertFindingStatus(FindingsStatus findingsStatus) {
-        assertEquals(ResultStatus.NOT_RELIABLE, findingsStatus.status());
-        assertTrue(findingsStatus.errors().contains(ResultIssue.LOW_PURITY));
-        assertFalse(findingsStatus.warnings().contains(ResultIssue.LOW_PURITY));
+    private void assertFindingStatus(FindingStatus findingStatus) {
+        assertEquals(ResultStatus.NOT_RELIABLE, findingStatus.status());
+        assertTrue(findingStatus.errors().contains(ResultIssue.LOW_PURITY));
+        assertFalse(findingStatus.warnings().contains(ResultIssue.LOW_PURITY));
     }
 
     private void assertHLA(FindingList<HlaAllele> findingList) {
-        FindingsStatus findingsStatus = findingList.status();
-        assertEquals(ResultStatus.OK, findingsStatus.status());
-        assertFalse(findingsStatus.errors().contains(ResultIssue.LOW_PURITY));
-        assertTrue(findingsStatus.warnings().contains(ResultIssue.LOW_PURITY));
+        FindingStatus findingStatus = findingList.status();
+        assertEquals(ResultStatus.OK, findingStatus.status());
+        assertFalse(findingStatus.errors().contains(ResultIssue.LOW_PURITY));
+        assertTrue(findingStatus.warnings().contains(ResultIssue.LOW_PURITY));
         List<HlaAllele> hlaAlleles = findingList.findings();
         assertFalse(hlaAlleles.isEmpty());
         for(HlaAllele hlaAllele : hlaAlleles)

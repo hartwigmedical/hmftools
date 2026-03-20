@@ -20,6 +20,7 @@ import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingList;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingListBuilder;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverSource;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
 import com.hartwig.hmftools.finding.datamodel.ReportedStatus;
 import com.hartwig.hmftools.finding.datamodel.VisualisationFile;
 
@@ -42,7 +43,8 @@ final class DisruptionFactory
     // germline: GERMLINE_DISRUPTION
     // somatic: HOM_DUP_DISRUPTION, HOM_DEL_DISRUPTION, DISRUPTION
     // We can check the breakend types to know which type it is
-    public static DriverFindingList<Disruption> createGermlineDisruptions(boolean hasRefSample, LinxRecord linx)
+    public static DriverFindingList<Disruption> createGermlineDisruptions(boolean hasRefSample, LinxRecord linx,
+            FindingStatus findingStatus)
     {
         if(!hasRefSample)
         {
@@ -52,17 +54,17 @@ final class DisruptionFactory
         List<LinxBreakend> breakends = Objects.requireNonNull(linx.germlineBreakends());
 
         return DriverFindingListBuilder.<Disruption>builder()
-                .status(FindingUtil.okStatus())
+                .status(findingStatus)
                 .findings(createDisruptions(DriverSource.GERMLINE, breakends))
                 .build();
     }
 
-    public static DriverFindingList<Disruption> createSomaticDisruptions(LinxRecord linx)
+    public static DriverFindingList<Disruption> createSomaticDisruptions(LinxRecord linx, FindingStatus findingStatus)
     {
         @NotNull Collection<LinxBreakend> breakends = linx.somaticBreakends();
 
         return DriverFindingListBuilder.<Disruption>builder()
-                .status(FindingUtil.okStatus())
+                .status(findingStatus)
                 .findings(createDisruptions(DriverSource.SOMATIC, breakends))
                 .build();
     }

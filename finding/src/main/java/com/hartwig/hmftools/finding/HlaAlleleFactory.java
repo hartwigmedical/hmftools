@@ -11,8 +11,8 @@ import com.hartwig.hmftools.datamodel.hla.LilacRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingList;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingListBuilder;
-import com.hartwig.hmftools.finding.datamodel.finding.FindingsStatus;
-import com.hartwig.hmftools.finding.datamodel.finding.FindingsStatusBuilder;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingStatusBuilder;
 import com.hartwig.hmftools.finding.datamodel.finding.ResultStatus;
 import com.hartwig.hmftools.finding.datamodel.HlaAllele;
 import com.hartwig.hmftools.finding.datamodel.HlaAlleleBuilder;
@@ -30,13 +30,13 @@ public class HlaAlleleFactory
     {
     }
 
-    public static FindingList<HlaAllele> createHlaAllelesFindings(OrangeRecord orangeRecord, FindingsStatus findingsStatus)
+    public static FindingList<HlaAllele> createHlaAllelesFindings(OrangeRecord orangeRecord, FindingStatus findingStatus)
     {
         LilacRecord lilac = orangeRecord.lilac();
         if(lilac != null)
         {
             return FindingListBuilder.<HlaAllele>builder()
-                    .status(findingsStatus)
+                    .status(findingStatus)
                     .findings(HlaAlleleFactory.convertHlaAlleles(lilac,
                             !orangeRecord.tumorOnlyMode(),
                             orangeRecord.isofox() != null))

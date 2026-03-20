@@ -9,8 +9,9 @@ import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingList;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingListBuilder;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingItem;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingItemBuilder;
-import com.hartwig.hmftools.finding.datamodel.finding.FindingsStatus;
-import com.hartwig.hmftools.finding.datamodel.finding.FindingsStatusBuilder;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingStatusBuilder;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
 import com.hartwig.hmftools.finding.datamodel.finding.ResultIssue;
 import com.hartwig.hmftools.finding.datamodel.finding.ResultStatus;
 
@@ -24,7 +25,7 @@ class FindingUtil
     static <T extends Driver> DriverFindingList<T> notAvailableDriverFindingList(Set<ResultIssue> errors)
     {
         return DriverFindingListBuilder.<T>builder()
-                .status(findingsStatus(ResultStatus.NOT_AVAILABLE, errors))
+                .status(findingStatus(ResultStatus.NOT_AVAILABLE, errors))
                 .findings(List.of())
                 .build();
     }
@@ -32,19 +33,19 @@ class FindingUtil
     static <T> FindingItem<T> notAvailableFindingItem(Set<ResultIssue> errors)
     {
         return FindingItemBuilder.<T>builder()
-                .status(findingsStatus(ResultStatus.NOT_AVAILABLE, errors))
+                .status(findingStatus(ResultStatus.NOT_AVAILABLE, errors))
                 .build();
     }
 
-    static FindingsStatus okStatus()
+    static FindingStatus okStatus()
     {
-        return findingsStatus(ResultStatus.OK, Set.of());
+        return findingStatus(ResultStatus.OK, Set.of());
     }
 
-    static FindingsStatus findingsStatus(ResultStatus status, Set<ResultIssue> errors)
+    static FindingStatus notAvailableStatus(Set<ResultIssue> errors)
     {
-        return FindingsStatusBuilder.builder()
-                .status(status)
+        return FindingStatusBuilder.builder()
+                .status(ResultStatus.NOT_AVAILABLE)
                 .errors(new TreeSet<>(errors))
                 .warnings(new TreeSet<>())
                 .build();
