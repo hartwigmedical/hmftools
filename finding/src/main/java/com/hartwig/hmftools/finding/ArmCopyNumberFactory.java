@@ -34,7 +34,7 @@ final class ArmCopyNumberFactory
     // use linked hash map which keeps the insertion order of the keys
     private final Map<CopyNumberKey, ChromosomeArmCopyNumber> cnPerChromosomeArm = new LinkedHashMap<>();
 
-    public ArmCopyNumberFactory(Iterable<PurpleCopyNumber> copyNumbers, double ploidy, Gender gender,
+    public ArmCopyNumberFactory(Iterable<PurpleCopyNumber> copyNumbers, double ploidy, @Nullable Gender gender,
             final OrangeRefGenomeVersion refGenomeVersion)
     {
         populateChromosomeArmCn(copyNumbers, refGenomeVersion, ploidy, gender);
@@ -80,7 +80,7 @@ final class ArmCopyNumberFactory
     }
 
     private void populateChromosomeArmCn(Iterable<PurpleCopyNumber> copyNumbers,
-            final OrangeRefGenomeVersion refGenomeVersion, double ploidy, Gender gender)
+            final OrangeRefGenomeVersion refGenomeVersion, double ploidy, @Nullable Gender gender)
     {
         RefGenomeCoordinates refGenomeCoordinates = RefGenomeCoordinates.refGenomeCoordinates(refGenomeVersion);
 
@@ -110,46 +110,63 @@ final class ArmCopyNumberFactory
                 }
 
                 copyNumberArm = Doubles.round(copyNumberArm, 2);
-                ChromosomeArmCopyNumber copyNumber = buildArmCopyNumber(chromosome, arm, copyNumberArm, ploidy, gender);
-                if (copyNumber != null)
-                {
-                    cnPerChromosomeArm.put(new CopyNumberKey(chromosome, arm), copyNumber);
-                }
+                cnPerChromosomeArm.put(new CopyNumberKey(chromosome, arm),
+                        buildArmCopyNumber(chromosome, arm, copyNumberArm, ploidy, gender));
             }
         }
     }
 
-    private static @Nullable ChromosomeArmCopyNumber buildArmCopyNumber(
-            String chromosome, ChromosomeArmCopyNumber.ChromosomeArm arm, double copyNumber, double ploidy, Gender gender)
+    // If gender is unknown, we will not report any GAIN or LOSS in X  or Y chromosome
+    private static ChromosomeArmCopyNumber buildArmCopyNumber(
+            String chromosome, ChromosomeArmCopyNumber.ChromosomeArm arm, double copyNumber, double ploidy, @Nullable Gender gender)
     {
         double expectedPloidy = ploidy;
-
-        if(chromosome.endsWith("Y") && gender == Gender.FEMALE)
-            return null;
 
         if(chromosome.endsWith("X") && gender == Gender.MALE)
         {
             expectedPloidy *= 0.5;
         }
+        if(chromosome.endsWith("Y"))
+        {
+            if (gender == Gender.FEMALE)
+            {
+                expectedPloidy = 0.0;
+            }
+            else
+            {
+                // this case applies for both FEMALE and unknown
+                expectedPloidy *= 0.5;
+            }
+        }
 
         ChromosomeArmCopyNumber.Type type;
+        DriverInterpretation driverInterpretation;
+        double relativeCopyNumber;
 
-        if(copyNumber > LOW_DRIVER_ARM_CN_GAIN_THRESHOLD * expectedPloidy)
+        if(gender == null && (chromosome.endsWith("X") || chromosome.endsWith("Y")))
         {
-            type = ChromosomeArmCopyNumber.Type.GAIN;
-        }
-        else if(copyNumber < LOW_DRIVER_ARM_CN_LOSS_THRESHOLD * expectedPloidy)
-        {
-            type = ChromosomeArmCopyNumber.Type.LOSS;
+            type = ChromosomeArmCopyNumber.Type.DIPLOID;
+            driverInterpretation = DriverInterpretation.UNKNOWN;
+            relativeCopyNumber = 1.0;
         }
         else
         {
-            type = ChromosomeArmCopyNumber.Type.DIPLOID;
+            if(copyNumber > LOW_DRIVER_ARM_CN_GAIN_THRESHOLD * expectedPloidy)
+            {
+                type = ChromosomeArmCopyNumber.Type.GAIN;
+            }
+            else if(copyNumber < LOW_DRIVER_ARM_CN_LOSS_THRESHOLD * expectedPloidy)
+            {
+                type = ChromosomeArmCopyNumber.Type.LOSS;
+            }
+            else
+            {
+                type = ChromosomeArmCopyNumber.Type.DIPLOID;
+            }
+
+            driverInterpretation = driverInterpretation(copyNumber, expectedPloidy);
+            relativeCopyNumber = expectedPloidy > 0 ? copyNumber / expectedPloidy : 0;
         }
-
-        DriverInterpretation driverInterpretation = driverInterpretation(copyNumber, expectedPloidy);
-
-        double relativeCopyNumber = expectedPloidy > 0 ? copyNumber / expectedPloidy : 0;
 
         return ChromosomeArmCopyNumberBuilder.builder()
                 .driver(DriverFieldsBuilder.builder()

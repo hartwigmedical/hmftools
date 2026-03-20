@@ -85,7 +85,7 @@ import org.jetbrains.annotations.Nullable;
 public class FindingRecordFactory
 {
     public static FindingRecord fromOrangeJsonWithTranscriptFile(Path orangeJson, @Nullable Path clinicalTranscriptsTsv,
-            @Nullable Path driverGeneTsv, Gender gender) throws IOException
+            @Nullable Path driverGeneTsv, @Nullable Gender gender) throws IOException
     {
         try(Reader reader = Files.newBufferedReader(orangeJson))
         {
@@ -95,7 +95,7 @@ public class FindingRecordFactory
     }
 
     public static FindingRecord fromOrangeRecord(OrangeRecord orangeRecord, @Nullable Path clinicalTranscriptsTsv,
-            @Nullable Path driverGeneTsv, Gender gender) throws IOException
+            @Nullable Path driverGeneTsv, @Nullable Gender gender) throws IOException
     {
         FindingConfig findingConfig =
                 FindingConfig.createFindingConfig(clinicalTranscriptsTsv, driverGeneTsv, orangeRecord.refGenomeVersion(), gender);

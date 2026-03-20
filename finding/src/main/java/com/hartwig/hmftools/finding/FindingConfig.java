@@ -22,11 +22,12 @@ public class FindingConfig
     private final ClinicalTranscriptsModel clinicalTranscriptsModel;
     @NotNull
     private final Map<String, DriverGene> driverGenes;
+    @Nullable
     private final Gender gender;
 
     public static FindingConfig createFindingConfig(@Nullable Path clinicalTranscriptsTsv,
             @Nullable Path driverGeneTsv, OrangeRefGenomeVersion orangeRefGenomeVersion,
-            Gender gender) throws IOException
+            @Nullable Gender gender) throws IOException
     {
         ClinicalTranscriptsModel clinicalTranscriptsModel = clinicalTranscriptsTsv != null ?
                 ClinicalTranscriptFile.buildFromTsv(orangeRefGenomeVersion, clinicalTranscriptsTsv) : null;
@@ -42,7 +43,7 @@ public class FindingConfig
     }
 
     public FindingConfig(@Nullable final ClinicalTranscriptsModel clinicalTranscriptsModel, final Map<String, DriverGene> driverGenes,
-            Gender gender)
+            @Nullable Gender gender)
     {
         this.clinicalTranscriptsModel = clinicalTranscriptsModel;
         this.driverGenes = driverGenes;
