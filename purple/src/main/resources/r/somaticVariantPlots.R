@@ -2,10 +2,6 @@ library(ggplot2)
 library(dplyr)
 theme_set(theme_bw())
 
-#sample = "COLO829v003T"
-#purpleDir = "~/data/samples/COLO829T/purple"
-#plotDir = paste0(purpleDir,"/plot")
-
 # Parse the arguments
 args <- commandArgs(trailing=T)
 sample <- args[1]
@@ -59,7 +55,7 @@ clonality_plot <- function(somaticBuckets, clonalityModel) {
     geom_line(data=combinedModel , aes(x = bucket, y = bucketWeight), position = "identity", alpha = 0.8) +
     geom_line(data=nonResidualModel, aes(x = bucket, y = bucketWeight, color = peak), position = "identity") +
     geom_area(data=nonResidualSubclonalPercentage %>% filter(isSubclonal), aes(x = bucket, y = bucketWeight), position = "identity",  alpha = 0.3, fill = singleRed, color = singleRed) +
-    ggtitle("") + xlab("Variant Copy Number") + ylab("") +
+    ggtitle("Somatic Clonality") + xlab("Variant Copy Number") + ylab("") +
     scale_y_continuous(expand=c(0.02, 0.02)) +
     theme(panel.border = element_blank(), panel.grid.minor = element_blank(), axis.ticks = element_blank(), legend.position="none") +
     scale_x_continuous( expand=c(0.01, 0.01), limits = c(0, 3.5)) 
@@ -105,7 +101,7 @@ rainfall_plot <- function(somaticVariants) {
     geom_rect(data = kataegis, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax, fill = strand), alpha = 0.6) + 
     geom_point(data = snps, mapping = aes(x = rank, y = distanceToNeighbour, color = mutation), size = 0.1) +
     scale_y_log10(labels = function(x) {format(x, scientific = FALSE)}) + 
-    ylab("Intermutation distance (bp)") + xlab("Mutation number") +
+    ylab("Intermutation distance (bp)") + xlab("Mutation number") + ggtitle("Somatic Rainfall & Kataegis") +
     scale_color_manual(values = singleSubstitutionColours, name = "Mutation") + 
     scale_fill_manual(values = strandColours, name = "Kataegis Regions") + 
     guides(color = guide_legend(override.aes = list(size = 2)))
@@ -140,7 +136,7 @@ somatic_ploidy_pdf <- function(somaticBuckets) {
     scale_x_continuous(breaks = c(0:10), limits = c(-0.1, maxPloidy + 1.1)) +
     scale_fill_manual(values = cnColours) +
     theme(panel.grid.minor = element_blank(), axis.ticks = element_blank(), legend.position = "right", legend.title = element_blank()) +
-    xlab("Variant Copy Number") + ylab("Count") + ggtitle("Somatic Variant Copy Number PDF")
+    xlab("Variant Copy Number") + ylab("Count") + ggtitle("Somatic Variant Copy Number")
 }
 
 somaticBuckets = read.table(paste0(purpleDir, "/", sample, ".purple.somatic.hist.tsv"), sep = "\t", header = T, numerals = "no.loss", skipNul = T)

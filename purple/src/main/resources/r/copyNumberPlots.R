@@ -50,7 +50,7 @@ purity_ploidy_range_plot <- function(bestFit, range) {
         geom_label(data = data.frame(), aes(x = bestPloidy, y = 1.05, label = round(bestPloidy, 2)), size = 2.5) +
         geom_segment(aes(y = bestPurity, yend = bestPurity, x=minPloidy, xend = maxPloidy + 0.4), linetype = "dashed", size = 0.1) +
         geom_label(data = data.frame(), aes(y = bestPurity, x = maxPloidy + 0.4, label = paste0(bestPurity*100,"%" )), size = 2.5, hjust = 0.7) +
-        theme(panel.grid.minor = element_blank(), axis.ticks = element_blank(), legend.position = "right", legend.title=element_text(size=6), legend.text=element_text(size=6)) +
+        theme(panel.grid.minor = element_blank(), axis.ticks = element_blank(), legend.position = "right") +
         scale_y_continuous(labels = c("25%", "50%", "75%", "100%"), breaks = c(0.25, 0.5, 0.75, 1)) +
         xlab("Ploidy") + ylab("Purity") +  ggtitle("Purity/Ploidy Scores")
 
@@ -81,11 +81,10 @@ fitted_segments_plot <- function(fittedSegments) {
         scale_x_continuous(breaks = c(-200:200), limits = c(minMajorAllelePloidy, maxMajorAllelePloidy)) +
         scale_y_continuous(breaks = c(-200:200), limits = c(0, maxMinorAllelePloidy)) +
         scale_color_gradientn(colours=c("blue","green","yellow","orange", "red"), limits = c(minScore, maxScore)) +
-        theme(panel.grid.minor = element_blank(), axis.ticks = element_blank(), legend.position = "right", legend.title=element_text(size=6), legend.text=element_text(size=6)) +
+        theme(panel.grid.minor = element_blank(), axis.ticks = element_blank(), legend.position = "right") +
         scale_size(range = c(1,9), guide = "none")
 
     return (p)
-
 }
 
 minor_allele_ploidy_pdf <- function(copyNumberRegions) {
