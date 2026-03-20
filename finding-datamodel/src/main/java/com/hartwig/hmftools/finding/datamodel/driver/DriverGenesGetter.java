@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.finding.datamodel.driver;
 
-import java.util.HashSet;
 import java.util.Set;
 
 import com.hartwig.hmftools.finding.datamodel.ChromosomeArmCopyNumber;
@@ -12,7 +11,7 @@ import com.hartwig.hmftools.finding.datamodel.Virus;
 
 public class DriverGenesGetter implements DriverVisitor
 {
-    private final Set<String> genes = new HashSet<>();
+    private Set<String> genes;
 
     public static Set<String> getGenes(Driver driver)
     {
@@ -27,26 +26,25 @@ public class DriverGenesGetter implements DriverVisitor
     @Override
     public void visit(SmallVariant smallVariant)
     {
-        genes.add(smallVariant.gene());
+        genes = Set.of(smallVariant.gene());
     }
 
     @Override
     public void visit(GainDeletion gainDeletion)
     {
-        genes.add(gainDeletion.gene());
+        genes = Set.of(gainDeletion.gene());
     }
 
     @Override
     public void visit(Fusion fusion)
     {
-        genes.add(fusion.geneUp());
-        genes.add(fusion.geneDown());
+        genes = Set.of(fusion.geneUp(), fusion.geneDown());
     }
 
     @Override
     public void visit(Disruption disruption)
     {
-        genes.add(disruption.gene());
+        genes = Set.of(disruption.gene());
     }
 
     @Override
