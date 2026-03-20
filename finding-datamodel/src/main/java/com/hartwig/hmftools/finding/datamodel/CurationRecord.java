@@ -2,6 +2,8 @@ package com.hartwig.hmftools.finding.datamodel;
 
 import java.util.List;
 
+import com.hartwig.hmftools.finding.datamodel.driver.DriverCuration;
+
 import jakarta.validation.constraints.NotNull;
 
 @RecordBuilder

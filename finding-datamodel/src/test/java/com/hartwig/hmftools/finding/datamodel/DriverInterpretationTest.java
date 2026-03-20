@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.hartwig.hmftools.finding.datamodel.driver.DriverInterpretation;
+
 import org.junit.Test;
 
 public class DriverInterpretationTest

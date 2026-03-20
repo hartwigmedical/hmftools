@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.finding.datamodel;
+package com.hartwig.hmftools.finding.datamodel.finding;
 
 import java.util.Comparator;
 

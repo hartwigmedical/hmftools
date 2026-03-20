@@ -1,4 +1,7 @@
-package com.hartwig.hmftools.finding.datamodel;
+package com.hartwig.hmftools.finding.datamodel.driver;
+
+import com.hartwig.hmftools.finding.datamodel.RecordBuilder;
+import com.hartwig.hmftools.finding.datamodel.ReportedStatus;
 
 import jakarta.validation.constraints.NotNull;
 
@@ -11,7 +14,7 @@ public record DriverFields(
         double driverLikelihood
 )
 {
-    boolean isReported()
+    public boolean isReported()
     {
         return reportedStatus == ReportedStatus.REPORTED;
     }

@@ -2,6 +2,8 @@ package com.hartwig.hmftools.finding.datamodel;
 
 import java.util.List;
 
+import com.hartwig.hmftools.finding.datamodel.finding.Finding;
+
 import org.jspecify.annotations.Nullable;
 
 import jakarta.validation.constraints.NotNull;
