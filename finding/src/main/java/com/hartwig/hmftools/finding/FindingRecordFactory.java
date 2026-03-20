@@ -2,8 +2,8 @@ package com.hartwig.hmftools.finding;
 
 import static com.hartwig.hmftools.finding.DisruptionFactory.createGermlineDisruptions;
 import static com.hartwig.hmftools.finding.DisruptionFactory.createSomaticDisruptions;
-import static com.hartwig.hmftools.finding.datamodel.finding.FindingStatus.ResultIssue.REF_REQUIRED;
-import static com.hartwig.hmftools.finding.datamodel.finding.FindingStatus.ResultIssue.WGS_REQUIRED;
+import static com.hartwig.hmftools.finding.datamodel.finding.FindingStatus.Issue.REF_REQUIRED;
+import static com.hartwig.hmftools.finding.datamodel.finding.FindingStatus.Issue.WGS_REQUIRED;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -374,7 +374,7 @@ public class FindingRecordFactory
         }
         else
         {
-            Set<FindingStatus.ResultIssue> errors = new HashSet<>();
+            Set<FindingStatus.Issue> errors = new HashSet<>();
             if(experimentType == ExperimentType.TARGETED)
             {
                 errors.add(WGS_REQUIRED);

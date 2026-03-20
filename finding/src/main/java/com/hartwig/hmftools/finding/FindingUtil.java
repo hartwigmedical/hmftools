@@ -16,10 +16,10 @@ class FindingUtil
 {
     static <T extends Driver> DriverFindingList<T> refRequired()
     {
-        return notAvailableDriverFindingList(Set.of(FindingStatus.ResultIssue.REF_REQUIRED));
+        return notAvailableDriverFindingList(Set.of(FindingStatus.Issue.REF_REQUIRED));
     }
 
-    static <T extends Driver> DriverFindingList<T> notAvailableDriverFindingList(Set<FindingStatus.ResultIssue> errors)
+    static <T extends Driver> DriverFindingList<T> notAvailableDriverFindingList(Set<FindingStatus.Issue> errors)
     {
         return DriverFindingListBuilder.<T>builder()
                 .status(notAvailableStatus(errors))
@@ -27,17 +27,17 @@ class FindingUtil
                 .build();
     }
 
-    static <T> FindingItem<T> notAvailableFindingItem(Set<FindingStatus.ResultIssue> errors)
+    static <T> FindingItem<T> notAvailableFindingItem(Set<FindingStatus.Issue> errors)
     {
         return FindingItemBuilder.<T>builder()
                 .status(notAvailableStatus(errors))
                 .build();
     }
 
-    static FindingStatus notAvailableStatus(Set<FindingStatus.ResultIssue> errors)
+    static FindingStatus notAvailableStatus(Set<FindingStatus.Issue> errors)
     {
         return FindingStatusBuilder.builder()
-                .status(FindingStatus.ResultStatus.NOT_AVAILABLE)
+                .status(FindingStatus.Status.NOT_AVAILABLE)
                 .errors(new TreeSet<>(errors))
                 .warnings(new TreeSet<>())
                 .build();

@@ -16,18 +16,18 @@ public class FindingStatusFactoryTest
     @Test
     public void toFindingStatusOk() {
         FindingStatus findingStatus = FindingsStatusFactory.toFindingsStatus(Set.of(PurpleQCStatus.WARN_LOW_PURITY));
-        assertEquals(FindingStatus.ResultStatus.OK, findingStatus.status());
+        assertEquals(FindingStatus.Status.OK, findingStatus.status());
         assertTrue(findingStatus.isOK());
-        assertEquals(findingStatus.warnings(), Set.of(FindingStatus.ResultIssue.LOW_PURITY));
+        assertEquals(findingStatus.warnings(), Set.of(FindingStatus.Issue.LOW_PURITY));
         assertEquals(findingStatus.errors(), Set.of());
     }
 
     @Test
     public void toFindingStatusNotReliable() {
         FindingStatus findingStatus = FindingsStatusFactory.toFindingsStatus(Set.of(PurpleQCStatus.FAIL_CONTAMINATION, PurpleQCStatus.WARN_LOW_PURITY));
-        assertEquals(FindingStatus.ResultStatus.NOT_RELIABLE, findingStatus.status());
+        assertEquals(FindingStatus.Status.NOT_RELIABLE, findingStatus.status());
         assertFalse(findingStatus.isOK());
-        assertEquals(findingStatus.warnings(), Set.of(FindingStatus.ResultIssue.LOW_PURITY));
-        assertEquals(findingStatus.errors(), Set.of(FindingStatus.ResultIssue.CONTAMINATION));
+        assertEquals(findingStatus.warnings(), Set.of(FindingStatus.Issue.LOW_PURITY));
+        assertEquals(findingStatus.errors(), Set.of(FindingStatus.Issue.CONTAMINATION));
     }
 }

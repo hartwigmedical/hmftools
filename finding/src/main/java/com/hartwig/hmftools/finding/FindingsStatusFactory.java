@@ -16,9 +16,9 @@ class FindingsStatusFactory
 {
     static FindingStatus toFindingsStatus(Set<PurpleQCStatus> purpleQCStatuses)
     {
-        SortedSet<FindingStatus.ResultIssue> errors = convert(errors(purpleQCStatuses));
+        SortedSet<FindingStatus.Issue> errors = convert(errors(purpleQCStatuses));
         return FindingStatusBuilder.builder()
-                .status(errors.isEmpty() ? FindingStatus.ResultStatus.OK : FindingStatus.ResultStatus.NOT_RELIABLE)
+                .status(errors.isEmpty() ? FindingStatus.Status.OK : FindingStatus.Status.NOT_RELIABLE)
                 .errors(errors)
                 .warnings(convert(warnings(purpleQCStatuses)))
                 .build();
@@ -39,7 +39,7 @@ class FindingsStatusFactory
         return purpleQCStatuses.stream().filter(s -> s.name().startsWith(prefix)).collect(Collectors.toSet());
     }
 
-    private static SortedSet<FindingStatus.ResultIssue> convert(Set<PurpleQCStatus> purpleQCStatuses)
+    private static SortedSet<FindingStatus.Issue> convert(Set<PurpleQCStatus> purpleQCStatuses)
     {
         return purpleQCStatuses.stream()
                 .map(FindingsStatusFactory::convert)
@@ -48,18 +48,18 @@ class FindingsStatusFactory
     }
 
     @Nullable
-    private static FindingStatus.ResultIssue convert(PurpleQCStatus purpleQCStatus)
+    private static FindingStatus.Issue convert(PurpleQCStatus purpleQCStatus)
     {
         return switch(purpleQCStatus)
         {
             case PASS -> null;
-            case WARN_DELETED_GENES -> FindingStatus.ResultIssue.DELETED_GENES;
-            case WARN_HIGH_COPY_NUMBER_NOISE -> FindingStatus.ResultIssue.HIGH_COPY_NUMBER_NOISE;
-            case WARN_GENDER_MISMATCH -> FindingStatus.ResultIssue.GENDER_MISMATCH;
-            case WARN_LOW_PURITY -> FindingStatus.ResultIssue.LOW_PURITY;
-            case WARN_TINC, FAIL_TINC -> FindingStatus.ResultIssue.TUMOR_IN_NORMAL_CONTAMINATION;
-            case FAIL_CONTAMINATION -> FindingStatus.ResultIssue.CONTAMINATION;
-            case FAIL_NO_TUMOR -> FindingStatus.ResultIssue.NO_TUMOR;
+            case WARN_DELETED_GENES -> FindingStatus.Issue.DELETED_GENES;
+            case WARN_HIGH_COPY_NUMBER_NOISE -> FindingStatus.Issue.HIGH_COPY_NUMBER_NOISE;
+            case WARN_GENDER_MISMATCH -> FindingStatus.Issue.GENDER_MISMATCH;
+            case WARN_LOW_PURITY -> FindingStatus.Issue.LOW_PURITY;
+            case WARN_TINC, FAIL_TINC -> FindingStatus.Issue.TUMOR_IN_NORMAL_CONTAMINATION;
+            case FAIL_CONTAMINATION -> FindingStatus.Issue.CONTAMINATION;
+            case FAIL_NO_TUMOR -> FindingStatus.Issue.NO_TUMOR;
         };
     }
 }

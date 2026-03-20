@@ -26,20 +26,20 @@ public class TestFindingFactory
 {
 
     @NotNull
-    public static <T extends Finding> FindingList<T> buildFindingsList(@NotNull FindingStatus.ResultStatus resultStatus, @NotNull List<T> findings)
+    public static <T extends Finding> FindingList<T> buildFindingsList(@NotNull FindingStatus.Status resultStatus, @NotNull List<T> findings)
     {
         return FindingListBuilder.<T>builder().status(findingsStatus(resultStatus)).findings(findings).build();
     }
 
     @NotNull
-    public static <T extends Driver> DriverFindingList<T> buildDriverFindingsList(@NotNull FindingStatus.ResultStatus resultStatus,
+    public static <T extends Driver> DriverFindingList<T> buildDriverFindingsList(@NotNull FindingStatus.Status resultStatus,
             @NotNull List<T> findings)
     {
         return DriverFindingListBuilder.<T>builder().status(findingsStatus(resultStatus)).findings(findings).build();
     }
 
     @NotNull
-    public static <T> FindingItem<T> buildFindingItem(@NotNull FindingStatus.ResultStatus resultStatus, @NotNull T finding)
+    public static <T> FindingItem<T> buildFindingItem(@NotNull FindingStatus.Status resultStatus, @NotNull T finding)
     {
         return FindingItemBuilder.<T>builder().status(findingsStatus(resultStatus)).finding(finding).build();
     }
@@ -256,7 +256,7 @@ public class TestFindingFactory
 
     public static <T extends Driver> DriverFindingListBuilder<T> driverFindingsBuilder(List<T> findings)
     {
-        return DriverFindingListBuilder.<T>builder().status(findingsStatus(FindingStatus.ResultStatus.OK)).findings(findings);
+        return DriverFindingListBuilder.<T>builder().status(findingsStatus(FindingStatus.Status.OK)).findings(findings);
     }
 
     @NotNull
@@ -305,7 +305,7 @@ public class TestFindingFactory
                 .driverSource(DriverSource.SOMATIC);
     }
 
-    static FindingStatus findingsStatus(FindingStatus.ResultStatus status)
+    static FindingStatus findingsStatus(FindingStatus.Status status)
     {
         return FindingStatusBuilder.builder()
                 .status(status)

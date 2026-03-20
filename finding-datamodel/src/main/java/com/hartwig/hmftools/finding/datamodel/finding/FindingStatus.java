@@ -6,15 +6,26 @@ import com.hartwig.hmftools.finding.datamodel.RecordBuilder;
 
 import jakarta.validation.constraints.NotNull;
 
+@SuppressWarnings("unused")
 @RecordBuilder
-public record FindingStatus(@NotNull ResultStatus status, @NotNull SortedSet<ResultIssue> errors, @NotNull SortedSet<ResultIssue> warnings)
+public record FindingStatus(@NotNull FindingStatus.Status status, @NotNull SortedSet<Issue> errors, @NotNull SortedSet<Issue> warnings)
 {
     public boolean isOK()
     {
-        return status == ResultStatus.OK;
+        return status == Status.OK;
     }
 
-    public enum ResultIssue
+    public boolean isNotAvailable()
+    {
+        return status == Status.NOT_AVAILABLE;
+    }
+
+    public boolean isNotReliable()
+    {
+        return status == Status.NOT_RELIABLE;
+    }
+
+    public enum Issue
     {
         REF_REQUIRED,
         WGS_REQUIRED,
@@ -27,7 +38,7 @@ public record FindingStatus(@NotNull ResultStatus status, @NotNull SortedSet<Res
         NO_TUMOR
     }
 
-    public enum ResultStatus
+    public enum Status
     {
         NOT_AVAILABLE,
         NOT_RELIABLE,
