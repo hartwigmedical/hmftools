@@ -4,15 +4,15 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import com.hartwig.hmftools.finding.datamodel.Driver;
-import com.hartwig.hmftools.finding.datamodel.DriverFindingList;
-import com.hartwig.hmftools.finding.datamodel.DriverFindingListBuilder;
-import com.hartwig.hmftools.finding.datamodel.FindingItem;
-import com.hartwig.hmftools.finding.datamodel.FindingItemBuilder;
-import com.hartwig.hmftools.finding.datamodel.FindingsStatus;
-import com.hartwig.hmftools.finding.datamodel.FindingsStatusBuilder;
-import com.hartwig.hmftools.finding.datamodel.ResultIssue;
-import com.hartwig.hmftools.finding.datamodel.ResultStatus;
+import com.hartwig.hmftools.finding.datamodel.driver.Driver;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingList;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingListBuilder;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingItem;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingItemBuilder;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingsStatus;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingsStatusBuilder;
+import com.hartwig.hmftools.finding.datamodel.finding.ResultIssue;
+import com.hartwig.hmftools.finding.datamodel.finding.ResultStatus;
 
 class FindingUtil
 {

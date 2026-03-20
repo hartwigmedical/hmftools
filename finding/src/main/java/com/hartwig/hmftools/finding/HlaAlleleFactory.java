@@ -12,11 +12,11 @@ import java.util.stream.Collectors;
 import com.hartwig.hmftools.datamodel.hla.LilacAllele;
 import com.hartwig.hmftools.datamodel.hla.LilacRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
-import com.hartwig.hmftools.finding.datamodel.FindingList;
-import com.hartwig.hmftools.finding.datamodel.FindingListBuilder;
-import com.hartwig.hmftools.finding.datamodel.FindingsStatus;
-import com.hartwig.hmftools.finding.datamodel.FindingsStatusBuilder;
-import com.hartwig.hmftools.finding.datamodel.ResultStatus;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingList;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingListBuilder;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingsStatus;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingsStatusBuilder;
+import com.hartwig.hmftools.finding.datamodel.finding.ResultStatus;
 import com.hartwig.hmftools.finding.datamodel.HlaAllele;
 import com.hartwig.hmftools.finding.datamodel.HlaAlleleBuilder;
 

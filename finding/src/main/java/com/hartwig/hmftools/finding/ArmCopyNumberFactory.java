@@ -10,11 +10,11 @@ import com.hartwig.hmftools.finding.datamodel.ChromosomeArmCopyNumberBuilder;
 import com.hartwig.hmftools.finding.datamodel.Doubles;
 import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
 import com.hartwig.hmftools.datamodel.purple.PurpleCopyNumber;
-import com.hartwig.hmftools.finding.datamodel.DriverFieldsBuilder;
-import com.hartwig.hmftools.finding.datamodel.DriverInterpretation;
-import com.hartwig.hmftools.finding.datamodel.DriverSource;
-import com.hartwig.hmftools.finding.datamodel.FindingList;
-import com.hartwig.hmftools.finding.datamodel.FindingsStatus;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverFieldsBuilder;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverInterpretation;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverSource;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingList;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingsStatus;
 
 import org.jspecify.annotations.Nullable;
 
