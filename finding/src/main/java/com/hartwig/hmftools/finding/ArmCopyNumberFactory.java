@@ -1,58 +1,81 @@
 package com.hartwig.hmftools.finding;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
+import com.hartwig.hmftools.common.purple.Gender;
+import com.hartwig.hmftools.finding.datamodel.ChromosomeArmCopyNumber;
+import com.hartwig.hmftools.finding.datamodel.ChromosomeArmCopyNumberBuilder;
 import com.hartwig.hmftools.finding.datamodel.Doubles;
 import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
 import com.hartwig.hmftools.datamodel.purple.PurpleCopyNumber;
+import com.hartwig.hmftools.finding.datamodel.DriverFieldsBuilder;
+import com.hartwig.hmftools.finding.datamodel.DriverInterpretation;
+import com.hartwig.hmftools.finding.datamodel.DriverSource;
+import com.hartwig.hmftools.finding.datamodel.FindingList;
+import com.hartwig.hmftools.finding.datamodel.FindingsStatus;
 
-final class ChromosomeArmCopyNumberMap
+import org.jspecify.annotations.Nullable;
+
+final class ArmCopyNumberFactory
 {
-    private enum ChromosomeArm
+    private static final double HIGH_DRIVER_THRESHOLD = 0.4;
+    private static final double LOW_DRIVER_THRESHOLD = 0.25;
+    private static final double HIGH_DRIVER_ARM_GAIN_THRESHOLD = 1 + HIGH_DRIVER_THRESHOLD;
+    private static final double LOW_DRIVER_ARM_CN_GAIN_THRESHOLD = 1 + LOW_DRIVER_THRESHOLD;
+    private static final double HIGH_DRIVER_ARM_LOSS_THRESHOLD = 1 - HIGH_DRIVER_THRESHOLD;
+    private static final double LOW_DRIVER_ARM_CN_LOSS_THRESHOLD = 1 - LOW_DRIVER_THRESHOLD;
+
+    public record CopyNumberKey(String chromosome, ChromosomeArmCopyNumber.ChromosomeArm arm)
     {
-        P_ARM,
-        Q_ARM,
     }
 
-    private record CopyNumberKey(String chromosome, ChromosomeArm arm)
+    // use linked hash map which keeps the insertion order of the keys
+    private final Map<CopyNumberKey, ChromosomeArmCopyNumber> cnPerChromosomeArm = new LinkedHashMap<>();
+
+    public Map<CopyNumberKey, ChromosomeArmCopyNumber> getCnPerChromosomeArm()
     {
+        return cnPerChromosomeArm;
     }
 
-    private final Map<CopyNumberKey, Double> cnPerChromosomeArm;
-
-    public static ChromosomeArmCopyNumberMap create(Iterable<PurpleCopyNumber> copyNumbers,
+    public ArmCopyNumberFactory(Iterable<PurpleCopyNumber> copyNumbers, double ploidy, Gender gender,
             final OrangeRefGenomeVersion refGenomeVersion)
     {
-        return new ChromosomeArmCopyNumberMap(extractCnPerChromosomeArm(copyNumbers, refGenomeVersion));
-    }
-
-    private ChromosomeArmCopyNumberMap(Map<CopyNumberKey, Double> cnPerChromosomeArm)
-    {
-        this.cnPerChromosomeArm = cnPerChromosomeArm;
+        populateChromosomeArmCn(copyNumbers, refGenomeVersion, ploidy, gender);
     }
 
     public double chromosomeArmCopyNumber(String chromosome, String chromosomeBand)
     {
-        Double copyNumber = cnPerChromosomeArm.get(new CopyNumberKey(chromosome, getChromosomeArm(chromosomeBand)));
+        ChromosomeArmCopyNumber copyNumber = cnPerChromosomeArm.get(new CopyNumberKey(chromosome, getChromosomeArm(chromosomeBand)));
         if(copyNumber == null)
         {
             throw new IllegalArgumentException(String.format(
                     "Copy number not found for chromosome: %s, band: %s", chromosome, chromosomeBand));
         }
-        return copyNumber;
+        return copyNumber.copyNumber();
     }
 
-    static ChromosomeArm getChromosomeArm(String chromosomeBand)
+    public FindingList<ChromosomeArmCopyNumber> toArmCopyNumberFindings(FindingsStatus findingsStatus)
     {
-        ChromosomeArm chromosomeArm;
+        // we filter out diploid copy
+        return new FindingList<>(
+                findingsStatus,
+                cnPerChromosomeArm.values().stream()
+                        .filter(o -> o.type() != ChromosomeArmCopyNumber.Type.DIPLOID)
+                        .toList());
+    }
+
+    static ChromosomeArmCopyNumber.ChromosomeArm getChromosomeArm(String chromosomeBand)
+    {
+        ChromosomeArmCopyNumber.ChromosomeArm chromosomeArm;
         if(chromosomeBand.startsWith("p"))
         {
-            chromosomeArm = ChromosomeArm.P_ARM;
+            chromosomeArm = ChromosomeArmCopyNumber.ChromosomeArm.P;
         }
         else if(chromosomeBand.startsWith("q"))
         {
-            chromosomeArm = ChromosomeArm.Q_ARM;
+            chromosomeArm = ChromosomeArmCopyNumber.ChromosomeArm.Q;
         }
         else
         {
@@ -61,17 +84,16 @@ final class ChromosomeArmCopyNumberMap
         return chromosomeArm;
     }
 
-    private static Map<CopyNumberKey, Double> extractCnPerChromosomeArm(Iterable<PurpleCopyNumber> copyNumbers,
-            final OrangeRefGenomeVersion refGenomeVersion)
+    private void populateChromosomeArmCn(Iterable<PurpleCopyNumber> copyNumbers,
+            final OrangeRefGenomeVersion refGenomeVersion, double ploidy, Gender gender)
     {
         RefGenomeCoordinates refGenomeCoordinates = RefGenomeCoordinates.refGenomeCoordinates(refGenomeVersion);
 
-        Map<CopyNumberKey, Double> cnPerChromosomeArmData = new HashMap<>();
         for(String chromosome : refGenomeCoordinates.Lengths.keySet())
         {
-            Map<ChromosomeArm, GenomeRegion> genomeRegion = determineArmRegions(chromosome, refGenomeCoordinates);
+            Map<ChromosomeArmCopyNumber.ChromosomeArm, GenomeRegion> genomeRegion = determineArmRegions(chromosome, refGenomeCoordinates);
 
-            for(ChromosomeArm arm : ChromosomeArm.values())
+            for(ChromosomeArmCopyNumber.ChromosomeArm arm : ChromosomeArmCopyNumber.ChromosomeArm.values())
             {
                 double copyNumberArm = 0;
 
@@ -93,33 +115,99 @@ final class ChromosomeArmCopyNumberMap
                 }
 
                 copyNumberArm = Doubles.round(copyNumberArm, 2);
-
-                cnPerChromosomeArmData.put(new CopyNumberKey(chromosome, arm), copyNumberArm);
+                ChromosomeArmCopyNumber copyNumber = buildArmCopyNumber(chromosome, arm, copyNumberArm, ploidy, gender);
+                if (copyNumber != null)
+                {
+                    cnPerChromosomeArm.put(new CopyNumberKey(chromosome, arm), copyNumber);
+                }
             }
         }
-        return cnPerChromosomeArmData;
     }
 
-    private static Map<ChromosomeArm, GenomeRegion> determineArmRegions(String chromosome,
+    private static @Nullable ChromosomeArmCopyNumber buildArmCopyNumber(
+            String chromosome, ChromosomeArmCopyNumber.ChromosomeArm arm, double copyNumber, double ploidy, Gender gender)
+    {
+        double expectedPloidy = ploidy;
+
+        if(chromosome.endsWith("Y") && gender == Gender.FEMALE)
+            return null;
+
+        if(chromosome.endsWith("X") && gender == Gender.MALE)
+        {
+            expectedPloidy *= 0.5;
+        }
+
+        ChromosomeArmCopyNumber.Type type;
+
+        if(copyNumber > LOW_DRIVER_ARM_CN_GAIN_THRESHOLD * expectedPloidy)
+        {
+            type = ChromosomeArmCopyNumber.Type.GAIN;
+        }
+        else if(copyNumber < LOW_DRIVER_ARM_CN_LOSS_THRESHOLD * expectedPloidy)
+        {
+            type = ChromosomeArmCopyNumber.Type.LOSS;
+        }
+        else
+        {
+            type = ChromosomeArmCopyNumber.Type.DIPLOID;
+        }
+
+        DriverInterpretation driverInterpretation = driverInterpretation(copyNumber, expectedPloidy);
+
+        double relativeCopyNumber = expectedPloidy > 0 ? copyNumber / expectedPloidy : 0;
+
+        return ChromosomeArmCopyNumberBuilder.builder()
+                .driver(DriverFieldsBuilder.builder()
+                                .findingKey(FindingKeys.chromosomeArmCopyNumber(chromosome, arm.name()))
+                                .driverSource(DriverSource.SOMATIC)
+                                .reportedStatus(DriverUtil.reportedStatus(true, true, driverInterpretation))
+                                .driverInterpretation(driverInterpretation)
+                                .driverLikelihood(driverInterpretation == DriverInterpretation.HIGH ? 1.0 : 0.0)
+                                .build())
+                .chromosome(chromosome)
+                .arm(arm)
+                .type(type)
+                .copyNumber(copyNumber)
+                .relativeCopyNumber(relativeCopyNumber)
+                .build();
+    }
+
+    private static DriverInterpretation driverInterpretation(final double copyNumber, final double ploidy)
+    {
+        if((copyNumber > HIGH_DRIVER_ARM_GAIN_THRESHOLD * ploidy)
+                || (copyNumber < HIGH_DRIVER_ARM_LOSS_THRESHOLD * ploidy))
+        {
+            return DriverInterpretation.HIGH;
+        }
+        if((copyNumber > LOW_DRIVER_ARM_CN_GAIN_THRESHOLD * ploidy)
+                || (copyNumber < LOW_DRIVER_ARM_CN_LOSS_THRESHOLD * ploidy))
+        {
+            return DriverInterpretation.LOW;
+        }
+
+        return DriverInterpretation.UNKNOWN;
+    }
+
+    private static Map<ChromosomeArmCopyNumber.ChromosomeArm, GenomeRegion> determineArmRegions(String chromosome,
             RefGenomeCoordinates refGenomeCoordinates)
     {
         int centromerePos = refGenomeCoordinates.centromeres().get(chromosome);
         int chrLength = refGenomeCoordinates.lengths().get(chromosome);
 
-        Map<ChromosomeArm, GenomeRegion> chromosomeArmGenomeRegionMap = new HashMap<>();
+        Map<ChromosomeArmCopyNumber.ChromosomeArm, GenomeRegion> chromosomeArmGenomeRegionMap = new HashMap<>();
 
         GenomeRegion partBeforeCentromere = new GenomeRegion(chromosome, 1, centromerePos);
         GenomeRegion partAfterCentromere = new GenomeRegion(chromosome, centromerePos + 1, chrLength);
 
         if(bases(partBeforeCentromere) < bases(partAfterCentromere))
         {
-            chromosomeArmGenomeRegionMap.put(ChromosomeArm.P_ARM, partBeforeCentromere);
-            chromosomeArmGenomeRegionMap.put(ChromosomeArm.Q_ARM, partAfterCentromere);
+            chromosomeArmGenomeRegionMap.put(ChromosomeArmCopyNumber.ChromosomeArm.P, partBeforeCentromere);
+            chromosomeArmGenomeRegionMap.put(ChromosomeArmCopyNumber.ChromosomeArm.Q, partAfterCentromere);
         }
         else
         {
-            chromosomeArmGenomeRegionMap.put(ChromosomeArm.P_ARM, partAfterCentromere);
-            chromosomeArmGenomeRegionMap.put(ChromosomeArm.Q_ARM, partBeforeCentromere);
+            chromosomeArmGenomeRegionMap.put(ChromosomeArmCopyNumber.ChromosomeArm.P, partAfterCentromere);
+            chromosomeArmGenomeRegionMap.put(ChromosomeArmCopyNumber.ChromosomeArm.Q, partBeforeCentromere);
         }
         return chromosomeArmGenomeRegionMap;
     }

@@ -19,6 +19,7 @@ public record FindingRecord(
         @NotNull DriverFindingList<Disruption> germlineDisruptions,
         @NotNull DriverFindingList<Fusion> fusions,
         @NotNull DriverFindingList<Virus> viruses,
+        @NotNull FindingList<ChromosomeArmCopyNumber> chromosomeArmCopyNumbers,
         @NotNull FindingList<HlaAllele> hlaAlleles,
         @NotNull FindingList<PharmacoGenotype> pharmacoGenotypes,
         @NotNull FindingItem<PredictedTumorOrigin> predictedTumorOrigin,

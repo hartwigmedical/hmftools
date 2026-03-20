@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.driver.panel.DriverGeneFile;
+import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
 import com.hartwig.hmftools.finding.clinicaltranscript.ClinicalTranscriptFile;
 import com.hartwig.hmftools.finding.clinicaltranscript.ClinicalTranscriptsModel;
@@ -21,14 +22,16 @@ public class FindingConfig
     private final ClinicalTranscriptsModel clinicalTranscriptsModel;
     @NotNull
     private final Map<String, DriverGene> driverGenes;
+    private final Gender gender;
 
     public static FindingConfig createFindingConfig(@Nullable Path clinicalTranscriptsTsv,
-            @Nullable Path driverGeneTsv, OrangeRefGenomeVersion orangeRefGenomeVersion) throws IOException
+            @Nullable Path driverGeneTsv, OrangeRefGenomeVersion orangeRefGenomeVersion,
+            Gender gender) throws IOException
     {
         ClinicalTranscriptsModel clinicalTranscriptsModel = clinicalTranscriptsTsv != null ?
                 ClinicalTranscriptFile.buildFromTsv(orangeRefGenomeVersion, clinicalTranscriptsTsv) : null;
         Map<String, DriverGene> driverGenes = driverGenesMap(driverGeneTsv);
-        return new FindingConfig(clinicalTranscriptsModel, driverGenes);
+        return new FindingConfig(clinicalTranscriptsModel, driverGenes, gender);
     }
 
     private static Map<String, DriverGene> driverGenesMap(@Nullable Path driverGeneTsv) throws IOException
@@ -38,10 +41,12 @@ public class FindingConfig
                 .collect(Collectors.toMap(DriverGene::gene, Function.identity())) : Map.of();
     }
 
-    public FindingConfig(@Nullable final ClinicalTranscriptsModel clinicalTranscriptsModel, final Map<String, DriverGene> driverGenes)
+    public FindingConfig(@Nullable final ClinicalTranscriptsModel clinicalTranscriptsModel, final Map<String, DriverGene> driverGenes,
+            Gender gender)
     {
         this.clinicalTranscriptsModel = clinicalTranscriptsModel;
         this.driverGenes = driverGenes;
+        this.gender = gender;
     }
 
     @Nullable
@@ -54,5 +59,10 @@ public class FindingConfig
     public DriverGene getDriverGene(String gene)
     {
         return driverGenes.get(gene);
+    }
+
+    public Gender gender()
+    {
+        return gender;
     }
 }

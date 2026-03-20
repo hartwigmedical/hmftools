@@ -16,6 +16,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.datamodel.OrangeJson;
 import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
@@ -85,20 +86,20 @@ import org.jetbrains.annotations.Nullable;
 public class FindingRecordFactory
 {
     public static FindingRecord fromOrangeJsonWithTranscriptFile(Path orangeJson, @Nullable Path clinicalTranscriptsTsv,
-            @Nullable Path driverGeneTsv) throws IOException
+            @Nullable Path driverGeneTsv, Gender gender) throws IOException
     {
         try(Reader reader = Files.newBufferedReader(orangeJson))
         {
             OrangeRecord orangeRecord = OrangeJson.getInstance().read(reader);
-            return fromOrangeRecord(orangeRecord, clinicalTranscriptsTsv, driverGeneTsv);
+            return fromOrangeRecord(orangeRecord, clinicalTranscriptsTsv, driverGeneTsv, gender);
         }
     }
 
     public static FindingRecord fromOrangeRecord(OrangeRecord orangeRecord, @Nullable Path clinicalTranscriptsTsv,
-            @Nullable Path driverGeneTsv) throws IOException
+            @Nullable Path driverGeneTsv, Gender gender) throws IOException
     {
         FindingConfig findingConfig =
-                FindingConfig.createFindingConfig(clinicalTranscriptsTsv, driverGeneTsv, orangeRecord.refGenomeVersion());
+                FindingConfig.createFindingConfig(clinicalTranscriptsTsv, driverGeneTsv, orangeRecord.refGenomeVersion(), gender);
 
         LinxRecord linx = orangeRecord.linx();
         PurpleRecord purple = orangeRecord.purple();
@@ -152,15 +153,17 @@ public class FindingRecordFactory
         DriverFindingList<SmallVariant> smallVariants =
                 SmallVariantFactory.somaticSmallVariantFindings(purple, findingsStatus, findingConfig);
         somaticGainDeletions =
-                GainDeletionFactory.somaticGainDeletionFindings(orangeRecord.refGenomeVersion(), findingsStatus, purple);
+                GainDeletionFactory.somaticGainDeletionFindings(orangeRecord.refGenomeVersion(), findingsStatus, purple, findingConfig.gender());
 
         builder.somaticSmallVariants(smallVariants)
                 .germlineSmallVariants(SmallVariantFactory.germlineSmallVariantFindings(hasRefSample, purple, findingsStatus, findingConfig))
                 .somaticGainDeletions(somaticGainDeletions)
-                .germlineGainDeletions(GainDeletionFactory.germlineGainDeletionFindings(hasRefSample, orangeRecord.refGenomeVersion(), findingsStatus, purple))
+                .germlineGainDeletions(GainDeletionFactory.germlineGainDeletionFindings(hasRefSample, orangeRecord.refGenomeVersion(), findingsStatus, purple, findingConfig.gender()))
                 .microsatelliteStability(createMicrosatelliteStability(purple, orangeRecord.linx(), somaticGainDeletions, findingsStatus))
                 .tumorMutationalLoad(createTumorMutationalLoad(purple, findingsStatus))
-                .tumorMutationalBurden(createTumorMutationalBurden(purple, findingsStatus));
+                .tumorMutationalBurden(createTumorMutationalBurden(purple, findingsStatus))
+                .chromosomeArmCopyNumbers(new ArmCopyNumberFactory(purple.allSomaticCopyNumbers(), purple.fit().ploidy(),
+                        findingConfig.gender(), orangeRecord.refGenomeVersion()).toArmCopyNumberFindings(findingsStatus));
 
         return somaticGainDeletions;
     }
