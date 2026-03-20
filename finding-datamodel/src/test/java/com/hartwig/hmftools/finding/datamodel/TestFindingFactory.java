@@ -18,7 +18,6 @@ import com.hartwig.hmftools.finding.datamodel.finding.FindingList;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingListBuilder;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingStatusBuilder;
-import com.hartwig.hmftools.finding.datamodel.finding.ResultStatus;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -27,20 +26,20 @@ public class TestFindingFactory
 {
 
     @NotNull
-    public static <T extends Finding> FindingList<T> buildFindingsList(@NotNull ResultStatus resultStatus, @NotNull List<T> findings)
+    public static <T extends Finding> FindingList<T> buildFindingsList(@NotNull FindingStatus.ResultStatus resultStatus, @NotNull List<T> findings)
     {
         return FindingListBuilder.<T>builder().status(findingsStatus(resultStatus)).findings(findings).build();
     }
 
     @NotNull
-    public static <T extends Driver> DriverFindingList<T> buildDriverFindingsList(@NotNull ResultStatus resultStatus,
+    public static <T extends Driver> DriverFindingList<T> buildDriverFindingsList(@NotNull FindingStatus.ResultStatus resultStatus,
             @NotNull List<T> findings)
     {
         return DriverFindingListBuilder.<T>builder().status(findingsStatus(resultStatus)).findings(findings).build();
     }
 
     @NotNull
-    public static <T> FindingItem<T> buildFindingItem(@NotNull ResultStatus resultStatus, @NotNull T finding)
+    public static <T> FindingItem<T> buildFindingItem(@NotNull FindingStatus.ResultStatus resultStatus, @NotNull T finding)
     {
         return FindingItemBuilder.<T>builder().status(findingsStatus(resultStatus)).finding(finding).build();
     }
@@ -258,7 +257,7 @@ public class TestFindingFactory
 
     public static <T extends Driver> DriverFindingListBuilder<T> driverFindingsBuilder(List<T> findings)
     {
-        return DriverFindingListBuilder.<T>builder().status(findingsStatus(ResultStatus.OK)).findings(findings);
+        return DriverFindingListBuilder.<T>builder().status(findingsStatus(FindingStatus.ResultStatus.OK)).findings(findings);
     }
 
     @NotNull
@@ -307,7 +306,7 @@ public class TestFindingFactory
                 .driverSource(DriverSource.SOMATIC);
     }
 
-    static FindingStatus findingsStatus(ResultStatus status)
+    static FindingStatus findingsStatus(FindingStatus.ResultStatus status)
     {
         return FindingStatusBuilder.builder()
                 .status(status)

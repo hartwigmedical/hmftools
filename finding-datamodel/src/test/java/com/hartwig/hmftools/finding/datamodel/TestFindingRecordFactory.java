@@ -3,7 +3,7 @@ package com.hartwig.hmftools.finding.datamodel;
 import java.time.LocalDate;
 import java.util.List;
 
-import com.hartwig.hmftools.finding.datamodel.finding.ResultStatus;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -29,26 +29,26 @@ public class TestFindingRecordFactory
                         .build())
                 .qc(TestFindingFactory.qcBuilder().build())
                 .purityPloidyFit(TestFindingFactory.purityPloidyFitBuilder().build())
-                .predictedTumorOrigin(TestFindingFactory.buildFindingItem(ResultStatus.OK, TestFindingFactory.predictedTumorOriginBuilder()
+                .predictedTumorOrigin(TestFindingFactory.buildFindingItem(FindingStatus.ResultStatus.OK, TestFindingFactory.predictedTumorOriginBuilder()
                         .build()))
-                .homologousRecombination(TestFindingFactory.buildFindingItem(ResultStatus.OK, TestFindingFactory.homologousRecombinationBuilder()
+                .homologousRecombination(TestFindingFactory.buildFindingItem(FindingStatus.ResultStatus.OK, TestFindingFactory.homologousRecombinationBuilder()
                         .build()))
-                .microsatelliteStability(TestFindingFactory.buildFindingItem(ResultStatus.OK, TestFindingFactory.microsatelliteStabilityBuilder()
+                .microsatelliteStability(TestFindingFactory.buildFindingItem(FindingStatus.ResultStatus.OK, TestFindingFactory.microsatelliteStabilityBuilder()
                         .build()))
-                .tumorMutationalLoad(TestFindingFactory.buildFindingItem(ResultStatus.OK, TestFindingFactory.tumorMutationalLoadBuilder()
+                .tumorMutationalLoad(TestFindingFactory.buildFindingItem(FindingStatus.ResultStatus.OK, TestFindingFactory.tumorMutationalLoadBuilder()
                         .build()))
-                .tumorMutationalBurden(TestFindingFactory.buildFindingItem(ResultStatus.OK, TestFindingFactory.tumorMutationalBurdenBuilder()
+                .tumorMutationalBurden(TestFindingFactory.buildFindingItem(FindingStatus.ResultStatus.OK, TestFindingFactory.tumorMutationalBurdenBuilder()
                         .build()))
-                .somaticSmallVariants(TestFindingFactory.buildDriverFindingsList(ResultStatus.OK, List.of()))
-                .germlineSmallVariants(TestFindingFactory.buildDriverFindingsList(ResultStatus.OK, List.of()))
-                .somaticGainDeletions(TestFindingFactory.buildDriverFindingsList(ResultStatus.OK, List.of()))
-                .germlineGainDeletions(TestFindingFactory.buildDriverFindingsList(ResultStatus.OK, List.of()))
-                .somaticDisruptions(TestFindingFactory.buildDriverFindingsList(ResultStatus.OK, List.of()))
-                .germlineDisruptions(TestFindingFactory.buildDriverFindingsList(ResultStatus.OK, List.of()))
-                .fusions(TestFindingFactory.buildDriverFindingsList(ResultStatus.OK, List.of()))
-                .viruses(TestFindingFactory.buildDriverFindingsList(ResultStatus.OK, List.of()))
-                .chromosomeArmCopyNumbers(TestFindingFactory.buildFindingsList(ResultStatus.OK, List.of()))
-                .hlaAlleles(TestFindingFactory.buildFindingsList(ResultStatus.OK, List.of()))
-                .pharmacoGenotypes(TestFindingFactory.buildFindingsList(ResultStatus.OK, List.of()));
+                .somaticSmallVariants(TestFindingFactory.buildDriverFindingsList(FindingStatus.ResultStatus.OK, List.of()))
+                .germlineSmallVariants(TestFindingFactory.buildDriverFindingsList(FindingStatus.ResultStatus.OK, List.of()))
+                .somaticGainDeletions(TestFindingFactory.buildDriverFindingsList(FindingStatus.ResultStatus.OK, List.of()))
+                .germlineGainDeletions(TestFindingFactory.buildDriverFindingsList(FindingStatus.ResultStatus.OK, List.of()))
+                .somaticDisruptions(TestFindingFactory.buildDriverFindingsList(FindingStatus.ResultStatus.OK, List.of()))
+                .germlineDisruptions(TestFindingFactory.buildDriverFindingsList(FindingStatus.ResultStatus.OK, List.of()))
+                .fusions(TestFindingFactory.buildDriverFindingsList(FindingStatus.ResultStatus.OK, List.of()))
+                .viruses(TestFindingFactory.buildDriverFindingsList(FindingStatus.ResultStatus.OK, List.of()))
+                .chromosomeArmCopyNumbers(TestFindingFactory.buildFindingsList(FindingStatus.ResultStatus.OK, List.of()))
+                .hlaAlleles(TestFindingFactory.buildFindingsList(FindingStatus.ResultStatus.OK, List.of()))
+                .pharmacoGenotypes(TestFindingFactory.buildFindingsList(FindingStatus.ResultStatus.OK, List.of()));
     }
 }

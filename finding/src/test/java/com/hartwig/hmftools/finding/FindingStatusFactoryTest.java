@@ -8,8 +8,6 @@ import java.util.Set;
 
 import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
-import com.hartwig.hmftools.finding.datamodel.finding.ResultIssue;
-import com.hartwig.hmftools.finding.datamodel.finding.ResultStatus;
 
 import org.junit.Test;
 
@@ -18,18 +16,18 @@ public class FindingStatusFactoryTest
     @Test
     public void toFindingStatusOk() {
         FindingStatus findingStatus = FindingsStatusFactory.toFindingsStatus(Set.of(PurpleQCStatus.WARN_LOW_PURITY));
-        assertEquals(ResultStatus.OK, findingStatus.status());
+        assertEquals(FindingStatus.ResultStatus.OK, findingStatus.status());
         assertTrue(findingStatus.isOK());
-        assertEquals(findingStatus.warnings(), Set.of(ResultIssue.LOW_PURITY));
+        assertEquals(findingStatus.warnings(), Set.of(FindingStatus.ResultIssue.LOW_PURITY));
         assertEquals(findingStatus.errors(), Set.of());
     }
 
     @Test
     public void toFindingStatusNotReliable() {
         FindingStatus findingStatus = FindingsStatusFactory.toFindingsStatus(Set.of(PurpleQCStatus.FAIL_CONTAMINATION, PurpleQCStatus.WARN_LOW_PURITY));
-        assertEquals(ResultStatus.NOT_RELIABLE, findingStatus.status());
+        assertEquals(FindingStatus.ResultStatus.NOT_RELIABLE, findingStatus.status());
         assertFalse(findingStatus.isOK());
-        assertEquals(findingStatus.warnings(), Set.of(ResultIssue.LOW_PURITY));
-        assertEquals(findingStatus.errors(), Set.of(ResultIssue.CONTAMINATION));
+        assertEquals(findingStatus.warnings(), Set.of(FindingStatus.ResultIssue.LOW_PURITY));
+        assertEquals(findingStatus.errors(), Set.of(FindingStatus.ResultIssue.CONTAMINATION));
     }
 }
