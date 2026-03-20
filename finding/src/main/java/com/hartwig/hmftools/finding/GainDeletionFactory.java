@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import com.hartwig.hmftools.common.purple.Gender;
-import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
 import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
@@ -13,15 +11,15 @@ import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.PurpleLossOfHeterozygosity;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
+import com.hartwig.hmftools.finding.datamodel.GainDeletion;
+import com.hartwig.hmftools.finding.datamodel.GainDeletionBuilder;
+import com.hartwig.hmftools.finding.datamodel.ReportedStatus;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFieldsBuilder;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingList;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingListBuilder;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverSource;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
-import com.hartwig.hmftools.finding.datamodel.GainDeletion;
-import com.hartwig.hmftools.finding.datamodel.GainDeletionBuilder;
-import com.hartwig.hmftools.finding.datamodel.ReportedStatus;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -29,14 +27,10 @@ final class GainDeletionFactory
 {
 
     public static DriverFindingList<GainDeletion> somaticGainDeletionFindings(
-            OrangeRefGenomeVersion orangeRefGenomeVersion,
             FindingStatus findingStatus,
             PurpleRecord purple,
-            Gender gender)
+            ArmCopyNumberFactory cnPerChromosome)
     {
-        ArmCopyNumberFactory cnPerChromosome = new ArmCopyNumberFactory(
-                purple.allSomaticCopyNumbers(), purple.fit().ploidy(), gender, orangeRefGenomeVersion);
-
         List<GainDeletion> gainDeletions = new ArrayList<>();
         gainDeletions.addAll(somaticDriverGainDels(purple.reportableSomaticGainsDels(), purple.somaticDrivers(), purple.allSomaticGeneCopyNumbers(), cnPerChromosome));
 
@@ -55,10 +49,9 @@ final class GainDeletionFactory
     // findings the reportable ones are in purple drivers. Other types are not reportable, we can ignore them
     public static DriverFindingList<GainDeletion> germlineGainDeletionFindings(
             boolean hasGermlineSample,
-            OrangeRefGenomeVersion orangeRefGenomeVersion,
             FindingStatus findingStatus,
             PurpleRecord purple,
-            Gender gender)
+            ArmCopyNumberFactory cnPerChromosome)
     {
         if(!hasGermlineSample)
         {
@@ -66,9 +59,6 @@ final class GainDeletionFactory
         }
 
         List<PurpleGeneCopyNumber> somaticGeneCopyNumbers = purple.allSomaticGeneCopyNumbers();
-
-        ArmCopyNumberFactory cnPerChromosome = new ArmCopyNumberFactory(
-                purple.allSomaticCopyNumbers(), purple.fit().ploidy(), gender, orangeRefGenomeVersion);
 
         List<GainDeletion> gainDeletions = new ArrayList<>();
         List<PurpleGainDeletion> reportableGermlineFullDels = Objects.requireNonNull(purple.reportableGermlineFullDels());

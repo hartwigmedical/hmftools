@@ -151,18 +151,21 @@ public class FindingRecordFactory
 
         DriverFindingList<SmallVariant> smallVariants =
                 SmallVariantFactory.somaticSmallVariantFindings(purple, findingStatus, findingConfig);
+
+        ArmCopyNumberFactory cnPerChromosome = new ArmCopyNumberFactory(
+                purple.allSomaticCopyNumbers(), purple.fit().ploidy(), findingConfig.gender(), orangeRecord.refGenomeVersion());
+
         somaticGainDeletions =
-                GainDeletionFactory.somaticGainDeletionFindings(orangeRecord.refGenomeVersion(), findingStatus, purple, findingConfig.gender());
+                GainDeletionFactory.somaticGainDeletionFindings(findingStatus, purple, cnPerChromosome);
 
         builder.somaticSmallVariants(smallVariants)
                 .germlineSmallVariants(SmallVariantFactory.germlineSmallVariantFindings(hasRefSample, purple, findingStatus, findingConfig))
                 .somaticGainDeletions(somaticGainDeletions)
-                .germlineGainDeletions(GainDeletionFactory.germlineGainDeletionFindings(hasRefSample, orangeRecord.refGenomeVersion(), findingStatus, purple, findingConfig.gender()))
+                .germlineGainDeletions(GainDeletionFactory.germlineGainDeletionFindings(hasRefSample, findingStatus, purple, cnPerChromosome))
                 .microsatelliteStability(createMicrosatelliteStability(purple, orangeRecord.linx(), somaticGainDeletions, findingStatus))
                 .tumorMutationalLoad(createTumorMutationalLoad(purple, findingStatus))
                 .tumorMutationalBurden(createTumorMutationalBurden(purple, findingStatus))
-                .chromosomeArmCopyNumbers(new ArmCopyNumberFactory(purple.allSomaticCopyNumbers(), purple.fit().ploidy(),
-                        findingConfig.gender(), orangeRecord.refGenomeVersion()).toArmCopyNumberFindings(findingStatus));
+                .chromosomeArmCopyNumbers(cnPerChromosome.toArmCopyNumberFindings(findingStatus));
 
         return somaticGainDeletions;
     }
