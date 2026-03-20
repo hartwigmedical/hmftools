@@ -24,7 +24,7 @@ public class CurationApplierTest
                 .driver(driverFields("variant-1", ReportedStatus.CANDIDATE))
                 .build();
         FindingRecord record = createMinimalTestFindingRecordBuilder()
-                .somaticSmallVariants(TestFindingFactory.buildDriverFindingsList(FindingStatus.ResultStatus.OK, List.of(variant)))
+                .somaticSmallVariants(TestFindingFactory.buildDriverFindingsList(FindingStatus.Status.OK, List.of(variant)))
                 .build();
 
         CurationRecord curation = new CurationRecord(List.of());
@@ -40,7 +40,7 @@ public class CurationApplierTest
                 .driver(driverFields("variant-1", ReportedStatus.CANDIDATE))
                 .build();
         FindingRecord record = createMinimalTestFindingRecordBuilder()
-                .somaticSmallVariants(TestFindingFactory.buildDriverFindingsList(FindingStatus.ResultStatus.OK, List.of(variant)))
+                .somaticSmallVariants(TestFindingFactory.buildDriverFindingsList(FindingStatus.Status.OK, List.of(variant)))
                 .build();
 
         DriverCuration dc = new DriverCuration("variant-1", 0L, "user1", true, "promote to reported");
@@ -57,7 +57,7 @@ public class CurationApplierTest
                 .driver(driverFields("variant-1", ReportedStatus.REPORTED))
                 .build();
         FindingRecord record = createMinimalTestFindingRecordBuilder()
-                .somaticSmallVariants(TestFindingFactory.buildDriverFindingsList(FindingStatus.ResultStatus.OK, List.of(variant)))
+                .somaticSmallVariants(TestFindingFactory.buildDriverFindingsList(FindingStatus.Status.OK, List.of(variant)))
                 .build();
 
         DriverCuration dc = new DriverCuration("variant-1", 0L, "user1", false, "demote to candidate");
@@ -77,7 +77,7 @@ public class CurationApplierTest
                 .driver(driverFields("variant-2", ReportedStatus.NOT_REPORTED))
                 .build();
         FindingRecord record = createMinimalTestFindingRecordBuilder()
-                .somaticSmallVariants(TestFindingFactory.buildDriverFindingsList(FindingStatus.ResultStatus.OK, List.of(variant1, variant2)))
+                .somaticSmallVariants(TestFindingFactory.buildDriverFindingsList(FindingStatus.Status.OK, List.of(variant1, variant2)))
                 .build();
 
         DriverCuration dc = new DriverCuration("variant-1", 0L, "user1", true, "promote");
@@ -95,7 +95,7 @@ public class CurationApplierTest
                 .driver(driverFields("gd-1", ReportedStatus.NOT_REPORTED))
                 .build();
         FindingRecord record = createMinimalTestFindingRecordBuilder()
-                .somaticGainDeletions(TestFindingFactory.buildDriverFindingsList(FindingStatus.ResultStatus.OK, List.of(gd)))
+                .somaticGainDeletions(TestFindingFactory.buildDriverFindingsList(FindingStatus.Status.OK, List.of(gd)))
                 .build();
 
         DriverCuration dc = new DriverCuration("gd-1", 0L, "user1", true, "promote");
@@ -112,7 +112,7 @@ public class CurationApplierTest
                 .driver(driverFields("dis-1", ReportedStatus.REPORTED))
                 .build();
         FindingRecord record = createMinimalTestFindingRecordBuilder()
-                .somaticDisruptions(TestFindingFactory.buildDriverFindingsList(FindingStatus.ResultStatus.OK, List.of(disruption)))
+                .somaticDisruptions(TestFindingFactory.buildDriverFindingsList(FindingStatus.Status.OK, List.of(disruption)))
                 .build();
 
         DriverCuration dc = new DriverCuration("dis-1", 0L, "user1", false, "demote");
@@ -129,7 +129,7 @@ public class CurationApplierTest
                 .driver(driverFields("fusion-1", ReportedStatus.CANDIDATE))
                 .build();
         FindingRecord record = createMinimalTestFindingRecordBuilder()
-                .fusions(TestFindingFactory.buildDriverFindingsList(FindingStatus.ResultStatus.OK, List.of(fusion)))
+                .fusions(TestFindingFactory.buildDriverFindingsList(FindingStatus.Status.OK, List.of(fusion)))
                 .build();
 
         DriverCuration dc = new DriverCuration("fusion-1", 0L, "user1", true, "promote");
@@ -146,7 +146,7 @@ public class CurationApplierTest
                 .driver(driverFields("gl-variant-1", ReportedStatus.NOT_REPORTED))
                 .build();
         FindingRecord record = createMinimalTestFindingRecordBuilder()
-                .germlineSmallVariants(TestFindingFactory.buildDriverFindingsList(FindingStatus.ResultStatus.OK, List.of(variant)))
+                .germlineSmallVariants(TestFindingFactory.buildDriverFindingsList(FindingStatus.Status.OK, List.of(variant)))
                 .build();
 
         DriverCuration dc = new DriverCuration("gl-variant-1", 0L, "user1", true, "promote");
@@ -171,7 +171,7 @@ public class CurationApplierTest
                 .gene("BRCA1")
                 .build();
         FindingRecord record = createMinimalTestFindingRecordBuilder()
-                .somaticSmallVariants(TestFindingFactory.buildDriverFindingsList(FindingStatus.ResultStatus.OK, List.of(variant)))
+                .somaticSmallVariants(TestFindingFactory.buildDriverFindingsList(FindingStatus.Status.OK, List.of(variant)))
                 .build();
 
         DriverCuration dc = new DriverCuration("variant-1", 0L, "user1", true, "promote");
@@ -196,8 +196,8 @@ public class CurationApplierTest
                 .driver(driverFields("fusion-1", ReportedStatus.REPORTED))
                 .build();
         FindingRecord record = createMinimalTestFindingRecordBuilder()
-                .somaticSmallVariants(TestFindingFactory.buildDriverFindingsList(FindingStatus.ResultStatus.OK, List.of(variant)))
-                .fusions(TestFindingFactory.buildDriverFindingsList(FindingStatus.ResultStatus.OK, List.of(fusion)))
+                .somaticSmallVariants(TestFindingFactory.buildDriverFindingsList(FindingStatus.Status.OK, List.of(variant)))
+                .fusions(TestFindingFactory.buildDriverFindingsList(FindingStatus.Status.OK, List.of(fusion)))
                 .build();
 
         CurationRecord curation = new CurationRecord(List.of(

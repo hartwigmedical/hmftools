@@ -108,7 +108,7 @@ public class LowPurityConverter
     private static FindingStatus convert(FindingStatus findingStatus)
     {
         return FindingStatusBuilder.builder()
-                .status(FindingStatus.ResultStatus.NOT_RELIABLE)
+                .status(FindingStatus.Status.NOT_RELIABLE)
                 .errors(addLowPurity(findingStatus.errors()))
                 .warnings(removeLowPurity(findingStatus.warnings()))
                 .build();
@@ -116,20 +116,20 @@ public class LowPurityConverter
 
     private static boolean shouldConvert(FindingStatus findingStatus, boolean isLowPurity)
     {
-        return findingStatus.status() == FindingStatus.ResultStatus.OK && isLowPurity;
+        return findingStatus.status() == FindingStatus.Status.OK && isLowPurity;
     }
 
-    private static SortedSet<FindingStatus.ResultIssue> addLowPurity(SortedSet<FindingStatus.ResultIssue> sortedSet)
+    private static SortedSet<FindingStatus.Issue> addLowPurity(SortedSet<FindingStatus.Issue> sortedSet)
     {
-        SortedSet<FindingStatus.ResultIssue> result = new TreeSet<>(sortedSet);
-        result.add(FindingStatus.ResultIssue.LOW_PURITY);
+        SortedSet<FindingStatus.Issue> result = new TreeSet<>(sortedSet);
+        result.add(FindingStatus.Issue.LOW_PURITY);
         return result;
     }
 
-    private static SortedSet<FindingStatus.ResultIssue> removeLowPurity(SortedSet<FindingStatus.ResultIssue> sortedSet)
+    private static SortedSet<FindingStatus.Issue> removeLowPurity(SortedSet<FindingStatus.Issue> sortedSet)
     {
-        SortedSet<FindingStatus.ResultIssue> result = new TreeSet<>(sortedSet);
-        result.remove(FindingStatus.ResultIssue.LOW_PURITY);
+        SortedSet<FindingStatus.Issue> result = new TreeSet<>(sortedSet);
+        result.remove(FindingStatus.Issue.LOW_PURITY);
         return result;
     }
 }

@@ -31,8 +31,8 @@ public class LowPurityConverterTest
                         .build())
                 .hlaAlleles(FindingListBuilder.<HlaAllele>builder()
                         .status(FindingStatusBuilder.builder()
-                                .status(FindingStatus.ResultStatus.OK)
-                                .warnings(new TreeSet<>(Set.of(FindingStatus.ResultIssue.LOW_PURITY)))
+                                .status(FindingStatus.Status.OK)
+                                .warnings(new TreeSet<>(Set.of(FindingStatus.Issue.LOW_PURITY)))
                                 .errors(new TreeSet<>())
                                 .build())
                         .findings(List.of(TestFindingFactory.hlaAlleleBuilder().build()))
@@ -64,16 +64,16 @@ public class LowPurityConverterTest
     }
 
     private void assertFindingStatus(FindingStatus findingStatus) {
-        assertEquals(FindingStatus.ResultStatus.NOT_RELIABLE, findingStatus.status());
-        assertTrue(findingStatus.errors().contains(FindingStatus.ResultIssue.LOW_PURITY));
-        assertFalse(findingStatus.warnings().contains(FindingStatus.ResultIssue.LOW_PURITY));
+        assertEquals(FindingStatus.Status.NOT_RELIABLE, findingStatus.status());
+        assertTrue(findingStatus.errors().contains(FindingStatus.Issue.LOW_PURITY));
+        assertFalse(findingStatus.warnings().contains(FindingStatus.Issue.LOW_PURITY));
     }
 
     private void assertHLA(FindingList<HlaAllele> findingList) {
         FindingStatus findingStatus = findingList.status();
-        assertEquals(FindingStatus.ResultStatus.OK, findingStatus.status());
-        assertFalse(findingStatus.errors().contains(FindingStatus.ResultIssue.LOW_PURITY));
-        assertTrue(findingStatus.warnings().contains(FindingStatus.ResultIssue.LOW_PURITY));
+        assertEquals(FindingStatus.Status.OK, findingStatus.status());
+        assertFalse(findingStatus.errors().contains(FindingStatus.Issue.LOW_PURITY));
+        assertTrue(findingStatus.warnings().contains(FindingStatus.Issue.LOW_PURITY));
         List<HlaAllele> hlaAlleles = findingList.findings();
         assertFalse(hlaAlleles.isEmpty());
         for(HlaAllele hlaAllele : hlaAlleles)
