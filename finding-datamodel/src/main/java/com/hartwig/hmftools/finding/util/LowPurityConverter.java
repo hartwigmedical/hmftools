@@ -20,8 +20,6 @@ import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
 import com.hartwig.hmftools.finding.datamodel.HlaAllele;
 import com.hartwig.hmftools.finding.datamodel.HlaAlleleBuilder;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingStatusBuilder;
-import com.hartwig.hmftools.finding.datamodel.finding.ResultIssue;
-import com.hartwig.hmftools.finding.datamodel.finding.ResultStatus;
 
 import org.jspecify.annotations.Nullable;
 
@@ -110,7 +108,7 @@ public class LowPurityConverter
     private static FindingStatus convert(FindingStatus findingStatus)
     {
         return FindingStatusBuilder.builder()
-                .status(ResultStatus.NOT_RELIABLE)
+                .status(FindingStatus.ResultStatus.NOT_RELIABLE)
                 .errors(addLowPurity(findingStatus.errors()))
                 .warnings(removeLowPurity(findingStatus.warnings()))
                 .build();
@@ -118,20 +116,20 @@ public class LowPurityConverter
 
     private static boolean shouldConvert(FindingStatus findingStatus, boolean isLowPurity)
     {
-        return findingStatus.status() == ResultStatus.OK && isLowPurity;
+        return findingStatus.status() == FindingStatus.ResultStatus.OK && isLowPurity;
     }
 
-    private static SortedSet<ResultIssue> addLowPurity(SortedSet<ResultIssue> sortedSet)
+    private static SortedSet<FindingStatus.ResultIssue> addLowPurity(SortedSet<FindingStatus.ResultIssue> sortedSet)
     {
-        SortedSet<ResultIssue> result = new TreeSet<>(sortedSet);
-        result.add(ResultIssue.LOW_PURITY);
+        SortedSet<FindingStatus.ResultIssue> result = new TreeSet<>(sortedSet);
+        result.add(FindingStatus.ResultIssue.LOW_PURITY);
         return result;
     }
 
-    private static SortedSet<ResultIssue> removeLowPurity(SortedSet<ResultIssue> sortedSet)
+    private static SortedSet<FindingStatus.ResultIssue> removeLowPurity(SortedSet<FindingStatus.ResultIssue> sortedSet)
     {
-        SortedSet<ResultIssue> result = new TreeSet<>(sortedSet);
-        result.remove(ResultIssue.LOW_PURITY);
+        SortedSet<FindingStatus.ResultIssue> result = new TreeSet<>(sortedSet);
+        result.remove(FindingStatus.ResultIssue.LOW_PURITY);
         return result;
     }
 }

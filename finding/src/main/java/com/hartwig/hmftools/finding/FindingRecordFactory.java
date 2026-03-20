@@ -2,8 +2,8 @@ package com.hartwig.hmftools.finding;
 
 import static com.hartwig.hmftools.finding.DisruptionFactory.createGermlineDisruptions;
 import static com.hartwig.hmftools.finding.DisruptionFactory.createSomaticDisruptions;
-import static com.hartwig.hmftools.finding.datamodel.finding.ResultIssue.REF_REQUIRED;
-import static com.hartwig.hmftools.finding.datamodel.finding.ResultIssue.WGS_REQUIRED;
+import static com.hartwig.hmftools.finding.datamodel.finding.FindingStatus.ResultIssue.REF_REQUIRED;
+import static com.hartwig.hmftools.finding.datamodel.finding.FindingStatus.ResultIssue.WGS_REQUIRED;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -68,7 +68,6 @@ import com.hartwig.hmftools.finding.datamodel.PurityPloidyFitBuilder;
 import com.hartwig.hmftools.finding.datamodel.Qc;
 import com.hartwig.hmftools.finding.datamodel.QcBuilder;
 import com.hartwig.hmftools.finding.datamodel.RefGenomeVersion;
-import com.hartwig.hmftools.finding.datamodel.finding.ResultIssue;
 import com.hartwig.hmftools.finding.datamodel.SequencingScope;
 import com.hartwig.hmftools.finding.datamodel.SmallVariant;
 import com.hartwig.hmftools.finding.datamodel.TumorMutationalBurden;
@@ -372,7 +371,7 @@ public class FindingRecordFactory
         }
         else
         {
-            Set<ResultIssue> errors = new HashSet<>();
+            Set<FindingStatus.ResultIssue> errors = new HashSet<>();
             if(experimentType == ExperimentType.TARGETED)
             {
                 errors.add(WGS_REQUIRED);

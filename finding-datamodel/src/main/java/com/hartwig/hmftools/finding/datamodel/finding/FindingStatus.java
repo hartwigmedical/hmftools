@@ -13,4 +13,24 @@ public record FindingStatus(@NotNull ResultStatus status, @NotNull SortedSet<Res
     {
         return status == ResultStatus.OK;
     }
+
+    public enum ResultIssue
+    {
+        REF_REQUIRED,
+        WGS_REQUIRED,
+        DELETED_GENES,
+        HIGH_COPY_NUMBER_NOISE,
+        GENDER_MISMATCH,
+        LOW_PURITY,
+        TUMOR_IN_NORMAL_CONTAMINATION,
+        CONTAMINATION,
+        NO_TUMOR
+    }
+
+    public enum ResultStatus
+    {
+        NOT_AVAILABLE,
+        NOT_RELIABLE,
+        OK
+    }
 }

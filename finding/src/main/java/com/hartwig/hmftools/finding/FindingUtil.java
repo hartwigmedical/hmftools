@@ -11,17 +11,15 @@ import com.hartwig.hmftools.finding.datamodel.finding.FindingItem;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingItemBuilder;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingStatusBuilder;
-import com.hartwig.hmftools.finding.datamodel.finding.ResultIssue;
-import com.hartwig.hmftools.finding.datamodel.finding.ResultStatus;
 
 class FindingUtil
 {
     static <T extends Driver> DriverFindingList<T> refRequired()
     {
-        return notAvailableDriverFindingList(Set.of(ResultIssue.REF_REQUIRED));
+        return notAvailableDriverFindingList(Set.of(FindingStatus.ResultIssue.REF_REQUIRED));
     }
 
-    static <T extends Driver> DriverFindingList<T> notAvailableDriverFindingList(Set<ResultIssue> errors)
+    static <T extends Driver> DriverFindingList<T> notAvailableDriverFindingList(Set<FindingStatus.ResultIssue> errors)
     {
         return DriverFindingListBuilder.<T>builder()
                 .status(notAvailableStatus(errors))
@@ -29,17 +27,17 @@ class FindingUtil
                 .build();
     }
 
-    static <T> FindingItem<T> notAvailableFindingItem(Set<ResultIssue> errors)
+    static <T> FindingItem<T> notAvailableFindingItem(Set<FindingStatus.ResultIssue> errors)
     {
         return FindingItemBuilder.<T>builder()
                 .status(notAvailableStatus(errors))
                 .build();
     }
 
-    static FindingStatus notAvailableStatus(Set<ResultIssue> errors)
+    static FindingStatus notAvailableStatus(Set<FindingStatus.ResultIssue> errors)
     {
         return FindingStatusBuilder.builder()
-                .status(ResultStatus.NOT_AVAILABLE)
+                .status(FindingStatus.ResultStatus.NOT_AVAILABLE)
                 .errors(new TreeSet<>(errors))
                 .warnings(new TreeSet<>())
                 .build();
