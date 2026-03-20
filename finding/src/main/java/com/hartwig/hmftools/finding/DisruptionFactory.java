@@ -25,6 +25,7 @@ import com.hartwig.hmftools.finding.datamodel.DriverFindingList;
 import com.hartwig.hmftools.finding.datamodel.DriverFindingListBuilder;
 import com.hartwig.hmftools.finding.datamodel.DriverInterpretation;
 import com.hartwig.hmftools.finding.datamodel.DriverSource;
+import com.hartwig.hmftools.finding.datamodel.FindingsStatus;
 import com.hartwig.hmftools.finding.datamodel.ReportedStatus;
 
 import org.apache.commons.lang3.Validate;
@@ -67,7 +68,8 @@ final class DisruptionFactory
     // back to the breakends, it probably will work by just selecting first reportable disruption with the same gene / transcript.
     // We can do it for the backport version if that makes it easier.
 
-    public static DriverFindingList<Disruption> createGermlineDisruptions(boolean hasRefSample, LinxRecord linx)
+    public static DriverFindingList<Disruption> createGermlineDisruptions(boolean hasRefSample, LinxRecord linx,
+            FindingsStatus findingsStatus)
     {
         if(!hasRefSample)
         {
@@ -85,12 +87,12 @@ final class DisruptionFactory
                         : Disruption.Type.DISRUPTION;
 
         return DriverFindingListBuilder.<Disruption>builder()
-                .status(FindingUtil.okStatus())
+                .status(findingsStatus)
                 .findings(createDisruptions(DriverSource.GERMLINE, breakends, structuralVariants, findDisruptionType))
                 .build();
     }
 
-    public static DriverFindingList<Disruption> createSomaticDisruptions(LinxRecord linx)
+    public static DriverFindingList<Disruption> createSomaticDisruptions(LinxRecord linx, FindingsStatus findingsStatus)
     {
         @NotNull Collection<LinxBreakend> breakends = linx.reportableSomaticBreakends();
         @NotNull Collection<LinxSvAnnotation> structuralVariants = linx.allSomaticStructuralVariants();
@@ -111,7 +113,7 @@ final class DisruptionFactory
                 geneDriverTypeMap.getOrDefault(gene, Disruption.Type.DISRUPTION);
 
         return DriverFindingListBuilder.<Disruption>builder()
-                .status(FindingUtil.okStatus())
+                .status(findingsStatus)
                 .findings(createDisruptions(DriverSource.SOMATIC, breakends, structuralVariants, findDisruptionType))
                 .build();
     }

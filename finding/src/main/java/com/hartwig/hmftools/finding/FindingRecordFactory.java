@@ -119,19 +119,19 @@ public class FindingRecordFactory
                         .samplingDate(orangeRecord.samplingDate())
                         .build())
                 .qc(createQc(purple))
-                .fusions(createFusionsFindings(orangeRecord.linx()));
+                .fusions(createFusionsFindings(orangeRecord.linx(), findingsStatus));
 
         DriverFindingList<GainDeletion>
                 somaticGainDeletions = addPurpleFindings(builder, orangeRecord, findingsStatus, findingConfig);
 
-        builder.somaticDisruptions(createSomaticDisruptions(linx))
-                .germlineDisruptions(createGermlineDisruptions(orangeRecord.refSample() != null, linx))
-                .viruses(createVirusFindings(orangeRecord.virusInterpreter(), experimentType))
+        builder.somaticDisruptions(createSomaticDisruptions(linx, findingsStatus))
+                .germlineDisruptions(createGermlineDisruptions(orangeRecord.refSample() != null, linx, findingsStatus))
+                .viruses(createVirusFindings(orangeRecord.virusInterpreter(), experimentType, findingsStatus))
                 .homologousRecombination(createHomologousRecombination(orangeRecord.chord(), purple, linx, somaticGainDeletions, findingsStatus, experimentType, hasRefSample));
 
-        return builder.predictedTumorOrigin(createPredictedTumorOrigin(orangeRecord.cuppa(), orangeRecord.plots(), experimentType))
+        return builder.predictedTumorOrigin(createPredictedTumorOrigin(orangeRecord.cuppa(), orangeRecord.plots(), experimentType, findingsStatus))
                 .hlaAlleles(HlaAlleleFactory.createHlaAllelesFindings(orangeRecord, findingsStatus))
-                .pharmacoGenotypes(createPharmacoGenotypesFindings(orangeRecord.peach()))
+                .pharmacoGenotypes(createPharmacoGenotypesFindings(orangeRecord.peach(), findingsStatus))
                 .build();
     }
 
@@ -231,12 +231,13 @@ public class FindingRecordFactory
     }
 
     private static FindingItem<PredictedTumorOrigin> createPredictedTumorOrigin(@Nullable CuppaData cuppa, OrangePlots orangePlots,
-            @NotNull ExperimentType experimentType)
+            @NotNull ExperimentType experimentType,
+            @NotNull FindingsStatus findingsStatus)
     {
         if(cuppa != null)
         {
             return FindingItemBuilder.<PredictedTumorOrigin>builder()
-                    .status(FindingUtil.okStatus())
+                    .status(findingsStatus)
                     .finding(PredictedTumorOriginBuilder.builder()
                             .findingKey("predictedTumorOrigin")
                             .mode(cuppaMode(cuppa.mode()))
@@ -447,10 +448,10 @@ public class FindingRecordFactory
                 .collect(Collectors.toList());
     }
 
-    public static DriverFindingList<Fusion> createFusionsFindings(LinxRecord linx)
+    public static DriverFindingList<Fusion> createFusionsFindings(LinxRecord linx, FindingsStatus findingsStatus)
     {
         return DriverFindingListBuilder.<Fusion>builder()
-                .status(FindingUtil.okStatus())
+                .status(findingsStatus)
                 .findings(linx.reportableSomaticFusions().stream()
                         .map(o -> convertFusion(o, DriverSource.SOMATIC)).sorted(Fusion.COMPARATOR).toList())
                 .build();
@@ -504,12 +505,13 @@ public class FindingRecordFactory
     }
 
     private static DriverFindingList<Virus> createVirusFindings(@Nullable VirusInterpreterData virusInterpreter,
-            @NotNull ExperimentType experimentType)
+            @NotNull ExperimentType experimentType,
+            @NotNull FindingsStatus findingsStatus)
     {
         if(virusInterpreter != null)
         {
             return DriverFindingListBuilder.<Virus>builder()
-                    .status(FindingUtil.okStatus())
+                    .status(findingsStatus)
                     .findings(convertViruses(virusInterpreter.allViruses()))
                     .build();
         }
@@ -564,12 +566,13 @@ public class FindingRecordFactory
         };
     }
 
-    private static FindingList<PharmacoGenotype> createPharmacoGenotypesFindings(@Nullable Set<PeachGenotype> peachGenotypes)
+    private static FindingList<PharmacoGenotype> createPharmacoGenotypesFindings(@Nullable Set<PeachGenotype> peachGenotypes,
+            @NotNull FindingsStatus findingsStatus)
     {
         if(peachGenotypes != null)
         {
             return FindingListBuilder.<PharmacoGenotype>builder()
-                    .status(FindingUtil.okStatus())
+                    .status(findingsStatus)
                     .findings(peachGenotypes.stream().map(o ->
                                     PharmacoGenotypeBuilder.builder()
                                             .findingKey(FindingKeys.pharmacoGenotype(o.gene(), o.allele()))

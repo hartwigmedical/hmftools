@@ -24,7 +24,7 @@ class FindingUtil
     static <T extends Driver> DriverFindingList<T> notAvailableDriverFindingList(Set<ResultIssue> errors)
     {
         return DriverFindingListBuilder.<T>builder()
-                .status(findingsStatus(ResultStatus.NOT_AVAILABLE, errors))
+                .status(notAvailableStatus(errors))
                 .findings(List.of())
                 .build();
     }
@@ -32,19 +32,14 @@ class FindingUtil
     static <T> FindingItem<T> notAvailableFindingItem(Set<ResultIssue> errors)
     {
         return FindingItemBuilder.<T>builder()
-                .status(findingsStatus(ResultStatus.NOT_AVAILABLE, errors))
+                .status(notAvailableStatus(errors))
                 .build();
     }
 
-    static FindingsStatus okStatus()
-    {
-        return findingsStatus(ResultStatus.OK, Set.of());
-    }
-
-    static FindingsStatus findingsStatus(ResultStatus status, Set<ResultIssue> errors)
+    static FindingsStatus notAvailableStatus(Set<ResultIssue> errors)
     {
         return FindingsStatusBuilder.builder()
-                .status(status)
+                .status(ResultStatus.NOT_AVAILABLE)
                 .errors(new TreeSet<>(errors))
                 .warnings(new TreeSet<>())
                 .build();
