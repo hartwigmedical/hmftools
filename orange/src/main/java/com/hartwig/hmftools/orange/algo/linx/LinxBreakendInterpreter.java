@@ -47,6 +47,9 @@ public final class LinxBreakendInterpreter
 
     public static List<LinxBreakend> buildGermlineBreakends(final LinxData linxData, final CytoBands cytoBands)
     {
+        if(linxData.germlineSvAnnotations() == null)
+            return null;
+
         List<LinxBreakend> reportedBreakends = Lists.newArrayList();
 
         Map<Integer,LinxSvAnnotation> svAnnotationsMap = linxData.germlineSvAnnotations().stream()
