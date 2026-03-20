@@ -152,6 +152,9 @@ public final class SomaticVariantTable
 
     protected static String hgvsDisplay(final PurpleTranscriptImpact transcriptImpact)
     {
+        if(transcriptImpact.hgvsProteinImpact().isEmpty())
+            return transcriptImpact.hgvsCodingImpact();
+
         return format("%s [%s]", transcriptImpact.hgvsCodingImpact(), transcriptImpact.hgvsProteinImpact());
     }
 
