@@ -1,6 +1,8 @@
-package com.hartwig.hmftools.finding.datamodel;
+package com.hartwig.hmftools.finding.datamodel.finding;
 
 import java.util.SortedSet;
+
+import com.hartwig.hmftools.finding.datamodel.RecordBuilder;
 
 import jakarta.validation.constraints.NotNull;
 

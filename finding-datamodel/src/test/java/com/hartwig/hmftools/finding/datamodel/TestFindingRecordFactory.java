@@ -3,6 +3,8 @@ package com.hartwig.hmftools.finding.datamodel;
 import java.time.LocalDate;
 import java.util.List;
 
+import com.hartwig.hmftools.finding.datamodel.finding.ResultStatus;
+
 import org.jetbrains.annotations.NotNull;
 
 @SuppressWarnings("unused")

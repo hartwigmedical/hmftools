@@ -1,5 +1,10 @@
 package com.hartwig.hmftools.finding.datamodel;
 
+import com.hartwig.hmftools.finding.datamodel.driver.Driver;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverFields;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverInterpretation;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverSource;
+
 import org.jspecify.annotations.Nullable;
 
 import jakarta.validation.constraints.NotNull;
@@ -72,6 +77,12 @@ public record Disruption(
     public DriverInterpretation driverInterpretation()
     {
         return driver.driverInterpretation();
+    }
+
+    @Override
+    public boolean isReported()
+    {
+        return driver.isReported();
     }
 
     @Override

@@ -6,22 +6,22 @@ import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.finding.datamodel.Driver;
-import com.hartwig.hmftools.finding.datamodel.DriverFindingList;
-import com.hartwig.hmftools.finding.datamodel.DriverFindingListBuilder;
-import com.hartwig.hmftools.finding.datamodel.Finding;
-import com.hartwig.hmftools.finding.datamodel.FindingItem;
-import com.hartwig.hmftools.finding.datamodel.FindingItemBuilder;
-import com.hartwig.hmftools.finding.datamodel.FindingList;
-import com.hartwig.hmftools.finding.datamodel.FindingListBuilder;
+import com.hartwig.hmftools.finding.datamodel.driver.Driver;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingList;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingListBuilder;
+import com.hartwig.hmftools.finding.datamodel.finding.Finding;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingItem;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingItemBuilder;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingList;
 import com.hartwig.hmftools.finding.datamodel.FindingRecord;
 import com.hartwig.hmftools.finding.datamodel.FindingRecordBuilder;
-import com.hartwig.hmftools.finding.datamodel.FindingsStatus;
-import com.hartwig.hmftools.finding.datamodel.FindingsStatusBuilder;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingListBuilder;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingsStatus;
 import com.hartwig.hmftools.finding.datamodel.HlaAllele;
 import com.hartwig.hmftools.finding.datamodel.HlaAlleleBuilder;
-import com.hartwig.hmftools.finding.datamodel.ResultIssue;
-import com.hartwig.hmftools.finding.datamodel.ResultStatus;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingsStatusBuilder;
+import com.hartwig.hmftools.finding.datamodel.finding.ResultIssue;
+import com.hartwig.hmftools.finding.datamodel.finding.ResultStatus;
 
 import org.jspecify.annotations.Nullable;
 

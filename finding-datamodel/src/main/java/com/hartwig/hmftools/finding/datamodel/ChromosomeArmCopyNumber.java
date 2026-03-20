@@ -1,5 +1,10 @@
 package com.hartwig.hmftools.finding.datamodel;
 
+import com.hartwig.hmftools.finding.datamodel.driver.Driver;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverFields;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverInterpretation;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverSource;
+
 import jakarta.validation.constraints.NotNull;
 
 @RecordBuilder
@@ -57,5 +62,11 @@ public record ChromosomeArmCopyNumber(
     public double driverLikelihood()
     {
         return driver.driverLikelihood();
+    }
+
+    @Override
+    public boolean isReported()
+    {
+        return driver.isReported();
     }
 }

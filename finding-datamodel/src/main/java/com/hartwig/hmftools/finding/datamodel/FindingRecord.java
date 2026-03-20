@@ -3,6 +3,11 @@ package com.hartwig.hmftools.finding.datamodel;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.hartwig.hmftools.finding.datamodel.driver.Driver;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingList;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingItem;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingList;
+
 import jakarta.validation.constraints.NotNull;
 
 @RecordBuilder
