@@ -7,10 +7,10 @@ import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
-import com.hartwig.hmftools.finding.datamodel.FindingsStatus;
-import com.hartwig.hmftools.finding.datamodel.FindingsStatusBuilder;
-import com.hartwig.hmftools.finding.datamodel.ResultIssue;
-import com.hartwig.hmftools.finding.datamodel.ResultStatus;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingsStatus;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingsStatusBuilder;
+import com.hartwig.hmftools.finding.datamodel.finding.ResultIssue;
+import com.hartwig.hmftools.finding.datamodel.finding.ResultStatus;
 
 import org.jetbrains.annotations.Nullable;
 

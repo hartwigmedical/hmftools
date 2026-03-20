@@ -12,12 +12,12 @@ import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.PurpleGermlineStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
-import com.hartwig.hmftools.finding.datamodel.DriverFieldsBuilder;
-import com.hartwig.hmftools.finding.datamodel.DriverFindingList;
-import com.hartwig.hmftools.finding.datamodel.DriverFindingListBuilder;
-import com.hartwig.hmftools.finding.datamodel.DriverInterpretation;
-import com.hartwig.hmftools.finding.datamodel.DriverSource;
-import com.hartwig.hmftools.finding.datamodel.FindingsStatus;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverFieldsBuilder;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingList;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingListBuilder;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverInterpretation;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverSource;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingsStatus;
 import com.hartwig.hmftools.finding.datamodel.GainDeletion;
 import com.hartwig.hmftools.finding.datamodel.GainDeletionBuilder;
 
