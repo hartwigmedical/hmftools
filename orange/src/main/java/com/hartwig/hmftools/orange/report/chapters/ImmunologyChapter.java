@@ -10,16 +10,12 @@ import com.hartwig.hmftools.datamodel.hla.LilacRecord;
 import com.hartwig.hmftools.datamodel.orange.ExperimentType;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.orange.report.ReportResources;
-import com.hartwig.hmftools.datamodel.purple.PurpleQCInterpretation;
+import com.hartwig.hmftools.orange.algo.QcStatusInterpretation;
 import com.hartwig.hmftools.orange.report.tables.HLAAlleleTable;
 import com.hartwig.hmftools.orange.report.tables.ImmuneEscapeTable;
-import com.hartwig.hmftools.orange.report.util.Cells;
-import com.hartwig.hmftools.orange.report.util.Tables;
 import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Paragraph;
-import com.itextpdf.layout.element.Table;
-import com.itextpdf.layout.property.UnitValue;
 
 public class ImmunologyChapter implements ReportChapter
 {
@@ -48,6 +44,12 @@ public class ImmunologyChapter implements ReportChapter
     public void render(final Document document)
     {
         document.add(new Paragraph(name()).addStyle(mReportResources.chapterTitleStyle()));
+
+        if(QcStatusInterpretation.hasPurpleFail(mReport.purple().fit().qc()))
+        {
+            mReportResources.addQcFailNotice(document);
+            return;
+        }
 
         addHLAData(document);
 
@@ -84,7 +86,7 @@ public class ImmunologyChapter implements ReportChapter
     private void addImmuneEscapeData(final Document document)
     {
         String title = "Genetic Immune Escape";
-        boolean isTumorFail = PurpleQCInterpretation.isFail(mReport.purple().fit().qc());
+        boolean isTumorFail = QcStatusInterpretation.hasPurpleFail(mReport.purple().fit().qc());
         document.add(ImmuneEscapeTable.build(title, contentWidth(), mReport.immuneEscape(), mReportResources, isTumorFail));
     }
 }

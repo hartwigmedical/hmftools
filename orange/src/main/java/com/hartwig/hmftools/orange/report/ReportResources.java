@@ -4,14 +4,17 @@ import java.io.IOException;
 import java.util.List;
 
 import com.hartwig.hmftools.orange.OrangeApplication;
+import com.hartwig.hmftools.orange.algo.QcStatusInterpretation;
 import com.itextpdf.io.font.FontProgram;
 import com.itextpdf.io.font.FontProgramFactory;
 import com.itextpdf.io.font.PdfEncodings;
 import com.itextpdf.kernel.colors.DeviceRgb;
 import com.itextpdf.kernel.font.PdfFont;
 import com.itextpdf.kernel.font.PdfFontFactory;
+import com.itextpdf.layout.Document;
 import com.itextpdf.layout.Style;
 import com.itextpdf.layout.element.Cell;
+import com.itextpdf.layout.element.Paragraph;
 
 public class ReportResources
 {
@@ -25,6 +28,9 @@ public class ReportResources
     public static final float PAGE_MARGIN_LEFT = 30;
     public static final float PAGE_MARGIN_RIGHT = 30;
     public static final float PAGE_MARGIN_BOTTOM = 40;
+
+    public static final int HEADER_ORANGE_HEIGHT = 60;
+    public static final int FOOTER_HEIGHT = 20;
 
     public static final int FULL_PAGE_IMAGE_WIDTH = 750; // was 740
     public static final int FULL_PAGE_IMAGE_HEIGHT = 430; // was 420
@@ -65,6 +71,11 @@ public class ReportResources
         return new ReportResources(
                 createFontFromProgram(loadFontProgram(FONT_REGULAR_PATH)),
                 createFontFromProgram(loadFontProgram(FONT_BOLD_PATH)));
+    }
+
+    public void addQcFailNotice(final Document document)
+    {
+        document.add(new Paragraph(ReportResources.NOT_AVAILABLE).addStyle(tableContentStyle()));
     }
 
     public PdfFont fontBold()

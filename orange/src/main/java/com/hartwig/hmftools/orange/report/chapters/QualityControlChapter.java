@@ -3,8 +3,11 @@ package com.hartwig.hmftools.orange.report.chapters;
 import static com.hartwig.hmftools.orange.report.ReportResources.FULL_PAGE_IMAGE_HEIGHT;
 import static com.hartwig.hmftools.orange.report.ReportResources.FULL_PAGE_IMAGE_WIDTH;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
-import com.hartwig.hmftools.datamodel.purple.PurpleQCInterpretation;
+import com.hartwig.hmftools.orange.algo.QcStatusInterpretation;
 import com.hartwig.hmftools.orange.report.PlotPathResolver;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.util.Images;
@@ -44,15 +47,19 @@ public class QualityControlChapter implements ReportChapter
     {
         document.add(new Paragraph(name()).addStyle(mReportResources.chapterTitleStyle()));
 
-        boolean isFail = PurpleQCInterpretation.isFail(mReport.purple().fit().qc());
-        if(!isFail && mReport.plots().qSeePlot() != null)
+        if(QcStatusInterpretation.hasPurpleFail(mReport.purple().fit().qc()))
         {
-            addQSeePdf(document);
+            mReportResources.addQcFailNotice(document);
+            return;
         }
-        else
+
+        if(mReport.plots().qSeePlot() == null || !Files.exists(Paths.get(mReport.plots().qSeePlot())))
         {
-            document.add(new Paragraph(ReportResources.NOT_AVAILABLE).addStyle(mReportResources.tableContentStyle()));
+            document.add(new Paragraph("Plot not available").addStyle(mReportResources.tableContentStyle()));
+            return;
         }
+
+       addQSeePdf(document);
     }
 
     private void addQSeePdf(final Document document)

@@ -14,6 +14,7 @@ public final class TableCommon
 {
     public static final String COL_GENE = "Gene";
     public static final String COL_CHR = "Chromosome";
+    public static final String COL_POSITION = "Position";
     public static final String COL_CN = "CN";
     public static final String COL_JCN = "JCN";
     public static final String COL_REL_CN = "Rel CN";

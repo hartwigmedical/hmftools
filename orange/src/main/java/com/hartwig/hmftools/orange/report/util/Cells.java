@@ -77,7 +77,8 @@ public class Cells
     public Cell createImage(final Image image)
     {
         Cell cell = createBorderlessBase();
-        cell.setBorderBottom(new SolidBorder(ReportResources.PALETTE_MID_GREY, 0.25F));
+        // cell.setBorderBottom(new SolidBorder(ReportResources.PALETTE_MID_GREY, 0.25F));
+        cell.setBorder(Border.NO_BORDER);
         cell.addStyle(mReportResources.tableContentStyle());
         cell.add(image);
         return cell;

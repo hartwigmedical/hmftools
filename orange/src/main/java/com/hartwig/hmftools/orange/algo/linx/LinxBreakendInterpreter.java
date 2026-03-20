@@ -100,6 +100,7 @@ public final class LinxBreakendInterpreter
                 .svId(linxBreakend.svId())
                 .gene(linxBreakend.gene())
                 .chromosome(chromosome)
+                .position(position)
                 .chromosomeBand(cytoBand)
                 .transcript(linxBreakend.transcriptId())
                 .isCanonical(linxBreakend.canonical())

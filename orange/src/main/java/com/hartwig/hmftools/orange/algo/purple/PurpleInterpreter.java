@@ -115,7 +115,7 @@ public class PurpleInterpreter
         for(SmallVariant variant : variants)
         {
             DriverCatalog driver = drivers.stream().filter(x -> x.driver() == requiredDriverType).findFirst().orElse(null);
-            PurpleVariant purpleVariant = PurpleVariantFactory.buildPurpleVariant(variant, driver, isGermline);
+            PurpleVariant purpleVariant = PurpleVariantFactory.buildPurpleVariant(variant, variants, driver, isGermline);
             purpleVariants.add(purpleVariant);
         }
 

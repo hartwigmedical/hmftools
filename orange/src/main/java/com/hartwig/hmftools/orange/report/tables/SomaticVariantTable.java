@@ -3,7 +3,9 @@ package com.hartwig.hmftools.orange.report.tables;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.orange.algo.OrangeConstants.isCandidateLikelihood;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_GENE;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_HGVS;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_POSITION;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.VALUE_NO;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.VALUE_YES;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.floatArray;
@@ -17,14 +19,12 @@ import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_DRIVER;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_HOTSPOT;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_MACN;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_SL;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_VARIANT;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_VCN;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_CN;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_DP;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_RNA;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.cellArray;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.intToFloatArray;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -55,8 +55,9 @@ public final class SomaticVariantTable
         List<Float> widths = Lists.newArrayList();
         List<Cell> cellEntries = Lists.newArrayList();
 
-        addEntry(cells, widths, cellEntries, 3, COL_VARIANT);
-        addEntry(cells, widths, cellEntries, 2, COL_HGVS);
+        addEntry(cells, widths, cellEntries, 1, COL_GENE);
+        addEntry(cells, widths, cellEntries, 2, COL_POSITION);
+        addEntry(cells, widths, cellEntries, 3, COL_HGVS);
         addEntry(cells, widths, cellEntries, 1, COL_AF);
         addEntry(cells, widths, cellEntries, 1, COL_DP);
         addEntry(cells, widths, cellEntries, 1, COL_VCN);
@@ -89,8 +90,9 @@ public final class SomaticVariantTable
             {
                 List<Cell> rowCells = Lists.newArrayList();
 
-                rowCells.add(cells.createContent(formatVariantDisplay(variant)));
-                rowCells.add(cells.createContent(transcriptImpact.hgvsProteinImpact()));
+                rowCells.add(cells.createContent(variant.gene()));
+                rowCells.add(cells.createContent(locationDisplay(variant)));
+                rowCells.add(cells.createContent(hgvsDisplay(transcriptImpact)));
                 rowCells.add(cells.createContent(formatTwoDigitDecimal(variant.tumorDepth().alleleFrequency())));
                 rowCells.add(cells.createContent(String.valueOf(variant.tumorDepth().totalReadCount())));
                 rowCells.add(cells.createContent(formatSingleDigitDecimal(variant.variantCopyNumber())));
@@ -141,9 +143,16 @@ public final class SomaticVariantTable
         }).collect(Collectors.toList());
     }
 
-    protected static String formatVariantDisplay(final PurpleVariant variant)
+    protected static String locationDisplay(final PurpleVariant variant)
     {
-        return format("%s:%d %s>%s", variant.chromosome(), variant.position(), variant.ref(), variant.alt());
+        boolean phased = variant.localPhaseSets() != null && !variant.localPhaseSets().isEmpty();
+        String locationStr = format("%s:%d", variant.chromosome(), variant.position());
+        return phased ? format("%s *", locationStr) : locationStr;
+    }
+
+    protected static String hgvsDisplay(final PurpleTranscriptImpact transcriptImpact)
+    {
+        return format("%s [%s]", transcriptImpact.hgvsCodingImpact(), transcriptImpact.hgvsProteinImpact());
     }
 
     protected static String clonalLikelihood(final PurpleVariant variant)

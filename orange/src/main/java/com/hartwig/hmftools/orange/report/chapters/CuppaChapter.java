@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.orange.report.ReportResources.FULL_PAGE_IMAGE
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.orange.report.PlotPathResolver;
 import com.hartwig.hmftools.orange.report.ReportResources;
-import com.hartwig.hmftools.datamodel.purple.PurpleQCInterpretation;
+import com.hartwig.hmftools.orange.algo.QcStatusInterpretation;
 import com.hartwig.hmftools.orange.report.util.Images;
 import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.layout.Document;
@@ -46,15 +46,19 @@ public class CuppaChapter implements ReportChapter
     {
         document.add(new Paragraph(name()).addStyle(mReportResources.chapterTitleStyle()));
 
-        boolean isFail = PurpleQCInterpretation.isFail(mReport.purple().fit().qc());
-        if(!isFail && mReport.plots().cuppaSummaryPlot() != null)
+        if(QcStatusInterpretation.hasPurpleFail(mReport.purple().fit().qc()))
         {
-            addCuppaSummaryPlot(document);
+            mReportResources.addQcFailNotice(document);
+            return;
         }
-        else
+
+        if(mReport.plots().cuppaSummaryPlot() == null)
         {
             document.add(new Paragraph(ReportResources.NOT_AVAILABLE).addStyle(mReportResources.tableContentStyle()));
+            return;
         }
+
+        addCuppaSummaryPlot(document);
     }
 
     private void addCuppaSummaryPlot(@NotNull Document document)

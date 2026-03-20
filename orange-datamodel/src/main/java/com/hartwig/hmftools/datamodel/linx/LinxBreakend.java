@@ -20,6 +20,8 @@ public interface LinxBreakend
 
     @NotNull
     String gene();
+    int position();
+    int orientation();
 
     @NotNull
     String chromosome();
@@ -51,8 +53,6 @@ public interface LinxBreakend
     TranscriptCodingType codingType();
 
     int nextSpliceExonRank();
-
-    int orientation();
 
     int exonUp();
 

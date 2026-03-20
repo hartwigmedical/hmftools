@@ -258,6 +258,7 @@
         "svId": 174,
         "gene": "PTEN",
         "chromosome": "10",
+        "position": 1000,
         "chromosomeBand": "",
         "transcript": "ENST00000371953",
         "isCanonical": true,
@@ -843,20 +844,20 @@
     }
   ],
   "plots": {
-    "purpleInputPlot": "plot/tumor_sample.input.png",
+    "purpleInputCircosPlot": "plot/tumor_sample.input.png",
     "purpleFinalCircosPlot": "plot/tumor_sample.circos.png",
     "purpleClonalityPlot": "plot/tumor_sample.somatic.clonality.png",
     "purpleCopyNumberPlot": "plot/tumor_sample.copynumber.png",
+    "purpleMinorAlleleMapPlot": "plot/tumor_sample.map.png",
     "purpleVariantCopyNumberPlot": "plot/tumor_sample.somatic.png",
     "purplePurityRangePlot": "plot/tumor_sample.purity.range.png",
-    "purpleKataegisPlot": "plot/tumor_sample.somatic.rainfall.png",
+    "purpleRainfallPlot": "plot/tumor_sample.somatic.rainfall.png",
     "linxDriverPlots": [
       "plot/tumor_sample.cluster3.png",
       "plot/tumor_sample.cluster2.png",
       "plot/tumor_sample.cluster1.png"
     ],
     "cuppaSummaryPdf": "plot/tumor_sample.cuppa.vis.png",
-    "purplePdf": null,
     "qSeePdf": null
   }
 }

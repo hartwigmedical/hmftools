@@ -118,13 +118,14 @@ public final class TestOrangeReportFactory
     private static OrangePlots createMinimalOrangePlots()
     {
         return ImmutableOrangePlots.builder()
-                .purpleInputPlot(DUMMY_IMAGE)
+                .purpleInputCircosPlot(DUMMY_IMAGE)
                 .purpleFinalCircosPlot(DUMMY_IMAGE)
                 .purpleClonalityPlot(DUMMY_IMAGE)
+                .purpleMinorAlleleMapPlot(DUMMY_IMAGE)
                 .purpleCopyNumberPlot(DUMMY_IMAGE)
                 .purpleVariantCopyNumberPlot(DUMMY_IMAGE)
                 .purplePurityRangePlot(DUMMY_IMAGE)
-                .purpleKataegisPlot(DUMMY_IMAGE)
+                .purpleRainfallPlot(DUMMY_IMAGE)
                 .build();
     }
 
@@ -158,20 +159,8 @@ public final class TestOrangeReportFactory
     @NotNull
     private static LinxRecord createTestLinxData()
     {
-        // LinxFusion fusion = fusionBuilder().build();
-
         return ImmutableLinxRecord.builder()
                 .from(TestLinxRecordFactory.createMinimalTestLinxData())
-                /*
-                .addFusions(fusion)
-                .addFusions(fusion)
-                .addFusions(fusion)
-                .addFusions(fusion)
-                .addFusions(fusion)
-                .addFusions(fusion)
-                .addFusions(fusion)
-                .addFusions(fusion)
-                */
                 .germlineBreakends(Lists.newArrayList())
                 .build();
     }

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.orange.report.components;
 
+import static com.hartwig.hmftools.orange.report.ReportResources.HEADER_ORANGE_HEIGHT;
+
 import java.net.URL;
 
 import com.hartwig.hmftools.orange.report.ReportResources;
@@ -29,7 +31,10 @@ public class Header
         PdfCanvas pdfCanvas = new PdfCanvas(page.getLastContentStream(), page.getResources(), page.getDocument());
         Canvas canvas = new Canvas(pdfCanvas, page.getDocument(), page.getPageSize());
 
-        pdfCanvas.addXObject(mOrangeCircosObject, 50, page.getPageSize().getHeight() - 70, 60, false);
+        float pageHeight = page.getPageSize().getHeight();
+        float orangeImageVerticalPosition = pageHeight - HEADER_ORANGE_HEIGHT - 10;
+        // pdfCanvas.addXObject(mOrangeCircosObject, 50, page.getPageSize().getHeight() - 70, 60, false); // old positioning
+        pdfCanvas.addXObject(mOrangeCircosObject, 50, orangeImageVerticalPosition, HEADER_ORANGE_HEIGHT, false);
 
         Paragraph title = new Paragraph().add(new Text("O").setFont(mReportResources.fontBold())
                         .setFontSize(11)
@@ -51,7 +56,9 @@ public class Header
         float left = mAddDisclaimer ? 150 : 180;
         float width = mAddDisclaimer ? 370 : 300;
 
-        canvas.add(title.setFixedPosition(left, page.getPageSize().getHeight() - 40, width));
+        // canvas.add(title.setFixedPosition(left, page.getPageSize().getHeight() - 40, width)); // old positioning
+        float orangeTextVerticalPosition = pageHeight - 40;
+        canvas.add(title.setFixedPosition(left, orangeTextVerticalPosition, width));
 
         pdfCanvas.release();
     }

@@ -254,6 +254,7 @@
         "svId": 1,
         "gene": "NF1",
         "chromosome": "1",
+        "position": 1000,
         "chromosomeBand": "p12",
         "transcript": "trans",
         "isCanonical": true,
@@ -390,16 +391,16 @@
   ],
   "sigAllocations": null,
   "plots": {
-    "purpleInputPlot": "",
+    "purpleInputCircosPlot": "",
     "purpleFinalCircosPlot": "plot/empty.circos.png",
     "purpleClonalityPlot": "",
     "purpleCopyNumberPlot": "",
     "purpleVariantCopyNumberPlot": "",
+    "purpleMinorAlleleMapPlot": "",
     "purplePurityRangePlot": "",
-    "purpleKataegisPlot": "",
+    "purpleRainfallPlot": "",
     "linxDriverPlots": [],
     "cuppaSummaryPlot": null,
-    "purplePlot": null,
     "qSeePlot": null
   }
 }

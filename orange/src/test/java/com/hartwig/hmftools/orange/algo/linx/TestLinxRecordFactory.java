@@ -24,6 +24,7 @@ public final class TestLinxRecordFactory
                 .svId(1)
                 .gene("GENE")
                 .chromosome("1")
+                .position(1000)
                 .chromosomeBand("1P23")
                 .transcript("TRANS")
                 .isCanonical(true)

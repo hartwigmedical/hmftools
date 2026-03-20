@@ -119,12 +119,13 @@ public class TestOrangeJsonWriter
                 .cuppa(createCuppaData())
                 .plots(ImmutableOrangePlots.builder()
                         .purpleFinalCircosPlot("plot/empty.circos.png")
-                        .purpleInputPlot("")
+                        .purpleInputCircosPlot("")
                         .purpleClonalityPlot("")
                         .purpleCopyNumberPlot("")
+                        .purpleMinorAlleleMapPlot("")
                         .purpleVariantCopyNumberPlot("")
                         .purplePurityRangePlot("")
-                        .purpleKataegisPlot("")
+                        .purpleRainfallPlot("")
                         .build())
                 .build();
     }

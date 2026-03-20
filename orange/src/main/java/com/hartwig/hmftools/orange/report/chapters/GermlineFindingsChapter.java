@@ -11,6 +11,7 @@ import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.PurpleGermlineAberration;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
+import com.hartwig.hmftools.orange.algo.QcStatusInterpretation;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.tables.DisruptionTable;
 import com.hartwig.hmftools.orange.report.tables.GainDeletionTable;
@@ -51,6 +52,12 @@ public class GermlineFindingsChapter implements ReportChapter
     public void render(final Document document)
     {
         document.add(new Paragraph(name()).addStyle(mReportResources.chapterTitleStyle()));
+
+        if(QcStatusInterpretation.hasPurpleFail(mReport.purple().fit().qc()))
+        {
+            mReportResources.addQcFailNotice(document);
+            return;
+        }
 
         if(mReport.referenceId() != null)
         {

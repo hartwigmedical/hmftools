@@ -3,11 +3,11 @@ package com.hartwig.hmftools.orange.report.tables;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.orange.algo.OrangeConstants.isCandidateLikelihood;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_POSITION;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatSingleDigitDecimal;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_DRIVER;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_GENE;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_JCN;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_LOCATION;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_TYPE;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_ZYGOSITY;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.VALUE_HET;
@@ -50,8 +50,8 @@ public final class DisruptionTable
         List<Integer> widths = Lists.newArrayList();
         List<Cell> cellEntries = Lists.newArrayList();
 
-        addEntry(cells, widths, cellEntries, 1, COL_LOCATION);
         addEntry(cells, widths, cellEntries, 1, COL_GENE);
+        addEntry(cells, widths, cellEntries, 2, COL_POSITION);
         addEntry(cells, widths, cellEntries, 1, COL_ZYGOSITY);
         addEntry(cells, widths, cellEntries, 2, COL_CONTEXT);
         addEntry(cells, widths, cellEntries, 1, COL_TYPE);
@@ -76,8 +76,8 @@ public final class DisruptionTable
 
             List<Cell> rowCells = Lists.newArrayList();
 
-            rowCells.add(cells.createContent(locationDisplay(breakend)));
             rowCells.add(cells.createContent(breakend.gene()));
+            rowCells.add(cells.createContent(locationDisplay(breakend, otherBreakend)));
             rowCells.add(cells.createContent(breakend.undisruptedCopyNumber() < 0.5 ? VALUE_HOM : VALUE_HET));
             rowCells.add(cells.createContent(contextDisplay(breakend, otherBreakend)));
             rowCells.add(cells.createContent(breakend.type().toString()));
@@ -103,7 +103,15 @@ public final class DisruptionTable
 
     private static String locationDisplay(final LinxBreakend breakend)
     {
-        return format("%s %s", breakend.chromosome(), breakend.chromosomeBand());
+        return format("%s:%d", breakend.chromosome(), breakend.position());
+    }
+
+    private static String locationDisplay(final LinxBreakend lower, @Nullable final LinxBreakend upper)
+    {
+        if(upper == null)
+            return locationDisplay(lower);
+
+        return format("%s - %s", locationDisplay(lower), locationDisplay(upper));
     }
 
     private static String contextDisplay(final LinxBreakend lower, @Nullable final LinxBreakend upper)

@@ -84,11 +84,12 @@
   },
   "plots": {
     "purpleFinalCircosPlot": "plot/empty.circos.png",
-    "purpleInputPlot": "",
+    "purpleInputCircosPlot": "",
     "purpleClonalityPlot": "",
+    "purpleMinorAlleleMapPlot": "",
     "purpleCopyNumberPlot": "",
     "purpleVariantCopyNumberPlot": "",
     "purplePurityRangePlot": "",
-    "purpleKataegisPlot": ""
+    "purpleRainfallPlot": ""
   }
 }

@@ -39,7 +39,7 @@ import com.hartwig.hmftools.orange.OrangeConfig;
 import com.hartwig.hmftools.orange.report.PlotPathResolver;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.interpretation.Drivers;
-import com.hartwig.hmftools.datamodel.purple.PurpleQCInterpretation;
+import com.hartwig.hmftools.orange.algo.QcStatusInterpretation;
 import com.hartwig.hmftools.orange.report.util.Cells;
 import com.hartwig.hmftools.orange.report.util.Images;
 import com.hartwig.hmftools.orange.report.util.Tables;
@@ -65,7 +65,8 @@ public class FrontPageChapter implements ReportChapter
     private final ReportResources mReportResources;
 
     public FrontPageChapter(
-            final OrangeConfig config, final OrangeRecord report, final PlotPathResolver plotPathResolver, final ReportResources reportResources)
+            final OrangeConfig config, final OrangeRecord report, final PlotPathResolver plotPathResolver,
+            final ReportResources reportResources)
     {
         mConfig = config;
         mReport = report;
@@ -144,8 +145,8 @@ public class FrontPageChapter implements ReportChapter
 
     private void addQCWarningInCaseOfFail(final Table table, final Cells cells)
     {
-        boolean isFailNoTumor = PurpleQCInterpretation.isFailNoTumor(mReport.purple().fit().qc());
-        boolean isContaminated = PurpleQCInterpretation.isContaminated(mReport.purple().fit().qc());
+        boolean isFailNoTumor = QcStatusInterpretation.isFailNoTumor(mReport.purple().fit().qc());
+        boolean isContaminated = QcStatusInterpretation.hasTumorContaminated(mReport.purple().fit().qc());
 
         if(isFailNoTumor || isContaminated)
         {
@@ -193,7 +194,7 @@ public class FrontPageChapter implements ReportChapter
             return "";
         }
 
-        if(PurpleQCInterpretation.isFail(mReport.purple().fit().qc()))
+        if(QcStatusInterpretation.hasPurpleFail(mReport.purple().fit().qc()))
         {
             return ReportResources.NOT_AVAILABLE;
         }
@@ -323,7 +324,7 @@ public class FrontPageChapter implements ReportChapter
 
     private String somaticVariantDriverString()
     {
-        if(PurpleQCInterpretation.isContaminated(mReport.purple().fit().qc()))
+        if(QcStatusInterpretation.hasTumorContaminated(mReport.purple().fit().qc()))
         {
             return ReportResources.NOT_AVAILABLE;
         }
@@ -333,7 +334,7 @@ public class FrontPageChapter implements ReportChapter
 
     private String germlineVariantDriverString()
     {
-        if(PurpleQCInterpretation.isContaminated(mReport.purple().fit().qc()))
+        if(QcStatusInterpretation.hasTumorContaminated(mReport.purple().fit().qc()))
         {
             return ReportResources.NOT_AVAILABLE;
         }
@@ -372,7 +373,7 @@ public class FrontPageChapter implements ReportChapter
 
     private String somaticCopyNumberDriverString()
     {
-        if(PurpleQCInterpretation.isContaminated(mReport.purple().fit().qc()))
+        if(QcStatusInterpretation.hasTumorContaminated(mReport.purple().fit().qc()))
         {
             return ReportResources.NOT_AVAILABLE;
         }
@@ -382,7 +383,7 @@ public class FrontPageChapter implements ReportChapter
 
     private String germlineCopyNumberDriverString()
     {
-        if(PurpleQCInterpretation.isContaminated(mReport.purple().fit().qc()))
+        if(QcStatusInterpretation.hasTumorContaminated(mReport.purple().fit().qc()))
         {
             return ReportResources.NOT_AVAILABLE;
         }
@@ -424,7 +425,7 @@ public class FrontPageChapter implements ReportChapter
 
     private String germlineDisruptionDriverString()
     {
-        if(PurpleQCInterpretation.isContaminated(mReport.purple().fit().qc()))
+        if(QcStatusInterpretation.hasTumorContaminated(mReport.purple().fit().qc()))
         {
             return ReportResources.NOT_AVAILABLE;
         }
@@ -454,7 +455,7 @@ public class FrontPageChapter implements ReportChapter
 
     private String fusionDriverString()
     {
-        if(PurpleQCInterpretation.isContaminated(mReport.purple().fit().qc()))
+        if(QcStatusInterpretation.hasTumorContaminated(mReport.purple().fit().qc()))
         {
             return ReportResources.NOT_AVAILABLE;
         }
@@ -474,7 +475,7 @@ public class FrontPageChapter implements ReportChapter
 
     private String virusString()
     {
-        if(PurpleQCInterpretation.isContaminated(mReport.purple().fit().qc()))
+        if(QcStatusInterpretation.hasTumorContaminated(mReport.purple().fit().qc()))
         {
             return ReportResources.NOT_AVAILABLE;
         }
@@ -509,7 +510,7 @@ public class FrontPageChapter implements ReportChapter
 
     private String wgdString()
     {
-        if(PurpleQCInterpretation.isFail(mReport.purple().fit().qc()))
+        if(QcStatusInterpretation.hasPurpleFail(mReport.purple().fit().qc()))
         {
             return ReportResources.NOT_AVAILABLE;
         }
@@ -519,7 +520,7 @@ public class FrontPageChapter implements ReportChapter
 
     private String msiString()
     {
-        if(PurpleQCInterpretation.isFail(mReport.purple().fit().qc()))
+        if(QcStatusInterpretation.hasPurpleFail(mReport.purple().fit().qc()))
         {
             return ReportResources.NOT_AVAILABLE;
         }
@@ -531,7 +532,7 @@ public class FrontPageChapter implements ReportChapter
 
     private String tmbString()
     {
-        if(PurpleQCInterpretation.isFail(mReport.purple().fit().qc()))
+        if(QcStatusInterpretation.hasPurpleFail(mReport.purple().fit().qc()))
         {
             return ReportResources.NOT_AVAILABLE;
         }
@@ -543,7 +544,7 @@ public class FrontPageChapter implements ReportChapter
 
     private String tmlString()
     {
-        if(PurpleQCInterpretation.isFail(mReport.purple().fit().qc()))
+        if(QcStatusInterpretation.hasPurpleFail(mReport.purple().fit().qc()))
         {
             return ReportResources.NOT_AVAILABLE;
         }
@@ -554,7 +555,7 @@ public class FrontPageChapter implements ReportChapter
 
     private String hrDeficiencyString()
     {
-        if(PurpleQCInterpretation.isFail(mReport.purple().fit().qc()))
+        if(QcStatusInterpretation.hasPurpleFail(mReport.purple().fit().qc()))
         {
             return ReportResources.NOT_AVAILABLE;
         }
@@ -623,7 +624,7 @@ public class FrontPageChapter implements ReportChapter
 
     private String svTmbString()
     {
-        if(PurpleQCInterpretation.isFail(mReport.purple().fit().qc()))
+        if(QcStatusInterpretation.hasPurpleFail(mReport.purple().fit().qc()))
         {
             return ReportResources.NOT_AVAILABLE;
         }
@@ -635,7 +636,7 @@ public class FrontPageChapter implements ReportChapter
 
     private String lohPercentageString()
     {
-        if(PurpleQCInterpretation.isFail(mReport.purple().fit().qc()))
+        if(QcStatusInterpretation.hasPurpleFail(mReport.purple().fit().qc()))
         {
             return ReportResources.NOT_AVAILABLE;
         }
@@ -647,7 +648,7 @@ public class FrontPageChapter implements ReportChapter
 
     private String maxComplexSizeString()
     {
-        if(PurpleQCInterpretation.isFail(mReport.purple().fit().qc()))
+        if(QcStatusInterpretation.hasPurpleFail(mReport.purple().fit().qc()))
         {
             return ReportResources.NOT_AVAILABLE;
         }
@@ -658,7 +659,7 @@ public class FrontPageChapter implements ReportChapter
 
     private String telomericSGLString()
     {
-        if(PurpleQCInterpretation.isFail(mReport.purple().fit().qc()))
+        if(QcStatusInterpretation.hasPurpleFail(mReport.purple().fit().qc()))
         {
             return ReportResources.NOT_AVAILABLE;
         }
@@ -669,7 +670,7 @@ public class FrontPageChapter implements ReportChapter
 
     private String lineCountString()
     {
-        if(PurpleQCInterpretation.isFail(mReport.purple().fit().qc()))
+        if(QcStatusInterpretation.hasPurpleFail(mReport.purple().fit().qc()))
         {
             return ReportResources.NOT_AVAILABLE;
         }

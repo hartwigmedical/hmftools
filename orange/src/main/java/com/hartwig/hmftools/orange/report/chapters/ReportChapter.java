@@ -19,6 +19,11 @@ public interface ReportChapter
         return pageSize().getWidth() - (5 + ReportResources.PAGE_MARGIN_LEFT + ReportResources.PAGE_MARGIN_RIGHT);
     }
 
+    default float contentHeight()
+    {
+        return pageSize().getHeight() - (5 + ReportResources.PAGE_MARGIN_LEFT + ReportResources.PAGE_MARGIN_RIGHT);
+    }
+
     void render(@NotNull Document document);
 
 }

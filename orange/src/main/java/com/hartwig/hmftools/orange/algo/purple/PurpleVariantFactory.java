@@ -1,10 +1,14 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
+import static java.lang.Math.abs;
+
 import static com.hartwig.hmftools.common.variant.impact.AltTranscriptReportableInfo.parseAltTranscriptInfo;
 
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.variant.SmallVariant;
 import com.hartwig.hmftools.common.variant.impact.AltTranscriptReportableInfo;
@@ -25,7 +29,8 @@ import org.jetbrains.annotations.Nullable;
 
 public final class PurpleVariantFactory
 {
-    public static PurpleVariant buildPurpleVariant(final SmallVariant variant, @Nullable final DriverCatalog driver, boolean isGermline)
+    public static PurpleVariant buildPurpleVariant(
+            final SmallVariant variant, final List<SmallVariant> allVariants, @Nullable final DriverCatalog driver, boolean isGermline)
     {
         List<AltTranscriptReportableInfo> altTransEffects = parseAltTranscriptInfo(variant.otherReportedEffects());
 
@@ -42,6 +47,8 @@ public final class PurpleVariantFactory
                 nonCanonicalTransImpacts.add(otherTransImpact);
             }
         }
+
+        List<Integer> phasedVariantIds = findPhasedVariantIds(variant, allVariants);
 
         AllelicDepth rnaDepth = variant.rnaDepth() != null ? PurpleConversion.convert(variant.rnaDepth()) : null;
 
@@ -69,10 +76,38 @@ public final class PurpleVariantFactory
                 .repeatCount(variant.repeatCount())
                 .subclonalLikelihood(variant.subclonalLikelihood())
                 .somaticLikelihood(PurpleConversion.convert(variant.somaticLikelihood()))
-                .localPhaseSets(variant.localPhaseSets())
+                .localPhaseSets(phasedVariantIds)
                 .clinvarPathogenicity(isGermline ? variant.pathogenicity() : null)
                 .gnomadFrequency(isGermline ? variant.gnomadFrequency() : null)
                 .build();
+    }
+
+    private static List<Integer> findPhasedVariantIds(final SmallVariant variant, final List<SmallVariant> allVariants)
+    {
+        if(variant.localPhaseSets() == null || variant.localPhaseSets().isEmpty())
+            return null;
+
+        Set<Integer> phasedIds = Sets.newHashSet();
+
+        for(SmallVariant otherVariant : allVariants)
+        {
+            if(otherVariant.localPhaseSets() == null || otherVariant.localPhaseSets().isEmpty())
+                continue;
+
+            if(!otherVariant.chromosome().equals(variant.chromosome()))
+                continue;
+
+            if(abs(variant.position() - otherVariant.position()) > 1000) // plausible distance to be phased
+            {
+                for(Integer lpsId : variant.localPhaseSets())
+                {
+                    if(otherVariant.localPhaseSets().contains(lpsId))
+                        phasedIds.add(lpsId);
+                }
+            }
+        }
+
+        return phasedIds.isEmpty() ? null : phasedIds.stream().toList();
     }
 
     private static PurpleTranscriptImpact createOtherImpact(

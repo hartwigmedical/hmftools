@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.orange.report.components;
 
+import static com.hartwig.hmftools.orange.report.ReportResources.FOOTER_HEIGHT;
+
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -32,7 +34,7 @@ public class Footer
         PdfCanvas canvas = new PdfCanvas(page.getLastContentStream(), page.getResources(), page.getDocument());
 
         int pageNumber = page.getDocument().getPageNumber(page);
-        PdfFormXObject pageNumberTemplate = new PdfFormXObject(new Rectangle(0, 0, 465, 20));
+        PdfFormXObject pageNumberTemplate = new PdfFormXObject(new Rectangle(0, 0, 465, FOOTER_HEIGHT));
         canvas.addXObject(pageNumberTemplate, 58, 20);
         mFooterTemplates.add(new FooterTemplate(pageNumber, pageNumberTemplate, mAddDisclaimer));
 

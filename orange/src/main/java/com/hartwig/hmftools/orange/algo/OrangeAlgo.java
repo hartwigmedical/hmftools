@@ -423,17 +423,18 @@ public class OrangeAlgo
         }
 
         String purplePlotBasePath = config.PurplePlotDirectory + File.separator + config.TumorId;
-        String purpleInputPlot = mPlotManager.processPlotFile(purplePlotBasePath + ".input.png");
         String purpleFinalCircosPlot = mPlotManager.processPlotFile(purplePlotBasePath + ".circos.png");
-        String purpleClonalityPlot = mPlotManager.processPlotFile(purplePlotBasePath + ".somatic.clonality.png");
-        String purpleCopyNumberPlot = mPlotManager.processPlotFile(purplePlotBasePath + ".copynumber.png");
-        String purpleVariantCopyNumberPlot = mPlotManager.processPlotFile(purplePlotBasePath + ".somatic.png");
-        String purplePurityRangePlot = mPlotManager.processPlotFile(purplePlotBasePath + ".purity.range.png");
-        String purpleKataegisPlot = mPlotManager.processPlotFile(purplePlotBasePath + ".somatic.rainfall.png");
-        String purplePlotPlot = mPlotManager.processPlotFile(purplePlotBasePath + ".somatic.rainfall.png");
 
-        List<String> purplePlots = Arrays.asList(purpleInputPlot, purpleFinalCircosPlot, purpleClonalityPlot, purpleCopyNumberPlot,
-                purpleVariantCopyNumberPlot, purplePurityRangePlot, purpleKataegisPlot);
+        String purpleInputCircosPlot = mPlotManager.processPlotFile(purplePlotBasePath + ".input.png");
+        String purpleCopyNumberPlot = mPlotManager.processPlotFile(purplePlotBasePath + ".copynumber.png");
+        String purpleClonalityPlot = mPlotManager.processPlotFile(purplePlotBasePath + ".somatic.clonality.png");
+        String purplePurityRangePlot = mPlotManager.processPlotFile(purplePlotBasePath + ".purity.range.png");
+        String purpleMinorAlleleMapPlot = mPlotManager.processPlotFile(purplePlotBasePath + ".map.png");
+        String purpleVariantCopyNumberPlot = mPlotManager.processPlotFile(purplePlotBasePath + ".somatic.png");
+        String purpleRainfallPlot = mPlotManager.processPlotFile(purplePlotBasePath + ".somatic.rainfall.png");
+
+        List<String> purplePlots = Arrays.asList(purpleInputCircosPlot, purpleFinalCircosPlot, purpleClonalityPlot, purpleCopyNumberPlot,
+                purpleVariantCopyNumberPlot, purplePurityRangePlot, purpleRainfallPlot);
 
         if(purplePlots.stream().anyMatch(Objects::isNull))
         {
@@ -445,16 +446,16 @@ public class OrangeAlgo
                 config.ReferenceId != null ? CuppaPredictions.generateVisPlotFilename(config.CuppaDir, config.TumorId) : null);
 
         return ImmutableOrangePlots.builder()
-                .purpleInputPlot(purpleInputPlot)
+                .purpleInputCircosPlot(purpleInputCircosPlot)
                 .purpleFinalCircosPlot(purpleFinalCircosPlot)
                 .purpleClonalityPlot(purpleClonalityPlot)
                 .purpleCopyNumberPlot(purpleCopyNumberPlot)
+                .purpleMinorAlleleMapPlot(purpleMinorAlleleMapPlot)
                 .purpleVariantCopyNumberPlot(purpleVariantCopyNumberPlot)
                 .purplePurityRangePlot(purplePurityRangePlot)
-                .purpleKataegisPlot(purpleKataegisPlot)
+                .purpleRainfallPlot(purpleRainfallPlot)
                 .linxDriverPlots(linxDriverPlots)
                 .cuppaSummaryPlot(cuppaSummaryPlot)
-                .purplePlot(purplePlotPlot)
                 .qSeePlot(qSeePlot)
                 .build();
     }

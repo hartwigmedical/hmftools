@@ -16,6 +16,7 @@ import com.hartwig.hmftools.orange.report.chapters.CuppaChapter;
 import com.hartwig.hmftools.orange.report.chapters.FrontPageChapter;
 import com.hartwig.hmftools.orange.report.chapters.GermlineFindingsChapter;
 import com.hartwig.hmftools.orange.report.chapters.ImmunologyChapter;
+import com.hartwig.hmftools.orange.report.chapters.PurplePlotsChapter;
 import com.hartwig.hmftools.orange.report.chapters.QualityControlChapter;
 import com.hartwig.hmftools.orange.report.chapters.ReportChapter;
 import com.hartwig.hmftools.orange.report.chapters.RnaFindingsChapter;
@@ -87,6 +88,8 @@ public class ReportWriter
 
         chapters.add(new QualityControlChapter(report, mPlotPathResolver, reportResources));
 
+        chapters.add(new PurplePlotsChapter(report, mPlotPathResolver, reportResources));
+
         writePdfChapters(report.sampleId(), chapters, reportResources);
     }
 
@@ -111,7 +114,7 @@ public class ReportWriter
         }
         else
         {
-            LOGGER.info("Generating in-memory JSON report");
+            LOGGER.info("generating in-memory JSON report");
         }
     }
 
@@ -162,7 +165,7 @@ public class ReportWriter
         }
         else
         {
-            LOGGER.info("Generating in-memory PDF report");
+            LOGGER.info("generating in-memory PDF report");
             writer = new PdfWriter(new ByteArrayOutputStream(), properties);
         }
 
