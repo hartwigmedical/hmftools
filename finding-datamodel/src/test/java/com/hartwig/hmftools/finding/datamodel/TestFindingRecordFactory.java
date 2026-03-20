@@ -46,6 +46,7 @@ public class TestFindingRecordFactory
                 .somaticDisruptions(TestFindingFactory.buildDriverFindingsList(FindingStatus.ResultStatus.OK, List.of()))
                 .germlineDisruptions(TestFindingFactory.buildDriverFindingsList(FindingStatus.ResultStatus.OK, List.of()))
                 .fusions(TestFindingFactory.buildDriverFindingsList(FindingStatus.ResultStatus.OK, List.of()))
+                .chromosomeArmCopyNumbers(TestFindingFactory.buildFindingsList(FindingStatus.ResultStatus.OK, List.of()))
                 .viruses(TestFindingFactory.buildDriverFindingsList(FindingStatus.ResultStatus.OK, List.of()))
                 .hlaAlleles(TestFindingFactory.buildFindingsList(FindingStatus.ResultStatus.OK, List.of()))
                 .pharmacoGenotypes(TestFindingFactory.buildFindingsList(FindingStatus.ResultStatus.OK, List.of()));
