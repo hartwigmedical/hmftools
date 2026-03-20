@@ -16,10 +16,10 @@ import com.hartwig.hmftools.finding.datamodel.finding.FindingList;
 import com.hartwig.hmftools.finding.datamodel.FindingRecord;
 import com.hartwig.hmftools.finding.datamodel.FindingRecordBuilder;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingListBuilder;
-import com.hartwig.hmftools.finding.datamodel.finding.FindingsStatus;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
 import com.hartwig.hmftools.finding.datamodel.HlaAllele;
 import com.hartwig.hmftools.finding.datamodel.HlaAlleleBuilder;
-import com.hartwig.hmftools.finding.datamodel.finding.FindingsStatusBuilder;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingStatusBuilder;
 import com.hartwig.hmftools.finding.datamodel.finding.ResultIssue;
 import com.hartwig.hmftools.finding.datamodel.finding.ResultStatus;
 
@@ -48,7 +48,7 @@ public class LowPurityConverter
 
     @NotNull
     private static <T extends Finding> FindingList<T> convert(@NotNull FindingList<T> findingList, boolean isLowPurity,
-            @NotNull Function<FindingsStatus, FindingsStatus> findingsStatusConverter,
+            @NotNull Function<FindingStatus, FindingStatus> findingsStatusConverter,
             @Null Function<T, T> findingConverter)
     {
         if(shouldConvert(findingList.status(), isLowPurity))
@@ -107,18 +107,18 @@ public class LowPurityConverter
         }
     }
 
-    private static FindingsStatus convert(FindingsStatus findingsStatus)
+    private static FindingStatus convert(FindingStatus findingStatus)
     {
-        return FindingsStatusBuilder.builder()
+        return FindingStatusBuilder.builder()
                 .status(ResultStatus.NOT_RELIABLE)
-                .errors(addLowPurity(findingsStatus.errors()))
-                .warnings(removeLowPurity(findingsStatus.warnings()))
+                .errors(addLowPurity(findingStatus.errors()))
+                .warnings(removeLowPurity(findingStatus.warnings()))
                 .build();
     }
 
-    private static boolean shouldConvert(FindingsStatus findingsStatus, boolean isLowPurity)
+    private static boolean shouldConvert(FindingStatus findingStatus, boolean isLowPurity)
     {
-        return findingsStatus.status() == ResultStatus.OK && isLowPurity;
+        return findingStatus.status() == ResultStatus.OK && isLowPurity;
     }
 
     private static SortedSet<ResultIssue> addLowPurity(SortedSet<ResultIssue> sortedSet)

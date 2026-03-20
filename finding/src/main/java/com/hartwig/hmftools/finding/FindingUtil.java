@@ -9,8 +9,8 @@ import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingList;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingListBuilder;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingItem;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingItemBuilder;
-import com.hartwig.hmftools.finding.datamodel.finding.FindingsStatus;
-import com.hartwig.hmftools.finding.datamodel.finding.FindingsStatusBuilder;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingStatusBuilder;
 import com.hartwig.hmftools.finding.datamodel.finding.ResultIssue;
 import com.hartwig.hmftools.finding.datamodel.finding.ResultStatus;
 
@@ -36,9 +36,9 @@ class FindingUtil
                 .build();
     }
 
-    static FindingsStatus notAvailableStatus(Set<ResultIssue> errors)
+    static FindingStatus notAvailableStatus(Set<ResultIssue> errors)
     {
-        return FindingsStatusBuilder.builder()
+        return FindingStatusBuilder.builder()
                 .status(ResultStatus.NOT_AVAILABLE)
                 .errors(new TreeSet<>(errors))
                 .warnings(new TreeSet<>())

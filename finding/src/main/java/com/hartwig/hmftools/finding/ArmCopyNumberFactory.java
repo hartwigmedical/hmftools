@@ -14,7 +14,7 @@ import com.hartwig.hmftools.finding.datamodel.driver.DriverFieldsBuilder;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverSource;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingList;
-import com.hartwig.hmftools.finding.datamodel.finding.FindingsStatus;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
 
 import org.jspecify.annotations.Nullable;
 
@@ -56,11 +56,11 @@ final class ArmCopyNumberFactory
         return copyNumber.copyNumber();
     }
 
-    public FindingList<ChromosomeArmCopyNumber> toArmCopyNumberFindings(FindingsStatus findingsStatus)
+    public FindingList<ChromosomeArmCopyNumber> toArmCopyNumberFindings(FindingStatus findingStatus)
     {
         // we filter out diploid copy
         return new FindingList<>(
-                findingsStatus,
+                findingStatus,
                 cnPerChromosomeArm.values().stream()
                         .filter(o -> o.type() != ChromosomeArmCopyNumber.Type.DIPLOID)
                         .toList());

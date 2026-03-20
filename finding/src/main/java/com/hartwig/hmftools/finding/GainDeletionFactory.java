@@ -18,7 +18,7 @@ import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingList;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingListBuilder;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverSource;
-import com.hartwig.hmftools.finding.datamodel.finding.FindingsStatus;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
 import com.hartwig.hmftools.finding.datamodel.GainDeletion;
 import com.hartwig.hmftools.finding.datamodel.GainDeletionBuilder;
 import com.hartwig.hmftools.finding.datamodel.ReportedStatus;
@@ -30,7 +30,7 @@ final class GainDeletionFactory
 
     public static DriverFindingList<GainDeletion> somaticGainDeletionFindings(
             OrangeRefGenomeVersion orangeRefGenomeVersion,
-            FindingsStatus findingsStatus,
+            FindingStatus findingStatus,
             PurpleRecord purple,
             Gender gender)
     {
@@ -46,7 +46,7 @@ final class GainDeletionFactory
         gainDeletions.sort(GainDeletion.COMPARATOR);
 
         return DriverFindingListBuilder.<GainDeletion>builder()
-                .status(findingsStatus)
+                .status(findingStatus)
                 .findings(gainDeletions)
                 .build();
     }
@@ -56,7 +56,7 @@ final class GainDeletionFactory
     public static DriverFindingList<GainDeletion> germlineGainDeletionFindings(
             boolean hasGermlineSample,
             OrangeRefGenomeVersion orangeRefGenomeVersion,
-            FindingsStatus findingsStatus,
+            FindingStatus findingStatus,
             PurpleRecord purple,
             Gender gender)
     {
@@ -103,7 +103,7 @@ final class GainDeletionFactory
 
         gainDeletions.sort(GainDeletion.COMPARATOR);
         return DriverFindingListBuilder.<GainDeletion>builder()
-                .status(findingsStatus)
+                .status(findingStatus)
                 .findings(gainDeletions)
                 .build();
     }

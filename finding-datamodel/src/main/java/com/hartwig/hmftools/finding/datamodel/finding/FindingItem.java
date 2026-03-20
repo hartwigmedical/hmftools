@@ -8,7 +8,7 @@ import jakarta.validation.constraints.NotNull;
 
 @RecordBuilder
 public record FindingItem<T>(
-        @NotNull FindingsStatus status,
+        @NotNull FindingStatus status,
         @Nullable T finding
 )
 {

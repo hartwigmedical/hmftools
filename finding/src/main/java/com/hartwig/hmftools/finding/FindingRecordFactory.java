@@ -49,7 +49,7 @@ import com.hartwig.hmftools.finding.datamodel.finding.FindingList;
 import com.hartwig.hmftools.finding.datamodel.FindingRecord;
 import com.hartwig.hmftools.finding.datamodel.FindingRecordBuilder;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingListBuilder;
-import com.hartwig.hmftools.finding.datamodel.finding.FindingsStatus;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
 import com.hartwig.hmftools.finding.datamodel.Fusion;
 import com.hartwig.hmftools.finding.datamodel.FusionBuilder;
 import com.hartwig.hmftools.finding.datamodel.GainDeletion;
@@ -104,7 +104,7 @@ public class FindingRecordFactory
         LinxRecord linx = orangeRecord.linx();
         PurpleRecord purple = orangeRecord.purple();
 
-        FindingsStatus findingsStatus = FindingsStatusFactory.toFindingsStatus(purple.fit().qc().status());
+        FindingStatus findingStatus = FindingsStatusFactory.toFindingsStatus(purple.fit().qc().status());
 
         boolean hasRefSample = orangeRecord.refSample() != null;
 
@@ -120,26 +120,26 @@ public class FindingRecordFactory
                         .samplingDate(orangeRecord.samplingDate())
                         .build())
                 .qc(createQc(purple))
-                .fusions(createFusionsFindings(orangeRecord.linx(), findingsStatus));
+                .fusions(createFusionsFindings(orangeRecord.linx(), findingStatus));
 
         DriverFindingList<GainDeletion>
-                somaticGainDeletions = addPurpleFindings(builder, orangeRecord, findingsStatus, findingConfig);
+                somaticGainDeletions = addPurpleFindings(builder, orangeRecord, findingStatus, findingConfig);
 
-        builder.somaticDisruptions(createSomaticDisruptions(linx, findingsStatus))
-                .germlineDisruptions(createGermlineDisruptions(orangeRecord.refSample() != null, linx, findingsStatus))
-                .viruses(createVirusFindings(orangeRecord.virusInterpreter(), experimentType, findingsStatus))
-                .homologousRecombination(createHomologousRecombination(orangeRecord.chord(), purple, linx, somaticGainDeletions, findingsStatus, experimentType, hasRefSample));
+        builder.somaticDisruptions(createSomaticDisruptions(linx, findingStatus))
+                .germlineDisruptions(createGermlineDisruptions(orangeRecord.refSample() != null, linx, findingStatus))
+                .viruses(createVirusFindings(orangeRecord.virusInterpreter(), experimentType, findingStatus))
+                .homologousRecombination(createHomologousRecombination(orangeRecord.chord(), purple, linx, somaticGainDeletions, findingStatus, experimentType, hasRefSample));
 
-        return builder.predictedTumorOrigin(createPredictedTumorOrigin(orangeRecord.cuppa(), orangeRecord.plots(), experimentType, findingsStatus))
-                .hlaAlleles(HlaAlleleFactory.createHlaAllelesFindings(orangeRecord, findingsStatus))
-                .pharmacoGenotypes(createPharmacoGenotypesFindings(orangeRecord.peach(), findingsStatus))
+        return builder.predictedTumorOrigin(createPredictedTumorOrigin(orangeRecord.cuppa(), orangeRecord.plots(), experimentType, findingStatus))
+                .hlaAlleles(HlaAlleleFactory.createHlaAllelesFindings(orangeRecord, findingStatus))
+                .pharmacoGenotypes(createPharmacoGenotypesFindings(orangeRecord.peach(), findingStatus))
                 .build();
     }
 
     // return the gain deletions cause they are needed by HRD, will see if we can find a better way
     private static DriverFindingList<GainDeletion> addPurpleFindings(
             FindingRecordBuilder builder, final OrangeRecord orangeRecord,
-            FindingsStatus findingsStatus,
+            FindingStatus findingStatus,
             FindingConfig findingConfig)
     {
         boolean hasRefSample = orangeRecord.refSample() != null;
@@ -151,19 +151,19 @@ public class FindingRecordFactory
         DriverFindingList<GainDeletion> somaticGainDeletions;
 
         DriverFindingList<SmallVariant> smallVariants =
-                SmallVariantFactory.somaticSmallVariantFindings(purple, findingsStatus, findingConfig);
+                SmallVariantFactory.somaticSmallVariantFindings(purple, findingStatus, findingConfig);
         somaticGainDeletions =
-                GainDeletionFactory.somaticGainDeletionFindings(orangeRecord.refGenomeVersion(), findingsStatus, purple, findingConfig.gender());
+                GainDeletionFactory.somaticGainDeletionFindings(orangeRecord.refGenomeVersion(), findingStatus, purple, findingConfig.gender());
 
         builder.somaticSmallVariants(smallVariants)
-                .germlineSmallVariants(SmallVariantFactory.germlineSmallVariantFindings(hasRefSample, purple, findingsStatus, findingConfig))
+                .germlineSmallVariants(SmallVariantFactory.germlineSmallVariantFindings(hasRefSample, purple, findingStatus, findingConfig))
                 .somaticGainDeletions(somaticGainDeletions)
-                .germlineGainDeletions(GainDeletionFactory.germlineGainDeletionFindings(hasRefSample, orangeRecord.refGenomeVersion(), findingsStatus, purple, findingConfig.gender()))
-                .microsatelliteStability(createMicrosatelliteStability(purple, orangeRecord.linx(), somaticGainDeletions, findingsStatus))
-                .tumorMutationalLoad(createTumorMutationalLoad(purple, findingsStatus))
-                .tumorMutationalBurden(createTumorMutationalBurden(purple, findingsStatus))
+                .germlineGainDeletions(GainDeletionFactory.germlineGainDeletionFindings(hasRefSample, orangeRecord.refGenomeVersion(), findingStatus, purple, findingConfig.gender()))
+                .microsatelliteStability(createMicrosatelliteStability(purple, orangeRecord.linx(), somaticGainDeletions, findingStatus))
+                .tumorMutationalLoad(createTumorMutationalLoad(purple, findingStatus))
+                .tumorMutationalBurden(createTumorMutationalBurden(purple, findingStatus))
                 .chromosomeArmCopyNumbers(new ArmCopyNumberFactory(purple.allSomaticCopyNumbers(), purple.fit().ploidy(),
-                        findingConfig.gender(), orangeRecord.refGenomeVersion()).toArmCopyNumberFindings(findingsStatus));
+                        findingConfig.gender(), orangeRecord.refGenomeVersion()).toArmCopyNumberFindings(findingStatus));
 
         return somaticGainDeletions;
     }
@@ -235,12 +235,12 @@ public class FindingRecordFactory
 
     private static FindingItem<PredictedTumorOrigin> createPredictedTumorOrigin(@Nullable CuppaData cuppa, OrangePlots orangePlots,
             @NotNull ExperimentType experimentType,
-            @NotNull FindingsStatus findingsStatus)
+            @NotNull FindingStatus findingStatus)
     {
         if(cuppa != null)
         {
             return FindingItemBuilder.<PredictedTumorOrigin>builder()
-                    .status(findingsStatus)
+                    .status(findingStatus)
                     .finding(PredictedTumorOriginBuilder.builder()
                             .findingKey("predictedTumorOrigin")
                             .mode(cuppaMode(cuppa.mode()))
@@ -288,11 +288,11 @@ public class FindingRecordFactory
         };
     }
 
-    private static FindingItem<TumorMutationalBurden> createTumorMutationalBurden(PurpleRecord purple, FindingsStatus findingsStatus)
+    private static FindingItem<TumorMutationalBurden> createTumorMutationalBurden(PurpleRecord purple, FindingStatus findingStatus)
     {
         TumorMutationalBurden.Status status = tumorMutationalBurdenStatus(purple.characteristics().tumorMutationalBurdenStatus());
         return FindingItemBuilder.<TumorMutationalBurden>builder()
-                .status(findingsStatus)
+                .status(findingStatus)
                 .finding(TumorMutationalBurdenBuilder.builder()
                         .findingKey(FindingKeys.tumorMutationBurdenStatus(purple.characteristics().tumorMutationalBurdenStatus()))
                         .burdenPerMb(ThresholdValueFactory.tmbValue(purple.characteristics().tumorMutationalBurdenPerMb()))
@@ -313,11 +313,11 @@ public class FindingRecordFactory
         };
     }
 
-    private static FindingItem<TumorMutationalLoad> createTumorMutationalLoad(PurpleRecord purple, FindingsStatus findingsStatus)
+    private static FindingItem<TumorMutationalLoad> createTumorMutationalLoad(PurpleRecord purple, FindingStatus findingStatus)
     {
         TumorMutationalLoad.Status status = tumorMutationalLoadStatus(purple.characteristics().tumorMutationalLoadStatus());
         return FindingItemBuilder.<TumorMutationalLoad>builder()
-                .status(findingsStatus)
+                .status(findingStatus)
                 .finding(TumorMutationalLoadBuilder.builder()
                         .findingKey(FindingKeys.tumorMutationLoadStatus(purple.characteristics().tumorMutationalLoadStatus()))
                         .load(ThresholdValueFactory.tmlValue(purple.characteristics().tumorMutationalLoad()))
@@ -341,7 +341,7 @@ public class FindingRecordFactory
             PurpleRecord purple,
             LinxRecord linx,
             DriverFindingList<GainDeletion> gainDeletions,
-            FindingsStatus findingsStatus,
+            FindingStatus findingStatus,
             @NotNull ExperimentType experimentType,
             boolean hasRefSample)
     {
@@ -357,7 +357,7 @@ public class FindingRecordFactory
                     linx.germlineHomozygousDisruptions(),
                     Genes.HRD_GENES) : List.of();
             return FindingItemBuilder.<HomologousRecombination>builder()
-                    .status(findingsStatus)
+                    .status(findingStatus)
                     .finding(HomologousRecombinationBuilder.builder()
                             .findingKey(FindingKeys.homologousRecombination(chord.hrStatus()))
                             .status(hrStatus)
@@ -405,7 +405,7 @@ public class FindingRecordFactory
     }
 
     private static FindingItem<MicrosatelliteStability> createMicrosatelliteStability(PurpleRecord purple,
-            LinxRecord linx, DriverFindingList<GainDeletion> gainDeletions, FindingsStatus findingsStatus)
+            LinxRecord linx, DriverFindingList<GainDeletion> gainDeletions, FindingStatus findingStatus)
     {
         MicrosatelliteStability.Status microsatelliteStatus =
                 microsatelliteStatus(purple.characteristics().microsatelliteStatus());
@@ -419,7 +419,7 @@ public class FindingRecordFactory
                 Genes.MSI_GENES) : List.of();
 
         return FindingItemBuilder.<MicrosatelliteStability>builder()
-                .status(findingsStatus)
+                .status(findingStatus)
                 .finding(MicrosatelliteStabilityBuilder.builder()
                         .findingKey(FindingKeys.microsatelliteStability(purple.characteristics().microsatelliteStatus()))
                         .status(microsatelliteStatus)
@@ -451,10 +451,10 @@ public class FindingRecordFactory
                 .collect(Collectors.toList());
     }
 
-    public static DriverFindingList<Fusion> createFusionsFindings(LinxRecord linx, FindingsStatus findingsStatus)
+    public static DriverFindingList<Fusion> createFusionsFindings(LinxRecord linx, FindingStatus findingStatus)
     {
         return DriverFindingListBuilder.<Fusion>builder()
-                .status(findingsStatus)
+                .status(findingStatus)
                 .findings(linx.reportableSomaticFusions().stream()
                         .map(o -> convertFusion(o, DriverSource.SOMATIC)).sorted(Fusion.COMPARATOR).toList())
                 .build();
@@ -509,12 +509,12 @@ public class FindingRecordFactory
 
     private static DriverFindingList<Virus> createVirusFindings(@Nullable VirusInterpreterData virusInterpreter,
             @NotNull ExperimentType experimentType,
-            @NotNull FindingsStatus findingsStatus)
+            @NotNull FindingStatus findingStatus)
     {
         if(virusInterpreter != null)
         {
             return DriverFindingListBuilder.<Virus>builder()
-                    .status(findingsStatus)
+                    .status(findingStatus)
                     .findings(convertViruses(virusInterpreter.allViruses()))
                     .build();
         }
@@ -570,12 +570,12 @@ public class FindingRecordFactory
     }
 
     private static FindingList<PharmacoGenotype> createPharmacoGenotypesFindings(@Nullable Set<PeachGenotype> peachGenotypes,
-            @NotNull FindingsStatus findingsStatus)
+            @NotNull FindingStatus findingStatus)
     {
         if(peachGenotypes != null)
         {
             return FindingListBuilder.<PharmacoGenotype>builder()
-                    .status(findingsStatus)
+                    .status(findingStatus)
                     .findings(peachGenotypes.stream().map(o ->
                                     PharmacoGenotypeBuilder.builder()
                                             .findingKey(FindingKeys.pharmacoGenotype(o.gene(), o.allele()))

@@ -7,8 +7,8 @@ import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
-import com.hartwig.hmftools.finding.datamodel.finding.FindingsStatus;
-import com.hartwig.hmftools.finding.datamodel.finding.FindingsStatusBuilder;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingStatusBuilder;
 import com.hartwig.hmftools.finding.datamodel.finding.ResultIssue;
 import com.hartwig.hmftools.finding.datamodel.finding.ResultStatus;
 
@@ -16,10 +16,10 @@ import org.jetbrains.annotations.Nullable;
 
 class FindingsStatusFactory
 {
-    static FindingsStatus toFindingsStatus(Set<PurpleQCStatus> purpleQCStatuses)
+    static FindingStatus toFindingsStatus(Set<PurpleQCStatus> purpleQCStatuses)
     {
         SortedSet<ResultIssue> errors = convert(errors(purpleQCStatuses));
-        return FindingsStatusBuilder.builder()
+        return FindingStatusBuilder.builder()
                 .status(errors.isEmpty() ? ResultStatus.OK : ResultStatus.NOT_RELIABLE)
                 .errors(errors)
                 .warnings(convert(warnings(purpleQCStatuses)))

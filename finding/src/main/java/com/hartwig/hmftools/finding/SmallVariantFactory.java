@@ -17,7 +17,7 @@ import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingList;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingListBuilder;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverSource;
-import com.hartwig.hmftools.finding.datamodel.finding.FindingsStatus;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
 import com.hartwig.hmftools.finding.datamodel.ReportedStatus;
 import com.hartwig.hmftools.finding.datamodel.SmallVariant;
 import com.hartwig.hmftools.finding.datamodel.SmallVariantAllelicDepthBuilder;
@@ -30,11 +30,11 @@ final class SmallVariantFactory
 {
     public static DriverFindingList<SmallVariant> somaticSmallVariantFindings(
             PurpleRecord purpleRecord,
-            FindingsStatus findingsStatus,
+            FindingStatus findingStatus,
             FindingConfig findingConfig)
     {
         return DriverFindingListBuilder.<SmallVariant>builder()
-                .status(findingsStatus)
+                .status(findingStatus)
                 .findings(SmallVariantFactory.create(
                         DriverSource.SOMATIC, purpleRecord.reportableSomaticVariants(), purpleRecord.somaticDrivers(),
                         findingConfig))
@@ -44,7 +44,7 @@ final class SmallVariantFactory
     public static DriverFindingList<SmallVariant> germlineSmallVariantFindings(
             boolean hasGermlineSample,
             PurpleRecord purpleRecord,
-            FindingsStatus findingsStatus,
+            FindingStatus findingStatus,
             FindingConfig findingConfig)
     {
         if(!hasGermlineSample)
@@ -56,7 +56,7 @@ final class SmallVariantFactory
         List<PurpleDriver> germlineDrivers = Objects.requireNonNull(purpleRecord.germlineDrivers());
 
         return DriverFindingListBuilder.<SmallVariant>builder()
-                .status(findingsStatus)
+                .status(findingStatus)
                 .findings(SmallVariantFactory.create(
                         DriverSource.GERMLINE, germlineVariants, germlineDrivers, findingConfig))
                 .build();

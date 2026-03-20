@@ -16,8 +16,8 @@ import com.hartwig.hmftools.finding.datamodel.finding.FindingItem;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingItemBuilder;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingList;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingListBuilder;
-import com.hartwig.hmftools.finding.datamodel.finding.FindingsStatus;
-import com.hartwig.hmftools.finding.datamodel.finding.FindingsStatusBuilder;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingStatusBuilder;
 import com.hartwig.hmftools.finding.datamodel.finding.ResultStatus;
 
 import org.jetbrains.annotations.NotNull;
@@ -306,9 +306,9 @@ public class TestFindingFactory
                 .driverSource(DriverSource.SOMATIC);
     }
 
-    static FindingsStatus findingsStatus(ResultStatus status)
+    static FindingStatus findingsStatus(ResultStatus status)
     {
-        return FindingsStatusBuilder.builder()
+        return FindingStatusBuilder.builder()
                 .status(status)
                 .errors(new TreeSet<>())
                 .warnings(new TreeSet<>())

@@ -7,7 +7,7 @@ import com.hartwig.hmftools.finding.datamodel.RecordBuilder;
 import jakarta.validation.constraints.NotNull;
 
 @RecordBuilder
-public record FindingsStatus(@NotNull ResultStatus status, @NotNull SortedSet<ResultIssue> errors, @NotNull SortedSet<ResultIssue> warnings)
+public record FindingStatus(@NotNull ResultStatus status, @NotNull SortedSet<ResultIssue> errors, @NotNull SortedSet<ResultIssue> warnings)
 {
     public boolean isOK()
     {
