@@ -4,6 +4,7 @@ import com.hartwig.hmftools.finding.datamodel.driver.Driver;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFields;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverSource;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverVisitor;
 
 import org.jspecify.annotations.Nullable;
 
@@ -83,6 +84,12 @@ public record Disruption(
     public boolean isReported()
     {
         return driver.isReported();
+    }
+
+    @Override
+    public void accept(@NotNull DriverVisitor visitor)
+    {
+        visitor.visit(this);
     }
 
     @Override

@@ -8,6 +8,7 @@ import com.hartwig.hmftools.finding.datamodel.driver.DriverCategory;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFields;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverSource;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverVisitor;
 
 import org.jspecify.annotations.Nullable;
 
@@ -168,6 +169,18 @@ public record SmallVariant(
     public double driverLikelihood()
     {
         return driver.driverLikelihood();
+    }
+
+    @Override
+    public boolean isReported()
+    {
+        return driver.isReported();
+    }
+
+    @Override
+    public void accept(@NotNull DriverVisitor visitor)
+    {
+        visitor.visit(this);
     }
 
     public double clonalLikelihood()

@@ -17,4 +17,6 @@ public interface Driver extends Finding
     double driverLikelihood();
 
     boolean isReported();
+
+    void accept(@NotNull DriverVisitor visitor);
 }
