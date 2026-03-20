@@ -12,6 +12,8 @@ public record HlaAllele(
         @NotNull String geneClass,
         @NotNull String gene,
         @NotNull String allele,
+        @NotNull String alleleGroup,
+        @NotNull String hlaProtein,
         @NotNull Set<QcStatus> qcStatus,
         int germlineCopyNumber,
         @Nullable Double tumorCopyNumber,
@@ -36,5 +38,11 @@ public record HlaAllele(
         WARN_LOW_COVERAGE,
         WARN_LOW_BASE_QUAL,
         WARN_UNMATCHED_INDEL
+    }
+
+    public boolean hasSomaticVariants()
+    {
+        return somaticMissense() > 0 || somaticNonsenseOrFrameshift() > 0 ||
+                somaticSplice() > 0 || somaticInframeIndel() > 0;
     }
 }
