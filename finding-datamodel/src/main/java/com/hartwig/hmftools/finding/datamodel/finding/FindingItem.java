@@ -1,4 +1,6 @@
-package com.hartwig.hmftools.finding.datamodel;
+package com.hartwig.hmftools.finding.datamodel.finding;
+
+import com.hartwig.hmftools.finding.datamodel.RecordBuilder;
 
 import org.jspecify.annotations.Nullable;
 

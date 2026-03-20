@@ -4,6 +4,22 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
+import com.hartwig.hmftools.finding.datamodel.driver.Driver;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverFields;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverFieldsBuilder;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingList;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingListBuilder;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverInterpretation;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverSource;
+import com.hartwig.hmftools.finding.datamodel.finding.Finding;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingItem;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingItemBuilder;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingList;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingListBuilder;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingsStatus;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingsStatusBuilder;
+import com.hartwig.hmftools.finding.datamodel.finding.ResultStatus;
+
 import org.jetbrains.annotations.NotNull;
 
 @SuppressWarnings("unused")

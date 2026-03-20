@@ -1,6 +1,12 @@
-package com.hartwig.hmftools.finding.datamodel;
+package com.hartwig.hmftools.finding.datamodel.driver;
 
 import java.util.List;
+
+import com.hartwig.hmftools.finding.datamodel.finding.FindingsQuery;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingsStatus;
+import com.hartwig.hmftools.finding.datamodel.IFindingList;
+import com.hartwig.hmftools.finding.datamodel.RecordBuilder;
+import com.hartwig.hmftools.finding.datamodel.ReportedStatus;
 
 import jakarta.validation.constraints.NotNull;
 

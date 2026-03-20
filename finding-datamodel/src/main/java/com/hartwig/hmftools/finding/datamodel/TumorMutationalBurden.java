@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.finding.datamodel;
 
+import com.hartwig.hmftools.finding.datamodel.finding.Finding;
+
 import jakarta.validation.constraints.NotNull;
 
 @RecordBuilder

@@ -5,12 +5,16 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.stream.Stream;
 
+import com.hartwig.hmftools.finding.datamodel.finding.Finding;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingsStatus;
+
 import jakarta.validation.constraints.NotNull;
 
 @SuppressWarnings("unused")
 public interface IFindingList<T extends Finding>
 {
-    @NotNull FindingsStatus status();
+    @NotNull
+    FindingsStatus status();
     @NotNull List<T> findings();
 
     default int size()

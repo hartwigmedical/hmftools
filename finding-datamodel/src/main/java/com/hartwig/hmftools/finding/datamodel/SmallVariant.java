@@ -3,6 +3,13 @@ package com.hartwig.hmftools.finding.datamodel;
 import java.util.List;
 import java.util.Set;
 
+import com.hartwig.hmftools.finding.datamodel.driver.Driver;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverCategory;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverFields;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverInterpretation;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverSource;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverVisitor;
+
 import org.jspecify.annotations.Nullable;
 
 import jakarta.validation.constraints.NotNull;
@@ -158,9 +165,9 @@ public record SmallVariant(
     }
 
     @Override
-    public Set<String> genes()
+    public void accept(@NotNull DriverVisitor visitor)
     {
-        return Set.of(gene());
+        visitor.visit(this);
     }
 
     public double clonalLikelihood()

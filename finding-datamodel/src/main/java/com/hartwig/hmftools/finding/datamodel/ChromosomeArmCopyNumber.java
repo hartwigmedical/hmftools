@@ -1,6 +1,10 @@
 package com.hartwig.hmftools.finding.datamodel;
 
-import java.util.Set;
+import com.hartwig.hmftools.finding.datamodel.driver.Driver;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverFields;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverInterpretation;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverSource;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverVisitor;
 
 import jakarta.validation.constraints.NotNull;
 
@@ -68,8 +72,8 @@ public record ChromosomeArmCopyNumber(
     }
 
     @Override
-    public Set<String> genes()
+    public void accept(@NotNull DriverVisitor visitor)
     {
-        return Set.of();
+        visitor.visit(this);
     }
 }

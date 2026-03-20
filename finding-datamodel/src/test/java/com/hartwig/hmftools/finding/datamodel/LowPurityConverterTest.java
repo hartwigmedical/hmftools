@@ -9,6 +9,14 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
+import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingList;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingItem;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingList;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingListBuilder;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingsStatus;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingsStatusBuilder;
+import com.hartwig.hmftools.finding.datamodel.finding.ResultIssue;
+import com.hartwig.hmftools.finding.datamodel.finding.ResultStatus;
 import com.hartwig.hmftools.finding.util.LowPurityConverter;
 
 import org.junit.Test;
