@@ -34,11 +34,6 @@ final class ArmCopyNumberFactory
     // use linked hash map which keeps the insertion order of the keys
     private final Map<CopyNumberKey, ChromosomeArmCopyNumber> cnPerChromosomeArm = new LinkedHashMap<>();
 
-    public Map<CopyNumberKey, ChromosomeArmCopyNumber> getCnPerChromosomeArm()
-    {
-        return cnPerChromosomeArm;
-    }
-
     public ArmCopyNumberFactory(Iterable<PurpleCopyNumber> copyNumbers, double ploidy, Gender gender,
             final OrangeRefGenomeVersion refGenomeVersion)
     {
