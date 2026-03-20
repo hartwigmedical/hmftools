@@ -4,13 +4,13 @@ import jakarta.validation.constraints.NotNull;
 
 @RecordBuilder
 public record ChromosomeArmCopyNumber(
-        @NotNull String findingKey,
+        @NotNull DriverFields driver,
         @NotNull String chromosome,
         @NotNull ChromosomeArm arm,
         @NotNull Type type,
         double copyNumber,
         double relativeCopyNumber
-) implements Finding
+) implements Driver
 {
     public enum ChromosomeArm
     {
@@ -23,5 +23,39 @@ public record ChromosomeArmCopyNumber(
         GAIN,
         LOSS,
         DIPLOID
+    }
+
+    @NotNull
+    @Override
+    public String findingKey()
+    {
+        return driver.findingKey();
+    }
+
+    @NotNull
+    @Override
+    public DriverSource driverSource()
+    {
+        return driver.driverSource();
+    }
+
+    @NotNull
+    @Override
+    public ReportedStatus reportedStatus()
+    {
+        return driver.reportedStatus();
+    }
+
+    @NotNull
+    @Override
+    public DriverInterpretation driverInterpretation()
+    {
+        return driver.driverInterpretation();
+    }
+
+    @Override
+    public double driverLikelihood()
+    {
+        return driver.driverLikelihood();
     }
 }

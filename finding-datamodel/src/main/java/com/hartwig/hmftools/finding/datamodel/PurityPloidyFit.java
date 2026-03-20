@@ -18,7 +18,7 @@ public record PurityPloidyFit(
         @NotNull VisualisationFile purpleCopyNumberPlot,
         @NotNull VisualisationFile purpleVariantCopyNumberPlot,
         @NotNull VisualisationFile purplePurityRangePlot,
-        @NotNull VisualisationFile purpleKataegisPlot
+        @NotNull VisualisationFile purpleRainfallPlot
 )
 {
     public enum FittedPurityMethod

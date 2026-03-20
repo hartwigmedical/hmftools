@@ -222,24 +222,32 @@ public class FindingRecordFactory
                 .ploidy(purpleFit.ploidy())
                 .minPloidy(purpleFit.minPloidy())
                 .maxPloidy(purpleFit.maxPloidy())
-                .purpleInputPlot(VisualisationFileUtil.create(orangePlots.purpleInputPlot()))
+                .purpleInputPlot(VisualisationFileUtil.create(orangePlots.purpleInputCircosPlot()))
                 .purpleCircosPlot(VisualisationFileUtil.create(orangePlots.purpleFinalCircosPlot()))
                 .purpleClonalityPlot(VisualisationFileUtil.create(orangePlots.purpleClonalityPlot()))
                 .purpleCopyNumberPlot(VisualisationFileUtil.create(orangePlots.purpleCopyNumberPlot()))
                 .purpleVariantCopyNumberPlot(VisualisationFileUtil.create(orangePlots.purpleVariantCopyNumberPlot()))
                 .purplePurityRangePlot(VisualisationFileUtil.create(orangePlots.purplePurityRangePlot()))
-                .purpleKataegisPlot(VisualisationFileUtil.create(orangePlots.purpleKataegisPlot()))
+                .purpleRainfallPlot(VisualisationFileUtil.create(orangePlots.purpleRainfallPlot()))
                 .build();
     }
 
     private static FindingList<ChromosomeArmCopyNumber> createChromosomeArmCopyNumber(
-            PurpleRecord purple, FindingStatus findingsStatus)
+            PurpleRecord purple, FindingsStatus findingsStatus)
     {
         return new FindingList<>(
                 findingsStatus,
                 purple.armCopyNumberAbberations().stream()
-                        .map(o -> ChromosomeArmCopyNumberBuilder.builder()
-                                .findingKey(FindingKeys.chromosomeArmCopyNumber(o.chromosome(), o.arm()))
+                        .map(o -> {
+                            DriverInterpretation driverInterpretation = DriverUtil.convert(o.driverInterpretation());
+                            return ChromosomeArmCopyNumberBuilder.builder()
+                                .driver(DriverFieldsBuilder.builder()
+                                            .findingKey(FindingKeys.chromosomeArmCopyNumber(o.chromosome(), o.arm()))
+                                            .driverSource(DriverSource.SOMATIC)
+                                            .reportedStatus(DriverUtil.reportedStatus(true, true, driverInterpretation))
+                                            .driverInterpretation(driverInterpretation)
+                                            .driverLikelihood(driverInterpretation == DriverInterpretation.HIGH ? 1.0 : 0.0)
+                                            .build())
                                 .chromosome(o.chromosome())
                                 .arm(switch (o.arm()) {
                                     case "P" -> ChromosomeArmCopyNumber.ChromosomeArm.P;
@@ -254,7 +262,8 @@ public class FindingRecordFactory
                                 })
                                 .copyNumber(o.copyNumber())
                                 .relativeCopyNumber(o.relativeCopyNumber())
-                                .build())
+                                .build();
+                        })
                         .toList());
     }
 

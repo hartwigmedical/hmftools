@@ -6,7 +6,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.driver.panel.DriverGene;
-import com.hartwig.hmftools.datamodel.purple.PurpleAllelicDepth;
+import com.hartwig.hmftools.datamodel.common.AllelicDepth;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleTranscriptImpact;
@@ -24,7 +24,6 @@ import com.hartwig.hmftools.finding.datamodel.SmallVariantAllelicDepthBuilder;
 import com.hartwig.hmftools.finding.datamodel.SmallVariantBuilder;
 import com.hartwig.hmftools.finding.datamodel.SmallVariantTranscriptImpactBuilder;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 final class SmallVariantFactory
@@ -176,7 +175,7 @@ final class SmallVariantFactory
     }
 
     @Nullable
-    private static SmallVariant.AllelicDepth convertAllelicDepth(@Nullable PurpleAllelicDepth allelicDepth)
+    private static SmallVariant.AllelicDepth convertAllelicDepth(@Nullable AllelicDepth allelicDepth)
     {
         if(allelicDepth == null)
         {

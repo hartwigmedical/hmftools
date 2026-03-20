@@ -40,7 +40,7 @@ public class TestFindingFactory
                 .purpleCopyNumberPlot(new VisualisationFile("purpleCopyNumberPlot.png"))
                 .purpleVariantCopyNumberPlot(new VisualisationFile("purpleVariantCopyNumberPlot.png"))
                 .purplePurityRangePlot(new VisualisationFile("purplePurityRangePlot.png"))
-                .purpleKataegisPlot(new VisualisationFile("purpleKataegisPlot.png"));
+                .purpleRainfallPlot(new VisualisationFile("purpleRainfallPlot.png"));
     }
 
     @NotNull

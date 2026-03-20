@@ -17,9 +17,9 @@ public record Disruption(
         @NotNull BreakendType breakendType,
         double disruptedCopyNumber,
         double undisruptedCopyNumber,
-        @Nullable Integer clusterId,
         @Nullable Breakend breakendUp,
-        @Nullable Breakend breakendDown
+        @Nullable Breakend breakendDown,
+        @Nullable VisualisationFile visualisationFile
 ) implements Driver
 {
     public enum Type

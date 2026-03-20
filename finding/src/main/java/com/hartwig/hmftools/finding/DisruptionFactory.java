@@ -6,13 +6,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxGeneOrientation;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
-import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.finding.datamodel.Breakend;
 import com.hartwig.hmftools.finding.datamodel.BreakendBuilder;
 import com.hartwig.hmftools.finding.datamodel.Disruption;
@@ -23,7 +21,7 @@ import com.hartwig.hmftools.finding.datamodel.DriverFindingListBuilder;
 import com.hartwig.hmftools.finding.datamodel.DriverInterpretation;
 import com.hartwig.hmftools.finding.datamodel.DriverSource;
 import com.hartwig.hmftools.finding.datamodel.ReportedStatus;
-import com.hartwig.hmftools.finding.datamodel.ResultStatus;
+import com.hartwig.hmftools.finding.datamodel.VisualisationFile;
 
 import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;
@@ -52,29 +50,26 @@ final class DisruptionFactory
         }
 
         List<LinxBreakend> breakends = Objects.requireNonNull(linx.germlineBreakends());
-        List<LinxSvAnnotation> structuralVariants = Objects.requireNonNull(linx.germlineStructuralVariants());
 
         return DriverFindingListBuilder.<Disruption>builder()
                 .status(FindingUtil.okStatus())
-                .findings(createDisruptions(DriverSource.GERMLINE, breakends, structuralVariants))
+                .findings(createDisruptions(DriverSource.GERMLINE, breakends))
                 .build();
     }
 
     public static DriverFindingList<Disruption> createSomaticDisruptions(LinxRecord linx)
     {
         @NotNull Collection<LinxBreakend> breakends = linx.somaticBreakends();
-        @NotNull Collection<LinxSvAnnotation> structuralVariants = linx.somaticStructuralVariants();
 
         return DriverFindingListBuilder.<Disruption>builder()
                 .status(FindingUtil.okStatus())
-                .findings(createDisruptions(DriverSource.SOMATIC, breakends, structuralVariants))
+                .findings(createDisruptions(DriverSource.SOMATIC, breakends))
                 .build();
     }
 
     private static List<Disruption> createDisruptions(
             DriverSource sampleType,
-            Collection<LinxBreakend> breakends,
-            Collection<LinxSvAnnotation> structuralVariants)
+            Collection<LinxBreakend> breakends)
     {
         List<Disruption> disruptions = new ArrayList<>();
         Map<SvAndTranscriptKey, Pair<LinxBreakend, LinxBreakend>> pairedMap = mapBreakendsPerStructuralVariant(breakends);
@@ -116,8 +111,7 @@ final class DisruptionFactory
                     disruptionType,
                     primaryBreakendStart,
                     primaryBreakendEnd,
-                    undisruptedCopyNumber,
-                    structuralVariants));
+                    undisruptedCopyNumber));
         }
         disruptions.sort(Disruption.COMPARATOR);
 
@@ -129,8 +123,7 @@ final class DisruptionFactory
             Disruption.Type disruptionType,
             @Nullable LinxBreakend breakendStart,
             @Nullable LinxBreakend breakendEnd,
-            double undisruptedCopyNumber,
-            Collection<LinxSvAnnotation> structuralVariants)
+            double undisruptedCopyNumber)
     {
         List<LinxBreakend> breakends = new ArrayList<>();
         if(breakendStart != null)
@@ -184,9 +177,9 @@ final class DisruptionFactory
                 .breakendType(Disruption.BreakendType.valueOf(breakend.type().name()))
                 .disruptedCopyNumber(breakend.junctionCopyNumber())
                 .undisruptedCopyNumber(undisruptedCopyNumber)
-                .clusterId(determineClusterId(structuralVariants, breakend))
                 .breakendUp(convert(breakendStart))
                 .breakendDown(convert(breakendEnd))
+                .visualisationFile(new VisualisationFile(breakend.plotFilename()))
                 .build();
     }
 
@@ -217,21 +210,6 @@ final class DisruptionFactory
                 .exonDown(linxBreakend.exonDown())
                 .junctionCopyNumber(linxBreakend.junctionCopyNumber())
                 .build();
-    }
-
-    @Nullable
-    static Integer determineClusterId(Collection<LinxSvAnnotation> structuralVariants, LinxBreakend breakend)
-    {
-        Optional<LinxSvAnnotation> sv = structuralVariants.stream().filter(o -> o.svId() == breakend.svId()).findFirst();
-        if(sv.isPresent())
-        {
-            return sv.get().clusterId();
-        }
-        else
-        {
-            LOGGER.warn("Could not find cluster ID for breakend with svId {}", breakend.svId());
-            return null;
-        }
     }
 
     private static Map<SvAndTranscriptKey, Pair<LinxBreakend, LinxBreakend>> mapBreakendsPerStructuralVariant(
