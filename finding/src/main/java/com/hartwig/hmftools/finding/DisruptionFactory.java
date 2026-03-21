@@ -26,7 +26,7 @@ import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingListBuilder;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverSource;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
-import com.hartwig.hmftools.finding.datamodel.ReportedStatus;
+import com.hartwig.hmftools.finding.datamodel.driver.ReportedStatus;
 
 import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;

@@ -10,6 +10,7 @@ import com.hartwig.hmftools.finding.datamodel.driver.DriverCuration;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFields;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverSource;
+import com.hartwig.hmftools.finding.datamodel.driver.ReportedStatus;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
 
 import org.junit.Test;

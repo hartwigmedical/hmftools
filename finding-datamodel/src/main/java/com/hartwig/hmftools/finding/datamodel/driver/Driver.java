@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.finding.datamodel.driver;
 
 import com.hartwig.hmftools.finding.datamodel.finding.Finding;
-import com.hartwig.hmftools.finding.datamodel.ReportedStatus;
 
 import jakarta.validation.constraints.NotNull;
 

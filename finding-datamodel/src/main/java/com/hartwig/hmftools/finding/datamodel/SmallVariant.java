@@ -9,6 +9,7 @@ import com.hartwig.hmftools.finding.datamodel.driver.DriverFields;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverSource;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverVisitor;
+import com.hartwig.hmftools.finding.datamodel.driver.ReportedStatus;
 
 import org.jspecify.annotations.Nullable;
 

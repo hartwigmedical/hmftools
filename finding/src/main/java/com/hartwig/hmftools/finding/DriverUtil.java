@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.finding;
 
 import com.hartwig.hmftools.finding.datamodel.driver.DriverInterpretation;
-import com.hartwig.hmftools.finding.datamodel.ReportedStatus;
+import com.hartwig.hmftools.finding.datamodel.driver.ReportedStatus;
 
 final class DriverUtil
 {
