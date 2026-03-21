@@ -462,7 +462,7 @@ public class FindingRecordFactory
                 .finding(MicrosatelliteStabilityBuilder.builder()
                         .findingKey(FindingKeys.microsatelliteStability(purple.characteristics().microsatelliteStatus()))
                         .status(microsatelliteStatus)
-                        .indelsPerMb(ThresholdValueFactory.mssValue(purple.characteristics().microsatelliteIndelsPerMb()))
+                        .indelsPerMb(ThresholdValueFactory.msiValue(purple.characteristics().microsatelliteIndelsPerMb()))
                         .lohCopyNumbers(lohGainDeletions)
                         .drivingGenes(drivingGenes)
                         .build())

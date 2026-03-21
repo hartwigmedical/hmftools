@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.finding;
 
+import static com.hartwig.hmftools.common.purple.MicrosatelliteStatus.MSI_THRESHOLD;
+import static com.hartwig.hmftools.common.purple.TumorMutationalStatus.TMB_THRESHOLD;
+import static com.hartwig.hmftools.common.purple.TumorMutationalStatus.TML_THRESHOLD;
+
 import com.hartwig.hmftools.finding.datamodel.ThresholdValue;
 
 import org.jetbrains.annotations.NotNull;
@@ -9,7 +13,6 @@ class ThresholdValueFactory
     private static final double TML_RANGE_MIN = 1;
     private static final double TML_RANGE_MAX = 1000;
     // TODO: Lookup proper threshold constant
-    private static final double TML_THRESHOLD = 10;
     private static final double HRD_RANGE_MIN = 0;
     private static final double HRD_RANGE_MAX = 1;
     // TODO: Lookup proper threshold constant
@@ -17,11 +20,8 @@ class ThresholdValueFactory
     private static final double MSS_RANGE_MIN = 1;
     private static final double MSS_RANGE_MAX = 100;
     // TODO: Lookup proper threshold constant
-    private static final double MSS_THRESHOLD = 4.0;
     private static final double TMB_RANGE_MIN = 1;
     private static final double TMB_RANGE_MAX = 120;
-    // TODO: Lookup proper threshold constant
-    private static final double TMB_THRESHOLD = 10;
 
     @NotNull
     static ThresholdValue tmlValue(double value)
@@ -36,9 +36,9 @@ class ThresholdValueFactory
     }
 
     @NotNull
-    static ThresholdValue mssValue(double value)
+    static ThresholdValue msiValue(double value)
     {
-        return new ThresholdValue(value, MSS_RANGE_MIN, MSS_RANGE_MAX, MSS_THRESHOLD);
+        return new ThresholdValue(value, MSS_RANGE_MIN, MSS_RANGE_MAX, MSI_THRESHOLD);
     }
 
     @NotNull
