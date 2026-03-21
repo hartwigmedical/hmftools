@@ -14,6 +14,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.datamodel.OrangeJson;
@@ -169,7 +171,7 @@ public class FindingRecordFactory
     private static Qc createQc(PurpleRecord purple)
     {
         PurpleFit purpleFit = purple.fit();
-        Set<Qc.QCStatus> qcStatuses = purpleFit.qc().status().stream()
+        SortedSet<Qc.QCStatus> qcStatuses = purpleFit.qc().status().stream()
                 .map(o -> switch(o)
                 {
                     case PASS -> Qc.QCStatus.PASS;
@@ -182,8 +184,8 @@ public class FindingRecordFactory
                     case FAIL_NO_TUMOR -> Qc.QCStatus.FAIL_NO_TUMOR;
                     case FAIL_TINC -> Qc.QCStatus.FAIL_TUMOR_IN_NORMAL_CONTAMINATION;
                 })
-                .collect(Collectors.toSet());
-        Set<Qc.GermlineAberration> germlineAberrations = purpleFit.qc().germlineAberrations().stream()
+                .collect(Collectors.toCollection(TreeSet::new));
+        SortedSet<Qc.GermlineAberration> germlineAberrations = purpleFit.qc().germlineAberrations().stream()
                 .map(o -> switch(o)
                 {
                     case NONE -> Qc.GermlineAberration.NONE;
@@ -196,7 +198,7 @@ public class FindingRecordFactory
                     case TRISOMY_18 -> Qc.GermlineAberration.TRISOMY_18;
                     case TRISOMY_21 -> Qc.GermlineAberration.TRISOMY_21;
                 })
-                .collect(Collectors.toSet());
+                .collect(Collectors.toCollection(TreeSet::new));
 
         return QcBuilder.builder()
                 .status(qcStatuses)

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.finding.datamodel;
 
-import java.util.Set;
+import java.util.SortedSet;
 
 import org.jspecify.annotations.Nullable;
 
@@ -9,8 +9,8 @@ import jakarta.validation.constraints.NotNull;
 @SuppressWarnings("unused")
 @RecordBuilder
 public record Qc(
-        @NotNull Set<QCStatus> status,
-        @NotNull Set<GermlineAberration> germlineAberrations,
+        @NotNull SortedSet<QCStatus> status,
+        @NotNull SortedSet<GermlineAberration> germlineAberrations,
         int amberMeanDepth,
         double contamination,
         int totalCopyNumberSegments,
