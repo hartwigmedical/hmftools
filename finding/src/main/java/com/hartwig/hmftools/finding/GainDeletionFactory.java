@@ -9,7 +9,6 @@ import com.hartwig.hmftools.datamodel.purple.GermlineAmpDelFields;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
-import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.PurpleGermlineStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFieldsBuilder;
@@ -65,15 +64,6 @@ final class GainDeletionFactory
                 .build();
     }
 
-    private static PurpleGeneCopyNumber findPurpleGeneCopyNumber(final List<PurpleGeneCopyNumber> somaticGeneCopyNumbers,
-            final String gene, final String transcript)
-    {
-        return somaticGeneCopyNumbers.stream()
-                .filter(o -> o.gene().equals(gene) && o.transcript().equals(transcript))
-                .findFirst()
-                .orElseThrow(() -> new IllegalStateException("No gene copy number found for " + gene + " transcript " + transcript));
-    }
-
     private static List<GainDeletion> somaticDriverGainDels(List<PurpleGainDeletion> gainDeletions)
     {
         List<GainDeletion> somaticGainsDels = new ArrayList<>();
@@ -120,7 +110,7 @@ final class GainDeletionFactory
                 .tumorMaxCopyNumber(purpleGainDeletion.maxCopyNumber())
                 .tumorRelativeCopyNumber(purpleGainDeletion.relativeCopyNumber())
                 .tumorMinMinorAlleleCopyNumber(purpleGainDeletion.minMinorAlleleCopies())
-                .chromosomeArmCopyNumber(2) // TODO fix later
+                .chromosomeArmCopyNumber(purpleGainDeletion.armCopyNumber())
                 .germlineMinCopyNumber(germlineAmpDelFields != null ? germlineAmpDelFields.germlineMinCopyNumber() : null)
                 .tpm(purpleGainDeletion.tpm())
                 .tpmPercentile(purpleGainDeletion.tpmPercentile())

@@ -2,7 +2,6 @@ package com.hartwig.hmftools.finding;
 
 import java.io.IOException;
 
-import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.datamodel.TestOrangeJsonWriter;
 
 import org.junit.Ignore;
@@ -14,6 +13,6 @@ public class FindingFactoryTest
     @Test
     public void fromOrangeRecord() throws IOException
     {
-        FindingRecordFactory.fromOrangeRecord(TestOrangeJsonWriter.createOrangeRecord(), null, null, Gender.FEMALE);
+        FindingRecordFactory.fromOrangeRecord(TestOrangeJsonWriter.createOrangeRecord(), null, null);
     }
 }
