@@ -27,7 +27,7 @@ public class LowPurityConverterTest
         // TODO: Create this from actual orange record to make sure it's a representative finding record
         FindingRecord original = TestFindingRecordFactory.createMinimalTestFindingRecordBuilder()
                 .qc(TestFindingFactory.qcBuilder()
-                        .status(Set.of(Qc.QCStatus.PASS, Qc.QCStatus.WARN_LOW_PURITY))
+                        .status(new TreeSet<>(Set.of(Qc.QCStatus.PASS, Qc.QCStatus.WARN_LOW_PURITY)))
                         .build())
                 .hlaAlleles(FindingListBuilder.<HlaAllele>builder()
                         .status(FindingStatusBuilder.builder()

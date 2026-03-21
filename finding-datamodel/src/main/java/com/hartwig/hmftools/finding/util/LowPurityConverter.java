@@ -1,30 +1,23 @@
 package com.hartwig.hmftools.finding.util;
 
-import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
+import com.hartwig.hmftools.finding.datamodel.FindingRecord;
+import com.hartwig.hmftools.finding.datamodel.FindingRecordBuilder;
+import com.hartwig.hmftools.finding.datamodel.HlaAllele;
+import com.hartwig.hmftools.finding.datamodel.HlaAlleleBuilder;
 import com.hartwig.hmftools.finding.datamodel.driver.Driver;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingList;
-import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingListBuilder;
 import com.hartwig.hmftools.finding.datamodel.finding.Finding;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingItem;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingItemBuilder;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingList;
-import com.hartwig.hmftools.finding.datamodel.FindingRecord;
-import com.hartwig.hmftools.finding.datamodel.FindingRecordBuilder;
-import com.hartwig.hmftools.finding.datamodel.finding.FindingListBuilder;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
-import com.hartwig.hmftools.finding.datamodel.HlaAllele;
-import com.hartwig.hmftools.finding.datamodel.HlaAlleleBuilder;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingStatusBuilder;
 
-import org.jspecify.annotations.Nullable;
-
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Null;
 
 public class LowPurityConverter
 {
@@ -47,14 +40,11 @@ public class LowPurityConverter
     @NotNull
     private static <T extends Finding> FindingList<T> convert(@NotNull FindingList<T> findingList, boolean isLowPurity,
             @NotNull Function<FindingStatus, FindingStatus> findingsStatusConverter,
-            @Null Function<T, T> findingConverter)
+            @NotNull Function<T, T> findingConverter)
     {
         if(shouldConvert(findingList.status(), isLowPurity))
         {
-            return FindingListBuilder.<T>builder()
-                    .status(findingsStatusConverter.apply(findingList.status()))
-                    .findings(convert(findingList.findings(), findingConverter))
-                    .build();
+            return FindingsConverter.convert(findingList, findingsStatusConverter, findingConverter, null);
         }
         else
         {
@@ -62,27 +52,15 @@ public class LowPurityConverter
         }
     }
 
-    private static <T> List<T> convert(List<T> list, @Nullable Function<T, T> converter)
-    {
-        return converter != null ? list.stream().map(converter).collect(Collectors.toList()) : List.of();
-    }
-
-    private static HlaAllele convert(HlaAllele hlaAllele)
-    {
-        return HlaAlleleBuilder.builder(hlaAllele)
-                .tumorCopyNumber(null)
-                .build();
-    }
-
     @NotNull
     private static <T extends Driver> DriverFindingList<T> convert(@NotNull DriverFindingList<T> driverFindingList, boolean isLowPurity)
     {
         if(shouldConvert(driverFindingList.status(), isLowPurity))
         {
-            return DriverFindingListBuilder.<T>builder()
-                    .status(convert(driverFindingList.status()))
-                    .findings(List.of())
-                    .build();
+            return FindingsConverter.convert(driverFindingList,
+                    LowPurityConverter::convert,
+                    f -> null,
+                    null);
         }
         else
         {
@@ -131,5 +109,12 @@ public class LowPurityConverter
         SortedSet<FindingStatus.Issue> result = new TreeSet<>(sortedSet);
         result.remove(FindingStatus.Issue.LOW_PURITY);
         return result;
+    }
+
+    private static HlaAllele convert(HlaAllele hlaAllele)
+    {
+        return HlaAlleleBuilder.builder(hlaAllele)
+                .tumorCopyNumber(null)
+                .build();
     }
 }
