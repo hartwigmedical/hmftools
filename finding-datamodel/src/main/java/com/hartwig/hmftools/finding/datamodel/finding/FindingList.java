@@ -2,7 +2,6 @@ package com.hartwig.hmftools.finding.datamodel.finding;
 
 import java.util.List;
 
-import com.hartwig.hmftools.finding.datamodel.IFindingList;
 import com.hartwig.hmftools.finding.datamodel.RecordBuilder;
 
 import jakarta.validation.constraints.NotNull;

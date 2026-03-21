@@ -4,9 +4,8 @@ import java.util.List;
 
 import com.hartwig.hmftools.finding.datamodel.finding.FindingsQuery;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
-import com.hartwig.hmftools.finding.datamodel.IFindingList;
+import com.hartwig.hmftools.finding.datamodel.finding.IFindingList;
 import com.hartwig.hmftools.finding.datamodel.RecordBuilder;
-import com.hartwig.hmftools.finding.datamodel.ReportedStatus;
 
 import jakarta.validation.constraints.NotNull;
 

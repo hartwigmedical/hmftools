@@ -1,12 +1,9 @@
-package com.hartwig.hmftools.finding.datamodel;
+package com.hartwig.hmftools.finding.datamodel.finding;
 
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.stream.Stream;
-
-import com.hartwig.hmftools.finding.datamodel.finding.Finding;
-import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
 
 import jakarta.validation.constraints.NotNull;
 

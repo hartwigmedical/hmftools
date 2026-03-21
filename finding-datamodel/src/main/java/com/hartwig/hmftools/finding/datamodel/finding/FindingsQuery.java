@@ -3,7 +3,7 @@ package com.hartwig.hmftools.finding.datamodel.finding;
 import java.util.List;
 import java.util.Set;
 
-import com.hartwig.hmftools.finding.datamodel.ReportedStatus;
+import com.hartwig.hmftools.finding.datamodel.driver.ReportedStatus;
 import com.hartwig.hmftools.finding.datamodel.driver.Driver;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverSource;
 
