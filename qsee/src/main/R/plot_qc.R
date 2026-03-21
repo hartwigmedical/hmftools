@@ -454,7 +454,7 @@ PLOTS[[FEATURE_TYPE$DUPLICATE_FREQ]] <- local({
    }
    
    plot_distribution(plot_data, x = "ReadCount") +
-      scale_x_continuous(transform = "log10", guide = "axis_logticks") +
+      scale_x_log10(guide = "axis_logticks") +
       scale_y_continuous(label = scales::label_percent()) +
       plot_labels +
       theme(panel.grid.major.x = THEME_PANEL_GRID_MAJOR) +
@@ -614,7 +614,7 @@ PLOTS[[FEATURE_TYPE$DISCORDANT_FRAG_FREQ]] <- local({
    plot_data <- plot_data %>% dplyr::mutate(DisplayName = reverse_levels(DisplayName))
 
    plot_pairwise_comparison(plot_data, x = "DisplayName", plot_type = box_or_bar_plot()) +
-      scale_y_continuous(transform = "log10", guide = "axis_logticks", labels = scales::label_percent(drop0trailing=TRUE)) +
+      scale_y_log10(guide = "axis_logticks", labels = scales::label_percent(drop0trailing=TRUE)) +
       plot_labels +
       coord_flip() +
       theme(panel.grid.major.x = THEME_PANEL_GRID_MAJOR) +
@@ -933,8 +933,8 @@ plot_sub_table <- function(plot_data, min_upper_limit, show_title = FALSE, show_
    }
 
    if(number_format == NUMBER_FORMAT$LOG10){
-      gg_scale_y_continuous <- scale_y_continuous(
-         transform = "log10", guide = "axis_logticks",
+      gg_scale_y_continuous <- scale_y_log10(
+         guide = "axis_logticks",
          label = function(x) format(x, scientific = FALSE, drop0trailing = TRUE, trim = TRUE)
       )
 
