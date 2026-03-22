@@ -1,0 +1,89 @@
+package com.hartwig.hmftools.finding.datamodel;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import com.hartwig.hmftools.finding.datamodel.driver.Driver;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingList;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingItem;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingList;
+
+import jakarta.validation.constraints.NotNull;
+
+@RecordBuilder
+public record FindingRecord(
+        @NotNull String version,
+        @NotNull MetaProperties metaProperties,
+        @NotNull Qc qc,
+        @NotNull PurityPloidyFit purityPloidyFit,
+        @NotNull DriverFindingList<SmallVariant> somaticSmallVariants,
+        @NotNull DriverFindingList<SmallVariant> germlineSmallVariants,
+        @NotNull DriverFindingList<GainDeletion> somaticGainDeletions,
+        @NotNull DriverFindingList<GainDeletion> germlineGainDeletions,
+        @NotNull DriverFindingList<Disruption> somaticDisruptions,
+        @NotNull DriverFindingList<Disruption> germlineDisruptions,
+        @NotNull DriverFindingList<Fusion> fusions,
+        @NotNull DriverFindingList<Virus> viruses,
+        @NotNull FindingList<ChromosomeArmCopyNumber> chromosomeArmCopyNumbers,
+        @NotNull FindingList<HlaAllele> hlaAlleles,
+        @NotNull FindingList<PharmacoGenotype> pharmacoGenotypes,
+        @NotNull FindingItem<PredictedTumorOrigin> predictedTumorOrigin,
+        @NotNull FindingItem<MicrosatelliteStability> microsatelliteStability,
+        @NotNull FindingItem<TumorMutationalLoad> tumorMutationalLoad,
+        @NotNull FindingItem<TumorMutationalBurden> tumorMutationalBurden,
+        @NotNull FindingItem<HomologousRecombination> homologousRecombination)
+{
+    @NotNull
+    public List<SmallVariant> allSmallVariants()
+    {
+        return mergeDriverFindings(somaticSmallVariants, germlineSmallVariants);
+    }
+
+    @NotNull
+    public List<GainDeletion> allGainDeletions()
+    {
+        return mergeDriverFindings(somaticGainDeletions, germlineGainDeletions);
+    }
+
+    @NotNull
+    public List<Disruption> allDisruptions()
+    {
+        return mergeDriverFindings(somaticDisruptions, germlineDisruptions);
+    }
+
+    @NotNull
+    public List<SmallVariant> allReportableSmallVariants()
+    {
+        return mergeReportedDriverFindings(somaticSmallVariants, germlineSmallVariants);
+    }
+
+    @NotNull
+    public List<GainDeletion> allReportableGainDeletions()
+    {
+        return mergeReportedDriverFindings(somaticGainDeletions, germlineGainDeletions);
+    }
+
+    @NotNull
+    public List<Disruption> allReportableDisruptions()
+    {
+        return mergeReportedDriverFindings(somaticDisruptions, germlineDisruptions);
+    }
+
+    @NotNull
+    private static <T extends Driver> List<T> mergeDriverFindings(DriverFindingList<T> somatic, DriverFindingList<T> germline)
+    {
+        List<T> all = new ArrayList<>(somatic.findings());
+        all.addAll(germline.findings());
+        all.sort(T.COMPARATOR);
+        return all;
+    }
+
+    @NotNull
+    private static <T extends Driver> List<T> mergeReportedDriverFindings(DriverFindingList<T> somatic, DriverFindingList<T> germline)
+    {
+        List<T> all = new ArrayList<>(somatic.reportedOnly().findings());
+        all.addAll(germline.reportedOnly().findings());
+        all.sort(T.COMPARATOR);
+        return all;
+    }
+}

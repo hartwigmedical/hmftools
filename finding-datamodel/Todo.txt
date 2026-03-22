@@ -1,0 +1,151 @@
+
+
+
+
+
+My proposal as the general principle that should apply is that what is shown in the findings model vs. in reports (be it ACTIN or OncoAct) should be consistent.
+
+Suggestions of what still to do:
+ * review OncoAct and ACTIN implementations
+ * review naming - at this stage this is still easy to change, at a later stage this will be undesirable.
+ * decide if more logic can be moved to the findings datamodel
+    - Some examples:
+        - ACTIN applies a gene based filter on all findings
+        - ACTIN splits TumorMutationStatus into TumorMutationalBurden and TumorMutationalLoad
+        - ACTIN has some "variant dedup" logic
+        - ACTIN converts proteinImpact to use singleLetterAminoAcids
+        - ACTIN rounds copy numbers to 3 digits (different from OncoAct)
+
+
+More java related:
+ * Review if findings lists interfaces can be improved
+    * IFindingsList name is not Idiomatic
+    * Don't like the list methods on findingsList
+    * All versions are not findings lists
+
+Things that can be done at a later stage
+
+ * add good test coverage for the orange -> findings conversion
+
+* IFindingsList?
+* Move handling of UGT1A1 into findings model?
+* HRStatus UNKNOWN / CANNOT_BE_DETERMINED -> Solve through finding status?
+
+(actin datamodel is not public)
+
+* "all" versions is not really consistent as it loses status
+* Handling of CDKN2A/CDKN2A (p16)/CDKN2A (p14ARF) which should also move to the findings model (but could be optional for NL).
+* Shared interface for "GeneFindings"
+    * Naming in OncoAct is inconsistent (also in the report). I think it's good to make clear that this is the same thing by using a shared interface
+    * Shared by Disruption, GainDeletion, SmallVariant
+    * Includes the following fields
+        * Gene
+        * Transcript
+        * IsCanonical
+        * Chromosome
+        * ChromosomeBand (not in small variant)
+
+
+
+* Move handling of germline for NL into findings model?
+    * We are not allowed to report germline findings in NL
+    * Any germline findings are changed to somatic, unless they are considered “germline only” (variant copy number < 0.5).
+    * The germline only findings need to be recognizable as such
+    * Probably necessary for UI anyway. NL UI can not show germline findings as germline findings
+
+
+* Consider moving handling of driverLikelihood to findings model
+    * OncoAct sets the driverlikelihood to the highest value for a gene (can change null value to actual driverlikelihood)
+
+* Create shared interface between all types of findings (for FindingStatus)?
+
+
+
+The list below shows what kind of post-processing happens in OncoAct on the data from the findings model:
+
+In general OncoAct currently combines somatic and germline variants, and reports everything as somatic.
+
+Variants
+
+First pass:
+
+List:
+- Sorting -> using max driver likelihoods
+    - Max driver likelihoods are already set but driver likelihood is cleared again for germline only
+
+Items:
+- Clear fields on “germline only” (variant copy number < 0.5 as germline only)
+    - Copies
+    - Driver
+    - Biallic
+    - Hotspot
+    - tvaf
+- Convert DriverInterpretation enum  (seems unnecessary?)
+    - This is because that DriverInterpretation is in common as it’s shared with protect
+- Curation of gene name
+- Add a + to the gene name if it's a phased variant
+- Add genomic position
+- Calculate tvaf
+- Add other impact to annotation list
+
+Homozygous Disruptions
+
+List
+- Filter (is Homozygous)
+- Distinct (is this necessary? -> Introduced in findings branch)
+- Sort
+
+Disruptions
+
+(probably currently also contains the homozygous disruptions? so these are reported double?)
+
+List
+- Sort
+
+Items:
+- Curation of gene name
+- Copy numbers are also filled in if not reliable
+- Convert copy numbers to integers
+
+Fusions
+
+List
+- Sort
+
+Items:
+- Add fusion name
+- Renames of properties
+- Add ensemble urls
+- Only fill in copy numbers if reliable purity
+- Convert copy numbers to integers
+
+GainDeletions
+
+List:
+- Filter out SOMATIC_LOH
+- Sort
+
+Items:
+- Curation of gene name
+- Only fill in copy numbers if reliable purity
+- Convert copy numbers to integers
+
+GeneCopyNumbers (comparable to GainDeletions, but only used for LOH events for HRD/MSI)
+
+(Has less fields than GainDeletions)
+
+List
+- Sort
+
+Items
+- Only fill in copy numbers if reliable purity
+- Convert copy numbers to integers
+
+
+
+
+
+
+
+
+

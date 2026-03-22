@@ -10,7 +10,8 @@
 
     <artifactId>orange-datamodel</artifactId>
     <packaging>jar</packaging>
-    <version>${orange-datamodel.version}</version>
+    <!--suppress MavenRedundantVersion -->
+    <version>local-SNAPSHOT</version>
     <name>HMF Tools - ORANGE datamodel</name>
 
     <dependencies>
@@ -67,6 +68,17 @@
                             <shadedArtifactAttached>true</shadedArtifactAttached>
                             <shadedClassifierName>shaded</shadedClassifierName>
                         </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>test-jar</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>
