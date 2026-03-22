@@ -54,7 +54,7 @@ public class MsiModelPrediction
             String header = lines.get(0);
             Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
 
-            String[] values = lines.get(0).split(TSV_DELIM, -1);
+            String[] values = lines.get(1).split(TSV_DELIM, -1);
 
             double predictedValue = Double.parseDouble(values[fieldsIndexMap.get(FLD_PREDICTED_VALUE)]);
 

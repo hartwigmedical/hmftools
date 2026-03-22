@@ -41,7 +41,7 @@ public class MicrosatelliteIndels
     {
         if(mTargetRegions.hasTargetRegions())
         {
-            return mMsiModelPrediction.PredictedMsiIndelsPerMb;
+            return mMsiModelPrediction != null ? mMsiModelPrediction.PredictedMsiIndelsPerMb : 0;
         }
         else
         {

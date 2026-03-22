@@ -16,7 +16,7 @@ public final class LinxCommonTypes
     public static final String SUPER_TYPE_INCOMPLETE = "INCOMPLETE";
     public static final String SUPER_TYPE_ARTIFACT = "ARTIFACT";
 
-    private static final String SV_VIS_CLUSTER_PREFIX = ".cluster";
+    public static final String SV_VIS_CLUSTER_PREFIX = ".cluster";
 
     // Visualiser file suffixes and file naming
     public static String formVisPlotClusterPrefix(final String clusterIds)
