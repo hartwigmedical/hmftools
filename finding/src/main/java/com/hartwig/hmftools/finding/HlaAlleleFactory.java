@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.finding;
 
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -30,7 +30,7 @@ public class HlaAlleleFactory
     private static final Logger LOGGER = LogManager.getLogger(HlaAlleleFactory.class);
 
     private static final Pattern HLA_REGEX = Pattern.compile("""
-            ^(?<gene>[A-Z]+)\\*(?<alleleGroup>\\d{2}):(?<hlaProtein>\\d{2,3})N?$""");
+            ^(?<geneSymbol>[A-Z]+)\\*(?<alleleGroup>\\d{2}):(?<hlaProtein>\\d{2,3})N?$""");
     private static final String PASS = "PASS";
 
     private HlaAlleleFactory()
@@ -59,70 +59,49 @@ public class HlaAlleleFactory
 
     public static List<HlaAllele> convertHlaAlleles(LilacRecord lilac, boolean hasRef, boolean hasRna)
     {
-        Map<String, List<LilacAllele>> hlaAllelesMap = lilac.alleles()
-                .stream()
-                .collect(Collectors.groupingBy(LilacAllele::allele));
+        Map<String, Integer> hlaAlleleCount = new HashMap<>();
 
         // newer version of Lilac puts acStatus in alleles instead. This backport version will do the same
         Set<HlaAllele.QcStatus> qcStatus = Arrays.stream(lilac.qc().split(";"))
                 .map(HlaAllele.QcStatus::valueOf)
                 .collect(Collectors.toSet());
 
-        List<HlaAllele> hlaAlleles = new ArrayList<>();
-        for(Map.Entry<String, List<LilacAllele>> keyMap : hlaAllelesMap.entrySet())
-        {
-            LilacAllele lilacAllele = keyMap.getValue().get(0);
+        return lilac.alleles().stream()
+                .map(lilacAllele -> convertLilacAllele(lilacAllele, qcStatus, hasRef, hasRna,
+                        hlaAlleleCount.compute(lilacAllele.allele(),
+                                (key, oldValue) -> oldValue == null ? 1 : oldValue + 1)))
+                .sorted(HlaAllele.COMPARATOR)
+                .toList();
+    }
 
-            var matcher = matchHlaRegEx(lilacAllele.allele());
-            String gene = "HLA-" + matcher.group("gene");
-            String geneClass = "MHC_CLASS_1";
-            String alleleGroup = matcher.group("alleleGroup");
-            String hlaProtein = matcher.group("hlaProtein");
+    static HlaAllele convertLilacAllele(LilacAllele lilacAllele, Set<HlaAllele.QcStatus> qcStatus, boolean hasRef,
+            boolean hasRna, int alleleCopy)
+    {
+        var matcher = matchHlaRegEx(lilacAllele.allele());
+        String gene = matcher.group("geneSymbol");
+        HlaAllele.GeneClass geneClass = HlaAllele.GeneClass.MHC_CLASS_I;
+        String alleleGroup = matcher.group("alleleGroup");
+        String hlaProtein = matcher.group("hlaProtein");
 
-            // NOTE: the fragment counts are doubled in lilac if an allele is present twice
-            HlaAlleleBuilder builder = HlaAlleleBuilder.builder()
-                    .findingKey(FindingKeys.hlaAllele(lilacAllele))
-                    .geneClass(geneClass)
-                    .gene(gene)
-                    .allele(lilacAllele.allele())
-                    .alleleGroup(alleleGroup)
-                    .hlaProtein(hlaProtein)
-                    .qcStatus(qcStatus)
-                    .refFragments(hasRef ? lilacAllele.refFragments() : null)
-                    .tumorFragments(lilacAllele.tumorFragments())
-                    .rnaFragments(hasRna ? lilacAllele.rnaFragments() : null)
-                    .somaticMissense(lilacAllele.somaticMissense())
-                    .somaticNonsenseOrFrameshift(lilacAllele.somaticNonsenseOrFrameshift())
-                    .somaticSplice(lilacAllele.somaticSplice())
-                    .somaticSynonymous(lilacAllele.somaticSynonymous())
-                    .somaticInframeIndel(lilacAllele.somaticInframeIndel());
+        HlaAlleleBuilder builder = HlaAlleleBuilder.builder()
+                .findingKey(FindingKeys.hlaAllele(lilacAllele, alleleCopy))
+                .geneClass(geneClass)
+                .geneSymbol(gene)
+                .alleleGroup(alleleGroup)
+                .hlaProtein(hlaProtein)
+                .qcStatus(qcStatus)
+                .germlineCopyNumber(1)
+                .tumorCopyNumber(lilacAllele.tumorCopyNumber())
+                .refFragments(hasRef ? lilacAllele.refFragments() : null)
+                .tumorFragments(lilacAllele.tumorFragments())
+                .rnaFragments(hasRna ? lilacAllele.rnaFragments() : null)
+                .somaticMissense(lilacAllele.somaticMissense())
+                .somaticNonsenseOrFrameshift(lilacAllele.somaticNonsenseOrFrameshift())
+                .somaticSplice(lilacAllele.somaticSplice())
+                .somaticSynonymous(lilacAllele.somaticSynonymous())
+                .somaticInframeIndel(lilacAllele.somaticInframeIndel());
 
-            if(keyMap.getValue().size() == 1)
-            {
-                hlaAlleles.add(builder
-                        .germlineCopyNumber(1)
-                        .tumorCopyNumber(lilacAllele.tumorCopyNumber())
-                        .build());
-
-            }
-            else if(keyMap.getValue().size() == 2)
-            {
-                LilacAllele allele2 = keyMap.getValue().get(1);
-                double tumorCopies = lilacAllele.tumorCopyNumber() + allele2.tumorCopyNumber();
-
-                hlaAlleles.add(builder
-                        .germlineCopyNumber(2)
-                        .tumorCopyNumber(tumorCopies)
-                        .build());
-            }
-            else
-            {
-                LOGGER.warn("To many hla alleles of allele '{}'", keyMap.getKey());
-            }
-        }
-
-        hlaAlleles.sort(HlaAllele.COMPARATOR);
-        return hlaAlleles;
+        return builder.build();
     }
 
     @NotNull

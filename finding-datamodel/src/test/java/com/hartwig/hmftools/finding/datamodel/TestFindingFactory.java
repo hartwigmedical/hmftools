@@ -274,10 +274,9 @@ public class TestFindingFactory
     {
         return HlaAlleleBuilder.builder()
                 .findingKey("")
-                .gene("")
-                .geneClass("")
+                .geneSymbol("")
+                .geneClass(HlaAllele.GeneClass.MHC_CLASS_I)
                 .germlineCopyNumber(0)
-                .allele("")
                 .alleleGroup("")
                 .hlaProtein("")
                 .tumorCopyNumber(0D)

@@ -59,9 +59,9 @@ final class FindingKeys
         return String.format("chrArmCopyNumber[%s%s]", chromosome, arm);
     }
 
-    public static String hlaAllele(LilacAllele allele)
+    public static String hlaAllele(LilacAllele allele, int suffix)
     {
-        return String.format("hlaAllele[%s]", allele.allele());
+        return String.format("hlaAllele[%s %d]", allele.allele(), suffix);
     }
 
     public static String microsatelliteStability(PurpleMicrosatelliteStatus status)
