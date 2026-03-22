@@ -27,8 +27,8 @@ public enum SummaryTableFeature
     COVERAGE_ABOVE_60(SourceTool.BAM_METRICS, SummaryTableGroup.MAPPING, "Coverage >60x", PERCENT),
     COVERAGE_ABOVE_100(SourceTool.BAM_METRICS, SummaryTableGroup.MAPPING, "Coverage >100x", PERCENT),
     COVERAGE_ABOVE_250(SourceTool.BAM_METRICS, SummaryTableGroup.MAPPING, "Coverage >250x", PERCENT),
-    LOW_BASE_QUAL(SourceTool.BAM_METRICS, SummaryTableGroup.MAPPING, "Low quality bases", PERCENT),
-    LOW_MAP_QUAL(SourceTool.BAM_METRICS, SummaryTableGroup.MAPPING, "Low map quality reads", PERCENT),
+    LOW_BASE_QUAL(SourceTool.BAM_METRICS, SummaryTableGroup.MAPPING, "Low qual. bases", PERCENT),
+    LOW_MAP_QUAL(SourceTool.BAM_METRICS, SummaryTableGroup.MAPPING, "Low map qual. reads", PERCENT),
     DUPLICATE_READS(SourceTool.BAM_METRICS, SummaryTableGroup.MAPPING, "Duplicate reads", PERCENT),
     DUAL_STRAND_READS(SourceTool.BAM_METRICS, SummaryTableGroup.MAPPING, "Dual-strand reads", PERCENT),
 
@@ -36,10 +36,10 @@ public enum SummaryTableFeature
     PLOIDY(SourceTool.PURPLE, SummaryTableGroup.COPY_NUMBER, "Ploidy", NUMBER),
     LOH_PERCENT(SourceTool.PURPLE, SummaryTableGroup.COPY_NUMBER, "LOH", PERCENT),
     DELETED_GENES(SourceTool.PURPLE, SummaryTableGroup.COPY_NUMBER, "Deleted genes", LOG10),
-    UNSUPPORTED_CN_SEGMENTS(SourceTool.PURPLE, SummaryTableGroup.COPY_NUMBER, "Unsupported CN segments", LOG10),
+    UNSUPPORTED_CN_SEGMENTS(SourceTool.PURPLE, SummaryTableGroup.COPY_NUMBER, "Unsupported CN segs", LOG10),
 
-    TINC(SourceTool.PURPLE, SummaryTableGroup.CONTAMINATION, "Tumor in normal contamination", PERCENT),
-    CONTAMINATION(SourceTool.PURPLE, SummaryTableGroup.CONTAMINATION, "Other DNA contamination", PERCENT),
+    TINC(SourceTool.PURPLE, SummaryTableGroup.CONTAMINATION, "Tumor in normal", PERCENT),
+    CONTAMINATION(SourceTool.PURPLE, SummaryTableGroup.CONTAMINATION, "Other DNA", PERCENT),
 
     TMB_SMALL_VARIANTS(SourceTool.PURPLE, SummaryTableGroup.TMB, "SNVs/indels per MB", LOG10),
     TMB_MS_INDELS(SourceTool.PURPLE, SummaryTableGroup.TMB, "MS indels per MB", LOG10),

@@ -7,13 +7,7 @@ if(!interactive()){
 }
 
 suppressPackageStartupMessages(library(dplyr))
-
 library(ggplot2)
-theme_set(
-   theme_bw() +
-   theme(panel.grid = element_blank())
-)
-
 library(patchwork)
 library(scales)
 
@@ -140,6 +134,21 @@ QC_STATUS <- list(
    WARN = list(name = "WARN", color = "#FCFFC6"),
    PASS = list(name = "PASS", color = "#FFFFFF00")
 )
+
+
+BASE_SIZE <- 10.5
+theme_set(
+   theme_bw(base_size = BASE_SIZE) +
+   theme(
+      panel.grid = element_blank(),
+      plot.title = element_text(size = BASE_SIZE),
+   )
+)
+
+update_geom_defaults("point", list(size = BASE_SIZE*0.15))
+update_geom_defaults("boxplot", list(linewidth = BASE_SIZE*0.025, color = "grey70"))
+
+THEME_PANEL_GRID_MAJOR <- element_line(color = "grey90", linewidth = BASE_SIZE*0.02)
 
 ## =============================
 ## Load data
@@ -368,8 +377,13 @@ plot_distribution <- function(plot_data, x, invert_normal = FALSE, mark_sample_p
       gg_geom_segment <- geom_segment(
          data = peak_data, 
          mapping = aes(x = XPos, xend = XPos, y = 0, yend = Height, color = SampleType),
-         show.legend = FALSE, linetype = "dotted"
+         show.legend = FALSE, linewidth = 0.2
       )
+   }
+
+   gg_geom_hline <- geom_blank()
+   if(!is.null(hlines)){
+      gg_geom_hline <- geom_hline(yintercept = hlines, linewidth = THEME_PANEL_GRID_MAJOR$linewidth, color = THEME_PANEL_GRID_MAJOR$colour)
    }
    
    gg_geom_ribbon <- geom_ribbon(aes(ymin = PctMin, ymax = PctMax, fill = SampleType), alpha = 0.1)
@@ -377,15 +391,15 @@ plot_distribution <- function(plot_data, x, invert_normal = FALSE, mark_sample_p
    sample_type_colors <- sapply(SAMPLE_TYPE, `[[`, "color")
    gg_scale_fill_manual <- scale_fill_manual(values = sample_type_colors)
    gg_scale_color_manual <- scale_color_manual(values = sample_type_colors)
-   
+
    if(is.na(COHORT_PERCENTILES_FILE)){
       gg_geom_ribbon <- geom_blank()
       gg_scale_fill_manual <- geom_blank()
    }
    
    ggplot(plot_data, aes(x = .data[[x]], y = FeatureValue, group = SampleType)) +
-      
-      { if(!is.null(hlines)) geom_hline(linewidth = 0.25, color = "grey70", yintercept = hlines) } +
+
+      gg_geom_hline +
       
       gg_geom_ribbon +
       gg_geom_line +
@@ -440,12 +454,10 @@ PLOTS[[FEATURE_TYPE$DUPLICATE_FREQ]] <- local({
    }
    
    plot_distribution(plot_data, x = "ReadCount") +
-      scale_x_continuous(transform = "log10", guide = "axis_logticks") +
+      scale_x_log10(guide = "axis_logticks") +
       scale_y_continuous(label = scales::label_percent()) +
       plot_labels +
-      theme(
-         panel.grid.major.x = element_line(color = "grey90", linewidth = 0.25),
-      ) +
+      theme(panel.grid.major.x = THEME_PANEL_GRID_MAJOR) +
       render_now()
 })
 
@@ -506,12 +518,11 @@ plot_pairwise_comparison <- function(
    gg_scale_color_manual <- scale_color_manual(values = sample_type_colors, drop = FALSE)
    
    if(plot_type == PAIRWISE_PLOT_TYPE$BOX){
-      gg_geom_point <- geom_point(shape = 21, position = gg_position_dodge, size = 1.8)
+      gg_geom_point <- geom_point(shape = 21, position = gg_position_dodge)
       
       gg_geom_boxplot <- geom_boxplot(
          aes(ymin = PctMin, lower = PctLower, middle = PctMid, upper = PctUpper, ymax = PctMax),
-         position = gg_position_dodge, width = 0.4 * box_width_scale,
-         stat = "identity", alpha = 0.3, size = 0.25, color = "grey70"
+         position = gg_position_dodge, width = 0.4 * box_width_scale, stat = "identity", alpha = 0.3
       )
       
       gg_scale_color_manual <- geom_blank()
@@ -519,7 +530,7 @@ plot_pairwise_comparison <- function(
    
    if(plot_type == PAIRWISE_PLOT_TYPE$POINT_RANGE){ ## Used when boxplot would be too cluttered
       
-      gg_geom_point <- geom_point(aes(color = SampleType), shape = 21, position = gg_position_dodge, size = 0.8)
+      gg_geom_point <- geom_point(aes(color = SampleType), shape = 21, position = gg_position_dodge, size = BASE_SIZE*0.07)
       
       gg_geom_linerange <- geom_linerange(
          aes(color = SampleType, ymin = PctMin, ymax = PctMax),
@@ -546,11 +557,21 @@ plot_pairwise_comparison <- function(
       gg_geom_boxplot <- geom_blank()
       gg_geom_linerange <- geom_blank()
    }
-   
+
+   gg_geom_hline <- geom_blank()
+   if(!is.null(hlines)){
+      gg_geom_hline <- geom_hline(yintercept = hlines, linewidth = THEME_PANEL_GRID_MAJOR$linewidth, color = THEME_PANEL_GRID_MAJOR$colour)
+   }
+
+   gg_geom_vline <- geom_blank()
+   if(!is.null(vlines)){
+      gg_geom_vline <- geom_vline(xintercept = vlines, linewidth = THEME_PANEL_GRID_MAJOR$linewidth, color = THEME_PANEL_GRID_MAJOR$colour)
+   }
+
    ggplot(plot_data, aes(x = .data[[x]], y = .data[[y]], fill = SampleType)) +
-      
-      { if(!is.null(hlines)) geom_hline(linewidth = 0.25, color = "grey70", yintercept = hlines) } +
-      { if(!is.null(vlines)) geom_vline(linewidth = 0.25, color = "grey70", xintercept = vlines) } +
+
+      gg_geom_hline +
+      gg_geom_vline +
       
       gg_geom_boxplot + 
       gg_geom_linerange +
@@ -593,12 +614,10 @@ PLOTS[[FEATURE_TYPE$DISCORDANT_FRAG_FREQ]] <- local({
    plot_data <- plot_data %>% dplyr::mutate(DisplayName = reverse_levels(DisplayName))
 
    plot_pairwise_comparison(plot_data, x = "DisplayName", plot_type = box_or_bar_plot()) +
-      scale_y_continuous(transform = "log10", guide = "axis_logticks", labels = scales::label_percent(drop0trailing=TRUE)) +
+      scale_y_log10(guide = "axis_logticks", labels = scales::label_percent(drop0trailing=TRUE)) +
       plot_labels +
       coord_flip() +
-      theme(
-         panel.grid.major.x = element_line(color = "grey90", linewidth = 0.25),
-      ) +
+      theme(panel.grid.major.x = THEME_PANEL_GRID_MAJOR) +
       render_now()
 })
 
@@ -631,19 +650,24 @@ PLOTS[[FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD]] <- local({
          Gene = Gene %>% preordered_factor() %>% reverse_levels(),
          SampleType = SampleType %>% preordered_factor() %>% reverse_levels()
       )
-   
+
+   ## Split plot into 2 panels if there are too many genes
    unique_genes <- unique(as.character(plot_data$Gene))
    gene_count <- length(unique_genes)
 
-   ## Split plot into 2 panels if there are too many genes
-   N_GENES_TO_SPLIT_PANEL <- 15
+   N_GENES_TO_SPLIT_PANEL <- TOP_N_GENES/2
    gg_facet_wrap <- geom_blank()
+   theme_axis_text_x <- element_text()
+   theme_axis_text_y <- element_text()
+
    if(gene_count > N_GENES_TO_SPLIT_PANEL){
       midpoint <- round(gene_count / 2)
       gene_group <- as.integer(1:gene_count > midpoint); names(gene_group) <- unique_genes
       
       plot_data$GeneGroup <- gene_group[as.character(plot_data$Gene)]
       gg_facet_wrap <- facet_wrap(". ~ GeneGroup", scales = "free_y")
+      theme_axis_text_x <- element_text(angle = 30, hjust = 1, vjust = 1)
+      theme_axis_text_y <- element_text(size = BASE_SIZE*0.5)
    }
    
    plot_pairwise_comparison(plot_data, x = "Gene", plot_type = box_or_bar_plot()) + 
@@ -652,13 +676,12 @@ PLOTS[[FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD]] <- local({
       scale_y_continuous(labels = scales::label_percent(drop0trailing=TRUE)) +
       coord_flip(ylim = c(0, NA)) +
       theme(
-         panel.grid.major.x = element_line(color = "grey90", linewidth = 0.25),
-         plot.title = element_text(hjust = 0.5),
-         axis.title.y = element_text(size = 10),
-         axis.text.y = element_text(size = 8),
+         panel.grid.major.x = THEME_PANEL_GRID_MAJOR,
          panel.spacing.x = unit(3, "pt"),
          strip.text.x = element_blank(),
          strip.background = element_blank(),
+         axis.text.x = theme_axis_text_x,
+         axis.text.y = theme_axis_text_y,
       ) +
       render_now()
 })
@@ -681,7 +704,7 @@ PLOTS[[FEATURE_TYPE$BQR_BY_ORIG_QUAL]] <- local({
       ) +
       plot_labels + 
       theme(
-         axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1, size = 7),
+         axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1, size = BASE_SIZE*0.7),
       ) +
       render_now()
 })
@@ -708,7 +731,7 @@ PLOTS[[FEATURE_TYPE$BQR_BY_SNV96_CONTEXT]] <- local({
       ) +
       plot_labels +
       theme(
-         axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, size = 6),
+         axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, size = BASE_SIZE*0.5),
       ) +
       render_now()
 })
@@ -733,9 +756,7 @@ PLOTS[[FEATURE_TYPE$MS_INDEL_ERROR_RATES]] <- local({
       ) +
       scale_y_continuous(limits = c(0, NA), sec.axis = dup_axis(name = "Consensus type")) +
       plot_labels +
-      theme(
-         panel.grid.major = element_line(color = "grey90", linewidth = 0.25)
-      ) +
+      theme(panel.grid.major = THEME_PANEL_GRID_MAJOR) +
       render_now()
 })
 
@@ -755,7 +776,7 @@ PLOTS[[FEATURE_TYPE$MS_INDEL_ERROR_BIAS]] <- local({
    
    plot_data$RefNumUnits <- as.numeric(plot_data$RefNumUnits)
    
-   plot_pairwise_comparison(plot_data, x = "RefNumUnits", plot_type = PAIRWISE_PLOT_TYPE$POINT_RANGE) +
+   plot_pairwise_comparison(plot_data, x = "RefNumUnits", plot_type = PAIRWISE_PLOT_TYPE$POINT_RANGE, hlines = 0) +
       facet_grid("ConsensusType ~ RepeatUnitType") +
       scale_x_continuous(
          breaks = scales::breaks_width(3), 
@@ -765,10 +786,8 @@ PLOTS[[FEATURE_TYPE$MS_INDEL_ERROR_BIAS]] <- local({
          labels = function(x){ ifelse(x > 0, paste0("+",x), x) },
          sec.axis = dup_axis(name = "Consensus type")
       ) +
+      theme(panel.grid.major.x = THEME_PANEL_GRID_MAJOR) +
       plot_labels +
-      theme(
-         panel.grid.major = element_line(color = "grey90", linewidth = 0.25)
-      ) +
       render_now()
 })
 
@@ -809,13 +828,12 @@ get_sub_table_data <- function(feature_group, number_format){
 get_div_lines <- function(n_table_rows, direction = "horizontal"){
    
    positions <- seq(1.5, n_table_rows)
-   color <- if(n_table_rows > 1) "grey70" else "white"
-   linetype <- "dotted"
-   
+   color <- if(n_table_rows > 1) THEME_PANEL_GRID_MAJOR$colour else "white"
+
    if(direction == "horizontal"){
-      geom_hline(yintercept = positions, color = color, linetype = linetype)
+      geom_hline(yintercept = positions, color = color, linewidth = THEME_PANEL_GRID_MAJOR$linewidth)
    } else if(direction == "vertical"){
-      geom_vline(xintercept = positions, color = color, linetype = linetype)
+      geom_vline(xintercept = positions, color = color, linewidth = THEME_PANEL_GRID_MAJOR$linewidth)
    } else {
       LOGGER$error("`direction` must be 'horizontal' or 'vertical'")
    }
@@ -880,7 +898,7 @@ plot_sub_table <- function(plot_data, min_upper_limit, show_title = FALSE, show_
       
       geom_label(
          aes(label = value_fmt_func(FeatureValue), fill = QcStatusEnum), border.color = plot_data$LabelBorderColor,
-         size = 3, label.padding = unit(4, "pt")
+         size = BASE_SIZE*0.3, label.padding = unit(3, "pt")
       ) +
       scale_color_manual(values = sample_type_colors) +
       scale_fill_manual(values = qc_status_colors) +
@@ -897,6 +915,7 @@ plot_sub_table <- function(plot_data, min_upper_limit, show_title = FALSE, show_
          axis.title.y = element_blank(),
          axis.ticks.x = if(show_sample_type_label) element_line() else element_blank(),
          axis.text.x = if(show_sample_type_label) element_text() else element_blank(),
+         axis.text.y = element_text(size = BASE_SIZE*0.95),
          plot.margin = margin(b = 10),
          legend.position = "none"
       )
@@ -914,8 +933,8 @@ plot_sub_table <- function(plot_data, min_upper_limit, show_title = FALSE, show_
    }
 
    if(number_format == NUMBER_FORMAT$LOG10){
-      gg_scale_y_continuous <- scale_y_continuous(
-         transform = "log10", guide = "axis_logticks",
+      gg_scale_y_continuous <- scale_y_log10(
+         guide = "axis_logticks",
          label = function(x) format(x, scientific = FALSE, drop0trailing = TRUE, trim = TRUE)
       )
 
@@ -1039,7 +1058,7 @@ PLOTS[[PLOT_NAME_LEGEND]] <- local({
       geom_point(
          data = plot_data_sample_type, 
          mapping = aes(x = Index, y = 1, color = preordered_factor(SampleType)),
-         shape = 15, size = 6
+         shape = 15
       ) +
       scale_color_manual(
          name = "Sample type",
@@ -1060,8 +1079,8 @@ PLOTS[[PLOT_NAME_LEGEND]] <- local({
       
       ## Set legend order
       guides(
-         color = guide_legend(order = 1),
-         fill = guide_legend(order = 2)
+         color = guide_legend(order = 1, override.aes = list(size = BASE_SIZE*0.5)),
+         fill  = guide_legend(order = 2, override.aes = list(size = BASE_SIZE*0.35))
       ) +
       
       theme(
@@ -1126,7 +1145,10 @@ REPORT_TITLE <- local({
    patchwork::plot_annotation(
       title = title,
       subtitle = subtitle,
-      theme = theme(plot.title = element_text(size = 16, face = "bold"))
+      theme = theme(
+         plot.title = element_text(size = BASE_SIZE*1.4, face = "bold"),
+         plot.subtitle = element_text(size = BASE_SIZE*0.9),
+      )
    )
 })
 
@@ -1179,8 +1201,8 @@ create_report <- local({
    
    plots_combined <- patchwork::wrap_plots(plots, design = design) + REPORT_TITLE
 
-   plot_width <- 20
-   plot_height <- 12
+   plot_width <- 17
+   plot_height <- 10
 
    ## Suppress warnings to prevent ggplot build warnings showing again - these are already shown when calling render_now()
 
