@@ -2,29 +2,22 @@ package com.hartwig.hmftools.orange.algo;
 
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.DEFAULT_PIPELINE_OUTPUT;
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
-import static com.hartwig.hmftools.orange.report.PdfConverter.convertPdfToPng;
+import static com.hartwig.hmftools.orange.algo.purple.PurpleDataLoader.addPurplePlots;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.chord.ChordDataFile;
 import com.hartwig.hmftools.common.cuppa.CuppaPredictions;
 import com.hartwig.hmftools.common.doid.DoidNode;
-import com.hartwig.hmftools.common.driver.panel.DriverGene;
-import com.hartwig.hmftools.common.driver.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.genome.chromosome.CytoBands;
 import com.hartwig.hmftools.common.sigs.SnvSigUtils;
 import com.hartwig.hmftools.datamodel.hla.LilacRecord;
@@ -72,29 +65,21 @@ import org.jetbrains.annotations.Nullable;
 
 public class OrangeAlgo
 {
-    private final Map<String,DriverGene> mDriverGenes;
     private final Map<String,String> mEtiologyPerSignature;
     private final PlotManager mPlotManager;
 
     public static OrangeAlgo fromConfig(final OrangeConfig config) throws IOException
     {
-        List<DriverGene> driverGenes = config.DriverGenePanelTsv != null ?
-                DriverGeneFile.read(config.DriverGenePanelTsv) : Collections.emptyList();
-
         Map<String,String> etiologyPerSignature = SnvSigUtils.loadSnvSignatureEtiologies();
 
         String outputDir = config.OutputDir;
         PlotManager plotManager = !outputDir.isEmpty() ? new FileBasedPlotManager(outputDir) : new DummyPlotManager();
 
-        return new OrangeAlgo(driverGenes, etiologyPerSignature, plotManager);
+        return new OrangeAlgo(etiologyPerSignature, plotManager);
     }
 
-    private OrangeAlgo(
-            final List<DriverGene> driverGenes, final Map<String,String> etiologyPerSignature, final PlotManager plotManager)
+    private OrangeAlgo(final Map<String,String> etiologyPerSignature, final PlotManager plotManager)
     {
-        mDriverGenes = Maps.newHashMap();
-        driverGenes.forEach(x -> mDriverGenes.put(x.gene(), x));
-
         mEtiologyPerSignature = etiologyPerSignature;
         mPlotManager = plotManager;
     }
@@ -132,7 +117,7 @@ public class OrangeAlgo
         IsofoxRecord isofox = null;
         if(isofoxData != null)
         {
-            IsofoxInterpreter isofoxInterpreter = new IsofoxInterpreter(mDriverGenes, linx);
+            IsofoxInterpreter isofoxInterpreter = new IsofoxInterpreter(linx);
             isofox = isofoxInterpreter.interpret(isofoxData);
         }
 
@@ -239,7 +224,7 @@ public class OrangeAlgo
 
     private PurpleData loadPurpleData(final OrangeConfig config) throws IOException
     {
-        PurpleData purple = PurpleDataLoader.load(config, mDriverGenes);
+        PurpleData purple = PurpleDataLoader.load(config);
         LOGGER.debug(" loaded {} somatic driver catalog entries", purple.somaticDrivers().size());
         LOGGER.debug(" loaded {} somatic variants", purple.somaticVariants().size());
 
@@ -407,12 +392,26 @@ public class OrangeAlgo
 
         mPlotManager.createPlotDirectory();
 
+        ImmutableOrangePlots.Builder plotBuilder = ImmutableOrangePlots.builder();
+
+        try
+        {
+            addPurplePlots(config, mPlotManager, plotBuilder);
+        }
+        catch(Exception e)
+        {
+            LOGGER.error("failed to find required plots: {}", e.toString());
+            System.exit(1);
+        }
+
         List<String> linxDriverPlots = Lists.newArrayList();
 
         for(String linxPlot : linxData.reportableEventPlots())
         {
             linxDriverPlots.add(mPlotManager.processPlotFile(linxPlot));
         }
+
+        plotBuilder.linxDriverPlots(linxDriverPlots);
 
         String qSeeSourcePlot = config.QSeeDirectory + File.separator + config.TumorId + ".qsee.vis.report.png";
         String qSeePlot = null;
@@ -422,41 +421,13 @@ public class OrangeAlgo
             qSeePlot = mPlotManager.processPlotFile(qSeeSourcePlot);
         }
 
-        String purplePlotBasePath = config.PurplePlotDirectory + File.separator + config.TumorId;
-        String purpleFinalCircosPlot = mPlotManager.processPlotFile(purplePlotBasePath + ".circos.png");
-
-        String purpleInputCircosPlot = mPlotManager.processPlotFile(purplePlotBasePath + ".input.png");
-        String purpleCopyNumberPlot = mPlotManager.processPlotFile(purplePlotBasePath + ".copynumber.png");
-        String purpleClonalityPlot = mPlotManager.processPlotFile(purplePlotBasePath + ".somatic.clonality.png");
-        String purplePurityRangePlot = mPlotManager.processPlotFile(purplePlotBasePath + ".purity.range.png");
-        String purpleMinorAlleleMapPlot = mPlotManager.processPlotFile(purplePlotBasePath + ".map.png");
-        String purpleVariantCopyNumberPlot = mPlotManager.processPlotFile(purplePlotBasePath + ".somatic.png");
-        String purpleRainfallPlot = mPlotManager.processPlotFile(purplePlotBasePath + ".somatic.rainfall.png");
-
-        List<String> purplePlots = Arrays.asList(purpleInputCircosPlot, purpleFinalCircosPlot, purpleClonalityPlot, purpleCopyNumberPlot,
-                purpleVariantCopyNumberPlot, purplePurityRangePlot, purpleRainfallPlot);
-
-        if(purplePlots.stream().anyMatch(Objects::isNull))
-        {
-            LOGGER.warn("missing one or more Purple plots");
-            System.exit(1);
-        }
+        plotBuilder.qSeePlot(qSeePlot);
 
         String cuppaSummaryPlot = mPlotManager.processPlotFile(
                 config.ReferenceId != null ? CuppaPredictions.generateVisPlotFilename(config.CuppaDir, config.TumorId) : null);
 
-        return ImmutableOrangePlots.builder()
-                .purpleInputCircosPlot(purpleInputCircosPlot)
-                .purpleFinalCircosPlot(purpleFinalCircosPlot)
-                .purpleClonalityPlot(purpleClonalityPlot)
-                .purpleCopyNumberPlot(purpleCopyNumberPlot)
-                .purpleMinorAlleleMapPlot(purpleMinorAlleleMapPlot)
-                .purpleVariantCopyNumberPlot(purpleVariantCopyNumberPlot)
-                .purplePurityRangePlot(purplePurityRangePlot)
-                .purpleRainfallPlot(purpleRainfallPlot)
-                .linxDriverPlots(linxDriverPlots)
-                .cuppaSummaryPlot(cuppaSummaryPlot)
-                .qSeePlot(qSeePlot)
-                .build();
+        plotBuilder.cuppaSummaryPlot(cuppaSummaryPlot);
+
+        return plotBuilder.build();
     }
 }

@@ -88,7 +88,7 @@ public class SomaticFindingsChapter implements ReportChapter
 
     private void addSomaticVariants(final Document document)
     {
-        String driverVariantsTitle = "Small variants";
+        String driverVariantsTitle = "Small Variants";
 
         String titleDrivers = driverVariantsTitle + " (" + mReport.purple().somaticVariants().size() + ")";
 
@@ -151,7 +151,7 @@ public class SomaticFindingsChapter implements ReportChapter
 
         if(sigAllocations != null)
         {
-            String signatureTitle = "Signature allocations";
+            String signatureTitle = "Signature Allocations";
 
             String title = signatureTitle + " (" + sigAllocations.size() + ")";
             document.add(SignatureAllocationTable.build(title, contentWidth(), sigAllocations, mReportResources));
@@ -160,7 +160,7 @@ public class SomaticFindingsChapter implements ReportChapter
 
     private void addLinxPlots(final Document document)
     {
-        String title = "Structural driver plots (" + mReport.plots().linxDriverPlots().size() + ")";
+        String title = "Structural Driver Plots (" + mReport.plots().linxDriverPlots().size() + ")";
         document.add(new Paragraph(title).addStyle(mReportResources.tableTitleStyle()));
         Table table = new Table(2);
         Cells cells = new Cells(mReportResources);

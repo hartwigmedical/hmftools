@@ -2,8 +2,6 @@ package com.hartwig.hmftools.orange;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL;
-import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.addGenePanelOption;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeVersion;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.PIPELINE_FORMAT_CFG;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.PIPELINE_FORMAT_FILE_CFG;
@@ -96,7 +94,6 @@ public class OrangeConfig
     public final String OutputId;
 
     public final String DoidJsonFile;
-    public final String DriverGenePanelTsv;
 
     public final String PipelineVersionFile;
 
@@ -158,7 +155,6 @@ public class OrangeConfig
         PrimaryTumorLocation = configBuilder.getValue(PRIMARY_TUMOR_LOCATION);
 
         RefGenVersion = RefGenomeVersion.from(configBuilder);
-        DriverGenePanelTsv = configBuilder.getValue(DRIVER_GENE_PANEL);
 
         String pipelineVersionFile = configBuilder.getValue(PIPELINE_VERSION_FILE);
 
@@ -218,12 +214,6 @@ public class OrangeConfig
         {
             RnaSampleId = configBuilder.getValue(RNA_SAMPLE_ID);
             IsofoxDir = pathResolver.resolveMandatoryToolDirectory(ISOFOX_DIR_CFG, defaultToolDirectories.isofoxDir());
-
-            if(DriverGenePanelTsv == null)
-            {
-                LOGGER.error("driver gene panel currently required for RNA analysis");
-                System.exit(1);
-            }
         }
 
         LOGGER.debug("RNA sample configured as {}", RnaSampleId);
@@ -271,7 +261,6 @@ public class OrangeConfig
         addOutputOptions(configBuilder);
 
         configBuilder.addPath(DOID_JSON, false, "Path to JSON file containing the full DOID tree");
-        addGenePanelOption(configBuilder, false); // only used for RNA
 
         configBuilder.addPath(PIPELINE_VERSION_FILE, false, "Path towards the pipeline version file.");
 
@@ -367,8 +356,7 @@ public class OrangeConfig
     public OrangeConfig(
             final ExperimentType runType, final String tumorId, final String referenceId, final String rnaSampleId,
             final RefGenomeVersion refGenVersion, final Set<String> primaryTumorDoids, final LocalDate samplingDate, final String outputDir,
-            final String doidJsonFile, final String driverGenePanelTsv,
-            final String pipelineVersionFile, final String purpleDataDirectory, final String purplePlotDirectory,
+            final String doidJsonFile, final String pipelineVersionFile, final String purpleDataDirectory, final String purplePlotDirectory,
             final String linxSomaticDataDirectory, final String linxGermlineDataDirectory, final String linxPlotDirectory,
             final String lilacDir, final String chordDir, final String cuppaDir, final String peachDir, final String sigsDir,
             final String virusDir, final String isofoxDir, final boolean addDisclaimer)
@@ -384,7 +372,6 @@ public class OrangeConfig
         OutputId = null;
         DoidJsonFile = doidJsonFile;
         PrimaryTumorLocation = "";
-        DriverGenePanelTsv = driverGenePanelTsv;
         PipelineVersionFile = pipelineVersionFile;
         PurpleDataDirectory = purpleDataDirectory;
         PurplePlotDirectory = purplePlotDirectory;

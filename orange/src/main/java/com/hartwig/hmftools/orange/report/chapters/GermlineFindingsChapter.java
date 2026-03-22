@@ -80,7 +80,7 @@ public class GermlineFindingsChapter implements ReportChapter
         List<PurpleVariant> reportableVariants = mReport.purple().germlineVariants();
         if(drivers != null && reportableVariants != null)
         {
-            String titleDrivers = "Small variants (" + reportableVariants.size() + ")";
+            String titleDrivers = "Small Variants (" + reportableVariants.size() + ")";
             document.add(GermlineVariantTable.build(titleDrivers, contentWidth(), reportableVariants, mReportResources));
         }
     }

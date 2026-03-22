@@ -69,7 +69,7 @@ public class RnaFindingsChapter implements ReportChapter
 
     private void addExpressionTables(final Document document)
     {
-        String highExpressionTitle = "Genes with high expression";
+        String highExpressionTitle = "High Gene Expression";
 
         List<GeneExpression> reportableHighExpression = mIsofoxRecord.highExpressionGenes();
         String titleHighExpression = highExpressionTitle + " (" + reportableHighExpression.size() + ")";
@@ -78,7 +78,7 @@ public class RnaFindingsChapter implements ReportChapter
                 titleHighExpression, contentWidth(), reportableHighExpression, false, mReportResources));
 
         /*
-        String lowExpressionTitle = "Genes with low expression";
+        String lowExpressionTitle = "Low Gene Expression";
 
         List<GeneExpression> reportableLowExpression = mIsofoxRecord.lowExpressionGenes();
         String titleLowExpression = lowExpressionTitle + " (" + reportableLowExpression.size() + ")";
@@ -90,7 +90,7 @@ public class RnaFindingsChapter implements ReportChapter
 
     private void addRnaFusionTables(final Document document)
     {
-        String fusionsTitle = "Fusions detected in RNA and not in DNA";
+        String fusionsTitle = "Fusions Detected In RNA, Not In DNA";
 
         List<RnaFusion> reportableNovelKnownFusions = mIsofoxRecord.fusions();
         String titleKnownFusions = fusionsTitle + " (" + reportableNovelKnownFusions.size() + ")";
@@ -99,7 +99,7 @@ public class RnaFindingsChapter implements ReportChapter
 
     private void addNovelSpliceJunctionTables(final Document document)
     {
-        String novelSplicJunctionsTitle = "Novel splice junctions";
+        String novelSplicJunctionsTitle = "Novel Splice Junctions";
 
         List<NovelSpliceJunction> reportableSkippedExons = mIsofoxRecord.novelSpliceJunctions();
         String titleSkippedExonJunctions = novelSplicJunctionsTitle + " (" + reportableSkippedExons.size() + ")";

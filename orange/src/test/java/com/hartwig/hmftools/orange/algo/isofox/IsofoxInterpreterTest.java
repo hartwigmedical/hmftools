@@ -20,6 +20,6 @@ public class IsofoxInterpreterTest
     @NotNull
     private static IsofoxInterpreter createTestInterpreter()
     {
-        return new IsofoxInterpreter(Maps.newHashMap(), TestLinxRecordFactory.createMinimalTestLinxData());
+        return new IsofoxInterpreter(TestLinxRecordFactory.createMinimalTestLinxData());
     }
 }

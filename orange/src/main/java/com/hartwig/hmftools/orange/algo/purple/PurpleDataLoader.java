@@ -1,7 +1,18 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
+import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_PLOT_COPY_NUMBER;
+import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_PLOT_FINAL_CIRCOS;
+import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_PLOT_INPUT_CIRCOS;
+import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_PLOT_MINOR_ALLELE;
+import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_PLOT_PURITY_RANGE;
+import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_PLOT_SOMATIC_CLONALITY;
+import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_PLOT_SOMATIC_CN;
+import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_PLOT_SOMATIC_RAINFALL;
+import static com.hartwig.hmftools.common.purple.PurpleCommon.purplePlotFile;
+
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -23,13 +34,15 @@ import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.common.variant.CommonVcfTags;
 import com.hartwig.hmftools.common.variant.SmallVariant;
 import com.hartwig.hmftools.common.variant.SmallVariantFactory;
+import com.hartwig.hmftools.datamodel.orange.ImmutableOrangePlots;
 import com.hartwig.hmftools.orange.OrangeConfig;
+import com.hartwig.hmftools.orange.algo.plot.PlotManager;
 
 import org.jetbrains.annotations.Nullable;
 
 public final class PurpleDataLoader
 {
-    public static PurpleData load(final OrangeConfig config, final Map<String,DriverGene> driverGenes) throws IOException
+    public static PurpleData load(final OrangeConfig config) throws IOException
     {
         String tumorId = config.TumorId;
         String purpleDir = config.PurpleDataDirectory;
@@ -95,6 +108,42 @@ public final class PurpleDataLoader
                 .germlineAmpDels(panelGermlineAmpDels)
                 .chrArmCopyNumbers(chrArmCopyNumbers)
                 .build();
+    }
+
+    public static void addPurplePlots(final OrangeConfig config, final PlotManager plotManager, final ImmutableOrangePlots.Builder builder) throws IOException
+    {
+        String purpleFinalCircosPlot = plotManager.processPlotFile(
+                purplePlotFile(config.PurplePlotDirectory, config.TumorId, PURPLE_PLOT_FINAL_CIRCOS));
+
+        String purpleInputCircosPlot = plotManager.processPlotFile(
+                purplePlotFile(config.PurplePlotDirectory, config.TumorId, PURPLE_PLOT_INPUT_CIRCOS));
+
+        String purpleCopyNumberPlot = plotManager.processPlotFile(
+                purplePlotFile(config.PurplePlotDirectory, config.TumorId, PURPLE_PLOT_COPY_NUMBER));
+
+        String purpleClonalityPlot = plotManager.processPlotFile(
+                purplePlotFile(config.PurplePlotDirectory, config.TumorId, PURPLE_PLOT_SOMATIC_CLONALITY));
+
+        String purplePurityRangePlot = plotManager.processPlotFile(
+                purplePlotFile(config.PurplePlotDirectory, config.TumorId, PURPLE_PLOT_PURITY_RANGE));
+
+        String purpleMinorAlleleMapPlot = plotManager.processPlotFile(
+                purplePlotFile(config.PurplePlotDirectory, config.TumorId, PURPLE_PLOT_MINOR_ALLELE));
+
+        String purpleVariantCopyNumberPlot = plotManager.processPlotFile(
+                purplePlotFile(config.PurplePlotDirectory, config.TumorId, PURPLE_PLOT_SOMATIC_CN));
+
+        String purpleRainfallPlot = plotManager.processPlotFile(
+                purplePlotFile(config.PurplePlotDirectory, config.TumorId, PURPLE_PLOT_SOMATIC_RAINFALL));
+
+        builder.purpleInputCircosPlot(purpleInputCircosPlot)
+            .purpleFinalCircosPlot(purpleFinalCircosPlot)
+            .purpleClonalityPlot(purpleClonalityPlot)
+            .purpleCopyNumberPlot(purpleCopyNumberPlot)
+            .purpleMinorAlleleMapPlot(purpleMinorAlleleMapPlot)
+            .purpleVariantCopyNumberPlot(purpleVariantCopyNumberPlot)
+            .purplePurityRangePlot(purplePurityRangePlot)
+            .purpleRainfallPlot(purpleRainfallPlot);
     }
 
     private static String resolveVcfPath(final String vcfPath)

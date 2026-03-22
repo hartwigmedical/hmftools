@@ -23,12 +23,10 @@ import com.hartwig.hmftools.orange.conversion.IsofoxConversion;
 
 public class IsofoxInterpreter
 {
-    private final Map<String,DriverGene> mDriverGenes;
     private final LinxRecord mLinxRecord;
 
-    public IsofoxInterpreter(final Map<String,DriverGene> driverGenes, final LinxRecord linx)
+    public IsofoxInterpreter(final LinxRecord linx)
     {
-        mDriverGenes = driverGenes;
         mLinxRecord = linx;
     }
 
@@ -37,7 +35,7 @@ public class IsofoxInterpreter
         List<GeneExpression> highExpressionGenes = Lists.newArrayList();
         List<GeneExpression> lowExpressionGenes = Lists.newArrayList();
 
-        findExpressionOutliers(isofox.geneExpressions(), mDriverGenes, highExpressionGenes, lowExpressionGenes);
+        findExpressionOutliers(isofox.geneExpressions(), highExpressionGenes, lowExpressionGenes);
 
         List<RnaFusion> fusions = findFusions(isofox.fusions(), mLinxRecord.fusions());
 
@@ -54,20 +52,17 @@ public class IsofoxInterpreter
 
     @VisibleForTesting
     public static void findExpressionOutliers(
-            final List<com.hartwig.hmftools.common.rna.GeneExpression> geneExpressions, final Map<String,DriverGene> driverGenes,
+            final List<com.hartwig.hmftools.common.rna.GeneExpression> geneExpressions,
             final List<GeneExpression> highExpressionGenes, final List<GeneExpression> lowExpressionGenes)
     {
         for(com.hartwig.hmftools.common.rna.GeneExpression geneExpression : geneExpressions)
         {
-            DriverGene driverGene = driverGenes.get(geneExpression.geneName());
-
-            if(driverGene == null)
-                continue;
-
+            /*
             if(driverGene.reportHighExpression() && geneExpression.percentileCohort() > HIGH_EXPRESSION_PERCENTILE_CUTOFF)
                 highExpressionGenes.add(IsofoxConversion.convert(geneExpression));
             else if(driverGene.reportLowExpression() && geneExpression.percentileCohort() < LOW_EXPRESSION_PERCENTILE_CUTOFF)
                 lowExpressionGenes.add(IsofoxConversion.convert(geneExpression));
+            */
         }
     }
 

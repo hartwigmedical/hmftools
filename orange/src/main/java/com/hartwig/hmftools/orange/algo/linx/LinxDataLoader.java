@@ -2,6 +2,7 @@ package com.hartwig.hmftools.orange.algo.linx;
 
 import static com.hartwig.hmftools.common.driver.DriverType.DRIVERS_LINX_GERMLINE;
 import static com.hartwig.hmftools.common.driver.DriverType.DRIVERS_LINX_SOMATIC;
+import static com.hartwig.hmftools.common.linx.LinxCommonTypes.SV_VIS_CLUSTER_PREFIX;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.getIntValue;
@@ -119,7 +120,8 @@ public final class LinxDataLoader
         {
             for(String file : new File(linxPlotDirectory).list())
             {
-                reportableEventPlots.add(linxPlotDirectory + File.separator + file);
+                if(file.contains(SV_VIS_CLUSTER_PREFIX) && file.endsWith(".png"))
+                    reportableEventPlots.add(linxPlotDirectory + File.separator + file);
             }
 
             LOGGER.debug(" loaded {} Linx plots from {}", reportableEventPlots.size(), linxPlotDirectory);
