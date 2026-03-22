@@ -1,29 +1,36 @@
 package com.hartwig.hmftools.finding;
 
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import com.hartwig.hmftools.common.hla.HlaCommon;
 import com.hartwig.hmftools.datamodel.hla.LilacAllele;
 import com.hartwig.hmftools.datamodel.hla.LilacRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingList;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingListBuilder;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
-import com.hartwig.hmftools.finding.datamodel.finding.FindingStatusBuilder;
 import com.hartwig.hmftools.finding.datamodel.HlaAllele;
 import com.hartwig.hmftools.finding.datamodel.HlaAlleleBuilder;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 
 // lilac shows two copies of HLA alleles even if they are the
 // same allele. This class combine the alleles and sum the copies
 public class HlaAlleleFactory
 {
     private static final Logger LOGGER = LogManager.getLogger(HlaAlleleFactory.class);
+
+    private static final Pattern HLA_REGEX = Pattern.compile("""
+            ^(?<geneSymbol>[A-Z]+)\\*(?<alleleGroup>\\d{2}):(?<hlaProtein>\\d{2,3})N?$""");
+    private static final String PASS = "PASS";
 
     private HlaAlleleFactory()
     {
@@ -49,69 +56,55 @@ public class HlaAlleleFactory
 
     public static List<HlaAllele> convertHlaAlleles(LilacRecord lilac, boolean hasRef, boolean hasRna)
     {
-        Map<String, List<LilacAllele>> hlaAllelesMap = lilac.alleles()
-                .stream()
-                .collect(Collectors.groupingBy(LilacAllele::allele));
+        Map<String, Integer> hlaAlleleCount = new HashMap<>();
 
-        List<HlaAllele> hlaAlleles = new ArrayList<>();
-        for(Map.Entry<String, List<LilacAllele>> keyMap : hlaAllelesMap.entrySet())
-        {
-            LilacAllele lilacAllele = keyMap.getValue().get(0);
-
-            // NOTE: the fragment counts are doubled in lilac if an allele is present twice
-            HlaAlleleBuilder builder = HlaAlleleBuilder.builder()
-                    .findingKey(FindingKeys.hlaAllele(lilacAllele))
-                    .geneClass(lilacAllele.geneClass())
-                    .gene(extractHLAGene(lilacAllele.allele()))
-                    .allele(lilacAllele.allele())
-                    .qcStatus(Arrays.stream(lilacAllele.qcStatus().split(";"))
-                                    .map(HlaAllele.QcStatus::valueOf)
-                                    .collect(Collectors.toSet()))
-                    .refFragments(hasRef ? lilacAllele.refFragments() : null)
-                    .tumorFragments(lilacAllele.tumorFragments())
-                    .rnaFragments(hasRna ? lilacAllele.rnaFragments() : null)
-                    .somaticMissense(lilacAllele.somaticMissense())
-                    .somaticNonsenseOrFrameshift(lilacAllele.somaticNonsenseOrFrameshift())
-                    .somaticSplice(lilacAllele.somaticSplice())
-                    .somaticSynonymous(lilacAllele.somaticSynonymous())
-                    .somaticInframeIndel(lilacAllele.somaticInframeIndel());
-
-            if(keyMap.getValue().size() == 1)
-            {
-                hlaAlleles.add(builder
-                        .germlineCopyNumber(1)
-                        .tumorCopyNumber(lilacAllele.tumorCopyNumber())
-                        .build());
-
-            }
-            else if(keyMap.getValue().size() == 2)
-            {
-                LilacAllele allele2 = keyMap.getValue().get(1);
-                double tumorCopies = lilacAllele.tumorCopyNumber() + allele2.tumorCopyNumber();
-
-                hlaAlleles.add(builder
-                        .germlineCopyNumber(2)
-                        .tumorCopyNumber(tumorCopies)
-                        .build());
-            }
-            else
-            {
-                LOGGER.warn("To many hla alleles of allele '{}'", keyMap.getKey());
-            }
-        }
-
-        hlaAlleles.sort(HlaAllele.COMPARATOR);
-        return hlaAlleles;
+        return lilac.alleles().stream()
+                .map(lilacAllele -> convertLilacAllele(lilacAllele, hasRef, hasRna,
+                        hlaAlleleCount.compute(lilacAllele.allele(),
+                                (key, oldValue) -> oldValue == null ? 1 : oldValue + 1)))
+                .sorted(HlaAllele.COMPARATOR)
+                .toList();
     }
 
-    public static String extractHLAGene(String allele)
+    static HlaAllele convertLilacAllele(LilacAllele lilacAllele, boolean hasRef, boolean hasRna, int alleleCopy)
     {
-        int asteriskIndex = allele.indexOf('*');
-        if(asteriskIndex == -1)
+        var matcher = matchHlaRegEx(lilacAllele.allele());
+        String gene = matcher.group("geneSymbol");
+        HlaAllele.GeneClass geneClass = lilacAllele.geneClass().equals(HlaCommon.MHC_CLASS_I) ? HlaAllele.GeneClass.MHC_CLASS_I : HlaAllele.GeneClass.MHC_CLASS_II;
+        String alleleGroup = matcher.group("alleleGroup");
+        String hlaProtein = matcher.group("hlaProtein");
+
+        HlaAlleleBuilder builder = HlaAlleleBuilder.builder()
+                .findingKey(FindingKeys.hlaAllele(lilacAllele, alleleCopy))
+                .geneClass(geneClass)
+                .geneSymbol(gene)
+                .alleleGroup(alleleGroup)
+                .hlaProtein(hlaProtein)
+                .qcStatus(Arrays.stream(lilacAllele.qcStatus().split(";"))
+                        .map(HlaAllele.QcStatus::valueOf)
+                        .collect(Collectors.toSet()))
+                .germlineCopyNumber(1)
+                .tumorCopyNumber(lilacAllele.tumorCopyNumber())
+                .refFragments(hasRef ? lilacAllele.refFragments() : null)
+                .tumorFragments(lilacAllele.tumorFragments())
+                .rnaFragments(hasRna ? lilacAllele.rnaFragments() : null)
+                .somaticMissense(lilacAllele.somaticMissense())
+                .somaticNonsenseOrFrameshift(lilacAllele.somaticNonsenseOrFrameshift())
+                .somaticSplice(lilacAllele.somaticSplice())
+                .somaticSynonymous(lilacAllele.somaticSynonymous())
+                .somaticInframeIndel(lilacAllele.somaticInframeIndel());
+
+        return builder.build();
+    }
+
+    @NotNull
+    static Matcher matchHlaRegEx(String allele)
+    {
+        var matcher = HLA_REGEX.matcher(allele);
+        if(!matcher.matches())
         {
-            LOGGER.error("Unknown HLA gene name '{}' present! ", allele);
-            throw new IllegalArgumentException("Unknown HLA gene name '" + allele + "'");
+            throw new IllegalStateException("Can't extract HLA gene, alleleGroup and hlaProtein from " + allele);
         }
-        return "HLA-" + allele.substring(0, asteriskIndex);
+        return matcher;
     }
 }

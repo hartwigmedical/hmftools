@@ -48,14 +48,14 @@ final class FindingKeys
         return String.format("virus[%s]", label);
     }
 
-    public static String hlaAllele(LilacAllele allele)
-    {
-        return String.format("hlaAllele[%s]", allele.allele());
-    }
-
     public static String chromosomeArmCopyNumber(String chromosome, String arm)
     {
         return String.format("chrArmCopyNumber[%s%s]", chromosome, arm);
+    }
+
+    public static String hlaAllele(LilacAllele allele, int suffix)
+    {
+        return String.format("hlaAllele[%s %d]", allele.allele(), suffix);
     }
 
     public static String microsatelliteStability(PurpleMicrosatelliteStatus status)
