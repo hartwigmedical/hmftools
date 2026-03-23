@@ -553,6 +553,8 @@ public class PurpleApplication
 
             DriverCatalogFile.write(DriverCatalogFile.generateFilenameForWriting(
                     mConfig.OutputDir, tumorId, true), Collections.emptyList());
+
+            ChrArmCopyNumbersFile.write(ChrArmCopyNumbersFile.generateFilename(mConfig.OutputDir, tumorId), Collections.emptyList());
         }
 
         if(mConfig.runGermline())
