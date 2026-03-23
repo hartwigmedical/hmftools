@@ -1,0 +1,278 @@
+package com.hartwig.hmftools.finding;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+import com.hartwig.hmftools.common.driver.panel.DriverGene;
+import com.hartwig.hmftools.datamodel.common.AllelicDepth;
+import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
+import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
+import com.hartwig.hmftools.datamodel.purple.PurpleTranscriptImpact;
+import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverCategory;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverFieldsBuilder;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingList;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingListBuilder;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverInterpretation;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverSource;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
+import com.hartwig.hmftools.finding.datamodel.driver.ReportedStatus;
+import com.hartwig.hmftools.finding.datamodel.SmallVariant;
+import com.hartwig.hmftools.finding.datamodel.SmallVariantAllelicDepthBuilder;
+import com.hartwig.hmftools.finding.datamodel.SmallVariantBuilder;
+import com.hartwig.hmftools.finding.datamodel.SmallVariantTranscriptImpactBuilder;
+
+import org.jetbrains.annotations.Nullable;
+
+final class SmallVariantFactory
+{
+    public static DriverFindingList<SmallVariant> somaticSmallVariantFindings(
+            PurpleRecord purpleRecord,
+            FindingStatus findingStatus,
+            FindingConfig findingConfig)
+    {
+        return DriverFindingListBuilder.<SmallVariant>builder()
+                .status(findingStatus)
+                .findings(SmallVariantFactory.create(
+                        DriverSource.SOMATIC, purpleRecord.somaticVariants(), purpleRecord.somaticDrivers(),
+                        findingConfig))
+                .build();
+    }
+
+    public static DriverFindingList<SmallVariant> germlineSmallVariantFindings(
+            boolean hasGermlineSample,
+            PurpleRecord purpleRecord,
+            FindingStatus findingStatus,
+            FindingConfig findingConfig)
+    {
+        if(!hasGermlineSample)
+        {
+            return FindingUtil.refRequired();
+        }
+
+        List<PurpleVariant> germlineVariants = Objects.requireNonNull(purpleRecord.germlineVariants());
+        List<PurpleDriver> germlineDrivers = Objects.requireNonNull(purpleRecord.germlineDrivers());
+
+        return DriverFindingListBuilder.<SmallVariant>builder()
+                .status(findingStatus)
+                .findings(SmallVariantFactory.create(
+                        DriverSource.GERMLINE, germlineVariants, germlineDrivers, findingConfig))
+                .build();
+    }
+
+    public static List<SmallVariant> create(
+            DriverSource sampleType, List<PurpleVariant> variants, List<PurpleDriver> drivers,
+            FindingConfig findingConfig)
+    {
+        List<SmallVariant> entries = new ArrayList<>();
+        for(PurpleVariant variant : variants)
+        {
+            if(hasCanonicalImpact(variant))
+            {
+                // find the driver object, if it is found, it is reported finding
+                PurpleDriver driver = Drivers.canonicalMutationEntryForGene(drivers, variant.gene());
+                if(driver != null)
+                {
+                    entries.add(toSmallVariant(variant, driver, sampleType, findingConfig));
+                }
+            }
+        }
+
+        for(PurpleDriver nonCanonicalDriver : Drivers.nonCanonicalMutationEntries(drivers))
+        {
+            List<PurpleVariant> nonCanonicalVariants = findReportedVariantsForDriver(variants, nonCanonicalDriver);
+            for(PurpleVariant nonCanonicalVariant : nonCanonicalVariants)
+            {
+                entries.add(toSmallVariant(nonCanonicalVariant, nonCanonicalDriver, sampleType, findingConfig));
+            }
+        }
+        entries.sort(SmallVariant.COMPARATOR);
+        return entries;
+    }
+
+    private static SmallVariant toSmallVariant(PurpleVariant variant, PurpleDriver driver,
+            DriverSource sampleType, FindingConfig findingConfig)
+    {
+        PurpleTranscriptImpact transcriptImpact;
+
+        transcriptImpact = findTranscriptImpact(variant, driver.transcript());
+        if(transcriptImpact == null)
+        {
+            throw new IllegalStateException("Could not find impact on transcript " + driver.transcript() + " for variant " + variant);
+        }
+
+        boolean isCanonical = driver.transcript().equals(variant.canonicalImpact().transcript());
+
+        PurpleTranscriptImpact otherImpact = isCanonical ? findOtherImpactClinical(variant, findingConfig) : null;
+
+        DriverGene driverGene = findingConfig.getDriverGene(variant.gene());
+        DriverCategory
+                driverCategory = driverGene != null ? driverLikelihoodType(driverGene.likelihoodType()) : null;
+
+        boolean reportable = transcriptImpact.reported() || (otherImpact != null && otherImpact.reported());
+        DriverInterpretation driverInterpretation = DriverInterpretation.valueOf(driver.driverInterpretation().name());
+        ReportedStatus reportedStatus = DriverUtil.reportedStatus(true, reportable, driverInterpretation);
+
+        return SmallVariantBuilder.builder()
+                .driver(DriverFieldsBuilder.builder()
+                        .findingKey(FindingKeys.smallVariant(sampleType, variant, transcriptImpact, isCanonical))
+                        .driverSource(sampleType)
+                        .reportedStatus(reportedStatus)
+                        .driverInterpretation(driverInterpretation)
+                        .driverLikelihood(driver.driverLikelihood())
+                        .build()
+                )
+                .driverLikelihoodType(driverCategory)
+                .transcriptImpact(Objects.requireNonNull(convertTranscriptImpact(transcriptImpact)))
+                .otherImpact(convertTranscriptImpact(otherImpact))
+                .isCanonical(isCanonical)
+                .type(SmallVariant.VariantType.valueOf(variant.type().name()))
+                .gene(variant.gene())
+                .chromosome(variant.chromosome())
+                .position(variant.position())
+                .ref(variant.ref())
+                .alt(variant.alt())
+                .worstCodingEffect(SmallVariant.CodingEffect.valueOf(variant.worstCodingEffect().name()))
+                .hotspot(SmallVariant.HotspotType.valueOf(variant.hotspot().name()))
+                .allelicDepth(Objects.requireNonNull(convertAllelicDepth(variant.tumorDepth())))
+                .rnaDepth(convertAllelicDepth(variant.rnaDepth()))
+                .adjustedCopyNumber(variant.adjustedCopyNumber())
+                .adjustedVAF(variant.adjustedVAF())
+                .minorAlleleCopyNumber(variant.minorAlleleCopyNumber())
+                .variantCopyNumber(variant.variantCopyNumber())
+                .biallelic(variant.biallelic())
+                .biallelicLikelihood(Objects.requireNonNull(variant.biallelicProbability()))
+                .genotypeStatus(SmallVariant.GenotypeStatus.valueOf(variant.genotypeStatus().name()))
+                .repeatCount(variant.repeatCount())
+                .subclonalLikelihood(variant.subclonalLikelihood())
+                .localPhaseSets(variant.localPhaseSets())
+                .build();
+    }
+
+    @Nullable
+    private static SmallVariant.TranscriptImpact convertTranscriptImpact(@Nullable PurpleTranscriptImpact transcriptImpact)
+    {
+        if(transcriptImpact == null)
+        {
+            return null;
+        }
+
+        return SmallVariantTranscriptImpactBuilder.builder()
+                .transcript(transcriptImpact.transcript())
+                .hgvsCodingImpact(transcriptImpact.hgvsCodingImpact())
+                .hgvsProteinImpact(transcriptImpact.hgvsProteinImpact())
+                .affectedCodon(transcriptImpact.affectedCodon())
+                .affectedExon(transcriptImpact.affectedExon())
+                .inSpliceRegion(transcriptImpact.inSpliceRegion())
+                .effects(transcriptImpact.effects().stream()
+                        .map(o -> SmallVariant.VariantEffect.valueOf(o.name()))
+                        .collect(Collectors.toSet()))
+                .codingEffect(SmallVariant.CodingEffect.valueOf(transcriptImpact.codingEffect().name()))
+                .reported(transcriptImpact.reported())
+                .build();
+    }
+
+    @Nullable
+    private static SmallVariant.AllelicDepth convertAllelicDepth(@Nullable AllelicDepth allelicDepth)
+    {
+        if(allelicDepth == null)
+        {
+            return null;
+        }
+
+        return SmallVariantAllelicDepthBuilder.builder()
+                .totalReadCount(allelicDepth.totalReadCount())
+                .alleleReadCount(allelicDepth.alleleReadCount())
+                .build();
+    }
+
+    private static List<PurpleVariant> findReportedVariantsForDriver(List<PurpleVariant> variants, PurpleDriver driver)
+    {
+        List<PurpleVariant> reportedVariantsForDriver = new ArrayList<>();
+        List<PurpleVariant> reportedVariantsForGene = findReportedVariantsForGene(variants, driver.gene());
+        for(PurpleVariant variant : reportedVariantsForGene)
+        {
+            if(findTranscriptImpact(variant, driver.transcript()) != null)
+            {
+                reportedVariantsForDriver.add(variant);
+            }
+        }
+
+        return reportedVariantsForDriver;
+    }
+
+    private static List<PurpleVariant> findReportedVariantsForGene(List<PurpleVariant> variants, String geneToFind)
+    {
+        List<PurpleVariant> reportedVariantsForGene = new ArrayList<>();
+        for(PurpleVariant variant : variants)
+        {
+            if(variant.reported() && variant.gene().equals(geneToFind))
+            {
+                reportedVariantsForGene.add(variant);
+            }
+        }
+        return reportedVariantsForGene;
+    }
+
+    @Nullable
+    static PurpleTranscriptImpact findTranscriptImpact(PurpleVariant variant, String transcriptToFind)
+    {
+        if(variant.canonicalImpact().transcript().equals(transcriptToFind))
+        {
+            return variant.canonicalImpact();
+        }
+
+        return findOtherTranscriptImpact(variant, transcriptToFind);
+    }
+
+    @Nullable
+    static PurpleTranscriptImpact findOtherTranscriptImpact(PurpleVariant variant, String transcriptToFind)
+    {
+        // ADQ: Recommended implementation:
+        //return variant.otherImpacts().stream().filter(o -> o.transcript().equals(transcriptToFind)).findFirst().orElse(null);
+
+        for(PurpleTranscriptImpact otherImpact : variant.otherImpacts())
+        {
+            if(otherImpact.transcript().equals(transcriptToFind))
+            {
+                return otherImpact;
+            }
+        }
+
+        return null;
+    }
+
+    @Nullable
+    private static PurpleTranscriptImpact findOtherImpactClinical(PurpleVariant variant, FindingConfig findingConfig)
+    {
+        String transcriptOverride = findingConfig.findCanonicalTranscriptForGene(variant.gene());
+        if(transcriptOverride != null)
+        {
+            PurpleTranscriptImpact otherImpactClinical = findOtherTranscriptImpact(variant, transcriptOverride);
+            if(otherImpactClinical != null)
+            {
+                otherImpactClinical = !otherImpactClinical.hgvsCodingImpact().equals(variant.canonicalImpact().hgvsCodingImpact())
+                        ? otherImpactClinical
+                        : null;
+            }
+            return otherImpactClinical;
+        }
+        return null;
+    }
+
+    private static boolean hasCanonicalImpact(PurpleVariant variant)
+    {
+        return !variant.canonicalImpact().transcript().isEmpty();
+    }
+
+    private static DriverCategory driverLikelihoodType(com.hartwig.hmftools.common.driver.DriverCategory driverLikelihoodType)
+    {
+        return switch(driverLikelihoodType)
+        {
+            case ONCO -> DriverCategory.ONCO;
+            case TSG -> DriverCategory.TSG;
+        };
+    }
+}

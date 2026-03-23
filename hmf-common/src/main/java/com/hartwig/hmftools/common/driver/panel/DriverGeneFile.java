@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createField
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -33,7 +34,12 @@ public final class DriverGeneFile
 
     public static List<DriverGene> read(final String filename) throws IOException
     {
-        return fromLines(Files.readAllLines(new File(filename).toPath()));
+        return read(new File(filename).toPath());
+    }
+
+    public static List<DriverGene> read(final Path path) throws IOException
+    {
+        return fromLines(Files.readAllLines(path));
     }
 
     private enum Columns

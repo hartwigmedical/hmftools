@@ -1,0 +1,282 @@
+package com.hartwig.hmftools.finding;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
+import com.hartwig.hmftools.datamodel.linx.LinxGeneOrientation;
+import com.hartwig.hmftools.datamodel.linx.LinxRecord;
+import com.hartwig.hmftools.finding.datamodel.Breakend;
+import com.hartwig.hmftools.finding.datamodel.BreakendBuilder;
+import com.hartwig.hmftools.finding.datamodel.Disruption;
+import com.hartwig.hmftools.finding.datamodel.DisruptionBuilder;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverFieldsBuilder;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingList;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingListBuilder;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverInterpretation;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverSource;
+import com.hartwig.hmftools.finding.datamodel.driver.ReportedStatus;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
+import com.hartwig.hmftools.finding.datamodel.VisualisationFile;
+
+import org.apache.commons.lang3.Validate;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+// create Disruption findings from Linx breakends
+final class DisruptionFactory
+{
+    public static final Logger LOGGER = LogManager.getLogger(DisruptionFactory.class);
+
+    private record Pair<A, B>(@Nullable A left, @Nullable B right)
+    {
+    }
+
+    // for the types of disruptions, see hmftools.common.driver.DriverType, they are:
+    // germline: GERMLINE_DISRUPTION
+    // somatic: HOM_DUP_DISRUPTION, HOM_DEL_DISRUPTION, DISRUPTION
+    // We can check the breakend types to know which type it is
+    public static DriverFindingList<Disruption> createGermlineDisruptions(boolean hasRefSample, LinxRecord linx,
+            FindingStatus findingStatus)
+    {
+        if(!hasRefSample)
+        {
+            return FindingUtil.refRequired();
+        }
+
+        List<LinxBreakend> breakends = Objects.requireNonNull(linx.germlineBreakends());
+
+        return DriverFindingListBuilder.<Disruption>builder()
+                .status(findingStatus)
+                .findings(createDisruptions(DriverSource.GERMLINE, breakends))
+                .build();
+    }
+
+    public static DriverFindingList<Disruption> createSomaticDisruptions(LinxRecord linx, FindingStatus findingStatus)
+    {
+        @NotNull Collection<LinxBreakend> breakends = linx.somaticBreakends();
+
+        return DriverFindingListBuilder.<Disruption>builder()
+                .status(findingStatus)
+                .findings(createDisruptions(DriverSource.SOMATIC, breakends))
+                .build();
+    }
+
+    private static List<Disruption> createDisruptions(
+            DriverSource sampleType,
+            Collection<LinxBreakend> breakends)
+    {
+        List<Disruption> disruptions = new ArrayList<>();
+        Map<SvAndTranscriptKey, Pair<LinxBreakend, LinxBreakend>> pairedMap = mapBreakendsPerStructuralVariant(breakends);
+
+        for(Pair<LinxBreakend, LinxBreakend> pairedBreakend : pairedMap.values())
+        {
+            LinxBreakend primaryBreakendStart = pairedBreakend.left();
+            LinxBreakend primaryBreakendEnd = pairedBreakend.right();
+
+            LinxBreakend breakend = primaryBreakendStart == null ? primaryBreakendEnd : primaryBreakendStart;
+            assert breakend != null;
+
+            double undisruptedCopyNumber;
+            if(primaryBreakendStart != null && primaryBreakendEnd != null)
+            {
+                undisruptedCopyNumber = Math.min(primaryBreakendStart.undisruptedCopyNumber(), primaryBreakendEnd.undisruptedCopyNumber());
+
+                double copyNumberLeft = primaryBreakendStart.junctionCopyNumber();
+                double copyNumberRight = primaryBreakendEnd.junctionCopyNumber();
+                if(!Doubles.equal(copyNumberLeft, copyNumberRight))
+                {
+                    LOGGER.warn("The disrupted copy number of a paired sv is not the same on {}", primaryBreakendStart.gene());
+                }
+            }
+            else
+            {
+                undisruptedCopyNumber = breakend.undisruptedCopyNumber();
+            }
+
+            Disruption.Type disruptionType = switch(breakend.driverType())
+            {
+                case DISRUPTION -> Disruption.Type.DISRUPTION;
+                case HOM_DEL_DISRUPTION -> Disruption.Type.HOM_DEL_DISRUPTION;
+                case HOM_DUP_DISRUPTION -> Disruption.Type.HOM_DUP_DISRUPTION;
+            };
+
+            disruptions.add(createDisruption(
+                    sampleType,
+                    disruptionType,
+                    primaryBreakendStart,
+                    primaryBreakendEnd,
+                    undisruptedCopyNumber));
+        }
+        disruptions.sort(Disruption.COMPARATOR);
+
+        return disruptions;
+    }
+
+    public static Disruption createDisruption(
+            DriverSource sourceSample,
+            Disruption.Type disruptionType,
+            @Nullable LinxBreakend breakendStart,
+            @Nullable LinxBreakend breakendEnd,
+            double undisruptedCopyNumber)
+    {
+        List<LinxBreakend> breakends = new ArrayList<>();
+        if(breakendStart != null)
+        {
+            breakends.add(breakendStart);
+        }
+        if(breakendEnd != null)
+        {
+            breakends.add(breakendEnd);
+        }
+
+        if(breakends.isEmpty())
+        {
+            // should not be possible
+            throw new IllegalStateException("Disruption with no breakend");
+        }
+
+        if(breakendStart != null && breakendEnd != null)
+        {
+            validateBreakends(breakendStart, breakendEnd);
+        }
+
+        LinxBreakend breakend = breakends.get(0);
+
+        ReportedStatus reportedStatus = ReportedStatus.NON_DRIVER_GENE;
+        for(LinxBreakend b : breakends)
+        {
+            ReportedStatus status = DriverUtil.reportedStatus(b.reportedStatus());
+            if(ReportedStatus.isMoreReportable(status, reportedStatus))
+            {
+                reportedStatus = status;
+            }
+        }
+
+        return DisruptionBuilder.builder()
+                .driver(
+                        DriverFieldsBuilder.builder()
+                                .findingKey(FindingKeys.disruption(sourceSample, breakend))
+                                .driverSource(sourceSample)
+                                .reportedStatus(reportedStatus)
+                                .driverInterpretation(reportedStatus == ReportedStatus.REPORTED ? DriverInterpretation.HIGH : DriverInterpretation.LOW) // TODOHWL: fix
+                                .driverLikelihood(reportedStatus == ReportedStatus.REPORTED ? 1.0 : 0.0)
+                                .build()
+                )
+                .type(disruptionType)
+                .chromosome(breakend.chromosome())
+                .chromosomeBand(breakend.chromosomeBand())
+                .gene(breakend.gene())
+                .isCanonical(breakend.isCanonical())
+                .transcript(breakend.transcript())
+                .breakendType(Disruption.BreakendType.valueOf(breakend.type().name()))
+                .disruptedCopyNumber(breakend.junctionCopyNumber())
+                .undisruptedCopyNumber(undisruptedCopyNumber)
+                .breakendUp(convert(breakendStart))
+                .breakendDown(convert(breakendEnd))
+                .visualisationFile(new VisualisationFile(breakend.plotFilename()))
+                .build();
+    }
+
+    @Nullable
+    static Breakend convert(@Nullable LinxBreakend linxBreakend)
+    {
+        if(linxBreakend == null)
+        {
+            return null;
+        }
+
+        Breakend.GeneOrientation orientation = switch(linxBreakend.geneOrientation())
+        {
+            case UPSTREAM -> Breakend.GeneOrientation.UPSTREAM;
+            case DOWNSTREAM -> Breakend.GeneOrientation.DOWNSTREAM;
+        };
+
+        return BreakendBuilder.builder()
+                .id(linxBreakend.id())
+                .svId(linxBreakend.svId())
+                .geneOrientation(orientation)
+                .disruptive(linxBreakend.disruptive())
+                .regionType(Breakend.TranscriptRegionType.valueOf(linxBreakend.regionType().name()))
+                .codingType(Breakend.TranscriptCodingType.valueOf(linxBreakend.codingType().name()))
+                .nextSpliceExonRank(linxBreakend.nextSpliceExonRank())
+                .orientation(linxBreakend.orientation())
+                .exonUp(linxBreakend.exonUp())
+                .exonDown(linxBreakend.exonDown())
+                .junctionCopyNumber(linxBreakend.junctionCopyNumber())
+                .build();
+    }
+
+    private static Map<SvAndTranscriptKey, Pair<LinxBreakend, LinxBreakend>> mapBreakendsPerStructuralVariant(
+            Collection<LinxBreakend> breakends)
+    {
+        Map<SvAndTranscriptKey, List<LinxBreakend>> breakendsPerSvAndTranscript = breakends.stream()
+                .collect(Collectors.groupingBy(breakend -> new SvAndTranscriptKey(breakend.svId(), breakend.transcript()),
+                        HashMap::new,
+                        Collectors.toList()));
+        return toPairedMap(breakendsPerSvAndTranscript);
+    }
+
+    private static Map<SvAndTranscriptKey, Pair<LinxBreakend, LinxBreakend>> toPairedMap(
+            Map<SvAndTranscriptKey, List<LinxBreakend>> breakendsPerSvAndTranscript)
+    {
+        Map<SvAndTranscriptKey, Pair<LinxBreakend, LinxBreakend>> pairedMap = new HashMap<>();
+
+        for(Map.Entry<SvAndTranscriptKey, List<LinxBreakend>> entry : breakendsPerSvAndTranscript.entrySet())
+        {
+            List<LinxBreakend> breakends = entry.getValue();
+
+            if(breakends.size() != 1 && breakends.size() != 2)
+            {
+                LOGGER.warn("Found unusual number of breakends on single event: {}", breakends.size());
+                continue;
+            }
+
+            LinxBreakend left;
+            LinxBreakend right;
+            if(breakends.size() == 1)
+            {
+                LinxBreakend breakend = breakends.get(0);
+                if(breakend.geneOrientation() == LinxGeneOrientation.UPSTREAM)
+                {
+                    left = breakend;
+                    right = null;
+                }
+                else
+                {
+                    right = breakend;
+                    left = null;
+                }
+            }
+            else
+            {
+                boolean firstBeforeSecond = breakends.get(0).exonUp() <= breakends.get(1).exonUp();
+                left = firstBeforeSecond ? breakends.get(0) : breakends.get(1);
+                right = firstBeforeSecond ? breakends.get(1) : breakends.get(0);
+            }
+
+            pairedMap.put(entry.getKey(), new Pair<>(left, right));
+        }
+
+        return pairedMap;
+    }
+
+    private static void validateBreakends(LinxBreakend breakendStart, LinxBreakend breakendEnd)
+    {
+        Validate.isTrue(breakendStart.svId() == breakendEnd.svId());
+        Validate.isTrue(breakendStart.type().equals(breakendEnd.type()));
+        Validate.isTrue(breakendStart.transcript().equals(breakendEnd.transcript()));
+//        Validate.isTrue(breakendStart.undisruptedCopyNumber() == breakendEnd.undisruptedCopyNumber());
+    }
+
+    private record SvAndTranscriptKey(int variantId, String transcriptId)
+    {
+    }
+}
