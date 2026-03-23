@@ -494,7 +494,7 @@ public class ChromosomeTaskExecutor implements Callable<Void>
     public FragmentTypeCounts getCombinedCounts() { return mCombinedFragmentCounts; }
     public GcRatioCounts getNonEnrichedGcRatioCounts() { return mNonEnrichedGcRatioCounts; }
 
-    public void writeExpressionResults(final Map<String,DriverGene> driverGenes, final Set<String> panelGeneIds)
+    public void writeExpressionResults(final Set<String> panelGeneIds)
     {
         for(GeneCollectionSummary geneCollectionResult : mGeneCollectionSummaryData)
         {
@@ -502,12 +502,6 @@ public class ChromosomeTaskExecutor implements Callable<Void>
             {
                 if(!panelGeneIds.isEmpty() && !panelGeneIds.contains(geneResult.Gene.GeneId))
                     continue;
-
-                DriverGene driverGene = driverGenes.get(geneResult.Gene.GeneName);
-                boolean reported = driverGene != null && (driverGene.reportHighExpression() || driverGene.reportLowExpression());
-
-                if(reported)
-                    geneResult.markReported();
 
                 mResultsWriter.writeGeneExpression(geneResult);
             }

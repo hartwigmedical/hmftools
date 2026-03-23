@@ -265,6 +265,9 @@ public class PassingFusions
 
     private void markKnownType(final FusionData fusion)
     {
+        if(fusion.GeneNames[SE_START].isEmpty() || fusion.GeneNames[SE_END].isEmpty())
+            return;
+
         for(KnownFusionData knownFusionData : mKnownFusionCache.getDataByType(KnownFusionType.KNOWN_PAIR))
         {
             if(knownFusionData.FiveGene.equals(fusion.GeneNames[SE_START]) && knownFusionData.ThreeGene.equals(fusion.GeneNames[SE_END]))

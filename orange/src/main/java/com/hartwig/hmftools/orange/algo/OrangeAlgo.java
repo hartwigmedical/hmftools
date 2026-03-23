@@ -400,7 +400,7 @@ public class OrangeAlgo
         }
         catch(Exception e)
         {
-            LOGGER.error("failed to find required plots: {}", e.toString());
+            LOGGER.warn("failed to find required plots: {}", e.toString());
             System.exit(1);
         }
 

@@ -1,15 +1,20 @@
 package com.hartwig.hmftools.isofox.expression;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.log;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.rna.GeneExpression.NO_CANCER_AVAILABLE_VALUE;
 import static com.hartwig.hmftools.common.sigs.SigUtils.calcResiduals;
 import static com.hartwig.hmftools.common.sigs.SigUtils.calculateFittedCounts;
 import static com.hartwig.hmftools.common.utils.VectorUtils.sumVector;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
+import static com.hartwig.hmftools.isofox.IsofoxConstants.HIGH_EXPRESSION_FOLD_CHANGE_HIGH;
+import static com.hartwig.hmftools.isofox.IsofoxConstants.HIGH_EXPRESSION_FOLD_CHANGE_LOW;
+import static com.hartwig.hmftools.isofox.IsofoxConstants.HIGH_EXPRESSION_PERCENTILE_HIGH;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.MAX_GENE_PERC_CONTRIBUTION;
 import static com.hartwig.hmftools.isofox.expression.CategoryCountsData.hasGeneIdentifier;
 import static com.hartwig.hmftools.isofox.expression.ExpectedRatesCommon.formTranscriptDefinitions;
@@ -22,6 +27,7 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.sigs.ExpectationMaxFit;
 import com.hartwig.hmftools.common.sigs.SigResiduals;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
@@ -277,7 +283,8 @@ public class TranscriptExpression
     }
 
     public static void setCohortDistributionValues(
-            final List<GeneCollectionSummary> allGeneSummaries, final CohortGenePercentiles cohortGenePercentiles, final String cancerType)
+            final List<GeneCollectionSummary> allGeneSummaries, final CohortGenePercentiles cohortGenePercentiles, final String cancerType,
+            final Map<String,DriverGene> driverGenes)
     {
         if(cohortGenePercentiles == null)
             return;
@@ -294,12 +301,52 @@ public class TranscriptExpression
                 double medianCohort = cohortGenePercentiles.getTpmMedian(geneId, CohortGenePercentiles.PAN_CANCER);
                 double percentileCohort = cohortGenePercentiles.getTpmPercentile(geneId, CohortGenePercentiles.PAN_CANCER, tpm);
 
-                double medianCancer = useCancerType ? cohortGenePercentiles.getTpmMedian(geneId, cancerType) : medianCohort;
-                double percentileCancer = useCancerType ? cohortGenePercentiles.getTpmPercentile(geneId, cancerType, tpm) : percentileCohort;
+                double medianCancer = useCancerType ? cohortGenePercentiles.getTpmMedian(geneId, cancerType) : NO_CANCER_AVAILABLE_VALUE;
+                double percentileCancer = useCancerType ? cohortGenePercentiles.getTpmPercentile(geneId, cancerType, tpm) : NO_CANCER_AVAILABLE_VALUE;
 
                 geneResult.setCohortValues(medianCohort, percentileCohort, medianCancer, percentileCancer);
+
+                if(reportHighExpression(geneResult, useCancerType, cohortGenePercentiles, driverGenes))
+                    geneResult.markReported();
             }
         }
+    }
+
+    private static boolean reportHighExpression(
+            final GeneResult geneResult, boolean useCancerType, final CohortGenePercentiles cohortGenePercentiles,
+            final Map<String,DriverGene> driverGenes)
+    {
+        DriverGene driverGene = driverGenes.get(geneResult.Gene.GeneName);
+
+        if(driverGene == null || !driverGene.reportHighExpression())
+            return false;
+
+        double cohortMedian;
+        double cohortPercentile;
+
+        if(useCancerType)
+        {
+            cohortPercentile = geneResult.percentileTpmCancer();
+            cohortMedian = geneResult.medianTpmCancer();
+        }
+        else
+        {
+            cohortPercentile = geneResult.percentileTpmCohort();
+            cohortMedian = cohortGenePercentiles.getTpmMedianAcrossCancerTypes(geneResult.Gene.GeneId);
+        }
+
+        if(cohortMedian < 0 || cohortPercentile < 0 || geneResult.adjustedTpm() <= cohortMedian)
+            return false;
+
+        double logFoldChangeMedian = log(geneResult.adjustedTpm() / cohortMedian);
+
+        if(logFoldChangeMedian > HIGH_EXPRESSION_FOLD_CHANGE_HIGH)
+            return true;
+
+        if(logFoldChangeMedian > HIGH_EXPRESSION_FOLD_CHANGE_LOW && cohortPercentile > HIGH_EXPRESSION_PERCENTILE_HIGH)
+            return true;
+
+        return false;
     }
 
     private void loadGeneExpectedRatesData(final String chrId, final List<String> geneIds)

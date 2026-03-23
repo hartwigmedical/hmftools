@@ -12,6 +12,7 @@ import java.util.Map;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.driver.panel.DriverGene;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.datamodel.isofox.GeneExpression;
 import com.hartwig.hmftools.datamodel.isofox.ImmutableIsofoxRecord;
 import com.hartwig.hmftools.datamodel.isofox.IsofoxRecord;
@@ -57,12 +58,8 @@ public class IsofoxInterpreter
     {
         for(com.hartwig.hmftools.common.rna.GeneExpression geneExpression : geneExpressions)
         {
-            /*
-            if(driverGene.reportHighExpression() && geneExpression.percentileCohort() > HIGH_EXPRESSION_PERCENTILE_CUTOFF)
+            if(geneExpression.reportedStatus() == ReportedStatus.REPORTED)
                 highExpressionGenes.add(IsofoxConversion.convert(geneExpression));
-            else if(driverGene.reportLowExpression() && geneExpression.percentileCohort() < LOW_EXPRESSION_PERCENTILE_CUTOFF)
-                lowExpressionGenes.add(IsofoxConversion.convert(geneExpression));
-            */
         }
     }
 
@@ -74,21 +71,7 @@ public class IsofoxInterpreter
 
         for(com.hartwig.hmftools.common.rna.NovelSpliceJunction altSpliceJunction : altSpliceJunctions)
         {
-            // TODO: consider other criteria - eg cohort frequency, fragment support, types of junctions
-
-            // previous was SKIPPED_EXONS: 6+ frags, cohort < 30, or NOVEL_INTRON/NOVEL_EXON: 6+ frags, cohort < 10
-
-            // TOD: consider overlap with other reportable RNA fusions
-
-            if(fusions.stream().anyMatch(x -> x.geneStart().equals(altSpliceJunction.geneName()))
-            || fusions.stream().anyMatch(x -> x.geneEnd().equals(altSpliceJunction.geneName())))
-            {
-                continue;
-            }
-
-            if(altSpliceJunction.fragmentCount() < ALT_SJ_MIN_FRAGMENTS)
-                continue;
-
+            // all in the passing file should be shown
             spliceJunctions.add(IsofoxConversion.convert(altSpliceJunction));
         }
 

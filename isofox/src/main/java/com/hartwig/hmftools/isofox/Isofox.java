@@ -291,13 +291,13 @@ public class Isofox
         {
             setTranscriptsPerMillion(chrTask.getGeneCollectionSummaryData(), tpmFactors);
 
-            setCohortDistributionValues(chrTask.getGeneCollectionSummaryData(), mGeneDistribution, mConfig.CancerType);
-
             panelTpmNormaliser.applyNormalisation(chrTask.getGeneCollectionSummaryData());
+
+            setCohortDistributionValues(chrTask.getGeneCollectionSummaryData(), mGeneDistribution, mConfig.CancerType, mConfig.DriverGenes);
 
             spliceGeneCount += chrTask.getGeneCollectionSummaryData().stream().mapToInt(x -> x.spliceGenesCount()).sum();
 
-            chrTask.writeExpressionResults(mConfig.DriverGenes, panelTpmNormaliser.panelGeneIds());
+            chrTask.writeExpressionResults(panelTpmNormaliser.panelGeneIds());
         }
 
         // write summary statistics

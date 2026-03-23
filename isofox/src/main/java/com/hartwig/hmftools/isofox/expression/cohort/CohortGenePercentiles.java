@@ -23,6 +23,7 @@ public class CohortGenePercentiles
 {
     private final Map<String,Map<String,double[]>> mGenePercentiles; // by geneId and then cancer type
     private final Map<String,Map<String,Double>> mGeneMedians;
+    private final Map<String,Double> mGeneMaxMedians; // max median value across all cancer types
     private final Set<String> mCancerTypes;
 
     public static final String PAN_CANCER = "ALL";
@@ -33,6 +34,7 @@ public class CohortGenePercentiles
     {
         mGenePercentiles = Maps.newHashMap();
         mGeneMedians = Maps.newHashMap();
+        mGeneMaxMedians = Maps.newHashMap();
         mCancerTypes = Sets.newHashSet();
 
         loadCohortFile(cohortFile);
@@ -98,6 +100,12 @@ public class CohortGenePercentiles
             }
 
             ISF_LOGGER.info("loaded distribution for {} genes from file({})", mGeneMedians.size(), filename);
+
+            for(Map.Entry<String,Map<String,Double>> entry : mGeneMedians.entrySet())
+            {
+                double maxMedian = entry.getValue().values().stream().mapToDouble(x -> x.doubleValue()).max().orElse(0);
+                mGeneMaxMedians.put(entry.getKey(), maxMedian);
+            }
         }
         catch (IOException e)
         {
@@ -107,9 +115,15 @@ public class CohortGenePercentiles
 
     public boolean hasCancerType(final String cancerType) { return mCancerTypes.contains(cancerType); }
 
+    public double getTpmMedianAcrossCancerTypes(final String geneId)
+    {
+        Double maxMedian = mGeneMaxMedians.get(geneId);
+        return maxMedian != null ? maxMedian : 0;
+    }
+
     public double getTpmMedian(final String geneId, final String cancerType)
     {
-        final Map<String,Double> medianMap = mGeneMedians.get(geneId);
+        Map<String,Double> medianMap = mGeneMedians.get(geneId);
 
         if(medianMap == null || !medianMap.containsKey(cancerType))
             return INVALID_VALUE;

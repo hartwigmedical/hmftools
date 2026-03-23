@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.rna;
 
+import static com.hartwig.hmftools.common.purple.ReportedStatus.NONE;
+import static com.hartwig.hmftools.common.purple.ReportedStatus.REPORTED;
 import static com.hartwig.hmftools.common.rna.RnaCommon.ISF_FILE_ID;
 import static com.hartwig.hmftools.common.rna.RnaCommon.RNA_LOGGER;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
@@ -14,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
 
 public final class GeneExpressionFile
 {
@@ -52,10 +55,13 @@ public final class GeneExpressionFile
             Integer percCancerIndex = fieldsIndexMap.get(FLD_PERC_TPM_CANCER);
             Integer medCohortIndex = fieldsIndexMap.get(FLD_MEDIAN_TPM_COHORT);
             Integer percCohortIndex = fieldsIndexMap.get(FLD_PERC_TPM_COHORT);
+            Integer reportedIndex = fieldsIndexMap.get(FLD_REPORTED_STATUS);
 
             for(String line : lines.subList(1, lines.size()))
             {
                 String[] values = line.split(fileDelim, -1);
+
+                ReportedStatus reportedStatus = reportedIndex != null ? ReportedStatus.valueOf(values[reportedIndex]) : NONE;
 
                 geneExpressions.add(ImmutableGeneExpression.builder()
                         .geneName(values[geneIndex])
@@ -66,6 +72,7 @@ public final class GeneExpressionFile
                         .percentileCancer(getCohortValue(values, percCancerIndex))
                         .medianTpmCohort(getCohortValue(values, medCohortIndex))
                         .percentileCohort(getCohortValue(values, percCohortIndex))
+                        .reportedStatus(reportedStatus)
                         .build());
             }
 

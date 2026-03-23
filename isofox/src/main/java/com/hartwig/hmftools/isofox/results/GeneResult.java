@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 
 import java.util.StringJoiner;
 
+import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
 
@@ -97,6 +98,11 @@ public class GeneResult
         mPercentileTpmCancer = percentileTpmCancer;
     }
 
+    public double medianTpmCohort() { return mMedianTpmCohort; }
+    public double percentileTpmCohort() { return mPercentileTpmCohort; }
+    public double medianTpmCancer() { return mMedianTpmCancer; }
+    public double percentileTpmCancer() { return mPercentileTpmCancer; }
+
     public static String header()
     {
         return new StringJoiner(TSV_DELIM)
@@ -141,7 +147,7 @@ public class GeneResult
                 .add(String.format("%.3f", mPercentileTpmCancer))
                 .add(String.format("%6.3e", mMedianTpmCohort))
                 .add(String.format("%.3f", mPercentileTpmCohort))
-                .add(String.valueOf(mReported))
+                .add(mReported ? ReportedStatus.REPORTED.toString() : ReportedStatus.NOT_REPORTED.toString())
                 .toString();
     }
 }

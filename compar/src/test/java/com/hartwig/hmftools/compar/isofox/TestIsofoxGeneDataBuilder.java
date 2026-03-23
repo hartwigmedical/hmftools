@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.compar.isofox;
 
+import static com.hartwig.hmftools.common.purple.ReportedStatus.NONE;
+
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.rna.GeneExpression;
@@ -35,6 +37,7 @@ public class TestIsofoxGeneDataBuilder
                 .percentileCancer(0.5)
                 .medianTpmCohort(0.3)
                 .percentileCohort(0.4)
+                .reportedStatus(NONE)
                 .build();
         return new IsofoxGeneData(geneExpression);
     }

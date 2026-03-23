@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.orange.algo.isofox;
 
+import static com.hartwig.hmftools.common.purple.ReportedStatus.NONE;
 import static com.hartwig.hmftools.common.rna.RnaQcFilter.PASS;
 
 import java.util.List;
@@ -56,7 +57,8 @@ public final class IsofoxTestFactory
                 .medianTpmCancer(0D)
                 .percentileCancer(0D)
                 .medianTpmCohort(0D)
-                .percentileCohort(0D);
+                .percentileCohort(0D)
+                .reportedStatus(NONE);
     }
 
     @NotNull
