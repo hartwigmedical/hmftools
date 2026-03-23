@@ -30,10 +30,16 @@ import org.jetbrains.annotations.Nullable;
 public final class NovelSpliceJunctionFile
 {
     public static final String ALT_SJ_FILE_ID = "alt_splice_junc.tsv";
+    public static final String ALT_SJ_UNFILTERED_FILE_ID = "alt_splice_junc_unfiltered.tsv";
 
     public static String generateFilename(final String basePath, final String sample)
     {
         return checkAddDirSeparator(basePath) + sample + ISF_FILE_ID + ALT_SJ_FILE_ID;
+    }
+
+    public static String generateUnfilteredFilename(final String basePath, final String sample)
+    {
+        return checkAddDirSeparator(basePath) + sample + ISF_FILE_ID + ALT_SJ_UNFILTERED_FILE_ID;
     }
 
     private enum Columns
@@ -115,19 +121,24 @@ public final class NovelSpliceJunctionFile
             {
                 String[] values = line.split(fileDelim, -1);
 
-                int geneIndex = fieldsIndexMap.get(FLD_GENE_NAME);
-                int chrIndex = fieldsIndexMap.get(FLD_CHROMOSOME);
-                int sjStartIndex = fieldsIndexMap.get(FLD_ALT_SJ_POS_START);
-                int sjEndIndex = fieldsIndexMap.get(FLD_ALT_SJ_POS_END);
-                int typeIndex = fieldsIndexMap.get(FLD_ALT_SJ_TYPE);
-                int fragCountIndex = fieldsIndexMap.get(FLD_FRAG_COUNT);
-                int depthStartIndex = fieldsIndexMap.get(FLD_DEPTH_START);
-                int depthEndIndex = fieldsIndexMap.get(FLD_DEPTH_END);
-                int regionStartIndex = fieldsIndexMap.get(FLD_REGION_START);
-                int regionEndIndex = fieldsIndexMap.get(FLD_REGION_END);
-                Integer basesStartIndex = fieldsIndexMap.get(FLD_BASES_START);
-                Integer basesEndIndex = fieldsIndexMap.get(FLD_BASES_END);
-                Integer cohortFreqIndex = fieldsIndexMap.get(FLD_COHORT_FREQUENCY);
+                int geneIndex = fieldsIndexMap.get(Columns.GeneName.toString());
+                int chrIndex = fieldsIndexMap.get(Columns.Chromosome.toString());
+                int sjStartIndex = fieldsIndexMap.get(Columns.SjStart.toString());
+                int sjEndIndex = fieldsIndexMap.get(Columns.SjEnd.toString());
+                int typeIndex = fieldsIndexMap.get(Columns.Type.toString());
+                int fragCountIndex = fieldsIndexMap.get(Columns.FragCount.toString());
+                int depthStartIndex = fieldsIndexMap.get(Columns.DepthStart.toString());
+                int depthEndIndex = fieldsIndexMap.get(Columns.DepthEnd.toString());
+                int regionStartIndex = fieldsIndexMap.get(Columns.RegionStart.toString());
+                int regionEndIndex = fieldsIndexMap.get(Columns.RegionEnd.toString());
+                Integer basesStartIndex = fieldsIndexMap.get(Columns.BaseStart.toString());
+                Integer basesEndIndex = fieldsIndexMap.get(Columns.BaseEnd.toString());
+                Integer cohortFreqIndex = fieldsIndexMap.get(Columns.CohortFrequency.toString());
+
+                Integer transStartIndex = fieldsIndexMap.get(Columns.TranscriptStart.toString());
+                Integer transEndIndex = fieldsIndexMap.get(Columns.TranscriptEnd.toString());
+                Integer exonStartIndex = fieldsIndexMap.get(Columns.ExonStart.toString());
+                Integer exonEndIndex = fieldsIndexMap.get(Columns.ExonEnd.toString());
 
                 String chromosome = values[chrIndex];
                 int sjStart = Integer.parseInt(values[sjStartIndex]);
@@ -139,6 +150,10 @@ public final class NovelSpliceJunctionFile
                         .junctionStart(sjStart)
                         .junctionEnd(sjEnd)
                         .type(AltSpliceJunctionType.valueOf(values[typeIndex]))
+                        .transcriptStart(transStartIndex != null ? values[transStartIndex] : "")
+                        .transcriptEnd(transEndIndex != null ? values[transEndIndex] : "")
+                        .exonStart(exonStartIndex != null ? Integer.parseInt(values[exonStartIndex]) : -1)
+                        .exonEnd(exonEndIndex != null ? Integer.parseInt(values[exonEndIndex]) : -1)
                         .fragmentCount(Integer.parseInt(values[fragCountIndex]))
                         .depthStart(Integer.parseInt(values[depthStartIndex]))
                         .depthEnd(Integer.parseInt(values[depthEndIndex]))

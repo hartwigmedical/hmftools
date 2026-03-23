@@ -252,7 +252,8 @@ public class IsofoxConfig
         ReadLength = configBuilder.getInteger(READ_LENGTH);
         FragmentSizeData = loadFragmentSizeConfig(configBuilder);
 
-        Fusions = Functions.contains(FUSIONS) ? new FusionConfig(configBuilder) : new FusionConfig();
+        Fusions = Functions.contains(FUSIONS) || Functions.contains(ALT_SPLICE_JUNCTIONS) ?
+                new FusionConfig(configBuilder) : new FusionConfig();
 
         PerfDebug = configBuilder.hasFlag(PERF_DEBUG);
 

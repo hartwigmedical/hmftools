@@ -4,6 +4,7 @@ import static java.lang.Math.abs;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.rna.NovelSpliceJunctionFile.ALT_SJ_FILE_ID;
+import static com.hartwig.hmftools.common.rna.NovelSpliceJunctionFile.ALT_SJ_UNFILTERED_FILE_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
@@ -36,6 +37,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionContext;
@@ -52,8 +54,6 @@ import com.hartwig.hmftools.isofox.common.RegionMatchType;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
 import com.hartwig.hmftools.isofox.common.TransMatchType;
 
-import htsjdk.samtools.CigarOperator;
-
 public class AltSpliceJunctionFinder
 {
     private final boolean mEnabled;
@@ -67,8 +67,7 @@ public class AltSpliceJunctionFinder
     private GeneCollection mGenes;
     private final AltSjCohortCache mAltSjCohortCache;
     private final Set<String> mReportableGenes;
-
-    public static final String ALT_SJ_UNFILTERED_FILE_ID = "alt_splice_junc_unfiltered.tsv";
+    private final Set<String> mKnownExonDelDupGenes;
 
     public AltSpliceJunctionFinder(
             final IsofoxConfig config, final AltSjCohortCache altSjCohortCache,
@@ -84,6 +83,9 @@ public class AltSpliceJunctionFinder
 
         mReportableGenes = config.DriverGenes.values().stream()
                 .filter(x -> x.reportNovelSpliceJunctions()).map(x -> x.gene()).collect(Collectors.toSet());
+
+        mKnownExonDelDupGenes = config.Fusions.KnownFusions.getDataByType(KnownFusionType.EXON_DEL_DUP).stream()
+                .map(x -> x.FiveGene).collect(Collectors.toSet());
     }
 
     public boolean enabled() { return mEnabled; }
@@ -514,11 +516,11 @@ public class AltSpliceJunctionFinder
             return;
         }
 
-        final List<RegionReadData> regions1 = Lists.newArrayList(firstAltSJ.getSjStartRegions());
-        regions1.addAll(firstAltSJ.getSjEndRegions());
+        final List<RegionReadData> regions1 = Lists.newArrayList(firstAltSJ.sjStartRegions());
+        regions1.addAll(firstAltSJ.sjEndRegions());
 
-        final List<RegionReadData> regions2 = Lists.newArrayList(secondAltSJ.getSjStartRegions());
-        regions2.addAll(secondAltSJ.getSjEndRegions());
+        final List<RegionReadData> regions2 = Lists.newArrayList(secondAltSJ.sjStartRegions());
+        regions2.addAll(secondAltSJ.sjEndRegions());
 
         List<Integer> commonTranscripts = Lists.newArrayList();
 
@@ -633,7 +635,7 @@ public class AltSpliceJunctionFinder
 
             for(final GeneReadData gene : mGenes.genes())
             {
-                if(gene.getExonRegions().stream().anyMatch(x -> altSJ.getSjStartRegions().contains(x) || altSJ.getSjEndRegions().contains(x)))
+                if(gene.getExonRegions().stream().anyMatch(x -> altSJ.sjStartRegions().contains(x) || altSJ.sjEndRegions().contains(x)))
                 {
                     candidateGenes.add(gene);
                 }
@@ -720,12 +722,36 @@ public class AltSpliceJunctionFinder
                 altSJ.setCohortFrequency(cohortFrequency);
             }
 
-            if(!mReportableGenes.contains(altSJ.geneName()))
-                altSJ.setFilter("NON_DRIVER");
+            // if(!mReportableGenes.contains(altSJ.geneName()))
+            //    altSJ.setFilter(AltSjFilterType.NON_DRIVER);
+
+            if(!matchesKnownExonDelDup(altSJ))
+            {
+                altSJ.addFilter(AltSjFilterType.NOT_KNOWN);
+            }
 
             // other filters?
 
         }
+    }
+
+    private boolean matchesKnownExonDelDup(final AltSpliceJunction altSJ)
+    {
+        if(!mKnownExonDelDupGenes.contains(altSJ.geneName()))
+            return false;
+
+        if(altSJ.selectedTranscripts()[SE_START] == null || altSJ.selectedTranscripts()[SE_START] != altSJ.selectedTranscripts()[SE_END])
+            return false;
+
+        if(altSJ.selectedExons()[SE_START] < 0 || altSJ.selectedExons()[SE_END] < 0)
+            return false;
+
+        String transcript = altSJ.selectedTranscripts()[SE_START];
+        int exonUp = altSJ.selectedExons()[SE_START];
+        int exonDown = altSJ.selectedExons()[SE_END];
+
+        return mConfig.Fusions.KnownFusions.withinKnownExonRanges(
+                KnownFusionType.EXON_DEL_DUP, transcript, exonUp, exonUp, exonDown, exonDown);
     }
 
     public void writeAltSpliceJunctions()
@@ -748,7 +774,7 @@ public class AltSpliceJunctionFinder
                 unfilteredWriter.write(altSJ.write(novelSpliceJunction));
                 unfilteredWriter.newLine();
 
-                if(altSJ.filter().isEmpty())
+                if(altSJ.filters().isEmpty())
                 {
                     passWriter.write(NovelSpliceJunctionFile.write(novelSpliceJunction));
                     passWriter.newLine();

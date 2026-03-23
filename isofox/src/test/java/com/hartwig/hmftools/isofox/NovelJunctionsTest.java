@@ -138,8 +138,8 @@ public class NovelJunctionsTest
         assertEquals(360, altSJ.SpliceJunction[SE_END]);
         assertEquals(SPLICE_JUNC, altSJ.RegionContexts[SE_START]);
         assertEquals(AltSpliceJunctionContext.INTRONIC, altSJ.RegionContexts[SE_END]);
-        assertTrue(altSJ.getSjStartRegions().stream().anyMatch(x -> x.hasTransId(transId1)));
-        assertTrue(altSJ.getSjEndRegions().isEmpty());
+        assertTrue(altSJ.sjStartRegions().stream().anyMatch(x -> x.hasTransId(transId1)));
+        assertTrue(altSJ.sjEndRegions().isEmpty());
 
         List<Integer> validTransIds = altSJ.candidateTransIds();
         assertTrue(validTransIds.contains(transId1));

@@ -28,6 +28,8 @@ import static com.hartwig.hmftools.cup.prep.SampleIdsLoader.NO_RNA_SAMPLE_ID;
 import static com.hartwig.hmftools.cup.somatics.SomaticVariant.SOMATIC_VARIANTS_DIR_CFG;
 import static com.hartwig.hmftools.cup.somatics.SomaticVariant.SOMATIC_VARIANTS_DIR_DESC;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -163,7 +165,16 @@ public class PrepConfig
     public String linxFusionFile(final String sampleId) { return LinxFusion.generateFilename(getLinxDataDir(sampleId), sampleId); }
     public String viralAnnotationFile(final String sampleId) { return AnnotatedVirusFile.generateFileName(getVirusDataDir(sampleId), sampleId); }
     public String geneExpressionFile(final String sampleId) { return GeneExpressionFile.generateFilename(getIsofoxDataDir(sampleId), sampleId); }
-    public String altSpliceJunctionFile(final String sampleId) { return NovelSpliceJunctionFile.generateFilename(getIsofoxDataDir(sampleId), sampleId); }
+
+    public String altSpliceJunctionFile(final String sampleId)
+    {
+        String unfilteredFilename = NovelSpliceJunctionFile.generateUnfilteredFilename(getIsofoxDataDir(sampleId), sampleId);
+
+        if(Files.exists(Paths.get(unfilteredFilename)))
+            return unfilteredFilename;
+
+        return NovelSpliceJunctionFile.generateFilename(getIsofoxDataDir(sampleId), sampleId);
+    }
 
     private static List<CategoryType> parseCategories(final ConfigBuilder configBuilder)
     {
