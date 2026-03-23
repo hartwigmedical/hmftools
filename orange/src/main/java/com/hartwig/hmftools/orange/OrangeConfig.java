@@ -214,9 +214,9 @@ public class OrangeConfig
         {
             RnaSampleId = configBuilder.getValue(RNA_SAMPLE_ID);
             IsofoxDir = pathResolver.resolveMandatoryToolDirectory(ISOFOX_DIR_CFG, defaultToolDirectories.isofoxDir());
-        }
 
-        LOGGER.debug("RNA sample configured as {}", RnaSampleId);
+            LOGGER.debug("RNA sample configured as {}", RnaSampleId);
+        }
 
         DisplaySampleId = configBuilder.getValue(DISPLAY_SAMPLE_ID, TumorId);
         PanelName = configBuilder.getValue(PANEL_NAME);

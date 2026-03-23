@@ -86,7 +86,10 @@ public class ReportWriter
             chapters.add(new CuppaChapter(report, mPlotPathResolver, reportResources));
         }
 
-        chapters.add(new QualityControlChapter(report, mPlotPathResolver, reportResources));
+        if(report.plots().qSeePlot() != null)
+        {
+            chapters.add(new QualityControlChapter(report, mPlotPathResolver, reportResources));
+        }
 
         chapters.add(new PurplePlotsChapter(report, mPlotPathResolver, reportResources));
 
