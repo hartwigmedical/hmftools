@@ -44,7 +44,7 @@ public class LowPurityConverter
     {
         if(shouldConvert(findingList.status(), isLowPurity))
         {
-            return FindingsConverter.convert(findingList, findingsStatusConverter, findingConverter, null);
+            return FindingsConverter.convertFindingList(findingList, findingsStatusConverter, findingConverter, null);
         }
         else
         {
@@ -57,7 +57,7 @@ public class LowPurityConverter
     {
         if(shouldConvert(driverFindingList.status(), isLowPurity))
         {
-            return FindingsConverter.convert(driverFindingList,
+            return FindingsConverter.convertDriverFindingList(driverFindingList,
                     LowPurityConverter::convert,
                     f -> null,
                     null);
@@ -117,4 +117,12 @@ public class LowPurityConverter
                 .tumorCopyNumber(null)
                 .build();
     }
+
+// TODO: Requires the copy number to be null
+//    private static Fusion convert(Fusion fusion)
+//    {
+//        return FusionBuilder.builder(fusion)
+//                .junctionCopyNumber(null)
+//                .build();
+//    }
 }
