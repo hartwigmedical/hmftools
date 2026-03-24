@@ -201,6 +201,11 @@ public class GeneratePanelNormalisation
 
                     int nonZeroCount = tpms.size() - zeroCount;
                     panelMedian = nonZeroCount / (double)tpms.size() * minNonZeroValue;
+
+                    if(nonZeroCount == 0)
+                    {
+                        ISF_LOGGER.debug("gene({}) has zero for all sample TPMs", geneName);
+                    }
                 }
 
                 double wgsMedian = max(mWgsCohortMedians.get(i), MIN_WGS_MEDIAN_TPM);
