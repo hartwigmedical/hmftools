@@ -28,6 +28,7 @@ public class LowPurityConverter
                 .somaticDisruptions(convert(record.somaticDisruptions(), isLowPurity))
                 .somaticGainDeletions(convert(record.somaticGainDeletions(), isLowPurity))
                 .viruses(convert(record.viruses(), isLowPurity))
+                .predictedTumorOrigin(convert(record.predictedTumorOrigin(), isLowPurity))
                 .microsatelliteStability(convert(record.microsatelliteStability(), isLowPurity))
                 .tumorMutationalLoad(convert(record.tumorMutationalLoad(), isLowPurity))
                 .tumorMutationalBurden(convert(record.tumorMutationalBurden(), isLowPurity))
