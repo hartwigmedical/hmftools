@@ -162,19 +162,15 @@ public class SequenceUtils
                 // swap ends and treat as +1/-1
                 startRegion = regionEndingAt(chrEnd, positionEnd, halfNonInsSeqLength);
                 startOrient = Orientation.FORWARD;
-
-                int endBaseLength = probeLength - startRegion.baseLength() - insSeqLength;
-                endRegion = regionStartingAt(chrStart, positionStart, endBaseLength);
             }
             else
             {
                 // -1/-1 - start with the reversed bases from the end breakend
                 startRegion = regionStartingAt(chrEnd, positionEnd, halfNonInsSeqLength);
                 startOrient = Orientation.REVERSE;
-
-                int endBaseLength = probeLength - startRegion.baseLength() - insSeqLength;
-                endRegion = regionStartingAt(chrStart, positionStart, endBaseLength);
             }
+            int endBaseLength = probeLength - startRegion.baseLength() - insSeqLength;
+            endRegion = regionStartingAt(chrStart, positionStart, endBaseLength);
             endOrient = Orientation.FORWARD;
         }
 
