@@ -331,8 +331,6 @@ public class PurpleApplication
             fittedRegions.addAll(regionFitCalculator.fitRegion(bestFit.Fit.purity(), bestFit.Fit.normFactor(), observedRegions));
         }
 
-        PPL_LOGGER.debug("generating QC stats");
-
         PurpleQC qcChecks = PurpleSummaryData.createQC(
                 amberData.Contamination, bestFit, amberGender, cobaltGender, copyNumbers, geneCopyNumbers,
                 cobaltChromosomes.germlineAberrations(), amberData.AverageTumorDepth,

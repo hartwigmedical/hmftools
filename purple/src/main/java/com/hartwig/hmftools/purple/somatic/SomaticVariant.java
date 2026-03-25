@@ -1,11 +1,13 @@
 package com.hartwig.hmftools.purple.somatic;
 
 import static com.hartwig.hmftools.common.variant.HotspotType.HOTSPOT_FLAG;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PANEL_SOMATIC_LIKELIHOOD;
 import static com.hartwig.hmftools.common.variant.VariantTier.PANEL;
 
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.pathogenic.PathogenicSummaryFactory;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
+import com.hartwig.hmftools.common.variant.SomaticLikelihood;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
@@ -74,6 +76,12 @@ public class SomaticVariant implements GenomePosition
     public int totalReadCount() { return mTumorAllelicDepth != null ? mTumorAllelicDepth.TotalReadCount : 0; }
     public int alleleReadCount() { return mTumorAllelicDepth != null ? mTumorAllelicDepth.AlleleReadCount : 0; }
     public int referenceAlleleReadCount() { return mReferenceAllelicDepth != null ? mReferenceAllelicDepth.AlleleReadCount : 0; }
+
+    public SomaticLikelihood somaticLikelihood()
+    {
+        String panelSomaticLikelihood = mContext.getAttributeAsString(PANEL_SOMATIC_LIKELIHOOD, SomaticLikelihood.UNKNOWN.toString());
+        return SomaticLikelihood.valueOf(panelSomaticLikelihood);
+    }
 
     public String toString()
     {
