@@ -9,6 +9,7 @@ import com.hartwig.hmftools.common.pathogenic.PathogenicSummaryFactory;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.SomaticLikelihood;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
+import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 
@@ -73,12 +74,12 @@ public class SomaticVariant implements GenomePosition
     {
         return mDecorator.type();
     }
+    public VariantTier tier() { return mDecorator.tier(); }
 
     public boolean isPass()
     {
         return mDecorator.isPass();
     }
-
     public boolean isFiltered()
     {
         return !isPass();
@@ -114,15 +115,9 @@ public class SomaticVariant implements GenomePosition
     {
         return mTumorAllelicDepth != null;
     }
-
     public AllelicDepth tumorAlleleDepth()
     {
         return mTumorAllelicDepth;
-    }
-
-    public AllelicDepth referenceAlleleDepth()
-    {
-        return mReferenceAllelicDepth;
     }
 
     public double alleleFrequency()
@@ -134,12 +129,10 @@ public class SomaticVariant implements GenomePosition
     {
         return mTumorAllelicDepth != null ? mTumorAllelicDepth.TotalReadCount : 0;
     }
-
     public int alleleReadCount()
     {
         return mTumorAllelicDepth != null ? mTumorAllelicDepth.AlleleReadCount : 0;
     }
-
     public int referenceAlleleReadCount()
     {
         return mReferenceAllelicDepth != null ? mReferenceAllelicDepth.AlleleReadCount : 0;

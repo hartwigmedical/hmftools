@@ -132,16 +132,7 @@ public class SomaticPurityFitter
             }
 
             if(!isFittingCandidate(variant))
-            {
                 continue;
-            }
-
-            /*
-            if(variant.type() == INDEL)
-            {
-                PPL_LOGGER.debug("variant({}) used for fitting with vaf({})", variant, format("%.2f", variant.alleleFrequency()));
-            }
-            */
 
             Optional<ObservedRegion> region = observedRegionSelector.select(variant);
 
@@ -177,52 +168,50 @@ public class SomaticPurityFitter
 
         VariantTier variantTier = variant.decorator().tier();
 
-        boolean isHotspotType = variant.isHotspotType();
-
         double variantGnomadFreq = variant.context().getAttributeAsDouble(GNOMAD_FREQ, -1);
 
-        if(variantGnomadFreq > 0 && variantGnomadFreq < HOTSPOT_GNOMAD_FREQ_THRESHOLD && variant.isHotspot())
+        if(variantGnomadFreq > 0)
         {
-            return true;
+            if(variant.isHotspot() && variantGnomadFreq < HOTSPOT_GNOMAD_FREQ_THRESHOLD)
+                return true;
+
+            if(variant.tier() == VariantTier.PANEL && variantGnomadFreq < PANEL_GNOMAD_FREQ_THRESHOLD)
+                return true;
         }
 
-        if(variantGnomadFreq > 0 && variantGnomadFreq < PANEL_GNOMAD_FREQ_THRESHOLD
-                && variant.decorator().tier() == VariantTier.PANEL)
-        {
+        boolean isHotspotType = variant.isHotspotType();
+
+        if(isHotspotType) // this does mean that a panel variant which is pathogenic in Clinvar has no further Gnomad freq checks
             return true;
+
+        if(variantGnomadFreq > 0)
+        {
+            logFilteredFittingCandidate(variant, "Gnomad frequency");
+            return false;
         }
 
-        if(!isHotspotType)
+        if(variantTier == VariantTier.LOW_CONFIDENCE || variantTier == VariantTier.UNKNOWN)
         {
-            if(variant.context().hasAttribute(GNOMAD_FREQ))
-            {
-                logFilteredFittingCandidate(variant, "gnomad frequency");
-                return false;
-            }
+            logFilteredFittingCandidate(variant, "low tier");
+            return false;
+        }
 
-            if(variantTier == VariantTier.LOW_CONFIDENCE || variantTier == VariantTier.UNKNOWN)
-            {
-                logFilteredFittingCandidate(variant, "low tier");
-                return false;
-            }
+        if(variant.decorator().repeatCount() > SNV_FITTING_MAX_REPEATS)
+        {
+            logFilteredFittingCandidate(variant, "max repeats");
+            return false;
+        }
 
-            if(variant.decorator().repeatCount() > SNV_FITTING_MAX_REPEATS)
-            {
-                logFilteredFittingCandidate(variant, "max repeats");
-                return false;
-            }
+        if(variant.context().hasAttribute(MAPPABILITY) && variant.decorator().mappability() < SNV_FITTING_MAPPABILITY)
+        {
+            logFilteredFittingCandidate(variant, "mappability");
+            return false;
+        }
 
-            if(variant.context().hasAttribute(MAPPABILITY) && variant.decorator().mappability() < SNV_FITTING_MAPPABILITY)
-            {
-                logFilteredFittingCandidate(variant, "mappability");
-                return false;
-            }
-
-            if(variant.referenceAlleleReadCount() > 0)
-            {
-                logFilteredFittingCandidate(variant, "germline allele count");
-                return false;
-            }
+        if(variant.referenceAlleleReadCount() > 0)
+        {
+            logFilteredFittingCandidate(variant, "germline allele count");
+            return false;
         }
 
         return true;
