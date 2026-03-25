@@ -145,7 +145,7 @@ public final class GeneCopyNumberFile
             String[] values = line.split(TSV_DELIM, -1);
 
             double gcContent = gcIndex != null ? Double.parseDouble(values[gcIndex]) : 0; // addded in Purple v4.2
-            double relativeMinCopyNumber = relMinCnIndex != null ? Double.parseDouble(values[relMinCnIndex]) : 0; // added in Purple v4.3
+            double relativeMinCopyNumber = relMinCnIndex != null ? Double.parseDouble(values[relMinCnIndex]) : -1; // added in Purple v4.3
 
             GeneCopyNumber geneCopyNumber = new GeneCopyNumber(
                     values[chrIndex], Integer.parseInt(values[startIndex]), Integer.parseInt(values[endIndex]),
