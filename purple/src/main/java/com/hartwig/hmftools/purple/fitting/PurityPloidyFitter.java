@@ -1,9 +1,12 @@
 package com.hartwig.hmftools.purple.fitting;
 
+import static java.lang.Math.abs;
 import static java.util.stream.Collectors.toList;
 
 import static com.hartwig.hmftools.common.purple.FittedPurityMethod.NORMAL;
+import static com.hartwig.hmftools.common.purple.FittedPurityMethod.NO_TUMOR;
 import static com.hartwig.hmftools.common.utils.Doubles.lessOrEqual;
+import static com.hartwig.hmftools.purple.PurpleConstants.DIPLOID_PLOIDY;
 import static com.hartwig.hmftools.purple.PurpleConstants.MIN_PURITY_DEFAULT;
 import static com.hartwig.hmftools.purple.PurpleConstants.SOMATIC_FIT_CONTAMINATION_CUTOFF;
 import static com.hartwig.hmftools.purple.PurpleConstants.SOMATIC_FIT_TUMOR_ONLY_PLOIDY_MAX;
@@ -154,10 +157,35 @@ public class PurityPloidyFitter
             return;
         }
 
+        if(mFitMethod == NO_TUMOR)
+        {
+            mFinalPurityFit = convertNoTumorFit(mFinalPurityFit);
+        }
+
         if(mFinalPurityFit != mCopyNumberPurityFit)
         {
             buildCopyNumbers(mFinalPurityFit);
         }
+    }
+
+    private FittedPurity convertNoTumorFit(final FittedPurity fittedPurity)
+    {
+        // find the purity 100% diploid solution
+        FittedPurity diploid100Perc = mCopyNumberFitCandidates.stream()
+                .filter(x -> abs(x.ploidy() - DIPLOID_PLOIDY) < 0.001)
+                .filter(x -> abs(x.purity() - 1.0) < 0.001)
+                .findFirst().orElse(null);
+
+        if(diploid100Perc != null)
+        {
+            return new FittedPurity(
+                    1.0, fittedPurity.normFactor(), DIPLOID_PLOIDY,
+                    diploid100Perc.score(), diploid100Perc.diploidProportion(), diploid100Perc.somaticPenalty());
+        }
+
+        return new FittedPurity(
+                1.0, fittedPurity.normFactor(), DIPLOID_PLOIDY,
+                fittedPurity.score(), fittedPurity.diploidProportion(), fittedPurity.somaticPenalty());
     }
 
     private void performCopyNumberFit()
@@ -210,14 +238,15 @@ public class PurityPloidyFitter
         boolean highlyDiploid = isHighlyDiploid(mFitPurityScore); // max diploid proportion > 0.97
         if(mConfig.tumorOnlyMode() || mTargetedMode)
         {
-            AneuploidyDetector aneuploidyDetector =
-                    new AneuploidyDetector(mObservedRegions, mSampleData.Amber.ChromosomeBafs, mSampleData.Cobalt.CobaltChromosomes);
+            AneuploidyDetector aneuploidyDetector = new AneuploidyDetector(
+                    mObservedRegions, mSampleData.Amber.ChromosomeBafs, mSampleData.Cobalt.CobaltChromosomes);
+
             boolean noSignificantAneuploidy = !aneuploidyDetector.hasAneuploidy();
             boolean diploidHighPurity = isCloseToDiploidAndHighPurity(mCopyNumberPurityFit);
-            final boolean significantContamination = ContaminationLevel > SOMATIC_FIT_CONTAMINATION_CUTOFF;
+            boolean significantContamination = ContaminationLevel > SOMATIC_FIT_CONTAMINATION_CUTOFF;
+
             if(significantContamination || (noSignificantAneuploidy && (diploidHighPurity || highlyDiploid)))
             {
-                PPL_LOGGER.debug("searching for somatic fit for non-chimeric diploid sample, significant contamination: {}", significantContamination);
                 mSomaticPurityFit = mVariantPurityFitter.calcSomaticOnlyFit(mCopyNumberFitCandidates);
 
                 if(mSomaticPurityFit != null)
@@ -229,8 +258,9 @@ public class PurityPloidyFitter
                 else
                 {
                     PPL_LOGGER.debug("somatic fit not found, reverting to lowest purity fit");
-                    mFinalPurityFit =
-                            new FittedPurity(MIN_PURITY_DEFAULT, lowestPurityFit.normFactor(), 2, lowestPurityFit.score(), lowestPurityFit.diploidProportion(), 0);
+                    mFinalPurityFit = new FittedPurity(
+                            MIN_PURITY_DEFAULT, lowestPurityFit.normFactor(),
+                            DIPLOID_PLOIDY, lowestPurityFit.score(), lowestPurityFit.diploidProportion(), 0);
                     mFitMethod = FittedPurityMethod.NO_TUMOR;
                 }
             }
@@ -346,8 +376,8 @@ public class PurityPloidyFitter
     {
         return fittedPurity ->
         {
-            double absDifference = Math.abs(fittedPurity.score() - score);
-            double relDifference = Math.abs(absDifference / score);
+            double absDifference = abs(fittedPurity.score() - score);
+            double relDifference = abs(absDifference / score);
             return lessOrEqual(absDifference, ABS_RANGE) || lessOrEqual(relDifference, PERCENT_RANGE);
         };
     }

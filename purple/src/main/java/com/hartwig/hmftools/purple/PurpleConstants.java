@@ -37,6 +37,7 @@ public class PurpleConstants
     public static final int GERMLINE_AMP_DEL_EXCLUSION_CHR_19 = 20_000_000;
 
     // purity calcs
+    public static final double DIPLOID_PLOIDY = 2.0;
     public static final double MIN_PURITY_DEFAULT = 0.08;
     public static final double MAX_PURITY_DEFAULT = 1.0;
     public static final double PURITY_INCREMENT_DEFAULT = 0.01;
@@ -109,10 +110,6 @@ public class PurpleConstants
     public static final int MIN_TOTAL_SOMATIC_VAR_ALLELE_READ_COUNT = 1000;
 
     public static final int SV_MAX_INFERRED_COPY_NUMBER = 1000;
-
-    // SV recovery
-    public static final int DEFAULT_RECOVERY_MIN_MATE_QUAL_SCORE = 300;
-    public static final int DEFAULT_RECOVERY_MIN_SGL_QUAL_SCORE = 500;
 
     public static final double GERMLINE_SV_TINC_FACTOR = 2;
     public static final double GERMLINE_SV_TINC_MARGIN = 0.02;
