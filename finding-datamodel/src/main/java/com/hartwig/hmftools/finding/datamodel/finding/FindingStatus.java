@@ -35,7 +35,9 @@ public record FindingStatus(@NotNull FindingStatus.Status status, @NotNull Sorte
         LOW_PURITY,
         TUMOR_IN_NORMAL_CONTAMINATION,
         CONTAMINATION,
-        NO_TUMOR
+        NO_TUMOR,
+        // No predicted tumor origins that meet likelihood threshold
+        NO_REPORTABLE_VALUE
     }
 
     public enum Status
