@@ -258,8 +258,11 @@ public class SomaticStream
 
             calculateVariantLoadValues();
 
-            PPL_LOGGER.debug("charting variants: total(snvs={} indels={}) downsampled({} snvMod={} indelMod={})",
-                    mSnpCount, mIndelCount, mPlottingVariants.size(), mSnpMod, mIndelMod);
+            if(mSnpMod > 1 || mIndelMod < 1)
+            {
+                PPL_LOGGER.debug("charting variants: total(snvs={} indels={}) downsampled({})",
+                        mSnpCount, mIndelCount, mPlottingVariants.size(), mSnpMod, mIndelMod);
+            }
         }
         catch(IOException e)
         {
@@ -377,13 +380,13 @@ public class SomaticStream
         if(!HumanChromosome.contains(variant.chromosome()))
             return;
 
-        if(mReferenceData.TargetRegions.hasTargetRegions())
+        boolean reported = variant.decorator().reported();
+
+        if(!reported && mReferenceData.TargetRegions.hasTargetRegions())
         {
             if(!mReferenceData.TargetRegions.inTargetRegions(variant.chromosome(), variant.position()))
                 return;
         }
-
-        boolean reported = variant.decorator().reported();
 
         if(variant.type() == VariantType.INDEL)
         {

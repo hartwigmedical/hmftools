@@ -30,6 +30,8 @@ import com.hartwig.hmftools.common.driver.DriverType;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.common.utils.Doubles;
+import com.hartwig.hmftools.common.variant.SomaticLikelihood;
+import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.purple.DriverSourceData;
 import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 
@@ -123,6 +125,11 @@ public final class CircosDriverWriter
                 .toList();
     }
 
+    private static final String AMP_COLOUR = "vdgreen";
+    private static final String DEL_COLOUR = "vdred";
+    private static final String VARIANT_COLOUR = "vdblue";
+    private static final String LIKELY_GERMLINE_COLOUR = "grey";
+
     private static String driverText(final DriverSourceData driverData)
     {
         if(driverData.SourceObject instanceof final GeneCopyNumber geneCopyNumber)
@@ -136,16 +143,18 @@ public final class CircosDriverWriter
                     String.valueOf(geneRegionMid),
                     String.valueOf(geneRegionMid),
                     geneCopyNumber.geneName(),
-                    format("color=%s", driverData.DriverData.driver() == DriverType.DEL ? "vdred" : "vdgreen"));
+                    format("color=%s", driverData.DriverData.driver() == DriverType.DEL ? DEL_COLOUR : AMP_COLOUR));
         }
         else if(driverData.SourceObject instanceof final SomaticVariant somaticVariant)
         {
+            boolean likelyGermline = somaticVariant.somaticLikelihood() == SomaticLikelihood.LOW;
+
             return String.join("\t",
                     circosContig(somaticVariant.chromosome()),
                     String.valueOf(somaticVariant.position()),
                     String.valueOf(somaticVariant.position()),
                     somaticVariant.gene(),
-                    format("color=black"));
+                    format("color=%s", likelyGermline ? LIKELY_GERMLINE_COLOUR : VARIANT_COLOUR));
         }
         throw new IllegalStateException("Unexpected value: " + driverData.SourceObject);
     }
@@ -187,6 +196,7 @@ public final class CircosDriverWriter
             }
             else
             {
+                // the upper and lower values here correspond to the outer and inner track positions
                 r0 = 0.775 + Doubles.clamp(somaticVariant.decorator().adjustedVaf(), 0, 1.0) * (0.975 - 0.775);
             }
             return String.join("\t",

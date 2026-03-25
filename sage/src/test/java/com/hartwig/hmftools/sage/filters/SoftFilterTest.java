@@ -7,11 +7,7 @@ import static com.hartwig.hmftools.common.test.MockRefGenome.getNextBase;
 import static com.hartwig.hmftools.common.variant.VariantTier.HIGH_CONFIDENCE;
 import static com.hartwig.hmftools.common.variant.VariantTier.PANEL;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
-import static com.hartwig.hmftools.sage.common.TestUtils.HIGH_QUAL_CONFIG;
-import static com.hartwig.hmftools.sage.common.TestUtils.MOCK_REF_GENOME;
-import static com.hartwig.hmftools.sage.common.TestUtils.MSI_JITTER_CALCS;
 import static com.hartwig.hmftools.sage.common.TestUtils.READ_ID_GENERATOR;
-import static com.hartwig.hmftools.sage.common.TestUtils.RECALIBRATION;
 import static com.hartwig.hmftools.sage.common.TestUtils.TEST_CONFIG;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildCigarString;
 import static com.hartwig.hmftools.sage.common.TestUtils.createSamRecord;
@@ -34,16 +30,16 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import com.hartwig.hmftools.common.variant.VariantTier;
+import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
-import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.filter.VariantFilters;
-import com.hartwig.hmftools.sage.quality.QualityCalculator;
 import com.hartwig.hmftools.sage.sync.FragmentData;
 
+import org.junit.After;
 import org.junit.Test;
 
 import htsjdk.samtools.SAMRecord;
@@ -52,12 +48,18 @@ public class SoftFilterTest
 {
     private static final String REF_BASES = "X" + generateRandomBases(100);
 
-    private static final RefSequence REF_SEQUENCE = new RefSequence(1, REF_BASES.getBytes());
-
     private static final String TEST_READ_ID = "READ_01";
     private static final String TEST_CIGAR = "30M";
 
+    // public static final SageConfig HIGH_QUAL_CONFIG = new SageConfig(true);
+
     private static final VariantFilters FILTERS = new VariantFilters(TEST_CONFIG);
+
+    @After
+    public void restoreDepthMode()
+    {
+        SageConfig.HighDepthMode = false;
+    }
 
     @Test
     public void testTumorQualFilter()
@@ -68,7 +70,8 @@ public class SoftFilterTest
                 createSimpleVariant(position, "A", "T"),
                 REF_BASES.substring(48, 50), REF_BASES.substring(51, 53), REF_BASES.substring(38, 48), REF_BASES.substring(53, 63));
 
-        ReadContextCounter readContextCounter = createReadCounter(readContext, HIGH_QUAL_CONFIG, VariantTier.PANEL);
+        SageConfig.HighDepthMode = true;
+        ReadContextCounter readContextCounter = createReadCounter(readContext, TEST_CONFIG, VariantTier.PANEL);
 
         String altBase = readContextCounter.alt();
 
@@ -105,6 +108,7 @@ public class SoftFilterTest
     {
         int position = 50;
 
+        SageConfig.HighDepthMode = true;
         ReadContextCounter readContextCounter = createSnvReadContextCounter(position);
 
         // all reads have the variant near the end of the read, and so fail the max edge distance filter
@@ -154,6 +158,7 @@ public class SoftFilterTest
         // variants are filtered if the read coords supporting the alt are not sufficiently unique
         int position = 20;
 
+        SageConfig.HighDepthMode = true;
         ReadContextCounter readContextCounter = createSnvReadContextCounter(position);
         String altBase = readContextCounter.alt();
 
@@ -378,6 +383,6 @@ public class SoftFilterTest
 
         VariantReadContext readContext = createReadContext(variant, leftCore, rightCore);
 
-        return createReadCounter(readContext, HIGH_QUAL_CONFIG, VariantTier.PANEL);
+        return createReadCounter(readContext, TEST_CONFIG, VariantTier.PANEL);
     }
 }

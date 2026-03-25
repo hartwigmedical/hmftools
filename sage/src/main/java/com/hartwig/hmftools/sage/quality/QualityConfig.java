@@ -20,12 +20,10 @@ public class QualityConfig
     public final double ReadMapQualEventsPenalty;
     public final int ImproperPairPenalty;
     public final double MapQualityRatioFactor;
-    public final boolean HighDepthMode;
 
     public static final String HIGH_DEPTH_MODE = "high_depth_mode";
 
     private static final String JITTER_MIN_REPEAT_COUNT = "jitter_min_repeat_count";
-    private static final String BASE_QUAL_FIXED_PENALTY = "base_qual_fixed_penalty";
     private static final String MAP_QUAL_FIXED_PENALTY = "fixed_qual_penalty";
     private static final String MAP_QUAL_IMPROPER_PAIR_PENALTY = "improper_pair_qual_penalty";
     private static final String MAP_QUAL_READ_EVENTS_PENALTY = "read_events_qual_penalty";
@@ -39,8 +37,6 @@ public class QualityConfig
         ReadMapQualEventsPenalty = configBuilder.getDecimal(MAP_QUAL_READ_EVENTS_PENALTY);
         ImproperPairPenalty = configBuilder.getInteger(MAP_QUAL_IMPROPER_PAIR_PENALTY);
 
-        HighDepthMode = configBuilder.hasFlag(HIGH_DEPTH_MODE);
-
         FixedMapQualPenalty = configBuilder.getInteger(MAP_QUAL_FIXED_PENALTY);
 
         MapQualityRatioFactor = configBuilder.getDecimal(MAP_QUAL_RATIO_FACTOR);
@@ -49,7 +45,7 @@ public class QualityConfig
             SageConstants.HIGHLY_POLYMORPHIC_GENES_MAX_QUALITY = configBuilder.getInteger(POLYMORPHIC_GENES_MAX_QUALITY);
     }
 
-    public QualityConfig(boolean highDepthMode)
+    public QualityConfig()
     {
         JitterMinRepeatCount = DEFAULT_JITTER_MIN_REPEAT_COUNT;
         BaseQualityFixedPenalty = DEFAULT_BASE_QUAL_FIXED_PENALTY;
@@ -57,8 +53,6 @@ public class QualityConfig
         ReadMapQualEventsPenalty = DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY;
         ImproperPairPenalty = DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY;
         MapQualityRatioFactor = DEFAULT_MQ_RATIO_FACTOR;
-
-        HighDepthMode = highDepthMode;
     }
 
     public static void registerConfig(final ConfigBuilder configBuilder)

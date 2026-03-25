@@ -37,6 +37,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.fusion.KnownFusionData;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
@@ -340,7 +341,7 @@ public class AltSpliceJunctionFinder
 
         if(spliceJunction[SE_START] < spliceJunction[SE_END])
         {
-            // flip the SJ around since a DUP/circular has opposite orientations to a standard alt-SJ DL
+            // flip the SJ around since a DUP/circular has opposite orientations to a standard alt-SJ DEL
             int[] flippedSpliceJunction = { spliceJunction[SE_END], spliceJunction[SE_START] };
             final AltSpliceJunctionContext[] flippedRegionContexts = { AltSpliceJunctionContext.UNKNOWN, AltSpliceJunctionContext.UNKNOWN };
 
@@ -750,8 +751,41 @@ public class AltSpliceJunctionFinder
         int exonUp = altSJ.selectedExons()[SE_START];
         int exonDown = altSJ.selectedExons()[SE_END];
 
-        return mConfig.Fusions.KnownFusions.withinKnownExonRanges(
-                KnownFusionType.EXON_DEL_DUP, transcript, exonUp, exonUp, exonDown, exonDown);
+        List<KnownFusionData> exonDelDups = mConfig.Fusions.KnownFusions.getDataByType(KnownFusionType.EXON_DEL_DUP);
+
+        for(KnownFusionData exonDelDup : exonDelDups)
+        {
+            if(!exonDelDup.specificExonsTransName().equals(transcript))
+                continue;
+
+            int[] fiveExonRange = exonDelDup.fiveGeneExonRange();
+            int[] threeExonRange = exonDelDup.threeGeneExonRange();
+            boolean isDupType = fiveExonRange[SE_START] > threeExonRange[SE_START];
+
+            if(isDupType)
+            {
+                if(altSJ.type() != CIRCULAR)
+                    continue;
+
+                // flip exons around to match how DUPs are configured
+                int tmp = exonUp;
+                exonUp = exonDown;
+                exonDown = tmp;
+            }
+            else
+            {
+                if(altSJ.type() != SKIPPED_EXONS)
+                    continue;
+            }
+
+            if(exonUp >= fiveExonRange[SE_START] && exonUp <= fiveExonRange[SE_END]
+            && exonDown >= threeExonRange[SE_START] && exonDown <= threeExonRange[SE_END])
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public void writeAltSpliceJunctions()

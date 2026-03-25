@@ -21,6 +21,7 @@ import static com.hartwig.hmftools.sage.SageConstants.JITTER_MIN_REPEAT_CHANGE;
 import static com.hartwig.hmftools.sage.SageConstants.LONG_INDEL_REPEAT_MAX;
 import static com.hartwig.hmftools.sage.SageConstants.LONG_INDEL_REPEAT_MIN;
 import static com.hartwig.hmftools.sage.SageConstants.MAP_QUAL_INDEL_REPEAT_PENALTY;
+import static com.hartwig.hmftools.sage.SageConstants.MAP_QUAL_MAX_EDGE_DISTANCE_PENALTY;
 import static com.hartwig.hmftools.sage.SageConstants.MAP_QUAL_NON_INDEL_REPEAT_PENALTY;
 import static com.hartwig.hmftools.sage.SageConstants.MAP_QUAL_READ_BIAS_CAP;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_GERMLINE_VAF_PANEL_INDEL_REPEAT_THRESHOLD_FACTOR;
@@ -215,7 +216,7 @@ public class VariantFilters
                 filters.add(SoftFilter.MIN_TUMOR_VAF);
         }
 
-        if(belowMaxEdgeDistance(tier, primaryTumor))
+        if(belowMaxEdgeDistance(variant, tier, primaryTumor))
         {
             filters.add(SoftFilter.MAX_EDGE_DISTANCE);
         }
@@ -431,8 +432,8 @@ public class VariantFilters
         {
             edgeDistancePenalty = 10 * altSupport * log10(avgEdgeDistance / max(avgAltEdgeDistance, 0.001));
 
-            if(!isSbx() && !variant.nearMultiBaseIndel())
-                edgeDistancePenalty = min(edgeDistancePenalty, 10);
+            if(!isSbx() && !variant.nearMultiBaseIndel() && !SageConfig.HighDepthMode)
+                edgeDistancePenalty = min(edgeDistancePenalty, MAP_QUAL_MAX_EDGE_DISTANCE_PENALTY);
         }
 
         double repeatPenalty = 0;
@@ -504,9 +505,9 @@ public class VariantFilters
         return primaryTumor.jitter().filterOnNoise();
     }
 
-    private boolean belowMaxEdgeDistance(final VariantTier tier, final ReadContextCounter primaryTumor)
+    private boolean belowMaxEdgeDistance(final SageVariant variant, final VariantTier tier, final ReadContextCounter primaryTumor)
     {
-        if(primaryTumor.isLongInsert())
+        if(primaryTumor.isLongInsert() && !variant.nearMultiBaseIndel())
             return false;
 
         double altMed = primaryTumor.readEdgeDistance().maxAltDistanceFromEdge();

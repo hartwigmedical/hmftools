@@ -16,16 +16,17 @@ show_tick_labels    = no
     stroke_color     = dgrey
     stroke_thickness = 2p
 
-    # Minimum definition for ideogram labels.
+    # Minimum definition for ideogram labels
 
     show_label       = yes
     # see etc/fonts.conf for list of font names
-    label_font       = bold
+    #label_font       = bold
     label_with_tag   = yes
     label_center     = yes
-    label_radius     = (dims(ideogram,radius_outer)+dims(ideogram,radius_inner))/2
+    #label_radius     = (dims(ideogram,radius_outer)+dims(ideogram,radius_inner))/2
+    label_radius     = 1r + 30p
     label_size       = 30
-    label_color      = white
+    label_color      = black
     label_parallel   = yes
     label_case       = upper
 

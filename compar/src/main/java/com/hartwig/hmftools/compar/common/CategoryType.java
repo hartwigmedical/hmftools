@@ -55,6 +55,6 @@ public enum CategoryType
 
     public static List<CategoryType> panelCategories()
     {
-        return Lists.newArrayList(PURITY, DRIVER, SOMATIC_VARIANT, FUSION, DISRUPTION, V_CHORD);
+        return Lists.newArrayList(PURITY, DRIVER, SOMATIC_VARIANT, FUSION, DISRUPTION);
     }
 }
