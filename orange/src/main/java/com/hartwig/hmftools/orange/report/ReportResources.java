@@ -32,6 +32,7 @@ public class ReportResources
     public static final int HEADER_ORANGE_HEIGHT = 60;
     public static final int FOOTER_HEIGHT = 20;
 
+    public static final int FRONT_CIRCOS_IMAGE_HEIGHT = 400;
     public static final int FULL_PAGE_IMAGE_WIDTH = 750; // was 740
     public static final int FULL_PAGE_IMAGE_HEIGHT = 430; // was 420
 

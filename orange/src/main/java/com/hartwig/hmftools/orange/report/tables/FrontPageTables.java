@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.chord.ChordStatus;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
@@ -63,26 +64,15 @@ public class FrontPageTables
         List<Integer> widths = Lists.newArrayList();
         List<Cell> cellEntries = Lists.newArrayList();
 
-        if(report.pipelineVersion() != null)
-            addEntry(cells, widths, cellEntries, 2, "Pipeline Version");
+        // Primary Tumor [as inputed - is it 2 fields?] |  Purity |  Ploidy | Fit Method | QC Status
 
-        String panelName = config != null ? config.PanelName : null;
         String configuredPrimaryTumorLocation = config != null ? config.PrimaryTumorLocation : null;
-
-        boolean showPanelName = report.experimentType() == ExperimentType.TARGETED && panelName != null;
-
-        if(showPanelName)
-            addEntry(cells, widths, cellEntries, 1, "Panel");
 
         addEntry(cells, widths, cellEntries, 2, "Primary Tumor");
 
-        boolean showCuppaCancerType = !report.tumorOnlyMode() && report.cuppa() != null;
-
-        if(showCuppaCancerType)
-            addEntry(cells, widths, cellEntries, 3, "Cuppa Cancer Type");
-
         addEntry(cells, widths, cellEntries, 2, "Purity");
         addEntry(cells, widths, cellEntries, 2, "Ploidy");
+        addEntry(cells, widths, cellEntries, 2, "Fit Method");
         addEntry(cells, widths, cellEntries, 2, "QC");
 
         String configuredCancerType = configuredPrimaryTumorLocation != null ?
@@ -90,25 +80,77 @@ public class FrontPageTables
 
         Table table = Tables.createContent(width, intToFloatArray(widths), cellArray(cellEntries));
 
-        if(report.pipelineVersion() != null)
-            table.addCell(cells.createContent(report.pipelineVersion()));
-
-        if(showPanelName)
-            table.addCell(cells.createContent(panelName));
-
         table.addCell(cells.createContent(configuredCancerType));
-
-        if(showCuppaCancerType)
-            table.addCell(cells.createContent(cuppaCancerType(report.cuppa())));
 
         table.addCell(cells.createContent(purityString(report.purple().fit())));
         table.addCell(cells.createContent(ploidyString(report.purple().fit())));
+        table.addCell(cells.createContent(report.purple().fit().fittedPurityMethod().toString()));
 
         table.addCell(cells.createContent(purpleQCString(report.purple().fit().qc())));
 
         addQCWarningInCaseOfFail(report.purple().fit().qc(), table, cells);
 
         return table;
+    }
+
+    public static Table buildTechnicalSummary(
+            final OrangeRecord report, final OrangeConfig config, float width, final ReportResources reportResources)
+    {
+        Cells cells = new Cells(reportResources);
+
+        List<Integer> widths = Lists.newArrayList();
+        List<Cell> cellEntries = Lists.newArrayList();
+
+        // OA Version | Genome Version | Sequencing Type | Pipeline Mode | Panel Name | Date Analysed?
+
+        addEntry(cells, widths, cellEntries, 2, "Pipeline Version");
+        addEntry(cells, widths, cellEntries, 2, "Genome Version");
+        addEntry(cells, widths, cellEntries, 2, "Sequencing Type");
+        addEntry(cells, widths, cellEntries, 2, "Pipeline");
+        addEntry(cells, widths, cellEntries, 2, "Samples");
+        addEntry(cells, widths, cellEntries, 2, "Data Analysed");
+
+        Table table = Tables.createContent(width, intToFloatArray(widths), cellArray(cellEntries));
+
+        table.addCell(cells.createContent(report.pipelineVersion()));
+        table.addCell(cells.createContent(report.refGenomeVersion().toString()));
+        table.addCell(cells.createContent(SequencingType.ILLUMINA.toString()));
+
+        // table.addCell(cells.createContent(report.experimentType().toString()));
+        table.addCell(cells.createContent(pipelineModeDisplay(report, config)));
+        table.addCell(cells.createContent(sampleTypesDisplay(report)));
+
+        table.addCell(cells.createContent(report.samplingDate().toString()));
+
+        return table;
+    }
+
+    private static String pipelineModeDisplay(final OrangeRecord report, final OrangeConfig config)
+    {
+        if(report.experimentType() == ExperimentType.WHOLE_GENOME)
+            return "WHOLE GENOME";
+
+        if(config != null && config.PanelName != null)
+            return format("PANEL: %s", config.PanelName);
+        else
+            return format("TARGETED PANEL");
+    }
+
+    private static String sampleTypesDisplay(final OrangeRecord report)
+    {
+        if(report.tumorOnlyMode() && !report.hasRna())
+            return "TUMOR-ONLY";
+
+        StringJoiner sj = new StringJoiner(" / ");
+        sj.add("TUMOR");
+
+        if(!report.tumorOnlyMode())
+            sj.add("NORMAL");
+
+        if(report.hasRna())
+            sj.add("RNA");
+
+        return sj.toString();
     }
 
     private static String configuredPrimaryTumor(final Set<OrangeDoidNode> nodes)
@@ -126,12 +168,6 @@ public class FrontPageTables
         }
 
         return concat(configured);
-    }
-
-    private static String cuppaCancerType(final CuppaData cuppaData)
-    {
-        CuppaPrediction best = cuppaData.bestPrediction();
-        return best.cancerType() + " (" + formatPercentage(best.likelihood()) + ")";
     }
 
     private static String purpleQCString(final PurpleQC qc)
@@ -394,7 +430,16 @@ public class FrontPageTables
         addCellEntry(table, cells, "LOH proportion:", lohPercentageString(report.purple()));
         addCellEntry(table, cells, "Number of SVs:", svTmbString(report.purple()));
 
-        return new Tables(reportResources).createWrapping(table, "Genome Wide Features");
+        if(!report.tumorOnlyMode() && report.cuppa() != null)
+            addCellEntry(table, cells, "CUPPA cancer type:", cuppaCancerType(report.cuppa()));
+
+        return new Tables(reportResources).createWrapping(table, "Genome Wide Biomarkers");
+    }
+
+    private static String cuppaCancerType(final CuppaData cuppaData)
+    {
+        CuppaPrediction best = cuppaData.bestPrediction();
+        return best.cancerType() + " (" + formatPercentage(best.likelihood()) + ")";
     }
 
     private static String wgdString(final PurpleRecord purpleRecord)

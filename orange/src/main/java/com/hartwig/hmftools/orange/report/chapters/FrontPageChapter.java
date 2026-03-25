@@ -1,5 +1,13 @@
 package com.hartwig.hmftools.orange.report.chapters;
 
+import static java.lang.Math.floor;
+import static java.lang.Math.min;
+import static java.lang.Math.round;
+
+import static com.hartwig.hmftools.orange.report.ReportResources.FRONT_CIRCOS_IMAGE_HEIGHT;
+import static com.hartwig.hmftools.orange.report.ReportResources.PAGE_MARGIN_BOTTOM;
+import static com.hartwig.hmftools.orange.report.ReportResources.PAGE_MARGIN_TOP;
+
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.orange.OrangeConfig;
 import com.hartwig.hmftools.orange.report.PlotPathResolver;
@@ -8,11 +16,18 @@ import com.hartwig.hmftools.orange.report.tables.FrontPageTables;
 import com.hartwig.hmftools.orange.report.util.Images;
 import com.hartwig.hmftools.orange.report.util.Tables;
 import com.itextpdf.kernel.geom.PageSize;
+import com.itextpdf.kernel.geom.Rectangle;
 import com.itextpdf.layout.Document;
+import com.itextpdf.layout.borders.Border;
+import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Image;
 import com.itextpdf.layout.element.Table;
+import com.itextpdf.layout.layout.LayoutArea;
+import com.itextpdf.layout.layout.LayoutContext;
+import com.itextpdf.layout.layout.LayoutResult;
 import com.itextpdf.layout.property.HorizontalAlignment;
 import com.itextpdf.layout.property.UnitValue;
+import com.itextpdf.layout.renderer.IRenderer;
 
 public class FrontPageChapter implements ReportChapter
 {
@@ -48,12 +63,12 @@ public class FrontPageChapter implements ReportChapter
     @Override
     public void render(final Document document)
     {
-        // addSummaryTable(document);
-        // addDetailsAndPlots(document);
-
         Table sampleSummaryTable = FrontPageTables.buildSampleSummary(mReport, mConfig, contentWidth(), mReportResources);
+        document.add(sampleSummaryTable);
 
-        document.add(new Tables(mReportResources).createWrapping(sampleSummaryTable));
+        Table technicalSummaryTable = FrontPageTables.buildTechnicalSummary(mReport, mConfig, contentWidth(), mReportResources);
+        technicalSummaryTable.setMarginBottom(10);
+        document.add(technicalSummaryTable);
 
         Table topTable = new Table(UnitValue.createPercentArray(new float[] { 1, 1 })).setWidth(contentWidth() - 5);
 
@@ -66,9 +81,17 @@ public class FrontPageChapter implements ReportChapter
         Table table = new Table(UnitValue.createPercentArray(new float[] { 1 })).setWidth(contentWidth()).setPadding(0);
         table.addCell(topTable);
 
+        float pageHeight = contentHeight();
+        IRenderer renderer = table.createRendererSubTree().setParent(document.getRenderer());
+        LayoutResult result = renderer.layout(new LayoutContext(new LayoutArea(0, new Rectangle(contentWidth(), pageHeight))));
+        float currentHeight = result.getOccupiedArea().getBBox().getHeight();
+
+        int remainingHeight = (int)floor(pageHeight - currentHeight - PAGE_MARGIN_TOP - PAGE_MARGIN_BOTTOM);
+        int maxCircosHeight = min(remainingHeight, FRONT_CIRCOS_IMAGE_HEIGHT);
+
         Image circosImage = Images.build(mPlotPathResolver.resolve(mReport.plots().purpleFinalCircosPlot()));
         circosImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
-        circosImage.setMaxHeight(400);
+        circosImage.setMaxHeight(maxCircosHeight);
         table.addCell(circosImage);
 
         document.add(table);

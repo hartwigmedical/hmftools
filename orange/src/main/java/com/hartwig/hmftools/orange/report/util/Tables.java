@@ -18,7 +18,7 @@ public class Tables
 
     public Tables(final ReportResources reportResources)
     {
-        this.mReportResources = reportResources;
+        mReportResources = reportResources;
     }
 
     public Table createNotAvailable(final String title, float width)

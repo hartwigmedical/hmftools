@@ -199,15 +199,15 @@ public class OrangeAlgo
         return orangeNodes;
     }
 
-    @Nullable
     private static String determinePipelineVersion(final OrangeConfig config) throws IOException
     {
+        String defaultPipelineVersion = DEFAULT_PIPELINE_OUTPUT.toString();
+
         String pipelineVersionFile = config.PipelineVersionFile;
         if(pipelineVersionFile == null)
         {
-            String pipelineVersion = DEFAULT_PIPELINE_OUTPUT.toString();
-            LOGGER.info("no pipeline version file, defaulting to {}", pipelineVersion);
-            return pipelineVersion;
+            LOGGER.info("no pipeline version file, defaulting to {}", defaultPipelineVersion);
+            return defaultPipelineVersion;
         }
 
         String pipelineVersion = PipelineVersionFile.majorDotMinorVersion(pipelineVersionFile);
@@ -219,7 +219,8 @@ public class OrangeAlgo
         {
             LOGGER.warn("no pipeline version determined from {}", pipelineVersionFile);
         }
-        return pipelineVersion;
+
+        return defaultPipelineVersion;
     }
 
     private PurpleData loadPurpleData(final OrangeConfig config) throws IOException
