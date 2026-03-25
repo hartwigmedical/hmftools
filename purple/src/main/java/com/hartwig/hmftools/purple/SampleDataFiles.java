@@ -79,7 +79,11 @@ public class SampleDataFiles
         PipelineToolDirectories pipelineToolDirectories = PipelineToolDirectories.resolveToolDirectories(
                 configBuilder, PIPELINE_FORMAT_CFG, PIPELINE_FORMAT_FILE_CFG);
 
-        if(configBuilder.hasValue(AMBER))
+        if(configBuilder.hasValue(AMBER_DIR_CFG))
+        {
+            AmberDirectory = checkAddDirSeparator(configBuilder.getValue(AMBER_DIR_CFG));
+        }
+        else if(configBuilder.hasValue(AMBER))
         {
             AmberDirectory = checkAddDirSeparator(configBuilder.getValue(AMBER));
         }
@@ -92,7 +96,11 @@ public class SampleDataFiles
             AmberDirectory = null;
         }
 
-        if(configBuilder.hasValue(COBALT))
+        if(configBuilder.hasValue(COBALT_DIR_CFG))
+        {
+            CobaltDirectory = checkAddDirSeparator(configBuilder.getValue(COBALT_DIR_CFG));
+        }
+        else if(configBuilder.hasValue(COBALT))
         {
             CobaltDirectory = checkAddDirSeparator(configBuilder.getValue(COBALT));
         }
