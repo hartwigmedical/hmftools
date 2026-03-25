@@ -74,6 +74,7 @@ public class PurpleConstants
     public static final double SOMATIC_PENALTY_WEIGHT_DEFAULT = 1.5;
     public static final double HIGHLY_DIPLOID_PERCENTAGE_DEFAULT = 0.97;
     public static final double HOTSPOT_GNOMAD_FREQ_THRESHOLD = 0.01;
+    public static final double PANEL_GNOMAD_FREQ_THRESHOLD = 0.0001;
 
     // tumor-only somatic fitting
     public static final double SOMATIC_FIT_TUMOR_ONLY_PURITY_MIN = 0.92;
