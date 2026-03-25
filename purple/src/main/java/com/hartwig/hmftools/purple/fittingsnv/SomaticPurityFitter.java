@@ -9,10 +9,12 @@ import static java.util.stream.Collectors.toList;
 
 import static com.hartwig.hmftools.common.variant.CodingEffect.MISSENSE;
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONSENSE_OR_FRAMESHIFT;
+import static com.hartwig.hmftools.common.variant.CodingEffect.SPLICE;
 import static com.hartwig.hmftools.common.variant.PaveVcfTags.GNOMAD_FREQ;
 import static com.hartwig.hmftools.common.variant.PaveVcfTags.MAPPABILITY;
 import static com.hartwig.hmftools.common.variant.VariantType.INDEL;
 import static com.hartwig.hmftools.purple.PurpleConstants.HOTSPOT_GNOMAD_FREQ_THRESHOLD;
+import static com.hartwig.hmftools.purple.PurpleConstants.PANEL_GNOMAD_FREQ_THRESHOLD;
 import static com.hartwig.hmftools.purple.PurpleConstants.PURITY_INCREMENT_DEFAULT;
 import static com.hartwig.hmftools.purple.PurpleConstants.SOMATIC_FIT_TUMOR_ONLY_HOTSPOT_VAF_CUTOFF;
 import static com.hartwig.hmftools.purple.PurpleConstants.SOMATIC_FIT_TUMOR_ONLY_VAF_MAX;
@@ -179,7 +181,13 @@ public class SomaticPurityFitter
 
         double variantGnomadFreq = variant.context().getAttributeAsDouble(GNOMAD_FREQ, -1);
 
-        if(variantGnomadFreq > 0 && variantGnomadFreq < HOTSPOT_GNOMAD_FREQ_THRESHOLD && isHotspotType)
+        if(variantGnomadFreq > 0 && variantGnomadFreq < HOTSPOT_GNOMAD_FREQ_THRESHOLD && variant.isHotspot())
+        {
+            return true;
+        }
+
+        if(variantGnomadFreq > 0 && variantGnomadFreq < PANEL_GNOMAD_FREQ_THRESHOLD
+                && variant.decorator().tier() == VariantTier.PANEL)
         {
             return true;
         }
@@ -340,7 +348,7 @@ public class SomaticPurityFitter
 
                 CodingEffect codingEffect = variant.variantImpact().CanonicalCodingEffect;
 
-                if(codingEffect != NONSENSE_OR_FRAMESHIFT && codingEffect != MISSENSE)
+                if(codingEffect != NONSENSE_OR_FRAMESHIFT && codingEffect != MISSENSE && codingEffect != SPLICE)
                 {
                     continue;
                 }
@@ -357,6 +365,10 @@ public class SomaticPurityFitter
                     continue;
                 }
                 else if(codingEffect == MISSENSE && !driverGene.reportMissenseAndInframe())
+                {
+                    continue;
+                }
+                else if(codingEffect == SPLICE && !driverGene.reportSplice())
                 {
                     continue;
                 }

@@ -23,7 +23,6 @@ public class SomaticVariant implements GenomePosition
     private VariantContextDecorator mDecorator;
     private final AllelicDepth mTumorAllelicDepth;
     private final AllelicDepth mReferenceAllelicDepth;
-    private final boolean mHotspotType;
 
     public SomaticVariant(final VariantContext context, final String sampleId, final String referenceId)
     {
@@ -32,14 +31,14 @@ public class SomaticVariant implements GenomePosition
 
         mChromosome = mContext.getContig();
         mPosition = mContext.getStart();
-        mTumorAllelicDepth = sampleId != null ? mDecorator.allelicDepth(sampleId) :  null;
-        mReferenceAllelicDepth = referenceId != null ? mDecorator.allelicDepth(referenceId) :  null;
-
-        mHotspotType = isHotspot()
-                || (mDecorator.tier() == PANEL && PathogenicSummaryFactory.fromContext(mContext).Status.isPathogenic());
+        mTumorAllelicDepth = sampleId != null ? mDecorator.allelicDepth(sampleId) : null;
+        mReferenceAllelicDepth = referenceId != null ? mDecorator.allelicDepth(referenceId) : null;
     }
 
-    public VariantContext context() { return mContext; }
+    public VariantContext context()
+    {
+        return mContext;
+    }
 
     public void setContext(final VariantContext context)
     {
@@ -48,34 +47,103 @@ public class SomaticVariant implements GenomePosition
     }
 
     @Override
-    public String chromosome() { return mChromosome; }
+    public String chromosome()
+    {
+        return mChromosome;
+    }
 
     @Override
-    public int position() { return mPosition; }
+    public int position()
+    {
+        return mPosition;
+    }
 
     // convenience methods
-    public VariantContextDecorator decorator() { return mDecorator; }
-    public VariantImpact variantImpact() { return mDecorator.variantImpact(); }
+    public VariantContextDecorator decorator()
+    {
+        return mDecorator;
+    }
 
-    public VariantType type() { return mDecorator.type(); }
+    public VariantImpact variantImpact()
+    {
+        return mDecorator.variantImpact();
+    }
 
-    public boolean isPass() { return mDecorator.isPass(); }
-    public boolean isFiltered() { return !isPass(); }
+    public VariantType type()
+    {
+        return mDecorator.type();
+    }
 
-    public double copyNumber() { return mDecorator.variantCopyNumber(); }
+    public boolean isPass()
+    {
+        return mDecorator.isPass();
+    }
 
-    public boolean isHotspot() { return mContext.hasAttribute(HOTSPOT_FLAG); }
-    public boolean isHotspotType() { return mHotspotType; }
-    public boolean biallelic() { return mDecorator.biallelic(); }
-    public String gene() { return mDecorator.variantImpact().GeneName; }
+    public boolean isFiltered()
+    {
+        return !isPass();
+    }
 
-    public boolean hasTumorAlleleDepth() { return mTumorAllelicDepth != null; }
-    public AllelicDepth tumorAlleleDepth() { return mTumorAllelicDepth; }
-    public AllelicDepth referenceAlleleDepth() { return mReferenceAllelicDepth; }
-    public double alleleFrequency() { return mTumorAllelicDepth != null ? mTumorAllelicDepth.alleleFrequency() : 0; }
-    public int totalReadCount() { return mTumorAllelicDepth != null ? mTumorAllelicDepth.TotalReadCount : 0; }
-    public int alleleReadCount() { return mTumorAllelicDepth != null ? mTumorAllelicDepth.AlleleReadCount : 0; }
-    public int referenceAlleleReadCount() { return mReferenceAllelicDepth != null ? mReferenceAllelicDepth.AlleleReadCount : 0; }
+    public double copyNumber()
+    {
+        return mDecorator.variantCopyNumber();
+    }
+
+    public boolean isHotspot()
+    {
+        return mContext.hasAttribute(HOTSPOT_FLAG);
+    }
+
+    public boolean isHotspotType()
+    {
+        return isHotspot()
+                || (mDecorator.tier() == PANEL && PathogenicSummaryFactory.fromContext(mContext).Status.isPathogenic());
+    }
+
+    public boolean biallelic()
+    {
+        return mDecorator.biallelic();
+    }
+
+    public String gene()
+    {
+        return mDecorator.variantImpact().GeneName;
+    }
+
+    public boolean hasTumorAlleleDepth()
+    {
+        return mTumorAllelicDepth != null;
+    }
+
+    public AllelicDepth tumorAlleleDepth()
+    {
+        return mTumorAllelicDepth;
+    }
+
+    public AllelicDepth referenceAlleleDepth()
+    {
+        return mReferenceAllelicDepth;
+    }
+
+    public double alleleFrequency()
+    {
+        return mTumorAllelicDepth != null ? mTumorAllelicDepth.alleleFrequency() : 0;
+    }
+
+    public int totalReadCount()
+    {
+        return mTumorAllelicDepth != null ? mTumorAllelicDepth.TotalReadCount : 0;
+    }
+
+    public int alleleReadCount()
+    {
+        return mTumorAllelicDepth != null ? mTumorAllelicDepth.AlleleReadCount : 0;
+    }
+
+    public int referenceAlleleReadCount()
+    {
+        return mReferenceAllelicDepth != null ? mReferenceAllelicDepth.AlleleReadCount : 0;
+    }
 
     public SomaticLikelihood somaticLikelihood()
     {
