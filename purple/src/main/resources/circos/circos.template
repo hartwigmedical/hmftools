@@ -20,13 +20,12 @@ show_tick_labels    = no
 
     show_label       = yes
     # see etc/fonts.conf for list of font names
-    #label_font       = bold
+    label_font       = bold
     label_with_tag   = yes
     label_center     = yes
-    #label_radius     = (dims(ideogram,radius_outer)+dims(ideogram,radius_inner))/2
-    label_radius     = 1r + 30p
+    label_radius     = (dims(ideogram,radius_outer)+dims(ideogram,radius_inner))/2
     label_size       = 30
-    label_color      = black
+    label_color      = white
     label_parallel   = yes
     label_case       = upper
 
