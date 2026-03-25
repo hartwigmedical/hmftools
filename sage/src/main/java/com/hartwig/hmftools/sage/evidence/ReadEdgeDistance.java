@@ -58,6 +58,7 @@ public class ReadEdgeDistance
         // take the lowest of the 2 distances for each read, eg 50 and 100 bases, then take 50
 
         int minDistance = NO_READ_EDGE_DISTANCE;
+        int readLength;
 
         if(fragmentData != null)
         {
@@ -71,13 +72,16 @@ public class ReadEdgeDistance
                 minDistance = minDistanceFirst;
             else if(minDistanceSecond > NO_READ_EDGE_DISTANCE)
                 minDistance = minDistanceSecond;
+
+            readLength = max(fragmentData.First.getReadLength(), fragmentData.Second.getReadLength());
         }
         else
         {
             minDistance = calcDistanceFromReadEdge(mVariantPosition, record);
+            readLength = record.getReadLength();
         }
 
-        double readLengthPercentage = minDistance / (double)record.getReadLength();
+        double readLengthPercentage = minDistance / (double)readLength;
         ++mUpdates;
         mMaxDistanceFromEdge = max(readLengthPercentage, mMaxDistanceFromEdge);
 

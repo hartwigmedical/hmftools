@@ -29,7 +29,6 @@ import htsjdk.samtools.SAMRecordSetBuilder;
 public class TestUtils
 {
     public static final SageConfig TEST_CONFIG = createSageConfig();
-    public static final SageConfig HIGH_QUAL_CONFIG = new SageConfig(true);
 
     public static final String TEST_SAMPLE = "SAMPLE";
 

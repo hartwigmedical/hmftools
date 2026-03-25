@@ -146,6 +146,7 @@ public class SageConstants
     public static final int MAP_QUAL_READ_BIAS_CAP = 50;
     public static final int MAP_QUAL_INDEL_REPEAT_PENALTY = 18;
     public static final int MAP_QUAL_NON_INDEL_REPEAT_PENALTY = 24;
+    public static final int MAP_QUAL_MAX_EDGE_DISTANCE_PENALTY = 10;
 
     public static final double NEAR_INDEL_MIN_VAF = 0.15;
     public static final int NEAR_INDEL_PROXIMITY = 30;

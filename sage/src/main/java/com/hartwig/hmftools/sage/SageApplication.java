@@ -107,7 +107,7 @@ public class SageApplication implements AutoCloseable
         MsiJitterCalcs msiJitterCalcs = MsiJitterCalcs.build(
                 combinedSampleIds,
                 !mConfig.Common.SkipMsiJitter ? mConfig.Common.JitterBqrDir : null,
-                mConfig.Common.Quality.HighDepthMode, msiSamples);
+                mConfig.Common.HighDepthMode, msiSamples);
 
         final SAMSequenceDictionary dictionary = dictionary();
         for(SAMSequenceRecord samSequenceRecord : dictionary.getSequences())

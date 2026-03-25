@@ -87,9 +87,9 @@ public class SageConfig
     public final int MaxPartitionSlices;
     public final ValidationStringency BamStringency;
 
-    // global for convenience
+    // globals for convenience
+    public static boolean HighDepthMode = false;
     public static boolean AppendMode = false;
-
     public static SequencingType SEQUENCING_TYPE = ILLUMINA;
 
     public final VisConfig Visualiser;
@@ -161,6 +161,8 @@ public class SageConfig
         OutputFile = SampleDataDir + configBuilder.getValue(OUTPUT_VCF);
 
         RefGenomeFile = configBuilder.getValue(REF_GENOME);
+
+        HighDepthMode = configBuilder.hasFlag(HIGH_DEPTH_MODE);
 
         BamStringency = BamUtils.validationStringency(configBuilder);
         RegionSliceSize = configBuilder.getInteger(SLICE_SIZE);
@@ -438,7 +440,8 @@ public class SageConfig
         ReferenceIds = Lists.newArrayList();
         ReferenceBams = Lists.newArrayList();
         Filter = new FilterConfig();
-        Quality = new QualityConfig(highDepthMode);
+        Quality = new QualityConfig();
+        SageConfig.HighDepthMode = highDepthMode;
         SkipBqr = true;
         JitterBqrDir = null;
         SkipMsiJitter = false;
