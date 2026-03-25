@@ -428,7 +428,8 @@ public class VariantFilters
         double readEdgeDistanceThresholdPerc = readEdgeDistanceThreshold(tier);
         double altAvgEdgeDistanceRatio = avgAltEdgeDistance / avgEdgeDistance;
 
-        if(!highlyPolymorphicSite && altAvgEdgeDistanceRatio < 2 * readEdgeDistanceThresholdPerc && !primaryTumor.isLongIndel())
+        if(!highlyPolymorphicSite && altAvgEdgeDistanceRatio < 2 * readEdgeDistanceThresholdPerc
+        && !skipEdgeDistanceCheck(variant, primaryTumor))
         {
             edgeDistancePenalty = 10 * altSupport * log10(avgEdgeDistance / max(avgAltEdgeDistance, 0.001));
 
@@ -505,9 +506,14 @@ public class VariantFilters
         return primaryTumor.jitter().filterOnNoise();
     }
 
+    private static boolean skipEdgeDistanceCheck(final SageVariant variant, final ReadContextCounter primaryTumor)
+    {
+        return primaryTumor.isLongInsert() && !variant.nearMultiBaseIndel();
+    }
+
     private boolean belowMaxEdgeDistance(final SageVariant variant, final VariantTier tier, final ReadContextCounter primaryTumor)
     {
-        if(primaryTumor.isLongInsert() && !variant.nearMultiBaseIndel())
+        if(skipEdgeDistanceCheck(variant, primaryTumor))
             return false;
 
         double altMed = primaryTumor.readEdgeDistance().maxAltDistanceFromEdge();
