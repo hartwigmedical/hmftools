@@ -70,9 +70,21 @@ java -Xmx16G -jar amber.jar \
 
 ## Tumor Only Mode
 
-If no reference BAM is supplied, AMBER will be put into tumor only mode. In tumor only, the following behaviour is changed:
+If no reference BAM is supplied, AMBER will be put into tumor-only mode. In this mode,
+a 'noise floor' is evaluated as follows:
 
-- Contamination check not run
+- Frequency peaks in the vaf level are investigated to find those that likely correspond to copy number events or contamination.
+- The lowest amongst such vaf peaks is divided by 3 to determine the noise floor.
+- To be considered as a possible copy number or contamination peak, a peak must:
+    * have a distribution of Gnomad frequencies is similar to that of the baseline heterozygous points
+    * be uniformly distributed across mutation classes
+    * be uniformly distributed across chromosomes (for a contamination peak)
+- A minimum noise floor of 0.04 applies.
+- If a contamination peak is found, its vaf value is written to the Amber qc file.
+
+Once the noise floor is determined, it is used to filter the raw data that is written to output and is used in the segmentation analysis.
+Additionally, in tumor-only mode:
+
 - snp check vcf is not produced
 - normalBAF and count fields are set to -1 in amber.baf.tsv
 - a set of blacklisted regions (with variable germline copy number) are ignored
