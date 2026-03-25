@@ -51,8 +51,6 @@ public class SoftFilterTest
     private static final String TEST_READ_ID = "READ_01";
     private static final String TEST_CIGAR = "30M";
 
-    // public static final SageConfig HIGH_QUAL_CONFIG = new SageConfig(true);
-
     private static final VariantFilters FILTERS = new VariantFilters(TEST_CONFIG);
 
     @After
