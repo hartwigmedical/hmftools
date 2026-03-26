@@ -274,15 +274,17 @@ public class FindingRecordFactory
     {
         if(cuppa != null)
         {
+            List<PredictedTumorOrigin.Prediction> predictedTumorOrigins = cuppa.predictions().stream()
+                    .map(FindingRecordFactory::createPredictedTumorOriginPrediction)
+                    .toList();
             return FindingItemBuilder.<PredictedTumorOrigin>builder()
                     .status(findingStatus)
                     .finding(PredictedTumorOriginBuilder.builder()
                             .findingKey("predictedTumorOrigin")
                             .mode(cuppaMode(cuppa.mode()))
-                            .predictions(cuppa.predictions().stream()
-                                    .map(FindingRecordFactory::createPredictedTumorOriginPrediction)
-                                    .toList())
+                            .predictions(predictedTumorOrigins)
                             .visualisationFile(VisualisationFileUtil.createNullable(orangePlots.cuppaSummaryPlot()))
+                            .bestPredictionLikelihood(!predictedTumorOrigins.isEmpty() ? predictedTumorOrigins.get(0).likelihood() : null)
                             .build()
                     )
                     .build();

@@ -45,7 +45,7 @@ public class LowPurityConverter
     {
         if(shouldConvert(findingList.status(), isLowPurity))
         {
-            return FindingsConverter.convertFindingList(findingList, findingsStatusConverter, findingConverter, null);
+            return FindingRecordConverterUtil.convertFindingList(findingList, findingsStatusConverter, findingConverter, null);
         }
         else
         {
@@ -58,7 +58,7 @@ public class LowPurityConverter
     {
         if(shouldConvert(driverFindingList.status(), isLowPurity))
         {
-            return FindingsConverter.convertDriverFindingList(driverFindingList,
+            return FindingRecordConverterUtil.convertDriverFindingList(driverFindingList,
                     LowPurityConverter::convert,
                     f -> null,
                     null);

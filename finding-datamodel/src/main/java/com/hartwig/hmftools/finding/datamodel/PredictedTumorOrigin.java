@@ -13,7 +13,8 @@ public record PredictedTumorOrigin(
         @NotNull String findingKey,
         @NotNull CuppaMode mode,
         @NotNull List<Prediction> predictions,
-        @Nullable VisualisationFile visualisationFile
+        @Nullable VisualisationFile visualisationFile,
+        @Nullable Double bestPredictionLikelihood
 ) implements Finding
 {
     public enum CuppaMode
