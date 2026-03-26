@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.purple.MicrosatelliteStatus.MSI_THRESH
 import static com.hartwig.hmftools.common.purple.TumorMutationalStatus.TMB_THRESHOLD;
 import static com.hartwig.hmftools.common.purple.TumorMutationalStatus.TML_THRESHOLD;
 
+import com.hartwig.hmftools.datamodel.orange.ExperimentType;
 import com.hartwig.hmftools.finding.datamodel.ThresholdValue;
 
 import org.jetbrains.annotations.NotNull;
@@ -12,11 +13,13 @@ import org.jetbrains.annotations.NotNull;
 class ThresholdValueFactory
 {
     private static final double HRD_THRESHOLD = 0.5;
+    // TODO: Is this defined elsewhere?
+    private static final double TARGETED_MIN_PURITY = 0.1;
 
     @NotNull
-    static ThresholdValue purityValue(double value)
+    static ThresholdValue purityValue(double value, ExperimentType experimentType)
     {
-        return new ThresholdValue(value, MIN_PURITY);
+        return new ThresholdValue(value, experimentType == ExperimentType.WHOLE_GENOME ? MIN_PURITY : TARGETED_MIN_PURITY);
     }
 
     @NotNull
