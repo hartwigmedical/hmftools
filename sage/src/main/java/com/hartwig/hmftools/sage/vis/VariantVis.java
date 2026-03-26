@@ -9,6 +9,8 @@ import static java.util.Map.entry;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.CHR_PREFIX;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.pipeline.MiscToolFiles.SAGE_VIS_PLOT_FILE_EXTENSION;
+import static com.hartwig.hmftools.common.pipeline.MiscToolFiles.generateSageVisFilePrefix;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_RECALIBRATED_BASE_QUAL;
@@ -85,6 +87,7 @@ import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.common.variant.CommonVcfTags;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
@@ -592,7 +595,7 @@ public class VariantVis
             values.put("Coding impact", List.of(span(aaVariantType)));
         }
 
-        String filterStr = "PASS";
+        String filterStr = CommonVcfTags.PASS_FILTER;
         if(!filters.isEmpty())
             filterStr = String.join(",", filters);
 
@@ -632,29 +635,29 @@ public class VariantVis
 
     private String getFilename(final String sampleId, @Nullable final String geneName, @Nullable final String variantType)
     {
-        String filename = mVariantKey;
-        String geneNamePrefix = geneName == null ? "" : geneName + "_";
+        // for reportable variants must conform to
+        String variantPrefix = geneName != null ?
+                generateSageVisFilePrefix(geneName, mVariant.chromosome(), mVariant.position(), mVariant.Ref, mVariant.Alt) : mVariantKey;
+
         String sanitisedVariantType = null;
         if(variantType != null)
         {
             sanitisedVariantType = variantType.replaceAll("&", "_");
             sanitisedVariantType = sanitisedVariantType.replaceAll("\\s", "");
+            sanitisedVariantType = sanitisedVariantType.replaceAll("_variant", "");
         }
 
         String variantTypeSuffix = sanitisedVariantType == null ? "" : "_" + sanitisedVariantType;
 
-        if(!filename.startsWith(CHR_PREFIX))
-            filename = CHR_PREFIX + filename;
-
-        filename = sampleId + ".sage." + geneNamePrefix + filename;
+        String filename = sampleId + variantPrefix;
 
         SortedSet<String> indexedBasesKeySet = VARIANT_INDEXED_BASES_MAP.get(mVariantKey);
         if(indexedBasesKeySet.size() == 1)
-            return filename + variantTypeSuffix + ".html";
+            return filename + variantTypeSuffix + SAGE_VIS_PLOT_FILE_EXTENSION;
 
         int variantFileNum = indexedBasesKeySet.headSet(mIndexedBasesKey).size() + 1;
         String formatStr = format("%%0%dd", String.valueOf(indexedBasesKeySet.size()).length());
-        return filename + "_" + format(formatStr, variantFileNum) + variantTypeSuffix + ".html";
+        return filename + "_" + format(formatStr, variantFileNum) + variantTypeSuffix + SAGE_VIS_PLOT_FILE_EXTENSION;
     }
 
     public void addEvidence(

@@ -48,9 +48,11 @@ public final class AminoAcidUtil
             if(prevExon != null)
             {
                 if(posStrand)
-                    geneRegions.add(new GeneRegionViewModel.IntronicRegionViewModel(new BaseRegion(prevExon.End + 1, exon.Start - 1), 0));
+                    geneRegions.add(new GeneRegionViewModel.IntronicRegionViewModel(
+                            new BaseRegion(prevExon.End + 1, exon.Start - 1), 0));
                 else
-                    geneRegions.add(new GeneRegionViewModel.IntronicRegionViewModel(new BaseRegion(exon.End + 1, prevExon.Start - 1), 0));
+                    geneRegions.add(new GeneRegionViewModel.IntronicRegionViewModel(
+                            new BaseRegion(exon.End + 1, prevExon.Start - 1), 0));
             }
 
             prevExon = exon;
@@ -67,12 +69,14 @@ public final class AminoAcidUtil
             if(posStrand)
             {
                 if(exon.Start < codingStart)
-                    geneRegions.add(new GeneRegionViewModel.NonCodingExonicRegionViewModel(new BaseRegion(exon.Start, codingStart - 1), 0));
+                    geneRegions.add(new GeneRegionViewModel.NonCodingExonicRegionViewModel(
+                            new BaseRegion(exon.Start, codingStart - 1), 0));
             }
             else
             {
                 if(exon.End > codingEnd)
-                    geneRegions.add(new GeneRegionViewModel.NonCodingExonicRegionViewModel(new BaseRegion(codingEnd + 1, exon.End), 0));
+                    geneRegions.add(new GeneRegionViewModel.NonCodingExonicRegionViewModel(
+                            new BaseRegion(codingEnd + 1, exon.End), 0));
             }
 
             BaseRegion codingRegion = new BaseRegion(codingStart, codingEnd);
@@ -96,12 +100,14 @@ public final class AminoAcidUtil
             if(posStrand)
             {
                 if(exon.End > codingEnd)
-                    geneRegions.add(new GeneRegionViewModel.NonCodingExonicRegionViewModel(new BaseRegion(codingEnd + 1, exon.End), 0));
+                    geneRegions.add(new GeneRegionViewModel.NonCodingExonicRegionViewModel(
+                            new BaseRegion(codingEnd + 1, exon.End), 0));
             }
             else
             {
                 if(exon.Start < codingStart)
-                    geneRegions.add(new GeneRegionViewModel.NonCodingExonicRegionViewModel(new BaseRegion(exon.Start, codingStart - 1), 0));
+                    geneRegions.add(new GeneRegionViewModel.NonCodingExonicRegionViewModel(
+                            new BaseRegion(exon.Start, codingStart - 1), 0));
             }
 
         }
@@ -133,7 +139,9 @@ public final class AminoAcidUtil
             {
                 int aaPos = aaRegion.aminoAcidPos();
                 char refAcid = aminoAcids.charAt(aaPos - 1);
-                viewModels.add(new GeneRegionViewModel.AminoAcidViewModel(aaRegion.region(), aaPos, refAcid, '.', 0, aaPos == 1));
+
+                viewModels.add(new GeneRegionViewModel.AminoAcidViewModel(
+                        aaRegion.region(), aaPos, refAcid, '.', 0, aaPos == 1));
                 continue;
             }
 
@@ -146,9 +154,10 @@ public final class AminoAcidUtil
         return viewModels;
     }
 
-    public static List<GeneRegionViewModel> getAltGeneRegionViewModels(final TranscriptData transcriptExons,
-            final TranscriptAminoAcids transcriptAminoAcids, final List<GeneRegionViewModel> geneRegions,
-            final List<AminoAcidEvent> events, final BaseRegion renderRegion, final RefGenomeSource refGenome, final SageVariant variant)
+    public static List<GeneRegionViewModel> getAltGeneRegionViewModels(
+            final TranscriptData transcriptExons, final TranscriptAminoAcids transcriptAminoAcids,
+            final List<GeneRegionViewModel> geneRegions, final List<AminoAcidEvent> events, final BaseRegion renderRegion,
+            final RefGenomeSource refGenome, final SageVariant variant)
     {
         List<GeneRegionViewModel> viewModels = Lists.newArrayList();
         boolean posStrand = transcriptExons.posStrand();
@@ -288,7 +297,8 @@ public final class AminoAcidUtil
                             {
                                 int pos = idx + 3;
                                 if(pos <= renderRegion.end())
-                                    viewModels.add(new GeneRegionViewModel.NonCodingExonicRegionViewModel(new BaseRegion(pos, renderRegion.end()), 0));
+                                    viewModels.add(new GeneRegionViewModel.NonCodingExonicRegionViewModel(
+                                            new BaseRegion(pos, renderRegion.end()), 0));
                             }
                         }
                         else
@@ -354,7 +364,8 @@ public final class AminoAcidUtil
                             {
                                 int pos = refIdx - 3;
                                 if(pos >= renderRegion.start())
-                                    viewModels.add(new GeneRegionViewModel.NonCodingExonicRegionViewModel(new BaseRegion(renderRegion.start(), pos), 0));
+                                    viewModels.add(new GeneRegionViewModel.NonCodingExonicRegionViewModel(
+                                            new BaseRegion(renderRegion.start(), pos), 0));
                             }
                         }
 
@@ -382,9 +393,14 @@ public final class AminoAcidUtil
                     continue;
 
                 if(!stopCoding || altAcid == STOP)
-                    viewModels.add(new GeneRegionViewModel.AminoAcidViewModel(aaRegion.region(), aaPos, refAcid, altAcid, 0, aaPos == 1));
+                {
+                    viewModels.add(new GeneRegionViewModel.AminoAcidViewModel(
+                            aaRegion.region(), aaPos, refAcid, altAcid, 0, aaPos == 1));
+                }
                 else
+                {
                     viewModels.add(new GeneRegionViewModel.NonCodingExonicRegionViewModel(aaRegion.region(), 0));
+                }
 
                 continue;
             }

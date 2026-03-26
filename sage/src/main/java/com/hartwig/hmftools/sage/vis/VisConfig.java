@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.sage.vis;
 
 import static com.hartwig.hmftools.common.utils.config.ConfigItemType.INTEGER;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreateOutputDir;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.REPORTED_KEY;
 
 import java.io.File;

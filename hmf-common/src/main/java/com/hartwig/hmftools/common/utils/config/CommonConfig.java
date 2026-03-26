@@ -131,6 +131,9 @@ public final class CommonConfig
     public static final String SAGE_DIR_CFG = toolDirectory("sage");
     public static final String SAGE_DIR_DESC = toolDirectoryDesc("Sage");
 
+    public static final String SAGE_PLOT_DIR_CFG = toolDirectory("sage_plot");
+    public static final String SAGE_PLOT_DIR_DESC = toolPlotsDirectoryDesc("Sage");
+
     public static final String SAGE_GERMLINE_DIR_CFG = toolDirectory("sage_germline");
     public static final String SAGE_GERMLINE_DIR_DESC = toolDirectoryDesc("Sage germline");
 
