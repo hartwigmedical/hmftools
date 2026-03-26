@@ -113,18 +113,17 @@ public class SampleDataFiles
             CobaltDirectory = null;
         }
 
-        SomaticSvVcfFile = getFilename(
-                configBuilder, SOMATIC_SV_VCF, pipelineToolDirectories.esveeDir(), sampleId, ".esvee.somatic.vcf.gz");
+        SomaticSvVcfFile = getFilename(configBuilder, SOMATIC_SV_VCF, ESVEE_DIR_CFG,
+                pipelineToolDirectories.esveeDir(), sampleId, ".esvee.somatic.vcf.gz");
 
-        GermlineSvVcfFile = getFilename(
-                configBuilder, GERMLINE_SV_VCF, pipelineToolDirectories.esveeDir(), sampleId, ".esvee.germline.vcf.gz");
+        GermlineSvVcfFile = getFilename(configBuilder, GERMLINE_SV_VCF, ESVEE_DIR_CFG,
+                pipelineToolDirectories.esveeDir(), sampleId, ".esvee.germline.vcf.gz");
 
-        SomaticVcfFile = getFilename(
-                configBuilder, SOMATIC_VARIANTS, pipelineToolDirectories.paveSomaticDir(), sampleId, ".pave.somatic.vcf.gz");
+        SomaticVcfFile = getFilename(configBuilder, SOMATIC_VARIANTS, PAVE_SOMATIC_DIR_CFG,
+                pipelineToolDirectories.paveSomaticDir(), sampleId, ".pave.somatic.vcf.gz");
 
-        GermlineVcfFile = getFilename(
-                configBuilder, GERMLINE_VARIANTS, pipelineToolDirectories.paveGermlineDir(), sampleId, ".pave.germline.vcf.gz");
-
+        GermlineVcfFile = getFilename(configBuilder, GERMLINE_VARIANTS, PAVE_GERMLINE_DIR_CFG,
+                pipelineToolDirectories.paveGermlineDir(), sampleId, ".pave.germline.vcf.gz");
 
         ReduxTumorDirectory = configBuilder.getValue(REDUX_TUMOR_DIR_CFG);
     }
@@ -167,11 +166,12 @@ public class SampleDataFiles
     }
 
     private String getFilename(
-            final ConfigBuilder configBuilder, final String config, final String toolDir, final String sampleId, final String fileSuffix)
+            final ConfigBuilder configBuilder, final String filePathConfig, final String toolDirConfig,
+            final String pipelineToolDir, final String sampleId, final String fileSuffix)
     {
-        if(configBuilder.hasValue(config))
+        if(configBuilder.hasValue(filePathConfig))
         {
-            final String filename = configBuilder.getValue(config);
+            final String filename = configBuilder.getValue(filePathConfig);
 
             if(Files.exists(Paths.get(filename)))
             {
@@ -182,21 +182,30 @@ public class SampleDataFiles
             return null;
         }
 
-        if(SampleDataDir == null)
+        final String baseDir;
+        if(configBuilder.hasValue(toolDirConfig))
+        {
+            baseDir = checkAddDirSeparator(configBuilder.getValue(toolDirConfig));
+        }
+        else if(SampleDataDir != null)
+        {
+            baseDir = checkAddDirSeparator(SampleDataDir) + checkAddDirSeparator(pipelineToolDir);
+        }
+        else
         {
             return "";
         }
 
-        String filename = SampleDataDir + toolDir + File.separator + sampleId + fileSuffix;
+        String filename = baseDir + sampleId + fileSuffix;
 
         if(Files.exists(Paths.get(filename)))
             return filename;
 
         // handle earlier pave formats, for conveniences only
-        if(toolDir.contains(GERMLINE_SUB_DIR) && Files.exists(Paths.get(filename.replaceFirst(GERMLINE_SUB_DIR, ""))))
+        if(pipelineToolDir.contains(GERMLINE_SUB_DIR) && Files.exists(Paths.get(filename.replaceFirst(GERMLINE_SUB_DIR, ""))))
             return filename.replaceFirst(GERMLINE_SUB_DIR, "");
 
-        if(toolDir.contains(SOMATIC_SUB_DIR) && Files.exists(Paths.get(filename.replaceFirst(SOMATIC_SUB_DIR, ""))))
+        if(pipelineToolDir.contains(SOMATIC_SUB_DIR) && Files.exists(Paths.get(filename.replaceFirst(SOMATIC_SUB_DIR, ""))))
             return filename.replaceFirst(SOMATIC_SUB_DIR, "");
 
         filename = SampleDataDir + sampleId + fileSuffix;
