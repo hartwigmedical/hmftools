@@ -6,6 +6,8 @@ import java.nio.file.Path;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.finding.datamodel.FindingRecord;
 import com.hartwig.hmftools.finding.datamodel.FindingsJson;
+import com.hartwig.hmftools.finding.util.LowPurityConverter;
+import com.hartwig.hmftools.finding.util.PTOConverter;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -16,7 +18,9 @@ public class ConversionUtil
             @Nullable Path driverGeneTsv, Gender gender) throws IOException
     {
         FindingRecord
-                findingRecord = FindingRecordFactory.fromOrangeJsonWithTranscriptFile(orangeJson, clinicalTranscriptsTsv, driverGeneTsv, gender);
+                findingRecord =
+                FindingRecordFactory.fromOrangeJsonWithTranscriptFile(orangeJson, clinicalTranscriptsTsv, driverGeneTsv, gender);
+        findingRecord = PTOConverter.convert(LowPurityConverter.convert(findingRecord));
         new FindingsJson().write(findingRecord, findingsJson);
     }
 }

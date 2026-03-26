@@ -21,6 +21,7 @@ public class PTOConverter
 {
     // TODO: Is this constant defined elsewhere?
     private static final double CUPPA_INCONCLUSIVE_CUT_OFF = 0.8;
+    private static final double BEST_LIKELIHOOD_CUT_OFF = 0.5;
 
     public static FindingRecord convert(FindingRecord record)
     {
@@ -40,18 +41,23 @@ public class PTOConverter
             {
                 predictions = predictions.stream().filter(prediction ->
                         prediction.likelihood() >= CUPPA_INCONCLUSIVE_CUT_OFF).toList();
+                Double bestLikelihood = predictedTumorOrigin.bestPredictionLikelihood();
+                FindingStatus findingStatus = findingItem.status();
                 if(predictions.isEmpty())
                 {
                     // Changing status code because this is different from there being no results.
                     // The issue is that no results meet the required criteria.
-                    FindingStatusBuilder.builder(findingItem.status())
+                    findingStatus = FindingStatusBuilder.builder(findingItem.status())
                             .status(FindingStatus.Status.NOT_AVAILABLE)
                             .errors(new TreeSet<>(Set.of(NO_REPORTABLE_VALUE)))
                             .build();
+                   bestLikelihood = bestLikelihood != null && bestLikelihood >= BEST_LIKELIHOOD_CUT_OFF ? bestLikelihood : null;
                 }
                 return FindingItemBuilder.builder(findingItem)
+                        .status(findingStatus)
                         .finding(PredictedTumorOriginBuilder.builder(predictedTumorOrigin)
                                 .predictions(predictions)
+                                .bestPredictionLikelihood(bestLikelihood)
                                 .build())
                         .build();
             }
