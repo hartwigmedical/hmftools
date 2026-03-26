@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotNull;
 @RecordBuilder
 public record PurityPloidyFit(
         @NotNull FittedPurityMethod fittedPurityMethod,
-        double purity,
+        @NotNull ThresholdValue purity,
         double minPurity,
         double maxPurity,
         double ploidy,
