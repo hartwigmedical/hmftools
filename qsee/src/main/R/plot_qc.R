@@ -482,12 +482,11 @@ PLOTS[[FEATURE_TYPE$GC_BIAS]] <- local({
 ## =============================
 PAIRWISE_PLOT_TYPE <- list(
    BOX = "box",
-   POINT_RANGE = "point_range",
-   BAR = "bar"
+   POINT_RANGE = "point_range"
 )
 
 plot_pairwise_comparison <- function(
-   plot_data, x, y = "FeatureValue", plot_type = PAIRWISE_PLOT_TYPE$BOX, hlines = NULL, vlines = NULL, box_width_scale = 1, bar_baseline = 0
+   plot_data, x, y = "FeatureValue", plot_type = PAIRWISE_PLOT_TYPE$BOX, hlines = NULL, vlines = NULL, box_width_scale = 1
 ){
    
    if(FALSE){
@@ -496,8 +495,7 @@ plot_pairwise_comparison <- function(
       hlines = NULL
       vlines = NULL
       box_width_scale = 1
-      bar_baseline = 0
-      
+
       x = "ReadCount"; plot_data = get_plot_data(FEATURE_TYPE$DUPLICATE_FREQ)
       x = "OriginalQualBin"; plot_data = get_plot_data(FEATURE_TYPE$BQR_BY_ORIG_QUAL); gg_facet = facet_grid("ReadType ~ StandardMutation")
    }
@@ -510,7 +508,6 @@ plot_pairwise_comparison <- function(
    gg_geom_point <- geom_blank()
    gg_geom_boxplot <- geom_blank()
    gg_geom_linerange <- geom_blank()
-   gg_geom_bar <- geom_blank()
    gg_position_dodge <- position_dodge(width = 0.5, preserve = "single")
    
    sample_type_colors <- sapply(SAMPLE_TYPE, `[[`, "color")
@@ -537,22 +534,7 @@ plot_pairwise_comparison <- function(
          position = gg_position_dodge, linewidth = 0.3, linetype = "11"
       )
    }
-   
-   if(plot_type == PAIRWISE_PLOT_TYPE$BAR){
-      
-      if(!is.na(COHORT_PERCENTILES_FILE)){
-         LOGGER$error("plot_type '%s' not allowed when cohort data is available", PAIRWISE_PLOT_TYPE$BAR)
-      }
-      
-      ## Use geom_crossbar instead of geom_bar here so that bars are not inverted when values are <1 when in log scale
-      gg_geom_bar <- geom_crossbar(
-         aes(ymin = bar_baseline, ymax = .data[[y]]), position = gg_position_dodge,
-         color = NA, middle.color = NA, linewidth = 0.3, width = 0.2 * box_width_scale
-      )
-      
-      gg_scale_color_manual <- geom_blank()
-   }
-   
+
    if(is.na(COHORT_PERCENTILES_FILE)){
       gg_geom_boxplot <- geom_blank()
       gg_geom_linerange <- geom_blank()
@@ -575,7 +557,6 @@ plot_pairwise_comparison <- function(
       
       gg_geom_boxplot + 
       gg_geom_linerange +
-      gg_geom_bar +
       gg_geom_point +
       
       gg_scale_fill_manual +
@@ -593,14 +574,6 @@ plot_pairwise_comparison <- function(
       )
 }
 
-box_or_bar_plot <- function(){
-   if(is.na(COHORT_PERCENTILES_FILE)){ 
-      PAIRWISE_PLOT_TYPE$BAR
-   } else { 
-      PAIRWISE_PLOT_TYPE$BOX
-   }
-}
-
 PLOTS[[FEATURE_TYPE$DISCORDANT_FRAG_FREQ]] <- local({
    
    plot_data <- get_plot_data(FEATURE_TYPE$DISCORDANT_FRAG_FREQ)
@@ -613,7 +586,7 @@ PLOTS[[FEATURE_TYPE$DISCORDANT_FRAG_FREQ]] <- local({
 
    plot_data <- plot_data %>% dplyr::mutate(DisplayName = reverse_levels(DisplayName))
 
-   plot_pairwise_comparison(plot_data, x = "DisplayName", plot_type = box_or_bar_plot()) +
+   plot_pairwise_comparison(plot_data, x = "DisplayName") +
       scale_y_log10(guide = "axis_logticks", labels = scales::label_percent(drop0trailing=TRUE)) +
       plot_labels +
       coord_flip() +
@@ -670,7 +643,7 @@ PLOTS[[FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD]] <- local({
       theme_axis_text_y <- element_text(size = BASE_SIZE*0.5)
    }
    
-   plot_pairwise_comparison(plot_data, x = "Gene", plot_type = box_or_bar_plot()) + 
+   plot_pairwise_comparison(plot_data, x = "Gene") +
       plot_labels +
       gg_facet_wrap +
       scale_y_continuous(labels = scales::label_percent(drop0trailing=TRUE)) +
@@ -921,7 +894,6 @@ plot_sub_table <- function(plot_data, min_upper_limit, show_title = FALSE, show_
       )
 
    ## Sample vs cohort =============================
-   plot_type <- if(is.na(COHORT_PERCENTILES_FILE)) PAIRWISE_PLOT_TYPE$BAR else PAIRWISE_PLOT_TYPE$BOX
    box_width_scale <- length(unique(plot_data$SampleType)) / length(levels(plot_data$SampleType))
    
    gg_scale_y_continuous <- scale_y_continuous()
@@ -943,7 +915,7 @@ plot_sub_table <- function(plot_data, min_upper_limit, show_title = FALSE, show_
    }
    
    subplot_pairwise_comparison <- 
-      plot_pairwise_comparison(plot_data, x = "DisplayName", y = "FeatureValue", plot_type = plot_type, box_width_scale = box_width_scale) +
+      plot_pairwise_comparison(plot_data, x = "DisplayName", y = "FeatureValue", box_width_scale = box_width_scale) +
       get_div_lines(n_rows, "vertical") + 
       dummy_point_lower_limit + 
       dummy_point_upper_limit +
