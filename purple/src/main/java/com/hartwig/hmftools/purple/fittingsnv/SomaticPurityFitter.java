@@ -365,30 +365,24 @@ public class SomaticPurityFitter
 
             double vaf = variant.alleleFrequency();
 
+            if(vaf < SOMATIC_FIT_TUMOR_ONLY_VAF_MIN)
+                continue;
+
             if(variant.isHotspotType())
             {
                 vaf = min(vaf, SOMATIC_FIT_TUMOR_ONLY_HOTSPOT_VAF_CUTOFF);
             }
             else
             {
-                if(vaf < SOMATIC_FIT_TUMOR_ONLY_VAF_MIN)
-                {
-                    continue;
-                }
-
                 if(tumorOnlyMode && vaf > SOMATIC_FIT_TUMOR_ONLY_VAF_MAX)
-                {
                     continue;
-                }
             }
 
             variantVafs.add(vaf);
         }
 
         if(variantVafs.isEmpty())
-        {
             return null;
-        }
 
         double vaf75thPercentile = calc75thPercentileValue(variantVafs);
 
