@@ -27,7 +27,8 @@ public class TestFindingFactory
 {
 
     @NotNull
-    public static <T extends Finding> FindingList<T> buildFindingsList(@NotNull FindingStatus.Status resultStatus, @NotNull List<T> findings)
+    public static <T extends Finding> FindingList<T> buildFindingsList(@NotNull FindingStatus.Status resultStatus,
+            @NotNull List<T> findings)
     {
         return FindingListBuilder.<T>builder().status(findingsStatus(resultStatus)).findings(findings).build();
     }
@@ -49,6 +50,7 @@ public class TestFindingFactory
     public static PurityPloidyFitBuilder purityPloidyFitBuilder()
     {
         return PurityPloidyFitBuilder.builder()
+                .purity(thresholdValue(0))
                 .fittedPurityMethod(PurityPloidyFit.FittedPurityMethod.NORMAL)
                 .purpleInputPlot(new VisualisationFile("purpleInputPlot.png"))
                 .purpleCircosPlot(new VisualisationFile("purpleCircosPlot.png"))
@@ -314,7 +316,8 @@ public class TestFindingFactory
                 .build();
     }
 
-    public static ThresholdValue thresholdValue(double value) {
-        return new ThresholdValue(value,0,0,0);
+    public static ThresholdValue thresholdValue(double value)
+    {
+        return new ThresholdValue(value, 0);
     }
 }

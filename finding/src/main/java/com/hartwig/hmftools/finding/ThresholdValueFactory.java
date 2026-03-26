@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.finding;
 
+import static com.hartwig.hmftools.common.purple.PurpleQCStatus.MIN_PURITY;
 import static com.hartwig.hmftools.common.purple.TumorMutationalStatus.TMB_THRESHOLD;
 import static com.hartwig.hmftools.common.purple.TumorMutationalStatus.TML_THRESHOLD;
 import static com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus.MSI_THRESHOLD;
@@ -10,40 +11,35 @@ import org.jetbrains.annotations.NotNull;
 
 class ThresholdValueFactory
 {
-    private static final double TML_RANGE_MIN = 1;
-    private static final double TML_RANGE_MAX = 1000;
-    // TODO: Lookup proper threshold constant
-    private static final double HRD_RANGE_MIN = 0;
-    private static final double HRD_RANGE_MAX = 1;
-    // TODO: Lookup proper threshold constant
     private static final double HRD_THRESHOLD = 0.5;
-    private static final double MSS_RANGE_MIN = 1;
-    private static final double MSS_RANGE_MAX = 100;
-    // TODO: Lookup proper threshold constant
-    private static final double TMB_RANGE_MIN = 1;
-    private static final double TMB_RANGE_MAX = 120;
+
+    @NotNull
+    static ThresholdValue purityValue(double value)
+    {
+        return new ThresholdValue(value, MIN_PURITY);
+    }
 
     @NotNull
     static ThresholdValue tmlValue(double value)
     {
-        return new ThresholdValue(value, TML_RANGE_MIN, TML_RANGE_MAX, TML_THRESHOLD);
+        return new ThresholdValue(value, TML_THRESHOLD);
     }
 
     @NotNull
     static ThresholdValue hrdValue(double value)
     {
-        return new ThresholdValue(value, HRD_RANGE_MIN, HRD_RANGE_MAX, HRD_THRESHOLD);
+        return new ThresholdValue(value, HRD_THRESHOLD);
     }
 
     @NotNull
     static ThresholdValue msiValue(double value)
     {
-        return new ThresholdValue(value, MSS_RANGE_MIN, MSS_RANGE_MAX, MSI_THRESHOLD);
+        return new ThresholdValue(value, MSI_THRESHOLD);
     }
 
     @NotNull
     static ThresholdValue tmbValue(double value)
     {
-        return new ThresholdValue(value, TMB_RANGE_MIN, TMB_RANGE_MAX, TMB_THRESHOLD);
+        return new ThresholdValue(value, TMB_THRESHOLD);
     }
 }
