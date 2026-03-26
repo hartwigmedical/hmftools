@@ -30,6 +30,8 @@ public class PanelTpmNormaliser
 
     public boolean panelHasGene(final String geneId) { return mGeneNormFactors.containsKey(geneId); }
     public Set<String> panelGeneIds() { return mGeneNormFactors.keySet(); }
+    public int panelGeneCount() { return mGeneNormFactors.size(); }
+    public boolean enabled() { return mEnabled; }
 
     public void applyNormalisation(final List<GeneCollectionSummary> allGeneSummaries)
     {
