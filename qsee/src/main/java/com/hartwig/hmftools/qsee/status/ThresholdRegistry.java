@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.qsee.status;
 
+import static com.hartwig.hmftools.qsee.common.QseeConstants.QC_LOGGER;
 import static com.hartwig.hmftools.qsee.common.SampleType.NORMAL;
 import static com.hartwig.hmftools.qsee.common.SampleType.TUMOR;
 import static com.hartwig.hmftools.qsee.feature.FeatureType.SUMMARY_TABLE;
@@ -81,6 +82,8 @@ public final class ThresholdRegistry
 
     ThresholdRegistry setDefaults(boolean targetedMode)
     {
+        QC_LOGGER.info("Using default QC thresholds for {} mode", targetedMode ? "targeted" : "WGS");
+
         setCommonThreshold(SUMMARY_TABLE, MAPPED_PROPORTION.name(), FAIL, LESS_THAN, 0.95);
         setCommonThreshold(SUMMARY_TABLE, LOW_MAP_QUAL.name(), WARN, GREATER_THAN, 0.05);
         setCommonThreshold(SUMMARY_TABLE, LOW_BASE_QUAL.name(), WARN, GREATER_THAN, 0.05);
