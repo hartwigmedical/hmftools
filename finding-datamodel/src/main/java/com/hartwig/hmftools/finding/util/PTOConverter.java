@@ -3,6 +3,7 @@ package com.hartwig.hmftools.finding.util;
 import static com.hartwig.hmftools.finding.datamodel.finding.FindingStatus.Issue.NO_REPORTABLE_VALUE;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -10,6 +11,7 @@ import com.hartwig.hmftools.finding.datamodel.FindingRecord;
 import com.hartwig.hmftools.finding.datamodel.FindingRecordBuilder;
 import com.hartwig.hmftools.finding.datamodel.PredictedTumorOrigin;
 import com.hartwig.hmftools.finding.datamodel.PredictedTumorOriginBuilder;
+import com.hartwig.hmftools.finding.datamodel.PredictedTumorOriginPredictionBuilder;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingItem;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingItemBuilder;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
@@ -22,6 +24,9 @@ public class PTOConverter
     // TODO: Is this constant defined elsewhere?
     private static final double CUPPA_INCONCLUSIVE_CUT_OFF = 0.8;
     private static final double BEST_LIKELIHOOD_CUT_OFF = 0.5;
+    // TODO: Check if these mappings are still necessary
+    private static final Map<String, String> CURATED_CANCER_TYPES =
+            Map.of("Uterus: Endometrium", "Endometrium", "Colorectum/Appendix/SmallIntestine", "Lower GI tract");
 
     public static FindingRecord convert(FindingRecord record)
     {
@@ -39,8 +44,12 @@ public class PTOConverter
             List<PredictedTumorOrigin.Prediction> predictions = predictedTumorOrigin.predictions();
             if(!predictions.isEmpty())
             {
-                predictions = predictions.stream().filter(prediction ->
-                        prediction.likelihood() >= CUPPA_INCONCLUSIVE_CUT_OFF).toList();
+                predictions = predictions.stream()
+                        .filter(prediction ->
+                                prediction.likelihood() >= CUPPA_INCONCLUSIVE_CUT_OFF)
+                        .map(p -> PredictedTumorOriginPredictionBuilder.builder(p).cancerType(curateCancerType(p.cancerType()))
+                                .build())
+                        .toList();
                 Double bestLikelihood = predictedTumorOrigin.bestPredictionLikelihood();
                 FindingStatus findingStatus = findingItem.status();
                 if(predictions.isEmpty())
@@ -51,7 +60,7 @@ public class PTOConverter
                             .status(FindingStatus.Status.NOT_AVAILABLE)
                             .errors(new TreeSet<>(Set.of(NO_REPORTABLE_VALUE)))
                             .build();
-                   bestLikelihood = bestLikelihood != null && bestLikelihood >= BEST_LIKELIHOOD_CUT_OFF ? bestLikelihood : null;
+                    bestLikelihood = bestLikelihood != null && bestLikelihood >= BEST_LIKELIHOOD_CUT_OFF ? bestLikelihood : null;
                 }
                 return FindingItemBuilder.builder(findingItem)
                         .status(findingStatus)
@@ -63,5 +72,11 @@ public class PTOConverter
             }
         }
         return findingItem;
+    }
+
+    @NotNull
+    private static String curateCancerType(@NotNull String cancerType)
+    {
+        return CURATED_CANCER_TYPES.getOrDefault(cancerType, cancerType);
     }
 }
