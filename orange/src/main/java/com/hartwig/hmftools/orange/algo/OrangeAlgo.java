@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.orange.algo;
 
+import static com.hartwig.hmftools.common.pipeline.MiscToolFiles.generateQseeVisPlot;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.DEFAULT_PIPELINE_OUTPUT;
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import static com.hartwig.hmftools.orange.algo.purple.PurpleDataLoader.addPurplePlots;
@@ -414,7 +415,7 @@ public class OrangeAlgo
 
         plotBuilder.linxDriverPlots(linxDriverPlots);
 
-        String qSeeSourcePlot = config.QSeeDirectory + File.separator + config.TumorId + ".qsee.vis.report.png";
+        String qSeeSourcePlot = generateQseeVisPlot(config.QSeeDirectory, config.TumorId);
         String qSeePlot = null;
 
         if(Files.exists(Paths.get(qSeeSourcePlot)))

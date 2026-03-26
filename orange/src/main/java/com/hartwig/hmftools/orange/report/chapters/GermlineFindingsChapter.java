@@ -125,7 +125,7 @@ public class GermlineFindingsChapter implements ReportChapter
             }
             Table table = new Table(UnitValue.createPercentArray(new float[] { 1 })).setWidth(contentWidth());
             table.addCell(new Cells(mReportResources).createContent(germlineAberrationJoiner.toString()));
-            document.add(new Tables(mReportResources).createWrapping(table, "Germline CN aberrations (" + count + ")"));
+            document.add(new Tables(mReportResources).createWrapping(table, "Chromosomal aberrations (" + count + ")"));
         }
     }
 

@@ -161,7 +161,9 @@ public class SomaticFindingsChapter implements ReportChapter
     private void addLinxPlots(final Document document)
     {
         String title = "Structural Driver Plots (" + mReport.plots().linxDriverPlots().size() + ")";
+
         document.add(new Paragraph(title).addStyle(mReportResources.tableTitleStyle()));
+
         Table table = new Table(2);
         Cells cells = new Cells(mReportResources);
 

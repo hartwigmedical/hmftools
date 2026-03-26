@@ -2,6 +2,7 @@ package com.hartwig.hmftools.orange.util;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.orange.util.PathUtil.mandatoryPath;
 
 import java.io.File;
@@ -23,8 +24,8 @@ public class PathResolver
             @Nullable final String sampleDataDir)
     {
         mConfigBuilder = configBuilder;
-        mPipelineSampleRootDir = pipelineSampleRootDir;
-        mSampleDataDir = sampleDataDir;
+        mPipelineSampleRootDir = checkAddDirSeparator(pipelineSampleRootDir);
+        mSampleDataDir = checkAddDirSeparator(sampleDataDir);
     }
 
     public String resolveMandatoryToolDirectory(final String toolDirConfigKey, final String defaultPipelineToolDir)
@@ -35,7 +36,7 @@ public class PathResolver
             throw new IllegalArgumentException(format("Failed to determine tool directory for configuration [%s/%s].",
                     toolDirConfigKey, defaultPipelineToolDir));
         }
-        return mandatoryPath(toolDir);
+        return checkAddDirSeparator(mandatoryPath(toolDir));
     }
 
     @Nullable
@@ -43,13 +44,11 @@ public class PathResolver
     {
         if(mConfigBuilder.hasValue(toolDirConfigKey))
         {
-            return mConfigBuilder.getValue(toolDirConfigKey);
+            return checkAddDirSeparator(mConfigBuilder.getValue(toolDirConfigKey));
         }
 
         if(mPipelineSampleRootDir != null)
-        {
-            return mPipelineSampleRootDir + File.separator + defaultPipelineToolDir;
-        }
+            return checkAddDirSeparator(mPipelineSampleRootDir + defaultPipelineToolDir);
 
         return mSampleDataDir;
     }
@@ -62,7 +61,7 @@ public class PathResolver
             throw new IllegalArgumentException(format("Failed to determine plot directory for configuration [%s/%s].",
                     toolPlotDirConfigKey, defaultPipelineToolDir));
         }
-        return mandatoryPath(plotDir);
+        return checkAddDirSeparator(mandatoryPath(plotDir));
     }
 
     @Nullable
@@ -70,12 +69,12 @@ public class PathResolver
     {
         if(mConfigBuilder.hasValue(toolPlotDirConfigKey))
         {
-            return mConfigBuilder.getValue(toolPlotDirConfigKey);
+            return checkAddDirSeparator(mConfigBuilder.getValue(toolPlotDirConfigKey));
         }
 
         if(mPipelineSampleRootDir != null)
         {
-            return mPipelineSampleRootDir + File.separator + defaultPipelineToolDir + File.separator + "plot";
+            return mPipelineSampleRootDir + defaultPipelineToolDir + File.separator + "plot/";
         }
 
         return null;

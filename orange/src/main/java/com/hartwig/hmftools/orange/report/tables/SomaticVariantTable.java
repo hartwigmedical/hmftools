@@ -55,21 +55,21 @@ public final class SomaticVariantTable
         List<Float> widths = Lists.newArrayList();
         List<Cell> cellEntries = Lists.newArrayList();
 
-        addEntry(cells, widths, cellEntries, 1, COL_GENE);
-        addEntry(cells, widths, cellEntries, 2, COL_POSITION);
+        addEntry(cells, widths, cellEntries, 1.5, COL_GENE);
+        addEntry(cells, widths, cellEntries, 1.5, COL_POSITION);
         addEntry(cells, widths, cellEntries, 3, COL_HGVS);
         addEntry(cells, widths, cellEntries, 1, COL_AF);
         addEntry(cells, widths, cellEntries, 1, COL_DP);
         addEntry(cells, widths, cellEntries, 1, COL_VCN);
         addEntry(cells, widths, cellEntries, 1, COL_CN);
-        addEntry(cells, widths, cellEntries, 1, COL_MACN);
+        // addEntry(cells, widths, cellEntries, 1, COL_MACN);
         addEntry(cells, widths, cellEntries, 1.25, COL_HOTSPOT);
         addEntry(cells, widths, cellEntries, 1.25, COL_BIALLELIC);
-        addEntry(cells, widths, cellEntries, 1, COL_CL);
+        addEntry(cells, widths, cellEntries, 1.25, COL_CL);
 
         if(tumorOnly)
         {
-            addEntry(cells, widths, cellEntries, 1, COL_SL);
+            addEntry(cells, widths, cellEntries, 1.25, COL_SL);
         }
 
         if(hasRna)
@@ -97,7 +97,7 @@ public final class SomaticVariantTable
                 rowCells.add(cells.createContent(String.valueOf(variant.tumorDepth().totalReadCount())));
                 rowCells.add(cells.createContent(formatSingleDigitDecimal(variant.variantCopyNumber())));
                 rowCells.add(cells.createContent(formatSingleDigitDecimal(variant.adjustedCopyNumber())));
-                rowCells.add(cells.createContent(formatSingleDigitDecimal(variant.minorAlleleCopyNumber())));
+                // rowCells.add(cells.createContent(formatSingleDigitDecimal(variant.minorAlleleCopyNumber())));
                 rowCells.add(cells.createContent(hotspotDisplay(variant)));
                 rowCells.add(cells.createContent(formatPercentageField(variant.biallelicProbability())));
 

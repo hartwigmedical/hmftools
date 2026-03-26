@@ -3,6 +3,7 @@ package com.hartwig.hmftools.orange.report.tables;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_RNA_FRAGS;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_TYPE;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatSingleDigitDecimal;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_DRIVER;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_FUSION;
@@ -46,10 +47,10 @@ public final class DnaFusionTable
         boolean hasRna = fusions.stream().anyMatch(x -> x.rnaSupport() != null);
 
         addEntry(cells, widths, cellEntries, 2, COL_FUSION);
-        addEntry(cells, widths, cellEntries, 5, "Junctions");
+        addEntry(cells, widths, cellEntries, 4, "Junctions");
         addEntry(cells, widths, cellEntries, 1, COL_JCN);
         addEntry(cells, widths, cellEntries, 1, "Phasing");
-        addEntry(cells, widths, cellEntries, 2, "Type");
+        addEntry(cells, widths, cellEntries, 3, COL_TYPE);
 
         if(hasRna)
             addEntry(cells, widths, cellEntries, 1, COL_RNA_FRAGS);

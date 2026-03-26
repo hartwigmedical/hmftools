@@ -37,6 +37,8 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_DIR_CFG
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_GERMLINE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_GERMLINE_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_PLOT_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_PLOT_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SIGS_DIR_CFG;
@@ -48,8 +50,10 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.BAM_METRICS_
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreateOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
@@ -103,6 +107,7 @@ public class OrangeConfig
     public final String LinxSomaticDataDirectory;
     public final String LinxGermlineDataDirectory;
     public final String LinxPlotDirectory;
+    public final String SagePlotDirectory;
     public final String LilacDir;
     public final String ChordDir;
     public final String CuppaDir;
@@ -158,9 +163,11 @@ public class OrangeConfig
 
         String pipelineVersionFile = configBuilder.getValue(PIPELINE_VERSION_FILE);
 
-        if(pipelineVersionFile == null && configBuilder.hasValue(PIPELINE_SAMPLE_ROOT_DIR))
+        String pipelineSampleRootDir = checkAddDirSeparator(configBuilder.getValue(PIPELINE_SAMPLE_ROOT_DIR));
+
+        if(pipelineVersionFile == null && pipelineSampleRootDir != null)
         {
-            String testPipelineVersionFile = format("%s/orange_pipeline.version.txt", configBuilder.getValue(PIPELINE_SAMPLE_ROOT_DIR));
+            String testPipelineVersionFile = format("%s/orange_pipeline.version.txt", pipelineSampleRootDir);
 
             if(Files.exists(Paths.get(testPipelineVersionFile)))
                 pipelineVersionFile = testPipelineVersionFile;
@@ -168,13 +175,21 @@ public class OrangeConfig
 
         PipelineVersionFile = pipelineVersionFile;
 
-        OutputDir = parseOutputDir(configBuilder);
+        String outputDir;
+
+        if(pipelineSampleRootDir != null && !configBuilder.hasValue(OUTPUT_DIR))
+            outputDir = pipelineSampleRootDir + "orange/";
+        else
+            outputDir = parseOutputDir(configBuilder);
+
+        OutputDir = outputDir;
         checkCreateOutputDir(OutputDir);
+
         OutputId = configBuilder.getValue(OUTPUT_ID);
 
         PathResolver pathResolver = new PathResolver(
                 configBuilder,
-                configBuilder.getValue(PIPELINE_SAMPLE_ROOT_DIR),
+                pipelineSampleRootDir,
                 configBuilder.getValue(SAMPLE_DATA_DIR_CFG));
 
         PipelineToolDirectories defaultToolDirectories = resolveDefaultPipelineDirectories(configBuilder);
@@ -183,6 +198,7 @@ public class OrangeConfig
         PurplePlotDirectory = pathResolver.resolveMandatoryToolPlotsDirectory(PURPLE_PLOT_DIR_CFG, defaultToolDirectories.purpleDir());
         LinxSomaticDataDirectory = pathResolver.resolveMandatoryToolDirectory(LINX_DIR_CFG, defaultToolDirectories.linxSomaticDir());
         LinxPlotDirectory = optionalPath(pathResolver.resolveOptionalToolPlotsDirectory(LINX_PLOT_DIR_CFG, defaultToolDirectories.linxSomaticDir()));
+        SagePlotDirectory = optionalPath(pathResolver.resolveOptionalToolPlotsDirectory(SAGE_PLOT_DIR_CFG, defaultToolDirectories.linxSomaticDir()));
 
         QSeeDirectory = pathResolver.resolveOptionalToolDirectory(QSEE_DIR_CFG, defaultToolDirectories.qseeDir());
 
@@ -203,7 +219,7 @@ public class OrangeConfig
         SigsDir = pathResolver.resolveOptionalToolDirectory(SIGS_DIR_CFG, defaultToolDirectories.sigsDir());
         VirusDir = pathResolver.resolveOptionalToolDirectory(VIRUS_DIR_CFG, defaultToolDirectories.virusInterpreterDir());
 
-        if(!configBuilder.hasValue(RNA_SAMPLE_ID) || !configBuilder.hasValue(ISOFOX_DIR_CFG))
+        if(!configBuilder.hasValue(RNA_SAMPLE_ID))
         {
             RnaSampleId = null;
             IsofoxDir = null;
@@ -271,7 +287,8 @@ public class OrangeConfig
         // per tool directory config options are supported, but simpler is to specific the root sample directory containing all tool
         // subdirectories or a single directory containing all pipeline output
         configBuilder.addPath(PIPELINE_SAMPLE_ROOT_DIR, false, PIPELINE_SAMPLE_ROOT_DESC);
-        configBuilder.addPath(SAMPLE_DATA_DIR_CFG, false, SAMPLE_DATA_DIR_DESC);
+
+        configBuilder.addPath(SAMPLE_DATA_DIR_CFG, false, SAMPLE_DATA_DIR_DESC); // consider deprecating
 
         configBuilder.addPath(LINX_GERMLINE_DIR_CFG, false, LINX_GERMLINE_DIR_DESC);
         configBuilder.addPath(VIRUS_DIR_CFG, false, VIRUS_DIR_DESC);
@@ -286,6 +303,7 @@ public class OrangeConfig
         configBuilder.addPath(PURPLE_PLOT_DIR_CFG, false, PURPLE_PLOT_DIR_DESC);
         configBuilder.addPath(LINX_DIR_CFG, false, LINX_DIR_DESC);
         configBuilder.addPath(LINX_PLOT_DIR_CFG, false, LINX_PLOT_DIR_DESC);
+        configBuilder.addPath(SAGE_PLOT_DIR_CFG, false, SAGE_PLOT_DIR_DESC);
         configBuilder.addPath(LILAC_DIR_CFG, false, LILAC_DIR_DESC);
         configBuilder.addPath(QSEE_DIR_CFG, false, QSEE_DIR_DESC);
         PipelineToolDirectories.addPipelineFormatOptions(configBuilder);
@@ -378,7 +396,8 @@ public class OrangeConfig
         QSeeDirectory = null;
         LinxSomaticDataDirectory = linxSomaticDataDirectory;
         LinxGermlineDataDirectory = linxGermlineDataDirectory;
-        LinxPlotDirectory = linxPlotDirectory;
+        LinxPlotDirectory = checkAddDirSeparator(linxPlotDirectory);
+        SagePlotDirectory = linxPlotDirectory; // shared with Linx for testing
         LilacDir = lilacDir;
         ChordDir = chordDir;
         CuppaDir = cuppaDir;

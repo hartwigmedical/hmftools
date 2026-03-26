@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.driver.DriverCatalogTestFactory;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
@@ -56,7 +57,9 @@ public final class PurpleTestFactory
                 .tumorMutationalBurdenStatus(TumorMutationalStatus.UNKNOWN)
                 .build();
 
-        return ImmutablePurpleData.builder().purityContext(minimalContext);
+        return ImmutablePurpleData.builder()
+                .purityContext(minimalContext)
+                .variantPlots(Lists.newArrayList());
     }
 
     private static FittedPurity emptyFit()

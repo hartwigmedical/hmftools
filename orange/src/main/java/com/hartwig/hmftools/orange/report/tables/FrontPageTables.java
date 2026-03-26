@@ -68,19 +68,23 @@ public class FrontPageTables
 
         String configuredPrimaryTumorLocation = config != null ? config.PrimaryTumorLocation : null;
 
-        addEntry(cells, widths, cellEntries, 2, "Primary Tumor");
+        String configuredCancerType = configuredPrimaryTumorLocation != null ?
+                configuredPrimaryTumorLocation :  configuredPrimaryTumor(report.configuredPrimaryTumor());
+
+        boolean showCancerType = configuredCancerType != null && !configuredCancerType.isEmpty();
+
+        if(showCancerType)
+            addEntry(cells, widths, cellEntries, 2, "Primary Tumor");
 
         addEntry(cells, widths, cellEntries, 2, "Purity");
         addEntry(cells, widths, cellEntries, 2, "Ploidy");
         addEntry(cells, widths, cellEntries, 2, "Fit Method");
         addEntry(cells, widths, cellEntries, 2, "QC");
 
-        String configuredCancerType = configuredPrimaryTumorLocation != null ?
-                configuredPrimaryTumorLocation :  configuredPrimaryTumor(report.configuredPrimaryTumor());
-
         Table table = Tables.createContent(width, intToFloatArray(widths), cellArray(cellEntries));
 
-        table.addCell(cells.createContent(configuredCancerType));
+        if(showCancerType)
+            table.addCell(cells.createContent(configuredCancerType));
 
         table.addCell(cells.createContent(purityString(report.purple().fit())));
         table.addCell(cells.createContent(ploidyString(report.purple().fit())));

@@ -51,7 +51,7 @@ public final class DisruptionTable
         List<Cell> cellEntries = Lists.newArrayList();
 
         addEntry(cells, widths, cellEntries, 1, COL_GENE);
-        addEntry(cells, widths, cellEntries, 2, COL_POSITION);
+        addEntry(cells, widths, cellEntries, 3, COL_POSITION);
         addEntry(cells, widths, cellEntries, 1, COL_ZYGOSITY);
         addEntry(cells, widths, cellEntries, 2, COL_CONTEXT);
         addEntry(cells, widths, cellEntries, 1, COL_TYPE);

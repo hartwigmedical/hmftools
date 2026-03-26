@@ -213,6 +213,7 @@ public class TestOrangeJsonWriter
                         .codingEffect(PurpleCodingEffect.MISSENSE)
                         .reported(true)
                         .build())
+                .plotFilename(null)
                 .build();
 
         PurpleVariant germlineVariant = ImmutablePurpleVariant.builder()
@@ -247,6 +248,7 @@ public class TestOrangeJsonWriter
                         .codingEffect(PurpleCodingEffect.SPLICE)
                         .reported(true)
                         .build())
+                .plotFilename(null)
                 .build();
 
 

@@ -33,6 +33,7 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.common.linx.DriverEventType;
 import com.hartwig.hmftools.common.linx.LinxDriver;
+import com.hartwig.hmftools.common.pipeline.MiscToolFiles;
 import com.hartwig.hmftools.common.purple.ChrArmCopyNumber;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
@@ -68,9 +69,11 @@ public class PurpleInterpreter
 
     public PurpleRecord interpret(final PurpleData purpleData, final LinxData linxData, @Nullable final IsofoxData isofoxData)
     {
-        List<PurpleVariant> somaticVariants = buildPurpleVariants(purpleData.somaticVariants(), purpleData.somaticDrivers(), false);
+        List<PurpleVariant> somaticVariants = buildPurpleVariants(
+                purpleData.somaticVariants(), purpleData.somaticDrivers(), false, purpleData.variantPlots());
 
-        List<PurpleVariant> germlineVariants = buildPurpleVariants(purpleData.germlineVariants(), purpleData.germlineDrivers(), true);
+        List<PurpleVariant> germlineVariants = buildPurpleVariants(
+                purpleData.germlineVariants(), purpleData.germlineDrivers(), true, null);
 
         List<PurpleDriver> germlineDrivers = ConversionUtil.mapToNullableList(purpleData.germlineDrivers(), PurpleConversion::convert);
 
@@ -100,7 +103,8 @@ public class PurpleInterpreter
     }
 
     private static List<PurpleVariant> buildPurpleVariants(
-            final List<SmallVariant> variants, final List<DriverCatalog> drivers, boolean isGermline)
+            final List<SmallVariant> variants, final List<DriverCatalog> drivers, boolean isGermline,
+            @Nullable final List<String> variantPlots)
     {
         if(variants == null)
             return null;
@@ -115,11 +119,24 @@ public class PurpleInterpreter
                     .filter(x -> x.driver() == requiredDriverType && x.gene().equals(variant.gene()))
                     .findFirst().orElse(null);
 
-            PurpleVariant purpleVariant = PurpleVariantFactory.buildPurpleVariant(variant, variants, driver, isGermline);
+            String plotFilename = findVariantPlot(variant, variantPlots);
+
+            PurpleVariant purpleVariant = PurpleVariantFactory.buildPurpleVariant(variant, variants, driver, isGermline, plotFilename);
             purpleVariants.add(purpleVariant);
         }
 
         return purpleVariants;
+    }
+
+    private static String findVariantPlot(final SmallVariant variant, @Nullable final List<String> variantPlots)
+    {
+        if(variantPlots == null)
+            return null;
+
+        String variantPlotPrefix = MiscToolFiles.generateSageVisFilePrefix(
+                variant.gene(), variant.chromosome(), variant.position(), variant.ref(), variant.alt());
+
+        return variantPlots.stream().filter(x -> x.contains(variantPlotPrefix)).findFirst().orElse(null);
     }
 
     private static final Set<DriverType> AMP_DEL_TYPES = EnumSet.of(

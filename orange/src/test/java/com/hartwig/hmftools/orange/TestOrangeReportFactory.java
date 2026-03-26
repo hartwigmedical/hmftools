@@ -13,6 +13,7 @@ import com.hartwig.hmftools.common.doid.DoidTestFactory;
 import com.hartwig.hmftools.common.metrics.FlagstatTestFactory;
 import com.hartwig.hmftools.common.metrics.BamMetricsTestFactory;
 import com.hartwig.hmftools.common.peach.PeachTestFactory;
+import com.hartwig.hmftools.common.pipeline.PipelineToolDirectories;
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.hla.ImmutableLilacAllele;
 import com.hartwig.hmftools.datamodel.hla.ImmutableLilacRecord;
@@ -70,6 +71,7 @@ public final class TestOrangeReportFactory
         return ImmutableOrangeRecord.builder()
                 .sampleId(TEST_SAMPLE)
                 .referenceId(REFERENCE_SAMPLE)
+                .pipelineVersion(PipelineToolDirectories.DEFAULT_PIPELINE_OUTPUT.toString())
                 .samplingDate(LocalDate.of(2021, 11, 19))
                 .experimentType(ExperimentType.TARGETED)
                 .refGenomeVersion(OrangeRefGenomeVersion.V37)
@@ -94,7 +96,7 @@ public final class TestOrangeReportFactory
     {
         return builder().experimentType(ExperimentType.WHOLE_GENOME)
                 .addConfiguredPrimaryTumor(OrangeConversion.convert(DoidTestFactory.createDoidNode("1", "cancer type")))
-                .pipelineVersion("v6.1")
+                .pipelineVersion(PipelineToolDirectories.DEFAULT_PIPELINE_OUTPUT.toString())
                 .purple(createTestPurpleData())
                 .linx(createTestLinxData())
                 .isofox(createTestIsofoxData())

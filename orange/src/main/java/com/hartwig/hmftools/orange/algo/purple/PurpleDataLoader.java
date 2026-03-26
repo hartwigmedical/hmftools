@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
+import static com.hartwig.hmftools.common.linx.LinxCommonTypes.SV_VIS_CLUSTER_PREFIX;
 import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_PLOT_COPY_NUMBER;
 import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_PLOT_FINAL_CIRCOS;
 import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_PLOT_INPUT_CIRCOS;
@@ -9,6 +10,7 @@ import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_PLOT_SOMATI
 import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_PLOT_SOMATIC_CN;
 import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_PLOT_SOMATIC_RAINFALL;
 import static com.hartwig.hmftools.common.purple.PurpleCommon.purplePlotFile;
+import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,9 +19,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.driver.DriverCatalogFile;
 import com.hartwig.hmftools.common.driver.panel.DriverGene;
+import com.hartwig.hmftools.common.pipeline.MiscToolFiles;
 import com.hartwig.hmftools.common.purple.ChrArmCopyNumber;
 import com.hartwig.hmftools.common.purple.ChrArmCopyNumbersFile;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
@@ -34,6 +38,7 @@ import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.common.variant.CommonVcfTags;
 import com.hartwig.hmftools.common.variant.SmallVariant;
 import com.hartwig.hmftools.common.variant.SmallVariantFactory;
+import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.datamodel.orange.ImmutableOrangePlots;
 import com.hartwig.hmftools.orange.OrangeConfig;
 import com.hartwig.hmftools.orange.algo.plot.PlotManager;
@@ -65,8 +70,13 @@ public final class PurpleDataLoader
         // exclude non-reportable events
         somaticDrivers = somaticDrivers.stream().filter(x -> x.reportedStatus() != ReportedStatus.NOT_REPORTED).collect(Collectors.toList());
 
+        VcfFileReader vcfFileReader = new VcfFileReader(somaticVariantVcf);
+
+        String rnaSampleId = config.RnaSampleId != null && vcfFileReader.genotypeOrdinals().containsKey(config.RnaSampleId) ?
+                config.RnaSampleId : null;
+
         List<SmallVariant> allSomaticVariants = SmallVariantFactory.passOnlyInstance().fromVCFFile(
-                tumorId, config.ReferenceId, config.RnaSampleId, somaticVariantVcf);
+                tumorId, config.ReferenceId, rnaSampleId, somaticVariantVcf);
 
         List<SmallVariant> panelSomaticVariants = allSomaticVariants.stream().filter(x -> x.reported()).collect(Collectors.toList());
 
@@ -98,6 +108,19 @@ public final class PurpleDataLoader
             panelGermlineAmpDels = germlineAmpDels.stream().filter(x -> x.Reported == ReportedStatus.REPORTED).collect(Collectors.toList());
         }
 
+        List<String> variantPlots = Lists.newArrayList();
+
+        if(config.SagePlotDirectory != null)
+        {
+            for(String file : new File(config.SagePlotDirectory).list())
+            {
+                if(file.endsWith(MiscToolFiles.SAGE_VIS_PLOT_FILE_EXTENSION))
+                    variantPlots.add(config.SagePlotDirectory + file);
+            }
+
+            LOGGER.debug(" loaded {} Sage-vis plots from {}", variantPlots.size(), config.SagePlotDirectory);
+        }
+
         return ImmutablePurpleData.builder()
                 .purityContext(purityContext)
                 .somaticDrivers(somaticDrivers)
@@ -107,6 +130,7 @@ public final class PurpleDataLoader
                 .somaticGeneCopyNumbers(geneCopyNumbers)
                 .germlineAmpDels(panelGermlineAmpDels)
                 .chrArmCopyNumbers(chrArmCopyNumbers)
+                .variantPlots(variantPlots)
                 .build();
     }
 

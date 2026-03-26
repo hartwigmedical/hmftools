@@ -37,4 +37,6 @@ public interface PurpleData
     List<Segment> segments();
 
     List<ChrArmCopyNumber> chrArmCopyNumbers();
+
+    List<String> variantPlots();
 }

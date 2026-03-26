@@ -86,7 +86,7 @@ public class FrontPageChapter implements ReportChapter
         LayoutResult result = renderer.layout(new LayoutContext(new LayoutArea(0, new Rectangle(contentWidth(), pageHeight))));
         float currentHeight = result.getOccupiedArea().getBBox().getHeight();
 
-        int remainingHeight = (int)floor(pageHeight - currentHeight - PAGE_MARGIN_TOP - PAGE_MARGIN_BOTTOM);
+        int remainingHeight = (int)floor(pageHeight - currentHeight - PAGE_MARGIN_TOP - PAGE_MARGIN_BOTTOM) - 50;
         int maxCircosHeight = min(remainingHeight, FRONT_CIRCOS_IMAGE_HEIGHT);
 
         Image circosImage = Images.build(mPlotPathResolver.resolve(mReport.plots().purpleFinalCircosPlot()));

@@ -58,6 +58,9 @@ public class IsofoxInterpreter
     {
         for(com.hartwig.hmftools.common.rna.GeneExpression geneExpression : geneExpressions)
         {
+            if(geneExpression.medianTpmCohort() <= 0) // points to an issue with annotation in Isofox
+                continue;
+
             if(geneExpression.reportedStatus() == ReportedStatus.REPORTED)
                 highExpressionGenes.add(IsofoxConversion.convert(geneExpression));
         }

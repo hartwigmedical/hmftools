@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.Doubles;
+import com.hartwig.hmftools.common.variant.CommonVcfTags;
 import com.hartwig.hmftools.datamodel.hla.LilacAllele;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.util.Cells;
@@ -36,8 +37,10 @@ public final class HLAAlleleTable
         List<Integer> widths = Lists.newArrayList();
         List<Cell> cellEntries = Lists.newArrayList();
 
+        boolean hasWarnings = alleles.stream().anyMatch(x -> !x.qcStatus().equals(CommonVcfTags.PASS_FILTER));
+
         addEntry(cells, widths, cellEntries, 1, "Allele");
-        addEntry(cells, widths, cellEntries, 1, "QC Status");
+        addEntry(cells, widths, cellEntries, hasWarnings ? 2 : 1, "QC Status");
         addEntry(cells, widths, cellEntries, 1, "Ref Frags");
         addEntry(cells, widths, cellEntries, 1, "Tumor Frags");
 
