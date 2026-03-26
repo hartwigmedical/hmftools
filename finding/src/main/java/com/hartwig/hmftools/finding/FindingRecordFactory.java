@@ -147,7 +147,7 @@ public class FindingRecordFactory
 
         PurpleRecord purple = orangeRecord.purple();
 
-        builder.purityPloidyFit(createPurityPloidyFit(purple, orangeRecord.plots()));
+        builder.purityPloidyFit(createPurityPloidyFit(purple, orangeRecord.experimentType(), orangeRecord.plots()));
 
         DriverFindingList<GainDeletion> somaticGainDeletions;
 
@@ -215,13 +215,13 @@ public class FindingRecordFactory
                 .build();
     }
 
-    private static PurityPloidyFit createPurityPloidyFit(PurpleRecord purple, OrangePlots orangePlots)
+    private static PurityPloidyFit createPurityPloidyFit(PurpleRecord purple, ExperimentType experimentType, OrangePlots orangePlots)
     {
         PurpleFit purpleFit = purple.fit();
 
         return PurityPloidyFitBuilder.builder()
                 .fittedPurityMethod(PurityPloidyFit.FittedPurityMethod.valueOf(purpleFit.fittedPurityMethod().name()))
-                .purity(ThresholdValueFactory.purityValue(purpleFit.purity()))
+                .purity(ThresholdValueFactory.purityValue(purpleFit.purity(), experimentType))
                 .minPurity(purpleFit.minPurity())
                 .maxPurity(purpleFit.maxPurity())
                 .ploidy(purpleFit.ploidy())
