@@ -3,7 +3,6 @@ package com.hartwig.hmftools.finding;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.function.Function;
 
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.finding.datamodel.FindingRecord;
