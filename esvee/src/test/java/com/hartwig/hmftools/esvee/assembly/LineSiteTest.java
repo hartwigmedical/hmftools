@@ -143,7 +143,7 @@ public class LineSiteTest
         assertFalse(read1.hasLineTailStart());
 
         assertFalse(read4.hasLineTailStart());
-        assertFalse(read4.hasLineTailEnd());
+        assertTrue(read4.hasLineTailEnd());
 
         JunctionAssembler junctionAssembler = new JunctionAssembler(junction);
 

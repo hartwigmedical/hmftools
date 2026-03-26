@@ -11,8 +11,8 @@ public final class LineElements
     public static final String POLY_A_HOMOLOGY = "AAAAAAA";
     public static final String POLY_T_HOMOLOGY = "TTTTTTT";
 
-    public static final int LINE_POLY_AT_TEST_LEN = 18;
-    public static final int LINE_POLY_AT_REQ = 16;
+    public static final int LINE_POLY_AT_TEST_LEN = 14;
+    public static final int LINE_POLY_AT_REQ = 12;
 
     public static final char LINE_CHAR_A = 'A';
     public static final char LINE_CHAR_T = 'T';

@@ -341,8 +341,8 @@ public class ReadAdjustmentsTest
 
         ReadAdjustments.markLineSoftClips(read);
         assertTrue(ReadAdjustments.trimLowQualSoftClipBases(read));
-        assertEquals(84, read.unclippedStart());
-        assertEquals("16S100M", read.cigarString());
+        assertEquals(86, read.unclippedStart());
+        assertEquals("14S100M", read.cigarString());
 
         // keep 2 extra bases since the non-line bases are further in
         softClipBases = "GCTGCTGTCGTGT" + lineSequence + "CC";
@@ -354,8 +354,8 @@ public class ReadAdjustmentsTest
 
         ReadAdjustments.markLineSoftClips(read);
         assertTrue(ReadAdjustments.trimLowQualSoftClipBases(read));
-        assertEquals(82, read.unclippedStart());
-        assertEquals("18S100M", read.cigarString());
+        assertEquals(86, read.unclippedStart());
+        assertEquals("14S100M", read.cigarString());
 
         // test no LINE trimming if an extension of a matching repeat
         readBases = softClipBases + lineSequence + REF_BASES_RANDOM_100;
@@ -386,8 +386,8 @@ public class ReadAdjustmentsTest
         ReadAdjustments.markLineSoftClips(read);
         assertTrue(ReadAdjustments.trimLowQualSoftClipBases(read));
         assertEquals(200, read.alignmentEnd());
-        assertEquals(218, read.unclippedEnd());
-        assertEquals("100M18S", read.cigarString());
+        assertEquals(214, read.unclippedEnd());
+        assertEquals("100M14S", read.cigarString());
 
 
         // expansion of local repeat
