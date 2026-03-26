@@ -3,7 +3,6 @@ package com.hartwig.hmftools.esvee.prep;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
-import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 
 import com.hartwig.hmftools.common.sv.EsveeCommon;
 import com.hartwig.hmftools.common.sv.EsveeDiscordantStats;
@@ -34,7 +33,7 @@ public final class PrepConstants
     public static final int MIN_CALC_ALIGNMENT_LOWER_SCORE = 35;
     public static final int MIN_ALIGNMENT_SCORE_DIFF = 15;
     public static final int MIN_INSERT_ALIGNMENT_OVERLAP = 5;
-    public static final int MIN_SOFT_CLIP_LENGTH = MIN_VARIANT_LENGTH;
+    public static final int MIN_SOFT_CLIP_LENGTH = 24;
     public static final int MIN_LINE_SOFT_CLIP_LENGTH = LineElements.LINE_POLY_AT_TEST_LEN;
     public static final double MIN_SOFT_CLIP_HIGH_QUAL_PERC = 0.75;
     public static final int MAX_SOFT_CLIP_LOW_QUAL_COUNT = 5;
