@@ -35,4 +35,9 @@ public record PredictedTumorOrigin(
     ) implements Finding
     {
     }
+
+    public PredictedTumorOrigin.Prediction best()
+    {
+        return !predictions().isEmpty() ? predictions().get(0) : null;
+    }
 }
