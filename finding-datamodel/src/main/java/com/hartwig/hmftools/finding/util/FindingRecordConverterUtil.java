@@ -7,6 +7,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.hartwig.hmftools.finding.datamodel.FindingRecord;
 import com.hartwig.hmftools.finding.datamodel.driver.Driver;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingList;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingListBuilder;
@@ -20,8 +21,13 @@ import org.jspecify.annotations.Nullable;
 
 import jakarta.validation.constraints.NotNull;
 
-public class FindingsConverter
+public class FindingRecordConverterUtil
 {
+    public static Function<FindingRecord, FindingRecord> listConverter(List<Function<FindingRecord, FindingRecord>> converters)
+    {
+        return record -> converters.stream().reduce(record, (r, c) -> c.apply(r), (r1, r2) -> r1);
+    }
+
     @NotNull
     public static <I extends Finding, O extends Finding> FindingList<O> convertFindingList(@NotNull IFindingList<I> findingList,
             Function<FindingStatus, FindingStatus> findingsStatusConverter,
@@ -35,7 +41,8 @@ public class FindingsConverter
     }
 
     @NotNull
-    public static <I extends Driver, O extends Driver> DriverFindingList<O> convertDriverFindingList(@NotNull IFindingList<I> driverFindingList,
+    public static <I extends Driver, O extends Driver> DriverFindingList<O> convertDriverFindingList(
+            @NotNull IFindingList<I> driverFindingList,
             Function<FindingStatus, FindingStatus> findingsStatusConverter,
             @Nullable Function<I, O> findingConverter,
             @Nullable Comparator<O> comparator)

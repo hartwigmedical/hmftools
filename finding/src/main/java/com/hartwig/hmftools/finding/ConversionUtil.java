@@ -2,10 +2,13 @@ package com.hartwig.hmftools.finding;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.function.Function;
 
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.finding.datamodel.FindingRecord;
 import com.hartwig.hmftools.finding.datamodel.FindingsJson;
+import com.hartwig.hmftools.finding.util.FindingRecordConverterUtil;
 import com.hartwig.hmftools.finding.util.LowPurityConverter;
 import com.hartwig.hmftools.finding.util.PTOConverter;
 
@@ -20,7 +23,8 @@ public class ConversionUtil
         FindingRecord
                 findingRecord =
                 FindingRecordFactory.fromOrangeJsonWithTranscriptFile(orangeJson, clinicalTranscriptsTsv, driverGeneTsv, gender);
-        findingRecord = PTOConverter.convert(LowPurityConverter.convert(findingRecord));
+        findingRecord =
+                FindingRecordConverterUtil.listConverter(List.of(LowPurityConverter::convert, PTOConverter::convert)).apply(findingRecord);
         new FindingsJson().write(findingRecord, findingsJson);
     }
 }
