@@ -30,7 +30,7 @@ public class HlaAlleleFactory
     private static final Logger LOGGER = LogManager.getLogger(HlaAlleleFactory.class);
 
     private static final Pattern HLA_REGEX = Pattern.compile("""
-            ^(?<geneSymbol>[A-Z]+)\\*(?<alleleGroup>\\d{2}):(?<hlaProtein>\\d{2,3})N?$""");
+            ^(?<geneSymbol>\\w+)\\*(?<alleleGroup>\\d{2}):(?<hlaProtein>\\d{2,3})N?$""");
     private static final String PASS = "PASS";
 
     private HlaAlleleFactory()

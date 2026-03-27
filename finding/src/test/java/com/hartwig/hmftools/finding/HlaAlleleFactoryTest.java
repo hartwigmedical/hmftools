@@ -27,6 +27,16 @@ public class HlaAlleleFactoryTest
     }
 
     @Test
+    public void testMatchHlaRegExClassII()
+    {
+        var matcher = HlaAlleleFactory.matchHlaRegEx("DPB1*01:01");
+
+        assertEquals("DPB1", matcher.group("geneSymbol"));
+        assertEquals("01", matcher.group("alleleGroup"));
+        assertEquals("01", matcher.group("hlaProtein"));
+    }
+
+    @Test
     public void testHlaAlleleConversion()
     {
         LilacRecord lilac = ImmutableLilacRecord.builder()
