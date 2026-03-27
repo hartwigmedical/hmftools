@@ -75,7 +75,7 @@ public class VisualisationFileFinderApp
                 .map(VisualisationFile::fileName)
                 .toList();
 
-        new JsonReadWriter<>(List.class).write(visualisationFiles, config.OutputJsonPath);
+        JsonReadWriter.listOf(String.class).write(visualisationFiles, config.OutputJsonPath);
 
         LOGGER.info("Done!");
     }
