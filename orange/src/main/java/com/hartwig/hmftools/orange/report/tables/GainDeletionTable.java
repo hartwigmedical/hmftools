@@ -67,7 +67,9 @@ public final class GainDeletionTable
         addEntry(cells, widths, cellEntries, 1, COL_REL_CN);
         addEntry(cells, widths, cellEntries, 1, COL_ARM_CN);
 
-        if(hasRna)
+        boolean anyEventsHaveRna = hasRna && gainsDels.stream().anyMatch(x -> x.tpm() != null);
+
+        if(anyEventsHaveRna)
         {
             addEntry(cells, widths, cellEntries, 1, COL_TPM);
             addEntry(cells, widths, cellEntries, 1, "Percentile");
@@ -91,7 +93,7 @@ public final class GainDeletionTable
             rowCells.add(cells.createContent(formatSingleDigitDecimal(gainDel.relativeCopyNumber())));
             rowCells.add(cells.createContent(formatSingleDigitDecimal(gainDel.armCopyNumber())));
 
-            if(hasRna)
+            if(anyEventsHaveRna)
             {
                 if(gainDel.tpm() != null)
                 {

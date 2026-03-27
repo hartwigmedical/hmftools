@@ -2,7 +2,6 @@ package com.hartwig.hmftools.orange.report.chapters;
 
 import static java.lang.Math.floor;
 import static java.lang.Math.min;
-import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.orange.report.ReportResources.FRONT_CIRCOS_IMAGE_HEIGHT;
 import static com.hartwig.hmftools.orange.report.ReportResources.PAGE_MARGIN_BOTTOM;
@@ -14,12 +13,9 @@ import com.hartwig.hmftools.orange.report.PlotPathResolver;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.tables.FrontPageTables;
 import com.hartwig.hmftools.orange.report.util.Images;
-import com.hartwig.hmftools.orange.report.util.Tables;
 import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.kernel.geom.Rectangle;
 import com.itextpdf.layout.Document;
-import com.itextpdf.layout.borders.Border;
-import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Image;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.layout.LayoutArea;
@@ -31,8 +27,6 @@ import com.itextpdf.layout.renderer.IRenderer;
 
 public class FrontPageChapter implements ReportChapter
 {
-    private static final String NONE = "None";
-
     private final OrangeConfig mConfig;
     private final OrangeRecord mReport;
     private final PlotPathResolver mPlotPathResolver;

@@ -239,7 +239,7 @@ public class OrangeAlgo
         }
         else
         {
-            LOGGER.debug(" Skipped loading germline variants and deletions since no reference sample configured");
+            LOGGER.trace(" skipped loading germline variants and deletions since no reference sample configured");
         }
 
         return purple;
@@ -276,9 +276,9 @@ public class OrangeAlgo
     @Nullable
     private IsofoxData loadIsofoxData(final OrangeConfig config) throws IOException
     {
-        if(config.RnaSampleId == null || config.IsofoxDir == null)
+        if(config.IsofoxDir == null)
         {
-            LOGGER.debug("skipping Isofox data loading as RNA is not configured");
+            LOGGER.trace("skipping Isofox data loading as RNA is not configured");
             return null;
         }
 
@@ -290,7 +290,7 @@ public class OrangeAlgo
     {
         if(config.LilacDir == null || !Files.exists(Paths.get(config.LilacDir)))
         {
-            LOGGER.info("skipping loading Lilac results since input dir not provided");
+            LOGGER.debug("skipping loading Lilac results since input dir not provided");
             return null;
         }
 
@@ -304,7 +304,7 @@ public class OrangeAlgo
     {
         if(config.VirusDir == null || !Files.exists(Paths.get(config.VirusDir)))
         {
-            LOGGER.debug("skipping Virus annotations as no input has been provided");
+            LOGGER.trace("skipping Virus annotations as no input has been provided");
             return null;
         }
 
@@ -319,7 +319,7 @@ public class OrangeAlgo
 
         if(config.ChordDir == null || !Files.exists(Paths.get(config.ChordDir)))
         {
-            LOGGER.debug("skipping Chord loading as no input has been provided");
+            LOGGER.trace("skipping Chord loading as no input has been provided");
             return null;
         }
 
@@ -337,7 +337,7 @@ public class OrangeAlgo
 
         if(config.CuppaDir == null || !Files.exists(Paths.get(config.CuppaDir)))
         {
-            LOGGER.debug("skipping Cuppa loading as no input has been provided");
+            LOGGER.trace("skipping Cuppa loading as no input has been provided");
             return null;
         }
 

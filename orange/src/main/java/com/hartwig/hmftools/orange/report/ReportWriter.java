@@ -66,7 +66,7 @@ public class ReportWriter
         List<ReportChapter> chapters = new ArrayList<>();
 
         chapters.add(new FrontPageChapter(mConfig, report, mPlotPathResolver, reportResources));
-        chapters.add(new SomaticFindingsChapter(report, mPlotPathResolver, reportResources));
+        chapters.add(new SomaticFindingsChapter(mConfig, report, mPlotPathResolver, reportResources));
 
         if(!report.tumorOnlyMode())
         {

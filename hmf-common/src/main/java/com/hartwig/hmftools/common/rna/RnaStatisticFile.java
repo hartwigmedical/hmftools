@@ -24,7 +24,7 @@ import com.hartwig.hmftools.common.utils.file.FileReaderUtils;
 
 public final class RnaStatisticFile
 {
-    public static final int LOW_COVERAGE_THRESHOLD = 2500000;
+    public static final int LOW_COVERAGE_THRESHOLD = 2_500_000;
     public static final int SPLICE_GENE_THRESHOLD = 17000;
     private static final double HIGH_DUPLICATES_THRESHOLD = 0.9;
 

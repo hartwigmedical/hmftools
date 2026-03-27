@@ -1,9 +1,14 @@
 package com.hartwig.hmftools.orange.report.chapters;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
+import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
+import com.hartwig.hmftools.orange.OrangeConfig;
 import com.hartwig.hmftools.orange.algo.QcStatusInterpretation;
 import com.hartwig.hmftools.datamodel.sigs.SignatureAllocation;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
@@ -30,12 +35,16 @@ import org.apache.logging.log4j.util.Strings;
 
 public class SomaticFindingsChapter implements ReportChapter
 {
+    private final OrangeConfig mConfig;
     private final OrangeRecord mReport;
     private final PlotPathResolver mPlotPathResolver;
     private final ReportResources mReportResources;
 
-    public SomaticFindingsChapter(final OrangeRecord report, final PlotPathResolver plotPathResolver, final ReportResources reportResources)
+    public SomaticFindingsChapter(
+            final OrangeConfig config, final OrangeRecord report, final PlotPathResolver plotPathResolver,
+            final ReportResources reportResources)
     {
+        mConfig = config;
         mReport = report;
         mPlotPathResolver = plotPathResolver;
         mReportResources = reportResources;
@@ -90,11 +99,21 @@ public class SomaticFindingsChapter implements ReportChapter
     {
         String driverVariantsTitle = "Small Variants";
 
-        String titleDrivers = driverVariantsTitle + " (" + mReport.purple().somaticVariants().size() + ")";
+        int variantImpactCount = 0;
+
+        for(PurpleVariant variant : mReport.purple().somaticVariants())
+        {
+            if(variant.canonicalImpact().reported())
+                ++variantImpactCount;
+
+            variantImpactCount += variant.otherImpacts().stream().filter(x -> x.reported()).mapToInt(x -> 1).sum();
+        }
+
+        String titleDrivers = driverVariantsTitle + " (" + variantImpactCount + ")";
 
         document.add(SomaticVariantTable.build(
                 titleDrivers, contentWidth(), mReport.purple().somaticVariants(), mReportResources,
-                mReport.tumorOnlyMode(), mReport.isofox() != null));
+                mReport.tumorOnlyMode(), mConfig != null && mConfig.RnaSampleId != null));
     }
 
     private void addSomaticAmpDels(final Document document)
@@ -141,7 +160,9 @@ public class SomaticFindingsChapter implements ReportChapter
 
         List<LinxBreakend> somaticBreakends = mReport.linx().somaticBreakends();
 
-        String titleDriver = driverGeneDisruptionsTitle + " (" + somaticBreakends.size() + ")";
+        Set<Integer> uniqueSvs = somaticBreakends.stream().map(x -> x.svId()).collect(Collectors.toSet());
+
+        String titleDriver = driverGeneDisruptionsTitle + " (" + uniqueSvs.size() + ")";
         document.add(DisruptionTable.build(titleDriver, contentWidth(), somaticBreakends, mReportResources));
     }
 

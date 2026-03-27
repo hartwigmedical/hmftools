@@ -112,7 +112,7 @@ public class FrontPageTables
         addEntry(cells, widths, cellEntries, 2, "Sequencing Type");
         addEntry(cells, widths, cellEntries, 2, "Pipeline");
         addEntry(cells, widths, cellEntries, 2, "Samples");
-        addEntry(cells, widths, cellEntries, 2, "Data Analysed");
+        addEntry(cells, widths, cellEntries, 2, "Date Analysed");
 
         Table table = Tables.createContent(width, intToFloatArray(widths), cellArray(cellEntries));
 

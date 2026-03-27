@@ -219,19 +219,29 @@ public class OrangeConfig
         SigsDir = pathResolver.resolveOptionalToolDirectory(SIGS_DIR_CFG, defaultToolDirectories.sigsDir());
         VirusDir = pathResolver.resolveOptionalToolDirectory(VIRUS_DIR_CFG, defaultToolDirectories.virusInterpreterDir());
 
-        if(!configBuilder.hasValue(RNA_SAMPLE_ID))
-        {
-            RnaSampleId = null;
-            IsofoxDir = null;
+        // RNA data can be in the appended Sage VCF and/or from Isofox
 
-            LOGGER.info("RNA config not present");
+        RnaSampleId = configBuilder.getValue(RNA_SAMPLE_ID);
+
+        String isofoxDir = null;
+
+        if(configBuilder.hasValue(ISOFOX_DIR_CFG))
+        {
+            isofoxDir = configBuilder.getValue(ISOFOX_DIR_CFG);
         }
         else
         {
-            RnaSampleId = configBuilder.getValue(RNA_SAMPLE_ID);
-            IsofoxDir = pathResolver.resolveMandatoryToolDirectory(ISOFOX_DIR_CFG, defaultToolDirectories.isofoxDir());
+            isofoxDir = pathResolver.resolveOptionalToolDirectory(ISOFOX_DIR_CFG, defaultToolDirectories.isofoxDir());
 
-            LOGGER.debug("RNA sample configured as {}", RnaSampleId);
+            if(!Files.exists(Paths.get(isofoxDir)))
+                isofoxDir = null;
+        }
+
+        IsofoxDir = isofoxDir;
+
+        if(IsofoxDir != null || RnaSampleId != null)
+        {
+            LOGGER.debug("RNA sample({}) Isofox results({})", RnaSampleId, IsofoxDir);
         }
 
         DisplaySampleId = configBuilder.getValue(DISPLAY_SAMPLE_ID, TumorId);
@@ -249,7 +259,7 @@ public class OrangeConfig
         }
         else
         {
-            LOGGER.debug("No sampling date has been configured. Setting sampling data to current date");
+            LOGGER.debug("defaulting sampling data to current date");
             SamplingDate = LocalDate.now();
         }
 
@@ -258,7 +268,7 @@ public class OrangeConfig
     }
 
     public boolean hasReference() { return ReferenceId != null; }
-    public boolean hasRNA() { return RnaSampleId != null; }
+    public boolean hasRNA() { return RnaSampleId != null || IsofoxDir != null; }
 
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
