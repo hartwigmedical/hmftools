@@ -10,19 +10,11 @@ import jakarta.validation.constraints.NotNull;
 @RecordBuilder
 public record FindingStatus(@NotNull FindingStatus.Status status, @NotNull SortedSet<Issue> errors, @NotNull SortedSet<Issue> warnings)
 {
-    public boolean isOK()
+    public enum Status
     {
-        return status == Status.OK;
-    }
-
-    public boolean isNotAvailable()
-    {
-        return status == Status.NOT_AVAILABLE;
-    }
-
-    public boolean isNotReliable()
-    {
-        return status == Status.NOT_RELIABLE;
+        NOT_AVAILABLE,
+        NOT_RELIABLE,
+        OK
     }
 
     public enum Issue
@@ -35,13 +27,23 @@ public record FindingStatus(@NotNull FindingStatus.Status status, @NotNull Sorte
         LOW_PURITY,
         TUMOR_IN_NORMAL_CONTAMINATION,
         CONTAMINATION,
-        NO_TUMOR
+        NO_TUMOR,
+        // No predicted tumor origins that meet likelihood threshold
+        NO_REPORTABLE_VALUE
     }
 
-    public enum Status
+    public boolean isOK()
     {
-        NOT_AVAILABLE,
-        NOT_RELIABLE,
-        OK
+        return status == Status.OK;
+    }
+
+    public boolean isAvailable()
+    {
+        return status == Status.OK || status == Status.NOT_RELIABLE;
+    }
+
+    public boolean isReliable()
+    {
+        return status != Status.NOT_RELIABLE;
     }
 }

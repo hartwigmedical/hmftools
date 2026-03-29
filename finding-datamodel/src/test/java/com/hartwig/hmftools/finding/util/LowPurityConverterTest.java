@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.finding.datamodel;
+package com.hartwig.hmftools.finding.util;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -9,13 +9,17 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
+import com.hartwig.hmftools.finding.datamodel.FindingRecord;
+import com.hartwig.hmftools.finding.datamodel.HlaAllele;
+import com.hartwig.hmftools.finding.datamodel.Qc;
+import com.hartwig.hmftools.finding.datamodel.TestFindingFactory;
+import com.hartwig.hmftools.finding.datamodel.TestFindingRecordFactory;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingList;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingItem;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingList;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingListBuilder;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingStatusBuilder;
-import com.hartwig.hmftools.finding.util.LowPurityConverter;
 
 import org.junit.Test;
 
