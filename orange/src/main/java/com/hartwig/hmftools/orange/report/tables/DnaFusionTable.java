@@ -2,6 +2,7 @@ package com.hartwig.hmftools.orange.report.tables;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_JUNCTIONS;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_RNA_FRAGS;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_TYPE;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatSingleDigitDecimal;
@@ -31,6 +32,8 @@ import com.google.common.collect.Lists;
 
 public final class DnaFusionTable
 {
+    private static final String COL_PHASING = "Phasing";
+
     public static Table build(
             final String title, float width, final List<LinxFusion> fusions, final ReportResources reportResources)
     {
@@ -47,9 +50,9 @@ public final class DnaFusionTable
         boolean hasRna = fusions.stream().anyMatch(x -> x.rnaSupport() != null);
 
         addEntry(cells, widths, cellEntries, 2, COL_FUSION);
-        addEntry(cells, widths, cellEntries, 4, "Junctions");
+        addEntry(cells, widths, cellEntries, 5, COL_JUNCTIONS);
         addEntry(cells, widths, cellEntries, 1, COL_JCN);
-        addEntry(cells, widths, cellEntries, 1, "Phasing");
+        addEntry(cells, widths, cellEntries, 1, COL_PHASING);
         addEntry(cells, widths, cellEntries, 3, COL_TYPE);
 
         if(hasRna)
@@ -96,7 +99,6 @@ public final class DnaFusionTable
     {
         return format("%s (%s) - %s (%s)",
                 fusion.contextUp(), fusion.transcriptUp(), fusion.contextDown(), fusion.transcriptDown());
-
     }
 
     private static String display(FusionPhasedType fusionPhasedType)

@@ -40,6 +40,8 @@ import com.hartwig.hmftools.common.variant.SmallVariant;
 import com.hartwig.hmftools.common.variant.SmallVariantFactory;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.datamodel.orange.ImmutableOrangePlots;
+import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
+import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.orange.OrangeConfig;
 import com.hartwig.hmftools.orange.algo.plot.PlotManager;
 
@@ -134,7 +136,9 @@ public final class PurpleDataLoader
                 .build();
     }
 
-    public static void addPurplePlots(final OrangeConfig config, final PlotManager plotManager, final ImmutableOrangePlots.Builder builder) throws IOException
+    public static void addPurplePlots(
+            final OrangeConfig config, final PlotManager plotManager,
+            final ImmutableOrangePlots.Builder builder) throws IOException
     {
         String purpleFinalCircosPlot = plotManager.processPlotFile(
                 purplePlotFile(config.PurplePlotDirectory, config.TumorId, PURPLE_PLOT_FINAL_CIRCOS));

@@ -19,6 +19,7 @@ public final class TableCommon
     public static final String COL_JCN = "JCN";
     public static final String COL_REL_CN = "Rel CN";
     public static final String COL_LOCATION = "Location";
+    public static final String COL_JUNCTIONS = "Junctions";
     public static final String COL_RANGE = "Range";
     public static final String COL_TYPE = "Type";
     public static final String COL_SV_TYPE = "SV Type";

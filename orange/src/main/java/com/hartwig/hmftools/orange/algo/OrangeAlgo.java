@@ -25,6 +25,7 @@ import com.hartwig.hmftools.datamodel.hla.LilacRecord;
 import com.hartwig.hmftools.datamodel.orange.ExperimentType;
 import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeDoidNode;
 import com.hartwig.hmftools.datamodel.orange.OrangeDoidNode;
+import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.orange.algo.immuno.LilacInterpreter;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxData;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxDataLoader;
@@ -122,7 +123,7 @@ public class OrangeAlgo
             isofox = isofoxInterpreter.interpret(isofoxData);
         }
 
-        OrangePlots plots = buildPlots(config, linxData);
+        OrangePlots plots = buildPlots(config, purple, linxData);
 
         OrangeRecord orangeRecord = ImmutableOrangeRecord.builder()
                 .sampleId(config.TumorId)
@@ -388,7 +389,7 @@ public class OrangeAlgo
         return sigsAllocations;
     }
 
-    private OrangePlots buildPlots(final OrangeConfig config, final LinxData linxData) throws IOException
+    private OrangePlots buildPlots(final OrangeConfig config, final PurpleRecord purpleRecord, final LinxData linxData) throws IOException
     {
         LOGGER.debug("loading plots");
 
@@ -404,6 +405,13 @@ public class OrangeAlgo
         {
             LOGGER.warn("failed to find required plots: {}", e.toString());
             System.exit(1);
+        }
+
+        // copy the Sage vis plots from each variant
+        for(PurpleVariant variant : purpleRecord.somaticVariants())
+        {
+            if(variant.plotFilename() != null)
+                mPlotManager.processPlotFile(variant.plotFilename());
         }
 
         List<String> linxDriverPlots = Lists.newArrayList();

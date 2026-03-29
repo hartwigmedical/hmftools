@@ -97,6 +97,14 @@ public class LinxInterpreter
 
             LinxFusionType fusionType = LinxFusionType.valueOf(fusion.reportedType().toString());
 
+            String geneUp = breakendUp.gene();
+            String geneDown = breakendDown.gene();
+
+            if(fusionType == LinxFusionType.ENHANCER_KNOWN_PAIR || fusionType == LinxFusionType.ENHANCER_PROMISCUOUS)
+            {
+                geneUp = breakendUp.transcriptId(); // to use the IG / TC name
+            }
+
             String contextUp = buildContextStr(breakendUp.regionType(), fusionType, fusion.fusedExonUp());
             String contextDown = buildContextStr(breakendDown.regionType(), fusionType, fusion.fusedExonDown());
 
@@ -105,10 +113,10 @@ public class LinxInterpreter
             AllelicDepth rnaSupport = findRnaSupport(fusion, isofoxData);
 
             LinxFusion convertedFusion = ImmutableLinxFusion.builder()
-                    .geneUp(breakendUp.gene())
+                    .geneUp(geneUp)
                     .contextUp(contextUp)
                     .transcriptUp(breakendUp.transcriptId())
-                    .geneDown(breakendDown.gene())
+                    .geneDown(geneDown)
                     .contextDown(contextDown)
                     .transcriptDown(breakendDown.transcriptId())
                     .reportedType(LinxFusionType.valueOf(fusion.reportedType()))

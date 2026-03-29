@@ -6,6 +6,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_COHOR_FREQ;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_GENE;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_JUNCTIONS;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_JUNC_END;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_JUNC_START;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_LOCATION;
@@ -21,7 +22,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.datamodel.isofox.AltSpliceJunctionType;
 import com.hartwig.hmftools.datamodel.isofox.NovelSpliceJunction;
+import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.util.Cells;
 import com.hartwig.hmftools.orange.report.util.Tables;
@@ -44,7 +47,7 @@ public final class NovelSpliceJunctionTable
         List<Cell> cellEntries = Lists.newArrayList();
 
         addEntry(cells, widths, cellEntries, 1, COL_GENE);
-        addEntry(cells, widths, cellEntries, 2, COL_LOCATION);
+        addEntry(cells, widths, cellEntries, 3, COL_JUNCTIONS);
         addEntry(cells, widths, cellEntries, 2, COL_TYPE);
         addEntry(cells, widths, cellEntries, 1, COL_JUNC_START);
         addEntry(cells, widths, cellEntries, 1, COL_JUNC_END);
@@ -56,19 +59,32 @@ public final class NovelSpliceJunctionTable
         for(NovelSpliceJunction junction : sort(junctions))
         {
             table.addCell(cells.createContent(junction.gene()));
-            table.addCell(cells.createContent(format("%s:%d-%d", junction.chromosome(), junction.junctionStart(), junction.junctionEnd())));
+            table.addCell(cells.createContent(junctionsDisplay(junction)));
             table.addCell(cells.createContent(junction.type().toString()));
             table.addCell(cells.createContent(String.valueOf(junction.regionStart())));
             table.addCell(cells.createContent(String.valueOf(junction.regionEnd())));
 
             int fragments = junction.fragmentCount();
-            int averageDepth = min((int)round((junction.depthStart() + junction.depthEnd()) * 0.5), fragments);
+            int averageDepth = (int)round((junction.depthStart() + junction.depthEnd()) * 0.5);
             table.addCell(cells.createContent(formatSupportField(fragments, averageDepth)));
 
             table.addCell(cells.createContent(String.valueOf(junction.cohortFrequency())));
         }
 
         return new Tables(reportResources).createWrapping(table, title);
+    }
+
+    private static String junctionsDisplay(final NovelSpliceJunction junction)
+    {
+        boolean dupType = junction.type() == AltSpliceJunctionType.CIRCULAR;
+
+        int positionStart = dupType ? junction.junctionEnd() : junction.junctionStart();
+        int positionEnd = dupType ? junction.junctionStart() : junction.junctionEnd();
+        int exonStart = dupType ? junction.exonEnd() : junction.exonStart();
+        int exonEnd = dupType ? junction.exonStart() : junction.exonEnd();
+
+        return format("Exon %d (%s:%d) - Exon %d (%s:%d)",
+                exonStart, junction.chromosome(), positionStart, exonEnd, junction.chromosome(), positionEnd);
     }
 
     private static List<NovelSpliceJunction> sort(final List<NovelSpliceJunction> junctions)
