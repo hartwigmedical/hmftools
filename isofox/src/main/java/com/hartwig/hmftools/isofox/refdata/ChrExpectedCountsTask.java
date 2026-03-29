@@ -74,9 +74,9 @@ public class ChrExpectedCountsTask implements Callable<Void>
 
             for(GeneReadData geneReadData : geneReadDataList)
             {
-                if(mConfig.EnrichedGeneIds.contains(geneReadData.GeneData.GeneId))
+                if(mConfig.EnrichedGeneIds.contains(geneReadData.Gene.GeneId))
                 {
-                    geneCollection.setEnrichedTranscripts(mGeneTransCache.getTranscripts(geneReadData.GeneData.GeneId));
+                    geneCollection.setEnrichedTranscripts(mGeneTransCache.getTranscripts(geneReadData.Gene.GeneId));
                 }
             }
 

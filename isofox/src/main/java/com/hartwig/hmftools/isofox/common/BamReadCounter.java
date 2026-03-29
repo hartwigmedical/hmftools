@@ -143,7 +143,7 @@ public class BamReadCounter implements Callable<Void>
         if(!positionWithin(record.getStart(), mCurrentGenesRange[SE_START], mCurrentGenesRange[SE_END]))
             return;
 
-        if(GeneRegionFilters.inExcludedRegion(mConfig.Filters.ExcludedRegion, record))
+        if(mConfig.Filters.skipRead(record.getContig(), record.getAlignmentStart()))
             return;
 
         ++mTotalReadCount;

@@ -76,7 +76,6 @@ import com.hartwig.hmftools.isofox.novel.RetainedIntronFinder;
 import com.hartwig.hmftools.isofox.novel.SpliceSiteCounter;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
 
-import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMFlag;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
@@ -183,7 +182,7 @@ public class FragmentAllocator
         mExcludedRegion = null;
     }
 
-    public void produceBamCounts(final GeneCollection geneCollection, final ChrBaseRegion geneRegion)
+    public void processBam(final GeneCollection geneCollection, final ChrBaseRegion geneRegion)
     {
         clearCache();
 
@@ -213,15 +212,22 @@ public class FragmentAllocator
         mValidReadStartRegion[SE_START] = geneRegion.start();
         mValidReadStartRegion[SE_END] = geneRegion.end();
 
-        if(mConfig.Filters.ExcludedRegion != null && geneRegion.overlaps(mConfig.Filters.ExcludedRegion))
+        mExcludedRegion = mConfig.Filters.ExcludedRegions.stream().filter(x -> geneRegion.overlaps(x)).findFirst().orElse(null);
+
+        if(mExcludedRegion != null)
         {
-            // special handling to avoid any specified enriched region (in this case LINC00486's poly-G sequence)
-            // has no genes overlapping this
-            mExcludedRegion = mConfig.Filters.ExcludedRegion;
-            final ChrBaseRegion preRegion = new ChrBaseRegion(geneRegion.Chromosome, geneRegion.start(), mExcludedRegion.start() - 100);
-            final ChrBaseRegion postRegion = new ChrBaseRegion(geneRegion.Chromosome, mExcludedRegion.end() + 100, geneRegion.end());
-            mBamSlicer.slice(mSamReader, preRegion, this::processSamRecord);
-            mBamSlicer.slice(mSamReader, postRegion, this::processSamRecord);
+            // slice around any excluded regions - assume they have been configured to have at most one per gene collection for now
+            ISF_LOGGER.debug("gene collection genes({}) region({}) slicing around excluded region({})",
+                    mCurrentGenes.geneNames(), geneRegion, mExcludedRegion);
+
+            ChrBaseRegion preRegion = new ChrBaseRegion(geneRegion.Chromosome, geneRegion.start(), mExcludedRegion.start() - 1000);
+            ChrBaseRegion postRegion = new ChrBaseRegion(geneRegion.Chromosome, mExcludedRegion.end() + 1000, geneRegion.end());
+
+            if(preRegion.isValid())
+                mBamSlicer.slice(mSamReader, preRegion, this::processSamRecord);
+
+            if(postRegion.isValid())
+                mBamSlicer.slice(mSamReader, postRegion, this::processSamRecord);
         }
         else
         {
@@ -252,8 +258,8 @@ public class FragmentAllocator
         if(!positionWithin(record.getStart(), mValidReadStartRegion[SE_START], mValidReadStartRegion[SE_END]))
             return;
 
-        if(inExcludedRegion(record))
-            return;
+        //if(inExcludedRegion(record))
+        //    return;
 
         trackFragmentCounts(record);
 
@@ -673,10 +679,10 @@ public class FragmentAllocator
                 if(transExonRef != null)
                 {
                     GeneReadData geneData = mCurrentGenes.genes().stream()
-                            .filter(x -> x.GeneData.GeneId.equals(transExonRef.GeneId)).findFirst().orElse(null);
+                            .filter(x -> x.Gene.GeneId.equals(transExonRef.GeneId)).findFirst().orElse(null);
 
                     if(geneData != null)
-                        return geneData.GeneData.Strand == ORIENT_FWD;
+                        return geneData.Gene.Strand == ORIENT_FWD;
                 }
             }
         }
@@ -751,7 +757,7 @@ public class FragmentAllocator
         if(mExcludedRegion == null)
             return false;
 
-        return GeneRegionFilters.inExcludedRegion(mConfig.Filters.ExcludedRegion, record);
+        return GeneRegionFilters.inExcludedRegion(mExcludedRegion, record);
     }
 
     private boolean reachedGeneReadLimit()
@@ -939,7 +945,7 @@ public class FragmentAllocator
                         continue;
 
                     writer.write(String.format("%s,%s,%d,%s",
-                            geneReadData.GeneData.GeneId, geneReadData.GeneData.GeneName, readIndex, read.Id));
+                            geneReadData.Gene.GeneId, geneReadData.Gene.GeneName, readIndex, read.Id));
 
                     int calcFragmentLength = read.fragmentInsertSize();
 

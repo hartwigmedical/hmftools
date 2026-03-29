@@ -109,8 +109,8 @@ public class AltSpliceJunctionFinder
 
         // exclude SJs too far outside known transcripts
         int[] geneBounds = new int[] {
-                genes.stream().mapToInt(x -> x.GeneData.GeneStart).min().orElse(0) - MAX_NOVEL_SJ_DISTANCE,
-                genes.stream().mapToInt(x -> x.GeneData.GeneStart).max().orElse(0) + MAX_NOVEL_SJ_DISTANCE };
+                genes.stream().mapToInt(x -> x.Gene.GeneStart).min().orElse(0) - MAX_NOVEL_SJ_DISTANCE,
+                genes.stream().mapToInt(x -> x.Gene.GeneStart).max().orElse(0) + MAX_NOVEL_SJ_DISTANCE };
 
         if(!positionsWithin(read1.PosStart, read1.PosEnd, geneBounds[SE_START], geneBounds[SE_END])
         || !positionsWithin(read2.PosStart, read2.PosEnd, geneBounds[SE_START], geneBounds[SE_END]))
@@ -120,8 +120,8 @@ public class AltSpliceJunctionFinder
 
         // at least one of the reads must fall within a gene
         final List<GeneReadData> candidateGenes = genes.stream()
-                .filter(x -> positionsWithin(read1.PosStart, read1.PosEnd, x.GeneData.GeneStart,x.GeneData.GeneEnd)
-                        || positionsWithin(read2.PosStart, read2.PosEnd, x.GeneData.GeneStart,x.GeneData.GeneEnd))
+                .filter(x -> positionsWithin(read1.PosStart, read1.PosEnd, x.Gene.GeneStart,x.Gene.GeneEnd)
+                        || positionsWithin(read2.PosStart, read2.PosEnd, x.Gene.GeneStart,x.Gene.GeneEnd))
                 .collect(Collectors.toList());
 
         if(candidateGenes.isEmpty())
@@ -647,7 +647,7 @@ public class AltSpliceJunctionFinder
 
             for(final GeneReadData gene : candidateGenes)
             {
-                if(spliceStrand != 0 && gene.GeneData.Strand != spliceStrand)
+                if(spliceStrand != 0 && gene.Gene.Strand != spliceStrand)
                     continue;
 
                 int transMatched = (int)gene.getTranscripts().stream().filter(x -> transIds.contains(x.TransId)).count();
@@ -661,11 +661,11 @@ public class AltSpliceJunctionFinder
 
             if(topGene != null)
             {
-                altSJ.setGeneData(topGene.GeneData.GeneId, topGene.GeneData.GeneName);
+                altSJ.setGeneData(topGene.Gene.GeneId, topGene.Gene.GeneName);
             }
             else
             {
-                GeneData geneData = mGenes.genes().get(0).GeneData;
+                GeneData geneData = mGenes.genes().get(0).Gene;
                 altSJ.setGeneData(geneData.GeneId, geneData.GeneName);
             }
         }
@@ -711,7 +711,7 @@ public class AltSpliceJunctionFinder
     {
         for(AltSpliceJunction altSJ : mAltSpliceJunctions)
         {
-            GeneReadData gene = mGenes.genes().stream().filter(x -> x.GeneData.GeneId.equals(altSJ.geneId())).findFirst().orElse(null);
+            GeneReadData gene = mGenes.genes().stream().filter(x -> x.Gene.GeneId.equals(altSJ.geneId())).findFirst().orElse(null);
             altSJ.calcSummaryData(gene);
 
             int cohortFrequency = 0;

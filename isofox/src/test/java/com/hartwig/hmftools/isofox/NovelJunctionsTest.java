@@ -152,7 +152,7 @@ public class NovelJunctionsTest
 
         read.processOverlappingRegions(overlappingRegions);
         altSJ = asjFinder.createFromRead(read, transIds);
-        altSJ.setGeneData(gene.GeneData.GeneId, gene.GeneData.GeneName);
+        altSJ.setGeneData(gene.Gene.GeneId, gene.Gene.GeneName);
 
         assertEquals(NOVEL_3_PRIME, altSJ.type());
         assertEquals(0, altSJ.calcNearestExonBoundary(SE_START, gene));
@@ -164,7 +164,7 @@ public class NovelJunctionsTest
         overlappingRegions = gene.findOverlappingRegions(read);
         read.processOverlappingRegions(overlappingRegions);
         altSJ = asjFinder.createFromRead(read, transIds);
-        altSJ.setGeneData(gene.GeneData.GeneId, gene.GeneData.GeneName);
+        altSJ.setGeneData(gene.Gene.GeneId, gene.Gene.GeneName);
 
         assertEquals(NOVEL_5_PRIME, altSJ.type());
 
@@ -176,7 +176,7 @@ public class NovelJunctionsTest
 
         assertTrue(overlappingRegions.isEmpty());
         altSJ = asjFinder.createFromRead(read, transIds);
-        altSJ.setGeneData(gene.GeneData.GeneId, gene.GeneData.GeneName);
+        altSJ.setGeneData(gene.Gene.GeneId, gene.Gene.GeneName);
 
         assertEquals(INTRONIC, altSJ.type());
         assertEquals(30, altSJ.calcNearestExonBoundary(SE_START, gene));
@@ -188,7 +188,7 @@ public class NovelJunctionsTest
         overlappingRegions = gene.findOverlappingRegions(read);
         read.processOverlappingRegions(overlappingRegions);
         altSJ = asjFinder.createFromRead(read, transIds);
-        altSJ.setGeneData(gene.GeneData.GeneId, gene.GeneData.GeneName);
+        altSJ.setGeneData(gene.Gene.GeneId, gene.Gene.GeneName);
 
         assertEquals(SKIPPED_EXONS, altSJ.type());
         assertEquals(0, altSJ.calcNearestExonBoundary(SE_START, gene));
@@ -200,7 +200,7 @@ public class NovelJunctionsTest
         overlappingRegions = gene.findOverlappingRegions(read);
         read.processOverlappingRegions(overlappingRegions);
         altSJ = asjFinder.createFromRead(read, transIds);
-        altSJ.setGeneData(gene.GeneData.GeneId, gene.GeneData.GeneName);
+        altSJ.setGeneData(gene.Gene.GeneId, gene.Gene.GeneName);
 
         assertEquals(NOVEL_INTRON, altSJ.type());
         assertEquals(-150, altSJ.calcNearestExonBoundary(SE_START, gene));
@@ -230,7 +230,7 @@ public class NovelJunctionsTest
         transIds = read.getTranscriptClassifications().keySet().stream().collect(Collectors.toList());
 
         altSJ = asjFinder.createFromRead(read, transIds);
-        altSJ.setGeneData(gene.GeneData.GeneId, gene.GeneData.GeneName);
+        altSJ.setGeneData(gene.Gene.GeneId, gene.Gene.GeneName);
 
         assertEquals(MIXED_TRANS, altSJ.type());
         assertEquals(300, altSJ.SpliceJunction[SE_START]);

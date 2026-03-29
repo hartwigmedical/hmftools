@@ -56,13 +56,13 @@ public class GeneCollection
         mGenes = genes;
 
         mGeneIds = Lists.newArrayList();
-        mGenes.forEach(x -> mGeneIds.add(x.GeneData.GeneId));
+        mGenes.forEach(x -> mGeneIds.add(x.Gene.GeneId));
 
         mRegionBounds = new int[SE_PAIR];
         mNonGenicPositions = new int[SE_PAIR];
         mEndOfChromosome = false;
 
-        mChromosome = genes.get(0).GeneData.Chromosome;
+        mChromosome = genes.get(0).Gene.Chromosome;
 
         mTransIdsGeneMap = Maps.newHashMap();
 
@@ -98,7 +98,7 @@ public class GeneCollection
     public int getStrand(int transId)
     {
         final GeneReadData gene = mTransIdsGeneMap.get(transId);
-        return gene != null ? gene.GeneData.Strand : 0;
+        return gene != null ? gene.Gene.Strand : 0;
     }
 
     public String geneNames() { return geneNames(10); }
@@ -137,9 +137,9 @@ public class GeneCollection
 
         for(GeneReadData geneReadData : mGenes)
         {
-            if(config.Filters.EnrichedGeneIds.contains(geneReadData.GeneData.GeneId))
+            if(config.Filters.EnrichedGeneIds.contains(geneReadData.Gene.GeneId))
             {
-                mEnrichedTranscripts = Lists.newArrayList(geneTransCache.getTranscripts(geneReadData.GeneData.GeneId));
+                mEnrichedTranscripts = Lists.newArrayList(geneTransCache.getTranscripts(geneReadData.Gene.GeneId));
                 mEnrichedRegion = new int[SE_PAIR];
 
                 for(TranscriptData transData : mEnrichedTranscripts)
@@ -213,7 +213,7 @@ public class GeneCollection
                 mRegionBounds[SE_END] = max(mRegionBounds[SE_END], transData.TransEnd);
             }
 
-            generateExonicRegions(gene.GeneData.GeneId, mChromosome, mExonRegions, gene.getTranscripts());
+            generateExonicRegions(gene.Gene.GeneId, mChromosome, mExonRegions, gene.getTranscripts());
 
             // cache the relevant set of exon regions back into the gene for convenience
             for(final TranscriptData transData : gene.getTranscripts())
@@ -244,14 +244,14 @@ public class GeneCollection
             // check for the region being a) contained within the gene and b) the gene has unspliced sections
             return mGenes.stream()
                     .filter(x -> x.hasUnsplicedRegions())
-                    .filter(x -> positionsWithin(posStart, posEnd, x.GeneData.GeneStart, x.GeneData.GeneEnd))
+                    .filter(x -> positionsWithin(posStart, posEnd, x.Gene.GeneStart, x.Gene.GeneEnd))
                     .collect(Collectors.toList());
         }
         else
         {
             // any overlap
             return mGenes.stream()
-                    .filter(x -> positionsOverlap(x.GeneData.GeneStart, x.GeneData.GeneEnd, posStart, posEnd))
+                    .filter(x -> positionsOverlap(x.Gene.GeneStart, x.Gene.GeneEnd, posStart, posEnd))
                     .collect(Collectors.toList());
         }
     }

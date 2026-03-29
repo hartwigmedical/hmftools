@@ -114,7 +114,7 @@ public class Isofox
         long startTimeMs = System.currentTimeMillis();
 
         // all other routines split work by chromosome
-        Map<String, List<GeneData>> chrGeneMap = getChromosomeGeneLists();
+        Map<String,List<GeneData>> chrGeneMap = getChromosomeGeneLists();
 
         if(chrGeneMap.isEmpty())
         {

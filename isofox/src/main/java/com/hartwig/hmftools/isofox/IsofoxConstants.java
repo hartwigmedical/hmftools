@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.isofox;
 
 import static com.hartwig.hmftools.common.immune.ImmuneRegions.getIgRegions;
+import static com.hartwig.hmftools.common.region.ExcludedRegions.getPolyGRegion;
 
 import java.util.List;
 
@@ -54,6 +55,17 @@ public class IsofoxConstants
             geneIds.add("ENSG00000266037");
             geneIds.add("ENSG00000263740");
             geneIds.add("ENSG00000265735");
+        }
+    }
+
+    public static void populateExcludedRegions(final List<ChrBaseRegion> excludedRegions, final RefGenomeVersion refGenomeVersion)
+    {
+        excludedRegions.add(getPolyGRegion(refGenomeVersion));
+
+        if(refGenomeVersion == RefGenomeVersion.V38)
+        {
+            // region with poor ribosomal depletion
+            excludedRegions.add(new ChrBaseRegion("chr21", 8200000, 8450000));
         }
     }
 

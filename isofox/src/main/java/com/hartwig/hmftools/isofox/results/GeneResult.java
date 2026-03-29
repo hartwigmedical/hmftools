@@ -44,7 +44,7 @@ public class GeneResult
 
     public GeneResult(final GeneCollection geneCollection, final GeneReadData geneReadData)
     {
-        Gene = geneReadData.GeneData;
+        Gene = geneReadData.Gene;
         CollectionId = geneCollection.chrId();
 
         long exonicLength = geneReadData.calcExonicRegionLength();
