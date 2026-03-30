@@ -119,7 +119,6 @@ public class ReduxConfig
     public static final List<String> LogReadIds = Lists.newArrayList();
     public static boolean ProcessOnlyReadIds = false;
     public static boolean LogReadCacheVerbose = false;
-    public final boolean UseJitterReadCache;
     public final FilterReadsType SpecificRegionsFilterType;
     public final ReadOutput LogReadType;
     public final double PerfDebugTime;
@@ -163,7 +162,6 @@ public class ReduxConfig
     private static final String WRITE_READ_BASE_LENGTH = "write_read_base_length";
     private static final String LOG_DUPLICATE_GROUP_SIZE = "log_dup_group_size";
     private static final String LOG_READ_CACHE_VERBOSE = "log_read_cache";
-    private static final String USE_JITTER_READ_CACHE = "use_jitter_read_cache";
     private static final String PARTIION_THREAD_RATIO = "partition_ratio";
     private static final String PARALLEL_CONCATENATION = "parallel_concat";
     private static final String PROCESS_ONLY_READ_IDS = "process_read_only";
@@ -305,7 +303,6 @@ public class ReduxConfig
         PerfDebugTime = configBuilder.getDecimal(PERF_LOG_TIME);
         RunChecks = configBuilder.hasFlag(RUN_CHECKS);
         LogReadCacheVerbose = configBuilder.hasFlag(LOG_READ_CACHE_VERBOSE);
-        UseJitterReadCache = configBuilder.hasFlag(USE_JITTER_READ_CACHE);
         WriteReadBaseLength = configBuilder.getInteger(WRITE_READ_BASE_LENGTH);
         LogDuplicateGroupSize = configBuilder.getInteger(LOG_DUPLICATE_GROUP_SIZE);
 
@@ -428,7 +425,6 @@ public class ReduxConfig
         configBuilder.addDecimal(PERF_LOG_TIME, PERF_LOG_TIME_DESC, 0);
         configBuilder.addFlag(RUN_CHECKS, "Run duplicate mismatch checks");
         configBuilder.addFlag(LOG_READ_CACHE_VERBOSE, "Log read cache verbose");
-        configBuilder.addFlag(USE_JITTER_READ_CACHE, "Enable jitter read cache");
         configBuilder.addFlag(FAIL_SUPP_NO_MATE_CIGAR, "Fail if supplementary is missing mate CIGAR");
         configBuilder.addConfigItem(SPECIFIC_REGION_FILTER_TYPE, "Used with specific regions, to filter mates or supps");
         configBuilder.addInteger(LOG_DUPLICATE_GROUP_SIZE, "Log duplicate groups of size or larger", 0);
@@ -489,7 +485,6 @@ public class ReduxConfig
         PerfDebugTime = 0;
         RunChecks = true;
         DropDuplicates = false;
-        UseJitterReadCache = false;
         WriteReadBaseLength = 0;
         LogDuplicateGroupSize = 0;
 
