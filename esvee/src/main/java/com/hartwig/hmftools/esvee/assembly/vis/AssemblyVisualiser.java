@@ -31,7 +31,6 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.VCF_ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.vis.HtmlUtil.BASE_FONT_STYLE;
-import static com.hartwig.hmftools.common.vis.HtmlUtil.JQUERY_SCRIPT;
 import static com.hartwig.hmftools.common.vis.HtmlUtil.getJavascript;
 import static com.hartwig.hmftools.common.vis.HtmlUtil.styledTable;
 import static com.hartwig.hmftools.common.vis.SvgRender.BASE_BOX_SIZE;
@@ -51,7 +50,6 @@ import static com.hartwig.hmftools.esvee.assembly.vis.AssemblyVisConstants.VIS_D
 
 import static j2html.TagCreator.body;
 import static j2html.TagCreator.div;
-import static j2html.TagCreator.header;
 import static j2html.TagCreator.html;
 import static j2html.TagCreator.rawHtml;
 import static j2html.TagCreator.td;
@@ -191,7 +189,6 @@ public final class AssemblyVisualiser
         bodyElements.add(getJavascript());
 
         String htmlStr = html(
-                header(JQUERY_SCRIPT),
                 body().with(bodyElements).withStyle(BASE_FONT_STYLE.toString())).render();
 
         Path filePath = (new File(new File(mConfig.OutputDir, VIS_DIR), filename)).toPath();
