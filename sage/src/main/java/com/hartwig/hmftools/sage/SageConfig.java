@@ -76,7 +76,6 @@ public class SageConfig
     public final boolean SkipBqr;
     public final String JitterBqrDir;
     public final boolean SkipMsiJitter;
-    public final boolean MsiSampleOverride;
     public final boolean IncludeMT;
     public final boolean SyncFragments;
     public final boolean IsGermline;
@@ -124,7 +123,6 @@ public class SageConfig
     private static final String JITTER_BQR_DIR = "jitter_bqr_dir";
     private static final String SKIP_BQR = "skip_bqr";
     private static final String SKIP_MSI_JITTER = "skip_msi_jitter";
-    private static final String MSI_SAMPLE_OVERRIDE = "msi_sample_override";
     private static final String GERMLINE = "germline";
 
     // debug options
@@ -231,7 +229,6 @@ public class SageConfig
         }
 
         SkipMsiJitter = configBuilder.hasFlag(SKIP_MSI_JITTER);
-        MsiSampleOverride = configBuilder.hasFlag(MSI_SAMPLE_OVERRIDE);
 
         MinMapQuality = configBuilder.getInteger(MIN_MAP_QUALITY);
 
@@ -414,7 +411,6 @@ public class SageConfig
 
         configBuilder.addPath(JITTER_BQR_DIR, false, "Path to sample jitter and BQR files, otherise uses BAM directory");
         configBuilder.addFlag(SKIP_MSI_JITTER, "Skip loading sample-specific MSI jitter parameter files");
-        configBuilder.addFlag(MSI_SAMPLE_OVERRIDE, "Classify sample as MSI instead of using internal designation");
 
         VisConfig.registerConfig(configBuilder);
 
@@ -445,7 +441,6 @@ public class SageConfig
         SkipBqr = true;
         JitterBqrDir = null;
         SkipMsiJitter = false;
-        MsiSampleOverride = false;
         SpecificChrRegions = new SpecificRegions();
         IncludeMT = false;
         IsGermline = false;
