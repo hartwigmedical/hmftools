@@ -521,8 +521,24 @@ public class FindingRecordFactory
                 .geneDown(fusion.geneDown())
                 .geneContextDown(fusion.contextDown())
                 .geneTranscriptDown(fusion.transcriptDown())
-                .reportedType(Fusion.FusionType.valueOf(fusion.reportedType().name()))
-                .phased(Fusion.FusionPhasedType.valueOf(fusion.phased().name()))
+                .reportedType(switch(fusion.reportedType())
+                {
+                    case NONE -> Fusion.FusionType.NONE;
+                    case KNOWN_PAIR -> Fusion.FusionType.KNOWN_PAIR;
+                    case PROMISCUOUS_5 -> Fusion.FusionType.PROMISCUOUS_5;
+                    case PROMISCUOUS_3 -> Fusion.FusionType.PROMISCUOUS_3;
+                    case PROMISCUOUS_BOTH -> Fusion.FusionType.PROMISCUOUS_BOTH;
+                    case ENHANCER_KNOWN_PAIR -> Fusion.FusionType.ENHANCER_KNOWN_PAIR;
+                    case ENHANCER_PROMISCUOUS -> Fusion.FusionType.ENHANCER_PROMISCUOUS;
+                    case EXON_DEL_DUP -> Fusion.FusionType.EXON_DEL_DUP;
+                    case PROMISCUOUS_ENHANCER_TARGET -> Fusion.FusionType.PROMISCUOUS_ENHANCER_TARGET;
+                })
+                .phased(switch(fusion.phased())
+                {
+                    case INFRAME -> Fusion.FusionPhasedType.INFRAME;
+                    case SKIPPED_EXONS -> Fusion.FusionPhasedType.SKIPPED_EXONS;
+                    case OUT_OF_FRAME -> Fusion.FusionPhasedType.OUT_OF_FRAME;
+                })
                 .fusedExonUp(fusion.fusedExonUp())
                 .fusedExonDown(fusion.fusedExonDown())
                 .chainLinks(fusion.chainLinks())
@@ -530,6 +546,7 @@ public class FindingRecordFactory
                 .domainsKept(List.of(fusion.domainsKept().split(";")))
                 .domainsLost(List.of(fusion.domainsLost().split(";")))
                 .junctionCopyNumber(fusion.junctionCopyNumber())
+                .visualisationFile(VisualisationFileUtil.createNullable(fusion.plotFilename()))
                 .build();
     }
 

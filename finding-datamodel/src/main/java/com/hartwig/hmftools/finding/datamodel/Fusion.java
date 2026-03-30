@@ -38,12 +38,12 @@ public record Fusion(
     public enum FusionType
     {
         NONE,
-        PROMISCUOUS_3,
-        PROMISCUOUS_5,
-        PROMISCUOUS_BOTH,
-        IG_PROMISCUOUS,
         KNOWN_PAIR,
-        IG_KNOWN_PAIR,
+        PROMISCUOUS_5,
+        PROMISCUOUS_3,
+        PROMISCUOUS_BOTH,
+        ENHANCER_KNOWN_PAIR,
+        ENHANCER_PROMISCUOUS,
         EXON_DEL_DUP,
         PROMISCUOUS_ENHANCER_TARGET
     }
