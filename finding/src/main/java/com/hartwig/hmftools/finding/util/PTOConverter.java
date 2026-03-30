@@ -28,7 +28,8 @@ public class PTOConverter
     private static final Map<String, String> CURATED_CANCER_TYPES =
             Map.of("Uterus: Endometrium", "Endometrium", "Colorectum/Appendix/SmallIntestine", "Lower GI tract");
 
-    public static FindingRecord convert(FindingRecord record)
+    @NotNull
+    public static FindingRecord convert(@NotNull FindingRecord record)
     {
         return FindingRecordBuilder.builder(record)
                 .predictedTumorOrigin(convert(record.predictedTumorOrigin()))

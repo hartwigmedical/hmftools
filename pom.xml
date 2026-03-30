@@ -397,6 +397,13 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
+                <groupId>com.hartwig</groupId>
+                <artifactId>finding-datamodel</artifactId>
+                <version>${finding-datamodel.version}</version>
+                <type>test-jar</type>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
                 <groupId>org.mockito</groupId>
                 <artifactId>mockito-core</artifactId>
                 <version>${mockito.version}</version>

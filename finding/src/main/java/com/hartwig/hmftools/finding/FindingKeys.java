@@ -3,6 +3,7 @@ package com.hartwig.hmftools.finding;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.datamodel.chord.ChordStatus;
+import com.hartwig.hmftools.finding.datamodel.SmallVariant;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverSource;
 import com.hartwig.hmftools.datamodel.hla.LilacAllele;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
@@ -19,13 +20,19 @@ import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
 
 import org.jetbrains.annotations.Nullable;
 
-final class FindingKeys
+public final class FindingKeys
 {
     public static String smallVariant(DriverSource sampleType, PurpleVariant variant,
             PurpleTranscriptImpact transcriptImpact, boolean isCanonical)
     {
         return String.format("smallVariant[%s %s %s:%d %s %s]", sampleType, geneTranscriptLabel(variant.gene(), isCanonical,
                 transcriptImpact.transcript()), variant.chromosome(), variant.position(), variant.ref(), variant.alt());
+    }
+
+    public static String smallVariant(DriverSource sampleType, SmallVariant variant)
+    {
+        return String.format("smallVariant[%s %s %s:%d %s %s]", sampleType, geneTranscriptLabel(variant.gene(), variant.isCanonical(),
+                variant.transcriptImpact().transcript()), variant.chromosome(), variant.position(), variant.ref(), variant.alt());
     }
 
     public static String gainDeletion(DriverSource sampleType, String gene, PurpleDriverType driverType,

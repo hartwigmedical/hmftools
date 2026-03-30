@@ -12,14 +12,14 @@ import com.hartwig.hmftools.finding.datamodel.finding.FindingItemBuilder;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingStatusBuilder;
 
-class FindingUtil
+public class FindingUtil
 {
     static <T extends Driver> DriverFindingList<T> refRequired()
     {
         return notAvailableDriverFindingList(Set.of(FindingStatus.Issue.REF_REQUIRED));
     }
 
-    static <T extends Driver> DriverFindingList<T> notAvailableDriverFindingList(Set<FindingStatus.Issue> errors)
+    public static <T extends Driver> DriverFindingList<T> notAvailableDriverFindingList(Set<FindingStatus.Issue> errors)
     {
         return DriverFindingListBuilder.<T>builder()
                 .status(notAvailableStatus(errors))
