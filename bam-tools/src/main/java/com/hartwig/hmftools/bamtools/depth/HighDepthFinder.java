@@ -5,6 +5,10 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POS_END;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POS_START;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
@@ -12,6 +16,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBuffe
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
+import java.util.StringJoiner;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
@@ -73,7 +78,10 @@ public class HighDepthFinder
         {
             BufferedWriter writer = createBufferedWriter(filename, false);
 
-            writer.write("Chromosome\tPosStart\tPosEnd\tBaseDepthMin\tBaseDepthMax");
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
+            sj.add(FLD_CHROMOSOME).add(FLD_POS_START).add(FLD_POS_END);
+            sj.add("BaseDepthMin").add("BaseDepthMax");
+            writer.write(sj.toString());
             writer.newLine();
 
             return writer;
@@ -95,8 +103,13 @@ public class HighDepthFinder
         {
             for(HighDepthRegion region : regions)
             {
-                writer.write(format("%s\t%d\t%d\t%d\t%d",
-                        region.Chromosome, region.start(), region.end(), region.DepthMin, region.DepthMax));
+                StringJoiner sj = new StringJoiner(TSV_DELIM);
+                sj.add(region.Chromosome);
+                sj.add(String.valueOf(region.start()));
+                sj.add(String.valueOf(region.end()));
+                sj.add(String.valueOf(region.DepthMin));
+                sj.add(String.valueOf(region.DepthMax));
+                writer.write(sj.toString());
                 writer.newLine();
             }
         }
