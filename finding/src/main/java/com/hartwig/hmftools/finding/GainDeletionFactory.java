@@ -115,6 +115,7 @@ final class GainDeletionFactory
                 .tpm(purpleGainDeletion.tpm())
                 .tpmPercentile(purpleGainDeletion.tpmPercentile())
                 .tpmFoldChange(purpleGainDeletion.tpmFoldChange())
+                .visualisationFile(VisualisationFileUtil.createNullable(purpleGainDeletion.plotFilename()))
                 .build();
     }
 
