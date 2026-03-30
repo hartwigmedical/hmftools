@@ -21,7 +21,8 @@ import jakarta.validation.constraints.NotNull;
 
 public class LowPurityConverter
 {
-    public static FindingRecord convert(FindingRecord record)
+    @NotNull
+    public static FindingRecord convert(@NotNull FindingRecord record)
     {
         boolean isLowPurity = record.qc().isLowPurity();
         return FindingRecordBuilder.builder(record)

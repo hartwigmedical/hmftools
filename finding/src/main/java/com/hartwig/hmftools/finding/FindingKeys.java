@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.finding;
 
 import com.hartwig.hmftools.datamodel.chord.ChordStatus;
+import com.hartwig.hmftools.finding.datamodel.SmallVariant;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverSource;
 import com.hartwig.hmftools.datamodel.hla.LilacAllele;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
@@ -13,7 +14,7 @@ import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
 
-final class FindingKeys
+public final class FindingKeys
 {
     public static String smallVariant(DriverSource sampleType, PurpleVariant variant,
             PurpleTranscriptImpact transcriptImpact, boolean isCanonical)
@@ -22,11 +23,17 @@ final class FindingKeys
                 transcriptImpact.transcript()), variant.chromosome(), variant.position(), variant.ref(), variant.alt());
     }
 
-    public static String gainDeletion(DriverSource sampleType, String gene, PurpleDriverType purpleDriverType,
+    public static String smallVariant(DriverSource sampleType, SmallVariant variant)
+    {
+        return String.format("smallVariant[%s %s %s:%d %s %s]", sampleType, geneTranscriptLabel(variant.gene(), variant.isCanonical(),
+                variant.transcriptImpact().transcript()), variant.chromosome(), variant.position(), variant.ref(), variant.alt());
+    }
+
+    public static String gainDeletion(DriverSource sampleType, String gene, PurpleDriverType driverType,
             boolean isCanonical, String transcriptId)
     {
         return String.format("gainDeletion[%s %s %s]", sampleType, geneTranscriptLabel(gene, isCanonical, transcriptId),
-                purpleDriverType.name());
+                driverType.name());
     }
 
     public static String disruption(DriverSource sampleType, LinxBreakend breakend)
