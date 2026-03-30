@@ -6,7 +6,6 @@ import static java.lang.Math.round;
 import static java.lang.String.format;
 import static java.util.Map.entry;
 
-import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.CHR_PREFIX;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.pipeline.MiscToolFiles.SAGE_VIS_PLOT_FILE_EXTENSION;
@@ -19,7 +18,6 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS;
 import static com.hartwig.hmftools.common.vis.BaseSeqViewModel.fromStr;
 import static com.hartwig.hmftools.common.vis.ColorUtil.DARK_BLUE;
 import static com.hartwig.hmftools.common.vis.HtmlUtil.BASE_FONT_STYLE;
-import static com.hartwig.hmftools.common.vis.HtmlUtil.JQUERY_SCRIPT;
 import static com.hartwig.hmftools.common.vis.HtmlUtil.getJavascript;
 import static com.hartwig.hmftools.common.vis.HtmlUtil.renderReadInfoTable;
 import static com.hartwig.hmftools.common.vis.HtmlUtil.styledTable;
@@ -53,7 +51,6 @@ import static com.hartwig.hmftools.sage.vis.SageVisConstants.TRANSCRIPT_NAME_IDX
 
 import static j2html.TagCreator.body;
 import static j2html.TagCreator.div;
-import static j2html.TagCreator.header;
 import static j2html.TagCreator.html;
 import static j2html.TagCreator.rawHtml;
 import static j2html.TagCreator.span;
@@ -344,7 +341,6 @@ public class VariantVis
                         aaElements)).withStyle(CssBuilder.EMPTY.verticalAlign("top").toString()))), CssBuilder.EMPTY);
 
         String htmlStr = html(
-                header(JQUERY_SCRIPT),
                 body(variantInfo, verticalSpacer, sampleInfo, readTable, getJavascript()).withStyle(BASE_FONT_STYLE.toString())).render();
 
         String filePath = (new File(firstVis.mConfig.OutputDir, filename)).toString();
