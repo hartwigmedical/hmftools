@@ -4,13 +4,12 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
-import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.purple.PurpleConstants.DEFAULT_CODING_BASE_FACTOR;
+import static com.hartwig.hmftools.purple.PurpleConstants.DEFAULT_TARGETED_TMB_RATIO;
+import static com.hartwig.hmftools.purple.PurpleConstants.DEFAULT_TARGETED_TML_RATIO;
+import static com.hartwig.hmftools.purple.PurpleConstants.TARGETED_TMB_GENE_EXCLUSIONS;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
@@ -23,6 +22,7 @@ import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.TaggedRegion;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 public class TargetRegionsData
 {
@@ -31,32 +31,40 @@ public class TargetRegionsData
     private int mTotalBases;
     private int mCodingBases;
 
-    private double mTmlRatio;
-    private double mTmbRatio;
-
     private int mCodingBaseFactor;
+    private double mTmbRatio;
+    private double mTmlRatio;
 
     private boolean mIsValid;
 
-    public static final List<String> TMB_GENE_EXCLUSIONS = Lists.newArrayList("HLA-A", "HLA-B", "HLA-C", "PIM1", "BCL2");
+    private static final String TARGETED_TMB_RATIO = "target_tmb_ratio";
+    private static final String TARGETED_TML_RATIO = "target_tml_ratio";
+    private static final String TARGETED_CODING_FACTOR = "target_coding_factor";
 
-    // target-region TML and TMB
-    public static final int DEFAULT_CODING_BASE_FACTOR = 150000;
-    public static final double PANEL_SOMATIC_LIKELIHOOD_DIFF_LOW = 0.08;
-    public static final double PANEL_SOMATIC_LIKELIHOOD_DIFF_HIGH = -0.05;
-
-    public TargetRegionsData(final String ratiosFile)
+    public TargetRegionsData(final int codingBaseFactor, final double tmbRatio, final double tmlRatio)
     {
         mTotalBases = 0;
         mCodingBases = 0;
-        mTmlRatio = 1;
-        mTmbRatio = 1;
-        mCodingBaseFactor = DEFAULT_CODING_BASE_FACTOR;
+        mTmlRatio = tmlRatio;
+        mTmbRatio = tmbRatio;
+        mCodingBaseFactor = codingBaseFactor;
 
         mTargetRegions = Maps.newHashMap();
         mIsValid = true;
+    }
 
-        loadTargetRegionsRatios(ratiosFile);
+    public TargetRegionsData(final ConfigBuilder configBuilder)
+    {
+        this(configBuilder.getInteger(TARGETED_CODING_FACTOR),
+                configBuilder.getDecimal(TARGETED_TMB_RATIO),
+                configBuilder.getDecimal(TARGETED_TML_RATIO));
+    }
+
+    public static void registerConfig(final ConfigBuilder configBuilder)
+    {
+        configBuilder.addInteger(TARGETED_CODING_FACTOR, "Targeted panel coding base factor" ,DEFAULT_CODING_BASE_FACTOR);
+        configBuilder.addDecimal(TARGETED_TMB_RATIO, "Targeted panel TMB adjustment factor", DEFAULT_TARGETED_TMB_RATIO);
+        configBuilder.addDecimal(TARGETED_TML_RATIO, "Targeted panel TML adjustment factor", DEFAULT_TARGETED_TML_RATIO);
     }
 
     public Map<String,List<TaggedRegion>> targetRegions() { return mTargetRegions; }
@@ -125,7 +133,7 @@ public class TargetRegionsData
             // find the genes and then coding transcripts which overlap with these entries
             for(GeneData geneData : geneList)
             {
-                if(TMB_GENE_EXCLUSIONS.contains(geneData.GeneName))
+                if(TARGETED_TMB_GENE_EXCLUSIONS.contains(geneData.GeneName))
                 {
                     continue;
                 }
@@ -177,35 +185,5 @@ public class TargetRegionsData
 
         PPL_LOGGER.info("loaded {} target regions bases(total={} coding={}) from file({})",
                 mTargetRegions.values().stream().mapToInt(List::size).sum(), mTotalBases, mCodingBases, targetRegionsBed);
-    }
-
-    private void loadTargetRegionsRatios(final String filename)
-    {
-        if(filename != null)
-        {
-            try
-            {
-                List<String> lines = Files.readAllLines(Paths.get(filename));
-
-                String header = lines.get(0);
-                Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
-                String[] values = lines.get(1).split(TSV_DELIM, -1);
-
-                mTmbRatio = Double.parseDouble(values[fieldsIndexMap.get("TmbRatio")]);
-                mTmlRatio = Double.parseDouble(values[fieldsIndexMap.get("TmlRatio")]);
-                if(fieldsIndexMap.containsKey("CodingBaseFactor"))
-                {
-                    mCodingBaseFactor = Integer.parseInt(values[fieldsIndexMap.get("CodingBaseFactor")]);
-                }
-
-                PPL_LOGGER.info("target regions: tml({}) tmb({}) codingBaseFactor({})",
-                        mTmlRatio, mTmbRatio, mCodingBaseFactor);
-            }
-            catch(IOException e)
-            {
-                mIsValid = false;
-                PPL_LOGGER.error("failed to load target regions ratios file: {}", e.toString());
-            }
-        }
     }
 }
