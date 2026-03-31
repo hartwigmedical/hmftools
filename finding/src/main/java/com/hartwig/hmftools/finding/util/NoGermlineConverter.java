@@ -38,7 +38,8 @@ public class NoGermlineConverter
         DriverFindingList<SmallVariant> somaticFindings = record.somaticSmallVariants();
         DriverFindingList<SmallVariant> germlineFindings = record.germlineSmallVariants();
         List<SmallVariant> allVariants = new ArrayList<>(record.somaticSmallVariants().findings());
-        if(germlineFindings.status().isOK())
+        // Only include germline findings if the somatic findings are ok, otherwise this is a germline only report.
+        if(somaticFindings.status().isOK() && germlineFindings.status().isOK())
         {
             allVariants.addAll(germlineFindings.findings().stream().map(v -> SmallVariantBuilder.builder(v)
                     .driver(DriverFieldsBuilder.builder(v.driver())
