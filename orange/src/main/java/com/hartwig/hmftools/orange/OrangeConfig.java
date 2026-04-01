@@ -233,7 +233,7 @@ public class OrangeConfig
         {
             isofoxDir = pathResolver.resolveOptionalToolDirectory(ISOFOX_DIR_CFG, defaultToolDirectories.isofoxDir());
 
-            if(!Files.exists(Paths.get(isofoxDir)))
+            if(isofoxDir != null && !Files.exists(Paths.get(isofoxDir)))
                 isofoxDir = null;
         }
 

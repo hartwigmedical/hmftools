@@ -45,18 +45,13 @@ public final class SignatureAllocationTable
         addEntry(cells, widths, cellEntries, 1, "Percent");
         addEntry(cells, widths, cellEntries, 4, Strings.EMPTY); // to space things out
 
-        /*
-        Table table = Tables.createContent(width,
-                new float[] { 10, 23, 10, 10, 10 },
-                new Cell[] { cells.createHeader("Signature"), cells.createHeader("Etiology"), cells.createHeader("Allocation"),
-                        cells.createHeader("Percent"),
-                        cells.createHeader(Strings.EMPTY) });
-        */
-
         Table table = Tables.createContent(width, intToFloatArray(widths), cellArray(cellEntries));
 
         for(SignatureAllocation signatureAllocation : sort(signatureAllocations))
         {
+            if(signatureAllocation.percent() < 0.01)
+                continue;
+
             table.addCell(cells.createContent(signatureAllocation.signature()));
             table.addCell(cells.createContent(signatureAllocation.etiology()));
             table.addCell(cells.createContent(format("%.0f", signatureAllocation.allocation())));

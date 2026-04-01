@@ -93,13 +93,16 @@ public final class PurpleVariantFactory
 
         for(SmallVariant otherVariant : allVariants)
         {
+            if(otherVariant == variant)
+                continue;
+
             if(otherVariant.localPhaseSets() == null || otherVariant.localPhaseSets().isEmpty())
                 continue;
 
             if(!otherVariant.chromosome().equals(variant.chromosome()))
                 continue;
 
-            if(abs(variant.position() - otherVariant.position()) > 1000) // plausible distance to be phased
+            if(abs(variant.position() - otherVariant.position()) <= 1000) // plausible distance to be phased
             {
                 for(Integer lpsId : variant.localPhaseSets())
                 {

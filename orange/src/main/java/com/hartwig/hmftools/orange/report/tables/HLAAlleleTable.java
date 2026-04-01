@@ -40,7 +40,7 @@ public final class HLAAlleleTable
         boolean hasWarnings = alleles.stream().anyMatch(x -> !x.qcStatus().equals(CommonVcfTags.PASS_FILTER));
 
         addEntry(cells, widths, cellEntries, 1, "Allele");
-        addEntry(cells, widths, cellEntries, hasWarnings ? 2 : 1, "QC Status");
+        addEntry(cells, widths, cellEntries, hasWarnings ? 3 : 1, "QC Status");
         addEntry(cells, widths, cellEntries, 1, "Ref Frags");
         addEntry(cells, widths, cellEntries, 1, "Tumor Frags");
 

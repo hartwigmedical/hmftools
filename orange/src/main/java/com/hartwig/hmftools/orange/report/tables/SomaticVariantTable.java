@@ -3,6 +3,7 @@ package com.hartwig.hmftools.orange.report.tables;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.orange.algo.OrangeConstants.isCandidateLikelihood;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_COPIES;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_GENE;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_HGVS;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_POSITION;
@@ -56,15 +57,14 @@ public final class SomaticVariantTable
         List<Cell> cellEntries = Lists.newArrayList();
 
         addEntry(cells, widths, cellEntries, 1.5, COL_GENE);
-        addEntry(cells, widths, cellEntries, 1.5, COL_POSITION);
+        addEntry(cells, widths, cellEntries, 2, COL_POSITION);
         addEntry(cells, widths, cellEntries, 3, COL_HGVS);
         addEntry(cells, widths, cellEntries, 1, COL_AF);
         addEntry(cells, widths, cellEntries, 1, COL_DP);
-        addEntry(cells, widths, cellEntries, 1, COL_VCN);
-        addEntry(cells, widths, cellEntries, 1, COL_CN);
+        addEntry(cells, widths, cellEntries, 1, COL_COPIES);
         // addEntry(cells, widths, cellEntries, 1, COL_MACN);
         addEntry(cells, widths, cellEntries, 1.25, COL_HOTSPOT);
-        addEntry(cells, widths, cellEntries, 1.25, COL_BIALLELIC);
+        addEntry(cells, widths, cellEntries, 1, COL_BIALLELIC);
         addEntry(cells, widths, cellEntries, 1.25, COL_CL);
 
         if(tumorOnly)
@@ -95,8 +95,7 @@ public final class SomaticVariantTable
                 rowCells.add(cells.createContent(hgvsDisplay(transcriptImpact)));
                 rowCells.add(cells.createContent(formatTwoDigitDecimal(variant.tumorDepth().alleleFrequency())));
                 rowCells.add(cells.createContent(String.valueOf(variant.tumorDepth().totalReadCount())));
-                rowCells.add(cells.createContent(formatSingleDigitDecimal(variant.variantCopyNumber())));
-                rowCells.add(cells.createContent(formatSingleDigitDecimal(variant.adjustedCopyNumber())));
+                rowCells.add(cells.createContent(copyNumberDisplay(variant)));
                 // rowCells.add(cells.createContent(formatSingleDigitDecimal(variant.minorAlleleCopyNumber())));
                 rowCells.add(cells.createContent(hotspotDisplay(variant)));
                 rowCells.add(cells.createContent(formatPercentageField(variant.biallelicProbability())));
@@ -156,6 +155,11 @@ public final class SomaticVariantTable
             return transcriptImpact.hgvsCodingImpact();
 
         return format("%s [%s]", transcriptImpact.hgvsCodingImpact(), transcriptImpact.hgvsProteinImpact());
+    }
+
+    protected static String copyNumberDisplay(final PurpleVariant variant)
+    {
+        return format("%.1f of %.1f", variant.variantCopyNumber(), variant.adjustedCopyNumber());
     }
 
     protected static String clonalLikelihood(final PurpleVariant variant)
