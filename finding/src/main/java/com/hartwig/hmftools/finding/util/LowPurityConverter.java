@@ -119,12 +119,4 @@ public class LowPurityConverter
                 .tumorCopyNumber(null)
                 .build();
     }
-
-// TODO: Requires the copy number to be null
-//    private static Fusion convert(Fusion fusion)
-//    {
-//        return FusionBuilder.builder(fusion)
-//                .junctionCopyNumber(null)
-//                .build();
-//    }
 }

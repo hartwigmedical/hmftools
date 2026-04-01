@@ -40,7 +40,7 @@ final class GainDeletionFactory
         gainDeletions.sort(GainDeletion.COMPARATOR);
 
         return DriverFindingListBuilder.<GainDeletion>builder()
-                .status(findingStatus)
+                .status(FindingUtil.somaticStatus(findingStatus))
                 .findings(gainDeletions)
                 .build();
     }

@@ -113,7 +113,7 @@ final class DisruptionFactory
                 geneDriverTypeMap.getOrDefault(gene, Disruption.Type.DISRUPTION);
 
         return DriverFindingListBuilder.<Disruption>builder()
-                .status(findingStatus)
+                .status(FindingUtil.somaticStatus(findingStatus))
                 .findings(createDisruptions(DriverSource.SOMATIC, breakends, structuralVariants, findDisruptionType))
                 .build();
     }

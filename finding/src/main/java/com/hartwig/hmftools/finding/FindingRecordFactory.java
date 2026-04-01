@@ -323,7 +323,7 @@ public class FindingRecordFactory
     {
         TumorMutationalLoad.Status status = tumorMutationalLoadStatus(purple.characteristics().tumorMutationalLoadStatus());
         return FindingItemBuilder.<TumorMutationalLoad>builder()
-                .status(findingStatus)
+                .status(FindingUtil.somaticStatus(findingStatus))
                 .finding(TumorMutationalLoadBuilder.builder()
                         .findingKey(FindingKeys.tumorMutationLoadStatus(purple.characteristics().tumorMutationalLoadStatus()))
                         .load(ThresholdValueFactory.tmlValue(purple.characteristics().tumorMutationalLoad()))
@@ -425,7 +425,7 @@ public class FindingRecordFactory
                 Genes.MSI_GENES) : List.of();
 
         return FindingItemBuilder.<MicrosatelliteStability>builder()
-                .status(findingStatus)
+                .status(FindingUtil.somaticStatus(findingStatus))
                 .finding(MicrosatelliteStabilityBuilder.builder()
                         .findingKey(FindingKeys.microsatelliteStability(purple.characteristics().microsatelliteStatus()))
                         .status(microsatelliteStatus)
@@ -460,7 +460,7 @@ public class FindingRecordFactory
     public static DriverFindingList<Fusion> createFusionsFindings(LinxRecord linx, FindingStatus findingStatus)
     {
         return DriverFindingListBuilder.<Fusion>builder()
-                .status(findingStatus)
+                .status(FindingUtil.somaticStatus(findingStatus))
                 .findings(linx.reportableSomaticFusions().stream()
                         .map(o -> convertFusion(o, DriverSource.SOMATIC)).sorted(Fusion.COMPARATOR).toList())
                 .build();
@@ -581,7 +581,7 @@ public class FindingRecordFactory
         if(peachGenotypes != null)
         {
             return FindingListBuilder.<PharmacoGenotype>builder()
-                    .status(findingStatus)
+                    .status(FindingUtil.germlineStatus(findingStatus))
                     .findings(peachGenotypes.stream().map(o ->
                                     PharmacoGenotypeBuilder.builder()
                                             .findingKey(FindingKeys.pharmacoGenotype(o.gene(), o.allele()))
