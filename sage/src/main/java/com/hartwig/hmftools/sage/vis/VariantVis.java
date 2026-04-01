@@ -40,14 +40,9 @@ import static com.hartwig.hmftools.sage.vis.ReadTableColumn.MAP_QUAL_COL;
 import static com.hartwig.hmftools.sage.vis.ReadTableColumn.MATE_TYPE_COL;
 import static com.hartwig.hmftools.sage.vis.ReadTableColumn.ORIENTATION_COL;
 import static com.hartwig.hmftools.sage.vis.ReadTableColumn.SEQ_TECH_BASE_QUAL_COL;
-import static com.hartwig.hmftools.sage.vis.SageVisConstants.AA_VARIANT_TYPE_IDX;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.DISPLAY_EVERY_NTH_COORD;
-import static com.hartwig.hmftools.sage.vis.SageVisConstants.GENE_NAME_IDX;
-import static com.hartwig.hmftools.sage.vis.SageVisConstants.HGVS_INDEX;
-import static com.hartwig.hmftools.sage.vis.SageVisConstants.IMPACT_KEY;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.MAX_READ_UPPER_LIMIT;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.READ_HEIGHT_PX;
-import static com.hartwig.hmftools.sage.vis.SageVisConstants.TRANSCRIPT_NAME_IDX;
 
 import static j2html.TagCreator.body;
 import static j2html.TagCreator.div;
@@ -87,7 +82,8 @@ import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.variant.CommonVcfTags;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.common.variant.VariantTier;
-import com.hartwig.hmftools.common.variant.VcfFileReader;
+import com.hartwig.hmftools.common.variant.impact.VariantImpact;
+import com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser;
 import com.hartwig.hmftools.common.vis.BaseSeqViewModel;
 import com.hartwig.hmftools.common.vis.BaseViewModel;
 import com.hartwig.hmftools.common.vis.CssBuilder;
@@ -293,12 +289,13 @@ public class VariantVis
 
         String aaVariantType = null;
         String geneName = null;
+
         if(aaElements != null && aaElements.variant != null)
         {
-            VariantContext variantContext = aaElements.variant;
-            List<String> impact = (List<String>) variantContext.getAttribute(IMPACT_KEY);
-            geneName = impact.get(GENE_NAME_IDX);
-            aaVariantType = impact.get(AA_VARIANT_TYPE_IDX);
+            VariantImpact variantImpact = VariantImpactSerialiser.fromVariantContext(aaElements.variant);
+
+            geneName = variantImpact.GeneName;
+            aaVariantType = variantImpact.CanonicalEffect;
         }
 
         String sampleId = tumorIds.isEmpty() ? referenceIds.get(0) : tumorIds.get(0);
@@ -566,7 +563,8 @@ public class VariantVis
         return div(table);
     }
 
-    private DomContent renderVariantInfoTable(int totalTumorQuality, double mapQualFactor, boolean nearbyIndel, final Set<String> filters,
+    private DomContent renderVariantInfoTable(
+            int totalTumorQuality, double mapQualFactor, boolean nearbyIndel, final Set<String> filters,
             @Nullable final AminoAcidElements aaElements)
     {
         CssBuilder borderStyle = CssBuilder.EMPTY.border(CssSize.px(1.0), "solid", Color.BLACK).borderCollapse("collapse");
@@ -576,19 +574,15 @@ public class VariantVis
         CssBuilder coreStyle = CssBuilder.EMPTY.fontWeight("bold");
 
         Map<String, List<DomContent>> values = Maps.newLinkedHashMap();
+
         if(aaElements != null && aaElements.variant != null)
         {
-            VariantContext variantContext = aaElements.variant;
-            List<String> impact = (List<String>) variantContext.getAttribute(IMPACT_KEY);
-            String geneName = impact.get(GENE_NAME_IDX);
-            String transcriptName = impact.get(TRANSCRIPT_NAME_IDX);
-            String aaVariantType = impact.get(AA_VARIANT_TYPE_IDX);
-            String hgvs = impact.get(HGVS_INDEX);
+            VariantImpact variantImpact = VariantImpactSerialiser.fromVariantContext(aaElements.variant);
 
-            values.put("Gene", List.of(span(geneName)));
-            values.put("Transcript", List.of(span(transcriptName)));
-            values.put("HGVS", List.of(span(hgvs)));
-            values.put("Coding impact", List.of(span(aaVariantType)));
+            values.put("Gene", List.of(span(variantImpact.GeneName)));
+            values.put("Transcript", List.of(span(variantImpact.CanonicalTranscript)));
+            values.put("HGVS", List.of(span(variantImpact.CanonicalHgvsProtein)));
+            values.put("Coding impact", List.of(span(variantImpact.CanonicalEffect)));
         }
 
         String filterStr = CommonVcfTags.PASS_FILTER;
@@ -710,119 +704,53 @@ public class VariantVis
 
     private record AminoAcidElements(String geneRegionLabel, DomContent ref, DomContent alt, @Nullable VariantContext variant) {}
 
-    private record TranscriptNameNode(String name, boolean isVariant, boolean isCanonical) implements Comparable<TranscriptNameNode>
-    {
-
-        @Override
-        public int compareTo(final TranscriptNameNode o)
-        {
-            if(isVariant == o.isVariant)
-            {
-                if(isCanonical == o.isCanonical)
-                    return name.compareTo(o.name);
-
-                return isCanonical ? -1 : 1;
-            }
-
-            return isVariant ? -1 : 1;
-        }
-    }
-
     @Nullable
-    private static AminoAcidElements getAminoAcidsElements(final VisConfig config, @Nullable final ReferenceData refData,
+    private static AminoAcidElements getAminoAcidsElements(
+            final VisConfig config, @Nullable final ReferenceData refData,
             final BaseRegion viewRegion, final SageVariant sageVariant, final RefGenomeSource refGenome)
     {
-        if(config.PurpleVcf == null)
-        {
-            SG_LOGGER.debug("skipping amino acid annotations in vis, since purple vcf not given");
-            return null;
-        }
-
-        if(refData == null || !refData.geneDataCacheLoaded())
-        {
-            SG_LOGGER.debug("skipping amino acid annotations in vis, since ensembl data is not loaded");
-            return null;
-        }
-
-        final SimpleVariant simpleVariant = sageVariant.variant();
-        List<VariantContext> vcfVariants;
-        try(VcfFileReader vcfFileReader = new VcfFileReader(config.PurpleVcf.toString(), true))
-        {
-            vcfVariants = vcfFileReader.findVariants(simpleVariant.Chromosome, viewRegion.start(), viewRegion.end());
-        }
-
-        if(vcfVariants == null)
-            throw new RuntimeException(format("Failed to read purple VCF: %s", config.PurpleVcf));
-
-        if(vcfVariants.isEmpty())
+        if(!config.hasVariantCodingImpacts() || refData == null)
             return null;
 
-        TranscriptNameNode bestTranscriptName = null;
+        SimpleVariant simpleVariant = sageVariant.variant();
+
+        VariantContext matchedVariantContext = config.getVariantContext(simpleVariant);
+
+        if(matchedVariantContext == null)
+            return null;
+
         List<AminoAcidEvent> aaEvents = Lists.newArrayList();
-        VariantContext variant = null;
-        for(VariantContext variantContext : vcfVariants)
+
+        VariantImpact variantImpact = VariantImpactSerialiser.fromVariantContext(matchedVariantContext);
+
+        String hgvs = variantImpact.CanonicalHgvsProtein;
+        if("p.?".equals(hgvs) || "unknown".equals(hgvs))
         {
-            Object rawImpact = variantContext.getAttribute(IMPACT_KEY);
-            if(rawImpact == null)
-                continue;
-
-            List<String> impact = (List<String>) rawImpact;
-            String transcriptName = impact.get(TRANSCRIPT_NAME_IDX);
-            TranscriptAminoAcids transcriptAminoAcids = refData.TransAminoAcidMap.get(transcriptName);
-            if(transcriptAminoAcids == null)
-                continue;
-
-            boolean isCanonical = transcriptAminoAcids.Canonical;
-
-            String hgvs = impact.get(HGVS_INDEX);
-            if("p.?".equals(hgvs) || "unknown".equals(hgvs))
-            {
-                aaEvents = null;
-            }
-            else if(aaEvents != null && !"".equals(hgvs))
-            {
-                aaEvents.addAll(AminoAcidEvent.parse(hgvs));
-            }
-
-            boolean variantMatches = variantContext.getContig().equals(simpleVariant.chromosome());
-            if(variantContext.getStart() != simpleVariant.Position)
-                variantMatches = false;
-
-            if(!variantContext.getReference().basesMatch(simpleVariant.Ref))
-                variantMatches = false;
-
-            if(!variantContext.getAltAlleleWithHighestAlleleCount().basesMatch(simpleVariant.Alt))
-                variantMatches = false;
-
-            TranscriptNameNode newTranscriptName = new TranscriptNameNode(transcriptName, variantMatches, isCanonical);
-            if(bestTranscriptName == null || newTranscriptName.compareTo(bestTranscriptName) < 0)
-                bestTranscriptName = newTranscriptName;
-
-            if(!variantMatches)
-                continue;
-
-            variant = variantContext;
+            aaEvents = null;
+        }
+        else if(aaEvents != null && !"".equals(hgvs))
+        {
+            aaEvents.addAll(AminoAcidEvent.parse(hgvs));
         }
 
-        if(bestTranscriptName == null)
-            return null;
+        String transcriptName = variantImpact.CanonicalTranscript;
 
-        String transcriptName = bestTranscriptName.name;
         TranscriptAminoAcids transcriptAminoAcids = refData.TransAminoAcidMap.get(transcriptName);
-        TranscriptData transcriptExons = refData.GeneDataCache.getTranscriptData(transcriptAminoAcids.GeneId, transcriptName);
+        TranscriptData transcriptData = refData.GeneDataCache.getTranscriptData(transcriptAminoAcids.GeneId, transcriptName);
 
         if(aaEvents == null)
             aaEvents = Collections.emptyList();
 
         SvgRender.RenderedGeneData renderedGeneData = renderAminoAcids(
-                viewRegion, transcriptExons, transcriptAminoAcids, aaEvents, refGenome, sageVariant);
+                viewRegion, transcriptData, transcriptAminoAcids, aaEvents, refGenome, sageVariant);
 
-        String geneRegionLabel = getGeneRegionLabel(transcriptExons, sageVariant.position());
+        String geneRegionLabel = getGeneRegionLabel(transcriptData, sageVariant.position());
+
         return new AminoAcidElements(
                 transcriptAminoAcids.GeneName + " " + geneRegionLabel,
                 rawHtml(renderedGeneData.refSvgCanvas().getSVGElement()),
                 rawHtml(renderedGeneData.altSvgCanvas().getSVGElement()),
-                variant);
+                matchedVariantContext);
     }
 
     private List<DomContent> renderReads(boolean isTumor, @Nullable final AminoAcidElements aaElements)

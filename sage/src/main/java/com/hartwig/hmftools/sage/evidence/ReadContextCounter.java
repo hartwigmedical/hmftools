@@ -177,7 +177,7 @@ public class ReadContextCounter
         {
             mMatcher = new ReadContextMatcher(mReadContext, true, isReferenceSample);
 
-            mVariantVis = config.Visualiser.Enabled && config.Visualiser.processVariant(mVariant)
+            mVariantVis = config.Visualiser.enabled() && config.Visualiser.processVariant(mVariant)
                     ? new VariantVis(mConfig, mSample, mVariant, mReadContext, mTier) : null;
         }
 

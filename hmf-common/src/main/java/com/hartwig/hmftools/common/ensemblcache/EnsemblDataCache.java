@@ -83,6 +83,7 @@ public class EnsemblDataCache
     }
 
     public RefGenomeVersion refGenomeVersion() { return mRefGenomeVersion; }
+    public String dataPath() { return mDataPath; }
 
     public static void addEnsemblDir(final ConfigBuilder configBuilder)
     {
@@ -304,7 +305,6 @@ public class EnsemblDataCache
         Integer spliceAcceptorPos = mTransSpliceAcceptorPosDataMap.get(transId);
         return spliceAcceptorPos != null ? spliceAcceptorPos : -1;
     }
-
 
     public static final int EXON_RANK_MIN = 0;
     public static final int EXON_RANK_MAX = 1;

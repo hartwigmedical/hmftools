@@ -1,10 +1,12 @@
 package com.hartwig.hmftools.sage.vis;
 
 import static com.hartwig.hmftools.common.utils.config.ConfigItemType.INTEGER;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreateOutputDir;
-import static com.hartwig.hmftools.sage.vis.SageVisConstants.REPORTED_KEY;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.REPORTED_FLAG;
+import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
-import java.io.File;
+import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -17,14 +19,14 @@ import htsjdk.variant.variantcontext.VariantContext;
 
 public class VisConfig
 {
-    public final boolean Enabled;
     public final boolean PassOnly;
     public final int MaxSupportReads;
-    public final File OutputDir;
-    public final List<SimpleVariant> SpecificVariants;
-    public final File PurpleVcf;
+    public final String OutputDir;
 
-    public boolean mNoVariants;
+    public final List<SimpleVariant> SpecificVariants;
+
+    private final String mPurpleVcf;
+    private final List<VariantAndContext> mReportableVariants;
 
     private static final String VIS_OUTPUT_DIR = "vis_output_dir";
     private static final String SPECIFIC_VARIANTS = "vis_variants";
@@ -34,61 +36,79 @@ public class VisConfig
 
     private static final String DEFAULT_PLOT_DIR = "vis";
 
+    private class VariantAndContext
+    {
+        public final SimpleVariant Variant;
+        public final VariantContext Context;
+
+        public VariantAndContext(final SimpleVariant variant, final VariantContext context)
+        {
+            Variant = variant;
+            Context = context;
+        }
+    }
+
     public VisConfig(final ConfigBuilder configBuilder, final String outputDir)
     {
         PassOnly = configBuilder.hasFlag(PASS_ONLY);
         SpecificVariants = Lists.newArrayList();
+        MaxSupportReads = configBuilder.getInteger(MAX_SUPPORT_READS);
 
-        String VcfStr = configBuilder.hasValue(PURPLE_VCF) ? configBuilder.getValue(PURPLE_VCF) : null;
-        PurpleVcf = VcfStr == null ? null : new File(VcfStr);
+        mReportableVariants = Lists.newArrayList();
+        mPurpleVcf = configBuilder.getValue(PURPLE_VCF);
 
-        mNoVariants = false;
         if(configBuilder.hasValue(SPECIFIC_VARIANTS))
         {
             SpecificVariants.addAll(SimpleVariant.fromConfig(configBuilder.getValue(SPECIFIC_VARIANTS)));
+
+            SG_LOGGER.info("loaded {} specific variants for vis plot generation", SpecificVariants.size());
         }
-        else if(PurpleVcf != null)
+        else if(mPurpleVcf != null)
         {
-            try(VcfFileReader vcfFileReader = new VcfFileReader(PurpleVcf.toString(), true))
+            try(VcfFileReader vcfFileReader = new VcfFileReader(mPurpleVcf, true))
             {
                 CloseableTribbleIterator<VariantContext> iter = vcfFileReader.iterator();
                 while(iter.hasNext())
                 {
-                    VariantContext variant = iter.next();
-                    Object reported = variant.getAttribute(REPORTED_KEY);
-                    if(reported != null && (boolean) reported)
+                    VariantContext variantContext = iter.next();
+
+                    if(variantContext.getAttributeAsBoolean(REPORTED_FLAG, false))
                     {
-                        String contig = variant.getContig();
-                        int pos = variant.getStart();
-                        String ref = variant.getReference().getBaseString();
-                        String alt = variant.getAltAlleleWithHighestAlleleCount().getBaseString();
-                        SpecificVariants.add(new SimpleVariant(contig, pos, ref, alt));
+                        String chromosome = variantContext.getContig();
+                        int pos = variantContext.getStart();
+                        String ref = variantContext.getReference().getBaseString();
+                        String alt = variantContext.getAltAlleleWithHighestAlleleCount().getBaseString();
+
+                        SimpleVariant variant = new SimpleVariant(chromosome, pos, ref, alt);
+                        SpecificVariants.add(variant);
+                        mReportableVariants.add(new VariantAndContext(variant, variantContext));
                     }
                 }
 
                 iter.close();
             }
 
-            if(SpecificVariants.isEmpty())
-                mNoVariants = true;
+            SG_LOGGER.info("loaded {} reportable variants for vis plot generation", SpecificVariants.size());
         }
 
-        boolean enabled = PassOnly || !SpecificVariants.isEmpty();
-        File visDir = null;
-        if(configBuilder.hasValue(VIS_OUTPUT_DIR))
-        {
-            enabled = true;
-            visDir = new File(outputDir, configBuilder.getValue(VIS_OUTPUT_DIR));
-        }
-        else if(enabled)
-        {
-            visDir = new File(outputDir, DEFAULT_PLOT_DIR);
-        }
+        String defaultPlotDir = checkAddDirSeparator(outputDir) + DEFAULT_PLOT_DIR;
+        OutputDir = configBuilder.getValue(VIS_OUTPUT_DIR, defaultPlotDir);
 
-        OutputDir = visDir;
-        Enabled = enabled;
+        // always make the output directory if no vis variants will be written
+        if(enabled())
+            checkCreateOutputDir(OutputDir);
+    }
 
-        MaxSupportReads = configBuilder.getInteger(MAX_SUPPORT_READS);
+    public boolean enabled() { return mPurpleVcf != null || PassOnly || !SpecificVariants.isEmpty(); }
+    public boolean hasVariants() { return !SpecificVariants.isEmpty(); }
+
+    public boolean hasVariantCodingImpacts() { return mPurpleVcf != null; }
+    public boolean visualiserOnlyMode() { return mPurpleVcf != null; }
+
+    public VariantContext getVariantContext(final SimpleVariant variant)
+    {
+        VariantAndContext variantAndContext = mReportableVariants.stream().filter(x -> x.Variant.matches(variant)).findFirst().orElse(null);
+        return variantAndContext != null ? variantAndContext.Context : null;
     }
 
     public boolean processVariant(final SimpleVariant variant)
@@ -112,19 +132,17 @@ public class VisConfig
                 INTEGER, MAX_SUPPORT_READS, false,
                 "Visualiser: Max reads by support type, default is fixed by type. Use '-1' to show all.", "0");
 
-        configBuilder.addConfigItem(PURPLE_VCF, false, "VCF file containing pave and purple annotations");
+        configBuilder.addConfigItem(
+                PURPLE_VCF, false, "Visualiser: Purple VCF file to use for reportable variant visualsations");
     }
 
     public VisConfig()
     {
         OutputDir = null;
         SpecificVariants = Lists.newArrayList();
+        mReportableVariants = Collections.emptyList();
         PassOnly = false;
         MaxSupportReads = 0;
-        Enabled = false;
-        mNoVariants = false;
-        PurpleVcf = null;
+        mPurpleVcf = null;
     }
-
-    public boolean noVariants() { return mNoVariants; }
 }

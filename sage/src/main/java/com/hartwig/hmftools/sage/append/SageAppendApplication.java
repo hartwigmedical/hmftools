@@ -318,11 +318,6 @@ public class SageAppendApplication
         configBuilder.checkAndParseCommandLine(args);
 
         SageAppendApplication application = new SageAppendApplication(configBuilder);
-        if(application.mConfig.Common.Visualiser.Enabled && application.mConfig.Common.Visualiser.noVariants())
-        {
-            SG_LOGGER.info("No reportable variants to visualise. Exiting.");
-            return;
-        }
 
         try
         {

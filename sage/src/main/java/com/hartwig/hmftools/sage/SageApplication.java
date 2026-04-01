@@ -10,7 +10,6 @@ import static com.hartwig.hmftools.sage.tinc.TincConfig.callerTincConfig;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -86,6 +85,13 @@ public class SageApplication implements AutoCloseable
 
     private void run() throws IOException
     {
+        if(mConfig.Common.Visualiser.visualiserOnlyMode() && !mConfig.Common.Visualiser.hasVariants())
+        {
+            SG_LOGGER.info("no reportable variants to visualise, exiting");
+            close();
+            return;
+        }
+
         long startTimeMs = System.currentTimeMillis();
 
         SageCommon.setReadLength(mConfig.Common, mRefData.PanelWithHotspots, mConfig.TumorBams.get(0));
@@ -169,13 +175,6 @@ public class SageApplication implements AutoCloseable
         configBuilder.checkAndParseCommandLine(args);
 
         SageApplication application = new SageApplication(configBuilder);
-        if(application.mConfig.Common.Visualiser.Enabled && application.mConfig.Common.Visualiser.noVariants())
-        {
-            SG_LOGGER.info("No reportable variants to visualise. Exiting.");
-            application.close();
-            return;
-        }
-
         application.run();
         application.close();
     }

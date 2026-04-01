@@ -6,6 +6,7 @@ import static java.lang.Math.min;
 import static java.lang.Math.pow;
 import static java.lang.Math.round;
 
+import com.hartwig.hmftools.common.bam.SamRecordUtils;
 import com.hartwig.hmftools.common.sequencing.IlluminaBamUtils;
 import com.hartwig.hmftools.common.sequencing.SbxBamUtils;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
@@ -22,6 +23,7 @@ public class BaseQualAdjustment
 
     private static final int[] STANDARD_BASE_QUALS = { BASE_QUAL_MINIMUM, 11, 25, 37 };
     private static final double BASE_QUAL_PERMITTED_DIFF_MAX = 1.5;
+    private static final int QUAL_PHRED_OFFSET = SamRecordUtils.PHRED_OFFSET;
 
     public static byte adjustBaseQual(final double baseQual) { return adjustBaseQual(STANDARD_BASE_QUALS, baseQual); }
 
@@ -84,4 +86,14 @@ public class BaseQualAdjustment
     }
 
     public static boolean isUncertainBaseQual(final byte qual) { return qual <= BASE_QUAL_MINIMUM; }
+
+    public static byte[] extractTagQualValues(final String qualValuesStr)
+    {
+        byte[] qualValues = qualValuesStr.getBytes();
+        for(int i = 0; i < qualValues.length; ++i)
+        {
+            qualValues[i] -= QUAL_PHRED_OFFSET;
+        }
+        return qualValues;
+    }
 }

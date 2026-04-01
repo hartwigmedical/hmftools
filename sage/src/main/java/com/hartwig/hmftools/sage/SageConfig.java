@@ -21,6 +21,7 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_BAM;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreateOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
 import static com.hartwig.hmftools.sage.SageCommon.SAMPLE_DELIM;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
@@ -249,8 +250,9 @@ public class SageConfig
             mIsValid = false;
 
         Visualiser = new VisConfig(configBuilder, outputDir());
+        SpecificVariants = Lists.newArrayList();
 
-        if(Visualiser.Enabled && !Visualiser.SpecificVariants.isEmpty() && SpecificChrRegions.Regions.isEmpty())
+        if(!Visualiser.SpecificVariants.isEmpty())
         {
             for(SimpleVariant visVariant : Visualiser.SpecificVariants)
             {
@@ -259,10 +261,7 @@ public class SageConfig
                         visVariant.Position + VIS_VARIANT_BUFFER));
             }
         }
-
-        SpecificVariants = Lists.newArrayList();
-
-        if(!SpecificChrRegions.hasFilters() && !Visualiser.Enabled && configBuilder.hasValue(SPECIFIC_VARIANTS_FILE))
+        else if(!SpecificChrRegions.hasFilters() && configBuilder.hasValue(SPECIFIC_VARIANTS_FILE))
         {
             try
             {
@@ -277,7 +276,9 @@ public class SageConfig
             }
             catch(Exception e)
             {
-                mIsValid = false;
+                SG_LOGGER.error("failed to load specific variants file: {}", e.toString());
+                e.printStackTrace();
+                System.exit(1);
             }
         }
 
@@ -324,7 +325,7 @@ public class SageConfig
 
         if(ReferenceIds.size() != ReferenceBams.size())
         {
-            SG_LOGGER.error("Each reference sample must have matching bam");
+            SG_LOGGER.error("each reference sample must have matching BAM file");
             return false;
         }
 
@@ -332,39 +333,26 @@ public class SageConfig
         {
             if(!new File(referenceBam).exists())
             {
-                SG_LOGGER.error("Unable to locate reference bam({})", referenceBam);
+                SG_LOGGER.error("unable to locate reference bam({})", referenceBam);
                 return false;
             }
         }
 
         if(RefGenomeFile.isEmpty())
         {
-            SG_LOGGER.error("Reference genome required");
+            SG_LOGGER.error("reference genome required");
             return false;
         }
 
         if(OutputFile.isEmpty())
         {
-            SG_LOGGER.error("No output VCF file specified");
+            SG_LOGGER.error("no output VCF file specified");
             return false;
         }
 
-        final File outputDir = new File(OutputFile).getParentFile();
-        if(!makeOutputDir(outputDir))
-            return false;
+        File outputDir = new File(OutputFile).getParentFile();
 
-        return !Visualiser.Enabled || makeOutputDir(Visualiser.OutputDir);
-    }
-
-    private static boolean makeOutputDir(final File outputDir)
-    {
-        if(outputDir != null && !outputDir.exists() && !outputDir.mkdirs())
-        {
-            SG_LOGGER.error("unable to write directory({})", outputDir.toString());
-            return false;
-        }
-
-        return true;
+        return checkCreateOutputDir(outputDir.toString());
     }
 
     public boolean processChromosome(final String chromosome)

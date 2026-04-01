@@ -34,11 +34,4 @@ public final class SageVisConstants
     }
 
     public static final int REF_BUFFER_SIZE = 100;
-
-    public static final String REPORTED_KEY = "REPORTED";
-    public static final String IMPACT_KEY = "IMPACT";
-    public static final int GENE_NAME_IDX = 0;
-    public static final int TRANSCRIPT_NAME_IDX = 1;
-    public static final int AA_VARIANT_TYPE_IDX = 2;
-    public static final int HGVS_INDEX = 6;
 }

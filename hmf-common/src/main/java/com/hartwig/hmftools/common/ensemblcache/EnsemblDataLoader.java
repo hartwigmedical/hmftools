@@ -3,7 +3,6 @@ package com.hartwig.hmftools.common.ensemblcache;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -362,9 +361,7 @@ public final class EnsemblDataLoader
     public static boolean loadTranscriptSpliceAcceptorData(
             final String dataPath, final Map<Integer, Integer> transSaPositionDataMap, final Set<Integer> restrictedTransIds)
     {
-        String filename = dataPath;
-
-        filename += ENSEMBL_TRANS_SPLICE_DATA_FILE;
+        String filename = dataPath + ENSEMBL_TRANS_SPLICE_DATA_FILE;
 
         if(!Files.exists(Paths.get(filename)))
             return false;
@@ -423,21 +420,14 @@ public final class EnsemblDataLoader
             final String dataPath, final Map<String, TranscriptAminoAcids> transAminoAcidMap,
             final List<String> restrictedGeneIds, boolean canonicalOnly)
     {
-        return loadTranscriptAminoAcidData(new File(dataPath), transAminoAcidMap, restrictedGeneIds, canonicalOnly);
-    }
+        String filename = dataPath + ENSEMBL_TRANS_AMINO_ACIDS_FILE;
 
-    public static boolean loadTranscriptAminoAcidData(
-            final File dataDir, final Map<String, TranscriptAminoAcids> transAminoAcidMap,
-            final List<String> restrictedGeneIds, boolean canonicalOnly)
-    {
-        File dataFile = new File(dataDir, ENSEMBL_TRANS_AMINO_ACIDS_FILE);
-
-        if(!dataFile.exists())
+        if(!Files.exists(Paths.get(filename)))
             return false;
 
         try
         {
-            BufferedReader fileReader = new BufferedReader(new FileReader(dataFile));
+            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
 
             String line = fileReader.readLine();
 
@@ -475,7 +465,7 @@ public final class EnsemblDataLoader
         }
         catch(IOException e)
         {
-            LOGGER.warn("failed to load transcript amino-acid data({}): {}", dataFile.getAbsolutePath(), e.toString());
+            LOGGER.warn("failed to load transcript amino-acid data({}): {}", filename, e.toString());
             return false;
         }
 
