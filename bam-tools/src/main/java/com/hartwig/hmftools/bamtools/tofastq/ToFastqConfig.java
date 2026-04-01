@@ -38,15 +38,17 @@ public class ToFastqConfig
     public final RefGenomeVersion RefGenVersion;
 
     public final String OutputDir;
-    @Nullable public final String OutputId;
+    public final String OutputId;
     public final FileSplitMode SplitMode;
     public final int Threads;
     public final int PartitionSize;
+    public final boolean BqsrReverse;
 
     public final SpecificRegions SpecificChrRegions;
     public final boolean PerfDebug;
 
     private static final String FILE_SPLIT_MODE = "split_mode";
+    private static final String BQSR_REVERSE = "bqsr_reverse";
 
     public static final String CHR_UNMAPPED = "unmapped"; // to test unmapped reads
 
@@ -90,6 +92,7 @@ public class ToFastqConfig
 
         Threads = Math.max(parseThreads(configBuilder), 1);
         PerfDebug = configBuilder.hasFlag(PERF_DEBUG);
+        BqsrReverse = configBuilder.hasFlag(BQSR_REVERSE);
         SplitMode = FileSplitMode.valueOf(configBuilder.getValue(FILE_SPLIT_MODE));
 
         BT_LOGGER.info("threads({})", Threads);
@@ -127,6 +130,8 @@ public class ToFastqConfig
         configBuilder.addConfigItem(FILE_SPLIT_MODE, false, "File split mode, NONE, READ_GROUP (default), THREAD",
                 FileSplitMode.READ_GROUP.name());
         configBuilder.addInteger(PARTITION_SIZE, "Partition split size", DEFAULT_PARTITION_SIZE);
+
+        configBuilder.addFlag(BQSR_REVERSE, "Reverse BQSR to original quals");
         configBuilder.addFlag(PERF_DEBUG, PERF_DEBUG_DESC);
 
         addOutputOptions(configBuilder);
