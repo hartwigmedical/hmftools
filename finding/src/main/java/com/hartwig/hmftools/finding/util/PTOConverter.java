@@ -24,9 +24,11 @@ public class PTOConverter
     // TODO: Is this constant defined elsewhere?
     private static final double CUPPA_INCONCLUSIVE_CUT_OFF = 0.8;
     private static final double BEST_LIKELIHOOD_CUT_OFF = 0.5;
+
+    private static final String LOWER_GI_TRACT = "Lower GI tract";
     // TODO: Check if these mappings are still necessary
     private static final Map<String, String> CURATED_CANCER_TYPES =
-            Map.of("Uterus: Endometrium", "Endometrium", "Colorectum/Appendix/SmallIntestine", "Lower GI tract");
+            Map.of("Uterus: Endometrium", "Endometrium", "Colorectum/Appendix/SmallIntestine", LOWER_GI_TRACT, "Colorectum/Small intestine/Appendix", LOWER_GI_TRACT);
 
     @NotNull
     public static FindingRecord convert(@NotNull FindingRecord record)
