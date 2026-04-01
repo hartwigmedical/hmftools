@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.ensemblcache;
 
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -62,7 +63,7 @@ public final class EnsemblDataLoader
         if(dataPath == null)
             return false;
 
-        String filename = dataPath;
+        String filename = checkAddDirSeparator(dataPath);
 
         filename += ENSEMBL_GENE_DATA_FILE;
 
@@ -148,7 +149,7 @@ public final class EnsemblDataLoader
             final List<String> restrictedGeneIds, boolean cacheExons, boolean canonicalOnly, boolean includeNonEnsembl,
             final List<String> nonCanonicalTrans)
     {
-        String filename = dataPath;
+        String filename = checkAddDirSeparator(dataPath);
 
         filename += ENSEMBL_TRANS_EXON_DATA_FILE;
 
@@ -281,7 +282,7 @@ public final class EnsemblDataLoader
     public static boolean loadTranscriptProteinData(
             final String dataPath, final Map<Integer, List<TranscriptProteinData>> proteinDataMap, final Set<Integer> restrictedTransIds)
     {
-        String filename = dataPath;
+        String filename = checkAddDirSeparator(dataPath);
 
         filename += ENSEMBL_PROTEIN_FEATURE_DATA_FILE;
 
@@ -361,7 +362,7 @@ public final class EnsemblDataLoader
     public static boolean loadTranscriptSpliceAcceptorData(
             final String dataPath, final Map<Integer, Integer> transSaPositionDataMap, final Set<Integer> restrictedTransIds)
     {
-        String filename = dataPath + ENSEMBL_TRANS_SPLICE_DATA_FILE;
+        String filename = checkAddDirSeparator(dataPath) + ENSEMBL_TRANS_SPLICE_DATA_FILE;
 
         if(!Files.exists(Paths.get(filename)))
             return false;
@@ -420,7 +421,7 @@ public final class EnsemblDataLoader
             final String dataPath, final Map<String, TranscriptAminoAcids> transAminoAcidMap,
             final List<String> restrictedGeneIds, boolean canonicalOnly)
     {
-        String filename = dataPath + ENSEMBL_TRANS_AMINO_ACIDS_FILE;
+        String filename = checkAddDirSeparator(dataPath) + ENSEMBL_TRANS_AMINO_ACIDS_FILE;
 
         if(!Files.exists(Paths.get(filename)))
             return false;
