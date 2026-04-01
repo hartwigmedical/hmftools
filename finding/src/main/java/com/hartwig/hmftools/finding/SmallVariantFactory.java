@@ -33,7 +33,7 @@ final class SmallVariantFactory
             FindingConfig findingConfig)
     {
         return DriverFindingListBuilder.<SmallVariant>builder()
-                .status(findingStatus)
+                .status(FindingUtil.somaticStatus(findingStatus))
                 .findings(SmallVariantFactory.create(
                         DriverSource.SOMATIC, purpleRecord.somaticVariants(), purpleRecord.somaticDrivers(),
                         findingConfig))
@@ -55,7 +55,7 @@ final class SmallVariantFactory
         List<PurpleDriver> germlineDrivers = Objects.requireNonNull(purpleRecord.germlineDrivers());
 
         return DriverFindingListBuilder.<SmallVariant>builder()
-                .status(findingStatus)
+                .status(FindingUtil.germlineStatus(findingStatus))
                 .findings(SmallVariantFactory.create(
                         DriverSource.GERMLINE, germlineVariants, germlineDrivers, findingConfig))
                 .build();

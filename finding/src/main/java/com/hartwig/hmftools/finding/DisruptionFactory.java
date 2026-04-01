@@ -63,7 +63,7 @@ final class DisruptionFactory
         @NotNull Collection<LinxBreakend> breakends = linx.somaticBreakends();
 
         return DriverFindingListBuilder.<Disruption>builder()
-                .status(findingStatus)
+                .status(FindingUtil.somaticStatus(findingStatus))
                 .findings(createDisruptions(DriverSource.SOMATIC, breakends))
                 .build();
     }

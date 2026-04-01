@@ -2,6 +2,7 @@ package com.hartwig.hmftools.finding;
 
 import java.util.List;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.TreeSet;
 
 import com.hartwig.hmftools.finding.datamodel.driver.Driver;
@@ -14,6 +15,42 @@ import com.hartwig.hmftools.finding.datamodel.finding.FindingStatusBuilder;
 
 public class FindingUtil
 {
+    private static final Set<FindingStatus.Issue> GERMLINE_ISSUES = Set.of(FindingStatus.Issue.TUMOR_IN_NORMAL_CONTAMINATION, FindingStatus.Issue.REF_REQUIRED);
+
+    static FindingStatus somaticStatus(FindingStatus status)
+    {
+        SortedSet<FindingStatus.Issue> errors = removeIssues(status.errors(), GERMLINE_ISSUES);
+        return FindingStatusBuilder.builder()
+                .status(errors.isEmpty() ? FindingStatus.Status.OK : status.status())
+                .errors(errors)
+                .warnings(removeIssues(status.warnings(), GERMLINE_ISSUES))
+                .build();
+    }
+
+    static FindingStatus germlineStatus(FindingStatus status)
+    {
+        SortedSet<FindingStatus.Issue> errors = retainIssues(status.errors(), GERMLINE_ISSUES);
+        return FindingStatusBuilder.builder()
+                .status(errors.isEmpty() ? FindingStatus.Status.OK : FindingStatus.Status.NOT_RELIABLE)
+                .errors(errors)
+                .warnings(retainIssues(status.warnings(), GERMLINE_ISSUES))
+                .build();
+    }
+
+    private static SortedSet<FindingStatus.Issue> retainIssues(Set<FindingStatus.Issue> issues, Set<FindingStatus.Issue> issuesToRetain)
+    {
+        SortedSet<FindingStatus.Issue> newIssues = new TreeSet<>(issues);
+        newIssues.retainAll(issuesToRetain);
+        return newIssues;
+    }
+
+    private static SortedSet<FindingStatus.Issue> removeIssues(Set<FindingStatus.Issue> issues, Set<FindingStatus.Issue> issuesToRemove)
+    {
+        SortedSet<FindingStatus.Issue> newIssues = new TreeSet<>(issues);
+        newIssues.removeAll(issuesToRemove);
+        return newIssues;
+    }
+
     static <T extends Driver> DriverFindingList<T> refRequired()
     {
         return notAvailableDriverFindingList(Set.of(FindingStatus.Issue.REF_REQUIRED));

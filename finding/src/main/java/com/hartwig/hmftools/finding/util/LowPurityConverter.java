@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.finding.util;
 
+import java.util.Set;
 import java.util.SortedSet;
-import java.util.TreeSet;
 import java.util.function.Function;
 
 import com.hartwig.hmftools.finding.datamodel.FindingRecord;
@@ -29,7 +29,6 @@ public class LowPurityConverter
                 .somaticDisruptions(convert(record.somaticDisruptions(), isLowPurity))
                 .somaticGainDeletions(convert(record.somaticGainDeletions(), isLowPurity))
                 .viruses(convert(record.viruses(), isLowPurity))
-                .predictedTumorOrigin(convert(record.predictedTumorOrigin(), isLowPurity))
                 .microsatelliteStability(convert(record.microsatelliteStability(), isLowPurity))
                 .tumorMutationalLoad(convert(record.tumorMutationalLoad(), isLowPurity))
                 .tumorMutationalBurden(convert(record.tumorMutationalBurden(), isLowPurity))
@@ -38,6 +37,7 @@ public class LowPurityConverter
                 .hlaAlleles(convert(record.hlaAlleles(), isLowPurity, Function.identity(), LowPurityConverter::convert))
                 .build();
     }
+
 
     @NotNull
     private static <T extends Finding> FindingList<T> convert(@NotNull FindingList<T> findingList, boolean isLowPurity,
@@ -119,12 +119,4 @@ public class LowPurityConverter
                 .tumorCopyNumber(null)
                 .build();
     }
-
-// TODO: Requires the copy number to be null
-//    private static Fusion convert(Fusion fusion)
-//    {
-//        return FusionBuilder.builder(fusion)
-//                .junctionCopyNumber(null)
-//                .build();
-//    }
 }
