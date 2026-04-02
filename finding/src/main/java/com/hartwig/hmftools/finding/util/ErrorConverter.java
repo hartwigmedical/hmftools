@@ -1,7 +1,10 @@
 package com.hartwig.hmftools.finding.util;
 
+import static com.hartwig.hmftools.finding.datamodel.finding.FindingStatus.Issue.NO_REPORTABLE_VALUE;
+
 import java.util.List;
-import java.util.function.Function;
+import java.util.Set;
+import java.util.TreeSet;
 
 import com.hartwig.hmftools.finding.datamodel.FindingRecord;
 import com.hartwig.hmftools.finding.datamodel.FindingRecordBuilder;
@@ -16,6 +19,7 @@ import com.hartwig.hmftools.finding.datamodel.finding.FindingItemBuilder;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingList;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingListBuilder;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingStatusBuilder;
 
 import jakarta.validation.constraints.NotNull;
 
@@ -35,7 +39,7 @@ public class ErrorConverter
                 .viruses(convert(record.viruses()))
                 .chromosomeArmCopyNumbers(convert(record.chromosomeArmCopyNumbers()))
                 // For HLA status remains the same, but tumor fields are cleared.
-                .hlaAlleles(convert(record.hlaAlleles(), Function.identity(), ErrorConverter::convert))
+                .hlaAlleles(convertHla(record.hlaAlleles()))
                 .pharmacoGenotypes(convert(record.pharmacoGenotypes()))
                 .predictedTumorOrigin(convert(record.predictedTumorOrigin()))
                 .microsatelliteStability(convert(record.microsatelliteStability()))
@@ -46,13 +50,30 @@ public class ErrorConverter
     }
 
     @NotNull
-    private static <T extends Finding> FindingList<T> convert(@NotNull FindingList<T> findingList,
-            @NotNull Function<FindingStatus, FindingStatus> findingsStatusConverter,
-            @NotNull Function<T, T> findingConverter)
+    private static FindingList<HlaAllele> convertHla(@NotNull FindingList<HlaAllele> findingList)
     {
-        if(!findingList.status().isOK())
+        if(!findingList.status().isOK() || !findingList.findings().isEmpty())
         {
-            return FindingRecordConverterUtil.convertFindingList(findingList, findingsStatusConverter, findingConverter, null);
+            List<HlaAllele> hlaAlleles = !findingList.status().isOK() ?
+                    FindingRecordConverterUtil.convert(findingList.findings(), ErrorConverter::convert, null) : findingList.findings();
+
+            hlaAlleles = hlaAlleles.stream().filter(h -> h.qcStatus().contains(HlaAllele.QcStatus.PASS)).toList();
+
+            FindingStatus findingStatus = findingList.status();
+            if(hlaAlleles.isEmpty())
+            {
+                // Changing status code because this is different from there being no results.
+                // The issue is that no results meet the required criteria.
+                findingStatus = FindingStatusBuilder.builder(findingStatus)
+                        .status(FindingStatus.Status.NOT_AVAILABLE)
+                        .errors(new TreeSet<>(Set.of(NO_REPORTABLE_VALUE)))
+                        .build();
+            }
+
+            return FindingListBuilder.<HlaAllele>builder()
+                    .status(findingStatus)
+                    .findings(hlaAlleles)
+                    .build();
         }
         else
         {
