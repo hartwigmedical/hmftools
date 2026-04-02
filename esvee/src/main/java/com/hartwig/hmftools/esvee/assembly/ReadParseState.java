@@ -110,7 +110,7 @@ public class ReadParseState
     public void markMismatched() { mMismatched = true; }
 
     public boolean isValid() { return mValid; }
-    public void markInvalid() { mValid = true; }
+    public void markInvalid() { mValid = false; }
 
     public boolean exhausted() { return mExhausted; }
 
