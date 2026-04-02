@@ -19,7 +19,7 @@ public class BaseQualAdjustment
     public static final byte BASE_QUAL_MINIMUM = 1;
     public static final byte INVALID_QUAL = 0;
 
-    public static final byte LOW_BASE_QUAL_THRESHOLD = 26; // quals below this value are considered low-qual
+    public static final byte LOW_BASE_QUAL_THRESHOLD = 26; // quals at and below this value are considered low-qual
 
     private static final int[] STANDARD_BASE_QUALS = { BASE_QUAL_MINIMUM, 11, 25, 37 };
     private static final double BASE_QUAL_PERMITTED_DIFF_MAX = 1.5;

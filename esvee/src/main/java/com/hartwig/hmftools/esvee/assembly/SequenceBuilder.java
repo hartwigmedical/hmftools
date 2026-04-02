@@ -996,11 +996,11 @@ public class SequenceBuilder
         int penaltyCount;
         if(repeatCount < READ_MISMATCH_MEDIUM_REPEAT_COUNT)
         {
-            penaltyCount = max(repeatCountDiff - 1, 0);
+            penaltyCount = max(repeatCountDiff - 1, 0); // zero penalty for 1 difference
         }
         else if(repeatCount < READ_MISMATCH_LONG_REPEAT_COUNT)
         {
-            penaltyCount = max(repeatCountDiff - 2, 0);
+            penaltyCount = max(repeatCountDiff - 2, 0); // zero penalty for 2 differences
         }
         else
         {

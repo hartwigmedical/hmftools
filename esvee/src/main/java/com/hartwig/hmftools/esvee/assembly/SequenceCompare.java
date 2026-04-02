@@ -3,15 +3,14 @@ package com.hartwig.hmftools.esvee.assembly;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
-import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.isLowBaseQual;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.PRIMARY_ASSEMBLY_MERGE_MISMATCH;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.READ_MISMATCH_LONG_REPEAT_COUNT;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.READ_MISMATCH_MEDIUM_REPEAT_COUNT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.READ_MISMATCH_MED_QUAL_NON_SNV_PENALTY;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.READ_MISMATCH_MED_QUAL_SNV_PENALTY;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.READ_MISMATCH_PENALTY;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.REPEAT_2_DIFF_COUNT;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.REPEAT_3_DIFF_COUNT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.basesMatch;
 import static com.hartwig.hmftools.esvee.assembly.BaseQualType.LOW;
 import static com.hartwig.hmftools.esvee.assembly.BaseQualType.MEDIUM;
@@ -284,10 +283,10 @@ public final class SequenceCompare
 
     public static int permittedRepeatCount(final int repeatCount)
     {
-        if(repeatCount >= REPEAT_3_DIFF_COUNT)
+        if(repeatCount >= READ_MISMATCH_LONG_REPEAT_COUNT)
             return 3;
 
-        if(repeatCount >= REPEAT_2_DIFF_COUNT)
+        if(repeatCount >= READ_MISMATCH_MEDIUM_REPEAT_COUNT)
             return 2;
 
         return 1;

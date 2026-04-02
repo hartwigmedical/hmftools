@@ -19,6 +19,7 @@ import static com.hartwig.hmftools.esvee.assembly.LineUtils.findConsensusLineExt
 import static com.hartwig.hmftools.esvee.assembly.LineUtils.hasLineTail;
 import static com.hartwig.hmftools.esvee.assembly.SequenceBuilder.NEXT_BASE_CHECK_COUNT;
 import static com.hartwig.hmftools.esvee.assembly.SequenceBuilder.getRepeatCount;
+import static com.hartwig.hmftools.esvee.assembly.SequenceCompare.permittedRepeatCount;
 import static com.hartwig.hmftools.esvee.assembly.SequenceDiffType.BASE;
 import static com.hartwig.hmftools.esvee.assembly.SequenceDiffType.DELETE;
 import static com.hartwig.hmftools.esvee.assembly.SequenceDiffType.INSERT;
@@ -274,7 +275,10 @@ public class ExtensionSeqBuilder
                     readRepeatCount = getRepeatCount(read, consensusRepeat.Bases, previousExtRepeatCount, mBuildForwards);
                 }
 
-                if(readRepeatCount > 0)
+                int permittedRepeatDiff = permittedRepeatCount(consensusRepeat.Count);
+                int repeatCountDiff = abs(readRepeatCount - consensusRepeat.Count);
+
+                if(readRepeatCount > 0 && repeatCountDiff <= permittedRepeatDiff)
                 {
                     previousRepeatLength = prevExtBaseLength;
 

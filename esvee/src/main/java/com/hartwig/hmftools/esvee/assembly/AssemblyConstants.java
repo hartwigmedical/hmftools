@@ -77,10 +77,6 @@ public final class AssemblyConstants
     public static int READ_MISMATCH_MEDIUM_REPEAT_COUNT = 11;
     public static int READ_MISMATCH_LONG_REPEAT_COUNT = 16;
 
-    // repeat identification and sequence comparison - deprecated??
-    public static final int REPEAT_2_DIFF_COUNT = 11;
-    public static final int REPEAT_3_DIFF_COUNT = 16;
-
     public static final int DEFAULT_ASSEMBLY_MAP_QUAL_THRESHOLD = 10;
 
     public static final int PRIMARY_ASSEMBLY_MERGE_MISMATCH = 3;

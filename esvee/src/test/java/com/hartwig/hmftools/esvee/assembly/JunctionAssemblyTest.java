@@ -301,7 +301,7 @@ public class JunctionAssemblyTest
     }
 
     @Test
-    public void tesRepeatMismatchesExtensionSequence()
+    public void testRepeatMismatchesExtensionSequence()
     {
         String refBases = REF_BASES_200.substring(0, 20);
 
@@ -323,7 +323,7 @@ public class JunctionAssemblyTest
         readBases = extBases3 + refBases;
         Read read3 = createRead(READ_ID_GENERATOR.nextId(), junctionPosition, readBases, makeCigarString(readBases, extBases3.length(), 0));
 
-        String extBases4 = buffer + caRepeat + "CACA" + buffer; // 2 extra CAs
+        String extBases4 = buffer + caRepeat + "CACA" + buffer; // 2 extra CAs, too many for this number of repeats
         readBases = extBases4 + refBases;
         Read read4 = createRead(READ_ID_GENERATOR.nextId(), junctionPosition, readBases, makeCigarString(readBases, extBases4.length(), 0));
 
@@ -376,10 +376,9 @@ public class JunctionAssemblyTest
 
         readInfo = extSeqBuilder.checkAddJunctionRead(read4b);
         assertNotNull(readInfo);
-        assertEquals(1, readInfo.mismatches().size());
+        assertEquals(2, readInfo.mismatches().size());
         mismatch = readInfo.mismatches().get(0);
-        assertEquals(SequenceDiffType.REPEAT, mismatch.Type);
-        assertEquals(6, mismatch.RepeatCount);
+        assertEquals(SequenceDiffType.BASE, mismatch.Type); // was too many to be considered a repeat diff
     }
 
     @Test
