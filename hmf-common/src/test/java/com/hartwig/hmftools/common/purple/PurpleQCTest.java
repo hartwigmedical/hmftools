@@ -117,7 +117,6 @@ public class PurpleQCTest
                 .method(FittedPurityMethod.NORMAL)
                 .amberMeanDepth(91)
                 .lohPercent(0)
-                .tincLevel(0)
-                .chimerismPercentage(0);
+                .tincLevel(0);
     }
 }
