@@ -49,8 +49,6 @@ public abstract class PurpleQC
 
     public abstract double tincLevel();
 
-    public abstract double chimerismPercentage();
-
     @Override
     public String toString()
     {

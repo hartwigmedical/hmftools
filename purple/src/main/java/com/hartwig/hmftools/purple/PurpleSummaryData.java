@@ -61,7 +61,6 @@ public final class PurpleSummaryData
                 .amberMeanDepth(amberMeanDepth)
                 .lohPercent(lohCalcData.lohPercent())
                 .tincLevel(tincLevel)
-                .chimerismPercentage(0.0)
                 .build();
     }
 

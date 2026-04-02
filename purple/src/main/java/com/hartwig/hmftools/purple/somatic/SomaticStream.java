@@ -260,7 +260,7 @@ public class SomaticStream
 
             if(mSnpMod > 1 || mIndelMod < 1)
             {
-                PPL_LOGGER.debug("charting variants: total(snvs={} indels={}) downsampled({})",
+                PPL_LOGGER.debug("charting variants: total(snvs={} indels={}) downsampled({}) mods(snv={} indel={})",
                         mSnpCount, mIndelCount, mPlottingVariants.size(), mSnpMod, mIndelMod);
             }
         }
