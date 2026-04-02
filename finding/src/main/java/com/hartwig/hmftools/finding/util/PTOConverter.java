@@ -59,7 +59,7 @@ public class PTOConverter
                 {
                     // Changing status code because this is different from there being no results.
                     // The issue is that no results meet the required criteria.
-                    findingStatus = FindingStatusBuilder.builder(findingItem.status())
+                    findingStatus = FindingStatusBuilder.builder(findingStatus)
                             .status(FindingStatus.Status.NOT_AVAILABLE)
                             .errors(new TreeSet<>(Set.of(NO_REPORTABLE_VALUE)))
                             .build();
