@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.purple.drivers.OncoDriversTest.createGeneCopy
 import static com.hartwig.hmftools.purple.drivers.TsgDriversTest.countMap;
 import static com.hartwig.hmftools.purple.drivers.TsgDriversTest.createLikelihood;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Map;
@@ -32,11 +33,12 @@ public class TsgMultiHitTest {
     private DndsDriverGeneLikelihood geneLikelihood;
 
     @Before
-    public void setup() {
-        DndsDriverImpactLikelihood missenseLikelihood = createLikelihood(0.00458696050642149, 3.5842380991213754E-7);
-        DndsDriverImpactLikelihood nonsenseLikelihood = createLikelihood(2.549386282565305E-4, 2.467222584510642E-8);
-        DndsDriverImpactLikelihood spliceLikelihood = createLikelihood(2.0913513727648957E-4, 9.252084691914908E-9);
-        DndsDriverImpactLikelihood indelLikelihood = createLikelihood(0.0020706936081327882, 2.4595609375053004E-7);
+    public void setup()
+    {
+        DndsDriverImpactLikelihood missenseLikelihood = createLikelihood(0.0045, 3.6E-7);
+        DndsDriverImpactLikelihood nonsenseLikelihood = createLikelihood(2.5E-4, 2.5E-8);
+        DndsDriverImpactLikelihood spliceLikelihood = createLikelihood(2.1E-4, 9.2E-9);
+        DndsDriverImpactLikelihood indelLikelihood = createLikelihood(0.002, 2.5E-7);
 
         geneLikelihood = ImmutableDndsDriverGeneLikelihood.builder()
                 .gene("JAK1")
@@ -48,7 +50,8 @@ public class TsgMultiHitTest {
     }
 
     @Test
-    public void testMultiHitIsNeverLessThanEquivalentMissense() {
+    public void testMultiHitIsNeverLessThanEquivalentMissense()
+    {
         Map<VariantType,Integer> counts = countMap(83135, 241917);
 
         SomaticVariant missense = createVariant(VariantType.SNP, CodingEffect.MISSENSE, 0, NON_HOTSPOT, 0.5);
@@ -77,4 +80,22 @@ public class TsgMultiHitTest {
         assertTrue(Doubles.equal(multiMissense.driverLikelihood(), multiFrameshift.driverLikelihood()));
     }
 
+    @Test
+    public void testMultiHitWithNonImpactingVariant()
+    {
+        // a variant in the splice region can get a driver catalog record but not be reported nor have a coding impact
+        // and should then not affect DNDS multi-hit logic
+        Map<VariantType,Integer> counts = countMap(83135, 241917);
+
+        SomaticVariant missense = createVariant(VariantType.SNP, CodingEffect.MISSENSE, 0, NON_HOTSPOT, 0.5);
+        SomaticVariant splaceIntronVariant = createVariant(VariantType.SNP, CodingEffect.UNDEFINED, 0, NON_HOTSPOT, 0.5);
+
+        GeneCopyNumber geneCopyNumber = createGeneCopyNumber(GENE_NAME_1);
+
+        DriverCatalog missensePlusNoImpact = TsgDrivers.buildDriverCatalog(
+                Lists.newArrayList(missense, splaceIntronVariant), counts, counts, geneCopyNumber, geneLikelihood,
+                LikelihoodMethod.DNDS, ReportedStatus.REPORTED);
+
+        assertEquals(0.13, missensePlusNoImpact.driverLikelihood(), 0.1);
+    }
 }

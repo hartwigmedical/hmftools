@@ -108,8 +108,8 @@ public class TsgDrivers extends SomaticVariantDriverFinder
         if(codingImpactVariants.size() == 1)
         {
             double singleHit = singleHit(firstVariantTypeCount, firstImpactLikelihood);
-            double substituteFirst =
-                    firstImpact != DriverImpact.MISSENSE ? singleHit(nonBiallelicMissenseCount, dndsLikelihood.missense()) : singleHit;
+            double substituteFirst = firstImpact != DriverImpact.MISSENSE ?
+                    singleHit(nonBiallelicMissenseCount, dndsLikelihood.missense()) : singleHit;
 
             return builder.driverLikelihood(Math.max(singleHit, substituteFirst)).build();
         }
