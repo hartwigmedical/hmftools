@@ -16,10 +16,9 @@ import com.hartwig.hmftools.common.segmentation.SegmentsFile;
 
 public class BAFSegmenter extends PerArmSegmenter<AmberBAF>
 {
-    public static void writeSegments(final List<AmberBAF> amberBAFS,
-            RefGenomeVersion genomeVersion,
-            ExecutorService executor,
-            String outputPath) throws Exception
+    public static void writeSegments(
+            final List<AmberBAF> amberBAFS, final RefGenomeVersion genomeVersion, final ExecutorService executor, final String outputPath)
+            throws Exception
     {
         if(amberBAFS.isEmpty())
         {
