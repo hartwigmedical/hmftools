@@ -48,8 +48,7 @@ public class NoGermlineConverter
                             .build())
                     .build()).toList());
         }
-        return DriverFindingListBuilder.<SmallVariant>builder()
-                .status(somaticFindings.status())
+        return DriverFindingListBuilder.builder(somaticFindings)
                 .findings(setMaxDriverLikelihoods(allVariants))
                 .build();
     }
