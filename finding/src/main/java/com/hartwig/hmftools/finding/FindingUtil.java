@@ -15,7 +15,8 @@ import com.hartwig.hmftools.finding.datamodel.finding.FindingStatusBuilder;
 
 public class FindingUtil
 {
-    private static final Set<FindingStatus.Issue> GERMLINE_ISSUES = Set.of(FindingStatus.Issue.TUMOR_IN_NORMAL_CONTAMINATION, FindingStatus.Issue.REF_REQUIRED);
+    private static final Set<FindingStatus.Issue> GERMLINE_ISSUES =
+            Set.of(FindingStatus.Issue.TUMOR_IN_NORMAL_CONTAMINATION, FindingStatus.Issue.REF_REQUIRED, FindingStatus.Issue.REF_SAMPLE_QUALITY_CONTROL);
 
     static FindingStatus somaticStatus(FindingStatus status)
     {
