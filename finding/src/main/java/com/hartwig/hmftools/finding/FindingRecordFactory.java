@@ -103,7 +103,9 @@ public class FindingRecordFactory
         LinxRecord linx = orangeRecord.linx();
         PurpleRecord purple = orangeRecord.purple();
 
-        FindingStatus findingStatus = FindingsStatusFactory.toFindingsStatus(purple.fit().qc().status());
+        Qc qc = createQc(purple, orangeRecord.plots());
+
+        FindingStatus findingStatus = FindingsStatusFactory.toFindingsStatus(qc.status());
 
         boolean hasRefSample = orangeRecord.referenceId() != null;
 
@@ -118,7 +120,7 @@ public class FindingRecordFactory
                         .sampleId(orangeRecord.sampleId())
                         .samplingDate(orangeRecord.samplingDate())
                         .build())
-                .qc(createQc(purple, orangeRecord.plots()))
+                .qc(qc)
                 .fusions(createFusionsFindings(orangeRecord.linx(), findingStatus));
 
         DriverFindingList<GainDeletion>

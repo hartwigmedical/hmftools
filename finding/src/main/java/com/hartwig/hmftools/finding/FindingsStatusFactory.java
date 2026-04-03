@@ -6,7 +6,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
+import com.hartwig.hmftools.finding.datamodel.Qc;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingStatusBuilder;
 
@@ -14,50 +14,59 @@ import org.jetbrains.annotations.Nullable;
 
 class FindingsStatusFactory
 {
-    static FindingStatus toFindingsStatus(Set<PurpleQCStatus> purpleQCStatuses)
+    static FindingStatus toFindingsStatus(Set<Qc.QCStatus> qcStatuses)
     {
-        SortedSet<FindingStatus.Issue> errors = convert(errors(purpleQCStatuses));
+        SortedSet<FindingStatus.Issue> errors = convert(errors(qcStatuses));
         return FindingStatusBuilder.builder()
                 .status(errors.isEmpty() ? FindingStatus.Status.OK : FindingStatus.Status.NOT_RELIABLE)
                 .errors(errors)
-                .warnings(convert(warnings(purpleQCStatuses)))
+                .warnings(convert(warnings(qcStatuses)))
                 .build();
     }
 
-    private static Set<PurpleQCStatus> warnings(Set<PurpleQCStatus> purpleQCStatuses)
+    private static Set<Qc.QCStatus> warnings(Set<Qc.QCStatus> qcStatuses)
     {
-        return filter(purpleQCStatuses, "WARN_");
+        return filter(qcStatuses, "WARN_");
     }
 
-    private static Set<PurpleQCStatus> errors(Set<PurpleQCStatus> purpleQCStatuses)
+    private static Set<Qc.QCStatus> errors(Set<Qc.QCStatus> qcStatuses)
     {
-        return filter(purpleQCStatuses, "FAIL_");
+        return filter(qcStatuses, "FAIL_");
     }
 
-    private static Set<PurpleQCStatus> filter(Set<PurpleQCStatus> purpleQCStatuses, String prefix)
+    private static Set<Qc.QCStatus> filter(Set<Qc.QCStatus> qcStatuses, String prefix)
     {
-        return purpleQCStatuses.stream().filter(s -> s.name().startsWith(prefix)).collect(Collectors.toSet());
+        return qcStatuses.stream().filter(s -> s.name().startsWith(prefix)).collect(Collectors.toSet());
     }
 
-    private static SortedSet<FindingStatus.Issue> convert(Set<PurpleQCStatus> purpleQCStatuses)
+    private static SortedSet<FindingStatus.Issue> convert(Set<Qc.QCStatus> qcStatuses)
     {
-        return purpleQCStatuses.stream()
+        return qcStatuses.stream()
                 .map(FindingsStatusFactory::convert)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toCollection(TreeSet::new));
     }
 
     @Nullable
-    private static FindingStatus.Issue convert(PurpleQCStatus purpleQCStatus)
+    private static FindingStatus.Issue convert(Qc.QCStatus qcStatus)
     {
-        return switch(purpleQCStatus)
+        return switch(qcStatus)
         {
             case PASS -> null;
             case WARN_DELETED_GENES -> FindingStatus.Issue.DELETED_GENES;
             case WARN_HIGH_COPY_NUMBER_NOISE -> FindingStatus.Issue.HIGH_COPY_NUMBER_NOISE;
             case WARN_GENDER_MISMATCH -> FindingStatus.Issue.GENDER_MISMATCH;
             case WARN_LOW_PURITY -> FindingStatus.Issue.LOW_PURITY;
-            case WARN_TINC, FAIL_TINC -> FindingStatus.Issue.TUMOR_IN_NORMAL_CONTAMINATION;
+            case WARN_TUMOR_IN_NORMAL_CONTAMINATION, FAIL_TUMOR_IN_NORMAL_CONTAMINATION ->
+                    FindingStatus.Issue.TUMOR_IN_NORMAL_CONTAMINATION;
+            case WARN_TUMOR_LOW_COVERAGE -> FindingStatus.Issue.TUMOR_SAMPLE_QUALITY_CONTROL;
+            case WARN_TUMOR_LOW_MAPPED_PROPORTION -> FindingStatus.Issue.TUMOR_SAMPLE_QUALITY_CONTROL;
+            case WARN_TUMOR_LOW_BASE_QUAL -> FindingStatus.Issue.TUMOR_SAMPLE_QUALITY_CONTROL;
+            case WARN_TUMOR_LOW_MAP_QUAL -> FindingStatus.Issue.TUMOR_SAMPLE_QUALITY_CONTROL;
+            case WARN_NORMAL_LOW_COVERAGE -> FindingStatus.Issue.REF_SAMPLE_QUALITY_CONTROL;
+            case WARN_NORMAL_LOW_MAPPED_PROPORTION -> FindingStatus.Issue.REF_SAMPLE_QUALITY_CONTROL;
+            case WARN_NORMAL_LOW_BASE_QUAL -> FindingStatus.Issue.REF_SAMPLE_QUALITY_CONTROL;
+            case WARN_NORMAL_LOW_MAP_QUAL -> FindingStatus.Issue.REF_SAMPLE_QUALITY_CONTROL;
             case FAIL_CONTAMINATION -> FindingStatus.Issue.CONTAMINATION;
             case FAIL_NO_TUMOR -> FindingStatus.Issue.NO_TUMOR;
         };
