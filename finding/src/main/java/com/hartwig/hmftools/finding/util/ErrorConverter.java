@@ -70,7 +70,7 @@ public class ErrorConverter
                         .build();
             }
 
-            return FindingListBuilder.<HlaAllele>builder()
+            return FindingListBuilder.builder(findingList)
                     .status(findingStatus)
                     .findings(hlaAlleles)
                     .build();
@@ -86,8 +86,7 @@ public class ErrorConverter
     {
         if(!findingList.status().isOK())
         {
-            return FindingListBuilder.<T>builder()
-                    .status(findingList.status())
+            return FindingListBuilder.builder(findingList)
                     .findings(List.of())
                     .build();
         }
@@ -102,8 +101,7 @@ public class ErrorConverter
     {
         if(!driverFindingList.status().isOK())
         {
-            return DriverFindingListBuilder.<T>builder()
-                    .status(driverFindingList.status())
+            return DriverFindingListBuilder.builder(driverFindingList)
                     .findings(List.of())
                     .build();
         }
@@ -118,9 +116,7 @@ public class ErrorConverter
     {
         if(!findingItem.status().isOK())
         {
-            return FindingItemBuilder.<T>builder()
-                    .status(findingItem.status())
-                    .build();
+            return FindingItemBuilder.builder(findingItem).build();
         }
         else
         {
