@@ -12,10 +12,12 @@ import org.jetbrains.annotations.NotNull;
 
 class ThresholdValueFactory
 {
-    private static final double HRD_THRESHOLD = 0.5;
     // TODO: Is this defined elsewhere?
     // TODO: Make sure LOW_PURITY status is correct for targeted mode
-    private static final double TARGETED_MIN_PURITY = 0.1;
+    // This is public as it's used in OncoAct for legacy panel reports.
+    public static final double TARGETED_MIN_PURITY = 0.1;
+    // TODO: Is this defined elsewhere?
+    private static final double HRD_THRESHOLD = 0.5;
 
     @NotNull
     static ThresholdValue purityValue(double value, ExperimentType experimentType)
