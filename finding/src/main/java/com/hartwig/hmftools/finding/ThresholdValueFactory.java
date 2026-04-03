@@ -17,7 +17,6 @@ class ThresholdValueFactory
     private static final double HRD_THRESHOLD = 0.5;
     // TODO: Is this defined elsewhere?
     // TODO: Make sure LOW_PURITY status is correct for targeted mode
-    // This is public as it's used in OncoAct for legacy panel reports (this can eventually be made private)
     private static final double TARGETED_MIN_PURITY = 0.1;
 
     @NotNull
