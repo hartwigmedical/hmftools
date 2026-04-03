@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.purple.TumorMutationalStatus.TML_THRES
 import static com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus.MSI_THRESHOLD;
 
 import com.hartwig.hmftools.datamodel.orange.ExperimentType;
+import com.hartwig.hmftools.finding.datamodel.FindingRecord;
 import com.hartwig.hmftools.finding.datamodel.ThresholdValue;
 
 import org.jetbrains.annotations.NotNull;
@@ -13,11 +14,11 @@ import org.jetbrains.annotations.NotNull;
 class ThresholdValueFactory
 {
     // TODO: Is this defined elsewhere?
-    // TODO: Make sure LOW_PURITY status is correct for targeted mode
-    // This is public as it's used in OncoAct for legacy panel reports.
-    public static final double TARGETED_MIN_PURITY = 0.1;
-    // TODO: Is this defined elsewhere?
     private static final double HRD_THRESHOLD = 0.5;
+    // TODO: Is this defined elsewhere?
+    // TODO: Make sure LOW_PURITY status is correct for targeted mode
+    // This is public as it's used in OncoAct for legacy panel reports (this can eventually be made private)
+    private static final double TARGETED_MIN_PURITY = 0.1;
 
     @NotNull
     static ThresholdValue purityValue(double value, ExperimentType experimentType)
