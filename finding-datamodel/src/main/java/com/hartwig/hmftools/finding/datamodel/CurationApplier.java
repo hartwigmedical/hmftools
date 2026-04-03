@@ -9,6 +9,7 @@ import com.hartwig.hmftools.finding.datamodel.driver.DriverCuration;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFields;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFieldsBuilder;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingList;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingListBuilder;
 import com.hartwig.hmftools.finding.datamodel.driver.ReportedStatus;
 
 import jakarta.validation.constraints.NotNull;
@@ -40,7 +41,7 @@ public class CurationApplier
         List<T> updatedFindings = driverFindingList.findings().stream()
                 .map(finding -> applyCuration(finding, curationByKey))
                 .toList();
-        return new DriverFindingList<>(driverFindingList.status(), updatedFindings);
+        return DriverFindingListBuilder.builder(driverFindingList).findings(updatedFindings).build();
     }
 
     @NotNull

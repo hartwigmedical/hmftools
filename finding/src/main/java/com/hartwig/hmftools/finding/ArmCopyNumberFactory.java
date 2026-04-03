@@ -5,15 +5,16 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import com.hartwig.hmftools.common.purple.Gender;
+import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
+import com.hartwig.hmftools.datamodel.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.finding.datamodel.ChromosomeArmCopyNumber;
 import com.hartwig.hmftools.finding.datamodel.ChromosomeArmCopyNumberBuilder;
 import com.hartwig.hmftools.finding.datamodel.Doubles;
-import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
-import com.hartwig.hmftools.datamodel.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFieldsBuilder;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverSource;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingList;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingListBuilder;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
 
 import org.jspecify.annotations.Nullable;
@@ -54,11 +55,12 @@ final class ArmCopyNumberFactory
     public FindingList<ChromosomeArmCopyNumber> toArmCopyNumberFindings(FindingStatus findingStatus)
     {
         // we filter out diploid copy
-        return new FindingList<>(
-                findingStatus,
-                cnPerChromosomeArm.values().stream()
+        return FindingListBuilder.<ChromosomeArmCopyNumber>builder()
+                .status(findingStatus)
+                .findings(cnPerChromosomeArm.values().stream()
                         .filter(o -> o.type() != ChromosomeArmCopyNumber.Type.DIPLOID)
-                        .toList());
+                        .toList())
+                .build();
     }
 
     static ChromosomeArmCopyNumber.ChromosomeArm getChromosomeArm(String chromosomeBand)
@@ -128,7 +130,7 @@ final class ArmCopyNumberFactory
         }
         if(chromosome.endsWith("Y"))
         {
-            if (gender == Gender.FEMALE)
+            if(gender == Gender.FEMALE)
             {
                 expectedPloidy = 0.0;
             }
@@ -170,12 +172,12 @@ final class ArmCopyNumberFactory
 
         return ChromosomeArmCopyNumberBuilder.builder()
                 .driver(DriverFieldsBuilder.builder()
-                                .findingKey(FindingKeys.chromosomeArmCopyNumber(chromosome, arm.name()))
-                                .driverSource(DriverSource.SOMATIC)
-                                .reportedStatus(DriverUtil.reportedStatus(true, true, driverInterpretation))
-                                .driverInterpretation(driverInterpretation)
-                                .driverLikelihood(driverInterpretation == DriverInterpretation.HIGH ? 1.0 : 0.0)
-                                .build())
+                        .findingKey(FindingKeys.chromosomeArmCopyNumber(chromosome, arm.name()))
+                        .driverSource(DriverSource.SOMATIC)
+                        .reportedStatus(DriverUtil.reportedStatus(true, true, driverInterpretation))
+                        .driverInterpretation(driverInterpretation)
+                        .driverLikelihood(driverInterpretation == DriverInterpretation.HIGH ? 1.0 : 0.0)
+                        .build())
                 .chromosome(chromosome)
                 .arm(arm)
                 .type(type)

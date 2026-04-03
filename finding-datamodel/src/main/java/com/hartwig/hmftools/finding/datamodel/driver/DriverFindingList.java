@@ -2,10 +2,10 @@ package com.hartwig.hmftools.finding.datamodel.driver;
 
 import java.util.List;
 
-import com.hartwig.hmftools.finding.datamodel.finding.FindingsQuery;
-import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
-import com.hartwig.hmftools.finding.datamodel.finding.IFindingList;
 import com.hartwig.hmftools.finding.datamodel.RecordBuilder;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingsQuery;
+import com.hartwig.hmftools.finding.datamodel.finding.IFindingList;
 
 import jakarta.validation.constraints.NotNull;
 
@@ -24,13 +24,17 @@ public record DriverFindingList<T extends Driver>(
     @NotNull
     public DriverFindingList<T> germlineOnly()
     {
-        return new DriverFindingList<>(status, query().driverSources(DriverSource.GERMLINE).results());
+        return DriverFindingListBuilder.builder(this)
+                .findings(query().driverSources(DriverSource.GERMLINE).results())
+                .build();
     }
 
     @NotNull
     public DriverFindingList<T> somaticOnly()
     {
-        return new DriverFindingList<>(status, query().driverSources(DriverSource.SOMATIC).results());
+        return DriverFindingListBuilder.builder(this)
+                .findings(query().driverSources(DriverSource.SOMATIC).results())
+                .build();
     }
 
     @NotNull
@@ -48,6 +52,8 @@ public record DriverFindingList<T extends Driver>(
     @NotNull
     public DriverFindingList<T> filter(ReportedStatus... reportedStatuses)
     {
-        return new DriverFindingList<>(status, query().reportedStatuses(reportedStatuses).results());
+        return DriverFindingListBuilder.builder(this)
+                .findings(query().reportedStatuses(reportedStatuses).results())
+                .build();
     }
 }
