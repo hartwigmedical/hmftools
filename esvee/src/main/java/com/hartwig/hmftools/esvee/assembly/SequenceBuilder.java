@@ -273,7 +273,16 @@ public class SequenceBuilder
 
                 for(ReadParseState read : activeReads)
                 {
-                    read.addBaseMatch(aboveMinQual(read.currentQual()));
+                    // low qual mismatches could have occurred before a consensus was formed, so check again for a match
+                    if(read.currentBase() == consensusBase)
+                    {
+                        read.addBaseMatch(aboveMinQual(read.currentQual()));
+                    }
+                    else
+                    {
+                        read.addMismatchInfo(SequenceDiffInfo.fromSnv(read, mCurrentIndex));
+                    }
+
                     read.moveNext();
                 }
             }

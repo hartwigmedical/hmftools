@@ -3,6 +3,7 @@ package com.hartwig.hmftools.esvee.assembly;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
+import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.test.MockRefGenome.getNextBase;
@@ -179,6 +180,23 @@ public class JunctionAssemblyTest
         assertFalse(readInfo.mismatched());
         mismatch = readInfo.mismatches().get(0);
         assertEquals(DELETE, mismatch.Type);
+
+        // test a read with most low qual mismatches
+        juncRead = cloneRead(read1, READ_ID_GENERATOR.nextId());
+
+        int readIndexStart = juncRead.basesLength() - extBases.length() + 5;
+        for(int i = 0; i < 15; ++i)
+        {
+            int readIndex = readIndexStart + i;
+            juncRead.getBases()[readIndex] = MockRefGenome.getNextBase(juncRead.getBases()[readIndex]);
+            juncRead.getBaseQuality()[readIndex] = LOW_BASE_QUAL_THRESHOLD;
+        }
+
+        readInfo = extSeqBuilder.checkAddJunctionRead(juncRead);
+        assertNotNull(readInfo);
+        assertFalse(readInfo.mismatched());
+        assertFalse(extSeqBuilder.sufficientQualMatches(readInfo));
+        assertEquals(17, readInfo.mismatchCount(false));
     }
 
     @Test

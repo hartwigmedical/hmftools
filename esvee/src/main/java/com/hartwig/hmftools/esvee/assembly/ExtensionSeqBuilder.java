@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_T;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_POLY_AT_REQ;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MAX_EXTENSION_READ_LOW_QUAL_MISMATCH_PERC;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH;
@@ -142,8 +143,20 @@ public class ExtensionSeqBuilder
 
     public boolean sufficientQualMatches(final ReadParseState read)
     {
+        double overlapBases = read.overlapBaseCount() - 1;
+
+        if(overlapBases > 0)
+        {
+            double mismatchPerc = read.mismatches().size() / overlapBases;
+
+            if(mismatchPerc > ASSEMBLY_MAX_EXTENSION_READ_LOW_QUAL_MISMATCH_PERC)
+                return false;
+        }
+
+        // require a minimum number of high-qual matches and no more than 1/3 low-qual mismatches
         int refBaseRepeatBuffer = refBaseRepeatCount() > 0 ? 2 : 0;
         int highQualExtensionMatches = read.highQualMatches() - 1; // to remove the initial junction ref bases
+
         return highQualExtensionMatches >= ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH + refBaseRepeatBuffer;
     }
 
@@ -165,10 +178,12 @@ public class ExtensionSeqBuilder
 
         int extensionIndex = mBuildForwards ? 0 : mSequenceBuilder.baseQuals().length - 1;
 
+        /*
+        // allowance for DEL indel reads vs a DEL indlel junction - is this required?
+
         int repeatIndexStart = -1;
         int repeatSkipCount = 0;
 
-        // TODO: check how this needs to work for reads with shorter DELs
         if(mJunction.indelCoords() != null && read.indelCoords() != null
         && mJunction.indelCoords().isDelete() && read.indelCoords().isDelete())
         {
@@ -181,6 +196,7 @@ public class ExtensionSeqBuilder
                 repeatIndexStart = extensionIndex + (mJunction.isForward() ? 1 : -1); // first base after the delete
             }
         }
+        */
 
         final byte[] extensionBases = mSequenceBuilder.bases();
 
@@ -372,8 +388,8 @@ public class ExtensionSeqBuilder
                 continue;
             }
 
-            // note the read's extension length does not include the junction base itself, hence the +1
-            maxValidExtensionLength = max(read.overlapBaseCount() + 1, maxValidExtensionLength);
+            // note the read's extension length includes the junction base itself
+            maxValidExtensionLength = max(read.overlapBaseCount(), maxValidExtensionLength);
         }
 
         int minRequiredReadCount = minReadThreshold(mJunction);

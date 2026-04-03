@@ -34,6 +34,7 @@ public final class AssemblyConstants
     public static final int ASSEMBLY_MAX_JUNC_POS_DIFF = 2;
     public static final int ASSEMBLY_REF_READ_MIN_SOFT_CLIP = 10;
     public static final int ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH = 2;
+    public static final double ASSEMBLY_MAX_EXTENSION_READ_LOW_QUAL_MISMATCH_PERC = 0.34;
     public static final int ASSEMBLY_DISCORDANT_MIN_MAP_QUALITY = MIN_MAP_QUALITY;
     public static final int ASSEMBLY_MIN_DISTINCT_FRAGS = 2;
     public static final int ASSEMBLY_INDEL_UNLINKED_ASSEMBLY_MIN_LENGTH = 85;
