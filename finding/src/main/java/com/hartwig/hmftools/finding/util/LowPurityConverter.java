@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.finding.util;
 
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.function.Function;
@@ -8,6 +9,8 @@ import com.hartwig.hmftools.finding.datamodel.FindingRecord;
 import com.hartwig.hmftools.finding.datamodel.FindingRecordBuilder;
 import com.hartwig.hmftools.finding.datamodel.HlaAllele;
 import com.hartwig.hmftools.finding.datamodel.HlaAlleleBuilder;
+import com.hartwig.hmftools.finding.datamodel.Qc;
+import com.hartwig.hmftools.finding.datamodel.QcBuilder;
 import com.hartwig.hmftools.finding.datamodel.driver.Driver;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingList;
 import com.hartwig.hmftools.finding.datamodel.finding.Finding;
@@ -26,6 +29,9 @@ public class LowPurityConverter
     {
         boolean isLowPurity = record.qc().isLowPurity();
         return FindingRecordBuilder.builder(record)
+                .qc(QcBuilder.builder(record.qc())
+                        .status(removeStatuses(record.qc().status(), Set.of(Qc.QCStatus.WARN_LOW_PURITY)))
+                        .build())
                 .somaticDisruptions(convert(record.somaticDisruptions(), isLowPurity))
                 .somaticGainDeletions(convert(record.somaticGainDeletions(), isLowPurity))
                 .viruses(convert(record.viruses(), isLowPurity))
@@ -37,6 +43,13 @@ public class LowPurityConverter
                 // For HLA status remains the same, but tumor fields are cleared.
                 .hlaAlleles(convert(record.hlaAlleles(), isLowPurity, Function.identity(), LowPurityConverter::convert))
                 .build();
+    }
+
+    private static SortedSet<Qc.QCStatus> removeStatuses(Set<Qc.QCStatus> issues, Set<Qc.QCStatus> issuesToRemove)
+    {
+        SortedSet<Qc.QCStatus> newIssues = new TreeSet<>(issues);
+        newIssues.removeAll(issuesToRemove);
+        return newIssues;
     }
 
     @NotNull
