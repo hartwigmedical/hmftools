@@ -9,6 +9,8 @@ import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
+import static com.hartwig.hmftools.isofox.IsofoxConstants.CHIMERIC_EXCLUDED_REGIONS_V37;
+import static com.hartwig.hmftools.isofox.IsofoxConstants.CHIMERIC_EXCLUDED_REGIONS_V38;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.MULTI_MAP_QUALITY_THRESHOLD;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.SINGLE_MAP_QUALITY;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.ALT_SPLICE_JUNCTIONS;
@@ -24,6 +26,7 @@ import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TRANS_SUPPORTING;
 import static com.hartwig.hmftools.isofox.common.FragmentType.UNSPLICED;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.FUSIONS;
+import static com.hartwig.hmftools.isofox.common.GeneRegionFilters.inExcludedRegion;
 import static com.hartwig.hmftools.isofox.common.Read.MAX_SC_BASE_MATCH;
 import static com.hartwig.hmftools.isofox.common.Read.findOverlappingRegions;
 import static com.hartwig.hmftools.isofox.common.Read.getUniqueValidRegion;
@@ -60,7 +63,6 @@ import com.hartwig.hmftools.isofox.common.FragmentTracker;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.FragmentType;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
-import com.hartwig.hmftools.isofox.common.GeneRegionFilters;
 import com.hartwig.hmftools.isofox.common.Read;
 import com.hartwig.hmftools.isofox.common.RegionMatchType;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
@@ -110,6 +112,7 @@ public class FragmentAllocator
     private final BufferedWriter mReadDataWriter;
     private long mEnrichedGeneFragments;
     private ChrBaseRegion mExcludedRegion;
+    private ChrBaseRegion mExcludedChimericRegion;
 
     private static final int GENE_LOG_COUNT = 5000000;
     private static final int NON_GENIC_BASE_DEPTH_WIDTH = 250000;
@@ -130,6 +133,7 @@ public class FragmentAllocator
         mNextGeneCountLog = 0;
         mEnrichedGeneFragments = 0;
         mExcludedRegion = null;
+        mExcludedChimericRegion = null;
         mValidReadStartRegion = new int[SE_PAIR];
 
         mSamReader = mConfig.BamFile != null ?
@@ -214,6 +218,9 @@ public class FragmentAllocator
 
         mExcludedRegion = mConfig.Filters.ExcludedRegions.stream().filter(x -> geneRegion.overlaps(x)).findFirst().orElse(null);
 
+        List<ChrBaseRegion> excludedChimericRegions = mConfig.RefGenVersion.is37() ? CHIMERIC_EXCLUDED_REGIONS_V37 : CHIMERIC_EXCLUDED_REGIONS_V38;
+        mExcludedChimericRegion = excludedChimericRegions.stream().filter(x -> x.overlaps(geneRegion)).findFirst().orElse(null);
+
         if(mExcludedRegion != null)
         {
             // slice around any excluded regions - assume they have been configured to have at most one per gene collection for now
@@ -250,15 +257,15 @@ public class FragmentAllocator
 
     private void processSamRecord(final SAMRecord record)
     {
-        if(mConfig.skipFilteredRead(record.getReadName()))
-            return;
-
         // to avoid double-processing of reads overlapping 2 (or more) gene collections, only process them if they start in this
         // gene collection or its preceding non-genic region
         if(!positionWithin(record.getStart(), mValidReadStartRegion[SE_START], mValidReadStartRegion[SE_END]))
             return;
 
-        //if(inExcludedRegion(record))
+        if(inExcludedChimericRegion(record))
+            return;
+
+        // if(mConfig.skipFilteredRead(record.getReadName()))
         //    return;
 
         trackFragmentCounts(record);
@@ -752,12 +759,12 @@ public class FragmentAllocator
         return transcriptBases;
     }
 
-    private boolean inExcludedRegion(final SAMRecord record)
+    private boolean inExcludedChimericRegion(final SAMRecord record)
     {
-        if(mExcludedRegion == null)
+        if(mExcludedChimericRegion == null)
             return false;
 
-        return GeneRegionFilters.inExcludedRegion(mExcludedRegion, record);
+        return inExcludedRegion(mExcludedChimericRegion, record);
     }
 
     private boolean reachedGeneReadLimit()

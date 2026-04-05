@@ -248,7 +248,7 @@ public class ChimericReadTracker
         // so will either be a supplementary or a read linked to another gene collection
         for(Object object : fragmentTracker.getValues())
         {
-            final Read read = (Read)object;
+            Read read = (Read)object;
 
             if(read.isMateUnmapped() || inExcludedRegion(read, true) || read.isSecondaryAlignment())
                 continue;
@@ -267,9 +267,9 @@ public class ChimericReadTracker
         }
 
         // migrate any local chimeric fragments for analysis as alternate splice junctions
-        final List<String> fragsToRemove = Lists.newArrayList();
+        List<String> fragsToRemove = Lists.newArrayList();
 
-        for(final ChimericReadGroup readGroup : mChimericReadMap.values())
+        for(ChimericReadGroup readGroup : mChimericReadMap.values())
         {
             // skip reads if all will be processed later or have been already
             final List<Read> reads = readGroup.reads();
