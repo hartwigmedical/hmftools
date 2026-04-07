@@ -26,6 +26,8 @@ import com.hartwig.hmftools.qsee.prep.QseePrepConfig;
 import com.hartwig.hmftools.qsee.prep.category.bqr.BaseQualBin;
 import com.hartwig.hmftools.qsee.prep.category.bqr.BaseQualBinner;
 
+import org.apache.commons.math3.stat.descriptive.moment.Mean;
+
 public class BaseQualRecalibrationPrep implements CategoryPrep
 {
     private final QseePrepConfig mConfig;
@@ -104,7 +106,7 @@ public class BaseQualRecalibrationPrep implements CategoryPrep
     }
 
     @VisibleForTesting
-    static List<Feature> calcChangeInQualPerTrinucContext(List<BqrRecord> bqrRecords, BaseQualBinner baseQualBinner)
+    static List<Feature> aggregateChangeInQualPerTrinucContext(List<BqrRecord> bqrRecords, BaseQualBinner baseQualBinner)
     {
         byte hiQualThreshold = baseQualBinner.binRanges().get(BaseQualBin.HIGH).lowerBound();
         bqrRecords = bqrRecords.stream().filter(x -> x.Key.Quality >= hiQualThreshold).toList();
@@ -125,12 +127,12 @@ public class BaseQualRecalibrationPrep implements CategoryPrep
             bqrRecordGroups.get(key).add(bqrRecord);
         }
 
-        List<Feature> features = calcMeanChangeInQualPerGroup(bqrRecordGroups);
+        List<Feature> features = calcWeightedMeanChangeInQualPerGroup(bqrRecordGroups);
         return features;
     }
 
     @VisibleForTesting
-    static List<Feature> calcChangeInQualPerOriginalQual(List<BqrRecord> bqrRecords, BaseQualBinner baseQualBinner)
+    static List<Feature> aggregateChangeInQualPerOriginalQual(List<BqrRecord> bqrRecords, BaseQualBinner baseQualBinner)
     {
         Map<FeatureKey, List<BqrRecord>> bqrRecordGroups = new LinkedHashMap<>();
         for(BqrRecord bqrRecord : bqrRecords)
@@ -147,38 +149,27 @@ public class BaseQualRecalibrationPrep implements CategoryPrep
             bqrRecordGroups.get(key).add(bqrRecord);
         }
 
-        List<Feature> features = calcMeanChangeInQualPerGroup(bqrRecordGroups);
+        List<Feature> features = calcWeightedMeanChangeInQualPerGroup(bqrRecordGroups);
         return features;
     }
 
-    private static List<Feature> calcMeanChangeInQualPerGroup(Map<FeatureKey, List<BqrRecord>> bqrRecordGroups)
+    private static List<Feature> calcWeightedMeanChangeInQualPerGroup(Map<FeatureKey, List<BqrRecord>> bqrRecordGroups)
     {
-        Map<FeatureKey, Double> meanChangeInQuals = new LinkedHashMap<>();
-        for(FeatureKey key : bqrRecordGroups.keySet())
-        {
-            List<BqrRecord> bqrRecordsInGroup = bqrRecordGroups.get(key);
-
-            double totalCountInGroup = bqrRecordsInGroup.stream().mapToDouble(x -> x.Count + PSEUDOCOUNT).sum();
-
-            double weightedMeanedChangeInQual = 0;
-            for(BqrRecord bqrRecordInGroup : bqrRecordsInGroup)
-            {
-                double changeInQual = bqrRecordInGroup.RecalibratedQuality - bqrRecordInGroup.Key.Quality;
-                double count = bqrRecordInGroup.Count + PSEUDOCOUNT;
-                double weight = count / totalCountInGroup;
-                double weightedChangeInQual = changeInQual * weight;
-
-                weightedMeanedChangeInQual += weightedChangeInQual;
-            }
-
-            meanChangeInQuals.put(key, weightedMeanedChangeInQual);
-        }
-
         List<Feature> features = new ArrayList<>();
-        for(FeatureKey key : meanChangeInQuals.keySet())
+
+        for(FeatureKey groupKey : bqrRecordGroups.keySet())
         {
-            features.add(new Feature(key, meanChangeInQuals.get(key)));
+            List<BqrRecord> bqrRecordsInGroup = bqrRecordGroups.get(groupKey);
+
+            double[] changeInQualPerRecord = bqrRecordsInGroup.stream().mapToDouble(x -> x.RecalibratedQuality - x.Key.Quality).toArray();
+            double[] variantCountPerRecord = bqrRecordsInGroup.stream().mapToDouble(x -> x.Count + PSEUDOCOUNT).toArray();
+
+            double weightedMeanChangeInQual = new Mean().evaluate(changeInQualPerRecord, variantCountPerRecord);
+
+            Feature feature = new Feature(groupKey, weightedMeanChangeInQual);
+            features.add(feature);
         }
+
         return features;
     }
 
@@ -188,8 +179,8 @@ public class BaseQualRecalibrationPrep implements CategoryPrep
         List<BqrRecord> bqrRecords = loadSnvBqrRecords(sampleId, sampleType);
 
         List<Feature> features = new ArrayList<>();
-        features.addAll(calcChangeInQualPerOriginalQual(bqrRecords, mBaseQualBinner));
-        features.addAll(calcChangeInQualPerTrinucContext(bqrRecords, mBaseQualBinner));
+        features.addAll(aggregateChangeInQualPerOriginalQual(bqrRecords, mBaseQualBinner));
+        features.addAll(aggregateChangeInQualPerTrinucContext(bqrRecords, mBaseQualBinner));
 
         return features;
     }
