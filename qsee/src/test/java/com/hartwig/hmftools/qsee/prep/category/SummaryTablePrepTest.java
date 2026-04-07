@@ -111,7 +111,6 @@ public class SummaryTablePrepTest
                 .lohPercent(0.01)
                 .amberMeanDepth(100)
                 .tincLevel(0.1)
-                .chimerismPercentage(0.01)
                 .build();
 
         return ImmutablePurityContext.builder()
