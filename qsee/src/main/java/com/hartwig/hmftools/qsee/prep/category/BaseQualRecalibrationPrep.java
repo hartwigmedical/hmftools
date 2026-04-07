@@ -2,9 +2,7 @@ package com.hartwig.hmftools.qsee.prep.category;
 
 import static com.hartwig.hmftools.common.codon.Nucleotides.reverseComplementBases;
 import static com.hartwig.hmftools.common.codon.Nucleotides.swapDnaBase;
-import static com.hartwig.hmftools.common.sage.SageCommon.SAGE_FILE_ID;
 
-import java.io.File;
 import java.nio.file.NoSuchFileException;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -56,24 +54,7 @@ public class BaseQualRecalibrationPrep implements CategoryPrep
 
     public SourceTool sourceTool() { return SOURCE_TOOL; }
     public PrepCategory category() { return PrepCategory.BASE_QUAL_RECALIBRATION; }
-
-    private String findBackwardsCompatibleBqrFile(String sampleId, SampleType sampleType) throws NoSuchFileException
-    {
-        // TODO: Remove this temporary method. In WiGiTS 3.0, the (new) REDUX BQR file path will be used.
-
-        File reduxBqrFile = new File(BqrFile.generateFilename(mConfig.getReduxDir(sampleId, sampleType), sampleId));
-
-        File sageBqrFile = new File(mConfig.getSageDir(sampleId) + File.separator + sampleId + SAGE_FILE_ID + ".bqr.tsv");
-
-        if(reduxBqrFile.isFile())
-            return reduxBqrFile.getAbsolutePath();
-
-        if(sageBqrFile.isFile())
-            return sageBqrFile.getAbsolutePath();
-
-        throw new NoSuchFileException(reduxBqrFile.getName() + " or " + sageBqrFile.getName());
-    }
-
+    
     @VisibleForTesting
     static BqrRecord standardiseBases(BqrRecord bqrRecord)
     {
@@ -103,9 +84,10 @@ public class BaseQualRecalibrationPrep implements CategoryPrep
 
     private static String formMutationString(BqrKey key) { return String.format("%c>%c", key.Ref, key.Alt); }
 
-    private List<BqrRecord> loadSnvBqrRecords(String sampleId, SampleType sampleType) throws NoSuchFileException
+    private List<BqrRecord> loadSnvBqrRecords(String sampleId, SampleType sampleType)
     {
-        String filePath = findBackwardsCompatibleBqrFile(sampleId, sampleType);
+        String baseDir = mConfig.getReduxDir(sampleId, sampleType);
+        String filePath = BqrFile.generateFilename(baseDir, sampleId);
 
         List<BqrRecord> records = BqrFile.read(filePath);
         List<BqrRecord> recordsFiltered = records.stream().filter(x -> x.Key.Ref != x.Key.Alt).toList();

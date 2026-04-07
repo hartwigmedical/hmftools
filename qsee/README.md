@@ -211,7 +211,6 @@ Qsee will for example expect the REDUX MS table files at:
 - `-cobalt_dir`: Directory containing COBALT output
 - `-esvee_dir`: Directory containing ESVEE output
 - `-purple_dir`: Directory containing PURPLE output
-- `-sage_dir`: Directory containing SAGE somatic output (for backwards compatibility)
 
 **Resource files**
 - `-driver_gene_panel`: Path to driver gene panel
