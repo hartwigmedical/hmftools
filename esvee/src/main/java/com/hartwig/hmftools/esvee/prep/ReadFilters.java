@@ -27,9 +27,11 @@ import static com.hartwig.hmftools.esvee.common.SvConstants.isSbx;
 import static com.hartwig.hmftools.esvee.common.SvConstants.isUltima;
 import static com.hartwig.hmftools.esvee.common.SvConstants.maxConcordantFragmentLength;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MAX_SOFT_CLIP_LOW_QUAL_COUNT;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_CALC_ALIGNMENT_SCORE;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.REPEAT_BREAK_CHECK_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.REPEAT_BREAK_MIN_MAP_QUAL;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.REPEAT_BREAK_MIN_SC_LENGTH;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.SUPP_SHORT_ALIGNMENT_MIN_MAP_QUAL;
 
 import static htsjdk.samtools.CigarOperator.M;
 
@@ -63,6 +65,9 @@ public class ReadFilters
         if(!hasLineTail && filterLowQualRead(record))
             return true;
 
+        if(filterPoorMappedSupplementary(record))
+            return true;
+
         if(!record.getReadPairedFlag())
             return false;
 
@@ -86,6 +91,24 @@ public class ReadFilters
             return true;
 
         return false;
+    }
+
+    public static boolean filterPoorMappedSupplementary(final SAMRecord read)
+    {
+        if(!read.getSupplementaryAlignmentFlag())
+            return false;
+
+        if(read.getMappingQuality() >= SUPP_SHORT_ALIGNMENT_MIN_MAP_QUAL)
+            return false;
+
+        int alignedLength = read.getCigar().getCigarElements().stream().filter(x -> x.getOperator() == M).mapToInt(x -> x.getLength()).sum();
+
+        if(alignedLength < MIN_CALC_ALIGNMENT_SCORE)
+            return true;
+
+        double adjustedAlignScore = calcRepeatTrimmedAlignmentScore(read, alignedLength, MIN_CALC_ALIGNMENT_SCORE, true);
+
+        return adjustedAlignScore < MIN_CALC_ALIGNMENT_SCORE;
     }
 
     public static boolean filterLowQualRead(final SAMRecord read)
@@ -308,10 +331,14 @@ public class ReadFilters
 
     public static double calcRepeatTrimmedAlignmentScore(final PrepRead read, final int minLength, boolean applyPowerAdjust)
     {
+        return calcRepeatTrimmedAlignmentScore(read.record(), read.alignedBaseLength(), minLength, applyPowerAdjust);
+    }
+
+    public static double calcRepeatTrimmedAlignmentScore(
+            final SAMRecord read, int alignedLength, final int minLength, boolean applyPowerAdjust)
+    {
         // at least one junction supporting read with [AS - Len + TrimmedLen] * (AS/SUM(M))^2 > 50
         int readIndex = 0;
-
-        int alignedLength = read.alignedBaseLength();
 
         if(alignedLength < minLength)
             return -1;
@@ -319,11 +346,11 @@ public class ReadFilters
         byte[] alignedBases = new byte[alignedLength];
         int alignedIndex = 0;
 
-        for(CigarElement element : read.cigar().getCigarElements())
+        for(CigarElement element : read.getCigar().getCigarElements())
         {
             if(element.getOperator() == M)
             {
-                copyArray(read.record().getReadBases(), alignedBases, readIndex, readIndex + element.getLength(), alignedIndex);
+                copyArray(read.getReadBases(), alignedBases, readIndex, readIndex + element.getLength(), alignedIndex);
                 alignedIndex += element.getLength();
             }
 
@@ -346,16 +373,16 @@ public class ReadFilters
 
         int alignmentScore = 0;
 
-        if(read.record().hasAttribute(ALIGNMENT_SCORE_ATTRIBUTE))
+        if(read.hasAttribute(ALIGNMENT_SCORE_ATTRIBUTE))
         {
-            alignmentScore = read.record().getIntegerAttribute(ALIGNMENT_SCORE_ATTRIBUTE).intValue();
+            alignmentScore = read.getIntegerAttribute(ALIGNMENT_SCORE_ATTRIBUTE).intValue();
         }
         else
         {
             alignmentScore = alignedLength;
 
-            if(read.record().hasAttribute(NUM_MUTATONS_ATTRIBUTE))
-                alignmentScore -= read.record().getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE).intValue();
+            if(read.hasAttribute(NUM_MUTATONS_ATTRIBUTE))
+                alignmentScore -= read.getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE).intValue();
         }
 
         double adjustedAlignScore = (alignmentScore - repeatReduction);
