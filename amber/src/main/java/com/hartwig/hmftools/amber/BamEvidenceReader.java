@@ -40,7 +40,7 @@ public class BamEvidenceReader
         boolean limitSliceRegions = bamFile.endsWith(".cram");
         populateTaskQueue(chrPositionEvidence, regionTaskQueue, limitSliceRegions);
 
-        TaskQueue taskQueue = new TaskQueue(regionTaskQueue, "regions", 2000); // will log about 10% of progress
+        TaskQueue taskQueue = new TaskQueue(regionTaskQueue, "regions", 1000);
 
         List<BamReaderThread> bamReaders = new ArrayList<BamReaderThread>();
 
