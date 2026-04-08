@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_REA
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_SPLIT_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.PRIMARY_ASSEMBLY_SPLIT_MIN_READ_SUPPORT_PERC;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.UNMAPPED_TRIM_THRESHOLD;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.ABOVE_LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.basesMatch;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.isValidSupportCoordsVsJunction;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.DUP_BRANCHED;
@@ -548,7 +549,8 @@ public class RefBaseExtender
 
         int permittedMismatches = ASSEMBLY_EXTENSION_BASE_MISMATCH;
 
-        boolean canAddRead = canAddRefBaseRead(assemblyBases, assemblyBaseQuals, read, readAssemblyIndices, requiredOverlap, permittedMismatches);
+        boolean canAddRead = canAddRefBaseRead(
+                assemblyBases, assemblyBaseQuals, read, readAssemblyIndices, requiredOverlap, permittedMismatches, false);
 
         if(!canAddRead && readStartIndex < read.getBases().length - REF_READ_SEARCH_LENGTH)
         {
@@ -564,14 +566,18 @@ public class RefBaseExtender
             }
 
             String readBases = new String(read.getBases(), readStartIndex, length);
-            int assemblyStartIndex = new String(assembly.bases()).indexOf(readBases);
+            String assemblyBaseStr = new String(assemblyBases);
+            int assemblyStartIndex = assemblyBaseStr.indexOf(readBases);
 
             if(assemblyStartIndex >= 0)
             {
+                // check for multiple matches
+                int nextStartIndex = assemblyBaseStr.indexOf(readBases, assemblyStartIndex + REF_READ_SEARCH_LENGTH);
                 readAssemblyIndices = new ReadAssemblyIndices(readStartIndex, readAssemblyIndices.ReadIndexEnd, assemblyStartIndex);
 
                 canAddRead = canAddRefBaseRead(
-                        assemblyBases, assemblyBaseQuals, read, readAssemblyIndices, requiredOverlap, permittedMismatches);
+                        assemblyBases, assemblyBaseQuals, read, readAssemblyIndices, requiredOverlap, permittedMismatches,
+                        nextStartIndex > 0);
             }
         }
 
@@ -597,7 +603,7 @@ public class RefBaseExtender
 
     private static boolean canAddRefBaseRead(
             final byte[] assemblyBases, final byte[] assemblyBaseQuals, final Read read, final ReadAssemblyIndices readIndexInfo,
-            int requiredOverlap, int permittedMismatches)
+            int requiredOverlap, int permittedMismatches, boolean requireQualMatches)
     {
         int mismatchCount = 0;
         int overlappedBaseCount = 0;
@@ -615,7 +621,15 @@ public class RefBaseExtender
                 ++overlappedBaseCount;
 
             // any unset base (ie unset qual) can be a mismatch
-            byte refBaseQual = assemblyBaseQuals[assemblyIndex] == 0 ? LOW_BASE_QUAL_THRESHOLD : assemblyBaseQuals[assemblyIndex];
+            byte refBaseQual = assemblyBaseQuals[assemblyIndex];
+
+            if(refBaseQual == 0)
+            {
+                if(requireQualMatches)
+                    refBaseQual = ABOVE_LOW_BASE_QUAL_THRESHOLD;
+                else
+                    refBaseQual = LOW_BASE_QUAL_THRESHOLD;
+            }
 
             if(!basesMatch(read.getBases()[i], assemblyBases[assemblyIndex], read.getBaseQuality()[i], refBaseQual))
             {
