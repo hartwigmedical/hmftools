@@ -30,7 +30,7 @@ public record SequenceDefinition(
     {
         // Simple single region.
         boolean single =
-                startRegion != null && startOrientation == null && insertSequence.isEmpty() && endRegion == null && endOrientation == null;
+                startRegion != null && startOrientation == Orientation.FORWARD && insertSequence.isEmpty() && endRegion == null && endOrientation == null;
         // SNV/INDEL/SV. start (+ insert) + end
         boolean genericVariant =
                 startRegion != null && startOrientation != null && endRegion != null && endOrientation != null
@@ -62,7 +62,7 @@ public record SequenceDefinition(
 
     public static SequenceDefinition singleRegion(final ChrBaseRegion region)
     {
-        return new SequenceDefinition(region, null, "", null, null);
+        return new SequenceDefinition(region, Orientation.FORWARD, "", null, null);
     }
 
     public static SequenceDefinition forwardSgl(final ChrBaseRegion startRegion, final String insertSequence)
