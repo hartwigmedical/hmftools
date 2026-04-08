@@ -466,13 +466,14 @@ PLOTS[[FEATURE_TYPE$GC_BIAS]] <- local({
    
    plot_data <- get_plot_data(FEATURE_TYPE$GC_BIAS)
    
-   plot_labels <- labs(title = "GC bias", x = "GC percentage", y = "Read depth")
+   plot_labels <- labs(title = "GC bias", x = "GC proportion", y = "Normalised median read depth")
    
    if(is.null(plot_data)){
       return(plot_missing_data(plot_labels))
    }
    
    plot_distribution(plot_data, x = "GCBucket", mark_sample_peak = FALSE, invert_normal = FALSE) +
+      scale_x_continuous(label = scales::label_percent(scale = 1)) +
       plot_labels +
       render_now()
 })
@@ -673,7 +674,7 @@ PLOTS[[FEATURE_TYPE$BQR_BY_ORIG_QUAL]] <- local({
       facet_grid("ReadType ~ StandardMutation") +
       scale_y_continuous(
          labels = function(x){ ifelse(x > 0, paste0("+",x), x) },
-         sec.axis = dup_axis(name = "Consensus type")
+         sec.axis = dup_axis(name = "Consensus read type")
       ) +
       plot_labels + 
       theme(
@@ -700,7 +701,7 @@ PLOTS[[FEATURE_TYPE$BQR_BY_SNV96_CONTEXT]] <- local({
       facet_grid("ReadType ~ StandardMutation", scales = "free_x") +
       scale_y_continuous(
          labels = function(x){ ifelse(x > 0, paste0("+",x), x) },
-         sec.axis = dup_axis(name = "Consensus type")
+         sec.axis = dup_axis(name = "Consensus read type")
       ) +
       plot_labels +
       theme(
@@ -727,7 +728,7 @@ PLOTS[[FEATURE_TYPE$MS_INDEL_ERROR_RATES]] <- local({
          breaks = scales::breaks_width(3), 
          limits = range(c(3, 12, plot_data$RefNumUnits), na.rm = TRUE)
       ) +
-      scale_y_continuous(limits = c(0, NA), sec.axis = dup_axis(name = "Consensus type")) +
+      scale_y_continuous(limits = c(0, NA), sec.axis = dup_axis(name = "Consensus read type")) +
       plot_labels +
       theme(panel.grid.major = THEME_PANEL_GRID_MAJOR) +
       render_now()
@@ -740,7 +741,7 @@ PLOTS[[FEATURE_TYPE$MS_INDEL_ERROR_BIAS]] <- local({
    plot_labels <- labs(
       title = "Microsatellite indel error bias",
       x = "Repeat units",
-      y = expression(atop("Phred score diff.",atop("more del. errors <-> more ins. errors")))
+      y = expression(atop("Phred score diff. (del - ins)",atop("more del errors <-> more ins errors")))
    )
    
    if(is.null(plot_data)){
@@ -757,7 +758,7 @@ PLOTS[[FEATURE_TYPE$MS_INDEL_ERROR_BIAS]] <- local({
       ) +
       scale_y_continuous(
          labels = function(x){ ifelse(x > 0, paste0("+",x), x) },
-         sec.axis = dup_axis(name = "Consensus type")
+         sec.axis = dup_axis(name = "Consensus read type")
       ) +
       theme(panel.grid.major.x = THEME_PANEL_GRID_MAJOR) +
       plot_labels +
