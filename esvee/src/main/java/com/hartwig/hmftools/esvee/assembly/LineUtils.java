@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.common.sv.LineElements.LINE_POLY_AT_TEST_LEN;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.INVALID_INDEX;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.getReadIndexAtReferencePosition;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.aboveMinQual;
+import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_REF_BASE_MAX_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_REF_BASE_REPEAT_FACTOR;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 
@@ -163,6 +164,9 @@ public final class LineUtils
         // now look for a ref bases having the same line base
         int refIndexStart = leftClipped ? softClipIndex + 1 : softClipIndex - 1;
         int refLineBaseCount = findBaseRepeatCount(bases, refIndexStart, leftClipped, lineBase);
+
+        if(refLineBaseCount > LINE_REF_BASE_MAX_LENGTH)
+            return false;
 
         return lineBaseCount >= refLineBaseCount * LINE_REF_BASE_REPEAT_FACTOR;
     }
