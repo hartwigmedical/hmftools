@@ -30,15 +30,12 @@ import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.perf.TaskQueue;
 import com.hartwig.hmftools.esvee.assembly.AssemblyConfig;
 import com.hartwig.hmftools.esvee.assembly.output.AlignmentWriter;
-import com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.types.SupportType;
 import com.hartwig.hmftools.esvee.assembly.types.ThreadTask;
 
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
-
-import htsjdk.samtools.CigarOperator;
 
 public class AssemblyAligner extends ThreadTask
 {
@@ -144,7 +141,6 @@ public class AssemblyAligner extends ThreadTask
     {
         // re-align long soft-clipped sequences add attach them to the original alignment
         String softClipBases;
-        String newCigar;
         boolean isLeftClip;
         boolean firstBasesMissing;
 
@@ -182,22 +178,6 @@ public class AssemblyAligner extends ThreadTask
             softClipBases = assemblyAlignment.fullSequence().substring(fullLength - softClipLength);
         }
 
-        if(isLeftClip)
-        {
-            newCigar = relevantAlignment.cigar().substring(relevantAlignment.cigar().indexOf(CigarOperator.S.toString()) + 1);
-        }
-        else
-        {
-            newCigar = relevantAlignment.cigar().substring(0, relevantAlignment.cigar().lastIndexOf(CigarOperator.M.toString()) + 1);
-        }
-
-        if(newCigar == null || newCigar.isEmpty())
-        {
-            SV_LOGGER.warn("assembly({}) error forming new cigar(orig={} new={})",
-                    assemblyAlignment, relevantAlignment.cigar(), newCigar);
-            return alignments;
-        }
-
         ++mRequeriedSoftClipCount;
 
         List<BwaMemAlignment> requeryBwaAlignments = mAligner.alignSequence(softClipBases.getBytes());
@@ -207,9 +187,7 @@ public class AssemblyAligner extends ThreadTask
                 .filter(x -> x != null).collect(Collectors.toList());
 
         if(newAlignments.isEmpty())
-        {
             return alignments;
-        }
 
         SV_LOGGER.trace("assembly({}) requeried single alignment({}) with long soft-clip", assemblyAlignment, relevantAlignment);
 
@@ -262,104 +240,6 @@ public class AssemblyAligner extends ThreadTask
         }
 
         return newAlignments;
-
-    }
-
-    private List<AlignData> requerySoftClipAlignmentsOld(final AssemblyAlignment assemblyAlignment, final List<AlignData> alignments)
-    {
-        // re-align long soft-clipped sequences add attach them to the original alignment
-        if(alignments.size() != 1)
-            return alignments;
-
-        AlignData alignment = alignments.get(0);
-
-        int softClipLength = max(alignment.leftSoftClipLength(), alignment.rightSoftClipLength());
-
-        if(softClipLength <= ALIGNMENT_REQUERY_SOFT_CLIP_LENGTH)
-            return alignments;
-
-        String softClipBases = "";
-        String newCigar = "";
-        boolean isLeftClip = false;
-
-        if(alignment.leftSoftClipLength() > alignment.rightSoftClipLength())
-        {
-            softClipBases = assemblyAlignment.fullSequence().substring(0, alignment.leftSoftClipLength());
-            newCigar = alignment.cigar().substring(alignment.cigar().indexOf(CigarOperator.S.toString()) + 1);
-            isLeftClip = true;
-        }
-        else
-        {
-            int fullLength = assemblyAlignment.fullSequenceLength();
-            softClipBases = assemblyAlignment.fullSequence().substring(fullLength - alignment.rightSoftClipLength());
-            newCigar = alignment.cigar().substring(0, alignment.cigar().lastIndexOf(CigarOperator.M.toString()) + 1);
-        }
-
-        if(newCigar == null || newCigar.isEmpty())
-        {
-            SV_LOGGER.warn("assembly({}) error forming new cigar(orig={} new={})",
-                    assemblyAlignment, alignment.cigar(), newCigar);
-            return alignments;
-        }
-
-        ++mRequeriedSoftClipCount;
-
-        List<BwaMemAlignment> requeryBwaAlignments = mAligner.alignSequence(softClipBases.getBytes());
-
-        List<AlignData> newAlignments = requeryBwaAlignments.stream()
-                .map(x -> AlignData.from(x, mConfig.RefGenVersion))
-                .filter(x -> x != null).collect(Collectors.toList());
-
-        if(newAlignments.isEmpty())
-        {
-            return alignments;
-        }
-
-        SV_LOGGER.trace("assembly({}) requeried single alignment({}) with long soft-clip", assemblyAlignment, alignment);
-
-        int softClipSeqIndexStart;
-
-        if(isLeftClip == alignment.orientation().isForward())
-        {
-            softClipSeqIndexStart = max(alignment.sequenceStart() - softClipLength, 0);
-        }
-        else
-        {
-            softClipSeqIndexStart = alignment.sequenceEnd() + 1;
-        }
-
-        for(AlignData rqAlignment : newAlignments)
-        {
-            // adjust values to be in terms of the original sequence, and then ordered within the soft-clip bounds
-            int adjSequenceStart, adjSequenceEnd;
-
-            if(rqAlignment.orientation().isForward())
-            {
-                adjSequenceStart = softClipSeqIndexStart + rqAlignment.sequenceStart();
-                adjSequenceEnd = softClipSeqIndexStart + rqAlignment.sequenceEnd();
-            }
-            else
-            {
-                int newSequenceStart = (softClipLength - 1) - (rqAlignment.rawSequenceEnd() - 1);
-                int newSequenceEnd = newSequenceStart + rqAlignment.segmentLength() - 1;
-
-                adjSequenceStart = softClipSeqIndexStart + newSequenceStart;
-                adjSequenceEnd = softClipSeqIndexStart + newSequenceEnd;
-            }
-
-            rqAlignment.setRequeriedSequenceCoords(adjSequenceStart, adjSequenceEnd);
-        }
-
-        if(isLeftClip)
-        {
-            newAlignments.add(alignment);
-        }
-        else
-        {
-            newAlignments.add(0, alignment);
-        }
-
-        return newAlignments;
     }
 
     private List<AlignData> requerySupplementaryAlignments(
@@ -382,13 +262,13 @@ public class AssemblyAligner extends ThreadTask
             }
 
             requeriedAlignments.add(alignData);
-            newAlignments.addAll(requeryAlignment(assemblyAlignment, alignData));
+            newAlignments.addAll(requerySupplementaryAlignment(assemblyAlignment, alignData));
         }
 
         return newAlignments;
     }
 
-    private List<AlignData> requeryAlignment(final AssemblyAlignment assemblyAlignment, final AlignData alignData)
+    private List<AlignData> requerySupplementaryAlignment(final AssemblyAlignment assemblyAlignment, final AlignData alignData)
     {
         ++mRequeriedSuppCount;
 

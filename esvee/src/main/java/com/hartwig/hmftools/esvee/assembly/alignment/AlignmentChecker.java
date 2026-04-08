@@ -29,15 +29,11 @@ public class AlignmentChecker
     private final AssemblyConfig mConfig;
     private final BwaMemAligner mDecoyAligner;
     private final BwaMemAligner mAligner;
-    private int mSequenceCount;
-    private int mSequenceMatched;
     private final BufferedWriter mWriter;
 
     public AlignmentChecker(final AssemblyConfig config, final BufferedWriter writer)
     {
         mConfig = config;
-        mSequenceCount = 0;
-        mSequenceMatched = 0;
         mWriter = writer;
 
         mAligner = config.AssemblyMapQualThreshold > 0 ? new BwaMemAligner(new BwaMemIndex(mConfig.RefGenomeImageFile)) : null;
@@ -45,15 +41,10 @@ public class AlignmentChecker
         mDecoyAligner = config.DecoyGenome != null ? new BwaMemAligner(new BwaMemIndex(mConfig.DecoyGenome)) : null;
     }
 
-    public int sequenceCount() { return mSequenceCount; }
-    public int sequenceMatched() { return mSequenceMatched; };
-
     public boolean matchesDecoy(final JunctionAssembly assembly)
     {
         if(mDecoyAligner == null)
             return false;
-
-        ++mSequenceCount;
 
         String fullSequence = assembly.formFullSequence();
         List<BwaMemAlignment> alignmentResults = mDecoyAligner.alignSeqs(List.of(fullSequence.getBytes())).get(0);
@@ -79,7 +70,6 @@ public class AlignmentChecker
 
         if(unalignedBases <= DECOY_MAX_MISMATCHES && scoreFactor >= DECOY_MIN_SCORE_FACTOR)
         {
-            ++mSequenceMatched;
             return true;
         }
 
