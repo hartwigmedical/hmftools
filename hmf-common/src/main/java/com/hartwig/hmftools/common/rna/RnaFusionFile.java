@@ -140,11 +140,11 @@ public final class RnaFusionFile
             int cohortIndex = fieldsIndexMap.getOrDefault(Columns.CohortFrequency.toString(), fieldsIndexMap.get("CohortCount"));
 
             // v2.0 columns
-            Integer transcriptUpIndex = fieldsIndexMap.get(Columns.TranscriptUp);
-            Integer transcriptDownIndex = fieldsIndexMap.get(Columns.TranscriptDown);
-            Integer exonUpIndex = fieldsIndexMap.get(Columns.ExonUp);
-            Integer exonDownIndex = fieldsIndexMap.get(Columns.ExonDown);
-            Integer knownTypeIndex = fieldsIndexMap.get(Columns.KnownType);
+            Integer transcriptUpIndex = fieldsIndexMap.get(Columns.TranscriptUp.toString());
+            Integer transcriptDownIndex = fieldsIndexMap.get(Columns.TranscriptDown.toString());
+            Integer exonUpIndex = fieldsIndexMap.get(Columns.ExonUp.toString());
+            Integer exonDownIndex = fieldsIndexMap.get(Columns.ExonDown.toString());
+            Integer knownTypeIndex = fieldsIndexMap.get(Columns.KnownType.toString());
 
             for(String line : lines.subList(1, lines.size()))
             {
