@@ -1,7 +1,5 @@
 # PanelBuilder
 
-!! Currently in BETA - exact specifications may change as testing is done.
-
 PanelBuilder is a tool to easily create custom panel designs based on simple input features.
 You input the genomic features you are interested in and PanelBuilder creates the best set of probes for you.
 
@@ -130,6 +128,10 @@ Feature methodology:
 
 The canonical transcript of a gene (according to Ensembl) is always included. Additional transcripts may be requested (see input file format below).
 If multiple transcripts are requested, they are merged together into a superset of exons from which probes are generated.
+
+We recommend specifying these additional transcripts of clinical interest:
+
+- CDKN2A: ENST00000579755
 
 #### Gene Feature Input File
 
