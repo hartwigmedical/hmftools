@@ -116,7 +116,9 @@ public class ErrorConverter
     {
         if(!findingItem.status().isOK())
         {
-            return FindingItemBuilder.builder(findingItem).build();
+            return FindingItemBuilder.builder(findingItem)
+                    .finding(null)
+                    .build();
         }
         else
         {
