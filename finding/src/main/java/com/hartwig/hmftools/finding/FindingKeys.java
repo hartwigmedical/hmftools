@@ -3,8 +3,6 @@ package com.hartwig.hmftools.finding;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.datamodel.chord.ChordStatus;
-import com.hartwig.hmftools.finding.datamodel.SmallVariant;
-import com.hartwig.hmftools.finding.datamodel.driver.DriverSource;
 import com.hartwig.hmftools.datamodel.hla.LilacAllele;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
@@ -17,42 +15,37 @@ import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariantEffect;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverSource;
 
 import org.jetbrains.annotations.Nullable;
 
 public final class FindingKeys
 {
-    public static String smallVariant(DriverSource sampleType, PurpleVariant variant,
+    public static String smallVariant(DriverSource driverSource, PurpleVariant variant,
             PurpleTranscriptImpact transcriptImpact, boolean isCanonical)
     {
-        return String.format("smallVariant[%s %s %s:%d %s %s]", sampleType, geneTranscriptLabel(variant.gene(), isCanonical,
+        return String.format("smallVariant[%s %s %s:%d %s %s]", driverSource, geneTranscriptLabel(variant.gene(), isCanonical,
                 transcriptImpact.transcript()), variant.chromosome(), variant.position(), variant.ref(), variant.alt());
     }
 
-    public static String smallVariant(DriverSource sampleType, SmallVariant variant)
-    {
-        return String.format("smallVariant[%s %s %s:%d %s %s]", sampleType, geneTranscriptLabel(variant.gene(), variant.isCanonical(),
-                variant.transcriptImpact().transcript()), variant.chromosome(), variant.position(), variant.ref(), variant.alt());
-    }
-
-    public static String gainDeletion(DriverSource sampleType, String gene, PurpleDriverType driverType,
+    public static String gainDeletion(DriverSource driverSource, String gene, PurpleDriverType driverType,
             boolean isCanonical, String transcriptId)
     {
-        return String.format("gainDeletion[%s %s %s]", sampleType, geneTranscriptLabel(gene, isCanonical, transcriptId),
+        return String.format("gainDeletion[%s %s %s]", driverSource, geneTranscriptLabel(gene, isCanonical, transcriptId),
                 driverType.name());
     }
 
-    public static String disruption(DriverSource sampleType, LinxBreakend breakend)
+    public static String disruption(DriverSource driverSource, LinxBreakend breakend)
     {
         return String.format("disruption[%s %s %d]",
-                sampleType,
+                driverSource,
                 geneTranscriptLabel(breakend.gene(), breakend.isCanonical(), breakend.transcript()),
                 breakend.svId());
     }
 
-    public static String fusion(DriverSource sampleType, LinxFusion fusion)
+    public static String fusion(DriverSource driverSource, LinxFusion fusion)
     {
-        return String.format("fusion[%s %s %s]", sampleType, fusion.geneStart(), fusion.geneEnd());
+        return String.format("fusion[%s %s %s]", driverSource, fusion.geneStart(), fusion.geneEnd());
     }
 
     public static String virus(VirusInterpreterEntry virus)
