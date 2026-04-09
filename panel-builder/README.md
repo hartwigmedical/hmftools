@@ -34,7 +34,7 @@ You input the genomic features you are interested in and PanelBuilder creates th
 | genes              | Path                         | (none)                      | Path to TSV file containing desired gene features. If not specified, gene probes are not produced.                                 |
 | cn_backbone        | Flag                         | (none)                      | If specified, include copy number backbone probes in the panel.                                                                    |
 | cn_backbone_res_kb | Integer                      | 1000                        | Approximate spacing between copy number backbone probes, in kb.                                                                    |
-| amber_sites        | Path                         | (none)                      | Path to heterozygous sites TSV file for copy number backbone. May be GZIP'd.                                                       |
+| het_sites          | Path                         | (none)                      | Path to heterozygous SNP sites TSV file for copy number backbone. May be GZIP'd.                                                   |
 | cdr3               | Flag                         | (none)                      | If specified, include CDR3 regions in the panel.                                                                                   |
 | sample             | String                       | (none)                      | ID of sample for sample variant probes. If not specified, sample variant probes are not produced.                                  |
 | linx_dir           | Path                         | (none)                      | Path to Linx somatic output for sample variant probes.                                                                             |
@@ -58,7 +58,7 @@ java -jar panel-builder.jar \
   -bwa_index_image Homo_sapiens.GRCh37.GATK.illumina.fasta.img \
   -probe_quality_profile panelbuilder_resources/probe_quality_profile.37.tsv.gz \
   -cdr3 \
-  -amber_sites panelbuilder_resources/amber_sites.37.tsv.gz \
+  -het_sites panelbuilder_resources/het_sites.37.tsv.gz \
   -cn_backbone \
   -genes genes_features.tsv \
   -custom_regions custom_regions.tsv \
@@ -162,7 +162,7 @@ These probes are included if you specify the `cn_backbone` argument.
 Methodology for all chromosomes except Y:
 
 1. Divide the chromosome into partitions of size `cn_backbone_res_kb`. Exclude 3Mb either side of the centromere.
-2. Enumerate Amber heterozygous sites (from `amber_sites` file) within each partition.
+2. Enumerate heterozygous sites (from `het_sites` file) within each partition.
 3. Filter sites with `0.3<=GNOMAD_FREQ<=0.7`. This ensures the site is likely heterozygous for any individual.
 4. Consider all probes centered on the sites.
 5. Select the acceptable probe with GC closest to 0.45.
@@ -174,7 +174,7 @@ Probe evaluation criteria:
 
 The methodology for the Y chromosome is similar, except:
 
-- Rather than considering probes on Amber sites, it considers all probes in the partition. This is because there are no heterozygous sites on the Y chromosome.
+- Rather than considering probes on heterozygous sites, it considers all probes in the partition. This is because there are no heterozygous sites on the Y chromosome.
 - QS criteria: `QS=1`.
 
 The strict QS and GC criteria aim to eliminate bias from amplification and hybridisation efficiency, yielding more accurate CN determination.

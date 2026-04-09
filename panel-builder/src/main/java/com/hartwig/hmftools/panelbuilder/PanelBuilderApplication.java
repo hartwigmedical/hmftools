@@ -132,13 +132,13 @@ public class PanelBuilderApplication
     {
         if(mConfig.includeCnBackbone())
         {
-            if(mConfig.amberSitesFile() == null)
+            if(mConfig.hetSitesFile() == null)
             {
-                throw new UserInputError("Copy number backbone requested but Amber sites file not provided");
+                throw new UserInputError("Copy number backbone requested but heterozygous sites file not provided");
             }
             else
             {
-                new CopyNumberBackbone(mConfig.amberSitesFile(), mConfig.cnBackboneResolution(), mRefGenomeVersion, mProbeGenerator, mPanelData)
+                new CopyNumberBackbone(mConfig.hetSitesFile(), mConfig.cnBackboneResolution(), mRefGenomeVersion, mProbeGenerator, mPanelData)
                         .generateProbes();
                 // Result is stored into mPanelData.
             }
