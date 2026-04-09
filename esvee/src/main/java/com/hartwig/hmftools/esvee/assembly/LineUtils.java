@@ -44,23 +44,6 @@ import htsjdk.samtools.SAMRecord;
 
 public final class LineUtils
 {
-    public static int findBaseRepeatCount(final byte[] bases, int index, boolean moveForward, byte testBase)
-    {
-        // count matching bases until the end of the read
-        int matchCount = 0;
-        while(index >= 0 && index < bases.length)
-        {
-            if(bases[index] == testBase)
-                ++matchCount;
-            else
-                break;
-
-            index += moveForward ? 1 : -1;
-        }
-
-        return matchCount;
-    }
-
     public static int findLineSequenceCount(final byte[] bases, final int indexStart, final int indexEnd, final byte lineBase)
     {
         if(indexStart < 0 || indexEnd >= bases.length)
@@ -163,12 +146,54 @@ public final class LineUtils
 
         // now look for a ref bases having the same line base
         int refIndexStart = leftClipped ? softClipIndex + 1 : softClipIndex - 1;
-        int refLineBaseCount = findBaseRepeatCount(bases, refIndexStart, leftClipped, lineBase);
+        int refLineBaseCount = findRefBaseRepeatCount(bases, refIndexStart, leftClipped, lineBase);
 
         if(refLineBaseCount > LINE_REF_BASE_MAX_LENGTH)
             return false;
 
         return lineBaseCount >= refLineBaseCount * LINE_REF_BASE_REPEAT_FACTOR;
+    }
+
+    @VisibleForTesting
+    public static int findRefBaseRepeatCount(final byte[] bases, int index, boolean moveForward, byte testBase)
+    {
+        // count matching bases and exit on a difference
+        int matchCount = 0;
+        int initialMatchCount = 0;
+        int mismatchCount = 0;
+        int baseCount = 0;
+
+        while(index >= 0 && index < bases.length)
+        {
+            ++baseCount;
+
+            if(bases[index] == testBase)
+            {
+                ++matchCount;
+
+                if(mismatchCount == 0)
+                    ++initialMatchCount;
+            }
+            else
+            {
+                ++mismatchCount;
+            }
+
+            if(baseCount >= 10)
+            {
+                // allow at most 1/10 mismatches
+                if(mismatchCount / (double)baseCount > 0.1)
+                    return initialMatchCount;
+            }
+            else if(mismatchCount >= 2)
+            {
+                return initialMatchCount;
+            }
+
+            index += moveForward ? 1 : -1;
+        }
+
+        return mismatchCount == 0 ? initialMatchCount : matchCount;
     }
 
     public static int findConsensusLineExtension(final List<Read> reads, final Junction junction)
