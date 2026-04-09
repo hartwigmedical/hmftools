@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.linx.fusion;
 
-import static com.hartwig.hmftools.common.driver.DriverCategory.TSG;
 import static com.hartwig.hmftools.common.driver.DriverType.HOM_DEL_DISRUPTION;
 import static com.hartwig.hmftools.common.driver.DriverType.HOM_DUP_DISRUPTION;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.UTR_3P;
@@ -23,7 +22,6 @@ import static com.hartwig.hmftools.linx.visualiser.file.VisGeneAnnotationType.DI
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -291,15 +289,18 @@ public class DisruptionFinder implements CohortFileInterface
         }
         else if(trans1.breakendGeneData().varId() == trans2.breakendGeneData().varId())
         {
-            // events wholly contained within the 3'UTR region are not disruptive
-            if(trans1.codingType() == UTR_3P && trans2.codingType() == UTR_3P)
+            if(mIsGermline) // only allow 3'UTR DEL-DUPs to be disruptive for somatics
             {
-                markNonDisruptive = true;
-            }
-            else if(trans1.codingType() == UTR_3P || trans2.codingType() == UTR_3P)
-            {
-                if(trans1.breakendGeneData().svType() == DUP)
+                // events wholly contained within the 3'UTR region are not disruptive
+                if(trans1.codingType() == UTR_3P && trans2.codingType() == UTR_3P)
+                {
                     markNonDisruptive = true;
+                }
+                else if(trans1.codingType() == UTR_3P || trans2.codingType() == UTR_3P)
+                {
+                    if(trans1.breakendGeneData().svType() == DUP)
+                        markNonDisruptive = true;
+                }
             }
         }
 
@@ -844,7 +845,7 @@ public class DisruptionFinder implements CohortFileInterface
             if(driverGene == null)
                 continue;
 
-            ReportedStatus reportedStatus = driverGene.reportDisruption() ? ReportedStatus.REPORTED : ReportedStatus.NOT_REPORTED;
+                ReportedStatus reportedStatus = driverGene.reportDisruption() ? ReportedStatus.REPORTED : ReportedStatus.NOT_REPORTED;
 
             DriverCatalog driverCatalog = ImmutableDriverCatalog.builder()
                     .driver(DriverType.DISRUPTION)
