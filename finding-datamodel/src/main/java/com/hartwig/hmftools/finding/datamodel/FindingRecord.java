@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.finding.datamodel;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 import com.hartwig.hmftools.finding.datamodel.driver.Driver;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingList;
@@ -72,18 +72,20 @@ public record FindingRecord(
     @NotNull
     private static <T extends Driver> List<T> mergeDriverFindings(DriverFindingList<T> somatic, DriverFindingList<T> germline)
     {
-        List<T> all = new ArrayList<>(somatic.findings());
-        all.addAll(germline.findings());
-        all.sort(T.COMPARATOR);
-        return all;
+        return mergeAndSort(somatic.findings(), germline.findings());
     }
 
     @NotNull
     private static <T extends Driver> List<T> mergeReportedDriverFindings(DriverFindingList<T> somatic, DriverFindingList<T> germline)
     {
-        List<T> all = new ArrayList<>(somatic.reportedOnly().findings());
-        all.addAll(germline.reportedOnly().findings());
-        all.sort(T.COMPARATOR);
-        return all;
+        return mergeAndSort(somatic.reportedOnly().findings(), germline.reportedOnly().findings());
+    }
+
+    @NotNull
+    private static <T extends Driver> List<T> mergeAndSort(List<T> list1, List<T> list2)
+    {
+        return Stream.concat(list1.stream(), list2.stream())
+                .sorted(T.COMPARATOR)
+                .toList();
     }
 }
