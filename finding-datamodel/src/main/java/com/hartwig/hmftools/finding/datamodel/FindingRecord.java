@@ -7,6 +7,8 @@ import com.hartwig.hmftools.finding.datamodel.driver.Driver;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingList;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingItem;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingList;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
+import com.hartwig.hmftools.finding.datamodel.finding.IFindingList;
 
 import jakarta.validation.constraints.NotNull;
 
@@ -33,6 +35,24 @@ public record FindingRecord(
         @NotNull FindingItem<TumorMutationalBurden> tumorMutationalBurden,
         @NotNull FindingItem<HomologousRecombination> homologousRecombination)
 {
+    public boolean hasLowPurity()
+    {
+        List<IFindingList<?>> lists =
+                List.of(somaticSmallVariants, somaticGainDeletions, somaticDisruptions, fusions, viruses, chromosomeArmCopyNumbers, hlaAlleles, pharmacoGenotypes);
+        for(IFindingList<?> list : lists)
+        {
+            if(list.status().errors().contains(FindingStatus.Issue.LOW_PURITY))
+            {
+                return true;
+            }
+            if(list.status().warnings().contains(FindingStatus.Issue.LOW_PURITY))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @NotNull
     public List<SmallVariant> allSmallVariants()
     {
