@@ -73,6 +73,7 @@ import com.hartwig.hmftools.esvee.common.WriteType;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 
 public class AssemblyConfig
 {
@@ -91,6 +92,8 @@ public class AssemblyConfig
     public final RefGenomeInterface RefGenome;
     public final String RefGenomeImageFile;
     public final String DecoyGenome;
+    @Nullable
+    public final String SagaFastaFile;
 
     public final Set<WriteType> WriteTypes;
 
@@ -131,6 +134,8 @@ public class AssemblyConfig
     public static boolean CLEAR_CACHED_READ = true;
 
     private static final String DECOY_GENOME = "decoy_genome";
+
+    private static final String SAGA_FASTA = "saga_fasta";
 
     private static final String PERF_LOG_TIME = "perf_log_time";
 
@@ -275,6 +280,8 @@ public class AssemblyConfig
 
         DecoyGenome = configBuilder.getValue(DECOY_GENOME);
 
+        SagaFastaFile = configBuilder.getValue(SAGA_FASTA);
+
         WriteTypes = WriteType.parseAssemblyTypes(configBuilder.getValue(WRITE_TYPES));
 
         loadAlignerLibrary(configBuilder.getValue(BWA_LIB_PATH));
@@ -392,6 +399,8 @@ public class AssemblyConfig
         addRefGenomeConfig(configBuilder, true);
         configBuilder.addPath(DECOY_GENOME, false, "Decoy genome image file");
 
+        configBuilder.addPath(SAGA_FASTA, false, "SAGA resource FASTA file");
+
         configBuilder.addPath(BWA_LIB_PATH, false, BWA_LIB_PATH_DESC);
 
         configBuilder.addConfigItem(LOG_READ_IDS, false, LOG_READ_IDS_DESC);
@@ -454,6 +463,7 @@ public class AssemblyConfig
         RefGenome = null;
         RefGenomeImageFile = null;
         DecoyGenome = null;
+        SagaFastaFile = null;
 
         WriteTypes = Collections.emptySet();
 
