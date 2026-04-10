@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASES;
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.fastqtools.FastqCommon.APP_NAME;
 import static com.hartwig.hmftools.fastqtools.FastqCommon.FQ_LOGGER;
 
 import org.jetbrains.annotations.NotNull;
@@ -176,7 +177,7 @@ public class FastqAnalyser
 
     public static void main(@NotNull final String[] args)
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
         addOutputOptions(configBuilder);
         addLoggingOptions(configBuilder);
