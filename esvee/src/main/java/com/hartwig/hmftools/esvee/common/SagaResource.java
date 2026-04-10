@@ -14,6 +14,8 @@ import java.util.stream.Stream;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.BasePosition;
 
+import org.jetbrains.annotations.Nullable;
+
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class SagaResource
@@ -37,15 +39,10 @@ public class SagaResource
                 .collect(Collectors.groupingBy(IndexedBreakend::chromosome));
     }
 
-//    public String bwaIndexImagePath()
-//    {
-//        return mFastaPath + ".img";
-//    }
-
-//    public Map<String, AssemblyMetadata> assembliesByFastaLabel()
-//    {
-//        return mAssemblies.stream().collect(Collectors.toMap(AssemblyMetadata::fastaLabel, identity()));
-//    }
+    public String bwaIndexImagePath()
+    {
+        return mFastaPath + ".img";
+    }
 
     public Variant getVariantById(final String variantId)
     {
@@ -60,9 +57,10 @@ public class SagaResource
         }
     }
 
-    public Map<String, Variant> variantsById()
+    public Variant getVariantByFastaLabel(final String fastaLabel)
     {
-        return mVariantsById;
+        String variantId = fastaLabel.split("\\|", 2)[0];
+        return getVariantById(variantId);
     }
 
     public Map<String, List<IndexedBreakend>> searchableBreakends()
@@ -105,7 +103,8 @@ public class SagaResource
             String fastaLabel,
             Variant variant,
             int junctionOffset1,
-            int junctionOffset2
+            // Can be null for DELs where the junction is a single position.
+            @Nullable Integer junctionOffset2
     )
     {
         public static AssemblyMetadata fromFastaLabel(final String fastaLabel)
@@ -119,7 +118,11 @@ public class SagaResource
             Breakend breakend1 = Breakend.fromString(parts[1]);
             Breakend breakend2 = Breakend.fromString(parts[2]);
             int junctionOffset1 = Integer.parseInt(parts[3]);
-            int junctionOffset2 = Integer.parseInt(parts[4]);
+            Integer junctionOffset2 = parts[4].isEmpty() ? null : Integer.parseInt(parts[4]);
+            if(junctionOffset2 != null && junctionOffset2 == junctionOffset1)
+            {
+                junctionOffset2 = null;
+            }
             Variant variant = new Variant(id, breakend1, breakend2);
             return new AssemblyMetadata(fastaLabel, variant, junctionOffset1, junctionOffset2);
         }
