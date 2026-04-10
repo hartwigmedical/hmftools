@@ -23,11 +23,10 @@ import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.isDiscordantFragment;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.isIllumina;
-import static com.hartwig.hmftools.esvee.common.SvConstants.isSbx;
-import static com.hartwig.hmftools.esvee.common.SvConstants.isUltima;
 import static com.hartwig.hmftools.esvee.common.SvConstants.maxConcordantFragmentLength;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MAX_SOFT_CLIP_LOW_QUAL_COUNT;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_CALC_ALIGNMENT_SCORE;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_SUPP_CALC_ALIGNMENT_SCORE;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.REPEAT_BREAK_CHECK_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.REPEAT_BREAK_MIN_MAP_QUAL;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.REPEAT_BREAK_MIN_SC_LENGTH;
@@ -98,17 +97,20 @@ public class ReadFilters
         if(!read.getSupplementaryAlignmentFlag())
             return false;
 
-        if(read.getMappingQuality() >= SUPP_SHORT_ALIGNMENT_MIN_MAP_QUAL)
-            return false;
-
         int alignedLength = read.getCigar().getCigarElements().stream().filter(x -> x.getOperator() == M).mapToInt(x -> x.getLength()).sum();
 
-        if(alignedLength < MIN_CALC_ALIGNMENT_SCORE)
+        boolean hasLowMapQual = read.getMappingQuality() < SUPP_SHORT_ALIGNMENT_MIN_MAP_QUAL;
+
+        if(alignedLength < MIN_CALC_ALIGNMENT_SCORE && hasLowMapQual)
             return true;
 
         double adjustedAlignScore = calcRepeatTrimmedAlignmentScore(read, alignedLength, MIN_CALC_ALIGNMENT_SCORE, true);
 
-        return adjustedAlignScore < MIN_CALC_ALIGNMENT_SCORE;
+        if(adjustedAlignScore < MIN_CALC_ALIGNMENT_SCORE && hasLowMapQual)
+            return true;
+
+        // very short repetitive section trigger this rule even if map qual is higher
+        return adjustedAlignScore < MIN_SUPP_CALC_ALIGNMENT_SCORE;
     }
 
     public static boolean filterLowQualRead(final SAMRecord read)
