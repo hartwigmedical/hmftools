@@ -14,6 +14,8 @@ import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.BLACKLISTED_SITES;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.BLACKLISTED_SITES_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_BAM;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_BAM_DESC;
@@ -73,7 +75,7 @@ public class AmberConfig
     public final ValidationStringency BamStringency;
     public final int Threads;
     public final boolean SkipBafSegmentation;
-    public final boolean UseOldSegmenter;
+    public final boolean PerfDebug;
 
     public final List<String> SpecificChromosomes;
 
@@ -154,7 +156,7 @@ public class AmberConfig
         PositionGap = configBuilder.getInteger(POSITION_GAP);
 
         SkipBafSegmentation = configBuilder.hasFlag(SKIP_BAF_SEGMENTATION);
-        UseOldSegmenter = configBuilder.hasFlag(USE_OLD_SEGMENTER);
+        PerfDebug = configBuilder.hasFlag(PERF_DEBUG);
 
         WriteUnfilteredGermline = configBuilder.hasFlag(WRITE_UNFILTERED_GERMLINE);
         WriteTumorData = configBuilder.hasFlag(WRITE_TUMOR_DATA);
@@ -207,7 +209,7 @@ public class AmberConfig
         configBuilder.addDecimal(MIN_HIT_AT_PERC, "Max heterozygous AF%", DEFAULT_MIN_HET_AF_PERCENTAGE);
         configBuilder.addDecimal(MAX_HIT_AT_PERC, "Max heterozygous AF%", DEFAULT_MAX_HET_AF_PERCENTAGE);
 
-        configBuilder.addFlag(USE_OLD_SEGMENTER, "Use old R segmentation");
+        configBuilder.addFlag(PERF_DEBUG, PERF_DEBUG_DESC);
         configBuilder.addFlag(SKIP_BAF_SEGMENTATION, "Skip BAF segmentation");
 
         configBuilder.addFlag(WRITE_UNFILTERED_GERMLINE, "Write all (unfiltered) germline points");

@@ -261,13 +261,13 @@ public class RetainedIntronFinder
                         continue;
 
                     writer.write(String.format("%s,%s,%s,%d",
-                            gene.GeneData.GeneId, gene.GeneData.GeneName,
-                            gene.GeneData.Chromosome, gene.GeneData.Strand));
+                            gene.Gene.GeneId, gene.Gene.GeneName,
+                            gene.Gene.Chromosome, gene.Gene.Strand));
 
                     int readDepth = max(retIntron.getDepth(), retIntron.getFragmentCount());
 
                     writer.write(String.format(",%d,%s,%d,%d,%d,%s",
-                            retIntron.position(), retIntron.type(gene.GeneData.forwardStrand()), retIntron.getFragmentCount(),
+                            retIntron.position(), retIntron.type(gene.Gene.forwardStrand()), retIntron.getFragmentCount(),
                             retIntron.getSplicedFragmentCount(), readDepth, retIntron.transcriptInfo()));
 
                     writer.newLine();

@@ -19,6 +19,7 @@ public final class TableCommon
     public static final String COL_JCN = "JCN";
     public static final String COL_REL_CN = "Rel CN";
     public static final String COL_LOCATION = "Location";
+    public static final String COL_JUNCTIONS = "Junctions";
     public static final String COL_RANGE = "Range";
     public static final String COL_TYPE = "Type";
     public static final String COL_SV_TYPE = "SV Type";
@@ -37,11 +38,12 @@ public final class TableCommon
     public static final String COL_VARIANT = "Variant";
     public static final String COL_HGVS = "HGVS";
     public static final String COL_VCN = "VCN";
+    public static final String COL_COPIES = "Copies";
     public static final String COL_MACN = "MACN";
     public static final String COL_CL = "Clonal";
     public static final String COL_AF = "AF";
     public static final String COL_SL = "Somatic";
-    public static final String COL_BIALLELIC = "Biallelic";
+    public static final String COL_BIALLELIC = "Biall";
     public static final String COL_HOTSPOT = "Hotspot";
 
     public static final String COL_SUPPORT = "Support"; // for fields of type fragments / depth

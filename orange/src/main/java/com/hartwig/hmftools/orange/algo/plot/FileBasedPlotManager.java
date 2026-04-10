@@ -68,7 +68,7 @@ public class FileBasedPlotManager implements PlotManager
 
         if(!Files.exists(Paths.get(targetPath)))
         {
-            LOGGER.debug("Copying '{}' to '{}'", sourcePlotPath, targetPath);
+            LOGGER.trace("copying '{}' to '{}'", sourcePlotPath, targetPath);
             Files.copy(new File(sourcePlotPath).toPath(), new File(targetPath).toPath());
         }
 

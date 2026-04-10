@@ -170,7 +170,7 @@ public class GeneTestUtils
                 .reportGermlineAmplification(false)
                 .reportHighExpression(false)
                 .reportLowExpression(false)
-                .reportNovelSpliceJunctions(false)
+                .reportNovelSpliceJunction(false)
                 .build();
     }
 

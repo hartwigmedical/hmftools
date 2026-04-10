@@ -24,6 +24,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
 
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.file.DelimFileWriter;
 import com.hartwig.hmftools.panelbuilder.samplevariants.SampleVariants;
@@ -53,8 +54,10 @@ public class OutputWriter implements AutoCloseable
     private enum PanelProbesColumns
     {
         StartRegion,
-        InsertSequence,
+        StartRegionOrient,
+        MiddleSequence,
         EndRegion,
+        EndRegionOrient,
         Sequence,
         TargetedStart,
         TargetedEnd,
@@ -77,8 +80,10 @@ public class OutputWriter implements AutoCloseable
     private enum CandidateProbesColumns
     {
         StartRegion,
-        InsertSequence,
+        StartRegionOrient,
+        MiddleSequence,
         EndRegion,
+        EndRegionOrient,
         Sequence,
         TargetType,
         TargetExtra,
@@ -189,13 +194,16 @@ public class OutputWriter implements AutoCloseable
 
     private static void writePanelProbesTsvRow(final Probe probe, DelimFileWriter.Row row)
     {
-        // TODO? write region orientation too
         SequenceDefinition definition = probe.definition();
         ChrBaseRegion start = definition.startRegion();
+        Orientation startOrientation = definition.startOrientation();
         ChrBaseRegion end = definition.endRegion();
+        Orientation endOrientation = definition.endOrientation();
         row.setOrNull(PanelProbesColumns.StartRegion, start == null ? null : start.toString());
-        row.set(PanelProbesColumns.InsertSequence, definition.insertSequence());
+        row.setOrNull(PanelProbesColumns.StartRegionOrient, startOrientation == null ? null : startOrientation.asChar());
+        row.setOrNull(PanelProbesColumns.MiddleSequence, definition.insertSequence());
         row.setOrNull(PanelProbesColumns.EndRegion, end == null ? null : end.toString());
+        row.setOrNull(PanelProbesColumns.EndRegionOrient, endOrientation == null ? null : endOrientation.asChar());
         row.setOrNull(PanelProbesColumns.Sequence, probe.sequence());
         row.set(PanelProbesColumns.TargetedStart, probe.targetedRange().startOffset());
         row.set(PanelProbesColumns.TargetedEnd, probe.targetedRange().endOffset());
@@ -322,10 +330,14 @@ public class OutputWriter implements AutoCloseable
     {
         SequenceDefinition definition = probe.definition();
         ChrBaseRegion start = definition.startRegion();
+        Orientation startOrientation = definition.startOrientation();
         ChrBaseRegion end = definition.endRegion();
+        Orientation endOrientation = definition.endOrientation();
         row.setOrNull(CandidateProbesColumns.StartRegion, start == null ? null : start.toString());
-        row.set(CandidateProbesColumns.InsertSequence, definition.insertSequence());
+        row.setOrNull(CandidateProbesColumns.StartRegionOrient, startOrientation == null ? null : startOrientation.asChar());
+        row.setOrNull(CandidateProbesColumns.MiddleSequence, definition.insertSequence());
         row.setOrNull(CandidateProbesColumns.EndRegion, end == null ? null : end.toString());
+        row.setOrNull(CandidateProbesColumns.EndRegionOrient, endOrientation == null ? null : endOrientation.asChar());
         row.setOrNull(CandidateProbesColumns.Sequence, probe.sequence());
         row.set(CandidateProbesColumns.TargetType, probe.metadata().type().name());
         row.set(CandidateProbesColumns.TargetExtra, probe.metadata().extraInfo());

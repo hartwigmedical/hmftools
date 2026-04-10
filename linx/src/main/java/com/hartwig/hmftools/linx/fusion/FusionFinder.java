@@ -22,6 +22,8 @@ import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.fusion.FusionConfig.LOG_INVALID_REASON;
 import static com.hartwig.hmftools.linx.fusion.FusionConfig.processSvGeneDebug;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_ENHANCER_PARTNER_GENE_DISTANCE_NO_ORIENT;
+import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_UPSTREAM_DISTANCE_ENHANCER_KNOWN;
+import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_UPSTREAM_DISTANCE_KNOWN;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.MIN_ENHANCER_PARTNER_GENE_DISTANCE;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.REQUIRED_BIOTYPES;
 import static com.hartwig.hmftools.linx.fusion.FusionReportability.checkProteinDomains;
@@ -516,7 +518,7 @@ public class FusionFinder
             // typically must be prior to the 1st coding base of the 3’ gene partner
             if(transData.CodingBases == 0 && !transData.isUpstream())
             {
-                if(transData.getDistanceUpstream() <= MAX_ENHANCER_PARTNER_GENE_DISTANCE_NO_ORIENT)
+                if(transData.getDistanceUpstream() <= MAX_UPSTREAM_DISTANCE_ENHANCER_KNOWN)
                     downGeneTranscripts.add(transData);
             }
             else if(transData.codingType() == CODING && allowCoding)

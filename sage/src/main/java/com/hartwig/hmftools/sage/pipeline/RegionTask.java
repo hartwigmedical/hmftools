@@ -229,7 +229,7 @@ public class RegionTask
 
         mResults.addFinalVariants(mTaskId, finalVariants);
 
-        if(mConfig.Common.Visualiser.Enabled)
+        if(mConfig.Common.Visualiser.enabled())
         {
             mSageVariants.forEach(variant -> VariantVis.writeToHtmlFile(
                     variant, mConfig.TumorIds, mConfig.Common.ReferenceIds, mConfig.Common.Visualiser, mRefData));

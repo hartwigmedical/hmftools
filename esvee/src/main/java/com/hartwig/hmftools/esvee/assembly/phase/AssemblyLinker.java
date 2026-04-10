@@ -227,7 +227,11 @@ public final class AssemblyLinker
 
         String insertedBases = assembly1.indelCoords().insertedBases();
 
-        return new AssemblyLink(assembly1, assembly2, INDEL, insertedBases, "");
+        // ensure junctions are ordered naturally
+        if(assembly1.junction().Position < assembly2.junction().Position)
+            return new AssemblyLink(assembly1, assembly2, INDEL, insertedBases, "");
+        else
+            return new AssemblyLink(assembly2, assembly1, INDEL, insertedBases, "");
     }
 
     @VisibleForTesting

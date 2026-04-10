@@ -379,7 +379,7 @@ public class TestUtils
     {
         List<GeneReadData> geneReadData = Lists.newArrayList();
         genes.forEach(x -> geneReadData.add(new GeneReadData(x)));
-        geneReadData.forEach(x -> x.setTranscripts(geneTransCache.getTranscripts(x.GeneData.GeneId)));
+        geneReadData.forEach(x -> x.setTranscripts(geneTransCache.getTranscripts(x.Gene.GeneId)));
 
         GeneCollection gc = new GeneCollection(id, geneReadData);
 

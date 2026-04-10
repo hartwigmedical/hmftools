@@ -114,7 +114,7 @@ public class Isofox
         long startTimeMs = System.currentTimeMillis();
 
         // all other routines split work by chromosome
-        Map<String, List<GeneData>> chrGeneMap = getChromosomeGeneLists();
+        Map<String,List<GeneData>> chrGeneMap = getChromosomeGeneLists();
 
         if(chrGeneMap.isEmpty())
         {
@@ -308,13 +308,13 @@ public class Isofox
             int lowCoverageThreshold = LOW_COVERAGE_THRESHOLD;
             int splicedGeneThreshold = SPLICE_GENE_THRESHOLD;
 
-            if(!mConfig.Filters.RestrictedGeneIds.isEmpty())
+            if(panelTpmNormaliser.enabled())
             {
                 // could be adjusted for the specific panel or by bases instead of gene count
                 int totalGeneCount = mGeneTransCache.getChrGeneDataMap().values().stream().mapToInt(x -> x.size()).sum();
-                double panelGeneCoverage = mConfig.Filters.RestrictedGeneIds.size() / (double)totalGeneCount;
-                lowCoverageThreshold = (int) (lowCoverageThreshold * panelGeneCoverage * PANEL_LOW_COVERAGE_FACTOR);
-                splicedGeneThreshold = (int) (panelGeneCoverage * SPLICE_GENE_THRESHOLD);
+                double panelGeneCoverage = panelTpmNormaliser.panelGeneCount() / (double)totalGeneCount;
+                lowCoverageThreshold = (int)(lowCoverageThreshold * panelGeneCoverage * PANEL_LOW_COVERAGE_FACTOR);
+                splicedGeneThreshold = (int)(panelGeneCoverage * SPLICE_GENE_THRESHOLD);
             }
 
             final RnaStatistics summaryStats = createSummaryStats(

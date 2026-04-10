@@ -174,10 +174,8 @@ public class FragmentSizeCalcs implements Callable<Void>
             if(geneLength < MIN_GENE_LENGTH || geneLength > MAX_GENE_LENGTH)
                 continue;
 
-            if(mChromosome.equals(mConfig.Filters.ExcludedRegion.Chromosome)
-                    && positionsOverlap(
-                    mConfig.Filters.ExcludedRegion.start(), mConfig.Filters.ExcludedRegion.end(),
-                    mCurrentGenesRange[SE_START], mCurrentGenesRange[SE_END]))
+            if(mConfig.Filters.ExcludedRegions.stream()
+                    .anyMatch(x -> x.overlaps(mChromosome, mCurrentGenesRange[SE_START], mCurrentGenesRange[SE_END])))
             {
                 continue;
             }

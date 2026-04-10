@@ -19,46 +19,26 @@ public class FragmentTracker
 
     public int readsCount() { return mReadMap.size(); }
 
-    public boolean checkReadId(final String readId)
-    {
-        Integer count = (Integer) mReadMap.get(readId);
-
-        if(count == null)
-        {
-            mReadMap.put(readId, 1);
-            return false;
-        }
-
-        mReadMap.remove(readId);
-        return true;
-    }
-
     public Read checkRead(final Read read)
     {
-        Read otherRead = (Read)mReadMap.get(read.Id);
+        Read otherRead = (Read)mReadMap.remove(read.Id);
 
-        if(otherRead == null)
-        {
-            mReadMap.put(read.Id, read);
-            return null;
-        }
+        if(otherRead != null)
+            return otherRead;
 
-        mReadMap.remove(read.Id);
-        return otherRead;
+        mReadMap.put(read.Id, read);
+        return null;
     }
 
     public Object checkRead(final String readId, final Object store)
     {
-        Object otherStore = mReadMap.get(readId);
+        Object otherStore = mReadMap.remove(readId);
 
-        if(otherStore == null)
-        {
-            mReadMap.put(readId, store);
-            return null;
-        }
+        if(otherStore != null)
+            return otherStore;
 
-        mReadMap.remove(readId);
-        return otherStore;
+        mReadMap.put(readId, store);
+        return null;
     }
 
     public void clear()

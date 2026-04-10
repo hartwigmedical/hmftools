@@ -64,12 +64,20 @@ public class VariantPurityFitter
                 config.Fitting.MinPurity, config.Fitting.MaxPurity);
     }
 
-    public boolean hasTumor() { return mHasTumor; }
-    public List<SomaticVariant> fittingSomatics() { return mFittingSomatics; }
+    public boolean hasTumor()
+    {
+        return mHasTumor;
+    }
+
+    public List<SomaticVariant> fittingSomatics()
+    {
+        return mFittingSomatics;
+    }
 
     public void setState(final List<ObservedRegion> observedRegions)
     {
-        mFittingSomatics.addAll(SomaticPurityFitter.findFittingVariants(mConfig.tumorOnlyMode(), mSampleData.SomaticCache.variants(), observedRegions));
+        mFittingSomatics.addAll(SomaticPurityFitter.findFittingVariants(
+                mConfig.tumorOnlyMode(), mSampleData.SomaticCache.variants(), observedRegions));
 
         if(!mFittingSomatics.isEmpty())
         {
@@ -128,8 +136,8 @@ public class VariantPurityFitter
         double somaticPurity = somaticFit.purity();
 
         return Doubles.lessThan(lowestPurity, config.MinSomaticPurity)
-            && Doubles.lessThan(somaticPurity, config.MinSomaticPurity)
-            && Doubles.greaterThan( somaticPurity, lowestPurity);
+                && Doubles.lessThan(somaticPurity, config.MinSomaticPurity)
+                && Doubles.greaterThan(somaticPurity, lowestPurity);
     }
 
     private void setSvSummary(final List<StructuralVariant> variants)
@@ -137,7 +145,9 @@ public class VariantPurityFitter
         for(StructuralVariant variant : variants)
         {
             if(variant.isFiltered())
+            {
                 continue;
+            }
 
             if(variant.hotspot() && variant.end() != null)
             {
@@ -158,10 +168,14 @@ public class VariantPurityFitter
         for(SomaticVariant variant : somatics)
         {
             if(!variant.isPass())
+            {
                 continue;
+            }
 
             if(variant.isHotspotType())
+            {
                 mSomaticHotspotCount++;
+            }
 
             if(variant.type() == VariantType.SNP) // they all should be
             {

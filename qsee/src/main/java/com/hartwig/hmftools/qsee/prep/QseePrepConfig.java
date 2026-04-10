@@ -19,8 +19,6 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_IDS_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.BAM_METRICS_REF_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.BAM_METRICS_REF_DIR_DESC;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_DIR_CFG;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR;
@@ -71,7 +69,6 @@ public class QseePrepConfig
     public final String CobaltDir;
     public final String EsveeDir;
     public final String PurpleDir;
-    public final String SageDir;
 
     public final List<DriverGene> DriverGenes;
     public final String CohortPercentilesFile;
@@ -116,7 +113,6 @@ public class QseePrepConfig
         CobaltDir = configBuilder.getValue(COBALT_DIR_CFG, SampleDataDir);
         EsveeDir = configBuilder.getValue(ESVEE_DIR_CFG, SampleDataDir);
         PurpleDir = configBuilder.getValue(PURPLE_DIR_CFG, SampleDataDir);
-        SageDir = configBuilder.getValue(SAGE_DIR_CFG, SampleDataDir);
 
         DriverGenes = DriverGenePanelConfig.loadDriverGenes(configBuilder);
         CohortPercentilesFile = configBuilder.getValue(COHORT_PERCENTILES_FILE_CFG);
@@ -153,7 +149,6 @@ public class QseePrepConfig
         configBuilder.addPath(COBALT_DIR_CFG, false, COBALT_DIR_DESC);
         configBuilder.addPath(ESVEE_DIR_CFG, false, ESVEE_DIR_DESC);
         configBuilder.addPath(PURPLE_DIR_CFG, false, PURPLE_DIR_DESC);
-        configBuilder.addPath(SAGE_DIR_CFG, false, SAGE_DIR_DESC);
 
         SequencingType.registerConfig(configBuilder);
         configBuilder.addPath(DRIVER_GENE_PANEL, false, DRIVER_GENE_PANEL_DESC);
@@ -178,7 +173,6 @@ public class QseePrepConfig
     public String getCobaltDir(String sampleId) { return convertWildcardSamplePath(CobaltDir, sampleId); }
     public String getEsveeDir(String sampleId) { return convertWildcardSamplePath(EsveeDir, sampleId); }
     public String getPurpleDir(String sampleId) { return convertWildcardSamplePath(PurpleDir, sampleId); }
-    public String getSageDir(String sampleId) { return convertWildcardSamplePath(SageDir, sampleId); }
 
     public String getBamMetricsDir(String sampleId, SampleType sampleType)
     {

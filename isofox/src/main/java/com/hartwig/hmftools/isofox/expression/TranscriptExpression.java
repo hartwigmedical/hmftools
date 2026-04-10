@@ -335,7 +335,7 @@ public class TranscriptExpression
             cohortMedian = cohortGenePercentiles.getTpmMedianAcrossCancerTypes(geneResult.Gene.GeneId);
         }
 
-        if(cohortMedian < 0 || cohortPercentile < 0 || geneResult.adjustedTpm() <= cohortMedian)
+        if(cohortMedian <= 0 || cohortPercentile <= 0 || geneResult.adjustedTpm() <= cohortMedian)
             return false;
 
         double logFoldChangeMedian = log(geneResult.adjustedTpm() / cohortMedian);

@@ -66,7 +66,6 @@ public class LoadPurpleDataTest extends DatabaseTestBase
                 .amberGender(Gender.FEMALE)
                 .germlineAberrations(Set.of(GermlineAberration.NONE))
                 .lohPercent(0)
-                .chimerismPercentage(0)
                 .tincLevel(0)
                 .build();
 

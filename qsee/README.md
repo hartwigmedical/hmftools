@@ -1,10 +1,25 @@
 # Qsee
 
-Qsee collects and calculates QC metrics from pipeline outputs. Metrics not meeting warn/fail QC thresholds are flagged.
+Qsee collects/calculates QC metrics from pipeline outputs, and [visualises](#visualisation) these metrics against an existing cohort. 
+Metrics not meeting warn/fail QC thresholds are flagged. 
 
+## Contents
 
-A visualisation (see [**example**](src/main/resources/COLO829v004T.qsee.vis.report.pdf)) is also generated providing an overview of all 
-metrics and compares the respective sample to an existing cohort.
+<!-- TOC -->
+* [Input files](#input-files)
+* [Running Qsee](#running-qsee)
+  * [Single sample mode](#single-sample-mode)
+  * [Multi-sample mode](#multi-sample-mode)
+* [Visualisation](#visualisation)
+  * [General format](#general-format)
+  * [Plot descriptions](#plot-descriptions)
+  * [Consensus read types](#consensus-read-types)
+* [Advanced usage](#advanced-usage)
+  * [Generating cohort percentiles](#generating-cohort-percentiles)
+  * [Input files in separate directories](#input-files-in-separate-directories)
+  * [Threshold overrides](#threshold-overrides)
+* [All arguments](#all-arguments)
+<!-- TOC -->
 
 ## Input files
 
@@ -39,8 +54,8 @@ to be flexible to missing input data.
 
 ```
 inputs/
-├── TUMOR_1.cobalt.gc.median.tsv
-├── REFERENCE_1.cobalt.gc.median.tsv
+├── TUMOR_ID.cobalt.gc.median.tsv
+├── REFERENCE_ID.cobalt.gc.median.tsv
 ...
 ```
 
@@ -48,8 +63,8 @@ inputs/
 
 ```
 java -jar qsee.jar \
--tumor TUMOR_1 \
--reference REFERENCE_1 \
+-tumor TUMOR_ID \
+-reference REFERENCE_ID \
 -sample_data_dir input/ \
 -driver_gene_panel DriverGenePanel.38.tsv \
 -cohort_percentiles_file qsee.cohort.percentiles.tsv.gz \
@@ -59,7 +74,7 @@ java -jar qsee.jar \
 This will generate the following files:
 - `TUMOR_ID.qsee.status.tsv.gz`: QC status (PASS/WARN/FAIL) per sample and per feature with a QC threshold defined
 - `TUMOR_ID.qsee.vis.data.tsv.gz`: Visualisation raw data
-- `TUMOR_ID.qsee.vis.report.pdf`: Visualisation comparing samples to an existing cohort, and highlighting samples not meeting QC thresholds (see [**example**](src/main/resources/COLO829v004T.qsee.vis.report.pdf))
+- `TUMOR_ID.qsee.vis.report.{png,pdf}`: Visualisation comparing samples to an existing cohort, and highlighting samples not meeting QC thresholds (see [**example**](#visualisation))
 
 Some key optional arguments:
 - `-reference`: Can be omitted to run Qsee in tumor-only mode.
@@ -127,32 +142,67 @@ multisample.qsee.vis.report.pdf
 
 If `-merge_plots` is omitted, Qsee will generate a separate PDF for each sample.
 
-### Threshold overrides
+## Visualisation
 
-The threshold overrides file can be provided to arg `threshold_overrides_file` to override the default thresholds for each feature.
+![](src/main/resources/COLO829v004T.qsee.vis.report.png)
 
-This file has the below format. `NaN` can be provided under column `Threshold` to set no threshold (i.e. always PASS).
+_Note: Thresholds for "Mean coverage" and "Mapped proportion" were artificially increased to demonstrate WARN/FAIL annotations._
 
-```
-SampleType  FeatureType    FeatureName        QcStatusType    ComparisonOperator  Threshold
-TUMOR	    SUMMARY_TABLE  MAPPED_PROPORTION  FAIL            LESS_THAN           0.95
-TUMOR       SUMMARY_TABLE  MEAN_COVERAGE      WARN            LESS_THAN           NaN
-...
-```
+### General format
 
-A default thresholds file with the above format can be written using the below command. This file shows all overridable thresholds
-and can be used as a template for customising thresholds.
+**Plots**
+- Tumor sample values are <span style="color:#D1392C">red</span>. Tumor cohort percentiles are <span style="color:#e89c95">light red</span>.
+- Normal sample values are <span style="color:#4A7DB4">blue</span>. Normal cohort percentiles are <span style="color:#92b1d2">light blue</span>.
+  - In tumor-only mode, normal sample and cohort statistics are not shown
+- Cohort percentiles are shown as:
+    - Boxplots showing the 5th, 25th (Q1), 50th (median), 75th (Q3), and 95th percentiles
+    - Ribbons or vertical dotted lines showing the 5th and 95th percentiles
 
-```
-java -cp qsee.jar com.hartwig.hmftools.qsee.status.DefaultThresholdsWriter \
--output_dir output/ \
-# -targeted_mode ## Add this arg to write default targeted mode thresholds
-```
+**QC status annotations**
+- In the summary table (i.e. with stats for mapping, copy number, etc), sample values not meeting WARN/FAIL thresholds are highlighted with a coloured box
+- Overall status: FAIL if any FAIL, else WARN if any WARN, else PASS.
+- All WARN and FAIL statuses are shown in the header subtitle.
 
-## Generating cohort percentiles
+### Plot descriptions
+
+- **Coverage**: % of bases in genome at each coverage level.
+
+- **Fragment length**: % of total reads per discordant fragment type.
+
+- **Duplicate frequency**: % of read groups containing N duplicate reads. Read groups where N=1 have no duplicate reads.
+
+- **GC bias**: For each GC% bin, the median read depth across all windows determined to have a particular GC%, normalised (i.e. divided) by 
+the global median read depth.
+
+- **Discordant fragment frequency**: Discordant fragment type refers to the orientation/spacing of the paired end reads, and does not 
+necessary represent a structural variant.
+
+- **Genes with potential missed variants**: Likelihood that a variant is missed within the respective gene. Only genes (up to 20) with 
+missed variant likelihood >1% are shown.
+
+- **Base quality recalibration (BQR)**: Adjusting base quality of SNVs to account for sequencer-specific base quality biases. 
+  - `+`: base quality boosted (original quality underestimated). `-`: base quality reduced (original quality overestimated)
+  - **BQR by original base quality**: Mean BQR across all variants with a given original base quality bin, SNV type and [consensus read type](#consensus-read-types).
+  - **BQR by SNV96 context**: Mean BQR across all variants with a given 96-trinucleotide context and [consensus read type](#consensus-read-types).
+
+- **Microsatellite (MS) indels**: 
+  - **MS indel error rates**: Variation in repeat units ("error") amongst reads mapping to sites in the reference genome with a particular repeat type.
+  - **MS indel error bias**: For each reference genome repeat type, whether there are more reads with deletion errors vs insertion errors.
+
+### Consensus read types
+
+A read group with duplicate reads is collapsed into a consensus read with one of the following methods:
+
+- DUAL: Read deduplication based on both forward and reverse strands
+- SINGLE: Read deduplication based on one strand (forward or reverse)
+- NONE: No read deduplication (only 1 read in group)
+
+## Advanced usage
+
+### Generating cohort percentiles
 
 Qsee can compare samples to an existing cohort. The cohort percentiles file stores the percentiles for each metric for the tumor and/or
-normal samples in the cohort.
+normal samples in the cohort. It is recommended to have >=50 samples when generating the cohort percentiles file.
 
 As with [multi-sample mode](#multi-sample-mode), create a sample IDs file and put all input files in a single directory. Then run:
 
@@ -170,7 +220,7 @@ Other optional arguments:
 - `-allow_missing_input`: If provided, Qsee will not fail if input files are missing This is useful if e.g. only some BamMetrics files are
   available due to running an older pipeline version
 
-## Input files in separate directories
+### Input files in separate directories
 
 For [Multi-sample mode](#multi-sample-mode) or [Generating cohort percentiles](#generating-cohort-percentiles), 
 if input files are located in different tool directories, tool dir args can be used to provide those paths:
@@ -193,6 +243,28 @@ Qsee will for example expect the REDUX MS table files at:
 - `redux/TUMOR_1/TUMOR_1.redux.ms_table.tsv.gz`
 - `redux/REFERENCE_1/REFERENCE_1.redux.ms_table.tsv.gz`
 
+### Threshold overrides
+
+The threshold overrides file can be provided to arg `threshold_overrides_file` to override the default thresholds for each feature.
+
+This file has the below format. `NaN` can be provided under column `Threshold` to set no threshold (i.e. always PASS).
+
+```
+SampleType  FeatureType    FeatureName        QcStatusType    ComparisonOperator  Threshold
+TUMOR	    SUMMARY_TABLE  MAPPED_PROPORTION  FAIL            LESS_THAN           0.95
+TUMOR       SUMMARY_TABLE  MEAN_COVERAGE      WARN            LESS_THAN           NaN
+...
+```
+
+A default thresholds file with the above format can be written using the below command. This file shows all overridable thresholds
+and can be used as a template for customising thresholds.
+
+```
+java -cp qsee.jar com.hartwig.hmftools.qsee.status.DefaultThresholdsWriter \
+-output_dir output/ \
+# -targeted_mode ## Add this arg to write default targeted mode thresholds
+```
+
 ## All arguments
 
 **Sample IDs**
@@ -211,7 +283,6 @@ Qsee will for example expect the REDUX MS table files at:
 - `-cobalt_dir`: Directory containing COBALT output
 - `-esvee_dir`: Directory containing ESVEE output
 - `-purple_dir`: Directory containing PURPLE output
-- `-sage_dir`: Directory containing SAGE somatic output (for backwards compatibility)
 
 **Resource files**
 - `-driver_gene_panel`: Path to driver gene panel

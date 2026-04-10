@@ -4,6 +4,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.datamodel.purple.PurpleDriverType.GERMLINE_AMP;
 import static com.hartwig.hmftools.datamodel.purple.PurpleDriverType.GERMLINE_DELETION;
+import static com.hartwig.hmftools.orange.report.ReportResources.NOT_AVAILABLE;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.VALUE_HET;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.VALUE_HOM;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatFoldChangeField;
@@ -66,7 +67,9 @@ public final class GainDeletionTable
         addEntry(cells, widths, cellEntries, 1, COL_REL_CN);
         addEntry(cells, widths, cellEntries, 1, COL_ARM_CN);
 
-        if(hasRna)
+        boolean anyEventsHaveRna = hasRna && gainsDels.stream().anyMatch(x -> x.tpm() != null);
+
+        if(anyEventsHaveRna)
         {
             addEntry(cells, widths, cellEntries, 1, COL_TPM);
             addEntry(cells, widths, cellEntries, 1, "Percentile");
@@ -90,11 +93,20 @@ public final class GainDeletionTable
             rowCells.add(cells.createContent(formatSingleDigitDecimal(gainDel.relativeCopyNumber())));
             rowCells.add(cells.createContent(formatSingleDigitDecimal(gainDel.armCopyNumber())));
 
-            if(hasRna)
+            if(anyEventsHaveRna)
             {
-                rowCells.add(cells.createContent(formatTpmField(gainDel.tpm())));
-                rowCells.add(cells.createContent(formatPercentileField(gainDel.tpmPercentile())));
-                rowCells.add(cells.createContent(formatFoldChangeField(gainDel.tpmFoldChange())));
+                if(gainDel.tpm() != null)
+                {
+                    rowCells.add(cells.createContent(formatTpmField(gainDel.tpm())));
+                    rowCells.add(cells.createContent(formatPercentileField(gainDel.tpmPercentile())));
+                    rowCells.add(cells.createContent(formatFoldChangeField(gainDel.tpmFoldChange())));
+                }
+                else
+                {
+                    rowCells.add(cells.createContent(NOT_AVAILABLE));
+                    rowCells.add(cells.createContent(NOT_AVAILABLE));
+                    rowCells.add(cells.createContent(NOT_AVAILABLE));
+                }
             }
 
             rowCells.add(cells.createContent(gainDel.driver().driverInterpretation().toString()));

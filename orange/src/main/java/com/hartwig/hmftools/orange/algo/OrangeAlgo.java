@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.orange.algo;
 
+import static com.hartwig.hmftools.common.pipeline.MiscToolFiles.generateQseeVisPlot;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.DEFAULT_PIPELINE_OUTPUT;
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import static com.hartwig.hmftools.orange.algo.purple.PurpleDataLoader.addPurplePlots;
@@ -24,6 +25,7 @@ import com.hartwig.hmftools.datamodel.hla.LilacRecord;
 import com.hartwig.hmftools.datamodel.orange.ExperimentType;
 import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeDoidNode;
 import com.hartwig.hmftools.datamodel.orange.OrangeDoidNode;
+import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.orange.algo.immuno.LilacInterpreter;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxData;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxDataLoader;
@@ -121,7 +123,7 @@ public class OrangeAlgo
             isofox = isofoxInterpreter.interpret(isofoxData);
         }
 
-        OrangePlots plots = buildPlots(config, linxData);
+        OrangePlots plots = buildPlots(config, purple, linxData);
 
         OrangeRecord orangeRecord = ImmutableOrangeRecord.builder()
                 .sampleId(config.TumorId)
@@ -199,15 +201,15 @@ public class OrangeAlgo
         return orangeNodes;
     }
 
-    @Nullable
     private static String determinePipelineVersion(final OrangeConfig config) throws IOException
     {
+        String defaultPipelineVersion = DEFAULT_PIPELINE_OUTPUT.toString();
+
         String pipelineVersionFile = config.PipelineVersionFile;
         if(pipelineVersionFile == null)
         {
-            String pipelineVersion = DEFAULT_PIPELINE_OUTPUT.toString();
-            LOGGER.info("no pipeline version file, defaulting to {}", pipelineVersion);
-            return pipelineVersion;
+            LOGGER.info("no pipeline version file, defaulting to {}", defaultPipelineVersion);
+            return defaultPipelineVersion;
         }
 
         String pipelineVersion = PipelineVersionFile.majorDotMinorVersion(pipelineVersionFile);
@@ -219,7 +221,8 @@ public class OrangeAlgo
         {
             LOGGER.warn("no pipeline version determined from {}", pipelineVersionFile);
         }
-        return pipelineVersion;
+
+        return defaultPipelineVersion;
     }
 
     private PurpleData loadPurpleData(final OrangeConfig config) throws IOException
@@ -237,7 +240,7 @@ public class OrangeAlgo
         }
         else
         {
-            LOGGER.debug(" Skipped loading germline variants and deletions since no reference sample configured");
+            LOGGER.trace(" skipped loading germline variants and deletions since no reference sample configured");
         }
 
         return purple;
@@ -274,9 +277,9 @@ public class OrangeAlgo
     @Nullable
     private IsofoxData loadIsofoxData(final OrangeConfig config) throws IOException
     {
-        if(config.RnaSampleId == null || config.IsofoxDir == null)
+        if(config.IsofoxDir == null)
         {
-            LOGGER.debug("skipping Isofox data loading as RNA is not configured");
+            LOGGER.trace("skipping Isofox data loading as RNA is not configured");
             return null;
         }
 
@@ -288,7 +291,7 @@ public class OrangeAlgo
     {
         if(config.LilacDir == null || !Files.exists(Paths.get(config.LilacDir)))
         {
-            LOGGER.info("skipping loading Lilac results since input dir not provided");
+            LOGGER.debug("skipping loading Lilac results since input dir not provided");
             return null;
         }
 
@@ -302,7 +305,7 @@ public class OrangeAlgo
     {
         if(config.VirusDir == null || !Files.exists(Paths.get(config.VirusDir)))
         {
-            LOGGER.debug("skipping Virus annotations as no input has been provided");
+            LOGGER.trace("skipping Virus annotations as no input has been provided");
             return null;
         }
 
@@ -317,7 +320,7 @@ public class OrangeAlgo
 
         if(config.ChordDir == null || !Files.exists(Paths.get(config.ChordDir)))
         {
-            LOGGER.debug("skipping Chord loading as no input has been provided");
+            LOGGER.trace("skipping Chord loading as no input has been provided");
             return null;
         }
 
@@ -335,7 +338,7 @@ public class OrangeAlgo
 
         if(config.CuppaDir == null || !Files.exists(Paths.get(config.CuppaDir)))
         {
-            LOGGER.debug("skipping Cuppa loading as no input has been provided");
+            LOGGER.trace("skipping Cuppa loading as no input has been provided");
             return null;
         }
 
@@ -386,7 +389,7 @@ public class OrangeAlgo
         return sigsAllocations;
     }
 
-    private OrangePlots buildPlots(final OrangeConfig config, final LinxData linxData) throws IOException
+    private OrangePlots buildPlots(final OrangeConfig config, final PurpleRecord purpleRecord, final LinxData linxData) throws IOException
     {
         LOGGER.debug("loading plots");
 
@@ -404,6 +407,13 @@ public class OrangeAlgo
             System.exit(1);
         }
 
+        // copy the Sage vis plots from each variant
+        for(PurpleVariant variant : purpleRecord.somaticVariants())
+        {
+            if(variant.plotFilename() != null)
+                mPlotManager.processPlotFile(variant.plotFilename());
+        }
+
         List<String> linxDriverPlots = Lists.newArrayList();
 
         for(String linxPlot : linxData.reportableEventPlots())
@@ -413,7 +423,7 @@ public class OrangeAlgo
 
         plotBuilder.linxDriverPlots(linxDriverPlots);
 
-        String qSeeSourcePlot = config.QSeeDirectory + File.separator + config.TumorId + ".qsee.vis.report.png";
+        String qSeeSourcePlot = generateQseeVisPlot(config.QSeeDirectory, config.TumorId);
         String qSeePlot = null;
 
         if(Files.exists(Paths.get(qSeeSourcePlot)))

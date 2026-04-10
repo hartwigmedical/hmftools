@@ -178,7 +178,9 @@ public final class AssemblyUtils
         return assembly.support().stream().allMatch(x -> x.isSupplementary());
     }
 
-    public static byte[] createBaseQualsAboveMinThreshold(final int length) { return createByteArray(length, LOW_BASE_QUAL_THRESHOLD); }
+    public static final byte ABOVE_LOW_BASE_QUAL_THRESHOLD = LOW_BASE_QUAL_THRESHOLD + 1;
+
+    public static byte[] createBaseQualsAboveMinThreshold(final int length) { return createByteArray(length, ABOVE_LOW_BASE_QUAL_THRESHOLD); }
 
     public static String extractInsertSequence(
             final JunctionAssembly first, boolean firstReversed, final JunctionAssembly second, boolean secondReversed, int insertLength)

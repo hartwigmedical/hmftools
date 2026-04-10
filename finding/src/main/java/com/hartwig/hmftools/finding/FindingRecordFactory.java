@@ -147,7 +147,7 @@ public class FindingRecordFactory
 
         PurpleRecord purple = orangeRecord.purple();
 
-        builder.purityPloidyFit(createPurityPloidyFit(purple, orangeRecord.plots()));
+        builder.purityPloidyFit(createPurityPloidyFit(purple, orangeRecord.experimentType(), orangeRecord.plots()));
 
         DriverFindingList<GainDeletion> somaticGainDeletions;
 
@@ -211,13 +211,13 @@ public class FindingRecordFactory
                 .build();
     }
 
-    private static PurityPloidyFit createPurityPloidyFit(PurpleRecord purple, OrangePlots orangePlots)
+    private static PurityPloidyFit createPurityPloidyFit(PurpleRecord purple, ExperimentType experimentType, OrangePlots orangePlots)
     {
         PurpleFit purpleFit = purple.fit();
 
         return PurityPloidyFitBuilder.builder()
                 .fittedPurityMethod(PurityPloidyFit.FittedPurityMethod.valueOf(purpleFit.fittedPurityMethod().name()))
-                .purity(purpleFit.purity())
+                .purity(ThresholdValueFactory.purityValue(purpleFit.purity(), experimentType))
                 .minPurity(purpleFit.minPurity())
                 .maxPurity(purpleFit.maxPurity())
                 .ploidy(purpleFit.ploidy())
@@ -274,15 +274,17 @@ public class FindingRecordFactory
     {
         if(cuppa != null)
         {
+            List<PredictedTumorOrigin.Prediction> predictedTumorOrigins = cuppa.predictions().stream()
+                    .map(FindingRecordFactory::createPredictedTumorOriginPrediction)
+                    .toList();
             return FindingItemBuilder.<PredictedTumorOrigin>builder()
                     .status(findingStatus)
                     .finding(PredictedTumorOriginBuilder.builder()
                             .findingKey("predictedTumorOrigin")
                             .mode(cuppaMode(cuppa.mode()))
-                            .predictions(cuppa.predictions().stream()
-                                    .map(FindingRecordFactory::createPredictedTumorOriginPrediction)
-                                    .toList())
+                            .predictions(predictedTumorOrigins)
                             .visualisationFile(VisualisationFileUtil.createNullable(orangePlots.cuppaSummaryPlot()))
+                            .bestPredictionLikelihood(!predictedTumorOrigins.isEmpty() ? predictedTumorOrigins.get(0).likelihood() : null)
                             .build()
                     )
                     .build();
@@ -519,8 +521,24 @@ public class FindingRecordFactory
                 .geneDown(fusion.geneDown())
                 .geneContextDown(fusion.contextDown())
                 .geneTranscriptDown(fusion.transcriptDown())
-                .reportedType(Fusion.FusionType.valueOf(fusion.reportedType().name()))
-                .phased(Fusion.FusionPhasedType.valueOf(fusion.phased().name()))
+                .reportedType(switch(fusion.reportedType())
+                {
+                    case NONE -> Fusion.FusionType.NONE;
+                    case KNOWN_PAIR -> Fusion.FusionType.KNOWN_PAIR;
+                    case PROMISCUOUS_5 -> Fusion.FusionType.PROMISCUOUS_5;
+                    case PROMISCUOUS_3 -> Fusion.FusionType.PROMISCUOUS_3;
+                    case PROMISCUOUS_BOTH -> Fusion.FusionType.PROMISCUOUS_BOTH;
+                    case ENHANCER_KNOWN_PAIR -> Fusion.FusionType.ENHANCER_KNOWN_PAIR;
+                    case ENHANCER_PROMISCUOUS -> Fusion.FusionType.ENHANCER_PROMISCUOUS;
+                    case EXON_DEL_DUP -> Fusion.FusionType.EXON_DEL_DUP;
+                    case PROMISCUOUS_ENHANCER_TARGET -> Fusion.FusionType.PROMISCUOUS_ENHANCER_TARGET;
+                })
+                .phased(switch(fusion.phased())
+                {
+                    case INFRAME -> Fusion.FusionPhasedType.INFRAME;
+                    case SKIPPED_EXONS -> Fusion.FusionPhasedType.SKIPPED_EXONS;
+                    case OUT_OF_FRAME -> Fusion.FusionPhasedType.OUT_OF_FRAME;
+                })
                 .fusedExonUp(fusion.fusedExonUp())
                 .fusedExonDown(fusion.fusedExonDown())
                 .chainLinks(fusion.chainLinks())
@@ -528,6 +546,7 @@ public class FindingRecordFactory
                 .domainsKept(List.of(fusion.domainsKept().split(";")))
                 .domainsLost(List.of(fusion.domainsLost().split(";")))
                 .junctionCopyNumber(fusion.junctionCopyNumber())
+                .visualisationFile(VisualisationFileUtil.createNullable(fusion.plotFilename()))
                 .build();
     }
 

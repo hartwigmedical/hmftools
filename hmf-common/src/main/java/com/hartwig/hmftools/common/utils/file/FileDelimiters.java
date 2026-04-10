@@ -28,6 +28,8 @@ public final class FileDelimiters
 
     public static final String BED_EXTENSION = ".bed";
 
+    public static final String PNG_EXTENSION = ".png";
+
     public static String inferFileDelimiter(final String filename)
     {
         return filename.endsWith(CSV_EXTENSION) || filename.endsWith(CSV_ZIP_EXTENSION) ? CSV_DELIM : TSV_DELIM;

@@ -123,7 +123,7 @@ public class RegionAppendTask implements Callable<Void>
 
         mVariantPhaser.populateLocalPhaseSetInfo(candidates, mFinalVariants);
 
-        if(mConfig.Common.Visualiser.Enabled)
+        if(mConfig.Common.Visualiser.enabled())
         {
             // in future, the existing genotype info could be displayed by the visualiser too
             for(int candidateIndex = 0; candidateIndex < mOriginalVariants.size(); ++candidateIndex)

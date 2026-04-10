@@ -68,6 +68,7 @@ public class AlignData
     private int mSequenceEnd;
     private boolean mDroppedOnRequery;
     private boolean mHasSequenceCoordsSet;
+    private boolean mIsRequery;
 
     private int mAdjustedAlignment;
     private int mModifiedMapQual;
@@ -113,6 +114,7 @@ public class AlignData
         mSequenceStart = sequenceStart;
         mSequenceEnd = max(sequenceEnd - 1, 0);
         mHasSequenceCoordsSet = false;
+        mIsRequery = false;
         mDroppedOnRequery = false;
         mAdjustedAlignment = mAlignedBases;
         mModifiedMapQual = 0;
@@ -176,12 +178,14 @@ public class AlignData
 
     public void markDroppedOnRequery() { mDroppedOnRequery = true; }
     public boolean droppedOnRequery() { return mDroppedOnRequery; }
+    public boolean isRequery() { return mIsRequery; }
 
     public void setRequeriedSequenceCoords(int sequenceStart, int sequenceEnd)
     {
         mSequenceStart = sequenceStart;
         mSequenceEnd = sequenceEnd;
         mHasSequenceCoordsSet = true;
+        mIsRequery = true;
     }
 
     public int sequenceStart() { return mSequenceStart; }

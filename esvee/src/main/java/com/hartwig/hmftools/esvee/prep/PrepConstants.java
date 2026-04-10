@@ -30,6 +30,7 @@ public final class PrepConstants
     // candidate junction fragments
     public static final int MIN_ALIGNMENT_BASES = 50;
     public static final int MIN_CALC_ALIGNMENT_SCORE = 40;
+    public static final int MIN_SUPP_CALC_ALIGNMENT_SCORE = 10;
     public static final int MIN_CALC_ALIGNMENT_LOWER_SCORE = 35;
     public static final int MIN_ALIGNMENT_SCORE_DIFF = 15;
     public static final int MIN_INSERT_ALIGNMENT_OVERLAP = 5;
@@ -38,6 +39,7 @@ public final class PrepConstants
     public static final double MIN_SOFT_CLIP_HIGH_QUAL_PERC = 0.75;
     public static final int MAX_SOFT_CLIP_LOW_QUAL_COUNT = 5;
     public static final int MIN_INSERT_LENGTH_SUPPORT = 10;
+    public static final int SUPP_SHORT_ALIGNMENT_MIN_MAP_QUAL = 10;
 
     public static final int REPEAT_BREAK_CHECK_LENGTH = 9;
     public static final int REPEAT_BREAK_MIN_MAP_QUAL = 40;

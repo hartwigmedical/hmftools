@@ -79,6 +79,9 @@ public interface PurpleVariant
     @Nullable
     Double gnomadFrequency();
 
+    @Nullable
+    String plotFilename();
+
     @Value.Derived
     default boolean reported()
     {

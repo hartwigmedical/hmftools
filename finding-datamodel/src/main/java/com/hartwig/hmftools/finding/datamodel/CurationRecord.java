@@ -14,6 +14,6 @@ public record CurationRecord(
     @SuppressWarnings("unused")
     public static JsonReadWriter<CurationRecord> jsonReadWriter()
     {
-        return new JsonReadWriter<>(CurationRecord.class);
+        return JsonReadWriter.of(CurationRecord.class);
     }
 }

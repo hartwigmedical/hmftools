@@ -53,7 +53,7 @@ public class QualityControlChapter implements ReportChapter
             return;
         }
 
-        if(mReport.plots().qSeePlot() == null || !Files.exists(Paths.get(mReport.plots().qSeePlot())))
+        if(mReport.plots().qSeePlot() == null)
         {
             document.add(new Paragraph("Plot not available").addStyle(mReportResources.tableContentStyle()));
             return;

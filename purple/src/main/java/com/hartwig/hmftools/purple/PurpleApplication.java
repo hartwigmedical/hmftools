@@ -331,8 +331,6 @@ public class PurpleApplication
             fittedRegions.addAll(regionFitCalculator.fitRegion(bestFit.Fit.purity(), bestFit.Fit.normFactor(), observedRegions));
         }
 
-        PPL_LOGGER.debug("generating QC stats");
-
         PurpleQC qcChecks = PurpleSummaryData.createQC(
                 amberData.Contamination, bestFit, amberGender, cobaltGender, copyNumbers, geneCopyNumbers,
                 cobaltChromosomes.germlineAberrations(), amberData.AverageTumorDepth,
@@ -525,7 +523,7 @@ public class PurpleApplication
                     .method(FittedPurityMethod.NO_TUMOR).purity(0).contamination(0).cobaltGender(gender)
                     .unsupportedCopyNumberSegments(0).deletedGenes(0).amberGender(gender).lohPercent(0).copyNumberSegments(0)
                     .status(List.of(FAIL_NO_TUMOR)).germlineAberrations(List.of(NONE)).amberMeanDepth(0)
-                    .tincLevel(0).chimerismPercentage(0).build();
+                    .tincLevel(0).build();
 
             PurityContext purityContext = ImmutablePurityContext.builder()
                     .bestFit(fittedPurity)

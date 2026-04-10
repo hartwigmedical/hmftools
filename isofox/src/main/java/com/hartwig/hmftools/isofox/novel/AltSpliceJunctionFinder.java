@@ -37,6 +37,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.fusion.KnownFusionData;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
@@ -82,7 +83,7 @@ public class AltSpliceJunctionFinder
         mGenes = null;
 
         mReportableGenes = config.DriverGenes.values().stream()
-                .filter(x -> x.reportNovelSpliceJunctions()).map(x -> x.gene()).collect(Collectors.toSet());
+                .filter(x -> x.reportNovelSpliceJunction()).map(x -> x.gene()).collect(Collectors.toSet());
 
         mKnownExonDelDupGenes = config.Fusions.KnownFusions.getDataByType(KnownFusionType.EXON_DEL_DUP).stream()
                 .map(x -> x.FiveGene).collect(Collectors.toSet());
@@ -108,8 +109,8 @@ public class AltSpliceJunctionFinder
 
         // exclude SJs too far outside known transcripts
         int[] geneBounds = new int[] {
-                genes.stream().mapToInt(x -> x.GeneData.GeneStart).min().orElse(0) - MAX_NOVEL_SJ_DISTANCE,
-                genes.stream().mapToInt(x -> x.GeneData.GeneStart).max().orElse(0) + MAX_NOVEL_SJ_DISTANCE };
+                genes.stream().mapToInt(x -> x.Gene.GeneStart).min().orElse(0) - MAX_NOVEL_SJ_DISTANCE,
+                genes.stream().mapToInt(x -> x.Gene.GeneStart).max().orElse(0) + MAX_NOVEL_SJ_DISTANCE };
 
         if(!positionsWithin(read1.PosStart, read1.PosEnd, geneBounds[SE_START], geneBounds[SE_END])
         || !positionsWithin(read2.PosStart, read2.PosEnd, geneBounds[SE_START], geneBounds[SE_END]))
@@ -119,8 +120,8 @@ public class AltSpliceJunctionFinder
 
         // at least one of the reads must fall within a gene
         final List<GeneReadData> candidateGenes = genes.stream()
-                .filter(x -> positionsWithin(read1.PosStart, read1.PosEnd, x.GeneData.GeneStart,x.GeneData.GeneEnd)
-                        || positionsWithin(read2.PosStart, read2.PosEnd, x.GeneData.GeneStart,x.GeneData.GeneEnd))
+                .filter(x -> positionsWithin(read1.PosStart, read1.PosEnd, x.Gene.GeneStart,x.Gene.GeneEnd)
+                        || positionsWithin(read2.PosStart, read2.PosEnd, x.Gene.GeneStart,x.Gene.GeneEnd))
                 .collect(Collectors.toList());
 
         if(candidateGenes.isEmpty())
@@ -340,7 +341,7 @@ public class AltSpliceJunctionFinder
 
         if(spliceJunction[SE_START] < spliceJunction[SE_END])
         {
-            // flip the SJ around since a DUP/circular has opposite orientations to a standard alt-SJ DL
+            // flip the SJ around since a DUP/circular has opposite orientations to a standard alt-SJ DEL
             int[] flippedSpliceJunction = { spliceJunction[SE_END], spliceJunction[SE_START] };
             final AltSpliceJunctionContext[] flippedRegionContexts = { AltSpliceJunctionContext.UNKNOWN, AltSpliceJunctionContext.UNKNOWN };
 
@@ -646,7 +647,7 @@ public class AltSpliceJunctionFinder
 
             for(final GeneReadData gene : candidateGenes)
             {
-                if(spliceStrand != 0 && gene.GeneData.Strand != spliceStrand)
+                if(spliceStrand != 0 && gene.Gene.Strand != spliceStrand)
                     continue;
 
                 int transMatched = (int)gene.getTranscripts().stream().filter(x -> transIds.contains(x.TransId)).count();
@@ -660,11 +661,11 @@ public class AltSpliceJunctionFinder
 
             if(topGene != null)
             {
-                altSJ.setGeneData(topGene.GeneData.GeneId, topGene.GeneData.GeneName);
+                altSJ.setGeneData(topGene.Gene.GeneId, topGene.Gene.GeneName);
             }
             else
             {
-                GeneData geneData = mGenes.genes().get(0).GeneData;
+                GeneData geneData = mGenes.genes().get(0).Gene;
                 altSJ.setGeneData(geneData.GeneId, geneData.GeneName);
             }
         }
@@ -710,7 +711,7 @@ public class AltSpliceJunctionFinder
     {
         for(AltSpliceJunction altSJ : mAltSpliceJunctions)
         {
-            GeneReadData gene = mGenes.genes().stream().filter(x -> x.GeneData.GeneId.equals(altSJ.geneId())).findFirst().orElse(null);
+            GeneReadData gene = mGenes.genes().stream().filter(x -> x.Gene.GeneId.equals(altSJ.geneId())).findFirst().orElse(null);
             altSJ.calcSummaryData(gene);
 
             int cohortFrequency = 0;
@@ -750,8 +751,41 @@ public class AltSpliceJunctionFinder
         int exonUp = altSJ.selectedExons()[SE_START];
         int exonDown = altSJ.selectedExons()[SE_END];
 
-        return mConfig.Fusions.KnownFusions.withinKnownExonRanges(
-                KnownFusionType.EXON_DEL_DUP, transcript, exonUp, exonUp, exonDown, exonDown);
+        List<KnownFusionData> exonDelDups = mConfig.Fusions.KnownFusions.getDataByType(KnownFusionType.EXON_DEL_DUP);
+
+        for(KnownFusionData exonDelDup : exonDelDups)
+        {
+            if(!exonDelDup.specificExonsTransName().equals(transcript))
+                continue;
+
+            int[] fiveExonRange = exonDelDup.fiveGeneExonRange();
+            int[] threeExonRange = exonDelDup.threeGeneExonRange();
+            boolean isDupType = fiveExonRange[SE_START] > threeExonRange[SE_START];
+
+            if(isDupType)
+            {
+                if(altSJ.type() != CIRCULAR)
+                    continue;
+
+                // flip exons around to match how DUPs are configured
+                int tmp = exonUp;
+                exonUp = exonDown;
+                exonDown = tmp;
+            }
+            else
+            {
+                if(altSJ.type() != SKIPPED_EXONS)
+                    continue;
+            }
+
+            if(exonUp >= fiveExonRange[SE_START] && exonUp <= fiveExonRange[SE_END]
+            && exonDown >= threeExonRange[SE_START] && exonDown <= threeExonRange[SE_END])
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public void writeAltSpliceJunctions()

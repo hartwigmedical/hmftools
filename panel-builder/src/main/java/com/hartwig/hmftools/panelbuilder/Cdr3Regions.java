@@ -9,8 +9,11 @@ import static com.hartwig.hmftools.panelbuilder.ProbeUtils.probeRegionEndingAt;
 import static com.hartwig.hmftools.panelbuilder.ProbeUtils.probeRegionStartingAt;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.cider.IgTcrGene;
@@ -41,6 +44,7 @@ public class Cdr3Regions
         LOGGER.info("Generating CDR3 probes");
 
         List<IgTcrGene> genes = loadIgTcrGenes(refGenomeVersion);
+        genes = filterAlleles(genes);
 
         generateProbes(genes, probeGenerator, panelData);
 
@@ -54,40 +58,54 @@ public class Cdr3Regions
                 .filter(IgTcrGene::inPrimaryAssembly)
                 .filter(gene -> gene.anchorLocation() != null)
                 .toList();
-        LOGGER.debug("Loaded {} V/J genes", genes.size());
+        LOGGER.debug("Loaded {} V/J gene alleles", genes.size());
         return genes;
+    }
+
+    private static List<IgTcrGene> filterAlleles(final List<IgTcrGene> genes)
+    {
+        // No need to compute produce probes for duplicate allele locations.
+
+        Map<String, List<IgTcrGene>> allelesbyGene = new HashMap<>();
+        for(IgTcrGene gene : genes)
+        {
+            allelesbyGene.computeIfAbsent(gene.geneName(), k -> new ArrayList<>()).add(gene);
+        }
+
+        List<IgTcrGene> filteredGenes = new ArrayList<>();
+        allelesbyGene.forEach((geneName, alleles) ->
+        {
+            Set<ChrBaseRegion> geneAnchorLocations = new HashSet<>();
+            for(IgTcrGene allele : alleles)
+            {
+                if(geneAnchorLocations.add(allele.anchorLocation()))
+                {
+                    filteredGenes.add(allele);
+                }
+            }
+        });
+
+        LOGGER.debug("Filtered to {} gene allele locations", filteredGenes.size());
+
+        return filteredGenes;
     }
 
     private static void generateProbes(final List<IgTcrGene> genes, final ProbeGenerator probeGenerator,
             PanelData panelData)
     {
-        List<ChrBaseRegion> generatedRegions = new ArrayList<>();
-        Stream<ProbeGenerationSpec> probeGenerationSpecs =
-                genes.stream().flatMap(gene -> createProbeGenerationSpec(gene, generatedRegions).stream());
+        Stream<ProbeGenerationSpec> probeGenerationSpecs = genes.stream().map(Cdr3Regions::createProbeGenerationSpec);
         probeGenerator.generateBatch(probeGenerationSpecs, panelData);
     }
 
-    private static Optional<ProbeGenerationSpec> createProbeGenerationSpec(final IgTcrGene gene, List<ChrBaseRegion> generatedRegions)
+    private static ProbeGenerationSpec createProbeGenerationSpec(final IgTcrGene gene)
     {
+        // Produce a probe exactly at the determined region or not at all. Shifting probes is not acceptable here.
+        // Need to produce a probe which is aligned with the edge of the gene. And want to match the previous CDR3 panel design closely.
         ChrBaseRegion targetRegion = calculateTargetRegion(gene);
-
-        if(generatedRegions.stream().anyMatch(targetRegion::overlaps))
-        {
-            // It's possible regions overlap other regions, in which case just take the first and discard the rest.
-            LOGGER.trace("CDR3 region {} overlaps with another; discarding", targetRegion);
-            return Optional.empty();
-        }
-        else
-        {
-            // For simplicity, don't check any regions where we already attempted any probe generation around that location.
-            generatedRegions.add(targetRegion);
-            // Produce a probe exactly at the determined region or not at all. Shifting probes is not acceptable here.
-            // Need to produce a probe which is aligned with the edge of the gene. And want to match the previous CDR3 panel design closely.
-            SequenceDefinition sequenceDefinition = SequenceDefinition.singleRegion(targetRegion);
-            TargetedRange targetedRange = TargetedRange.wholeRegion(sequenceDefinition.baseLength());
-            TargetMetadata metadata = createTargetMetadata(gene);
-            return Optional.of(new ProbeGenerationSpec.SingleProbe(sequenceDefinition, targetedRange, metadata, PROBE_CRITERIA));
-        }
+        SequenceDefinition sequenceDefinition = SequenceDefinition.singleRegion(targetRegion);
+        TargetedRange targetedRange = TargetedRange.wholeRegion(sequenceDefinition.baseLength());
+        TargetMetadata metadata = createTargetMetadata(gene);
+        return new ProbeGenerationSpec.SingleProbe(sequenceDefinition, targetedRange, metadata, PROBE_CRITERIA);
     }
 
     private static ChrBaseRegion calculateTargetRegion(final IgTcrGene gene)

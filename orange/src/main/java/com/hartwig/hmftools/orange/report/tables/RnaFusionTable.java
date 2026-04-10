@@ -64,7 +64,7 @@ public final class RnaFusionTable
             table.addCell(cells.createContent(fusion.junctionTypeEnd()));
 
             int splitFragments = fusion.splitFragments();
-            int averageDepth = min((int)round((fusion.depthStart() + fusion.depthEnd()) * 0.5), splitFragments);
+            int averageDepth = (int)round((fusion.depthStart() + fusion.depthEnd()) * 0.5);
             table.addCell(cells.createContent(formatSupportField(splitFragments, averageDepth)));
 
             // table.addCell(cells.createContent(String.valueOf(fusion.realignedFrags() + fusion.discordantFrags())));

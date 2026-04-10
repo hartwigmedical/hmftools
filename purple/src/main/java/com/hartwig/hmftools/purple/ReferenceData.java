@@ -11,6 +11,9 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.common.hla.HlaCommon.hlaChromosome;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TARGET_REGIONS_BED;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TARGET_REGIONS_BED_DESC;
+import static com.hartwig.hmftools.purple.PurpleConstants.DEFAULT_CODING_BASE_FACTOR;
+import static com.hartwig.hmftools.purple.PurpleConstants.DEFAULT_TARGETED_TMB_RATIO;
+import static com.hartwig.hmftools.purple.PurpleConstants.DEFAULT_TARGETED_TML_RATIO;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.SampleDataFiles.GERMLINE_VARIANTS;
 import static com.hartwig.hmftools.purple.tools.GenerateGermlineAmpDelFrequency.COHORT_AMP_DEL_FREQ_FILE;
@@ -70,8 +73,6 @@ public class ReferenceData
 
     private static final String SOMATIC_HOTSPOT = "somatic_hotspots";
     private static final String GERMLINE_HOTSPOT = "germline_hotspots";
-
-    private static final String TARGET_REGIONS_RATIOS = "target_regions_ratios";
 
     public ReferenceData(final ConfigBuilder configBuilder, final PurpleConfig config)
     {
@@ -184,7 +185,7 @@ public class ReferenceData
         String germlineDeletionFreqFile = config.runGermline() ? configBuilder.getValue(COHORT_AMP_DEL_FREQ_FILE) : null;
         CohortGermlineDeletions = new GermlineAmpDelFrequencyCache(germlineDeletionFreqFile);
 
-        TargetRegions = new TargetRegionsData(configBuilder.getValue(TARGET_REGIONS_RATIOS));
+        TargetRegions = new TargetRegionsData(configBuilder);
         TargetRegions.loadTargetRegionsBed(configBuilder.getValue(TARGET_REGIONS_BED), GeneTransCache);
     }
 
@@ -229,7 +230,8 @@ public class ReferenceData
         addGcProfilePath(configBuilder, false);
         configBuilder.addPath(COHORT_AMP_DEL_FREQ_FILE, false, "Path to cohort germline deletions frequency file");
         configBuilder.addPath(TARGET_REGIONS_BED, false, TARGET_REGIONS_BED_DESC);
-        configBuilder.addPath(TARGET_REGIONS_RATIOS, false, "Path to target regions ratios file");
+        TargetRegionsData.registerConfig(configBuilder);
+
         EnsemblDataCache.addEnsemblDir(configBuilder, true);
         DriverGenePanelConfig.addGenePanelOption(configBuilder, false);
     }
@@ -262,6 +264,6 @@ public class ReferenceData
         SomaticHotspots = ArrayListMultimap.create();
         GermlineHotspots = ArrayListMultimap.create();
         CohortGermlineDeletions = new GermlineAmpDelFrequencyCache(null);
-        TargetRegions = new TargetRegionsData(null);
+        TargetRegions = new TargetRegionsData(DEFAULT_CODING_BASE_FACTOR, DEFAULT_TARGETED_TMB_RATIO, DEFAULT_TARGETED_TML_RATIO);
     }
 }

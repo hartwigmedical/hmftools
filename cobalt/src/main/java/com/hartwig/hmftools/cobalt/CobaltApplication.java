@@ -61,9 +61,10 @@ public class CobaltApplication
             BamReadCounter brcRef = mConfig.referenceBamReader(executorService);
 
             ListMultimap<HumanChromosome, DepthReading> tumourDepths = brcTumor == null ? create() : brcTumor.calculateReadDepths();
-            CB_LOGGER.info("Tumor depths collected, size: {}", tumourDepths.size());
+            CB_LOGGER.info("tumor depths({}) collected", tumourDepths.size());
+
             ListMultimap<HumanChromosome, DepthReading> refDepths = brcRef == null ? create() : brcRef.calculateReadDepths();
-            CB_LOGGER.info("Reference depths collected, size: {}", refDepths.size());
+            CB_LOGGER.info("reference depths({}) collected", refDepths.size());
 
             CobaltCalculator calculator = new CobaltCalculator(tumourDepths, refDepths, mConfig);
             ListMultimap<Chromosome, CobaltRatio> results = calculator.getCalculatedRatios();
@@ -74,16 +75,12 @@ public class CobaltApplication
 
             if(mConfig.TumorId != null)
             {
-                CB_LOGGER.info("persisting tumor {} GC read count to {}", mConfig.TumorId, mConfig.OutputDir);
                 CobaltGcMedianFile.write(mConfig.tumorGcMedianFileName(), calculator.tumorMedianReadDepth());
             }
 
             if(mConfig.ReferenceId != null)
             {
-                CB_LOGGER.info("persisting {} gc ratio medians to {}", mConfig.ReferenceId, mConfig.OutputDir);
                 CobaltMedianRatioFile.write(mConfig.medianRatiosFileName(), calculator.medianRatios());
-
-                CB_LOGGER.info("persisting reference {} GC read count to {}", mConfig.ReferenceId, mConfig.OutputDir);
                 CobaltGcMedianFile.write(mConfig.referenceGcMedianFileName(), calculator.referenceMedianReadDepth());
             }
 
@@ -110,20 +107,13 @@ public class CobaltApplication
 
     private void writePcf(final ListMultimap<Chromosome, CobaltRatio> results, final ExecutorService executorService) throws Exception
     {
-        if(mConfig.UseOldSegmenter)
+        if(mConfig.TumorId != null)
         {
-            applyRatioSegmentation(executorService, mConfig.OutputDir, mConfig.cobaltRatiosFileName(), mConfig.ReferenceId, mConfig.TumorId, mConfig.PcfGamma);
+            CobaltRatioSegmenter.writeTumorSegments(results, mConfig.PcfGamma, mConfig.RefGenVersion, executorService, mConfig.tumorPcfFileName());
         }
-        else
+        if(mConfig.ReferenceId != null)
         {
-            if(mConfig.TumorId != null)
-            {
-                CobaltRatioSegmenter.writeTumorSegments(results, mConfig.PcfGamma, mConfig.RefGenVersion, executorService, mConfig.tumorPcfFileName());
-            }
-            if(mConfig.ReferenceId != null)
-            {
-                CobaltRatioSegmenter.writeReferenceSegments(results, mConfig.PcfGamma, mConfig.RefGenVersion, executorService, mConfig.referencePcfFileName());
-            }
+            CobaltRatioSegmenter.writeReferenceSegments(results, mConfig.PcfGamma, mConfig.RefGenVersion, executorService, mConfig.referencePcfFileName());
         }
     }
 

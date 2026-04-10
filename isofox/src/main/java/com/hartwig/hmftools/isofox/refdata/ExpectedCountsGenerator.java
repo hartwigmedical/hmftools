@@ -166,14 +166,14 @@ public class ExpectedCountsGenerator
             else
             {
                 // force an empty entry even though it won't have any category ratios set for it
-                List<String> allGeneIds = mGeneCollection.genes().stream().map(x -> x.GeneData.GeneId).collect(Collectors.toList());
+                List<String> allGeneIds = mGeneCollection.genes().stream().map(x -> x.Gene.GeneId).collect(Collectors.toList());
                 CategoryCountsData genesWithoutCounts = new CategoryCountsData(emptyTrans, allGeneIds);
                 genesWithoutCounts.initialiseLengthCounts(mConfig.FragmentSizeData.size());
 
                 List<CategoryCountsData> emptyList = Lists.newArrayList(genesWithoutCounts);
                 for(GeneReadData gene : mGeneCollection.genes())
                 {
-                    mTransCategoryCountsMap.put(gene.GeneData.GeneId, emptyList);
+                    mTransCategoryCountsMap.put(gene.Gene.GeneId, emptyList);
                 }
             }
         }
@@ -181,7 +181,7 @@ public class ExpectedCountsGenerator
         // add in any genes which ended up without counts, ie those with a single exon
         for(GeneReadData gene : geneCollection.genes())
         {
-            final String geneId = gene.GeneData.GeneId;
+            final String geneId = gene.Gene.GeneId;
 
             if(mTransCategoryCountsMap.containsKey(geneId))
                 continue;
@@ -239,7 +239,7 @@ public class ExpectedCountsGenerator
         if(mGeneCollection.genes().size() == 1)
         {
             if(mGeneCollection.genes().get(0).hasUnsplicedRegions())
-                return Lists.newArrayList(mGeneCollection.genes().get(0).GeneData.GeneId);
+                return Lists.newArrayList(mGeneCollection.genes().get(0).Gene.GeneId);
             else
                 return Lists.newArrayList();
         }
@@ -248,8 +248,8 @@ public class ExpectedCountsGenerator
 
         return mGeneCollection.genes().stream()
                 .filter(x -> x.hasUnsplicedRegions()) // must have at least one unspliced region
-                .filter(x -> positionsWithin(fragStart,fragEnd, x.GeneData.GeneStart, x.GeneData.GeneEnd))
-                .map(x -> x.GeneData.GeneId).collect(Collectors.toList());
+                .filter(x -> positionsWithin(fragStart,fragEnd, x.Gene.GeneStart, x.Gene.GeneEnd))
+                .map(x -> x.Gene.GeneId).collect(Collectors.toList());
     }
 
     private boolean allocateTranscriptCounts(final TranscriptData transData, final List<TranscriptData> transDataList, int startPos)

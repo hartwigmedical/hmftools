@@ -28,7 +28,6 @@ import java.util.concurrent.Callable;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
@@ -127,11 +126,10 @@ public class ChromosomeTaskExecutor implements Callable<Void>
     }
 
     public String chromosome() { return mChromosome; }
-    public final List<GeneCollectionSummary> getGeneCollectionSummaryData() { return mGeneCollectionSummaryData; }
-    public final GcRatioCounts getGcRatioCounts() { return mGcRatioCounts; }
+    public List<GeneCollectionSummary> getGeneCollectionSummaryData() { return mGeneCollectionSummaryData; }
+    public GcRatioCounts getGcRatioCounts() { return mGcRatioCounts; }
 
-    public final ChimericStats getChimericStats() { return mChromosomeFusions.chimericStats(); }
-    public boolean isValid() { return mIsValid; }
+    public ChimericStats getChimericStats() { return mChromosomeFusions.chimericStats(); }
     public int totalReadCount() { return mTotalReadsProcessed; }
 
     public void setTaskType(TaskType taskType) { mCurrentTaskType = taskType; }
@@ -180,7 +178,7 @@ public class ChromosomeTaskExecutor implements Callable<Void>
         {
             mCurrentGeneIndex = findNextOverlappingGenes(mGeneDataList, mCurrentGeneIndex, overlappingGenes);
 
-            final List<GeneReadData> geneReadDataList = createGeneReadData(overlappingGenes, mGeneTransCache);
+            List<GeneReadData> geneReadDataList = createGeneReadData(overlappingGenes, mGeneTransCache);
 
             GeneCollection geneCollection = new GeneCollection(mCollectionId++, geneReadDataList);
             geneCollection.markEnrichedAndExcludedGenes(mConfig, mGeneTransCache);
@@ -286,7 +284,7 @@ public class ChromosomeTaskExecutor implements Callable<Void>
         {
             for(RegionReadData region : geneCollection.getExonRegions())
             {
-                final String regionRefBases = mConfig.RefGenome.getBaseString(region.chromosome(), region.start(), region.end());
+                String regionRefBases = mConfig.RefGenome.getBaseString(region.chromosome(), region.start(), region.end());
                 region.setRefBases(regionRefBases);
             }
 
@@ -312,10 +310,10 @@ public class ChromosomeTaskExecutor implements Callable<Void>
             return;
         }
 
-        final ChrBaseRegion geneRegion = new ChrBaseRegion(geneCollection.chromosome(), geneRegionPositions);
+        ChrBaseRegion geneRegion = new ChrBaseRegion(geneCollection.chromosome(), geneRegionPositions);
 
         mPerfCounters[PERF_READS].start();
-        mBamFragmentAllocator.produceBamCounts(geneCollection, geneRegion);
+        mBamFragmentAllocator.processBam(geneCollection, geneRegion);
         mPerfCounters[PERF_READS].stop();
 
         postBamReadTranscriptCounts(geneCollection);
@@ -392,7 +390,7 @@ public class ChromosomeTaskExecutor implements Callable<Void>
         if(!mConfig.Filters.EnrichedGeneIds.isEmpty())
         {
             long enrichedGeneFragments = geneCollection.genes().stream()
-                    .anyMatch(x -> mConfig.Filters.EnrichedGeneIds.contains(x.GeneData.GeneId))
+                    .anyMatch(x -> mConfig.Filters.EnrichedGeneIds.contains(x.Gene.GeneId))
                     ? geneCollection.fragmentTypeCounts().typeCount(TOTAL) : 0;
 
             if(enrichedGeneFragments > 0)

@@ -3,6 +3,7 @@ package com.hartwig.hmftools.esvee.assembly;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
+import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.test.MockRefGenome.getNextBase;
@@ -179,6 +180,23 @@ public class JunctionAssemblyTest
         assertFalse(readInfo.mismatched());
         mismatch = readInfo.mismatches().get(0);
         assertEquals(DELETE, mismatch.Type);
+
+        // test a read with most low qual mismatches
+        juncRead = cloneRead(read1, READ_ID_GENERATOR.nextId());
+
+        int readIndexStart = juncRead.basesLength() - extBases.length() + 5;
+        for(int i = 0; i < 15; ++i)
+        {
+            int readIndex = readIndexStart + i;
+            juncRead.getBases()[readIndex] = MockRefGenome.getNextBase(juncRead.getBases()[readIndex]);
+            juncRead.getBaseQuality()[readIndex] = LOW_BASE_QUAL_THRESHOLD;
+        }
+
+        readInfo = extSeqBuilder.checkAddJunctionRead(juncRead);
+        assertNotNull(readInfo);
+        assertFalse(readInfo.mismatched());
+        assertFalse(extSeqBuilder.sufficientQualMatches(readInfo));
+        assertEquals(17, readInfo.mismatchCount(false));
     }
 
     @Test
@@ -301,7 +319,7 @@ public class JunctionAssemblyTest
     }
 
     @Test
-    public void tesRepeatMismatchesExtensionSequence()
+    public void testRepeatMismatchesExtensionSequence()
     {
         String refBases = REF_BASES_200.substring(0, 20);
 
@@ -323,7 +341,7 @@ public class JunctionAssemblyTest
         readBases = extBases3 + refBases;
         Read read3 = createRead(READ_ID_GENERATOR.nextId(), junctionPosition, readBases, makeCigarString(readBases, extBases3.length(), 0));
 
-        String extBases4 = buffer + caRepeat + "CACA" + buffer; // 2 extra CAs
+        String extBases4 = buffer + caRepeat + "CACA" + buffer; // 2 extra CAs, too many for this number of repeats
         readBases = extBases4 + refBases;
         Read read4 = createRead(READ_ID_GENERATOR.nextId(), junctionPosition, readBases, makeCigarString(readBases, extBases4.length(), 0));
 
@@ -376,10 +394,9 @@ public class JunctionAssemblyTest
 
         readInfo = extSeqBuilder.checkAddJunctionRead(read4b);
         assertNotNull(readInfo);
-        assertEquals(1, readInfo.mismatches().size());
+        assertEquals(2, readInfo.mismatches().size());
         mismatch = readInfo.mismatches().get(0);
-        assertEquals(SequenceDiffType.REPEAT, mismatch.Type);
-        assertEquals(6, mismatch.RepeatCount);
+        assertEquals(SequenceDiffType.BASE, mismatch.Type); // was too many to be considered a repeat diff
     }
 
     @Test

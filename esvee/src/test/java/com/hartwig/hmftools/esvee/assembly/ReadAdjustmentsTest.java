@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.esvee.TestUtils.TEST_CIGAR_100;
 import static com.hartwig.hmftools.esvee.TestUtils.TEST_READ_ID;
 import static com.hartwig.hmftools.esvee.TestUtils.createRead;
 import static com.hartwig.hmftools.esvee.TestUtils.makeCigarString;
+import static com.hartwig.hmftools.esvee.assembly.LineUtils.findRefBaseRepeatCount;
 import static com.hartwig.hmftools.esvee.assembly.LineUtils.hasLineTail;
 import static com.hartwig.hmftools.esvee.assembly.SeqTechUtils.trimIlluminaAdapterBases;
 
@@ -317,6 +318,35 @@ public class ReadAdjustmentsTest
         readBases = REF_BASES_RANDOM_100 + "TTTTTTTTTT" + softClipBases;
 
         assertFalse(hasLineTail(readBases.getBytes(), REF_BASES_RANDOM_100.length() + 10, false, LINE_BASE_T, defaultQuals));
+
+        // ref base repeats
+        String refBases = "AAAAAAAAAA";
+        int refBaseRepeat = findRefBaseRepeatCount(refBases.getBytes(), 0, true, LINE_BASE_A);
+        assertEquals(10, refBaseRepeat);
+
+        refBases = "AAAAAGAAAA";
+        refBaseRepeat = findRefBaseRepeatCount(refBases.getBytes(), 0, true, LINE_BASE_A);
+        assertEquals(9, refBaseRepeat);
+
+        refBases = "AAAAAGAAGA";
+        refBaseRepeat = findRefBaseRepeatCount(refBases.getBytes(), 0, true, LINE_BASE_A);
+        assertEquals(5, refBaseRepeat);
+
+        refBases = "AAAAAAAAAAGAAAA";
+        refBaseRepeat = findRefBaseRepeatCount(refBases.getBytes(), 0, true, LINE_BASE_A);
+        assertEquals(14, refBaseRepeat);
+
+        refBases = "AAAAAAAAAAGAAAAAAAAAAG";
+        refBaseRepeat = findRefBaseRepeatCount(refBases.getBytes(), 0, true, LINE_BASE_A);
+        assertEquals(20, refBaseRepeat);
+
+        refBases = "AAAAAAAAAAGAAAAG";
+        refBaseRepeat = findRefBaseRepeatCount(refBases.getBytes(), 0, true, LINE_BASE_A);
+        assertEquals(10, refBaseRepeat);
+
+        refBases = "AAAAAACGT";
+        refBaseRepeat = findRefBaseRepeatCount(refBases.getBytes(), 0, true, LINE_BASE_A);
+        assertEquals(6, refBaseRepeat);
     }
 
     @Test

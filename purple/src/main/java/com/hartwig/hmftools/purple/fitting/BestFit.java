@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.purple.fitting;
 
+import static com.hartwig.hmftools.purple.PurpleConstants.DIPLOID_PLOIDY;
+
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -36,8 +38,8 @@ public class BestFit
         List<FittedPurity> sortableList = Lists.newArrayList(all);
         sortableList.sort((o1, o2) ->
         {
-            double o1DistanceFromDiploid = Math.abs(2 - o1.ploidy());
-            double o2DistanceFromDiploid = Math.abs(2 - o2.ploidy());
+            double o1DistanceFromDiploid = Math.abs(DIPLOID_PLOIDY - o1.ploidy());
+            double o2DistanceFromDiploid = Math.abs(DIPLOID_PLOIDY - o2.ploidy());
             return Double.compare(o1DistanceFromDiploid, o2DistanceFromDiploid);
         });
 

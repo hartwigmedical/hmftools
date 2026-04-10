@@ -30,7 +30,8 @@ import org.jetbrains.annotations.Nullable;
 public final class PurpleVariantFactory
 {
     public static PurpleVariant buildPurpleVariant(
-            final SmallVariant variant, final List<SmallVariant> allVariants, @Nullable final DriverCatalog driver, boolean isGermline)
+            final SmallVariant variant, final List<SmallVariant> allVariants, @Nullable final DriverCatalog driver, boolean isGermline,
+            @Nullable final String plotFilename)
     {
         List<AltTranscriptReportableInfo> altTransEffects = parseAltTranscriptInfo(variant.otherReportedEffects());
 
@@ -79,6 +80,7 @@ public final class PurpleVariantFactory
                 .localPhaseSets(phasedVariantIds)
                 .clinvarPathogenicity(isGermline ? variant.pathogenicity() : null)
                 .gnomadFrequency(isGermline ? variant.gnomadFrequency() : null)
+                .plotFilename(plotFilename)
                 .build();
     }
 
@@ -91,13 +93,16 @@ public final class PurpleVariantFactory
 
         for(SmallVariant otherVariant : allVariants)
         {
+            if(otherVariant == variant)
+                continue;
+
             if(otherVariant.localPhaseSets() == null || otherVariant.localPhaseSets().isEmpty())
                 continue;
 
             if(!otherVariant.chromosome().equals(variant.chromosome()))
                 continue;
 
-            if(abs(variant.position() - otherVariant.position()) > 1000) // plausible distance to be phased
+            if(abs(variant.position() - otherVariant.position()) <= 1000) // plausible distance to be phased
             {
                 for(Integer lpsId : variant.localPhaseSets())
                 {

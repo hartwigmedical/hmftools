@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOpt
 
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Objects;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.finding.datamodel.FindingRecord;
@@ -73,9 +74,10 @@ public class VisualisationFileFinderApp
         FindingRecord findingRecord = new FindingsJson().read(config.FindingJsonPath);
         List<String> visualisationFiles = VisualisationFileFinder.find(findingRecord).stream()
                 .map(VisualisationFile::fileName)
+                .filter(Objects::nonNull)
                 .toList();
 
-        new JsonReadWriter<>(List.class).write(visualisationFiles, config.OutputJsonPath);
+        JsonReadWriter.listOf(String.class).write(visualisationFiles, config.OutputJsonPath);
 
         LOGGER.info("Done!");
     }

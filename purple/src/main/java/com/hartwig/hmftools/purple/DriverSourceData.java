@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.purple;
 
+import static java.lang.String.format;
+
 import com.hartwig.hmftools.common.driver.DriverCatalog;
 
 public class DriverSourceData
@@ -11,5 +13,11 @@ public class DriverSourceData
     {
         DriverData = driverData;
         SourceObject = sourceObject;
+    }
+
+    public String toString()
+    {
+        return format("gene(%s) type(%s) likelihood(%.2f) location(%s:%s)",
+                DriverData.gene(), DriverData.driver(), DriverData.driverLikelihood(), DriverData.chromosome(), DriverData.chromosomeBand());
     }
 }

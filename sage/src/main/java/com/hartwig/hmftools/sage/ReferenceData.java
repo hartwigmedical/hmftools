@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.sage;
 
 import static com.hartwig.hmftools.common.driver.panel.DriverGeneRegions.buildDriverGeneBaseRegions;
-import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.loadTranscriptAminoAcidData;
 import static com.hartwig.hmftools.common.hla.HlaCommon.hlaChromosome;
 import static com.hartwig.hmftools.common.region.BedFileReader.loadBedFileChrMap;
@@ -42,7 +41,6 @@ public class ReferenceData
     public final Map<Chromosome, List<BaseRegion>> HighConfidence;
 
     public final EnsemblDataCache GeneDataCache;
-    private boolean mGeneDataCacheLoaded;
     public final List<DriverGene> DriverGenes;
 
     public final Map<String, List<TranscriptData>> ChromosomeTranscripts;
@@ -64,15 +62,8 @@ public class ReferenceData
 
         RefGenome = loadRefGenome(config.Common.RefGenomeFile);
 
-        mGeneDataCacheLoaded = false;
         GeneDataCache = new EnsemblDataCache(configBuilder);
         loadGeneData();
-
-        if(mConfig.Common.Visualiser.Enabled && mConfig.Common.Visualiser.PurpleVcf != null && mGeneDataCacheLoaded)
-        {
-            File ensemblDataDir = new File(configBuilder.getValue(ENSEMBL_DATA_DIR));
-            loadTranscriptAminoAcidData(ensemblDataDir, TransAminoAcidMap, Collections.emptyList(), false);
-        }
 
         if(configBuilder.hasValue(DriverGenePanelConfig.DRIVER_GENE_PANEL))
         {
@@ -106,8 +97,12 @@ public class ReferenceData
 
     private void loadGeneData()
     {
-        GeneDataCache.setRequiredData(true, false, false, !(mConfig.Common.Visualiser.Enabled && mConfig.Common.Visualiser.PurpleVcf != null));
-        mGeneDataCacheLoaded = GeneDataCache.load(false);
+        boolean requiredAminoAcids = mConfig.Common.Visualiser.enabled();
+        boolean canonicalOnly = !requiredAminoAcids;
+
+        GeneDataCache.setRequiredData(true, false, false, canonicalOnly);
+
+        GeneDataCache.load(false);
 
         for(Map.Entry<String, List<GeneData>> entry : GeneDataCache.getChrGeneDataMap().entrySet())
         {
@@ -133,6 +128,11 @@ public class ReferenceData
 
                 transDataList.add(transData);
             }
+        }
+
+        if(requiredAminoAcids)
+        {
+            loadTranscriptAminoAcidData(GeneDataCache.dataPath(), TransAminoAcidMap, Collections.emptyList(), canonicalOnly);
         }
     }
 
@@ -262,6 +262,4 @@ public class ReferenceData
             }
         }
     }
-
-    public boolean geneDataCacheLoaded() { return mGeneDataCacheLoaded; }
 }

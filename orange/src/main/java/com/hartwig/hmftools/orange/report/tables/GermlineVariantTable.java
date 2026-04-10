@@ -3,10 +3,12 @@ package com.hartwig.hmftools.orange.report.tables;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.orange.algo.OrangeConstants.isCandidateLikelihood;
+import static com.hartwig.hmftools.orange.report.tables.SomaticVariantTable.copyNumberDisplay;
 import static com.hartwig.hmftools.orange.report.tables.SomaticVariantTable.hgvsDisplay;
 import static com.hartwig.hmftools.orange.report.tables.SomaticVariantTable.hotspotDisplay;
 import static com.hartwig.hmftools.orange.report.tables.SomaticVariantTable.locationDisplay;
 import static com.hartwig.hmftools.orange.report.tables.SomaticVariantTable.sort;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_COPIES;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_GENE;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_HGVS;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.VALUE_NO;
@@ -59,17 +61,16 @@ public final class GermlineVariantTable
         List<Float> widths = Lists.newArrayList();
         List<Cell> cellEntries = Lists.newArrayList();
 
-        addEntry(cells, widths, cellEntries, 1.25, COL_GENE);
+        addEntry(cells, widths, cellEntries, 1.5, COL_GENE);
         addEntry(cells, widths, cellEntries, 2, COL_VARIANT);
         addEntry(cells, widths, cellEntries, 2, COL_HGVS);
         addEntry(cells, widths, cellEntries, 1.5, COL_ZYGOSITY);
         addEntry(cells, widths, cellEntries, 0.75, COL_AF);
         addEntry(cells, widths, cellEntries, 1, COL_DP);
-        addEntry(cells, widths, cellEntries, 0.75, COL_VCN);
-        addEntry(cells, widths, cellEntries, 0.75, COL_CN);
-        addEntry(cells, widths, cellEntries, 0.9, COL_MACN);
+        addEntry(cells, widths, cellEntries, 1, COL_COPIES);
+        // addEntry(cells, widths, cellEntries, 0.9, COL_MACN);
         addEntry(cells, widths, cellEntries, 1.5, COL_HOTSPOT);
-        addEntry(cells, widths, cellEntries, 1.5, COL_BIALLELIC);
+        addEntry(cells, widths, cellEntries, 1, COL_BIALLELIC);
         addEntry(cells, widths, cellEntries, 1.5, COL_GNOMAD);
         addEntry(cells, widths, cellEntries, 2, COL_CLINVAR);
         addEntry(cells, widths, cellEntries, 1.25, COL_DRIVER);
@@ -91,9 +92,8 @@ public final class GermlineVariantTable
                 rowCells.add(cells.createContent(simplifiedDisplay(variant.genotypeStatus())));
                 rowCells.add(cells.createContent(formatTwoDigitDecimal(variant.tumorDepth().alleleFrequency())));
                 rowCells.add(cells.createContent(String.valueOf(variant.tumorDepth().totalReadCount())));
-                rowCells.add(cells.createContent(formatSingleDigitDecimal(variant.variantCopyNumber())));
-                rowCells.add(cells.createContent(formatSingleDigitDecimal(variant.adjustedCopyNumber())));
-                rowCells.add(cells.createContent(formatSingleDigitDecimal(variant.minorAlleleCopyNumber())));
+                rowCells.add(cells.createContent(copyNumberDisplay(variant)));
+                // rowCells.add(cells.createContent(formatSingleDigitDecimal(variant.minorAlleleCopyNumber())));
                 rowCells.add(cells.createContent(hotspotDisplay(variant)));
                 rowCells.add(cells.createContent(variant.biallelic() ? VALUE_YES : VALUE_NO));
                 rowCells.add(cells.createContent(format("%4.2e", variant.gnomadFrequency())));

@@ -52,7 +52,7 @@ public class ReadParseState
     private int mElementIndex; // index within the current CIGAR element
 
     // track agreement and mismatches vs consensus sequence
-    private boolean mMismatched;
+    private boolean mMismatched; // exceeded the max mismatch penalty and cannot then count as support
     public int mBaseMatches;
     public int mHighQualMatches; // includes medium qual
     private List<SequenceDiffInfo> mMismatches;
@@ -110,7 +110,7 @@ public class ReadParseState
     public void markMismatched() { mMismatched = true; }
 
     public boolean isValid() { return mValid; }
-    public void markInvalid() { mValid = true; }
+    public void markInvalid() { mValid = false; }
 
     public boolean exhausted() { return mExhausted; }
 

@@ -3,7 +3,6 @@ package com.hartwig.hmftools.cobalt.e2e;
 import static com.hartwig.hmftools.cobalt.CobaltConfig.PCF_GAMMA;
 import static com.hartwig.hmftools.cobalt.CobaltConfig.TARGET_REGION_NORM_FILE;
 import static com.hartwig.hmftools.cobalt.CobaltConfig.TUMOR_ONLY_DIPLOID_BED;
-import static com.hartwig.hmftools.cobalt.CobaltConfig.USE_OLD_SEGMENTER;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._1;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._15;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._16;
@@ -703,7 +702,7 @@ public class ProcessBamTest
 
         createStandardMultiChromosomeGCFile(100_000, _1, _2);
         createStandardMultipleChromosomePanelFile(100_000, 1.0001, _1, _2);
-        runCobalt(false, true);
+        runCobalt(false);
 
         String segmentsFileName = PCFFile.generateRatioFilename(outputDir.getAbsolutePath(), sample);
         ListMultimap<Chromosome, PcfSegment> regions = PCFFile.readPcfFile(segmentsFileName);
@@ -727,7 +726,7 @@ public class ProcessBamTest
     public void segmentationTumorGermline() throws Exception
     {
         setupForSingleWindowBamTumorAndGermline();
-        runCobalt(false, true);
+        runCobalt(false);
 
         String tumorSegmentsFileName = PCFFile.generateRatioFilename(outputDir.getAbsolutePath(), sample);
         ListMultimap<Chromosome, PcfSegment> regions = PCFFile.readPcfFile(tumorSegmentsFileName);
@@ -742,7 +741,7 @@ public class ProcessBamTest
     public void segmentationTumorOnly() throws Exception
     {
         setupForSingleWindowBamTumorOnly();
-        runCobalt(false, true);
+        runCobalt(false);
 
         String tumorSegmentsFileName = PCFFile.generateRatioFilename(outputDir.getAbsolutePath(), sample);
         ListMultimap<Chromosome, PcfSegment> regions = PCFFile.readPcfFile(tumorSegmentsFileName);
@@ -756,7 +755,7 @@ public class ProcessBamTest
     public void segmentationGermlineOnly() throws Exception
     {
         setupForSingleWindowBamGermlineOnly();
-        runCobalt(false, true);
+        runCobalt(false);
 
         String tumorSegmentsFileName = PCFFile.generateRatioFilename(outputDir.getAbsolutePath(), sample);
         assertFalse(new File(tumorSegmentsFileName).exists());
@@ -1210,20 +1209,12 @@ public class ProcessBamTest
 
     private void runCobalt(boolean targeted) throws Exception
     {
-        runCobalt(targeted, false);
-    }
-
-    private void runCobalt(boolean targeted, boolean useNewSegmenter) throws Exception
-    {
         int argCount = 12;
         if(targeted)
         {
             argCount += 2;
         }
-        if(!useNewSegmenter)
-        {
-            argCount += 1;
-        }
+
         if(tumorBamFile != null && referenceBamFile != null)
         {
             argCount += 4;
@@ -1260,10 +1251,6 @@ public class ProcessBamTest
         {
             args[index++] = String.format("-%s", TARGET_REGION_NORM_FILE);
             args[index++] = String.format("%s", panelNormalisation.getAbsolutePath());
-        }
-        if(!useNewSegmenter)
-        {
-            args[index++] = String.format("-%s", USE_OLD_SEGMENTER);
         }
         if(diploidBedFile != null)
         {

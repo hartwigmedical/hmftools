@@ -212,7 +212,7 @@ public class AltSpliceJunction
         */
 
         int position = SpliceJunction[seIndex];
-        boolean forwardStrand = gene.GeneData.Strand == 1;
+        boolean forwardStrand = gene.Gene.Strand == 1;
         boolean isFivePrime = (seIndex == SE_START) == forwardStrand;
         boolean isExonic = RegionContexts[seIndex].equals(EXONIC) || RegionContexts[seIndex].equals(MIXED);
         boolean searchForwards = (isFivePrime && isExonic) || (!isFivePrime && !isExonic);

@@ -17,7 +17,6 @@ import static com.hartwig.hmftools.common.purple.ChrArmCopyNumber.LOW_DRIVER_ARM
 import static com.hartwig.hmftools.common.purple.ChrArmCopyNumber.LOW_DRIVER_ARM_CN_LOSS_THRESHOLD;
 import static com.hartwig.hmftools.orange.algo.OrangeConstants.PURPLE_AMP_DEL_FULL;
 import static com.hartwig.hmftools.orange.algo.OrangeConstants.PURPLE_AMP_DEL_PARTIAL;
-import static com.hartwig.hmftools.orange.algo.OrangeConstants.PURPLE_ARM_CN_DIPLOID;
 import static com.hartwig.hmftools.orange.algo.OrangeConstants.PURPLE_ARM_CN_GAIN;
 import static com.hartwig.hmftools.orange.algo.OrangeConstants.PURPLE_ARM_CN_LOSS;
 import static com.hartwig.hmftools.orange.algo.linx.LinxInterpreter.findReportableLinxPlot;
@@ -26,7 +25,6 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
@@ -35,6 +33,7 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.common.linx.DriverEventType;
 import com.hartwig.hmftools.common.linx.LinxDriver;
+import com.hartwig.hmftools.common.pipeline.MiscToolFiles;
 import com.hartwig.hmftools.common.purple.ChrArmCopyNumber;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
@@ -70,14 +69,15 @@ public class PurpleInterpreter
 
     public PurpleRecord interpret(final PurpleData purpleData, final LinxData linxData, @Nullable final IsofoxData isofoxData)
     {
-        List<PurpleVariant> somaticVariants = buildPurpleVariants(purpleData.somaticVariants(), purpleData.somaticDrivers(), false);
+        List<PurpleVariant> somaticVariants = buildPurpleVariants(
+                purpleData.somaticVariants(), purpleData.somaticDrivers(), false, purpleData.variantPlots());
 
-        List<PurpleVariant> germlineVariants = buildPurpleVariants(purpleData.germlineVariants(), purpleData.germlineDrivers(), true);
+        List<PurpleVariant> germlineVariants = buildPurpleVariants(
+                purpleData.germlineVariants(), purpleData.germlineDrivers(), true, null);
 
         List<PurpleDriver> germlineDrivers = ConversionUtil.mapToNullableList(purpleData.germlineDrivers(), PurpleConversion::convert);
 
-        List<PurpleGainDeletion> driverSomaticGainsDels = somaticGainsDelsFromDrivers(
-                purpleData.somaticDrivers(), purpleData.somaticGeneCopyNumbers(), purpleData.chrArmCopyNumbers(), linxData, isofoxData);
+        List<PurpleGainDeletion> driverSomaticGainsDels = somaticGainsDelsFromDrivers(purpleData, linxData, isofoxData);
 
         List<PurpleChrArmCopyNumber> armCopyNumberAbberations = buildArmAbberations(purpleData);
 
@@ -103,7 +103,8 @@ public class PurpleInterpreter
     }
 
     private static List<PurpleVariant> buildPurpleVariants(
-            final List<SmallVariant> variants, final List<DriverCatalog> drivers, boolean isGermline)
+            final List<SmallVariant> variants, final List<DriverCatalog> drivers, boolean isGermline,
+            @Nullable final List<String> variantPlots)
     {
         if(variants == null)
             return null;
@@ -118,39 +119,53 @@ public class PurpleInterpreter
                     .filter(x -> x.driver() == requiredDriverType && x.gene().equals(variant.gene()))
                     .findFirst().orElse(null);
 
-            PurpleVariant purpleVariant = PurpleVariantFactory.buildPurpleVariant(variant, variants, driver, isGermline);
+            String plotFilename = findVariantPlot(variant, variantPlots);
+
+            PurpleVariant purpleVariant = PurpleVariantFactory.buildPurpleVariant(variant, variants, driver, isGermline, plotFilename);
             purpleVariants.add(purpleVariant);
         }
 
         return purpleVariants;
     }
 
+    private static String findVariantPlot(final SmallVariant variant, @Nullable final List<String> variantPlots)
+    {
+        if(variantPlots == null)
+            return null;
+
+        String variantPlotPrefix = MiscToolFiles.generateSageVisFilePrefix(
+                variant.gene(), variant.chromosome(), variant.position(), variant.ref(), variant.alt());
+
+        return variantPlots.stream().filter(x -> x.contains(variantPlotPrefix)).findFirst().orElse(null);
+    }
+
     private static final Set<DriverType> AMP_DEL_TYPES = EnumSet.of(
             DriverType.AMP, DriverType.PARTIAL_AMP, DriverType.DEL, DriverType.HET_DEL, DriverType.LOH);
 
     private static List<PurpleGainDeletion> somaticGainsDelsFromDrivers(
-            final List<DriverCatalog> drivers, final List<GeneCopyNumber> geneCopyNumbers, final List<ChrArmCopyNumber> chrArmCopyNumbers,
-            final LinxData linxData, @Nullable final IsofoxData isofoxData)
+            final PurpleData purpleData, final LinxData linxData, @Nullable final IsofoxData isofoxData)
     {
         List<PurpleGainDeletion> gainDeletions = Lists.newArrayList();
 
-        for(DriverCatalog driver : drivers)
+        double samplePloidy = purpleData.purityContext().bestFit().ploidy();
+
+        for(DriverCatalog driver : purpleData.somaticDrivers())
         {
             if(AMP_DEL_TYPES.contains(driver.driver()))
             {
-                GeneCopyNumber geneCopyNumber = geneCopyNumbers.stream()
+                GeneCopyNumber geneCopyNumber = purpleData.somaticGeneCopyNumbers().stream()
                         .filter(x -> x.GeneName.equals(driver.gene()) && driver.transcript().equals(x.TransName))
                         .findFirst().orElse(null);
 
                 if(geneCopyNumber == null)
                     continue;
 
-                ChrArmCopyNumber chrArmCopyNumber = findChrArmCopyNumber(chrArmCopyNumbers, geneCopyNumber);
+                ChrArmCopyNumber chrArmCopyNumber = findChrArmCopyNumber(purpleData.chrArmCopyNumbers(), geneCopyNumber);
 
                 GeneExpression geneExpression = isofoxData != null ? isofoxData.geneExpressions().stream()
                         .filter(x -> x.geneName().equals(driver.gene())).findFirst().orElse(null) : null;
 
-                gainDeletions.add(toGainDel(driver, geneCopyNumber, chrArmCopyNumber, linxData, geneExpression));
+                gainDeletions.add(toGainDel(driver, geneCopyNumber, chrArmCopyNumber, samplePloidy, linxData, geneExpression));
             }
         }
 
@@ -167,7 +182,7 @@ public class PurpleInterpreter
 
     private static PurpleGainDeletion toGainDel(
             final DriverCatalog driver, final GeneCopyNumber geneCopyNumber, final ChrArmCopyNumber chrArmCopyNumber,
-            final LinxData linxData, @Nullable final GeneExpression geneExpression)
+            final double samplePloidy, final LinxData linxData, @Nullable final GeneExpression geneExpression)
     {
         Double tpm = null;
         Double tpmPercentile = null;
@@ -187,6 +202,10 @@ public class PurpleInterpreter
             geneRange = PURPLE_AMP_DEL_FULL;
         }
 
+        // only required when running from un-regenerated Purple data prior to v4.4
+        double relativeCopyNumber = geneCopyNumber.RelativeMinCopyNumber == -1 ?
+                geneCopyNumber.MinCopyNumber / samplePloidy : geneCopyNumber.RelativeMinCopyNumber;
+
         String plotFilename = findLinxDriverPlot(driver, linxData);
 
         return ImmutablePurpleGainDeletion.builder()
@@ -199,7 +218,7 @@ public class PurpleInterpreter
                 .geneRange(geneRange)
                 .exonStart(null)
                 .exonEnd(null)
-                .relativeCopyNumber(geneCopyNumber.RelativeMinCopyNumber)
+                .relativeCopyNumber(relativeCopyNumber)
                 .minMinorAlleleCopies(geneCopyNumber.MinMinorAlleleCopyNumber)
                 .tpm(tpm)
                 .tpmPercentile(tpmPercentile)

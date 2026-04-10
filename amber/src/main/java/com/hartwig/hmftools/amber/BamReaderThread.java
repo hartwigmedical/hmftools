@@ -9,6 +9,7 @@ import java.util.Queue;
 
 import com.hartwig.hmftools.common.bam.BamSlicer;
 import com.hartwig.hmftools.common.perf.PerformanceCounter;
+import com.hartwig.hmftools.common.perf.TaskQueue;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
@@ -16,7 +17,7 @@ import htsjdk.samtools.SamReaderFactory;
 
 public class BamReaderThread extends Thread
 {
-    private final Queue<RegionTask> mTaskQueue;
+    private final TaskQueue mTaskQueue;
     private final SamReader mSamReader;
     private final BamSlicer mBamSlicer;
     private RegionTask mCurrentTask;
@@ -24,9 +25,9 @@ public class BamReaderThread extends Thread
     private final PerformanceCounter mPerfCounter;
 
     public BamReaderThread(
-            final String bamFile, final SamReaderFactory samReaderFactory, final Queue<RegionTask> inTaskQueue)
+            final String bamFile, final SamReaderFactory samReaderFactory, final TaskQueue taskQueue)
     {
-        mTaskQueue = inTaskQueue;
+        mTaskQueue = taskQueue;
         mSamReader = samReaderFactory.open(new File(bamFile));
         mBamSlicer = new BamSlicer(0, false, false, false);
         mCurrentTask = null;
@@ -43,7 +44,7 @@ public class BamReaderThread extends Thread
             RegionTask task;
             try
             {
-                task = mTaskQueue.remove();
+                task = (RegionTask)mTaskQueue.removeItem();
                 mCurrentTask = task;
             }
             catch(NoSuchElementException e)

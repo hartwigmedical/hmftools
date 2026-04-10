@@ -23,7 +23,7 @@ public class SequenceDefinitionTest
     public void testConstructorValid()
     {
         // Single region.
-        new SequenceDefinition(REGION1, null, "", null, null);
+        new SequenceDefinition(REGION1, Orientation.FORWARD, "", null, null);
         // SGL.
         new SequenceDefinition(REGION1, Orientation.FORWARD, INSERT, null, null);
         new SequenceDefinition(null, null, INSERT, REGION2, Orientation.FORWARD);
@@ -36,7 +36,7 @@ public class SequenceDefinitionTest
     public void testConstructorInvalid()
     {
         // Single region but wrong format.
-        assertThrows(IllegalArgumentException.class, () -> new SequenceDefinition(REGION1, Orientation.FORWARD, "", null, null));
+        assertThrows(IllegalArgumentException.class, () -> new SequenceDefinition(REGION1, null, "", null, null));
         assertThrows(IllegalArgumentException.class, () -> new SequenceDefinition(null, null, "", REGION2, null));
         assertThrows(IllegalArgumentException.class, () -> new SequenceDefinition(null, null, "", REGION2, Orientation.FORWARD));
 
@@ -58,7 +58,7 @@ public class SequenceDefinitionTest
     public void testSingleRegion()
     {
         SequenceDefinition actual = SequenceDefinition.singleRegion(REGION1);
-        SequenceDefinition expected = new SequenceDefinition(REGION1, null, "", null, null);
+        SequenceDefinition expected = new SequenceDefinition(REGION1, Orientation.FORWARD, "", null, null);
         assertEquals(expected, actual);
         assertTrue(actual.isSingleRegion());
         assertEquals(REGION1, actual.singleRegion());

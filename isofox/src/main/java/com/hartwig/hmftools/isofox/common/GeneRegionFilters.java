@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadGeneIdsFi
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.ENRICHED_GENE_BUFFER;
+import static com.hartwig.hmftools.isofox.IsofoxConstants.populateExcludedRegions;
 
 import java.util.Arrays;
 import java.util.List;
@@ -32,12 +33,13 @@ public class GeneRegionFilters
 
     public final List<String> RestrictedGeneIds; // limit expression analysis to a set of panel genes
     public final List<String> EnrichedGeneIds; // genes to count by not fully process for any functional purpose
-    public final ChrBaseRegion ExcludedRegion;
+    public final List<ChrBaseRegion> ExcludedRegions;
 
     public final List<ChrBaseRegion> ImmuneGeneRegions;
 
     private final RefGenomeVersion mRefGenomeVersion;
     private final List<ChrBaseRegion> mExcludedGeneRegions; // exclude these regions based on geneId, enriched or excluded regions
+    private boolean mHasSpecificRegions;
 
     // config
     private static final String ENRICHED_GENE_IDS = "enriched_gene_ids";
@@ -47,12 +49,15 @@ public class GeneRegionFilters
         RestrictedGeneIds = Lists.newArrayList();
         EnrichedGeneIds = Lists.newArrayList();
         SpecificChrRegions = new SpecificRegions();
+        mHasSpecificRegions = false;
 
         mExcludedGeneRegions = Lists.newArrayList();
         ImmuneGeneRegions = Lists.newArrayList();
 
         mRefGenomeVersion = refGenomeVersion;
-        ExcludedRegion = getPolyGRegion(refGenomeVersion);
+        ExcludedRegions = Lists.newArrayList();
+
+        populateExcludedRegions(ExcludedRegions, refGenomeVersion);
     }
 
     public static void registerConfig(final ConfigBuilder configBuilder)
@@ -89,6 +94,7 @@ public class GeneRegionFilters
         try
         {
             loadSpecificChromsomesOrRegions(configBuilder, SpecificChrRegions.Chromosomes, SpecificChrRegions.Regions);
+            mHasSpecificRegions = SpecificChrRegions.hasFilters();
         }
         catch(ParseException e)
         {
@@ -107,11 +113,14 @@ public class GeneRegionFilters
         if(!HumanChromosome.contains(chromosome))
             return true;
 
-        if(SpecificChrRegions.excludeChromosome(chromosome))
-            return true;
+        if(mHasSpecificRegions)
+        {
+            if(SpecificChrRegions.excludeChromosome(chromosome))
+                return true;
 
-        if(SpecificChrRegions.excludePosition(chromosome, position))
-            return true;
+            if(SpecificChrRegions.excludePosition(chromosome, position))
+                return true;
+        }
 
         if(mExcludedGeneRegions.stream().anyMatch(x -> x.containsPosition(chromosome, position)))
             return true;
@@ -121,7 +130,7 @@ public class GeneRegionFilters
 
     public void buildGeneRegions(final EnsemblDataCache geneTransCache)
     {
-        mExcludedGeneRegions.add(ExcludedRegion);
+        mExcludedGeneRegions.addAll(ExcludedRegions);
 
         EnrichedGeneIds.stream()
                 .map(x -> geneTransCache.getGeneDataById(x))

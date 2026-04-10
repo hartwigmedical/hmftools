@@ -177,7 +177,7 @@ public class ReadContextCounter
         {
             mMatcher = new ReadContextMatcher(mReadContext, true, isReferenceSample);
 
-            mVariantVis = config.Visualiser.Enabled && config.Visualiser.processVariant(mVariant)
+            mVariantVis = config.Visualiser.enabled() && config.Visualiser.processVariant(mVariant)
                     ? new VariantVis(mConfig, mSample, mVariant, mReadContext, mTier) : null;
         }
 
@@ -370,7 +370,7 @@ public class ReadContextCounter
             return MAP_QUAL;
         }
 
-        if(mConfig.Quality.HighDepthMode && fragmentData == null && isChimericRead(record))
+        if(mConfig.HighDepthMode && fragmentData == null && isChimericRead(record))
         {
             addVariantVisRecord(record, ReadContextMatch.NONE, null, fragmentData);
             return CHIMERIC;
@@ -662,7 +662,7 @@ public class ReadContextCounter
 
     private boolean belowQualThreshold(double calcBaseQuality)
     {
-        return mConfig.Quality.HighDepthMode && !mQualCache.usesMsiIndelErrorQual() && !isHighBaseQual(calcBaseQuality);
+        return mConfig.HighDepthMode && !mQualCache.usesMsiIndelErrorQual() && !isHighBaseQual(calcBaseQuality);
     }
 
     private void registerReadSupport(

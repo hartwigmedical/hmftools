@@ -342,7 +342,7 @@ public class ResultsWriter
                     continue;
 
                 mExonDataWriter.write(format("%s,%s,%d,%s",
-                        geneReadData.GeneData.GeneId, geneReadData.GeneData.GeneName, transData.TransId, transData.TransName));
+                        geneReadData.Gene.GeneId, geneReadData.Gene.GeneName, transData.TransId, transData.TransName));
 
                 mExonDataWriter.write(format(",%d,%d,%d,%d",
                         exon.Rank, exon.Start, exon.End, exonReadData.getTransExonRefs().size()));
@@ -440,10 +440,10 @@ public class ResultsWriter
                                 continue;
 
                             GeneReadData geneData = geneCollection.genes().stream()
-                                    .filter(x -> x.GeneData.GeneId.equals(transExonRef.GeneId)).findFirst().orElse(null);
+                                    .filter(x -> x.Gene.GeneId.equals(transExonRef.GeneId)).findFirst().orElse(null);
 
                             sjData = new SpliceJunctionData(
-                                    geneData.GeneData.GeneId, geneData.GeneData.GeneName,
+                                    geneData.Gene.GeneId, geneData.Gene.GeneName,
                                     prevExonEnd, nextExonStart, prevRegion.getBoundaryBaseDepth(SE_END),
                                     regionReadData.getBoundaryBaseDepth(SE_START), nextSpliceCount);
 

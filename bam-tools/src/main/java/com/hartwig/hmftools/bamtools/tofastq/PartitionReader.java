@@ -3,7 +3,9 @@ package com.hartwig.hmftools.bamtools.tofastq;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.BQSR_ORIGINAL_QUALS;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
+import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.extractTagQualValues;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -119,6 +121,21 @@ public class PartitionReader implements AutoCloseable
 
         if(read.getCigar().containsOperator(CigarOperator.HARD_CLIP)) // hard-clips are only present on supplementaries so ignore
             return;
+
+        if(mConfig.BqsrReverse && read.hasAttribute(BQSR_ORIGINAL_QUALS))
+        {
+            String originalQualsStr = read.getStringAttribute(BQSR_ORIGINAL_QUALS);
+
+            final byte[] originalQuals = extractTagQualValues(originalQualsStr);
+            final byte[] baseQuals = read.getBaseQualities();
+
+            for(int i = 0; i < baseQuals.length; ++i)
+            {
+                baseQuals[i] = originalQuals[i];
+            }
+
+            read.setBaseQualities(baseQuals);
+        }
 
         if(!read.getReadPairedFlag())
         {

@@ -208,7 +208,7 @@ public class ChimericReadTest
         chimericRT.clear();
 
         // a DEL more than 500K from the gene boundary is considered chimeric
-        int geneEnd = gc2.genes().stream().mapToInt(x -> x.GeneData.GeneEnd).max().orElse(0);
+        int geneEnd = gc2.genes().stream().mapToInt(x -> x.Gene.GeneEnd).max().orElse(0);
         int chimericJunc = geneEnd + MAX_NOVEL_SJ_DISTANCE + 1; // 511501
         read1 = createMappedRead(
                 ++readId, gc2, 10481, chimericJunc + 19,

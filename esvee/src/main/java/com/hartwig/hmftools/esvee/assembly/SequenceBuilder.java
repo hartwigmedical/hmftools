@@ -273,7 +273,16 @@ public class SequenceBuilder
 
                 for(ReadParseState read : activeReads)
                 {
-                    read.addBaseMatch(aboveMinQual(read.currentQual()));
+                    // low qual mismatches could have occurred before a consensus was formed, so check again for a match
+                    if(read.currentBase() == consensusBase)
+                    {
+                        read.addBaseMatch(aboveMinQual(read.currentQual()));
+                    }
+                    else
+                    {
+                        read.addMismatchInfo(SequenceDiffInfo.fromSnv(read, mCurrentIndex));
+                    }
+
                     read.moveNext();
                 }
             }
@@ -996,11 +1005,11 @@ public class SequenceBuilder
         int penaltyCount;
         if(repeatCount < READ_MISMATCH_MEDIUM_REPEAT_COUNT)
         {
-            penaltyCount = max(repeatCountDiff - 1, 0);
+            penaltyCount = max(repeatCountDiff - 1, 0); // zero penalty for 1 difference
         }
         else if(repeatCount < READ_MISMATCH_LONG_REPEAT_COUNT)
         {
-            penaltyCount = max(repeatCountDiff - 2, 0);
+            penaltyCount = max(repeatCountDiff - 2, 0); // zero penalty for 2 differences
         }
         else
         {

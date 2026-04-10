@@ -17,16 +17,17 @@ public interface NovelSpliceJunction
     String chromosome();
 
     int junctionStart();
-
     int junctionEnd();
 
     @NotNull
     AltSpliceJunctionType type();
 
+    int exonStart();
+    int exonEnd();
+
     int fragmentCount();
 
     int depthStart();
-
     int depthEnd();
 
     @NotNull

@@ -120,7 +120,8 @@ public class RegionPonTask
         // filter & finalise variants
         filterVariants();
 
-        PV_LOGGER.debug("region({}) complete, variants(filter={} cached={}})", mRegion, mVariantCache.variantCount(), cachedVariantCount);
+        PV_LOGGER.debug("region({}) complete, variants(filter={} cached={})",
+                mRegion, mVariantCache.variantCount(), cachedVariantCount);
     }
 
     private void resetSearchIndices()

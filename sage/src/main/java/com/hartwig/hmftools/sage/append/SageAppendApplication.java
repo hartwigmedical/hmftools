@@ -186,11 +186,9 @@ public class SageAppendApplication
 
         Map<String, BqrRecordMap> recalibrationMap = bqrCache.getSampleRecalibrationMap();
 
-        List<String> msiSamples = mConfig.Common.MsiSampleOverride ? Lists.newArrayList(mConfig.Common.ReferenceIds) : Collections.emptyList();
-
         MsiJitterCalcs msiJitterCalcs = MsiJitterCalcs.build(
                 mConfig.Common.ReferenceIds, !mConfig.Common.SkipMsiJitter ? mConfig.Common.JitterBqrDir : null,
-                mConfig.Common.Quality.HighDepthMode, msiSamples);
+                mConfig.Common.HighDepthMode);
 
         ChromosomePartition chromosomePartition = new ChromosomePartition(mConfig.Common, mRefGenome);
 
@@ -320,11 +318,6 @@ public class SageAppendApplication
         configBuilder.checkAndParseCommandLine(args);
 
         SageAppendApplication application = new SageAppendApplication(configBuilder);
-        if(application.mConfig.Common.Visualiser.Enabled && application.mConfig.Common.Visualiser.noVariants())
-        {
-            SG_LOGGER.info("No reportable variants to visualise. Exiting.");
-            return;
-        }
 
         try
         {

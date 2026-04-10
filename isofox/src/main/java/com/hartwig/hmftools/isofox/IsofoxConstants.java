@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.isofox;
 
 import static com.hartwig.hmftools.common.immune.ImmuneRegions.getIgRegions;
+import static com.hartwig.hmftools.common.region.ExcludedRegions.getPolyGRegion;
 
 import java.util.List;
 
@@ -57,6 +58,17 @@ public class IsofoxConstants
         }
     }
 
+    public static void populateExcludedRegions(final List<ChrBaseRegion> excludedRegions, final RefGenomeVersion refGenomeVersion)
+    {
+        excludedRegions.add(getPolyGRegion(refGenomeVersion));
+
+        if(refGenomeVersion == RefGenomeVersion.V38)
+        {
+            // region with poor ribosomal depletion
+            excludedRegions.add(new ChrBaseRegion("chr21", 8200000, 8450000));
+        }
+    }
+
     // process genes with longer expected processing times first
     public static final List<String> PRIORITISED_CHROMOSOMES = Lists.newArrayList("14", "22", "2", "3", "6", "9", "16", "17");
 
@@ -72,4 +84,12 @@ public class IsofoxConstants
     }
 
     public static final String DEFAULT_EXPECTED_RATE_LENGTHS = "50-1;75-1;100-1;125-1;150-1;200-1;250-1;300-1;400-1;550-1";
+
+    public static final List<ChrBaseRegion> CHIMERIC_EXCLUDED_REGIONS_V37 = List.of(
+            new ChrBaseRegion("2",118847180, 118847191),
+            new ChrBaseRegion("7",101270000, 101280000));
+
+    public static final List<ChrBaseRegion> CHIMERIC_EXCLUDED_REGIONS_V38 = List.of(
+            new ChrBaseRegion("chr2",118089000, 118091000),
+            new ChrBaseRegion("chr7",101625000, 101635000));
 }

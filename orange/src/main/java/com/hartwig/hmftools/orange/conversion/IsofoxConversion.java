@@ -104,6 +104,8 @@ public final class IsofoxConversion
                 .junctionStart(novelSpliceJunction.junctionStart())
                 .junctionEnd(novelSpliceJunction.junctionEnd())
                 .type(AltSpliceJunctionType.valueOf(novelSpliceJunction.type().name()))
+                .exonStart(novelSpliceJunction.exonStart())
+                .exonEnd(novelSpliceJunction.exonEnd())
                 .fragmentCount(novelSpliceJunction.fragmentCount())
                 .depthStart(novelSpliceJunction.depthStart())
                 .depthEnd(novelSpliceJunction.depthEnd())

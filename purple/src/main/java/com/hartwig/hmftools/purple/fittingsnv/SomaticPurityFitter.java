@@ -9,10 +9,12 @@ import static java.util.stream.Collectors.toList;
 
 import static com.hartwig.hmftools.common.variant.CodingEffect.MISSENSE;
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONSENSE_OR_FRAMESHIFT;
+import static com.hartwig.hmftools.common.variant.CodingEffect.SPLICE;
 import static com.hartwig.hmftools.common.variant.PaveVcfTags.GNOMAD_FREQ;
 import static com.hartwig.hmftools.common.variant.PaveVcfTags.MAPPABILITY;
 import static com.hartwig.hmftools.common.variant.VariantType.INDEL;
 import static com.hartwig.hmftools.purple.PurpleConstants.HOTSPOT_GNOMAD_FREQ_THRESHOLD;
+import static com.hartwig.hmftools.purple.PurpleConstants.PANEL_GNOMAD_FREQ_THRESHOLD;
 import static com.hartwig.hmftools.purple.PurpleConstants.PURITY_INCREMENT_DEFAULT;
 import static com.hartwig.hmftools.purple.PurpleConstants.SOMATIC_FIT_TUMOR_ONLY_HOTSPOT_VAF_CUTOFF;
 import static com.hartwig.hmftools.purple.PurpleConstants.SOMATIC_FIT_TUMOR_ONLY_VAF_MAX;
@@ -130,16 +132,7 @@ public class SomaticPurityFitter
             }
 
             if(!isFittingCandidate(variant))
-            {
                 continue;
-            }
-
-            /*
-            if(variant.type() == INDEL)
-            {
-                PPL_LOGGER.debug("variant({}) used for fitting with vaf({})", variant, format("%.2f", variant.alleleFrequency()));
-            }
-            */
 
             Optional<ObservedRegion> region = observedRegionSelector.select(variant);
 
@@ -175,46 +168,50 @@ public class SomaticPurityFitter
 
         VariantTier variantTier = variant.decorator().tier();
 
-        boolean isHotspotType = variant.isHotspotType();
-
         double variantGnomadFreq = variant.context().getAttributeAsDouble(GNOMAD_FREQ, -1);
 
-        if(variantGnomadFreq > 0 && variantGnomadFreq < HOTSPOT_GNOMAD_FREQ_THRESHOLD && isHotspotType)
+        if(variantGnomadFreq > 0)
         {
-            return true;
+            if(variant.isHotspot() && variantGnomadFreq < HOTSPOT_GNOMAD_FREQ_THRESHOLD)
+                return true;
+
+            if(variant.tier() == VariantTier.PANEL && variantGnomadFreq < PANEL_GNOMAD_FREQ_THRESHOLD)
+                return true;
         }
 
-        if(!isHotspotType)
+        boolean isHotspotType = variant.isHotspotType();
+
+        if(isHotspotType) // this does mean that a panel variant which is pathogenic in Clinvar has no further Gnomad freq checks
+            return true;
+
+        if(variantGnomadFreq > 0)
         {
-            if(variant.context().hasAttribute(GNOMAD_FREQ))
-            {
-                logFilteredFittingCandidate(variant, "gnomad frequency");
-                return false;
-            }
+            logFilteredFittingCandidate(variant, "Gnomad frequency");
+            return false;
+        }
 
-            if(variantTier == VariantTier.LOW_CONFIDENCE || variantTier == VariantTier.UNKNOWN)
-            {
-                logFilteredFittingCandidate(variant, "low tier");
-                return false;
-            }
+        if(variantTier == VariantTier.LOW_CONFIDENCE || variantTier == VariantTier.UNKNOWN)
+        {
+            logFilteredFittingCandidate(variant, "low tier");
+            return false;
+        }
 
-            if(variant.decorator().repeatCount() > SNV_FITTING_MAX_REPEATS)
-            {
-                logFilteredFittingCandidate(variant, "max repeats");
-                return false;
-            }
+        if(variant.decorator().repeatCount() > SNV_FITTING_MAX_REPEATS)
+        {
+            logFilteredFittingCandidate(variant, "max repeats");
+            return false;
+        }
 
-            if(variant.context().hasAttribute(MAPPABILITY) && variant.decorator().mappability() < SNV_FITTING_MAPPABILITY)
-            {
-                logFilteredFittingCandidate(variant, "mappability");
-                return false;
-            }
+        if(variant.context().hasAttribute(MAPPABILITY) && variant.decorator().mappability() < SNV_FITTING_MAPPABILITY)
+        {
+            logFilteredFittingCandidate(variant, "mappability");
+            return false;
+        }
 
-            if(variant.referenceAlleleReadCount() > 0)
-            {
-                logFilteredFittingCandidate(variant, "germline allele count");
-                return false;
-            }
+        if(variant.referenceAlleleReadCount() > 0)
+        {
+            logFilteredFittingCandidate(variant, "germline allele count");
+            return false;
         }
 
         return true;
@@ -340,7 +337,7 @@ public class SomaticPurityFitter
 
                 CodingEffect codingEffect = variant.variantImpact().CanonicalCodingEffect;
 
-                if(codingEffect != NONSENSE_OR_FRAMESHIFT && codingEffect != MISSENSE)
+                if(codingEffect != NONSENSE_OR_FRAMESHIFT && codingEffect != MISSENSE && codingEffect != SPLICE)
                 {
                     continue;
                 }
@@ -360,9 +357,16 @@ public class SomaticPurityFitter
                 {
                     continue;
                 }
+                else if(codingEffect == SPLICE && !driverGene.reportSplice())
+                {
+                    continue;
+                }
             }
 
             double vaf = variant.alleleFrequency();
+
+            if(vaf < SOMATIC_FIT_TUMOR_ONLY_VAF_MIN)
+                continue;
 
             if(variant.isHotspotType())
             {
@@ -370,24 +374,15 @@ public class SomaticPurityFitter
             }
             else
             {
-                if(vaf < SOMATIC_FIT_TUMOR_ONLY_VAF_MIN)
-                {
-                    continue;
-                }
-
                 if(tumorOnlyMode && vaf > SOMATIC_FIT_TUMOR_ONLY_VAF_MAX)
-                {
                     continue;
-                }
             }
 
             variantVafs.add(vaf);
         }
 
         if(variantVafs.isEmpty())
-        {
             return null;
-        }
 
         double vaf75thPercentile = calc75thPercentileValue(variantVafs);
 

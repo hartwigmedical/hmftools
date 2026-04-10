@@ -45,9 +45,6 @@ public final class HtmlUtil
     // styles
     public static final CssBuilder BASE_FONT_STYLE = CssBuilder.EMPTY.fontSizePt(BASE_FONT_SIZE).fontFamily("sans-serif");
 
-    public static final DomContent JQUERY_SCRIPT =
-            rawHtml("<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js\"></script>");
-
     private static final AtomicReference<DomContent> JAVASCRIPT = new AtomicReference<>(null);
 
     public static DomContent styledTable(final List<DomContent> elems, final CssBuilder style)

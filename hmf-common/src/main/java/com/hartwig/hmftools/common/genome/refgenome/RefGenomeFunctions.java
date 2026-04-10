@@ -5,8 +5,6 @@ import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.CHR_
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import htsjdk.samtools.SamReader;
-
 public final class RefGenomeFunctions
 {
     public static final Logger LOGGER = LogManager.getLogger(RefGenomeFunctions.class);

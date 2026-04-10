@@ -66,7 +66,7 @@ public class ExpressionReadTracker
         if(!mEnabled)
             return;
 
-        List<String> unsplicedGeneIds = overlapGenes.stream().map(x -> x.GeneData.GeneId).collect(Collectors.toList());
+        List<String> unsplicedGeneIds = overlapGenes.stream().map(x -> x.Gene.GeneId).collect(Collectors.toList());
 
         if(!unsplicedGeneIds.isEmpty())
         {
@@ -83,7 +83,7 @@ public class ExpressionReadTracker
             return;
 
         List<String> unsplicedGeneIds = comboTransMatchType == FragmentMatchType.SHORT ?
-                overlapGenes.stream().map(x -> x.GeneData.GeneId).collect(Collectors.toList()) : Lists.newArrayList();
+                overlapGenes.stream().map(x -> x.Gene.GeneId).collect(Collectors.toList()) : Lists.newArrayList();
 
         CategoryCountsData catCounts = getCategoryCountsData(validTranscripts, unsplicedGeneIds);
         addGcCounts(catCounts, commonMappings, minMapQuality);
@@ -94,7 +94,7 @@ public class ExpressionReadTracker
         if(!mEnabled)
             return;
 
-        List<String> unsplicedGeneIds = genes.stream().map(x -> x.GeneData.GeneId).collect(Collectors.toList());
+        List<String> unsplicedGeneIds = genes.stream().map(x -> x.Gene.GeneId).collect(Collectors.toList());
 
         if(!unsplicedGeneIds.isEmpty())
         {
@@ -113,7 +113,7 @@ public class ExpressionReadTracker
         // add to category counts
         final int[] enrichedRegion = mGenes.getEnrichedRegion();
         final List<String> unsplicedGeneIds = mGenes.findGenesCoveringRange(enrichedRegion[SE_START], enrichedRegion[SE_END], true)
-                .stream().map(x -> x.GeneData.GeneId).collect(Collectors.toList());
+                .stream().map(x -> x.Gene.GeneId).collect(Collectors.toList());
 
         final List<Integer> transIds = mGenes.getEnrichedTranscripts().stream().map(x -> Integer.valueOf(x.TransId)).collect(Collectors.toList());
         CategoryCountsData catCounts = getCategoryCountsData(transIds, unsplicedGeneIds);

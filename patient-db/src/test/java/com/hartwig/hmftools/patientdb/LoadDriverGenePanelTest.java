@@ -55,7 +55,7 @@ public class LoadDriverGenePanelTest extends DatabaseTestBase
                 .reportPGX(false)
                 .reportHighExpression(false)
                 .reportLowExpression(false)
-                .reportNovelSpliceJunctions(false)
+                .reportNovelSpliceJunction(false)
                 .build();
     }
 }

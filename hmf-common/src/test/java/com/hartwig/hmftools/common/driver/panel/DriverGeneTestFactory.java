@@ -34,6 +34,6 @@ public final class DriverGeneTestFactory
                 .reportPGX(false)
                 .reportHighExpression(false)
                 .reportLowExpression(false)
-                .reportNovelSpliceJunctions(false);
+                .reportNovelSpliceJunction(false);
     }
 }

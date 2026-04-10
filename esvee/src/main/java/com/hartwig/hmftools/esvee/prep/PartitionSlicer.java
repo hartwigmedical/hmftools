@@ -198,16 +198,6 @@ public class PartitionSlicer
 
     private void processFilteredRead(final PrepRead read)
     {
-        // check criteria to keep an otherwise filtered, to see if it supports a non-filtered read or location
-        if(mConfig.PerfDebug)
-        {
-            for(ReadFilterType type : ReadFilterType.values())
-            {
-                if(type.isSet(read.filters()))
-                    ++mStats.ReadFilterCounts[type.index()];
-            }
-        }
-
         // check for any evidence of support for an SV
         boolean isSupportCandidate = mReadFilters.isCandidateSupportingRead(read);
 

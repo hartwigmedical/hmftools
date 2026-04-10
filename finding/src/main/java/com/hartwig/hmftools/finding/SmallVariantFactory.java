@@ -148,6 +148,7 @@ final class SmallVariantFactory
                 .repeatCount(variant.repeatCount())
                 .subclonalLikelihood(variant.subclonalLikelihood())
                 .localPhaseSets(variant.localPhaseSets())
+                .visualisationFile(VisualisationFileUtil.createNullable(variant.plotFilename()))
                 .build();
     }
 
