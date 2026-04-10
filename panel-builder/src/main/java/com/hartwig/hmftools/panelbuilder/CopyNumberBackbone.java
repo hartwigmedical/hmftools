@@ -35,15 +35,15 @@ import com.hartwig.hmftools.common.utils.file.DelimFileReader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-// Probes based on Amber heterozygous sites, used to calculate accurate copy number.
+// Probes based on heterozygous SNP sites, used to calculate accurate copy number.
 // Methodology:
 //   - Divide chromosomes into large partitions;
-//   - In each partition, generate candidate probes on each Amber site.
-//      Or if on chrY and there are no Amber sites, consider all probe positions in the partition.
+//   - In each partition, generate candidate probes on each heterozygous site.
+//      Or if on chrY and there are no heterozygous sites, consider all probe positions in the partition.
 //   - In each partition, select the acceptable probe with the best GC content.
 public class CopyNumberBackbone
 {
-    private final String mAmberSitesFile;
+    private final String mHetSitesFile;
     private final int mResolution;
     private final RefGenomeVersion mRefGenomeVersion;
     private final ProbeGenerator mProbeGenerator;
@@ -61,10 +61,10 @@ public class CopyNumberBackbone
 
     private static final Logger LOGGER = LogManager.getLogger(CopyNumberBackbone.class);
 
-    public CopyNumberBackbone(final String amberSitesFile, int resolution, final RefGenomeVersion refGenomeVersion,
+    public CopyNumberBackbone(final String hetSitesFile, int resolution, final RefGenomeVersion refGenomeVersion,
             final ProbeGenerator probeGenerator, PanelData panelData)
     {
-        mAmberSitesFile = amberSitesFile;
+        mHetSitesFile = hetSitesFile;
         mResolution = resolution;
         mRefGenomeVersion = refGenomeVersion;
         mProbeGenerator = probeGenerator;
@@ -77,23 +77,23 @@ public class CopyNumberBackbone
 
         Map<String, List<Partition>> partitions = createPartitions();
 
-        populateAmberSites(partitions);
+        populateHetSites(partitions);
 
         generateProbes(partitions);
 
         LOGGER.info("Done generating copy number backbone probes");
     }
 
-    private record AmberSite(
+    private record HeterozygousSite(
             BasePosition position,
             double gnomadFreq
     )
     {
     }
 
-    private static List<AmberSite> loadAmberSitesFile(final String path)
+    private static List<HeterozygousSite> loadHetSitesFile(final String path)
     {
-        LOGGER.debug("Loading Amber sites file: {}", path);
+        LOGGER.debug("Loading heterozygous sites file: {}", path);
 
         try(DelimFileReader reader = new DelimFileReader(path))
         {
@@ -101,15 +101,15 @@ public class CopyNumberBackbone
             int posIndex = requireNonNull(reader.getColumnIndex(FLD_POSITION));
             int gnomadIndex = requireNonNull(reader.getColumnIndex(FLD_GNOMAD_FREQ));
 
-            List<AmberSite> sites = reader.stream().map(row ->
+            List<HeterozygousSite> sites = reader.stream().map(row ->
             {
                 String chromosome = row.get(chrIndex);
                 int position = row.getInt(posIndex);
                 double gnomadFreq = row.getDouble(gnomadIndex);
-                return new AmberSite(new BasePosition(chromosome, position), gnomadFreq);
+                return new HeterozygousSite(new BasePosition(chromosome, position), gnomadFreq);
             }).toList();
 
-            LOGGER.debug("Loaded {} Amber sites from {}", sites.size(), path);
+            LOGGER.debug("Loaded {} heterozygous sites from {}", sites.size(), path);
             return sites;
         }
     }
@@ -117,7 +117,7 @@ public class CopyNumberBackbone
     private static class Partition
     {
         public final ChrBaseRegion Region;
-        public final List<AmberSite> Sites;
+        public final List<HeterozygousSite> Sites;
 
         public Partition(final ChrBaseRegion region)
         {
@@ -157,7 +157,7 @@ public class CopyNumberBackbone
         }).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
-    private void populateAmberSites(Map<String, List<Partition>> partitions)
+    private void populateHetSites(Map<String, List<Partition>> partitions)
     {
         enum SiteFilter
         {
@@ -166,9 +166,9 @@ public class CopyNumberBackbone
             GNOMAD_FREQ
         }
 
-        List<AmberSite> sites = loadAmberSitesFile(mAmberSitesFile);
+        List<HeterozygousSite> sites = loadHetSitesFile(mHetSitesFile);
         int[] siteFilterCounts = new int[SiteFilter.values().length];
-        for(AmberSite site : sites)
+        for(HeterozygousSite site : sites)
         {
             if(!(site.gnomadFreq() >= CN_BACKBONE_GNOMAD_FREQ_MIN && site.gnomadFreq() <= CN_BACKBONE_GNOMAD_FREQ_MAX))
             {
@@ -199,7 +199,7 @@ public class CopyNumberBackbone
 
         String filterCountStr = Arrays.stream(SiteFilter.values())
                 .map(x -> format("%s=%d", x.toString(), siteFilterCounts[x.ordinal()])).collect(Collectors.joining(", "));
-        LOGGER.debug("Amber site filters: {}", filterCountStr);
+        LOGGER.debug("Het site filters: {}", filterCountStr);
     }
 
     private void generateProbes(final Map<String, List<Partition>> partitions)
@@ -218,7 +218,7 @@ public class CopyNumberBackbone
 
     private static ProbeGenerationSpec createProbeGenerationSpec(final Partition partition)
     {
-        LOGGER.trace("Generating probes for {} with {} Amber sites", partition.Region, partition.Sites.size());
+        LOGGER.trace("Generating probes for {} with {} het sites", partition.Region, partition.Sites.size());
 
         TargetMetadata metadata = createTargetMetadata(partition.Region);
 
@@ -234,7 +234,7 @@ public class CopyNumberBackbone
         {
             BaseRegion positionBounds = new BaseRegion(partition.Region.start() + PROBE_LENGTH, partition.Region.end() - PROBE_LENGTH);
             List<BasePosition> candidatePositions = partition.Sites.stream()
-                    .map(AmberSite::position)
+                    .map(HeterozygousSite::position)
                     // Plausible that a site is near the edge of a partition such that the probe goes outside the partition.
                     // Filter these out to avoid probe overlap, since there are many probes to choose from.
                     .filter(position -> positionBounds.containsPosition(position.Position))
