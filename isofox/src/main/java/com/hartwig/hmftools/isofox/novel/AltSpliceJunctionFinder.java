@@ -83,7 +83,7 @@ public class AltSpliceJunctionFinder
         mGenes = null;
 
         mReportableGenes = config.DriverGenes.values().stream()
-                .filter(x -> x.reportNovelSpliceJunctions()).map(x -> x.gene()).collect(Collectors.toSet());
+                .filter(x -> x.reportNovelSpliceJunction()).map(x -> x.gene()).collect(Collectors.toSet());
 
         mKnownExonDelDupGenes = config.Fusions.KnownFusions.getDataByType(KnownFusionType.EXON_DEL_DUP).stream()
                 .map(x -> x.FiveGene).collect(Collectors.toSet());

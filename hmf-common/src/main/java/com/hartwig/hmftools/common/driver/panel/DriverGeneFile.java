@@ -66,7 +66,7 @@ public final class DriverGeneFile
         reportPGX,
         reportHighExpression,
         reportLowExpression,
-        reportNovelSpliceJunctions;
+        reportNovelSpliceJunction;
     }
 
     public static List<DriverGene> fromLines(final List<String> lines)
@@ -102,7 +102,7 @@ public final class DriverGeneFile
 
         Integer rnaExpLowIndex = fieldsIndexMap.get(Columns.reportLowExpression.toString());
         Integer rnaExpHighIndex = fieldsIndexMap.get(Columns.reportHighExpression.toString());
-        Integer rnaNovelSjIndex = fieldsIndexMap.get(Columns.reportNovelSpliceJunctions.toString());
+        Integer rnaNovelSjIndex = fieldsIndexMap.get(Columns.reportNovelSpliceJunction.toString());
 
         ImmutableDriverGene.Builder builder = ImmutableDriverGene.builder();
 
@@ -151,7 +151,7 @@ public final class DriverGeneFile
                     .reportPGX(Boolean.parseBoolean(values[reportPGXIndex]))
                     .reportLowExpression(rnaExpLowIndex != null ? Boolean.parseBoolean(values[rnaExpLowIndex]) : false)
                     .reportHighExpression(rnaExpHighIndex != null ? Boolean.parseBoolean(values[rnaExpHighIndex]) : false)
-                    .reportNovelSpliceJunctions(rnaNovelSjIndex != null ? Boolean.parseBoolean(values[rnaNovelSjIndex]) : false);
+                    .reportNovelSpliceJunction(rnaNovelSjIndex != null ? Boolean.parseBoolean(values[rnaNovelSjIndex]) : false);
 
             driverGenes.add(builder.build());
         }
@@ -206,7 +206,7 @@ public final class DriverGeneFile
                 .add(String.valueOf(gene.reportPGX()))
                 .add(String.valueOf(gene.reportLowExpression()))
                 .add(String.valueOf(gene.reportHighExpression()))
-                .add(String.valueOf(gene.reportNovelSpliceJunctions()))
+                .add(String.valueOf(gene.reportNovelSpliceJunction()))
                 .toString();
     }
 

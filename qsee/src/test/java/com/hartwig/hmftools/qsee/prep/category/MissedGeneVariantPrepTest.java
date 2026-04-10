@@ -89,7 +89,7 @@ public class MissedGeneVariantPrepTest
                 .reportPGX(false)
                 .reportHighExpression(false)
                 .reportLowExpression(false)
-                .reportNovelSpliceJunctions(false)
+                .reportNovelSpliceJunction(false)
                 .build();
 
         DriverGene geneBRCA1 = ImmutableDriverGene.builder()
@@ -114,7 +114,7 @@ public class MissedGeneVariantPrepTest
                 .reportPGX(false)
                 .reportHighExpression(false)
                 .reportLowExpression(false)
-                .reportNovelSpliceJunctions(false)
+                .reportNovelSpliceJunction(false)
                 .build();
 
         return List.of(geneAR, geneBRCA1);

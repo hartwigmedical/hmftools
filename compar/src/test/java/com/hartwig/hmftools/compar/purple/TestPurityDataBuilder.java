@@ -79,7 +79,6 @@ public class TestPurityDataBuilder
                 .deletedGenes(-1)
                 .amberMeanDepth(-1)
                 .lohPercent(-1)
-                .chimerismPercentage(-1)
                 .build();
         FittedPurityScore score = ImmutableFittedPurityScore.builder()
                 .minPurity(-1)

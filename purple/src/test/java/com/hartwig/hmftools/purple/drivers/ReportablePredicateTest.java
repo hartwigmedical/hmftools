@@ -65,7 +65,7 @@ public class ReportablePredicateTest
                 .reportPGX(false)
                 .reportHighExpression(false)
                 .reportLowExpression(false)
-                .reportNovelSpliceJunctions(false)
+                .reportNovelSpliceJunction(false)
                 .build());
 
         ReportablePredicate predicate = new ReportablePredicate(ONCO, driverGenes);

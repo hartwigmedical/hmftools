@@ -803,7 +803,7 @@ public class GermlineAmpDelFinderTest
                 .reportPGX(true)
                 .reportHighExpression(false)
                 .reportLowExpression(false)
-                .reportNovelSpliceJunctions(false)
+                .reportNovelSpliceJunction(false)
                 .build();
         Preconditions.checkState(Objects.equals(result.gene(), geneName));
         Preconditions.checkState(Objects.equals(result.reportGermlineDeletion(), reporting));

@@ -60,7 +60,7 @@ public interface DriverGene extends Comparable<DriverGene>
 
     boolean reportLowExpression();
 
-    boolean reportNovelSpliceJunctions();
+    boolean reportNovelSpliceJunction();
 
     @Override
     default int compareTo(@NotNull final DriverGene o)
