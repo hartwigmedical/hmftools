@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
+import static com.hartwig.hmftools.common.utils.config.ConfigItem.enumValueSelectionAsStr;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.IGNORE_SAMPLE_ID;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
@@ -18,6 +19,7 @@ import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.joinEnumsToStr;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
@@ -59,6 +61,7 @@ import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.common.MatchLevel;
+import com.hartwig.hmftools.compar.common.WriteType;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.logging.log4j.LogManager;
@@ -87,7 +90,7 @@ public class ComparConfig
     public final String OutputId;
     public final String ExpectedMismatchFile;
 
-    public final boolean WriteDetailed;
+    public final List<WriteType> WriteTypes;
     public final boolean IncludeMatches;
     public final int Threads;
 
@@ -103,6 +106,7 @@ public class ComparConfig
     public static final String DB_SOURCE = "db_source";
     public static final String THRESHOLDS = "thresholds";
 
+    public static final String WRITE_TYPES = "write_types";
     public static final String WRITE_DETAILED_FILES = "write_detailed";
     public static final String INCLUDE_MATCHES = "include_matches";
     public static final String RESTRICT_TO_DRIVERS = "restrict_to_drivers";
@@ -158,7 +162,18 @@ public class ComparConfig
         OutputDir = parseOutputDir(configBuilder);
         OutputId = configBuilder.getValue(OUTPUT_ID);
         ExpectedMismatchFile = configBuilder.getValue(EXPECTED_MISMATCH_FILE);
-        WriteDetailed = configBuilder.hasFlag(WRITE_DETAILED_FILES);
+
+        WriteTypes = Lists.newArrayList();
+
+        if(configBuilder.hasFlag(WRITE_DETAILED_FILES))
+        {
+            WriteTypes.add(WriteType.TYPE_SPECIFIC);
+        }
+        else
+        {
+            WriteTypes.addAll(WriteType.fromConfigStr(configBuilder.getValue(WRITE_TYPES)));
+        }
+
         IncludeMatches = configBuilder.hasFlag(INCLUDE_MATCHES);
         Threads = parseThreads(configBuilder);
 
@@ -459,6 +474,7 @@ public class ComparConfig
 
         registerConfig(configBuilder);
 
+        configBuilder.addConfigItem(WRITE_TYPES, enumValueSelectionAsStr(WriteType.values(), "Write types"));
         configBuilder.addFlag(WRITE_DETAILED_FILES, "Write per-type details files");
         configBuilder.addConfigItem(EXPECTED_MISMATCH_FILE, "Existing expected mismatch file");
         configBuilder.addFlag(INCLUDE_MATCHES, "Also write matches to output file(s)");
@@ -479,9 +495,9 @@ public class ComparConfig
         Categories = Maps.newHashMap();
         OutputDir = null;
         OutputId = "";
-        WriteDetailed = false;
         IncludeMatches = false;
         Threads = 0;
+        WriteTypes = WriteType.DEFAULT_WRITE_TYPES;
 
         DbConnections = Maps.newHashMap();
         FileSources = Maps.newHashMap();

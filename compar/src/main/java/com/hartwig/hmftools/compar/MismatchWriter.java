@@ -17,6 +17,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.MismatchData;
+import com.hartwig.hmftools.compar.common.WriteType;
 
 public class MismatchWriter
 {
@@ -51,7 +52,7 @@ public class MismatchWriter
 
         try
         {
-            if(mConfig.WriteDetailed)
+            if(mConfig.WriteTypes.contains(WriteType.TYPE_SPECIFIC))
             {
                 List<ItemComparer> comparers = buildComparers(mConfig);
 
@@ -59,7 +60,7 @@ public class MismatchWriter
                 {
                     String detailedFile = filePrefix + "." + comparer.category().toString().toLowerCase() + TSV_EXTENSION;
 
-                    CMP_LOGGER.info("writing output results: {}", detailedFile);
+                    CMP_LOGGER.debug("writing output results: {}", detailedFile);
 
                     BufferedWriter writer = createBufferedWriter(detailedFile, false);
 
@@ -76,11 +77,12 @@ public class MismatchWriter
                     mCategoryWriters.put(comparer.category(), writer);
                 }
             }
-            else
+
+            if(mConfig.WriteTypes.contains(WriteType.GENERIC))
             {
                 String outputFile = filePrefix + TSV_EXTENSION;
 
-                CMP_LOGGER.info("writing output results: {}", outputFile);
+                CMP_LOGGER.debug("writing output results: {}", outputFile);
 
                 mCombinedWriter = createBufferedWriter(outputFile, false);
 
@@ -118,16 +120,34 @@ public class MismatchWriter
         {
             CategoryType category = comparer.category();
 
-            boolean hasSpecificWriter = mCategoryWriters.containsKey(category);
-            BufferedWriter writer = hasSpecificWriter ? mCategoryWriters.get(category) : mCombinedWriter;
+            BufferedWriter categoryWriter = mCategoryWriters.get(category);
 
             for(Mismatch mismatch : mismatches)
             {
                 if(sampleId != null && mConfig.multiSample())
-                    writer.write(String.format("%s\t", sampleId));
+                {
+                    if(mCombinedWriter != null)
+                    {
+                        mCombinedWriter.write(String.format("%s\t", sampleId));
+                    }
 
-                writer.write(MismatchFile.toTsv(mismatch, hasSpecificWriter, comparer.comparedFieldNames()));
-                writer.newLine();
+                    if(categoryWriter != null)
+                    {
+                        categoryWriter.write(String.format("%s\t", sampleId));
+                    }
+                }
+
+                if(mCombinedWriter != null)
+                {
+                    mCombinedWriter.write(MismatchFile.toTsv(mismatch, false, comparer.comparedFieldNames()));
+                    mCombinedWriter.newLine();
+                }
+
+                if(categoryWriter != null)
+                {
+                    categoryWriter.write(MismatchFile.toTsv(mismatch, true, comparer.comparedFieldNames()));
+                    categoryWriter.newLine();
+                }
             }
         }
         catch(IOException e)
