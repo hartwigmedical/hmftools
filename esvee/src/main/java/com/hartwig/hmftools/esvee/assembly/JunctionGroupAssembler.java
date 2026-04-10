@@ -58,7 +58,7 @@ public class JunctionGroupAssembler extends ThreadTask
     private final ReadStats mReadStats;
     private final List<JunctionAssembly> mDecoyAssemblies;
 
-    private final SagaResource mSagaResource;
+    private final SagaMatcher mSagaMatcher;
 
     public JunctionGroupAssembler(
             final AssemblyConfig config, final BamReader bamReader, final SagaResource sagaResource, final TaskQueue junctionGroups, final ResultsWriter resultsWriter)
@@ -77,7 +77,7 @@ public class JunctionGroupAssembler extends ThreadTask
         mCurrentJunctionGroup = null;
         mReadStats = new ReadStats();
 
-        mSagaResource = sagaResource;
+        mSagaMatcher = new SagaMatcher(sagaResource);
     }
 
     public static List<JunctionGroupAssembler> createThreadTasks(
@@ -172,7 +172,7 @@ public class JunctionGroupAssembler extends ThreadTask
         {
             Junction junction = junctionGroup.junctions().get(i);
 
-            JunctionAssembler junctionAssembler = new JunctionAssembler(junction, mConfig.RefGenome, mSagaResource);
+            JunctionAssembler junctionAssembler = new JunctionAssembler(junction, mConfig.RefGenome, mSagaMatcher);
 
             // doesn't seem to be making a big difference, but this is inefficient for long-range junction groups
             // since both the junctions and reads are ordered. Could consider re-ordering by unclipped start and comparing to junction position

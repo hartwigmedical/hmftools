@@ -51,14 +51,14 @@ public class JunctionAssembler
 {
     private Junction mJunction;
     private final RefGenomeInterface mRefGenome;
-    private final SagaResource mSagaResource;
+    private final SagaMatcher mSagaMatcher;
     private final List<Read> mNonJunctionReads;
 
-    public JunctionAssembler(final Junction junction, final RefGenomeInterface refGenome, final SagaResource sagaResource)
+    public JunctionAssembler(final Junction junction, final RefGenomeInterface refGenome, final SagaMatcher sagaMatcher)
     {
         mJunction = junction;
         mRefGenome = refGenome;
-        mSagaResource = sagaResource;
+        mSagaMatcher = sagaMatcher;
         mNonJunctionReads = Lists.newArrayList();
     }
 
@@ -66,8 +66,8 @@ public class JunctionAssembler
 
     public List<JunctionAssembly> processJunction(final List<Read> rawReads)
     {
-        // TODO: actually match by location at prep stage
-        SagaResource.Variant sagaVariantByLocation = SagaMatcher.matchByLocation(mSagaResource, mJunction.Chromosome, mJunction.Position);
+        // TODO: actually match by location at prep stage and conditionally relax filters
+        SagaResource.Variant sagaVariantByLocation = mSagaMatcher.matchByLocation(mJunction.Chromosome, mJunction.Position);
         SV_LOGGER.trace("Junction {}:{} SAGA location match {}", mJunction.Chromosome, mJunction.Position, sagaVariantByLocation);
 
         // find prominent reads to establish the extension sequence, taking any read meeting min soft-clip lengths

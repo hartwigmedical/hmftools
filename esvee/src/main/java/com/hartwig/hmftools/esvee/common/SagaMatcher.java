@@ -9,10 +9,22 @@ import java.util.Map;
 
 public class SagaMatcher
 {
-    public static SagaResource.Variant matchByLocation(final SagaResource sagaResource, final String chromosome, int position)
+    private final SagaResource mSagaResource;
+
+    public SagaMatcher(final SagaResource sagaResource)
     {
-        Map<String, List<SagaResource.IndexedBreakend>> breakends = sagaResource.searchableBreakends();
+        mSagaResource = sagaResource;
+    }
+
+    public SagaResource.Variant matchByLocation(final String chromosome, int position)
+    {
+        Map<String, List<SagaResource.IndexedBreakend>> breakends = mSagaResource.searchableBreakends();
         List<SagaResource.IndexedBreakend> chrBreakends = breakends.get(chromosome);
+        return matchByLocationOnChromosome(position, chrBreakends);
+    }
+
+    public SagaResource.Variant matchByLocationOnChromosome(int position, List<SagaResource.IndexedBreakend> chrBreakends)
+    {
         String bestVariant = null;
         int bestDistance = SAGA_LOCATION_MATCH_DISTANCE + 1;
         if(chrBreakends != null)
@@ -35,8 +47,7 @@ public class SagaMatcher
         }
         else
         {
-            return sagaResource.getVariantById(bestVariant);
+            return mSagaResource.getVariantById(bestVariant);
         }
-
     }
 }
