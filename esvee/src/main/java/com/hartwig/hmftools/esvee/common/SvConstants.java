@@ -55,4 +55,6 @@ public final class SvConstants
 
     public static final String ASSEMBLY_INFO_DELIM = "_";
     public static final String JUNCTION_COORD_DELIM = ":";
+
+    public static final int SAGA_LOCATION_MATCH_DISTANCE = 50;
 }

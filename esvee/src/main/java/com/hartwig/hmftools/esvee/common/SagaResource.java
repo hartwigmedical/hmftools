@@ -2,6 +2,8 @@ package com.hartwig.hmftools.esvee.common;
 
 import static java.util.function.UnaryOperator.identity;
 
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -10,6 +12,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.genome.region.Orientation;
+import com.hartwig.hmftools.common.region.BasePosition;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
@@ -17,42 +20,58 @@ public class SagaResource
 {
     private final String mFastaPath;
     private final List<AssemblyMetadata> mAssemblies;
+    private final Map<String, Variant> mVariantsById;
+    private final Map<String, List<IndexedBreakend>> mSearchableBreakends;
 
     public SagaResource(final String fastaPath)
     {
         mFastaPath = fastaPath;
         mAssemblies = loadAssemblies();
-    }
-
-    public String bwaIndexImagePath()
-    {
-        return mFastaPath + ".img";
-    }
-
-    public Map<String, AssemblyMetadata> assembliesByFastaLabel()
-    {
-        return mAssemblies.stream().collect(Collectors.toMap(AssemblyMetadata::fastaLabel, identity()));
-    }
-
-    public Map<String, Variant> variantsById()
-    {
-        return mAssemblies.stream()
+        mVariantsById = mAssemblies.stream()
                 .map(AssemblyMetadata::variant)
                 .collect(Collectors.toMap(Variant::id, identity()));
-    }
-
-    public Map<String, List<IndexedBreakend>> breakendsByChromosome()
-    {
-        return mAssemblies.stream()
+        mSearchableBreakends = mAssemblies.stream()
                 .flatMap(assembly ->
                         assembly.variant.breakends().map(breakend ->
                                 new IndexedBreakend(breakend, assembly.variant.id())))
                 .collect(Collectors.groupingBy(IndexedBreakend::chromosome));
     }
 
+//    public String bwaIndexImagePath()
+//    {
+//        return mFastaPath + ".img";
+//    }
+
+//    public Map<String, AssemblyMetadata> assembliesByFastaLabel()
+//    {
+//        return mAssemblies.stream().collect(Collectors.toMap(AssemblyMetadata::fastaLabel, identity()));
+//    }
+
+    public Variant getVariantById(final String variantId)
+    {
+        Variant variant = mVariantsById.get(variantId);
+        if(variant == null)
+        {
+            throw new IllegalArgumentException("No SAGA variant with ID:" + variantId);
+        }
+        else
+        {
+            return variant;
+        }
+    }
+
+    public Map<String, Variant> variantsById()
+    {
+        return mVariantsById;
+    }
+
+    public Map<String, List<IndexedBreakend>> searchableBreakends()
+    {
+        return mSearchableBreakends;
+    }
+
     public record Breakend(
-            String chromosome,
-            int position,
+            BasePosition position,
             Orientation orientation
     )
     {
@@ -66,7 +85,7 @@ public class SagaResource
             String chromosome = parts[0];
             int position = Integer.parseInt(parts[1]);
             Orientation orientation = Orientation.fromByteStr(parts[2]);
-            return new Breakend(chromosome, position, orientation);
+            return new Breakend(new BasePosition(chromosome, position), orientation);
         }
     }
 
@@ -111,19 +130,20 @@ public class SagaResource
             String variantId
     )
     {
-        public String chromosome()
-        {
-            return breakend.chromosome();
-        }
-
-        public int position()
+        public BasePosition position()
         {
             return breakend.position();
+        }
+
+        public String chromosome()
+        {
+            return position().Chromosome;
         }
     }
 
     private List<AssemblyMetadata> loadAssemblies()
     {
+        SV_LOGGER.debug("Loading SAGA resource FASTA");
         List<AssemblyMetadata> assemblies;
         try(IndexedFastaSequenceFile fasta = loadFasta())
         {
@@ -143,6 +163,8 @@ public class SagaResource
         {
             throw new RuntimeException("Duplicate variant IDs in SAGA resource");
         }
+
+        SV_LOGGER.debug("Loaded {} SAGA variant assemblies", assemblies.size());
 
         return assemblies;
     }

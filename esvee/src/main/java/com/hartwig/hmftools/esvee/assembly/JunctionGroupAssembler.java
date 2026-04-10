@@ -37,6 +37,8 @@ import com.hartwig.hmftools.esvee.assembly.read.BamReader;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.read.ReadAdjustments;
 import com.hartwig.hmftools.esvee.assembly.read.ReadStats;
+import com.hartwig.hmftools.esvee.common.SagaMatcher;
+import com.hartwig.hmftools.esvee.common.SagaResource;
 import com.hartwig.hmftools.esvee.prep.ReadFilters;
 
 import htsjdk.samtools.SAMRecord;
@@ -56,8 +58,10 @@ public class JunctionGroupAssembler extends ThreadTask
     private final ReadStats mReadStats;
     private final List<JunctionAssembly> mDecoyAssemblies;
 
+    private final SagaResource mSagaResource;
+
     public JunctionGroupAssembler(
-            final AssemblyConfig config, final BamReader bamReader, final TaskQueue junctionGroups, final ResultsWriter resultsWriter)
+            final AssemblyConfig config, final BamReader bamReader, final SagaResource sagaResource, final TaskQueue junctionGroups, final ResultsWriter resultsWriter)
     {
         super("PrimaryAssembly");
         mConfig = config;
@@ -72,10 +76,13 @@ public class JunctionGroupAssembler extends ThreadTask
         mSupplementaryRepeats = Maps.newHashMap();
         mCurrentJunctionGroup = null;
         mReadStats = new ReadStats();
+
+        mSagaResource = sagaResource;
     }
 
     public static List<JunctionGroupAssembler> createThreadTasks(
-            final List<JunctionGroup> junctionGroups, final List<BamReader> bamReaders, final AssemblyConfig config,
+            final List<JunctionGroup> junctionGroups, final List<BamReader> bamReaders,
+            final SagaResource sagaResource, final AssemblyConfig config,
             final ResultsWriter resultsWriter, final int taskCount, final List<Thread> threadTasks)
     {
         List<JunctionGroupAssembler> primaryAssemblyTasks = Lists.newArrayList();
@@ -91,7 +98,7 @@ public class JunctionGroupAssembler extends ThreadTask
         {
             BamReader bamReader = bamReaders.get(i);
 
-            JunctionGroupAssembler junctionGroupAssembler = new JunctionGroupAssembler(config, bamReader, taskQueue, resultsWriter);
+            JunctionGroupAssembler junctionGroupAssembler = new JunctionGroupAssembler(config, bamReader, sagaResource, taskQueue, resultsWriter);
             primaryAssemblyTasks.add(junctionGroupAssembler);
             threadTasks.add(junctionGroupAssembler);
         }
@@ -165,7 +172,7 @@ public class JunctionGroupAssembler extends ThreadTask
         {
             Junction junction = junctionGroup.junctions().get(i);
 
-            JunctionAssembler junctionAssembler = new JunctionAssembler(junction, mConfig.RefGenome);
+            JunctionAssembler junctionAssembler = new JunctionAssembler(junction, mConfig.RefGenome, mSagaResource);
 
             // doesn't seem to be making a big difference, but this is inefficient for long-range junction groups
             // since both the junctions and reads are ordered. Could consider re-ordering by unclipped start and comparing to junction position

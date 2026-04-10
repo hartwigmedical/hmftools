@@ -3,6 +3,7 @@ package com.hartwig.hmftools.esvee.assembly;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_DISCORDANT_MIN_MAP_QUALITY;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
@@ -43,17 +44,21 @@ import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
+import com.hartwig.hmftools.esvee.common.SagaMatcher;
+import com.hartwig.hmftools.esvee.common.SagaResource;
 
 public class JunctionAssembler
 {
     private Junction mJunction;
     private final RefGenomeInterface mRefGenome;
+    private final SagaResource mSagaResource;
     private final List<Read> mNonJunctionReads;
 
-    public JunctionAssembler(final Junction junction, final RefGenomeInterface refGenome)
+    public JunctionAssembler(final Junction junction, final RefGenomeInterface refGenome, final SagaResource sagaResource)
     {
         mJunction = junction;
         mRefGenome = refGenome;
+        mSagaResource = sagaResource;
         mNonJunctionReads = Lists.newArrayList();
     }
 
@@ -61,6 +66,10 @@ public class JunctionAssembler
 
     public List<JunctionAssembly> processJunction(final List<Read> rawReads)
     {
+        // TODO: actually match by location at prep stage
+        SagaResource.Variant sagaVariantByLocation = SagaMatcher.matchByLocation(mSagaResource, mJunction.Chromosome, mJunction.Position);
+        SV_LOGGER.trace("Junction {}:{} SAGA location match {}", mJunction.Chromosome, mJunction.Position, sagaVariantByLocation);
+
         // find prominent reads to establish the extension sequence, taking any read meeting min soft-clip lengths
         // and repetitive indels
 
@@ -518,6 +527,6 @@ public class JunctionAssembler
     @VisibleForTesting
     public JunctionAssembler(final Junction junction)
     {
-        this(junction, null);
+        this(junction, null, null);
     }
 }

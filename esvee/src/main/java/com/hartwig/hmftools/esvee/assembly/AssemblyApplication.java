@@ -62,6 +62,7 @@ import com.hartwig.hmftools.esvee.assembly.types.PhaseSet;
 import com.hartwig.hmftools.esvee.assembly.types.ThreadTask;
 import com.hartwig.hmftools.esvee.assembly.vis.AssemblyVisualiser;
 import com.hartwig.hmftools.esvee.common.FragmentLengthBounds;
+import com.hartwig.hmftools.esvee.common.SagaResource;
 import com.hartwig.hmftools.esvee.common.WriteType;
 import com.hartwig.hmftools.esvee.prep.FragmentSizeDistribution;
 import com.hartwig.hmftools.esvee.prep.types.DiscordantStats;
@@ -252,6 +253,8 @@ public class AssemblyApplication
 
     private void runPrimaryAssembly()
     {
+        SagaResource sagaResource = mConfig.SagaFastaFile == null ? null : new SagaResource(mConfig.SagaFastaFile);
+
         int taskCount = mBamReaders.size();
 
         List<JunctionGroup> junctionGroups = Lists.newArrayList();
@@ -263,7 +266,7 @@ public class AssemblyApplication
         List<Thread> threadTasks = new ArrayList<>();
 
         List<JunctionGroupAssembler> primaryAssemblyTasks = JunctionGroupAssembler.createThreadTasks(
-                junctionGroups, mBamReaders, mConfig, mResultsWriter, taskCount, threadTasks);
+                junctionGroups, mBamReaders, sagaResource, mConfig, mResultsWriter, taskCount, threadTasks);
 
         if(!runThreadTasks(threadTasks))
             System.exit(1);
