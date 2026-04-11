@@ -1,8 +1,16 @@
-package com.hartwig.hmftools.linx;
+package com.hartwig.hmftools.linx.cohort;
 
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.Strings.appendStr;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHR_END;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHR_START;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_ORIENT_END;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_ORIENT_START;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POS_END;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_SAMPLE_ID;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_TYPE;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POS_START;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
@@ -35,6 +43,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
+import com.hartwig.hmftools.linx.LinxConfig;
+import com.hartwig.hmftools.linx.WriteType;
 import com.hartwig.hmftools.linx.analysis.ClusterMetrics;
 import com.hartwig.hmftools.linx.annotators.LineElementType;
 import com.hartwig.hmftools.linx.chaining.ChainMetrics;
@@ -61,6 +71,14 @@ public class CohortDataWriter
     public static final String COHORT_WRITER_SV = "SvData";
     public static final String COHORT_WRITER_CLUSTER = "Cluster";
     public static final String COHORT_WRITER_LINK = "Link";
+
+    protected static String COHORT_FILE_ID_SVS = "SVS";
+    protected static String COHORT_FILE_ID_GERMLINE_SVS = "GERMLINE_SVS";
+
+    protected static String COHORT_FILE_ID_LINKS = "LINKS";
+    protected static String COHORT_FILE_ID_GERMLINE_LINKS = "GERMLINE_LINKS";
+    protected static String COHORT_FILE_ID_CLUSTERS = "CLUSTERS";
+    protected static String COHORT_FILE_ID_GERMLINE_CLUSTERS = "GERMLINE_CLUSTERS";
 
     public CohortDataWriter(final LinxConfig config, final EnsemblDataCache geneDataCache)
     {
@@ -131,6 +149,25 @@ public class CohortDataWriter
         return outputDir + "LNX_" + fileId + TSV_EXTENSION;
     }
 
+    protected static final String FLD_SV_ID = "Id";
+    protected static final String FLD_CLUSTER_ID = "ClusterId";
+    protected static final String FLD_CLUSTER_COUNT = "ClusterCount";
+    protected static final String FLD_RESOLVED_TYPE = "ResolvedType";
+    protected static final String FLD_CHAIN_INDEX = "ChainIndex";
+    protected static final String FLD_CHAIN_COUNT = "ChainCount";
+    protected static final String FLD_CHAIN_ID = "ChainId";
+    protected static final String FLD_GENE_START = "GeneStart";
+    protected static final String FLD_GENE_END = "GeneEnd";
+    protected static final String FLD_LINE_START = "LEStart";
+    protected static final String FLD_LINE_END = "LEEnd";
+    protected static final String FLD_AF_START = "AFStart";
+    protected static final String FLD_AF_END = "AFEnd";
+    protected static final String FLD_REPEAT_CLASS = "RepeatClass";
+    protected static final String FLD_INS_SEQ = "InsertSeq";
+    protected static final String FLD_HOMOLOGY_START = "HomologyStart";
+    protected static final String FLD_HOMOLOGY_END = "HomologyEnd";
+    // protected static final String FLD_ = "";
+
     private BufferedWriter createSvDataFile()
     {
         if(!writeCohortFiles())
@@ -138,15 +175,17 @@ public class CohortDataWriter
 
         try
         {
-            String outputFileName = cohortDataFilename(mConfig.OutputDataPath, mConfig.IsGermline ? "GERMLINE_SVS" : "SVS");
+            String outputFileName = cohortDataFilename(
+                    mConfig.OutputDataPath, mConfig.IsGermline ? COHORT_FILE_ID_GERMLINE_SVS : COHORT_FILE_ID_SVS);
 
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
 
             StringJoiner sj = new StringJoiner(TSV_DELIM);
 
             // definitional fields
-            sj.add("SampleId").add("Id").add("Type").add("ClusterId").add("ClusterCount");
-            sj.add("ChrStart").add("PosStart").add("OrientStart").add("ArmStart").add("ChrEnd").add("PosEnd").add("OrientEnd").add("ArmEnd");
+            sj.add(FLD_SAMPLE_ID).add(FLD_SV_ID).add(FLD_TYPE).add(FLD_CLUSTER_ID).add(FLD_CLUSTER_COUNT);
+            sj.add(FLD_CHR_START).add(FLD_POS_START).add(FLD_ORIENT_START).add("ArmStart");
+            sj.add(FLD_CHR_END).add(FLD_POS_END).add(FLD_ORIENT_END).add("ArmEnd");
 
             if(mConfig.isSomatic())
             {
@@ -155,15 +194,15 @@ public class CohortDataWriter
             }
 
             // cluster info
-            sj.add("ClusterReason").add("ClusterDesc").add("ResolvedType");
+            sj.add("ClusterReason").add("ClusterDesc").add(FLD_RESOLVED_TYPE);
 
-            sj.add("FSStart").add("FSEnd").add("LEStart").add("LEEnd");
+            sj.add("FSStart").add("FSEnd").add(FLD_LINE_START).add(FLD_LINE_END);
 
             // linked pair info
             sj.add("LnkSvStart").add("LnkLenStart").add("LnkSvEnd").add("LnkLenEnd").add("AsmbStart").add("AsmbEnd");
 
             // chain info
-            sj.add("ChainId").add("ChainCount").add("ChainIndex");
+            sj.add(FLD_CHAIN_ID).add(FLD_CHAIN_COUNT).add(FLD_CHAIN_INDEX);
 
             // proximity info and other link info
             sj.add("NearestLen").add("NearestType").add("DBLenStart").add("DBLenEnd");
@@ -179,7 +218,7 @@ public class CohortDataWriter
             }
 
             // gene info
-            sj.add("GeneStart").add("GeneEnd");
+            sj.add(FLD_GENE_START).add(FLD_GENE_END);
 
             if(mConfig.Output.writeSvData())
             {
@@ -188,8 +227,8 @@ public class CohortDataWriter
                     sj.add("MinorAPStartPrev").add("MinorAPStartPost").add("MinorAPEndPrev").add("MinorAPEndPost");
 
                 // SV table info
-                sj.add("HomologyStart").add("HomologyEnd").add("InsertSeq").add("QualScore").add("AFStart").add("AFEnd");
-                sj.add("InsSeqAlignments").add("RepeatClass").add("RepeatType").add("AnchorStart").add("AnchorEnd");
+                sj.add(FLD_HOMOLOGY_START).add(FLD_HOMOLOGY_END).add(FLD_INS_SEQ).add("QualScore").add(FLD_AF_START).add(FLD_AF_END);
+                sj.add("InsSeqAlignments").add(FLD_REPEAT_CLASS).add("RepeatType").add("AnchorStart").add("AnchorEnd");
             }
 
             writer.write(sj.toString());
@@ -392,7 +431,8 @@ public class CohortDataWriter
 
         try
         {
-            String outputFileName = cohortDataFilename(mConfig.OutputDataPath, mConfig.IsGermline ? "GERMLINE_CLUSTERS" : "CLUSTERS");
+            String outputFileName = cohortDataFilename(
+                    mConfig.OutputDataPath, mConfig.IsGermline ? COHORT_FILE_ID_GERMLINE_CLUSTERS : COHORT_FILE_ID_CLUSTERS);
 
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
 
@@ -573,7 +613,8 @@ public class CohortDataWriter
 
         try
         {
-            String outputFileName = cohortDataFilename(mConfig.OutputDataPath, mConfig.IsGermline ? "GERMLINE_LINKS" : "LINKS");;
+            String outputFileName = cohortDataFilename(
+                    mConfig.OutputDataPath, mConfig.IsGermline ? COHORT_FILE_ID_GERMLINE_LINKS : COHORT_FILE_ID_LINKS);;
 
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
 

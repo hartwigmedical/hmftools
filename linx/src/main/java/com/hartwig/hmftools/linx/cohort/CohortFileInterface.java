@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.linx;
+package com.hartwig.hmftools.linx.cohort;
 
 import java.io.BufferedWriter;
 

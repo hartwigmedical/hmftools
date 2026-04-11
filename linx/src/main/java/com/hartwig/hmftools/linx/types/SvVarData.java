@@ -448,6 +448,9 @@ public class SvVarData
         return getGeneInBreakend(isStart, includeId, false);
     }
 
+    public static String SV_DISRUPTIVE_STR = "disruptive";
+    public static String GENE_DATA_ITEM_DELIM = "|";
+
     public String getGeneInBreakend(boolean isStart, boolean includeId, boolean includeTransImpact)
     {
         // create a list of any genes which this breakend touches, but exclude the upstream distance used for fusions
@@ -459,7 +462,9 @@ public class SvVarData
 
         for(final BreakendGeneData gene : genesList)
         {
-            StringJoiner geneSj = new StringJoiner("|");
+            StringJoiner geneSj = new StringJoiner(GENE_DATA_ITEM_DELIM);
+
+            // format: geneName|regionType|codingType|disruption or not present|exon=123 or not present
 
             if(includeId)
                 geneSj.add(gene.geneId());
@@ -476,7 +481,7 @@ public class SvVarData
                     geneSj.add(String.valueOf(transData.codingType()));
 
                     if(transData.isDisruptive())
-                        geneSj.add("disruptive");
+                        geneSj.add(SV_DISRUPTIVE_STR);
 
                     if(transData.codingType() == CODING)
                         geneSj.add(format("exon=%d", transData.ExonUpstream));

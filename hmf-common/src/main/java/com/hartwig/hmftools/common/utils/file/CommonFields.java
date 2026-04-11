@@ -8,20 +8,30 @@ public final class CommonFields
 
     // location
     public static final String FLD_CHROMOSOME = "Chromosome";
+    public static final String FLD_CHR_START = "ChrStart";
+    public static final String FLD_CHR_END = "ChrEnd";
+
     public static final String FLD_POSITION = "Position";
     public static final String FLD_POS_START = "PosStart";
     public static final String FLD_POSITION_START = "PositionStart";
     public static final String FLD_POS_END = "PosEnd";
     public static final String FLD_POSITION_END = "PositionEnd";
+
     public static final String FLD_ORIENTATION = "Orientation";
+    public static final String FLD_ORIENT_START = "OrientStart";
+    public static final String FLD_ORIENT_END = "OrientEnd";
+
     public static final String FLD_REGION_START = "RegionStart";
     public static final String FLD_REGION_END = "RegionEnd";
+    public static final String FLD_TYPE = "Type";
 
     // genes
     public static final String FLD_GENE_ID = "GeneId";
     public static final String FLD_GENE_NAME = "GeneName";
     public static final String FLD_TRANS_ID = "TransId";
     public static final String FLD_TRANS_NAME = "TransName";
+    public static final String FLD_REGION_TYPE = "RegionType";
+    public static final String FLD_CODING_TYPE = "CodingType";
 
     // variants
     public static final String FLD_REF = "Ref";
