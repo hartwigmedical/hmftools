@@ -66,7 +66,7 @@ public class BwaMemAligner implements IBwaMemAligner
     public BwaMemAligner(final BwaMemIndex index, final Params params)
     {
         mParams = params;
-        LOGGER.debug("Creating BWA-MEM aligner");
+        LOGGER.trace("Creating BWA-MEM aligner");
         mAligner = new org.broadinstitute.hellbender.utils.bwa.BwaMemAligner(index);
         applyOptions(mAligner, mParams.align(), mParams.allAlignments(), mParams.minAlignScore, mParams.threads);
         logOptions(mAligner);
@@ -153,26 +153,26 @@ public class BwaMemAligner implements IBwaMemAligner
 
     private static void logOptions(org.broadinstitute.hellbender.utils.bwa.BwaMemAligner aligner)
     {
-        LOGGER.debug("BWA-MEM options:");
-        LOGGER.debug("  MinSeedLength: {}", aligner.getMinSeedLengthOption());
-        LOGGER.debug("  SplitFactor: {}", aligner.getSplitFactorOption());
-        LOGGER.debug("  SplitWidth: {}", aligner.getSplitWidthOption());
-        LOGGER.debug("  MaxSeedOccurrences: {}", aligner.getMaxSeedOccurencesOption());
-        LOGGER.debug("  MaxMemOccurrences: {}", aligner.getMaxMemIntvOption());
-        LOGGER.debug("  DropRatio: {}", aligner.getDropRatioOption());
-        LOGGER.debug("  Match: {}", aligner.getMatchScoreOption());
-        LOGGER.debug("  Mismatch: {}", aligner.getMismatchPenaltyOption());
-        LOGGER.debug("  IGapOpen: {}", aligner.getIGapOpenPenaltyOption());
-        LOGGER.debug("  IGapExtend: {}", aligner.getIGapExtendPenaltyOption());
-        LOGGER.debug("  DGapOpen: {}", aligner.getDGapOpenPenaltyOption());
-        LOGGER.debug("  DGapExtend: {}", aligner.getDGapExtendPenaltyOption());
-        LOGGER.debug("  Clip3: {}", aligner.getClip3PenaltyOption());
-        LOGGER.debug("  Clip5: {}", aligner.getClip5PenaltyOption());
-        LOGGER.debug("  Bandwidth: {}", aligner.getBandwidthOption());
-        LOGGER.debug("  ZDrop: {}", aligner.getZDropOption());
-        LOGGER.debug("  OutputScoreThreshold: {}", aligner.getOutputScoreThresholdOption());
-        LOGGER.debug("  Flags: {}", aligner.getFlagOption());
-        LOGGER.debug("  Threads: {}", aligner.getNThreadsOption());
+        LOGGER.trace("BWA-MEM options:");
+        LOGGER.trace("  MinSeedLength: {}", aligner.getMinSeedLengthOption());
+        LOGGER.trace("  SplitFactor: {}", aligner.getSplitFactorOption());
+        LOGGER.trace("  SplitWidth: {}", aligner.getSplitWidthOption());
+        LOGGER.trace("  MaxSeedOccurrences: {}", aligner.getMaxSeedOccurencesOption());
+        LOGGER.trace("  MaxMemOccurrences: {}", aligner.getMaxMemIntvOption());
+        LOGGER.trace("  DropRatio: {}", aligner.getDropRatioOption());
+        LOGGER.trace("  Match: {}", aligner.getMatchScoreOption());
+        LOGGER.trace("  Mismatch: {}", aligner.getMismatchPenaltyOption());
+        LOGGER.trace("  IGapOpen: {}", aligner.getIGapOpenPenaltyOption());
+        LOGGER.trace("  IGapExtend: {}", aligner.getIGapExtendPenaltyOption());
+        LOGGER.trace("  DGapOpen: {}", aligner.getDGapOpenPenaltyOption());
+        LOGGER.trace("  DGapExtend: {}", aligner.getDGapExtendPenaltyOption());
+        LOGGER.trace("  Clip3: {}", aligner.getClip3PenaltyOption());
+        LOGGER.trace("  Clip5: {}", aligner.getClip5PenaltyOption());
+        LOGGER.trace("  Bandwidth: {}", aligner.getBandwidthOption());
+        LOGGER.trace("  ZDrop: {}", aligner.getZDropOption());
+        LOGGER.trace("  OutputScoreThreshold: {}", aligner.getOutputScoreThresholdOption());
+        LOGGER.trace("  Flags: {}", aligner.getFlagOption());
+        LOGGER.trace("  Threads: {}", aligner.getNThreadsOption());
     }
 
     private List<List<BwaMemAlignment>> runBatchedAlignment(List<byte[]> queries)
