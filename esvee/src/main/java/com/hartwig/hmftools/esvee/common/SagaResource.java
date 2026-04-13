@@ -121,19 +121,24 @@ public class SagaResource
 
         public static AssemblyMetadata fromFastaLabel(final String fastaLabel)
         {
+            // E.g.:
+            // SvimAsm00000237|chr1:181626:1|chr1:181627:-1|150|285
+            // SvimAsm00000238|chr1:368909:1|chr1:369380:-1|150|
+
             String[] parts = fastaLabel.split("\\|");
-            if(parts.length != 5)
+            if(!(parts.length == 4 || parts.length == 5))
             {
+                SV_LOGGER.error("Expected 4 or 5 parts but got {}", parts.length);
                 throw new IllegalArgumentException("Invalid fasta label: " + fastaLabel);
             }
             String id = parts[0];
             Breakend breakend1 = Breakend.fromString(parts[1]);
             Breakend breakend2 = Breakend.fromString(parts[2]);
             int junctionOffset1 = Integer.parseInt(parts[3]);
-            Integer junctionOffset2 = parts[4].isEmpty() ? null : Integer.parseInt(parts[4]);
-            if(junctionOffset2 != null && junctionOffset2 == junctionOffset1)
+            Integer junctionOffset2 = parts.length >= 5 ? Integer.parseInt(parts[4]) : null;
+            if(junctionOffset2 != null && junctionOffset1 >= junctionOffset2)
             {
-                junctionOffset2 = null;
+                throw new IllegalArgumentException("Invalid junction offsets");
             }
             Variant variant = new Variant(id, breakend1, breakend2);
             List<Integer> junctionOffsets = junctionOffset2 == null ? List.of(junctionOffset1) : List.of(junctionOffset1, junctionOffset2);

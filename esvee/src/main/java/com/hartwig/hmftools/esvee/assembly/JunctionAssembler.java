@@ -166,7 +166,6 @@ public class JunctionAssembler
             return Collections.emptyList();
         }
 
-
         List<JunctionAssembly> assemblies = Lists.newArrayList(firstAssembly);
 
         int initialAssemblySupport = assemblySupport.size();
