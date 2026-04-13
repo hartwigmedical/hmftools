@@ -2,7 +2,7 @@ package com.hartwig.hmftools.linx.cohort;
 
 import com.hartwig.hmftools.linx.types.ResolvedType;
 
-public enum SvType
+public enum SvCategory
 {
     INS,
     DEL_100,
@@ -43,7 +43,7 @@ public enum SvType
         }
     }
 
-    public static SvType classifySv(final SvData sv)
+    public static SvCategory classifySv(final SvData sv)
     {
         if(sv.ClusterCount == 1)
         {
@@ -73,13 +73,13 @@ public enum SvType
                     else
                         return DUP_LONG;
 
-                case INS: return SvType.INS;
-                case INV: return SvType.INV;
-                case BND: return SvType.BND;
+                case INS: return SvCategory.INS;
+                case INV: return SvCategory.INV;
+                case BND: return SvCategory.BND;
 
                 case SGL:
                 default:
-                    return SvType.SGL;
+                    return SvCategory.SGL;
             }
         }
 

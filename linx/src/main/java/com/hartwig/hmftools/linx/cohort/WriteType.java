@@ -11,6 +11,7 @@ public enum WriteType
     SV_DATA,
     SAMPLE_SUMMARY,
     BREAKEND,
+    DISRUPTIVE_BREAKEND,
     PON;
 
     public static List<WriteType> DEFAULT_WRITE_TYPES = List.of(SAMPLE_SUMMARY, BREAKEND);

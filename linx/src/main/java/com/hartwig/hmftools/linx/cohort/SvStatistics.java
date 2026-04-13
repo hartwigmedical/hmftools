@@ -23,19 +23,19 @@ public class SvStatistics
         Genic = 0;
         GeneDisruptive = 0;
 
-        TypeCounts = new int[SvType.values().length];
+        TypeCounts = new int[SvCategory.values().length];
     }
 
     public void addSvData(final SvData sv)
     {
         ++Total;
 
-        if(sv.ponMatch() == PonMatchType.NONE)
+        if(sv.hasPonMatch())
             ++NonPON;
 
-        if(sv.svType() != null)
+        if(sv.category() != null)
         {
-            ++TypeCounts[sv.svType().ordinal()];
+            ++TypeCounts[sv.category().ordinal()];
         }
 
         if(sv.IsLine || sv.RepeatClass.contains("LINE"))

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.linx.cohort;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
@@ -39,10 +41,9 @@ import static com.hartwig.hmftools.linx.cohort.CohortDataWriter.FLD_REPEAT_CLASS
 import static com.hartwig.hmftools.linx.cohort.CohortDataWriter.FLD_RESOLVED_TYPE;
 import static com.hartwig.hmftools.linx.cohort.CohortDataWriter.FLD_SV_ID;
 import static com.hartwig.hmftools.linx.cohort.CohortDataWriter.cohortDataFilename;
-import static com.hartwig.hmftools.linx.cohort.SvType.classifySv;
-import static com.hartwig.hmftools.linx.cohort.SvType.ignoreResolvedType;
-import static com.hartwig.hmftools.linx.types.SvVarData.GENE_DATA_ITEM_DELIM;
-import static com.hartwig.hmftools.linx.types.SvVarData.SV_DISRUPTIVE_STR;
+import static com.hartwig.hmftools.linx.cohort.PonMatchType.NONE;
+import static com.hartwig.hmftools.linx.cohort.SvCategory.classifySv;
+import static com.hartwig.hmftools.linx.cohort.SvCategory.ignoreResolvedType;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -50,9 +51,12 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.utils.StartEndPair;
@@ -65,36 +69,70 @@ public class CohortAnalyser
 {
     public final CohortConfig mConfig;
 
-    // private final Map<String, List<SvData>> mSampleSvMap;
-
     private final PonCache mPonCache;
-    private final boolean mBuildPon;
+    private final Map<String,PonCache> mPonCacheMap;
+    private final PonBuilder mPonBuilder;
 
     // output writers
     private final BufferedWriter mSvDataWriter;
     private final BufferedWriter mSampleDataWriter;
     private final BufferedWriter mBreakendDataWriter;
+    private final BufferedWriter mDisruptiveBreakendDataWriter;
 
     public CohortAnalyser(final ConfigBuilder configBuilder)
     {
         mConfig = new CohortConfig(configBuilder);
 
-        // mSampleSvMap = Maps.newHashMap();
-        mSvDataWriter = initialiseSvDataWriter();
-        mSampleDataWriter = initialiseSampleDataWriter();
-        mBreakendDataWriter = initialiseBreakendWriter();
-
-        mPonCache = new PonCache();
+        mPonCacheMap = Maps.newHashMap();
 
         if(mConfig.PonFile != null)
         {
-            mPonCache.loadPonFile(mConfig.PonFile);
-            mBuildPon = false;
+            if(mConfig.PonFile.contains(ITEM_DELIM))
+            {
+                String[] ponFiles = mConfig.PonFile.split(ITEM_DELIM, -1);
+
+                for(String ponFileEntry : ponFiles)
+                {
+                    String[] parts = ponFileEntry.split("=", 2);
+
+                    if(parts.length != 2)
+                    {
+                        LNX_LOGGER.error("invalid PON file entry: {}", ponFileEntry);
+                        System.exit(1);
+                    }
+
+                    String ponFilename = parts[1];
+                    PonCache ponCache = new PonCache();
+                    ponCache.loadPonFile(ponFilename);
+                    mPonCacheMap.put(parts[0], ponCache);
+                }
+
+                mPonCache = null;
+            }
+            else
+            {
+                mPonCache = new PonCache();
+                mPonCache.loadPonFile(mConfig.PonFile);
+            }
         }
         else
         {
-            mBuildPon = mConfig.WriteTypes.contains(WriteType.PON);
+            mPonCache = null;
         }
+
+        if(mConfig.WriteTypes.contains(WriteType.PON))
+        {
+            mPonBuilder = new PonBuilder();
+        }
+        else
+        {
+            mPonBuilder = null;
+        }
+
+        mSvDataWriter = initialiseSvDataWriter();
+        mSampleDataWriter = initialiseSampleDataWriter();
+        mBreakendDataWriter = initialiseBreakendWriter(false);
+        mDisruptiveBreakendDataWriter = initialiseBreakendWriter(true);
     }
 
     public void run()
@@ -109,9 +147,10 @@ public class CohortAnalyser
         closeBufferedWriter(mSvDataWriter);
         closeBufferedWriter(mSampleDataWriter);
         closeBufferedWriter(mBreakendDataWriter);
+        closeBufferedWriter(mDisruptiveBreakendDataWriter);
 
-        if(mBuildPon)
-            mPonCache.writePonCache(mConfig);
+        if(mPonBuilder != null)
+            mPonBuilder.writePonCache(mConfig);
 
         LNX_LOGGER.info("completed cohort analysis, mins({})", runTimeMinsStr(startTimeMs));
     }
@@ -152,8 +191,9 @@ public class CohortAnalyser
             int afEndIndex = fieldsIndexMap.get(FLD_AF_END);
 
             int repeatClassIndex = fieldsIndexMap.get(FLD_REPEAT_CLASS);
-            // int Index = fieldsIndexMap.get(FLD_);
-            // int Index = fieldsIndexMap.get(FLD_);
+            // spare: int Index = fieldsIndexMap.get(FLD_);
+
+            Set<String> restrictedSampleIds = !mConfig.SampleIds.isEmpty() ? mConfig.SampleIds.stream().collect(Collectors.toSet()) : null;
 
             String line;
             String currentSample = "";
@@ -184,8 +224,10 @@ public class CohortAnalyser
 
                     currentSample = sampleId;
                     svDataList = Lists.newArrayList();
-                    // mSampleSvMap.put(sampleId, svDataList);
                 }
+
+                if(restrictedSampleIds != null && !restrictedSampleIds.contains(sampleId))
+                    continue;
 
                 ++svCount;
 
@@ -221,38 +263,31 @@ public class CohortAnalyser
                         chainId, chainCount, chainCount > 0 ? values[chainIndexIndex] : "",
                         averageAf, values[repeatClassIndex]);
 
-                svDataList.add(svData);
-
                 svData.setSvType(classifySv(svData));
                 svData.setGeneDisruptive();
 
-                if(mBuildPon)
+                if(mPonBuilder != null)
                 {
                     if(svData.SvType == SGL)
                     {
-                        mPonCache.registerSgl(svData.ChrStart, svData.PosStart, svData.OrientStart);
+                        mPonBuilder.registerSgl(svData.ChrStart, svData.PosStart, svData.OrientStart);
                     }
                     else
                     {
-                        mPonCache.registerSv(
+                        mPonBuilder.registerSv(
                                 svData.ChrStart, svData.PosStart, svData.OrientStart,
                                 svData.ChrEnd, svData.PosEnd, svData.OrientEnd);
                     }
                 }
-                else if(mPonCache.hasEntries())
+                else
                 {
-                    if(isSgl)
-                    {
-                        svData.setPonMatch(mPonCache.matchesSglEntry(
-                                svData.ChrStart, svData.PosStart, svData.OrientStart, mConfig.PonMargin));
-                    }
-                    else
-                    {
-                        svData.setPonMatch(mPonCache.matchesSvEntry(
-                                svData.ChrStart, svData.PosStart, svData.OrientStart, svData.ChrEnd, svData.PosEnd, svData.OrientEnd,
-                                mConfig.PonMargin));
-                    }
+                    markPonEntries(svData);
+
+                    if(mConfig.RestrictNonPon && svData.hasPonMatch())
+                        continue;
                 }
+
+                svDataList.add(svData);
 
                 writeTrimmedSvData(sampleId, svData);
                 writeBreakendData(sampleId, svData);
@@ -264,6 +299,56 @@ public class CohortAnalyser
         catch(IOException exception)
         {
             LNX_LOGGER.error("failed to read cohort SV file({})", filename, exception.toString());
+        }
+    }
+
+    private void markPonEntries(final SvData svData)
+    {
+        if(mPonCache != null && mPonCache.hasEntries())
+        {
+            PonMatch ponMatch = PonMatch.NONE;
+
+            if(svData.SvType == SGL)
+            {
+                ponMatch = mPonCache.matchesSglEntry(
+                        svData.ChrStart, svData.PosStart, svData.OrientStart, mConfig.PonMargin);
+            }
+            else
+            {
+                ponMatch = mPonCache.matchesSvEntry(
+                        svData.ChrStart, svData.PosStart, svData.OrientStart, svData.ChrEnd, svData.PosEnd, svData.OrientEnd,
+                        mConfig.PonMargin);
+            }
+
+            if(ponMatch != PonMatch.NONE)
+                svData.addPonMatch(ponMatch);
+
+            return;
+        }
+
+        if(!mPonCacheMap.isEmpty())
+        {
+            for(Map.Entry<String,PonCache> entry : mPonCacheMap.entrySet())
+            {
+                String ponName = entry.getKey();
+                PonCache ponCache = entry.getValue();
+                PonMatch ponMatch = PonMatch.NONE;
+
+                if(svData.SvType == SGL)
+                {
+                    ponMatch = ponCache.matchesSglEntry(
+                            svData.ChrStart, svData.PosStart, svData.OrientStart, mConfig.PonMargin);
+                }
+                else
+                {
+                    ponMatch = ponCache.matchesSvEntry(
+                            svData.ChrStart, svData.PosStart, svData.OrientStart, svData.ChrEnd, svData.PosEnd, svData.OrientEnd,
+                            mConfig.PonMargin);
+                }
+
+                if(ponMatch != PonMatch.NONE)
+                    svData.addPonMatch(ponName, ponMatch);
+            }
         }
     }
 
@@ -283,10 +368,11 @@ public class CohortAnalyser
     }
 
     private static final String FLD_PON_MATCH = "PonMatch";
+    private static final String FLD_CATEGORY = "Category";
 
     private BufferedWriter initialiseSvDataWriter()
     {
-        if(!mConfig.WriteTypes.contains(WriteType.SAMPLE_SUMMARY))
+        if(!mConfig.WriteTypes.contains(WriteType.SV_DATA))
             return null;
 
         try
@@ -302,11 +388,13 @@ public class CohortAnalyser
 
             sj.add(FLD_CLUSTER_ID).add(FLD_CLUSTER_COUNT);
             sj.add(FLD_CHAIN_ID).add(FLD_CHAIN_COUNT).add(FLD_CHAIN_INDEX);
+            sj.add(FLD_RESOLVED_TYPE).add(FLD_CATEGORY);
             sj.add(FLD_GENE_START).add(FLD_GENE_END);
 
             // sj.add(FLD_HOMOLOGY_START).add(FLD_HOMOLOGY_END).add(FLD_INS_SEQ);
             // sj.add("QualScore").add(FLD_AF_START).add(FLD_AF_END);
-            sj.add(FLD_REPEAT_CLASS).add(FLD_PON_MATCH);
+            sj.add(FLD_REPEAT_CLASS);
+            addPonColumns(sj);
 
             writer.write(sj.toString());
 
@@ -320,8 +408,61 @@ public class CohortAnalyser
         }
     }
 
+    private void addPonColumns(final StringJoiner sj)
+    {
+        if(mPonCache != null)
+        {
+            sj.add(FLD_PON_MATCH);
+        }
+        else
+        {
+            for(String ponName : mPonCacheMap.keySet())
+            {
+                sj.add(format("%s_%s", FLD_PON_MATCH, ponName));
+            }
+        }
+    }
+
+    private void addPonValues(final SvData svData, final StringJoiner sj)
+    {
+        if(mPonCache != null)
+        {
+            PonMatch ponMatch = svData.getUnnamedPonMatch();
+            addPonMatch(sj, ponMatch);
+        }
+        else
+        {
+            for(String ponName : mPonCacheMap.keySet())
+            {
+                PonMatch ponMatch = svData.ponMatches().get(ponName);
+                addPonMatch(sj, ponMatch);
+            }
+        }
+    }
+
+    private void addPonMatch(final StringJoiner sj, final PonMatch ponMatch)
+    {
+        if(ponMatch == null || ponMatch == PonMatch.NONE)
+        {
+            if(mConfig.WritePonType)
+                sj.add(NONE.toString());
+            else
+                sj.add("0");
+        }
+        else
+        {
+            if(mConfig.WritePonType)
+                sj.add(ponMatch.toString());
+            else
+                sj.add(String.valueOf(ponMatch.Count));
+        }
+    }
+
     private void writeTrimmedSvData(final String sampleId, final SvData svData) throws IOException
     {
+        if(mSvDataWriter == null)
+            return;
+
         StringJoiner sj = new StringJoiner(TSV_DELIM);
 
         sj.add(sampleId).add(String.valueOf(svData.Id)).add(svData.SvType.toString());
@@ -332,10 +473,12 @@ public class CohortAnalyser
         sj.add(String.valueOf(svData.ChainId));
         sj.add(String.valueOf(svData.ChainCount));
         sj.add(svData.ChainIndex);
+        sj.add(svData.Resolved.toString());
+        sj.add(svData.category().toString());
         sj.add(svData.GeneStart);
         sj.add(svData.GeneEnd);
         sj.add(svData.RepeatClass);
-        sj.add(svData.ponMatch().toString());
+        addPonValues(svData, sj);
 
         mSvDataWriter.write(sj.toString());
         mSvDataWriter.newLine();
@@ -357,9 +500,9 @@ public class CohortAnalyser
             sj.add("TotalCount");
             sj.add("NonPON");
 
-            for(SvType svType : SvType.values())
+            for(SvCategory svCategory : SvCategory.values())
             {
-                sj.add(svType.toString());
+                sj.add(svCategory.toString());
             }
 
             sj.add("MeiLine");
@@ -391,9 +534,9 @@ public class CohortAnalyser
         sj.add(String.valueOf(statistics.Total));
         sj.add(String.valueOf(statistics.NonPON));
 
-        for(SvType svType : SvType.values())
+        for(SvCategory svCategory : SvCategory.values())
         {
-            sj.add(String.valueOf(statistics.TypeCounts[svType.ordinal()]));
+            sj.add(String.valueOf(statistics.TypeCounts[svCategory.ordinal()]));
         }
 
         sj.add(String.valueOf(statistics.MeiLINE));
@@ -406,27 +549,34 @@ public class CohortAnalyser
         mSampleDataWriter.newLine();
     }
 
-    private BufferedWriter initialiseBreakendWriter()
+    private BufferedWriter initialiseBreakendWriter(boolean disruptiveOnly)
     {
-        if(!mConfig.WriteTypes.contains(WriteType.SAMPLE_SUMMARY))
+        if(disruptiveOnly && !mConfig.WriteTypes.contains(WriteType.DISRUPTIVE_BREAKEND))
+            return null;
+
+        if(!disruptiveOnly && !mConfig.WriteTypes.contains(WriteType.BREAKEND))
             return null;
 
         try
         {
-            String filename = mConfig.formOutputFilename("breakend");
+            String fileId = disruptiveOnly ? "disruptive_breakend" : "breakend";
+            String filename = mConfig.formOutputFilename(fileId);
             BufferedWriter writer = createBufferedWriter(filename, false);
 
             StringJoiner sj = new StringJoiner(TSV_DELIM);
 
             // definitional fields
-            sj.add(FLD_SAMPLE_ID).add(FLD_SV_ID).add(FLD_TYPE);
-            sj.add(FLD_CHROMOSOME).add(FLD_POSITION).add(FLD_ORIENTATION).add(FLD_PON_MATCH);
+            sj.add(FLD_SAMPLE_ID).add(FLD_SV_ID).add(FLD_TYPE).add(FLD_CATEGORY);
+            sj.add(FLD_CHROMOSOME).add(FLD_POSITION).add(FLD_ORIENTATION);
+
             sj.add("IsStart").add("PairedGene");
 
             sj.add(FLD_CLUSTER_COUNT).add(FLD_CHAIN_COUNT);
 
             sj.add(FLD_GENE_NAME).add(FLD_REGION_TYPE).add(FLD_CODING_TYPE);
-            sj.add("Disruptive").add("Exon");
+            sj.add("Disruptive").add("Exon").add("Paired");
+
+            addPonColumns(sj);
 
             writer.write(sj.toString());
 
@@ -442,76 +592,60 @@ public class CohortAnalyser
 
     private void writeBreakendData(final String sampleId, final SvData svData) throws IOException
     {
-        if(mBreakendDataWriter == null)
+        if(mBreakendDataWriter == null && mDisruptiveBreakendDataWriter == null)
             return;
 
-        if(svData.GeneStart.isEmpty() && svData.GeneEnd.isEmpty())
+        if(svData.genesStart().isEmpty() && svData.genesEnd().isEmpty())
             return;
-
-        boolean isPaired = !svData.GeneStart.isEmpty() && !svData.GeneEnd.isEmpty();
 
         for(StartEndPair se : StartEndPair.values())
         {
-            String genesData = se.isStart() ? svData.GeneStart : svData.GeneEnd;
-
-            if((se.isEnd() && svData.SvType == SGL) || genesData.isEmpty())
+            if(se.isEnd() && svData.SvType == SGL)
                 continue;
 
-            String[] geneDataItems = genesData.split(ITEM_DELIM, -1);
+            List<GeneData> genesDataList = se.isStart() ? svData.genesStart() : svData.genesEnd();
 
-            for(String geneData : geneDataItems)
+            if(genesDataList.isEmpty())
+                continue;
+
+            for(GeneData geneData : genesDataList)
             {
                 StringJoiner sj = new StringJoiner(TSV_DELIM);
-                sj.add(sampleId).add(String.valueOf(svData.Id)).add(svData.SvType.toString());
+                sj.add(sampleId).add(String.valueOf(svData.Id)).add(svData.SvType.toString()).add(svData.category().toString());
 
                 if(se.isStart())
                     sj.add(svData.ChrStart).add(String.valueOf(svData.PosStart)).add(svData.OrientStart.toString());
                 else
                     sj.add(svData.ChrEnd).add(String.valueOf(svData.PosEnd)).add(svData.OrientEnd.toString());
 
-                sj.add(svData.ponMatch().toString());
                 sj.add(String.valueOf(se.isStart()));
-                sj.add(String.valueOf(isPaired));
+                sj.add(String.valueOf(geneData.isPaired()));
 
                 sj.add(String.valueOf(svData.ClusterCount));
                 sj.add(String.valueOf(svData.ChainCount));
 
-                // format: geneName|regionType|codingType|disruption or not present|exon=123 or not present
-                String[] geneParts = geneData.split("\\" + GENE_DATA_ITEM_DELIM, -1);
+                sj.add(geneData.GeneName);
+                sj.add(geneData.RegionType.toString());
+                sj.add(geneData.CodingType.toString());
 
-                if(geneParts.length < 3)
-                    continue;
+                boolean disruptive = geneData.Disruptive && !geneData.markedNonDisruptive();
+                sj.add(String.valueOf(disruptive));
+                sj.add(String.valueOf(geneData.Exon));
+                sj.add(String.valueOf(geneData.isPaired()));
 
-                int partIndex = 0;
-                String geneName = geneParts[partIndex++];
-                String regionType = geneParts[partIndex++];
-                String codingType = geneParts[partIndex++];
+                addPonValues(svData, sj);
 
-                sj.add(geneName);
-                sj.add(regionType);
-                sj.add(codingType);
-
-                boolean isDisruptive = false;
-
-                if(partIndex < geneParts.length && geneParts[partIndex].equals(SV_DISRUPTIVE_STR))
+                if(mBreakendDataWriter != null)
                 {
-                    ++partIndex;
-                    isDisruptive = true;
+                    mBreakendDataWriter.write(sj.toString());
+                    mBreakendDataWriter.newLine();
                 }
 
-                sj.add(String.valueOf(isDisruptive));
-
-                int exon = -1;
-                if(partIndex < geneParts.length && geneParts[partIndex].contains("exon"))
+                if(mDisruptiveBreakendDataWriter != null && disruptive)
                 {
-                    String[] exonData = geneParts[partIndex].split("=", 2);
-                    exon = Integer.parseInt(exonData[1]);
+                    mDisruptiveBreakendDataWriter.write(sj.toString());
+                    mDisruptiveBreakendDataWriter.newLine();
                 }
-
-                sj.add(String.valueOf(exon));
-
-                mBreakendDataWriter.write(sj.toString());
-                mBreakendDataWriter.newLine();
             }
         }
     }
@@ -526,5 +660,4 @@ public class CohortAnalyser
         CohortAnalyser cohortAnalyser = new CohortAnalyser(configBuilder);
         cohortAnalyser.run();
     }
-
 }
