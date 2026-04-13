@@ -123,6 +123,7 @@ public class SagaMatcher
         int sagaAlignLength = alignment.getRefEnd() - alignment.getRefStart();
         int seqAlignLength = sequence.length - (leftClip + rightClip);
         int minAlignScore = calcMinAlignScore(sagaAlignLength, seqAlignLength);
+        // Low alignment score means low sequence similarity, so we think this is not a good match.
         if(alignment.getAlignerScore() < minAlignScore)
         {
             return null;
@@ -134,6 +135,8 @@ public class SagaMatcher
         int seqStart = startClip;
         int seqEnd = sequence.length - endClip;
 
+        // The novel sequence created by the variant junction needs to be included in the alignment.
+        // Otherwise we could align onto the surrounding ref bases which could be similar, but the variant is not the same.
         List<List<Integer>> seqJunctionOverlaps =
                 seqJunctionOffsets.stream().map(offset -> calcJunctionOverlap(seqStart, seqEnd, offset)).toList();
         if(!isJunctionOverlapOk(seqJunctionOverlaps))
