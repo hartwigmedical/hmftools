@@ -84,6 +84,8 @@ public class LilacConfig
     // global for convenience
     public static SequencingType SEQUENCING_TYPE = ILLUMINA;
 
+    public final boolean IsPanel;
+
     public final double HlaYPercentThreshold;
 
     public final int MinFragmentsPerAllele;
@@ -114,6 +116,7 @@ public class LilacConfig
 
     private static final String SOMATIC_VCF = "somatic_vcf";
     private static final String GENE_COPY_NUMBER = "gene_copy_number";
+    private static final String TARGETED_PANEL = "targeted_panel";
 
     public static final String GENES = "genes";
 
@@ -201,6 +204,14 @@ public class LilacConfig
         RefGenome = configBuilder.getValue(REF_GENOME, "");
 
         RefGenVersion = RefGenomeVersion.from(configBuilder);
+        IsPanel = configBuilder.hasFlag(TARGETED_PANEL);
+
+        if(IsPanel)
+        {
+            // increase rates due to higher variability in coverage
+            LilacConstants.WARN_UNMATCHED_HAPLOTYPE_SUPPORT *= 2;
+            LilacConstants.WARN_INDEL_THRESHOLD *= 2;
+        }
 
         Genes = GeneSelector.parseArg(configBuilder.getValue(GENES));
         SEQUENCING_TYPE = SequencingType.valueOf(configBuilder.getValue(SEQUENCING_TYPE_CFG));
@@ -291,6 +302,7 @@ public class LilacConfig
         Genes = Sets.newHashSet(GeneSelector.MHC_CLASS_1);
 
         MaxRefFragments = DEFAULT_MAX_REF_FRAGMENTS;
+        IsPanel = false;
 
         MinFragmentsPerAllele = DEFAULT_FRAGS_PER_ALLELE;
         MinFragmentsToRemoveSingle = DEFAULT_FRAGS_REMOVE_SGL;
@@ -327,6 +339,7 @@ public class LilacConfig
         configBuilder.addConfigItem(GENES, false, "Gene sets to use", ALL_GENES);
         SequencingType.registerConfig(configBuilder);
 
+        configBuilder.addFlag(TARGETED_PANEL, "Run with targeted panel settings");
         configBuilder.addDecimal(MIN_EVIDENCE_FACTOR, "Min fragment evidence required", DEFAULT_MIN_EVIDENCE_FACTOR);
         configBuilder.addInteger(MAX_REF_FRAGMENTS, "Cap ref fragments in solution search, 0 uses all", DEFAULT_MAX_REF_FRAGMENTS);
         configBuilder.addDecimal(MIN_HIGH_QUAL_EVIDENCE_FACTOR, "Min high-qual fragment evidence factor", DEFAULT_MIN_HIGH_QUAL_EVIDENCE_FACTOR);
