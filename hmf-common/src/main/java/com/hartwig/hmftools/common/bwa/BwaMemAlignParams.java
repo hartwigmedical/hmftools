@@ -2,23 +2,38 @@ package com.hartwig.hmftools.common.bwa;
 
 public record BwaMemAlignParams(
         // Rewards and penalties are specified as positive numbers.
-        int matchReward,    // -A
-        int mismatchPenalty,    // -B
-        int gapOpenPenalty,     // -O
-        int gapExtendPenalty,   // -E
-        int clipPenalty,    // -L
-        int seedLengthMin,  // -k
-        int seed3MaxOccurrence,     // -y and also known as max_mem_intv
-        int memMaxOccurrence,   // -c
-        float memReseedFactor,      // -r
-        float chainOverlapFactor,   // -D
-        int bandWidth,  // -w
-        int zDropoff    // -d
+
+        // Reward for matching bases, except for N. CLI: -A
+        int matchReward,
+        // Penalty for mismatched bases, except if one is N. CLI: -B
+        int mismatchPenalty,
+        // Penalty for when either base is N. No CLI equivalent.
+        int uncertainBasePenalty,
+        // Penalty for opening an insert or delete. CLI: -O
+        int gapOpenPenalty,
+        // Penalty for adding a base to an insert or delete. CLI: -E
+        int gapExtendPenalty,
+        // Penalty for terminating the alignment early. CLI: -L
+        int clipPenalty,
+        // Length of exact match seed. CLI: -k
+        int seedLengthMin,
+        // In the 3rd round of seeding, seeds with more than this many occurrences are dropped. Also known as max_mem_intv. CLI: -y
+        int seed3MaxOccurrence,
+        // CLI: -c
+        int memMaxOccurrence,
+        // CLI: -r
+        float memReseedFactor,
+        // CLI: -D
+        float chainOverlapFactor,
+        // CLI: -w
+        int bandWidth,
+        // CLI: -d
+        int zDropoff
 )
 {
     public BwaMemAlignParams
     {
-        if(matchReward < 1 || mismatchPenalty < 0 || gapOpenPenalty < 0 || gapExtendPenalty < 0 || clipPenalty < 0)
+        if(matchReward < 1 || mismatchPenalty < 0 || uncertainBasePenalty < 0 || gapOpenPenalty < 0 || gapExtendPenalty < 0 || clipPenalty < 0)
         {
             throw new IllegalArgumentException("Invalid rewards/penalties");
         }
@@ -34,5 +49,5 @@ public record BwaMemAlignParams(
         }
     }
 
-    public static final BwaMemAlignParams DEFAULT = new BwaMemAlignParams(1, 4, 6, 1, 5, 19, 20, 500, 1.5f, 0.5f, 100, 100);
+    public static final BwaMemAlignParams DEFAULT = new BwaMemAlignParams(1, 4, 1, 6, 1, 5, 19, 20, 500, 1.5f, 0.5f, 100, 100);
 }

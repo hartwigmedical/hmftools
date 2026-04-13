@@ -48,9 +48,10 @@ public class BwaMemAligner implements IBwaMemAligner
         aligner.setDGapExtendPenaltyOption(alignParams.gapExtendPenalty());
         aligner.setClip3PenaltyOption(alignParams.clipPenalty());
         aligner.setClip5PenaltyOption(alignParams.clipPenalty());
-        // I'm not sure if this is strictly necessary, since the other params should set the scoring.
-        // But it was done is ESVEE, so to ensure backwards compatibility, we will do it.
-        updateScoringMatrix(aligner);
+        // Setting the match and mismatch options doesn't do anything because BWA uses an internal matrix of base-to-base scores.
+        // Usually when called from the CLI, BWA will update this matrix accordingly. But via the JNI wrapper, that code won't trigger, so
+        // we have to do it ourselves.
+        setScoringMatrix(aligner, alignParams);
 
         aligner.setMinSeedLengthOption(alignParams.seedLengthMin());
         aligner.setMaxMemIntvOption(alignParams.seed3MaxOccurrence());
@@ -73,13 +74,18 @@ public class BwaMemAligner implements IBwaMemAligner
         aligner.setNThreadsOption(threads);
     }
 
-    private static void updateScoringMatrix(org.broadinstitute.hellbender.utils.bwa.BwaMemAligner aligner)
+    private static void setScoringMatrix(org.broadinstitute.hellbender.utils.bwa.BwaMemAligner aligner, BwaMemAlignParams alignParams)
     {
-        // TODO: what is this actually achieving?
+        // Set the base-to-base scoring.
+        // If the bases are equal, use the match reward.
+        // If the bases are unequal, use the mismatch penalty.
+        // If either base is uncertain (N), use the uncertain base penalty.
 
-        int matrixSize = 5;
-        int matchScore = aligner.getMatchScoreOption();
-        int mismatchPenalty = aligner.getMismatchPenaltyOption();
+        byte matchScore = (byte) alignParams.matchReward();
+        byte mismatchScore = (byte) -alignParams.mismatchPenalty();
+        byte uncertainScore = (byte) -alignParams.uncertainBasePenalty();
+
+        int matrixSize = 5; // 4 nucleotides + uncertain
         byte[] scoringMatrix = new byte[matrixSize * matrixSize];
         int k = 0;
 
@@ -87,14 +93,14 @@ public class BwaMemAligner implements IBwaMemAligner
         {
             for(int j = 0; j < matrixSize - 1; j++)
             {
-                scoringMatrix[k++] = (byte) (i == j ? matchScore : -mismatchPenalty);
+                scoringMatrix[k++] = i == j ? matchScore : mismatchScore;
             }
-            scoringMatrix[k++] = -1;
+            scoringMatrix[k++] = uncertainScore;
         }
 
         for(int j = 0; j < matrixSize; j++)
         {
-            scoringMatrix[k++] = -1;
+            scoringMatrix[k++] = uncertainScore;
         }
 
         aligner.setScoringMatrixOption(scoringMatrix);
