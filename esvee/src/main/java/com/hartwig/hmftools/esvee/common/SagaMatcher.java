@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.bam.CigarUtils.cigarFromStr;
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftClipLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.rightClipLength;
 import static com.hartwig.hmftools.esvee.common.SvConstants.SAGA_ALIGN_JUNCTION_OVERLAP_MIN;
+import static com.hartwig.hmftools.esvee.common.SvConstants.SAGA_ALIGN_SCORE_MIN_BASELINE;
 import static com.hartwig.hmftools.esvee.common.SvConstants.SAGA_ALIGN_SCORE_MIN_RATIO;
 import static com.hartwig.hmftools.esvee.common.SvConstants.SAGA_LOCATION_MATCH_DISTANCE;
 
@@ -18,7 +19,8 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.bam.SamRecordUtils;
-import com.hartwig.hmftools.esvee.assembly.alignment.BwaAligner;
+import com.hartwig.hmftools.common.bwa.BwaMemAlignParams;
+import com.hartwig.hmftools.common.bwa.BwaMemAligner;
 
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
 import org.jetbrains.annotations.NotNull;
@@ -30,14 +32,13 @@ import htsjdk.samtools.SAMSequenceDictionary;
 public class SagaMatcher
 {
     private final SagaResource mSagaResource;
-    private final BwaAligner mAligner;
+    private final BwaMemAligner mAligner;
     private final SAMSequenceDictionary mSagaDict;
 
     public SagaMatcher(final SagaResource sagaResource)
     {
         mSagaResource = sagaResource;
-        // TODO: set params? min alignment score? output multiple alignments?
-        mAligner = new BwaAligner(sagaResource.bwaIndexImagePath());
+        mAligner = new BwaMemAligner(sagaResource.bwaIndexImagePath(), makeAlignerParams());
         mSagaDict = sagaResource.samDict();
     }
 
@@ -176,5 +177,19 @@ public class SagaMatcher
         // matching just one side of the variant (e.g. for junction assembly, or an SGL).
         return overlaps.stream()
                 .anyMatch(junctionOverlaps -> junctionOverlaps.stream().allMatch(overlap -> overlap >= SAGA_ALIGN_JUNCTION_OVERLAP_MIN));
+    }
+
+    private static BwaMemAligner.Params makeAlignerParams()
+    {
+        return new BwaMemAligner.Params(
+                // TODO? may have to relax some params? but measure performance hit
+                BwaMemAlignParams.DEFAULT,
+                true,
+                SAGA_ALIGN_SCORE_MIN_BASELINE,
+                // Single threaded because ESVEE is already multithreaded appropriately.
+                1,
+                // Don't care about batching because we align 1 sequence at a time.
+                null
+        );
     }
 }
