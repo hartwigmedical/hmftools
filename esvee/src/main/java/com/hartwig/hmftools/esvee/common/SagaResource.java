@@ -5,6 +5,7 @@ import static java.util.function.UnaryOperator.identity;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -14,25 +15,23 @@ import java.util.stream.Stream;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.BasePosition;
 
-import org.jetbrains.annotations.Nullable;
-
+import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
+import htsjdk.samtools.reference.ReferenceSequenceFileFactory;
 
 public class SagaResource
 {
     private final String mFastaPath;
-    private final List<AssemblyMetadata> mAssemblies;
-    private final Map<String, Variant> mVariantsById;
+    private final Map<String, AssemblyMetadata> mAssembliesById;
     private final Map<String, List<IndexedBreakend>> mSearchableBreakends;
 
     public SagaResource(final String fastaPath)
     {
         mFastaPath = fastaPath;
-        mAssemblies = loadAssemblies();
-        mVariantsById = mAssemblies.stream()
-                .map(AssemblyMetadata::variant)
-                .collect(Collectors.toMap(Variant::id, identity()));
-        mSearchableBreakends = mAssemblies.stream()
+        List<AssemblyMetadata> assemblies = loadAssemblies();
+        mAssembliesById = assemblies.stream()
+                .collect(Collectors.toMap(AssemblyMetadata::id, identity()));
+        mSearchableBreakends = assemblies.stream()
                 .flatMap(assembly ->
                         assembly.variant.breakends().map(breakend ->
                                 new IndexedBreakend(breakend, assembly.variant.id())))
@@ -44,23 +43,34 @@ public class SagaResource
         return mFastaPath + ".img";
     }
 
-    public Variant getVariantById(final String variantId)
+    public SAMSequenceDictionary samDict()
     {
-        Variant variant = mVariantsById.get(variantId);
-        if(variant == null)
+        String path = mFastaPath + ".dict";
+        return ReferenceSequenceFileFactory.loadDictionary(new FileInputStream(path));
+    }
+
+    public AssemblyMetadata getAssemblyById(final String variantId)
+    {
+        AssemblyMetadata assembly = mAssembliesById.get(variantId);
+        if(assembly == null)
         {
             throw new IllegalArgumentException("No SAGA variant with ID:" + variantId);
         }
         else
         {
-            return variant;
+            return assembly;
         }
     }
 
-    public Variant getVariantByFastaLabel(final String fastaLabel)
+    public Variant getVariantById(final String variantId)
+    {
+        return getAssemblyById(variantId).variant();
+    }
+
+    public AssemblyMetadata getAssemblyByFastaLabel(final String fastaLabel)
     {
         String variantId = fastaLabel.split("\\|", 2)[0];
-        return getVariantById(variantId);
+        return getAssemblyById(variantId);
     }
 
     public Map<String, List<IndexedBreakend>> searchableBreakends()
@@ -102,11 +112,15 @@ public class SagaResource
     public record AssemblyMetadata(
             String fastaLabel,
             Variant variant,
-            int junctionOffset1,
-            // Can be null for DELs where the junction is a single position.
-            @Nullable Integer junctionOffset2
+            // Usually length 2. Can be length 1 for DELs where the junction is a single position.
+            List<Integer> junctionOffsets
     )
     {
+        public String id()
+        {
+            return variant.id();
+        }
+
         public static AssemblyMetadata fromFastaLabel(final String fastaLabel)
         {
             String[] parts = fastaLabel.split("\\|");
@@ -124,7 +138,8 @@ public class SagaResource
                 junctionOffset2 = null;
             }
             Variant variant = new Variant(id, breakend1, breakend2);
-            return new AssemblyMetadata(fastaLabel, variant, junctionOffset1, junctionOffset2);
+            List<Integer> junctionOffsets = junctionOffset2 == null ? List.of(junctionOffset1) : List.of(junctionOffset1, junctionOffset2);
+            return new AssemblyMetadata(fastaLabel, variant, junctionOffsets);
         }
     }
 

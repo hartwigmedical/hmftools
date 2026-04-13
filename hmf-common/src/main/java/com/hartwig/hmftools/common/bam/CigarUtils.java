@@ -179,6 +179,20 @@ public final class CigarUtils
         return record.getReadString().substring(record.getReadString().length() - rightClip);
     }
 
+    // Soft clip or hard clip.
+    public static int leftClipLength(final Cigar cigar)
+    {
+        CigarElement firstElement = cigar.getFirstCigarElement();
+        return (firstElement != null && firstElement.getOperator().isClipping()) ? firstElement.getLength() : 0;
+    }
+
+    // Soft clip or hard clip.
+    public static int rightClipLength(final Cigar cigar)
+    {
+        CigarElement lastElement = cigar.getLastCigarElement();
+        return (lastElement != null && lastElement.getOperator().isClipping()) ? lastElement.getLength() : 0;
+    }
+
     public static int getReadBoundaryPosition(
             final int readStart, final String cigarStr, final boolean getReadStart, boolean includeSoftClipped)
     {
