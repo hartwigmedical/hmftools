@@ -1,10 +1,7 @@
 package com.hartwig.hmftools.esvee.prep;
 
-import static java.lang.Math.min;
-
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
 
-import com.hartwig.hmftools.common.sv.EsveeCommon;
 import com.hartwig.hmftools.common.sv.EsveeDiscordantStats;
 import com.hartwig.hmftools.common.sv.LineElements;
 

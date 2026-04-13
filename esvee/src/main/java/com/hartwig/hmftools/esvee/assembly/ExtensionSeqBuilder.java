@@ -28,7 +28,6 @@ import static com.hartwig.hmftools.esvee.assembly.SequenceDiffType.REPEAT;
 import static com.hartwig.hmftools.esvee.assembly.SequenceDiffType.UNSET;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.INVALID_INDEX;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.aboveMinQual;
-import static com.hartwig.hmftools.esvee.common.CommonUtils.isHighBaseQual;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_MIN_EXTENSION_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_MIN_SOFT_CLIP_SECONDARY_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;

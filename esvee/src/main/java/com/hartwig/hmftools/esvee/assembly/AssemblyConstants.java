@@ -31,6 +31,8 @@ public final class AssemblyConstants
     public static final int PROXIMATE_REF_SIDE_SOFT_CLIPS = 3;
     public static final int ASSEMBLY_MIN_SOFT_CLIP_LENGTH = MIN_VARIANT_LENGTH;
     public static final int ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH = ASSEMBLY_MIN_SOFT_CLIP_LENGTH / 2;
+    public static final int ASSEMBLY_MIN_SOFT_CLIP_LENGTH_LOWER = 24;
+    public static final int ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH_LOWER = ASSEMBLY_MIN_SOFT_CLIP_LENGTH_LOWER / 2;
     public static final int ASSEMBLY_MAX_JUNC_POS_DIFF = 2;
     public static final int ASSEMBLY_REF_READ_MIN_SOFT_CLIP = 10;
     public static final int ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH = 2;
