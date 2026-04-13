@@ -120,7 +120,7 @@ public class FindingRecordFactory
                         .sampleId(orangeRecord.sampleId())
                         .samplingDate(orangeRecord.samplingDate())
                         .build())
-                .qc(createQc(purple))
+                .qc(createQc(purple, orangeRecord.plots()))
                 .fusions(createFusionsFindings(orangeRecord.linx(), findingStatus));
 
         DriverFindingList<GainDeletion>
@@ -168,7 +168,7 @@ public class FindingRecordFactory
         return somaticGainDeletions;
     }
 
-    private static Qc createQc(PurpleRecord purple)
+    private static Qc createQc(PurpleRecord purple, OrangePlots orangePlots)
     {
         PurpleFit purpleFit = purple.fit();
         SortedSet<Qc.QCStatus> qcStatuses = purpleFit.qc().status().stream()
@@ -208,6 +208,7 @@ public class FindingRecordFactory
                 .totalCopyNumberSegments(purpleFit.qc().totalCopyNumberSegments())
                 .unsupportedCopyNumberSegments(purpleFit.qc().unsupportedCopyNumberSegments())
                 .deletedGenes(purpleFit.qc().deletedGenes())
+                .visualisationFile(VisualisationFileUtil.createNullable(orangePlots.qSeePlot()))
                 .build();
     }
 
