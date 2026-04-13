@@ -5,7 +5,6 @@ import static java.util.function.UnaryOperator.identity;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -17,13 +16,13 @@ import com.hartwig.hmftools.common.region.BasePosition;
 
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
-import htsjdk.samtools.reference.ReferenceSequenceFileFactory;
 
 public class SagaResource
 {
     private final String mFastaPath;
     private final Map<String, AssemblyMetadata> mAssembliesById;
     private final Map<String, List<IndexedBreakend>> mSearchableBreakends;
+    private SAMSequenceDictionary mSamDict;
 
     public SagaResource(final String fastaPath)
     {
@@ -45,8 +44,7 @@ public class SagaResource
 
     public SAMSequenceDictionary samDict()
     {
-        String path = mFastaPath + ".dict";
-        return ReferenceSequenceFileFactory.loadDictionary(new FileInputStream(path));
+        return mSamDict;
     }
 
     public AssemblyMetadata getAssemblyById(final String variantId)
@@ -165,7 +163,8 @@ public class SagaResource
         List<AssemblyMetadata> assemblies;
         try(IndexedFastaSequenceFile fasta = loadFasta())
         {
-            assemblies = fasta.getSequenceDictionary().getSequences().stream()
+            mSamDict = fasta.getSequenceDictionary();
+            assemblies = mSamDict.getSequences().stream()
                     .map(seq -> AssemblyMetadata.fromFastaLabel(seq.getSequenceName()))
                     .toList();
         }
