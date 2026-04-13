@@ -1,6 +1,6 @@
-package com.hartwig.hmftools.panelbuilder.probequality;
+package com.hartwig.hmftools.common.utils;
 
-import static com.hartwig.hmftools.panelbuilder.probequality.Utils.partitionStream;
+import static com.hartwig.hmftools.common.utils.Streams.partitionStream;
 
 import static org.junit.Assert.assertEquals;
 
@@ -8,8 +8,7 @@ import java.util.List;
 
 import org.junit.Test;
 
-public class UtilsTest
-{
+public class StreamsTest {
     @Test
     public void testPartitionStreamSingle()
     {

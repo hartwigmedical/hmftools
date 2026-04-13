@@ -1,32 +1,58 @@
 package com.hartwig.hmftools.common.bwa;
 
+import static com.hartwig.hmftools.common.bwa.BwaUtils.LIBBWA_PATH;
+import static com.hartwig.hmftools.common.bwa.BwaUtils.loadAlignerLibrary;
+import static com.hartwig.hmftools.common.utils.Streams.partitionStream;
+
 import static org.broadinstitute.hellbender.utils.bwa.BwaMemAligner.MEM_F_ALL;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
 import org.broadinstitute.hellbender.utils.bwa.BwaMemIndex;
+import org.jetbrains.annotations.Nullable;
 
 public class BwaMemAligner implements IBwaMemAligner
 {
     private final org.broadinstitute.hellbender.utils.bwa.BwaMemAligner mAligner;
+    @Nullable
+    private final Integer mBatchSize;
 
     private static final Logger LOGGER = LogManager.getLogger(BwaMemAligner.class);
 
-    public BwaMemAligner(final BwaMemIndex index, final BwaMemAlignParams alignParams, boolean allAlignments, int minAlignScore,
-            int threads)
+    // Must be called once to load the BWA-MEM DLL before using any functionality.
+    public static void initLibrary(@Nullable final String path)
     {
-        if(threads < 1)
+        // Probably a mistake to try to initialise it multiple times, even though technically it may work.
+        if(System.getProperties().containsKey(LIBBWA_PATH))
         {
-            throw new IllegalArgumentException("Invalid threads: " + threads);
+            throw new RuntimeException("BWA-MEM library already loaded");
         }
+        loadAlignerLibrary(path);
+    }
+
+    public BwaMemAligner(final BwaMemIndex index, final BwaMemAlignParams alignParams, boolean allAlignments, int minAlignScore,
+            int threads, @Nullable Integer batchSize)
+    {
         if(minAlignScore < 0)
         {
             throw new IllegalArgumentException("Invalid minAlignScore: " + minAlignScore);
         }
+        if(threads < 1)
+        {
+            throw new IllegalArgumentException("Invalid threads: " + threads);
+        }
+        if(batchSize != null && batchSize < 1)
+        {
+            throw new IllegalArgumentException("Invalid batchSize: " + batchSize);
+        }
 
+        mBatchSize = batchSize;
+
+        LOGGER.debug("Creating BWA-MEM aligner");
         mAligner = new org.broadinstitute.hellbender.utils.bwa.BwaMemAligner(index);
         applyOptions(mAligner, alignParams, allAlignments, minAlignScore, threads);
         logOptions(mAligner);
@@ -34,7 +60,7 @@ public class BwaMemAligner implements IBwaMemAligner
 
     public List<List<BwaMemAlignment>> alignSequences(List<byte[]> sequences)
     {
-        return mAligner.alignSeqs(sequences);
+        return runBatchedAlignment(sequences);
     }
 
     private static void applyOptions(org.broadinstitute.hellbender.utils.bwa.BwaMemAligner aligner, BwaMemAlignParams alignParams,
@@ -128,5 +154,51 @@ public class BwaMemAligner implements IBwaMemAligner
         LOGGER.debug("  OutputScoreThreshold: {}", aligner.getOutputScoreThresholdOption());
         LOGGER.debug("  Flags: {}", aligner.getFlagOption());
         LOGGER.debug("  Threads: {}", aligner.getNThreadsOption());
+    }
+
+    private List<List<BwaMemAlignment>> runBatchedAlignment(List<byte[]> queries)
+    {
+        int batchSize = mBatchSize == null ? queries.size() : mBatchSize;
+        while(true)
+        {
+            try
+            {
+                Stream<List<byte[]>> batches =
+                        batchSize < queries.size() ? partitionStream(queries.stream(), batchSize) : Stream.of(queries);
+                return batches
+                        .flatMap(batch ->
+                        {
+                            LOGGER.trace("Running BWA-MEM alignment on {} queries", batch.size());
+                            List<List<BwaMemAlignment>> batchAlignments = mAligner.alignSeqs(batch);
+                            if(batchAlignments.size() != batch.size())
+                            {
+                                // Presumably, this shouldn't occur, but we'll check to give a nicer error just in case.
+                                throw new RuntimeException("Alignment failed");
+                            }
+                            return batchAlignments.stream();
+                        })
+                        .toList();
+            }
+            catch(IllegalArgumentException e)
+            {
+                // Silly issue with the BWA-MEM JNI wrapper where it may try to allocate a ByteBuffer larger than is allowed (which is
+                // subsequently a silly issue with ByteBuffer being limited to 2^31 bytes).
+                // We don't have much control over this issue since the number of alignments produced can't be predicted or tightly controlled.
+                // Further, modifying the wrapper code is a pain.
+                // So instead we will catch the error and shrink the sequence set, hopefully reducing the allocation to an acceptable size.
+                int newBatchSize = batchSize / 10;
+                if(newBatchSize >= 1)
+                {
+                    LOGGER.warn("Aligning sequences with batch size {} failed. Trying again with batch size {}",
+                            batchSize, newBatchSize);
+                    batchSize = newBatchSize;
+                    // Loop and try again with the new batch size.
+                }
+                else
+                {
+                    throw e;
+                }
+            }
+        }
     }
 }

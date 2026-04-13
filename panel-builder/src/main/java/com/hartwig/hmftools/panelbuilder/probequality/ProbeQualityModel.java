@@ -2,7 +2,7 @@ package com.hartwig.hmftools.panelbuilder.probequality;
 
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.panelbuilder.probequality.Utils.partitionStream;
+import static com.hartwig.hmftools.common.utils.Streams.partitionStream;
 
 import java.util.Comparator;
 import java.util.List;
