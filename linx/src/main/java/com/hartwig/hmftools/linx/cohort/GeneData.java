@@ -31,8 +31,8 @@ public class GeneData
         mPaired = false;
     }
 
-    public boolean markedNonDisruptive() { return mMarkedNonDisruptive; }
-    public void markNonDisruptive() { mMarkedNonDisruptive = true; }
+    public boolean nonDisruptive() { return mMarkedNonDisruptive; }
+    public void setNonDisruptive() { mMarkedNonDisruptive = true; }
     public boolean disruptive() { return Disruptive && !mMarkedNonDisruptive; }
 
     public boolean isPaired() { return mPaired; }

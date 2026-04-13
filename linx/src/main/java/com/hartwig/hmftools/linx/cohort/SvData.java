@@ -135,24 +135,39 @@ public class SvData
         if(mGeneDataList.start().isEmpty() && mGeneDataList.end().isEmpty())
             return;
 
-        boolean isUnclusteredSgl = ClusterCount == 1 && SvType == SGL;
-        boolean simpleDelDup = ClusterCount == 1 && (SvType == DEL || SvType == DUP);
-
-        for(GeneData startGeneData : mGeneDataList.start())
+        for(int se = SE_START; se <= SE_END; ++se)
         {
-            if(SvType == SGL)
+            for(GeneData geneData : mGeneDataList.get(se))
+            {
+                if(geneData.CodingType == NON_CODING)
+                    geneData.setNonDisruptive();
+            }
+        }
+
+        // tailored treatment of SGLs
+        if(SvType == SGL)
+        {
+            boolean isUnclusteredSgl = ClusterCount == 1 && SvType == SGL;
+
+            for(GeneData startGeneData : mGeneDataList.start())
             {
                 if(!startGeneData.Disruptive)
                     continue;
 
-                if(isUnclusteredSgl && (startGeneData.CodingType == NON_CODING || startGeneData.CodingType == UTR_3P))
-                    startGeneData.markedNonDisruptive();
+                if(isUnclusteredSgl && startGeneData.CodingType == UTR_3P)
+                    startGeneData.setNonDisruptive();
 
                 // could assume also true for intronic
-
-                continue;
             }
 
+            return;
+        }
+
+        boolean simpleDelDup = ClusterCount == 1 && (SvType == DEL || SvType == DUP);
+
+        // paired breakend logic
+        for(GeneData startGeneData : mGeneDataList.start())
+        {
             GeneData endGeneData = mGeneDataList.end().stream().filter(x -> x.GeneName.equals(startGeneData.GeneName)).findFirst().orElse(null);
 
             if(endGeneData == null)
@@ -164,17 +179,10 @@ public class SvData
             if(!startGeneData.Disruptive && !endGeneData.Disruptive)
                 continue;
 
-            if(startGeneData.CodingType == NON_CODING)
-            {
-                startGeneData.markedNonDisruptive();
-                endGeneData.markedNonDisruptive();
-                continue;
-            }
-
             if(simpleDelDup && (startGeneData.CodingType == UTR_3P && endGeneData.CodingType == UTR_3P))
             {
-                startGeneData.markedNonDisruptive();
-                endGeneData.markedNonDisruptive();
+                startGeneData.setNonDisruptive();
+                endGeneData.setNonDisruptive();
                 continue;
             }
         }

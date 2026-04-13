@@ -628,7 +628,7 @@ public class CohortAnalyser
                 sj.add(geneData.RegionType.toString());
                 sj.add(geneData.CodingType.toString());
 
-                boolean disruptive = geneData.Disruptive && !geneData.markedNonDisruptive();
+                boolean disruptive = geneData.Disruptive && !geneData.nonDisruptive();
                 sj.add(String.valueOf(disruptive));
                 sj.add(String.valueOf(geneData.Exon));
                 sj.add(String.valueOf(geneData.isPaired()));
