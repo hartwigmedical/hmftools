@@ -10,10 +10,10 @@ import jakarta.validation.constraints.NotNull;
 
 // HLA allele nomenclature:
 //
-//   HLA-A  *  02  : 101
-//      |_|    |_|   |_|
-//       |      |     |
-//   geneSymbol |   hlaProtein
+// HLA - A  *  02  :  101
+//      |_|   |__|   |___|
+//       |      |      |
+//  geneSymbol  |  hlaProtein
 //          alleleGroup
 //
 // geneSymbol  - e.g. "A", "B", "DQA1"
@@ -70,7 +70,7 @@ public record HlaAllele(
 
     public boolean hasSomaticVariants()
     {
-        return Doubles.positive(somaticMissense()) || Doubles.positive(somaticNonsenseOrFrameshift()) || Doubles.positive(
-                somaticSplice()) || Doubles.positive(somaticInframeIndel());
+        return somaticMissense() > 0 || somaticNonsenseOrFrameshift() > 0 ||
+                somaticSplice() > 0 || somaticInframeIndel() > 0;
     }
 }

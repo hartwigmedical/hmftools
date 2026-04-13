@@ -2,6 +2,7 @@ package com.hartwig.hmftools.finding.datamodel;
 
 import jakarta.validation.constraints.NotNull;
 
+@SuppressWarnings("unused")
 @RecordBuilder
 public record PurityPloidyFit(
         @NotNull FittedPurityMethod fittedPurityMethod,
@@ -17,7 +18,7 @@ public record PurityPloidyFit(
         @NotNull VisualisationFile purpleCopyNumberPlot,
         @NotNull VisualisationFile purpleVariantCopyNumberPlot,
         @NotNull VisualisationFile purplePurityRangePlot,
-        @NotNull VisualisationFile purpleKataegisPlot
+        @NotNull VisualisationFile purpleRainfallPlot
 )
 {
     public enum FittedPurityMethod

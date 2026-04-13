@@ -8,7 +8,6 @@ public record Breakend(
     int svId,
     @NotNull GeneOrientation geneOrientation,
     boolean disruptive,
-    boolean reported,
     @NotNull TranscriptRegionType regionType,
     @NotNull TranscriptCodingType codingType,
     int nextSpliceExonRank,

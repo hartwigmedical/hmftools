@@ -46,8 +46,8 @@ public record FindingStatus(@NotNull FindingStatus.Status status, @NotNull Sorte
         return status == Status.OK || status == Status.NOT_RELIABLE;
     }
 
-    public boolean isReliable()
+    public boolean isNotReliable()
     {
-        return status != Status.NOT_RELIABLE;
+        return status == Status.NOT_RELIABLE;
     }
 }

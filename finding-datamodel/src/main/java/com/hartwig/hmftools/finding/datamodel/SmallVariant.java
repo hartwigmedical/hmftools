@@ -15,6 +15,7 @@ import org.jspecify.annotations.Nullable;
 
 import jakarta.validation.constraints.NotNull;
 
+@SuppressWarnings("unused")
 @RecordBuilder
 public record SmallVariant(
         @NotNull DriverFields driver,
@@ -41,7 +42,11 @@ public record SmallVariant(
         @NotNull GenotypeStatus genotypeStatus,
         int repeatCount,
         double subclonalLikelihood,
+        @Nullable SomaticLikelihood somaticLikelihood,
         @Nullable List<Integer> localPhaseSets,
+        // germline fields
+        @Nullable String clinvarPathogenicity,
+        @Nullable Double gnomadFrequency,
         @Nullable VisualisationFile visualisationFile
 ) implements Driver
 {
@@ -123,6 +128,14 @@ public record SmallVariant(
         HET,
         HOM_ALT,
         UNKNOWN
+    }
+
+    public enum SomaticLikelihood
+    {
+        UNKNOWN,
+        LOW,
+        MEDIUM,
+        HIGH
     }
 
     @NotNull
