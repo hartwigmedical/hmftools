@@ -49,7 +49,6 @@ public class GermlineVariantDataTest extends ComparableItemTest<GermlineVariantD
         fieldToAlternateValueInitializer = new HashMap<>();
         fieldToAlternateValueInitializer.put(FLD_HOTSPOT, b -> b.hotspotStatus = alternateValueSource.Variant.hotspot());
         fieldToAlternateValueInitializer.put(FLD_TIER, b -> b.tier = alternateValueSource.Variant.tier());
-        fieldToAlternateValueInitializer.put(FLD_BIALLELIC, b -> b.biallelic = alternateValueSource.Variant.biallelic());
         fieldToAlternateValueInitializer.put(FLD_GENE, b -> b.gene = alternateValueSource.Variant.gene());
         fieldToAlternateValueInitializer.put(FLD_CANON_EFFECT, b -> b.canonicalEffect = alternateValueSource.Variant.canonicalEffect());
         fieldToAlternateValueInitializer.put(FLD_CODING_EFFECT, b -> b.canonicalCodingEffect =

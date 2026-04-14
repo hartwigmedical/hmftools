@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.compar.mutation;
 
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_AF;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_BIALLELIC_PROB;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_VARIANT_CN;
 import static com.hartwig.hmftools.compar.common.CommonUtils.createMismatchFromDiffs;
 
@@ -74,7 +75,7 @@ public class SomaticVariantData implements ComparableItem
     public final boolean Reported;
     public final HotspotType HotspotStatus;
     public final VariantTier Tier;
-    public final boolean Biallelic;
+    public final double BiallelicProbability;
     public final String CanonicalEffect;
     public final String CanonicalCodingEffect;
     public final String CanonicalHgvsCodingImpact;
@@ -100,7 +101,7 @@ public class SomaticVariantData implements ComparableItem
 
     public SomaticVariantData(
             final String chromosome, final int position, final String ref, final String alt, final VariantType type,
-            final String gene, final boolean reported, final HotspotType hotspotStatus, final VariantTier tier, final boolean biallelic,
+            final String gene, final boolean reported, final HotspotType hotspotStatus, final VariantTier tier, final double biallelicProb,
             final String canonicalEffect, final String canonicalCodingEffect, final String canonicalHgvsCodingImpact,
             final String canonicalHgvsProteinImpact, final String otherReportedEffects, final boolean hasLPS, final int qual,
             final double subclonalLikelihood, final Set<String> filters, final double variantCopyNumber, final double purityAdjustedVaf,
@@ -116,7 +117,7 @@ public class SomaticVariantData implements ComparableItem
         Reported = reported;
         HotspotStatus = hotspotStatus;
         Tier = tier;
-        Biallelic = biallelic;
+        BiallelicProbability = biallelicProb;
         CanonicalEffect = canonicalEffect;
         CanonicalCodingEffect = canonicalCodingEffect;
         CanonicalHgvsCodingImpact = canonicalHgvsCodingImpact;
@@ -155,7 +156,7 @@ public class SomaticVariantData implements ComparableItem
         values.add(format("%s", Reported));
         values.add(format("%s", HotspotStatus));
         values.add(format("%s", Tier));
-        values.add(format("%s", Biallelic));
+        values.add(format("%.2f", BiallelicProbability));
         values.add(format("%s", Gene));
         values.add(format("%s", CanonicalEffect));
         values.add(format("%s", CanonicalCodingEffect));
@@ -243,7 +244,7 @@ public class SomaticVariantData implements ComparableItem
         if(canComparePurpleFields(otherVar))
         {
             checkDiff(diffs, FLD_HOTSPOT, HotspotStatus.toString(), otherVar.HotspotStatus.toString());
-            checkDiff(diffs, FLD_BIALLELIC, Biallelic, otherVar.Biallelic);
+            checkDiff(diffs, FLD_BIALLELIC, BiallelicProbability, otherVar.BiallelicProbability, thresholds);
             checkDiff(diffs, FLD_OTHER_REPORTED, OtherReportedEffects, otherVar.OtherReportedEffects);
             checkDiff(diffs, FLD_SUBCLONAL_LIKELIHOOD, SubclonalLikelihood, otherVar.SubclonalLikelihood, thresholds);
             checkDiff(diffs, FLD_VARIANT_COPY_NUMBER, VariantCopyNumber, otherVar.VariantCopyNumber, thresholds);
@@ -276,7 +277,8 @@ public class SomaticVariantData implements ComparableItem
         return HasPurpleAnnotation && otherVar.HasPurpleAnnotation;
     }
 
-    public static SomaticVariantData fromContext(final VariantContext context, final String sampleId, final boolean fromUnfilteredFile,
+    public static SomaticVariantData fromContext(
+            final VariantContext context, final String sampleId, final boolean fromUnfilteredFile,
             final boolean hasPurpleAnnotation, String sourceName, ComparConfig config)
     {
         int position = context.getStart();
@@ -300,7 +302,7 @@ public class SomaticVariantData implements ComparableItem
                 context.getAttributeAsBoolean(REPORTED_FLAG, false),
                 HotspotType.fromVariant(context),
                 VariantTier.fromContext(context),
-                context.getAttributeAsBoolean(PURPLE_BIALLELIC_FLAG, false),
+                context.getAttributeAsDouble(PURPLE_BIALLELIC_PROB, 0),
                 variantImpact.CanonicalEffect,
                 variantImpact.CanonicalCodingEffect.toString(),
                 variantImpact.CanonicalHgvsCoding,
@@ -343,7 +345,7 @@ public class SomaticVariantData implements ComparableItem
                 record.getValue(SOMATICVARIANT.REPORTED).intValue() == 1,
                 HotspotType.valueOf(record.getValue(SOMATICVARIANT.HOTSPOT)),
                 VariantTier.fromString(record.get(SOMATICVARIANT.TIER)),
-                record.getValue(SOMATICVARIANT.BIALLELIC).intValue() == 1,
+                record.getValue(SOMATICVARIANT.BIALLELIC).intValue() == 1 ? 1.0 : 0,
                 record.getValue(SOMATICVARIANT.CANONICALEFFECT),
                 record.getValue(SOMATICVARIANT.CANONICALCODINGEFFECT),
                 record.getValue(SOMATICVARIANT.CANONICALHGVSCODINGIMPACT),

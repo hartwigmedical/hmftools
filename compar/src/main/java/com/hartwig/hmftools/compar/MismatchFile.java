@@ -29,18 +29,18 @@ import org.jetbrains.annotations.Nullable;
 
 public class MismatchFile
 {
-    private enum Columns
+    private enum Columns // for the generic file output
     {
         SampleId,
         Category,
         MismatchType,
         Key,
         Differences,
-        AllValues;
+        RefValues,
+        NewValues;
     }
 
-    // Differences is list of the form: field(refValue/otherValue)
-
+    // differences is list of the form: field(refValue/newValue)
     public static String commonHeader(boolean includeSampleId, boolean includeCatagory)
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);
@@ -57,7 +57,11 @@ public class MismatchFile
 
     public static String header(boolean includeSampleId)
     {
-        return commonHeader(includeSampleId, true) + TSV_DELIM + Columns.AllValues;
+        StringJoiner sj = new StringJoiner(TSV_DELIM);
+        sj.add(commonHeader(includeSampleId, true));
+        sj.add(Columns.RefValues.toString());
+        sj.add(Columns.NewValues.toString());
+        return sj.toString();
     }
 
     public static String commonTsv(boolean writeCategory, final Mismatch mismatch)
@@ -92,8 +96,8 @@ public class MismatchFile
 
         if(writeFieldValues)
         {
-            final List<String> refFieldValues = mismatch.RefItem != null ? mismatch.RefItem.displayValues() : null;
-            final List<String> newFieldValues = mismatch.NewItem != null ? mismatch.NewItem.displayValues() : null;
+            List<String> refFieldValues = mismatch.RefItem != null ? mismatch.RefItem.displayValues() : null;
+            List<String> newFieldValues = mismatch.NewItem != null ? mismatch.NewItem.displayValues() : null;
             int fieldCount = refFieldValues != null ? refFieldValues.size() : newFieldValues.size();
 
             for(int i = 0; i < fieldCount; ++i)
@@ -111,21 +115,30 @@ public class MismatchFile
         }
         else
         {
-            ComparableItem item = mismatch.RefItem != null ? mismatch.RefItem : mismatch.NewItem;
-
-            StringJoiner displaySj = new StringJoiner(ITEM_DELIM);
-
-            List<String> itemDisplayValues = item.displayValues();
-
-            for(int i = 0; i < itemDisplayValues.size(); ++i)
-            {
-                displaySj.add(format("%s=%s", comparedFieldsNames.get(i), itemDisplayValues.get(i)));
-            }
-
-            sj.add(displaySj.toString());
+            sj.add(itemValues(mismatch.RefItem, comparedFieldsNames));
+            sj.add(itemValues(mismatch.NewItem, comparedFieldsNames));
         }
 
         return sj.toString();
+    }
+
+    private static String itemValues(final ComparableItem item, final List<String> comparedFieldsNames)
+    {
+        if(item == null)
+            return "";
+
+        StringJoiner displaySj = new StringJoiner(ITEM_DELIM);
+
+        List<String> itemDisplayValues = item.displayValues();
+
+        for(int i = 0; i < itemDisplayValues.size(); ++i)
+        {
+            displaySj.add(format("%s=%s", comparedFieldsNames.get(i), itemDisplayValues.get(i)));
+        }
+
+        return displaySj.toString();
+
+
     }
 
     public static Map<String,List<MismatchData>> loadMismatches(final String filename, @Nullable final String configSampleId)

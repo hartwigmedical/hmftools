@@ -3,7 +3,6 @@ package com.hartwig.hmftools.compar.mutation;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 import static com.hartwig.hmftools.compar.common.CategoryType.SOMATIC_VARIANT;
-import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_QUAL;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.ComparConfig.NEW_SOURCE;
 import static com.hartwig.hmftools.compar.ComparConfig.REF_SOURCE;
@@ -15,10 +14,7 @@ import static com.hartwig.hmftools.compar.common.MismatchType.NEW_ONLY;
 import static com.hartwig.hmftools.compar.common.MismatchType.REF_ONLY;
 import static com.hartwig.hmftools.compar.mutation.SomaticVariantData.FLD_LPS;
 import static com.hartwig.hmftools.compar.mutation.SomaticVariantData.FLD_SUBCLONAL_LIKELIHOOD;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_PURITY_ADJUSTED_VAF;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_TUMOR_SUPPORTING_READ_COUNT;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_TUMOR_TOTAL_READ_COUNT;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_VARIANT_COPY_NUMBER;
+import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_BIALLELIC;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Somaticvariant.SOMATICVARIANT;
 
 import java.util.List;
@@ -203,8 +199,8 @@ public class SomaticVariantComparer implements ItemComparer
         return true;
     }
 
-    protected SomaticVariantData findUnfilteredVariant(final SomaticVariantData testVariant, final String otherSource,
-            final String sourceSampleId)
+    protected SomaticVariantData findUnfilteredVariant(
+            final SomaticVariantData testVariant, final String otherSource, final String sourceSampleId)
     {
         VcfFileReader unfilteredVcfReader = mUnfilteredVcfReaders.get(otherSource);
 
@@ -226,7 +222,7 @@ public class SomaticVariantComparer implements ItemComparer
             return new SomaticVariantData(
                     context.getContig(), context.getStart(), ref, alt, VariantType.type(context),
                     "", false, HotspotType.fromVariant(context), VariantTier.fromContext(context),
-                    false, "", "", "", "",
+                    0, "", "", "", "",
                     "", context.hasAttribute(LOCAL_PHASE_SET), (int)context.getPhredScaledQual(),
                     0, context.getFilters(), 0, 0,
                     tumorAllelicDepth.AlleleReadCount, tumorAllelicDepth.TotalReadCount, true, false,
@@ -264,18 +260,14 @@ public class SomaticVariantComparer implements ItemComparer
     @Override
     public void registerThresholds(final DiffThresholds thresholds)
     {
-        thresholds.addFieldThreshold(FLD_QUAL, 20, 0.2);
-        thresholds.addFieldThreshold(FLD_SUBCLONAL_LIKELIHOOD, 0.6, 0);
-        thresholds.addFieldThreshold(FLD_VARIANT_COPY_NUMBER, 0.3, 0.15);
-        thresholds.addFieldThreshold(FLD_PURITY_ADJUSTED_VAF, 0.2, 0);
-        thresholds.addFieldThreshold(FLD_TUMOR_SUPPORTING_READ_COUNT, 1, 0.2);
-        thresholds.addFieldThreshold(FLD_TUMOR_TOTAL_READ_COUNT, 1, 0.2);
+        VariantCommon.registerThresholds(thresholds);
     }
 
     @Override
     public List<String> comparedFieldNames()
     {
         List<String> fieldNames = VariantCommon.comparedFieldNames();
+        fieldNames.add(FLD_BIALLELIC);
         fieldNames.add(FLD_SUBCLONAL_LIKELIHOOD);
         fieldNames.add(FLD_LPS);
         return fieldNames;

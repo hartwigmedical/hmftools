@@ -2,13 +2,8 @@ package com.hartwig.hmftools.compar.mutation;
 
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 import static com.hartwig.hmftools.compar.common.CategoryType.GERMLINE_VARIANT;
-import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_QUAL;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonGenomePosition;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_PURITY_ADJUSTED_VAF;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_TUMOR_SUPPORTING_READ_COUNT;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_TUMOR_TOTAL_READ_COUNT;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_VARIANT_COPY_NUMBER;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.GERMLINEVARIANT;
 
 import java.util.List;
@@ -53,12 +48,7 @@ public class GermlineVariantComparer implements ItemComparer
     @Override
     public void registerThresholds(final DiffThresholds thresholds)
     {
-        // same as somatic
-        thresholds.addFieldThreshold(FLD_QUAL, 20, 0.2);
-        thresholds.addFieldThreshold(FLD_VARIANT_COPY_NUMBER, 0.3, 0.15);
-        thresholds.addFieldThreshold(FLD_PURITY_ADJUSTED_VAF, 0.2, 0);
-        thresholds.addFieldThreshold(FLD_TUMOR_SUPPORTING_READ_COUNT, 1, 0.2);
-        thresholds.addFieldThreshold(FLD_TUMOR_TOTAL_READ_COUNT, 1, 0.2);
+        VariantCommon.registerThresholds(thresholds);
     }
 
     @Override

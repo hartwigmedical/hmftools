@@ -121,7 +121,6 @@ public class GermlineVariantData implements ComparableItem
         checkDiff(diffs, FLD_REPORTED, refVar.reported(), otherVar.reported());
         checkDiff(diffs, FLD_HOTSPOT, refVar.hotspot().toString(), otherVar.hotspot().toString());
         checkDiff(diffs, FLD_TIER, refVar.tier().toString(), otherVar.tier().toString());
-        checkDiff(diffs, FLD_BIALLELIC, refVar.biallelic(), otherVar.biallelic());
         checkDiff(diffs, FLD_GENE, refVar.gene(), otherVar.gene());
         checkDiff(diffs, FLD_CANON_EFFECT, refVar.canonicalEffect(), otherVar.canonicalEffect());
         checkDiff(diffs, FLD_CODING_EFFECT, refVar.canonicalCodingEffect().toString(), otherVar.canonicalCodingEffect()
@@ -143,7 +142,6 @@ public class GermlineVariantData implements ComparableItem
         values.add(String.format("%s", variant.reported()));
         values.add(String.format("%s", variant.hotspot()));
         values.add(String.format("%s", variant.tier()));
-        values.add(String.format("%s", variant.biallelic()));
         values.add(String.format("%s", variant.gene()));
         values.add(String.format("%s", variant.canonicalEffect()));
         values.add(String.format("%s", variant.canonicalCodingEffect()));
