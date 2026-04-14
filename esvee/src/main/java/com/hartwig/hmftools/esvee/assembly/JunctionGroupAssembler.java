@@ -41,6 +41,8 @@ import com.hartwig.hmftools.esvee.common.SagaMatcher;
 import com.hartwig.hmftools.esvee.common.SagaResource;
 import com.hartwig.hmftools.esvee.prep.ReadFilters;
 
+import org.jetbrains.annotations.Nullable;
+
 import htsjdk.samtools.SAMRecord;
 
 public class JunctionGroupAssembler extends ThreadTask
@@ -58,10 +60,11 @@ public class JunctionGroupAssembler extends ThreadTask
     private final ReadStats mReadStats;
     private final List<JunctionAssembly> mDecoyAssemblies;
 
+    @Nullable
     private final SagaMatcher mSagaMatcher;
 
     public JunctionGroupAssembler(
-            final AssemblyConfig config, final BamReader bamReader, final SagaResource sagaResource, final TaskQueue junctionGroups, final ResultsWriter resultsWriter)
+            final AssemblyConfig config, final BamReader bamReader, @Nullable final SagaResource sagaResource, final TaskQueue junctionGroups, final ResultsWriter resultsWriter)
     {
         super("PrimaryAssembly");
         mConfig = config;
@@ -77,12 +80,12 @@ public class JunctionGroupAssembler extends ThreadTask
         mCurrentJunctionGroup = null;
         mReadStats = new ReadStats();
 
-        mSagaMatcher = new SagaMatcher(sagaResource);
+        mSagaMatcher = sagaResource == null ?null : new SagaMatcher(sagaResource);
     }
 
     public static List<JunctionGroupAssembler> createThreadTasks(
             final List<JunctionGroup> junctionGroups, final List<BamReader> bamReaders,
-            final SagaResource sagaResource, final AssemblyConfig config,
+            @Nullable final SagaResource sagaResource, final AssemblyConfig config,
             final ResultsWriter resultsWriter, final int taskCount, final List<Thread> threadTasks)
     {
         List<JunctionGroupAssembler> primaryAssemblyTasks = Lists.newArrayList();
