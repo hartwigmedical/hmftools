@@ -9,7 +9,6 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.finding.FindingKeys;
 import com.hartwig.hmftools.finding.FindingUtil;
 import com.hartwig.hmftools.finding.datamodel.Disruption;
 import com.hartwig.hmftools.finding.datamodel.DisruptionBuilder;
@@ -104,6 +103,10 @@ public class NoGermlineConverter
 
     private static DriverFindingList<GainDeletion> combineGainDeletions(@NotNull FindingRecord record)
     {
+        //TODO: Review behavior. This was the old behavior (ConclusionAlgo)
+        // purple.reportableSomaticGainsLosses();
+        // purple.reportableGermlineFullLosses();
+        // purple.reportableGermlineLossOfHeterozygosities();
         DriverFindingList<GainDeletion> somaticFindings = record.somaticGainDeletions();
         DriverFindingList<GainDeletion> germlineFindings = record.germlineGainDeletions();
         return combineDriverFindingLists(somaticFindings, germlineFindings, NoGermlineConverter::convertGainDeletion);
