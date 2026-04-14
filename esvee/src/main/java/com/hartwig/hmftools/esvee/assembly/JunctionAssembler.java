@@ -133,9 +133,9 @@ public class JunctionAssembler
         duplicateLongExtensionReads.forEach(x -> extensionReads.remove(x));
         duplicateLongExtensionReads.forEach(x -> junctionReads.remove(x));
 
-        ExtensionSeqBuilder extensionSeqBuilder = new ExtensionSeqBuilder(mJunction, extensionReads);
+        ExtensionSeqBuilder extensionSeqBuilder = new ExtensionSeqBuilder(mJunction, extensionReads, usedRelaxedFilters);
 
-        int reqExtensionLength = extensionSeqBuilder.hasLineSequence() ? LINE_MIN_EXTENSION_LENGTH : ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
+        int reqExtensionLength = extensionSeqBuilder.hasLineSequence() ? LINE_MIN_EXTENSION_LENGTH : (usedRelaxedFilters ? ASSEMBLY_MIN_SOFT_CLIP_LENGTH_LOWER :  ASSEMBLY_MIN_SOFT_CLIP_LENGTH);
 
         if(!extensionSeqBuilder.isValid() || extensionSeqBuilder.extensionLength() < reqExtensionLength)
             return Collections.emptyList();
@@ -158,16 +158,6 @@ public class JunctionAssembler
         if(extensionSeqBuilder.hasLineSequence())
             firstAssembly.markLineSequence();
 
-        // Now we have the assembly sequence, try to match to SAGA if necessary.
-        // Note matching to SAGA via coordinate is not enough; we need to know that the variant sequence is actually the same.
-        if (usedRelaxedFilters && !tryRecoverWithSaga(firstAssembly))
-        {
-            // Failed the regular filters and couldn't recover by matching to SAGA.
-            return Collections.emptyList();
-        }
-
-        List<JunctionAssembly> assemblies = Lists.newArrayList(firstAssembly);
-
         int initialAssemblySupport = assemblySupport.size();
         addJunctionReads(firstAssembly, extensionSeqBuilder, junctionReads);
 
@@ -185,6 +175,7 @@ public class JunctionAssembler
         // test for a second well-supported, alternative assembly at the same junction
         JunctionAssembly secondAssembly = checkSecondAssembly(extensionSeqBuilder.mismatchReads(), firstAssembly, junctionReads);
 
+        List<JunctionAssembly> assemblies = Lists.newArrayList(firstAssembly);
         if(secondAssembly != null)
         {
             assemblies.add(secondAssembly);
@@ -204,6 +195,14 @@ public class JunctionAssembler
             assembly.setRefBases(refBaseSeqBuilder);
 
             assembly.buildRepeatInfo();
+
+            // Now we have the assembly sequence, try to match to SAGA if necessary.
+            // Note matching to SAGA via coordinate is not enough; we need to know that the variant sequence is actually the same.
+            if (usedRelaxedFilters && !tryRecoverWithSaga(assembly))
+            {
+                // Failed the regular filters and couldn't recover by matching to SAGA.
+                return Collections.emptyList();
+            }
         }
 
         return assemblies;

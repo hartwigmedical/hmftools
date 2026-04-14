@@ -13,7 +13,9 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MAX_EXTENSION_READ_LOW_QUAL_MISMATCH_PERC;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_LENGTH_LOWER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH_LOWER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.basesMatch;
 import static com.hartwig.hmftools.esvee.assembly.JunctionAssembler.minReadThreshold;
 import static com.hartwig.hmftools.esvee.assembly.LineUtils.findConsensusLineExtension;
@@ -52,6 +54,7 @@ public class ExtensionSeqBuilder
     private final Junction mJunction;
     private final List<ReadParseState> mReads;
     private final boolean mBuildForwards;
+    private final boolean mUseRelaxedFilters;
     
     private final SequenceBuilder mSequenceBuilder;
 
@@ -62,9 +65,15 @@ public class ExtensionSeqBuilder
 
     public ExtensionSeqBuilder(final Junction junction, final List<Read> reads)
     {
+        this(junction, reads, false);
+    }
+
+    public ExtensionSeqBuilder(final Junction junction, final List<Read> reads, boolean useRelaxedFilters)
+    {
         mJunction = junction;
         mBuildForwards = mJunction.isForward();
         mReads = Lists.newArrayListWithCapacity(reads.size());
+        mUseRelaxedFilters = useRelaxedFilters;
 
         int maxExtension = 0;
         boolean hasLineReads = false;
@@ -350,8 +359,8 @@ public class ExtensionSeqBuilder
         int validExtensionReadCount = 0;
         boolean hasMinLengthSoftClipRead = false;
 
-        int reqExtensionLength = mHasLineSequence ? LINE_MIN_EXTENSION_LENGTH : ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
-        int reqSecondaryExtensionLength = mHasLineSequence ? LINE_MIN_SOFT_CLIP_SECONDARY_LENGTH : ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH;
+        int reqExtensionLength = mHasLineSequence ? LINE_MIN_EXTENSION_LENGTH : (mUseRelaxedFilters ? ASSEMBLY_MIN_SOFT_CLIP_LENGTH_LOWER : ASSEMBLY_MIN_SOFT_CLIP_LENGTH);
+        int reqSecondaryExtensionLength = mHasLineSequence ? LINE_MIN_SOFT_CLIP_SECONDARY_LENGTH : (mUseRelaxedFilters ? ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH_LOWER : ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH);
 
         for(ReadParseState read : mReads)
         {
