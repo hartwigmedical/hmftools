@@ -410,7 +410,7 @@ Data key: SampleId, Signature
 
 | Field   | Match Type & Thresholds |
 |---------|-------------------------|
-| percent | Threshold [0.1]         |
+| percent | Threshold [0.05]        |
 
 ### Isofox Summary
 Only runs in DETAILED mode.

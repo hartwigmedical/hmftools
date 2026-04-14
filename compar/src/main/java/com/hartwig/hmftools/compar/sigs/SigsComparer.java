@@ -41,7 +41,7 @@ public record SigsComparer(ComparConfig mConfig) implements ItemComparer
     @Override
     public void registerThresholds(final DiffThresholds thresholds)
     {
-        thresholds.addFieldThreshold(FLD_PERCENT, 0.1, -1);
+        thresholds.addFieldThreshold(FLD_PERCENT, 0.05, -1);
     }
 
     @Override
