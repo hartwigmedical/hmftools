@@ -41,6 +41,7 @@ public record PanelBuilderConfig(
         int cnBackboneResolution,
         boolean includeCdr3,
         List<String> customRegionsFiles,
+        @Nullable String customSmallVariantsFile,
         @Nullable String customStructuralVariantsFile,
         @Nullable SampleVariantsConfig sampleVariants,
         int threads,
@@ -63,6 +64,8 @@ public record PanelBuilderConfig(
     private static final String DESC_INCLUDE_CDR3 = "Include fixed CDR3 panel probes";
     private static final String CFG_CUSTOM_REGIONS_FILE = "custom_regions";
     private static final String DESC_CUSTOM_REGIONS_FILE = "Custom regions TSV file(s) (separate multiple paths with comma)";
+    private static final String CFG_CUSTOM_SMALL_VARIANTS_FILE = "custom_small_variants";
+    private static final String DESC_CUSTOM_SMALL_VARIANTS_FILE = "Custom small variants TSV file";
     private static final String CFG_CUSTOM_SVS_FILE = "custom_svs";
     private static final String DESC_CUSTOM_SV_FILE = "Custom structural variants TSV file";
     private static final String CFG_VERBOSE_OUTPUT = "verbose_output";
@@ -86,6 +89,7 @@ public record PanelBuilderConfig(
                 configBuilder.getInteger(CFG_CN_BACKBONE_RESOLUTION) * 1000,
                 configBuilder.hasFlag(CFG_INCLUDE_CDR3),
                 customRegionsFiles,
+                configBuilder.getValue(CFG_CUSTOM_SMALL_VARIANTS_FILE),
                 configBuilder.getValue(CFG_CUSTOM_SVS_FILE),
                 SampleVariantsConfig.fromConfigBuilder(configBuilder),
                 parseThreads(configBuilder),
@@ -109,6 +113,7 @@ public record PanelBuilderConfig(
         configBuilder.addPath(CFG_TARGET_GENES_FILE, false, DESC_TARGET_GENES_FILE);
         configBuilder.addFlag(CFG_INCLUDE_CDR3, DESC_INCLUDE_CDR3);
         configBuilder.addPaths(CFG_CUSTOM_REGIONS_FILE, false, DESC_CUSTOM_REGIONS_FILE);
+        configBuilder.addPath(CFG_CUSTOM_SMALL_VARIANTS_FILE, false, DESC_CUSTOM_SMALL_VARIANTS_FILE);
         configBuilder.addPath(CFG_CUSTOM_SVS_FILE, false, DESC_CUSTOM_SV_FILE);
 
         SampleVariantsConfig.registerConfig(configBuilder);

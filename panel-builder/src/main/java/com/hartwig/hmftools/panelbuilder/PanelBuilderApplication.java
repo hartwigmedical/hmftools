@@ -79,6 +79,7 @@ public class PanelBuilderApplication
         Genes.ExtraOutput genesExtraOutput = generateTargetGeneProbes();
         generateCustomRegionProbes();
         generateCustomStructuralVariantProbes();
+        generateCustomSmallVariantProbes();
         generateCopyNumberBackboneProbes();
         generateCdr3Probes();
         SampleVariants.ExtraOutput sampleVariantsExtraOutput = generateSampleVariantProbes();
@@ -171,6 +172,19 @@ public class PanelBuilderApplication
         else
         {
             CustomRegions.generateProbes(mConfig.customRegionsFiles(), mRefGenome.chromosomeLengths(), mProbeGenerator, mPanelData);
+            // Result is stored into mPanelData.
+        }
+    }
+
+    private void generateCustomSmallVariantProbes()
+    {
+        if(mConfig.customSmallVariantsFile() == null)
+        {
+            LOGGER.info("Custom small variants not provided; skipping custom small variant probes");
+        }
+        else
+        {
+            CustomSmallVariants.generateProbes(mConfig.customSmallVariantsFile(), mRefGenome, mProbeGenerator, mPanelData);
             // Result is stored into mPanelData.
         }
     }
