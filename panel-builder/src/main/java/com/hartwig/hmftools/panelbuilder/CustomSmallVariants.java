@@ -98,6 +98,7 @@ public class CustomSmallVariants
         TargetMetadata metadata = new TargetMetadata(TARGET_TYPE, customVariant.extraInfo());
         SequenceDefinition definition =
                 buildIndelProbe(customVariant.position().Chromosome, customVariant.position().Position, customVariant.refSequence(), customVariant.altSequence(), PROBE_LENGTH);
+        // TODO: should target whole range or just altered bases?
         TargetedRange targetedRange = TargetedRange.wholeRegion(definition.baseLength());
         ProbeEvaluator.Criteria evalCriteria = new ProbeEvaluator.Criteria(
                 customVariant.qualityScoreMin() == null ? CUSTOM_SMALL_VARIANT_QUALITY_MIN_DEFAULT : customVariant.qualityScoreMin(),

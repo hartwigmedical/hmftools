@@ -93,7 +93,7 @@ public class ProbeUtils
 
     public static List<TargetRegion> probeTargetRegions(final Probe probe)
     {
-        return probe.definition().regions().stream()
+        return probeTargetedRegions(probe.definition(), probe.targetedRange()).stream()
                 .map(region -> new TargetRegion(region, probe.metadata()))
                 .toList();
     }

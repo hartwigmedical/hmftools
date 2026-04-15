@@ -81,6 +81,7 @@ public class CustomStructuralVariants
                 customSv.endPosition().Chromosome, customSv.endPosition().Position, customSv.endOrientation(),
                 customSv.insertSequence(),
                 PROBE_LENGTH);
+        // TODO: should target whole range or just insert sequence?
         TargetedRange targetedRange = TargetedRange.wholeRegion(definition.baseLength());
         ProbeEvaluator.Criteria evalCriteria = new ProbeEvaluator.Criteria(
                 customSv.qualityScoreMin() == null ? CUSTOM_SV_QUALITY_MIN_DEFAULT : customSv.qualityScoreMin(),

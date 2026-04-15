@@ -342,6 +342,7 @@ public class SampleVariants
         LOGGER.trace("Generating probe for variant: {}", variant);
 
         SequenceDefinition definition = variant.generateProbe();
+        // TODO: should target whole range or just altered bases?
         TargetedRange targetedRange = TargetedRange.wholeRegion(definition.baseLength());
         TargetMetadata metadata = createTargetMetadata(variant);
         ProbeEvaluator.Criteria evalCriteria = variant.isDriver() ? DRIVER_PROBE_CRITERIA : NONDRIVER_PROBE_CRITERIA;
