@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.panelbuilder;
 
+import static java.lang.Math.round;
 import static java.lang.System.exit;
 import static java.util.Objects.requireNonNull;
 
@@ -10,9 +11,11 @@ import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreateOutputDir;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.APP_NAME;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
+import static com.hartwig.hmftools.panelbuilder.Utils.estimatePanelOnTargetRate;
 import static com.hartwig.hmftools.panelbuilder.probequality.Utils.createBwaMemAligner;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.function.Supplier;
 
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
@@ -47,6 +50,8 @@ public class PanelBuilderApplication
     {
         mConfig = config;
 
+        LOGGER.info("Loading prerequisite data");
+
         RefGenomeSource refGenomeSource = loadRefGenome(mConfig.refGenomeFile());
         mRefGenome = new CachedRefGenome(refGenomeSource, 2000, 10);
         mRefGenomeVersion = deriveRefGenomeVersion(refGenomeSource);
@@ -63,7 +68,7 @@ public class PanelBuilderApplication
 
     public void run() throws IOException
     {
-        LOGGER.info("Starting panel builder");
+        LOGGER.info("Starting PanelBuilder");
 
         LOGGER.debug("Config: {}", mConfig);
 
@@ -102,7 +107,7 @@ public class PanelBuilderApplication
 
         printPanelStats();
 
-        LOGGER.info("Panel builder complete, mins({})", runTimeMinsStr(startTimeMs));
+        LOGGER.info("PanelBuilder complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
     @Nullable
@@ -233,9 +238,13 @@ public class PanelBuilderApplication
 
     private void printPanelStats()
     {
-        long probeBases = mPanelData.probes().stream().mapToLong(probe -> probe.definition().baseLength()).sum();
+        List<Probe> probes = mPanelData.probes();
+        long probeBases = probes.stream().mapToLong(probe -> probe.definition().baseLength()).sum();
+        double estimatedOnTargetRate = estimatePanelOnTargetRate(probes) * 100;
         LOGGER.info("Panel stats:");
+        LOGGER.info("  Probe count: {}", probes.size());
         LOGGER.info("  Probe bases: {}", probeBases);
+        LOGGER.info("  Estimated on-target rate: {}%", round(estimatedOnTargetRate));
     }
 
     public static void main(@NotNull final String[] args)

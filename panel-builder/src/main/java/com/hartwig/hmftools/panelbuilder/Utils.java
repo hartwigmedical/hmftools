@@ -2,6 +2,8 @@ package com.hartwig.hmftools.panelbuilder;
 
 import static java.lang.Double.NEGATIVE_INFINITY;
 import static java.lang.Double.POSITIVE_INFINITY;
+import static java.lang.Math.max;
+import static java.util.Objects.requireNonNull;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -83,5 +85,27 @@ public class Utils
     public static <T> List<T> findDuplicates(final List<T> items)
     {
         return findDuplicates(items, Object::equals);
+    }
+
+    public static double estimatePanelOnTargetRate(final List<Probe> probes)
+    {
+        double offTargetSum = probes.stream().mapToDouble(p -> qualityScoreToOffTargets(requireNonNull(p.qualityScore()))).sum();
+        double offTargetRate = offTargetSum / probes.size();
+        return 1 - offTargetRate;
+    }
+
+    private static double qualityScoreToOffTargets(double qualityScore)
+    {
+        if (qualityScore < 0)
+        {
+            throw new IllegalArgumentException("Quality score must be non-negative");
+        }
+        // The probe quality profile resolution is 0.01, so let's estimate that any probe which scores near 0 is about 0.01.
+        // This avoids division by 0 issues. Because technically 0 QS means the probe has infinite off-targets.
+        if (qualityScore < 1e-3)
+        {
+            qualityScore = 0.01;
+        }
+        return (1 / qualityScore) - 1;
     }
 }
