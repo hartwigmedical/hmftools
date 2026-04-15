@@ -106,6 +106,19 @@ public class SequenceUtilsTest
     }
 
     @Test
+    public void testBuildIndelProbeIns()
+    {
+        SequenceDefinition actual = buildIndelProbe("1", 101, "A", "ATGT", 11);
+        SequenceDefinition expected = new SequenceDefinition(
+                new ChrBaseRegion("1", 98, 100),
+                Orientation.FORWARD,
+                "ATGT",
+                new ChrBaseRegion("1", 102, 105),
+                Orientation.FORWARD);
+        assertEquals(expected, actual);
+    }
+
+    @Test
     public void testBuildIndelProbeIndel()
     {
         SequenceDefinition actual = buildIndelProbe("1", 101, "A", "CG", 11);
