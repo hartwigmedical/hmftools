@@ -110,16 +110,30 @@ public class SagaResource
     public record AssemblyMetadata(
             String fastaLabel,
             Variant variant,
+            // Junctions occur just before each of these indices in the assembly sequence.
             // Usually length 2. Can be length 1 for DELs where the junction is a single position.
-            List<Integer> junctionOffsets
+            List<Integer> junctionOffsets,
+            int assemblyLength
     )
     {
+        public AssemblyMetadata
+        {
+            // E.g.
+            // sequence = RRRJJJRRR
+            // junctionOffset[0] = 3
+            // junctionOffset[1] = 6
+            if(!junctionOffsets.stream().allMatch(offset -> offset >= 1 && offset < assemblyLength))
+            {
+                throw new IllegalArgumentException("Junction offsets out of bounds");
+            }
+        }
+
         public String id()
         {
             return variant.id();
         }
 
-        public static AssemblyMetadata fromFastaLabel(final String fastaLabel)
+        public static AssemblyMetadata fromFastaLabel(final String fastaLabel, int assemblyLength)
         {
             // E.g.:
             // SvimAsm00000237|chr1:181626:1|chr1:181627:-1|150|285
@@ -142,7 +156,7 @@ public class SagaResource
             }
             Variant variant = new Variant(id, breakend1, breakend2);
             List<Integer> junctionOffsets = junctionOffset2 == null ? List.of(junctionOffset1) : List.of(junctionOffset1, junctionOffset2);
-            return new AssemblyMetadata(fastaLabel, variant, junctionOffsets);
+            return new AssemblyMetadata(fastaLabel, variant, junctionOffsets, assemblyLength);
         }
     }
 
@@ -170,7 +184,7 @@ public class SagaResource
         {
             mSamDict = fasta.getSequenceDictionary();
             assemblies = mSamDict.getSequences().stream()
-                    .map(seq -> AssemblyMetadata.fromFastaLabel(seq.getSequenceName()))
+                    .map(seq -> AssemblyMetadata.fromFastaLabel(seq.getSequenceName(), seq.getSequenceLength()))
                     .toList();
         }
         catch(IOException e)

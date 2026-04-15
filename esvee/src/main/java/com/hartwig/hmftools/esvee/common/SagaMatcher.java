@@ -77,6 +77,11 @@ public class SagaMatcher
         }
     }
 
+    // junctionOffsets are the indices just after the junction in sequence.
+    // E.g.
+    // sequence = RRRJJJRRR
+    // junctionOffset[0] = 3
+    // junctionOffset[1] = 6
     public SagaResource.Variant matchBySequence(final byte[] sequence, List<Integer> junctionOffsets)
     {
         List<BwaMemAlignment> alignments = mAligner.alignSequence(sequence);
@@ -167,6 +172,11 @@ public class SagaMatcher
 
     private static List<Integer> calcJunctionOverlap(int alignStart, int alignEnd, int junctionOffset)
     {
+        // Example to help maths.
+        // 012 345 678
+        // RRR JJJ RRR
+        // junctionOffsets[0] = 3
+        // junctionOffsets[1] = 6
         return List.of(junctionOffset - alignStart, alignEnd - junctionOffset);
     }
 

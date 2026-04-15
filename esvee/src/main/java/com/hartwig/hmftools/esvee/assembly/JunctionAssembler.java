@@ -439,8 +439,8 @@ public class JunctionAssembler
         }
         else
         {
-            List<Integer> assemblyJunctionOffsets = List.of(assembly.junctionIndex());
-            SagaResource.Variant sagaSeqMatch = mSagaMatcher.matchBySequence(assembly.bases(), assemblyJunctionOffsets);
+            int junctionOffset = mJunction.isForward() ? assembly.refBaseLength() : assembly.baseLength() - assembly.refBaseLength();
+            SagaResource.Variant sagaSeqMatch = mSagaMatcher.matchBySequence(assembly.bases(), List.of(junctionOffset));
             SV_LOGGER.trace("Junction assembly {}:{} SAGA sequence match {}", mJunction.Chromosome, mJunction.Position, sagaSeqMatch);
             assembly.setSagaMatch(sagaSeqMatch);
             return sagaSeqMatch != null;
