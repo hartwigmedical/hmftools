@@ -41,7 +41,7 @@ public record PanelBuilderConfig(
         int cnBackboneResolution,
         boolean includeCdr3,
         List<String> customRegionsFiles,
-        @Nullable String customSvsFile,
+        @Nullable String customStructuralVariantsFile,
         @Nullable SampleVariantsConfig sampleVariants,
         int threads,
         @Nullable String outputId,
