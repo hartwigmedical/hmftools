@@ -22,6 +22,7 @@ import com.hartwig.hmftools.esvee.assembly.AssemblyConfig;
 import com.hartwig.hmftools.esvee.assembly.AssemblyUtils;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyStats;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
+import com.hartwig.hmftools.esvee.common.SagaResource;
 import com.hartwig.hmftools.esvee.common.WriteType;
 
 public class AssemblyWriter
@@ -69,6 +70,8 @@ public class AssemblyWriter
             sj.add("UnmappedCandidates");
 
             sj.add("AssemblyInfo");
+
+            sj.add("SAGAMatch");
 
             // extra detailed fields
             if(mConfig.AssemblyDetailedTsv)
@@ -149,6 +152,9 @@ public class AssemblyWriter
             sj.add(String.valueOf(assembly.stats().UnmappedReadCount));
 
             sj.add(assembly.assemblyAlignmentInfo());
+
+            SagaResource.Variant sagaMatch = assembly.sagaMatch();
+            sj.add(sagaMatch == null ? "" : sagaMatch.id());
 
             if(mConfig.AssemblyDetailedTsv)
             {

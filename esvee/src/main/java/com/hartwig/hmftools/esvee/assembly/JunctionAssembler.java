@@ -129,6 +129,11 @@ public class JunctionAssembler
         if(!checkJunctionReadExtension(hasMinLengthSoftClipRead, extensionReads))
             return Collections.emptyList();
 
+        if (usedRelaxedFilters)
+        {
+            SV_LOGGER.trace("Junction assembly {}:{} passed relaxed filters", mJunction.Chromosome, mJunction.Position);
+        }
+
         List<Read> duplicateLongExtensionReads = isSbx() ? findSbxPossibleDuplicates(mJunction, extensionReads) : Collections.emptyList();
         duplicateLongExtensionReads.forEach(x -> extensionReads.remove(x));
         duplicateLongExtensionReads.forEach(x -> junctionReads.remove(x));
@@ -436,8 +441,8 @@ public class JunctionAssembler
         {
             List<Integer> assemblyJunctionOffsets = List.of(assembly.junctionIndex());
             SagaResource.Variant sagaSeqMatch = mSagaMatcher.matchBySequence(assembly.bases(), assemblyJunctionOffsets);
-            SV_LOGGER.trace("Junction {}:{} SAGA sequence match {}", mJunction.Chromosome, mJunction.Position, sagaSeqMatch);
-            // TODO: save the matched variant somewhere
+            SV_LOGGER.trace("Junction assembly {}:{} SAGA sequence match {}", mJunction.Chromosome, mJunction.Position, sagaSeqMatch);
+            assembly.setSagaMatch(sagaSeqMatch);
             return sagaSeqMatch != null;
         }
     }
