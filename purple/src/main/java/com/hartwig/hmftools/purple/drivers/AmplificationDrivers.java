@@ -45,17 +45,17 @@ public final class AmplificationDrivers
 
             double ampCopyNumberThreshold = ploidy * driverGene.amplificationRatio();
 
-            double geneCopyNummberThreshold = (gender == Gender.MALE) && HumanChromosome._X.matches(geneCopyNumber.chromosome())
+            double geneCopyNumberThreshold = (gender == Gender.MALE) && HumanChromosome._X.matches(geneCopyNumber.chromosome())
                     ? ampCopyNumberThreshold * 0.5 : ampCopyNumberThreshold;
 
             boolean checkPartials = !isTargetRegions || TARGET_REGIONS_PARTIAL_AMP_GENES.contains(geneCopyNumber.geneName());
 
             boolean isCandidate = false;
-            DriverType driverType = calcDriverType(geneCopyNumber, geneCopyNummberThreshold, checkPartials);
+            DriverType driverType = calcDriverType(geneCopyNumber, geneCopyNumberThreshold, checkPartials);
 
             if(driverType == UNKNOWN)
             {
-                double candidateAmpThreshold = geneCopyNummberThreshold * DRIVER_AMPLIFICATION_CANDIDATE_PLOIDY_RATIO;
+                double candidateAmpThreshold = geneCopyNumberThreshold * DRIVER_AMPLIFICATION_CANDIDATE_PLOIDY_RATIO;
                 driverType = calcDriverType(geneCopyNumber, candidateAmpThreshold, checkPartials);
                 isCandidate = driverType != UNKNOWN;
             }
