@@ -58,7 +58,7 @@ public final class SvConstants
 
     // For matching variants to the SAGA resource variants.
     public static final int SAGA_LOCATION_MATCH_DISTANCE = 50;
-    public static final int SAGA_ALIGN_SCORE_MIN_BASELINE = 80;
+    public static final int SAGA_ALIGN_SCORE_MIN_BASELINE = 50;
     public static final double SAGA_ALIGN_SCORE_MIN_RATIO = 0.8;
-    public static final int SAGA_ALIGN_JUNCTION_OVERLAP_MIN = 30;
+    public static final int SAGA_ALIGN_JUNCTION_OVERLAP_MIN = 24;
 }
