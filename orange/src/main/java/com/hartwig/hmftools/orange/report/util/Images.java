@@ -1,24 +1,21 @@
 package com.hartwig.hmftools.orange.report.util;
 
-import java.net.MalformedURLException;
+import java.io.IOException;
 
-import com.itextpdf.io.IOException;
-import com.itextpdf.io.image.ImageDataFactory;
-import com.itextpdf.layout.element.Image;
-
-import org.jetbrains.annotations.NotNull;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 
 public final class Images
 {
-    public static Image build(final String path)
+    public static PDImageXObject load(final String path, final PDDocument document)
     {
         try
         {
-            return new Image(ImageDataFactory.create(path));
+            return PDImageXObject.createFromFile(path, document);
         }
-        catch(MalformedURLException e)
+        catch(IOException e)
         {
-            throw new IOException("Could not read image from " + path);
+            throw new RuntimeException("Could not read image from " + path, e);
         }
     }
 }

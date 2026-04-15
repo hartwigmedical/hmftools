@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.orange.report.chapters;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 import java.util.StringJoiner;
@@ -12,18 +13,20 @@ import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.PurpleGermlineAberration;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.orange.algo.QcStatusInterpretation;
+import com.hartwig.hmftools.orange.report.DocumentContext;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.tables.DisruptionTable;
 import com.hartwig.hmftools.orange.report.tables.GainDeletionTable;
 import com.hartwig.hmftools.orange.report.tables.GermlineVariantTable;
 import com.hartwig.hmftools.orange.report.tables.PharmacogeneticsTable;
 import com.hartwig.hmftools.orange.report.util.Cells;
-import com.hartwig.hmftools.orange.report.util.Tables;
-import com.itextpdf.kernel.geom.PageSize;
-import com.itextpdf.layout.Document;
-import com.itextpdf.layout.element.Paragraph;
-import com.itextpdf.layout.element.Table;
-import com.itextpdf.layout.property.UnitValue;
+
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.jetbrains.annotations.NotNull;
+
+import be.quodlibet.boxable.BaseTable;
+import be.quodlibet.boxable.Row;
 
 public class GermlineFindingsChapter implements ReportChapter
 {
@@ -36,26 +39,28 @@ public class GermlineFindingsChapter implements ReportChapter
         mReportResources = reportResources;
     }
 
+    @NotNull
     @Override
     public String name()
     {
         return "Germline Findings";
     }
 
+    @NotNull
     @Override
-    public PageSize pageSize()
+    public PDRectangle pageSize()
     {
-        return PageSize.A4;
+        return PDRectangle.A4;
     }
 
     @Override
-    public void render(final Document document)
+    public void render(@NotNull final DocumentContext document) throws IOException
     {
-        document.add(new Paragraph(name()).addStyle(mReportResources.chapterTitleStyle()));
+        document.addParagraph(name(), mReportResources.chapterTitleStyle());
 
         if(QcStatusInterpretation.hasPurpleFail(mReport.purple().fit().qc()))
         {
-            mReportResources.addQcFailNotice(document);
+            document.addQcFailNotice(mReportResources);
             return;
         }
 
@@ -69,11 +74,11 @@ public class GermlineFindingsChapter implements ReportChapter
         }
         else
         {
-            document.add(new Paragraph(ReportResources.NOT_AVAILABLE).addStyle(mReportResources.tableContentStyle()));
+            document.addParagraph(ReportResources.NOT_AVAILABLE, mReportResources.tableContentStyle());
         }
     }
 
-    private void addGermlineVariants(final Document document)
+    private void addGermlineVariants(final DocumentContext document) throws IOException
     {
         List<PurpleDriver> drivers = mReport.purple().germlineDrivers();
 
@@ -81,34 +86,33 @@ public class GermlineFindingsChapter implements ReportChapter
         if(drivers != null && reportableVariants != null)
         {
             String titleDrivers = "Small Variants (" + reportableVariants.size() + ")";
-            document.add(GermlineVariantTable.build(titleDrivers, contentWidth(), reportableVariants, mReportResources));
+            document.addTable(GermlineVariantTable.build(document, titleDrivers, contentWidth(), reportableVariants, mReportResources));
         }
     }
 
-    private void addGermlineAmpDels(final Document document)
+    private void addGermlineAmpDels(final DocumentContext document) throws IOException
     {
         List<PurpleGainDeletion> reportableGermlineFullDels = mReport.purple().germlineGainsDels();
         if(reportableGermlineFullDels != null)
         {
             String title = "Amplifications and Deletions (" + reportableGermlineFullDels.size() + ")";
-
-            document.add(GainDeletionTable.build(
-                    title, contentWidth(), reportableGermlineFullDels, mReportResources, mReport.hasRna()));
+            document.addTable(GainDeletionTable.build(
+                    document, title, contentWidth(), reportableGermlineFullDels, mReportResources, mReport.hasRna()));
         }
     }
 
-    private void addGermlineBreakends(final Document document)
+    private void addGermlineBreakends(final DocumentContext document) throws IOException
     {
         List<LinxBreakend> germlineBreakends = mReport.linx().germlineBreakends();
 
         if(germlineBreakends != null)
         {
             String title = "Disruptions (" + germlineBreakends.size() + ")";
-            document.add(DisruptionTable.build(title, contentWidth(), germlineBreakends, mReportResources));
+            document.addTable(DisruptionTable.build(document, title, contentWidth(), germlineBreakends, mReportResources));
         }
     }
 
-    private void addGermlineCNAberrations(final Document document)
+    private void addGermlineCNAberrations(final DocumentContext document) throws IOException
     {
         Set<PurpleGermlineAberration> germlineAberrations = mReport.purple().fit().qc().germlineAberrations();
         if(!germlineAberrations.isEmpty())
@@ -123,19 +127,24 @@ public class GermlineFindingsChapter implements ReportChapter
                 }
                 germlineAberrationJoiner.add(germlineAberration.toString());
             }
-            Table table = new Table(UnitValue.createPercentArray(new float[] { 1 })).setWidth(contentWidth());
-            table.addCell(new Cells(mReportResources).createContent(germlineAberrationJoiner.toString()));
-            document.add(new Tables(mReportResources).createWrapping(table, "Chromosomal aberrations (" + count + ")"));
+
+            Cells cells = new Cells(mReportResources);
+            BaseTable table = document.createTable(contentWidth(), null);
+            Row<PDPage> titleRow = table.createRow(15f);
+            cells.applyTitleStyle(titleRow.createCell(100, "Chromosomal aberrations (" + count + ")"));
+            Row<PDPage> dataRow = table.createRow(12f);
+            cells.addContentCell(dataRow, 100, germlineAberrationJoiner.toString());
+            document.addTable(table);
         }
     }
 
-    private void addPharmacogenetics(final Document document)
+    private void addPharmacogenetics(final DocumentContext document) throws IOException
     {
         Set<PeachGenotype> peach = mReport.peach();
         if(peach != null)
         {
             String titlePharmacogenetics = "Pharmacogenetics (" + peach.size() + ")";
-            document.add(PharmacogeneticsTable.build(titlePharmacogenetics, contentWidth(), peach, mReportResources));
+            document.addTable(PharmacogeneticsTable.build(document, titlePharmacogenetics, contentWidth(), peach, mReportResources));
         }
     }
 }

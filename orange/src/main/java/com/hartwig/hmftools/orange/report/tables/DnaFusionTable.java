@@ -9,11 +9,12 @@ import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatSingle
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_DRIVER;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_FUSION;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_JCN;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_RNA;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.cellArray;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.stringArray;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.createStandardTable;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.createEmptyTable;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.toPercentages;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.floatArray;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatSupportField;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -21,12 +22,17 @@ import java.util.stream.Collectors;
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.linx.FusionPhasedType;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
-import com.hartwig.hmftools.datamodel.common.AllelicDepth;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.util.Cells;
-import com.hartwig.hmftools.orange.report.util.Tables;
-import com.itextpdf.layout.element.Cell;
-import com.itextpdf.layout.element.Table;
+
+import be.quodlibet.boxable.Cell;
+import be.quodlibet.boxable.BaseTable;
+
+import org.apache.pdfbox.pdmodel.PDPage;
+
+import com.hartwig.hmftools.orange.report.DocumentContext;
+
+import java.io.IOException;
 
 import com.google.common.collect.Lists;
 
@@ -34,37 +40,40 @@ public final class DnaFusionTable
 {
     private static final String COL_PHASING = "Phasing";
 
-    public static Table build(
-            final String title, float width, final List<LinxFusion> fusions, final ReportResources reportResources)
+    public static BaseTable build(final DocumentContext docCtx,
+            final String title, float width, final List<LinxFusion> fusions, final ReportResources reportResources) throws IOException
     {
         if(fusions.isEmpty())
         {
-            return new Tables(reportResources).createEmpty(title, width);
+            return createEmptyTable(docCtx, title, width, reportResources);
         }
 
         Cells cells = new Cells(reportResources);
 
         List<Float> widths = Lists.newArrayList();
-        List<Cell> cellEntries = Lists.newArrayList();
+        List<String> headers = Lists.newArrayList();
 
         boolean hasRna = fusions.stream().anyMatch(x -> x.rnaSupport() != null);
 
-        addEntry(cells, widths, cellEntries, 2, COL_FUSION);
-        addEntry(cells, widths, cellEntries, 5, COL_JUNCTIONS);
-        addEntry(cells, widths, cellEntries, 1, COL_JCN);
-        addEntry(cells, widths, cellEntries, 1, COL_PHASING);
-        addEntry(cells, widths, cellEntries, 3, COL_TYPE);
+        addEntry(widths, headers, 2, COL_FUSION);
+        addEntry(widths, headers, 5, COL_JUNCTIONS);
+        addEntry(widths, headers, 1, COL_JCN);
+        addEntry(widths, headers, 1, COL_PHASING);
+        addEntry(widths, headers, 3, COL_TYPE);
 
         if(hasRna)
-            addEntry(cells, widths, cellEntries, 1, COL_RNA_FRAGS);
+        {
+            addEntry(widths, headers, 1, COL_RNA_FRAGS);
+        }
 
-        addEntry(cells, widths, cellEntries, 1, COL_DRIVER);
+        addEntry(widths, headers, 1, COL_DRIVER);
 
-        Table table = Tables.createContent(width, floatArray(widths), cellArray(cellEntries));
+        BaseTable table = createStandardTable(docCtx, title, width, floatArray(widths), stringArray(headers), reportResources);
+        float[] pcts = toPercentages(floatArray(widths));
 
         for(LinxFusion fusion : sortLinxFusions(fusions))
         {
-            List<Cell> rowCells = Lists.newArrayList();
+            List<String> rowCells = Lists.newArrayList();
 
             rowCells.add(cells.createContent(fusionDisplay(fusion)));
             rowCells.add(cells.createContent(transcriptJunctions(fusion)));
@@ -79,15 +88,16 @@ public final class DnaFusionTable
 
             rowCells.add(cells.createContent(fusion.driverInterpretation().toString()));
 
+            List<Cell<PDPage>> createdCells = cells.addRow(table, pcts, rowCells);
+
             if(fusion.driverInterpretation() == DriverInterpretation.LOW)
             {
-                reportResources.shadeCandidateCells(rowCells);
+                reportResources.shadeCandidateCells(createdCells);
             }
 
-            rowCells.forEach(x -> table.addCell(x));
         }
 
-        return new Tables(reportResources).createWrapping(table, title);
+        return table;
     }
 
     private static String fusionDisplay(final LinxFusion fusion)
@@ -103,16 +113,12 @@ public final class DnaFusionTable
 
     private static String display(FusionPhasedType fusionPhasedType)
     {
-        switch(fusionPhasedType)
+        return switch(fusionPhasedType)
         {
-            case INFRAME:
-                return "Inframe";
-            case SKIPPED_EXONS:
-                return "Skipped exons";
-            case OUT_OF_FRAME:
-                return "Out of frame";
-        }
-        throw new IllegalStateException();
+            case INFRAME -> "Inframe";
+            case SKIPPED_EXONS -> "Skipped exons";
+            case OUT_OF_FRAME -> "Out of frame";
+        };
     }
 
     /*
@@ -147,8 +153,4 @@ public final class DnaFusionTable
         }).collect(Collectors.toList());
     }
 
-    private static <T> List<T> max5(final List<T> elements)
-    {
-        return elements.subList(0, Math.min(5, elements.size()));
-    }
 }

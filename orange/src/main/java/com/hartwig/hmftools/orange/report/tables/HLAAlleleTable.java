@@ -2,7 +2,10 @@ package com.hartwig.hmftools.orange.report.tables;
 
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatSingleDigitDecimal;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.cellArray;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.stringArray;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.createStandardTable;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.createEmptyTable;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.toPercentages;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.intToFloatArray;
 
 import java.util.Comparator;
@@ -16,59 +19,68 @@ import com.hartwig.hmftools.common.variant.CommonVcfTags;
 import com.hartwig.hmftools.datamodel.hla.LilacAllele;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.util.Cells;
-import com.hartwig.hmftools.orange.report.util.Tables;
-import com.itextpdf.layout.element.Cell;
-import com.itextpdf.layout.element.Table;
+
+import be.quodlibet.boxable.BaseTable;
+
+import com.hartwig.hmftools.orange.report.DocumentContext;
+
+import java.io.IOException;
 
 import org.jetbrains.annotations.Nullable;
 
 public final class HLAAlleleTable
 {
-    public static Table build(
+    public static BaseTable build(final DocumentContext docCtx,
             final String title, float width, final List<LilacAllele> alleles, final ReportResources reportResources, boolean hasRna)
+            throws IOException
     {
         if(alleles.isEmpty())
         {
-            return new Tables(reportResources).createEmpty(title, width);
+            return createEmptyTable(docCtx, title, width, reportResources);
         }
 
         Cells cells = new Cells(reportResources);
 
         List<Integer> widths = Lists.newArrayList();
-        List<Cell> cellEntries = Lists.newArrayList();
+        List<String> headers = Lists.newArrayList();
 
         boolean hasWarnings = alleles.stream().anyMatch(x -> !x.qcStatus().equals(CommonVcfTags.PASS_FILTER));
 
-        addEntry(cells, widths, cellEntries, 1, "Allele");
-        addEntry(cells, widths, cellEntries, hasWarnings ? 3 : 1, "QC Status");
-        addEntry(cells, widths, cellEntries, 1, "Ref Frags");
-        addEntry(cells, widths, cellEntries, 1, "Tumor Frags");
+        addEntry(widths, headers, 1, "Allele");
+        addEntry(widths, headers, hasWarnings ? 3 : 1, "QC Status");
+        addEntry(widths, headers, 1, "Ref Frags");
+        addEntry(widths, headers, 1, "Tumor Frags");
 
         if(hasRna)
         {
-            addEntry(cells, widths, cellEntries, 1, "RNA Frags");
+            addEntry(widths, headers, 1, "RNA Frags");
         }
 
-        addEntry(cells, widths, cellEntries, 1, "Tumor CN");
-        addEntry(cells, widths, cellEntries, 3, "Somatic Mutations");
+        addEntry(widths, headers, 1, "Tumor CN");
+        addEntry(widths, headers, 3, "Somatic Mutations");
 
-        Table table = Tables.createContent(width, intToFloatArray(widths), cellArray(cellEntries));
+        BaseTable table = createStandardTable(docCtx, title, width, intToFloatArray(widths), stringArray(headers), reportResources);
+        float[] pcts = toPercentages(intToFloatArray(widths));
 
         for(LilacAllele allele : sort(alleles))
         {
-            table.addCell(cells.createContent(allele.allele()));
-            table.addCell(cells.createContent(allele.qcStatus()));
-            table.addCell(cells.createContent(fragmentString(allele.refFragments())));
-            table.addCell(cells.createContent(fragmentString(allele.tumorFragments())));
+            List<String> rowValues = Lists.newArrayList();
+            rowValues.add(allele.allele());
+            rowValues.add(allele.qcStatus());
+            rowValues.add(fragmentString(allele.refFragments()));
+            rowValues.add(fragmentString(allele.tumorFragments()));
 
             if(hasRna)
-                table.addCell(cells.createContent(fragmentString(allele.rnaFragments())));
+            {
+                rowValues.add(fragmentString(allele.rnaFragments()));
+            }
 
-            table.addCell(cells.createContent(formatSingleDigitDecimal(allele.tumorCopyNumber())));
-            table.addCell(cells.createContent(mutationString(allele)));
+            rowValues.add(formatSingleDigitDecimal(allele.tumorCopyNumber()));
+            rowValues.add(mutationString(allele));
+            cells.addRow(table, pcts, rowValues);
         }
 
-        return new Tables(reportResources).createWrapping(table, title);
+        return table;
     }
 
     private static List<LilacAllele> sort(final List<LilacAllele> alleles)

@@ -7,7 +7,8 @@ import static com.hartwig.hmftools.common.peach.PeachUtil.convertToZygosityStrin
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.VALUE_NO;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.VALUE_YES;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.cellArray;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.stringArray;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.toPercentages;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatPercentage;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatSingleDigitDecimal;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatTwoDigitDecimal;
@@ -48,83 +49,98 @@ import com.hartwig.hmftools.orange.algo.QcStatusInterpretation;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.util.Cells;
 import com.hartwig.hmftools.orange.report.util.Tables;
-import com.itextpdf.layout.element.Cell;
-import com.itextpdf.layout.element.Table;
-import com.itextpdf.layout.property.UnitValue;
+
+import be.quodlibet.boxable.Cell;
+import be.quodlibet.boxable.BaseTable;
+import be.quodlibet.boxable.Row;
+
+import org.apache.pdfbox.pdmodel.PDPage;
+
+import com.hartwig.hmftools.orange.report.DocumentContext;
+
+import java.io.IOException;
 
 import org.apache.logging.log4j.util.Strings;
 
 public class FrontPageTables
 {
-    public static Table buildSampleSummary(
-            final OrangeRecord report, final OrangeConfig config, float width, final ReportResources reportResources)
+    public static BaseTable buildSampleSummary(final DocumentContext docCtx,
+            final OrangeRecord report, final OrangeConfig config, float width, final ReportResources reportResources) throws IOException
     {
         Cells cells = new Cells(reportResources);
 
         List<Integer> widths = Lists.newArrayList();
-        List<Cell> cellEntries = Lists.newArrayList();
+        List<String> headers = Lists.newArrayList();
 
         // Primary Tumor [as inputed - is it 2 fields?] |  Purity |  Ploidy | Fit Method | QC Status
 
         String configuredPrimaryTumorLocation = config != null ? config.PrimaryTumorLocation : null;
 
         String configuredCancerType = configuredPrimaryTumorLocation != null ?
-                configuredPrimaryTumorLocation :  configuredPrimaryTumor(report.configuredPrimaryTumor());
+                configuredPrimaryTumorLocation : configuredPrimaryTumor(report.configuredPrimaryTumor());
 
         boolean showCancerType = configuredCancerType != null && !configuredCancerType.isEmpty();
 
         if(showCancerType)
-            addEntry(cells, widths, cellEntries, 2, "Primary Tumor");
+        {
+            addEntry(widths, headers, 2, "Primary Tumor");
+        }
 
-        addEntry(cells, widths, cellEntries, 2, "Purity");
-        addEntry(cells, widths, cellEntries, 2, "Ploidy");
-        addEntry(cells, widths, cellEntries, 2, "Fit Method");
-        addEntry(cells, widths, cellEntries, 2, "QC");
+        addEntry(widths, headers, 2, "Purity");
+        addEntry(widths, headers, 2, "Ploidy");
+        addEntry(widths, headers, 2, "Fit Method");
+        addEntry(widths, headers, 2, "QC");
 
-        Table table = Tables.createContent(width, intToFloatArray(widths), cellArray(cellEntries));
+        BaseTable table = new Tables(reportResources).createContent(docCtx, width, intToFloatArray(widths), stringArray(headers));
+        float[] pcts = toPercentages(intToFloatArray(widths));
 
+        List<String> rowValues = Lists.newArrayList();
         if(showCancerType)
-            table.addCell(cells.createContent(configuredCancerType));
+        {
+            rowValues.add(configuredCancerType);
+        }
 
-        table.addCell(cells.createContent(purityString(report.purple().fit())));
-        table.addCell(cells.createContent(ploidyString(report.purple().fit())));
-        table.addCell(cells.createContent(report.purple().fit().fittedPurityMethod().toString()));
+        rowValues.add(purityString(report.purple().fit()));
+        rowValues.add(ploidyString(report.purple().fit()));
+        rowValues.add(report.purple().fit().fittedPurityMethod().toString());
+        rowValues.add(purpleQCString(report.purple().fit().qc()));
 
-        table.addCell(cells.createContent(purpleQCString(report.purple().fit().qc())));
+        cells.addRow(table, pcts, rowValues);
 
         addQCWarningInCaseOfFail(report.purple().fit().qc(), table, cells);
 
         return table;
     }
 
-    public static Table buildTechnicalSummary(
-            final OrangeRecord report, final OrangeConfig config, float width, final ReportResources reportResources)
+    public static BaseTable buildTechnicalSummary(final DocumentContext docCtx,
+            final OrangeRecord report, final OrangeConfig config, float width, final ReportResources reportResources) throws IOException
     {
         Cells cells = new Cells(reportResources);
 
         List<Integer> widths = Lists.newArrayList();
-        List<Cell> cellEntries = Lists.newArrayList();
+        List<String> headers = Lists.newArrayList();
 
         // OA Version | Genome Version | Sequencing Type | Pipeline Mode | Panel Name | Date Analysed?
 
-        addEntry(cells, widths, cellEntries, 2, "Pipeline Version");
-        addEntry(cells, widths, cellEntries, 2, "Genome Version");
-        addEntry(cells, widths, cellEntries, 2, "Sequencing Type");
-        addEntry(cells, widths, cellEntries, 2, "Pipeline");
-        addEntry(cells, widths, cellEntries, 2, "Samples");
-        addEntry(cells, widths, cellEntries, 2, "Date Analysed");
+        addEntry(widths, headers, 2, "Pipeline Version");
+        addEntry(widths, headers, 2, "Genome Version");
+        addEntry(widths, headers, 2, "Sequencing Type");
+        addEntry(widths, headers, 2, "Pipeline");
+        addEntry(widths, headers, 2, "Samples");
+        addEntry(widths, headers, 2, "Date Analysed");
 
-        Table table = Tables.createContent(width, intToFloatArray(widths), cellArray(cellEntries));
+        BaseTable table = new Tables(reportResources).createContent(docCtx, width, intToFloatArray(widths), stringArray(headers));
+        float[] pcts = toPercentages(intToFloatArray(widths));
 
-        table.addCell(cells.createContent(report.pipelineVersion()));
-        table.addCell(cells.createContent(report.refGenomeVersion().toString()));
-        table.addCell(cells.createContent(SequencingType.ILLUMINA.toString()));
+        List<String> rowValues = Lists.newArrayList();
+        rowValues.add(report.pipelineVersion());
+        rowValues.add(report.refGenomeVersion().toString());
+        rowValues.add(SequencingType.ILLUMINA.toString());
+        rowValues.add(pipelineModeDisplay(report, config));
+        rowValues.add(sampleTypesDisplay(report));
+        rowValues.add(report.samplingDate().toString());
 
-        // table.addCell(cells.createContent(report.experimentType().toString()));
-        table.addCell(cells.createContent(pipelineModeDisplay(report, config)));
-        table.addCell(cells.createContent(sampleTypesDisplay(report)));
-
-        table.addCell(cells.createContent(report.samplingDate().toString()));
+        cells.addRow(table, pcts, rowValues);
 
         return table;
     }
@@ -132,27 +148,39 @@ public class FrontPageTables
     private static String pipelineModeDisplay(final OrangeRecord report, final OrangeConfig config)
     {
         if(report.experimentType() == ExperimentType.WHOLE_GENOME)
+        {
             return "WHOLE GENOME";
+        }
 
         if(config != null && config.PanelName != null)
+        {
             return format("PANEL: %s", config.PanelName);
+        }
         else
+        {
             return format("TARGETED PANEL");
+        }
     }
 
     private static String sampleTypesDisplay(final OrangeRecord report)
     {
         if(report.tumorOnlyMode() && !report.hasRna())
+        {
             return "TUMOR-ONLY";
+        }
 
         StringJoiner sj = new StringJoiner(" / ");
         sj.add("TUMOR");
 
         if(!report.tumorOnlyMode())
+        {
             sj.add("NORMAL");
+        }
 
         if(report.hasRna())
+        {
             sj.add("RNA");
+        }
 
         return sj.toString();
     }
@@ -166,7 +194,9 @@ public class FrontPageTables
             String primaryTumorInfo = node.doidTerm();
 
             if(!node.doid().isEmpty())
+            {
                 primaryTumorInfo += " (DOID " + node.doid() + ")";
+            }
 
             configured.add(primaryTumorInfo);
         }
@@ -184,7 +214,7 @@ public class FrontPageTables
         return concat(purpleStatuses);
     }
 
-    private static void addQCWarningInCaseOfFail(final PurpleQC qc, final Table table, final Cells cells)
+    private static void addQCWarningInCaseOfFail(final PurpleQC qc, final BaseTable table, final Cells cells)
     {
         boolean isFailNoTumor = QcStatusInterpretation.isFailNoTumor(qc);
         boolean isContaminated = QcStatusInterpretation.hasTumorContaminated(qc);
@@ -207,7 +237,8 @@ public class FrontPageTables
 
             String warning = "The QC status of this sample is fail (" + reason + ")" +
                     ": all presented data in this report should be interpreted with caution";
-            table.addCell(cells.createSpanningWarning(table, warning));
+            Row<PDPage> row = table.createRow(12f);
+            cells.addWarningCell(row, warning);
         }
     }
 
@@ -224,13 +255,19 @@ public class FrontPageTables
                 formatTwoDigitDecimal(purpleFit.maxPloidy()));
     }
 
-    public static Table buildDriverSummary(final OrangeRecord report, float width, final ReportResources reportResources)
+    public static BaseTable buildDriverSummary(final DocumentContext docCtx, final OrangeRecord report, float width, float xStart,
+            final ReportResources reportResources) throws IOException
     {
         Cells cells = new Cells(reportResources);
 
         boolean includeGermline = !report.tumorOnlyMode();
 
-        Table table = new Table(UnitValue.createPercentArray(new float[] { 1, 2 }));
+        BaseTable table = docCtx.createTableAtX(width, xStart);
+
+        // Title row
+        Row<PDPage> titleRow = table.createRow(15f);
+        Cell<PDPage> titleCell = titleRow.createCell(100, "Driver Summary");
+        cells.applyTitleStyle(titleCell);
 
         addCellEntry(table, cells, "Somatic variant:", somaticVariantString(report.purple()));
         addCellEntry(table, cells, "Somatic copy number:", somaticCopyNumberString(report.purple()));
@@ -258,7 +295,7 @@ public class FrontPageTables
             // addCellEntry(table, cells, "UGT1A1 status:", geneStatus("UGT1A1"));
         }
 
-        return new Tables(reportResources).createWrapping(table, "Driver Summary");
+        return table;
     }
 
     private static final String NONE = "None";
@@ -266,14 +303,18 @@ public class FrontPageTables
     private static String fusionsString(final LinxRecord linxRecord)
     {
         if(linxRecord.fusions().isEmpty())
+        {
             return NONE;
+        }
 
         Set<String> highLikelihoodFusions = Sets.newHashSet();
 
         for(LinxFusion fusion : linxRecord.fusions())
         {
             if(fusion.driverInterpretation() == DriverInterpretation.LOW)
+            {
                 continue;
+            }
 
             highLikelihoodFusions.add(fusion.display());
         }
@@ -284,7 +325,9 @@ public class FrontPageTables
     private static String reportableEventString(final int driverCount, final Set<String> reportedGenes)
     {
         if(reportedGenes.isEmpty())
+        {
             return String.valueOf(driverCount);
+        }
 
         String orderGenesStr = reportedGenes.stream().sorted().collect(Collectors.joining(", "));
         return format("%d (%s)", driverCount, orderGenesStr);
@@ -297,7 +340,9 @@ public class FrontPageTables
         for(PurpleVariant variant : variants)
         {
             if(DriverInterpretation.interpret(variant.driverLikelihood()) == DriverInterpretation.LOW)
+            {
                 continue;
+            }
 
             highDriverGenes.add(variant.gene());
         }
@@ -308,7 +353,9 @@ public class FrontPageTables
     private static String somaticVariantString(final PurpleRecord purpleRecord)
     {
         if(purpleRecord.somaticVariants().isEmpty())
+        {
             return NONE;
+        }
 
         Set<String> highDriverGenes = findHighDriverVariantGenes(purpleRecord.somaticVariants());
         return reportableEventString(purpleRecord.somaticVariants().size(), highDriverGenes);
@@ -317,7 +364,9 @@ public class FrontPageTables
     private static String virusesString(final VirusInterpreterData virusData)
     {
         if(virusData.reportableViruses().isEmpty())
+        {
             return NONE;
+        }
 
         Set<String> viruses = Sets.newHashSet();
         for(VirusInterpreterEntry virus : virusData.reportableViruses())
@@ -343,7 +392,9 @@ public class FrontPageTables
         for(PurpleGainDeletion ampDel : ampDels)
         {
             if(DriverInterpretation.interpret(ampDel.driver().driverLikelihood()) == DriverInterpretation.LOW)
+            {
                 continue;
+            }
 
             highDriverGenes.add(ampDel.gene());
         }
@@ -354,7 +405,9 @@ public class FrontPageTables
     private static String somaticCopyNumberString(final PurpleRecord purpleRecord)
     {
         if(purpleRecord.somaticGainsDels().isEmpty())
+        {
             return NONE;
+        }
 
         Set<String> highDriverGenes = findHighDriverAmpDelGenes(purpleRecord.somaticGainsDels());
         return reportableEventString(purpleRecord.somaticGainsDels().size(), highDriverGenes);
@@ -367,7 +420,9 @@ public class FrontPageTables
         for(LinxBreakend breakend : breakends)
         {
             if(DriverInterpretation.interpret(breakend.driverLikelihood()) == DriverInterpretation.LOW)
+            {
                 continue;
+            }
 
             highDriverGenes.add(breakend.gene());
         }
@@ -378,7 +433,9 @@ public class FrontPageTables
     private static String somaticDisruptionString(final LinxRecord linxRecord)
     {
         if(linxRecord.somaticBreakends().isEmpty())
+        {
             return NONE;
+        }
 
         Set<String> highDriverGenes = findHighDriverDisruptionGenes(linxRecord.somaticBreakends());
         return reportableEventString(linxRecord.somaticBreakends().size(), highDriverGenes);
@@ -387,7 +444,9 @@ public class FrontPageTables
     private static String germlineVariantString(final PurpleRecord purpleRecord)
     {
         if(purpleRecord.germlineVariants() == null || purpleRecord.germlineVariants().isEmpty())
+        {
             return NONE;
+        }
 
         Set<String> highDriverGenes = findHighDriverVariantGenes(purpleRecord.germlineVariants());
         return reportableEventString(purpleRecord.germlineVariants().size(), highDriverGenes);
@@ -397,7 +456,9 @@ public class FrontPageTables
     private static String germlineCopyNumberString(final PurpleRecord purpleRecord)
     {
         if(purpleRecord.germlineGainsDels() == null || purpleRecord.germlineGainsDels().isEmpty())
+        {
             return NONE;
+        }
 
         Set<String> highDriverGenes = findHighDriverAmpDelGenes(purpleRecord.germlineGainsDels());
         return reportableEventString(purpleRecord.germlineGainsDels().size(), highDriverGenes);
@@ -406,21 +467,33 @@ public class FrontPageTables
     private static String germlineDisruptionString(final LinxRecord linxRecord)
     {
         if(linxRecord.germlineBreakends() == null || linxRecord.germlineBreakends().isEmpty())
+        {
             return NONE;
+        }
 
         Set<String> highDriverGenes = findHighDriverDisruptionGenes(linxRecord.germlineBreakends());
         return reportableEventString(linxRecord.germlineBreakends().size(), highDriverGenes);
     }
 
-    public static Table buildGenomeWideFeatures(final OrangeRecord report, float width, final ReportResources reportResources)
+    public static BaseTable buildGenomeWideFeatures(final DocumentContext docCtx, final OrangeRecord report, float width,
+            final ReportResources reportResources) throws IOException
+    {
+        return buildGenomeWideFeaturesAtX(docCtx, report, width, docCtx.marginLeft(), reportResources);
+    }
+
+    public static BaseTable buildGenomeWideFeaturesAtX(final DocumentContext docCtx, final OrangeRecord report, float width, float xStart,
+            final ReportResources reportResources) throws IOException
     {
         boolean includeGermline = !report.tumorOnlyMode();
 
         Cells cells = new Cells(reportResources);
 
-        float labelWidth = (float)(1.9);
-        float valueWidth = (float)(1.0);
-        Table table = new Table(UnitValue.createPercentArray(new float[] { labelWidth, valueWidth }));
+        BaseTable table = docCtx.createTableAtX(width, xStart);
+
+        // Title row
+        Row<PDPage> titleRow = table.createRow(15f);
+        Cell<PDPage> titleCell = titleRow.createCell(100, "Genome Wide Biomarkers");
+        cells.applyTitleStyle(titleCell);
 
         addCellEntry(table, cells, "Microsatellite indels per Mb:", msiString(report.purple()));
         addCellEntry(table, cells, "Tumor mutations per Mb:", tmbString(report.purple()));
@@ -435,9 +508,11 @@ public class FrontPageTables
         addCellEntry(table, cells, "Number of SVs:", svTmbString(report.purple()));
 
         if(!report.tumorOnlyMode() && report.cuppa() != null)
+        {
             addCellEntry(table, cells, "CUPPA cancer type:", cuppaCancerType(report.cuppa()));
+        }
 
-        return new Tables(reportResources).createWrapping(table, "Genome Wide Biomarkers");
+        return table;
     }
 
     private static String cuppaCancerType(final CuppaData cuppaData)
@@ -542,10 +617,11 @@ public class FrontPageTables
         return lohPerc + addon;
     }
 
-    private static void addCellEntry(final Table summary, final Cells cells, final String name, final String value)
+    private static void addCellEntry(final BaseTable summary, final Cells cells, final String name, final String value)
     {
-        summary.addCell(cells.createKey(name));
-        summary.addCell(cells.createValue(value));
+        Row<PDPage> row = summary.createRow(Cells.COMPACT_ROW_HEIGHT);
+        cells.addKeyCell(row, 50, name);
+        cells.addValueCell(row, 50, value);
     }
 
     private static String concat(final Iterable<String> strings)

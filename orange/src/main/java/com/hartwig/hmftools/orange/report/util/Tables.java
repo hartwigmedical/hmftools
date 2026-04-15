@@ -1,18 +1,21 @@
 package com.hartwig.hmftools.orange.report.util;
 
-import com.hartwig.hmftools.orange.report.ReportResources;
-import com.itextpdf.layout.borders.Border;
-import com.itextpdf.layout.element.Cell;
-import com.itextpdf.layout.element.Paragraph;
-import com.itextpdf.layout.element.Table;
-import com.itextpdf.layout.property.UnitValue;
+import java.io.IOException;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import com.hartwig.hmftools.orange.report.DocumentContext;
+import com.hartwig.hmftools.orange.report.ReportResources;
+
+import org.apache.pdfbox.pdmodel.PDPage;
+
+import be.quodlibet.boxable.BaseTable;
+import be.quodlibet.boxable.Cell;
+import be.quodlibet.boxable.Row;
 
 public class Tables
 {
     private static final float TABLE_BOTTOM_MARGIN = 20;
+    private static final float ROW_HEIGHT = Cells.COMPACT_ROW_HEIGHT;
+    private static final float HEADER_ROW_HEIGHT = 12f;
 
     private final ReportResources mReportResources;
 
@@ -21,69 +24,88 @@ public class Tables
         mReportResources = reportResources;
     }
 
-    public Table createNotAvailable(final String title, float width)
+    public BaseTable createEmpty(final DocumentContext docCtx, final String title, float width) throws IOException
     {
-        return createNonContent(title, width, ReportResources.NOT_AVAILABLE);
+        return createNonContent(docCtx, title, width, ReportResources.NONE);
     }
 
-    public Table createEmpty(final String title, float width)
+    public BaseTable createNonContent(final DocumentContext docCtx, final String title, float width, final String value) throws IOException
     {
-        return createNonContent(title, width, ReportResources.NONE);
-    }
+        Cells cells = new Cells(mReportResources);
 
-    public Table createNonContent(final String title, float width, final String value)
-    {
-        Cell headerCell = new Cell().setBorder(Border.NO_BORDER).add(new Paragraph(title).addStyle(mReportResources.tableTitleStyle()));
+        BaseTable table = docCtx.createTable(width, null);
 
-        Table table = Tables.createContent(width, new float[] { 1 }, new Cell[] { headerCell });
-        table.setKeepTogether(true);
-        table.setMarginBottom(TABLE_BOTTOM_MARGIN);
-        table.addCell(new Cells(mReportResources).createContent(new Paragraph(value)));
+        // Title row
+        Row<PDPage> titleRow = table.createRow(HEADER_ROW_HEIGHT);
+        Cell<PDPage> titleCell = titleRow.createCell(100, title);
+        cells.applyTitleStyle(titleCell);
+
+        // Content row
+        Row<PDPage> row = table.createRow(ROW_HEIGHT);
+        cells.addContentCell(row, 100, value);
 
         return table;
     }
 
-    public static Table createContent(float width, final float[] columnPercentageWidths, final Cell[] headerCells)
+    public BaseTable createContent(
+            final DocumentContext docCtx, float width, final float[] columnPercentageWidths,
+            final String[] headerTexts) throws IOException
     {
-        Table table = new Table(UnitValue.createPercentArray(columnPercentageWidths)).setWidth(width);
-        table.setFixedLayout();
+        Cells cells = new Cells(mReportResources);
 
-        for(Cell headerCell : headerCells)
+        BaseTable table = docCtx.createTable(width, columnPercentageWidths);
+
+        // Normalize widths to percentages
+        float totalWidth = 0;
+        for(float w : columnPercentageWidths)
         {
-            table.addHeaderCell(headerCell);
+            totalWidth += w;
         }
 
+        Row<PDPage> headerRow = table.createRow(HEADER_ROW_HEIGHT);
+        for(int i = 0; i < headerTexts.length; i++)
+        {
+            float pct = (columnPercentageWidths[i] / totalWidth) * 100f;
+            cells.addHeaderCell(headerRow, pct, headerTexts[i]);
+        }
+        table.addHeaderRow(headerRow);
+
         return table;
     }
 
-    public Table createWrapping(final Table contentTable)
+    public BaseTable createWithTitle(
+            final DocumentContext docCtx, final String title, float width, final float[] columnPercentageWidths,
+            final String[] headerTexts) throws IOException
     {
-        return createWrapping(contentTable, null);
-    }
+        Cells cells = new Cells(mReportResources);
 
-    public Table createWrapping(final Table contentTable, @Nullable String title)
-    {
-        contentTable.addFooterCell(new Cell(1, contentTable.getNumberOfColumns()).setBorder(Border.NO_BORDER)
-                        .setPaddingTop(5)
-                        .setPaddingBottom(5)
-                        .add(new Paragraph("The table continues on the next page".toUpperCase()).addStyle(mReportResources.subTextStyle())))
-                .setSkipLastFooter(true);
+        BaseTable table = docCtx.createTable(width, columnPercentageWidths);
 
-        Table continuedWrapTable = new Table(1).setMinWidth(contentTable.getWidth())
-                .addHeaderCell(new Cell().setBorder(Border.NO_BORDER)
-                        .add(new Paragraph("Continued from the previous page".toUpperCase()).addStyle(mReportResources.subTextStyle())))
-                .setSkipFirstHeader(true)
-                .addCell(new Cell().add(contentTable).setPadding(0).setBorder(Border.NO_BORDER));
+        // Title row spanning full width
+        Row<PDPage> titleRow = table.createRow(HEADER_ROW_HEIGHT);
+        Cell<PDPage> titleCell = titleRow.createCell(100, title);
+        cells.applyTitleStyle(titleCell);
 
-        Table table = new Table(1).setMinWidth(contentTable.getWidth()).setMarginBottom(TABLE_BOTTOM_MARGIN);
-        if(title != null)
+        // Header row
+        float totalWidth = 0;
+        for(float w : columnPercentageWidths)
         {
-            table.addHeaderCell(new Cell().setBorder(Border.NO_BORDER)
-                    .setPadding(0)
-                    .add(new Paragraph(title).addStyle(mReportResources.tableTitleStyle())));
+            totalWidth += w;
         }
 
-        table.addCell(new Cell().add(continuedWrapTable).setPadding(0).setBorder(Border.NO_BORDER));
+        Row<PDPage> headerRow = table.createRow(HEADER_ROW_HEIGHT);
+        for(int i = 0; i < headerTexts.length; i++)
+        {
+            float pct = (columnPercentageWidths[i] / totalWidth) * 100f;
+            cells.addHeaderCell(headerRow, pct, headerTexts[i]);
+        }
+        table.addHeaderRow(headerRow);
+
         return table;
+    }
+
+    public static float rowHeight()
+    {
+        return ROW_HEIGHT;
     }
 }

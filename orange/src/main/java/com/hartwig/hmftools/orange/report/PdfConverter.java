@@ -2,6 +2,7 @@ package com.hartwig.hmftools.orange.report;
 
 import java.io.File;
 import java.io.IOException;
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.PDFRenderer;
 
@@ -12,7 +13,7 @@ public final class PdfConverter
 {
     public static void convertPdfToPng(final String pdfFilename, final String pngFilename) throws IOException
     {
-        PDDocument document = PDDocument.load(new File(pdfFilename));
+        PDDocument document = Loader.loadPDF(new File(pdfFilename));
 
         PDFRenderer pdfRenderer = new PDFRenderer(document);
 

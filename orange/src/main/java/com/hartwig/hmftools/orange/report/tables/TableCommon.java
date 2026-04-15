@@ -7,8 +7,18 @@ import java.text.DecimalFormatSymbols;
 import java.util.List;
 import java.util.Locale;
 
+import java.io.IOException;
+
+import com.hartwig.hmftools.orange.report.DocumentContext;
+import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.util.Cells;
-import com.itextpdf.layout.element.Cell;
+import com.hartwig.hmftools.orange.report.util.Tables;
+
+import org.apache.pdfbox.pdmodel.PDPage;
+
+import be.quodlibet.boxable.BaseTable;
+import be.quodlibet.boxable.Cell;
+import be.quodlibet.boxable.Row;
 
 public final class TableCommon
 {
@@ -73,10 +83,12 @@ public final class TableCommon
     {
         return formatDecimal(num, "0.0");
     }
+
     public static String formatTwoDigitDecimal(double num)
     {
         return formatDecimal(num, "0.00");
     }
+
     public static String formatPercentage(double num)
     {
         return formatPercentage(num, true);
@@ -103,9 +115,15 @@ public final class TableCommon
         return PERCENTAGE_FORMAT.format(value * 100);
     }
 
-    public static String formatTpmField(final double tpm) { return formatSingleDigitDecimal(tpm); }
+    public static String formatTpmField(final double tpm)
+    {
+        return formatSingleDigitDecimal(tpm);
+    }
 
-    public static String formatPercentileField(final double percentile) { return formatTwoDigitDecimal(percentile); }
+    public static String formatPercentileField(final double percentile)
+    {
+        return formatTwoDigitDecimal(percentile);
+    }
 
     public static String formatFoldChangeField(final double foldChange)
     {
@@ -146,16 +164,28 @@ public final class TableCommon
         }
     }
 
-    public static void addEntry(final Cells cells, final List<Integer> widths, final List<Cell> cellEntries, int width, final String column)
+    // Column definition helpers - collect widths and header names
+    public static void addEntry(final List<Integer> widths, final List<String> headers, int width, final String column)
     {
-        cellEntries.add(cells.createHeader(column));
         widths.add(width);
+        headers.add(column);
     }
 
-    public static void addEntry(final Cells cells, final List<Float> widths, final List<Cell> cellEntries, double width, final String column)
+    public static void addEntry(final List<Float> widths, final List<String> headers, double width, final String column)
     {
-        cellEntries.add(cells.createHeader(column));
-        widths.add((float)width);
+        widths.add((float) width);
+        headers.add(column);
+    }
+
+    // Legacy overloads that still accept Cells parameter (ignored) for easier migration
+    public static void addEntry(final Cells cells, final List<Integer> widths, final List<String> headers, int width, final String column)
+    {
+        addEntry(widths, headers, width, column);
+    }
+
+    public static void addEntry(final Cells cells, final List<Float> widths, final List<String> headers, double width, final String column)
+    {
+        addEntry(widths, headers, width, column);
     }
 
     public static float[] intToFloatArray(final List<Integer> widths)
@@ -182,15 +212,50 @@ public final class TableCommon
         return widthArray;
     }
 
-    public static Cell[] cellArray(final List<Cell> cellEntries)
+    public static String[] stringArray(final List<String> headers)
     {
-        Cell[] cellArray = new Cell[cellEntries.size()];
+        return headers.toArray(new String[0]);
+    }
 
-        for(int i = 0; i < cellArray.length; ++i)
+    public static BaseTable createStandardTable(
+            final DocumentContext docCtx, final String title, float width,
+            final float[] columnWidths, final String[] headerTexts,
+            final ReportResources reportResources) throws IOException
+    {
+        return new Tables(reportResources).createWithTitle(docCtx, title, width, columnWidths, headerTexts);
+    }
+
+    public static BaseTable createEmptyTable(
+            final DocumentContext docCtx, final String title, float width,
+            final ReportResources reportResources) throws IOException
+    {
+        return new Tables(reportResources).createEmpty(docCtx, title, width);
+    }
+
+    public static float[] toPercentages(final float[] widths)
+    {
+        float total = 0;
+        for(float w : widths)
         {
-            cellArray[i] = cellEntries.get(i);
+            total += w;
         }
+        float[] pcts = new float[widths.length];
+        for(int i = 0; i < widths.length; i++)
+        {
+            pcts[i] = (widths[i] / total) * 100f;
+        }
+        return pcts;
+    }
 
-        return cellArray;
+    public static java.util.List<Cell<PDPage>> addDataRow(
+            final BaseTable table, final Cells cells, final float[] pcts, final String[] values)
+    {
+        Row<PDPage> row = table.createRow(Tables.rowHeight());
+        java.util.List<Cell<PDPage>> createdCells = new java.util.ArrayList<>();
+        for(int i = 0; i < values.length; i++)
+        {
+            createdCells.add(cells.addContentCell(row, pcts[i], values[i]));
+        }
+        return createdCells;
     }
 }

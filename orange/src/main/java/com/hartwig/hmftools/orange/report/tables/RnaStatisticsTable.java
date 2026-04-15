@@ -2,7 +2,9 @@ package com.hartwig.hmftools.orange.report.tables;
 
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatPercentage;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.cellArray;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.stringArray;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.createStandardTable;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.toPercentages;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.intToFloatArray;
 
 import java.util.List;
@@ -13,9 +15,12 @@ import com.hartwig.hmftools.datamodel.isofox.RnaQCStatus;
 import com.hartwig.hmftools.datamodel.isofox.RnaStatistics;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.util.Cells;
-import com.hartwig.hmftools.orange.report.util.Tables;
-import com.itextpdf.layout.element.Cell;
-import com.itextpdf.layout.element.Table;
+
+import be.quodlibet.boxable.BaseTable;
+
+import com.hartwig.hmftools.orange.report.DocumentContext;
+
+import java.io.IOException;
 
 public final class RnaStatisticsTable
 {
@@ -27,23 +32,24 @@ public final class RnaStatisticsTable
     private static String COL_ALT_RATE = "Alt-sliced Rate";
     private static String COL_CHIMERIC_RATE = "Chimeric Rate";
 
-    public static Table build(
-            final String title, float width, final RnaStatistics rnaStatistics, final ReportResources reportResources)
+    public static BaseTable build(final DocumentContext docCtx,
+            final String title, float width, final RnaStatistics rnaStatistics, final ReportResources reportResources) throws IOException
     {
         Cells cells = new Cells(reportResources);
 
         List<Integer> widths = Lists.newArrayList();
-        List<Cell> cellEntries = Lists.newArrayList();
+        List<String> headers = Lists.newArrayList();
 
-        addEntry(cells, widths, cellEntries, 1, COL_QC);
-        addEntry(cells, widths, cellEntries, 1, COL_TOTAL_FRAGS);
-        addEntry(cells, widths, cellEntries, 1, COL_DUP_RATE);
-        addEntry(cells, widths, cellEntries, 1, COL_SPLICED_RATE);
-        addEntry(cells, widths, cellEntries, 1, COL_UNSPLICED_RATE);
-        addEntry(cells, widths, cellEntries, 1, COL_ALT_RATE);
-        addEntry(cells, widths, cellEntries, 1, COL_CHIMERIC_RATE);
+        addEntry(widths, headers, 1, COL_QC);
+        addEntry(widths, headers, 1, COL_TOTAL_FRAGS);
+        addEntry(widths, headers, 1, COL_DUP_RATE);
+        addEntry(widths, headers, 1, COL_SPLICED_RATE);
+        addEntry(widths, headers, 1, COL_UNSPLICED_RATE);
+        addEntry(widths, headers, 1, COL_ALT_RATE);
+        addEntry(widths, headers, 1, COL_CHIMERIC_RATE);
 
-        Table table = Tables.createContent(width, intToFloatArray(widths), cellArray(cellEntries));
+        BaseTable table = createStandardTable(docCtx, title, width, intToFloatArray(widths), stringArray(headers), reportResources);
+        float[] pcts = toPercentages(intToFloatArray(widths));
 
         StringJoiner qcSj = new StringJoiner(", ");
         for(RnaQCStatus status : rnaStatistics.qcStatus())
@@ -51,18 +57,21 @@ public final class RnaStatisticsTable
             qcSj.add(status.name());
         }
 
-        table.addCell(cells.createContent(qcSj.toString()));
-        table.addCell(cells.createContent(String.valueOf(rnaStatistics.totalFragments())));
+        List<String> rowValues = Lists.newArrayList();
+        rowValues.add(qcSj.toString());
+        rowValues.add(String.valueOf(rnaStatistics.totalFragments()));
 
         double duplicateRate = rnaStatistics.duplicateFragments() / (double) rnaStatistics.totalFragments();
-        table.addCell(cells.createContent(formatPercentage(duplicateRate)));
+        rowValues.add(formatPercentage(duplicateRate));
 
-        table.addCell(cells.createContent(formatPercentage(rnaStatistics.splicedFragmentPerc())));
-        table.addCell(cells.createContent(formatPercentage(rnaStatistics.unsplicedFragmentPerc())));
-        table.addCell(cells.createContent(formatPercentage(rnaStatistics.altFragmentPerc())));
-        table.addCell(cells.createContent(formatPercentage(rnaStatistics.chimericFragmentPerc())));
+        rowValues.add(formatPercentage(rnaStatistics.splicedFragmentPerc()));
+        rowValues.add(formatPercentage(rnaStatistics.unsplicedFragmentPerc()));
+        rowValues.add(formatPercentage(rnaStatistics.altFragmentPerc()));
+        rowValues.add(formatPercentage(rnaStatistics.chimericFragmentPerc()));
 
-        return new Tables(reportResources).createWrapping(table, title);
+        cells.addRow(table, pcts, rowValues);
+
+        return table;
     }
 
     /*

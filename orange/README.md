@@ -4,11 +4,11 @@ ORANGE summarizes the key outputs from all algorithms in the Hartwig suite into 
 see [orange-datamodel](../orange-datamodel)).
 
 1. The algo depends exclusively on config and data produced by the [Hartwig genomic pipeline](../pipeline)
-   and hence can always be run as final step without any additional local data or config required.
+   and hence can always be run as a final step without any additional local data or config required.
 2. ORANGE respects the mode in which the pipeline has been run (tumor-only vs tumor-reference, targeted (panel) vs whole genome).
    In case RNA data is provided, the algo combines the RNA and DNA data to present an integrated DNA/RNA analysis of a tumor sample.
 3. ORANGE can be configured to convert all germline driver variants to somatic driver variants, thereby obfuscating the germline driver part
-   of the analysis without actually loosing this data.
+   of the analysis without actually losing this data.
 4. Every event that is labeled as a driver by any of the Hartwig algorithms is displayed in the PDF along with the driver likelihood.
 5. A comprehensive range of QC measures and plots is displayed which provides in-depth details about the data quality of the samples
    provided.
@@ -71,14 +71,14 @@ Also, the value of the `-experiment_type` parameter should be set to `WGS` for a
 
 ### Additional optional parameters across all modes
 
-| Argument                    | Description                                                                                                                                                                                                                                                                           |
-|-----------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| pipeline_version_file       | Path to the file containing the (platinum) pipeline version used.                                                                                                                                                                                                                     |
-| sampling_date               | Sets the sampling date to the specified date if set. Expected format is YYMMDD. If omitted, current date is used as sampling date.                                                                                                                                                    |
-| add_disclaimer              | If set, adds a "research use only" disclaimer to the footer of every page.                                                                                                                                                                                                            |  
-| limit_json_output           | If set, limits all lists in the JSON output to a single entry to facilitate manual inspection of the JSON output.                                                                                                                                                                     |
-| log_debug                   | If set, additional DEBUG logging is generated.                                                                                                                                                                                                                                        |
-| log_level                   | If set, overrides the default log level (INFO). Values can be `ERROR`, `WARN`, `INFO`, `DEBUG` and `TRACE`                                                                                                                                                                            |
+| Argument              | Description                                                                                                                        |
+|-----------------------|------------------------------------------------------------------------------------------------------------------------------------|
+| pipeline_version_file | Path to the file containing the (platinum) pipeline version used.                                                                  |
+| sampling_date         | Sets the sampling date to the specified date if set. Expected format is YYMMDD. If omitted, current date is used as sampling date. |
+| add_disclaimer        | If set, adds a "research use only" disclaimer to the footer of every page.                                                         |  
+| limit_json_output     | If set, limits all lists in the JSON output to a single entry to facilitate manual inspection of the JSON output.                  |
+| log_debug             | If set, additional DEBUG logging is generated.                                                                                     |
+| log_level             | If set, overrides the default log level (INFO). Values can be `ERROR`, `WARN`, `INFO`, `DEBUG` and `TRACE`                         |
 
 ### Additional run modes
 

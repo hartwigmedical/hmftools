@@ -1,29 +1,23 @@
 package com.hartwig.hmftools.orange.report.chapters;
 
-import static java.lang.Math.floor;
-import static java.lang.Math.min;
-
 import static com.hartwig.hmftools.orange.report.ReportResources.FRONT_CIRCOS_IMAGE_HEIGHT;
-import static com.hartwig.hmftools.orange.report.ReportResources.PAGE_MARGIN_BOTTOM;
-import static com.hartwig.hmftools.orange.report.ReportResources.PAGE_MARGIN_TOP;
+import static com.hartwig.hmftools.orange.report.ReportResources.PAGE_MARGIN_LEFT;
+import static com.hartwig.hmftools.orange.report.ReportResources.PAGE_MARGIN_RIGHT;
+
+import java.io.IOException;
 
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.orange.OrangeConfig;
+import com.hartwig.hmftools.orange.report.DocumentContext;
 import com.hartwig.hmftools.orange.report.PlotPathResolver;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.tables.FrontPageTables;
-import com.hartwig.hmftools.orange.report.util.Images;
-import com.itextpdf.kernel.geom.PageSize;
-import com.itextpdf.kernel.geom.Rectangle;
-import com.itextpdf.layout.Document;
-import com.itextpdf.layout.element.Image;
-import com.itextpdf.layout.element.Table;
-import com.itextpdf.layout.layout.LayoutArea;
-import com.itextpdf.layout.layout.LayoutContext;
-import com.itextpdf.layout.layout.LayoutResult;
-import com.itextpdf.layout.property.HorizontalAlignment;
-import com.itextpdf.layout.property.UnitValue;
-import com.itextpdf.layout.renderer.IRenderer;
+
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.jetbrains.annotations.NotNull;
+
+import be.quodlibet.boxable.BaseTable;
 
 public class FrontPageChapter implements ReportChapter
 {
@@ -42,52 +36,68 @@ public class FrontPageChapter implements ReportChapter
         mReportResources = reportResources;
     }
 
+    @NotNull
     @Override
     public String name()
     {
         return "Front Page";
     }
 
+    @NotNull
     @Override
-    public PageSize pageSize()
+    public PDRectangle pageSize()
     {
-        return PageSize.A4;
+        return PDRectangle.A4;
     }
 
     @Override
-    public void render(final Document document)
+    public void render(@NotNull final DocumentContext document) throws IOException
     {
-        Table sampleSummaryTable = FrontPageTables.buildSampleSummary(mReport, mConfig, contentWidth(), mReportResources);
-        document.add(sampleSummaryTable);
+        final float contentWidth = pageSize().getWidth() - (PAGE_MARGIN_LEFT + PAGE_MARGIN_RIGHT);//contentWidth();
+        document.addTable(FrontPageTables.buildSampleSummary(document, mReport, mConfig, contentWidth, mReportResources));
+        document.addTable(FrontPageTables.buildTechnicalSummary(document, mReport, mConfig, contentWidth, mReportResources));
+        document.addSpacing(10);
 
-        Table technicalSummaryTable = FrontPageTables.buildTechnicalSummary(mReport, mConfig, contentWidth(), mReportResources);
-        technicalSummaryTable.setMarginBottom(10);
-        document.add(technicalSummaryTable);
+        // Driver Summary and Genome Wide Biomarkers side-by-side
+        float nestedTableWidth = (contentWidth / 2) - 3 * 5;
 
-        Table topTable = new Table(UnitValue.createPercentArray(new float[] { 1, 1 })).setWidth(contentWidth() - 5);
+        float savedY = document.cursorY();
+        float driverTableLeft = PAGE_MARGIN_LEFT + 5 + 5;
+        BaseTable driverTable = FrontPageTables.buildDriverSummary(document, mReport, nestedTableWidth, driverTableLeft, mReportResources);
+        float leftFinalY = document.addTableNoAdvance(driverTable);
 
-        Table driverSummaryTable = FrontPageTables.buildDriverSummary(mReport, contentWidth(), mReportResources);
-        Table genomeWideTable = FrontPageTables.buildGenomeWideFeatures(mReport, contentWidth(), mReportResources);
+        document.setCursorY(savedY); // reset cursor to same line
+        float genomeTableLeft = document.marginLeft() + nestedTableWidth + 4 * 5;
+        BaseTable genomeTable =
+                FrontPageTables.buildGenomeWideFeaturesAtX(document, mReport, nestedTableWidth, genomeTableLeft, mReportResources);
+        float rightFinalY = document.addTableNoAdvance(genomeTable);
 
-        topTable.addCell(driverSummaryTable);
-        topTable.addCell(genomeWideTable);
+        // Draw box borders around both sections
+        float bottomY = Math.min(leftFinalY, rightFinalY);
+        float borderBoxesWidths = nestedTableWidth + 10;
+        float borderBoxesHeight = savedY - bottomY;
+        drawBoxBorder(document, driverTableLeft - 5, bottomY, borderBoxesWidths, borderBoxesHeight);
+        drawBoxBorder(document, genomeTableLeft - 5, bottomY, borderBoxesWidths, borderBoxesHeight);
+        drawBoxBorder(document, driverTableLeft - 10, savedY + 5, contentWidth, -1 * FRONT_CIRCOS_IMAGE_HEIGHT - 15 - borderBoxesHeight);
 
-        Table table = new Table(UnitValue.createPercentArray(new float[] { 1 })).setWidth(contentWidth()).setPadding(0);
-        table.addCell(topTable);
+        // Advance cursor to the lower of the two tables
+        document.setCursorY(bottomY - 5);
 
-        float pageHeight = contentHeight();
-        IRenderer renderer = table.createRendererSubTree().setParent(document.getRenderer());
-        LayoutResult result = renderer.layout(new LayoutContext(new LayoutArea(0, new Rectangle(contentWidth(), pageHeight))));
-        float currentHeight = result.getOccupiedArea().getBBox().getHeight();
+        // Add circos plot
+        document.addImage(
+                mPlotPathResolver.resolve(mReport.plots().purpleFinalCircosPlot()),
+                contentWidth, FRONT_CIRCOS_IMAGE_HEIGHT);
+    }
 
-        int remainingHeight = (int)floor(pageHeight - currentHeight - PAGE_MARGIN_TOP - PAGE_MARGIN_BOTTOM) - 50;
-        int maxCircosHeight = min(remainingHeight, FRONT_CIRCOS_IMAGE_HEIGHT);
-
-        Image circosImage = Images.build(mPlotPathResolver.resolve(mReport.plots().purpleFinalCircosPlot()));
-        circosImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
-        circosImage.setMaxHeight(maxCircosHeight);
-        table.addCell(circosImage);
-
-        document.add(table);
+    private static void drawBoxBorder(final DocumentContext document, float x, float y, float width, float height) throws IOException
+    {
+        try(PDPageContentStream cs = new PDPageContentStream(
+                document.document(), document.currentPage(), PDPageContentStream.AppendMode.APPEND, true, true))
+        {
+            cs.setStrokingColor(ReportResources.PALETTE_BLACK);
+            cs.setLineWidth(0.5f);
+            cs.addRect(x, y, width, height);
+            cs.stroke();
+        }
     }
 }

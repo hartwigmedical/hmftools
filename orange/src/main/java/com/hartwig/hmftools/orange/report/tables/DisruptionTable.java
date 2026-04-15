@@ -13,7 +13,10 @@ import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_ZYGOSITY
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.VALUE_HET;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.VALUE_HOM;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.cellArray;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.stringArray;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.createStandardTable;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.createEmptyTable;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.toPercentages;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.intToFloatArray;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.zeroPrefixed;
 
@@ -26,9 +29,15 @@ import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxGeneOrientation;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.util.Cells;
-import com.hartwig.hmftools.orange.report.util.Tables;
-import com.itextpdf.layout.element.Cell;
-import com.itextpdf.layout.element.Table;
+
+import be.quodlibet.boxable.Cell;
+import be.quodlibet.boxable.BaseTable;
+
+import org.apache.pdfbox.pdmodel.PDPage;
+
+import com.hartwig.hmftools.orange.report.DocumentContext;
+
+import java.io.IOException;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -37,29 +46,30 @@ public final class DisruptionTable
     private static final String COL_CONTEXT = "Context";
     private static final String COL_UNDISRUPTED_CN = "Undisrupted CN";
 
-    public static Table build(
-            final String title, float width, final List<LinxBreakend> breakends, final ReportResources reportResources)
+    public static BaseTable build(final DocumentContext docCtx,
+            final String title, float width, final List<LinxBreakend> breakends, final ReportResources reportResources) throws IOException
     {
         if(breakends.isEmpty())
         {
-            return new Tables(reportResources).createEmpty(title, width);
+            return createEmptyTable(docCtx, title, width, reportResources);
         }
 
         Cells cells = new Cells(reportResources);
 
         List<Integer> widths = Lists.newArrayList();
-        List<Cell> cellEntries = Lists.newArrayList();
+        List<String> headers = Lists.newArrayList();
 
-        addEntry(cells, widths, cellEntries, 1, COL_GENE);
-        addEntry(cells, widths, cellEntries, 3, COL_POSITION);
-        addEntry(cells, widths, cellEntries, 1, COL_ZYGOSITY);
-        addEntry(cells, widths, cellEntries, 2, COL_CONTEXT);
-        addEntry(cells, widths, cellEntries, 1, COL_TYPE);
-        addEntry(cells, widths, cellEntries, 1, COL_JCN);
-        addEntry(cells, widths, cellEntries, 2, COL_UNDISRUPTED_CN);
-        addEntry(cells, widths, cellEntries, 1, COL_DRIVER);
+        addEntry(widths, headers, 1, COL_GENE);
+        addEntry(widths, headers, 3, COL_POSITION);
+        addEntry(widths, headers, 1, COL_ZYGOSITY);
+        addEntry(widths, headers, 2, COL_CONTEXT);
+        addEntry(widths, headers, 1, COL_TYPE);
+        addEntry(widths, headers, 1, COL_JCN);
+        addEntry(widths, headers, 2, COL_UNDISRUPTED_CN);
+        addEntry(widths, headers, 1, COL_DRIVER);
 
-        Table table = Tables.createContent(width, intToFloatArray(widths), cellArray(cellEntries));
+        BaseTable table = createStandardTable(docCtx, title, width, intToFloatArray(widths), stringArray(headers), reportResources);
+        float[] pcts = toPercentages(intToFloatArray(widths));
 
         List<LinxBreakend> sortedBreakends = sort(breakends);
 
@@ -74,7 +84,7 @@ public final class DisruptionTable
                 otherBreakend = sortedBreakends.get(i + 1);
             }
 
-            List<Cell> rowCells = Lists.newArrayList();
+            List<String> rowCells = Lists.newArrayList();
 
             rowCells.add(cells.createContent(breakend.gene()));
             rowCells.add(cells.createContent(locationDisplay(breakend, otherBreakend)));
@@ -87,18 +97,20 @@ public final class DisruptionTable
             DriverInterpretation interpretation = DriverInterpretation.interpret(breakend.driverLikelihood());
             rowCells.add(cells.createContent(interpretation.toString()));
 
+            List<Cell<PDPage>> createdCells = cells.addRow(table, pcts, rowCells);
+
             if(isCandidateLikelihood(breakend.driverLikelihood()))
             {
-                reportResources.shadeCandidateCells(rowCells);
+                reportResources.shadeCandidateCells(createdCells);
             }
 
-            rowCells.forEach(x -> table.addCell(x));
-
             if(otherBreakend != null)
+            {
                 ++i;
+            }
         }
 
-        return new Tables(reportResources).createWrapping(table, title);
+        return table;
     }
 
     private static String locationDisplay(final LinxBreakend breakend)
@@ -109,7 +121,9 @@ public final class DisruptionTable
     private static String locationDisplay(final LinxBreakend lower, @Nullable final LinxBreakend upper)
     {
         if(upper == null)
+        {
             return locationDisplay(lower);
+        }
 
         return format("%s - %s", locationDisplay(lower), locationDisplay(upper));
     }
@@ -117,7 +131,9 @@ public final class DisruptionTable
     private static String contextDisplay(final LinxBreakend lower, @Nullable final LinxBreakend upper)
     {
         if(upper == null)
+        {
             return contextStr(lower, true);
+        }
 
         return format("%s - %s", contextStr(lower, false), contextStr(upper, false));
     }
@@ -146,13 +162,12 @@ public final class DisruptionTable
 
     private static String orientationStr(final LinxGeneOrientation orientation)
     {
-        switch(orientation)
+        return switch(orientation)
         {
-            case UPSTREAM: return "Upstream";
-            case DOWNSTREAM: return "Downstream";
-        }
+            case UPSTREAM -> "Upstream";
+            case DOWNSTREAM -> "Downstream";
+        };
 
-        return null;
     }
 
     private static List<LinxBreakend> sort(final List<LinxBreakend> breakends)
@@ -160,7 +175,9 @@ public final class DisruptionTable
         return breakends.stream().sorted((breakend1, breakend2) ->
         {
             if(breakend1.svId() == breakend2.svId())
+            {
                 return Integer.compare(breakend1.id(), breakend2.id());
+            }
 
             String location1 = zeroPrefixed(breakend1.chromosome()) + breakend1.chromosomeBand();
             String location2 = zeroPrefixed(breakend2.chromosome()) + breakend2.chromosomeBand();

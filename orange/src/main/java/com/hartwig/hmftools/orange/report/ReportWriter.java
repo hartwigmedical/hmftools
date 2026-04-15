@@ -2,14 +2,12 @@ package com.hartwig.hmftools.orange.report;
 
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import com.hartwig.hmftools.datamodel.OrangeJson;
 import com.hartwig.hmftools.datamodel.isofox.IsofoxRecord;
-import com.hartwig.hmftools.datamodel.orange.ExperimentType;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.orange.OrangeConfig;
 import com.hartwig.hmftools.orange.report.chapters.CuppaChapter;
@@ -21,16 +19,10 @@ import com.hartwig.hmftools.orange.report.chapters.QualityControlChapter;
 import com.hartwig.hmftools.orange.report.chapters.ReportChapter;
 import com.hartwig.hmftools.orange.report.chapters.RnaFindingsChapter;
 import com.hartwig.hmftools.orange.report.chapters.SomaticFindingsChapter;
-import com.itextpdf.kernel.events.PdfDocumentEvent;
-import com.itextpdf.kernel.geom.PageSize;
-import com.itextpdf.kernel.pdf.CompressionConstants;
-import com.itextpdf.kernel.pdf.PdfDocument;
-import com.itextpdf.kernel.pdf.PdfWriter;
-import com.itextpdf.kernel.pdf.WriterProperties;
-import com.itextpdf.layout.Document;
-import com.itextpdf.layout.element.AreaBreak;
-import com.itextpdf.layout.property.AreaBreakType;
 
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDDocumentInformation;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.jetbrains.annotations.Nullable;
 
 public class ReportWriter
@@ -61,39 +53,42 @@ public class ReportWriter
 
     private void writePdf(final OrangeRecord report) throws IOException
     {
-        ReportResources reportResources = ReportResources.create();
-
-        List<ReportChapter> chapters = new ArrayList<>();
-
-        chapters.add(new FrontPageChapter(mConfig, report, mPlotPathResolver, reportResources));
-        chapters.add(new SomaticFindingsChapter(mConfig, report, mPlotPathResolver, reportResources));
-
-        if(!report.tumorOnlyMode())
+        try(PDDocument pdfDocument = new PDDocument())
         {
-            chapters.add(new GermlineFindingsChapter(report, reportResources));
+            ReportResources reportResources = ReportResources.create(pdfDocument);
+
+            List<ReportChapter> chapters = new ArrayList<>();
+
+            chapters.add(new FrontPageChapter(mConfig, report, mPlotPathResolver, reportResources));
+            chapters.add(new SomaticFindingsChapter(mConfig, report, mPlotPathResolver, reportResources));
+
+            if(!report.tumorOnlyMode())
+            {
+                chapters.add(new GermlineFindingsChapter(report, reportResources));
+            }
+
+            chapters.add(new ImmunologyChapter(report, reportResources));
+
+            IsofoxRecord isofox = report.isofox();
+            if(isofox != null)
+            {
+                chapters.add(new RnaFindingsChapter(isofox, reportResources));
+            }
+
+            if(!report.tumorOnlyMode())
+            {
+                chapters.add(new CuppaChapter(report, mPlotPathResolver, reportResources));
+            }
+
+            if(report.plots().qSeePlot() != null)
+            {
+                chapters.add(new QualityControlChapter(report, mPlotPathResolver, reportResources));
+            }
+
+            chapters.add(new PurplePlotsChapter(report, mPlotPathResolver, reportResources));
+
+            writePdfChapters(pdfDocument, report.sampleId(), chapters, reportResources);
         }
-
-        chapters.add(new ImmunologyChapter(report, reportResources));
-
-        IsofoxRecord isofox = report.isofox();
-        if(isofox != null)
-        {
-            chapters.add(new RnaFindingsChapter(isofox, report.purple(), reportResources));
-        }
-
-        if(!report.tumorOnlyMode())
-        {
-            chapters.add(new CuppaChapter(report, mPlotPathResolver, reportResources));
-        }
-
-        if(report.plots().qSeePlot() != null)
-        {
-            chapters.add(new QualityControlChapter(report, mPlotPathResolver, reportResources));
-        }
-
-        chapters.add(new PurplePlotsChapter(report, mPlotPathResolver, reportResources));
-
-        writePdfChapters(report.sampleId(), chapters, reportResources);
     }
 
     private String formOutputFile(final String sampleId, final String fileId)
@@ -101,7 +96,9 @@ public class ReportWriter
         String filename = mOutputDir + sampleId + ".orange.";
 
         if(mOutputId != null)
+        {
             filename += mOutputId + ".";
+        }
 
         return filename + fileId;
     }
@@ -122,67 +119,51 @@ public class ReportWriter
     }
 
     private void writePdfChapters(
-            final String sampleId, final List<ReportChapter> chapters, final ReportResources reportResources) throws IOException
+            final PDDocument pdfDocument, final String sampleId, final List<ReportChapter> chapters,
+            final ReportResources reportResources) throws IOException
     {
-        Document doc = initializeReport(sampleId);
-        PdfDocument pdfDocument = doc.getPdfDocument();
+        // Set metadata
+        PDDocumentInformation info = pdfDocument.getDocumentInformation();
+        info.setTitle(ReportResources.METADATA_TITLE);
+        info.setAuthor(ReportResources.METADATA_AUTHOR);
+
+        // Create document context
+        DocumentContext docCtx = new DocumentContext(pdfDocument, PDRectangle.A4,
+                ReportResources.PAGE_MARGIN_TOP, ReportResources.PAGE_MARGIN_BOTTOM,
+                ReportResources.PAGE_MARGIN_LEFT, ReportResources.PAGE_MARGIN_RIGHT);
 
         PageEventHandler pageEventHandler = PageEventHandler.create(
                 mConfig != null ? mConfig.DisplaySampleId : sampleId, reportResources,
                 mConfig != null ? mConfig.AddDisclaimer : false);
 
-        pdfDocument.addEventHandler(PdfDocumentEvent.START_PAGE, pageEventHandler);
+        docCtx.setPageEventHandler(pageEventHandler);
 
         for(int i = 0; i < chapters.size(); i++)
         {
             ReportChapter chapter = chapters.get(i);
-            pdfDocument.setDefaultPageSize(chapter.pageSize());
+            docCtx.setPageSize(chapter.pageSize());
             pageEventHandler.chapterTitle(chapter.name());
             pageEventHandler.resetChapterPageCounter();
 
-            if(i > 0)
-            {
-                doc.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
-            }
-            chapter.render(doc);
+            // Start a new page for each chapter
+            docCtx.newPage(chapter.pageSize());
+            chapter.render(docCtx);
         }
 
-        pageEventHandler.writeFooters(doc.getPdfDocument());
+        // Second pass: write footers with total page count
+        docCtx.writeFooters();
 
-        doc.close();
-        pdfDocument.close();
-    }
-
-    private Document initializeReport(final String sampleId) throws IOException
-    {
-        PdfWriter writer;
-        WriterProperties properties = new WriterProperties()
-                .setFullCompressionMode(true)
-                .setCompressionLevel(CompressionConstants.BEST_COMPRESSION)
-                .useSmartMode();
-        if(mWriteToDisk)
+        // Save
+        if(mWriteToDisk && mOutputDir != null)
         {
             String outputFilename = formOutputFile(sampleId, "pdf");
             LOGGER.info("writing PDF report to {}", outputFilename);
-            writer = new PdfWriter(outputFilename, properties);
+            pdfDocument.save(outputFilename);
         }
         else
         {
             LOGGER.info("generating in-memory PDF report");
-            writer = new PdfWriter(new ByteArrayOutputStream(), properties);
+            // For in-memory, we still render the document but don't save to file
         }
-
-        PdfDocument pdf = new PdfDocument(writer);
-        pdf.setDefaultPageSize(PageSize.A4);
-        pdf.getDocumentInfo().setTitle(ReportResources.METADATA_TITLE);
-        pdf.getDocumentInfo().setAuthor(ReportResources.METADATA_AUTHOR);
-
-        Document document = new Document(pdf);
-        document.setMargins(ReportResources.PAGE_MARGIN_TOP,
-                ReportResources.PAGE_MARGIN_RIGHT,
-                ReportResources.PAGE_MARGIN_BOTTOM,
-                ReportResources.PAGE_MARGIN_LEFT);
-
-        return document;
     }
 }
