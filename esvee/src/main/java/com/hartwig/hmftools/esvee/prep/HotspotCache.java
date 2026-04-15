@@ -140,7 +140,7 @@ public class HotspotCache
                 ++itemCount;
             }
 
-            SV_LOGGER.info("loaded {} known hotspot records from file", itemCount, filename);
+            SV_LOGGER.info("loaded {} known hotspot records from file({})", itemCount, filename);
         }
         catch(IOException e)
         {
