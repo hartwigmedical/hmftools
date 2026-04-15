@@ -237,7 +237,7 @@ For each selected variant, one probe is generated that targets the alternate seq
 | Variant type | Probe layout                                                                                                                                                                                                                           |
 |--------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | SNV          | The reference sequenced is altered by substituting in the variant base. A probe is centered on the resulting sequence.                                                                                                                 |
-| MVN/INDEL    | The reference sequence is altered by replacing the reference base(s) with the variant bases. A probe is centered on the resulting sequence.                                                                                            |
+| MNV/INDEL    | The reference sequence is altered by replacing the reference base(s) with the variant bases. A probe is centered on the resulting sequence.                                                                                            |
 | SV           | The reference sequence up to the first breakend, then the insert sequence (if any), then the reference sequence from the second breakend. (Breakend orientation is taken into account.) A probe is centered on the resulting sequence. |
 
 ### Custom Regions
