@@ -74,6 +74,11 @@ public class PanelBuilderConstants
     public static final double CUSTOM_REGION_GC_TARGET = 0.45;
     public static final double CUSTOM_REGION_GC_TOLERANCE = 1;
 
+    // Custom small variants parameters.
+    public static final double CUSTOM_SMALL_VARIANT_QUALITY_MIN_DEFAULT = 0.1;
+    public static final double CUSTOM_SMALL_VARIANT_GC_TARGET = 0.45;
+    public static final double CUSTOM_SMALL_VARIANT_GC_TOLERANCE = 1;
+
     // Custom structural variants parameters.
     public static final double CUSTOM_SV_QUALITY_MIN_DEFAULT = 0.1;
     public static final double CUSTOM_SV_GC_TARGET = 0.45;

@@ -78,7 +78,8 @@ public class PanelBuilderApplication
         // Probes generated first will exclude overlapping probes generated afterward.
         Genes.ExtraOutput genesExtraOutput = generateTargetGeneProbes();
         generateCustomRegionProbes();
-        generateCustomSvProbes();
+        generateCustomStructuralVariantProbes();
+        generateCustomSmallVariantProbes();
         generateCopyNumberBackboneProbes();
         generateCdr3Probes();
         SampleVariants.ExtraOutput sampleVariantsExtraOutput = generateSampleVariantProbes();
@@ -175,15 +176,28 @@ public class PanelBuilderApplication
         }
     }
 
-    private void generateCustomSvProbes()
+    private void generateCustomSmallVariantProbes()
     {
-        if(mConfig.customSvsFile() == null)
+        if(mConfig.customSmallVariantsFile() == null)
         {
-            LOGGER.info("Custom SVs not provided; skipping custom SV probes");
+            LOGGER.info("Custom small variants not provided; skipping custom small variant probes");
         }
         else
         {
-            CustomSvs.generateProbes(mConfig.customSvsFile(), mRefGenome.chromosomeLengths(), mProbeGenerator, mPanelData);
+            CustomSmallVariants.generateProbes(mConfig.customSmallVariantsFile(), mRefGenome, mProbeGenerator, mPanelData);
+            // Result is stored into mPanelData.
+        }
+    }
+
+    private void generateCustomStructuralVariantProbes()
+    {
+        if(mConfig.customStructuralVariantsFile() == null)
+        {
+            LOGGER.info("Custom structural variants not provided; skipping custom structural variant probes");
+        }
+        else
+        {
+            CustomStructuralVariants.generateProbes(mConfig.customStructuralVariantsFile(), mRefGenome.chromosomeLengths(), mProbeGenerator, mPanelData);
             // Result is stored into mPanelData.
         }
     }

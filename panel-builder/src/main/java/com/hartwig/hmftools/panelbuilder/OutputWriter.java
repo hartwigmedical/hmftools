@@ -270,7 +270,8 @@ public class OutputWriter implements AutoCloseable
     {
         row.setOrNull(RejectedFeaturesColumns.Region, rejectedFeature.region() == null ? null : rejectedFeature.region().toString());
         row.setOrNull(RejectedFeaturesColumns.ProbeSequence, rejectedFeature.probe() == null ? null : rejectedFeature.probe().sequence());
-        row.setOrNull(RejectedFeaturesColumns.ProbeQualityScore, rejectedFeature.probe() == null ? null : rejectedFeature.probe().qualityScore());
+        row.setOrNull(RejectedFeaturesColumns.ProbeQualityScore,
+                rejectedFeature.probe() == null ? null : rejectedFeature.probe().qualityScore());
         row.setOrNull(RejectedFeaturesColumns.ProbeGCContent, rejectedFeature.probe() == null ? null : rejectedFeature.probe().gcContent());
         row.set(RejectedFeaturesColumns.TargetType, rejectedFeature.metadata().type().name());
         row.set(RejectedFeaturesColumns.TargetExtra, rejectedFeature.metadata().extraInfo());

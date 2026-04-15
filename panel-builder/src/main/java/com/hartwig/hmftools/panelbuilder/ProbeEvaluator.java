@@ -66,7 +66,7 @@ public class ProbeEvaluator
                 .map(applyIfNotRejected(probe -> evaluateSequence(mAnnotateSequence.apply(probe))))
                 // TODO? don't have to annotate GC if there's no limit
                 .map(applyIfNotRejected(probe -> evaluateGcContent(mAnnotateGcContent.apply(probe))));
-                // TODO? don't have to annotate QS if threshold is 0
+        // TODO? don't have to annotate QS if threshold is 0
         probes = mAnnotateQualityScore.apply(probes)
                 .map(applyIfNotRejected(ProbeEvaluator::evaluateQualityScore));
         probes = probes.map(applyIfNotRejected(probe -> probe.withEvaluationResult(EvaluationResult.accept())));

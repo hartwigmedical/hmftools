@@ -1,15 +1,16 @@
 # PanelBuilder
 
 PanelBuilder is a tool to easily create custom panel designs based on simple input features.
-You input the genomic features you are interested in and PanelBuilder creates the best set of probes for you.
+You input the genomic features you are interested in, and PanelBuilder creates the best set of probes for you.
 
 ## Supported Features
 
 - Genes (coding, promoter, UTR, flanks)
 - Copy number backbone
 - CDR3
-- Sample variants
+- Sample variants from WiGiTS analysis
 - Custom regions
+- Custom small variants
 - Custom structural variants
 
 ## Configuration
@@ -25,27 +26,28 @@ You input the genomic features you are interested in and PanelBuilder creates th
 
 ### Optional Arguments
 
-| Argument           | Type                         | Default                     | Description                                                                                                                        |
-|--------------------|------------------------------|-----------------------------|------------------------------------------------------------------------------------------------------------------------------------|
-| ensembl_data_dir   | Path                         | (none)                      | Ensembl cache directory.                                                                                                           |
-| bwa_lib            | Path                         | Search in current directory | Path to BWA-MEM shared library object.                                                                                             |
-| genes              | Path                         | (none)                      | Path to TSV file containing desired gene features. If not specified, gene probes are not produced.                                 |
-| cn_backbone        | Flag                         | (none)                      | If specified, include copy number backbone probes in the panel.                                                                    |
-| cn_backbone_res_kb | Integer                      | 1000                        | Approximate spacing between copy number backbone probes, in kb.                                                                    |
-| het_sites          | Path                         | (none)                      | Path to heterozygous SNP sites TSV file for copy number backbone. May be GZIP'd.                                                   |
-| cdr3               | Flag                         | (none)                      | If specified, include CDR3 regions in the panel.                                                                                   |
-| sample             | String                       | (none)                      | ID of sample for sample variant probes. If not specified, sample variant probes are not produced.                                  |
-| linx_dir           | Path                         | (none)                      | Path to Linx somatic output for sample variant probes.                                                                             |
-| linx_germline_dir  | Path                         | (none)                      | Path to Linx germline output for sample variant probes.                                                                            |
-| purple_dir         | Path                         | (none)                      | Path to Purple output for sample variant probes.                                                                                   |
-| sample_probes      | Integer                      | 500                         | Maximum number of sample variant probes to produce.                                                                                |
-| prefer_small_indel | Flag                         | (none)                      | If specified, when selecting nondriver sample variants, prefer variants with lower `IndelLength`.                                  | 
-| custom_regions     | Comma-separated list of path | (none)                      | Path(s) to TSV file containing desired custom regions. If not specified, custom region probes are not produced.                    |
-| custom_svs         | Path                         | (none)                      | Path to TSV file containing the desired custom structural variants. If not specified, custom structural variants are not produced. |
-| threads            | Integer                      | 1                           | Number of threads to use for some parts of the application which support multithreading.                                           |
-| output_id          | String                       | (none)                      | Prefix for output files.                                                                                                           |
-| verbose_output     | Flag                         | (none)                      | If specified, output more information which may be useful for investigation or debugging. Increases run time.                      |
-| log_level          | String                       | `error`                     | `all`/`trace`/`debug`/`info`/`warn`/`error`/`fatal`/`off`                                                                          |
+| Argument              | Type                         | Default                     | Description                                                                                                                              |
+|-----------------------|------------------------------|-----------------------------|------------------------------------------------------------------------------------------------------------------------------------------|
+| ensembl_data_dir      | Path                         | (none)                      | Ensembl cache directory.                                                                                                                 |
+| bwa_lib               | Path                         | Search in current directory | Path to BWA-MEM shared library object.                                                                                                   |
+| genes                 | Path                         | (none)                      | Path to TSV file containing desired gene features. If not specified, gene probes are not produced.                                       |
+| cn_backbone           | Flag                         | (none)                      | If specified, include copy number backbone probes in the panel.                                                                          |
+| cn_backbone_res_kb    | Integer                      | 1000                        | Approximate spacing between copy number backbone probes, in kb.                                                                          |
+| het_sites             | Path                         | (none)                      | Path to heterozygous SNP sites TSV file for copy number backbone. May be GZIP'd.                                                         |
+| cdr3                  | Flag                         | (none)                      | If specified, include CDR3 regions in the panel.                                                                                         |
+| sample                | String                       | (none)                      | ID of sample for sample variant probes. If not specified, sample variant probes are not produced.                                        |
+| linx_dir              | Path                         | (none)                      | Path to Linx somatic output for sample variant probes.                                                                                   |
+| linx_germline_dir     | Path                         | (none)                      | Path to Linx germline output for sample variant probes.                                                                                  |
+| purple_dir            | Path                         | (none)                      | Path to Purple output for sample variant probes.                                                                                         |
+| sample_probes         | Integer                      | 500                         | Maximum number of sample variant probes to produce.                                                                                      |
+| prefer_small_indel    | Flag                         | (none)                      | If specified, when selecting nondriver sample variants, prefer variants with lower `IndelLength`.                                        | 
+| custom_regions        | Comma-separated list of path | (none)                      | Path(s) to TSV file containing desired custom regions. If not specified, custom region probes are not produced.                          |
+| custom_small_variants | Path                         | (none)                      | Path to TSV file containing the desired custom small variants. If not specified, custom small variant probes are not produced.           |
+| custom_svs            | Path                         | (none)                      | Path to TSV file containing the desired custom structural variants. If not specified, custom structural variant probes are not produced. |
+| threads               | Integer                      | 1                           | Number of threads to use for some parts of the application which support multithreading.                                                 |
+| output_id             | String                       | (none)                      | Prefix for output files.                                                                                                                 |
+| verbose_output        | Flag                         | (none)                      | If specified, output more information which may be useful for investigation or debugging. Increases run time.                            |
+| log_level             | String                       | `error`                     | `all`/`trace`/`debug`/`info`/`warn`/`error`/`fatal`/`off`                                                                                |
 
 ## Example Usage
 
@@ -60,6 +62,7 @@ java -jar panel-builder.jar \
   -cn_backbone \
   -genes genes_features.tsv \
   -custom_regions custom_regions.tsv \
+  -custom_small_variants custom_small_variants.tsv \
   -custom_svs custom_svs.tsv \
   -sample COLO829T \
   -linx_dir COLO829T/linx \
@@ -78,7 +81,7 @@ Note that since the probe size is fixed, a probe may cover a larger region than 
 ### Probe Quality Score
 
 A core feature of PanelBuilder is how it intelligently selects probes which we think will give us good results.
-To do so, probes are evaluated with a "quality score" (QS), which quantifies how likely a probe is to hybridise with unintended genome region.
+To do so, probes are evaluated with a "quality score" (QS), which quantifies how likely a probe is to hybridise with unintended genome regions.
 If a probe sequence (or part of the sequence) occurs in many places in the genome, then the probe may hybridise there, reducing coverage of the intended region.
 For example, if a probe significantly overlaps an Alu region, it is likely to match to the millions of other Alu regions.
 The quality score is roughly reciprocal with the number of effective exact matches in the genome.
@@ -107,14 +110,14 @@ Probes which do not pass their criteria are referred to as "rejected".
 This means we believe these probes do not meet our requirements and likely won't give us good results.
 Regions which are not covered by accepted probes are "rejected" regions.
 
-It is important to note that when you request a particular feature, the application may not produce probes which (completely) cover that feature, because they are rejected.
-You should check the output to see which probes/regions were rejected, and determine if that is acceptable for you.
+It is important to note that when you request a particular feature, PanelBuilder may not produce probes which (completely) cover that feature, because they are rejected.
+You should check the output to see which probes/regions were rejected and determine if that is acceptable for your use case.
 
 ## Feature Details & Probe Generation
 
 ### Genes
 
-Probes generated to capture different features of genes. Features can be enabled/disabled individually.
+Probes generated to capture different features of genes. Features can be enabled/disabled on a per-gene basis.
 
 Feature methodology:
 
@@ -179,7 +182,7 @@ The methodology for the Y chromosome is similar, except:
 - Rather than considering probes on heterozygous sites, it considers all probes in the partition. This is because there are no heterozygous sites on the Y chromosome.
 - QS criteria: `QS=1`.
 
-The strict QS and GC criteria aim to eliminate bias from amplification and hybridisation efficiency, yielding more accurate CN determination.
+The strict QS and GC criteria aim to eliminate bias from amplification and hybridisation efficiency, yielding more accurate copy number determination.
 
 ### CDR3 Regions
 
@@ -234,7 +237,7 @@ For each selected variant, one probe is generated that targets the alternate seq
 | Variant type | Probe layout                                                                                                                                                                                                                           |
 |--------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | SNV          | The reference sequenced is altered by substituting in the variant base. A probe is centered on the resulting sequence.                                                                                                                 |
-| INDEL        | The reference sequence is altered by replacing the reference base(s) with the variant bases. A probe is centered on the resulting sequence.                                                                                            |
+| MNV/INDEL    | The reference sequence is altered by replacing the reference base(s) with the variant bases. A probe is centered on the resulting sequence.                                                                                            |
 | SV           | The reference sequence up to the first breakend, then the insert sequence (if any), then the reference sequence from the second breakend. (Breakend orientation is taken into account.) A probe is centered on the resulting sequence. |
 
 ### Custom Regions
@@ -265,6 +268,38 @@ Example:
 Chromosome	PositionStart	PositionEnd	ExtraInfo	QualityScoreMin
 17	7433101	7469631	custom1	0
 1	30429900	30429950	custom2	NULL
+```
+
+### Custom Small Variants
+
+Arbitrary small variants (SNV/MNV/INDEL), for which probes are generated in the same manner as described in "Sample Variants".
+
+Probe evaluation criteria:
+
+- `QS>=QualityScoreMin` (see the file format below)
+
+#### Custom Small Variants Input File
+
+TSV file with these columns:
+
+| Column          | Type    | Default if null | Description                                                                                                                |
+|-----------------|---------|-----------------|----------------------------------------------------------------------------------------------------------------------------|
+| Chromosome      | String  | (N/A)           | Chromosome name as matching the reference genome.                                                                          |
+| Position        | Integer | (N/A)           | 1-indexed inclusive position of the first reference base to alter.                                                         |
+| RefSequence     | String  | (N/A)           | Reference genome nucleotide sequence starting at `Position`, which is to be altered. This must match the reference genome. |
+| AltSequence     | String  | (N/A)           | Nucleotide sequence which replaces `RefSequence` in the variant.                                                           |
+| ExtraInfo       | String  | (N/A)           | Arbitrary label which will be included in the output.                                                                      |
+| QualityScoreMin | Number  | 0.1             | Minimum quality score for probe evaluation criteria.                                                                       |
+
+Acceptable null values are `null` and `NULL`. If N/A then that column may not be null.
+
+Example:
+```text
+Chromosome	Position	RefSequence	AltSequence	ExtraInfo	QualityScoreMin
+1	80000000	G	C	SNV	NULL
+1	80000200	GCT	CTA	MNV	NULL
+1	80000400	A	TTTA	INS	0.1
+1	80000600	GAAA		DEL	NULL
 ```
 
 ### Custom Structural Variants
@@ -313,7 +348,7 @@ Algorithm:
 
 1. Split the target region into uncovered subregions which do not overlap existing probes.
 2. Split the uncovered subregions into acceptable regions where probes may be placed.
-This identifies all subregions where overlap with a probe would cause that probe to be rejected according the probe evaluation criteria, and discards those regions.
+This identifies all subregions where overlap with a probe would cause that probe to be rejected according to the probe evaluation criteria, and discards those regions.
 3. For each acceptable subregion, generate probes to evenly cover ("tile") the subregion. The tiling follows these rules:
     - The tiling always has the minimum number of probes to cover the subregion.
     - Up to 10b on each edge of the subregion may be uncovered before "adding" another probe. This avoids huge probe overlap if the subregion is slightly larger than a multiple of the probe size. (And the probe sequencing is likely to capture these edges anyway).
@@ -331,9 +366,10 @@ Probes are generated in this order, with probes generated first having priority 
 1. Genes
 2. Custom regions
 3. Custom structural variants
-4. Copy number backbone
-5. CDR3
-6. Sample variants
+4. Custom small variants
+5. Copy number backbone
+6. CDR3
+7. Sample variants
 
 In general, if a probe's target region is already covered by an existing probe, the new probe is not included in the panel.
 

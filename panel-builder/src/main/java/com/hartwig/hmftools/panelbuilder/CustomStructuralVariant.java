@@ -11,7 +11,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
-public record CustomSv(
+public record CustomStructuralVariant(
         BasePosition startPosition,
         Orientation startOrientation,
         BasePosition endPosition,
@@ -36,15 +36,15 @@ public record CustomSv(
         QualityScoreMin
     }
 
-    private static final Logger LOGGER = LogManager.getLogger(CustomSv.class);
+    private static final Logger LOGGER = LogManager.getLogger(CustomStructuralVariant.class);
 
-    public static List<CustomSv> readFromFile(final String filePath)
+    public static List<CustomStructuralVariant> readFromFile(final String filePath)
     {
         LOGGER.debug("Reading custom structural variants from file: {}", filePath);
 
         try(DelimFileReader reader = new DelimFileReader(filePath))
         {
-            List<CustomSv> customSvs = reader.stream().map(row ->
+            List<CustomStructuralVariant> customSvs = reader.stream().map(row ->
             {
                 BasePosition startPosition = new BasePosition(row.getString(Columns.ChromosomeStart), row.getInt(Columns.PositionStart));
                 Orientation startOrientation = Orientation.fromByteStr(row.getString(Columns.OrientationStart));
@@ -57,7 +57,7 @@ public record CustomSv(
                 }
                 String extraInfo = row.getString(Columns.ExtraInfo);
                 Double qualityScoreMin = row.getDoubleOrNull(Columns.QualityScoreMin);
-                return new CustomSv(startPosition, startOrientation, endPosition, endOrientation, insertSequence, extraInfo, qualityScoreMin);
+                return new CustomStructuralVariant(startPosition, startOrientation, endPosition, endOrientation, insertSequence, extraInfo, qualityScoreMin);
             }).toList();
 
             LOGGER.debug("Read {} custom structural variants from {}", customSvs.size(), filePath);
@@ -65,17 +65,17 @@ public record CustomSv(
         }
     }
 
-    public static void writeToFile(final List<CustomSv> customSvs, final String filePath)
+    public static void writeToFile(final List<CustomStructuralVariant> customSvs, final String filePath)
     {
         LOGGER.debug("Writing custom structural variants to file: {}", filePath);
 
-        try(DelimFileWriter<CustomSv> writer = new DelimFileWriter<>(filePath, Columns.values(), CustomSv::writeObj))
+        try(DelimFileWriter<CustomStructuralVariant> writer = new DelimFileWriter<>(filePath, Columns.values(), CustomStructuralVariant::writeObj))
         {
             customSvs.forEach(writer::writeRow);
         }
     }
 
-    private static void writeObj(final CustomSv sv, final DelimFileWriter.Row row)
+    private static void writeObj(final CustomStructuralVariant sv, final DelimFileWriter.Row row)
     {
         row.set(Columns.ChromosomeStart, sv.startPosition().Chromosome);
         row.set(Columns.PositionStart, sv.startPosition().Position);
