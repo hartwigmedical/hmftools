@@ -59,7 +59,7 @@ public class PurityComparer implements ItemComparer
         thresholds.addFieldThreshold(FLD_TML, 1, 0.05);
         thresholds.addFieldThreshold(FLD_CN_SEGS, 5, 0.2);
         thresholds.addFieldThreshold(FLD_UNS_CN_SEGS, 5, 0.2);
-        thresholds.addFieldThreshold(FLD_SV_TMB, 5, 0.03);
+        thresholds.addFieldThreshold(FLD_SV_TMB, 5, 0.05);
         thresholds.addFieldThreshold(FLD_TINC_LEVEL, 0.1, 0);
     }
 

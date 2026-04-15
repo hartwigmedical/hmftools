@@ -6,6 +6,9 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
+import static com.hartwig.hmftools.compar.common.CurationType.EXPECTED;
+import static com.hartwig.hmftools.compar.common.CurationType.INVALID;
+import static com.hartwig.hmftools.compar.common.CurationType.NONE;
 import static com.hartwig.hmftools.compar.common.DiffFunctions.diffsStr;
 
 import java.io.IOException;
@@ -21,8 +24,10 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.compar.common.CategoryType;
+import com.hartwig.hmftools.compar.common.CurationInfo;
+import com.hartwig.hmftools.compar.common.CurationType;
 import com.hartwig.hmftools.compar.common.Mismatch;
-import com.hartwig.hmftools.compar.common.MismatchData;
+import com.hartwig.hmftools.compar.common.KnownMismatch;
 import com.hartwig.hmftools.compar.common.MismatchType;
 
 import org.jetbrains.annotations.Nullable;
@@ -37,7 +42,9 @@ public class MismatchFile
         Key,
         Differences,
         RefValues,
-        NewValues;
+        NewValues,
+        CurationType,
+        CurationComment;
     }
 
     // differences is list of the form: field(refValue/newValue)
@@ -55,12 +62,21 @@ public class MismatchFile
         return sj.toString();
     }
 
-    public static String header(boolean includeSampleId)
+    public static String header(boolean includeSampleId, boolean includeCuration, boolean includeComment)
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);
         sj.add(commonHeader(includeSampleId, true));
         sj.add(Columns.RefValues.toString());
         sj.add(Columns.NewValues.toString());
+
+        if(includeCuration)
+        {
+            sj.add(Columns.CurationType.toString());
+
+            if(includeComment)
+                sj.add(Columns.CurationComment.toString());
+        }
+
         return sj.toString();
     }
 
@@ -137,13 +153,11 @@ public class MismatchFile
         }
 
         return displaySj.toString();
-
-
     }
 
-    public static Map<String,List<MismatchData>> loadMismatches(final String filename, @Nullable final String configSampleId)
+    public static Map<String,List<KnownMismatch>> loadSampleCurations(final String filename, @Nullable final String configSampleId)
     {
-        Map<String,List<MismatchData>> sampleMismatches = Maps.newHashMap();
+        Map<String,List<KnownMismatch>> sampleMismatches = Maps.newHashMap();
 
         try
         {
@@ -157,8 +171,10 @@ public class MismatchFile
             int mismatchTypeIndex = fieldsIndexMap.get(Columns.MismatchType.toString());
             int keyIndex = fieldsIndexMap.get(Columns.Key.toString());
             int differencesIndex = fieldsIndexMap.get(Columns.Differences.toString());
+            Integer curationIndex = fieldsIndexMap.get(Columns.CurationType.toString());
+            Integer commentIndex = fieldsIndexMap.get(Columns.CurationComment.toString());
 
-            List<MismatchData> mismatches = null;
+            List<KnownMismatch> mismatches = null;
             String currentSampleId = "";
 
             if(sampleIndex == null && configSampleId != null)
@@ -189,15 +205,41 @@ public class MismatchFile
                     }
                 }
 
-                CategoryType categoryType = CategoryType.valueOf( values[categoryIndex]);
+                CategoryType categoryType = CategoryType.valueOf(values[categoryIndex]);
                 MismatchType mismatchType = MismatchType.valueOf(values[mismatchTypeIndex]);
                 String itemKey = values[keyIndex];
 
                 String diffsStr = values[differencesIndex];
+
+                CurationType curationType = NONE;
+                String curationComment = "";
+
+                if(curationIndex != null)
+                {
+                    try
+                    {
+                        if(curationIndex < values.length)
+                            curationType = CurationType.valueOf(values[curationIndex]);
+
+                        if(commentIndex != null && commentIndex < values.length)
+                            curationComment = values[commentIndex];
+                    }
+                    catch(Exception e)
+                    {
+                        curationType = INVALID; // use has configured an invalid enum/type
+                    }
+                }
+                else
+                {
+                    curationType = EXPECTED; // loading a prior unedited mismatch file
+                }
+
                 List<String> differences = !diffsStr.isEmpty() ?
                         Arrays.stream(diffsStr.split(ITEM_DELIM, -1)).collect(Collectors.toList()) : Collections.emptyList();
 
-                mismatches.add(new MismatchData(categoryType, mismatchType, itemKey, differences));
+                CurationInfo curationInfo = new CurationInfo(curationType, curationComment);
+
+                mismatches.add(new KnownMismatch(categoryType, mismatchType, itemKey, differences, curationInfo));
             }
 
             CMP_LOGGER.info("loaded {} mismatches file({})", mismatches.size(), filename);

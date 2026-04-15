@@ -3,7 +3,6 @@ package com.hartwig.hmftools.compar;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL;
-import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_DESC;
 import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.addGenePanelOption;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_DESC;
@@ -19,7 +18,6 @@ import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.joinEnumsToStr;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
@@ -88,7 +86,7 @@ public class ComparConfig
 
     public final String OutputDir;
     public final String OutputId;
-    public final String ExpectedMismatchFile;
+    public final String KnownMismatchFile;
 
     public final List<WriteType> WriteTypes;
     public final boolean IncludeMatches;
@@ -110,7 +108,7 @@ public class ComparConfig
     public static final String WRITE_DETAILED_FILES = "write_detailed";
     public static final String INCLUDE_MATCHES = "include_matches";
     public static final String RESTRICT_TO_DRIVERS = "restrict_to_drivers";
-    public static final String EXPECTED_MISMATCH_FILE = "expected_mismatches";
+    public static final String KNOWN_MISMATCH_FILE = "known_mismatches";
     public static final String IGNORE_GENES = "ignore_genes";
 
     public static final Logger CMP_LOGGER = LogManager.getLogger(ComparConfig.class);
@@ -161,7 +159,7 @@ public class ComparConfig
 
         OutputDir = parseOutputDir(configBuilder);
         OutputId = configBuilder.getValue(OUTPUT_ID);
-        ExpectedMismatchFile = configBuilder.getValue(EXPECTED_MISMATCH_FILE);
+        KnownMismatchFile = configBuilder.getValue(KNOWN_MISMATCH_FILE);
 
         WriteTypes = Lists.newArrayList();
 
@@ -476,7 +474,7 @@ public class ComparConfig
 
         configBuilder.addConfigItem(WRITE_TYPES, enumValueSelectionAsStr(WriteType.values(), "Write types"));
         configBuilder.addFlag(WRITE_DETAILED_FILES, "Write per-type details files");
-        configBuilder.addConfigItem(EXPECTED_MISMATCH_FILE, "Existing expected mismatch file");
+        configBuilder.addConfigItem(KNOWN_MISMATCH_FILE, "File with sample curations or expected mismatches");
         configBuilder.addFlag(INCLUDE_MATCHES, "Also write matches to output file(s)");
         configBuilder.addFlag(RESTRICT_TO_DRIVERS, "Restrict any comparison involving genes to driver gene panel");
         configBuilder.addFlag(REQUIRES_LIFTOVER, "Lift over ref positions from v37 to v 38");
@@ -508,9 +506,10 @@ public class ComparConfig
         IgnoreGenes = Collections.emptySet();
         AlternateTranscriptDriverGenes = Sets.newHashSet();
         RestrictToDrivers = false;
-        mSampleIdMappings = Maps.newHashMap();
         LiftoverCache = new GenomeLiftoverCache();
         RequiresLiftover = false;
-        ExpectedMismatchFile = null;
+        KnownMismatchFile = null;
+
+        mSampleIdMappings = Maps.newHashMap();
     }
 }
