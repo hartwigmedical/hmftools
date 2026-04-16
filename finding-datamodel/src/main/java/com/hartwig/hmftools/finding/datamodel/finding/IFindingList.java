@@ -8,7 +8,7 @@ import java.util.stream.Stream;
 import jakarta.validation.constraints.NotNull;
 
 @SuppressWarnings("unused")
-public interface IFindingList<T extends Finding>
+public interface IFindingList<T>
 {
     @NotNull
     FindingStatus status();
