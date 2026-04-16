@@ -5,6 +5,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.function.Function;
 
+import com.hartwig.hmftools.finding.FindingUtil;
 import com.hartwig.hmftools.finding.datamodel.FindingRecord;
 import com.hartwig.hmftools.finding.datamodel.FindingRecordBuilder;
 import com.hartwig.hmftools.finding.datamodel.HlaAllele;
@@ -111,18 +112,14 @@ public class LowPurityConverter
         return findingStatus.status() == FindingStatus.Status.OK && isLowPurity;
     }
 
-    private static SortedSet<FindingStatus.Issue> addLowPurity(SortedSet<FindingStatus.Issue> sortedSet)
+    private static SortedSet<FindingStatus.Issue> addLowPurity(SortedSet<FindingStatus.Issue> issues)
     {
-        SortedSet<FindingStatus.Issue> result = new TreeSet<>(sortedSet);
-        result.add(FindingStatus.Issue.LOW_PURITY);
-        return result;
+        return FindingUtil.addIssues(issues, Set.of(FindingStatus.Issue.LOW_PURITY));
     }
 
-    private static SortedSet<FindingStatus.Issue> removeLowPurity(SortedSet<FindingStatus.Issue> sortedSet)
+    private static SortedSet<FindingStatus.Issue> removeLowPurity(SortedSet<FindingStatus.Issue> issues)
     {
-        SortedSet<FindingStatus.Issue> result = new TreeSet<>(sortedSet);
-        result.remove(FindingStatus.Issue.LOW_PURITY);
-        return result;
+        return FindingUtil.removeIssues(issues, Set.of(FindingStatus.Issue.LOW_PURITY));
     }
 
     private static HlaAllele convert(HlaAllele hlaAllele)

@@ -275,6 +275,7 @@ public class TestFindingFactory
     public static HlaAlleleBuilder hlaAlleleBuilder()
     {
         return HlaAlleleBuilder.builder()
+                .qcStatus(Set.of(HlaAllele.QcStatus.PASS))
                 .findingKey("")
                 .geneSymbol("")
                 .geneClass(HlaAllele.GeneClass.MHC_CLASS_I)

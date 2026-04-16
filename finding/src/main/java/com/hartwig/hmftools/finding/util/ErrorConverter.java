@@ -1,11 +1,12 @@
 package com.hartwig.hmftools.finding.util;
 
-import static com.hartwig.hmftools.finding.datamodel.finding.FindingStatus.Issue.NO_REPORTABLE_VALUE;
+import static com.hartwig.hmftools.finding.datamodel.finding.FindingStatus.Issue.NO_TUMOR;
 
 import java.util.List;
 import java.util.Set;
-import java.util.TreeSet;
+import java.util.SortedSet;
 
+import com.hartwig.hmftools.finding.FindingUtil;
 import com.hartwig.hmftools.finding.datamodel.FindingRecord;
 import com.hartwig.hmftools.finding.datamodel.FindingRecordBuilder;
 import com.hartwig.hmftools.finding.datamodel.HlaAllele;
@@ -54,20 +55,33 @@ public class ErrorConverter
     {
         if(!findingList.status().isOK() || !findingList.findings().isEmpty())
         {
-            List<HlaAllele> hlaAlleles = !findingList.status().isOK() ?
-                    FindingRecordConverterUtil.convert(findingList.findings(), ErrorConverter::convert, null) : findingList.findings();
+            FindingStatus findingStatus = findingList.status();
+            List<HlaAllele> hlaAlleles;
+            System.out.println("findingStatus = " + findingStatus);
+            if(!findingStatus.isOK() && findingStatus.errors().contains(NO_TUMOR) )
+            {
+                // Clear tumor fields if there is no tumor.
+                hlaAlleles = FindingRecordConverterUtil.convert(findingList.findings(), ErrorConverter::convert, null);
+                // Toggle no tumor from error to warning.
+                SortedSet<FindingStatus.Issue> errors = FindingUtil.removeIssues(findingStatus.errors(), Set.of(NO_TUMOR));
+                findingStatus = FindingStatusBuilder.builder(findingStatus)
+                        .status(errors.isEmpty() ? FindingStatus.Status.OK : findingStatus.status())
+                        .errors(errors)
+                        .warnings(FindingUtil.addIssues(findingStatus.warnings(), Set.of(NO_TUMOR)))
+                        .build();
+            }
+            else
+            {
+                hlaAlleles = findingList.findings();
+            }
 
             hlaAlleles = hlaAlleles.stream().filter(h -> h.qcStatus().contains(HlaAllele.QcStatus.PASS)).toList();
 
-            FindingStatus findingStatus = findingList.status();
             if(hlaAlleles.isEmpty())
             {
                 // Changing status code because this is different from there being no results.
                 // The issue is that no results meet the required criteria.
-                findingStatus = FindingStatusBuilder.builder(findingStatus)
-                        .status(FindingStatus.Status.NOT_AVAILABLE)
-                        .errors(new TreeSet<>(Set.of(NO_REPORTABLE_VALUE)))
-                        .build();
+                findingStatus = FindingUtil.noReportableValueStatus(findingStatus);
             }
 
             return FindingListBuilder.builder(findingList)
