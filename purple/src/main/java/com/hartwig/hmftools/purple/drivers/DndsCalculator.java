@@ -15,7 +15,7 @@ public final class DndsCalculator
     private static double probabilityDriverVariantSameImpact(int count, long sampleSNVCount, final DndsDriverImpactLikelihood likelihood)
     {
         double lambda = sampleSNVCount * likelihood.passengersPerMutation();
-        if(Doubles.isZero(lambda))
+        if(Doubles.lessOrEqual(lambda, 0))
             return 0.0;
 
         PoissonDistribution poissonDistribution = new PoissonDistribution(lambda);
@@ -35,7 +35,7 @@ public final class DndsCalculator
 
         double lambda1 = firstVariantTypeCount * firstLikelihood.passengersPerMutation();
         double lambda2 = secondVariantTypeCount * secondLikelihood.passengersPerMutation();
-        if(Doubles.isZero(lambda1) || Doubles.isZero(lambda2))
+        if(Doubles.lessOrEqual(lambda1, 0) || Doubles.lessOrEqual(lambda2, 0))
         {
             return Math.max(probabilityDriverVariant(firstVariantTypeCount, firstLikelihood),
                     probabilityDriverVariant(secondVariantTypeCount, secondLikelihood));

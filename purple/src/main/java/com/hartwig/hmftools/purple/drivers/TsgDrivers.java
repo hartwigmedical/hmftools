@@ -96,9 +96,9 @@ public class TsgDrivers extends SomaticVariantDriverFinder
         }
 
         CodingEffect firstCodingEffect = getWorstReportableCodingEffect(topVariant.variantImpact());
-        final DriverImpact firstImpact = DriverImpact.select(topVariant.type(), firstCodingEffect);
-        final DndsDriverImpactLikelihood firstImpactLikelihood = dndsLikelihood.select(firstImpact);
-        final int firstVariantTypeCount = variantCount(topVariant.biallelic(), topVariant, variantTypeCounts, biallelicCounts);
+        DriverImpact firstImpact = DriverImpact.select(topVariant.type(), firstCodingEffect);
+        DndsDriverImpactLikelihood firstImpactLikelihood = dndsLikelihood.select(firstImpact);
+        int firstVariantTypeCount = variantCount(topVariant.biallelic(), topVariant, variantTypeCounts, biallelicCounts);
 
         int nonBiallelicMissenseCount = variantTypeCounts.getOrDefault(VariantType.SNP, 0);
 
@@ -121,9 +121,9 @@ public class TsgDrivers extends SomaticVariantDriverFinder
 
         DriverImpact secondImpact = DriverImpact.select(secondVariant.type(), secondCodingEffect);
 
-        final DndsDriverImpactLikelihood secondImpactLikelihood = dndsLikelihood.select(secondImpact);
+        DndsDriverImpactLikelihood secondImpactLikelihood = dndsLikelihood.select(secondImpact);
 
-        final int secondVariantTypeCount = variantCount(secondVariant.biallelic(), secondVariant, variantTypeCounts, biallelicCounts);
+        int secondVariantTypeCount = variantCount(secondVariant.biallelic(), secondVariant, variantTypeCounts, biallelicCounts);
 
         double multiHit = multiHit(firstVariantTypeCount, secondVariantTypeCount, firstImpactLikelihood, secondImpactLikelihood);
 
