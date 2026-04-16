@@ -16,6 +16,8 @@ import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PANEL_PROB
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.REJECTED_FEATURES_FILE_STEM;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_VARIANT_INFO_FILE_NAME;
+import static com.hartwig.hmftools.panelbuilder.RegionUtils.mergeOverlapAndAdjacentRegions;
+import static com.hartwig.hmftools.panelbuilder.Utils.combineStringUnique;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -24,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -172,7 +175,7 @@ public class OutputWriter implements AutoCloseable
 
         // TODO? should there be a probe ID which matches between TSV, BED, and FASTA?
 
-        // Sort probes roughly by region to give consistent output.
+        // Sort probes roughly by region to give a more consistent output.
         List<Probe> probesSorted = probes.stream().sorted(Comparator.comparing(
                 probe -> probe.definition().singleRegionOrNull(), Comparator.nullsLast(Comparator.naturalOrder()))).toList();
 
@@ -253,17 +256,34 @@ public class OutputWriter implements AutoCloseable
         }
     }
 
-    public void writeCoveredRegions(final List<NamedRegion> regions) throws IOException
+    public void writeCoveredRegions(final List<Probe> probes) throws IOException
     {
+        List<NamedRegion> regions = createCoveredRegions(probes);
+
         LOGGER.debug("Writing {} covered regions to file", regions.size());
 
         // Must be sorted for BED files since some tools expect sorted order.
-        List<NamedRegion> regionsSorted = regions.stream().sorted(Comparator.comparing(NamedRegion::region)).toList();
+        List<NamedRegion> regionsSorted = regions.stream().sorted().toList();
 
         for(NamedRegion region : regionsSorted)
         {
-            writeBedRow(region, mCoveredTargetRegionsBedWriter);
+            writeBedRow(region, mCoveredRegionsBedWriter);
         }
+    }
+
+    private static List<NamedRegion> createCoveredRegions(final List<Probe> probes)
+    {
+        Stream<NamedRegion> regions = probes.stream()
+                .flatMap(probe -> probe.definition()
+                        .regions()
+                        .stream()
+                        .map(region -> new NamedRegion(region, targetMetadataToBedName(probe.metadata()))));
+        return mergeOverlapAndAdjacentRegions(regions, NamedRegion::region, OutputWriter::mergeCoveredRegion);
+    }
+
+    private static NamedRegion mergeCoveredRegion(final ChrBaseRegion mergedRegion, final NamedRegion r1, final NamedRegion r2)
+    {
+        return new NamedRegion(mergedRegion, combineStringUnique(r1.name(), r2.name(), (s1, s2) -> format("%s | %s", r1.name(), r2.name())));
     }
 
     public void writeRejectedFeatures(final List<RejectedFeature> rejectedFeatures) throws IOException

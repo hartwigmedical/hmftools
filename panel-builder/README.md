@@ -393,8 +393,8 @@ Informational/visualisation/debugging outputs:
 
 | File                     | Description                                                                                                               |
 |--------------------------|---------------------------------------------------------------------------------------------------------------------------|
-| targets.bed              | Regions which the probes are targeting (subset of `panel.bed`).                                                           |
-| probes.bed               | Regions of probes which correspond to exact locations in the reference genome.                                            |
+| probes.bed               | Individual probe regions. Similar to `panel.bed` but regions are not merged.                                              |
+| targets.bed              | Individual regions which the probes are targeting (subset of `probes.bed`).                                               |
 | rejections.bed           | Regions which were rejected. Excludes variant probes.                                                                     |                                                                                                
 | gene_stats.tsv           | Statistics on probes on a per-gene basis. Only produced if gene features were requested.                                  |
 | sample_variant_info.tsv  | Additional information used in processing on a per-variant basis. Only produced if sample variants probes were requested. |
