@@ -1,12 +1,9 @@
 package com.hartwig.hmftools.finding.util;
 
-import static com.hartwig.hmftools.finding.datamodel.finding.FindingStatus.Issue.NO_REPORTABLE_VALUE;
-
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
 
+import com.hartwig.hmftools.finding.FindingUtil;
 import com.hartwig.hmftools.finding.datamodel.FindingRecord;
 import com.hartwig.hmftools.finding.datamodel.FindingRecordBuilder;
 import com.hartwig.hmftools.finding.datamodel.PredictedTumorOrigin;
@@ -15,7 +12,6 @@ import com.hartwig.hmftools.finding.datamodel.PredictedTumorOriginPredictionBuil
 import com.hartwig.hmftools.finding.datamodel.finding.FindingItem;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingItemBuilder;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
-import com.hartwig.hmftools.finding.datamodel.finding.FindingStatusBuilder;
 
 import jakarta.validation.constraints.NotNull;
 
@@ -59,10 +55,7 @@ public class PTOConverter
                 {
                     // Changing status code because this is different from there being no results.
                     // The issue is that no results meet the required criteria.
-                    findingStatus = FindingStatusBuilder.builder(findingStatus)
-                            .status(FindingStatus.Status.NOT_AVAILABLE)
-                            .errors(new TreeSet<>(Set.of(NO_REPORTABLE_VALUE)))
-                            .build();
+                    findingStatus = FindingUtil.noReportableValueStatus(findingStatus);
                     bestLikelihood = bestLikelihood != null && bestLikelihood >= BEST_LIKELIHOOD_CUT_OFF ? bestLikelihood : null;
                 }
                 return FindingItemBuilder.builder(findingItem)

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.finding;
 
+import static com.hartwig.hmftools.finding.datamodel.finding.FindingStatus.Issue.NO_REPORTABLE_VALUE;
+
 import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
@@ -45,12 +47,20 @@ public class FindingUtil
         return newIssues;
     }
 
-    private static SortedSet<FindingStatus.Issue> removeIssues(Set<FindingStatus.Issue> issues, Set<FindingStatus.Issue> issuesToRemove)
+    public static SortedSet<FindingStatus.Issue> removeIssues(Set<FindingStatus.Issue> issues, Set<FindingStatus.Issue> issuesToRemove)
     {
         SortedSet<FindingStatus.Issue> newIssues = new TreeSet<>(issues);
         newIssues.removeAll(issuesToRemove);
         return newIssues;
     }
+
+    public static SortedSet<FindingStatus.Issue> addIssues(Set<FindingStatus.Issue> issues, Set<FindingStatus.Issue> issuesToRemove)
+    {
+        SortedSet<FindingStatus.Issue> newIssues = new TreeSet<>(issues);
+        newIssues.addAll(issuesToRemove);
+        return newIssues;
+    }
+
 
     static <T extends Driver> DriverFindingList<T> refRequired()
     {
@@ -78,6 +88,14 @@ public class FindingUtil
                 .status(FindingStatus.Status.NOT_AVAILABLE)
                 .errors(new TreeSet<>(errors))
                 .warnings(new TreeSet<>())
+                .build();
+    }
+
+    public static FindingStatus noReportableValueStatus(FindingStatus findingStatus)
+    {
+        return FindingStatusBuilder.builder(findingStatus)
+                .status(findingStatus.isOK() ? FindingStatus.Status.NOT_AVAILABLE : findingStatus.status()  )
+                .errors(new TreeSet<>(Set.of(NO_REPORTABLE_VALUE)))
                 .build();
     }
 }

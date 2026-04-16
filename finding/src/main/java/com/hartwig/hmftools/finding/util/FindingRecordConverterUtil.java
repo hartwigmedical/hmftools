@@ -31,7 +31,7 @@ public class FindingRecordConverterUtil
     @NotNull
     public static <I extends Finding, O extends Finding> FindingList<O> convertFindingList(@NotNull IFindingList<I> findingList,
             Function<FindingStatus, FindingStatus> findingsStatusConverter,
-            @Nullable Function<I, O> findingConverter,
+            @NotNull Function<I, O> findingConverter,
             @Nullable Comparator<O> comparator)
     {
         return FindingListBuilder.<O>builder()
@@ -44,7 +44,7 @@ public class FindingRecordConverterUtil
     public static <I extends Driver, O extends Driver> DriverFindingList<O> convertDriverFindingList(
             @NotNull IFindingList<I> driverFindingList,
             Function<FindingStatus, FindingStatus> findingsStatusConverter,
-            @Nullable Function<I, O> findingConverter,
+            @NotNull Function<I, O> findingConverter,
             @Nullable Comparator<O> comparator)
     {
         return DriverFindingListBuilder.<O>builder()
@@ -53,7 +53,7 @@ public class FindingRecordConverterUtil
                 .build();
     }
 
-    static <I, O> List<O> convert(List<I> list, Function<I, O> converter, @Nullable Comparator<O> comparator)
+    static <I, O> List<O> convert(List<I> list, @NotNull Function<I, O> converter, @Nullable Comparator<O> comparator)
     {
         Stream<O> stream = list.stream().map(converter).filter(Objects::nonNull);
         if(comparator != null)
