@@ -165,7 +165,8 @@ public class BamReader
         if(mRecordOffTargetReads && !overlapsTargetRegion(read))
         {
            ++mReadCounts.OffTarget;
-           return;
+            mPartitionStats.processRead(read, mRegion, isConsensusRead, mConfig.expectDuplicates());
+            return;
         }
 
         if(isConsensusRead)
