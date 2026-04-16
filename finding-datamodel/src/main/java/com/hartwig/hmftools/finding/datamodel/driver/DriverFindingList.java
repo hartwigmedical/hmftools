@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.finding.datamodel.driver;
 
 import java.util.List;
+import java.util.function.Predicate;
 
 import com.hartwig.hmftools.finding.datamodel.RecordBuilder;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
-import com.hartwig.hmftools.finding.datamodel.finding.FindingsQuery;
 import com.hartwig.hmftools.finding.datamodel.finding.IFindingList;
 
 import jakarta.validation.constraints.NotNull;
@@ -16,44 +16,33 @@ public record DriverFindingList<T extends Driver>(
 ) implements IFindingList<T>
 {
     @NotNull
-    public FindingsQuery<T> query()
-    {
-        return new FindingsQuery<>(findings());
-    }
-
-    @NotNull
     public DriverFindingList<T> germlineOnly()
     {
-        return DriverFindingListBuilder.builder(this)
-                .findings(query().driverSources(DriverSource.GERMLINE).results())
-                .build();
-    }
+        return filter(f -> f.driverSource() == DriverSource.GERMLINE);    }
 
     @NotNull
     public DriverFindingList<T> somaticOnly()
     {
-        return DriverFindingListBuilder.builder(this)
-                .findings(query().driverSources(DriverSource.SOMATIC).results())
-                .build();
+        return filter(f -> f.driverSource() == DriverSource.SOMATIC);
     }
 
     @NotNull
     public DriverFindingList<T> reportedOnly()
     {
-        return filter(ReportedStatus.REPORTED);
+        return filter(f -> f.reportedStatus() == ReportedStatus.REPORTED);
     }
 
     @NotNull
     public DriverFindingList<T> candidateOnly()
     {
-        return filter(ReportedStatus.CANDIDATE);
+        return filter(f -> f.reportedStatus() == ReportedStatus.CANDIDATE);
     }
 
     @NotNull
-    public DriverFindingList<T> filter(ReportedStatus... reportedStatuses)
+    public DriverFindingList<T> filter(Predicate<T> filter)
     {
         return DriverFindingListBuilder.builder(this)
-                .findings(query().reportedStatuses(reportedStatuses).results())
+                .findings(findings.stream().filter(filter).toList())
                 .build();
     }
 }
