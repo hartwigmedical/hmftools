@@ -43,26 +43,31 @@ public class PTOConverter
             List<PredictedTumorOrigin.Prediction> predictions = predictedTumorOrigin.predictions();
             if(!predictions.isEmpty())
             {
+                PredictedTumorOrigin.Prediction best = predictions.get(0);
                 predictions = predictions.stream()
                         .filter(prediction ->
                                 prediction.likelihood() >= CUPPA_INCONCLUSIVE_CUT_OFF)
                         .map(p -> PredictedTumorOriginPredictionBuilder.builder(p).cancerType(curateCancerType(p.cancerType()))
                                 .build())
                         .toList();
-                Double bestLikelihood = predictedTumorOrigin.bestPredictionLikelihood();
                 FindingStatus findingStatus = findingItem.status();
                 if(predictions.isEmpty())
                 {
                     // Changing status code because this is different from there being no results.
                     // The issue is that no results meet the required criteria.
-                    findingStatus = FindingUtil.noReportableValueStatus(findingStatus);
-                    bestLikelihood = bestLikelihood != null && bestLikelihood >= BEST_LIKELIHOOD_CUT_OFF ? bestLikelihood : null;
+
+                    if (best.likelihood() >= BEST_LIKELIHOOD_CUT_OFF)
+                    {
+                        findingStatus = FindingUtil.noReportableValueStatus(findingStatus, FindingStatus.Status.NOT_RELIABLE);
+                        predictions = List.of(best);
+                    } else {
+                        findingStatus = FindingUtil.noReportableValueStatus(findingStatus, FindingStatus.Status.NOT_AVAILABLE);
+                    }
                 }
                 return FindingItemBuilder.builder(findingItem)
                         .status(findingStatus)
                         .finding(PredictedTumorOriginBuilder.builder(predictedTumorOrigin)
                                 .predictions(predictions)
-                                .bestPredictionLikelihood(bestLikelihood)
                                 .build())
                         .build();
             }

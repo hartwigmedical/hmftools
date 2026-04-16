@@ -93,9 +93,15 @@ public class FindingUtil
 
     public static FindingStatus noReportableValueStatus(FindingStatus findingStatus)
     {
+        return noReportableValueStatus(findingStatus, FindingStatus.Status.NOT_AVAILABLE);
+    }
+
+    public static FindingStatus noReportableValueStatus(FindingStatus findingStatus, FindingStatus.Status status)
+    {
         return FindingStatusBuilder.builder(findingStatus)
-                .status(findingStatus.isOK() ? FindingStatus.Status.NOT_AVAILABLE : findingStatus.status()  )
+                .status(findingStatus.isOK() ? status : findingStatus.status()  )
                 .errors(new TreeSet<>(Set.of(NO_REPORTABLE_VALUE)))
                 .build();
     }
+
 }

@@ -2,7 +2,6 @@ package com.hartwig.hmftools.finding.util;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
@@ -34,8 +33,6 @@ public class PTOConverterTest
 
         PredictedTumorOrigin predictedTumorOrigin = findingItem.finding();
         assertNotNull(predictedTumorOrigin);
-        assertNotNull(predictedTumorOrigin.bestPredictionLikelihood());
-        assertEquals(0.8, predictedTumorOrigin.bestPredictionLikelihood(), EPSILON);
         PredictedTumorOrigin.Prediction prediction = predictedTumorOrigin.best();
         assertNotNull(prediction);
         assertEquals(0.8, prediction.likelihood(), EPSILON);
@@ -54,8 +51,6 @@ public class PTOConverterTest
 
         PredictedTumorOrigin predictedTumorOrigin = findingItem.finding();
         assertNotNull(predictedTumorOrigin);
-        assertNotNull(predictedTumorOrigin.bestPredictionLikelihood());
-        assertEquals(0.8, predictedTumorOrigin.bestPredictionLikelihood(), EPSILON);
         PredictedTumorOrigin.Prediction prediction = predictedTumorOrigin.best();
         assertNotNull(prediction);
         assertEquals(0.8, prediction.likelihood(), EPSILON);
@@ -70,14 +65,12 @@ public class PTOConverterTest
         FindingRecord converted = PTOConverter.convert(original);
 
         FindingItem<PredictedTumorOrigin> findingItem = converted.predictedTumorOrigin();
-        assertEquals(FindingStatus.Status.NOT_AVAILABLE, findingItem.status().status());
+        assertEquals(FindingStatus.Status.NOT_RELIABLE, findingItem.status().status());
         assertEquals(Set.of(FindingStatus.Issue.NO_REPORTABLE_VALUE), findingItem.status().errors());
 
         PredictedTumorOrigin predictedTumorOrigin = findingItem.finding();
         assertNotNull(predictedTumorOrigin);
-        assertNotNull(predictedTumorOrigin.bestPredictionLikelihood());
-        assertEquals(0.7, predictedTumorOrigin.bestPredictionLikelihood(), EPSILON);
-        assertTrue(predictedTumorOrigin.predictions().isEmpty());
+        assertEquals(1, predictedTumorOrigin.predictions().size());
     }
 
     @Test
@@ -92,7 +85,6 @@ public class PTOConverterTest
 
         PredictedTumorOrigin predictedTumorOrigin = findingItem.finding();
         assertNotNull(predictedTumorOrigin);
-        assertNull(predictedTumorOrigin.bestPredictionLikelihood());
         assertTrue(predictedTumorOrigin.predictions().isEmpty());
     }
 
@@ -104,7 +96,6 @@ public class PTOConverterTest
                                 .cancerType(cancerType)
                                 .likelihood(likelihood)
                                 .build()))
-                        .bestPredictionLikelihood(likelihood)
                         .build()))
                 .build();
     }
