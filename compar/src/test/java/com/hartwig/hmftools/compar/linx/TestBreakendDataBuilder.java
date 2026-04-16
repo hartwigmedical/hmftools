@@ -72,7 +72,9 @@ public class TestBreakendDataBuilder
                 .nextSpliceDistance(-1)
                 .totalExonCount(-1)
                 .build();
+
         return new BreakendData(
-                breakend, "", svType, chromosome, position, orientation, homologyOffset, comparisonChromosome, comparisonPosition);
+                breakend, "", svType, chromosome, position, orientation, homologyOffset,
+                100, 50, 60, comparisonChromosome, comparisonPosition);
     }
 }

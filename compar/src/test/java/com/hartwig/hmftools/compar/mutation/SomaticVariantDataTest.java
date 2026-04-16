@@ -153,7 +153,7 @@ public class SomaticVariantDataTest extends ComparableItemTest<SomaticVariantDat
         Mismatch mismatch = refVictim.findMismatch(newVictim, MatchLevel.DETAILED, diffThresholds, false);
 
         assertEquals(MismatchType.VALUE, mismatch.Type);
-        assertEquals(refVictim, mismatch.RefItem);
+        assertEquals(refVictim, mismatch.OldItem);
         assertEquals(newVictim, mismatch.NewItem);
         assertDifferencesAreForFields(FIELDS_UP_TO_PAVE, mismatch.DiffValues);
     }
@@ -181,8 +181,8 @@ public class SomaticVariantDataTest extends ComparableItemTest<SomaticVariantDat
         assertTrue(passVictim.matches(filteredVictim));
         Mismatch mismatch = passVictim.findMismatch(filteredVictim, MatchLevel.DETAILED, diffThresholds, false);
 
-        assertEquals(MismatchType.REF_ONLY, mismatch.Type);
-        assertEquals(passVictim, mismatch.RefItem);
+        assertEquals(MismatchType.OLD_ONLY, mismatch.Type);
+        assertEquals(passVictim, mismatch.OldItem);
         assertEquals(filteredVictim, mismatch.NewItem);
         assertDifferencesAreForFields(union(SAGE_ONLY_FIELDS, Set.of(FILTER_DIFF)), mismatch.DiffValues);
 
@@ -190,7 +190,7 @@ public class SomaticVariantDataTest extends ComparableItemTest<SomaticVariantDat
         Mismatch oppositeMismatch = filteredVictim.findMismatch(passVictim, MatchLevel.DETAILED, diffThresholds, false);
 
         assertEquals(MismatchType.NEW_ONLY, oppositeMismatch.Type);
-        assertEquals(filteredVictim, oppositeMismatch.RefItem);
+        assertEquals(filteredVictim, oppositeMismatch.OldItem);
         assertEquals(passVictim, oppositeMismatch.NewItem);
         assertDifferencesAreForFields(union(SAGE_ONLY_FIELDS, Set.of(FILTER_DIFF)), mismatch.DiffValues);
     }

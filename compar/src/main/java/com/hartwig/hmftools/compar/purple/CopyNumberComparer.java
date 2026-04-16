@@ -22,6 +22,7 @@ import com.hartwig.hmftools.compar.common.DiffThresholds;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.Mismatch;
+import com.hartwig.hmftools.compar.common.SourceType;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class CopyNumberComparer implements ItemComparer
@@ -59,11 +60,11 @@ public class CopyNumberComparer implements ItemComparer
     }
 
     @Override
-    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final String sourceName)
+    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final SourceType sourceType)
     {
         final List<PurpleCopyNumber> copyNumbers = dbAccess.readCopynumbers(sampleId);
         List<ComparableItem> items = Lists.newArrayList();
-        copyNumbers.forEach(x -> items.add(createCopyNumberData(x, sourceName)));
+        copyNumbers.forEach(x -> items.add(createCopyNumberData(x, sourceType)));
         return items;
     }
 
@@ -88,21 +89,18 @@ public class CopyNumberComparer implements ItemComparer
         return comparableItems;
     }
 
-    private CopyNumberData createCopyNumberData(final PurpleCopyNumber copyNumber, final String fileSource)
+    private CopyNumberData createCopyNumberData(final PurpleCopyNumber copyNumber, final SourceType sourceType)
     {
         BasePosition comparisonPositionStart = determineComparisonGenomePosition(
-                copyNumber.chromosome(), copyNumber.start(), fileSource, mConfig.RequiresLiftover, mConfig.LiftoverCache);
+                copyNumber.chromosome(), copyNumber.start(), sourceType, mConfig.RequiresLiftover, mConfig.LiftoverCache);
+
         BasePosition comparisonPositionEnd = determineComparisonGenomePosition(
-                copyNumber.chromosome(), copyNumber.end(), fileSource, mConfig.RequiresLiftover, mConfig.LiftoverCache);
+                copyNumber.chromosome(), copyNumber.end(), sourceType, mConfig.RequiresLiftover, mConfig.LiftoverCache);
+
         return new CopyNumberData(
-                copyNumber.chromosome(),
-                copyNumber.start(),
-                copyNumber.end(),
-                copyNumber.averageTumorCopyNumber(),
-                copyNumber.majorAlleleCopyNumber(),
-                copyNumber.method(),
-                comparisonPositionStart,
-                comparisonPositionEnd
+                copyNumber.chromosome(), copyNumber.start(), copyNumber.end(),
+                copyNumber.averageTumorCopyNumber(), copyNumber.majorAlleleCopyNumber(),
+                copyNumber.method(), comparisonPositionStart, comparisonPositionEnd
         );
     }
 }

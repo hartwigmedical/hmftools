@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.rna;
 
+import static com.hartwig.hmftools.common.linx.LinxFusion.FUSION_GENE_DELIM;
 import static com.hartwig.hmftools.common.rna.RnaCommon.ISF_FILE_ID;
 import static com.hartwig.hmftools.common.rna.RnaCommon.RNA_LOGGER;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
@@ -17,6 +18,7 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
+import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 
 public final class RnaFusionFile
@@ -62,14 +64,12 @@ public final class RnaFusionFile
         return sj.toString();
     }
 
-    public static final String FUSION_GENE_DELIM = "_";
-
     public static String formFusionName(final String geneUp, final String geneDown)
     {
         return geneUp + FUSION_GENE_DELIM + geneDown;
     }
 
-    public static String[] geneNames(final RnaFusion fusion) { return fusion.name().split(FUSION_GENE_DELIM, 2); }
+    public static String[] geneNames(final RnaFusion fusion) { return LinxFusion.geneNames(fusion.name()); }
 
     public static String geneUp(final RnaFusion fusion)
     {

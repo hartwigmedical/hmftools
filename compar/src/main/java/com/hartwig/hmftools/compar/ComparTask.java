@@ -2,8 +2,11 @@ package com.hartwig.hmftools.compar;
 
 import static com.hartwig.hmftools.common.driver.DriverType.AMP;
 import static com.hartwig.hmftools.common.driver.DriverType.DEL;
+import static com.hartwig.hmftools.common.driver.DriverType.DRIVERS_PURPLE_SOMATIC_COPY_NUMBER;
+import static com.hartwig.hmftools.common.driver.DriverType.HET_DEL;
 import static com.hartwig.hmftools.common.driver.DriverType.PARTIAL_AMP;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
+import static com.hartwig.hmftools.compar.common.CategoryType.DRIVER;
 import static com.hartwig.hmftools.compar.common.CategoryType.GENE_COPY_NUMBER;
 import static com.hartwig.hmftools.compar.common.CommonUtils.buildComparers;
 import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_ERROR;
@@ -20,6 +23,7 @@ import com.hartwig.hmftools.common.driver.DriverCatalogFile;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.common.InvalidDataItem;
 import com.hartwig.hmftools.compar.common.Mismatch;
+import com.hartwig.hmftools.compar.driver.DriverComparer;
 import com.hartwig.hmftools.compar.purple.GeneCopyNumberComparer;
 
 public class ComparTask implements Callable<Void>
@@ -76,11 +80,6 @@ public class ComparTask implements Callable<Void>
 
             try
             {
-                if(mConfig.runCopyNumberGeneComparer() && comparer.category() == GENE_COPY_NUMBER)
-                {
-                    ((GeneCopyNumberComparer) comparer).addDriverGenes(loadCombinedCopyNumberDriverGenes(sampleId));
-                }
-
                 boolean status = comparer.processSample(sampleId, mismatches);
 
                 if(!status)
@@ -108,34 +107,5 @@ public class ComparTask implements Callable<Void>
         {
             CMP_LOGGER.warn("sample({}) mismatches({}) failed types({})", sampleId, totalMismatches, failedTypes);
         }
-    }
-
-    private Set<String> loadCombinedCopyNumberDriverGenes(final String sampleId)
-    {
-        Set<String> combinedGenes = Sets.newHashSet();
-
-        for(String sourceName : mConfig.SourceNames)
-        {
-            String sourceSampleId = mConfig.sourceSampleId(sourceName, sampleId);
-            String sourceGermlineSampleId = mConfig.sourceGermlineSampleId(sourceName, sampleId);
-
-            FileSources fileSources = FileSources.sampleInstance(mConfig.FileSources.get(sourceName), sourceSampleId, sourceGermlineSampleId);
-
-            try
-            {
-                String purpleDriverFile = DriverCatalogFile.generateSomaticFilename(fileSources.Purple, sourceSampleId);
-
-                DriverCatalogFile.read(purpleDriverFile).stream()
-                        .filter(x -> x.driver() == AMP || x.driver() == PARTIAL_AMP || x.driver() == DEL)
-                        .forEach(x -> combinedGenes.add(x.gene()));
-
-            }
-            catch(IOException e)
-            {
-                CMP_LOGGER.warn("sample({}) failed to load driver data: {}", sampleId, e.toString());
-            }
-        }
-
-        return combinedGenes;
     }
 }

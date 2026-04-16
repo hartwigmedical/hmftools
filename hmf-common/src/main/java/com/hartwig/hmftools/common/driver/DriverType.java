@@ -21,6 +21,8 @@ public enum DriverType
 
     public static final EnumSet<DriverType> DRIVERS_PURPLE_GERMLINE = EnumSet.of(GERMLINE_MUTATION, GERMLINE_DELETION, GERMLINE_AMP);
 
+    public static final EnumSet<DriverType> DRIVERS_PURPLE_SOMATIC_COPY_NUMBER = EnumSet.of(AMP, PARTIAL_AMP, DEL, HET_DEL, LOH);
+
     public static final EnumSet<DriverType> DRIVERS_PURPLE_SOMATIC = EnumSet.of(AMP, PARTIAL_AMP, DEL, HET_DEL, LOH, MUTATION);
 
     public static final EnumSet<DriverType> DRIVERS_LINX_GERMLINE = EnumSet.of(GERMLINE_DISRUPTION);

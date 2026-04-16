@@ -146,7 +146,7 @@ public class MismatchWriter
                     // need to write separate lines to distinguish between the matches
                     for(String diff : mismatch.DiffValues)
                     {
-                        Mismatch singleMismatch = new Mismatch(mismatch.RefItem, mismatch.NewItem, mismatch.Type, List.of(diff));
+                        Mismatch singleMismatch = new Mismatch(mismatch.OldItem, mismatch.NewItem, mismatch.Type, List.of(diff));
                         writeMismatch(sampleId, singleMismatch, comparer, categoryWriter, matchCurations.get(diff));
                     }
                 }
@@ -235,43 +235,4 @@ public class MismatchWriter
             }
         }
     }
-
-    /*
-    private void checkRemoveExpectedMismatches(final String sampleId, final List<Mismatch> mismatches)
-    {
-        List<KnownMismatch> expectedMismatches = mSampleKnownMismatches.get(sampleId);
-
-        if(expectedMismatches == null || expectedMismatches.isEmpty())
-            return;
-
-        int index = 0;
-
-        while(index < mismatches.size())
-        {
-            Mismatch mismatch = mismatches.get(index);
-            boolean matched = false;
-
-            for(int i = 0; i < expectedMismatches.size(); ++i)
-            {
-                KnownMismatch expectedMismatch = expectedMismatches.get(i);
-
-                if(expectedMismatch.matchesMismatch(mismatch))
-                {
-                    expectedMismatches.remove(i);
-                    matched = true;
-                    break;
-                }
-            }
-
-            if(matched)
-            {
-                mismatches.remove(index);
-            }
-            else
-            {
-                ++index;
-            }
-        }
-    }
-    */
 }

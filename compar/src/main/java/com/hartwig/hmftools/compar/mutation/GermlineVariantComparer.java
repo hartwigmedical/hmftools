@@ -21,6 +21,7 @@ import com.hartwig.hmftools.compar.common.DiffThresholds;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.Mismatch;
+import com.hartwig.hmftools.compar.common.SourceType;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.dao.GermlineVariantDAO;
 
@@ -58,7 +59,7 @@ public class GermlineVariantComparer implements ItemComparer
     }
 
     @Override
-    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final String sourceName)
+    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final SourceType sourceType)
     {
         Result<Record> result = dbAccess.context().select()
                 .from(GERMLINEVARIANT)
@@ -71,7 +72,7 @@ public class GermlineVariantComparer implements ItemComparer
         {
             SmallVariant variant = GermlineVariantDAO.buildFromRecord(record);
             BasePosition comparisonPosition = determineComparisonGenomePosition(
-                    variant.chromosome(), variant.position(), sourceName, mConfig.RequiresLiftover, mConfig.LiftoverCache);
+                    variant.chromosome(), variant.position(), sourceType, mConfig.RequiresLiftover, mConfig.LiftoverCache);
             variants.add(new GermlineVariantData(variant, comparisonPosition));
         }
 

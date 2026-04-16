@@ -6,15 +6,19 @@ import com.google.common.collect.Lists;
 
 public enum CategoryType
 {
-    PURITY,
+    // ordering matters as described below where comparers share loaded data
+
+    PURITY, // CN is dependent on purity
     DRIVER,
     COPY_NUMBER,
     GENE_COPY_NUMBER,
     SOMATIC_VARIANT,
     GERMLINE_VARIANT,
     GERMLINE_AMP_DEL,
-    FUSION,
+
     DISRUPTION,
+    FUSION, // dependent on disruptions
+
     GERMLINE_SV,
     CUPPA,
     CUPPA_IMAGE,

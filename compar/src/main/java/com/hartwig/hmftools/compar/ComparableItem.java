@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.compar;
 
+import java.util.Collections;
 import java.util.List;
 
 import com.hartwig.hmftools.compar.common.CategoryType;
@@ -19,6 +20,9 @@ public interface ComparableItem
     String key();
 
     List<String> displayValues();
+
+    // values for display only
+    default List<String> extraInfoValues() { return Collections.emptyList(); }
 
     default String geneName() { return ""; }
 

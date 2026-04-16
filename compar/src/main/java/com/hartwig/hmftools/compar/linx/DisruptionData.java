@@ -53,7 +53,7 @@ public class DisruptionData implements ComparableItem
 
         for(BreakendData breakendData : Breakends)
         {
-            sj.add(breakendData.fullStr());
+            sj.add(breakendData.fullStr(true));
         }
 
         values.add(sj.toString());

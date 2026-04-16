@@ -41,7 +41,7 @@ public class MismatchFile
         MismatchType,
         Key,
         Differences,
-        RefValues,
+        OldValues,
         NewValues,
         CurationType,
         CurationComment;
@@ -66,7 +66,7 @@ public class MismatchFile
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);
         sj.add(commonHeader(includeSampleId, true));
-        sj.add(Columns.RefValues.toString());
+        sj.add(Columns.OldValues.toString());
         sj.add(Columns.NewValues.toString());
 
         if(includeCuration)
@@ -86,16 +86,16 @@ public class MismatchFile
 
         if(writeCategory)
         {
-            if(mismatch.RefItem != null)
-                sj.add(mismatch.RefItem.category().toString());
+            if(mismatch.OldItem != null)
+                sj.add(mismatch.OldItem.category().toString());
             else
                 sj.add(mismatch.NewItem.category().toString());
         }
 
         sj.add(mismatch.Type.toString());
 
-        if(mismatch.RefItem != null)
-            sj.add(mismatch.RefItem.key());
+        if(mismatch.OldItem != null)
+            sj.add(mismatch.OldItem.key());
         else
             sj.add(mismatch.NewItem.key());
 
@@ -112,14 +112,14 @@ public class MismatchFile
 
         if(writeFieldValues)
         {
-            List<String> refFieldValues = mismatch.RefItem != null ? mismatch.RefItem.displayValues() : null;
+            List<String> oldFieldValues = mismatch.OldItem != null ? mismatch.OldItem.displayValues() : null;
             List<String> newFieldValues = mismatch.NewItem != null ? mismatch.NewItem.displayValues() : null;
-            int fieldCount = refFieldValues != null ? refFieldValues.size() : newFieldValues.size();
+            int fieldCount = oldFieldValues != null ? oldFieldValues.size() : newFieldValues.size();
 
             for(int i = 0; i < fieldCount; ++i)
             {
-                if(refFieldValues != null)
-                    sj.add(refFieldValues.get(i));
+                if(oldFieldValues != null)
+                    sj.add(oldFieldValues.get(i));
                 else
                     sj.add("");
 
@@ -131,7 +131,7 @@ public class MismatchFile
         }
         else
         {
-            sj.add(itemValues(mismatch.RefItem, comparedFieldsNames));
+            sj.add(itemValues(mismatch.OldItem, comparedFieldsNames));
             sj.add(itemValues(mismatch.NewItem, comparedFieldsNames));
         }
 
@@ -150,6 +150,11 @@ public class MismatchFile
         for(int i = 0; i < itemDisplayValues.size(); ++i)
         {
             displaySj.add(format("%s=%s", comparedFieldsNames.get(i), itemDisplayValues.get(i)));
+        }
+
+        for(String extraInfo : item.extraInfoValues())
+        {
+            displaySj.add(extraInfo);
         }
 
         return displaySj.toString();

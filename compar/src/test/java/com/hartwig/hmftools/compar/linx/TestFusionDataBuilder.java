@@ -73,6 +73,7 @@ public class TestFusionDataBuilder
                 .skippedExonsUp(-1)
                 .skippedExonsDown(-1)
                 .build();
-        return new FusionData(fusion, fusionName);
+
+        return new FusionData(fusion, fusionName, null, null);
     }
 }

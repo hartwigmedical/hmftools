@@ -34,6 +34,7 @@ import com.hartwig.hmftools.compar.common.DiffThresholds;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.Mismatch;
+import com.hartwig.hmftools.compar.common.SourceType;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class PurityComparer implements ItemComparer
@@ -78,9 +79,9 @@ public class PurityComparer implements ItemComparer
     }
 
     @Override
-    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final String sourceName)
+    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final SourceType sourceType)
     {
-        final PurityContext purityContext = dbAccess.readPurityContext(sampleId);
+        PurityContext purityContext = dbAccess.readPurityContext(sampleId);
 
         List<ComparableItem> items = Lists.newArrayList();
         items.add(new PurityData(purityContext));
@@ -90,7 +91,7 @@ public class PurityComparer implements ItemComparer
     @Override
     public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources)
     {
-        final List<ComparableItem> comparableItems = Lists.newArrayList();
+        List<ComparableItem> comparableItems = Lists.newArrayList();
 
         try
         {

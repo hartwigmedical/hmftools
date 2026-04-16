@@ -13,6 +13,7 @@ import java.util.StringJoiner;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.gene.TranscriptRegionType;
+import com.hartwig.hmftools.common.rna.RnaFusion;
 import com.hartwig.hmftools.common.utils.file.FileDelimiters;
 
 import org.immutables.value.Value;
@@ -171,6 +172,11 @@ public abstract class LinxFusion
                 .add(String.valueOf(fusion.fusedExonDown()))
                 .toString();
     }
+
+    // shared with Isofox
+    public static final String FUSION_GENE_DELIM = "_";
+
+    public static String[] geneNames(final String fusionName) { return fusionName.split(FUSION_GENE_DELIM, 2); }
 
     public static String reportableReasonsToStr(final List<FusionReportableReason> reasons)
     {

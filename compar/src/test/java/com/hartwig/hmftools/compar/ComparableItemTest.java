@@ -112,7 +112,7 @@ public abstract class ComparableItemTest<I extends ComparableItem, C extends Ite
             assertSingleFieldMismatch(field, reportableVictim, nonReportableVictim, MatchLevel.DETAILED, diffThresholds, MismatchType.VALUE);
             assertSingleFieldMismatch(field, nonReportableVictim, reportableVictim, MatchLevel.DETAILED, diffThresholds, MismatchType.VALUE);
 
-            assertSingleFieldMismatch(field, reportableVictim, nonReportableVictim, MatchLevel.REPORTABLE, diffThresholds, MismatchType.REF_ONLY);
+            assertSingleFieldMismatch(field, reportableVictim, nonReportableVictim, MatchLevel.REPORTABLE, diffThresholds, MismatchType.OLD_ONLY);
             assertSingleFieldMismatch(field, nonReportableVictim, reportableVictim, MatchLevel.REPORTABLE, diffThresholds, MismatchType.NEW_ONLY);
         }
     }
@@ -129,7 +129,7 @@ public abstract class ComparableItemTest<I extends ComparableItem, C extends Ite
         Mismatch mismatch = refVictim.findMismatch(newVictim, MatchLevel.DETAILED, diffThresholds, false);
 
         assertEquals(MismatchType.VALUE, mismatch.Type);
-        assertEquals(refVictim, mismatch.RefItem);
+        assertEquals(refVictim, mismatch.OldItem);
         assertEquals(newVictim, mismatch.NewItem);
         assertDifferencesAreForFields(getAllValueFieldNames(), mismatch.DiffValues);
     }
@@ -182,9 +182,9 @@ public abstract class ComparableItemTest<I extends ComparableItem, C extends Ite
 
             DiffThresholds diffThresholds = createDefaultThresholds();
             assertEquals("Test non-PASS due to " + name + " can cause REF_ONLY when not including matches",
-                    MismatchType.REF_ONLY, passVictim.findMismatch(nonPassVictim, MatchLevel.DETAILED, diffThresholds, false).Type);
+                    MismatchType.OLD_ONLY, passVictim.findMismatch(nonPassVictim, MatchLevel.DETAILED, diffThresholds, false).Type);
             assertEquals("Test non-PASS due to " + name + " can cause REF_ONLY when including matches",
-                    MismatchType.REF_ONLY, passVictim.findMismatch(nonPassVictim, MatchLevel.DETAILED, diffThresholds, true).Type);
+                    MismatchType.OLD_ONLY, passVictim.findMismatch(nonPassVictim, MatchLevel.DETAILED, diffThresholds, true).Type);
 
             assertEquals("Test non-PASS due to " + name + " can cause NEW_ONLY when not including matches",
                     MismatchType.NEW_ONLY, nonPassVictim.findMismatch(passVictim, MatchLevel.DETAILED, diffThresholds, false).Type);

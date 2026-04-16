@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.compar.linx;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.compar.common.CategoryType.FUSION;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.common.CommonUtils.createMismatchFromDiffs;
@@ -19,6 +21,8 @@ public class FusionData implements ComparableItem
 {
     public final LinxFusion Fusion;
     public final String GeneMappedName;
+    public final BreakendData BreakendFive;
+    public final BreakendData BreakendThree;
 
     protected static final String FLD_REPORTED_TYPE = "ReportedType";
     protected static final String FLD_PHASED = "Phased";
@@ -33,10 +37,12 @@ public class FusionData implements ComparableItem
     protected static final String FLD_DOMAINS_LOST = "DomainsLost";
     protected static final String FLD_JUNCTION_COPY_NUMBER = "JunctionCopyNumber";
 
-    public FusionData(final LinxFusion fusion, final String geneMappedName)
+    public FusionData(final LinxFusion fusion, final String geneMappedName, final BreakendData breakendFive, final BreakendData breakendThree)
     {
         Fusion = fusion;
         GeneMappedName = geneMappedName;
+        BreakendFive = breakendFive;
+        BreakendThree = breakendThree;
     }
 
     @Override
@@ -45,26 +51,38 @@ public class FusionData implements ComparableItem
     @Override
     public String key()
     {
-        return String.format("%s_%s", Fusion.name(), Fusion.reportedType());
+        return format("%s_%s", Fusion.name(), Fusion.reportedType());
     }
 
     @Override
     public List<String> displayValues()
     {
         List<String> values = Lists.newArrayList();
-        values.add(String.format("%s", Fusion.reported()));
-        values.add(String.format("%s", Fusion.reportedType()));
-        values.add(String.format("%s", Fusion.phased()));
-        values.add(String.format("%s", Fusion.likelihood()));
-        //values.add(String.format("%s", Fusion.geneTranscriptStart()));
-        values.add(String.format("%d", Fusion.fusedExonUp()));
-        //values.add(String.format("%s", Fusion.geneTranscriptEnd()));
-        values.add(String.format("%d", Fusion.fusedExonDown()));
-        values.add(String.format("%d", Fusion.chainLinks()));
-        values.add(String.format("%s", Fusion.chainTerminated()));
-        values.add(String.format("%s", Fusion.domainsKept()));
-        values.add(String.format("%s", Fusion.domainsLost()));
-        //values.add(String.format("%.2f", Fusion.junctionCopyNumber()));
+        values.add(format("%s", Fusion.reported()));
+        values.add(format("%s", Fusion.reportedType()));
+        values.add(format("%s", Fusion.phased()));
+        values.add(format("%s", Fusion.likelihood()));
+        values.add(format("%d", Fusion.fusedExonUp()));
+        values.add(format("%d", Fusion.fusedExonDown()));
+        values.add(format("%d", Fusion.chainLinks()));
+        values.add(format("%s", Fusion.chainTerminated()));
+        values.add(format("%s", Fusion.domainsKept()));
+        values.add(format("%s", Fusion.domainsLost()));
+
+        return values;
+    }
+
+    @Override
+    public List<String> extraInfoValues()
+    {
+        List<String> values = Lists.newArrayList();
+
+        if(BreakendFive != null)
+            values.add(format("BreakendUp=%s", BreakendFive.fullStr(true)));
+
+        if(BreakendThree != null)
+            values.add(format("BreakendDown=%s", BreakendThree.fullStr(true)));
+
         return values;
     }
 
@@ -82,8 +100,8 @@ public class FusionData implements ComparableItem
     }
 
     @Override
-    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds,
-            final boolean includeMatches)
+    public Mismatch findMismatch(
+            final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds, final boolean includeMatches)
     {
         final FusionData otherFusion = (FusionData)other;
 
@@ -93,15 +111,12 @@ public class FusionData implements ComparableItem
         checkDiff(diffs, FLD_REPORTED_TYPE, Fusion.reportedType(), otherFusion.Fusion.reportedType());
         checkDiff(diffs, FLD_PHASED, Fusion.phased().toString(), otherFusion.Fusion.phased().toString());
         checkDiff(diffs, FLD_LIKELIHOOD, Fusion.likelihood().toString(), otherFusion.Fusion.likelihood().toString());
-        //checkDiff(diffs, FLD_TRANSCRIPT_UP, Fusion.geneTranscriptStart(), otherFusion.Fusion.geneTranscriptStart());
         checkDiff(diffs, FLD_EXON_UP, Fusion.fusedExonUp(), otherFusion.Fusion.fusedExonUp());
-        //checkDiff(diffs, FLD_TRANSCRIPT_DOWN, Fusion.geneTranscriptEnd(), otherFusion.Fusion.geneTranscriptEnd());
         checkDiff(diffs, FLD_EXON_DOWN, Fusion.fusedExonDown(), otherFusion.Fusion.fusedExonDown());
         checkDiff(diffs, FLD_CHAIN_LINKS, Fusion.chainLinks(), otherFusion.Fusion.chainLinks());
         checkDiff(diffs, FLD_CHAIN_TERM, Fusion.chainTerminated(), otherFusion.Fusion.chainTerminated());
         checkDiff(diffs, FLD_DOMAINS_KEPT, Fusion.domainsKept(), otherFusion.Fusion.domainsKept());
         checkDiff(diffs, FLD_DOMAINS_LOST, Fusion.domainsLost(), otherFusion.Fusion.domainsLost());
-        //checkDiff(diffs, FLD_JUNCTION_COPY_NUMBER, Fusion.junctionCopyNumber(), otherFusion.Fusion.junctionCopyNumber(), thresholds);
 
         return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
     }

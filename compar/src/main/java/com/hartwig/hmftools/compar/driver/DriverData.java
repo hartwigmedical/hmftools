@@ -22,6 +22,7 @@ import com.hartwig.hmftools.compar.common.Mismatch;
 public class DriverData implements ComparableItem
 {
     public final DriverCatalog DriverCatalog;
+
     public final String mComparisonChromosome;
     private final String mKey;
     private final boolean mCheckTranscript;
@@ -31,9 +32,11 @@ public class DriverData implements ComparableItem
     protected static final String FLD_MIN_COPY_NUMBER = "MinCopyNumber";
     protected static final String FLD_MAX_COPY_NUMBER = "MaxCopyNumber";
 
-    public DriverData(final DriverCatalog driverCatalog, final String comparisonChromosome, boolean checkTranscript)
+    public DriverData(
+            final DriverCatalog driverCatalog, final String comparisonChromosome, boolean checkTranscript)
     {
         DriverCatalog = driverCatalog;
+
         mComparisonChromosome = comparisonChromosome;
         mCheckTranscript = checkTranscript;
 
@@ -58,6 +61,15 @@ public class DriverData implements ComparableItem
         values.add(format("%.2f", DriverCatalog.driverLikelihood()));
         values.add(format("%.2f", DriverCatalog.minCopyNumber()));
         values.add(format("%.2f", DriverCatalog.maxCopyNumber()));
+        return values;
+    }
+
+    @Override
+    public List<String> extraInfoValues()
+    {
+        List<String> values = Lists.newArrayList();
+
+
         return values;
     }
 
@@ -91,8 +103,8 @@ public class DriverData implements ComparableItem
     }
 
     @Override
-    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds,
-            final boolean includeMatches)
+    public Mismatch findMismatch(
+            final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds, final boolean includeMatches)
     {
         final DriverData otherDriver = (DriverData)other;
 

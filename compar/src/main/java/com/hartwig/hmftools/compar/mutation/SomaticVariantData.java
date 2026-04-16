@@ -56,6 +56,7 @@ import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
+import com.hartwig.hmftools.compar.common.SourceType;
 import com.hartwig.hmftools.patientdb.database.hmfpatients.Tables;
 
 import org.jooq.Record;
@@ -279,7 +280,7 @@ public class SomaticVariantData implements ComparableItem
 
     public static SomaticVariantData fromContext(
             final VariantContext context, final String sampleId, final boolean fromUnfilteredFile,
-            final boolean hasPurpleAnnotation, String sourceName, ComparConfig config)
+            final boolean hasPurpleAnnotation, final SourceType sourceType, ComparConfig config)
     {
         int position = context.getStart();
         String chromosome = context.getContig();
@@ -293,7 +294,7 @@ public class SomaticVariantData implements ComparableItem
             variantImpact = fromSnpEffAttributes(context);
 
         BasePosition comparisonPosition = determineComparisonGenomePosition(
-                chromosome, position, sourceName, config.RequiresLiftover, config.LiftoverCache);
+                chromosome, position, sourceType, config.RequiresLiftover, config.LiftoverCache);
 
         var tumorAllelicDepth = AllelicDepth.fromGenotype(context.getGenotype(sampleId));
         return new SomaticVariantData(
@@ -323,7 +324,7 @@ public class SomaticVariantData implements ComparableItem
         );
     }
 
-    public static SomaticVariantData fromRecord(final Record record, final String sourceName, final ComparConfig config)
+    public static SomaticVariantData fromRecord(final Record record, final SourceType sourceType, final ComparConfig config)
     {
         Set<String> filters = Arrays.stream(record.getValue(SOMATICVARIANT.FILTER).split(";", -1)).collect(Collectors.toSet());
         String localPhaseSets = record.get(SOMATICVARIANT.LOCALPHASESET);
@@ -333,7 +334,7 @@ public class SomaticVariantData implements ComparableItem
         var position = record.getValue(SOMATICVARIANT.POSITION);
 
         BasePosition comparisonPosition = determineComparisonGenomePosition(
-                chromosome, position, sourceName, config.RequiresLiftover, config.LiftoverCache);
+                chromosome, position, sourceType, config.RequiresLiftover, config.LiftoverCache);
 
         return new SomaticVariantData(
                 chromosome,
