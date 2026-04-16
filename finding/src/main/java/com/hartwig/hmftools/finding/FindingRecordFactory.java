@@ -285,7 +285,6 @@ public class FindingRecordFactory
                             .mode(cuppaMode(cuppa.mode()))
                             .predictions(predictedTumorOrigins)
                             .visualisationFile(VisualisationFileUtil.createNullable(orangePlots.cuppaSummaryPlot()))
-                            .bestPredictionLikelihood(!predictedTumorOrigins.isEmpty() ? predictedTumorOrigins.get(0).likelihood() : null)
                             .build()
                     )
                     .build();
