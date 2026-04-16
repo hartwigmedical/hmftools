@@ -157,10 +157,6 @@ public class ComparConfig
             }
         }
 
-        // check dependencies
-        if(!Categories.containsKey(GENE_COPY_NUMBER) && Categories.containsKey(DRIVER))
-            Categories.put(GENE_COPY_NUMBER, matchLevel);
-
         OutputDir = parseOutputDir(configBuilder);
         OutputId = configBuilder.getValue(OUTPUT_ID);
         KnownMismatchFile = configBuilder.getValue(KNOWN_MISMATCH_FILE);

@@ -157,7 +157,6 @@ public class SomaticVariantData implements ComparableItem
         values.add(format("%s", Reported));
         values.add(format("%s", HotspotStatus));
         values.add(format("%s", Tier));
-        values.add(format("%.2f", BiallelicProbability));
         values.add(format("%s", Gene));
         values.add(format("%s", CanonicalEffect));
         values.add(format("%s", CanonicalCodingEffect));
@@ -170,6 +169,7 @@ public class SomaticVariantData implements ComparableItem
         values.add(String.format("%d", TumorSupportingReadCount));
         values.add(String.format("%d", TumorTotalReadCount));
 
+        values.add(format("%.2f", BiallelicProbability));
         values.add(format("%.2f", SubclonalLikelihood));
         values.add(format("%s", HasLPS));
 

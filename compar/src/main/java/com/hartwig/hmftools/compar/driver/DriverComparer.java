@@ -2,9 +2,12 @@ package com.hartwig.hmftools.compar.driver;
 
 import static com.hartwig.hmftools.common.driver.DriverType.DRIVERS_LINX_GERMLINE;
 import static com.hartwig.hmftools.common.driver.DriverType.DRIVERS_LINX_SOMATIC;
+import static com.hartwig.hmftools.common.driver.DriverType.DRIVERS_PURPLE_SOMATIC_COPY_NUMBER;
 import static com.hartwig.hmftools.compar.common.CategoryType.DRIVER;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonChromosome;
+import static com.hartwig.hmftools.compar.common.SourceType.NEW;
+import static com.hartwig.hmftools.compar.common.SourceType.OLD;
 import static com.hartwig.hmftools.compar.driver.DriverData.FLD_LIKELIHOOD;
 import static com.hartwig.hmftools.compar.driver.DriverData.FLD_LIKE_METHOD;
 import static com.hartwig.hmftools.compar.driver.DriverData.FLD_MAX_COPY_NUMBER;
@@ -15,16 +18,21 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.driver.DriverCatalogFile;
+import com.hartwig.hmftools.common.driver.ImmutableDriverCatalog;
 import com.hartwig.hmftools.common.linx.LinxDriver;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.purple.PurplePurity;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
@@ -33,6 +41,7 @@ import com.hartwig.hmftools.compar.common.DiffThresholds;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.ItemComparer;
+import com.hartwig.hmftools.compar.common.SourceData;
 import com.hartwig.hmftools.compar.common.SourceType;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
@@ -40,9 +49,17 @@ public class DriverComparer implements ItemComparer
 {
     private final ComparConfig mConfig;
 
+    private final Map<SourceType,List<DriverCatalog>> mDrivers;
+    private final Map<SourceType,PurplePurity> mPurities;
+    private final Map<SourceType,List<GeneCopyNumber>> mGeneCopyNumbers;
+
     public DriverComparer(final ComparConfig config)
     {
         mConfig = config;
+
+        mDrivers = Maps.newHashMap();
+        mPurities = Maps.newHashMap();
+        mGeneCopyNumbers = Maps.newHashMap();
     }
 
     @Override
@@ -59,95 +76,36 @@ public class DriverComparer implements ItemComparer
     @Override
     public boolean processSample(final String sampleId, final List<Mismatch> mismatches)
     {
-        return CommonUtils.processSample(this, mConfig, sampleId, mismatches);
-
-        /*
-        MatchLevel matchLevel = mConfig.Categories.get(category());
-
-        String refSourceName = mConfig.SourceNames.get(0);
-        String newSourceName = mConfig.SourceNames.get(1);
-        List<ComparableItem> refDrivers = loadDrivers(sampleId, refSourceName);
-        List<ComparableItem> newDrivers = loadDrivers(sampleId, newSourceName);
-
-        // ensure gene copy numbers are loaded for CN-type events
-        Set<String> sharedCopyNumberGenes = Sets.newHashSet();
-
-        refDrivers.stream().map(x -> (DriverData)x)
-                .filter(x -> DRIVERS_PURPLE_SOMATIC_COPY_NUMBER.contains(x.DriverCatalog.driver()))
-                .forEach(x -> sharedCopyNumberGenes.add(x.geneName()));
-
-        newDrivers.stream().map(x -> (DriverData)x)
-                .filter(x -> DRIVERS_PURPLE_SOMATIC_COPY_NUMBER.contains(x.DriverCatalog.driver()))
-                .forEach(x -> sharedCopyNumberGenes.add(x.geneName()));
-
-        List<GeneCopyNumber> refGeneCopyNumbers = loadGeneCopyNumbers(sampleId, refSourceName, sharedCopyNumberGenes);
-        List<GeneCopyNumber> newGeneCopyNumbers = loadGeneCopyNumbers(sampleId, newSourceName, sharedCopyNumberGenes);
-
-        // PurplePurity refPurity = PurplePurity.read(PurplePurity.generateFilename(fileSources.Purple, sampleId));
-        */
-    }
-
-    /*
-    private List<GeneCopyNumber> loadGeneCopyNumbers(final String sampleId, final String sourceName, final Set<String> sharedCopyNumberGenes)
-    {
-        if(sharedCopyNumberGenes.isEmpty())
-            return Collections.emptyList();
-
-        List<GeneCopyNumber> geneCopyNumbers = Lists.newArrayList();
-        FileSources fileSources = mConfig.FileSources.get(sourceName);
-
-        try
+        // load data ahead of the standard calls for cross-driver comparisons
+        for(SourceData sourceData : mConfig.Sources)
         {
-            String geneCopyNumberFile = GeneCopyNumberFile.generateFilename(fileSources.Purple, sampleId);
+            String sourceSampleId = mConfig.sourceSampleId(sourceData.Type, sampleId);
 
-            return GeneCopyNumberFile.read(geneCopyNumberFile).stream()
-                            .filter(x -> sharedCopyNumberGenes.contains(x.GeneName)).collect(Collectors.toList());
+            if(sourceData.Database != null)
+            {
+                loadData(sourceSampleId, sourceData.Database, sourceData.Type);
+            }
+            else
+            {
+                loadData(sourceSampleId, sourceData.Files, sourceData.Type);
+            }
         }
-        catch(Exception e)
-        {
-            CMP_LOGGER.warn("sample({}) failed to load gene copy number data: {}", sampleId, e.toString());
-            return Collections.emptyList();
-        }
+
+        boolean valid = CommonUtils.processSample(this, mConfig, sampleId, mismatches);
+
+        mGeneCopyNumbers.clear();
+        mPurities.clear();
+        mDrivers.clear();
+        return valid;
     }
 
-    private List<ComparableItem> loadDrivers(final String sampleId, final String sourceName)
+    private void loadData(final String sampleId, final DatabaseAccess dbAccess, final SourceType sourceType)
     {
-        String sourceSampleId = mConfig.sourceSampleId(sourceName, sampleId);
-
-        if(!mConfig.DbConnections.isEmpty())
-        {
-            return loadFromDb(sourceSampleId, mConfig.DbConnections.get(sourceName), sourceName);
-        }
-        else
-        {
-            String sourceGermlineSampleId = mConfig.sourceReferenceId(sourceName, sampleId);
-            FileSources fileSources = mConfig.FileSources.get(sourceName);
-
-            return loadFromFile(
-                    sourceSampleId, sourceGermlineSampleId, FileSources.sampleInstance(fileSources, sourceSampleId, sourceGermlineSampleId));
-        }
-    }
-    */
-
-    @Override
-    public List<String> comparedFieldNames()
-    {
-        return Lists.newArrayList(FLD_LIKE_METHOD, FLD_LIKELIHOOD, FLD_MIN_COPY_NUMBER, FLD_MAX_COPY_NUMBER);
+        mDrivers.put(sourceType, Lists.newArrayList(dbAccess.readDriverCatalog(sampleId)));
     }
 
-    @Override
-    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final SourceType sourceType)
+    private void loadData(final String sampleId, final FileSources fileSources, final SourceType sourceType)
     {
-        List<DriverCatalog> drivers = dbAccess.readDriverCatalog(sampleId);
-
-        return drivers.stream().map(x -> createDriverData(x)).collect(Collectors.toList());
-    }
-
-    @Override
-    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources)
-    {
-        final List<ComparableItem> comparableItems = Lists.newArrayList();
-
         try
         {
             // use Linx if present, otherwise Purple drivers
@@ -155,6 +113,7 @@ public class DriverComparer implements ItemComparer
             String purpleDriverFile = DriverCatalogFile.generateSomaticFilename(fileSources.Purple, sampleId);
 
             List<DriverCatalog> drivers = Lists.newArrayList();
+            mDrivers.put(sourceType, drivers);
 
             if(Files.exists(Paths.get(linxDriverFile)))
             {
@@ -187,25 +146,85 @@ public class DriverComparer implements ItemComparer
             }
 
             PurplePurity purity = PurplePurity.read(PurplePurity.generateFilename(fileSources.Purple, sampleId));
+            mPurities.put(sourceType, purity);
 
-            for(DriverCatalog driver : drivers)
-            {
-                comparableItems.add(createDriverData(driver));
-            }
+            String geneCopyNumberFile = GeneCopyNumberFile.generateFilename(fileSources.Purple, sampleId);
+            mGeneCopyNumbers.put(sourceType, GeneCopyNumberFile.read(geneCopyNumberFile));
         }
         catch(IOException e)
         {
             CMP_LOGGER.warn("sample({}) failed to load driver data: {}", sampleId, e.toString());
-            return null;
         }
-
-        return comparableItems;
     }
 
-    private DriverData createDriverData(final DriverCatalog driver)
+    @Override
+    public List<String> comparedFieldNames()
+    {
+        return Lists.newArrayList(FLD_LIKE_METHOD, FLD_LIKELIHOOD, FLD_MIN_COPY_NUMBER, FLD_MAX_COPY_NUMBER);
+    }
+
+    private List<ComparableItem> createDriverItems(final SourceType sourceType)
+    {
+        List<DriverCatalog> drivers = mDrivers.get(sourceType);
+
+        if(drivers == null)
+            return null;
+
+        List<ComparableItem> items = Lists.newArrayList();
+
+        for(DriverCatalog driverCatalog : drivers)
+        {
+            items.add(createDriverData(driverCatalog, mPurities.get(sourceType)));
+        }
+
+        // create non-reportable CN driver events if present in the other source
+        List<DriverCatalog> otherDrivers = mDrivers.get(sourceType == OLD ? NEW : OLD);
+
+        for(DriverCatalog otherDriver : otherDrivers)
+        {
+            if(otherDriver.reportedStatus() != ReportedStatus.REPORTED)
+                continue;
+
+            if(!DRIVERS_PURPLE_SOMATIC_COPY_NUMBER.contains(otherDriver.driver()))
+                continue;
+
+            if(drivers.stream().anyMatch(x -> x.driver() == otherDriver.driver() && x.gene().equals(otherDriver.gene())))
+                continue;
+
+            GeneCopyNumber geneCopyNumber = mGeneCopyNumbers.get(sourceType).stream()
+                    .filter(x -> x.GeneName.equals(otherDriver.gene())).findFirst().orElse(null);
+
+            if(geneCopyNumber == null)
+                continue;
+
+            ImmutableDriverCatalog.Builder builder = ImmutableDriverCatalog.builder().from(otherDriver);
+            builder.minCopyNumber(geneCopyNumber.MinCopyNumber);
+            builder.maxCopyNumber(geneCopyNumber.MaxCopyNumber);
+            builder.driverLikelihood(0);
+            builder.reportedStatus(ReportedStatus.NOT_REPORTED);
+
+            items.add(createDriverData(builder.build(), mPurities.get(sourceType)));
+        }
+
+        return items;
+    }
+
+    @Override
+    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final SourceType sourceType)
+    {
+        return createDriverItems(sourceType);
+    }
+
+    @Override
+    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources)
+    {
+        return createDriverItems(fileSources.Source);
+    }
+
+    private DriverData createDriverData(final DriverCatalog driver, final PurplePurity purity)
     {
         boolean checkTranscript = mConfig.AlternateTranscriptDriverGenes.contains(driver.gene());
         String comparisonChromosome = determineComparisonChromosome(driver.chromosome(), mConfig.RequiresLiftover);
-        return new DriverData(driver, comparisonChromosome, checkTranscript);
+        return new DriverData(driver, purity, comparisonChromosome, checkTranscript);
     }
 }

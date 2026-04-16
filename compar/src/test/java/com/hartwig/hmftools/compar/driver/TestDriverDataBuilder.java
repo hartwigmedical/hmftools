@@ -66,6 +66,6 @@ public class TestDriverDataBuilder
                 .frameshift(-1)
                 .biallelic(true)
                 .build();
-        return new DriverData(driverCatalog, comparisonChromosome, checkTranscript);
+        return new DriverData(driverCatalog, null, comparisonChromosome, checkTranscript);
     }
 }
