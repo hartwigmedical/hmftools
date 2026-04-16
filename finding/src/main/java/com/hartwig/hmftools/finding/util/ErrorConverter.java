@@ -57,7 +57,6 @@ public class ErrorConverter
         {
             FindingStatus findingStatus = findingList.status();
             List<HlaAllele> hlaAlleles;
-            System.out.println("findingStatus = " + findingStatus);
             if(!findingStatus.isOK() && findingStatus.errors().contains(NO_TUMOR) )
             {
                 // Clear tumor fields if there is no tumor.
