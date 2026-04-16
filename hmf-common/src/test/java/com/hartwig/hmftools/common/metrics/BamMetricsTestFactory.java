@@ -17,6 +17,7 @@ public final class BamMetricsTestFactory
                 .totalRegionBases(0)
                 .duplicateReads(0)
                 .dualStrandReads(0)
+                .offTargetReads(0)
                 .meanCoverage(0D)
                 .sdCoverage(0D)
                 .medianCoverage(0)

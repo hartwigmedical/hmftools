@@ -7,12 +7,14 @@ public class ReadCounts
     public long Total;
     public long Duplicates;
     public long DualStrand;
+    public long OffTarget;
 
     public ReadCounts()
     {
         Total = 0;
         Duplicates = 0;
         DualStrand = 0;
+        OffTarget = 0;
     }
 
     public void merge(final ReadCounts other)
@@ -20,6 +22,7 @@ public class ReadCounts
         Total += other.Total;
         Duplicates += other.Duplicates;
         DualStrand += other.DualStrand;
+        OffTarget += other.OffTarget;
     }
 
     public String toString()

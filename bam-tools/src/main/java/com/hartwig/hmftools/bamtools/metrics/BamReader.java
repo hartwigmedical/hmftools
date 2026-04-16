@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.bam.BamSlicer;
 import com.hartwig.hmftools.common.bam.SamRecordUtils;
@@ -52,8 +53,9 @@ public class BamReader
     private final PartitionStats mPartitionStats;
 
     private final List<TargetRegionStats> mTargetRegionStats;
-    private final OffTargetFragments mOffTargetFragments;
+    private final OffTargetAnalyser mOffTargetAnalyser;
     private final ChrBaseRegion mExcludedRegion;
+    private final boolean mRecordOffTargetReads;
 
     private final List<ExonCoverage> mExonCoverage;
 
@@ -83,10 +85,14 @@ public class BamReader
                     .forEach(x -> mTargetRegionStats.add(new TargetRegionStats(new ChrBaseRegion(mRegion.Chromosome, x.start(), x.end()))));
         }
 
-        mOffTargetFragments = !mConfig.TargetRegions.isEmpty() ? new OffTargetFragments(mConfig.HighFragmentOverlapThreshold) : null;
+        mRecordOffTargetReads = !mConfig.TargetRegions.isEmpty();
+
+        mOffTargetAnalyser = !mConfig.TargetRegions.isEmpty() && mConfig.WriteOffTarget
+                ? new OffTargetAnalyser(mConfig.HighFragmentOverlapThreshold) : null;
 
         List<ChrBaseRegion> unmappableRegions = mConfig.UnmappableRegions.stream().filter(x -> x.overlaps(region)).collect(Collectors.toList());
 
+        // should not be required if Redux has been run
         ChrBaseRegion excludedRegion = ExcludedRegions.getPolyGRegion(mConfig.RefGenVersion);
         mExcludedRegion = excludedRegion.overlaps(mRegion) ? excludedRegion : null;
 
@@ -105,7 +111,7 @@ public class BamReader
 
     public ChrBaseRegion region() { return mRegion; }
     public List<TargetRegionStats> targetRegionStats() { return mTargetRegionStats; }
-    public OffTargetFragments offTargetFragments() { return mOffTargetFragments; }
+    public OffTargetAnalyser offTargetFragments() { return mOffTargetAnalyser; }
     public PartitionStats partitionStats() { return mPartitionStats; }
 
     public void run()
@@ -128,11 +134,16 @@ public class BamReader
     {
         mReadGroupMap.clear();
 
-        CoverageMetrics metrics = mBaseCoverage.createMetrics();
+        List<BaseRegion> targetRegions = null;
+
+        if(!mConfig.TargetRegions.isEmpty())
+            targetRegions = mTargetRegionStats.stream().map(x -> new BaseRegion(x.start(), x.end())).collect(Collectors.toList());
+
+        CoverageMetrics metrics = mBaseCoverage.createMetrics(targetRegions);
 
         mCombinedStats.addStats(
                 metrics, mFragmentLengths, mReadCounts, mFlagStats,
-                mOffTargetFragments != null ? mOffTargetFragments.fragmentOverlapCounts() : Collections.EMPTY_MAP, mPerfCounter);
+                mOffTargetAnalyser != null ? mOffTargetAnalyser.fragmentOverlapCounts() : Collections.EMPTY_MAP, mPerfCounter);
     }
 
     private void processSamRecord(final SAMRecord read)
@@ -147,12 +158,15 @@ public class BamReader
             BT_LOGGER.debug("specific readId({}) unmapped({})", read.getReadName(), read.getReadUnmappedFlag());
         }
 
-        // extract mate alignment since used by a few components
-        int readMateEnd = read.getReadPairedFlag() ? SamRecordUtils.getMateAlignmentEnd(read) : NO_POSITION;
-
         boolean isDualStrand = false;
 
         boolean isConsensusRead = read.hasAttribute(CONSENSUS_READ_ATTRIBUTE);
+
+        if(mRecordOffTargetReads && !overlapsTargetRegion(read))
+        {
+           ++mReadCounts.OffTarget;
+           return;
+        }
 
         if(isConsensusRead)
         {
@@ -177,6 +191,9 @@ public class BamReader
             if(read.getDuplicateReadFlag())
                 ++mReadCounts.Duplicates;
         }
+
+        // extract mate alignment since used by a few components
+        int readMateEnd = read.getReadPairedFlag() ? SamRecordUtils.getMateAlignmentEnd(read) : NO_POSITION;
 
         mFlagStats.processRead(read, isConsensusRead, mConfig.expectDuplicates());
         mFragmentLengths.processRead(read);
@@ -207,9 +224,20 @@ public class BamReader
         checkGeneCoverage(read);
     }
 
+    private boolean overlapsTargetRegion(final SAMRecord read)
+    {
+        if(mTargetRegionStats.isEmpty())
+            return false;
+
+        int alignedPosStart = read.getAlignmentStart();
+        int alignedPosEnd = read.getAlignmentEnd();
+
+        return mTargetRegionStats.stream().anyMatch(x -> positionsOverlap(alignedPosStart, alignedPosEnd, x.start(), x.end()));
+    }
+
     private void checkTargetRegions(final SAMRecord read, boolean isConsensus, boolean isDualStrand, int readMateEnd)
     {
-        if(mTargetRegionStats.isEmpty() && mOffTargetFragments == null)
+        if(mTargetRegionStats.isEmpty() && mOffTargetAnalyser == null)
             return;
 
         if(read.getSupplementaryAlignmentFlag())
@@ -273,8 +301,8 @@ public class BamReader
             }
         }
 
-        if(!read.getDuplicateReadFlag() && !overlapsTargetRegion && mOffTargetFragments != null)
-            mOffTargetFragments.addRead(read, isLocalConcordantFragment, readMateEnd);
+        if(!read.getDuplicateReadFlag() && !overlapsTargetRegion && mOffTargetAnalyser != null)
+            mOffTargetAnalyser.addRead(read, isLocalConcordantFragment, readMateEnd);
     }
 
     private int findOverlappingFragmentStart(final SAMRecord read)

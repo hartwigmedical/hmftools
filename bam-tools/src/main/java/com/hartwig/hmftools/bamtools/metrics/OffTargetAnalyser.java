@@ -28,7 +28,7 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import htsjdk.samtools.SAMRecord;
 
-public class OffTargetFragments
+public class OffTargetAnalyser
 {
     private final List<Fragment> mFragments;
     private final List<EnrichedSite> mEnrichedSites;
@@ -43,7 +43,7 @@ public class OffTargetFragments
     public static final String FLD_PEAK_POS_START = "PeakPosStart";
     public static final String FLD_PEAK_POS_END = "PeakPosEnd";
 
-    public OffTargetFragments(final int fragmentOverlapWriteThreshold)
+    public OffTargetAnalyser(final int fragmentOverlapWriteThreshold)
     {
         mFragmentOverlapWriteThreshold = fragmentOverlapWriteThreshold;
         mFragments = Lists.newArrayList();

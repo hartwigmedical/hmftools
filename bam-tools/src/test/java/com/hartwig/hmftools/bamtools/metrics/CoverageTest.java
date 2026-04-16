@@ -95,7 +95,7 @@ public class CoverageTest
 
         baseCoverage.processRead(read, null, false);
 
-        CoverageMetrics metrics = baseCoverage.createMetrics();
+        CoverageMetrics metrics = baseCoverage.createMetrics(null);
 
         assertEquals(readLength * 2, metrics.FilterTypeCounts[FilterType.UNFILTERED.ordinal()]);
         assertEquals(readLength, metrics.FilterTypeCounts[FilterType.LOW_MAP_QUAL.ordinal()]);
@@ -127,7 +127,7 @@ public class CoverageTest
             baseCoverage.processRead(read3, null, false);
         }
 
-        metrics = baseCoverage.createMetrics();
+        metrics = baseCoverage.createMetrics(null);
 
         for(int i = 0; i < baseCoverage.baseDepth().length; ++i)
         {
@@ -160,7 +160,7 @@ public class CoverageTest
         bamReader.processRead(mate1);
 
         BaseCoverage baseCoverage = bamReader.baseCoverage();
-        CoverageMetrics metrics = baseCoverage.createMetrics();
+        CoverageMetrics metrics = baseCoverage.createMetrics(null);
 
         assertEquals(15, metrics.FilterTypeCounts[FilterType.UNFILTERED.ordinal()]);
 

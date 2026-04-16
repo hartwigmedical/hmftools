@@ -52,6 +52,7 @@ import com.hartwig.hmftools.common.region.BedFileReader;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
+import com.hartwig.hmftools.common.region.TaggedRegion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
@@ -109,6 +110,7 @@ public class MetricsConfig
     private static final int DEFAULT_MAP_QUAL_THRESHOLD = 20;
     private static final int DEFAULT_BASE_QUAL_THRESHOLD = 10;
     private static final int DEFAULT_MAX_COVERAGE = 250;
+    private static final int DEFAULT_PANEL_MAX_COVERAGE = 10000;
     private static final int DEFAULT_PARTITION_READ_COUNT_CHECK = 1000000;
 
     public MetricsConfig(final ConfigBuilder configBuilder)
@@ -147,15 +149,25 @@ public class MetricsConfig
 
         MapQualityThreshold = configBuilder.getInteger(MAP_QUAL_THRESHOLD);
         BaseQualityThreshold = configBuilder.getInteger(BASE_QUAL_THRESHOLD);
-        MaxCoverage = configBuilder.getInteger(MAX_COVERAGE);
+
+        TargetRegions = loadChrBaseRegions(configBuilder.getValue(REGIONS_FILE));
+        OnlyTargetRegions = !TargetRegions.isEmpty() && configBuilder.hasFlag(ONLY_TARGET);
+
+        if(!TargetRegions.isEmpty())
+        {
+            MaxCoverage = configBuilder.hasValue(MAX_COVERAGE) ? configBuilder.getInteger(MAX_COVERAGE) :DEFAULT_PANEL_MAX_COVERAGE;
+        }
+        else
+        {
+            MaxCoverage = configBuilder.getInteger(MAX_COVERAGE);
+        }
+
         ExcludeZeroCoverage = configBuilder.hasFlag(EXCLUDE_ZERO_COVERAGE);
         NoDuplicates = configBuilder.hasFlag(NO_DUPLICATES);
 
         WriteOffTarget = configBuilder.hasFlag(WRITE_OFF_TARGET);
         HighFragmentOverlapThreshold = configBuilder.getInteger(OFF_TARGET_FRAG_OVERLAP_THRESHOLD);
 
-        TargetRegions = loadChrBaseRegions(configBuilder.getValue(REGIONS_FILE));
-        OnlyTargetRegions = !TargetRegions.isEmpty() && configBuilder.hasFlag(ONLY_TARGET);
         PartitionReadCountCheck = configBuilder.getInteger(PARTITION_READ_COUNT_CHECK);
 
         UnmappableRegions = Lists.newArrayList();

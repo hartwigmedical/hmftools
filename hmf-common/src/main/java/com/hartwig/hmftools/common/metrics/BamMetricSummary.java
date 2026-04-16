@@ -28,6 +28,7 @@ public abstract class BamMetricSummary
     public abstract long totalReads();
     public abstract long duplicateReads();
     public abstract long dualStrandReads();
+    public abstract long offTargetReads();
 
     public abstract double meanCoverage();
     public abstract double sdCoverage();
@@ -81,6 +82,7 @@ public abstract class BamMetricSummary
     public static final String TOTAL_READS_COLUMN = "TotalReads";
     public static final String DUPLICATES_COLUMN = "DuplicateReads";
     public static final String DUAL_STRAND_COLUMN = "DualStrandReads";
+    public static final String OFF_TARGET_COLUMN = "OffTargetReads";
     public static final String MEAN_COVERAGE_COLUMN = "MeanCoverage";
     public static final String SD_COVERAGE_COLUMN = "StdDevCoverage";
     public static final String MEDIAN_COVERAGE_COLUMN = "MedianCoverage";
@@ -105,6 +107,7 @@ public abstract class BamMetricSummary
         header.add(TOTAL_READS_COLUMN);
         header.add(DUPLICATES_COLUMN);
         header.add(DUAL_STRAND_COLUMN);
+        header.add(OFF_TARGET_COLUMN);
         header.add(MEAN_COVERAGE_COLUMN);
         header.add(SD_COVERAGE_COLUMN);
         header.add(MEDIAN_COVERAGE_COLUMN);
@@ -128,6 +131,7 @@ public abstract class BamMetricSummary
         values.add(String.valueOf(totalReads()));
         values.add(String.valueOf(duplicateReads()));
         values.add(String.valueOf(dualStrandReads()));
+        values.add(String.valueOf(offTargetReads()));
 
         values.add(format("%.3f", meanCoverage()));
         values.add(format("%.3f", sdCoverage()));
@@ -182,11 +186,14 @@ public abstract class BamMetricSummary
         int unmappedIndex = fieldsIndexMap.containsKey(UNMAPPED_COLUMN) ?
                 fieldsIndexMap.get(UNMAPPED_COLUMN) : fieldsIndexMap.get(UNPAIRED_COLUMN);
 
+        Integer offTargetIndex = fieldsIndexMap.get(OFF_TARGET_COLUMN);
+
         return ImmutableBamMetricSummary.builder()
                 .totalRegionBases(Long.parseLong(values[fieldsIndexMap.get(TOTAL_REGION_COLUMN)]))
                 .totalReads(Long.parseLong(values[fieldsIndexMap.get(TOTAL_READS_COLUMN)]))
                 .duplicateReads(Long.parseLong(values[fieldsIndexMap.get(DUPLICATES_COLUMN)]))
                 .dualStrandReads(Long.parseLong(values[fieldsIndexMap.get(DUAL_STRAND_COLUMN)]))
+                .offTargetReads(offTargetIndex != null ? Long.parseLong(values[fieldsIndexMap.get(OFF_TARGET_COLUMN)]) : 0)
                 .meanCoverage(Double.parseDouble(values[fieldsIndexMap.get(MEAN_COVERAGE_COLUMN)]))
                 .sdCoverage(Double.parseDouble(values[fieldsIndexMap.get(SD_COVERAGE_COLUMN)]))
                 .medianCoverage((int)Double.parseDouble(values[fieldsIndexMap.get(MEDIAN_COVERAGE_COLUMN)]))

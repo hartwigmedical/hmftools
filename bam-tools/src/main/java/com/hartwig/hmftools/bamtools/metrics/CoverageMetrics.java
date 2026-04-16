@@ -20,6 +20,7 @@ public class CoverageMetrics
     public final long[] CoverageFrequency;
 
     private long mCoverageBases; // bases with any level of coverage
+    private long mZeroCoverageBases;
 
     private long mTotalBases; // filtered and unfiltered
     private Statistics mStatistics;
@@ -29,13 +30,19 @@ public class CoverageMetrics
         FilterTypeCounts = new long[FilterType.values().length];
         CoverageFrequency = new long[maxCoverage + 1];
         mCoverageBases = 0;
+        mZeroCoverageBases = 0;
         mTotalBases = -1;
         mStatistics = null;
     }
 
-    public void addCoverageBases(long bases) { mCoverageBases += bases; }
+    public void addCoverageBases(long coverage, long zeroCoverage)
+    {
+        mCoverageBases += coverage;
+        mZeroCoverageBases += zeroCoverage;
+    }
+
     public long coverageBases() { return mCoverageBases; }
-    public long zeroCoverageBases() { return CoverageFrequency[0]; }
+    public long zeroCoverageBases() { return mZeroCoverageBases; }
 
     // note this does not include unmappable regions (eg 'N' in centromeres and telomeres)
     public long genomeTerritory() { return zeroCoverageBases() + coverageBases(); }
@@ -213,7 +220,7 @@ public class CoverageMetrics
             CoverageFrequency[i] += other.CoverageFrequency[i];
         }
 
-        addCoverageBases(other.coverageBases());
+        addCoverageBases(other.coverageBases(), other.zeroCoverageBases());
     }
 
     public String toString()
