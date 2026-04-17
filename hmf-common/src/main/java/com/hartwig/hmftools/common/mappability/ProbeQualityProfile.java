@@ -8,7 +8,10 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.secondsSinceNow;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_START;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
 
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -20,13 +23,12 @@ import java.util.stream.IntStream;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.utils.file.DelimFileReader;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 // Reads the data written by ProbeQualityProfiler and provides utilities for calculating probe quality scores based on the data.
-// See ProbeQualityProfiler class for more context.
+// See the ProbeQualityProfiler class for more context.
 public class ProbeQualityProfile
 {
     private final int mBaseWindowLength;
@@ -178,16 +180,43 @@ public class ProbeQualityProfile
         long startTimeMs = System.currentTimeMillis();
         HashMap<String, WindowArray> result = new HashMap<>();
 
-        try(DelimFileReader reader = new DelimFileReader(filePath))
+        try(BufferedReader reader = createBufferedReader(filePath))
         {
+            // Some manual TSV parsing here because this file is huge and delays the startup of PanelBuilder.
+            List<String> header = Arrays.stream(reader.readLine().split("\t")).toList();
+            if(header.size() != 3)
+            {
+                throw new RuntimeException("Expected 3 fields in header but got " + header.size());
+            }
+            int chromosomeIndex = header.indexOf(FLD_CHROMOSOME);
+            int positionStartIndex = header.indexOf(FLD_POSITION_START);
+            int qualityScoreIndex = header.indexOf(FLD_QUALITY_SCORE);
+
+            String[] fields = new String[3];
+
             String curChromosome = null;
             WindowArray curWindows = null;
 
-            for(DelimFileReader.Row row : reader)
+            while(true)
             {
-                String chromosome = row.getString(FLD_CHROMOSOME);
-                int start = row.getInt(FLD_POSITION_START);
-                float qualityScore = row.getFloat(FLD_QUALITY_SCORE);
+                String line = reader.readLine();
+                if(line == null)
+                {
+                    break;
+                }
+
+                // Much faster than String.split();
+                int field0End = line.indexOf('\t');
+                int field1Begin = field0End + 1;
+                int field1End = line.indexOf('\t', field1Begin);
+                int field2Begin = field1End + 1;
+                fields[0] = line.substring(0, field0End);
+                fields[1] = line.substring(field1Begin, field1End);
+                fields[2] = line.substring(field2Begin);
+
+                String chromosome = fields[chromosomeIndex];
+                int start = Integer.parseInt(fields[positionStartIndex]);
+                float qualityScore = Float.parseFloat(fields[qualityScoreIndex]);
 
                 if((start - 1) % baseWindowSpacing != 0)
                 {
@@ -196,7 +225,7 @@ public class ProbeQualityProfile
                     throw new RuntimeException(error);
                 }
 
-                // File is typically sorted by chromosome so we can improve performance by only doing the hash table lookup when the
+                // File is typically sorted by chromosome, so we can improve performance by only doing the hash table lookup when the
                 // chromosome changes.
                 if(!chromosome.equals(curChromosome))
                 {
@@ -212,6 +241,11 @@ public class ProbeQualityProfile
 
                 curWindows.add(start, qualityScore);
             }
+        }
+        catch(IOException e)
+        {
+            LOGGER.error("Failed to load probe quality profile file: {}", filePath);
+            throw new RuntimeException(e);
         }
 
         // Store windows sorted, helps computations later.
