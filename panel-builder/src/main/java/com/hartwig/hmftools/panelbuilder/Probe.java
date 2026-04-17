@@ -12,7 +12,7 @@ public record Probe(
         // null if the probe hasn't been evaluated yet.
         @Nullable ProbeEvaluator.Criteria evaluationCriteria,
         // null if the probe hasn't been evaluated yet.
-        @Nullable EvaluationResult evaluationResult,
+        @Nullable EvaluationResult<String> evaluationResult,
         // null if the probe hasn't been evaluated yet or the probe was rejected by another criteria.
         @Nullable Double qualityScore,
         // null if the probe hasn't been evaluated yet or the probe was rejected by another criteria.
@@ -81,7 +81,7 @@ public record Probe(
         return new Probe(definition, sequence, targetedRange, metadata, value, evaluationResult, qualityScore, gcContent);
     }
 
-    public Probe withEvaluationResult(final EvaluationResult value)
+    public Probe withEvaluationResult(final EvaluationResult<String> value)
     {
         if(evaluationResult != null)
         {

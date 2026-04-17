@@ -362,6 +362,9 @@ public class SomaticSv implements StructuralVariant
             }
         }
 
+        // We only support driver somatic structural variants, so filter out nondrivers now.
+        variants = variants.stream().filter(SomaticSv::isDriver).toList();
+
         LOGGER.debug("Loaded {} somatic structural variants", variants.size());
         variants.forEach(variant -> LOGGER.trace("SomaticSv: {}", variant));
 

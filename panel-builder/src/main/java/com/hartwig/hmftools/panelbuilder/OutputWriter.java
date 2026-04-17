@@ -453,7 +453,7 @@ public class OutputWriter implements AutoCloseable
     {
         row.set(SampleVariantInfoColumns.Variant, variantInfo.variant());
         row.set(SampleVariantInfoColumns.TargetType, variantInfo.targetType().name());
-        row.set(SampleVariantInfoColumns.FilterReason, variantInfo.filterReason() == null ? "PASS" : variantInfo.filterReason());
+        row.set(SampleVariantInfoColumns.FilterReason, variantInfo.filterReason() == null ? "PASS" : variantInfo.filterReason().name());
     }
 
     @Override
