@@ -3,6 +3,7 @@ package com.hartwig.hmftools.finding;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.datamodel.common.AllelicDepth;
@@ -170,7 +171,7 @@ final class SmallVariantFactory
                 .inSpliceRegion(transcriptImpact.inSpliceRegion())
                 .effects(transcriptImpact.effects().stream()
                         .map(o -> SmallVariant.VariantEffect.valueOf(o.name()))
-                        .collect(Collectors.toSet()))
+                        .collect(Collectors.toCollection(TreeSet::new)))
                 .codingEffect(SmallVariant.CodingEffect.valueOf(transcriptImpact.codingEffect().name()))
                 .reported(transcriptImpact.reported())
                 .build();
