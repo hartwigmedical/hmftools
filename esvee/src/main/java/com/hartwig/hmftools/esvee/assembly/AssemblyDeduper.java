@@ -224,6 +224,16 @@ public class AssemblyDeduper
 
     private static boolean selectFirstAssembly(final JunctionAssembly first, final JunctionAssembly second)
     {
+        // Prefer the assembly which matches a known SAGA variant.
+        if(first.sagaMatch() != null && second.sagaMatch() == null)
+        {
+            return true;
+        }
+        else if(first.sagaMatch() == null && second.sagaMatch() != null)
+        {
+            return false;
+        }
+
         if(assemblyExceedsSupportRatio(first, second))
             return true;
 
