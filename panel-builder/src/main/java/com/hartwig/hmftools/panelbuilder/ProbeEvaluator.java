@@ -4,8 +4,8 @@ import static java.lang.Math.abs;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
-import static com.hartwig.hmftools.common.genome.gc.GcCalcs.calcGcPercent;
 import static com.hartwig.hmftools.panelbuilder.SequenceUtils.buildSequence;
+import static com.hartwig.hmftools.panelbuilder.SequenceUtils.calcGcPercentFast;
 import static com.hartwig.hmftools.panelbuilder.SequenceUtils.isDnaSequenceNormal;
 
 import java.text.DecimalFormat;
@@ -35,7 +35,7 @@ public class ProbeEvaluator
     {
         this(
                 probe -> probe.withSequence(buildSequence(refGenome, probe.definition())),
-                probe -> probe.withGcContent(calcGcPercent(requireNonNull(probe.sequence()))),
+                probe -> probe.withGcContent(calcGcPercentFast(requireNonNull(probe.sequence()))),
                 probeQualityScorer::computeQualityScores
         );
     }
@@ -63,51 +63,64 @@ public class ProbeEvaluator
             }
         });
         probes = probes
-                .map(applyIfNotRejected(probe -> evaluateSequence(mAnnotateSequence.apply(probe))))
-                // TODO? don't have to annotate GC if there's no limit
-                .map(applyIfNotRejected(probe -> evaluateGcContent(mAnnotateGcContent.apply(probe))));
-        // TODO? don't have to annotate QS if threshold is 0
+                .map(this::annotateAndEvaluateSequence)
+                .map(this::annotateAndEvaluateGcContent);
         probes = mAnnotateQualityScore.apply(probes)
-                .map(applyIfNotRejected(ProbeEvaluator::evaluateQualityScore));
-        probes = probes.map(applyIfNotRejected(probe -> probe.withEvaluationResult(EvaluationResult.accept())));
+                .map(ProbeEvaluator::evaluateQualityScore)
+                .map(ProbeEvaluator::acceptIfNotRejected);
         return probes;
     }
 
-    private static Function<Probe, Probe> applyIfNotRejected(final Function<Probe, Probe> function)
+    private Probe annotateAndEvaluateSequence(Probe probe)
     {
-        return probe -> probe.rejected() ? probe : function.apply(probe);
-    }
-
-    private static Probe evaluateSequence(Probe probe)
-    {
+        probe = mAnnotateSequence.apply(probe);
         String sequence = requireNonNull(probe.sequence());
         if(!isDnaSequenceNormal(sequence))
         {
-            probe = probe.withEvaluationResult(EvaluationResult.reject("sequence"));
+            return probe.withEvaluationResult(EvaluationResult.reject("sequence"));
         }
         return probe;
     }
 
-    private static Probe evaluateGcContent(Probe probe)
+    private Probe annotateAndEvaluateGcContent(Probe probe)
     {
-        Criteria criteria = requireNonNull(probe.evaluationCriteria());
-        double gcContent = requireNonNull(probe.gcContent());
-        if(!(abs(gcContent - criteria.gcContentTarget()) <= criteria.gcContentTolerance()))
+        if(!probe.rejected())
         {
-            probe = probe.withEvaluationResult(EvaluationResult.reject("GC"));
+            probe = mAnnotateGcContent.apply(probe);
+            Criteria criteria = requireNonNull(probe.evaluationCriteria());
+            double gcContent = requireNonNull(probe.gcContent());
+            if(!(abs(gcContent - criteria.gcContentTarget()) <= criteria.gcContentTolerance()))
+            {
+                return probe.withEvaluationResult(EvaluationResult.reject("GC"));
+            }
         }
         return probe;
     }
 
     private static Probe evaluateQualityScore(Probe probe)
     {
-        Criteria criteria = requireNonNull(probe.evaluationCriteria());
-        double qualityScore = requireNonNull(probe.qualityScore());
-        if(!(qualityScore >= criteria.qualityScoreMin()))
+        if(!probe.rejected())
         {
-            probe = probe.withEvaluationResult(EvaluationResult.reject("QS"));
+            Criteria criteria = requireNonNull(probe.evaluationCriteria());
+            double qualityScore = requireNonNull(probe.qualityScore());
+            if(!(qualityScore >= criteria.qualityScoreMin()))
+            {
+                return probe.withEvaluationResult(EvaluationResult.reject("QS"));
+            }
         }
         return probe;
+    }
+
+    private static Probe acceptIfNotRejected(Probe probe)
+    {
+        if(probe.rejected())
+        {
+            return probe;
+        }
+        else
+        {
+            return probe.withEvaluationResult(EvaluationResult.accept());
+        }
     }
 
     public record Criteria(

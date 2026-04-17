@@ -8,8 +8,8 @@ import static com.hartwig.hmftools.common.codon.Nucleotides.reverseComplementBas
 import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionEndingAt;
 import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionStartingAt;
 
+import java.util.Locale;
 import java.util.OptionalInt;
-import java.util.regex.Pattern;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.region.Orientation;
@@ -19,7 +19,8 @@ public class SequenceUtils
 {
     public static String buildSequence(final RefGenomeInterface refGenome, final SequenceDefinition definition)
     {
-        String start = definition.startRegion() == null ? "" : getSequence(refGenome, definition.startRegion());
+        ChrBaseRegion startRegion = definition.startRegion();
+        String start = startRegion == null ? "" : getSequence(refGenome, startRegion);
         if(definition.startOrientation() == Orientation.REVERSE)
         {
             start = reverseComplementBases(start);
@@ -39,14 +40,44 @@ public class SequenceUtils
         {
             throw new IllegalArgumentException("Attempt to create probe in unmapped region: " + region);
         }
-        return sequence.toUpperCase();
+        return sequence.toUpperCase(Locale.ENGLISH);
     }
-
-    private static final Pattern NORMAL_DNA_REGEX = Pattern.compile("^[acgtACGT]*$");
 
     public static boolean isDnaSequenceNormal(final String sequence)
     {
-        return NORMAL_DNA_REGEX.matcher(sequence).matches();
+        for(int i = 0; i < sequence.length(); ++i)
+        {
+            switch(sequence.charAt(i))
+            {
+                case 'A':
+                case 'T':
+                case 'G':
+                case 'C':
+                case 'a':
+                case 't':
+                case 'g':
+                case 'c':
+                    break;
+                default:
+                    return false;
+            }
+        }
+        return true;
+    }
+
+    // Requires that the sequence is nonempty, uppercase, and contains only ACGT.
+    public static double calcGcPercentFast(final String sequence)
+    {
+        int gcCount = 0;
+        for(int i = 0; i < sequence.length(); ++i)
+        {
+            char base = sequence.charAt(i);
+            if(base == 'G' || base == 'C')
+            {
+                ++gcCount;
+            }
+        }
+        return gcCount / (double) sequence.length();
     }
 
     // Calculates the approximate size in bases of the insertion or deletion represented by the sequence.
