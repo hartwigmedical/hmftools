@@ -106,6 +106,7 @@ public class OutputWriter implements AutoCloseable
     private enum SampleVariantInfoColumns
     {
         Variant,
+        TargetType,
         FilterReason
     }
 
@@ -451,7 +452,8 @@ public class OutputWriter implements AutoCloseable
     private static void writeSampleVariantInfoRow(final SampleVariants.VariantInfo variantInfo, DelimFileWriter.Row row)
     {
         row.set(SampleVariantInfoColumns.Variant, variantInfo.variant());
-        row.set(SampleVariantInfoColumns.FilterReason, variantInfo.filterReason() == null ? "PASS" : variantInfo.filterReason());
+        row.set(SampleVariantInfoColumns.TargetType, variantInfo.targetType().name());
+        row.set(SampleVariantInfoColumns.FilterReason, variantInfo.filterReason() == null ? "PASS" : variantInfo.filterReason().name());
     }
 
     @Override

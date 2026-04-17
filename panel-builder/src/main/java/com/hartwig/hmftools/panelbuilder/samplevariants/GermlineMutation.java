@@ -80,7 +80,11 @@ public class GermlineMutation implements Variant
             throw new RuntimeException(format("Failed to load germline variants from file: %s", vcfFile));
         }
 
-        List<GermlineMutation> variants = germlineVariants.stream().map(GermlineMutation::new).toList();
+        List<GermlineMutation> variants = germlineVariants.stream()
+                .map(GermlineMutation::new)
+                // We only support driver germline SNV/INDEL, so filter out nondrivers now.
+                .filter(GermlineMutation::isDriver)
+                .toList();
 
         LOGGER.debug("Loaded {} germline mutations", sampleId);
         variants.forEach(variant -> LOGGER.trace("GermlineMutation: {}", variant));
