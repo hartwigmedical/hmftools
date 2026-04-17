@@ -750,7 +750,7 @@ public class AlignmentTest
     public void testAlignmentRequery()
     {
         MockAligner aligner = new MockAligner();
-        AssemblyAligner assemblyAligner = new AssemblyAligner(TEST_CONFIG, aligner, new AlignmentWriter(TEST_CONFIG), null);
+        AssemblyAligner assemblyAligner = new AssemblyAligner(TEST_CONFIG, aligner, new AlignmentWriter(TEST_CONFIG), null, null);
 
         // need to ensure the full assembly sequence length matches the alignments returned
         AssemblyAlignment assemblyAlignment = AssemblyTestUtils.createAssemblyAlignment(

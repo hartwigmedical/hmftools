@@ -108,6 +108,12 @@ public class SagaMatcher
     }
 
     @Nullable
+    public MatchBySequence matchBySequence(final String sequence, List<Integer> junctionOffsets)
+    {
+        return matchBySequence(sequence.getBytes(), junctionOffsets);
+    }
+
+    @Nullable
     private MatchBySequence matchFromAlignments(final byte[] sequence, List<BwaMemAlignment> alignments,
             List<Integer> junctionOffsets)
     {

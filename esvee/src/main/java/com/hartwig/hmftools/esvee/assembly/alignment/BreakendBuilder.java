@@ -301,8 +301,7 @@ public class BreakendBuilder
             insertedBases = reverseComplementBases(insertedBases);
         }
 
-        int requiredSoftClipLength = isLineInsertion(insertedBases, orientation) ? LINE_MIN_EXTENSION_LENGTH :
-                (mAssemblyAlignment.sagaMatch() == null ? ALIGNMENT_MIN_SOFT_CLIP : ALIGNMENT_MIN_SOFT_CLIP_LOWER);
+        int requiredSoftClipLength = calcRequiredSoftClipLength(insertedBases, orientation);
 
         if(softClipLength < requiredSoftClipLength)
             return;
@@ -350,7 +349,7 @@ public class BreakendBuilder
 
         Orientation sglOrientation = segmentOrientation(alignment, !checkStart);
 
-        int requiredSoftClipLength = isLineInsertion(insertSequence, sglOrientation) ? LINE_MIN_EXTENSION_LENGTH : ALIGNMENT_MIN_SOFT_CLIP;
+        int requiredSoftClipLength = calcRequiredSoftClipLength(insertSequence, sglOrientation);
 
         if(softClipLength < requiredSoftClipLength)
             return false;
@@ -371,6 +370,22 @@ public class BreakendBuilder
             breakend.setAlternativeAlignments(altAlignments);
 
         return true;
+    }
+
+    private int calcRequiredSoftClipLength(final String insertSequence, final Orientation orientation)
+    {
+        if (isLineInsertion(insertSequence, orientation))
+        {
+            return LINE_MIN_EXTENSION_LENGTH;
+        }
+        else if (mAssemblyAlignment.sagaMatch() == null)
+        {
+            return ALIGNMENT_MIN_SOFT_CLIP;
+        }
+        else
+        {
+            return ALIGNMENT_MIN_SOFT_CLIP_LOWER;
+        }
     }
 
     private void checkAlignmentIndel(final AlignData alignment)

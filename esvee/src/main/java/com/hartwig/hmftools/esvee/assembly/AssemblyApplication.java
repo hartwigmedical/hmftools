@@ -67,6 +67,8 @@ import com.hartwig.hmftools.esvee.common.WriteType;
 import com.hartwig.hmftools.esvee.prep.FragmentSizeDistribution;
 import com.hartwig.hmftools.esvee.prep.types.DiscordantStats;
 
+import org.jetbrains.annotations.Nullable;
+
 public class AssemblyApplication
 {
     private final AssemblyConfig mConfig;
@@ -76,6 +78,9 @@ public class AssemblyApplication
     private final Map<String,List<JunctionGroup>> mJunctionGroupMap;
 
     private final List<BamReader> mBamReaders;
+
+    @Nullable
+    private SagaResource mSagaResource;
 
     private final List<PerformanceCounter> mPerfCounters;
 
@@ -91,6 +96,7 @@ public class AssemblyApplication
         mChrJunctionsMap = Maps.newHashMap();
         mJunctionGroupMap = Maps.newHashMap();
         mBamReaders = Lists.newArrayList();
+        mSagaResource = null;
 
         mResultsWriter = new ResultsWriter(mConfig);
 
@@ -115,7 +121,7 @@ public class AssemblyApplication
         try
         {
             // create junction groups from existing junctions
-            for(Map.Entry<String,List<Junction>> entry : mChrJunctionsMap.entrySet())
+            for(Map.Entry<String, List<Junction>> entry : mChrJunctionsMap.entrySet())
             {
                 mJunctionGroupMap.put(entry.getKey(), buildJunctionGroups(entry.getValue(), BAM_READ_JUNCTION_BUFFER));
             }
@@ -125,6 +131,8 @@ public class AssemblyApplication
             int taskCount = min(junctionCount, mConfig.Threads);
 
             loadBamFiles(taskCount);
+
+            loadSagaResource();
 
             runPrimaryAssembly();
 
@@ -251,10 +259,13 @@ public class AssemblyApplication
         }
     }
 
+    private void loadSagaResource()
+    {
+        mSagaResource = mConfig.SagaFastaFile == null ? null : new SagaResource(mConfig.SagaFastaFile);
+    }
+
     private void runPrimaryAssembly()
     {
-        SagaResource sagaResource = mConfig.SagaFastaFile == null ? null : new SagaResource(mConfig.SagaFastaFile);
-
         int taskCount = mBamReaders.size();
 
         List<JunctionGroup> junctionGroups = Lists.newArrayList();
@@ -266,7 +277,7 @@ public class AssemblyApplication
         List<Thread> threadTasks = new ArrayList<>();
 
         List<JunctionGroupAssembler> primaryAssemblyTasks = JunctionGroupAssembler.createThreadTasks(
-                junctionGroups, mBamReaders, sagaResource, mConfig, mResultsWriter, taskCount, threadTasks);
+                junctionGroups, mBamReaders, mSagaResource, mConfig, mResultsWriter, taskCount, threadTasks);
 
         if(!runThreadTasks(threadTasks))
             System.exit(1);
@@ -354,7 +365,7 @@ public class AssemblyApplication
 
     private void runAlignment(final List<AssemblyAlignment> assemblyAlignments)
     {
-        Alignment alignment = new Alignment(mConfig, new BwaAligner(mConfig.RefGenomeImageFile));
+        Alignment alignment = new Alignment(mConfig, new BwaAligner(mConfig.RefGenomeImageFile), mSagaResource);
         alignment.run(assemblyAlignments, mPerfCounters);
         alignment.close();
     }

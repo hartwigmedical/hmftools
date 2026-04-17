@@ -49,7 +49,7 @@ public class JunctionGroupAssembler extends ThreadTask
 {
     private final AssemblyConfig mConfig;
 
-    private final TaskQueue mJunctionGroups;
+    private final TaskQueue<JunctionGroup> mJunctionGroups;
 
     private JunctionGroup mCurrentJunctionGroup;
     private final BamReader mBamReader;
@@ -64,7 +64,7 @@ public class JunctionGroupAssembler extends ThreadTask
     private final SagaMatcher mSagaMatcher;
 
     public JunctionGroupAssembler(
-            final AssemblyConfig config, final BamReader bamReader, @Nullable final SagaResource sagaResource, final TaskQueue junctionGroups, final ResultsWriter resultsWriter)
+            final AssemblyConfig config, final BamReader bamReader, @Nullable final SagaResource sagaResource, final TaskQueue<JunctionGroup> junctionGroups, final ResultsWriter resultsWriter)
     {
         super("PrimaryAssembly");
         mConfig = config;
@@ -80,7 +80,7 @@ public class JunctionGroupAssembler extends ThreadTask
         mCurrentJunctionGroup = null;
         mReadStats = new ReadStats();
 
-        mSagaMatcher = sagaResource == null ?null : new SagaMatcher(sagaResource);
+        mSagaMatcher = sagaResource == null ? null : new SagaMatcher(sagaResource);
     }
 
     public static List<JunctionGroupAssembler> createThreadTasks(
@@ -93,7 +93,7 @@ public class JunctionGroupAssembler extends ThreadTask
         Queue<JunctionGroup> junctionGroupQueue = new ConcurrentLinkedQueue<>();
         junctionGroupQueue.addAll(junctionGroups);
 
-        TaskQueue taskQueue = new TaskQueue(junctionGroupQueue, "junction groups", 10000);
+        TaskQueue<JunctionGroup> taskQueue = new TaskQueue<>(junctionGroupQueue, "junction groups", 10000);
 
         int junctionGroupCount = junctionGroups.size();
 
@@ -121,7 +121,7 @@ public class JunctionGroupAssembler extends ThreadTask
         {
             try
             {
-                JunctionGroup junctionGroup = (JunctionGroup)mJunctionGroups.removeItem();
+                JunctionGroup junctionGroup = mJunctionGroups.removeItem();
 
                 mPerfCounter.start();
                 processJunctionGroup(junctionGroup);
@@ -346,7 +346,7 @@ public class JunctionGroupAssembler extends ThreadTask
         }
     }
 
-    private class ReadGroup
+    private static class ReadGroup
     {
         private final List<Read> mReads;
         private final int mExpectedCount;

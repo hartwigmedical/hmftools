@@ -34,8 +34,11 @@ import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.types.SupportType;
 import com.hartwig.hmftools.esvee.assembly.types.ThreadTask;
+import com.hartwig.hmftools.esvee.common.SagaMatcher;
+import com.hartwig.hmftools.esvee.common.SagaResource;
 
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
+import org.jetbrains.annotations.Nullable;
 
 public class AssemblyAligner extends ThreadTask
 {
@@ -43,12 +46,16 @@ public class AssemblyAligner extends ThreadTask
     private final Aligner mAligner;
     private final AlignmentWriter mWriter;
 
-    private final TaskQueue mAssemblyAlignments;
+    private final TaskQueue<AssemblyAlignment> mAssemblyAlignments;
     private int mRequeriedSuppCount;
     private int mRequeriedSoftClipCount;
 
+    @Nullable
+    private final SagaMatcher mSagaMatcher;
+
     public AssemblyAligner(
-            final AssemblyConfig config, final Aligner aligner, final AlignmentWriter writer, final TaskQueue assemblyAlignments)
+            final AssemblyConfig config, final Aligner aligner, final AlignmentWriter writer, @Nullable final SagaResource sagaResource,
+            final TaskQueue<AssemblyAlignment> assemblyAlignments)
     {
         super("AssemblerAlignment");
         mConfig = config;
@@ -57,6 +64,7 @@ public class AssemblyAligner extends ThreadTask
         mAssemblyAlignments = assemblyAlignments;
         mRequeriedSuppCount = 0;
         mRequeriedSoftClipCount = 0;
+        mSagaMatcher = sagaResource == null ? null : new SagaMatcher(sagaResource);
     }
 
     public int requeriedSuppCount()
@@ -77,7 +85,7 @@ public class AssemblyAligner extends ThreadTask
             {
                 mPerfCounter.start();
 
-                AssemblyAlignment assemblyAlignment = (AssemblyAlignment) mAssemblyAlignments.removeItem();
+                AssemblyAlignment assemblyAlignment = mAssemblyAlignments.removeItem();
 
                 processAssembly(assemblyAlignment);
 
@@ -324,6 +332,13 @@ public class AssemblyAligner extends ThreadTask
     {
         if(alignments.isEmpty())
             return;
+
+        if (mSagaMatcher != null)
+        {
+            SagaMatcher.MatchBySequence sagaMatch = mSagaMatcher.matchBySequence(assemblyAlignment.fullSequence(), assemblyAlignment.linkIndices());
+            SV_LOGGER.trace("assembly alignment({}) SAGA sequence match {}", assemblyAlignment, sagaMatch);
+            assemblyAlignment.setSagaMatch(sagaMatch);
+        }
 
         BreakendBuilder breakendBuilder = new BreakendBuilder(mConfig.RefGenome, assemblyAlignment);
         breakendBuilder.formBreakends(alignments);

@@ -6,7 +6,7 @@ import java.util.Queue;
 
 import com.google.common.annotations.VisibleForTesting;
 
-public class TaskQueue<E extends Object>
+public class TaskQueue<E>
 {
     private final Queue<E> mQueue;
     private final int mInitialCount;

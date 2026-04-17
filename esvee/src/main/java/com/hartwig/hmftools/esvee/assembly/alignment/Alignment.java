@@ -20,7 +20,10 @@ import com.hartwig.hmftools.esvee.assembly.output.AlignmentWriter;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.common.perf.TaskQueue;
+import com.hartwig.hmftools.esvee.common.SagaResource;
 import com.hartwig.hmftools.esvee.common.WriteType;
+
+import org.jetbrains.annotations.Nullable;
 
 public class Alignment
 {
@@ -28,12 +31,14 @@ public class Alignment
 
     private final Aligner mAligner;
     private final AlignmentWriter mWriter;
+    private final SagaResource mSagaResource;
 
-    public Alignment(final AssemblyConfig config, final Aligner aligner)
+    public Alignment(final AssemblyConfig config, final Aligner aligner, @Nullable final SagaResource sagaResource)
     {
         mConfig = config;
         mAligner = aligner;
         mWriter = new AlignmentWriter(mConfig);
+        mSagaResource = sagaResource;
     }
 
     public void close() { mWriter.close(); }
@@ -69,7 +74,7 @@ public class Alignment
         Queue<AssemblyAlignment> assemblyAlignmentQueue = new ConcurrentLinkedQueue<>();
         assemblyAlignments.forEach(x -> assemblyAlignmentQueue.add(x));
 
-        TaskQueue taskQueue = new TaskQueue(assemblyAlignmentQueue, "assembly alignments", 10000);
+        TaskQueue<AssemblyAlignment> taskQueue = new TaskQueue<>(assemblyAlignmentQueue, "assembly alignments", 10000);
 
         List<Thread> threadTasks = new ArrayList<>();
         List<AssemblyAligner> alignerTasks = Lists.newArrayList();
@@ -78,7 +83,7 @@ public class Alignment
 
         for(int i = 0; i < taskCount; ++i)
         {
-            AssemblyAligner alignerTask = new AssemblyAligner(mConfig, mAligner, mWriter, taskQueue);
+            AssemblyAligner alignerTask = new AssemblyAligner(mConfig, mAligner, mWriter, mSagaResource, taskQueue);
             alignerTasks.add(alignerTask);
             threadTasks.add(alignerTask);
         }
