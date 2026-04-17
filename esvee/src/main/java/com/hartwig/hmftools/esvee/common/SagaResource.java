@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -36,8 +37,10 @@ public class SagaResource
         mSearchableBreakends = assemblies.stream()
                 .flatMap(assembly ->
                         assembly.variant.breakends().map(breakend ->
-                                new IndexedBreakend(breakend, assembly.variant.id())))
+                                new IndexedBreakend(breakend.position(), assembly.variant.id())))
                 .collect(Collectors.groupingBy(IndexedBreakend::chromosome));
+        // Sort by position so they can be binary searched.
+        mSearchableBreakends.forEach((chr, breakends) -> breakends.sort(Comparator.comparing(IndexedBreakend::position)));
     }
 
     public String bwaIndexImagePath()
@@ -74,6 +77,7 @@ public class SagaResource
         return getAssemblyById(variantId);
     }
 
+    // Breakends grouped by chromosome, and sorted by position within each chromosome.
     public Map<String, List<IndexedBreakend>> searchableBreakends()
     {
         return mSearchableBreakends;
@@ -178,18 +182,18 @@ public class SagaResource
     }
 
     public record IndexedBreakend(
-            Breakend breakend,
+            BasePosition basePosition,
             String variantId
     )
     {
-        public BasePosition position()
-        {
-            return breakend.position();
-        }
-
         public String chromosome()
         {
-            return position().Chromosome;
+            return basePosition.Chromosome;
+        }
+
+        public int position()
+        {
+            return basePosition.Position;
         }
     }
 

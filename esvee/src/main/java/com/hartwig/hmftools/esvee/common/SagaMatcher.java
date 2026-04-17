@@ -2,6 +2,7 @@ package com.hartwig.hmftools.esvee.common;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.ceil;
+import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.cigarFromStr;
@@ -12,6 +13,8 @@ import static com.hartwig.hmftools.esvee.common.SvConstants.SAGA_ALIGN_SCORE_MIN
 import static com.hartwig.hmftools.esvee.common.SvConstants.SAGA_ALIGN_SCORE_MIN_RATIO;
 import static com.hartwig.hmftools.esvee.common.SvConstants.SAGA_LOCATION_MATCH_DISTANCE;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -20,6 +23,7 @@ import java.util.stream.Stream;
 import com.hartwig.hmftools.common.bam.SamRecordUtils;
 import com.hartwig.hmftools.common.bwa.BwaMemAlignParams;
 import com.hartwig.hmftools.common.bwa.BwaMemAligner;
+import com.hartwig.hmftools.common.region.BasePosition;
 
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
 import org.jetbrains.annotations.NotNull;
@@ -64,14 +68,30 @@ public class SagaMatcher
         int bestDistance = SAGA_LOCATION_MATCH_DISTANCE + 1;
         if(chrBreakends != null)
         {
-            // TODO: can binary search for better performance
-            for(SagaResource.IndexedBreakend breakend : chrBreakends)
+            SagaResource.IndexedBreakend target =
+                    new SagaResource.IndexedBreakend(new BasePosition(chrBreakends.get(0).chromosome(), position), "");
+            int index = Collections.binarySearch(chrBreakends, target, Comparator.comparingInt(SagaResource.IndexedBreakend::position));
+            if(index >= 0)
             {
-                int distance = abs(breakend.position().Position - position);
-                if(distance < bestDistance)
+                // Exact position found.
+                bestVariant = chrBreakends.get(index).variantId();
+                bestDistance = 0;
+            }
+            else
+            {
+                // Exact position not found, so need to look at adjacent indices.
+                index = -(index + 1);
+                int startIndex = max(index - 1, 0);
+                int endIndex = min(index + 1, chrBreakends.size() - 1);
+                for(int i = startIndex; i <= endIndex; i++)
                 {
-                    bestVariant = breakend.variantId();
-                    bestDistance = distance;
+                    SagaResource.IndexedBreakend breakend = chrBreakends.get(i);
+                    int distance = abs(breakend.position() - position);
+                    if(distance < bestDistance)
+                    {
+                        bestVariant = breakend.variantId();
+                        bestDistance = distance;
+                    }
                 }
             }
         }
