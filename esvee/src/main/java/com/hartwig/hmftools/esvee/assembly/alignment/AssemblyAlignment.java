@@ -33,6 +33,9 @@ import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.PhaseSet;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
+import com.hartwig.hmftools.esvee.common.SagaMatcher;
+
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
@@ -55,6 +58,9 @@ public class AssemblyAlignment
 
     // local map to ensure reads from same fragment get the same assembly coords
     private final Map<String,List<SupportRead>> mFragmentReadsMap;
+
+    @Nullable
+    private SagaMatcher.MatchBySequence mSagaMatch;
 
     public AssemblyAlignment(final JunctionAssembly assembly) { this(assembly, null); }
 
@@ -93,6 +99,8 @@ public class AssemblyAlignment
         }
 
         mFullSequenceLength = mFullSequence != null ? mFullSequence.length() : 0;
+
+        mSagaMatch = null;
     }
 
     public void setId(int id) { mId = id; }
@@ -573,5 +581,15 @@ public class AssemblyAlignment
     public static boolean isLocalIndelAssembly(final AssemblyAlignment assemblyAlignment)
     {
         return assemblyAlignment.assemblies().size() == 2 && assemblyAlignment.assemblies().stream().allMatch(x -> x.outcome() == LOCAL_INDEL);
+    }
+
+    public SagaMatcher.MatchBySequence sagaMatch()
+    {
+        return mSagaMatch;
+    }
+
+    public void setSagaMatch(final SagaMatcher.MatchBySequence match)
+    {
+        mSagaMatch = match;
     }
 }

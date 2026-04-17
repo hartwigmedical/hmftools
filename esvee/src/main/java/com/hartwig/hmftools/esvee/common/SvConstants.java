@@ -15,6 +15,8 @@ public final class SvConstants
 
     // commonly used thresholds
     public static final int MIN_VARIANT_LENGTH = 32;
+    // Used for variants matched to the SAGA resource.
+    public static final int MIN_VARIANT_LENGTH_LOWER = 24;
     public static final int MIN_MAP_QUALITY = 20;
 
     public static final int DEFAULT_MAX_CONCORDANT_FRAG_LENGTH = 1000; // default, otherwise set from BAM fragment sampling
@@ -60,5 +62,5 @@ public final class SvConstants
     public static final int SAGA_LOCATION_MATCH_DISTANCE = 50;
     public static final int SAGA_ALIGN_SCORE_MIN_BASELINE = 50;
     public static final double SAGA_ALIGN_SCORE_MIN_RATIO = 0.8;
-    public static final int SAGA_ALIGN_JUNCTION_OVERLAP_MIN = 24;
+    public static final int SAGA_ALIGN_JUNCTION_OVERLAP_MIN = MIN_VARIANT_LENGTH_LOWER;
 }

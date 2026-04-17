@@ -16,6 +16,7 @@ import java.util.StringJoiner;
 import com.hartwig.hmftools.esvee.assembly.AssemblyConfig;
 import com.hartwig.hmftools.esvee.assembly.alignment.AlignData;
 import com.hartwig.hmftools.esvee.assembly.alignment.AssemblyAlignment;
+import com.hartwig.hmftools.esvee.common.SagaMatcher;
 import com.hartwig.hmftools.esvee.common.WriteType;
 
 public class AlignmentWriter
@@ -58,6 +59,8 @@ public class AlignmentWriter
             sj.add("SequenceLength");
             sj.add("AssemblyCigar");
             sj.add("FullSequence");
+            sj.add("SagaMatchVariant");
+            sj.add("SagaMatchCigar");
 
             writer.write(sj.toString());
             writer.newLine();
@@ -86,6 +89,10 @@ public class AlignmentWriter
             sj.add(String.valueOf(assemblyAlignment.fullSequenceLength()));
             sj.add(assemblyAlignment.assemblyCigar());
             sj.add(assemblyAlignment.fullSequence());
+
+            SagaMatcher.MatchBySequence sagaMatch = assemblyAlignment.sagaMatch();
+            sj.add(sagaMatch == null ? "" : sagaMatch.variant().toString());
+            sj.add(sagaMatch == null ? "" : sagaMatch.cigar().toString());
 
             writer.write(sj.toString());
             writer.newLine();
