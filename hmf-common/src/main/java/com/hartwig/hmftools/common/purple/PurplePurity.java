@@ -197,7 +197,7 @@ public final class PurplePurity
                 .add(FORMAT.format(purplePurity.MsIndelsPerMb))
                 .add(String.valueOf(purplePurity.MsStatus))
                 .add(String.valueOf(purplePurity.Tml))
-                .add(String.valueOf(purplePurity.TmbStatus))
+                .add(String.valueOf(purplePurity.TmlStatus))
                 .add(FORMAT.format(purplePurity.TmbPerMb))
                 .add(String.valueOf(purplePurity.TmbStatus))
                 .add(String.valueOf(purplePurity.SvTumorMutationalBurden))
