@@ -212,13 +212,19 @@ public class JunctionGroupAssembler extends ThreadTask
             // extend assemblies with non-junction and discordant reads
             for(JunctionAssembly assembly : candidateAssemblies)
             {
-                if(mAlignmentChecker.matchesDecoy(assembly))
+                if(AlignmentChecker.shouldConsiderDecoys(assembly))
                 {
-                    SV_LOGGER.trace("assembly({}) matches decoy, excluding", assembly);
-                    ++mReadStats.DecoySequences;
+                    if(mAlignmentChecker.matchesDecoy(assembly))
+                    {
+                        SV_LOGGER.trace("assembly({}) matches decoy, excluding", assembly);
+                        ++mReadStats.DecoySequences;
 
-                    mDecoyAssemblies.add(assembly);
-                    continue;
+                        mDecoyAssemblies.add(assembly);
+                        continue;
+                    }
+                }
+                else {
+                    SV_LOGGER.trace("assembly({}) excluded from decoy check", assembly);
                 }
 
                 if(mAlignmentChecker.failsMappability(assembly))

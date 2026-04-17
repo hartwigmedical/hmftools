@@ -41,6 +41,12 @@ public class AlignmentChecker
         mDecoyAligner = config.DecoyGenome != null ? new BwaMemAligner(new BwaMemIndex(mConfig.DecoyGenome)) : null;
     }
 
+    public static boolean shouldConsiderDecoys(final JunctionAssembly assembly)
+    {
+        // If matching a known SAGA variant, don't try to filter by matching to decoys.
+        return assembly.sagaMatch() == null;
+    }
+
     public boolean matchesDecoy(final JunctionAssembly assembly)
     {
         if(mDecoyAligner == null)
