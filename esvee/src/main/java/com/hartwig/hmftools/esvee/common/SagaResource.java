@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.esvee.common;
 
+import static java.lang.String.format;
 import static java.util.function.UnaryOperator.identity;
 
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
@@ -13,6 +14,8 @@ import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.BasePosition;
+
+import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
@@ -93,6 +96,13 @@ public class SagaResource
             Orientation orientation = Orientation.fromByteStr(parts[2]);
             return new Breakend(new BasePosition(chromosome, position), orientation);
         }
+
+        @Override
+        @NotNull
+        public String toString()
+        {
+            return format("%s:%s", position, orientation);
+        }
     }
 
     public record Variant(
@@ -104,6 +114,13 @@ public class SagaResource
         public Stream<Breakend> breakends()
         {
             return Stream.of(breakend1, breakend2);
+        }
+
+        @Override
+        @NotNull
+        public String toString()
+        {
+            return format("%s %s-%s", id, breakend1, breakend2);
         }
     }
 

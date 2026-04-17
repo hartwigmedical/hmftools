@@ -15,7 +15,6 @@ import static com.hartwig.hmftools.esvee.common.SvConstants.SAGA_LOCATION_MATCH_
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.bam.SamRecordUtils;
@@ -24,6 +23,7 @@ import com.hartwig.hmftools.common.bwa.BwaMemAligner;
 
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.SAMFlag;
@@ -42,14 +42,23 @@ public class SagaMatcher
         mSagaDict = sagaResource.samDict();
     }
 
-    public SagaResource.Variant matchByLocation(final String chromosome, int position)
+    public record MatchByLocation(
+            SagaResource.Variant variant,
+            int distance
+    )
+    {
+    }
+
+    @Nullable
+    public MatchByLocation matchByLocation(final String chromosome, int position)
     {
         Map<String, List<SagaResource.IndexedBreakend>> breakends = mSagaResource.searchableBreakends();
         List<SagaResource.IndexedBreakend> chrBreakends = breakends.get(chromosome);
         return matchByLocationOnChromosome(position, chrBreakends);
     }
 
-    private SagaResource.Variant matchByLocationOnChromosome(int position, List<SagaResource.IndexedBreakend> chrBreakends)
+    @Nullable
+    private MatchByLocation matchByLocationOnChromosome(int position, List<SagaResource.IndexedBreakend> chrBreakends)
     {
         String bestVariant = null;
         int bestDistance = SAGA_LOCATION_MATCH_DISTANCE + 1;
@@ -73,8 +82,17 @@ public class SagaMatcher
         }
         else
         {
-            return mSagaResource.getVariantById(bestVariant);
+            SagaResource.Variant variant = mSagaResource.getVariantById(bestVariant);
+            return new MatchByLocation(variant, bestDistance);
         }
+    }
+
+    public record MatchBySequence(
+            SagaResource.Variant variant,
+            Cigar cigar,
+            int alignScore
+    )
+    {
     }
 
     // junctionOffsets are the indices just after the junction in sequence.
@@ -82,24 +100,29 @@ public class SagaMatcher
     // sequence = RRRJJJRRR
     // junctionOffset[0] = 3
     // junctionOffset[1] = 6
-    public SagaResource.Variant matchBySequence(final byte[] sequence, List<Integer> junctionOffsets)
+    @Nullable
+    public MatchBySequence matchBySequence(final byte[] sequence, List<Integer> junctionOffsets)
     {
         List<BwaMemAlignment> alignments = mAligner.alignSequence(sequence);
-        return matchFromAlignments(sequence, alignments, junctionOffsets).orElse(null);
+        return matchFromAlignments(sequence, alignments, junctionOffsets);
     }
 
-    private Optional<SagaResource.Variant> matchFromAlignments(final byte[] sequence, List<BwaMemAlignment> alignments,
+    @Nullable
+    private MatchBySequence matchFromAlignments(final byte[] sequence, List<BwaMemAlignment> alignments,
             List<Integer> junctionOffsets)
     {
         Stream<AlignmentCandidate> candidates = alignments.stream()
                 .map(alignment -> evaluateAlignmentCandidate(sequence, alignment, junctionOffsets))
                 .filter(Objects::nonNull)
                 .sorted();
-        return candidates.findFirst().map(AlignmentCandidate::sagaVariant);
+        return candidates.findFirst()
+                .map(candidate -> new MatchBySequence(candidate.variant(), candidate.cigar(), candidate.alignScore()))
+                .orElse(null);
     }
 
     private record AlignmentCandidate(
-            SagaResource.Variant sagaVariant,
+            SagaResource.Variant variant,
+            Cigar cigar,
             int alignScore,
             List<List<Integer>> esveeJunctionOverlaps,
             List<List<Integer>> sagaJunctionOverlaps)
@@ -162,7 +185,7 @@ public class SagaMatcher
             return null;
         }
 
-        return new AlignmentCandidate(sagaAssembly.variant(), alignment.getAlignerScore(), seqJunctionOverlaps, sagaJunctionOverlaps);
+        return new AlignmentCandidate(sagaAssembly.variant(), cigar, alignment.getAlignerScore(), seqJunctionOverlaps, sagaJunctionOverlaps);
     }
 
     private static int calcMinAlignScore(int alignLength1, int alignLength2)

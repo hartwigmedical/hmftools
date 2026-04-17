@@ -32,7 +32,7 @@ import com.hartwig.hmftools.esvee.assembly.ReadParseState;
 import com.hartwig.hmftools.esvee.assembly.RefBaseSeqBuilder;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.common.IndelCoords;
-import com.hartwig.hmftools.esvee.common.SagaResource;
+import com.hartwig.hmftools.esvee.common.SagaMatcher;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -73,7 +73,7 @@ public class JunctionAssembly
     private String mAssemblyAlignmentInfo;
 
     @Nullable
-    private SagaResource.Variant mSagaMatch;
+    private SagaMatcher.MatchBySequence mSagaMatch;
 
     // info only
     private final String mInitialReadId;
@@ -833,12 +833,13 @@ public class JunctionAssembly
     public int minAlignedPosition() { return mJunction.isForward() ? refBasePosition() : mJunction.Position; }
     public int maxAlignedPosition() { return mJunction.isReverse() ? refBasePosition() : mJunction.Position; }
 
-    public void setSagaMatch(final SagaResource.Variant sagaMatch)
+    public void setSagaMatch(final SagaMatcher.MatchBySequence sagaMatch)
     {
         mSagaMatch = sagaMatch;
     }
 
-    public SagaResource.Variant sagaMatch()
+    @Nullable
+    public SagaMatcher.MatchBySequence sagaMatch()
     {
         return mSagaMatch;
     }

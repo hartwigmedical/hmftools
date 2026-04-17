@@ -22,7 +22,7 @@ import com.hartwig.hmftools.esvee.assembly.AssemblyConfig;
 import com.hartwig.hmftools.esvee.assembly.AssemblyUtils;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyStats;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
-import com.hartwig.hmftools.esvee.common.SagaResource;
+import com.hartwig.hmftools.esvee.common.SagaMatcher;
 import com.hartwig.hmftools.esvee.common.WriteType;
 
 public class AssemblyWriter
@@ -71,7 +71,8 @@ public class AssemblyWriter
 
             sj.add("AssemblyInfo");
 
-            sj.add("SAGAMatch");
+            sj.add("SagaMatchVariant");
+            sj.add("SagaMatchCigar");
 
             // extra detailed fields
             if(mConfig.AssemblyDetailedTsv)
@@ -153,8 +154,9 @@ public class AssemblyWriter
 
             sj.add(assembly.assemblyAlignmentInfo());
 
-            SagaResource.Variant sagaMatch = assembly.sagaMatch();
-            sj.add(sagaMatch == null ? "" : sagaMatch.id());
+            SagaMatcher.MatchBySequence sagaMatch = assembly.sagaMatch();
+            sj.add(sagaMatch == null ? "" : sagaMatch.variant().toString());
+            sj.add(sagaMatch == null ? "" : sagaMatch.cigar().toString());
 
             if(mConfig.AssemblyDetailedTsv)
             {

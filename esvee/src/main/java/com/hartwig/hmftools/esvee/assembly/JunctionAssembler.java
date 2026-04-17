@@ -75,7 +75,7 @@ public class JunctionAssembler
         if (mSagaMatcher != null)
         {
             // TODO: actually match by location at prep stage and conditionally relax filters
-            SagaResource.Variant sagaLocationMatch = mSagaMatcher.matchByLocation(mJunction.Chromosome, mJunction.Position);
+            SagaMatcher.MatchByLocation sagaLocationMatch = mSagaMatcher.matchByLocation(mJunction.Chromosome, mJunction.Position);
             SV_LOGGER.trace("Junction {}:{} SAGA location match {}", mJunction.Chromosome, mJunction.Position, sagaLocationMatch);
         }
 
@@ -440,7 +440,7 @@ public class JunctionAssembler
         else
         {
             int junctionOffset = mJunction.isForward() ? assembly.refBaseLength() : assembly.baseLength() - assembly.refBaseLength();
-            SagaResource.Variant sagaSeqMatch = mSagaMatcher.matchBySequence(assembly.bases(), List.of(junctionOffset));
+            SagaMatcher.MatchBySequence sagaSeqMatch = mSagaMatcher.matchBySequence(assembly.bases(), List.of(junctionOffset));
             SV_LOGGER.trace("Junction assembly {}:{} SAGA sequence match {}", mJunction.Chromosome, mJunction.Position, sagaSeqMatch);
             assembly.setSagaMatch(sagaSeqMatch);
             return sagaSeqMatch != null;
