@@ -5,8 +5,6 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 import static com.hartwig.hmftools.panelbuilder.SequenceUtils.buildSequence;
-import static com.hartwig.hmftools.panelbuilder.SequenceUtils.calcGcPercentFast;
-import static com.hartwig.hmftools.panelbuilder.SequenceUtils.isDnaSequenceNormal;
 
 import java.text.DecimalFormat;
 import java.util.function.Function;
@@ -19,23 +17,20 @@ import org.jetbrains.annotations.NotNull;
 // Common candidate probe filtering.
 public class ProbeEvaluator
 {
-    private final Function<Probe, Probe> mAnnotateSequence;
-    private final Function<Probe, Probe> mAnnotateGcContent;
+    private final Function<Probe, SequenceData> mGetSequence;
     private final Function<Stream<Probe>, Stream<Probe>> mAnnotateQualityScore;
 
-    protected ProbeEvaluator(final Function<Probe, Probe> annotateSequence, final Function<Probe, Probe> annotateGcContent,
+    protected ProbeEvaluator(final Function<Probe, SequenceData> getSequence,
             final Function<Stream<Probe>, Stream<Probe>> annotateQualityScore)
     {
-        mAnnotateSequence = annotateSequence;
-        mAnnotateGcContent = annotateGcContent;
+        mGetSequence = getSequence;
         mAnnotateQualityScore = annotateQualityScore;
     }
 
     public ProbeEvaluator(final RefGenomeInterface refGenome, final ProbeQualityScorer probeQualityScorer)
     {
         this(
-                probe -> probe.withSequence(buildSequence(refGenome, probe.definition())),
-                probe -> probe.withGcContent(calcGcPercentFast(requireNonNull(probe.sequence()))),
+                probe -> buildSequence(refGenome, probe.definition()),
                 probeQualityScorer::computeQualityScores
         );
     }
@@ -62,38 +57,32 @@ public class ProbeEvaluator
                 throw new IllegalArgumentException("Probe must not already be evaluated");
             }
         });
-        probes = probes
-                .map(this::annotateAndEvaluateSequence)
-                .map(this::annotateAndEvaluateGcContent);
+        probes = probes.map(this::annotateAndEvaluateSequenceAndGc);
         probes = mAnnotateQualityScore.apply(probes)
                 .map(ProbeEvaluator::evaluateQualityScore)
                 .map(ProbeEvaluator::acceptIfNotRejected);
         return probes;
     }
 
-    private Probe annotateAndEvaluateSequence(Probe probe)
+    private Probe annotateAndEvaluateSequenceAndGc(Probe probe)
     {
-        probe = mAnnotateSequence.apply(probe);
-        String sequence = requireNonNull(probe.sequence());
-        if(!isDnaSequenceNormal(sequence))
+        SequenceData sequenceData = mGetSequence.apply(probe);
+
+        String sequence = sequenceData.baseString();
+        probe = probe.withSequence(sequence);
+        if(!sequenceData.isNormal())
         {
             return probe.withEvaluationResult(EvaluationResult.reject("sequence"));
         }
-        return probe;
-    }
 
-    private Probe annotateAndEvaluateGcContent(Probe probe)
-    {
-        if(!probe.rejected())
+        double gcContent = sequenceData.gcContent();
+        probe = probe.withGcContent(gcContent);
+        Criteria criteria = requireNonNull(probe.evaluationCriteria());
+        if(!(abs(gcContent - criteria.gcContentTarget()) <= criteria.gcContentTolerance()))
         {
-            probe = mAnnotateGcContent.apply(probe);
-            Criteria criteria = requireNonNull(probe.evaluationCriteria());
-            double gcContent = requireNonNull(probe.gcContent());
-            if(!(abs(gcContent - criteria.gcContentTarget()) <= criteria.gcContentTolerance()))
-            {
-                return probe.withEvaluationResult(EvaluationResult.reject("GC"));
-            }
+            return probe.withEvaluationResult(EvaluationResult.reject("GC"));
         }
+
         return probe;
     }
 

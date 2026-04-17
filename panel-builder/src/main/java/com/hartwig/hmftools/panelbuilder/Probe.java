@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.panelbuilder;
 
+import static java.lang.String.format;
+
 import org.jetbrains.annotations.Nullable;
 
 public record Probe(
@@ -35,7 +37,7 @@ public record Probe(
         }
         if(gcContent != null && !(gcContent >= 0 && gcContent <= 1))
         {
-            throw new IllegalArgumentException("gcContent should be between 0 and 1");
+            throw new IllegalArgumentException(format("gcContent should be between 0 and 1 but got %s", gcContent));
         }
         if(qualityScore != null && !(qualityScore >= 0 && qualityScore <= 1))
         {

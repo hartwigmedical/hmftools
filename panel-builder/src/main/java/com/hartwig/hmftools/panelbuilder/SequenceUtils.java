@@ -3,12 +3,12 @@ package com.hartwig.hmftools.panelbuilder;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
+import static java.lang.System.arraycopy;
 
-import static com.hartwig.hmftools.common.codon.Nucleotides.reverseComplementBases;
+import static com.hartwig.hmftools.common.codon.Nucleotides.reverseComplementBasesInPlace;
 import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionEndingAt;
 import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionStartingAt;
 
-import java.util.Locale;
 import java.util.OptionalInt;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
@@ -17,30 +17,124 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 public class SequenceUtils
 {
-    public static String buildSequence(final RefGenomeInterface refGenome, final SequenceDefinition definition)
+    public static SequenceData buildSequence(final RefGenomeInterface refGenome, final SequenceDefinition definition)
     {
+        byte[] sequence = new byte[definition.baseLength()];
+        int sequenceIndex = 0;
+        boolean isNormal = true;
+        int gcCount = 0;
+
         ChrBaseRegion startRegion = definition.startRegion();
-        String start = startRegion == null ? "" : getSequence(refGenome, startRegion);
-        if(definition.startOrientation() == Orientation.REVERSE)
+        if(startRegion != null)
         {
-            start = reverseComplementBases(start);
+            SequenceData start = getSequence(refGenome, startRegion);
+            int startLength = start.bases().length;
+            arraycopy(start.bases(), 0, sequence, sequenceIndex, startLength);
+            if(definition.startOrientation() == Orientation.REVERSE)
+            {
+                reverseComplementBasesInPlace(sequence, sequenceIndex, startLength);
+            }
+            isNormal &= start.isNormal();
+            gcCount += start.gcCount();
+            sequenceIndex += startLength;
         }
-        String end = definition.endRegion() == null ? "" : getSequence(refGenome, definition.endRegion());
-        if(definition.endOrientation() == Orientation.REVERSE)
+
         {
-            end = reverseComplementBases(end);
+            SequenceData insert = validateAndNormaliseSequence(definition.insertSequence());
+            int insertLength = insert.bases().length;
+            arraycopy(insert.bases(), 0, sequence, sequenceIndex, insertLength);
+            sequenceIndex += insertLength;
+            isNormal &= insert.isNormal();
+            gcCount += insert.gcCount();
         }
-        return start + definition.insertSequence() + end;
+
+        ChrBaseRegion endRegion = definition.endRegion();
+        if(endRegion != null)
+        {
+            SequenceData end = getSequence(refGenome, endRegion);
+            int endLength = end.bases().length;
+            arraycopy(end.bases(), 0, sequence, sequenceIndex, endLength);
+            if(definition.endOrientation() == Orientation.REVERSE)
+            {
+                reverseComplementBasesInPlace(sequence, sequenceIndex, endLength);
+            }
+            isNormal &= end.isNormal();
+            gcCount += end.gcCount();
+            //            sequenceIndex += endLength;
+        }
+
+        return new SequenceData(sequence, isNormal, gcCount);
     }
 
-    private static String getSequence(final RefGenomeInterface refGenome, final ChrBaseRegion region)
+    private static SequenceData getSequence(final RefGenomeInterface refGenome, final ChrBaseRegion region)
     {
-        String sequence = refGenome.getBaseString(region.chromosome(), region.start(), region.end());
-        if(sequence == null || sequence.length() != region.baseLength())
+        byte[] sequence = refGenome.getBases(region.chromosome(), region.start(), region.end());
+        if(sequence == null || sequence.length != region.baseLength())
         {
             throw new IllegalArgumentException("Attempt to create probe in unmapped region: " + region);
         }
-        return sequence.toUpperCase(Locale.ENGLISH);
+        return validateAndNormaliseSequence(sequence);
+    }
+
+    public static SequenceData validateAndNormaliseSequence(final byte[] sequence)
+    {
+        // Combine these into one iteration to increase performance:
+        //   - check if the sequence contains normal bases
+        //   - convert to uppercase
+        //   - count GC content
+
+        byte[] normalised = new byte[sequence.length];
+        boolean isNormal = true;
+        int gcCount = 0;
+        for(int i = 0; i < sequence.length; ++i)
+        {
+            byte b = sequence[i];
+            byte n;
+            switch(b)
+            {
+                case 'A':
+                case 'T':
+                    n = b;
+                    break;
+                case 'G':
+                case 'C':
+                    n = b;
+                    ++gcCount;
+                    break;
+                case 'a':
+                    n = 'A';
+                    break;
+                case 't':
+                    n = 'T';
+                    break;
+                case 'g':
+                    n = 'G';
+                    ++gcCount;
+                    break;
+                case 'c':
+                    n = 'C';
+                    ++gcCount;
+                    break;
+                case 'N':
+                    n = b;
+                    isNormal = false;
+                    break;
+                case 'n':
+                    n = 'N';
+                    isNormal = false;
+                    break;
+                default:
+                    n = (byte) Character.toUpperCase(b);
+                    isNormal = false;
+            }
+            normalised[i] = n;
+        }
+        return new SequenceData(normalised, isNormal, gcCount);
+    }
+
+    public static SequenceData validateAndNormaliseSequence(final String sequence)
+    {
+        return validateAndNormaliseSequence(sequence.getBytes());
     }
 
     public static boolean isDnaSequenceNormal(final String sequence)
@@ -63,21 +157,6 @@ public class SequenceUtils
             }
         }
         return true;
-    }
-
-    // Requires that the sequence is nonempty, uppercase, and contains only ACGT.
-    public static double calcGcPercentFast(final String sequence)
-    {
-        int gcCount = 0;
-        for(int i = 0; i < sequence.length(); ++i)
-        {
-            char base = sequence.charAt(i);
-            if(base == 'G' || base == 'C')
-            {
-                ++gcCount;
-            }
-        }
-        return gcCount / (double) sequence.length();
     }
 
     // Calculates the approximate size in bases of the insertion or deletion represented by the sequence.
