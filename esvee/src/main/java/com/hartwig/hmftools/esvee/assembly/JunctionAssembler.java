@@ -76,7 +76,7 @@ public class JunctionAssembler
         {
             // TODO: actually match by location at prep stage and conditionally relax filters
             SagaMatcher.MatchByLocation sagaLocationMatch = mSagaMatcher.matchByLocation(mJunction.Chromosome, mJunction.Position);
-            SV_LOGGER.trace("Junction {}:{} SAGA location match {}", mJunction.Chromosome, mJunction.Position, sagaLocationMatch);
+            SV_LOGGER.trace("junction({}) SAGA location match {}", mJunction, sagaLocationMatch);
         }
 
         // find prominent reads to establish the extension sequence, taking any read meeting min soft-clip lengths
@@ -131,7 +131,7 @@ public class JunctionAssembler
 
         if (usedRelaxedFilters)
         {
-            SV_LOGGER.trace("Junction assembly {}:{} passed relaxed filters", mJunction.Chromosome, mJunction.Position);
+            SV_LOGGER.trace("junction({}) passed relaxed filters", mJunction);
         }
 
         List<Read> duplicateLongExtensionReads = isSbx() ? findSbxPossibleDuplicates(mJunction, extensionReads) : Collections.emptyList();
@@ -441,7 +441,7 @@ public class JunctionAssembler
         {
             int junctionOffset = mJunction.isForward() ? assembly.refBaseLength() : assembly.baseLength() - assembly.refBaseLength();
             SagaMatcher.MatchBySequence sagaSeqMatch = mSagaMatcher.matchBySequence(assembly.bases(), List.of(junctionOffset));
-            SV_LOGGER.trace("Junction assembly {}:{} SAGA sequence match {}", mJunction.Chromosome, mJunction.Position, sagaSeqMatch);
+            SV_LOGGER.trace("assembly({}) SAGA sequence match {}", assembly, sagaSeqMatch);
             assembly.setSagaMatch(sagaSeqMatch);
             return sagaSeqMatch != null;
         }
