@@ -60,6 +60,7 @@ public class SampleVariants
 
     public record VariantInfo(
             String variant,
+            TargetMetadata.Type targetType,
             @Nullable String filterReason
     )
     {
@@ -147,7 +148,7 @@ public class SampleVariants
         LOGGER.debug("Selecting up to {} driver variants", maxCount);
 
         List<Variant> candidateVariants = variants.stream()
-                .filter(variant -> !variantFilters.containsKey(variant))
+                .filter(variant -> !hasBeenConsidered(variant, variantFilters))
                 .filter(Variant::isDriver)
                 .toList();
 
@@ -184,7 +185,7 @@ public class SampleVariants
         // For nondrivers, we are only interested in somatic SNV/INDEL.
         // Also, some variants are prioritised over others.
         List<SomaticMutation> candidateVariants = variants.stream()
-                .filter(variant -> !variantFilters.containsKey(variant))
+                .filter(variant -> !hasBeenConsidered(variant, variantFilters))
                 .filter(variant -> variant instanceof SomaticMutation)
                 .filter(variant -> !variant.isDriver())
                 .map(variant -> (SomaticMutation) variant)
@@ -207,6 +208,11 @@ public class SampleVariants
             );
         }
         return selectedVariants;
+    }
+
+    private static boolean hasBeenConsidered(final Variant variant, final Map<Variant, EvaluationResult> variantFilters)
+    {
+        return variantFilters.containsKey(variant);
     }
 
     private static EvaluationResult commonFilters(final Variant variant)
@@ -360,9 +366,10 @@ public class SampleVariants
                 .map(variant ->
                 {
                     EvaluationResult filterResult = variantFilters.get(variant);
+                    // TODO: wrong, could be because that variant type is not considerable due to its type (e.g. germline nondriver)
                     // If we didn't even attempt to filter the variant, it must have been because we encountered the probe limit first.
                     String filterReason = filterResult == null ? "max probe count" : filterResult.rejectionReason();
-                    return new VariantInfo(variant.toString(), filterReason);
+                    return new VariantInfo(variant.toString(), variant.targetType(), filterReason);
                 })
                 .toList();
     }
