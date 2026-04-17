@@ -79,7 +79,8 @@ public class OutputWriter implements AutoCloseable
         ProbeQualityScore,
         ProbeGCContent,
         TargetType,
-        TargetExtra
+        TargetExtra,
+        RejectionReason,
     }
 
     private enum CandidateProbesColumns
@@ -308,13 +309,14 @@ public class OutputWriter implements AutoCloseable
 
     private static void writeRejectedFeaturesTsvRow(final RejectedFeature rejectedFeature, DelimFileWriter.Row row)
     {
+        Probe probe = rejectedFeature.probe();
         row.setOrNull(RejectedFeaturesColumns.Region, rejectedFeature.region() == null ? null : rejectedFeature.region().toString());
-        row.setOrNull(RejectedFeaturesColumns.ProbeSequence, rejectedFeature.probe() == null ? null : rejectedFeature.probe().sequence());
-        row.setOrNull(RejectedFeaturesColumns.ProbeQualityScore,
-                rejectedFeature.probe() == null ? null : rejectedFeature.probe().qualityScore());
-        row.setOrNull(RejectedFeaturesColumns.ProbeGCContent, rejectedFeature.probe() == null ? null : rejectedFeature.probe().gcContent());
+        row.setOrNull(RejectedFeaturesColumns.ProbeSequence, probe == null ? null : probe.sequence());
+        row.setOrNull(RejectedFeaturesColumns.ProbeQualityScore, probe == null ? null : probe.qualityScore());
+        row.setOrNull(RejectedFeaturesColumns.ProbeGCContent, probe == null ? null : probe.gcContent());
         row.set(RejectedFeaturesColumns.TargetType, rejectedFeature.metadata().type().name());
         row.set(RejectedFeaturesColumns.TargetExtra, rejectedFeature.metadata().extraInfo());
+        row.set(RejectedFeaturesColumns.RejectionReason, probe == null ? null : requireNonNull(probe.evaluationResult()).rejectionInfo());
     }
 
     private void writeRejectedFeaturesBedRow(final RejectedFeature rejectedFeature) throws IOException
