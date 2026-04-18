@@ -30,7 +30,8 @@ public record SequenceDefinition(
     {
         // Simple single region.
         boolean single =
-                startRegion != null && startOrientation == Orientation.FORWARD && insertSequence.isEmpty() && endRegion == null && endOrientation == null;
+                startRegion != null && startOrientation == Orientation.FORWARD && insertSequence.isEmpty() && endRegion == null
+                        && endOrientation == null;
         // SNV/INDEL/SV. start (+ insert) + end
         boolean genericVariant =
                 startRegion != null && startOrientation != null && endRegion != null && endOrientation != null

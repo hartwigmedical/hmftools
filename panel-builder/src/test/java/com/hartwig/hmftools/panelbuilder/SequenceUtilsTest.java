@@ -22,6 +22,8 @@ import org.junit.Test;
 
 public class SequenceUtilsTest
 {
+    private static final double EPSILON = 1e-6;
+
     private final MockRefGenome mRefGenome;
 
     public SequenceUtilsTest()
@@ -41,13 +43,29 @@ public class SequenceUtilsTest
     public void testBuildSequenceSingleRegion()
     {
         SequenceDefinition def = SequenceDefinition.singleRegion(new ChrBaseRegion("1", 1, 10));
-        String actual = buildSequence(mRefGenome, def);
-        String expected = "AAAAAAAAAA";
-        assertEquals(expected, actual);
+        SequenceData actual = buildSequence(mRefGenome, def);
+        assertEquals("AAAAAAAAAA", actual.baseString());
+        assertTrue(actual.isNormal());
+        assertEquals(0, actual.gcContent(), 0);
     }
 
     @Test
-    public void testBuildSequenceVariant()
+    public void testBuildSequenceVariant1()
+    {
+        SequenceDefinition def = new SequenceDefinition(
+                new ChrBaseRegion("1", 1, 10),
+                Orientation.REVERSE,
+                "GCGCGCGCGC",
+                new ChrBaseRegion("2", 1, 10),
+                Orientation.FORWARD);
+        SequenceData actual = buildSequence(mRefGenome, def);
+        assertEquals("TTTTTTTTTTGCGCGCGCGCGGGGGAAAAA", actual.baseString());
+        assertTrue(actual.isNormal());
+        assertEquals(0.5, actual.gcContent(), EPSILON);
+    }
+
+    @Test
+    public void testBuildSequenceVariant2()
     {
         SequenceDefinition def = new SequenceDefinition(
                 new ChrBaseRegion("1", 1, 10),
@@ -55,9 +73,10 @@ public class SequenceUtilsTest
                 "GCGCGCGCGC",
                 new ChrBaseRegion("2", 1, 10),
                 Orientation.REVERSE);
-        String actual = buildSequence(mRefGenome, def);
-        String expected = "AAAAAAAAAAGCGCGCGCGCTTTTTCCCCC";
-        assertEquals(expected, actual);
+        SequenceData actual = buildSequence(mRefGenome, def);
+        assertEquals("AAAAAAAAAAGCGCGCGCGCTTTTTCCCCC", actual.baseString());
+        assertTrue(actual.isNormal());
+        assertEquals(0.5, actual.gcContent(), EPSILON);
     }
 
     @Test
@@ -101,6 +120,19 @@ public class SequenceUtilsTest
                 Orientation.FORWARD,
                 "",
                 new ChrBaseRegion("1", 102, 107),
+                Orientation.FORWARD);
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testBuildIndelProbeIns()
+    {
+        SequenceDefinition actual = buildIndelProbe("1", 101, "A", "ATGT", 11);
+        SequenceDefinition expected = new SequenceDefinition(
+                new ChrBaseRegion("1", 98, 100),
+                Orientation.FORWARD,
+                "ATGT",
+                new ChrBaseRegion("1", 102, 105),
                 Orientation.FORWARD);
         assertEquals(expected, actual);
     }

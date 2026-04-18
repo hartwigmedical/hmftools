@@ -87,7 +87,7 @@
         <orange.version>5.0</orange.version>
         <orange-datamodel.version>local-SNAPSHOT</orange-datamodel.version>
         <paddle.version>1.1</paddle.version>
-        <panel-builder.version>1.0</panel-builder.version>
+        <panel-builder.version>1.1</panel-builder.version>
         <patient-db.version>3.0</patient-db.version>
         <pave.version>1.9</pave.version>
         <peach.version>2.0</peach.version>

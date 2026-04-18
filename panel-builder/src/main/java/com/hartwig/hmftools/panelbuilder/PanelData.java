@@ -18,12 +18,16 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 // It's a mutable data structure because it's also used during probe generation to check which regions are already covered.
 public class PanelData implements PanelBuffer
 {
-    private ProbeGenerationResult mData;
+    private final List<Probe> mProbes;
+    private final List<TargetRegion> mCandidateTargetRegions;
+    private final List<RejectedFeature> mRejectedFeatures;
     private final Map<String, List<ChrBaseRegion>> mCoveredRegionsCache = new HashMap<>();
 
     public PanelData()
     {
-        mData = new ProbeGenerationResult();
+        mProbes = new ArrayList<>();
+        mCandidateTargetRegions = new ArrayList<>();
+        mRejectedFeatures = new ArrayList<>();
     }
 
     @Override
@@ -49,7 +53,10 @@ public class PanelData implements PanelBuffer
             }
         }
 
-        mData = mData.add(result);
+        mProbes.addAll(result.probes());
+        mCandidateTargetRegions.addAll(result.candidateTargetRegions());
+        mRejectedFeatures.addAll(result.rejectedFeatures());
+
         for(Probe probe : result.probes())
         {
             for(ChrBaseRegion region : probe.definition().regions())
@@ -67,7 +74,7 @@ public class PanelData implements PanelBuffer
 
     public List<Probe> probes()
     {
-        return mData.probes();
+        return mProbes;
     }
 
     // All the target regions, regardless of how they were covered by probes.
@@ -75,7 +82,7 @@ public class PanelData implements PanelBuffer
     // source type.
     public List<TargetRegion> candidateTargetRegions()
     {
-        return mData.candidateTargetRegions();
+        return mCandidateTargetRegions;
     }
 
     // The target regions which the probes aim to hit. This is the intersection of the probe and its target region.
@@ -83,7 +90,7 @@ public class PanelData implements PanelBuffer
     {
         // Merge adjacent/overlapping target regions which have the same metadata.
         // If multiple target regions with different metadata overlap, there will be overlapping output regions.
-        return mData.probes().stream()
+        return mProbes.stream()
                 .collect(Collectors.groupingBy(Probe::metadata)).entrySet().stream()
                 .flatMap(entry ->
                         mergeOverlapAndAdjacentRegions(entry.getValue().stream()
@@ -95,6 +102,6 @@ public class PanelData implements PanelBuffer
 
     public List<RejectedFeature> rejectedFeatures()
     {
-        return mData.rejectedFeatures();
+        return mRejectedFeatures;
     }
 }

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.panelbuilder;
 
+import static java.lang.String.format;
+
 import org.jetbrains.annotations.Nullable;
 
 public record Probe(
@@ -12,7 +14,7 @@ public record Probe(
         // null if the probe hasn't been evaluated yet.
         @Nullable ProbeEvaluator.Criteria evaluationCriteria,
         // null if the probe hasn't been evaluated yet.
-        @Nullable EvaluationResult evaluationResult,
+        @Nullable EvaluationResult<String> evaluationResult,
         // null if the probe hasn't been evaluated yet or the probe was rejected by another criteria.
         @Nullable Double qualityScore,
         // null if the probe hasn't been evaluated yet or the probe was rejected by another criteria.
@@ -35,7 +37,7 @@ public record Probe(
         }
         if(gcContent != null && !(gcContent >= 0 && gcContent <= 1))
         {
-            throw new IllegalArgumentException("gcContent should be between 0 and 1");
+            throw new IllegalArgumentException(format("gcContent should be between 0 and 1 but got %s", gcContent));
         }
         if(qualityScore != null && !(qualityScore >= 0 && qualityScore <= 1))
         {
@@ -81,7 +83,7 @@ public record Probe(
         return new Probe(definition, sequence, targetedRange, metadata, value, evaluationResult, qualityScore, gcContent);
     }
 
-    public Probe withEvaluationResult(final EvaluationResult value)
+    public Probe withEvaluationResult(final EvaluationResult<String> value)
     {
         if(evaluationResult != null)
         {
