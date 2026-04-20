@@ -115,10 +115,8 @@ Typical arguments running in paired tumor-normal mode:
 
 ```
 java -Xmx32G -jar sage.jar \
-    -tumor COLO829v003T \
-    -tumor_bam /sample_data/COLO829v003T.bam \
-    -reference COLO829v003R -reference_bam /sample_data/COLO829v003R.bam \
     -tumor COLO829v003T -tumor_bam /sample_data/COLO829v003T.bam \
+    -reference COLO829v003R -reference_bam /sample_data/COLO829v003R.bam \
     -ref_genome_version 38 \
     -ref_genome /ref_data/refGenome.38.fasta \
     -hotspots /ref_data/KnownHotspots.38.vcf.gz \
