@@ -15,12 +15,11 @@ import org.jetbrains.annotations.Nullable;
 @SuppressWarnings("unused")
 public class ConversionUtil
 {
-    public static void orangeJsonToFindingsJson(Path findingsJson, Path orangeJson, @Nullable Path clinicalTranscriptsTsv,
-            @Nullable Path driverGeneTsv) throws IOException
+    public static void orangeJsonToFindingsJson(Path findingsJson, Path orangeJson, @Nullable Path clinicalTranscriptsTsv) throws IOException
     {
         FindingRecord
                 findingRecord =
-                FindingRecordFactory.fromOrangeJsonWithTranscriptFile(orangeJson, clinicalTranscriptsTsv, driverGeneTsv);
+                FindingRecordFactory.fromOrangeJsonWithTranscriptFile(orangeJson, clinicalTranscriptsTsv);
         findingRecord =
                 FindingRecordConverterUtil.listConverter(List.of(LowPurityConverter::convert, PTOConverter::convert)).apply(findingRecord);
         new FindingsJson().write(findingRecord, findingsJson);
