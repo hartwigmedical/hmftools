@@ -548,7 +548,7 @@ The variants are into ‘phase regions’ (ie regions without any read overlap, 
 - **Filter sets with identical PASS variants** - Retain only sets with maximum read count support. 
 - **Filter sets with subsets of PASS variants** - Filter any subsets of PASS variants with <25% read support of a superset of PASS variants
  
-Each variant is annotated on the basis of this algorithm with one or more LPS.  The support is also annotated for each phase set as LPS_RC.  Downstream analyses such as PAVE and Neo which utilise LPS may use either the most supported LPS or consider all LPS.
+Each variant is annotated on the basis of this algorithm with one or more LPS.  The support is also annotated for each phase set as LPS_RC.  Downstream analyses such as Pave and Neo which utilise LPS may use either the most supported LPS or consider all LPS.
 
 Note that phasing is only done on the first tumor sample. Any filtered variant that shares a local phase set with a PASS variant after all filters are applied is retained in the file and not hard filtered to allow phased neo-epitopes and functional impact to be assessed downstream.
 
@@ -580,7 +580,7 @@ Gather a list of high quality passing and filtered variants due to germline evid
    * If there is germline evidence, the germline average base qual (ABQ) must be >= 30
    * Must have MQF >= 25
    * Must not have `NEARBY_INDEL` annotation
-   * Must not have any associated gnomAD entry or would be PON filtered with our tiered PON filtering rules in PAVE
+   * Must not have any associated gnomAD entry or would be PON filtered with our tiered PON filtering rules in Pave
    * Must have p-score of Binom(n=GL_DP, k=GL_AD, p=0.5) < 0.001
 If over 15000 variants exist in the sample, downsample to 15000. Then discard variants with a germline DP not between 0.5x and 1.5x of mean
 
