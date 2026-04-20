@@ -580,7 +580,7 @@ Gather a list of high quality passing and filtered variants due to germline evid
    * If there is germline evidence, the germline average base qual (ABQ) must be >= 30
    * Must have MQF >= 25
    * Must not have `NEARBY_INDEL` annotation
-   * Must not have any associated gnomAD entry or would be PON filtered with our tiered PON filtering rules in Pave
+   * Must not have any associated gnomAD entry or would be PON filtered with our tiered PON filtering rules in PAVE
    * Must have p-score of Binom(n=GL_DP, k=GL_AD, p=0.5) < 0.001
 If over 15000 variants exist in the sample, downsample to 15000. Then Discard variants with a germline DP not between 0.5x and 1.5x of mean
 
