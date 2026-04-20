@@ -55,11 +55,19 @@ public class NoGermlineConverter
 
     private static SmallVariant convertSmallVariant(SmallVariant smallVariant)
     {
-        return SmallVariantBuilder.builder(smallVariant)
-                .driver(DriverFieldsBuilder.builder(smallVariant.driver())
-                        .driverSource(DriverSource.SOMATIC)
-                        .build())
-                .build();
+        // Germline only variant, return as is
+        if(smallVariant.driverSource() == DriverSource.GERMLINE && smallVariant.variantCopyNumber() < 0.5)
+        {
+            return smallVariant;
+        }
+        else
+        {
+            return SmallVariantBuilder.builder(smallVariant)
+                    .driver(DriverFieldsBuilder.builder(smallVariant.driver())
+                            .driverSource(DriverSource.SOMATIC)
+                            .build())
+                    .build();
+        }
     }
 
     @NotNull
@@ -69,9 +77,14 @@ public class NoGermlineConverter
         return variants.stream().map(v ->
         {
             DriverFields driverFields = maximumDriverLikelihoodPerGene.get(v.gene());
-            return SmallVariantBuilder.builder(v)
-                    .driver(DriverFieldsBuilder.builder(driverFields).build())
-                    .build();
+            if (v.driverSource() != DriverSource.GERMLINE)
+            {
+                return SmallVariantBuilder.builder(v)
+                        .driver(DriverFieldsBuilder.builder(driverFields).build())
+                        .build();
+            } else {
+                return v;
+            }
         }).toList();
     }
 
