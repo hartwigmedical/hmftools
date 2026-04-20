@@ -65,7 +65,6 @@ include_mt | NA                | By default the mitochondrial DNA is not read bu
 no_fragment_sync | False             | Where R1 and R2 in a fragment overlap, consider both observations' base and qual as separate pieces of evidence
 high_depth_mode  | False             | To be used in targeted sequencing - places additional conditions on read-supporting variants to increase precision
 read_length | Inferred from BAM | Max read length, affects memory usage slightly and some filtering
-germline | false             | Is a germline run, so tumor/normal filters are not applied
 jitter_param_dir | BAM path | Path to jitter files (jitter_params.tsv and ms_table.tsv.gz) from Redux
 skip_msi_jitter | NA                | Use default MSI jitter params instead of sample-specific values from Redux files
 read_context_flank_size | 10                | Number of flanking bases on each side of read core
