@@ -1,13 +1,13 @@
 CHORD: Classifier of HOmologous Recombination Deficiency
 ========================================================
 
-CHORD is a random forest model that predicts homologous recombination deficiency (HRD) using relative counts of somatic mutation contexts, 
+Chord is a random forest model that predicts homologous recombination deficiency (HRD) using relative counts of somatic mutation contexts, 
 primarily deletions with flanking microhomology to distinguish HRD vs non-HRD, and 1-100kb duplications to distinguish BRCA1-type vs 
-BRCA2-type HRD. For more info on CHORD, please see the paper: [Pan-cancer landscape of homologous recombination deficiency](https://www.nature.com/articles/s41467-020-19406-4).
+BRCA2-type HRD. For more info on Chord, please see the paper: [Pan-cancer landscape of homologous recombination deficiency](https://www.nature.com/articles/s41467-020-19406-4).
 
-`hmftools/chord` is a Java reimplementation of the original two R packages used to run CHORD:
+`hmftools/chord` is a Java reimplementation of the original two R packages used to run Chord:
 - [mutSigExtractor](https://github.com/UMCUGenetics/mutSigExtractor): Performs the feature extraction from VCFs. The core functionality has been entirely migrated to Java
-- [CHORD](https://github.com/UMCUGenetics/CHORD): Runs the CHORD random forest. This is now a simple R script with a Java wrapper
+- [Chord](https://github.com/UMCUGenetics/Chord): Runs the Chord random forest. This is now a simple R script with a Java wrapper
 
 # Contents
 <!-- TOC -->
@@ -57,7 +57,7 @@ Notes:
 
 ## Single sample mode
 
-CHORD can be run using the below example command:
+Chord can be run using the below example command:
 
 ```shell
 java -jar chord.jar \
@@ -73,7 +73,7 @@ java -jar chord.jar \
 
 ## Multi-sample mode
 
-To run CHORD in multi-sample mode, we can provide comma-delimited sample IDs to `-sample`, and paths with wildcards (`*`) to 
+To run Chord in multi-sample mode, we can provide comma-delimited sample IDs to `-sample`, and paths with wildcards (`*`) to 
 `-snv_indel_vcf_file` and `-sv_vcf_file`. We can also provide `-threads` to run in multithreaded mode.
 
 ```shell
@@ -140,9 +140,9 @@ java -cp chord.jar com.hartwig.hmftools.chord.predict.ChordModel \
 
 # Output
 
-CHORD will output 2 files:
-- `*.chord.mutation_contexts.tsv`: Input features to CHORD (SNV, indel and SV context counts)
-- `*.chord.prediction.tsv`: Predictions from the CHORD random forest
+Chord will output 2 files:
+- `*.chord.mutation_contexts.tsv`: Input features to Chord (SNV, indel and SV context counts)
+- `*.chord.prediction.tsv`: Predictions from the Chord random forest
 
 These files can contain the data for one or more samples.
 
@@ -170,7 +170,7 @@ The mutation contexts include:
 
 ## Predictions
 
-The below example `*.chord.prediction.tsv` file shows different possible predictions that CHORD can produce: 
+The below example `*.chord.prediction.tsv` file shows different possible predictions that Chord can produce: 
 
 ```
   sample  p_BRCA1  p_BRCA2  p_hrd             hr_status              hrd_type  remarks_hr_status  remarks_hrd_type
@@ -189,11 +189,11 @@ SAMPLE_5    0.331    0.410  0.741          HR_deficient  cannot_be_determined   
 - `hrd_type`: If `hr_status` is `HR_deficient`, indicates if the sample has `BRCA1-type` or `BRCA2-type` HRD; i.e. max(`p_BRCA1`,`p_BRCA2`)
 
 ### Quality control checks
-- CHORD requires **\>=100 indels** to accurately determine whether a sample is HRD. If this criterion is not met, `hr_status` will be
+- Chord requires **\>=100 indels** to accurately determine whether a sample is HRD. If this criterion is not met, `hr_status` will be
 `cannot_be_determined` and `remarks_hr_status` will be `<50 indels`.
-- CHORD **cannot be applied to MSI samples**. If an MSI sample is detected, `hr_status` will be `cannot_be_determined` and
+- Chord **cannot be applied to MSI samples**. If an MSI sample is detected, `hr_status` will be `cannot_be_determined` and
 `remarks_hr_status` will be `Has MSI (>14000 indel.rep)`
-- CHORD requires **\>=30 SVs** to accurately determine HRD subtype. If this criterion is not met, `hrd_type` will be
+- Chord requires **\>=30 SVs** to accurately determine HRD subtype. If this criterion is not met, `hrd_type` will be
 `cannot_be_determined`, and `remarks_hr_status` will be `<30 SVs`.
 
-The user may of course ignore these remarks and proceed with using the raw probabilities outputted by CHORD (`p_hrd` and/or`p_BRCA1`/`pBRCA2`).
+The user may of course ignore these remarks and proceed with using the raw probabilities outputted by Chord (`p_hrd` and/or`p_BRCA1`/`pBRCA2`).

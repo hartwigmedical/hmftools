@@ -1,6 +1,6 @@
 # WISP
 
-WISP estimates TF in a given sample (typically ctDNA), guided by the biomarkers identified prior anlaysis of the same patient (typically a primary tissue biopsy).   The algorithm supports data generated from both WGS or targeted analyses.    
+Wisp estimates TF in a given sample (typically ctDNA), guided by the biomarkers identified prior anlaysis of the same patient (typically a primary tissue biopsy).   The algorithm supports data generated from both WGS or targeted analyses.    
 
 ## Commands
 
@@ -38,17 +38,17 @@ output_dir | Output directory
 
 ## Algorithm
 
-WISP can infer tumor fraction of a sample via 3 different method:
+Wisp can infer tumor fraction of a sample via 3 different method:
 - SNV (& small Indel)
 - CNA (WGS only)
 - LOH (WGS only)
 
 These are described in detail below.
 
-WISP addiitonally annotates allele and ref support fragment counts at sites of interest if the necessary files are provided from SAGE.
+Wisp addiitonally annotates allele and ref support fragment counts at sites of interest if the necessary files are provided from SAGE.
 
-Here is a schematic of the recommended pipeline setup to run WISP
-![WISP](./WISP.png)      
+Here is a schematic of the recommended pipeline setup to run Wisp
+![Wisp](./Wisp.png)      
 
 ###  SNV tumor fraction estimate
 Using the cfDNA annotated tissue biopsy purple VCF, apply the following filters based on the primary tumor annotations
@@ -96,7 +96,7 @@ wAD = Σ(i=1->n)[(DPi_cfDNA)2/CNn] / Σ(i=1->n)[DPi_cfDNA/CNi]
 The adjusted VAF is used to recalculate the implied tumor fraction estimate for the sample.  If the conditions for neither model are met, then the VAF is not adjusted.    
 
 #### Other annotations
-- **Tumor Presence P-Value** – Poisson test of whether the observed AD is greater than expected noise.  Since some trinucleotides can have much higher rates than others (particularly C>T), WISP tests for tumor presence by filtering sites based on the empirically measured error rates in SAGE BQR with raw base qualities higher than 35, for each context at 4 different phred score thresholds f {All sites, >38,>42,>45}.  For each threshold, the observed AD is compared the weighted average expected error rate for the included sites (note the maximum BQR phred score is limited to 50 per variant context to be able to handle sparse data).   The final p-value is set to the minimum threshold across all the tests.   For duplex sequencing a further test is made to see if the DUAL_STRAND AD > expected noise (set to a fixed 1e-6 for DUPLEX observations). 
+- **Tumor Presence P-Value** – Poisson test of whether the observed AD is greater than expected noise.  Since some trinucleotides can have much higher rates than others (particularly C>T), Wisp tests for tumor presence by filtering sites based on the empirically measured error rates in SAGE BQR with raw base qualities higher than 35, for each context at 4 different phred score thresholds f {All sites, >38,>42,>45}.  For each threshold, the observed AD is compared the weighted average expected error rate for the included sites (note the maximum BQR phred score is limited to 50 per variant context to be able to handle sparse data).   The final p-value is set to the minimum threshold across all the tests.   For duplex sequencing a further test is made to see if the DUAL_STRAND AD > expected noise (set to a fixed 1e-6 for DUPLEX observations). 
 - **LOD** – This is calculated as the observed TF that would return a 99% confidence of tumor presence (ie p-value = 0.01) given the allele fragments. Again, the lowest LOD across different phred thresholds is used. A separate LOD is calculated for DUAL stranded fragments only.
 - **LowTFEstimate** – Estimated using the same formula with the following adjustments: 
    - Recalculate TF based on AD = poisson[sumAD,0.05]  
@@ -120,7 +120,7 @@ Note that if the copy number variation in the tissue biopsy may be minimal.   To
 LOD_CNA = 0.4% / sqrt(aneuploidy score) / clonalProportion^3 
 ```
 ### LOH estimate (WGS only) 
-In WGS mode, a tumor fraction estimate is also made based on the LOH sites.  WISP considers each high confidence heterozygous BAF site in an LOH region identified in the primary tumor by PURPLE.   If the lost allele can be determined with high confidence (tumorBAF < 0.45 => ALT lost ; tumorBAF>0.55 => REF lost), then the site is used in the LOH estimate.   
+In WGS mode, a tumor fraction estimate is also made based on the LOH sites.  Wisp considers each high confidence heterozygous BAF site in an LOH region identified in the primary tumor by PURPLE.   If the lost allele can be determined with high confidence (tumorBAF < 0.45 => ALT lost ; tumorBAF>0.55 => REF lost), then the site is used in the LOH estimate.   
 
 An AF is first calculated per region using the high confidence LOH sites as  
 ```
@@ -132,7 +132,7 @@ The implied tumor fraction for each region is estimated as:
 ```
 TF = (1-2*AF) / [AF*(CN-2)+1] 
 ```
-WISP then uses the median TF across all the regions as the final TF (weighted by number of sites per region).   A final check is made to see if there is a subset of regions which have TF significantly higher than the median indicating that some of the identified LOH regions may have been subclonal in the tumor.  For this WISP searches for regions with TF > max(median*1.5, 3%) AND impliedTF >> medianTF (P<0.001).   If at least max(2000,5%) of the LOH sites satisify these condtions, then the TF is instead set to the median of those selected regions.    
+Wisp then uses the median TF across all the regions as the final TF (weighted by number of sites per region).   A final check is made to see if there is a subset of regions which have TF significantly higher than the median indicating that some of the identified LOH regions may have been subclonal in the tumor.  For this Wisp searches for regions with TF > max(median*1.5, 3%) AND impliedTF >> medianTF (P<0.001).   If at least max(2000,5%) of the LOH sites satisify these condtions, then the TF is instead set to the median of those selected regions.    
 
 A LOD is calculated based on the TF consistent with an AF that would return a p-value of <0.01 given the total fragments observed at LOH sites.
 

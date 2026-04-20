@@ -1,7 +1,6 @@
-
 # Somatic Alterations in Genome (SAGE)
 
-SAGE is a precise and highly sensitive somatic SNV, MNV and small INDEL caller. It has dynamically scaling sensitivity based on the depth of the provided tumor and germline BAMs, but performs best if both BAMs have at least 30x typical depth.
+Sage is a precise and highly sensitive somatic SNV, MNV and small INDEL caller. It has dynamically scaling sensitivity based on the depth of the provided tumor and germline BAMs, but performs best if both BAMs have at least 30x typical depth.
 
 Key features include:
   - 4 tiered (`HOTSPOT`,`PANEL`, `HIGH_CONFIDENCE`, `LOW_CONFIDENCE`) calling allows high sensitivity calling in regions of high prior likelihood including hotspots in low mappability regions such as HIST2H3C K28M
@@ -18,10 +17,10 @@ Key features include:
 
 ## Append mode
 
-SAGE also supports the ability append additional reference samples to an existing SAGE VCF file. A typical use case would be to analyse previously called variants in RNA or other additional longitudinal samples for monitoring without having to rerun all samples through SAGE.
+Sage also supports the ability append additional reference samples to an existing Sage VCF file. A typical use case would be to analyse previously called variants in RNA or other additional longitudinal samples for monitoring without having to rerun all samples through Sage.
 
-In append mode SAGE only performs the [alt specific base quality recalibration](#1-alt-specific-base-quality-recalibration) and [normal counts and quality](#5-normal-counts-and-quality) steps.
-The supplied SAGE VCF is used to determine the candidate variants and no changes are made to tumor counts, filters, phasing, de-duplication or realignment.
+In append mode Sage only performs the [alt specific base quality recalibration](#1-alt-specific-base-quality-recalibration) and [normal counts and quality](#5-normal-counts-and-quality) steps.
+The supplied Sage VCF is used to determine the candidate variants and no changes are made to tumor counts, filters, phasing, de-duplication or realignment.
 
 All resource files for this tool and the WiGiTs pipeline are available for download via the [HMF Resource page](../pipeline/README_RESOURCES.md).
 
@@ -104,8 +103,8 @@ read_events_qual_penalty | 7       | Penalty to apply to map qual for additional
 Argument | Default | Description 
 ---|---------|---
 log_level | INFO    | Also DEBUG and TRACE
-specific_chr | None    | Limit SAGE to list of chromosomes, separated by ';'
-specific_regions | None    | Limit SAGE to list of regions, separated by ';' in the form chromosome:positionStart-positionEnd
+specific_chr | None    | Limit Sage to list of chromosomes, separated by ';'
+specific_regions | None    | Limit Sage to list of regions, separated by ';' in the form chromosome:positionStart-positionEnd
 perf_warn_time | None    | Log a warning if any region (ie 100K partition by default) takes more than X seconds to complete  
 log_evidence_reads | False   | For each variant, print a line with each read's match type and various intermediate calculations
 
@@ -127,7 +126,7 @@ java -Xmx32G -jar sage.jar \
     -threads 16 \ 
 ```
 
-# SAGE append mode usage
+# Sage append mode usage
 
 ## Mandatory Arguments
 
@@ -135,7 +134,7 @@ Argument | Description
 ---|---
 reference | Comma separated names of the reference sample
 reference_bam | Comma separated paths to indexed reference BAM file
-input_vcf | Name of the existing SAGE 2.4+ VCF
+input_vcf | Name of the existing Sage 2.4+ VCF
 output_vcf | Name of the output VCF
 ref_genome | Path to reference genome fasta file
 
@@ -168,7 +167,7 @@ java -cp sage.jar com.hartwig.hmftools.sage.append.SageAppendApplication \
 
 
 # Variant Visualisations
-SAGE can produce interactive HTML visualisations for specific variants of interest, showing the type of support from each overlapping read.
+Sage can produce interactive HTML visualisations for specific variants of interest, showing the type of support from each overlapping read.
 
 To enable this output, set one or more of the following arguments:
 
@@ -185,7 +184,7 @@ A guide to the visualisations is shown below. A link to the HTML file for this v
 
 
 
-# Key concepts in SAGE
+# Key concepts in Sage
 
 ## BAM conventions
 BAM records that are flagged as unmapped, duplicateRead or secondary/supplementary are ignored. 
@@ -194,22 +193,22 @@ Optional NM tag (edit distance to the reference) is used in the quality calculat
 
 ## Sample types and conventions
 
-SAGE is designed to jointly call any number of samples.  1 or more 'tumor' samples must be defined (unless running in append mode - see below) and any number of reference samples (including 0) may be defined:
+Sage is designed to jointly call any number of samples.  1 or more 'tumor' samples must be defined (unless running in append mode - see below) and any number of reference samples (including 0) may be defined:
 
-- A 'tumor' sample in SAGE is defined as a sample in which SAGE will BOTH search for candidates AND collect evidence
-- A 'reference' sample is one in which SAGE will collect evidence only (for candidates identified in the tumor samples)
+- A 'tumor' sample in Sage is defined as a sample in which Sage will BOTH search for candidates AND collect evidence
+- A 'reference' sample is one in which Sage will collect evidence only (for candidates identified in the tumor samples)
 
 By default the first reference sample is also treated as a 'germline' sample, which is used for calculation of the germline filters.  The number of reference samples to be used for germline filtering can be configured by setting the ref_sample_count.  Two common alternatives are:
 
 - If no germline filtering is desired set ref_sample_count = 0.
-- If the patient has a bone marrow donor and reference samples for both patient and donor are available, then SAGE can subtract germline calls from both by setting ref_sample_count = 2. 
+- If the patient has a bone marrow donor and reference samples for both patient and donor are available, then Sage can subtract germline calls from both by setting ref_sample_count = 2. 
 
-Additionally, SAGE can be run in a germline mode by setting the germline sample to be the 'tumor'. Please see more details [here](https://github.com/hartwigmedical/hmftools/blob/master/sage/GERMLINE.md).
+Additionally, Sage can be run in a germline mode by setting the germline sample to be the 'tumor'. Please see more details [here](https://github.com/hartwigmedical/hmftools/blob/master/sage/GERMLINE.md).
 
 ## Variant qual conventions
 
-In pre-4.0 versions of SAGE, variant tumor quality (`QUAL`) was a sum of per-read final qualities, which were a function of both base and mapping quality. The `minTumorQual` filter was a simple comparison between this tumor quality and a per-tier threshold. In SAGE 4.0+, variant quality is now split into two:
-- Base quality, which is a probabilistic measure based on DP, AD and per-read base qual. This is recorded in `TQP`, and the phred score of this (capped at 200) is placed in the `QUAL` field. As before, SAGE has per-tier thresholds for this, below which a variant will be marked as `minTumorQual`
+In pre-4.0 versions of Sage, variant tumor quality (`QUAL`) was a sum of per-read final qualities, which were a function of both base and mapping quality. The `minTumorQual` filter was a simple comparison between this tumor quality and a per-tier threshold. In Sage 4.0+, variant quality is now split into two:
+- Base quality, which is a probabilistic measure based on DP, AD and per-read base qual. This is recorded in `TQP`, and the phred score of this (capped at 200) is placed in the `QUAL` field. As before, Sage has per-tier thresholds for this, below which a variant will be marked as `minTumorQual`
 - Map quality, which is a heuristic aggregated from all reads contributing to DP. This is recorded in `MQF` and is not encoded in the `QUAL` field. It can cause a variant to be `minMQF` filtered based on separate per-tier thresholds.
 
 Both sets of per-tier thresholds are specified in the 'Soft Filters' section of the readme.
@@ -217,7 +216,7 @@ Both sets of per-tier thresholds are specified in the 'Soft Filters' section of 
 ## Read context 
  
  The read context of a variant is the region surrounding it in the read where it was found. It must be sufficiently large to uniquely identify the variant from both the reference and other possible variants at that location regardless of local alignment.
- SAGE uses the read context to search for evidence supporting the variant and calculate the allelic depth and frequency.
+ Sage uses the read context to search for evidence supporting the variant and calculate the allelic depth and frequency.
  
  The core read context is a distinct set of bases surrounding a variant after accounting for any microhomology in the read and any repeats in the read. A 'repeat' in this context, is defined as having 1-5 bases repeated at least 3 times. 
  The core is a minimum of 4 bases long. For a SNV/MNV in a non-repeat sequence this will just be the alternate base(s) with 2 bases either side. If either outer base is inside a repeat, we extend the core to fully cover the repeat plus one padding base, eg 'TAAAAAC'. If the padding base is itself part of a long (6+ count) repeat, we extend again in the same way.
@@ -301,7 +300,7 @@ A similar principle applies to any repeat sequences. Spanning them in the read c
  
 # Algorithm
 
-There are 9 key steps in the SAGE algorithm described in detail below:
+There are 9 key steps in the Sage algorithm described in detail below:
   1. [Alt Specific Base Quality Recalibration](#1-alt-specific-base-quality-recalibration)
   2. [Candidate Variants](#2-candidate-variants)
   3. [Tumor Counts and Quality](#3-tumor-counts-and-quality)
@@ -314,7 +313,7 @@ There are 9 key steps in the SAGE algorithm described in detail below:
 
 ## 1. Alt Specific Base Quality Recalibration
 
-SAGE includes a base quality recalibration method to adjust sequencer reported base qualities to empirically observed values since we observe that qualities for certain base contexts and alts can be systematically over or under estimated which can cause either false positives or poor sensitivity respectively.
+Sage includes a base quality recalibration method to adjust sequencer reported base qualities to empirically observed values since we observe that qualities for certain base contexts and alts can be systematically over or under estimated which can cause either false positives or poor sensitivity respectively.
 This idea is inspired by the GATK BQSR tool, but instead of using a covariate model we create a direct lookup table for base quality adjustments. 
 The recalibration is unique per sample.
 
@@ -328,7 +327,7 @@ Fragments with low mapping quality (by default: below 50) are ignored as errors 
 Note that the definition of this recalibrated base quality is slightly different to the sequencer base quality, since it is the probability of making a specific ALT error given a trinucleotide sequence, whereas the sequencer base quality is the probability of making any error at the base in question.   Since the chance of making an error to a specific base is lower than the chance of making it to a random base, the ALT specific base quality will generally be higher even if the sequencer base quality matches the empirical distribution.
 
 For all SNV and MNV calls the base quality is adjusted to the empirically observed value before determining the quality. 
-SAGE produces both a file output and QC chart which show the magnitude of the base quality adjustment applied for each {trinucleotide context, alt, sequencer reported base qual, consensus type} combination.
+Sage produces both a file output and QC chart which show the magnitude of the base quality adjustment applied for each {trinucleotide context, alt, sequencer reported base qual, consensus type} combination.
 These files are written into the same directory as the output file.
 
 A typical example of the chart (for one consensus type) is shown below. Note that each bar represents the amount that will be added to the sequencer Phred score: 
@@ -341,16 +340,16 @@ The base quality recalibration chart is generated with the config `-bqr_write_pl
  
 ## 2. Candidate Variants
 
-In this first pass of the tumor BAM(s), SAGE looks for candidate variants using reads with adjusted MAPQ >=1 (penalising the mapping quality for NM and softclips in accordance with `read_events_qual_penalty`)
+In this first pass of the tumor BAM(s), Sage looks for candidate variants using reads with adjusted MAPQ >=1 (penalising the mapping quality for NM and softclips in accordance with `read_events_qual_penalty`)
 Valid candidates must include a complete read context, with full-length flanks.
 
 INDELS are located using the `I` and `D` flag in the CIGAR.
 SNVs and MNVs are located by comparing the bases in every aligned region (flags `M`, `X` or `=`) with the provided reference genome.
 MNVs consist of up to 3 bases, with 2 SNVs split by 1 reference base also treated as a 3 base MNV. ie, MNVs with CIGARs `1X1M1X` and `3X` are both considered valid MNVs of length 3.  
 
-Longer insertions or duplications may be aligned by BWA as a soft clipping instead of as an insertion in the bam file. To ensure these insertions are captured, SAGE also searches for candidates in soft clipping by taking the first 12 bases of the reference genome at the location of the soft clip and testing for an exact match in the soft clip sequence at least 5 bases from the soft clip site (implying an insertion of at least 5 bases). If such an insert is found, SAGE will then left-align the implied variant as necessary.
+Longer insertions or duplications may be aligned by BWA as a soft clipping instead of as an insertion in the bam file. To ensure these insertions are captured, Sage also searches for candidates in soft clipping by taking the first 12 bases of the reference genome at the location of the soft clip and testing for an exact match in the soft clip sequence at least 5 bases from the soft clip site (implying an insertion of at least 5 bases). If such an insert is found, Sage will then left-align the implied variant as necessary.
 
-For each candidate, SAGE tallies the ref/alt support and total quality and selects the most frequently found read context of each variant. As each variant can potentially have multiple read contexts due to sequencing errors or sub-clonal populations, SAGE also allows additional read contexts as candidates IF there are at least max(25% max support,3) reads with FULL support for that read context.  Multiple read contexts may be possible for example where a germline HET SNV overlaps read context with a germline HOM SNV or when a somatic subclonal SNV overlaps read context with a somatic clonal SNV. 
+For each candidate, Sage tallies the ref/alt support and total quality and selects the most frequently found read context of each variant. As each variant can potentially have multiple read contexts due to sequencing errors or sub-clonal populations, Sage also allows additional read contexts as candidates IF there are at least max(25% max support,3) reads with FULL support for that read context.  Multiple read contexts may be possible for example where a germline HET SNV overlaps read context with a germline HOM SNV or when a somatic subclonal SNV overlaps read context with a somatic clonal SNV. 
 
 A candidate will be dropped at this stage if it is only identified on one fragment. Candidate inserts with any 'N' base in the alt sequence are also dropped.
 
@@ -361,7 +360,7 @@ If multiple tumors are supplied, the final set of candidates is the superset of 
 
 The aim of the stage it to collect evidence of each candidate variant's read context in the tumor. 
 
-SAGE examines every read with MAPQ >=1 (penalising the mapping quality for NM and softclips in accordance with `read_events_qual_penalty`) overlapping the variant tallying matches of the read context. 
+Sage examines every read with MAPQ >=1 (penalising the mapping quality for NM and softclips in accordance with `read_events_qual_penalty`) overlapping the variant tallying matches of the read context. 
 
 A match can be (in descending order of quality):
   - `FULL` - Read context matches read at same reference location. At least one flank must be fully covered
@@ -381,7 +380,7 @@ Other relevant details are:
 
 By default, if the positive and negative stranded reads of a fragment overlap, a consensus of the overlap is taken, and the 2 reads in the fragment converted into a single consensus read. For each base, if the R1 and R2 observations agree, set the consensus base qual to the high base qual from either read. If there is disagreement, the nucleotide with the highest base qual is chosen and the quality is set to the difference in base quals. However, if `-no_sync_fragments=True` then each read is processed individually in this instance.
 
-Failing a match of `CORE` or better, SAGE searches for matches that would occur if a repeat in the complete read context was extended or retracted.  Matches of this type we call 'jitter' and are tallied as `LENGTHENED` or `SHORTENED`. 
+Failing a match of `CORE` or better, Sage searches for matches that would occur if a repeat in the complete read context was extended or retracted.  Matches of this type we call 'jitter' and are tallied as `LENGTHENED` or `SHORTENED`. 
 
 If the variant is not found and instead matches the ref genome at that location with at least `CORE` quality, the `REFERENCE` tally is incremented.
 
@@ -389,7 +388,7 @@ Any read which spans 'essential' read core bases increments the `TOTAL` tally.
 
 ### Microsatellite Indel Base Quality
 
-SAGE takes parameter files from Redux (of the form `SAMPLE.jitter_params.tsv` and `SAMPLE.ms_table.tsv.gz` for all tumor and reference samples) to set an appropriate base quality for microsatellite indels. Specifically, a 6-parameter model provides for an asymmetric laplace distribution to model all permutations of (repeat count, repeat unit, consensus type). We then use the repeat, ref and alt bases to determine a modelled error rate for the error in question. This is backed out into a phred score, and acts as a cap for per-read base qual contribution for that variant. For example, if a 8xT>9xT expansion is modelled with a 0.01 error rate, the per-read base qual would be capped at `-10 * log10(0.01)` = 20.
+Sage takes parameter files from Redux (of the form `SAMPLE.jitter_params.tsv` and `SAMPLE.ms_table.tsv.gz` for all tumor and reference samples) to set an appropriate base quality for microsatellite indels. Specifically, a 6-parameter model provides for an asymmetric laplace distribution to model all permutations of (repeat count, repeat unit, consensus type). We then use the repeat, ref and alt bases to determine a modelled error rate for the error in question. This is backed out into a phred score, and acts as a cap for per-read base qual contribution for that variant. For example, if a 8xT>9xT expansion is modelled with a 0.01 error rate, the per-read base qual would be capped at `-10 * log10(0.01)` = 20.
 
 This approach is only applied for repeats of length 4 or more, and indels of no more than 5 repeat units. Additionally, we fall back to typical 'default jitter' parameterisation if the rate of sample-specific jitter is very high (for example, in a MSI sample)
 
@@ -526,11 +525,11 @@ Soft filters become hard filters when the `hard_filter` flag is included.
 
 ### Germline filters for multiple reference samples
 
-Patients who have previously undergone bone marrow transplantation may have a significant proportion of donor DNA in the blood and impurities tumor biopsy both.  In such cases, we may want to treat multiple reference samples (ie patient + donor samples) as germline references for subtraction in SAGE. SAGE includes an optional parameter (ref_sample_count  {0->N}).   If not set, then SAGE will assume that the first reference sample is a germline sample, otherwise the first N samples will be treated as germline samples and germline filters will be applied.  If ref_sample_count = 0, then germline filters are not applied and reference samples are annotated only.
+Patients who have previously undergone bone marrow transplantation may have a significant proportion of donor DNA in the blood and impurities tumor biopsy both.  In such cases, we may want to treat multiple reference samples (ie patient + donor samples) as germline references for subtraction in Sage. Sage includes an optional parameter (ref_sample_count  {0->N}).   If not set, then Sage will assume that the first reference sample is a germline sample, otherwise the first N samples will be treated as germline samples and germline filters will be applied.  If ref_sample_count = 0, then germline filters are not applied and reference samples are annotated only.
 
 ### High Depth Mode
 
-For targeted sequencing, the `high_depth_mode` flag should be provided. This allows SAGE to make high-quality variant calls at low VAFs in high depth samples by adding the following additional conditions:
+For targeted sequencing, the `high_depth_mode` flag should be provided. This allows Sage to make high-quality variant calls at low VAFs in high depth samples by adding the following additional conditions:
 * Reads that have discordant or unmapped mates are ignored
 * Reads with raw base qual < 30 do not provide variant support
 
@@ -538,7 +537,7 @@ For targeted sequencing, the `high_depth_mode` flag should be provided. This all
 
 ### Local Phase Set
 
-SAGE tries to phase variants which have overlapping read evidence. Phasing is considered for any variants not filtered by the ‘hard_min_tumor_qual’, ’hard_min_tumor_raw_alt_support’, ‘hard_min_tumor_raw_base_quality’ or 'jitter p-score' hard filters.
+Sage tries to phase variants which have overlapping read evidence. Phasing is considered for any variants not filtered by the ‘hard_min_tumor_qual’, ’hard_min_tumor_raw_alt_support’, ‘hard_min_tumor_raw_base_quality’ or 'jitter p-score' hard filters.
 
 The variants are into ‘phase regions’ (ie regions without any read overlap, and hence can be phased independently).   If a phase region has no PASS variants, then skip phasing.  For each phase region the following operations are performed:     
 - **Create ‘sets’** - Sets are groups of reads that overlap identical candidate variants with the same phase support (either + for alt support or - for non-alt support). For example, one set would be all the reads that support +A+B where A and B are 2 candidate variants)
@@ -560,7 +559,7 @@ Sets with less than the read count threshold are dropped before merging and coll
 
 ## 8. De-duplication
 
-De-duplication removes any duplicate candidate variants, which may represent the same underlying mutation in different ways.  SAGE removes the following 4 types of deduplication in the following order on PASS variants only:
+De-duplication removes any duplicate candidate variants, which may represent the same underlying mutation in different ways.  Sage removes the following 4 types of deduplication in the following order on PASS variants only:
 - **dedupMNV** - DEDUP any overlapping MNV in the same phase set. MNV may have 2 or 3 bases.  First any MNV which has 2 changed bases and overlaps with an MNV with 3 changed bases is filtered. If both have 2 changed bases then the least compact MNV is filtered.  If both have the same number of bases and changed bases then the lowest qual MNV is filtered.
 - **dedupMixedGermlineSomatic** -  Filter MNVs as DEDUP which can be explained by a germline filtered SNV and PASS, except when the MNV is in a coding region and impacts more than one base of the same codon impacted by the SNV. Any MNVs that have a germline component and all associated SNVs (including somatic) are given a shared MSG (mixed somatic germline) identifier.
 - **dedupMNVSNV** - Any remaining passing SNVs that are phased with and contribute to a passing somatic MNV are filtered as DEDUP.
@@ -571,7 +570,7 @@ After deduplication any uninformative or duplicate phase sets are further remove
 If there are any cases where the exact same variant is still duplicated (ie. same chromosome, position, ref, alt) but with different read core contexts, then the lower quality variant is hard filtered with the LPS information merged.
 
 ## 9. TINC Analysis
-If the `-run_tinc` config is provided, SAGE will measure the level of tumor in normal contamination in the sample, and use this to conditionally recover likely somatic variants that were filtered due to germline evidence. The routine works as follows:
+If the `-run_tinc` config is provided, Sage will measure the level of tumor in normal contamination in the sample, and use this to conditionally recover likely somatic variants that were filtered due to germline evidence. The routine works as follows:
 
 ### Finding fitting variants
 Gather a list of high quality passing and filtered variants due to germline evidence to use for TINC fitting. The variants must satisfy these conditions:
@@ -590,7 +589,7 @@ If we have less than 200 variants, or the sum of tumor AF of fitting variants < 
 To compute the score for a considered TINC level of X, consider each fit variant's tumor AF. The 'expected' germline AF, if the sample's TINC really is X, will be tumorAF * X. We then produce a binomial distribution of the likelihood of each germline AD for 0 <= AD <= 10 given this expected germline AF and the germline DP. We can sum these binomial probabilities up across all the fit variants, and compare these to the sum of counts of actual germline ADs. The score for TINC = X is then the sum of differences between real germline ADs and expected germline ADs (from the sum of binomial distributions) across all the fit variants.
 
 ### Recovering variants
-If a TINC > 0% is found, calculate a recoveryTinc = 2.5 * TINC + 3%. For example if TINC = 10%, then recoveryTinc = 28%. We back out the level of germline AF implied by this recoveryTinc (e.g. if tumorAF was 30% we would reduce germlineAF by 0.28 * 30% = 8.4%). We then check SAGE soft germline filters again (`max_germline_vaf`, `max_germline_rel_raw_base_qual`, `max_germline_alt_support`) with this adjusted germlineAF, and remove any filters that are no longer applicable. This can cause previously filtered variants to now pass. Variants that are still filtered, and fail our usual `filtered_max_germline_alt_support` threshold of 3 (which was temporarily relaxed to check if these variants are in fact explained by TINC), are now hard filtered again.
+If a TINC > 0% is found, calculate a recoveryTinc = 2.5 * TINC + 3%. For example if TINC = 10%, then recoveryTinc = 28%. We back out the level of germline AF implied by this recoveryTinc (e.g. if tumorAF was 30% we would reduce germlineAF by 0.28 * 30% = 8.4%). We then check Sage soft germline filters again (`max_germline_vaf`, `max_germline_rel_raw_base_qual`, `max_germline_alt_support`) with this adjusted germlineAF, and remove any filters that are no longer applicable. This can cause previously filtered variants to now pass. Variants that are still filtered, and fail our usual `filtered_max_germline_alt_support` threshold of 3 (which was temporarily relaxed to check if these variants are in fact explained by TINC), are now hard filtered again.
 
 # Outputs
 
@@ -627,7 +626,7 @@ The outputs below are found in the VCF::
 `MUC` | Min unclipped fragment coordinates (i.e. min of distinct upper and lower fragment coordinates in alt-supporting reads)
 
 # Performance Characteristics
-Time taken for SAGE to run is proportional to the size of the BAM file and the number of threads used. Memory increases with number of threads. 
+Time taken for Sage to run is proportional to the size of the BAM file and the number of threads used. Memory increases with number of threads. 
 Each chromosome is partitioned into blocks of 100K bases for each stage of processing.
 
 Performance numbers were taken from a 24 core machine using paired normal tumor COLO829 data with an average read depth of 35 and 93 in the normal and tumor respectively.
@@ -639,7 +638,7 @@ Performance numbers were taken from a 24 core machine using paired normal tumor 
 Variant calling Improvements
 - **MNV calling near qual cutoffs** - Occasionally 2 variants may individually PASS but the combined MNV may fail filters.  Impact is very limited since we will phase anyway.   An example is COLO829v003T 13:5559855 TCA>CAT (which narrowly fails qual filtering but the component SNVs PASS).
 - **Support for ALT contigs** - For now we only support chromosomes 1-22, X,Y, and optionally MT
-- **Hard filter settings** - These should potentially be set much higher for FFPE samples to improve performance and reduce memory and file size. SAGE would ideally detect this internally and dynamically set the optimal filter.
+- **Hard filter settings** - These should potentially be set much higher for FFPE samples to improve performance and reduce memory and file size. Sage would ideally detect this internally and dynamically set the optimal filter.
 - **Optionally rescue based on RNA reference sample support** - If RNA is run, we should have the option of rescuing variants from minTumorQual support failure using qual from RNA.
 - **Read position diversity** - Similar to ignoring duplicates we could limit the maximum qual support from reads with the same base position.   We see some FFPE panel samples where this could help, although we have some protection with our edge distance features
 - **Filtering of supplementary reads** - This is necessary to remove artefacts, but may lead to reduced sensitivity particularly for long deletions which may be mapped with a supplementary read 
@@ -647,7 +646,7 @@ Variant calling Improvements
 - **Complex events in key cancer genes** - Any messy read profile is likely to be something interesting if it falls within a well known cancer gene.  We should make sure not to miss any of these
 - **BQR based on read position** - some library preparations have strong positional biases. Adjusting for this would reduce FP.
 - **BQR at long palindromic sequences** - some library preparations frequently have errors in palindromic regions. Adjusting for this would reduce FP.
-- **Low MAPQ** - SAGE penalises low MAPQ reads harshly. No truth set is available in these regions, so it is unclear whether this behaviour is the correct decision.
+- **Low MAPQ** - Sage penalises low MAPQ reads harshly. No truth set is available in these regions, so it is unclear whether this behaviour is the correct decision.
 - **SNV base qual downstream of long homopolymer with insert** - If a sample has a germline extension of a long homopolymer, a somatic SNV immediately downstream of the homopolymer that extends it will have different QUAL characteristics for forward and reverse stranded reads, due to the left-alignment convention for indels. Specifically, the negative strand should use a different base for variant qual.
 - **Better MNV handling** - we don't consider that multiple high quality SNVs in a row may imply multiple adjacent sequencing or upstream errors in our QUAL model, and so have scope to be more sensitive here
 - **Adding strand context to BQR** - Recalibration accuracy could be improved if we aggregated BQR evidence on reverse strand reads into reverse complemented trinucleotide/ref/alt contexts
@@ -663,7 +662,7 @@ Phasing improvements
 - **Fragment based phasing** - We can extend phasing even further by looking at the fragment level.   Fragments typically extend 400-600 bases.  This may be relevant in assessing ASE where coverage is low or for determining whether 2xTSG hits are on the same parental chromosome.   Again similar to point 1 we could search for fragments that cover both core regions and look for relative support for neither, both or one or the other variants. 
 - **Population based phasing** - we can extend germline phasing even further afield using population based phasing known as imputation with ranges of up to 100kb. This could potentially assist with phasing across exon boundaries and would allow more accurate purity and ploidy fitting.
 - **Phasing across exon boundaries with WTS data** - May be relevant for neo-epitope prediction or functional consequence.
-- **Germline phased variants may not be deduped** - SAGE does not dedup filtered variants so this may cause confusion in phasing. This can be an issue around microsatellites.
+- **Germline phased variants may not be deduped** - Sage does not dedup filtered variants so this may cause confusion in phasing. This can be an issue around microsatellites.
 
 Other functionality
 - **scDNA / scRNA** - Support counting by single cell labels
@@ -671,20 +670,3 @@ Other functionality
   
 Performance
 - **High depth regions** - Phasing may be slow in very high depth regions
-
-# Version History and Download Links
-- [4.1](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v4.1)
-- [4.0](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v4.0)
-- [3.4](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v3.4.4)
-- [3.3](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v3.3)
-- [3.2](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v3.2.5)
-- [3.1](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v3.1)
-- [3.0](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v3.0)
-- [2.8](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v2.8)
-- [2.7](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v2.7)
-- [2.6](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v2.6)
-- [2.5](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v2.5)
-- [2.4](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v2.4)
-- [2.3](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v2.3)
-- [2.2](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v2.2)
-- [2.1](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v2.1)
