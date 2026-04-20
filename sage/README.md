@@ -103,7 +103,6 @@ read_events_qual_penalty | 7       | Penalty to apply to map qual for additional
 
 Argument | Default | Description 
 ---|---------|---
-threads | 1       | Number of threads to use
 log_level | INFO    | Also DEBUG and TRACE
 specific_chr | None    | Limit Sage to list of chromosomes, separated by ';'
 specific_regions | None    | Limit Sage to list of regions, separated by ';' in the form chromosome:positionStart-positionEnd
