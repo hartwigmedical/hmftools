@@ -12,47 +12,29 @@ import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
 import com.hartwig.hmftools.finding.clinicaltranscript.ClinicalTranscriptFile;
 import com.hartwig.hmftools.finding.clinicaltranscript.ClinicalTranscriptsModel;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class FindingConfig
 {
     @Nullable
     private final ClinicalTranscriptsModel clinicalTranscriptsModel;
-    @NotNull
-    private final Map<String, DriverGene> driverGenes;
 
     public static FindingConfig createFindingConfig(@Nullable Path clinicalTranscriptsTsv,
-            @Nullable Path driverGeneTsv, OrangeRefGenomeVersion orangeRefGenomeVersion) throws IOException
+            OrangeRefGenomeVersion orangeRefGenomeVersion) throws IOException
     {
         ClinicalTranscriptsModel clinicalTranscriptsModel = clinicalTranscriptsTsv != null ?
                 ClinicalTranscriptFile.buildFromTsv(orangeRefGenomeVersion, clinicalTranscriptsTsv) : null;
-        Map<String, DriverGene> driverGenes = driverGenesMap(driverGeneTsv);
-        return new FindingConfig(clinicalTranscriptsModel, driverGenes);
+        return new FindingConfig(clinicalTranscriptsModel);
     }
 
-    private static Map<String, DriverGene> driverGenesMap(@Nullable Path driverGeneTsv) throws IOException
-    {
-        return driverGeneTsv != null ? DriverGeneFile.read(driverGeneTsv)
-                .stream()
-                .collect(Collectors.toMap(DriverGene::gene, Function.identity())) : Map.of();
-    }
-
-    public FindingConfig(@Nullable final ClinicalTranscriptsModel clinicalTranscriptsModel, final Map<String, DriverGene> driverGenes)
+    public FindingConfig(@Nullable final ClinicalTranscriptsModel clinicalTranscriptsModel)
     {
         this.clinicalTranscriptsModel = clinicalTranscriptsModel;
-        this.driverGenes = driverGenes;
     }
 
     @Nullable
     public String findCanonicalTranscriptForGene(String gene)
     {
         return clinicalTranscriptsModel != null ? clinicalTranscriptsModel.findCanonicalTranscriptForGene(gene) : null;
-    }
-
-    @Nullable
-    public DriverGene getDriverGene(String gene)
-    {
-        return driverGenes.get(gene);
     }
 }

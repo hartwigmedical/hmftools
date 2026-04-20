@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.datamodel.common.AllelicDepth;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
@@ -107,9 +106,11 @@ final class SmallVariantFactory
 
         PurpleTranscriptImpact otherImpact = isCanonical ? findOtherImpactClinical(variant, findingConfig) : null;
 
-        DriverGene driverGene = findingConfig.getDriverGene(variant.gene());
-        DriverCategory
-                driverCategory = driverGene != null ? driverLikelihoodType(driverGene.likelihoodType()) : null;
+        DriverCategory driverCategory = switch(driver.category())
+        {
+            case ONCO -> DriverCategory.ONCO;
+            case TSG -> DriverCategory.TSG;
+        };
 
         boolean reportable = transcriptImpact.reported() || (otherImpact != null && otherImpact.reported());
         DriverInterpretation driverInterpretation = DriverInterpretation.valueOf(driver.driverInterpretation().name());
@@ -266,14 +267,5 @@ final class SmallVariantFactory
     private static boolean hasCanonicalImpact(PurpleVariant variant)
     {
         return !variant.canonicalImpact().transcript().isEmpty();
-    }
-
-    private static DriverCategory driverLikelihoodType(com.hartwig.hmftools.common.driver.DriverCategory driverLikelihoodType)
-    {
-        return switch(driverLikelihoodType)
-        {
-            case ONCO -> DriverCategory.ONCO;
-            case TSG -> DriverCategory.TSG;
-        };
     }
 }

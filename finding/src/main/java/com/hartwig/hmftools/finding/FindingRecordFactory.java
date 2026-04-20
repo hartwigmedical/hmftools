@@ -86,21 +86,19 @@ import org.jetbrains.annotations.Nullable;
 // various part of the orange record
 public class FindingRecordFactory
 {
-    public static FindingRecord fromOrangeJsonWithTranscriptFile(Path orangeJson, @Nullable Path clinicalTranscriptsTsv,
-            @Nullable Path driverGeneTsv) throws IOException
+    public static FindingRecord fromOrangeJsonWithTranscriptFile(Path orangeJson, @Nullable Path clinicalTranscriptsTsv) throws IOException
     {
         try(Reader reader = Files.newBufferedReader(orangeJson))
         {
             OrangeRecord orangeRecord = OrangeJson.getInstance().read(reader);
-            return fromOrangeRecord(orangeRecord, clinicalTranscriptsTsv, driverGeneTsv);
+            return fromOrangeRecord(orangeRecord, clinicalTranscriptsTsv);
         }
     }
 
-    public static FindingRecord fromOrangeRecord(OrangeRecord orangeRecord, @Nullable Path clinicalTranscriptsTsv,
-            @Nullable Path driverGeneTsv) throws IOException
+    public static FindingRecord fromOrangeRecord(OrangeRecord orangeRecord, @Nullable Path clinicalTranscriptsTsv) throws IOException
     {
         FindingConfig findingConfig =
-                FindingConfig.createFindingConfig(clinicalTranscriptsTsv, driverGeneTsv, orangeRecord.refGenomeVersion());
+                FindingConfig.createFindingConfig(clinicalTranscriptsTsv, orangeRecord.refGenomeVersion());
 
         LinxRecord linx = orangeRecord.linx();
         PurpleRecord purple = orangeRecord.purple();

@@ -13,6 +13,6 @@ public class FindingFactoryTest
     @Test
     public void fromOrangeRecord() throws IOException
     {
-        FindingRecordFactory.fromOrangeRecord(TestOrangeJsonWriter.createOrangeRecord(), null, null);
+        FindingRecordFactory.fromOrangeRecord(TestOrangeJsonWriter.createOrangeRecord(), null);
     }
 }
