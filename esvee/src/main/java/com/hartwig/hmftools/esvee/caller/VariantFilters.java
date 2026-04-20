@@ -112,16 +112,16 @@ public class VariantFilters
         if(belowMinAf(var))
             var.addFilter(MIN_AF);
 
-        if(belowMinSupport(var))
+        if(!var.hasSagaMatch() && belowMinSupport(var))
             var.addFilter(MIN_SUPPORT);
 
-        if(belowMinQuality(var))
+        if(!var.hasSagaMatch() && belowMinQuality(var))
             var.addFilter(MIN_QUALITY);
 
         if(belowMinLength(var))
             var.addFilter(MIN_LENGTH);
 
-        if(belowMinAnchorLength(var))
+        if(!var.hasSagaMatch() && belowMinAnchorLength(var))
             var.addFilter(MIN_ANCHOR_LENGTH);
 
         if(belowMinFragmentLength(var))
