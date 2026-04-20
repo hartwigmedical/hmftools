@@ -582,7 +582,7 @@ Gather a list of high quality passing and filtered variants due to germline evid
    * Must not have `NEARBY_INDEL` annotation
    * Must not have any associated gnomAD entry or would be PON filtered with our tiered PON filtering rules in PAVE
    * Must have p-score of Binom(n=GL_DP, k=GL_AD, p=0.5) < 0.001
-If over 15000 variants exist in the sample, downsample to 15000. Then Discard variants with a germline DP not between 0.5x and 1.5x of mean
+If over 15000 variants exist in the sample, downsample to 15000. Then discard variants with a germline DP not between 0.5x and 1.5x of mean
 
 ### Fitting TINC
 If we have less than 200 variants, or the sum of tumor AF of fitting variants < 50, then simply set TINC = 0. Otherwise for each searched TINC level (every 0.5% from 0->3%, then every 1% from 3->15%, then every 5% from 15->100%), calculate a score across all the variants. The selected TINC will be the level that minimises this score.
