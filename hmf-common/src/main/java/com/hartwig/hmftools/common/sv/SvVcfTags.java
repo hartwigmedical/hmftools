@@ -87,6 +87,9 @@ public final class SvVcfTags
     public static final String MAX_LOCAL_REPEAT = "MLR";
     public static final String MAX_LOCAL_REPEAT_DESC = "Max local indel repeat around breakend";
 
+    public static final String SAGA_VARIANT_ID = "SAGAID";
+    public static final String SAGA_VARIANT_ID_DESC = "ID (including possible allele) of best matching SAGA variant";
+
     // per sample
     public static final String SPLIT_FRAGS = "SF";
     public static final String SPLIT_FRAGS_DESC = "Count of fragments supporting the breakend with a read overlapping the breakend";
