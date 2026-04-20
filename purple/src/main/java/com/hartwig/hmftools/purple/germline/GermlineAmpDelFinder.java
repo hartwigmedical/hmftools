@@ -341,9 +341,9 @@ public class GermlineAmpDelFinder
         if(copyNumber != null && germlineStatus != GermlineStatus.AMPLIFICATION)
         {
             double cnInconsistency = region.refNormalisedCopyNumber() - copyNumber.majorAlleleCopyNumber();
-            double cnLimit =
-                    max(GERMLINE_AMP_DEL_CN_CONSISTENCY_MIN,
-                            copyNumber.majorAlleleCopyNumber() * GERMLINE_AMP_DEL_CN_CONSISTENCY_MACN_PERC);
+
+            double cnLimit = max(
+                    GERMLINE_AMP_DEL_CN_CONSISTENCY_MIN, copyNumber.majorAlleleCopyNumber() * GERMLINE_AMP_DEL_CN_CONSISTENCY_MACN_PERC);
 
             if(cnInconsistency > cnLimit)
             {

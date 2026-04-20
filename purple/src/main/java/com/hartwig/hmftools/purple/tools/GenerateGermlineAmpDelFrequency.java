@@ -132,7 +132,9 @@ public class GenerateGermlineAmpDelFrequency
             regions = Lists.newArrayList();
             mChrRegionMap.put(chromsome, regions);
         }
-        AmpDelRegionFrequency.EventType type = germlineStatus == GermlineStatus.AMPLIFICATION ? AmpDelRegionFrequency.EventType.AMP : AmpDelRegionFrequency.EventType.DEL;
+
+        AmpDelRegionFrequency.EventType type = germlineStatus == GermlineStatus.AMPLIFICATION ?
+                AmpDelRegionFrequency.EventType.AMP : AmpDelRegionFrequency.EventType.DEL;
 
         int index = 0;
         while(index < regions.size())
@@ -178,7 +180,8 @@ public class GenerateGermlineAmpDelFrequency
                     if(region.Frequency < mMinSampleCount)
                         continue;
 
-                    writer.write(String.format("%s,%d,%d,%s,%d", chromosome, region.Region.start(), region.Region.end(), region.Type, region.Frequency));
+                    writer.write(String.format("%s,%d,%d,%s,%d",
+                            chromosome, region.Region.start(), region.Region.end(), region.Type, region.Frequency));
                     writer.newLine();
                 }
             }
