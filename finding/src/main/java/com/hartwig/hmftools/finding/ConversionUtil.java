@@ -9,9 +9,11 @@ import com.hartwig.hmftools.finding.datamodel.FindingRecord;
 import com.hartwig.hmftools.finding.datamodel.FindingsJson;
 import com.hartwig.hmftools.finding.util.ErrorConverter;
 import com.hartwig.hmftools.finding.util.FindingRecordConverterUtil;
+import com.hartwig.hmftools.finding.util.GainDeletionsFilterConverter;
 import com.hartwig.hmftools.finding.util.LowPurityConverter;
 import com.hartwig.hmftools.finding.util.NoGermlineConverter;
 import com.hartwig.hmftools.finding.util.PTOConverter;
+import com.hartwig.hmftools.finding.util.ReportedOnlyConverter;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -28,7 +30,9 @@ public class ConversionUtil
                 FindingRecordConverterUtil.listConverter(List.of(ErrorConverter::convert,
                                 LowPurityConverter::convert,
                                 PTOConverter::convert,
-                                NoGermlineConverter::convert))
+                                NoGermlineConverter::convert,
+                                GainDeletionsFilterConverter::convert,
+                                ReportedOnlyConverter::convert))
                         .apply(findingRecord);
         new FindingsJson().write(findingRecord, findingsJson);
     }
