@@ -7,6 +7,7 @@ import java.util.List;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.finding.datamodel.FindingRecord;
 import com.hartwig.hmftools.finding.datamodel.FindingsJson;
+import com.hartwig.hmftools.finding.util.CandidateToReportableConverter;
 import com.hartwig.hmftools.finding.util.ErrorConverter;
 import com.hartwig.hmftools.finding.util.FindingRecordConverterUtil;
 import com.hartwig.hmftools.finding.util.GainDeletionsFilterConverter;
@@ -32,6 +33,7 @@ public class ConversionUtil
                                 PTOConverter::convert,
                                 NoGermlineConverter::convert,
                                 GainDeletionsFilterConverter::convert,
+                                CandidateToReportableConverter::convert,
                                 ReportedOnlyConverter::convert))
                         .apply(findingRecord);
         new FindingsJson().write(findingRecord, findingsJson);

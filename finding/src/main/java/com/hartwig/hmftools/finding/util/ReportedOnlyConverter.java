@@ -19,7 +19,7 @@ public class ReportedOnlyConverter
                 .germlineDisruptions(convert(record.germlineDisruptions()))
                 .somaticGainDeletions(convert(record.somaticGainDeletions()))
                 .germlineGainDeletions(convert(record.germlineGainDeletions()))
-//                .fusions(convert(record.fusions()))
+                .fusions(convert(record.fusions()))
                 .viruses(convert(record.viruses()))
                 .build();
     }
