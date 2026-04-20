@@ -104,8 +104,8 @@ read_events_qual_penalty | 7       | Penalty to apply to map qual for additional
 Argument | Default | Description 
 ---|---------|---
 log_level | INFO    | Also DEBUG and TRACE
-specific_chr | None    | Limit Sage to list of chromosomes, separated by ';'
-specific_regions | None    | Limit Sage to list of regions, separated by ';' in the form chromosome:positionStart-positionEnd
+specific_chr | None    | Limit SAGE to list of chromosomes, separated by ';'
+specific_regions | None    | Limit SAGE to list of regions, separated by ';' in the form chromosome:positionStart-positionEnd
 perf_warn_time | None    | Log a warning if any region (ie 100K partition by default) takes more than X seconds to complete  
 log_evidence_reads | False   | For each variant, print a line with each read's match type and various intermediate calculations
 
@@ -168,7 +168,7 @@ java -cp sage.jar com.hartwig.hmftools.sage.append.SageAppendApplication \
 
 
 # Variant Visualisations
-Sage can produce interactive HTML visualisations for specific variants of interest, showing the type of support from each overlapping read.
+SAGE can produce interactive HTML visualisations for specific variants of interest, showing the type of support from each overlapping read.
 
 To enable this output, set one or more of the following arguments:
 
@@ -208,8 +208,8 @@ Additionally, SAGE can be run in a germline mode by setting the germline sample 
 
 ## Variant qual conventions
 
-In pre-4.0 versions of Sage, variant tumor quality (`QUAL`) was a sum of per-read final qualities, which were a function of both base and mapping quality. The `minTumorQual` filter was a simple comparison between this tumor quality and a per-tier threshold. In Sage 4.0+, variant quality is now split into two:
-- Base quality, which is a probabilistic measure based on DP, AD and per-read base qual. This is recorded in `TQP`, and the phred score of this (capped at 200) is placed in the `QUAL` field. As before, Sage has per-tier thresholds for this, below which a variant will be marked as `minTumorQual`
+In pre-4.0 versions of SAGE, variant tumor quality (`QUAL`) was a sum of per-read final qualities, which were a function of both base and mapping quality. The `minTumorQual` filter was a simple comparison between this tumor quality and a per-tier threshold. In SAGE 4.0+, variant quality is now split into two:
+- Base quality, which is a probabilistic measure based on DP, AD and per-read base qual. This is recorded in `TQP`, and the phred score of this (capped at 200) is placed in the `QUAL` field. As before, SAGE has per-tier thresholds for this, below which a variant will be marked as `minTumorQual`
 - Map quality, which is a heuristic aggregated from all reads contributing to DP. This is recorded in `MQF` and is not encoded in the `QUAL` field. It can cause a variant to be `minMQF` filtered based on separate per-tier thresholds.
 
 Both sets of per-tier thresholds are specified in the 'Soft Filters' section of the readme.
@@ -348,7 +348,7 @@ INDELS are located using the `I` and `D` flag in the CIGAR.
 SNVs and MNVs are located by comparing the bases in every aligned region (flags `M`, `X` or `=`) with the provided reference genome.
 MNVs consist of up to 3 bases, with 2 SNVs split by 1 reference base also treated as a 3 base MNV. ie, MNVs with CIGARs `1X1M1X` and `3X` are both considered valid MNVs of length 3.  
 
-Longer insertions or duplications may be aligned by BWA as a soft clipping instead of as an insertion in the bam file. To ensure these insertions are captured, SAGE also searches for candidates in soft clipping by taking the first 12 bases of the reference genome at the location of the soft clip and testing for an exact match in the soft clip sequence at least 5 bases from the soft clip site (implying an insertion of at least 5 bases). If such an insert is found, Sage will then left-align the implied variant as necessary.
+Longer insertions or duplications may be aligned by BWA as a soft clipping instead of as an insertion in the bam file. To ensure these insertions are captured, SAGE also searches for candidates in soft clipping by taking the first 12 bases of the reference genome at the location of the soft clip and testing for an exact match in the soft clip sequence at least 5 bases from the soft clip site (implying an insertion of at least 5 bases). If such an insert is found, SAGE will then left-align the implied variant as necessary.
 
 For each candidate, SAGE tallies the ref/alt support and total quality and selects the most frequently found read context of each variant. As each variant can potentially have multiple read contexts due to sequencing errors or sub-clonal populations, SAGE also allows additional read contexts as candidates IF there are at least max(25% max support,3) reads with FULL support for that read context.  Multiple read contexts may be possible for example where a germline HET SNV overlaps read context with a germline HOM SNV or when a somatic subclonal SNV overlaps read context with a somatic clonal SNV. 
 
@@ -389,7 +389,7 @@ Any read which spans 'essential' read core bases increments the `TOTAL` tally.
 
 ### Microsatellite Indel Base Quality
 
-Sage takes parameter files from Redux (of the form `SAMPLE.jitter_params.tsv` and `SAMPLE.ms_table.tsv.gz` for all tumor and reference samples) to set an appropriate base quality for microsatellite indels. Specifically, a 6-parameter model provides for an asymmetric laplace distribution to model all permutations of (repeat count, repeat unit, consensus type). We then use the repeat, ref and alt bases to determine a modelled error rate for the error in question. This is backed out into a phred score, and acts as a cap for per-read base qual contribution for that variant. For example, if a 8xT>9xT expansion is modelled with a 0.01 error rate, the per-read base qual would be capped at `-10 * log10(0.01)` = 20.
+SAGE takes parameter files from Redux (of the form `SAMPLE.jitter_params.tsv` and `SAMPLE.ms_table.tsv.gz` for all tumor and reference samples) to set an appropriate base quality for microsatellite indels. Specifically, a 6-parameter model provides for an asymmetric laplace distribution to model all permutations of (repeat count, repeat unit, consensus type). We then use the repeat, ref and alt bases to determine a modelled error rate for the error in question. This is backed out into a phred score, and acts as a cap for per-read base qual contribution for that variant. For example, if a 8xT>9xT expansion is modelled with a 0.01 error rate, the per-read base qual would be capped at `-10 * log10(0.01)` = 20.
 
 This approach is only applied for repeats of length 4 or more, and indels of no more than 5 repeat units. Additionally, we fall back to typical 'default jitter' parameterisation if the rate of sample-specific jitter is very high (for example, in a MSI sample)
 
@@ -526,11 +526,11 @@ Soft filters become hard filters when the `hard_filter` flag is included.
 
 ### Germline filters for multiple reference samples
 
-Patients who have previously undergone bone marrow transplantation may have a significant proportion of donor DNA in the blood and impurities tumor biopsy both.  In such cases, we may want to treat multiple reference samples (ie patient + donor samples) as germline references for subtraction in Sage.  Sage includes an optional parameter (ref_sample_count  {0->N}).   If not set, then Sage will assume that the first reference sample is a germline sample, otherwise the first N samples will be treated as germline samples and germline filters will be applied.  If ref_sample_count = 0, then germline filters are not applied and reference samples are annotated only.
+Patients who have previously undergone bone marrow transplantation may have a significant proportion of donor DNA in the blood and impurities tumor biopsy both.  In such cases, we may want to treat multiple reference samples (ie patient + donor samples) as germline references for subtraction in SAGE. SAGE includes an optional parameter (ref_sample_count  {0->N}).   If not set, then SAGE will assume that the first reference sample is a germline sample, otherwise the first N samples will be treated as germline samples and germline filters will be applied.  If ref_sample_count = 0, then germline filters are not applied and reference samples are annotated only.
 
 ### High Depth Mode
 
-For targeted sequencing, the `high_depth_mode` flag should be provided. This allows Sage to make high-quality variant calls at low VAFs in high depth samples by adding the following additional conditions:
+For targeted sequencing, the `high_depth_mode` flag should be provided. This allows SAGE to make high-quality variant calls at low VAFs in high depth samples by adding the following additional conditions:
 * Reads that have discordant or unmapped mates are ignored
 * Reads with raw base qual < 30 do not provide variant support
 
@@ -571,7 +571,7 @@ After deduplication any uninformative or duplicate phase sets are further remove
 If there are any cases where the exact same variant is still duplicated (ie. same chromosome, position, ref, alt) but with different read core contexts, then the lower quality variant is hard filtered with the LPS information merged.
 
 ## 9. TINC Analysis
-If the `-run_tinc` config is provided, Sage will measure the level of tumor in normal contamination in the sample, and use this to conditionally recover likely somatic variants that were filtered due to germline evidence. The routine works as follows:
+If the `-run_tinc` config is provided, SAGE will measure the level of tumor in normal contamination in the sample, and use this to conditionally recover likely somatic variants that were filtered due to germline evidence. The routine works as follows:
 
 ### Finding fitting variants
 Gather a list of high quality passing and filtered variants due to germline evidence to use for TINC fitting. The variants must satisfy these conditions:
@@ -590,7 +590,7 @@ If we have less than 200 variants, or the sum of tumor AF of fitting variants < 
 To compute the score for a considered TINC level of X, consider each fit variant's tumor AF. The 'expected' germline AF, if the sample's TINC really is X, will be tumorAF * X. We then produce a binomial distribution of the likelihood of each germline AD for 0 <= AD <= 10 given this expected germline AF and the germline DP. We can sum these binomial probabilities up across all the fit variants, and compare these to the sum of counts of actual germline ADs. The score for TINC = X is then the sum of differences between real germline ADs and expected germline ADs (from the sum of binomial distributions) across all the fit variants.
 
 ### Recovering variants
-If a TINC > 0% is found, calculate a recoveryTinc = 2.5 * TINC + 3%. For example if TINC = 10%, then recoveryTinc = 28%. We back out the level of germline AF implied by this recoveryTinc (e.g. if tumorAF was 30% we would reduce germlineAF by 0.28 * 30% = 8.4%). We then check Sage soft germline filters again (`max_germline_vaf`, `max_germline_rel_raw_base_qual`, `max_germline_alt_support`) with this adjusted germlineAF, and remove any filters that are no longer applicable. This can cause previously filtered variants to now pass. Variants that are still filtered, and fail our usual `filtered_max_germline_alt_support` threshold of 3 (which was temporarily relaxed to check if these variants are in fact explained by TINC), are now hard filtered again.
+If a TINC > 0% is found, calculate a recoveryTinc = 2.5 * TINC + 3%. For example if TINC = 10%, then recoveryTinc = 28%. We back out the level of germline AF implied by this recoveryTinc (e.g. if tumorAF was 30% we would reduce germlineAF by 0.28 * 30% = 8.4%). We then check SAGE soft germline filters again (`max_germline_vaf`, `max_germline_rel_raw_base_qual`, `max_germline_alt_support`) with this adjusted germlineAF, and remove any filters that are no longer applicable. This can cause previously filtered variants to now pass. Variants that are still filtered, and fail our usual `filtered_max_germline_alt_support` threshold of 3 (which was temporarily relaxed to check if these variants are in fact explained by TINC), are now hard filtered again.
 
 # Outputs
 
@@ -627,7 +627,7 @@ The outputs below are found in the VCF::
 `MUC` | Min unclipped fragment coordinates (i.e. min of distinct upper and lower fragment coordinates in alt-supporting reads)
 
 # Performance Characteristics
-Time taken for Sage to run is proportional to the size of the BAM file and the number of threads used. Memory increases with number of threads. 
+Time taken for SAGE to run is proportional to the size of the BAM file and the number of threads used. Memory increases with number of threads. 
 Each chromosome is partitioned into blocks of 100K bases for each stage of processing.
 
 Performance numbers were taken from a 24 core machine using paired normal tumor COLO829 data with an average read depth of 35 and 93 in the normal and tumor respectively.
@@ -647,7 +647,7 @@ Variant calling Improvements
 - **Complex events in key cancer genes** - Any messy read profile is likely to be something interesting if it falls within a well known cancer gene.  We should make sure not to miss any of these
 - **BQR based on read position** - some library preparations have strong positional biases. Adjusting for this would reduce FP.
 - **BQR at long palindromic sequences** - some library preparations frequently have errors in palindromic regions. Adjusting for this would reduce FP.
-- **Low MAPQ** - Sage penalises low MAPQ reads harshly. No truth set is available in these regions, so it is unclear whether this behaviour is the correct decision.
+- **Low MAPQ** - SAGE penalises low MAPQ reads harshly. No truth set is available in these regions, so it is unclear whether this behaviour is the correct decision.
 - **SNV base qual downstream of long homopolymer with insert** - If a sample has a germline extension of a long homopolymer, a somatic SNV immediately downstream of the homopolymer that extends it will have different QUAL characteristics for forward and reverse stranded reads, due to the left-alignment convention for indels. Specifically, the negative strand should use a different base for variant qual.
 - **Better MNV handling** - we don't consider that multiple high quality SNVs in a row may imply multiple adjacent sequencing or upstream errors in our QUAL model, and so have scope to be more sensitive here
 - **Adding strand context to BQR** - Recalibration accuracy could be improved if we aggregated BQR evidence on reverse strand reads into reverse complemented trinucleotide/ref/alt contexts
