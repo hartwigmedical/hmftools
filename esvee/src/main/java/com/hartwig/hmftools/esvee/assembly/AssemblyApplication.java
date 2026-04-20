@@ -492,7 +492,7 @@ public class AssemblyApplication
         if(mConfig.WriteTypes.contains(WriteType.BREAKEND))
         {
             BreakendWriter breakendWriter = mResultsWriter.breakendWriter();
-            assemblyAlignments.forEach(x -> breakendWriter.writeBreakends((x)));
+            assemblyAlignments.forEach(x -> breakendWriter.writeBreakends(x));
         }
     }
 

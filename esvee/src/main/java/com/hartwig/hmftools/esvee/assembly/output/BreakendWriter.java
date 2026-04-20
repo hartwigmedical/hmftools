@@ -31,6 +31,7 @@ import com.hartwig.hmftools.esvee.assembly.types.InsertionType;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.PhaseGroup;
+import com.hartwig.hmftools.esvee.common.SagaMatcher;
 import com.hartwig.hmftools.esvee.common.WriteType;
 
 public class BreakendWriter
@@ -106,6 +107,9 @@ public class BreakendWriter
             sj.add("ThreePrimeRange");
             sj.add("ClosestAssembly");
             sj.add("NonPrimaryFragments");
+
+            sj.add("SagaMatchVariant");
+            sj.add("SagaMatchCigar");
 
             writer.write(sj.toString());
             writer.newLine();
@@ -242,6 +246,10 @@ public class BreakendWriter
                 sj.add(assemblyMatchStr);
 
                 sj.add(String.valueOf(breakend.nonPrimaryAssemblyFragmentCount()));
+
+                SagaMatcher.MatchBySequence sagaMatch = assemblyAlignment.sagaMatch();
+                sj.add(sagaMatch == null ? "" : sagaMatch.variant().toString());
+                sj.add(sagaMatch == null ? "" : sagaMatch.cigar().toString());
 
                 mWriter.write(sj.toString());
                 mWriter.newLine();
