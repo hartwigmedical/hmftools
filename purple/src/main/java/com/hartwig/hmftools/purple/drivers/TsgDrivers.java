@@ -49,8 +49,6 @@ public class TsgDrivers extends SomaticVariantDriverFinder
     {
         geneVariants.sort(new TsgImpactComparator());
 
-        SomaticVariant topVariant = geneVariants.get(0);
-
         Map<DriverImpact,Integer> variantCounts = groupByImpact(geneVariants);
         int missenseVariants = variantCounts.getOrDefault(DriverImpact.MISSENSE, 0);
         int nonsenseVariants = variantCounts.getOrDefault(DriverImpact.NONSENSE, 0);
@@ -61,7 +59,7 @@ public class TsgDrivers extends SomaticVariantDriverFinder
         double impactLikelihood = likelihoodMethod != LikelihoodMethod.SPLICE_REGION ? 1 : 0;
 
         final ImmutableDriverCatalog.Builder builder = ImmutableDriverCatalog.builder()
-                .chromosome(topVariant.chromosome())
+                .chromosome(geneVariants.get(0).chromosome())
                 .chromosomeBand(geneCopyNumber.ChromosomeBand)
                 .gene(geneCopyNumber.geneName())
                 .transcript(geneCopyNumber.TransName)
@@ -90,10 +88,15 @@ public class TsgDrivers extends SomaticVariantDriverFinder
             return builder.likelihoodMethod(LikelihoodMethod.HOTSPOT).build();
         }
 
-        if(geneVariants.stream().anyMatch(x -> x.biallelic() && !DriverImpact.isMissense(x.type(), x.variantImpact().CanonicalCodingEffect)))
+        List<SomaticVariant> codingImpactVariants = geneVariants.stream()
+                .filter(x -> hasProteinImpact(getWorstReportableCodingEffect(x.variantImpact()))).collect(Collectors.toList());
+
+        if(codingImpactVariants.stream().anyMatch(x -> x.biallelic() && !DriverImpact.isMissense(x.type(), x.variantImpact().CanonicalCodingEffect)))
         {
             return builder.likelihoodMethod(LikelihoodMethod.BIALLELIC).build();
         }
+
+        SomaticVariant topVariant = codingImpactVariants.get(0);
 
         CodingEffect firstCodingEffect = getWorstReportableCodingEffect(topVariant.variantImpact());
         DriverImpact firstImpact = DriverImpact.select(topVariant.type(), firstCodingEffect);
@@ -102,8 +105,6 @@ public class TsgDrivers extends SomaticVariantDriverFinder
 
         int nonBiallelicMissenseCount = variantTypeCounts.getOrDefault(VariantType.SNP, 0);
 
-        List<SomaticVariant> codingImpactVariants = geneVariants.stream()
-                .filter(x -> hasProteinImpact(getWorstReportableCodingEffect(x.variantImpact()))).collect(Collectors.toList());
 
         if(codingImpactVariants.size() == 1)
         {
