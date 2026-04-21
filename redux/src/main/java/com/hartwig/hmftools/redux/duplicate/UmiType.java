@@ -7,8 +7,10 @@ public enum UmiType
     TWIST_DUPLEX,
     TSO500_DUPLEX,
     MSK,
+    KAPA,
     OTHER_DUPLEX;
 
     public static final String TSO500_DUPEX_DELIM = "+";
     public static final String TWIST_DUPEX_DELIM = "_";
+        public static final String KAPA_DUPEX_DELIM = "_";
 }
