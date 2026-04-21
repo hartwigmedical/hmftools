@@ -220,7 +220,7 @@ final class GainDeletionFactory
                 .tumorMinCopyNumber(purpleGainDeletion.minCopies())
                 .tumorMaxCopyNumber(purpleGainDeletion.maxCopies())
                 .tumorMinMinorAlleleCopyNumber(geneCopyNumber.minMinorAlleleCopyNumber())
-                .chromosomeArmCopyNumber(cnPerChromosome.chromosomeArmCopyNumber(geneCopyNumber.chromosome(), geneCopyNumber.chromosomeBand()))
+                .chromosomeArmCopyNumber(cnPerChromosome.chromosomeArmCopyNumber(purpleGainDeletion.chromosome(), purpleGainDeletion.chromosomeBand()))
                 .build();
     }
 
