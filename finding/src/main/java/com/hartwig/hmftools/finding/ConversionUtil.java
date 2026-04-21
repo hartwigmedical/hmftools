@@ -31,8 +31,8 @@ public class ConversionUtil
                 FindingRecordConverterUtil.listConverter(List.of(ErrorConverter::convert,
                                 LowPurityConverter::convert,
                                 PTOConverter::convert,
-                                NoGermlineConverter::convert,
                                 GainDeletionsFilterConverter::convert,
+                                NoGermlineConverter::convert,
                                 CandidateToReportableConverter::convert,
                                 ReportedOnlyConverter::convert))
                         .apply(findingRecord);
