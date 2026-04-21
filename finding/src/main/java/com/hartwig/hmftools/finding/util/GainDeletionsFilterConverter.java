@@ -17,7 +17,6 @@ public class GainDeletionsFilterConverter
     {
         return FindingRecordBuilder.builder(record)
                 .somaticGainDeletions(filtered(record.somaticGainDeletions(), not(GainDeletion::isLossOfHeterozygosity)))
-                .germlineGainDeletions(filtered(record.germlineGainDeletions(), not(GainDeletion::isLossOfHeterozygosity)))
                 .build();
     }
 
