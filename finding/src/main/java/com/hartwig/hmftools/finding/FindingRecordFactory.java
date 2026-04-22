@@ -40,6 +40,7 @@ import com.hartwig.hmftools.datamodel.purple.PurpleTumorMutationalStatus;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
 import com.hartwig.hmftools.datamodel.virus.VirusLikelihoodType;
+import com.hartwig.hmftools.finding.datamodel.Disruption;
 import com.hartwig.hmftools.finding.datamodel.MetaProperties;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFieldsBuilder;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingList;
@@ -123,6 +124,13 @@ public class FindingRecordFactory
         DriverFindingList<GainDeletion> somaticGainDeletions =
                 GainDeletionFactory.somaticGainDeletionFindings(findingStatus, purple, cnPerChromosome, findingConfig.geneCopyNumbersOptional());
 
+        DriverFindingList<Disruption> germlineDisruptions =
+                createGermlineDisruptions(orangeRecord.refSample() != null, linx, findingStatus);
+
+        List<Disruption> germlineHomozygousDisruptions = germlineDisruptions.status().isOK()
+                ? germlineDisruptions.findings().stream().filter(Disruption::isHomozygous).toList()
+                : null;
+
         return FindingRecordBuilder.builder()
                 .version("1.0")
                 .metaProperties(createMetaProperties(orangeRecord, experimentType))
@@ -133,14 +141,14 @@ public class FindingRecordFactory
                 .germlineSmallVariants(SmallVariantFactory.germlineSmallVariantFindings(hasRefSample, purple, findingStatus, findingConfig))
                 .somaticGainDeletions(somaticGainDeletions)
                 .germlineGainDeletions(GainDeletionFactory.germlineGainDeletionFindings(hasRefSample, findingStatus, purple, cnPerChromosome, findingConfig.geneCopyNumbersOptional()))
-                .microsatelliteStability(createMicrosatelliteStability(purple, orangeRecord.linx(), somaticGainDeletions, findingStatus))
+                .microsatelliteStability(createMicrosatelliteStability(purple, smallVariants, somaticGainDeletions, germlineHomozygousDisruptions, findingStatus))
                 .tumorMutationalLoad(createTumorMutationalLoad(purple, findingStatus))
                 .tumorMutationalBurden(createTumorMutationalBurden(purple, findingStatus))
                 .chromosomeArmCopyNumbers(cnPerChromosome.toArmCopyNumberFindings(findingStatus))
                 .somaticDisruptions(createSomaticDisruptions(linx, findingStatus))
-                .germlineDisruptions(createGermlineDisruptions(orangeRecord.refSample() != null, linx, findingStatus))
+                .germlineDisruptions(germlineDisruptions)
                 .viruses(createVirusFindings(orangeRecord.virusInterpreter(), experimentType, findingStatus))
-                .homologousRecombination(createHomologousRecombination(orangeRecord.chord(), purple, linx, somaticGainDeletions, findingStatus, experimentType, hasRefSample))
+                .homologousRecombination(createHomologousRecombination(orangeRecord.chord(), smallVariants, somaticGainDeletions, germlineHomozygousDisruptions, findingStatus, experimentType, hasRefSample))
                 .predictedTumorOrigin(createPredictedTumorOrigin(orangeRecord.cuppa(), orangeRecord.plots(), experimentType, findingStatus))
                 .hlaAlleles(HlaAlleleFactory.createHlaAllelesFindings(orangeRecord, findingStatus))
                 .pharmacoGenotypes(createPharmacoGenotypesFindings(orangeRecord.peach(), findingStatus))
@@ -329,11 +337,11 @@ public class FindingRecordFactory
     }
 
     private static FindingItem<HomologousRecombination> createHomologousRecombination(@Nullable ChordRecord chord,
-            PurpleRecord purple,
-            LinxRecord linx,
+            DriverFindingList<SmallVariant> smallVariants,
             DriverFindingList<GainDeletion> gainDeletions,
+            @Nullable List<Disruption> germlineHomozygousDisruptions,
             FindingStatus findingStatus,
-            @NotNull ExperimentType experimentType,
+            ExperimentType experimentType,
             boolean hasRefSample)
     {
         if(chord != null)
@@ -343,9 +351,9 @@ public class FindingRecordFactory
             List<GainDeletion> lohGainDeletions = isPresent
                     ? filterLohGainDeletions(gainDeletions, Genes.HRD_GENES)
                     : List.of();
-            List<String> drivingGenes = isPresent ? GeneListUtil.genes(purple.reportableSomaticVariants(),
-                    purple.reportableSomaticGainsDels(),
-                    linx.germlineHomozygousDisruptions(),
+            List<String> drivingGenes = isPresent ? GeneListUtil.genes(smallVariants,
+                    gainDeletions,
+                    germlineHomozygousDisruptions,
                     Genes.HRD_GENES) : List.of();
             return FindingItemBuilder.<HomologousRecombination>builder()
                     .status(findingStatus)
@@ -396,7 +404,9 @@ public class FindingRecordFactory
     }
 
     private static FindingItem<MicrosatelliteStability> createMicrosatelliteStability(PurpleRecord purple,
-            LinxRecord linx, DriverFindingList<GainDeletion> gainDeletions, FindingStatus findingStatus)
+            DriverFindingList<SmallVariant> smallVariants, DriverFindingList<GainDeletion> gainDeletions,
+            @Nullable List<Disruption> germlineHomozygousDisruptions,
+            FindingStatus findingStatus)
     {
         MicrosatelliteStability.Status microsatelliteStatus =
                 microsatelliteStatus(purple.characteristics().microsatelliteStatus());
@@ -404,9 +414,9 @@ public class FindingRecordFactory
         List<GainDeletion> lohGainDeletions = isPresent
                 ? filterLohGainDeletions(gainDeletions, Genes.MSI_GENES)
                 : List.of();
-        List<String> drivingGenes = isPresent ? GeneListUtil.genes(purple.reportableSomaticVariants(),
-                purple.reportableSomaticGainsDels(),
-                linx.germlineHomozygousDisruptions(),
+        List<String> drivingGenes = isPresent ? GeneListUtil.genes(smallVariants,
+                gainDeletions,
+                germlineHomozygousDisruptions,
                 Genes.MSI_GENES) : List.of();
 
         return FindingItemBuilder.<MicrosatelliteStability>builder()
