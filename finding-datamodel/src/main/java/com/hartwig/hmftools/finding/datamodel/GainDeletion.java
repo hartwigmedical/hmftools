@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.finding.datamodel;
 
+import java.util.Set;
+
 import com.hartwig.hmftools.finding.datamodel.driver.Driver;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFields;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverInterpretation;
@@ -11,6 +13,7 @@ import org.jspecify.annotations.Nullable;
 
 import jakarta.validation.constraints.NotNull;
 
+@SuppressWarnings("unused")
 @RecordBuilder
 public record GainDeletion(
     @NotNull DriverFields driver,
@@ -34,13 +37,16 @@ public record GainDeletion(
     @Nullable Double tpmFoldChange,
     @Nullable VisualisationFile visualisationFile) implements Driver
 {
+    private final static Set<Type> GAIN_TYPES = Set.of(Type.GAIN);
+    private final static Set<Type> DELETION_TYPES = Set.of(Type.HOM_DEL, Type.HET_DEL, Type.CN_NEUTRAL_LOH);
+
     public enum Type
     {
         GAIN,
         HOM_DEL,
         HET_DEL,
         CN_NEUTRAL_LOH,
-        NONE
+        NONE // this is required in the case germline amplification is deleted in somatic
     }
 
     public enum GeneExtent
@@ -105,5 +111,13 @@ public record GainDeletion(
     {
         return (somaticType() == Type.CN_NEUTRAL_LOH) ||
                (somaticType() == Type.HET_DEL && tumorMinMinorAlleleCopyNumber() < 0.5);
+    }
+
+    public boolean isGain() {
+        return GAIN_TYPES.contains(somaticType());
+    }
+
+    public boolean isDeletion() {
+        return DELETION_TYPES.contains(somaticType());
     }
 }
