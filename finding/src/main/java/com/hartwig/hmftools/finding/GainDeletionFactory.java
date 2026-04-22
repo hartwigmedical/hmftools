@@ -3,6 +3,7 @@ package com.hartwig.hmftools.finding;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
@@ -29,10 +30,11 @@ final class GainDeletionFactory
     public static DriverFindingList<GainDeletion> somaticGainDeletionFindings(
             FindingStatus findingStatus,
             PurpleRecord purple,
-            ArmCopyNumberFactory cnPerChromosome)
+            ArmCopyNumberFactory cnPerChromosome,
+            boolean geneCopyNumbersOptional)
     {
         List<GainDeletion> gainDeletions = new ArrayList<>();
-        gainDeletions.addAll(somaticDriverGainDels(purple.reportableSomaticGainsDels(), purple.somaticDrivers(), purple.allSomaticGeneCopyNumbers(), cnPerChromosome));
+        gainDeletions.addAll(somaticDriverGainDels(purple.reportableSomaticGainsDels(), purple.somaticDrivers(), purple.allSomaticGeneCopyNumbers(), cnPerChromosome, geneCopyNumbersOptional));
 
         // we are going to add somatic LOH to purple. For this backported version we will reverse engineer how they might look
         gainDeletions.addAll(somaticLoh(purple.suspectGeneCopyNumbersWithLOH(), cnPerChromosome));
@@ -51,7 +53,8 @@ final class GainDeletionFactory
             boolean hasGermlineSample,
             FindingStatus findingStatus,
             PurpleRecord purple,
-            ArmCopyNumberFactory cnPerChromosome)
+            ArmCopyNumberFactory cnPerChromosome,
+            boolean geneCopyNumbersOptional)
     {
         if(!hasGermlineSample)
         {
@@ -73,7 +76,7 @@ final class GainDeletionFactory
                     findDriver(germlineDrivers, fullDels.gene(), fullDels.transcript(), PurpleDriverType.GERMLINE_DELETION));
 
             final PurpleGeneCopyNumber geneCopyNumber =
-                    findPurpleGeneCopyNumber(somaticGeneCopyNumbers, fullDels.gene(), fullDels.transcript());
+                    findPurpleGeneCopyNumber(somaticGeneCopyNumbers, fullDels.gene(), fullDels.transcript(), geneCopyNumbersOptional);
 
             gainDeletions.add(toGainDel(fullDels, driver, DriverSource.GERMLINE,
                     GainDeletion.Type.HOM_DEL, GainDeletion.Type.HOM_DEL,
@@ -86,7 +89,11 @@ final class GainDeletionFactory
             PurpleDriver driver = Objects.requireNonNull(
                     findDriver(germlineDrivers, loh.gene(), loh.transcript(), PurpleDriverType.GERMLINE_DELETION));
 
-            final PurpleGeneCopyNumber geneCopyNumber = findPurpleGeneCopyNumber(somaticGeneCopyNumbers, loh.gene(), loh.transcript());
+            // Copy numbers always expected for LOH
+            final PurpleGeneCopyNumber geneCopyNumber =
+                    findPurpleGeneCopyNumber(somaticGeneCopyNumbers, loh.gene(), loh.transcript(), geneCopyNumbersOptional);
+
+            assert geneCopyNumber != null;
 
             gainDeletions.add(germlineLohToGainDel(loh, driver, geneCopyNumber, cnPerChromosome));
         }
@@ -98,19 +105,11 @@ final class GainDeletionFactory
                 .build();
     }
 
-    private static PurpleGeneCopyNumber findPurpleGeneCopyNumber(final List<PurpleGeneCopyNumber> somaticGeneCopyNumbers,
-            final String gene, final String transcript)
-    {
-        return somaticGeneCopyNumbers.stream()
-                .filter(o -> o.gene().equals(gene) && o.transcript().equals(transcript))
-                .findFirst()
-                .orElseThrow(() -> new IllegalStateException("No gene copy number found for " + gene + " transcript " + transcript));
-    }
-
     private static List<GainDeletion> somaticDriverGainDels(
             List<PurpleGainDeletion> gainDeletions, final List<PurpleDriver> drivers,
             List<PurpleGeneCopyNumber> somaticGeneCopyNumbers,
-            ArmCopyNumberFactory cnPerChromosome)
+            ArmCopyNumberFactory cnPerChromosome,
+            boolean geneCopyNumbersOptional)
     {
         List<GainDeletion> somaticGainsDels = new ArrayList<>();
         for(PurpleGainDeletion gainDeletion : gainDeletions)
@@ -132,7 +131,8 @@ final class GainDeletionFactory
             };
 
             final PurpleGeneCopyNumber geneCopyNumber =
-                    findPurpleGeneCopyNumber(somaticGeneCopyNumbers, gainDeletion.gene(), gainDeletion.transcript());
+                    findPurpleGeneCopyNumber(somaticGeneCopyNumbers, gainDeletion.gene(), gainDeletion.transcript(),
+                            geneCopyNumbersOptional);
 
             somaticGainsDels.add(toGainDel(gainDeletion, driver, DriverSource.SOMATIC,
                     somaticGainDelType,
@@ -147,6 +147,27 @@ final class GainDeletionFactory
     {
         return lohGeneCopyNumbers.stream().map(o -> somaticLohToGainDel(
                 o, cnPerChromosome)).toList();
+    }
+
+    @Nullable
+    private static PurpleGeneCopyNumber findPurpleGeneCopyNumber(final List<PurpleGeneCopyNumber> somaticGeneCopyNumbers,
+            final String gene, final String transcript, boolean isOptional)
+    {
+        // In older orange versions it's not possible to exactly look up the correct copy numbers
+        // because the transcript is not always available. However, OncoAct only needs the copy numbers for LOH cases
+        // and for those genes the transcript is in practice not necessary.
+        Optional<PurpleGeneCopyNumber> result = somaticGeneCopyNumbers.stream()
+                .filter(o -> o.gene().equals(gene) && o.transcript().equals(transcript))
+                .findFirst();
+        System.out.println("isOptional = " + isOptional);
+        if(result.isEmpty() && !isOptional)
+        {
+            throw new IllegalStateException("No gene copy number found for " + gene + " transcript " + transcript);
+        }
+        else
+        {
+            return result.orElse(null);
+        }
     }
 
     private static GainDeletion somaticLohToGainDel(PurpleGeneCopyNumber geneCopyNumber, ArmCopyNumberFactory cnPerChromosome)
@@ -193,7 +214,7 @@ final class GainDeletionFactory
             DriverSource sourceSample,
             GainDeletion.Type somaticType,
             @Nullable GainDeletion.Type germlineType,
-            PurpleGeneCopyNumber geneCopyNumber,
+            @Nullable PurpleGeneCopyNumber geneCopyNumber,
             ArmCopyNumberFactory cnPerChromosome)
     {
         return GainDeletionBuilder.builder()
@@ -219,13 +240,13 @@ final class GainDeletionFactory
                 .geneExtent(toGeneExtent(purpleGainDeletion.interpretation()))
                 .tumorMinCopyNumber(purpleGainDeletion.minCopies())
                 .tumorMaxCopyNumber(purpleGainDeletion.maxCopies())
-                .tumorMinMinorAlleleCopyNumber(geneCopyNumber.minMinorAlleleCopyNumber())
+                .tumorMinMinorAlleleCopyNumber(geneCopyNumber != null ? geneCopyNumber.minMinorAlleleCopyNumber() : Double.NaN)
                 .chromosomeArmCopyNumber(cnPerChromosome.chromosomeArmCopyNumber(purpleGainDeletion.chromosome(), purpleGainDeletion.chromosomeBand()))
                 .build();
     }
 
     private static GainDeletion germlineLohToGainDel(PurpleLossOfHeterozygosity loh, final PurpleDriver driver,
-            PurpleGeneCopyNumber geneCopyNumber,
+            @Nullable PurpleGeneCopyNumber geneCopyNumber,
             ArmCopyNumberFactory cnPerChromosome)
     {
 
@@ -258,7 +279,7 @@ final class GainDeletionFactory
                 .geneExtent(geneExtent)
                 .tumorMinCopyNumber(loh.minCopies())
                 .tumorMaxCopyNumber(loh.maxCopies())
-                .tumorMinMinorAlleleCopyNumber(geneCopyNumber.minMinorAlleleCopyNumber())
+                .tumorMinMinorAlleleCopyNumber(geneCopyNumber != null ? geneCopyNumber.minMinorAlleleCopyNumber() : Double.NaN)
                 .chromosomeArmCopyNumber(cnPerChromosome.chromosomeArmCopyNumber(loh.chromosome(), loh.chromosomeBand()))
                 .build();
     }

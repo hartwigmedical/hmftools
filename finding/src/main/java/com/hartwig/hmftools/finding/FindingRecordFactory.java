@@ -100,7 +100,7 @@ public class FindingRecordFactory
             @Nullable Path driverGeneTsv, @Nullable Gender gender) throws IOException
     {
         FindingConfig findingConfig =
-                FindingConfig.createFindingConfig(clinicalTranscriptsTsv, driverGeneTsv, orangeRecord.refGenomeVersion(), gender);
+                FindingConfig.createFindingConfig(clinicalTranscriptsTsv, driverGeneTsv, orangeRecord.refGenomeVersion(), gender, true);
 
         LinxRecord linx = orangeRecord.linx();
         PurpleRecord purple = orangeRecord.purple();
@@ -160,12 +160,12 @@ public class FindingRecordFactory
                 purple.allSomaticCopyNumbers(), purple.fit().ploidy(), findingConfig.gender(), orangeRecord.refGenomeVersion());
 
         somaticGainDeletions =
-                GainDeletionFactory.somaticGainDeletionFindings(findingStatus, purple, cnPerChromosome);
+                GainDeletionFactory.somaticGainDeletionFindings(findingStatus, purple, cnPerChromosome, findingConfig.geneCopyNumbersOptional());
 
         builder.somaticSmallVariants(smallVariants)
                 .germlineSmallVariants(SmallVariantFactory.germlineSmallVariantFindings(hasRefSample, purple, findingStatus, findingConfig))
                 .somaticGainDeletions(somaticGainDeletions)
-                .germlineGainDeletions(GainDeletionFactory.germlineGainDeletionFindings(hasRefSample, findingStatus, purple, cnPerChromosome))
+                .germlineGainDeletions(GainDeletionFactory.germlineGainDeletionFindings(hasRefSample, findingStatus, purple, cnPerChromosome, findingConfig.geneCopyNumbersOptional()))
                 .microsatelliteStability(createMicrosatelliteStability(purple, orangeRecord.linx(), somaticGainDeletions, findingStatus))
                 .tumorMutationalLoad(createTumorMutationalLoad(purple, findingStatus))
                 .tumorMutationalBurden(createTumorMutationalBurden(purple, findingStatus))

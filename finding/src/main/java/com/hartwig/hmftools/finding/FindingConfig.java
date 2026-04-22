@@ -16,24 +16,25 @@ import com.hartwig.hmftools.finding.clinicaltranscript.ClinicalTranscriptsModel;
 import org.jetbrains.annotations.Nullable;
 
 record FindingConfig(@Nullable ClinicalTranscriptsModel clinicalTranscriptsModel,
-                            Map<String, DriverGene> driverGenes,
-                            @Nullable Gender gender)
+                     Map<String, DriverGene> driverGenes,
+                     @Nullable Gender gender,
+                     boolean geneCopyNumbersOptional)
 {
     public static FindingConfig createFindingConfig(@Nullable Path clinicalTranscriptsTsv,
             @Nullable Path driverGeneTsv, OrangeRefGenomeVersion orangeRefGenomeVersion,
-            @Nullable Gender gender) throws IOException
+            @Nullable Gender gender, boolean geneCopyNumbersOptional) throws IOException
     {
         ClinicalTranscriptsModel clinicalTranscriptsModel = clinicalTranscriptsTsv != null ?
                 ClinicalTranscriptFile.buildFromTsv(orangeRefGenomeVersion, clinicalTranscriptsTsv) : null;
         Map<String, DriverGene> driverGenes = driverGenesMap(driverGeneTsv);
-        return new FindingConfig(clinicalTranscriptsModel, driverGenes, gender);
+        return new FindingConfig(clinicalTranscriptsModel, driverGenes, gender, geneCopyNumbersOptional);
     }
 
     private static Map<String, DriverGene> driverGenesMap(@Nullable Path driverGeneTsv) throws IOException
     {
         return driverGeneTsv != null ? DriverGeneFile.read(driverGeneTsv)
-                .stream()
-                .collect(Collectors.toMap(DriverGene::gene, Function.identity())) : Map.of();
+                                       .stream()
+                                       .collect(Collectors.toMap(DriverGene::gene, Function.identity())) : Map.of();
     }
 
     @Nullable
