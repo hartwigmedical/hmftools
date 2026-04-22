@@ -40,6 +40,7 @@ import com.hartwig.hmftools.datamodel.purple.PurpleTumorMutationalStatus;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
 import com.hartwig.hmftools.datamodel.virus.VirusLikelihoodType;
+import com.hartwig.hmftools.finding.datamodel.MetaProperties;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFieldsBuilder;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingList;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingListBuilder;
@@ -112,46 +113,6 @@ public class FindingRecordFactory
         boolean hasRefSample = orangeRecord.refSample() != null;
 
         ExperimentType experimentType = orangeRecord.experimentType();
-        FindingRecordBuilder
-                builder = FindingRecordBuilder.builder()
-                .version("1.0")
-                .metaProperties(MetaPropertiesBuilder.builder()
-                        .refGenomeVersion(RefGenomeVersion.valueOf(orangeRecord.refGenomeVersion().name()))
-                        .sequencingScope(SequencingScope.valueOf(experimentType.name()))
-                        .pipelineVersion(orangeRecord.pipelineVersion())
-                        .sampleId(orangeRecord.sampleId())
-                        .samplingDate(orangeRecord.samplingDate())
-                        .build())
-                .qc(qc)
-                .fusions(createFusionsFindings(orangeRecord.linx(), findingStatus));
-
-        DriverFindingList<GainDeletion>
-                somaticGainDeletions = addPurpleFindings(builder, orangeRecord, findingStatus, findingConfig);
-
-        builder.somaticDisruptions(createSomaticDisruptions(linx, findingStatus))
-                .germlineDisruptions(createGermlineDisruptions(orangeRecord.refSample() != null, linx, findingStatus))
-                .viruses(createVirusFindings(orangeRecord.virusInterpreter(), experimentType, findingStatus))
-                .homologousRecombination(createHomologousRecombination(orangeRecord.chord(), purple, linx, somaticGainDeletions, findingStatus, experimentType, hasRefSample));
-
-        return builder.predictedTumorOrigin(createPredictedTumorOrigin(orangeRecord.cuppa(), orangeRecord.plots(), experimentType, findingStatus))
-                .hlaAlleles(HlaAlleleFactory.createHlaAllelesFindings(orangeRecord, findingStatus))
-                .pharmacoGenotypes(createPharmacoGenotypesFindings(orangeRecord.peach(), findingStatus))
-                .build();
-    }
-
-    // return the gain deletions cause they are needed by HRD, will see if we can find a better way
-    private static DriverFindingList<GainDeletion> addPurpleFindings(
-            FindingRecordBuilder builder, final OrangeRecord orangeRecord,
-            FindingStatus findingStatus,
-            FindingConfig findingConfig)
-    {
-        boolean hasRefSample = orangeRecord.refSample() != null;
-
-        PurpleRecord purple = orangeRecord.purple();
-
-        builder.purityPloidyFit(createPurityPloidyFit(purple, orangeRecord.experimentType(), orangeRecord.plots()));
-
-        DriverFindingList<GainDeletion> somaticGainDeletions;
 
         DriverFindingList<SmallVariant> smallVariants =
                 SmallVariantFactory.somaticSmallVariantFindings(purple, findingStatus, findingConfig);
@@ -159,19 +120,42 @@ public class FindingRecordFactory
         ArmCopyNumberFactory cnPerChromosome = new ArmCopyNumberFactory(
                 purple.allSomaticCopyNumbers(), purple.fit().ploidy(), findingConfig.gender(), orangeRecord.refGenomeVersion());
 
-        somaticGainDeletions =
+        DriverFindingList<GainDeletion> somaticGainDeletions =
                 GainDeletionFactory.somaticGainDeletionFindings(findingStatus, purple, cnPerChromosome, findingConfig.geneCopyNumbersOptional());
 
-        builder.somaticSmallVariants(smallVariants)
+        return FindingRecordBuilder.builder()
+                .version("1.0")
+                .metaProperties(createMetaProperties(orangeRecord, experimentType))
+                .qc(qc)
+                .purityPloidyFit(createPurityPloidyFit(purple, orangeRecord.experimentType(), orangeRecord.plots()))
+                .fusions(createFusionsFindings(orangeRecord.linx(), findingStatus))
+                .somaticSmallVariants(smallVariants)
                 .germlineSmallVariants(SmallVariantFactory.germlineSmallVariantFindings(hasRefSample, purple, findingStatus, findingConfig))
                 .somaticGainDeletions(somaticGainDeletions)
                 .germlineGainDeletions(GainDeletionFactory.germlineGainDeletionFindings(hasRefSample, findingStatus, purple, cnPerChromosome, findingConfig.geneCopyNumbersOptional()))
                 .microsatelliteStability(createMicrosatelliteStability(purple, orangeRecord.linx(), somaticGainDeletions, findingStatus))
                 .tumorMutationalLoad(createTumorMutationalLoad(purple, findingStatus))
                 .tumorMutationalBurden(createTumorMutationalBurden(purple, findingStatus))
-                .chromosomeArmCopyNumbers(cnPerChromosome.toArmCopyNumberFindings(findingStatus));
+                .chromosomeArmCopyNumbers(cnPerChromosome.toArmCopyNumberFindings(findingStatus))
+                .somaticDisruptions(createSomaticDisruptions(linx, findingStatus))
+                .germlineDisruptions(createGermlineDisruptions(orangeRecord.refSample() != null, linx, findingStatus))
+                .viruses(createVirusFindings(orangeRecord.virusInterpreter(), experimentType, findingStatus))
+                .homologousRecombination(createHomologousRecombination(orangeRecord.chord(), purple, linx, somaticGainDeletions, findingStatus, experimentType, hasRefSample))
+                .predictedTumorOrigin(createPredictedTumorOrigin(orangeRecord.cuppa(), orangeRecord.plots(), experimentType, findingStatus))
+                .hlaAlleles(HlaAlleleFactory.createHlaAllelesFindings(orangeRecord, findingStatus))
+                .pharmacoGenotypes(createPharmacoGenotypesFindings(orangeRecord.peach(), findingStatus))
+                .build();
+    }
 
-        return somaticGainDeletions;
+    private static MetaProperties createMetaProperties(final OrangeRecord orangeRecord, final ExperimentType experimentType)
+    {
+        return MetaPropertiesBuilder.builder()
+                .refGenomeVersion(RefGenomeVersion.valueOf(orangeRecord.refGenomeVersion().name()))
+                .sequencingScope(SequencingScope.valueOf(experimentType.name()))
+                .pipelineVersion(orangeRecord.pipelineVersion())
+                .sampleId(orangeRecord.sampleId())
+                .samplingDate(orangeRecord.samplingDate())
+                .build();
     }
 
     private static Qc createQc(PurpleRecord purple)
