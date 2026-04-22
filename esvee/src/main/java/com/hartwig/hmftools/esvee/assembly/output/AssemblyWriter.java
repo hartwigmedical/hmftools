@@ -73,6 +73,7 @@ public class AssemblyWriter
 
             sj.add("SagaMatchVariant");
             sj.add("SagaMatchCigar");
+            sj.add("SagaRecovered");
 
             // extra detailed fields
             if(mConfig.AssemblyDetailedTsv)
@@ -157,6 +158,7 @@ public class AssemblyWriter
             SagaMatcher.MatchBySequence sagaMatch = assembly.sagaMatch();
             sj.add(sagaMatch == null ? "" : sagaMatch.variant().toString());
             sj.add(sagaMatch == null ? "" : sagaMatch.cigar().toString());
+            sj.add(String.valueOf(assembly.mSagaRecovered));
 
             if(mConfig.AssemblyDetailedTsv)
             {

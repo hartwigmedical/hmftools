@@ -48,7 +48,6 @@ import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.common.SagaMatcher;
-import com.hartwig.hmftools.esvee.common.SagaResource;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -127,7 +126,10 @@ public class JunctionAssembler
         }
 
         if(!checkJunctionReadExtension(hasMinLengthSoftClipRead, extensionReads))
+        {
+            SV_LOGGER.trace("junction({}) hard filtered: read extension length", mJunction);
             return Collections.emptyList();
+        }
 
         if (usedRelaxedFilters)
         {
@@ -143,12 +145,18 @@ public class JunctionAssembler
         int reqExtensionLength = extensionSeqBuilder.hasLineSequence() ? LINE_MIN_EXTENSION_LENGTH : (usedRelaxedFilters ? ASSEMBLY_MIN_SOFT_CLIP_LENGTH_LOWER :  ASSEMBLY_MIN_SOFT_CLIP_LENGTH);
 
         if(!extensionSeqBuilder.isValid() || extensionSeqBuilder.extensionLength() < reqExtensionLength)
+        {
+            SV_LOGGER.trace("junction({}) hard filtered: extension sequence length", mJunction);
             return Collections.emptyList();
+        }
 
         List<SupportRead> assemblySupport = extensionSeqBuilder.formAssemblySupport();
 
         if(!meetsMinSupportThreshold(assemblySupport))
+        {
+            SV_LOGGER.trace("junction({}) hard filtered: min support", mJunction);
             return Collections.emptyList();
+        }
 
         JunctionAssembly firstAssembly = new JunctionAssembly(
                 mJunction, extensionSeqBuilder.extensionBases(), extensionSeqBuilder.baseQualities(), assemblySupport,
@@ -156,7 +164,10 @@ public class JunctionAssembler
 
         // filter LINE source-type sites marked by opposition orientation poly A/T sequences
         if(!firstAssembly.indel() && LineUtils.hasLineSourceSequence(firstAssembly))
+        {
+            SV_LOGGER.trace("assembly({}) hard filtered: LINE source site", firstAssembly);
             return Collections.emptyList();
+        }
 
         firstAssembly.setExtBaseBuildInfo(extensionSeqBuilder.buildInformation());
 
@@ -173,7 +184,10 @@ public class JunctionAssembler
                 firstAssembly.unmarkLineSequence();
 
                 if(firstAssembly.extensionLength() < ASSEMBLY_MIN_SOFT_CLIP_LENGTH)
+                {
+                    SV_LOGGER.trace("assembly({}) hard filtered: LINE with local aligned insert SC", firstAssembly);
                     return Collections.emptyList();
+                }
             }
         }
 
@@ -203,10 +217,19 @@ public class JunctionAssembler
 
             // Now we have the assembly sequence, try to match to SAGA if necessary.
             // Note matching to SAGA via coordinate is not enough; we need to know that the variant sequence is actually the same.
-            if (usedRelaxedFilters && !tryRecoverWithSaga(assembly))
+            boolean sagaMatched = tryMatchToSaga(assembly);
+            if (usedRelaxedFilters)
             {
-                // Failed the regular filters and couldn't recover by matching to SAGA.
-                return Collections.emptyList();
+                if (sagaMatched)
+                {
+                    SV_LOGGER.trace("assembly({}) recovered with SAGA", assembly);
+                    assembly.mSagaRecovered = true;
+                }
+                else {
+                    // Failed the regular filters and couldn't recover by matching to SAGA.
+                    SV_LOGGER.trace("assembly({}) hard filtered: could not recover with SAGA", assembly);
+                    return Collections.emptyList();
+                }
             }
         }
 
@@ -431,7 +454,7 @@ public class JunctionAssembler
         return hasMinLengthSoftClipRead && aboveMinReadThreshold(extensionReads);
     }
 
-    private boolean tryRecoverWithSaga(final JunctionAssembly assembly)
+    private boolean tryMatchToSaga(JunctionAssembly assembly)
     {
         if(mSagaMatcher == null)
         {

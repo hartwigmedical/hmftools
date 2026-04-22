@@ -72,6 +72,7 @@ public class JunctionAssembly
     private AssemblyOutcome mOutcome;
     private String mAssemblyAlignmentInfo;
 
+    public boolean mSagaRecovered = false;
     @Nullable
     private SagaMatcher.MatchBySequence mSagaMatch;
 
