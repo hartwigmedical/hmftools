@@ -127,6 +127,7 @@ public class PurpleConstants
     public static final double GERMLINE_AMP_DEL_CN_CONSISTENCY_MACN_PERC = 0.2;
     public static final double GERMLINE_AMP_DEL_NORMAL_RATIO = 0.65;
     public static final int GERMLINE_AMP_DEL_COHORT_FREQ = 4;
+    public static final int GERMLINE_AMP_DEL_MIN_DEPTH_WINDOW_COUNT = 2;
 
     // copy number smoothing
     public static final double MIN_OBSERVED_BAF_CHANGE = 0.03;

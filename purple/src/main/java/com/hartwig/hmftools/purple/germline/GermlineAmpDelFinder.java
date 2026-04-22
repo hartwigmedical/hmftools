@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
 import static com.hartwig.hmftools.common.purple.GermlineStatus.AMPLIFICATION;
 import static com.hartwig.hmftools.common.purple.GermlineStatus.HET_DELETION;
 import static com.hartwig.hmftools.common.purple.GermlineStatus.HOM_DELETION;
+import static com.hartwig.hmftools.common.purple.GermlineStatus.UNKNOWN;
 import static com.hartwig.hmftools.common.purple.ReportedStatus.NONE;
 import static com.hartwig.hmftools.common.purple.ReportedStatus.NOT_REPORTED;
 import static com.hartwig.hmftools.common.purple.ReportedStatus.REPORTED;
@@ -24,8 +25,8 @@ import static com.hartwig.hmftools.purple.PurpleConstants.GERMLINE_AMP_DEL_CN_CO
 import static com.hartwig.hmftools.purple.PurpleConstants.GERMLINE_AMP_DEL_CN_CONSISTENCY_MIN;
 import static com.hartwig.hmftools.purple.PurpleConstants.GERMLINE_AMP_DEL_COHORT_FREQ;
 import static com.hartwig.hmftools.purple.PurpleConstants.GERMLINE_AMP_DEL_GENE_BUFFER;
+import static com.hartwig.hmftools.purple.PurpleConstants.GERMLINE_AMP_DEL_MIN_DEPTH_WINDOW_COUNT;
 import static com.hartwig.hmftools.purple.PurpleConstants.GERMLINE_AMP_DEL_REGION_MATCH_BUFFER;
-import static com.hartwig.hmftools.purple.PurpleConstants.GERMLINE_AMP_DEL_REGION_MIN;
 import static com.hartwig.hmftools.purple.PurpleConstants.WINDOW_SIZE;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.drivers.DeletionDrivers.MAX_COPY_NUMBER_DEL;
@@ -143,7 +144,7 @@ public class GermlineAmpDelFinder
 
             MatchedStructuralVariant[] matchingSVs = findMatchingGermlineSVs(region, nextRegion, germlineSVs, germlineStatus);
 
-            findOverlappingDriverGene(region, matchedCopyNumber, matchingSVs, germlineStatus);
+            findOverlappingDriverGene(region, nextRegion, matchedCopyNumber, matchingSVs, germlineStatus);
         }
     }
 
@@ -328,12 +329,14 @@ public class GermlineAmpDelFinder
     static final String FILTER_COHORT_FREQ = "COHORT_FREQ";
     static final String FILTER_REGION_LENGTH = "MIN_LENGTH";
 
-    private List<String> checkFilters(final ObservedRegion region, final PurpleCopyNumber copyNumber,
+    private List<String> checkFilters(final ObservedRegion region, final ObservedRegion nextRegion,
+            final PurpleCopyNumber copyNumber,
             int cohortFrequency, final GermlineStatus germlineStatus)
     {
         final List<String> filters = Lists.newArrayList();
 
-        if(region.end() - region.start() <= GERMLINE_AMP_DEL_REGION_MIN)
+        boolean isSVBounded = regionStartsWithSV(region) || regionStartsWithSV(nextRegion);
+        if(!isSVBounded && region.depthWindowCount() < GERMLINE_AMP_DEL_MIN_DEPTH_WINDOW_COUNT)
         {
             filters.add(FILTER_REGION_LENGTH);
         }
@@ -359,8 +362,13 @@ public class GermlineAmpDelFinder
         return filters;
     }
 
+    private static boolean regionStartsWithSV(ObservedRegion nextRegion)
+    {
+        return nextRegion != null && nextRegion.support() != null && nextRegion.support().isSV();
+    }
+
     private void findOverlappingDriverGene(
-            final ObservedRegion region, final PurpleCopyNumber matchedCopyNumber,
+            final ObservedRegion region, final ObservedRegion nextRegion, final PurpleCopyNumber matchedCopyNumber,
             final MatchedStructuralVariant[] matchingSVs, final GermlineStatus germlineStatus)
     {
         // now find genes
@@ -370,21 +378,30 @@ public class GermlineAmpDelFinder
             return;
         }
 
-        int adjustPosStart = matchingSVs[SE_START] != null ? matchingSVs[SE_START].position() : region.start();
-        int adjustPosEnd = matchingSVs[SE_END] != null ? matchingSVs[SE_END].position() : region.end();
+        final boolean germlineSvAtStart = matchingSVs[SE_START] != null;
+        int adjustPosStart = germlineSvAtStart ? matchingSVs[SE_START].position() : region.start();
+        final boolean germlineSvAtEnd = matchingSVs[SE_END] != null;
+        int adjustPosEnd = germlineSvAtEnd ? matchingSVs[SE_END].position() : region.end();
 
-        int regionLowerPos = adjustPosStart - GERMLINE_AMP_DEL_GENE_BUFFER;
-        int regionHighPos = adjustPosEnd + GERMLINE_AMP_DEL_GENE_BUFFER;
+        int regionLowerPos = germlineSvAtStart ? adjustPosStart : adjustPosStart - GERMLINE_AMP_DEL_GENE_BUFFER;
+        int regionHighPos = germlineSvAtEnd ? adjustPosEnd : adjustPosEnd + GERMLINE_AMP_DEL_GENE_BUFFER;
 
         double tumorCopyNumber = region.refNormalisedCopyNumber();
-        GermlineStatus tumorStatus = HET_DELETION;
+
+        boolean hasGermlineDel = germlineStatus == HET_DELETION || germlineStatus == HOM_DELETION;
+
+        GermlineStatus tumorAmpDelStatus = HET_DELETION;
+
         if(tumorCopyNumber >= GERMLINE_LIKELY_DIPLOID_UPPER_THRESHOLD)
         {
-            tumorStatus = AMPLIFICATION;
+            if(hasGermlineDel)
+                tumorAmpDelStatus = UNKNOWN;
+            else
+                tumorAmpDelStatus = AMPLIFICATION;
         }
         else if(tumorCopyNumber < HOM_DELETION_CUTOFF)
         {
-            tumorStatus = HOM_DELETION;
+            tumorAmpDelStatus = HOM_DELETION;
         }
 
         // find overlapping driver genes
@@ -418,9 +435,7 @@ public class GermlineAmpDelFinder
         }
 
         if(overlappingGenes.isEmpty())
-        {
             return;
-        }
 
         AmpDelRegionFrequency.EventType eventType = germlineStatus == AMPLIFICATION ?
                 AmpDelRegionFrequency.EventType.AMP : AmpDelRegionFrequency.EventType.DEL;
@@ -428,7 +443,7 @@ public class GermlineAmpDelFinder
         int cohortFrequency = mCohortFrequency.getRegionFrequency(
                 region.chromosome(), region.start(), region.end(), GERMLINE_AMP_DEL_REGION_MATCH_BUFFER, eventType);
 
-        List<String> filters = checkFilters(region, matchedCopyNumber, cohortFrequency, germlineStatus);
+        List<String> filters = checkFilters(region, nextRegion, matchedCopyNumber, cohortFrequency, germlineStatus);
 
         List<GeneData> deletedGenes = Lists.newArrayList();
         List<int[]> deletedExonRanges = Lists.newArrayList();
@@ -438,13 +453,17 @@ public class GermlineAmpDelFinder
             TranscriptData transData = mGeneDataCache.getTranscriptData(geneData.GeneId);
 
             if(transData == null)
+            {
                 continue;
+            }
 
             List<ExonData> overlappedExons = transData.exons().stream()
                     .filter(x -> positionsOverlap(x.Start, x.End, regionLowerPos, regionHighPos)).toList();
 
             if(overlappedExons.isEmpty())
+            {
                 continue;
+            }
 
             PPL_LOGGER.trace("region({}: {}-{}) overlaps gene({}) exons({})",
                     region.chromosome(), region.start(), region.end(), geneData.GeneName, overlappedExons.size());
@@ -458,7 +477,9 @@ public class GermlineAmpDelFinder
         }
 
         if(transcripts.isEmpty())
+        {
             return;
+        }
 
         double germlineCopyNumber = region.observedNormalRatio() * 2;
         String filter = filters.isEmpty() ? PASS_FILTER : String.join(";", filters);
@@ -473,7 +494,7 @@ public class GermlineAmpDelFinder
             {
                 for(DriverGene driverGene : driverGenes)
                 {
-                    if(driverGene.gene().equals(geneData.GeneName) && reportEvent(driverGene, tumorStatus))
+                    if(driverGene.gene().equals(geneData.GeneName) && reportEvent(driverGene, tumorAmpDelStatus))
                     {
                         reportedStatus = REPORTED;
                     }
@@ -488,7 +509,7 @@ public class GermlineAmpDelFinder
             mEvents.add(new GermlineAmpDel(
                     geneData.GeneName, transcriptName, region.chromosome(), geneData.KaryotypeBand, adjustPosStart, adjustPosEnd,
                     region.depthWindowCount(), deletedExonRange[0], deletedExonRange[1], isPartial,
-                    GermlineDetectionMethod.SEGMENT, region.germlineStatus(), tumorStatus, germlineCopyNumber, tumorCopyNumber,
+                    GermlineDetectionMethod.SEGMENT, region.germlineStatus(), tumorAmpDelStatus, germlineCopyNumber, tumorCopyNumber,
                     filter, cohortFrequency, reportedStatus));
         }
 
@@ -503,7 +524,9 @@ public class GermlineAmpDelFinder
             DriverGene driverGene = driverGenes.stream().filter(x -> x.gene().equals(geneData.GeneName)).findFirst().orElse(null);
 
             if(driverGene == null)
+            {
                 continue;
+            }
 
             // only create one record even if multiple sections of the gene are deleted
             if(mDrivers.stream().anyMatch(x -> x.gene().equals(geneData.GeneName) && x.transcript().equals(transData.TransName)))
@@ -511,7 +534,7 @@ public class GermlineAmpDelFinder
                 continue;
             }
 
-            ReportedStatus reportedStatus = reportEvent(driverGene, tumorStatus) ? REPORTED : NOT_REPORTED;
+            ReportedStatus reportedStatus = reportEvent(driverGene, tumorAmpDelStatus) ? REPORTED : NOT_REPORTED;
 
             // create a driver record for reportable genes
             DriverCatalog driverCatalog = ImmutableDriverCatalog.builder()
@@ -539,12 +562,16 @@ public class GermlineAmpDelFinder
         }
     }
 
-    private static boolean reportEvent(final DriverGene driverGene, final GermlineStatus germlineStatus)
+    private static boolean reportEvent(final DriverGene driverGene, final GermlineStatus tumorAmpDelStatus)
     {
-        if(germlineStatus == AMPLIFICATION)
+        if(tumorAmpDelStatus == UNKNOWN)
+            return false;
+
+        if(tumorAmpDelStatus == AMPLIFICATION)
         {
             return driverGene.reportGermlineAmplification();
         }
+
         // check requirements on the germline disruption field: WILDTYPE_LOST - requires an LOH for the deletion to be reportable
         if(driverGene.reportGermlineDeletion() == ANY || driverGene.reportGermlineDeletion() == VARIANT_NOT_LOST)
         {
@@ -552,7 +579,7 @@ public class GermlineAmpDelFinder
         }
         else
         {
-            return driverGene.reportGermlineDeletion() == WILDTYPE_LOST && germlineStatus == HOM_DELETION;
+            return driverGene.reportGermlineDeletion() == WILDTYPE_LOST && tumorAmpDelStatus == HOM_DELETION;
         }
     }
 }
