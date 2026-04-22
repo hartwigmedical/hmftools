@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.finding;
+package com.hartwig.hmftools.finding.util;
 
 import static com.hartwig.hmftools.finding.datamodel.finding.FindingStatus.Issue.NO_REPORTABLE_VALUE;
 
@@ -20,7 +20,7 @@ public class FindingUtil
     private static final Set<FindingStatus.Issue> GERMLINE_ISSUES =
             Set.of(FindingStatus.Issue.TUMOR_IN_NORMAL_CONTAMINATION, FindingStatus.Issue.REF_REQUIRED, FindingStatus.Issue.REF_SAMPLE_QUALITY_CONTROL);
 
-    static FindingStatus somaticStatus(FindingStatus status)
+    public static FindingStatus somaticStatus(FindingStatus status)
     {
         SortedSet<FindingStatus.Issue> errors = removeIssues(status.errors(), GERMLINE_ISSUES);
         return FindingStatusBuilder.builder()
@@ -30,7 +30,7 @@ public class FindingUtil
                 .build();
     }
 
-    static FindingStatus germlineStatus(FindingStatus status)
+    public static FindingStatus germlineStatus(FindingStatus status)
     {
         SortedSet<FindingStatus.Issue> errors = retainIssues(status.errors(), GERMLINE_ISSUES);
         return FindingStatusBuilder.builder()
@@ -62,7 +62,7 @@ public class FindingUtil
     }
 
 
-    static <T extends Driver> DriverFindingList<T> refRequired()
+    public static <T extends Driver> DriverFindingList<T> refRequired()
     {
         return notAvailableDriverFindingList(Set.of(FindingStatus.Issue.REF_REQUIRED));
     }
@@ -75,14 +75,14 @@ public class FindingUtil
                 .build();
     }
 
-    static <T> FindingItem<T> notAvailableFindingItem(Set<FindingStatus.Issue> errors)
+    public static <T> FindingItem<T> notAvailableFindingItem(Set<FindingStatus.Issue> errors)
     {
         return FindingItemBuilder.<T>builder()
                 .status(notAvailableStatus(errors))
                 .build();
     }
 
-    static FindingStatus notAvailableStatus(Set<FindingStatus.Issue> errors)
+    public static FindingStatus notAvailableStatus(Set<FindingStatus.Issue> errors)
     {
         return FindingStatusBuilder.builder()
                 .status(FindingStatus.Status.NOT_AVAILABLE)
