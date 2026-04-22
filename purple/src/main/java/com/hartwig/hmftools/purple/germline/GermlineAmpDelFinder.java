@@ -327,7 +327,7 @@ public class GermlineAmpDelFinder
 
     static final String FILTER_CN_INCONSISTENCY = "INCONSISTENT_CN";
     static final String FILTER_COHORT_FREQ = "COHORT_FREQ";
-    static final String FILTER_REGION_LENGTH = "MIN_LENGTH";
+    static final String FILTER_LOW_DEPTH_NO_SVS = "LOW_DEPTH_NO_SVS";
 
     private List<String> checkFilters(final ObservedRegion region, final ObservedRegion nextRegion,
             final PurpleCopyNumber copyNumber,
@@ -338,7 +338,7 @@ public class GermlineAmpDelFinder
         boolean isSVBounded = regionStartsWithSV(region) || regionStartsWithSV(nextRegion);
         if(!isSVBounded && region.depthWindowCount() < GERMLINE_AMP_DEL_MIN_DEPTH_WINDOW_COUNT)
         {
-            filters.add(FILTER_REGION_LENGTH);
+            filters.add(FILTER_LOW_DEPTH_NO_SVS);
         }
 
         if(copyNumber != null && germlineStatus != GermlineStatus.AMPLIFICATION)

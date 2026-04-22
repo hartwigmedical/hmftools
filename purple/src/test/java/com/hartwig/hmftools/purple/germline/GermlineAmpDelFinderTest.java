@@ -10,7 +10,7 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 import static com.hartwig.hmftools.purple.germline.GermlineAmpDelFinder.FILTER_CN_INCONSISTENCY;
 import static com.hartwig.hmftools.purple.germline.GermlineAmpDelFinder.FILTER_COHORT_FREQ;
-import static com.hartwig.hmftools.purple.germline.GermlineAmpDelFinder.FILTER_REGION_LENGTH;
+import static com.hartwig.hmftools.purple.germline.GermlineAmpDelFinder.FILTER_LOW_DEPTH_NO_SVS;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -167,7 +167,7 @@ public class GermlineAmpDelFinderTest
         mGermlineAmpDelFinder.findEvents(List.of(pcn), List.of(or1), List.of());
         List<GermlineAmpDel> events = mGermlineAmpDelFinder.getEvents();
         assertEquals(1, events.size());
-        checkAllEventsPass(FILTER_REGION_LENGTH, events, 0, ReportedStatus.NONE);
+        checkAllEventsPass(FILTER_LOW_DEPTH_NO_SVS, events, 0, ReportedStatus.NONE);
     }
 
     @Test
@@ -255,7 +255,7 @@ public class GermlineAmpDelFinderTest
         mGermlineAmpDelFinder.findEvents(List.of(pcn), List.of(or1), List.of());
         List<GermlineAmpDel> deletions = mGermlineAmpDelFinder.getEvents();
         assertEquals(1, deletions.size());
-        checkAllEventsPass(FILTER_REGION_LENGTH, deletions, 0, ReportedStatus.NONE);
+        checkAllEventsPass(FILTER_LOW_DEPTH_NO_SVS, deletions, 0, ReportedStatus.NONE);
     }
 
     @Test
@@ -267,7 +267,7 @@ public class GermlineAmpDelFinderTest
         mGermlineAmpDelFinder.findEvents(List.of(pcn), List.of(or1), List.of());
         List<GermlineAmpDel> events = mGermlineAmpDelFinder.getEvents();
         assertEquals(1, events.size());
-        checkAllEventsPass(FILTER_REGION_LENGTH, events, 0, ReportedStatus.NONE);
+        checkAllEventsPass(FILTER_LOW_DEPTH_NO_SVS, events, 0, ReportedStatus.NONE);
     }
 
     private static void checkAllEventsPass(final String filterRegionLength, final List<GermlineAmpDel> events, final int index,
@@ -402,7 +402,7 @@ public class GermlineAmpDelFinderTest
         mGermlineAmpDelFinder.findEvents(List.of(pcn), List.of(or1), List.of());
         List<GermlineAmpDel> deletions = mGermlineAmpDelFinder.getEvents();
         assertEquals(1, deletions.size());
-        String expectedFilter = String.format("%s;%s;%s", FILTER_REGION_LENGTH, FILTER_CN_INCONSISTENCY, FILTER_COHORT_FREQ);
+        String expectedFilter = String.format("%s;%s;%s", FILTER_LOW_DEPTH_NO_SVS, FILTER_CN_INCONSISTENCY, FILTER_COHORT_FREQ);
         checkAllEventsPass(expectedFilter, deletions, 0, ReportedStatus.NONE);
     }
 
