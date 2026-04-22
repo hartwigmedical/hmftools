@@ -22,7 +22,7 @@ import org.jetbrains.annotations.Nullable;
 public class ConversionUtil
 {
     public static void orangeJsonToFindingsJson(Path findingsJson, Path orangeJson, @Nullable Path clinicalTranscriptsTsv,
-            @Nullable Path driverGeneTsv, Gender gender) throws IOException
+            @Nullable Path driverGeneTsv, @Nullable Gender gender) throws IOException
     {
         FindingRecord
                 findingRecord =

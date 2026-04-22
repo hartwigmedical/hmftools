@@ -13,14 +13,12 @@ import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
 import com.hartwig.hmftools.finding.clinicaltranscript.ClinicalTranscriptFile;
 import com.hartwig.hmftools.finding.clinicaltranscript.ClinicalTranscriptsModel;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class FindingConfig
 {
     @Nullable
     private final ClinicalTranscriptsModel clinicalTranscriptsModel;
-    @NotNull
     private final Map<String, DriverGene> driverGenes;
     @Nullable
     private final Gender gender;
@@ -62,6 +60,7 @@ public class FindingConfig
         return driverGenes.get(gene);
     }
 
+    @Nullable
     public Gender gender()
     {
         return gender;
