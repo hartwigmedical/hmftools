@@ -4,6 +4,8 @@ import static java.lang.Math.abs;
 import static java.lang.Math.ceil;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.util.Objects.requireNonNull;
+import static java.util.function.UnaryOperator.identity;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.cigarFromStr;
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftClipLength;
@@ -18,11 +20,13 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.bam.SamRecordUtils;
 import com.hartwig.hmftools.common.bwa.BwaMemAlignParams;
 import com.hartwig.hmftools.common.bwa.BwaMemAligner;
+import com.hartwig.hmftools.common.bwa.IBwaMemAligner;
 import com.hartwig.hmftools.common.region.BasePosition;
 
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
@@ -31,19 +35,88 @@ import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.SAMFlag;
-import htsjdk.samtools.SAMSequenceDictionary;
+import htsjdk.samtools.SAMSequenceRecord;
 
 public class SagaMatcher
 {
-    private final SagaResource mSagaResource;
-    private final BwaMemAligner mAligner;
-    private final SAMSequenceDictionary mSagaDict;
+    private final Map<String, SagaResource.AssemblyMetadata> mAssembliesByVariantId;
+    // Map from contig to list of breakends sorted by position ascending.
+    private final Map<String, List<IndexedBreakend>> mSearchableBreakends;
+    private final IBwaMemAligner mAligner;
+    // So we can quickly look up a variant from the alignment contig ID.
+    private final Map<Integer, String> mContigIdToVariantId;
+    private final MatchConfig mMatchConfig;
+
+    private SagaMatcher(final List<SagaResource.AssemblyMetadata> assemblies, final IBwaMemAligner aligner,
+            final Map<Integer, String> contigIdToName, final MatchConfig matchConfig)
+    {
+        mAssembliesByVariantId = assemblies.stream()
+                .collect(Collectors.toMap(SagaResource.AssemblyMetadata::variantId, identity()));
+
+        mSearchableBreakends = assemblies.stream()
+                .flatMap(assembly ->
+                        assembly.variant().breakends().map(breakend ->
+                                new IndexedBreakend(breakend.position(), assembly.variantId())))
+                .collect(Collectors.groupingBy(IndexedBreakend::chromosome));
+        // Sort by position so they can be binary-searched.
+        mSearchableBreakends.forEach((chr, breakends) -> breakends.sort(Comparator.comparing(IndexedBreakend::position)));
+
+        // Precompute a map of the contig ID integer to the variant ID, so we can look it up from a BwaMemAlignment.
+        Map<String, String> contigNameToVariantId = assemblies.stream()
+                .collect(Collectors.toMap(SagaResource.AssemblyMetadata::fastaLabel, SagaResource.AssemblyMetadata::variantId));
+        mContigIdToVariantId = contigIdToName.entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, entry -> requireNonNull(contigNameToVariantId.get(entry.getValue()))));
+
+        mAligner = aligner;
+
+        mMatchConfig = matchConfig;
+    }
+
+    private SagaMatcher(final SagaResource sagaResource, final MatchConfig matchConfig)
+    {
+        this(
+                sagaResource.assemblies(),
+                new BwaMemAligner(sagaResource.bwaIndexImagePath(), createAlignerParams(matchConfig)),
+                sagaResource.samDict().getSequences()
+                        .stream()
+                        .collect(Collectors.toMap(SAMSequenceRecord::getSequenceIndex, SAMSequenceRecord::getSequenceName)),
+                matchConfig);
+    }
 
     public SagaMatcher(final SagaResource sagaResource)
     {
-        mSagaResource = sagaResource;
-        mAligner = new BwaMemAligner(sagaResource.bwaIndexImagePath(), makeAlignerParams());
-        mSagaDict = sagaResource.samDict();
+        this(sagaResource, MatchConfig.DEFAULT);
+    }
+
+    public record MatchConfig(
+            int locationDistanceMax,
+            int alignScoreMin,
+            double alignScoreRatioMin,
+            int junctionOverlapMin
+    )
+    {
+        static MatchConfig DEFAULT = new MatchConfig(
+                SAGA_LOCATION_MATCH_DISTANCE,
+                SAGA_ALIGN_SCORE_MIN_BASELINE,
+                SAGA_ALIGN_SCORE_MIN_RATIO,
+                SAGA_ALIGN_JUNCTION_OVERLAP_MIN
+        );
+    }
+
+    private record IndexedBreakend(
+            BasePosition basePosition,
+            String variantId
+    )
+    {
+        public String chromosome()
+        {
+            return basePosition.Chromosome;
+        }
+
+        public int position()
+        {
+            return basePosition.Position;
+        }
     }
 
     public record MatchByLocation(
@@ -56,25 +129,25 @@ public class SagaMatcher
     @Nullable
     public MatchByLocation matchByLocation(final String chromosome, int position)
     {
-        Map<String, List<SagaResource.IndexedBreakend>> breakends = mSagaResource.searchableBreakends();
-        List<SagaResource.IndexedBreakend> chrBreakends = breakends.get(chromosome);
+        Map<String, List<IndexedBreakend>> breakends = mSearchableBreakends;
+        List<IndexedBreakend> chrBreakends = breakends.get(chromosome);
         return matchByLocationOnChromosome(position, chrBreakends);
     }
 
     @Nullable
-    private MatchByLocation matchByLocationOnChromosome(int position, List<SagaResource.IndexedBreakend> chrBreakends)
+    private MatchByLocation matchByLocationOnChromosome(int position, List<IndexedBreakend> chrBreakends)
     {
-        String bestVariant = null;
-        int bestDistance = SAGA_LOCATION_MATCH_DISTANCE + 1;
+        IndexedBreakend bestBreakend = null;
+        int bestDistance = mMatchConfig.locationDistanceMax + 1;
         if(chrBreakends != null)
         {
-            SagaResource.IndexedBreakend target =
-                    new SagaResource.IndexedBreakend(new BasePosition(chrBreakends.get(0).chromosome(), position), "");
-            int index = Collections.binarySearch(chrBreakends, target, Comparator.comparingInt(SagaResource.IndexedBreakend::position));
+            IndexedBreakend target =
+                    new IndexedBreakend(new BasePosition(chrBreakends.get(0).chromosome(), position), "");
+            int index = Collections.binarySearch(chrBreakends, target, Comparator.comparingInt(IndexedBreakend::position));
             if(index >= 0)
             {
                 // Exact position found.
-                bestVariant = chrBreakends.get(index).variantId();
+                bestBreakend = chrBreakends.get(index);
                 bestDistance = 0;
             }
             else
@@ -85,24 +158,24 @@ public class SagaMatcher
                 int endIndex = min(index + 1, chrBreakends.size() - 1);
                 for(int i = startIndex; i <= endIndex; i++)
                 {
-                    SagaResource.IndexedBreakend breakend = chrBreakends.get(i);
+                    IndexedBreakend breakend = chrBreakends.get(i);
                     int distance = abs(breakend.position() - position);
                     if(distance < bestDistance)
                     {
-                        bestVariant = breakend.variantId();
+                        bestBreakend = breakend;
                         bestDistance = distance;
                     }
                 }
             }
         }
-        if(bestVariant == null)
+        if(bestBreakend == null)
         {
             return null;
 
         }
         else
         {
-            SagaResource.Variant variant = mSagaResource.getVariantById(bestVariant);
+            SagaResource.Variant variant = getAssemblyByVariantId(bestBreakend.variantId()).variant();
             return new MatchByLocation(variant, bestDistance);
         }
     }
@@ -199,8 +272,7 @@ public class SagaMatcher
             return null;
         }
 
-        String refContig = mSagaDict.getSequence(alignment.getRefId()).getSequenceName();
-        SagaResource.AssemblyMetadata sagaAssembly = mSagaResource.getAssemblyByFastaLabel(refContig);
+        SagaResource.AssemblyMetadata sagaAssembly = getAssemblyByContigId(alignment.getRefId());
 
         List<List<Integer>> sagaJunctionOverlaps = sagaAssembly.junctionOffsets()
                 .stream()
@@ -214,9 +286,9 @@ public class SagaMatcher
         return new AlignmentCandidate(sagaAssembly.variant(), cigar, alignment.getAlignerScore(), seqJunctionOverlaps, sagaJunctionOverlaps);
     }
 
-    private static int calcMinAlignScore(int alignLength1, int alignLength2)
+    private int calcMinAlignScore(int alignLength1, int alignLength2)
     {
-        return (int) ceil(min(alignLength1, alignLength2) * SAGA_ALIGN_SCORE_MIN_RATIO);
+        return (int) ceil(min(alignLength1, alignLength2) * mMatchConfig.alignScoreRatioMin);
     }
 
     private static List<Integer> calcJunctionOverlap(int alignStart, int alignEnd, int junctionOffset)
@@ -229,26 +301,53 @@ public class SagaMatcher
         return List.of(junctionOffset - alignStart, alignEnd - junctionOffset);
     }
 
-    private static boolean isJunctionOverlapOk(List<List<Integer>> overlaps)
+    private boolean isJunctionOverlapOk(final List<List<Integer>> overlaps)
     {
         // Require the alignment to cover the junction +/- some tolerance bases.
         // At least one junction must be covered in this manner. We don't require all the junctions to be covered because we could be
         // matching just one side of the variant (e.g. for junction assembly, or an SGL).
+        int minOverlap = mMatchConfig.junctionOverlapMin;
         return overlaps.stream()
-                .anyMatch(junctionOverlaps -> junctionOverlaps.stream().allMatch(overlap -> overlap >= SAGA_ALIGN_JUNCTION_OVERLAP_MIN));
+                .anyMatch(junctionOverlaps -> junctionOverlaps.stream().allMatch(overlap -> overlap >= minOverlap));
     }
 
-    private static BwaMemAligner.Params makeAlignerParams()
+    private static BwaMemAligner.Params createAlignerParams(final MatchConfig matchConfig)
     {
         return new BwaMemAligner.Params(
                 // TODO? may have to relax some params? but measure performance hit
                 BwaMemAlignParams.DEFAULT,
                 true,
-                SAGA_ALIGN_SCORE_MIN_BASELINE,
+                matchConfig.alignScoreMin(),
                 // Single threaded because ESVEE is already multithreaded appropriately.
                 1,
                 // Don't care about batching because we align 1 sequence at a time.
                 null
         );
+    }
+
+    private SagaResource.AssemblyMetadata getAssemblyByVariantId(final String variantId)
+    {
+        SagaResource.AssemblyMetadata assembly = mAssembliesByVariantId.get(variantId);
+        if(assembly == null)
+        {
+            throw new IllegalArgumentException("No SAGA variant with ID: " + variantId);
+        }
+        else
+        {
+            return assembly;
+        }
+    }
+
+    private SagaResource.AssemblyMetadata getAssemblyByContigId(int contigId)
+    {
+        String variantId = mContigIdToVariantId.get(contigId);
+        if(variantId == null)
+        {
+            throw new IllegalArgumentException("No SAGA variant with contig ID: " + contigId);
+        }
+        else
+        {
+            return getAssemblyByVariantId(variantId);
+        }
     }
 }

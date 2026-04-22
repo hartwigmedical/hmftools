@@ -1,16 +1,13 @@
 package com.hartwig.hmftools.esvee.common;
 
 import static java.lang.String.format;
-import static java.util.function.UnaryOperator.identity;
 
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Comparator;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.genome.region.Orientation;
@@ -24,23 +21,14 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 public class SagaResource
 {
     private final String mFastaPath;
-    private final Map<String, AssemblyMetadata> mAssembliesById;
-    private final Map<String, List<IndexedBreakend>> mSearchableBreakends;
-    private SAMSequenceDictionary mSamDict;
+    private final List<AssemblyMetadata> mAssemblies;
+    private final SAMSequenceDictionary mSamDict;
 
     public SagaResource(final String fastaPath)
     {
         mFastaPath = fastaPath;
-        List<AssemblyMetadata> assemblies = loadAssemblies();
-        mAssembliesById = assemblies.stream()
-                .collect(Collectors.toMap(AssemblyMetadata::id, identity()));
-        mSearchableBreakends = assemblies.stream()
-                .flatMap(assembly ->
-                        assembly.variant.breakends().map(breakend ->
-                                new IndexedBreakend(breakend.position(), assembly.variant.id())))
-                .collect(Collectors.groupingBy(IndexedBreakend::chromosome));
-        // Sort by position so they can be binary searched.
-        mSearchableBreakends.forEach((chr, breakends) -> breakends.sort(Comparator.comparing(IndexedBreakend::position)));
+        mAssemblies = new ArrayList<>(100_000);
+        mSamDict = loadAssemblies(fastaPath, mAssemblies);
     }
 
     public String bwaIndexImagePath()
@@ -53,34 +41,9 @@ public class SagaResource
         return mSamDict;
     }
 
-    public AssemblyMetadata getAssemblyById(final String variantId)
+    public List<AssemblyMetadata> assemblies()
     {
-        AssemblyMetadata assembly = mAssembliesById.get(variantId);
-        if(assembly == null)
-        {
-            throw new IllegalArgumentException("No SAGA variant with ID:" + variantId);
-        }
-        else
-        {
-            return assembly;
-        }
-    }
-
-    public Variant getVariantById(final String variantId)
-    {
-        return getAssemblyById(variantId).variant();
-    }
-
-    public AssemblyMetadata getAssemblyByFastaLabel(final String fastaLabel)
-    {
-        String variantId = fastaLabel.split("\\|", 2)[0];
-        return getAssemblyById(variantId);
-    }
-
-    // Breakends grouped by chromosome, and sorted by position within each chromosome.
-    public Map<String, List<IndexedBreakend>> searchableBreakends()
-    {
-        return mSearchableBreakends;
+        return mAssemblies;
     }
 
     public record Breakend(
@@ -149,7 +112,7 @@ public class SagaResource
             }
         }
 
-        public String id()
+        public String variantId()
         {
             return variant.id();
         }
@@ -181,32 +144,16 @@ public class SagaResource
         }
     }
 
-    public record IndexedBreakend(
-            BasePosition basePosition,
-            String variantId
-    )
-    {
-        public String chromosome()
-        {
-            return basePosition.Chromosome;
-        }
-
-        public int position()
-        {
-            return basePosition.Position;
-        }
-    }
-
-    private List<AssemblyMetadata> loadAssemblies()
+    private static SAMSequenceDictionary loadAssemblies(final String fastaPath, List<AssemblyMetadata> assemblies)
     {
         SV_LOGGER.debug("Loading SAGA resource FASTA");
-        List<AssemblyMetadata> assemblies;
-        try(IndexedFastaSequenceFile fasta = loadFasta())
+        SAMSequenceDictionary samDict;
+        try(IndexedFastaSequenceFile fasta = loadFasta(fastaPath))
         {
-            mSamDict = fasta.getSequenceDictionary();
-            assemblies = mSamDict.getSequences().stream()
+            samDict = fasta.getSequenceDictionary();
+            samDict.getSequences().stream()
                     .map(seq -> AssemblyMetadata.fromFastaLabel(seq.getSequenceName(), seq.getSequenceLength()))
-                    .toList();
+                    .forEach(assemblies::add);
         }
         catch(IOException e)
         {
@@ -223,11 +170,11 @@ public class SagaResource
 
         SV_LOGGER.debug("Loaded {} SAGA variant assemblies", assemblies.size());
 
-        return assemblies;
+        return samDict;
     }
 
-    private IndexedFastaSequenceFile loadFasta() throws IOException
+    private static IndexedFastaSequenceFile loadFasta(final String fastaPath) throws IOException
     {
-        return new IndexedFastaSequenceFile(new File(mFastaPath));
+        return new IndexedFastaSequenceFile(new File(fastaPath));
     }
 }
