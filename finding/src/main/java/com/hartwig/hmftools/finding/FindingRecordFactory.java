@@ -127,9 +127,7 @@ public class FindingRecordFactory
         DriverFindingList<Disruption> germlineDisruptions =
                 createGermlineDisruptions(orangeRecord.refSample() != null, linx, findingStatus);
 
-        List<Disruption> germlineHomozygousDisruptions = germlineDisruptions.status().isOK()
-                ? germlineDisruptions.findings().stream().filter(Disruption::isHomozygous).toList()
-                : null;
+        List<Disruption> germlineHomozygousDisruptions = germlineDisruptions.findingsIfOk().stream().filter(Disruption::isHomozygous).toList();
 
         return FindingRecordBuilder.builder()
                 .version("1.0")
@@ -339,7 +337,7 @@ public class FindingRecordFactory
     private static FindingItem<HomologousRecombination> createHomologousRecombination(@Nullable ChordRecord chord,
             DriverFindingList<SmallVariant> smallVariants,
             DriverFindingList<GainDeletion> gainDeletions,
-            @Nullable List<Disruption> germlineHomozygousDisruptions,
+            List<Disruption> germlineHomozygousDisruptions,
             FindingStatus findingStatus,
             ExperimentType experimentType,
             boolean hasRefSample)
@@ -405,7 +403,7 @@ public class FindingRecordFactory
 
     private static FindingItem<MicrosatelliteStability> createMicrosatelliteStability(PurpleRecord purple,
             DriverFindingList<SmallVariant> smallVariants, DriverFindingList<GainDeletion> gainDeletions,
-            @Nullable List<Disruption> germlineHomozygousDisruptions,
+            List<Disruption> germlineHomozygousDisruptions,
             FindingStatus findingStatus)
     {
         MicrosatelliteStability.Status microsatelliteStatus =
