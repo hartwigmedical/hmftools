@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.function.Predicate;
 
 import com.hartwig.hmftools.finding.datamodel.RecordBuilder;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingList;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
 import com.hartwig.hmftools.finding.datamodel.finding.IFindingList;
 
@@ -18,7 +19,8 @@ public record DriverFindingList<T extends Driver>(
     @NotNull
     public DriverFindingList<T> germlineOnly()
     {
-        return filter(f -> f.driverSource() == DriverSource.GERMLINE);    }
+        return filter(f -> f.driverSource() == DriverSource.GERMLINE);
+    }
 
     @NotNull
     public DriverFindingList<T> somaticOnly()
@@ -44,5 +46,10 @@ public record DriverFindingList<T extends Driver>(
         return DriverFindingListBuilder.builder(this)
                 .findings(findings.stream().filter(filter).toList())
                 .build();
+    }
+
+    public List<T> findingsIfOk()
+    {
+        return status().isOK() ? findings() : List.of();
     }
 }

@@ -2,41 +2,36 @@ package com.hartwig.hmftools.finding;
 
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Sets;
-import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
-import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
-import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
-import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
-
-import org.jetbrains.annotations.Nullable;
+import com.hartwig.hmftools.finding.datamodel.Disruption;
+import com.hartwig.hmftools.finding.datamodel.GainDeletion;
+import com.hartwig.hmftools.finding.datamodel.SmallVariant;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingList;
 
 class GeneListUtil
 {
-    static List<String> genes(List<PurpleVariant> reportableVariants,
-            List<PurpleGainDeletion> gainDeletions,
-            @Nullable List<LinxBreakend> homozygousDisruptions,
+    static List<String> genes(DriverFindingList<SmallVariant> smallVariants,
+            DriverFindingList<GainDeletion> gainDeletions,
+            List<Disruption> germlineHomozygousDisruptions,
             Set<String> genes)
     {
-        Set<String> genesDisplay = Sets.newTreeSet();
+        Set<String> genesDisplay = new TreeSet<>();
 
-        genesDisplay.addAll(filteredMapped(reportableVariants,
+        genesDisplay.addAll(filteredMapped(smallVariants.findings(),
                 variant -> genes.contains(variant.gene()),
-                PurpleVariant::gene));
+                SmallVariant::gene));
 
-        genesDisplay.addAll(filteredMapped(gainDeletions,
-                gainDeletion -> genes.contains(gainDeletion.gene()) && gainDeletion.driver().type() == PurpleDriverType.DEL,
-                PurpleGainDeletion::gene));
+        genesDisplay.addAll(filteredMapped(gainDeletions.findings(),
+                gainDeletion -> genes.contains(gainDeletion.gene()) && gainDeletion.isDeletion(),
+                GainDeletion::gene));
 
-        if(homozygousDisruptions != null)
-        {
-            genesDisplay.addAll(filteredMapped(homozygousDisruptions,
-                    homozygousDisruption -> genes.contains(homozygousDisruption.gene()),
-                    LinxBreakend::gene));
-        }
+        genesDisplay.addAll(filteredMapped(germlineHomozygousDisruptions,
+                homozygousDisruption -> genes.contains(homozygousDisruption.gene()),
+                Disruption::gene));
 
         return genesDisplay.stream().sorted().toList();
     }
