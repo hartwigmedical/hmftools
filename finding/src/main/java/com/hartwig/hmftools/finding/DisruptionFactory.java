@@ -25,13 +25,13 @@ import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingList;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingListBuilder;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverSource;
-import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
 import com.hartwig.hmftools.finding.datamodel.driver.ReportedStatus;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
+import com.hartwig.hmftools.finding.util.FindingUtil;
 
 import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 // create Disruption findings from Linx breakends
@@ -94,9 +94,9 @@ final class DisruptionFactory
 
     public static DriverFindingList<Disruption> createSomaticDisruptions(LinxRecord linx, FindingStatus findingStatus)
     {
-        @NotNull Collection<LinxBreakend> breakends = linx.reportableSomaticBreakends();
-        @NotNull Collection<LinxSvAnnotation> structuralVariants = linx.allSomaticStructuralVariants();
-        @NotNull List<LinxDriver> linxDrivers = linx.somaticDrivers();
+        Collection<LinxBreakend> breakends = linx.reportableSomaticBreakends();
+        Collection<LinxSvAnnotation> structuralVariants = linx.allSomaticStructuralVariants();
+        List<LinxDriver> linxDrivers = linx.somaticDrivers();
 
         Map<String, Disruption.Type> geneDriverTypeMap = new HashMap<>();
         for(LinxDriver linxDriver : linxDrivers)

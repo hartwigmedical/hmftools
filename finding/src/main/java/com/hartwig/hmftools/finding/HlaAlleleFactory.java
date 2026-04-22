@@ -21,7 +21,6 @@ import com.hartwig.hmftools.finding.datamodel.HlaAlleleBuilder;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 
 // lilac shows two copies of HLA alleles even if they are the
 // same allele. This class combine the alleles and sum the copies
@@ -104,7 +103,6 @@ public class HlaAlleleFactory
         return builder.build();
     }
 
-    @NotNull
     static Matcher matchHlaRegEx(String allele)
     {
         var matcher = HLA_REGEX.matcher(allele);

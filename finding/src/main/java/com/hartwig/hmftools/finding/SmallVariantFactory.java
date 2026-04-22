@@ -24,6 +24,7 @@ import com.hartwig.hmftools.finding.datamodel.SmallVariant;
 import com.hartwig.hmftools.finding.datamodel.SmallVariantAllelicDepthBuilder;
 import com.hartwig.hmftools.finding.datamodel.SmallVariantBuilder;
 import com.hartwig.hmftools.finding.datamodel.SmallVariantTranscriptImpactBuilder;
+import com.hartwig.hmftools.finding.util.FindingUtil;
 
 import org.jetbrains.annotations.Nullable;
 

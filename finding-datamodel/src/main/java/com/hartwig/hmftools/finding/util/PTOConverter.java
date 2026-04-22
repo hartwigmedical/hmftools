@@ -3,7 +3,6 @@ package com.hartwig.hmftools.finding.util;
 import java.util.List;
 import java.util.Map;
 
-import com.hartwig.hmftools.finding.FindingUtil;
 import com.hartwig.hmftools.finding.datamodel.FindingRecord;
 import com.hartwig.hmftools.finding.datamodel.FindingRecordBuilder;
 import com.hartwig.hmftools.finding.datamodel.PredictedTumorOrigin;

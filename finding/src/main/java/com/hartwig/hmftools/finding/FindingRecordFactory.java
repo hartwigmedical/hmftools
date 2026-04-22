@@ -80,8 +80,8 @@ import com.hartwig.hmftools.finding.datamodel.TumorMutationalLoad;
 import com.hartwig.hmftools.finding.datamodel.TumorMutationalLoadBuilder;
 import com.hartwig.hmftools.finding.datamodel.Virus;
 import com.hartwig.hmftools.finding.datamodel.VirusBuilder;
+import com.hartwig.hmftools.finding.util.FindingUtil;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 // to reduce duplication, the findings are collected from
@@ -230,8 +230,8 @@ public class FindingRecordFactory
     }
 
     private static FindingItem<PredictedTumorOrigin> createPredictedTumorOrigin(@Nullable CuppaData cuppa, OrangePlots orangePlots,
-            @NotNull ExperimentType experimentType,
-            @NotNull FindingStatus findingStatus)
+            ExperimentType experimentType,
+            FindingStatus findingStatus)
     {
         if(cuppa != null)
         {
@@ -299,7 +299,6 @@ public class FindingRecordFactory
                 .build();
     }
 
-    @NotNull
     private static TumorMutationalBurden.Status tumorMutationalBurdenStatus(PurpleTumorMutationalStatus status)
     {
         return switch(status)
@@ -323,7 +322,6 @@ public class FindingRecordFactory
                 .build();
     }
 
-    @NotNull
     private static TumorMutationalLoad.Status tumorMutationalLoadStatus(PurpleTumorMutationalStatus status)
     {
         return switch(status)
@@ -389,8 +387,7 @@ public class FindingRecordFactory
         }
     }
 
-    @NotNull
-    private static HomologousRecombination.Status hrStatus(@NotNull ChordRecord chord)
+    private static HomologousRecombination.Status hrStatus(ChordRecord chord)
     {
         return switch(chord.hrStatus())
         {
@@ -429,7 +426,6 @@ public class FindingRecordFactory
                 .build();
     }
 
-    @NotNull
     private static MicrosatelliteStability.Status microsatelliteStatus(PurpleMicrosatelliteStatus status)
     {
         return switch(status)
@@ -507,8 +503,8 @@ public class FindingRecordFactory
     }
 
     private static DriverFindingList<Virus> createVirusFindings(@Nullable VirusInterpreterData virusInterpreter,
-            @NotNull ExperimentType experimentType,
-            @NotNull FindingStatus findingStatus)
+            ExperimentType experimentType,
+            FindingStatus findingStatus)
     {
         if(virusInterpreter != null)
         {
@@ -569,7 +565,7 @@ public class FindingRecordFactory
     }
 
     private static FindingList<PharmacoGenotype> createPharmacoGenotypesFindings(@Nullable Set<PeachGenotype> peachGenotypes,
-            @NotNull FindingStatus findingStatus)
+            FindingStatus findingStatus)
     {
         if(peachGenotypes != null)
         {

@@ -5,7 +5,6 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.function.Function;
 
-import com.hartwig.hmftools.finding.FindingUtil;
 import com.hartwig.hmftools.finding.datamodel.FindingRecord;
 import com.hartwig.hmftools.finding.datamodel.FindingRecordBuilder;
 import com.hartwig.hmftools.finding.datamodel.HlaAllele;

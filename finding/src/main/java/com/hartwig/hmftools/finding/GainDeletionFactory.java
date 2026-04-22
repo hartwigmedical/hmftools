@@ -21,6 +21,7 @@ import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingListBuilder;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverSource;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
+import com.hartwig.hmftools.finding.util.FindingUtil;
 
 import org.jetbrains.annotations.Nullable;
 
