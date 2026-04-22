@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
 import com.hartwig.hmftools.datamodel.purple.GermlineAmpDelFields;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
@@ -25,7 +24,6 @@ import org.jspecify.annotations.Nullable;
 final class GainDeletionFactory
 {
     public static DriverFindingList<GainDeletion> somaticGainDeletionFindings(
-            OrangeRefGenomeVersion orangeRefGenomeVersion,
             FindingStatus findingStatus,
             PurpleRecord purple)
     {
@@ -41,7 +39,6 @@ final class GainDeletionFactory
 
     public static DriverFindingList<GainDeletion> germlineGainDeletionFindings(
             boolean hasGermlineSample,
-            OrangeRefGenomeVersion orangeRefGenomeVersion,
             FindingStatus findingStatus,
             PurpleRecord purple)
     {
