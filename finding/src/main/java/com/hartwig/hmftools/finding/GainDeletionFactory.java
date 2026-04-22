@@ -159,7 +159,6 @@ final class GainDeletionFactory
         Optional<PurpleGeneCopyNumber> result = somaticGeneCopyNumbers.stream()
                 .filter(o -> o.gene().equals(gene) && o.transcript().equals(transcript))
                 .findFirst();
-        System.out.println("isOptional = " + isOptional);
         if(result.isEmpty() && !isOptional)
         {
             throw new IllegalStateException("No gene copy number found for " + gene + " transcript " + transcript);
