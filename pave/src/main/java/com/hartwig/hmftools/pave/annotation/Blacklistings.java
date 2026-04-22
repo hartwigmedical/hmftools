@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.pave.annotation;
 
+import static com.hartwig.hmftools.common.variant.PaveVcfTags.BLACKLIST_BED_FLAG;
+import static com.hartwig.hmftools.common.variant.PaveVcfTags.BLACKLIST_VCF_DESC;
+import static com.hartwig.hmftools.common.variant.PaveVcfTags.BLACKLIST_VCF_FLAG;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 
 import java.io.IOException;
@@ -27,9 +30,6 @@ public class Blacklistings extends AnnotationData
 
     private static final String BLACKLIST_BED = "blacklist_bed";
     private static final String BLACKLIST_VCF = "blacklist_vcf";
-
-    private static final String BLACKLIST_BED_FLAG = "BLACKLIST_BED";
-    private static final String BLACKLIST_VCF_FLAG = "BLACKLIST_VCF";
 
     public Blacklistings(final ConfigBuilder configBuilder)
     {
@@ -133,11 +133,8 @@ public class Blacklistings extends AnnotationData
 
     public static void addHeader(final VCFHeader header)
     {
-        header.addMetaDataLine(new VCFInfoHeaderLine(
-                BLACKLIST_BED_FLAG, 0, VCFHeaderLineType.Flag, "Sites listed in Blacklist BED"));
-
-        header.addMetaDataLine(new VCFInfoHeaderLine(
-                BLACKLIST_VCF_FLAG, 0, VCFHeaderLineType.Flag, "Sites listed in Blacklist VCF"));
+        header.addMetaDataLine(new VCFInfoHeaderLine(BLACKLIST_BED_FLAG, 0, VCFHeaderLineType.Flag, BLACKLIST_BED_FLAG));
+        header.addMetaDataLine(new VCFInfoHeaderLine(BLACKLIST_VCF_FLAG, 0, VCFHeaderLineType.Flag, BLACKLIST_VCF_DESC));
     }
 
     public static void addConfig(final ConfigBuilder configBuilder)

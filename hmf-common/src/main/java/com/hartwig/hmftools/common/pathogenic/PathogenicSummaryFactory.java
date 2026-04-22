@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.common.pathogenic;
 
+import static com.hartwig.hmftools.common.variant.PaveVcfTags.BLACKLIST_BED_FLAG;
+import static com.hartwig.hmftools.common.variant.PaveVcfTags.BLACKLIST_VCF_FLAG;
+
 import org.apache.logging.log4j.util.Strings;
 
 import htsjdk.variant.variantcontext.VariantContext;
@@ -8,8 +11,6 @@ public final class PathogenicSummaryFactory
 {
     public static final String CLNSIG = "CLNSIG";
     public static final String CLNSIGCONF = "CLNSIGCONF";
-    public static final String BLACKLIST_BED = "BLACKLIST_BED";
-    public static final String BLACKLIST_VCF = "BLACKLIST_VCF";
 
     public static PathogenicSummary fromContext(final VariantContext context)
     {
@@ -17,10 +18,11 @@ public final class PathogenicSummaryFactory
         String clnSigConf = clnSigConf(context);
         String clinvarInfo = !clnSigConf.isEmpty() ? clnSigConf : clnSig;
 
-        final Pathogenicity pathogenicity =
-                context.getAttributeAsBoolean(BLACKLIST_BED, false) || context.getAttributeAsBoolean(BLACKLIST_VCF, false)
-                        ? Pathogenicity.BENIGN_BLACKLIST
-                        : Pathogenicity.fromClinvarAnnotation(clnSig, clnSigConf);
+        boolean isBlacklisted = context.getAttributeAsBoolean(BLACKLIST_BED_FLAG, false)
+                || context.getAttributeAsBoolean(BLACKLIST_VCF_FLAG, false);
+
+        final Pathogenicity pathogenicity = isBlacklisted ?
+                Pathogenicity.BENIGN_BLACKLIST : Pathogenicity.fromClinvarAnnotation(clnSig, clnSigConf);
 
         return new PathogenicSummary(clinvarInfo, pathogenicity);
     }
