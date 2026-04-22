@@ -15,14 +15,10 @@ import com.hartwig.hmftools.finding.clinicaltranscript.ClinicalTranscriptsModel;
 
 import org.jetbrains.annotations.Nullable;
 
-public class FindingConfig
+record FindingConfig(@Nullable ClinicalTranscriptsModel clinicalTranscriptsModel,
+                            Map<String, DriverGene> driverGenes,
+                            @Nullable Gender gender)
 {
-    @Nullable
-    private final ClinicalTranscriptsModel clinicalTranscriptsModel;
-    private final Map<String, DriverGene> driverGenes;
-    @Nullable
-    private final Gender gender;
-
     public static FindingConfig createFindingConfig(@Nullable Path clinicalTranscriptsTsv,
             @Nullable Path driverGeneTsv, OrangeRefGenomeVersion orangeRefGenomeVersion,
             @Nullable Gender gender) throws IOException
@@ -40,14 +36,6 @@ public class FindingConfig
                 .collect(Collectors.toMap(DriverGene::gene, Function.identity())) : Map.of();
     }
 
-    public FindingConfig(@Nullable final ClinicalTranscriptsModel clinicalTranscriptsModel, final Map<String, DriverGene> driverGenes,
-            @Nullable Gender gender)
-    {
-        this.clinicalTranscriptsModel = clinicalTranscriptsModel;
-        this.driverGenes = driverGenes;
-        this.gender = gender;
-    }
-
     @Nullable
     public String findCanonicalTranscriptForGene(String gene)
     {
@@ -58,11 +46,5 @@ public class FindingConfig
     public DriverGene getDriverGene(String gene)
     {
         return driverGenes.get(gene);
-    }
-
-    @Nullable
-    public Gender gender()
-    {
-        return gender;
     }
 }
