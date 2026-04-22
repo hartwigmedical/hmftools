@@ -38,8 +38,7 @@ public record GainDeletion(
         GAIN,
         HOM_DEL,
         HET_DEL,
-        CN_NEUTRAL_LOH,
-        NONE
+        CN_NEUTRAL_LOH
     }
 
     public enum GeneExtent
