@@ -74,7 +74,10 @@ public class BreakendBuilder
     private void doFormBreakends(final List<AlignData> alignments)
     {
         if(alignments.isEmpty())
+        {
+            SV_LOGGER.trace("assembly alignment({}) filtered: no alignments", mAssemblyAlignment);
             return;
+        }
 
         List<AlignData> validAlignments = Lists.newArrayList();
         List<AlignData> lowQualAlignments = Lists.newArrayList();
@@ -82,7 +85,10 @@ public class BreakendBuilder
         AlignmentFilters.filterAlignments(mAssemblyAlignment, alignments, validAlignments, lowQualAlignments);
 
         if(validAlignments.isEmpty())
+        {
+            SV_LOGGER.trace("assembly alignment({}) filtered: alignment validity", mAssemblyAlignment);
             return;
+        }
 
         if(validAlignments.size() == 1)
         {
@@ -92,7 +98,12 @@ public class BreakendBuilder
             boolean formsIndel = formIndelBreakends(singleAlignment);
 
             if(!formsIndel)
+            {
                 formSingleBreakend(singleAlignment, lowQualAlignments);
+            }
+            else {
+                SV_LOGGER.trace("assembly alignment({}) filtered: forms indel", mAssemblyAlignment);
+            }
         }
         else
         {
@@ -304,7 +315,10 @@ public class BreakendBuilder
         int requiredSoftClipLength = calcRequiredSoftClipLength(insertedBases, orientation);
 
         if(softClipLength < requiredSoftClipLength)
+        {
+            SV_LOGGER.trace("assembly alignment({}) filtered: alignment SC length", mAssemblyAlignment);
             return;
+        }
 
         Breakend breakend = new Breakend(
                 mAssemblyAlignment, alignment.chromosome(), breakendPosition, orientation, insertedBases, null);

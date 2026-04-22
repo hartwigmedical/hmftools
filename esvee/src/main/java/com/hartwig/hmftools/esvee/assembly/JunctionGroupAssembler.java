@@ -223,13 +223,14 @@ public class JunctionGroupAssembler extends ThreadTask
                         continue;
                     }
                 }
-                else {
+                else
+                {
                     SV_LOGGER.trace("assembly({}) excluded from decoy check", assembly);
                 }
 
                 if(mAlignmentChecker.failsMappability(assembly))
                 {
-                    SV_LOGGER.trace("assembly({}) fails ref-base alignment, excluding", assembly);
+                    SV_LOGGER.trace("assembly({}) filtered: ref-base alignment", assembly);
                     ++mReadStats.RefBaseAlignmentFails;
                     continue;
                 }

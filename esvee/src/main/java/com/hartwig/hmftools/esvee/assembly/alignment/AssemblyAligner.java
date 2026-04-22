@@ -109,14 +109,22 @@ public class AssemblyAligner extends ThreadTask
     @VisibleForTesting
     public void processAssembly(final AssemblyAlignment assemblyAlignment)
     {
+        if (mSagaMatcher != null)
+        {
+            SagaMatcher.MatchBySequence sagaMatch = mSagaMatcher.matchBySequence(assemblyAlignment.fullSequence(), assemblyAlignment.linkIndices());
+            SV_LOGGER.trace("assembly alignment({}) SAGA sequence match {}", assemblyAlignment, sagaMatch);
+            assemblyAlignment.setSagaMatch(sagaMatch);
+        }
+
         if(!assemblyAlignment.isValid())
         {
-            SV_LOGGER.warn("assembly alignment({}) invalid, skipping", assemblyAlignment);
+            SV_LOGGER.warn("assembly alignment({}) filtered: invalid", assemblyAlignment);
             return;
         }
 
         if(assemblyAlignment.isMerged())
         {
+            SV_LOGGER.trace("assembly alignment({}) filtered: merged", assemblyAlignment);
             writeAssemblyData(mWriter, mConfig, assemblyAlignment, Collections.emptyList(), Collections.emptyList());
             return;
         }
@@ -331,13 +339,9 @@ public class AssemblyAligner extends ThreadTask
     private void processAlignmentResults(final AssemblyAlignment assemblyAlignment, final List<AlignData> alignments)
     {
         if(alignments.isEmpty())
-            return;
-
-        if (mSagaMatcher != null)
         {
-            SagaMatcher.MatchBySequence sagaMatch = mSagaMatcher.matchBySequence(assemblyAlignment.fullSequence(), assemblyAlignment.linkIndices());
-            SV_LOGGER.trace("assembly alignment({}) SAGA sequence match {}", assemblyAlignment, sagaMatch);
-            assemblyAlignment.setSagaMatch(sagaMatch);
+            SV_LOGGER.trace("assembly alignment({}) filtered: no alignments", assemblyAlignment);
+            return;
         }
 
         BreakendBuilder breakendBuilder = new BreakendBuilder(mConfig.RefGenome, assemblyAlignment);
@@ -346,6 +350,7 @@ public class AssemblyAligner extends ThreadTask
         // final filters on assembly and alignment results
         if(isWeakSingleReadExtensionAssembly(assemblyAlignment))
         {
+            SV_LOGGER.trace("assembly alignment({}) filtered: weak single read extension", assemblyAlignment);
             assemblyAlignment.breakends().clear();
         }
     }
