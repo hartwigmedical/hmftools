@@ -12,13 +12,11 @@ import com.hartwig.hmftools.finding.datamodel.GainDeletion;
 import com.hartwig.hmftools.finding.datamodel.SmallVariant;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingList;
 
-import org.jetbrains.annotations.Nullable;
-
 class GeneListUtil
 {
     static List<String> genes(DriverFindingList<SmallVariant> smallVariants,
             DriverFindingList<GainDeletion> gainDeletions,
-            @Nullable List<Disruption> germlineHomozygousDisruptions,
+            List<Disruption> germlineHomozygousDisruptions,
             Set<String> genes)
     {
         Set<String> genesDisplay = Sets.newTreeSet();
@@ -31,12 +29,9 @@ class GeneListUtil
                 gainDeletion -> genes.contains(gainDeletion.gene()) && gainDeletion.isDeletion(),
                 GainDeletion::gene));
 
-        if(germlineHomozygousDisruptions != null)
-        {
-            genesDisplay.addAll(filteredMapped(germlineHomozygousDisruptions,
-                    homozygousDisruption -> genes.contains(homozygousDisruption.gene()),
-                    Disruption::gene));
-        }
+        genesDisplay.addAll(filteredMapped(germlineHomozygousDisruptions,
+                homozygousDisruption -> genes.contains(homozygousDisruption.gene()),
+                Disruption::gene));
 
         return genesDisplay.stream().sorted().toList();
     }
