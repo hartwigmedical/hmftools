@@ -98,7 +98,8 @@ public class GermlineAmpDelFinder
         this(driverGenes, new EnsemblDataSupplier(geneDataCache), cohortFrequency);
     }
 
-    public GermlineAmpDelFinder(final Map<String, DriverGene> driverGenes, final GeneDataSupplier geneDataCache,
+    public GermlineAmpDelFinder(
+            final Map<String, DriverGene> driverGenes, final GeneDataSupplier geneDataCache,
             final GermlineAmpDelFrequencyCache cohortFrequency)
     {
         mGeneDataCache = geneDataCache;
@@ -128,7 +129,8 @@ public class GermlineAmpDelFinder
         {
             ObservedRegion region = fittedRegions.get(i);
 
-            final GermlineStatus germlineStatus = region.germlineStatus();
+            GermlineStatus germlineStatus = region.germlineStatus();
+
             if(germlineStatus != HOM_DELETION && germlineStatus != HET_DELETION && germlineStatus != AMPLIFICATION)
             {
                 continue;
@@ -261,9 +263,7 @@ public class GermlineAmpDelFinder
         public int ChrEndIndex = 0;
         public String CurrentChromosome = "";
 
-        public CopyNumberSearchState()
-        {
-        }
+        public CopyNumberSearchState() {}
     }
 
     private PurpleCopyNumber findMatchingCopyNumber(
@@ -329,8 +329,8 @@ public class GermlineAmpDelFinder
     static final String FILTER_COHORT_FREQ = "COHORT_FREQ";
     static final String FILTER_LOW_DEPTH_NO_SVS = "LOW_DEPTH_NO_SVS";
 
-    private List<String> checkFilters(final ObservedRegion region, final ObservedRegion nextRegion,
-            final PurpleCopyNumber copyNumber,
+    private List<String> checkFilters(
+            final ObservedRegion region, final ObservedRegion nextRegion, final PurpleCopyNumber copyNumber,
             int cohortFrequency, final GermlineStatus germlineStatus)
     {
         final List<String> filters = Lists.newArrayList();
@@ -373,10 +373,9 @@ public class GermlineAmpDelFinder
     {
         // now find genes
         List<GeneData> geneDataList = mGeneDataCache.getGeneData(region.chromosome());
+
         if(geneDataList == null)
-        {
             return;
-        }
 
         final boolean germlineSvAtStart = matchingSVs[SE_START] != null;
         int adjustPosStart = germlineSvAtStart ? matchingSVs[SE_START].position() : region.start();
@@ -386,22 +385,18 @@ public class GermlineAmpDelFinder
         int regionLowerPos = germlineSvAtStart ? adjustPosStart : adjustPosStart - GERMLINE_AMP_DEL_GENE_BUFFER;
         int regionHighPos = germlineSvAtEnd ? adjustPosEnd : adjustPosEnd + GERMLINE_AMP_DEL_GENE_BUFFER;
 
+        // set the status in the tumor
+        GermlineStatus tumorAmpDelStatus = germlineStatus;
         double tumorCopyNumber = region.refNormalisedCopyNumber();
 
-        boolean hasGermlineDel = germlineStatus == HET_DELETION || germlineStatus == HOM_DELETION;
-
-        GermlineStatus tumorAmpDelStatus = HET_DELETION;
-
-        if(tumorCopyNumber >= GERMLINE_LIKELY_DIPLOID_UPPER_THRESHOLD)
-        {
-            if(hasGermlineDel)
-                tumorAmpDelStatus = UNKNOWN;
-            else
-                tumorAmpDelStatus = AMPLIFICATION;
-        }
-        else if(tumorCopyNumber < HOM_DELETION_CUTOFF)
+        if(germlineStatus == HET_DELETION && tumorCopyNumber < HOM_DELETION_CUTOFF)
         {
             tumorAmpDelStatus = HOM_DELETION;
+        }
+        else if(germlineStatus == AMPLIFICATION)
+        {
+            if(tumorCopyNumber >= GERMLINE_LIKELY_DIPLOID_UPPER_THRESHOLD)
+                tumorAmpDelStatus = AMPLIFICATION;
         }
 
         // find overlapping driver genes
@@ -494,9 +489,9 @@ public class GermlineAmpDelFinder
             {
                 for(DriverGene driverGene : driverGenes)
                 {
-                    if(driverGene.gene().equals(geneData.GeneName) && reportEvent(driverGene, tumorAmpDelStatus))
+                    if(driverGene.gene().equals(geneData.GeneName))
                     {
-                        reportedStatus = REPORTED;
+                        reportedStatus = reportEvent(driverGene, germlineStatus) ? REPORTED : NOT_REPORTED;
                     }
                 }
             }
@@ -534,7 +529,7 @@ public class GermlineAmpDelFinder
                 continue;
             }
 
-            ReportedStatus reportedStatus = reportEvent(driverGene, tumorAmpDelStatus) ? REPORTED : NOT_REPORTED;
+            ReportedStatus reportedStatus = reportEvent(driverGene, germlineStatus) ? REPORTED : NOT_REPORTED;
 
             // create a driver record for reportable genes
             DriverCatalog driverCatalog = ImmutableDriverCatalog.builder()
@@ -562,24 +557,27 @@ public class GermlineAmpDelFinder
         }
     }
 
-    private static boolean reportEvent(final DriverGene driverGene, final GermlineStatus tumorAmpDelStatus)
+    private static boolean reportEvent(final DriverGene driverGene, final GermlineStatus germlineStatus)
     {
-        if(tumorAmpDelStatus == UNKNOWN)
-            return false;
-
-        if(tumorAmpDelStatus == AMPLIFICATION)
+        if(germlineStatus == AMPLIFICATION)
         {
             return driverGene.reportGermlineAmplification();
         }
-
-        // check requirements on the germline disruption field: WILDTYPE_LOST - requires an LOH for the deletion to be reportable
-        if(driverGene.reportGermlineDeletion() == ANY || driverGene.reportGermlineDeletion() == VARIANT_NOT_LOST)
+        else if(germlineStatus == HET_DELETION || germlineStatus == HOM_DELETION)
         {
-            return true;
+            // check requirements on the germline disruption field: WILDTYPE_LOST - requires an LOH for the deletion to be reportable
+            if(driverGene.reportGermlineDeletion() == ANY || driverGene.reportGermlineDeletion() == VARIANT_NOT_LOST)
+            {
+                return true;
+            }
+            else
+            {
+                return driverGene.reportGermlineDeletion() == WILDTYPE_LOST && germlineStatus == HOM_DELETION;
+            }
         }
         else
         {
-            return driverGene.reportGermlineDeletion() == WILDTYPE_LOST && tumorAmpDelStatus == HOM_DELETION;
+            return false;
         }
     }
 }

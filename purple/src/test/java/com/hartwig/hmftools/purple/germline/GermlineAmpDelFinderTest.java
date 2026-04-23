@@ -64,8 +64,8 @@ public class GermlineAmpDelFinderTest
     private final ExonData exon2_1_1 = exonData(transId3, 1, 1210, 1218);
     private final ExonData exon2_1_2 = exonData(transId3, 2, 1220, 1228);
     private final TranscriptData td2_1 = transcriptData(geneData3.GeneId, transId3, true, exon2_1_1, exon2_1_2);
-    private DriverGene driverGene1;
-    private DriverGene driverGene2;
+    private DriverGene mDriverGene1;
+    private DriverGene mDriverGene2;
     private DriverGene driverGene3;
 
     private class GDS implements GermlineAmpDelFinder.GeneDataSupplier
@@ -93,15 +93,15 @@ public class GermlineAmpDelFinderTest
     @Before
     public void setup()
     {
-        driverGene1 = driverGene(geneData1.GeneName, DriverGeneGermlineReporting.ANY);
-        driverGene2 = driverGene(geneData2.GeneName, DriverGeneGermlineReporting.ANY);
+        mDriverGene1 = driverGene(geneData1.GeneName, DriverGeneGermlineReporting.ANY);
+        mDriverGene2 = driverGene(geneData2.GeneName, DriverGeneGermlineReporting.ANY);
         driverGene3 = driverGene(geneData3.GeneName, DriverGeneGermlineReporting.ANY);
         mEnsemblDataCache = new GDS();
         mGermlineAmpDelFrequencyCache = Mockito.mock(GermlineAmpDelFrequencyCache.class);
         Mockito.when(mGermlineAmpDelFrequencyCache.getRegionFrequency(
                 any(String.class), any(Integer.class), any(Integer.class), any(Integer.class),
                 any(AmpDelRegionFrequency.EventType.class))).thenReturn(3);
-        Map<String, DriverGene> driverMap = Map.of(geneData1.GeneName, driverGene1, geneData2.GeneName, driverGene2, geneData3.GeneName, driverGene3);
+        Map<String, DriverGene> driverMap = Map.of(geneData1.GeneName, mDriverGene1, geneData2.GeneName, mDriverGene2, geneData3.GeneName, driverGene3);
         mGermlineAmpDelFinder = new GermlineAmpDelFinder(driverMap, mEnsemblDataCache, mGermlineAmpDelFrequencyCache);
     }
 
@@ -112,7 +112,7 @@ public class GermlineAmpDelFinderTest
         ObservedRegion or = createObservedRegion(CHR_1, 1001, 1400, HOM_DELETION);
         mGermlineAmpDelFinder.findEvents(List.of(pcn), List.of(or), List.of());
         assertEquals(1, mGermlineAmpDelFinder.getEvents().size());
-        assertEquals(driverGene1.gene(), mGermlineAmpDelFinder.getEvents().get(0).GeneName);
+        assertEquals(mDriverGene1.gene(), mGermlineAmpDelFinder.getEvents().get(0).GeneName);
     }
 
     @Test
@@ -143,8 +143,8 @@ public class GermlineAmpDelFinderTest
         mGermlineAmpDelFinder.findEvents(List.of(pcn), List.of(or1, or2, or3), List.of());
         List<GermlineAmpDel> deletions = mGermlineAmpDelFinder.getEvents();
         assertEquals(3, deletions.size());
-        assertEquals(driverGene1.gene(), deletions.get(0).GeneName);
-        assertEquals(driverGene2.gene(), deletions.get(1).GeneName);
+        assertEquals(mDriverGene1.gene(), deletions.get(0).GeneName);
+        assertEquals(mDriverGene2.gene(), deletions.get(1).GeneName);
         assertEquals(driverGene3.gene(), deletions.get(2).GeneName);
     }
 
@@ -156,7 +156,7 @@ public class GermlineAmpDelFinderTest
         mGermlineAmpDelFinder.findEvents(List.of(pcn), List.of(or1), List.of());
         List<GermlineAmpDel> deletions = mGermlineAmpDelFinder.getEvents();
         assertEquals(1, deletions.size());
-        assertEquals(driverGene1.gene(), deletions.get(0).GeneName);
+        assertEquals(mDriverGene1.gene(), deletions.get(0).GeneName);
     }
 
     @Test
@@ -298,7 +298,7 @@ public class GermlineAmpDelFinderTest
         Mockito.when(mGermlineAmpDelFrequencyCache.getRegionFrequency(
                 any(String.class), any(Integer.class), any(Integer.class), any(Integer.class),
                 eq(AmpDelRegionFrequency.EventType.AMP))).thenReturn(1);
-        Map<String, DriverGene> driverMap = Map.of(geneData1.GeneName, driverGene1);
+        Map<String, DriverGene> driverMap = Map.of(geneData1.GeneName, mDriverGene1);
         mEnsemblDataCache.transcriptData = List.of(td1_1);
         mEnsemblDataCache.chrGeneMap = Map.of(CHR_1, List.of(geneData1));
         mGermlineAmpDelFinder = new GermlineAmpDelFinder(driverMap, mEnsemblDataCache, mGermlineAmpDelFrequencyCache);
@@ -322,7 +322,7 @@ public class GermlineAmpDelFinderTest
         Mockito.when(mGermlineAmpDelFrequencyCache.getRegionFrequency(
                 any(String.class), any(Integer.class), any(Integer.class), any(Integer.class),
                 eq(AmpDelRegionFrequency.EventType.AMP))).thenReturn(10);
-        Map<String, DriverGene> driverMap = Map.of(geneData1.GeneName, driverGene1);
+        Map<String, DriverGene> driverMap = Map.of(geneData1.GeneName, mDriverGene1);
         mEnsemblDataCache.transcriptData = List.of(td1_1);
         mEnsemblDataCache.chrGeneMap = Map.of(CHR_1, List.of(geneData1));
         mGermlineAmpDelFinder = new GermlineAmpDelFinder(driverMap, mEnsemblDataCache, mGermlineAmpDelFrequencyCache);
@@ -346,7 +346,7 @@ public class GermlineAmpDelFinderTest
         Mockito.when(mGermlineAmpDelFrequencyCache.getRegionFrequency(
                 any(String.class), any(Integer.class), any(Integer.class), any(Integer.class),
                 eq(AmpDelRegionFrequency.EventType.AMP))).thenReturn(10);
-        Map<String, DriverGene> driverMap = Map.of(geneData1.GeneName, driverGene1);
+        Map<String, DriverGene> driverMap = Map.of(geneData1.GeneName, mDriverGene1);
         mEnsemblDataCache.transcriptData = List.of(td1_1);
         mEnsemblDataCache.chrGeneMap = Map.of(CHR_1, List.of(geneData1));
         mGermlineAmpDelFinder = new GermlineAmpDelFinder(driverMap, mEnsemblDataCache, mGermlineAmpDelFrequencyCache);
@@ -370,7 +370,7 @@ public class GermlineAmpDelFinderTest
         Mockito.when(mGermlineAmpDelFrequencyCache.getRegionFrequency(
                 any(String.class), any(Integer.class), any(Integer.class), any(Integer.class),
                 eq(AmpDelRegionFrequency.EventType.AMP))).thenReturn(1);
-        Map<String, DriverGene> driverMap = Map.of(geneData1.GeneName, driverGene1);
+        Map<String, DriverGene> driverMap = Map.of(geneData1.GeneName, mDriverGene1);
         mEnsemblDataCache.transcriptData = List.of(td1_1);
         mEnsemblDataCache.chrGeneMap = Map.of(CHR_1, List.of(geneData1));
         mGermlineAmpDelFinder = new GermlineAmpDelFinder(driverMap, mEnsemblDataCache, mGermlineAmpDelFrequencyCache);
@@ -391,7 +391,7 @@ public class GermlineAmpDelFinderTest
         Mockito.when(mGermlineAmpDelFrequencyCache.getRegionFrequency(
                 any(String.class), any(Integer.class), any(Integer.class), any(Integer.class),
                 eq(AmpDelRegionFrequency.EventType.DEL))).thenReturn(5);
-        Map<String, DriverGene> driverMap = Map.of(geneData1.GeneName, driverGene1);
+        Map<String, DriverGene> driverMap = Map.of(geneData1.GeneName, mDriverGene1);
         mEnsemblDataCache.transcriptData = List.of(td1_1);
         mEnsemblDataCache.chrGeneMap = Map.of(CHR_1, List.of(geneData1));
         mGermlineAmpDelFinder = new GermlineAmpDelFinder(driverMap, mEnsemblDataCache, mGermlineAmpDelFrequencyCache);
@@ -409,7 +409,7 @@ public class GermlineAmpDelFinderTest
     @Test
     public void copyNumberMajorAllele()
     {
-        Map<String, DriverGene> driverMap = Map.of(geneData1.GeneName, driverGene1, geneData3.GeneName, driverGene3);
+        Map<String, DriverGene> driverMap = Map.of(geneData1.GeneName, mDriverGene1, geneData3.GeneName, driverGene3);
         mEnsemblDataCache.transcriptData = List.of(td1_1, td2_1);
         mEnsemblDataCache.chrGeneMap = Map.of(CHR_1, List.of(geneData1), CHR_2, List.of(geneData3));
         mGermlineAmpDelFinder = new GermlineAmpDelFinder(driverMap, mEnsemblDataCache, mGermlineAmpDelFrequencyCache);
@@ -423,7 +423,7 @@ public class GermlineAmpDelFinderTest
         mGermlineAmpDelFinder.findEvents(List.of(pcn1, pcn2), List.of(or1, or2), List.of());
         List<GermlineAmpDel> deletions = mGermlineAmpDelFinder.getEvents();
         assertEquals(2, deletions.size());
-        assertEquals(driverGene1.gene(), deletions.get(0).GeneName);
+        assertEquals(mDriverGene1.gene(), deletions.get(0).GeneName);
         checkAllEventsPass(CommonVcfTags.PASS_FILTER, deletions, 0, ReportedStatus.REPORTED);
         assertEquals(driverGene3.gene(), deletions.get(1).GeneName);
         checkAllEventsPass(FILTER_CN_INCONSISTENCY, deletions, 1, ReportedStatus.NONE);
@@ -462,7 +462,7 @@ public class GermlineAmpDelFinderTest
         mGermlineAmpDelFinder.findEvents(List.of(pcn), List.of(or1), List.of());
         List<GermlineAmpDel> deletions = mGermlineAmpDelFinder.getEvents();
         assertEquals(1, deletions.size());
-        checkAllEventsPass(CommonVcfTags.PASS_FILTER, deletions, 0, ReportedStatus.NONE);
+        checkAllEventsPass(CommonVcfTags.PASS_FILTER, deletions, 0, ReportedStatus.NOT_REPORTED);
     }
 
     @Test
@@ -470,49 +470,29 @@ public class GermlineAmpDelFinderTest
     {
         DriverGene driverGene1 = driverGene(geneData1.GeneName, DriverGeneGermlineReporting.WILDTYPE_LOST);
         DriverGene driverGene2 = driverGene(geneData3.GeneName, DriverGeneGermlineReporting.WILDTYPE_LOST);
-        Map<String, DriverGene> driverMap = Map.of(geneData1.GeneName, driverGene1, geneData3.GeneName, driverGene2);
+
+        Map<String, DriverGene> driverMap = Map.of(driverGene1.gene(), driverGene1, driverGene2.gene(), driverGene2);
+
         mEnsemblDataCache.transcriptData = List.of(td1_1, td2_1);
         mEnsemblDataCache.chrGeneMap = Map.of(CHR_1, List.of(geneData1), CHR_2, List.of(geneData3));
         mGermlineAmpDelFinder = new GermlineAmpDelFinder(driverMap, mEnsemblDataCache, mGermlineAmpDelFrequencyCache);
 
         PurpleCopyNumber pcn1 = createCopyNumber(CHR_1, 1001, 2000, 2);
         PurpleCopyNumber pcn2 = createCopyNumber(CHR_2, 1001, 2000, 1);
+
         ObservedRegion or1 = createObservedRegion(
                 CHR_1, 1000, 2001, 2, HOM_DELETION, 1, 0.5);
         ObservedRegion or2 = createObservedRegion(
                 CHR_2, 1000, 2001, 2, HET_DELETION, 0, 0.5);
+
         mGermlineAmpDelFinder.findEvents(List.of(pcn1, pcn2), List.of(or1, or2), List.of());
+
         List<GermlineAmpDel> deletions = mGermlineAmpDelFinder.getEvents();
         assertEquals(2, deletions.size());
-        assertEquals(this.driverGene1.gene(), deletions.get(0).GeneName);
-        checkAllEventsPass(CommonVcfTags.PASS_FILTER, deletions, 0, ReportedStatus.NONE);
-        assertEquals(driverGene3.gene(), deletions.get(1).GeneName);
-        checkAllEventsPass(CommonVcfTags.PASS_FILTER, deletions, 1, ReportedStatus.REPORTED);
-    }
-
-    @Test
-    public void homozygousDeletionCutoff()
-    {
-        DriverGene driverGene1 = driverGene(geneData1.GeneName, DriverGeneGermlineReporting.WILDTYPE_LOST);
-        DriverGene driverGene2 = driverGene(geneData3.GeneName, DriverGeneGermlineReporting.WILDTYPE_LOST);
-        Map<String, DriverGene> driverMap = Map.of(geneData1.GeneName, driverGene1, geneData3.GeneName, driverGene2);
-        mEnsemblDataCache.transcriptData = List.of(td1_1, td2_1);
-        mEnsemblDataCache.chrGeneMap = Map.of(CHR_1, List.of(geneData1), CHR_2, List.of(geneData3));
-        mGermlineAmpDelFinder = new GermlineAmpDelFinder(driverMap, mEnsemblDataCache, mGermlineAmpDelFrequencyCache);
-
-        PurpleCopyNumber pcn1 = createCopyNumber(CHR_1, 1001, 2000, 2);
-        PurpleCopyNumber pcn2 = createCopyNumber(CHR_2, 1001, 2000, 1);
-        ObservedRegion or1 = createObservedRegion(
-                CHR_1, 1000, 2001, 2, HOM_DELETION, 0.499, 0.5);
-        ObservedRegion or2 = createObservedRegion(
-                CHR_2, 1000, 2001, 2, HET_DELETION, 0.501, 0.5);
-        mGermlineAmpDelFinder.findEvents(List.of(pcn1, pcn2), List.of(or1, or2), List.of());
-        List<GermlineAmpDel> deletions = mGermlineAmpDelFinder.getEvents();
-        assertEquals(2, deletions.size());
-        assertEquals(this.driverGene1.gene(), deletions.get(0).GeneName);
+        assertEquals(driverGene1.gene(), deletions.get(0).GeneName);
         checkAllEventsPass(CommonVcfTags.PASS_FILTER, deletions, 0, ReportedStatus.REPORTED);
         assertEquals(driverGene3.gene(), deletions.get(1).GeneName);
-        checkAllEventsPass(CommonVcfTags.PASS_FILTER, deletions, 1, ReportedStatus.NONE);
+        checkAllEventsPass(CommonVcfTags.PASS_FILTER, deletions, 1, ReportedStatus.NOT_REPORTED);
     }
 
     @Test
@@ -530,12 +510,13 @@ public class GermlineAmpDelFinderTest
     @Test
     public void reportGermlineAmplification()
     {
-        driverGene1 = ImmutableDriverGene.builder().from(driverGene1)
+        DriverGene driverGene1 = ImmutableDriverGene.builder().from(mDriverGene1)
                 .reportGermlineAmplification(false)
                 .build();
-        driverGene2 = ImmutableDriverGene.builder().from(driverGene2)
+        DriverGene driverGene2 = ImmutableDriverGene.builder().from(mDriverGene2)
                 .reportGermlineAmplification(true)
                 .build();
+
         Map<String, DriverGene> driverMap = Map.of(geneData1.GeneName, driverGene1, geneData2.GeneName, driverGene2, geneData3.GeneName, driverGene3);
         mGermlineAmpDelFinder = new GermlineAmpDelFinder(driverMap, mEnsemblDataCache, mGermlineAmpDelFrequencyCache);
 
@@ -546,7 +527,7 @@ public class GermlineAmpDelFinderTest
         List<GermlineAmpDel> events = mGermlineAmpDelFinder.getEvents();
         assertEquals(2, events.size());
         assertEquals(driverGene1.gene(), events.get(0).GeneName);
-        checkAllEventsPass(CommonVcfTags.PASS_FILTER, events, 0, ReportedStatus.NONE);
+        checkAllEventsPass(CommonVcfTags.PASS_FILTER, events, 0, ReportedStatus.NOT_REPORTED);
         assertEquals(driverGene2.gene(), events.get(1).GeneName);
         checkAllEventsPass(CommonVcfTags.PASS_FILTER, events, 1, ReportedStatus.REPORTED);
     }
@@ -605,7 +586,7 @@ public class GermlineAmpDelFinderTest
     public void supStructuralVariant()
     {
         // Setup with only one gene to avoid multiple deletions
-        Map<String, DriverGene> driverMap = Map.of(geneData1.GeneName, driverGene1);
+        Map<String, DriverGene> driverMap = Map.of(geneData1.GeneName, mDriverGene1);
         mEnsemblDataCache.transcriptData = List.of(td1_1);
         mEnsemblDataCache.chrGeneMap = Map.of(CHR_1, List.of(geneData1));
         mGermlineAmpDelFinder = new GermlineAmpDelFinder(driverMap, mEnsemblDataCache, mGermlineAmpDelFrequencyCache);
