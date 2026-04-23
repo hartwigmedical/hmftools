@@ -66,7 +66,7 @@
         <hmf-common.version>local-SNAPSHOT</hmf-common.version>
 
         <amber.version>4.3</amber.version>
-        <bam-tools.version>1.5</bam-tools.version>
+        <bam-tools.version>1.6</bam-tools.version>
         <chord.version>2.1.2</chord.version>
         <cider.version>1.2</cider.version>
         <cobalt.version>3.0</cobalt.version>
