@@ -40,6 +40,7 @@ public class GeneCoverage
     private static final List<Integer> DEPTH_BUCKETS = Lists.newArrayList();
     public static final int MAX_DEPTH_BUCKET = 10000;
     protected static final int GENE_COVERAGE_MIN_MAP_QUALITY = 10;
+    private final int[] EXON_DEPTH_THRESHOLDS = { 10, 20, 30, 60, 100, 250 };
 
     public GeneCoverage(final ConfigBuilder configBuilder)
     {
@@ -102,7 +103,13 @@ public class GeneCoverage
 
             StringJoiner sj = new StringJoiner(TSV_DELIM);
 
-            sj.add("gene").add("chromosome").add("posStart").add("posEnd").add("exonRank").add("medianDepth");
+            sj.add("gene").add("chromosome").add("posStart").add("posEnd").add("exonRank").add("medianDepth").add("meanDepth");
+
+            for(int threshold : EXON_DEPTH_THRESHOLDS)
+            {
+                sj.add(format("propAboveDepth_%d", threshold));
+            }
+
             writer.write(sj.toString());
             writer.newLine();
 
@@ -117,6 +124,14 @@ public class GeneCoverage
                     data.add(String.valueOf(exonCoverage.end()));
                     data.add(String.valueOf(exonCoverage.ExonRank));
                     data.add(format("%.0f", exonCoverage.medianDepth()));
+                    data.add(format("%.2f", exonCoverage.meanDepth()));
+
+                    double[] propBasesAboveDepth = exonCoverage.propBasesAboveDepth(EXON_DEPTH_THRESHOLDS);
+                    for(double value : propBasesAboveDepth)
+                    {
+                        data.add(format("%.2f", value));
+                    }
+
                     writer.write(data.toString());
                     writer.newLine();
                 }
