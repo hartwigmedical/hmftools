@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.purple.FittedPurityMethod.NO_TUMOR;
 import static com.hartwig.hmftools.common.utils.Doubles.lessOrEqual;
 import static com.hartwig.hmftools.purple.PurpleConstants.DIPLOID_PLOIDY;
 import static com.hartwig.hmftools.purple.PurpleConstants.MIN_PURITY_DEFAULT;
+import static com.hartwig.hmftools.purple.PurpleConstants.PURITY_INCREMENT_DEFAULT;
 import static com.hartwig.hmftools.purple.PurpleConstants.SOMATIC_FIT_CONTAMINATION_CUTOFF;
 import static com.hartwig.hmftools.purple.PurpleConstants.SOMATIC_FIT_TUMOR_ONLY_PLOIDY_MAX;
 import static com.hartwig.hmftools.purple.PurpleConstants.SOMATIC_FIT_TUMOR_ONLY_PLOIDY_MIN;
@@ -236,12 +237,14 @@ public class PurityPloidyFitter
                 diploidCandidates.stream().min(Comparator.comparingDouble(FittedPurity::purity)).get() : mCopyNumberPurityFit;
 
         boolean highlyDiploid = isHighlyDiploid(mFitPurityScore); // max diploid proportion > 0.97
+
         if(mConfig.tumorOnlyMode() || mTargetedMode)
         {
             AneuploidyDetector aneuploidyDetector = new AneuploidyDetector(
                     mObservedRegions, mSampleData.Amber.ChromosomeBafs, mSampleData.Cobalt.CobaltChromosomes);
 
-            boolean noSignificantAneuploidy = !aneuploidyDetector.hasAneuploidy();
+            boolean hasAneuploidy = aneuploidyDetector.hasAneuploidy();
+            boolean noSignificantAneuploidy = !hasAneuploidy;
             boolean diploidHighPurity = isCloseToDiploidAndHighPurity(mCopyNumberPurityFit);
             boolean significantContamination = ContaminationLevel > SOMATIC_FIT_CONTAMINATION_CUTOFF;
 
@@ -266,7 +269,19 @@ public class PurityPloidyFitter
             }
             else
             {
-                mFinalPurityFit = mCopyNumberPurityFit;
+                FittedPurity bafFittedPurity = null;
+
+                if(hasAneuploidy && diploidHighPurity && !aneuploidyDetector.hasHighBafRegion())
+                {
+                    Double bafPurity = aneuploidyDetector.calculateBafPurity();
+
+                    if(bafPurity != null)
+                    {
+                        bafFittedPurity = findMatchedFittedPurity(bafPurity, mCopyNumberFitCandidates);
+                    }
+                }
+
+                mFinalPurityFit = bafFittedPurity != null ? bafFittedPurity : bafFittedPurity;
                 mFitMethod = FittedPurityMethod.NORMAL;
             }
 
@@ -396,5 +411,36 @@ public class PurityPloidyFitter
                 .build();
 
         return new BestFit(fittedPurity, score, NORMAL, List.of(fittedPurity));
+    }
+
+    public static FittedPurity findMatchedFittedPurity(double purity, final List<FittedPurity> allCandidates)
+    {
+        // find the closest purity with diploid ploidy
+        FittedPurity closestPurity = null;
+        double closestDiff = 0;
+        double purityEpsilon = PURITY_INCREMENT_DEFAULT * 0.25;
+
+        for(FittedPurity fittedPurity : allCandidates)
+        {
+            if(abs(fittedPurity.ploidy() - 2) > 0.005)
+            {
+                continue;
+            }
+
+            double diff = abs(fittedPurity.purity() - purity);
+
+            if(closestPurity == null || diff < closestDiff)
+            {
+                if(diff < purityEpsilon)
+                {
+                    return fittedPurity;
+                }
+
+                closestDiff = diff;
+                closestPurity = fittedPurity;
+            }
+        }
+
+        return closestPurity;
     }
 }

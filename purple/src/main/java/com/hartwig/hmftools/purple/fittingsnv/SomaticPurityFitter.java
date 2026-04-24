@@ -25,6 +25,7 @@ import static com.hartwig.hmftools.purple.PurpleConstants.SNV_FITTING_MAX_REPEAT
 import static com.hartwig.hmftools.purple.PurpleConstants.SNV_HOTSPOT_MAX_SNV_COUNT;
 import static com.hartwig.hmftools.purple.PurpleConstants.SNV_HOTSPOT_VAF_PROBABILITY;
 import static com.hartwig.hmftools.purple.PurpleConstants.SOMATIC_FIT_TUMOR_ONLY_VAF_MIN;
+import static com.hartwig.hmftools.purple.fitting.PurityPloidyFitter.findMatchedFittedPurity;
 import static com.hartwig.hmftools.purple.fittingsnv.SomaticReadjustmentFit.calcReadjustmentPurity;
 import static com.hartwig.hmftools.purple.region.ObservedRegionFactory.EXCLUDED_IMMUNE_REGIONS;
 
@@ -286,37 +287,6 @@ public class SomaticPurityFitter
         }
 
         return somaticFitPurity;
-    }
-
-    protected static FittedPurity findMatchedFittedPurity(double purity, final List<FittedPurity> allCandidates)
-    {
-        // find the closest purity with diploid ploidy
-        FittedPurity closestPurity = null;
-        double closestDiff = 0;
-        double purityEpsilon = PURITY_INCREMENT_DEFAULT * 0.25;
-
-        for(FittedPurity fittedPurity : allCandidates)
-        {
-            if(abs(fittedPurity.ploidy() - 2) > 0.005)
-            {
-                continue;
-            }
-
-            double diff = abs(fittedPurity.purity() - purity);
-
-            if(closestPurity == null || diff < closestDiff)
-            {
-                if(diff < purityEpsilon)
-                {
-                    return fittedPurity;
-                }
-
-                closestDiff = diff;
-                closestPurity = fittedPurity;
-            }
-        }
-
-        return closestPurity;
     }
 
     @Nullable

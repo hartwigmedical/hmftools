@@ -138,6 +138,6 @@ public class AmberPointsProviderTest
 
     private FittingRegion fr(HumanChromosome chromosome, int start, int end)
     {
-        return new FR(chromosome, start, end, GermlineStatus.DIPLOID, 10, 0.5, 0.5, 0.5);
+        return new FittedRegionImpl(chromosome, start, end, GermlineStatus.DIPLOID, 10, 0.5, 0.5, 0.5);
     }
 }

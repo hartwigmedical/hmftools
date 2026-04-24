@@ -3,7 +3,7 @@ package com.hartwig.hmftools.purple.fittingsnv;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
-import static com.hartwig.hmftools.purple.fittingsnv.SomaticPurityFitter.findMatchedFittedPurity;
+import static com.hartwig.hmftools.purple.fitting.PurityPloidyFitter.findMatchedFittedPurity;
 
 import java.util.List;
 import java.util.stream.Collectors;
