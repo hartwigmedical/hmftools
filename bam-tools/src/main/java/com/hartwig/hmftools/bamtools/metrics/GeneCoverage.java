@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL;
 import static com.hartwig.hmftools.common.driver.panel.DriverGeneRegions.buildDriverGeneRegions;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
-import static com.hartwig.hmftools.common.metrics.GeneDepthFile.generateExonMediansFilename;
+import static com.hartwig.hmftools.common.metrics.GeneDepthFile.generateExonCoverageFilename;
 import static com.hartwig.hmftools.common.metrics.GeneDepthFile.generateGeneCoverageFilename;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
@@ -89,7 +89,7 @@ public class GeneCoverage
             return;
 
         String geneFilename = generateGeneCoverageFilename(outputDir, sampleId);
-        String exonFilename = generateExonMediansFilename(outputDir, sampleId);
+        String exonFilename = generateExonCoverageFilename(outputDir, sampleId);
 
         writeExonCoverage(exonFilename);
         writeGeneCoverage(geneFilename);

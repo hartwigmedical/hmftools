@@ -29,9 +29,9 @@ public final class GeneDepthFile
         return checkAddDirSeparator(basePath) + sample + BAM_METRICS_FILE_ID + ".gene_coverage.tsv";
     }
 
-    public static String generateExonMediansFilename(final String basePath, final String sample)
+    public static String generateExonCoverageFilename(final String basePath, final String sample)
     {
-        return checkAddDirSeparator(basePath) + sample + BAM_METRICS_FILE_ID + ".exon_medians.tsv";
+        return checkAddDirSeparator(basePath) + sample + BAM_METRICS_FILE_ID + ".exon_coverage.tsv";
     }
 
     public static void write(final String filename, final List<GeneDepth> depths, final List<Integer> depthBuckets) throws IOException
