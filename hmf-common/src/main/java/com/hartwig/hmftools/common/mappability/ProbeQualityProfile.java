@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.common.mappability;
 
 import static java.lang.Double.isFinite;
+import static java.lang.Math.ceil;
+import static java.lang.Math.floor;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
@@ -8,11 +10,14 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.secondsSinceNow;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_START;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +25,7 @@ import java.util.OptionalDouble;
 import java.util.OptionalInt;
 import java.util.stream.IntStream;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -32,7 +38,6 @@ import org.apache.logging.log4j.Logger;
 public class ProbeQualityProfile
 {
     private final int mBaseWindowLength;
-    private final int mBaseWindowSpacing;
     private final int mMatchScoreThreshold;
     private final int mMatchScoreOffset;
     // Keyed by chromosome.
@@ -51,8 +56,9 @@ public class ProbeQualityProfile
 
     private static final Logger LOGGER = LogManager.getLogger(ProbeQualityProfile.class);
 
-    private ProbeQualityProfile(final Map<String, WindowArray> windows, int baseWindowLength, int baseWindowSpacing,
-            int matchScoreThreshold, int matchScoreOffset)
+    private ProbeQualityProfile(
+            final Map<String, WindowArray> windows, int baseWindowLength, int baseWindowSpacing, int matchScoreThreshold,
+            int matchScoreOffset)
     {
         if(baseWindowLength < 1)
         {
@@ -63,7 +69,6 @@ public class ProbeQualityProfile
             throw new IllegalArgumentException("baseWindowSpacing must be in range [1, baseWindowLength]");
         }
         mBaseWindowLength = baseWindowLength;
-        mBaseWindowSpacing = baseWindowSpacing;
         mMatchScoreThreshold = matchScoreThreshold;
         mMatchScoreOffset = matchScoreOffset;
         mWindows = windows;
@@ -82,10 +87,96 @@ public class ProbeQualityProfile
                 RESOURCE_MATCH_SCORE_THRESHOLD, RESOURCE_MATCH_SCORE_OFFSET);
     }
 
+    public int matchScoreThreshold() { return mMatchScoreThreshold; }
+    public int matchScoreOffset() { return mMatchScoreOffset; }
+
+    // Compute the final quality score from the probe quality profile.
+    // Returns empty optional if the profile doesn't cover the probe region.
+    public OptionalDouble computeQualityScore(final ChrBaseRegion probe)
+    {
+        if(probe.baseLength() < mBaseWindowLength)
+        {
+            // The aggregation of the quality score is design to work for probes that cover multiple windows.
+            throw new IllegalArgumentException(format("probe length must be >= %d", mBaseWindowLength));
+        }
+
+        // If the profile doesn't completely cover the probe then we say we can't assess its quality
+        // (since the uncovered region could affect the quality significantly).
+
+        WindowArray windows = mWindows.get(probe.chromosome());
+        if(windows == null)
+        {
+            // Probe chromosome not covered at all.
+            return OptionalDouble.empty();
+        }
+        OptionalInt windowsStart = findFirstWindowContaining(windows, probe.start());
+        if(windowsStart.isEmpty())
+        {
+            // Probe start position not covered.
+            return OptionalDouble.empty();
+        }
+        int windowsEnd = scanWhileOverlap(windows, windowsStart.getAsInt(), probe.baseRegion());   // Inclusive
+        if(!windows.getRegion(windowsEnd).containsPosition(probe.end()))
+        {
+            // Probe middle or end not covered.
+            return OptionalDouble.empty();
+        }
+        double qualityScore = aggregateQualityScore(windows, windowsStart.getAsInt(), windowsEnd + 1, probe.baseRegion());
+        return OptionalDouble.of(qualityScore);
+    }
+
+    public List<RegionQuality> findRegionQualities(final ChrBaseRegion region)
+    {
+        // form a collection of distinct quality scores across the requested region
+        WindowArray windowArray = mWindows.get(region.Chromosome);
+        if(windowArray == null)
+            return Collections.emptyList();
+
+        OptionalInt windowsStart = findFirstWindowContaining(windowArray, region.start());
+
+        if(windowsStart.isEmpty())
+            return Collections.emptyList();
+
+        List<RegionQuality> regionQualities = Lists.newArrayList();
+
+        int windowIndex = windowsStart.getAsInt() + 1;
+        BaseRegion qualRegion = windowArray.getRegion(windowIndex);
+        double qual = windowArray.getQualityScore(windowIndex);
+
+        RegionQuality currentReqionQuality = new RegionQuality(qualRegion, qual);
+        regionQualities.add(currentReqionQuality);
+        ++windowIndex;
+
+        while(windowIndex < windowArray.size())
+        {
+            qualRegion = windowArray.getRegion(windowIndex);
+
+            if(qualRegion.start() > region.end())
+                break;
+
+            qual = windowArray.getQualityScore(windowsStart.getAsInt());
+
+            if(qual == currentReqionQuality.Quality)
+            {
+                currentReqionQuality.setEnd(qualRegion.end());
+            }
+            else
+            {
+                int nextRegionStart = currentReqionQuality.end() + 1;
+                currentReqionQuality = new RegionQuality(new BaseRegion(nextRegionStart, qualRegion.end()), qual);
+                regionQualities.add(currentReqionQuality);
+            }
+
+            ++windowIndex;
+        }
+
+        return regionQualities;
+    }
+
     protected static class WindowArray
     {
         // To save memory, only store the end position and the length, since every window is the same size.
-        // Store the end rather than the start because later we need to search on the end.
+        // Store the end rather than the start because the search is on the end.
         protected final int mBaseWindowLength;
         // Also store the data in raw arrays to avoid the memory overhead of boxing with ArrayList.
         protected int[] mEndPositions;
@@ -172,27 +263,19 @@ public class ProbeQualityProfile
         }
     }
 
-    private static Map<String, WindowArray> loadProbeQualityWindows(final String filePath, int baseWindowLength,
-            int baseWindowSpacing)
+    private static Map<String, WindowArray> loadProbeQualityWindows(final String filePath, int baseWindowLength, int baseWindowSpacing)
     {
-        LOGGER.debug("Loading probe quality profile file: {}", filePath);
+        LOGGER.debug("loading probe quality profile file: {}", filePath);
 
         long startTimeMs = System.currentTimeMillis();
         HashMap<String, WindowArray> result = new HashMap<>();
 
         try(BufferedReader reader = createBufferedReader(filePath))
         {
-            // Some manual TSV parsing here because this file is huge and delays the startup of PanelBuilder.
-            List<String> header = Arrays.stream(reader.readLine().split("\t")).toList();
-            if(header.size() != 3)
-            {
-                throw new RuntimeException("Expected 3 fields in header but got " + header.size());
-            }
-            int chromosomeIndex = header.indexOf(FLD_CHROMOSOME);
-            int positionStartIndex = header.indexOf(FLD_POSITION_START);
-            int qualityScoreIndex = header.indexOf(FLD_QUALITY_SCORE);
+            // parse manually since file is very large
+            char tsvDelim = TSV_DELIM.charAt(0);
 
-            String[] fields = new String[3];
+            reader.readLine(); // skip header
 
             String curChromosome = null;
             WindowArray curWindows = null;
@@ -200,23 +283,19 @@ public class ProbeQualityProfile
             while(true)
             {
                 String line = reader.readLine();
+
                 if(line == null)
-                {
                     break;
-                }
 
                 // Much faster than String.split();
-                int field0End = line.indexOf('\t');
+                int field0End = line.indexOf(tsvDelim);
                 int field1Begin = field0End + 1;
-                int field1End = line.indexOf('\t', field1Begin);
+                int field1End = line.indexOf(tsvDelim, field1Begin);
                 int field2Begin = field1End + 1;
-                fields[0] = line.substring(0, field0End);
-                fields[1] = line.substring(field1Begin, field1End);
-                fields[2] = line.substring(field2Begin);
 
-                String chromosome = fields[chromosomeIndex];
-                int start = Integer.parseInt(fields[positionStartIndex]);
-                float qualityScore = Float.parseFloat(fields[qualityScoreIndex]);
+                String chromosome = line.substring(0, field0End);
+                int start = Integer.parseInt(line.substring(field1Begin, field1End));
+                float qualityScore = Float.parseFloat(line.substring(field2Begin));
 
                 if((start - 1) % baseWindowSpacing != 0)
                 {
@@ -225,13 +304,11 @@ public class ProbeQualityProfile
                     throw new RuntimeException(error);
                 }
 
-                // File is typically sorted by chromosome, so we can improve performance by only doing the hash table lookup when the
-                // chromosome changes.
                 if(!chromosome.equals(curChromosome))
                 {
                     curChromosome = chromosome;
                     curWindows = result.get(curChromosome);
-                    // Not using computeIfAbsent() because that is much slower.
+
                     if(curWindows == null)
                     {
                         curWindows = new WindowArray(baseWindowLength);
@@ -255,51 +332,6 @@ public class ProbeQualityProfile
                 LOGGER.trace("Loaded chromosome {} with {} windows", chromosome, windows.size()));
         LOGGER.trace("Loading complete, secs({})", secondsSinceNow(startTimeMs));
         return result;
-    }
-
-    public int matchScoreThreshold()
-    {
-        return mMatchScoreThreshold;
-    }
-
-    public int matchScoreOffset()
-    {
-        return mMatchScoreOffset;
-    }
-
-    // Compute the final quality score from the probe quality profile.
-    // Returns empty optional if the profile doesn't cover the probe region.
-    public OptionalDouble computeQualityScore(final ChrBaseRegion probe)
-    {
-        if(probe.baseLength() < mBaseWindowLength)
-        {
-            // The aggregation of the quality score is design to work for probes that cover multiple windows.
-            throw new IllegalArgumentException(format("probe length must be >= %d", mBaseWindowLength));
-        }
-
-        // If the profile doesn't completely cover the probe then we say we can't assess its quality
-        // (since the uncovered region could affect the quality significantly).
-
-        WindowArray windows = mWindows.get(probe.chromosome());
-        if(windows == null)
-        {
-            // Probe chromosome not covered at all.
-            return OptionalDouble.empty();
-        }
-        OptionalInt windowsStart = findFirstWindowContaining(windows, probe.start());
-        if(windowsStart.isEmpty())
-        {
-            // Probe start position not covered.
-            return OptionalDouble.empty();
-        }
-        int windowsEnd = scanWhileOverlap(windows, windowsStart.getAsInt(), probe.baseRegion());   // Inclusive
-        if(!windows.getRegion(windowsEnd).containsPosition(probe.end()))
-        {
-            // Probe middle or end not covered.
-            return OptionalDouble.empty();
-        }
-        double qualityScore = aggregateQualityScore(windows, windowsStart.getAsInt(), windowsEnd + 1, probe.baseRegion());
-        return OptionalDouble.of(qualityScore);
     }
 
     // Efficiently finds the index of the first window that contains a position.
@@ -360,8 +392,8 @@ public class ProbeQualityProfile
         return minQuality;
     }
 
-    private double adjustedWindowQualityScore(final BaseRegion region, double qualityScore, double adjacentQualityScore,
-            final BaseRegion probe)
+    private double adjustedWindowQualityScore(
+            final BaseRegion region, double qualityScore, double adjacentQualityScore, final BaseRegion probe)
     {
         int overlap = min(region.end(), probe.end()) - max(region.start(), probe.start());
         if(overlap < mBaseWindowLength)
