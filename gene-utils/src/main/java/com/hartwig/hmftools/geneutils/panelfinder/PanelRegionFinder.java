@@ -296,7 +296,7 @@ public class PanelRegionFinder
             for(RegionData region : regions)
             {
                 List<RegionQuality> regionQualities = probeQualityProfile.findRegionQualities(region);
-                regionQualities.forEach(x -> region.mappabilityScores().add(x.Quality));
+                region.mappabilityScores().addAll(regionQualities);
             }
         }
     }
@@ -366,10 +366,9 @@ public class PanelRegionFinder
                     sj.add(String.valueOf(region.geneExons().size()));
                     sj.add(String.valueOf(GeneExonData.toString(region.geneExons())));
 
-                    double medianMappability = median(region.mappabilityScores());
-                    double minMappability = region.mappabilityScores().stream().mapToDouble(x -> x).min().orElse(0);
-                    double maxMappability = region.mappabilityScores().stream().mapToDouble(x -> x).max().orElse(0);
-                    sj.add(format("%.3f", medianMappability));
+                    double minMappability = region.mappabilityScores().stream().mapToDouble(x -> x.Quality).min().orElse(0);
+                    double maxMappability = region.mappabilityScores().stream().mapToDouble(x -> x.Quality).max().orElse(0);
+                    sj.add(format("%.3f", region.meanMappability()));
                     sj.add(format("%.3f", minMappability));
                     sj.add(format("%.3f", maxMappability));
 

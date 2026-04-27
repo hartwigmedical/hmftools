@@ -112,7 +112,7 @@ public class TargetRegionsData
         if(targetRegionsBed == null)
             return;
 
-        Map<Chromosome, List<TaggedRegion>> chrRegionsMap = TaggedRegion.loadRegionsFromBedFile(targetRegionsBed);
+        Map<Chromosome,List<TaggedRegion>> chrRegionsMap = TaggedRegion.loadRegionsFromBedFile(targetRegionsBed);
 
         if(chrRegionsMap == null)
         {
