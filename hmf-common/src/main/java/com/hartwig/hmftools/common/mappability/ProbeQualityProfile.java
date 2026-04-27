@@ -287,7 +287,6 @@ public class ProbeQualityProfile
                 if(line == null)
                     break;
 
-                // Much faster than String.split();
                 int field0End = line.indexOf(tsvDelim);
                 int field1Begin = field0End + 1;
                 int field1End = line.indexOf(tsvDelim, field1Begin);
