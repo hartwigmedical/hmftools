@@ -101,16 +101,7 @@ public class GeneCoverage
         {
             BufferedWriter writer = createBufferedWriter(exonFilename, false);
 
-            StringJoiner sj = new StringJoiner(TSV_DELIM);
-
-            sj.add("gene").add("chromosome").add("posStart").add("posEnd").add("exonRank").add("medianDepth").add("meanDepth");
-
-            for(int threshold : EXON_DEPTH_THRESHOLDS)
-            {
-                sj.add(format("propAboveDepth_%d", threshold));
-            }
-
-            writer.write(sj.toString());
+            writer.write(GeneDepthFile.exonCoverageHeader(EXON_DEPTH_THRESHOLDS));
             writer.newLine();
 
             for(List<ExonCoverage> exonCoverageList : mChrGeneRegionsMap.values())

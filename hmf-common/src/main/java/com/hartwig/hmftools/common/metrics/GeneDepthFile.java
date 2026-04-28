@@ -1,6 +1,12 @@
 package com.hartwig.hmftools.common.metrics;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.metrics.BamMetricsCommon.BAM_METRICS_FILE_ID;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POS_END;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POS_START;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
@@ -18,11 +24,7 @@ import com.google.common.collect.Lists;
 
 public final class GeneDepthFile
 {
-    public static final String COL_GENE = "gene";
-    public static final String COL_CHROMOSOME = "chromosome";
-    public static final String COL_POS_START = "posStart";
-    public static final String COL_POS_END = "posEnd";
-    public static final String COL_MV_LIKELIHOOD = "missedVariantLikelihood";
+    public static final String FLD_MV_LIKELIHOOD = "MissedVariantLikelihood";
 
     public static String generateGeneCoverageFilename(final String basePath, final String sample)
     {
@@ -47,35 +49,6 @@ public final class GeneDepthFile
         }
     }
 
-    public static List<int[]> readDepthRanges(final String filename) throws IOException
-    {
-        List<int[]> ranges = Lists.newArrayList();
-
-        List<String> lines = Files.readAllLines(new File(filename).toPath());
-
-        String header = lines.get(0);
-        String[] values = header.split(TSV_DELIM, -1);
-
-        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
-        int mvlIndex = fieldsIndexMap.get(COL_MV_LIKELIHOOD);
-        int depthStartIndex = fieldsIndexMap.get(COL_MV_LIKELIHOOD) + 1;
-        int depthColumns = values.length - depthStartIndex;
-
-        for(int i = 0; i < depthColumns; ++i)
-        {
-            int colIndex = depthStartIndex + i;
-            String colStr = values[colIndex];
-
-            // depth columns are like: DR_0 or DR_4000_4999
-            String[] depthParts = colStr.split("_");
-            int rangeStart = Integer.parseInt(depthParts[1]);
-            int rangeEnd = depthParts.length == 3 ? Integer.parseInt(depthParts[2]) : rangeStart;
-            ranges.add(new int[] {rangeStart, rangeEnd});
-        }
-
-        return ranges;
-    }
-
     public static List<GeneDepth> read(final String filename) throws IOException
     {
         List<String> lines = Files.readAllLines(new File(filename).toPath());
@@ -85,11 +58,11 @@ public final class GeneDepthFile
 
         Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
 
-        int chrIndex = fieldsIndexMap.get(COL_CHROMOSOME);
-        int geneIndex = fieldsIndexMap.get(COL_GENE);
-        int posStartIndex = fieldsIndexMap.get(COL_POS_START);
-        int posEndIndex = fieldsIndexMap.get(COL_POS_END);
-        int mvlIndex = fieldsIndexMap.get(COL_MV_LIKELIHOOD);
+        int chrIndex = fieldsIndexMap.get(FLD_CHROMOSOME);
+        int geneIndex = fieldsIndexMap.get(FLD_GENE_NAME);
+        int posStartIndex = fieldsIndexMap.get(FLD_POS_START);
+        int posEndIndex = fieldsIndexMap.get(FLD_POS_END);
+        int mvlIndex = fieldsIndexMap.get(FLD_MV_LIKELIHOOD);
         int depthStartIndex = mvlIndex + 1;
 
         List<GeneDepth> geneDepths = Lists.newArrayList();
@@ -124,7 +97,7 @@ public final class GeneDepthFile
         {
             Collections.sort(depths, new GeneDepthComparator());
             final List<String> lines = Lists.newArrayList();
-            lines.add(header(depthBuckets));
+            lines.add(geneCoverageHeader(depthBuckets));
             depths.stream().map(GeneDepthFile::toString).forEach(lines::add);
             return lines;
         }
@@ -132,15 +105,15 @@ public final class GeneDepthFile
         return Collections.emptyList();
     }
 
-    private static String header(final List<Integer> depthBuckets)
+    private static String geneCoverageHeader(final List<Integer> depthBuckets)
     {
         StringJoiner joiner = new StringJoiner(TSV_DELIM);
 
-        joiner.add(COL_GENE);
-        joiner.add(COL_CHROMOSOME);
-        joiner.add(COL_POS_START);
-        joiner.add(COL_POS_END);
-        joiner.add(COL_MV_LIKELIHOOD);
+        joiner.add(FLD_GENE_NAME);
+        joiner.add(FLD_CHROMOSOME);
+        joiner.add(FLD_POS_START);
+        joiner.add(FLD_POS_END);
+        joiner.add(FLD_MV_LIKELIHOOD);
 
         for(int bucket = 0; bucket < depthBuckets.size() - 1; ++bucket)
         {
@@ -149,18 +122,43 @@ public final class GeneDepthFile
 
             if(depthNext == depth + 1)
             {
-                joiner.add(String.format("DR_%d", depth));
+                joiner.add(format("DR_%d", depth));
             }
             else
             {
-                joiner.add(String.format("DR_%d_%d", depth, depthNext - 1));
+                joiner.add(format("DR_%d_%d", depth, depthNext - 1));
             }
         }
 
         int maxDepth = depthBuckets.get(depthBuckets.size() - 1);
-        joiner.add(String.format("DR_%d", maxDepth));
+        joiner.add(format("DR_%d", maxDepth));
 
         return joiner.toString();
+    }
+
+    public static final String FLD_EXON_RANK = "ExonRank";
+    public static final String FLD_MEDIAN_DEPTH = "MedianDepth";
+    public static final String FLD_MEAN_DEPTH = "MeanDepth";
+    public static final String FLD_PERC_ABOVE_DEPTH = "PercAboveDepth";
+
+    public static String exonCoverageHeader(final int[] exonDepthThresholds)
+    {
+        StringJoiner sj = new StringJoiner(TSV_DELIM);
+
+        sj.add(FLD_GENE_NAME);
+        sj.add(FLD_CHROMOSOME);
+        sj.add(FLD_POS_START);
+        sj.add(FLD_POS_END);
+        sj.add(FLD_EXON_RANK);
+        sj.add(FLD_MEDIAN_DEPTH);
+        sj.add(FLD_MEAN_DEPTH);
+
+        for(int threshold : exonDepthThresholds)
+        {
+            sj.add(format("%s_%d", FLD_PERC_ABOVE_DEPTH, threshold));
+        }
+
+        return sj.toString();
     }
 
     private static String toString(final GeneDepth depth)
@@ -170,7 +168,7 @@ public final class GeneDepthFile
         joiner.add(depth.Chromosome);
         joiner.add(String.valueOf(depth.PosStart));
         joiner.add(String.valueOf(depth.PosEnd));
-        joiner.add(String.format("%.4f", depth.MissedVariantLikelihood));
+        joiner.add(format("%.4f", depth.MissedVariantLikelihood));
 
         for(int i : depth.DepthCounts)
         {
