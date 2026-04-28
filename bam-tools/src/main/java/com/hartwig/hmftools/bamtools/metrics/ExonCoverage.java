@@ -48,6 +48,38 @@ public class ExonCoverage extends GeneRegion
         return depths.get(medianIndex);
     }
 
+    public double meanDepth()
+    {
+        double totalCoverage = 0;
+        for(int coverage : mBaseCoverage)
+        {
+            totalCoverage += coverage;
+        }
+
+        return totalCoverage / mBaseCoverage.length;
+    }
+
+    public double[] propBasesAboveDepth(int[] depthThresholds)
+    {
+        int[] depthCounts = new int[depthThresholds.length];
+        for(int coverage : mBaseCoverage)
+        {
+            for(int i = 0; i < depthThresholds.length; ++i)
+            {
+                if(coverage >= depthThresholds[i])
+                    depthCounts[i] += 1;
+            }
+        }
+
+        double[] depthProportions = new double[depthThresholds.length];
+        for(int i = 0; i < depthThresholds.length; ++i)
+        {
+            depthProportions[i] = (double)depthCounts[i] / mBaseCoverage.length;
+        }
+
+        return depthProportions;
+    }
+
     private int index(int position) { return position - start(); }
 
     public String toString() { return format("rank(%d) region(%s)", ExonRank, ((ChrBaseRegion)this)); }
