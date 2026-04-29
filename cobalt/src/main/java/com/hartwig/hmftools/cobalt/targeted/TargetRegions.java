@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.cobalt.targeted;
 
+import static com.hartwig.hmftools.common.genome.gc.GCProfileFactory.WINDOW_SIZE;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -22,12 +24,12 @@ public class TargetRegions implements CobaltScope
 
     private final Map<Chromosome, ArrayList<TargetRegionEnrichment>> mEnrichments = new HashMap<>();
 
-    public TargetRegions(ListMultimap<Chromosome, TargetRegionEnrichment> enrichments, ChromosomeData chromosomeData)
+    public TargetRegions(ListMultimap<Chromosome, TargetRegionEnrichment> enrichments, final ChromosomeData chromosomeData)
     {
         for(Chromosome chromosome : enrichments.keySet())
         {
             int length = chromosomeData.length(chromosome);
-            int numberOfSlots = length / 1000;
+            int numberOfSlots = length / WINDOW_SIZE;
             ArrayList<TargetRegionEnrichment> enrichmentsForChromosome = new ArrayList<>(numberOfSlots);
             int position = 1;
             Map<Integer, TargetRegionEnrichment> positionToSuppliedItem = new HashMap<>();
@@ -40,7 +42,7 @@ public class TargetRegions implements CobaltScope
             {
                 TargetRegionEnrichment suppliedItem = positionToSuppliedItem.get(position);
                 enrichmentsForChromosome.add(i, suppliedItem);
-                position += 1000;
+                position += WINDOW_SIZE;
             }
             mEnrichments.put(chromosome, enrichmentsForChromosome);
         }
@@ -81,7 +83,7 @@ public class TargetRegions implements CobaltScope
     {
         if(mEnrichments.containsKey(chromosome))
         {
-            return mEnrichments.get(chromosome).get(position / 1000);
+            return mEnrichments.get(chromosome).get(position / WINDOW_SIZE);
         }
         return null;
     }

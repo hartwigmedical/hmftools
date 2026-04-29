@@ -42,6 +42,7 @@ public class NormalisationConfig
     public final String CobaltWgsDir;
     public final String CobaltPanelDir; // un-normalised files
     public final String TargetRegionsBed;
+    public final String WgsCopyNumberPercentiles;
     public final String GcProfile;
     public final String OutputFile;
     public final String DetailedFile;
@@ -51,6 +52,7 @@ public class NormalisationConfig
 
     private static final String COBALT_WGS_DIR = "cobalt_wgs_dir";
     private static final String OUTPUT_FILE = "output_file";
+    private static final String WGS_COPY_NUMBER_PERCENTILES = "wgs_copy_number_percentiles";
     private static final String DETAILED_OUTPUT = "detailed_file";
 
     private static final String WGS_SAMPLE_ID = "WgsSampleId";
@@ -68,6 +70,7 @@ public class NormalisationConfig
         AmberDir = configBuilder.getValue(AMBER_DIR_CFG, "");
         GcProfile = configBuilder.getValue(GC_PROFILE);
         TargetRegionsBed = configBuilder.getValue(TARGET_REGIONS_BED);
+        WgsCopyNumberPercentiles = configBuilder.getValue(WGS_COPY_NUMBER_PERCENTILES);
         RefGenVersion = RefGenomeVersion.from(configBuilder);
         OutputFile = configBuilder.getValue(OUTPUT_FILE);
         DetailedFile = configBuilder.getValue(DETAILED_OUTPUT);
@@ -139,6 +142,7 @@ public class NormalisationConfig
         configBuilder.addPath(AMBER_DIR_CFG, false, AMBER_DIR_DESC);
         configBuilder.addPath(COBALT_DIR_CFG, true, COBALT_DIR_DESC);
         configBuilder.addPath(COBALT_WGS_DIR, false, "Path to cobalt WGS files");
+        configBuilder.addPath(WGS_COPY_NUMBER_PERCENTILES, false, "WGS cohort copy number percentiles");
         configBuilder.addConfigItem(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
         configBuilder.addPath(TARGET_REGIONS_BED, true, TARGET_REGIONS_BED_DESC);
         registerCommonConfig(configBuilder);

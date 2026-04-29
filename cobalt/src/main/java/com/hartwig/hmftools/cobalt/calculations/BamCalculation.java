@@ -58,11 +58,14 @@ abstract class BamCalculation
         {
             // Windows are converted to BamRatios. The essential values of a BamRatio are its ratio
             // and whether it is included (not masked out due to mapability, GC, targeted mode).
+
             // Subsequent normalisation steps adjust the ratio value, but excluded BamRatios have a ratio fixed at -1.
             BamRatio bamRatio = window.toBamRatio();
+
             // Normalise by the GC factor for the window's bucket. This will set the ratio to -1.0 if the bucket is null.
             bamRatio.normaliseForGc(BucketStatistics.medianReadDepth(window.GcBucket));
-            // Target region normalisation (does nothing in whole genome mode).
+
+            // Target region normalisation (does nothing in whole genome mode)
             bamRatio.applyEnrichment(Scope.enrichmentQuotient(chromosome, window.Position));
             bamResults.put(chromosome, bamRatio);
         });

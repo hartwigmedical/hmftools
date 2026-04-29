@@ -48,14 +48,18 @@ public class BamReadCounter
         mConfig = config;
         mBamPath = bamPath;
         mReaderFactory = config.readerFactory();
+
         loadChromosomes();
+
         mReadDepthAccumulator = new ReadDepthAccumulator(windowSize);
+
         for(ChromosomeData chromosome : mChromosomes)
         {
             mReadDepthAccumulator.addChromosome(chromosome.Name, chromosome.Length);
         }
 
         CB_LOGGER.info("calculating read depths from {}", mBamPath);
+
         for(ChrBaseRegion baseRegion : partitionGenome())
         {
             Runnable task = () -> sliceRegionTask(baseRegion);
@@ -66,7 +70,7 @@ public class BamReadCounter
     private void sliceRegionTask(ChrBaseRegion region)
     {
         CB_LOGGER.debug("region({}) accumulating read depth", region);
-        final File bamFile = new File(mBamPath);
+        File bamFile = new File(mBamPath);
         try(SamReader reader = mReaderFactory.open(bamFile))
         {
             BamSlicer bamSlicer = new BamSlicer(mConfig.MinMappingQuality, mConfig.IncludeDuplicates, false, false);
