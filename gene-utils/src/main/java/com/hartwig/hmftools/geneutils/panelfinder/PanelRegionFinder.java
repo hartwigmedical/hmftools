@@ -171,6 +171,7 @@ public class PanelRegionFinder
             String chromosome = mRefGenomeVersion.versionedChromosome(entry.getKey().toString());
 
             List<RegionData> regions = mChrRegions.get(chromosome);
+            Collections.sort(regions);
 
             if(regions == null)
             {
