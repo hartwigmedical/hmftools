@@ -281,7 +281,7 @@ public class PurityPloidyFitter
                     }
                 }
 
-                mFinalPurityFit = bafFittedPurity != null ? bafFittedPurity : bafFittedPurity;
+                mFinalPurityFit = bafFittedPurity != null ? bafFittedPurity : mCopyNumberPurityFit;
                 mFitMethod = FittedPurityMethod.NORMAL;
             }
 
