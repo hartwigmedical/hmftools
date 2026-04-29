@@ -5,6 +5,7 @@ import java.nio.file.Path;
 import java.util.List;
 
 import com.hartwig.hmftools.common.purple.Gender;
+import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.finding.datamodel.FindingRecord;
 import com.hartwig.hmftools.finding.datamodel.FindingsJson;
 import com.hartwig.hmftools.finding.util.CandidateToReportableConverter;
@@ -24,18 +25,31 @@ public class ConversionUtil
     public static void orangeJsonToFindingsJson(Path findingsJson, Path orangeJson, @Nullable Path clinicalTranscriptsTsv,
             @Nullable Path driverGeneTsv, @Nullable Gender gender) throws IOException
     {
-        FindingRecord
-                findingRecord =
-                FindingRecordFactory.fromOrangeJsonWithTranscriptFile(orangeJson, clinicalTranscriptsTsv, driverGeneTsv, gender);
-        findingRecord =
-                FindingRecordConverterUtil.listConverter(List.of(ErrorConverter::convert,
-                                LowPurityConverter::convert,
-                                PTOConverter::convert,
-                                GainDeletionsFilterConverter::convert,
-                                NoGermlineConverter::convert,
-                                CandidateToReportableConverter::convert,
-                                ReportedOnlyConverter::convert))
-                        .apply(findingRecord);
+        convertAndWrite(findingsJson, FindingRecordFactory.fromOrangeJsonWithTranscriptFile(orangeJson, clinicalTranscriptsTsv, driverGeneTsv, gender));
+    }
+
+    public static FindingRecord orangeJsonToFindingsJson(OrangeRecord orangeRecord, @Nullable Path clinicalTranscriptsTsv,
+            @Nullable Path driverGeneTsv, @Nullable Gender gender) throws IOException
+    {
+        return convert(FindingRecordFactory.fromOrangeRecord(orangeRecord, clinicalTranscriptsTsv, driverGeneTsv, gender));
+    }
+
+    private static void convertAndWrite(Path findingsJson, FindingRecord findingRecord) throws IOException
+    {
+        findingRecord = convert(findingRecord);
+
         new FindingsJson().write(findingRecord, findingsJson);
+    }
+
+    private static FindingRecord convert(FindingRecord findingRecord)
+    {
+        return FindingRecordConverterUtil.listConverter(List.of(ErrorConverter::convert,
+                        LowPurityConverter::convert,
+                        PTOConverter::convert,
+                        GainDeletionsFilterConverter::convert,
+                        NoGermlineConverter::convert,
+                        CandidateToReportableConverter::convert,
+                        ReportedOnlyConverter::convert))
+                .apply(findingRecord);
     }
 }
