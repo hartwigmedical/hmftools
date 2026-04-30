@@ -2,11 +2,11 @@ package com.hartwig.hmftools.finding;
 
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.finding.datamodel.Disruption;
 import com.hartwig.hmftools.finding.datamodel.GainDeletion;
 import com.hartwig.hmftools.finding.datamodel.SmallVariant;
@@ -19,7 +19,7 @@ class GeneListUtil
             List<Disruption> germlineHomozygousDisruptions,
             Set<String> genes)
     {
-        Set<String> genesDisplay = Sets.newTreeSet();
+        Set<String> genesDisplay = new TreeSet<>();
 
         genesDisplay.addAll(filteredMapped(smallVariants.findings(),
                 variant -> genes.contains(variant.gene()),
