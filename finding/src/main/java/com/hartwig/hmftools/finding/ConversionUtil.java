@@ -22,23 +22,10 @@ import org.jetbrains.annotations.Nullable;
 @SuppressWarnings("unused")
 public class ConversionUtil
 {
-    public static void orangeJsonToFindingsJson(Path findingsJson, Path orangeJson, @Nullable Path clinicalTranscriptsTsv,
-            @Nullable Path driverGeneTsv, @Nullable Gender gender) throws IOException
-    {
-        convertAndWrite(findingsJson, FindingRecordFactory.fromOrangeJsonWithTranscriptFile(orangeJson, clinicalTranscriptsTsv, driverGeneTsv, gender));
-    }
-
-    public static FindingRecord orangeJsonToFindingsJson(OrangeRecord orangeRecord, @Nullable Path clinicalTranscriptsTsv,
+    public static FindingRecord orangeRecordToFindingRecord(OrangeRecord orangeRecord, @Nullable Path clinicalTranscriptsTsv,
             @Nullable Path driverGeneTsv, @Nullable Gender gender) throws IOException
     {
         return convert(FindingRecordFactory.fromOrangeRecord(orangeRecord, clinicalTranscriptsTsv, driverGeneTsv, gender));
-    }
-
-    private static void convertAndWrite(Path findingsJson, FindingRecord findingRecord) throws IOException
-    {
-        findingRecord = convert(findingRecord);
-
-        new FindingsJson().write(findingRecord, findingsJson);
     }
 
     private static FindingRecord convert(FindingRecord findingRecord)
