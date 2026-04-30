@@ -1,15 +1,11 @@
 package com.hartwig.hmftools.geneutils.panelfinder;
 
+import static java.lang.Math.round;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeVersion;
+import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._Y;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.region.TaggedRegion.loadRegionsFromBedFile;
-import static com.hartwig.hmftools.common.utils.Doubles.median;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.TARGET_REGIONS_BED;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.TARGET_REGIONS_BED_DESC;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POS_END;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POS_START;
@@ -20,6 +16,7 @@ import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createField
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
+import static com.hartwig.hmftools.geneutils.panelfinder.PanelFinderConfig.CHROMOSOME_Y_SAMPLE_FRACTION;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -28,7 +25,6 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.OptionalDouble;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
@@ -40,7 +36,6 @@ import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.mappability.ProbeQualityProfile;
 import com.hartwig.hmftools.common.mappability.RegionQuality;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -51,27 +46,13 @@ import org.jetbrains.annotations.NotNull;
 
 public class PanelRegionFinder
 {
-    private static final String HIGH_DEPTH_FILE = "high_depth_file";
-    private static final String OUTPUT_FILE = "output_file";
-
-    private final String mHighDepthFile;
-    private final String mTargetRegionsBed;
-    private final String mEnsemblDataPath;
-    private final String mMappabilityProfileFile;
-    private final RefGenomeVersion mRefGenomeVersion;
-    private final String mOutputFile;
+    private final PanelFinderConfig mConfig;
 
     private final Map<String,List<RegionData>> mChrRegions;
 
     public PanelRegionFinder(final ConfigBuilder configBuilder)
     {
-        mHighDepthFile = configBuilder.getValue(HIGH_DEPTH_FILE);
-        mTargetRegionsBed = configBuilder.getValue(TARGET_REGIONS_BED);
-        mOutputFile = configBuilder.getValue(OUTPUT_FILE);
-        mRefGenomeVersion = RefGenomeVersion.from(configBuilder);
-
-        mEnsemblDataPath = configBuilder.getValue(ENSEMBL_DATA_DIR);
-        mMappabilityProfileFile = configBuilder.getValue(ProbeQualityProfile.CFG_PROBE_QUALITY_FILE);
+        mConfig = new PanelFinderConfig(configBuilder);
 
         mChrRegions = Maps.newHashMap();
     }
@@ -107,7 +88,7 @@ public class PanelRegionFinder
     {
         try
         {
-            List<String> lines = Files.readAllLines(Paths.get(mHighDepthFile));
+            List<String> lines = Files.readAllLines(Paths.get(mConfig.HighDepthFile));
 
             // check for headers
             String header = lines.get(0);
@@ -121,18 +102,55 @@ public class PanelRegionFinder
             int depthMinIndex = fieldsIndexMap.get("DepthMin");
             int depthMaxIndex = fieldsIndexMap.get("DepthMax");
 
+            double minSamplesChromosomeY = CHROMOSOME_Y_SAMPLE_FRACTION * mConfig.MinSampleCount;
+
             int count = 0;
+            int filtered = 0;
 
             for(String line : lines)
             {
                 String[] values = line.split(TSV_DELIM, -1);
 
-                HighDepthData highDepthData = new HighDepthData(
-                        new ChrBaseRegion(values[chrIndex], Integer.parseInt(values[posStartIndex]), Integer.parseInt(values[posEndIndex])),
-                        Integer.parseInt(values[sampleCountIndex]),
-                        Integer.parseInt(values[depthMinIndex]), Integer.parseInt(values[depthMaxIndex]));
+                String chromosome = values[chrIndex];
+                int regionStart = Integer.parseInt(values[posStartIndex]);
+                int regionEnd = Integer.parseInt(values[posEndIndex]);
+                int sampleCount = Integer.parseInt(values[sampleCountIndex]);
+                int depthMin = Integer.parseInt(values[depthMinIndex]);
+                int depthMax = Integer.parseInt(values[depthMaxIndex]);
 
                 ++count;
+
+                if(mConfig.MinSampleCount > 0)
+                {
+                    if(HumanChromosome.fromString(chromosome) == _Y)
+                    {
+                        if(sampleCount < minSamplesChromosomeY)
+                        {
+                            ++filtered;
+                            continue;
+                        }
+                    }
+                    else if(sampleCount < mConfig.MinSampleCount)
+                    {
+                        ++filtered;
+                        continue;
+                    }
+                }
+
+                if(mConfig.HighDepthTrimCount > 0)
+                {
+                    regionStart += mConfig.HighDepthTrimCount;
+                    regionEnd -= mConfig.HighDepthTrimCount;
+
+                    if(regionStart > regionEnd)
+                    {
+                        ++filtered;
+                        continue;
+                    }
+                }
+
+                HighDepthData highDepthData = new HighDepthData(
+                        new ChrBaseRegion(chromosome, regionStart, regionEnd), sampleCount, depthMin, depthMax);
 
                 List<RegionData> regions = mChrRegions.get(highDepthData.Chromosome);
 
@@ -147,28 +165,28 @@ public class PanelRegionFinder
                 regions.add(regionData);
             }
 
-            GU_LOGGER.info("loaded {} high-depth regions from file({})", count, mHighDepthFile);
+            GU_LOGGER.info("loaded {} high-depth regions, filtered({}), from file({})", count, filtered, mConfig.HighDepthFile);
         }
         catch(Exception e)
         {
-            GU_LOGGER.error("failed to load high-depth regions file({}): {}", mHighDepthFile, e.toString());
+            GU_LOGGER.error("failed to load high-depth regions file({}): {}", mConfig.HighDepthFile, e.toString());
             System.exit(1);
         }
     }
 
     private void loadPanelRegions()
     {
-        if(mTargetRegionsBed == null)
+        if(mConfig.TargetRegionsBed == null)
             return;
 
-        Map<Chromosome,List<TaggedRegion>> chrPanelRegions = loadRegionsFromBedFile(mTargetRegionsBed);
+        Map<Chromosome,List<TaggedRegion>> chrPanelRegions = loadRegionsFromBedFile(mConfig.TargetRegionsBed);
 
         GU_LOGGER.info("loaded {} panel regions from file({})",
-                chrPanelRegions.values().stream().mapToInt(x -> x.size()).sum(), mTargetRegionsBed);
+                chrPanelRegions.values().stream().mapToInt(x -> x.size()).sum(), mConfig.TargetRegionsBed);
 
         for(Map.Entry<Chromosome,List<TaggedRegion>> entry : chrPanelRegions.entrySet())
         {
-            String chromosome = mRefGenomeVersion.versionedChromosome(entry.getKey().toString());
+            String chromosome = mConfig.RefGenVersion.versionedChromosome(entry.getKey().toString());
 
             List<RegionData> regions = mChrRegions.get(chromosome);
             Collections.sort(regions);
@@ -239,10 +257,10 @@ public class PanelRegionFinder
 
     private void annotateGeneExons()
     {
-        if(mEnsemblDataPath == null)
+        if(mConfig.EnsemblDataPath == null)
             return;
 
-        EnsemblDataCache ensemblDataCache = new EnsemblDataCache(mEnsemblDataPath, mRefGenomeVersion);
+        EnsemblDataCache ensemblDataCache = new EnsemblDataCache(mConfig.EnsemblDataPath, mConfig.RefGenVersion);
 
         ensemblDataCache.setRequiredData(true, false, false, true);
         ensemblDataCache.load(false);
@@ -283,12 +301,12 @@ public class PanelRegionFinder
 
     private void annotateMappability()
     {
-        if(mMappabilityProfileFile == null)
+        if(mConfig.MappabilityProfileFile == null)
             return;
 
-        ProbeQualityProfile probeQualityProfile = ProbeQualityProfile.loadFromResourceFile(mMappabilityProfileFile);
+        ProbeQualityProfile probeQualityProfile = ProbeQualityProfile.loadFromResourceFile(mConfig.MappabilityProfileFile);
 
-        GU_LOGGER.debug("loaded genome-mappability file({})", mMappabilityProfileFile);
+        GU_LOGGER.debug("loaded genome-mappability file({})", mConfig.MappabilityProfileFile);
 
         for(Map.Entry<String,List<RegionData>> entry : mChrRegions.entrySet())
         {
@@ -304,11 +322,12 @@ public class PanelRegionFinder
 
     private void writeResults()
     {
-        GU_LOGGER.info("writing {} regions to file({})", mChrRegions.values().stream().mapToInt(x -> x.size()).sum(), mOutputFile);
+        GU_LOGGER.info("writing {} regions to file({})", mChrRegions.values().stream().mapToInt(x -> x.size()).sum(), mConfig.OutputFile);
 
         try
         {
-            BufferedWriter writer = createBufferedWriter(mOutputFile);
+            BufferedWriter writer = createBufferedWriter(mConfig.OutputFile);
+            BufferedWriter bedWriter = mConfig.OutputBed != null ? createBufferedWriter(mConfig.OutputBed) : null;
 
             StringJoiner sj = new StringJoiner(TSV_DELIM);
 
@@ -336,7 +355,7 @@ public class PanelRegionFinder
 
             for(HumanChromosome chromosome : HumanChromosome.values())
             {
-                String chrStr = mRefGenomeVersion.versionedChromosome(chromosome.toString());
+                String chrStr = mConfig.RefGenVersion.versionedChromosome(chromosome.toString());
 
                 List<RegionData> regions = mChrRegions.get(chrStr);
 
@@ -348,6 +367,15 @@ public class PanelRegionFinder
 
                 for(RegionData region : regions)
                 {
+                    // filter on mappability
+                    double meanMappability = region.meanMappability();
+
+                    if(mConfig.MinMappability > 0)
+                    {
+                        if(region.panelRegions().isEmpty() && meanMappability < mConfig.MinMappability)
+                            continue;
+                    }
+
                     sj = new StringJoiner(TSV_DELIM);
                     sj.add(region.Chromosome);
                     sj.add(String.valueOf(region.start()));
@@ -369,20 +397,35 @@ public class PanelRegionFinder
 
                     double minMappability = region.mappabilityScores().stream().mapToDouble(x -> x.Quality).min().orElse(0);
                     double maxMappability = region.mappabilityScores().stream().mapToDouble(x -> x.Quality).max().orElse(0);
-                    sj.add(format("%.3f", region.meanMappability()));
+                    sj.add(format("%.3f", meanMappability));
                     sj.add(format("%.3f", minMappability));
                     sj.add(format("%.3f", maxMappability));
 
                     writer.write(sj.toString());
                     writer.newLine();
+
+                    if(bedWriter != null)
+                    {
+                        sj = new StringJoiner(TSV_DELIM);
+                        sj.add(region.Chromosome);
+                        sj.add(String.valueOf(region.start()));
+                        sj.add(String.valueOf(region.end()));
+                        sj.add(region.label());
+
+                        bedWriter.write(sj.toString());
+                        bedWriter.newLine();
+                    }
                 }
             }
 
             writer.close();
+
+            if(bedWriter != null)
+                bedWriter.close();
         }
         catch(IOException e)
         {
-            GU_LOGGER.error("failed to write output file({}): {}", mOutputFile, e.toString());
+            GU_LOGGER.error("failed to write output file({}): {}", mConfig.OutputFile, e.toString());
             System.exit(1);
         }
     }
@@ -391,14 +434,7 @@ public class PanelRegionFinder
     {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
-        configBuilder.addPath(HIGH_DEPTH_FILE, true, "Input regions TSV file - header is optional");
-        configBuilder.addPath(TARGET_REGIONS_BED, false, TARGET_REGIONS_BED_DESC);
-        EnsemblDataCache.addEnsemblDir(configBuilder, false);
-        addRefGenomeVersion(configBuilder);
-        configBuilder.addConfigItem(OUTPUT_FILE, false, "Output filename");
-        ProbeQualityProfile.registerConfig(configBuilder);
-
-        addLoggingOptions(configBuilder);
+        PanelFinderConfig.registerConfig(configBuilder);
 
         configBuilder.checkAndParseCommandLine(args);
 

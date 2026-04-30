@@ -2,6 +2,7 @@ package com.hartwig.hmftools.geneutils.panelfinder;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.String.format;
 
 import java.util.List;
 
@@ -79,9 +80,20 @@ public class RegionData extends ChrBaseRegion
         return totalBases > 0 ? totalQuality / totalBases : 0;
     }
 
+    public String label()
+    {
+        if(mPanelRegions.isEmpty())
+            return "HIGH_DEPTH";
+
+        if(mPanelRegions.size() == 1)
+            return mPanelRegions.get(0).Label;
+
+        return format("%s_MULTI", mPanelRegions.get(0).Label);
+    }
+
     public String toString()
     {
-        return String.format("%s: highDepth(%s) genes(%s) panels(%s)",
+        return format("%s: highDepth(%s) genes(%s) panels(%s)",
                 super.toString(), HighDepthData.toString(mHighDepths), GeneExonData.toString(mGeneExons), PanelData.toString(mPanelRegions));
     }
 }
