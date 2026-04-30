@@ -12,6 +12,8 @@ import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._8;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._9;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.common.purple.GermlineStatus.LIKELY_DIPLOID;
+import static com.hartwig.hmftools.purple.PurpleConstants.HIGHLY_ANEUPLOIDIC_REFIT_BAF_CUTOFF;
+import static com.hartwig.hmftools.purple.PurpleConstants.SOMATIC_FIT_ANEUPLOIDIC_REGION_CUTOFF;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -196,24 +198,62 @@ public class AneuploidyDetectorTest
     @Test
     public void testAneuploidyBafFit()
     {
+        double minBafAboveThreshold = SOMATIC_FIT_ANEUPLOIDIC_REGION_CUTOFF + 0.005;
         int position = 1000;
-        createAndAddRegion(_1, position, 1000, 0.5);
+        createAndAddRegion(_1, position, 2970, 0.5); // threshold will be 2991
         position += WINDOW_SIZE;
-        createAndAddRegion(_1, position, 1000, 0.57);
+        createAndAddRegion(_1, position, 24, minBafAboveThreshold); // valid to use, and above cumulative threshold
         position += WINDOW_SIZE;
-        createAndAddRegion(_1, position, 990, 0.58);
+        createAndAddRegion(_1, position, 5, minBafAboveThreshold + 0.01);
         position += WINDOW_SIZE;
-        createAndAddRegion(_1, position, 4, 0.59); // too few points to use
-        position += WINDOW_SIZE;
-        createAndAddRegion(_1, position, 5, 0.60);
+        createAndAddRegion(_1, position, 1, HIGHLY_ANEUPLOIDIC_REFIT_BAF_CUTOFF + 0.01); // an outlier
 
         AneuploidyDetector detector = new AneuploidyDetector(Regions, AmberData, pcdFirst10Chromosomes());
         assertTrue(detector.hasAneuploidy());
-        assertFalse(detector.hasHighBafRegion());
 
         Double bafPurity = detector.calculateBafPurity();
         assertNotNull(bafPurity);
-        assertEquals(0.2, bafPurity, 0.01);
+        assertEquals(0.15, bafPurity, 0.01);
+
+        Regions.clear();
+        AmberData.clear();
+
+        position = 1000;
+        createAndAddRegion(_1, position, 2970, 0.5); // threshold will be 2991
+        position += WINDOW_SIZE;
+        createAndAddRegion(_1, position, 20, minBafAboveThreshold); // valid to use, but below cumulative threshold
+        position += WINDOW_SIZE;
+        createAndAddRegion(_1, position, 9, minBafAboveThreshold + 0.01); // valid to use
+        position += WINDOW_SIZE;
+        createAndAddRegion(_1, position, 1, HIGHLY_ANEUPLOIDIC_REFIT_BAF_CUTOFF + 0.01); //
+
+        detector = new AneuploidyDetector(Regions, AmberData, pcdFirst10Chromosomes());
+        assertTrue(detector.hasAneuploidy());
+
+        bafPurity = detector.calculateBafPurity();
+        assertNotNull(bafPurity);
+        assertEquals(0.17, bafPurity, 0.01);
+
+        Regions.clear();
+        AmberData.clear();
+
+        position = 1000;
+        createAndAddRegion(_1, position, 2970, 0.5); // threshold will be 2991
+        position += WINDOW_SIZE;
+        createAndAddRegion(_1, position, 20, minBafAboveThreshold); // valid to use, but below cumulative threshold
+        position += WINDOW_SIZE;
+        createAndAddRegion(_1, position, 4, minBafAboveThreshold + 0.01); // invalid to use, below 5 points
+        position += WINDOW_SIZE;
+        createAndAddRegion(_1, position, 4, minBafAboveThreshold + 0.02);
+        position += WINDOW_SIZE;
+        createAndAddRegion(_1, position, 2, minBafAboveThreshold + 0.02);
+
+        detector = new AneuploidyDetector(Regions, AmberData, pcdFirst10Chromosomes());
+        assertTrue(detector.hasAneuploidy());
+
+        bafPurity = detector.calculateBafPurity();
+        assertNotNull(bafPurity);
+        assertEquals(0.15, bafPurity, 0.01);
     }
 
     private void createUniformlyDiploidRegionsPlusSingleSignificantlyElevatedRegion(

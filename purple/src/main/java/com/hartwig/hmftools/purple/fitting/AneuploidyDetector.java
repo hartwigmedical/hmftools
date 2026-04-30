@@ -111,21 +111,35 @@ public class AneuploidyDetector
         int cumulativeTotal = 0;
         double maxPercThreshold = mTotalBafCount * (1 - HIGHLY_ANEUPLOIDIC_RATIO_CUTOFF);
 
+        FittingRegion lastValidRegion = null;
+
         for(FittingRegion fittingRegion : mRegions)
         {
             cumulativeTotal += fittingRegion.bafCount();
 
-            if(cumulativeTotal > maxPercThreshold && fittingRegion.bafCount() >= HIGHLY_ANEUPLOIDIC_REGION_MIN_BAF_COUNT)
-            {
-                if(fittingRegion.observedBAF() < SOMATIC_FIT_ANEUPLOIDIC_REGION_CUTOFF)
-                    return null;
+            boolean isValidRegion = fittingRegion.bafCount() >= HIGHLY_ANEUPLOIDIC_REGION_MIN_BAF_COUNT
+                    && fittingRegion.observedBAF() >= SOMATIC_FIT_ANEUPLOIDIC_REGION_CUTOFF;
 
-                return fittingRegion.observedBAF() * 2 - 1;
+            if(cumulativeTotal < maxPercThreshold)
+            {
+                if(isValidRegion)
+                    lastValidRegion = fittingRegion;
+            }
+            else
+            {
+                if(isValidRegion)
+                    return impliedPurity(fittingRegion);
+                else if(lastValidRegion != null)
+                    return impliedPurity(lastValidRegion);
+                else
+                    return null;
             }
         }
 
         return null;
     }
+
+    private double impliedPurity(final FittingRegion region) { return region.observedBAF() * 2 - 1; }
 
     private boolean isHighlyAneuploidic(final List<AmberBAF> amberPoints)
     {

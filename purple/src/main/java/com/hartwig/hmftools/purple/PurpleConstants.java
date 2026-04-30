@@ -95,7 +95,7 @@ public class PurpleConstants
     public static final double HIGHLY_ANEUPLOIDIC_REGION_MIN_BAF_COUNT = 5;
     public static final double HIGHLY_ANEUPLOIDIC_RATIO_CUTOFF = 0.003;
     public static final double HIGHLY_ANEUPLOIDIC_REGION_CUTOFF = 0.7;
-    public static final double HIGHLY_ANEUPLOIDIC_REFIT_BAF_CUTOFF = 1 - 2 * (1 - SOMATIC_FIT_TUMOR_ONLY_PURITY_MIN);
+    public static final double HIGHLY_ANEUPLOIDIC_REFIT_BAF_CUTOFF = 2 * SOMATIC_FIT_TUMOR_ONLY_PURITY_MIN - 1;
 
     // somatic fitting readjustment
     public static final double SNV_READJUST_CN_MIN = 1.8;
