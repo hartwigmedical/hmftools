@@ -39,6 +39,8 @@ public record FindingRecord(
         @NotNull FindingItem<TumorMutationalBurden> tumorMutationalBurden,
         @NotNull FindingItem<HomologousRecombination> homologousRecombination)
 {
+    public static final String VERSION = FindingRecord.class.getPackage().getImplementationVersion();
+
     public boolean hasLowPurity()
     {
         List<IFindingList<?>> lists =
