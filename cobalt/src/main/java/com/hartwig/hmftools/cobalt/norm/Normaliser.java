@@ -31,6 +31,8 @@ public class Normaliser
     */
 
     private static final double MAX_WGS_ADJUST_RATIO = 0.3; // vs the median
+    private static final double MEDIAN_PERCENTILE = 0.5;
+    private static final double WGS_PERCENTILE_DAMPEN = 0.2;
 
     public static void calcSampleAdjustedRatios(final List<String> samples, final Map<String, List<RegionData>> chrRegionData)
     {
@@ -220,17 +222,20 @@ public class Normaliser
             final WgsCopyNumberPercentiles wgsPercentiles)
     {
         // use a percentile derived from the WGS cohort instead of the median, which can be especially important for regions and
-        // genes which arre typically amplified or deleted
+        // genes which are typically amplified or deleted
         double specificPercentile = wgsPercentiles.getRegionPercentile(chromosome, regionData.Position);
 
         Collections.sort(sampleRelativeEnrichments);
 
         double median = median(sampleRelativeEnrichments);
 
-        if(specificPercentile == 0.5)
+        if(specificPercentile == MEDIAN_PERCENTILE)
             return median;
 
-        int targetIndex = (int)floor(specificPercentile * sampleRelativeEnrichments.size());
+        // dampen the percentile towards the median, eg 0.25*(1-DF)+0.5*(DF) = 0.3
+        double dampenedPercentile = specificPercentile * (1 - WGS_PERCENTILE_DAMPEN) + MEDIAN_PERCENTILE * WGS_PERCENTILE_DAMPEN;
+
+        int targetIndex = (int)floor(dampenedPercentile * sampleRelativeEnrichments.size());
         double percentileEnrichment = sampleRelativeEnrichments.get(targetIndex);
 
         if(median == percentileEnrichment)
