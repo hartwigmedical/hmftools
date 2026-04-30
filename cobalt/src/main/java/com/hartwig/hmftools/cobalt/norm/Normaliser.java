@@ -7,6 +7,7 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.cobalt.CobaltConstants.GC_BUCKET_MAX;
 import static com.hartwig.hmftools.cobalt.CobaltConstants.GC_BUCKET_MIN;
 import static com.hartwig.hmftools.cobalt.norm.NormConstants.MAPPABILITY_THRESHOLD;
+import static com.hartwig.hmftools.cobalt.norm.NormConstants.MIN_ADJACENT_ENRICHMENT_RATIO;
 import static com.hartwig.hmftools.common.utils.Doubles.median;
 
 import java.util.ArrayList;
@@ -176,6 +177,39 @@ public class Normaliser
                 if(percentileEnrichment >= minEnrichmentRatio)
                 {
                     regionData.setRelativeEnrichment(percentileEnrichment);
+                }
+            }
+
+            // invalid regions with significant drop-off relative to the neighbouring ones
+            //
+            for(int i = 1; i < regions.size() - 1; ++i)
+            {
+                RegionData priorRegion = regions.get(i - 1);
+                RegionData regionData = regions.get(i);
+                RegionData nextRegion = regions.get(i + 1);
+
+                if(regionData.relativeEnrichment() == 0)
+                    continue;
+
+                if(priorRegion.relativeEnrichment() > 0)
+                {
+                    double adjacentRatio = regionData.relativeEnrichment() / priorRegion.relativeEnrichment();
+
+                    if(adjacentRatio < MIN_ADJACENT_ENRICHMENT_RATIO)
+                    {
+                        regionData.setRelativeEnrichment(0); // zero being a sentinel for invalid when written to file
+                        continue;
+                    }
+                }
+
+                if(nextRegion.relativeEnrichment() > 0)
+                {
+                    double adjacentRatio = regionData.relativeEnrichment() / nextRegion.relativeEnrichment();
+
+                    if(adjacentRatio < MIN_ADJACENT_ENRICHMENT_RATIO)
+                    {
+                        regionData.setRelativeEnrichment(0); // zero being a sentinel for invalid when written to file
+                    }
                 }
             }
         }
