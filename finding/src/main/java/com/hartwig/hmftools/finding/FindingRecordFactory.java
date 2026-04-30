@@ -122,8 +122,9 @@ public class FindingRecordFactory
 
         List<Disruption> germlineHomozygousDisruptions = germlineDisruptions.findingsIfOk().stream().filter(Disruption::isHomozygous).toList();
 
+        String version = FindingRecord.VERSION != null ? FindingRecord.VERSION : "local-dev";
         return FindingRecordBuilder.builder()
-                .version("1.0")
+                .version(version)
                 .metaProperties(createMetaProperties(orangeRecord, experimentType))
                 .qc(qc)
                 .purityPloidyFit(createPurityPloidyFit(purple, orangeRecord.experimentType(), orangeRecord.plots()))
