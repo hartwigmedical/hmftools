@@ -408,10 +408,17 @@ public class AssemblyApplication
             // and then add any assemblies not in a phase set into their own for alignment
             for(JunctionAssembly assembly : phaseGroup.assemblies())
             {
-                if(assembly.phaseSet() == null && !skipUnlinkedJunctionAssembly(assembly))
+                if(assembly.phaseSet() == null)
                 {
-                    AssemblyAlignment assemblyAlignment = new AssemblyAlignment(assembly);
-                    assemblyAlignments.add(assemblyAlignment);
+                    if (!skipUnlinkedJunctionAssembly(assembly))
+                    {
+                        AssemblyAlignment assemblyAlignment = new AssemblyAlignment(assembly);
+                        assemblyAlignments.add(assemblyAlignment);
+                    }
+                    else
+                    {
+                        SV_LOGGER.trace("assembly({}) filtered: unlinked", assembly);
+                    }
                 }
             }
         }
