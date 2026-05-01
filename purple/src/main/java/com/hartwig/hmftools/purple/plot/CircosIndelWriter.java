@@ -9,48 +9,47 @@ import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 
-public final class CircosINDELWriter
+public final class CircosIndelWriter
 {
     public static void writePositions(final String filePath, Collection<VariantContextDecorator> values)
             throws IOException
     {
-        writeCircosFile(filePath, values, CircosINDELWriter::transformPosition);
+        writeCircosFile(filePath, values, CircosIndelWriter::transformPosition);
     }
 
-    private static String transformPosition(final VariantContextDecorator position)
+    private static String transformPosition(final VariantContextDecorator variant)
     {
-        return new StringJoiner("\t").add(circosContig(position.chromosome()))
-                .add(String.valueOf(position.position()))
-                .add(String.valueOf(position.position()))
-                .add(String.valueOf(position.adjustedVaf()))
-                .add("fill_color=" + color(position))
+        return new StringJoiner("\t").add(circosContig(variant.chromosome()))
+                .add(String.valueOf(variant.position()))
+                .add(String.valueOf(variant.position()))
+                .add("1") // VAF has no impact on the line (since type=heatmap)
+                .add("color=" + color(variant))
                 .toString();
     }
 
-    //    DEL REPEAT>=4  ORANGE
-    //    DEL MH>2 RED
-    //    OTHER DEL YELLOW
-    //    INS  GREEN
     private static String color(final VariantContextDecorator variant)
     {
+        // Inserts: GREEN
         if(variant.alt().length() > variant.ref().length())
         {
-            // insertion
             return "green";
         }
 
+        // DEL with repeats >=4: ORANGE
         if(variant.repeatCount() >= 4)
         {
             // del repeat >= 4
             return "orange";
         }
 
-        if(!variant.microhomology().isEmpty())
+        // DEL with microhomology > 2: RED
+        if(variant.microhomology().length() > 2)
         {
-            // microhomology
             return "vdred";
         }
 
+
+        // other DELs: YELLOW
         return "vdyellow";
     }
 }

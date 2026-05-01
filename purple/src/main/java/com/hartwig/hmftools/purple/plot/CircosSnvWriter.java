@@ -9,7 +9,7 @@ import java.util.Collection;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 
-public final class CircosSNPWriter
+public final class CircosSnvWriter
 {
     private static final String PINK = "233,187,184";
     private static final String BLUE = "20,176,239";
@@ -20,16 +20,16 @@ public final class CircosSNPWriter
 
     public static void writePositions(final String filePath, Collection<VariantContextDecorator> values) throws IOException
     {
-        writeCircosFile(filePath, values, CircosSNPWriter::transformPosition);
+        writeCircosFile(filePath, values, CircosSnvWriter::transformPosition);
     }
 
-    private static String transformPosition(final VariantContextDecorator position)
+    private static String transformPosition(final VariantContextDecorator variant)
     {
-        return String.join("\t", circosContig(position.chromosome()),
-                String.valueOf(position.position()),
-                String.valueOf(position.position()),
-                String.valueOf(position.adjustedVaf()),
-                String.join(",", "color=" + color(position), "glyph=" + glyph(position), "glyph_size=" + glyphSize(position)));
+        return String.join("\t", circosContig(variant.chromosome()),
+                String.valueOf(variant.position()),
+                String.valueOf(variant.position()),
+                String.valueOf(variant.adjustedVaf()),
+                String.join(",", "color=" + color(variant), "glyph=" + glyph(), "glyph_size=" + glyphSize()));
     }
 
     private static String color(final VariantContextDecorator variant)
@@ -73,12 +73,12 @@ public final class CircosSNPWriter
         return Nucleotides.swapDnaBase(base);
     }
 
-    private static String glyph(final VariantContextDecorator variant)
+    private static String glyph()
     {
         return "circle";
     }
 
-    private static int glyphSize(final VariantContextDecorator variant)
+    private static int glyphSize()
     {
         return 10;
     }
