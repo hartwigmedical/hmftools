@@ -48,7 +48,6 @@ public final class CircosIndelWriter
             return "vdred";
         }
 
-
         // other DELs: YELLOW
         return "vdyellow";
     }

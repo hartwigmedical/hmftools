@@ -37,19 +37,17 @@ public final class PCFFile
     private static final int COL_POS_START = 3;
     private static final int COL_POS_END = 4;
 
-    @NotNull
     public static String generateRatioFilename(final String basePath, final String sample)
     {
         return checkAddDirSeparator(basePath) + sample + RATIO_EXTENSION;
     }
 
-    @NotNull
     public static String generateBAFFilename(final String basePath, final String sample)
     {
         return checkAddDirSeparator(basePath) + sample + BAF_EXTENSION;
     }
 
-    public static ListMultimap<Chromosome, PcfSegment> readPcfFile(String path)
+    public static ListMultimap<Chromosome, PcfSegment> readPcfFile(final String path)
     {
         ListMultimap<Chromosome, PcfSegment> result = ArrayListMultimap.create();
         try(DelimFileReader dfr = new DelimFileReader(path))
@@ -67,7 +65,7 @@ public final class PCFFile
         return result;
     }
 
-    public static void write(String filename, GenomeIntervals data)
+    public static void write(final String filename, final GenomeIntervals data)
     {
         List<ChrBaseRegion> ratios = data.regionsList();
         List<String> columns = List.of("sampleID", "chrom", "arm", "start.pos", "end.pos", "n.probes", "mean");
@@ -84,7 +82,6 @@ public final class PCFFile
                 });
     }
 
-    @NotNull
     public static ListMultimap<Chromosome, PCFPosition> readPositions(int windowSize, PCFSource source, String filename) throws IOException
     {
         ListMultimap<Chromosome, PCFPosition> result = ArrayListMultimap.create();
