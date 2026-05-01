@@ -496,6 +496,11 @@ public class SampleAnalyser implements Callable<Void>
                 mCnDataLoader.getSvJcnCalcMap(),
                 mCnDataLoader.getSvIdCnDataMap(),
                 mCnDataLoader.getChrCnDataMap());
+
+        for(SvVarData var : mAllVariants)
+        {
+            var.setJcnRecalcData(1, 1); // assume in 1 of 2 copies
+        }
     }
 
     private List<LinxSvAnnotation> generateSvDataOutput()
