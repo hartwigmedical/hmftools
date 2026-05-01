@@ -2,6 +2,7 @@ package com.hartwig.hmftools.esvee.assembly;
 
 import static java.lang.Math.abs;
 
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_DEDUP_HIGH_SUPPORT_RATIO;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_DEDUP_JITTER_MAX_DIST;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.PROXIMATE_JUNCTION_DISTANCE;
@@ -65,7 +66,10 @@ public class AssemblyDeduper
             --index;
         }
 
-        removeExisting.forEach(x -> existingAssemblies.remove(x));
+        removeExisting.forEach(x -> {
+            existingAssemblies.remove(x);
+            SV_LOGGER.trace("assembly({}) filtered: deduped", x);
+        });
     }
 
     private static boolean checkDedupNonIndel(
@@ -80,6 +84,7 @@ public class AssemblyDeduper
         {
             assembly.addMergedAssembly();
             newAssemblies.remove(newIndex);
+            SV_LOGGER.trace("assembly({}) filtered: deduped", newAssembly);
             return false;
         }
         else
@@ -120,6 +125,7 @@ public class AssemblyDeduper
         {
             assembly.addMergedAssembly();
             newAssemblies.remove(newIndex);
+            SV_LOGGER.trace("assembly({}) filtered: deduped", newAssembly);
 
             if(matchedIndel == null)
             {
