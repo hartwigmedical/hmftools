@@ -118,7 +118,10 @@ public class PhaseGroup
             phaseSet.setId(mNextPhaseSetId++);
 
             if(phaseSet.isShortLocalRefLink())
+            {
+                SV_LOGGER.trace("phaseGroup({}) phaseSet({}) filtered: short local ref link", mId, phaseSet.id());
                 continue;
+            }
 
             AssemblyAlignment assemblyAlignment = new AssemblyAlignment(phaseSet);
             phaseSet.setAssemblyAlignment(assemblyAlignment);
