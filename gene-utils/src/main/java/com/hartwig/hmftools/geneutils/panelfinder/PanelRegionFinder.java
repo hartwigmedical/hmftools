@@ -187,9 +187,10 @@ public class PanelRegionFinder
         for(Map.Entry<Chromosome,List<TaggedRegion>> entry : chrPanelRegions.entrySet())
         {
             String chromosome = mConfig.RefGenVersion.versionedChromosome(entry.getKey().toString());
+            List<TaggedRegion> panelRegions = entry.getValue();
+            Collections.sort(panelRegions);
 
             List<RegionData> regions = mChrRegions.get(chromosome);
-            Collections.sort(regions);
 
             if(regions == null)
             {
@@ -408,7 +409,7 @@ public class PanelRegionFinder
                     {
                         sj = new StringJoiner(TSV_DELIM);
                         sj.add(region.Chromosome);
-                        sj.add(String.valueOf(region.start()));
+                        sj.add(String.valueOf(region.start() - 1)); // since as BED
                         sj.add(String.valueOf(region.end()));
                         sj.add(region.label());
 
