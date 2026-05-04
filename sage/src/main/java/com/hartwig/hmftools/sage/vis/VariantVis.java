@@ -266,94 +266,96 @@ public class VariantVis
             final SageVariant sageVariant, final List<String> tumorIds, final List<String> referenceIds,
             final VisConfig config, @Nullable final ReferenceData refData)
     {
-        if(config.PassOnly && !sageVariant.isPassing())
-            return;
-
-        List<ReadContextCounter> tumorReadCounters = sageVariant.tumorReadCounters();
-        List<ReadContextCounter> refReadCounters = sageVariant.referenceReadCounters();
-
-        // can be null if doesn't meet the configured criteria
-        List<VariantVis> tumorVis = tumorReadCounters.stream()
-                .map(ReadContextCounter::variantVis).filter(Objects::nonNull).toList();
-
-        List<VariantVis> refVis = refReadCounters.stream()
-                .map(ReadContextCounter::variantVis).filter(Objects::nonNull).toList();
-
-        if(tumorVis.isEmpty() && refVis.isEmpty())
-            return;
-
-        ReadContextCounter firstCounter = !tumorReadCounters.isEmpty() ? tumorReadCounters.get(0) : refReadCounters.get(0);
-        VariantVis firstVis = !tumorVis.isEmpty() ? tumorVis.get(0) : refVis.get(0);
-
-        AminoAcidElements aaElements = getAminoAcidsElements(config, refData, firstVis.mViewRegion, sageVariant, firstVis.mRefGenome);
-
-        String aaVariantType = null;
-        String geneName = null;
-
-        if(aaElements != null && aaElements.variant != null)
-        {
-            VariantImpact variantImpact = VariantImpactSerialiser.fromVariantContext(aaElements.variant);
-
-            geneName = variantImpact.GeneName;
-            aaVariantType = variantImpact.CanonicalEffect;
-        }
-
-        String sampleId = tumorIds.isEmpty() ? referenceIds.get(0) : tumorIds.get(0);
-        String filename = firstVis.getFilename(sampleId, geneName, aaVariantType);
-
-        int tumorTotalReadCount = tumorVis.stream().mapToInt(x -> x.mReadCount).sum();
-        int refTotalReadCount = refVis.stream().mapToInt(x -> x.mReadCount).sum();
-        int totalReadCount = tumorTotalReadCount + refTotalReadCount;
-        if(totalReadCount == 0)
-        {
-            SG_LOGGER.info("not writing variant vis file {}, because there are no associated reads", filename);
-            return;
-        }
-
-        tumorVis.forEach(VariantVis::downsampleReadEvidenceRecords);
-        refVis.forEach(VariantVis::downsampleReadEvidenceRecords);
-
-        Stream<DomContent> tumorReadTableRows = tumorVis.stream().map(x -> x.renderReads(true, aaElements)).flatMap(Collection::stream);
-        Stream<DomContent> refReadTableRows = refVis.stream().map(x -> x.renderReads(false, aaElements)).flatMap(Collection::stream);
-        List<DomContent> readTableRows = Stream.concat(tumorReadTableRows, refReadTableRows).collect(Collectors.toList());
-
-        CssBuilder readTableStyle = CssBuilder.EMPTY.borderSpacing(CssSize.ZERO);
-        CssBuilder verticalSpacerStyle = CssBuilder.EMPTY.height(CssSize.em(1));
-
-        DomContent readTable = div(styledTable(readTableRows, readTableStyle));
-        DomContent verticalSpacer = div().withStyle(verticalSpacerStyle.toString());
-        DomContent variantInfo = firstVis.renderVariantInfo(tumorIds, referenceIds);
-        DomContent sampleInfo = styledTable(List.of(tr(
-                td(renderSampleSummaryAndCountsTable(tumorReadCounters, refReadCounters))
-                        .withStyle(CssBuilder.EMPTY.verticalAlign("top")
-                                .toString()),
-                td(renderSampleQualAndSiteInfo(tumorReadCounters, refReadCounters, firstCounter))
-                        .withStyle(CssBuilder.EMPTY.verticalAlign("top")
-                                .toString()),
-                td(firstVis.renderVariantInfoTable(
-                        (int) (-10 * firstCounter.logTqp()),
-                        round(round(firstCounter.mapQualFactor() * 10.0d) / 10.0d),
-                        sageVariant.nearIndel(),
-                        sageVariant.filtersStringSet(),
-                        aaElements)).withStyle(CssBuilder.EMPTY.verticalAlign("top").toString()))), CssBuilder.EMPTY);
-
-        String htmlStr = html(
-                body(variantInfo, verticalSpacer, sampleInfo, readTable, getJavascript()).withStyle(BASE_FONT_STYLE.toString())).render();
-
-        String filePath = (new File(firstVis.mConfig.OutputDir, filename)).toString();
-
-        SG_LOGGER.debug("writing variant vis file: {}", filePath);
+        VariantVis firstVis = null;
 
         try
         {
+            if(config.PassOnly && !sageVariant.isPassing())
+                return;
+
+            List<ReadContextCounter> tumorReadCounters = sageVariant.tumorReadCounters();
+            List<ReadContextCounter> refReadCounters = sageVariant.referenceReadCounters();
+
+            // can be null if doesn't meet the configured criteria
+            List<VariantVis> tumorVis = tumorReadCounters.stream()
+                    .map(ReadContextCounter::variantVis).filter(Objects::nonNull).toList();
+
+            List<VariantVis> refVis = refReadCounters.stream()
+                    .map(ReadContextCounter::variantVis).filter(Objects::nonNull).toList();
+
+            if(tumorVis.isEmpty() && refVis.isEmpty())
+                return;
+
+            ReadContextCounter firstCounter = !tumorReadCounters.isEmpty() ? tumorReadCounters.get(0) : refReadCounters.get(0);
+            firstVis = !tumorVis.isEmpty() ? tumorVis.get(0) : refVis.get(0);
+
+            AminoAcidElements aaElements = getAminoAcidsElements(config, refData, firstVis.mViewRegion, sageVariant, firstVis.mRefGenome);
+
+            String aaVariantType = null;
+            String geneName = null;
+
+            if(aaElements != null && aaElements.variant != null)
+            {
+                VariantImpact variantImpact = VariantImpactSerialiser.fromVariantContext(aaElements.variant);
+
+                geneName = variantImpact.GeneName;
+                aaVariantType = variantImpact.CanonicalEffect;
+            }
+
+            String sampleId = tumorIds.isEmpty() ? referenceIds.get(0) : tumorIds.get(0);
+            String filename = firstVis.getFilename(sampleId, geneName, aaVariantType);
+
+            int tumorTotalReadCount = tumorVis.stream().mapToInt(x -> x.mReadCount).sum();
+            int refTotalReadCount = refVis.stream().mapToInt(x -> x.mReadCount).sum();
+            int totalReadCount = tumorTotalReadCount + refTotalReadCount;
+            if(totalReadCount == 0)
+            {
+                SG_LOGGER.info("not writing variant vis file {}, because there are no associated reads", filename);
+                return;
+            }
+
+            tumorVis.forEach(VariantVis::downsampleReadEvidenceRecords);
+            refVis.forEach(VariantVis::downsampleReadEvidenceRecords);
+
+            Stream<DomContent> tumorReadTableRows = tumorVis.stream().map(x -> x.renderReads(true, aaElements)).flatMap(Collection::stream);
+            Stream<DomContent> refReadTableRows = refVis.stream().map(x -> x.renderReads(false, aaElements)).flatMap(Collection::stream);
+            List<DomContent> readTableRows = Stream.concat(tumorReadTableRows, refReadTableRows).collect(Collectors.toList());
+
+            CssBuilder readTableStyle = CssBuilder.EMPTY.borderSpacing(CssSize.ZERO);
+            CssBuilder verticalSpacerStyle = CssBuilder.EMPTY.height(CssSize.em(1));
+
+            DomContent readTable = div(styledTable(readTableRows, readTableStyle));
+            DomContent verticalSpacer = div().withStyle(verticalSpacerStyle.toString());
+            DomContent variantInfo = firstVis.renderVariantInfo(tumorIds, referenceIds);
+            DomContent sampleInfo = styledTable(List.of(tr(
+                    td(renderSampleSummaryAndCountsTable(tumorReadCounters, refReadCounters))
+                            .withStyle(CssBuilder.EMPTY.verticalAlign("top")
+                                    .toString()),
+                    td(renderSampleQualAndSiteInfo(tumorReadCounters, refReadCounters, firstCounter))
+                            .withStyle(CssBuilder.EMPTY.verticalAlign("top")
+                                    .toString()),
+                    td(firstVis.renderVariantInfoTable(
+                            (int) (-10 * firstCounter.logTqp()),
+                            round(round(firstCounter.mapQualFactor() * 10.0d) / 10.0d),
+                            sageVariant.nearIndel(),
+                            sageVariant.filtersStringSet(),
+                            aaElements)).withStyle(CssBuilder.EMPTY.verticalAlign("top").toString()))), CssBuilder.EMPTY);
+
+            String htmlStr = html(
+                    body(variantInfo, verticalSpacer, sampleInfo, readTable, getJavascript()).withStyle(BASE_FONT_STYLE.toString())).render();
+
+            String filePath = (new File(firstVis.mConfig.OutputDir, filename)).toString();
+
+            SG_LOGGER.debug("writing variant vis file: {}", filePath);
+
             BufferedWriter outputWriter = createBufferedWriter(filePath, false);
             outputWriter.write(htmlStr);
             outputWriter.newLine();
             closeBufferedWriter(outputWriter);
         }
-        catch(IOException e)
+        catch(Exception e)
         {
-            SG_LOGGER.error("failed to write output file({}): {}", filePath, e.toString());
+            SG_LOGGER.error("failed to generate variant({}) visualisation:: {}", firstVis, e.toString());
             System.exit(1);
         }
     }
@@ -458,8 +460,9 @@ public class VariantVis
         return div(table);
     }
 
-    private static DomContent renderSampleQualAndSiteInfo(final List<ReadContextCounter> tumorReadCounters,
-            final List<ReadContextCounter> refReadCounters, final ReadContextCounter firstCounter)
+    private static DomContent renderSampleQualAndSiteInfo(
+            final List<ReadContextCounter> tumorReadCounters, final List<ReadContextCounter> refReadCounters,
+            final ReadContextCounter firstCounter)
     {
         CssBuilder borderStyle = CssBuilder.EMPTY.border(CssSize.px(1.0), "solid", Color.BLACK).borderCollapse("collapse");
         CssBuilder tableStyle = borderStyle.marginRight(CssSize.px(10.0));
@@ -783,7 +786,9 @@ public class VariantVis
             headerCols.add(td(column.Header).withStyle(verticalHeaderStyle.toString()));
         }
 
-        headerCols.add(td(rawHtml(renderCoords(READ_HEIGHT_PX, mViewRegion, mVariant.position(), DISPLAY_EVERY_NTH_COORD).getSVGElement())).withStyle(lightGrayBgStyle.toString()));
+        headerCols.add(td(rawHtml(renderCoords(
+                READ_HEIGHT_PX, mViewRegion, mVariant.position(),
+                DISPLAY_EVERY_NTH_COORD).getSVGElement())).withStyle(lightGrayBgStyle.toString()));
         DomContent headerRow = tr().with(headerCols);
         tableRows.add(headerRow);
 
@@ -791,12 +796,14 @@ public class VariantVis
         if(aaElements != null)
         {
             // ref amino acid row
-            DomContent aaRefRow = tr(td("ref").attr("colspan", columns.size() + 1).withStyle(headerStyle.toString()), td(aaElements.ref));
+            DomContent aaRefRow = tr(
+                    td("ref").attr("colspan", columns.size() + 1).withStyle(headerStyle.toString()), td(aaElements.ref));
             tableRows.add(aaRefRow);
 
             // predicted amino acids row
             DomContent aaPredictedRow = tr(
-                    td("predicted").attr("colspan", columns.size() + 1).withStyle(headerStyle.toString()), td(aaElements.alt));
+                    td("predicted").attr("colspan", columns.size() + 1).withStyle(headerStyle.toString()),
+                    td(aaElements.alt));
             tableRows.add(aaPredictedRow);
 
             // gene name row
@@ -809,12 +816,14 @@ public class VariantVis
         }
 
         // ref row
-        DomContent refRow = tr(td("ref").attr("colspan", columns.size() + 1).withStyle(headerStyle.toString()), td(renderRef()));
+        DomContent refRow = tr(
+                td("ref").attr("colspan", columns.size() + 1).withStyle(headerStyle.toString()), td(renderRef()));
         tableRows.add(refRow);
 
         // context row
-        DomContent contextRow =
-                tr(td("context").attr("colspan", columns.size() + 1).withStyle(headerStyle.toString()), td(renderContext()));
+        DomContent contextRow = tr(
+                td("context").attr("colspan", columns.size() + 1).withStyle(headerStyle.toString()),
+                td(renderContext()));
         tableRows.add(contextRow);
 
         for(ReadContextMatch matchType : SORTED_MATCH_TYPES)
@@ -929,7 +938,8 @@ public class VariantVis
         return containerDiv;
     }
 
-    private static SvgRender.RenderedGeneData renderAminoAcids(final BaseRegion viewRegion, final TranscriptData transcriptExons,
+    private static SvgRender.RenderedGeneData renderAminoAcids(
+            final BaseRegion viewRegion, final TranscriptData transcriptExons,
             final TranscriptAminoAcids transcriptAminoAcids, final List<AminoAcidEvent> events, final RefGenomeSource refGenome,
             final SageVariant variant)
     {
