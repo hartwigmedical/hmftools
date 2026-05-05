@@ -48,7 +48,7 @@ public class TranscriptUtils
         // ie if previous exon's end phase was 2, then start phase of this exon will also be 2, and first base will tick to phase 0
         // if coding begins with the first base, then if phase is not specified, then assume '1',
         // otherwise use the starting phase to adjust the exonic phase ie:
-        // PredEndPhase = if ExonPhase < 0 then CodingBases %% 3 else ExonPhase+CodingBases %% 3
+        // PrevEndPhase = if ExonPhase < 0 then CodingBases %% 3 else ExonPhase+CodingBases %% 3
 
         if(!positionWithin(position, codingStart, codingEnd))
             return PHASE_NONE;

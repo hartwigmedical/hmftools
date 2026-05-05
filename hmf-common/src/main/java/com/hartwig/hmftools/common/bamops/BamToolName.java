@@ -10,9 +10,6 @@ public enum BamToolName
     protected static final String SAMBAMBA_BINARY = "sambamba";
     protected static final String SAMTOOLS_BINARY = "samtools";
 
-    public static final String SAMTOOLS_PATH = "samtools";
-    public static final String SAMBAMBA_PATH = "sambamba";
-
     public static final String BAMTOOL_PATH = "bamtool";
 
     protected String toolThreadArgument()
