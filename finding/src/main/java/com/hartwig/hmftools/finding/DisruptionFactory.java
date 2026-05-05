@@ -234,7 +234,6 @@ final class DisruptionFactory
                 .svId(linxBreakend.svId())
                 .geneOrientation(orientation)
                 .disruptive(linxBreakend.disruptive())
-                .reported(linxBreakend.reported())
                 .regionType(Breakend.TranscriptRegionType.valueOf(linxBreakend.regionType().name()))
                 .codingType(Breakend.TranscriptCodingType.valueOf(linxBreakend.codingType().name()))
                 .nextSpliceExonRank(linxBreakend.nextSpliceExonRank())

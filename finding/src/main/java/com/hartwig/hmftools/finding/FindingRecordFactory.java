@@ -226,7 +226,7 @@ public class FindingRecordFactory
                 .purpleCopyNumberPlot(VisualisationFileUtil.create(orangePlots.purpleCopyNumberPlot()))
                 .purpleVariantCopyNumberPlot(VisualisationFileUtil.create(orangePlots.purpleVariantCopyNumberPlot()))
                 .purplePurityRangePlot(VisualisationFileUtil.create(orangePlots.purplePurityRangePlot()))
-                .purpleKataegisPlot(VisualisationFileUtil.create(orangePlots.purpleKataegisPlot()))
+                .purpleRainfallPlot(VisualisationFileUtil.create(orangePlots.purpleKataegisPlot()))
                 .build();
     }
 
@@ -461,6 +461,20 @@ public class FindingRecordFactory
         DriverInterpretation driverInterpretation = toDriverInterpretation(fusion.driverLikelihood());
 
         boolean isDriverGene = !fusion.unreportedReasons().contains(LinxUnreportableReason.NOT_KNOWN);
+
+        Fusion.FusionType reportedType = switch(fusion.reportedType())
+        {
+            case NONE -> Fusion.FusionType.NONE;
+            case PROMISCUOUS_3 -> Fusion.FusionType.PROMISCUOUS_3;
+            case PROMISCUOUS_5 -> Fusion.FusionType.PROMISCUOUS_5;
+            case PROMISCUOUS_BOTH -> Fusion.FusionType.PROMISCUOUS_BOTH;
+            case IG_PROMISCUOUS -> Fusion.FusionType.ENHANCER_PROMISCUOUS;
+            case KNOWN_PAIR -> Fusion.FusionType.KNOWN_PAIR;
+            case IG_KNOWN_PAIR -> Fusion.FusionType.ENHANCER_KNOWN_PAIR;
+            case EXON_DEL_DUP -> Fusion.FusionType.EXON_DEL_DUP;
+            case PROMISCUOUS_ENHANCER_TARGET -> Fusion.FusionType.PROMISCUOUS_ENHANCER_TARGET;
+        };
+
         List<Fusion.UnreportableReason> unreportableReasons = fusion.unreportedReasons().stream()
                 .map(o -> Fusion.UnreportableReason.valueOf(o.name()))
                 .toList();
@@ -480,7 +494,7 @@ public class FindingRecordFactory
                 .geneDown(fusion.geneEnd())
                 .geneContextDown(fusion.geneContextEnd())
                 .geneTranscriptDown(fusion.geneTranscriptEnd())
-                .reportedType(Fusion.FusionType.valueOf(fusion.reportedType().name()))
+                .reportedType(reportedType)
                 .unreportedReasons(unreportableReasons)
                 .phased(Fusion.FusionPhasedType.valueOf(fusion.phased().name()))
                 .fusedExonUp(fusion.fusedExonUp())

@@ -35,7 +35,9 @@ final class GainDeletionFactory
             boolean geneCopyNumbersOptional)
     {
         List<GainDeletion> gainDeletions = new ArrayList<>();
-        gainDeletions.addAll(somaticDriverGainDels(purple.reportableSomaticGainsDels(), purple.somaticDrivers(), purple.allSomaticGeneCopyNumbers(), cnPerChromosome, geneCopyNumbersOptional));
+        gainDeletions.addAll(somaticDriverGainDels(
+                purple.reportableSomaticGainsDels(), purple.somaticDrivers(), purple.allSomaticGeneCopyNumbers(),
+                cnPerChromosome, purple.fit().ploidy(), geneCopyNumbersOptional));
 
         // we are going to add somatic LOH to purple. For this backported version we will reverse engineer how they might look
         gainDeletions.addAll(somaticLoh(purple.suspectGeneCopyNumbersWithLOH(), cnPerChromosome));
@@ -81,7 +83,7 @@ final class GainDeletionFactory
 
             gainDeletions.add(toGainDel(fullDels, driver, DriverSource.GERMLINE,
                     GainDeletion.Type.HOM_DEL, GainDeletion.Type.HOM_DEL,
-                    geneCopyNumber, cnPerChromosome));
+                    geneCopyNumber, cnPerChromosome, purple.fit().ploidy()));
         }
 
         for(PurpleLossOfHeterozygosity loh : reportableGermlineLossOfHeterozygosities)
@@ -110,6 +112,7 @@ final class GainDeletionFactory
             List<PurpleGainDeletion> gainDeletions, final List<PurpleDriver> drivers,
             List<PurpleGeneCopyNumber> somaticGeneCopyNumbers,
             ArmCopyNumberFactory cnPerChromosome,
+            double tumorPloidy,
             boolean geneCopyNumbersOptional)
     {
         List<GainDeletion> somaticGainsDels = new ArrayList<>();
@@ -139,7 +142,8 @@ final class GainDeletionFactory
                     somaticGainDelType,
                     null,
                     geneCopyNumber,
-                    cnPerChromosome));
+                    cnPerChromosome,
+                    tumorPloidy));
         }
         return somaticGainsDels;
     }
@@ -215,8 +219,11 @@ final class GainDeletionFactory
             GainDeletion.Type somaticType,
             @Nullable GainDeletion.Type germlineType,
             @Nullable PurpleGeneCopyNumber geneCopyNumber,
-            ArmCopyNumberFactory cnPerChromosome)
+            ArmCopyNumberFactory cnPerChromosome,
+            double samplePloidy)
     {
+        double relativeCopyNumber = geneCopyNumber != null ? geneCopyNumber.minCopyNumber() / samplePloidy : Double.NaN;
+
         return GainDeletionBuilder.builder()
                 .driver(DriverFieldsBuilder.builder()
                         .findingKey(FindingKeys.gainDeletion(sourceSample,
@@ -241,6 +248,7 @@ final class GainDeletionFactory
                 .tumorMinCopyNumber(purpleGainDeletion.minCopies())
                 .tumorMaxCopyNumber(purpleGainDeletion.maxCopies())
                 .tumorMinMinorAlleleCopyNumber(geneCopyNumber != null ? geneCopyNumber.minMinorAlleleCopyNumber() : Double.NaN)
+                .tumorRelativeCopyNumber(relativeCopyNumber)
                 .chromosomeArmCopyNumber(cnPerChromosome.chromosomeArmCopyNumber(purpleGainDeletion.chromosome(), purpleGainDeletion.chromosomeBand()))
                 .build();
     }
