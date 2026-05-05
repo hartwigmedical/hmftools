@@ -10,7 +10,6 @@ import com.hartwig.hmftools.finding.datamodel.FindingRecordBuilder;
 import com.hartwig.hmftools.finding.datamodel.HlaAllele;
 import com.hartwig.hmftools.finding.datamodel.HlaAlleleBuilder;
 import com.hartwig.hmftools.finding.datamodel.Qc;
-import com.hartwig.hmftools.finding.datamodel.QcBuilder;
 import com.hartwig.hmftools.finding.datamodel.driver.Driver;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingList;
 import com.hartwig.hmftools.finding.datamodel.finding.Finding;
@@ -29,9 +28,6 @@ public class LowPurityConverter
     {
         boolean isLowPurity = record.qc().isLowPurity();
         return FindingRecordBuilder.builder(record)
-                .qc(QcBuilder.builder(record.qc())
-                        .status(removeStatuses(record.qc().status(), Set.of(Qc.QCStatus.WARN_LOW_PURITY)))
-                        .build())
                 .somaticDisruptions(convert(record.somaticDisruptions(), isLowPurity))
                 .somaticGainDeletions(convert(record.somaticGainDeletions(), isLowPurity))
                 .viruses(convert(record.viruses(), isLowPurity))
