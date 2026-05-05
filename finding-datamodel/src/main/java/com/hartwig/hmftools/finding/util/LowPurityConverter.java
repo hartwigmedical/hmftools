@@ -40,12 +40,6 @@ public class LowPurityConverter
                 .build();
     }
 
-    private static SortedSet<Qc.QCStatus> removeStatuses(Set<Qc.QCStatus> issues, Set<Qc.QCStatus> issuesToRemove)
-    {
-        SortedSet<Qc.QCStatus> newIssues = new TreeSet<>(issues);
-        newIssues.removeAll(issuesToRemove);
-        return newIssues;
-    }
 
     @NotNull
     private static <T extends Finding> FindingList<T> convert(@NotNull FindingList<T> findingList, boolean isLowPurity,
