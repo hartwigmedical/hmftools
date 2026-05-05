@@ -127,7 +127,7 @@ public class FindingRecordFactory
                 .version(version)
                 .metaProperties(createMetaProperties(orangeRecord, experimentType))
                 .qc(qc)
-                .purityPloidyFit(createPurityPloidyFit(purple, orangeRecord.experimentType(), orangeRecord.plots()))
+                .purityPloidyFit(createPurityPloidyFit(purple, orangeRecord.plots()))
                 .fusions(createFusionsFindings(orangeRecord.linx(), findingStatus))
                 .somaticSmallVariants(smallVariants)
                 .germlineSmallVariants(SmallVariantFactory.germlineSmallVariantFindings(hasRefSample, purple, findingStatus, findingConfig))
@@ -202,13 +202,13 @@ public class FindingRecordFactory
                 .build();
     }
 
-    private static PurityPloidyFit createPurityPloidyFit(PurpleRecord purple, ExperimentType experimentType, OrangePlots orangePlots)
+    private static PurityPloidyFit createPurityPloidyFit(PurpleRecord purple, OrangePlots orangePlots)
     {
         PurpleFit purpleFit = purple.fit();
 
         return PurityPloidyFitBuilder.builder()
                 .fittedPurityMethod(PurityPloidyFit.FittedPurityMethod.valueOf(purpleFit.fittedPurityMethod().name()))
-                .purity(ThresholdValueFactory.purityValue(purpleFit.purity(), experimentType))
+                .purity(purpleFit.purity())
                 .minPurity(purpleFit.minPurity())
                 .maxPurity(purpleFit.maxPurity())
                 .ploidy(purpleFit.ploidy())
