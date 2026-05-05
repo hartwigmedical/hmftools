@@ -23,16 +23,16 @@ The key configuration values to set are:
  
 ### Required configuration
 
-| Argument                          | Description                                                                                                                                |
-|-----------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------|
-| sample                            | Tumor sample ID, OR                                                                                                                        |
-| sample_id_file                    | File with column header SampleId and then list of sample IDs, optional Ref and New sample mappings and germline sample IDs (see examples)  |
-| categories                        | 'ALL', 'PANEL', or otherwise specify a comma-separated list                                                                                |
-| match_level                       | REPORTABLE (default) or DETAILED                                                                                                           |
-| sample_data_old & sample_data_new | Sample root directory for pipeline output                                                                                                  |
-| TOOL_dir_old & TOOL_dir_new **    | Tool path overrides - each pipeline tool directory eg 'linx_dir_old' - relative path to 'sample_dir' if specified, otherwise absolute path |
-| db_source_old & db_source_new     | DB connection details for ref and new sample data - see format below                                                                       |
-| output_dir                        | Path for output file                                                                                                                       |
+| Argument                          | Description                                                                                                                                          |
+|-----------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------|
+| sample                            | Tumor sample ID, OR                                                                                                                                  |
+| sample_id_file                    | File with column header SampleId and then list of sample IDs, optional Old and New sample mappings and refrence (germline) sample IDs (see examples) |
+| categories                        | 'ALL', 'PANEL', or otherwise specify a comma-separated list                                                                                          |
+| match_level                       | REPORTABLE (default) or DETAILED                                                                                                                     |
+| sample_data_old & sample_data_new | Sample root directory for pipeline output                                                                                                            |
+| TOOL_dir_old & TOOL_dir_new **    | Tool path overrides - each pipeline tool directory eg 'linx_dir_old' - relative path to 'sample_dir' if specified, otherwise absolute path           |
+| db_source_old & db_source_new     | DB connection details for old and new sample data - see format below                                                                                 |
+| output_dir                        | Path for output file                                                                                                                                 |
 
 ** set of tools are: linx, linx_germline, purple, chord, cuppa, isofox, lilac, peach, virus (i.e. virus-interpreter), sigs, snp_genotype, tumor_flagstat, germline_flagstat, tumor_bam_metrics and germline_bam_metrics.
 
@@ -63,14 +63,14 @@ The category PANEL is equivalent to PURITY, DRIVER, SOMATIC_VARIANT, FUSION, DIS
 If the same patient has different sample IDs for different runs and these are used for all filenames, then specify these mappings in the sample ID file, eg:
 ```
 sample_id_mappings.csv
-SampleId,RefSampleId,NewSampleId
-COLO829T,COLO829_Ref,COLO829T_New
+SampleId,OldSampleId,NewSampleId
+COLO829T,COLO829_Old,COLO829T_New
 ```
 The same can be done for germline sample IDs.
 ```
 sample_id_mappings.with_germline.csv
 SampleId,ReferenceId,OldSampleId,OldReferenceId,NewSampleId,NewReferenceId
-COLO829T,COLO829R,COLO829T_Ref,COLO829R_Ref,COLO829T_New,COLO829R_New
+COLO829T,COLO829R,COLO829T_Old,COLO829R_Old,COLO829T_New,COLO829R_New
 ```
 
 ### File Sourced Data
@@ -104,7 +104,7 @@ purple_old="sample_dir=/path_to_sample_data/run_01/"
 purple_new="sample_dir=/path_to_sample_data/run_02/"
 ```
 
-will load reference run 01 data from /path_to_sample_data/run_01/ and new run 02 data from /path_to_sample_data/run_02/
+will load old run 01 data from /path_to_sample_data/run_01/ and new run 02 data from /path_to_sample_data/run_02/
 
 Example 2
 ```

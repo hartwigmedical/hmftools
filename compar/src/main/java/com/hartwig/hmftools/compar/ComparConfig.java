@@ -190,7 +190,7 @@ public class ComparConfig
             if(!loadFileSources(configBuilder))
             {
                 mIsValid = false;
-                CMP_LOGGER.error("missing DB or file source ref and new config");
+                CMP_LOGGER.error("missing DB or file source old and new config");
             }
         }
 

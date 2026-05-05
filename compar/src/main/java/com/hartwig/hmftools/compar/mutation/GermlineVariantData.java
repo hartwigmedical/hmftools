@@ -114,26 +114,26 @@ public class GermlineVariantData implements ComparableItem
     }
 
     private static List<String> findVariantDiffs(
-            final SmallVariant refVar, final SmallVariant otherVar, final DiffThresholds thresholds)
+            final SmallVariant var, final SmallVariant otherVar, final DiffThresholds thresholds)
     {
         final List<String> diffs = Lists.newArrayList();
 
-        checkDiff(diffs, FLD_REPORTED, refVar.reported(), otherVar.reported());
-        checkDiff(diffs, FLD_HOTSPOT, refVar.hotspot().toString(), otherVar.hotspot().toString());
-        checkDiff(diffs, FLD_TIER, refVar.tier().toString(), otherVar.tier().toString());
-        checkDiff(diffs, FLD_GENE, refVar.gene(), otherVar.gene());
-        checkDiff(diffs, FLD_CANON_EFFECT, refVar.canonicalEffect(), otherVar.canonicalEffect());
-        checkDiff(diffs, FLD_CODING_EFFECT, refVar.canonicalCodingEffect().toString(), otherVar.canonicalCodingEffect()
+        checkDiff(diffs, FLD_REPORTED, var.reported(), otherVar.reported());
+        checkDiff(diffs, FLD_HOTSPOT, var.hotspot().toString(), otherVar.hotspot().toString());
+        checkDiff(diffs, FLD_TIER, var.tier().toString(), otherVar.tier().toString());
+        checkDiff(diffs, FLD_GENE, var.gene(), otherVar.gene());
+        checkDiff(diffs, FLD_CANON_EFFECT, var.canonicalEffect(), otherVar.canonicalEffect());
+        checkDiff(diffs, FLD_CODING_EFFECT, var.canonicalCodingEffect().toString(), otherVar.canonicalCodingEffect()
                 .toString());
-        checkDiff(diffs, FLD_HGVS_CODING, refVar.canonicalHgvsCodingImpact(), otherVar.canonicalHgvsCodingImpact());
-        checkDiff(diffs, FLD_HGVS_PROTEIN, refVar.canonicalHgvsProteinImpact(), otherVar.canonicalHgvsProteinImpact());
-        checkDiff(diffs, FLD_OTHER_REPORTED, refVar.otherReportedEffects(), otherVar.otherReportedEffects());
+        checkDiff(diffs, FLD_HGVS_CODING, var.canonicalHgvsCodingImpact(), otherVar.canonicalHgvsCodingImpact());
+        checkDiff(diffs, FLD_HGVS_PROTEIN, var.canonicalHgvsProteinImpact(), otherVar.canonicalHgvsProteinImpact());
+        checkDiff(diffs, FLD_OTHER_REPORTED, var.otherReportedEffects(), otherVar.otherReportedEffects());
 
-        checkDiff(diffs, FLD_QUAL, (int) refVar.qual(), (int) otherVar.qual(), thresholds);
-        checkDiff(diffs, FLD_VARIANT_COPY_NUMBER, refVar.variantCopyNumber(), otherVar.variantCopyNumber(), thresholds);
-        checkDiff(diffs, FLD_PURITY_ADJUSTED_VAF, refVar.adjustedVAF(), otherVar.adjustedVAF(), thresholds);
-        checkDiff(diffs, FLD_TUMOR_SUPPORTING_READ_COUNT, refVar.allelicDepth().AlleleReadCount, otherVar.allelicDepth().AlleleReadCount, thresholds);
-        checkDiff(diffs, FLD_TUMOR_TOTAL_READ_COUNT, refVar.allelicDepth().TotalReadCount, otherVar.allelicDepth().TotalReadCount, thresholds);
+        checkDiff(diffs, FLD_QUAL, (int) var.qual(), (int) otherVar.qual(), thresholds);
+        checkDiff(diffs, FLD_VARIANT_COPY_NUMBER, var.variantCopyNumber(), otherVar.variantCopyNumber(), thresholds);
+        checkDiff(diffs, FLD_PURITY_ADJUSTED_VAF, var.adjustedVAF(), otherVar.adjustedVAF(), thresholds);
+        checkDiff(diffs, FLD_TUMOR_SUPPORTING_READ_COUNT, var.allelicDepth().AlleleReadCount, otherVar.allelicDepth().AlleleReadCount, thresholds);
+        checkDiff(diffs, FLD_TUMOR_TOTAL_READ_COUNT, var.allelicDepth().TotalReadCount, otherVar.allelicDepth().TotalReadCount, thresholds);
         return diffs;
     }
 

@@ -82,7 +82,7 @@ public class MismatchWriter
 
                     for(String field : compareFields)
                     {
-                        writer.write(String.format("\tRef%s\tNew%s", field, field));
+                        writer.write(String.format("\tOld%s\tNew%s", field, field));
                     }
 
                     writer.newLine();
