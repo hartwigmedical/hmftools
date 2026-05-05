@@ -62,7 +62,7 @@ public class TargetRegionsData
 
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addInteger(TARGETED_CODING_FACTOR, "Targeted panel coding base factor" ,DEFAULT_CODING_BASE_FACTOR);
+        configBuilder.addInteger(TARGETED_CODING_FACTOR, "Targeted panel coding base factor", DEFAULT_CODING_BASE_FACTOR);
         configBuilder.addDecimal(TARGETED_TMB_RATIO, "Targeted panel TMB adjustment factor", DEFAULT_TARGETED_TMB_RATIO);
         configBuilder.addDecimal(TARGETED_TML_RATIO, "Targeted panel TML adjustment factor", DEFAULT_TARGETED_TML_RATIO);
     }
