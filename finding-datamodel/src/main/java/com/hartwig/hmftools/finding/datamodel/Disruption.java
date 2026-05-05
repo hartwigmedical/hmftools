@@ -24,6 +24,7 @@ public record Disruption(
         @NotNull BreakendType breakendType,
         double disruptedCopyNumber,
         double undisruptedCopyNumber,
+        @Nullable Integer clusterId,
         @Nullable Breakend breakendUp,
         @Nullable Breakend breakendDown,
         @Nullable VisualisationFile visualisationFile
