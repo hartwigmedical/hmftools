@@ -40,6 +40,7 @@ public class TestBamMetricsDataBuilder
                 .totalReads(-1)
                 .duplicateReads(-1)
                 .dualStrandReads(-1)
+                .offTargetReads(-1)
                 .meanCoverage(-1)
                 .sdCoverage(-1)
                 .medianCoverage(-1)
