@@ -2,14 +2,12 @@ package com.hartwig.hmftools.finding.util;
 
 import java.util.Set;
 import java.util.SortedSet;
-import java.util.TreeSet;
 import java.util.function.Function;
 
 import com.hartwig.hmftools.finding.datamodel.FindingRecord;
 import com.hartwig.hmftools.finding.datamodel.FindingRecordBuilder;
 import com.hartwig.hmftools.finding.datamodel.HlaAllele;
 import com.hartwig.hmftools.finding.datamodel.HlaAlleleBuilder;
-import com.hartwig.hmftools.finding.datamodel.Qc;
 import com.hartwig.hmftools.finding.datamodel.driver.Driver;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingList;
 import com.hartwig.hmftools.finding.datamodel.finding.Finding;
