@@ -153,7 +153,7 @@ final class DisruptionFactory
         for(LinxBreakend b : breakends)
         {
             ReportedStatus status = DriverUtil.reportedStatus(b.reportedStatus());
-            if(ReportedStatus.isMoreReportable(status, reportedStatus))
+            if(status.ordinal() > reportedStatus.ordinal())
             {
                 reportedStatus = status;
             }
@@ -178,6 +178,7 @@ final class DisruptionFactory
                 .breakendType(Disruption.BreakendType.valueOf(breakend.type().name()))
                 .disruptedCopyNumber(breakend.junctionCopyNumber())
                 .undisruptedCopyNumber(undisruptedCopyNumber)
+                .clusterId(breakend.clusterId())
                 .breakendUp(convert(breakendStart))
                 .breakendDown(convert(breakendEnd))
                 .visualisationFile(VisualisationFileUtil.createNullable(breakend.plotFilename()))
@@ -272,6 +273,7 @@ final class DisruptionFactory
         Validate.isTrue(breakendStart.svId() == breakendEnd.svId());
         Validate.isTrue(breakendStart.type().equals(breakendEnd.type()));
         Validate.isTrue(breakendStart.transcript().equals(breakendEnd.transcript()));
+        Validate.isTrue(breakendStart.clusterId() == breakendEnd.clusterId());
 //        Validate.isTrue(breakendStart.undisruptedCopyNumber() == breakendEnd.undisruptedCopyNumber());
     }
 
