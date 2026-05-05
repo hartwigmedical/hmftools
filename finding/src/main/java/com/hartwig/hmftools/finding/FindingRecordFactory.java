@@ -214,7 +214,7 @@ public class FindingRecordFactory
 
         return PurityPloidyFitBuilder.builder()
                 .fittedPurityMethod(PurityPloidyFit.FittedPurityMethod.valueOf(purpleFit.fittedPurityMethod().name()))
-                .purity(ThresholdValueFactory.purityValue(purpleFit.purity(), experimentType))
+                .purity(purpleFit.purity())
                 .minPurity(purpleFit.minPurity())
                 .maxPurity(purpleFit.maxPurity())
                 .ploidy(purpleFit.ploidy())

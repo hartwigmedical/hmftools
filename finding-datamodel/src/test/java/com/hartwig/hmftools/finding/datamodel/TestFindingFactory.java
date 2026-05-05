@@ -51,7 +51,7 @@ public class TestFindingFactory
     public static PurityPloidyFitBuilder purityPloidyFitBuilder()
     {
         return PurityPloidyFitBuilder.builder()
-                .purity(thresholdValue(0))
+                .purity(0)
                 .fittedPurityMethod(PurityPloidyFit.FittedPurityMethod.NORMAL)
                 .purpleInputPlot(new VisualisationFile("purpleInputPlot.png"))
                 .purpleCircosPlot(new VisualisationFile("purpleCircosPlot.png"))
