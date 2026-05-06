@@ -258,8 +258,8 @@ public class PurpleApplication
         }
 
         PPL_LOGGER.info("applying segmentation");
-        List<ObservedRegion> observedRegions =
-                mSegmentation.createObservedRegions(sampleData.SvCache.somaticVariants(), amberData, cobaltData);
+        List<ObservedRegion> observedRegions = mSegmentation.createObservedRegions(
+                sampleData.SvCache.somaticVariants(), amberData, cobaltData);
 
         if(observedRegions.isEmpty() || !validateObservedRegions(observedRegions))
         {
@@ -283,8 +283,8 @@ public class PurpleApplication
         {
             PPL_LOGGER.info("fitting purity");
 
-            PurityPloidyFitter purityPloidyFitter =
-                    new PurityPloidyFitter(mConfig, mReferenceData, sampleData, mExecutorService, regionFitCalculator, observedRegions, gender);
+            PurityPloidyFitter purityPloidyFitter = new PurityPloidyFitter(
+                    mConfig, mReferenceData, sampleData, mExecutorService, regionFitCalculator, observedRegions, gender);
 
             purityPloidyFitter.run();
 

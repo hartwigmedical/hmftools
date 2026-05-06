@@ -28,7 +28,7 @@ public class StructuralVariantPositionFactoryTest
     public void deletions()
     {
         StructuralVariant variant = createStructuralVariant("1", 1001, "1", 2001, DEL).build();
-        List<SVSegment> segments = SVSegmentFactory.create(of(variant));
+        List<SvPosition> segments = SVSegmentFactory.create(of(variant));
         assertEquals(2, segments.size());
         assertEquals(1002, segments.get(0).position());
         assertEquals(2001, segments.get(1).position());
@@ -38,7 +38,7 @@ public class StructuralVariantPositionFactoryTest
     public void inversions()
     {
         StructuralVariant variant = createStructuralVariant("1", 1001, "1", 2001, INV).build();
-        List<SVSegment> segments = SVSegmentFactory.create(of(variant));
+        List<SvPosition> segments = SVSegmentFactory.create(of(variant));
         assertEquals(2, segments.size());
         assertEquals(1002, segments.get(0).position());
         assertEquals(2002, segments.get(1).position());

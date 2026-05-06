@@ -33,11 +33,11 @@ public class ClusterFactoryTest
     @Test
     public void testBoundaries()
     {
-        final List<SVSegment> sv = variants(37383599, 37387153);
+        final List<SvPosition> sv = variants(37383599, 37387153);
         final List<PCFPosition> ratios = createRatioBreaks(36965001, 37381001, 37382001, 37384001, 37387001, 37389001);
         final List<CobaltRatio> cobalt = cobalt(37380001, true, false, true, true, true, true, true);
 
-        final List<Cluster> clusters = victim.cluster(sv, ratios, cobalt);
+        final List<Cluster> clusters = victim.buildChromosomeClusters(sv, ratios, cobalt);
         assertEquals(4, clusters.size());
         assertRatioInCluster(clusters.get(0), 36964002, 36965001);
         assertRatioInCluster(clusters.get(1), 37380002, 37381001, 37382001);
@@ -50,20 +50,20 @@ public class ClusterFactoryTest
     {
         final List<CobaltRatio> cobalt = cobalt(37380001, true, false, true, true, true, true, true);
 
-        assertEquals(37380002, victim.earliestDetectableCopyNumberChangePosition(37381001, 6, cobalt));
-        assertEquals(37380002, victim.earliestDetectableCopyNumberChangePosition(37381002, 6, cobalt));
-        assertEquals(37380002, victim.earliestDetectableCopyNumberChangePosition(37381999, 6, cobalt));
-        assertEquals(37380002, victim.earliestDetectableCopyNumberChangePosition(37382000, 6, cobalt));
+        assertEquals(37380002, victim.findFirstValidCobaltRatio(37381001, 6, cobalt));
+        assertEquals(37380002, victim.findFirstValidCobaltRatio(37381002, 6, cobalt));
+        assertEquals(37380002, victim.findFirstValidCobaltRatio(37381999, 6, cobalt));
+        assertEquals(37380002, victim.findFirstValidCobaltRatio(37382000, 6, cobalt));
 
-        assertEquals(37380002, victim.earliestDetectableCopyNumberChangePosition(37382001, 6, cobalt));
-        assertEquals(37380002, victim.earliestDetectableCopyNumberChangePosition(37382002, 6, cobalt));
-        assertEquals(37380002, victim.earliestDetectableCopyNumberChangePosition(37382999, 6, cobalt));
-        assertEquals(37380002, victim.earliestDetectableCopyNumberChangePosition(37383000, 6, cobalt));
+        assertEquals(37380002, victim.findFirstValidCobaltRatio(37382001, 6, cobalt));
+        assertEquals(37380002, victim.findFirstValidCobaltRatio(37382002, 6, cobalt));
+        assertEquals(37380002, victim.findFirstValidCobaltRatio(37382999, 6, cobalt));
+        assertEquals(37380002, victim.findFirstValidCobaltRatio(37383000, 6, cobalt));
 
-        assertEquals(37382002, victim.earliestDetectableCopyNumberChangePosition(37383001, 6, cobalt));
-        assertEquals(37382002, victim.earliestDetectableCopyNumberChangePosition(37383002, 6, cobalt));
-        assertEquals(37382002, victim.earliestDetectableCopyNumberChangePosition(37383999, 6, cobalt));
-        assertEquals(37382002, victim.earliestDetectableCopyNumberChangePosition(37384000, 6, cobalt));
+        assertEquals(37382002, victim.findFirstValidCobaltRatio(37383001, 6, cobalt));
+        assertEquals(37382002, victim.findFirstValidCobaltRatio(37383002, 6, cobalt));
+        assertEquals(37382002, victim.findFirstValidCobaltRatio(37383999, 6, cobalt));
+        assertEquals(37382002, victim.findFirstValidCobaltRatio(37384000, 6, cobalt));
     }
 
     @Test
@@ -71,27 +71,27 @@ public class ClusterFactoryTest
     {
         final List<CobaltRatio> cobalt = Lists.newArrayList();
 
-        assertEquals(37380002, victim.earliestDetectableCopyNumberChangePosition(37381001, -1, cobalt));
-        assertEquals(37380002, victim.earliestDetectableCopyNumberChangePosition(37381002, -1, cobalt));
-        assertEquals(37380002, victim.earliestDetectableCopyNumberChangePosition(37381999, -1, cobalt));
-        assertEquals(37380002, victim.earliestDetectableCopyNumberChangePosition(37382000, -1, cobalt));
+        assertEquals(37380002, victim.findFirstValidCobaltRatio(37381001, -1, cobalt));
+        assertEquals(37380002, victim.findFirstValidCobaltRatio(37381002, -1, cobalt));
+        assertEquals(37380002, victim.findFirstValidCobaltRatio(37381999, -1, cobalt));
+        assertEquals(37380002, victim.findFirstValidCobaltRatio(37382000, -1, cobalt));
 
-        assertEquals(37381002, victim.earliestDetectableCopyNumberChangePosition(37382001, -1, cobalt));
-        assertEquals(37381002, victim.earliestDetectableCopyNumberChangePosition(37382002, -1, cobalt));
-        assertEquals(37381002, victim.earliestDetectableCopyNumberChangePosition(37382999, -1, cobalt));
-        assertEquals(37381002, victim.earliestDetectableCopyNumberChangePosition(37383000, -1, cobalt));
+        assertEquals(37381002, victim.findFirstValidCobaltRatio(37382001, -1, cobalt));
+        assertEquals(37381002, victim.findFirstValidCobaltRatio(37382002, -1, cobalt));
+        assertEquals(37381002, victim.findFirstValidCobaltRatio(37382999, -1, cobalt));
+        assertEquals(37381002, victim.findFirstValidCobaltRatio(37383000, -1, cobalt));
 
-        assertEquals(37382002, victim.earliestDetectableCopyNumberChangePosition(37383001, -1, cobalt));
-        assertEquals(37382002, victim.earliestDetectableCopyNumberChangePosition(37383002, -1, cobalt));
-        assertEquals(37382002, victim.earliestDetectableCopyNumberChangePosition(37383999, -1, cobalt));
-        assertEquals(37382002, victim.earliestDetectableCopyNumberChangePosition(37384000, -1, cobalt));
+        assertEquals(37382002, victim.findFirstValidCobaltRatio(37383001, -1, cobalt));
+        assertEquals(37382002, victim.findFirstValidCobaltRatio(37383002, -1, cobalt));
+        assertEquals(37382002, victim.findFirstValidCobaltRatio(37383999, -1, cobalt));
+        assertEquals(37382002, victim.findFirstValidCobaltRatio(37384000, -1, cobalt));
     }
 
     @Test
     public void testDefaultClusterBounds()
     {
-        final SVSegment sv = createSVPosition(15532);
-        final List<Cluster> clusters = victim.cluster(Lists.newArrayList(sv), Collections.emptyList(), Collections.emptyList());
+        final SvPosition sv = createSVPosition(15532);
+        final List<Cluster> clusters = victim.buildChromosomeClusters(Lists.newArrayList(sv), Collections.emptyList(), Collections.emptyList());
         assertEquals(1, clusters.size());
         assertVariantInCluster(clusters.get(0), 14002, 15532);
     }
@@ -99,9 +99,9 @@ public class ClusterFactoryTest
     @Test
     public void testClusterBoundsWithRatios()
     {
-        final List<SVSegment> sv = variants(15532);
+        final List<SvPosition> sv = variants(15532);
         final List<CobaltRatio> ratios = createRatios();
-        final List<Cluster> clusters = victim.cluster(sv, Collections.emptyList(), ratios);
+        final List<Cluster> clusters = victim.buildChromosomeClusters(sv, Collections.emptyList(), ratios);
         assertEquals(1, clusters.size());
         assertVariantInCluster(clusters.get(0), 12002, 15532);
     }
@@ -109,8 +109,8 @@ public class ClusterFactoryTest
     @Test
     public void testTwoSVInsideCluster()
     {
-        final List<SVSegment> sv = variants(15532, 16771);
-        final List<Cluster> clusters = victim.cluster(sv, Collections.emptyList(), Collections.emptyList());
+        final List<SvPosition> sv = variants(15532, 16771);
+        final List<Cluster> clusters = victim.buildChromosomeClusters(sv, Collections.emptyList(), Collections.emptyList());
         assertEquals(1, clusters.size());
         assertVariantsInCluster(clusters.get(0), 14002, 15532, 16771);
     }
@@ -118,8 +118,8 @@ public class ClusterFactoryTest
     @Test
     public void testTwoSVOutsideCluster()
     {
-        final List<SVSegment> sv = variants(15532, 17881);
-        final List<Cluster> clusters = victim.cluster(sv, Collections.emptyList(), Collections.emptyList());
+        final List<SvPosition> sv = variants(15532, 17881);
+        final List<Cluster> clusters = victim.buildChromosomeClusters(sv, Collections.emptyList(), Collections.emptyList());
         assertEquals(2, clusters.size());
         assertVariantInCluster(clusters.get(0), 14002, 15532);
         assertVariantInCluster(clusters.get(1), 16002, 17881);
@@ -128,9 +128,9 @@ public class ClusterFactoryTest
     @Test
     public void testTwoSVInsideClusterWithRatio()
     {
-        final List<SVSegment> sv = variants(15532, 18881);
+        final List<SvPosition> sv = variants(15532, 18881);
         final List<CobaltRatio> ratios = createRatios();
-        final List<Cluster> clusters = victim.cluster(sv, Collections.emptyList(), ratios);
+        final List<Cluster> clusters = victim.buildChromosomeClusters(sv, Collections.emptyList(), ratios);
         assertEquals(1, clusters.size());
         assertVariantsInCluster(clusters.get(0), 12002, 15532, 18881);
     }
@@ -185,9 +185,9 @@ public class ClusterFactoryTest
     }
 
     @NotNull
-    private static SVSegment createSVPosition(int position)
+    private static SvPosition createSVPosition(int position)
     {
-        return new SVSegment(CHROM, position, StructuralVariantType.BND);
+        return new SvPosition(CHROM, position, StructuralVariantType.BND);
     }
 
     @NotNull
@@ -204,9 +204,9 @@ public class ClusterFactoryTest
     }
 
     @NotNull
-    private static List<SVSegment> variants(int... positions)
+    private static List<SvPosition> variants(int... positions)
     {
-        final List<SVSegment> result = Lists.newArrayList();
+        final List<SvPosition> result = Lists.newArrayList();
         for(int position : positions)
         {
             result.add(createSVPosition(position));
