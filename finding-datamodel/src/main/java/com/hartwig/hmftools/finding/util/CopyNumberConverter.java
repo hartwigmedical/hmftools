@@ -54,14 +54,12 @@ public class CopyNumberConverter {
             Double copyNumber = roundCopyNumber(smallVariant.adjustedCopyNumber());
 
             if (copyNumber != null && copyNumber >= 0.1) {
-                smallVariantList.add(SmallVariantBuilder.builder(smallVariant)
-                        .driver(DriverFieldsBuilder.builder(smallVariant.driver()).reportedStatus(ReportedStatus.REPORTED).build())
-                        .build());
-            } else {
+                smallVariantList.add(smallVariant);
+              } else {
                 smallVariantList.add(SmallVariantBuilder.builder(smallVariant)
                         .driver(DriverFieldsBuilder.builder(smallVariant.driver()).reportedStatus(ReportedStatus.CANDIDATE).build())
                         .build());
-                LOGGER.warn("Gene {} with variant (coding) {} with variant (protein) {} has lesser than <0.1 copies, investigate further",
+                LOGGER.warn("Gene {} with variant (coding) {} with variant (protein) {} has less than <0.1 copies, investigate further",
                         smallVariant.gene(),
                         smallVariant.transcriptImpact().hgvsCodingImpact(),
                         smallVariant.transcriptImpact().hgvsProteinImpact());
@@ -82,14 +80,12 @@ public class CopyNumberConverter {
         for (Disruption disruption : disruptions) {
             Double copyNumber = roundCopyNumber(disruption.disruptedCopyNumber());
             if (copyNumber != null && copyNumber >= 0.1) {
-                disruptionList.add(DisruptionBuilder.builder(disruption)
-                        .driver(DriverFieldsBuilder.builder(disruption.driver()).reportedStatus(ReportedStatus.REPORTED).build())
-                        .build());
+                disruptionList.add(disruption);
             } else {
                 disruptionList.add(DisruptionBuilder.builder(disruption)
                         .driver(DriverFieldsBuilder.builder(disruption.driver()).reportedStatus(ReportedStatus.CANDIDATE).build())
                         .build());
-                LOGGER.warn("Gene disruption {} with type {} has lesser than <0.1 copies, investigate further",
+                LOGGER.warn("Gene disruption {} with type {} has less than <0.1 copies, investigate further",
                         disruption.gene(),
                         disruption.type());
             }
@@ -110,14 +106,12 @@ public class CopyNumberConverter {
             Double copyNumber = roundCopyNumber(fusion.junctionCopyNumber());
             String fusionName = fusion.geneUp() + " - " + fusion.geneDown();
             if (copyNumber != null && copyNumber >= 0.1) {
-                fusionsList.add(FusionBuilder.builder(fusion)
-                        .driver(DriverFieldsBuilder.builder(fusion.driver()).reportedStatus(ReportedStatus.REPORTED).build())
-                        .build());
+                fusionsList.add(fusion);
             } else {
                 fusionsList.add(FusionBuilder.builder(fusion)
                         .driver(DriverFieldsBuilder.builder(fusion.driver()).reportedStatus(ReportedStatus.CANDIDATE).build())
                         .build());
-                LOGGER.warn("Fusion {} has lesser than <0.1 copies, investigate further", fusionName);
+                LOGGER.warn("Fusion {} has less than <0.1 copies, investigate further", fusionName);
             }
         }
         return fusionsList;
