@@ -188,10 +188,16 @@ public class JunctionGroupAssembler extends ThreadTask
                     .collect(Collectors.toList());
 
             if(candidateReads.isEmpty())
+            {
+                SV_LOGGER.trace("junction({}) filtered: no candidate reads", junction);
                 continue;
+            }
 
             if(junction.DiscordantOnly && mConfig.DiscordantOnlyDisabled)
+            {
+                SV_LOGGER.trace("junction({}) filtered: discordant disabled", junction);
                 continue;
+            }
 
             List<JunctionAssembly> candidateAssemblies = null;
 

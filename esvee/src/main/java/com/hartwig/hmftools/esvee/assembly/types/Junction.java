@@ -198,10 +198,15 @@ public class Junction implements Comparable<Junction>
                 boolean indel = indelIndex != null && Boolean.parseBoolean(values[indelIndex]);
                 boolean hotspot = hotspotIndex != null && Boolean.parseBoolean(values[hotspotIndex]);
 
+                Junction junction = new Junction(chromosome, position, orientation, discordantOnly, indel, hotspot);
+
                 if(hotspot)
                 {
                     if(junctionFrags < minHotspotFrags)
+                    {
+                        SV_LOGGER.trace("junction({}) filtered: min hotspot frags", junction);
                         continue;
+                    }
 
                     ++hotspotCount;
                 }
@@ -210,14 +215,20 @@ public class Junction implements Comparable<Junction>
                     int maxRemoteFrags = extraInfoIndex != null ? Integer.parseInt(values[extraInfoIndex]) : otherSupportFrags;
 
                     if(maxRemoteFrags < minDiscordantFrags)
+                    {
+                        SV_LOGGER.trace("junction({}) filtered: min discordant frags", junction);
                         continue;
+                    }
 
                     ++discordantCount;
                 }
                 else
                 {
                     if(junctionFrags + otherJunctionFrags < minJunctionFrags)
+                    {
+                        SV_LOGGER.trace("junction({}) filtered: min junction frags", junction);
                         continue;
+                    }
 
                     if(indel)
                         ++indelCount;
@@ -230,7 +241,7 @@ public class Junction implements Comparable<Junction>
                     chrJunctionsMap.put(chromosome, junctionDataList);
                 }
 
-                junctionDataList.add(new Junction(chromosome, position, orientation, discordantOnly, indel, hotspot));
+                junctionDataList.add(junction);
                 ++junctionCount;
             }
 

@@ -395,6 +395,8 @@ public class JunctionAssembler
             adjustedJuncPosition = max(outerJuncPosition, secondJuncPosition);
         }
 
+        SV_LOGGER.trace("junction({}) discordant position adjust: {}", mJunction, adjustedJuncPosition);
+
         mJunction = new Junction(
                 mJunction.Chromosome, adjustedJuncPosition, mJunction.Orient, true, false, false);
 
