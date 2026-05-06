@@ -63,10 +63,10 @@ class FindingsStatusFactory
             case WARN_TUMOR_LOW_MAPPED_PROPORTION -> FindingStatus.Issue.TUMOR_SAMPLE_QUALITY_CONTROL;
             case WARN_TUMOR_LOW_BASE_QUAL -> FindingStatus.Issue.TUMOR_SAMPLE_QUALITY_CONTROL;
             case WARN_TUMOR_LOW_MAP_QUAL -> FindingStatus.Issue.TUMOR_SAMPLE_QUALITY_CONTROL;
-            case WARN_NORMAL_LOW_COVERAGE -> FindingStatus.Issue.REF_SAMPLE_QUALITY_CONTROL;
-            case WARN_NORMAL_LOW_MAPPED_PROPORTION -> FindingStatus.Issue.REF_SAMPLE_QUALITY_CONTROL;
-            case WARN_NORMAL_LOW_BASE_QUAL -> FindingStatus.Issue.REF_SAMPLE_QUALITY_CONTROL;
-            case WARN_NORMAL_LOW_MAP_QUAL -> FindingStatus.Issue.REF_SAMPLE_QUALITY_CONTROL;
+            case WARN_NORMAL_LOW_COVERAGE -> FindingStatus.Issue.NORMAL_SAMPLE_QUALITY_CONTROL;
+            case WARN_NORMAL_LOW_MAPPED_PROPORTION -> FindingStatus.Issue.NORMAL_SAMPLE_QUALITY_CONTROL;
+            case WARN_NORMAL_LOW_BASE_QUAL -> FindingStatus.Issue.NORMAL_SAMPLE_QUALITY_CONTROL;
+            case WARN_NORMAL_LOW_MAP_QUAL -> FindingStatus.Issue.NORMAL_SAMPLE_QUALITY_CONTROL;
             case FAIL_CONTAMINATION -> FindingStatus.Issue.CONTAMINATION;
             case FAIL_NO_TUMOR -> FindingStatus.Issue.NO_TUMOR;
         };

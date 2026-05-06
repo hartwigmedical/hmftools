@@ -51,7 +51,7 @@ final class SmallVariantFactory
     {
         if(!hasGermlineSample)
         {
-            return FindingUtil.refRequired();
+            return FindingUtil.normalRequired();
         }
 
         List<PurpleVariant> germlineVariants = Objects.requireNonNull(purpleRecord.reportableGermlineVariants());

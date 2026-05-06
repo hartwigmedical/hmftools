@@ -61,7 +61,7 @@ final class GainDeletionFactory
     {
         if(!hasGermlineSample)
         {
-            return FindingUtil.refRequired();
+            return FindingUtil.normalRequired();
         }
 
         List<PurpleGeneCopyNumber> somaticGeneCopyNumbers = purple.allSomaticGeneCopyNumbers();

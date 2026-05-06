@@ -2,7 +2,7 @@ package com.hartwig.hmftools.finding;
 
 import static com.hartwig.hmftools.finding.DisruptionFactory.createGermlineDisruptions;
 import static com.hartwig.hmftools.finding.DisruptionFactory.createSomaticDisruptions;
-import static com.hartwig.hmftools.finding.datamodel.finding.FindingStatus.Issue.REF_REQUIRED;
+import static com.hartwig.hmftools.finding.datamodel.finding.FindingStatus.Issue.NORMAL_REQUIRED;
 import static com.hartwig.hmftools.finding.datamodel.finding.FindingStatus.Issue.WGS_REQUIRED;
 
 import java.io.IOException;
@@ -375,7 +375,7 @@ public class FindingRecordFactory
             }
             if(!hasRefSample)
             {
-                errors.add(REF_REQUIRED);
+                errors.add(NORMAL_REQUIRED);
             }
             if(!errors.isEmpty())
             {
