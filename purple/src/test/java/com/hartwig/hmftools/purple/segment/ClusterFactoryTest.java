@@ -22,7 +22,7 @@ public class ClusterFactoryTest
     private static final String CHROM = "1";
 
     private ClusterFactory victim;
-    private static final int WINDOW = 1000;
+    private static final int WINDOW = 1000; // use default Cobalt / Amber / Purple window size
 
     @Before
     public void setup()
@@ -43,6 +43,41 @@ public class ClusterFactoryTest
         assertRatioInCluster(clusters.get(1), 37380002, 37381001, 37382001);
         assertCluster(clusters.get(2), 37382002, 37383599, 37383599, 37384001, 37384001);
         assertCluster(clusters.get(3), 37386002, 37387153, 37387153, 37387001, 37389001);
+    }
+
+    @Test
+    public void testAmberPcfSegmentation()
+    {
+        List<SvPosition> sv = Collections.emptyList();
+
+        List<CobaltRatio> cobaltRatios = Lists.newArrayList();
+        cobaltRatios.add(cobalt(1000, true));
+        cobaltRatios.add(cobalt(10000, true));
+        cobaltRatios.add(cobalt(20000, true));
+        cobaltRatios.add(cobalt(48000, true));
+        cobaltRatios.add(cobalt(49000, true));
+        cobaltRatios.add(cobalt(50000, true));
+
+        List<PCFPosition> pcfPositions = Lists.newArrayList();
+
+        pcfPositions.add(new PCFPosition(PCFSource.TUMOR_RATIO, CHROM, 1500));
+        pcfPositions.add(new PCFPosition(PCFSource.TUMOR_BAF, CHROM, 1500));
+        pcfPositions.add(new PCFPosition(PCFSource.TUMOR_RATIO, CHROM, 5000)); // will not be used for segmentation
+        pcfPositions.add(new PCFPosition(PCFSource.TUMOR_BAF, CHROM, 5100));
+
+        pcfPositions.add(new PCFPosition(PCFSource.TUMOR_BAF, CHROM, 30000)); // will be used for segmentation
+
+        pcfPositions.add(new PCFPosition(PCFSource.TUMOR_RATIO, CHROM, 50000));
+
+        List<Cluster> clusters = victim.buildChromosomeClusters(sv, pcfPositions, cobaltRatios);
+
+        assertEquals(3, clusters.size());
+        Cluster cluster = clusters.get(1);
+        assertEquals(20001, cluster.Start);
+        assertEquals(30000, cluster.End);
+        cluster = clusters.get(2);
+        assertEquals(48001, cluster.Start);
+        assertEquals(50000, cluster.End);
     }
 
     @Test
@@ -155,7 +190,8 @@ public class ClusterFactoryTest
         assertCluster(cluster, start, firstPosition, finalPosition, null, null);
     }
 
-    private static void assertCluster(final Cluster cluster, int start, @Nullable Integer firstVariant, @Nullable Integer finalVariant,
+    private static void assertCluster(
+            final Cluster cluster, int start, @Nullable Integer firstVariant, @Nullable Integer finalVariant,
             @Nullable Integer firstRatio, @Nullable Integer finalRatio)
     {
         assertEquals(start, cluster.start());
@@ -166,31 +202,26 @@ public class ClusterFactoryTest
         assertEquals(finalRatio, finalRatio(cluster));
     }
 
-    @NotNull
     private static List<CobaltRatio> createRatios()
     {
         return cobalt(11001, true, true, false, false, true, false, false, true);
     }
 
-    @NotNull
     private static CobaltRatio cobalt(int position, boolean useable)
     {
         return ratio(position, useable ? 1 : -1);
     }
 
-    @NotNull
     private static CobaltRatio ratio(int position, double ratio)
     {
         return PurpleTestUtils.cobalt(CHROM, position, ratio);
     }
 
-    @NotNull
     private static SvPosition createSVPosition(int position)
     {
         return new SvPosition(CHROM, position, StructuralVariantType.BND);
     }
 
-    @NotNull
     private static List<CobaltRatio> cobalt(int startPosition, boolean... usable)
     {
         final List<CobaltRatio> result = Lists.newArrayList();
@@ -203,7 +234,6 @@ public class ClusterFactoryTest
         return result;
     }
 
-    @NotNull
     private static List<SvPosition> variants(int... positions)
     {
         final List<SvPosition> result = Lists.newArrayList();
@@ -215,7 +245,6 @@ public class ClusterFactoryTest
         return result;
     }
 
-    @NotNull
     private static List<PCFPosition> createRatioBreaks(int... positions)
     {
         final List<PCFPosition> result = Lists.newArrayList();
@@ -227,7 +256,6 @@ public class ClusterFactoryTest
         return result;
     }
 
-    @NotNull
     private static PCFPosition ratio(int position)
     {
         return new PCFPosition(PCFSource.TUMOR_RATIO, CHROM, position);

@@ -86,7 +86,6 @@ public class ClusterFactory
                 cobaltIndex++;
             }
 
-            /*
             boolean canSegment = true;
 
             if(position instanceof PCFPosition)
@@ -95,7 +94,7 @@ public class ClusterFactory
 
                 if(pcfPosition.Source == PCFSource.TUMOR_BAF)
                 {
-                    if(lastAmberPcf != null && lastPosition.position() > lastAmberPcf.position())
+                    if(lastAmberPcf != null && lastPosition != null && lastPosition.position() > lastAmberPcf.position())
                         canSegment = false;
 
                     lastAmberPcf = pcfPosition;
@@ -110,12 +109,8 @@ public class ClusterFactory
                 if(segment != null)
                     canSegment = earliestCnChangePosition > segment.end();
             }
-            */
 
-            int earliestCnChangePosition = findFirstValidCobaltRatio(position.position(), cobaltIndex, cobaltRatios);
-
-            if(segment == null || earliestCnChangePosition > segment.end())
-            //if(segment == null || canSegment)
+            if(segment == null || canSegment)
             {
                 segment = new Cluster(position.chromosome(), earliestCnChangePosition, 0);
                 clusters.add(segment);
@@ -132,7 +127,7 @@ public class ClusterFactory
                 segment.PcfPositions.add((PCFPosition)position);
             }
 
-            // lastPosition = position;
+            lastPosition = position;
         }
 
         return clusters;
