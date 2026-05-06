@@ -93,16 +93,16 @@ public record NovelSpliceJunctionComparer(ComparConfig mConfig) implements ItemC
 
     private static String determineFileName(final String sampleId, final FileSources fileSources)
     {
-        String current_file_name = NovelSpliceJunctionFile.generateFilename(fileSources.Isofox, sampleId);
-        String old_file_name = current_file_name.replace(".tsv", ".csv");
+        String filename = NovelSpliceJunctionFile.generateFilename(fileSources.Isofox, sampleId);
+        String oldFilename = filename.replace(".tsv", ".csv");
 
-        if(!Files.exists(Paths.get(current_file_name)) && Files.exists(Paths.get(old_file_name)))
+        if(!Files.exists(Paths.get(filename)) && Files.exists(Paths.get(oldFilename)))
         {
-            return old_file_name;
+            return oldFilename;
         }
         else
         {
-            return current_file_name;
+            return filename;
         }
     }
 }

@@ -78,7 +78,7 @@ public class MismatchWriter
 
                     writer.write(MismatchFile.commonHeader(mConfig.multiSample(), false));
 
-                    final List<String> compareFields = comparer.comparedFieldNames();
+                    List<String> compareFields = comparer.comparedFieldNames();
 
                     for(String field : compareFields)
                     {

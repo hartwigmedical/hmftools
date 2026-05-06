@@ -200,13 +200,13 @@ public class CommonUtils
             case SIGS:
                 return new SigsComparer(config);
 
-            case ISOFOX_SUMMARY:
+            case RNA_SUMMARY:
                 return new IsofoxSummaryComparer(config);
 
-            case ISOFOX_GENE_DATA:
+            case RNA_GENE_DATA:
                 return new IsofoxGeneDataComparer(config);
 
-            case ISOFOX_TRANSCRIPT_DATA:
+            case RNA_TRANSCRIPT_DATA:
                 return new IsofoxTranscriptDataComparer(config);
 
             case NOVEL_SPLICE_JUNCTION:

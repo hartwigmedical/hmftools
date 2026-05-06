@@ -22,7 +22,7 @@ public record IsofoxTranscriptData(TranscriptExpression TranscriptExpression) im
     @Override
     public CategoryType category()
     {
-        return CategoryType.ISOFOX_TRANSCRIPT_DATA;
+        return CategoryType.RNA_TRANSCRIPT_DATA;
     }
 
     @Override
@@ -61,8 +61,8 @@ public record IsofoxTranscriptData(TranscriptExpression TranscriptExpression) im
     }
 
     @Override
-    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds,
-            final boolean includeMatches)
+    public Mismatch findMismatch(
+            final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds, final boolean includeMatches)
     {
         final TranscriptExpression ref = TranscriptExpression;
         final TranscriptExpression otherData = ((IsofoxTranscriptData) other).TranscriptExpression;

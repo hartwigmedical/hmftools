@@ -31,7 +31,7 @@ public record IsofoxGeneDataComparer(ComparConfig mConfig) implements ItemCompar
     @Override
     public CategoryType category()
     {
-        return CategoryType.ISOFOX_GENE_DATA;
+        return CategoryType.RNA_GENE_DATA;
     }
 
     @Override
@@ -84,16 +84,16 @@ public record IsofoxGeneDataComparer(ComparConfig mConfig) implements ItemCompar
     @NotNull
     private static String determineFileName(final String sampleId, final FileSources fileSources)
     {
-        String current_file_name = GeneExpressionFile.generateFilename(fileSources.Isofox, sampleId);
-        String old_file_name = current_file_name.replace(".tsv", ".csv");
+        String filename = GeneExpressionFile.generateFilename(fileSources.Isofox, sampleId);
+        String oldFilename = filename.replace(".tsv", ".csv");
 
-        if(!Files.exists(Paths.get(current_file_name)) && Files.exists(Paths.get(old_file_name)))
+        if(!Files.exists(Paths.get(filename)) && Files.exists(Paths.get(oldFilename)))
         {
-            return old_file_name;
+            return oldFilename;
         }
         else
         {
-            return current_file_name;
+            return filename;
         }
     }
 }
