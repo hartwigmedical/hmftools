@@ -8,6 +8,8 @@ import com.hartwig.hmftools.finding.datamodel.Fusion;
 import com.hartwig.hmftools.finding.datamodel.FusionBuilder;
 import com.hartwig.hmftools.finding.datamodel.SmallVariant;
 import com.hartwig.hmftools.finding.datamodel.SmallVariantBuilder;
+import com.hartwig.hmftools.finding.datamodel.Virus;
+import com.hartwig.hmftools.finding.datamodel.VirusBuilder;
 import com.hartwig.hmftools.finding.datamodel.driver.Driver;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFields;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFieldsBuilder;
@@ -26,6 +28,7 @@ public class CandidateToReportableConverter
                 .somaticSmallVariants(convert(record.somaticSmallVariants(), CandidateToReportableConverter::convert))
                 .germlineSmallVariants(convert(record.germlineSmallVariants(), CandidateToReportableConverter::convert))
                 .fusions(convert(record.fusions(), CandidateToReportableConverter::convert))
+                .viruses(convert(record.viruses(), CandidateToReportableConverter::convert))
                 .build();
     }
 
@@ -49,6 +52,13 @@ public class CandidateToReportableConverter
     {
         return FusionBuilder.builder(fusion)
                 .driver(convert(fusion.driver()))
+                .build();
+    }
+
+    private static Virus convert(Virus virus)
+    {
+        return VirusBuilder.builder(virus)
+                .driver(convert(virus.driver()))
                 .build();
     }
 
