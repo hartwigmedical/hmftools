@@ -127,7 +127,7 @@ public class JunctionAssembler
 
         if(!checkJunctionReadExtension(hasMinLengthSoftClipRead, extensionReads))
         {
-            SV_LOGGER.trace("junction({}) filtered: read extension length", mJunction);
+            SV_LOGGER.trace("filter stage=junctionAssembly reason=\"read extension\" data=junction({})", mJunction);
             return Collections.emptyList();
         }
 
@@ -146,7 +146,7 @@ public class JunctionAssembler
 
         if(!extensionSeqBuilder.isValid() || extensionSeqBuilder.extensionLength() < reqExtensionLength)
         {
-            SV_LOGGER.trace("junction({}) filtered: extension sequence length", mJunction);
+            SV_LOGGER.trace("filter stage=junctionAssembly reason=\"extension sequence\" data=junction({})", mJunction);
             return Collections.emptyList();
         }
 
@@ -154,7 +154,7 @@ public class JunctionAssembler
 
         if(!meetsMinSupportThreshold(assemblySupport))
         {
-            SV_LOGGER.trace("junction({}) filtered: min support", mJunction);
+            SV_LOGGER.trace("filter stage=junctionAssembly reason=\"min support\" data=junction({})", mJunction);
             return Collections.emptyList();
         }
 
@@ -165,7 +165,7 @@ public class JunctionAssembler
         // filter LINE source-type sites marked by opposition orientation poly A/T sequences
         if(!firstAssembly.indel() && LineUtils.hasLineSourceSequence(firstAssembly))
         {
-            SV_LOGGER.trace("assembly({}) filtered: LINE source site", firstAssembly);
+            SV_LOGGER.trace("filter stage=junctionAssembly reason=\"LINE source site\" data=assembly({})", firstAssembly);
             return Collections.emptyList();
         }
 
@@ -185,7 +185,7 @@ public class JunctionAssembler
 
                 if(firstAssembly.extensionLength() < ASSEMBLY_MIN_SOFT_CLIP_LENGTH)
                 {
-                    SV_LOGGER.trace("assembly({}) filtered: LINE with local aligned insert SC", firstAssembly);
+                    SV_LOGGER.trace("filter stage=junctionAssembly reason=\"LINE with local aligned insert SC\" data=assembly({})", firstAssembly);
                     return Collections.emptyList();
                 }
             }
@@ -225,9 +225,10 @@ public class JunctionAssembler
                     SV_LOGGER.trace("assembly({}) recovered with SAGA", assembly);
                     assembly.mSagaRecovered = true;
                 }
-                else {
+                else
+                {
                     // Failed the regular filters and couldn't recover by matching to SAGA.
-                    SV_LOGGER.trace("assembly({}) filtered: could not recover with SAGA", assembly);
+                    SV_LOGGER.trace("filter stage=junctionAssembly reason=\"could not recover with SAGA\" data=assembly({})", assembly);
                     return Collections.emptyList();
                 }
             }

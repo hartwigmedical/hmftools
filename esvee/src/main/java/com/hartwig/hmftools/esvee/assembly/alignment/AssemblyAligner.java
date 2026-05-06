@@ -118,13 +118,13 @@ public class AssemblyAligner extends ThreadTask
 
         if(!assemblyAlignment.isValid())
         {
-            SV_LOGGER.warn("assembly alignment({}) filtered: invalid", assemblyAlignment);
+            SV_LOGGER.warn("filter stage=alignment reason=\"invalid\" data=assemblyAlignment({})", assemblyAlignment);
             return;
         }
 
         if(assemblyAlignment.isMerged())
         {
-            SV_LOGGER.trace("assembly alignment({}) filtered: merged", assemblyAlignment);
+            SV_LOGGER.trace("filter stage=alignment reason=\"merged\" data=assemblyAlignment({})", assemblyAlignment);
             writeAssemblyData(mWriter, mConfig, assemblyAlignment, Collections.emptyList(), Collections.emptyList());
             return;
         }
@@ -340,7 +340,7 @@ public class AssemblyAligner extends ThreadTask
     {
         if(alignments.isEmpty())
         {
-            SV_LOGGER.trace("assembly alignment({}) filtered: no alignments", assemblyAlignment);
+            SV_LOGGER.trace("filter stage=alignment reason=\"no alignments\" data=assemblyAlignment({})", assemblyAlignment);
             return;
         }
 
@@ -350,7 +350,7 @@ public class AssemblyAligner extends ThreadTask
         // final filters on assembly and alignment results
         if(isWeakSingleReadExtensionAssembly(assemblyAlignment))
         {
-            SV_LOGGER.trace("assembly alignment({}) filtered: weak single read extension", assemblyAlignment);
+            SV_LOGGER.trace("filter stage=alignment reason=\"weak single read extension\" data=assemblyAlignment({})", assemblyAlignment);
             assemblyAlignment.breakends().clear();
         }
     }

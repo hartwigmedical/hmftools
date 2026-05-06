@@ -75,7 +75,7 @@ public class BreakendBuilder
     {
         if(alignments.isEmpty())
         {
-            SV_LOGGER.trace("assembly alignment({}) filtered: no alignments", mAssemblyAlignment);
+            SV_LOGGER.trace("filter stage=breakend reason=\"no alignments\" data=assemblyAlignment({})", mAssemblyAlignment);
             return;
         }
 
@@ -86,7 +86,7 @@ public class BreakendBuilder
 
         if(validAlignments.isEmpty())
         {
-            SV_LOGGER.trace("assembly alignment({}) filtered: alignment validity", mAssemblyAlignment);
+            SV_LOGGER.trace("filter stage=breakend reason=\"alignment validity\" data=assemblyAlignment({})", mAssemblyAlignment);
             return;
         }
 
@@ -102,7 +102,7 @@ public class BreakendBuilder
                 formSingleBreakend(singleAlignment, lowQualAlignments);
             }
             else {
-                SV_LOGGER.trace("assembly alignment({}) filtered: forms indel", mAssemblyAlignment);
+                SV_LOGGER.trace("filter stage=breakend reason=\"forms indel\" data=assemblyAlignment({})", mAssemblyAlignment);
             }
         }
         else
@@ -316,7 +316,7 @@ public class BreakendBuilder
 
         if(softClipLength < requiredSoftClipLength)
         {
-            SV_LOGGER.trace("assembly alignment({}) filtered: alignment SC length", mAssemblyAlignment);
+            SV_LOGGER.trace("filter stage=breakend reason=\"alignment SC length\" data=assemblyAlignment({})", mAssemblyAlignment);
             return;
         }
 

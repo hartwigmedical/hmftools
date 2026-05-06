@@ -119,7 +119,7 @@ public class PhaseGroup
 
             if(phaseSet.isShortLocalRefLink())
             {
-                SV_LOGGER.trace("phaseGroup({}) phaseSet({}) filtered: short local ref link", mId, phaseSet.id());
+                SV_LOGGER.trace("filter stage=phasing reason=\"short local ref link\" data=phaseGroup({}),phaseSet({})", mId, phaseSet.id());
                 continue;
             }
 

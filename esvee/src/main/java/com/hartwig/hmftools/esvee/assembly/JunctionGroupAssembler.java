@@ -189,13 +189,13 @@ public class JunctionGroupAssembler extends ThreadTask
 
             if(candidateReads.isEmpty())
             {
-                SV_LOGGER.trace("junction({}) filtered: no candidate reads", junction);
+                SV_LOGGER.trace("filter stage=junctionAssembly reason=\"no candidate reads\" data=junction({})", junction);
                 continue;
             }
 
             if(junction.DiscordantOnly && mConfig.DiscordantOnlyDisabled)
             {
-                SV_LOGGER.trace("junction({}) filtered: discordant disabled", junction);
+                SV_LOGGER.trace("filter stage=junctionAssembly reason=\"discordant disabled\" data=junction({})", junction);
                 continue;
             }
 
@@ -222,7 +222,7 @@ public class JunctionGroupAssembler extends ThreadTask
                 {
                     if(mAlignmentChecker.matchesDecoy(assembly))
                     {
-                        SV_LOGGER.trace("assembly({}) matches decoy, excluding", assembly);
+                        SV_LOGGER.trace("filter stage=junctionAssembly reason=\"matches decoy\" data=assembly({})", assembly);
                         ++mReadStats.DecoySequences;
 
                         mDecoyAssemblies.add(assembly);
@@ -236,7 +236,7 @@ public class JunctionGroupAssembler extends ThreadTask
 
                 if(mAlignmentChecker.failsMappability(assembly))
                 {
-                    SV_LOGGER.trace("assembly({}) filtered: ref-base alignment", assembly);
+                    SV_LOGGER.trace("filter stage=junctionAssembly reason=\"ref base alignment\" data=assembly({})", assembly);
                     ++mReadStats.RefBaseAlignmentFails;
                     continue;
                 }

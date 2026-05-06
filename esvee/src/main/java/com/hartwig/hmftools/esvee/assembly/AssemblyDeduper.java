@@ -68,7 +68,7 @@ public class AssemblyDeduper
 
         removeExisting.forEach(x -> {
             existingAssemblies.remove(x);
-            SV_LOGGER.trace("assembly({}) filtered: deduped", x);
+            SV_LOGGER.trace("filter stage=junctionAssembly reason=\"deduped\" data=assembly({})", x);
         });
     }
 
@@ -84,7 +84,7 @@ public class AssemblyDeduper
         {
             assembly.addMergedAssembly();
             newAssemblies.remove(newIndex);
-            SV_LOGGER.trace("assembly({}) filtered: deduped", newAssembly);
+            SV_LOGGER.trace("filter stage=junctionAssembly reason=\"deduped\" data=assembly({})", newAssembly);
             return false;
         }
         else
@@ -125,7 +125,7 @@ public class AssemblyDeduper
         {
             assembly.addMergedAssembly();
             newAssemblies.remove(newIndex);
-            SV_LOGGER.trace("assembly({}) filtered: deduped", newAssembly);
+            SV_LOGGER.trace("filter stage=junctionAssembly reason=\"deduped\" data=assembly({})", newAssembly);
 
             if(matchedIndel == null)
             {

@@ -417,7 +417,7 @@ public class AssemblyApplication
                     }
                     else
                     {
-                        SV_LOGGER.trace("assembly({}) filtered: unlinked", assembly);
+                        SV_LOGGER.trace("filter stage=phasing reason=\"unlinked\" data=assembly({})", assembly);
                     }
                 }
             }
