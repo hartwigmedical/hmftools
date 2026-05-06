@@ -34,7 +34,8 @@ public class ConversionUtil
                 GainDeletionsFilterConverter::convert,
                 NoGermlineConverter::convert,
                 CandidateToReportableConverter::convert,
-                ReportedOnlyConverter::convert,
-                CopyNumberConverter::convert)).apply(findingRecord);
+                CopyNumberConverter::convert,
+                ReportedOnlyConverter::convert
+                )).apply(findingRecord);
     }
 }
