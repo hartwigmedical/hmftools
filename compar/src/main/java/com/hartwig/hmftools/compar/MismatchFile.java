@@ -47,7 +47,7 @@ public class MismatchFile
         CurationComment;
     }
 
-    // differences is list of the form: field(refValue/newValue)
+    // differences is list of the form: field(oldValue/newValue)
     public static String commonHeader(boolean includeSampleId, boolean includeCatagory)
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);

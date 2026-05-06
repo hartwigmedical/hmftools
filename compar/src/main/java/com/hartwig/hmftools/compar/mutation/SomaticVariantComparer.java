@@ -68,10 +68,10 @@ public class SomaticVariantComparer implements ItemComparer
         // use a custom method optimised for large numbers of variants
         MatchLevel matchLevel = mConfig.Categories.get(category());
 
-        List<SomaticVariantData> refVariants = loadVariants(sampleId, OLD);
+        List<SomaticVariantData> oldVariants = loadVariants(sampleId, OLD);
         List<SomaticVariantData> newVariants = loadVariants(sampleId, NEW);
 
-        return identifyMismatches(sampleId, mismatches, refVariants, newVariants, matchLevel);
+        return identifyMismatches(sampleId, mismatches, oldVariants, newVariants, matchLevel);
     }
 
     public boolean identifyMismatches(
