@@ -13,6 +13,7 @@ import org.jspecify.annotations.Nullable;
 
 import jakarta.validation.constraints.NotNull;
 
+@SuppressWarnings("unused")
 @RecordBuilder
 public record GainDeletion(
     @NotNull DriverFields driver,
@@ -44,7 +45,8 @@ public record GainDeletion(
         GAIN,
         HOM_DEL,
         HET_DEL,
-        CN_NEUTRAL_LOH
+        CN_NEUTRAL_LOH,
+        NONE // this is required in the case germline amplification is deleted in somatic
     }
 
     public enum GeneExtent
