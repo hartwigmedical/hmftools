@@ -37,7 +37,7 @@ public class ResultsWriter
 
     public void persistBAF(final List<AmberBAF> result) throws Exception
     {
-        final String filename = AmberBAFFile.generateAmberFilenameForWriting(mConfig.OutputDir, mConfig.getSampleId());
+        String filename = AmberBAFFile.generateAmberFilenameForWriting(mConfig.OutputDir, mConfig.getSampleId());
         AmberBAFFile.write(filename, result);
 
         if(mConfig.TumorId != null && !mConfig.SkipBafSegmentation)
@@ -45,7 +45,7 @@ public class ResultsWriter
             AMB_LOGGER.info("applying PCF segmentation");
 
             ExecutorService executorService = Executors.newFixedThreadPool(mConfig.Threads);
-            final String pcfFile = PCFFile.generateBAFFilename(mConfig.OutputDir, mConfig.TumorId);
+            String pcfFile = PCFFile.generateBAFFilename(mConfig.OutputDir, mConfig.TumorId);
             BAFSegmenter.writeSegments(result, mConfig.RefGenVersion, executorService, pcfFile);
             executorService.shutdown();
         }
@@ -53,10 +53,10 @@ public class ResultsWriter
 
     public void persistQC(double consanguinityProportion, double contamination, @Nullable Chromosome uniparentalDisomy) throws IOException
     {
-        final String uniparentalDisomyString = uniparentalDisomy != null ? uniparentalDisomy.toString() : null;
+        String uniparentalDisomyString = uniparentalDisomy != null ? uniparentalDisomy.toString() : null;
         AmberQC qcStats = new AmberQC(contamination, consanguinityProportion, uniparentalDisomyString);
 
-        final String qcFilename = AmberQCFile.generateFilename(mConfig.OutputDir, mConfig.getSampleId());
+        String qcFilename = AmberQCFile.generateFilename(mConfig.OutputDir, mConfig.getSampleId());
         AmberQCFile.write(qcFilename, qcStats);
     }
 
@@ -64,11 +64,11 @@ public class ResultsWriter
     {
         Collections.sort(contaminationList);
 
-        final String outputVcf = mConfig.OutputDir + mConfig.TumorId + ".amber.contamination.vcf.gz";
+        String outputVcf = mConfig.OutputDir + mConfig.TumorId + ".amber.contamination.vcf.gz";
         AMB_LOGGER.info("writing {} contamination records to {}", contaminationList.size(), outputVcf);
         new VCFWriter(mConfig).writeContamination(outputVcf, contaminationList);
 
-        final String filename = TumorContaminationFile.generateContaminationFilename(mConfig.OutputDir, mConfig.TumorId);
+        String filename = TumorContaminationFile.generateContaminationFilename(mConfig.OutputDir, mConfig.TumorId);
         TumorContaminationFile.write(filename, contaminationList);
     }
 
@@ -76,7 +76,7 @@ public class ResultsWriter
     {
         if(baseDepths.size() > 0)
         {
-            final String outputVcf = mConfig.OutputDir + mConfig.primaryReference() + ".amber.snp.vcf.gz";
+            String outputVcf = mConfig.OutputDir + mConfig.primaryReference() + ".amber.snp.vcf.gz";
             AMB_LOGGER.info("writing {} germline snp records to {}", baseDepths.size(), outputVcf);
             VCFWriter.writeBaseDepths(outputVcf, baseDepths.values(), mConfig.primaryReference());
         }
@@ -84,7 +84,7 @@ public class ResultsWriter
 
     public void persistHomozygousRegions(final List<RegionOfHomozygosity> regionOfHomozygosities) throws IOException
     {
-        final String filename = RegionOfHomozygosityFile.generateFilename(mConfig.OutputDir, mConfig.primaryReference());
+        String filename = RegionOfHomozygosityFile.generateFilename(mConfig.OutputDir, mConfig.primaryReference());
         RegionOfHomozygosityFile.write(filename, regionOfHomozygosities);
     }
 }

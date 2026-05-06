@@ -9,7 +9,6 @@ import org.apache.commons.lang3.tuple.Pair;
 
 public class SearchGrid
 {
-
     public record ValueScore(double value, double score) implements Comparable<ValueScore>
     {
         @Override
@@ -31,7 +30,7 @@ public class SearchGrid
         double current = AmberConstants.PEAK_SEARCH_START;
         while(current <= AmberConstants.PEAK_SEARCH_END + AmberConstants.PEAK_SEARCH_OVERSHOOT)
         {
-            final double currentValue = Math.round(current * 1000.0) / 1000.0;
+            double currentValue = Math.round(current * 1000.0) / 1000.0;
             current += step;
             step *= AmberConstants.PEAK_SEARCH_STEP_RATIO;
             result.add(Pair.of(currentValue, step));
