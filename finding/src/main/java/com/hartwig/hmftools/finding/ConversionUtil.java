@@ -7,6 +7,7 @@ import java.util.List;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.finding.datamodel.FindingRecord;
 import com.hartwig.hmftools.finding.util.CandidateToReportableConverter;
+import com.hartwig.hmftools.finding.util.CopyNumberConverter;
 import com.hartwig.hmftools.finding.util.ErrorConverter;
 import com.hartwig.hmftools.finding.util.FindingRecordConverterUtil;
 import com.hartwig.hmftools.finding.util.GainDeletionsFilterConverter;
@@ -28,12 +29,12 @@ public class ConversionUtil
     private static FindingRecord convert(FindingRecord findingRecord)
     {
         return FindingRecordConverterUtil.listConverter(List.of(ErrorConverter::convert,
-                        LowPurityConverter::convert,
-                        PTOConverter::convert,
-                        GainDeletionsFilterConverter::convert,
-                        NoGermlineConverter::convert,
-                        CandidateToReportableConverter::convert,
-                        ReportedOnlyConverter::convert))
-                .apply(findingRecord);
+                LowPurityConverter::convert,
+                PTOConverter::convert,
+                GainDeletionsFilterConverter::convert,
+                NoGermlineConverter::convert,
+                CandidateToReportableConverter::convert,
+                ReportedOnlyConverter::convert,
+                CopyNumberConverter::convert)).apply(findingRecord);
     }
 }
