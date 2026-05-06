@@ -18,7 +18,7 @@ import com.hartwig.hmftools.finding.datamodel.finding.FindingStatusBuilder;
 public class FindingUtil
 {
     private static final Set<FindingStatus.Issue> GERMLINE_ISSUES =
-            Set.of(FindingStatus.Issue.TUMOR_IN_NORMAL_CONTAMINATION, FindingStatus.Issue.REF_REQUIRED, FindingStatus.Issue.REF_SAMPLE_QUALITY_CONTROL);
+            Set.of(FindingStatus.Issue.TUMOR_IN_NORMAL_CONTAMINATION, FindingStatus.Issue.NORMAL_REQUIRED, FindingStatus.Issue.NORMAL_SAMPLE_QUALITY_CONTROL);
 
     public static FindingStatus somaticStatus(FindingStatus status)
     {
@@ -62,9 +62,9 @@ public class FindingUtil
     }
 
 
-    public static <T extends Driver> DriverFindingList<T> refRequired()
+    public static <T extends Driver> DriverFindingList<T> normalRequired()
     {
-        return notAvailableDriverFindingList(Set.of(FindingStatus.Issue.REF_REQUIRED));
+        return notAvailableDriverFindingList(Set.of(FindingStatus.Issue.NORMAL_REQUIRED));
     }
 
     public static <T extends Driver> DriverFindingList<T> notAvailableDriverFindingList(Set<FindingStatus.Issue> errors)

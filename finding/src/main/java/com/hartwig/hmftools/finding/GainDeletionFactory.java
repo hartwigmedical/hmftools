@@ -45,7 +45,7 @@ final class GainDeletionFactory
     {
         if(!hasGermlineSample)
         {
-            return FindingUtil.refRequired();
+            return FindingUtil.normalRequired();
         }
 
         List<GainDeletion> gainDeletions = new ArrayList<>();

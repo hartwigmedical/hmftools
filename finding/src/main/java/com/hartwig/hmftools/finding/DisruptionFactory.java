@@ -47,7 +47,7 @@ final class DisruptionFactory
     {
         if(!hasRefSample)
         {
-            return FindingUtil.refRequired();
+            return FindingUtil.normalRequired();
         }
 
         List<LinxBreakend> breakends = Objects.requireNonNull(linx.germlineBreakends());
