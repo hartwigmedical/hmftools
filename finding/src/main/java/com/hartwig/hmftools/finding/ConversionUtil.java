@@ -9,6 +9,7 @@ import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.finding.datamodel.FindingRecord;
 import com.hartwig.hmftools.finding.util.CandidateToReportableConverter;
 import com.hartwig.hmftools.finding.util.CopyNumberConverter;
+import com.hartwig.hmftools.finding.util.CopyNumberRoundingConverter;
 import com.hartwig.hmftools.finding.util.ErrorConverter;
 import com.hartwig.hmftools.finding.util.FindingRecordConverterUtil;
 import com.hartwig.hmftools.finding.util.GainDeletionsFilterConverter;
@@ -33,6 +34,7 @@ public class ConversionUtil {
                 GainDeletionsFilterConverter::convert,
                 NoGermlineConverter::convert,
                 CandidateToReportableConverter::convert,
+                CopyNumberRoundingConverter::convert,
                 CopyNumberConverter::convert,
                 ReportedOnlyConverter::convert
                 )).apply(findingRecord);

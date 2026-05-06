@@ -5,7 +5,6 @@ import java.util.List;
 
 import com.hartwig.hmftools.finding.datamodel.Disruption;
 import com.hartwig.hmftools.finding.datamodel.DisruptionBuilder;
-import com.hartwig.hmftools.finding.datamodel.Doubles;
 import com.hartwig.hmftools.finding.datamodel.FindingRecord;
 import com.hartwig.hmftools.finding.datamodel.FindingRecordBuilder;
 import com.hartwig.hmftools.finding.datamodel.Fusion;
@@ -19,7 +18,6 @@ import com.hartwig.hmftools.finding.datamodel.driver.ReportedStatus;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jspecify.annotations.Nullable;
 
 import jakarta.validation.constraints.NotNull;
 
@@ -51,9 +49,8 @@ public class CopyNumberConverter {
     public static List<SmallVariant> convertSmallVariant(@NotNull List<SmallVariant> smallVariants) {
         List<SmallVariant> smallVariantList = new ArrayList<>();
         for (SmallVariant smallVariant : smallVariants) {
-            Double copyNumber = roundCopyNumber(smallVariant.adjustedCopyNumber());
 
-            if (copyNumber != null && copyNumber >= 0.1) {
+            if (smallVariant.adjustedCopyNumber() >= 0.1) {
                 smallVariantList.add(smallVariant);
               } else {
                 smallVariantList.add(SmallVariantBuilder.builder(smallVariant)
@@ -78,8 +75,7 @@ public class CopyNumberConverter {
         List<Disruption> disruptionList = new ArrayList<>();
 
         for (Disruption disruption : disruptions) {
-            Double copyNumber = roundCopyNumber(disruption.disruptedCopyNumber());
-            if (copyNumber != null && copyNumber >= 0.1) {
+            if (disruption.disruptedCopyNumber() >= 0.1) {
                 disruptionList.add(disruption);
             } else {
                 disruptionList.add(DisruptionBuilder.builder(disruption)
@@ -103,9 +99,8 @@ public class CopyNumberConverter {
         List<Fusion> fusionsList = new ArrayList<>();
 
         for (Fusion fusion : fusions) {
-            Double copyNumber = roundCopyNumber(fusion.junctionCopyNumber());
             String fusionName = fusion.geneUp() + " - " + fusion.geneDown();
-            if (copyNumber != null && copyNumber >= 0.1) {
+            if (fusion.junctionCopyNumber() >= 0.1) {
                 fusionsList.add(fusion);
             } else {
                 fusionsList.add(FusionBuilder.builder(fusion)
@@ -115,15 +110,5 @@ public class CopyNumberConverter {
             }
         }
         return fusionsList;
-    }
-
-    //LS: Duplicate of the onco master repo. Is this necessary or can we compare to 0.05?
-    @Nullable
-    public static Double roundCopyNumber(@Nullable Double value) {
-        if (value != null) {
-            double doubleValue = Math.max(value, 0);
-            return Doubles.round(doubleValue, doubleValue > 10 ? 0 : 1);
-        }
-        return null;
     }
 }
