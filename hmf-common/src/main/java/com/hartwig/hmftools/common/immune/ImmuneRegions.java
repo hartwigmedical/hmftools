@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.common.immune;
 
-import java.sql.Ref;
 import java.util.List;
 
 import com.google.common.collect.Lists;
