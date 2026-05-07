@@ -21,7 +21,6 @@ import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparison
 import static com.hartwig.hmftools.compar.common.DiffFunctions.FILTER_DIFF;
 import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
 import static com.hartwig.hmftools.compar.common.DiffFunctions.checkFilterDiffs;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_BIALLELIC;
 import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_CANON_EFFECT;
 import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_CODING_EFFECT;
 import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_GENE;
@@ -76,6 +75,7 @@ public class SomaticVariantData implements ComparableItem
     public final boolean Reported;
     public final HotspotType HotspotStatus;
     public final VariantTier Tier;
+    public final boolean Biallelic;
     public final double BiallelicProbability;
     public final String CanonicalEffect;
     public final String CanonicalCodingEffect;
@@ -97,12 +97,13 @@ public class SomaticVariantData implements ComparableItem
 
     protected static final String FLD_SUBCLONAL_LIKELIHOOD = "SubclonalLikelihood";
     protected static final String FLD_LPS = "HasLPS";
-
+    protected static final String FLD_BIALLELIC = "Biallelic";
+    protected static final String FLD_BIALLELIC_PROB = "BiallelicProb";
     protected static final double NO_QUAL_PRESENT = -10;
 
     public SomaticVariantData(
-            final String chromosome, final int position, final String ref, final String alt, final VariantType type,
-            final String gene, final boolean reported, final HotspotType hotspotStatus, final VariantTier tier, final double biallelicProb,
+            final String chromosome, final int position, final String ref, final String alt, final VariantType type, final String gene,
+            final boolean reported, final HotspotType hotspotStatus, final VariantTier tier, boolean biallelic, double biallelicProb,
             final String canonicalEffect, final String canonicalCodingEffect, final String canonicalHgvsCodingImpact,
             final String canonicalHgvsProteinImpact, final String otherReportedEffects, final boolean hasLPS, final int qual,
             final double subclonalLikelihood, final Set<String> filters, final double variantCopyNumber, final double purityAdjustedVaf,
@@ -119,6 +120,7 @@ public class SomaticVariantData implements ComparableItem
         HotspotStatus = hotspotStatus;
         Tier = tier;
         BiallelicProbability = biallelicProb;
+        Biallelic = biallelic;
         CanonicalEffect = canonicalEffect;
         CanonicalCodingEffect = canonicalCodingEffect;
         CanonicalHgvsCodingImpact = canonicalHgvsCodingImpact;
@@ -169,6 +171,7 @@ public class SomaticVariantData implements ComparableItem
         values.add(String.format("%d", TumorSupportingReadCount));
         values.add(String.format("%d", TumorTotalReadCount));
 
+        values.add(format("%s", Biallelic));
         values.add(format("%.2f", BiallelicProbability));
         values.add(format("%.2f", SubclonalLikelihood));
         values.add(format("%s", HasLPS));
@@ -245,7 +248,8 @@ public class SomaticVariantData implements ComparableItem
         if(canComparePurpleFields(otherVar))
         {
             checkDiff(diffs, FLD_HOTSPOT, HotspotStatus.toString(), otherVar.HotspotStatus.toString());
-            checkDiff(diffs, FLD_BIALLELIC, BiallelicProbability, otherVar.BiallelicProbability, thresholds);
+            checkDiff(diffs, FLD_BIALLELIC, Biallelic, otherVar.Biallelic);
+            checkDiff(diffs, FLD_BIALLELIC_PROB, BiallelicProbability, otherVar.BiallelicProbability, thresholds);
             checkDiff(diffs, FLD_OTHER_REPORTED, OtherReportedEffects, otherVar.OtherReportedEffects);
             checkDiff(diffs, FLD_SUBCLONAL_LIKELIHOOD, SubclonalLikelihood, otherVar.SubclonalLikelihood, thresholds);
             checkDiff(diffs, FLD_VARIANT_COPY_NUMBER, VariantCopyNumber, otherVar.VariantCopyNumber, thresholds);
@@ -297,12 +301,14 @@ public class SomaticVariantData implements ComparableItem
                 chromosome, position, sourceType, config.RequiresLiftover, config.LiftoverCache);
 
         var tumorAllelicDepth = AllelicDepth.fromGenotype(context.getGenotype(sampleId));
+
         return new SomaticVariantData(
                 chromosome, position, ref, alt, VariantType.type(context),
                 variantImpact.GeneName,
                 context.getAttributeAsBoolean(REPORTED_FLAG, false),
                 HotspotType.fromVariant(context),
                 VariantTier.fromContext(context),
+                context.getAttributeAsBoolean(PURPLE_BIALLELIC_FLAG, false),
                 context.getAttributeAsDouble(PURPLE_BIALLELIC_PROB, 0),
                 variantImpact.CanonicalEffect,
                 variantImpact.CanonicalCodingEffect.toString(),
@@ -346,6 +352,7 @@ public class SomaticVariantData implements ComparableItem
                 record.getValue(SOMATICVARIANT.REPORTED).intValue() == 1,
                 HotspotType.valueOf(record.getValue(SOMATICVARIANT.HOTSPOT)),
                 VariantTier.fromString(record.get(SOMATICVARIANT.TIER)),
+                record.getValue(SOMATICVARIANT.BIALLELIC).intValue() == 1,
                 record.getValue(SOMATICVARIANT.BIALLELIC).intValue() == 1 ? 1.0 : 0,
                 record.getValue(SOMATICVARIANT.CANONICALEFFECT),
                 record.getValue(SOMATICVARIANT.CANONICALCODINGEFFECT),

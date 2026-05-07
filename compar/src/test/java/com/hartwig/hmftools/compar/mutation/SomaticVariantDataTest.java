@@ -5,9 +5,10 @@ import static com.hartwig.hmftools.compar.ComparTestUtil.union;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_QUAL;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.common.DiffFunctions.FILTER_DIFF;
+import static com.hartwig.hmftools.compar.mutation.SomaticVariantData.FLD_BIALLELIC;
+import static com.hartwig.hmftools.compar.mutation.SomaticVariantData.FLD_BIALLELIC_PROB;
 import static com.hartwig.hmftools.compar.mutation.SomaticVariantData.FLD_LPS;
 import static com.hartwig.hmftools.compar.mutation.SomaticVariantData.FLD_SUBCLONAL_LIKELIHOOD;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_BIALLELIC;
 import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_CANON_EFFECT;
 import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_CODING_EFFECT;
 import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_GENE;
@@ -72,7 +73,8 @@ public class SomaticVariantDataTest extends ComparableItemTest<SomaticVariantDat
         fieldToAlternateValueInitializer.put(FLD_HGVS_PROTEIN, b -> b.canonicalHgvsProteinImpact =
                 alternateValueSource.CanonicalHgvsProteinImpact);
         fieldToAlternateValueInitializer.put(FLD_HOTSPOT, b -> b.hotspotStatus = alternateValueSource.HotspotStatus);
-        fieldToAlternateValueInitializer.put(FLD_BIALLELIC, b -> b.biallelicProb = alternateValueSource.BiallelicProbability);
+        fieldToAlternateValueInitializer.put(FLD_BIALLELIC, b -> b.biallelic = alternateValueSource.Biallelic);
+        fieldToAlternateValueInitializer.put(FLD_BIALLELIC_PROB, b -> b.biallelicProb = alternateValueSource.BiallelicProbability);
         fieldToAlternateValueInitializer.put(FLD_OTHER_REPORTED, b -> b.otherReportedEffects = alternateValueSource.OtherReportedEffects);
         fieldToAlternateValueInitializer.put(FLD_SUBCLONAL_LIKELIHOOD, b -> b.subclonalLikelihood =
                 alternateValueSource.SubclonalLikelihood);

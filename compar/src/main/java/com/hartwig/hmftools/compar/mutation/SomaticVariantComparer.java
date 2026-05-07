@@ -12,9 +12,10 @@ import static com.hartwig.hmftools.compar.common.MismatchType.NEW_ONLY;
 import static com.hartwig.hmftools.compar.common.MismatchType.OLD_ONLY;
 import static com.hartwig.hmftools.compar.common.SourceType.NEW;
 import static com.hartwig.hmftools.compar.common.SourceType.OLD;
+import static com.hartwig.hmftools.compar.mutation.SomaticVariantData.FLD_BIALLELIC;
+import static com.hartwig.hmftools.compar.mutation.SomaticVariantData.FLD_BIALLELIC_PROB;
 import static com.hartwig.hmftools.compar.mutation.SomaticVariantData.FLD_LPS;
 import static com.hartwig.hmftools.compar.mutation.SomaticVariantData.FLD_SUBCLONAL_LIKELIHOOD;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_BIALLELIC;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Somaticvariant.SOMATICVARIANT;
 
 import java.util.List;
@@ -222,10 +223,11 @@ public class SomaticVariantComparer implements ItemComparer
                 continue;
 
             final AllelicDepth tumorAllelicDepth = AllelicDepth.fromGenotype(context.getGenotype(sourceSampleId));
+
             return new SomaticVariantData(
                     context.getContig(), context.getStart(), ref, alt, VariantType.type(context),
                     "", false, HotspotType.fromVariant(context), VariantTier.fromContext(context),
-                    0, "", "", "", "",
+                    false, 0, "", "", "", "",
                     "", context.hasAttribute(LOCAL_PHASE_SET), (int)context.getPhredScaledQual(),
                     0, context.getFilters(), 0, 0,
                     tumorAllelicDepth.AlleleReadCount, tumorAllelicDepth.TotalReadCount, true, false,
@@ -271,6 +273,7 @@ public class SomaticVariantComparer implements ItemComparer
     {
         List<String> fieldNames = VariantCommon.comparedFieldNames();
         fieldNames.add(FLD_BIALLELIC);
+        fieldNames.add(FLD_BIALLELIC_PROB);
         fieldNames.add(FLD_SUBCLONAL_LIKELIHOOD);
         fieldNames.add(FLD_LPS);
         return fieldNames;

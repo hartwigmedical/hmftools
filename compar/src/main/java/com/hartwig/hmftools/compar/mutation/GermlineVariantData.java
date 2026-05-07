@@ -6,7 +6,6 @@ import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.common.CommonUtils.createMismatchFromDiffs;
 import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
 import static com.hartwig.hmftools.compar.common.DiffFunctions.checkFilterDiffs;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_BIALLELIC;
 import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_CANON_EFFECT;
 import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_CODING_EFFECT;
 import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_GENE;

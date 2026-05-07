@@ -2,6 +2,7 @@ package com.hartwig.hmftools.compar.mutation;
 
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_QUAL;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
+import static com.hartwig.hmftools.compar.mutation.SomaticVariantData.FLD_BIALLELIC_PROB;
 import static com.hartwig.hmftools.compar.mutation.SomaticVariantData.FLD_SUBCLONAL_LIKELIHOOD;
 
 import java.util.List;
@@ -13,7 +14,6 @@ public final class VariantCommon
 {
     static final String FLD_HOTSPOT = "Hotspot";
     static final String FLD_TIER = "Tier";
-    static final String FLD_BIALLELIC = "BiallelicProb";
     static final String FLD_GENE = "Gene";
     static final String FLD_CANON_EFFECT = "CanonicalEffect";
     static final String FLD_CODING_EFFECT = "CanonicalCodingEffect";
@@ -29,7 +29,7 @@ public final class VariantCommon
     {
         thresholds.addFieldThreshold(FLD_QUAL, 50, 0.2);
         thresholds.addFieldThreshold(FLD_SUBCLONAL_LIKELIHOOD, 0.6, 0);
-        thresholds.addFieldThreshold(FLD_BIALLELIC, 0.3, 0);
+        thresholds.addFieldThreshold(FLD_BIALLELIC_PROB, 0.3, 0);
         thresholds.addFieldThreshold(FLD_VARIANT_COPY_NUMBER, 0.3, 0.3);
         thresholds.addFieldThreshold(FLD_PURITY_ADJUSTED_VAF, 0.2, 0);
         thresholds.addFieldThreshold(FLD_TUMOR_SUPPORTING_READ_COUNT, 1, 0.2);

@@ -3,7 +3,6 @@ package com.hartwig.hmftools.compar.mutation;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_QUAL;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.common.DiffFunctions.FILTER_DIFF;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_BIALLELIC;
 import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_CANON_EFFECT;
 import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_CODING_EFFECT;
 import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_GENE;
