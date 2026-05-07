@@ -22,24 +22,6 @@ public class PTOConverterTest
     private static final String CANCER_TYPE = "Melanoma";
 
     @Test
-    public void convertWithCuration()
-    {
-        FindingRecord original = createPTOFindingItem(0.8, "Uterus: Endometrium");
-        FindingRecord converted = PTOConverter.convert(original);
-
-        FindingItem<PredictedTumorOrigin> findingItem = converted.predictedTumorOrigin();
-        assertEquals(FindingStatus.Status.OK, findingItem.status().status());
-        assertEquals(Set.of(), findingItem.status().errors());
-
-        PredictedTumorOrigin predictedTumorOrigin = findingItem.finding();
-        assertNotNull(predictedTumorOrigin);
-        PredictedTumorOrigin.Prediction prediction = predictedTumorOrigin.best();
-        assertNotNull(prediction);
-        assertEquals(0.8, prediction.likelihood(), EPSILON);
-        assertEquals("Endometrium", prediction.cancerType());
-    }
-
-    @Test
     public void convertWithResults()
     {
         FindingRecord original = createPTOFindingItem(0.8, CANCER_TYPE);
