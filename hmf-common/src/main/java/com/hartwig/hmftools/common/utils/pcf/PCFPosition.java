@@ -13,11 +13,16 @@ public class PCFPosition implements GenomePosition
 
     public PCFPosition(final PCFSource source, final String chromosome, final int position)
     {
+        this(source, chromosome, position, position, position);
+    }
+
+    public PCFPosition(final PCFSource source, final String chromosome, final int position, final int minPosition, final int maxPosition)
+    {
         Source = source;
         Chromosome = chromosome;
         Position = position;
-        mMinPosition = position;
-        mMaxPosition = position;
+        mMinPosition = minPosition;
+        mMaxPosition = maxPosition;
     }
 
     public int minPosition() { return mMinPosition; }
@@ -39,11 +44,11 @@ public class PCFPosition implements GenomePosition
     }
 
     public boolean isSegmentEnd() { return Position == minPosition(); }
-    public boolean isSegmentStart() { return Position == maxPosition(); }
+    public boolean isSegmentStart() { return !isSegmentEnd(); }
 
     public String toString()
     {
         return String.format("src(%s) pos(%s:%d) range(%d - %d) segment %s",
-                Source, Chromosome, Position, mMinPosition, mMaxPosition, Position == mMaxPosition ? "start" : "end");
+                Source, Chromosome, Position, mMinPosition, mMaxPosition, Position == mMinPosition ? "end" : "start");
     }
 }

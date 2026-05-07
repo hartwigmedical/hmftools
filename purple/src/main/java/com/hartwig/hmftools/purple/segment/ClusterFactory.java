@@ -21,6 +21,7 @@ import com.hartwig.hmftools.common.utils.Multimaps;
 import com.hartwig.hmftools.common.utils.pcf.PCFPosition;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.utils.pcf.PCFSource;
+import com.hartwig.hmftools.purple.PurpleConfig;
 
 public class ClusterFactory
 {
@@ -75,14 +76,16 @@ public class ClusterFactory
 
         int cobaltIndex = 0;
         Cluster segment = null;
-        PCFPosition lastAmberPcf = null;
-        GenomePosition lastPosition = null;
+        boolean lastPositionWasAmberPcfEnd = false;
 
-        for(GenomePosition position : allPositions)
+        for(int i = 0; i < allPositions.size(); ++i)
         {
+            GenomePosition position = allPositions.get(i);
+
             if(position.position() == 1)
                 continue;
 
+            // move cobalt ratios to just before the current segment position
             while(cobaltIndex < cobaltRatios.size() - 1 && cobaltRatios.get(cobaltIndex).position() < position.position())
             {
                 cobaltIndex++;
@@ -90,32 +93,35 @@ public class ClusterFactory
 
             boolean canSegment = true;
 
+            PCFPosition pcfPosition = position instanceof PCFPosition ? (PCFPosition)position : null;
+
+            // find the first cobalt ratio earlier than this position
             int earliestCnChangePosition = findFirstValidCobaltRatio(position.position(), cobaltIndex, cobaltRatios);
 
             if(segment != null)
             {
                 if(earliestCnChangePosition > segment.end())
                 {
-                    /*
-                    if(position instanceof PCFPosition)
+                    if(pcfPosition != null && pcfPosition.Source == PCFSource.TUMOR_BAF && PurpleConfig.LimitAmberPcfSegmentation)
                     {
-                        PCFPosition pcfPosition = (PCFPosition) position;
+                        // cannot be the final segment
+                        canSegment = lastPositionWasAmberPcfEnd && pcfPosition.isSegmentStart()&& i < allPositions.size() - 2;
 
-                        if(pcfPosition.Source == PCFSource.TUMOR_BAF)
+                        if(canSegment)
                         {
-                            if(lastAmberPcf != null && lastPosition != null && lastPosition.position() > lastAmberPcf.position())
-                            {
-                                PPL_LOGGER.debug("Amber PCF region({}) skipped from use in segmentation", pcfPosition);
-                                canSegment = false;
-                            }
+                            PPL_LOGGER.debug("segment({}}:{}}) segmenting on Amber PCF",
+                                    position.chromosome(), position.position());
                         }
                     }
-                    */
                 }
                 else
                 {
                     canSegment = false;
                 }
+            }
+            else
+            {
+                canSegment = pcfPosition == null || (pcfPosition.Source != PCFSource.TUMOR_BAF);
             }
 
             if(segment == null || canSegment)
@@ -126,27 +132,26 @@ public class ClusterFactory
 
             segment.End = position.position();
 
+            lastPositionWasAmberPcfEnd = false;
+
             if(position instanceof SvPosition)
             {
                 segment.Variants.add((SvPosition) position);
             }
             else
             {
-                PCFPosition pcfPosition = (PCFPosition) position;
                 segment.PcfPositions.add(pcfPosition);
 
-                if(pcfPosition.Source == PCFSource.TUMOR_BAF)
-                    lastAmberPcf = pcfPosition;
+                if(pcfPosition.Source == PCFSource.TUMOR_BAF && pcfPosition.isSegmentEnd())
+                    lastPositionWasAmberPcfEnd = true;
             }
-
-            lastPosition = position;
         }
 
         return clusters;
     }
 
     @VisibleForTesting
-    int findFirstValidCobaltRatio(int position, int index, final List<CobaltRatio> ratios)
+    int     findFirstValidCobaltRatio(int position, int index, final List<CobaltRatio> ratios)
     {
         // returns the first valid ratio earlier than the specific position, starting at the specified index and working backwards
         int min = mWindow.start(position) - mWindowSize + 1;

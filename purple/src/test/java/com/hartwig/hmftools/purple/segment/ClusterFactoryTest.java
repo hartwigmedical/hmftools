@@ -11,6 +11,7 @@ import com.hartwig.hmftools.common.purple.PurpleTestUtils;
 import com.hartwig.hmftools.common.utils.pcf.PCFPosition;
 import com.hartwig.hmftools.common.utils.pcf.PCFSource;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
+import com.hartwig.hmftools.purple.PurpleConfig;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -48,36 +49,64 @@ public class ClusterFactoryTest
     @Test
     public void testAmberPcfSegmentation()
     {
+        PurpleConfig.LimitAmberPcfSegmentation = true;
+
         List<SvPosition> sv = Collections.emptyList();
 
         List<CobaltRatio> cobaltRatios = Lists.newArrayList();
-        cobaltRatios.add(cobalt(1000, true));
-        cobaltRatios.add(cobalt(10000, true));
-        cobaltRatios.add(cobalt(20000, true));
-        cobaltRatios.add(cobalt(48000, true));
-        cobaltRatios.add(cobalt(49000, true));
-        cobaltRatios.add(cobalt(50000, true));
+        cobaltRatios.add(cobalt(6000, true));
+        cobaltRatios.add(cobalt(7000, true));
+        cobaltRatios.add(cobalt(19000, true));
+        cobaltRatios.add(cobalt(22000, true));
+        cobaltRatios.add(cobalt(28000, true));
+        cobaltRatios.add(cobalt(32000, true));
+        cobaltRatios.add(cobalt(39000, true));
+        cobaltRatios.add(cobalt(59000, true));
+        cobaltRatios.add(cobalt(70000, true));
 
         List<PCFPosition> pcfPositions = Lists.newArrayList();
 
-        pcfPositions.add(new PCFPosition(PCFSource.TUMOR_RATIO, CHROM, 1500));
-        pcfPositions.add(new PCFPosition(PCFSource.TUMOR_BAF, CHROM, 1500));
-        pcfPositions.add(new PCFPosition(PCFSource.TUMOR_RATIO, CHROM, 5000)); // will not be used for segmentation
-        pcfPositions.add(new PCFPosition(PCFSource.TUMOR_BAF, CHROM, 5100));
+        int amberPcfStart1 = 1000;
+        int amberPcfEnd1 = 5000;
 
-        pcfPositions.add(new PCFPosition(PCFSource.TUMOR_BAF, CHROM, 30000)); // will be used for segmentation
+        int amberPcfStart2 = 20000;
+        int amberPcfEnd2 = 30000;
 
-        pcfPositions.add(new PCFPosition(PCFSource.TUMOR_RATIO, CHROM, 50000));
+        int amberPcfStart3 = 40000;
+        int amberPcfEnd3 = 50000;
+
+        pcfPositions.add(new PCFPosition(PCFSource.TUMOR_BAF, CHROM, amberPcfStart1, 1, amberPcfStart1));
+        pcfPositions.add(new PCFPosition(PCFSource.TUMOR_BAF, CHROM, amberPcfEnd1, amberPcfEnd1, amberPcfStart2)); // start of next
+
+        pcfPositions.add(new PCFPosition(PCFSource.TUMOR_BAF, CHROM, amberPcfStart2, amberPcfEnd1, amberPcfStart2));
+        pcfPositions.add(new PCFPosition(PCFSource.TUMOR_BAF, CHROM, amberPcfEnd2, amberPcfEnd2, amberPcfStart3));
+
+        pcfPositions.add(new PCFPosition(PCFSource.TUMOR_BAF, CHROM, amberPcfStart3, amberPcfEnd2, amberPcfStart3));
+        pcfPositions.add(new PCFPosition(PCFSource.TUMOR_BAF, CHROM, amberPcfEnd3, amberPcfEnd3, amberPcfEnd3));
+
+        int cobaltPcfStart1 = 8000;
+        int cobaltPcfEnd1 = 10000;
+
+        int cobaltPcfStart2 = 60000;
+        int cobaltPcfEnd2 = 70000;
+
+        pcfPositions.add(new PCFPosition(PCFSource.TUMOR_RATIO, CHROM, cobaltPcfStart1, 1, cobaltPcfStart1));
+        pcfPositions.add(new PCFPosition(PCFSource.TUMOR_RATIO, CHROM, cobaltPcfEnd1, cobaltPcfEnd1, cobaltPcfStart2)); // start of next
+
+        pcfPositions.add(new PCFPosition(PCFSource.TUMOR_RATIO, CHROM, cobaltPcfStart2, cobaltPcfEnd1, cobaltPcfStart2));
+        pcfPositions.add(new PCFPosition(PCFSource.TUMOR_RATIO, CHROM, cobaltPcfEnd2, cobaltPcfEnd2, cobaltPcfEnd2));
 
         List<Cluster> clusters = victim.buildChromosomeClusters(sv, pcfPositions, cobaltRatios);
 
         assertEquals(3, clusters.size());
         Cluster cluster = clusters.get(1);
-        assertEquals(20001, cluster.Start);
+        assertEquals(6001, cluster.Start);
         assertEquals(30000, cluster.End);
         cluster = clusters.get(2);
-        assertEquals(48001, cluster.Start);
-        assertEquals(50000, cluster.End);
+        assertEquals(32001, cluster.Start);
+        assertEquals(70000, cluster.End);
+
+        PurpleConfig.LimitAmberPcfSegmentation = false;
     }
 
     @Test
