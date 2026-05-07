@@ -137,8 +137,7 @@ public class CopyNumberRoundingConverter
     {
         if(value != null)
         {
-            double doubleValue = Math.max(value, 0);
-            return Doubles.round(doubleValue, doubleValue > COPY_NUMBER_ROUNDING_THRESHOLD ? 0 : 1);
+            return roundCopyNumber(value);
         }
         return null;
     }
