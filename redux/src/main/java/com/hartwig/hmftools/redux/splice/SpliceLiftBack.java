@@ -31,16 +31,13 @@ public class SpliceLiftBack
 
     public void run()
     {
-        if(!mConfig.isValid())
-            System.exit(1);
-
         long startTimeMs = System.currentTimeMillis();
 
         // TODO: can make this better, just getting it to work for now (PERFORMANCE IMPROVEMENTS)
         List<ContigEntry> contigEntries = ContigSidecar.read(mConfig.ContigSidecarFile);
         Map<String, ContigEntry> contigByName = new HashMap<>();
         for(ContigEntry entry : contigEntries)
-            contigByName.put(entry.ContigName, entry);
+            contigByName.put(entry.contigName(), entry);
 
         RD_LOGGER.info("loaded {} contig entries", contigEntries.size());
 
