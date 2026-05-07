@@ -20,11 +20,6 @@ public class PTOConverter
     private static final double CUPPA_INCONCLUSIVE_CUT_OFF = 0.8;
     private static final double BEST_LIKELIHOOD_CUT_OFF = 0.5;
 
-    private static final String LOWER_GI_TRACT = "Lower GI tract";
-    // TODO: Check if these mappings are still necessary
-    private static final Map<String, String> CURATED_CANCER_TYPES =
-            Map.of("Uterus: Endometrium", "Endometrium", "Colorectum/Appendix/SmallIntestine", LOWER_GI_TRACT, "Colorectum/Small intestine/Appendix", LOWER_GI_TRACT);
-
     @NotNull
     public static FindingRecord convert(@NotNull FindingRecord record)
     {
@@ -46,8 +41,6 @@ public class PTOConverter
                 predictions = predictions.stream()
                         .filter(prediction ->
                                 prediction.likelihood() >= CUPPA_INCONCLUSIVE_CUT_OFF)
-                        .map(p -> PredictedTumorOriginPredictionBuilder.builder(p).cancerType(curateCancerType(p.cancerType()))
-                                .build())
                         .toList();
                 FindingStatus findingStatus = findingItem.status();
                 if(predictions.isEmpty())
@@ -72,11 +65,5 @@ public class PTOConverter
             }
         }
         return findingItem;
-    }
-
-    @NotNull
-    private static String curateCancerType(@NotNull String cancerType)
-    {
-        return CURATED_CANCER_TYPES.getOrDefault(cancerType, cancerType);
     }
 }
