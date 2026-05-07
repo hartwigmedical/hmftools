@@ -86,8 +86,8 @@ public class Read
                 Id, readInfo(), mValidIndels.size(), mIgnoredIndels.size(), SoftClippedStart, SoftClippedEnd);
     }
 
-    public List<Indel> getValidIndels() { return mValidIndels; }
-    public List<Indel> getIgnoredIndels() { return mIgnoredIndels; }
+    public List<Indel> validIndels() { return mValidIndels; }
+    public List<Indel> ignoredIndels() { return mIgnoredIndels; }
     public int trimmedBases() { return mTrimmedBases; }
 
     public SAMRecord bamRecord() { return mRecord; }
