@@ -20,7 +20,7 @@ java -cp redux/target/redux-2.0-jar-with-dependencies.jar \
     -output_dir ~/Documents/hartwig/temp-output
 ```
 
-Outputs `splice.transcript_contigs.fasta` + `splice.transcript_contigs.sidecar.tsv` in the output dir.
+Outputs `ref_genome_v38_rna_contigs.fasta` + `ref_genome_v38_rna_contigs.sidecar.tsv` in the output dir.
 
 ## Tool 2: SpliceLiftBack (per sample, after bwa-mem2 mapping)
 
@@ -29,7 +29,7 @@ java -cp redux/target/redux-2.0-jar-with-dependencies.jar \
     com.hartwig.hmftools.redux.splice.SpliceLiftBack \
     -input_bam <path-to-bwa-mem2-output.bam> \
     -ref_genome ~/Documents/hartwig/data/rna/ref_genome/38/ref_genome_v38_rna_contigs.fasta \
-    -contig_sidecar ~/Documents/hartwig/temp-output/splice.transcript_contigs.sidecar.tsv \
+    -contig_sidecar ~/Documents/hartwig/temp-output/ref_genome_v38_rna_contigs.sidecar.tsv \
     -output_dir ~/Documents/hartwig/temp-output
 ```
 

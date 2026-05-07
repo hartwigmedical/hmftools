@@ -54,7 +54,7 @@ public class SpliceFastaConfig
 
     public String formFilename(final String fileId)
     {
-        String prefix = OutputId != null ? OutputId : "splice"; // TODO: can be more verbose here
+        String prefix = OutputId != null ? OutputId : "ref_genome_v" + RefGenVersion.identifier() + "_rna_contigs";
         return OutputDir + prefix + fileId;
     }
 
