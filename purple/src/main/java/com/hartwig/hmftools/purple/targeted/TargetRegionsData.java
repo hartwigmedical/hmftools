@@ -20,6 +20,7 @@ import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.TaggedRegion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -29,6 +30,7 @@ public class TargetRegionsData
     private final Map<String,List<TaggedRegion>> mTargetRegions;
 
     private int mTotalBases;
+    private int mChromosomeXBases;
     private int mCodingBases;
 
     private int mCodingBaseFactor;
@@ -45,6 +47,7 @@ public class TargetRegionsData
     {
         mTotalBases = 0;
         mCodingBases = 0;
+        mChromosomeXBases = 0;
         mTmlRatio = tmlRatio;
         mTmbRatio = tmbRatio;
         mCodingBaseFactor = codingBaseFactor;
@@ -121,13 +124,14 @@ public class TargetRegionsData
 
         for(Map.Entry<Chromosome, List<TaggedRegion>> entry : chrRegionsMap.entrySet())
         {
-            String chromosome = ensemblDataCache.refGenomeVersion().versionedChromosome(entry.getKey().toString());
+            Chromosome chromosome = entry.getKey();
+            String chrStr = ensemblDataCache.refGenomeVersion().versionedChromosome(chromosome.toString());
 
             List<TaggedRegion> chrRegions = entry.getValue();
 
-            mTargetRegions.put(chromosome, chrRegions);
+            mTargetRegions.put(chrStr, chrRegions);
 
-            List<GeneData> geneList = ensemblDataCache.getChrGeneDataMap().get(chromosome);
+            List<GeneData> geneList = ensemblDataCache.getChrGeneDataMap().get(chrStr);
             List<TranscriptData> overlappedTranscripts = Lists.newArrayList();
 
             // find the genes and then coding transcripts which overlap with these entries
@@ -153,6 +157,9 @@ public class TargetRegionsData
             for(TaggedRegion region : chrRegions)
             {
                 mTotalBases += region.baseLength();
+
+                if(chromosome == HumanChromosome._X)
+                    mChromosomeXBases += region.baseLength();
 
                 List<BaseRegion> exonicRegions = Lists.newArrayList();
 
@@ -185,5 +192,10 @@ public class TargetRegionsData
 
         PPL_LOGGER.info("loaded {} target regions bases(total={} coding={}) from file({})",
                 mTargetRegions.values().stream().mapToInt(List::size).sum(), mTotalBases, mCodingBases, targetRegionsBed);
+    }
+
+    public Double chromosomeXRegionPercentage()
+    {
+        return hasTargetRegions() ? mChromosomeXBases / (double)mTotalBases : null;
     }
 }

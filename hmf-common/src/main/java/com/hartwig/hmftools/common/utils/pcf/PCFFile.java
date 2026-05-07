@@ -8,11 +8,13 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
@@ -25,7 +27,6 @@ import com.hartwig.hmftools.common.utils.file.DelimFileReader;
 import com.hartwig.hmftools.common.utils.file.DelimFileWriter;
 
 import org.apache.logging.log4j.util.Strings;
-import org.jetbrains.annotations.NotNull;
 
 public final class PCFFile
 {
@@ -82,73 +83,77 @@ public final class PCFFile
                 });
     }
 
-    public static ListMultimap<Chromosome, PCFPosition> readPositions(int windowSize, PCFSource source, String filename) throws IOException
+    public static Map<Chromosome,List<PCFPosition>> readPositions(int windowSize, PCFSource source, String filename) throws IOException
     {
-        ListMultimap<Chromosome, PCFPosition> result = ArrayListMultimap.create();
-        final Window window = new Window(windowSize);
+        Map<Chromosome,List<PCFPosition>> chrPositionsMap = Maps.newHashMap();
+        Window window = new Window(windowSize);
 
-        PCFPosition pcfPosition = null;
+        PCFPosition lastPcfPosition = null;
 
-        String prevChromosome = Strings.EMPTY;
+        String currentChromosome = Strings.EMPTY;
         int minPosition = 1;
-        List<PCFPosition> chromosomeResult = Lists.newArrayList();
+        List<PCFPosition> pcfPositions = null;
 
-        final List<String> lines = Files.readAllLines(new File(filename).toPath());
-        boolean inOldFormat = lines.get(0).startsWith(HEADER_PREFIX);
+        List<String> lines = Files.readAllLines(new File(filename).toPath());
+        String header = lines.get(0);
+
+        boolean inOldFormat = header.startsWith(HEADER_PREFIX);
         int chrIndex = inOldFormat ? COL_CHROMOSOME : 0;
         int posStartIndex = inOldFormat ? COL_POS_START : 1;
         int posEndIndex = inOldFormat ? COL_POS_END : 2;
+
         for(int i = 1; i < lines.size(); i++)
         {
             String line = lines.get(i);
             String[] values = line.split(TSV_DELIM);
-            String chromosomeName = values[chrIndex];
-            if(HumanChromosome.contains(chromosomeName))
+
+            String chrStr = values[chrIndex];
+
+            if(!HumanChromosome.contains(chrStr))
+                continue;
+
+            // each entry results in 2 PCF positions since gaps are converted into entries as well
+            if(!chrStr.equals(currentChromosome))
             {
-                if(!chromosomeName.equals(prevChromosome))
-                {
-                    if(pcfPosition != null)
-                    {
-                        chromosomeResult.add(pcfPosition);
-                        result.putAll(HumanChromosome.fromString(prevChromosome), mergePositions(chromosomeResult));
-                    }
-                    chromosomeResult.clear();
-                    pcfPosition = null;
-                    minPosition = 1;
-                    prevChromosome = chromosomeName;
-                }
+                currentChromosome = chrStr;
+                pcfPositions = Lists.newArrayList();
+                chrPositionsMap.put(HumanChromosome.fromString(chrStr), pcfPositions);
 
-                int rawStart = Integer.parseInt(values[posStartIndex]);
-                int rawEnd = Integer.parseInt(values[posEndIndex]);
-                int start = inOldFormat ? window.start(rawStart) : rawStart;
-                int end = inOldFormat ? window.start(rawEnd) + windowSize : rawEnd + 1;
-                if(pcfPosition != null)
-                {
-                    pcfPosition.setMaxPosition(start);
-                    chromosomeResult.add(pcfPosition);
-                }
-
-                pcfPosition = new PCFPosition(source, chromosomeName, start);
-                pcfPosition.setMinPosition(minPosition);
-                pcfPosition.setMaxPosition(start);
-
-                chromosomeResult.add(pcfPosition);
-
-                minPosition = end;
-
-                pcfPosition = new PCFPosition(source, chromosomeName, end);
-                pcfPosition.setMinPosition(end);
-                pcfPosition.setMaxPosition(end);
+                minPosition = 1; // reset for start of new chromosome
+                lastPcfPosition = null;
             }
+
+            int rawStart = Integer.parseInt(values[posStartIndex]);
+            int rawEnd = Integer.parseInt(values[posEndIndex]);
+            int start = inOldFormat ? window.start(rawStart) : rawStart;
+            int end = inOldFormat ? window.start(rawEnd) + windowSize : rawEnd + 1;
+
+            if(lastPcfPosition != null)
+            {
+                lastPcfPosition.setMaxPosition(start); // mark the boundary for the previous PCF position
+            }
+
+            PCFPosition pcfStart = new PCFPosition(source, chrStr, start);
+            pcfStart.setMinPosition(minPosition); // taken from the previous position's end
+            pcfStart.setMaxPosition(start);
+            pcfPositions.add(pcfStart);
+
+            minPosition = end;
+
+            PCFPosition pcfEnd = new PCFPosition(source, chrStr, end);
+            pcfEnd.setMinPosition(end);
+            pcfEnd.setMaxPosition(end);
+            pcfPositions.add(pcfEnd);
+
+            lastPcfPosition = pcfEnd;
         }
 
-        if(pcfPosition != null)
+        for(List<PCFPosition> positions : chrPositionsMap.values())
         {
-            chromosomeResult.add(pcfPosition);
-            result.putAll(HumanChromosome.fromString(prevChromosome), mergePositions(chromosomeResult));
+            mergePositions(positions);
         }
 
-        return result;
+        return chrPositionsMap;
     }
 
     public static Multimap<String, GenomeRegion> read(int windowSize, final String filename) throws IOException

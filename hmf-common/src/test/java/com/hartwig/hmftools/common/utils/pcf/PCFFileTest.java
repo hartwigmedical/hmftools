@@ -11,8 +11,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
-import com.google.common.collect.ListMultimap;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
@@ -51,8 +51,8 @@ public class PCFFileTest extends PCFTestBase
         String tempFile = new File(tempDir, "whatever.pcf").getAbsolutePath();
         PCFFile.write(tempFile, data);
 
-        ListMultimap<Chromosome, PCFPosition> read = PCFFile.readPositions(100, TUMOR_RATIO, tempFile);
-        assertEquals(2, read.asMap().size());
+        Map<Chromosome,List<PCFPosition>> read = PCFFile.readPositions(100, TUMOR_RATIO, tempFile);
+        assertEquals(2, read.size());
         List<PCFPosition> positions1 = read.get(HumanChromosome._1);
         assertEquals(5, positions1.size());
         assertPosition(101, 1, 101, positions1.get(0));
@@ -65,8 +65,8 @@ public class PCFFileTest extends PCFTestBase
     @Test
     public void testBafFile() throws IOException
     {
-        final ListMultimap<Chromosome, PCFPosition> resultMap =
-                PCFFile.readPositions(WINDOW, PCFSource.TUMOR_BAF, BASE_PATH + File.separator + "baf.pcf");
+        Map<Chromosome,List<PCFPosition>> resultMap = PCFFile.readPositions(
+                WINDOW, PCFSource.TUMOR_BAF, BASE_PATH + File.separator + "baf.pcf");
 
         final List<PCFPosition> chromOneResults = resultMap.get(_1);
 
@@ -88,8 +88,8 @@ public class PCFFileTest extends PCFTestBase
     @Test
     public void testRatioFile() throws IOException
     {
-        final ListMultimap<Chromosome, PCFPosition> resultMap =
-                PCFFile.readPositions(WINDOW, PCFSource.TUMOR_BAF, BASE_PATH + File.separator + "ratio.pcf");
+        Map<Chromosome,List<PCFPosition>> resultMap = PCFFile.readPositions(
+                WINDOW, PCFSource.TUMOR_BAF, BASE_PATH + File.separator + "ratio.pcf");
 
         final List<PCFPosition> chromosomeOneResults = resultMap.get(_1);
 

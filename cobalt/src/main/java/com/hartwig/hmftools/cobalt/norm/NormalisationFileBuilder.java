@@ -95,7 +95,7 @@ public class NormalisationFileBuilder
                 final String amberFilename = AmberBAFFile.generateAmberFilenameForReading(sampleDir, sampleId);
 
                 Multimap<Chromosome, AmberBAF> chromosomeBafs = AmberBAFFile.read(amberFilename, true);
-                Gender gender = AmberGender.determineGender(mConfig.RefGenVersion, chromosomeBafs);
+                Gender gender = AmberGender.determineGender(mConfig.RefGenVersion, chromosomeBafs, null);
                 sampleGenders.put(sampleId, gender);
 
                 CB_LOGGER.debug("sample({}) Amber gender({})", sampleId, gender);

@@ -38,8 +38,12 @@ public class PCFPosition implements GenomePosition
         return Position;
     }
 
+    public boolean isSegmentEnd() { return Position == minPosition(); }
+    public boolean isSegmentStart() { return Position == maxPosition(); }
+
     public String toString()
     {
-        return String.format("src(%s) pos(%s:%d) range(%d - %d)", Source, Chromosome, Position, mMinPosition, mMaxPosition);
+        return String.format("src(%s) pos(%s:%d) range(%d - %d) segment %s",
+                Source, Chromosome, Position, mMinPosition, mMaxPosition, Position == mMaxPosition ? "start" : "end");
     }
 }

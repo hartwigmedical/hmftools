@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
@@ -79,7 +80,7 @@ public class RunAmberTest
 
         // Check the segmentation file.
         String segmentsFile = PCFFile.generateBAFFilename(OutputDir.getAbsolutePath(), TumorSample);
-        ListMultimap<Chromosome, PCFPosition> pcfData = PCFFile.readPositions(WINDOW_SIZE, PCFSource.TUMOR_BAF, segmentsFile);
+        Map<Chromosome,List<PCFPosition>> pcfData = PCFFile.readPositions(WINDOW_SIZE, PCFSource.TUMOR_BAF, segmentsFile);
         assertEquals(2, pcfData.keySet().size());
         List<PCFPosition> chr1Positions = pcfData.get(_1);
         // The R program that does segmentation puts a couple of spurious segments

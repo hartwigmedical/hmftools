@@ -139,8 +139,10 @@ public class SegmentationTest
         int amberPos1 = 100_000;
         int amberPos2 = 800_000;
         AmberData amberData = amberPcfPerChromosomeArm();
-        amberData.TumorSegments.put(chr1, new PCFPosition(PCFSource.TUMOR_BAF, chr1.toString(), amberPos1));
-        amberData.TumorSegments.put(chr1, new PCFPosition(PCFSource.TUMOR_BAF, chr1.toString(), amberPos2));
+        amberData.TumorSegments.put(
+                chr1,
+                List.of(new PCFPosition(PCFSource.TUMOR_BAF, chr1.toString(), amberPos1),
+                        new PCFPosition(PCFSource.TUMOR_BAF, chr1.toString(), amberPos2)));
 
         List<ObservedRegion> segments = segmentation.createObservedRegions(of(), amberData, emptyCobaltData());
         assertEquals(6, segments.size());
@@ -234,8 +236,10 @@ public class SegmentationTest
         int cobaltReferencePos = 200_000;
 
         CobaltData cobaltData = new CobaltData(cobaltChromosomes);
-        cobaltData.TumorSegments.put(chr1, new PCFPosition(PCFSource.TUMOR_RATIO, chr1.toString(), cobaltTumorPos));
-        cobaltData.TumorSegments.put(chr1, new PCFPosition(PCFSource.REFERENCE_RATIO, chr1.toString(), cobaltReferencePos));
+
+        cobaltData.TumorSegments.put(chr1, List.of(
+                new PCFPosition(PCFSource.TUMOR_RATIO, chr1.toString(), cobaltTumorPos),
+                new PCFPosition(PCFSource.REFERENCE_RATIO, chr1.toString(), cobaltReferencePos)));
 
         List<ObservedRegion> segments = segmentation.createObservedRegions(of(), amberPcfPerChromosomeArm(), cobaltData);
         assertEquals(6, segments.size());
@@ -392,10 +396,14 @@ public class SegmentationTest
     private AmberData amberPcfPerChromosomeArm()
     {
         AmberData data = new AmberData(50, Gender.MALE);
-        data.TumorSegments.put(chr1, new PCFPosition(PCFSource.TUMOR_BAF, chr1.toString(), 1));
-        data.TumorSegments.put(chr1, new PCFPosition(PCFSource.TUMOR_BAF, chr1.toString(), CHR1_CENTROMERE.position()));
-        data.TumorSegments.put(chr2, new PCFPosition(PCFSource.TUMOR_BAF, chr2.toString(), 1));
-        data.TumorSegments.put(chr2, new PCFPosition(PCFSource.TUMOR_BAF, chr2.toString(), CHR2_CENTROMERE.position()));
+
+        data.TumorSegments.put(chr1, List.of(
+                new PCFPosition(PCFSource.TUMOR_BAF, chr1.toString(), 1),
+                new PCFPosition(PCFSource.TUMOR_BAF, chr1.toString(), CHR1_CENTROMERE.position())));
+
+        data.TumorSegments.put(chr2, List.of(
+                new PCFPosition(PCFSource.TUMOR_BAF, chr2.toString(), 1),
+                new PCFPosition(PCFSource.TUMOR_BAF, chr2.toString(), CHR2_CENTROMERE.position())));
         return data;
     }
 

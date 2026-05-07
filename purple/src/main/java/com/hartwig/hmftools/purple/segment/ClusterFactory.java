@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.purple.segment;
 
+import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -40,7 +42,7 @@ public class ClusterFactory
     }
 
     private ListMultimap<Chromosome, Cluster> buildClusters(
-            final Multimap<Chromosome, SvPosition> variantPositions, final Map<Chromosome,List<PCFPosition>> chrPcfPositions,
+            final Multimap<Chromosome,SvPosition> variantPositions, final Map<Chromosome,List<PCFPosition>> chrPcfPositions,
             final Map<Chromosome,List<CobaltRatio>> ratios)
     {
         ListMultimap<Chromosome, Cluster> chrClusters = ArrayListMultimap.create();
@@ -88,26 +90,32 @@ public class ClusterFactory
 
             boolean canSegment = true;
 
-            if(position instanceof PCFPosition)
-            {
-                PCFPosition pcfPosition = (PCFPosition)position;
+            int earliestCnChangePosition = findFirstValidCobaltRatio(position.position(), cobaltIndex, cobaltRatios);
 
-                if(pcfPosition.Source == PCFSource.TUMOR_BAF)
+            if(segment != null)
+            {
+                if(earliestCnChangePosition > segment.end())
                 {
-                    if(lastAmberPcf != null && lastPosition != null && lastPosition.position() > lastAmberPcf.position())
-                        canSegment = false;
+                    /*
+                    if(position instanceof PCFPosition)
+                    {
+                        PCFPosition pcfPosition = (PCFPosition) position;
 
-                    lastAmberPcf = pcfPosition;
+                        if(pcfPosition.Source == PCFSource.TUMOR_BAF)
+                        {
+                            if(lastAmberPcf != null && lastPosition != null && lastPosition.position() > lastAmberPcf.position())
+                            {
+                                PPL_LOGGER.debug("Amber PCF region({}) skipped from use in segmentation", pcfPosition);
+                                canSegment = false;
+                            }
+                        }
+                    }
+                    */
                 }
-            }
-
-            int earliestCnChangePosition = 0;
-            if(canSegment)
-            {
-                earliestCnChangePosition = findFirstValidCobaltRatio(position.position(), cobaltIndex, cobaltRatios);
-
-                if(segment != null)
-                    canSegment = earliestCnChangePosition > segment.end();
+                else
+                {
+                    canSegment = false;
+                }
             }
 
             if(segment == null || canSegment)
@@ -124,7 +132,11 @@ public class ClusterFactory
             }
             else
             {
-                segment.PcfPositions.add((PCFPosition)position);
+                PCFPosition pcfPosition = (PCFPosition) position;
+                segment.PcfPositions.add(pcfPosition);
+
+                if(pcfPosition.Source == PCFSource.TUMOR_BAF)
+                    lastAmberPcf = pcfPosition;
             }
 
             lastPosition = position;
