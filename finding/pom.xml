@@ -33,6 +33,10 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
         </dependency>
@@ -54,6 +58,12 @@
         <dependency>
             <groupId>com.hartwig</groupId>
             <artifactId>orange-datamodel</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.hartwig</groupId>
+            <artifactId>finding-datamodel</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>

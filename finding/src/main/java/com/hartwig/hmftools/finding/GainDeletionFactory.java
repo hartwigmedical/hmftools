@@ -4,28 +4,27 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
 import com.hartwig.hmftools.datamodel.purple.GermlineAmpDelFields;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.PurpleGermlineStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
+import com.hartwig.hmftools.finding.datamodel.GainDeletion;
+import com.hartwig.hmftools.finding.datamodel.GainDeletionBuilder;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFieldsBuilder;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingList;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingListBuilder;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverSource;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
-import com.hartwig.hmftools.finding.datamodel.GainDeletion;
-import com.hartwig.hmftools.finding.datamodel.GainDeletionBuilder;
+import com.hartwig.hmftools.finding.util.FindingUtil;
 
 import org.jspecify.annotations.Nullable;
 
 final class GainDeletionFactory
 {
     public static DriverFindingList<GainDeletion> somaticGainDeletionFindings(
-            OrangeRefGenomeVersion orangeRefGenomeVersion,
             FindingStatus findingStatus,
             PurpleRecord purple)
     {
@@ -34,20 +33,19 @@ final class GainDeletionFactory
         gainDeletions.sort(GainDeletion.COMPARATOR);
 
         return DriverFindingListBuilder.<GainDeletion>builder()
-                .status(findingStatus)
+                .status(FindingUtil.somaticStatus(findingStatus))
                 .findings(gainDeletions)
                 .build();
     }
 
     public static DriverFindingList<GainDeletion> germlineGainDeletionFindings(
             boolean hasGermlineSample,
-            OrangeRefGenomeVersion orangeRefGenomeVersion,
             FindingStatus findingStatus,
             PurpleRecord purple)
     {
         if(!hasGermlineSample)
         {
-            return FindingUtil.refRequired();
+            return FindingUtil.normalRequired();
         }
 
         List<GainDeletion> gainDeletions = new ArrayList<>();
