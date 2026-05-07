@@ -37,18 +37,18 @@ public class ContigSidecarTest
         assertEquals(2, readBack.size());
 
         ContigEntry first = readBack.get(0);
-        assertEquals("ensENSG0000001_GENEA_ENST0000001", first.ContigName);
-        assertEquals("ENSG0000001", first.GeneId);
-        assertEquals("GENEA", first.GeneName);
-        assertEquals("ENST0000001", first.TransName);
-        assertEquals(CHR_1, first.Chromosome);
-        assertEquals(2, first.ExonSpans.size());
-        assertEquals(new BaseRegion(100, 199), first.ExonSpans.get(0));
-        assertEquals(new BaseRegion(300, 399), first.ExonSpans.get(1));
+        assertEquals("ensENSG0000001_GENEA_ENST0000001", first.contigName());
+        assertEquals("ENSG0000001", first.geneId());
+        assertEquals("GENEA", first.geneName());
+        assertEquals("ENST0000001", first.transName());
+        assertEquals(CHR_1, first.chromosome());
+        assertEquals(2, first.exonSpans().size());
+        assertEquals(new BaseRegion(100, 199), first.exonSpans().get(0));
+        assertEquals(new BaseRegion(300, 399), first.exonSpans().get(1));
 
         ContigEntry second = readBack.get(1);
-        assertEquals("ENST0000002", second.TransName);
-        assertEquals(1, second.ExonSpans.size());
-        assertEquals(new BaseRegion(1000, 1050), second.ExonSpans.get(0));
+        assertEquals("ENST0000002", second.transName());
+        assertEquals(1, second.exonSpans().size());
+        assertEquals(new BaseRegion(1000, 1050), second.exonSpans().get(0));
     }
 }

@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreateOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
@@ -26,13 +25,8 @@ public class SpliceLiftBackConfig
     public final String OutputDir;
     public final String OutputId;
 
-    private boolean mIsValid;
-
     public SpliceLiftBackConfig(final ConfigBuilder configBuilder)
     {
-        // ConfigBuilder has already enforced presence + existence of every required path before we get here
-        mIsValid = true;
-
         InputBam = configBuilder.getValue(INPUT_BAM);
         RefGenomeFile = configBuilder.getValue(REF_GENOME);
         ContigSidecarFile = configBuilder.getValue(CONTIG_SIDECAR);
@@ -40,18 +34,11 @@ public class SpliceLiftBackConfig
         OutputId = configBuilder.getValue(OUTPUT_ID);
 
         if(OutputDir == null)
-        {
-            RD_LOGGER.error("missing required config: output_dir");
-            mIsValid = false;
-        }
-        else if(!checkCreateOutputDir(OutputDir))
-        {
-            RD_LOGGER.error("failed to create output directory: {}", OutputDir);
-            mIsValid = false;
-        }
-    }
+            throw new IllegalArgumentException("missing required config: output_dir");
 
-    public boolean isValid() { return mIsValid; }
+        if(!checkCreateOutputDir(OutputDir))
+            throw new IllegalStateException("failed to create output directory: " + OutputDir);
+    }
 
     public String formOutputBam()
     {

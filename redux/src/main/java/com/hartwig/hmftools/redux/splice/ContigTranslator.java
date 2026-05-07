@@ -13,7 +13,7 @@ public final class ContigTranslator
 {
     public static TranslationResult translate(final ContigEntry contig, int contigPos, final Cigar contigCigar)
     {
-        final List<BaseRegion> spans = contig.ExonSpans;
+        final List<BaseRegion> spans = contig.exonSpans();
         if(spans.isEmpty() || contigPos < 1)
             return null;
 
@@ -82,7 +82,7 @@ public final class ContigTranslator
             }
         }
 
-        return new TranslationResult(contig.Chromosome, genomicStart, new Cigar(outElements), impliedIntrons);
+        return new TranslationResult(contig.chromosome(), genomicStart, new Cigar(outElements), impliedIntrons);
     }
 
     public static final class TranslationResult
