@@ -13,9 +13,9 @@ import com.hartwig.hmftools.common.utils.pcf.PCFSource;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.purple.PurpleConfig;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class ClusterFactoryTest
@@ -49,7 +49,7 @@ public class ClusterFactoryTest
     @Test
     public void testAmberPcfSegmentation()
     {
-        PurpleConfig.LimitAmberPcfSegmentation = true;
+        // PurpleConfig.OldAmberPcfSegmentation = true;
 
         List<SvPosition> sv = Collections.emptyList();
 
@@ -81,6 +81,7 @@ public class ClusterFactoryTest
         pcfPositions.add(new PCFPosition(PCFSource.TUMOR_BAF, CHROM, amberPcfStart2, amberPcfEnd1, amberPcfStart2));
         pcfPositions.add(new PCFPosition(PCFSource.TUMOR_BAF, CHROM, amberPcfEnd2, amberPcfEnd2, amberPcfStart3));
 
+        // follows another Amber PCF segment so will be used
         pcfPositions.add(new PCFPosition(PCFSource.TUMOR_BAF, CHROM, amberPcfStart3, amberPcfEnd2, amberPcfStart3));
         pcfPositions.add(new PCFPosition(PCFSource.TUMOR_BAF, CHROM, amberPcfEnd3, amberPcfEnd3, amberPcfEnd3));
 
@@ -101,12 +102,10 @@ public class ClusterFactoryTest
         assertEquals(3, clusters.size());
         Cluster cluster = clusters.get(1);
         assertEquals(6001, cluster.Start);
-        assertEquals(30000, cluster.End);
+        assertEquals(20000, cluster.End);
         cluster = clusters.get(2);
-        assertEquals(32001, cluster.Start);
+        assertEquals(39001, cluster.Start);
         assertEquals(70000, cluster.End);
-
-        PurpleConfig.LimitAmberPcfSegmentation = false;
     }
 
     @Test

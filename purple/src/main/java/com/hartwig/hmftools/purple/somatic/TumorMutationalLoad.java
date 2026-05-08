@@ -127,6 +127,6 @@ public class TumorMutationalLoad
         else
             ++mLoad;
 
-        PPL_LOGGER.debug("variant({}) tml somatic status({})", variant, isUnclear ? "unclear" : "high");
+        PPL_LOGGER.trace("variant({}) tml somatic status({})", variant, isUnclear ? "unclear" : "high");
     }
 }

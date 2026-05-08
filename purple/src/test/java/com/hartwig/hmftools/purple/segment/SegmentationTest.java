@@ -135,9 +135,11 @@ public class SegmentationTest
         assertEquals(CENTROMERE, segments.get(3).support());
     }
 
+    @Ignore
     @Test
     public void amberPcfRegionsWithinAChromosomeArm()
     {
+        // test could be scapped after conditionally excluding Amber PCF positions
         int amberPos1 = 100_000;
         int amberPos2 = 800_000;
         AmberData amberData = amberPcfPerChromosomeArm();

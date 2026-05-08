@@ -92,6 +92,7 @@ public class ClusterFactory
             }
 
             boolean canSegment = true;
+            boolean extendPosition = true;
 
             PCFPosition pcfPosition = position instanceof PCFPosition ? (PCFPosition)position : null;
 
@@ -102,15 +103,21 @@ public class ClusterFactory
             {
                 if(earliestCnChangePosition > segment.end())
                 {
-                    if(pcfPosition != null && pcfPosition.Source == PCFSource.TUMOR_BAF && PurpleConfig.LimitAmberPcfSegmentation)
+                    if(pcfPosition != null && pcfPosition.Source == PCFSource.TUMOR_BAF && !PurpleConfig.OldAmberPcfSegmentation)
                     {
                         // cannot be the final segment
-                        canSegment = lastPositionWasAmberPcfEnd && pcfPosition.isSegmentStart()&& i < allPositions.size() - 2;
+                        boolean useAmberSegment = lastPositionWasAmberPcfEnd && pcfPosition.isSegmentStart()&& i < allPositions.size() - 2;
 
-                        if(canSegment)
+                        if(!useAmberSegment)
                         {
-                            PPL_LOGGER.debug("segment({}}:{}}) segmenting on Amber PCF",
-                                    position.chromosome(), position.position());
+                            PPL_LOGGER.debug("segment({}) skipping Amber PCF: lastQasAmberEnd({}) index({} of {})",
+                                    pcfPosition, lastPositionWasAmberPcfEnd, i, allPositions.size());
+                            continue;
+                        }
+                        else
+                        {
+                            // TEMP logging, remove after v4.4 regression is complete
+                            PPL_LOGGER.debug("segment({}) segmenting on Amber PCF", pcfPosition);
                         }
                     }
                 }
