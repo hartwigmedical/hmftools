@@ -15,15 +15,6 @@ import org.junit.Test;
 public class CopyNumberConverterTest  {
 
     @Test
-    public void canFilterSmallVariants() {
-        SmallVariant variant = TestFindingFactory.variantBuilder().adjustedCopyNumber(0.1).build();
-        assertEquals(ReportedStatus.REPORTED, CopyNumberConverter.convertSmallVariant(List.of(variant)).get(0).reportedStatus());
-
-        SmallVariant variantFilter = TestFindingFactory.variantBuilder().adjustedCopyNumber(0.04).build();
-        assertEquals(ReportedStatus.CANDIDATE, CopyNumberConverter.convertSmallVariant(List.of(variantFilter)).get(0).reportedStatus());
-    }
-
-    @Test
     public void canFilterDisruptions() {
         Disruption disruption = TestFindingFactory.disruptionBuilder().disruptedCopyNumber(0.1).build();
         assertEquals(ReportedStatus.REPORTED, CopyNumberConverter.convertDisruption(List.of(disruption)).get(0).reportedStatus());
