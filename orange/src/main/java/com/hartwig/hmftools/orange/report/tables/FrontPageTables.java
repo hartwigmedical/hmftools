@@ -118,7 +118,7 @@ public class FrontPageTables
 
         table.addCell(cells.createContent(report.pipelineVersion()));
         table.addCell(cells.createContent(report.refGenomeVersion().toString()));
-        table.addCell(cells.createContent(SequencingType.ILLUMINA.toString()));
+        table.addCell(cells.createContent(sequencingType(config)));
 
         // table.addCell(cells.createContent(report.experimentType().toString()));
         table.addCell(cells.createContent(pipelineModeDisplay(report, config)));
@@ -127,6 +127,11 @@ public class FrontPageTables
         table.addCell(cells.createContent(report.samplingDate().toString()));
 
         return table;
+    }
+
+    private static String sequencingType(final OrangeConfig config)
+    {
+        return config != null ? config.SeqType.toString() : SequencingType.ILLUMINA.toString();
     }
 
     private static String pipelineModeDisplay(final OrangeRecord report, final OrangeConfig config)
