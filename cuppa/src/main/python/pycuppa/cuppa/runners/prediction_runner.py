@@ -25,6 +25,7 @@ class PredictionRunner(LoggerMixin):
         sample_id: str | None = None,
         compress_tsv_files: bool = False,
         force_plot: bool = False,
+        rename_classes: dict[str, str] | None = None,
         cv_predictions_path: str = None,
         cv_predictions: CuppaPrediction | None = None,
         clf_group: str = DEFAULT_RUNNER_ARGS.clf_group,
@@ -38,6 +39,7 @@ class PredictionRunner(LoggerMixin):
         self.sample_id = sample_id
         self.compress_tsv_files = compress_tsv_files
         self.force_plot = force_plot
+        self.rename_classes = rename_classes
         self.classifier_path = classifier_path
 
         self.cv_predictions_path = cv_predictions_path
@@ -121,6 +123,20 @@ class PredictionRunner(LoggerMixin):
 
         self.predictions = predictions
 
+    def do_rename_classes(self) -> None:
+        if self.rename_classes is None:
+            return
+
+        self.logger.info("Renaming classes {old: new}: " + str(self.rename_classes))
+
+        invalid_keys = [k for k in self.rename_classes.keys() if k not in self.predictions.columns]
+        if len(invalid_keys) > 0:
+            self.logger.error("Failed to rename non-existing classes: " + ", ".join(invalid_keys))
+            raise ValueError
+
+        self.predictions.rename(columns=self.rename_classes, inplace=True)
+        self.cuppa_classifier.cv_performance['class'].replace(self.rename_classes, inplace=True)
+
     def get_pred_summ(self) -> None:
         self.pred_summ = self.predictions.summarize(
             show_extra_info = self.clf_group != CLF_GROUPS.RNA,
@@ -177,6 +193,8 @@ class PredictionRunner(LoggerMixin):
             raise ValueError
 
         self.get_predictions()
+        self.do_rename_classes()
+
         self.get_pred_summ()
         self.get_vis_data()
 
