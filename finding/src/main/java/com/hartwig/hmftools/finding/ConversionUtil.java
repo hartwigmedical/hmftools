@@ -34,7 +34,6 @@ public class ConversionUtil {
                 GainDeletionsFilterConverter::convert,
                 NoGermlineConverter::convert,
                 CandidateToReportableConverter::convert,
-                CopyNumberRoundingConverter::convert,
                 CopyNumberConverter::convert,
                 ReportedOnlyConverter::convert
                 )).apply(findingRecord);

@@ -126,7 +126,7 @@ public class CopyNumberRoundingConverter
     }
 
     @NotNull
-    public static Double roundCopyNumber(@NotNull Double value)
+    public static Double roundCopyNumber(@NotNull double value)
     {
         double doubleValue = Math.max(value, 0);
         return Doubles.round(doubleValue, doubleValue > COPY_NUMBER_ROUNDING_THRESHOLD ? 0 : 1);
