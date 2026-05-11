@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.finding;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
 @SuppressWarnings("unused")
 final class Doubles
 {
@@ -30,9 +33,11 @@ final class Doubles
         return value - reference > -EPSILON;
     }
 
-    public static double round(double value, int decimals)
-    {
-        double scale = Math.pow(10, decimals);
-        return Math.round(value * scale) / scale;
+    public static double round(double value, int decimals) {
+        return toBigDecimalRounded(value, decimals).doubleValue();
+    }
+
+    private static BigDecimal toBigDecimalRounded(double value, int decimals) {
+        return new BigDecimal(value).setScale(decimals, RoundingMode.HALF_UP);
     }
 }
