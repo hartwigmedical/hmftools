@@ -308,7 +308,9 @@ python -m cuppa.train \
 --log_to_file
 ```
 
-The below table lists all possible arguments for training and/or predicting.
+### Arguments
+
+The below table lists all possible arguments for the Python component of Cuppa.
 
 | Argument                  | Task    | Description                                                                                                                                                                                   |
 |---------------------------|---------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
