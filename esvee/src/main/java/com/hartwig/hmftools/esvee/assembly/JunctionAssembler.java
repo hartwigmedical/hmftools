@@ -71,11 +71,13 @@ public class JunctionAssembler
 
     public List<JunctionAssembly> processJunction(final List<Read> rawReads)
     {
+        boolean isJuncSagaMatched = false;
         if (mSagaMatcher != null)
         {
             // TODO: actually match by location at prep stage and conditionally relax filters
             SagaMatcher.MatchByLocation sagaLocationMatch = mSagaMatcher.matchByLocation(mJunction.Chromosome, mJunction.Position);
             SV_LOGGER.trace("junction({}) SAGA location match {}", mJunction, sagaLocationMatch);
+            isJuncSagaMatched = sagaLocationMatch != null;
         }
 
         // find prominent reads to establish the extension sequence, taking any read meeting min soft-clip lengths
@@ -128,7 +130,10 @@ public class JunctionAssembler
         if(!checkJunctionReadExtension(hasMinLengthSoftClipRead, extensionReads))
         {
             SV_LOGGER.trace("filter stage=junctionAssembly reason=\"read extension\" data=junction({})", mJunction);
-            return Collections.emptyList();
+            if(!isJuncSagaMatched)
+            {
+                return Collections.emptyList();
+            }
         }
 
         if (usedRelaxedFilters)
@@ -147,26 +152,36 @@ public class JunctionAssembler
         if(!extensionSeqBuilder.isValid() || extensionSeqBuilder.extensionLength() < reqExtensionLength)
         {
             SV_LOGGER.trace("filter stage=junctionAssembly reason=\"extension sequence\" data=junction({})", mJunction);
-            return Collections.emptyList();
+            if(!isJuncSagaMatched)
+            {
+                return Collections.emptyList();
+            }
         }
 
         List<SupportRead> assemblySupport = extensionSeqBuilder.formAssemblySupport();
 
-        if(!meetsMinSupportThreshold(assemblySupport))
-        {
-            SV_LOGGER.trace("filter stage=junctionAssembly reason=\"min support\" data=junction({})", mJunction);
-            return Collections.emptyList();
-        }
-
         JunctionAssembly firstAssembly = new JunctionAssembly(
                 mJunction, extensionSeqBuilder.extensionBases(), extensionSeqBuilder.baseQualities(), assemblySupport,
                 extensionSeqBuilder.repeats());
+        tryMatchToSaga(firstAssembly);
+
+        if(!meetsMinSupportThreshold(assemblySupport))
+        {
+            SV_LOGGER.trace("filter stage=junctionAssembly reason=\"min support\" data=junction({})", mJunction);
+            if(!firstAssembly.isSagaMatched())
+            {
+                return Collections.emptyList();
+            }
+        }
 
         // filter LINE source-type sites marked by opposition orientation poly A/T sequences
         if(!firstAssembly.indel() && LineUtils.hasLineSourceSequence(firstAssembly))
         {
             SV_LOGGER.trace("filter stage=junctionAssembly reason=\"LINE source site\" data=assembly({})", firstAssembly);
-            return Collections.emptyList();
+            if(!firstAssembly.isSagaMatched())
+            {
+                return Collections.emptyList();
+            }
         }
 
         firstAssembly.setExtBaseBuildInfo(extensionSeqBuilder.buildInformation());
@@ -186,7 +201,10 @@ public class JunctionAssembler
                 if(firstAssembly.extensionLength() < ASSEMBLY_MIN_SOFT_CLIP_LENGTH)
                 {
                     SV_LOGGER.trace("filter stage=junctionAssembly reason=\"LINE with local aligned insert SC\" data=assembly({})", firstAssembly);
-                    return Collections.emptyList();
+                    if(!firstAssembly.isSagaMatched())
+                    {
+                        return Collections.emptyList();
+                    }
                 }
             }
         }
@@ -197,6 +215,7 @@ public class JunctionAssembler
         List<JunctionAssembly> assemblies = Lists.newArrayList(firstAssembly);
         if(secondAssembly != null)
         {
+            tryMatchToSaga(secondAssembly);
             assemblies.add(secondAssembly);
 
             if(!keepSecondAssembly(secondAssembly.supportCount(), initialAssemblySupport))
@@ -217,10 +236,9 @@ public class JunctionAssembler
 
             // Now we have the assembly sequence, try to match to SAGA if necessary.
             // Note matching to SAGA via coordinate is not enough; we need to know that the variant sequence is actually the same.
-            boolean sagaMatched = tryMatchToSaga(assembly);
             if (usedRelaxedFilters)
             {
-                if (sagaMatched)
+                if (assembly.isSagaMatched())
                 {
                     SV_LOGGER.trace("assembly({}) recovered with SAGA", assembly);
                     assembly.mSagaRecovered = true;

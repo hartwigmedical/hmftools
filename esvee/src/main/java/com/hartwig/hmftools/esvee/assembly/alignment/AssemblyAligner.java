@@ -351,7 +351,10 @@ public class AssemblyAligner extends ThreadTask
         if(isWeakSingleReadExtensionAssembly(assemblyAlignment))
         {
             SV_LOGGER.trace("filter stage=alignment reason=\"weak single read extension\" data=assemblyAlignment({})", assemblyAlignment);
-            assemblyAlignment.breakends().clear();
+            if(!assemblyAlignment.isSagaMatched())
+            {
+                assemblyAlignment.breakends().clear();
+            }
         }
     }
 

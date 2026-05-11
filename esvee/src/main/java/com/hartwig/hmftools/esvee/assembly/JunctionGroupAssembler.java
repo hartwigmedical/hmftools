@@ -238,7 +238,10 @@ public class JunctionGroupAssembler extends ThreadTask
                 {
                     SV_LOGGER.trace("filter stage=junctionAssembly reason=\"ref base alignment\" data=assembly({})", assembly);
                     ++mReadStats.RefBaseAlignmentFails;
-                    continue;
+                    if(!assembly.isSagaMatched())
+                    {
+                        continue;
+                    }
                 }
 
                 refBaseExtender.findAssemblyCandidateExtensions(assembly, junctionAssembler.nonJunctionReads());

@@ -317,7 +317,10 @@ public class BreakendBuilder
         if(softClipLength < requiredSoftClipLength)
         {
             SV_LOGGER.trace("filter stage=breakend reason=\"alignment SC length\" data=assemblyAlignment({})", mAssemblyAlignment);
-            return;
+            if(!mAssemblyAlignment.isSagaMatched())
+            {
+                return;
+            }
         }
 
         Breakend breakend = new Breakend(

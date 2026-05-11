@@ -120,7 +120,10 @@ public class PhaseGroup
             if(phaseSet.isShortLocalRefLink())
             {
                 SV_LOGGER.trace("filter stage=phasing reason=\"short local ref link\" data=phaseGroup({}),phaseSet({})", mId, phaseSet.id());
-                continue;
+                if(mAssemblies.stream().noneMatch(JunctionAssembly::isSagaMatched))
+                {
+                    continue;
+                }
             }
 
             AssemblyAlignment assemblyAlignment = new AssemblyAlignment(phaseSet);
