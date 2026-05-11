@@ -139,7 +139,7 @@ public class PhaseSet
         if(mAssemblyLinks.size() != 1 || mAssemblies.get(0).outcome() != LOCAL_INDEL)
             return false;
 
-        boolean sagaMatched = mAssemblies.stream().anyMatch(a -> a.sagaMatch() != null);
+        boolean sagaMatched = mAssemblies.stream().anyMatch(JunctionAssembly::isSagaMatched);
         int requiredLength = sagaMatched ? MIN_VARIANT_LENGTH_LOWER : MIN_VARIANT_LENGTH;
         return mAssemblyLinks.get(0).length() < requiredLength;
     }

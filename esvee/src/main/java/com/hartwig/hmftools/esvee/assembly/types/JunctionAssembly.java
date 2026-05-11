@@ -845,6 +845,11 @@ public class JunctionAssembly
         return mSagaMatch;
     }
 
+    public boolean isSagaMatched()
+    {
+        return mSagaMatch != null;
+    }
+
     @VisibleForTesting
     public JunctionAssembly(final Junction junction, final byte[] bases, final byte[] quals, final int junctionIndex)
     {

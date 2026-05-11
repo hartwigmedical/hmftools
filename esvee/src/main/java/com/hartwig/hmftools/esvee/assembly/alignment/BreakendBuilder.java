@@ -392,13 +392,13 @@ public class BreakendBuilder
         {
             return LINE_MIN_EXTENSION_LENGTH;
         }
-        else if (mAssemblyAlignment.sagaMatch() == null)
+        else if (mAssemblyAlignment.isSagaMatched())
         {
-            return ALIGNMENT_MIN_SOFT_CLIP;
+            return ALIGNMENT_MIN_SOFT_CLIP_LOWER;
         }
         else
         {
-            return ALIGNMENT_MIN_SOFT_CLIP_LOWER;
+            return ALIGNMENT_MIN_SOFT_CLIP;
         }
     }
 

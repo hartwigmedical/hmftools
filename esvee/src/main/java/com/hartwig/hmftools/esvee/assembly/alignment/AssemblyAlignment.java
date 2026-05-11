@@ -588,6 +588,11 @@ public class AssemblyAlignment
         return mSagaMatch;
     }
 
+    public boolean isSagaMatched()
+    {
+        return mSagaMatch != null;
+    }
+
     public void setSagaMatch(final SagaMatcher.MatchBySequence match)
     {
         mSagaMatch = match;

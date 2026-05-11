@@ -44,7 +44,7 @@ public class AlignmentChecker
     public static boolean shouldConsiderDecoys(final JunctionAssembly assembly)
     {
         // If matching a known SAGA variant, don't try to filter by matching to decoys.
-        return assembly.sagaMatch() == null;
+        return !assembly.isSagaMatched();
     }
 
     public boolean matchesDecoy(final JunctionAssembly assembly)
