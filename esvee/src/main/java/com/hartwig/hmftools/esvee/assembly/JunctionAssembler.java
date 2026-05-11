@@ -191,8 +191,6 @@ public class JunctionAssembler
         int initialAssemblySupport = assemblySupport.size();
         addJunctionReads(firstAssembly, extensionSeqBuilder, junctionReads);
 
-        tryMatchToSaga(firstAssembly);
-
         if(firstAssembly.hasLineSequence())
         {
             if(isLineWithLocalAlignedInsert(firstAssembly))
@@ -202,7 +200,7 @@ public class JunctionAssembler
                 if(firstAssembly.extensionLength() < ASSEMBLY_MIN_SOFT_CLIP_LENGTH)
                 {
                     SV_LOGGER.trace("filter stage=junctionAssembly reason=\"LINE with local aligned insert SC\" data=assembly({})", firstAssembly);
-                    if(!firstAssembly.isSagaMatched())
+                    if(!isJuncSagaMatched)
                     {
                         return Collections.emptyList();
                     }
@@ -216,7 +214,6 @@ public class JunctionAssembler
         List<JunctionAssembly> assemblies = Lists.newArrayList(firstAssembly);
         if(secondAssembly != null)
         {
-            tryMatchToSaga(secondAssembly);
             assemblies.add(secondAssembly);
 
             if(!keepSecondAssembly(secondAssembly.supportCount(), initialAssemblySupport))
@@ -239,7 +236,7 @@ public class JunctionAssembler
             // Note matching to SAGA via coordinate is not enough; we need to know that the variant sequence is actually the same.
             if (usedRelaxedFilters)
             {
-                if (assembly.isSagaMatched())
+                if (tryMatchToSaga(assembly))
                 {
                     SV_LOGGER.trace("assembly({}) recovered with SAGA", assembly);
                     assembly.mSagaRecovered = true;
