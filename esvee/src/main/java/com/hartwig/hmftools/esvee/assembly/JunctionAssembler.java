@@ -220,6 +220,11 @@ public class JunctionAssembler
                 assemblies.remove(firstAssembly);
         }
 
+        if (firstAssembly.bases().length == 0)
+        {
+            assemblies.remove(firstAssembly);
+        }
+
         for(JunctionAssembly assembly : assemblies)
         {
             // call routine to purge reads likely add to multiple assemblies and breaching a dominant RSSC
