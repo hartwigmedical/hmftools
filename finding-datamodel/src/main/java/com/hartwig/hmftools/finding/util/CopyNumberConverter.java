@@ -14,6 +14,7 @@ import com.hartwig.hmftools.finding.datamodel.HlaAllele;
 import com.hartwig.hmftools.finding.datamodel.HlaAlleleBuilder;
 import com.hartwig.hmftools.finding.datamodel.SmallVariant;
 import com.hartwig.hmftools.finding.datamodel.SmallVariantBuilder;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverFields;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFieldsBuilder;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingList;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingListBuilder;
@@ -31,6 +32,7 @@ public class CopyNumberConverter
 {
 
     private static final double COPY_NUMBER_ROUNDING_THRESHOLD = 10;
+    private static final double COPY_NUMBER_FILTER = 0.1;
     private static final Logger LOGGER = LogManager.getLogger(CopyNumberConverter.class);
 
     @NotNull
@@ -99,18 +101,18 @@ public class CopyNumberConverter
 
         for(Disruption disruption : disruptions)
         {
-            if(disruption.disruptedCopyNumber() >= 0.1)
+            if(disruption.disruptedCopyNumber() >= COPY_NUMBER_FILTER)
             {
                 disruptionList.add(disruption);
             }
             else
             {
                 disruptionList.add(DisruptionBuilder.builder(disruption)
-                        .driver(DriverFieldsBuilder.builder(disruption.driver()).reportedStatus(ReportedStatus.CANDIDATE).build())
+                        .driver(toCandidate(disruption.driver()).build())
                         .build());
-                LOGGER.warn("Gene disruption {} with type {} has less than <0.1 copies, investigate further",
+                LOGGER.warn("Gene disruption {} with type {} has less than < {} copies, investigate further",
                         disruption.gene(),
-                        disruption.type());
+                        disruption.type(), COPY_NUMBER_FILTER);
             }
         }
         return disruptionList;
@@ -143,16 +145,16 @@ public class CopyNumberConverter
         for(Fusion fusion : fusions)
         {
             String fusionName = fusion.geneUp() + " - " + fusion.geneDown();
-            if(fusion.junctionCopyNumber() >= 0.1)
+            if(fusion.junctionCopyNumber() >= COPY_NUMBER_FILTER)
             {
                 fusionsList.add(fusion);
             }
             else
             {
                 fusionsList.add(FusionBuilder.builder(fusion)
-                        .driver(DriverFieldsBuilder.builder(fusion.driver()).reportedStatus(ReportedStatus.CANDIDATE).build())
+                        .driver(toCandidate(fusion.driver()).build())
                         .build());
-                LOGGER.warn("Fusion {} has less than <0.1 copies, investigate further", fusionName);
+                LOGGER.warn("Fusion {} has less than < {} copies, investigate further", fusionName, COPY_NUMBER_FILTER);
             }
         }
         return fusionsList;
@@ -178,10 +180,8 @@ public class CopyNumberConverter
     }
 
     @NotNull
-    public static Double roundCopyNumber(@NotNull Double value)
-    {
-        double doubleValue = Math.max(value, 0);
-        return Doubles.round(doubleValue, doubleValue > COPY_NUMBER_ROUNDING_THRESHOLD ? 0 : 1);
+    private static DriverFieldsBuilder toCandidate(@NotNull DriverFields driverFields) {
+        return DriverFieldsBuilder.builder(driverFields).reportedStatus(ReportedStatus.CANDIDATE);
     }
 
     @Nullable
@@ -192,5 +192,12 @@ public class CopyNumberConverter
             return roundCopyNumber(value);
         }
         return null;
+    }
+
+    @NotNull
+    public static Double roundCopyNumber(@NotNull Double value)
+    {
+        double doubleValue = Math.max(value, 0);
+        return Doubles.round(doubleValue, doubleValue > COPY_NUMBER_ROUNDING_THRESHOLD ? 0 : 1);
     }
 }
