@@ -163,12 +163,11 @@ public class JunctionAssembler
         JunctionAssembly firstAssembly = new JunctionAssembly(
                 mJunction, extensionSeqBuilder.extensionBases(), extensionSeqBuilder.baseQualities(), assemblySupport,
                 extensionSeqBuilder.repeats());
-        tryMatchToSaga(firstAssembly);
 
         if(!meetsMinSupportThreshold(assemblySupport))
         {
             SV_LOGGER.trace("filter stage=junctionAssembly reason=\"min support\" data=junction({})", mJunction);
-            if(!firstAssembly.isSagaMatched())
+            if(!isJuncSagaMatched)
             {
                 return Collections.emptyList();
             }
@@ -178,7 +177,7 @@ public class JunctionAssembler
         if(!firstAssembly.indel() && LineUtils.hasLineSourceSequence(firstAssembly))
         {
             SV_LOGGER.trace("filter stage=junctionAssembly reason=\"LINE source site\" data=assembly({})", firstAssembly);
-            if(!firstAssembly.isSagaMatched())
+            if(!isJuncSagaMatched)
             {
                 return Collections.emptyList();
             }
@@ -191,6 +190,8 @@ public class JunctionAssembler
 
         int initialAssemblySupport = assemblySupport.size();
         addJunctionReads(firstAssembly, extensionSeqBuilder, junctionReads);
+
+        tryMatchToSaga(firstAssembly);
 
         if(firstAssembly.hasLineSequence())
         {
