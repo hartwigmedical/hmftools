@@ -246,7 +246,10 @@ public class Junction implements Comparable<Junction>
                     if(junctionFrags < minHotspotFrags)
                     {
                         SV_LOGGER.trace("filter stage=junction reason=\"min hotspot frags\" data=junction({})", junction);
-                        continue;
+                        if(!junction.isSagaMatched())
+                        {
+                            continue;
+                        }
                     }
 
                     ++hotspotCount;
@@ -258,7 +261,10 @@ public class Junction implements Comparable<Junction>
                     if(maxRemoteFrags < minDiscordantFrags)
                     {
                         SV_LOGGER.trace("filter stage=junction reason=\"min discordant frags\" data=junction({})", junction);
-                        continue;
+                        if(!junction.isSagaMatched())
+                        {
+                            continue;
+                        }
                     }
 
                     ++discordantCount;
@@ -268,7 +274,10 @@ public class Junction implements Comparable<Junction>
                     if(junctionFrags + otherJunctionFrags < minJunctionFrags)
                     {
                         SV_LOGGER.trace("filter stage=junction reason=\"min junction frags\" data=junction({})", junction);
-                        continue;
+                        if(!junction.isSagaMatched())
+                        {
+                            continue;
+                        }
                     }
 
                     if(indel)
