@@ -19,34 +19,34 @@ import com.hartwig.hmftools.finding.datamodel.finding.FindingStatusBuilder;
 
 import jakarta.validation.constraints.NotNull;
 
-public class LowPurityConverter
+public class LowPurityTransformer
 {
     @NotNull
-    public static FindingRecord convert(@NotNull FindingRecord record)
+    public static FindingRecord transform(@NotNull FindingRecord record)
     {
         boolean isLowPurity = record.qc().isLowPurity();
         return FindingRecordBuilder.builder(record)
-                .somaticDisruptions(convert(record.somaticDisruptions(), isLowPurity))
-                .somaticGainDeletions(convert(record.somaticGainDeletions(), isLowPurity))
-                .viruses(convert(record.viruses(), isLowPurity))
-                .microsatelliteStability(convert(record.microsatelliteStability(), isLowPurity))
-                .tumorMutationalLoad(convert(record.tumorMutationalLoad(), isLowPurity))
-                .tumorMutationalBurden(convert(record.tumorMutationalBurden(), isLowPurity))
-                .homologousRecombination(convert(record.homologousRecombination(), isLowPurity))
+                .somaticDisruptions(transform(record.somaticDisruptions(), isLowPurity))
+                .somaticGainDeletions(transform(record.somaticGainDeletions(), isLowPurity))
+                .viruses(transform(record.viruses(), isLowPurity))
+                .microsatelliteStability(transform(record.microsatelliteStability(), isLowPurity))
+                .tumorMutationalLoad(transform(record.tumorMutationalLoad(), isLowPurity))
+                .tumorMutationalBurden(transform(record.tumorMutationalBurden(), isLowPurity))
+                .homologousRecombination(transform(record.homologousRecombination(), isLowPurity))
                 // For HLA status remains the same, but tumor fields are cleared.
-                .hlaAlleles(convert(record.hlaAlleles(), isLowPurity, Function.identity(), LowPurityConverter::convert))
+                .hlaAlleles(transform(record.hlaAlleles(), isLowPurity, Function.identity(), LowPurityTransformer::transform))
                 .build();
     }
 
 
     @NotNull
-    private static <T extends Finding> FindingList<T> convert(@NotNull FindingList<T> findingList, boolean isLowPurity,
+    private static <T extends Finding> FindingList<T> transform(@NotNull FindingList<T> findingList, boolean isLowPurity,
             @NotNull Function<FindingStatus, FindingStatus> findingsStatusConverter,
             @NotNull Function<T, T> findingConverter)
     {
         if(shouldConvert(findingList.status(), isLowPurity))
         {
-            return FindingRecordConverterUtil.convertFindingList(findingList, findingsStatusConverter, findingConverter, null);
+            return FindingRecordTransformerUtil.transformFindingList(findingList, findingsStatusConverter, findingConverter, null);
         }
         else
         {
@@ -55,12 +55,12 @@ public class LowPurityConverter
     }
 
     @NotNull
-    private static <T extends Driver> DriverFindingList<T> convert(@NotNull DriverFindingList<T> driverFindingList, boolean isLowPurity)
+    private static <T extends Driver> DriverFindingList<T> transform(@NotNull DriverFindingList<T> driverFindingList, boolean isLowPurity)
     {
         if(shouldConvert(driverFindingList.status(), isLowPurity))
         {
-            return FindingRecordConverterUtil.convertDriverFindingList(driverFindingList,
-                    LowPurityConverter::convert,
+            return FindingRecordTransformerUtil.transformDriverFindingList(driverFindingList,
+                    LowPurityTransformer::transform,
                     f -> null,
                     null);
         }
@@ -71,12 +71,12 @@ public class LowPurityConverter
     }
 
     @NotNull
-    private static <T> FindingItem<T> convert(@NotNull FindingItem<T> findingItem, boolean isLowPurity)
+    private static <T> FindingItem<T> transform(@NotNull FindingItem<T> findingItem, boolean isLowPurity)
     {
         if(shouldConvert(findingItem.status(), isLowPurity))
         {
             return FindingItemBuilder.<T>builder()
-                    .status(convert(findingItem.status()))
+                    .status(transform(findingItem.status()))
                     .build();
         }
         else
@@ -85,7 +85,7 @@ public class LowPurityConverter
         }
     }
 
-    private static FindingStatus convert(FindingStatus findingStatus)
+    private static FindingStatus transform(FindingStatus findingStatus)
     {
         return FindingStatusBuilder.builder()
                 .status(FindingStatus.Status.NOT_RELIABLE)
@@ -109,7 +109,7 @@ public class LowPurityConverter
         return FindingUtil.removeIssues(issues, Set.of(FindingStatus.Issue.LOW_PURITY));
     }
 
-    private static HlaAllele convert(HlaAllele hlaAllele)
+    private static HlaAllele transform(HlaAllele hlaAllele)
     {
         return HlaAlleleBuilder.builder(hlaAllele)
                 .tumorCopyNumber(null)

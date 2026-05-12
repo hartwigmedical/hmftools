@@ -1,35 +1,33 @@
 package com.hartwig.hmftools.finding.util;
 
 import java.util.List;
-import java.util.Map;
 
 import com.hartwig.hmftools.finding.datamodel.FindingRecord;
 import com.hartwig.hmftools.finding.datamodel.FindingRecordBuilder;
 import com.hartwig.hmftools.finding.datamodel.PredictedTumorOrigin;
 import com.hartwig.hmftools.finding.datamodel.PredictedTumorOriginBuilder;
-import com.hartwig.hmftools.finding.datamodel.PredictedTumorOriginPredictionBuilder;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingItem;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingItemBuilder;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
 
 import jakarta.validation.constraints.NotNull;
 
-public class PTOConverter
+public class PTOTransformer
 {
     // TODO: Is this constant defined elsewhere?
     private static final double CUPPA_INCONCLUSIVE_CUT_OFF = 0.8;
     private static final double BEST_LIKELIHOOD_CUT_OFF = 0.5;
 
     @NotNull
-    public static FindingRecord convert(@NotNull FindingRecord record)
+    public static FindingRecord transform(@NotNull FindingRecord record)
     {
         return FindingRecordBuilder.builder(record)
-                .predictedTumorOrigin(convert(record.predictedTumorOrigin()))
+                .predictedTumorOrigin(transform(record.predictedTumorOrigin()))
                 .build();
     }
 
     @NotNull
-    private static FindingItem<PredictedTumorOrigin> convert(@NotNull FindingItem<PredictedTumorOrigin> findingItem)
+    private static FindingItem<PredictedTumorOrigin> transform(@NotNull FindingItem<PredictedTumorOrigin> findingItem)
     {
         PredictedTumorOrigin predictedTumorOrigin = findingItem.finding();
         if(predictedTumorOrigin != null)

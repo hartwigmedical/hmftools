@@ -16,16 +16,16 @@ import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
 
 import org.junit.Test;
 
-public class PTOConverterTest
+public class PTOTransformerTest
 {
     private static final double EPSILON = 0.00001;
     private static final String CANCER_TYPE = "Melanoma";
 
     @Test
-    public void convertWithResults()
+    public void transformWithResults()
     {
         FindingRecord original = createPTOFindingItem(0.8, CANCER_TYPE);
-        FindingRecord converted = PTOConverter.convert(original);
+        FindingRecord converted = PTOTransformer.transform(original);
 
         FindingItem<PredictedTumorOrigin> findingItem = converted.predictedTumorOrigin();
         assertEquals(FindingStatus.Status.OK, findingItem.status().status());
@@ -41,10 +41,10 @@ public class PTOConverterTest
     }
 
     @Test
-    public void convertNoResultsWithBestLikelihood()
+    public void transformNoResultsWithBestLikelihood()
     {
         FindingRecord original = createPTOFindingItem(0.7, CANCER_TYPE);
-        FindingRecord converted = PTOConverter.convert(original);
+        FindingRecord converted = PTOTransformer.transform(original);
 
         FindingItem<PredictedTumorOrigin> findingItem = converted.predictedTumorOrigin();
         assertEquals(FindingStatus.Status.NOT_RELIABLE, findingItem.status().status());
@@ -56,10 +56,10 @@ public class PTOConverterTest
     }
 
     @Test
-    public void convertNoResultsWithoutBestLikelihood()
+    public void transformNoResultsWithoutBestLikelihood()
     {
         FindingRecord original = createPTOFindingItem(0.4, CANCER_TYPE);
-        FindingRecord converted = PTOConverter.convert(original);
+        FindingRecord converted = PTOTransformer.transform(original);
 
         FindingItem<PredictedTumorOrigin> findingItem = converted.predictedTumorOrigin();
         assertEquals(FindingStatus.Status.NOT_AVAILABLE, findingItem.status().status());

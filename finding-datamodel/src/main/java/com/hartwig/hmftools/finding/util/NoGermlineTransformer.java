@@ -28,9 +28,9 @@ import jakarta.validation.constraints.NotNull;
 
 // TODO: Finding keys are still recognizable as germline
 //  however if we would convert them we have to make sure these remain unique
-public class NoGermlineConverter
+public class NoGermlineTransformer
 {
-    public static FindingRecord convert(FindingRecord record)
+    public static FindingRecord transform(FindingRecord record)
     {
         return FindingRecordBuilder.builder(record)
                 .somaticSmallVariants(combineVariants(record))
@@ -48,11 +48,11 @@ public class NoGermlineConverter
         DriverFindingList<SmallVariant> somaticFindings = record.somaticSmallVariants();
         DriverFindingList<SmallVariant> germlineFindings = record.germlineSmallVariants();
         return DriverFindingListBuilder.builder(somaticFindings)
-                .findings(setMaxDriverLikelihoods(combineFindings(somaticFindings, germlineFindings, NoGermlineConverter::convertSmallVariant)))
+                .findings(setMaxDriverLikelihoods(combineFindings(somaticFindings, germlineFindings, NoGermlineTransformer::transformSmallVariant)))
                 .build();
     }
 
-    private static SmallVariant convertSmallVariant(SmallVariant smallVariant)
+    private static SmallVariant transformSmallVariant(SmallVariant smallVariant)
     {
         // Germline only variant, return as is
         if(smallVariant.driverSource() == DriverSource.GERMLINE && smallVariant.variantCopyNumber() < 0.5)
@@ -101,10 +101,10 @@ public class NoGermlineConverter
     {
         DriverFindingList<Disruption> somaticFindings = record.somaticDisruptions();
         DriverFindingList<Disruption> germlineFindings = record.germlineDisruptions();
-        return combineDriverFindingLists(somaticFindings, germlineFindings, NoGermlineConverter::convertDisruption);
+        return combineDriverFindingLists(somaticFindings, germlineFindings, NoGermlineTransformer::transformDisruption);
     }
 
-    private static Disruption convertDisruption(Disruption disruption)
+    private static Disruption transformDisruption(Disruption disruption)
     {
         return DisruptionBuilder.builder(disruption)
                 .driver(DriverFieldsBuilder.builder(disruption.driver())
@@ -121,10 +121,10 @@ public class NoGermlineConverter
         // purple.reportableGermlineLossOfHeterozygosities();
         DriverFindingList<GainDeletion> somaticFindings = record.somaticGainDeletions();
         DriverFindingList<GainDeletion> germlineFindings = record.germlineGainDeletions();
-        return combineDriverFindingLists(somaticFindings, germlineFindings, NoGermlineConverter::convertGainDeletion);
+        return combineDriverFindingLists(somaticFindings, germlineFindings, NoGermlineTransformer::transformGainDeletion);
     }
 
-    private static GainDeletion convertGainDeletion(GainDeletion gainDeletion)
+    private static GainDeletion transformGainDeletion(GainDeletion gainDeletion)
     {
         return GainDeletionBuilder.builder(gainDeletion)
                 .driver(DriverFieldsBuilder.builder(gainDeletion.driver())

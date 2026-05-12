@@ -20,10 +20,10 @@ import com.hartwig.hmftools.finding.datamodel.finding.FindingStatusBuilder;
 
 import org.junit.Test;
 
-public class ErrorConverterTest
+public class ErrorTransformerTest
 {
     @Test
-    public void testConvertHLANoTumor()
+    public void testTransformHLANoTumor()
     {
         // TODO: Create this from actual orange record to make sure it's a representative finding record
         FindingRecord original = TestFindingRecordFactory.createMinimalTestFindingRecordBuilder()
@@ -36,7 +36,7 @@ public class ErrorConverterTest
                         .findings(List.of(TestFindingFactory.hlaAlleleBuilder().build()))
                         .build())
                 .build();
-        FindingRecord converted = ErrorConverter.convert(original);
+        FindingRecord converted = ErrorTransformer.transform(original);
 
         FindingList<HlaAllele> findingList = converted.hlaAlleles();
         FindingStatus findingStatus = findingList.status();
@@ -52,7 +52,7 @@ public class ErrorConverterTest
     }
 
     @Test
-    public void testConvertHLANoPass()
+    public void testTransformHLANoPass()
     {
         // TODO: Create this from actual orange record to make sure it's a representative finding record
         FindingRecord original = TestFindingRecordFactory.createMinimalTestFindingRecordBuilder()
@@ -65,7 +65,7 @@ public class ErrorConverterTest
                         .findings(List.of(TestFindingFactory.hlaAlleleBuilder().qcStatus(Set.of(HlaAllele.QcStatus.FAIL)).build()))
                         .build())
                 .build();
-        FindingRecord converted = ErrorConverter.convert(original);
+        FindingRecord converted = ErrorTransformer.transform(original);
 
         FindingList<HlaAllele> findingList = converted.hlaAlleles();
         FindingStatus findingStatus = findingList.status();
