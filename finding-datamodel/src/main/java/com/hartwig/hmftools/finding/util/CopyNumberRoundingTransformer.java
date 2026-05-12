@@ -39,8 +39,8 @@ public class CopyNumberRoundingTransformer
     public static FindingRecord transform(@NotNull FindingRecord record)
     {
         return FindingRecordBuilder.builder(record)
-                .germlineSmallVariants(roundCopyNumberGermlineVariant(record.germlineSmallVariants()))
-                .somaticSmallVariants(roundCopyNumberSomaticVariant(record.somaticSmallVariants()))
+                .germlineSmallVariants(roundCopyNumberSmallVariant(record.germlineSmallVariants()))
+                .somaticSmallVariants(roundCopyNumberSmallVariant(record.somaticSmallVariants()))
                 .somaticDisruptions(roundCopyNumberDisruption(record.somaticDisruptions()))
                 .fusions(roundCopyNumberFusion(record.fusions()))
                 .hlaAlleles(roundHlACopyNumbers(record.hlaAlleles()))
@@ -48,15 +48,9 @@ public class CopyNumberRoundingTransformer
     }
 
     @NotNull
-    private static DriverFindingList<SmallVariant> roundCopyNumberGermlineVariant(@NotNull DriverFindingList<SmallVariant> germlineVariants)
+    private static DriverFindingList<SmallVariant> roundCopyNumberSmallVariant(@NotNull DriverFindingList<SmallVariant> germlineVariants)
     {
         return DriverFindingListBuilder.builder(germlineVariants).findings(transformSmallVariant(germlineVariants.findings())).build();
-    }
-
-    @NotNull
-    private static DriverFindingList<SmallVariant> roundCopyNumberSomaticVariant(@NotNull DriverFindingList<SmallVariant> somaticVariants)
-    {
-        return DriverFindingListBuilder.builder(somaticVariants).findings(transformSmallVariant(somaticVariants.findings())).build();
     }
 
     @NotNull
