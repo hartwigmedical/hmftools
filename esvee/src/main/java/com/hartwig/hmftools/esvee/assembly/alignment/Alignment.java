@@ -51,11 +51,15 @@ public class Alignment
         || assembly.outcome() == AssemblyOutcome.SUPP_ONLY)
         {
             // since identical to or associated with other links
+            SV_LOGGER.trace("filter stage=phasing reason=\"weak link\" data=assembly({})", assembly);
             return true;
         }
 
         if(isWeakIndelBasedUnlinkedAssembly(assembly))
+        {
+            SV_LOGGER.trace("filter stage=phasing reason=\"weak indel based\" data=assembly({})", assembly);
             return true;
+        }
 
         return false;
     }

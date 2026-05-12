@@ -410,12 +410,7 @@ public class AssemblyApplication
             {
                 if(assembly.phaseSet() == null)
                 {
-                    boolean skip = skipUnlinkedJunctionAssembly(assembly);
-                    if(skip)
-                    {
-                        SV_LOGGER.trace("filter stage=phasing reason=\"unlinked\" data=assembly({})", assembly);
-                    }
-                    if (!skip || assembly.isSagaMatched())
+                    if (!skipUnlinkedJunctionAssembly(assembly) || assembly.isSagaMatched())
                     {
                         AssemblyAlignment assemblyAlignment = new AssemblyAlignment(assembly);
                         assemblyAlignments.add(assemblyAlignment);
