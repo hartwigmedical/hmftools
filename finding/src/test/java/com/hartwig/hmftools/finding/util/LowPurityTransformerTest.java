@@ -23,10 +23,10 @@ import com.hartwig.hmftools.finding.datamodel.finding.FindingStatusBuilder;
 
 import org.junit.Test;
 
-public class LowPurityConverterTest
+public class LowPurityTransformerTest
 {
     @Test
-    public void testConvert()
+    public void testTransform()
     {
         // TODO: Create this from actual orange record to make sure it's a representative finding record
         FindingRecord original = TestFindingRecordFactory.createMinimalTestFindingRecordBuilder()
@@ -42,7 +42,7 @@ public class LowPurityConverterTest
                         .findings(List.of(TestFindingFactory.hlaAlleleBuilder().build()))
                         .build())
                 .build();
-        FindingRecord converted = LowPurityConverter.convert(original);
+        FindingRecord converted = LowPurityTransformer.transform(original);
 
         assertFindingList(converted.somaticDisruptions());
         assertFindingList(converted.somaticGainDeletions());

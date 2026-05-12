@@ -21,41 +21,41 @@ import org.jspecify.annotations.Nullable;
 
 import jakarta.validation.constraints.NotNull;
 
-public class FindingRecordConverterUtil
+public class FindingRecordTransformerUtil
 {
-    public static Function<FindingRecord, FindingRecord> listConverter(List<Function<FindingRecord, FindingRecord>> converters)
+    public static Function<FindingRecord, FindingRecord> listTransformer(List<Function<FindingRecord, FindingRecord>> transformers)
     {
-        return record -> converters.stream().reduce(record, (r, c) -> c.apply(r), (r1, r2) -> r1);
+        return record -> transformers.stream().reduce(record, (r, c) -> c.apply(r), (r1, r2) -> r1);
     }
 
     @NotNull
-    public static <I extends Finding, O extends Finding> FindingList<O> convertFindingList(@NotNull IFindingList<I> findingList,
+    public static <I extends Finding, O extends Finding> FindingList<O> transformFindingList(@NotNull IFindingList<I> findingList,
             Function<FindingStatus, FindingStatus> findingsStatusConverter,
             @NotNull Function<I, O> findingConverter,
             @Nullable Comparator<O> comparator)
     {
         return FindingListBuilder.<O>builder()
                 .status(findingsStatusConverter.apply(findingList.status()))
-                .findings(convert(findingList.findings(), findingConverter, comparator))
+                .findings(transform(findingList.findings(), findingConverter, comparator))
                 .build();
     }
 
     @NotNull
-    public static <I extends Driver, O extends Driver> DriverFindingList<O> convertDriverFindingList(
+    public static <I extends Driver, O extends Driver> DriverFindingList<O> transformDriverFindingList(
             @NotNull IFindingList<I> driverFindingList,
-            Function<FindingStatus, FindingStatus> findingsStatusConverter,
-            @NotNull Function<I, O> findingConverter,
+            Function<FindingStatus, FindingStatus> findingsStatusTransformer,
+            @NotNull Function<I, O> findingTransformer,
             @Nullable Comparator<O> comparator)
     {
         return DriverFindingListBuilder.<O>builder()
-                .status(findingsStatusConverter.apply(driverFindingList.status()))
-                .findings(convert(driverFindingList.findings(), findingConverter, comparator))
+                .status(findingsStatusTransformer.apply(driverFindingList.status()))
+                .findings(transform(driverFindingList.findings(), findingTransformer, comparator))
                 .build();
     }
 
-    static <I, O> List<O> convert(List<I> list, @NotNull Function<I, O> converter, @Nullable Comparator<O> comparator)
+    static <I, O> List<O> transform(List<I> list, @NotNull Function<I, O> transformer, @Nullable Comparator<O> comparator)
     {
-        Stream<O> stream = list.stream().map(converter).filter(Objects::nonNull);
+        Stream<O> stream = list.stream().map(transformer).filter(Objects::nonNull);
         if(comparator != null)
         {
             stream = stream.sorted(comparator);

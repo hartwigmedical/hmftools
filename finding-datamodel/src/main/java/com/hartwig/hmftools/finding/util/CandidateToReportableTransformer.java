@@ -19,50 +19,50 @@ import com.hartwig.hmftools.finding.datamodel.driver.ReportedStatus;
 
 import jakarta.validation.constraints.NotNull;
 
-public class CandidateToReportableConverter
+public class CandidateToReportableTransformer
 {
     @NotNull
-    public static FindingRecord convert(@NotNull FindingRecord record)
+    public static FindingRecord transform(@NotNull FindingRecord record)
     {
         return FindingRecordBuilder.builder(record)
-                .somaticSmallVariants(convert(record.somaticSmallVariants(), CandidateToReportableConverter::convert))
-                .germlineSmallVariants(convert(record.germlineSmallVariants(), CandidateToReportableConverter::convert))
-                .fusions(convert(record.fusions(), CandidateToReportableConverter::convert))
-                .viruses(convert(record.viruses(), CandidateToReportableConverter::convert))
+                .somaticSmallVariants(transform(record.somaticSmallVariants(), CandidateToReportableTransformer::transform))
+                .germlineSmallVariants(transform(record.germlineSmallVariants(), CandidateToReportableTransformer::transform))
+                .fusions(transform(record.fusions(), CandidateToReportableTransformer::transform))
+                .viruses(transform(record.viruses(), CandidateToReportableTransformer::transform))
                 .build();
     }
 
     @NotNull
-    private static <T extends Driver> DriverFindingList<T> convert(@NotNull DriverFindingList<T> driverFindingList,
-            Function<T, T> convertFunction)
+    private static <T extends Driver> DriverFindingList<T> transform(@NotNull DriverFindingList<T> driverFindingList,
+            Function<T, T> transformFunction)
     {
         return DriverFindingListBuilder.builder(driverFindingList)
-                .findings(driverFindingList.stream().map(convertFunction).toList())
+                .findings(driverFindingList.stream().map(transformFunction).toList())
                 .build();
     }
 
-    private static SmallVariant convert(SmallVariant smallVariant)
+    private static SmallVariant transform(SmallVariant smallVariant)
     {
         return SmallVariantBuilder.builder(smallVariant)
-                .driver(convert(smallVariant.driver()))
+                .driver(transform(smallVariant.driver()))
                 .build();
     }
 
-    private static Fusion convert(Fusion fusion)
+    private static Fusion transform(Fusion fusion)
     {
         return FusionBuilder.builder(fusion)
-                .driver(convert(fusion.driver()))
+                .driver(transform(fusion.driver()))
                 .build();
     }
 
-    private static Virus convert(Virus virus)
+    private static Virus transform(Virus virus)
     {
         return VirusBuilder.builder(virus)
-                .driver(convert(virus.driver()))
+                .driver(transform(virus.driver()))
                 .build();
     }
 
-    private static DriverFields convert(DriverFields driverFields)
+    private static DriverFields transform(DriverFields driverFields)
     {
         if(driverFields.reportedStatus() == ReportedStatus.CANDIDATE)
         {

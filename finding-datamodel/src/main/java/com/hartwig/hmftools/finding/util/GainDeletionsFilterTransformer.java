@@ -11,9 +11,9 @@ import com.hartwig.hmftools.finding.datamodel.driver.Driver;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingList;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingListBuilder;
 
-public class GainDeletionsFilterConverter
+public class GainDeletionsFilterTransformer
 {
-    public static FindingRecord convert(FindingRecord record)
+    public static FindingRecord transform(FindingRecord record)
     {
         return FindingRecordBuilder.builder(record)
                 .somaticGainDeletions(filtered(record.somaticGainDeletions(), not(GainDeletion::isLossOfHeterozygosity)))

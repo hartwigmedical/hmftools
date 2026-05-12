@@ -28,19 +28,19 @@ import org.jspecify.annotations.Nullable;
 
 import jakarta.validation.constraints.NotNull;
 
-public class CopyNumberConverter
+public class CopyNumberRoundingTransformer
 {
 
     private static final double COPY_NUMBER_ROUNDING_THRESHOLD = 10;
     private static final double COPY_NUMBER_FILTER = 0.1;
-    private static final Logger LOGGER = LogManager.getLogger(CopyNumberConverter.class);
+    private static final Logger LOGGER = LogManager.getLogger(CopyNumberRoundingTransformer.class);
 
     @NotNull
-    public static FindingRecord convert(@NotNull FindingRecord record)
+    public static FindingRecord transform(@NotNull FindingRecord record)
     {
         return FindingRecordBuilder.builder(record)
-                .germlineSmallVariants(roundCopyNumberGermlineVariant(record.germlineSmallVariants()))
-                .somaticSmallVariants(roundCopyNumberSomaticVariant(record.somaticSmallVariants()))
+                .germlineSmallVariants(roundCopyNumberSmallVariant(record.germlineSmallVariants()))
+                .somaticSmallVariants(roundCopyNumberSmallVariant(record.somaticSmallVariants()))
                 .somaticDisruptions(roundCopyNumberDisruption(record.somaticDisruptions()))
                 .fusions(roundCopyNumberFusion(record.fusions()))
                 .hlaAlleles(roundHlACopyNumbers(record.hlaAlleles()))
@@ -48,19 +48,13 @@ public class CopyNumberConverter
     }
 
     @NotNull
-    private static DriverFindingList<SmallVariant> roundCopyNumberGermlineVariant(@NotNull DriverFindingList<SmallVariant> germlineVariants)
+    private static DriverFindingList<SmallVariant> roundCopyNumberSmallVariant(@NotNull DriverFindingList<SmallVariant> germlineVariants)
     {
-        return DriverFindingListBuilder.builder(germlineVariants).findings(convertSmallVariant(germlineVariants.findings())).build();
+        return DriverFindingListBuilder.builder(germlineVariants).findings(transformSmallVariant(germlineVariants.findings())).build();
     }
 
     @NotNull
-    private static DriverFindingList<SmallVariant> roundCopyNumberSomaticVariant(@NotNull DriverFindingList<SmallVariant> somaticVariants)
-    {
-        return DriverFindingListBuilder.builder(somaticVariants).findings(convertSmallVariant(somaticVariants.findings())).build();
-    }
-
-    @NotNull
-    public static List<SmallVariant> convertSmallVariant(@NotNull List<SmallVariant> smallVariants)
+    public static List<SmallVariant> transformSmallVariant(@NotNull List<SmallVariant> smallVariants)
     {
         List<SmallVariant> smallVariantList = new ArrayList<>();
         for(SmallVariant smallVariant : smallVariants)
@@ -75,11 +69,11 @@ public class CopyNumberConverter
     @NotNull
     private static DriverFindingList<Disruption> roundCopyNumberDisruption(@NotNull DriverFindingList<Disruption> disruptions)
     {
-        return DriverFindingListBuilder.builder(disruptions).findings(filterDisruption(convertDisruption(disruptions.findings()))).build();
+        return DriverFindingListBuilder.builder(disruptions).findings(filterDisruption(transformDisruption(disruptions.findings()))).build();
     }
 
     @NotNull
-    public static List<Disruption> convertDisruption(@NotNull List<Disruption> disruptions)
+    public static List<Disruption> transformDisruption(@NotNull List<Disruption> disruptions)
     {
         List<Disruption> disruptionList = new ArrayList<>();
 
@@ -121,11 +115,11 @@ public class CopyNumberConverter
     @NotNull
     private static DriverFindingList<Fusion> roundCopyNumberFusion(@NotNull DriverFindingList<Fusion> fusions)
     {
-        return DriverFindingListBuilder.builder(fusions).findings(filterFusion(convertFusion(fusions.findings()))).build();
+        return DriverFindingListBuilder.builder(fusions).findings(filterFusion(transformFusion(fusions.findings()))).build();
     }
 
     @NotNull
-    public static List<Fusion> convertFusion(@NotNull List<Fusion> fusions)
+    public static List<Fusion> transformFusion(@NotNull List<Fusion> fusions)
     {
         List<Fusion> fusionsList = new ArrayList<>();
 
@@ -163,11 +157,11 @@ public class CopyNumberConverter
     @NotNull
     private static FindingList<HlaAllele> roundHlACopyNumbers(@NotNull FindingList<HlaAllele> hlaAlleles)
     {
-        return FindingListBuilder.builder(hlaAlleles).findings(convertHla(hlaAlleles.findings())).build();
+        return FindingListBuilder.builder(hlaAlleles).findings(transformHla(hlaAlleles.findings())).build();
     }
 
     @NotNull
-    public static List<HlaAllele> convertHla(@NotNull List<HlaAllele> hlaAlleles)
+    public static List<HlaAllele> transformHla(@NotNull List<HlaAllele> hlaAlleles)
     {
         List<HlaAllele> hlaList = new ArrayList<>();
 

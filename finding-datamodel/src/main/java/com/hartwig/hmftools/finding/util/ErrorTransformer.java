@@ -23,34 +23,34 @@ import com.hartwig.hmftools.finding.datamodel.finding.FindingStatusBuilder;
 
 import jakarta.validation.constraints.NotNull;
 
-public class ErrorConverter
+public class ErrorTransformer
 {
     @NotNull
-    public static FindingRecord convert(@NotNull FindingRecord record)
+    public static FindingRecord transform(@NotNull FindingRecord record)
     {
         return FindingRecordBuilder.builder(record)
-                .somaticSmallVariants(convert(record.somaticSmallVariants()))
-                .germlineSmallVariants(convert(record.germlineSmallVariants()))
-                .somaticDisruptions(convert(record.somaticDisruptions()))
-                .germlineDisruptions(convert(record.germlineDisruptions()))
-                .somaticGainDeletions(convert(record.somaticGainDeletions()))
-                .germlineGainDeletions(convert(record.germlineGainDeletions()))
-                .fusions(convert(record.fusions()))
-                .viruses(convert(record.viruses()))
-                .chromosomeArmCopyNumbers(convert(record.chromosomeArmCopyNumbers()))
+                .somaticSmallVariants(transform(record.somaticSmallVariants()))
+                .germlineSmallVariants(transform(record.germlineSmallVariants()))
+                .somaticDisruptions(transform(record.somaticDisruptions()))
+                .germlineDisruptions(transform(record.germlineDisruptions()))
+                .somaticGainDeletions(transform(record.somaticGainDeletions()))
+                .germlineGainDeletions(transform(record.germlineGainDeletions()))
+                .fusions(transform(record.fusions()))
+                .viruses(transform(record.viruses()))
+                .chromosomeArmCopyNumbers(transform(record.chromosomeArmCopyNumbers()))
                 // For HLA status remains the same, but tumor fields are cleared.
-                .hlaAlleles(convertHla(record.hlaAlleles()))
-                .pharmacoGenotypes(convert(record.pharmacoGenotypes()))
-                .predictedTumorOrigin(convert(record.predictedTumorOrigin()))
-                .microsatelliteStability(convert(record.microsatelliteStability()))
-                .tumorMutationalLoad(convert(record.tumorMutationalLoad()))
-                .tumorMutationalBurden(convert(record.tumorMutationalBurden()))
-                .homologousRecombination(convert(record.homologousRecombination()))
+                .hlaAlleles(transformHla(record.hlaAlleles()))
+                .pharmacoGenotypes(transform(record.pharmacoGenotypes()))
+                .predictedTumorOrigin(transform(record.predictedTumorOrigin()))
+                .microsatelliteStability(transform(record.microsatelliteStability()))
+                .tumorMutationalLoad(transform(record.tumorMutationalLoad()))
+                .tumorMutationalBurden(transform(record.tumorMutationalBurden()))
+                .homologousRecombination(transform(record.homologousRecombination()))
                 .build();
     }
 
     @NotNull
-    private static FindingList<HlaAllele> convertHla(@NotNull FindingList<HlaAllele> findingList)
+    private static FindingList<HlaAllele> transformHla(@NotNull FindingList<HlaAllele> findingList)
     {
         if(!findingList.status().isOK() || !findingList.findings().isEmpty())
         {
@@ -59,7 +59,7 @@ public class ErrorConverter
             if(!findingStatus.isOK() && findingStatus.errors().contains(NO_TUMOR) )
             {
                 // Clear tumor fields if there is no tumor.
-                hlaAlleles = FindingRecordConverterUtil.convert(findingList.findings(), ErrorConverter::convert, null);
+                hlaAlleles = FindingRecordTransformerUtil.transform(findingList.findings(), ErrorTransformer::transform, null);
                 // Toggle no tumor from error to warning.
                 SortedSet<FindingStatus.Issue> errors = FindingUtil.removeIssues(findingStatus.errors(), Set.of(NO_TUMOR));
                 findingStatus = FindingStatusBuilder.builder(findingStatus)
@@ -94,7 +94,7 @@ public class ErrorConverter
     }
 
     @NotNull
-    private static <T extends Finding> FindingList<T> convert(@NotNull FindingList<T> findingList)
+    private static <T extends Finding> FindingList<T> transform(@NotNull FindingList<T> findingList)
     {
         if(!findingList.status().isOK())
         {
@@ -109,7 +109,7 @@ public class ErrorConverter
     }
 
     @NotNull
-    private static <T extends Driver> DriverFindingList<T> convert(@NotNull DriverFindingList<T> driverFindingList)
+    private static <T extends Driver> DriverFindingList<T> transform(@NotNull DriverFindingList<T> driverFindingList)
     {
         if(!driverFindingList.status().isOK())
         {
@@ -124,7 +124,7 @@ public class ErrorConverter
     }
 
     @NotNull
-    private static <T> FindingItem<T> convert(@NotNull FindingItem<T> findingItem)
+    private static <T> FindingItem<T> transform(@NotNull FindingItem<T> findingItem)
     {
         if(!findingItem.status().isOK())
         {
@@ -138,7 +138,7 @@ public class ErrorConverter
         }
     }
 
-    private static HlaAllele convert(HlaAllele hlaAllele)
+    private static HlaAllele transform(HlaAllele hlaAllele)
     {
         return HlaAlleleBuilder.builder(hlaAllele)
                 .tumorCopyNumber(null)

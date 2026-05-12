@@ -6,15 +6,15 @@ import java.util.List;
 
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.finding.datamodel.FindingRecord;
-import com.hartwig.hmftools.finding.util.CandidateToReportableConverter;
-import com.hartwig.hmftools.finding.util.CopyNumberConverter;
-import com.hartwig.hmftools.finding.util.ErrorConverter;
-import com.hartwig.hmftools.finding.util.FindingRecordConverterUtil;
-import com.hartwig.hmftools.finding.util.GainDeletionsFilterConverter;
-import com.hartwig.hmftools.finding.util.LowPurityConverter;
-import com.hartwig.hmftools.finding.util.NoGermlineConverter;
-import com.hartwig.hmftools.finding.util.PTOConverter;
-import com.hartwig.hmftools.finding.util.ReportedOnlyConverter;
+import com.hartwig.hmftools.finding.util.CandidateToReportableTransformer;
+import com.hartwig.hmftools.finding.util.CopyNumberRoundingTransformer;
+import com.hartwig.hmftools.finding.util.ErrorTransformer;
+import com.hartwig.hmftools.finding.util.FindingRecordTransformerUtil;
+import com.hartwig.hmftools.finding.util.GainDeletionsFilterTransformer;
+import com.hartwig.hmftools.finding.util.LowPurityTransformer;
+import com.hartwig.hmftools.finding.util.NoGermlineTransformer;
+import com.hartwig.hmftools.finding.util.PTOTransformer;
+import com.hartwig.hmftools.finding.util.ReportedOnlyTransformer;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -28,14 +28,14 @@ public class ConversionUtil
 
     private static FindingRecord convert(FindingRecord findingRecord)
     {
-        return FindingRecordConverterUtil.listConverter(List.of(ErrorConverter::convert,
-                LowPurityConverter::convert,
-                PTOConverter::convert,
-                GainDeletionsFilterConverter::convert,
-                NoGermlineConverter::convert,
-                CandidateToReportableConverter::convert,
-                CopyNumberConverter::convert,
-                ReportedOnlyConverter::convert
+        return FindingRecordTransformerUtil.listTransformer(List.of(ErrorTransformer::transform,
+                LowPurityTransformer::transform,
+                PTOTransformer::transform,
+                GainDeletionsFilterTransformer::transform,
+                NoGermlineTransformer::transform,
+                CandidateToReportableTransformer::transform,
+                CopyNumberRoundingTransformer::transform,
+                ReportedOnlyTransformer::transform
                 )).apply(findingRecord);
     }
 }
