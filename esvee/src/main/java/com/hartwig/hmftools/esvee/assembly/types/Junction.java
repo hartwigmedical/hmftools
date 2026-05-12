@@ -30,6 +30,9 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.esvee.common.IndelCoords;
+import com.hartwig.hmftools.esvee.common.SagaMatcher;
+
+import org.jetbrains.annotations.Nullable;
 
 public class Junction implements Comparable<Junction>
 {
@@ -45,15 +48,18 @@ public class Junction implements Comparable<Junction>
     private int mRawDiscordantPosition;
     private IndelCoords mIndelCoords; // the consensus indel if applicable
 
+    @Nullable
+    private final SagaMatcher.MatchByLocation mSagaMatch;
+
     public Junction(final String chromosome, final int position, final Orientation orientation)
     {
-        this(chromosome, position, orientation, false, false, false);
+        this(chromosome, position, orientation, false, false, false, null);
         mRawDiscordantPosition = -1;
     }
 
     public Junction(
             final String chromosome, final int position, final Orientation orientation, final boolean discordantOnly,
-            final boolean indelBased, final boolean hotspot)
+            final boolean indelBased, final boolean hotspot, @Nullable final SagaMatcher.MatchByLocation sagaMatch)
     {
         Chromosome = chromosome;
         Position = position;
@@ -66,11 +72,17 @@ public class Junction implements Comparable<Junction>
         {
             StringJoiner sj = new StringJoiner("/");
             if(DiscordantOnly)
+            {
                 sj.add("disc-only");
+            }
             if(mIndelBased)
+            {
                 sj.add("indel");
+            }
             if(Hotspot)
+            {
                 sj.add("hotspot");
+            }
 
             mDetails = sj.toString();
         }
@@ -80,6 +92,8 @@ public class Junction implements Comparable<Junction>
         }
 
         mIndelCoords = null;
+
+        mSagaMatch = sagaMatch;
     }
 
     public boolean isForward() { return Orient.isForward(); }
@@ -136,8 +150,20 @@ public class Junction implements Comparable<Junction>
         return compareJunctions(Chromosome, other.Chromosome, Position, other.Position, Orient, other.Orient);
     }
 
+    @Nullable
+    public SagaMatcher.MatchByLocation sagaMatch()
+    {
+        return mSagaMatch;
+    }
+
+    public boolean isSagaMatched()
+    {
+        return mSagaMatch != null;
+    }
+
     public static Map<String,List<Junction>> loadJunctions(
-            final String filename, final SpecificRegions specificRegions, int minJunctionFrags, int minHotspotFrags, int minDiscordantFrags)
+            final String filename, final SpecificRegions specificRegions, int minJunctionFrags, int minHotspotFrags, int minDiscordantFrags,
+            @Nullable final SagaMatcher sagaMatcher)
     {
         if(filename == null || filename.isEmpty())
             return null;
@@ -198,7 +224,15 @@ public class Junction implements Comparable<Junction>
                 boolean indel = indelIndex != null && Boolean.parseBoolean(values[indelIndex]);
                 boolean hotspot = hotspotIndex != null && Boolean.parseBoolean(values[hotspotIndex]);
 
-                Junction junction = new Junction(chromosome, position, orientation, discordantOnly, indel, hotspot);
+                // TODO: actually do this in prep
+                SagaMatcher.MatchByLocation sagaMatch = sagaMatcher == null ? null : sagaMatcher.matchByLocation(chromosome, position);
+
+                Junction junction = new Junction(chromosome, position, orientation, discordantOnly, indel, hotspot, sagaMatch);
+
+                if(sagaMatcher != null)
+                {
+                    SV_LOGGER.trace("junction({}) SAGA location match {}", junction, junction.mSagaMatch);
+                }
 
                 if(hotspot)
                 {
@@ -281,7 +315,7 @@ public class Junction implements Comparable<Junction>
                 indelBased = true;
         }
 
-        return new Junction(chromosome, position, orientation, discordantOnly, indelBased, false);
+        return new Junction(chromosome, position, orientation, discordantOnly, indelBased, false, null);
     }
 
     public static void mergeJunctions(final Map<String,List<Junction>> existingMap, final Map<String,List<Junction>> newMap)

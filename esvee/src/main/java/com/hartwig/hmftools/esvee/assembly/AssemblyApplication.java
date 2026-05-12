@@ -62,6 +62,7 @@ import com.hartwig.hmftools.esvee.assembly.types.PhaseSet;
 import com.hartwig.hmftools.esvee.assembly.types.ThreadTask;
 import com.hartwig.hmftools.esvee.assembly.vis.AssemblyVisualiser;
 import com.hartwig.hmftools.esvee.common.FragmentLengthBounds;
+import com.hartwig.hmftools.esvee.common.SagaMatcher;
 import com.hartwig.hmftools.esvee.common.SagaResource;
 import com.hartwig.hmftools.esvee.common.WriteType;
 import com.hartwig.hmftools.esvee.prep.FragmentSizeDistribution;
@@ -112,6 +113,8 @@ public class AssemblyApplication
 
         loadFragmentLengthBounds();
 
+        loadSagaResource();
+
         if(!loadJunctionFiles())
         {
             SV_LOGGER.error("failed to load junction file");
@@ -131,8 +134,6 @@ public class AssemblyApplication
             int taskCount = min(junctionCount, mConfig.Threads);
 
             loadBamFiles(taskCount);
-
-            loadSagaResource();
 
             runPrimaryAssembly();
 
@@ -220,8 +221,10 @@ public class AssemblyApplication
                     minHotspotFrags, minJunctionFrags, minDiscordantFrags, format("%.3f", discordantRate));
         }
 
+        // TODO: actually do this in prep instead
+        SagaMatcher sagaMatcher = mSagaResource == null ? null : new SagaMatcher(mSagaResource);
         mChrJunctionsMap.putAll(Junction.loadJunctions(
-                mConfig.JunctionFile, mConfig.SpecificChrRegions, minJunctionFrags, minHotspotFrags, minDiscordantFrags));
+                mConfig.JunctionFile, mConfig.SpecificChrRegions, minJunctionFrags, minHotspotFrags, minDiscordantFrags, sagaMatcher));
 
         // if(AssemblyConfig.DevDebug && !validateJunctionMap(mChrJunctionsMap))
         //    System.exit(1);

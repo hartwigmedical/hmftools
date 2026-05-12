@@ -71,15 +71,6 @@ public class JunctionAssembler
 
     public List<JunctionAssembly> processJunction(final List<Read> rawReads)
     {
-        boolean isJuncSagaMatched = false;
-        if (mSagaMatcher != null)
-        {
-            // TODO: actually match by location at prep stage and conditionally relax filters
-            SagaMatcher.MatchByLocation sagaLocationMatch = mSagaMatcher.matchByLocation(mJunction.Chromosome, mJunction.Position);
-            SV_LOGGER.trace("junction({}) SAGA location match {}", mJunction, sagaLocationMatch);
-            isJuncSagaMatched = sagaLocationMatch != null;
-        }
-
         // find prominent reads to establish the extension sequence, taking any read meeting min soft-clip lengths
         // and repetitive indels
 
@@ -130,7 +121,7 @@ public class JunctionAssembler
         if(!checkJunctionReadExtension(hasMinLengthSoftClipRead, extensionReads))
         {
             SV_LOGGER.trace("filter stage=junctionAssembly reason=\"read extension\" data=junction({})", mJunction);
-            if(!isJuncSagaMatched)
+            if(!mJunction.isSagaMatched())
             {
                 return Collections.emptyList();
             }
@@ -152,7 +143,7 @@ public class JunctionAssembler
         if(!extensionSeqBuilder.isValid() || extensionSeqBuilder.extensionLength() < reqExtensionLength)
         {
             SV_LOGGER.trace("filter stage=junctionAssembly reason=\"extension sequence\" data=junction({})", mJunction);
-            if(!isJuncSagaMatched)
+            if(!mJunction.isSagaMatched())
             {
                 return Collections.emptyList();
             }
@@ -167,7 +158,7 @@ public class JunctionAssembler
         if(!meetsMinSupportThreshold(assemblySupport))
         {
             SV_LOGGER.trace("filter stage=junctionAssembly reason=\"min support\" data=junction({})", mJunction);
-            if(!isJuncSagaMatched)
+            if(!mJunction.isSagaMatched())
             {
                 return Collections.emptyList();
             }
@@ -177,7 +168,7 @@ public class JunctionAssembler
         if(!firstAssembly.indel() && LineUtils.hasLineSourceSequence(firstAssembly))
         {
             SV_LOGGER.trace("filter stage=junctionAssembly reason=\"LINE source site\" data=assembly({})", firstAssembly);
-            if(!isJuncSagaMatched)
+            if(!mJunction.isSagaMatched())
             {
                 return Collections.emptyList();
             }
@@ -200,7 +191,7 @@ public class JunctionAssembler
                 if(firstAssembly.extensionLength() < ASSEMBLY_MIN_SOFT_CLIP_LENGTH)
                 {
                     SV_LOGGER.trace("filter stage=junctionAssembly reason=\"LINE with local aligned insert SC\" data=assembly({})", firstAssembly);
-                    if(!isJuncSagaMatched)
+                    if(!mJunction.isSagaMatched())
                     {
                         return Collections.emptyList();
                     }
@@ -421,7 +412,7 @@ public class JunctionAssembler
         SV_LOGGER.trace("junction({}) discordant position adjust: {}", mJunction, adjustedJuncPosition);
 
         mJunction = new Junction(
-                mJunction.Chromosome, adjustedJuncPosition, mJunction.Orient, true, false, false);
+                mJunction.Chromosome, adjustedJuncPosition, mJunction.Orient, true, false, false, mJunction.sagaMatch());
 
         mJunction.setRawDiscordantPosition(originalJuncPosition);
 
