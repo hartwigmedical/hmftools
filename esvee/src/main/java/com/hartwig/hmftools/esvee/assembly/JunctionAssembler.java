@@ -239,9 +239,10 @@ public class JunctionAssembler
 
             // Now we have the assembly sequence, try to match to SAGA if necessary.
             // Note matching to SAGA via coordinate is not enough; we need to know that the variant sequence is actually the same.
+            boolean sagaMatched = tryMatchToSaga(assembly);
             if (usedRelaxedFilters)
             {
-                if (tryMatchToSaga(assembly))
+                if (sagaMatched)
                 {
                     SV_LOGGER.trace("assembly({}) recovered with SAGA", assembly);
                     assembly.mSagaRecovered = true;
