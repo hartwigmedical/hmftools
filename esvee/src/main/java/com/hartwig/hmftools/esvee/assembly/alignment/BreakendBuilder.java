@@ -95,14 +95,9 @@ public class BreakendBuilder
             AlignData singleAlignment = validAlignments.get(0);
 
             // check for cigar-based INDELs and SGLs with soft-clips
-            boolean formsIndel = formIndelBreakends(singleAlignment);
-
-            if(!formsIndel)
+            if(!formIndelBreakends(singleAlignment))
             {
                 formSingleBreakend(singleAlignment, lowQualAlignments);
-            }
-            else {
-                SV_LOGGER.trace("filter stage=breakend reason=\"forms indel\" data=assemblyAlignment({})", mAssemblyAlignment);
             }
         }
         else
