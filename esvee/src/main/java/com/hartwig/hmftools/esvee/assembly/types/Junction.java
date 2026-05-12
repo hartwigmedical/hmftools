@@ -59,6 +59,13 @@ public class Junction implements Comparable<Junction>
 
     public Junction(
             final String chromosome, final int position, final Orientation orientation, final boolean discordantOnly,
+            final boolean indelBased, final boolean hotspot)
+    {
+        this(chromosome, position, orientation, discordantOnly, indelBased, hotspot, null);
+    }
+
+    public Junction(
+            final String chromosome, final int position, final Orientation orientation, final boolean discordantOnly,
             final boolean indelBased, final boolean hotspot, @Nullable final SagaMatcher.MatchByLocation sagaMatch)
     {
         Chromosome = chromosome;
@@ -315,7 +322,7 @@ public class Junction implements Comparable<Junction>
                 indelBased = true;
         }
 
-        return new Junction(chromosome, position, orientation, discordantOnly, indelBased, false, null);
+        return new Junction(chromosome, position, orientation, discordantOnly, indelBased, false);
     }
 
     public static void mergeJunctions(final Map<String,List<Junction>> existingMap, final Map<String,List<Junction>> newMap)
