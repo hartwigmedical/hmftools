@@ -13,6 +13,7 @@ class DEFAULT_RUNNER_ARGS:
 
     min_samples_with_rna: int = 5
     excl_classes: str | list[str] = ["_Other","_Unknown"]
+    rename_classes: dict[str, str] | None = None
 
     fusion_overrides_path: str = DEFAULT_FUSION_OVERRIDES_PATH
     clf_group: str = "all"
@@ -30,6 +31,14 @@ class DEFAULT_RUNNER_ARGS:
 def comma_sep_str_to_list(string) -> list[str]:
     return [s.strip() for s in string.split(",")]
 
+def comma_and_equals_sep_str_to_dict(string) -> dict[str, str]:
+    d = dict()
+
+    for pair in string.split(","):
+        key, value = pair.split("=")
+        d[key] = value
+
+    return d
 
 class RunnerArgs:
 
@@ -88,6 +97,13 @@ class RunnerArgs:
         help="Comma separated list of cancer subtypes to exclude from training. "
              "E.g. 'Breast' or 'Breast,Lung'. Default: "
              ",".join(DEFAULT_RUNNER_ARGS.excl_classes)
+    )
+
+    rename_classes = dict(
+        type=comma_and_equals_sep_str_to_dict,
+        default=DEFAULT_RUNNER_ARGS.rename_classes,
+        help="Change the display name of cancer types in prediction output files. Provide a key value pair string with the form: "
+             "<class_1_name>=<class_1_new_name>,<class_2_name>=<class_2_new_name>"
     )
 
     fusion_overrides_path = dict(
@@ -174,6 +190,7 @@ class RunnerArgParser:
             "cv_predictions_path",
             "compress_tsv_files",
             "force_plot",
+            "rename_classes",
             "log_to_file",
             "log_path",
             "log_format"

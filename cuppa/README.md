@@ -308,7 +308,9 @@ python -m cuppa.train \
 --log_to_file
 ```
 
-The below table lists all possible arguments for training and/or predicting.
+### Arguments
+
+The below table lists all possible arguments for the Python component of Cuppa.
 
 | Argument                  | Task    | Description                                                                                                                                                                                   |
 |---------------------------|---------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -320,7 +322,8 @@ The below table lists all possible arguments for training and/or predicting.
 | `--cv_predictions_path`   | Predict | Path to a CuppaPrediction tsv file containing the cross-validation predictions. Samples found in <br/>this file will have their predictions returned from this file instead of being computed |
 | `--compress_tsv_files`    | Predict | Compress tsv files with gzip? (will add .gz to the file extension)                                                                                                                            |
 | `--force_plot`            | Predict | Force plotting when there are >10 samples in multi-sample mode                                                                                                                                |
-| `--excl_classes`          | Train   | Comma separated list of cancer subtypes to exclude from training. E.g. 'Breast' or 'Breast,Lung'. Default: '_Other,_Unknown'                                                                  |
+| `--rename_classes`        | Predict | Key/value pairs for changing cancer type names in prediction output files, e.g. `'Breast: Other=Breast: ER and/or HER2 positive,Kidney: Other=Kidney: Clear cell carcinoma'`                  |
+| `--excl_classes`          | Train   | Comma separated list of cancer subtypes to exclude from training, e.g. `'Breast'` or `'Breast,Lung'`. Default: `'_Other,_Unknown'`                                                            |
 | `--min_samples_with_rna`  | Train   | Minimum number of samples with RNA in each cancer subtype. If the cancer subtype has fewer samples with RNA than this value, the cancer subtype will be excluded from training. Default: 5    |
 | `--fusion_overrides_path` | Train   | Path to the fusion overrides tsv file. See section [FusionProbOverrider](#fusionproboverrider) for how this file should be formatted                                                          |
 | `--cv_folds`              | Train   | Number of cross-validation folds. Default: 10                                                                                                                                                 |
