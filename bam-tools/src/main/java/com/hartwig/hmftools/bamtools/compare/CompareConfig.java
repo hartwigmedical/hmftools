@@ -34,8 +34,10 @@ public class CompareConfig
     public final boolean IgnoreDupDiffs;
     public final boolean IgnoreConsensusReads;
     public final boolean IgnoreSupplementaryReads;
+    public final boolean IgnoreSecondaryReads;
     public final boolean IgnoreSupplementaryAttribute;
     public final boolean IgnoreReduxUnmapped;
+    public final boolean CompareCoordsOnly;
     public final boolean CheckBasesAndQuals;
 
     public final boolean IgnoreReduxAlterations; // consensus reads and internal unmappings
@@ -51,13 +53,16 @@ public class CompareConfig
     private static final String NEW_BAM_FILE = "new_bam_file";
     private static final String EXCLUDE_REGIONS = "exclude_regions";
     private static final String MAX_CACHED_READS_PER_THREAD = "max_cached_reads_per_thread";
+
     private static final String IGNORE_DUP_DIFFS = "ignore_dup_diffs";
     private static final String IGNORE_ALTERATIONS = "ignore_alterations";
     private static final String IGNORE_SUPPLEMENTARY_READS = "ignore_supp_reads";
+    private static final String IGNORE_SECONDARY_READS = "ignore_sec_reads";
     private static final String IGNORE_SUPPLEMENTARY_ATTRIBUTE = "ignore_supp_attribute";
     private static final String IGNORE_CONSENSUS_READS = "ignore_consensus_reads";
     private static final String IGNORE_REDUX_UNMAPPED = "ignore_redux_unmapped";
     private static final String IGNORE_REDUX_DIFFS = "ignore_redux_diffs";
+    private static final String COORDS_ONLY = "coords_only";
     private static final String CHECK_BASES_QUALS = "check_bases_quals";
 
     private static final int DEFAULT_CHR_PARTITION_SIZE = 10_000_000;
@@ -81,11 +86,14 @@ public class CompareConfig
         PartitionSize = configBuilder.getInteger(PARTITION_SIZE);
         int maxCachedReadsPerThread = configBuilder.getInteger(MAX_CACHED_READS_PER_THREAD);
 
+        CompareCoordsOnly = configBuilder.hasFlag(COORDS_ONLY);
+
         if(configBuilder.hasFlag(IGNORE_REDUX_DIFFS))
         {
             IgnoreDupDiffs = true;
             IgnoreConsensusReads = true;
             IgnoreSupplementaryReads = true;
+            IgnoreSecondaryReads = true;
             IgnoreSupplementaryAttribute = true;
             IgnoreReduxUnmapped = true;
             CheckBasesAndQuals = false;
@@ -98,6 +106,7 @@ public class CompareConfig
             IgnoreDupDiffs = configBuilder.hasFlag(IGNORE_DUP_DIFFS);
             IgnoreConsensusReads = configBuilder.hasFlag(IGNORE_CONSENSUS_READS);
             IgnoreSupplementaryReads = configBuilder.hasFlag(IGNORE_SUPPLEMENTARY_READS);
+            IgnoreSecondaryReads = configBuilder.hasFlag(IGNORE_SECONDARY_READS);
             IgnoreSupplementaryAttribute = configBuilder.hasFlag(IGNORE_SUPPLEMENTARY_ATTRIBUTE);
             IgnoreReduxUnmapped = configBuilder.hasFlag(IGNORE_REDUX_UNMAPPED);
             IgnoreReduxAlterations = configBuilder.hasFlag(IGNORE_ALTERATIONS);
@@ -149,12 +158,14 @@ public class CompareConfig
         configBuilder.addConfigItem(LOG_READ_IDS, LOG_READ_IDS_DESC);
         configBuilder.addFlag(EXCLUDE_REGIONS, "Specify regions to exclude");
 
+        configBuilder.addFlag(COORDS_ONLY, "Only compare read coordinates");
         configBuilder.addFlag(IGNORE_REDUX_DIFFS, "Ignore differences from Redux consensus and unmapping routines");
 
         configBuilder.addFlag(IGNORE_DUP_DIFFS, "Ignore duplicate diffs");
         configBuilder.addFlag(IGNORE_ALTERATIONS, "Ignore Redux consensus reads and unmappings");
         configBuilder.addFlag(IGNORE_CONSENSUS_READS, "Ignore consensus reads");
         configBuilder.addFlag(IGNORE_SUPPLEMENTARY_READS, "Ignore supplementary reads");
+        configBuilder.addFlag(IGNORE_SECONDARY_READS, "Ignore secondary reads");
         configBuilder.addFlag(IGNORE_SUPPLEMENTARY_ATTRIBUTE, "Ignore supplementary attribute, can change from unmapping");
         configBuilder.addFlag(IGNORE_REDUX_UNMAPPED, "Ignore differences in reads unmapped by Redux");
         configBuilder.addFlag(CHECK_BASES_QUALS, "Ignore differences in consensus read bases and quals");
@@ -169,14 +180,6 @@ public class CompareConfig
     public boolean ignoreUnmapped() { return SpecificChrRegions != null && !SpecificChrRegions.Regions.isEmpty(); }
 
     @VisibleForTesting
-    public CompareConfig()
-    {
-        this(
-                false, false, false, false,
-                false, false, false);
-    }
-
-    @VisibleForTesting
     public CompareConfig(
             boolean ignoreDupDiffs, boolean ignoreConsensusReads, boolean ignoreSupplementaryReads,
             boolean ignoreSupplementaryAttribute, boolean ignoreReduxUnmapped, boolean ignoreReduxAlterations, boolean checkBaseAndQuals)
@@ -188,6 +191,9 @@ public class CompareConfig
         IgnoreReduxUnmapped = ignoreReduxUnmapped;
         IgnoreReduxAlterations = ignoreReduxAlterations;
         CheckBasesAndQuals = checkBaseAndQuals;
+        IgnoreSecondaryReads = ignoreSupplementaryReads;
+
+        CompareCoordsOnly = false;
 
         OutputFile = null;
         OrigBamFile = null;

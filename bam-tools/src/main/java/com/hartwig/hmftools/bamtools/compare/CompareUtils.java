@@ -8,10 +8,12 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNMAP_ATTRIBUTE;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReaderFactory;
@@ -24,12 +26,43 @@ public class CompareUtils
     @VisibleForTesting
     public static List<String> compareReads(final SAMRecord origRead, final SAMRecord newRead, final CompareConfig config)
     {
-        List<String> diffs = new ArrayList<>();
+        boolean bothUnmapped = origRead.getReadUnmappedFlag() && newRead.getReadUnmappedFlag();
+
+        if(bothUnmapped)
+            return Collections.emptyList();
+
+        List<String> diffs = Lists.newArrayList();
 
         boolean hasUnmappedDifference = origRead.getReadUnmappedFlag() != newRead.getReadUnmappedFlag();
         boolean hasMateUnmappedDifference = origRead.getMateUnmappedFlag() != newRead.getMateUnmappedFlag();
-
         boolean skipUnmappingDifference = config.IgnoreReduxUnmapped && (hasUnmappedDifference || hasMateUnmappedDifference);
+
+        if(!skipUnmappingDifference)
+        {
+            boolean coordsDiffer = false;
+
+            if(origRead.getAlignmentStart() != newRead.getAlignmentStart())
+            {
+                coordsDiffer = true;
+            }
+            else if(origRead.getAlignmentEnd() != newRead.getAlignmentEnd())
+            {
+                coordsDiffer = true;
+            }
+            else
+            {
+                coordsDiffer = origRead.getContig() != null && newRead.getContig() != null
+                        && !origRead.getContig().equals(newRead.getContig());
+            }
+
+            if(coordsDiffer)
+            {
+                diffs.add(format("coords(%s/%s)", readCoords(origRead), readCoords(newRead)));
+            }
+        }
+
+        if(config.CompareCoordsOnly)
+            return diffs;
 
         if(!skipUnmappingDifference)
         {
@@ -103,7 +136,15 @@ public class CompareUtils
         return diffs;
     }
 
-    public static SamReaderFactory makeSamReaderFactory(CompareConfig config)
+    private static String readCoords(final SAMRecord read)
+    {
+        if(!read.getReadUnmappedFlag())
+            return format("%s:%d-%d:%s", read.getContig(), read.getAlignmentStart(), read.getAlignmentEnd(), read.getCigarString());
+        else
+            return format("%s:%d", read.getContig(), read.getAlignmentStart());
+    }
+
+    public static SamReaderFactory makeSamReaderFactory(final CompareConfig config)
     {
         SamReaderFactory readerFactory = SamReaderFactory.makeDefault()
                 .validationStringency(ValidationStringency.SILENT);
