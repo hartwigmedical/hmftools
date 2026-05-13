@@ -110,14 +110,13 @@ public class ClusterFactory
 
                         if(!useAmberSegment)
                         {
-                            PPL_LOGGER.debug("segment({}) skipping Amber PCF: lastQasAmberEnd({}) index({} of {})",
+                            PPL_LOGGER.trace("segment({}) skipping Amber PCF: lastQasAmberEnd({}) index({} of {})",
                                     pcfPosition, lastPositionWasAmberPcfEnd, i, allPositions.size());
                             continue;
                         }
                         else
                         {
-                            // TEMP logging, remove after v4.4 regression is complete
-                            PPL_LOGGER.debug("segment({}) segmenting on Amber PCF", pcfPosition);
+                            PPL_LOGGER.trace("segment({}) segmenting on Amber PCF", pcfPosition);
                         }
                     }
                 }
