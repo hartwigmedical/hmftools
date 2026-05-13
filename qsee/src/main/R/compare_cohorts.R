@@ -16,6 +16,15 @@ theme_set(
 ## Config
 ## =============================
 
+#' Usage example:
+#'
+#' Rscript compare_cohorts.R \
+#' --reference_input_dir /Users/lnguyen/Hartwig/experiments/wigits_qc/analysis/20260414_panel_metrics/hmf_data \
+#' --target_input_dir /Users/lnguyen/Hartwig/experiments/wigits_qc/analysis/20260414_panel_metrics/panel_data/msk \
+#' --panel_bed_file /Users/lnguyen/Hartwig/resources/common-resources-public/panel/msk/panel_definition.msk.37.bed.gz \
+#' --driver_gene_panel /Users/lnguyen/Hartwig/resources/common-resources-public/panel/msk/driver_genes.msk.37.tsv \
+#' --output_dir /Users/lnguyen/Hartwig/experiments/wigits_qc/analysis/20260414_panel_metrics/output
+
 args <- local({
    parser <- argparse::ArgumentParser()
    
@@ -36,16 +45,6 @@ args <- local({
    
    parser$parse_args()
 })
-
-if(TRUE){
-   args$reference_input_dir <- "/Users/lnguyen/Hartwig/experiments/wigits_qc/analysis/20260414_panel_metrics/hmf_data"
-   args$target_input_dir <- "/Users/lnguyen/Hartwig/experiments/wigits_qc/analysis/20260414_panel_metrics/panel_data/msk"
-   
-   args$panel_bed_file <- "/Users/lnguyen/Hartwig/resources/common-resources-public/panel/msk/panel_definition.msk.37.bed.gz"
-   args$driver_gene_panel <- "/Users/lnguyen/Hartwig/resources/common-resources-public/panel/msk/driver_genes.msk.37.tsv"
-   
-   args$output_dir <- "/Users/lnguyen/Hartwig/experiments/wigits_qc/analysis/20260414_panel_metrics/output"
-}
 
 if(is.null(args$reference_tables_dir)) args$reference_tables_dir <- file.path(args$output_dir, "tables")
 if(is.null(args$target_tables_dir)) args$target_tables_dir <- file.path(args$output_dir, "tables")
@@ -456,7 +455,11 @@ plot_to_pdf <- function(plots, output_path, width, height){
    pdf(output_path, width = width, height = height)
    
    if(is.list(plots)){
-      for(page in plots){ plot(page) }
+      for(i in seq_along(plots)){
+         LOGGER$debug("  Writing page: %s", i)
+         page <- plots[[i]]
+         plot(page)
+      }
    } else {
       plot(plots)
    }
@@ -631,7 +634,7 @@ EXON_INFO <- local({
    
    ## Extract exon gene and coords. Could also get this info from ensembl data cache
    exons <- TARGET_COHORT$bam_metric.exon_coverage %>%
-      select(GeneName, Chromosome, PosStart, PosEnd, ExonRank) %>%
+      dplyr::select(GeneName, Chromosome, PosStart, PosEnd, ExonRank) %>%
       unique()
    
    exons <- exons[naturalsort::naturalorder(exons$Chromosome),]
