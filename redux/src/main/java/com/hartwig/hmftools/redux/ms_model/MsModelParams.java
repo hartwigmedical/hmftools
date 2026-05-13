@@ -2,15 +2,21 @@ package com.hartwig.hmftools.redux.ms_model;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.redux.ms_model.MsModelConstants.TRAINING_NOISE_THRESHOLD_DEFAULT;
+import static com.hartwig.hmftools.redux.ms_model.MsModelConstants.TRAINING_NOISE_THRESHOLD_ULTIMA;
 import static com.hartwig.hmftools.redux.ms_model.MsModelConstants.TRAINING_REPEAT_COUNT_MAX_DEFAULT;
+import static com.hartwig.hmftools.redux.ms_model.MsModelConstants.TRAINING_REPEAT_COUNT_MAX_NON_ILLUMINA;
 import static com.hartwig.hmftools.redux.ms_model.MsModelConstants.TRAINING_REPEAT_COUNT_MIN_DEFAULT;
+import static com.hartwig.hmftools.redux.ms_model.MsModelConstants.TRAINING_REPEAT_COUNT_MIN_NON_ILLUMINA;
 import static com.hartwig.hmftools.redux.ms_model.MsModelConstants.TRAINING_REPEAT_UNITS_DEFAULT;
+import static com.hartwig.hmftools.redux.ms_model.MsModelConstants.TRAINING_REPEAT_UNITS_ULTIMA;
 import static com.hartwig.hmftools.redux.ms_model.MsModelConstants.TRAINING_SAMPLE_PURITY_THRESHOLD_DEFAULT;
+import static com.hartwig.hmftools.redux.ms_model.MsModelConstants.TRAINING_SAMPLE_PURITY_THRESHOLD_NON_ILLUMINA;
 
 import java.util.Arrays;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 public class MsModelParams
@@ -71,10 +77,36 @@ public class MsModelParams
         configBuilder.addInteger(FITTING_COUNT_MAX, "Repeat unit count maximum", TRAINING_REPEAT_COUNT_MAX_DEFAULT);
     }
 
-    public static final MsModelParams DEFAULT_MODEL_PARAMS = new MsModelParams(
+    public static MsModelParams sequencingTypeParams(final SequencingType sequencingType)
+    {
+        if(sequencingType == SequencingType.ULTIMA)
+            return MODEL_PARAMS_ULTIMA;
+
+        if(sequencingType == SequencingType.SBX)
+            return MODEL_PARAMS_SBX;
+
+        return MODEL_PARAMS_DEFAULT;
+    }
+
+    // for Illumina
+    public static final MsModelParams MODEL_PARAMS_DEFAULT = new MsModelParams(
             TRAINING_NOISE_THRESHOLD_DEFAULT,
             TRAINING_SAMPLE_PURITY_THRESHOLD_DEFAULT,
             TRAINING_REPEAT_UNITS_DEFAULT,
             TRAINING_REPEAT_COUNT_MIN_DEFAULT,
             TRAINING_REPEAT_COUNT_MAX_DEFAULT);
+
+    public static final MsModelParams MODEL_PARAMS_SBX = new MsModelParams(
+            TRAINING_NOISE_THRESHOLD_DEFAULT,
+            TRAINING_SAMPLE_PURITY_THRESHOLD_NON_ILLUMINA,
+            TRAINING_REPEAT_UNITS_DEFAULT,
+            TRAINING_REPEAT_COUNT_MIN_NON_ILLUMINA,
+            TRAINING_REPEAT_COUNT_MAX_NON_ILLUMINA);
+
+    public static final MsModelParams MODEL_PARAMS_ULTIMA = new MsModelParams(
+            TRAINING_NOISE_THRESHOLD_ULTIMA,
+            TRAINING_SAMPLE_PURITY_THRESHOLD_NON_ILLUMINA,
+            TRAINING_REPEAT_UNITS_ULTIMA,
+            TRAINING_REPEAT_COUNT_MIN_NON_ILLUMINA,
+            TRAINING_REPEAT_COUNT_MAX_NON_ILLUMINA);
 }
