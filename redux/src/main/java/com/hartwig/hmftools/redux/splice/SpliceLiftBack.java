@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.redux.splice;
 
+import static com.hartwig.hmftools.common.bamops.BamToolName.fromPath;
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.redux.ReduxConfig.APP_NAME;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
@@ -10,12 +11,16 @@ import static com.hartwig.hmftools.redux.splice.SpliceCommon.ALT_CONTIG_SUFFIX;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
+import com.hartwig.hmftools.common.bamops.BamOperations;
+import com.hartwig.hmftools.common.bamops.BamToolName;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
@@ -34,7 +39,7 @@ import htsjdk.samtools.TextCigarCodec;
 //  - pass 1: builds a LiftedMateInfoCache (one entry per paired primary record) so each read's
 //            partner-mate fields can be rewritten in genomic coords.
 //  - pass 2: resolves + applies + writes a coordinate-sorted BAM with mate fields patched.
-// 1:1 record contract still holds: every input record produces exactly one output record + one TSV-A row + N TSV-B rows.
+// 1:1 record contract: every input record produces exactly one output record + one TSV-A row + N TSV-B rows.
 public class SpliceLiftBack
 {
     private static final String XA_TAG = "XA";
@@ -136,12 +141,12 @@ public class SpliceLiftBack
                     continue;
 
                 final LiftBackResult result = resolver.resolve(record);
-                if(result.Category == LiftBackCategory.UNMAPPED || result.Category == LiftBackCategory.LIFT_FAILED)
+                if(result.category() == LiftBackCategory.UNMAPPED || result.category() == LiftBackCategory.LIFT_FAILED)
                     continue;
 
-                final Cigar cigar = TextCigarCodec.decode(result.FinalCigar);
-                final int liftedEnd = result.FinalPos + cigar.getReferenceLength() - 1;
-                if(rrnaIndex.overlaps(result.FinalChrom, result.FinalPos, liftedEnd))
+                final Cigar cigar = TextCigarCodec.decode(result.finalCigar());
+                final int liftedEnd = result.finalPos() + cigar.getReferenceLength() - 1;
+                if(rrnaIndex.overlaps(result.finalChrom(), result.finalPos(), liftedEnd))
                     filtered.add(record.getReadName());
             }
         }
@@ -198,10 +203,10 @@ public class SpliceLiftBack
         return cache;
     }
 
-    // pass 2: stream the input BAM again, apply the lift-back to each record, patch mate fields from the cache,
-    // and emit to a coordinate-sorted, indexed BAM. TSVs are written here so MateNum reflects firstOfPair.
-    // Records whose read name is in filteredReadNames are dropped from the BAM (rRNA pair filter) but a TSV-A
-    // audit row is still emitted with Filtered=true so the 1:1 record audit trail is preserved.
+    // pass 2: stream the input BAM again, apply the lift-back to each record, patch mate fields, and emit
+    // an unsorted BAM (sorted + indexed afterwards via samtools/sambamba). TSVs are written inline so MateNum
+    // reflects firstOfPair. rRNA-filtered read pairs are dropped from the BAM but get an audit row with
+    // Filtered=true in TSV-A.
     private void emitLiftedBam(
             final LiftBackResolver resolver, final LiftedMateInfoCache liftedMateInfoCache, final Set<String> filteredReadNames)
     {
@@ -209,17 +214,17 @@ public class SpliceLiftBack
         final LiftBackStats stats = new LiftBackStats();
         int rrnaRecordsDropped = 0;
 
+        final String unsortedBam = mConfig.formUnsortedBam();
+
         try(SamReader samReader = SamReaderFactory.makeDefault()
                 .referenceSequence(new File(mConfig.RefGenomeFile))
                 .open(new File(mConfig.InputBam));
             LiftBackWriter writer = new LiftBackWriter(mConfig.formTsvAFile(), mConfig.formTsvBFile()))
         {
             final SAMFileHeader header = samReader.getFileHeader().clone();
-            header.setSortOrder(SAMFileHeader.SortOrder.coordinate);
+            header.setSortOrder(SAMFileHeader.SortOrder.unsorted);
 
-            final SAMFileWriterFactory factory = new SAMFileWriterFactory().setCreateIndex(true);
-
-            try(SAMFileWriter samWriter = factory.makeBAMWriter(header, false, new File(mConfig.formOutputBam())))
+            try(SAMFileWriter samWriter = new SAMFileWriterFactory().makeBAMWriter(header, false, new File(unsortedBam)))
             {
                 final SAMRecordIterator iter = samReader.iterator();
                 while(iter.hasNext())
@@ -261,6 +266,40 @@ public class SpliceLiftBack
                     rrnaRecordsDropped, filteredReadNames.size());
         }
         RD_LOGGER.info("pass 2 emit complete, mins({})", runTimeMinsStr(startTimeMs));
+
+        sortAndIndex(unsortedBam, mConfig.formOutputBam());
+    }
+
+    // delegate sort + index to samtools/sambamba — much faster than htsjdk's in-memory SortingSamFileWriter
+    // for whole-RNA BAMs. Skips when no bamtool is configured (unsorted BAM stays in place for inspection).
+    private void sortAndIndex(final String unsortedBam, final String sortedBam)
+    {
+        if(mConfig.BamToolPath == null)
+        {
+            RD_LOGGER.info("no -{} configured; leaving unsorted BAM at {}", BamToolName.BAMTOOL_PATH, unsortedBam);
+            return;
+        }
+
+        final BamToolName toolName = fromPath(mConfig.BamToolPath);
+        RD_LOGGER.info("sorting BAM via {}: {}", toolName, sortedBam);
+
+        if(!BamOperations.sortBam(toolName, mConfig.BamToolPath, unsortedBam, sortedBam, mConfig.Threads))
+            throw new RuntimeException("failed to sort BAM: " + unsortedBam);
+
+        if(toolName == BamToolName.SAMTOOLS)
+        {
+            if(!BamOperations.indexBam(toolName, mConfig.BamToolPath, sortedBam, mConfig.Threads))
+                throw new RuntimeException("failed to index BAM: " + sortedBam);
+        }
+
+        try
+        {
+            Files.deleteIfExists(Paths.get(unsortedBam));
+        }
+        catch(IOException e)
+        {
+            RD_LOGGER.warn("could not delete intermediate {}: {}", unsortedBam, e.toString());
+        }
     }
 
     // mutate the SAMRecord in place to reflect the LiftBackResult: lifted chrom/pos/CIGAR, or unmapped flag
@@ -272,10 +311,9 @@ public class SpliceLiftBack
     static void applyResultToRecord(
             final SAMRecord record, final LiftBackResult result, final LiftedMateInfoCache liftedMateInfoCache)
     {
-        switch(result.Category)
+        switch(result.category())
         {
             case UNMAPPED:
-                // already unmapped; nothing to do
                 return;
 
             case LIFT_FAILED:
@@ -292,12 +330,12 @@ public class SpliceLiftBack
                 return;
 
             default:
-                Cigar liftedCigar = TextCigarCodec.decode(result.FinalCigar);
-                record.setReferenceName(result.FinalChrom);
-                record.setAlignmentStart(result.FinalPos);
+                final Cigar liftedCigar = TextCigarCodec.decode(result.finalCigar());
+                record.setReferenceName(result.finalChrom());
+                record.setAlignmentStart(result.finalPos());
                 record.setCigar(liftedCigar);
-                record.setReadNegativeStrandFlag(result.NegativeStrand);
-                record.setMappingQuality(result.UpdatedMapq);
+                record.setReadNegativeStrandFlag(result.negativeStrand());
+                record.setMappingQuality(result.updatedMapq());
                 record.setAttribute(XA_TAG, buildLiftedXa(result));
         }
     }
@@ -310,13 +348,13 @@ public class SpliceLiftBack
         if(!record.getReadPairedFlag())
             return false;
 
-        LiftedMateInfo ownPrimary = liftedMateInfoCache.getOwnPrimary(record.getReadName(), record.getFirstOfPairFlag());
-        if(ownPrimary == null || ownPrimary.Unmapped)
+        final LiftedMateInfo ownPrimary = liftedMateInfoCache.getOwnPrimary(record.getReadName(), record.getFirstOfPairFlag());
+        if(ownPrimary == null || ownPrimary.unmapped())
             return false;
 
-        record.setReferenceName(ownPrimary.Chromosome);
-        record.setAlignmentStart(ownPrimary.AlignmentStart);
-        record.setCigarString(ownPrimary.LiftedCigar);
+        record.setReferenceName(ownPrimary.chromosome());
+        record.setAlignmentStart(ownPrimary.alignmentStart());
+        record.setCigarString(ownPrimary.liftedCigar());
         record.setMappingQuality(0);
         record.setAttribute(XA_TAG, null);
         // leave SA tag in place — rewriteSaTag translates any tx-contig entries to genomic coords downstream,
@@ -328,22 +366,22 @@ public class SpliceLiftBack
     // UNMAPPED/LIFT_FAILED primaries are cached as unmapped so the partner can clear proper-pair on patch.
     static LiftedMateInfo toLiftedMateInfo(final SAMRecord record, final LiftBackResult result)
     {
-        if(result.Category == LiftBackCategory.UNMAPPED || result.Category == LiftBackCategory.LIFT_FAILED)
-            return LiftedMateInfo.unmapped();
+        if(result.category() == LiftBackCategory.UNMAPPED || result.category() == LiftBackCategory.LIFT_FAILED)
+            return LiftedMateInfo.UNMAPPED;
 
-        Cigar liftedCigar = TextCigarCodec.decode(result.FinalCigar);
-        int alignmentEnd = result.FinalPos + liftedCigar.getReferenceLength() - 1;
-        return LiftedMateInfo.mapped(result.FinalChrom, result.FinalPos, alignmentEnd, result.FinalCigar, result.NegativeStrand);
+        final Cigar liftedCigar = TextCigarCodec.decode(result.finalCigar());
+        final int alignmentEnd = result.finalPos() + liftedCigar.getReferenceLength() - 1;
+        return LiftedMateInfo.mapped(result.finalChrom(), result.finalPos(), alignmentEnd, result.finalCigar(), result.negativeStrand());
     }
 
     // build the bwa XA tag string from the lifted, deduped XA alts. Returns null when there are none, which
     // tells htsjdk to drop the tag entirely.
     static String buildLiftedXa(final LiftBackResult result)
     {
-        // emit every alignment in the lifted set except (a) the chosen BAM primary, (b) any losers the
-        // discriminator marked Dropped. Filtering by IsPrimaryChoice (rather than Source==SELF) is what
-        // lets a swapped original-self appear in XA as an informative paralog hit.
-        String xa = result.LiftedAlignments.stream()
+        // emit every alignment except (a) the chosen BAM primary and (b) discriminator-dropped losers.
+        // Filtering by IsPrimaryChoice (not Source==SELF) is what lets a swapped original-self appear
+        // in XA as an informative paralog hit.
+        final String xa = result.liftedAlignments().stream()
                 .filter(la -> !la.IsPrimaryChoice && !la.Dropped)
                 .map(SpliceLiftBack::formatXaEntry)
                 .collect(Collectors.joining());
@@ -358,12 +396,10 @@ public class SpliceLiftBack
 
     public static void main(final String[] args)
     {
-        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
+        final ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
         SpliceLiftBackConfig.addConfig(configBuilder);
-
         configBuilder.checkAndParseCommandLine(args);
 
-        SpliceLiftBack liftBack = new SpliceLiftBack(configBuilder);
-        liftBack.run();
+        new SpliceLiftBack(configBuilder).run();
     }
 }

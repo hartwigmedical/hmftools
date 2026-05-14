@@ -1,10 +1,13 @@
 package com.hartwig.hmftools.redux.splice;
 
+import static com.hartwig.hmftools.common.bamops.BamToolName.BAMTOOL_PATH;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeFile;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeVersion;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.BAM_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
@@ -12,6 +15,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOp
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreateOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 
+import com.hartwig.hmftools.common.bamops.BamToolName;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 public class SpliceLiftBackConfig
@@ -39,6 +43,8 @@ public class SpliceLiftBackConfig
     public final boolean FilterRrna;
     public final String OutputDir;
     public final String OutputId;
+    public final String BamToolPath;
+    public final int Threads;
 
     public SpliceLiftBackConfig(final ConfigBuilder configBuilder)
     {
@@ -49,6 +55,8 @@ public class SpliceLiftBackConfig
         FilterRrna = configBuilder.hasFlag(FILTER_RRNA);
         OutputDir = parseOutputDir(configBuilder);
         OutputId = configBuilder.getValue(OUTPUT_ID);
+        BamToolPath = configBuilder.getValue(BAMTOOL_PATH);
+        Threads = parseThreads(configBuilder);
 
         if(OutputDir == null)
             throw new IllegalArgumentException("missing required config: output_dir");
@@ -58,6 +66,11 @@ public class SpliceLiftBackConfig
 
         if(!checkCreateOutputDir(OutputDir))
             throw new IllegalStateException("failed to create output directory: " + OutputDir);
+    }
+
+    public String formUnsortedBam()
+    {
+        return OutputDir + prefix() + ".unsorted" + BAM_EXTENSION;
     }
 
     public boolean hasContigSidecar()
@@ -98,8 +111,10 @@ public class SpliceLiftBackConfig
         addEnsemblDir(configBuilder, false);
         addRefGenomeVersion(configBuilder);
         configBuilder.addFlag(FILTER_RRNA, FILTER_RRNA_DESC);
+        BamToolName.addConfig(configBuilder);
 
         addOutputOptions(configBuilder);
+        addThreadOptions(configBuilder);
         addLoggingOptions(configBuilder);
     }
 }
