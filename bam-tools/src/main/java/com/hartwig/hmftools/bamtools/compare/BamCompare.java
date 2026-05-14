@@ -2,7 +2,7 @@ package com.hartwig.hmftools.bamtools.compare;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
-import static com.hartwig.hmftools.bamtools.compare.PartitionReader.NAME_UNMAPPED;
+import static com.hartwig.hmftools.bamtools.compare.CompareConfig.FULLY_UNMAPPED_PARTITION;
 import static com.hartwig.hmftools.common.region.PartitionUtils.buildPartitions;
 import static com.hartwig.hmftools.common.region.PartitionUtils.partitionChromosome;
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
@@ -25,7 +25,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Level;
 import org.jetbrains.annotations.NotNull;
 
-import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
@@ -58,7 +57,6 @@ public class BamCompare
         File newBamFile = new File(mConfig.NewBamFile);
 
         List<ChrBaseRegion> partitions = createPartitions();
-        BT_LOGGER.info("splitting {} partitions across {} threads", partitions.size(), mConfig.Threads);
 
         for(ChrBaseRegion partition : partitions)
         {
@@ -68,26 +66,33 @@ public class BamCompare
             partitionTasks.add(partitionReader);
         }
 
-        if(!mConfig.ignoreUnmapped())
+        boolean includeFullyUnmapped = !mConfig.StandardChromosomes
+                && (!mConfig.SpecificChrRegions.hasFilters() || mConfig.SpecificChrRegions.Chromosomes.contains(FULLY_UNMAPPED_PARTITION));
+
+        if(includeFullyUnmapped)
         {
             PartitionReader partitionReader = new PartitionReader(
-                    NAME_UNMAPPED, mConfig, null, origBamFile, newBamFile, readWriter, unmatchedReadHandler);
+                    FULLY_UNMAPPED_PARTITION, mConfig, null, origBamFile, newBamFile, readWriter, unmatchedReadHandler);
 
             partitionTasks.add(partitionReader);
         }
 
-        BT_LOGGER.info("partition processing complete");
+        BT_LOGGER.info("splitting {} partitions across {} threads", partitionTasks.size(), mConfig.Threads);
 
         List<Callable<Void>> callableList = partitionTasks.stream().collect(Collectors.toList());
 
         if(!TaskExecutor.executeTasks(callableList, mConfig.Threads))
             System.exit(1);
 
+        BT_LOGGER.info("partition processing complete");
+
         Statistics combinedStats = new Statistics();
         partitionTasks.forEach(x -> combinedStats.merge(x.stats()));
         partitionTasks.clear();
 
         unmatchedReadHandler.closeHashBamWriters();
+
+        System.gc(); // probably unnecessary
 
         if(!unmatchedReadHandler.getHashBamPairs().isEmpty())
         {
@@ -112,8 +117,8 @@ public class BamCompare
 
         readWriter.close();
 
-        BT_LOGGER.printf(Level.INFO, "summary: reads(orig=%,d new=%,d) diffs(%,d)",
-                combinedStats.OrigReadCount, combinedStats.NewReadCount, combinedStats.DiffCount);
+        BT_LOGGER.printf(Level.INFO, "summary: reads(orig=%,d new=%,d) matched(%,d) diffs(%,d)",
+                combinedStats.OrigReadCount, combinedStats.NewReadCount, combinedStats.Matched, combinedStats.DiffCount);
 
         BT_LOGGER.info("BamCompare complete, mins({})", runTimeMinsStr(startTimeMs));
     }

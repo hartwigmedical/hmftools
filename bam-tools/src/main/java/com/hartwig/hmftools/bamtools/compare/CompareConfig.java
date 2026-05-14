@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.bamtools.compare;
 
+import static java.lang.Math.max;
+
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.PARTITION_SIZE;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
@@ -16,6 +18,7 @@ import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.bam.BamUtils;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -39,6 +42,7 @@ public class CompareConfig
     public final boolean IgnoreReduxUnmapped;
     public final boolean CompareCoordsOnly;
     public final boolean CheckBasesAndQuals;
+    public final boolean StandardChromosomes;
 
     public final boolean IgnoreReduxAlterations; // consensus reads and internal unmappings
 
@@ -64,8 +68,11 @@ public class CompareConfig
     private static final String IGNORE_REDUX_DIFFS = "ignore_redux_diffs";
     private static final String COORDS_ONLY = "coords_only";
     private static final String CHECK_BASES_QUALS = "check_bases_quals";
+    protected static final String STANDARD_CHROMOSOMES = "std_chromosomes";
 
     private static final int DEFAULT_CHR_PARTITION_SIZE = 10_000_000;
+
+    protected static final String FULLY_UNMAPPED_PARTITION = "fully_unmapped";
 
     public CompareConfig(final ConfigBuilder configBuilder)
     {
@@ -126,9 +133,19 @@ public class CompareConfig
         if(SpecificChrRegions == null)
             System.exit(1);
 
+        StandardChromosomes = configBuilder.hasFlag(STANDARD_CHROMOSOMES);
+
+        if(StandardChromosomes)
+        {
+            for(HumanChromosome chromosome : HumanChromosome.values())
+            {
+                SpecificChrRegions.Chromosomes.add(RefGenVersion.versionedChromosome(chromosome.toString()));
+            }
+        }
+
         ExcludeRegions = configBuilder.hasFlag(EXCLUDE_REGIONS);
 
-        Threads = Math.max(parseThreads(configBuilder), 1);
+        Threads = max(parseThreads(configBuilder), 1);
 
         LogReadIds = parseLogReadIds(configBuilder);
 
@@ -138,13 +155,13 @@ public class CompareConfig
             int maxMemKB = (int)(Runtime.getRuntime().maxMemory() / 1024);
             // seems 5kB for 1 read is about right
             MaxCachedReadsPerThread = maxMemKB / 5 / Threads;
+
+            BT_LOGGER.debug("setting maxCachedReadsPerThread({})", MaxCachedReadsPerThread);
         }
         else
         {
-            MaxCachedReadsPerThread = maxCachedReadsPerThread;
+            MaxCachedReadsPerThread = max(maxCachedReadsPerThread, 0);
         }
-
-        BT_LOGGER.trace("maxCachedReadsPerThread({})", MaxCachedReadsPerThread);
     }
 
     public static void addConfig(final ConfigBuilder configBuilder)
@@ -169,6 +186,7 @@ public class CompareConfig
         configBuilder.addFlag(IGNORE_SUPPLEMENTARY_ATTRIBUTE, "Ignore supplementary attribute, can change from unmapping");
         configBuilder.addFlag(IGNORE_REDUX_UNMAPPED, "Ignore differences in reads unmapped by Redux");
         configBuilder.addFlag(CHECK_BASES_QUALS, "Ignore differences in consensus read bases and quals");
+        configBuilder.addFlag(STANDARD_CHROMOSOMES, "Only process standard human chromosomes");
 
         addRefGenomeFile(configBuilder, false);
         addSpecificChromosomesRegionsConfig(configBuilder);
@@ -194,6 +212,7 @@ public class CompareConfig
         IgnoreSecondaryReads = ignoreSupplementaryReads;
 
         CompareCoordsOnly = false;
+        StandardChromosomes = false;
 
         OutputFile = null;
         OrigBamFile = null;

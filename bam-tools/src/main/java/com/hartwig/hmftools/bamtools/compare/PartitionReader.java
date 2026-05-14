@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.bamtools.compare;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
+import static com.hartwig.hmftools.bamtools.compare.CompareConfig.FULLY_UNMAPPED_PARTITION;
 import static com.hartwig.hmftools.bamtools.compare.CompareUtils.compareReads;
 import static com.hartwig.hmftools.bamtools.compare.MismatchType.NEW_ONLY;
 import static com.hartwig.hmftools.bamtools.compare.MismatchType.ORIG_ONLY;
@@ -45,8 +46,6 @@ public class PartitionReader implements Callable<Void>
 
     private final Statistics mStats;
 
-    protected static final String NAME_UNMAPPED = "fully_unmapped";
-
     public PartitionReader(
             final String name, final CompareConfig config, @Nullable final ChrBaseRegion bamPartition,
             final File origBamFile, final File newBamFile,
@@ -73,10 +72,12 @@ public class PartitionReader implements Callable<Void>
 
     public Statistics stats() { return mStats; }
 
+    private String partitionStr() { return mPartition == null ? mName : mPartition.toString(); }
+
     @Override
     public Void call()
     {
-        BT_LOGGER.trace("processing {}", mName);
+        BT_LOGGER.trace("processing {}", partitionStr());
 
         SamReader origSamReader = SamReaderFactory.makeDefault()
                 .referenceSequence(new File(mConfig.RefGenomeFile)).open(mOrigBamFile);
@@ -88,7 +89,7 @@ public class PartitionReader implements Callable<Void>
         SAMRecordIterator origBamIter;
         SAMRecordIterator newBamIter;
 
-        boolean fullyUnmappedReads = mName.equals(NAME_UNMAPPED);
+        boolean fullyUnmappedReads = mName.equals(FULLY_UNMAPPED_PARTITION);
 
         if(mPartition != null)
         {
@@ -112,6 +113,11 @@ public class PartitionReader implements Callable<Void>
 
         int origReadAlignStart = -1;
         int newReadAlignStart = -1;
+
+        ReadKey origReadKey = null;
+        SAMRecord origRead = null;
+        ReadKey newReadKey = null;
+        SAMRecord newRead = null;
 
         while(origBamIter.hasNext() || newBamIter.hasNext())
         {
@@ -151,26 +157,59 @@ public class PartitionReader implements Callable<Void>
                 }
             }
 
+            if(!advanceNew && !advanceOrig)
+                break; // logical assert
+
+            // in the event of the 2 reads matching, it will end up storing the original, only to retrieve again when the new is processed
+            // but for 2 dissimilar BAMs that is probably unlikely
             if(advanceOrig)
             {
-                SAMRecord origBamRead = origBamIter.next();
-                processOrigBamRecord(origBamRead);
-                origReadAlignStart = origBamRead.getAlignmentStart();
+                ++mStats.OrigReadCount;
+                origRead = origBamIter.next();
+                origReadKey = checkAndFormReadKey(origRead);
+                origReadAlignStart = origRead.getAlignmentStart();
             }
 
             if(advanceNew)
             {
-                SAMRecord newBamRead = newBamIter.next();
-                processNewBamRecord(newBamRead);
-                newReadAlignStart = newBamRead.getAlignmentStart();
+                ++mStats.NewReadCount;
+                newRead = newBamIter.next();
+                newReadKey = checkAndFormReadKey(newRead);
+                newReadAlignStart = newRead.getAlignmentStart();
+            }
+
+            if(origReadKey != null && newReadKey != null && origReadKey.equals(newReadKey))
+            {
+                checkReadDetails(origRead, newRead);
+                origRead = null;
+                newRead = null;
+            }
+            else
+            {
+                // rather than either wait for the next read to be a match, process any unmatched read now
+                if(origRead != null)
+                {
+                    checkMatch(origRead, origReadKey, true);
+                    origRead = null;
+                    origReadKey = null;
+                }
+
+                if(newRead != null)
+                {
+                    checkMatch(newRead, newReadKey, false);
+                    newRead = null;
+                    newReadKey = null;
+                }
             }
 
             // check if we need to dump the reads to unmatched read handler, this is to protect against running out of memory
             int readCacheSize = mOrigBamReads.size() + mNewBamReads.size();
 
-            if(mUnmatchedReadHandler != null && readCacheSize > mConfig.MaxCachedReadsPerThread)
+            if(mConfig.MaxCachedReadsPerThread > 0 && mUnmatchedReadHandler != null && readCacheSize > mConfig.MaxCachedReadsPerThread)
             {
-                BT_LOGGER.debug("{}: cached reads({}) exceeds limit, writing reads to hash bam", mName, readCacheSize);
+                BT_LOGGER.debug("partition({}): cached reads({}) exceeds limit, writing reads to hash bam",
+                        partitionStr(), readCacheSize);
+
                 mUnmatchedReadHandler.handleOrigBamReads(mOrigBamReads.values());
                 mUnmatchedReadHandler.handleNewBamReads(mNewBamReads.values());
                 mOrigBamReads.clear();
@@ -178,12 +217,18 @@ public class PartitionReader implements Callable<Void>
             }
         }
 
+        if(origRead != null)
+            mOrigBamReads.put(origReadKey, origRead);
+
+        if(newRead != null)
+            mNewBamReads.put(newReadKey, newRead);
+
         completePartition();
 
         if(mStats.OrigReadCount > 0 || mStats.NewReadCount > 0)
         {
-            BT_LOGGER.trace("{} complete: origReads({}) newReads({}) diff({})",
-                    mName, mStats.OrigReadCount, mStats.NewReadCount, mStats.DiffCount);
+            BT_LOGGER.trace("partition({}) complete: origReads({}) newReads({}) matched({}) diff({})",
+                    partitionStr(), mStats.OrigReadCount, mStats.NewReadCount, mStats.Matched, mStats.DiffCount);
         }
 
         try
@@ -199,69 +244,42 @@ public class PartitionReader implements Callable<Void>
         return null;
     }
 
-    private void processOrigBamRecord(final SAMRecord origRead)
+    private ReadKey checkAndFormReadKey(final SAMRecord read)
     {
-        if(mPartition != null && !mPartition.containsPosition(origRead.getAlignmentStart()))
-            return;
+        if(mPartition != null && !mPartition.containsPosition(read.getAlignmentStart()))
+            return null;
 
-        if(mLogReadIds && mConfig.LogReadIds.contains(origRead.getReadName()))
+        if(mLogReadIds && mConfig.LogReadIds.contains(read.getReadName()))
         {
-            BT_LOGGER.debug("orig bam: specific readId({})", origRead.getReadName());
+            BT_LOGGER.debug("orig bam: specific readId({})", read.getReadName());
         }
 
-        if(excludeRead(origRead))
-            return;
+        if(excludeRead(read))
+            return null;
 
         checkLogReadCounts();
 
         // create a key
-        ReadKey readKey = ReadKey.from(origRead);
-
-        // look it up see if can find corresponding beta record
-        SAMRecord newBamRead = mNewBamReads.remove(readKey);
-
-        if(newBamRead != null)
-        {
-            // found matching
-            checkReadDetails(origRead, newBamRead);
-        }
-        else
-        {
-            // add to read map
-            mOrigBamReads.put(readKey, origRead);
-        }
+        return ReadKey.from(read);
     }
 
-    private void processNewBamRecord(final SAMRecord newRead)
+    private void checkMatch(final SAMRecord read, final ReadKey readKey, boolean isOriginal)
     {
-        if(mPartition != null && !mPartition.containsPosition(newRead.getAlignmentStart()))
-            return;
+        SAMRecord matchedRead = isOriginal ? mNewBamReads.remove(readKey) : mOrigBamReads.remove(readKey);
 
-        if(mLogReadIds && mConfig.LogReadIds.contains(newRead.getReadName()))
+        if(matchedRead != null)
         {
-            BT_LOGGER.debug("new bam: specific readId({})", newRead.getReadName());
-        }
-
-        if(excludeRead(newRead))
-            return;
-
-        checkLogReadCounts();
-
-        // create a key
-        ReadKey readKey = ReadKey.from(newRead);
-
-        // look it up see if can find corresponding beta record
-        SAMRecord origRead = mOrigBamReads.remove(readKey);
-
-        if(origRead != null)
-        {
-            // found matching
+            SAMRecord origRead = isOriginal ? read : matchedRead;
+            SAMRecord newRead = !isOriginal ? read : matchedRead;
             checkReadDetails(origRead, newRead);
         }
         else
         {
-            // add to beta read map
-            mNewBamReads.put(readKey, newRead);
+            // add to read map
+            if(isOriginal)
+                mOrigBamReads.put(readKey, read);
+            else
+                mNewBamReads.put(readKey, read);
         }
     }
 
@@ -286,11 +304,9 @@ public class PartitionReader implements Callable<Void>
         {
             // write them out as mismatches
             mOrigBamReads.values().forEach(read -> mReadWriter.writeComparison(read, ORIG_ONLY, null));
-            mStats.OrigReadCount += mOrigBamReads.size();
             mStats.DiffCount += mOrigBamReads.size();
 
             mNewBamReads.values().forEach(read -> mReadWriter.writeComparison(read, NEW_ONLY, null));
-            mStats.NewReadCount += mNewBamReads.size();
             mStats.DiffCount += mNewBamReads.size();
         }
 
@@ -300,8 +316,7 @@ public class PartitionReader implements Callable<Void>
 
     private void checkReadDetails(final SAMRecord origRead, final SAMRecord newRead)
     {
-        ++mStats.OrigReadCount;
-        ++mStats.NewReadCount;
+        ++mStats.Matched;
 
         // note that the ReadKey of both reads match
         if(mConfig.IgnoreReduxAlterations && (origRead.hasAttribute(UNMAP_ATTRIBUTE) || newRead.hasAttribute(UNMAP_ATTRIBUTE)))
@@ -346,8 +361,9 @@ public class PartitionReader implements Callable<Void>
         {
             mNextLogReadCount += LOG_COUNT;
 
-            BT_LOGGER.debug("partition({}) reads processed total({}) orig({}) new({})",
-                    mPartition, mReadCount, mStats.OrigReadCount, mStats.NewReadCount);
+            BT_LOGGER.debug("partition({}) reads processed total({}) orig({}) new({}) matched({}) diffs({}) cache(old={} new={})",
+                    partitionStr(), mReadCount, mStats.OrigReadCount, mStats.NewReadCount, mStats.Matched, mStats.DiffCount,
+                    mOrigBamReads.size(), mNewBamReads.size());
         }
     }
 }

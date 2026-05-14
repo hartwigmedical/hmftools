@@ -32,7 +32,6 @@ public class UnmatchedReadHandler
         try(SamReader samReader = CompareUtils.makeSamReaderFactory(config).open(new File(config.OrigBamFile)))
         {
             SAMFileHeader header = samReader.getFileHeader();
-            // create hash bams
             mOrigBamHashBamWriter = new HashBamWriter(header, "bamcomp_orig_hashbams_", NUM_HASH_BAMS);
         }
         catch(IOException e)
@@ -43,7 +42,6 @@ public class UnmatchedReadHandler
         try(SamReader samReader = CompareUtils.makeSamReaderFactory(config).open(new File(config.NewBamFile)))
         {
             SAMFileHeader header = samReader.getFileHeader();
-            // create hash bams
             mNewBamHashBamWriter = new HashBamWriter(header, "bamcomp_new_hashbams_", NUM_HASH_BAMS);
         }
         catch(IOException e)
