@@ -5,6 +5,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.filter.FilterUtils.setNearByIndelStatusPostFilter;
 import static com.hartwig.hmftools.sage.filter.FilterUtils.setNearByIndelStatusPreFilter;
+import static com.hartwig.hmftools.sage.vis.VisFileBuilder.writeToHtmlFile;
 
 import java.util.Collections;
 import java.util.List;
@@ -16,6 +17,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.perf.PerformanceCounter;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -231,8 +233,10 @@ public class RegionTask
 
         if(mConfig.Common.Visualiser.enabled())
         {
-            mSageVariants.forEach(variant -> VariantVis.writeToHtmlFile(
-                    variant, mConfig.TumorIds, mConfig.Common.ReferenceIds, mConfig.Common.Visualiser, mRefData));
+            RefGenomeSource refGenome = new RefGenomeSource(mRefData.RefGenome);
+
+            mSageVariants.forEach(variant -> writeToHtmlFile(
+                    variant, mConfig.TumorIds, mConfig.Common.ReferenceIds, mConfig.Common.Visualiser, mRefData, refGenome));
         }
 
         mResults.addTotalReads(mCandidateState.totalReadsProcessed());
