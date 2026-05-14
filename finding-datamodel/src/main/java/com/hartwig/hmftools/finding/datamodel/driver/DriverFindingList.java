@@ -7,12 +7,15 @@ import com.hartwig.hmftools.finding.datamodel.RecordBuilder;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
 import com.hartwig.hmftools.finding.datamodel.finding.IFindingList;
 
+import org.jspecify.annotations.Nullable;
+
 import jakarta.validation.constraints.NotNull;
 
 @RecordBuilder
 public record DriverFindingList<T extends Driver>(
         @NotNull FindingStatus status,
-        @NotNull List<T> findings
+        @NotNull List<T> findings,
+        @Nullable Double purityThreshold
 ) implements IFindingList<T>
 {
     @NotNull
