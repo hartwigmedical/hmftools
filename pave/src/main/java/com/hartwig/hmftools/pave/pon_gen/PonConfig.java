@@ -73,7 +73,7 @@ public class PonConfig
 
         WriteFinal = configBuilder.hasFlag(WRITE_FINAL_PON);
 
-        ExistingPonFilename = configBuilder.getValue(PON_FILE);
+        ExistingPonFilename = configBuilder.getValue(PON_FILE, "");
 
         PV_LOGGER.info("key config: minSamples({}) cut-offs(qual={} mqf={})", MinSamples, QualCutoff, MqfCutoff);
 
