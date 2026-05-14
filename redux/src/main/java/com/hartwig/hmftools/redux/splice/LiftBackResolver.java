@@ -28,12 +28,6 @@ public class LiftBackResolver
 
     private static final int RESCUED_MAPQ = 60;
 
-    // minimum flanking M length for an N operator to be treated as a real splice junction in
-    // discriminator decisions. Lift-back of a tx alignment whose last bases bleed into the next exon
-    // can produce N with anchors of 1-3 bp — those are not evidence of splicing and must not swap the
-    // primary off a clean ref full-match. 8 bp gives ~1-in-65k random-match probability.
-    static final int MIN_REAL_N_ANCHOR = 8;
-
     // per-alt-contig list of segments sorted by altStart so a record's alt-contig position can be
     // bin-searched back to the owning transcript. Non-alt-contig alignments (ref) fall through unindexed.
     private final Map<String, List<ContigEntry>> mSegmentsByAltContig;
@@ -41,9 +35,9 @@ public class LiftBackResolver
     public LiftBackResolver(final List<ContigEntry> entries)
     {
         mSegmentsByAltContig = new HashMap<>();
-        for(ContigEntry entry : entries)
+        for(final ContigEntry entry : entries)
             mSegmentsByAltContig.computeIfAbsent(entry.contigName(), k -> new ArrayList<>()).add(entry);
-        for(List<ContigEntry> segments : mSegmentsByAltContig.values())
+        for(final List<ContigEntry> segments : mSegmentsByAltContig.values())
             segments.sort(Comparator.comparingInt(ContigEntry::altStart));
     }
 
@@ -56,17 +50,16 @@ public class LiftBackResolver
     // falls outside any transcript (e.g. inside the inter-transcript N spacer) or the contig isn't an alt contig.
     ContigEntry findSegment(final String altContig, final int altPos)
     {
-        List<ContigEntry> segments = mSegmentsByAltContig.get(altContig);
+        final List<ContigEntry> segments = mSegmentsByAltContig.get(altContig);
         if(segments == null)
             return null;
 
-        // binary search: find the rightmost segment with altStart <= altPos, then check altEnd
         int lo = 0;
         int hi = segments.size() - 1;
         int candidate = -1;
         while(lo <= hi)
         {
-            int mid = (lo + hi) >>> 1;
+            final int mid = (lo + hi) >>> 1;
             if(segments.get(mid).altStart() <= altPos)
             {
                 candidate = mid;
@@ -85,7 +78,7 @@ public class LiftBackResolver
             return segments.isEmpty() ? null : segments.get(0);
         }
 
-        ContigEntry segment = segments.get(candidate);
+        final ContigEntry segment = segments.get(candidate);
         if(altPos <= segment.altEnd())
             return segment;
 
@@ -93,86 +86,23 @@ public class LiftBackResolver
         // overhangs less, and let ContigTranslator's clamp convert the overhang into soft-clip.
         if(candidate + 1 < segments.size())
         {
-            ContigEntry next = segments.get(candidate + 1);
-            int leadingOverhang = next.altStart() - altPos;
-            int trailingOverhang = altPos - segment.altEnd();
+            final ContigEntry next = segments.get(candidate + 1);
+            final int leadingOverhang = next.altStart() - altPos;
+            final int trailingOverhang = altPos - segment.altEnd();
             return leadingOverhang <= trailingOverhang ? next : segment;
         }
 
         return segment;
     }
 
-    // translates a single (contig, pos, cigar) triple from transcript-contig coordinates to genomic.
-    // pass-through (returns the input values) for non-alt contigs. Returns null when the contig is an alt
-    // contig but the position cannot be translated (e.g. it falls into the inter-transcript N spacer).
-    //
-    // intended for callers that want lift-only translation without the full LiftBackResult machinery
-    // (e.g. SA tag rewriting, where mapQ / NM pass through unchanged).
+    // lift-only API for callers that don't need the full LiftBackResult machinery (e.g. SA tag rewriting).
     public LiftedCoords liftCoords(final String contig, final int pos, final String cigarStr)
     {
-        LiftCore core = lift(contig, pos, cigarStr);
-        return core == null ? null : new LiftedCoords(core.LiftedChrom, core.LiftedPos, core.LiftedCigar);
-    }
-
-    public static class LiftedCoords
-    {
-        public final String Chromosome;
-        public final int Position;
-        public final String CigarString;
-
-        public LiftedCoords(final String chromosome, final int position, final String cigarString)
-        {
-            Chromosome = chromosome;
-            Position = position;
-            CigarString = cigarString;
-        }
-    }
-
-    // shared lift kernel for liftCoords + liftAlignment. Returns null when the contig is an alt contig but
-    // the position cannot be translated; ref-genome alignments fall through with Entry / ParsedCigar = null.
-    private static final class LiftCore
-    {
-        final ContigEntry Entry;            // null = ref pass-through
-        final String LiftedChrom;
-        final int LiftedPos;
-        final String LiftedCigar;
-        final Cigar ParsedCigar;            // null = ref pass-through (no exon-boundary check needed)
-
-        LiftCore(final ContigEntry entry, final String liftedChrom, final int liftedPos, final String liftedCigar,
-                final Cigar parsedCigar)
-        {
-            Entry = entry;
-            LiftedChrom = liftedChrom;
-            LiftedPos = liftedPos;
-            LiftedCigar = liftedCigar;
-            ParsedCigar = parsedCigar;
-        }
-    }
-
-    private LiftCore lift(final String contig, final int pos, final String cigarStr)
-    {
-        if(!mSegmentsByAltContig.containsKey(contig))
-        {
-            // alt contig missing from the segments map (FASTA/sidecar mismatch) must not pass through
-            // as if it were ref — the resulting "lifted" coords would leak _tx contig names into the BAM
-            // (read RNAME, mate RNEXT, MC) and break downstream tools that key off genomic coords.
-            if(contig.endsWith(ALT_CONTIG_SUFFIX))
-                return null;
-
-            // ref alignment — pass through unchanged
-            return new LiftCore(null, contig, pos, cigarStr, null);
-        }
-
-        ContigEntry entry = findSegment(contig, pos);
-        if(entry == null)
+        final LiftedAlignment lifted = liftAlignment(
+                LiftedAlignment.AlignmentSource.SELF, contig, pos, cigarStr, 0, 0, true);
+        if(lifted == null)
             return null;
-
-        Cigar cigar = TextCigarCodec.decode(cigarStr);
-        ContigTranslator.TranslationResult result = ContigTranslator.translate(entry, pos, cigar);
-        if(result == null)
-            return null;
-
-        return new LiftCore(entry, result.chromosome(), result.genomicStart(), result.genomicCigar().toString(), cigar);
+        return new LiftedCoords(lifted.LiftedChrom, lifted.LiftedPos, lifted.LiftedCigar);
     }
 
     public LiftBackResult resolve(final SAMRecord record)
@@ -188,50 +118,45 @@ public class LiftBackResolver
 
     private LiftBackResult resolvePrimary(final SAMRecord record)
     {
-        LiftedAlignment selfAlignment = liftAlignment(
+        final LiftedAlignment self = liftAlignment(
                 LiftedAlignment.AlignmentSource.SELF,
                 record.getReferenceName(), record.getAlignmentStart(), record.getCigarString(),
                 getInt(record, AS_TAG), getInt(record, NM_TAG),
                 !record.getReadNegativeStrandFlag());
 
-        // bwa's chosen primary failed to translate — record kept but flagged unmapped on emit
-        if(selfAlignment == null)
+        if(self == null)
             return unliftableResult(LiftBackResult.RecordRole.PRIMARY, countXaEntries(record), "primary_translate_failed");
 
-        selfAlignment.IsPrimaryChoice = true;
+        self.IsPrimaryChoice = true;
 
-        List<LiftedAlignment> xaAlts = parseAndLiftXa(record);
+        final List<LiftedAlignment> xaAlts = parseAndLiftXa(record);
 
-        List<LiftedAlignment> allAlignments = new ArrayList<>(1 + xaAlts.size());
-        allAlignments.add(selfAlignment);
+        final List<LiftedAlignment> allAlignments = new ArrayList<>(1 + xaAlts.size());
+        allAlignments.add(self);
         allAlignments.addAll(xaAlts);
 
-        Features features = categorize(allAlignments);
+        final LiftBackDiscriminator.Features features = LiftBackDiscriminator.categorize(allAlignments);
+        final LiftBackDiscriminator.Outcome outcome = LiftBackDiscriminator.apply(allAlignments, features.Category, self);
+        final LiftedAlignment effectivePrimary = outcome.effectivePrimary();
 
-        // confident discriminator outcomes may swap the BAM primary (when bwa picked a paralog over the
-        // spliced transcript alignment) and mark losing-side alts with Dropped=true. Returns the effective
-        // primary — usually selfAlignment, but a winning tx alt when a swap occurred.
-        DiscriminatorOutcome outcome = applyDiscriminator(allAlignments, features.Category, selfAlignment);
-        LiftedAlignment effectivePrimary = outcome.EffectivePrimary;
+        final List<LiftedAlignment> keptAlignments = allAlignments.stream()
+                .filter(la -> !la.Dropped)
+                .collect(Collectors.toList());
 
-        // aggregate stats (loci, cigarsAtPrimary, geneIds) over the kept (non-Dropped) alignments,
-        // matching what the BAM XA tag will surface.
-        List<LiftedAlignment> keptAlignments = keptAlignments(allAlignments);
-        Aggregates aggregates = aggregate(keptAlignments, effectivePrimary);
+        final int numLoci = countDistinctLoci(keptAlignments);
+        final int cigarsAtPrimaryLocus = countDistinctCigarsAtLocus(keptAlignments, effectivePrimary);
+        final String geneIds = joinGeneIds(keptAlignments);
 
         // bwa drops MAPQ to 0 when a read ties across multiple alt transcript contigs of the same gene.
-        // when every lifted alignment (self + XA alts) collapses to a single genomic locus, the tie is
-        // an artefact of the transcript-contig representation, not a real multi-mapper — restore MAPQ
-        // so downstream tools (Isofox, redux) don't discard the read as ambiguous.
-        //
-        // also rescue when we swapped the BAM primary to a different locus — bwa's MAPQ belonged to the
-        // (rejected) original locus and shouldn't carry over.
-        int bwaMapq = record.getMappingQuality();
-        boolean swapped = effectivePrimary != selfAlignment;
-        int updatedMapq;
+        // when every lifted alignment collapses to a single genomic locus, the tie is an artefact of the
+        // transcript-contig representation, not a real multi-mapper — restore MAPQ so downstream tools
+        // (Isofox, redux) don't discard the read as ambiguous. Also rescue when we swapped the BAM primary.
+        final int bwaMapq = record.getMappingQuality();
+        final boolean swapped = effectivePrimary != self;
+        final int updatedMapq;
         if(swapped)
             updatedMapq = RESCUED_MAPQ;
-        else if(aggregates.NumLoci == 1 && bwaMapq == 0)
+        else if(numLoci == 1 && bwaMapq == 0)
             updatedMapq = RESCUED_MAPQ;
         else
             updatedMapq = bwaMapq;
@@ -243,187 +168,16 @@ public class LiftBackResolver
                 !effectivePrimary.ForwardStrand,
                 effectivePrimary.cigarHasN(), bwaMapq, updatedMapq,
                 xaAlts.size(), features.NumRefAlts, features.NumTxAlts,
-                aggregates.NumLoci, aggregates.CigarsAtPrimaryLocus,
+                numLoci, cigarsAtPrimaryLocus,
                 features.TxHasNCigar, features.TxSoftClipAtBoundary,
                 features.RefSoftClipped, features.RefFullMatch,
-                aggregates.GeneIds, outcome.Note,
+                geneIds, outcome.note(),
                 allAlignments);
-    }
-
-    private static List<LiftedAlignment> keptAlignments(final List<LiftedAlignment> alignments)
-    {
-        return alignments.stream().filter(la -> !la.Dropped).collect(Collectors.toList());
-    }
-
-    private static class Aggregates
-    {
-        int NumLoci;
-        int CigarsAtPrimaryLocus;
-        String GeneIds;
-    }
-
-    private static Aggregates aggregate(final List<LiftedAlignment> alignments, final LiftedAlignment effectivePrimary)
-    {
-        String primaryLocus = locusKey(effectivePrimary);
-        Set<String> loci = new HashSet<>();
-        Set<String> cigarsAtPrimary = new HashSet<>();
-        Set<String> geneIdSet = new HashSet<>();
-        for(LiftedAlignment la : alignments)
-        {
-            String locus = locusKey(la);
-            loci.add(locus);
-            if(locus.equals(primaryLocus))
-                cigarsAtPrimary.add(la.LiftedCigar);
-            if(la.GeneId != null)
-                geneIdSet.add(la.GeneId);
-        }
-        Aggregates aggregates = new Aggregates();
-        aggregates.NumLoci = loci.size();
-        aggregates.CigarsAtPrimaryLocus = cigarsAtPrimary.size();
-        aggregates.GeneIds = geneIdSet.stream().sorted().collect(Collectors.joining("|"));
-        return aggregates;
-    }
-
-    // bundles the effective-primary alignment with a diagnostic note. Effective primary equals selfAlignment
-    // for most categories; for tx-favouring discriminators when bwa picked ref as primary, it is the winning
-    // tx alt (BAM primary is swapped onto it, original ref-self demoted to an XA entry).
-    private static class DiscriminatorOutcome
-    {
-        final LiftedAlignment EffectivePrimary;
-        final String Note;
-
-        DiscriminatorOutcome(final LiftedAlignment effectivePrimary, final String note)
-        {
-            EffectivePrimary = effectivePrimary;
-            Note = note;
-        }
-    }
-
-    // applies confident discriminator outcomes:
-    //   - marks losing-side alts with Dropped=true (stay in LiftedAlignments for TSV-B diagnostics,
-    //     excluded from the rebuilt BAM XA tag)
-    //   - swaps the BAM primary onto the winning side when bwa's chosen primary disagreed with the
-    //     discriminator (e.g. bwa picked a processed-pseudogene paralog over the spliced parent gene).
-    private static DiscriminatorOutcome applyDiscriminator(
-            final List<LiftedAlignment> alignments, final LiftBackCategory category, final LiftedAlignment self)
-    {
-        switch(category)
-        {
-            case BOTH_TX_JUNCTION_REF_SOFTCLIP:
-            case BOTH_MULTI_TX_JUNCTION:
-                return promoteTxOverRef(alignments, self);
-
-            case BOTH_TX_JUNCTION_REF_MATCH:
-                // ref full-match across the supposed intron with NM=0 is overwhelming evidence the read is
-                // genuinely unspliced (pre-mRNA / retained-intron / DNA contamination). 100bp of intron
-                // matching by chance is ~4^-100 — essentially zero. The tx N-CIGAR is the artifact, not the
-                // ref full-match. Favour ref and drop the tx alt.
-                return promoteRefOverTx(alignments, self);
-
-            case BOTH_TX_SOFTCLIP_REF_MATCH:
-                if(!self.fromTxContig())
-                {
-                    for(LiftedAlignment la : alignments)
-                        if(la.fromTxContig())
-                            la.Dropped = true;
-                    return new DiscriminatorOutcome(self, "");
-                }
-                return new DiscriminatorOutcome(self, "self_was_tx_no_swap");
-
-            default:
-                return new DiscriminatorOutcome(self, "");
-        }
-    }
-
-    // ref-favouring outcome (mirror of promoteTxOverRef). If self is ref, drop all tx alts. If self is
-    // tx, swap: promote the winning ref alt to primary, demote self (tx) to XA, drop other tx alts.
-    private static DiscriminatorOutcome promoteRefOverTx(
-            final List<LiftedAlignment> alignments, final LiftedAlignment self)
-    {
-        if(!self.fromTxContig())
-        {
-            for(final LiftedAlignment la : alignments)
-                if(la.fromTxContig())
-                    la.Dropped = true;
-            return new DiscriminatorOutcome(self, "");
-        }
-
-        // self is tx — promote the first ref alt
-        LiftedAlignment winner = null;
-        for(final LiftedAlignment la : alignments)
-        {
-            if(!la.fromTxContig())
-            {
-                winner = la;
-                break;
-            }
-        }
-        if(winner == null)
-            return new DiscriminatorOutcome(self, "");
-
-        self.IsPrimaryChoice = false;
-        winner.IsPrimaryChoice = true;
-        // keep self (tx) in XA as a transcript hit; drop OTHER tx alts
-        for(final LiftedAlignment la : alignments)
-        {
-            if(la.fromTxContig() && la != self)
-                la.Dropped = true;
-        }
-        return new DiscriminatorOutcome(winner, "swapped_tx_to_ref");
-    }
-
-    // tx-favouring outcome: keep the best tx alt as primary. If self is tx, drop all ref alts. If self is
-    // ref, swap: promote the winning tx alt to primary, demote self to XA (preserves the original locus as
-    // an informative paralog hit), and drop other ref alts.
-    private static DiscriminatorOutcome promoteTxOverRef(
-            final List<LiftedAlignment> alignments, final LiftedAlignment self)
-    {
-        if(self.fromTxContig())
-        {
-            for(LiftedAlignment la : alignments)
-                if(!la.fromTxContig())
-                    la.Dropped = true;
-            return new DiscriminatorOutcome(self, "");
-        }
-
-        // self is ref — prefer the tx alt that actually carries the N junction; fall back to any tx alt
-        LiftedAlignment winner = null;
-        for(LiftedAlignment la : alignments)
-        {
-            if(la.fromTxContig() && la.cigarHasN())
-            {
-                winner = la;
-                break;
-            }
-        }
-        if(winner == null)
-        {
-            for(LiftedAlignment la : alignments)
-            {
-                if(la.fromTxContig())
-                {
-                    winner = la;
-                    break;
-                }
-            }
-        }
-        if(winner == null)
-            return new DiscriminatorOutcome(self, "");
-
-        self.IsPrimaryChoice = false;
-        winner.IsPrimaryChoice = true;
-        // keep self in XA as a paralog reference; drop OTHER ref alts (paralog noise)
-        for(LiftedAlignment la : alignments)
-        {
-            if(!la.fromTxContig() && la != self)
-                la.Dropped = true;
-        }
-        return new DiscriminatorOutcome(winner, "swapped_ref_to_tx");
     }
 
     private LiftBackResult supplementaryResult(final SAMRecord record)
     {
-        LiftedAlignment lifted = liftAlignment(
+        final LiftedAlignment lifted = liftAlignment(
                 LiftedAlignment.AlignmentSource.SELF,
                 record.getReferenceName(), record.getAlignmentStart(), record.getCigarString(),
                 getInt(record, AS_TAG), getInt(record, NM_TAG),
@@ -434,13 +188,13 @@ public class LiftBackResolver
 
         lifted.IsPrimaryChoice = true;
 
-        // supplementaries don't carry XA, so collapsed-locus check doesn't apply. Rescue only when bwa
-        // dropped to 0 on a tx-contig supp (the multi-alt-contig tie artefact); leave non-zero MAPQ alone.
-        int bwaMapq = record.getMappingQuality();
-        int suppMapq = (lifted.fromTxContig() && bwaMapq == 0) ? RESCUED_MAPQ : bwaMapq;
+        // supplementaries don't carry XA, so the collapsed-locus check doesn't apply. Rescue MAPQ only on
+        // a tx-contig supp where bwa dropped to 0 due to the multi-alt-contig tie artefact.
+        final int bwaMapq = record.getMappingQuality();
+        final int suppMapq = (lifted.fromTxContig() && bwaMapq == 0) ? RESCUED_MAPQ : bwaMapq;
 
-        int numRefAlts = lifted.fromTxContig() ? 0 : 1;
-        int numTxAlts = lifted.fromTxContig() ? 1 : 0;
+        final int numRefAlts = lifted.fromTxContig() ? 0 : 1;
+        final int numTxAlts = lifted.fromTxContig() ? 1 : 0;
 
         return new LiftBackResult(
                 LiftBackCategory.SUPPLEMENTARY, LiftBackResult.Composition.fromAlignments(List.of(lifted)),
@@ -455,139 +209,31 @@ public class LiftBackResolver
                 List.of(lifted));
     }
 
-    // bundles the category decision with the per-alignment evidence the discriminator collected.
-    // emitted into TSV-A so post-hoc analysis can answer "why did this read land in category X?"
-    static class Features
-    {
-        LiftBackCategory Category;
-        int NumRefAlts;
-        int NumTxAlts;
-        boolean TxHasNCigar;
-        boolean TxSoftClipAtBoundary;
-        boolean RefSoftClipped;
-        boolean RefFullMatch;
-        boolean RefHasNCigar;
-    }
-
-    private Features categorize(final List<LiftedAlignment> alignments)
-    {
-        Features features = new Features();
-
-        if(alignments.isEmpty())
-        {
-            features.Category = LiftBackCategory.LIFT_FAILED;
-            return features;
-        }
-
-        Set<String> loci = new HashSet<>();
-        boolean anyHasN = false;
-        Set<String> distinctCigars = new HashSet<>();
-
-        for(LiftedAlignment alignment : alignments)
-        {
-            loci.add(locusKey(alignment));
-            distinctCigars.add(alignment.LiftedCigar);
-            if(alignment.cigarHasN())
-                anyHasN = true;
-
-            if(alignment.fromTxContig())
-            {
-                ++features.NumTxAlts;
-                if(alignment.cigarHasRealNJunction(MIN_REAL_N_ANCHOR))
-                    features.TxHasNCigar = true;
-                if(alignment.SoftClipAtBoundary)
-                    features.TxSoftClipAtBoundary = true;
-            }
-            else
-            {
-                ++features.NumRefAlts;
-                if(alignment.cigarHasSoftClip())
-                    features.RefSoftClipped = true;
-                else
-                    features.RefFullMatch = true;
-                if(alignment.cigarHasRealNJunction(MIN_REAL_N_ANCHOR))
-                    features.RefHasNCigar = true;
-            }
-        }
-
-        boolean hasRef = features.NumRefAlts > 0;
-        boolean hasTx = features.NumTxAlts > 0;
-
-        if(loci.size() >= 2)
-        {
-            if(hasRef && hasTx)
-            {
-                // tx found an annotated junction (N-CIGAR) at one locus; ref alts hit other loci
-                // intronlessly — almost always processed pseudogenes / paralogs. Favour tx and swap
-                // the BAM primary onto it.
-                if(features.TxHasNCigar && !features.RefHasNCigar)
-                    features.Category = LiftBackCategory.BOTH_MULTI_TX_JUNCTION;
-                else
-                    features.Category = LiftBackCategory.BOTH_MULTI;
-            }
-            else if(hasTx)
-                features.Category = LiftBackCategory.TX_MULTI;
-            else
-                features.Category = LiftBackCategory.REF_MULTI;
-            return features;
-        }
-
-        // numLoci == 1
-        if(hasRef && !hasTx)
-        {
-            features.Category = LiftBackCategory.REF_SINGLE;
-            return features;
-        }
-        if(hasTx && !hasRef)
-        {
-            features.Category = LiftBackCategory.TX_SINGLE;
-            return features;
-        }
-
-        // single locus, both ref and tx contributed — run discriminator
-        if(distinctCigars.size() == 1 && !anyHasN)
-            features.Category = LiftBackCategory.BOTH_AGREE;
-        else if(features.TxHasNCigar && features.RefSoftClipped)
-            features.Category = LiftBackCategory.BOTH_TX_JUNCTION_REF_SOFTCLIP;
-        else if(features.TxHasNCigar && features.RefFullMatch && !features.RefSoftClipped)
-            // tx found a real junction; ref ignored it and stretched through with a full match.
-            // tx is the more faithful alignment — drop the ref alt downstream.
-            features.Category = LiftBackCategory.BOTH_TX_JUNCTION_REF_MATCH;
-        else if(features.TxSoftClipAtBoundary && features.RefFullMatch)
-            features.Category = LiftBackCategory.BOTH_TX_SOFTCLIP_REF_MATCH;
-        else
-            features.Category = LiftBackCategory.BOTH_AMBIGUOUS;
-
-        return features;
-    }
-
-    // parses the XA tag, lifts each alt, then dedupes (Stage 2):
-    //   - drops XA entries that fail to lift or fail to parse
-    //   - dedupes among XA alts by lifted (chrom, pos, CIGAR), keeping first occurrence.
-    // Self is intentionally NOT included in the dedup key set so a Tx XA alt that lifts to the same
-    // (chrom, pos, CIGAR) as a ref self-alignment is preserved (drives BOTH_AGREE).
+    // parses the XA tag, lifts each alt, and dedupes XA-internally by lifted (chrom, pos, CIGAR).
+    // Self is intentionally NOT in the dedup key set so a Tx XA alt that lifts to the same coords as a
+    // ref self-alignment is preserved (drives BOTH_AGREE).
     private List<LiftedAlignment> parseAndLiftXa(final SAMRecord record)
     {
-        List<LiftedAlignment> alts = new ArrayList<>();
-        String xa = record.getStringAttribute(XA_TAG);
+        final List<LiftedAlignment> alts = new ArrayList<>();
+        final String xa = record.getStringAttribute(XA_TAG);
         if(xa == null || xa.isEmpty())
             return alts;
 
-        Set<String> seenKeys = new HashSet<>();
+        final Set<String> seenKeys = new HashSet<>();
 
-        for(String entry : xa.split(";"))
+        for(final String entry : xa.split(";"))
         {
             if(entry.isEmpty())
                 continue;
-            String[] parts = entry.split(",");
+            final String[] parts = entry.split(",");
             if(parts.length < 4)
                 continue;
 
-            String contig = parts[0];
-            String cigar = parts[2];
+            final String contig = parts[0];
+            final String cigar = parts[2];
 
-            // bwa XA pos is signed (sign = strand); be tolerant of malformed XA — skip entries we can't parse
-            int signedPos;
+            // bwa XA pos is signed (sign = strand). Tolerate malformed XA — skip entries we can't parse.
+            final int signedPos;
             int nm;
             try
             {
@@ -606,10 +252,10 @@ public class LiftBackResolver
                 nm = 0;
             }
 
-            boolean forwardStrand = signedPos >= 0;
-            int pos = Math.abs(signedPos);
+            final boolean forwardStrand = signedPos >= 0;
+            final int pos = Math.abs(signedPos);
 
-            LiftedAlignment lifted = liftAlignment(
+            final LiftedAlignment lifted = liftAlignment(
                     LiftedAlignment.AlignmentSource.XA_INPUT, contig, pos, cigar, 0, nm, forwardStrand);
             if(lifted == null)
                 continue;
@@ -620,33 +266,74 @@ public class LiftBackResolver
         return alts;
     }
 
+    // single lift kernel. Returns null when the contig is an alt contig but the position cannot be
+    // translated (alt missing from segments map, or position falls outside any transcript span).
+    // For ref alignments the returned LiftedAlignment is a coord-preserving pass-through.
     private LiftedAlignment liftAlignment(
             final LiftedAlignment.AlignmentSource source, final String contig, final int pos, final String cigarStr,
             final int as, final int nm, final boolean forwardStrand)
     {
-        LiftCore core = lift(contig, pos, cigarStr);
-        if(core == null)
-            return null;
-
-        if(core.Entry == null)
+        if(!mSegmentsByAltContig.containsKey(contig))
         {
-            // ref alignment — pass through unchanged; no transcript metadata, no boundary check
+            // alt contig missing from the segments map (FASTA/sidecar mismatch) must not pass through
+            // as if it were ref — the resulting "lifted" coords would leak _tx contig names into the BAM.
+            if(contig.endsWith(ALT_CONTIG_SUFFIX))
+                return null;
+
             return new LiftedAlignment(
                     source, contig, pos, cigarStr,
-                    core.LiftedChrom, core.LiftedPos, core.LiftedCigar,
+                    contig, pos, cigarStr,
                     as, nm,
                     null, null, null,
                     false, forwardStrand);
         }
 
-        boolean softClipAtBoundary = ContigTranslator.hasSoftClipAtExonBoundary(core.Entry, pos, core.ParsedCigar);
+        final ContigEntry entry = findSegment(contig, pos);
+        if(entry == null)
+            return null;
+
+        final Cigar parsedCigar = TextCigarCodec.decode(cigarStr);
+        final ContigTranslator.TranslationResult translated = ContigTranslator.translate(entry, pos, parsedCigar);
+        if(translated == null)
+            return null;
+
+        final boolean softClipAtBoundary = ContigTranslator.hasSoftClipAtExonBoundary(entry, pos, parsedCigar);
 
         return new LiftedAlignment(
                 source, contig, pos, cigarStr,
-                core.LiftedChrom, core.LiftedPos, core.LiftedCigar,
+                translated.chromosome(), translated.genomicStart(), translated.genomicCigar().toString(),
                 as, nm,
-                core.Entry.transName(), core.Entry.geneId(), core.Entry.geneName(),
+                entry.transName(), entry.geneId(), entry.geneName(),
                 softClipAtBoundary, forwardStrand);
+    }
+
+    private static int countDistinctLoci(final List<LiftedAlignment> alignments)
+    {
+        final Set<String> loci = new HashSet<>();
+        for(final LiftedAlignment la : alignments)
+            loci.add(locusKey(la));
+        return loci.size();
+    }
+
+    private static int countDistinctCigarsAtLocus(final List<LiftedAlignment> alignments, final LiftedAlignment primary)
+    {
+        final String primaryLocus = locusKey(primary);
+        final Set<String> cigars = new HashSet<>();
+        for(final LiftedAlignment la : alignments)
+        {
+            if(locusKey(la).equals(primaryLocus))
+                cigars.add(la.LiftedCigar);
+        }
+        return cigars.size();
+    }
+
+    private static String joinGeneIds(final List<LiftedAlignment> alignments)
+    {
+        final Set<String> geneIds = new HashSet<>();
+        for(final LiftedAlignment la : alignments)
+            if(la.GeneId != null)
+                geneIds.add(la.GeneId);
+        return geneIds.stream().sorted().collect(Collectors.joining("|"));
     }
 
     private static String liftedKey(final LiftedAlignment la)
@@ -661,12 +348,12 @@ public class LiftBackResolver
 
     private static int countXaEntries(final SAMRecord record)
     {
-        String xa = record.getStringAttribute(XA_TAG);
+        final String xa = record.getStringAttribute(XA_TAG);
         if(xa == null || xa.isEmpty())
             return 0;
 
         int count = 0;
-        for(String entry : xa.split(";"))
+        for(final String entry : xa.split(";"))
         {
             if(!entry.isEmpty())
                 ++count;
@@ -676,13 +363,13 @@ public class LiftBackResolver
 
     private static int getInt(final SAMRecord record, final String tag)
     {
-        Integer val = record.getIntegerAttribute(tag);
+        final Integer val = record.getIntegerAttribute(tag);
         return val != null ? val : 0;
     }
 
     private static LiftBackResult unmappedResult(final SAMRecord record)
     {
-        LiftBackResult.RecordRole role = record.isSecondaryOrSupplementary()
+        final LiftBackResult.RecordRole role = record.isSecondaryOrSupplementary()
                 ? LiftBackResult.RecordRole.SUPPLEMENTARY
                 : LiftBackResult.RecordRole.PRIMARY;
 
@@ -696,7 +383,7 @@ public class LiftBackResolver
                 0, 0,
                 false, false, false, false,
                 "", "",
-                List.<LiftedAlignment>of());
+                List.of());
     }
 
     private static LiftBackResult unliftableResult(final LiftBackResult.RecordRole role, final int numXaAlts, final String note)
@@ -711,6 +398,6 @@ public class LiftBackResolver
                 0, 0,
                 false, false, false, false,
                 "", note,
-                List.<LiftedAlignment>of());
+                List.of());
     }
 }
