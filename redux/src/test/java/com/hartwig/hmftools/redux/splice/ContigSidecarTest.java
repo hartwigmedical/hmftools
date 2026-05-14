@@ -24,10 +24,10 @@ public class ContigSidecarTest
 
         List<ContigEntry> entries = List.of(
                 new ContigEntry(
-                        "ensENSG0000001_GENEA_ENST0000001", "ENSG0000001", "GENEA", "ENST0000001", CHR_1,
+                        "chr1_tx", 1, 200, "ENSG0000001", "GENEA", "ENST0000001", CHR_1,
                         List.of(new BaseRegion(100, 199), new BaseRegion(300, 399))),
                 new ContigEntry(
-                        "ensENSG0000002_GENEB_ENST0000002", "ENSG0000002", "GENEB", "ENST0000002", CHR_2,
+                        "chr2_tx", 1, 51, "ENSG0000002", "GENEB", "ENST0000002", CHR_2,
                         List.of(new BaseRegion(1000, 1050))));
 
         ContigSidecar.write(tempFile.getAbsolutePath(), entries);
@@ -37,7 +37,9 @@ public class ContigSidecarTest
         assertEquals(2, readBack.size());
 
         ContigEntry first = readBack.get(0);
-        assertEquals("ensENSG0000001_GENEA_ENST0000001", first.contigName());
+        assertEquals("chr1_tx", first.contigName());
+        assertEquals(1, first.altStart());
+        assertEquals(200, first.altEnd());
         assertEquals("ENSG0000001", first.geneId());
         assertEquals("GENEA", first.geneName());
         assertEquals("ENST0000001", first.transName());
@@ -47,6 +49,9 @@ public class ContigSidecarTest
         assertEquals(new BaseRegion(300, 399), first.exonSpans().get(1));
 
         ContigEntry second = readBack.get(1);
+        assertEquals("chr2_tx", second.contigName());
+        assertEquals(1, second.altStart());
+        assertEquals(51, second.altEnd());
         assertEquals("ENST0000002", second.transName());
         assertEquals(1, second.exonSpans().size());
         assertEquals(new BaseRegion(1000, 1050), second.exonSpans().get(0));

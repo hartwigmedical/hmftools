@@ -16,6 +16,8 @@ public final class ContigSidecar
     public enum Column
     {
         ContigName,
+        AltStart,
+        AltEnd,
         GeneId,
         GeneName,
         TransName,
@@ -31,6 +33,8 @@ public final class ContigSidecar
         try(DelimFileWriter<ContigEntry> writer = new DelimFileWriter<>(filename, Column.values(), (entry, row) ->
         {
             row.set(Column.ContigName, entry.contigName());
+            row.set(Column.AltStart, String.valueOf(entry.altStart()));
+            row.set(Column.AltEnd, String.valueOf(entry.altEnd()));
             row.set(Column.GeneId, entry.geneId());
             row.set(Column.GeneName, entry.geneName());
             row.set(Column.TransName, entry.transName());
@@ -55,6 +59,8 @@ public final class ContigSidecar
             {
                 entries.add(new ContigEntry(
                         row.get(Column.ContigName),
+                        Integer.parseInt(row.get(Column.AltStart)),
+                        Integer.parseInt(row.get(Column.AltEnd)),
                         row.get(Column.GeneId),
                         row.get(Column.GeneName),
                         row.get(Column.TransName),
