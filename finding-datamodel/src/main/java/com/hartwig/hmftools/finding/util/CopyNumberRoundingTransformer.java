@@ -54,6 +54,12 @@ public class CopyNumberRoundingTransformer
     }
 
     @NotNull
+    private static DriverFindingList<SmallVariant> roundCopyNumberSomaticVariant(@NotNull DriverFindingList<SmallVariant> somaticVariants)
+    {
+        return DriverFindingListBuilder.builder(somaticVariants).findings(transformSmallVariant(somaticVariants.findings())).build();
+    }
+
+    @NotNull
     public static List<SmallVariant> transformSmallVariant(@NotNull List<SmallVariant> smallVariants)
     {
         List<SmallVariant> smallVariantList = new ArrayList<>();
