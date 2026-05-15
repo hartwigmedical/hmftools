@@ -23,7 +23,6 @@ public final class ContigMappings
         ExonSpans
     }
 
-    // matches the convention in SpecificRegions: ITEM_DELIM separates spans, '-' separates start from end (BaseRegion.toString)
     private static final String SPAN_DELIM = "-";
 
     public static void write(final String filename, final List<ContigEntry> entries)

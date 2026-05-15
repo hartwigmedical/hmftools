@@ -131,7 +131,6 @@ public class SpliceFastaBuilder
 
     private static void writeFastaContig(final BufferedWriter writer, final String contigName, final String sequence) throws IOException
     {
-        // unwrapped: matches BlastnRunner.writeBlastFasta. bwa-mem2 / samtools accept any line length.
         writer.write(">" + contigName);
         writer.newLine();
         writer.write(sequence);
