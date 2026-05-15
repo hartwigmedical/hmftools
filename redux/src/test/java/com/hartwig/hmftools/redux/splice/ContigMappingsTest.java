@@ -51,4 +51,27 @@ public class ContigMappingsTest
         assertEquals(1, second.exonSpans().size());
         assertEquals(new BaseRegion(1000, 1050), second.exonSpans().get(0));
     }
+
+    @Test
+    public void testVaryingSpanCounts() throws IOException
+    {
+        File tempFile = Files.createTempFile("contig_mappings_", ".tsv").toFile();
+        tempFile.deleteOnExit();
+
+        List<ContigEntry> entries = List.of(
+                new ContigEntry("ens1", "GENE1", "NAME1", "TRANS1", CHR_1,
+                        List.of(new BaseRegion(100, 200))),
+                new ContigEntry("ens2", "GENE2", "NAME2", "TRANS2", CHR_1,
+                        List.of(new BaseRegion(100, 200), new BaseRegion(500, 600))),
+                new ContigEntry("ens3", "GENE3", "NAME3", "TRANS3", CHR_2,
+                        List.of(new BaseRegion(10, 50), new BaseRegion(100, 150), new BaseRegion(200, 250), new BaseRegion(300, 400))));
+
+        ContigMappings.write(tempFile.getAbsolutePath(), entries);
+        List<ContigEntry> readBack = ContigMappings.read(tempFile.getAbsolutePath());
+
+        assertEquals(3, readBack.size());
+        assertEquals(1, readBack.get(0).exonSpans().size());
+        assertEquals(2, readBack.get(1).exonSpans().size());
+        assertEquals(4, readBack.get(2).exonSpans().size());
+    }
 }
