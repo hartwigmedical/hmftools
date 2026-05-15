@@ -34,10 +34,19 @@ public class TranscriptContigBuilder
 
         List<BaseRegion> spans = new ArrayList<>(ordered.size());
         StringBuilder sequence = new StringBuilder();
+        int prevEnd = -1;
         for(ExonData exon : ordered)
         {
+            if(exon.Start <= prevEnd)
+            {
+                throw new IllegalStateException(String.format(
+                        "overlapping exons in transcript %s gene %s: exon [%d,%d] overlaps prior exon ending at %d",
+                        transcript.TransName, gene.GeneId, exon.Start, exon.End, prevEnd));
+            }
+
             spans.add(new BaseRegion(exon.Start, exon.End));
             sequence.append(mRefGenome.getBaseString(gene.Chromosome, exon.Start, exon.End));
+            prevEnd = exon.End;
         }
 
         String contigName = CONTIG_NAME_PREFIX + gene.GeneId

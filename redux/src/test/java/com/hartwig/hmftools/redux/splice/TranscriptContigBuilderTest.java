@@ -35,15 +35,15 @@ public class TranscriptContigBuilderTest
         TranscriptContigBuilder.TranscriptContigResult result = builder.build(gene(POS_STRAND), transcript);
 
         assertNotNull(result);
-        assertEquals("ens" + GENE_ID + "_" + GENE_NAME + "_" + TRANS_NAME, result.Entry.ContigName);
-        assertEquals(GENE_ID, result.Entry.GeneId);
-        assertEquals(GENE_NAME, result.Entry.GeneName);
-        assertEquals(TRANS_NAME, result.Entry.TransName);
+        assertEquals("ens" + GENE_ID + "_" + GENE_NAME + "_" + TRANS_NAME, result.Entry.contigName());
+        assertEquals(GENE_ID, result.Entry.geneId());
+        assertEquals(GENE_NAME, result.Entry.geneName());
+        assertEquals(TRANS_NAME, result.Entry.transName());
 
-        assertEquals(3, result.Entry.ExonSpans.size());
-        assertEquals(new BaseRegion(100, 199), result.Entry.ExonSpans.get(0));
-        assertEquals(new BaseRegion(300, 399), result.Entry.ExonSpans.get(1));
-        assertEquals(new BaseRegion(500, 549), result.Entry.ExonSpans.get(2));
+        assertEquals(3, result.Entry.exonSpans().size());
+        assertEquals(new BaseRegion(100, 199), result.Entry.exonSpans().get(0));
+        assertEquals(new BaseRegion(300, 399), result.Entry.exonSpans().get(1));
+        assertEquals(new BaseRegion(500, 549), result.Entry.exonSpans().get(2));
 
         // sequence length equals total exonic bases (no introns)
         assertEquals(100 + 100 + 50, result.Sequence.length());
@@ -64,9 +64,9 @@ public class TranscriptContigBuilderTest
         TranscriptContigBuilder.TranscriptContigResult result = builder.build(gene(NEG_STRAND), transcript);
 
         assertNotNull(result);
-        assertEquals(100, result.Entry.ExonSpans.get(0).start());
-        assertEquals(300, result.Entry.ExonSpans.get(1).start());
-        assertEquals(500, result.Entry.ExonSpans.get(2).start());
+        assertEquals(100, result.Entry.exonSpans().get(0).start());
+        assertEquals(300, result.Entry.exonSpans().get(1).start());
+        assertEquals(500, result.Entry.exonSpans().get(2).start());
     }
 
     @Test
@@ -109,11 +109,11 @@ public class TranscriptContigBuilderTest
         assertNotNull(resultA);
         assertNotNull(resultB);
 
-        assertEquals("ens" + GENE_ID + "_" + GENE_NAME + "_ENST00000001", resultA.Entry.ContigName);
-        assertEquals("ens" + GENE_ID + "_" + GENE_NAME + "_ENST00000002", resultB.Entry.ContigName);
+        assertEquals("ens" + GENE_ID + "_" + GENE_NAME + "_ENST00000001", resultA.Entry.contigName());
+        assertEquals("ens" + GENE_ID + "_" + GENE_NAME + "_ENST00000002", resultB.Entry.contigName());
 
-        assertEquals(2, resultA.Entry.ExonSpans.size());
-        assertEquals(2, resultB.Entry.ExonSpans.size());
+        assertEquals(2, resultA.Entry.exonSpans().size());
+        assertEquals(2, resultB.Entry.exonSpans().size());
 
         // contig A spans 100-199 + 300-399, contig B spans 100-199 + 500-549. Different lengths confirm they're independent.
         assertEquals(200, resultA.Entry.contigLength());
@@ -138,7 +138,7 @@ public class TranscriptContigBuilderTest
         TranscriptContigBuilder.TranscriptContigResult result = builder.build(gene(POS_STRAND), transcript);
 
         assertNotNull(result);
-        assertEquals(1, result.Entry.ExonSpans.size());
+        assertEquals(1, result.Entry.exonSpans().size());
         assertEquals(101, result.Sequence.length());
     }
 

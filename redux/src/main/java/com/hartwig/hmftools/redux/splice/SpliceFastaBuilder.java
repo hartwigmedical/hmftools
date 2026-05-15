@@ -32,9 +32,6 @@ public class SpliceFastaBuilder
 
     public void run()
     {
-        if(!mConfig.isValid())
-            System.exit(1);
-
         long startTimeMs = System.currentTimeMillis();
 
         RefGenomeSource refGenome = RefGenomeSource.loadRefGenome(mConfig.RefGenomeFile);
@@ -71,9 +68,8 @@ public class SpliceFastaBuilder
                     ++genesProcessed;
 
                     List<TranscriptData> transcripts = mEnsemblDataCache.getTranscripts(gene.GeneId);
-                    // TODO: do i really need this here? CHECK if ensembledatacache already covers this
                     if(transcripts == null || transcripts.isEmpty())
-                        continue;
+                        throw new IllegalStateException("ensembl cache returned no transcripts for gene " + gene.GeneId);
 
                     for(TranscriptData transcript : transcripts)
                     {
@@ -95,7 +91,7 @@ public class SpliceFastaBuilder
                             continue;
                         }
 
-                        writeFastaContig(fastaWriter, result.Entry.ContigName, result.Sequence);
+                        writeFastaContig(fastaWriter, result.Entry.contigName(), result.Sequence);
                         contigEntries.add(result.Entry);
                         ++contigsWritten;
                     }
@@ -135,7 +131,6 @@ public class SpliceFastaBuilder
 
     private static void writeFastaContig(final BufferedWriter writer, final String contigName, final String sequence) throws IOException
     {
-        // TODO: confirm this with Charles
         // unwrapped: matches BlastnRunner.writeBlastFasta. bwa-mem2 / samtools accept any line length.
         writer.write(">" + contigName);
         writer.newLine();
