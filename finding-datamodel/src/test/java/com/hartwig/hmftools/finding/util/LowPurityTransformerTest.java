@@ -2,6 +2,7 @@ package com.hartwig.hmftools.finding.util;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -58,17 +59,19 @@ public class LowPurityTransformerTest
     private void assertFindingItem(FindingItem<?> item)
     {
         assertFindingStatus(item.status());
+        assertNotNull(item.purityThreshold());
         assertNull(item.finding());
     }
 
     private void assertFindingList(DriverFindingList<?> list)
     {
         assertFindingStatus(list.status());
+        assertNotNull(list.purityThreshold());
         assertTrue(list.findings().isEmpty());
     }
 
     private void assertFindingStatus(FindingStatus findingStatus) {
-        assertEquals(FindingStatus.Status.NOT_AVAILABLE, findingStatus.status());
+        assertEquals(FindingStatus.Status.NOT_RELIABLE, findingStatus.status());
         assertTrue(findingStatus.errors().contains(FindingStatus.Issue.LOW_PURITY));
         assertFalse(findingStatus.warnings().contains(FindingStatus.Issue.LOW_PURITY));
     }
@@ -78,6 +81,7 @@ public class LowPurityTransformerTest
         assertEquals(FindingStatus.Status.OK, findingStatus.status());
         assertFalse(findingStatus.errors().contains(FindingStatus.Issue.LOW_PURITY));
         assertTrue(findingStatus.warnings().contains(FindingStatus.Issue.LOW_PURITY));
+        assertNotNull(findingList.purityThreshold());
         List<HlaAllele> hlaAlleles = findingList.findings();
         assertFalse(hlaAlleles.isEmpty());
         for(HlaAllele hlaAllele : hlaAlleles)

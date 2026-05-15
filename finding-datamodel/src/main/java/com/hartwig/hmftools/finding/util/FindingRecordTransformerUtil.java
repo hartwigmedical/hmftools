@@ -36,6 +36,7 @@ public class FindingRecordTransformerUtil
     {
         return FindingListBuilder.<O>builder()
                 .status(findingsStatusConverter.apply(findingList.status()))
+                .purityThreshold(findingList.purityThreshold())
                 .findings(transform(findingList.findings(), findingConverter, comparator))
                 .build();
     }
@@ -49,6 +50,7 @@ public class FindingRecordTransformerUtil
     {
         return DriverFindingListBuilder.<O>builder()
                 .status(findingsStatusTransformer.apply(driverFindingList.status()))
+                .purityThreshold(driverFindingList.purityThreshold())
                 .findings(transform(driverFindingList.findings(), findingTransformer, comparator))
                 .build();
     }
