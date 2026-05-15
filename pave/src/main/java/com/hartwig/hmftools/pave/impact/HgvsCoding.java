@@ -3,6 +3,11 @@ package com.hartwig.hmftools.pave.impact;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.common.codon.HgvsCommon.HGVS_CODING_ID;
+import static com.hartwig.hmftools.common.codon.HgvsCommon.HGVS_NON_CODING_ID;
+import static com.hartwig.hmftools.common.codon.HgvsCommon.HGVS_TYPE_DEL;
+import static com.hartwig.hmftools.common.codon.HgvsCommon.HGVS_TYPE_DUP;
+import static com.hartwig.hmftools.common.codon.HgvsCommon.HGVS_TYPE_INS;
 import static com.hartwig.hmftools.common.codon.Nucleotides.reverseComplementBases;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.ENHANCER;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.NON_CODING;
@@ -39,13 +44,6 @@ public final class HgvsCoding
     - insertion as classified as duplication if microhomology matches the inserted bases
      */
 
-    private static final String CODING_ID = "c.";
-    private static final String NON_CODING_ID = "n.";
-
-    public static final String HGVS_TYPE_DEL = "del";
-    public static final String HGVS_TYPE_DUP = "dup";
-    public static final String HGVS_TYPE_INS = "ins";
-
     public static final String HGVS_UNKNOWN = "unknown"; // misclassified or malformed string
 
     public static void set(final VariantData variant, final CodingContext codingContext)
@@ -81,9 +79,9 @@ public final class HgvsCoding
     private static void addTranscriptType(final CodingContext codingContext, final StringBuilder sb)
     {
         if(codingContext.CodingType == NON_CODING)
-            sb.append(NON_CODING_ID);
+            sb.append(HGVS_NON_CODING_ID);
         else
-            sb.append(CODING_ID);
+            sb.append(HGVS_CODING_ID);
     }
 
     private static void addUtr(final CodingContext codingContext, final StringBuilder sb)

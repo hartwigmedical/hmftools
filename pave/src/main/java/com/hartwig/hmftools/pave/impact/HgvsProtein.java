@@ -3,6 +3,15 @@ package com.hartwig.hmftools.pave.impact;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.codon.Codons.STOP_AMINO_ACID;
+import static com.hartwig.hmftools.common.codon.HgvsCommon.HGVS_FRAMESHIFT;
+import static com.hartwig.hmftools.common.codon.HgvsCommon.HGVS_STOP_GAINED;
+import static com.hartwig.hmftools.common.codon.HgvsCommon.HGVS_STOP_LOST;
+import static com.hartwig.hmftools.common.codon.HgvsCommon.HGVS_STOP_TRI_CODE;
+import static com.hartwig.hmftools.common.codon.HgvsCommon.HGVS_SYNONYMOUS;
+import static com.hartwig.hmftools.common.codon.HgvsCommon.HGVS_TYPE_DEL;
+import static com.hartwig.hmftools.common.codon.HgvsCommon.HGVS_TYPE_DUP;
+import static com.hartwig.hmftools.common.codon.HgvsCommon.HGVS_TYPE_INS;
+import static com.hartwig.hmftools.common.codon.HgvsCommon.PROTEIN_ID;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.FRAMESHIFT;
@@ -11,9 +20,6 @@ import static com.hartwig.hmftools.common.variant.impact.VariantEffect.STOP_GAIN
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.SYNONYMOUS;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.isInframe;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.isNonsenseOrFrameshift;
-import static com.hartwig.hmftools.pave.impact.HgvsCoding.HGVS_TYPE_DEL;
-import static com.hartwig.hmftools.pave.impact.HgvsCoding.HGVS_TYPE_DUP;
-import static com.hartwig.hmftools.pave.impact.HgvsCoding.HGVS_TYPE_INS;
 import static com.hartwig.hmftools.pave.impact.HgvsCoding.HGVS_UNKNOWN;
 
 import java.util.List;
@@ -21,17 +27,11 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.codon.AminoAcids;
+import com.hartwig.hmftools.common.codon.HgvsCommon;
 import com.hartwig.hmftools.common.variant.impact.VariantEffect;
 
 public final class HgvsProtein
 {
-    private static final String PROTEIN_ID = "p.";
-    private static final String HGVS_FRAMESHIFT = "fs";
-    private static final String HGVS_STOP_LOST = "ext*?";
-    private static final String HGVS_STOP_GAINED = "*";
-    private static final String HGVS_STOP_TRI_CODE = "Ter";
-    private static final String HGVS_SYNONYMOUS = "=";
-
     public static final String HGVS_SPLICE_UNKNOWN = PROTEIN_ID + "?";
 
     private static final Map<Character,String> AMINO_ACID_SINGLE_TO_TRI_MAP = Maps.newHashMap();
