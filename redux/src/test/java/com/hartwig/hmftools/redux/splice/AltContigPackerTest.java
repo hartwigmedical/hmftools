@@ -28,9 +28,9 @@ public class AltContigPackerTest
         AltContigPacker packer = new AltContigPacker(SPACER);
         AltContigPacker.PackResult result = packer.pack(CHR_1, List.of());
 
-        assertEquals("1_tx", result.AltContig);
-        assertEquals("", result.Sequence);
-        assertTrue(result.Entries.isEmpty());
+        assertEquals("1_tx", result.altContig());
+        assertEquals("", result.sequence());
+        assertTrue(result.entries().isEmpty());
         assertTrue(result.isEmpty());
     }
 
@@ -41,10 +41,10 @@ public class AltContigPackerTest
         AltContigPacker.PackResult result = packer.pack(
                 CHR_1, List.of(txResult("T1", "ACGTACGT", List.of(new BaseRegion(100, 107)))));
 
-        assertEquals("ACGTACGT", result.Sequence);
-        assertEquals(1, result.Entries.size());
+        assertEquals("ACGTACGT", result.sequence());
+        assertEquals(1, result.entries().size());
 
-        ContigEntry entry = result.Entries.get(0);
+        ContigEntry entry = result.entries().get(0);
         assertEquals("1_tx", entry.contigName());
         assertEquals(1, entry.altStart());
         assertEquals(8, entry.altEnd());
@@ -59,14 +59,14 @@ public class AltContigPackerTest
                 txResult("T1", "AAAA", List.of(new BaseRegion(100, 103))),
                 txResult("T2", "CCC", List.of(new BaseRegion(200, 202)))));
 
-        assertEquals("AAAA" + "NNNNN" + "CCC", result.Sequence);
-        assertEquals(2, result.Entries.size());
+        assertEquals("AAAA" + "NNNNN" + "CCC", result.sequence());
+        assertEquals(2, result.entries().size());
 
-        ContigEntry first = result.Entries.get(0);
+        ContigEntry first = result.entries().get(0);
         assertEquals(1, first.altStart());
         assertEquals(4, first.altEnd());
 
-        ContigEntry second = result.Entries.get(1);
+        ContigEntry second = result.entries().get(1);
         // 4 (first transcript) + 5 (spacer) + 1 = 10
         assertEquals(10, second.altStart());
         assertEquals(12, second.altEnd());
@@ -82,11 +82,11 @@ public class AltContigPackerTest
                 txResult("T3", "GGGGGGGG", List.of(new BaseRegion(300, 307)))));
 
         // ranges must not overlap, must lie inside the sequence, and must be spacer-separated
-        assertEquals(6 + 5 + 3 + 5 + 8, result.Sequence.length());
-        for(int i = 0; i < result.Entries.size() - 1; ++i)
+        assertEquals(6 + 5 + 3 + 5 + 8, result.sequence().length());
+        for(int i = 0; i < result.entries().size() - 1; ++i)
         {
-            ContigEntry a = result.Entries.get(i);
-            ContigEntry b = result.Entries.get(i + 1);
+            ContigEntry a = result.entries().get(i);
+            ContigEntry b = result.entries().get(i + 1);
             assertEquals(a.altEnd() + SPACER + 1, b.altStart());
         }
     }
@@ -98,7 +98,7 @@ public class AltContigPackerTest
         AltContigPacker.PackResult result = packer.pack(
                 CHR_1, List.of(txResult("T1", "ACGT", List.of(new BaseRegion(100, 103)))));
 
-        ContigEntry entry = result.Entries.get(0);
+        ContigEntry entry = result.entries().get(0);
         assertEquals("G_T1", entry.geneId());
         assertEquals("GENE_T1", entry.geneName());
         assertEquals(CHR_1, entry.chromosome());

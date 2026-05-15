@@ -20,41 +20,30 @@ public final class AltContigPacker
 
     public PackResult pack(final String chromosome, final List<TranscriptContigBuilder.TranscriptContigResult> transcripts)
     {
-        String altContig = altContigName(chromosome);
-        StringBuilder sequence = new StringBuilder();
-        List<ContigEntry> entries = new ArrayList<>();
+        final String altContig = altContigName(chromosome);
+        final StringBuilder sequence = new StringBuilder();
+        final List<ContigEntry> entries = new ArrayList<>();
 
-        for(TranscriptContigBuilder.TranscriptContigResult transcript : transcripts)
+        for(final TranscriptContigBuilder.TranscriptContigResult transcript : transcripts)
         {
             if(sequence.length() > 0)
                 sequence.append(mSpacer);
 
-            int altStart = sequence.length() + 1;
-            sequence.append(transcript.Sequence);
-            int altEnd = sequence.length();
+            final int altStart = sequence.length() + 1;
+            sequence.append(transcript.sequence());
+            final int altEnd = sequence.length();
 
             entries.add(new ContigEntry(
                     altContig, altStart, altEnd,
-                    transcript.GeneId, transcript.GeneName, transcript.TransName, transcript.Chromosome,
-                    transcript.ExonSpans));
+                    transcript.geneId(), transcript.geneName(), transcript.transName(), transcript.chromosome(),
+                    transcript.exonSpans()));
         }
 
         return new PackResult(altContig, sequence.toString(), entries);
     }
 
-    public static final class PackResult
+    public record PackResult(String altContig, String sequence, List<ContigEntry> entries)
     {
-        public final String AltContig;
-        public final String Sequence;
-        public final List<ContigEntry> Entries;
-
-        public PackResult(final String altContig, final String sequence, final List<ContigEntry> entries)
-        {
-            AltContig = altContig;
-            Sequence = sequence;
-            Entries = entries;
-        }
-
-        public boolean isEmpty() { return Entries.isEmpty(); }
+        public boolean isEmpty() { return entries.isEmpty(); }
     }
 }

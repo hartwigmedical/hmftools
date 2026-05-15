@@ -34,14 +34,14 @@ public class LiftBackStats
     public void record(final SAMRecord record, final LiftBackResult result)
     {
         // pre-drop full-set composition: includes alts dropped by the discriminator, so the summary reflects what
-        // bwa actually produced (vs. result.Comp, the post-drop "kept" view written to TSV-A).
-        LiftBackResult.Composition fullComposition = LiftBackResult.Composition.fromAlignments(result.LiftedAlignments);
+        // bwa actually produced (vs. result.comp(), the post-drop "kept" view written to TSV-A).
+        LiftBackResult.Composition fullComposition = LiftBackResult.Composition.fromAlignments(result.liftedAlignments());
         MapqTier tier = deriveMapqTier(record, result);
 
         ++mTotal;
-        ++mPerCategory[result.Category.ordinal()];
+        ++mPerCategory[result.category().ordinal()];
         ++mCompositionByTier[fullComposition.ordinal()][tier.ordinal()];
-        ++mCategoryByTier[result.Category.ordinal()][tier.ordinal()];
+        ++mCategoryByTier[result.category().ordinal()][tier.ordinal()];
     }
 
     public int total()
@@ -176,6 +176,6 @@ public class LiftBackStats
         int mapq = record.getMappingQuality();
         if(mapq == 0)
             return MapqTier.MAPQ_ZERO;
-        return result.NumXaAlts > 0 ? MapqTier.MAPQ_POS_MULTI : MapqTier.MAPQ_POS_UNIQUE;
+        return result.numXaAlts() > 0 ? MapqTier.MAPQ_POS_MULTI : MapqTier.MAPQ_POS_UNIQUE;
     }
 }

@@ -43,12 +43,12 @@ public class LiftedMateInfoCacheTest
     }
 
     @Test
-    public void testUnmappedFactory()
+    public void testUnmappedConstant()
     {
-        LiftedMateInfo unmapped = LiftedMateInfo.unmapped();
-        assertTrue(unmapped.Unmapped);
-        assertNull(unmapped.Chromosome);
-        assertEquals(0, unmapped.AlignmentStart);
-        assertEquals(0, unmapped.AlignmentEnd);
+        LiftedMateInfo unmapped = LiftedMateInfo.UNMAPPED;
+        assertTrue(unmapped.unmapped());
+        assertNull(unmapped.chromosome());
+        assertEquals(0, unmapped.alignmentStart());
+        assertEquals(0, unmapped.alignmentEnd());
     }
 }

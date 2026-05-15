@@ -71,7 +71,7 @@ public class MateFieldPatcherTest
     public void testMateCigarClearedWhenPartnerUnmapped()
     {
         LiftedMateInfoCache cache = new LiftedMateInfoCache();
-        cache.recordPrimaryAlignment("read1", false, LiftedMateInfo.unmapped());
+        cache.recordPrimaryAlignment("read1", false, LiftedMateInfo.UNMAPPED);
 
         SAMRecord r1 = pairedMappedRecord("read1", true, "1", 100, "50M", false);
         r1.setAttribute(MATE_CIGAR_ATTRIBUTE, "50M");
@@ -115,7 +115,7 @@ public class MateFieldPatcherTest
     public void testPatchWithUnmappedPartner()
     {
         LiftedMateInfoCache cache = new LiftedMateInfoCache();
-        cache.recordPrimaryAlignment("read1", false, LiftedMateInfo.unmapped());
+        cache.recordPrimaryAlignment("read1", false, LiftedMateInfo.UNMAPPED);
 
         SAMRecord r1 = pairedMappedRecord("read1", true, "1", 100, "50M", false);
         r1.setProperPairFlag(true);

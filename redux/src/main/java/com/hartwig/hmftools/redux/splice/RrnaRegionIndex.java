@@ -86,7 +86,7 @@ public class RrnaRegionIndex
         while(lo <= hi)
         {
             int mid = (lo + hi) >>> 1;
-            if(intervals.get(mid).Start <= end)
+            if(intervals.get(mid).start() <= end)
             {
                 candidate = mid;
                 lo = mid + 1;
@@ -105,9 +105,9 @@ public class RrnaRegionIndex
         for(int i = candidate; i >= 0; --i)
         {
             final Interval interval = intervals.get(i);
-            if(interval.End < start)
+            if(interval.end() < start)
                 return false;
-            if(interval.Start <= end && interval.End >= start)
+            if(interval.start() <= end && interval.end() >= start)
                 return true;
         }
         return false;
@@ -174,7 +174,7 @@ public class RrnaRegionIndex
         for(final Map.Entry<String, List<Interval>> entry : rawIntervalsByChromosome.entrySet())
         {
             final List<Interval> intervals = entry.getValue();
-            intervals.sort(Comparator.comparingInt(i -> i.Start));
+            intervals.sort(Comparator.comparingInt(Interval::start));
             intervalsByChromosome.put(entry.getKey(), mergeOverlapping(intervals));
         }
 
@@ -202,9 +202,9 @@ public class RrnaRegionIndex
                 current = interval;
                 continue;
             }
-            if(interval.Start <= current.End + 1)
+            if(interval.start() <= current.end() + 1)
             {
-                current = new Interval(current.Start, Math.max(current.End, interval.End));
+                current = new Interval(current.start(), Math.max(current.end(), interval.end()));
             }
             else
             {
@@ -217,15 +217,5 @@ public class RrnaRegionIndex
         return merged;
     }
 
-    static final class Interval
-    {
-        final int Start;
-        final int End;
-
-        Interval(final int start, final int end)
-        {
-            Start = start;
-            End = end;
-        }
-    }
+    record Interval(int start, int end) {}
 }

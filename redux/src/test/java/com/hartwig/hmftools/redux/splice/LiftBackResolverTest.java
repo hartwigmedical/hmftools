@@ -63,8 +63,8 @@ public class LiftBackResolverTest
         LiftBackResolver resolver = new LiftBackResolver(contigMap());
         LiftBackResult result = resolver.resolve(newUnmappedRecord());
 
-        assertEquals(LiftBackCategory.UNMAPPED, result.Category);
-        assertTrue(result.LiftedAlignments.isEmpty());
+        assertEquals(LiftBackCategory.UNMAPPED, result.category());
+        assertTrue(result.liftedAlignments().isEmpty());
     }
 
     @Test
@@ -75,12 +75,12 @@ public class LiftBackResolverTest
         LiftBackResolver resolver = new LiftBackResolver(contigMap());
         LiftBackResult result = resolver.resolve(record);
 
-        assertEquals(LiftBackCategory.REF_SINGLE, result.Category);
-        assertEquals(CHR_1, result.FinalChrom);
-        assertEquals(1000, result.FinalPos);
-        assertEquals("150M", result.FinalCigar);
-        assertFalse(result.HasNCigar);
-        assertEquals(1, result.NumLoci);
+        assertEquals(LiftBackCategory.REF_SINGLE, result.category());
+        assertEquals(CHR_1, result.finalChrom());
+        assertEquals(1000, result.finalPos());
+        assertEquals("150M", result.finalCigar());
+        assertFalse(result.hasNCigar());
+        assertEquals(1, result.numLoci());
     }
 
     @Test
@@ -92,11 +92,11 @@ public class LiftBackResolverTest
         LiftBackResolver resolver = new LiftBackResolver(contigMap());
         LiftBackResult result = resolver.resolve(record);
 
-        assertEquals(LiftBackCategory.TX_SINGLE, result.Category);
-        assertEquals(CHR_1, result.FinalChrom);
-        assertEquals(100, result.FinalPos);
-        assertEquals("50M", result.FinalCigar);
-        assertFalse(result.HasNCigar);
+        assertEquals(LiftBackCategory.TX_SINGLE, result.category());
+        assertEquals(CHR_1, result.finalChrom());
+        assertEquals(100, result.finalPos());
+        assertEquals("50M", result.finalCigar());
+        assertFalse(result.hasNCigar());
     }
 
     @Test
@@ -108,11 +108,11 @@ public class LiftBackResolverTest
         LiftBackResolver resolver = new LiftBackResolver(contigMap());
         LiftBackResult result = resolver.resolve(record);
 
-        assertEquals(LiftBackCategory.TX_SINGLE, result.Category);
-        assertEquals(CHR_1, result.FinalChrom);
-        assertEquals(150, result.FinalPos);
-        assertEquals("50M100N50M", result.FinalCigar);
-        assertTrue(result.HasNCigar);
+        assertEquals(LiftBackCategory.TX_SINGLE, result.category());
+        assertEquals(CHR_1, result.finalChrom());
+        assertEquals(150, result.finalPos());
+        assertEquals("50M100N50M", result.finalCigar());
+        assertTrue(result.hasNCigar());
     }
 
     @Test
@@ -125,15 +125,15 @@ public class LiftBackResolverTest
         LiftBackResolver resolver = new LiftBackResolver(contigMap());
         LiftBackResult result = resolver.resolve(record);
 
-        assertEquals(LiftBackCategory.BOTH_TX_JUNCTION_REF_SOFTCLIP, result.Category);
-        assertTrue(result.HasNCigar);
-        assertEquals(1, result.NumLoci);
+        assertEquals(LiftBackCategory.BOTH_TX_JUNCTION_REF_SOFTCLIP, result.category());
+        assertTrue(result.hasNCigar());
+        assertEquals(1, result.numLoci());
         // ref alt is dropped from the emitted set because tx wins this discriminator outcome,
         // so only the tx CIGAR remains at the primary locus. The dropped ref alt stays in
         // LiftedAlignments for TSV-B diagnostics.
-        assertEquals(1, result.NumDistinctCigarsAtPrimaryLocus);
-        assertEquals(2, result.LiftedAlignments.size());
-        assertEquals(1, result.LiftedAlignments.stream().filter(la -> !la.Dropped).count());
+        assertEquals(1, result.numDistinctCigarsAtPrimaryLocus());
+        assertEquals(2, result.liftedAlignments().size());
+        assertEquals(1, result.liftedAlignments().stream().filter(la -> !la.Dropped).count());
     }
 
     @Test
@@ -146,8 +146,8 @@ public class LiftBackResolverTest
         LiftBackResolver resolver = new LiftBackResolver(contigMap());
         LiftBackResult result = resolver.resolve(record);
 
-        assertEquals(LiftBackCategory.BOTH_AGREE, result.Category);
-        assertEquals(1, result.NumLoci);
+        assertEquals(LiftBackCategory.BOTH_AGREE, result.category());
+        assertEquals(1, result.numLoci());
     }
 
     @Test
@@ -162,8 +162,8 @@ public class LiftBackResolverTest
         LiftBackResolver resolver = new LiftBackResolver(contigMap());
         LiftBackResult result = resolver.resolve(record);
 
-        assertEquals(LiftBackCategory.BOTH_TX_SOFTCLIP_REF_MATCH, result.Category);
-        assertEquals(1, result.NumLoci);
+        assertEquals(LiftBackCategory.BOTH_TX_SOFTCLIP_REF_MATCH, result.category());
+        assertEquals(1, result.numLoci());
     }
 
     @Test
@@ -178,8 +178,8 @@ public class LiftBackResolverTest
         LiftBackResolver resolver = new LiftBackResolver(contigMap());
         LiftBackResult result = resolver.resolve(record);
 
-        assertEquals(LiftBackCategory.BOTH_AMBIGUOUS, result.Category);
-        assertEquals(1, result.NumLoci);
+        assertEquals(LiftBackCategory.BOTH_AMBIGUOUS, result.category());
+        assertEquals(1, result.numLoci());
     }
 
     @Test
@@ -192,8 +192,8 @@ public class LiftBackResolverTest
         LiftBackResolver resolver = new LiftBackResolver(contigMap());
         LiftBackResult result = resolver.resolve(record);
 
-        assertEquals(LiftBackCategory.BOTH_MULTI, result.Category);
-        assertEquals(2, result.NumLoci);
+        assertEquals(LiftBackCategory.BOTH_MULTI, result.category());
+        assertEquals(2, result.numLoci());
     }
 
     @Test
@@ -206,8 +206,8 @@ public class LiftBackResolverTest
         LiftBackResolver resolver = new LiftBackResolver(contigMap());
         LiftBackResult result = resolver.resolve(record);
 
-        assertEquals(LiftBackCategory.REF_MULTI, result.Category);
-        assertEquals(2, result.NumLoci);
+        assertEquals(LiftBackCategory.REF_MULTI, result.category());
+        assertEquals(2, result.numLoci());
     }
 
     @Test
@@ -228,8 +228,8 @@ public class LiftBackResolverTest
         LiftBackResolver resolver = new LiftBackResolver(twoContigs);
         LiftBackResult result = resolver.resolve(record);
 
-        assertEquals(LiftBackCategory.TX_MULTI, result.Category);
-        assertEquals(2, result.NumLoci);
+        assertEquals(LiftBackCategory.TX_MULTI, result.category());
+        assertEquals(2, result.numLoci());
     }
 
     @Test
@@ -241,8 +241,8 @@ public class LiftBackResolverTest
         LiftBackResolver resolver = new LiftBackResolver(contigMap());
         LiftBackResult result = resolver.resolve(record);
 
-        assertEquals(LiftBackCategory.SUPPLEMENTARY, result.Category);
-        assertEquals(LiftBackResult.RecordRole.SUPPLEMENTARY, result.Role);
+        assertEquals(LiftBackCategory.SUPPLEMENTARY, result.category());
+        assertEquals(LiftBackResult.RecordRole.SUPPLEMENTARY, result.role());
     }
 
     @Test
@@ -254,12 +254,12 @@ public class LiftBackResolverTest
         LiftBackResolver resolver = new LiftBackResolver(contigMap());
         LiftBackResult result = resolver.resolve(record);
 
-        assertEquals(LiftBackCategory.SUPPLEMENTARY, result.Category);
-        assertEquals(LiftBackResult.RecordRole.SUPPLEMENTARY, result.Role);
-        assertEquals(CHR_1, result.FinalChrom);
-        assertEquals(150, result.FinalPos);
-        assertEquals("50M100N50M", result.FinalCigar);
-        assertTrue(result.HasNCigar);
+        assertEquals(LiftBackCategory.SUPPLEMENTARY, result.category());
+        assertEquals(LiftBackResult.RecordRole.SUPPLEMENTARY, result.role());
+        assertEquals(CHR_1, result.finalChrom());
+        assertEquals(150, result.finalPos());
+        assertEquals("50M100N50M", result.finalCigar());
+        assertTrue(result.hasNCigar());
     }
 
     @Test
@@ -272,9 +272,9 @@ public class LiftBackResolverTest
         LiftBackResolver resolver = new LiftBackResolver(contigMap());
         LiftBackResult result = resolver.resolve(record);
 
-        assertEquals(LiftBackCategory.LIFT_FAILED, result.Category);
-        assertEquals(LiftBackResult.RecordRole.SUPPLEMENTARY, result.Role);
-        assertTrue(result.LiftedAlignments.isEmpty());
+        assertEquals(LiftBackCategory.LIFT_FAILED, result.category());
+        assertEquals(LiftBackResult.RecordRole.SUPPLEMENTARY, result.role());
+        assertTrue(result.liftedAlignments().isEmpty());
     }
 
     @Test
@@ -285,9 +285,9 @@ public class LiftBackResolverTest
         LiftBackResolver resolver = new LiftBackResolver(contigMap());
         LiftBackResult result = resolver.resolve(record);
 
-        assertEquals(LiftBackCategory.LIFT_FAILED, result.Category);
-        assertEquals(LiftBackResult.RecordRole.PRIMARY, result.Role);
-        assertTrue(result.Notes.contains("primary_translate_failed"));
+        assertEquals(LiftBackCategory.LIFT_FAILED, result.category());
+        assertEquals(LiftBackResult.RecordRole.PRIMARY, result.role());
+        assertTrue(result.notes().contains("primary_translate_failed"));
     }
 
     @Test
@@ -299,8 +299,8 @@ public class LiftBackResolverTest
         LiftBackResolver resolver = new LiftBackResolver(contigMap());
         LiftBackResult result = resolver.resolve(record);
 
-        assertEquals(LiftBackCategory.TX_SINGLE, result.Category);
-        assertTrue(result.FinalCigar.endsWith("49S"));
+        assertEquals(LiftBackCategory.TX_SINGLE, result.category());
+        assertTrue(result.finalCigar().endsWith("49S"));
     }
 
     @Test
@@ -314,8 +314,8 @@ public class LiftBackResolverTest
         LiftBackResolver resolver = new LiftBackResolver(contigMap());
         LiftBackResult result = resolver.resolve(record);
 
-        assertEquals(LiftBackCategory.BOTH_TX_SOFTCLIP_REF_MATCH, result.Category);
-        assertEquals(1, result.NumLoci);
+        assertEquals(LiftBackCategory.BOTH_TX_SOFTCLIP_REF_MATCH, result.category());
+        assertEquals(1, result.numLoci());
     }
 
     @Test
@@ -329,8 +329,8 @@ public class LiftBackResolverTest
         LiftBackResult result = resolver.resolve(record);
 
         // self + one deduped alt = 2 alignments
-        assertEquals(2, result.LiftedAlignments.size());
-        assertEquals(1, result.NumXaAlts);
+        assertEquals(2, result.liftedAlignments().size());
+        assertEquals(1, result.numXaAlts());
     }
 
     @Test
@@ -346,9 +346,9 @@ public class LiftBackResolverTest
         LiftBackResult result = resolver.resolve(record);
 
         // self + 1 surviving XA alt (the Tx one; the chr1,100,50M XA collapses to the Tx one as both share lifted key)
-        assertEquals(2, result.LiftedAlignments.size());
-        assertEquals(1, result.NumXaAlts);
-        assertEquals(LiftBackCategory.BOTH_AGREE, result.Category);
+        assertEquals(2, result.liftedAlignments().size());
+        assertEquals(1, result.numXaAlts());
+        assertEquals(LiftBackCategory.BOTH_AGREE, result.category());
     }
 
     @Test
@@ -361,8 +361,8 @@ public class LiftBackResolverTest
         LiftBackResolver resolver = new LiftBackResolver(contigMap());
         LiftBackResult result = resolver.resolve(record);
 
-        assertEquals(2, result.LiftedAlignments.size());
-        assertEquals(LiftBackCategory.BOTH_MULTI, result.Category);
+        assertEquals(2, result.liftedAlignments().size());
+        assertEquals(LiftBackCategory.BOTH_MULTI, result.category());
     }
 
     @Test
@@ -378,23 +378,23 @@ public class LiftBackResolverTest
         LiftBackResolver resolver = new LiftBackResolver(contigMap());
         LiftBackResult result = resolver.resolve(record);
 
-        assertEquals(LiftBackCategory.BOTH_MULTI_TX_JUNCTION, result.Category);
-        assertEquals(CHR_1, result.FinalChrom);
-        assertEquals(150, result.FinalPos);
-        assertEquals("50M100N50M", result.FinalCigar);
-        assertTrue(result.HasNCigar);
-        assertEquals(60, result.UpdatedMapq);
-        assertTrue(result.Notes.contains("swapped_ref_to_tx"));
+        assertEquals(LiftBackCategory.BOTH_MULTI_TX_JUNCTION, result.category());
+        assertEquals(CHR_1, result.finalChrom());
+        assertEquals(150, result.finalPos());
+        assertEquals("50M100N50M", result.finalCigar());
+        assertTrue(result.hasNCigar());
+        assertEquals(60, result.updatedMapq());
+        assertTrue(result.notes().contains("swapped_ref_to_tx"));
 
         // self (chr5 ref) should still be in the lifted set but not the primary choice and not dropped
-        LiftedAlignment originalSelf = result.LiftedAlignments.stream()
+        LiftedAlignment originalSelf = result.liftedAlignments().stream()
                 .filter(la -> la.Source == LiftedAlignment.AlignmentSource.SELF)
                 .findFirst().orElseThrow();
         assertFalse(originalSelf.IsPrimaryChoice);
         assertFalse(originalSelf.Dropped);
 
         // the tx XA alt is now the primary choice
-        LiftedAlignment winner = result.LiftedAlignments.stream()
+        LiftedAlignment winner = result.liftedAlignments().stream()
                 .filter(la -> la.IsPrimaryChoice)
                 .findFirst().orElseThrow();
         assertTrue(winner.fromTxContig());
@@ -412,9 +412,9 @@ public class LiftBackResolverTest
         LiftBackResolver resolver = new LiftBackResolver(contigMap());
         LiftBackResult result = resolver.resolve(record);
 
-        assertEquals(LiftBackCategory.BOTH_MULTI, result.Category);
+        assertEquals(LiftBackCategory.BOTH_MULTI, result.category());
         // self stays primary (no swap)
-        LiftedAlignment self = result.LiftedAlignments.stream()
+        LiftedAlignment self = result.liftedAlignments().stream()
                 .filter(la -> la.Source == LiftedAlignment.AlignmentSource.SELF)
                 .findFirst().orElseThrow();
         assertTrue(self.IsPrimaryChoice);
@@ -432,14 +432,14 @@ public class LiftBackResolverTest
         LiftBackResolver resolver = new LiftBackResolver(contigMap());
         LiftBackResult result = resolver.resolve(record);
 
-        assertEquals(LiftBackCategory.BOTH_MULTI_TX_JUNCTION, result.Category);
+        assertEquals(LiftBackCategory.BOTH_MULTI_TX_JUNCTION, result.category());
 
-        LiftedAlignment chr7Alt = result.LiftedAlignments.stream()
+        LiftedAlignment chr7Alt = result.liftedAlignments().stream()
                 .filter(la -> "chr7".equals(la.LiftedChrom))
                 .findFirst().orElseThrow();
         assertTrue(chr7Alt.Dropped);
 
-        LiftedAlignment chr5Self = result.LiftedAlignments.stream()
+        LiftedAlignment chr5Self = result.liftedAlignments().stream()
                 .filter(la -> "chr5".equals(la.LiftedChrom))
                 .findFirst().orElseThrow();
         assertFalse(chr5Self.Dropped);
@@ -458,10 +458,10 @@ public class LiftBackResolverTest
         LiftBackResolver resolver = new LiftBackResolver(contigMap());
         LiftBackResult result = resolver.resolve(record);
 
-        assertEquals(LiftBackCategory.BOTH_TX_JUNCTION_REF_SOFTCLIP, result.Category);
-        assertEquals("50M100N50M", result.FinalCigar);
-        assertTrue(result.HasNCigar);
-        assertTrue(result.Notes.contains("swapped_ref_to_tx"));
+        assertEquals(LiftBackCategory.BOTH_TX_JUNCTION_REF_SOFTCLIP, result.category());
+        assertEquals("50M100N50M", result.finalCigar());
+        assertTrue(result.hasNCigar());
+        assertTrue(result.notes().contains("swapped_ref_to_tx"));
     }
 
     @Test
@@ -476,21 +476,21 @@ public class LiftBackResolverTest
         LiftBackResolver resolver = new LiftBackResolver(contigMap());
         LiftBackResult result = resolver.resolve(record);
 
-        assertEquals(LiftBackCategory.BOTH_TX_JUNCTION_REF_MATCH, result.Category);
-        assertEquals(CHR_1, result.FinalChrom);
-        assertEquals(150, result.FinalPos);
-        assertEquals("151M", result.FinalCigar);
-        assertFalse(result.HasNCigar);
+        assertEquals(LiftBackCategory.BOTH_TX_JUNCTION_REF_MATCH, result.category());
+        assertEquals(CHR_1, result.finalChrom());
+        assertEquals(150, result.finalPos());
+        assertEquals("151M", result.finalCigar());
+        assertFalse(result.hasNCigar());
 
         // ref self stays primary
-        LiftedAlignment self = result.LiftedAlignments.stream()
+        LiftedAlignment self = result.liftedAlignments().stream()
                 .filter(la -> la.Source == LiftedAlignment.AlignmentSource.SELF)
                 .findFirst().orElseThrow();
         assertTrue(self.IsPrimaryChoice);
         assertFalse(self.Dropped);
 
         // tx alt is dropped
-        LiftedAlignment txAlt = result.LiftedAlignments.stream()
+        LiftedAlignment txAlt = result.liftedAlignments().stream()
                 .filter(LiftedAlignment::fromTxContig)
                 .findFirst().orElseThrow();
         assertTrue(txAlt.Dropped);
@@ -508,22 +508,22 @@ public class LiftBackResolverTest
         LiftBackResolver resolver = new LiftBackResolver(contigMap());
         LiftBackResult result = resolver.resolve(record);
 
-        assertEquals(LiftBackCategory.BOTH_TX_JUNCTION_REF_MATCH, result.Category);
-        assertEquals(CHR_1, result.FinalChrom);
-        assertEquals(150, result.FinalPos);
-        assertEquals("151M", result.FinalCigar);
-        assertFalse(result.HasNCigar);
-        assertTrue(result.Notes.contains("swapped_tx_to_ref"));
+        assertEquals(LiftBackCategory.BOTH_TX_JUNCTION_REF_MATCH, result.category());
+        assertEquals(CHR_1, result.finalChrom());
+        assertEquals(150, result.finalPos());
+        assertEquals("151M", result.finalCigar());
+        assertFalse(result.hasNCigar());
+        assertTrue(result.notes().contains("swapped_tx_to_ref"));
 
         // tx self gets demoted (kept in XA, not dropped — informative tx hit)
-        LiftedAlignment txSelf = result.LiftedAlignments.stream()
+        LiftedAlignment txSelf = result.liftedAlignments().stream()
                 .filter(la -> la.Source == LiftedAlignment.AlignmentSource.SELF)
                 .findFirst().orElseThrow();
         assertFalse(txSelf.IsPrimaryChoice);
         assertFalse(txSelf.Dropped);
 
         // ref alt is now the primary
-        LiftedAlignment winner = result.LiftedAlignments.stream()
+        LiftedAlignment winner = result.liftedAlignments().stream()
                 .filter(la -> la.IsPrimaryChoice)
                 .findFirst().orElseThrow();
         assertFalse(winner.fromTxContig());

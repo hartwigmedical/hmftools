@@ -53,25 +53,13 @@ public class TranscriptContigBuilder
                 gene.GeneId, gene.GeneName, transcript.TransName, gene.Chromosome, spans, sequence.toString());
     }
 
-    public static final class TranscriptContigResult
+    public record TranscriptContigResult(
+            String geneId,
+            String geneName,
+            String transName,
+            String chromosome,
+            List<BaseRegion> exonSpans,
+            String sequence)
     {
-        public final String GeneId;
-        public final String GeneName;
-        public final String TransName;
-        public final String Chromosome;
-        public final List<BaseRegion> ExonSpans;
-        public final String Sequence;
-
-        public TranscriptContigResult(
-                final String geneId, final String geneName, final String transName, final String chromosome,
-                final List<BaseRegion> exonSpans, final String sequence)
-        {
-            GeneId = geneId;
-            GeneName = geneName;
-            TransName = transName;
-            Chromosome = chromosome;
-            ExonSpans = exonSpans;
-            Sequence = sequence;
-        }
     }
 }
