@@ -1,0 +1,172 @@
+package com.hartwig.hmftools.redux.splice;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMRecord;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
+// verifies LiftBackWriter produces the exact TSV layout consumers expect: stable header columns
+// and one row per record (TSV-A) / one row per lifted alignment (TSV-B), with MateNum derived from
+// the record's first-of-pair flag.
+public class LiftBackWriterTest
+{
+    private static SAMRecord pairedRecord(final String readName, final boolean firstOfPair)
+    {
+        SAMRecord record = new SAMRecord(new SAMFileHeader());
+        record.setReadName(readName);
+        record.setReadPairedFlag(true);
+        record.setFirstOfPairFlag(firstOfPair);
+        record.setSecondOfPairFlag(!firstOfPair);
+        return record;
+    }
+
+    private static SAMRecord unpairedRecord(final String readName)
+    {
+        SAMRecord record = new SAMRecord(new SAMFileHeader());
+        record.setReadName(readName);
+        record.setReadPairedFlag(false);
+        return record;
+    }
+
+    private Path mTsvA;
+    private Path mTsvB;
+
+    @Before
+    public void setUp() throws IOException
+    {
+        mTsvA = Files.createTempFile("liftback_a_", ".tsv");
+        mTsvB = Files.createTempFile("liftback_b_", ".tsv");
+    }
+
+    @After
+    public void tearDown() throws IOException
+    {
+        Files.deleteIfExists(mTsvA);
+        Files.deleteIfExists(mTsvB);
+    }
+
+    @Test
+    public void testHeadersAndRowsForRefOnlyResult() throws IOException
+    {
+        LiftedAlignment selfAlignment = new LiftedAlignment(
+                LiftedAlignment.AlignmentSource.SELF, "1", 1000, "50M",
+                "1", 1000, "50M",
+                100, 0,
+                null, null, null,
+                false, true);
+
+        LiftBackResult result = new LiftBackResult(
+                LiftBackCategory.REF_SINGLE, LiftBackResult.Composition.REF_ONLY,
+                LiftBackResult.RecordRole.PRIMARY,
+                "1", 1000, "50M",
+                false,
+                false, 60, 60,
+                0, 1, 0,
+                1, 1,
+                false, false, false, true,
+                "", "",
+                List.of(selfAlignment));
+
+        try(LiftBackWriter writer = new LiftBackWriter(mTsvA.toString(), mTsvB.toString()))
+        {
+            writer.write(pairedRecord("read1", true), result, false);
+        }
+
+        List<String> aLines = Files.readAllLines(mTsvA);
+        List<String> bLines = Files.readAllLines(mTsvB);
+
+        assertEquals(2, aLines.size());
+        assertEquals("ReadName\tMateNum\tRecordRole\tPrimaryBucket\tComposition\tDecisionCategory"
+                + "\tBwaMapq\tUpdatedMapq\tNumXaAlts\tNumRefAlts\tNumTxAlts\tNumLoci"
+                + "\tNumDistinctCigarsAtPrimaryLocus\tTxHasNCigar\tTxSoftClipAtBoundary"
+                + "\tRefSoftClipped\tRefFullMatch\tFinalChrom\tFinalPos\tFinalCigar\tHasNCigar"
+                + "\tGeneIds\tNotes\tFiltered", aLines.get(0));
+        assertEquals("read1\t1\tPRIMARY\tRESOLVED\tREF_ONLY\tREF_SINGLE\t60\t60\t0\t1\t0\t1\t1\tfalse\tfalse\tfalse\ttrue\t1\t1000\t50M\tfalse\t\t\tfalse", aLines.get(1));
+
+        assertEquals(2, bLines.size());
+        assertEquals("ReadName\tMateNum\tRecordRole\tSource\tOrigContig\tOrigPos\tOrigCigar"
+                + "\tLiftedChrom\tLiftedPos\tLiftedCigar\tAlignmentScore\tNumMismatches"
+                + "\tTransName\tGeneId\tGeneName", bLines.get(0));
+        assertEquals("read1\t1\tPRIMARY\tSELF\t1\t1000\t50M\t1\t1000\t50M\t100\t0\t\t\t", bLines.get(1));
+    }
+
+    @Test
+    public void testTsvBHasOneRowPerLiftedAlignment() throws IOException
+    {
+        LiftedAlignment self = new LiftedAlignment(
+                LiftedAlignment.AlignmentSource.SELF, "txContig", 1, "50M",
+                "1", 100, "50M",
+                100, 0,
+                "ENST_X", "ENSG_X", "GENEX",
+                false, true);
+
+        LiftedAlignment xa = new LiftedAlignment(
+                LiftedAlignment.AlignmentSource.XA_INPUT, "1", 5000, "50M",
+                "1", 5000, "50M",
+                0, 1,
+                null, null, null,
+                false, true);
+
+        LiftBackResult result = new LiftBackResult(
+                LiftBackCategory.BOTH_MULTI, LiftBackResult.Composition.REF_AND_TX,
+                LiftBackResult.RecordRole.PRIMARY,
+                "1", 100, "50M",
+                false,
+                false, 0, 0,
+                1, 1, 1,
+                2, 1,
+                false, false, false, true,
+                "ENSG_X", "",
+                List.of(self, xa));
+
+        try(LiftBackWriter writer = new LiftBackWriter(mTsvA.toString(), mTsvB.toString()))
+        {
+            writer.write(pairedRecord("read2", false), result, false);
+        }
+
+        List<String> bLines = Files.readAllLines(mTsvB);
+        // header + 2 alignment rows
+        assertEquals(3, bLines.size());
+        assertTrue(bLines.get(1).startsWith("read2\t2\tPRIMARY\tSELF\t"));
+        assertTrue(bLines.get(2).startsWith("read2\t2\tPRIMARY\tXA_INPUT\t"));
+    }
+
+    @Test
+    public void testEmptyAlignmentSetStillEmitsTsvARow() throws IOException
+    {
+        // UNMAPPED / LIFT_FAILED -> TSV-A still gets a row, TSV-B gets nothing
+        LiftBackResult result = new LiftBackResult(
+                LiftBackCategory.UNMAPPED, LiftBackResult.Composition.NONE,
+                LiftBackResult.RecordRole.PRIMARY,
+                "*", 0, "*",
+                false,
+                false, 0, 0,
+                0, 0, 0,
+                0, 0,
+                false, false, false, false,
+                "", "",
+                List.<LiftedAlignment>of());
+
+        try(LiftBackWriter writer = new LiftBackWriter(mTsvA.toString(), mTsvB.toString()))
+        {
+            writer.write(unpairedRecord("read3"), result, false);
+        }
+
+        List<String> aLines = Files.readAllLines(mTsvA);
+        List<String> bLines = Files.readAllLines(mTsvB);
+
+        assertEquals(2, aLines.size());
+        assertTrue(aLines.get(1).startsWith("read3\t0\tPRIMARY\tNON_PRIMARY\tNONE\tUNMAPPED\t"));
+        assertEquals(1, bLines.size()); // header only
+    }
+}

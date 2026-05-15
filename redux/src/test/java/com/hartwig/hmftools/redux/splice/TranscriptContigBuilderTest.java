@@ -35,19 +35,18 @@ public class TranscriptContigBuilderTest
         TranscriptContigBuilder.TranscriptContigResult result = builder.build(gene(POS_STRAND), transcript);
 
         assertNotNull(result);
-        assertEquals("ens" + GENE_ID + "_" + GENE_NAME + "_" + TRANS_NAME, result.Entry.contigName());
-        assertEquals(GENE_ID, result.Entry.geneId());
-        assertEquals(GENE_NAME, result.Entry.geneName());
-        assertEquals(TRANS_NAME, result.Entry.transName());
+        assertEquals(GENE_ID, result.geneId());
+        assertEquals(GENE_NAME, result.geneName());
+        assertEquals(TRANS_NAME, result.transName());
+        assertEquals(CHR_1, result.chromosome());
 
-        assertEquals(3, result.Entry.exonSpans().size());
-        assertEquals(new BaseRegion(100, 199), result.Entry.exonSpans().get(0));
-        assertEquals(new BaseRegion(300, 399), result.Entry.exonSpans().get(1));
-        assertEquals(new BaseRegion(500, 549), result.Entry.exonSpans().get(2));
+        assertEquals(3, result.exonSpans().size());
+        assertEquals(new BaseRegion(100, 199), result.exonSpans().get(0));
+        assertEquals(new BaseRegion(300, 399), result.exonSpans().get(1));
+        assertEquals(new BaseRegion(500, 549), result.exonSpans().get(2));
 
         // sequence length equals total exonic bases (no introns)
-        assertEquals(100 + 100 + 50, result.Sequence.length());
-        assertEquals(result.Entry.contigLength(), result.Sequence.length());
+        assertEquals(100 + 100 + 50, result.sequence().length());
     }
 
     @Test
@@ -64,9 +63,9 @@ public class TranscriptContigBuilderTest
         TranscriptContigBuilder.TranscriptContigResult result = builder.build(gene(NEG_STRAND), transcript);
 
         assertNotNull(result);
-        assertEquals(100, result.Entry.exonSpans().get(0).start());
-        assertEquals(300, result.Entry.exonSpans().get(1).start());
-        assertEquals(500, result.Entry.exonSpans().get(2).start());
+        assertEquals(100, result.exonSpans().get(0).start());
+        assertEquals(300, result.exonSpans().get(1).start());
+        assertEquals(500, result.exonSpans().get(2).start());
     }
 
     @Test
@@ -86,7 +85,7 @@ public class TranscriptContigBuilderTest
         String expected = ref.getBaseString(CHR_1, 100, 199)
                 + ref.getBaseString(CHR_1, 300, 399)
                 + ref.getBaseString(CHR_1, 500, 549);
-        assertEquals(expected, result.Sequence);
+        assertEquals(expected, result.sequence());
     }
 
     @Test
@@ -109,15 +108,15 @@ public class TranscriptContigBuilderTest
         assertNotNull(resultA);
         assertNotNull(resultB);
 
-        assertEquals("ens" + GENE_ID + "_" + GENE_NAME + "_ENST00000001", resultA.Entry.contigName());
-        assertEquals("ens" + GENE_ID + "_" + GENE_NAME + "_ENST00000002", resultB.Entry.contigName());
+        assertEquals("ENST00000001", resultA.transName());
+        assertEquals("ENST00000002", resultB.transName());
 
-        assertEquals(2, resultA.Entry.exonSpans().size());
-        assertEquals(2, resultB.Entry.exonSpans().size());
+        assertEquals(2, resultA.exonSpans().size());
+        assertEquals(2, resultB.exonSpans().size());
 
         // contig A spans 100-199 + 300-399, contig B spans 100-199 + 500-549. Different lengths confirm they're independent.
-        assertEquals(200, resultA.Entry.contigLength());
-        assertEquals(150, resultB.Entry.contigLength());
+        assertEquals(200, resultA.sequence().length());
+        assertEquals(150, resultB.sequence().length());
     }
 
     @Test
@@ -138,8 +137,8 @@ public class TranscriptContigBuilderTest
         TranscriptContigBuilder.TranscriptContigResult result = builder.build(gene(POS_STRAND), transcript);
 
         assertNotNull(result);
-        assertEquals(1, result.Entry.exonSpans().size());
-        assertEquals(101, result.Sequence.length());
+        assertEquals(1, result.exonSpans().size());
+        assertEquals(101, result.sequence().length());
     }
 
     private static GeneData gene(final byte strand)

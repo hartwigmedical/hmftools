@@ -4,17 +4,20 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.region.BaseRegion;
 
+// one transcript-shaped segment laid down on a per-chromosome alt contig. AltStart/AltEnd are 1-based inclusive
+// positions on contigName; exonSpans are 1-based inclusive genomic positions on chromosome.
 public record ContigEntry(
         String contigName,
+        int altStart,
+        int altEnd,
         String geneId,
         String geneName,
         String transName,
         String chromosome,
-        // exon spans on the forward genomic strand, sorted ascending. Each span is 1-based, inclusive.
         List<BaseRegion> exonSpans)
 {
     public int contigLength()
     {
-        return exonSpans.stream().mapToInt(BaseRegion::baseLength).sum();
+        return altEnd - altStart + 1;
     }
 }

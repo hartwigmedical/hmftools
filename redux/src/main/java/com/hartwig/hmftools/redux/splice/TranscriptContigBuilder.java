@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.redux.splice;
 
-import static com.hartwig.hmftools.redux.splice.SpliceCommon.CONTIG_NAME_DELIM;
-import static com.hartwig.hmftools.redux.splice.SpliceCommon.CONTIG_NAME_PREFIX;
-
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -13,6 +10,9 @@ import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.region.BaseRegion;
 
+// per-transcript exon-concatenation. Produces a forward-strand sequence and the genomic exon spans that
+// generated it. Placement of this sequence onto a per-chromosome alt contig (altStart/altEnd) is the
+// caller's job — SpliceFastaBuilder owns that packing.
 public class TranscriptContigBuilder
 {
     private final RefGenomeInterface mRefGenome;
@@ -49,25 +49,17 @@ public class TranscriptContigBuilder
             prevEnd = exon.End;
         }
 
-        String contigName = CONTIG_NAME_PREFIX + gene.GeneId
-                + CONTIG_NAME_DELIM + gene.GeneName
-                + CONTIG_NAME_DELIM + transcript.TransName;
-
-        ContigEntry entry = new ContigEntry(
-                contigName, gene.GeneId, gene.GeneName, transcript.TransName, gene.Chromosome, spans);
-
-        return new TranscriptContigResult(entry, sequence.toString());
+        return new TranscriptContigResult(
+                gene.GeneId, gene.GeneName, transcript.TransName, gene.Chromosome, spans, sequence.toString());
     }
 
-    public static final class TranscriptContigResult
+    public record TranscriptContigResult(
+            String geneId,
+            String geneName,
+            String transName,
+            String chromosome,
+            List<BaseRegion> exonSpans,
+            String sequence)
     {
-        public final ContigEntry Entry;
-        public final String Sequence;
-
-        public TranscriptContigResult(final ContigEntry entry, final String sequence)
-        {
-            Entry = entry;
-            Sequence = sequence;
-        }
     }
 }
