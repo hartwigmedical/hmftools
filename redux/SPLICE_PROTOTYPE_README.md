@@ -20,4 +20,4 @@ java -cp redux/target/redux-2.0-jar-with-dependencies.jar \
     -output_dir ~/Documents/hartwig/temp-output
 ```
 
-Outputs `splice.transcript_contigs.fasta` + `splice.transcript_contigs.sidecar.tsv` in the output dir.
+Outputs `ref_genome_v38_rna_contigs.fasta` + `ref_genome_v38_rna_contigs.sidecar.tsv` in the output dir.
