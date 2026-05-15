@@ -562,11 +562,20 @@ public class FindingRecordFactory
                         .oncogenicVirus(v.interpretation() != null ?
                                 Virus.OncogenicVirus.valueOf(Objects.requireNonNull(v.interpretation()).name())
                                 : null)
-                        .percentageCovered(v.percentageCovered())
+                        .percentageCovered(toPercentage(v.percentageCovered()))
                         .meanCoverage(v.meanCoverage())
-                        .expectedClonalCoverage(v.expectedClonalCoverage())
+                        .expectedClonalCoverage(toPercentageNullable(v.expectedClonalCoverage()))
                         .build()
                 ).sorted(Virus.COMPARATOR).toList();
+    }
+
+    @Nullable
+    private static Double toPercentageNullable(@Nullable Double value) {
+        return value == null ? null : toPercentage(value);
+    }
+
+    private static double toPercentage(double value) {
+        return value * 0.01;
     }
 
     private static DriverInterpretation virusDriverInterpretation(VirusLikelihoodType virusLikelihoodType)
