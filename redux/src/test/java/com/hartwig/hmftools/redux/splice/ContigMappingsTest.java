@@ -14,12 +14,12 @@ import com.hartwig.hmftools.common.region.BaseRegion;
 
 import org.junit.Test;
 
-public class ContigSidecarTest
+public class ContigMappingsTest
 {
     @Test
     public void testRoundTrip() throws IOException
     {
-        File tempFile = Files.createTempFile("contig_sidecar_", ".tsv").toFile();
+        File tempFile = Files.createTempFile("contig_mappings_", ".tsv").toFile();
         tempFile.deleteOnExit();
 
         List<ContigEntry> entries = List.of(
@@ -30,9 +30,9 @@ public class ContigSidecarTest
                         "ensENSG0000002_GENEB_ENST0000002", "ENSG0000002", "GENEB", "ENST0000002", CHR_2,
                         List.of(new BaseRegion(1000, 1050))));
 
-        ContigSidecar.write(tempFile.getAbsolutePath(), entries);
+        ContigMappings.write(tempFile.getAbsolutePath(), entries);
 
-        List<ContigEntry> readBack = ContigSidecar.read(tempFile.getAbsolutePath());
+        List<ContigEntry> readBack = ContigMappings.read(tempFile.getAbsolutePath());
 
         assertEquals(2, readBack.size());
 

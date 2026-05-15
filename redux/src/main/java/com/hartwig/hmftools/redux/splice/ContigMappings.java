@@ -11,7 +11,7 @@ import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.utils.file.DelimFileReader;
 import com.hartwig.hmftools.common.utils.file.DelimFileWriter;
 
-public final class ContigSidecar
+public final class ContigMappings
 {
     public enum Column
     {

@@ -4,7 +4,7 @@ import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.redux.ReduxConfig.APP_NAME;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
-import static com.hartwig.hmftools.redux.splice.SpliceCommon.CONTIG_SIDECAR_FILE_ID;
+import static com.hartwig.hmftools.redux.splice.SpliceCommon.CONTIG_MAPPINGS_FILE_ID;
 import static com.hartwig.hmftools.redux.splice.SpliceCommon.TRANSCRIPT_CONTIGS_FILE_ID;
 
 import java.io.BufferedWriter;
@@ -48,7 +48,7 @@ public class SpliceFastaBuilder
         Map<String, List<GeneData>> chrGeneMap = mEnsemblDataCache.getChrGeneDataMap();
 
         String fastaFile = mConfig.formFilename(TRANSCRIPT_CONTIGS_FILE_ID);
-        String sidecarFile = mConfig.formFilename(CONTIG_SIDECAR_FILE_ID);
+        String mappingsFile = mConfig.formFilename(CONTIG_MAPPINGS_FILE_ID);
 
         TranscriptContigBuilder builder = new TranscriptContigBuilder(refGenome);
 
@@ -110,7 +110,7 @@ public class SpliceFastaBuilder
         RD_LOGGER.info("wrote {} transcript contigs to {} (skipped {} single-exon, {} all-N)",
                 contigsWritten, fastaFile, skippedSingleExon, skippedAllN);
 
-        ContigSidecar.write(sidecarFile, contigEntries);
+        ContigMappings.write(mappingsFile, contigEntries);
 
         RD_LOGGER.info("next: cat <ref.fasta> {} > ref_genome_<ver>_rna_contigs.fasta && bwa-mem2 index ref_genome_<ver>_rna_contigs.fasta",
                 fastaFile);
