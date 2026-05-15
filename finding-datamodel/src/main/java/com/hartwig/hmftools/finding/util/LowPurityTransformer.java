@@ -180,7 +180,7 @@ public class LowPurityTransformer
     private static FindingStatus transform(FindingStatus findingStatus)
     {
         return FindingStatusBuilder.builder()
-                .status(FindingStatus.Status.NOT_RELIABLE)
+                .status(FindingStatus.Status.NOT_AVAILABLE)
                 .errors(addLowPurity(findingStatus.errors()))
                 .warnings(removeLowPurity(findingStatus.warnings()))
                 .build();
