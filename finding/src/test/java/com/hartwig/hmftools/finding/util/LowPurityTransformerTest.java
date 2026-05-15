@@ -68,7 +68,7 @@ public class LowPurityTransformerTest
     }
 
     private void assertFindingStatus(FindingStatus findingStatus) {
-        assertEquals(FindingStatus.Status.NOT_RELIABLE, findingStatus.status());
+        assertEquals(FindingStatus.Status.NOT_AVAILABLE, findingStatus.status());
         assertTrue(findingStatus.errors().contains(FindingStatus.Issue.LOW_PURITY));
         assertFalse(findingStatus.warnings().contains(FindingStatus.Issue.LOW_PURITY));
     }
