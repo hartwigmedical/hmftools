@@ -6,13 +6,14 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.codon.Codons.codonToAminoAcid;
 import static com.hartwig.hmftools.common.codon.Codons.isStopCodon;
+import static com.hartwig.hmftools.common.codon.HgvsCommon.HGVS_START_LOST;
 import static com.hartwig.hmftools.common.codon.Nucleotides.reverseComplementBases;
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_1;
 import static com.hartwig.hmftools.common.gene.TranscriptUtils.calcExonicCodingPhase;
 import static com.hartwig.hmftools.common.gene.TranscriptUtils.tickPhaseForward;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
-import static com.hartwig.hmftools.sage.vis.AminoAcidEvent.START_LOST;
-import static com.hartwig.hmftools.sage.vis.AminoAcidEvent.STOP;
+import static com.hartwig.hmftools.sage.vis.AminoAcidEvent.START_LOST_CHAR;
+import static com.hartwig.hmftools.sage.vis.AminoAcidEvent.STOP_CHAR;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.REF_BUFFER_SIZE;
 
 import java.util.ArrayDeque;
@@ -247,7 +248,7 @@ public final class AminoAcidUtil
                         altAcid = e.alt();
 
                         // if stop codon is gained, then skip over the rest, and covert to non-coding exon models
-                        if(altAcid == STOP)
+                        if(altAcid == STOP_CHAR)
                         {
                             stopCoding = true;
                             break;
@@ -413,7 +414,7 @@ public final class AminoAcidUtil
                     else if(event instanceof AminoAcidEvent.AminoAcidStartLost)
                     {
                         stopCoding = true;
-                        altAcid = START_LOST;
+                        altAcid = START_LOST_CHAR;
                         break;
                     }
                     else
@@ -431,7 +432,7 @@ public final class AminoAcidUtil
                 if(inDel)
                     continue;
 
-                if(!stopCoding || altAcid == STOP)
+                if(!stopCoding || altAcid == STOP_CHAR)
                 {
                     viewModels.add(new GeneRegionViewModel.AminoAcidViewModel(
                             aaRegion.region(), aaPos, refAcid, altAcid, 0, aaPos == 1));

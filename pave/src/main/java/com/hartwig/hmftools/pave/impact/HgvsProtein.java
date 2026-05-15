@@ -11,7 +11,7 @@ import static com.hartwig.hmftools.common.codon.HgvsCommon.HGVS_SYNONYMOUS;
 import static com.hartwig.hmftools.common.codon.HgvsCommon.HGVS_TYPE_DEL;
 import static com.hartwig.hmftools.common.codon.HgvsCommon.HGVS_TYPE_DUP;
 import static com.hartwig.hmftools.common.codon.HgvsCommon.HGVS_TYPE_INS;
-import static com.hartwig.hmftools.common.codon.HgvsCommon.PROTEIN_ID;
+import static com.hartwig.hmftools.common.codon.HgvsCommon.HGVS_PROTEIN_ID;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.FRAMESHIFT;
@@ -27,12 +27,11 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.codon.AminoAcids;
-import com.hartwig.hmftools.common.codon.HgvsCommon;
 import com.hartwig.hmftools.common.variant.impact.VariantEffect;
 
 public final class HgvsProtein
 {
-    public static final String HGVS_SPLICE_UNKNOWN = PROTEIN_ID + "?";
+    public static final String HGVS_SPLICE_UNKNOWN = HGVS_PROTEIN_ID + "?";
 
     private static final Map<Character,String> AMINO_ACID_SINGLE_TO_TRI_MAP = Maps.newHashMap();
 
@@ -98,7 +97,7 @@ public final class HgvsProtein
             return HGVS_UNKNOWN;
 
         StringBuilder sb = new StringBuilder();
-        sb.append(PROTEIN_ID);
+        sb.append(HGVS_PROTEIN_ID);
 
         switch(effect)
         {

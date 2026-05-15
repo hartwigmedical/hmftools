@@ -186,7 +186,7 @@ public final class VisFileBuilder
             }
 
             String sampleId = tumorIds.isEmpty() ? referenceIds.get(0) : tumorIds.get(0);
-            String filename = getFilename(firstVis, sampleId, geneName, aaVariantType);
+            String filename = formFilename(firstVis, sampleId, geneName, aaVariantType);
 
             int tumorTotalReadCount = tumorVis.stream().mapToInt(x -> x.readCount()).sum();
             int refTotalReadCount = refVis.stream().mapToInt(x -> x.readCount()).sum();
@@ -242,17 +242,18 @@ public final class VisFileBuilder
         }
         catch(Exception e)
         {
-            SG_LOGGER.error("failed to generate variant({}) visualisation:: {}", firstVis.VariantInfo, e.toString());
-            System.exit(1);
+            // for this release will remain a warning and non-fatal
+            SG_LOGGER.warn("failed to generate variant({}) visualisation:: {}", firstVis.VariantInfo, e.toString());
+            e.printStackTrace();
         }
     }
 
-    protected static String getFilename(
+    protected static String formFilename(
             final VariantVis variant, final String sampleId, @Nullable final String geneName, @Nullable final String variantType)
     {
         SimpleVariant variantInfo = variant.VariantInfo;
 
-        // for reportable variants must conform to
+        // the filename prefix is used in Orange to link a file to the variant
         String variantPrefix = geneName != null ?
                 generateSageVisFilePrefix(geneName, variantInfo.chromosome(), variantInfo.position(), variantInfo.Ref, variantInfo.Alt)
                 : variant.VariantKey;

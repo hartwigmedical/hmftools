@@ -3,6 +3,15 @@ package com.hartwig.hmftools.sage.vis;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.codon.AminoAcids.TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER;
+import static com.hartwig.hmftools.common.codon.HgvsCommon.HGVS_FRAMESHIFT;
+import static com.hartwig.hmftools.common.codon.HgvsCommon.HGVS_PROTEIN_ID;
+import static com.hartwig.hmftools.common.codon.HgvsCommon.HGVS_START_LOST;
+import static com.hartwig.hmftools.common.codon.HgvsCommon.HGVS_STOP_GAINED;
+import static com.hartwig.hmftools.common.codon.HgvsCommon.HGVS_STOP_LOST;
+import static com.hartwig.hmftools.common.codon.HgvsCommon.HGVS_TYPE_DEL;
+import static com.hartwig.hmftools.common.codon.HgvsCommon.HGVS_TYPE_DEL_INS;
+import static com.hartwig.hmftools.common.codon.HgvsCommon.HGVS_TYPE_DUP;
+import static com.hartwig.hmftools.common.codon.HgvsCommon.HGVS_TYPE_INS;
 
 import java.util.Collections;
 import java.util.List;
@@ -16,12 +25,9 @@ import org.apache.commons.lang3.tuple.Pair;
 
 public interface AminoAcidEvent
 {
-    String FRAME_SHIFT = "fs";
     String TER = "Ter";
-    char START_LOST = '?';
-    char STOP = '*';
-    String START_LOST_STR = "?";
-    String STOP_STR = "*";
+    char START_LOST_CHAR = HGVS_START_LOST.charAt(0);
+    char STOP_CHAR = HGVS_STOP_GAINED.charAt(0);
 
     int aminoAcidStartPos();
     int priority();
@@ -89,31 +95,35 @@ public interface AminoAcidEvent
 
     static List<AminoAcidEvent> parse(final String hgvsStr)
     {
-        CharSequence hgvs = new StringBuilder(hgvsStr);
-        if(!"p.".contentEquals(hgvs.subSequence(0, 2)))
+        CharSequence hgvsWorking = new StringBuilder(hgvsStr);
+
+        if(!HGVS_PROTEIN_ID.contentEquals(hgvsWorking.subSequence(0, 2)))
             throw new IllegalArgumentException(format("hgvs(%s) does not follow expected format", hgvsStr));
 
-        hgvs = hgvs.subSequence(2, hgvs.length());
+        hgvsWorking = hgvsWorking.subSequence(2, hgvsWorking.length());
 
         Pattern pattern = Pattern.compile("^([A-Z][a-z][a-z])(\\d+)(|[^\\d].*)$");
-        Matcher matcher = pattern.matcher(hgvs);
+        Matcher matcher = pattern.matcher(hgvsWorking);
         if(!matcher.find())
             throw new IllegalArgumentException(format("hgvs(%s) does not follow expected format", hgvsStr));
 
         int matchLength = matcher.group(1).length() + matcher.group(2).length();
         String triAA = matcher.group(1);
         int aaPos = Integer.parseInt(matcher.group(2));
-        Pair<String, Integer> ref1 = Pair.of(triAA, aaPos);
-        hgvs = hgvs.subSequence(matchLength, hgvs.length());
 
+        // make a pair of amino acid character and index in the reference
+        Pair<String, Integer> ref1 = Pair.of(triAA, aaPos);
+        hgvsWorking = hgvsWorking.subSequence(matchLength, hgvsWorking.length());
+
+        // make a second pair if the reference spans more than one amino acid
         Pair<String, Integer> ref2 = null;
-        if(!hgvs.isEmpty() && hgvs.charAt(0) == '_')
+        if(!hgvsWorking.isEmpty() && hgvsWorking.charAt(0) == '_')
         {
             if(ref1.getLeft().equals(TER))
                 throw new IllegalArgumentException(format("hgvs(%s) does not follow expected format", hgvsStr));
 
-            hgvs = hgvs.subSequence(1, hgvs.length());
-            matcher = pattern.matcher(hgvs);
+            hgvsWorking = hgvsWorking.subSequence(1, hgvsWorking.length());
+            matcher = pattern.matcher(hgvsWorking);
             if(!matcher.find())
                 throw new IllegalArgumentException(format("hgvs(%s) does not follow expected format", hgvsStr));
 
@@ -121,7 +131,7 @@ public interface AminoAcidEvent
             triAA = matcher.group(1);
             aaPos = Integer.parseInt(matcher.group(2));
             ref2 = Pair.of(triAA, aaPos);
-            hgvs = hgvs.subSequence(matchLength, hgvs.length());
+            hgvsWorking = hgvsWorking.subSequence(matchLength, hgvsWorking.length());
 
             if(ref2.getLeft().equals(TER))
                 throw new IllegalArgumentException(format("hgvs(%s) does not follow expected format", hgvsStr));
@@ -131,11 +141,11 @@ public interface AminoAcidEvent
         }
 
         // synonymous
-        if("=".contentEquals(hgvs))
+        if("=".contentEquals(hgvsWorking))
             return Collections.emptyList();
 
         // frame shift
-        if(FRAME_SHIFT.contentEquals(hgvs))
+        if(HGVS_FRAMESHIFT.contentEquals(hgvsWorking))
         {
             if(ref2 != null)
                 throw new IllegalArgumentException(format("hgvs(%s) does not follow expected format", hgvsStr));
@@ -150,7 +160,7 @@ public interface AminoAcidEvent
                 throw new IllegalArgumentException(format("hgvs(%s) does not follow expected format", hgvsStr));
 
             pattern = Pattern.compile("^([A-Z][a-z][a-z])(ext\\*\\?)$");
-            matcher = pattern.matcher(hgvs);
+            matcher = pattern.matcher(hgvsWorking);
             if(!matcher.find())
                 throw new IllegalArgumentException(format("hgvs(%s) does not follow expected format", hgvsStr));
 
@@ -161,7 +171,7 @@ public interface AminoAcidEvent
             return List.of(new AminoAcidExt(ref1.getRight()));
         }
 
-        if("ext*?".contentEquals(hgvs))
+        if(HGVS_STOP_LOST.contentEquals(hgvsWorking))
         {
             if(ref2 != null)
                 throw new IllegalArgumentException(format("hgvs(%s) does not follow expected format", hgvsStr));
@@ -171,19 +181,19 @@ public interface AminoAcidEvent
 
         // simple missense and stop gained
         pattern = Pattern.compile("^([A-Z][a-z][a-z]|\\*)$");
-        matcher = pattern.matcher(hgvs);
+        matcher = pattern.matcher(hgvsWorking);
         if(matcher.find())
         {
             if(ref2 != null)
                 throw new IllegalArgumentException(format("hgvs(%s) does not follow expected format", hgvsStr));
 
-            String triAltAA = hgvs.toString();
-            char altAA = STOP_STR.equals(triAltAA) ? STOP : TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.get(triAltAA).charAt(0);
+            String triAltAA = hgvsWorking.toString();
+            char altAA = HGVS_STOP_GAINED.equals(triAltAA) ? STOP_CHAR : TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.get(triAltAA).charAt(0);
             return List.of(new AminoAcidSubstitution(ref1.getRight(), altAA));
         }
 
         // start lost
-        if(START_LOST_STR.contentEquals(hgvs))
+        if(HGVS_START_LOST.contentEquals(hgvsWorking))
         {
             if(ref2 != null)
                 throw new IllegalArgumentException(format("hgvs(%s) does not follow expected format", hgvsStr));
@@ -192,7 +202,7 @@ public interface AminoAcidEvent
         }
 
         // del
-        if("del".contentEquals(hgvs))
+        if(HGVS_TYPE_DEL.contentEquals(hgvsWorking))
         {
             int startPos = ref1.getRight();
             int endPos = ref2 == null ? startPos : ref2.getRight();
@@ -200,7 +210,7 @@ public interface AminoAcidEvent
         }
 
         // dup
-        if("dup".contentEquals(hgvs))
+        if(HGVS_TYPE_DUP.contentEquals(hgvsWorking))
         {
             int startPos = ref1.getRight();
             int endPos = ref2 == null ? startPos : ref2.getRight();
@@ -208,41 +218,46 @@ public interface AminoAcidEvent
             return List.of(new AminoAcidIns(endPos, dupLength));
         }
 
-        if(!("ins".contentEquals(hgvs.subSequence(0, 3)) || "delins".contentEquals(hgvs.subSequence(0, 6))))
+        if(!(HGVS_TYPE_INS.contentEquals(hgvsWorking.subSequence(0, 3)) || HGVS_TYPE_DEL_INS.contentEquals(hgvsWorking.subSequence(0, 6))))
             throw new IllegalArgumentException(format("hgvs(%s) does not follow expected format", hgvsStr));
 
         // ins, del-ins, including stop gained
-        boolean isInsert = "ins".contentEquals(hgvs.subSequence(0, 3));
-        if(isInsert)
-            hgvs = hgvs.subSequence(3, hgvs.length());
-        else
-            hgvs = hgvs.subSequence(6, hgvs.length());
+        boolean isInsert = HGVS_TYPE_INS.contentEquals(hgvsWorking.subSequence(0, 3));
+        boolean isDelInsert = !isInsert;
 
-        if(ref2 == null)
-            throw new IllegalArgumentException(format("hgvs(%s) does not follow expected format", hgvsStr));
+        if(isInsert)
+            hgvsWorking = hgvsWorking.subSequence(3, hgvsWorking.length());
+        else
+            hgvsWorking = hgvsWorking.subSequence(6, hgvsWorking.length());
+
+        if(ref2 == null && isDelInsert)
+        {
+            ref2 = Pair.of(hgvsWorking.toString(), ref1.getRight());
+            // throw new IllegalArgumentException(format("hgvs(%s) does not follow expected format", hgvsStr));
+        }
 
         if(isInsert && ref2.getRight() != ref1.getRight() + 1)
             throw new IllegalArgumentException(format("hgvs(%s) does not follow expected format", hgvsStr));
 
         StringBuilder altAcids = new StringBuilder();
         pattern = Pattern.compile("^[A-Z][a-z][a-z].*$");
-        while(!hgvs.isEmpty())
+        while(!hgvsWorking.isEmpty())
         {
-            matcher = pattern.matcher(hgvs);
+            matcher = pattern.matcher(hgvsWorking);
             if(matcher.find())
             {
-                String triAltAA = hgvs.subSequence(0, 3).toString();
+                String triAltAA = hgvsWorking.subSequence(0, 3).toString();
                 if(TER.equals(triAltAA))
                     throw new IllegalArgumentException(format("hgvs(%s) does not follow expected format", hgvsStr));
 
                 altAcids.append(TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.get(triAltAA));
-                hgvs = hgvs.subSequence(3, hgvs.length());
+                hgvsWorking = hgvsWorking.subSequence(3, hgvsWorking.length());
                 continue;
             }
 
-            if(STOP_STR.contentEquals(hgvs))
+            if(HGVS_STOP_GAINED.contentEquals(hgvsWorking))
             {
-                altAcids.append(STOP_STR);
+                altAcids.append(HGVS_STOP_GAINED);
                 break;
             }
 
