@@ -59,7 +59,7 @@ public class SpecialFusions
 
     public void cacheSpecialFusionGenes()
     {
-        for(final KnownFusionData kfData : mKnownFusionCache.getData())
+        for(KnownFusionData kfData : mKnownFusionCache.getData())
         {
             if(kfData.downstreamDistance(FS_UP) > 0)
             {
@@ -88,7 +88,7 @@ public class SpecialFusions
                     if(mGeneDataCache.getAlternativeGeneData().stream().anyMatch(x -> x.GeneId.equals(geneData.GeneId)))
                         continue;
 
-                    for(final ChrBaseRegion altRegion : kfData.getThreeGeneAltRegions())
+                    for(ChrBaseRegion altRegion : kfData.getThreeGeneAltRegions())
                     {
                         mGeneDataCache.getAlternativeGeneData().add(new GeneData(
                                 geneData.GeneId, geneData.GeneName, altRegion.Chromosome, geneData.Strand, altRegion.start(), altRegion.end(), ""));
@@ -107,7 +107,7 @@ public class SpecialFusions
         if(enhancerTargets.isEmpty())
             return fusions;
 
-        for(final SvVarData var : svList)
+        for(SvVarData var : svList)
         {
             if(var.isSglBreakend())
                 continue;

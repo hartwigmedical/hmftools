@@ -265,7 +265,7 @@ public class CnSegmentBuilder
         double defaultBaf = 0.5;
 
         int cnId = 0;
-        for(final Map.Entry<String, List<SvBreakend>> entry : chrBreakendMap.entrySet())
+        for(Map.Entry<String, List<SvBreakend>> entry : chrBreakendMap.entrySet())
         {
             final String chromosome = entry.getKey();
             final List<SvBreakend> breakendList = entry.getValue();

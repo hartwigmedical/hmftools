@@ -229,6 +229,12 @@ public class DriverGeneAnnotator implements CohortFileInterface
         }
     }
 
+    private static boolean writeDriverType(final DriverType driverType)
+    {
+        return DriverType.DRIVERS_LINX_SOMATIC.contains(driverType)
+                || driverType == DriverType.DEL || driverType == DriverType.AMP || driverType == PARTIAL_AMP;
+    }
+
     private void writeDriverData(final DriverGeneData dgData)
     {
         if(!dgData.TransData.IsCanonical) // currently ignored since would duplicate everything
@@ -237,7 +243,7 @@ public class DriverGeneAnnotator implements CohortFileInterface
         // convert to a sample driver record
         if(mVisSampleData != null)
         {
-            for(final DriverGeneEvent driverEvent : dgData.getEvents())
+            for(DriverGeneEvent driverEvent : dgData.getEvents())
             {
                 int clusterId = driverEvent.getCluster() != null ? driverEvent.getCluster().id() : -1;
 
@@ -255,7 +261,7 @@ public class DriverGeneAnnotator implements CohortFileInterface
         if(!mConfig.hasMultipleSamples())
             return;
 
-        DriverCatalog driverGene = dgData.DriverData;
+        DriverCatalog driverCatalog = dgData.DriverData;
         GeneData geneData = dgData.GeneInfo;
 
         TelomereCentromereCnData tcData = mDataCache.CopyNumberData.getChrTeleCentroData().get(dgData.GeneInfo.Chromosome);
@@ -277,15 +283,19 @@ public class DriverGeneAnnotator implements CohortFileInterface
 
         for(DriverGeneEvent driverEvent : dgData.getEvents())
         {
+            // only write CN and Linx-specific driver types (ie exclude small variant mutations from the output)
+            if(!writeDriverType(driverCatalog.driver()))
+                continue;
+
             SvBreakend[] breakendPair = driverEvent.getBreakendPair();
 
             StringJoiner sj = new StringJoiner(TSV_DELIM);
             sj.add(mSampleId);
-            sj.add(driverGene.gene());
-            sj.add(driverGene.category().toString());
-            sj.add(driverGene.driver().toString());
-            sj.add(driverGene.likelihoodMethod().toString());
-            sj.add(format("%.2f", driverGene.driverLikelihood()));
+            sj.add(driverCatalog.gene());
+            sj.add(driverCatalog.category().toString());
+            sj.add(driverCatalog.driver().toString());
+            sj.add(driverCatalog.likelihoodMethod().toString());
+            sj.add(format("%.2f", driverCatalog.driverLikelihood()));
             sj.add(String.valueOf(dgData.fullyMatched()));
             sj.add(driverEvent.Type.toString());
 
@@ -311,7 +321,6 @@ public class DriverGeneAnnotator implements CohortFileInterface
             sj.add(format("%.2f", centromereCopyNumber));
             sj.add(format("%.2f", telomereCopyNumber));
             sj.add(format("%.2f", driverEvent.getCopyNumberGain()));
-            sj.add("");
 
             // breakend info if present
             int posStart = breakendPair[SE_START] != null ? breakendPair[SE_START].position() : 0;

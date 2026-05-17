@@ -143,7 +143,7 @@ public class DisruptionFinder implements CohortFileInterface
 
         Set<SvCluster> clusters = Sets.newHashSet();
 
-        for(final SvVarData var : svList)
+        for(SvVarData var : svList)
         {
             markTranscriptsDisruptive(var);
 
@@ -221,7 +221,7 @@ public class DisruptionFinder implements CohortFileInterface
     {
         List<BreakendTransData> transList = Lists.newArrayList();
 
-        for(final BreakendGeneData gene : genes)
+        for(BreakendGeneData gene : genes)
         {
             transList.addAll(gene.transcripts().stream().filter(x -> x.isDisruptive()).collect(Collectors.toList()));
         }
@@ -246,7 +246,7 @@ public class DisruptionFinder implements CohortFileInterface
             final List<BreakendGeneData> genesStart, final List<BreakendGeneData> genesEnd, final String context)
     {
         // check for breakend transcripts from DELs and DUPs which start and end in the same intron
-        for(final BreakendGeneData geneStart : genesStart)
+        for(BreakendGeneData geneStart : genesStart)
         {
             final BreakendGeneData geneEnd = genesEnd.stream()
                     .filter(x -> x.geneId().equals(geneStart.geneId())).findFirst().orElse(null);
@@ -264,7 +264,7 @@ public class DisruptionFinder implements CohortFileInterface
         // look for matching transcripts which are both in the same non-exonic section
         boolean foundMatchingTrans = false;
 
-        for(final BreakendTransData trans1 : transList1)
+        for(BreakendTransData trans1 : transList1)
         {
             final BreakendTransData trans2 = transList2.stream()
                     .filter(x -> x.transId() == trans1.transId()).findFirst().orElse(null);
@@ -462,7 +462,7 @@ public class DisruptionFinder implements CohortFileInterface
                 return;
         }
 
-        for(final LinkedPair pair : chain.getLinkedPairs())
+        for(LinkedPair pair : chain.getLinkedPairs())
         {
             if(!pair.isAssembled())
                 continue;
@@ -650,7 +650,7 @@ public class DisruptionFinder implements CohortFileInterface
 
     private void checkOtherEndsNonGenic(final SvChain chain)
     {
-        for(final LinkedPair pair : chain.getLinkedPairs())
+        for(LinkedPair pair : chain.getLinkedPairs())
         {
             SvBreakend breakend1 = pair.firstBreakend();
             SvBreakend breakend2 = pair.secondBreakend();
@@ -724,9 +724,9 @@ public class DisruptionFinder implements CohortFileInterface
                 if(transDataList == null)
                     continue;
 
-                for(final TranscriptData transData : transDataList)
+                for(TranscriptData transData : transDataList)
                 {
-                    for(final ExonData exonData : transData.exons())
+                    for(ExonData exonData : transData.exons())
                     {
                         if(exonData.Rank == 1)
                             continue;
@@ -974,7 +974,7 @@ public class DisruptionFinder implements CohortFileInterface
 
         List<String> outputLines = Lists.newArrayList();
 
-        for(final SvDisruptionData disruptionData : mDisruptions)
+        for(SvDisruptionData disruptionData : mDisruptions)
         {
             StringBuilder sb = new StringBuilder();
 

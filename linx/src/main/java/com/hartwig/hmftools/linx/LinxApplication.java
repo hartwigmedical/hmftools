@@ -119,7 +119,7 @@ public class LinxApplication
             }
 
             int saIndex = 0;
-            for(final String sampleId : samplesList)
+            for(String sampleId : samplesList)
             {
                 saSampleLists.get(saIndex).add(sampleId);
                 ++saIndex;

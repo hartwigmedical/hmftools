@@ -254,7 +254,7 @@ public class CohortDataWriter
 
         try
         {
-            for(final SvVarData var : svDataList)
+            for(SvVarData var : svDataList)
             {
                 final SvCluster cluster = var.getCluster();
 
@@ -477,7 +477,7 @@ public class CohortDataWriter
 
         try
         {
-            for(final SvCluster cluster : clusters)
+            for(SvCluster cluster : clusters)
             {
                 int clusterSvCount = cluster.getSvCount();
 
@@ -519,7 +519,7 @@ public class CohortDataWriter
 
                 double foldbackCount = 0;
 
-                for(final SvVarData var : cluster.getFoldbacks())
+                for(SvVarData var : cluster.getFoldbacks())
                 {
                     // avoid double-count chained foldbacks
                     if(var.getFoldbackBreakend(true) != null)
@@ -660,13 +660,13 @@ public class CohortDataWriter
 
         try
         {
-            for(final SvCluster cluster : clusters)
+            for(SvCluster cluster : clusters)
             {
                 int clusterSvCount = cluster.getSvCount();
 
                 List<SvChain> chains = cluster.getChains();
 
-                for(final SvChain chain : chains)
+                for(SvChain chain : chains)
                 {
                     int chainSvCount = chain.getSvCount();
                     boolean chainConsistent = chain.isConsistent();

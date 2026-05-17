@@ -47,7 +47,7 @@ public class ClusteringPrep
     public static void populateChromosomeBreakendMap(final List<SvVarData> allVariants, final ClusteringState state)
     {
         // add each SV's breakends to a map keyed by chromosome, with the breakends in order of position lowest to highest
-        for(final SvVarData var : allVariants)
+        for(SvVarData var : allVariants)
         {
             addSvToChrBreakendMap(var, state.getChrBreakendMap());
         }
@@ -203,7 +203,7 @@ public class ClusteringPrep
 
         int simpleArmCount = 0;
 
-        for(final Map.Entry<String, List<SvBreakend>> entry : state.getChrBreakendMap().entrySet())
+        for(Map.Entry<String, List<SvBreakend>> entry : state.getChrBreakendMap().entrySet())
         {
             final String chromosome = entry.getKey();
             final List<SvBreakend> breakendList = entry.getValue();
@@ -212,7 +212,7 @@ public class ClusteringPrep
             boolean pArmHasInversions = false;
             boolean qArmHasInversions = false;
 
-            for(final SvBreakend breakend : breakendList)
+            for(SvBreakend breakend : breakendList)
             {
                 final SvVarData var = breakend.getSV();
 
@@ -239,7 +239,7 @@ public class ClusteringPrep
             if(!qArmHasInversions)
                 ++simpleArmCount;
 
-            for(final SvBreakend breakend : breakendList)
+            for(SvBreakend breakend : breakendList)
             {
                 if(!breakend.usesStart() || !(breakend.type() == DEL || breakend.type() == DUP))
                     continue;
@@ -361,7 +361,7 @@ public class ClusteringPrep
 
         if(state.getLohEventList() != null)
         {
-            for(final LohEvent lohEvent : state.getLohEventList())
+            for(LohEvent lohEvent : state.getLohEventList())
             {
                 if(!lohEvent.isSvEvent())
                     continue;
@@ -376,7 +376,7 @@ public class ClusteringPrep
                 if(breakendList == null)
                     continue;
 
-                for(final SvBreakend breakend : breakendList)
+                for(SvBreakend breakend : breakendList)
                 {
                     final SvVarData var = breakend.getSV();
 
@@ -429,7 +429,7 @@ public class ClusteringPrep
                 if(breakendList == null)
                     continue;
 
-                for(final SvBreakend breakend : breakendList)
+                for(SvBreakend breakend : breakendList)
                 {
                     if(breakend.orientation() == 1 && breakend.getSV().id() == homLossEvent.StartSV)
                     {

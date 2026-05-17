@@ -216,7 +216,7 @@ public class ChainRuleSelector
         // find all breakends with only one other link option
         if(!proposedLinks.isEmpty())
         {
-            for(final ProposedLinks proposedLink : proposedLinks)
+            for(ProposedLinks proposedLink : proposedLinks)
             {
                 boolean hasSingleOption = false;
 

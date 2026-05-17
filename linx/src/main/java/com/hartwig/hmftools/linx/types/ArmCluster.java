@@ -93,7 +93,7 @@ public class ArmCluster
 
     public static ArmCluster findArmCluster(final SvCluster cluster, final SvBreakend breakend)
     {
-        for(final ArmCluster armCluster : cluster.getArmClusters())
+        for(ArmCluster armCluster : cluster.getArmClusters())
         {
             if(armCluster.getBreakends().contains(breakend))
                 return armCluster;
@@ -144,7 +144,7 @@ public class ArmCluster
 
                 boolean groupFound = false;
 
-                for(final ArmCluster armCluster : armClusters)
+                for(ArmCluster armCluster : armClusters)
                 {
                     if(!breakend.chromosome().equals(armCluster.chromosome()) || breakend.arm() != armCluster.arm())
                         continue;
@@ -236,7 +236,7 @@ public class ArmCluster
 
         List<SvBreakend> tiBreakends = Lists.newArrayList();
 
-        for(final SvBreakend breakend : mBreakends)
+        for(SvBreakend breakend : mBreakends)
         {
             if(breakend.getSV().isLineElement(breakend.usesStart()))
             {
@@ -350,7 +350,7 @@ public class ArmCluster
     {
         int[] results = new int[ArmClusterType.values().length];
 
-        for(final ArmCluster armCluster : cluster.getArmClusters())
+        for(ArmCluster armCluster : cluster.getArmClusters())
         {
             ++results[armCluster.getType().ordinal()];
         }
@@ -360,7 +360,7 @@ public class ArmCluster
 
     public static void logArmClusterData(final SvCluster cluster)
     {
-        for(final ArmCluster armCluster : cluster.getArmClusters())
+        for(ArmCluster armCluster : cluster.getArmClusters())
         {
             LNX_LOGGER.debug("cluster({}) armCluster({}) breakends({}) type({})",
                     cluster.id(), armCluster.toString(), armCluster.getBreakends().size(), armCluster.getType());
