@@ -49,24 +49,17 @@ public class Junction implements Comparable<Junction>
     private IndelCoords mIndelCoords; // the consensus indel if applicable
 
     @Nullable
-    private final SagaMatcher.MatchByLocation mSagaMatch;
+    private SagaMatcher.MatchByLocation mSagaMatch;
 
     public Junction(final String chromosome, final int position, final Orientation orientation)
     {
-        this(chromosome, position, orientation, false, false, false, null);
+        this(chromosome, position, orientation, false, false, false);
         mRawDiscordantPosition = -1;
     }
 
     public Junction(
             final String chromosome, final int position, final Orientation orientation, final boolean discordantOnly,
             final boolean indelBased, final boolean hotspot)
-    {
-        this(chromosome, position, orientation, discordantOnly, indelBased, hotspot, null);
-    }
-
-    public Junction(
-            final String chromosome, final int position, final Orientation orientation, final boolean discordantOnly,
-            final boolean indelBased, final boolean hotspot, @Nullable final SagaMatcher.MatchByLocation sagaMatch)
     {
         Chromosome = chromosome;
         Position = position;
@@ -100,7 +93,7 @@ public class Junction implements Comparable<Junction>
 
         mIndelCoords = null;
 
-        mSagaMatch = sagaMatch;
+        mSagaMatch = null;
     }
 
     public boolean isForward() { return Orient.isForward(); }
@@ -155,6 +148,17 @@ public class Junction implements Comparable<Junction>
     public int compareTo(final Junction other)
     {
         return compareJunctions(Chromosome, other.Chromosome, Position, other.Position, Orient, other.Orient);
+    }
+
+    public void matchToSaga(final SagaMatcher sagaMatcher)
+    {
+        setSagaMatch(sagaMatcher.matchByLocation(Chromosome, Position));
+        SV_LOGGER.trace("junction({}) SAGA location match {}", this, mSagaMatch);
+    }
+
+    public void setSagaMatch(final SagaMatcher.MatchByLocation match)
+    {
+        mSagaMatch = match;
     }
 
     @Nullable
@@ -231,14 +235,12 @@ public class Junction implements Comparable<Junction>
                 boolean indel = indelIndex != null && Boolean.parseBoolean(values[indelIndex]);
                 boolean hotspot = hotspotIndex != null && Boolean.parseBoolean(values[hotspotIndex]);
 
+                Junction junction = new Junction(chromosome, position, orientation, discordantOnly, indel, hotspot);
+
                 // TODO: actually do this in prep
-                SagaMatcher.MatchByLocation sagaMatch = sagaMatcher == null ? null : sagaMatcher.matchByLocation(chromosome, position);
-
-                Junction junction = new Junction(chromosome, position, orientation, discordantOnly, indel, hotspot, sagaMatch);
-
                 if(sagaMatcher != null)
                 {
-                    SV_LOGGER.trace("junction({}) SAGA location match {}", junction, junction.mSagaMatch);
+                    junction.matchToSaga(sagaMatcher);
                 }
 
                 if(hotspot)

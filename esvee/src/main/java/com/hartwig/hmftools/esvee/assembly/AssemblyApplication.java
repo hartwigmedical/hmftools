@@ -181,8 +181,13 @@ public class AssemblyApplication
     {
         if(!mConfig.SpecificJunctions.isEmpty())
         {
+            SagaMatcher sagaMatcher = mSagaResource == null ? null : new SagaMatcher(mSagaResource);
             for(Junction junction : mConfig.SpecificJunctions)
             {
+                if(sagaMatcher != null)
+                {
+                    junction.matchToSaga(sagaMatcher);
+                }
                 List<Junction> chrJunctions = mChrJunctionsMap.get(junction.Chromosome);
                 if(chrJunctions == null)
                 {

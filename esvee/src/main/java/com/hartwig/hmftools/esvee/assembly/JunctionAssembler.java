@@ -213,6 +213,7 @@ public class JunctionAssembler
 
         if (firstAssembly.bases().length == 0)
         {
+            SV_LOGGER.trace("filter stage=junctionAssembly reason=\"no assembly bases\" data=assembly({})", firstAssembly);
             assemblies.remove(firstAssembly);
         }
 
@@ -411,8 +412,10 @@ public class JunctionAssembler
 
         SV_LOGGER.trace("junction({}) discordant position adjust: {}", mJunction, adjustedJuncPosition);
 
-        mJunction = new Junction(
-                mJunction.Chromosome, adjustedJuncPosition, mJunction.Orient, true, false, false, mJunction.sagaMatch());
+        Junction newJunction = new Junction(
+                mJunction.Chromosome, adjustedJuncPosition, mJunction.Orient, true, false, false);
+        newJunction.setSagaMatch(mJunction.sagaMatch());
+        mJunction = newJunction;
 
         mJunction.setRawDiscordantPosition(originalJuncPosition);
 
