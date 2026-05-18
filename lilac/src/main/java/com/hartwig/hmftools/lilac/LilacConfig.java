@@ -84,8 +84,6 @@ public class LilacConfig
     // global for convenience
     public static SequencingType SEQUENCING_TYPE = ILLUMINA;
 
-    public final boolean IsPanel;
-
     public final double HlaYPercentThreshold;
 
     public final int MinFragmentsPerAllele;
@@ -202,19 +200,18 @@ public class LilacConfig
 
         ResourceDir = checkAddDirSeparator(configBuilder.getValue(RESOURCE_DIR));
         RefGenome = configBuilder.getValue(REF_GENOME, "");
-
         RefGenVersion = RefGenomeVersion.from(configBuilder);
-        IsPanel = configBuilder.hasFlag(TARGETED_PANEL);
 
-        if(IsPanel)
+        SEQUENCING_TYPE = SequencingType.valueOf(configBuilder.getValue(SEQUENCING_TYPE_CFG));
+
+        if(configBuilder.hasFlag(TARGETED_PANEL) || SEQUENCING_TYPE != ILLUMINA)
         {
-            // increase rates due to higher variability in coverage
+            // increase rates due to higher variability in coverage or noise
             LilacConstants.WARN_UNMATCHED_HAPLOTYPE_SUPPORT *= 2;
             LilacConstants.WARN_INDEL_THRESHOLD *= 2;
         }
 
         Genes = GeneSelector.parseArg(configBuilder.getValue(GENES));
-        SEQUENCING_TYPE = SequencingType.valueOf(configBuilder.getValue(SEQUENCING_TYPE_CFG));
 
         LilacConstants.MIN_EVIDENCE_FACTOR = configBuilder.getDecimal(MIN_EVIDENCE_FACTOR);
         LilacConstants.MIN_HIGH_QUAL_EVIDENCE_FACTOR = configBuilder.getDecimal(MIN_HIGH_QUAL_EVIDENCE_FACTOR);
@@ -302,7 +299,6 @@ public class LilacConfig
         Genes = Sets.newHashSet(GeneSelector.MHC_CLASS_1);
 
         MaxRefFragments = DEFAULT_MAX_REF_FRAGMENTS;
-        IsPanel = false;
 
         MinFragmentsPerAllele = DEFAULT_FRAGS_PER_ALLELE;
         MinFragmentsToRemoveSingle = DEFAULT_FRAGS_REMOVE_SGL;
