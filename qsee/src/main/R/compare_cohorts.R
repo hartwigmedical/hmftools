@@ -436,8 +436,9 @@ SCALE_Y_LOG10 <- scale_y_log10(label = function(x) format(x, scientific = FALSE,
 preordered_factor <- function(x){ factor(x, unique(x)) }
 
 merge_cohort_data <- function(target_cohort_data, reference_cohort_data){
-   target_cohort_data$Cohort <- COHORT_TYPE$TARGET$name
-   reference_cohort_data$Cohort <- COHORT_TYPE$REFERENCE$name
+
+   target_cohort_data <- target_cohort_data %>% dplyr::mutate(Cohort = COHORT_TYPE$TARGET$name)
+   reference_cohort_data <- reference_cohort_data %>% dplyr::mutate(Cohort = COHORT_TYPE$REFERENCE$name)
    
    df <- dplyr::bind_rows(target_cohort_data, reference_cohort_data)
    df$Cohort <- preordered_factor(df$Cohort)
@@ -896,7 +897,7 @@ if(!is.null(TARGET_COHORT$linx.fusion)){
    plot_to_pdf(
       REPORTABLE_FUSIONS_PLOT, 
       form_plot_path(".frequency.fusion.pdf"), 
-      width = REPORTABLE_FUSIONS_PLOT$width*0.5 + 1, 
+      width = REPORTABLE_FUSIONS_PLOT$width*0.5 + 2, 
       height = 5
    )
    
