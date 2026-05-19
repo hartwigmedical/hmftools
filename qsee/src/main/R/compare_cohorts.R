@@ -46,9 +46,6 @@ args <- local({
    parser$parse_args()
 })
 
-if(is.null(args$reference_tables_dir)) args$reference_tables_dir <- file.path(args$output_dir, "tables")
-if(is.null(args$target_tables_dir)) args$target_tables_dir <- file.path(args$output_dir, "tables")
-
 ## =============================
 ## Logging / common functions
 ## =============================
@@ -133,6 +130,12 @@ DRIVER_GENES <- local({
 ## Config
 ## =============================
 
+if(is.null(args$reference_tables_dir)) args$reference_tables_dir <- file.path(args$output_dir, "tables")
+if(is.null(args$target_tables_dir)) args$target_tables_dir <- file.path(args$output_dir, "tables")
+
+if(!dir.exists(args$reference_tables_dir)) dir.create(args$reference_tables_dir, recursive = TRUE)
+if(!dir.exists(args$target_tables_dir)) dir.create(args$target_tables_dir, recursive = TRUE)
+
 COHORT_TYPE <- list(
    
    REFERENCE = list(
@@ -154,9 +157,6 @@ DEFAULT_COVERAGE_THRESHOLDS <- c(50, 100, 200, 400)
 ## =============================
 ## Loader functions 
 ## =============================
-
-if(!dir.exists(args$reference_tables_dir)) dir.create(args$reference_tables_dir, recursive = TRUE)
-if(!dir.exists(args$target_tables_dir)) dir.create(args$target_tables_dir, recursive = TRUE)
 
 merge_tsvs <- function(cohort_type, pattern, output_file_suffix, read_func = NULL, progress_interval = 500){
    
@@ -366,7 +366,9 @@ merge_tsvs.isofox.gene_data <- function(cohort_type){
       read_func=read_func, progress_interval=10
    )
    
-   df$AdjTPM <- as.numeric(df$AdjTPM)
+   if(!is.null(df)){
+      df$AdjTPM <- as.numeric(df$AdjTPM)   
+   }
    
    return(df)
 }
@@ -374,7 +376,6 @@ merge_tsvs.isofox.gene_data <- function(cohort_type){
 ## =============================
 ## Load sample data
 ## =============================
-
 
 TARGET_COHORT <- local({
    
@@ -418,7 +419,7 @@ REFERENCE_COHORT <- local({
 ## =============================
 
 PLOTS_DIR <- file.path(args$output_dir, "plots")
-if(!dir.exists(PLOTS_DIR)) dir.create(PLOTS_DIR)
+if(!dir.exists(PLOTS_DIR)) dir.create(PLOTS_DIR, recursive=TRUE)
 
 scale_values <- function(target_cohort_value, reference_cohort_value){
    values <- c(target_cohort_value, reference_cohort_value)
@@ -435,8 +436,9 @@ SCALE_Y_LOG10 <- scale_y_log10(label = function(x) format(x, scientific = FALSE,
 preordered_factor <- function(x){ factor(x, unique(x)) }
 
 merge_cohort_data <- function(target_cohort_data, reference_cohort_data){
-   target_cohort_data$Cohort <- COHORT_TYPE$TARGET$name
-   reference_cohort_data$Cohort <- COHORT_TYPE$REFERENCE$name
+
+   target_cohort_data <- target_cohort_data %>% dplyr::mutate(Cohort = COHORT_TYPE$TARGET$name)
+   reference_cohort_data <- reference_cohort_data %>% dplyr::mutate(Cohort = COHORT_TYPE$REFERENCE$name)
    
    df <- dplyr::bind_rows(target_cohort_data, reference_cohort_data)
    df$Cohort <- preordered_factor(df$Cohort)
@@ -895,7 +897,7 @@ if(!is.null(TARGET_COHORT$linx.fusion)){
    plot_to_pdf(
       REPORTABLE_FUSIONS_PLOT, 
       form_plot_path(".frequency.fusion.pdf"), 
-      width = REPORTABLE_FUSIONS_PLOT$width*0.5 + 1, 
+      width = REPORTABLE_FUSIONS_PLOT$width*0.5 + 2, 
       height = 5
    )
    
@@ -1071,3 +1073,19 @@ if(!is.null(TARGET_COHORT$isofox.gene_data)){
       
    plot_to_pdf(RNA_ADJ_TPM_PLOTS, form_plot_path(".rna.adj_tpm.pdf"), width = 12, height = 8)
 }
+
+
+## =============================
+## Create tar of plots
+## =============================
+
+setwd(PLOTS_DIR)
+tar(
+   tarfile = file.path(
+      args$output_dir, 
+      paste0(args$target_name, ".plots.",  format(Sys.time(), "%Y%m%d_%H%M"), ".tar.gz")
+   ), 
+   files = list.files(PLOTS_DIR, ".pdf"),
+   compression = "gzip"
+)
+
