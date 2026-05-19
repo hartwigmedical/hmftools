@@ -76,9 +76,6 @@ public class BamEvidenceReader
         {
             String chromosome = mConfig.RefGenVersion.versionedChromosome(entry.getKey().toString());
 
-            if(!mConfig.SpecificChromosomes.isEmpty() && !mConfig.SpecificChromosomes.contains(chromosome))
-                continue;
-
             List<PositionEvidence> positions = entry.getValue();
 
             if(positions.isEmpty())
@@ -91,7 +88,7 @@ public class BamEvidenceReader
             {
                 PositionEvidence posEvidence = positions.get(i);
 
-                if(currentTask.Region.end() + minGap < posEvidence.Position) // or  || tasks.size() >= maxPositionsPerRegion
+                if(currentTask.Region.end() + minGap < posEvidence.Position)
                 {
                     // start a new region
                     currentTask = new RegionTask(mEvidenceChecker, chromosome, posEvidence);

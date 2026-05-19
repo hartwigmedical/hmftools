@@ -26,17 +26,12 @@ public class TumorAnalysis
     {
         return mBafs;
     }
-
-    public ListMultimap<Chromosome, TumorContamination> getContamination()
-    {
-        return mContamination;
-    }
+    public ListMultimap<Chromosome, TumorContamination> getContamination() { return mContamination; }
 
     public TumorAnalysis(
             final AmberConfig config, SamReaderFactory readerFactory,
             final ListMultimap<Chromosome, PositionEvidence> germlineHetLoci,
             final ListMultimap<Chromosome, PositionEvidence> germlineHomLoci)
-            throws InterruptedException
     {
         mConfig = config;
 

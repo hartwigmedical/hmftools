@@ -64,10 +64,6 @@ public class ResultsWriter
     {
         Collections.sort(contaminationList);
 
-        String outputVcf = mConfig.OutputDir + mConfig.TumorId + ".amber.contamination.vcf.gz";
-        AMB_LOGGER.info("writing {} contamination records to {}", contaminationList.size(), outputVcf);
-        new VCFWriter(mConfig).writeContamination(outputVcf, contaminationList);
-
         String filename = TumorContaminationFile.generateContaminationFilename(mConfig.OutputDir, mConfig.TumorId);
         TumorContaminationFile.write(filename, contaminationList);
     }

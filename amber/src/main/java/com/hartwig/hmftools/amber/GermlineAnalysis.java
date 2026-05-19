@@ -37,7 +37,7 @@ public class GermlineAnalysis
 
     public GermlineAnalysis(
             final AmberConfig config, SamReaderFactory readerFactory, ListMultimap<Chromosome,AmberSite> chrAmberSites)
-            throws InterruptedException, IOException
+            throws IOException
     {
         mConfig = config;
 
@@ -94,7 +94,7 @@ public class GermlineAnalysis
 
     private ListMultimap<Chromosome, PositionEvidence> germlineDepth(
             final SamReaderFactory readerFactory, final String bamPath,
-            final ListMultimap<Chromosome,AmberSite> chrAmberSites) throws InterruptedException
+            final ListMultimap<Chromosome,AmberSite> chrAmberSites)
     {
         AMB_LOGGER.info("processing {} Amber sites in reference bam({})", chrAmberSites.values().size(), bamPath);
 
