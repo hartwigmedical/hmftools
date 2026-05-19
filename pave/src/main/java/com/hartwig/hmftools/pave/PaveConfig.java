@@ -24,17 +24,12 @@ import static com.hartwig.hmftools.pave.FilterType.ALL;
 import static com.hartwig.hmftools.pave.FilterType.PASS;
 import static com.hartwig.hmftools.pave.annotation.GnomadAnnotation.GNOMAD_NO_FILTER;
 
-import java.util.List;
-
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.utils.file.FileReaderUtils;
 import com.hartwig.hmftools.common.variant.pon.GnomadCache;
 import com.hartwig.hmftools.pave.annotation.Blacklistings;
 import com.hartwig.hmftools.pave.annotation.ClinvarAnnotation;
