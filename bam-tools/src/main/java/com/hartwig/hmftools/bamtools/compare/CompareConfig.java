@@ -43,6 +43,7 @@ public class CompareConfig
     public final boolean CompareCoordsOnly;
     public final boolean CheckBasesAndQuals;
     public final boolean StandardChromosomes;
+    public final int CigarBoundaryTolerance;
 
     public final boolean IgnoreReduxAlterations; // consensus reads and internal unmappings
 
@@ -66,6 +67,7 @@ public class CompareConfig
     private static final String IGNORE_CONSENSUS_READS = "ignore_consensus_reads";
     private static final String IGNORE_REDUX_UNMAPPED = "ignore_redux_unmapped";
     private static final String IGNORE_REDUX_DIFFS = "ignore_redux_diffs";
+    private static final String CIGAR_BOUNDARY_TOLERANCE = "cigar_boundary_tolerance";
     private static final String COORDS_ONLY = "coords_only";
     private static final String CHECK_BASES_QUALS = "check_bases_quals";
     protected static final String STANDARD_CHROMOSOMES = "std_chromosomes";
@@ -94,6 +96,8 @@ public class CompareConfig
         int maxCachedReadsPerThread = configBuilder.getInteger(MAX_CACHED_READS_PER_THREAD);
 
         CompareCoordsOnly = configBuilder.hasFlag(COORDS_ONLY);
+
+        CigarBoundaryTolerance = configBuilder.getInteger(CIGAR_BOUNDARY_TOLERANCE);
 
         if(configBuilder.hasFlag(IGNORE_REDUX_DIFFS))
         {
@@ -188,6 +192,9 @@ public class CompareConfig
         configBuilder.addFlag(CHECK_BASES_QUALS, "Ignore differences in consensus read bases and quals");
         configBuilder.addFlag(STANDARD_CHROMOSOMES, "Only process standard human chromosomes");
 
+        configBuilder.addInteger(CIGAR_BOUNDARY_TOLERANCE,
+                "Tolerate up to N bp drift on M-block boundaries when comparing CIGARs (0 = strict)", 0);
+
         addRefGenomeFile(configBuilder, false);
         addSpecificChromosomesRegionsConfig(configBuilder);
         addLoggingOptions(configBuilder);
@@ -213,6 +220,7 @@ public class CompareConfig
 
         CompareCoordsOnly = false;
         StandardChromosomes = false;
+        CigarBoundaryTolerance = 0;
 
         OutputFile = null;
         OrigBamFile = null;

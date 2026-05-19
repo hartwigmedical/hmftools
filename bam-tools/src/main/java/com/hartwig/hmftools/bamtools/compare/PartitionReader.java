@@ -23,6 +23,7 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.ValidationStringency;
 
 public class PartitionReader implements Callable<Void>
 {
@@ -80,9 +81,11 @@ public class PartitionReader implements Callable<Void>
         BT_LOGGER.trace("processing {}", partitionStr());
 
         SamReader origSamReader = SamReaderFactory.makeDefault()
+                .validationStringency(ValidationStringency.SILENT)
                 .referenceSequence(new File(mConfig.RefGenomeFile)).open(mOrigBamFile);
 
         SamReader newSamReader = SamReaderFactory.makeDefault()
+                .validationStringency(ValidationStringency.SILENT)
                 .referenceSequence(new File(mConfig.RefGenomeFile)).open(mNewBamFile);
 
         // reads are stored inside a hash table and looked up by the read ID
@@ -162,9 +165,13 @@ public class PartitionReader implements Callable<Void>
 
             // in the event of the 2 reads matching, it will end up storing the original, only to retrieve again when the new is processed
             // but for 2 dissimilar BAMs that is probably unlikely
+            // skip the total-record counters in the hash-bam re-processing pass to avoid double-counting
+            final boolean countTotals = mUnmatchedReadHandler != null;
+
             if(advanceOrig)
             {
-                ++mStats.OrigReadCount;
+                if(countTotals)
+                    ++mStats.OrigReadCount;
                 origRead = origBamIter.next();
                 origReadKey = checkAndFormReadKey(origRead);
                 origReadAlignStart = origRead.getAlignmentStart();
@@ -172,7 +179,8 @@ public class PartitionReader implements Callable<Void>
 
             if(advanceNew)
             {
-                ++mStats.NewReadCount;
+                if(countTotals)
+                    ++mStats.NewReadCount;
                 newRead = newBamIter.next();
                 newReadKey = checkAndFormReadKey(newRead);
                 newReadAlignStart = newRead.getAlignmentStart();
@@ -186,17 +194,23 @@ public class PartitionReader implements Callable<Void>
             }
             else
             {
-                // rather than either wait for the next read to be a match, process any unmatched read now
+                // rather than either wait for the next read to be a match, process any unmatched read now.
+                // a null ReadKey means checkAndFormReadKey rejected the record (excludeRead, partition
+                // out-of-range, etc) — drop it here rather than letting it slip into the unmatched cache
+                // with a null map key, where it would either get compared with another null-keyed record
+                // or be emitted as a spurious ORIG_ONLY / NEW_ONLY at partition end.
                 if(origRead != null)
                 {
-                    checkMatch(origRead, origReadKey, true);
+                    if(origReadKey != null)
+                        checkMatch(origRead, origReadKey, true);
                     origRead = null;
                     origReadKey = null;
                 }
 
                 if(newRead != null)
                 {
-                    checkMatch(newRead, newReadKey, false);
+                    if(newReadKey != null)
+                        checkMatch(newRead, newReadKey, false);
                     newRead = null;
                     newReadKey = null;
                 }
@@ -217,10 +231,10 @@ public class PartitionReader implements Callable<Void>
             }
         }
 
-        if(origRead != null)
+        if(origRead != null && origReadKey != null)
             mOrigBamReads.put(origReadKey, origRead);
 
-        if(newRead != null)
+        if(newRead != null && newReadKey != null)
             mNewBamReads.put(newReadKey, newRead);
 
         completePartition();
@@ -303,11 +317,18 @@ public class PartitionReader implements Callable<Void>
         else
         {
             // write them out as mismatches
-            mOrigBamReads.values().forEach(read -> mReadWriter.writeComparison(read, ORIG_ONLY, null));
-            mStats.DiffCount += mOrigBamReads.size();
-
-            mNewBamReads.values().forEach(read -> mReadWriter.writeComparison(read, NEW_ONLY, null));
-            mStats.DiffCount += mNewBamReads.size();
+            mOrigBamReads.values().forEach(read ->
+            {
+                DiffBucket bucket = DiffBucket.classify(ORIG_ONLY, read, null, null);
+                mReadWriter.writeComparison(read, ORIG_ONLY, null, bucket);
+                mStats.recordOrigOnly();
+            });
+            mNewBamReads.values().forEach(read ->
+            {
+                DiffBucket bucket = DiffBucket.classify(NEW_ONLY, read, null, null);
+                mReadWriter.writeComparison(read, NEW_ONLY, null, bucket);
+                mStats.recordNewOnly();
+            });
         }
 
         mOrigBamReads.clear();
@@ -326,8 +347,9 @@ public class PartitionReader implements Callable<Void>
 
         if(!diffs.isEmpty())
         {
-            ++mStats.DiffCount;
-            mReadWriter.writeComparison(origRead, VALUE, diffs);
+            DiffBucket bucket = DiffBucket.classify(VALUE, origRead, newRead, diffs);
+            mStats.recordValue();
+            mReadWriter.writeComparison(origRead, VALUE, diffs, bucket);
         }
     }
 
