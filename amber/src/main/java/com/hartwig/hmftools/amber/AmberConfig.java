@@ -41,6 +41,7 @@ import org.apache.logging.log4j.Logger;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.bam.BamUtils;
+import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import htsjdk.samtools.ValidationStringency;
@@ -77,7 +78,7 @@ public class AmberConfig
     public final boolean SkipBafSegmentation;
     public final boolean PerfDebug;
 
-    public final List<String> SpecificChromosomes;
+    public final SpecificRegions SpecificChrRegions;
 
     public static final Logger AMB_LOGGER = LogManager.getLogger(AmberConfig.class);
 
@@ -165,12 +166,7 @@ public class AmberConfig
         Threads = parseThreads(configBuilder);
         BamStringency = BamUtils.validationStringency(configBuilder);
 
-        SpecificChromosomes = loadSpecificChromsomes(configBuilder);
-
-        if(!SpecificChromosomes.isEmpty())
-        {
-            AMB_LOGGER.info("restricting to chromosomes: {}", configBuilder.getValue(SPECIFIC_CHROMOSOMES));
-        }
+        SpecificChrRegions = SpecificRegions.from(configBuilder);
     }
 
     public static void registerConfig(final ConfigBuilder configBuilder)

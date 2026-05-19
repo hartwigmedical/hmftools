@@ -1,10 +1,13 @@
 package com.hartwig.hmftools.amber.contamination;
 
+import static com.hartwig.hmftools.amber.AmberConfig.AMB_LOGGER;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 import java.util.StringJoiner;
 
@@ -17,8 +20,6 @@ import org.jetbrains.annotations.NotNull;
 
 public final class TumorContaminationFile
 {
-    private static final String HEADER_PREFIX = "chr";
-
     private static final String AMBER_EXTENSION = ".amber.contamination.tsv";
 
     public static String generateContaminationFilename(@NotNull final String basePath, @NotNull final String sample)
@@ -26,76 +27,88 @@ public final class TumorContaminationFile
         return basePath + File.separator + sample + AMBER_EXTENSION;
     }
 
-    public static void write(@NotNull final String filename, @NotNull final List<TumorContamination> contamination) throws IOException
+    public static void write(final String filename, final List<TumorContamination> contamination) throws IOException
     {
         Files.write(new File(filename).toPath(), toLines(contamination));
     }
 
-    @NotNull
-    static List<TumorContamination> fromLines(@NotNull List<String> lines)
+    public static List<TumorContamination> read(final String filename)
     {
-        final List<TumorContamination> result = Lists.newArrayList();
+        try
+        {
+            List<String> lines = Files.readAllLines(Paths.get(filename));
+            return fromLines(lines);
+        }
+        catch(IOException e)
+        {
+            AMB_LOGGER.error("failed to read contamination file({}): {}", filename, e.toString());
+            return null;
+        }
+    }
+
+    public static List<TumorContamination> fromLines(final List<String> lines)
+    {
+        List<TumorContamination> contaminationEntries = Lists.newArrayList();
+
+        if(lines.get(0).startsWith(Columns.chromosome.toString()))
+            lines.remove(0);
+
         for(String line : lines)
         {
-            if(!line.startsWith(HEADER_PREFIX))
-            {
-                result.add(fromString(line));
-            }
+            String[] values = line.split(TSV_DELIM);
+
+            PositionEvidence positionEvidence = new PositionEvidence(
+                    values[Columns.chromosome.ordinal()], Integer.parseInt(values[Columns.position.ordinal()]),
+                    values[Columns.ref.ordinal()], values[Columns.alt.ordinal()]);
+
+            BaseDepthData normalDepth = new BaseDepthData(
+                    AmberBase.valueOf(positionEvidence.ref()),
+                    AmberBase.valueOf(positionEvidence.alt()),
+                    Integer.parseInt(values[Columns.normalDepth.ordinal()]),
+                    0,
+                    Integer.parseInt(values[Columns.normalRefSupport.ordinal()]),
+                    Integer.parseInt(values[Columns.normalAltSupport.ordinal()]));
+
+            BaseDepthData tumorDepth = new BaseDepthData(
+                    AmberBase.valueOf(positionEvidence.ref()),
+                    AmberBase.valueOf(positionEvidence.alt()),
+                    Integer.parseInt(values[Columns.tumorDepth.ordinal()]),
+                    0,
+                    Integer.parseInt(values[Columns.tumorRefSupport.ordinal()]),
+                    Integer.parseInt(values[Columns.tumorAltSupport.ordinal()]));
+
+            TumorContamination tumorContamination = new TumorContamination(
+                    positionEvidence.Chromosome, positionEvidence.Position, normalDepth, tumorDepth);
+
+            contaminationEntries.add(tumorContamination);
         }
 
-        return result;
+        return contaminationEntries;
     }
 
-    @NotNull
-    private static TumorContamination fromString(@NotNull final String line)
+    private enum Columns
     {
-        String[] values = line.split(TSV_DELIM);
-
-        PositionEvidence template = new PositionEvidence(values[0], Integer.parseInt(values[1]), values[2], values[3]);
-
-        BaseDepthData normalDepth = new BaseDepthData(
-                AmberBase.valueOf(template.ref()),
-                AmberBase.valueOf(template.alt()),
-                Integer.parseInt(values[4]),
-                0,
-                Integer.parseInt(values[5]),
-                Integer.parseInt(values[6]));
-
-        BaseDepthData tumorDepth = new BaseDepthData(
-                AmberBase.valueOf(template.ref()),
-                AmberBase.valueOf(template.alt()),
-                Integer.parseInt(values[7]),
-                0,
-                Integer.parseInt(values[8]),
-                Integer.parseInt(values[9]));
-
-        return new TumorContamination(template.Chromosome, template.Position, normalDepth, tumorDepth);
+        chromosome,
+        position,
+        ref,
+        alt,
+        normalDepth,
+        normalRefSupport,
+        normalAltSupport,
+        tumorDepth,
+        tumorRefSupport,
+        tumorAltSupport;
     }
 
-    @NotNull
-    static List<String> toLines(@NotNull final List<TumorContamination> contamination)
+    public static List<String> toLines(final List<TumorContamination> contamination)
     {
-        final List<String> lines = Lists.newArrayList();
-        lines.add(header());
+        List<String> lines = Lists.newArrayList();
+
+        StringJoiner sj = new StringJoiner(TSV_DELIM);
+        Arrays.stream(Columns.values()).forEach(x -> sj.add(x.toString()));
+        lines.add(sj.toString());
         contamination.stream().map(TumorContaminationFile::toString).forEach(lines::add);
         return lines;
-    }
-
-    @NotNull
-    private static String header()
-    {
-        return new StringJoiner(TSV_DELIM, "", "")
-                .add("chromosome")
-                .add("position")
-                .add("ref")
-                .add("alt")
-                .add("normalDepth")
-                .add("normalRefSupport")
-                .add("normalAltSupport")
-                .add("tumorDepth")
-                .add("tumorRefSupport")
-                .add("tumorAltSupport")
-                .toString();
     }
 
     private static String toString(final TumorContamination ratio)
