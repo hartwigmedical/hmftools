@@ -57,28 +57,26 @@ public final class TumorContaminationFile
         {
             String[] values = line.split(TSV_DELIM);
 
-            PositionEvidence positionEvidence = new PositionEvidence(
-                    values[Columns.chromosome.ordinal()], Integer.parseInt(values[Columns.position.ordinal()]),
-                    values[Columns.ref.ordinal()], values[Columns.alt.ordinal()]);
+            String chromosome = values[Columns.chromosome.ordinal()];
+            int position = Integer.parseInt(values[Columns.position.ordinal()]);
+            String ref = values[Columns.ref.ordinal()];
+            String alt = values[Columns.alt.ordinal()];
 
             BaseDepthData normalDepth = new BaseDepthData(
-                    AmberBase.valueOf(positionEvidence.ref()),
-                    AmberBase.valueOf(positionEvidence.alt()),
+                    AmberBase.valueOf(ref), AmberBase.valueOf(alt),
                     Integer.parseInt(values[Columns.normalDepth.ordinal()]),
                     0,
                     Integer.parseInt(values[Columns.normalRefSupport.ordinal()]),
                     Integer.parseInt(values[Columns.normalAltSupport.ordinal()]));
 
             BaseDepthData tumorDepth = new BaseDepthData(
-                    AmberBase.valueOf(positionEvidence.ref()),
-                    AmberBase.valueOf(positionEvidence.alt()),
+                    AmberBase.valueOf(ref), AmberBase.valueOf(alt),
                     Integer.parseInt(values[Columns.tumorDepth.ordinal()]),
                     0,
                     Integer.parseInt(values[Columns.tumorRefSupport.ordinal()]),
                     Integer.parseInt(values[Columns.tumorAltSupport.ordinal()]));
 
-            TumorContamination tumorContamination = new TumorContamination(
-                    positionEvidence.Chromosome, positionEvidence.Position, normalDepth, tumorDepth);
+            TumorContamination tumorContamination = new TumorContamination(chromosome, position, normalDepth, tumorDepth);
 
             contaminationEntries.add(tumorContamination);
         }

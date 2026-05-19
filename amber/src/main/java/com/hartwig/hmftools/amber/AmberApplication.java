@@ -228,6 +228,13 @@ public class AmberApplication implements AutoCloseable
 
         List<AmberBAF> amberBAFList = tumorBAFList.stream().map(AmberUtils::fromTumorBaf).filter(AmberUtils::isValid).collect(toList());
 
+        if(mConfig.WriteTumorData)
+        {
+            List<PositionEvidence> rawData = tumorBAFList.stream().map(x -> x.TumorEvidence).toList();
+            String rawDataFileName = PositionEvidenceFile.generateTumorDataFilename(mConfig.OutputDir, mConfig.TumorId);
+            PositionEvidenceFile.write(rawDataFileName, rawData);
+        }
+
         List<TumorContamination> contaminationList = new ArrayList<>(tumor.getContamination().values());
 
         long sampleHetCount = amberBAFList.size();
@@ -260,11 +267,13 @@ public class AmberApplication implements AutoCloseable
                 .sorted().toList();
 
         List<PositionEvidence> rawData = readDepthAndQualityFiltered.stream().map(x -> x.TumorEvidence).toList();
+
         if(mConfig.WriteTumorData)
         {
             String rawDataFileName = PositionEvidenceFile.generateTumorDataFilename(mConfig.OutputDir, mConfig.TumorId);
             PositionEvidenceFile.write(rawDataFileName, rawData);
         }
+
         PurityAnalysisConfig purityAnalysisConfig = new PurityAnalysisConfig(mConfig);
         TumorOnlyPurityAnalysis noiseFloorAnalysis = new TumorOnlyPurityAnalysis(rawData, mChromosomeSites, purityAnalysisConfig);
         double noiseFloor = noiseFloorAnalysis.cutoff();
