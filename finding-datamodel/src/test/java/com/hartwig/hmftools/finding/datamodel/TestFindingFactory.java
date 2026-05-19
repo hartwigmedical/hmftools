@@ -65,7 +65,7 @@ public class TestFindingFactory
     @NotNull
     public static QcBuilder qcBuilder()
     {
-        return QcBuilder.builder().status(new TreeSet<>()).germlineAberrations(new TreeSet<>());
+        return QcBuilder.builder().isPass(true).errors(new TreeSet<>()).warnings(new TreeSet<>()).germlineAberrations(new TreeSet<>());
     }
 
     @NotNull
