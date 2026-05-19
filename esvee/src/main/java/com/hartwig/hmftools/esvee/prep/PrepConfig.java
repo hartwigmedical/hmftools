@@ -94,9 +94,6 @@ public class PrepConfig
 
     private boolean mIsValid;
 
-    // both of these are set from the fragment length distribution
-    private boolean mUnpairedReads;
-
     // config strings
     public static final String BAM_FILE = "bam_file";
     public static final String BAM_FILE_DESC = "BAM file paths separated by ','";
@@ -179,7 +176,6 @@ public class PrepConfig
         TrackRemotes = configBuilder.hasFlag(TRACK_REMOTES);
         NoCleanUp = configBuilder.hasFlag(NO_CLEAN_UP);
         PerfDebug = configBuilder.hasFlag(PERF_DEBUG);
-        mUnpairedReads = false;
     }
 
     public boolean isValid()
@@ -243,8 +239,6 @@ public class PrepConfig
         TrimReadId = false;
         NoCleanUp = false;
         MaxFragmentLengthOverride = -1;
-
-        mUnpairedReads = false;
     }
 
     public static void registerConfig(final ConfigBuilder configBuilder)

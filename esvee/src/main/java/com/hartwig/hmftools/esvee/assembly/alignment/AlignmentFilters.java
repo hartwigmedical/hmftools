@@ -343,9 +343,6 @@ public final class AlignmentFilters
 
     private static boolean findShortestLocalVariant(final AlignData first, AlignData second)
     {
-        if(first.isRequery() || second.isRequery())
-            return false;
-
         // form alt alignments from the top alignment to make comparison easier
         List<AlternativeAlignment> firstAlignments = collectAlignmentCandidates(first, true);
         List<AlternativeAlignment> secondAlignments = collectAlignmentCandidates(second, false);
