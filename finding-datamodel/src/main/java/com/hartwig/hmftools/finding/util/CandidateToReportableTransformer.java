@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.finding.util;
 
-import java.util.function.Function;
+import static com.hartwig.hmftools.finding.util.TransformUtil.transformDriverFindingList;
 
 import com.hartwig.hmftools.finding.datamodel.FindingRecord;
 import com.hartwig.hmftools.finding.datamodel.FindingRecordBuilder;
@@ -10,11 +10,8 @@ import com.hartwig.hmftools.finding.datamodel.SmallVariant;
 import com.hartwig.hmftools.finding.datamodel.SmallVariantBuilder;
 import com.hartwig.hmftools.finding.datamodel.Virus;
 import com.hartwig.hmftools.finding.datamodel.VirusBuilder;
-import com.hartwig.hmftools.finding.datamodel.driver.Driver;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFields;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFieldsBuilder;
-import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingList;
-import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingListBuilder;
 import com.hartwig.hmftools.finding.datamodel.driver.ReportedStatus;
 
 import jakarta.validation.constraints.NotNull;
@@ -25,19 +22,10 @@ public class CandidateToReportableTransformer
     public static FindingRecord transform(@NotNull FindingRecord record)
     {
         return FindingRecordBuilder.builder(record)
-                .somaticSmallVariants(transform(record.somaticSmallVariants(), CandidateToReportableTransformer::transform))
-                .germlineSmallVariants(transform(record.germlineSmallVariants(), CandidateToReportableTransformer::transform))
-                .fusions(transform(record.fusions(), CandidateToReportableTransformer::transform))
-                .viruses(transform(record.viruses(), CandidateToReportableTransformer::transform))
-                .build();
-    }
-
-    @NotNull
-    private static <T extends Driver> DriverFindingList<T> transform(@NotNull DriverFindingList<T> driverFindingList,
-            Function<T, T> transformFunction)
-    {
-        return DriverFindingListBuilder.builder(driverFindingList)
-                .findings(driverFindingList.stream().map(transformFunction).toList())
+                .somaticSmallVariants(transformDriverFindingList(record.somaticSmallVariants(), CandidateToReportableTransformer::transform))
+                .germlineSmallVariants(transformDriverFindingList(record.germlineSmallVariants(), CandidateToReportableTransformer::transform))
+                .fusions(transformDriverFindingList(record.fusions(), CandidateToReportableTransformer::transform))
+                .viruses(transformDriverFindingList(record.viruses(), CandidateToReportableTransformer::transform))
                 .build();
     }
 

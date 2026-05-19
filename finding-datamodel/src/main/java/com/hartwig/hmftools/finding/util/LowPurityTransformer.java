@@ -91,17 +91,16 @@ public class LowPurityTransformer
                 || hasLowPurity(record.tumorMutationalBurden().status())
                 || hasLowPurity(record.homologousRecombination().status());
 
-        SortedSet<Qc.QCStatus> updatedStatus = new TreeSet<>(record.qc().status());
+        SortedSet<Qc.QCStatus> updatedWarnings = new TreeSet<>(record.qc().warnings());
+        updatedWarnings.remove(Qc.QCStatus.LOW_PURITY);
+
+        SortedSet<Qc.QCStatus> updatedErrors = new TreeSet<>(record.qc().warnings());
         if(hasLowPurity)
         {
-            updatedStatus.add(Qc.QCStatus.WARN_LOW_PURITY);
-        }
-        else
-        {
-            updatedStatus.remove(Qc.QCStatus.WARN_LOW_PURITY);
+            updatedErrors.add(Qc.QCStatus.LOW_PURITY);
         }
 
-        Qc updatedQc = QcBuilder.builder(record.qc()).status(updatedStatus).build();
+        Qc updatedQc = QcBuilder.builder(record.qc()).errors(updatedErrors).warnings(updatedWarnings).build();
         return FindingRecordBuilder.builder(record).qc(updatedQc).build();
     }
 
@@ -138,7 +137,7 @@ public class LowPurityTransformer
     {
         if(shouldConvert(findingList.status(), hasLowPurity(purity, findingList.purityThreshold())))
         {
-            return FindingRecordTransformerUtil.transformFindingList(findingList, findingsStatusConverter, findingConverter, null);
+            return TransformUtil.transformFindingList(findingList, findingsStatusConverter, findingConverter, null);
         }
         else
         {
@@ -151,7 +150,7 @@ public class LowPurityTransformer
     {
         if(shouldConvert(driverFindingList.status(), hasLowPurity(purity, driverFindingList.purityThreshold())))
         {
-            return FindingRecordTransformerUtil.transformDriverFindingList(driverFindingList,
+            return TransformUtil.transformDriverFindingList(driverFindingList,
                     LowPurityTransformer::transform,
                     f -> null,
                     null);

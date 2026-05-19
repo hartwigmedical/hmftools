@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.finding.util;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.hartwig.hmftools.finding.datamodel.Disruption;
 import com.hartwig.hmftools.finding.datamodel.DisruptionBuilder;
 import com.hartwig.hmftools.finding.datamodel.Doubles;
@@ -14,13 +11,8 @@ import com.hartwig.hmftools.finding.datamodel.HlaAllele;
 import com.hartwig.hmftools.finding.datamodel.HlaAlleleBuilder;
 import com.hartwig.hmftools.finding.datamodel.SmallVariant;
 import com.hartwig.hmftools.finding.datamodel.SmallVariantBuilder;
-import com.hartwig.hmftools.finding.datamodel.driver.DriverFields;
-import com.hartwig.hmftools.finding.datamodel.driver.DriverFieldsBuilder;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingList;
-import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingListBuilder;
-import com.hartwig.hmftools.finding.datamodel.driver.ReportedStatus;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingList;
-import com.hartwig.hmftools.finding.datamodel.finding.FindingListBuilder;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -48,9 +40,9 @@ public class CopyNumberRoundingTransformer
     }
 
     @NotNull
-    private static DriverFindingList<SmallVariant> roundCopyNumberSmallVariant(@NotNull DriverFindingList<SmallVariant> germlineVariants)
+    private static DriverFindingList<SmallVariant> roundCopyNumberSmallVariant(@NotNull DriverFindingList<SmallVariant> variants)
     {
-        return DriverFindingListBuilder.builder(germlineVariants).findings(transformSmallVariant(germlineVariants.findings())).build();
+        return TransformUtil.transformDriverFindingList(variants, CopyNumberRoundingTransformer::roundCopyNumbers);
     }
 
     @NotNull
@@ -60,132 +52,91 @@ public class CopyNumberRoundingTransformer
     }
 
     @NotNull
-    public static List<SmallVariant> transformSmallVariant(@NotNull List<SmallVariant> smallVariants)
+    static SmallVariant roundCopyNumbers(@NotNull SmallVariant smallVariant)
     {
-        List<SmallVariant> smallVariantList = new ArrayList<>();
-        for(SmallVariant smallVariant : smallVariants)
-        {
-            smallVariantList.add(SmallVariantBuilder.builder(smallVariant)
-                    .adjustedCopyNumber(roundCopyNumber(smallVariant.adjustedCopyNumber()))
-                    .build());
-        }
-        return smallVariantList;
+        return SmallVariantBuilder.builder(smallVariant)
+                .adjustedCopyNumber(roundCopyNumber(smallVariant.adjustedCopyNumber()))
+                .build();
     }
 
     @NotNull
     private static DriverFindingList<Disruption> roundCopyNumberDisruption(@NotNull DriverFindingList<Disruption> disruptions)
     {
-        return DriverFindingListBuilder.builder(disruptions).findings(filterDisruption(transformDisruption(disruptions.findings()))).build();
+        return TransformUtil.transformDriverFindingList(disruptions, CopyNumberRoundingTransformer::roundCopyNumbers);
     }
 
     @NotNull
-    public static List<Disruption> transformDisruption(@NotNull List<Disruption> disruptions)
+    static Disruption roundCopyNumbers(@NotNull Disruption disruption)
     {
-        List<Disruption> disruptionList = new ArrayList<>();
-
-        for(Disruption disruption : disruptions)
-        {
-            disruptionList.add(DisruptionBuilder.builder(disruption)
-                    .disruptedCopyNumber(roundCopyNumber(disruption.disruptedCopyNumber()))
-                    .undisruptedCopyNumber(roundCopyNumber(disruption.undisruptedCopyNumber()))
-                    .build());
-
-        }
-        return disruptionList;
+        return filter(DisruptionBuilder.builder(disruption)
+                .disruptedCopyNumber(roundCopyNumber(disruption.disruptedCopyNumber()))
+                .undisruptedCopyNumber(roundCopyNumber(disruption.undisruptedCopyNumber()))
+                .build());
     }
 
     @NotNull
-    public static List<Disruption> filterDisruption(@NotNull List<Disruption> disruptions)
+    static Disruption filter(@NotNull Disruption disruption)
     {
-        List<Disruption> disruptionList = new ArrayList<>();
-
-        for(Disruption disruption : disruptions)
+        if(disruption.disruptedCopyNumber() >= COPY_NUMBER_FILTER)
         {
-            if(disruption.disruptedCopyNumber() >= COPY_NUMBER_FILTER)
-            {
-                disruptionList.add(disruption);
-            }
-            else
-            {
-                disruptionList.add(DisruptionBuilder.builder(disruption)
-                        .driver(toCandidate(disruption.driver()).build())
-                        .build());
-                LOGGER.warn("Gene disruption {} with type {} has less than < {} copies, investigate further",
-                        disruption.gene(),
-                        disruption.type(), COPY_NUMBER_FILTER);
-            }
+            return disruption;
         }
-        return disruptionList;
+        else
+        {
+            LOGGER.warn("Gene disruption {} with type {} has less than < {} copies, investigate further",
+                    disruption.gene(),
+                    disruption.type(), COPY_NUMBER_FILTER);
+            return DisruptionBuilder.builder(disruption)
+                    .driver(TransformUtil.toCandidate(disruption.driver()).build())
+                    .build();
+        }
     }
 
     @NotNull
     private static DriverFindingList<Fusion> roundCopyNumberFusion(@NotNull DriverFindingList<Fusion> fusions)
     {
-        return DriverFindingListBuilder.builder(fusions).findings(filterFusion(transformFusion(fusions.findings()))).build();
+        return TransformUtil.transformDriverFindingList(fusions, CopyNumberRoundingTransformer::roundCopyNumbers);
     }
 
     @NotNull
-    public static List<Fusion> transformFusion(@NotNull List<Fusion> fusions)
+    static Fusion roundCopyNumbers(@NotNull Fusion fusion)
     {
-        List<Fusion> fusionsList = new ArrayList<>();
+        return filter(FusionBuilder.builder(fusion)
+                .junctionCopyNumber(roundCopyNumber(fusion.junctionCopyNumber()))
+                .build());
+    }
 
-        for(Fusion fusion : fusions)
+    @NotNull
+    static Fusion filter(@NotNull Fusion fusion)
+    {
+
+        if(fusion.junctionCopyNumber() >= COPY_NUMBER_FILTER)
         {
-            fusionsList.add(FusionBuilder.builder(fusion).junctionCopyNumber(roundCopyNumber(fusion.junctionCopyNumber()))
-                    .build());
+            return fusion;
         }
-        return fusionsList;
-    }
-
-    @NotNull
-    public static List<Fusion> filterFusion(@NotNull List<Fusion> fusions)
-    {
-        List<Fusion> fusionsList = new ArrayList<>();
-
-        for(Fusion fusion : fusions)
+        else
         {
             String fusionName = fusion.geneUp() + " - " + fusion.geneDown();
-            if(fusion.junctionCopyNumber() >= COPY_NUMBER_FILTER)
-            {
-                fusionsList.add(fusion);
-            }
-            else
-            {
-                fusionsList.add(FusionBuilder.builder(fusion)
-                        .driver(toCandidate(fusion.driver()).build())
-                        .build());
-                LOGGER.warn("Fusion {} has less than < {} copies, investigate further", fusionName, COPY_NUMBER_FILTER);
-            }
+            LOGGER.warn("Fusion {} has less than < {} copies, investigate further", fusionName, COPY_NUMBER_FILTER);
+            return FusionBuilder.builder(fusion)
+                    .driver(TransformUtil.toCandidate(fusion.driver()).build())
+                    .build();
         }
-        return fusionsList;
     }
 
     @NotNull
     private static FindingList<HlaAllele> roundHlACopyNumbers(@NotNull FindingList<HlaAllele> hlaAlleles)
     {
-        return FindingListBuilder.builder(hlaAlleles).findings(transformHla(hlaAlleles.findings())).build();
+        return TransformUtil.transformFindingList(hlaAlleles, CopyNumberRoundingTransformer::roundCopyNumbers);
     }
 
     @NotNull
-    public static List<HlaAllele> transformHla(@NotNull List<HlaAllele> hlaAlleles)
-    {
-        List<HlaAllele> hlaList = new ArrayList<>();
-
-        for(HlaAllele hlaAllele : hlaAlleles)
-        {
-            hlaList.add(HlaAlleleBuilder.builder(hlaAllele).tumorCopyNumber(roundCopyNumberNullable(hlaAllele.tumorCopyNumber()))
-                    .build());
-        }
-        return hlaList;
-    }
-
-    @NotNull
-    private static DriverFieldsBuilder toCandidate(@NotNull DriverFields driverFields) {
-        return DriverFieldsBuilder.builder(driverFields).reportedStatus(ReportedStatus.CANDIDATE);
+    static HlaAllele roundCopyNumbers(HlaAllele hlaAllele) {
+        return HlaAlleleBuilder.builder(hlaAllele).tumorCopyNumber(roundCopyNumberNullable(hlaAllele.tumorCopyNumber())).build();
     }
 
     @Nullable
-    public static Double roundCopyNumberNullable(@Nullable Double value)
+    static Double roundCopyNumberNullable(@Nullable Double value)
     {
         if(value != null)
         {
@@ -195,7 +146,7 @@ public class CopyNumberRoundingTransformer
     }
 
     @NotNull
-    public static Double roundCopyNumber(@NotNull Double value)
+    static Double roundCopyNumber(@NotNull Double value)
     {
         double doubleValue = Math.max(value, 0);
         return Doubles.round(doubleValue, doubleValue > COPY_NUMBER_ROUNDING_THRESHOLD ? 0 : 1);

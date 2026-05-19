@@ -35,6 +35,7 @@ import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
 import com.hartwig.hmftools.datamodel.purple.PurpleFit;
 import com.hartwig.hmftools.datamodel.purple.PurpleMicrosatelliteStatus;
+import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleTumorMutationalStatus;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
@@ -106,7 +107,7 @@ public class FindingRecordFactory
 
         Qc qc = createQc(purple, orangeRecord.plots());
 
-        FindingStatus findingStatus = FindingsStatusFactory.toFindingsStatus(qc.status());
+        FindingStatus findingStatus = FindingsStatusFactory.toFindingsStatus(qc.errors(), qc.warnings());
 
         boolean hasRefSample = orangeRecord.referenceId() != null;
 
@@ -120,7 +121,8 @@ public class FindingRecordFactory
         DriverFindingList<Disruption> germlineDisruptions =
                 createGermlineDisruptions(orangeRecord.referenceId() != null, linx, findingStatus);
 
-        List<Disruption> germlineHomozygousDisruptions = germlineDisruptions.findingsIfOk().stream().filter(Disruption::isHomozygous).toList();
+        List<Disruption> germlineHomozygousDisruptions =
+                germlineDisruptions.findingsIfOk().stream().filter(Disruption::isHomozygous).toList();
 
         String version = FindingRecord.VERSION != null ? FindingRecord.VERSION : "local-dev";
         return FindingRecordBuilder.builder()
@@ -161,20 +163,6 @@ public class FindingRecordFactory
     private static Qc createQc(PurpleRecord purple, OrangePlots orangePlots)
     {
         PurpleFit purpleFit = purple.fit();
-        SortedSet<Qc.QCStatus> qcStatuses = purpleFit.qc().status().stream()
-                .map(o -> switch(o)
-                {
-                    case PASS -> Qc.QCStatus.PASS;
-                    case WARN_DELETED_GENES -> Qc.QCStatus.WARN_DELETED_GENES;
-                    case WARN_HIGH_COPY_NUMBER_NOISE -> Qc.QCStatus.WARN_HIGH_COPY_NUMBER_NOISE;
-                    case WARN_GENDER_MISMATCH -> Qc.QCStatus.WARN_GENDER_MISMATCH;
-                    case WARN_LOW_PURITY -> Qc.QCStatus.WARN_LOW_PURITY;
-                    case WARN_TINC -> Qc.QCStatus.WARN_TUMOR_IN_NORMAL_CONTAMINATION;
-                    case FAIL_CONTAMINATION -> Qc.QCStatus.FAIL_CONTAMINATION;
-                    case FAIL_NO_TUMOR -> Qc.QCStatus.FAIL_NO_TUMOR;
-                    case FAIL_TINC -> Qc.QCStatus.FAIL_TUMOR_IN_NORMAL_CONTAMINATION;
-                })
-                .collect(Collectors.toCollection(TreeSet::new));
         SortedSet<Qc.GermlineAberration> germlineAberrations = purpleFit.qc().germlineAberrations().stream()
                 .map(o -> switch(o)
                 {
@@ -191,7 +179,9 @@ public class FindingRecordFactory
                 .collect(Collectors.toCollection(TreeSet::new));
 
         return QcBuilder.builder()
-                .status(qcStatuses)
+                .isPass(purpleFit.qc().status().contains(PurpleQCStatus.PASS))
+                .errors(QcStatusFactory.toErrors(purpleFit.qc().status()))
+                .warnings(QcStatusFactory.toWarnings(purpleFit.qc().status()))
                 .germlineAberrations(germlineAberrations)
                 .amberMeanDepth(purpleFit.qc().amberMeanDepth())
                 .contamination(purpleFit.qc().contamination())
@@ -594,11 +584,13 @@ public class FindingRecordFactory
 
     // in virus interpreter, numbers are presented as 0-100, change them to 0-1
     @Nullable
-    private static Double toPercentageNullable(@Nullable Double value) {
+    private static Double toPercentageNullable(@Nullable Double value)
+    {
         return value == null ? null : toPercentage(value);
     }
 
-    private static double toPercentage(double value) {
+    private static double toPercentage(double value)
+    {
         return value * 0.01;
     }
 

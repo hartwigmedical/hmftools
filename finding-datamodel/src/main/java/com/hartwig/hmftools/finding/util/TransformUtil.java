@@ -9,8 +9,11 @@ import java.util.stream.Stream;
 
 import com.hartwig.hmftools.finding.datamodel.FindingRecord;
 import com.hartwig.hmftools.finding.datamodel.driver.Driver;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverFields;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverFieldsBuilder;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingList;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingListBuilder;
+import com.hartwig.hmftools.finding.datamodel.driver.ReportedStatus;
 import com.hartwig.hmftools.finding.datamodel.finding.Finding;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingList;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingListBuilder;
@@ -21,8 +24,32 @@ import org.jspecify.annotations.Nullable;
 
 import jakarta.validation.constraints.NotNull;
 
-public class FindingRecordTransformerUtil
+public class TransformUtil
 {
+    @NotNull
+    public static <T extends Driver> DriverFindingList<T> transformDriverFindingList(@NotNull DriverFindingList<T> findingList,
+            Function<T, T> transformFunction)
+    {
+        return DriverFindingListBuilder.builder(findingList)
+                .findings(findingList.stream().map(transformFunction).filter(Objects::nonNull).toList())
+                .build();
+    }
+
+    @NotNull
+    public static <T extends Finding> FindingList<T> transformFindingList(@NotNull FindingList<T> findingList,
+            Function<T, T> transformFunction)
+    {
+        return FindingListBuilder.builder(findingList)
+                .findings(findingList.stream().map(transformFunction).filter(Objects::nonNull).toList())
+                .build();
+    }
+
+    @NotNull
+    static DriverFieldsBuilder toCandidate(@NotNull DriverFields driverFields)
+    {
+        return DriverFieldsBuilder.builder(driverFields).reportedStatus(ReportedStatus.CANDIDATE);
+    }
+
     public static Function<FindingRecord, FindingRecord> listTransformer(List<Function<FindingRecord, FindingRecord>> transformers)
     {
         return record -> transformers.stream().reduce(record, (r, c) -> c.apply(r), (r1, r2) -> r1);
