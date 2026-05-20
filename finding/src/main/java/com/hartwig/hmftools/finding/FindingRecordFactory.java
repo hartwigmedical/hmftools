@@ -81,6 +81,7 @@ import com.hartwig.hmftools.finding.datamodel.finding.FindingListBuilder;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
 import com.hartwig.hmftools.finding.util.FindingUtil;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 // to reduce duplication, the findings are collected from
@@ -88,20 +89,22 @@ import org.jetbrains.annotations.Nullable;
 public class FindingRecordFactory
 {
     public static FindingRecord fromOrangeJsonWithTranscriptFile(Path orangeJson, @Nullable Path clinicalTranscriptsTsv,
+            @NotNull Path clinicalRelevantGeneCopyNumbersTsv,
             @Nullable Path driverGeneTsv, @Nullable Gender gender) throws IOException
     {
         try(Reader reader = Files.newBufferedReader(orangeJson))
         {
             OrangeRecord orangeRecord = OrangeJson.getInstance().read(reader);
-            return fromOrangeRecord(orangeRecord, clinicalTranscriptsTsv, driverGeneTsv, gender);
+            return fromOrangeRecord(orangeRecord, clinicalTranscriptsTsv, clinicalRelevantGeneCopyNumbersTsv, driverGeneTsv, gender);
         }
     }
 
     public static FindingRecord fromOrangeRecord(OrangeRecord orangeRecord, @Nullable Path clinicalTranscriptsTsv,
+            @NotNull Path clinicalRelevantGeneCopyNumbersTsv,
             @Nullable Path driverGeneTsv, @Nullable Gender gender) throws IOException
     {
         FindingConfig findingConfig =
-                FindingConfig.createFindingConfig(clinicalTranscriptsTsv, driverGeneTsv, orangeRecord.refGenomeVersion(), gender, true);
+                FindingConfig.createFindingConfig(clinicalTranscriptsTsv, clinicalRelevantGeneCopyNumbersTsv, driverGeneTsv, orangeRecord.refGenomeVersion(), gender, true);
 
         LinxRecord linx = orangeRecord.linx();
         PurpleRecord purple = orangeRecord.purple();
@@ -121,7 +124,7 @@ public class FindingRecordFactory
                 purple.allSomaticCopyNumbers(), purple.fit().ploidy(), findingConfig.gender(), orangeRecord.refGenomeVersion());
 
         DriverFindingList<GainDeletion> somaticGainDeletions =
-                GainDeletionFactory.somaticGainDeletionFindings(findingStatus, purple, cnPerChromosome, findingConfig.geneCopyNumbersOptional());
+                GainDeletionFactory.somaticGainDeletionFindings(findingStatus, purple, cnPerChromosome, findingConfig);
 
         DriverFindingList<Disruption> germlineDisruptions =
                 createGermlineDisruptions(orangeRecord.refSample() != null, linx, findingStatus);

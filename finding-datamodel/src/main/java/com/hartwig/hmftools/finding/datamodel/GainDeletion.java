@@ -52,7 +52,8 @@ public record GainDeletion(
     public enum GeneExtent
     {
         FULL_GENE,
-        PARTIAL_GENE
+        PARTIAL_GENE,
+        UNKNOWN
     }
 
     public record ExonRange(

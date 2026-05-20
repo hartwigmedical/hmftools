@@ -17,7 +17,7 @@ public class ReportedOnlyTransformer
                 .germlineSmallVariants(transform(record.germlineSmallVariants()))
                 .somaticDisruptions(transform(record.somaticDisruptions()))
                 .germlineDisruptions(transform(record.germlineDisruptions()))
-                .somaticGainDeletions(transform(record.somaticGainDeletions()))
+                .somaticGainDeletions(record.somaticGainDeletions())
                 .germlineGainDeletions(transform(record.germlineGainDeletions()))
                 .fusions(transform(record.fusions()))
                 .viruses(transform(record.viruses()))

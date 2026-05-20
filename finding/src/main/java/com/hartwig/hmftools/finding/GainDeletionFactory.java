@@ -14,15 +14,16 @@ import com.hartwig.hmftools.datamodel.purple.PurpleLossOfHeterozygosity;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.finding.datamodel.GainDeletion;
 import com.hartwig.hmftools.finding.datamodel.GainDeletionBuilder;
-import com.hartwig.hmftools.finding.datamodel.driver.ReportedStatus;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFieldsBuilder;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingList;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingListBuilder;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverSource;
+import com.hartwig.hmftools.finding.datamodel.driver.ReportedStatus;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
 import com.hartwig.hmftools.finding.util.FindingUtil;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 final class GainDeletionFactory
@@ -32,16 +33,17 @@ final class GainDeletionFactory
             FindingStatus findingStatus,
             PurpleRecord purple,
             ArmCopyNumberFactory cnPerChromosome,
-            boolean geneCopyNumbersOptional)
+            FindingConfig findingConfig)
     {
         List<GainDeletion> gainDeletions = new ArrayList<>();
         gainDeletions.addAll(somaticDriverGainDels(
                 purple.reportableSomaticGainsDels(), purple.somaticDrivers(), purple.allSomaticGeneCopyNumbers(),
-                cnPerChromosome, purple.fit().ploidy(), geneCopyNumbersOptional));
+                cnPerChromosome, purple.fit().ploidy(), findingConfig.geneCopyNumbersOptional()));
 
         // we are going to add somatic LOH to purple. For this backported version we will reverse engineer how they might look
         gainDeletions.addAll(somaticLoh(purple.suspectGeneCopyNumbersWithLOH(), cnPerChromosome));
 
+        gainDeletions.addAll(ClinicalRelevantGeneCopyNumber(purple.allSomaticGeneCopyNumbers(), cnPerChromosome, findingConfig));
         gainDeletions.sort(GainDeletion.COMPARATOR);
 
         return DriverFindingListBuilder.<GainDeletion>builder()
@@ -251,6 +253,51 @@ final class GainDeletionFactory
                 .tumorRelativeCopyNumber(relativeCopyNumber)
                 .chromosomeArmCopyNumber(cnPerChromosome.chromosomeArmCopyNumber(purpleGainDeletion.chromosome(), purpleGainDeletion.chromosomeBand()))
                 .build();
+    }
+
+    @NotNull
+    public static List<GainDeletion> ClinicalRelevantGeneCopyNumber(@NotNull List<PurpleGeneCopyNumber> clinicalRelevantGeneCopyNumbers,
+            ArmCopyNumberFactory cnPerChromosome, FindingConfig findingConfig)
+    {
+        return clinicalRelevantGeneCopyNumbers.stream()
+                .map(o -> ClinicalRelevantGeneCopyNumber(o, cnPerChromosome, findingConfig))
+                .filter(Objects::nonNull).toList();
+    }
+
+    @Nullable
+    private static GainDeletion ClinicalRelevantGeneCopyNumber(@NotNull PurpleGeneCopyNumber clinicalRelevantGeneCopyNumber,
+            ArmCopyNumberFactory cnPerChromosome, FindingConfig findingConfig)
+    {
+        if(findingConfig.findClinicalRelevantGeneCopyNumber(clinicalRelevantGeneCopyNumber.gene()))
+        {
+            return GainDeletionBuilder.builder()
+                    .driver(DriverFieldsBuilder.builder()
+                            .findingKey(FindingKeys.gainDeletion(DriverSource.SOMATIC,
+                                    clinicalRelevantGeneCopyNumber.gene(),
+                                    PurpleDriverType.UNKNOWN,
+                                    clinicalRelevantGeneCopyNumber.isCanonical(),
+                                    clinicalRelevantGeneCopyNumber.transcript()))
+                            .driverSource(DriverSource.SOMATIC)
+                            .reportedStatus(ReportedStatus.CANDIDATE)
+                            .driverInterpretation(DriverInterpretation.LOW) //TODO; should this be low or unknown?
+                            .driverLikelihood(0)
+                            .build()
+                    )
+                    .chromosome(clinicalRelevantGeneCopyNumber.chromosome())
+                    .chromosomeBand(clinicalRelevantGeneCopyNumber.chromosomeBand())
+                    .gene(clinicalRelevantGeneCopyNumber.gene())
+                    .transcript(clinicalRelevantGeneCopyNumber.transcript())
+                    .isCanonical(clinicalRelevantGeneCopyNumber.isCanonical())
+                    .somaticType(GainDeletion.Type.NONE)
+                    .germlineType(GainDeletion.Type.NONE)
+                    .geneExtent(GainDeletion.GeneExtent.UNKNOWN)
+                    .tumorMinCopyNumber(clinicalRelevantGeneCopyNumber.minCopyNumber())
+                    .tumorMaxCopyNumber(clinicalRelevantGeneCopyNumber.maxCopyNumber())
+                    .tumorMinMinorAlleleCopyNumber(clinicalRelevantGeneCopyNumber.minMinorAlleleCopyNumber())
+                    .chromosomeArmCopyNumber(cnPerChromosome.chromosomeArmCopyNumber(clinicalRelevantGeneCopyNumber.chromosome(), clinicalRelevantGeneCopyNumber.chromosomeBand()))
+                    .build();
+        }
+        return null;
     }
 
     private static GainDeletion germlineLohToGainDel(PurpleLossOfHeterozygosity loh, final PurpleDriver driver,
