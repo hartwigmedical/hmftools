@@ -116,7 +116,7 @@ public class PositionEvidence implements GenomePosition
         return new BaseDepthData(
                 AmberBase.valueOf(ref()),
                 AmberBase.valueOf(alt()),
-                ReadDepth, RefSupport, AltSupport, IndelCount);
+                ReadDepth, IndelCount, RefSupport, AltSupport);
     }
 
     @Override

@@ -39,7 +39,7 @@ public class PositionEvidenceChecker
         }
 
         int bafPosition = posEvidence.position();
-        int readIndex = read.getReadPositionAtReferencePosition(bafPosition); // is 1-based
+        int readIndex = read.getReadPositionAtReferencePosition(bafPosition) - 1; // is 1-based
 
         if(isUltima())
         {
@@ -57,11 +57,11 @@ public class PositionEvidenceChecker
         if(filtered)
             return;
 
-        if(readIndex != 0)
+        if(readIndex >= 0)
         {
-            if(!isIndel(bafPosition, readIndex, read))
+            if(!isIndel(bafPosition, readIndex + 1, read)) // to preserve existing read index behaviour
             {
-                char baseChar = read.getReadString().charAt(readIndex - 1);
+                char baseChar = read.getReadString().charAt(readIndex);
 
                 if(posEvidence.equalsRef(baseChar))
                 {
@@ -79,7 +79,7 @@ public class PositionEvidenceChecker
         }
     }
 
-    public static boolean isIndel(int bafPosition, int readPosition, final SAMRecord samRecord)
+    private static boolean isIndel(int bafPosition, int readIndex, final SAMRecord samRecord)
     {
         if(samRecord.getAlignmentEnd() > bafPosition)
         {
@@ -90,7 +90,7 @@ public class PositionEvidenceChecker
             }
 
             // Insert?
-            return samRecord.getReferencePositionAtReadPosition(readPosition + 1) != bafPosition + 1;
+            return samRecord.getReferencePositionAtReadPosition(readIndex + 1) != bafPosition + 1;
         }
 
         return false;

@@ -3,11 +3,10 @@ package com.hartwig.hmftools.amber.contamination;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.amber.AmberConfig.AMB_LOGGER;
-import static com.hartwig.hmftools.amber.AmberConstants.MIN_NORMAL_READ_DEPTH;
-import static com.hartwig.hmftools.amber.AmberConstants.THREE_PLUS_READS_MIN;
-import static com.hartwig.hmftools.amber.AmberConstants.THREE_PLUS_READS_SITE_PERC;
-import static com.hartwig.hmftools.amber.AmberConstants.THREE_PLUS_READS_SITE_LOW_VAF_PERC;
-import static com.hartwig.hmftools.amber.AmberConstants.THREE_PLUS_READS_VAF_MIN;
+import static com.hartwig.hmftools.amber.AmberConstants.CONTAMINATON_THREE_PLUS_READS_MIN;
+import static com.hartwig.hmftools.amber.AmberConstants.CONTAMINATON_THREE_PLUS_READS_SITE_PERC;
+import static com.hartwig.hmftools.amber.AmberConstants.CONTAMINATON_THREE_PLUS_READS_SITE_LOW_VAF_PERC;
+import static com.hartwig.hmftools.amber.AmberConstants.CONTAMINATON_THREE_PLUS_READS_VAF_MIN;
 
 import java.util.List;
 import java.util.Map;
@@ -23,11 +22,8 @@ public class TumorContaminationModel
 {
     private static final double INCREMENT = 0.001;
 
-    public double calcContamination(final List<TumorContamination> allTumorContamination, long amberSiteCount)
+    public double calcContamination(final List<TumorContamination> contaminationSites, long amberSiteCount)
     {
-        List<TumorContamination> contaminationSites = allTumorContamination.stream()
-                .filter(x -> x.Normal.readDepth() > MIN_NORMAL_READ_DEPTH).collect(Collectors.toList());
-
         long threePlusReadsSiteCount = 0;
         long threePlusReadsLowVafSiteCount = 0;
         long twoPlusReadsSiteCount = 0;
@@ -43,7 +39,7 @@ public class TumorContaminationModel
                     ++threePlusReadsSiteCount;
 
                     double vaf = site.Tumor.altSupport() / (double) site.Tumor.readDepth();
-                    if(vaf < THREE_PLUS_READS_VAF_MIN)
+                    if(vaf < CONTAMINATON_THREE_PLUS_READS_VAF_MIN)
                     {
                         ++threePlusReadsLowVafSiteCount;
                     }
@@ -53,13 +49,13 @@ public class TumorContaminationModel
 
         boolean calcContamination = false;
 
-        if(threePlusReadsSiteCount >= THREE_PLUS_READS_MIN)
+        if(threePlusReadsSiteCount >= CONTAMINATON_THREE_PLUS_READS_MIN)
         {
-            if(threePlusReadsSiteCount > THREE_PLUS_READS_SITE_PERC * amberSiteCount)
+            if(threePlusReadsSiteCount > CONTAMINATON_THREE_PLUS_READS_SITE_PERC * amberSiteCount)
             {
                 calcContamination = true;
             }
-            else if(threePlusReadsLowVafSiteCount > THREE_PLUS_READS_SITE_LOW_VAF_PERC * amberSiteCount)
+            else if(threePlusReadsLowVafSiteCount > CONTAMINATON_THREE_PLUS_READS_SITE_LOW_VAF_PERC * amberSiteCount)
             {
                 calcContamination = true;
             }

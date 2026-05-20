@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.amber;
 
 import static com.hartwig.hmftools.amber.AmberConfig.AMB_LOGGER;
+import static com.hartwig.hmftools.amber.AmberConstants.CONTAMINATON_MIN_NORMAL_READ_DEPTH;
+import static com.hartwig.hmftools.amber.AmberUtils.aboveQualFilter;
 
 import java.util.Collections;
 import java.util.List;
@@ -19,14 +21,14 @@ import htsjdk.samtools.SamReaderFactory;
 public class TumorAnalysis
 {
     private final AmberConfig mConfig;
-    private ListMultimap<Chromosome, TumorBAF> mBafs;
-    private ListMultimap<Chromosome, TumorContamination> mContamination;
+    private final ListMultimap<Chromosome, TumorBAF> mBafs;
+    private final List<TumorContamination> mContaminationSites;
 
-    public ListMultimap<Chromosome, TumorBAF> getBafs()
+    public ListMultimap<Chromosome, TumorBAF> chrBafMap()
     {
         return mBafs;
     }
-    public ListMultimap<Chromosome, TumorContamination> getContamination() { return mContamination; }
+    public List<TumorContamination> contaminationSites() { return mContaminationSites; }
 
     public TumorAnalysis(
             final AmberConfig config, SamReaderFactory readerFactory,
@@ -34,6 +36,8 @@ public class TumorAnalysis
             final ListMultimap<Chromosome, PositionEvidence> germlineHomLoci)
     {
         mConfig = config;
+        mContaminationSites = Lists.newArrayList();
+        mBafs = ArrayListMultimap.create();
 
         tumorBAFAndContamination(readerFactory, germlineHetLoci, germlineHomLoci);
     }
@@ -93,23 +97,22 @@ public class TumorAnalysis
         BamEvidenceReader bamEvidenceReader = new BamEvidenceReader(mConfig);
         bamEvidenceReader.processBam(mConfig.TumorBam, readerFactory, chrPositionEvidence);
 
-        mBafs = ArrayListMultimap.create();
-
         tumorBAFs.stream()
                 .filter(x -> x.TumorEvidence.IndelCount == 0)
                 .forEach(x -> mBafs.put(HumanChromosome.fromString(x.chromosome()), x));
 
-        mContamination = ArrayListMultimap.create();
-
         for(Map.Entry<PositionEvidence, PositionEvidence> entry : contaminationBafMap.entrySet())
         {
             PositionEvidence normal = entry.getKey();
+
+            if(normal.RefSupport <= CONTAMINATON_MIN_NORMAL_READ_DEPTH)
+                continue;
+
             PositionEvidence tumor = entry.getValue();
 
-            if(tumor.AltSupport > 0)
+            if(tumor.AltSupport > 0 && aboveQualFilter(tumor))
             {
-                mContamination.put(
-                        HumanChromosome.fromString(normal.chromosome()),
+                mContaminationSites.add(
                         new TumorContamination(normal.Chromosome, normal.Position, normal.toBaseDepthData(), tumor.toBaseDepthData()));
             }
         }

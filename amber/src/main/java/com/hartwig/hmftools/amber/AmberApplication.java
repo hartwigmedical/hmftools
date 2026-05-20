@@ -221,7 +221,7 @@ public class AmberApplication implements AutoCloseable
 
         TumorAnalysis tumor = new TumorAnalysis(mConfig, readerFactory, germline.getHeterozygousLoci(), germline.getHomozygousLoci());
 
-        List<TumorBAF> tumorBAFList = tumor.getBafs().values().stream()
+        List<TumorBAF> tumorBAFList = tumor.chrBafMap().values().stream()
                 .filter(x -> x.TumorEvidence.ReadDepth >= mConfig.TumorMinDepth)
                 .filter(x -> aboveQualFilter(x.TumorEvidence))
                 .sorted().toList();
@@ -235,7 +235,7 @@ public class AmberApplication implements AutoCloseable
             PositionEvidenceFile.write(rawDataFileName, rawData);
         }
 
-        List<TumorContamination> contaminationList = new ArrayList<>(tumor.getContamination().values());
+        List<TumorContamination> contaminationList = tumor.contaminationSites();
 
         long sampleHetCount = amberBAFList.size();
 
@@ -258,7 +258,7 @@ public class AmberApplication implements AutoCloseable
         // no homozygous sites
         TumorAnalysis tumor = new TumorAnalysis(mConfig, readerFactory, allNormal, ArrayListMultimap.create());
 
-        List<TumorBAF> readDepthAndQualityFiltered = tumor.getBafs().values()
+        List<TumorBAF> readDepthAndQualityFiltered = tumor.chrBafMap().values()
                 .stream()
                 .filter(x -> x.TumorEvidence.ReadDepth >= mConfig.TumorMinDepth)
                 .filter(x -> aboveQualFilter(x.TumorEvidence))
