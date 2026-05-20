@@ -10,12 +10,12 @@ import com.hartwig.hmftools.finding.datamodel.FindingRecord;
 import com.hartwig.hmftools.finding.util.CandidateToReportableTransformer;
 import com.hartwig.hmftools.finding.util.CopyNumberRoundingTransformer;
 import com.hartwig.hmftools.finding.util.ErrorTransformer;
-import com.hartwig.hmftools.finding.util.FindingRecordTransformerUtil;
 import com.hartwig.hmftools.finding.util.GainDeletionsFilterTransformer;
 import com.hartwig.hmftools.finding.util.LowPurityTransformer;
 import com.hartwig.hmftools.finding.util.NoGermlineTransformer;
 import com.hartwig.hmftools.finding.util.PTOTransformer;
 import com.hartwig.hmftools.finding.util.ReportedOnlyTransformer;
+import com.hartwig.hmftools.finding.util.TransformUtil;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -27,7 +27,7 @@ public class ConversionUtil {
     }
 
     private static FindingRecord convert(FindingRecord findingRecord) {
-        return FindingRecordTransformerUtil.listTransformer(List.of(ErrorTransformer::transform,
+        return TransformUtil.listTransformer(List.of(ErrorTransformer::transform,
                 LowPurityTransformer::transform,
                 PTOTransformer::transform,
                 GainDeletionsFilterTransformer::transform,
