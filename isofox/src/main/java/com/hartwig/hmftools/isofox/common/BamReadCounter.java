@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.ChromosomeTaskExecutor.findNextOverlappingGenes;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
+import static com.hartwig.hmftools.isofox.WriteType.READ;
 import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
 import static com.hartwig.hmftools.isofox.common.FragmentType.DUPLICATE;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
@@ -27,6 +28,7 @@ import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
+import com.hartwig.hmftools.isofox.WriteType;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
 
 import htsjdk.samtools.SAMFlag;
@@ -170,7 +172,7 @@ public class BamReadCounter implements Callable<Void>
             ISF_LOGGER.info("chromosome({}) gene({}) halting processing after {} reads", mChromosome, mCurrentGenes, mCurrentGeneReadCount);
         }
 
-        if(mConfig.WriteReadData)
+        if(mConfig.writeType(READ))
             writeReadData(mResultsWriter.getReadDataWriter(), record, mCurrentGenes);
     }
 

@@ -17,6 +17,9 @@ import static com.hartwig.hmftools.isofox.IsofoxFunction.NEO_EPITOPES;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.READ_COUNTS;
 import static com.hartwig.hmftools.isofox.TaskType.APPLY_GC_ADJUSTMENT;
 import static com.hartwig.hmftools.isofox.TaskType.TRANSCRIPT_COUNTS;
+import static com.hartwig.hmftools.isofox.WriteType.FRAG_LENGTH;
+import static com.hartwig.hmftools.isofox.WriteType.FRAG_LENGTH_BY_GENE;
+import static com.hartwig.hmftools.isofox.WriteType.GC_RATIO;
 import static com.hartwig.hmftools.isofox.adjusts.FragmentSizeCalcs.setConfigFragmentLengthData;
 import static com.hartwig.hmftools.isofox.adjusts.GcRatioCounts.writeReadGcRatioCounts;
 import static com.hartwig.hmftools.isofox.expression.TranscriptExpression.calcTpmFactors;
@@ -158,7 +161,7 @@ public class Isofox
         {
             calcFragmentLengths(chrGeneMap);
 
-            if(mConfig.WriteFragmentLengthsByGene)
+            if(mConfig.WriteTypes.contains(FRAG_LENGTH_BY_GENE))
             {
                 mResultsWriter.close();
                 return true;
@@ -248,7 +251,7 @@ public class Isofox
             applyGcAdjustments(chrTasks, callableList, nonEnrichedGcRatioCounts);
         }
 
-        if(mConfig.WriteGcData)
+        if(mConfig.writeType(GC_RATIO))
         {
             GcRatioCounts combinedGcRatioCounts = new GcRatioCounts();
             chrTasks.forEach(x -> combinedGcRatioCounts.mergeRatioCounts(x.getGcRatioCounts().getCounts()));
@@ -410,7 +413,7 @@ public class Isofox
             setConfigFragmentLengthData(mConfig, mFragmentLengthDistribution);
         }
 
-        if(mConfig.WriteFragmentLengths)
+        if(mConfig.writeType(FRAG_LENGTH))
         {
             FragmentSizeCalcs.writeFragmentLengths(mConfig, mFragmentLengthDistribution);
         }
