@@ -59,7 +59,7 @@ public class ErrorTransformer
             if(!findingStatus.isOK() && findingStatus.errors().contains(NO_TUMOR) )
             {
                 // Clear tumor fields if there is no tumor.
-                hlaAlleles = FindingRecordTransformerUtil.transform(findingList.findings(), ErrorTransformer::transform, null);
+                hlaAlleles = TransformUtil.transform(findingList.findings(), ErrorTransformer::transform, null);
                 // Toggle no tumor from error to warning.
                 SortedSet<FindingStatus.Issue> errors = FindingUtil.removeIssues(findingStatus.errors(), Set.of(NO_TUMOR));
                 findingStatus = FindingStatusBuilder.builder(findingStatus)

@@ -62,9 +62,7 @@ public class NoGermlineTransformer
         else
         {
             return SmallVariantBuilder.builder(smallVariant)
-                    .driver(DriverFieldsBuilder.builder(smallVariant.driver())
-                            .driverSource(DriverSource.SOMATIC)
-                            .build())
+                    .driver(toSomatic(smallVariant.driver()))
                     .build();
         }
     }
@@ -76,12 +74,14 @@ public class NoGermlineTransformer
         return variants.stream().map(v ->
         {
             DriverFields driverFields = maximumDriverLikelihoodPerGene.get(v.gene());
-            if (v.driverSource() != DriverSource.GERMLINE)
+            if(v.driverSource() != DriverSource.GERMLINE)
             {
                 return SmallVariantBuilder.builder(v)
                         .driver(DriverFieldsBuilder.builder(driverFields).build())
                         .build();
-            } else {
+            }
+            else
+            {
                 return v;
             }
         }).toList();
@@ -107,9 +107,7 @@ public class NoGermlineTransformer
     private static Disruption transformDisruption(Disruption disruption)
     {
         return DisruptionBuilder.builder(disruption)
-                .driver(DriverFieldsBuilder.builder(disruption.driver())
-                        .driverSource(DriverSource.SOMATIC)
-                        .build())
+                .driver(toSomatic(disruption.driver()))
                 .build();
     }
 
@@ -127,9 +125,7 @@ public class NoGermlineTransformer
     private static GainDeletion transformGainDeletion(GainDeletion gainDeletion)
     {
         return GainDeletionBuilder.builder(gainDeletion)
-                .driver(DriverFieldsBuilder.builder(gainDeletion.driver())
-                        .driverSource(DriverSource.SOMATIC)
-                        .build())
+                .driver(toSomatic(gainDeletion.driver()))
                 .build();
     }
 
@@ -154,5 +150,10 @@ public class NoGermlineTransformer
             combinedFindings.addAll(germlineFindings.findings().stream().map(buildFinding).toList());
         }
         return combinedFindings;
+    }
+
+    private static DriverFields toSomatic(DriverFields driverFields)
+    {
+        return DriverFieldsBuilder.builder(driverFields).driverSource(DriverSource.SOMATIC).build();
     }
 }

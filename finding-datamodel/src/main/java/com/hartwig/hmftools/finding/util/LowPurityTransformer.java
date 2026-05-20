@@ -137,7 +137,7 @@ public class LowPurityTransformer
     {
         if(shouldConvert(findingList.status(), hasLowPurity(purity, findingList.purityThreshold())))
         {
-            return FindingRecordTransformerUtil.transformFindingList(findingList, findingsStatusConverter, findingConverter, null);
+            return TransformUtil.transformFindingList(findingList, findingsStatusConverter, findingConverter, null);
         }
         else
         {
@@ -150,7 +150,7 @@ public class LowPurityTransformer
     {
         if(shouldConvert(driverFindingList.status(), hasLowPurity(purity, driverFindingList.purityThreshold())))
         {
-            return FindingRecordTransformerUtil.transformDriverFindingList(driverFindingList,
+            return TransformUtil.transformDriverFindingList(driverFindingList,
                     LowPurityTransformer::transform,
                     f -> null,
                     null);
