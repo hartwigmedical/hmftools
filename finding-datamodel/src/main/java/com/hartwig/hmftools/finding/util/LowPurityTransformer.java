@@ -1,12 +1,17 @@
 package com.hartwig.hmftools.finding.util;
 
+import static java.util.function.Predicate.not;
+
+import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.finding.datamodel.FindingRecord;
 import com.hartwig.hmftools.finding.datamodel.FindingRecordBuilder;
+import com.hartwig.hmftools.finding.datamodel.GainDeletion;
 import com.hartwig.hmftools.finding.datamodel.HlaAllele;
 import com.hartwig.hmftools.finding.datamodel.HlaAlleleBuilder;
 import com.hartwig.hmftools.finding.datamodel.Qc;
@@ -36,7 +41,7 @@ public class LowPurityTransformer
     @NotNull
     public static FindingRecord transform(@NotNull FindingRecord record)
     {
-        return updateQCLowPurityStatus(updateLowPurityStatus(setLowPurityThresholds(record)));
+        return updateQCLowPurityStatus(gainDeletionsTargetedHandling(updateLowPurityStatus(setLowPurityThresholds(record))));
     }
 
     private static FindingRecord setLowPurityThresholds(@NotNull FindingRecord record)
@@ -72,6 +77,35 @@ public class LowPurityTransformer
                 // For HLA status remains the same, but tumor fields are cleared.
                 .hlaAlleles(transform(record.hlaAlleles(), purity, Function.identity(), LowPurityTransformer::transform))
                 .build();
+    }
+
+    private static FindingRecord gainDeletionsTargetedHandling(@NotNull FindingRecord record)
+    {
+
+        double purity = record.purityPloidyFit().purity();
+        boolean isTargeted = record.metaProperties().sequencingScope() == SequencingScope.TARGETED;
+        if(isTargeted && (purity > MIN_PURITY_20_PCT && purity < MIN_PURITY_30_PCT))
+        {
+            // Special handling for deletions, that have a different purity cut off than the gains for targeted sequencing
+            // Filter out the deletions, these are not within the purity range
+            List<GainDeletion> gainDeletions =
+                    record.somaticGainDeletions().findings().stream().filter(not(GainDeletion::isDeletion)).toList();
+            return FindingRecordBuilder.builder(record)
+                    .somaticGainDeletions(DriverFindingListBuilder.builder(record.somaticGainDeletions())
+                            .status(FindingStatusBuilder.builder(record.somaticGainDeletions().status())
+                                    // Status is warning, because there are potentially still valid gain results.
+                                    .warnings(addLowPurity(record.somaticGainDeletions().status().warnings()))
+                                    .status(FindingStatus.Status.OK)
+                                    .build())
+                            .findings(gainDeletions)
+                            .purityThreshold(MIN_PURITY_30_PCT)
+                            .build())
+                    .build();
+        }
+        else
+        {
+            return record;
+        }
     }
 
     @NotNull
