@@ -4,8 +4,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
-import java.util.List;
-
 import com.hartwig.hmftools.finding.datamodel.Disruption;
 import com.hartwig.hmftools.finding.datamodel.Fusion;
 import com.hartwig.hmftools.finding.datamodel.HlaAllele;
