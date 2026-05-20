@@ -78,8 +78,7 @@ public class TestFindingFactory
                 .hrdType("")
                 .brca1Value(0)
                 .brca2Value(0)
-                .lohCopyNumbers(List.of())
-                .drivingGenes(List.of());
+                .drivingGenes(new TreeSet<>());
     }
 
     @NotNull
@@ -89,8 +88,7 @@ public class TestFindingFactory
                 .findingKey("")
                 .status(MicrosatelliteStability.Status.MSI)
                 .indelsPerMb(thresholdValue(0))
-                .lohCopyNumbers(List.of())
-                .drivingGenes(List.of());
+                .drivingGenes(new TreeSet<>());
     }
 
     @NotNull

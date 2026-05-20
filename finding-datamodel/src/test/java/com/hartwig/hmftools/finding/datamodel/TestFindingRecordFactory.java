@@ -2,6 +2,7 @@ package com.hartwig.hmftools.finding.datamodel;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.TreeSet;
 
 import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
 
@@ -26,6 +27,8 @@ public class TestFindingRecordFactory
                         .samplingDate(LocalDate.of(2026, 1, 1))
                         .sequencingScope(SequencingScope.WHOLE_GENOME)
                         .refGenomeVersion(RefGenomeVersion.V37)
+                        .potentialHRDGenes(new TreeSet<>())
+                        .potentialMSIGenes(new TreeSet<>())
                         .build())
                 .qc(TestFindingFactory.qcBuilder().build())
                 .purityPloidyFit(TestFindingFactory.purityPloidyFitBuilder().build())
