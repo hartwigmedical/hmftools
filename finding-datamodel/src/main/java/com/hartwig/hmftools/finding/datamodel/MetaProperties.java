@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.finding.datamodel;
 
 import java.time.LocalDate;
+import java.util.SortedSet;
 
 import org.jspecify.annotations.Nullable;
 
@@ -12,6 +13,8 @@ public record MetaProperties(
         @Nullable String pipelineVersion,
         @NotNull RefGenomeVersion refGenomeVersion,
         @NotNull String sampleId,
-        @NotNull LocalDate samplingDate)
+        @NotNull LocalDate samplingDate,
+        @NotNull SortedSet<String> potentialHRDGenes,
+        @NotNull SortedSet<String> potentialMSIGenes)
 {
 }
