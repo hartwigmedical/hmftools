@@ -13,6 +13,7 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -42,6 +43,11 @@ public class PartitionReader implements Callable<Void>
     private final UnmatchedReadHandler mUnmatchedReadHandler;
     private final boolean mLogReadIds;
 
+    @Nullable
+    private final IgnoreRegionIndex mIgnoreRegionIndex;
+    @Nullable
+    private final Set<String> mIgnoredReadNames;
+
     private long mReadCount;
     private long mNextLogReadCount;
 
@@ -50,7 +56,8 @@ public class PartitionReader implements Callable<Void>
     public PartitionReader(
             final String name, final CompareConfig config, @Nullable final ChrBaseRegion bamPartition,
             final File origBamFile, final File newBamFile,
-            final ReadWriter readWriter, @Nullable final UnmatchedReadHandler unmatchedReadHandler)
+            final ReadWriter readWriter, @Nullable final UnmatchedReadHandler unmatchedReadHandler,
+            @Nullable final IgnoreRegionIndex ignoreRegionIndex, @Nullable final Set<String> ignoredReadNames)
     {
         mName = name;
         mConfig = config;
@@ -60,6 +67,8 @@ public class PartitionReader implements Callable<Void>
         mNewBamFile = newBamFile;
         mReadWriter = readWriter;
         mUnmatchedReadHandler = unmatchedReadHandler;
+        mIgnoreRegionIndex = ignoreRegionIndex;
+        mIgnoredReadNames = ignoredReadNames;
         mStats = new Statistics();
 
         mOrigBamReads = new HashMap<>();
@@ -355,6 +364,12 @@ public class PartitionReader implements Callable<Void>
 
     private boolean excludeRead(final SAMRecord read)
     {
+        if(mIgnoredReadNames != null && mIgnoredReadNames.contains(read.getReadName()))
+        {
+            ++mStats.IgnoredReadRecords;
+            return true;
+        }
+
         if(mConfig.IgnoreSecondaryReads && read.isSecondaryAlignment())
             return true;
 
@@ -371,6 +386,83 @@ public class PartitionReader implements Callable<Void>
             return true;
 
         return false;
+    }
+
+    // pre-pass: scan this partition (both BAMs) and add to the shared ignore-set the readname of every
+    // record whose alignment overlaps an ignore region by more than half its reference span. Cross-partition
+    // by design — a read's primary may be in partition A while its supplementary lands in B, and only one
+    // of those two scanners needs to flag the readname for it to be dropped from comparison.
+    public void scanIgnoredReadNames()
+    {
+        if(mIgnoreRegionIndex == null || mIgnoredReadNames == null)
+            return;
+
+        SamReader origSamReader = SamReaderFactory.makeDefault()
+                .validationStringency(ValidationStringency.SILENT)
+                .referenceSequence(new File(mConfig.RefGenomeFile)).open(mOrigBamFile);
+
+        SamReader newSamReader = SamReaderFactory.makeDefault()
+                .validationStringency(ValidationStringency.SILENT)
+                .referenceSequence(new File(mConfig.RefGenomeFile)).open(mNewBamFile);
+
+        SAMRecordIterator origBamIter;
+        SAMRecordIterator newBamIter;
+
+        boolean fullyUnmappedReads = mName.equals(FULLY_UNMAPPED_PARTITION);
+
+        if(mPartition != null)
+        {
+            origBamIter = origSamReader.query(mPartition.chromosome(), mPartition.start(), mPartition.end(), false);
+            newBamIter = newSamReader.query(mPartition.chromosome(), mPartition.start(), mPartition.end(), false);
+        }
+        else if(fullyUnmappedReads)
+        {
+            // fully-unmapped reads have no coords, so nothing to overlap — close and return.
+            try { origSamReader.close(); newSamReader.close(); }
+            catch(Exception e) { BT_LOGGER.error("failed to close BAMs"); }
+            return;
+        }
+        else
+        {
+            origBamIter = origSamReader.iterator();
+            newBamIter = newSamReader.iterator();
+        }
+
+        scanIterator(origBamIter);
+        scanIterator(newBamIter);
+
+        try
+        {
+            origSamReader.close();
+            newSamReader.close();
+        }
+        catch(Exception e)
+        {
+            BT_LOGGER.error("failed to close BAMs");
+        }
+    }
+
+    private void scanIterator(final SAMRecordIterator iter)
+    {
+        while(iter.hasNext())
+        {
+            final SAMRecord read = iter.next();
+
+            if(read.getReadUnmappedFlag())
+                continue;
+
+            // partition-local: scan only records whose alignment start is inside this partition. Without
+            // this guard, region queries return reads that overlap the partition's start coord (e.g. a
+            // read mapped at the previous partition's tail) and we'd double-count across partitions.
+            if(mPartition != null && !mPartition.containsPosition(read.getAlignmentStart()))
+                continue;
+
+            if(mIgnoreRegionIndex.overlapsAboveHalf(
+                    read.getReferenceName(), read.getAlignmentStart(), read.getAlignmentEnd()))
+            {
+                mIgnoredReadNames.add(read.getReadName());
+            }
+        }
     }
 
     private static final int LOG_COUNT = 1_000_000;

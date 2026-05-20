@@ -14,6 +14,8 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.parseLogReadIds;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -50,6 +52,11 @@ public class CompareConfig
     public final int Threads;
     public final List<String> LogReadIds;
 
+    // comma-separated list of TSV paths (Chromosome / PosStart / PosEnd headers; extra columns ignored).
+    // any readname whose any alignment overlaps an ignore region by > 50% of its reference span is dropped
+    // from comparison in both BAMs.
+    public final List<String> IgnoreRegionFiles;
+
     // debug
     public final SpecificRegions SpecificChrRegions;
 
@@ -67,6 +74,7 @@ public class CompareConfig
     private static final String IGNORE_CONSENSUS_READS = "ignore_consensus_reads";
     private static final String IGNORE_REDUX_UNMAPPED = "ignore_redux_unmapped";
     private static final String IGNORE_REDUX_DIFFS = "ignore_redux_diffs";
+    private static final String IGNORE_REGIONS_FILES = "ignore_regions";
     private static final String CIGAR_BOUNDARY_TOLERANCE = "cigar_boundary_tolerance";
     private static final String COORDS_ONLY = "coords_only";
     private static final String CHECK_BASES_QUALS = "check_bases_quals";
@@ -149,6 +157,17 @@ public class CompareConfig
 
         ExcludeRegions = configBuilder.hasFlag(EXCLUDE_REGIONS);
 
+        final String ignoreRegionFiles = configBuilder.getValue(IGNORE_REGIONS_FILES);
+        if(ignoreRegionFiles != null && !ignoreRegionFiles.isEmpty())
+        {
+            IgnoreRegionFiles = Arrays.asList(ignoreRegionFiles.split(","));
+            BT_LOGGER.info("ignore-region TSV file(s): {}", IgnoreRegionFiles);
+        }
+        else
+        {
+            IgnoreRegionFiles = Collections.emptyList();
+        }
+
         Threads = max(parseThreads(configBuilder), 1);
 
         LogReadIds = parseLogReadIds(configBuilder);
@@ -195,6 +214,11 @@ public class CompareConfig
         configBuilder.addInteger(CIGAR_BOUNDARY_TOLERANCE,
                 "Tolerate up to N bp drift on M-block boundaries when comparing CIGARs (0 = strict)", 0);
 
+        configBuilder.addConfigItem(IGNORE_REGIONS_FILES,
+                "Comma-separated TSV path(s) with Chromosome/PosStart/PosEnd columns; readnames whose any"
+                        + " alignment overlaps these regions by more than half its reference span are dropped"
+                        + " from comparison in both BAMs.");
+
         addRefGenomeFile(configBuilder, false);
         addSpecificChromosomesRegionsConfig(configBuilder);
         addLoggingOptions(configBuilder);
@@ -233,5 +257,6 @@ public class CompareConfig
         Threads = 0;
         LogReadIds = null;
         SpecificChrRegions = null;
+        IgnoreRegionFiles = Collections.emptyList();
     }
 }

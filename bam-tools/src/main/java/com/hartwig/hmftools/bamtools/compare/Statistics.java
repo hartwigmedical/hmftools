@@ -9,6 +9,7 @@ public class Statistics
     public long ValueDiffCount;
     public long OrigOnlyCount;
     public long NewOnlyCount;
+    public long IgnoredReadRecords;
 
     public void recordOrigOnly()
     {
@@ -37,5 +38,6 @@ public class Statistics
         ValueDiffCount += other.ValueDiffCount;
         OrigOnlyCount += other.OrigOnlyCount;
         NewOnlyCount += other.NewOnlyCount;
+        IgnoredReadRecords += other.IgnoredReadRecords;
     }
 }

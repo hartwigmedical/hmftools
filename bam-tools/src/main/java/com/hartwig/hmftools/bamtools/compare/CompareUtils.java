@@ -160,6 +160,11 @@ public class CompareUtils
             return false;
         if(orig.getContig() == null || newRead.getContig() == null || !orig.getContig().equals(newRead.getContig()))
             return false;
+        // alignments must share a start or end within tolerance — otherwise the cigars belong to two
+        // distinct placements that happen to have similar element shapes
+        if(Math.abs(orig.getAlignmentStart() - newRead.getAlignmentStart()) > toleranceBp
+                && Math.abs(orig.getAlignmentEnd() - newRead.getAlignmentEnd()) > toleranceBp)
+            return false;
         return cigarElementsEquivalent(orig.getCigar(), newRead.getCigar(), toleranceBp);
     }
 
