@@ -27,7 +27,7 @@ class GeneListUtil
                 SmallVariant::gene));
 
         genesDisplay.addAll(filteredMapped(gainDeletions.findings(),
-                gainDeletion -> genes.contains(gainDeletion.gene()) && gainDeletion.isDeletion() && gainDeletion.isLossOfHeterozygosity(),
+                gainDeletion -> genes.contains(gainDeletion.gene()) && gainDeletion.isDeletion() && !gainDeletion.isLossOfHeterozygosity(),
                 GainDeletion::gene));
 
         genesDisplay.addAll(filteredMapped(germlineHomozygousDisruptions,
