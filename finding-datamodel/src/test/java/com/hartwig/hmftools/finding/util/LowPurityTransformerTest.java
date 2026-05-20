@@ -29,7 +29,6 @@ public class LowPurityTransformerTest
     @Test
     public void testTransform()
     {
-        // TODO: Create this from actual orange record to make sure it's a representative finding record
         FindingRecord original = TestFindingRecordFactory.createMinimalTestFindingRecordBuilder()
                 .qc(TestFindingFactory.qcBuilder()
                         .warnings(new TreeSet<>(Set.of(Qc.QCStatus.LOW_PURITY)))
