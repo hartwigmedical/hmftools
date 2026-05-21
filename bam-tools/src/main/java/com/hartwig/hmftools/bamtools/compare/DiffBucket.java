@@ -60,9 +60,7 @@ public enum DiffBucket
                 return RESCUE_NEW_UNMAPPED;
         }
 
-        // mapQuality is orthogonal to structural classification: when it's paired with a structural diff
-        // it shouldn't push the row into MIXED. Strip it from the structural set so e.g. `mapQuality + attrib_MC`
-        // buckets as MATE_ECHO. mapQuality-only diffs fall through to MIXED (callers typically scrub those).
+        // bucket on the non-mapQuality fields so mapQuality + a structural diff doesn't fall through to MIXED.
         Set<String> structuralFields = new HashSet<>(fields);
         structuralFields.remove("mapQuality");
 

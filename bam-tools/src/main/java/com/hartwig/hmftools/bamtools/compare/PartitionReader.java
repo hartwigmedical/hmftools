@@ -261,7 +261,7 @@ public class PartitionReader implements Callable<Void>
         }
         catch(Exception e)
         {
-            BT_LOGGER.error("failed to close BAMs");
+            BT_LOGGER.error("failed to close BAMs: {}", e.toString());
         }
 
         return null;
@@ -388,10 +388,6 @@ public class PartitionReader implements Callable<Void>
         return false;
     }
 
-    // pre-pass: scan this partition (both BAMs) and add to the shared ignore-set the readname of every
-    // record whose alignment overlaps an ignore region by more than half its reference span. Cross-partition
-    // by design — a read's primary may be in partition A while its supplementary lands in B, and only one
-    // of those two scanners needs to flag the readname for it to be dropped from comparison.
     public void scanIgnoredReadNames()
     {
         if(mIgnoreRegionIndex == null || mIgnoredReadNames == null)
@@ -417,7 +413,6 @@ public class PartitionReader implements Callable<Void>
         }
         else if(fullyUnmappedReads)
         {
-            // fully-unmapped reads have no coords, so nothing to overlap — close and return.
             try { origSamReader.close(); newSamReader.close(); }
             catch(Exception e) { BT_LOGGER.error("failed to close BAMs"); }
             return;
@@ -438,12 +433,13 @@ public class PartitionReader implements Callable<Void>
         }
         catch(Exception e)
         {
-            BT_LOGGER.error("failed to close BAMs");
+            BT_LOGGER.error("failed to close BAMs: {}", e.toString());
         }
     }
 
     private void scanIterator(final SAMRecordIterator iter)
     {
+        String lastFlaggedReadName = null;
         while(iter.hasNext())
         {
             final SAMRecord read = iter.next();
@@ -451,16 +447,18 @@ public class PartitionReader implements Callable<Void>
             if(read.getReadUnmappedFlag())
                 continue;
 
-            // partition-local: scan only records whose alignment start is inside this partition. Without
-            // this guard, region queries return reads that overlap the partition's start coord (e.g. a
-            // read mapped at the previous partition's tail) and we'd double-count across partitions.
             if(mPartition != null && !mPartition.containsPosition(read.getAlignmentStart()))
+                continue;
+
+            final String readName = read.getReadName();
+            if(readName.equals(lastFlaggedReadName))
                 continue;
 
             if(mIgnoreRegionIndex.overlapsAboveHalf(
                     read.getReferenceName(), read.getAlignmentStart(), read.getAlignmentEnd()))
             {
-                mIgnoredReadNames.add(read.getReadName());
+                mIgnoredReadNames.add(readName);
+                lastFlaggedReadName = readName;
             }
         }
     }

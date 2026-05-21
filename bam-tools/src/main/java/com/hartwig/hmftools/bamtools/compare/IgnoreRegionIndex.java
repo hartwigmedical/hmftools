@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.region.ChrBaseRegion.getPositionStartF
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -17,10 +18,6 @@ import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.utils.file.FileDelimiters;
 import com.hartwig.hmftools.common.utils.file.FileReaderUtils;
 
-// per-chromosome sorted index of ignore regions, queried by alignment overlap. Multiple TSV files are
-// merged into a single index. Each TSV must have a header row including Chromosome / PosStart / PosEnd
-// (extra columns are tolerated). An alignment "hits" the index when any single ignore region overlaps
-// more than half the alignment's reference span.
 public class IgnoreRegionIndex
 {
     private final Map<String, List<BaseRegion>> mRegionsByChromosome;
@@ -36,9 +33,6 @@ public class IgnoreRegionIndex
 
     public int chromosomeCount() { return mRegionsByChromosome.size(); }
 
-    // returns true if any ignore region on the alignment's chromosome overlaps it by more than half its
-    // reference span. Span is (alignmentEnd - alignmentStart + 1); for an unmapped record callers should
-    // skip this check entirely (no coords).
     public boolean overlapsAboveHalf(final String chromosome, final int alignmentStart, final int alignmentEnd)
     {
         final List<BaseRegion> regions = mRegionsByChromosome.get(chromosome);
@@ -51,12 +45,22 @@ public class IgnoreRegionIndex
 
         final int threshold = span / 2;
 
-        for(final BaseRegion region : regions)
+        int lo = 0;
+        int hi = regions.size();
+        while(lo < hi)
         {
+            int mid = (lo + hi) >>> 1;
+            if(regions.get(mid).end() < alignmentStart)
+                lo = mid + 1;
+            else
+                hi = mid;
+        }
+
+        for(int i = lo; i < regions.size(); ++i)
+        {
+            final BaseRegion region = regions.get(i);
             if(region.start() > alignmentEnd)
                 break;
-            if(region.end() < alignmentStart)
-                continue;
 
             final int overlapStart = Math.max(region.start(), alignmentStart);
             final int overlapEnd = Math.min(region.end(), alignmentEnd);
@@ -79,15 +83,37 @@ public class IgnoreRegionIndex
             totalRegions += loadOne(filename, merged);
         }
 
-        for(final List<BaseRegion> regions : merged.values())
+        int finalCount = 0;
+        for(Map.Entry<String, List<BaseRegion>> entry : merged.entrySet())
         {
-            regions.sort(Comparator.comparingInt(BaseRegion::start));
+            entry.setValue(sortedNonOverlapping(entry.getValue()));
+            finalCount += entry.getValue().size();
         }
 
-        BT_LOGGER.info("ignore-region index: loaded {} regions across {} chromosomes from {} file(s)",
-                totalRegions, merged.size(), filenames.size());
+        BT_LOGGER.info("ignore-region index: loaded {} regions ({} after merge) across {} chromosomes from {} file(s)",
+                totalRegions, finalCount, merged.size(), filenames.size());
 
-        return new IgnoreRegionIndex(merged, totalRegions);
+        return new IgnoreRegionIndex(merged, finalCount);
+    }
+
+    private static List<BaseRegion> sortedNonOverlapping(final List<BaseRegion> regions)
+    {
+        regions.sort(Comparator.comparingInt(BaseRegion::start));
+        final List<BaseRegion> merged = new ArrayList<>(regions.size());
+        for(final BaseRegion region : regions)
+        {
+            if(!merged.isEmpty() && region.start() <= merged.get(merged.size() - 1).end() + 1)
+            {
+                final BaseRegion prev = merged.get(merged.size() - 1);
+                if(region.end() > prev.end())
+                    prev.setEnd(region.end());
+            }
+            else
+            {
+                merged.add(region);
+            }
+        }
+        return merged;
     }
 
     private static int loadOne(final String filename, final Map<String, List<BaseRegion>> target)

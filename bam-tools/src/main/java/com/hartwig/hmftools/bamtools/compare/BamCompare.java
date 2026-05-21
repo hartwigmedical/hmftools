@@ -88,9 +88,6 @@ public class BamCompare
 
         BT_LOGGER.info("splitting {} partitions across {} threads", partitionTasks.size(), mConfig.Threads);
 
-        // pre-pass: scan both BAMs over each partition and collect readnames whose any alignment overlaps
-        // an ignore region by > 50% of its reference span. Populates the shared ignoredReadNames set used
-        // by excludeRead in the compare wave below.
         if(ignoreRegionIndex != null)
         {
             long scanStartMs = System.currentTimeMillis();

@@ -52,9 +52,6 @@ public class CompareConfig
     public final int Threads;
     public final List<String> LogReadIds;
 
-    // comma-separated list of TSV paths (Chromosome / PosStart / PosEnd headers; extra columns ignored).
-    // any readname whose any alignment overlaps an ignore region by > 50% of its reference span is dropped
-    // from comparison in both BAMs.
     public final List<String> IgnoreRegionFiles;
 
     // debug
