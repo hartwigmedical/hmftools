@@ -15,7 +15,7 @@ public class FindingStatusFactoryTest
 {
     @Test
     public void toFindingStatusOk() {
-        FindingStatus findingStatus = FindingsStatusFactory.toFindingsStatus(Set.of(Qc.QCStatus.WARN_LOW_PURITY));
+        FindingStatus findingStatus = FindingsStatusFactory.toFindingsStatus(Set.of(),Set.of(Qc.QCStatus.LOW_PURITY));
         assertEquals(FindingStatus.Status.OK, findingStatus.status());
         assertTrue(findingStatus.isOK());
         assertEquals(findingStatus.warnings(), Set.of(FindingStatus.Issue.LOW_PURITY));
@@ -24,7 +24,7 @@ public class FindingStatusFactoryTest
 
     @Test
     public void toFindingStatusNotReliable() {
-        FindingStatus findingStatus = FindingsStatusFactory.toFindingsStatus(Set.of(Qc.QCStatus.FAIL_CONTAMINATION, Qc.QCStatus.WARN_LOW_PURITY));
+        FindingStatus findingStatus = FindingsStatusFactory.toFindingsStatus(Set.of(Qc.QCStatus.CONTAMINATION), Set.of(Qc.QCStatus.LOW_PURITY));
         assertEquals(FindingStatus.Status.NOT_RELIABLE, findingStatus.status());
         assertFalse(findingStatus.isOK());
         assertEquals(findingStatus.warnings(), Set.of(FindingStatus.Issue.LOW_PURITY));
