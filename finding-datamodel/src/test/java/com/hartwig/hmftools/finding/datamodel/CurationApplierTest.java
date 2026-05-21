@@ -21,7 +21,7 @@ public class CurationApplierTest
     @Test
     public void applyWithNoCurationsReturnsUnchangedRecord()
     {
-        SmallVariant variant = TestFindingFactory.variantBuilder()
+        SmallVariant variant = TestFindingFactory.smallVariantBuilder()
                 .driver(driverFields("variant-1", ReportedStatus.CANDIDATE))
                 .build();
         FindingRecord record = createMinimalTestFindingRecordBuilder()
@@ -37,7 +37,7 @@ public class CurationApplierTest
     @Test
     public void applyCurationChangesSmallVariantToReported()
     {
-        SmallVariant variant = TestFindingFactory.variantBuilder()
+        SmallVariant variant = TestFindingFactory.smallVariantBuilder()
                 .driver(driverFields("variant-1", ReportedStatus.CANDIDATE))
                 .build();
         FindingRecord record = createMinimalTestFindingRecordBuilder()
@@ -54,7 +54,7 @@ public class CurationApplierTest
     @Test
     public void applyCurationChangesSmallVariantToCandidate()
     {
-        SmallVariant variant = TestFindingFactory.variantBuilder()
+        SmallVariant variant = TestFindingFactory.smallVariantBuilder()
                 .driver(driverFields("variant-1", ReportedStatus.REPORTED))
                 .build();
         FindingRecord record = createMinimalTestFindingRecordBuilder()
@@ -71,10 +71,10 @@ public class CurationApplierTest
     @Test
     public void applyCurationDoesNotAffectUnmatchedFindings()
     {
-        SmallVariant variant1 = TestFindingFactory.variantBuilder()
+        SmallVariant variant1 = TestFindingFactory.smallVariantBuilder()
                 .driver(driverFields("variant-1", ReportedStatus.CANDIDATE))
                 .build();
-        SmallVariant variant2 = TestFindingFactory.variantBuilder()
+        SmallVariant variant2 = TestFindingFactory.smallVariantBuilder()
                 .driver(driverFields("variant-2", ReportedStatus.NOT_REPORTED))
                 .build();
         FindingRecord record = createMinimalTestFindingRecordBuilder()
@@ -143,7 +143,7 @@ public class CurationApplierTest
     @Test
     public void applyCurationToGermlineList()
     {
-        SmallVariant variant = TestFindingFactory.variantBuilder()
+        SmallVariant variant = TestFindingFactory.smallVariantBuilder()
                 .driver(driverFields("gl-variant-1", ReportedStatus.NOT_REPORTED))
                 .build();
         FindingRecord record = createMinimalTestFindingRecordBuilder()
@@ -167,7 +167,7 @@ public class CurationApplierTest
                 .driverInterpretation(DriverInterpretation.LOW)
                 .driverLikelihood(0.75)
                 .build();
-        SmallVariant variant = TestFindingFactory.variantBuilder()
+        SmallVariant variant = TestFindingFactory.smallVariantBuilder()
                 .driver(originalDriver)
                 .gene("BRCA1")
                 .build();
@@ -190,7 +190,7 @@ public class CurationApplierTest
     @Test
     public void applyMultipleCurationsAcrossDifferentLists()
     {
-        SmallVariant variant = TestFindingFactory.variantBuilder()
+        SmallVariant variant = TestFindingFactory.smallVariantBuilder()
                 .driver(driverFields("variant-1", ReportedStatus.CANDIDATE))
                 .build();
         Fusion fusion = TestFindingFactory.fusionBuilder()
