@@ -33,9 +33,9 @@ import jakarta.validation.constraints.NotNull;
 
 public class LowPurityTransformer
 {
-    private final static double MIN_PURITY_10_PCT = 0.1;
-    private final static double MIN_PURITY_20_PCT = 0.2;
-    private final static double MIN_PURITY_30_PCT = 0.3;
+    final static double MIN_PURITY_10_PCT = 0.1;
+    final static double MIN_PURITY_20_PCT = 0.2;
+    final static double MIN_PURITY_30_PCT = 0.3;
 
     @NotNull
     public static FindingRecord transform(@NotNull FindingRecord record)
@@ -66,6 +66,7 @@ public class LowPurityTransformer
     {
         double purity = record.purityPloidyFit().purity();
         return FindingRecordBuilder.builder(record)
+                .somaticSmallVariants(transform(record.somaticSmallVariants(), purity))
                 .somaticDisruptions(transform(record.somaticDisruptions(), purity))
                 .somaticGainDeletions(transform(record.somaticGainDeletions(), purity))
                 .viruses(transform(record.viruses(), purity))
@@ -74,7 +75,7 @@ public class LowPurityTransformer
                 .tumorMutationalBurden(transform(record.tumorMutationalBurden(), purity))
                 .homologousRecombination(transform(record.homologousRecombination(), purity))
                 // For HLA status remains the same, but tumor fields are cleared.
-                .hlaAlleles(transform(record.hlaAlleles(), purity, Function.identity(), LowPurityTransformer::transform))
+                .hlaAlleles(transform(record.hlaAlleles(), purity, LowPurityTransformer::addLowPurityWarning, LowPurityTransformer::transform))
                 .build();
     }
 
@@ -83,19 +84,16 @@ public class LowPurityTransformer
 
         double purity = record.purityPloidyFit().purity();
         boolean isTargeted = record.metaProperties().sequencingScope() == SequencingScope.TARGETED;
-        if(isTargeted && (purity > MIN_PURITY_20_PCT && purity < MIN_PURITY_30_PCT))
+        if(isTargeted && (purity >= MIN_PURITY_20_PCT && purity < MIN_PURITY_30_PCT))
         {
             // Special handling for deletions, that have a different purity cut off than the gains for targeted sequencing
             // Filter out the deletions, these are not within the purity range
-            List<GainDeletion> gainDeletions =
-                    record.somaticGainDeletions().findings().stream().filter(not(GainDeletion::isDeletion)).toList();
+            DriverFindingList<GainDeletion> findingList = record.somaticGainDeletions();
+            List<GainDeletion> gainDeletions = findingList.findings().stream().filter(not(GainDeletion::isDeletion)).toList();
             return FindingRecordBuilder.builder(record)
-                    .somaticGainDeletions(DriverFindingListBuilder.builder(record.somaticGainDeletions())
-                            .status(FindingStatusBuilder.builder(record.somaticGainDeletions().status())
-                                    // Status is warning, because there are potentially still valid gain results.
-                                    .warnings(addLowPurity(record.somaticGainDeletions().status().warnings()))
-                                    .status(FindingStatus.Status.OK)
-                                    .build())
+                    .somaticGainDeletions(DriverFindingListBuilder.builder(findingList)
+                            // Status is warning, because there are potentially still valid gain results.
+                            .status(addLowPurityWarning(findingList.status()))
                             .findings(gainDeletions)
                             .purityThreshold(MIN_PURITY_30_PCT)
                             .build())
@@ -133,7 +131,7 @@ public class LowPurityTransformer
             updatedErrors.add(Qc.QCStatus.LOW_PURITY);
         }
 
-        Qc updatedQc = QcBuilder.builder(record.qc()).errors(updatedErrors).warnings(updatedWarnings).build();
+        Qc updatedQc = QcBuilder.builder(record.qc()).isPass(!hasLowPurity).errors(updatedErrors).warnings(updatedWarnings).build();
         return FindingRecordBuilder.builder(record).qc(updatedQc).build();
     }
 
@@ -184,7 +182,7 @@ public class LowPurityTransformer
         if(shouldConvert(driverFindingList.status(), hasLowPurity(purity, driverFindingList.purityThreshold())))
         {
             return TransformUtil.transformDriverFindingList(driverFindingList,
-                    LowPurityTransformer::transform,
+                    LowPurityTransformer::addLowPurityError,
                     f -> null,
                     null);
         }
@@ -200,7 +198,7 @@ public class LowPurityTransformer
         if(shouldConvert(findingItem.status(), hasLowPurity(purity, findingItem.purityThreshold())))
         {
             return FindingItemBuilder.<T>builder()
-                    .status(transform(findingItem.status()))
+                    .status(addLowPurityError(findingItem.status()))
                     .purityThreshold(findingItem.purityThreshold())
                     .build();
         }
@@ -210,12 +208,21 @@ public class LowPurityTransformer
         }
     }
 
-    private static FindingStatus transform(FindingStatus findingStatus)
+    private static FindingStatus addLowPurityError(FindingStatus findingStatus)
     {
         return FindingStatusBuilder.builder()
                 .status(FindingStatus.Status.NOT_RELIABLE)
                 .errors(addLowPurity(findingStatus.errors()))
                 .warnings(removeLowPurity(findingStatus.warnings()))
+                .build();
+    }
+
+    private static FindingStatus addLowPurityWarning(FindingStatus findingStatus)
+    {
+        return FindingStatusBuilder.builder()
+                .status(FindingStatus.Status.OK)
+                .errors(removeLowPurity(findingStatus.errors()))
+                .warnings(addLowPurity(findingStatus.warnings()))
                 .build();
     }
 

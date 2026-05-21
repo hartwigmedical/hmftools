@@ -3,6 +3,7 @@ package com.hartwig.hmftools.finding.datamodel;
 import java.time.LocalDate;
 import java.util.List;
 
+import com.hartwig.hmftools.finding.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
 
 import org.jetbrains.annotations.NotNull;

@@ -272,6 +272,16 @@ public class TestFindingFactory
     }
 
     @NotNull
+    public static ChromosomeArmCopyNumberBuilder chromosomeArmCopyNumberBuilder()
+    {
+        return ChromosomeArmCopyNumberBuilder.builder()
+                .driver(driverFields(true, DriverInterpretation.HIGH))
+                .chromosome("")
+                .arm(ChromosomeArmCopyNumber.ChromosomeArm.P)
+                .type(ChromosomeArmCopyNumber.Type.GAIN);
+    }
+
+    @NotNull
     public static HlaAlleleBuilder hlaAlleleBuilder()
     {
         return HlaAlleleBuilder.builder()
@@ -294,6 +304,20 @@ public class TestFindingFactory
                 .somaticInframeIndel(0D);
     }
 
+    @NotNull
+    public static PharmacoGenotypeBuilder pharmacoGenotypeBuilder()
+    {
+        return PharmacoGenotypeBuilder.builder()
+                .findingKey("")
+                .gene("")
+                .allele("")
+                .function("")
+                .haplotype("")
+                .linkedDrugs("")
+                .urlPrescriptionInfo("");
+    }
+
+    @NotNull
     public static DriverFields driverFields(boolean reported, DriverInterpretation interpretation)
     {
         return driverFieldsBuilder()
