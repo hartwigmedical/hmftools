@@ -269,7 +269,7 @@ public class VariantFilters
 
         if(isUltima())
         {
-            if(belowExpectedHpQuals(primaryTumor))
+            if(belowExpectedHpQuals(primaryTumor, mIsGermline))
             {
                 filters.add(SoftFilter.MIN_AVG_HP_QUAL);
             }
