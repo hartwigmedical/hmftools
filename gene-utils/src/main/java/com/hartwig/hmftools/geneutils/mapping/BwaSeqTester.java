@@ -1,8 +1,6 @@
 package com.hartwig.hmftools.geneutils.mapping;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.calcCigarAlignedLength;
-import static com.hartwig.hmftools.common.bwa.BwaUtils.BWA_LIB_PATH;
-import static com.hartwig.hmftools.common.bwa.BwaUtils.loadAlignerLibrary;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
@@ -21,9 +19,9 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
-import org.broadinstitute.hellbender.utils.bwa.BwaMemAligner;
-import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
-import org.broadinstitute.hellbender.utils.bwa.BwaMemIndex;
+import org.umccr.java.hellbender.utils.bwa.BwaMemAligner;
+import org.umccr.java.hellbender.utils.bwa.BwaMemAlignment;
+import org.umccr.java.hellbender.utils.bwa.BwaMemIndex;
 
 public class BwaSeqTester
 {
@@ -36,7 +34,6 @@ public class BwaSeqTester
 
         String refGenomeImageFile = configBuilder.getValue(REF_GENOME) + ".img";
 
-        loadAlignerLibrary(configBuilder.getValue(BWA_LIB_PATH));
         mAligner = initialiseBwaAligner(refGenomeImageFile);
     }
 

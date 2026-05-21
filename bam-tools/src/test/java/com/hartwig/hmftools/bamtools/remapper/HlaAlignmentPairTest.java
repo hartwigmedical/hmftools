@@ -2,7 +2,7 @@ package com.hartwig.hmftools.bamtools.remapper;
 
 import static org.junit.Assert.assertEquals;
 
-import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
+import org.umccr.java.hellbender.utils.bwa.BwaMemAlignment;
 import org.junit.Test;
 
 public class HlaAlignmentPairTest extends RemapperTestBase

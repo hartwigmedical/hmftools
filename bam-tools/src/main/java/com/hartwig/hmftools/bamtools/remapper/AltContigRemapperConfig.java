@@ -2,8 +2,6 @@ package com.hartwig.hmftools.bamtools.remapper;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.common.bamops.BamToolName.BAMTOOL_PATH;
-import static com.hartwig.hmftools.common.bwa.BwaUtils.LIBBWA_PATH;
-import static com.hartwig.hmftools.common.bwa.BwaUtils.loadAlignerLibrary;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeFile;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.THREADS;
@@ -15,7 +13,7 @@ import com.hartwig.hmftools.common.bam.BamUtils;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
-import org.broadinstitute.hellbender.utils.bwa.BwaMemIndex;
+import org.umccr.java.hellbender.utils.bwa.BwaMemIndex;
 
 import htsjdk.samtools.SAMFileHeader;
 
@@ -49,7 +47,6 @@ public class AltContigRemapperConfig
                     OrigBamFile != null, OutputFile != null);
             System.exit(1);
         }
-        loadAlignerLibrary(null);
 
         RefGenVersion = BamUtils.deriveRefGenomeVersion(OrigBamFile);
 
@@ -62,7 +59,6 @@ public class AltContigRemapperConfig
         configBuilder.addConfigItem(OUTPUT_FILE, true, "Output comparison file");
         configBuilder.addPath(ORIG_BAM_FILE, true, "Original BAM file");
         configBuilder.addFlag(HLA_REGIONS_ONLY, "Slice HLA regions only");
-        configBuilder.addPath(LIBBWA_PATH, false, "Path to BWA library");
         configBuilder.addPath(BAMTOOL_PATH, false, "Path to BWA library");
 
         addRefGenomeFile(configBuilder, true);
