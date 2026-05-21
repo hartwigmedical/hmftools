@@ -42,12 +42,12 @@ public class CopyNumberRoundingTransformerTest
     @Test
     public void canRoundVariants()
     {
-        SmallVariant variant1 = CopyNumberRoundingTransformer.roundCopyNumbers(TestFindingFactory.variantBuilder()
+        SmallVariant variant1 = CopyNumberRoundingTransformer.roundCopyNumbers(TestFindingFactory.smallVariantBuilder()
                 .adjustedCopyNumber(0.144)
                 .build());
         assertEquals(0.1, variant1.adjustedCopyNumber(), EPSILON);
 
-        SmallVariant variant2 = CopyNumberRoundingTransformer.roundCopyNumbers(TestFindingFactory.variantBuilder()
+        SmallVariant variant2 = CopyNumberRoundingTransformer.roundCopyNumbers(TestFindingFactory.smallVariantBuilder()
                 .adjustedCopyNumber(0.04)
                 .build());
         assertEquals(0.0, variant2.adjustedCopyNumber(), EPSILON);
