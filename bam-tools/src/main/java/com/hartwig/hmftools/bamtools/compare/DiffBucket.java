@@ -26,6 +26,7 @@ public enum DiffBucket
     PLACEMENT,
     SA_DIFF,
     MATE_ECHO,
+    SOFTCLIP_BOUNDARY_TOLERATED,
     ATTR_ONLY,
     MIXED;
 
@@ -51,6 +52,9 @@ public enum DiffBucket
         }
 
         Set<String> fields = diffFieldNames(diffs);
+
+        if(fields.contains("boundaryTolerated") || fields.contains("mateBoundaryTolerated"))
+            return SOFTCLIP_BOUNDARY_TOLERATED;
 
         if(fields.contains("unmapped"))
         {

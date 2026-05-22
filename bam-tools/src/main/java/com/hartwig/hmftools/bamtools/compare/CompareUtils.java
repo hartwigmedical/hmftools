@@ -71,6 +71,23 @@ public class CompareUtils
         if(config.CheckBasesAndQuals)
             addBasesAndQualsDiffs(orig, newRead, diffs);
 
+        // surface boundary-tolerance absorption as its own diff when nothing else differs, so the row is
+        // emitted and downstream can bucket it as a known-ignore softclip-boundary case instead of a silent match
+        if(diffs.isEmpty())
+        {
+            if(ownCigarsEquiv && !orig.getCigarString().equals(newRead.getCigarString()))
+            {
+                diffs.add(format("boundaryTolerated(%s/%s)", orig.getCigarString(), newRead.getCigarString()));
+            }
+            else if(mateCigarsEquiv)
+            {
+                String origMc = orig.getStringAttribute(MATE_CIGAR_ATTRIBUTE);
+                String newMc = newRead.getStringAttribute(MATE_CIGAR_ATTRIBUTE);
+                if(origMc != null && newMc != null && !origMc.equals(newMc))
+                    diffs.add(format("mateBoundaryTolerated(%s/%s)", origMc, newMc));
+            }
+        }
+
         return diffs;
     }
 
