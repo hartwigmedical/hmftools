@@ -33,7 +33,6 @@ import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_SLICE_SIZE;
 import static com.hartwig.hmftools.sage.SageConstants.NON_ILLUMINA_MAX_READ_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.VIS_VARIANT_BUFFER;
-import static com.hartwig.hmftools.sage.common.NumberEvents.setRecomputeNumMutations;
 import static com.hartwig.hmftools.sage.quality.QualityConfig.HIGH_DEPTH_MODE;
 
 import java.io.File;
@@ -156,8 +155,6 @@ public class SageConfig
             Arrays.stream(configBuilder.getValue(REFERENCE_BAM, Strings.EMPTY).split(SAMPLE_DELIM))
                     .forEach(x -> ReferenceBams.add(SampleDataDir + x));
         }
-
-        setRecomputeNumMutations(ReferenceBams);
 
         OutputFile = SampleDataDir + configBuilder.getValue(OUTPUT_VCF);
 
