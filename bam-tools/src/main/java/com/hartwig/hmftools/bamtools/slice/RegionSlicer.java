@@ -28,7 +28,6 @@ import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
 
-
 public class RegionSlicer
 {
     private final SliceConfig mConfig;

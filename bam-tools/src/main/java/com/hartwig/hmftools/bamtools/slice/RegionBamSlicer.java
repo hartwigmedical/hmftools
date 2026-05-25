@@ -3,6 +3,7 @@ package com.hartwig.hmftools.bamtools.slice;
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
+import static com.hartwig.hmftools.bamtools.slice.SliceConfig.DOWNSAMPLE_BASES;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 
@@ -30,19 +31,26 @@ public class RegionBamSlicer implements Runnable
     private List<ChrBaseRegion> mLowerRegions;
     private int mReadsProcessed;
 
+    // downsampling state
+    private int mDownsamplePositionStart;
+    private int mDownsampleReadCount;
+
     public RegionBamSlicer(final ChrBaseRegion region, final SliceConfig config, final ReadCache readCache, final ThreadLocal<SamReader> bamReader)
     {
         mConfig = config;
         mReadCache = readCache;
         mBamReader = bamReader;
 
-        mBamSlicer = new BamSlicer(0, true, true, false);
+        mBamSlicer = new BamSlicer(0, !mConfig.DropDuplicates, true, false);
         mBamSlicer.setKeepHardClippedSecondaries();
         mBamSlicer.setKeepUnmapped();
 
         mCurrentRegion = region;
         mLowerRegions = Collections.emptyList();
         mReadsProcessed = 0;
+
+        mDownsamplePositionStart = 0;
+        mDownsampleReadCount = 0;
     }
 
     @Override
@@ -92,6 +100,25 @@ public class RegionBamSlicer implements Runnable
         {
             BT_LOGGER.debug("region({}) processed {} reads, current pos({})",
                     mCurrentRegion, mReadsProcessed, readStart);
+        }
+
+        if(mConfig.DownsampleFactor > 0)
+        {
+            // down-sample at a fixed rate specified in config per X bases (default = 100)
+            if(readStart > mDownsamplePositionStart + DOWNSAMPLE_BASES)
+            {
+                mDownsamplePositionStart = readStart;
+                mDownsampleReadCount = 0;
+            }
+            else if(mDownsampleReadCount > mConfig.DownsampleFactor)
+            {
+                // processed sufficient reads for this window
+                return;
+            }
+            else
+            {
+                ++mDownsampleReadCount;
+            }
         }
 
         mReadCache.addReadRecord(read);
