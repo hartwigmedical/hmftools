@@ -316,7 +316,7 @@ public class ChimericReadTracker
 
             // chimeric reads will be processed by the fusion-finding routine, so need to capture transcript and exon data
             // and free up other gene & region read data (to avoid retaining large numbers of references/memory)
-            for(final ChimericReadGroup readGroup : mChimericReadMap.values())
+            for(ChimericReadGroup readGroup : mChimericReadMap.values())
             {
                 List<FusionRead> reads = convertReads(readGroup.reads());
                 reads.forEach(x -> x.setReadJunctionDepth(baseDepth));
