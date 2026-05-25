@@ -3,6 +3,8 @@
 PanelBuilder is a tool to easily create custom panel designs based on simple input features.
 You input the genomic features you are interested in, and PanelBuilder creates the best set of probes for you.
 
+Resource files are officially available here: [https://console.cloud.google.com/storage/browser/hmf-public/HMFtools-Resources/panel-builder](https://console.cloud.google.com/storage/browser/hmf-public/HMFtools-Resources/panel-builder)
+
 ## Supported Features
 
 - Genes (coding, promoter, UTR, flanks)
