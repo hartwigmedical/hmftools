@@ -117,7 +117,9 @@ public class RegionBamSlicer implements Runnable
             }
             else
             {
-                ++mDownsampleReadCount;
+                // duplicates are included but not counted towards down-sampling so the intended depth is based on primaries
+                if(!read.getDuplicateReadFlag())
+                    ++mDownsampleReadCount;
             }
         }
 
