@@ -374,9 +374,9 @@ public class JunctionAssembler
             adjustedJuncPosition = max(outerJuncPosition, secondJuncPosition);
         }
 
-        // Do not apply coordinate SAGA matching to discordant junctions, because we don't know the location with enough precision.
         mJunction = new Junction(
-                mJunction.Chromosome, adjustedJuncPosition, mJunction.Orient, true, false, false, null);
+                mJunction.Chromosome, adjustedJuncPosition, mJunction.Orient, true, false, false,
+                null); // no SAGA-match owing to imprecise junction coords
 
         mJunction.setRawDiscordantPosition(originalJuncPosition);
 
