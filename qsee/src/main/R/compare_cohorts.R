@@ -1,3 +1,23 @@
+#'
+#' This script generates plots that compare the pipeline outputs from a reference cohort (e.g. HMF cohort) vs a target cohort (e.g. panel cohort).
+#'
+#' Example command:
+#'
+#' Rscript compare_cohorts.R \
+#' --reference_input_dir hmf_data/ \
+#' --reference_name HMF \
+#' --target_input_dir panel_data/msk \
+#' --target_name MSK \
+#' --panel_bed_file panel_definition.msk.37.bed.gz \
+#' --driver_gene_panel driver_genes.msk.37.tsv \
+#' --output_dir output/
+#'
+#' Details of what the script does:
+#' - The required pipeline output files will be recursively searched for within the output dirs, e.g. it will search for files with the suffix' '*.bam_metric.summary.tsv(.gz)*$' within reference_input_dir.
+#' - For each cohort and file suffix, TSV files will be merged into a single TSV file.
+#' - Generates comparison plots
+#'
+
 library(stringr)
 library(dplyr)
 library(GenomicRanges)
@@ -16,27 +36,18 @@ theme_set(
 ## Config
 ## =============================
 
-#' Usage example:
-#'
-#' Rscript compare_cohorts.R \
-#' --reference_input_dir /Users/lnguyen/Hartwig/experiments/wigits_qc/analysis/20260414_panel_metrics/hmf_data \
-#' --target_input_dir /Users/lnguyen/Hartwig/experiments/wigits_qc/analysis/20260414_panel_metrics/panel_data/msk \
-#' --panel_bed_file /Users/lnguyen/Hartwig/resources/common-resources-public/panel/msk/panel_definition.msk.37.bed.gz \
-#' --driver_gene_panel /Users/lnguyen/Hartwig/resources/common-resources-public/panel/msk/driver_genes.msk.37.tsv \
-#' --output_dir /Users/lnguyen/Hartwig/experiments/wigits_qc/analysis/20260414_panel_metrics/output
-
 args <- local({
    parser <- argparse::ArgumentParser()
    
    parser$add_argument("--reference_input_dir", help="Directory containing reference cohort data")
    parser$add_argument("--target_input_dir", help="Directory containing the target cohort data")
    
-   parser$add_argument("--reference_name", help="Reference cohort name. Used in plots and output file prefixes", default="reference")
-   parser$add_argument("--target_name", help="Target cohort name. Used in plots and output file prefixes", default="target")
+   parser$add_argument("--reference_name", help="Reference cohort name. Used in plots and output file prefixes", default="REFERENCE")
+   parser$add_argument("--target_name", help="Target cohort name. Used in plots and output file prefixes", default="TARGET")
    parser$add_argument("--output_dir", help="Output directory")
    
-   parser$add_argument("--reference_tables_dir", help="Directory containing reference cohort merged TSVs. Defaults: <output_dir>/tables")
-   parser$add_argument("--target_tables_dir", help="Directory containing target cohort merged TSVs. Defaults: <output_dir>/tables")
+   parser$add_argument("--reference_tables_dir", help="Default: <output_dir>/tables. Directory containing reference cohort merged TSVs. The merged TSVs will be loaded if they exist, skipping the merging operation")
+   parser$add_argument("--target_tables_dir", help="Default: <output_dir>/tables. Directory containing target cohort merged TSVs. The merged TSVs will be loaded if they exist, skipping the merging operation")
    
    parser$add_argument("--panel_bed_file", help="Path to the panel bed file")
    parser$add_argument("--driver_gene_panel", help="Path to the driver gene panel file")
@@ -325,6 +336,20 @@ merge_tsvs.purple.cnv.gene <- function(cohort_type){
    )
 }
 
+merge_tsvs.purple.target_region_cn <- function(cohort_type){
+   read_func <- function(path){
+      df <- read.delim(path)
+      df %>% 
+         dplyr::filter(masked == "false") %>% 
+         dplyr::select(chromosome, windowStart, windowEnd, windowTumorRatio)
+   }
+   
+   merge_tsvs(
+      cohort_type, pattern="*.purple.target_region_cn.tsv(.gz)*$", output_file_suffix=".purple.target_region_cn.tsv.gz",
+      read_func=read_func, progress_interval = 10
+   )
+}
+
 ## --------------------------------
 ## Linx
 ## --------------------------------
@@ -390,6 +415,7 @@ TARGET_COHORT <- local({
    tables$purple.qc <- merge_tsvs.purple.qc(cohort_type)
    tables$purple.purity <- merge_tsvs.purple.purity(cohort_type)
    tables$purple.cnv.gene <- merge_tsvs.purple.cnv.gene(cohort_type)
+   tables$purple.target_region_cn <- merge_tsvs.purple.target_region_cn(cohort_type)
    tables$linx.driver.catalog <- merge_tsvs.linx.driver.catalog(cohort_type)
    tables$linx.fusion <- merge_tsvs.linx.fusion(cohort_type)
    tables$lilac.solutions <- merge_tsvs.lilac.solutions(cohort_type)
@@ -467,6 +493,11 @@ plot_to_pdf <- function(plots, output_path, width, height){
    }
    
    dev.off()
+}
+
+plot_to_png <- function(plot, output_path, width, height){
+   LOGGER$info("Writing PNG: %s", output_path)
+   ggsave(filename=output_path, plot=plot, width=width, height=height)
 }
 
 ## --------------------------------
@@ -902,6 +933,71 @@ if(!is.null(TARGET_COHORT$linx.fusion)){
    )
    
 }
+
+## --------------------------------
+## Copy number clustering
+## --------------------------------
+
+TUMOR_RATIO_PLOT <- local({
+   
+   ## Convert to matrix
+   cn_table <- TARGET_COHORT$purple.target_region_cn %>% 
+      dplyr::mutate(chromosome = naturalsort::naturalfactor(chromosome)) %>%
+      dplyr::arrange(chromosome, windowStart) %>%
+      dplyr::mutate(coord = paste(chromosome, windowStart, windowEnd, sep = ":")) %>%
+      dplyr::mutate(coord = preordered_factor(coord))
+      
+   ratio_matrix <- reshape2::dcast(cn_table, formula = coord ~ SampleId, value.var = "windowTumorRatio")
+   
+   rownames(ratio_matrix) <- ratio_matrix$coord
+   ratio_matrix$coord <- NULL
+   ratio_matrix <- as.matrix(ratio_matrix)
+   
+   ## Clustering
+   ratio_matrix_no_na <- ratio_matrix
+   ratio_matrix_no_na[is.na(ratio_matrix_no_na)] <- 1
+   distances <- dist(t(ratio_matrix_no_na))
+   hclust_result <- hclust(distances)
+   
+   ## Apply clustering order
+   ratio_matrix <- ratio_matrix[,hclust_result$order]
+   
+   ## Plot
+   plot_data <- reshape2::melt(ratio_matrix, varnames = c("Coord", "SampleId"), value.name = "TumorRatio")
+   plot_data <- plot_data %>% dplyr::mutate(
+      Coord = preordered_factor(Coord),
+      Chromosome = preordered_factor(stringr::str_remove(Coord, ":.+$"))
+   )
+   
+   dendro <- ggdendro::ggdendrogram(hclust_result, rotate = TRUE) +
+      scale_x_discrete(expand = c(0, 0.5)) +
+      scale_y_continuous(expand = c(0, 0)) +
+      theme_void()
+   
+   heatmap <- ggplot(plot_data, aes(x=Coord, y=SampleId)) + 
+      facet_grid(.~Chromosome, scales = "free_x", space = "free_x") +
+      geom_tile(aes(fill = TumorRatio)) + 
+      scale_fill_distiller(palette = "Spectral", na.value = "white") +
+      scale_y_discrete(sec.axis = dup_axis()) +
+      coord_cartesian(expand = FALSE) +
+      theme(
+         axis.text.x = element_blank(),
+         axis.ticks.x = element_blank(),
+         axis.text.y = element_text(size = 5),
+         axis.text.y.right = element_blank(),
+         axis.title.y.right = element_blank(),
+         panel.spacing.x = unit(-1, "pt"),
+         strip.text.x = element_text(angle = 0),
+         legend.position = "bottom"
+      )
+   
+   plot <- patchwork::wrap_plots(heatmap, dendro, nrow = 1, widths = c(10, 1))
+   plot$nrow <- length(unique(plot_data$SampleId))
+   return(plot)
+})
+
+plot_to_png(TUMOR_RATIO_PLOT, form_plot_path(".tumor_ratio.png"), width = 16, height = 0.5 + TUMOR_RATIO_PLOT$nrow * 0.08)
+
 
 ## --------------------------------
 ## Gene copy number
