@@ -147,8 +147,8 @@ public class FindingRecordFactory
                         smallVariants,
                         somaticGainDeletions,
                         germlineHomozygousDisruptions,
-                        findingStatus,
-                        metaProperties.potentialMSIGenes()))
+                        findingStatus
+                ))
                 .tumorMutationalLoad(createTumorMutationalLoad(purple, findingStatus))
                 .tumorMutationalBurden(createTumorMutationalBurden(purple, findingStatus))
                 .chromosomeArmCopyNumbers(cnPerChromosome.toArmCopyNumberFindings(findingStatus))
@@ -160,8 +160,8 @@ public class FindingRecordFactory
                         somaticGainDeletions,
                         germlineHomozygousDisruptions,
                         findingStatus, experimentType,
-                        hasRefSample,
-                        metaProperties.potentialHRDGenes()))
+                        hasRefSample
+                ))
                 .predictedTumorOrigin(createPredictedTumorOrigin(orangeRecord.cuppa(), orangeRecord.plots(), experimentType, findingStatus))
                 .hlaAlleles(HlaAlleleFactory.createHlaAllelesFindings(orangeRecord, findingStatus))
                 .pharmacoGenotypes(createPharmacoGenotypesFindings(orangeRecord.peach(), findingStatus))
@@ -176,8 +176,6 @@ public class FindingRecordFactory
                 .pipelineVersion(orangeRecord.pipelineVersion())
                 .sampleId(orangeRecord.sampleId())
                 .samplingDate(orangeRecord.samplingDate())
-                .potentialHRDGenes(new TreeSet<>(Genes.HRD_GENES))
-                .potentialMSIGenes(new TreeSet<>(Genes.MSI_GENES))
                 .build();
     }
 
@@ -343,8 +341,7 @@ public class FindingRecordFactory
             List<Disruption> germlineHomozygousDisruptions,
             FindingStatus findingStatus,
             ExperimentType experimentType,
-            boolean hasRefSample,
-            Set<String> potentialHRDGenes)
+            boolean hasRefSample)
     {
         if(chord != null)
         {
@@ -353,7 +350,7 @@ public class FindingRecordFactory
             SortedSet<String> drivingGenes = isPresent ? GeneListUtil.genes(smallVariants,
                     gainDeletions,
                     germlineHomozygousDisruptions,
-                    potentialHRDGenes) : new TreeSet<>();
+                    Genes.HRD_GENES) : new TreeSet<>();
             return FindingItemBuilder.<HomologousRecombination>builder()
                     .status(findingStatus)
                     .finding(HomologousRecombinationBuilder.builder()
@@ -403,8 +400,7 @@ public class FindingRecordFactory
     private static FindingItem<MicrosatelliteStability> createMicrosatelliteStability(PurpleRecord purple,
             DriverFindingList<SmallVariant> smallVariants, DriverFindingList<GainDeletion> gainDeletions,
             List<Disruption> germlineHomozygousDisruptions,
-            FindingStatus findingStatus,
-            Set<String> potentialMSIGenes)
+            FindingStatus findingStatus)
     {
         MicrosatelliteStability.Status microsatelliteStatus =
                 microsatelliteStatus(purple.characteristics().microsatelliteStatus());
@@ -412,7 +408,7 @@ public class FindingRecordFactory
         SortedSet<String> drivingGenes = isPresent ? GeneListUtil.genes(smallVariants,
                 gainDeletions,
                 germlineHomozygousDisruptions,
-                potentialMSIGenes) : new TreeSet<>();
+                Genes.MSI_GENES) : new TreeSet<>();
 
         return FindingItemBuilder.<MicrosatelliteStability>builder()
                 .status(FindingUtil.somaticStatus(findingStatus))
