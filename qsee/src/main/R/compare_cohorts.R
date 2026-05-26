@@ -336,6 +336,20 @@ merge_tsvs.purple.cnv.gene <- function(cohort_type){
    )
 }
 
+merge_tsvs.purple.target_region_cn <- function(cohort_type){
+   read_func <- function(path){
+      df <- read.delim(path)
+      df %>% 
+         dplyr::filter(masked == "false") %>% 
+         dplyr::select(chromosome, windowStart, windowEnd, windowTumorRatio)
+   }
+   
+   merge_tsvs(
+      cohort_type, pattern="*.purple.target_region_cn.tsv(.gz)*$", output_file_suffix=".purple.target_region_cn.tsv.gz",
+      read_func=read_func, progress_interval = 10
+   )
+}
+
 ## --------------------------------
 ## Linx
 ## --------------------------------
@@ -401,6 +415,7 @@ TARGET_COHORT <- local({
    tables$purple.qc <- merge_tsvs.purple.qc(cohort_type)
    tables$purple.purity <- merge_tsvs.purple.purity(cohort_type)
    tables$purple.cnv.gene <- merge_tsvs.purple.cnv.gene(cohort_type)
+   tables$purple.target_region_cn <- merge_tsvs.purple.target_region_cn(cohort_type)
    tables$linx.driver.catalog <- merge_tsvs.linx.driver.catalog(cohort_type)
    tables$linx.fusion <- merge_tsvs.linx.fusion(cohort_type)
    tables$lilac.solutions <- merge_tsvs.lilac.solutions(cohort_type)
@@ -478,6 +493,11 @@ plot_to_pdf <- function(plots, output_path, width, height){
    }
    
    dev.off()
+}
+
+plot_to_png <- function(plot, output_path, width, height){
+   LOGGER$info("Writing PNG: %s", output_path)
+   ggsave(filename=output_path, plot=plot, width=width, height=height)
 }
 
 ## --------------------------------
@@ -913,6 +933,71 @@ if(!is.null(TARGET_COHORT$linx.fusion)){
    )
    
 }
+
+## --------------------------------
+## Copy number clustering
+## --------------------------------
+
+TUMOR_RATIO_PLOT <- local({
+   
+   ## Convert to matrix
+   cn_table <- TARGET_COHORT$purple.target_region_cn %>% 
+      dplyr::mutate(chromosome = naturalsort::naturalfactor(chromosome)) %>%
+      dplyr::arrange(chromosome, windowStart) %>%
+      dplyr::mutate(coord = paste(chromosome, windowStart, windowEnd, sep = ":")) %>%
+      dplyr::mutate(coord = preordered_factor(coord))
+      
+   ratio_matrix <- reshape2::dcast(cn_table, formula = coord ~ SampleId, value.var = "windowTumorRatio")
+   
+   rownames(ratio_matrix) <- ratio_matrix$coord
+   ratio_matrix$coord <- NULL
+   ratio_matrix <- as.matrix(ratio_matrix)
+   
+   ## Clustering
+   ratio_matrix_no_na <- ratio_matrix
+   ratio_matrix_no_na[is.na(ratio_matrix_no_na)] <- 1
+   distances <- dist(t(ratio_matrix_no_na))
+   hclust_result <- hclust(distances)
+   
+   ## Apply clustering order
+   ratio_matrix <- ratio_matrix[,hclust_result$order]
+   
+   ## Plot
+   plot_data <- reshape2::melt(ratio_matrix, varnames = c("Coord", "SampleId"), value.name = "TumorRatio")
+   plot_data <- plot_data %>% dplyr::mutate(
+      Coord = preordered_factor(Coord),
+      Chromosome = preordered_factor(stringr::str_remove(Coord, ":.+$"))
+   )
+   
+   dendro <- ggdendro::ggdendrogram(hclust_result, rotate = TRUE) +
+      scale_x_discrete(expand = c(0, 0.5)) +
+      scale_y_continuous(expand = c(0, 0)) +
+      theme_void()
+   
+   heatmap <- ggplot(plot_data, aes(x=Coord, y=SampleId)) + 
+      facet_grid(.~Chromosome, scales = "free_x", space = "free_x") +
+      geom_tile(aes(fill = TumorRatio)) + 
+      scale_fill_distiller(palette = "Spectral", na.value = "white") +
+      scale_y_discrete(sec.axis = dup_axis()) +
+      coord_cartesian(expand = FALSE) +
+      theme(
+         axis.text.x = element_blank(),
+         axis.ticks.x = element_blank(),
+         axis.text.y = element_text(size = 5),
+         axis.text.y.right = element_blank(),
+         axis.title.y.right = element_blank(),
+         panel.spacing.x = unit(-1, "pt"),
+         strip.text.x = element_text(angle = 0),
+         legend.position = "bottom"
+      )
+   
+   plot <- patchwork::wrap_plots(heatmap, dendro, nrow = 1, widths = c(10, 1))
+   plot$nrow <- length(unique(plot_data$SampleId))
+   return(plot)
+})
+
+plot_to_png(TUMOR_RATIO_PLOT, form_plot_path(".tumor_ratio.png"), width = 16, height = 0.5 + TUMOR_RATIO_PLOT$nrow * 0.08)
+
 
 ## --------------------------------
 ## Gene copy number
