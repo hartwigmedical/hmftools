@@ -66,9 +66,9 @@ public class FusionFragmentBuilder
         */
 
         // set chromosomes - either 1 or 2, with the lower set into the start position
-        final List<String> chromosomes = Lists.newArrayListWithCapacity(2);
+        List<String> chromosomes = Lists.newArrayListWithCapacity(2);
 
-        for(final FusionRead read : fragment.reads())
+        for(FusionRead read : fragment.reads())
         {
             if(!chromosomes.contains(read.Chromosome))
                 chromosomes.add(read.Chromosome);
@@ -102,7 +102,7 @@ public class FusionFragmentBuilder
         // identify the properties of the junction and use it to set other properties of the fragment
         if(fragment.isSingleChromosome())
         {
-            final FusionRead splitRead = fragment.reads().stream()
+            FusionRead splitRead = fragment.reads().stream()
                     .filter(x -> x.ContainsSplit)
                     .filter(x -> x.spansGeneCollections() || x.HasInterGeneSplit)
                     .findFirst().orElse(null);

@@ -59,8 +59,8 @@ public class ChromosomeFusions
         // pass any complete chimeric read groups to the fusion finder
         // and add to this any groups which are now complete (ie which were partially complete before)
         // cache any incomplete groups, either for later gene collections or from other chromosomes
-        final List<FusionReadGroup> completeReadGroups = mFusionFinder.processNewChimericReadGroups(
-                geneCollection, baseDepth,mChimericReadTracker.getReadMap());
+        List<FusionReadGroup> completeReadGroups = mFusionFinder.processNewChimericReadGroups(
+                geneCollection, baseDepth, mChimericReadTracker.fusionReadGroupMap());
 
         mChimericStats.merge(mChimericReadTracker.getStats());
 
@@ -104,10 +104,10 @@ public class ChromosomeFusions
         Map<String, Set<String>> chrHardFilteredIds = mChimericReadTracker.getHardFilteredReadIds();
 
         // organise incomplete reads into the chromosomes which they link to
-        final Map<String,Map<String,FusionReadGroup>> chrIncompleteReadsGroups = mFusionFinder.extractIncompleteReadGroups(
+        Map<String,Map<String,FusionReadGroup>> chrIncompleteReadsGroups = mFusionFinder.extractIncompleteReadGroups(
                 mChromosome, chrHardFilteredIds);
 
-        final List<FusionReadGroup> interChromosomalGroups = mFusionTaskManager.addIncompleteReadGroup(
+        List<FusionReadGroup> interChromosomalGroups = mFusionTaskManager.addIncompleteReadGroup(
                 mChromosome, chrIncompleteReadsGroups, chrHardFilteredIds);
 
         if(!interChromosomalGroups.isEmpty())
@@ -115,11 +115,11 @@ public class ChromosomeFusions
             mFusionFinder.processInterChromosomalReadGroups(interChromosomalGroups);
         }
 
-        mFusionTaskManager.addHardFilteredFusionCount(mFusionFinder.getHardFilteredCount());
+        mFusionTaskManager.addHardFilteredFusionCount(mFusionFinder.hardFilteredCount());
 
         mPerfCounter.stop();
 
-        mChimericReadTracker.clearAll();
+        mChimericReadTracker.clearAllData();
 
         mFusionFinder.logPerfCounters();
         mFusionFinder.clearState(true);
