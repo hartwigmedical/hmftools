@@ -66,6 +66,9 @@ public class FusionFinder implements Callable<Void>
     private final FusionWriter mFusionWriter;
 
     private int mHardFilteredCount;
+    private int mDuplicateGroupFilteredCount;
+    private int mExcludedFilteredCount;
+
     private final PerformanceCounter[] mPerfCounters;
 
     private static final int PERF_CREATE_FRAGS = 0;
@@ -94,6 +97,8 @@ public class FusionFinder implements Callable<Void>
 
         mFusionWriter = fusionWriter;
         mHardFilteredCount = 0;
+        mDuplicateGroupFilteredCount = 0;
+        mExcludedFilteredCount = 0;
 
         if(mConfig.Fusions.RunPerfChecks)
         {
@@ -116,7 +121,10 @@ public class FusionFinder implements Callable<Void>
     public final Map<String, FusionReadGroup> getChimericPartialReadGroups() { return mChimericPartialReadGroups; }
     public final List<FusionReadGroup> getSpanningReadGroups() { return mSpanningReadGroups; }
     public final RacFragmentCache racFragmentCache() { return mRacFragmentCache; }
-    public int getHardFilteredCount() { return mHardFilteredCount; }
+
+    public int hardFilteredCount() { return mHardFilteredCount; }
+    public int duplicateFilteredCount() { return mDuplicateGroupFilteredCount; }
+    public int excludedReadCount() { return mExcludedFilteredCount; }
 
     public void clearState(boolean isFinal)
     {
@@ -142,11 +150,11 @@ public class FusionFinder implements Callable<Void>
 
         // identify any read groups with reads spanning into a future gene collection
         // and fill in any missing gene info for reads (partial or complete) which link to this gene collections
-        final List<FusionReadGroup> spanningGroups = newReadGroups.values().stream()
+        List<FusionReadGroup> spanningGroups = newReadGroups.values().stream()
                 .filter(x -> x.Reads.stream().anyMatch(y -> y.GeneCollections[SE_END] == NO_GENE_ID))
                 .collect(Collectors.toList());
 
-        final List<FusionReadGroup> geneCompletedGroups = reconcileSpanningReadGroups(geneCollection, spanningGroups, baseDepth);
+        List<FusionReadGroup> geneCompletedGroups = reconcileSpanningReadGroups(geneCollection, spanningGroups, baseDepth);
 
         spanningGroups.stream().forEach(x -> completeReadGroups.remove(x));
         geneCompletedGroups.stream().filter(x -> !completeReadGroups.contains(x)).forEach(x -> completeReadGroups.add(x));
@@ -220,7 +228,7 @@ public class FusionFinder implements Callable<Void>
 
         if(chrHardFilteredIds.containsKey(chrPair))
         {
-            final Map<String, Set<String>> selfChrHardFilteredIds = Maps.newHashMap();
+            Map<String, Set<String>> selfChrHardFilteredIds = Maps.newHashMap();
             selfChrHardFilteredIds.put(chrPair, chrHardFilteredIds.get(chrPair));
             removePartialGroupsWithHardFilteredMatch(mChimericPartialReadGroups, selfChrHardFilteredIds);
             chrHardFilteredIds.remove(chrPair);
@@ -262,7 +270,8 @@ public class FusionFinder implements Callable<Void>
 
         if(mHardFilteredCount > 0)
         {
-            ISF_LOGGER.info("chr({}) fusion processing complete, hard-filtered({})", mChromosome, mHardFilteredCount);
+            ISF_LOGGER.info("chr({}) fusion processing complete, filtered(hard={} excluded={} duplicate={})",
+                    mChromosome, mHardFilteredCount, mExcludedFilteredCount, mDuplicateGroupFilteredCount);
         }
     }
 
@@ -295,12 +304,18 @@ public class FusionFinder implements Callable<Void>
 
             // exclude any group with a duplicate read now that group is complete (since not all reads are marked as duplicates)
             if(readGroup.hasDuplicateRead())
+            {
+                ++mDuplicateGroupFilteredCount;
                 continue;
+            }
 
-            final List<FusionRead> reads = readGroup.Reads;
+            List<FusionRead> reads = readGroup.Reads;
 
             if(reads.stream().anyMatch(x -> mConfig.Filters.skipRead(x.MateChromosome, x.MatePosStart)))
+            {
+                ++mExcludedFilteredCount;
                 continue;
+            }
 
             FusionFragment fragment = new FusionFragment(readGroup);
 
@@ -502,9 +517,7 @@ public class FusionFinder implements Callable<Void>
             for(FusionTransExon transExonRef : initialFragment.getTransExonRefs()[se])
             {
                 TranscriptData transData = transcriptsCache.stream()
-		    .filter(x -> x.TransId == transExonRef.TransId)
-		    .findFirst()
-		    .orElse(null);
+                        .filter(x -> x.TransId == transExonRef.TransId).findFirst().orElse(null);
 
                 if(transData == null)
                 {
@@ -547,7 +560,7 @@ public class FusionFinder implements Callable<Void>
                 for(GeneData gene2 : genesByPosition[SE_END])
                 {
                     if(mConfig.Fusions.KnownFusions.hasKnownFusion(gene1.GeneName, gene2.GeneName)
-                            || mConfig.Fusions.KnownFusions.hasKnownFusion(gene2.GeneName, gene1.GeneName))
+                    || mConfig.Fusions.KnownFusions.hasKnownFusion(gene2.GeneName, gene1.GeneName))
                     {
                         matched = true;
                         genesByPosition[SE_START].clear();
@@ -587,10 +600,10 @@ public class FusionFinder implements Callable<Void>
             // for the start being the upstream gene, if the orientation is +1 then require a +ve strand gene,
             // and so the end is the downstream gene and will set the orientation as required
 
-            final List<GeneData> upstreamGenes = genesByPosition[upstreamIndex].stream()
+            List<GeneData> upstreamGenes = genesByPosition[upstreamIndex].stream()
                     .filter(x -> x.Strand == sjOrientations[upstreamIndex]).collect(Collectors.toList());
 
-            final List<GeneData> downstreamGenes = genesByPosition[downstreamIndex].stream()
+            List<GeneData> downstreamGenes = genesByPosition[downstreamIndex].stream()
                     .filter(x -> x.Strand == -sjOrientations[downstreamIndex]).collect(Collectors.toList());
 
             // where multiple (non-known) genes are still considered, take the longest coding one
@@ -617,8 +630,6 @@ public class FusionFinder implements Callable<Void>
                 fusionData.setStreamData(upstreamGenes, downstreamGenes, se == SE_START);
             }
         }
-
-        // fusionData.cacheTranscriptData(); // now done higher up
 
         initialFragment.setJunctionTypes(mConfig.RefGenome, fusionData.getGeneStrands(), fusionData.junctionSpliceBases());
     }
@@ -854,15 +865,15 @@ public class FusionFinder implements Callable<Void>
         // now re-check remaining non-split-junction against the new fusions only
         for(Map.Entry<String, List<FusionFragment>> entry : mDiscordantFragments.entrySet())
         {
-            final List<FusionReadData> fusions = newFusions.stream()
+            List<FusionReadData> fusions = newFusions.stream()
                     .filter(x -> x.locationId().equals(entry.getKey())).collect(Collectors.toList());
 
             if(fusions.isEmpty())
                 continue;
 
-            final List<FusionFragment> fragments = entry.getValue();
+            List<FusionFragment> fragments = entry.getValue();
 
-            final Set<FusionFragment> allocatedFragments = Sets.newHashSet();
+            Set<FusionFragment> allocatedFragments = Sets.newHashSet();
 
             for(FusionFragment fragment : fragments)
             {

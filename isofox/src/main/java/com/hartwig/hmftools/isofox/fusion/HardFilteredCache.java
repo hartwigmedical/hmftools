@@ -20,7 +20,6 @@ import com.hartwig.hmftools.common.gene.TranscriptData;
 public class HardFilteredCache
 {
     private final Map<String,Set<String>> mChromosomePairFilteredReads;
-
     private final Map<String,Set<Integer>> mKnownSpliteSites;
 
     private int mHardFilteredCount;

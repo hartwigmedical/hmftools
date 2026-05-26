@@ -51,7 +51,6 @@ import static com.hartwig.hmftools.isofox.fusion.ChimericUtils.isRealignedFragme
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -184,7 +183,7 @@ public class FragmentAllocator
     public void clearCache()
     {
         mFragmentReads.clear();
-        mChimericReads.clear();
+        mChimericReads.clearData();
 
         mExpressionReadTracker.setGeneData(null);
         mAltSpliceJunctionFinder.setGeneData(null);

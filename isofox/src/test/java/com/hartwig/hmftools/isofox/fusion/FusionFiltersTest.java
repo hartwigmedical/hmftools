@@ -229,7 +229,7 @@ public class FusionFiltersTest
         bamReader1.getChimericReadTracker().postProcessChimericReads(bamReader1.getBaseDepth(), bamReader1.getFragmentTracker());
 
         List<FusionReadGroup> completeGroups = finderChr1.processNewChimericReadGroups(
-                gc5, bamReader1.getBaseDepth(), bamReader1.getChimericReadTracker().getReadMap());
+                gc5, bamReader1.getBaseDepth(), bamReader1.getChimericReadTracker().fusionReadGroupMap());
 
         fusionTaskManager.addRacFragments(gc5.chromosome(), gc5.id(), bamReader1.getChimericReadTracker().extractJunctionRacFragments());
 
@@ -265,7 +265,7 @@ public class FusionFiltersTest
         FusionFinder finderChr2 = fusionTaskManager.createFusionFinder(gc3.chromosome());
 
         completeGroups = finderChr2.processNewChimericReadGroups(
-                gc3, bamReader2.getBaseDepth(), bamReader2.getChimericReadTracker().getReadMap());
+                gc3, bamReader2.getBaseDepth(), bamReader2.getChimericReadTracker().fusionReadGroupMap());
 
         fusionTaskManager.addRacFragments(gc3.chromosome(), gc3.id(), bamReader2.getChimericReadTracker().extractJunctionRacFragments());
 
