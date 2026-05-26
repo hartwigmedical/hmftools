@@ -97,7 +97,7 @@ public class ChimericReadTracker
 
     public boolean enabled() { return mEnabled; }
 
-    public Map<String, FusionReadGroup> getReadMap() { return mFusionReadGroupMap; }
+    public Map<String,FusionReadGroup> fusionReadGroupMap() { return mFusionReadGroupMap; }
 
     public JunctionRacFragments extractJunctionRacFragments()
     {
@@ -169,8 +169,8 @@ public class ChimericReadTracker
         mPostGeneReadMap.clear();
     }
 
-    public void clear() { clear(false); }
-    public void clearAll() { clear(true); }
+    public void clearData() { clear(false); }
+    public void clearAllData() { clear(true); }
 
     private void clear(boolean full)
     {
@@ -318,6 +318,12 @@ public class ChimericReadTracker
             // and free up other gene & region read data (to avoid retaining large numbers of references/memory)
             for(final ChimericReadGroup readGroup : mChimericReadMap.values())
             {
+                if(mConfig.Fusions.SkipNonGenic)
+                {
+                    if(readGroup.reads().stream().noneMatch(x -> x.withinGeneCollection()))
+                        continue;
+                }
+
                 List<FusionRead> reads = convertReads(readGroup.reads());
                 reads.forEach(x -> x.setReadJunctionDepth(baseDepth));
                 mFusionReadGroupMap.put(readGroup.id(), new FusionReadGroup(readGroup.id(), reads));
