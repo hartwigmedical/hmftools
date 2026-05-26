@@ -8,7 +8,6 @@ import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.finding.datamodel.FindingRecord;
 import com.hartwig.hmftools.finding.util.CandidateToReportableTransformer;
-import com.hartwig.hmftools.finding.util.ChromosomePrefixTransformer;
 import com.hartwig.hmftools.finding.util.CopyNumberRoundingTransformer;
 import com.hartwig.hmftools.finding.util.ErrorTransformer;
 import com.hartwig.hmftools.finding.util.LowPurityTransformer;
@@ -36,8 +35,7 @@ public class ConversionUtil
                 NoGermlineTransformer::transform,
                 CandidateToReportableTransformer::transform,
                 CopyNumberRoundingTransformer::transform,
-                ReportedOnlyTransformer::transform,
-                ChromosomePrefixTransformer::transform
+                ReportedOnlyTransformer::transform
         )).apply(findingRecord);
     }
 }
