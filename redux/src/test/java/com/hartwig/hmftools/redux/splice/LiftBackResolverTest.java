@@ -383,7 +383,7 @@ public class LiftBackResolverTest
         assertEquals(150, result.finalPos());
         assertEquals("50M100N50M", result.finalCigar());
         assertTrue(result.hasNCigar());
-        assertEquals(255, result.updatedMapq());
+        assertEquals(60, result.updatedMapq());
         assertTrue(result.notes().contains("swapped_ref_to_tx"));
 
         // self (chr5 ref) should still be in the lifted set but not the primary choice and not dropped

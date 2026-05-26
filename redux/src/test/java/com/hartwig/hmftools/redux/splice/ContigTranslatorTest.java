@@ -200,15 +200,44 @@ public class ContigTranslatorTest
     }
 
     @Test
-    public void testDeletionCrossingJunction()
+    public void testDeletionCrossingJunctionAboveThreshold()
     {
-        // 10M5D5M starting at contig pos 91 (genomic 190): 10M fills the rest of exon 1, then 5D would consume
-        // ref starting at 200 (intron). We emit 100N for the intron, advance to exon 2 (300), then continue 5D + 5M.
+        // 10M10D5M starting at contig pos 91 (genomic 190): 10M fills the rest of exon 1, then 10D would
+        // consume ref starting at 200 (intron). We emit 100N for the intron, advance to exon 2 (300),
+        // then continue 10D + 5M. 10D is above SPLICE_FLANKING_DELETION_MAX_BP so it is preserved as-is.
+        ContigTranslator.TranslationResult result = ContigTranslator.translate(threeExonContig(), 91, cigar("10M10D5M"));
+
+        assertNotNull(result);
+        assertEquals(190, result.genomicStart());
+        assertEquals("10M100N10D5M", result.genomicCigar().toString());
+        assertEquals(1, result.impliedIntrons().size());
+    }
+
+    @Test
+    public void testDeletionCrossingJunctionCollapsedIntoSplice()
+    {
+        // tx-FASTA off-by-N artefact: bwa reports e.g. 10M5D5M where the 5D straddles an exon boundary.
+        // The lift would emit 10M 100N 5D 5M; collapseSpliceFlankingDeletions absorbs the small trailing
+        // D into the N because each D <= SPLICE_FLANKING_DELETION_MAX_BP.
         ContigTranslator.TranslationResult result = ContigTranslator.translate(threeExonContig(), 91, cigar("10M5D5M"));
 
         assertNotNull(result);
         assertEquals(190, result.genomicStart());
-        assertEquals("10M100N5D5M", result.genomicCigar().toString());
+        assertEquals("10M105N5M", result.genomicCigar().toString());
+        assertEquals(1, result.impliedIntrons().size());
+    }
+
+    @Test
+    public void testDeletionsBothSidesOfJunctionCollapsedIntoSplice()
+    {
+        // pre-lift cigar with a single D straddling the boundary: 9M3D6M starting at contig pos 92.
+        // 9M reaches the end of exon 1, the 3D splits into 1D before the junction + 2D after (during the
+        // lift walk), and collapseSpliceFlankingDeletions then absorbs both into the N.
+        ContigTranslator.TranslationResult result = ContigTranslator.translate(threeExonContig(), 92, cigar("9M3D6M"));
+
+        assertNotNull(result);
+        assertEquals(191, result.genomicStart());
+        assertEquals("9M103N6M", result.genomicCigar().toString());
         assertEquals(1, result.impliedIntrons().size());
     }
 
@@ -276,6 +305,82 @@ public class ContigTranslatorTest
         assertFalse(ContigTranslator.hasSoftClipAtExonBoundary(threeExonContig(), 1, cigar("20S30M")));
         // 50M from pos 201 ends at contig pos 250 = last base of last exon — outer edge, not interior
         assertFalse(ContigTranslator.hasSoftClipAtExonBoundary(threeExonContig(), 201, cigar("50M20S")));
+    }
+
+    @Test
+    public void testTrimMicroAnchorAtThreshold()
+    {
+        // "100M500N3M48S" with min anchor 3 -> 3M stays (3 is not below 3).
+        final Cigar in = cigar("100M500N3M48S");
+        final Cigar out = ContigTranslator.trimTrailingMicroAnchor(in, 2);
+        assertEquals("100M500N3M48S", out.toString());
+    }
+
+    @Test
+    public void testTrimMicroAnchorBelowThreshold()
+    {
+        // "100M500N2M49S" with threshold 3 -> drop the N+2M, roll into trailing S: "100M51S".
+        final Cigar in = cigar("100M500N2M49S");
+        final Cigar out = ContigTranslator.trimTrailingMicroAnchor(in, 3);
+        assertEquals("100M51S", out.toString());
+    }
+
+    @Test
+    public void testTrimMicroAnchorExactlyAtThreshold()
+    {
+        // 3M tail with threshold 3 is trimmable (semantics: trim when length <= maxAnchorBp).
+        final Cigar in = cigar("100M500N3M48S");
+        final Cigar out = ContigTranslator.trimTrailingMicroAnchor(in, 3);
+        assertEquals("100M51S", out.toString());
+    }
+
+    @Test
+    public void testTrimMicroAnchorOneBaseTail()
+    {
+        // tiniest possible tail anchor (1M) gets rolled.
+        final Cigar in = cigar("80M2000N1M70S");
+        final Cigar out = ContigTranslator.trimTrailingMicroAnchor(in, 3);
+        assertEquals("80M71S", out.toString());
+    }
+
+    @Test
+    public void testTrimMicroAnchorNoTrailingSoftClip()
+    {
+        // No trailing S -> nothing to roll, unchanged.
+        final Cigar in = cigar("80M2000N2M");
+        final Cigar out = ContigTranslator.trimTrailingMicroAnchor(in, 3);
+        assertEquals("80M2000N2M", out.toString());
+    }
+
+    @Test
+    public void testTrimMicroAnchorNoTrailingIntron()
+    {
+        // Tail is yM zS but no preceding N -> nothing to drop, leave alone.
+        final Cigar in = cigar("100M");
+        assertEquals("100M", ContigTranslator.trimTrailingMicroAnchor(in, 3).toString());
+
+        final Cigar in2 = cigar("80M3M48S");
+        // adjacent M ops aren't a junction; trim must not fire.
+        assertEquals("80M3M48S", ContigTranslator.trimTrailingMicroAnchor(in2, 3).toString());
+    }
+
+    @Test
+    public void testTrimMicroAnchorMustHaveAnchorBeforeIntron()
+    {
+        // pathological case: cigar starts with S then N then tiny-M then S — no preceding M anchor,
+        // trimming would leave just softclips. Refuse.
+        final Cigar in = cigar("50S100N2M99S");
+        final Cigar out = ContigTranslator.trimTrailingMicroAnchor(in, 3);
+        assertEquals("50S100N2M99S", out.toString());
+    }
+
+    @Test
+    public void testTrimMicroAnchorTrailingMatchAboveThresholdUnchanged()
+    {
+        // 4M tail with threshold 3 -> not trimmed (above threshold).
+        final Cigar in = cigar("100M500N4M47S");
+        final Cigar out = ContigTranslator.trimTrailingMicroAnchor(in, 3);
+        assertEquals("100M500N4M47S", out.toString());
     }
 
     private static Cigar cigar(final String cigarString)

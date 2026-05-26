@@ -1,0 +1,88 @@
+package com.hartwig.hmftools.redux.splice.rescue;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+// Provides three views of an annotated-junction set:
+//   - exact membership (Set semantics) — used by the supp-merge snap loop
+//   - by-intron-start (Map<(chrom, intronStart), List<ChrIntron>>) — used by right-extend ref-verify
+//     to find candidate downstream exons
+//   - by-intron-end (Map<(chrom, intronEnd), List<ChrIntron>>) — used by left-extend ref-verify to
+//     find candidate upstream exons
+//
+// Builds all three from the same Set<ChrIntron> in one pass at construction.
+public class AnnotatedJunctionIndex
+{
+    private final Set<ChrIntron> mJunctions;
+    private final Map<ChrPos, List<ChrIntron>> mByStart;
+    private final Map<ChrPos, List<ChrIntron>> mByEnd;
+
+    public AnnotatedJunctionIndex(final Set<ChrIntron> junctions)
+    {
+        mJunctions = junctions != null ? junctions : new HashSet<>();
+        mByStart = new HashMap<>();
+        mByEnd = new HashMap<>();
+        for(ChrIntron intron : mJunctions)
+        {
+            mByStart.computeIfAbsent(new ChrPos(intron.Chromosome, intron.IntronStart),
+                    k -> new ArrayList<>()).add(intron);
+            mByEnd.computeIfAbsent(new ChrPos(intron.Chromosome, intron.IntronEnd),
+                    k -> new ArrayList<>()).add(intron);
+        }
+    }
+
+    public boolean contains(final ChrIntron intron)
+    {
+        return mJunctions.contains(intron);
+    }
+
+    public int size()
+    {
+        return mJunctions.size();
+    }
+
+    // returns introns whose start position equals `intronStart` on the given chromosome. Used by
+    // the ref-verify right-extend path to enumerate candidate downstream exons (the intron's end
+    // tells us where to read reference bases for verification).
+    public List<ChrIntron> introByStart(final String chromosome, final int intronStart)
+    {
+        return mByStart.getOrDefault(new ChrPos(chromosome, intronStart), Collections.emptyList());
+    }
+
+    public List<ChrIntron> introByEnd(final String chromosome, final int intronEnd)
+    {
+        return mByEnd.getOrDefault(new ChrPos(chromosome, intronEnd), Collections.emptyList());
+    }
+
+    private static final class ChrPos
+    {
+        final String Chromosome;
+        final int Position;
+
+        ChrPos(final String chromosome, final int position)
+        {
+            Chromosome = chromosome;
+            Position = position;
+        }
+
+        @Override
+        public boolean equals(final Object o)
+        {
+            if(this == o) return true;
+            if(!(o instanceof ChrPos)) return false;
+            final ChrPos other = (ChrPos) o;
+            return Position == other.Position && Chromosome.equals(other.Chromosome);
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return Chromosome.hashCode() * 31 + Position;
+        }
+    }
+}

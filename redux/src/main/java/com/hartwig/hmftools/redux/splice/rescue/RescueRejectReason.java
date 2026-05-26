@@ -1,0 +1,24 @@
+package com.hartwig.hmftools.redux.splice.rescue;
+
+// Reasons a rescue candidate was rejected. Drives the per-decision counters in RescueStatistics so
+// we can measure which gate is filtering most candidates after a run.
+public enum RescueRejectReason
+{
+    NO_TERMINAL_SOFTCLIP,         // primary cigar has no leading or trailing S to extend across
+    NO_MATCHING_SUPP,             // no supplementary had a complementary cigar shape
+    DIFFERENT_CHROMOSOME,
+    OPPOSITE_STRAND,
+    READ_COVERAGE_OVERLAP,        // primary's M + supp's M overlap on the read
+    READ_COVERAGE_GAP,            // primary's M + supp's M leave a gap on the read
+    INTRON_TOO_SHORT,
+    INTRON_TOO_LONG,
+    SHORT_ANCHOR,                 // primary or supp matched portion < MinAnchorOverhang
+    NOVEL_JUNCTION,               // candidate intron not in annotated set (and AnnotatedOnly is true)
+    COMPLEX_CIGAR_SHAPE,          // hard clip, indel adjacent to softclip boundary, etc.
+    AMBIGUOUS_SUPP_CHOICE,        // multiple equally-good candidate supps; refuse to guess
+    // ref-verify path: primary has terminal softclip but no matching supp
+    REF_VERIFY_NO_CANDIDATE_EXON, // no annotated junction's adjacent exon lines up with the softclip
+    REF_VERIFY_MISMATCH_TOO_HIGH, // softclipped read bases don't match the candidate exon's ref bases
+    REF_VERIFY_NO_REF_SOURCE,     // ref-verify requested but no RefSequenceSource configured
+    REF_VERIFY_AMBIGUOUS          // multiple annotated downstream/upstream exons match; refuse to guess
+}

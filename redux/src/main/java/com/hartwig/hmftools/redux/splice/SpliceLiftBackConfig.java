@@ -38,6 +38,18 @@ public class SpliceLiftBackConfig
     public static final String UNMAP_BELOW_MAPQ = "unmap_below_mapq";
     public static final String UNMAP_BELOW_MAPQ_DESC = "If > 0, mark primary records with final MAPQ < N as unmapped";
 
+    public static final String RESCUE_VIA_SUPP = "rescue_via_supp";
+    public static final String RESCUE_VIA_SUPP_DESC =
+            "Merge primary + supplementary across annotated junctions when read coverage complements cleanly";
+
+    public static final String EXTEND_SOFTCLIP_TAILS = "extend_softclip_tails";
+    public static final String EXTEND_SOFTCLIP_TAILS_DESC =
+            "Convert ref-matching bases at terminal softclips into M (recovers bwa tail-trim losses)";
+
+    public static final String ENSEMBL_DATA_DIR = "ensembl_data_dir";
+    public static final String ENSEMBL_DATA_DIR_DESC =
+            "Ensembl data cache directory; required when -rescue_via_supp is set";
+
     public static final String DEFAULT_OUTPUT_PREFIX = "splice_lifted";
     public static final String TSV_A_SUFFIX = ".liftback.records.tsv";
     public static final String TSV_B_SUFFIX = ".liftback.alignments.tsv";
@@ -51,6 +63,9 @@ public class SpliceLiftBackConfig
     public final boolean StarMapqLadder;
     public final int UnmapAboveNh;
     public final int UnmapBelowMapq;
+    public final boolean RescueViaSupp;
+    public final boolean ExtendSoftclipTails;
+    public final String EnsemblDataDir;
     public final String OutputDir;
     public final String OutputId;
     public final String BamToolPath;
@@ -66,6 +81,12 @@ public class SpliceLiftBackConfig
         StarMapqLadder = configBuilder.hasFlag(STAR_MAPQ_LADDER);
         UnmapAboveNh = configBuilder.getInteger(UNMAP_ABOVE_NH);
         UnmapBelowMapq = configBuilder.getInteger(UNMAP_BELOW_MAPQ);
+        RescueViaSupp = configBuilder.hasFlag(RESCUE_VIA_SUPP);
+        ExtendSoftclipTails = configBuilder.hasFlag(EXTEND_SOFTCLIP_TAILS);
+        EnsemblDataDir = configBuilder.getValue(ENSEMBL_DATA_DIR);
+
+        if(RescueViaSupp && EnsemblDataDir == null)
+            throw new IllegalArgumentException("-rescue_via_supp requires -ensembl_data_dir");
         OutputDir = parseOutputDir(configBuilder);
         OutputId = configBuilder.getValue(OUTPUT_ID);
         BamToolPath = configBuilder.getValue(BAMTOOL_PATH);
@@ -123,6 +144,9 @@ public class SpliceLiftBackConfig
         configBuilder.addFlag(STAR_MAPQ_LADDER, STAR_MAPQ_LADDER_DESC);
         configBuilder.addInteger(UNMAP_ABOVE_NH, UNMAP_ABOVE_NH_DESC, 0);
         configBuilder.addInteger(UNMAP_BELOW_MAPQ, UNMAP_BELOW_MAPQ_DESC, 0);
+        configBuilder.addFlag(RESCUE_VIA_SUPP, RESCUE_VIA_SUPP_DESC);
+        configBuilder.addFlag(EXTEND_SOFTCLIP_TAILS, EXTEND_SOFTCLIP_TAILS_DESC);
+        configBuilder.addPath(ENSEMBL_DATA_DIR, false, ENSEMBL_DATA_DIR_DESC);
         BamToolName.addConfig(configBuilder);
 
         addOutputOptions(configBuilder);

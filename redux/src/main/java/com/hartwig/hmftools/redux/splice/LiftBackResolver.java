@@ -27,8 +27,12 @@ public class LiftBackResolver
     private static final String XS_TAG = "XS";
     private static final String NM_TAG = "NM";
 
-    private static final int RESCUED_MAPQ = 255;
+    private static final int RESCUED_MAPQ = 60;
     private static final int INPUT_UNIQUE_MAPQ = 60;
+
+    // Tail-anchor floor for tx-contig supps. A trailing yM after an N with y below this is dropped
+    // into the trailing softclip — the junction it implies isn't supported by enough matched bases.
+    private static final int ANNOTATED_JUNCTION_MIN_ANCHOR_BP = 3;
 
     // per-alt-contig list of segments sorted by altStart so a record's alt-contig position can be
     // bin-searched back to the owning transcript. Non-alt-contig alignments (ref) fall through unindexed.
@@ -205,9 +209,9 @@ public class LiftBackResolver
         //  (1) input MAPQ=0 from a ref/tx tie that lifts back to one genomic locus is an artefact of the
         //      tx-contig representation — restore to RESCUED_MAPQ so downstream tools (Isofox, redux)
         //      don't discard as ambiguous. Also rescue when we swapped the BAM primary.
-        //  (2) input MAPQ=60 is the standard sanger cap for confident-unique placements (binary, not
-        //      graded), semantically equivalent to the NH==1 sentinel of 255 emitted by spliced aligners
-        //      — translate so downstream tools using either convention agree.
+        //  (2) input MAPQ=60 is the standard sanger cap for confident-unique placements; passes through
+        //      unchanged (no-op now that RESCUED_MAPQ == 60). STAR's NH==1 sentinel of 255 and bwa's 60
+        //      both mean "unique"; the downstream comparison treats (255, 60) as a match.
         //  (3) input MAPQ in (0, 60) carries graded alignment-quality signal (ambiguous boundaries, low
         //      complexity, indels near edges) that is strictly more informative than a binary sentinel —
         //      leave it alone.
@@ -215,6 +219,9 @@ public class LiftBackResolver
         // suppressed by the source aligner, e.g. numt / chrM paralog). The chosen primary's tx provenance
         // overrides — a spliced-transcript match is stronger evidence than a sequence-only tie. Otherwise
         // keep MAPQ at 0 so downstream tools see honest ambiguity.
+        // TODO extend the override: when the lifted primary falls cleanly inside an annotated exon AND
+        // the hidden tie has no XA, the tie is a sub-threshold paralog and the rescue should still fire.
+        // Needs an exon annotation index threaded into the resolver.
         final int inputMapq = record.getMappingQuality();
         final boolean swapped = effectivePrimary != self;
         final boolean unresolvedHiddenTie = inputMapq == 0 && hasHiddenTie(record) && !effectivePrimary.fromTxContig();
@@ -283,9 +290,22 @@ public class LiftBackResolver
                 List.of(lifted));
     }
 
+    private static LiftedAlignment rebuildLiftedWithCigar(final LiftedAlignment original, final String newCigar)
+    {
+        final LiftedAlignment rebuilt = new LiftedAlignment(
+                original.Source, original.OrigContig, original.OrigPos, original.OrigCigar,
+                original.LiftedChrom, original.LiftedPos, newCigar,
+                original.AlignmentScore, original.NumMismatches,
+                original.TransName, original.GeneId, original.GeneName,
+                original.SoftClipAtBoundary, original.ForwardStrand);
+        rebuilt.Dropped = original.Dropped;
+        rebuilt.IsPrimaryChoice = original.IsPrimaryChoice;
+        return rebuilt;
+    }
+
     private LiftBackResult supplementaryResult(final SAMRecord record)
     {
-        final LiftedAlignment lifted = liftAlignment(
+        LiftedAlignment lifted = liftAlignment(
                 LiftedAlignment.AlignmentSource.SELF,
                 record.getReferenceName(), record.getAlignmentStart(), record.getCigarString(),
                 getInt(record, AS_TAG), getInt(record, NM_TAG),
@@ -293,6 +313,14 @@ public class LiftBackResolver
 
         if(lifted == null)
             return unliftableResult(LiftBackResult.RecordRole.SUPPLEMENTARY, 0, "supp_translate_failed");
+
+        if(lifted.fromTxContig())
+        {
+            final Cigar trimmed = ContigTranslator.trimTrailingMicroAnchor(
+                    TextCigarCodec.decode(lifted.LiftedCigar), ANNOTATED_JUNCTION_MIN_ANCHOR_BP);
+            if(!trimmed.toString().equals(lifted.LiftedCigar))
+                lifted = rebuildLiftedWithCigar(lifted, trimmed.toString());
+        }
 
         lifted.IsPrimaryChoice = true;
 

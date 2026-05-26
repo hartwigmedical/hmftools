@@ -11,6 +11,10 @@ import htsjdk.samtools.CigarOperator;
 
 public final class ContigTranslator
 {
+    // tx-contig D ops up to this length that end up adjacent to a lift-emitted N are absorbed into the N
+    // (see collapseSpliceFlankingDeletions). Larger D values are kept as real deletions.
+    static final int SPLICE_FLANKING_DELETION_MAX_BP = 5;
+
     public static TranslationResult translate(final ContigEntry contig, int contigPos, final Cigar contigCigar)
     {
         final List<BaseRegion> spans = contig.exonSpans();
@@ -110,7 +114,93 @@ public final class ContigTranslator
             }
         }
 
-        return new TranslationResult(contig.chromosome(), genomicStart, new Cigar(outElements), impliedIntrons);
+        return new TranslationResult(
+                contig.chromosome(), genomicStart,
+                new Cigar(collapseSpliceFlankingDeletions(outElements)),
+                impliedIntrons);
+    }
+
+    // A pre-lift D op that straddles an exon boundary gets emitted by translate() as xD nN yD (lead D
+    // up to the exon end, splice N, trail D into the next exon). This is the signature of a tx-FASTA
+    // off-by-N at the junction; the D consumes no read bases and the N consumes no read bases either,
+    // so absorbing xD..yD into the N preserves read and reference span. Only absorbed when each D's
+    // length is <= SPLICE_FLANKING_DELETION_MAX_BP — larger Ds are kept as real deletions.
+    static List<CigarElement> collapseSpliceFlankingDeletions(final List<CigarElement> elements)
+    {
+        if(elements.size() < 3)
+            return elements;
+
+        List<CigarElement> result = new ArrayList<>(elements.size());
+        for(int i = 0; i < elements.size(); ++i)
+        {
+            final CigarElement element = elements.get(i);
+
+            if(element.getOperator() != CigarOperator.N)
+            {
+                result.add(element);
+                continue;
+            }
+
+            int splicedLength = element.getLength();
+
+            // absorb a leading absorbable D already emitted into result
+            if(!result.isEmpty() && isAbsorbableDeletion(result.get(result.size() - 1)))
+                splicedLength += result.remove(result.size() - 1).getLength();
+
+            // absorb a trailing absorbable D that immediately follows in the input
+            while(i + 1 < elements.size() && isAbsorbableDeletion(elements.get(i + 1)))
+                splicedLength += elements.get(++i).getLength();
+
+            result.add(new CigarElement(splicedLength, CigarOperator.N));
+        }
+        return result;
+    }
+
+    private static boolean isAbsorbableDeletion(final CigarElement element)
+    {
+        return element.getOperator() == CigarOperator.D && element.getLength() <= SPLICE_FLANKING_DELETION_MAX_BP;
+    }
+
+    // Collapses "<...>M nN yM zS" -> "<...>M (y+z)S" when y <= maxAnchorBp. Used on tx-contig supps
+    // whose walk barely reached into the next exon; the tiny yM forces a fake mini-intron and
+    // pushes the supp's ref end past the real splice point.
+    public static Cigar trimTrailingMicroAnchor(final Cigar cigar, final int maxAnchorBp)
+    {
+        final List<CigarElement> elements = cigar.getCigarElements();
+        if(elements.size() < 3)
+            return cigar;
+
+        final int last = elements.size() - 1;
+        final CigarElement trailingSoftClip = elements.get(last);
+        if(trailingSoftClip.getOperator() != CigarOperator.S)
+            return cigar;
+
+        final CigarElement tailMatch = elements.get(last - 1);
+        if(tailMatch.getOperator() != CigarOperator.M || tailMatch.getLength() > maxAnchorBp)
+            return cigar;
+
+        final CigarElement intron = elements.get(last - 2);
+        if(intron.getOperator() != CigarOperator.N)
+            return cigar;
+
+        // refuse if there's no preceding M anchor — would leave the cigar starting with S/N.
+        boolean hasAnchorBeforeIntron = false;
+        for(int i = 0; i < last - 2; ++i)
+        {
+            if(elements.get(i).getOperator() == CigarOperator.M)
+            {
+                hasAnchorBeforeIntron = true;
+                break;
+            }
+        }
+        if(!hasAnchorBeforeIntron)
+            return cigar;
+
+        final List<CigarElement> result = new ArrayList<>(last - 1);
+        for(int i = 0; i < last - 2; ++i)
+            result.add(elements.get(i));
+        result.add(new CigarElement(tailMatch.getLength() + trailingSoftClip.getLength(), CigarOperator.S));
+        return new Cigar(result);
     }
 
     // true if the contig CIGAR has a leading or trailing S whose adjacent edge sits at an interior exon
