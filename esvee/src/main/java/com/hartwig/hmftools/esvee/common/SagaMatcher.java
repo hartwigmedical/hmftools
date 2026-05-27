@@ -31,7 +31,6 @@ import com.hartwig.hmftools.common.bwa.IBwaMemAligner;
 import com.hartwig.hmftools.common.region.BasePosition;
 
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.Cigar;
@@ -216,25 +215,41 @@ public class SagaMatcher
         Stream<AlignmentCandidate> candidates = alignments.stream()
                 .map(alignment -> evaluateAlignmentCandidate(sequence, alignment, junctionOffsets))
                 .filter(Objects::nonNull)
-                .sorted();
+                .sorted(new AlignmentCandidateComparator(sequence.length));
         return candidates.findFirst()
                 .map(candidate -> new MatchBySequence(candidate.variant(), candidate.cigar(), candidate.alignScore()))
                 .orElse(null);
     }
 
     private record AlignmentCandidate(
-            SagaResource.Variant variant,
+            SagaResource.AssemblyMetadata assembly,
             Cigar cigar,
             int alignScore,
             List<List<Integer>> esveeJunctionOverlaps,
             List<List<Integer>> sagaJunctionOverlaps)
-            implements Comparable<AlignmentCandidate>
+    {
+        public SagaResource.Variant variant()
+        {
+            return assembly.variant();
+        }
+    }
+
+    private record AlignmentCandidateComparator(int sequenceLength) implements Comparator<AlignmentCandidate>
     {
         @Override
-        public int compareTo(@NotNull final AlignmentCandidate other)
+        public int compare(final AlignmentCandidate o1, final AlignmentCandidate o2)
         {
             // Higher alignment score is better.
-            return Integer.compare(-alignScore, -other.alignScore);
+            int res = Integer.compare(-o1.alignScore, -o2.alignScore);
+            if(res != 0)
+            {
+                return res;
+            }
+
+            // Then prefer the variant whose length is closer to the ESVEE assembly length (rarely occurs but can help tie-break different alleles).
+            int distance1 = abs(o1.assembly().assemblyLength() - sequenceLength);
+            int distance2 = abs(o2.assembly().assemblyLength() - sequenceLength);
+            return Integer.compare(distance1, distance2);
         }
     }
 
@@ -301,7 +316,7 @@ public class SagaMatcher
             return null;
         }
 
-        return new AlignmentCandidate(sagaAssembly.variant(), cigar, alignment.getAlignerScore(), seqJunctionOverlaps, sagaJunctionOverlaps);
+        return new AlignmentCandidate(sagaAssembly, cigar, alignment.getAlignerScore(), seqJunctionOverlaps, sagaJunctionOverlaps);
     }
 
     private boolean isAlignLengthOk(int seqAlignLength, int sagaAlignLength, int seqAssemblyLength, int sagaAssemblyLength)
