@@ -70,7 +70,7 @@ public abstract class ComparableImage implements ComparableItem
             return new Mismatch(this, other, MismatchType.INVALID_BOTH, List.of());
 
         if(Image == null)
-            return new Mismatch(this, other, MismatchType.INVALID_REF, List.of());
+            return new Mismatch(this, other, MismatchType.INVALID_OLD, List.of());
 
         if(otherImage == null)
             return new Mismatch(this, other, MismatchType.INVALID_NEW, List.of());

@@ -2,27 +2,29 @@ package com.hartwig.hmftools.bamtools.compare;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
+import static com.hartwig.hmftools.bamtools.compare.CompareConfig.FULLY_UNMAPPED_PARTITION;
 import static com.hartwig.hmftools.common.region.PartitionUtils.buildPartitions;
 import static com.hartwig.hmftools.common.region.PartitionUtils.partitionChromosome;
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
-import static com.hartwig.hmftools.common.perf.TaskExecutor.executeRunnables;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.perf.TaskExecutor;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Level;
 import org.jetbrains.annotations.NotNull;
 
-import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
@@ -38,98 +40,108 @@ public class BamCompare
 
     public void run()
     {
-        BT_LOGGER.info("starting bam comparison, writing output to {}", mConfig.OutputFile);
+        BT_LOGGER.info("starting BAM comparison, writing output to {}", mConfig.OutputFile);
 
         long startTimeMs = System.currentTimeMillis();
 
-        try(ReadWriter readWriter = new ReadWriter(mConfig))
+        ReadWriter readWriter = new ReadWriter(mConfig);
+
+        if(!readWriter.initialised())
+            System.exit(1);
+
+        UnmatchedReadHandler unmatchedReadHandler = new UnmatchedReadHandler(mConfig);
+
+        List<PartitionReader> partitionTasks = new ArrayList<>();
+
+        File origBamFile = new File(mConfig.OrigBamFile);
+        File newBamFile = new File(mConfig.NewBamFile);
+
+        List<ChrBaseRegion> partitions = createPartitions();
+
+        for(ChrBaseRegion partition : partitions)
         {
-            if(!readWriter.initialised())
-                System.exit(1);
+            PartitionReader partitionReader = new PartitionReader(
+                    partition.toString(), mConfig, partition, origBamFile, newBamFile, readWriter, unmatchedReadHandler);
 
-            UnmatchedReadHandler unmatchedReadHandler = new UnmatchedReadHandler(mConfig);
-            SamReaderFactory samReaderFactory = CompareUtils.makeSamReaderFactory(mConfig);
-            List<Runnable> tasks = new ArrayList<>();
-            List<PartitionReader> partitionTasks = new ArrayList<>();
+            partitionTasks.add(partitionReader);
+        }
 
-            try(BamReaderProvider origThreadBamReader = BamReaderProvider.makeThreadLocal(samReaderFactory, new File(mConfig.OrigBamFile));
-                    BamReaderProvider newThreadBamBReader = BamReaderProvider.makeThreadLocal(samReaderFactory, new File(mConfig.NewBamFile)))
-            {
-                // process unmapped
-                addProcessUnmappedTasks(tasks, origThreadBamReader, newThreadBamBReader, unmatchedReadHandler);
+        boolean includeFullyUnmapped = !mConfig.StandardChromosomes
+                && (!mConfig.SpecificChrRegions.hasFilters() || mConfig.SpecificChrRegions.Chromosomes.contains(FULLY_UNMAPPED_PARTITION));
 
-                List<BamPartition> partitions = createPartitions();
-                BT_LOGGER.info("splitting {} partitions across {} threads", partitions.size(), mConfig.Threads);
+        if(includeFullyUnmapped)
+        {
+            PartitionReader partitionReader = new PartitionReader(
+                    FULLY_UNMAPPED_PARTITION, mConfig, null, origBamFile, newBamFile, readWriter, unmatchedReadHandler);
 
-                for(BamPartition bamPartition : partitions)
-                {
-                    PartitionReader partitionReader = new PartitionReader(bamPartition.toString(), mConfig, bamPartition,
-                            origThreadBamReader, newThreadBamBReader, readWriter, unmatchedReadHandler);
-                    partitionTasks.add(partitionReader);
-                    tasks.add(partitionReader);
-                }
+            partitionTasks.add(partitionReader);
+        }
 
-                if(!executeRunnables(tasks, mConfig.Threads))
-                    System.exit(1);
-            }
+        BT_LOGGER.info("splitting {} partitions across {} threads", partitionTasks.size(), mConfig.Threads);
 
-            Statistics combinedStats = new Statistics();
-            partitionTasks.forEach(x -> combinedStats.merge(x.stats()));
-            partitionTasks.clear();
+        List<Callable<Void>> callableList = partitionTasks.stream().collect(Collectors.toList());
 
-            unmatchedReadHandler.closeHashBamWriters();
+        if(!TaskExecutor.executeTasks(callableList, mConfig.Threads))
+            System.exit(1);
 
-            List<BamReaderProvider> hashBamReaderProviders = new ArrayList<>();
+        BT_LOGGER.info("partition processing complete");
+
+        Statistics combinedStats = new Statistics();
+        partitionTasks.forEach(x -> combinedStats.merge(x.stats()));
+        partitionTasks.clear();
+
+        unmatchedReadHandler.closeHashBamWriters();
+
+        System.gc(); // probably unnecessary
+
+        if(!unmatchedReadHandler.getHashBamPairs().isEmpty())
+        {
+            BT_LOGGER.info("processing cached hash BAMs");
 
             // now process all hash bam pairs
             for(Map.Entry<Integer, Pair<File, File>> hashBamPairEntries : unmatchedReadHandler.getHashBamPairs().entrySet())
             {
-                Pair<File, File> hashBamPair = hashBamPairEntries.getValue();
-                BamReaderProvider origHashBamReaderProvider = BamReaderProvider.of(samReaderFactory.open(hashBamPair.getLeft()));
-                BamReaderProvider newHashBamReaderProvider = BamReaderProvider.of(samReaderFactory.open(hashBamPair.getRight()));
-                partitionTasks.add(new PartitionReader(String.format("hash bam %d", hashBamPairEntries.getKey()),
-                        mConfig, BamPartition.ofWholeBam(), origHashBamReaderProvider,
-                        newHashBamReaderProvider, readWriter, null));
-                hashBamReaderProviders.add(origHashBamReaderProvider);
-                hashBamReaderProviders.add(newHashBamReaderProvider);
-            }
+                Pair<File,File> hashBamPair = hashBamPairEntries.getValue();
 
-            if(!executeRunnables(partitionTasks, mConfig.Threads))
+                partitionTasks.add(new PartitionReader(String.format("hash bam %d", hashBamPairEntries.getKey()),
+                        mConfig, null, hashBamPair.getLeft(), hashBamPair.getRight(), readWriter, null));
+           }
+
+            callableList = partitionTasks.stream().collect(Collectors.toList());
+
+            if(!TaskExecutor.executeTasks(callableList, mConfig.Threads))
                 System.exit(1);
 
-            hashBamReaderProviders.forEach(BamReaderProvider::close);
-
             partitionTasks.forEach(x -> combinedStats.merge(x.stats()));
-
-            BT_LOGGER.printf(Level.INFO, "summary: reads(orig=%,d new=%,d) diffs(%,d)",
-                    combinedStats.OrigReadCount, combinedStats.NewReadCount, combinedStats.DiffCount);
         }
+
+        readWriter.close();
+
+        BT_LOGGER.printf(Level.INFO, "summary: reads(orig=%,d new=%,d) matched(%,d) diffs(%,d)",
+                combinedStats.OrigReadCount, combinedStats.NewReadCount, combinedStats.Matched, combinedStats.DiffCount);
 
         BT_LOGGER.info("BamCompare complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
-    private List<BamPartition> createPartitions()
+    private List<ChrBaseRegion> createPartitions()
     {
-        // get sequences of both bam files
+        // get sequences of both BAM headers
         final List<SAMSequenceRecord> sequenceRecords = new ArrayList<>();
         SamReaderFactory samReaderFactory = CompareUtils.makeSamReaderFactory(mConfig);
-        try(SamReader samReaderOrig = samReaderFactory.open(new File(mConfig.OrigBamFile));
-            SamReader samReaderNew = samReaderFactory.open(new File(mConfig.NewBamFile)))
-        {
-            final List<SAMSequenceRecord> sequencesOriginal = samReaderOrig.getFileHeader().getSequenceDictionary().getSequences();
-            sequenceRecords.addAll(sequencesOriginal);
-            final List<SAMSequenceRecord> sequencesNew = samReaderNew.getFileHeader().getSequenceDictionary().getSequences();
-            sequenceRecords.addAll(sequencesNew);
-        }
-        catch(IOException e)
-        {
-            throw new UncheckedIOException(e);
-        }
 
-        List<BamPartition> partitions = new ArrayList<>();
+        SamReader samReaderOrig = samReaderFactory.open(new File(mConfig.OrigBamFile));
+        List<SAMSequenceRecord> sequencesOriginal = samReaderOrig.getFileHeader().getSequenceDictionary().getSequences();
+        sequenceRecords.addAll(sequencesOriginal);
+
+        SamReader samReaderNew = samReaderFactory.open(new File(mConfig.NewBamFile));
+        List<SAMSequenceRecord> sequencesNew = samReaderNew.getFileHeader().getSequenceDictionary().getSequences();
+        sequenceRecords.addAll(sequencesNew);
+
+        List<ChrBaseRegion> partitions = Lists.newArrayList();
 
         Set<String> processedSequences = new HashSet<>();
-        for(final SAMSequenceRecord sequenceRecord : sequenceRecords)
+
+        for(SAMSequenceRecord sequenceRecord : sequenceRecords)
         {
             String chromosome = sequenceRecord.getSequenceName();
 
@@ -141,52 +153,16 @@ public class BamCompare
 
             if(mConfig.SpecificChrRegions != null && !mConfig.SpecificChrRegions.Regions.isEmpty())
             {
-                partitionChromosome(chromosome, mConfig.RefGenVersion, mConfig.SpecificChrRegions.Regions, mConfig.PartitionSize)
-                        .forEach(region -> partitions.add(BamPartition.ofRegion(region)));
+                partitions.addAll(partitionChromosome(
+                        chromosome, mConfig.RefGenVersion, mConfig.SpecificChrRegions.Regions, mConfig.PartitionSize));
             }
             else
             {
-                buildPartitions(chromosome, sequenceRecord.getSequenceLength(), mConfig.PartitionSize)
-                        .forEach(region -> partitions.add(BamPartition.ofRegion(region)));
+                partitions.addAll(buildPartitions(chromosome, sequenceRecord.getSequenceLength(), mConfig.PartitionSize));
             }
         }
 
         return partitions;
-    }
-
-    private void addProcessUnmappedTasks(
-            final List<Runnable> tasks, BamReaderProvider origBamReaderProvider,
-            final BamReaderProvider newBamReaderProvider, final UnmatchedReadHandler unmatchedReadHandler)
-    {
-        // pass all unmapped reads to the unmatched read handler
-        if(!mConfig.ignoreUnmapped())
-        {
-            tasks.add(() ->
-            {
-                try(SAMRecordIterator itr = origBamReaderProvider.getBamReader().queryUnmapped())
-                {
-                    long numReads = unmatchedReadHandler.handleOrigBamReads(itr);
-
-                    if(numReads > 0)
-                    {
-                        BT_LOGGER.debug("finished writing {} unmapped orig bam reads to hash bams", numReads);
-                    }
-                }
-            });
-
-            tasks.add(() ->
-            {
-                try(SAMRecordIterator itr = newBamReaderProvider.getBamReader().queryUnmapped())
-                {
-                    long numReads = unmatchedReadHandler.handleNewBamReads(itr);
-
-                    if(numReads > 0)
-                    {
-                        BT_LOGGER.trace("finished writing {} unmapped new bam reads to hash bams", numReads);
-                    }
-                }
-            });
-        }
     }
 
     public static void main(@NotNull final String[] args)

@@ -12,22 +12,17 @@ import com.hartwig.hmftools.common.hla.HlaCommon;
 import com.hartwig.hmftools.datamodel.hla.LilacAllele;
 import com.hartwig.hmftools.datamodel.hla.LilacRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
+import com.hartwig.hmftools.finding.datamodel.HlaAllele;
+import com.hartwig.hmftools.finding.datamodel.HlaAlleleBuilder;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingList;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingListBuilder;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
-import com.hartwig.hmftools.finding.datamodel.HlaAllele;
-import com.hartwig.hmftools.finding.datamodel.HlaAlleleBuilder;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingStatusBuilder;
 
 // lilac shows two copies of HLA alleles even if they are the
 // same allele. This class combine the alleles and sum the copies
 public class HlaAlleleFactory
 {
-    private static final Logger LOGGER = LogManager.getLogger(HlaAlleleFactory.class);
-
     private static final Pattern HLA_REGEX = Pattern.compile("""
             ^(?<geneSymbol>\\w+)\\*(?<alleleGroup>\\d{2}):(?<hlaProtein>\\d{2,3})N?$""");
     private static final String PASS = "PASS";
@@ -97,7 +92,6 @@ public class HlaAlleleFactory
         return builder.build();
     }
 
-    @NotNull
     static Matcher matchHlaRegEx(String allele)
     {
         var matcher = HLA_REGEX.matcher(allele);

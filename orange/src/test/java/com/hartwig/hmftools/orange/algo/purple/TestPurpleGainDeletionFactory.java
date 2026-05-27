@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
+import com.hartwig.hmftools.datamodel.driver.DriverCategory;
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleDriver;
@@ -51,6 +52,7 @@ public final class TestPurpleGainDeletionFactory
                 .likelihoodMethod(PurpleLikelihoodMethod.DEL)
                 .reportedStatus(ReportedStatus.REPORTED)
                 .driverInterpretation(DriverInterpretation.HIGH)
-                .isCanonical(true);
+                .isCanonical(true)
+                .category(DriverCategory.TSG);
     }
 }

@@ -22,6 +22,7 @@ public final class TestLinxRecordFactory
         return ImmutableLinxBreakend.builder()
                 .id(0)
                 .svId(1)
+                .clusterId(0)
                 .gene("GENE")
                 .chromosome("1")
                 .position(1000)
@@ -49,6 +50,7 @@ public final class TestLinxRecordFactory
     {
         return ImmutableLinxFusion.builder()
                 .geneUp("GENE01")
+                .clusterId(0)
                 .contextUp("")
                 .transcriptUp("")
                 .geneDown("GENE02")

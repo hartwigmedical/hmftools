@@ -12,6 +12,9 @@ import static com.hartwig.hmftools.common.region.SpecificRegions.loadSpecificChr
 import static com.hartwig.hmftools.common.bam.BamUtils.addValidationStringencyOption;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
+import static com.hartwig.hmftools.common.sequencing.SequencingType.SEQUENCING_TYPE_CFG;
+import static com.hartwig.hmftools.common.sequencing.SequencingType.ULTIMA;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.BLACKLISTED_SITES;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.BLACKLISTED_SITES_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG;
@@ -41,6 +44,8 @@ import org.apache.logging.log4j.Logger;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.bam.BamUtils;
+import com.hartwig.hmftools.common.region.SpecificRegions;
+import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import htsjdk.samtools.ValidationStringency;
@@ -77,7 +82,9 @@ public class AmberConfig
     public final boolean SkipBafSegmentation;
     public final boolean PerfDebug;
 
-    public final List<String> SpecificChromosomes;
+    public final SpecificRegions SpecificChrRegions;
+
+    public static SequencingType SEQUENCING_TYPE = ILLUMINA;
 
     public static final Logger AMB_LOGGER = LogManager.getLogger(AmberConfig.class);
 
@@ -119,6 +126,8 @@ public class AmberConfig
 
         RefGenVersion = RefGenomeVersion.from(configBuilder);
         RefGenomeFile = configBuilder.getValue(REF_GENOME);
+
+        SEQUENCING_TYPE = SequencingType.valueOf(configBuilder.getValue(SEQUENCING_TYPE_CFG));
 
         TumorOnlyMinSupport = configBuilder.getInteger(TUMOR_ONLY_MIN_SUPPORT);
         TumorOnlyMinVaf = configBuilder.getDecimal(TUMOR_ONLY_MIN_VAF);
@@ -165,13 +174,10 @@ public class AmberConfig
         Threads = parseThreads(configBuilder);
         BamStringency = BamUtils.validationStringency(configBuilder);
 
-        SpecificChromosomes = loadSpecificChromsomes(configBuilder);
-
-        if(!SpecificChromosomes.isEmpty())
-        {
-            AMB_LOGGER.info("restricting to chromosomes: {}", configBuilder.getValue(SPECIFIC_CHROMOSOMES));
-        }
+        SpecificChrRegions = SpecificRegions.from(configBuilder);
     }
+
+    public static boolean isUltima() { return SEQUENCING_TYPE == ULTIMA; }
 
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
@@ -186,7 +192,9 @@ public class AmberConfig
         configBuilder.addPath(BLACKLISTED_SITES, false, BLACKLISTED_SITES_DESC);
 
         addRefGenomeVersion(configBuilder);
-        configBuilder.addPath(REF_GENOME, false, REF_GENOME_CFG_DESC + ", required when using CRAM files");
+        configBuilder.addPath(REF_GENOME, false, REF_GENOME_CFG_DESC);
+
+        SequencingType.registerConfig(configBuilder);
 
         configBuilder.addInteger(
                 TUMOR_ONLY_MIN_SUPPORT, "Min support in ref and alt in tumor-only mode", DEFAULT_TUMOR_ONLY_MIN_SUPPORT);

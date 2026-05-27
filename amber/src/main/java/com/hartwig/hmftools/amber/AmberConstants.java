@@ -17,12 +17,12 @@ public class AmberConstants
     public static final double DEFAULT_MIN_HET_AF_PERCENTAGE = 0.4;
     public static final double DEFAULT_MAX_HET_AF_PERCENTAGE = 0.65;
 
-    public static final int MIN_NORMAL_READ_DEPTH = 7;
-
-    public static final int THREE_PLUS_READS_MIN = 10;
-    public static final double THREE_PLUS_READS_SITE_PERC = 0.03;
-    public static final double THREE_PLUS_READS_SITE_LOW_VAF_PERC = 0.002;
-    public static final double THREE_PLUS_READS_VAF_MIN = 0.05;
+    //
+    public static final int CONTAMINATON_MIN_NORMAL_READ_DEPTH = 7;
+    public static final int CONTAMINATON_THREE_PLUS_READS_MIN = 10;
+    public static final double CONTAMINATON_THREE_PLUS_READS_SITE_PERC = 0.03;
+    public static final double CONTAMINATON_THREE_PLUS_READS_SITE_LOW_VAF_PERC = 0.002;
+    public static final double CONTAMINATON_THREE_PLUS_READS_VAF_MIN = 0.05;
 
     public static final double QUAL_FILTERED_THRESHOLD = 0.15;
 

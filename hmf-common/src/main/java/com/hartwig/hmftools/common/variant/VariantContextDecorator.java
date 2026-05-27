@@ -102,28 +102,7 @@ public class VariantContextDecorator implements GenomePosition
         return mContext;
     }
 
-    public String filter()
-    {
-        return mFilter;
-    }
-
-    public VariantType type()
-    {
-        return mType;
-    }
-
-    public String ref()
-    {
-        return mRef;
-    }
-
-    public String alt()
-    {
-        return mAlt;
-    }
-
     @Override
-    @NotNull
     public String chromosome()
     {
         return mContext.getContig();
@@ -133,6 +112,23 @@ public class VariantContextDecorator implements GenomePosition
     public int position()
     {
         return mContext.getStart();
+    }
+
+    public String ref()
+    {
+        return mRef;
+    }
+    public String alt()
+    {
+        return mAlt;
+    }
+    public VariantType type()
+    {
+        return mType;
+    }
+    public String filter()
+    {
+        return mFilter;
     }
 
     public VariantImpact variantImpact()

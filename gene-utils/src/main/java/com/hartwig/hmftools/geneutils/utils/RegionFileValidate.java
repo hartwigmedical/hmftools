@@ -3,6 +3,7 @@ package com.hartwig.hmftools.geneutils.utils;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.lowerChromosome;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.APP_NAME;
@@ -27,6 +28,7 @@ public class RegionFileValidate
 {
     private static final String INPUT_FILE = "input_file";
     private static final String OUTPUT_FILE = "output_file";
+    private static final String MERGE_OTHER_FIELDS = "merge_fields";
 
     private String mOutputHeader;
 
@@ -34,6 +36,7 @@ public class RegionFileValidate
     {
         String inputFile = configBuilder.getValue(INPUT_FILE);
         String outputFile = configBuilder.getValue(OUTPUT_FILE);
+        boolean mergeOtherData = configBuilder.hasFlag(MERGE_OTHER_FIELDS);
 
         mOutputHeader = "";
 
@@ -45,7 +48,7 @@ public class RegionFileValidate
 
             boolean fixFile = outputFile != null;
 
-            validateRegions(regionDataList, fixFile);
+            validateRegions(regionDataList, fixFile, mergeOtherData);
 
             if(outputFile != null)
                 writeBedRegions(regionDataList, outputFile);
@@ -129,7 +132,7 @@ public class RegionFileValidate
         }
     }
 
-    public void validateRegions(final List<RegionData> regionDataList, boolean fixFile)
+    public void validateRegions(final List<RegionData> regionDataList, boolean fixFile, boolean mergeOtherData)
     {
         // check ordering
         int orderingErrors = 0;
@@ -197,7 +200,7 @@ public class RegionFileValidate
 
             while(index < regionDataList.size())
             {
-                ChrBaseRegion nextRegion = regionDataList.get(nextIndex);
+                RegionData nextRegion = regionDataList.get(nextIndex);
 
                 if(!regionData.chromosome().equals(nextRegion.chromosome()))
                     break;
@@ -207,7 +210,23 @@ public class RegionFileValidate
 
                 // no attempt to merge other data fields
                 if(regionData.end() < nextRegion.end())
+                {
                     regionData.setEnd(nextRegion.end());
+
+                    if(mergeOtherData && regionData.OtherData.size() == nextRegion.OtherData.size())
+                    {
+                        for(int i = 0; i < regionData.OtherData.size(); ++i)
+                        {
+                            String firstData = regionData.OtherData.get(i);
+                            String secondData = nextRegion.OtherData.get(i);
+
+                            if(!firstData.isEmpty() && !secondData.isEmpty())
+                                regionData.OtherData.set(i, firstData + ITEM_DELIM + secondData);
+                            else if(!secondData.isEmpty())
+                                regionData.OtherData.set(i, secondData);
+                        }
+                    }
+                }
 
                 regionDataList.remove(nextIndex);
                 ++mergedCount;
@@ -273,6 +292,7 @@ public class RegionFileValidate
 
         configBuilder.addPath(INPUT_FILE, true, "Input regions TSV file - header is optional");
         configBuilder.addConfigItem(OUTPUT_FILE, false, "Output filename");
+        configBuilder.addFlag(MERGE_OTHER_FIELDS, "Merge data columns");
         addLoggingOptions(configBuilder);
 
         configBuilder.checkAndParseCommandLine(args);

@@ -95,6 +95,8 @@ public class MsModelBuilder
 
     private void loadSampleFiles()
     {
+        boolean requirePurpleFiles = mConfig.Routines.contains(COEFFICIENTS) || mConfig.Routines.contains(VALIDATION);
+
         try
         {
             int count = 0;
@@ -109,17 +111,23 @@ public class MsModelBuilder
                     msSitesFile = msSitesFile.replace(".redux", "");
                 }
 
-                if(!Files.exists(Paths.get(msSitesFile)) || !Files.exists(Paths.get(purplePurityFile)))
+                if(!Files.exists(Paths.get(msSitesFile)))
                 {
-                    RD_LOGGER.warn("sample({}) missing files: present purity({}) msTable({})",
-                            sampleId,
-                            Files.exists(Paths.get(purplePurityFile)),
-                            Files.exists(Paths.get(msSitesFile)));
-                    continue;
+                    RD_LOGGER.warn("sample({}) missing msTable file: {}", sampleId, Files.exists(Paths.get(msSitesFile)));
+                    System.exit(1);
                 }
 
-                PurplePurity purplePurity = PurplePurity.read(purplePurityFile);
-                mSamplePurities.put(sampleId, purplePurity);
+                if(requirePurpleFiles)
+                {
+                    if(!Files.exists(Paths.get(purplePurityFile)))
+                    {
+                        RD_LOGGER.warn("sample({}) missing purity file: {}", sampleId, Files.exists(Paths.get(purplePurityFile)));
+                        System.exit(1);;
+                    }
+
+                    PurplePurity purplePurity = PurplePurity.read(purplePurityFile);
+                    mSamplePurities.put(sampleId, purplePurity);
+                }
 
                 Collection<JitterCountsTable> jitterCounts = JitterCountsTableFile.read(msSitesFile);
                 mSampleJitterCounts.put(sampleId, jitterCounts);

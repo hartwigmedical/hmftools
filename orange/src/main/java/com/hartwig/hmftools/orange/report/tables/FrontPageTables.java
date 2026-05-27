@@ -71,11 +71,9 @@ public class FrontPageTables
         String configuredCancerType = configuredPrimaryTumorLocation != null ?
                 configuredPrimaryTumorLocation :  configuredPrimaryTumor(report.configuredPrimaryTumor());
 
-        boolean showCancerType = configuredCancerType != null && !configuredCancerType.isEmpty();
+        boolean hasCancerType = configuredCancerType != null && !configuredCancerType.isEmpty();
 
-        if(showCancerType)
-            addEntry(cells, widths, cellEntries, 2, "Primary Tumor");
-
+        addEntry(cells, widths, cellEntries, 2, "Primary Tumor");
         addEntry(cells, widths, cellEntries, 2, "Purity");
         addEntry(cells, widths, cellEntries, 2, "Ploidy");
         addEntry(cells, widths, cellEntries, 2, "Fit Method");
@@ -83,9 +81,7 @@ public class FrontPageTables
 
         Table table = Tables.createContent(width, intToFloatArray(widths), cellArray(cellEntries));
 
-        if(showCancerType)
-            table.addCell(cells.createContent(configuredCancerType));
-
+        table.addCell(cells.createContent(hasCancerType ? configuredCancerType : "NOT SPECIFIED"));
         table.addCell(cells.createContent(purityString(report.purple().fit())));
         table.addCell(cells.createContent(ploidyString(report.purple().fit())));
         table.addCell(cells.createContent(report.purple().fit().fittedPurityMethod().toString()));
@@ -118,7 +114,7 @@ public class FrontPageTables
 
         table.addCell(cells.createContent(report.pipelineVersion()));
         table.addCell(cells.createContent(report.refGenomeVersion().toString()));
-        table.addCell(cells.createContent(SequencingType.ILLUMINA.toString()));
+        table.addCell(cells.createContent(sequencingType(config)));
 
         // table.addCell(cells.createContent(report.experimentType().toString()));
         table.addCell(cells.createContent(pipelineModeDisplay(report, config)));
@@ -127,6 +123,11 @@ public class FrontPageTables
         table.addCell(cells.createContent(report.samplingDate().toString()));
 
         return table;
+    }
+
+    private static String sequencingType(final OrangeConfig config)
+    {
+        return config != null ? config.SeqType.toString() : SequencingType.ILLUMINA.toString();
     }
 
     private static String pipelineModeDisplay(final OrangeRecord report, final OrangeConfig config)

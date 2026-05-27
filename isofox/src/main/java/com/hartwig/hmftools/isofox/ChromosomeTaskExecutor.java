@@ -376,13 +376,13 @@ public class ChromosomeTaskExecutor implements Callable<Void>
         {
             collectResults(geneCollection, geneCollectionSummary, geneReadData);
 
-            if(mConfig.WriteExonData)
+            if(mConfig.WriteTypes.contains(WriteType.EXON))
             {
                 geneReadData.getTranscripts().forEach(x -> mResultsWriter.writeExonData(geneReadData, x));
             }
         }
 
-        if(mConfig.WriteSpliceJunctions)
+        if(mConfig.WriteTypes.contains(WriteType.SPLICE_JUNC))
         {
             mResultsWriter.writeSpliceJunctionData(geneCollection);
         }
@@ -427,7 +427,7 @@ public class ChromosomeTaskExecutor implements Callable<Void>
         mPerfCounters[PERF_NOVEL_LOCATIONS].start();
         mBamFragmentAllocator.annotateNovelLocations();
 
-        if(mConfig.WriteSpliceSiteData)
+        if(mConfig.WriteTypes.contains(WriteType.SPLICE_SITE))
         {
             mBamFragmentAllocator.getSpliceSiteCounter().writeSpliceSiteData(geneCollection);
         }

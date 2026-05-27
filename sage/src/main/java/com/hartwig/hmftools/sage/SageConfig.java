@@ -139,6 +139,8 @@ public class SageConfig
 
         RefGenVersion = RefGenomeVersion.from(configBuilder);
 
+        SEQUENCING_TYPE = SequencingType.valueOf(configBuilder.getValue(SEQUENCING_TYPE_CFG));
+
         ReferenceIds = Lists.newArrayList();
         if(configBuilder.hasValue(REFERENCE))
         {
@@ -232,8 +234,6 @@ public class SageConfig
         SkipMsiJitter = configBuilder.hasFlag(SKIP_MSI_JITTER);
 
         MinMapQuality = configBuilder.getInteger(MIN_MAP_QUALITY);
-
-        SEQUENCING_TYPE = SequencingType.valueOf(configBuilder.getValue(SEQUENCING_TYPE_CFG));
 
         if(isUltima())
         {

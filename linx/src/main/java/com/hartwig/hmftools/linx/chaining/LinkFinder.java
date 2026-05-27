@@ -27,7 +27,7 @@ import com.hartwig.hmftools.linx.types.LinkedPair;
 
 public class LinkFinder
 {
-    public static List<LinkedPair> createAssemblyLinkedPairs(SvCluster cluster)
+    public static List<LinkedPair> createAssemblyLinkedPairs(final SvCluster cluster)
     {
         List<LinkedPair> linkedPairs = Lists.newArrayList();
 
@@ -36,11 +36,11 @@ public class LinkFinder
             return linkedPairs;
 
         boolean hasMultiBreakendLinks = false;
-        final Map<String,List<SvBreakend>> chrBreakendMap = cluster.getChrBreakendMap();
+        Map<String,List<SvBreakend>> chrBreakendMap = cluster.getChrBreakendMap();
 
         List<SvBreakend> multiConnectionBreakends = Lists.newArrayList();
 
-        for(final Map.Entry<String, List<SvBreakend>> entry : chrBreakendMap.entrySet())
+        for(Map.Entry<String, List<SvBreakend>> entry : chrBreakendMap.entrySet())
         {
             final List<SvBreakend> breakendList = entry.getValue();
 
@@ -208,11 +208,9 @@ public class LinkFinder
 
     public static boolean haveLinkedAssemblies(final SvVarData var1, final SvVarData var2, boolean v1Start, boolean v2Start)
     {
-        // Esvee sets the linked variant ID into the breakend, not a unique assembly ID as Gridss does
+        // Esvee sets the linked variant ID into the breakend
         return var1.getAssemblyLinks(v1Start).stream()
                 .anyMatch(x -> v2Start ? x.equals(var2.getSvData().vcfIdStart()) : x.equals(var2.getSvData().vcfIdEnd()));
-
-        //return var1.getTIAssemblies(v1Start).stream().anyMatch(x -> var2.getTIAssemblies(v2Start).contains(x));
     }
 
     public static boolean isPossibleLink(final String chr1, int pos1, byte orient1, final String chr2, int pos2, byte orient2, int minDistance)
@@ -247,9 +245,9 @@ public class LinkFinder
 
     public static void findDeletionBridges(final Map<String, List<SvBreakend>> chrBreakendMap)
     {
-        for(final Map.Entry<String, List<SvBreakend>> entry : chrBreakendMap.entrySet())
+        for(Map.Entry<String, List<SvBreakend>> entry : chrBreakendMap.entrySet())
         {
-            final List<SvBreakend> breakendList = entry.getValue();
+            List<SvBreakend> breakendList = entry.getValue();
 
             for(int i = 0; i < breakendList.size() - 1; ++i)
             {
@@ -279,7 +277,9 @@ public class LinkFinder
                         int nextDistance = nextNextBreakend.position() - nextBreakend.position();
                         int nextMinTiLength = getMinTemplatedInsertionLength(nextBreakend, nextNextBreakend);
 
-                        if(nextDistance < distance && (nextDistance < nextMinTiLength || nextMinTiLength == 0))
+                        boolean oppositeOrientations = nextBreakend.orientation() != nextNextBreakend.orientation();
+
+                        if(oppositeOrientations && nextDistance < distance && (nextDistance < nextMinTiLength || nextMinTiLength == 0))
                             continue;
                     }
 

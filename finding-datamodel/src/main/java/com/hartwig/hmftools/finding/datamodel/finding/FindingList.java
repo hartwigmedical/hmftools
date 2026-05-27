@@ -7,7 +7,7 @@ import com.hartwig.hmftools.finding.datamodel.RecordBuilder;
 import jakarta.validation.constraints.NotNull;
 
 @RecordBuilder
-public record FindingList<T extends Finding>(
+public record FindingList<T>(
         @NotNull FindingStatus status,
         @NotNull List<T> findings) implements IFindingList<T>
 {

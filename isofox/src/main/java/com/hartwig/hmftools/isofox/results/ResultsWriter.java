@@ -3,6 +3,11 @@ package com.hartwig.hmftools.isofox.results;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.isofox.WriteType.FRAG_LENGTH_BY_GENE;
+import static com.hartwig.hmftools.isofox.WriteType.GC_RATIO;
+import static com.hartwig.hmftools.isofox.WriteType.READ;
+import static com.hartwig.hmftools.isofox.WriteType.SPLICE_SITE;
+import static com.hartwig.hmftools.isofox.WriteType.TRANS_COMBO;
 import static com.hartwig.hmftools.isofox.novel.CanonicalSpliceJunctionFile.CANONICAL_SJ_FILE_ID;
 import static com.hartwig.hmftools.common.rna.GeneExpressionFile.GENE_EXPRESSION_FILE_ID;
 import static com.hartwig.hmftools.common.rna.RnaStatisticFile.SUMMARY_FILE_ID;
@@ -41,6 +46,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.isofox.WriteType;
 import com.hartwig.hmftools.isofox.novel.CanonicalSpliceJunctionFile;
 import com.hartwig.hmftools.common.rna.RnaStatisticFile;
 import com.hartwig.hmftools.common.rna.RnaStatistics;
@@ -134,13 +140,13 @@ public class ResultsWriter
         if(mConfig.OutputDir == null)
             return;
 
-        if(mConfig.WriteFragmentLengthsByGene)
+        if(mConfig.writeType(FRAG_LENGTH_BY_GENE))
         {
             mGeneFragLengthWriter = FragmentSizeCalcs.createGeneFragmentLengthWriter(mConfig);
             return;
         }
 
-        if(mConfig.WriteReadData)
+        if(mConfig.writeType(READ))
         {
             if(mConfig.runFunction(READ_COUNTS))
                 mReadDataWriter = BamReadCounter.createReadDataWriter(mConfig);
@@ -148,7 +154,7 @@ public class ResultsWriter
                 mReadDataWriter = FragmentAllocator.createReadDataWriter(mConfig);
         }
 
-        if(mConfig.WriteSpliceSiteData)
+        if(mConfig.writeType(SPLICE_SITE))
             mSpliceSiteWriter = SpliceSiteCounter.createWriter(mConfig);
 
         if(mConfig.runFunction(ALT_SPLICE_JUNCTIONS))
@@ -160,10 +166,10 @@ public class ResultsWriter
         if(mConfig.runFunction(RETAINED_INTRONS))
             mRetainedIntronWriter = RetainedIntronFinder.createWriter(mConfig);
 
-        if(mConfig.WriteGcData)
+        if(mConfig.writeType(GC_RATIO))
             mReadGcRatioWriter = GcRatioCounts.createReadGcRatioWriter(mConfig);
 
-        if(mConfig.WriteTransComboData)
+        if(mConfig.writeType(TRANS_COMBO))
             mCategoryCountsWriter = TranscriptExpression.createWriter(mConfig);
     }
 

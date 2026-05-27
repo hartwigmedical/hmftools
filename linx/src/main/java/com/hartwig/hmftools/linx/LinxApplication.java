@@ -21,6 +21,7 @@ import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.common.utils.config.VersionInfo;
+import com.hartwig.hmftools.linx.cohort.CohortDataWriter;
 import com.hartwig.hmftools.linx.fusion.FusionConfig;
 import com.hartwig.hmftools.linx.fusion.FusionResources;
 
@@ -118,7 +119,7 @@ public class LinxApplication
             }
 
             int saIndex = 0;
-            for(final String sampleId : samplesList)
+            for(String sampleId : samplesList)
             {
                 saSampleLists.get(saIndex).add(sampleId);
                 ++saIndex;

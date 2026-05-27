@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.rna.RnaFusion;
 import com.hartwig.hmftools.compar.ComparableItem;
@@ -16,8 +17,8 @@ import com.hartwig.hmftools.compar.common.DiffThresholds;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 
-public record RnaFusionData(RnaFusion RnaFusion, BasePosition ComparisonPositionUp,
-                            BasePosition ComparisonPositionDown) implements ComparableItem
+public record RnaFusionData(RnaFusion RnaFusion, BasePosition ComparisonPositionUp, BasePosition ComparisonPositionDown)
+        implements ComparableItem
 {
     public static final String FLD_KNOWN_TYPE = "KnownFusionType";
     public static final String FLD_SPLIT_FRAGS = "SplitFrags";
@@ -63,7 +64,7 @@ public record RnaFusionData(RnaFusion RnaFusion, BasePosition ComparisonPosition
     @Override
     public boolean reportable()
     {
-        return false;
+        return RnaFusion.knownType() != KnownFusionType.NONE;
     }
 
     @Override

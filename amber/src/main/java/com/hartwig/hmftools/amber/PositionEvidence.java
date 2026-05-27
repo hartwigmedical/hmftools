@@ -22,6 +22,7 @@ public class PositionEvidence implements GenomePosition
     public int AltSupport;
     public int BaseQualFiltered;
     public int MapQualFiltered;
+    public int SeqTechFiltered;
 
     public PositionEvidence(final String chromosome, final int position, final String ref, final String alt)
     {
@@ -36,6 +37,7 @@ public class PositionEvidence implements GenomePosition
         AltSupport = 0;
         BaseQualFiltered = 0;
         MapQualFiltered = 0;
+        SeqTechFiltered = 0;
     }
 
     public static PositionEvidence copy(final PositionEvidence other)
@@ -114,7 +116,7 @@ public class PositionEvidence implements GenomePosition
         return new BaseDepthData(
                 AmberBase.valueOf(ref()),
                 AmberBase.valueOf(alt()),
-                ReadDepth, RefSupport, AltSupport, IndelCount);
+                ReadDepth, IndelCount, RefSupport, AltSupport);
     }
 
     @Override

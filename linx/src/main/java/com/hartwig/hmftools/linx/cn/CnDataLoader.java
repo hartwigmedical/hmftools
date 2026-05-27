@@ -128,7 +128,7 @@ public class CnDataLoader
 
         String currentChromosome = "";
         List<SvCNData> cnDataList = null;
-        for(final PurpleCopyNumber cnRecord : mCnRecords)
+        for(PurpleCopyNumber cnRecord : mCnRecords)
         {
             SvCNData cnData = new SvCNData(cnRecord, ++mRecordId);
 
@@ -150,7 +150,7 @@ public class CnDataLoader
 
         int unmatchedSVs = 0;
 
-        for(final StructuralVariantData svData : mSvDataList)
+        for(StructuralVariantData svData : mSvDataList)
         {
             if(svData.filter().equals(PON_FILTER_PON))
                 continue;
@@ -589,7 +589,7 @@ public class CnDataLoader
             double centromerePArm = 0;
             double centromereQArm = 0;
 
-            for(final SvCNData cnData : entry.getValue())
+            for(SvCNData cnData : entry.getValue())
             {
                 if(cnData.SegStart.equals(TELOMERE.toString()))
                 {

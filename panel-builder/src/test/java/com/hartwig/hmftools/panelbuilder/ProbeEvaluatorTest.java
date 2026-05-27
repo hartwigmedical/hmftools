@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.panelbuilder;
 
+import static java.lang.Math.round;
+import static java.util.Objects.requireNonNull;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -9,6 +12,7 @@ import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
+import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
 public class ProbeEvaluatorTest
@@ -22,12 +26,23 @@ public class ProbeEvaluatorTest
 
     private static final double EPSILON = 1e-6;
 
-    // Attributes are pre-set in test cases, so no need for these functions to modify the probe. Simplifies the test setup.
-    private final ProbeEvaluator mEvaluator = new ProbeEvaluator(Function.identity(), Function.identity(), Function.identity());
+    private final ProbeEvaluator mEvaluator = new ProbeEvaluator(this::getProbeSequenceData, Function.identity());
+    @Nullable
+    private SequenceData mProbeSequenceData;
 
-    private static Probe probe(final String sequence, Double qualityScore, Double gcContent)
+    private void setProbeSequence(final String sequence, boolean isNormal, double gcContent)
     {
-        return new Probe(DEFINITION, sequence, TARGETED_RANGE, METADATA, null, null, qualityScore, gcContent);
+        mProbeSequenceData = new SequenceData(sequence.getBytes(), isNormal, (int) round(gcContent * sequence.length()));
+    }
+
+    private SequenceData getProbeSequenceData(final Probe probe)
+    {
+        return requireNonNull(mProbeSequenceData);
+    }
+
+    private static Probe probe(Double qualityScore)
+    {
+        return new Probe(DEFINITION, null, TARGETED_RANGE, METADATA, CRITERIA, null, qualityScore, null);
     }
 
     @Test
@@ -48,7 +63,8 @@ public class ProbeEvaluatorTest
         String sequence = "ACGTACGTAC";
         double qualityScore = 1.0;
         double gcContent = 0.5;
-        Probe probe = probe(sequence, qualityScore, gcContent).withEvaluationCriteria(CRITERIA);
+        setProbeSequence(sequence, true, gcContent);
+        Probe probe = probe(qualityScore);
         Probe evalProbe = mEvaluator.evaluateProbes(Stream.of(probe)).findFirst().orElseThrow();
         assertEquals(probe.metadata(), evalProbe.metadata());
         assertEquals(CRITERIA, evalProbe.evaluationCriteria());
@@ -64,7 +80,8 @@ public class ProbeEvaluatorTest
     public void testEvaluateProbesRejectSequence()
     {
         String sequence = "AAANNNAAAA";
-        Probe probe = probe(sequence, 1.0, 0.5).withEvaluationCriteria(CRITERIA);
+        setProbeSequence(sequence, false, 0.5);
+        Probe probe = probe(1.0);
         Probe evalProbe = mEvaluator.evaluateProbes(Stream.of(probe)).findFirst().orElseThrow();
         assertEquals(probe.metadata(), evalProbe.metadata());
         assertEquals(CRITERIA, evalProbe.evaluationCriteria());
@@ -78,7 +95,8 @@ public class ProbeEvaluatorTest
     public void testEvaluateProbesRejectGc()
     {
         double gcContent = 0.0;
-        Probe probe = probe("AAAAAAAAAA", 1.0, gcContent).withEvaluationCriteria(CRITERIA);
+        setProbeSequence("AAAAAAAAAA", true, gcContent);
+        Probe probe = probe(1.0);
         Probe evalProbe = mEvaluator.evaluateProbes(Stream.of(probe)).findFirst().orElseThrow();
         assertEquals(probe.metadata(), evalProbe.metadata());
         assertEquals(CRITERIA, evalProbe.evaluationCriteria());
@@ -92,7 +110,8 @@ public class ProbeEvaluatorTest
     public void testEvaluateProbesRejectQuality()
     {
         double qualityScore = 0.1;
-        Probe probe = probe("ACGTACGTAC", qualityScore, 0.5).withEvaluationCriteria(CRITERIA);
+        setProbeSequence("ACGTACGTAC", true, 0.5);
+        Probe probe = probe(qualityScore);
         Probe evalProbe = mEvaluator.evaluateProbes(Stream.of(probe)).findFirst().orElseThrow();
         assertEquals(probe.metadata(), evalProbe.metadata());
         assertEquals(CRITERIA, evalProbe.evaluationCriteria());

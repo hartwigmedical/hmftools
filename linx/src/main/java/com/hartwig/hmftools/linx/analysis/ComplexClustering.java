@@ -148,7 +148,7 @@ public class ComplexClustering
 
         if(!cluster1Foldbacks.isEmpty() && !cluster2Foldbacks.isEmpty())
         {
-            for(final SvVarData var1 : cluster1Foldbacks)
+            for(SvVarData var1 : cluster1Foldbacks)
             {
                 for(int be1 = SE_START; be1 <= SE_END; ++be1)
                 {
@@ -160,7 +160,7 @@ public class ComplexClustering
                     if(var1.getFoldbackBreakend(v1Start) == null)
                         continue;
 
-                    for(final SvVarData var2 : cluster2Foldbacks)
+                    for(SvVarData var2 : cluster2Foldbacks)
                     {
                         for(int be2 = SE_START; be2 <= SE_END; ++be2)
                         {
@@ -208,9 +208,9 @@ public class ComplexClustering
         // now that the candidate arm groups have been established, just need to find a single BND
         // from each cluster that falls into the same par of arm groups
 
-        for(final SvVarData var1 : crossArmList1)
+        for(SvVarData var1 : crossArmList1)
         {
-            for(final SvVarData var2 : crossArmList2)
+            for(SvVarData var2 : crossArmList2)
             {
                 if(!haveSameChrArms(var1, var2))
                     continue;
@@ -264,7 +264,7 @@ public class ComplexClustering
 
             boolean mergedOtherClusters = false;
 
-            for(final Map.Entry<String, List<SvBreakend>> entry : cluster.getChrBreakendMap().entrySet())
+            for(Map.Entry<String, List<SvBreakend>> entry : cluster.getChrBreakendMap().entrySet())
             {
                 List<SvBreakend> breakendList = entry.getValue();
 
@@ -414,7 +414,7 @@ public class ComplexClustering
 
             boolean mergedOtherClusters = false;
 
-            for(final Map.Entry<String, List<SvBreakend>> entry : cluster.getChrBreakendMap().entrySet())
+            for(Map.Entry<String, List<SvBreakend>> entry : cluster.getChrBreakendMap().entrySet())
             {
                 List<SvBreakend> breakendList = entry.getValue();
 

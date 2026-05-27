@@ -33,6 +33,7 @@ public class NormalisationFileBuilder
     private final NormalisationConfig mConfig;
     private final Map<String, List<RegionData>> mChrRegionData;
     private final GcProfileCache mGcProfileCache;
+    private final WgsCopyNumberPercentiles mWgsCopyNumberPercentiles;
 
     public NormalisationFileBuilder(final ConfigBuilder configBuilder)
     {
@@ -47,6 +48,8 @@ public class NormalisationFileBuilder
         mChrRegionData = Maps.newHashMap();
 
         mGcProfileCache = new GcProfileCache(mConfig.GcProfile);
+
+        mWgsCopyNumberPercentiles = new WgsCopyNumberPercentiles(mConfig.WgsCopyNumberPercentiles, mConfig.RefGenVersion);
     }
 
     public void run()
@@ -67,8 +70,8 @@ public class NormalisationFileBuilder
         // calculate per-sample normalised tumor GC ratios
         calcSampleAdjustedRatios(mConfig.SampleIds, mChrRegionData);
 
-        // calculate a final relative panel enichment ratio for each region
-        calcRelativeEnrichment(mChrRegionData, MIN_ENRICHMENT_RATIO);
+        // calculate a final relative panel enrichment ratio for each region
+        calcRelativeEnrichment(mChrRegionData, MIN_ENRICHMENT_RATIO, mWgsCopyNumberPercentiles);
 
         writeNormalisationFile(mChrRegionData, mConfig.RefGenVersion, mConfig.OutputFile);
 
@@ -92,7 +95,7 @@ public class NormalisationFileBuilder
                 final String amberFilename = AmberBAFFile.generateAmberFilenameForReading(sampleDir, sampleId);
 
                 Multimap<Chromosome, AmberBAF> chromosomeBafs = AmberBAFFile.read(amberFilename, true);
-                Gender gender = AmberGender.determineGender(mConfig.RefGenVersion, chromosomeBafs);
+                Gender gender = AmberGender.determineGender(mConfig.RefGenVersion, chromosomeBafs, null);
                 sampleGenders.put(sampleId, gender);
 
                 CB_LOGGER.debug("sample({}) Amber gender({})", sampleId, gender);
@@ -111,9 +114,7 @@ public class NormalisationFileBuilder
     private void loadTargetRegionsBed(final String bedFile)
     {
         if(bedFile == null)
-        {
             return;
-        }
 
         List<ChrBaseRegion> regions = ChrBaseRegion.loadChrBaseRegionList(bedFile);
 

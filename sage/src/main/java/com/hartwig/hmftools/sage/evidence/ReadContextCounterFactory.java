@@ -3,6 +3,8 @@ package com.hartwig.hmftools.sage.evidence;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConfig.AppendMode;
 import static com.hartwig.hmftools.sage.SageConfig.isUltima;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
+import static com.hartwig.hmftools.sage.SageConstants.MAX_GERMLINE_VAF_PANEL_INDEL_REPEAT_THRESHOLD_FACTOR;
 import static com.hartwig.hmftools.sage.seqtech.UltimaQualModelBuilder.setReadContextUltimaModels;
 
 import java.util.EnumSet;
@@ -10,6 +12,8 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.SageConfig;
@@ -55,12 +59,20 @@ public class ReadContextCounterFactory
             }
             catch(Exception e)
             {
-                Level logLevel = AppendMode ? Level.WARN : Level.ERROR;
+                boolean isNonStandardChromosome = !HumanChromosome.contains(candidate.variant().chromosome());
+                boolean isLowBoundaryPosition = candidate.variant().position() < DEFAULT_FLANK_LENGTH * 3;
 
-                SG_LOGGER.log(logLevel, "var({}) error building counter from readContext: {}",
-                        candidate.readContext().variant(), candidate.readContext());
+                boolean allowInvalidContexts = AppendMode || isNonStandardChromosome || isLowBoundaryPosition;
 
-                if(AppendMode)
+                if(!isNonStandardChromosome)
+                {
+                    Level logLevel = allowInvalidContexts ? Level.WARN : Level.ERROR;
+
+                    SG_LOGGER.log(logLevel, "var({}) error building counter from readContext: {}",
+                            candidate.readContext().variant(), candidate.readContext());
+                }
+
+                if(allowInvalidContexts)
                 {
                     candidate.readContext().markedInvalid();
 

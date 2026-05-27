@@ -3,9 +3,9 @@ package com.hartwig.hmftools.finding;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.datamodel.common.AllelicDepth;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
@@ -23,6 +23,7 @@ import com.hartwig.hmftools.finding.datamodel.SmallVariant;
 import com.hartwig.hmftools.finding.datamodel.SmallVariantAllelicDepthBuilder;
 import com.hartwig.hmftools.finding.datamodel.SmallVariantBuilder;
 import com.hartwig.hmftools.finding.datamodel.SmallVariantTranscriptImpactBuilder;
+import com.hartwig.hmftools.finding.util.FindingUtil;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -34,7 +35,7 @@ final class SmallVariantFactory
             FindingConfig findingConfig)
     {
         return DriverFindingListBuilder.<SmallVariant>builder()
-                .status(findingStatus)
+                .status(FindingUtil.somaticStatus(findingStatus))
                 .findings(SmallVariantFactory.create(
                         DriverSource.SOMATIC, purpleRecord.somaticVariants(), purpleRecord.somaticDrivers(),
                         findingConfig))
@@ -49,14 +50,14 @@ final class SmallVariantFactory
     {
         if(!hasGermlineSample)
         {
-            return FindingUtil.refRequired();
+            return FindingUtil.normalRequired();
         }
 
         List<PurpleVariant> germlineVariants = Objects.requireNonNull(purpleRecord.germlineVariants());
         List<PurpleDriver> germlineDrivers = Objects.requireNonNull(purpleRecord.germlineDrivers());
 
         return DriverFindingListBuilder.<SmallVariant>builder()
-                .status(findingStatus)
+                .status(FindingUtil.germlineStatus(findingStatus))
                 .findings(SmallVariantFactory.create(
                         DriverSource.GERMLINE, germlineVariants, germlineDrivers, findingConfig))
                 .build();
@@ -107,9 +108,11 @@ final class SmallVariantFactory
 
         PurpleTranscriptImpact otherImpact = isCanonical ? findOtherImpactClinical(variant, findingConfig) : null;
 
-        DriverGene driverGene = findingConfig.getDriverGene(variant.gene());
-        DriverCategory
-                driverCategory = driverGene != null ? driverLikelihoodType(driverGene.likelihoodType()) : null;
+        DriverCategory driverCategory = switch(driver.category())
+        {
+            case ONCO -> DriverCategory.ONCO;
+            case TSG -> DriverCategory.TSG;
+        };
 
         boolean reportable = transcriptImpact.reported() || (otherImpact != null && otherImpact.reported());
         DriverInterpretation driverInterpretation = DriverInterpretation.valueOf(driver.driverInterpretation().name());
@@ -169,7 +172,7 @@ final class SmallVariantFactory
                 .inSpliceRegion(transcriptImpact.inSpliceRegion())
                 .effects(transcriptImpact.effects().stream()
                         .map(o -> SmallVariant.VariantEffect.valueOf(o.name()))
-                        .collect(Collectors.toSet()))
+                        .collect(Collectors.toCollection(TreeSet::new)))
                 .codingEffect(SmallVariant.CodingEffect.valueOf(transcriptImpact.codingEffect().name()))
                 .reported(transcriptImpact.reported())
                 .build();
@@ -266,14 +269,5 @@ final class SmallVariantFactory
     private static boolean hasCanonicalImpact(PurpleVariant variant)
     {
         return !variant.canonicalImpact().transcript().isEmpty();
-    }
-
-    private static DriverCategory driverLikelihoodType(com.hartwig.hmftools.common.driver.DriverCategory driverLikelihoodType)
-    {
-        return switch(driverLikelihoodType)
-        {
-            case ONCO -> DriverCategory.ONCO;
-            case TSG -> DriverCategory.TSG;
-        };
     }
 }

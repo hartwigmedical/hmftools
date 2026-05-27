@@ -332,7 +332,7 @@ plot_heatmap <- function(
          axis.text.x.bottom=element_text(angle=90, hjust=1, vjust=0.5),
          axis.title.x=element_blank(),
          axis.title.y=element_blank(),
-         legend.margin=margin(c(0,0,0,0)),
+         legend.margin=margin(0,0,0,0, "pt"),
          legend.justification=c("left","top"),
          plot.title=element_text(face="bold"),
          plot.margin = margin(0,0,20,0, "pt")

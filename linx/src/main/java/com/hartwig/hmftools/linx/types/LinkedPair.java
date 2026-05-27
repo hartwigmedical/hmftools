@@ -237,7 +237,7 @@ public class LinkedPair
 
     public static boolean hasLinkClash(final List<LinkedPair> links1, final List<LinkedPair> links2)
     {
-        for(final LinkedPair pair : links1)
+        for(LinkedPair pair : links1)
         {
             if(links2.stream().anyMatch(x -> pair.hasLinkClash(x)))
                 return true;

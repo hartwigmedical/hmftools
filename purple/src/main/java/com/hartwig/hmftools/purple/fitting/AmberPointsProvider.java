@@ -19,7 +19,7 @@ public class AmberPointsProvider
         mBafSelector = GenomePositionSelectorFactory.create(chromosomeBafs);
     }
 
-    public List<AmberBAF> nextBlock(FittingRegion segment)
+    public List<AmberBAF> nextBlock(final FittingRegion segment)
     {
         List<AmberBAF> result = new ArrayList<>();
         mBafSelector.select(segment, result::add);

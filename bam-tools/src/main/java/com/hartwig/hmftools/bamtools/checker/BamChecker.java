@@ -39,7 +39,6 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReaderFactory;
-import htsjdk.samtools.ValidationStringency;
 
 public class BamChecker
 {

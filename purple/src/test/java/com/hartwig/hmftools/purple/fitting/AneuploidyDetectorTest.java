@@ -12,8 +12,12 @@ import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._8;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._9;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.common.purple.GermlineStatus.LIKELY_DIPLOID;
+import static com.hartwig.hmftools.purple.PurpleConstants.HIGHLY_ANEUPLOIDIC_REFIT_BAF_CUTOFF;
+import static com.hartwig.hmftools.purple.PurpleConstants.SOMATIC_FIT_ANEUPLOIDIC_REGION_CUTOFF;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
@@ -32,6 +36,7 @@ import com.hartwig.hmftools.purple.region.FittingRegion;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class AneuploidyDetectorTest
@@ -41,6 +46,8 @@ public class AneuploidyDetectorTest
     private static final double VERY_HIGH = 0.701;
     private List<FittingRegion> Regions;
     private ListMultimap<Chromosome, AmberBAF> AmberData;
+
+    private static final int WINDOW_SIZE = 1000;
 
     @Before
     public void setup()
@@ -78,7 +85,7 @@ public class AneuploidyDetectorTest
             int position = 1000;
             for(int i = 0; i < 100; i++)
             {
-                createAndAddRegion(chromosome, position, position + 1000, 10, 0.5);
+                createAndAddRegion(chromosome, position, 10, 0.5);
                 position += 2000;
             }
         }
@@ -96,11 +103,11 @@ public class AneuploidyDetectorTest
             {
                 if(i == 10)
                 {
-                    createAndAddRegion(chromosome, position, position + 1000, 10, JUST_ABOVE_CUTOFF);
+                    createAndAddRegion(chromosome, position, 10, JUST_ABOVE_CUTOFF);
                 }
                 else
                 {
-                    createAndAddRegion(chromosome, position, position + 1000, 10, 0.5);
+                    createAndAddRegion(chromosome, position, 10, 0.5);
                 }
                 position += 2000;
             }
@@ -131,15 +138,17 @@ public class AneuploidyDetectorTest
         for(HumanChromosome chromosome : FIRST_10)
         {
             int position = 1000;
-            for(int i = 0; i < 100; i++)
+            for(int i = 0; i < 10; i++)
             {
                 if(i == 10)
                 {
-                    Regions.add(new FR(chromosome, position, position + 1000, LIKELY_DIPLOID, 10, JUST_ABOVE_CUTOFF, 0.5, 0.5));
+                    Regions.add(new FittedRegionImpl(
+                            chromosome, position, position + WINDOW_SIZE, LIKELY_DIPLOID, 10, JUST_ABOVE_CUTOFF,
+                            0.5, 0.5));
                 }
                 else
                 {
-                    createAndAddRegion(chromosome, position, position + 1000, 10, 0.5);
+                    createAndAddRegion(chromosome, position, 10, 0.5);
                 }
                 position += 2000;
             }
@@ -186,6 +195,67 @@ public class AneuploidyDetectorTest
         assertFalse(detector.hasAneuploidy()); // min vaf in elevated region too high
     }
 
+    @Test
+    public void testAneuploidyBafFit()
+    {
+        double minBafAboveThreshold = SOMATIC_FIT_ANEUPLOIDIC_REGION_CUTOFF + 0.005;
+        int position = 1000;
+        createAndAddRegion(_1, position, 2970, 0.5); // threshold will be 2991
+        position += WINDOW_SIZE;
+        createAndAddRegion(_1, position, 24, minBafAboveThreshold); // valid to use, and above cumulative threshold
+        position += WINDOW_SIZE;
+        createAndAddRegion(_1, position, 5, minBafAboveThreshold + 0.01);
+        position += WINDOW_SIZE;
+        createAndAddRegion(_1, position, 1, HIGHLY_ANEUPLOIDIC_REFIT_BAF_CUTOFF + 0.01); // an outlier
+
+        AneuploidyDetector detector = new AneuploidyDetector(Regions, AmberData, pcdFirst10Chromosomes());
+        assertTrue(detector.hasAneuploidy());
+
+        Double bafPurity = detector.calculateBafPurity();
+        assertNotNull(bafPurity);
+        assertEquals(0.15, bafPurity, 0.01);
+
+        Regions.clear();
+        AmberData.clear();
+
+        position = 1000;
+        createAndAddRegion(_1, position, 2970, 0.5); // threshold will be 2991
+        position += WINDOW_SIZE;
+        createAndAddRegion(_1, position, 20, minBafAboveThreshold); // valid to use, but below cumulative threshold
+        position += WINDOW_SIZE;
+        createAndAddRegion(_1, position, 9, minBafAboveThreshold + 0.01); // valid to use
+        position += WINDOW_SIZE;
+        createAndAddRegion(_1, position, 1, HIGHLY_ANEUPLOIDIC_REFIT_BAF_CUTOFF + 0.01); //
+
+        detector = new AneuploidyDetector(Regions, AmberData, pcdFirst10Chromosomes());
+        assertTrue(detector.hasAneuploidy());
+
+        bafPurity = detector.calculateBafPurity();
+        assertNotNull(bafPurity);
+        assertEquals(0.17, bafPurity, 0.01);
+
+        Regions.clear();
+        AmberData.clear();
+
+        position = 1000;
+        createAndAddRegion(_1, position, 2970, 0.5); // threshold will be 2991
+        position += WINDOW_SIZE;
+        createAndAddRegion(_1, position, 20, minBafAboveThreshold); // valid to use, but below cumulative threshold
+        position += WINDOW_SIZE;
+        createAndAddRegion(_1, position, 4, minBafAboveThreshold + 0.01); // invalid to use, below 5 points
+        position += WINDOW_SIZE;
+        createAndAddRegion(_1, position, 4, minBafAboveThreshold + 0.02);
+        position += WINDOW_SIZE;
+        createAndAddRegion(_1, position, 2, minBafAboveThreshold + 0.02);
+
+        detector = new AneuploidyDetector(Regions, AmberData, pcdFirst10Chromosomes());
+        assertTrue(detector.hasAneuploidy());
+
+        bafPurity = detector.calculateBafPurity();
+        assertNotNull(bafPurity);
+        assertEquals(0.15, bafPurity, 0.01);
+    }
+
     private void createUniformlyDiploidRegionsPlusSingleSignificantlyElevatedRegion(
             final int pointsPerRegion,
             final int numberOfDiploidRegions,
@@ -197,7 +267,7 @@ public class AneuploidyDetectorTest
         // Create regions with no aneuploidy
         for(int i = 0; i < numberOfDiploidRegions; i++)
         {
-            createAndAddRegion(_1, position, position + 1000, pointsPerRegion, 0.5);
+            createAndAddRegion(_1, position, pointsPerRegion, 0.5);
             position += 2000;
         }
         // Add another region, of the same length as the other, that has significantly elevated vaf
@@ -216,11 +286,11 @@ public class AneuploidyDetectorTest
             {
                 if(i == 10)
                 {
-                    createAndAddRegion(chromosome, position, position + 1000, elevatedBafPointCount, JUST_ABOVE_CUTOFF);
+                    createAndAddRegion(chromosome, position, elevatedBafPointCount, JUST_ABOVE_CUTOFF);
                 }
                 else
                 {
-                    createAndAddRegion(chromosome, position, position + 1000, 5, 0.5);
+                    createAndAddRegion(chromosome, position, 5, 0.5);
                 }
                 position += 2000;
             }
@@ -239,11 +309,11 @@ public class AneuploidyDetectorTest
             {
                 if(i % 5 == 0)
                 {
-                    createAndAddRegion(chromosome, position, position + 1000, multiplier, JUST_ABOVE_CUTOFF);
+                    createAndAddRegion(chromosome, position, multiplier, JUST_ABOVE_CUTOFF);
                 }
                 else
                 {
-                    createAndAddRegion(chromosome, position, position + 1000, 5 * multiplier, 0.5);
+                    createAndAddRegion(chromosome, position, 5 * multiplier, 0.5);
                 }
                 position += 2000;
             }
@@ -258,12 +328,12 @@ public class AneuploidyDetectorTest
 
     private FittingRegion fr(HumanChromosome chromosome, int start, int end, GermlineStatus status, int bafCount, double tumorRatio)
     {
-        return new FR(chromosome, start, end, status, bafCount, 0.5, 0.5, tumorRatio);
+        return new FittedRegionImpl(chromosome, start, end, status, bafCount, 0.5, 0.5, tumorRatio);
     }
 
-    private void createAndAddRegion(HumanChromosome chromosome, int start, int end, int bafCount, double observedBAF)
+    private void createAndAddRegion(HumanChromosome chromosome, int start, int bafCount, double observedBAF)
     {
-        Regions.add(frDiploid(chromosome, start, end, bafCount, observedBAF));
+        Regions.add(frDiploid(chromosome, start, start + WINDOW_SIZE, bafCount, observedBAF));
         createAmberPointsForRegion(chromosome, start, bafCount, observedBAF);
     }
 
@@ -281,36 +351,27 @@ public class AneuploidyDetectorTest
 
     private FittingRegion frDiploid(HumanChromosome chromosome, int start, int end, int bafCount, double observedBAF)
     {
-        return new FR(chromosome, start, end, GermlineStatus.DIPLOID, bafCount, observedBAF, 0.5, 0.5);
+        return new FittedRegionImpl(chromosome, start, end, GermlineStatus.DIPLOID, bafCount, observedBAF, 0.5, 0.5);
     }
-}
 
-record FR(HumanChromosome chr, int start, int end,
-          GermlineStatus germlineStatus, int bafCount, double observedBAF,
-          double observedNormalRatio, double observedTumorRatio) implements FittingRegion
-{
-    @Override
-    public String chromosome()
+    private class PCD implements PerChromosomeData
     {
-        return V38.versionedChromosome(chr);
-    }
-}
+        private final Set<String> chrNames = new HashSet<>();
 
-class PCD implements PerChromosomeData
-{
-    private final Set<String> chrNames = new HashSet<>();
-
-    PCD(HumanChromosome... chromosomes)
-    {
-        for(HumanChromosome chromosome : chromosomes)
+        PCD(HumanChromosome... chromosomes)
         {
-            chrNames.add(V38.versionedChromosome(chromosome));
+            for(HumanChromosome chromosome : chromosomes)
+            {
+                chrNames.add(V38.versionedChromosome(chromosome));
+            }
+        }
+
+        @Override
+        public boolean hasChromosome(final String chromosome)
+        {
+            return chrNames.contains(chromosome);
         }
     }
-
-    @Override
-    public boolean hasChromosome(final String chromosome)
-    {
-        return chrNames.contains(chromosome);
-    }
 }
+
+

@@ -298,7 +298,7 @@ public class PairResolution
 
     private static boolean isLohBoundedTi(final LinkedPair pair)
     {
-        for(final LohEvent lohEvent : pair.first().getCluster().getLohEvents())
+        for(LohEvent lohEvent : pair.first().getCluster().getLohEvents())
         {
             if(lohEvent.getBreakend(true) == pair.firstBreakend() || lohEvent.getBreakend(true) == pair.secondBreakend())
                 return true;

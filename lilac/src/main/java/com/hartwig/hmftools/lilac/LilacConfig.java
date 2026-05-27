@@ -114,6 +114,7 @@ public class LilacConfig
 
     private static final String SOMATIC_VCF = "somatic_vcf";
     private static final String GENE_COPY_NUMBER = "gene_copy_number";
+    private static final String TARGETED_PANEL = "targeted_panel";
 
     public static final String GENES = "genes";
 
@@ -199,11 +200,18 @@ public class LilacConfig
 
         ResourceDir = checkAddDirSeparator(configBuilder.getValue(RESOURCE_DIR));
         RefGenome = configBuilder.getValue(REF_GENOME, "");
-
         RefGenVersion = RefGenomeVersion.from(configBuilder);
 
-        Genes = GeneSelector.parseArg(configBuilder.getValue(GENES));
         SEQUENCING_TYPE = SequencingType.valueOf(configBuilder.getValue(SEQUENCING_TYPE_CFG));
+
+        if(configBuilder.hasFlag(TARGETED_PANEL) || SEQUENCING_TYPE != ILLUMINA)
+        {
+            // increase rates due to higher variability in coverage or noise
+            LilacConstants.WARN_UNMATCHED_HAPLOTYPE_SUPPORT *= 2;
+            LilacConstants.WARN_INDEL_THRESHOLD *= 2;
+        }
+
+        Genes = GeneSelector.parseArg(configBuilder.getValue(GENES));
 
         LilacConstants.MIN_EVIDENCE_FACTOR = configBuilder.getDecimal(MIN_EVIDENCE_FACTOR);
         LilacConstants.MIN_HIGH_QUAL_EVIDENCE_FACTOR = configBuilder.getDecimal(MIN_HIGH_QUAL_EVIDENCE_FACTOR);
@@ -327,6 +335,7 @@ public class LilacConfig
         configBuilder.addConfigItem(GENES, false, "Gene sets to use", ALL_GENES);
         SequencingType.registerConfig(configBuilder);
 
+        configBuilder.addFlag(TARGETED_PANEL, "Run with targeted panel settings");
         configBuilder.addDecimal(MIN_EVIDENCE_FACTOR, "Min fragment evidence required", DEFAULT_MIN_EVIDENCE_FACTOR);
         configBuilder.addInteger(MAX_REF_FRAGMENTS, "Cap ref fragments in solution search, 0 uses all", DEFAULT_MAX_REF_FRAGMENTS);
         configBuilder.addDecimal(MIN_HIGH_QUAL_EVIDENCE_FACTOR, "Min high-qual fragment evidence factor", DEFAULT_MIN_HIGH_QUAL_EVIDENCE_FACTOR);

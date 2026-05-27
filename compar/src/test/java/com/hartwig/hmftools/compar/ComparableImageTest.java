@@ -125,7 +125,7 @@ public class ComparableImageTest
         assertEquals(MismatchType.INVALID_NEW, mismatch.Type);
 
         mismatch = invalidImage.findMismatch(valid, MatchLevel.DETAILED, TEST_THRESHOLDS, true);
-        assertEquals(MismatchType.INVALID_REF, mismatch.Type);
+        assertEquals(MismatchType.INVALID_OLD, mismatch.Type);
 
         mismatch = invalidImage.findMismatch(invalidImage, MatchLevel.DETAILED, TEST_THRESHOLDS, true);
         assertEquals(MismatchType.INVALID_BOTH, mismatch.Type);

@@ -168,9 +168,8 @@ FileWriterUtils
     public static void closeBufferedWriter(BufferedWriter writer)
     {
         if(writer == null)
-        {
             return;
-        }
+
         try
         {
             writer.close();

@@ -21,6 +21,7 @@ public record TargetMetadata(
         CN_BACKBONE,
         CDR3,
         CUSTOM_REGION,
+        CUSTOM_SMALL_VARIANT,
         CUSTOM_SV,
         SAMPLE_SNV_INDEL_DRIVER,
         SAMPLE_SNV_INDEL_OTHER,

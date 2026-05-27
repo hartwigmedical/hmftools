@@ -37,8 +37,6 @@ public class BamReaderThread extends Thread
     @Override
     public void run()
     {
-        // AMB_LOGGER.debug("bam reader thread start");
-
         while(true)
         {
             RegionTask task;

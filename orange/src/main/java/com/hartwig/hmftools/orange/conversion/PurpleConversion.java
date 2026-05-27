@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.common.variant.CodingEffect.SPLICE;
 import static com.hartwig.hmftools.common.variant.CodingEffect.SYNONYMOUS;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
@@ -17,6 +16,7 @@ import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.impact.VariantEffect;
 import com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact;
+import com.hartwig.hmftools.datamodel.driver.DriverCategory;
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.common.ImmutableAllelicDepth;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleDriver;
@@ -51,6 +51,11 @@ public final class PurpleConversion
                 .likelihoodMethod(PurpleLikelihoodMethod.valueOf(catalog.likelihoodMethod().name()))
                 .isCanonical(catalog.isCanonical())
                 .reportedStatus(com.hartwig.hmftools.datamodel.driver.ReportedStatus.valueOf(catalog.reportedStatus().name()))
+                .category(switch(catalog.category())
+                {
+                    case ONCO -> DriverCategory.ONCO;
+                    case TSG -> DriverCategory.TSG;
+                })
                 .build();
     }
 
@@ -136,7 +141,7 @@ public final class PurpleConversion
 
     public static CodingEffect determineCodingEffect(final List<VariantEffect> variantEffects)
     {
-        List<CodingEffect> simplifiedEffects = variantEffects.stream().map(CodingEffect::effect).collect(Collectors.toList());
+        List<CodingEffect> simplifiedEffects = variantEffects.stream().map(CodingEffect::effect).toList();
 
         if(simplifiedEffects.stream().anyMatch(x -> x.equals(NONSENSE_OR_FRAMESHIFT)))
         {

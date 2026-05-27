@@ -114,6 +114,7 @@ public class LinxInterpreter
 
             LinxFusion convertedFusion = ImmutableLinxFusion.builder()
                     .geneUp(geneUp)
+                    .clusterId(svAnnotation.clusterId())
                     .contextUp(contextUp)
                     .transcriptUp(breakendUp.transcriptId())
                     .geneDown(geneDown)

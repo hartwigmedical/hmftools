@@ -70,7 +70,7 @@ public class PartitionThread extends Thread
 
                 if(mMetricsWriter.offTargetHighFragmentOverlapWriter() != null)
                 {
-                    OffTargetFragments.writeEnrichedRegions(
+                    OffTargetAnalyser.writeEnrichedRegions(
                             mMetricsWriter.offTargetHighFragmentOverlapWriter(), bamReader.offTargetFragments().enrichedFragmentSites());
                 }
             }

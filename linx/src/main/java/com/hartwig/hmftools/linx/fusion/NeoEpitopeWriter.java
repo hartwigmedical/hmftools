@@ -15,7 +15,7 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.linx.CohortDataWriter.cohortDataFilename;
+import static com.hartwig.hmftools.linx.cohort.CohortDataWriter.cohortDataFilename;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.FUSION_MAX_CHAIN_LENGTH;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.FUSION_MAX_CHAIN_LINKS;
@@ -96,9 +96,9 @@ public class NeoEpitopeWriter
 
         boolean fusionAdded = false;
 
-        for(final BreakendGeneData gene1 : breakendGenes1)
+        for(BreakendGeneData gene1 : breakendGenes1)
         {
-            for(final BreakendGeneData gene2 : breakendGenes2)
+            for(BreakendGeneData gene2 : breakendGenes2)
             {
                 if(gene1.isUpstream() == gene2.isUpstream())
                     continue;
@@ -157,7 +157,7 @@ public class NeoEpitopeWriter
     {
         final List<BreakendTransData> validTrans = Lists.newArrayList();
 
-        for(final BreakendTransData transcript : gene.transcripts())
+        for(BreakendTransData transcript : gene.transcripts())
         {
             if(gene.isUpstream())
             {
@@ -274,7 +274,7 @@ public class NeoEpitopeWriter
 
     private boolean isDuplicate(final BreakendGeneData gene1, final BreakendGeneData gene2)
     {
-        for(final NeoEpitopeFusion fusion : mFusions)
+        for(NeoEpitopeFusion fusion : mFusions)
         {
             for(int fs = FS_UP; fs <= FS_DOWN; ++fs)
             {

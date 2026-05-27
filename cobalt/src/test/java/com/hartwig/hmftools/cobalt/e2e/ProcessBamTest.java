@@ -679,9 +679,9 @@ public class ProcessBamTest
 
         String segmentsFile = PCFFile.generateRatioFilename(outputDir.getAbsolutePath(), sample);
 
-        ListMultimap<Chromosome, PCFPosition> pcfData = PCFFile.readPositions(1000, PCFSource.TUMOR_BAF, segmentsFile);
+        Map<Chromosome,List<PCFPosition>> pcfData = PCFFile.readPositions(1000, PCFSource.TUMOR_BAF, segmentsFile);
         assertEquals(2, pcfData.keySet().size());
-        List<PCFPosition> chr1Positions = pcfData.asMap().get(_1).stream().toList();
+        List<PCFPosition> chr1Positions = pcfData.get(_1).stream().toList();
         // The R program that does segmentation puts a spurious 1-window segment
         // at the start of each chromosome.
         assertEquals(6, chr1Positions.size());

@@ -260,7 +260,7 @@ public class SvChain {
             // if ends on a different arm it needs to go through a centromere once and have 2 telomeres
             boolean traversesCentromere = false;
 
-            for(final LinkedPair pair : mLinkedPairs)
+            for(LinkedPair pair : mLinkedPairs)
             {
                 if(pair.firstBreakend().arm() != pair.secondBreakend().arm())
                 {

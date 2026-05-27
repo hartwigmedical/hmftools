@@ -152,6 +152,7 @@ public class SummaryTablePrepTest
                 .cappedCoveragePercent(0.01)
                 .coverageLevels(List.of(30, 60, 100))
                 .coveragePercents(List.of(0.95, 0.90, 0.85))
+                .offTargetReads(0)
                 .build();
     }
 

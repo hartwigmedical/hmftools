@@ -21,6 +21,7 @@ import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingStatusBuilder;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 @SuppressWarnings("unused")
 public class TestFindingFactory
@@ -41,7 +42,7 @@ public class TestFindingFactory
     }
 
     @NotNull
-    public static <T> FindingItem<T> buildFindingItem(@NotNull FindingStatus.Status resultStatus, @NotNull T finding)
+    public static <T> FindingItem<T> buildFindingItem(@NotNull FindingStatus.Status resultStatus, @Nullable T finding)
     {
         return FindingItemBuilder.<T>builder().status(findingsStatus(resultStatus)).finding(finding).build();
     }
@@ -50,7 +51,7 @@ public class TestFindingFactory
     public static PurityPloidyFitBuilder purityPloidyFitBuilder()
     {
         return PurityPloidyFitBuilder.builder()
-                .purity(thresholdValue(0))
+                .purity(0)
                 .fittedPurityMethod(PurityPloidyFit.FittedPurityMethod.NORMAL)
                 .purpleInputPlot(new VisualisationFile("purpleInputPlot.png"))
                 .purpleCircosPlot(new VisualisationFile("purpleCircosPlot.png"))
@@ -276,6 +277,7 @@ public class TestFindingFactory
     public static HlaAlleleBuilder hlaAlleleBuilder()
     {
         return HlaAlleleBuilder.builder()
+                .qcStatus(Set.of(HlaAllele.QcStatus.PASS))
                 .findingKey("")
                 .geneSymbol("")
                 .geneClass(HlaAllele.GeneClass.MHC_CLASS_I)

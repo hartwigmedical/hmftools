@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.cobalt;
 
+import static java.lang.String.format;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -54,6 +56,6 @@ public record CobaltRatio(
     @Override
     public String toString()
     {
-        return "CobaltRatio(" + chromosome + ", " + position + ")";
+        return format("%s:%d tumor(ratio=%.4f reads=%.1f)", chromosome, position, tumorGCRatio, tumorReadDepth);
     }
 }

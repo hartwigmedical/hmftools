@@ -197,6 +197,10 @@ public class PonCache
         return chrCache != null ? chrCache.hasEntry(position, ref, alt) : false;
     }
 
+    private static final String FLD_OLD_SAMPLE_COUNT = "SamplesCount";
+    private static final String FLD_OLD_MAX_READ_COUNT = "MaxSampleReads";
+    private static final String FLD_OLD_TOTAL_READ_COUNT = "TotalReads";
+
     private void initialiseFile(final String filename, boolean loadOnDemand)
     {
         if(filename == null)
@@ -228,9 +232,20 @@ public class PonCache
                 mColumnPositionIndex = fieldsIndexMap.get(FLD_POSITION);
                 mColumnRefIndex = fieldsIndexMap.get(FLD_REF);
                 mColumnAltIndex = fieldsIndexMap.get(FLD_ALT);
+
                 mColumnSampleCountIndex = fieldsIndexMap.get(FLD_SAMPLE_COUNT);
                 mColumnMaxReadIndex = fieldsIndexMap.get(FLD_MAX_READ_COUNT);
                 mColumnTotalReadIndex = fieldsIndexMap.get(FLD_TOTAL_READ_COUNT);
+
+                // support for v37 PON file naming
+                if(mColumnSampleCountIndex == null)
+                    mColumnSampleCountIndex = fieldsIndexMap.get(FLD_OLD_SAMPLE_COUNT);
+
+                if(mColumnMaxReadIndex == null)
+                    mColumnMaxReadIndex = fieldsIndexMap.get(FLD_OLD_MAX_READ_COUNT);
+
+                if(mColumnTotalReadIndex == null)
+                    mColumnTotalReadIndex = fieldsIndexMap.get(FLD_OLD_TOTAL_READ_COUNT);
 
                 mColumnMultiStatusIndex = fieldsIndexMap.get(FLD_MULTI_PON_STATUS);
             }

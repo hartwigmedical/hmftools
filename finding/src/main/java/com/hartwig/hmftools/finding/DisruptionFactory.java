@@ -22,12 +22,11 @@ import com.hartwig.hmftools.finding.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverSource;
 import com.hartwig.hmftools.finding.datamodel.driver.ReportedStatus;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
-import com.hartwig.hmftools.finding.datamodel.VisualisationFile;
+import com.hartwig.hmftools.finding.util.FindingUtil;
 
 import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 // create Disruption findings from Linx breakends
@@ -48,7 +47,7 @@ final class DisruptionFactory
     {
         if(!hasRefSample)
         {
-            return FindingUtil.refRequired();
+            return FindingUtil.normalRequired();
         }
 
         List<LinxBreakend> breakends = Objects.requireNonNull(linx.germlineBreakends());
@@ -61,11 +60,9 @@ final class DisruptionFactory
 
     public static DriverFindingList<Disruption> createSomaticDisruptions(LinxRecord linx, FindingStatus findingStatus)
     {
-        @NotNull Collection<LinxBreakend> breakends = linx.somaticBreakends();
-
         return DriverFindingListBuilder.<Disruption>builder()
-                .status(findingStatus)
-                .findings(createDisruptions(DriverSource.SOMATIC, breakends))
+                .status(FindingUtil.somaticStatus(findingStatus))
+                .findings(createDisruptions(DriverSource.SOMATIC, linx.somaticBreakends()))
                 .build();
     }
 
@@ -154,7 +151,7 @@ final class DisruptionFactory
         for(LinxBreakend b : breakends)
         {
             ReportedStatus status = DriverUtil.reportedStatus(b.reportedStatus());
-            if(ReportedStatus.isMoreReportable(status, reportedStatus))
+            if(status.ordinal() > reportedStatus.ordinal())
             {
                 reportedStatus = status;
             }
@@ -179,9 +176,10 @@ final class DisruptionFactory
                 .breakendType(Disruption.BreakendType.valueOf(breakend.type().name()))
                 .disruptedCopyNumber(breakend.junctionCopyNumber())
                 .undisruptedCopyNumber(undisruptedCopyNumber)
+                .clusterId(breakend.clusterId())
                 .breakendUp(convert(breakendStart))
                 .breakendDown(convert(breakendEnd))
-                .visualisationFile(new VisualisationFile(breakend.plotFilename()))
+                .visualisationFile(VisualisationFileUtil.createNullable(breakend.plotFilename()))
                 .build();
     }
 
@@ -273,6 +271,7 @@ final class DisruptionFactory
         Validate.isTrue(breakendStart.svId() == breakendEnd.svId());
         Validate.isTrue(breakendStart.type().equals(breakendEnd.type()));
         Validate.isTrue(breakendStart.transcript().equals(breakendEnd.transcript()));
+        Validate.isTrue(breakendStart.clusterId() == breakendEnd.clusterId());
 //        Validate.isTrue(breakendStart.undisruptedCopyNumber() == breakendEnd.undisruptedCopyNumber());
     }
 

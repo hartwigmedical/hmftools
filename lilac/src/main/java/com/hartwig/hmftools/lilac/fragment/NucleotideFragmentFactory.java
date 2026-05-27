@@ -119,7 +119,7 @@ public class NucleotideFragmentFactory
         List<Nucleotide> nucleotides = Lists.newArrayListWithCapacity(rangeLength);
 
         Queue<Indel> indelQueue = new PriorityQueue<>(Comparator.comparingInt((Indel x) -> x.ReadIndex));
-        indelQueue.addAll(read.getIgnoredIndels());
+        indelQueue.addAll(read.ignoredIndels());
 
         final int inc = reverseStrand ? -1 : 1;
         final int iStart = reverseStrand ? readLength - 1 : 0;

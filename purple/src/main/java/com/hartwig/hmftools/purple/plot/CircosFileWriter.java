@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Collection;
-import java.util.StringJoiner;
 import java.util.function.Function;
 import java.util.function.ToDoubleFunction;
 
@@ -12,7 +11,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -91,15 +89,5 @@ public final class CircosFileWriter
     public static String circosContig(String chromosome)
     {
         return "hs" + HumanChromosome.fromString(chromosome);
-    }
-
-    static String transformPosition(VariantContextDecorator position, Function<VariantContextDecorator, String> colourFunction)
-    {
-        return new StringJoiner("\t").add(circosContig(position.chromosome()))
-                .add(String.valueOf(position.position()))
-                .add(String.valueOf(position.position()))
-                .add(String.valueOf(position.adjustedVaf()))
-                .add("color=" + colourFunction.apply(position))
-                .toString();
     }
 }

@@ -31,7 +31,6 @@ public class RegionData
     {
         return mGcBucket;
     }
-
     public double mappability()
     {
         return mMappability;

@@ -135,7 +135,7 @@ public final class SvFileLoader
     {
         List<SvVarData> svDataItems = Lists.newArrayList();
 
-        for(final StructuralVariantData svRecord : svRecords)
+        for(StructuralVariantData svRecord : svRecords)
         {
             final String filter = svRecord.filter();
 

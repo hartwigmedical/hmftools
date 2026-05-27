@@ -16,6 +16,7 @@ public class PurpleConstants
     // TMB calcs
     public static final double CODING_BASES_PER_GENOME = 3.188e7; // calculated from GRCh38 canonical transcripts (overlaps ignored)
     public static final double TUMOR_MSI_LOAD_MIN_VAF = 0.02;
+    public static final double TUMOR_MUT_LOAD_MIN_VAF = 0.05;
 
     // no-tumor
     public static final int NO_TUMOR_BAF_TOTAL = 3000;
@@ -88,12 +89,14 @@ public class PurpleConstants
     public static final double SOMATIC_FIT_TUMOR_ONLY_VAF_MAX = 0.35;
     public static final double SOMATIC_FIT_CONTAMINATION_CUTOFF = 0.04;
     public static final double SOMATIC_FIT_TUMOR_ONLY_HOTSPOT_VAF_CUTOFF = 0.50;
+
     public static final double SOMATIC_FIT_ANEUPLOIDIC_REGION_CUTOFF = 0.57;
-    public static final double SOMATIC_FIT_ANEUPLOIDIC_REGION_MIN_BAF_COUNT = 1;
+    public static final int SOMATIC_FIT_ANEUPLOIDIC_REGION_MIN_BAF_COUNT = 1;
     public static final double SOMATIC_FIT_ANEUPLOIDIC_RATIO_CUTOFF = 0.008;
     public static final double HIGHLY_ANEUPLOIDIC_REGION_MIN_BAF_COUNT = 5;
     public static final double HIGHLY_ANEUPLOIDIC_RATIO_CUTOFF = 0.003;
     public static final double HIGHLY_ANEUPLOIDIC_REGION_CUTOFF = 0.7;
+    public static final double HIGHLY_ANEUPLOIDIC_REFIT_BAF_CUTOFF = 2 * SOMATIC_FIT_TUMOR_ONLY_PURITY_MIN - 1;
 
     // somatic fitting readjustment
     public static final double SNV_READJUST_CN_MIN = 1.8;
@@ -127,6 +130,7 @@ public class PurpleConstants
     public static final double GERMLINE_AMP_DEL_CN_CONSISTENCY_MACN_PERC = 0.2;
     public static final double GERMLINE_AMP_DEL_NORMAL_RATIO = 0.65;
     public static final int GERMLINE_AMP_DEL_COHORT_FREQ = 4;
+    public static final int GERMLINE_AMP_DEL_MIN_DEPTH_WINDOW_COUNT = 2;
 
     // copy number smoothing
     public static final double MIN_OBSERVED_BAF_CHANGE = 0.03;

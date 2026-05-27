@@ -101,7 +101,20 @@ public class AmberApplication implements AutoCloseable
 
     private ImmutableListMultimap<Chromosome, AmberSite> loadAmberSites() throws IOException
     {
-        ListMultimap<Chromosome, AmberSite> amberSitesMap = AmberSitesFile.sites(mConfig.BafLociPath);
+        ListMultimap<Chromosome,AmberSite> amberSitesMap = AmberSitesFile.sites(mConfig.BafLociPath);
+
+        if(mConfig.SpecificChrRegions.hasFilters())
+        {
+            ListMultimap<Chromosome,AmberSite> filteredSitesMap = ArrayListMultimap.create();
+
+            for(AmberSite amberSite : amberSitesMap.values())
+            {
+                if(mConfig.SpecificChrRegions.includePosition(amberSite.Chromosome, amberSite.Position))
+                    filteredSitesMap.put(amberSite.chr(), amberSite);
+            }
+
+            amberSitesMap = filteredSitesMap;
+        }
 
         if(mConfig.TargetRegionsBed == null)
         {
@@ -137,33 +150,26 @@ public class AmberApplication implements AutoCloseable
                 for(AmberSite amberSite : amberSites)
                 {
                     if(blacklistedPositions.contains(amberSite.rawPosition()))
-                    {
                         continue;
-                    }
+
                     if(amberSite.position() < currentRegion.start() - TARGET_REGION_SITE_BUFFER)
-                    {
                         continue;
-                    }
 
                     while(amberSite.position() > currentRegion.end() + TARGET_REGION_SITE_BUFFER)
                     {
                         ++regionIndex;
 
                         if(regionIndex >= regions.size())
-                        {
                             break;
-                        }
 
                         currentRegion = regions.get(regionIndex);
                     }
 
                     if(regionIndex >= regions.size())
-                    {
                         break;
-                    }
 
                     if(amberSite.position() >= currentRegion.start() - TARGET_REGION_SITE_BUFFER
-                            && amberSite.position() <= currentRegion.end() + TARGET_REGION_SITE_BUFFER)
+                    && amberSite.position() <= currentRegion.end() + TARGET_REGION_SITE_BUFFER)
                     {
                         targetRegionSites.put(chromosome, amberSite);
                     }
@@ -215,14 +221,21 @@ public class AmberApplication implements AutoCloseable
 
         TumorAnalysis tumor = new TumorAnalysis(mConfig, readerFactory, germline.getHeterozygousLoci(), germline.getHomozygousLoci());
 
-        List<TumorBAF> tumorBAFList = tumor.getBafs().values().stream()
+        List<TumorBAF> tumorBAFList = tumor.chrBafMap().values().stream()
                 .filter(x -> x.TumorEvidence.ReadDepth >= mConfig.TumorMinDepth)
                 .filter(x -> aboveQualFilter(x.TumorEvidence))
                 .sorted().toList();
 
         List<AmberBAF> amberBAFList = tumorBAFList.stream().map(AmberUtils::fromTumorBaf).filter(AmberUtils::isValid).collect(toList());
 
-        List<TumorContamination> contaminationList = new ArrayList<>(tumor.getContamination().values());
+        if(mConfig.WriteTumorData)
+        {
+            List<PositionEvidence> rawData = tumorBAFList.stream().map(x -> x.TumorEvidence).toList();
+            String rawDataFileName = PositionEvidenceFile.generateTumorDataFilename(mConfig.OutputDir, mConfig.TumorId);
+            PositionEvidenceFile.write(rawDataFileName, rawData);
+        }
+
+        List<TumorContamination> contaminationList = tumor.contaminationSites();
 
         long sampleHetCount = amberBAFList.size();
 
@@ -245,7 +258,7 @@ public class AmberApplication implements AutoCloseable
         // no homozygous sites
         TumorAnalysis tumor = new TumorAnalysis(mConfig, readerFactory, allNormal, ArrayListMultimap.create());
 
-        List<TumorBAF> readDepthAndQualityFiltered = tumor.getBafs().values()
+        List<TumorBAF> readDepthAndQualityFiltered = tumor.chrBafMap().values()
                 .stream()
                 .filter(x -> x.TumorEvidence.ReadDepth >= mConfig.TumorMinDepth)
                 .filter(x -> aboveQualFilter(x.TumorEvidence))
@@ -254,11 +267,13 @@ public class AmberApplication implements AutoCloseable
                 .sorted().toList();
 
         List<PositionEvidence> rawData = readDepthAndQualityFiltered.stream().map(x -> x.TumorEvidence).toList();
+
         if(mConfig.WriteTumorData)
         {
             String rawDataFileName = PositionEvidenceFile.generateTumorDataFilename(mConfig.OutputDir, mConfig.TumorId);
             PositionEvidenceFile.write(rawDataFileName, rawData);
         }
+
         PurityAnalysisConfig purityAnalysisConfig = new PurityAnalysisConfig(mConfig);
         TumorOnlyPurityAnalysis noiseFloorAnalysis = new TumorOnlyPurityAnalysis(rawData, mChromosomeSites, purityAnalysisConfig);
         double noiseFloor = noiseFloorAnalysis.cutoff();

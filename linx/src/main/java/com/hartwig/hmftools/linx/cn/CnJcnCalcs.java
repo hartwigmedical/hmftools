@@ -70,7 +70,7 @@ public class CnJcnCalcs
 
     private StructuralVariantData getSvDataById(int svId)
     {
-        for(final StructuralVariantData svData : mSvDataList)
+        for(StructuralVariantData svData : mSvDataList)
         {
             if(svData.id() == svId)
                 return svData;

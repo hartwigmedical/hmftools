@@ -66,11 +66,11 @@
         <hmf-common.version>local-SNAPSHOT</hmf-common.version>
 
         <amber.version>4.3</amber.version>
-        <bam-tools.version>1.5</bam-tools.version>
+        <bam-tools.version>1.6</bam-tools.version>
         <chord.version>2.1.2</chord.version>
         <cider.version>1.2</cider.version>
         <cobalt.version>3.0</cobalt.version>
-        <compar.version>1.5</compar.version>
+        <compar.version>1.6</compar.version>
         <crest.version>1.0.0</crest.version>
         <cuppa.version>2.5</cuppa.version>
         <esvee.version>2.0</esvee.version>
@@ -87,7 +87,7 @@
         <orange.version>5.0</orange.version>
         <orange-datamodel.version>local-SNAPSHOT</orange-datamodel.version>
         <paddle.version>1.1</paddle.version>
-        <panel-builder.version>1.0</panel-builder.version>
+        <panel-builder.version>1.1</panel-builder.version>
         <patient-db.version>3.0</patient-db.version>
         <pave.version>1.9</pave.version>
         <peach.version>2.0</peach.version>
@@ -391,6 +391,13 @@
                 <groupId>com.hartwig</groupId>
                 <artifactId>orange-datamodel</artifactId>
                 <version>${orange-datamodel.version}</version>
+                <type>test-jar</type>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.hartwig</groupId>
+                <artifactId>finding-datamodel</artifactId>
+                <version>${finding-datamodel.version}</version>
                 <type>test-jar</type>
                 <scope>test</scope>
             </dependency>

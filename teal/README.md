@@ -1,17 +1,17 @@
 # TEAL
 
-TEAL measures telomere content, and estimates telomeric length based on WGS BAM input and can be run on a germline only, tumor only or tumor-normal pair.
+Teal measures telomere content, and estimates telomeric length based on WGS BAM input and can be run on a germline only, tumor only or tumor-normal pair.
 
-If a tumor-normal pair is provided, TEAL will also call somatic telomeric rearrangements, ie. breakends linking non telomeric regions of the genome to telomeric content.
+If a tumor-normal pair is provided, Teal will also call somatic telomeric rearrangements, ie. breakends linking non telomeric regions of the genome to telomeric content.
 
 ## Installation
 
 To install, download the latest compiled jar file from the [download links](#version-history-and-download-links).
 
-TEAL requires Java 17+ to be installed.
+Teal requires Java 17+ to be installed.
 
-## Using TEAL with HMF pipeline
-We can run TEAL using output files from HMF pipeline tools.
+## Using Teal with HMF pipeline
+We can run Teal using output files from HMF pipeline tools.
 
 ### Paired germline/tumor mode with HMF pipeline
 
@@ -71,8 +71,8 @@ java -Xmx16G -cp teal.jar com.hartwig.hmftools.teal.TealPipelineApp \
    -threads 28
 ```
 
-## Using TEAL standalone (without HMF pipeline)
-If HMF pipeline is not available, then TEAL can be used in standalone mode. Inputs that it extracts from
+## Using Teal standalone (without HMF pipeline)
+If HMF pipeline is not available, then Teal can be used in standalone mode. Inputs that it extracts from
 other pipeline tools will need to be explicited provided.
 
 ### Paired germline/tumor mode standalone
@@ -256,7 +256,7 @@ recurrent artefacts across samples (currently for hg19/grch37 assembly only)
 
 ## Outputs
 
-The outputs of TEAL is a 'telbam' file (ie a bam restricted to fragments where at least 1 read contains telomeric content), a file which
+The outputs of Teal is a 'telbam' file (ie a bam restricted to fragments where at least 1 read contains telomeric content), a file which
 details the estimated  telomeric length and content and finally a file which predicts the telomeric reararrangements
   
 ### Telomeric Length and content
@@ -302,9 +302,9 @@ details the estimated  telomeric length and content and finally a file which pre
 | 
 ## Known issues and future improvements
 * A blacklist bed file is currently only provided for hg19 / grch37 assembly.  
-* TEAL represents each breakend independently, but ideally should pair up rearrangements which are supported by the same fragment and represent telomeric insertions
-* TEAL should determine a consensus sequence for each telomeric rearrangement
-* TEAL could aslo count relative amount T-Type, C-Type, G-Type and J-Type content per sample (relevant for ALT pathway identification)
+* Teal represents each breakend independently, but ideally should pair up rearrangements which are supported by the same fragment and represent telomeric insertions
+* Teal should determine a consensus sequence for each telomeric rearrangement
+* Teal could aslo count relative amount T-Type, C-Type, G-Type and J-Type content per sample (relevant for ALT pathway identification)
 
 # Version History and Download Links
 - [1.3.4](https://github.com/hartwigmedical/hmftools/releases/tag/teal-v1.3.4)

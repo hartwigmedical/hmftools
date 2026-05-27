@@ -33,7 +33,7 @@ import com.hartwig.hmftools.common.perf.PerformanceCounter;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.linx.LinxConfig;
-import com.hartwig.hmftools.linx.CohortDataWriter;
+import com.hartwig.hmftools.linx.cohort.CohortDataWriter;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.fusion.rna.RnaFusionMapper;
 import com.hartwig.hmftools.linx.types.LinkedPair;
@@ -139,7 +139,7 @@ public class FusionDisruptionAnalyser
         // mark any transcripts as not disruptive prior to running any fusion logic
         mDisruptionFinder.markTranscriptsDisruptive(svList);
 
-        for(final SvVarData var : svList)
+        for(SvVarData var : svList)
         {
             // now that transcripts have been marked as disruptive it is safe to purge any which cannot make viable fusions
             if(purgeInvalidTranscripts)
@@ -246,7 +246,7 @@ public class FusionDisruptionAnalyser
 
             if(LNX_LOGGER.isDebugEnabled())
             {
-                for(final GeneFusion fusion : mUniqueFusions)
+                for(GeneFusion fusion : mUniqueFusions)
                 {
                     if(fusion.knownType() != KnownFusionType.NONE)
                     {
@@ -332,7 +332,7 @@ public class FusionDisruptionAnalyser
             final SvCluster cluster = var.getCluster();
 
             // check transcript disruptions
-            for(final GeneFusion fusion : fusions)
+            for(GeneFusion fusion : fusions)
             {
                 FusionAnnotations annotations = ImmutableFusionAnnotations.builder()
                         .clusterId(cluster.id())
@@ -352,7 +352,7 @@ public class FusionDisruptionAnalyser
     private void findChainedFusions(final List<SvCluster> clusters)
     {
         // for now only consider simple SVs and resolved small clusters
-        for(final SvCluster cluster : clusters)
+        for(SvCluster cluster : clusters)
         {
             if(cluster.getSvCount() == 1) // simple clusters already checked
                 continue;
@@ -363,7 +363,7 @@ public class FusionDisruptionAnalyser
             final List<GeneFusion> chainFusions = Lists.newArrayList();
             final List<ValidTraversalData> validPairs = Lists.newArrayList();
 
-            for(final SvChain chain : cluster.getChains())
+            for(SvChain chain : cluster.getChains())
             {
                 findChainedFusions(cluster, chain, chainFusions, validPairs);
             }
@@ -848,7 +848,7 @@ public class FusionDisruptionAnalyser
         final Map<String,List<GeneFusion>> genePairFusions = Maps.newHashMap();
 
         // allocate fusions to unique SV pairings
-        for(final GeneFusion fusion : mFusions)
+        for(GeneFusion fusion : mFusions)
         {
             if(!persistFusion(fusion))
                 continue;

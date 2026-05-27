@@ -4,6 +4,12 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.firstInPair;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_ID;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POS_END;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POS_START;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
@@ -16,6 +22,7 @@ import static com.hartwig.hmftools.isofox.IsofoxConstants.SINGLE_MAP_QUALITY;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.ALT_SPLICE_JUNCTIONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.STATISTICS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.TRANSCRIPT_COUNTS;
+import static com.hartwig.hmftools.isofox.WriteType.SPLICE_SITE;
 import static com.hartwig.hmftools.isofox.common.FragmentMatchType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.common.FragmentType.ALT;
 import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
@@ -44,9 +51,11 @@ import static com.hartwig.hmftools.isofox.fusion.ChimericUtils.isRealignedFragme
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -443,7 +452,7 @@ public class FragmentAllocator
         }
 
         // track splice site info
-        if(mConfig.WriteSpliceSiteData)
+        if(mConfig.writeType(SPLICE_SITE))
         {
             mSpliceSiteCounter.registerSpliceSiteSupport(read1.getMappedRegionCoords(), read2.getMappedRegionCoords(), mCurrentGenes.getExonRegions());
         }
@@ -666,9 +675,9 @@ public class FragmentAllocator
             mCurrentGenes.addCount(fragmentType, 1);
         }
 
-        if(mConfig.WriteReadData && mReadDataWriter != null)
+        if(mReadDataWriter != null && mConfig.writeType(WriteType.READ))
         {
-            for(final GeneReadData geneReadData : overlapGenes)
+            for(GeneReadData geneReadData : overlapGenes)
             {
                 writeReadData(mReadDataWriter, geneReadData, 0, read1, read2, fragmentType, validTranscripts.size());
                 writeReadData(mReadDataWriter, geneReadData, 1, read2, read1, fragmentType, validTranscripts.size());
@@ -827,6 +836,15 @@ public class FragmentAllocator
         mExpressionReadTracker.processIntronicReads(genes, read1, read2);
 
         mCurrentGenes.addCount(UNSPLICED, 1);
+
+        if(mReadDataWriter != null && mConfig.writeType(WriteType.READ))
+        {
+            for(GeneReadData geneReadData : genes)
+            {
+                writeReadData(mReadDataWriter, geneReadData, 0, read1, read2, UNSPLICED, 0);
+                writeReadData(mReadDataWriter, geneReadData, 1, read2, read1, UNSPLICED, 0);
+            }
+        }
     }
 
     private void processChimericNovelJunctions()
@@ -913,12 +931,17 @@ public class FragmentAllocator
     {
         try
         {
-            final String outputFileName = config.formOutputFile("read_data.csv");
+            String outputFileName = config.formOutputFile("read_data.tsv");
 
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
-            writer.write("GeneId,GeneName,ReadIndex,ReadId,Chromosome,PosStart,PosEnd,Cigar");
-            writer.write(",InsertSize,FragLength,MateChr,MatePosStart,FirstInPair,ReadReversed,SuppData");
-            writer.write(",GeneClass,TransId,TransClass,ValidTrans,ExonRank,ExonStart,ExonEnd,RegionClass,ScRegionsStart,SvRegionsEnd");
+
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
+            sj.add(FLD_GENE_ID).add(FLD_GENE_NAME).add("ReadIndex").add("ReadId");
+            sj.add(FLD_CHROMOSOME).add(FLD_POS_START).add(FLD_POS_END).add("Cigar").add("InsertSize").add("MateChr").add("MatePosStart");
+            sj.add("Flags").add("FirstInPair").add("ReadReversed").add("SuppData").add("FragType");
+            sj.add("TransId").add("TransClass").add("ValidTrans").add("ExonRank").add("ExonStart");
+            sj.add("RegionStart").add("RegionEnd").add("RegionClass").add("ScRegionsStart").add("SvRegionsEnd");
+            writer.write(sj.toString());
             writer.newLine();
             return writer;
         }
@@ -933,11 +956,38 @@ public class FragmentAllocator
             final BufferedWriter writer, final GeneReadData geneReadData, int readIndex, final Read read, final Read otherRead,
             FragmentType geneReadType, int validTranscripts)
     {
-        if(read.getTranscriptClassifications().isEmpty())
-            return;
-
         try
         {
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
+
+            sj.add(geneReadData.Gene.GeneId);
+            sj.add(geneReadData.Gene.GeneName);
+            sj.add(String.valueOf(readIndex));
+            sj.add(read.Id);
+
+            sj.add(read.Chromosome);
+            sj.add(String.valueOf(read.PosStart));
+            sj.add(String.valueOf(read.PosEnd));
+            sj.add(read.cigarStr());
+            sj.add(String.valueOf(read.fragmentInsertSize()));
+            sj.add(read.mateChromosome());
+            sj.add(String.valueOf(read.mateStartPosition()));
+
+            sj.add(String.valueOf(read.flags()));
+            sj.add(String.valueOf(read.isFirstOfPair()));
+            sj.add(String.valueOf(read.isReadReversed()));
+            sj.add(read.suppAlignmentAsStr());
+
+            sj.add(geneReadType.toString());
+
+            if(read.getTranscriptClassifications().isEmpty())
+            {
+                sj.add("NONE").add("").add("").add("").add("").add("").add("").add("").add("");
+                writer.write(sj.toString());
+                writer.newLine();
+                return;
+            }
+
             for(Map.Entry<Integer,TransMatchType> entry : read.getTranscriptClassifications().entrySet())
             {
                 int transId = entry.getKey();
@@ -951,31 +1001,29 @@ public class FragmentAllocator
                     if(!region.hasTransId(transId))
                         continue;
 
-                    writer.write(String.format("%s,%s,%d,%s",
-                            geneReadData.Gene.GeneId, geneReadData.Gene.GeneName, readIndex, read.Id));
-
-                    int calcFragmentLength = read.fragmentInsertSize();
-
+                    /*
                     if(validTranscriptType(read.getTranscriptClassification(transId)))
                     {
-                        final TranscriptData transData =
-                                geneReadData.getTranscripts().stream().filter(x -> x.TransId == transId).findFirst().orElse(null);
+                        TranscriptData transData = geneReadData.getTranscripts().stream()
+                                .filter(x -> x.TransId == transId).findFirst().orElse(null);
                         calcFragmentLength = transData != null ? calcFragmentLength(transData, read, otherRead) : -1;
                     }
+                    */
 
-                    writer.write(String.format(",%s,%d,%d,%s,%d,%d",
-                            read.Chromosome, read.PosStart, read.PosEnd, read.cigarStr(),
-                            read.fragmentInsertSize(), calcFragmentLength));
+                    StringJoiner transSj = new StringJoiner(TSV_DELIM);
+                    transSj.add(sj.toString());
 
-                    writer.write(String.format(",%s,%d,%s,%s,%s",
-                            read.mateChromosome(), read.mateStartPosition(), read.isFirstOfPair(), read.isReadReversed(),
-                            read.getSuppAlignmentCsv()));
+                    transSj.add(String.valueOf(transId));
+                    transSj.add(transType.toString());
+                    transSj.add(String.valueOf(validTranscripts));
+                    transSj.add(String.valueOf(region.getExonRank(transId)));
+                    transSj.add(String.valueOf(region.start()));
+                    transSj.add(String.valueOf(region.end()));
+                    transSj.add(matchType.toString());
+                    transSj.add(String.valueOf(read.getSoftClipRegionsMatched()[SE_START]));
+                    transSj.add(String.valueOf(read.getSoftClipRegionsMatched()[SE_END]));
 
-                    writer.write(String.format(",%s,%d,%s,%s,%d,%d,%d,%s,%d,%d",
-                            geneReadType, transId, transType, validTranscripts,
-                            region.getExonRank(transId), region.start(), region.end(), matchType,
-                            read.getSoftClipRegionsMatched()[SE_START], read.getSoftClipRegionsMatched()[SE_END]));
-
+                    writer.write(transSj.toString());
                     writer.newLine();
                 }
             }

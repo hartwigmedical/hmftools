@@ -24,7 +24,7 @@ import static com.hartwig.hmftools.bamtools.metrics.FlagStatType.SECONDARY;
 import static com.hartwig.hmftools.bamtools.metrics.FlagStatType.SINGLETON;
 import static com.hartwig.hmftools.bamtools.metrics.FlagStatType.SUPPLEMENTARY;
 import static com.hartwig.hmftools.bamtools.metrics.FlagStatType.TOTAL;
-import static com.hartwig.hmftools.bamtools.metrics.OffTargetFragments.writeOverlapCounts;
+import static com.hartwig.hmftools.bamtools.metrics.OffTargetAnalyser.writeOverlapCounts;
 import static com.hartwig.hmftools.common.metrics.BamFlagStats.FLAGSTAT_BOTH_MAPPED;
 import static com.hartwig.hmftools.common.metrics.BamFlagStats.FLAGSTAT_DUPLICATE;
 import static com.hartwig.hmftools.common.metrics.BamFlagStats.FLAGSTAT_MAPPED;
@@ -77,7 +77,7 @@ public class MetricsWriter
         mPartitionWriter = !config.OnlyTargetRegions ? initialisePartitionWriter(config) : null;
 
         mOffTargetHighFragmentOverlapWriter = !config.TargetRegions.isEmpty() && config.HighFragmentOverlapThreshold > 0 ?
-                OffTargetFragments.initialiseEnrichedRegionWriter(config) : null;
+                OffTargetAnalyser.initialiseEnrichedRegionWriter(config) : null;
     }
 
     public BufferedWriter targetRegionsWriter() { return mTargetRegionsWriter; }
@@ -127,6 +127,7 @@ public class MetricsWriter
                     .totalReads(readCounts.Total)
                     .duplicateReads(readCounts.Duplicates)
                     .dualStrandReads(readCounts.DualStrand)
+                    .offTargetReads(readCounts.OffTarget)
                     .meanCoverage(metrics.statistics().Mean)
                     .sdCoverage(metrics.statistics().StandardDeviation)
                     .medianCoverage((int)round(metrics.statistics().Median))

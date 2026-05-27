@@ -155,7 +155,7 @@ public class AssemblyAligner extends ThreadTask
 
     private List<AlignData> requerySoftClipAlignments(final AssemblyAlignment assemblyAlignment, final List<AlignData> alignments)
     {
-        // re-align long soft-clipped sequences add attach them to the original alignment
+        // re-align long soft-clipped sequences and attach them to the original alignment
         String softClipBases;
         boolean isLeftClip;
         boolean firstBasesMissing;

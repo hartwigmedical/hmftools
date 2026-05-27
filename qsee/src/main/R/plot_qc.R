@@ -587,12 +587,19 @@ PLOTS[[FEATURE_TYPE$DISCORDANT_FRAG_FREQ]] <- local({
 
    plot_data <- plot_data %>% dplyr::mutate(DisplayName = reverse_levels(DisplayName))
 
-   plot_pairwise_comparison(plot_data, x = "DisplayName") +
-      scale_y_log10(guide = "axis_logticks", labels = scales::label_percent(drop0trailing=TRUE)) +
+   plot <- plot_pairwise_comparison(plot_data, x = "DisplayName") +
       plot_labels +
       coord_flip() +
-      theme(panel.grid.major.x = THEME_PANEL_GRID_MAJOR) +
-      render_now()
+      theme(panel.grid.major.x = THEME_PANEL_GRID_MAJOR)
+
+   ## Plotting will fail if all values are zero and log transform is attempted
+   if(all(plot_data$FeatureValue==0)){
+      plot <- plot + scale_y_continuous(labels = scales::label_percent(drop0trailing=TRUE))
+   } else {
+      plot <- plot + scale_y_log10(guide = "axis_logticks", labels = scales::label_percent(drop0trailing=TRUE))
+   }
+
+   plot + render_now()
 })
 
 PLOTS[[FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD]] <- local({

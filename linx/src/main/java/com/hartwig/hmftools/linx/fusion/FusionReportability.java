@@ -143,7 +143,7 @@ public class FusionReportability
         // form a score by allocating 0/1 or length value to each power of 10 descending
         double highestScore = 0;
 
-        for(final GeneFusion fusion : fusions)
+        for(GeneFusion fusion : fusions)
         {
             double fusionPriorityScore = calcFusionPriority(fusion);
             fusion.setPriority(fusionPriorityScore);

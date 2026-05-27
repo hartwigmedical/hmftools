@@ -62,9 +62,9 @@ public final class LilacConstants
     public static int FAIL_LOW_COVERAGE_THRESHOLD = 360;
     public static double WARN_LOW_COVERAGE_THRESHOLD = 180;
     public static final double WARN_LOW_BASE_QUAL_THRESHOLD = 25;
-    public static final double WARN_UNMATCHED_HAPLOTYPE_SUPPORT = 0.01;
+    public static double WARN_UNMATCHED_HAPLOTYPE_SUPPORT = 0.01;
     public static final int LOG_UNMATCHED_HAPLOTYPE_SUPPORT = 3;
-    public static final double WARN_INDEL_THRESHOLD = 0.005;
+    public static double WARN_INDEL_THRESHOLD = 0.005;
     public static final double WARN_LOW_COVERAGE_DEPTH = 10;
     public static final int DEFAULT_FATAL_TOTAL_LOW_COVERAGE_POSITIONS = 300;
 

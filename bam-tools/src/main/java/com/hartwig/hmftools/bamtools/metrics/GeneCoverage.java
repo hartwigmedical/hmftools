@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL;
 import static com.hartwig.hmftools.common.driver.panel.DriverGeneRegions.buildDriverGeneRegions;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
-import static com.hartwig.hmftools.common.metrics.GeneDepthFile.generateExonMediansFilename;
+import static com.hartwig.hmftools.common.metrics.GeneDepthFile.generateExonCoverageFilename;
 import static com.hartwig.hmftools.common.metrics.GeneDepthFile.generateGeneCoverageFilename;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
@@ -40,6 +40,7 @@ public class GeneCoverage
     private static final List<Integer> DEPTH_BUCKETS = Lists.newArrayList();
     public static final int MAX_DEPTH_BUCKET = 10000;
     protected static final int GENE_COVERAGE_MIN_MAP_QUALITY = 10;
+    private final int[] EXON_DEPTH_THRESHOLDS = { 10, 20, 30, 60, 100, 250 };
 
     public GeneCoverage(final ConfigBuilder configBuilder)
     {
@@ -88,7 +89,7 @@ public class GeneCoverage
             return;
 
         String geneFilename = generateGeneCoverageFilename(outputDir, sampleId);
-        String exonFilename = generateExonMediansFilename(outputDir, sampleId);
+        String exonFilename = generateExonCoverageFilename(outputDir, sampleId);
 
         writeExonCoverage(exonFilename);
         writeGeneCoverage(geneFilename);
@@ -100,10 +101,7 @@ public class GeneCoverage
         {
             BufferedWriter writer = createBufferedWriter(exonFilename, false);
 
-            StringJoiner sj = new StringJoiner(TSV_DELIM);
-
-            sj.add("gene").add("chromosome").add("posStart").add("posEnd").add("exonRank").add("medianDepth");
-            writer.write(sj.toString());
+            writer.write(GeneDepthFile.exonCoverageHeader(EXON_DEPTH_THRESHOLDS));
             writer.newLine();
 
             for(List<ExonCoverage> exonCoverageList : mChrGeneRegionsMap.values())
@@ -117,6 +115,14 @@ public class GeneCoverage
                     data.add(String.valueOf(exonCoverage.end()));
                     data.add(String.valueOf(exonCoverage.ExonRank));
                     data.add(format("%.0f", exonCoverage.medianDepth()));
+                    data.add(format("%.2f", exonCoverage.meanDepth()));
+
+                    double[] propBasesAboveDepth = exonCoverage.propBasesAboveDepth(EXON_DEPTH_THRESHOLDS);
+                    for(double value : propBasesAboveDepth)
+                    {
+                        data.add(format("%.2f", value));
+                    }
+
                     writer.write(data.toString());
                     writer.newLine();
                 }

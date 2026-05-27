@@ -94,7 +94,7 @@ public class ProbeGenerator
 
         public void addAll(Stream<ProbeGenerationSpec> specs)
         {
-            specs.forEach(this::add);
+            specs.forEachOrdered(this::add);
         }
 
         public ProbeGenerationResult generate(PanelBuffer resultBuffer)
@@ -213,7 +213,7 @@ public class ProbeGenerator
         // Map from start position to probe.
         Map<Integer, Probe> acceptableProbes = new HashMap<>();
         // This requires sorted by position, but it's already in that order.
-        allPlausibleProbes.forEach(probe ->
+        allPlausibleProbes.forEachOrdered(probe ->
         {
             BaseRegion probeRegion = probe.definition().singleRegion().baseRegion();
             BaseRegion prev = acceptableSubregions.isEmpty() ? null : acceptableSubregions.get(acceptableSubregions.size() - 1);

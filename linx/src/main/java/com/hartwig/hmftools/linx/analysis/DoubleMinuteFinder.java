@@ -14,7 +14,7 @@ import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.typeAsInt;
-import static com.hartwig.hmftools.linx.CohortDataWriter.cohortDataFilename;
+import static com.hartwig.hmftools.linx.cohort.CohortDataWriter.cohortDataFilename;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxOutput.ITEM_DELIM_CHR;
 import static com.hartwig.hmftools.linx.analysis.AnnotationExtension.CANDIDATE_VIS_DOUBLE_MINUTES;
@@ -40,8 +40,8 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
-import com.hartwig.hmftools.linx.CohortDataWriter;
-import com.hartwig.hmftools.linx.CohortFileInterface;
+import com.hartwig.hmftools.linx.cohort.CohortDataWriter;
+import com.hartwig.hmftools.linx.cohort.CohortFileInterface;
 import com.hartwig.hmftools.linx.LinxConfig;
 import com.hartwig.hmftools.linx.chaining.ChainFinder;
 import com.hartwig.hmftools.linx.chaining.SvChain;
@@ -435,7 +435,7 @@ public class DoubleMinuteFinder implements CohortFileInterface
         double maxDMCopyNumber = 0;
         double minDMCopyNumber = 0;
 
-        for(final SvVarData var : dmData.ValidSVs)
+        for(SvVarData var : dmData.ValidSVs)
         {
             ++typeCounts[typeAsInt(var.type())];
 
@@ -577,7 +577,7 @@ public class DoubleMinuteFinder implements CohortFileInterface
             if(genesList.isEmpty())
                 continue;
 
-            for(final GeneData geneData : genesList)
+            for(GeneData geneData : genesList)
             {
                 genesStr = appendStr(genesStr, geneData.GeneName, ';');
             }

@@ -91,7 +91,6 @@ public class PartitionReaderTest
         read2.setInferredInsertSize(-1);
 
         // no mate cigar set
-
         diffs = CompareUtils.compareReads(read1, read2, config);
         Assert.assertTrue(diffs.isEmpty());
     }

@@ -50,7 +50,8 @@ public class AmberUtils
         if(posEvidence.ReadDepth == 0)
             return false;
 
-        double filteredPercent = (posEvidence.BaseQualFiltered + posEvidence.MapQualFiltered) / (double)posEvidence.ReadDepth;
+        int filteredCount = posEvidence.BaseQualFiltered + posEvidence.MapQualFiltered + posEvidence.SeqTechFiltered;
+        double filteredPercent = filteredCount / (double)posEvidence.ReadDepth;
         return filteredPercent < QUAL_FILTERED_THRESHOLD;
     }
 

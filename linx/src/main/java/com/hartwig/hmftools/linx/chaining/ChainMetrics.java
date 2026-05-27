@@ -75,7 +75,7 @@ public class ChainMetrics
             }
         }
 
-        for(final LinkedPair pair : chain.getLinkedPairs())
+        for(LinkedPair pair : chain.getLinkedPairs())
         {
             if(pair.first().type() == SGL || pair.second().type() == SGL)
                 continue;

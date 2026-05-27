@@ -336,6 +336,9 @@ public final class CigarUtils
                     readIndexShift = index - readIndex - 1;
                 }
 
+                if(refPosition <= 0)
+                    return NO_POSITION_INFO;
+
                 return new int[] { refPosition, readIndexShift };
             }
 

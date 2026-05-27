@@ -196,7 +196,7 @@ public class Read
     public void setSuppAlignment(final String suppAlign) { mSupplementaryAlignment = suppAlign; }
     public String getSuppAlignment() { return mSupplementaryAlignment; }
 
-    public String getSuppAlignmentCsv()
+    public String suppAlignmentAsStr()
     {
         return mSupplementaryAlignment != null ? mSupplementaryAlignment.replaceAll(",", ITEM_DELIM) : "NONE";
     }

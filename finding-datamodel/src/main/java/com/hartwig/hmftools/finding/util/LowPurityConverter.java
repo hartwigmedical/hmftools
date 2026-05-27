@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.finding.util;
 
+import java.util.Set;
 import java.util.SortedSet;
-import java.util.TreeSet;
 import java.util.function.Function;
 
 import com.hartwig.hmftools.finding.datamodel.FindingRecord;
@@ -21,14 +21,14 @@ import jakarta.validation.constraints.NotNull;
 
 public class LowPurityConverter
 {
-    public static FindingRecord convert(FindingRecord record)
+    @NotNull
+    public static FindingRecord convert(@NotNull FindingRecord record)
     {
         boolean isLowPurity = record.qc().isLowPurity();
         return FindingRecordBuilder.builder(record)
                 .somaticDisruptions(convert(record.somaticDisruptions(), isLowPurity))
                 .somaticGainDeletions(convert(record.somaticGainDeletions(), isLowPurity))
                 .viruses(convert(record.viruses(), isLowPurity))
-                .predictedTumorOrigin(convert(record.predictedTumorOrigin(), isLowPurity))
                 .microsatelliteStability(convert(record.microsatelliteStability(), isLowPurity))
                 .tumorMutationalLoad(convert(record.tumorMutationalLoad(), isLowPurity))
                 .tumorMutationalBurden(convert(record.tumorMutationalBurden(), isLowPurity))
@@ -37,6 +37,7 @@ public class LowPurityConverter
                 .hlaAlleles(convert(record.hlaAlleles(), isLowPurity, Function.identity(), LowPurityConverter::convert))
                 .build();
     }
+
 
     @NotNull
     private static <T extends Finding> FindingList<T> convert(@NotNull FindingList<T> findingList, boolean isLowPurity,
@@ -98,18 +99,14 @@ public class LowPurityConverter
         return findingStatus.status() == FindingStatus.Status.OK && isLowPurity;
     }
 
-    private static SortedSet<FindingStatus.Issue> addLowPurity(SortedSet<FindingStatus.Issue> sortedSet)
+    private static SortedSet<FindingStatus.Issue> addLowPurity(SortedSet<FindingStatus.Issue> issues)
     {
-        SortedSet<FindingStatus.Issue> result = new TreeSet<>(sortedSet);
-        result.add(FindingStatus.Issue.LOW_PURITY);
-        return result;
+        return FindingUtil.addIssues(issues, Set.of(FindingStatus.Issue.LOW_PURITY));
     }
 
-    private static SortedSet<FindingStatus.Issue> removeLowPurity(SortedSet<FindingStatus.Issue> sortedSet)
+    private static SortedSet<FindingStatus.Issue> removeLowPurity(SortedSet<FindingStatus.Issue> issues)
     {
-        SortedSet<FindingStatus.Issue> result = new TreeSet<>(sortedSet);
-        result.remove(FindingStatus.Issue.LOW_PURITY);
-        return result;
+        return FindingUtil.removeIssues(issues, Set.of(FindingStatus.Issue.LOW_PURITY));
     }
 
     private static HlaAllele convert(HlaAllele hlaAllele)
@@ -118,12 +115,4 @@ public class LowPurityConverter
                 .tumorCopyNumber(null)
                 .build();
     }
-
-// TODO: Requires the copy number to be null
-//    private static Fusion convert(Fusion fusion)
-//    {
-//        return FusionBuilder.builder(fusion)
-//                .junctionCopyNumber(null)
-//                .build();
-//    }
 }

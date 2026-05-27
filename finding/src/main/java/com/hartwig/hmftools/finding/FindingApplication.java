@@ -43,8 +43,7 @@ public class FindingApplication
         OrangeRecord orangeRecord = OrangeJson.getInstance().read(config.OrangeJsonPath);
 
         FindingRecord findingRecord = FindingRecordFactory.fromOrangeRecord(orangeRecord,
-                config.ClinicalTranscriptsPath != null ? Path.of(config.ClinicalTranscriptsPath) : null,
-                Path.of(config.DriverGenePath));
+                config.ClinicalTranscriptsPath != null ? Path.of(config.ClinicalTranscriptsPath) : null);
 
         new FindingsJson().write(findingRecord, Path.of(config.FindingJsonPath));
 

@@ -17,7 +17,7 @@ import htsjdk.samtools.util.SequenceUtil;
 
 public final class NumberEvents
 {
-    public static boolean RECOMPUTE_MISSING_NM = false;
+    private static boolean RECOMPUTE_MISSING_NM = false;
 
     public static void setRecomputeNumMutations(final List<String> bamFiles)
     {

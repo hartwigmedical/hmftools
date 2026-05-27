@@ -10,10 +10,10 @@ import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.HALF_PHRED_S
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_INVALID_QUAL;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_HP_LEN;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractTpValues;
-import static com.hartwig.hmftools.common.variant.VariantTier.HOTSPOT;
-import static com.hartwig.hmftools.common.variant.VariantTier.PANEL;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
+import static com.hartwig.hmftools.sage.SageConstants.GERMLINE_STRAND_BIAS_ADJUST;
+import static com.hartwig.hmftools.sage.SageConstants.GERMLINE_STRAND_BIAS_ADJUST_FACTOR;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
 import static com.hartwig.hmftools.sage.SageConstants.GERMLINE_HET_MIN_EXPECTED_VAF;
 import static com.hartwig.hmftools.sage.filter.FilterConfig.ULTIMA_CANDIDATE_HIGH_BQ_REPEAT_MIN;
@@ -34,8 +34,6 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 import static com.hartwig.hmftools.sage.filter.VariantFilters.STRAND_BIAS_CALCS;
 
-import com.hartwig.hmftools.common.variant.VariantTier;
-import com.hartwig.hmftools.sage.common.Microhomology;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 
@@ -394,7 +392,7 @@ public final class UltimaUtils
     private static final int HP_MAX_LENGTHS = 5;
     private static final double HP_THRESHOLD_NON_INDEL_DEDUCTION = 2.5;
 
-    public static boolean belowExpectedHpQuals(final ReadContextCounter primaryTumor)
+    public static boolean belowExpectedHpQuals(final ReadContextCounter primaryTumor, boolean isGermline)
     {
         if(primaryTumor.isSnv() && !primaryTumor.readContext().hasIndelInCore())
             return false;
@@ -404,12 +402,59 @@ public final class UltimaUtils
 
         if(primaryTumor.isLongIndel() && Collections.max(homopolymerLengths) < HP_MAX_LENGTHS)
             return false;
-        if((double) primaryTumor.strongAltSupport() / primaryTumor.depth() >= GERMLINE_HET_MIN_EXPECTED_VAF)
+
+        if(!isGermline && (double) primaryTumor.strongAltSupport() / primaryTumor.depth() >= GERMLINE_HET_MIN_EXPECTED_VAF)
             return false;
 
         int repeatLength = primaryTumor.readContext().maxRepeatCount();
-        boolean isPanelIndelRepeat = isPanelIndelRepeatVariant(
-                primaryTumor.tier(), primaryTumor.phredQual(), primaryTumor.variant().isIndel(), repeatLength);
+
+        boolean isPanelIndelRepeat;
+
+        if(isGermline)
+        {
+            isPanelIndelRepeat = false;
+        }
+        else
+        {
+            isPanelIndelRepeat = isPanelIndelRepeatVariant(
+                    primaryTumor.tier(), primaryTumor.phredQual(), primaryTumor.variant().isIndel(), repeatLength);
+        }
+
+        double strandBiasThresholdAdjustment = 0;
+
+        if(isGermline)
+        {
+            double altStrandBias = primaryTumor.readStrandBiasAlt().bias();
+            double nonAltStrandBias = primaryTumor.readStrandBiasNonAlt().bias();
+
+            double lowerVafLimit = GERMLINE_HET_MIN_EXPECTED_VAF;
+            double upperVafLimit = 1 - GERMLINE_HET_MIN_EXPECTED_VAF;
+
+            strandBiasThresholdAdjustment = GERMLINE_STRAND_BIAS_ADJUST;
+
+            if(altStrandBias < lowerVafLimit)
+            {
+                if(nonAltStrandBias >= lowerVafLimit)
+                {
+                    strandBiasThresholdAdjustment += (lowerVafLimit - altStrandBias) * GERMLINE_STRAND_BIAS_ADJUST_FACTOR;
+                }
+            }
+            else if(altStrandBias > upperVafLimit)
+            {
+                if(nonAltStrandBias <= upperVafLimit)
+                {
+                    strandBiasThresholdAdjustment += (altStrandBias - upperVafLimit) * GERMLINE_STRAND_BIAS_ADJUST_FACTOR;
+                }
+            }
+        }
+
+        /* for germline, calculate an offset to add to the threshold that we test read core homopolymer quals against based on the variant's strand bias.
+            it starts at 5, and increases by 5 per 0.1 pts the alt RSB is below 40% or above 60%.
+            if the alt and non-alt RSBs are both <40% or >60% we just keep the basic offset of 5. some examples:
+            non-alt RSB 0.45, alt RSB 0.3 -> offset = 5 + 50 * (0.4 - 0.3) = 10
+            non-alt RSB 0.35, alt RSB 0.3 -> offset = 5
+            non-alt RSB 0.35, alt RSB 0.8 -> offset = 5 + 50 * (0.8 - 0.6) = 15
+        */
 
         for(int i = 0; i < homopolymerLengths.size(); i++)
         {
@@ -429,13 +474,14 @@ public final class UltimaUtils
                     threshold -= HP_THRESHOLD_NON_INDEL_DEDUCTION;
             }
 
+            threshold += strandBiasThresholdAdjustment;
+
             if(primaryTumor.qualCache().isMsiSampleAndVariant() && primaryTumor.readContext().MaxRepeat != null
             &&primaryTumor.readContext().MaxRepeat.repeatLength() == 1 && repeatLength >= MSI_SAMPLE_REPEAT_LENGTH_MAX
             && primaryTumor.variant().indelLengthAbs() > 1 && length >= MSI_SAMPLE_REPEAT_LENGTH_MAX)
             {
                 continue;
             }
-
 
             double avgQual = ultimaData.homopolymerAvgQuals().get(i);
 

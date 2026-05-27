@@ -91,8 +91,12 @@ public class SampleGermlineGeneTask implements Callable<Void>
 
             for(ObservedRegion region : entry.getValue())
             {
-                if(region.germlineStatus() != HOM_DELETION && region.germlineStatus() != HET_DELETION && region.germlineStatus() != AMPLIFICATION)
+                if(region.germlineStatus() != HOM_DELETION
+                && region.germlineStatus() != HET_DELETION
+                && region.germlineStatus() != AMPLIFICATION)
+                {
                     continue;
+                }
 
                 // find the overlapping / matching copy number region
                 PurpleCopyNumber matchedCopyNumber = copyNumbers.stream()
@@ -190,64 +194,4 @@ public class SampleGermlineGeneTask implements Callable<Void>
         }
     }
 }
-class GeneAmplification
-{
-    private final int totalExonCount;
-    private final int overlappingExonCount;
-    private final boolean overlapsFirstExon;
-    private final boolean overlapsLastExon;
 
-    GeneAmplification(List<ExonData> allExons, int start, int end)
-    {
-        Preconditions.checkArgument(!allExons.isEmpty());
-        Preconditions.checkArgument(start < end);
-
-        totalExonCount = allExons.size();
-        List<ExonData> overlappingExons = allExons.stream().filter(x -> positionsOverlap(x.Start, x.End, start, end)).toList();
-        overlappingExonCount = overlappingExons.size();
-
-        if (overlappingExonCount > 0)
-        {
-            overlapsFirstExon = overlappingExons.get(0).equals(allExons.get(0));
-            overlapsLastExon = overlappingExons.get(overlappingExonCount - 1).equals(allExons.get(totalExonCount - 1));
-        }
-        else
-        {
-            overlapsFirstExon = false;
-            overlapsLastExon = false;
-        }
-    }
-
-    public boolean isCompleteAmplification()
-    {
-        return overlappingExonCount == totalExonCount;
-    }
-
-    public boolean isOfInterest()
-    {
-        if (overlappingExonCount == 0)
-        {
-            return false;
-        }
-        if (isCompleteAmplification())
-        {
-            return true;
-        }
-        return !overlapsFirstExon && !overlapsLastExon;
-    }
-
-    public boolean isTailAmplification()
-    {
-        return overlappingExonCount > 0 && !isCompleteAmplification() && overlapsLastExon;
-    }
-
-    public boolean isHeadAmplification()
-    {
-        return overlappingExonCount > 0 && !isCompleteAmplification() && overlapsFirstExon;
-    }
-
-    public int numberOfAffectedExons()
-    {
-        return overlappingExonCount;
-    }
-}

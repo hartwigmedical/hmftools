@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.compar.common;
 
-import static com.hartwig.hmftools.compar.ComparConfig.NEW_SOURCE;
-import static com.hartwig.hmftools.compar.ComparConfig.REF_SOURCE;
 import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonChromosome;
 import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonGenomePosition;
+import static com.hartwig.hmftools.compar.common.SourceType.NEW;
+import static com.hartwig.hmftools.compar.common.SourceType.OLD;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -41,13 +41,13 @@ public class CommonUtilsTest
         GenomeLiftoverCache lifoverCache = new GenomeLiftoverCache(true);
 
         assertEquals(new BasePosition("8", 10000),
-                determineComparisonGenomePosition("8", 10000, REF_SOURCE, false, lifoverCache));
+                determineComparisonGenomePosition("8", 10000, OLD, false, lifoverCache));
         assertEquals(new BasePosition("chr10", 10000),
-                determineComparisonGenomePosition("chr10", 10000, REF_SOURCE, false, lifoverCache));
+                determineComparisonGenomePosition("chr10", 10000, OLD, false, lifoverCache));
         assertEquals(new BasePosition("X", 10000),
-                determineComparisonGenomePosition("X", 10000, NEW_SOURCE, false, lifoverCache));
+                determineComparisonGenomePosition("X", 10000, NEW, false, lifoverCache));
         assertEquals(new BasePosition("chr3", 10000),
-                determineComparisonGenomePosition("chr3", 10000, NEW_SOURCE, false, lifoverCache));
+                determineComparisonGenomePosition("chr3", 10000, NEW, false, lifoverCache));
     }
 
     @Test
@@ -57,13 +57,13 @@ public class CommonUtilsTest
 
         assertTrue(lifoverCache.hasMappings());
         assertEquals(new BasePosition("chr8", 150000),
-                determineComparisonGenomePosition("8", 100000, REF_SOURCE, true, lifoverCache));
+                determineComparisonGenomePosition("8", 100000, OLD, true, lifoverCache));
         assertEquals(new BasePosition("chr10", 100000),
-                determineComparisonGenomePosition("chr10", 100000, REF_SOURCE, true, lifoverCache));
+                determineComparisonGenomePosition("chr10", 100000, OLD, true, lifoverCache));
         assertEquals(new BasePosition("X", 100000),
-                determineComparisonGenomePosition("X", 100000, NEW_SOURCE, true, lifoverCache));
+                determineComparisonGenomePosition("X", 100000, NEW, true, lifoverCache));
         assertEquals(new BasePosition("3", 141683),
-                determineComparisonGenomePosition("chr3", 100000, NEW_SOURCE, true, lifoverCache));
+                determineComparisonGenomePosition("chr3", 100000, NEW, true, lifoverCache));
     }
 
     @Test

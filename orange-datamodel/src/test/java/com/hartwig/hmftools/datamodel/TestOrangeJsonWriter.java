@@ -12,6 +12,7 @@ import com.hartwig.hmftools.datamodel.cuppa.CuppaMode;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
 import com.hartwig.hmftools.datamodel.cuppa.ImmutableCuppaData;
 import com.hartwig.hmftools.datamodel.cuppa.ImmutableCuppaPrediction;
+import com.hartwig.hmftools.datamodel.driver.DriverCategory;
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
 import com.hartwig.hmftools.datamodel.flagstat.ImmutableFlagstat;
@@ -29,6 +30,7 @@ import com.hartwig.hmftools.datamodel.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
+import com.hartwig.hmftools.datamodel.linx.LinxDriverType;
 import com.hartwig.hmftools.datamodel.linx.LinxFusionType;
 import com.hartwig.hmftools.datamodel.linx.LinxGeneOrientation;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
@@ -168,6 +170,7 @@ public class TestOrangeJsonWriter
                         .reportedStatus(ReportedStatus.REPORTED)
                         .driverInterpretation(DriverInterpretation.HIGH)
                         .isCanonical(false)
+                        .category(DriverCategory.ONCO)
                         .build();
 
         PurpleDriver deletionDriver = ImmutablePurpleDriver.builder()
@@ -179,6 +182,7 @@ public class TestOrangeJsonWriter
                         .reportedStatus(ReportedStatus.REPORTED)
                         .driverInterpretation(DriverInterpretation.HIGH)
                         .isCanonical(false)
+                        .category(DriverCategory.TSG)
                         .build();
 
         PurpleVariant somaticVariant = ImmutablePurpleVariant.builder()
@@ -223,6 +227,7 @@ public class TestOrangeJsonWriter
                 .position(41209068)
                 .ref("C")
                 .alt("T")
+                .driverLikelihood(0.8)
                 .worstCodingEffect(PurpleCodingEffect.SPLICE)
                 .variantCopyNumber(1.0)
                 .minorAlleleCopyNumber(0.8)
@@ -248,7 +253,8 @@ public class TestOrangeJsonWriter
                         .codingEffect(PurpleCodingEffect.SPLICE)
                         .reported(true)
                         .build())
-                .plotFilename(null)
+                .clinvarPathogenicity("PATHOGENIC")
+                .gnomadFrequency(0.001)
                 .build();
 
 
@@ -291,6 +297,7 @@ public class TestOrangeJsonWriter
                         .reportedStatus(ReportedStatus.REPORTED)
                         .driverInterpretation(DriverInterpretation.LOW)
                         .isCanonical(false)
+                        .category(DriverCategory.TSG)
                         .build()))
                 .somaticVariants(List.of(somaticVariant))
                 .germlineVariants(List.of(germlineVariant))
@@ -300,14 +307,15 @@ public class TestOrangeJsonWriter
                         .chromosomeBand("q2.2")
                         .minCopyNumber(0.1)
                         .maxCopyNumber(1.2)
-                        .relativeCopyNumber(1.2)
+                        .relativeCopyNumber(0.1)
                         .minMinorAlleleCopies(0.1)
                         .geneRange("FULL")
                         .exonStart(null)
                         .exonEnd(null)
-                        .tpm(null)
-                        .tpmPercentile(null)
-                        .tpmFoldChange(null)
+                        .tpm(0.0)
+                        .tpmPercentile(0.0)
+                        .tpmFoldChange(0.0)
+                        .armCopyNumber(1.0)
                         .build()))
                 .build();
     }
@@ -320,8 +328,10 @@ public class TestOrangeJsonWriter
                 .disruptive(false)
                 .id(0)
                 .svId(1)
+                .clusterId(0)
                 .gene("NF1")
                 .chromosome("1")
+                .position(1000)
                 .chromosomeBand("p12")
                 .transcript("trans")
                 .isCanonical(true)
@@ -335,6 +345,8 @@ public class TestOrangeJsonWriter
                 .orientation(-1)
                 .regionType(TranscriptRegionType.EXONIC)
                 .codingType(TranscriptCodingType.UTR_3P)
+                .driverType(LinxDriverType.HOM_DUP_DISRUPTION)
+                .driverLikelihood(1.0)
                 .build();
 
         return ImmutableLinxRecord.builder()
@@ -344,6 +356,7 @@ public class TestOrangeJsonWriter
                         .fusedExonUp(1)
                         .fusedExonDown(2)
                         .geneUp("TMPRSS2")
+                        .clusterId(0)
                         .transcriptUp("ENST00000332149")
                         .contextUp("Exon 1")
                         .geneDown("ETV4")

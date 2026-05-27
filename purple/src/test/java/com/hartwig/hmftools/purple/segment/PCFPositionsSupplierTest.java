@@ -48,8 +48,8 @@ public class PCFPositionsSupplierTest
     public void amberEmpty()
     {
         mCobaltData.Ratios.put(chr, List.of(createCobaltRatio(chr, 1000, 0.5, 0.5)));
-        mCobaltData.TumorSegments.put(chr, pos(TUMOR_RATIO, 10_000));
-        mCobaltData.ReferenceSegments.put(chr, pos(REFERENCE_RATIO, 100_000));
+        mCobaltData.TumorSegments.put(chr, List.of(pos(TUMOR_RATIO, 10_000)));
+        mCobaltData.ReferenceSegments.put(chr, List.of(pos(REFERENCE_RATIO, 100_000)));
 
         List<PCFPosition> positions = createPositions();
         assertEquals(2, positions.size());
@@ -60,8 +60,8 @@ public class PCFPositionsSupplierTest
     @Test
     public void cobaltRatioCommonToTumorAndReference()
     {
-        mCobaltData.ReferenceSegments.put(chr, pos(REFERENCE_RATIO, 5000));
-        mCobaltData.TumorSegments.put(chr, pos(TUMOR_RATIO, 5000));
+        mCobaltData.ReferenceSegments.put(chr, List.of(pos(REFERENCE_RATIO, 5000)));
+        mCobaltData.TumorSegments.put(chr, List.of(pos(TUMOR_RATIO, 5000)));
 
         List<PCFPosition> positions = createPositions();
         assertEquals(1, positions.size());
@@ -75,8 +75,7 @@ public class PCFPositionsSupplierTest
     @Test
     public void cobaltEmpty()
     {
-        mAmberData.TumorSegments.put(chr, pos(TUMOR_RATIO, 5000));
-        mAmberData.TumorSegments.put(chr, pos(TUMOR_RATIO, 6000));
+        mAmberData.TumorSegments.put(chr, List.of(pos(TUMOR_RATIO, 5000), pos(TUMOR_RATIO, 6000)));
         List<PCFPosition> positions = createPositions();
         assertEquals(2, positions.size());
         checkPcfPosition(positions.get(0), TUMOR_RATIO, 5000);
@@ -86,9 +85,9 @@ public class PCFPositionsSupplierTest
     @Test
     public void amberAndCobaltHaveData()
     {
-        mAmberData.TumorSegments.put(chr, pos(TUMOR_RATIO, 1000));
-        mCobaltData.TumorSegments.put(chr, pos(TUMOR_RATIO, 10_000));
-        mCobaltData.ReferenceSegments.put(chr, pos(REFERENCE_RATIO, 100_000));
+        mAmberData.TumorSegments.put(chr, List.of(pos(TUMOR_RATIO, 1000)));
+        mCobaltData.TumorSegments.put(chr, List.of(pos(TUMOR_RATIO, 10_000)));
+        mCobaltData.ReferenceSegments.put(chr, List.of(pos(REFERENCE_RATIO, 100_000)));
 
         List<PCFPosition> positions = createPositions();
         assertEquals(3, positions.size());

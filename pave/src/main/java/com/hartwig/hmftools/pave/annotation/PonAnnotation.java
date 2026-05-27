@@ -32,7 +32,7 @@ public class PonAnnotation extends AnnotationData implements Callable<Void>
     public String type() { return "PON"; }
 
     @Override
-    public boolean enabled() { return mPonFilename != null; }
+    public boolean enabled() { return mPonFilename != null && !mPonFilename.isEmpty(); }
 
     @Override
     public boolean hasValidData() { return mPonCache.hasValidData(); }

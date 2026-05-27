@@ -35,7 +35,7 @@ public class FoldbackFinder
         boolean foundAnyFoldback = false;
 
         // find all valid consecutive breakends formed either from a single SV or a chained set
-        for(final Map.Entry<String, List<SvBreakend>> entry : chrBreakendMap.entrySet())
+        for(Map.Entry<String, List<SvBreakend>> entry : chrBreakendMap.entrySet())
         {
             List<SvBreakend> breakendList = entry.getValue();
 
@@ -178,7 +178,7 @@ public class FoldbackFinder
             if(chain != null)
             {
                 int bndLinks = 0;
-                for(final LinkedPair pair : chain.getLinkedPairs())
+                for(LinkedPair pair : chain.getLinkedPairs())
                 {
                     if(pair.first() == varEnd && pair.second().type() == BND)
                         ++bndLinks;

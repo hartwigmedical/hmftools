@@ -244,7 +244,7 @@ public class SvCluster
 
         if(requireConsistency)
         {
-            for(final SvChain chain : mChains)
+            for(SvChain chain : mChains)
             {
                 if(!chain.isConsistent(requireConsistency))
                     return false;
@@ -329,7 +329,7 @@ public class SvCluster
 
     private void addVariantLists(final SvCluster other)
     {
-        for(final SvVarData var : other.getSVs())
+        for(SvVarData var : other.getSVs())
         {
             addVariant(var);
         }
@@ -542,10 +542,10 @@ public class SvCluster
         mShortTIRemoteSVs.clear();
         mUnlinkedRemoteSVs.clear();
 
-        for(final SvChain chain : mChains)
+        for(SvChain chain : mChains)
         {
             // any pair of remote SVs which don't form a short TI are fair game
-            for(final LinkedPair pair : chain.getLinkedPairs())
+            for(LinkedPair pair : chain.getLinkedPairs())
             {
                 if(pair.first().isCrossArm() && pair.second().isCrossArm() && pair.baseLength() <= SHORT_TI_LENGTH)
                 {
@@ -589,7 +589,7 @@ public class SvCluster
         double minSvJcn = -1;
         int maxAssembledMultiple = 1; // the highest multiple of a breakend linked to other assembled breakends
 
-        for(final SvVarData var : mSVs)
+        for(SvVarData var : mSVs)
         {
             int svJcn = var.getImpliedJcn();
             maxAssembledMultiple = max(maxAssembledMultiple, var.getMaxAssembledBreakend());
@@ -712,9 +712,9 @@ public class SvCluster
         // moves assembly and unique inferred linked pairs which are used in chains to a set of 'final' linked pairs
         mLinkedPairs.clear();
 
-        for(final SvChain chain : mChains)
+        for(SvChain chain : mChains)
         {
-            for(final LinkedPair pair : chain.getLinkedPairs())
+            for(LinkedPair pair : chain.getLinkedPairs())
             {
                 if(mLinkedPairs.stream().anyMatch(x -> x.matches(pair)))
                     continue;
@@ -728,7 +728,7 @@ public class SvCluster
 
     public final SvChain findChain(final SvVarData var)
     {
-        for(final SvChain chain : mChains)
+        for(SvChain chain : mChains)
         {
             if(chain.getSvIndex(var) >= 0)
                 return chain;

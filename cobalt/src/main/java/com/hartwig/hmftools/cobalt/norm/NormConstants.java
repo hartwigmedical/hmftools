@@ -10,4 +10,6 @@ public class NormConstants
     public static final double MAPPABILITY_THRESHOLD = MIN_MAPPABLE_PERCENTAGE;
 
     public static final double MIN_ENRICHMENT_RATIO = 0.1;
+
+    public static final double MIN_ADJACENT_ENRICHMENT_RATIO = 0.15;
 }

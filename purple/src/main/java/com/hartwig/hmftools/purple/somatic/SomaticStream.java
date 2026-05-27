@@ -284,9 +284,8 @@ public class SomaticStream
             mTmb = mTumorMutationalLoad.burden() / MB_PER_GENOME;
         }
 
-        PPL_LOGGER.info(String.format("load(%.1f tml=%.4f) msiIndels(%d perMb=%.4f) burden(%.1f perMb=%.4f)",
-                mTumorMutationalLoad.load(), mTml, mMicrosatelliteIndels.msiIndelCount(), mMsiIndelPerMb,
-                mTumorMutationalLoad.burden(), mTmb));
+        PPL_LOGGER.info(String.format("load(tml=%.4f) msiIndels(%d perMb=%.4f) burden(%.1f perMb=%.4f)",
+                mTml, mMicrosatelliteIndels.msiIndelCount(), mMsiIndelPerMb, mTumorMutationalLoad.burden(), mTmb));
     }
 
     private void checkReportability(final SomaticVariant variant)

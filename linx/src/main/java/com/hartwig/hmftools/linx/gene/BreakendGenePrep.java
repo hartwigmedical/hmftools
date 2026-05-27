@@ -110,7 +110,7 @@ public final class BreakendGenePrep
         final List<GeneData> matchedGenes = ensemblDataCache.findGeneRegions(chromosome, position, upstreamDistance);
 
         // now look up relevant transcript and exon information
-        for(final GeneData geneData : matchedGenes)
+        for(GeneData geneData : matchedGenes)
         {
             final List<TranscriptData> transcriptDataList = ensemblDataCache.getTranscriptDataMap().get(geneData.GeneId);
 
@@ -164,7 +164,7 @@ public final class BreakendGenePrep
                 .filter(x -> positionWithin(position, x.GeneStart, x.GeneEnd))
                 .collect(Collectors.toList());
 
-        for(final GeneData altGeneData : altMappingGenes)
+        for(GeneData altGeneData : altMappingGenes)
         {
             final List<TranscriptData> transcriptDataList = ensemblDataCache.getTranscriptDataMap().get(altGeneData.GeneId);
 

@@ -122,7 +122,7 @@ public class BreakendGeneData
             return false;
 
         // return true if the gene has a transcript such that the breakend falls into its pre-gene region
-        for(final BreakendTransData trans : mTranscripts)
+        for(BreakendTransData trans : mTranscripts)
         {
             // exclude if the position is interrupted by another splice acceptor
             if(!trans.isUpstream() && trans.hasNegativePrevSpliceAcceptorDistance())

@@ -117,7 +117,7 @@ public class PonWriter
             if(!mConfig.ExistingPonFilename.isEmpty())
                 sj.add(FLD_MULTI_PON_STATUS);
 
-            if(!mConfig.WriteFinal)
+            if(mConfig.WriteDetailed)
             {
                 sj.add("SomaticHotspot");
                 sj.add("GermlineHotspot");
@@ -154,27 +154,24 @@ public class PonWriter
                 sj.add(String.valueOf(variant.maxSampleReadCount()));
                 sj.add(String.valueOf(variant.totalReadCount()));
 
-                MultiPonStatus ponStatus = MultiPonStatus.BASE;
-
                 if(!mConfig.ExistingPonFilename.isEmpty())
                 {
-                    ponStatus = variant.multiPonStatus();
+                    MultiPonStatus ponStatus = variant.multiPonStatus();
+                    sj.add(ponStatus.toString());
                 }
 
-                sj.add(ponStatus.toString());
-
-                if(mConfig.WriteFinal)
-                {
-                    if(filterOutVariant(variant))
-                        continue;
-                }
-                else
+                if(mConfig.WriteDetailed)
                 {
                     sj.add(String.valueOf(variant.isSomaticHotspot()));
                     sj.add(String.valueOf(variant.isGermlineHotspot()));
                     sj.add(String.valueOf(variant.isClinvarPathogenic()));
                     sj.add(String.valueOf(variant.inCodingRegion()));
                     sj.add(String.valueOf(variant.repeatCount()));
+                }
+                else
+                {
+                    if(filterOutVariant(variant))
+                        continue;
                 }
 
                 mWriter.write(sj.toString());
