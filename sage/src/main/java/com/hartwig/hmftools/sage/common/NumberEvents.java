@@ -7,18 +7,12 @@ import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipLength;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.sage.SageConstants.SC_READ_EVENTS_FACTOR;
 
-import static htsjdk.samtools.util.FileExtensions.CRAM;
-
-import java.util.List;
-
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.util.SequenceUtil;
 
 public final class NumberEvents
 {
-    private static boolean RECOMPUTE_MISSING_NM = false;
-
     public static int calcAdjustedNumMutations(final SAMRecord record, final RefSequence refSequence)
     {
         int nm = getOrCalcNm(record, refSequence);
@@ -43,10 +37,7 @@ public final class NumberEvents
     {
         Object nm = record.getAttribute(NUM_MUTATONS_ATTRIBUTE);
 
-        if(nm == null && !RECOMPUTE_MISSING_NM)
-            return 0;
-
-        if(nm instanceof Integer)
+        if(nm != null && nm instanceof Integer)
             return (int)nm;
 
         int offset = refSequence.Start - 1;
