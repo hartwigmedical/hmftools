@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.common.bam;
 
 import static java.lang.Math.max;
-import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.INVALID_READ_INDEX;
@@ -12,7 +11,6 @@ import static htsjdk.samtools.CigarOperator.H;
 import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.M;
 import static htsjdk.samtools.CigarOperator.S;
-import static htsjdk.samtools.CigarOperator.X;
 
 import java.util.Collections;
 import java.util.List;
@@ -177,6 +175,20 @@ public final class CigarUtils
             return null;
 
         return record.getReadString().substring(record.getReadString().length() - rightClip);
+    }
+
+    // Soft clip or hard clip.
+    public static int leftClipLength(final Cigar cigar)
+    {
+        CigarElement firstElement = cigar.getFirstCigarElement();
+        return (firstElement != null && firstElement.getOperator().isClipping()) ? firstElement.getLength() : 0;
+    }
+
+    // Soft clip or hard clip.
+    public static int rightClipLength(final Cigar cigar)
+    {
+        CigarElement lastElement = cigar.getLastCigarElement();
+        return (lastElement != null && lastElement.getOperator().isClipping()) ? lastElement.getLength() : 0;
     }
 
     public static int getReadBoundaryPosition(
