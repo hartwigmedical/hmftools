@@ -19,13 +19,6 @@ public final class NumberEvents
 {
     private static boolean RECOMPUTE_MISSING_NM = false;
 
-    public static void setRecomputeNumMutations(final List<String> bamFiles)
-    {
-        // assumption is that CRAMs have dropped NM for compression and if missing it needs to be recomputed
-        if(bamFiles.stream().anyMatch(x -> x.endsWith(CRAM)))
-            RECOMPUTE_MISSING_NM = true;
-    }
-
     public static int calcAdjustedNumMutations(final SAMRecord record, final RefSequence refSequence)
     {
         int nm = getOrCalcNm(record, refSequence);
@@ -54,7 +47,7 @@ public final class NumberEvents
             return 0;
 
         if(nm instanceof Integer)
-            return (int) nm;
+            return (int)nm;
 
         int offset = refSequence.Start - 1;
         return SequenceUtil.calculateSamNmTag(record, refSequence.Bases, offset);

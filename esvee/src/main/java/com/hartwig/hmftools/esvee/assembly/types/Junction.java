@@ -324,6 +324,7 @@ public class Junction implements Comparable<Junction>
 
         boolean discordantOnly = false;
         boolean indelBased = false;
+        boolean hotspot = false;
 
         if(values.length >= 4)
         {
@@ -333,7 +334,12 @@ public class Junction implements Comparable<Junction>
                 indelBased = true;
         }
 
-        return new Junction(chromosome, position, orientation, discordantOnly, indelBased, false);
+        if(values.length >= 5 && values[4].equals("H"))
+        {
+            hotspot = true;
+        }
+
+        return new Junction(chromosome, position, orientation, discordantOnly, indelBased, hotspot);
     }
 
     public static void mergeJunctions(final Map<String,List<Junction>> existingMap, final Map<String,List<Junction>> newMap)

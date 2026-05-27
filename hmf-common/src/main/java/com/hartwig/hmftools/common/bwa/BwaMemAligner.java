@@ -61,6 +61,11 @@ public class BwaMemAligner implements IBwaMemAligner
         {
             return new Params(BwaMemAlignParams.DEFAULT, false, 0, threads, null);
         }
+
+        public static Params basicDefaults()
+        {
+            return basicDefaults(1);
+        }
     }
 
     public BwaMemAligner(final BwaMemIndex index, final Params params)
@@ -204,7 +209,7 @@ public class BwaMemAligner implements IBwaMemAligner
                 // subsequently a silly issue with ByteBuffer being limited to 2^31 bytes).
                 // We don't have much control over this issue since the number of alignments produced can't be predicted or tightly controlled.
                 // Further, modifying the wrapper code is a pain.
-                // So instead we will catch the error and shrink the sequence set, hopefully reducing the allocation to an acceptable size.
+                // So instead, we will catch the error and shrink the sequence set, hopefully reducing the allocation to an acceptable size.
                 int newBatchSize = batchSize / 10;
                 if(newBatchSize >= 1)
                 {

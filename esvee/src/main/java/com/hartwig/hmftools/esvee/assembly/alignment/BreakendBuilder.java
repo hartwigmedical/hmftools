@@ -126,6 +126,13 @@ public class BreakendBuilder
                 if(svType == DEL || svType == DUP || svType == INS)
                 {
                     int svLength = assemblyLink.length();
+
+                    if(svLength == 0 && assemblyLink.insertedBases().length() > 0) // same-base DUP/INS, change implied Cigar insert length
+                    {
+                        svLength = assemblyLink.insertedBases().length();
+                        svType = INS;
+                    }
+
                     CigarElement specificIndel = new CigarElement(svLength, svType == DEL ? D : I);
                     indelCoords = IndelCoords.findMatchingIndelCoords(alignment.positionStart(), alignment.cigarElements(), specificIndel);
                 }

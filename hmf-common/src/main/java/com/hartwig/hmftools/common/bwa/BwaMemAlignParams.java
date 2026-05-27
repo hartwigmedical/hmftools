@@ -33,7 +33,8 @@ public record BwaMemAlignParams(
 {
     public BwaMemAlignParams
     {
-        if(matchReward < 1 || mismatchPenalty < 0 || uncertainBasePenalty < 0 || gapOpenPenalty < 0 || gapExtendPenalty < 0 || clipPenalty < 0)
+        if(matchReward < 1 || mismatchPenalty < 0 || uncertainBasePenalty < 0 || gapOpenPenalty < 0 || gapExtendPenalty < 0
+                || clipPenalty < 0)
         {
             throw new IllegalArgumentException("Invalid rewards/penalties");
         }

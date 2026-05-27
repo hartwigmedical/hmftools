@@ -32,7 +32,7 @@ public class GeneRegionFilters
     public final SpecificRegions SpecificChrRegions;
 
     public final List<String> RestrictedGeneIds; // limit expression analysis to a set of panel genes
-    public final List<String> EnrichedGeneIds; // genes to count by not fully process for any functional purpose
+    public final List<String> EnrichedGeneIds; // genes to count but not fully process for any functional purpose
     public final List<ChrBaseRegion> ExcludedRegions;
 
     public final List<ChrBaseRegion> ImmuneGeneRegions;

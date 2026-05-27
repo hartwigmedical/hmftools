@@ -80,13 +80,13 @@ public class ChimericReadTest
         chimericRT.addChimericReadPair(read1, read2);
         chimericRT.postProcessChimericReads(baseDepth, fragTracker);
 
-        assertEquals(1, chimericRT.getReadMap().size());
-        assertEquals(2, chimericRT.getReadMap().get(read1.Id).size());
+        assertEquals(1, chimericRT.fusionReadGroupMap().size());
+        assertEquals(2, chimericRT.fusionReadGroupMap().get(read1.Id).size());
         assertEquals(1, chimericRT.getJunctionRacGroups().junctionCount());
         assertTrue(chimericRT.getJunctionRacGroups().getJunctionGroups(ORIENT_FWD).containsKey(1100));
 
         // single read in this gene
-        chimericRT.clear();
+        chimericRT.clearData();
 
         Read read3 = createMappedRead(++readId, gc1, 1081, 1100, createCigar(0, 20, 20));
         read3.setSuppAlignment(TEST_SUPP_DATA);
@@ -101,7 +101,7 @@ public class ChimericReadTest
 
         chimericRT.postProcessChimericReads(baseDepth, fragTracker);
 
-        assertEquals(1, chimericRT.getReadMap().size());
+        assertEquals(1, chimericRT.fusionReadGroupMap().size());
         assertEquals(1, chimericRT.getJunctionRacGroups().fragmentCount());
         assertEquals(1, chimericRT.getJunctionRacGroups().junctionCount());
         assertTrue(chimericRT.getJunctionRacGroups().getJunctionGroups(ORIENT_FWD).containsKey(1100));
@@ -145,11 +145,11 @@ public class ChimericReadTest
         chimericRT.addChimericReadPair(read1, read2);
         chimericRT.postProcessChimericReads(baseDepth, fragTracker);
 
-        assertTrue(chimericRT.getReadMap().isEmpty());
+        assertTrue(chimericRT.fusionReadGroupMap().isEmpty());
         assertEquals(1, chimericRT.getLocalChimericReads().size());
         assertTrue(chimericRT.getJunctionRacGroups().junctionCount() == 0);
 
-        chimericRT.clear();
+        chimericRT.clearData();
 
         // DEL linking 2 genes at known splice sites is considered chimeric
         read1 = createMappedRead(++readId, gc1, 1081, 10419, createCigar(0, 20, 9299, 20, 0));
@@ -162,12 +162,12 @@ public class ChimericReadTest
         chimericRT.addChimericReadPair(read1, read2);
         chimericRT.postProcessChimericReads(baseDepth, fragTracker);
 
-        assertEquals(1, chimericRT.getReadMap().size());
+        assertEquals(1, chimericRT.fusionReadGroupMap().size());
         assertEquals(2, chimericRT.getJunctionRacGroups().junctionCount());
         assertTrue(chimericRT.getJunctionRacGroups().getJunctionGroups(ORIENT_FWD).containsKey(1100));
         assertTrue(chimericRT.getJunctionRacGroups().getJunctionGroups(ORIENT_REV).containsKey(10400));
 
-        chimericRT.clear();
+        chimericRT.clearData();
         chimericRT.getJunctionRacGroups().clear(); // force a clean-up
 
         // this DEL doesn't splice at known sites
@@ -179,11 +179,11 @@ public class ChimericReadTest
         chimericRT.addChimericReadPair(read1, read2);
         chimericRT.postProcessChimericReads(baseDepth, fragTracker);
 
-        assertTrue(chimericRT.getReadMap().isEmpty());
+        assertTrue(chimericRT.fusionReadGroupMap().isEmpty());
         assertEquals(1, chimericRT.getLocalChimericReads().size());
         assertEquals(0, chimericRT.getJunctionRacGroups().junctionCount());
 
-        chimericRT.clear();
+        chimericRT.clearData();
 
         // unless the junction could be explained by a single gene, as is the case for 10500 below
         geneDataList = Lists.newArrayList(
@@ -201,11 +201,11 @@ public class ChimericReadTest
         chimericRT.addChimericReadPair(read1, read2);
         chimericRT.postProcessChimericReads(baseDepth, fragTracker);
 
-        assertTrue(chimericRT.getReadMap().isEmpty());
+        assertTrue(chimericRT.fusionReadGroupMap().isEmpty());
         assertEquals(1, chimericRT.getLocalChimericReads().size());
         assertTrue(chimericRT.getJunctionRacGroups().junctionCount() == 0);
 
-        chimericRT.clear();
+        chimericRT.clearData();
 
         // a DEL more than 500K from the gene boundary is considered chimeric
         int geneEnd = gc2.genes().stream().mapToInt(x -> x.Gene.GeneEnd).max().orElse(0);
@@ -225,7 +225,7 @@ public class ChimericReadTest
         chimericRT.addChimericReadPair(read1, read2);
         chimericRT.postProcessChimericReads(baseDepth, fragTracker);
 
-        assertEquals(1, chimericRT.getReadMap().size());
+        assertEquals(1, chimericRT.fusionReadGroupMap().size());
         assertEquals(2, chimericRT.getJunctionRacGroups().junctionCount());
         assertTrue(chimericRT.getJunctionRacGroups().getJunctionGroups(ORIENT_FWD).containsKey(10500));
         assertTrue(chimericRT.getJunctionRacGroups().getJunctionGroups(ORIENT_REV).containsKey(chimericJunc));
@@ -265,22 +265,22 @@ public class ChimericReadTest
         chimericRT.addChimericReadPair(read1, read2);
         chimericRT.postProcessChimericReads(baseDepth, fragTracker);
 
-        assertTrue(chimericRT.getReadMap().isEmpty());
+        assertTrue(chimericRT.fusionReadGroupMap().isEmpty());
         assertTrue(chimericRT.getLocalChimericReads().isEmpty());
         assertTrue(chimericRT.getJunctionRacGroups().junctionCount() == 0);
-        chimericRT.clear();
+        chimericRT.clearData();
 
         chimericRT.initialise(gc2);
         baseDepth.initialise(gc2.regionBounds());
         fragTracker.checkRead(read2);
         chimericRT.postProcessChimericReads(baseDepth, fragTracker);
 
-        assertTrue(chimericRT.getReadMap().isEmpty());
+        assertTrue(chimericRT.fusionReadGroupMap().isEmpty());
         assertTrue(chimericRT.getLocalChimericReads().isEmpty());
         assertTrue(chimericRT.getJunctionRacGroups().junctionCount() == 0);
 
         // pre and post gene reads are kept if relating to other genes / have supp alignments
-        chimericRT.clear();
+        chimericRT.clearData();
         fragTracker.clear();
         chimericRT.initialise(gc1);
         baseDepth.initialise(gc1.regionBounds());
@@ -310,11 +310,11 @@ public class ChimericReadTest
 
         chimericRT.postProcessChimericReads(baseDepth, fragTracker);
 
-        assertEquals(1, chimericRT.getReadMap().size());
-        assertTrue(chimericRT.getReadMap().containsKey(read1.Id));
-        assertFalse(chimericRT.getReadMap().containsKey(read2.Id));
-        assertFalse(chimericRT.getReadMap().containsKey(read4.Id));
-        assertFalse(chimericRT.getReadMap().containsKey(read5.Id));
+        assertEquals(1, chimericRT.fusionReadGroupMap().size());
+        assertTrue(chimericRT.fusionReadGroupMap().containsKey(read1.Id));
+        assertFalse(chimericRT.fusionReadGroupMap().containsKey(read2.Id));
+        assertFalse(chimericRT.fusionReadGroupMap().containsKey(read4.Id));
+        assertFalse(chimericRT.fusionReadGroupMap().containsKey(read5.Id));
 
         assertEquals(1, chimericRT.getLocalChimericReads().size());
         assertTrue(chimericRT.getLocalChimericReads().get(0).contains(read5));
@@ -322,7 +322,7 @@ public class ChimericReadTest
         assertTrue(chimericRT.getJunctionRacGroups().getJunctionGroups(ORIENT_FWD).containsKey(500));
         assertFalse(chimericRT.getJunctionRacGroups().getJunctionGroups(ORIENT_REV).containsKey(2000));
 
-        chimericRT.clear();
+        chimericRT.clearData();
         fragTracker.clear();
         chimericRT.initialise(gc2);
         baseDepth.initialise(gc2.regionBounds());
@@ -333,9 +333,9 @@ public class ChimericReadTest
 
         chimericRT.postProcessChimericReads(baseDepth, fragTracker);
 
-        assertEquals(2, chimericRT.getReadMap().size());
-        assertTrue(chimericRT.getReadMap().containsKey(read2.Id));
-        assertTrue(chimericRT.getReadMap().containsKey(read4.Id));
+        assertEquals(2, chimericRT.fusionReadGroupMap().size());
+        assertTrue(chimericRT.fusionReadGroupMap().containsKey(read2.Id));
+        assertTrue(chimericRT.fusionReadGroupMap().containsKey(read4.Id));
         assertTrue(chimericRT.getLocalChimericReads().isEmpty());
     }
 
@@ -392,10 +392,10 @@ public class ChimericReadTest
 
         chimericRT.postProcessChimericReads(baseDepth, fragTracker);
 
-        assertEquals(2, chimericRT.getReadMap().size());
+        assertEquals(2, chimericRT.fusionReadGroupMap().size());
         assertEquals(4, chimericRT.getJunctionRacGroups().junctionCount());
 
-        chimericRT.clear();
+        chimericRT.clearData();
         chimericRT.initialise(gc2);
         baseDepth.initialise(gc2.regionBounds());
 
@@ -409,11 +409,11 @@ public class ChimericReadTest
 
         chimericRT.postProcessChimericReads(baseDepth, fragTracker);
 
-        assertEquals(0, chimericRT.getReadMap().size());
+        assertEquals(0, chimericRT.fusionReadGroupMap().size());
         assertEquals(0, chimericRT.getJunctionRacGroups().junctionCount());
 
         // same again with the 3rd gene
-        chimericRT.clear();
+        chimericRT.clearData();
         chimericRT.initialise(gc3);
         baseDepth.initialise(gc3.regionBounds());
 
@@ -426,7 +426,7 @@ public class ChimericReadTest
 
         chimericRT.postProcessChimericReads(baseDepth, fragTracker);
 
-        assertEquals(0, chimericRT.getReadMap().size());
+        assertEquals(0, chimericRT.fusionReadGroupMap().size());
         assertEquals(0, chimericRT.getJunctionRacGroups().junctionCount());
     }
 
