@@ -244,6 +244,14 @@ public class SagaMatcher
             return null;
         }
 
+        boolean isForward = !SamRecordUtils.isFlagSet(alignment.getSamFlag(), SAMFlag.READ_REVERSE_STRAND);
+
+        // ESVEE assemblies are implied as forward strand and so are SAGA assemblies, so there should never be a reverse strand match.
+        if(!isForward)
+        {
+            return null;
+        }
+
         Cigar cigar = cigarFromStr(alignment.getCigar());
         int leftClip = leftClipLength(cigar);
         int rightClip = rightClipLength(cigar);
@@ -257,14 +265,13 @@ public class SagaMatcher
             return null;
         }
 
-        boolean isForward = !SamRecordUtils.isFlagSet(alignment.getSamFlag(), SAMFlag.READ_REVERSE_STRAND);
         int startClip = isForward ? leftClip : rightClip;
         int endClip = isForward ? rightClip : leftClip;
         int seqStart = startClip;
         int seqEnd = sequence.length - endClip;
 
         // The novel sequence created by the variant junction needs to be included in the alignment.
-        // Otherwise we could align onto the surrounding ref bases which could be similar, but the variant is not the same.
+        // Otherwise, we could align onto the surrounding ref bases which could be similar, but the variant is different.
         List<List<Integer>> seqJunctionOverlaps =
                 seqJunctionOffsets.stream().map(offset -> calcJunctionOverlap(seqStart, seqEnd, offset)).toList();
         if(!isJunctionOverlapOk(seqJunctionOverlaps))
