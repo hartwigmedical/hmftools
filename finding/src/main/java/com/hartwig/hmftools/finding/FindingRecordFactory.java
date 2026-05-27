@@ -87,6 +87,7 @@ import org.jetbrains.annotations.Nullable;
 // various part of the orange record
 public class FindingRecordFactory
 {
+    @SuppressWarnings("unused")
     public static FindingRecord fromOrangeJsonWithTranscriptFile(Path orangeJson, @Nullable Path clinicalTranscriptsTsv) throws IOException
     {
         try(Reader reader = Files.newBufferedReader(orangeJson))
@@ -229,9 +230,9 @@ public class FindingRecordFactory
     private static FindingList<ChromosomeArmCopyNumber> createChromosomeArmCopyNumber(
             PurpleRecord purple, FindingStatus findingStatus)
     {
-        return new FindingList<>(
-                findingStatus,
-                purple.armCopyNumberAbberations().stream()
+        return FindingListBuilder.<ChromosomeArmCopyNumber>builder()
+                .status(findingStatus)
+                .findings(purple.armCopyNumberAbberations().stream()
                         .map(o -> {
                             DriverInterpretation driverInterpretation = DriverUtil.convert(o.driverInterpretation());
                             return ChromosomeArmCopyNumberBuilder.builder()
@@ -258,7 +259,8 @@ public class FindingRecordFactory
                                 .relativeCopyNumber(o.relativeCopyNumber())
                                 .build();
                         })
-                        .toList());
+                        .toList())
+                .build();
     }
 
     private static FindingItem<PredictedTumorOrigin> createPredictedTumorOrigin(@Nullable CuppaData cuppa, OrangePlots orangePlots,

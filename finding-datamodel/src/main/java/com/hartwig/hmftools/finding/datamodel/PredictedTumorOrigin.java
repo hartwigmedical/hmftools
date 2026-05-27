@@ -36,7 +36,7 @@ public record PredictedTumorOrigin(
     {
     }
 
-    public PredictedTumorOrigin.Prediction best()
+    public Prediction best()
     {
         return !predictions().isEmpty() ? predictions().get(0) : null;
     }
