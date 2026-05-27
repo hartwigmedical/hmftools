@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.bam.CigarUtils.cigarFromStr;
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftClipLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.rightClipLength;
 import static com.hartwig.hmftools.esvee.common.SvConstants.SAGA_ALIGN_JUNCTION_OVERLAP_MIN;
+import static com.hartwig.hmftools.esvee.common.SvConstants.SAGA_ALIGN_LENGTH_MIN_RATIO;
 import static com.hartwig.hmftools.esvee.common.SvConstants.SAGA_ALIGN_SCORE_MIN_BASELINE;
 import static com.hartwig.hmftools.esvee.common.SvConstants.SAGA_ALIGN_SCORE_MIN_RATIO;
 import static com.hartwig.hmftools.esvee.common.SvConstants.SAGA_LOCATION_MATCH_DISTANCE;
@@ -90,6 +91,7 @@ public class SagaMatcher
 
     public record MatchConfig(
             int locationDistanceMax,
+            double alignLengthRatioMin,
             int alignScoreMin,
             double alignScoreRatioMin,
             int junctionOverlapMin
@@ -97,6 +99,7 @@ public class SagaMatcher
     {
         static MatchConfig DEFAULT = new MatchConfig(
                 SAGA_LOCATION_MATCH_DISTANCE,
+                SAGA_ALIGN_LENGTH_MIN_RATIO,
                 SAGA_ALIGN_SCORE_MIN_BASELINE,
                 SAGA_ALIGN_SCORE_MIN_RATIO,
                 SAGA_ALIGN_JUNCTION_OVERLAP_MIN
@@ -252,12 +255,22 @@ public class SagaMatcher
             return null;
         }
 
+        SagaResource.AssemblyMetadata sagaAssembly = getAssemblyByContigId(alignment.getRefId());
+
         Cigar cigar = cigarFromStr(alignment.getCigar());
         int leftClip = leftClipLength(cigar);
         int rightClip = rightClipLength(cigar);
 
         int sagaAlignLength = alignment.getRefEnd() - alignment.getRefStart();
         int seqAlignLength = sequence.length - (leftClip + rightClip);
+
+        // Only match if the majority of the sequences align, where possible.
+        // I.e. don't allow a small subsequence match where much more sequence was possible to match.
+        if(!isAlignLengthOk(seqAlignLength, sagaAlignLength, sequence.length, sagaAssembly.assemblyLength()))
+        {
+            return null;
+        }
+
         int minAlignScore = calcMinAlignScore(sagaAlignLength, seqAlignLength);
         // Low alignment score means low sequence similarity, so we think this is not a good match.
         if(alignment.getAlignerScore() < minAlignScore)
@@ -279,8 +292,6 @@ public class SagaMatcher
             return null;
         }
 
-        SagaResource.AssemblyMetadata sagaAssembly = getAssemblyByContigId(alignment.getRefId());
-
         List<List<Integer>> sagaJunctionOverlaps = sagaAssembly.junctionOffsets()
                 .stream()
                 .map(offset -> calcJunctionOverlap(alignment.getRefStart(), alignment.getRefEnd(), offset))
@@ -291,6 +302,17 @@ public class SagaMatcher
         }
 
         return new AlignmentCandidate(sagaAssembly.variant(), cigar, alignment.getAlignerScore(), seqJunctionOverlaps, sagaJunctionOverlaps);
+    }
+
+    private boolean isAlignLengthOk(int seqAlignLength, int sagaAlignLength, int seqAssemblyLength, int sagaAssemblyLength)
+    {
+        int minAlignLength = calcMinAlignLength(seqAssemblyLength, sagaAssemblyLength);
+        return min(seqAlignLength, sagaAlignLength) >= minAlignLength;
+    }
+
+    private int calcMinAlignLength(int assemblyLength1, int assemblyLength2)
+    {
+        return (int) ceil(min(assemblyLength1, assemblyLength2) * mMatchConfig.alignLengthRatioMin);
     }
 
     private int calcMinAlignScore(int alignLength1, int alignLength2)
