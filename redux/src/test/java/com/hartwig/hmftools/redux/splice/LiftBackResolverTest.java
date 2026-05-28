@@ -29,7 +29,7 @@ public class LiftBackResolverTest
     private static ContigEntry threeExonContig()
     {
         return new ContigEntry(
-                TX_CONTIG, 1, 250, GENE_ID, GENE_NAME, TRANS_NAME, CHR_1,
+                TX_CONTIG, 1, 250, GENE_ID, GENE_NAME, TRANS_NAME, CHR_1, 1,
                 List.of(new BaseRegion(100, 199), new BaseRegion(300, 399), new BaseRegion(500, 549)));
     }
 
@@ -218,7 +218,7 @@ public class LiftBackResolverTest
         //  not in our map so it's treated as ref — defeats the test. Simulate with two different lifted positions
         //  of two Tx alts. Since our map only has one contig, instead build a multi-contig test:)
         ContigEntry entryB = new ContigEntry(
-                "ensG_OTHER_T", 1, 100, "GO", "OTHER", "TO", "chr5",
+                "ensG_OTHER_T", 1, 100, "GO", "OTHER", "TO", "chr5", 1,
                 List.of(new BaseRegion(2000, 2099)));
         List<ContigEntry> twoContigs = List.of(threeExonContig(), entryB);
 
@@ -560,4 +560,164 @@ public class LiftBackResolverTest
         assertEquals(1, stats.categoryCount(LiftBackCategory.UNMAPPED));
     }
 
+    // covers the -emit_secondaries case where bwa-mem2 -a reports the same junction across many
+    // transcript contigs and the lifter collapses them onto one chr1 locus. numLoci must reflect the
+    // deduped genomic-locus count (1), not the secondary-record count, because NH is derived from it.
+    @Test
+    public void testNumLociDedupesIdenticalLiftedSecondaries()
+    {
+        // primary on tx contig spanning exon1 -> exon2; lifts to chr1:150 50M100N50M
+        SAMRecord primary = newRecord(TX_CONTIG, 51, "100M");
+
+        // four secondaries representing the same tx-contig junction emitted via -a; all lift to the
+        // identical genomic locus as the primary. numLoci should still be 1.
+        SAMRecord sec1 = newRecord(TX_CONTIG, 51, "100M");
+        SAMRecord sec2 = newRecord(TX_CONTIG, 51, "100M");
+        SAMRecord sec3 = newRecord(TX_CONTIG, 51, "100M");
+        SAMRecord sec4 = newRecord(TX_CONTIG, 51, "100M");
+        for(SAMRecord s : List.of(sec1, sec2, sec3, sec4))
+            s.setSecondaryAlignment(true);
+
+        LiftBackResolver resolver = new LiftBackResolver(contigMap(), true);
+        LiftBackResult result = resolver.resolvePrimaryWithSecondaries(primary, List.of(sec1, sec2, sec3, sec4));
+
+        assertEquals(CHR_1, result.finalChrom());
+        assertEquals(150, result.finalPos());
+        assertEquals("50M100N50M", result.finalCigar());
+        assertEquals(1, result.numLoci());
+    }
+
+    // when the -a secondaries genuinely land at distinct genomic loci (paralog / repeat), numLoci
+    // tracks the distinct count.
+    @Test
+    public void testNumLociCountsDistinctLiftedLoci()
+    {
+        SAMRecord primary = newRecord(CHR_1, 1000, "150M");
+        SAMRecord sec1 = newRecord(CHR_1, 2000, "150M");
+        SAMRecord sec2 = newRecord(CHR_1, 3000, "150M");
+        sec1.setSecondaryAlignment(true);
+        sec2.setSecondaryAlignment(true);
+
+        LiftBackResolver resolver = new LiftBackResolver(contigMap(), true);
+        LiftBackResult result = resolver.resolvePrimaryWithSecondaries(primary, List.of(sec1, sec2));
+
+        assertEquals(3, result.numLoci());
+    }
+
+    // minimal in-memory ExonRegionIndex backed by reflection through the public load() path would be
+    // heavyweight; instead build a fake index against test exon coords by writing a tiny ensembl CSV
+    // pair. Wrapping these in a helper because both rescue-path tests need it.
+    private static ExonRegionIndex buildExonIndex(final List<int[]> exons) throws Exception
+    {
+        final java.nio.file.Path dir = java.nio.file.Files.createTempDirectory("exonIdxTest");
+        java.nio.file.Files.writeString(dir.resolve("ensembl_gene_data.csv"),
+                "GeneId,GeneName,Chromosome,Strand,GeneStart,GeneEnd\n"
+                        + "ENSG_TEST,TESTG," + CHR_1.replaceFirst("^chr", "") + ",1,1,100000\n");
+        final StringBuilder sb = new StringBuilder("GeneId,CanonicalTranscriptId,Strand,TransId,TransName,BioType,"
+                + "TransStart,TransEnd,ExonRank,ExonStart,ExonEnd,ExonPhase,ExonEndPhase,CodingStart,CodingEnd,RefSeqId\n");
+        int rank = 1;
+        for(int[] ex : exons)
+        {
+            sb.append("ENSG_TEST,1,1,1,ENST_TEST,protein_coding,1,100000,").append(rank++).append(",")
+                    .append(ex[0]).append(",").append(ex[1]).append(",0,0,0,0,\n");
+        }
+        java.nio.file.Files.writeString(dir.resolve("ensembl_trans_exon_data.csv"), sb.toString());
+        return ExonRegionIndex.load(dir.toString());
+    }
+
+    // hidden tie (XS==AS, no XA) on a ref-only primary inside an annotated exon: rescue MAPQ to 60.
+    // Without the exon index the tie keeps MAPQ at 0 (the historical behavior).
+    @Test
+    public void testHiddenTieInsideAnnotatedExonRescuesMapq() throws Exception
+    {
+        SAMRecord record = newRecord(CHR_1, 1500, "150M");
+        record.setMappingQuality(0);
+        record.setAttribute("AS", 151);
+        record.setAttribute("XS", 151);
+
+        // without an exon index: tie blocks the rescue
+        LiftBackResolver noIndex = new LiftBackResolver(contigMap());
+        assertEquals(0, noIndex.resolve(record).updatedMapq());
+
+        // exon covers position 1500: rescue fires
+        final ExonRegionIndex idx = buildExonIndex(List.of(new int[] { 1400, 1700 }));
+        LiftBackResolver withIndex = new LiftBackResolver(contigMap(), false, idx);
+        LiftBackResult result = withIndex.resolve(record);
+        assertEquals(60, result.updatedMapq());
+        assertEquals(LiftBackCategory.REF_SINGLE, result.category());
+    }
+
+    // hidden tie outside any annotated exon: rescue stays blocked even with an index.
+    @Test
+    public void testHiddenTieOutsideExonKeepsMapqZero() throws Exception
+    {
+        SAMRecord record = newRecord(CHR_1, 5000, "150M");
+        record.setMappingQuality(0);
+        record.setAttribute("AS", 151);
+        record.setAttribute("XS", 151);
+
+        // exon spans 1400-1700, primary at 5000 is intergenic
+        final ExonRegionIndex idx = buildExonIndex(List.of(new int[] { 1400, 1700 }));
+        LiftBackResolver resolver = new LiftBackResolver(contigMap(), false, idx);
+        assertEquals(0, resolver.resolve(record).updatedMapq());
+    }
+
+    // ===== decidePrimaryMapq policy unit tests =====
+    // Direct exercise of the extracted MAPQ policy. Independent of LiftBackDiscriminator / SAMRecord
+    // plumbing — every input that drives the policy is a parameter.
+
+    @Test
+    public void testMapqPolicy_swappedAlwaysRescues()
+    {
+        // even with an unresolved hidden tie, the swap signal is decisive
+        assertEquals(60, LiftBackResolver.decidePrimaryMapq(0, 1, true, true, false, false));
+    }
+
+    @Test
+    public void testMapqPolicy_singleLocusZeroRescues()
+    {
+        assertEquals(60, LiftBackResolver.decidePrimaryMapq(0, 1, false, false, false, false));
+    }
+
+    @Test
+    public void testMapqPolicy_hiddenTieRefPrimaryNoExonHoldsAtZero()
+    {
+        // hidden tie + ref-only primary + no exon evidence → unresolved → no rescue
+        assertEquals(0, LiftBackResolver.decidePrimaryMapq(0, 1, false, true, false, false));
+    }
+
+    @Test
+    public void testMapqPolicy_hiddenTieTxPrimaryRescues()
+    {
+        // tx provenance overrides the hidden tie
+        assertEquals(60, LiftBackResolver.decidePrimaryMapq(0, 1, false, true, true, false));
+    }
+
+    @Test
+    public void testMapqPolicy_hiddenTieInAnnotatedExonRescues()
+    {
+        // exon evidence overrides the hidden tie even on a ref-only primary
+        assertEquals(60, LiftBackResolver.decidePrimaryMapq(0, 1, false, true, false, true));
+    }
+
+    @Test
+    public void testMapqPolicy_inputSixtyPassesAsRescued()
+    {
+        // sanger cap; no-op since RESCUED_MAPQ == 60
+        assertEquals(60, LiftBackResolver.decidePrimaryMapq(60, 1, false, false, false, false));
+    }
+
+    @Test
+    public void testMapqPolicy_gradedMapqPassesThrough()
+    {
+        // mid-range MAPQ carries graded signal; leave alone
+        assertEquals(37, LiftBackResolver.decidePrimaryMapq(37, 1, false, false, false, false));
+    }
+
+    @Test
+    public void testMapqPolicy_multiLocusZeroStaysZero()
+    {
+        // numLoci > 1 means there's a real alt; honest 0 stands
+        assertEquals(0, LiftBackResolver.decidePrimaryMapq(0, 2, false, false, false, false));
+    }
 }

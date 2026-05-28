@@ -43,12 +43,22 @@ public class LiftBackResolver
     // secondaries (their MAPQ=0 is a real ambiguity signal, not the multi-alt-contig tie artefact).
     private final boolean mEmitSecondaries;
 
+    // optional annotated-exon lookup. When provided, a hidden tie (XS==AS, no XA) on a ref-only primary
+    // is overridden when the lifted primary lands inside an annotated exon — the tied alt is then
+    // almost certainly a sub-threshold intronic/intergenic paralog.
+    private final ExonRegionIndex mExonIndex;
+
     public LiftBackResolver(final List<ContigEntry> entries)
     {
-        this(entries, false);
+        this(entries, false, null);
     }
 
     public LiftBackResolver(final List<ContigEntry> entries, final boolean emitSecondaries)
+    {
+        this(entries, emitSecondaries, null);
+    }
+
+    public LiftBackResolver(final List<ContigEntry> entries, final boolean emitSecondaries, final ExonRegionIndex exonIndex)
     {
         mSegmentsByAltContig = new HashMap<>();
         for(final ContigEntry entry : entries)
@@ -57,6 +67,7 @@ public class LiftBackResolver
             segments.sort(Comparator.comparingInt(ContigEntry::altStart));
 
         mEmitSecondaries = emitSecondaries;
+        mExonIndex = exonIndex;
     }
 
     public Set<String> contigNames()
@@ -132,9 +143,28 @@ public class LiftBackResolver
             return supplementaryResult(record);
 
         if(record.isSecondaryAlignment())
-            return secondaryResult(record);
+            return nonPrimaryResult(record, NonPrimaryKind.SECONDARY);
 
         return resolvePrimary(record);
+    }
+
+    // Non-primary records (secondaries from -emit_secondaries and supplementaries from split reads)
+    // share their lift/result shape; only the MAPQ-rescue rule and failure-note string differ.
+    enum NonPrimaryKind
+    {
+        // 0x100. MAPQ=0 means real ambiguity at this locus; never rescue.
+        SECONDARY("secondary_translate_failed", false),
+        // 0x800. MAPQ=0 on a tx-contig supp is the multi-alt-contig tie artefact; rescue it.
+        SUPPLEMENTARY("supp_translate_failed", true);
+
+        final String FailureNote;
+        final boolean RescueZeroMapqOnTxContig;
+
+        NonPrimaryKind(final String failureNote, final boolean rescueZeroMapqOnTxContig)
+        {
+            FailureNote = failureNote;
+            RescueZeroMapqOnTxContig = rescueZeroMapqOnTxContig;
+        }
     }
 
     private LiftBackResult resolvePrimary(final SAMRecord record)
@@ -205,35 +235,13 @@ public class LiftBackResolver
         final int cigarsAtPrimaryLocus = countDistinctCigarsAtLocus(keptAlignments, effectivePrimary);
         final String geneIds = joinGeneIds(keptAlignments);
 
-        // MAPQ rewrite rules:
-        //  (1) input MAPQ=0 from a ref/tx tie that lifts back to one genomic locus is an artefact of the
-        //      tx-contig representation — restore to RESCUED_MAPQ so downstream tools (Isofox, redux)
-        //      don't discard as ambiguous. Also rescue when we swapped the BAM primary.
-        //  (2) input MAPQ=60 is the standard sanger cap for confident-unique placements; passes through
-        //      unchanged (no-op now that RESCUED_MAPQ == 60). STAR's NH==1 sentinel of 255 and bwa's 60
-        //      both mean "unique"; the downstream comparison treats (255, 60) as a match.
-        //  (3) input MAPQ in (0, 60) carries graded alignment-quality signal (ambiguous boundaries, low
-        //      complexity, indels near edges) that is strictly more informative than a binary sentinel —
-        //      leave it alone.
-        // Guard on (1): if the input record reports XS == AS, an equally-scoring alt is hiding (XA
-        // suppressed by the source aligner, e.g. numt / chrM paralog). The chosen primary's tx provenance
-        // overrides — a spliced-transcript match is stronger evidence than a sequence-only tie. Otherwise
-        // keep MAPQ at 0 so downstream tools see honest ambiguity.
-        // TODO extend the override: when the lifted primary falls cleanly inside an annotated exon AND
-        // the hidden tie has no XA, the tie is a sub-threshold paralog and the rescue should still fire.
-        // Needs an exon annotation index threaded into the resolver.
         final int inputMapq = record.getMappingQuality();
         final boolean swapped = effectivePrimary != self;
-        final boolean unresolvedHiddenTie = inputMapq == 0 && hasHiddenTie(record) && !effectivePrimary.fromTxContig();
-        final int updatedMapq;
-        if(swapped)
-            updatedMapq = RESCUED_MAPQ;
-        else if(numLoci == 1 && inputMapq == 0 && !unresolvedHiddenTie)
-            updatedMapq = RESCUED_MAPQ;
-        else if(inputMapq == INPUT_UNIQUE_MAPQ)
-            updatedMapq = RESCUED_MAPQ;
-        else
-            updatedMapq = inputMapq;
+        final boolean hiddenTie = inputMapq == 0 && hasHiddenTie(record);
+        final boolean inAnnotatedExon = mExonIndex != null
+                && mExonIndex.contains(effectivePrimary.LiftedChrom, effectivePrimary.LiftedPos);
+        final int updatedMapq = decidePrimaryMapq(
+                inputMapq, numLoci, swapped, hiddenTie, effectivePrimary.fromTxContig(), inAnnotatedExon);
 
         // in secondaries mode each alt is its own SAM record and will be written separately with its own
         // lifted coords. The primary record must keep self's lifted coords (not the discriminator's
@@ -252,15 +260,19 @@ public class LiftBackResolver
                 features.TxHasNCigar, features.TxSoftClipAtBoundary,
                 features.RefSoftClipped, features.RefFullMatch,
                 geneIds, outcome.note(),
+                primaryCoords.TranscriptStrand,
                 allAlignments);
     }
 
-    // secondary records (0x100) in -emit_secondaries mode are bwa-mem2's alt mappings expressed as their own
-    // records. Lift coords like a supplementary, but DO NOT apply the tx-contig MAPQ rescue: a secondary's
-    // MAPQ=0 reflects genuine ambiguity at that locus (multi-mapper), not the tied-alt-contig artefact that
-    // motivates the primary's rescue. Returns a SUPPLEMENTARY-role result so the downstream writer treats it
-    // the same way (no XA rewrite, mate fields patched from cache).
-    private LiftBackResult secondaryResult(final SAMRecord record)
+    private LiftBackResult supplementaryResult(final SAMRecord record)
+    {
+        return nonPrimaryResult(record, NonPrimaryKind.SUPPLEMENTARY);
+    }
+
+    // Shared body for secondaries (0x100, from -emit_secondaries) and supplementaries (0x800, from
+    // split reads). Lift coords, build a SUPPLEMENTARY-role result with one alignment in the set.
+    // MAPQ rescue policy is kind-dependent: see NonPrimaryKind doc.
+    LiftBackResult nonPrimaryResult(final SAMRecord record, final NonPrimaryKind kind)
     {
         final LiftedAlignment lifted = liftAlignment(
                 LiftedAlignment.AlignmentSource.SELF,
@@ -269,11 +281,13 @@ public class LiftBackResolver
                 !record.getReadNegativeStrandFlag());
 
         if(lifted == null)
-            return unliftableResult(LiftBackResult.RecordRole.SUPPLEMENTARY, 0, "secondary_translate_failed");
+            return unliftableResult(LiftBackResult.RecordRole.SUPPLEMENTARY, 0, kind.FailureNote);
 
         lifted.IsPrimaryChoice = true;
 
         final int inputMapq = record.getMappingQuality();
+        final int outputMapq = (kind.RescueZeroMapqOnTxContig && lifted.fromTxContig() && inputMapq == 0)
+                ? RESCUED_MAPQ : inputMapq;
         final int numRefAlts = lifted.fromTxContig() ? 0 : 1;
         final int numTxAlts = lifted.fromTxContig() ? 1 : 0;
 
@@ -282,66 +296,12 @@ public class LiftBackResolver
                 LiftBackResult.RecordRole.SUPPLEMENTARY,
                 lifted.LiftedChrom, lifted.LiftedPos, lifted.LiftedCigar,
                 !lifted.ForwardStrand,
-                lifted.cigarHasN(), inputMapq, inputMapq,
+                lifted.cigarHasN(), inputMapq, outputMapq,
                 0, numRefAlts, numTxAlts,
                 1, 1,
                 false, false, false, false,
                 lifted.GeneId != null ? lifted.GeneId : "", "",
-                List.of(lifted));
-    }
-
-    private static LiftedAlignment rebuildLiftedWithCigar(final LiftedAlignment original, final String newCigar)
-    {
-        final LiftedAlignment rebuilt = new LiftedAlignment(
-                original.Source, original.OrigContig, original.OrigPos, original.OrigCigar,
-                original.LiftedChrom, original.LiftedPos, newCigar,
-                original.AlignmentScore, original.NumMismatches,
-                original.TransName, original.GeneId, original.GeneName,
-                original.SoftClipAtBoundary, original.ForwardStrand);
-        rebuilt.Dropped = original.Dropped;
-        rebuilt.IsPrimaryChoice = original.IsPrimaryChoice;
-        return rebuilt;
-    }
-
-    private LiftBackResult supplementaryResult(final SAMRecord record)
-    {
-        LiftedAlignment lifted = liftAlignment(
-                LiftedAlignment.AlignmentSource.SELF,
-                record.getReferenceName(), record.getAlignmentStart(), record.getCigarString(),
-                getInt(record, AS_TAG), getInt(record, NM_TAG),
-                !record.getReadNegativeStrandFlag());
-
-        if(lifted == null)
-            return unliftableResult(LiftBackResult.RecordRole.SUPPLEMENTARY, 0, "supp_translate_failed");
-
-        if(lifted.fromTxContig())
-        {
-            final Cigar trimmed = ContigTranslator.trimTrailingMicroAnchor(
-                    TextCigarCodec.decode(lifted.LiftedCigar), ANNOTATED_JUNCTION_MIN_ANCHOR_BP);
-            if(!trimmed.toString().equals(lifted.LiftedCigar))
-                lifted = rebuildLiftedWithCigar(lifted, trimmed.toString());
-        }
-
-        lifted.IsPrimaryChoice = true;
-
-        // supplementaries don't carry XA, so the collapsed-locus check doesn't apply. Rescue MAPQ only on
-        // a tx-contig supp where the input dropped to 0 due to the multi-alt-contig tie artefact.
-        final int inputMapq = record.getMappingQuality();
-        final int suppMapq = (lifted.fromTxContig() && inputMapq == 0) ? RESCUED_MAPQ : inputMapq;
-
-        final int numRefAlts = lifted.fromTxContig() ? 0 : 1;
-        final int numTxAlts = lifted.fromTxContig() ? 1 : 0;
-
-        return new LiftBackResult(
-                LiftBackCategory.SUPPLEMENTARY, LiftBackResult.Composition.fromAlignments(List.of(lifted)),
-                LiftBackResult.RecordRole.SUPPLEMENTARY,
-                lifted.LiftedChrom, lifted.LiftedPos, lifted.LiftedCigar,
-                !lifted.ForwardStrand,
-                lifted.cigarHasN(), inputMapq, suppMapq,
-                0, numRefAlts, numTxAlts,
-                1, 1,
-                false, false, false, false,
-                lifted.GeneId != null ? lifted.GeneId : "", "",
+                lifted.TranscriptStrand,
                 List.of(lifted));
     }
 
@@ -435,12 +395,19 @@ public class LiftBackResolver
 
         final boolean softClipAtBoundary = ContigTranslator.hasSoftClipAtExonBoundary(entry, pos, parsedCigar);
 
+        // A tx-contig walk that dribbles a few bases past an exon boundary fabricates a junction
+        // anchoring a tiny terminal yM. Drop sub-threshold anchors at both ends so we don't emit a
+        // junction we can't support; a leading trim advances the start past the dropped anchor.
+        final ContigTranslator.MicroAnchorResult trimmed = ContigTranslator.trimMicroAnchors(
+                translated.genomicCigar(), ANNOTATED_JUNCTION_MIN_ANCHOR_BP);
+
         return new LiftedAlignment(
                 source, contig, pos, cigarStr,
-                translated.chromosome(), translated.genomicStart(), translated.genomicCigar().toString(),
+                translated.chromosome(), translated.genomicStart() + trimmed.StartShift,
+                trimmed.AdjustedCigar.toString(),
                 as, nm,
                 entry.transName(), entry.geneId(), entry.geneName(),
-                softClipAtBoundary, forwardStrand);
+                softClipAtBoundary, forwardStrand, entry.strand());
     }
 
     private static int countDistinctLoci(final List<LiftedAlignment> alignments)
@@ -504,7 +471,32 @@ public class LiftBackResolver
                 0, 0,
                 false, false, false, false,
                 "", "",
+                0,
                 List.of());
+    }
+
+    // MAPQ rewrite policy for primary records. Pure function of the inputs; extracted so the policy
+    // can be unit-tested independently of LiftBackDiscriminator / SAMRecord plumbing.
+    //
+    //  (1) primary was swapped by the discriminator → rescue to RESCUED_MAPQ.
+    //  (2) input MAPQ=0 and the read lifts back to a single genomic locus → rescue, unless an
+    //      unresolved hidden tie is in play (XS==AS, primary isn't tx-derived, and we have no exon
+    //      evidence that the unseen alt is sub-threshold).
+    //  (3) input MAPQ=60 is the sanger cap for confident-unique placements → pass through as
+    //      RESCUED_MAPQ (no-op when RESCUED_MAPQ == 60).
+    //  (4) input MAPQ in (0, 60) is graded quality signal → leave alone.
+    static int decidePrimaryMapq(
+            final int inputMapq, final int numLoci, final boolean swapped, final boolean hiddenTie,
+            final boolean primaryFromTxContig, final boolean primaryInAnnotatedExon)
+    {
+        if(swapped)
+            return RESCUED_MAPQ;
+        final boolean unresolvedHiddenTie = hiddenTie && !primaryFromTxContig && !primaryInAnnotatedExon;
+        if(numLoci == 1 && inputMapq == 0 && !unresolvedHiddenTie)
+            return RESCUED_MAPQ;
+        if(inputMapq == INPUT_UNIQUE_MAPQ)
+            return RESCUED_MAPQ;
+        return inputMapq;
     }
 
     // bwa-mem2 reports XS as the second-best alignment score; when XS == AS, an equally-scoring alt
@@ -530,6 +522,7 @@ public class LiftBackResolver
                 0, 0,
                 false, false, false, false,
                 "", note,
+                0,
                 List.of());
     }
 }
