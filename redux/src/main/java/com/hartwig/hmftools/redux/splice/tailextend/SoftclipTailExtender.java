@@ -10,6 +10,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.redux.splice.rescue.AnnotatedJunctionIndex;
 import com.hartwig.hmftools.redux.splice.rescue.CigarShape;
+import com.hartwig.hmftools.redux.splice.rescue.ChrIntron;
 import com.hartwig.hmftools.redux.splice.rescue.RefSequenceSource;
 
 // Recovers ref-matching bases that bwa-mem2 softclipped at the read tails. Runs after junction
@@ -58,12 +59,11 @@ public class SoftclipTailExtender
 
         mStatistics.countEvaluated();
 
-        // trailing extension runs first because the leading-side math reads alignmentStart, not
-        // the cigar tail; this keeps the two extensions independent on the same working list.
         final List<CigarShape.Element> working = new ArrayList<>(elements);
+        final int alignmentEnd = alignmentStart + CigarShape.referenceSpan(working) - 1;
 
-        final int trailExtended = tryExtendTrailing(chromosome, alignmentStart, readBases, working);
-        final int leadExtended = tryExtendLeading(chromosome, alignmentStart, readBases, working);
+        final int trailExtended = tryExtendSide(Side.TRAILING, chromosome, alignmentStart, alignmentEnd, readBases, working);
+        final int leadExtended = tryExtendSide(Side.LEADING, chromosome, alignmentStart, alignmentEnd, readBases, working);
 
         if(trailExtended == 0 && leadExtended == 0)
             return TailExtensionResult.unchanged();
@@ -74,83 +74,37 @@ public class SoftclipTailExtender
                 leadExtended, trailExtended);
     }
 
-    private int tryExtendTrailing(
-            final String chromosome, final int alignmentStart, final byte[] readBases,
-            final List<CigarShape.Element> working)
-    {
-        final int last = working.size() - 1;
-        if(last < 1)
-            return 0;
-
-        final CigarShape.Element softclip = working.get(last);
-        if(softclip.Op != OP_SOFTCLIP || softclip.Length < mConfig.MinSoftclipLength)
-            return 0;
-
-        final CigarShape.Element adjacent = working.get(last - 1);
-        if(!isMatchedOp(adjacent.Op))
-        {
-            mStatistics.countSkippedComplexShape();
-            return 0;
-        }
-
-        final int alignmentEnd = alignmentStart + CigarShape.referenceSpan(working) - 1;
-
-        if(crossesAnnotatedJunctionTrailing(chromosome, alignmentEnd))
-            return 0;
-
-        final int extendBudget = Math.min(softclip.Length, mConfig.MaxExtension);
-        final byte[] refBases = mRefSource.getBases(chromosome, alignmentEnd + 1, alignmentEnd + extendBudget);
-        if(refBases == null || refBases.length < mConfig.MinExtension)
-        {
-            mStatistics.countSkippedNoRef();
-            return 0;
-        }
-
-        final int walkLength = Math.min(refBases.length, extendBudget);
-        final int readStart = readBases.length - softclip.Length;
-        final int bestLength = longestAcceptedPrefix(readBases, readStart, refBases, 0, walkLength, true);
-
-        if(bestLength < mConfig.MinExtension)
-        {
-            if(bestLength == 0)
-                mStatistics.countRejectedTooManyMismatches();
-            return 0;
-        }
-
-        applyExtension(working, last, last - 1, bestLength);
-        return bestLength;
-    }
-
-    private int tryExtendLeading(
-            final String chromosome, final int alignmentStart, final byte[] readBases,
-            final List<CigarShape.Element> working)
+    private int tryExtendSide(
+            final Side side, final String chromosome, final int alignmentStart, final int alignmentEnd,
+            final byte[] readBases, final List<CigarShape.Element> working)
     {
         if(working.size() < 2)
             return 0;
 
-        final CigarShape.Element softclip = working.get(0);
+        final int softclipIndex = side.softclipIndex(working);
+        final int matchedIndex = side.matchedIndex(working);
+
+        final CigarShape.Element softclip = working.get(softclipIndex);
         if(softclip.Op != OP_SOFTCLIP || softclip.Length < mConfig.MinSoftclipLength)
             return 0;
 
-        final CigarShape.Element adjacent = working.get(1);
-        if(!isMatchedOp(adjacent.Op))
+        if(!isMatchedOp(working.get(matchedIndex).Op))
         {
             mStatistics.countSkippedComplexShape();
             return 0;
         }
 
-        if(crossesAnnotatedJunctionLeading(chromosome, alignmentStart))
+        final int boundary = side.refBoundary(alignmentStart, alignmentEnd);
+        if(crossesAnnotatedJunction(side, chromosome, boundary))
             return 0;
 
         int extendBudget = Math.min(softclip.Length, mConfig.MaxExtension);
-        if(alignmentStart - extendBudget < 1)
+        if(side == Side.LEADING && alignmentStart - extendBudget < 1)
             extendBudget = alignmentStart - 1;
         if(extendBudget < mConfig.MinExtension)
             return 0;
 
-        final int refStart = alignmentStart - extendBudget;
-        final int refEnd = alignmentStart - 1;
-        final byte[] refBases = mRefSource.getBases(chromosome, refStart, refEnd);
+        final byte[] refBases = side.fetchRef(mRefSource, chromosome, boundary, extendBudget);
         if(refBases == null || refBases.length < mConfig.MinExtension)
         {
             mStatistics.countSkippedNoRef();
@@ -158,10 +112,7 @@ public class SoftclipTailExtender
         }
 
         final int walkLength = Math.min(refBases.length, extendBudget);
-        // walk backward from the M boundary into the softclip: read[softclipLen-1-i] vs
-        // ref[refLen-1-i].
-        final int bestLength = longestAcceptedPrefix(
-                readBases, softclip.Length - 1, refBases, refBases.length - 1, walkLength, false);
+        final int bestLength = side.walk(readBases, refBases, softclip.Length, walkLength);
 
         if(bestLength < mConfig.MinExtension)
         {
@@ -170,8 +121,24 @@ public class SoftclipTailExtender
             return 0;
         }
 
-        applyExtension(working, 0, 1, bestLength);
+        applyExtension(working, softclipIndex, matchedIndex, bestLength);
         return bestLength;
+    }
+
+    private boolean crossesAnnotatedJunction(final Side side, final String chromosome, final int boundary)
+    {
+        if(mJunctionGuard == null)
+            return false;
+        for(int offset = 1; offset <= mConfig.MaxExtension; ++offset)
+        {
+            final List<ChrIntron> hits = side.junctionLookup(mJunctionGuard, chromosome, boundary, offset);
+            if(!hits.isEmpty())
+            {
+                mStatistics.countSkippedForJunctionGuard();
+                return true;
+            }
+        }
+        return false;
     }
 
     // longest p in [0, walkLength] with cumulative mismatches <= max(1, p / 10). The min-of-1
@@ -198,36 +165,6 @@ public class SoftclipTailExtender
                 break;
         }
         return bestLength;
-    }
-
-    private boolean crossesAnnotatedJunctionTrailing(final String chromosome, final int alignmentEnd)
-    {
-        if(mJunctionGuard == null)
-            return false;
-        for(int offset = 1; offset <= mConfig.MaxExtension; ++offset)
-        {
-            if(!mJunctionGuard.introByStart(chromosome, alignmentEnd + offset).isEmpty())
-            {
-                mStatistics.countSkippedForJunctionGuard();
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private boolean crossesAnnotatedJunctionLeading(final String chromosome, final int alignmentStart)
-    {
-        if(mJunctionGuard == null)
-            return false;
-        for(int offset = 1; offset <= mConfig.MaxExtension; ++offset)
-        {
-            if(!mJunctionGuard.introByEnd(chromosome, alignmentStart - offset).isEmpty())
-            {
-                mStatistics.countSkippedForJunctionGuard();
-                return true;
-            }
-        }
-        return false;
     }
 
     private static boolean isMatchedOp(final char op)
@@ -260,5 +197,80 @@ public class SoftclipTailExtender
         {
             working.set(softclipIndex, new CigarShape.Element(softclip.Length - extend, OP_SOFTCLIP));
         }
+    }
+
+    // Encapsulates the leading/trailing geometry so the body of tryExtendSide is direction-free.
+    private enum Side
+    {
+        LEADING
+                {
+                    @Override
+                    int softclipIndex(final List<CigarShape.Element> cigar) { return 0; }
+
+                    @Override
+                    int matchedIndex(final List<CigarShape.Element> cigar) { return 1; }
+
+                    @Override
+                    int refBoundary(final int alignmentStart, final int alignmentEnd) { return alignmentStart; }
+
+                    @Override
+                    byte[] fetchRef(final RefSequenceSource src, final String chr, final int boundary, final int budget)
+                    {
+                        return src.getBases(chr, boundary - budget, boundary - 1);
+                    }
+
+                    @Override
+                    int walk(final byte[] readBases, final byte[] refBases, final int softclipLength, final int walkLength)
+                    {
+                        // walk backward from the M boundary into the softclip
+                        return longestAcceptedPrefix(
+                                readBases, softclipLength - 1, refBases, refBases.length - 1, walkLength, false);
+                    }
+
+                    @Override
+                    List<ChrIntron> junctionLookup(
+                            final AnnotatedJunctionIndex idx, final String chr, final int boundary, final int offset)
+                    {
+                        return idx.introByEnd(chr, boundary - offset);
+                    }
+                },
+        TRAILING
+                {
+                    @Override
+                    int softclipIndex(final List<CigarShape.Element> cigar) { return cigar.size() - 1; }
+
+                    @Override
+                    int matchedIndex(final List<CigarShape.Element> cigar) { return cigar.size() - 2; }
+
+                    @Override
+                    int refBoundary(final int alignmentStart, final int alignmentEnd) { return alignmentEnd; }
+
+                    @Override
+                    byte[] fetchRef(final RefSequenceSource src, final String chr, final int boundary, final int budget)
+                    {
+                        return src.getBases(chr, boundary + 1, boundary + budget);
+                    }
+
+                    @Override
+                    int walk(final byte[] readBases, final byte[] refBases, final int softclipLength, final int walkLength)
+                    {
+                        final int readStart = readBases.length - softclipLength;
+                        return longestAcceptedPrefix(readBases, readStart, refBases, 0, walkLength, true);
+                    }
+
+                    @Override
+                    List<ChrIntron> junctionLookup(
+                            final AnnotatedJunctionIndex idx, final String chr, final int boundary, final int offset)
+                    {
+                        return idx.introByStart(chr, boundary + offset);
+                    }
+                };
+
+        abstract int softclipIndex(List<CigarShape.Element> cigar);
+        abstract int matchedIndex(List<CigarShape.Element> cigar);
+        abstract int refBoundary(int alignmentStart, int alignmentEnd);
+        abstract byte[] fetchRef(RefSequenceSource src, String chr, int boundary, int budget);
+        abstract int walk(byte[] readBases, byte[] refBases, int softclipLength, int walkLength);
+        abstract List<ChrIntron> junctionLookup(AnnotatedJunctionIndex idx, String chr, int boundary, int offset);
     }
 }

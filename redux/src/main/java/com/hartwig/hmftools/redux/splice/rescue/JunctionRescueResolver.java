@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.redux.splice.rescue.CigarShape.OP_SKIPPED;
 import static com.hartwig.hmftools.redux.splice.rescue.CigarShape.OP_SOFTCLIP;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -54,7 +55,6 @@ public class JunctionRescueResolver
         if(!mConfig.Enabled)
             return RescueResult.noMerge(RescueRejectReason.NO_MATCHING_SUPP);
 
-        // Empty supplementary list — only the ref-verify path can rescue. Fall through to it.
         if(candidate.Supplementaries.isEmpty())
             return tryRefVerifyOnly(candidate);
 
@@ -87,21 +87,21 @@ public class JunctionRescueResolver
                 break;
             }
 
-            final MergeAttempt attempt = pickBestSupplementary(
+            final MergeOutcome attempt = pickBestSupplementary(
                     candidate, primaryStart, primaryCigar, remaining);
 
-            if(!attempt.success())
+            if(!attempt.isSuccess())
             {
                 if(chainDepth == 0)
-                    return RescueResult.noMerge(attempt.RejectReason);
-                lastReject = attempt.RejectReason;
+                    return RescueResult.noMerge(attempt.Reject);
+                lastReject = attempt.Reject;
                 break;
             }
 
-            primaryStart = attempt.Inner.MergedStart;
-            primaryCigar = attempt.Inner.MergedCigar;
+            primaryStart = attempt.MergedStart;
+            primaryCigar = attempt.MergedCigar;
             dropped.add(attempt.MergedSupp.Index);
-            introns.add(attempt.Inner.IntroducedIntron);
+            introns.add(attempt.IntroducedIntron);
             remaining.remove(attempt.MergedSupp);
             ++chainDepth;
         }
@@ -119,10 +119,8 @@ public class JunctionRescueResolver
     }
 
     // Ref-verify path: primary has a terminal softclip but no supplementary. Look up annotated
-    // junctions that start (right-extend) or end (left-extend) where the softclip would extend,
-    // fetch reference bases at the candidate next-exon position, and accept if the softclipped
-    // read bases match within tolerance. Drops zero supps (there were none), introduces one
-    // intron, no chain.
+    // junctions whose start/end abuts the softclip boundary, fetch reference bases at the
+    // candidate next-exon position, and accept if the softclipped read bases match within tolerance.
     private RescueResult tryRefVerifyOnly(final RescueCandidate candidate)
     {
         if(mRefSource == null || candidate.ReadBases == null)
@@ -143,50 +141,35 @@ public class JunctionRescueResolver
         final boolean leadingS = primaryCigar.get(0).Op == OP_SOFTCLIP;
         if(!trailingS && !leadingS)
             return RescueResult.noMerge(RescueRejectReason.NO_TERMINAL_SOFTCLIP);
-
-        if(trailingS && !leadingS)
-            return tryRefVerifyRightExtend(candidate, primaryCigar);
-        if(leadingS && !trailingS)
-            return tryRefVerifyLeftExtend(candidate, primaryCigar);
-        return RescueResult.noMerge(RescueRejectReason.COMPLEX_CIGAR_SHAPE);
-    }
-
-    private RescueResult tryRefVerifyRightExtend(
-            final RescueCandidate candidate, final List<CigarShape.Element> primaryCigar)
-    {
-        if(opAdjacentToSoftClip(primaryCigar, false))
+        if(trailingS && leadingS)
             return RescueResult.noMerge(RescueRejectReason.COMPLEX_CIGAR_SHAPE);
 
-        final int trailS = CigarShape.trailingSoftClip(primaryCigar);
-        if(trailS < mConfig.MinAnchorOverhang)
+        final boolean rightExtend = trailingS;
+        if(opAdjacentToSoftClip(primaryCigar, !rightExtend))
+            return RescueResult.noMerge(RescueRejectReason.COMPLEX_CIGAR_SHAPE);
+
+        final int softclipLen = rightExtend
+                ? CigarShape.trailingSoftClip(primaryCigar)
+                : CigarShape.leadingSoftClip(primaryCigar);
+        if(softclipLen < mConfig.MinAnchorOverhang)
             return RescueResult.noMerge(RescueRejectReason.SHORT_ANCHOR);
-        final int primaryAnchor = trailingMatchedRun(primaryCigar);
+        final int primaryAnchor = rightExtend
+                ? trailingMatchedRun(primaryCigar)
+                : leadingMatchedRun(primaryCigar);
         if(primaryAnchor < mConfig.MinAnchorOverhang)
             return RescueResult.noMerge(RescueRejectReason.SHORT_ANCHOR);
 
-        final int primaryRefEnd = candidate.PrimaryStart
-                + CigarShape.referenceSpan(primaryCigar) - 1;
-        final int intronStart = primaryRefEnd + 1;
-        final List<ChrIntron> candidates = mAnnotatedIndex.introByStart(candidate.Chromosome, intronStart);
-        return verifyAgainstCandidates(candidate, primaryCigar, candidates, trailS, true);
-    }
-
-    private RescueResult tryRefVerifyLeftExtend(
-            final RescueCandidate candidate, final List<CigarShape.Element> primaryCigar)
-    {
-        if(opAdjacentToSoftClip(primaryCigar, true))
-            return RescueResult.noMerge(RescueRejectReason.COMPLEX_CIGAR_SHAPE);
-
-        final int leadS = CigarShape.leadingSoftClip(primaryCigar);
-        if(leadS < mConfig.MinAnchorOverhang)
-            return RescueResult.noMerge(RescueRejectReason.SHORT_ANCHOR);
-        final int primaryAnchor = leadingMatchedRun(primaryCigar);
-        if(primaryAnchor < mConfig.MinAnchorOverhang)
-            return RescueResult.noMerge(RescueRejectReason.SHORT_ANCHOR);
-
-        final int intronEnd = candidate.PrimaryStart - 1;
-        final List<ChrIntron> candidates = mAnnotatedIndex.introByEnd(candidate.Chromosome, intronEnd);
-        return verifyAgainstCandidates(candidate, primaryCigar, candidates, leadS, false);
+        final List<ChrIntron> candidates;
+        if(rightExtend)
+        {
+            final int primaryRefEnd = candidate.PrimaryStart + CigarShape.referenceSpan(primaryCigar) - 1;
+            candidates = mAnnotatedIndex.introByStart(candidate.Chromosome, primaryRefEnd + 1);
+        }
+        else
+        {
+            candidates = mAnnotatedIndex.introByEnd(candidate.Chromosome, candidate.PrimaryStart - 1);
+        }
+        return verifyAgainstCandidates(candidate, primaryCigar, candidates, softclipLen, rightExtend);
     }
 
     private RescueResult verifyAgainstCandidates(
@@ -199,19 +182,12 @@ public class JunctionRescueResolver
             return RescueResult.noMerge(RescueRejectReason.REF_VERIFY_NO_CANDIDATE_EXON);
         }
 
-        // The softclipped read bases: right-extend = trailing softclip's bases; left-extend = leading.
         final byte[] readBases = candidate.ReadBases;
-        final byte[] softclipBases;
+        final byte[] softclipBases = new byte[softclipLen];
         if(rightExtend)
-        {
-            softclipBases = new byte[softclipLen];
             System.arraycopy(readBases, readBases.length - softclipLen, softclipBases, 0, softclipLen);
-        }
         else
-        {
-            softclipBases = new byte[softclipLen];
             System.arraycopy(readBases, 0, softclipBases, 0, softclipLen);
-        }
 
         final int maxMismatches = softclipLen / 10;        // ~90% identity floor
 
@@ -231,13 +207,11 @@ public class JunctionRescueResolver
             final int refEnd;
             if(rightExtend)
             {
-                // downstream exon's first softclipLen bases live at [intronEnd+1, intronEnd+softclipLen]
                 refStart = candidateIntron.IntronEnd + 1;
                 refEnd = candidateIntron.IntronEnd + softclipLen;
             }
             else
             {
-                // upstream exon's last softclipLen bases end at intronStart-1
                 refStart = candidateIntron.IntronStart - softclipLen;
                 refEnd = candidateIntron.IntronStart - 1;
             }
@@ -278,7 +252,6 @@ public class JunctionRescueResolver
             return RescueResult.noMerge(RescueRejectReason.REF_VERIFY_AMBIGUOUS);
         }
 
-        // Rewrite cigar: drop terminal S, append N(intronLength) + softclipLen M.
         final int intronLength = chosen.IntronEnd - chosen.IntronStart + 1;
         final List<CigarShape.Element> merged = new ArrayList<>(primaryCigar.size() + 2);
         if(rightExtend)
@@ -300,7 +273,7 @@ public class JunctionRescueResolver
         mStatistics.countMergedChain(1);
         return new RescueResult(
                 true, CigarShape.format(merged), mergedStart,
-                java.util.Collections.emptyList(), java.util.Collections.singletonList(chosen),
+                Collections.emptyList(), Collections.singletonList(chosen),
                 1, null);
     }
 
@@ -328,99 +301,100 @@ public class JunctionRescueResolver
 
     // Picks the highest-confidence supplementary that passes all gates. Returns the merged-primary
     // proposal or a reject reason describing which gate the best candidate(s) failed against.
-    private MergeAttempt pickBestSupplementary(
+    private MergeOutcome pickBestSupplementary(
             final RescueCandidate candidate, final int primaryStart,
             final List<CigarShape.Element> primaryCigar, final List<RescueSupplementary> supps)
     {
-        MergeAttempt bestSuccess = null;
-        RescueAttemptResult lastAnyGateReject = null;
+        MergeOutcome best = null;
+        RescueRejectReason lastReject = null;
 
         for(RescueSupplementary supp : supps)
         {
-            final RescueAttemptResult attempt = tryMerge(candidate, primaryStart, primaryCigar, supp);
-            if(attempt.Reject != null)
+            final MergeOutcome attempt = tryMerge(candidate, primaryStart, primaryCigar, supp);
+            if(!attempt.isSuccess())
             {
                 mStatistics.countReject(attempt.Reject);
-                lastAnyGateReject = attempt;
+                lastReject = attempt.Reject;
                 continue;
             }
 
-            if(bestSuccess == null)
+            if(best == null)
             {
-                bestSuccess = new MergeAttempt(attempt, supp);
-                continue;
+                best = attempt;
             }
-
-            final int cmp = compareSuccess(attempt, supp, bestSuccess);
-            if(cmp < 0)
+            else if(best.Ambiguous)
             {
-                bestSuccess = new MergeAttempt(attempt, supp);
+                // already ambiguous; a third equally-good candidate doesn't recover. Keep iterating
+                // only to drain reject stats on remaining failures via the !isSuccess branch above.
             }
-            else if(cmp == 0)
+            else if(isBetterCandidate(attempt, best))
             {
-                bestSuccess = MergeAttempt.ambiguous();
+                best = attempt;
+            }
+            else if(isTied(attempt, best))
+            {
+                best = MergeOutcome.ambiguous();
             }
         }
 
-        if(bestSuccess == null)
-        {
-            final RescueRejectReason reason = lastAnyGateReject != null
-                    ? lastAnyGateReject.Reject
-                    : RescueRejectReason.NO_MATCHING_SUPP;
-            return MergeAttempt.fail(reason);
-        }
+        if(best == null)
+            return MergeOutcome.reject(lastReject != null ? lastReject : RescueRejectReason.NO_MATCHING_SUPP);
 
-        if(bestSuccess.Ambiguous)
+        if(best.Ambiguous)
         {
             mStatistics.countReject(RescueRejectReason.AMBIGUOUS_SUPP_CHOICE);
-            return MergeAttempt.fail(RescueRejectReason.AMBIGUOUS_SUPP_CHOICE);
+            return MergeOutcome.reject(RescueRejectReason.AMBIGUOUS_SUPP_CHOICE);
         }
 
-        return bestSuccess;
+        return best;
     }
 
-    // Lower compareSuccess result == better candidate. Comparison axes (in order):
-    //   1. higher MAPQ wins
-    //   2. smaller intron length wins
-    // Equal on both → ambiguous, caller refuses to merge.
-    private int compareSuccess(final RescueAttemptResult a, final RescueSupplementary aSupp,
-            final MergeAttempt current)
+    // Candidate ranking. Axes in order: higher MAPQ wins, then smaller intron wins. A tie on both
+    // becomes AMBIGUOUS_SUPP_CHOICE (caller refuses to merge).
+    private static boolean isBetterCandidate(final MergeOutcome a, final MergeOutcome b)
     {
-        if(aSupp.Mapq != current.MergedSupp.Mapq)
-            return current.MergedSupp.Mapq - aSupp.Mapq;       // higher MAPQ = "smaller" (better)
-        final int aIntron = a.IntroducedIntron.IntronEnd - a.IntroducedIntron.IntronStart + 1;
-        final ChrIntron curIntron = current.Inner.IntroducedIntron;
-        return aIntron - (curIntron.IntronEnd - curIntron.IntronStart + 1);
+        if(a.MergedSupp.Mapq != b.MergedSupp.Mapq)
+            return a.MergedSupp.Mapq > b.MergedSupp.Mapq;
+        return intronLength(a.IntroducedIntron) < intronLength(b.IntroducedIntron);
     }
 
-    private RescueAttemptResult tryMerge(
+    private static boolean isTied(final MergeOutcome a, final MergeOutcome b)
+    {
+        return a.MergedSupp.Mapq == b.MergedSupp.Mapq
+                && intronLength(a.IntroducedIntron) == intronLength(b.IntroducedIntron);
+    }
+
+    private static int intronLength(final ChrIntron intron)
+    {
+        return intron.IntronEnd - intron.IntronStart + 1;
+    }
+
+    private MergeOutcome tryMerge(
             final RescueCandidate candidate, final int primaryStart,
             final List<CigarShape.Element> primaryCigar, final RescueSupplementary supp)
     {
         if(!candidate.Chromosome.equals(supp.Chromosome))
-            return RescueAttemptResult.reject(RescueRejectReason.DIFFERENT_CHROMOSOME);
+            return MergeOutcome.reject(RescueRejectReason.DIFFERENT_CHROMOSOME);
 
         if(candidate.ForwardStrand != supp.ForwardStrand)
-            return RescueAttemptResult.reject(RescueRejectReason.OPPOSITE_STRAND);
+            return MergeOutcome.reject(RescueRejectReason.OPPOSITE_STRAND);
 
         final List<CigarShape.Element> suppCigar = CigarShape.parse(supp.Cigar);
         if(CigarShape.hasHardClip(suppCigar))
-            return RescueAttemptResult.reject(RescueRejectReason.COMPLEX_CIGAR_SHAPE);
+            return MergeOutcome.reject(RescueRejectReason.COMPLEX_CIGAR_SHAPE);
 
-        // bail early if the cigar shapes don't make a clean right-extend or left-extend pair.
+        // Decide which record is upstream and which is downstream by softclip shapes (and, when a
+        // middle-anchored primary has S on both sides, by where the supp sits genomically).
         final int primaryLeadS = CigarShape.leadingSoftClip(primaryCigar);
         final int primaryTrailS = CigarShape.trailingSoftClip(primaryCigar);
         final int suppLeadS = CigarShape.leadingSoftClip(suppCigar);
         final int suppTrailS = CigarShape.trailingSoftClip(suppCigar);
 
-        // A middle-anchored primary in a 3-exon read has both leading AND trailing softclip and
-        // chain-merges twice (right supp first, then left supp). Disambiguate by where the supp
-        // sits genomically when shape alone matches both directions.
         boolean rightExtend = primaryTrailS > 0 && suppLeadS > 0;
         boolean leftExtend = primaryLeadS > 0 && suppTrailS > 0;
 
         if(!rightExtend && !leftExtend)
-            return RescueAttemptResult.reject(RescueRejectReason.NO_MATCHING_SUPP);
+            return MergeOutcome.reject(RescueRejectReason.NO_MATCHING_SUPP);
 
         if(rightExtend && leftExtend)
         {
@@ -431,88 +405,121 @@ public class JunctionRescueResolver
             else if(suppRefEnd < primaryStart && supp.Start <= primaryRefEnd)
                 rightExtend = false;
             else
-                return RescueAttemptResult.reject(RescueRejectReason.COMPLEX_CIGAR_SHAPE);
+                return MergeOutcome.reject(RescueRejectReason.COMPLEX_CIGAR_SHAPE);
         }
 
-        return rightExtend
-                ? tryRightExtend(candidate, primaryStart, primaryCigar, supp, suppCigar)
-                : tryLeftExtend(candidate, primaryStart, primaryCigar, supp, suppCigar);
+        final Side primarySide = Side.of(primaryStart, primaryCigar);
+        final Side suppSide = Side.of(supp.Start, suppCigar);
+        final boolean primaryIsUpstream = rightExtend;
+        final Side up = primaryIsUpstream ? primarySide : suppSide;
+        final Side down = primaryIsUpstream ? suppSide : primarySide;
+
+        return mergeJunction(candidate, up, down, primaryIsUpstream, supp);
     }
 
-    private RescueAttemptResult tryRightExtend(
-            final RescueCandidate candidate, final int primaryStart,
-            final List<CigarShape.Element> primaryCigar, final RescueSupplementary supp,
-            final List<CigarShape.Element> suppCigar)
+    // The unified merge: validates the up/down anchor pair, scores candidate snap points by
+    // junction tier and min anchor, falls back to mate-hint, then to trust-primary. The body is
+    // direction-agnostic — caller has already mapped primary/supp into upstream/downstream slots.
+    // supp is threaded through purely as the result payload (so callers know which supp was merged).
+    private MergeOutcome mergeJunction(
+            final RescueCandidate candidate, final Side up, final Side down,
+            final boolean primaryIsUpstream, final RescueSupplementary supp)
     {
-        final int primaryReadCovered = CigarShape.readLength(primaryCigar);
-        final int suppReadCovered = CigarShape.readLength(suppCigar);
+        if(CigarShape.readLength(up.Cigar) != candidate.ReadLength
+                || CigarShape.readLength(down.Cigar) != candidate.ReadLength)
+            return MergeOutcome.reject(RescueRejectReason.COMPLEX_CIGAR_SHAPE);
 
-        if(primaryReadCovered != candidate.ReadLength || suppReadCovered != candidate.ReadLength)
-            return RescueAttemptResult.reject(RescueRejectReason.COMPLEX_CIGAR_SHAPE);
+        if(opAdjacentToSoftClip(up.Cigar, false) || opAdjacentToSoftClip(down.Cigar, true))
+            return MergeOutcome.reject(RescueRejectReason.COMPLEX_CIGAR_SHAPE);
 
-        if(opAdjacentToSoftClip(primaryCigar, false))
-            return RescueAttemptResult.reject(RescueRejectReason.COMPLEX_CIGAR_SHAPE);
-        if(opAdjacentToSoftClip(suppCigar, true))
-            return RescueAttemptResult.reject(RescueRejectReason.COMPLEX_CIGAR_SHAPE);
-
-        final int primaryMatched = candidate.ReadLength - CigarShape.trailingSoftClip(primaryCigar);
-        final int suppLeadingS = CigarShape.leadingSoftClip(suppCigar);
-        final int overlap = primaryMatched - suppLeadingS;
+        final int upMatchedRead = candidate.ReadLength - up.TrailingS;
+        final int overlap = upMatchedRead - down.LeadingS;
 
         if(overlap < 0)
-            return RescueAttemptResult.reject(RescueRejectReason.READ_COVERAGE_GAP);
+            return MergeOutcome.reject(RescueRejectReason.READ_COVERAGE_GAP);
         if(overlap > mConfig.SoftclipTolerance)
-            return RescueAttemptResult.reject(RescueRejectReason.READ_COVERAGE_OVERLAP);
+            return MergeOutcome.reject(RescueRejectReason.READ_COVERAGE_OVERLAP);
+        if(down.Start <= up.RefEnd)
+            return MergeOutcome.reject(RescueRejectReason.READ_COVERAGE_OVERLAP);
 
-        final int primaryRefEnd = primaryStart + CigarShape.referenceSpan(primaryCigar) - 1;
-        if(supp.Start <= primaryRefEnd)
-            return RescueAttemptResult.reject(RescueRejectReason.READ_COVERAGE_OVERLAP);
-
-        // Intron length is invariant under the snap point L (any redistribution of overlap bases
-        // moves both intron endpoints by the same amount). Check once, up front.
-        final int intronLength = (supp.Start - 1 - primaryRefEnd) + overlap;
+        // Intron length is invariant under the snap point L: any redistribution of overlap bases
+        // moves both intron endpoints by the same amount. Check once, up front.
+        final int intronLength = (down.Start - 1 - up.RefEnd) + overlap;
         if(intronLength < mConfig.MinIntronLength)
-            return RescueAttemptResult.reject(RescueRejectReason.INTRON_TOO_SHORT);
+            return MergeOutcome.reject(RescueRejectReason.INTRON_TOO_SHORT);
         if(intronLength > mConfig.MaxIntronLength)
-            return RescueAttemptResult.reject(RescueRejectReason.INTRON_TOO_LONG);
+            return MergeOutcome.reject(RescueRejectReason.INTRON_TOO_LONG);
 
-        // Original anchors must already meet threshold — clipping only reduces them.
-        final int primaryTrailingMOrig = trailingMatchedRun(primaryCigar);
-        final int suppLeadingMOrig = leadingMatchedRun(suppCigar);
-        if(primaryTrailingMOrig < mConfig.MinAnchorOverhang
-                || suppLeadingMOrig < mConfig.MinAnchorOverhang)
-            return RescueAttemptResult.reject(RescueRejectReason.SHORT_ANCHOR);
+        if(up.TrailingM < mConfig.MinAnchorOverhang || down.LeadingM < mConfig.MinAnchorOverhang)
+            return MergeOutcome.reject(RescueRejectReason.SHORT_ANCHOR);
 
-        // pick the highest-tier candidate split point in [suppLeadingS, primaryMatched]; within a
-        // tier, largest min(primaryAnchor, suppAnchor) wins; ties go to trust-primary (the first
-        // L seen in descending iteration). Tier-0 candidates fall through to the mate-hint and
-        // trust-primary fallbacks below.
+        // Pick the highest-tier snap point in L ∈ [down.LeadingS, upMatchedRead]; within a tier,
+        // largest min(upAnchor, downAnchor) wins; ties go to "first encountered". Iterate so the
+        // primary-fully-matched value (upLoss=0 when primary is upstream, downLoss=0 when primary
+        // is downstream) is visited first — that preserves trust-primary as the natural tie-break.
+        final SnapPick pick = scanSnapPoints(candidate, up, down, upMatchedRead, primaryIsUpstream);
+        int chosenL = pick.L;
+        ChrIntron chosenIntron = pick.Intron;
+
+        if(chosenL == -1)
+        {
+            final SnapPick hinted = scanMateHint(candidate, up, down, upMatchedRead, primaryIsUpstream);
+            chosenL = hinted.L;
+            chosenIntron = hinted.Intron;
+        }
+        if(chosenL == -1)
+        {
+            if(mConfig.AnnotatedOnly)
+                return MergeOutcome.reject(RescueRejectReason.NOVEL_JUNCTION);
+            // Trust-primary fallback: primary contributes everything it matched. If primary is
+            // upstream, upLoss=0 → L=upMatchedRead. If primary is downstream, downLoss=0 → L=down.LeadingS.
+            chosenL = primaryIsUpstream ? upMatchedRead : down.LeadingS;
+            final int upLossFb = upMatchedRead - chosenL;
+            final int downLossFb = chosenL - down.LeadingS;
+            if(up.TrailingM - upLossFb < mConfig.MinAnchorOverhang || up.TrailingM < upLossFb
+                    || down.LeadingM - downLossFb < mConfig.MinAnchorOverhang || down.LeadingM < downLossFb)
+                return MergeOutcome.reject(RescueRejectReason.SHORT_ANCHOR);
+            chosenIntron = new ChrIntron(candidate.Chromosome, up.RefEnd + 1, down.Start - 1);
+        }
+
+        final int upLoss = upMatchedRead - chosenL;
+        final int downLoss = chosenL - down.LeadingS;
+        final List<CigarShape.Element> merged = buildMergedCigar(up.Cigar, down.Cigar, upLoss, downLoss, intronLength);
+        return MergeOutcome.success(up.Start, merged, chosenIntron, supp);
+    }
+
+    private SnapPick scanSnapPoints(
+            final RescueCandidate candidate, final Side up, final Side down,
+            final int upMatchedRead, final boolean primaryIsUpstream)
+    {
         int chosenL = -1;
         ChrIntron chosenIntron = null;
         int chosenTier = SpliceMotif.TIER_NONE;
         int chosenMinAnchor = -1;
-        for(int L = primaryMatched; L >= suppLeadingS; --L)
+
+        // Iterate so trust-primary is first encountered (wins ties).
+        final int startL = primaryIsUpstream ? upMatchedRead : down.LeadingS;
+        final int endL = primaryIsUpstream ? down.LeadingS : upMatchedRead;
+        final int step = primaryIsUpstream ? -1 : 1;
+        for(int L = startL; primaryIsUpstream ? L >= endL : L <= endL; L += step)
         {
-            final int primaryLoss = primaryMatched - L;
-            final int suppLoss = L - suppLeadingS;
-            if(primaryTrailingMOrig - primaryLoss < mConfig.MinAnchorOverhang)
+            final int upLoss = upMatchedRead - L;
+            final int downLoss = L - down.LeadingS;
+            if(up.TrailingM - upLoss < mConfig.MinAnchorOverhang)
                 continue;
-            if(suppLeadingMOrig - suppLoss < mConfig.MinAnchorOverhang)
+            if(down.LeadingM - downLoss < mConfig.MinAnchorOverhang)
                 continue;
-            if(primaryTrailingMOrig < primaryLoss || suppLeadingMOrig < suppLoss)
+            if(up.TrailingM < upLoss || down.LeadingM < downLoss)
                 continue;
-            final int candidateIntronStart = primaryRefEnd - primaryLoss + 1;
-            final int candidateIntronEnd = supp.Start + suppLoss - 1;
+
             final ChrIntron candidateIntron = new ChrIntron(
-                    candidate.Chromosome, candidateIntronStart, candidateIntronEnd);
+                    candidate.Chromosome, up.RefEnd - upLoss + 1, down.Start + downLoss - 1);
             final int tier = classifyJunctionTier(candidateIntron);
             if(tier == SpliceMotif.TIER_NONE)
                 continue;
-            final int candidateMinAnchor = Math.min(
-                    primaryTrailingMOrig - primaryLoss,
-                    suppLeadingMOrig - suppLoss);
-            if(tier > chosenTier
-                    || (tier == chosenTier && candidateMinAnchor > chosenMinAnchor))
+
+            final int candidateMinAnchor = Math.min(up.TrailingM - upLoss, down.LeadingM - downLoss);
+            if(tier > chosenTier || (tier == chosenTier && candidateMinAnchor > chosenMinAnchor))
             {
                 chosenL = L;
                 chosenIntron = candidateIntron;
@@ -520,211 +527,71 @@ public class JunctionRescueResolver
                 chosenMinAnchor = candidateMinAnchor;
             }
         }
-        // Mate-hint fallback: no annotated match, but the partner mate's rescue introduced an
-        // intron whose start position falls within our overlap window. Use it as the snap target
-        // instead of trust-primary fallback.
-        if(chosenL == -1 && !candidate.MateHintIntrons.isEmpty())
-        {
-            for(ChrIntron hint : candidate.MateHintIntrons)
-            {
-                if(!hint.Chromosome.equals(candidate.Chromosome))
-                    continue;
-                final int requiredPrimaryLoss = primaryRefEnd - hint.IntronStart + 1;
-                final int L = primaryMatched - requiredPrimaryLoss;
-                if(L < suppLeadingS || L > primaryMatched)
-                    continue;
-                final int suppLoss = L - suppLeadingS;
-                final int primaryLoss = requiredPrimaryLoss;
-                if(primaryTrailingMOrig - primaryLoss < mConfig.MinAnchorOverhang)
-                    continue;
-                if(suppLeadingMOrig - suppLoss < mConfig.MinAnchorOverhang)
-                    continue;
-                if(primaryTrailingMOrig < primaryLoss || suppLeadingMOrig < suppLoss)
-                    continue;
-                final ChrIntron candidateIntron = new ChrIntron(
-                        candidate.Chromosome, hint.IntronStart, supp.Start + suppLoss - 1);
-                chosenL = L;
-                chosenIntron = candidateIntron;
-                break;
-            }
-        }
-        if(chosenL == -1)
-        {
-            if(mConfig.AnnotatedOnly)
-                return RescueAttemptResult.reject(RescueRejectReason.NOVEL_JUNCTION);
-            // Fallback: trust primary entirely (L = primaryMatched, no clipping).
-            chosenL = primaryMatched;
-            chosenIntron = new ChrIntron(candidate.Chromosome, primaryRefEnd + 1, supp.Start - 1);
-            // Re-check that this fallback split passes the anchor and clip constraints — supp
-            // may need to clip overlap bases off its leading M.
-            final int suppLoss = chosenL - suppLeadingS;
-            if(suppLeadingMOrig - suppLoss < mConfig.MinAnchorOverhang || suppLeadingMOrig < suppLoss)
-                return RescueAttemptResult.reject(RescueRejectReason.SHORT_ANCHOR);
-        }
-
-        final int primaryLoss = primaryMatched - chosenL;
-        final int suppLoss = chosenL - suppLeadingS;
-
-        // Build merged: primary's ops up to (excluding) trailing S, with the trailing M reduced
-        // by primaryLoss; then N(intronLength); then supp's ops past the leading S, with the
-        // first M reduced by suppLoss.
-        final List<CigarShape.Element> merged = new ArrayList<>(primaryCigar.size() + suppCigar.size());
-        for(int i = 0; i < primaryCigar.size() - 1; ++i)
-        {
-            if(i == primaryCigar.size() - 2 && primaryLoss > 0)
-                merged.add(new CigarShape.Element(primaryCigar.get(i).Length - primaryLoss,
-                        primaryCigar.get(i).Op));
-            else
-                merged.add(primaryCigar.get(i));
-        }
-        merged.add(new CigarShape.Element(intronLength, OP_SKIPPED));
-        for(int i = 1; i < suppCigar.size(); ++i)
-        {
-            if(i == 1 && suppLoss > 0)
-                merged.add(new CigarShape.Element(suppCigar.get(i).Length - suppLoss,
-                        suppCigar.get(i).Op));
-            else
-                merged.add(suppCigar.get(i));
-        }
-
-        return RescueAttemptResult.success(primaryStart, merged, chosenIntron);
+        return new SnapPick(chosenL, chosenIntron);
     }
 
-    private RescueAttemptResult tryLeftExtend(
-            final RescueCandidate candidate, final int primaryStart,
-            final List<CigarShape.Element> primaryCigar, final RescueSupplementary supp,
-            final List<CigarShape.Element> suppCigar)
+    // Mate-hint fallback: partner mate's previously-rescued intron hints the junction position.
+    // The hint position that's load-bearing depends on which side is the primary: if primary is
+    // upstream, the hint pins the intron's start (up.RefEnd-side); if downstream, the intron's
+    // end (down.Start-side).
+    private SnapPick scanMateHint(
+            final RescueCandidate candidate, final Side up, final Side down,
+            final int upMatchedRead, final boolean primaryIsUpstream)
     {
-        final int primaryReadCovered = CigarShape.readLength(primaryCigar);
-        final int suppReadCovered = CigarShape.readLength(suppCigar);
+        if(candidate.MateHintIntrons.isEmpty())
+            return SnapPick.miss();
 
-        if(primaryReadCovered != candidate.ReadLength || suppReadCovered != candidate.ReadLength)
-            return RescueAttemptResult.reject(RescueRejectReason.COMPLEX_CIGAR_SHAPE);
-
-        if(opAdjacentToSoftClip(primaryCigar, true))
-            return RescueAttemptResult.reject(RescueRejectReason.COMPLEX_CIGAR_SHAPE);
-        if(opAdjacentToSoftClip(suppCigar, false))
-            return RescueAttemptResult.reject(RescueRejectReason.COMPLEX_CIGAR_SHAPE);
-
-        final int primaryLeadingS = CigarShape.leadingSoftClip(primaryCigar);
-        final int suppMatched = candidate.ReadLength - CigarShape.trailingSoftClip(suppCigar);
-        final int overlap = suppMatched - primaryLeadingS;
-
-        if(overlap < 0)
-            return RescueAttemptResult.reject(RescueRejectReason.READ_COVERAGE_GAP);
-        if(overlap > mConfig.SoftclipTolerance)
-            return RescueAttemptResult.reject(RescueRejectReason.READ_COVERAGE_OVERLAP);
-
-        final int suppRefEnd = supp.Start + CigarShape.referenceSpan(suppCigar) - 1;
-        if(primaryStart <= suppRefEnd)
-            return RescueAttemptResult.reject(RescueRejectReason.READ_COVERAGE_OVERLAP);
-
-        final int intronLength = (primaryStart - 1 - suppRefEnd) + overlap;
-        if(intronLength < mConfig.MinIntronLength)
-            return RescueAttemptResult.reject(RescueRejectReason.INTRON_TOO_SHORT);
-        if(intronLength > mConfig.MaxIntronLength)
-            return RescueAttemptResult.reject(RescueRejectReason.INTRON_TOO_LONG);
-
-        final int suppTrailingMOrig = trailingMatchedRun(suppCigar);
-        final int primaryLeadingMOrig = leadingMatchedRun(primaryCigar);
-        if(suppTrailingMOrig < mConfig.MinAnchorOverhang
-                || primaryLeadingMOrig < mConfig.MinAnchorOverhang)
-            return RescueAttemptResult.reject(RescueRejectReason.SHORT_ANCHOR);
-
-        // mirror of tryRightExtend's snap loop. Tier-0 candidates fall through to the fallbacks below.
-        int chosenL = -1;
-        ChrIntron chosenIntron = null;
-        int chosenTier = SpliceMotif.TIER_NONE;
-        int chosenMinAnchor = -1;
-        for(int L = primaryLeadingS; L <= suppMatched; ++L)
+        for(ChrIntron hint : candidate.MateHintIntrons)
         {
-            final int suppLoss = suppMatched - L;
-            final int primaryLoss = L - primaryLeadingS;
-            if(suppTrailingMOrig - suppLoss < mConfig.MinAnchorOverhang)
+            if(!hint.Chromosome.equals(candidate.Chromosome))
                 continue;
-            if(primaryLeadingMOrig - primaryLoss < mConfig.MinAnchorOverhang)
-                continue;
-            if(suppTrailingMOrig < suppLoss || primaryLeadingMOrig < primaryLoss)
-                continue;
-            final int candidateIntronStart = suppRefEnd - suppLoss + 1;
-            final int candidateIntronEnd = primaryStart + primaryLoss - 1;
-            final ChrIntron candidateIntron = new ChrIntron(
-                    candidate.Chromosome, candidateIntronStart, candidateIntronEnd);
-            final int tier = classifyJunctionTier(candidateIntron);
-            if(tier == SpliceMotif.TIER_NONE)
-                continue;
-            final int candidateMinAnchor = Math.min(
-                    suppTrailingMOrig - suppLoss,
-                    primaryLeadingMOrig - primaryLoss);
-            if(tier > chosenTier
-                    || (tier == chosenTier && candidateMinAnchor > chosenMinAnchor))
-            {
-                chosenL = L;
-                chosenIntron = candidateIntron;
-                chosenTier = tier;
-                chosenMinAnchor = candidateMinAnchor;
-            }
-        }
-        // Mate-hint fallback for left-extend: derive L from the hinted intron's end position.
-        if(chosenL == -1 && !candidate.MateHintIntrons.isEmpty())
-        {
-            for(ChrIntron hint : candidate.MateHintIntrons)
-            {
-                if(!hint.Chromosome.equals(candidate.Chromosome))
-                    continue;
-                final int requiredPrimaryLoss = hint.IntronEnd - (primaryStart - 1);
-                final int L = primaryLeadingS + requiredPrimaryLoss;
-                if(L < primaryLeadingS || L > suppMatched)
-                    continue;
-                final int suppLoss = suppMatched - L;
-                final int primaryLoss = requiredPrimaryLoss;
-                if(suppTrailingMOrig - suppLoss < mConfig.MinAnchorOverhang)
-                    continue;
-                if(primaryLeadingMOrig - primaryLoss < mConfig.MinAnchorOverhang)
-                    continue;
-                if(suppTrailingMOrig < suppLoss || primaryLeadingMOrig < primaryLoss)
-                    continue;
-                final ChrIntron candidateIntron = new ChrIntron(
-                        candidate.Chromosome, suppRefEnd - suppLoss + 1, hint.IntronEnd);
-                chosenL = L;
-                chosenIntron = candidateIntron;
-                break;
-            }
-        }
-        if(chosenL == -1)
-        {
-            if(mConfig.AnnotatedOnly)
-                return RescueAttemptResult.reject(RescueRejectReason.NOVEL_JUNCTION);
-            chosenL = primaryLeadingS;
-            chosenIntron = new ChrIntron(candidate.Chromosome, suppRefEnd + 1, primaryStart - 1);
-            final int suppLoss = suppMatched - chosenL;
-            if(suppTrailingMOrig - suppLoss < mConfig.MinAnchorOverhang || suppTrailingMOrig < suppLoss)
-                return RescueAttemptResult.reject(RescueRejectReason.SHORT_ANCHOR);
-        }
-
-        final int suppLoss = suppMatched - chosenL;
-        final int primaryLoss = chosenL - primaryLeadingS;
-
-        final List<CigarShape.Element> merged = new ArrayList<>(primaryCigar.size() + suppCigar.size());
-        for(int i = 0; i < suppCigar.size() - 1; ++i)
-        {
-            if(i == suppCigar.size() - 2 && suppLoss > 0)
-                merged.add(new CigarShape.Element(suppCigar.get(i).Length - suppLoss,
-                        suppCigar.get(i).Op));
+            final int upLoss;
+            if(primaryIsUpstream)
+                upLoss = up.RefEnd - hint.IntronStart + 1;
             else
-                merged.add(suppCigar.get(i));
+                upLoss = upMatchedRead - (down.LeadingS + (hint.IntronEnd - (down.Start - 1)));
+            final int L = upMatchedRead - upLoss;
+            if(L < down.LeadingS || L > upMatchedRead)
+                continue;
+            final int downLoss = L - down.LeadingS;
+            if(up.TrailingM - upLoss < mConfig.MinAnchorOverhang)
+                continue;
+            if(down.LeadingM - downLoss < mConfig.MinAnchorOverhang)
+                continue;
+            if(up.TrailingM < upLoss || down.LeadingM < downLoss)
+                continue;
+
+            // Hint pins the primary's side of the intron; the other end is derived from the snap.
+            final int hintedIntronStart = primaryIsUpstream ? hint.IntronStart : (up.RefEnd - upLoss + 1);
+            final int hintedIntronEnd = primaryIsUpstream ? (down.Start + downLoss - 1) : hint.IntronEnd;
+            return new SnapPick(L, new ChrIntron(candidate.Chromosome, hintedIntronStart, hintedIntronEnd));
+        }
+        return SnapPick.miss();
+    }
+
+    private static List<CigarShape.Element> buildMergedCigar(
+            final List<CigarShape.Element> upCigar, final List<CigarShape.Element> downCigar,
+            final int upLoss, final int downLoss, final int intronLength)
+    {
+        final List<CigarShape.Element> merged = new ArrayList<>(upCigar.size() + downCigar.size());
+        // upstream ops, excluding trailing S; shrink last M by upLoss
+        for(int i = 0; i < upCigar.size() - 1; ++i)
+        {
+            if(i == upCigar.size() - 2 && upLoss > 0)
+                merged.add(new CigarShape.Element(upCigar.get(i).Length - upLoss, upCigar.get(i).Op));
+            else
+                merged.add(upCigar.get(i));
         }
         merged.add(new CigarShape.Element(intronLength, OP_SKIPPED));
-        for(int i = 1; i < primaryCigar.size(); ++i)
+        // downstream ops, excluding leading S; shrink first M by downLoss
+        for(int i = 1; i < downCigar.size(); ++i)
         {
-            if(i == 1 && primaryLoss > 0)
-                merged.add(new CigarShape.Element(primaryCigar.get(i).Length - primaryLoss,
-                        primaryCigar.get(i).Op));
+            if(i == 1 && downLoss > 0)
+                merged.add(new CigarShape.Element(downCigar.get(i).Length - downLoss, downCigar.get(i).Op));
             else
-                merged.add(primaryCigar.get(i));
+                merged.add(downCigar.get(i));
         }
-
-        return RescueAttemptResult.success(supp.Start, merged, chosenIntron);
+        return merged;
     }
 
     // returns the length of the matched-run (M/=/X) adjacent to the cigar's trailing softclip. If
@@ -780,71 +647,103 @@ public class JunctionRescueResolver
         }
     }
 
-    // small helpers wrapping success/failure plumbing.
-    private static final class RescueAttemptResult
+    // Per-record geometry computed once at the entry to tryMerge — start, parsed cigar, and the
+    // S/M lengths on each side plus the reference end coordinate.
+    private static final class Side
     {
-        final RescueRejectReason Reject;
-        final int MergedStart;
-        final List<CigarShape.Element> MergedCigar;
-        final ChrIntron IntroducedIntron;
+        final int Start;
+        final List<CigarShape.Element> Cigar;
+        final int LeadingS;
+        final int TrailingS;
+        final int LeadingM;
+        final int TrailingM;
+        final int RefEnd;
 
-        private RescueAttemptResult(
-                final RescueRejectReason reject, final int mergedStart,
-                final List<CigarShape.Element> mergedCigar, final ChrIntron intron)
+        private Side(
+                final int start, final List<CigarShape.Element> cigar,
+                final int leadingS, final int trailingS,
+                final int leadingM, final int trailingM, final int refEnd)
         {
-            Reject = reject;
-            MergedStart = mergedStart;
-            MergedCigar = mergedCigar;
-            IntroducedIntron = intron;
+            Start = start;
+            Cigar = cigar;
+            LeadingS = leadingS;
+            TrailingS = trailingS;
+            LeadingM = leadingM;
+            TrailingM = trailingM;
+            RefEnd = refEnd;
         }
 
-        static RescueAttemptResult reject(final RescueRejectReason reason)
+        static Side of(final int start, final List<CigarShape.Element> cigar)
         {
-            return new RescueAttemptResult(reason, -1, null, null);
-        }
-
-        static RescueAttemptResult success(
-                final int start, final List<CigarShape.Element> cigar, final ChrIntron intron)
-        {
-            return new RescueAttemptResult(null, start, cigar, intron);
+            return new Side(start, cigar,
+                    CigarShape.leadingSoftClip(cigar), CigarShape.trailingSoftClip(cigar),
+                    leadingMatchedRun(cigar), trailingMatchedRun(cigar),
+                    start + CigarShape.referenceSpan(cigar) - 1);
         }
     }
 
-    private static final class MergeAttempt
+    private static final class SnapPick
     {
-        final RescueAttemptResult Inner;
-        final RescueSupplementary MergedSupp;
+        final int L;
+        final ChrIntron Intron;
+
+        SnapPick(final int l, final ChrIntron intron)
+        {
+            L = l;
+            Intron = intron;
+        }
+
+        static SnapPick miss()
+        {
+            return new SnapPick(-1, null);
+        }
+    }
+
+    // Result of attempting to merge one supp into the primary. Three shapes: success (carries the
+    // merged geometry plus the supp identity), reject (carries a reason), or ambiguous (two equally
+    // good candidates — treated as a special reject by the caller).
+    private static final class MergeOutcome
+    {
+        final RescueRejectReason Reject;
         final boolean Ambiguous;
-        final RescueRejectReason RejectReason;
+        final int MergedStart;
+        final List<CigarShape.Element> MergedCigar;
+        final ChrIntron IntroducedIntron;
+        final RescueSupplementary MergedSupp;
 
-        private MergeAttempt(
-                final RescueAttemptResult inner, final RescueSupplementary supp,
-                final boolean ambiguous, final RescueRejectReason rejectReason)
+        private MergeOutcome(
+                final RescueRejectReason reject, final boolean ambiguous,
+                final int mergedStart, final List<CigarShape.Element> mergedCigar,
+                final ChrIntron intron, final RescueSupplementary supp)
         {
-            Inner = inner;
-            MergedSupp = supp;
+            Reject = reject;
             Ambiguous = ambiguous;
-            RejectReason = rejectReason;
+            MergedStart = mergedStart;
+            MergedCigar = mergedCigar;
+            IntroducedIntron = intron;
+            MergedSupp = supp;
         }
 
-        MergeAttempt(final RescueAttemptResult inner, final RescueSupplementary supp)
+        static MergeOutcome reject(final RescueRejectReason reason)
         {
-            this(inner, supp, false, null);
+            return new MergeOutcome(reason, false, -1, null, null, null);
         }
 
-        static MergeAttempt ambiguous()
+        static MergeOutcome ambiguous()
         {
-            return new MergeAttempt(null, null, true, RescueRejectReason.AMBIGUOUS_SUPP_CHOICE);
+            return new MergeOutcome(RescueRejectReason.AMBIGUOUS_SUPP_CHOICE, true, -1, null, null, null);
         }
 
-        static MergeAttempt fail(final RescueRejectReason reason)
+        static MergeOutcome success(
+                final int start, final List<CigarShape.Element> cigar,
+                final ChrIntron intron, final RescueSupplementary supp)
         {
-            return new MergeAttempt(null, null, false, reason);
+            return new MergeOutcome(null, false, start, cigar, intron, supp);
         }
 
-        boolean success()
+        boolean isSuccess()
         {
-            return MergedSupp != null && !Ambiguous;
+            return Reject == null;
         }
     }
 }
