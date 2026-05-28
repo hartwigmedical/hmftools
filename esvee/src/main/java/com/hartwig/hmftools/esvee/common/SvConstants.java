@@ -64,4 +64,6 @@ public final class SvConstants
     public static final int SAGA_ALIGN_SCORE_MIN_BASELINE = 50;
     public static final double SAGA_ALIGN_SCORE_MIN_RATIO = 0.8;
     public static final int SAGA_ALIGN_JUNCTION_OVERLAP_MIN = MIN_VARIANT_LENGTH_LOWER;
+    public static final int SAGA_ALIGN_JUNCTION_INDEL_DISTANCE = MIN_VARIANT_LENGTH_LOWER;
+    public static final int SAGA_ALIGN_JUNCTION_INDEL_MAX_LENGTH = 2;
 }
