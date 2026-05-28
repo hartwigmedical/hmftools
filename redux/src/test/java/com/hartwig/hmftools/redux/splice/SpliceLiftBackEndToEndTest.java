@@ -38,7 +38,7 @@ public class SpliceLiftBackEndToEndTest
     private static ContigEntry threeExonContig()
     {
         return new ContigEntry(
-                TX_CONTIG, 1, 250, GENE_ID, GENE_NAME, TRANS_NAME, CHR_1,
+                TX_CONTIG, 1, 250, GENE_ID, GENE_NAME, TRANS_NAME, CHR_1, 1,
                 List.of(new BaseRegion(100, 199), new BaseRegion(300, 399), new BaseRegion(500, 549)));
     }
 
@@ -191,5 +191,34 @@ public class SpliceLiftBackEndToEndTest
         assertEquals("50M100N50M", r1.getCigarString());
         // ref alt was Dropped — XA tag is null (only one kept alignment, which is the primary itself)
         assertNull(r1.getStringAttribute(XA_TAG));
+    }
+
+    // Issue #3: spliced records lifted from tx contigs should carry XS:A:+ / XS:A:- so downstream
+    // RNA tools (Isofox) can interpret junctions strand-aware. Non-spliced records must NOT get XS:A.
+    @Test
+    public void splicedTxRecordsGetXsAStrand()
+    {
+        // forward-strand transcript (threeExonContig has strand=1): expect XS:A:+
+        final SAMRecord r1 = newPrimary("readXsPlus", true, TX_CONTIG, 51, "100M");
+        final SAMRecord r2 = newPrimary("readXsPlus", false, TX_CONTIG, 200, "50M");
+
+        processFragment(List.of(threeExonContig()), List.of(r1, r2));
+
+        // r1 lifted to 50M100N50M → XS:A:+ on the spliced record
+        assertTrue("expected N in lifted cigar", r1.getCigarString().contains("N"));
+        assertEquals(Character.valueOf('+'), r1.getAttribute("XS"));
+    }
+
+    @Test
+    public void nonSplicedRecordsDoNotGetXsA()
+    {
+        // ref-only alignment on chr1 (not from any tx contig), no N in cigar → no XS:A
+        final SAMRecord r1 = newPrimary("readNoXs", true, CHR_1, 1000, "100M");
+        final SAMRecord r2 = newPrimary("readNoXs", false, CHR_1, 1100, "50M");
+
+        processFragment(List.of(threeExonContig()), List.of(r1, r2));
+
+        assertFalse("expected no N in lifted cigar", r1.getCigarString().contains("N"));
+        assertNull(r1.getAttribute("XS"));
     }
 }

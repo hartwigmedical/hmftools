@@ -161,28 +161,65 @@ public final class ContigTranslator
         return element.getOperator() == CigarOperator.D && element.getLength() <= SPLICE_FLANKING_DELETION_MAX_BP;
     }
 
-    // Collapses "<...>M nN yM zS" -> "<...>M (y+z)S" when y <= maxAnchorBp. Used on tx-contig supps
-    // whose walk barely reached into the next exon; the tiny yM forces a fake mini-intron and
-    // pushes the supp's ref end past the real splice point.
-    public static Cigar trimTrailingMicroAnchor(final Cigar cigar, final int maxAnchorBp)
+    public static final class MicroAnchorResult
     {
-        final List<CigarElement> elements = cigar.getCigarElements();
-        if(elements.size() < 3)
-            return cigar;
+        public final Cigar AdjustedCigar;
+        public final int StartShift;     // bases the alignment start advanced (from a leading trim)
 
+        MicroAnchorResult(final Cigar cigar, final int startShift)
+        {
+            AdjustedCigar = cigar;
+            StartShift = startShift;
+        }
+    }
+
+    // Drops fabricated sub-threshold junction anchors at both read ends. A tx-contig walk that
+    // dribbles a few bases past an exon boundary leaves a tiny terminal "yM nN ..." (leading) or
+    // "... nN yM zS" (trailing) anchor. STAR rejects an annotated junction whose flanking exon
+    // block is shorter than alignSJDBoverhangMin (stitchWindowAligns.cpp), so we do the same:
+    // when y < minAnchorBp the yM is rolled into the adjacent softclip and the junction dropped.
+    // A leading trim advances the alignment start past the dropped yM + intron (reported via
+    // StartShift). A "<...>N yM" tail with no softclip is left intact — there the short exon is
+    // the read's genuine end.
+    public static MicroAnchorResult trimMicroAnchors(final Cigar cigar, final int minAnchorBp)
+    {
+        List<CigarElement> elements = new ArrayList<>(cigar.getCigarElements());
+        elements = trimTrailingAnchor(elements, minAnchorBp);
+        int startShift = 0;
+
+        if(leadingAnchorTrimmable(elements, minAnchorBp))
+        {
+            final int tinyAnchor = elements.get(1).getLength();
+            final int intron = elements.get(2).getLength();
+            startShift = tinyAnchor + intron;
+            final List<CigarElement> trimmed = new ArrayList<>(elements.size() - 2);
+            trimmed.add(new CigarElement(elements.get(0).getLength() + tinyAnchor, CigarOperator.S));
+            for(int i = 3; i < elements.size(); ++i)
+                trimmed.add(elements.get(i));
+            elements = trimmed;
+        }
+
+        return new MicroAnchorResult(new Cigar(elements), startShift);
+    }
+
+    // "<...>M nN yM zS" -> "<...>M (y+z)S" when y < minAnchorBp.
+    public static Cigar trimTrailingMicroAnchor(final Cigar cigar, final int minAnchorBp)
+    {
+        return new Cigar(trimTrailingAnchor(new ArrayList<>(cigar.getCigarElements()), minAnchorBp));
+    }
+
+    private static List<CigarElement> trimTrailingAnchor(final List<CigarElement> elements, final int minAnchorBp)
+    {
         final int last = elements.size() - 1;
-        final CigarElement trailingSoftClip = elements.get(last);
-        if(trailingSoftClip.getOperator() != CigarOperator.S)
-            return cigar;
-
+        if(last < 2)
+            return elements;
+        if(elements.get(last).getOperator() != CigarOperator.S)
+            return elements;
         final CigarElement tailMatch = elements.get(last - 1);
-        if(tailMatch.getOperator() != CigarOperator.M || tailMatch.getLength() > maxAnchorBp)
-            return cigar;
-
-        final CigarElement intron = elements.get(last - 2);
-        if(intron.getOperator() != CigarOperator.N)
-            return cigar;
-
+        if(tailMatch.getOperator() != CigarOperator.M || tailMatch.getLength() >= minAnchorBp)
+            return elements;
+        if(elements.get(last - 2).getOperator() != CigarOperator.N)
+            return elements;
         // refuse if there's no preceding M anchor — would leave the cigar starting with S/N.
         boolean hasAnchorBeforeIntron = false;
         for(int i = 0; i < last - 2; ++i)
@@ -194,13 +231,34 @@ public final class ContigTranslator
             }
         }
         if(!hasAnchorBeforeIntron)
-            return cigar;
+            return elements;
 
         final List<CigarElement> result = new ArrayList<>(last - 1);
         for(int i = 0; i < last - 2; ++i)
             result.add(elements.get(i));
-        result.add(new CigarElement(tailMatch.getLength() + trailingSoftClip.getLength(), CigarOperator.S));
-        return new Cigar(result);
+        result.add(new CigarElement(tailMatch.getLength() + elements.get(last).getLength(), CigarOperator.S));
+        return result;
+    }
+
+    // matches "zS yM nN M<...>" — leading softclip, tiny matched anchor under threshold, intron,
+    // then a real matched anchor that survives the trim.
+    private static boolean leadingAnchorTrimmable(final List<CigarElement> elements, final int minAnchorBp)
+    {
+        if(elements.size() < 4)
+            return false;
+        if(elements.get(0).getOperator() != CigarOperator.S)
+            return false;
+        final CigarElement tinyAnchor = elements.get(1);
+        if(tinyAnchor.getOperator() != CigarOperator.M || tinyAnchor.getLength() >= minAnchorBp)
+            return false;
+        if(elements.get(2).getOperator() != CigarOperator.N)
+            return false;
+        for(int i = 3; i < elements.size(); ++i)
+        {
+            if(elements.get(i).getOperator() == CigarOperator.M)
+                return true;
+        }
+        return false;
     }
 
     // true if the contig CIGAR has a leading or trailing S whose adjacent edge sits at an interior exon

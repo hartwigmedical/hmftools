@@ -75,6 +75,7 @@ public class LiftBackWriterTest
                 1, 1,
                 false, false, false, true,
                 "", "",
+                0,
                 List.of(selfAlignment));
 
         try(LiftBackWriter writer = new LiftBackWriter(mTsvA.toString(), mTsvB.toString()))
@@ -127,6 +128,7 @@ public class LiftBackWriterTest
                 2, 1,
                 false, false, false, true,
                 "ENSG_X", "",
+                0,
                 List.of(self, xa));
 
         try(LiftBackWriter writer = new LiftBackWriter(mTsvA.toString(), mTsvB.toString()))
@@ -155,6 +157,7 @@ public class LiftBackWriterTest
                 0, 0,
                 false, false, false, false,
                 "", "",
+                0,
                 List.<LiftedAlignment>of());
 
         try(LiftBackWriter writer = new LiftBackWriter(mTsvA.toString(), mTsvB.toString()))

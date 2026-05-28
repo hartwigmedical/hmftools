@@ -26,6 +26,11 @@ public record LiftBackResult(
         boolean refFullMatch,
         String geneIds,
         String notes,
+        // Transcript's genome strand for tx-contig-derived primaries (+1 forward / -1 reverse).
+        // 0 when the chosen primary is ref-only (e.g. REF_SINGLE, or N-cigar introduced by
+        // rescue/tail-extend whose source transcript strand we haven't threaded through yet).
+        // Used by the writer to set XS:A:+/- on spliced records.
+        int transcriptStrand,
         List<LiftedAlignment> liftedAlignments)
 {
     public enum RecordRole

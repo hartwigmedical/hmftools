@@ -24,7 +24,7 @@ public class SaTagRewriterTest
     private static LiftBackResolver newResolver()
     {
         ContigEntry entry = new ContigEntry(
-                TX_CONTIG, 1, 250, GENE_ID, GENE_NAME, TRANS_NAME, CHR_1,
+                TX_CONTIG, 1, 250, GENE_ID, GENE_NAME, TRANS_NAME, CHR_1, 1,
                 List.of(new BaseRegion(100, 199), new BaseRegion(300, 399), new BaseRegion(500, 549)));
         return new LiftBackResolver(List.of(entry));
     }

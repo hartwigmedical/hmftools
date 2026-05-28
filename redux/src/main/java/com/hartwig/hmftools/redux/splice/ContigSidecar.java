@@ -22,6 +22,7 @@ public final class ContigSidecar
         GeneName,
         TransName,
         Chromosome,
+        Strand,
         ExonSpans
     }
 
@@ -39,6 +40,7 @@ public final class ContigSidecar
             row.set(Column.GeneName, entry.geneName());
             row.set(Column.TransName, entry.transName());
             row.set(Column.Chromosome, entry.chromosome());
+            row.set(Column.Strand, String.valueOf(entry.strand()));
             row.set(Column.ExonSpans, entry.exonSpans().stream().map(BaseRegion::toString).collect(Collectors.joining(ITEM_DELIM)));
         }))
         {
@@ -52,11 +54,34 @@ public final class ContigSidecar
     public static List<ContigEntry> read(final String filename)
     {
         List<ContigEntry> entries = new ArrayList<>();
+        boolean missingStrandWarned = false;
 
         try(DelimFileReader reader = new DelimFileReader(filename))
         {
+            // Strand is a newer column (added with the XS:A:+/- emit pass). Older sidecars built by
+            // pre-strand SpliceFastaBuilder runs lack it; tolerate that by defaulting to 0 (no XS:A
+            // written for records lifted off those contigs) instead of failing the run.
+            final boolean hasStrand = reader.getColumnNames().contains(Column.Strand.name());
+
             for(DelimFileReader.Row row : reader)
             {
+                final int strand;
+                if(hasStrand)
+                {
+                    strand = Integer.parseInt(row.get(Column.Strand));
+                }
+                else
+                {
+                    strand = 0;
+                    if(!missingStrandWarned)
+                    {
+                        RD_LOGGER.warn("contig sidecar {} lacks the Strand column — XS:A:+/- will not "
+                                + "be emitted on tx-derived spliced records. Regenerate the sidecar "
+                                + "with the current SpliceFastaBuilder to enable.", filename);
+                        missingStrandWarned = true;
+                    }
+                }
+
                 entries.add(new ContigEntry(
                         row.get(Column.ContigName),
                         Integer.parseInt(row.get(Column.AltStart)),
@@ -65,6 +90,7 @@ public final class ContigSidecar
                         row.get(Column.GeneName),
                         row.get(Column.TransName),
                         row.get(Column.Chromosome),
+                        strand,
                         decodeSpans(row.get(Column.ExonSpans))));
             }
         }

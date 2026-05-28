@@ -1,0 +1,87 @@
+package com.hartwig.hmftools.redux.splice;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+
+import org.junit.Test;
+
+// Issue #4: contains() must be O(log N) (binary search on merged ranges), not a backward linear scan.
+// These tests exercise the merge-at-load path and a few overlap edge cases that the earlier scan-back
+// implementation tripped over.
+public class ExonRegionIndexTest
+{
+    @Test
+    public void containsHitsIncludeBoundaries() throws Exception
+    {
+        ExonRegionIndex idx = build(List.of(new int[] { 100, 200 }, new int[] { 300, 400 }));
+
+        // start, interior, end of an exon all count as inside
+        assertTrue(idx.contains("chr1", 100));
+        assertTrue(idx.contains("chr1", 150));
+        assertTrue(idx.contains("chr1", 200));
+        assertTrue(idx.contains("chr1", 300));
+        assertTrue(idx.contains("chr1", 400));
+    }
+
+    @Test
+    public void containsMissesIntronicAndIntergenic() throws Exception
+    {
+        ExonRegionIndex idx = build(List.of(new int[] { 100, 200 }, new int[] { 300, 400 }));
+
+        // outside all exons
+        assertFalse(idx.contains("chr1", 50));     // before first
+        assertFalse(idx.contains("chr1", 250));    // intronic
+        assertFalse(idx.contains("chr1", 500));    // after last
+    }
+
+    @Test
+    public void containsAcrossOverlappingAndAbuttingIntervals() throws Exception
+    {
+        // overlapping (100-200) and (150-300) should merge to (100-300); abutting (301-400) merges to
+        // (100-400). The previous backward-scan would visit every prior exon to confirm misses; the
+        // merged view exits in O(log N).
+        ExonRegionIndex idx = build(List.of(
+                new int[] { 100, 200 },
+                new int[] { 150, 300 },
+                new int[] { 301, 400 },
+                new int[] { 600, 700 }));
+
+        assertTrue(idx.contains("chr1", 250));   // overlap region
+        assertTrue(idx.contains("chr1", 301));   // abutment join
+        assertTrue(idx.contains("chr1", 400));   // end of merged range
+        assertFalse(idx.contains("chr1", 401));  // gap between merged ranges
+        assertFalse(idx.contains("chr1", 599));  // intergenic
+        assertTrue(idx.contains("chr1", 700));   // start of second merged range
+    }
+
+    @Test
+    public void chromosomeNormalizationIsBidirectional() throws Exception
+    {
+        // gene_data uses "1", BAM uses "chr1" — contains() must accept either form
+        ExonRegionIndex idx = build(List.of(new int[] { 100, 200 }));
+        assertTrue(idx.contains("chr1", 150));
+        assertTrue(idx.contains("1", 150));
+        assertFalse(idx.contains("chr2", 150));
+    }
+
+    private static ExonRegionIndex build(final List<int[]> exons) throws Exception
+    {
+        final Path dir = Files.createTempDirectory("exonIdxTest");
+        Files.writeString(dir.resolve("ensembl_gene_data.csv"),
+                "GeneId,GeneName,Chromosome,Strand,GeneStart,GeneEnd\nENSG_TEST,TESTG,1,1,1,100000\n");
+        final StringBuilder sb = new StringBuilder("GeneId,CanonicalTranscriptId,Strand,TransId,TransName,BioType,"
+                + "TransStart,TransEnd,ExonRank,ExonStart,ExonEnd,ExonPhase,ExonEndPhase,CodingStart,CodingEnd,RefSeqId\n");
+        int rank = 1;
+        for(int[] ex : exons)
+        {
+            sb.append("ENSG_TEST,1,1,1,ENST_TEST,protein_coding,1,100000,").append(rank++).append(",")
+                    .append(ex[0]).append(",").append(ex[1]).append(",0,0,0,0,\n");
+        }
+        Files.writeString(dir.resolve("ensembl_trans_exon_data.csv"), sb.toString());
+        return ExonRegionIndex.load(dir.toString());
+    }
+}

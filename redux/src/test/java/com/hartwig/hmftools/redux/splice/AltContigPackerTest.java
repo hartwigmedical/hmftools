@@ -19,7 +19,7 @@ public class AltContigPackerTest
             final String transName, final String sequence, final List<BaseRegion> exonSpans)
     {
         return new TranscriptContigBuilder.TranscriptContigResult(
-                "G_" + transName, "GENE_" + transName, transName, CHR_1, exonSpans, sequence);
+                "G_" + transName, "GENE_" + transName, transName, CHR_1, 1, exonSpans, sequence);
     }
 
     @Test

@@ -36,7 +36,7 @@ public final class AltContigPacker
             entries.add(new ContigEntry(
                     altContig, altStart, altEnd,
                     transcript.geneId(), transcript.geneName(), transcript.transName(), transcript.chromosome(),
-                    transcript.exonSpans()));
+                    transcript.strand(), transcript.exonSpans()));
         }
 
         return new PackResult(altContig, sequence.toString(), entries);

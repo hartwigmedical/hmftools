@@ -50,7 +50,8 @@ public class TranscriptContigBuilder
         }
 
         return new TranscriptContigResult(
-                gene.GeneId, gene.GeneName, transcript.TransName, gene.Chromosome, spans, sequence.toString());
+                gene.GeneId, gene.GeneName, transcript.TransName, gene.Chromosome, gene.Strand,
+                spans, sequence.toString());
     }
 
     public record TranscriptContigResult(
@@ -58,6 +59,7 @@ public class TranscriptContigBuilder
             String geneName,
             String transName,
             String chromosome,
+            int strand,
             List<BaseRegion> exonSpans,
             String sequence)
     {

@@ -21,16 +21,10 @@ public class SpliceLiftBackConfig
     public static final String INPUT_BAM_DESC = "Input BAM aligned against ref + transcript-contig FASTA";
 
     public static final String CONTIG_SIDECAR = "contig_sidecar";
-    public static final String CONTIG_SIDECAR_DESC = "Contig sidecar TSV from SpliceFastaBuilder; omit for pass-through mode";
+    public static final String CONTIG_SIDECAR_DESC = "Contig sidecar TSV from SpliceFastaBuilder. Required.";
 
     public static final String EMIT_SECONDARIES = "emit_secondaries";
     public static final String EMIT_SECONDARIES_DESC = "Input BAM uses 0x100 secondaries (bwa-mem2 -a) instead of XA tags";
-
-    public static final String DROP_LOSING_ALTS = "drop_losing_alts";
-    public static final String DROP_LOSING_ALTS_DESC = "Drop secondaries the per-pair discriminator marked Dropped";
-
-    public static final String STAR_MAPQ_LADDER = "star_mapq_ladder";
-    public static final String STAR_MAPQ_LADDER_DESC = "Override MAPQ on mapped records using STAR's NH ladder";
 
     public static final String UNMAP_ABOVE_NH = "unmap_above_nh";
     public static final String UNMAP_ABOVE_NH_DESC = "If > 0, mark records with NH > N as unmapped (STAR default 10)";
@@ -48,7 +42,7 @@ public class SpliceLiftBackConfig
 
     public static final String ENSEMBL_DATA_DIR = "ensembl_data_dir";
     public static final String ENSEMBL_DATA_DIR_DESC =
-            "Ensembl data cache directory; required when -rescue_via_supp is set";
+            "Ensembl data cache directory (annotated exons + junctions). Required.";
 
     public static final String DEFAULT_OUTPUT_PREFIX = "splice_lifted";
     public static final String TSV_A_SUFFIX = ".liftback.records.tsv";
@@ -59,8 +53,6 @@ public class SpliceLiftBackConfig
     public final String RefGenomeFile;
     public final String ContigSidecarFile;
     public final boolean EmitSecondaries;
-    public final boolean DropLosingAlts;
-    public final boolean StarMapqLadder;
     public final int UnmapAboveNh;
     public final int UnmapBelowMapq;
     public final boolean RescueViaSupp;
@@ -77,16 +69,11 @@ public class SpliceLiftBackConfig
         RefGenomeFile = configBuilder.getValue(REF_GENOME);
         ContigSidecarFile = configBuilder.getValue(CONTIG_SIDECAR);
         EmitSecondaries = configBuilder.hasFlag(EMIT_SECONDARIES);
-        DropLosingAlts = configBuilder.hasFlag(DROP_LOSING_ALTS);
-        StarMapqLadder = configBuilder.hasFlag(STAR_MAPQ_LADDER);
         UnmapAboveNh = configBuilder.getInteger(UNMAP_ABOVE_NH);
         UnmapBelowMapq = configBuilder.getInteger(UNMAP_BELOW_MAPQ);
         RescueViaSupp = configBuilder.hasFlag(RESCUE_VIA_SUPP);
         ExtendSoftclipTails = configBuilder.hasFlag(EXTEND_SOFTCLIP_TAILS);
         EnsemblDataDir = configBuilder.getValue(ENSEMBL_DATA_DIR);
-
-        if(RescueViaSupp && EnsemblDataDir == null)
-            throw new IllegalArgumentException("-rescue_via_supp requires -ensembl_data_dir");
         OutputDir = parseOutputDir(configBuilder);
         OutputId = configBuilder.getValue(OUTPUT_ID);
         BamToolPath = configBuilder.getValue(BAMTOOL_PATH);
@@ -95,6 +82,13 @@ public class SpliceLiftBackConfig
         if(OutputDir == null)
             throw new IllegalArgumentException("missing required config: output_dir");
 
+        // Rescue and tail-extension run inside the grouped per-pair pipeline (decideMateGroup), which
+        // only executes when -emit_secondaries is set. Without it the flags would be silent no-ops, so
+        // fail fast rather than emit unrescued BAMs while logging "rescue-via-supp enabled".
+        if((RescueViaSupp || ExtendSoftclipTails) && !EmitSecondaries)
+            throw new IllegalArgumentException(
+                    "-rescue_via_supp and -extend_softclip_tails require -emit_secondaries");
+
         if(!checkCreateOutputDir(OutputDir))
             throw new IllegalStateException("failed to create output directory: " + OutputDir);
     }
@@ -102,11 +96,6 @@ public class SpliceLiftBackConfig
     public String formUnsortedBam()
     {
         return OutputDir + prefix() + ".unsorted" + BAM_EXTENSION;
-    }
-
-    public boolean hasContigSidecar()
-    {
-        return ContigSidecarFile != null;
     }
 
     private String prefix()
@@ -138,15 +127,13 @@ public class SpliceLiftBackConfig
     {
         configBuilder.addPath(INPUT_BAM, true, INPUT_BAM_DESC);
         addRefGenomeConfig(configBuilder, true);
-        configBuilder.addPath(CONTIG_SIDECAR, false, CONTIG_SIDECAR_DESC);
+        configBuilder.addPath(CONTIG_SIDECAR, true, CONTIG_SIDECAR_DESC);
         configBuilder.addFlag(EMIT_SECONDARIES, EMIT_SECONDARIES_DESC);
-        configBuilder.addFlag(DROP_LOSING_ALTS, DROP_LOSING_ALTS_DESC);
-        configBuilder.addFlag(STAR_MAPQ_LADDER, STAR_MAPQ_LADDER_DESC);
         configBuilder.addInteger(UNMAP_ABOVE_NH, UNMAP_ABOVE_NH_DESC, 0);
         configBuilder.addInteger(UNMAP_BELOW_MAPQ, UNMAP_BELOW_MAPQ_DESC, 0);
         configBuilder.addFlag(RESCUE_VIA_SUPP, RESCUE_VIA_SUPP_DESC);
         configBuilder.addFlag(EXTEND_SOFTCLIP_TAILS, EXTEND_SOFTCLIP_TAILS_DESC);
-        configBuilder.addPath(ENSEMBL_DATA_DIR, false, ENSEMBL_DATA_DIR_DESC);
+        configBuilder.addPath(ENSEMBL_DATA_DIR, true, ENSEMBL_DATA_DIR_DESC);
         BamToolName.addConfig(configBuilder);
 
         addOutputOptions(configBuilder);

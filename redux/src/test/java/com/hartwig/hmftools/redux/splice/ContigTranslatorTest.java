@@ -28,7 +28,7 @@ public class ContigTranslatorTest
     private static ContigEntry threeExonContig()
     {
         return new ContigEntry(
-                CONTIG_NAME, 1, 250, GENE_ID, GENE_NAME, TRANS_NAME, CHR_1,
+                CONTIG_NAME, 1, 250, GENE_ID, GENE_NAME, TRANS_NAME, CHR_1, 1,
                 List.of(new BaseRegion(100, 199), new BaseRegion(300, 399), new BaseRegion(500, 549)));
     }
 
@@ -245,7 +245,7 @@ public class ContigTranslatorTest
     public void testTwoExonContigBoundaryCases()
     {
         ContigEntry twoExon = new ContigEntry(
-                "ensG_X_T", 1, 100, "G", "X", "T", CHR_1,
+                "ensG_X_T", 1, 100, "G", "X", "T", CHR_1, 1,
                 List.of(new BaseRegion(100, 149), new BaseRegion(200, 249)));
 
         // M that exactly fills exon 1 — no spurious trailing N
@@ -293,7 +293,7 @@ public class ContigTranslatorTest
     {
         // single-exon contig has no interior boundaries; should always be false even with S
         ContigEntry singleExon = new ContigEntry(
-                "single", 1, 100, GENE_ID, GENE_NAME, TRANS_NAME, CHR_1, List.of(new BaseRegion(100, 199)));
+                "single", 1, 100, GENE_ID, GENE_NAME, TRANS_NAME, CHR_1, 1, List.of(new BaseRegion(100, 199)));
         assertFalse(ContigTranslator.hasSoftClipAtExonBoundary(singleExon, 1, cigar("50S50M")));
         assertFalse(ContigTranslator.hasSoftClipAtExonBoundary(singleExon, 1, cigar("50M50S")));
     }
@@ -326,12 +326,12 @@ public class ContigTranslatorTest
     }
 
     @Test
-    public void testTrimMicroAnchorExactlyAtThreshold()
+    public void testTrimMicroAnchorAtThresholdKept()
     {
-        // 3M tail with threshold 3 is trimmable (semantics: trim when length <= maxAnchorBp).
+        // 3M tail with min anchor 3 is kept (STAR keeps anchors >= alignSJDBoverhangMin; trim < 3).
         final Cigar in = cigar("100M500N3M48S");
         final Cigar out = ContigTranslator.trimTrailingMicroAnchor(in, 3);
-        assertEquals("100M51S", out.toString());
+        assertEquals("100M500N3M48S", out.toString());
     }
 
     @Test
@@ -381,6 +381,47 @@ public class ContigTranslatorTest
         final Cigar in = cigar("100M500N4M47S");
         final Cigar out = ContigTranslator.trimTrailingMicroAnchor(in, 3);
         assertEquals("100M500N4M47S", out.toString());
+    }
+
+    @Test
+    public void testTrimMicroAnchorsLeading()
+    {
+        // "38S2M3713N68M4I39M" with min anchor 3 -> drop the leading 2M + 3713N, roll 2M into the
+        // leading softclip: "40S68M4I39M". Start advances by 2 (anchor) + 3713 (intron) = 3715.
+        final ContigTranslator.MicroAnchorResult out =
+                ContigTranslator.trimMicroAnchors(cigar("38S2M3713N68M4I39M"), 3);
+        assertEquals("40S68M4I39M", out.AdjustedCigar.toString());
+        assertEquals(3715, out.StartShift);
+    }
+
+    @Test
+    public void testTrimMicroAnchorsLeadingAnchorAtThresholdKept()
+    {
+        // 3M leading anchor is kept (>= 3); no start shift.
+        final ContigTranslator.MicroAnchorResult out =
+                ContigTranslator.trimMicroAnchors(cigar("38S3M3713N68M"), 3);
+        assertEquals("38S3M3713N68M", out.AdjustedCigar.toString());
+        assertEquals(0, out.StartShift);
+    }
+
+    @Test
+    public void testTrimMicroAnchorsBothEnds()
+    {
+        // tiny anchors at both ends: leading 2M and trailing 1M both dropped.
+        final ContigTranslator.MicroAnchorResult out =
+                ContigTranslator.trimMicroAnchors(cigar("10S2M500N80M600N1M20S"), 3);
+        assertEquals("12S80M21S", out.AdjustedCigar.toString());
+        assertEquals(502, out.StartShift);
+    }
+
+    @Test
+    public void testTrimMicroAnchorsNoChange()
+    {
+        // clean cigar with adequate anchors -> unchanged, no shift.
+        final ContigTranslator.MicroAnchorResult out =
+                ContigTranslator.trimMicroAnchors(cigar("38S68M3713N40M"), 3);
+        assertEquals("38S68M3713N40M", out.AdjustedCigar.toString());
+        assertEquals(0, out.StartShift);
     }
 
     private static Cigar cigar(final String cigarString)

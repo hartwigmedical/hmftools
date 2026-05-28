@@ -85,19 +85,24 @@ public class SpliceLiftBack
 
         mWorkingInputBam = mConfig.EmitSecondaries ? nameSortInput() : mConfig.InputBam;
 
-        final List<ContigEntry> contigEntries;
-        if(mConfig.hasContigSidecar())
+        final List<ContigEntry> contigEntries = ContigSidecar.read(mConfig.ContigSidecarFile);
+        RD_LOGGER.info("loaded {} contig entries", contigEntries.size());
+
+        ExonRegionIndex exonIndex = null;
+        if(mConfig.EnsemblDataDir != null)
         {
-            contigEntries = ContigSidecar.read(mConfig.ContigSidecarFile);
-            RD_LOGGER.info("loaded {} contig entries", contigEntries.size());
-        }
-        else
-        {
-            contigEntries = List.of();
-            RD_LOGGER.info("no contig sidecar supplied — running in pass-through mode (lift-back is a no-op)");
+            try
+            {
+                exonIndex = ExonRegionIndex.load(mConfig.EnsemblDataDir);
+                RD_LOGGER.info("loaded annotated-exon index from {}", mConfig.EnsemblDataDir);
+            }
+            catch(IOException e)
+            {
+                throw new IllegalStateException("failed to load annotated exons: " + e, e);
+            }
         }
 
-        final LiftBackResolver resolver = new LiftBackResolver(contigEntries, mConfig.EmitSecondaries);
+        final LiftBackResolver resolver = new LiftBackResolver(contigEntries, mConfig.EmitSecondaries, exonIndex);
         validateBamAgainstSidecar(resolver.contigNames());
 
         if(mConfig.RescueViaSupp || mConfig.ExtendSoftclipTails)
@@ -261,7 +266,7 @@ public class SpliceLiftBack
                     continue;
 
                 final LiftBackResult result = resolver.resolve(record);
-                final LiftedMateInfo info = toLiftedMateInfo(record, result);
+                final LiftedMateInfo info = toLiftedMateInfo(record, result, mConfig.UnmapAboveNh, mConfig.UnmapBelowMapq);
                 cache.recordPrimaryAlignment(record.getReadName(), record.getFirstOfPairFlag(), info);
                 ++primaryRecordsCached;
             }
@@ -292,8 +297,7 @@ public class SpliceLiftBack
             final SAMFileHeader header = samReader.getFileHeader().clone();
             header.setSortOrder(SAMFileHeader.SortOrder.unsorted);
 
-            if(mConfig.hasContigSidecar())
-                stripAltContigsFromHeader(header);
+            stripAltContigsFromHeader(header);
 
             try(SAMFileWriter samWriter = new SAMFileWriterFactory().makeBAMWriter(header, false, new File(unsortedBam)))
             {
@@ -327,7 +331,7 @@ public class SpliceLiftBack
         {
             final SAMRecord record = iter.next();
             final LiftBackResult result = resolver.resolve(record);
-            final int nh = countKeptForNh(result);
+            final int nh = Math.max(result.numLoci(), 1);
             applyAndWriteRecord(record, result, nh, samWriter, writer, resolver, liftedMateInfoCache, stats);
         }
     }
@@ -375,15 +379,17 @@ public class SpliceLiftBack
 
         // Two passes per pair so mate /2 can use mate /1's rescued junctions as a hint, and a
         // re-decide of mate /1 picks up mate /2's hints when mate /1 wasn't initially rescued.
+        final int unmapAboveNh = mConfig.UnmapAboveNh;
+        final int unmapBelowMapq = mConfig.UnmapBelowMapq;
         final MateDecision m1 = decideMateGroup(firstOfPair, resolver, java.util.Collections.emptyList());
-        refreshMateInfoCache(firstOfPair, m1, liftedMateInfoCache);
+        refreshMateInfoCache(firstOfPair, m1, liftedMateInfoCache, unmapAboveNh, unmapBelowMapq);
         final MateDecision m2 = decideMateGroup(secondOfPair, resolver, m1.IntroducedIntrons);
-        refreshMateInfoCache(secondOfPair, m2, liftedMateInfoCache);
+        refreshMateInfoCache(secondOfPair, m2, liftedMateInfoCache, unmapAboveNh, unmapBelowMapq);
         final MateDecision m1Final = (m1.IntroducedIntrons.isEmpty() && !m2.IntroducedIntrons.isEmpty())
                 ? decideMateGroup(firstOfPair, resolver, m2.IntroducedIntrons)
                 : m1;
         if(m1Final != m1)
-            refreshMateInfoCache(firstOfPair, m1Final, liftedMateInfoCache);
+            refreshMateInfoCache(firstOfPair, m1Final, liftedMateInfoCache, unmapAboveNh, unmapBelowMapq);
 
         writeMateGroup(firstOfPair, m1Final, samWriter, writer, resolver, liftedMateInfoCache, stats);
         writeMateGroup(secondOfPair, m2, samWriter, writer, resolver, liftedMateInfoCache, stats);
@@ -392,7 +398,8 @@ public class SpliceLiftBack
     // Push the post-rescue primary back into the mate cache so the partner mate's MC tag uses
     // the merged/extended cigar instead of the pre-rescue one pass 1 seeded.
     private static void refreshMateInfoCache(
-            final List<SAMRecord> mateRecords, final MateDecision decision, final LiftedMateInfoCache cache)
+            final List<SAMRecord> mateRecords, final MateDecision decision, final LiftedMateInfoCache cache,
+            final int unmapAboveNh, final int unmapBelowMapq)
     {
         if(mateRecords.isEmpty() || decision.PrimaryResult == null)
             return;
@@ -407,7 +414,8 @@ public class SpliceLiftBack
         }
         if(primary == null)
             return;
-        final LiftedMateInfo refreshed = toLiftedMateInfo(primary, decision.PrimaryResult);
+        final LiftedMateInfo refreshed = toLiftedMateInfo(
+                primary, decision.PrimaryResult, unmapAboveNh, unmapBelowMapq);
         cache.recordPrimaryAlignment(primary.getReadName(), primary.getFirstOfPairFlag(), refreshed);
     }
 
@@ -506,28 +514,40 @@ public class SpliceLiftBack
         for(SAMRecord r : records)
             if(!r.getSupplementaryAlignmentFlag() && !r.isSecondaryAlignment()) { primary = r; break; }
 
-        final Set<String> keptKeys = (mConfig.DropLosingAlts && ranGroupResolve)
-                ? buildKeptKeys(decision.PrimaryResult)
-                : null;
+        // Secondaries whose lifted key isn't in the discriminator's kept-alt set are dropped: the
+        // discriminator marked them losers, no reason to ship them.
+        final Set<String> keptKeys = ranGroupResolve ? buildKeptKeys(decision.PrimaryResult) : null;
 
+        // Drop duplicate-lifted non-primary records: bwa-mem2 -a emits the same junction across many
+        // transcript contigs, and after lifting back they collapse to identical (chrom, pos, cigar,
+        // strand) records. Without this dedup the BAM carries N copies of one alignment.
+        // Secondaries and supplementaries share a single emitted-key set because the liftback labels
+        // both as RecordRole.SUPPLEMENTARY in records.tsv — a sec at the same lifted key as an earlier
+        // supp (or vice versa) is the same alignment expressed two ways and the second should drop.
+        final Set<String> emittedNonPrimaryKeys = new HashSet<>();
         final boolean[] willEmit = new boolean[records.size()];
-        int emittedNonSupp = 0;
         for(int i = 0; i < records.size(); i++)
         {
             final SAMRecord record = records.get(i);
             final LiftBackResult result = resolved[i];
             boolean drop = droppedByRescue != null && droppedByRescue[i];
-            if(!drop && keptKeys != null && record != primary && record.isSecondaryAlignment())
+            if(!drop && record != primary && (record.isSecondaryAlignment() || record.getSupplementaryAlignmentFlag()))
             {
-                final String key = liftedKey(result.finalChrom(), result.finalPos(), result.finalCigar());
-                if(!keptKeys.contains(key))
+                final String key = dedupKey(result, record);
+                if(record.isSecondaryAlignment() && keptKeys != null
+                        && !keptKeys.contains(liftedKey(result.finalChrom(), result.finalPos(), result.finalCigar())))
+                    drop = true;
+                else if(!emittedNonPrimaryKeys.add(key))
                     drop = true;
             }
             willEmit[i] = !drop;
-            if(willEmit[i] && !record.getSupplementaryAlignmentFlag())
-                ++emittedNonSupp;
         }
-        final int nh = Math.max(emittedNonSupp, 1);
+
+        // NH = the number of distinct genomic loci the read lifts back to, taken from the resolver's
+        // chrom:pos-keyed locus count. Counting emitted records would inflate NH by tx-contig
+        // representation multiplicity (one junction repeated across many transcript contigs all lifting
+        // to the same locus).
+        final int nh = decision.PrimaryResult != null ? Math.max(decision.PrimaryResult.numLoci(), 1) : 1;
 
         for(int i = 0; i < records.size(); i++)
         {
@@ -653,6 +673,7 @@ public class SpliceLiftBack
                 original.refSoftClipped(), original.refFullMatch(),
                 original.geneIds(),
                 appendNote(original.notes(), "tail-extended"),
+                original.transcriptStrand(),
                 original.liftedAlignments());
     }
 
@@ -681,6 +702,7 @@ public class SpliceLiftBack
                 original.refSoftClipped(), original.refFullMatch(),
                 original.geneIds(),
                 appendNote(original.notes(), "rescued-via-supp"),
+                original.transcriptStrand(),
                 original.liftedAlignments());
     }
 
@@ -766,22 +788,17 @@ public class SpliceLiftBack
         return keys;
     }
 
+    // Dedup key for secondaries/supplementaries: lifted (chrom, pos, cigar) + lifted strand. Opposite-
+    // strand placements at the same coords/cigar are kept as distinct records.
+    private static String dedupKey(final LiftBackResult result, final SAMRecord record)
+    {
+        return result.finalChrom() + ":" + result.finalPos() + ":" + result.finalCigar()
+                + ":" + (result.negativeStrand() ? '-' : '+');
+    }
+
     private static String liftedKey(final String chrom, final int pos, final String cigar)
     {
         return chrom + ":" + pos + ":" + cigar;
-    }
-
-    private static int countKeptForNh(final LiftBackResult result)
-    {
-        if(result.liftedAlignments().isEmpty())
-            return 1;
-        int count = 0;
-        for(final LiftedAlignment alignment : result.liftedAlignments())
-        {
-            if(!alignment.Dropped)
-                ++count;
-        }
-        return Math.max(count, 1);
     }
 
     private void applyAndWriteRecord(
@@ -798,29 +815,12 @@ public class SpliceLiftBack
         if(result.category() != LiftBackCategory.UNMAPPED)
             record.setAttribute("NH", nh);
 
-        if(mConfig.StarMapqLadder && !record.getReadUnmappedFlag())
-        {
-            final int ladderMapq = NhMapqLadder.starLadder(nh);
-            final int newMapq = result.category().txWon() ? ladderMapq : Math.min(ladderMapq, result.inputMapq());
-            record.setMappingQuality(newMapq);
-        }
-
         if(mConfig.UnmapAboveNh > 0 && nh > mConfig.UnmapAboveNh
                 && !record.getReadUnmappedFlag()
                 && !record.isSecondaryAlignment()
                 && !record.getSupplementaryAlignmentFlag())
         {
-            record.setReadUnmappedFlag(true);
-            record.setReferenceName(SAMRecord.NO_ALIGNMENT_REFERENCE_NAME);
-            record.setAlignmentStart(SAMRecord.NO_ALIGNMENT_START);
-            record.setCigarString(SAMRecord.NO_ALIGNMENT_CIGAR);
-            record.setMappingQuality(0);
-            record.setAttribute(SA_ATTRIBUTE, null);
-            if(record.getReadPairedFlag())
-            {
-                record.setProperPairFlag(false);
-                record.setInferredInsertSize(0);
-            }
+            markPrimaryUnmapped(record);
         }
 
         if(mConfig.UnmapBelowMapq > 0
@@ -829,17 +829,7 @@ public class SpliceLiftBack
                 && !record.getSupplementaryAlignmentFlag()
                 && record.getMappingQuality() < mConfig.UnmapBelowMapq)
         {
-            record.setReadUnmappedFlag(true);
-            record.setReferenceName(SAMRecord.NO_ALIGNMENT_REFERENCE_NAME);
-            record.setAlignmentStart(SAMRecord.NO_ALIGNMENT_START);
-            record.setCigarString(SAMRecord.NO_ALIGNMENT_CIGAR);
-            record.setMappingQuality(0);
-            record.setAttribute(SA_ATTRIBUTE, null);
-            if(record.getReadPairedFlag())
-            {
-                record.setProperPairFlag(false);
-                record.setInferredInsertSize(0);
-            }
+            markPrimaryUnmapped(record);
         }
 
         stripMdNm(record);
@@ -941,6 +931,16 @@ public class SpliceLiftBack
                 record.setReadNegativeStrandFlag(result.negativeStrand());
                 record.setMappingQuality(result.updatedMapq());
                 record.setAttribute(XA_TAG, buildLiftedXa(result));
+                // STAR-style XS:A:+/- on spliced records: downstream RNA tools (Isofox) rely on
+                // transcript strand for stranded junction interpretation. bwa-mem2 emits XS:i: as
+                // the sub-optimal alignment score on the same tag name — clear first so the SAM
+                // tag-type bookkeeping isn't ambiguous. Only set XS:A when the lifted cigar has
+                // an N AND we know the transcript strand (i.e. the primary came off a tx contig).
+                // Ref-only N-cigars from rescue/tail-extend don't have a strand threaded yet —
+                // they ship without XS rather than risk a wrong call.
+                record.setAttribute("XS", null);
+                if(result.hasNCigar() && result.transcriptStrand() != 0)
+                    record.setAttribute("XS", result.transcriptStrand() > 0 ? Character.valueOf('+') : Character.valueOf('-'));
         }
     }
 
@@ -965,12 +965,57 @@ public class SpliceLiftBack
 
     static LiftedMateInfo toLiftedMateInfo(final SAMRecord record, final LiftBackResult result)
     {
-        if(result.category() == LiftBackCategory.UNMAPPED || result.category() == LiftBackCategory.LIFT_FAILED)
+        return toLiftedMateInfo(record, result, 0, 0);
+    }
+
+    // unmapAboveNh / unmapBelowMapq are forwarded so cache entries reflect threshold-unmap decisions
+    // that applyAndWriteRecord will make later. Without this, a partner record's patched mate fields
+    // would still claim "mate mapped" for a primary about to be threshold-unmapped.
+    static LiftedMateInfo toLiftedMateInfo(
+            final SAMRecord record, final LiftBackResult result, final int unmapAboveNh, final int unmapBelowMapq)
+    {
+        if(willBeUnmapped(result, unmapAboveNh, unmapBelowMapq))
             return LiftedMateInfo.UNMAPPED;
 
         final Cigar liftedCigar = TextCigarCodec.decode(result.finalCigar());
         final int alignmentEnd = result.finalPos() + liftedCigar.getReferenceLength() - 1;
         return LiftedMateInfo.mapped(result.finalChrom(), result.finalPos(), alignmentEnd, result.finalCigar(), result.negativeStrand());
+    }
+
+    // Mark a previously-mapped primary as unmapped, clearing every per-record tag the SAM spec invariant
+    // would otherwise leave inconsistent. SA/XA/NH/MC all reference now-stale coords; ProperPair and
+    // TLEN are meaningless once one end is unmapped. Package-private for direct unit testing.
+    static void markPrimaryUnmapped(final SAMRecord record)
+    {
+        record.setReadUnmappedFlag(true);
+        record.setReferenceName(SAMRecord.NO_ALIGNMENT_REFERENCE_NAME);
+        record.setAlignmentStart(SAMRecord.NO_ALIGNMENT_START);
+        record.setCigarString(SAMRecord.NO_ALIGNMENT_CIGAR);
+        record.setMappingQuality(0);
+        record.setAttribute(SA_ATTRIBUTE, null);
+        record.setAttribute(XA_TAG, null);
+        record.setAttribute("NH", null);
+        record.setAttribute("MC", null);
+        if(record.getReadPairedFlag())
+        {
+            record.setProperPairFlag(false);
+            record.setInferredInsertSize(0);
+        }
+    }
+
+    // Single source of truth for whether a primary's final state ends up unmapped, used both at cache-
+    // build time (so partner records see the correct MateUnmapped) and at apply time (where we mutate
+    // the record itself). Mirrors the threshold logic in applyAndWriteRecord.
+    static boolean willBeUnmapped(final LiftBackResult result, final int unmapAboveNh, final int unmapBelowMapq)
+    {
+        if(result.category() == LiftBackCategory.UNMAPPED || result.category() == LiftBackCategory.LIFT_FAILED)
+            return true;
+        final int nh = Math.max(result.numLoci(), 1);
+        if(unmapAboveNh > 0 && nh > unmapAboveNh)
+            return true;
+        if(unmapBelowMapq > 0 && result.updatedMapq() < unmapBelowMapq)
+            return true;
+        return false;
     }
 
     static String buildLiftedXa(final LiftBackResult result)

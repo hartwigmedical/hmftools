@@ -31,6 +31,9 @@ public class LiftedAlignment
     public final String GeneName;
     public final boolean SoftClipAtBoundary;
     public final boolean ForwardStrand;
+    // Transcript's genome strand for tx-contig alignments (+1 forward / -1 reverse). 0 when this
+    // alignment didn't come off a tx contig — the writer treats that as "no transcript strand known".
+    public final int TranscriptStrand;
 
     // non-final: set by LiftBackResolver when this alignment is on the losing side of a confident
     // discriminator outcome (JUNCTION_FAVOURS_TX, TX_PICKED_REF_DROPPED, INTRON_RETAINED_FAVOURS_REF,
@@ -50,6 +53,18 @@ public class LiftedAlignment
             final String transName, final String geneId, final String geneName,
             final boolean softClipAtBoundary, final boolean forwardStrand)
     {
+        this(source, origContig, origPos, origCigar, liftedChrom, liftedPos, liftedCigar,
+                alignmentScore, numMismatches, transName, geneId, geneName,
+                softClipAtBoundary, forwardStrand, 0);
+    }
+
+    public LiftedAlignment(
+            final AlignmentSource source, final String origContig, final int origPos, final String origCigar,
+            final String liftedChrom, final int liftedPos, final String liftedCigar,
+            final int alignmentScore, final int numMismatches,
+            final String transName, final String geneId, final String geneName,
+            final boolean softClipAtBoundary, final boolean forwardStrand, final int transcriptStrand)
+    {
         Source = source;
         OrigContig = origContig;
         OrigPos = origPos;
@@ -64,6 +79,7 @@ public class LiftedAlignment
         GeneName = geneName;
         SoftClipAtBoundary = softClipAtBoundary;
         ForwardStrand = forwardStrand;
+        TranscriptStrand = transcriptStrand;
     }
 
     public boolean fromTxContig()
