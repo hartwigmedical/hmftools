@@ -33,11 +33,12 @@ import java.util.List;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
+import com.hartwig.hmftools.esvee.common.SagaMatcher;
 import com.hartwig.hmftools.esvee.prep.types.JunctionData;
+import com.hartwig.hmftools.esvee.prep.types.PrepRead;
 import com.hartwig.hmftools.esvee.prep.types.ReadFilterType;
 import com.hartwig.hmftools.esvee.prep.types.ReadGroup;
 import com.hartwig.hmftools.esvee.prep.types.ReadGroupStatus;
-import com.hartwig.hmftools.esvee.prep.types.PrepRead;
 import com.hartwig.hmftools.esvee.prep.types.ReadType;
 import com.hartwig.hmftools.esvee.prep.types.RemoteJunction;
 
@@ -145,6 +146,11 @@ public class ResultsWriter
                 sj.add("RemoteJunctions");
             }
 
+            if(mConfig.SagaFastaFile != null)
+            {
+                sj.add("SagaMatchVariant");
+            }
+
             writer.write(sj.toString());
             writer.newLine();
 
@@ -184,7 +190,7 @@ public class ResultsWriter
                         // check the read supports this junction (it can also support another junction)
                         boolean supportsJunction =
                                 (expectLeftClipped && read.AlignmentStart == junctionData.Position && read.isLeftClipped())
-                            || (!expectLeftClipped && read.AlignmentEnd  == junctionData.Position && read.isRightClipped());
+                                        || (!expectLeftClipped && read.AlignmentEnd == junctionData.Position && read.isRightClipped());
 
                         if(!supportsJunction)
                             continue;
@@ -259,6 +265,12 @@ public class ResultsWriter
 
                     sj.add(String.valueOf(remoteJunctions.size()));
                     sj.add(remoteJunctionsStr);
+                }
+
+                if(mConfig.SagaFastaFile != null)
+                {
+                    SagaMatcher.MatchByLocation sagaMatch = junctionData.sagaMatch();
+                    sj.add(sagaMatch == null ? "" : sagaMatch.variant().toString());
                 }
 
                 mJunctionWriter.write(sj.toString());

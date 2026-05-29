@@ -16,25 +16,32 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.esvee.common.SagaResource;
 import com.hartwig.hmftools.esvee.prep.types.CombinedStats;
 import com.hartwig.hmftools.esvee.prep.types.ReadFilterType;
+
+import org.jetbrains.annotations.Nullable;
 
 public class ChromosomeTask
 {
     private final String mChromosome;
     private final PrepConfig mConfig;
     private final SpanningReadCache mSpanningReadCache;
+    @Nullable
+    private final SagaResource mSagaResource;
     private final ResultsWriter mWriter;
     private final Queue<ChrBaseRegion> mPartitions;
 
     private final CombinedStats mCombinedStats;
 
     public ChromosomeTask(
-            final String chromosome, final PrepConfig config, final SpanningReadCache spanningReadCache, final ResultsWriter writer)
+            final String chromosome, final PrepConfig config, final SpanningReadCache spanningReadCache,
+            @Nullable final SagaResource sagaResource, final ResultsWriter writer)
     {
         mChromosome = chromosome;
         mConfig = config;
         mSpanningReadCache = spanningReadCache;
+        mSagaResource = sagaResource;
         mWriter = writer;
 
         mCombinedStats = new CombinedStats();
@@ -54,6 +61,7 @@ public class ChromosomeTask
     {
         return mChromosome;
     }
+
     public CombinedStats combinedStats() { return mCombinedStats; }
 
     public void process()
@@ -65,7 +73,7 @@ public class ChromosomeTask
 
         for(int i = 0; i < min(mPartitions.size(), mConfig.Threads); ++i)
         {
-            workers.add(new PartitionThread(mChromosome, mConfig, mPartitions, mSpanningReadCache, mWriter, mCombinedStats));
+            workers.add(new PartitionThread(mChromosome, mConfig, mPartitions, mSpanningReadCache, mSagaResource, mWriter, mCombinedStats));
         }
 
         if(!runThreadTasks(workers))
@@ -101,14 +109,15 @@ public class ChromosomeTask
             {
                 if(region.Chromosome.equals(chromosome))
                 {
-                    partitions.addAll(partition(chromosome, region.start() ,region.end()));
+                    partitions.addAll(partition(chromosome, region.start(), region.end()));
                 }
             }
 
             return partitions;
         }
 
-        RefGenomeCoordinates refGenomeCoords = mConfig.RefGenVersion == V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
+        RefGenomeCoordinates refGenomeCoords =
+                mConfig.RefGenVersion == V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
         int chromosomeLength = refGenomeCoords.length(stripChrPrefix(chromosome));
         return partition(chromosome, 1, chromosomeLength);
     }
