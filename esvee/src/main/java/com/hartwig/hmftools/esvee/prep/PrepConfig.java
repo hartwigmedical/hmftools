@@ -14,7 +14,6 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.parseLogReadIds;
-import static com.hartwig.hmftools.common.utils.config.ConfigItem.enumValueSelectionAsStr;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
@@ -58,6 +57,8 @@ import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.esvee.common.WriteType;
 import com.hartwig.hmftools.esvee.prep.types.ReadFilterConfig;
 
+import org.jetbrains.annotations.Nullable;
+
 import htsjdk.samtools.ValidationStringency;
 
 public class PrepConfig
@@ -69,6 +70,9 @@ public class PrepConfig
 
     public final ReadFilters ReadFiltering;
     public final HotspotCache Hotspots;
+
+    @Nullable
+    public final String SagaFastaFile;
 
     public final int PartitionSize;
     public final ValidationStringency BamStringency;
@@ -98,6 +102,8 @@ public class PrepConfig
     public static final String BAM_FILE = "bam_file";
     public static final String BAM_FILE_DESC = "BAM file paths separated by ','";
     public static final String SAMPLE_ID_DESC = "List of samples separated by ','";
+
+    private static final String SAGA_FASTA = "saga_fasta";
 
     private static final String WRITE_TYPES = "write_types";
 
@@ -148,6 +154,8 @@ public class PrepConfig
                 OutputDir, OutputId != null ? format("outputId(%s)", OutputId) : "");
 
         Hotspots = new HotspotCache(configBuilder.getValue(KNOWN_HOTSPOT_FILE));
+
+        SagaFastaFile = configBuilder.getValue(SAGA_FASTA);
 
         PartitionSize = configBuilder.getInteger(PARTITION_SIZE);
 
@@ -227,6 +235,8 @@ public class PrepConfig
                 MIN_INDEL_LENGTH,
                 MIN_JUNCTION_SUPPORT));
 
+        SagaFastaFile = null;
+
         BamStringency = ValidationStringency.STRICT;
         WriteTypes = Sets.newHashSet();
         SpecificChrRegions = new SpecificRegions();
@@ -248,6 +258,7 @@ public class PrepConfig
 
         addRefGenomeConfig(configBuilder, true);
         configBuilder.addPath(KNOWN_HOTSPOT_FILE, false, "Known fusion hotspot BED file");
+        configBuilder.addPath(SAGA_FASTA, false, "SAGA resource FASTA file");
         configBuilder.addInteger(PARTITION_SIZE, "Partition size", DEFAULT_CHR_PARTITION_SIZE);
 
         registerCommonConfig(configBuilder);
