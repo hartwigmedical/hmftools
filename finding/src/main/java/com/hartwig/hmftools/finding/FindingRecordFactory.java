@@ -2,6 +2,10 @@ package com.hartwig.hmftools.finding;
 
 import static com.hartwig.hmftools.finding.DisruptionFactory.createGermlineDisruptions;
 import static com.hartwig.hmftools.finding.DisruptionFactory.createSomaticDisruptions;
+import static com.hartwig.hmftools.finding.RnaFindingFactory.createNovelSpliceJunctionFindings;
+import static com.hartwig.hmftools.finding.RnaFindingFactory.createRnaFusionFindings;
+import static com.hartwig.hmftools.finding.RnaFindingFactory.createRnaGeneExpressionFindings;
+import static com.hartwig.hmftools.finding.RnaFindingFactory.createRnaStatistics;
 import static com.hartwig.hmftools.finding.datamodel.finding.FindingStatus.Issue.NORMAL_REQUIRED;
 import static com.hartwig.hmftools.finding.datamodel.finding.FindingStatus.Issue.WGS_REQUIRED;
 
@@ -149,6 +153,11 @@ public class FindingRecordFactory
                 .somaticDisruptions(createSomaticDisruptions(linx, findingStatus))
                 .germlineDisruptions(germlineDisruptions)
                 .viruses(createVirusFindings(orangeRecord.virusInterpreter(), experimentType, findingStatus))
+                .rnaStatistics(createRnaStatistics(orangeRecord.isofox(), findingStatus))
+                .highExpressionGenes(createRnaGeneExpressionFindings(orangeRecord.isofox(), true, findingStatus))
+                .lowExpressionGenes(createRnaGeneExpressionFindings(orangeRecord.isofox(), false, findingStatus))
+                .rnaFusions(createRnaFusionFindings(orangeRecord.isofox(), findingStatus))
+                .novelSpliceJunctions(createNovelSpliceJunctionFindings(orangeRecord.isofox(), findingStatus))
                 .homologousRecombination(createHomologousRecombination(orangeRecord.chord(),
                         smallVariants,
                         somaticGainDeletions,

@@ -2,6 +2,9 @@ package com.hartwig.hmftools.finding;
 
 import com.hartwig.hmftools.datamodel.chord.ChordStatus;
 import com.hartwig.hmftools.datamodel.hla.LilacAllele;
+import com.hartwig.hmftools.datamodel.isofox.GeneExpression;
+import com.hartwig.hmftools.datamodel.isofox.NovelSpliceJunction;
+import com.hartwig.hmftools.datamodel.isofox.RnaFusion;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
@@ -86,6 +89,37 @@ public final class FindingKeys
     public static String pharmacoGenotype(String gene, String allele)
     {
         return String.format("pharmacoGenotype[%s:%s]", gene, allele);
+    }
+
+    public static String rnaStatistics()
+    {
+        return "rnaStatistics";
+    }
+
+    public static String rnaGeneExpression(String expressionType, GeneExpression geneExpression)
+    {
+        return String.format("rnaGeneExpression[%s %s]", expressionType, geneExpression.gene());
+    }
+
+    public static String rnaFusion(RnaFusion fusion)
+    {
+        return String.format("rnaFusion[%s %s:%d %s %s:%d]",
+                fusion.geneStart(),
+                fusion.chromosomeStart(),
+                fusion.positionStart(),
+                fusion.geneEnd(),
+                fusion.chromosomeEnd(),
+                fusion.positionEnd());
+    }
+
+    public static String novelSpliceJunction(NovelSpliceJunction spliceJunction)
+    {
+        return String.format("novelSpliceJunction[%s %s:%d-%d %s]",
+                spliceJunction.gene(),
+                spliceJunction.chromosome(),
+                spliceJunction.junctionStart(),
+                spliceJunction.junctionEnd(),
+                spliceJunction.type());
     }
 
     // only show transcript ID for non canonical transcripts
