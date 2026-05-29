@@ -169,6 +169,7 @@ public class AssemblyApplication
 
     private boolean loadJunctionFiles()
     {
+        // TODO? match these to SAGA
         if(!mConfig.SpecificJunctions.isEmpty())
         {
             for(Junction junction : mConfig.SpecificJunctions)
@@ -212,7 +213,7 @@ public class AssemblyApplication
         }
 
         mChrJunctionsMap.putAll(Junction.loadJunctions(
-                mConfig.JunctionFile, mConfig.SpecificChrRegions, minJunctionFrags, minHotspotFrags, minDiscordantFrags));
+                mConfig.JunctionFile, mConfig.SpecificChrRegions, minJunctionFrags, minHotspotFrags, minDiscordantFrags, mConfig.SagaFastaFile != null));
 
         // if(AssemblyConfig.DevDebug && !validateJunctionMap(mChrJunctionsMap))
         //    System.exit(1);

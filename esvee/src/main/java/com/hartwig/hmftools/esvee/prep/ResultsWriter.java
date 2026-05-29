@@ -20,6 +20,7 @@ import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_HOTSPOT_JUNCTION
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_INDEL_JUNCTION;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_JUNCTION_FRAGS;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_OTHER_SUPPORT_FRAGS;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_SAGA_MATCH_VARIANT;
 
 import static htsjdk.samtools.SAMFlag.MATE_REVERSE_STRAND;
 import static htsjdk.samtools.SAMFlag.READ_UNMAPPED;
@@ -148,7 +149,7 @@ public class ResultsWriter
 
             if(mConfig.SagaFastaFile != null)
             {
-                sj.add("SagaMatchVariant");
+                sj.add(FLD_SAGA_MATCH_VARIANT);
             }
 
             writer.write(sj.toString());
