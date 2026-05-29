@@ -4,11 +4,11 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_DISCORDANT_MIN_MAP_QUALITY;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_DISTINCT_FRAGS;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_SPLIT_MIN_READ_SUPPORT;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_DISTINCT_FRAGS;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.MAX_OBSERVED_CONCORDANT_FRAG_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.PRIMARY_ASSEMBLY_SPLIT_MIN_READ_SUPPORT_PERC;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.findIndelExtensionReads;
@@ -38,22 +38,28 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.esvee.assembly.read.Read;
+import com.hartwig.hmftools.esvee.assembly.types.Junction;
+import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.RemoteRegion;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
-import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
-import com.hartwig.hmftools.esvee.assembly.types.Junction;
-import com.hartwig.hmftools.esvee.assembly.read.Read;
+import com.hartwig.hmftools.esvee.common.SagaMatcher;
+
+import org.jetbrains.annotations.Nullable;
 
 public class JunctionAssembler
 {
     private Junction mJunction;
     private final RefGenomeInterface mRefGenome;
+    @Nullable
+    private final SagaMatcher mSagaMatcher;
     private final List<Read> mNonJunctionReads;
 
-    public JunctionAssembler(final Junction junction, final RefGenomeInterface refGenome)
+    public JunctionAssembler(final Junction junction, final RefGenomeInterface refGenome, @Nullable final SagaMatcher sagaMatcher)
     {
         mJunction = junction;
         mRefGenome = refGenome;
+        mSagaMatcher = sagaMatcher;
         mNonJunctionReads = Lists.newArrayList();
     }
 
@@ -192,6 +198,11 @@ public class JunctionAssembler
             assembly.setRefBases(refBaseSeqBuilder);
 
             assembly.buildRepeatInfo();
+
+            if(mSagaMatcher != null)
+            {
+                matchJunctionAssemblyToSaga(assembly);
+            }
         }
 
         return assemblies;
@@ -366,7 +377,7 @@ public class JunctionAssembler
             return null;
 
         int secondSupport = extensionReads.size();
-        double secondSupportPerc = secondSupport / (double)firstAssembly.supportCount();
+        double secondSupportPerc = secondSupport / (double) firstAssembly.supportCount();
 
         if(secondSupport < ASSEMBLY_SPLIT_MIN_READ_SUPPORT || secondSupportPerc < PRIMARY_ASSEMBLY_SPLIT_MIN_READ_SUPPORT_PERC)
             return null;
@@ -410,7 +421,7 @@ public class JunctionAssembler
 
     public boolean keepSecondAssembly(final JunctionAssembly firstAssembly, final int secondSupportCount)
     {
-        double secondSupportPerc = secondSupportCount / (double)firstAssembly.supportCount();
+        double secondSupportPerc = secondSupportCount / (double) firstAssembly.supportCount();
 
         return secondSupportCount >= ASSEMBLY_SPLIT_MIN_READ_SUPPORT && secondSupportPerc >= PRIMARY_ASSEMBLY_SPLIT_MIN_READ_SUPPORT_PERC;
     }
@@ -516,9 +527,17 @@ public class JunctionAssembler
         return false;
     }
 
+    private void matchJunctionAssemblyToSaga(JunctionAssembly assembly)
+    {
+        assert mSagaMatcher != null;
+        int junctionOffset = mJunction.isForward() ? assembly.refBaseLength() : assembly.baseLength() - assembly.refBaseLength();
+        SagaMatcher.MatchBySequence match = mSagaMatcher.matchBySequence(assembly.bases(), List.of(junctionOffset));
+        assembly.setSagaMatch(match);
+    }
+
     @VisibleForTesting
     public JunctionAssembler(final Junction junction)
     {
-        this(junction, null);
+        this(junction, null, null);
     }
 }

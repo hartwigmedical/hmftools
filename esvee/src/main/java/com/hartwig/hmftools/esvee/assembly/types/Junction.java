@@ -135,6 +135,7 @@ public class Junction implements Comparable<Junction>
         return mSagaMatchVariantId != null;
     }
 
+    @Nullable
     public String sagaMatch()
     {
         return mSagaMatchVariantId;
@@ -218,7 +219,7 @@ public class Junction implements Comparable<Junction>
                 boolean hotspot = hotspotIndex != null && Boolean.parseBoolean(values[hotspotIndex]);
 
                 // The first part is the variant ID, the second part is the breakends which we don't need.
-                @Nullable String sagaMatchVariant = loadSagaMatch && sagaMatchVariantIndex != null ? values[sagaMatchVariantIndex].split(" ")[0] : null;
+                String sagaMatchVariant = loadSagaMatch && sagaMatchVariantIndex != null ? values[sagaMatchVariantIndex].split(" ")[0] : null;
 
                 if(hotspot)
                 {

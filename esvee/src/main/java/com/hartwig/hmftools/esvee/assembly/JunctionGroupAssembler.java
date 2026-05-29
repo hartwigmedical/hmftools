@@ -28,16 +28,20 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.perf.TaskQueue;
 import com.hartwig.hmftools.esvee.assembly.alignment.AlignmentChecker;
-import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
-import com.hartwig.hmftools.esvee.assembly.types.Junction;
-import com.hartwig.hmftools.esvee.assembly.types.JunctionGroup;
-import com.hartwig.hmftools.esvee.assembly.types.ThreadTask;
 import com.hartwig.hmftools.esvee.assembly.output.ResultsWriter;
 import com.hartwig.hmftools.esvee.assembly.read.BamReader;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.read.ReadAdjustments;
 import com.hartwig.hmftools.esvee.assembly.read.ReadStats;
+import com.hartwig.hmftools.esvee.assembly.types.Junction;
+import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
+import com.hartwig.hmftools.esvee.assembly.types.JunctionGroup;
+import com.hartwig.hmftools.esvee.assembly.types.ThreadTask;
+import com.hartwig.hmftools.esvee.common.SagaMatcher;
+import com.hartwig.hmftools.esvee.common.SagaResource;
 import com.hartwig.hmftools.esvee.prep.ReadFilters;
+
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -45,19 +49,23 @@ public class JunctionGroupAssembler extends ThreadTask
 {
     private final AssemblyConfig mConfig;
 
-    private final TaskQueue mJunctionGroups;
+    private final TaskQueue<JunctionGroup> mJunctionGroups;
 
     private JunctionGroup mCurrentJunctionGroup;
     private final BamReader mBamReader;
     private final AlignmentChecker mAlignmentChecker;
 
-    private final Map<String,ReadGroup> mReadGroupMap;
-    private final Map<String,SAMRecord> mSupplementaryRepeats; // temporary to track an issue in SvPrep
+    private final Map<String, ReadGroup> mReadGroupMap;
+    private final Map<String, SAMRecord> mSupplementaryRepeats; // temporary to track an issue in SvPrep
     private final ReadStats mReadStats;
     private final List<JunctionAssembly> mDecoyAssemblies;
 
+    @Nullable
+    private final SagaMatcher mSagaMatcher;
+
     public JunctionGroupAssembler(
-            final AssemblyConfig config, final BamReader bamReader, final TaskQueue junctionGroups, final ResultsWriter resultsWriter)
+            final AssemblyConfig config, final BamReader bamReader, @Nullable final SagaResource sagaResource,
+            final TaskQueue<JunctionGroup> junctionGroups, final ResultsWriter resultsWriter)
     {
         super("PrimaryAssembly");
         mConfig = config;
@@ -72,18 +80,21 @@ public class JunctionGroupAssembler extends ThreadTask
         mSupplementaryRepeats = Maps.newHashMap();
         mCurrentJunctionGroup = null;
         mReadStats = new ReadStats();
+
+        mSagaMatcher = sagaResource == null ? null : new SagaMatcher(sagaResource);
     }
 
     public static List<JunctionGroupAssembler> createThreadTasks(
             final List<JunctionGroup> junctionGroups, final List<BamReader> bamReaders, final AssemblyConfig config,
-            final ResultsWriter resultsWriter, final int taskCount, final List<Thread> threadTasks)
+            @Nullable final SagaResource sagaResource, final ResultsWriter resultsWriter, final int taskCount,
+            final List<Thread> threadTasks)
     {
         List<JunctionGroupAssembler> primaryAssemblyTasks = Lists.newArrayList();
 
         Queue<JunctionGroup> junctionGroupQueue = new ConcurrentLinkedQueue<>();
         junctionGroupQueue.addAll(junctionGroups);
 
-        TaskQueue taskQueue = new TaskQueue(junctionGroupQueue, "junction groups", 10000);
+        TaskQueue<JunctionGroup> taskQueue = new TaskQueue<>(junctionGroupQueue, "junction groups", 10000);
 
         int junctionGroupCount = junctionGroups.size();
 
@@ -91,7 +102,8 @@ public class JunctionGroupAssembler extends ThreadTask
         {
             BamReader bamReader = bamReaders.get(i);
 
-            JunctionGroupAssembler junctionGroupAssembler = new JunctionGroupAssembler(config, bamReader, taskQueue, resultsWriter);
+            JunctionGroupAssembler junctionGroupAssembler =
+                    new JunctionGroupAssembler(config, bamReader, sagaResource, taskQueue, resultsWriter);
             primaryAssemblyTasks.add(junctionGroupAssembler);
             threadTasks.add(junctionGroupAssembler);
         }
@@ -111,7 +123,7 @@ public class JunctionGroupAssembler extends ThreadTask
         {
             try
             {
-                JunctionGroup junctionGroup = (JunctionGroup)mJunctionGroups.removeItem();
+                JunctionGroup junctionGroup = mJunctionGroups.removeItem();
 
                 mPerfCounter.start();
                 processJunctionGroup(junctionGroup);
@@ -132,6 +144,7 @@ public class JunctionGroupAssembler extends ThreadTask
     }
 
     public ReadStats readStats() { return mReadStats; }
+
     public List<JunctionAssembly> decoyAssemblies() { return mDecoyAssemblies; }
 
     private void processJunctionGroup(final JunctionGroup junctionGroup)
@@ -165,7 +178,7 @@ public class JunctionGroupAssembler extends ThreadTask
         {
             Junction junction = junctionGroup.junctions().get(i);
 
-            JunctionAssembler junctionAssembler = new JunctionAssembler(junction, mConfig.RefGenome);
+            JunctionAssembler junctionAssembler = new JunctionAssembler(junction, mConfig.RefGenome, mSagaMatcher);
 
             // doesn't seem to be making a big difference, but this is inefficient for long-range junction groups
             // since both the junctions and reads are ordered. Could consider re-ordering by unclipped start and comparing to junction position
@@ -301,13 +314,13 @@ public class JunctionGroupAssembler extends ThreadTask
         boolean hasLocalMate = read.isMateUnmapped()
                 || (read.isMateMapped() && read.mateChromosome().equals(read.chromosome())
                 && positionsOverlap(
-                        read.mateAlignmentStart(), read.mateAlignmentEnd(),
-                        mCurrentJunctionGroup.readRangeStart(), mCurrentJunctionGroup.readRangeEnd()));
+                read.mateAlignmentStart(), read.mateAlignmentEnd(),
+                mCurrentJunctionGroup.readRangeStart(), mCurrentJunctionGroup.readRangeEnd()));
 
         // link first and second in pair if within the same group
         boolean hasLocalSupplementary = read.hasSupplementary() && read.supplementaryData().Chromosome.equals(read.chromosome())
                 && positionWithin(
-                        read.supplementaryData().Position, mCurrentJunctionGroup.readRangeStart(), mCurrentJunctionGroup.readRangeEnd());
+                read.supplementaryData().Position, mCurrentJunctionGroup.readRangeStart(), mCurrentJunctionGroup.readRangeEnd());
 
         if(!hasLocalMate && !hasLocalSupplementary)
             return;
@@ -330,7 +343,7 @@ public class JunctionGroupAssembler extends ThreadTask
         }
     }
 
-    private class ReadGroup
+    private static class ReadGroup
     {
         private final List<Read> mReads;
         private final int mExpectedCount;
