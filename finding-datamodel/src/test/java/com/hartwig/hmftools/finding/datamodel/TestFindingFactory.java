@@ -272,6 +272,72 @@ public class TestFindingFactory
     }
 
     @NotNull
+    public static RnaStatisticsBuilder rnaStatisticsBuilder()
+    {
+        return RnaStatisticsBuilder.builder()
+                .findingKey("")
+                .qcStatus(Set.of(RnaStatistics.QcStatus.PASS))
+                .totalFragments(0)
+                .duplicateFragments(0)
+                .splicedFragmentPercent(0D)
+                .unsplicedFragmentPercent(0D)
+                .altFragmentPercent(0D)
+                .chimericFragmentPercent(0D);
+    }
+
+    @NotNull
+    public static RnaGeneExpressionBuilder rnaGeneExpressionBuilder()
+    {
+        return RnaGeneExpressionBuilder.builder()
+                .findingKey("")
+                .gene("")
+                .tpm(0D)
+                .medianTpmCohort(0D)
+                .percentileCohort(0D);
+    }
+
+    @NotNull
+    public static RnaFusionBuilder rnaFusionBuilder()
+    {
+        return RnaFusionBuilder.builder()
+                .findingKey("")
+                .chromosomeStart("")
+                .chromosomeEnd("")
+                .positionStart(0)
+                .positionEnd(0)
+                .junctionTypeStart("")
+                .junctionTypeEnd("")
+                .knownType(RnaFusion.KnownType.NONE)
+                .structuralVariantType(RnaFusion.StructuralVariantType.BND)
+                .splitFragments(0)
+                .realignedFragments(0)
+                .discordantFragments(0)
+                .depthStart(0)
+                .depthEnd(0)
+                .cohortFrequency(0);
+    }
+
+    @NotNull
+    public static NovelSpliceJunctionBuilder novelSpliceJunctionBuilder()
+    {
+        return NovelSpliceJunctionBuilder.builder()
+                .findingKey("")
+                .gene("")
+                .chromosome("")
+                .junctionStart(0)
+                .junctionEnd(0)
+                .type(NovelSpliceJunction.Type.UNKNOWN)
+                .exonStart(0)
+                .exonEnd(0)
+                .fragmentCount(0)
+                .depthStart(0)
+                .depthEnd(0)
+                .regionStart(NovelSpliceJunction.Context.UNKNOWN)
+                .regionEnd(NovelSpliceJunction.Context.UNKNOWN)
+                .cohortFrequency(0);
+    }
+
+    @NotNull
     public static ChromosomeArmCopyNumberBuilder chromosomeArmCopyNumberBuilder()
     {
         return ChromosomeArmCopyNumberBuilder.builder()

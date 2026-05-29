@@ -21,6 +21,7 @@ public record FindingStatus(@NotNull FindingStatus.Status status, @NotNull Sorte
     {
         NORMAL_REQUIRED,
         WGS_REQUIRED,
+        RNA_REQUIRED,
         DELETED_GENES,
         HIGH_COPY_NUMBER_NOISE,
         GENDER_MISMATCH,

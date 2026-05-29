@@ -37,6 +37,11 @@ public class ErrorTransformer
                 .germlineGainDeletions(transform(record.germlineGainDeletions()))
                 .fusions(transform(record.fusions()))
                 .viruses(transform(record.viruses()))
+                .rnaStatistics(transform(record.rnaStatistics()))
+                .highExpressionGenes(transform(record.highExpressionGenes()))
+                .lowExpressionGenes(transform(record.lowExpressionGenes()))
+                .rnaFusions(transform(record.rnaFusions()))
+                .novelSpliceJunctions(transform(record.novelSpliceJunctions()))
                 .chromosomeArmCopyNumbers(transform(record.chromosomeArmCopyNumbers()))
                 // For HLA status remains the same, but tumor fields are cleared.
                 .hlaAlleles(transformHla(record.hlaAlleles()))
