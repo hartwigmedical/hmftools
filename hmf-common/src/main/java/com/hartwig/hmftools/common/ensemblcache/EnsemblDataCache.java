@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.loadTra
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.loadTranscriptSpliceAcceptorData;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
@@ -16,6 +17,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -258,6 +260,15 @@ public class EnsemblDataCache
         }
 
         return genesList;
+    }
+    public List<GeneData> findGeneByRange(final String chromosome, int regionStart, int regionEnd)
+    {
+        List<GeneData> geneDataList = mChrGeneDataMap.get(chromosome);
+
+        if(geneDataList == null)
+            return Collections.emptyList();
+
+        return geneDataList.stream().filter(x -> positionsOverlap(x.GeneStart, x.GeneEnd, regionStart, regionEnd)).collect(Collectors.toList());
     }
 
     public List<GeneData> findGeneRegions(final String chromosome, int position, int upstreamDistance)
