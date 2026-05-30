@@ -32,6 +32,9 @@ import com.hartwig.hmftools.esvee.assembly.ReadParseState;
 import com.hartwig.hmftools.esvee.assembly.RefBaseSeqBuilder;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.common.IndelCoords;
+import com.hartwig.hmftools.esvee.common.SagaMatcher;
+
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.CigarElement;
 
@@ -49,8 +52,8 @@ public class JunctionAssembly
     private IndelCoords mIndelCoords;
     private boolean mHasLineSequence;
 
-    private byte mBases[];
-    private byte mBaseQuals[];
+    private byte[] mBases;
+    private byte[] mBaseQuals;
 
     private final List<SupportRead> mSupport;
     private final List<Read> mCandidateSupport;
@@ -68,6 +71,9 @@ public class JunctionAssembly
     private int mNonPhasedId;
     private AssemblyOutcome mOutcome;
     private String mAssemblyAlignmentInfo;
+
+    @Nullable
+    private SagaMatcher.MatchBySequence mSagaMatch;
 
     // info only
     private final String mInitialReadId;
@@ -137,6 +143,7 @@ public class JunctionAssembly
         mAssemblyAlignmentInfo = null;
         mMismatchReadCount = 0;
         mExtBaseBuildInfo = null;
+        mSagaMatch = null;
 
         mStats = new AssemblyStats();
     }
@@ -826,6 +833,22 @@ public class JunctionAssembly
     public int minAlignedPosition() { return mJunction.isForward() ? refBasePosition() : mJunction.Position; }
     public int maxAlignedPosition() { return mJunction.isReverse() ? refBasePosition() : mJunction.Position; }
 
+    public boolean isSagaMatched()
+    {
+        return mSagaMatch != null;
+    }
+
+    @Nullable
+    public SagaMatcher.MatchBySequence sagaMatch()
+    {
+        return mSagaMatch;
+    }
+
+    public void setSagaMatch(final SagaMatcher.MatchBySequence match)
+    {
+        mSagaMatch = match;
+    }
+
     @VisibleForTesting
     public JunctionAssembly(final Junction junction, final byte[] bases, final byte[] quals, final int junctionIndex)
     {
@@ -862,6 +885,7 @@ public class JunctionAssembly
         mMismatchReadCount = 0;
         mStats = new AssemblyStats();
         mIndelCoords = null;
+        mSagaMatch = null;
     }
 
     @VisibleForTesting

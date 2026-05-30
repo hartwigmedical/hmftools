@@ -7,24 +7,30 @@ import static com.hartwig.hmftools.esvee.prep.types.DiscordantStats.writeDiscord
 
 import java.util.stream.Collectors;
 
+import com.hartwig.hmftools.common.bwa.BwaMemAligner;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.esvee.common.FragmentLengthBounds;
+import com.hartwig.hmftools.esvee.common.SagaResource;
 import com.hartwig.hmftools.esvee.prep.types.CombinedStats;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class PrepApplication
 {
     private final PrepConfig mConfig;
     private final ResultsWriter mWriter;
     private final SpanningReadCache mSpanningReadCache;
+    @Nullable
+    private final SagaResource mSagaResource;
 
     public PrepApplication(final ConfigBuilder configBuilder)
     {
         mConfig = new PrepConfig(configBuilder);
         mWriter = new ResultsWriter(mConfig);
         mSpanningReadCache = new SpanningReadCache(mConfig);
+        mSagaResource = mConfig.SagaFastaFile == null ? null : new SagaResource(mConfig.SagaFastaFile);
     }
 
     public void run()
@@ -36,6 +42,12 @@ public class PrepApplication
                 mConfig.SampleIds.size() == 1 ? mConfig.sampleId() : mConfig.SampleIds.stream().collect(Collectors.joining(",")));
 
         long startTimeMs = System.currentTimeMillis();
+
+        if(mSagaResource != null)
+        {
+            // Initialise BWA for SAGA matching.
+            BwaMemAligner.initLibrary(null);
+        }
 
         calcFragmentDistribution();
 
@@ -50,7 +62,7 @@ public class PrepApplication
 
             SV_LOGGER.info("processing chromosome({})", chromosomeStr);
 
-            ChromosomeTask chromosomeTask = new ChromosomeTask(chromosomeStr, mConfig, mSpanningReadCache, mWriter);
+            ChromosomeTask chromosomeTask = new ChromosomeTask(chromosomeStr, mConfig, mSpanningReadCache, mSagaResource, mWriter);
             chromosomeTask.process();
             combinedStats.addPartitionStats(chromosomeTask.combinedStats().ReadStats);
             combinedStats.addDiscordantStats(chromosomeTask.combinedStats().Discordants);

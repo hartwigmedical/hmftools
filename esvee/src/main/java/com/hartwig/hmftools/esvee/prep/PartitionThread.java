@@ -12,7 +12,11 @@ import java.util.Queue;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bam.BamSlicer;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.esvee.common.SagaMatcher;
+import com.hartwig.hmftools.esvee.common.SagaResource;
 import com.hartwig.hmftools.esvee.prep.types.CombinedStats;
+
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
@@ -29,11 +33,15 @@ public class PartitionThread extends Thread
     private final BamSlicer mBamSlicer;
     private final Queue<ChrBaseRegion> mPartitions;
 
+    @Nullable
+    private final SagaMatcher mSagaMatcher;
+
     private final int mPartitionCount;
 
     public PartitionThread(
             final String chromosome, final PrepConfig config, final Queue<ChrBaseRegion> partitions,
-            final SpanningReadCache spanningReadCache, final ResultsWriter writer, final CombinedStats combinedStats)
+            final SpanningReadCache spanningReadCache, @Nullable final SagaResource sagaResource, final ResultsWriter writer,
+            final CombinedStats combinedStats)
     {
         mChromosome = chromosome;
         mConfig = config;
@@ -41,6 +49,7 @@ public class PartitionThread extends Thread
         mWriter = writer;
         mCombinedStats = combinedStats;
         mPartitions = partitions;
+        mSagaMatcher = sagaResource == null ? null : new SagaMatcher(sagaResource);
 
         mPartitionCount = partitions.size();
 
@@ -69,7 +78,7 @@ public class PartitionThread extends Thread
                 int processedCount = mPartitionCount - mPartitions.size();
 
                 PartitionSlicer slicer = new PartitionSlicer(
-                        0, partition, mConfig, mSamReaders, mBamSlicer, mSpanningReadCache, mWriter, mCombinedStats);
+                        0, partition, mConfig, mSamReaders, mBamSlicer, mSpanningReadCache, mSagaMatcher, mWriter, mCombinedStats);
 
                 slicer.run();
 

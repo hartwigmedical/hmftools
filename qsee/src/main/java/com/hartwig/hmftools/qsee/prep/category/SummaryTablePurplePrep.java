@@ -34,6 +34,7 @@ import com.hartwig.hmftools.qsee.prep.QseePrepConfig;
 import com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature;
 import com.hartwig.hmftools.qsee.status.PurpleQCStatusConverter;
 import com.hartwig.hmftools.qsee.status.QcStatus;
+import com.hartwig.hmftools.qsee.status.QcStatusType;
 import com.hartwig.hmftools.qsee.status.ThresholdRegistry;
 
 import org.jetbrains.annotations.NotNull;
@@ -58,7 +59,8 @@ public class SummaryTablePurplePrep implements CategoryPrep
         return PurityContextFile.readWithQC(qcFile, purityFile);
     }
 
-    private static EnumMap<PurpleQCStatus, QcStatus> qcStatusFrom(Set<PurpleQCStatus> purpleQCStatuses, ThresholdRegistry thresholds)
+    @VisibleForTesting
+    static EnumMap<PurpleQCStatus, QcStatus> createQcStatusMappings(Set<PurpleQCStatus> purpleQCStatuses, ThresholdRegistry thresholds)
     {
         PurpleQCStatusConverter converter = new PurpleQCStatusConverter(thresholds);
 
@@ -78,18 +80,20 @@ public class SummaryTablePurplePrep implements CategoryPrep
         return qcStatuses;
     }
 
-    private static QcStatus getTincQcStatus(EnumMap<PurpleQCStatus, QcStatus> qcStatuses)
+    @VisibleForTesting
+    static QcStatus getTincQcStatus(EnumMap<PurpleQCStatus, QcStatus> qcStatusMappings)
     {
-        QcStatus passStatus = QcStatus.createPass(qcStatuses.get(PurpleQCStatus.FAIL_TINC));
+        QcStatus maybeFail = qcStatusMappings.get(PurpleQCStatus.FAIL_TINC);
+        if(maybeFail.type() != QcStatusType.PASS)
+            return maybeFail;
 
-        QcStatus tincStatus = qcStatuses.get(PurpleQCStatus.FAIL_TINC);
-        if(tincStatus == null)
-            tincStatus = qcStatuses.get(PurpleQCStatus.WARN_TINC);
+        QcStatus maybeWarn = qcStatusMappings.get(PurpleQCStatus.WARN_TINC);
+        if(maybeWarn.type() != QcStatusType.PASS)
+            return maybeWarn;
 
-        if(tincStatus == null)
-            tincStatus = passStatus;
+        QcStatus pass = QcStatus.createPass(maybeFail); // Display fail threshold
 
-        return tincStatus;
+        return pass;
     }
 
     @VisibleForTesting
@@ -98,18 +102,18 @@ public class SummaryTablePurplePrep implements CategoryPrep
         PurpleQC purpleQC = purityContext.qc();
         FittedPurity purpleFit = purityContext.bestFit();
 
-        EnumMap<PurpleQCStatus, QcStatus> qcStatuses = qcStatusFrom(purityContext.qc().status(), thresholds);
+        EnumMap<PurpleQCStatus, QcStatus> qcStatusMappings = createQcStatusMappings(purityContext.qc().status(), thresholds);
 
         EnumMap<SummaryTableFeature, Feature> featuresMap = new EnumMap<>(SummaryTableFeature.class);
 
         putFeature(featuresMap, PLOIDY, purpleFit.ploidy(), QcStatus.createEmpty());
-        putFeature(featuresMap, PURITY, purpleFit.purity(), qcStatuses.get(PurpleQCStatus.WARN_LOW_PURITY));
+        putFeature(featuresMap, PURITY, purpleFit.purity(), qcStatusMappings.get(PurpleQCStatus.WARN_LOW_PURITY));
         putFeature(featuresMap, LOH_PERCENT, purpleQC.lohPercent(), QcStatus.createEmpty());
-        putFeature(featuresMap, UNSUPPORTED_CN_SEGMENTS, purpleQC.unsupportedCopyNumberSegments(), qcStatuses.get(PurpleQCStatus.WARN_HIGH_COPY_NUMBER_NOISE));
-        putFeature(featuresMap, DELETED_GENES, purpleQC.deletedGenes(), qcStatuses.get(PurpleQCStatus.WARN_DELETED_GENES));
+        putFeature(featuresMap, UNSUPPORTED_CN_SEGMENTS, purpleQC.unsupportedCopyNumberSegments(), qcStatusMappings.get(PurpleQCStatus.WARN_HIGH_COPY_NUMBER_NOISE));
+        putFeature(featuresMap, DELETED_GENES, purpleQC.deletedGenes(), qcStatusMappings.get(PurpleQCStatus.WARN_DELETED_GENES));
 
-        putFeature(featuresMap, TINC, purpleQC.tincLevel(), getTincQcStatus(qcStatuses));
-        putFeature(featuresMap, CONTAMINATION, purpleQC.contamination(), qcStatuses.get(PurpleQCStatus.FAIL_CONTAMINATION));
+        putFeature(featuresMap, TINC, purpleQC.tincLevel(), getTincQcStatus(qcStatusMappings));
+        putFeature(featuresMap, CONTAMINATION, purpleQC.contamination(), qcStatusMappings.get(PurpleQCStatus.FAIL_CONTAMINATION));
 
         putFeature(featuresMap, TMB_SMALL_VARIANTS, purityContext.tumorMutationalBurdenPerMb(), QcStatus.createEmpty());
         putFeature(featuresMap, TMB_MS_INDELS, purityContext.microsatelliteIndelsPerMb(), QcStatus.createEmpty());

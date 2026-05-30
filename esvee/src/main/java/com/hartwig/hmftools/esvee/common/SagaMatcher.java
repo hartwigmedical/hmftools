@@ -8,8 +8,11 @@ import static java.util.Objects.requireNonNull;
 import static java.util.function.UnaryOperator.identity;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.cigarFromStr;
+import static com.hartwig.hmftools.common.bam.CigarUtils.getElementPositions;
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftClipLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.rightClipLength;
+import static com.hartwig.hmftools.esvee.common.SvConstants.SAGA_ALIGN_JUNCTION_INDEL_DISTANCE;
+import static com.hartwig.hmftools.esvee.common.SvConstants.SAGA_ALIGN_JUNCTION_INDEL_MAX_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.SAGA_ALIGN_JUNCTION_OVERLAP_MIN;
 import static com.hartwig.hmftools.esvee.common.SvConstants.SAGA_ALIGN_LENGTH_MIN_RATIO;
 import static com.hartwig.hmftools.esvee.common.SvConstants.SAGA_ALIGN_SCORE_MIN_BASELINE;
@@ -34,6 +37,7 @@ import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
 import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.Cigar;
+import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMFlag;
 import htsjdk.samtools.SAMSequenceRecord;
 
@@ -316,6 +320,14 @@ public class SagaMatcher
             return null;
         }
 
+        // Ensure there are no large indels near the junction.
+        // This would mean the junction sequence is different, despite the rest of the sequence aligning.
+        // TODO: limit to only the matched junctions?
+        if(!checkIndelsNotNearJunctions(cigar, alignment.getRefStart(), seqJunctionOffsets, sagaAssembly.junctionOffsets()))
+        {
+            return null;
+        }
+
         return new AlignmentCandidate(sagaAssembly, cigar, alignment.getAlignerScore(), seqJunctionOverlaps, sagaJunctionOverlaps);
     }
 
@@ -353,6 +365,27 @@ public class SagaMatcher
         int minOverlap = mMatchConfig.junctionOverlapMin;
         return overlaps.stream()
                 .anyMatch(junctionOverlaps -> junctionOverlaps.stream().allMatch(overlap -> overlap >= minOverlap));
+    }
+
+    private static boolean checkIndelsNotNearJunctions(final Cigar cigar, int sagaStart, final List<Integer> seqJunctionOffsets,
+            final List<Integer> sagaJunctionOffsets)
+    {
+        return getElementPositions(cigar, sagaStart).stream()
+                .filter(e -> e.operator().isIndel())
+                .allMatch(element -> checkIndelOnJunctions(element.element(), element.readStart(), element.readEnd(), seqJunctionOffsets)
+                        && checkIndelOnJunctions(element.element(), element.refStart(), element.refEnd(), sagaJunctionOffsets));
+    }
+
+    private static boolean checkIndelOnJunctions(final CigarElement element, int start, int end, final List<Integer> junctions)
+    {
+        if(element.getLength() <= SAGA_ALIGN_JUNCTION_INDEL_MAX_LENGTH)
+        {
+            // Allow very small indels.
+            return true;
+        }
+        // Ensure there are no large indels near the junctions.
+        return junctions.stream()
+                .allMatch(j -> min(abs(j - start), abs(j - end)) > SAGA_ALIGN_JUNCTION_INDEL_DISTANCE);
     }
 
     private static BwaMemAligner.Params createAlignerParams(final MatchConfig matchConfig)

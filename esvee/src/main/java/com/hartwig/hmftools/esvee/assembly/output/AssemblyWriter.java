@@ -22,6 +22,7 @@ import com.hartwig.hmftools.esvee.assembly.AssemblyConfig;
 import com.hartwig.hmftools.esvee.assembly.AssemblyUtils;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyStats;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
+import com.hartwig.hmftools.esvee.common.SagaMatcher;
 import com.hartwig.hmftools.esvee.common.WriteType;
 
 public class AssemblyWriter
@@ -37,7 +38,7 @@ public class AssemblyWriter
         mWriter = initialiseWriter();
     }
 
-    public void close() { closeBufferedWriter(mWriter);}
+    public void close() { closeBufferedWriter(mWriter); }
 
     private BufferedWriter initialiseWriter()
     {
@@ -86,6 +87,12 @@ public class AssemblyWriter
                 AssemblyStats.addReadTypeHeader(sj);
                 addRemoteRegionHeader(sj);
                 sj.add("MergedAssemblies");
+            }
+
+            if(mConfig.SagaFastaFile != null)
+            {
+                sj.add("SagaMatchVariant");
+                sj.add("SagaMatchCigar");
             }
 
             writer.write(sj.toString());
@@ -142,7 +149,7 @@ public class AssemblyWriter
                 sj.add(assembly.formRefBaseSequence(refBaseLength)); // long enough to show most short TIs
             }
 
-            String insertionType =  assembly.hasLineSequence() ? "LINE" : "NONE";
+            String insertionType = assembly.hasLineSequence() ? "LINE" : "NONE";
             sj.add(insertionType);
 
             sj.add(String.valueOf(assembly.stats().CandidateSupportCount));
@@ -168,6 +175,13 @@ public class AssemblyWriter
 
                 addRemoteRegionInfo(assembly, sj);
                 sj.add(String.valueOf(assembly.mergedAssemblyCount()));
+            }
+
+            if(mConfig.SagaFastaFile != null)
+            {
+                SagaMatcher.MatchBySequence match = assembly.sagaMatch();
+                sj.add(match == null ? "" : match.variant().toString());
+                sj.add(match == null ? "" : match.cigar().toString());
             }
 
             mWriter.write(sj.toString());

@@ -62,9 +62,12 @@ import com.hartwig.hmftools.esvee.assembly.types.PhaseSet;
 import com.hartwig.hmftools.esvee.assembly.types.ThreadTask;
 import com.hartwig.hmftools.esvee.assembly.vis.AssemblyVisualiser;
 import com.hartwig.hmftools.esvee.common.FragmentLengthBounds;
+import com.hartwig.hmftools.esvee.common.SagaResource;
 import com.hartwig.hmftools.esvee.common.WriteType;
 import com.hartwig.hmftools.esvee.prep.FragmentSizeDistribution;
 import com.hartwig.hmftools.esvee.prep.types.DiscordantStats;
+
+import org.jetbrains.annotations.Nullable;
 
 public class AssemblyApplication
 {
@@ -75,6 +78,9 @@ public class AssemblyApplication
     private final Map<String,List<JunctionGroup>> mJunctionGroupMap;
 
     private final List<BamReader> mBamReaders;
+
+    @Nullable
+    private final SagaResource mSagaResource;
 
     private final List<PerformanceCounter> mPerfCounters;
 
@@ -94,6 +100,8 @@ public class AssemblyApplication
         mResultsWriter = new ResultsWriter(mConfig);
 
         mPerfCounters = Lists.newArrayList();
+
+        mSagaResource = mConfig.SagaFastaFile != null ? new SagaResource(mConfig.SagaFastaFile) : null;
     }
 
     public void run()
@@ -169,6 +177,7 @@ public class AssemblyApplication
 
     private boolean loadJunctionFiles()
     {
+        // TODO? match these to SAGA
         if(!mConfig.SpecificJunctions.isEmpty())
         {
             for(Junction junction : mConfig.SpecificJunctions)
@@ -212,7 +221,7 @@ public class AssemblyApplication
         }
 
         mChrJunctionsMap.putAll(Junction.loadJunctions(
-                mConfig.JunctionFile, mConfig.SpecificChrRegions, minJunctionFrags, minHotspotFrags, minDiscordantFrags));
+                mConfig.JunctionFile, mConfig.SpecificChrRegions, minJunctionFrags, minHotspotFrags, minDiscordantFrags, mConfig.SagaFastaFile != null));
 
         // if(AssemblyConfig.DevDebug && !validateJunctionMap(mChrJunctionsMap))
         //    System.exit(1);
@@ -263,7 +272,7 @@ public class AssemblyApplication
         List<Thread> threadTasks = new ArrayList<>();
 
         List<JunctionGroupAssembler> primaryAssemblyTasks = JunctionGroupAssembler.createThreadTasks(
-                junctionGroups, mBamReaders, mConfig, mResultsWriter, taskCount, threadTasks);
+                junctionGroups, mBamReaders, mConfig, mSagaResource, mResultsWriter, taskCount, threadTasks);
 
         if(!runThreadTasks(threadTasks))
             System.exit(1);

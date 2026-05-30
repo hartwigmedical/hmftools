@@ -160,7 +160,7 @@ public class IndelsTest
     @Test
     public void testLongDeleteAssemblies()
     {
-        Junction posJunction = new Junction(CHR_1, 50, FORWARD, false, true, false);
+        Junction posJunction = new Junction(CHR_1, 50, FORWARD, false, true, false, null);
 
         // first a basic assembly with all reads agreeing
         String readBases = REF_BASES_200.substring(11, 51) + REF_BASES_200.substring(100, 140);
@@ -186,7 +186,7 @@ public class IndelsTest
         assertEquals(0, assembly.mismatchReadCount());
 
         // test the other side
-        Junction negJunction = new Junction(CHR_1, 100, REVERSE, false, true, false);
+        Junction negJunction = new Junction(CHR_1, 100, REVERSE, false, true, false, null);
 
         readBases = REF_BASES_200.substring(31, 51) + REF_BASES_200.substring(100, 160);
         read3 = createRead(READ_ID_GENERATOR.nextId(), 100, readBases, "20S60M");
@@ -250,8 +250,8 @@ public class IndelsTest
     @Test
     public void testIndelAssemblyDedup()
     {
-        Junction indelJunctionPos1 = new Junction(CHR_1, 130, FORWARD, false, true, false);
-        Junction indelJunctionNeg1 = new Junction(CHR_1, 131, REVERSE, false, true, false);
+        Junction indelJunctionPos1 = new Junction(CHR_1, 130, FORWARD, false, true, false, null);
+        Junction indelJunctionNeg1 = new Junction(CHR_1, 131, REVERSE, false, true, false, null);
 
         String leftRefBases = REF_BASES_400.substring(100, 130);
         String rightRefBases = REF_BASES_400.substring(131, 171);
@@ -279,8 +279,8 @@ public class IndelsTest
         indelAssemblyNeg1.setIndelCoords(indelRead.indelCoords());
 
         // create a pair where the pos assemblies don't match and the negatives do
-        Junction indelJunctionPos2 = new Junction(CHR_1, 140, FORWARD, false, true, false);
-        Junction indelJunctionNeg2 = new Junction(CHR_1, 141, REVERSE, false, true, false);
+        Junction indelJunctionPos2 = new Junction(CHR_1, 140, FORWARD, false, true, false, null);
+        Junction indelJunctionNeg2 = new Junction(CHR_1, 141, REVERSE, false, true, false, null);
 
         String insertBases2 = REF_BASES_400.substring(210, 255);
 
