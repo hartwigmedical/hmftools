@@ -76,16 +76,6 @@ public class IsofoxConfig
 
     private static final String WRITE_TYPES = "write_type";
 
-    /*
-    private static final String WRITE_EXON_DATA = "write_exon_data";
-    private static final String WRITE_READ_DATA = "write_read_data";
-    private static final String WRITE_SPLICE_SITE_DATA = "write_splice_sites";
-    private static final String WRITE_SPLICE_JUNC_DATA = "write_splice_junctions";
-    private static final String WRITE_FRAG_LENGTHS = "write_frag_lengths";
-    private static final String WRITE_GC_DATA = "write_gc_data";
-    private static final String WRITE_TRANS_COMBO_DATA = "write_trans_combo_data";
-    */
-
     private static final String FRAG_LENGTH_MIN_COUNT = "frag_length_min_count";
     private static final String FRAG_LENGTHS_BY_GENE = "frag_length_by_gene";
 

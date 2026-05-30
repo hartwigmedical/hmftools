@@ -30,6 +30,7 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.perf.PerformanceCounter;
+import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.WriteType;
@@ -175,11 +176,12 @@ public class FragmentSizeCalcs implements Callable<Void>
             if(geneLength < MIN_GENE_LENGTH || geneLength > MAX_GENE_LENGTH)
                 continue;
 
-            if(mConfig.Filters.ExcludedRegions.stream()
-                    .anyMatch(x -> x.overlaps(mChromosome, mCurrentGenesRange[SE_START], mCurrentGenesRange[SE_END])))
-            {
+            ChrBaseRegion sliceRegion = new ChrBaseRegion(mChromosome, mCurrentGenesRange);
+
+            List<BaseRegion> excludedRegions = mConfig.Filters.findExcludedRegions(sliceRegion);
+
+            if(!excludedRegions.isEmpty())
                 continue;
-            }
 
             if(currentGeneIndex >= nextLogCount)
             {
@@ -193,7 +195,6 @@ public class FragmentSizeCalcs implements Callable<Void>
             mCurrentFragmentCount = 0;
             mCurrentGenes = overlappingGenes.get(0).GeneName;
 
-            ChrBaseRegion sliceRegion = new ChrBaseRegion(mChromosome, mCurrentGenesRange);
 
             ISF_LOGGER.trace("chromosome({}) gene({} index={}) fragCount({}) nextRegion({})",
                     mChromosome, mCurrentGenes, currentGeneIndex, mProcessedFragments, sliceRegion);

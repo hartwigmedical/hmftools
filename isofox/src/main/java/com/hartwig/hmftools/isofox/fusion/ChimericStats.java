@@ -8,6 +8,7 @@ public class ChimericStats
 
     public int Translocations;
     public int Inversions;
+    public int Excluded;
 
     public ChimericStats()
     {
@@ -21,6 +22,7 @@ public class ChimericStats
         CandidateRealignFrags += other.CandidateRealignFrags;
         Translocations += other.Translocations;
         Inversions += other.Inversions;
+        Excluded += other.Excluded;
     }
 
     public void clear()
@@ -30,12 +32,12 @@ public class ChimericStats
         CandidateRealignFrags = 0;
         Translocations = 0;
         Inversions = 0;
+        Excluded = 0;
     }
 
     public String toString()
     {
-        return String.format("junc=%d locInterGene=%d candRealgn=%d bnd=%d",
-                ChimericJunctions, LocalInterGeneFrags, CandidateRealignFrags, Translocations);
+        return String.format("junc=%d locInterGene=%d candRealgn=%d bnd=%d excl=%d",
+                ChimericJunctions, LocalInterGeneFrags, CandidateRealignFrags, Translocations, Excluded);
     }
-
 }

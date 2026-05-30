@@ -2,12 +2,16 @@ package com.hartwig.hmftools.isofox.results;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.bam.SupplementaryReadData.fromAlignment;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.isofox.WriteType.CHIMERIC_POSITION_DATA;
+import static com.hartwig.hmftools.isofox.WriteType.CHIMERIC_READ;
 import static com.hartwig.hmftools.isofox.WriteType.FRAG_LENGTH_BY_GENE;
 import static com.hartwig.hmftools.isofox.WriteType.GC_RATIO;
 import static com.hartwig.hmftools.isofox.WriteType.READ;
 import static com.hartwig.hmftools.isofox.WriteType.SPLICE_SITE;
 import static com.hartwig.hmftools.isofox.WriteType.TRANS_COMBO;
+import static com.hartwig.hmftools.isofox.common.Read.clippedSide;
 import static com.hartwig.hmftools.isofox.novel.CanonicalSpliceJunctionFile.CANONICAL_SJ_FILE_ID;
 import static com.hartwig.hmftools.common.rna.GeneExpressionFile.GENE_EXPRESSION_FILE_ID;
 import static com.hartwig.hmftools.common.rna.RnaStatisticFile.SUMMARY_FILE_ID;
@@ -38,15 +42,25 @@ import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.bam.ClippedSide;
+import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.isofox.WriteType;
+import com.hartwig.hmftools.isofox.common.BaseDepth;
+import com.hartwig.hmftools.isofox.common.Read;
+import com.hartwig.hmftools.isofox.fusion.ChimericPosData;
+import com.hartwig.hmftools.isofox.fusion.ChimericReadGroup;
+import com.hartwig.hmftools.isofox.fusion.ChimericRemoteRegion;
 import com.hartwig.hmftools.isofox.novel.CanonicalSpliceJunctionFile;
 import com.hartwig.hmftools.common.rna.RnaStatisticFile;
 import com.hartwig.hmftools.common.rna.RnaStatistics;
@@ -90,6 +104,8 @@ public class ResultsWriter
     private BufferedWriter mReadGcRatioWriter;
     private BufferedWriter mRetainedIntronWriter;
     private BufferedWriter mSpliceSiteWriter;
+    private BufferedWriter mChimericReadWriter;
+    private BufferedWriter mChimericPositionDataWriter;
 
     public ResultsWriter(final IsofoxConfig config)
     {
@@ -108,6 +124,8 @@ public class ResultsWriter
         mReadGcRatioWriter = null;
         mRetainedIntronWriter = null;
         mSpliceSiteWriter = null;
+        mChimericReadWriter = null;
+        mChimericPositionDataWriter = null;
 
         if(mConfig.runFunction(TRANSCRIPT_COUNTS))
             initialiseGeneCollectionWriter();
@@ -133,6 +151,8 @@ public class ResultsWriter
         closeBufferedWriter(mReadGcRatioWriter);
         closeBufferedWriter(mRetainedIntronWriter);
         closeBufferedWriter(mSpliceSiteWriter);
+        closeBufferedWriter(mChimericReadWriter);
+        closeBufferedWriter(mChimericPositionDataWriter);
     }
 
     private void initialiseExternalWriters()
@@ -171,6 +191,12 @@ public class ResultsWriter
 
         if(mConfig.writeType(TRANS_COMBO))
             mCategoryCountsWriter = TranscriptExpression.createWriter(mConfig);
+
+        if(mConfig.writeType(CHIMERIC_READ))
+            initialiseChimericReadWriter();
+
+        if(mConfig.writeType(CHIMERIC_POSITION_DATA))
+            initialiseChimericPositionDataWriter();
     }
 
     public BufferedWriter getCategoryCountsWriter() { return mCategoryCountsWriter;}
@@ -181,6 +207,8 @@ public class ResultsWriter
     public BufferedWriter getSpliceSiteWriter() { return mSpliceSiteWriter; }
     public BufferedWriter getFragmentLengthWriter() { return mGeneFragLengthWriter; }
     public BufferedWriter getReadGcRatioWriter() { return mReadGcRatioWriter; }
+    public BufferedWriter getChimericReadWriter() { return mChimericReadWriter; }
+    public BufferedWriter getChimericPositionDataWriter() { return mChimericPositionDataWriter; }
 
     public void writeSummaryStats(final RnaStatistics summaryStats)
     {
@@ -376,6 +404,190 @@ public class ResultsWriter
         catch(IOException e)
         {
             ISF_LOGGER.error("failed to write exon expression file: {}", e.toString());
+        }
+    }
+
+    private void initialiseChimericReadWriter()
+    {
+        try
+        {
+            final String outputFileName = mConfig.formOutputFile("chimeric_reads.tsv");
+            mChimericReadWriter = createBufferedWriter(outputFileName, false);
+
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
+            sj.add("GroupCount").add("GroupComplete").add("ReadId");
+            sj.add("Chromosome").add("PosStart").add("PosEnd").add("Cigar").add("Flags").add("MapQual");
+            sj.add("IsSupp").add("IsDup").add("MateChr").add("MatePosition").add("SuppChr").add("SuppPosition");
+            sj.add("GeneSet").add("GeneName").add("BaseDepth");
+
+            mChimericReadWriter.write(sj.toString());
+            mChimericReadWriter.newLine();
+        }
+        catch (IOException e)
+        {
+            ISF_LOGGER.error("failed to initialise chimeric read data: {}", e.toString());
+        }
+    }
+
+    public static synchronized void writeChimericReadData(
+            final BufferedWriter writer, final ChimericReadGroup readGroup, final BaseDepth baseDepth)
+    {
+        if(writer == null)
+            return;
+
+        try
+        {
+            Read primaryRead = null;
+            ClippedSide maxClippedSide = null;
+            String suppChromosome = "";
+            int suppPosition = 0;
+
+            for(Read read : readGroup.reads())
+            {
+                ClippedSide clippedSide = clippedSide(read);
+
+                if(primaryRead == null)
+                {
+                    primaryRead = read;
+                    maxClippedSide = clippedSide;
+                }
+                else if(primaryRead.isSupplementaryAlignment() && !read.isSupplementaryAlignment())
+                {
+                    primaryRead = read;
+                    maxClippedSide = clippedSide;
+                }
+                else
+                {
+
+                    if(clippedSide.Length > maxClippedSide.Length)
+                    {
+                        primaryRead = read;
+                        maxClippedSide = clippedSide;
+                    }
+                }
+
+                if(suppChromosome.isEmpty() && !read.isSupplementaryAlignment() && read.hasSuppAlignment())
+                {
+                    String[] suppDataItems = read.getSuppAlignment().split(CSV_DELIM, -1);
+
+                    if(suppDataItems.length > 2)
+                    {
+                        suppChromosome = suppDataItems[0];
+                        suppPosition = Integer.parseInt(suppDataItems[1]);
+                    }
+                }
+            }
+
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
+            sj.add(String.valueOf(readGroup.size()));
+            sj.add(String.valueOf(readGroup.isComplete()));
+            sj.add(primaryRead.Id);
+            sj.add(primaryRead.Chromosome);
+            sj.add(String.valueOf(primaryRead.PosStart));
+            sj.add(String.valueOf(primaryRead.PosEnd));
+            sj.add(primaryRead.cigarStr());
+            sj.add(String.valueOf(primaryRead.flags()));
+            sj.add(String.valueOf(primaryRead.mapQuality()));
+            sj.add(String.valueOf(primaryRead.isSupplementaryAlignment()));
+            sj.add(String.valueOf(primaryRead.isDuplicate()));
+            sj.add(primaryRead.mateChromosome());
+            sj.add(String.valueOf(primaryRead.mateStartPosition()));
+
+            sj.add(suppChromosome);
+            sj.add(String.valueOf(suppPosition));
+
+            sj.add(String.valueOf(primaryRead.getGeneCollectons()[SE_START]));
+
+            String geneId = "";
+
+            if(!primaryRead.getReadTransExonRefs().isEmpty())
+            {
+                TransExonRef transExonRef = primaryRead.getReadTransExonRefs().values().iterator().next().get(0);
+                geneId = transExonRef.GeneId;
+            }
+
+            sj.add(geneId);
+
+            int basePosition = maxClippedSide.Length > 0 ?
+                    (maxClippedSide.isLeft() ? primaryRead.PosStart : primaryRead.PosEnd) : primaryRead.PosStart;
+
+            sj.add(String.valueOf(baseDepth.depthAtBase(basePosition)));
+
+            writer.write(sj.toString());
+            writer.newLine();
+        }
+        catch (IOException e)
+        {
+            ISF_LOGGER.error("failed to write chimeric read data: {}", e.toString());
+        }
+    }
+
+    private void initialiseChimericPositionDataWriter()
+    {
+        try
+        {
+            final String outputFileName = mConfig.formOutputFile("chimeric_pos_data.tsv");
+            mChimericPositionDataWriter = createBufferedWriter(outputFileName, false);
+
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
+            sj.add("Chromosome").add("Position").add("FragCount").add("DupCount").add("SuppCount");
+            sj.add("RemoteMaxRegion").add("RemoteMaxCount").add("RemoteTotalRegions");
+            sj.add("InitialReadId").add("InitialReadBases");
+
+            mChimericPositionDataWriter.write(sj.toString());
+            mChimericPositionDataWriter.newLine();
+        }
+        catch (IOException e)
+        {
+            ISF_LOGGER.error("failed to initialise chimeric position data: {}", e.toString());
+        }
+    }
+
+    private static final int MIN_CHRIMERIC_POS_FRAG_COUNT = 5;
+
+    public static synchronized void writeChimericPositionData(final BufferedWriter writer, final Collection<ChimericPosData> posDataList)
+    {
+        if(writer == null)
+            return;
+
+        try
+        {
+            for(ChimericPosData posData : posDataList)
+            {
+                if(posData.ReadCount < MIN_CHRIMERIC_POS_FRAG_COUNT)
+                    continue;
+
+                StringJoiner sj = new StringJoiner(TSV_DELIM);
+                sj.add(posData.Chromosome);
+                sj.add(String.valueOf(posData.Position));
+                sj.add(String.valueOf(posData.ReadCount));
+                sj.add(String.valueOf(posData.DuplicateCount));
+                sj.add(String.valueOf(posData.SuppCount));
+
+                if(!posData.RemoteRegions.isEmpty())
+                {
+                    Collections.sort(posData.RemoteRegions, Comparator.comparingInt(x -> -x.Count));
+                    ChimericRemoteRegion maxRemoteRegion = posData.RemoteRegions.get(0);
+
+                    sj.add(maxRemoteRegion.toString());
+                    sj.add(String.valueOf(maxRemoteRegion.Count));
+                    sj.add(String.valueOf(posData.RemoteRegions.size()));
+                }
+                else
+                {
+                    sj.add("").add("0").add("0");
+                }
+
+                sj.add(posData.InitialReadId);
+                sj.add(posData.InitialReadBases);
+
+                writer.write(sj.toString());
+                writer.newLine();
+            }
+        }
+        catch (IOException e)
+        {
+            ISF_LOGGER.error("failed to write chimeric position data: {}", e.toString());
         }
     }
 

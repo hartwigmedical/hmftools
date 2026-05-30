@@ -14,12 +14,16 @@ import static com.hartwig.hmftools.isofox.IsofoxConstants.MAX_NOVEL_SJ_DISTANCE;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.ALT_SPLICE_JUNCTIONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.FUSIONS;
 import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
+import static com.hartwig.hmftools.isofox.fusion.ChimericPosData.addChimericPosData;
 import static com.hartwig.hmftools.isofox.fusion.ChimericUtils.findSplitReadJunction;
 import static com.hartwig.hmftools.isofox.fusion.ChimericUtils.isInversion;
 import static com.hartwig.hmftools.isofox.fusion.ChimericUtils.setHasMultipleKnownSpliceGenes;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MIN_SOFT_CLIP_BASE_LENGTH;
 import static com.hartwig.hmftools.isofox.fusion.FusionRead.convertReads;
+import static com.hartwig.hmftools.isofox.results.ResultsWriter.writeChimericPositionData;
+import static com.hartwig.hmftools.isofox.results.ResultsWriter.writeChimericReadData;
 
+import java.io.BufferedWriter;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -71,6 +75,10 @@ public class ChimericReadTracker
     private final Map<String,List<Read>> mPreviousPostGeneReadMap;
     private final ChimericStats mChimericStats;
 
+    private BufferedWriter mChimericReadWriter;
+    private BufferedWriter mChimericPosDataWriter;
+    private final Map<String,ChimericPosData> mChimericPosDataMap;
+
     public ChimericReadTracker(final IsofoxConfig config)
     {
         mConfig = config;
@@ -93,6 +101,9 @@ public class ChimericReadTracker
         mHardFilteredReadIds = Maps.newHashMap();
         mGeneCollection = null;
         mKnownSpliteSites = null;
+        mChimericReadWriter = null;
+        mChimericPosDataWriter = null;
+        mChimericPosDataMap = Maps.newHashMap();
     }
 
     public boolean enabled() { return mEnabled; }
@@ -113,6 +124,9 @@ public class ChimericReadTracker
     public List<List<Read>> getLocalChimericReads() { return mLocalChimericReads; }
     public ChimericStats getStats() { return mChimericStats; }
     public Map<String,Set<String>> getHardFilteredReadIds() { return mHardFilteredReadIds; }
+
+    public void setChimericReadWriter(final BufferedWriter writer) { mChimericReadWriter = writer; }
+    public void setChimericPosDataWriter(final BufferedWriter writer) { mChimericPosDataWriter = writer; }
 
     public boolean isChimeric(final Read read1, final Read read2, boolean isDuplicate, boolean isMultiMapped)
     {
@@ -174,6 +188,12 @@ public class ChimericReadTracker
 
     private void clear(boolean full)
     {
+        if(mGeneCollection != null && mChimericReadMap.size() > 1000)
+        {
+            ISF_LOGGER.debug("{}: CRT: cleared readGroups({}) suppJuncs({}) stats({})",
+                    mGeneCollection.toString(), mChimericReadMap.size(), mSupplementaryJunctions.size(), mChimericStats);
+        }
+
         mChimericReadMap.clear();
         mFusionReadGroupMap.clear();
         mLocalCompleteGroups.clear();
@@ -181,6 +201,7 @@ public class ChimericReadTracker
         mChimericStats.clear();
         mLocalChimericReads.clear();
         mSupplementaryJunctions.clear();
+        mChimericPosDataMap.clear();
 
         if(full)
         {
@@ -201,7 +222,7 @@ public class ChimericReadTracker
 
     public void addChimericReadPair(final Read read1, final Read read2)
     {
-        if(inExcludedRegion(read1, false) || inExcludedRegion(read2, false))
+        if(inImmuneRegion(read1) || inImmuneRegion(read2))
             return;
 
         if(!read1.isDuplicate() && !read2.isDuplicate())
@@ -232,7 +253,17 @@ public class ChimericReadTracker
         }
         else
         {
-            mChimericReadMap.put(read1.Id, new ChimericReadGroup(read1, read2));
+            ChimericReadGroup readGroup = new ChimericReadGroup(read1, read2);
+
+            if(mChimericPosDataWriter != null)
+            {
+                addChimericPosData(mChimericPosDataMap, readGroup);
+            }
+
+            if(!mConfig.Fusions.WriteChimericOnly)
+            {
+                mChimericReadMap.put(read1.Id, readGroup);
+            }
         }
     }
 
@@ -250,7 +281,7 @@ public class ChimericReadTracker
         {
             Read read = (Read)object;
 
-            if(read.isMateUnmapped() || inExcludedRegion(read, true) || read.isSecondaryAlignment())
+            if(read.isMateUnmapped() || inImmuneRegion(read) || read.isSecondaryAlignment())
                 continue;
 
             if(!read.isDuplicate())
@@ -324,9 +355,30 @@ public class ChimericReadTracker
                         continue;
                 }
 
+                if(mChimericReadWriter != null)
+                    writeChimericReadData(mChimericReadWriter, readGroup, baseDepth);
+
+                if(mChimericPosDataWriter != null)
+                    addChimericPosData(mChimericPosDataMap, readGroup);
+
+                if(mConfig.Fusions.WriteChimericOnly)
+                    continue;
+
                 List<FusionRead> reads = convertReads(readGroup.reads());
                 reads.forEach(x -> x.setReadJunctionDepth(baseDepth));
                 mFusionReadGroupMap.put(readGroup.id(), new FusionReadGroup(readGroup.id(), reads));
+            }
+
+            if(mChimericPosDataWriter != null)
+            {
+                writeChimericPositionData(mChimericPosDataWriter, mChimericPosDataMap.values());
+            }
+
+            if(mConfig.Fusions.WriteChimericOnly)
+            {
+                // clear earlier
+                mChimericReadMap.clear();
+                mChimericPosDataMap.clear();
             }
 
             for(FusionFragment fragment : mJunctionRacGroups.getRacFragments())
@@ -344,15 +396,8 @@ public class ChimericReadTracker
         }
     }
 
-    private boolean inExcludedRegion(final Read read, boolean checkMate)
+    private boolean inImmuneRegion(final Read read)
     {
-        // check the read and its supplementary data if present
-        if(mConfig.Filters.skipRead(read.Chromosome, read.PosStart))
-            return true;
-
-        if(checkMate && mConfig.Filters.skipRead(read.mateChromosome(), read.mateStartPosition()))
-            return true;
-
         // only skip fragments in immune regions if both junction positions are in one
         boolean inImmuneRegion = mConfig.Filters.ImmuneGeneRegions.stream()
                 .anyMatch(x -> x.Chromosome.equals(read.Chromosome) && positionsOverlap(read.PosStart, read.PosEnd, x.start(), x.end()));
@@ -366,9 +411,6 @@ public class ChimericReadTracker
         if(read.hasSuppAlignment())
         {
             SupplementaryReadData suppData = SupplementaryReadData.extractAlignment(read.getSuppAlignment());
-
-            if(suppData != null && mConfig.Filters.skipRead(suppData.Chromosome, suppData.Position))
-                return true;
 
             if(inImmuneRegion && suppData != null
             && mConfig.Filters.ImmuneGeneRegions.stream().anyMatch(x -> x.containsPosition(suppData.Chromosome, suppData.Position)))

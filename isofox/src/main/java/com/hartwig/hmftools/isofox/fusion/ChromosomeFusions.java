@@ -68,14 +68,13 @@ public class ChromosomeFusions
         if(highCount)
         {
             int nonSuppGroups = (int)completeReadGroups.stream().filter(x -> x.size() == 2).count();
-            ISF_LOGGER.trace("chr({}) genes({}) region({} - {}) found {} local chimeric read groups (non-supp={}), stats({})",
+            ISF_LOGGER.debug("chr({}) genes({}) region({} - {}) found {} local chimeric read groups (non-supp={}), stats({})",
                     mChromosome, geneCollection.geneNames(),
                     geneCollection.getNonGenicPositions()[SE_START], geneCollection.getNonGenicPositions()[SE_END],
                     completeReadGroups.size(), nonSuppGroups, mChimericStats);
         }
 
-        mFusionTaskManager.addRacFragments(
-                mChromosome, geneCollection.id(), mChimericReadTracker.extractJunctionRacFragments());
+        mFusionTaskManager.addRacFragments(mChromosome, geneCollection.id(), mChimericReadTracker.extractJunctionRacFragments());
 
         mFusionFinder.processLocalReadGroups(completeReadGroups);
 
