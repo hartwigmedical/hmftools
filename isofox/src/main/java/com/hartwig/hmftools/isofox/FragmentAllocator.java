@@ -15,8 +15,6 @@ import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.IsofoxConstants.CHIMERIC_EXCLUDED_REGIONS_V37;
-import static com.hartwig.hmftools.isofox.IsofoxConstants.CHIMERIC_EXCLUDED_REGIONS_V38;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.MULTI_MAP_QUALITY_THRESHOLD;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.SINGLE_MAP_QUALITY;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.ALT_SPLICE_JUNCTIONS;
@@ -33,7 +31,6 @@ import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TRANS_SUPPORTING;
 import static com.hartwig.hmftools.isofox.common.FragmentType.UNSPLICED;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.FUSIONS;
-import static com.hartwig.hmftools.isofox.common.GeneRegionFilters.inExcludedRegion;
 import static com.hartwig.hmftools.isofox.common.Read.MAX_SC_BASE_MATCH;
 import static com.hartwig.hmftools.isofox.common.Read.findOverlappingRegions;
 import static com.hartwig.hmftools.isofox.common.Read.getUniqueValidRegion;
@@ -64,6 +61,7 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.bam.BamSlicer;
+import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.isofox.common.BaseDepth;
 import com.hartwig.hmftools.isofox.common.FragmentMatchType;
@@ -119,8 +117,6 @@ public class FragmentAllocator
 
     private final BufferedWriter mReadDataWriter;
     private long mEnrichedGeneFragments;
-    private ChrBaseRegion mExcludedRegion;
-    private ChrBaseRegion mExcludedChimericRegion;
 
     private static final int GENE_LOG_COUNT = 5000000;
     private static final int NON_GENIC_BASE_DEPTH_WIDTH = 250000;
@@ -140,8 +136,6 @@ public class FragmentAllocator
         mTotalBamReadCount = 0;
         mNextGeneCountLog = 0;
         mEnrichedGeneFragments = 0;
-        mExcludedRegion = null;
-        mExcludedChimericRegion = null;
         mValidReadStartRegion = new int[SE_PAIR];
 
         mSamReader = mConfig.BamFile != null ?
@@ -160,7 +154,11 @@ public class FragmentAllocator
 
         mReadDataWriter = resultsWriter.getReadDataWriter();
         mBaseDepth = new BaseDepth();
+
         mChimericReads = new ChimericReadTracker(mConfig);
+        mChimericReads.setChimericReadWriter(resultsWriter.getChimericReadWriter());
+        mChimericReads.setChimericPosDataWriter(resultsWriter.getChimericPositionDataWriter());
+
         mSpliceSiteCounter = new SpliceSiteCounter(resultsWriter.getSpliceSiteWriter());
 
         mExpressionReadTracker = new ExpressionReadTracker(mConfig);
@@ -191,7 +189,6 @@ public class FragmentAllocator
         mSpliceSiteCounter.clear();
 
         mCurrentGenes = null;
-        mExcludedRegion = null;
     }
 
     public void processBam(final GeneCollection geneCollection, final ChrBaseRegion geneRegion)
@@ -224,25 +221,47 @@ public class FragmentAllocator
         mValidReadStartRegion[SE_START] = geneRegion.start();
         mValidReadStartRegion[SE_END] = geneRegion.end();
 
-        mExcludedRegion = mConfig.Filters.ExcludedRegions.stream().filter(x -> geneRegion.overlaps(x)).findFirst().orElse(null);
+        List<BaseRegion> excludedRegions = mConfig.Filters.findExcludedRegions(geneRegion);
 
-        List<ChrBaseRegion> excludedChimericRegions = mConfig.RefGenVersion.is37() ? CHIMERIC_EXCLUDED_REGIONS_V37 : CHIMERIC_EXCLUDED_REGIONS_V38;
-        mExcludedChimericRegion = excludedChimericRegions.stream().filter(x -> x.overlaps(geneRegion)).findFirst().orElse(null);
-
-        if(mExcludedRegion != null)
+        if(!excludedRegions.isEmpty())
         {
-            // slice around any excluded regions - assume they have been configured to have at most one per gene collection for now
-            ISF_LOGGER.debug("gene collection genes({}) region({}) slicing around excluded region({})",
-                    mCurrentGenes.geneNames(), geneRegion, mExcludedRegion);
+            // genic regions are wholly contained within an excluded region
+            BaseRegion geneBaseRegion = new BaseRegion(geneRegion.start(), geneRegion.end());
+            if(excludedRegions.stream().anyMatch(x -> x.containsRegion(geneBaseRegion)))
+                return;
 
-            ChrBaseRegion preRegion = new ChrBaseRegion(geneRegion.Chromosome, geneRegion.start(), mExcludedRegion.start() - 1000);
-            ChrBaseRegion postRegion = new ChrBaseRegion(geneRegion.Chromosome, mExcludedRegion.end() + 1000, geneRegion.end());
+            // slice around any excluded regions
+            ISF_LOGGER.debug("gene collection({}) region({}) slicing around excluded regions({})",
+                    mCurrentGenes, geneRegion, excludedRegions.stream().map(x -> x.toString()).collect(Collectors.joining(";")));
 
-            if(preRegion.isValid())
-                mBamSlicer.slice(mSamReader, preRegion, this::processSamRecord);
+            int regionStart = geneRegion.start();
+            List<ChrBaseRegion> sliceRegions = Lists.newArrayList();
 
-            if(postRegion.isValid())
-                mBamSlicer.slice(mSamReader, postRegion, this::processSamRecord);
+            for(int i = 0; i < excludedRegions.size(); ++i)
+            {
+                BaseRegion excludedRegion = excludedRegions.get(i);
+
+                if(regionStart < excludedRegion.start())
+                {
+                    sliceRegions.add(new ChrBaseRegion(geneRegion.Chromosome, regionStart, excludedRegion.start() - 1));
+                }
+
+                regionStart = excludedRegion.end() + 1;
+            }
+
+            if(regionStart < geneRegion.end())
+            {
+                sliceRegions.add(new ChrBaseRegion(geneRegion.Chromosome, regionStart, geneRegion.end()));
+            }
+
+            for(ChrBaseRegion sliceRegion : sliceRegions)
+            {
+                // no buffer for slicing around regions since they already have a buffer configured / set
+                if(sliceRegion.isValid())
+                {
+                    mBamSlicer.slice(mSamReader, sliceRegion, this::processSamRecord);
+                }
+            }
         }
         else
         {
@@ -270,8 +289,11 @@ public class FragmentAllocator
         if(!positionWithin(record.getStart(), mValidReadStartRegion[SE_START], mValidReadStartRegion[SE_END]))
             return;
 
-        if(inExcludedChimericRegion(record))
+        if(mConfig.Filters.skipRead(record, true))
+        {
+            ++mChimericReads.getStats().Excluded;
             return;
+        }
 
         // if(mConfig.skipFilteredRead(record.getReadName()))
         //    return;
@@ -765,14 +787,6 @@ public class FragmentAllocator
         }
 
         return transcriptBases;
-    }
-
-    private boolean inExcludedChimericRegion(final SAMRecord record)
-    {
-        if(mExcludedChimericRegion == null)
-            return false;
-
-        return inExcludedRegion(mExcludedChimericRegion, record);
     }
 
     private boolean reachedGeneReadLimit()
