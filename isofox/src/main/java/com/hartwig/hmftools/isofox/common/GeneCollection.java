@@ -2,6 +2,7 @@ package com.hartwig.hmftools.isofox.common;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
@@ -17,6 +18,7 @@ import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 
 import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -80,7 +82,7 @@ public class GeneCollection
     }
 
     public int id() { return mId; }
-    public String chrId() { return String.format("%s_%d", mChromosome, mId); }
+    public String chrId() { return format("%s_%d", mChromosome, mId); }
     public String chromosome() { return mChromosome; }
     public List<GeneReadData> genes() { return mGenes; }
     public List<String> geneIds() { return mGeneIds; }
@@ -101,6 +103,11 @@ public class GeneCollection
         return gene != null ? gene.Gene.Strand : 0;
     }
 
+    public String toString()
+    {
+        return format("%s %s", chrId(), geneNames(5));
+    }
+
     public String geneNames() { return geneNames(10); }
 
     public String geneNames(int maxCount)
@@ -108,11 +115,11 @@ public class GeneCollection
         if(mGenes.size() == 1)
             return mGenes.get(0).name();
 
-        StringBuilder geneNames = new StringBuilder(mGenes.get(0).name());
+        StringJoiner geneNames = new StringJoiner(ITEM_DELIM);
 
-        for(int i = 1; i < min(mGenes.size(), maxCount); ++i)
+        for(int i = 0; i < min(mGenes.size(), maxCount); ++i)
         {
-            geneNames.append(ITEM_DELIM + mGenes.get(i).name());
+            geneNames.add(mGenes.get(i).name());
         }
 
         return geneNames.toString();

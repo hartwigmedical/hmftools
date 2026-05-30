@@ -1,48 +1,52 @@
 package com.hartwig.hmftools.isofox.common;
 
-import static com.hartwig.hmftools.common.region.ExcludedRegions.getPolyGRegion;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.region.ChrBaseRegion.loadChrBaseRegions;
 import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
-import static com.hartwig.hmftools.common.region.SpecificRegions.loadSpecificChromsomesOrRegions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.GENE_ID_FILE;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.GENE_ID_FILE_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadGeneIdsFile;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.ENRICHED_GENE_BUFFER;
-import static com.hartwig.hmftools.isofox.IsofoxConstants.populateExcludedRegions;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.isofox.IsofoxConstants;
 
-import org.apache.commons.cli.ParseException;
-
 import htsjdk.samtools.SAMRecord;
 
 public class GeneRegionFilters
 {
-    public final SpecificRegions SpecificChrRegions;
+    public SpecificRegions SpecificChrRegions;
 
     public final List<String> RestrictedGeneIds; // limit expression analysis to a set of panel genes
     public final List<String> EnrichedGeneIds; // genes to count by not fully process for any functional purpose
-    public final List<ChrBaseRegion> ExcludedRegions;
+    public final Map<String,List<BaseRegion>> ExcludedRegions;
 
     public final List<ChrBaseRegion> ImmuneGeneRegions;
 
     private final RefGenomeVersion mRefGenomeVersion;
-    private final List<ChrBaseRegion> mExcludedGeneRegions; // exclude these regions based on geneId, enriched or excluded regions
     private boolean mHasSpecificRegions;
 
     // config
     private static final String ENRICHED_GENE_IDS = "enriched_gene_ids";
+    private static final String EXCLUDED_REGIONS = "excluded_regions";
 
     public GeneRegionFilters(final RefGenomeVersion refGenomeVersion)
     {
@@ -51,19 +55,17 @@ public class GeneRegionFilters
         SpecificChrRegions = new SpecificRegions();
         mHasSpecificRegions = false;
 
-        mExcludedGeneRegions = Lists.newArrayList();
         ImmuneGeneRegions = Lists.newArrayList();
+        ExcludedRegions = Maps.newHashMap();
 
         mRefGenomeVersion = refGenomeVersion;
-        ExcludedRegions = Lists.newArrayList();
-
-        populateExcludedRegions(ExcludedRegions, refGenomeVersion);
     }
 
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addPath(GENE_ID_FILE, false, GENE_ID_FILE_DESC);
         configBuilder.addConfigItem(ENRICHED_GENE_IDS, "List of geneIds to treat as enriched");
+        configBuilder.addPath(EXCLUDED_REGIONS, false, "List of excluded regions");
         addSpecificChromosomesRegionsConfig(configBuilder);
     }
 
@@ -91,15 +93,15 @@ public class GeneRegionFilters
             }
         }
 
-        try
+        if(configBuilder.hasValue(EXCLUDED_REGIONS))
         {
-            loadSpecificChromsomesOrRegions(configBuilder, SpecificChrRegions.Chromosomes, SpecificChrRegions.Regions);
-            mHasSpecificRegions = SpecificChrRegions.hasFilters();
+            String excludedRegionsFile = configBuilder.getValue(EXCLUDED_REGIONS);
+            ExcludedRegions.putAll(loadChrBaseRegions(excludedRegionsFile, false));
+            ISF_LOGGER.info("file({}) loaded {} excluded regions", excludedRegionsFile, ExcludedRegions.size());
         }
-        catch(ParseException e)
-        {
-            System.exit(1);
-        }
+
+        SpecificChrRegions = SpecificRegions.from(configBuilder);
+        mHasSpecificRegions = SpecificChrRegions.hasFilters();
     }
 
     public boolean excludeChromosome(final String chromosome)
@@ -107,7 +109,42 @@ public class GeneRegionFilters
         return SpecificChrRegions.excludeChromosome(chromosome);
     }
 
-    public boolean skipRead(final String chromosome, int position)
+    private static final int READ_END_BUFFER = 150;
+
+    public boolean skipRead(final SAMRecord read, boolean checkMateAndSupp)
+    {
+        if(skipRead(read.getContig(), read.getAlignmentStart(), read.getAlignmentEnd()))
+            return true;
+
+        if(checkMateAndSupp)
+        {
+            // simple, non-cigar aware read end
+            if(!read.getMateUnmappedFlag())
+            {
+                int mateReadStart = read.getMateAlignmentStart();
+                if(skipRead(read.getMateReferenceName(), mateReadStart, mateReadStart))
+                {
+                    return true;
+                }
+            }
+
+            SupplementaryReadData suppData = SupplementaryReadData.extractAlignment(read);
+            if(suppData != null)
+            {
+                if(skipRead(suppData.Chromosome, suppData.Position, suppData.Position))
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
+    public boolean skipRead(final String chromosome, int readStart)
+    {
+        return skipRead(chromosome, readStart, readStart + READ_END_BUFFER);
+    }
+
+    public boolean skipRead(final String chromosome, int readStart, int readEnd)
     {
         // currently only used to filter out chimeric reads
         if(!HumanChromosome.contains(chromosome))
@@ -118,41 +155,59 @@ public class GeneRegionFilters
             if(SpecificChrRegions.excludeChromosome(chromosome))
                 return true;
 
-            if(SpecificChrRegions.excludePosition(chromosome, position))
+            if(SpecificChrRegions.Regions.stream().noneMatch(x -> x.overlaps(chromosome, readStart, readEnd)))
                 return true;
         }
 
-        if(mExcludedGeneRegions.stream().anyMatch(x -> x.containsPosition(chromosome, position)))
-            return true;
+        List<BaseRegion> excludedRegions = ExcludedRegions.get(chromosome);
+
+        if(excludedRegions != null)
+        {
+            if(excludedRegions.stream().anyMatch(x -> positionsOverlap(x.start(), x.end(), readStart, readEnd)))
+                return true;
+        }
 
         return false;
+    }
+
+    public List<BaseRegion> findExcludedRegions(final ChrBaseRegion region)
+    {
+        List<BaseRegion> excludedRegions = ExcludedRegions.get(region.Chromosome);
+
+        if(excludedRegions == null)
+            return Collections.emptyList();
+
+        return excludedRegions.stream().filter(x -> x.overlaps(region)).collect(Collectors.toList());
     }
 
     public void buildGeneRegions(final EnsemblDataCache geneTransCache)
     {
-        mExcludedGeneRegions.addAll(ExcludedRegions);
-
-        EnrichedGeneIds.stream()
-                .map(x -> geneTransCache.getGeneDataById(x))
-                .filter(x -> x != null)
-                .forEach(x -> mExcludedGeneRegions.add(new ChrBaseRegion(
-                        x.Chromosome, x.GeneStart - ENRICHED_GENE_BUFFER, x.GeneEnd + ENRICHED_GENE_BUFFER)));
-    }
-
-    public static boolean inExcludedRegion(final ChrBaseRegion excludedRegion, final SAMRecord record)
-    {
-        if(excludedRegion == null)
-            return false;
-
-        if(excludedRegion.containsPosition(record.getStart()) || excludedRegion.containsPosition(record.getEnd()))
-            return true;
-
-        // check the mate as well
-        if(record.getMateReferenceName() != null && excludedRegion.containsPosition(record.getMateReferenceName(), record.getMateAlignmentStart()))
+        // add the regions from any enriched genes to the excluded regions set
+        for(String enrichedGeneId : EnrichedGeneIds)
         {
-            return true;
+            GeneData geneData = geneTransCache.getGeneDataById(enrichedGeneId);
+
+            if(geneData == null)
+            {
+                ISF_LOGGER.warn("enriched gene ID({}) missing from Ensembl cache", enrichedGeneId);
+                continue;
+            }
+
+            List<BaseRegion> excludedRegions = ExcludedRegions.get(geneData.Chromosome);
+
+            if(excludedRegions == null)
+            {
+                excludedRegions = Lists.newArrayList();
+                ExcludedRegions.put(geneData.Chromosome, excludedRegions);
+            }
+
+            excludedRegions.add(new BaseRegion(
+                    geneData.GeneStart - ENRICHED_GENE_BUFFER, geneData.GeneEnd + ENRICHED_GENE_BUFFER));
         }
 
-        return false;
+        for(List<BaseRegion> excludedRegions : ExcludedRegions.values())
+        {
+            Collections.sort(excludedRegions);
+        }
     }
 }
