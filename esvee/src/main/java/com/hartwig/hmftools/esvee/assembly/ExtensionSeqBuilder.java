@@ -367,6 +367,7 @@ public class ExtensionSeqBuilder
         int reqExtensionLength = mHasLineSequence
                 ? LINE_MIN_EXTENSION_LENGTH
                 : (mUseRelaxedFilters ? ASSEMBLY_MIN_SOFT_CLIP_LENGTH_LOWER : ASSEMBLY_MIN_SOFT_CLIP_LENGTH);
+
         int reqSecondaryExtensionLength = mHasLineSequence
                 ? LINE_MIN_SOFT_CLIP_SECONDARY_LENGTH
                 : (mUseRelaxedFilters ? ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH_LOWER : ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH);
@@ -441,8 +442,9 @@ public class ExtensionSeqBuilder
         int junctionIndex = sampleRead.startIndex();
 
         int repeatIndexStart = junctionIndex + (mBuildForwards ? repeatJunctionDistance - 1 : -repeatJunctionDistance + 1);
-        int previousRepeatCount =
-                RepeatInfo.getRepeatCount(sampleRead.read().getBases(), firstRepeat.Bases, repeatIndexStart, !mBuildForwards);
+
+        int previousRepeatCount = RepeatInfo.getRepeatCount(
+                sampleRead.read().getBases(), firstRepeat.Bases, repeatIndexStart, !mBuildForwards);
 
         if(previousRepeatCount > 0)
             mRefRepeatCount = previousRepeatCount;
@@ -457,7 +459,7 @@ public class ExtensionSeqBuilder
 
     private boolean checkLineSequence()
     {
-        int validReadCount = (int) mSequenceBuilder.reads().stream().filter(x -> !x.mismatched()).count();
+        int validReadCount = (int)mSequenceBuilder.reads().stream().filter(x -> !x.mismatched()).count();
 
         List<Read> validLineReads = mSequenceBuilder.reads().stream()
                 .filter(x -> !x.mismatched() && x.read().hasLineTail(mBuildForwards))

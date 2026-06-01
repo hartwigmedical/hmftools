@@ -55,7 +55,6 @@ public class JunctionAssembler
 {
     private Junction mJunction;
     private final RefGenomeInterface mRefGenome;
-    @Nullable
     private final SagaMatcher mSagaMatcher;
     private final List<Read> mNonJunctionReads;
 
@@ -111,6 +110,7 @@ public class JunctionAssembler
                 // If that failed, try again with a relaxed requirement - later this will be permitted if the junction sequence matches SAGA.
                 result = assessSoftClipJunction(rawReads, true);
             }
+
             junctionReads = result.junctionReads();
             extensionReads = result.extensionReads();
             mNonJunctionReads.addAll(result.nonJunctionReads());
@@ -192,9 +192,9 @@ public class JunctionAssembler
 
             assembly.buildRepeatInfo();
 
-            // Now we have the assembly sequence, try to match to SAGA if necessary.
-            // Note matching to SAGA via coordinate is not enough; we need to know that the variant sequence is actually the same.
+            // check for a SAGA match by sequence, even if a coord match was previously found
             boolean sagaMatched = matchJunctionAssemblyToSaga(assembly);
+
             if(usedRelaxedFilters)
             {
                 if(sagaMatched)
@@ -227,8 +227,9 @@ public class JunctionAssembler
         // the only difference for indel-based junctions is that only the long indels are used to build the consensus extension
 
         int minSoftClip = useRelaxedLimits ? ASSEMBLY_MIN_SOFT_CLIP_LENGTH_LOWER : ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
-        int minSoftClipSecondary =
-                useRelaxedLimits ? ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH_LOWER : ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH;
+
+        int minSoftClipSecondary = useRelaxedLimits
+                ? ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH_LOWER : ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH;
 
         List<Read> extensionReads = new ArrayList<>();
         List<Read> junctionReads = new ArrayList<>();
@@ -593,9 +594,11 @@ public class JunctionAssembler
         return false;
     }
 
-    private boolean matchJunctionAssemblyToSaga(JunctionAssembly assembly)
+    private boolean matchJunctionAssemblyToSaga(final JunctionAssembly assembly)
     {
-        assert mSagaMatcher != null;
+        if(mSagaMatcher == null)
+            return false;
+
         int junctionOffset = mJunction.isForward() ? assembly.refBaseLength() : assembly.baseLength() - assembly.refBaseLength();
         SagaMatcher.MatchBySequence match = mSagaMatcher.matchBySequence(assembly.bases(), List.of(junctionOffset));
         assembly.setSagaMatch(match);

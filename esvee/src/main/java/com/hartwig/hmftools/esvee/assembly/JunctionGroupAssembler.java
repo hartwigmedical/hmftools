@@ -102,8 +102,8 @@ public class JunctionGroupAssembler extends ThreadTask
         {
             BamReader bamReader = bamReaders.get(i);
 
-            JunctionGroupAssembler junctionGroupAssembler =
-                    new JunctionGroupAssembler(config, bamReader, sagaResource, taskQueue, resultsWriter);
+            JunctionGroupAssembler junctionGroupAssembler = new JunctionGroupAssembler(
+                    config, bamReader, sagaResource, taskQueue, resultsWriter);
             primaryAssemblyTasks.add(junctionGroupAssembler);
             threadTasks.add(junctionGroupAssembler);
         }
@@ -314,8 +314,8 @@ public class JunctionGroupAssembler extends ThreadTask
         boolean hasLocalMate = read.isMateUnmapped()
                 || (read.isMateMapped() && read.mateChromosome().equals(read.chromosome())
                 && positionsOverlap(
-                read.mateAlignmentStart(), read.mateAlignmentEnd(),
-                mCurrentJunctionGroup.readRangeStart(), mCurrentJunctionGroup.readRangeEnd()));
+                        read.mateAlignmentStart(), read.mateAlignmentEnd(),
+                        mCurrentJunctionGroup.readRangeStart(), mCurrentJunctionGroup.readRangeEnd()));
 
         // link first and second in pair if within the same group
         boolean hasLocalSupplementary = read.hasSupplementary() && read.supplementaryData().Chromosome.equals(read.chromosome())

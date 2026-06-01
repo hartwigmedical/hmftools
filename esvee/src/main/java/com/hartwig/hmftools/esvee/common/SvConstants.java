@@ -15,8 +15,7 @@ public final class SvConstants
 
     // commonly used thresholds
     public static final int MIN_VARIANT_LENGTH = 32;
-    // Used for variants matched to the SAGA resource.
-    public static final int MIN_VARIANT_LENGTH_LOWER = 24;
+    public static final int MIN_VARIANT_LENGTH_LOWER = 24; // lowered to aid SAGA-matching
     public static final int MIN_MAP_QUALITY = 20;
 
     public static final int DEFAULT_MAX_CONCORDANT_FRAG_LENGTH = 1000; // default, otherwise set from BAM fragment sampling

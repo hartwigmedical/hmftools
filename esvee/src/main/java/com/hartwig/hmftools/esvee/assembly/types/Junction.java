@@ -48,7 +48,6 @@ public class Junction implements Comparable<Junction>
     private int mRawDiscordantPosition;
     private IndelCoords mIndelCoords; // the consensus indel if applicable
 
-    @Nullable
     private final String mSagaMatchVariantId;
 
     public Junction(final String chromosome, final int position, final Orientation orientation)
@@ -182,7 +181,6 @@ public class Junction implements Comparable<Junction>
             Integer indelIndex = fieldsIndexMap.get(FLD_INDEL_JUNCTION);
             Integer hotspotIndex = fieldsIndexMap.get(FLD_HOTSPOT_JUNCTION);
             Integer extraInfoIndex = fieldsIndexMap.get(FLD_EXTRA_INFO);
-
             Integer sagaMatchVariantIndex = fieldsIndexMap.get(FLD_SAGA_MATCH_VARIANT);
 
             List<Junction> junctionDataList = null;
@@ -218,7 +216,7 @@ public class Junction implements Comparable<Junction>
                 boolean indel = indelIndex != null && Boolean.parseBoolean(values[indelIndex]);
                 boolean hotspot = hotspotIndex != null && Boolean.parseBoolean(values[hotspotIndex]);
 
-                // The first part is the variant ID, the second part is the breakends which we don't need.
+                // the first part is the variant ID, the second part is the breakends which isn't needed
                 String sagaMatchVariant = loadSagaMatch && sagaMatchVariantIndex != null ? values[sagaMatchVariantIndex].split(" ")[0] : null;
 
                 if(hotspot)
