@@ -329,7 +329,7 @@ public class SagaMatcher
 
         // Ensure there are no large indels near the junction.
         // This would mean the junction sequence is different, despite the rest of the sequence aligning.
-        // TODO: limit to only the matched junctions?
+        // Potential FIXME: limit to only the matched junctions.
         if(!checkIndelsNotNearJunctions(cigar, alignment.getRefStart(), seqJunctionOffsets, sagaAssembly.junctionOffsets()))
         {
             return null;
@@ -447,7 +447,7 @@ public class SagaMatcher
         // single-threaded in since Esvee makes these calls within threads already, and don't batch since phased assemblies are aligned
         // one at a time, also in a threaded context
         return new BwaMemAligner.Params(
-                // TODO? may have to relax some params? but measure performance hit
+                // Note: default params may be too strict. If a case where BWA drops an alignment of a valid match, should relax these.
                 BwaMemAlignParams.DEFAULT,
                 true,
                 matchConfig.alignScoreMin(),
