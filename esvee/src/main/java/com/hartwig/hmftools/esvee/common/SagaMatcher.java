@@ -431,8 +431,15 @@ public class SagaMatcher
             return true;
         }
         // Ensure there are no large indels near the junctions.
-        return junctions.stream()
-                .allMatch(j -> min(abs(j - start), abs(j - end)) > SAGA_ALIGN_JUNCTION_INDEL_DISTANCE);
+        return junctions.stream().noneMatch(j -> isJunctionNearIndel(j, start, end));
+    }
+
+    private static boolean isJunctionNearIndel(int junctionOffset, int indelStart, int indelEnd)
+    {
+        boolean insideIndel = junctionOffset >= indelStart && junctionOffset < indelEnd;
+        boolean nearIndelStart = abs(junctionOffset - indelStart) < SAGA_ALIGN_JUNCTION_INDEL_DISTANCE;
+        boolean nearIndelEnd = abs(junctionOffset - indelEnd) < SAGA_ALIGN_JUNCTION_INDEL_DISTANCE;
+        return insideIndel || nearIndelStart || nearIndelEnd;
     }
 
     private static BwaMemAligner.Params createAlignerParams(final MatchConfig matchConfig)
