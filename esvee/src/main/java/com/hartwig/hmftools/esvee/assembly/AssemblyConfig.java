@@ -42,6 +42,8 @@ import static com.hartwig.hmftools.esvee.common.FileCommon.JUNCTION_FILE_DESC;
 import static com.hartwig.hmftools.esvee.common.FileCommon.PREP_DIR;
 import static com.hartwig.hmftools.esvee.common.FileCommon.PREP_DIR_DESC;
 import static com.hartwig.hmftools.esvee.common.FileCommon.REF_GENOME_IMAGE_EXTENSION;
+import static com.hartwig.hmftools.esvee.common.FileCommon.SAGA_FASTA;
+import static com.hartwig.hmftools.esvee.common.FileCommon.SAGA_FASTA_DESC;
 import static com.hartwig.hmftools.esvee.common.FileCommon.formEsveeInputFilename;
 import static com.hartwig.hmftools.esvee.common.FileCommon.formPrepBamFilenames;
 import static com.hartwig.hmftools.esvee.common.FileCommon.formPrepInputFilename;
@@ -134,8 +136,6 @@ public class AssemblyConfig
     public static boolean CLEAR_CACHED_READ = true;
 
     private static final String DECOY_GENOME = "decoy_genome";
-
-    private static final String SAGA_FASTA = "saga_fasta";
 
     private static final String PERF_LOG_TIME = "perf_log_time";
 
@@ -399,7 +399,7 @@ public class AssemblyConfig
         addRefGenomeConfig(configBuilder, true);
         configBuilder.addPath(DECOY_GENOME, false, "Decoy genome image file");
 
-        configBuilder.addPath(SAGA_FASTA, false, "SAGA resource FASTA file");
+        configBuilder.addPath(SAGA_FASTA, false, SAGA_FASTA_DESC);
 
         configBuilder.addPath(BWA_LIB_PATH, false, BWA_LIB_PATH_DESC);
 

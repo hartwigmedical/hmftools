@@ -78,7 +78,7 @@ public class PartitionThread extends Thread
                 int processedCount = mPartitionCount - mPartitions.size();
 
                 PartitionSlicer slicer = new PartitionSlicer(
-                        0, partition, mConfig, mSamReaders, mBamSlicer, mSpanningReadCache, mSagaMatcher, mWriter, mCombinedStats);
+                        partition, mConfig, mSamReaders, mBamSlicer, mSpanningReadCache, mSagaMatcher, mWriter, mCombinedStats);
 
                 slicer.run();
 

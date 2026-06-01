@@ -885,7 +885,6 @@ public class JunctionTracker
 
     private void matchJunctionsToSaga()
     {
-        assert mSagaMatcher != null;
         for(JunctionData junction : mJunctions)
         {
             SagaMatcher.MatchByLocation match = mSagaMatcher.matchByLocation(mRegion.chromosome(), junction.Position);

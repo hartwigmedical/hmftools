@@ -34,7 +34,6 @@ import htsjdk.samtools.SamReader;
 
 public class PartitionSlicer
 {
-    private final int mId;
     private final PrepConfig mConfig;
     private final ChrBaseRegion mRegion;
     private final SpanningReadCache mSpanningReadCache;
@@ -63,11 +62,10 @@ public class PartitionSlicer
     }
 
     public PartitionSlicer(
-            final int id, final ChrBaseRegion region, final PrepConfig config, final List<SamReader> samReaders, final BamSlicer bamSlicer,
+            final ChrBaseRegion region, final PrepConfig config, final List<SamReader> samReaders, final BamSlicer bamSlicer,
             final SpanningReadCache spanningReadCache, @Nullable final SagaMatcher sagaMatcher, final ResultsWriter writer,
             final CombinedStats combinedStats)
     {
-        mId = id;
         mConfig = config;
         mReadFilters = config.ReadFiltering;
         mSpanningReadCache = spanningReadCache;

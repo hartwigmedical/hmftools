@@ -24,6 +24,8 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFil
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.FileCommon.KNOWN_HOTSPOT_FILE;
 import static com.hartwig.hmftools.esvee.common.FileCommon.PREP_FILE_ID;
+import static com.hartwig.hmftools.esvee.common.FileCommon.SAGA_FASTA;
+import static com.hartwig.hmftools.esvee.common.FileCommon.SAGA_FASTA_DESC;
 import static com.hartwig.hmftools.esvee.common.FileCommon.formOutputFile;
 import static com.hartwig.hmftools.esvee.common.FileCommon.parseBamFiles;
 import static com.hartwig.hmftools.esvee.common.FileCommon.parseSampleIds;
@@ -102,8 +104,6 @@ public class PrepConfig
     public static final String BAM_FILE = "bam_file";
     public static final String BAM_FILE_DESC = "BAM file paths separated by ','";
     public static final String SAMPLE_ID_DESC = "List of samples separated by ','";
-
-    private static final String SAGA_FASTA = "saga_fasta";
 
     private static final String WRITE_TYPES = "write_types";
 
@@ -258,7 +258,7 @@ public class PrepConfig
 
         addRefGenomeConfig(configBuilder, true);
         configBuilder.addPath(KNOWN_HOTSPOT_FILE, false, "Known fusion hotspot BED file");
-        configBuilder.addPath(SAGA_FASTA, false, "SAGA resource FASTA file");
+        configBuilder.addPath(SAGA_FASTA, false, SAGA_FASTA_DESC);
         configBuilder.addInteger(PARTITION_SIZE, "Partition size", DEFAULT_CHR_PARTITION_SIZE);
 
         registerCommonConfig(configBuilder);

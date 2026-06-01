@@ -25,7 +25,7 @@ public class JunctionData
     private List<ReadGroup> mExactSupportGroups;
     private List<RemoteJunction> mRemoteJunctions;
 
-    private final Map<ReadType, List<PrepRead>> mReadTypeReads;
+    private final Map<ReadType,List<PrepRead>> mReadTypeReads;
 
     private PrepRead mTopJunctionRead;
     private boolean mInternalIndel;

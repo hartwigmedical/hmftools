@@ -191,7 +191,7 @@ public class ResultsWriter
                         // check the read supports this junction (it can also support another junction)
                         boolean supportsJunction =
                                 (expectLeftClipped && read.AlignmentStart == junctionData.Position && read.isLeftClipped())
-                                        || (!expectLeftClipped && read.AlignmentEnd == junctionData.Position && read.isRightClipped());
+                                || (!expectLeftClipped && read.AlignmentEnd == junctionData.Position && read.isRightClipped());
 
                         if(!supportsJunction)
                             continue;

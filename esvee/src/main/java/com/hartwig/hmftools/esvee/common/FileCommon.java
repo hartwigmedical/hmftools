@@ -57,6 +57,9 @@ public final class FileCommon
 
     public static final String KNOWN_HOTSPOT_FILE = "known_hotspot_file";
 
+    public static final String SAGA_FASTA = "saga_fasta";
+    public static final String SAGA_FASTA_DESC = "SAGA resource FASTA file";
+
     public static final String FILE_NAME_DELIM = ".";
 
     public static final String REF_GENOME_IMAGE_EXTENSION = ".img";
