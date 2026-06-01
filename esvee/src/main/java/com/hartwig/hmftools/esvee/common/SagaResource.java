@@ -89,6 +89,13 @@ public class SagaResource
         {
             return format("%s %s-%s", id, breakend1, breakend2);
         }
+
+        public String noSpaceString()
+        {
+            String result = format("%s:%s-%s", id, breakend1, breakend2);
+            result = result.replace(" ", "_");
+            return result;
+        }
     }
 
     public record AssemblyMetadata(

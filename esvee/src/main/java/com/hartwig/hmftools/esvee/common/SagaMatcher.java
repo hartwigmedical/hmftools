@@ -329,7 +329,7 @@ public class SagaMatcher
 
         // Ensure there are no large indels near the junction.
         // This would mean the junction sequence is different, despite the rest of the sequence aligning.
-        // TODO: limit to only the matched junctions?
+        // Potential FIXME: limit to only the matched junctions.
         if(!checkIndelsNotNearJunctions(cigar, alignment.getRefStart(), seqJunctionOffsets, sagaAssembly.junctionOffsets()))
         {
             return null;
@@ -431,8 +431,15 @@ public class SagaMatcher
             return true;
         }
         // Ensure there are no large indels near the junctions.
-        return junctions.stream()
-                .allMatch(j -> min(abs(j - start), abs(j - end)) > SAGA_ALIGN_JUNCTION_INDEL_DISTANCE);
+        return junctions.stream().noneMatch(j -> isJunctionNearIndel(j, start, end));
+    }
+
+    private static boolean isJunctionNearIndel(int junctionOffset, int indelStart, int indelEnd)
+    {
+        boolean insideIndel = junctionOffset >= indelStart && junctionOffset < indelEnd;
+        boolean nearIndelStart = abs(junctionOffset - indelStart) < SAGA_ALIGN_JUNCTION_INDEL_DISTANCE;
+        boolean nearIndelEnd = abs(junctionOffset - indelEnd) < SAGA_ALIGN_JUNCTION_INDEL_DISTANCE;
+        return insideIndel || nearIndelStart || nearIndelEnd;
     }
 
     private static BwaMemAligner.Params createAlignerParams(final MatchConfig matchConfig)
@@ -440,7 +447,7 @@ public class SagaMatcher
         // single-threaded in since Esvee makes these calls within threads already, and don't batch since phased assemblies are aligned
         // one at a time, also in a threaded context
         return new BwaMemAligner.Params(
-                // TODO? may have to relax some params? but measure performance hit
+                // Note: default params may be too strict. If a case where BWA drops an alignment of a valid match, should relax these.
                 BwaMemAlignParams.DEFAULT,
                 true,
                 matchConfig.alignScoreMin(),

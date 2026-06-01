@@ -360,7 +360,7 @@ public class AssemblyApplication
 
     private void runAlignment(final List<AssemblyAlignment> assemblyAlignments)
     {
-        Alignment alignment = new Alignment(mConfig, new BwaAligner(mConfig.RefGenomeImageFile));
+        Alignment alignment = new Alignment(mConfig, new BwaAligner(mConfig.RefGenomeImageFile), mSagaResource);
         alignment.run(assemblyAlignments, mPerfCounters);
         alignment.close();
     }

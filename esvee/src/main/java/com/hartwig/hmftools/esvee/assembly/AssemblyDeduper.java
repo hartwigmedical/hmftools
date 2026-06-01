@@ -233,6 +233,12 @@ public class AssemblyDeduper
         if(first.indel() != second.indel())
             return first.indel();
 
+        // Prefer the assembly which matches a known SAGA variant.
+        if(first.isSagaMatched() != second.isSagaMatched())
+        {
+            return first.isSagaMatched();
+        }
+
         // always favour assemblies with germline over those without, so as not to miss germline support
         boolean firstHasGermlineSupport = first.support().stream().anyMatch(x -> x.isReference());
         boolean secondHasGermlineSupport = second.support().stream().anyMatch(x -> x.isReference());
