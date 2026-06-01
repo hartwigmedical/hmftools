@@ -215,7 +215,8 @@ public class JunctionGroupAssembler extends ThreadTask
             // extend assemblies with non-junction and discordant reads
             for(JunctionAssembly assembly : candidateAssemblies)
             {
-                if(mAlignmentChecker.matchesDecoy(assembly))
+                // prefer known SAGA variant over a decoy sequence.
+                if(!assembly.isSagaMatched() && mAlignmentChecker.matchesDecoy(assembly))
                 {
                     SV_LOGGER.trace("assembly({}) matches decoy, excluding", assembly);
                     ++mReadStats.DecoySequences;
