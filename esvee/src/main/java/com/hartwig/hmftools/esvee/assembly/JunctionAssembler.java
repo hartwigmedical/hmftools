@@ -225,7 +225,6 @@ public class JunctionAssembler
     private AssessJunctionReadsResult assessSoftClipJunction(final List<Read> rawReads, boolean useRelaxedLimits)
     {
         // the only difference for indel-based junctions is that only the long indels are used to build the consensus extension
-
         int minSoftClip = useRelaxedLimits ? ASSEMBLY_MIN_SOFT_CLIP_LENGTH_LOWER : ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
 
         int minSoftClipSecondary = useRelaxedLimits

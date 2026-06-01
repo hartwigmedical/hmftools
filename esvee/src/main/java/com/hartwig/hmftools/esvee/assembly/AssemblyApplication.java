@@ -221,7 +221,7 @@ public class AssemblyApplication
         }
 
         mChrJunctionsMap.putAll(Junction.loadJunctions(
-                mConfig.JunctionFile, mConfig.SpecificChrRegions, minJunctionFrags, minHotspotFrags, minDiscordantFrags, mConfig.SagaFastaFile != null));
+                mConfig.JunctionFile, mConfig.SpecificChrRegions, minJunctionFrags, minHotspotFrags, minDiscordantFrags));
 
         // if(AssemblyConfig.DevDebug && !validateJunctionMap(mChrJunctionsMap))
         //    System.exit(1);

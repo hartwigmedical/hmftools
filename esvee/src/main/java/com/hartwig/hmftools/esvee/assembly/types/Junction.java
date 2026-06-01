@@ -16,7 +16,8 @@ import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_HOTSPOT_JUNCTION
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_INDEL_JUNCTION;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_JUNCTION_FRAGS;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_OTHER_SUPPORT_FRAGS;
-import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_SAGA_MATCH_VARIANT;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_REMOTE_FRAGS;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_SAGA_MATCH;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -154,7 +155,7 @@ public class Junction implements Comparable<Junction>
     }
 
     public static Map<String,List<Junction>> loadJunctions(
-            final String filename, final SpecificRegions specificRegions, int minJunctionFrags, int minHotspotFrags, int minDiscordantFrags, boolean loadSagaMatch)
+            final String filename, final SpecificRegions specificRegions, int minJunctionFrags, int minHotspotFrags, int minDiscordantFrags)
     {
         if(filename == null || filename.isEmpty())
             return null;
@@ -181,7 +182,8 @@ public class Junction implements Comparable<Junction>
             Integer indelIndex = fieldsIndexMap.get(FLD_INDEL_JUNCTION);
             Integer hotspotIndex = fieldsIndexMap.get(FLD_HOTSPOT_JUNCTION);
             Integer extraInfoIndex = fieldsIndexMap.get(FLD_EXTRA_INFO);
-            Integer sagaMatchVariantIndex = fieldsIndexMap.get(FLD_SAGA_MATCH_VARIANT);
+            Integer remoteFragsIndex = fieldsIndexMap.get(FLD_REMOTE_FRAGS);
+            Integer sagaMatchIndex = fieldsIndexMap.get(FLD_SAGA_MATCH);
 
             List<Junction> junctionDataList = null;
             String currentChromosome = "";
@@ -217,7 +219,7 @@ public class Junction implements Comparable<Junction>
                 boolean hotspot = hotspotIndex != null && Boolean.parseBoolean(values[hotspotIndex]);
 
                 // the first part is the variant ID, the second part is the breakends which isn't needed
-                String sagaMatchVariant = loadSagaMatch && sagaMatchVariantIndex != null ? values[sagaMatchVariantIndex].split(" ")[0] : null;
+                String sagaMatchVariant = sagaMatchIndex != null ? values[sagaMatchIndex].split(" ")[0] : null;
 
                 if(hotspot)
                 {
@@ -228,7 +230,12 @@ public class Junction implements Comparable<Junction>
                 }
                 else if(discordantOnly)
                 {
-                    int maxRemoteFrags = extraInfoIndex != null ? Integer.parseInt(values[extraInfoIndex]) : otherSupportFrags;
+                    int maxRemoteFrags = otherSupportFrags;
+
+                    if(remoteFragsIndex != null)
+                        maxRemoteFrags = Integer.parseInt(values[remoteFragsIndex]);
+                    else if(extraInfoIndex != null)
+                        maxRemoteFrags = Integer.parseInt(values[extraInfoIndex]); // for v2.0 backwards compatibility
 
                     if(maxRemoteFrags < minDiscordantFrags)
                         continue;
