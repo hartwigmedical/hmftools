@@ -14,7 +14,6 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_3;
 import static com.hartwig.hmftools.esvee.TestUtils.TEST_CONFIG;
-import static com.hartwig.hmftools.esvee.TestUtils.makeCigarString;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.SSX2_GENE_ORIENT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.SSX2_MAX_MAP_QUAL;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.SSX2_REGIONS_V37;
@@ -750,7 +749,7 @@ public class AlignmentTest
     public void testAlignmentRequery()
     {
         MockAligner aligner = new MockAligner();
-        AssemblyAligner assemblyAligner = new AssemblyAligner(TEST_CONFIG, aligner, new AlignmentWriter(TEST_CONFIG), null);
+        AssemblyAligner assemblyAligner = new AssemblyAligner(TEST_CONFIG, aligner, null, new AlignmentWriter(TEST_CONFIG), null);
 
         // need to ensure the full assembly sequence length matches the alignments returned
         AssemblyAlignment assemblyAlignment = AssemblyTestUtils.createAssemblyAlignment(
