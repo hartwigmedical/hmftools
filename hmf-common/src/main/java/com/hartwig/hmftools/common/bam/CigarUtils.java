@@ -142,10 +142,6 @@ public final class CigarUtils
         return (lastElement != null && lastElement.getOperator() == S) ? lastElement.getLength() : 0;
     }
 
-    public static int leftHardClipLength(final SAMRecord record) { return leftHardClipLength(record.getCigar()); }
-
-    public static int rightHardClipLength(final SAMRecord record) { return rightHardClipLength(record.getCigar()); }
-
     public static int leftHardClipLength(final Cigar cigar)
     {
         CigarElement firstElement = cigar.getFirstCigarElement();
@@ -156,6 +152,18 @@ public final class CigarUtils
     {
         CigarElement lastElement = cigar.getLastCigarElement();
         return (lastElement != null && lastElement.getOperator() == H) ? lastElement.getLength() : 0;
+    }
+
+    public static int leftClipLength(final Cigar cigar)
+    {
+        CigarElement firstElement = cigar.getFirstCigarElement();
+        return (firstElement != null && firstElement.getOperator().isClipping()) ? firstElement.getLength() : 0;
+    }
+
+    public static int rightClipLength(final Cigar cigar)
+    {
+        CigarElement lastElement = cigar.getLastCigarElement();
+        return (lastElement != null && lastElement.getOperator().isClipping()) ? lastElement.getLength() : 0;
     }
 
     @Nullable
@@ -176,20 +184,6 @@ public final class CigarUtils
             return null;
 
         return record.getReadString().substring(record.getReadString().length() - rightClip);
-    }
-
-    // Soft clip or hard clip.
-    public static int leftClipLength(final Cigar cigar)
-    {
-        CigarElement firstElement = cigar.getFirstCigarElement();
-        return (firstElement != null && firstElement.getOperator().isClipping()) ? firstElement.getLength() : 0;
-    }
-
-    // Soft clip or hard clip.
-    public static int rightClipLength(final Cigar cigar)
-    {
-        CigarElement lastElement = cigar.getLastCigarElement();
-        return (lastElement != null && lastElement.getOperator().isClipping()) ? lastElement.getLength() : 0;
     }
 
     public static int getReadBoundaryPosition(

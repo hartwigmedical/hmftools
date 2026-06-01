@@ -87,7 +87,8 @@ public class BwaMemAligner implements IBwaMemAligner
         return runBatchedAlignment(sequences);
     }
 
-    private static void applyOptions(org.broadinstitute.hellbender.utils.bwa.BwaMemAligner aligner, BwaMemAlignParams alignParams,
+    private static void applyOptions(
+            final org.broadinstitute.hellbender.utils.bwa.BwaMemAligner aligner, final BwaMemAlignParams alignParams,
             boolean allAlignments, int minAlignScore, int threads)
     {
         aligner.setMatchScoreOption(alignParams.matchReward());
@@ -124,7 +125,8 @@ public class BwaMemAligner implements IBwaMemAligner
         aligner.setNThreadsOption(threads);
     }
 
-    private static void setScoringMatrix(org.broadinstitute.hellbender.utils.bwa.BwaMemAligner aligner, BwaMemAlignParams alignParams)
+    private static void setScoringMatrix(
+            final org.broadinstitute.hellbender.utils.bwa.BwaMemAligner aligner, final BwaMemAlignParams alignParams)
     {
         // Set the base-to-base scoring.
         // If the bases are equal, use the match reward.
@@ -156,7 +158,7 @@ public class BwaMemAligner implements IBwaMemAligner
         aligner.setScoringMatrixOption(scoringMatrix);
     }
 
-    private static void logOptions(org.broadinstitute.hellbender.utils.bwa.BwaMemAligner aligner)
+    private static void logOptions(final org.broadinstitute.hellbender.utils.bwa.BwaMemAligner aligner)
     {
         LOGGER.trace("BWA-MEM options:");
         LOGGER.trace("  MinSeedLength: {}", aligner.getMinSeedLengthOption());
@@ -187,8 +189,9 @@ public class BwaMemAligner implements IBwaMemAligner
         {
             try
             {
-                Stream<List<byte[]>> batches =
-                        batchSize < queries.size() ? partitionStream(queries.stream(), batchSize) : Stream.of(queries);
+                Stream<List<byte[]>> batches = batchSize < queries.size()
+                        ? partitionStream(queries.stream(), batchSize) : Stream.of(queries);
+
                 return batches
                         .flatMap(batch ->
                         {
@@ -213,7 +216,7 @@ public class BwaMemAligner implements IBwaMemAligner
                 int newBatchSize = batchSize / 10;
                 if(newBatchSize >= 1)
                 {
-                    LOGGER.warn("Aligning sequences with batch size {} failed. Trying again with batch size {}",
+                    LOGGER.warn("aligning sequences with batch size {} failed. Trying again with batch size {}",
                             batchSize, newBatchSize);
                     batchSize = newBatchSize;
                     // Loop and try again with the new batch size.

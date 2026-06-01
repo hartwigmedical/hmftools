@@ -146,7 +146,7 @@ public final class SbxRoutines
             return;
 
         // not expecting to see hard-clips but remove any if present
-        if(leftHardClipLength(record) > 0 || rightHardClipLength(record) > 0)
+        if(leftHardClipLength(record.getCigar()) > 0 || rightHardClipLength(record.getCigar()) > 0)
         {
             RD_LOGGER.error("hard-clipped reads not supported in SBX: {}", readToString(record));
             System.exit(1);
