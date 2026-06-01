@@ -49,7 +49,7 @@ public class Alignment
             return true;
         }
 
-        if(isWeakIndelBasedUnlinkedAssembly(assembly))
+        if(!assembly.isSagaMatched() && isWeakIndelBasedUnlinkedAssembly(assembly))
             return true;
 
         return false;
