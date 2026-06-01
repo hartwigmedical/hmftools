@@ -535,44 +535,4 @@ public final class CigarUtils
 
         return true;
     }
-
-    public record ElementWithPositions(
-            CigarElement element,
-            int readStart,
-            int readEnd,    // Exclusive
-            int refStart,
-            int refEnd      // Exclusive
-    )
-    {
-        public CigarOperator operator()
-        {
-            return element.getOperator();
-        }
-    }
-
-    public static List<ElementWithPositions> getElementPositions(final Cigar cigar, int refStart)
-    {
-        List<ElementWithPositions> result = new ArrayList<>();
-        int readIndex = 0;
-        int refIndex = refStart;
-        for(CigarElement element : cigar.getCigarElements())
-        {
-            CigarOperator operator = element.getOperator();
-            int nextReadIndex = readIndex;
-            if(operator.consumesReadBases() || operator.isClipping())
-            {
-                nextReadIndex += element.getLength();
-            }
-            int nextRefIndex = refIndex;
-            if(operator.consumesReferenceBases())
-            {
-                nextRefIndex += element.getLength();
-            }
-            result.add(new ElementWithPositions(element, readIndex, nextReadIndex, refIndex, nextRefIndex));
-
-            readIndex = nextReadIndex;
-            refIndex = nextRefIndex;
-        }
-        return result;
-    }
 }

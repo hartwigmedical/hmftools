@@ -22,13 +22,13 @@ public class SagaResource
 {
     private final String mFastaPath;
     private final List<AssemblyMetadata> mAssemblies;
-    private final SAMSequenceDictionary mSamDict;
+    private final SAMSequenceDictionary mSequenceDictionary;
 
     public SagaResource(final String fastaPath)
     {
         mFastaPath = fastaPath;
         mAssemblies = new ArrayList<>(100_000);
-        mSamDict = loadAssemblies(fastaPath, mAssemblies);
+        mSequenceDictionary = loadAssemblies(fastaPath, mAssemblies);
     }
 
     public String bwaIndexImagePath()
@@ -38,7 +38,7 @@ public class SagaResource
 
     public SAMSequenceDictionary samDict()
     {
-        return mSamDict;
+        return mSequenceDictionary;
     }
 
     public List<AssemblyMetadata> assemblies()
@@ -146,7 +146,6 @@ public class SagaResource
 
     private static SAMSequenceDictionary loadAssemblies(final String fastaPath, List<AssemblyMetadata> assemblies)
     {
-        SV_LOGGER.debug("Loading SAGA resource FASTA");
         SAMSequenceDictionary samDict;
         try(IndexedFastaSequenceFile fasta = loadFasta(fastaPath))
         {
@@ -157,7 +156,6 @@ public class SagaResource
         }
         catch(IOException e)
         {
-            // Failed to load/read/close fasta file.
             throw new RuntimeException("Failed to load SAGA resource", e);
         }
 
@@ -168,7 +166,7 @@ public class SagaResource
             throw new RuntimeException("Duplicate variant IDs in SAGA resource");
         }
 
-        SV_LOGGER.debug("Loaded {} SAGA variant assemblies", assemblies.size());
+        SV_LOGGER.debug("loaded {} SAGA variant assemblies from file({})", assemblies.size(), fastaPath);
 
         return samDict;
     }

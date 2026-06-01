@@ -8,7 +8,6 @@ import static java.util.Objects.requireNonNull;
 import static java.util.function.UnaryOperator.identity;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.cigarFromStr;
-import static com.hartwig.hmftools.common.bam.CigarUtils.getElementPositions;
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftClipLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.rightClipLength;
 import static com.hartwig.hmftools.esvee.common.SvConstants.SAGA_ALIGN_JUNCTION_INDEL_DISTANCE;
@@ -19,6 +18,7 @@ import static com.hartwig.hmftools.esvee.common.SvConstants.SAGA_ALIGN_SCORE_MIN
 import static com.hartwig.hmftools.esvee.common.SvConstants.SAGA_ALIGN_SCORE_MIN_RATIO;
 import static com.hartwig.hmftools.esvee.common.SvConstants.SAGA_LOCATION_MATCH_DISTANCE;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -38,20 +38,25 @@ import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMFlag;
 import htsjdk.samtools.SAMSequenceRecord;
 
 public class SagaMatcher
 {
     private final Map<String, SagaResource.AssemblyMetadata> mAssembliesByVariantId;
-    // Map from contig to list of breakends sorted by position ascending.
+
+    // Map from contig to list of breakends sorted by position ascending
     private final Map<String, List<IndexedBreakend>> mSearchableBreakends;
+
     private final IBwaMemAligner mAligner;
-    // So we can quickly look up a variant from the alignment contig ID.
+
+    // So we can quickly look up a variant from the alignment contig ID
     private final Map<Integer, String> mContigIdToVariantId;
     private final MatchConfig mMatchConfig;
 
-    private SagaMatcher(final List<SagaResource.AssemblyMetadata> assemblies, final IBwaMemAligner aligner,
+    private SagaMatcher(
+            final List<SagaResource.AssemblyMetadata> assemblies, final IBwaMemAligner aligner,
             final Map<Integer, String> contigIdToName, final MatchConfig matchConfig)
     {
         mAssembliesByVariantId = assemblies.stream()
@@ -62,12 +67,14 @@ public class SagaMatcher
                         assembly.variant().breakends().map(breakend ->
                                 new IndexedBreakend(breakend.position(), assembly.variantId())))
                 .collect(Collectors.groupingBy(IndexedBreakend::chromosome));
+
         // Sort by position so they can be binary-searched.
         mSearchableBreakends.forEach((chr, breakends) -> breakends.sort(Comparator.comparing(IndexedBreakend::position)));
 
         // Precompute a map of the contig ID integer to the variant ID, so we can look it up from a BwaMemAlignment.
         Map<String, String> contigNameToVariantId = assemblies.stream()
                 .collect(Collectors.toMap(SagaResource.AssemblyMetadata::fastaLabel, SagaResource.AssemblyMetadata::variantId));
+
         mContigIdToVariantId = contigIdToName.entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, entry -> requireNonNull(contigNameToVariantId.get(entry.getValue()))));
 
@@ -257,8 +264,8 @@ public class SagaMatcher
         }
     }
 
-    private AlignmentCandidate evaluateAlignmentCandidate(final byte[] sequence, final BwaMemAlignment alignment,
-            List<Integer> seqJunctionOffsets)
+    private AlignmentCandidate evaluateAlignmentCandidate(
+            final byte[] sequence, final BwaMemAlignment alignment, final List<Integer> seqJunctionOffsets)
     {
         if(alignment.getRefId() < 0 || SamRecordUtils.isFlagSet(alignment.getSamFlag(), SAMFlag.READ_UNMAPPED))
         {
@@ -367,8 +374,48 @@ public class SagaMatcher
                 .anyMatch(junctionOverlaps -> junctionOverlaps.stream().allMatch(overlap -> overlap >= minOverlap));
     }
 
-    private static boolean checkIndelsNotNearJunctions(final Cigar cigar, int sagaStart, final List<Integer> seqJunctionOffsets,
-            final List<Integer> sagaJunctionOffsets)
+    private record ElementWithPositions(
+            CigarElement element,
+            int readStart,
+            int readEnd,    // Exclusive
+            int refStart,
+            int refEnd      // Exclusive
+    )
+    {
+        public CigarOperator operator()
+        {
+            return element.getOperator();
+        }
+    }
+
+    private static List<ElementWithPositions> getElementPositions(final Cigar cigar, int refStart)
+    {
+        List<ElementWithPositions> result = new ArrayList<>();
+        int readIndex = 0;
+        int refIndex = refStart;
+        for(CigarElement element : cigar.getCigarElements())
+        {
+            CigarOperator operator = element.getOperator();
+            int nextReadIndex = readIndex;
+            if(operator.consumesReadBases() || operator.isClipping())
+            {
+                nextReadIndex += element.getLength();
+            }
+            int nextRefIndex = refIndex;
+            if(operator.consumesReferenceBases())
+            {
+                nextRefIndex += element.getLength();
+            }
+            result.add(new ElementWithPositions(element, readIndex, nextReadIndex, refIndex, nextRefIndex));
+
+            readIndex = nextReadIndex;
+            refIndex = nextRefIndex;
+        }
+        return result;
+    }
+
+    private static boolean checkIndelsNotNearJunctions(
+            final Cigar cigar, int sagaStart, final List<Integer> seqJunctionOffsets, final List<Integer> sagaJunctionOffsets)
     {
         return getElementPositions(cigar, sagaStart).stream()
                 .filter(e -> e.operator().isIndel())
@@ -390,14 +437,14 @@ public class SagaMatcher
 
     private static BwaMemAligner.Params createAlignerParams(final MatchConfig matchConfig)
     {
+        // single-threaded in since Esvee makes these calls within threads already, and don't batch since phased assemblies are aligned
+        // one at a time, also in a threaded context
         return new BwaMemAligner.Params(
                 // TODO? may have to relax some params? but measure performance hit
                 BwaMemAlignParams.DEFAULT,
                 true,
                 matchConfig.alignScoreMin(),
-                // Single threaded because ESVEE is already multithreaded appropriately.
                 1,
-                // Don't care about batching because we align 1 sequence at a time.
                 null
         );
     }
