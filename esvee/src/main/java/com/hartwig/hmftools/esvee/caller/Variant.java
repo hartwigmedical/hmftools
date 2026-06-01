@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.common.sv.SvUtils.hasShortIndelLength;
 import static com.hartwig.hmftools.common.sv.SvUtils.isIndel;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ASM_INFO;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.AVG_FRAG_LENGTH;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SAGA_VARIANT;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
@@ -34,6 +35,8 @@ import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.caller.annotation.RepeatMaskAnnotation;
 import com.hartwig.hmftools.esvee.common.FilterType;
 
+import org.jetbrains.annotations.Nullable;
+
 import htsjdk.variant.variantcontext.VariantContext;
 
 public class Variant
@@ -52,6 +55,7 @@ public class Variant
     private boolean mGermline;
     private RepeatMaskAnnotation mRmAnnotation;
     private final Set<FilterType> mFilters;
+    private final boolean mIsSagaMatched;
 
     private List<Junction> mOriginalJunctions;
 
@@ -91,6 +95,8 @@ public class Variant
         mGermline = false;
         mRmAnnotation = null;
         mOriginalJunctions = null;
+
+        mIsSagaMatched = isSagaMatched(sv.startContext()) || isSagaMatched(sv.endContext());
     }
 
     public String chromosomeStart() { return mBreakends[SE_START].Chromosome; }
@@ -190,6 +196,11 @@ public class Variant
         return maxUps;
     }
 
+    public boolean isSagaMatched()
+    {
+        return mIsSagaMatched;
+    }
+
     public void addFilter(final FilterType filter) { mFilters.add(filter); }
     public Set<FilterType> filters() { return mFilters; }
     public boolean isPass() { return mFilters.isEmpty(); }
@@ -260,5 +271,10 @@ public class Variant
             return String.format("%s pos(%s:%d)",
                     mType.toString(), chromosomeStart(), posStart());
         }
+    }
+
+    private static boolean isSagaMatched(@Nullable final VariantContext context)
+    {
+        return context != null && context.hasAttribute(SAGA_VARIANT);
     }
 }
