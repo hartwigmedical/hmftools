@@ -112,7 +112,7 @@ public class JunctionTracker
         mDepthTracker = depthTracker;
         mKnownHotspots = hotspotCache.findRegionHotspots(region);
 
-        mDiscordantGroupFinder = new DiscordantGroups(mRegion, mFilterConfig.observedFragLengthMax(), mKnownHotspots, mConfig.TrackRemotes);
+        mDiscordantGroupFinder = new DiscordantGroups(mRegion, mFilterConfig.observedFragLengthMax(), mKnownHotspots);
 
         mReadGroupMap = Maps.newHashMap();
         mExpectedReadIds = Sets.newHashSet();
@@ -382,17 +382,11 @@ public class JunctionTracker
     private void createJunction(final ReadGroup readGroup)
     {
         List<JunctionData> junctions = Lists.newArrayListWithExpectedSize(2);
-        List<RemoteJunction> remoteJunctions = mConfig.TrackRemotes ? Lists.newArrayList() : Collections.emptyList();
 
         for(PrepRead read : readGroup.reads())
         {
             if(read.isUnmapped())
                 continue;
-
-            if(mConfig.TrackRemotes && read.hasSuppAlignment())
-            {
-                RemoteJunction.addRemoteJunction(remoteJunctions, RemoteJunction.fromSupplementaryData(read.supplementaryAlignment()));
-            }
 
             if(read.readType() != ReadType.JUNCTION)
                 continue;
@@ -417,12 +411,7 @@ public class JunctionTracker
 
                 int position = orientation.isReverse() ? read.AlignmentStart : read.AlignmentEnd;
 
-                if(!mRegion.containsPosition(position))
-                {
-                    if(mConfig.TrackRemotes)
-                        RemoteJunction.addRemoteJunction(remoteJunctions, new RemoteJunction(mRegion.Chromosome, position, orientation));
-                }
-                else
+                if(mRegion.containsPosition(position))
                 {
                     JunctionData junctionData = getOrCreateJunction(read, orientation);
                     junctionData.addReadType(read, ReadType.JUNCTION);
@@ -438,18 +427,6 @@ public class JunctionTracker
 
         junctions.forEach(x -> x.addJunctionReadGroup(readGroup));
         junctions.forEach(x -> readGroup.addJunctionPosition(x));
-
-        for(RemoteJunction remoteJunction : remoteJunctions)
-        {
-            for(JunctionData junctionData : junctions)
-            {
-                // ignore remotes (typically) supplementaries which point to junction in another read in this group
-                if(remoteJunction.matches(mRegion.Chromosome, junctionData.Position, junctionData.Orient))
-                    continue;
-
-                junctionData.addRemoteJunction(remoteJunction);
-            }
-        }
     }
 
     private void handleIndelJunction(final ReadGroup readGroup, final PrepRead read, final IndelCoords indelCoords)
@@ -640,7 +617,7 @@ public class JunctionTracker
             JunctionData junctionData = mJunctions.get(mRecentJunctionIndex);
 
             if(readWithinJunctionRange(read, junctionData, distanceBuffer)
-                    || positionWithin(junctionData.Position, read.AlignmentStart, read.AlignmentEnd))
+            || positionWithin(junctionData.Position, read.AlignmentStart, read.AlignmentEnd))
             {
                 closeJuncIndex = mRecentJunctionIndex;
             }

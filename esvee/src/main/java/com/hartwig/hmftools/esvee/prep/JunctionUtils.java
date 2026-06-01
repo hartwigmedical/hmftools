@@ -265,7 +265,7 @@ public final class JunctionUtils
         // - the read's ref/SC bases matching any overlapping junction ref/SC bases
         // - allowing for 1 high-qual mismatch
         // - ignoring low-qual mismatches
-        // - requiring > 25% of all bases to match
+        // - requiring > 25% of all bases to match regardless of qual
 
         final PrepRead juncRead = junctionData.topJunctionRead();
 

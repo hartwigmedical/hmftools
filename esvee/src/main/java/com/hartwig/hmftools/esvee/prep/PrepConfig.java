@@ -92,7 +92,6 @@ public class PrepConfig
     // debug
     public final SpecificRegions SpecificChrRegions;
     public final List<String> LogReadIds;
-    public final boolean TrackRemotes;
     public final boolean PerfDebug;
     public final int MaxFragmentLengthOverride;
 
@@ -109,7 +108,6 @@ public class PrepConfig
 
     public static final String PARTITION_SIZE = "partition_size";
 
-    private static final String TRACK_REMOTES = "track_remotes";
     private static final String NO_CACHE_BAM = "no_cache_bam";
     private static final String NO_CLEAN_UP = "no_clean_up";
     private static final String NO_TRIM_READ_ID = "no_trim_read_id";
@@ -181,7 +179,6 @@ public class PrepConfig
         // optimisations and debug
         TrimReadId = !configBuilder.hasFlag(NO_TRIM_READ_ID) && !SpecificChrRegions.hasFilters() && BamFiles.size() == 1;
         UseCacheBam = !configBuilder.hasFlag(NO_CACHE_BAM) && !SpecificChrRegions.hasFilters();
-        TrackRemotes = configBuilder.hasFlag(TRACK_REMOTES);
         NoCleanUp = configBuilder.hasFlag(NO_CLEAN_UP);
         PerfDebug = configBuilder.hasFlag(PERF_DEBUG);
     }
@@ -243,7 +240,6 @@ public class PrepConfig
         LogReadIds = Lists.newArrayList();
         BamToolPath = null;
         Threads = 1;
-        TrackRemotes = true;
         UseCacheBam = false;
         PerfDebug = false;
         TrimReadId = false;
@@ -267,7 +263,6 @@ public class PrepConfig
         addSpecificChromosomesRegionsConfig(configBuilder);
         configBuilder.addConfigItem(LOG_READ_IDS, false, LOG_READ_IDS_DESC);
         configBuilder.addFlag(NO_CACHE_BAM, "Write a BAM to cache candidate reads");
-        configBuilder.addFlag(TRACK_REMOTES, "Track support for remote junctions");
         configBuilder.addFlag(NO_TRIM_READ_ID, "Disable use of a shortened readId internally");
         configBuilder.addFlag(NO_CLEAN_UP, "Keep candidate cache BAM files");
         configBuilder.addFlag(PERF_DEBUG, PERF_DEBUG_DESC);

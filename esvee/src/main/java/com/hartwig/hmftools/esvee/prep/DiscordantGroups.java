@@ -41,17 +41,14 @@ public class DiscordantGroups
     private final ChrBaseRegion mRegion;
     private final int mMaxConcordantFragmentLength;
     private final int mMinDiscordantFragmentLength;
-    private final boolean mTrackRemotes;
     private final List<KnownHotspot> mKnownHotspots;
 
-    public DiscordantGroups(
-            final ChrBaseRegion region, int observedMaxFragmentLength, final List<KnownHotspot> knownHotspots, boolean trackRemotes)
+    public DiscordantGroups(final ChrBaseRegion region, int observedMaxFragmentLength, final List<KnownHotspot> knownHotspots)
     {
         mRegion = region;
         mMaxConcordantFragmentLength = observedMaxFragmentLength;
         mMinDiscordantFragmentLength = maxConcordantFragmentLength(observedMaxFragmentLength) * 2;
         mKnownHotspots = knownHotspots;
-        mTrackRemotes = trackRemotes;
     }
 
     public List<JunctionData> formDiscordantJunctions(final List<ReadGroup> candidateReadGroups)
@@ -249,7 +246,7 @@ public class DiscordantGroups
         // create junctions from remote regions which satisfy the required fragment count
         for(DiscordantRemoteRegion remoteRegion : remoteRegions)
         {
-            if(mTrackRemotes || remoteRegion == mainRemoteRegion)
+            if(remoteRegion == mainRemoteRegion)
             {
                 RemoteJunction remoteJunction = new RemoteJunction(remoteRegion.Chromosome, remoteRegion.start(), Orientation.FORWARD);
                 remoteJunction.Fragments = remoteRegion.readCount();
@@ -277,7 +274,7 @@ public class DiscordantGroups
                 readGroup.reads().forEach(x -> x.setReadType(ReadType.SUPPORT, true));
             }
 
-            if(mTrackRemotes || remoteRegion == mainRemoteRegion)
+            if(remoteRegion == mainRemoteRegion)
             {
                 RemoteJunction remoteJunction = new RemoteJunction(
                         discordantGroup.Region.Chromosome, discordantGroup.innerPosition(), discordantGroup.Orient);

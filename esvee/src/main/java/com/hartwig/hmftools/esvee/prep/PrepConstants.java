@@ -5,7 +5,6 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 
-import com.hartwig.hmftools.common.sv.EsveeCommon;
 import com.hartwig.hmftools.common.sv.EsveeDiscordantStats;
 import com.hartwig.hmftools.common.sv.LineElements;
 
@@ -21,8 +20,9 @@ public final class PrepConstants
     public static final String FLD_EXACT_SUPPORT_FRAGS = "ExactSupportFrags";
     public static final String FLD_OTHER_SUPPORT_FRAGS = "OtherSupportFrags";
     public static final String FLD_HOTSPOT_JUNCTION = "Hotspot";
-    public static final String FLD_EXTRA_INFO = "ExtraInfo";
-    public static final String FLD_SAGA_MATCH_VARIANT = "SagaMatchVariant";
+    public static final String FLD_EXTRA_INFO = "ExtraInfo"; // deprecated
+    public static final String FLD_REMOTE_FRAGS = "RemoteFrags"; // currently only used for discordant junctions
+    public static final String FLD_SAGA_MATCH = "SagaMatch";
 
     // region processing
     public static final int DEFAULT_CHR_PARTITION_SIZE = 1_000_000;

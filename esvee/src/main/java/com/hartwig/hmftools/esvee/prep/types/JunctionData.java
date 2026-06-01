@@ -23,7 +23,7 @@ public class JunctionData
     private List<ReadGroup> mJunctionGroups; // with a read matching the junction
     private List<ReadGroup> mSupportingGroups;
     private List<ReadGroup> mExactSupportGroups;
-    private List<RemoteJunction> mRemoteJunctions;
+    private List<RemoteJunction> mRemoteJunctions; // currently only used for discordant groups
 
     private final Map<ReadType,List<PrepRead>> mReadTypeReads;
 
