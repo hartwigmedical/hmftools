@@ -60,11 +60,18 @@ import htsjdk.samtools.TextCigarCodec;
 public class SpliceLiftBack
 {
     private static final String XA_TAG = "XA";
+    private static final String AS_TAG = "AS";
+
+    // bwa-mem2's default -T (minimum alignment score) is 30. The RNA splice run uses -T 19 deliberately
+    // to surface short-anchor supplementary records that JunctionRescueResolver can merge across annotated
+    // junctions. Supps in the [19, 30) AS band that survive the rescue pass are residual noise -- they
+    // were emitted only because of the lowered -T and were not promoted to spliced primaries. Drop them
+    // from the output BAM after rescue + tail-extend have had their chance.
+    static final int SUPP_AS_DROP_THRESHOLD = 30;
 
     private final SpliceLiftBackConfig mConfig;
 
-    // in -emit_secondaries mode this is a name-sorted intermediate so primary + 0x100 secondaries are
-    // contiguous in the stream. Otherwise it equals mConfig.InputBam.
+    // name-sorted intermediate so primary + supps are contiguous in the stream.
     private String mWorkingInputBam;
 
     // optional rescue resolver: merges primary + supp across annotated junctions when bwa emits the
@@ -83,7 +90,7 @@ public class SpliceLiftBack
     {
         final long startTimeMs = System.currentTimeMillis();
 
-        mWorkingInputBam = mConfig.EmitSecondaries ? nameSortInput() : mConfig.InputBam;
+        mWorkingInputBam = nameSortInput();
 
         final List<ContigEntry> contigEntries = ContigSidecar.read(mConfig.ContigSidecarFile);
         RD_LOGGER.info("loaded {} contig entries", contigEntries.size());
@@ -102,7 +109,7 @@ public class SpliceLiftBack
             }
         }
 
-        final LiftBackResolver resolver = new LiftBackResolver(contigEntries, mConfig.EmitSecondaries, exonIndex);
+        final LiftBackResolver resolver = new LiftBackResolver(contigEntries, exonIndex);
         validateBamAgainstSidecar(resolver.contigNames());
 
         if(mConfig.RescueViaSupp || mConfig.ExtendSoftclipTails)
@@ -157,16 +164,13 @@ public class SpliceLiftBack
         if(mSoftclipTailExtender != null)
             logTailExtensionStats(mSoftclipTailExtender.statistics());
 
-        if(mConfig.EmitSecondaries && !mWorkingInputBam.equals(mConfig.InputBam))
+        try
         {
-            try
-            {
-                Files.deleteIfExists(Paths.get(mWorkingInputBam));
-            }
-            catch(IOException e)
-            {
-                RD_LOGGER.warn("could not delete name-sorted intermediate {}: {}", mWorkingInputBam, e.toString());
-            }
+            Files.deleteIfExists(Paths.get(mWorkingInputBam));
+        }
+        catch(IOException e)
+        {
+            RD_LOGGER.warn("could not delete name-sorted intermediate {}: {}", mWorkingInputBam, e.toString());
         }
 
         RD_LOGGER.info("SpliceLiftBack complete, mins({})", runTimeMinsStr(startTimeMs));
@@ -175,7 +179,7 @@ public class SpliceLiftBack
     private String nameSortInput()
     {
         if(mConfig.BamToolPath == null)
-            throw new IllegalStateException("-emit_secondaries requires -bamtool for the name-sort pre-pass");
+            throw new IllegalStateException("name-sort pre-pass requires -bamtool");
 
         final String nameSortedBam = mConfig.OutputDir + "splice_lift_back.name_sorted_input.bam";
         RD_LOGGER.info("name-sorting input via {}: {}", fromPath(mConfig.BamToolPath), nameSortedBam);
@@ -302,11 +306,7 @@ public class SpliceLiftBack
             try(SAMFileWriter samWriter = new SAMFileWriterFactory().makeBAMWriter(header, false, new File(unsortedBam)))
             {
                 final SAMRecordIterator iter = samReader.iterator();
-
-                if(mConfig.EmitSecondaries)
-                    streamGrouped(iter, samWriter, writer, resolver, liftedMateInfoCache, stats);
-                else
-                    streamPerRecord(iter, samWriter, writer, resolver, liftedMateInfoCache, stats);
+                streamGrouped(iter, samWriter, writer, resolver, liftedMateInfoCache, stats);
             }
 
             stats.writeSummary(mConfig.formSummaryFile());
@@ -323,22 +323,10 @@ public class SpliceLiftBack
         sortAndIndex(unsortedBam, mConfig.formOutputBam());
     }
 
-    private void streamPerRecord(
-            final SAMRecordIterator iter, final SAMFileWriter samWriter, final LiftBackWriter writer,
-            final LiftBackResolver resolver, final LiftedMateInfoCache liftedMateInfoCache, final LiftBackStats stats)
-    {
-        while(iter.hasNext())
-        {
-            final SAMRecord record = iter.next();
-            final LiftBackResult result = resolver.resolve(record);
-            final int nh = Math.max(result.numLoci(), 1);
-            applyAndWriteRecord(record, result, nh, samWriter, writer, resolver, liftedMateInfoCache, stats);
-        }
-    }
-
-    // -emit_secondaries mode on a name-sorted input: buffer records sharing a read name and fold
-    // secondaries into the primary's alignment set so the discriminator sees the full alt picture.
-    // Supplementaries stay independent — they're split-read components, not alts.
+    // Buffers records sharing a read name so primary + supps process as one group. This lets rescue
+    // see all split-read components and lets /2 hint /1's introns (and vice versa). Supplementaries
+    // are split-read components, not alts — alts arrive on the primary's XA tag and are handled by
+    // the resolver per-record.
     private void streamGrouped(
             final SAMRecordIterator iter, final SAMFileWriter samWriter, final LiftBackWriter writer,
             final LiftBackResolver resolver, final LiftedMateInfoCache liftedMateInfoCache, final LiftBackStats stats)
@@ -406,7 +394,7 @@ public class SpliceLiftBack
         SAMRecord primary = null;
         for(final SAMRecord r : mateRecords)
         {
-            if(!r.getSupplementaryAlignmentFlag() && !r.isSecondaryAlignment())
+            if(!r.getSupplementaryAlignmentFlag())
             {
                 primary = r;
                 break;
@@ -427,23 +415,21 @@ public class SpliceLiftBack
         final LiftBackResult[] Resolved;
         final boolean[] DroppedByRescue;
         final LiftBackResult PrimaryResult;
-        final boolean RanGroupResolve;
         final List<ChrIntron> IntroducedIntrons;
 
         MateDecision(final LiftBackResult[] resolved, final boolean[] droppedByRescue,
-                final LiftBackResult primaryResult, final boolean ranGroupResolve,
+                final LiftBackResult primaryResult,
                 final List<ChrIntron> introducedIntrons)
         {
             Resolved = resolved;
             DroppedByRescue = droppedByRescue;
             PrimaryResult = primaryResult;
-            RanGroupResolve = ranGroupResolve;
             IntroducedIntrons = introducedIntrons != null ? introducedIntrons : java.util.Collections.emptyList();
         }
 
         static MateDecision empty()
         {
-            return new MateDecision(new LiftBackResult[0], null, null, false, java.util.Collections.emptyList());
+            return new MateDecision(new LiftBackResult[0], null, null, java.util.Collections.emptyList());
         }
     }
 
@@ -455,23 +441,15 @@ public class SpliceLiftBack
             return MateDecision.empty();
 
         SAMRecord primary = null;
-        final List<SAMRecord> secondaries = new ArrayList<>();
         for(final SAMRecord record : records)
         {
             if(record.getSupplementaryAlignmentFlag())
                 continue;
-            if(record.isSecondaryAlignment())
-                secondaries.add(record);
-            else if(primary == null)
+            if(primary == null)
                 primary = record;
         }
 
-        final boolean ranGroupResolve = primary != null && !primary.getReadUnmappedFlag();
-        final LiftBackResult primaryResult;
-        if(ranGroupResolve)
-            primaryResult = resolver.resolvePrimaryWithSecondaries(primary, secondaries);
-        else
-            primaryResult = primary != null ? resolver.resolve(primary) : null;
+        final LiftBackResult primaryResult = primary != null ? resolver.resolve(primary) : null;
 
         final LiftBackResult[] resolved = new LiftBackResult[records.size()];
         for(int i = 0; i < records.size(); i++)
@@ -487,7 +465,7 @@ public class SpliceLiftBack
 
         return new MateDecision(resolved, droppedByRescue,
                 resolved.length > 0 && primary != null ? resolved[indexOfPrimary(records, primary)] : primaryResult,
-                ranGroupResolve, introduced);
+                introduced);
     }
 
     private static int indexOfPrimary(final List<SAMRecord> records, final SAMRecord primary)
@@ -509,36 +487,37 @@ public class SpliceLiftBack
 
         final LiftBackResult[] resolved = decision.Resolved;
         final boolean[] droppedByRescue = decision.DroppedByRescue;
-        final boolean ranGroupResolve = decision.RanGroupResolve;
         SAMRecord primary = null;
         for(SAMRecord r : records)
-            if(!r.getSupplementaryAlignmentFlag() && !r.isSecondaryAlignment()) { primary = r; break; }
+            if(!r.getSupplementaryAlignmentFlag()) { primary = r; break; }
 
-        // Secondaries whose lifted key isn't in the discriminator's kept-alt set are dropped: the
-        // discriminator marked them losers, no reason to ship them.
-        final Set<String> keptKeys = ranGroupResolve ? buildKeptKeys(decision.PrimaryResult) : null;
-
-        // Drop duplicate-lifted non-primary records: bwa-mem2 -a emits the same junction across many
-        // transcript contigs, and after lifting back they collapse to identical (chrom, pos, cigar,
-        // strand) records. Without this dedup the BAM carries N copies of one alignment.
-        // Secondaries and supplementaries share a single emitted-key set because the liftback labels
-        // both as RecordRole.SUPPLEMENTARY in records.tsv — a sec at the same lifted key as an earlier
-        // supp (or vice versa) is the same alignment expressed two ways and the second should drop.
-        final Set<String> emittedNonPrimaryKeys = new HashSet<>();
+        // Dedup supplementaries that lift to the same (chrom, pos, cigar, strand) — bwa can emit the
+        // same junction across multiple transcript contigs and they collapse after liftback.
+        final Set<String> emittedSuppKeys = new HashSet<>();
         final boolean[] willEmit = new boolean[records.size()];
         for(int i = 0; i < records.size(); i++)
         {
             final SAMRecord record = records.get(i);
             final LiftBackResult result = resolved[i];
             boolean drop = droppedByRescue != null && droppedByRescue[i];
-            if(!drop && record != primary && (record.isSecondaryAlignment() || record.getSupplementaryAlignmentFlag()))
+            if(!drop && record != primary && record.getSupplementaryAlignmentFlag())
             {
                 final String key = dedupKey(result, record);
-                if(record.isSecondaryAlignment() && keptKeys != null
-                        && !keptKeys.contains(liftedKey(result.finalChrom(), result.finalPos(), result.finalCigar())))
+                if(!emittedSuppKeys.add(key))
                     drop = true;
-                else if(!emittedNonPrimaryKeys.add(key))
+            }
+            // Drop supps the rescue pass left behind that exist only because bwa-mem2 was run with -T 19
+            // below its default of 30 (see SUPP_AS_DROP_THRESHOLD). Only applies when rescue ran, because
+            // a configuration without rescue might want to retain these supps for other reasons.
+            if(!drop && mJunctionRescueResolver != null && record.getSupplementaryAlignmentFlag()
+                    && !record.getReadUnmappedFlag())
+            {
+                final Integer alignmentScore = record.getIntegerAttribute(AS_TAG);
+                if(alignmentScore != null && alignmentScore < SUPP_AS_DROP_THRESHOLD)
+                {
                     drop = true;
+                    stats.recordLowAsSuppDropped();
+                }
             }
             willEmit[i] = !drop;
         }
@@ -764,8 +743,8 @@ public class SpliceLiftBack
 
     private static void logRescueStats(final RescueStatistics stats)
     {
-        RD_LOGGER.info("rescue-via-supp summary: candidates={} merged={} (depth1={} depth2={} depth3={} depth4={})",
-                stats.candidatesEvaluated(), stats.mergedTotal(),
+        RD_LOGGER.info("rescue-via-supp summary: candidates={} merged={} suppClamped={} (depth1={} depth2={} depth3={} depth4={})",
+                stats.candidatesEvaluated(), stats.mergedTotal(), stats.suppClampApplied(),
                 stats.mergedAtChainDepth(1), stats.mergedAtChainDepth(2),
                 stats.mergedAtChainDepth(3), stats.mergedAtChainDepth(4));
         for(com.hartwig.hmftools.redux.splice.rescue.RescueRejectReason reason
@@ -777,28 +756,12 @@ public class SpliceLiftBack
         }
     }
 
-    private static Set<String> buildKeptKeys(final LiftBackResult result)
-    {
-        final Set<String> keys = new HashSet<>();
-        for(final LiftedAlignment alignment : result.liftedAlignments())
-        {
-            if(!alignment.Dropped)
-                keys.add(liftedKey(alignment.LiftedChrom, alignment.LiftedPos, alignment.LiftedCigar));
-        }
-        return keys;
-    }
-
-    // Dedup key for secondaries/supplementaries: lifted (chrom, pos, cigar) + lifted strand. Opposite-
-    // strand placements at the same coords/cigar are kept as distinct records.
+    // Dedup key for supplementaries: lifted (chrom, pos, cigar) + lifted strand. Opposite-strand
+    // placements at the same coords/cigar are kept as distinct records.
     private static String dedupKey(final LiftBackResult result, final SAMRecord record)
     {
         return result.finalChrom() + ":" + result.finalPos() + ":" + result.finalCigar()
                 + ":" + (result.negativeStrand() ? '-' : '+');
-    }
-
-    private static String liftedKey(final String chrom, final int pos, final String cigar)
-    {
-        return chrom + ":" + pos + ":" + cigar;
     }
 
     private void applyAndWriteRecord(
@@ -817,7 +780,6 @@ public class SpliceLiftBack
 
         if(mConfig.UnmapAboveNh > 0 && nh > mConfig.UnmapAboveNh
                 && !record.getReadUnmappedFlag()
-                && !record.isSecondaryAlignment()
                 && !record.getSupplementaryAlignmentFlag())
         {
             markPrimaryUnmapped(record);
@@ -825,7 +787,6 @@ public class SpliceLiftBack
 
         if(mConfig.UnmapBelowMapq > 0
                 && !record.getReadUnmappedFlag()
-                && !record.isSecondaryAlignment()
                 && !record.getSupplementaryAlignmentFlag()
                 && record.getMappingQuality() < mConfig.UnmapBelowMapq)
         {

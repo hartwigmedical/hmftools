@@ -189,12 +189,15 @@ public final class ContigTranslator
 
         if(leadingAnchorTrimmable(elements, minAnchorBp))
         {
-            final int tinyAnchor = elements.get(1).getLength();
-            final int intron = elements.get(2).getLength();
+            final boolean hasLeadingS = elements.get(0).getOperator() == CigarOperator.S;
+            final int anchorIdx = hasLeadingS ? 1 : 0;
+            final int existingS = hasLeadingS ? elements.get(0).getLength() : 0;
+            final int tinyAnchor = elements.get(anchorIdx).getLength();
+            final int intron = elements.get(anchorIdx + 1).getLength();
             startShift = tinyAnchor + intron;
-            final List<CigarElement> trimmed = new ArrayList<>(elements.size() - 2);
-            trimmed.add(new CigarElement(elements.get(0).getLength() + tinyAnchor, CigarOperator.S));
-            for(int i = 3; i < elements.size(); ++i)
+            final List<CigarElement> trimmed = new ArrayList<>(elements.size() - anchorIdx - 1);
+            trimmed.add(new CigarElement(existingS + tinyAnchor, CigarOperator.S));
+            for(int i = anchorIdx + 2; i < elements.size(); ++i)
                 trimmed.add(elements.get(i));
             elements = trimmed;
         }
@@ -240,20 +243,24 @@ public final class ContigTranslator
         return result;
     }
 
-    // matches "zS yM nN M<...>" — leading softclip, tiny matched anchor under threshold, intron,
-    // then a real matched anchor that survives the trim.
+    // matches "[zS]? yM nN <...>M<...>" — optional leading softclip, tiny matched anchor under
+    // threshold, intron, then a real matched anchor that survives the trim. The leading S is
+    // optional because a tx-contig source cigar that begins with M (no clip) lifts to a cigar
+    // starting directly with the tiny anchor — same fabrication pattern, no leading S to merge into.
     private static boolean leadingAnchorTrimmable(final List<CigarElement> elements, final int minAnchorBp)
     {
-        if(elements.size() < 4)
+        if(elements.isEmpty())
             return false;
-        if(elements.get(0).getOperator() != CigarOperator.S)
+        final boolean hasLeadingS = elements.get(0).getOperator() == CigarOperator.S;
+        final int anchorIdx = hasLeadingS ? 1 : 0;
+        if(anchorIdx + 2 >= elements.size())
             return false;
-        final CigarElement tinyAnchor = elements.get(1);
+        final CigarElement tinyAnchor = elements.get(anchorIdx);
         if(tinyAnchor.getOperator() != CigarOperator.M || tinyAnchor.getLength() >= minAnchorBp)
             return false;
-        if(elements.get(2).getOperator() != CigarOperator.N)
+        if(elements.get(anchorIdx + 1).getOperator() != CigarOperator.N)
             return false;
-        for(int i = 3; i < elements.size(); ++i)
+        for(int i = anchorIdx + 2; i < elements.size(); ++i)
         {
             if(elements.get(i).getOperator() == CigarOperator.M)
                 return true;

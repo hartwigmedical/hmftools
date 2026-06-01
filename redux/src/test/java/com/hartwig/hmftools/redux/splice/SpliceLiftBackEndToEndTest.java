@@ -99,8 +99,10 @@ public class SpliceLiftBackEndToEndTest
     {
         // single R1, primary on tx contig spanning exon1 -> exon2
         final SAMRecord r1 = newPrimary("read1", true, TX_CONTIG, 51, "100M");
-        // R2 mate placeholder — kept simple, on the same tx contig in the next exon
-        final SAMRecord r2 = newPrimary("read1", false, TX_CONTIG, 200, "50M");
+        // R2 on the same tx contig spanning exon2 tail -> exon3. Start at tx 197 so the leading
+        // exon2 anchor is 4M (above ContigTranslator.trimMicroAnchors threshold of 3); tx 200
+        // would lift to a 1M head that the trim would drop.
+        final SAMRecord r2 = newPrimary("read1", false, TX_CONTIG, 197, "50M");
 
         processFragment(List.of(threeExonContig()), List.of(r1, r2));
 
@@ -111,11 +113,11 @@ public class SpliceLiftBackEndToEndTest
 
         // R1 mate fields refer to R2's lifted coords on chr1
         assertEquals(CHR_1, r1.getMateReferenceName());
-        assertEquals(399, r1.getMateAlignmentStart());
+        assertEquals(396, r1.getMateAlignmentStart());
 
         // R2 lifted into exon2/intron2/exon3 region with its own junction
         assertEquals(CHR_1, r2.getReferenceName());
-        assertEquals(399, r2.getAlignmentStart());
+        assertEquals(396, r2.getAlignmentStart());
         assertTrue(r2.getCigarString().contains("N"));
 
         // R2 mate fields refer back to R1
@@ -125,18 +127,20 @@ public class SpliceLiftBackEndToEndTest
     @Test
     public void supplementarySaTagRewrittenToGenomicCoords()
     {
-        // R1 primary on tx contig with a supplementary on the same tx contig further along
+        // R1 primary on tx contig with a supplementary on the same tx contig further along. The
+        // supp starts at tx 197 so it has a 4M anchor in exon2 before the junction — above
+        // ContigTranslator.trimMicroAnchors threshold of 3.
         final SAMRecord r1 = newPrimary("read2", true, TX_CONTIG, 51, "100M");
-        r1.setAttribute(SA_ATTRIBUTE, TX_CONTIG + ",200,+,50M,60,0;");
+        r1.setAttribute(SA_ATTRIBUTE, TX_CONTIG + ",197,+,50M,60,0;");
 
-        final SAMRecord r1Supp = newSupplementary("read2", true, TX_CONTIG, 200, "50M");
+        final SAMRecord r1Supp = newSupplementary("read2", true, TX_CONTIG, 197, "50M");
         r1Supp.setAttribute(SA_ATTRIBUTE, TX_CONTIG + ",51,+,100M,60,0;");
 
         final SAMRecord r2 = newPrimary("read2", false, CHR_1, 600, "50M");
 
         processFragment(List.of(threeExonContig()), List.of(r1, r1Supp, r2));
 
-        // r1's SA entry pointed to (TX_CONTIG, 200, +, 50M) which lifts to (chr1, 399, +, ...) per the exon spans
+        // r1's SA entry pointed to (TX_CONTIG, 197, +, 50M) which lifts to (chr1, 396, +, ...) per the exon spans
         final String r1Sa = r1.getStringAttribute(SA_ATTRIBUTE);
         assertTrue("expected lifted SA entry on chr1, got: " + r1Sa, r1Sa != null && r1Sa.startsWith(CHR_1 + ","));
         // no _tx contig name should leak through
@@ -144,7 +148,7 @@ public class SpliceLiftBackEndToEndTest
 
         // supplementary primary itself is lifted to chr1 too
         assertEquals(CHR_1, r1Supp.getReferenceName());
-        assertEquals(399, r1Supp.getAlignmentStart());
+        assertEquals(396, r1Supp.getAlignmentStart());
 
         // r1 and r1Supp share the same mate (r2 on chr1:600), so both carry consistent mate info
         assertEquals(CHR_1, r1.getMateReferenceName());

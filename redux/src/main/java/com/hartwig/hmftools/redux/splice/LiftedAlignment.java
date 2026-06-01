@@ -11,10 +11,7 @@ public class LiftedAlignment
     public enum AlignmentSource
     {
         SELF,
-        XA_INPUT,
-        // alt mapping that arrived as its own 0x100 secondary SAM record (bwa-mem2 -a), folded back into
-        // the primary's alignment set so the discriminator can categorize the pair as a group.
-        SECONDARY_INPUT
+        XA_INPUT
     }
 
     public final AlignmentSource Source;

@@ -560,26 +560,25 @@ public class LiftBackResolverTest
         assertEquals(1, stats.categoryCount(LiftBackCategory.UNMAPPED));
     }
 
-    // covers the -emit_secondaries case where bwa-mem2 -a reports the same junction across many
-    // transcript contigs and the lifter collapses them onto one chr1 locus. numLoci must reflect the
-    // deduped genomic-locus count (1), not the secondary-record count, because NH is derived from it.
+    // bwa-mem2 reports the same junction across many transcript contigs via XA entries on the
+    // primary, and the lifter collapses them onto one chr1 locus. numLoci must reflect the deduped
+    // genomic-locus count (1), not the XA entry count, because NH is derived from it.
     @Test
-    public void testNumLociDedupesIdenticalLiftedSecondaries()
+    public void testNumLociDedupesIdenticalLiftedXaEntries()
     {
         // primary on tx contig spanning exon1 -> exon2; lifts to chr1:150 50M100N50M
         SAMRecord primary = newRecord(TX_CONTIG, 51, "100M");
 
-        // four secondaries representing the same tx-contig junction emitted via -a; all lift to the
-        // identical genomic locus as the primary. numLoci should still be 1.
-        SAMRecord sec1 = newRecord(TX_CONTIG, 51, "100M");
-        SAMRecord sec2 = newRecord(TX_CONTIG, 51, "100M");
-        SAMRecord sec3 = newRecord(TX_CONTIG, 51, "100M");
-        SAMRecord sec4 = newRecord(TX_CONTIG, 51, "100M");
-        for(SAMRecord s : List.of(sec1, sec2, sec3, sec4))
-            s.setSecondaryAlignment(true);
+        // four XA entries representing the same tx-contig junction; all lift to the identical
+        // genomic locus as the primary. numLoci should still be 1.
+        primary.setAttribute("XA",
+                TX_CONTIG + ",+51,100M,0;"
+                        + TX_CONTIG + ",+51,100M,0;"
+                        + TX_CONTIG + ",+51,100M,0;"
+                        + TX_CONTIG + ",+51,100M,0;");
 
-        LiftBackResolver resolver = new LiftBackResolver(contigMap(), true);
-        LiftBackResult result = resolver.resolvePrimaryWithSecondaries(primary, List.of(sec1, sec2, sec3, sec4));
+        LiftBackResolver resolver = new LiftBackResolver(contigMap());
+        LiftBackResult result = resolver.resolve(primary);
 
         assertEquals(CHR_1, result.finalChrom());
         assertEquals(150, result.finalPos());
@@ -587,19 +586,18 @@ public class LiftBackResolverTest
         assertEquals(1, result.numLoci());
     }
 
-    // when the -a secondaries genuinely land at distinct genomic loci (paralog / repeat), numLoci
-    // tracks the distinct count.
+    // when XA entries genuinely land at distinct genomic loci (paralog / repeat), numLoci tracks
+    // the distinct count.
     @Test
     public void testNumLociCountsDistinctLiftedLoci()
     {
         SAMRecord primary = newRecord(CHR_1, 1000, "150M");
-        SAMRecord sec1 = newRecord(CHR_1, 2000, "150M");
-        SAMRecord sec2 = newRecord(CHR_1, 3000, "150M");
-        sec1.setSecondaryAlignment(true);
-        sec2.setSecondaryAlignment(true);
+        primary.setAttribute("XA",
+                CHR_1 + ",+2000,150M,0;"
+                        + CHR_1 + ",+3000,150M,0;");
 
-        LiftBackResolver resolver = new LiftBackResolver(contigMap(), true);
-        LiftBackResult result = resolver.resolvePrimaryWithSecondaries(primary, List.of(sec1, sec2));
+        LiftBackResolver resolver = new LiftBackResolver(contigMap());
+        LiftBackResult result = resolver.resolve(primary);
 
         assertEquals(3, result.numLoci());
     }
@@ -641,7 +639,7 @@ public class LiftBackResolverTest
 
         // exon covers position 1500: rescue fires
         final ExonRegionIndex idx = buildExonIndex(List.of(new int[] { 1400, 1700 }));
-        LiftBackResolver withIndex = new LiftBackResolver(contigMap(), false, idx);
+        LiftBackResolver withIndex = new LiftBackResolver(contigMap(), idx);
         LiftBackResult result = withIndex.resolve(record);
         assertEquals(60, result.updatedMapq());
         assertEquals(LiftBackCategory.REF_SINGLE, result.category());
@@ -658,7 +656,7 @@ public class LiftBackResolverTest
 
         // exon spans 1400-1700, primary at 5000 is intergenic
         final ExonRegionIndex idx = buildExonIndex(List.of(new int[] { 1400, 1700 }));
-        LiftBackResolver resolver = new LiftBackResolver(contigMap(), false, idx);
+        LiftBackResolver resolver = new LiftBackResolver(contigMap(), idx);
         assertEquals(0, resolver.resolve(record).updatedMapq());
     }
 

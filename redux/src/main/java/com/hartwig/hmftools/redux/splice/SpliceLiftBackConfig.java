@@ -23,9 +23,6 @@ public class SpliceLiftBackConfig
     public static final String CONTIG_SIDECAR = "contig_sidecar";
     public static final String CONTIG_SIDECAR_DESC = "Contig sidecar TSV from SpliceFastaBuilder. Required.";
 
-    public static final String EMIT_SECONDARIES = "emit_secondaries";
-    public static final String EMIT_SECONDARIES_DESC = "Input BAM uses 0x100 secondaries (bwa-mem2 -a) instead of XA tags";
-
     public static final String UNMAP_ABOVE_NH = "unmap_above_nh";
     public static final String UNMAP_ABOVE_NH_DESC = "If > 0, mark records with NH > N as unmapped (STAR default 10)";
 
@@ -52,7 +49,6 @@ public class SpliceLiftBackConfig
     public final String InputBam;
     public final String RefGenomeFile;
     public final String ContigSidecarFile;
-    public final boolean EmitSecondaries;
     public final int UnmapAboveNh;
     public final int UnmapBelowMapq;
     public final boolean RescueViaSupp;
@@ -68,7 +64,6 @@ public class SpliceLiftBackConfig
         InputBam = configBuilder.getValue(INPUT_BAM);
         RefGenomeFile = configBuilder.getValue(REF_GENOME);
         ContigSidecarFile = configBuilder.getValue(CONTIG_SIDECAR);
-        EmitSecondaries = configBuilder.hasFlag(EMIT_SECONDARIES);
         UnmapAboveNh = configBuilder.getInteger(UNMAP_ABOVE_NH);
         UnmapBelowMapq = configBuilder.getInteger(UNMAP_BELOW_MAPQ);
         RescueViaSupp = configBuilder.hasFlag(RESCUE_VIA_SUPP);
@@ -81,13 +76,6 @@ public class SpliceLiftBackConfig
 
         if(OutputDir == null)
             throw new IllegalArgumentException("missing required config: output_dir");
-
-        // Rescue and tail-extension run inside the grouped per-pair pipeline (decideMateGroup), which
-        // only executes when -emit_secondaries is set. Without it the flags would be silent no-ops, so
-        // fail fast rather than emit unrescued BAMs while logging "rescue-via-supp enabled".
-        if((RescueViaSupp || ExtendSoftclipTails) && !EmitSecondaries)
-            throw new IllegalArgumentException(
-                    "-rescue_via_supp and -extend_softclip_tails require -emit_secondaries");
 
         if(!checkCreateOutputDir(OutputDir))
             throw new IllegalStateException("failed to create output directory: " + OutputDir);
@@ -128,7 +116,6 @@ public class SpliceLiftBackConfig
         configBuilder.addPath(INPUT_BAM, true, INPUT_BAM_DESC);
         addRefGenomeConfig(configBuilder, true);
         configBuilder.addPath(CONTIG_SIDECAR, true, CONTIG_SIDECAR_DESC);
-        configBuilder.addFlag(EMIT_SECONDARIES, EMIT_SECONDARIES_DESC);
         configBuilder.addInteger(UNMAP_ABOVE_NH, UNMAP_ABOVE_NH_DESC, 0);
         configBuilder.addInteger(UNMAP_BELOW_MAPQ, UNMAP_BELOW_MAPQ_DESC, 0);
         configBuilder.addFlag(RESCUE_VIA_SUPP, RESCUE_VIA_SUPP_DESC);

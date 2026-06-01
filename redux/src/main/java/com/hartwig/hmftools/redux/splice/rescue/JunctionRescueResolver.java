@@ -379,9 +379,24 @@ public class JunctionRescueResolver
         if(candidate.ForwardStrand != supp.ForwardStrand)
             return MergeOutcome.reject(RescueRejectReason.OPPOSITE_STRAND);
 
-        final List<CigarShape.Element> suppCigar = CigarShape.parse(supp.Cigar);
+        List<CigarShape.Element> suppCigar = CigarShape.parse(supp.Cigar);
         if(CigarShape.hasHardClip(suppCigar))
             return MergeOutcome.reject(RescueRejectReason.COMPLEX_CIGAR_SHAPE);
+
+        // A tx-contig-derived supp can end up with an internal N when ContigTranslator expands a
+        // cross-exon M anchor into M-N-M on the reference. If the post-N M lands inside or past the
+        // primary's mapped interval, those read bases are already explained by the primary and the
+        // post-N piece is a coincidental ref match. Clamp the supp to its primary-distal M anchor
+        // before the rest of the merge logic looks at softclip lengths.
+        final int primaryRefEnd = primaryStart + CigarShape.referenceSpan(primaryCigar) - 1;
+        int suppStart = supp.Start;
+        final ClampedSupp clamped = clampSuppToPrimaryBoundary(suppCigar, suppStart, primaryStart, primaryRefEnd);
+        if(clamped != null)
+        {
+            suppCigar = clamped.Cigar;
+            suppStart = clamped.Start;
+            mStatistics.countSuppClamp();
+        }
 
         // Decide which record is upstream and which is downstream by softclip shapes (and, when a
         // middle-anchored primary has S on both sides, by where the supp sits genomically).
@@ -398,18 +413,17 @@ public class JunctionRescueResolver
 
         if(rightExtend && leftExtend)
         {
-            final int primaryRefEnd = primaryStart + CigarShape.referenceSpan(primaryCigar) - 1;
-            final int suppRefEnd = supp.Start + CigarShape.referenceSpan(suppCigar) - 1;
-            if(supp.Start > primaryRefEnd && suppRefEnd >= primaryStart)
+            final int suppRefEnd = suppStart + CigarShape.referenceSpan(suppCigar) - 1;
+            if(suppStart > primaryRefEnd && suppRefEnd >= primaryStart)
                 leftExtend = false;
-            else if(suppRefEnd < primaryStart && supp.Start <= primaryRefEnd)
+            else if(suppRefEnd < primaryStart && suppStart <= primaryRefEnd)
                 rightExtend = false;
             else
                 return MergeOutcome.reject(RescueRejectReason.COMPLEX_CIGAR_SHAPE);
         }
 
         final Side primarySide = Side.of(primaryStart, primaryCigar);
-        final Side suppSide = Side.of(supp.Start, suppCigar);
+        final Side suppSide = Side.of(suppStart, suppCigar);
         final boolean primaryIsUpstream = rightExtend;
         final Side up = primaryIsUpstream ? primarySide : suppSide;
         final Side down = primaryIsUpstream ? suppSide : primarySide;
@@ -644,6 +658,156 @@ public class JunctionRescueResolver
                 return false;
             final char prev = elements.get(last - 1).Op;
             return prev == OP_INSERTION || prev == OP_DELETION;
+        }
+    }
+
+    // Clamps a supp cigar so its post-N tail (or pre-N head, for a downstream supp) is replaced
+    // with a soft clip whenever the M-after-N (or M-before-N) lands inside or past the primary's
+    // mapped interval. Driven by the tx-contig-expansion artifact: ContigTranslator may split a
+    // single M anchor across an exon boundary, producing M-N-M; if the inner M coincidentally
+    // matches the reference inside the primary's span, the supp double-counts the same read bases
+    // at two genomic positions. Returns null when no clamp is needed (no internal N, or the supp's
+    // anchor sits entirely on one side of the primary without crossing back).
+    private static ClampedSupp clampSuppToPrimaryBoundary(
+            final List<CigarShape.Element> suppCigar, final int suppStart,
+            final int primaryStart, final int primaryRefEnd)
+    {
+        boolean hasInternalN = false;
+        for(CigarShape.Element e : suppCigar)
+        {
+            if(e.Op == OP_SKIPPED)
+            {
+                hasInternalN = true;
+                break;
+            }
+        }
+        if(!hasInternalN)
+            return null;
+
+        final int suppRefEnd = suppStart + CigarShape.referenceSpan(suppCigar) - 1;
+        if(suppStart < primaryStart)
+            return clampUpstreamSupp(suppCigar, suppStart, primaryStart);
+        if(suppRefEnd > primaryRefEnd)
+            return clampDownstreamSupp(suppCigar, suppStart, primaryRefEnd);
+        return null;
+    }
+
+    // Walk left-to-right; remember the first N. When a subsequent M's ref start is at or past
+    // primaryStart, cut the cigar at that first N (inclusive) and replace the dropped tail with a
+    // trailing softclip sized to the dropped read bases.
+    private static ClampedSupp clampUpstreamSupp(
+            final List<CigarShape.Element> suppCigar, final int suppStart, final int primaryStart)
+    {
+        int refCursor = suppStart;
+        int readCursor = 0;
+        int firstNIdx = -1;
+        int readAtFirstN = 0;
+
+        for(int i = 0; i < suppCigar.size(); i++)
+        {
+            final CigarShape.Element e = suppCigar.get(i);
+            final char op = e.Op;
+            final int len = e.Length;
+
+            if(op == OP_SKIPPED && firstNIdx == -1)
+            {
+                firstNIdx = i;
+                readAtFirstN = readCursor;
+            }
+
+            if(firstNIdx != -1 && refCursor >= primaryStart
+                    && (op == OP_MATCH || op == OP_SEQ_MATCH || op == OP_SEQ_MISMATCH))
+            {
+                return cutTailAt(suppCigar, suppStart, firstNIdx, readAtFirstN);
+            }
+
+            if(CigarShape.consumesReference(op))
+                refCursor += len;
+            if(CigarShape.consumesRead(op))
+                readCursor += len;
+        }
+        return null;
+    }
+
+    // Mirror of clampUpstreamSupp: find the last N whose preceding M ended at or before
+    // primaryRefEnd, drop everything up to and including that N, and add a leading softclip sized
+    // to the dropped read bases. New start = the position of the first kept reference op.
+    private static ClampedSupp clampDownstreamSupp(
+            final List<CigarShape.Element> suppCigar, final int suppStart, final int primaryRefEnd)
+    {
+        int refCursor = suppStart;
+        int readCursor = 0;
+        int lastBadNIdx = -1;
+        int readAfterLastBadN = 0;
+        int refAfterLastBadN = -1;
+        boolean prevMInsidePrimary = false;
+
+        for(int i = 0; i < suppCigar.size(); i++)
+        {
+            final CigarShape.Element e = suppCigar.get(i);
+            final char op = e.Op;
+            final int len = e.Length;
+
+            if(op == OP_MATCH || op == OP_SEQ_MATCH || op == OP_SEQ_MISMATCH)
+            {
+                final int mRefEnd = refCursor + len - 1;
+                prevMInsidePrimary = mRefEnd <= primaryRefEnd;
+            }
+
+            if(op == OP_SKIPPED && prevMInsidePrimary)
+            {
+                lastBadNIdx = i;
+                // ref/read cursors just after this N op
+                refAfterLastBadN = refCursor + len;
+                readAfterLastBadN = readCursor;
+            }
+
+            if(CigarShape.consumesReference(op))
+                refCursor += len;
+            if(CigarShape.consumesRead(op))
+                readCursor += len;
+        }
+
+        if(lastBadNIdx == -1 || refAfterLastBadN < 0)
+            return null;
+        return cutHeadAt(suppCigar, refAfterLastBadN, lastBadNIdx, readAfterLastBadN);
+    }
+
+    private static ClampedSupp cutTailAt(
+            final List<CigarShape.Element> suppCigar, final int suppStart,
+            final int cutIdx, final int readBeforeCut)
+    {
+        final List<CigarShape.Element> trimmed = new ArrayList<>(cutIdx + 1);
+        for(int i = 0; i < cutIdx; i++)
+            trimmed.add(suppCigar.get(i));
+        final int totalRead = CigarShape.readLength(suppCigar);
+        final int trailingS = totalRead - readBeforeCut;
+        if(trailingS > 0)
+            trimmed.add(new CigarShape.Element(trailingS, OP_SOFTCLIP));
+        return new ClampedSupp(suppStart, trimmed);
+    }
+
+    private static ClampedSupp cutHeadAt(
+            final List<CigarShape.Element> suppCigar, final int newStart,
+            final int cutIdx, final int readBeforeCut)
+    {
+        final List<CigarShape.Element> trimmed = new ArrayList<>(suppCigar.size() - cutIdx);
+        if(readBeforeCut > 0)
+            trimmed.add(new CigarShape.Element(readBeforeCut, OP_SOFTCLIP));
+        for(int i = cutIdx + 1; i < suppCigar.size(); i++)
+            trimmed.add(suppCigar.get(i));
+        return new ClampedSupp(newStart, trimmed);
+    }
+
+    private static final class ClampedSupp
+    {
+        final int Start;
+        final List<CigarShape.Element> Cigar;
+
+        ClampedSupp(final int start, final List<CigarShape.Element> cigar)
+        {
+            Start = start;
+            Cigar = cigar;
         }
     }
 

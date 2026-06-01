@@ -38,11 +38,6 @@ public class LiftBackResolver
     // bin-searched back to the owning transcript. Non-alt-contig alignments (ref) fall through unindexed.
     private final Map<String, List<ContigEntry>> mSegmentsByAltContig;
 
-    // when true, the input BAM was produced with bwa-mem2 -a so alts arrive as secondary records (0x100)
-    // instead of via the XA tag. Skips XA parsing on primaries and disables the tx-contig MAPQ rescue on
-    // secondaries (their MAPQ=0 is a real ambiguity signal, not the multi-alt-contig tie artefact).
-    private final boolean mEmitSecondaries;
-
     // optional annotated-exon lookup. When provided, a hidden tie (XS==AS, no XA) on a ref-only primary
     // is overridden when the lifted primary lands inside an annotated exon — the tied alt is then
     // almost certainly a sub-threshold intronic/intergenic paralog.
@@ -50,15 +45,10 @@ public class LiftBackResolver
 
     public LiftBackResolver(final List<ContigEntry> entries)
     {
-        this(entries, false, null);
+        this(entries, null);
     }
 
-    public LiftBackResolver(final List<ContigEntry> entries, final boolean emitSecondaries)
-    {
-        this(entries, emitSecondaries, null);
-    }
-
-    public LiftBackResolver(final List<ContigEntry> entries, final boolean emitSecondaries, final ExonRegionIndex exonIndex)
+    public LiftBackResolver(final List<ContigEntry> entries, final ExonRegionIndex exonIndex)
     {
         mSegmentsByAltContig = new HashMap<>();
         for(final ContigEntry entry : entries)
@@ -66,7 +56,6 @@ public class LiftBackResolver
         for(final List<ContigEntry> segments : mSegmentsByAltContig.values())
             segments.sort(Comparator.comparingInt(ContigEntry::altStart));
 
-        mEmitSecondaries = emitSecondaries;
         mExonIndex = exonIndex;
     }
 
@@ -142,69 +131,17 @@ public class LiftBackResolver
         if(record.getSupplementaryAlignmentFlag())
             return supplementaryResult(record);
 
-        if(record.isSecondaryAlignment())
-            return nonPrimaryResult(record, NonPrimaryKind.SECONDARY);
-
         return resolvePrimary(record);
-    }
-
-    // Non-primary records (secondaries from -emit_secondaries and supplementaries from split reads)
-    // share their lift/result shape; only the MAPQ-rescue rule and failure-note string differ.
-    enum NonPrimaryKind
-    {
-        // 0x100. MAPQ=0 means real ambiguity at this locus; never rescue.
-        SECONDARY("secondary_translate_failed", false),
-        // 0x800. MAPQ=0 on a tx-contig supp is the multi-alt-contig tie artefact; rescue it.
-        SUPPLEMENTARY("supp_translate_failed", true);
-
-        final String FailureNote;
-        final boolean RescueZeroMapqOnTxContig;
-
-        NonPrimaryKind(final String failureNote, final boolean rescueZeroMapqOnTxContig)
-        {
-            FailureNote = failureNote;
-            RescueZeroMapqOnTxContig = rescueZeroMapqOnTxContig;
-        }
     }
 
     private LiftBackResult resolvePrimary(final SAMRecord record)
     {
-        // in -emit_secondaries mode the alts arrive as separate 0x100 records, so any XA entries on the
-        // primary (if bwa-mem2 still emits some) would double-count. Skip the parse — the per-pair grouped
-        // path (see resolvePrimaryWithSecondaries) is what feeds the real alt set in that mode.
-        final List<LiftedAlignment> xaAlts = mEmitSecondaries ? List.of() : parseAndLiftXa(record);
+        final List<LiftedAlignment> xaAlts = parseAndLiftXa(record);
         // numXaAlts in the result tracks the *deduped + lifted* count, not the raw XA entry count, so dedup
         // behavior remains visible in TSV-A.
         return resolvePrimaryWithAlts(record, xaAlts, xaAlts.size());
     }
 
-    // grouped-mode entry point: lifts each secondary as a SECONDARY_INPUT alt and feeds them into the
-    // primary's alignment set. Used when bwa-mem2 -a put alts on separate 0x100 records but the BAM has
-    // been name-sorted so a primary + its secondaries can be processed as one group.
-    public LiftBackResult resolvePrimaryWithSecondaries(final SAMRecord primary, final List<SAMRecord> secondaryRecords)
-    {
-        final List<LiftedAlignment> alts = new ArrayList<>(secondaryRecords.size());
-        final Set<String> seenKeys = new HashSet<>();
-        for(final SAMRecord secondary : secondaryRecords)
-        {
-            if(secondary.getReadUnmappedFlag())
-                continue;
-            final LiftedAlignment lifted = liftAlignment(
-                    LiftedAlignment.AlignmentSource.SECONDARY_INPUT,
-                    secondary.getReferenceName(), secondary.getAlignmentStart(), secondary.getCigarString(),
-                    getInt(secondary, AS_TAG), getInt(secondary, NM_TAG),
-                    !secondary.getReadNegativeStrandFlag());
-            if(lifted == null)
-                continue;
-            if(seenKeys.add(liftedKey(lifted)))
-                alts.add(lifted);
-        }
-        return resolvePrimaryWithAlts(primary, alts, secondaryRecords.size());
-    }
-
-    // shared body for both XA-mode (alts from primary's XA tag) and secondaries-mode (alts from sibling
-    // 0x100 records). numXaAltsForReport is what the LiftBackResult.numXaAlts field carries downstream —
-    // XA-mode passes the XA tag count, secondaries-mode passes the secondary-record count.
     private LiftBackResult resolvePrimaryWithAlts(
             final SAMRecord record, final List<LiftedAlignment> alts, final int numXaAltsForReport)
     {
@@ -243,11 +180,7 @@ public class LiftBackResolver
         final int updatedMapq = decidePrimaryMapq(
                 inputMapq, numLoci, swapped, hiddenTie, effectivePrimary.fromTxContig(), inAnnotatedExon);
 
-        // in secondaries mode each alt is its own SAM record and will be written separately with its own
-        // lifted coords. The primary record must keep self's lifted coords (not the discriminator's
-        // effective-primary swap target), otherwise the primary and the chosen-alt secondary would both
-        // land at the same locus and the original primary's locus would be lost.
-        final LiftedAlignment primaryCoords = mEmitSecondaries ? self : effectivePrimary;
+        final LiftedAlignment primaryCoords = effectivePrimary;
 
         return new LiftBackResult(
                 features.Category, LiftBackResult.Composition.fromAlignments(keptAlignments),
@@ -264,15 +197,10 @@ public class LiftBackResolver
                 allAlignments);
     }
 
+    // Supplementaries (0x800) from split reads. Lift coords, build a SUPPLEMENTARY-role result with
+    // one alignment in the set. MAPQ=0 on a tx-contig supp is the multi-alt-contig tie artefact and
+    // is rescued to RESCUED_MAPQ.
     private LiftBackResult supplementaryResult(final SAMRecord record)
-    {
-        return nonPrimaryResult(record, NonPrimaryKind.SUPPLEMENTARY);
-    }
-
-    // Shared body for secondaries (0x100, from -emit_secondaries) and supplementaries (0x800, from
-    // split reads). Lift coords, build a SUPPLEMENTARY-role result with one alignment in the set.
-    // MAPQ rescue policy is kind-dependent: see NonPrimaryKind doc.
-    LiftBackResult nonPrimaryResult(final SAMRecord record, final NonPrimaryKind kind)
     {
         final LiftedAlignment lifted = liftAlignment(
                 LiftedAlignment.AlignmentSource.SELF,
@@ -281,13 +209,12 @@ public class LiftBackResolver
                 !record.getReadNegativeStrandFlag());
 
         if(lifted == null)
-            return unliftableResult(LiftBackResult.RecordRole.SUPPLEMENTARY, 0, kind.FailureNote);
+            return unliftableResult(LiftBackResult.RecordRole.SUPPLEMENTARY, 0, "supp_translate_failed");
 
         lifted.IsPrimaryChoice = true;
 
         final int inputMapq = record.getMappingQuality();
-        final int outputMapq = (kind.RescueZeroMapqOnTxContig && lifted.fromTxContig() && inputMapq == 0)
-                ? RESCUED_MAPQ : inputMapq;
+        final int outputMapq = (lifted.fromTxContig() && inputMapq == 0) ? RESCUED_MAPQ : inputMapq;
         final int numRefAlts = lifted.fromTxContig() ? 0 : 1;
         final int numTxAlts = lifted.fromTxContig() ? 1 : 0;
 

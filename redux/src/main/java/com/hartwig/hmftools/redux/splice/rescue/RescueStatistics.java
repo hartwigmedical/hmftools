@@ -10,6 +10,7 @@ public class RescueStatistics
 {
     private int mCandidatesEvaluated;
     private int mMergedTotal;
+    private int mSuppClampApplied;
     private final int[] mChainDepthCounts;  // index = depth (1 = single merge, 2 = chain of two, ...)
     private final Map<RescueRejectReason, Integer> mRejections;
 
@@ -34,6 +35,16 @@ public class RescueStatistics
     public void countReject(final RescueRejectReason reason)
     {
         mRejections.merge(reason, 1, Integer::sum);
+    }
+
+    public void countSuppClamp()
+    {
+        ++mSuppClampApplied;
+    }
+
+    public int suppClampApplied()
+    {
+        return mSuppClampApplied;
     }
 
     public int candidatesEvaluated()

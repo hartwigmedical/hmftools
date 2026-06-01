@@ -30,6 +30,7 @@ public class LiftBackStats
     private final int[][] mCompositionByTier = new int[N_COMPOSITIONS][N_TIERS];
     private final int[][] mCategoryByTier = new int[N_CATEGORIES][N_TIERS];
     private int mTotal = 0;
+    private int mLowAsSuppsDropped = 0;
 
     public void record(final SAMRecord record, final LiftBackResult result)
     {
@@ -54,9 +55,22 @@ public class LiftBackStats
         return mPerCategory[category.ordinal()];
     }
 
+    public void recordLowAsSuppDropped()
+    {
+        ++mLowAsSuppsDropped;
+    }
+
+    public int lowAsSuppsDropped()
+    {
+        return mLowAsSuppsDropped;
+    }
+
     public void logSummary()
     {
         RD_LOGGER.info("processed {} records", mTotal);
+        if(mLowAsSuppsDropped > 0)
+            RD_LOGGER.info("dropped {} non-rescued supps with source AS < {}",
+                    mLowAsSuppsDropped, SpliceLiftBack.SUPP_AS_DROP_THRESHOLD);
 
         RD_LOGGER.info("alignment-set composition x MAPQ tier:");
         logTable(mCompositionByTier, LiftBackResult.Composition.values(), MapqTier.values());
