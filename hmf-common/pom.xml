@@ -92,10 +92,6 @@
             <artifactId>gatk-bwamem-jni</artifactId>
             <version>1.0.5</version>
         </dependency>
-        <dependency>
-            <groupId>com.itextpdf</groupId>
-            <artifactId>layout</artifactId>
-        </dependency>
     </dependencies>
 
     <build>
