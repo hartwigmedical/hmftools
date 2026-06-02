@@ -155,8 +155,8 @@ public class JunctionsTest
         assertNotNull(junctionData);
         assertEquals(FORWARD, junctionData.Orient);
         assertEquals(1, junctionData.junctionFragmentCount());
-        assertEquals(1, junctionData.exactSupportFragmentCount());
-        assertEquals(2, junctionData.supportingFragmentCount());
+        assertEquals(2, junctionData.exactSupportFragmentCount());
+        assertEquals(1, junctionData.supportingFragmentCount());
 
         junctionData = mJunctionTracker.junctions().stream().filter(x -> x.Position == 1059).findFirst().orElse(null);
         assertNotNull(junctionData);
