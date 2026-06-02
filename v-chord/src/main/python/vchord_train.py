@@ -449,11 +449,12 @@ def init_model(dropout_rate):
 
 def train_main(sample_tsv, purple_root, epochs, batch_size, dropout_rate, hrd_sample_dup, test_fraction, use_nesterov, starting_model):
     df = pd.read_csv(sample_tsv, sep="\t")
-    df["inputPngPath"] = purple_root + "/" + df["sampleId"] + "/" + df["sampleId"] + ".input.png"
-    df["circosPngPath"] = purple_root + "/" + df["sampleId"] + "/" + df["sampleId"] + ".circos.png"
+    df["inputPngPath"] = purple_root + "/" + df["sampleId"] + ".input.png"
+    df["circosPngPath"] = purple_root + "/" + df["sampleId"] + ".circos.png"
 
     # load the purity
-    df["purity"] = [pd.read_csv(f'{purple_root}/{s}/{s}.purple.purity.tsv', sep='\t')["purity"].iloc[0] for s in df["sampleId"]]
+    if "purity" not in df.columns:
+        df["purity"] = [pd.read_csv(f'{purple_root}/{s}/{s}.purple.purity.tsv', sep='\t')["purity"].iloc[0] for s in df["sampleId"]]
 
     df = filter_df(df)
     #df = df.head(5).reset_index(drop=True)
