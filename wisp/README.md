@@ -51,7 +51,7 @@ Here is a schematic of the recommended pipeline setup to run Wisp
 ![Wisp](./Wisp.png)      
 
 ###  SNV tumor fraction estimate
-Using the cfDNA annotated tissue biopsy purple VCF, apply the following filters based on the primary tumor annotations
+Using the PASS variants from the cfDNA annotated tissue biopsy purple VCF, apply the following filters based on the primary tumor annotations
 - Mappability>=0.5 
 - RepeatCount<4 
 - High confidence observation in ctDNA: (RC_QUAL[0]+RC_QUAL[1]+RC_QUAL[3]) / (RC_CNT[0]+RC_CNT[1]+RC_CNT[3]) >= 18
