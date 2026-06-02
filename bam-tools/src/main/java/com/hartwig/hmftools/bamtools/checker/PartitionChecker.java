@@ -5,6 +5,8 @@ import static java.lang.Math.max;
 import static com.hartwig.hmftools.bamtools.checker.CheckConfig.LOG_READ_COUNT;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.common.bam.BamSlicer.createIntervals;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.BQSR_ORIGINAL_QUALS;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.getAlignmentEndFromCigar;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
 import static com.hartwig.hmftools.common.genome.chromosome.Chromosome.isAltRegionContig;
 
@@ -12,10 +14,10 @@ import static org.apache.logging.log4j.Level.DEBUG;
 
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.bam.BamSlicer;
+import com.hartwig.hmftools.common.redux.BaseQualAdjustment;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import org.apache.logging.log4j.Level;
@@ -24,6 +26,7 @@ import htsjdk.samtools.QueryInterval;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
+import htsjdk.samtools.SAMTag;
 import htsjdk.samtools.SamReader;
 
 public class PartitionChecker
@@ -87,7 +90,6 @@ public class PartitionChecker
         mCurrentStats.reset();
 
         customSlice();
-        // mBamSlicer.slice(mSamReader, mRegion, this::processSamRecord);
 
         handleIncompleteFragments();
         mStats.merge(mCurrentStats);
@@ -103,12 +105,12 @@ public class PartitionChecker
 
     private void customSlice()
     {
-        final QueryInterval[] queryIntervals = createIntervals(List.of(mRegion), mSamReader.getFileHeader());
+        QueryInterval[] queryIntervals = createIntervals(List.of(mRegion), mSamReader.getFileHeader());
 
         if(queryIntervals == null)
             return;
 
-        try(final SAMRecordIterator iterator = mSamReader.queryOverlapping(queryIntervals))
+        try(SAMRecordIterator iterator = mSamReader.queryOverlapping(queryIntervals))
         {
             SAMRecord lastRecord = null;
 
@@ -117,7 +119,7 @@ public class PartitionChecker
 
                 while(iterator.hasNext())
                 {
-                    final SAMRecord record = iterator.next();
+                    SAMRecord record = iterator.next();
                     processSamRecord(record);
                     lastRecord = record;
                 }
@@ -153,6 +155,9 @@ public class PartitionChecker
             BT_LOGGER.info("region({}) processed reads({}) cached fragments({})", mRegion, mReadCount, mFragmentMap.size());
         }
 
+        if(mConfig.ReverseBqsr)
+            reverseBqsrQuals(read);
+
         if(!read.getReadPairedFlag() || read.isSecondaryAlignment())
         {
             writeRecord(read);
@@ -161,6 +166,41 @@ public class PartitionChecker
 
         // check if the mate is in this partition or not
         checkOrCacheRead(read);
+    }
+
+    private static final String MARK_DUPS_TAG = "MarkDuplicates";
+
+    private void reverseBqsrQuals(final SAMRecord read)
+    {
+        String originalQualsStr = read.getStringAttribute(BQSR_ORIGINAL_QUALS);
+
+        if(originalQualsStr == null)
+            return;
+
+        final byte[] originalQuals = BaseQualAdjustment.extractTagQualValues(originalQualsStr);
+        final byte[] baseQuals = read.getBaseQualities();
+
+        for(int i = 0; i < baseQuals.length; ++i)
+        {
+            baseQuals[i] = originalQuals[i];
+        }
+
+        read.setBaseQualities(baseQuals);
+
+        List<SAMRecord.SAMTagAndValue> existingAttributes = read.getAttributes();
+
+        read.clearAttributes();
+
+        for(SAMRecord.SAMTagAndValue attribute : existingAttributes)
+        {
+            if(attribute.tag.equals(BQSR_ORIGINAL_QUALS))
+                continue;
+
+            if(attribute.value.equals(MARK_DUPS_TAG))
+                continue;
+
+            read.setAttribute(attribute.tag, attribute.value);
+        }
     }
 
     private void checkOrCacheRead(final SAMRecord read)
@@ -178,6 +218,9 @@ public class PartitionChecker
         {
             fragment.addRead(read);
         }
+
+        if(mConfig.ConvertHardClips && !read.getSupplementaryAlignmentFlag())
+            fragment.cachePrimaryBaseInfo(read);
 
         List<SAMRecord> completeReads = fragment.extractCompleteReads();
 

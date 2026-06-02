@@ -190,11 +190,15 @@ public class BamChecker
         // merge sorted BAMs
         String finalBam = mConfig.OutputBam != null ? mConfig.OutputBam : mConfig.formFilename("final", BAM_EXTENSION);
 
+        BT_LOGGER.debug("writing final BAM {}", finalBam);
+
         if(!BamOperations.mergeBams(toolName, mConfig.BamToolPath, finalBam, sortedBams, mConfig.Threads))
         {
             BT_LOGGER.error("error merging sorted BAMs");
             System.exit(1);
         }
+
+        BT_LOGGER.debug("indexing final BAM");
 
         // index final BAM
         String finalBamIndex = finalBam + BAM_INDEX_EXTENSION;
