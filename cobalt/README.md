@@ -111,17 +111,6 @@ The other buckets are masked.
 Finally, a piecewise constant fit (segmentation) of the ratios is found using a penalized least squares
 regression algorithm ported from the Bioconductor [copynumber](http://bioconductor.org/packages/release/bioc/html/copynumber.html) package.
 
-If preferred, the original copynumber program can be used for segmentation. To do this,
-apply the `use_old_segmenter` parameter. This will require prior installation
-of [R](https://www.r-project.org/) or [RStudio](https://rstudio.com/) and then installation of the required R packages with the following
-R commands:
-
-```
-    library(BiocManager)
-    install("copynumber")
-    install("dplyr")
-```
-
 All resource files for this tool and the WiGiTs pipeline are available for download via
 the [HMF Resource page](../pipeline/README_RESOURCES.md).
 
