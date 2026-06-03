@@ -29,21 +29,21 @@ NUM_CANCER_TYPES = 5
 device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
 
 
-def filter_df(df):
+def filter_df(df: pd.DataFrame) -> pd.DataFrame:
     # filter out stuff we do not need, we filter out anything that seem abiguous to Chord
     df = df[(df["hrStatus"] == "HR_DEFICIENT") | (df["hrStatus"] == "HR_PROFICIENT")]
     return df
 
 
 # create a transform object to convert image to pytorch tensor
-def make_transform(image_size=IMAGE_SIZE):
+def make_transform(image_size: int = IMAGE_SIZE) -> v2.Compose:
     x = [v2.Resize(int(image_size * 1.1)),
           v2.CenterCrop(image_size),
           v2.ToDtype(torch.float32, scale=True)]
     return v2.Compose(x)
 
 
-def image_to_tensor(circos_png_path, image_size=IMAGE_SIZE, transform=None):
+def image_to_tensor(circos_png_path: str, image_size: int = IMAGE_SIZE, transform: v2.Compose = None) -> torch.Tensor:
     if transform is None:
         transform = make_transform(image_size)
 
@@ -51,7 +51,7 @@ def image_to_tensor(circos_png_path, image_size=IMAGE_SIZE, transform=None):
     return circos_png
 
 
-def cancer_type_to_tensor(cancer_type, purity):
+def cancer_type_to_tensor(cancer_type: str, purity: float) -> torch.Tensor:
     a = [0.0, 0.0, 0.0, 0.0, 0.0]
     i = -1
     if isinstance(cancer_type, str):
@@ -72,7 +72,7 @@ def cancer_type_to_tensor(cancer_type, purity):
 
 class HrdDataset(data_utils.Dataset):
 
-    def __init__(self, df, image_size, augment, hrd_sample_dup):
+    def __init__(self, df: pd.DataFrame, image_size: int, augment: bool, hrd_sample_dup: int) -> None:
         start = time.time()
 
         # duplicate all certain HRD samples to enrich the size
@@ -108,10 +108,10 @@ class HrdDataset(data_utils.Dataset):
         minute, second = divmod(elapsed_sec, 60)
         logger.info(f"loading dataset of size {len(self)}, hrd={num_hrd}, took {minute:.0f}m {second:.0f}s")
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.image_tensors)
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx: int) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         # we do the rotation here to support augmentation of data
         image_tensor = self.image_tensors[idx]
         if self.transform:
@@ -127,7 +127,7 @@ class HrdDataset(data_utils.Dataset):
 
 
 class EpochStats:
-    def __init__(self):
+    def __init__(self) -> None:
         self.loss_sum = 0.0
         self.loss_count = 0
         self.true_pos = 0
@@ -136,34 +136,34 @@ class EpochStats:
         self.num_neg = 0
 
     @property
-    def loss(self):
+    def loss(self) -> float:
         return self.loss_sum / self.loss_count
 
     @property
-    def accuracy(self):
+    def accuracy(self) -> float:
         return (self.true_pos + self.true_neg) / (self.num_pos + self.num_neg)
 
     @property
-    def correct(self):
+    def correct(self) -> int:
         return self.true_pos + self.true_neg
 
     @property
-    def count(self):
+    def count(self) -> int:
         return self.num_pos + self.num_neg
 
     @property
-    def true_pos_rate(self):
+    def true_pos_rate(self) -> float:
         return self.true_pos / self.num_pos
 
     @property
-    def true_neg_rate(self):
+    def true_neg_rate(self) -> float:
         return self.true_neg / self.num_neg
 
-    def update_loss(self, loss_val, count):
+    def update_loss(self, loss_val: float, count: int) -> None:
         self.loss_sum += loss_val * count
         self.loss_count += count
 
-    def update_accuracies(self, pred: torch.Tensor, target: torch.Tensor):
+    def update_accuracies(self, pred: torch.Tensor, target: torch.Tensor) -> None:
 
         # force prediction to 0 and 1, this is required after sigmoid
         pred = (pred > 0.5).int()
@@ -176,7 +176,7 @@ class EpochStats:
         # 1 - target gives the mask required to zero out all true target ones
         self.true_neg += ((1 - pred) * (1 - target)).sum().item()
 
-    def log(self, name, epoch):
+    def log(self, name: str, epoch: int) -> None:
         logger.info(f"[{name} {epoch:>4d}]    loss: {self.loss:>8.5f}    "
                     f"acc:{self.accuracy * 100:>6.2f}% [{self.correct:>4d}/{self.count:>4d}]    "
                     f"TP:{self.true_pos_rate * 100:>6.2f}% [{self.true_pos:>4d}/{self.num_pos:>4d}]    "
@@ -186,7 +186,7 @@ class EpochStats:
 # from the input pandas dataframe create the train / test dataloaders requied for
 # pytorch training.
 # return (train_dataloader, test_dataloader)
-def create_dataloader(df, image_size, batch_size, augment, hrd_sample_dup, test_fraction):
+def create_dataloader(df: pd.DataFrame, image_size: int, batch_size: int, augment: bool, hrd_sample_dup: int, test_fraction: float) -> tuple[data_utils.DataLoader, data_utils.DataLoader]:
     # Using Skicit-learn to split data into training and testing sets
     from sklearn.model_selection import train_test_split
 
@@ -217,7 +217,7 @@ ADAM is very lr sensitive
 Using pretrained weights results in getting stuck often
 SGD with Nesterov momentum is worse
 '''
-def train_model(model, train_dataloader, test_dataloader, num_epochs, use_nesterov=False):
+def train_model(model: nn.Module, train_dataloader: data_utils.DataLoader, test_dataloader: data_utils.DataLoader, num_epochs: int, use_nesterov: bool = False) -> bool:
 
     # use this cause the model does not have a logit
     loss_fn = nn.BCEWithLogitsLoss()
@@ -339,7 +339,7 @@ def train_model(model, train_dataloader, test_dataloader, num_epochs, use_nester
     return True
 
 
-def train(dataloader, model, loss_fn, optimizer, epoch_stats, epoch, should_log):
+def train(dataloader: data_utils.DataLoader, model: nn.Module, loss_fn: nn.Module, optimizer: torch.optim.Optimizer, epoch_stats: EpochStats, epoch: int, should_log: bool) -> None:
     model.train()
     for batch, (x1, x2, y) in enumerate(dataloader):
         x1 = x1.to(device)
@@ -371,7 +371,7 @@ def train(dataloader, model, loss_fn, optimizer, epoch_stats, epoch, should_log)
 
     epoch_stats.log("Train", epoch)
 
-def test(dataloader, model, loss_fn, epoch_stats, epoch, should_log):
+def test(dataloader: data_utils.DataLoader, model: nn.Module, loss_fn: nn.Module, epoch_stats: EpochStats, epoch: int, should_log: bool) -> None:
 
     model.eval()
 
@@ -391,7 +391,7 @@ def test(dataloader, model, loss_fn, epoch_stats, epoch, should_log):
     epoch_stats.log("Test ", epoch)
 
 
-def append_dropout(model, rate):
+def append_dropout(model: nn.Module, rate: float) -> None:
     for name, module in model.named_children():
         if len(list(module.children())) > 0:
             append_dropout(module, rate)
@@ -400,7 +400,7 @@ def append_dropout(model, rate):
             setattr(model, name, new)
 
 
-def train_main(sample_tsv, purple_root, epochs, batch_size, dropout_rate, hrd_sample_dup, test_fraction, use_nesterov, starting_model):
+def train_main(sample_tsv: str, purple_root: str, epochs: int, batch_size: int, dropout_rate: float, hrd_sample_dup: int, test_fraction: float, use_nesterov: bool, starting_model: str) -> None:
     df = pd.read_csv(sample_tsv, sep="\t")
 
     df["circosPngPath"] = purple_root + "/" + df["sampleId"] + ".circos.png"
@@ -433,7 +433,7 @@ def train_main(sample_tsv, purple_root, epochs, batch_size, dropout_rate, hrd_sa
     model_scripted.save('model_scripted.pt')  # Save
 
 
-def main():
+def main() -> None:
     import argparse
     parser = argparse.ArgumentParser(description="train hrd predictor")
     parser.add_argument('--sample_tsv', help='input tsv file', required=True)
