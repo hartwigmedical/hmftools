@@ -1,22 +1,14 @@
-import pandas as pd
-
-import numpy as np
-import math
-import os, sys, time
-
-import torch
-from torch import nn
-import torch.utils.data as data_utils
-
-import torchvision
-# use v2 as it claims to be faster
-from torchvision.transforms import v2
-from torchvision.io import read_image
-
-import matplotlib.pyplot as plt
-
 import logging
-
+import sys
+import time
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import torch
+import torch.utils.data as data_utils
+from torch import nn
+from torchvision.io import read_image
+from torchvision.transforms import v2 # use v2 as it claims to be faster
 import vchord_model
 
 logger = logging.getLogger(__name__)
@@ -36,29 +28,11 @@ NUM_CANCER_TYPES = 5
 # Get cpu or gpu device for training.
 device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
 
-# convert a df to tensor to be used in pytorch
-def df_to_tensor(df):
-    return torch.from_numpy(df.values).float().to(device)
-
 
 def filter_df(df):
     # filter out stuff we do not need, we filter out anything that seem abiguous to Chord
     df = df[(df["hrStatus"] == "HR_DEFICIENT") | (df["hrStatus"] == "HR_PROFICIENT")]
     return df
-
-
-# https://stackoverflow.com/questions/44865023/how-can-i-create-a-circular-mask-for-a-numpy-array
-def create_circular_mask(h, w, center=None, radius=None):
-    if center is None:  # use the middle of the image
-        center = (int(w / 2), int(h / 2))
-    if radius is None:  # use the smallest distance between the center and image walls
-        radius = min(center[0], center[1], w - center[0], h - center[1])
-
-    Y, X = np.ogrid[:h, :w]
-    dist_from_center = np.sqrt((X - center[0]) ** 2 + (Y - center[1]) ** 2)
-
-    mask = dist_from_center >= radius
-    return torch.from_numpy(mask.astype(np.uint8))  # note we must cast to uint8
 
 
 # create a transform object to convert image to pytorch tensor
@@ -68,16 +42,14 @@ def make_transform(image_size=IMAGE_SIZE):
           v2.ToDtype(torch.float32, scale=True)]
     return v2.Compose(x)
 
-def image_to_tensor(input_png_path, circos_png_path, image_size=IMAGE_SIZE, transform=None):
+
+def image_to_tensor(circos_png_path, image_size=IMAGE_SIZE, transform=None):
     if transform is None:
         transform = make_transform(image_size)
 
-    # input png we use gray scale image
-    #input_png = transform(v2.functional.to_grayscale(read_image(input_png_path)))
-    #input_png = transform(read_image(input_png_path))
     circos_png = transform(read_image(circos_png_path))
-    #return torch.cat((input_png, circos_png), dim=0)
     return circos_png
+
 
 def cancer_type_to_tensor(cancer_type, purity):
     a = [0.0, 0.0, 0.0, 0.0, 0.0]
@@ -95,8 +67,8 @@ def cancer_type_to_tensor(cancer_type, purity):
     if i != -1:
         a[i] = 1.0
     a[4] = purity
-    #logger.info(f"cancer type: {cancer_type}, encoded: {a}")
     return torch.tensor(a, dtype=torch.float32)
+
 
 class HrdDataset(data_utils.Dataset):
 
@@ -123,11 +95,10 @@ class HrdDataset(data_utils.Dataset):
             if idx % 50 == 0:
                 logger.debug(f"[{idx+1}/{len(df)}] Loading: {row['circosPngPath']}")
 
-            self.image_tensors.append(image_to_tensor(row["inputPngPath"], row["circosPngPath"], image_size, transform))
+            self.image_tensors.append(image_to_tensor(row["circosPngPath"], image_size, transform))
             self.type_tensors.append(cancer_type_to_tensor(row["primaryTumorLocation"], row["purity"]))
 
-        # rotation is done when the tensor is retrieved, this provides better
-        # augmentation
+        # rotation is done when the tensor is retrieved, this provides better augmentation
         if augment:
             self.transform = v2.RandomRotation(degrees=180, fill=1.0)
         else:
@@ -193,7 +164,6 @@ class EpochStats:
         self.loss_count += count
 
     def update_accuracies(self, pred: torch.Tensor, target: torch.Tensor):
-        # logger.debug(f"calc_error: pred: {pred}, target: {target}")
 
         # force prediction to 0 and 1, this is required after sigmoid
         pred = (pred > 0.5).int()
@@ -237,12 +207,6 @@ def create_dataloader(df, image_size, batch_size, augment, hrd_sample_dup, test_
     test_dataset = HrdDataset(test_df, image_size, augment=False, hrd_sample_dup=hrd_sample_dup)
     test_dataloader = data_utils.DataLoader(test_dataset, batch_size=batch_size, shuffle=True, drop_last=True)
 
-    # for seq_x, linear_x, y, bq, bqr in test_dataloader:
-    #    print(f"Shape of seq x [N, C, H]: {seq_x.shape}")
-    #    print(f"Shape of linear x [N, C]: {linear_x.shape}")
-    #    print(f"Shape of y: {y.shape} {y.dtype}")
-    #    break
-
     return train_dataloader, test_dataloader
 
 '''
@@ -254,7 +218,6 @@ Using pretrained weights results in getting stuck often
 SGD with Nesterov momentum is worse
 '''
 def train_model(model, train_dataloader, test_dataloader, num_epochs, use_nesterov=False):
-    # loss_fn = nn.BCELoss()
 
     # use this cause the model does not have a logit
     loss_fn = nn.BCEWithLogitsLoss()
@@ -377,7 +340,6 @@ def train_model(model, train_dataloader, test_dataloader, num_epochs, use_nester
 
 
 def train(dataloader, model, loss_fn, optimizer, epoch_stats, epoch, should_log):
-    size = len(dataloader.dataset)
     model.train()
     for batch, (x1, x2, y) in enumerate(dataloader):
         x1 = x1.to(device)
@@ -387,7 +349,6 @@ def train(dataloader, model, loss_fn, optimizer, epoch_stats, epoch, should_log)
         pred = model(x1, x2)
 
         # set weight to ignore low base qual bases
-        # loss_fn.weight = float(1.0)
         loss = loss_fn(pred, y)
 
         # Backpropagation
@@ -411,8 +372,7 @@ def train(dataloader, model, loss_fn, optimizer, epoch_stats, epoch, should_log)
     epoch_stats.log("Train", epoch)
 
 def test(dataloader, model, loss_fn, epoch_stats, epoch, should_log):
-    # size = len(dataloader.dataset)
-    # num_batches = len(dataloader)
+
     model.eval()
 
     with torch.no_grad():
@@ -421,18 +381,12 @@ def test(dataloader, model, loss_fn, epoch_stats, epoch, should_log):
             x2 = x2.to(device)
             y = y.to(device)
             pred = model(x1, x2)
-            # pred = torch.full(y.shape, 1.0)
-
-            # set weight to ignore low base qual bases
-            # loss_fn.weight = float(1.0)
 
             epoch_stats.update_loss(loss_fn(pred, y).item(), y.size(dim=0))
 
             # NOTE: need to add sigmoid since we use loss with logit
             sigmoid_pred = torch.sigmoid(pred)
             epoch_stats.update_accuracies(sigmoid_pred, y)
-            # logger.debug(f"test size: x.size(0)")
-            # logger.debug(f"true error: {t_err}, false error: {f_err}")
 
     epoch_stats.log("Test ", epoch)
 
@@ -445,15 +399,10 @@ def append_dropout(model, rate):
             new = nn.Sequential(module, nn.Dropout2d(p=rate))
             setattr(model, name, new)
 
-#
-def init_model(dropout_rate):
-    # load the model
-    # 5
-    return vchord_model.HrdModel(dropout_rate, NUM_CANCER_TYPES)
 
 def train_main(sample_tsv, purple_root, epochs, batch_size, dropout_rate, hrd_sample_dup, test_fraction, use_nesterov, starting_model):
     df = pd.read_csv(sample_tsv, sep="\t")
-    df["inputPngPath"] = purple_root + "/" + df["sampleId"] + ".input.png"
+
     df["circosPngPath"] = purple_root + "/" + df["sampleId"] + ".circos.png"
 
     # load the purity
@@ -461,13 +410,12 @@ def train_main(sample_tsv, purple_root, epochs, batch_size, dropout_rate, hrd_sa
         df["purity"] = [pd.read_csv(f'{purple_root}/{s}/{s}.purple.purity.tsv', sep='\t')["purity"].iloc[0] for s in df["sampleId"]]
 
     df = filter_df(df)
-    #df = df.head(5).reset_index(drop=True)
 
     if starting_model:
         logger.info(f"starting model: {starting_model}")
         model = torch.jit.load(starting_model, map_location=torch.device('cpu'))
     else:
-        model = init_model(dropout_rate)
+        model = vchord_model.HrdModel(dropout_rate, NUM_CANCER_TYPES)
 
     model = model.to(device)
 
@@ -481,7 +429,6 @@ def train_main(sample_tsv, purple_root, epochs, batch_size, dropout_rate, hrd_sa
 
     # also use torch script to save it once more
     # load using
-    # model = torch.jit.load('model_scripted.pt')
     model_scripted = torch.jit.script(model)  # Export to TorchScript
     model_scripted.save('model_scripted.pt')  # Save
 
