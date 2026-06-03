@@ -281,7 +281,7 @@ final class GainDeletionFactory
                                 .findingKey(FindingKeys.gainDeletion(DriverSource.SOMATIC,
                                         clinicalRelevantGeneCopyNumber.gene(),
                                         PurpleDriverType.UNKNOWN,
-                                        clinicalRelevantGeneCopyNumber.isCanonical(),
+                                        clinicalRelevantGeneCopyNumber.isCanonical(), // Can be now only canonical
                                         clinicalRelevantGeneCopyNumber.transcript()))
                                 .driverSource(DriverSource.SOMATIC)
                                 .reportedStatus(ReportedStatus.CANDIDATE)
