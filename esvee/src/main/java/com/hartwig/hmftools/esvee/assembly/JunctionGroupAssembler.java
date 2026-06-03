@@ -37,8 +37,8 @@ import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionGroup;
 import com.hartwig.hmftools.esvee.assembly.types.ThreadTask;
-import com.hartwig.hmftools.esvee.common.SagaMatcher;
-import com.hartwig.hmftools.esvee.common.SagaResource;
+import com.hartwig.hmftools.esvee.common.saga.SagaSequenceMatcher;
+import com.hartwig.hmftools.esvee.common.saga.SagaMatcherFactory;
 import com.hartwig.hmftools.esvee.prep.ReadFilters;
 
 import org.jetbrains.annotations.Nullable;
@@ -61,10 +61,10 @@ public class JunctionGroupAssembler extends ThreadTask
     private final List<JunctionAssembly> mDecoyAssemblies;
 
     @Nullable
-    private final SagaMatcher mSagaMatcher;
+    private final SagaSequenceMatcher mSagaMatcher;
 
     public JunctionGroupAssembler(
-            final AssemblyConfig config, final BamReader bamReader, @Nullable final SagaResource sagaResource,
+            final AssemblyConfig config, final BamReader bamReader, @Nullable final SagaMatcherFactory sagaMatcherFactory,
             final TaskQueue<JunctionGroup> junctionGroups, final ResultsWriter resultsWriter)
     {
         super("PrimaryAssembly");
@@ -81,12 +81,12 @@ public class JunctionGroupAssembler extends ThreadTask
         mCurrentJunctionGroup = null;
         mReadStats = new ReadStats();
 
-        mSagaMatcher = sagaResource == null ? null : new SagaMatcher(sagaResource);
+        mSagaMatcher = sagaMatcherFactory == null ? null : sagaMatcherFactory.createSequenceMatcher();
     }
 
     public static List<JunctionGroupAssembler> createThreadTasks(
             final List<JunctionGroup> junctionGroups, final List<BamReader> bamReaders, final AssemblyConfig config,
-            @Nullable final SagaResource sagaResource, final ResultsWriter resultsWriter, final int taskCount,
+            @Nullable final SagaMatcherFactory sagaMatcherFactory, final ResultsWriter resultsWriter, final int taskCount,
             final List<Thread> threadTasks)
     {
         List<JunctionGroupAssembler> primaryAssemblyTasks = Lists.newArrayList();
@@ -103,7 +103,7 @@ public class JunctionGroupAssembler extends ThreadTask
             BamReader bamReader = bamReaders.get(i);
 
             JunctionGroupAssembler junctionGroupAssembler = new JunctionGroupAssembler(
-                    config, bamReader, sagaResource, taskQueue, resultsWriter);
+                    config, bamReader, sagaMatcherFactory, taskQueue, resultsWriter);
             primaryAssemblyTasks.add(junctionGroupAssembler);
             threadTasks.add(junctionGroupAssembler);
         }

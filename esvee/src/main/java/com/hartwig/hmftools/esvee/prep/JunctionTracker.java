@@ -49,7 +49,8 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.StartEndPair;
 import com.hartwig.hmftools.esvee.common.IndelCoords;
 import com.hartwig.hmftools.esvee.common.ReadIdTrimmer;
-import com.hartwig.hmftools.esvee.common.SagaMatcher;
+import com.hartwig.hmftools.esvee.common.saga.SagaLocationMatcher;
+import com.hartwig.hmftools.esvee.common.saga.SagaMatchByLocation;
 import com.hartwig.hmftools.esvee.prep.types.DiscordantStats;
 import com.hartwig.hmftools.esvee.prep.types.JunctionData;
 import com.hartwig.hmftools.esvee.prep.types.PrepRead;
@@ -58,7 +59,6 @@ import com.hartwig.hmftools.esvee.prep.types.ReadFilterType;
 import com.hartwig.hmftools.esvee.prep.types.ReadGroup;
 import com.hartwig.hmftools.esvee.prep.types.ReadGroupStatus;
 import com.hartwig.hmftools.esvee.prep.types.ReadType;
-import com.hartwig.hmftools.esvee.prep.types.RemoteJunction;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -89,7 +89,7 @@ public class JunctionTracker
     private final DiscordantStats mDiscordantStats;
 
     @Nullable
-    private final SagaMatcher mSagaMatcher;
+    private final SagaLocationMatcher mSagaMatcher;
 
     private final List<PerformanceCounter> mPerfCounters;
 
@@ -103,7 +103,7 @@ public class JunctionTracker
 
     public JunctionTracker(
             final ChrBaseRegion region, final PrepConfig config, final DepthTracker depthTracker, final HotspotCache hotspotCache,
-            @Nullable final SagaMatcher sagaMatcher)
+            @Nullable final SagaLocationMatcher sagaMatcher)
     {
         mRegion = region;
         mConfig = config;
@@ -864,7 +864,7 @@ public class JunctionTracker
     {
         for(JunctionData junction : mJunctions)
         {
-            SagaMatcher.MatchByLocation match = mSagaMatcher.matchByLocation(mRegion.chromosome(), junction.Position);
+            SagaMatchByLocation match = mSagaMatcher.match(mRegion.chromosome(), junction.Position);
             junction.setSagaMatch(match);
         }
     }

@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.esvee.prep;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
-
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_ORIENTATION;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION;
@@ -14,7 +11,6 @@ import static com.hartwig.hmftools.esvee.common.WriteType.PREP_JUNCTION;
 import static com.hartwig.hmftools.esvee.common.WriteType.PREP_READ;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.BAM_RECORD_SAMPLE_ID_TAG;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_EXACT_SUPPORT_FRAGS;
-import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_EXTRA_INFO;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_HOTSPOT_JUNCTION;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_INDEL_JUNCTION;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_JUNCTION_FRAGS;
@@ -32,7 +28,7 @@ import java.util.List;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
-import com.hartwig.hmftools.esvee.common.SagaMatcher;
+import com.hartwig.hmftools.esvee.common.saga.SagaMatchByLocation;
 import com.hartwig.hmftools.esvee.prep.types.JunctionData;
 import com.hartwig.hmftools.esvee.prep.types.PrepRead;
 import com.hartwig.hmftools.esvee.prep.types.ReadFilterType;
@@ -219,7 +215,7 @@ public class ResultsWriter
 
                 if(mConfig.SagaFastaFile != null)
                 {
-                    SagaMatcher.MatchByLocation sagaMatch = junctionData.sagaMatch();
+                    SagaMatchByLocation sagaMatch = junctionData.sagaMatch();
                     sj.add(sagaMatch == null ? "" : sagaMatch.variant().toString());
                 }
 

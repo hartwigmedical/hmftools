@@ -18,7 +18,8 @@ import com.hartwig.hmftools.common.bam.BamSlicer;
 import com.hartwig.hmftools.common.perf.PerformanceCounter;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.esvee.common.SagaMatcher;
+import com.hartwig.hmftools.esvee.common.saga.SagaLocationMatcher;
+import com.hartwig.hmftools.esvee.common.saga.SagaMatcherFactory;
 import com.hartwig.hmftools.esvee.prep.types.CombinedStats;
 import com.hartwig.hmftools.esvee.prep.types.PartitionStats;
 import com.hartwig.hmftools.esvee.prep.types.PrepRead;
@@ -63,7 +64,7 @@ public class PartitionSlicer
 
     public PartitionSlicer(
             final ChrBaseRegion region, final PrepConfig config, final List<SamReader> samReaders, final BamSlicer bamSlicer,
-            final SpanningReadCache spanningReadCache, @Nullable final SagaMatcher sagaMatcher, final ResultsWriter writer,
+            final SpanningReadCache spanningReadCache, @Nullable final SagaMatcherFactory sagaMatcherFactory, final ResultsWriter writer,
             final CombinedStats combinedStats)
     {
         mConfig = config;
@@ -74,6 +75,11 @@ public class PartitionSlicer
         mCombinedStats = combinedStats;
 
         mDepthTracker = new DepthTracker(new BaseRegion(mRegion.start(), mRegion.end()), DEPTH_WINDOW_SIZE);
+        ChrBaseRegion sagaMatchRegion = new ChrBaseRegion(
+                mRegion.chromosome(),
+                mRegion.start() - mReadFilters.config().observedFragLengthMax(),
+                mRegion.end() + mReadFilters.config().observedFragLengthMax());
+        SagaLocationMatcher sagaMatcher = sagaMatcherFactory == null ? null : sagaMatcherFactory.createLocationMatcher(sagaMatchRegion);
         mJunctionTracker = new JunctionTracker(mRegion, mConfig, mDepthTracker, mConfig.Hotspots, sagaMatcher);
 
         mSamReaders = samReaders;

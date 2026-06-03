@@ -47,7 +47,8 @@ import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.RemoteRegion;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
-import com.hartwig.hmftools.esvee.common.SagaMatcher;
+import com.hartwig.hmftools.esvee.common.saga.SagaMatchBySequence;
+import com.hartwig.hmftools.esvee.common.saga.SagaSequenceMatcher;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -55,10 +56,10 @@ public class JunctionAssembler
 {
     private Junction mJunction;
     private final RefGenomeInterface mRefGenome;
-    private final SagaMatcher mSagaMatcher;
+    private final SagaSequenceMatcher mSagaMatcher;
     private final List<Read> mNonJunctionReads;
 
-    public JunctionAssembler(final Junction junction, final RefGenomeInterface refGenome, @Nullable final SagaMatcher sagaMatcher)
+    public JunctionAssembler(final Junction junction, final RefGenomeInterface refGenome, @Nullable final SagaSequenceMatcher sagaMatcher)
     {
         mJunction = junction;
         mRefGenome = refGenome;
@@ -599,7 +600,7 @@ public class JunctionAssembler
             return false;
 
         int junctionOffset = mJunction.isForward() ? assembly.refBaseLength() : assembly.baseLength() - assembly.refBaseLength();
-        SagaMatcher.MatchBySequence match = mSagaMatcher.matchBySequence(assembly.bases(), List.of(junctionOffset));
+        SagaMatchBySequence match = mSagaMatcher.matchBySequence(assembly.bases(), List.of(junctionOffset));
         assembly.setSagaMatch(match);
         return match != null;
     }
