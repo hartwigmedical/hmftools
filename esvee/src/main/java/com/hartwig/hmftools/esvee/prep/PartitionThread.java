@@ -70,10 +70,19 @@ public class PartitionThread extends Thread
     {
         while(true)
         {
+            ChrBaseRegion partition;
             try
             {
-                ChrBaseRegion partition = mPartitions.remove();
+                partition = mPartitions.remove();
+            }
+            catch(NoSuchElementException e)
+            {
+                SV_LOGGER.trace("all tasks complete");
+                break;
+            }
 
+            try
+            {
                 int processedCount = mPartitionCount - mPartitions.size();
 
                 PartitionSlicer slicer = new PartitionSlicer(
@@ -85,11 +94,6 @@ public class PartitionThread extends Thread
                 {
                     SV_LOGGER.debug("chromosome({}) processed {} partitions", mChromosome, mPartitions.size());
                 }
-            }
-            catch(NoSuchElementException e)
-            {
-                SV_LOGGER.trace("all tasks complete");
-                break;
             }
             catch(Throwable e)
             {
