@@ -64,7 +64,7 @@ public class AlignmentWriter
 
             if(mSagaEnabled)
             {
-                sj.add("SagaMatchVariant");
+                sj.add("SagaMatch");
                 sj.add("SagaMatchCigar");
             }
 

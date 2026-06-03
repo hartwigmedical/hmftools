@@ -91,7 +91,7 @@ public class AssemblyWriter
 
             if(mConfig.SagaFastaFile != null)
             {
-                sj.add("SagaMatchVariant");
+                sj.add("SagaMatch");
                 sj.add("SagaMatchCigar");
             }
 
