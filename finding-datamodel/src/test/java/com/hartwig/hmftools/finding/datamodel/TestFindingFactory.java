@@ -65,7 +65,7 @@ public class TestFindingFactory
     @NotNull
     public static QcBuilder qcBuilder()
     {
-        return QcBuilder.builder().status(new TreeSet<>()).germlineAberrations(new TreeSet<>());
+        return QcBuilder.builder().isPass(true).errors(new TreeSet<>()).warnings(new TreeSet<>()).germlineAberrations(new TreeSet<>());
     }
 
     @NotNull
@@ -134,7 +134,7 @@ public class TestFindingFactory
     }
 
     @NotNull
-    public static SmallVariantBuilder variantBuilder()
+    public static SmallVariantBuilder smallVariantBuilder()
     {
         return SmallVariantBuilder.builder()
                 .driver(driverFields(true, DriverInterpretation.HIGH))
@@ -148,7 +148,7 @@ public class TestFindingFactory
                 .minorAlleleCopyNumber(0D)
                 .variantCopyNumber(0D)
                 .hotspot(SmallVariant.HotspotType.NON_HOTSPOT)
-                .allelicDepth(depthBuilder().build())
+                .allelicDepth(allelicDepthBuilder().build())
                 .subclonalLikelihood(0D)
                 .biallelic(false)
                 .biallelicLikelihood(0D)
@@ -160,7 +160,7 @@ public class TestFindingFactory
     }
 
     @NotNull
-    public static SmallVariantAllelicDepthBuilder depthBuilder()
+    public static SmallVariantAllelicDepthBuilder allelicDepthBuilder()
     {
         return SmallVariantAllelicDepthBuilder.builder().totalReadCount(0).alleleReadCount(0);
     }
@@ -271,6 +271,16 @@ public class TestFindingFactory
     }
 
     @NotNull
+    public static ChromosomeArmCopyNumberBuilder chromosomeArmCopyNumberBuilder()
+    {
+        return ChromosomeArmCopyNumberBuilder.builder()
+                .driver(driverFields(true, DriverInterpretation.HIGH))
+                .chromosome("")
+                .arm(ChromosomeArmCopyNumber.ChromosomeArm.P)
+                .type(ChromosomeArmCopyNumber.Type.GAIN);
+    }
+
+    @NotNull
     public static HlaAlleleBuilder hlaAlleleBuilder()
     {
         return HlaAlleleBuilder.builder()
@@ -292,6 +302,20 @@ public class TestFindingFactory
                 .somaticInframeIndel(0D);
     }
 
+    @NotNull
+    public static PharmacoGenotypeBuilder pharmacoGenotypeBuilder()
+    {
+        return PharmacoGenotypeBuilder.builder()
+                .findingKey("")
+                .gene("")
+                .allele("")
+                .function("")
+                .haplotype("")
+                .linkedDrugs("")
+                .urlPrescriptionInfo("");
+    }
+
+    @NotNull
     public static DriverFields driverFields(boolean reported, DriverInterpretation interpretation)
     {
         return driverFieldsBuilder()
@@ -307,13 +331,17 @@ public class TestFindingFactory
                 .driverSource(DriverSource.SOMATIC);
     }
 
-    static FindingStatus findingsStatus(FindingStatus.Status status)
+    public static FindingStatus findingsStatus(FindingStatus.Status status)
+    {
+        return findingsStatusBuilder(status).build();
+    }
+
+    public static FindingStatusBuilder findingsStatusBuilder(FindingStatus.Status status)
     {
         return FindingStatusBuilder.builder()
                 .status(status)
                 .errors(new TreeSet<>())
-                .warnings(new TreeSet<>())
-                .build();
+                .warnings(new TreeSet<>());
     }
 
     public static ThresholdValue thresholdValue(double value)

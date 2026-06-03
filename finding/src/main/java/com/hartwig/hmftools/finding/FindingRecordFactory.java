@@ -34,6 +34,7 @@ import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
 import com.hartwig.hmftools.datamodel.purple.Genes;
 import com.hartwig.hmftools.datamodel.purple.PurpleFit;
 import com.hartwig.hmftools.datamodel.purple.PurpleMicrosatelliteStatus;
+import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleTumorMutationalStatus;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
@@ -111,7 +112,7 @@ public class FindingRecordFactory
 
         Qc qc = createQc(purple);
 
-        FindingStatus findingStatus = FindingsStatusFactory.toFindingsStatus(qc.status());
+        FindingStatus findingStatus = FindingsStatusFactory.toFindingsStatus(qc.errors(), qc.warnings());
 
         boolean hasRefSample = orangeRecord.refSample() != null;
 
@@ -149,8 +150,8 @@ public class FindingRecordFactory
                         smallVariants,
                         somaticGainDeletions,
                         germlineHomozygousDisruptions,
-                        findingStatus,
-                        metaProperties.potentialMSIGenes()))
+                        findingStatus
+                ))
                 .tumorMutationalLoad(createTumorMutationalLoad(purple, findingStatus))
                 .tumorMutationalBurden(createTumorMutationalBurden(purple, findingStatus))
                 .chromosomeArmCopyNumbers(cnPerChromosome.toArmCopyNumberFindings(findingStatus))
@@ -162,8 +163,8 @@ public class FindingRecordFactory
                         somaticGainDeletions,
                         germlineHomozygousDisruptions,
                         findingStatus, experimentType,
-                        hasRefSample,
-                        metaProperties.potentialHRDGenes()))
+                        hasRefSample
+                ))
                 .predictedTumorOrigin(createPredictedTumorOrigin(orangeRecord.cuppa(), orangeRecord.plots(), experimentType, findingStatus))
                 .hlaAlleles(HlaAlleleFactory.createHlaAllelesFindings(orangeRecord, findingStatus))
                 .pharmacoGenotypes(createPharmacoGenotypesFindings(orangeRecord.peach(), findingStatus))
@@ -178,28 +179,12 @@ public class FindingRecordFactory
                 .pipelineVersion(orangeRecord.pipelineVersion())
                 .sampleId(orangeRecord.sampleId())
                 .samplingDate(orangeRecord.samplingDate())
-                .potentialHRDGenes(new TreeSet<>(Genes.HRD_GENES))
-                .potentialMSIGenes(new TreeSet<>(Genes.MSI_GENES))
                 .build();
     }
 
     private static Qc createQc(PurpleRecord purple)
     {
         PurpleFit purpleFit = purple.fit();
-        SortedSet<Qc.QCStatus> qcStatuses = purpleFit.qc().status().stream()
-                .map(o -> switch(o)
-                {
-                    case PASS -> Qc.QCStatus.PASS;
-                    case WARN_DELETED_GENES -> Qc.QCStatus.WARN_DELETED_GENES;
-                    case WARN_HIGH_COPY_NUMBER_NOISE -> Qc.QCStatus.WARN_HIGH_COPY_NUMBER_NOISE;
-                    case WARN_GENDER_MISMATCH -> Qc.QCStatus.WARN_GENDER_MISMATCH;
-                    case WARN_LOW_PURITY -> Qc.QCStatus.WARN_LOW_PURITY;
-                    case WARN_TINC -> Qc.QCStatus.WARN_TUMOR_IN_NORMAL_CONTAMINATION;
-                    case FAIL_CONTAMINATION -> Qc.QCStatus.FAIL_CONTAMINATION;
-                    case FAIL_NO_TUMOR -> Qc.QCStatus.FAIL_NO_TUMOR;
-                    case FAIL_TINC -> Qc.QCStatus.FAIL_TUMOR_IN_NORMAL_CONTAMINATION;
-                })
-                .collect(Collectors.toCollection(TreeSet::new));
         SortedSet<Qc.GermlineAberration> germlineAberrations = purpleFit.qc().germlineAberrations().stream()
                 .map(o -> switch(o)
                 {
@@ -216,7 +201,9 @@ public class FindingRecordFactory
                 .collect(Collectors.toCollection(TreeSet::new));
 
         return QcBuilder.builder()
-                .status(qcStatuses)
+                .isPass(purpleFit.qc().status().contains(PurpleQCStatus.PASS))
+                .errors(QcStatusFactory.toErrors(purpleFit.qc().status()))
+                .warnings(QcStatusFactory.toWarnings(purpleFit.qc().status()))
                 .germlineAberrations(germlineAberrations)
                 .amberMeanDepth(purpleFit.qc().amberMeanDepth())
                 .contamination(purpleFit.qc().contamination())
@@ -357,8 +344,7 @@ public class FindingRecordFactory
             List<Disruption> germlineHomozygousDisruptions,
             FindingStatus findingStatus,
             ExperimentType experimentType,
-            boolean hasRefSample,
-            Set<String> potentialHRDGenes)
+            boolean hasRefSample)
     {
         if(chord != null)
         {
@@ -367,7 +353,7 @@ public class FindingRecordFactory
             SortedSet<String> drivingGenes = isPresent ? GeneListUtil.genes(smallVariants,
                     gainDeletions,
                     germlineHomozygousDisruptions,
-                    potentialHRDGenes) : new TreeSet<>();
+                    Genes.HRD_GENES) : new TreeSet<>();
             return FindingItemBuilder.<HomologousRecombination>builder()
                     .status(findingStatus)
                     .finding(HomologousRecombinationBuilder.builder()
@@ -417,8 +403,7 @@ public class FindingRecordFactory
     private static FindingItem<MicrosatelliteStability> createMicrosatelliteStability(PurpleRecord purple,
             DriverFindingList<SmallVariant> smallVariants, DriverFindingList<GainDeletion> gainDeletions,
             List<Disruption> germlineHomozygousDisruptions,
-            FindingStatus findingStatus,
-            Set<String> potentialMSIGenes)
+            FindingStatus findingStatus)
     {
         MicrosatelliteStability.Status microsatelliteStatus =
                 microsatelliteStatus(purple.characteristics().microsatelliteStatus());
@@ -426,7 +411,7 @@ public class FindingRecordFactory
         SortedSet<String> drivingGenes = isPresent ? GeneListUtil.genes(smallVariants,
                 gainDeletions,
                 germlineHomozygousDisruptions,
-                potentialMSIGenes) : new TreeSet<>();
+                Genes.MSI_GENES) : new TreeSet<>();
 
         return FindingItemBuilder.<MicrosatelliteStability>builder()
                 .status(FindingUtil.somaticStatus(findingStatus))
