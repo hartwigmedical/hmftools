@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
@@ -43,7 +45,7 @@ final class GainDeletionFactory
         // we are going to add somatic LOH to purple. For this backported version we will reverse engineer how they might look
         gainDeletions.addAll(somaticLoh(purple.suspectGeneCopyNumbersWithLOH(), cnPerChromosome));
 
-        gainDeletions.addAll(ClinicalRelevantGeneCopyNumber(purple.allSomaticGeneCopyNumbers(), cnPerChromosome, findingConfig));
+        gainDeletions.addAll(ClinicalRelevantGeneCopyNumber(purple.allSomaticGeneCopyNumbers(), cnPerChromosome, findingConfig, gainDeletions));
         gainDeletions.sort(GainDeletion.COMPARATOR);
 
         return DriverFindingListBuilder.<GainDeletion>builder()
@@ -257,45 +259,50 @@ final class GainDeletionFactory
 
     @NotNull
     public static List<GainDeletion> ClinicalRelevantGeneCopyNumber(@NotNull List<PurpleGeneCopyNumber> clinicalRelevantGeneCopyNumbers,
-            ArmCopyNumberFactory cnPerChromosome, FindingConfig findingConfig)
+            ArmCopyNumberFactory cnPerChromosome, FindingConfig findingConfig, @NotNull List<GainDeletion> gainDeletions)
     {
         return clinicalRelevantGeneCopyNumbers.stream()
-                .map(o -> ClinicalRelevantGeneCopyNumber(o, cnPerChromosome, findingConfig))
+                .map(o -> ClinicalRelevantGeneCopyNumber(o, cnPerChromosome, findingConfig, gainDeletions))
                 .filter(Objects::nonNull).toList();
     }
 
     @Nullable
     private static GainDeletion ClinicalRelevantGeneCopyNumber(@NotNull PurpleGeneCopyNumber clinicalRelevantGeneCopyNumber,
-            ArmCopyNumberFactory cnPerChromosome, FindingConfig findingConfig)
+            ArmCopyNumberFactory cnPerChromosome, FindingConfig findingConfig, List<GainDeletion> gainDeletions)
     {
         if(findingConfig.findClinicalRelevantGeneCopyNumber(clinicalRelevantGeneCopyNumber.gene()))
         {
-            return GainDeletionBuilder.builder()
-                    .driver(DriverFieldsBuilder.builder()
-                            .findingKey(FindingKeys.gainDeletion(DriverSource.SOMATIC,
-                                    clinicalRelevantGeneCopyNumber.gene(),
-                                    PurpleDriverType.UNKNOWN,
-                                    clinicalRelevantGeneCopyNumber.isCanonical(),
-                                    clinicalRelevantGeneCopyNumber.transcript()))
-                            .driverSource(DriverSource.SOMATIC)
-                            .reportedStatus(ReportedStatus.CANDIDATE)
-                            .driverInterpretation(DriverInterpretation.LOW) //TODO; should this be low or unknown?
-                            .driverLikelihood(0)
-                            .build()
-                    )
-                    .chromosome(clinicalRelevantGeneCopyNumber.chromosome())
-                    .chromosomeBand(clinicalRelevantGeneCopyNumber.chromosomeBand())
-                    .gene(clinicalRelevantGeneCopyNumber.gene())
-                    .transcript(clinicalRelevantGeneCopyNumber.transcript())
-                    .isCanonical(clinicalRelevantGeneCopyNumber.isCanonical())
-                    .somaticType(GainDeletion.Type.NONE)
-                    .germlineType(GainDeletion.Type.NONE)
-                    .geneExtent(GainDeletion.GeneExtent.UNKNOWN)
-                    .tumorMinCopyNumber(clinicalRelevantGeneCopyNumber.minCopyNumber())
-                    .tumorMaxCopyNumber(clinicalRelevantGeneCopyNumber.maxCopyNumber())
-                    .tumorMinMinorAlleleCopyNumber(clinicalRelevantGeneCopyNumber.minMinorAlleleCopyNumber())
-                    .chromosomeArmCopyNumber(cnPerChromosome.chromosomeArmCopyNumber(clinicalRelevantGeneCopyNumber.chromosome(), clinicalRelevantGeneCopyNumber.chromosomeBand()))
-                    .build();
+            Set<String> reportableGainDeletionsGenes =
+                    gainDeletions.stream().map(GainDeletion::gene).collect(Collectors.toSet());
+            if(!reportableGainDeletionsGenes.contains(clinicalRelevantGeneCopyNumber.gene()))
+            {
+                return GainDeletionBuilder.builder()
+                        .driver(DriverFieldsBuilder.builder()
+                                .findingKey(FindingKeys.gainDeletion(DriverSource.SOMATIC,
+                                        clinicalRelevantGeneCopyNumber.gene(),
+                                        PurpleDriverType.UNKNOWN,
+                                        clinicalRelevantGeneCopyNumber.isCanonical(),
+                                        clinicalRelevantGeneCopyNumber.transcript()))
+                                .driverSource(DriverSource.SOMATIC)
+                                .reportedStatus(ReportedStatus.CANDIDATE)
+                                .driverInterpretation(DriverInterpretation.LOW) //TODO; should this be low or unknown?
+                                .driverLikelihood(0)
+                                .build()
+                        )
+                        .chromosome(clinicalRelevantGeneCopyNumber.chromosome())
+                        .chromosomeBand(clinicalRelevantGeneCopyNumber.chromosomeBand())
+                        .gene(clinicalRelevantGeneCopyNumber.gene())
+                        .transcript(clinicalRelevantGeneCopyNumber.transcript())
+                        .isCanonical(clinicalRelevantGeneCopyNumber.isCanonical())
+                        .somaticType(GainDeletion.Type.NONE)
+                        .germlineType(GainDeletion.Type.NONE)
+                        .geneExtent(GainDeletion.GeneExtent.UNKNOWN)
+                        .tumorMinCopyNumber(clinicalRelevantGeneCopyNumber.minCopyNumber())
+                        .tumorMaxCopyNumber(clinicalRelevantGeneCopyNumber.maxCopyNumber())
+                        .tumorMinMinorAlleleCopyNumber(clinicalRelevantGeneCopyNumber.minMinorAlleleCopyNumber())
+                        .chromosomeArmCopyNumber(cnPerChromosome.chromosomeArmCopyNumber(clinicalRelevantGeneCopyNumber.chromosome(), clinicalRelevantGeneCopyNumber.chromosomeBand()))
+                        .build();
+            }
         }
         return null;
     }

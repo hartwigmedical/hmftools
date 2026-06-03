@@ -209,7 +209,7 @@ public class CurationApplierTest
         assertEquals(ReportedStatus.CANDIDATE, result.fusions().findings().get(0).reportedStatus());
     }
 
-    private static DriverFields driverFields(String findingKey, ReportedStatus reportedStatus)
+    public static DriverFields driverFields(String findingKey, ReportedStatus reportedStatus)
     {
         return TestFindingFactory.driverFieldsBuilder()
                 .findingKey(findingKey)
