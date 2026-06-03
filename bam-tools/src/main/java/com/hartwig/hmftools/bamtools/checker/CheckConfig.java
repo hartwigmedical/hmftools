@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.bamtools.checker;
 
+import static com.hartwig.hmftools.bamtools.checker.CheckParams.DEFAULT_MIN_SUPP_ALIGNMENT_SCORE;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BAM_FILE;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BAM_FILE_DESC;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
@@ -50,13 +51,13 @@ public class CheckConfig
     public final String BamToolPath;
     public final boolean SkipUnmapped;
     public final boolean ReverseBqsr;
-    public final boolean ConvertHardClips;
-
-    public final boolean WriteIncompleteFragments;
-    public final int MaxWriteIncompleteFragments;
     public final boolean DropIncompleteFragments;
 
+    public static CheckParams Params = new CheckParams(); // global since used per-fragment
+
     // debug
+    public final boolean WriteIncompleteFragments;
+    public final int MaxWriteIncompleteFragments;
     public final SpecificRegions SpecificChrRegions;
     public final List<String> LogReadIds;
     public final boolean PerfDebug;
@@ -65,6 +66,7 @@ public class CheckConfig
     public static final String SKIP_UNMAPPED = "skip_unmapped";
     public static final String REVERSE_BQSR = "bqsr_reverse";
     public static final String CONVERT_HARD_CLIPS = "convert_hard_clips";
+    public static final String MIN_SUPP_ALIGNMENT_SCORE = "min_supp_as";
     public static final String WRITE_INCOMPLETE_FRAGS = "write_incompletes";
     public static final String MAX_WRITE_INCOMPLETE_FRAGS = "max_write_incompletes";
     public static final String DROP_INCOMPLETE_FRAGS = "drop_incompletes";
@@ -96,6 +98,9 @@ public class CheckConfig
 
         PartitionSize = configBuilder.getInteger(PARTITION_SIZE);
 
+        Params.MinSuppAlignmentScore = configBuilder.getInteger(MIN_SUPP_ALIGNMENT_SCORE);
+        Params.ConvertHardClips = configBuilder.hasFlag(CONVERT_HARD_CLIPS);
+
         SpecificChrRegions = new SpecificRegions();
         loadSpecificRegionsConfig(configBuilder, SpecificChrRegions.Chromosomes, SpecificChrRegions.Regions);
 
@@ -105,7 +110,6 @@ public class CheckConfig
         LogReadIds = parseLogReadIds(configBuilder);
 
         ReverseBqsr = configBuilder.hasFlag(REVERSE_BQSR);
-        ConvertHardClips = configBuilder.hasFlag(CONVERT_HARD_CLIPS);
 
         PerfDebug = configBuilder.hasFlag(PERF_DEBUG);
         SkipUnmapped = configBuilder.hasFlag(SKIP_UNMAPPED);
@@ -145,11 +149,16 @@ public class CheckConfig
         addRefGenomeFile(configBuilder, true);;
 
         configBuilder.addInteger(PARTITION_SIZE, "Partition size", DEFAULT_CHR_PARTITION_SIZE);
-        configBuilder.addInteger(CFG_LOG_READ_COUNT, "Log partition processed read count frequency", LOG_READ_COUNT);
-        configBuilder.addInteger(MAX_WRITE_INCOMPLETE_FRAGS, "Max incomplete fragments to write (0 means unlimited)", 0);
+
+        configBuilder.addInteger(
+                MIN_SUPP_ALIGNMENT_SCORE, "Min required supplmentary alignment score (matching BWA)",
+                DEFAULT_MIN_SUPP_ALIGNMENT_SCORE);
 
         configBuilder.addFlag(REVERSE_BQSR, "Reverse BQSR");
         configBuilder.addFlag(CONVERT_HARD_CLIPS, "Convert hard to soft-clips");
+
+        configBuilder.addInteger(CFG_LOG_READ_COUNT, "Log partition processed read count frequency", LOG_READ_COUNT);
+        configBuilder.addInteger(MAX_WRITE_INCOMPLETE_FRAGS, "Max incomplete fragments to write (0 means unlimited)", 0);
         configBuilder.addFlag(PERF_DEBUG, PERF_DEBUG_DESC);
         configBuilder.addFlag(SKIP_UNMAPPED, "Skip full unmapped reads");
         configBuilder.addFlag(WRITE_INCOMPLETE_FRAGS, "Write incomplete fragments to TSV");

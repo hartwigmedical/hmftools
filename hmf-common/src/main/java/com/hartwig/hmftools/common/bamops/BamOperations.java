@@ -99,8 +99,17 @@ public final class BamOperations
         return true;
     }
 
+    public static final String SAMBAMBA_SORT_MEM_PER_THREAD = "2G";
+
     public static boolean sortBam(
             final BamToolName toolName, final String toolPath, final String inputBam, final String outputBam, final int threads)
+    {
+        return sortBam(toolName, toolPath, inputBam, outputBam, threads, SAMBAMBA_SORT_MEM_PER_THREAD);
+    }
+
+    public static boolean sortBam(
+            final BamToolName toolName, final String toolPath, final String inputBam, final String outputBam, final int threads,
+            final String memoryPerThread)
     {
         List<String> commandArgs = Lists.newArrayList();
 
@@ -109,8 +118,11 @@ public final class BamOperations
         addThreadsArg(toolName, commandArgs, threads);
 
         // default memory per thread according to samtools doco is 768MB, could configure as a function of max heap used by calling app
-        // commandArgs.add("-m");
-        // commandArgs.add("1G");
+        if(toolName == BamToolName.SAMBAMBA)
+        {
+            commandArgs.add("-m");
+            commandArgs.add(memoryPerThread);
+        }
 
         // commandArgs.add("-T");
         // commandArgs.add("tmp"); // these are default

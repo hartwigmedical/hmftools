@@ -5,7 +5,9 @@ import static java.lang.Math.max;
 import static com.hartwig.hmftools.bamtools.checker.CheckConfig.LOG_READ_COUNT;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.common.bam.BamSlicer.createIntervals;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.BQSR_ORIGINAL_QUALS;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.getAlignmentEndFromCigar;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
 import static com.hartwig.hmftools.common.genome.chromosome.Chromosome.isAltRegionContig;
@@ -155,6 +157,16 @@ public class PartitionChecker
             BT_LOGGER.info("region({}) processed reads({}) cached fragments({})", mRegion, mReadCount, mFragmentMap.size());
         }
 
+        if(read.getSupplementaryAlignmentFlag())
+        {
+            Integer alignmentScore = read.getIntegerAttribute(ALIGNMENT_SCORE_ATTRIBUTE);
+            if(alignmentScore != null && alignmentScore < CheckConfig.Params.MinSuppAlignmentScore)
+            {
+                ++mStats.SuppsDropped;
+                return;
+            }
+        }
+
         if(mConfig.ReverseBqsr)
             reverseBqsrQuals(read);
 
@@ -219,7 +231,7 @@ public class PartitionChecker
             fragment.addRead(read);
         }
 
-        if(mConfig.ConvertHardClips && !read.getSupplementaryAlignmentFlag())
+        if(CheckConfig.Params.ConvertHardClips && !read.getSupplementaryAlignmentFlag())
             fragment.cachePrimaryBaseInfo(read);
 
         List<SAMRecord> completeReads = fragment.extractCompleteReads();

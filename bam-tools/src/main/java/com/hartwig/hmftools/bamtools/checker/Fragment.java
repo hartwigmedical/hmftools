@@ -5,15 +5,20 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.READ_GROUP_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SupplementaryReadData.ALIGNMENTS_DELIM;
 
 import static htsjdk.samtools.CigarOperator.H;
+import static htsjdk.samtools.CigarOperator.M;
 import static htsjdk.samtools.CigarOperator.S;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.StringJoiner;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bam.BamReadLite;
+import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.utils.Arrays;
@@ -106,10 +111,50 @@ public class Fragment
                 mSecondPrimaryCigar = read.getCigarString();
             }
 
-            List<SupplementaryReadData> suppDataList = SupplementaryReadData.extractAlignments(read);
+            checkSupplementaryData(read);
+        }
+    }
 
-            if(suppDataList != null)
-                mExpectedSupplementaryCount += suppDataList.size();
+    private void checkSupplementaryData(final SAMRecord read)
+    {
+        // filter out supps with low alignment scores, rebuilding the SA tag if required
+        List<SupplementaryReadData> suppDataList = SupplementaryReadData.extractAlignments(read);
+
+        if(suppDataList == null)
+            return;
+
+        List<SupplementaryReadData> validSuppDataList = Lists.newArrayListWithExpectedSize(suppDataList.size());
+
+        for(SupplementaryReadData suppData : suppDataList)
+        {
+            Cigar suppCigar = CigarUtils.cigarFromStr(suppData.Cigar);
+            int alignedBases = suppCigar.getCigarElements().stream()
+                    .filter(x -> x.getOperator() == M).mapToInt(x -> x.getLength()).sum();
+
+            if(alignedBases >= CheckConfig.Params.MinSuppAlignmentScore)
+            {
+                validSuppDataList.add(suppData);
+            }
+        }
+
+        if(validSuppDataList.isEmpty())
+        {
+            read.setAttribute(SUPPLEMENTARY_ATTRIBUTE, null);
+            return;
+        }
+
+        mExpectedSupplementaryCount += validSuppDataList.size();
+
+        if(validSuppDataList.size() < suppDataList.size())
+        {
+            StringJoiner sj = new StringJoiner(ALIGNMENTS_DELIM);
+
+            for(SupplementaryReadData suppData : validSuppDataList)
+            {
+                sj.add(suppData.asSamTag());
+            }
+
+            read.setAttribute(SUPPLEMENTARY_ATTRIBUTE, sj.toString());
         }
     }
 
@@ -121,7 +166,8 @@ public class Fragment
         return hasPrimaryInfo() && mExpectedSupplementaryCount == mReceivedSupplementaryCount;
     }
 
-    public synchronized boolean mergeFragment(final Fragment fragment, final SAMFileHeader samFileHeader, final List<SAMRecord> completeReads)
+    public synchronized boolean mergeFragment(
+            final Fragment fragment, final SAMFileHeader samFileHeader, final List<SAMRecord> completeReads)
     {
         // copy reads or primary cigar info if the fragment has already written the primaries
         transfer(fragment);
@@ -248,7 +294,8 @@ public class Fragment
         }
     }
 
-    private static void convertHardClips(final SAMRecord read, final byte[] readBases, final byte[] baseQuals, final boolean negOrientation)
+    @VisibleForTesting
+    public static void convertHardClips(final SAMRecord read, final byte[] readBases, final byte[] baseQuals, final boolean negOrientation)
     {
         List<CigarElement> cigarElements = read.getCigar().getCigarElements();
         List<CigarElement> newCigarElements = Lists.newArrayListWithExpectedSize(cigarElements.size());

@@ -179,6 +179,8 @@ public class BamChecker
         partitionThreads.clear();
         System.gc();
 
+        // clean-up unsorted BAMs
+
         List<Callable<Void>> threadTasks = sortTasks.stream().collect(Collectors.toList());
 
         if(!TaskExecutor.executeTasks(threadTasks, mConfig.Threads))
@@ -186,6 +188,8 @@ public class BamChecker
             BT_LOGGER.error("failed to sort {} BAMs", sortedBams.size());
             System.exit(1);
         }
+
+        deleteInterimBams(unsortedBams, true);
 
         // merge sorted BAMs
         String finalBam = mConfig.OutputBam != null ? mConfig.OutputBam : mConfig.formFilename("final", BAM_EXTENSION);
@@ -208,15 +212,20 @@ public class BamChecker
         }
 
         // clean-up interim BAMs
+        deleteInterimBams(sortedBams, true);
+    }
+
+    private void deleteInterimBams(final List<String> bamFiles, boolean deleteIndex)
+    {
         try
         {
-            for(int i = 0; i < sortedBams.size(); ++i)
+            for(int i = 0; i < bamFiles.size(); ++i)
             {
-                Files.deleteIfExists(Paths.get(unsortedBams.get(i)));
+                String bamFile = bamFiles.get(i);
+                Files.deleteIfExists(Paths.get(bamFile));
 
-                String sortedBamFilename = sortedBams.get(i);
-                Files.deleteIfExists(Paths.get(sortedBamFilename));
-                Files.deleteIfExists(Paths.get(sortedBamFilename + BAM_INDEX_EXTENSION));
+                if(deleteIndex)
+                    Files.deleteIfExists(Paths.get(bamFile + BAM_INDEX_EXTENSION));
             }
         }
         catch(IOException e)
@@ -241,7 +250,7 @@ public class BamChecker
         public Void call()
         {
             BamToolName toolName = fromPath(mConfig.BamToolPath);
-            BamOperations.sortBam(toolName, mConfig.BamToolPath, mInputBam, mOutputBam, 1);
+            BamOperations.sortBam(toolName, mConfig.BamToolPath, mInputBam, mOutputBam, 1, "1G");
             return null;
         }
     }

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.bamtools.checker;
 
+import static com.hartwig.hmftools.bamtools.checker.Fragment.convertHardClips;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
@@ -7,10 +8,13 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.READ_GROUP_ATTRIBUT
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.XS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SupplementaryReadData.SUPP_POS_STRAND;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildBaseQuals;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+
+import static htsjdk.samtools.CigarOperator.S;
 
 import java.util.List;
 
@@ -19,6 +23,7 @@ import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 
+import org.junit.After;
 import org.junit.Test;
 
 import htsjdk.samtools.SAMRecord;
@@ -28,6 +33,11 @@ public class BamCheckerTest
     private static final ReadIdGenerator READ_ID_GENERATOR = new ReadIdGenerator();
     private static final String TEST_READ_BASES = "ACGTACGTACGTACGTACGT";
     private static final String TEST_CIGAR = "20M";
+
+    public BamCheckerTest()
+    {
+        CheckConfig.Params.MinSuppAlignmentScore = 10;
+    }
 
     @Test
     public void testBasicFragment()
@@ -358,5 +368,25 @@ public class BamCheckerTest
             assertNotNull(otherAttribute);
             assertEquals(otherAttribute, read.getAttribute(attribute.tag));
         }
+    }
+
+    @Test
+    public void testHardClippedSupplementaries()
+    {
+        String suppReadBases = "A".repeat(30);
+        String primaryReadBases = "A".repeat(60);
+        byte[] primaryReadQuals = buildBaseQuals(primaryReadBases.length(), 30);
+
+        SAMRecord read = SamRecordTestUtils.createSamRecord(
+                READ_ID_GENERATOR.nextId(), CHR_1, 100, suppReadBases, "10H30M20H", CHR_1, 300,
+                false, false, new SupplementaryReadData(CHR_1, 200, SUPP_POS_STRAND, TEST_CIGAR, 60));
+
+        convertHardClips(read, primaryReadBases.getBytes(), primaryReadQuals, false);
+
+        assertEquals(3, read.getCigar().getCigarElements().size());
+        assertTrue(read.getCigar().getCigarElements().get(0).getOperator() == S);
+        assertTrue(read.getCigar().getCigarElements().get(2).getOperator() == S);
+
+        assertEquals(primaryReadBases.getBytes().length, read.getReadBases().length);
     }
 }
