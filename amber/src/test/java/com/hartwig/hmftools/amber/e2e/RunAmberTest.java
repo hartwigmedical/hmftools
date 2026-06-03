@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.amber.e2e;
 
 import static com.hartwig.hmftools.amber.AmberConfig.LOCI_FILE;
-import static com.hartwig.hmftools.amber.AmberConfig.USE_OLD_SEGMENTER;
 import static com.hartwig.hmftools.amber.AmberConstants.TARGET_REGION_SITE_BUFFER;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._1;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._2;
@@ -74,13 +73,13 @@ public class RunAmberTest
     public void twoChromosomes() throws Exception
     {
         AmberScenario scenario = new AmberScenario("TwoChromosomes");
-        runAmberInWholeGenomeMode(scenario, false);
+        runAmberInWholeGenomeMode(scenario);
         // Check that baf.tsv file.
         scenario.checkResults(Results);
 
         // Check the segmentation file.
         String segmentsFile = PCFFile.generateBAFFilename(OutputDir.getAbsolutePath(), TumorSample);
-        Map<Chromosome,List<PCFPosition>> pcfData = PCFFile.readPositions(WINDOW_SIZE, PCFSource.TUMOR_BAF, segmentsFile);
+        Map<Chromosome, List<PCFPosition>> pcfData = PCFFile.readPositions(WINDOW_SIZE, PCFSource.TUMOR_BAF, segmentsFile);
         assertEquals(2, pcfData.keySet().size());
         List<PCFPosition> chr1Positions = pcfData.get(_1);
         // The R program that does segmentation puts a couple of spurious segments
@@ -93,7 +92,7 @@ public class RunAmberTest
     public void newSegmenter() throws Exception
     {
         AmberScenario scenario = new AmberScenario("TwoChromosomes");
-        runAmberInWholeGenomeMode(scenario, true);
+        runAmberInWholeGenomeMode(scenario);
 
         // Check the segmentation file.
         String segmentsFile = PCFFile.generateBAFFilename(OutputDir.getAbsolutePath(), TumorSample);
@@ -139,7 +138,7 @@ public class RunAmberTest
     public void handleEmptyData() throws Exception
     {
         AmberScenario scenario = new AmberScenario("NoBafs");
-        runAmberInWholeGenomeMode(scenario, true);
+        runAmberInWholeGenomeMode(scenario);
 
         // Check the segmentation file.
         String segmentsFile = PCFFile.generateBAFFilename(OutputDir.getAbsolutePath(), TumorSample);
@@ -149,15 +148,15 @@ public class RunAmberTest
 
     private void runAmberInTargetedMode(AmberScenario scenario, String panelFileName, String blacklistFileName) throws Exception
     {
-        runAmber(scenario, false, panelFileName, blacklistFileName);
+        runAmber(scenario, panelFileName, blacklistFileName);
     }
 
-    private void runAmberInWholeGenomeMode(AmberScenario scenario, boolean useNewSegmenter) throws Exception
+    private void runAmberInWholeGenomeMode(AmberScenario scenario) throws Exception
     {
-        runAmber(scenario, useNewSegmenter, null, null);
+        runAmber(scenario, null, null);
     }
 
-    private void runAmber(AmberScenario scenario, boolean useNewSegmenter, String panelFileName, String blacklistFileName) throws Exception
+    private void runAmber(AmberScenario scenario, String panelFileName, String blacklistFileName) throws Exception
     {
         File sitesFile = scenario.createAmberLocationsFile(OutputDir);
         TumorBamFile = scenario.getTumorBamFile();
@@ -186,10 +185,6 @@ public class RunAmberTest
             Preconditions.checkArgument(blacklistFile.exists(), "Blacklist file does not exist: " + blacklistFile.getAbsolutePath());
             Preconditions.checkArgument(blacklistFile.isFile(), "Blacklist file is not a file: " + blacklistFile.getAbsolutePath());
             argCount += 2;
-        }
-        if(!useNewSegmenter)
-        {
-            argCount += 1;
         }
         String[] args = new String[argCount];
         int index = 0;
@@ -221,11 +216,7 @@ public class RunAmberTest
         if(blacklistFileName != null)
         {
             args[index++] = String.format("-%s", BLACKLISTED_SITES);
-            args[index++] = String.format("%s", blacklistFile.getAbsolutePath());
-        }
-        if(!useNewSegmenter)
-        {
-            args[index] = String.format("-%s", USE_OLD_SEGMENTER);
+            args[index] = String.format("%s", blacklistFile.getAbsolutePath());
         }
 
         AmberApplication.main(args);
