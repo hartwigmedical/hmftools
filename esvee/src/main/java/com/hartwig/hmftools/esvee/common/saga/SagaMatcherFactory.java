@@ -5,13 +5,11 @@ import static java.lang.Math.min;
 import static java.util.Objects.requireNonNull;
 import static java.util.function.UnaryOperator.identity;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.bwa.BwaMemAligner;
-import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import htsjdk.samtools.SAMSequenceRecord;
@@ -35,7 +33,7 @@ public class SagaMatcherFactory
         mSearchableBreakends = sagaResource.assemblies().stream()
                 .flatMap(assembly ->
                         assembly.variant().breakends().map(breakend ->
-                                new SagaIndexedBreakend(breakend.position(), assembly.variant())))
+                                new SagaIndexedBreakend(breakend, assembly.variant())))
                 .collect(Collectors.groupingBy(SagaIndexedBreakend::chromosome));
         // Sort by position so they can be binary-searched.
         mSearchableBreakends.forEach((chr, breakends) -> breakends.sort(null));
@@ -82,23 +80,8 @@ public class SagaMatcherFactory
             return Map.of();
         }
 
-        SagaIndexedBreakend lowerTarget =
-                new SagaIndexedBreakend(new BasePosition(subregion.chromosome(), subregion.start()), null);
-        int startIndex = Collections.binarySearch(chrBreakends, lowerTarget);
-        if(startIndex < 0)
-        {
-            // Exact position not found. Slice before the next lower breakend.
-            startIndex = max(-(startIndex + 1) - 1, 0);
-        }
-
-        SagaIndexedBreakend upperTarget =
-                new SagaIndexedBreakend(new BasePosition(subregion.chromosome(), subregion.end()), null);
-        int endIndex = Collections.binarySearch(chrBreakends, upperTarget);
-        if(endIndex < 0)
-        {
-            // Exact position not found. Slice after the next higher breakend.
-            endIndex = min(-(endIndex + 1) + 2, chrBreakends.size());
-        }
+        int startIndex = max(SagaIndexedBreakend.binarySearch(chrBreakends, subregion.start()).left - 1, 0);
+        int endIndex = min(SagaIndexedBreakend.binarySearch(chrBreakends, subregion.end()).right + 1, chrBreakends.size());
 
         chrBreakends = chrBreakends.subList(startIndex, endIndex);
         return Map.of(subregion.chromosome(), chrBreakends);

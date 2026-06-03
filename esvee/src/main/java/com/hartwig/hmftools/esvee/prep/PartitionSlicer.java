@@ -77,8 +77,8 @@ public class PartitionSlicer
         mDepthTracker = new DepthTracker(new BaseRegion(mRegion.start(), mRegion.end()), DEPTH_WINDOW_SIZE);
         ChrBaseRegion sagaMatchRegion = new ChrBaseRegion(
                 mRegion.chromosome(),
-                mRegion.start() - mReadFilters.config().observedFragLengthMax(),
-                mRegion.end() + mReadFilters.config().observedFragLengthMax());
+                mRegion.start() - 2 * mReadFilters.config().observedFragLengthMax(),
+                mRegion.end() + 2 * mReadFilters.config().observedFragLengthMax());
         SagaLocationMatcher sagaMatcher = sagaMatcherFactory == null ? null : sagaMatcherFactory.createLocationMatcher(sagaMatchRegion);
         mJunctionTracker = new JunctionTracker(mRegion, mConfig, mDepthTracker, mConfig.Hotspots, sagaMatcher);
 
