@@ -55,7 +55,7 @@ Using the PASS variants from the cfDNA annotated tissue biopsy purple VCF, apply
 - Mappability>=0.5 
 - RepeatCount<4 
 - High confidence observation in ctDNA: (RC_QUAL[0]+RC_QUAL[1]+RC_QUAL[3]) / (RC_CNT[0]+RC_CNT[1]+RC_CNT[3]) >= 18
-- Not subclonal:  AND(SubclonalPerc<0.5,VCN<0.7) 
+- Not subclonal:  OR(SubclonalPerc<=0.5,VCN>=0.7) 
 - GC content:  GC[probe] > 0.4 (if in PANEL mode)
 - Is an SNV
 - Not in LOW_CONFIDENCE tier
