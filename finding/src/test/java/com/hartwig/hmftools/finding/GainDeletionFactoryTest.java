@@ -18,6 +18,10 @@ import com.hartwig.hmftools.finding.clinicaltranscript.ClinicalTranscriptsModelT
 import com.hartwig.hmftools.finding.datamodel.CurationApplierTest;
 import com.hartwig.hmftools.finding.datamodel.GainDeletion;
 import com.hartwig.hmftools.finding.datamodel.TestFindingFactory;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverFields;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverFieldsBuilder;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverInterpretation;
+import com.hartwig.hmftools.finding.datamodel.driver.DriverSource;
 import com.hartwig.hmftools.finding.datamodel.driver.ReportedStatus;
 
 import org.apache.logging.log4j.util.Strings;
@@ -32,6 +36,10 @@ public class GainDeletionFactoryTest
     private static final String CLINICAL_TRANSCRIPT_TSV =
             ClinicalTranscriptsModelTest.class.getClassLoader().getResource("clinicaltranscript/clinical_transcripts.tsv").getPath();
 
+    private static DriverFields driverFields(String findingKey, ReportedStatus reportedStatus) {
+        return DriverFieldsBuilder.builder().findingKey(findingKey).driverSource(DriverSource.SOMATIC).reportedStatus(reportedStatus).driverInterpretation(DriverInterpretation.HIGH).build();
+    }
+
     @Test
     public void canExtractClicicalRelevantGeneCopyNumbers() throws IOException
     {
@@ -39,7 +47,7 @@ public class GainDeletionFactoryTest
 
         GainDeletion gd = TestFindingFactory.gainDeletionBuilder()
                 .gene("BRAF")
-                .driver(CurationApplierTest.driverFields("gd-1", ReportedStatus.CANDIDATE))
+                .driver(driverFields("gd-1", ReportedStatus.CANDIDATE))
                 .build();
         PurpleGeneCopyNumber clinicalRelevantGeneCopyNumbers = builder().gene("EGFR").chromosome("1").chromosomeBand("p").build();
         ArmCopyNumberFactory cn = new ArmCopyNumberFactory(
@@ -63,7 +71,7 @@ public class GainDeletionFactoryTest
         List<PurpleCopyNumber> copyNumbers = createCopyNumbersList();
         GainDeletion gd = TestFindingFactory.gainDeletionBuilder()
                 .gene("BRAF")
-                .driver(CurationApplierTest.driverFields("gd-1", ReportedStatus.CANDIDATE))
+                .driver(driverFields("gd-1", ReportedStatus.CANDIDATE))
                 .build();
         PurpleGeneCopyNumber clinicalRelevantGeneCopyNumbers = builder().gene("BRAF").chromosome("1").chromosomeBand("p").build();
         ArmCopyNumberFactory cn = new ArmCopyNumberFactory(

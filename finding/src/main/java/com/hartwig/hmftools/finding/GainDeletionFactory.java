@@ -270,7 +270,8 @@ final class GainDeletionFactory
     private static GainDeletion ClinicalRelevantGeneCopyNumber(@NotNull PurpleGeneCopyNumber clinicalRelevantGeneCopyNumber,
             ArmCopyNumberFactory cnPerChromosome, FindingConfig findingConfig, List<GainDeletion> gainDeletions)
     {
-        if(findingConfig.findClinicalRelevantGeneCopyNumber(clinicalRelevantGeneCopyNumber.gene()))
+        Boolean presence = findingConfig.findClinicalRelevantGeneCopyNumber(clinicalRelevantGeneCopyNumber.gene());
+        if(presence != null && presence)
         {
             Set<String> reportableGainDeletionsGenes =
                     gainDeletions.stream().map(GainDeletion::gene).collect(Collectors.toSet());
@@ -296,7 +297,7 @@ final class GainDeletionFactory
                         .isCanonical(clinicalRelevantGeneCopyNumber.isCanonical())
                         .somaticType(GainDeletion.Type.NONE)
                         .germlineType(GainDeletion.Type.NONE)
-                        .geneExtent(GainDeletion.GeneExtent.UNKNOWN)
+                        .geneExtent(GainDeletion.GeneExtent.PARTIAL_GENE) //TODO: should this not be unknown
                         .tumorMinCopyNumber(clinicalRelevantGeneCopyNumber.minCopyNumber())
                         .tumorMaxCopyNumber(clinicalRelevantGeneCopyNumber.maxCopyNumber())
                         .tumorMinMinorAlleleCopyNumber(clinicalRelevantGeneCopyNumber.minMinorAlleleCopyNumber())

@@ -16,14 +16,13 @@ import com.hartwig.hmftools.finding.util.PTOTransformer;
 import com.hartwig.hmftools.finding.util.ReportedOnlyTransformer;
 import com.hartwig.hmftools.finding.util.TransformUtil;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 @SuppressWarnings("unused")
 public class ConversionUtil
 {
     public static FindingRecord orangeRecordToFindingRecord(OrangeRecord orangeRecord, @Nullable Path clinicalTranscriptsTsv,
-            @NotNull Path clinicalRelevantGeneCopyNumbersTsv, @Nullable Path driverGeneTsv, @Nullable Gender gender) throws IOException
+            @Nullable Path clinicalRelevantGeneCopyNumbersTsv, @Nullable Path driverGeneTsv, @Nullable Gender gender) throws IOException
     {
         return convert(FindingRecordFactory.fromOrangeRecord(orangeRecord, clinicalTranscriptsTsv, clinicalRelevantGeneCopyNumbersTsv, driverGeneTsv, gender));
     }

@@ -15,24 +15,23 @@ import com.hartwig.hmftools.finding.clinicalrelevantgenecopynumber.ClinicalRelev
 import com.hartwig.hmftools.finding.clinicaltranscript.ClinicalTranscriptFile;
 import com.hartwig.hmftools.finding.clinicaltranscript.ClinicalTranscriptsModel;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 record FindingConfig(@Nullable ClinicalTranscriptsModel clinicalTranscriptsModel,
-                     @NotNull ClinicalRelevantGeneCopyNumberModel clinicalRelevantGeneCopyNumberModel,
+                     @Nullable ClinicalRelevantGeneCopyNumberModel clinicalRelevantGeneCopyNumberModel,
                      Map<String, DriverGene> driverGenes,
                      @Nullable Gender gender,
                      boolean geneCopyNumbersOptional)
 {
     public static FindingConfig createFindingConfig(@Nullable Path clinicalTranscriptsTsv,
-            @NotNull Path clinicalRelevantGeneCopyNumbersTsv,
+            @Nullable Path clinicalRelevantGeneCopyNumbersTsv,
             @Nullable Path driverGeneTsv, OrangeRefGenomeVersion orangeRefGenomeVersion,
             @Nullable Gender gender, boolean geneCopyNumbersOptional) throws IOException
     {
         ClinicalTranscriptsModel clinicalTranscriptsModel = clinicalTranscriptsTsv != null ?
                 ClinicalTranscriptFile.buildFromTsv(orangeRefGenomeVersion, clinicalTranscriptsTsv) : null;
-        ClinicalRelevantGeneCopyNumberModel clinicalRelevantGeneCopyNumberModel =
-                ClinicalRelevantGeneCopyNumberFile.buildFromTsv(clinicalRelevantGeneCopyNumbersTsv);
+        ClinicalRelevantGeneCopyNumberModel clinicalRelevantGeneCopyNumberModel = clinicalRelevantGeneCopyNumbersTsv != null ?
+                ClinicalRelevantGeneCopyNumberFile.buildFromTsv(clinicalRelevantGeneCopyNumbersTsv) : null;
         Map<String, DriverGene> driverGenes = driverGenesMap(driverGeneTsv);
         return new FindingConfig(clinicalTranscriptsModel, clinicalRelevantGeneCopyNumberModel, driverGenes, gender, geneCopyNumbersOptional);
     }
@@ -56,9 +55,12 @@ record FindingConfig(@Nullable ClinicalTranscriptsModel clinicalTranscriptsModel
         return driverGenes.get(gene);
     }
 
-    public boolean findClinicalRelevantGeneCopyNumber(String gene)
+    @Nullable
+    public Boolean findClinicalRelevantGeneCopyNumber(String gene)
     {
-        return clinicalRelevantGeneCopyNumberModel.findClinicalRelevantCopyNumberGene(gene);
+        return clinicalRelevantGeneCopyNumberModel != null
+                ? clinicalRelevantGeneCopyNumberModel.findClinicalRelevantCopyNumberGene(gene)
+                : null;
     }
 
 }

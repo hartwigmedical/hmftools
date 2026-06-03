@@ -101,7 +101,7 @@ public class FindingRecordFactory
     }
 
     public static FindingRecord fromOrangeRecord(OrangeRecord orangeRecord, @Nullable Path clinicalTranscriptsTsv,
-            @NotNull Path clinicalRelevantGeneCopyNumbersTsv,
+            @Nullable Path clinicalRelevantGeneCopyNumbersTsv,
             @Nullable Path driverGeneTsv, @Nullable Gender gender) throws IOException
     {
         FindingConfig findingConfig =
