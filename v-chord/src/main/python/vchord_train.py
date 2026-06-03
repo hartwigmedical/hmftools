@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(stream=sys.stdout,
                     format='%(asctime)s %(levelname)5s - %(message)s',
                     datefmt='%Y-%m-%d %H:%M:%S',
-                    level=logging.INFO)
+                    level=logging.DEBUG)
 
 logger.setLevel(logging.DEBUG)
 
@@ -119,6 +119,10 @@ class HrdDataset(data_utils.Dataset):
         logger.info(f"start loading images, augment={augment}")
         # load all the images into an array
         for idx, row in df.iterrows():
+
+            if idx % 50 == 0:
+                logger.debug(f"[{idx+1}/{len(df)}] Loading: {row['circosPngPath']}")
+
             self.image_tensors.append(image_to_tensor(row["inputPngPath"], row["circosPngPath"], image_size, transform))
             self.type_tensors.append(cancer_type_to_tensor(row["primaryTumorLocation"], row["purity"]))
 
