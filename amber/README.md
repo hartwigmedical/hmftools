@@ -52,7 +52,6 @@ Amber supports both BAM and CRAM file formats.
 | min_het_af_percent    | 0.4     | Minimum allelic frequency in reference sample to be considered heterozygous                       |
 | max_het_af_percent    | 0.65    | Maximum allelic frequency in reference sample to be considered heterozygous                       |
 | validation_stringency | STRICT  | SAM validation strategy: STRICT, SILENT, LENIENT                                                  |
-| use_old_segmenter     | false   | Use the Bioconductor copynumber package to produce the segments file                              |
 | threads               | 1       | Number of threads to use                                                                          |
 
 ### Example Usage
@@ -153,16 +152,6 @@ germline.
 A piecewise constant fit (segmentation) of the BAF ratios is found by least squares regression
 and written as a `.pcf` file. This uses a built-in implementation of the Bioconductor copynumber package.
 
-If the [copynumber](http://bioconductor.org/packages/release/bioc/html/copynumber.html) package is preferred for segmentation, add the
-parameter `use_old_segmenter`.
-This will also require the installation of [R](https://www.r-project.org/) or [RStudio](https://rstudio.com/), and then the installation of
-the copynumber package using the following R commands:
-
-```
-    library(BiocManager)
-    install("copynumber")
-```
-
 ### Contamination
 
 The contamination algorithm aims to detect potential contamination from other patients’ DNA during the preparation stage. It can only be run
@@ -171,7 +160,7 @@ sites in the normal. Amber first detects presence of contamination and then esti
 
 **Detect contamination**
 
-Amber first gathers high confidence homozygous ref sites from the normal sample – each site requires at least 7 reads supporting the REF and
+Amber first gathers high-confidence homozygous ref sites from the normal sample – each site requires at least 7 reads supporting the REF and
 0 reads supporting the ALT. The tumor sample is considered contaminated if, within these corresponding sites,
 
 - The number of sites with three or more ALT support reads is greater than or equals to 10 AND The number of sites with three or more ALT

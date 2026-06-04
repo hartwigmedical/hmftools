@@ -33,7 +33,7 @@ import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.PhaseSet;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
-import com.hartwig.hmftools.esvee.common.SagaMatcher;
+import com.hartwig.hmftools.esvee.common.saga.SagaMatchBySequence;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -60,7 +60,7 @@ public class AssemblyAlignment
     private final Map<String,List<SupportRead>> mFragmentReadsMap;
 
     @Nullable
-    private SagaMatcher.MatchBySequence mSagaMatch;
+    private SagaMatchBySequence mSagaMatch;
 
     public AssemblyAlignment(final JunctionAssembly assembly) { this(assembly, null); }
 
@@ -583,7 +583,7 @@ public class AssemblyAlignment
         return assemblyAlignment.assemblies().size() == 2 && assemblyAlignment.assemblies().stream().allMatch(x -> x.outcome() == LOCAL_INDEL);
     }
 
-    public SagaMatcher.MatchBySequence sagaMatch()
+    public SagaMatchBySequence sagaMatch()
     {
         return mSagaMatch;
     }
@@ -593,7 +593,7 @@ public class AssemblyAlignment
         return mSagaMatch != null;
     }
 
-    public void setSagaMatch(final SagaMatcher.MatchBySequence match)
+    public void setSagaMatch(final SagaMatchBySequence match)
     {
         mSagaMatch = match;
     }

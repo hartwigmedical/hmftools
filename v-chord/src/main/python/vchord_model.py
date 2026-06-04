@@ -1,4 +1,3 @@
-
 import torch
 from torch import nn
 import torchvision
@@ -7,7 +6,7 @@ NUM_INPUT_CHANNELS = 3
 
 # Define model
 class HrdModel(nn.Module):
-    def __init__(self, dropout_rate, num_tumor_types):
+    def __init__(self, dropout_rate: float, num_tumor_types: int):
         super().__init__()
 
         self.resnet = torchvision.models.resnet18(weights=torchvision.models.ResNet18_Weights.DEFAULT)
@@ -63,7 +62,7 @@ class HrdModel(nn.Module):
                 nn.Dropout(dropout_rate),
                 nn.Linear(16, 1))
 
-    def forward(self, image_x, linear_x):
+    def forward(self, image_x: torch.Tensor, linear_x: torch.Tensor) -> torch.Tensor:
         
         #print(seq_x.shape)
         x = self.resnet(image_x)
@@ -79,7 +78,7 @@ class HrdModel(nn.Module):
         x = self.fc_stack(x)
         return x
 
-def append_dropout(model, rate):
+def append_dropout(model: nn.Module, rate: float) -> None:
     for name, module in model.named_children():
         if len(list(module.children())) > 0:
             append_dropout(module, rate)

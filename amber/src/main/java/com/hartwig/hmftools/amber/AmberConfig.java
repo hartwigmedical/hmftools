@@ -6,9 +6,7 @@ import static com.hartwig.hmftools.amber.AmberConstants.*;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeVersion;
-import static com.hartwig.hmftools.common.region.SpecificRegions.SPECIFIC_CHROMOSOMES;
 import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
-import static com.hartwig.hmftools.common.region.SpecificRegions.loadSpecificChromsomes;
 import static com.hartwig.hmftools.common.bam.BamUtils.addValidationStringencyOption;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
@@ -104,7 +102,6 @@ public class AmberConfig
     private static final String WRITE_TUMOR_DATA = "write_tumor_data";
     private static final String POSITION_GAP = "position_gap";
     private static final String SKIP_BAF_SEGMENTATION = "skip_baf_segmentation";
-    public static final String USE_OLD_SEGMENTER = "use_old_segmenter";
 
     public AmberConfig(final ConfigBuilder configBuilder)
     {
@@ -177,7 +174,10 @@ public class AmberConfig
         SpecificChrRegions = SpecificRegions.from(configBuilder);
     }
 
-    public static boolean isUltima() { return SEQUENCING_TYPE == ULTIMA; }
+    public static boolean isUltima()
+    {
+        return SEQUENCING_TYPE == ULTIMA;
+    }
 
     public static void registerConfig(final ConfigBuilder configBuilder)
     {

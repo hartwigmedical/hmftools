@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.esvee.common.SagaResource;
+import com.hartwig.hmftools.esvee.common.saga.SagaMatcherFactory;
 import com.hartwig.hmftools.esvee.prep.types.CombinedStats;
 import com.hartwig.hmftools.esvee.prep.types.ReadFilterType;
 
@@ -28,7 +28,7 @@ public class ChromosomeTask
     private final PrepConfig mConfig;
     private final SpanningReadCache mSpanningReadCache;
     @Nullable
-    private final SagaResource mSagaResource;
+    private final SagaMatcherFactory mSagaMatcherFactory;
     private final ResultsWriter mWriter;
     private final Queue<ChrBaseRegion> mPartitions;
 
@@ -36,12 +36,12 @@ public class ChromosomeTask
 
     public ChromosomeTask(
             final String chromosome, final PrepConfig config, final SpanningReadCache spanningReadCache,
-            @Nullable final SagaResource sagaResource, final ResultsWriter writer)
+            @Nullable final SagaMatcherFactory sagaMatcherFactory, final ResultsWriter writer)
     {
         mChromosome = chromosome;
         mConfig = config;
         mSpanningReadCache = spanningReadCache;
-        mSagaResource = sagaResource;
+        mSagaMatcherFactory = sagaMatcherFactory;
         mWriter = writer;
 
         mCombinedStats = new CombinedStats();
@@ -73,7 +73,7 @@ public class ChromosomeTask
 
         for(int i = 0; i < min(mPartitions.size(), mConfig.Threads); ++i)
         {
-            workers.add(new PartitionThread(mChromosome, mConfig, mPartitions, mSpanningReadCache, mSagaResource, mWriter, mCombinedStats));
+            workers.add(new PartitionThread(mChromosome, mConfig, mPartitions, mSpanningReadCache, mSagaMatcherFactory, mWriter, mCombinedStats));
         }
 
         if(!runThreadTasks(workers))

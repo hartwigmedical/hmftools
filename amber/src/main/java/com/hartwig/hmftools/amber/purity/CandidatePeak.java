@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.amber.AmberConstants.UPPER_CDF_BOUND_FOR_CAPT
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 import com.hartwig.hmftools.amber.PositionEvidence;
@@ -121,7 +122,7 @@ public class CandidatePeak
     @Override
     public String toString()
     {
-        return String.format("VafLevel{vaf=%.2f, step=%.2f, tested: %d, homozygous: %d, heterozygous: %d}",
+        return String.format(Locale.ENGLISH, "VafLevel{vaf=%.2f, step=%.2f, tested: %d, homozygous: %d, heterozygous: %d}",
                 mLevel, mStepToNextLevel, mPointsTested.size(), mPointsInHomozygousBand.size(), mPointsInHeterozygousBand.size());
     }
 

@@ -34,8 +34,9 @@ import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.types.SupportType;
 import com.hartwig.hmftools.esvee.assembly.types.ThreadTask;
-import com.hartwig.hmftools.esvee.common.SagaMatcher;
-import com.hartwig.hmftools.esvee.common.SagaResource;
+import com.hartwig.hmftools.esvee.common.saga.SagaMatchBySequence;
+import com.hartwig.hmftools.esvee.common.saga.SagaSequenceMatcher;
+import com.hartwig.hmftools.esvee.common.saga.SagaMatcherFactory;
 
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
 import org.jetbrains.annotations.Nullable;
@@ -51,10 +52,10 @@ public class AssemblyAligner extends ThreadTask
     private int mRequeriedSoftClipCount;
 
     @Nullable
-    private final SagaMatcher mSagaMatcher;
+    private final SagaSequenceMatcher mSagaMatcher;
 
     public AssemblyAligner(
-            final AssemblyConfig config, final Aligner aligner, @Nullable final SagaResource sagaResource,
+            final AssemblyConfig config, final Aligner aligner, @Nullable final SagaMatcherFactory sagaMatcherFactory,
             final AlignmentWriter writer, final TaskQueue<AssemblyAlignment> assemblyAlignments)
     {
         super("AssemblerAlignment");
@@ -64,7 +65,7 @@ public class AssemblyAligner extends ThreadTask
         mAssemblyAlignments = assemblyAlignments;
         mRequeriedSuppCount = 0;
         mRequeriedSoftClipCount = 0;
-        mSagaMatcher = sagaResource == null ? null : new SagaMatcher(sagaResource);
+        mSagaMatcher = sagaMatcherFactory == null ? null : sagaMatcherFactory.createSequenceMatcher();
     }
 
     public int requeriedSuppCount()
@@ -123,7 +124,7 @@ public class AssemblyAligner extends ThreadTask
 
         if(mSagaMatcher != null)
         {
-            SagaMatcher.MatchBySequence sagaMatch = mSagaMatcher.matchBySequence(assemblyAlignment.fullSequence(), assemblyAlignment.linkIndices());
+            SagaMatchBySequence sagaMatch = mSagaMatcher.matchBySequence(assemblyAlignment.fullSequence(), assemblyAlignment.linkIndices());
             assemblyAlignment.setSagaMatch(sagaMatch);
         }
 

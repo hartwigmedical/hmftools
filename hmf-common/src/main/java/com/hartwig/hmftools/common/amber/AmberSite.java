@@ -2,6 +2,8 @@ package com.hartwig.hmftools.common.amber;
 
 import static java.lang.String.format;
 
+import java.util.Locale;
+
 import javax.annotation.Nullable;
 
 import com.google.common.primitives.Booleans;
@@ -74,7 +76,7 @@ public class AmberSite implements GenomePosition
 
     public String toString()
     {
-        return format("%s:%d %s>%s %s %.3f", Chromosome, Position, Ref, Alt, mSnpCheck ? "snpcheck" : "", GnomadFrequency);
+        return format(Locale.ENGLISH, "%s:%d %s>%s %s %.3f", Chromosome, Position, Ref, Alt, mSnpCheck ? "snpcheck" : "", GnomadFrequency);
     }
 
     @Override

@@ -62,7 +62,7 @@ import com.hartwig.hmftools.esvee.assembly.types.PhaseSet;
 import com.hartwig.hmftools.esvee.assembly.types.ThreadTask;
 import com.hartwig.hmftools.esvee.assembly.vis.AssemblyVisualiser;
 import com.hartwig.hmftools.esvee.common.FragmentLengthBounds;
-import com.hartwig.hmftools.esvee.common.SagaResource;
+import com.hartwig.hmftools.esvee.common.saga.SagaMatcherFactory;
 import com.hartwig.hmftools.esvee.common.WriteType;
 import com.hartwig.hmftools.esvee.prep.FragmentSizeDistribution;
 import com.hartwig.hmftools.esvee.prep.types.DiscordantStats;
@@ -80,7 +80,7 @@ public class AssemblyApplication
     private final List<BamReader> mBamReaders;
 
     @Nullable
-    private final SagaResource mSagaResource;
+    private final SagaMatcherFactory mSagaMatcherFactory;
 
     private final List<PerformanceCounter> mPerfCounters;
 
@@ -101,7 +101,7 @@ public class AssemblyApplication
 
         mPerfCounters = Lists.newArrayList();
 
-        mSagaResource = mConfig.SagaFastaFile != null ? new SagaResource(mConfig.SagaFastaFile) : null;
+        mSagaMatcherFactory = mConfig.SagaFastaFile == null ? null : new SagaMatcherFactory(mConfig.SagaFastaFile);
     }
 
     public void run()
@@ -272,7 +272,7 @@ public class AssemblyApplication
         List<Thread> threadTasks = new ArrayList<>();
 
         List<JunctionGroupAssembler> primaryAssemblyTasks = JunctionGroupAssembler.createThreadTasks(
-                junctionGroups, mBamReaders, mConfig, mSagaResource, mResultsWriter, taskCount, threadTasks);
+                junctionGroups, mBamReaders, mConfig, mSagaMatcherFactory, mResultsWriter, taskCount, threadTasks);
 
         if(!runThreadTasks(threadTasks))
             System.exit(1);
@@ -360,7 +360,7 @@ public class AssemblyApplication
 
     private void runAlignment(final List<AssemblyAlignment> assemblyAlignments)
     {
-        Alignment alignment = new Alignment(mConfig, new BwaAligner(mConfig.RefGenomeImageFile), mSagaResource);
+        Alignment alignment = new Alignment(mConfig, new BwaAligner(mConfig.RefGenomeImageFile), mSagaMatcherFactory);
         alignment.run(assemblyAlignments, mPerfCounters);
         alignment.close();
     }

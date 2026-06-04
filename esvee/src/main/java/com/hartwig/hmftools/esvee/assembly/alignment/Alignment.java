@@ -20,7 +20,7 @@ import com.hartwig.hmftools.esvee.assembly.output.AlignmentWriter;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.common.perf.TaskQueue;
-import com.hartwig.hmftools.esvee.common.SagaResource;
+import com.hartwig.hmftools.esvee.common.saga.SagaMatcherFactory;
 import com.hartwig.hmftools.esvee.common.WriteType;
 
 import org.jetbrains.annotations.Nullable;
@@ -31,14 +31,14 @@ public class Alignment
 
     private final Aligner mAligner;
     @Nullable
-    private final SagaResource mSagaResource;
+    private final SagaMatcherFactory mSagaMatcherFactory;
     private final AlignmentWriter mWriter;
 
-    public Alignment(final AssemblyConfig config, final Aligner aligner, @Nullable final SagaResource sagaResource)
+    public Alignment(final AssemblyConfig config, final Aligner aligner, @Nullable final SagaMatcherFactory sagaMatcherFactory)
     {
         mConfig = config;
         mAligner = aligner;
-        mSagaResource = sagaResource;
+        mSagaMatcherFactory = sagaMatcherFactory;
         mWriter = new AlignmentWriter(mConfig);
     }
 
@@ -84,7 +84,7 @@ public class Alignment
 
         for(int i = 0; i < taskCount; ++i)
         {
-            AssemblyAligner alignerTask = new AssemblyAligner(mConfig, mAligner, mSagaResource, mWriter, taskQueue);
+            AssemblyAligner alignerTask = new AssemblyAligner(mConfig, mAligner, mSagaMatcherFactory, mWriter, taskQueue);
             alignerTasks.add(alignerTask);
             threadTasks.add(alignerTask);
         }
