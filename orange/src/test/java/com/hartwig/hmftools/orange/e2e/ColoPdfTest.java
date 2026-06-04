@@ -33,11 +33,12 @@ import com.hartwig.hmftools.common.test.Unzipper;
 import org.apache.commons.io.FileUtils;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.junit.Before;
 import org.junit.Test;
 
-public class ColoPdf
+public class ColoPdfTest
 {
     String tumor = "COLO829v004T";
     String reference = "COLO829v004R";
@@ -95,33 +96,35 @@ public class ColoPdf
             assertEquals("PIPELINE VERSION GENOME VERSION SEQUENCING TYPE PIPELINE SAMPLES DATE ANALYSED", lines[6]);
             assertTrue(lines[7].contains("V38 ILLUMINA WHOLE GENOME TUMOR / NORMAL"));
 
+            // Side-by-side tables: Driver Summary (left) and Genome Wide Biomarkers (right)
+            PDPage page1 = document.getPage(0);
+            PageTextRipper page1Ripper = new PageTextRipper(page1);
 
-/*
+            // The driver summary is on the left side of the page, from about 23% to about 50% of the way down.
+            String[] driverSummary = page1Ripper.getLinesInRectangle(new PositionInPage(0.0, 0.23), new PositionInPage(0.5, 0.5));
+            assertEquals("Driver Summary", driverSummary[0]);
+            assertEquals("Somatic variant: 7 (BRAF, CDKN2A, HDAC2, TERT)", driverSummary[1]);
+            assertEquals("Somatic copy number: 1 (PTEN)", driverSummary[2]);
+            assertEquals("Somatic disruption: 2", driverSummary[3]);
+            assertEquals("Germline variant: None", driverSummary[4]);
+            assertEquals("Germline copy number: None", driverSummary[5]);
+            assertEquals("Germline disruption: None", driverSummary[6]);
+            assertEquals("Fusion drivers: None", driverSummary[7]);
+            assertEquals("Viral presence: None", driverSummary[8]);
+            assertEquals("Whole genome Yes", driverSummary[9]);
+            assertEquals("duplicated:", driverSummary[10]);
+            assertEquals("DPYD status: *1 HOM (Normal Function)", driverSummary[11]);
 
-OA_V3_0 V38 ILLUMINA WHOLE GENOME TUMOR / NORMAL 2026-06-04
-Driver Summary
-Somatic variant: 7 (BRAF, CDKN2A, HDAC2, TERT)
-Somatic copy number: 1 (PTEN)
-Somatic disruption: 2
-Germline variant: None
-Germline copy number: None
-Germline disruption: None
-Fusion drivers: None
-Viral presence: None
-Whole genome
-duplicated:
-Yes
-DPYD status: *1 HOM (Normal Function)
-Genome Wide Biomarkers
-Microsatellite indels per Mb: 0.1 (Stable)
-Tumor mutations per Mb: 14.4 (High)
-Tumor mutational load: 198 (High)
-HR deficiency score: 0.0 (Proficient)
-LOH proportion: 15%
-Number of SVs: 125
-CUPPA cancer type: Skin: Melanoma (100%)
-
- */
+            // The Genome Wide Biomarkers table is to the right of the driver summary table
+            String[] genomeWideBiomarkers = page1Ripper.getLinesInRectangle(new PositionInPage(0.5, 0.23), new PositionInPage(1.0, 0.5));
+            assertEquals("Genome Wide Biomarkers", genomeWideBiomarkers[0]);
+            assertEquals("Microsatellite indels per Mb: 0.1 (Stable)", genomeWideBiomarkers[1]);
+            assertEquals("Tumor mutations per Mb: 14.4 (High)", genomeWideBiomarkers[2]);
+            assertEquals("Tumor mutational load: 198 (High)", genomeWideBiomarkers[3]);
+            assertEquals("HR deficiency score: 0.0 (Proficient)", genomeWideBiomarkers[4]);
+            assertEquals("LOH proportion: 15%", genomeWideBiomarkers[5]);
+            assertEquals("Number of SVs: 125", genomeWideBiomarkers[6]);
+            assertEquals("CUPPA cancer type: Skin: Melanoma (100%)", genomeWideBiomarkers[7]);
         }
     }
 
