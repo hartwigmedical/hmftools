@@ -223,6 +223,8 @@ public class FileWriterCache
         if(mConfig.BamToolPath == null)
             return true;
 
+        // NOTE: passes in all threads to sort a single BAM, so leaving samtools (assumed since used for merge) to set the default
+        // memory per thread
         if(!BamOperations.sortBam(bamToolName(), bamToolPath(), mUnmappingWriter.filename(), mUnmappingSortedBamFilename, mConfig.Threads))
             return false;
 

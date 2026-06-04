@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.bamops;
 
+import static java.lang.String.format;
+
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -11,6 +13,7 @@ import com.google.common.collect.Lists;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 
 public final class BamOperations
 {
@@ -99,17 +102,15 @@ public final class BamOperations
         return true;
     }
 
-    public static final String SAMBAMBA_SORT_MEM_PER_THREAD = "2G";
-
     public static boolean sortBam(
             final BamToolName toolName, final String toolPath, final String inputBam, final String outputBam, final int threads)
     {
-        return sortBam(toolName, toolPath, inputBam, outputBam, threads, SAMBAMBA_SORT_MEM_PER_THREAD);
+        return sortBam(toolName, toolPath, inputBam, outputBam, threads, null);
     }
 
     public static boolean sortBam(
             final BamToolName toolName, final String toolPath, final String inputBam, final String outputBam, final int threads,
-            final String memoryPerThread)
+            @Nullable final Integer memoryPerThread)
     {
         List<String> commandArgs = Lists.newArrayList();
 
@@ -117,11 +118,14 @@ public final class BamOperations
         commandArgs.add(SORT_COMMAND);
         addThreadsArg(toolName, commandArgs, threads);
 
-        // default memory per thread according to samtools doco is 768MB, could configure as a function of max heap used by calling app
-        if(toolName == BamToolName.SAMBAMBA)
+        // Sambamba: approximate total memory limit for all threads (by default 2GB)
+        // samtools: maximum memory per thread; suffix K/M/G recognized [768M]
+        // could configure as a function of max heap used by calling app
+
+        if(memoryPerThread != null)
         {
             commandArgs.add("-m");
-            commandArgs.add(memoryPerThread);
+            commandArgs.add(format("%dG", memoryPerThread));
         }
 
         // commandArgs.add("-T");

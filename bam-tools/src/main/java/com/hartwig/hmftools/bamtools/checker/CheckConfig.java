@@ -52,6 +52,7 @@ public class CheckConfig
     public final boolean SkipUnmapped;
     public final boolean ReverseBqsr;
     public final boolean DropIncompleteFragments;
+    public final int SortThreadMemory;
 
     public static CheckParams Params = new CheckParams(); // global since used per-fragment
 
@@ -67,12 +68,16 @@ public class CheckConfig
     public static final String REVERSE_BQSR = "bqsr_reverse";
     public static final String CONVERT_HARD_CLIPS = "convert_hard_clips";
     public static final String MIN_SUPP_ALIGNMENT_SCORE = "min_supp_as";
+    public static final String SORT_THREAD_MEMORY = "sort_thread_mem";
+
+
     public static final String WRITE_INCOMPLETE_FRAGS = "write_incompletes";
     public static final String MAX_WRITE_INCOMPLETE_FRAGS = "max_write_incompletes";
     public static final String DROP_INCOMPLETE_FRAGS = "drop_incompletes";
     public static final String CFG_LOG_READ_COUNT = "log_read_count";
 
     protected static int LOG_READ_COUNT = 10_000_000;
+    protected static int DEFAULT_SORT_THREAD_MEMORY = 1;
 
     public CheckConfig(final ConfigBuilder configBuilder)
     {
@@ -119,6 +124,7 @@ public class CheckConfig
         DropIncompleteFragments = configBuilder.hasFlag(DROP_INCOMPLETE_FRAGS);
 
         LOG_READ_COUNT = configBuilder.getInteger(CFG_LOG_READ_COUNT);
+        SortThreadMemory = configBuilder.getInteger(SORT_THREAD_MEMORY);
     }
 
     public String formFilename(final String fileId, final String fileExtension)
@@ -158,6 +164,7 @@ public class CheckConfig
         configBuilder.addFlag(CONVERT_HARD_CLIPS, "Convert hard to soft-clips");
 
         configBuilder.addInteger(CFG_LOG_READ_COUNT, "Log partition processed read count frequency", LOG_READ_COUNT);
+        configBuilder.addInteger(SORT_THREAD_MEMORY, "Memory per sort thread (value in GB)", DEFAULT_SORT_THREAD_MEMORY);
         configBuilder.addInteger(MAX_WRITE_INCOMPLETE_FRAGS, "Max incomplete fragments to write (0 means unlimited)", 0);
         configBuilder.addFlag(PERF_DEBUG, PERF_DEBUG_DESC);
         configBuilder.addFlag(SKIP_UNMAPPED, "Skip full unmapped reads");

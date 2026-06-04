@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.bamtools.checker;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.bamtools.checker.PartitionThread.SORTED_BAM_ID;
 import static com.hartwig.hmftools.bamtools.checker.PartitionThread.UNSORTED_BAM_ID;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.APP_NAME;
@@ -250,7 +252,7 @@ public class BamChecker
         public Void call()
         {
             BamToolName toolName = fromPath(mConfig.BamToolPath);
-            BamOperations.sortBam(toolName, mConfig.BamToolPath, mInputBam, mOutputBam, 1, "1G");
+            BamOperations.sortBam(toolName, mConfig.BamToolPath, mInputBam, mOutputBam, 1, mConfig.SortThreadMemory);
             return null;
         }
     }
