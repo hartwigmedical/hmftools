@@ -55,12 +55,8 @@ record FindingConfig(@Nullable ClinicalTranscriptsModel clinicalTranscriptsModel
         return driverGenes.get(gene);
     }
 
-    @Nullable
-    public Boolean findClinicalRelevantGeneCopyNumber(String gene)
+    public boolean findClinicalRelevantGeneCopyNumber(String gene)
     {
-        return clinicalRelevantGeneCopyNumberModel != null
-                ? clinicalRelevantGeneCopyNumberModel.findClinicalRelevantCopyNumberGene(gene)
-                : null;
+        return clinicalRelevantGeneCopyNumberModel != null && clinicalRelevantGeneCopyNumberModel.findClinicalRelevantCopyNumberGene(gene);
     }
-
 }
