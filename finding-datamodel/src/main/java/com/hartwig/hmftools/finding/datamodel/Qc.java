@@ -10,8 +10,8 @@ import jakarta.validation.constraints.NotNull;
 @RecordBuilder
 public record Qc(
         boolean isPass,
-        @NotNull SortedSet<QCStatus> warnings,
-        @NotNull SortedSet<QCStatus> errors,
+        @NotNull SortedSet<QcStatus> warnings,
+        @NotNull SortedSet<QcStatus> errors,
         @NotNull SortedSet<GermlineAberration> germlineAberrations,
         int amberMeanDepth,
         double contamination,
@@ -21,7 +21,7 @@ public record Qc(
         @Nullable VisualisationFile visualisationFile
 )
 {
-    public enum QCStatus
+    public enum QcStatus
     {
         DELETED_GENES,
         HIGH_COPY_NUMBER_NOISE,

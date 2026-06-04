@@ -127,13 +127,13 @@ public class LowPurityTransformer
                 || hasLowPurity(record.tumorMutationalBurden().status())
                 || hasLowPurity(record.homologousRecombination().status());
 
-        SortedSet<Qc.QCStatus> updatedWarnings = new TreeSet<>(record.qc().warnings());
-        updatedWarnings.remove(Qc.QCStatus.LOW_PURITY);
+        SortedSet<Qc.QcStatus> updatedWarnings = new TreeSet<>(record.qc().warnings());
+        updatedWarnings.remove(Qc.QcStatus.LOW_PURITY);
 
-        SortedSet<Qc.QCStatus> updatedErrors = new TreeSet<>(record.qc().warnings());
+        SortedSet<Qc.QcStatus> updatedErrors = new TreeSet<>(record.qc().warnings());
         if(hasLowPurity)
         {
-            updatedErrors.add(Qc.QCStatus.LOW_PURITY);
+            updatedErrors.add(Qc.QcStatus.LOW_PURITY);
         }
 
         Qc updatedQc = QcBuilder.builder(record.qc()).isPass(!hasLowPurity).errors(updatedErrors).warnings(updatedWarnings).build();
