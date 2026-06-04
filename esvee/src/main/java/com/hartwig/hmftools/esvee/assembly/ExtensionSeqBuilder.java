@@ -191,25 +191,8 @@ public class ExtensionSeqBuilder
 
         int extensionIndex = mBuildForwards ? 0 : mSequenceBuilder.baseQuals().length - 1;
 
-        /*
-        // allowance for DEL indel reads vs a DEL indlel junction - is this required?
-
-        int repeatIndexStart = -1;
-        int repeatSkipCount = 0;
-
-        if(mJunction.indelCoords() != null && read.indelCoords() != null
-        && mJunction.indelCoords().isDelete() && read.indelCoords().isDelete())
-        {
-            // the read must cover the assembly INDEL entirely
-            if(read.alignmentStart() < mJunction.indelCoords().PosStart && read.alignmentEnd() > mJunction.indelCoords().PosEnd
-            && mJunction.indelCoords().Length != read.indelCoords().Length)
-            {
-                // a shorter delete means more ref bases need to be skipped
-                repeatSkipCount = mJunction.indelCoords().Length - read.indelCoords().Length;
-                repeatIndexStart = extensionIndex + (mJunction.isForward() ? 1 : -1); // first base after the delete
-            }
-        }
-        */
+        // NOTE: previously there was logic to specifically handle deletes if a shorter length then indel junction DEL, but
+        // haven't seen the need for this
 
         final byte[] extensionBases = mSequenceBuilder.bases();
 

@@ -381,7 +381,7 @@ public class ReadUtilsTest
         assertTrue(readSoftClipsAndCrossesJunction(read, posJunction, refGenome));
 
         // alignment too far from junction
-        read = createRead(readId, 24, readBases, "10M10S");
+        read = createRead(readId, 20, REF_BASES_200.substring(10, 40), "30M10S");
         assertFalse(readSoftClipsAndCrossesJunction(read, posJunction, refGenome));
 
         // any realigned indel that crosses the junction is permitted
@@ -407,7 +407,7 @@ public class ReadUtilsTest
         assertTrue(readSoftClipsAndCrossesJunction(read, negJunction, refGenome));
 
         // alignment too far from junction
-        read = createRead(readId, 33, readBases, "10S10M");
+        read = createRead(readId, 10, REF_BASES_200.substring(10, 40), "10S30M");
         assertFalse(readSoftClipsAndCrossesJunction(read, negJunction, refGenome));
 
         // any realigned indel that crosses the junction is permitted

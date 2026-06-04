@@ -28,6 +28,8 @@ public final class SvConstants
         return max(observedMaxFragmentLength, MIN_UPPER_FRAGMENT_LENGTH);
     }
 
+    public static final int MAX_JUNC_POSITION_DIFF = 15;
+
     // sequencing type - set in config
     public static SequencingType SEQUENCING_TYPE = SequencingType.ILLUMINA;
 

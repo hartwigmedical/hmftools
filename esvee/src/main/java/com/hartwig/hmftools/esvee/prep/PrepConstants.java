@@ -3,6 +3,7 @@ package com.hartwig.hmftools.esvee.prep;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
+import static com.hartwig.hmftools.esvee.common.SvConstants.MAX_JUNC_POSITION_DIFF;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 
 import com.hartwig.hmftools.common.sv.EsveeDiscordantStats;
@@ -48,7 +49,7 @@ public final class PrepConstants
     public static final int REPEAT_BREAK_MIN_SC_LENGTH = 50;
 
     // supporting reads
-    public static final int MIN_SUPPORTING_READ_DISTANCE = 50;
+    public static final int MIN_SUPPORTING_READ_DISTANCE = MAX_JUNC_POSITION_DIFF;
     public static final int UNPAIRED_READ_JUNCTION_DISTANCE = 5;
     public static final int MAX_SUPPORT_FRAGMENT_DISTANCE = 1000;
     public static final int MAX_HIGH_QUAL_BASE_MISMATCHES = 1;
