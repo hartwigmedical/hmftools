@@ -79,7 +79,7 @@ public class FrontPageTables
         String configuredCancerType = configuredPrimaryTumorLocation != null ?
                 configuredPrimaryTumorLocation : configuredPrimaryTumor(report.configuredPrimaryTumor());
 
-        boolean showCancerType = configuredCancerType != null && !configuredCancerType.isEmpty();
+        boolean hasCancerType = configuredCancerType != null && !configuredCancerType.isEmpty();
 
         addEntry(widths, headers, 2, "Primary Tumor");
         addEntry(widths, headers, 2, "Purity");
@@ -91,7 +91,7 @@ public class FrontPageTables
         float[] pcts = toPercentages(intToFloatArray(widths));
 
         List<String> rowValues = Lists.newArrayList();
-        rowValues.add(showCancerType ? configuredCancerType : "NOT SPECIFIED"));
+        rowValues.add(hasCancerType ? configuredCancerType : "NOT SPECIFIED");
         rowValues.add(purityString(report.purple().fit()));
         rowValues.add(ploidyString(report.purple().fit()));
         rowValues.add(report.purple().fit().fittedPurityMethod().toString());
