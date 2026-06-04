@@ -1,26 +1,30 @@
 package com.hartwig.hmftools.finding;
 
 import static com.hartwig.hmftools.finding.datamodel.finding.FindingStatus.Issue.RNA_REQUIRED;
+import static com.hartwig.hmftools.finding.datamodel.finding.FindingStatus.Issue.RNA_SAMPLE_QUALITY_CONTROL;
 
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import com.hartwig.hmftools.datamodel.isofox.GeneExpression;
 import com.hartwig.hmftools.datamodel.isofox.IsofoxRecord;
-import com.hartwig.hmftools.datamodel.isofox.RnaStatistics;
+import com.hartwig.hmftools.datamodel.isofox.RnaQCStatus;
 import com.hartwig.hmftools.finding.datamodel.NovelSpliceJunction;
 import com.hartwig.hmftools.finding.datamodel.NovelSpliceJunctionBuilder;
 import com.hartwig.hmftools.finding.datamodel.RnaFusion;
 import com.hartwig.hmftools.finding.datamodel.RnaFusionBuilder;
 import com.hartwig.hmftools.finding.datamodel.RnaGeneExpression;
 import com.hartwig.hmftools.finding.datamodel.RnaGeneExpressionBuilder;
+import com.hartwig.hmftools.finding.datamodel.RnaStatistics;
 import com.hartwig.hmftools.finding.datamodel.RnaStatisticsBuilder;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingItem;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingItemBuilder;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingList;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingListBuilder;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingStatusBuilder;
 import com.hartwig.hmftools.finding.util.FindingUtil;
 
 import org.jetbrains.annotations.Nullable;
@@ -36,7 +40,7 @@ final class RnaFindingFactory
         }
 
         return FindingItemBuilder.<com.hartwig.hmftools.finding.datamodel.RnaStatistics>builder()
-                .status(FindingUtil.somaticStatus(findingStatus))
+                .status(rnaStatus(isofox, findingStatus))
                 .finding(convertRnaStatistics(isofox.summary()))
                 .build();
     }
@@ -52,7 +56,7 @@ final class RnaFindingFactory
         List<GeneExpression> geneExpressions = highExpression ? isofox.highExpressionGenes() : isofox.lowExpressionGenes();
         String expressionType = highExpression ? "HIGH" : "LOW";
         return FindingListBuilder.<RnaGeneExpression>builder()
-                .status(FindingUtil.somaticStatus(findingStatus))
+                .status(rnaStatus(isofox, findingStatus))
                 .findings(geneExpressions.stream()
                         .map(geneExpression -> convertRnaGeneExpression(expressionType, geneExpression))
                         .sorted(RnaGeneExpression.COMPARATOR)
@@ -68,7 +72,7 @@ final class RnaFindingFactory
         }
 
         return FindingListBuilder.<RnaFusion>builder()
-                .status(FindingUtil.somaticStatus(findingStatus))
+                .status(rnaStatus(isofox, findingStatus))
                 .findings(isofox.fusions().stream()
                         .map(RnaFindingFactory::convertRnaFusion)
                         .sorted(RnaFusion.COMPARATOR)
@@ -85,7 +89,7 @@ final class RnaFindingFactory
         }
 
         return FindingListBuilder.<NovelSpliceJunction>builder()
-                .status(FindingUtil.somaticStatus(findingStatus))
+                .status(rnaStatus(isofox, findingStatus))
                 .findings(isofox.novelSpliceJunctions().stream()
                         .map(RnaFindingFactory::convertNovelSpliceJunction)
                         .sorted(NovelSpliceJunction.COMPARATOR)
@@ -93,13 +97,32 @@ final class RnaFindingFactory
                 .build();
     }
 
-    private static com.hartwig.hmftools.finding.datamodel.RnaStatistics convertRnaStatistics(RnaStatistics statistics)
+    private static RnaStatistics convertRnaStatistics(com.hartwig.hmftools.datamodel.isofox.RnaStatistics statistics)
     {
+        SortedSet<RnaStatistics.QcStatus> qcErrors = new TreeSet<>();
+        SortedSet<RnaStatistics.QcStatus> qcWarnings = new TreeSet<>();
+
+        statistics.qcStatus().forEach(qcStatus -> {
+            switch(qcStatus)
+            {
+                case PASS:
+                    break;
+                case FAIL_LOW_COVERAGE:
+                    qcErrors.add(RnaStatistics.QcStatus.FAIL_LOW_COVERAGE);
+                    break;
+                case WARN_DUPLICATE_RATE:
+                    qcWarnings.add(RnaStatistics.QcStatus.WARN_DUPLICATE_RATE);
+                    break;
+                case WARN_SPLICED_GENE_COVERAGE:
+                    qcWarnings.add(RnaStatistics.QcStatus.WARN_SPLICED_GENE_COVERAGE);
+                    break;
+            }
+        });
+
         return RnaStatisticsBuilder.builder()
                 .findingKey(FindingKeys.rnaStatistics())
-                .qcStatus(statistics.qcStatus().stream()
-                        .map(status -> com.hartwig.hmftools.finding.datamodel.RnaStatistics.QcStatus.valueOf(status.name()))
-                        .collect(Collectors.toSet()))
+                .errors(qcErrors)
+                .warnings(qcWarnings)
                 .totalFragments(statistics.totalFragments())
                 .duplicateFragments(statistics.duplicateFragments())
                 .splicedFragmentPercent(statistics.splicedFragmentPerc())
@@ -126,21 +149,21 @@ final class RnaFindingFactory
     {
         return RnaFusionBuilder.builder()
                 .findingKey(FindingKeys.rnaFusion(fusion))
-                .geneStart(fusion.geneStart())
-                .geneEnd(fusion.geneEnd())
-                .chromosomeStart(fusion.chromosomeStart())
-                .chromosomeEnd(fusion.chromosomeEnd())
-                .positionStart(fusion.positionStart())
-                .positionEnd(fusion.positionEnd())
-                .junctionTypeStart(fusion.junctionTypeStart())
-                .junctionTypeEnd(fusion.junctionTypeEnd())
+                .geneUp(fusion.geneStart())
+                .geneDown(fusion.geneEnd())
+                .chromosomeUp(fusion.chromosomeStart())
+                .chromosomeDown(fusion.chromosomeEnd())
+                .positionUp(fusion.positionStart())
+                .positionDown(fusion.positionEnd())
+                .junctionTypeUp(fusion.junctionTypeStart())
+                .junctionTypeDown(fusion.junctionTypeEnd())
                 .knownType(RnaFusion.KnownType.valueOf(fusion.knownType().name()))
                 .structuralVariantType(RnaFusion.StructuralVariantType.valueOf(fusion.svType().name()))
                 .splitFragments(fusion.splitFragments())
                 .realignedFragments(fusion.realignedFrags())
                 .discordantFragments(fusion.discordantFrags())
-                .depthStart(fusion.depthStart())
-                .depthEnd(fusion.depthEnd())
+                .depthUp(fusion.depthStart())
+                .depthDown(fusion.depthEnd())
                 .cohortFrequency(fusion.cohortFrequency())
                 .build();
     }
@@ -172,5 +195,23 @@ final class RnaFindingFactory
                 .status(FindingUtil.notAvailableStatus(Set.of(RNA_REQUIRED)))
                 .findings(List.of())
                 .build();
+    }
+
+    private static FindingStatus rnaStatus(IsofoxRecord isofox, FindingStatus findingStatus)
+    {
+        FindingStatus somaticStatus = FindingUtil.somaticStatus(findingStatus);
+        if(isofox.summary().qcStatus().stream().anyMatch(RnaFindingFactory::isFailingQcStatus))
+        {
+            return FindingStatusBuilder.builder(somaticStatus)
+                    .status(FindingStatus.Status.NOT_RELIABLE)
+                    .errors(FindingUtil.addIssues(somaticStatus.errors(), Set.of(RNA_SAMPLE_QUALITY_CONTROL)))
+                    .build();
+        }
+        return somaticStatus;
+    }
+
+    private static boolean isFailingQcStatus(RnaQCStatus qcStatus)
+    {
+        return qcStatus.name().startsWith("FAIL");
     }
 }

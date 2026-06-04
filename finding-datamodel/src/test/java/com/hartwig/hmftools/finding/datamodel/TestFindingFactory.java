@@ -276,7 +276,8 @@ public class TestFindingFactory
     {
         return RnaStatisticsBuilder.builder()
                 .findingKey("")
-                .qcStatus(Set.of(RnaStatistics.QcStatus.PASS))
+                .errors(new TreeSet<>())
+                .warnings(new TreeSet<>())
                 .totalFragments(0)
                 .duplicateFragments(0)
                 .splicedFragmentPercent(0D)
@@ -301,19 +302,19 @@ public class TestFindingFactory
     {
         return RnaFusionBuilder.builder()
                 .findingKey("")
-                .chromosomeStart("")
-                .chromosomeEnd("")
-                .positionStart(0)
-                .positionEnd(0)
-                .junctionTypeStart("")
-                .junctionTypeEnd("")
+                .chromosomeUp("")
+                .chromosomeDown("")
+                .positionUp(0)
+                .positionDown(0)
+                .junctionTypeUp("")
+                .junctionTypeDown("")
                 .knownType(RnaFusion.KnownType.NONE)
                 .structuralVariantType(RnaFusion.StructuralVariantType.BND)
                 .splitFragments(0)
                 .realignedFragments(0)
                 .discordantFragments(0)
-                .depthStart(0)
-                .depthEnd(0)
+                .depthUp(0)
+                .depthDown(0)
                 .cohortFrequency(0);
     }
 

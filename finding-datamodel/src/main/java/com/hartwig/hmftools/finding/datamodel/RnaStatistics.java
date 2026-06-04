@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.finding.datamodel;
 
-import java.util.Set;
+import java.util.SortedSet;
 
 import com.hartwig.hmftools.finding.datamodel.finding.Finding;
 
@@ -9,7 +9,8 @@ import jakarta.validation.constraints.NotNull;
 @RecordBuilder
 public record RnaStatistics(
         @NotNull String findingKey,
-        @NotNull Set<QcStatus> qcStatus,
+        @NotNull SortedSet<QcStatus> warnings,
+        @NotNull SortedSet<QcStatus> errors,
         long totalFragments,
         long duplicateFragments,
         double splicedFragmentPercent,
@@ -20,9 +21,8 @@ public record RnaStatistics(
 {
     public enum QcStatus
     {
-        PASS,
-        FAIL_LOW_COVERAGE,
         WARN_DUPLICATE_RATE,
-        WARN_SPLICED_GENE_COVERAGE
+        WARN_SPLICED_GENE_COVERAGE,
+        FAIL_LOW_COVERAGE
     }
 }

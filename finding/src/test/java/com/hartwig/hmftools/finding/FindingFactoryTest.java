@@ -2,6 +2,7 @@ package com.hartwig.hmftools.finding;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.List;
@@ -23,6 +24,7 @@ import com.hartwig.hmftools.finding.datamodel.FindingRecord;
 import com.hartwig.hmftools.finding.datamodel.NovelSpliceJunction;
 import com.hartwig.hmftools.finding.datamodel.RnaFusion;
 import com.hartwig.hmftools.finding.datamodel.RnaStatistics;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -104,7 +106,8 @@ public class FindingFactoryTest
 
         RnaStatistics statistics = findingRecord.rnaStatistics().finding();
         assertNotNull(statistics);
-        assertEquals(Set.of(RnaStatistics.QcStatus.PASS), statistics.qcStatus());
+        assertTrue(statistics.errors().isEmpty());
+        assertTrue(statistics.warnings().isEmpty());
         assertEquals(100, statistics.totalFragments());
         assertEquals(0.4, statistics.chimericFragmentPercent(), 0);
 
@@ -120,6 +123,42 @@ public class FindingFactoryTest
         NovelSpliceJunction spliceJunction = findingRecord.novelSpliceJunctions().findings().get(0);
         assertEquals("MET", spliceJunction.gene());
         assertEquals(NovelSpliceJunction.Type.SKIPPED_EXONS, spliceJunction.type());
-        assertEquals(NovelSpliceJunction.Context.SPLICE_JUNC, spliceJunction.regionStart());
+        assertEquals(NovelSpliceJunction.Context.SPLICE_JUNC, spliceJunction.regionUp());
+    }
+
+    @Test
+    public void setsRnaFindingsToNotReliableWhenIsofoxQcFails() throws IOException
+    {
+        FindingRecord findingRecord = FindingRecordFactory.fromOrangeRecord(ImmutableOrangeRecord.builder()
+                .from(TestOrangeJsonWriter.createOrangeRecord())
+                .referenceId(null)
+                .isofox(ImmutableIsofoxRecord.builder()
+                        .summary(ImmutableRnaStatistics.builder()
+                                .addQcStatus(RnaQCStatus.FAIL_LOW_COVERAGE)
+                                .totalFragments(100)
+                                .duplicateFragments(10)
+                                .splicedFragmentPerc(0.1)
+                                .unsplicedFragmentPerc(0.2)
+                                .altFragmentPerc(0.3)
+                                .chimericFragmentPerc(0.4)
+                                .build())
+                        .highExpressionGenes(List.of())
+                        .lowExpressionGenes(List.of())
+                        .fusions(List.of())
+                        .novelSpliceJunctions(List.of())
+                        .build())
+                .build(), null);
+
+        assertRnaSampleQcNotReliable(findingRecord.rnaStatistics().status());
+        assertRnaSampleQcNotReliable(findingRecord.highExpressionGenes().status());
+        assertRnaSampleQcNotReliable(findingRecord.lowExpressionGenes().status());
+        assertRnaSampleQcNotReliable(findingRecord.rnaFusions().status());
+        assertRnaSampleQcNotReliable(findingRecord.novelSpliceJunctions().status());
+    }
+
+    private static void assertRnaSampleQcNotReliable(FindingStatus status)
+    {
+        assertEquals(FindingStatus.Status.NOT_RELIABLE, status.status());
+        assertEquals(Set.of(FindingStatus.Issue.RNA_SAMPLE_QUALITY_CONTROL), status.errors());
     }
 }

@@ -9,21 +9,21 @@ import jakarta.validation.constraints.NotNull;
 @RecordBuilder
 public record RnaFusion(
         @NotNull String findingKey,
-        @Nullable String geneStart,
-        @Nullable String geneEnd,
-        @NotNull String chromosomeStart,
-        @NotNull String chromosomeEnd,
-        int positionStart,
-        int positionEnd,
-        @NotNull String junctionTypeStart,
-        @NotNull String junctionTypeEnd,
+        @Nullable String geneUp,
+        @Nullable String geneDown,
+        @NotNull String chromosomeUp,
+        @NotNull String chromosomeDown,
+        int positionUp,
+        int positionDown,
+        @NotNull String junctionTypeUp,
+        @NotNull String junctionTypeDown,
         @NotNull KnownType knownType,
         @NotNull StructuralVariantType structuralVariantType,
         int splitFragments,
         int realignedFragments,
         int discordantFragments,
-        int depthStart,
-        int depthEnd,
+        int depthUp,
+        int depthDown,
         int cohortFrequency
 ) implements Finding
 {
@@ -51,6 +51,6 @@ public record RnaFusion(
     @NotNull
     public String display()
     {
-        return String.format("%s::%s", geneStart != null ? geneStart : "", geneEnd != null ? geneEnd : "");
+        return String.format("%s::%s", geneUp != null ? geneUp : "", geneDown != null ? geneDown : "");
     }
 }
