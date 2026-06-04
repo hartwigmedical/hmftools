@@ -279,7 +279,7 @@ public class ClusterClassification
 
         int minDistance = NO_LENGTH;
 
-        for(final LinkedPair pair : chain.getLinkedPairs())
+        for(LinkedPair pair : chain.getLinkedPairs())
         {
             if(pair.baseLength() > SHORT_TI_LENGTH)
             {

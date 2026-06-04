@@ -45,7 +45,6 @@ steps:
       - '-B'
       - 'deploy'
       - '-pl'
-      - '-am'
       - ':finding-datamodel'
     volumes:
       - path: '/cache/.m2'

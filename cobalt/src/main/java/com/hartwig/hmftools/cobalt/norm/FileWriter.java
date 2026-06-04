@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 
+import com.hartwig.hmftools.cobalt.targeted.TargetRegionEnrichment;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
@@ -26,7 +27,7 @@ public class FileWriter
         {
             BufferedWriter writer = createBufferedWriter(outputFile, false);
 
-            writer.write("chromosome\tposition\trelativeEnrichment");
+            writer.write(TargetRegionEnrichment.header());
             writer.newLine();
 
             for(HumanChromosome chromosome : HumanChromosome.values())
@@ -40,7 +41,7 @@ public class FileWriter
 
                 for(RegionData regionData : chrRegionData.get(chrStr))
                 {
-                    writer.write(format("%s\t%d\t%.4f",
+                    writer.write(TargetRegionEnrichment.toTsv(
                             chrStr, regionData.Position,
                             regionData.relativeEnrichment() > 0 ? regionData.relativeEnrichment() : Double.NaN));
 

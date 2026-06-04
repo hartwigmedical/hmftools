@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.vcf.VariantContextFactory.createGenotype;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_SEQ_TECH_BASE_QUAL;
+import static com.hartwig.hmftools.sage.vis.VisFileBuilder.writeToHtmlFile;
 
 import java.util.Collections;
 import java.util.List;
@@ -123,9 +124,9 @@ public class RegionAppendTask implements Callable<Void>
 
         mVariantPhaser.populateLocalPhaseSetInfo(candidates, mFinalVariants);
 
+        /* not currently supported
         if(mConfig.Common.Visualiser.enabled())
         {
-            // in future, the existing genotype info could be displayed by the visualiser too
             for(int candidateIndex = 0; candidateIndex < mOriginalVariants.size(); ++candidateIndex)
             {
                 Candidate candidate = candidates.get(candidateIndex);
@@ -134,10 +135,11 @@ public class RegionAppendTask implements Callable<Void>
 
                 SageVariant sageVariant = new SageVariant(candidate, refCounters, Lists.newArrayList());
 
-                VariantVis.writeToHtmlFile(
+                writeToHtmlFile(
                         sageVariant, Lists.newArrayList(), mConfig.Common.ReferenceIds, mConfig.Common.Visualiser, null);
             }
         }
+        */
 
         if(mConfig.Common.WriteFragmentLengths)
         {

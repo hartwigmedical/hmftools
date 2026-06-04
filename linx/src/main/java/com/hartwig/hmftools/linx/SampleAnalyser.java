@@ -496,13 +496,18 @@ public class SampleAnalyser implements Callable<Void>
                 mCnDataLoader.getSvJcnCalcMap(),
                 mCnDataLoader.getSvIdCnDataMap(),
                 mCnDataLoader.getChrCnDataMap());
+
+        for(SvVarData var : mAllVariants)
+        {
+            var.setJcnRecalcData(1, 1); // assume in 1 of 2 copies
+        }
     }
 
     private List<LinxSvAnnotation> generateSvDataOutput()
     {
         final List<LinxSvAnnotation> linxSvData = Lists.newArrayList();
 
-        for(final SvVarData var : mAllVariants)
+        for(SvVarData var : mAllVariants)
         {
             final SvCluster cluster = var.getCluster();
 
@@ -560,7 +565,7 @@ public class SampleAnalyser implements Callable<Void>
     {
         final List<LinxCluster> clusterData = Lists.newArrayList();
 
-        for(final SvCluster cluster : allClusters)
+        for(SvCluster cluster : allClusters)
         {
             final String superType = getClusterCategory(cluster);
 
@@ -581,11 +586,11 @@ public class SampleAnalyser implements Callable<Void>
     {
         final List<LinxLink> linksData = Lists.newArrayList();
 
-        for(final SvCluster cluster : mAnalyser.getClusters())
+        for(SvCluster cluster : mAnalyser.getClusters())
         {
             List<SvChain> chains = cluster.getChains();
 
-            for(final SvChain chain : chains)
+            for(SvChain chain : chains)
             {
                 int chainSvCount = chain.getSvCount();
 

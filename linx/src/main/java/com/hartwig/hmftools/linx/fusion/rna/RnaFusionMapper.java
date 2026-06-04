@@ -92,7 +92,7 @@ public class RnaFusionMapper
 
         LNX_LOGGER.debug("assessing {} RNA fusions", rnaFusionList.size());
 
-        for(final RnaFusionData rnaFusion : rnaFusionList)
+        for(RnaFusionData rnaFusion : rnaFusionList)
         {
             setRnaFusionData(rnaFusion);
 
@@ -161,7 +161,7 @@ public class RnaFusionMapper
             if(breakendList == null)
                 continue;
 
-            for(final SvBreakend breakend : breakendList)
+            for(SvBreakend breakend : breakendList)
             {
                 if(breakend.orientation() != rnaOrient)
                      continue;
@@ -214,9 +214,9 @@ public class RnaFusionMapper
                 // boolean correctLocation = isViableBreakend(breakend, rnaPosition, requiredGeneStrand, isUpstream);
 
                 // check whether any of the breakend's transcripts match the exon (exact or nearest) of the RNA fusion breakpoint
-                for(final BreakendGeneData gene : genesList)
+                for(BreakendGeneData gene : genesList)
                 {
-                    for(final BreakendTransData trans : gene.transcripts())
+                    for(BreakendTransData trans : gene.transcripts())
                     {
                         if(isKnownJunction && !rnaFusion.getExactMatchTransIds(fs).contains(trans.transName()))
                             continue;
@@ -384,7 +384,7 @@ public class RnaFusionMapper
         final BreakendTransData transUp = rnaFusion.getMatchedTranscripts()[FS_UP];
         final BreakendTransData transDown = rnaFusion.getMatchedTranscripts()[FS_DOWN];
 
-        for(final GeneFusion dnaFusion : mDnaFusions)
+        for(GeneFusion dnaFusion : mDnaFusions)
         {
             if(transUp != null && dnaFusion.upstreamTrans().breakendGeneData().varId() == transUp.breakendGeneData().varId()
             && transDown != null && dnaFusion.downstreamTrans().breakendGeneData().varId() == transDown.breakendGeneData().varId())
@@ -557,7 +557,7 @@ public class RnaFusionMapper
 
             if(transDataList != null)
             {
-                for(final TranscriptData transData : transDataList)
+                for(TranscriptData transData : transDataList)
                 {
                     RnaExonMatchData exonMatchData = findExonMatch(transData, rnaPosition);
 

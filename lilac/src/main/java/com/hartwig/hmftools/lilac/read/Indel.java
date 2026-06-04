@@ -16,7 +16,7 @@ public class Indel
     public final int ReadIndex;
     public final String Ref;
     public final String Alt;
-    public final boolean Ignore;
+    public final boolean Ignore; // currently can only be true for SBX or Ultima
 
     public Indel(final String contig, int position, int readIndex, final String ref, final String alt, boolean ignore)
     {

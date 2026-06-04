@@ -240,7 +240,7 @@ public class BamRecordReader implements BamReader
                     mergeFragments(existingFragment, fragment);
                 }
 
-                if(read.getValidIndels().contains(STOP_LOSS_ON_C_INDEL))
+                if(read.validIndels().contains(STOP_LOSS_ON_C_INDEL))
                     addKnownIndelFragment(existingFragment);
 
                 continue;
@@ -248,7 +248,7 @@ public class BamRecordReader implements BamReader
 
             if(read.containsValidIndel())
             {
-                if(read.getValidIndels().contains(STOP_LOSS_ON_C_INDEL))
+                if(read.validIndels().contains(STOP_LOSS_ON_C_INDEL))
                 {
                     LL_LOGGER.trace("missing known indel fragment: {} {}", read.Id, read.readInfo());
                 }
@@ -257,7 +257,7 @@ public class BamRecordReader implements BamReader
                 mDiscardIndelReadIds.add(read.Id);
             }
 
-            for(Indel indel : read.getValidIndels())
+            for(Indel indel : read.validIndels())
             {
                 if(INDEL_PON.contains(indel))
                 {
@@ -431,7 +431,7 @@ public class BamRecordReader implements BamReader
         if(variant.Alt.length() != variant.Ref.length())
         {
             Indel expectedIndel = new Indel(variant.Chromosome, variant.Position, variant.Ref, variant.Alt);
-            return record.getValidIndels().stream().anyMatch(x -> x.match(expectedIndel));
+            return record.validIndels().stream().anyMatch(x -> x.match(expectedIndel));
         }
 
         for(int i = 0; i < variant.Alt.length(); ++i)

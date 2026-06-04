@@ -182,9 +182,22 @@ public class CircosCharts
 
     private void writeEnrichedSomatics(final List<VariantContextDecorator> somaticVariants) throws IOException
     {
-        CircosSNPWriter.writePositions(mBaseCircosTumorSample + ".snp.circos", Downsample.downsample(MAX_PLOT_POINTS, snp(somaticVariants)));
-        CircosINDELWriter.writePositions(mBaseCircosTumorSample + ".indel.circos",
-                Downsample.downsample(MAX_PLOT_POINTS, indel(somaticVariants)));
+        List<VariantContextDecorator> snps = Lists.newArrayList();
+        List<VariantContextDecorator> indels = Lists.newArrayList();
+
+        for(VariantContextDecorator variant : somaticVariants)
+        {
+            if(variant.type() == VariantType.SNP)
+                snps.add(variant);
+            else if(variant.type() == VariantType.INDEL)
+                indels.add(variant);
+        }
+
+        CircosSnvWriter.writePositions(
+                mBaseCircosTumorSample + ".snp.circos", Downsample.downsample(MAX_PLOT_POINTS, snps));
+
+        CircosIndelWriter.writePositions(
+                mBaseCircosTumorSample + ".indel.circos", Downsample.downsample(MAX_PLOT_POINTS, indels));
     }
 
     private void writeDrivers(final List<DriverSourceData> driverSourceData) throws IOException
@@ -231,15 +244,5 @@ public class CircosCharts
         InputStream in = getClass().getResourceAsStream(resource);
         BufferedReader reader = new BufferedReader(new InputStreamReader(in));
         return IOUtils.toString(reader);
-    }
-
-    private List<VariantContextDecorator> snp(final List<VariantContextDecorator> somaticVariants)
-    {
-        return somaticVariants.stream().filter(x -> x.type() == VariantType.SNP).collect(Collectors.toList());
-    }
-
-    private List<VariantContextDecorator> indel(final List<VariantContextDecorator> somaticVariants)
-    {
-        return somaticVariants.stream().filter(x -> x.type() == VariantType.INDEL).collect(Collectors.toList());
     }
 }

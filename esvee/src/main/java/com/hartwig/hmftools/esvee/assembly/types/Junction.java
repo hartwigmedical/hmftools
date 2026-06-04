@@ -16,6 +16,8 @@ import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_HOTSPOT_JUNCTION
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_INDEL_JUNCTION;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_JUNCTION_FRAGS;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_OTHER_SUPPORT_FRAGS;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_REMOTE_FRAGS;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_SAGA_MATCH;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -31,6 +33,8 @@ import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.esvee.common.IndelCoords;
 
+import org.jetbrains.annotations.Nullable;
+
 public class Junction implements Comparable<Junction>
 {
     public final String Chromosome;
@@ -45,15 +49,17 @@ public class Junction implements Comparable<Junction>
     private int mRawDiscordantPosition;
     private IndelCoords mIndelCoords; // the consensus indel if applicable
 
+    private final String mSagaMatchVariantId;
+
     public Junction(final String chromosome, final int position, final Orientation orientation)
     {
-        this(chromosome, position, orientation, false, false, false);
+        this(chromosome, position, orientation, false, false, false, null);
         mRawDiscordantPosition = -1;
     }
 
     public Junction(
             final String chromosome, final int position, final Orientation orientation, final boolean discordantOnly,
-            final boolean indelBased, final boolean hotspot)
+            final boolean indelBased, final boolean hotspot, @Nullable final String sagaMatchVariantId)
     {
         Chromosome = chromosome;
         Position = position;
@@ -80,6 +86,7 @@ public class Junction implements Comparable<Junction>
         }
 
         mIndelCoords = null;
+        mSagaMatchVariantId = sagaMatchVariantId;
     }
 
     public boolean isForward() { return Orient.isForward(); }
@@ -123,6 +130,17 @@ public class Junction implements Comparable<Junction>
         return Position == other.Position && Orient == other.Orient;
     }
 
+    public boolean isSagaMatched()
+    {
+        return mSagaMatchVariantId != null;
+    }
+
+    @Nullable
+    public String sagaMatch()
+    {
+        return mSagaMatchVariantId;
+    }
+
     public boolean lower(final Junction other)
     {
         return Position < other.Position || (Position == other.Position && Orient.isForward() && other.Orient.isReverse());
@@ -164,6 +182,8 @@ public class Junction implements Comparable<Junction>
             Integer indelIndex = fieldsIndexMap.get(FLD_INDEL_JUNCTION);
             Integer hotspotIndex = fieldsIndexMap.get(FLD_HOTSPOT_JUNCTION);
             Integer extraInfoIndex = fieldsIndexMap.get(FLD_EXTRA_INFO);
+            Integer remoteFragsIndex = fieldsIndexMap.get(FLD_REMOTE_FRAGS);
+            Integer sagaMatchIndex = fieldsIndexMap.get(FLD_SAGA_MATCH);
 
             List<Junction> junctionDataList = null;
             String currentChromosome = "";
@@ -198,6 +218,9 @@ public class Junction implements Comparable<Junction>
                 boolean indel = indelIndex != null && Boolean.parseBoolean(values[indelIndex]);
                 boolean hotspot = hotspotIndex != null && Boolean.parseBoolean(values[hotspotIndex]);
 
+                // the first part is the variant ID, the second part is the breakends which isn't needed
+                String sagaMatchVariant = sagaMatchIndex != null ? values[sagaMatchIndex].split(" ")[0] : null;
+
                 if(hotspot)
                 {
                     if(junctionFrags < minHotspotFrags)
@@ -207,7 +230,12 @@ public class Junction implements Comparable<Junction>
                 }
                 else if(discordantOnly)
                 {
-                    int maxRemoteFrags = extraInfoIndex != null ? Integer.parseInt(values[extraInfoIndex]) : otherSupportFrags;
+                    int maxRemoteFrags = otherSupportFrags;
+
+                    if(remoteFragsIndex != null)
+                        maxRemoteFrags = Integer.parseInt(values[remoteFragsIndex]);
+                    else if(extraInfoIndex != null)
+                        maxRemoteFrags = Integer.parseInt(values[extraInfoIndex]); // for v2.0 backwards compatibility
 
                     if(maxRemoteFrags < minDiscordantFrags)
                         continue;
@@ -230,7 +258,7 @@ public class Junction implements Comparable<Junction>
                     chrJunctionsMap.put(chromosome, junctionDataList);
                 }
 
-                junctionDataList.add(new Junction(chromosome, position, orientation, discordantOnly, indel, hotspot));
+                junctionDataList.add(new Junction(chromosome, position, orientation, discordantOnly, indel, hotspot, sagaMatchVariant));
                 ++junctionCount;
             }
 
@@ -261,6 +289,7 @@ public class Junction implements Comparable<Junction>
 
         boolean discordantOnly = false;
         boolean indelBased = false;
+        boolean hotspot = false;
 
         if(values.length >= 4)
         {
@@ -270,7 +299,12 @@ public class Junction implements Comparable<Junction>
                 indelBased = true;
         }
 
-        return new Junction(chromosome, position, orientation, discordantOnly, indelBased, false);
+        if(values.length >= 5 && values[4].equals("H"))
+        {
+            hotspot = true;
+        }
+
+        return new Junction(chromosome, position, orientation, discordantOnly, indelBased, hotspot, null);
     }
 
     public static void mergeJunctions(final Map<String,List<Junction>> existingMap, final Map<String,List<Junction>> newMap)

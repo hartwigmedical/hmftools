@@ -72,6 +72,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.pipeline.PipelineToolDirectories;
+import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.datamodel.orange.ExperimentType;
 import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
@@ -89,6 +90,7 @@ public class OrangeConfig
     public final String PanelName;
 
     public final RefGenomeVersion RefGenVersion;
+    public final SequencingType SeqType;
 
     public final Set<String> PrimaryTumorDoids;
     public final String PrimaryTumorLocation;
@@ -160,6 +162,7 @@ public class OrangeConfig
         PrimaryTumorLocation = configBuilder.getValue(PRIMARY_TUMOR_LOCATION);
 
         RefGenVersion = RefGenomeVersion.from(configBuilder);
+        SeqType = SequencingType.parseConfig(configBuilder);
 
         String pipelineVersionFile = configBuilder.getValue(PIPELINE_VERSION_FILE);
 
@@ -284,6 +287,7 @@ public class OrangeConfig
         configBuilder.addConfigItem(SAMPLING_DATE, false, "Optional, if provided represents the sampling date in YYMMDD format");
 
         addRefGenomeVersion(configBuilder);
+        SequencingType.registerConfig(configBuilder);
         addOutputOptions(configBuilder);
 
         configBuilder.addPath(DOID_JSON, false, "Path to JSON file containing the full DOID tree");
@@ -394,6 +398,7 @@ public class OrangeConfig
         ReferenceId = referenceId;
         RnaSampleId = rnaSampleId;
         RefGenVersion = refGenVersion;
+        SeqType = SequencingType.ILLUMINA;
         PrimaryTumorDoids = primaryTumorDoids;
         SamplingDate = samplingDate;
         OutputDir = outputDir;

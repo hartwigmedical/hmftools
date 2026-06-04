@@ -22,6 +22,7 @@ import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.common.Mismatch;
+import com.hartwig.hmftools.compar.common.SourceType;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public record RnaFusionComparer(ComparConfig mConfig) implements ItemComparer
@@ -57,7 +58,7 @@ public record RnaFusionComparer(ComparConfig mConfig) implements ItemComparer
     }
 
     @Override
-    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final String sourceName)
+    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final SourceType sourceType)
     {
         // Not currently supported
         return Lists.newArrayList();
@@ -92,16 +93,16 @@ public record RnaFusionComparer(ComparConfig mConfig) implements ItemComparer
 
     private static String determineFileName(final String sampleId, final FileSources fileSources)
     {
-        String current_file_name = RnaFusionFile.generateFilename(fileSources.Isofox, sampleId);
-        String old_file_name = current_file_name.replace(".tsv", ".csv");
+        String filename = RnaFusionFile.generateFilename(fileSources.Isofox, sampleId);
+        String oldFilename = filename.replace(".tsv", ".csv");
 
-        if(!Files.exists(Paths.get(current_file_name)) && Files.exists(Paths.get(old_file_name)))
+        if(!Files.exists(Paths.get(filename)) && Files.exists(Paths.get(oldFilename)))
         {
-            return old_file_name;
+            return oldFilename;
         }
         else
         {
-            return current_file_name;
+            return filename;
         }
     }
 }

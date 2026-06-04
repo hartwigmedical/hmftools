@@ -13,8 +13,7 @@ public record PredictedTumorOrigin(
         @NotNull String findingKey,
         @NotNull CuppaMode mode,
         @NotNull List<Prediction> predictions,
-        @Nullable VisualisationFile visualisationFile,
-        @Nullable Double bestPredictionLikelihood
+        @Nullable VisualisationFile visualisationFile
 ) implements Finding
 {
     public enum CuppaMode
@@ -37,7 +36,7 @@ public record PredictedTumorOrigin(
     {
     }
 
-    public PredictedTumorOrigin.Prediction best()
+    public Prediction best()
     {
         return !predictions().isEmpty() ? predictions().get(0) : null;
     }

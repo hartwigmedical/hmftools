@@ -10,8 +10,12 @@ import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
 
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
+import com.hartwig.hmftools.common.purple.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.PurplePurity;
 import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.ComparableItem;
@@ -22,6 +26,8 @@ import com.hartwig.hmftools.compar.common.Mismatch;
 public class DriverData implements ComparableItem
 {
     public final DriverCatalog DriverCatalog;
+
+    private final PurplePurity mPurity;
     public final String mComparisonChromosome;
     private final String mKey;
     private final boolean mCheckTranscript;
@@ -31,9 +37,12 @@ public class DriverData implements ComparableItem
     protected static final String FLD_MIN_COPY_NUMBER = "MinCopyNumber";
     protected static final String FLD_MAX_COPY_NUMBER = "MaxCopyNumber";
 
-    public DriverData(final DriverCatalog driverCatalog, final String comparisonChromosome, boolean checkTranscript)
+    public DriverData(
+            final DriverCatalog driverCatalog, final PurplePurity purity, final String comparisonChromosome, boolean checkTranscript)
     {
         DriverCatalog = driverCatalog;
+
+        mPurity = purity;
         mComparisonChromosome = comparisonChromosome;
         mCheckTranscript = checkTranscript;
 
@@ -58,6 +67,15 @@ public class DriverData implements ComparableItem
         values.add(format("%.2f", DriverCatalog.driverLikelihood()));
         values.add(format("%.2f", DriverCatalog.minCopyNumber()));
         values.add(format("%.2f", DriverCatalog.maxCopyNumber()));
+        return values;
+    }
+
+    @Override
+    public List<String> extraInfoValues()
+    {
+        List<String> values = Lists.newArrayList();
+        values.add(format("Purity=%.2f", mPurity.Purity));
+        values.add(format("Ploidy=%.2f", mPurity.Ploidy));
         return values;
     }
 
@@ -91,8 +109,8 @@ public class DriverData implements ComparableItem
     }
 
     @Override
-    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds,
-            final boolean includeMatches)
+    public Mismatch findMismatch(
+            final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds, final boolean includeMatches)
     {
         final DriverData otherDriver = (DriverData)other;
 

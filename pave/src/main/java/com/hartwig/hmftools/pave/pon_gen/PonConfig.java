@@ -28,7 +28,7 @@ public class PonConfig
     public final int QualCutoff;
     public final int MqfCutoff;
     public final int MinSamples;
-    public final boolean WriteFinal;
+    public final boolean WriteDetailed;
 
     public final int RefSampleGenoptypeIndex;
     public final RefGenomeVersion RefGenVersion;
@@ -45,7 +45,7 @@ public class PonConfig
     private static final String REF_SAMPLE_GENOTYPE_INDEX = "ref_sample_index";
     private static final String PARTITION_SIZE = "partition_size";
 
-    public static final String WRITE_FINAL_PON = "write_final";
+    public static final String WRITE_DETAILED = "write_detailed";
     public static final String MANUAL_ENTRIES = "manual_entries";
     public static final String SOMATIC_HOTSPOT = "somatic_hotspots";
     public static final String GERMLINE_HOTSPOT = "germline_hotspots";
@@ -71,9 +71,9 @@ public class PonConfig
 
         RefGenVersion = RefGenomeVersion.from(configBuilder);
 
-        WriteFinal = configBuilder.hasFlag(WRITE_FINAL_PON);
+        WriteDetailed = configBuilder.hasFlag(WRITE_DETAILED);
 
-        ExistingPonFilename = configBuilder.getValue(PON_FILE);
+        ExistingPonFilename = configBuilder.getValue(PON_FILE, "");
 
         PV_LOGGER.info("key config: minSamples({}) cut-offs(qual={} mqf={})", MinSamples, QualCutoff, MqfCutoff);
 
@@ -95,7 +95,7 @@ public class PonConfig
         configBuilder.addConfigItem(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
         configBuilder.addConfigItem(MANUAL_ENTRIES, false, "Manual PON entries in form Chr:Pos:Ref:Alt separated by ';'");
 
-        configBuilder.addFlag(WRITE_FINAL_PON, "Write final PON without annotations");
+        configBuilder.addFlag(WRITE_DETAILED, "Write final PON without annotations");
 
         configBuilder.addPath(PON_FILE, false, "PON entries");
         ClinvarAnnotation.addConfig(configBuilder);

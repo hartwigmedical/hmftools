@@ -1,22 +1,28 @@
 package com.hartwig.hmftools.compar;
 
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.compar.MismatchFile.loadMismatches;
+import static com.hartwig.hmftools.compar.MismatchFile.loadSampleCurations;
 import static com.hartwig.hmftools.compar.common.CommonUtils.buildComparers;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
+import static com.hartwig.hmftools.compar.common.CurationType.NONE;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
+
+import javax.annotation.Nullable;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.compar.common.CategoryType;
+import com.hartwig.hmftools.compar.common.KnownMismatch;
+import com.hartwig.hmftools.compar.common.CurationInfo;
 import com.hartwig.hmftools.compar.common.Mismatch;
-import com.hartwig.hmftools.compar.common.MismatchData;
 import com.hartwig.hmftools.compar.common.WriteType;
 
 public class MismatchWriter
@@ -25,7 +31,9 @@ public class MismatchWriter
     private BufferedWriter mCombinedWriter;
     private final Map<CategoryType,BufferedWriter> mCategoryWriters;
 
-    private final Map<String,List<MismatchData>> mExpectedMismatches;
+    private final Map<String,List<KnownMismatch>> mSampleKnownMismatches;
+    private final boolean mWriteCurations;
+    private final boolean mWriteCurationComment;
 
     public MismatchWriter(final ComparConfig config)
     {
@@ -34,8 +42,12 @@ public class MismatchWriter
         mCategoryWriters = Maps.newHashMap();
 
         String sampleId = mConfig.SampleIds.size() == 1 ? mConfig.SampleIds.get(0) : null;
-        mExpectedMismatches = config.ExpectedMismatchFile != null ?
-                loadMismatches(config.ExpectedMismatchFile, sampleId) : Collections.emptyMap();
+
+        mSampleKnownMismatches = config.KnownMismatchFile != null ?
+                loadSampleCurations(config.KnownMismatchFile, sampleId) : Collections.emptyMap();
+
+        mWriteCurations = !mSampleKnownMismatches.isEmpty();
+        mWriteCurationComment = mSampleKnownMismatches.values().stream().anyMatch(x -> x.stream().anyMatch(y -> !y.Curation.Comment.isEmpty()));
     }
 
     public boolean initialiseOutputFiles()
@@ -66,11 +78,11 @@ public class MismatchWriter
 
                     writer.write(MismatchFile.commonHeader(mConfig.multiSample(), false));
 
-                    final List<String> compareFields = comparer.comparedFieldNames();
+                    List<String> compareFields = comparer.comparedFieldNames();
 
                     for(String field : compareFields)
                     {
-                        writer.write(String.format("\tRef%s\tNew%s", field, field));
+                        writer.write(String.format("\tOld%s\tNew%s", field, field));
                     }
 
                     writer.newLine();
@@ -86,7 +98,7 @@ public class MismatchWriter
 
                 mCombinedWriter = createBufferedWriter(outputFile, false);
 
-                mCombinedWriter.write(MismatchFile.header(mConfig.multiSample()));
+                mCombinedWriter.write(MismatchFile.header(mConfig.multiSample(), mWriteCurations, mWriteCurationComment));
                 mCombinedWriter.newLine();
             }
         }
@@ -111,7 +123,7 @@ public class MismatchWriter
             return;
 
         checkRemoveIgnoredGenes(mismatches);
-        checkRemoveExpectedMismatches(sampleId, mismatches);
+        // checkRemoveExpectedMismatches(sampleId, mismatches);
 
         if(mCategoryWriters.isEmpty() && mCombinedWriter == null)
             return;
@@ -122,37 +134,81 @@ public class MismatchWriter
 
             BufferedWriter categoryWriter = mCategoryWriters.get(category);
 
+            List<KnownMismatch> knownMismatches = mSampleKnownMismatches.getOrDefault(sampleId, Collections.emptyList());
+
             for(Mismatch mismatch : mismatches)
             {
-                if(sampleId != null && mConfig.multiSample())
-                {
-                    if(mCombinedWriter != null)
-                    {
-                        mCombinedWriter.write(String.format("%s\t", sampleId));
-                    }
+                // check or any expected mismatches / curations
+                Map<String,CurationInfo> matchCurations = KnownMismatch.matchCurations(mismatch, knownMismatches);
 
-                    if(categoryWriter != null)
+                if(!matchCurations.isEmpty() && !mismatch.DiffValues.isEmpty() && matchCurations.size() != mismatch.DiffValues.size())
+                {
+                    // need to write separate lines to distinguish between the matches
+                    for(String diff : mismatch.DiffValues)
                     {
-                        categoryWriter.write(String.format("%s\t", sampleId));
+                        Mismatch singleMismatch = new Mismatch(mismatch.OldItem, mismatch.NewItem, mismatch.Type, List.of(diff));
+                        writeMismatch(sampleId, singleMismatch, comparer, categoryWriter, matchCurations.get(diff));
                     }
                 }
-
-                if(mCombinedWriter != null)
+                else
                 {
-                    mCombinedWriter.write(MismatchFile.toTsv(mismatch, false, comparer.comparedFieldNames()));
-                    mCombinedWriter.newLine();
-                }
-
-                if(categoryWriter != null)
-                {
-                    categoryWriter.write(MismatchFile.toTsv(mismatch, true, comparer.comparedFieldNames()));
-                    categoryWriter.newLine();
+                    CurationInfo curationInfo = !matchCurations.isEmpty() ? matchCurations.entrySet().iterator().next().getValue() : null;
+                    writeMismatch(sampleId, mismatch, comparer, categoryWriter, curationInfo);
                 }
             }
         }
         catch(IOException e)
         {
             CMP_LOGGER.error("failed to write sample data: {}", e.toString());
+        }
+    }
+
+    private void writeMismatch(
+            final String sampleId, final Mismatch mismatch, final ItemComparer comparer, final BufferedWriter categoryWriter,
+            @Nullable final CurationInfo curationInfo) throws IOException
+    {
+        StringJoiner sj = new StringJoiner(TSV_DELIM);
+
+        if(sampleId != null && mConfig.multiSample())
+        {
+            sj.add(sampleId);
+
+            if(categoryWriter != null)
+            {
+                categoryWriter.write(String.format("%s\t", sampleId));
+            }
+        }
+
+        if(mCombinedWriter != null)
+        {
+            sj.add(MismatchFile.toTsv(mismatch, false, comparer.comparedFieldNames()));
+
+            if(mWriteCurations)
+            {
+                if(curationInfo != null)
+                {
+                    sj.add(curationInfo.Type.toString());
+
+                    if(mWriteCurationComment)
+                        sj.add(curationInfo.Comment);
+                }
+                else
+                {
+                    sj.add(NONE.toString());
+
+                    if(mWriteCurationComment)
+                        sj.add("");
+                }
+            }
+
+            mCombinedWriter.write(sj.toString());
+            mCombinedWriter.newLine();
+        }
+
+        if(categoryWriter != null)
+        {
+            categoryWriter.write(MismatchFile.toTsv(mismatch, true, comparer.comparedFieldNames()));
+            categoryWriter.newLine();
         }
     }
 
@@ -170,43 +226,6 @@ public class MismatchWriter
             ComparableItem item = mismatch.nonNullItem();
 
             if(!item.geneName().isEmpty() && mConfig.IgnoreGenes.contains(item.geneName()))
-            {
-                mismatches.remove(index);
-            }
-            else
-            {
-                ++index;
-            }
-        }
-    }
-
-    private void checkRemoveExpectedMismatches(final String sampleId, final List<Mismatch> mismatches)
-    {
-        List<MismatchData> expectedMismatches = mExpectedMismatches.get(sampleId);
-
-        if(expectedMismatches == null || expectedMismatches.isEmpty())
-            return;
-
-        int index = 0;
-
-        while(index < mismatches.size())
-        {
-            Mismatch mismatch = mismatches.get(index);
-            boolean matched = false;
-
-            for(int i = 0; i < expectedMismatches.size(); ++i)
-            {
-                MismatchData expectedMismatch = expectedMismatches.get(i);
-
-                if(expectedMismatch.matches(mismatch))
-                {
-                    expectedMismatches.remove(i);
-                    matched = true;
-                    break;
-                }
-            }
-
-            if(matched)
             {
                 mismatches.remove(index);
             }

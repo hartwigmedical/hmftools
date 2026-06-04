@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.isofox.IsofoxConstants.HIGH_EXPRESSION_FOLD_C
 import static com.hartwig.hmftools.isofox.IsofoxConstants.HIGH_EXPRESSION_FOLD_CHANGE_LOW;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.HIGH_EXPRESSION_PERCENTILE_HIGH;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.MAX_GENE_PERC_CONTRIBUTION;
+import static com.hartwig.hmftools.isofox.WriteType.TRANS_COMBO;
 import static com.hartwig.hmftools.isofox.expression.CategoryCountsData.hasGeneIdentifier;
 import static com.hartwig.hmftools.isofox.expression.ExpectedRatesCommon.formTranscriptDefinitions;
 
@@ -31,6 +32,7 @@ import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.sigs.ExpectationMaxFit;
 import com.hartwig.hmftools.common.sigs.SigResiduals;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
+import com.hartwig.hmftools.isofox.WriteType;
 import com.hartwig.hmftools.isofox.adjusts.FragmentSize;
 import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
 import com.hartwig.hmftools.isofox.expression.cohort.CohortGenePercentiles;
@@ -149,7 +151,7 @@ public class TranscriptExpression
                 transAllocations.put(transName, transAllocation);
         }
 
-        if(mConfig.WriteTransComboData)
+        if(mConfig.writeType(TRANS_COMBO))
         {
             writeCategoryCounts(mResultsWriter.getCategoryCountsWriter(), geneSummaryData.ChrId, mCurrentExpRatesData.Categories,
                     geneSummaryData.TransCategoryCounts, transComboCounts, fittedCounts, mConfig.applyGcBiasAdjust());

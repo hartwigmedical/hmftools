@@ -36,7 +36,8 @@ public class ReadWriter implements AutoCloseable
 
             StringJoiner sj = new StringJoiner(TSV_DELIM);
             sj.add("ReadId").add("Chromosome").add("PosStart").add("MismatchType").add("Diff").add("MateChr").add("MatePos");
-            sj.add("Cigar").add("Flags").add("MapQual").add("IsFirst").add("NegStrand").add("Duplicate").add("IsSupp").add("SuppData");
+            sj.add("Cigar").add("Flags").add("MapQual").add("IsFirst").add("NegStrand").add("Duplicate");
+            sj.add("Supplementary").add("SuppData").add("Secondary");
             writer.write(sj.toString());
             writer.newLine();
             return writer;
@@ -70,6 +71,7 @@ public class ReadWriter implements AutoCloseable
             sj.add(String.valueOf(read.getDuplicateReadFlag()));
             sj.add(String.valueOf(read.getSupplementaryAlignmentFlag()));
             sj.add(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE) ? SupplementaryReadData.extractAlignment(read).asDelimStr() : "N/A");
+            sj.add(String.valueOf(read.isSecondaryAlignment()));
             mWriter.write(sj.toString());
             mWriter.newLine();
         }

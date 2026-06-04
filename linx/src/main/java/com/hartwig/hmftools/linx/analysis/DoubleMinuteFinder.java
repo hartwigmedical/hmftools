@@ -435,7 +435,7 @@ public class DoubleMinuteFinder implements CohortFileInterface
         double maxDMCopyNumber = 0;
         double minDMCopyNumber = 0;
 
-        for(final SvVarData var : dmData.ValidSVs)
+        for(SvVarData var : dmData.ValidSVs)
         {
             ++typeCounts[typeAsInt(var.type())];
 
@@ -577,7 +577,7 @@ public class DoubleMinuteFinder implements CohortFileInterface
             if(genesList.isEmpty())
                 continue;
 
-            for(final GeneData geneData : genesList)
+            for(GeneData geneData : genesList)
             {
                 genesStr = appendStr(genesStr, geneData.GeneName, ';');
             }

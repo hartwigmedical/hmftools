@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
+import static com.hartwig.hmftools.common.utils.config.ConfigItem.enumValueSelectionAsStr;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadDelimitedIdFile;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
@@ -33,6 +34,8 @@ import static com.hartwig.hmftools.isofox.IsofoxFunction.ALT_SPLICE_JUNCTIONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.RETAINED_INTRONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.STATISTICS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.TRANSCRIPT_COUNTS;
+import static com.hartwig.hmftools.isofox.WriteType.EXON;
+import static com.hartwig.hmftools.isofox.WriteType.READ;
 import static com.hartwig.hmftools.isofox.expression.ExpectedRatesCommon.ER_FRAGMENT_LENGTHS;
 import static com.hartwig.hmftools.isofox.expression.ExpectedRatesCommon.ER_FRAGMENT_LENGTHS_DESC;
 import static com.hartwig.hmftools.isofox.expression.ExpectedRatesCommon.loadFragmentSizeConfig;
@@ -51,6 +54,7 @@ import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.driver.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.isofox.adjusts.FragmentSize;
 import com.hartwig.hmftools.isofox.common.GeneRegionFilters;
@@ -70,15 +74,10 @@ public class IsofoxConfig
     public static final String LONG_FRAGMENT_LIMIT = "long_frag_limit";
     public static final String READ_LENGTH = "read_length";
 
-    private static final String WRITE_EXON_DATA = "write_exon_data";
-    private static final String WRITE_READ_DATA = "write_read_data";
-    private static final String WRITE_SPLICE_SITE_DATA = "write_splice_sites";
-    private static final String WRITE_SPLICE_JUNC_DATA = "write_splice_junctions";
-    private static final String WRITE_FRAG_LENGTHS = "write_frag_lengths";
+    private static final String WRITE_TYPES = "write_type";
+
     private static final String FRAG_LENGTH_MIN_COUNT = "frag_length_min_count";
     private static final String FRAG_LENGTHS_BY_GENE = "frag_length_by_gene";
-    private static final String WRITE_GC_DATA = "write_gc_data";
-    private static final String WRITE_TRANS_COMBO_DATA = "write_trans_combo_data";
 
     // expected expression config
     private static final String EXP_COUNTS_FILE = "exp_counts_file";
@@ -131,15 +130,8 @@ public class IsofoxConfig
     public final boolean ApplyFragmentLengthAdjust;
     public final List<FragmentSize> FragmentSizeData;
 
-    public final boolean WriteExonData;
-    public final boolean WriteSpliceJunctions;
-    public final boolean WriteReadData;
-    public final boolean WriteSpliceSiteData;
-    public final boolean WriteTransComboData;
-    public final boolean WriteFragmentLengths;
+    public final List<WriteType> WriteTypes;
     public final int FragmentLengthSamplingCount;
-    public final boolean WriteFragmentLengthsByGene;
-    public final boolean WriteGcData;
 
     public final FusionConfig Fusions;
 
@@ -218,14 +210,7 @@ public class IsofoxConfig
         IsofoxConstants.SINGLE_MAP_QUALITY = (short)configBuilder.getInteger(SINGLE_MAP_QUAL);
         DropDuplicates = configBuilder.hasValue(DROP_DUPLICATES);
 
-        WriteExonData = configBuilder.hasFlag(WRITE_EXON_DATA);
-        WriteSpliceJunctions = configBuilder.hasFlag(WRITE_SPLICE_JUNC_DATA);
-        WriteFragmentLengths = configBuilder.hasFlag(WRITE_FRAG_LENGTHS);
-        WriteFragmentLengthsByGene = configBuilder.hasFlag(FRAG_LENGTHS_BY_GENE);
-        WriteReadData = configBuilder.hasFlag(WRITE_READ_DATA);
-        WriteSpliceSiteData = configBuilder.hasFlag(WRITE_SPLICE_SITE_DATA);
-        WriteTransComboData = configBuilder.hasFlag(WRITE_TRANS_COMBO_DATA);
-        WriteGcData = configBuilder.hasFlag(WRITE_GC_DATA);
+        WriteTypes = WriteType.parseConfig(configBuilder.getValue(WRITE_TYPES));
 
         Threads = parseThreads(configBuilder);
 
@@ -302,7 +287,7 @@ public class IsofoxConfig
             return false;
         }
 
-        if(Filters.RestrictedGeneIds.isEmpty() && (WriteExonData || WriteReadData))
+        if(Filters.RestrictedGeneIds.isEmpty() && !Filters.SpecificChrRegions.hasFilters() && (writeType(EXON) || writeType(READ)))
         {
             ISF_LOGGER.warn("writing exon and/or read data for all transcripts may be slow and generate large output files");
         }
@@ -316,10 +301,12 @@ public class IsofoxConfig
 
     public boolean requireFragmentLengthCalcs()
     {
-        return WriteFragmentLengths || FragmentLengthSamplingCount > 0;
+        return WriteTypes.contains(WriteType.FRAG_LENGTH) || FragmentLengthSamplingCount > 0;
     }
 
-    public boolean requireGcRatioCalcs() { return WriteGcData || ExpGcRatiosFile != null; }
+    public boolean writeType(final WriteType writeType) { return WriteTypes.contains(writeType); }
+
+    public boolean requireGcRatioCalcs() { return WriteTypes.contains(WriteType.GC_RATIO) || ExpGcRatiosFile != null; }
     public boolean applyGcBiasAdjust() { return ExpGcRatiosFile != null; }
 
     public String formOutputFile(final String fileId)
@@ -364,18 +351,11 @@ public class IsofoxConfig
         NeoDir = null;
         PanelTpmNormFile = null;
 
-        WriteExonData = false;
-        WriteSpliceJunctions = false;
-        WriteReadData = false;
-        WriteSpliceSiteData = false;
-        WriteFragmentLengths = false;
-        WriteTransComboData = false;
-        WriteGcData = false;
+        WriteTypes = Lists.newArrayList();
         Fusions = new FusionConfig();
 
         ApplyFragmentLengthAdjust = false;
         OutputIdentifier = null;
-        WriteFragmentLengthsByGene = false;
         FragmentLengthSamplingCount = 0;
 
         RunValidations = true;
@@ -409,13 +389,9 @@ public class IsofoxConfig
 
         configBuilder.addFlag(FRAG_LENGTHS_BY_GENE, "Write fragment lengths by gene");
         configBuilder.addPath(BAM_FILE, true, "RNA BAM file location");
-        configBuilder.addFlag(WRITE_EXON_DATA, "Exon region data");
-        configBuilder.addFlag(WRITE_SPLICE_JUNC_DATA, "Write canonical splice junction counts");
-        configBuilder.addFlag(WRITE_READ_DATA, "BAM read data");
-        configBuilder.addFlag(WRITE_SPLICE_SITE_DATA, "Write support info for each splice site");
-        configBuilder.addFlag(WRITE_TRANS_COMBO_DATA, "Write transcript group data for EM algo");
-        configBuilder.addFlag(WRITE_FRAG_LENGTHS, "Write intronic fragment lengths to log");
-        configBuilder.addFlag(WRITE_GC_DATA, "Write GC ratio counts from all genic reads");
+
+        configBuilder.addConfigItem(
+                WRITE_TYPES, false, enumValueSelectionAsStr(WriteType.values(), "Write types"), "");
 
         configBuilder.addPath(EXP_COUNTS_FILE, false, "File with generated expected expression rates per transcript");
         configBuilder.addPath(EXP_GC_RATIOS_FILE, false, "File with generated expected GC ratios per transcript");

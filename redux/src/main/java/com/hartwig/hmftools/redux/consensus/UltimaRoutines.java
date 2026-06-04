@@ -9,7 +9,6 @@ import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.HALF_PHRED_S
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_T0_TAG;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_TP_TAG;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULT_QUAL_TAG;
-import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULT_QUAL_TAG_DELIM;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULT_QUAL_TAG_INDEX_DELIM;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractLowQualCount;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractT0Values;
@@ -22,7 +21,6 @@ import java.util.StringJoiner;
 import javax.annotation.Nullable;
 
 import com.hartwig.hmftools.common.bam.ConsensusType;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.sequencing.UltimaBamUtils;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
@@ -37,16 +35,16 @@ public final class UltimaRoutines
     private static final Set<String> ULTIMA_RAW_QUAL_ATTRIBUTES = Set.of(ULTIMA_T0_TAG, ULTIMA_TP_TAG);
 
     private static boolean UTLIMA_DROP_QUAL_TAGS = false;
-    private static final String CFG_ULTIMA_DROP_QUA_TAGS = "ultima_drop_qual_tags";
+    private static final String CFG_ULTIMA_DROP_QUAL_TAGS = "ultima_drop_qual_tags";
 
     public static void registerUltimaConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addFlag(CFG_ULTIMA_DROP_QUA_TAGS, "Drop Ultima qual tags");
+        configBuilder.addFlag(CFG_ULTIMA_DROP_QUAL_TAGS, "Drop Ultima qual tags");
     }
 
     public static void setUltimaConfig(final ConfigBuilder configBuilder)
     {
-        if(configBuilder.hasFlag(CFG_ULTIMA_DROP_QUA_TAGS))
+        if(configBuilder.hasFlag(CFG_ULTIMA_DROP_QUAL_TAGS))
             UTLIMA_DROP_QUAL_TAGS = true;
     }
 

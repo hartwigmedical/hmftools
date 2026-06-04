@@ -460,7 +460,7 @@ public class SvVarData
 
         StringJoiner sj = new StringJoiner(ITEM_DELIM);
 
-        for(final BreakendGeneData gene : genesList)
+        for(BreakendGeneData gene : genesList)
         {
             StringJoiner geneSj = new StringJoiner(GENE_DATA_ITEM_DELIM);
 

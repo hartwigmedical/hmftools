@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.esvee.prep;
 
-import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
@@ -9,8 +8,6 @@ import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_MAX_DUPLICATE_DISTANCE;
-import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.SvConstants.hasPairedReads;
 import static com.hartwig.hmftools.esvee.common.SvConstants.isIllumina;
@@ -25,8 +22,8 @@ import static com.hartwig.hmftools.esvee.prep.JunctionUtils.markSupplementaryDup
 import static com.hartwig.hmftools.esvee.prep.JunctionUtils.readWithinJunctionRange;
 import static com.hartwig.hmftools.esvee.prep.KnownHotspot.junctionMatchesHotspot;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEPTH_MIN_CHECK;
-import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEPTH_MIN_SUPPORT_RATIO_DISCORDANT;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEPTH_MIN_SUPPORT_RATIO;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEPTH_MIN_SUPPORT_RATIO_DISCORDANT;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_HOTSPOT_JUNCTION_SUPPORT;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_LINE_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.NON_ILLUMINA_X_DEPTH_MIN_SUPPORT_RATIO;
@@ -50,17 +47,20 @@ import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.perf.PerformanceCounter;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.StartEndPair;
+import com.hartwig.hmftools.esvee.common.IndelCoords;
+import com.hartwig.hmftools.esvee.common.ReadIdTrimmer;
+import com.hartwig.hmftools.esvee.common.saga.SagaLocationMatcher;
+import com.hartwig.hmftools.esvee.common.saga.SagaMatchByLocation;
 import com.hartwig.hmftools.esvee.prep.types.DiscordantStats;
 import com.hartwig.hmftools.esvee.prep.types.JunctionData;
+import com.hartwig.hmftools.esvee.prep.types.PrepRead;
 import com.hartwig.hmftools.esvee.prep.types.ReadFilterConfig;
 import com.hartwig.hmftools.esvee.prep.types.ReadFilterType;
 import com.hartwig.hmftools.esvee.prep.types.ReadGroup;
 import com.hartwig.hmftools.esvee.prep.types.ReadGroupStatus;
-import com.hartwig.hmftools.esvee.common.ReadIdTrimmer;
-import com.hartwig.hmftools.esvee.prep.types.PrepRead;
 import com.hartwig.hmftools.esvee.prep.types.ReadType;
-import com.hartwig.hmftools.esvee.prep.types.RemoteJunction;
-import com.hartwig.hmftools.esvee.common.IndelCoords;
+
+import org.jetbrains.annotations.Nullable;
 
 public class JunctionTracker
 {
@@ -70,7 +70,7 @@ public class JunctionTracker
     private final List<KnownHotspot> mKnownHotspots;
     private final DepthTracker mDepthTracker;
 
-    private final Map<String,ReadGroup> mReadGroupMap; // keyed by readId
+    private final Map<String, ReadGroup> mReadGroupMap; // keyed by readId
     private final Set<String> mExpectedReadIds; // as indicated by another partition
     private final List<ReadGroup> mExpectedReadGroups;
 
@@ -88,6 +88,9 @@ public class JunctionTracker
     private int mInitialSupportingFrags;
     private final DiscordantStats mDiscordantStats;
 
+    @Nullable
+    private final SagaLocationMatcher mSagaMatcher;
+
     private final List<PerformanceCounter> mPerfCounters;
 
     private enum PerfCounters
@@ -96,10 +99,11 @@ public class JunctionTracker
         JunctionSupport,
         DiscordantGroups,
         JunctionFilter;
-    };
+    }
 
     public JunctionTracker(
-            final ChrBaseRegion region, final PrepConfig config, final DepthTracker depthTracker, final HotspotCache hotspotCache)
+            final ChrBaseRegion region, final PrepConfig config, final DepthTracker depthTracker, final HotspotCache hotspotCache,
+            @Nullable final SagaLocationMatcher sagaMatcher)
     {
         mRegion = region;
         mConfig = config;
@@ -108,7 +112,7 @@ public class JunctionTracker
         mDepthTracker = depthTracker;
         mKnownHotspots = hotspotCache.findRegionHotspots(region);
 
-        mDiscordantGroupFinder = new DiscordantGroups(mRegion, mFilterConfig.observedFragLengthMax(), mKnownHotspots, mConfig.TrackRemotes);
+        mDiscordantGroupFinder = new DiscordantGroups(mRegion, mFilterConfig.observedFragLengthMax(), mKnownHotspots);
 
         mReadGroupMap = Maps.newHashMap();
         mExpectedReadIds = Sets.newHashSet();
@@ -120,6 +124,7 @@ public class JunctionTracker
         mInitialSupportingFrags = 0;
         mDiscordantStats = new DiscordantStats();
         mReadIdTrimmer = new ReadIdTrimmer(mConfig.TrimReadId);
+        mSagaMatcher = sagaMatcher;
 
         mPerfCounters = Lists.newArrayList();
 
@@ -140,7 +145,9 @@ public class JunctionTracker
     }
 
     public List<JunctionData> junctions() { return mJunctions; }
+
     public List<PerformanceCounter> perfCounters() { return mPerfCounters; }
+
     public DiscordantStats discordantStats() { return mDiscordantStats; }
 
     public List<ReadGroup> formUniqueAssignedGroups()
@@ -221,6 +228,11 @@ public class JunctionTracker
         filterJunctions();
 
         findDiscordantGroups();
+
+        if(mSagaMatcher != null)
+        {
+            matchJunctionsToSaga();
+        }
     }
 
     public void assignJunctionFragmentsAndSupport()
@@ -287,7 +299,7 @@ public class JunctionTracker
         if(hasJunctions)
             Collections.sort(candidateSupportGroups, new ReadGroup.ReadGroupComparator());
 
-        Map<JunctionData,ReadType> supportedJunctions = Maps.newHashMap();
+        Map<JunctionData, ReadType> supportedJunctions = Maps.newHashMap();
         for(ReadGroup readGroup : candidateSupportGroups)
         {
             supportedJunctions.clear();
@@ -305,7 +317,7 @@ public class JunctionTracker
             if(!supportedJunctions.isEmpty())
             {
                 // check support from most important to least
-                for(Map.Entry<JunctionData,ReadType> entry : supportedJunctions.entrySet())
+                for(Map.Entry<JunctionData, ReadType> entry : supportedJunctions.entrySet())
                 {
                     JunctionData junctionData = entry.getKey();
 
@@ -370,17 +382,11 @@ public class JunctionTracker
     private void createJunction(final ReadGroup readGroup)
     {
         List<JunctionData> junctions = Lists.newArrayListWithExpectedSize(2);
-        List<RemoteJunction> remoteJunctions = mConfig.TrackRemotes ? Lists.newArrayList() : Collections.emptyList();
 
         for(PrepRead read : readGroup.reads())
         {
             if(read.isUnmapped())
                 continue;
-
-            if(mConfig.TrackRemotes && read.hasSuppAlignment())
-            {
-                RemoteJunction.addRemoteJunction(remoteJunctions, RemoteJunction.fromSupplementaryData(read.supplementaryAlignment()));
-            }
 
             if(read.readType() != ReadType.JUNCTION)
                 continue;
@@ -405,12 +411,7 @@ public class JunctionTracker
 
                 int position = orientation.isReverse() ? read.AlignmentStart : read.AlignmentEnd;
 
-                if(!mRegion.containsPosition(position))
-                {
-                    if(mConfig.TrackRemotes)
-                        RemoteJunction.addRemoteJunction(remoteJunctions, new RemoteJunction(mRegion.Chromosome, position, orientation));
-                }
-                else
+                if(mRegion.containsPosition(position))
                 {
                     JunctionData junctionData = getOrCreateJunction(read, orientation);
                     junctionData.addReadType(read, ReadType.JUNCTION);
@@ -426,18 +427,6 @@ public class JunctionTracker
 
         junctions.forEach(x -> x.addJunctionReadGroup(readGroup));
         junctions.forEach(x -> readGroup.addJunctionPosition(x));
-
-        for(RemoteJunction remoteJunction : remoteJunctions)
-        {
-            for(JunctionData junctionData : junctions)
-            {
-                // ignore remotes (typically) supplementaries which point to junction in another read in this group
-                if(remoteJunction.matches(mRegion.Chromosome, junctionData.Position, junctionData.Orient))
-                    continue;
-
-                junctionData.addRemoteJunction(remoteJunction);
-            }
-        }
     }
 
     private void handleIndelJunction(final ReadGroup readGroup, final PrepRead read, final IndelCoords indelCoords)
@@ -463,7 +452,7 @@ public class JunctionTracker
         readGroup.addJunctionPosition(junctionEnd);
     }
 
-    private void checkIndelSupport(final PrepRead read, final Map<JunctionData,ReadType> supportedJunctions, final int closeJunctionIndex)
+    private void checkIndelSupport(final PrepRead read, final Map<JunctionData, ReadType> supportedJunctions, final int closeJunctionIndex)
     {
         IndelCoords indelCoords = read.indelCoords();
 
@@ -602,7 +591,7 @@ public class JunctionTracker
                 JunctionData junctionData = mJunctions.get(exactJuncIndex);
 
                 if(!junctionData.discordantGroup() && discJunction.discordantGroup() && !junctionData.hotspot()
-                && junctionData.junctionGroups().size() < mFilterConfig.MinJunctionSupport)
+                        && junctionData.junctionGroups().size() < mFilterConfig.MinJunctionSupport)
                 {
                     mJunctions.set(exactJuncIndex, discJunction);
                 }
@@ -615,7 +604,7 @@ public class JunctionTracker
         mJunctions.add(newJuncIndex, discJunction);
     }
 
-    private void checkJunctionSupport(final ReadGroup readGroup, final PrepRead read, final Map<JunctionData,ReadType> supportedJunctions)
+    private void checkJunctionSupport(final ReadGroup readGroup, final PrepRead read, final Map<JunctionData, ReadType> supportedJunctions)
     {
         boolean hasPairedReads = hasPairedReads();
         int distanceBuffer = hasPairedReads ? mFilterConfig.maxSupportingFragmentDistance() : UNPAIRED_READ_JUNCTION_DISTANCE;
@@ -696,7 +685,7 @@ public class JunctionTracker
 
     private void checkReadSupportsJunction(
             final ReadGroup readGroup, final PrepRead read, final JunctionData junctionData,
-            final Map<JunctionData,ReadType> supportedJunctions)
+            final Map<JunctionData, ReadType> supportedJunctions)
     {
         if(readGroup.hasJunctionPosition(junctionData))
             return;
@@ -869,5 +858,14 @@ public class JunctionTracker
     {
         Orientation orientation = read.isLeftClipped() ? REVERSE : FORWARD;
         return getOrCreateJunction(read, orientation);
+    }
+
+    private void matchJunctionsToSaga()
+    {
+        for(JunctionData junction : mJunctions)
+        {
+            SagaMatchByLocation match = mSagaMatcher.match(mRegion.chromosome(), junction.Position);
+            junction.setSagaMatch(match);
+        }
     }
 }

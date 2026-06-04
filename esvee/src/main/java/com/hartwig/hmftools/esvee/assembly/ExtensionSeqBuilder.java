@@ -13,7 +13,9 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MAX_EXTENSION_READ_LOW_QUAL_MISMATCH_PERC;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_LENGTH_LOWER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH_LOWER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.basesMatch;
 import static com.hartwig.hmftools.esvee.assembly.JunctionAssembler.minReadThreshold;
 import static com.hartwig.hmftools.esvee.assembly.LineUtils.findConsensusLineExtension;
@@ -28,7 +30,6 @@ import static com.hartwig.hmftools.esvee.assembly.SequenceDiffType.REPEAT;
 import static com.hartwig.hmftools.esvee.assembly.SequenceDiffType.UNSET;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.INVALID_INDEX;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.aboveMinQual;
-import static com.hartwig.hmftools.esvee.common.CommonUtils.isHighBaseQual;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_MIN_EXTENSION_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_MIN_SOFT_CLIP_SECONDARY_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;
@@ -53,7 +54,8 @@ public class ExtensionSeqBuilder
     private final Junction mJunction;
     private final List<ReadParseState> mReads;
     private final boolean mBuildForwards;
-    
+    private final boolean mUseRelaxedFilters;
+
     private final SequenceBuilder mSequenceBuilder;
 
     private boolean mHasLineSequence;
@@ -63,9 +65,15 @@ public class ExtensionSeqBuilder
 
     public ExtensionSeqBuilder(final Junction junction, final List<Read> reads)
     {
+        this(junction, reads, false);
+    }
+
+    public ExtensionSeqBuilder(final Junction junction, final List<Read> reads, boolean useRelaxedFilters)
+    {
         mJunction = junction;
         mBuildForwards = mJunction.isForward();
         mReads = Lists.newArrayListWithCapacity(reads.size());
+        mUseRelaxedFilters = useRelaxedFilters;
 
         int maxExtension = 0;
         boolean hasLineReads = false;
@@ -112,10 +120,15 @@ public class ExtensionSeqBuilder
     }
 
     public byte[] extensionBases() { return mSequenceBuilder.bases(); }
+
     public int extensionLength() { return mSequenceBuilder.bases().length - 1; } // since includes the first ref base
+
     public byte[] baseQualities() { return mSequenceBuilder.baseQuals(); }
+
     public List<RepeatInfo> repeats() { return mSequenceBuilder.repeats(); }
+
     public boolean isValid() { return mIsValid; }
+
     public int refBaseRepeatCount() { return mRefRepeatCount; }
 
     public List<SupportRead> formAssemblySupport()
@@ -165,7 +178,7 @@ public class ExtensionSeqBuilder
         return mReads.stream().filter(x -> x.mismatched()).map(x -> x.read()).collect(Collectors.toList());
     }
 
-    public int mismatches() { return (int)mReads.stream().filter(x -> x.mismatched()).count(); }
+    public int mismatches() { return (int) mReads.stream().filter(x -> x.mismatched()).count(); }
 
     public ReadParseState checkAddJunctionRead(final Read read)
     {
@@ -319,7 +332,7 @@ public class ExtensionSeqBuilder
                 seqDiffInfo = mSequenceBuilder.assessNovelIndelDifferences(
                         read, seqDiffInfo, readNextBases, consensusNextBases, consensusCurrentAndNext);
             }
-       }
+        }
 
         if(seqDiffInfo == SequenceDiffInfo.UNSET)
         {
@@ -351,8 +364,13 @@ public class ExtensionSeqBuilder
         int validExtensionReadCount = 0;
         boolean hasMinLengthSoftClipRead = false;
 
-        int reqExtensionLength = mHasLineSequence ? LINE_MIN_EXTENSION_LENGTH : ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
-        int reqSecondaryExtensionLength = mHasLineSequence ? LINE_MIN_SOFT_CLIP_SECONDARY_LENGTH : ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH;
+        int reqExtensionLength = mHasLineSequence
+                ? LINE_MIN_EXTENSION_LENGTH
+                : (mUseRelaxedFilters ? ASSEMBLY_MIN_SOFT_CLIP_LENGTH_LOWER : ASSEMBLY_MIN_SOFT_CLIP_LENGTH);
+
+        int reqSecondaryExtensionLength = mHasLineSequence
+                ? LINE_MIN_SOFT_CLIP_SECONDARY_LENGTH
+                : (mUseRelaxedFilters ? ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH_LOWER : ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH);
 
         for(ReadParseState read : mReads)
         {
@@ -424,7 +442,9 @@ public class ExtensionSeqBuilder
         int junctionIndex = sampleRead.startIndex();
 
         int repeatIndexStart = junctionIndex + (mBuildForwards ? repeatJunctionDistance - 1 : -repeatJunctionDistance + 1);
-        int previousRepeatCount = RepeatInfo.getRepeatCount(sampleRead.read().getBases(), firstRepeat.Bases, repeatIndexStart, !mBuildForwards);
+
+        int previousRepeatCount = RepeatInfo.getRepeatCount(
+                sampleRead.read().getBases(), firstRepeat.Bases, repeatIndexStart, !mBuildForwards);
 
         if(previousRepeatCount > 0)
             mRefRepeatCount = previousRepeatCount;

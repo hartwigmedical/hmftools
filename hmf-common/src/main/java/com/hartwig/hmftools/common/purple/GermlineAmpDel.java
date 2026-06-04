@@ -15,6 +15,7 @@ import com.google.common.collect.Lists;
 
 public final class GermlineAmpDel
 {
+    private static final String INCONSISTENT_STATUS_CHANGE_MARKER = "NA";
     public final String GeneName;
     public final String Transcript;
     public final String Chromosome;
@@ -35,10 +36,11 @@ public final class GermlineAmpDel
     public final ReportedStatus Reported;
 
     public GermlineAmpDel(
-            final String geneName, final String transcript, final String chromosome, final String chromosomeBand, int regionStart, int regionEnd,
-            final int depthWindowCount, final int exonStart, final int exonEnd, final boolean isPartial, final GermlineDetectionMethod detectionMethod,
-            final GermlineStatus normalStatus, final GermlineStatus tumorStatus, final double germlineCopyNumber, final double tumorCopyNumber,
-            final String filter, final int cohortFrequency, final ReportedStatus reportedStatus)
+            final String geneName, final String transcript, final String chromosome, final String chromosomeBand, int regionStart,
+            int regionEnd, final int depthWindowCount, final int exonStart, final int exonEnd, final boolean isPartial,
+            final GermlineDetectionMethod detectionMethod, final GermlineStatus germlineStatus, final GermlineStatus tumorStatus,
+            final double germlineCopyNumber, final double tumorCopyNumber, final String filter, final int cohortFrequency,
+            final ReportedStatus reportedStatus)
     {
         GeneName = geneName;
         Transcript = transcript;
@@ -51,7 +53,7 @@ public final class GermlineAmpDel
         ExonEnd = exonEnd;
         IsPartial = isPartial;
         DetectionMethod = detectionMethod;
-        NormalStatus = normalStatus;
+        NormalStatus = germlineStatus;
         TumorStatus = tumorStatus;
         TumorCopyNumber = tumorCopyNumber;
         GermlineCopyNumber = germlineCopyNumber;
@@ -104,7 +106,7 @@ public final class GermlineAmpDel
         tumorCopyNumber,
         filter,
         cohortFrequency,
-        reportedStatus;
+        reportedStatus
     }
 
     private static String header()
@@ -153,7 +155,7 @@ public final class GermlineAmpDel
         Integer transcriptIndex = fieldsIndexMap.get(Columns.transcript.toString());
         Integer isPartialIndex = fieldsIndexMap.get(Columns.isPartial.toString());
 
-        for(final String line : lines)
+        for(String line : lines)
         {
             String[] values = line.split(TSV_DELIM, -1);
 

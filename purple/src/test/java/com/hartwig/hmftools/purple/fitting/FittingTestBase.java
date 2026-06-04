@@ -83,10 +83,10 @@ public class FittingTestBase
         // Amber data
         mAmberData.ChromosomeBafs.put(chr1, createAmberBaf(chr1.toString(), 1000, 1.0, 0.5));
 
-        mAmberData.TumorSegments.put(chr1, new PCFPosition(TUMOR_BAF, chr1.toString(), 100000));
+        mAmberData.TumorSegments.put(chr1, List.of(new PCFPosition(TUMOR_BAF, chr1.toString(), 100000)));
 
         // Cobalt data
-        mCobaltData.TumorSegments.put(chr1, new PCFPosition(TUMOR_RATIO, chr1.toString(), 100000));
+        mCobaltData.TumorSegments.put(chr1, List.of(new PCFPosition(TUMOR_RATIO, chr1.toString(), 100000)));
 
         List<CobaltRatio> cobaltRatios = Lists.newArrayList();
         cobaltRatios.add(FittingTestUtils.createCobaltRatio(chr1, 1000, 0.5, 0.5));

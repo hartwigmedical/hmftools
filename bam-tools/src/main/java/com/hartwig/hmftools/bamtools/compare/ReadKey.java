@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.bamtools.compare;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 
 import java.util.Comparator;
@@ -14,49 +16,63 @@ import htsjdk.samtools.SAMTag;
 public class ReadKey
 {
     public final String ReadName;
-    public final boolean FirstOfPair;
+    public final boolean FirstInPair;
+    public final String SuppSecondaryId;
 
-    // supplementary index is 0 for non supplementary, and then rest rank by chr:pos:strand:cigar
-    public final byte SupplementaryIndex;
-
-    public ReadKey(final String readName, final boolean firstOfPair, final int supplementaryIndex)
+    public ReadKey(final String readName, final boolean firstInPair, final String suppSecondaryId)
     {
         ReadName = readName;
-        FirstOfPair = firstOfPair;
-        SupplementaryIndex = (byte)supplementaryIndex;
+        FirstInPair = firstInPair;
+        SuppSecondaryId = suppSecondaryId;
+    }
+
+    public static ReadKey from(final SAMRecord read)
+    {
+        if(!read.isSecondaryOrSupplementary())
+            return new ReadKey(read.getReadName(), read.getFirstOfPairFlag(), null);
+
+        String id = format("%s:%s:%s:%s:%c",
+            read.getSupplementaryAlignmentFlag() ? "supp" : "second",
+                read.getContig(), read.getAlignmentStart(), read.getCigarString(), read.getReadNegativeStrandFlag() ? '-' : '+');
+
+        return new ReadKey(read.getReadName(), read.getFirstOfPairFlag(), id);
     }
 
     @Override
     public boolean equals(final Object o)
     {
         if(this == o)
-        {
             return true;
-        }
+
         if(!(o instanceof ReadKey))
-        {
             return false;
-        }
 
-        final ReadKey readKey = (ReadKey) o;
+        final ReadKey readKey = (ReadKey)o;
 
-        if(FirstOfPair != readKey.FirstOfPair)
-        {
+        if(FirstInPair != readKey.FirstInPair)
             return false;
-        }
-        if(SupplementaryIndex != readKey.SupplementaryIndex)
-        {
+
+        if(!ReadName.equals(readKey.ReadName))
             return false;
-        }
-        return ReadName.equals(readKey.ReadName);
+
+        if(SuppSecondaryId != null && readKey.SuppSecondaryId != null)
+            return SuppSecondaryId.equals(readKey.SuppSecondaryId);
+
+        if(SuppSecondaryId == null && readKey.SuppSecondaryId == null)
+            return true;
+
+        return false;
     }
 
     @Override
     public int hashCode()
     {
         int result = ReadName.hashCode();
-        result = 31 * result + (FirstOfPair ? 1 : 0);
-        result = 31 * result + (int) SupplementaryIndex;
+        result = 31 * result + (FirstInPair ? 1 : 0);
+
+        if(SuppSecondaryId != null)
+            result = 31 * result + SuppSecondaryId.hashCode();
+
         return result;
     }
 
@@ -66,25 +82,16 @@ public class ReadKey
             .thenComparingInt(o -> o.Strand)
             .thenComparing(o -> o.Cigar);
 
-    // create key from read
-    public static ReadKey from(SAMRecord read)
-    {
-        return new ReadKey(read.getReadName(), SamRecordUtils.firstInPair(read), calcSupplementaryIndex(read));
-    }
-
-    static int calcSupplementaryIndex(SAMRecord read)
+    /*
+    static int calcSupplementaryIndex(final SAMRecord read)
     {
         if(!read.isSecondaryOrSupplementary())
-        {
             return 0;
-        }
 
         String saAttribute = read.getStringAttribute(SAMTag.SA.name());
 
         if(saAttribute == null)
-        {
             return 1;
-        }
 
         // before splitting it, we want to see how many supplementary there are, problem is that this split
         // call takes too much memory otherwise. If there is only one supplementary then the index would be 1
@@ -141,4 +148,5 @@ public class ReadKey
 
         return saIndex;
     }
+    */
 }

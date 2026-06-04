@@ -40,7 +40,7 @@ public class GeneCopyNumberRegion
     {
         SvCNData minRegion = null;
 
-        for(final ExonData exon : transData.exons())
+        for(ExonData exon : transData.exons())
         {
             for(SvCNData cnData : copyNumberData)
             {

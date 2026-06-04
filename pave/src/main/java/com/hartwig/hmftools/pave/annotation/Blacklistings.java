@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.pave.annotation;
 
+import static com.hartwig.hmftools.common.variant.PaveVcfTags.BLACKLIST_BED_FLAG;
+import static com.hartwig.hmftools.common.variant.PaveVcfTags.BLACKLIST_VCF_DESC;
+import static com.hartwig.hmftools.common.variant.PaveVcfTags.BLACKLIST_VCF_FLAG;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 
 import java.io.IOException;
@@ -9,6 +12,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.pave.VariantData;
 
@@ -22,14 +26,11 @@ import htsjdk.variant.vcf.VCFInfoHeaderLine;
 public class Blacklistings extends AnnotationData
 {
     private final List<ChrBaseRegion> mBedRegions;
-    private final List<VcfEntry> mVcfEntries;
+    private final List<SimpleVariant> mVcfEntries;
     private boolean mHasValidData;
 
     private static final String BLACKLIST_BED = "blacklist_bed";
     private static final String BLACKLIST_VCF = "blacklist_vcf";
-
-    private static final String BLACKLIST_BED_FLAG = "BLACKLIST_BED";
-    private static final String BLACKLIST_VCF_FLAG = "BLACKLIST_VCF";
 
     public Blacklistings(final ConfigBuilder configBuilder)
     {
@@ -69,7 +70,7 @@ public class Blacklistings extends AnnotationData
             variant.context().getCommonInfo().putAttribute(BLACKLIST_BED_FLAG, true);
         }
 
-        if(mVcfEntries.stream().anyMatch(x -> x.matches(variant)))
+        if(mVcfEntries.stream().anyMatch(x -> x.matches(variant.Chromosome, variant.Position, variant.Ref, variant.Alt)))
         {
             variant.context().getCommonInfo().putAttribute(BLACKLIST_VCF_FLAG, true);
         }
@@ -121,11 +122,12 @@ public class Blacklistings extends AnnotationData
 
         for(VariantContext context : vcfFileReader.iterator())
         {
+            String chromosome = context.getContig();
             int position = context.getStart();
             String ref = context.getReference().getBaseString();
             String alt = context.getAlternateAlleles().get(0).toString();
 
-            mVcfEntries.add(new VcfEntry(position, ref, alt));
+            mVcfEntries.add(new SimpleVariant(chromosome, position, ref, alt));
         }
 
         PV_LOGGER.info("loaded {} blacklist VCF entries from file({})", mVcfEntries.size(), filename);
@@ -133,37 +135,13 @@ public class Blacklistings extends AnnotationData
 
     public static void addHeader(final VCFHeader header)
     {
-        header.addMetaDataLine(new VCFInfoHeaderLine(
-                BLACKLIST_BED_FLAG, 0, VCFHeaderLineType.Flag, "Sites listed in Blacklist BED"));
-
-        header.addMetaDataLine(new VCFInfoHeaderLine(
-                BLACKLIST_VCF_FLAG, 0, VCFHeaderLineType.Flag, "Sites listed in Blacklist VCF"));
+        header.addMetaDataLine(new VCFInfoHeaderLine(BLACKLIST_BED_FLAG, 0, VCFHeaderLineType.Flag, BLACKLIST_BED_FLAG));
+        header.addMetaDataLine(new VCFInfoHeaderLine(BLACKLIST_VCF_FLAG, 0, VCFHeaderLineType.Flag, BLACKLIST_VCF_DESC));
     }
 
     public static void addConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addPath(BLACKLIST_BED, false, "Blacklist BED file");
         configBuilder.addPath(BLACKLIST_VCF, false, "Blacklist VCF file");
-    }
-
-    private class VcfEntry
-    {
-        public final int Position;
-        public final String Ref;
-        public final String Alt;
-
-        public VcfEntry(final int position, final String ref, final String alt)
-        {
-            Position = position;
-            Ref = ref;
-            Alt = alt;
-        }
-
-        public boolean matches(final VariantData variant)
-        {
-            return variant.Position == Position && variant.Ref.equals(Ref) && variant.Alt.equals(Alt);
-        }
-
-        public String toString() { return String.format("%d %s>%s", Position, Ref, Alt); }
     }
 }

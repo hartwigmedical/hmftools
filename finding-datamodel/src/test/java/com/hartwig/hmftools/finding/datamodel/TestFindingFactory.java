@@ -21,6 +21,7 @@ import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingStatusBuilder;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 @SuppressWarnings("unused")
 public class TestFindingFactory
@@ -41,7 +42,7 @@ public class TestFindingFactory
     }
 
     @NotNull
-    public static <T> FindingItem<T> buildFindingItem(@NotNull FindingStatus.Status resultStatus, @NotNull T finding)
+    public static <T> FindingItem<T> buildFindingItem(@NotNull FindingStatus.Status resultStatus, @Nullable T finding)
     {
         return FindingItemBuilder.<T>builder().status(findingsStatus(resultStatus)).finding(finding).build();
     }
@@ -50,7 +51,7 @@ public class TestFindingFactory
     public static PurityPloidyFitBuilder purityPloidyFitBuilder()
     {
         return PurityPloidyFitBuilder.builder()
-                .purity(thresholdValue(0))
+                .purity(0)
                 .fittedPurityMethod(PurityPloidyFit.FittedPurityMethod.NORMAL)
                 .purpleInputPlot(new VisualisationFile("purpleInputPlot.png"))
                 .purpleCircosPlot(new VisualisationFile("purpleCircosPlot.png"))
@@ -64,7 +65,7 @@ public class TestFindingFactory
     @NotNull
     public static QcBuilder qcBuilder()
     {
-        return QcBuilder.builder().status(new TreeSet<>()).germlineAberrations(new TreeSet<>());
+        return QcBuilder.builder().isPass(true).errors(new TreeSet<>()).warnings(new TreeSet<>()).germlineAberrations(new TreeSet<>());
     }
 
     @NotNull
@@ -77,8 +78,7 @@ public class TestFindingFactory
                 .hrdType("")
                 .brca1Value(0)
                 .brca2Value(0)
-                .lohCopyNumbers(List.of())
-                .drivingGenes(List.of());
+                .drivingGenes(new TreeSet<>());
     }
 
     @NotNull
@@ -88,8 +88,7 @@ public class TestFindingFactory
                 .findingKey("")
                 .status(MicrosatelliteStability.Status.MSI)
                 .indelsPerMb(thresholdValue(0))
-                .lohCopyNumbers(List.of())
-                .drivingGenes(List.of());
+                .drivingGenes(new TreeSet<>());
     }
 
     @NotNull
@@ -135,7 +134,7 @@ public class TestFindingFactory
     }
 
     @NotNull
-    public static SmallVariantBuilder variantBuilder()
+    public static SmallVariantBuilder smallVariantBuilder()
     {
         return SmallVariantBuilder.builder()
                 .driver(driverFields(true, DriverInterpretation.HIGH))
@@ -149,7 +148,7 @@ public class TestFindingFactory
                 .minorAlleleCopyNumber(0D)
                 .variantCopyNumber(0D)
                 .hotspot(SmallVariant.HotspotType.NON_HOTSPOT)
-                .allelicDepth(depthBuilder().build())
+                .allelicDepth(allelicDepthBuilder().build())
                 .subclonalLikelihood(0D)
                 .biallelic(false)
                 .biallelicLikelihood(0D)
@@ -161,7 +160,7 @@ public class TestFindingFactory
     }
 
     @NotNull
-    public static SmallVariantAllelicDepthBuilder depthBuilder()
+    public static SmallVariantAllelicDepthBuilder allelicDepthBuilder()
     {
         return SmallVariantAllelicDepthBuilder.builder().totalReadCount(0).alleleReadCount(0);
     }
@@ -273,9 +272,20 @@ public class TestFindingFactory
     }
 
     @NotNull
+    public static ChromosomeArmCopyNumberBuilder chromosomeArmCopyNumberBuilder()
+    {
+        return ChromosomeArmCopyNumberBuilder.builder()
+                .driver(driverFields(true, DriverInterpretation.HIGH))
+                .chromosome("")
+                .arm(ChromosomeArmCopyNumber.ChromosomeArm.P)
+                .type(ChromosomeArmCopyNumber.Type.GAIN);
+    }
+
+    @NotNull
     public static HlaAlleleBuilder hlaAlleleBuilder()
     {
         return HlaAlleleBuilder.builder()
+                .qcStatus(Set.of(HlaAllele.QcStatus.PASS))
                 .findingKey("")
                 .geneSymbol("")
                 .geneClass(HlaAllele.GeneClass.MHC_CLASS_I)
@@ -294,6 +304,20 @@ public class TestFindingFactory
                 .somaticInframeIndel(0D);
     }
 
+    @NotNull
+    public static PharmacoGenotypeBuilder pharmacoGenotypeBuilder()
+    {
+        return PharmacoGenotypeBuilder.builder()
+                .findingKey("")
+                .gene("")
+                .allele("")
+                .function("")
+                .haplotype("")
+                .linkedDrugs("")
+                .urlPrescriptionInfo("");
+    }
+
+    @NotNull
     public static DriverFields driverFields(boolean reported, DriverInterpretation interpretation)
     {
         return driverFieldsBuilder()
@@ -309,13 +333,17 @@ public class TestFindingFactory
                 .driverSource(DriverSource.SOMATIC);
     }
 
-    static FindingStatus findingsStatus(FindingStatus.Status status)
+    public static FindingStatus findingsStatus(FindingStatus.Status status)
+    {
+        return findingsStatusBuilder(status).build();
+    }
+
+    public static FindingStatusBuilder findingsStatusBuilder(FindingStatus.Status status)
     {
         return FindingStatusBuilder.builder()
                 .status(status)
                 .errors(new TreeSet<>())
-                .warnings(new TreeSet<>())
-                .build();
+                .warnings(new TreeSet<>());
     }
 
     public static ThresholdValue thresholdValue(double value)

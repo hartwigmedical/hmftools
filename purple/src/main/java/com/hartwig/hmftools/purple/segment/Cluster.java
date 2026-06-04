@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.purple.segment;
 
+import static java.lang.String.format;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -15,7 +17,7 @@ public class Cluster implements GenomeRegion
     public final int Start;
     public int End;
     public final List<PCFPosition> PcfPositions;
-    public final List<SVSegment> Variants;
+    public final List<SvPosition> Variants;
 
     public Cluster(final String chromosome, final int start, final int end)
     {
@@ -47,5 +49,14 @@ public class Cluster implements GenomeRegion
     public int end()
     {
         return End;
+    }
+
+    public String toString()
+    {
+        int pcfCount = PcfPositions.size();
+        int ratioCount = ratios().size();
+
+        return format("%s:%d-%d: pcfs(%d baf=%d ratio=%d) sv(%d)",
+                Chromosome, Start, End, pcfCount, pcfCount - ratioCount, ratioCount, Variants.size());
     }
 }

@@ -2,11 +2,13 @@ package com.hartwig.hmftools.panelbuilder;
 
 import static java.lang.Double.NEGATIVE_INFINITY;
 import static java.lang.Double.POSITIVE_INFINITY;
+import static java.util.Objects.requireNonNull;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import java.util.function.DoublePredicate;
 import java.util.function.ToDoubleFunction;
@@ -83,5 +85,43 @@ public class Utils
     public static <T> List<T> findDuplicates(final List<T> items)
     {
         return findDuplicates(items, Object::equals);
+    }
+
+    public static double estimatePanelOnTargetRate(final List<Probe> probes)
+    {
+        double offTargetSum = probes.stream().mapToDouble(p -> qualityScoreToOffTargets(requireNonNull(p.qualityScore()))).sum();
+        double offTargetRate = offTargetSum / probes.size();
+        return 1 - offTargetRate;
+    }
+
+    private static double qualityScoreToOffTargets(double qualityScore)
+    {
+        if(qualityScore < 0)
+        {
+            throw new IllegalArgumentException("Quality score must be non-negative");
+        }
+        // The probe quality profile resolution is 0.01, so let's estimate that any probe which scores near 0 is about 0.01.
+        // This avoids division by 0 issues. Because technically 0 QS means the probe has infinite off-targets.
+        if(qualityScore < 1e-3)
+        {
+            qualityScore = 0.01;
+        }
+        return (1 / qualityScore) - 1;
+    }
+
+    public static String combineStringUnique(final String s1, final String s2, final BiFunction<String, String, String> combiner)
+    {
+        if(s1.contains(s2))
+        {
+            return s1;
+        }
+        else if(s2.contains(s1))
+        {
+            return s2;
+        }
+        else
+        {
+            return combiner.apply(s1, s2);
+        }
     }
 }

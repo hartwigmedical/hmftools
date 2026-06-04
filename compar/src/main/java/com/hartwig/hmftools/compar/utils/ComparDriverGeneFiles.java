@@ -31,16 +31,16 @@ public class ComparDriverGeneFiles
     {
         CMP_LOGGER.info("comparing driver gene panel files");
 
-        String driverGenePanelFileRef = configBuilder.getValue(CFG_OLD_FILE_REF);
-        String driverGenePanelFileNew = configBuilder.getValue(CFG_OLD_FILE_NEW);
+        String driverGenePanelFileOld = configBuilder.getValue(CFG_PANEL_FILE_OLD);
+        String driverGenePanelFileNew = configBuilder.getValue(CFG_PANEL_FILE_NEW);
         String outputDir = parseOutputDir(configBuilder);
 
         try
         {
-            List<DriverGene> driverGenesRef = DriverGeneFile.read(driverGenePanelFileRef);
+            List<DriverGene> driverGenesOld = DriverGeneFile.read(driverGenePanelFileOld);
             List<DriverGene> driverGenesNew = DriverGeneFile.read(driverGenePanelFileNew);
 
-            int refOnly = 0;
+            int oldOnly = 0;
             int newOnly = 0;
             int valueDiffs = 0;
 
@@ -57,20 +57,20 @@ public class ComparDriverGeneFiles
 
             Set<String> matchedGenes = Sets.newHashSet();
 
-            for(DriverGene driverGeneRef : driverGenesRef)
+            for(DriverGene driverGeneOld : driverGenesOld)
             {
-                DriverGene driverGeneNew = driverGenesNew.stream().filter(x -> x.gene().equals(driverGeneRef.gene())).findFirst().orElse(null);
+                DriverGene driverGeneNew = driverGenesNew.stream().filter(x -> x.gene().equals(driverGeneOld.gene())).findFirst().orElse(null);
 
                 if(driverGeneNew == null)
                 {
-                    writeMissing(driverGeneRef, true, writer);
-                    ++refOnly;
+                    writeMissing(driverGeneOld, true, writer);
+                    ++oldOnly;
                 }
                 else
                 {
-                    matchedGenes.add(driverGeneRef.gene());
+                    matchedGenes.add(driverGeneOld.gene());
 
-                    valueDiffs += checkDifferences(driverGeneRef, driverGeneNew, writer);
+                    valueDiffs += checkDifferences(driverGeneOld, driverGeneNew, writer);
                 }
             }
 
@@ -85,7 +85,7 @@ public class ComparDriverGeneFiles
 
             writer.close();
 
-            CMP_LOGGER.info("additions: ref({}) new({}) valueDiffs({})", refOnly, newOnly, valueDiffs);
+            CMP_LOGGER.info("additions: old({}) new({}) valueDiffs({})", oldOnly, newOnly, valueDiffs);
         }
         catch(Exception e)
         {
@@ -94,139 +94,139 @@ public class ComparDriverGeneFiles
         }
     }
 
-    private static int checkDifferences(final DriverGene driverGeneRef, final DriverGene driverGeneNew, final BufferedWriter writer)
+    private static int checkDifferences(final DriverGene driverGeneOld, final DriverGene driverGeneNew, final BufferedWriter writer)
             throws IOException
     {
-        String gene = driverGeneRef.gene();
+        String gene = driverGeneOld.gene();
 
         int diffs = 0;
 
         if(checkValueDifference(
-                gene, "reportMissense", driverGeneRef.reportMissenseAndInframe(), driverGeneNew.reportMissenseAndInframe(), writer))
+                gene, "reportMissense", driverGeneOld.reportMissenseAndInframe(), driverGeneNew.reportMissenseAndInframe(), writer))
         {
             ++diffs;
         }
 
         if(checkValueDifference(
-                gene, "reportNonsense", driverGeneRef.reportNonsenseAndFrameshift(), driverGeneNew.reportNonsenseAndFrameshift(), writer))
+                gene, "reportNonsense", driverGeneOld.reportNonsenseAndFrameshift(), driverGeneNew.reportNonsenseAndFrameshift(), writer))
         {
             ++diffs;
         }
 
         if(checkValueDifference(
-                gene, "reportSplice", driverGeneRef.reportSplice(), driverGeneNew.reportSplice(), writer))
+                gene, "reportSplice", driverGeneOld.reportSplice(), driverGeneNew.reportSplice(), writer))
         {
             ++diffs;
         }
 
         if(checkValueDifference(
-                gene, "reportDeletion", driverGeneRef.reportDeletion(), driverGeneNew.reportDeletion(), writer))
+                gene, "reportDeletion", driverGeneOld.reportDeletion(), driverGeneNew.reportDeletion(), writer))
         {
             ++diffs;
         }
 
         if(checkValueDifference(
-                gene, "reportHetDeletion", driverGeneRef.reportHetDeletion(), driverGeneNew.reportHetDeletion(), writer))
+                gene, "reportHetDeletion", driverGeneOld.reportHetDeletion(), driverGeneNew.reportHetDeletion(), writer))
         {
             ++diffs;
         }
 
         if(checkValueDifference(
-                gene, "reportLoh", driverGeneRef.reportLoh(), driverGeneNew.reportLoh(), writer))
+                gene, "reportLoh", driverGeneOld.reportLoh(), driverGeneNew.reportLoh(), writer))
         {
             ++diffs;
         }
 
         if(checkValueDifference(
-                gene, "hetDeletionThreshold", driverGeneRef.hetDeletionThreshold(), driverGeneNew.hetDeletionThreshold(), writer))
+                gene, "hetDeletionThreshold", driverGeneOld.hetDeletionThreshold(), driverGeneNew.hetDeletionThreshold(), writer))
         {
             ++diffs;
         }
 
         if(checkValueDifference(
-                gene, "reportDisruption", driverGeneRef.reportDisruption(), driverGeneNew.reportDisruption(), writer))
+                gene, "reportDisruption", driverGeneOld.reportDisruption(), driverGeneNew.reportDisruption(), writer))
         {
             ++diffs;
         }
 
         if(checkValueDifference(
-                gene, "reportAmplification", driverGeneRef.reportAmplification(), driverGeneNew.reportAmplification(), writer))
+                gene, "reportAmplification", driverGeneOld.reportAmplification(), driverGeneNew.reportAmplification(), writer))
         {
             ++diffs;
         }
 
         if(checkValueDifference(
-                gene, "amplificationRatio", driverGeneRef.amplificationRatio(), driverGeneNew.amplificationRatio(), writer))
+                gene, "amplificationRatio", driverGeneOld.amplificationRatio(), driverGeneNew.amplificationRatio(), writer))
         {
             ++diffs;
         }
 
         if(checkValueDifference(
-                gene, "reportSomaticHotspot", driverGeneRef.reportSomaticHotspot(), driverGeneNew.reportSomaticHotspot(), writer))
+                gene, "reportSomaticHotspot", driverGeneOld.reportSomaticHotspot(), driverGeneNew.reportSomaticHotspot(), writer))
         {
             ++diffs;
         }
 
         if(checkValueDifference(
-                gene, "likelihoodType", driverGeneRef.likelihoodType().toString(), driverGeneNew.likelihoodType().toString(), writer))
+                gene, "likelihoodType", driverGeneOld.likelihoodType().toString(), driverGeneNew.likelihoodType().toString(), writer))
         {
             ++diffs;
         }
 
         if(checkValueDifference(
-                gene, "reportGermlineVariant", driverGeneRef.reportGermlineVariant().toString(),
+                gene, "reportGermlineVariant", driverGeneOld.reportGermlineVariant().toString(),
                 driverGeneNew.reportGermlineVariant().toString(), writer))
         {
             ++diffs;
         }
 
         if(checkValueDifference(
-                gene, "reportGermlineHotspot", driverGeneRef.reportGermlineHotspot().toString(),
+                gene, "reportGermlineHotspot", driverGeneOld.reportGermlineHotspot().toString(),
                 driverGeneNew.reportGermlineHotspot().toString(), writer))
         {
             ++diffs;
         }
 
         if(checkValueDifference(
-                gene, "reportGermlineDisruption", driverGeneRef.reportGermlineDisruption().toString(),
+                gene, "reportGermlineDisruption", driverGeneOld.reportGermlineDisruption().toString(),
                 driverGeneNew.reportGermlineDisruption().toString(), writer))
         {
             ++diffs;
         }
 
         if(checkValueDifference(
-                gene, "reportGermlineAmplification", driverGeneRef.reportGermlineAmplification(), driverGeneNew.reportGermlineAmplification(), writer))
+                gene, "reportGermlineAmplification", driverGeneOld.reportGermlineAmplification(), driverGeneNew.reportGermlineAmplification(), writer))
         {
             ++diffs;
         }
 
         if(checkValueDifference(
                 gene, "additionalReportedTranscripts",
-                driverGeneRef.additionalReportedTranscripts().stream().collect(Collectors.joining(ITEM_DELIM)),
+                driverGeneOld.additionalReportedTranscripts().stream().collect(Collectors.joining(ITEM_DELIM)),
                 driverGeneNew.additionalReportedTranscripts().stream().collect(Collectors.joining(ITEM_DELIM)), writer))
         {
             ++diffs;
         }
 
         if(checkValueDifference(
-                gene, "reportPGX", driverGeneRef.reportPGX(), driverGeneNew.reportPGX(), writer))
+                gene, "reportPGX", driverGeneOld.reportPGX(), driverGeneNew.reportPGX(), writer))
         {
             ++diffs;
         }
 
         if(checkValueDifference(
-                gene, "reportHighExpression", driverGeneRef.reportHighExpression(), driverGeneNew.reportHighExpression(), writer))
+                gene, "reportHighExpression", driverGeneOld.reportHighExpression(), driverGeneNew.reportHighExpression(), writer))
         {
             ++diffs;
         }
 
         if(checkValueDifference(
-                gene, "reportLowExpression", driverGeneRef.reportLowExpression(), driverGeneNew.reportLowExpression(), writer))
+                gene, "reportLowExpression", driverGeneOld.reportLowExpression(), driverGeneNew.reportLowExpression(), writer))
         {
             ++diffs;
         }
         if(checkValueDifference(
-                gene, "reportNovelSpliceJunction", driverGeneRef.reportNovelSpliceJunction(), driverGeneNew.reportNovelSpliceJunction(), writer))
+                gene, "reportNovelSpliceJunction", driverGeneOld.reportNovelSpliceJunction(), driverGeneNew.reportNovelSpliceJunction(), writer))
         {
             ++diffs;
         }
@@ -235,12 +235,12 @@ public class ComparDriverGeneFiles
     }
 
     private static boolean checkValueDifference(
-            final String gene, final String field, final boolean refValue, final boolean newValue, final BufferedWriter writer)
+            final String gene, final String field, final boolean oldValue, final boolean newValue, final BufferedWriter writer)
             throws IOException
     {
-        if(refValue != newValue)
+        if(oldValue != newValue)
         {
-            writeValueDifference(gene, field, String.valueOf(refValue), String.valueOf(newValue), writer);
+            writeValueDifference(gene, field, String.valueOf(oldValue), String.valueOf(newValue), writer);
             return true;
         }
 
@@ -248,12 +248,12 @@ public class ComparDriverGeneFiles
     }
 
     private static boolean checkValueDifference(
-            final String gene, final String field, final double refValue, final double newValue, final BufferedWriter writer)
+            final String gene, final String field, final double oldValue, final double newValue, final BufferedWriter writer)
             throws IOException
     {
-        if(refValue != newValue)
+        if(oldValue != newValue)
         {
-            writeValueDifference(gene, field, String.valueOf(refValue), String.valueOf(newValue), writer);
+            writeValueDifference(gene, field, String.valueOf(oldValue), String.valueOf(newValue), writer);
             return true;
         }
 
@@ -261,42 +261,42 @@ public class ComparDriverGeneFiles
     }
 
     private static boolean checkValueDifference(
-            final String gene, final String field, final String refValue, final String newValue, final BufferedWriter writer)
+            final String gene, final String field, final String oldValue, final String newValue, final BufferedWriter writer)
             throws IOException
     {
-        if(!refValue.equals(newValue))
+        if(!oldValue.equals(newValue))
         {
-            writeValueDifference(gene, field, refValue, newValue, writer);
+            writeValueDifference(gene, field, oldValue, newValue, writer);
             return true;
         }
 
         return false;
     }
 
-    private static void writeValueDifference(final String gene, final String field, final String refValue, final String newValue, final BufferedWriter writer)
+    private static void writeValueDifference(final String gene, final String field, final String oldValue, final String newValue, final BufferedWriter writer)
             throws IOException
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);
         sj.add(gene);
         sj.add("VALUE");
-        sj.add(format("%s(%s/%s)", field, refValue, newValue));
+        sj.add(format("%s(%s/%s)", field, oldValue, newValue));
         writer.write(sj.toString());
         writer.newLine();
     }
 
-    private static void writeMissing(final DriverGene driverGene, boolean isRef, final BufferedWriter writer)
+    private static void writeMissing(final DriverGene driverGene, boolean isOld, final BufferedWriter writer)
             throws IOException
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);
         sj.add(driverGene.gene());
-        sj.add(isRef ? "REF_ONLY" : "NEW_ONLY");
+        sj.add(isOld ? "OLD_ONLY" : "NEW_ONLY");
         sj.add("");
         writer.write(sj.toString());
         writer.newLine();
     }
 
-    private static final String CFG_OLD_FILE_REF = "driver_gene_panel_ref";
-    private static final String CFG_OLD_FILE_NEW = "driver_gene_panel_new";
+    private static final String CFG_PANEL_FILE_OLD = "driver_gene_panel_old";
+    private static final String CFG_PANEL_FILE_NEW = "driver_gene_panel_new";
 
     public static void main(@NotNull final String[] args)
     {
@@ -304,8 +304,8 @@ public class ComparDriverGeneFiles
 
         addOutputOptions(configBuilder);
         addLoggingOptions(configBuilder);
-        configBuilder.addPath(CFG_OLD_FILE_REF, true, "Path to reference driver gene panel");
-        configBuilder.addPath(CFG_OLD_FILE_NEW, true, "Path to new driver gene panel");
+        configBuilder.addPath(CFG_PANEL_FILE_OLD, true, "Path to old driver gene panel");
+        configBuilder.addPath(CFG_PANEL_FILE_NEW, true, "Path to new driver gene panel");
 
         configBuilder.checkAndParseCommandLine(args);
 

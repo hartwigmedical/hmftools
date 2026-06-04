@@ -8,14 +8,14 @@ import com.hartwig.hmftools.compar.ComparableItem;
 
 public class Mismatch
 {
-    public final ComparableItem RefItem;
+    public final ComparableItem OldItem;
     public final ComparableItem NewItem;
     public final MismatchType Type;
     public final List<String> DiffValues;
 
-    public Mismatch(final ComparableItem refItem, final ComparableItem newItem, final MismatchType type, final List<String> diffValues)
+    public Mismatch(final ComparableItem oldItem, final ComparableItem newItem, final MismatchType type, final List<String> diffValues)
     {
-        RefItem = refItem;
+        OldItem = oldItem;
         NewItem = newItem;
         Type = type;
         DiffValues = diffValues;
@@ -31,10 +31,10 @@ public class Mismatch
             return false;
 
         Mismatch otherMismatch = (Mismatch)other;
-        return Type == otherMismatch.Type && RefItem == otherMismatch.RefItem && NewItem == otherMismatch.NewItem;
+        return Type == otherMismatch.Type && OldItem == otherMismatch.OldItem && NewItem == otherMismatch.NewItem;
     }
 
-    public ComparableItem nonNullItem() { return RefItem != null ? RefItem : NewItem; }
+    public ComparableItem nonNullItem() { return OldItem != null ? OldItem : NewItem; }
 
     public String toString()
     {

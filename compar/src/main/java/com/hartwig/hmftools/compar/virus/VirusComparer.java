@@ -20,6 +20,7 @@ import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.common.Mismatch;
+import com.hartwig.hmftools.compar.common.SourceType;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class VirusComparer implements ItemComparer
@@ -57,7 +58,7 @@ public class VirusComparer implements ItemComparer
     }
 
     @Override
-    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final String sourceName)
+    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final SourceType sourceType)
     {
         // currently unsupported
         return Lists.newArrayList();

@@ -82,8 +82,8 @@ public class MsModelConfig
         registerModelConfigFiles(configBuilder);
 
         addSampleIdFile(configBuilder, true);
-        configBuilder.addPath(PURPLE_DIR_CFG, true, PURPLE_DIR_DESC);
-        configBuilder.addPath(REDUX_DIR_CFG, true, REDUX_DIR_DESC);
+        configBuilder.addPath(PURPLE_DIR_CFG, false, PURPLE_DIR_DESC);
+        configBuilder.addPath(REDUX_DIR_CFG, false, REDUX_DIR_DESC);
 
         MsModelParams.registerConfig(configBuilder);
 

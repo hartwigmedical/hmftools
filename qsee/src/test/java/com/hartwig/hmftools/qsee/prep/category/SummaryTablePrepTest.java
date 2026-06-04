@@ -30,8 +30,11 @@ import com.hartwig.hmftools.qsee.feature.Feature;
 import com.hartwig.hmftools.qsee.feature.SourceTool;
 import com.hartwig.hmftools.qsee.prep.category.table.BamMetricsData;
 import com.hartwig.hmftools.qsee.prep.category.table.SummaryTableFeature;
+import com.hartwig.hmftools.qsee.status.QcStatus;
+import com.hartwig.hmftools.qsee.status.QcStatusType;
 import com.hartwig.hmftools.qsee.status.ThresholdRegistry;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 public class SummaryTablePrepTest
@@ -48,6 +51,23 @@ public class SummaryTablePrepTest
         assertEquals(0.7, featuresMap.get(SummaryTableFeature.COVERAGE_ABOVE_30).value(), 0.01);
         assertEquals(0.6, featuresMap.get(SummaryTableFeature.COVERAGE_ABOVE_100).value(), 0.01);
         assertEquals(0.4, featuresMap.get(SummaryTableFeature.COVERAGE_ABOVE_250).value(), 0.01);
+    }
+
+    @Test
+    public void highestTincStatusSelected()
+    {
+        PurityContext purityContext = createTestPurityContext(List.of(
+                PurpleQCStatus.WARN_LOW_PURITY,
+
+                PurpleQCStatus.WARN_TINC,
+                PurpleQCStatus.FAIL_TINC
+        ));
+
+        ThresholdRegistry qcThresholds = ThresholdRegistry.createWithoutThresholds();
+        EnumMap<PurpleQCStatus, QcStatus> qcStatusMappings = SummaryTablePurplePrep.createQcStatusMappings(purityContext.qc().status(), qcThresholds);
+        QcStatus tincStatus = SummaryTablePurplePrep.getTincQcStatus(qcStatusMappings);
+
+        assertEquals(QcStatusType.FAIL, tincStatus.type());
     }
 
     @Test
@@ -152,6 +172,7 @@ public class SummaryTablePrepTest
                 .cappedCoveragePercent(0.01)
                 .coverageLevels(List.of(30, 60, 100))
                 .coveragePercents(List.of(0.95, 0.90, 0.85))
+                .offTargetReads(0)
                 .build();
     }
 

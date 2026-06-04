@@ -7,7 +7,8 @@ import static com.hartwig.hmftools.redux.jitter.JitterConstants.DUAL_BASE_3;
 import static com.hartwig.hmftools.redux.jitter.JitterConstants.DUAL_BASE_4;
 import static com.hartwig.hmftools.redux.jitter.JitterConstants.SINGLE_BASE_1;
 import static com.hartwig.hmftools.redux.jitter.JitterConstants.SINGLE_BASE_2;
-import static com.hartwig.hmftools.redux.ms_model.MsModelParams.DEFAULT_MODEL_PARAMS;
+import static com.hartwig.hmftools.redux.ms_model.MsModelParams.MODEL_PARAMS_DEFAULT;
+import static com.hartwig.hmftools.redux.ms_model.MsModelParams.sequencingTypeParams;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -29,7 +30,9 @@ import com.hartwig.hmftools.common.redux.JitterTableRow;
 import com.hartwig.hmftools.common.bam.ConsensusType;
 import com.hartwig.hmftools.common.redux.MsiModelPrediction;
 import com.hartwig.hmftools.common.utils.RExecutor;
+import com.hartwig.hmftools.redux.ReduxConfig;
 import com.hartwig.hmftools.redux.ms_model.MsModelCalculator;
+import com.hartwig.hmftools.redux.ms_model.MsModelParams;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -102,8 +105,10 @@ public class MsJitterAnalyser
 
     private void writeMsModelPrediction(final List<JitterCountsTable> jitterCountsTable) throws IOException
     {
+        MsModelParams modelParams = sequencingTypeParams(ReduxConfig.SEQUENCING_TYPE);
+
         MsModelCalculator modelCalculator = new MsModelCalculator(
-                DEFAULT_MODEL_PARAMS, mConfig.MsModelCoefficientsFile, mConfig.MsModelErroRatesFile);
+                modelParams, mConfig.MsModelCoefficientsFile, mConfig.MsModelErroRatesFile);
 
         double predictedValue = modelCalculator.calcPredictedMsiRate(jitterCountsTable);
 

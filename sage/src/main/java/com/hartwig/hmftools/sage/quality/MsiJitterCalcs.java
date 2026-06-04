@@ -120,6 +120,11 @@ public class MsiJitterCalcs
                     MsiModelPrediction msiModelPrediction = MsiModelPrediction.read(msModelPredictionFile);
                     MicrosatelliteStatus msStatus = MicrosatelliteStatus.fromIndelsPerMb(msiModelPrediction.PredictedMsiIndelsPerMb);
                     isMsiSample = msStatus == MSI;
+
+                    if(isMsiSample)
+                    {
+                        SG_LOGGER.debug("sample({}) marked as MSI", sampleId);
+                    }
                 }
 
                 List<MsiModelParams> defaultMsiParams = defaultParams.stream().map(x -> new MsiModelParams(x)).collect(Collectors.toList());

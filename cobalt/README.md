@@ -111,17 +111,6 @@ The other buckets are masked.
 Finally, a piecewise constant fit (segmentation) of the ratios is found using a penalized least squares
 regression algorithm ported from the Bioconductor [copynumber](http://bioconductor.org/packages/release/bioc/html/copynumber.html) package.
 
-If preferred, the original copynumber program can be used for segmentation. To do this,
-apply the `use_old_segmenter` parameter. This will require prior installation
-of [R](https://www.r-project.org/) or [RStudio](https://rstudio.com/) and then installation of the required R packages with the following
-R commands:
-
-```
-    library(BiocManager)
-    install("copynumber")
-    install("dplyr")
-```
-
 All resource files for this tool and the WiGiTs pipeline are available for download via
 the [HMF Resource page](../pipeline/README_RESOURCES.md).
 
@@ -271,24 +260,3 @@ and the GC proportions:
 
 TUMOR.cobalt.ratio.pcf and REFERENCE.cobalt.ratio.pcf contain the segmented regions determined from the ratios.
 
-# Version History and Download Links
-
-- [1.14.1](https://github.com/hartwigmedical/hmftools/releases/tag/cobalt-v1.14.1)
-    - Fix crash bug in the bucket consolidation.
-- [1.14](https://github.com/hartwigmedical/hmftools/releases/tag/cobalt-v1.14)
-    - Automatically consolidating buckets if mean coverage <= 50.
-- [1.13](https://github.com/hartwigmedical/hmftools/releases/tag/cobalt-v1.13)
-    - Added support for germline only mode.
-    - Added support for targeted mode. Activated when run with `-target_region` argument.
-    - Keeps 0 read counts for regions that have no read, instead of dropping those regions from output.
-    - Added new argument `-pcf_gamma` for overriding PCF gamma value.
-    - Remove some redundant output files.
-- [1.12](https://github.com/hartwigmedical/hmftools/releases/tag/cobalt-v1.12)
-    - Added workaround for R copy_number module pcf function bug
-- [1.11](https://github.com/hartwigmedical/hmftools/releases/tag/cobalt-v1.11)
-    - Tumor only mode
-- [1.10](https://github.com/hartwigmedical/hmftools/releases/tag/cobalt-v1.10)
-    - Re-added support for cancel panel integration test
-- [1.9](https://github.com/hartwigmedical/hmftools/releases/tag/cobalt-v1.9)
-    - Alert user that gc_profile should be un-compressed before use
-    - Add support for XXY, XYY, Female Mosaic X, and Trisomy 13,15,18,21,X

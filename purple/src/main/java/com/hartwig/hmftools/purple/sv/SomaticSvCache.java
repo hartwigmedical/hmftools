@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.purple.sv;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.INFERRED;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.INFERRED_DESC;
@@ -92,14 +94,23 @@ public class SomaticSvCache
 
         mGenotypeIds = GenotypeIds.fromVcfHeader(mVcfHeader, config.ReferenceId, config.TumorId);
 
+        int filtered = 0;
+
         for(VariantContext context : vcfReader)
         {
+            if(config.SvQualFilter > 0 && context.getPhredScaledQual() < config.SvQualFilter)
+            {
+                ++filtered;
+                continue;
+            }
+
             mVariantCollection.addVariant(context);
         }
 
         vcfReader.close();
 
-        PPL_LOGGER.info("loaded {} somatic SVs from {}", somaticVariants().size(), inputVcf);
+        PPL_LOGGER.info("loaded {} somatic SVs from {} {}",
+                somaticVariants().size(), inputVcf, filtered > 0 ? format("filter(%d)", filtered) : "");
     }
 
     public void inferMissingVariant(final List<PurpleCopyNumber> copyNumbers)

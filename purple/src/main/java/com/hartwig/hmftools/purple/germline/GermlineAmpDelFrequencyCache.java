@@ -32,8 +32,8 @@ public class GermlineAmpDelFrequencyCache
         loadCohortFrequencies(filename);
     }
 
-    public int getRegionFrequency(final String chromsome, int regionStart, int regionEnd, int buffer,
-            AmpDelRegionFrequency.EventType eventType)
+    public int getRegionFrequency(
+            final String chromsome, int regionStart, int regionEnd, int buffer, final AmpDelRegionFrequency.EventType eventType)
     {
         if(!mChrRegionMap.containsKey(chromsome))
         {

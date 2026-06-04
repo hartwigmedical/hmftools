@@ -6,15 +6,19 @@ import com.google.common.collect.Lists;
 
 public enum CategoryType
 {
-    PURITY,
+    // ordering matters as described below where comparers share loaded data
+
+    PURITY, // CN is dependent on purity
     DRIVER,
     COPY_NUMBER,
     GENE_COPY_NUMBER,
     SOMATIC_VARIANT,
     GERMLINE_VARIANT,
     GERMLINE_AMP_DEL,
-    FUSION,
+
     DISRUPTION,
+    FUSION, // dependent on disruptions
+
     GERMLINE_SV,
     CUPPA,
     CUPPA_IMAGE,
@@ -32,9 +36,9 @@ public enum CategoryType
     TELOMERE_LENGTH,
     V_CHORD,
     SIGS,
-    ISOFOX_SUMMARY,
-    ISOFOX_GENE_DATA,
-    ISOFOX_TRANSCRIPT_DATA,
+    RNA_SUMMARY,
+    RNA_GENE_DATA,
+    RNA_TRANSCRIPT_DATA,
     NOVEL_SPLICE_JUNCTION,
     RNA_FUSION;
 

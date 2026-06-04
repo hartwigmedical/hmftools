@@ -21,6 +21,7 @@ public class TestSomaticVariantDataBuilder
     public HotspotType hotspotStatus = HotspotType.HOTSPOT;
     public VariantTier tier = VariantTier.HOTSPOT;
     public boolean biallelic = false;
+    public double biallelicProb = 0;
     public String canonicalEffect = "missense_variant";
     public String canonicalCodingEffect = "MISSENSE";
     public String canonicalHgvsCodingImpact = "c.1799T>A";
@@ -51,6 +52,7 @@ public class TestSomaticVariantDataBuilder
         b.hotspotStatus = HotspotType.NEAR_HOTSPOT;
         b.tier = VariantTier.PANEL;
         b.biallelic = true;
+        b.biallelicProb = 1.0;
         b.canonicalEffect = "synonymous_variant";
         b.canonicalCodingEffect = "SYNONYMOUS";
         b.canonicalHgvsCodingImpact = "c.1800T>A";
@@ -77,9 +79,9 @@ public class TestSomaticVariantDataBuilder
 
     private SomaticVariantData build()
     {
-        return new SomaticVariantData(chromosome, position, ref, alt, type, gene, reported, hotspotStatus, tier, biallelic, canonicalEffect,
-                canonicalCodingEffect, canonicalHgvsCodingImpact, canonicalHgvsProteinImpact, otherReportedEffects, hasLPS, qual,
-                subclonalLikelihood, filters, variantCopyNumber, purityAdjustedVaf, tumorSupportingReadCount, tumorTotalReadCount,
+        return new SomaticVariantData(chromosome, position, ref, alt, type, gene, reported, hotspotStatus, tier, biallelic, biallelicProb,
+                canonicalEffect, canonicalCodingEffect, canonicalHgvsCodingImpact, canonicalHgvsProteinImpact, otherReportedEffects, hasLPS,
+                qual, subclonalLikelihood, filters, variantCopyNumber, purityAdjustedVaf, tumorSupportingReadCount, tumorTotalReadCount,
                 isFromUnfilteredVcf, hasPurpleAnnotation, comparisonChromosome, comparisonPosition);
     }
 }

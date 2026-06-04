@@ -9,7 +9,8 @@ import jakarta.validation.constraints.NotNull;
 @RecordBuilder
 public record FindingItem<T>(
         @NotNull FindingStatus status,
-        @Nullable T finding
+        @Nullable T finding,
+        @Nullable Double purityThreshold
 )
 {
     @Nullable

@@ -43,7 +43,6 @@ public class SomaticVariantEnrichment implements Callable<Void>
     public Void call()
     {
         int flushCount = 100000;
-        // int gcCount = 250000;
         int varCount = 0;
 
         boolean tumorOnly = mConfig.tumorOnlyMode();

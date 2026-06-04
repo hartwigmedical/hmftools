@@ -221,7 +221,7 @@ public final class SvUtilities {
     {
         int consistencyCount = 0;
 
-        for(final SvVarData var : svList)
+        for(SvVarData var : svList)
         {
             consistencyCount += calcConsistency(var);
         }
@@ -295,7 +295,7 @@ public final class SvUtilities {
     {
         List<ChrBaseRegion> regions = Lists.newArrayList();
 
-        for(final String line : fileLines)
+        for(String line : fileLines)
         {
             if(line.contains("Chromosome"))
                 continue;

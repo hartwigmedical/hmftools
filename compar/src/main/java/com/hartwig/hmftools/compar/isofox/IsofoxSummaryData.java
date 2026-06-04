@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.compar.common.CommonUtils.createMismatchFromD
 import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
 
 import java.util.List;
-import java.util.Set;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
@@ -40,7 +39,7 @@ public record IsofoxSummaryData(RnaStatistics RnaStatistics) implements Comparab
     @Override
     public CategoryType category()
     {
-        return CategoryType.ISOFOX_SUMMARY;
+        return CategoryType.RNA_SUMMARY;
     }
 
     @Override
@@ -82,8 +81,8 @@ public record IsofoxSummaryData(RnaStatistics RnaStatistics) implements Comparab
     }
 
     @Override
-    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds,
-            final boolean includeMatches)
+    public Mismatch findMismatch(
+            final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds, final boolean includeMatches)
     {
         final RnaStatistics ref = RnaStatistics;
         final RnaStatistics otherData = ((IsofoxSummaryData) other).RnaStatistics;

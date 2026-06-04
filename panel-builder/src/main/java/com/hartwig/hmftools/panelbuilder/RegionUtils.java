@@ -9,12 +9,15 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+
+import org.apache.commons.lang3.function.TriFunction;
 
 // Miscellaneous utility functionality for base regions.
 public class RegionUtils
@@ -221,27 +224,37 @@ public class RegionUtils
         return region1.overlaps(region2) || region1.end() + 1 == region2.start() || region2.end() + 1 == region1.start();
     }
 
-    public static List<ChrBaseRegion> mergeOverlapAndAdjacentRegions(Stream<ChrBaseRegion> regions)
+    public static <T> List<T> mergeOverlapAndAdjacentRegions(Stream<T> items, final Function<T, ChrBaseRegion> regionGetter,
+            final TriFunction<ChrBaseRegion, T, T, T> itemMerger)
     {
-        regions = regions.sorted();
-        List<ChrBaseRegion> result = new ArrayList<>();
-        regions.forEach(region ->
+        items = items.sorted(Comparator.comparing(regionGetter));
+        List<T> result = new ArrayList<>();
+        items.forEachOrdered(item ->
         {
-            ChrBaseRegion prev = result.isEmpty() ? null : result.get(result.size() - 1);
-            if(prev != null && region.chromosome().equals(prev.chromosome()) && region.start() <= prev.end() + 1)
+            ChrBaseRegion region = regionGetter.apply(item);
+            T prevItem = result.isEmpty() ? null : result.get(result.size() - 1);
+            ChrBaseRegion prevRegion = prevItem == null ? null : regionGetter.apply(prevItem);
+            if(prevItem != null && region.chromosome().equals(prevRegion.chromosome()) && region.start() <= prevRegion.end() + 1)
             {
-                if(region.end() > prev.end())
+                if(region.end() > prevRegion.end())
                 {
-                    // Don't mutate in place because we borrowed the object from the input stream.
-                    result.set(result.size() - 1, new ChrBaseRegion(prev.chromosome(), prev.start(), region.end()));
+                    // Don't mutate the ChrBaseRegion in place because we borrowed the object from the input stream.
+                    ChrBaseRegion mergedRegion = new ChrBaseRegion(prevRegion.chromosome(), prevRegion.start(), region.end());
+                    T mergedItem = itemMerger.apply(mergedRegion, prevItem, item);
+                    result.set(result.size() - 1, mergedItem);
                 }
             }
             else
             {
-                result.add(region);
+                result.add(item);
             }
         });
         return result;
+    }
+
+    public static List<ChrBaseRegion> mergeOverlapAndAdjacentRegions(Stream<ChrBaseRegion> regions)
+    {
+        return mergeOverlapAndAdjacentRegions(regions, Function.identity(), (merged, r1, r2) -> merged);
     }
 
     public static boolean isRegionValid(final ChrBaseRegion region, final Map<String, Integer> chromosomeLengths)

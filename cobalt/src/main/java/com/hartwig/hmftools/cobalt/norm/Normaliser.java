@@ -1,11 +1,17 @@
 package com.hartwig.hmftools.cobalt.norm;
 
+import static java.lang.Math.floor;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.cobalt.CobaltConstants.GC_BUCKET_MAX;
 import static com.hartwig.hmftools.cobalt.CobaltConstants.GC_BUCKET_MIN;
 import static com.hartwig.hmftools.cobalt.norm.NormConstants.MAPPABILITY_THRESHOLD;
+import static com.hartwig.hmftools.cobalt.norm.NormConstants.MIN_ADJACENT_ENRICHMENT_RATIO;
 import static com.hartwig.hmftools.common.utils.Doubles.median;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +29,10 @@ public class Normaliser
     - calculate relative enrichment as a median from each region's sample adjusted GC ratios
         - apply a min relative enrichment threshold
     */
+
+    private static final double MAX_WGS_ADJUST_RATIO = 0.3; // vs the median
+    private static final double MEDIAN_PERCENTILE = 0.5;
+    private static final double WGS_PERCENTILE_DAMPEN = 0.2;
 
     public static void calcSampleAdjustedRatios(final List<String> samples, final Map<String, List<RegionData>> chrRegionData)
     {
@@ -139,13 +149,17 @@ public class Normaliser
         return sampleRegionData.PanelGcBucket >= GC_BUCKET_MIN && sampleRegionData.PanelGcBucket <= GC_BUCKET_MAX;
     }
 
-    public static void calcRelativeEnrichment(final Map<String, List<RegionData>> chrRegionData, double minEnrichmentRatio)
+    public static void calcRelativeEnrichment(
+            final Map<String,List<RegionData>> chrRegionData, double minEnrichmentRatio, final WgsCopyNumberPercentiles wgsPercentiles)
     {
-        for(List<RegionData> regions : chrRegionData.values())
+        for(Map.Entry<String,List<RegionData>> entry : chrRegionData.entrySet())
         {
+            String chromosome = entry.getKey();
+            List<RegionData> regions = entry.getValue();
+
             for(RegionData regionData : regions)
             {
-                List<Double> sampleRelativeEnrichment = new ArrayList<>(regionData.sampleCount());
+                List<Double> sampleRelativeEnrichments = new ArrayList<>(regionData.sampleCount());
 
                 for(SampleRegionData sampleRegionData : regionData.getSamples())
                 {
@@ -154,18 +168,82 @@ public class Normaliser
                         // -1.0 is used to mark Y regions in female samples and may also arise from masked windows in WGS data
                         continue;
                     }
+
                     double relativeEnrichment = sampleRegionData.adjustedGcRatio() / sampleRegionData.WgsGcRatio;
 
-                    sampleRelativeEnrichment.add(relativeEnrichment);
+                    sampleRelativeEnrichments.add(relativeEnrichment);
                 }
 
-                double medianEnrichment = median(sampleRelativeEnrichment);
+                double percentileEnrichment = findPercentileEnrichment(sampleRelativeEnrichments, chromosome, regionData, wgsPercentiles);
 
-                if(medianEnrichment >= minEnrichmentRatio)
+                if(percentileEnrichment >= minEnrichmentRatio)
                 {
-                    regionData.setRelativeEnrichment(medianEnrichment);
+                    regionData.setRelativeEnrichment(percentileEnrichment);
+                }
+            }
+
+            // invalid regions with significant drop-off relative to the neighbouring ones
+            //
+            for(int i = 1; i < regions.size() - 1; ++i)
+            {
+                RegionData priorRegion = regions.get(i - 1);
+                RegionData regionData = regions.get(i);
+                RegionData nextRegion = regions.get(i + 1);
+
+                if(regionData.relativeEnrichment() == 0)
+                    continue;
+
+                if(priorRegion.relativeEnrichment() > 0)
+                {
+                    double adjacentRatio = regionData.relativeEnrichment() / priorRegion.relativeEnrichment();
+
+                    if(adjacentRatio < MIN_ADJACENT_ENRICHMENT_RATIO)
+                    {
+                        regionData.setRelativeEnrichment(0); // zero being a sentinel for invalid when written to file
+                        continue;
+                    }
+                }
+
+                if(nextRegion.relativeEnrichment() > 0)
+                {
+                    double adjacentRatio = regionData.relativeEnrichment() / nextRegion.relativeEnrichment();
+
+                    if(adjacentRatio < MIN_ADJACENT_ENRICHMENT_RATIO)
+                    {
+                        regionData.setRelativeEnrichment(0); // zero being a sentinel for invalid when written to file
+                    }
                 }
             }
         }
+    }
+
+    private static double findPercentileEnrichment(
+            final List<Double> sampleRelativeEnrichments, final String chromosome, final RegionData regionData,
+            final WgsCopyNumberPercentiles wgsPercentiles)
+    {
+        // use a percentile derived from the WGS cohort instead of the median, which can be especially important for regions and
+        // genes which are typically amplified or deleted
+        double specificPercentile = wgsPercentiles.getRegionPercentile(chromosome, regionData.Position);
+
+        Collections.sort(sampleRelativeEnrichments);
+
+        double median = median(sampleRelativeEnrichments);
+
+        if(specificPercentile == MEDIAN_PERCENTILE)
+            return median;
+
+        // dampen the percentile towards the median, eg 0.25*(1-DF)+0.5*(DF) = 0.3
+        double dampenedPercentile = specificPercentile * (1 - WGS_PERCENTILE_DAMPEN) + MEDIAN_PERCENTILE * WGS_PERCENTILE_DAMPEN;
+
+        int targetIndex = (int)floor(dampenedPercentile * sampleRelativeEnrichments.size());
+        double percentileEnrichment = sampleRelativeEnrichments.get(targetIndex);
+
+        if(median == percentileEnrichment)
+            return median;
+
+        double cappedEnrichment = min(percentileEnrichment, median * (1 + MAX_WGS_ADJUST_RATIO));
+        cappedEnrichment = max(cappedEnrichment, median * (1 - MAX_WGS_ADJUST_RATIO));
+
+        return cappedEnrichment;
     }
 }

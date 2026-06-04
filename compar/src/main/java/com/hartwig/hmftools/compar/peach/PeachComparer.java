@@ -22,6 +22,7 @@ import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.common.Mismatch;
+import com.hartwig.hmftools.compar.common.SourceType;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class PeachComparer implements ItemComparer
@@ -52,7 +53,7 @@ public class PeachComparer implements ItemComparer
     }
 
     @Override
-    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final String sourceName)
+    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final SourceType sourceType)
     {
         List<PeachGenotype> genotypes = dbAccess.readPeachGenotypes(sampleId);
         return genotypes.stream().map(g -> new PeachData(g)).collect(Collectors.toList());

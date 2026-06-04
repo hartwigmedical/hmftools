@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.common.rna.GeneExpression;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.CategoryType;
@@ -23,7 +24,7 @@ public record IsofoxGeneData(GeneExpression GeneExpression) implements Comparabl
     @Override
     public CategoryType category()
     {
-        return CategoryType.ISOFOX_GENE_DATA;
+        return CategoryType.RNA_GENE_DATA;
     }
 
     @Override
@@ -45,7 +46,7 @@ public record IsofoxGeneData(GeneExpression GeneExpression) implements Comparabl
     @Override
     public boolean reportable()
     {
-        return false;
+        return GeneExpression.reportedStatus() == ReportedStatus.REPORTED;
     }
 
     @Override

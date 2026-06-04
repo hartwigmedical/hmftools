@@ -61,7 +61,7 @@ public class BfbFinder
         double foldbackCount = 0;
         double maxSglJcn = 0;
 
-        for(final SvVarData var : cluster.getSVs())
+        for(SvVarData var : cluster.getSVs())
         {
             if(candidateDMSVs.contains(var))
                 continue;

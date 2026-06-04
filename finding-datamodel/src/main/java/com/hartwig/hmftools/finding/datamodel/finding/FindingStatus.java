@@ -19,7 +19,7 @@ public record FindingStatus(@NotNull FindingStatus.Status status, @NotNull Sorte
 
     public enum Issue
     {
-        REF_REQUIRED,
+        NORMAL_REQUIRED,
         WGS_REQUIRED,
         DELETED_GENES,
         HIGH_COPY_NUMBER_NOISE,
@@ -29,7 +29,9 @@ public record FindingStatus(@NotNull FindingStatus.Status status, @NotNull Sorte
         CONTAMINATION,
         NO_TUMOR,
         // No predicted tumor origins that meet likelihood threshold
-        NO_REPORTABLE_VALUE
+        NO_REPORTABLE_VALUE,
+        TUMOR_SAMPLE_QUALITY_CONTROL,
+        NORMAL_SAMPLE_QUALITY_CONTROL
     }
 
     public boolean isOK()

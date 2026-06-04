@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.purple.segment;
 
+import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -18,6 +20,8 @@ import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.Multimaps;
 import com.hartwig.hmftools.common.utils.pcf.PCFPosition;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
+import com.hartwig.hmftools.common.utils.pcf.PCFSource;
+import com.hartwig.hmftools.purple.PurpleConfig;
 
 public class ClusterFactory
 {
@@ -34,93 +38,135 @@ public class ClusterFactory
             final List<StructuralVariant> variants, Map<Chromosome,List<PCFPosition>> pcfPositions,
             final Map<Chromosome,List<CobaltRatio>> ratios)
     {
-        final Multimap<Chromosome,SVSegment> positions = Multimaps.fromPositions(SVSegmentFactory.create(variants));
-        return cluster(positions, pcfPositions, ratios);
+        final Multimap<Chromosome, SvPosition> positions = Multimaps.fromPositions(SVSegmentFactory.create(variants));
+        return buildClusters(positions, pcfPositions, ratios);
     }
 
-    private ListMultimap<Chromosome, Cluster> cluster(
-            final Multimap<Chromosome, SVSegment> variantPositions, final Map<Chromosome,List<PCFPosition>> pcfPositions,
+    private ListMultimap<Chromosome, Cluster> buildClusters(
+            final Multimap<Chromosome,SvPosition> variantPositions, final Map<Chromosome,List<PCFPosition>> chrPcfPositions,
             final Map<Chromosome,List<CobaltRatio>> ratios)
     {
-        ListMultimap<Chromosome, Cluster> clusters = ArrayListMultimap.create();
-        for(Chromosome chromosome : pcfPositions.keySet())
-        {
-            final List<PCFPosition> chromosomePcfPositions = pcfPositions.get(chromosome);
-            final List<CobaltRatio> chromosomeRatios = ratios.containsKey(chromosome) ? ratios.get(chromosome) : Lists.newArrayList();
-            final Collection<SVSegment> chromosomeVariants =
-                    variantPositions.containsKey(chromosome) ? variantPositions.get(chromosome) : Lists.newArrayList();
+        ListMultimap<Chromosome, Cluster> chrClusters = ArrayListMultimap.create();
 
-            clusters.putAll(chromosome, cluster(chromosomeVariants, chromosomePcfPositions, chromosomeRatios));
+        for(Chromosome chromosome : chrPcfPositions.keySet())
+        {
+            List<PCFPosition> pcfPositions = chrPcfPositions.get(chromosome);
+            List<CobaltRatio> cobaltRatios = ratios.containsKey(chromosome) ? ratios.get(chromosome) : Collections.emptyList();
+
+            Collection<SvPosition> svPositions = variantPositions.containsKey(chromosome)
+                    ? variantPositions.get(chromosome) : Collections.emptyList();
+
+            List<Cluster> clusters = buildChromosomeClusters(svPositions, pcfPositions, cobaltRatios);
+            chrClusters.putAll(chromosome, clusters);
+        }
+
+        return chrClusters;
+    }
+
+    @VisibleForTesting
+    List<Cluster> buildChromosomeClusters(
+            final Collection<SvPosition> svPositions, final List<PCFPosition> pcfPositions, final List<CobaltRatio> cobaltRatios)
+    {
+        List<GenomePosition> allPositions = Lists.newArrayList();
+        allPositions.addAll(svPositions);
+        allPositions.addAll(pcfPositions);
+        Collections.sort(allPositions);
+
+        List<Cluster> clusters = Lists.newArrayList();
+
+        int cobaltIndex = 0;
+        Cluster segment = null;
+        boolean lastPositionWasAmberPcfEnd = false;
+
+        for(int i = 0; i < allPositions.size(); ++i)
+        {
+            GenomePosition position = allPositions.get(i);
+
+            if(position.position() == 1)
+                continue;
+
+            // move cobalt ratios to just before the current segment position
+            while(cobaltIndex < cobaltRatios.size() - 1 && cobaltRatios.get(cobaltIndex).position() < position.position())
+            {
+                cobaltIndex++;
+            }
+
+            boolean canSegment = true;
+            boolean extendPosition = true;
+
+            PCFPosition pcfPosition = position instanceof PCFPosition ? (PCFPosition)position : null;
+
+            // find the first cobalt ratio earlier than this position
+            int earliestCnChangePosition = findFirstValidCobaltRatio(position.position(), cobaltIndex, cobaltRatios);
+
+            if(segment != null)
+            {
+                if(earliestCnChangePosition > segment.end())
+                {
+                    if(pcfPosition != null && pcfPosition.Source == PCFSource.TUMOR_BAF && !PurpleConfig.OldAmberPcfSegmentation)
+                    {
+                        // cannot be the final segment
+                        boolean useAmberSegment = lastPositionWasAmberPcfEnd && pcfPosition.isSegmentStart()&& i < allPositions.size() - 2;
+
+                        if(!useAmberSegment)
+                        {
+                            PPL_LOGGER.trace("segment({}) skipping Amber PCF: lastQasAmberEnd({}) index({} of {})",
+                                    pcfPosition, lastPositionWasAmberPcfEnd, i, allPositions.size());
+                            continue;
+                        }
+                        else
+                        {
+                            PPL_LOGGER.trace("segment({}) segmenting on Amber PCF", pcfPosition);
+                        }
+                    }
+                }
+                else
+                {
+                    canSegment = false;
+                }
+            }
+            else
+            {
+                canSegment = pcfPosition == null || (pcfPosition.Source != PCFSource.TUMOR_BAF);
+            }
+
+            if(segment == null || canSegment)
+            {
+                segment = new Cluster(position.chromosome(), earliestCnChangePosition, 0);
+                clusters.add(segment);
+            }
+
+            segment.End = position.position();
+
+            lastPositionWasAmberPcfEnd = false;
+
+            if(position instanceof SvPosition)
+            {
+                segment.Variants.add((SvPosition) position);
+            }
+            else
+            {
+                segment.PcfPositions.add(pcfPosition);
+
+                if(pcfPosition.Source == PCFSource.TUMOR_BAF && pcfPosition.isSegmentEnd())
+                    lastPositionWasAmberPcfEnd = true;
+            }
         }
 
         return clusters;
     }
 
     @VisibleForTesting
-    List<Cluster> cluster(
-            final Collection<SVSegment> variantPositions, final List<PCFPosition> pcfPositions, final List<CobaltRatio> cobaltRatios)
+    int     findFirstValidCobaltRatio(int position, int index, final List<CobaltRatio> ratios)
     {
-        final List<GenomePosition> allPositions = Lists.newArrayList();
-        allPositions.addAll(variantPositions);
-        allPositions.addAll(pcfPositions);
-        Collections.sort(allPositions);
+        // returns the first valid ratio earlier than the specific position, starting at the specified index and working backwards
+        int min = mWindow.start(position) - mWindowSize + 1;
 
-        final List<Cluster> result = Lists.newArrayList();
-
-        int cobaltIndex = 0;
-        Cluster segment = null;
-        for(GenomePosition position : allPositions)
-        {
-            if(position.position() == 1)
-            {
-                continue;
-            }
-
-            while(cobaltIndex < cobaltRatios.size() - 1 && cobaltRatios.get(cobaltIndex).position() < position.position())
-            {
-                cobaltIndex++;
-            }
-
-            final int earliestDetectableCopyNumberChangePosition =
-                    earliestDetectableCopyNumberChangePosition(position.position(), cobaltIndex, cobaltRatios);
-            if(segment == null || earliestDetectableCopyNumberChangePosition > segment.end())
-            {
-                if(segment != null)
-                {
-                    result.add(segment);
-                }
-
-                segment = new Cluster(position.chromosome(), earliestDetectableCopyNumberChangePosition, 0);
-            }
-
-            segment.End = position.position();
-
-            if(position instanceof SVSegment)
-            {
-                segment.Variants.add((SVSegment) position);
-            }
-            else
-            {
-                segment.PcfPositions.add((PCFPosition) position);
-            }
-        }
-        if(segment != null)
-        {
-            result.add(segment);
-        }
-
-        return result;
-    }
-
-    @VisibleForTesting
-    int earliestDetectableCopyNumberChangePosition(int position, int index, final List<CobaltRatio> ratios)
-    {
-        final int min = mWindow.start(position) - mWindowSize + 1;
         if(!ratios.isEmpty())
         {
             for(int i = index; i >= 0; i--)
             {
-                final CobaltRatio ratio = ratios.get(i);
+                CobaltRatio ratio = ratios.get(i);
                 if(ratio.position() <= min && Doubles.greaterThan(ratio.tumorGCRatio(), -1))
                 {
                     return ratio.position() + 1;

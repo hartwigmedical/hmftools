@@ -3,6 +3,7 @@ package com.hartwig.hmftools.finding.datamodel;
 import java.time.LocalDate;
 import java.util.List;
 
+import com.hartwig.hmftools.finding.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
 
 import org.jetbrains.annotations.NotNull;
@@ -21,12 +22,7 @@ public class TestFindingRecordFactory
     {
         return FindingRecordBuilder.builder()
                 .version("")
-                .metaProperties(MetaPropertiesBuilder.builder()
-                        .sampleId("")
-                        .samplingDate(LocalDate.of(2026, 1, 1))
-                        .sequencingScope(SequencingScope.WHOLE_GENOME)
-                        .refGenomeVersion(RefGenomeVersion.V37)
-                        .build())
+                .metaProperties(metaPropertiesBuilder().build())
                 .qc(TestFindingFactory.qcBuilder().build())
                 .purityPloidyFit(TestFindingFactory.purityPloidyFitBuilder().build())
                 .predictedTumorOrigin(TestFindingFactory.buildFindingItem(FindingStatus.Status.OK, TestFindingFactory.predictedTumorOriginBuilder()
@@ -39,16 +35,36 @@ public class TestFindingRecordFactory
                         .build()))
                 .tumorMutationalBurden(TestFindingFactory.buildFindingItem(FindingStatus.Status.OK, TestFindingFactory.tumorMutationalBurdenBuilder()
                         .build()))
-                .somaticSmallVariants(TestFindingFactory.buildDriverFindingsList(FindingStatus.Status.OK, List.of()))
-                .germlineSmallVariants(TestFindingFactory.buildDriverFindingsList(FindingStatus.Status.OK, List.of()))
-                .somaticGainDeletions(TestFindingFactory.buildDriverFindingsList(FindingStatus.Status.OK, List.of()))
-                .germlineGainDeletions(TestFindingFactory.buildDriverFindingsList(FindingStatus.Status.OK, List.of()))
-                .somaticDisruptions(TestFindingFactory.buildDriverFindingsList(FindingStatus.Status.OK, List.of()))
-                .germlineDisruptions(TestFindingFactory.buildDriverFindingsList(FindingStatus.Status.OK, List.of()))
-                .fusions(TestFindingFactory.buildDriverFindingsList(FindingStatus.Status.OK, List.of()))
-                .chromosomeArmCopyNumbers(TestFindingFactory.buildFindingsList(FindingStatus.Status.OK, List.of()))
-                .viruses(TestFindingFactory.buildDriverFindingsList(FindingStatus.Status.OK, List.of()))
-                .hlaAlleles(TestFindingFactory.buildFindingsList(FindingStatus.Status.OK, List.of()))
-                .pharmacoGenotypes(TestFindingFactory.buildFindingsList(FindingStatus.Status.OK, List.of()));
+                .somaticSmallVariants(TestFindingFactory.buildDriverFindingsList(FindingStatus.Status.OK, List.of(TestFindingFactory.smallVariantBuilder()
+                        .build())))
+                .germlineSmallVariants(TestFindingFactory.buildDriverFindingsList(FindingStatus.Status.OK, List.of(TestFindingFactory.smallVariantBuilder()
+                        .build())))
+                .somaticGainDeletions(TestFindingFactory.buildDriverFindingsList(FindingStatus.Status.OK, List.of(TestFindingFactory.gainDeletionBuilder()
+                        .build())))
+                .germlineGainDeletions(TestFindingFactory.buildDriverFindingsList(FindingStatus.Status.OK, List.of(TestFindingFactory.gainDeletionBuilder()
+                        .build())))
+                .somaticDisruptions(TestFindingFactory.buildDriverFindingsList(FindingStatus.Status.OK, List.of(TestFindingFactory.disruptionBuilder()
+                        .build())))
+                .germlineDisruptions(TestFindingFactory.buildDriverFindingsList(FindingStatus.Status.OK, List.of(TestFindingFactory.disruptionBuilder()
+                        .build())))
+                .fusions(TestFindingFactory.buildDriverFindingsList(FindingStatus.Status.OK, List.of(TestFindingFactory.fusionBuilder()
+                        .build())))
+                .chromosomeArmCopyNumbers(TestFindingFactory.buildFindingsList(FindingStatus.Status.OK, List.of(TestFindingFactory.chromosomeArmCopyNumberBuilder()
+                        .build())))
+                .viruses(TestFindingFactory.buildDriverFindingsList(FindingStatus.Status.OK, List.of(TestFindingFactory.virusBuilder(true, DriverInterpretation.HIGH)
+                        .build())))
+                .hlaAlleles(TestFindingFactory.buildFindingsList(FindingStatus.Status.OK, List.of(TestFindingFactory.hlaAlleleBuilder()
+                        .build())))
+                .pharmacoGenotypes(TestFindingFactory.buildFindingsList(FindingStatus.Status.OK, List.of(TestFindingFactory.pharmacoGenotypeBuilder()
+                        .build())));
+    }
+
+    public static MetaPropertiesBuilder metaPropertiesBuilder()
+    {
+        return MetaPropertiesBuilder.builder()
+                .sampleId("")
+                .samplingDate(LocalDate.of(2026, 1, 1))
+                .sequencingScope(SequencingScope.WHOLE_GENOME)
+                .refGenomeVersion(RefGenomeVersion.V37);
     }
 }

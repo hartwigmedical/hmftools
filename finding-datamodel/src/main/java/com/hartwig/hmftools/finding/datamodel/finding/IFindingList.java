@@ -5,14 +5,18 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.stream.Stream;
 
+import org.jspecify.annotations.Nullable;
+
 import jakarta.validation.constraints.NotNull;
 
 @SuppressWarnings("unused")
-public interface IFindingList<T extends Finding>
+public interface IFindingList<T>
 {
-    @NotNull
-    FindingStatus status();
+    @NotNull FindingStatus status();
+
     @NotNull List<T> findings();
+
+    @Nullable Double purityThreshold();
 
     default int size()
     {

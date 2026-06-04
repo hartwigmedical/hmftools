@@ -1,12 +1,8 @@
 package com.hartwig.hmftools.esvee.prep;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
-
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_ORIENTATION;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION;
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
@@ -15,11 +11,12 @@ import static com.hartwig.hmftools.esvee.common.WriteType.PREP_JUNCTION;
 import static com.hartwig.hmftools.esvee.common.WriteType.PREP_READ;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.BAM_RECORD_SAMPLE_ID_TAG;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_EXACT_SUPPORT_FRAGS;
-import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_EXTRA_INFO;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_HOTSPOT_JUNCTION;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_INDEL_JUNCTION;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_JUNCTION_FRAGS;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_OTHER_SUPPORT_FRAGS;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_REMOTE_FRAGS;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_SAGA_MATCH;
 
 import static htsjdk.samtools.SAMFlag.MATE_REVERSE_STRAND;
 import static htsjdk.samtools.SAMFlag.READ_UNMAPPED;
@@ -27,19 +24,17 @@ import static htsjdk.samtools.SAMFlag.SUPPLEMENTARY_ALIGNMENT;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
+import com.hartwig.hmftools.esvee.common.saga.SagaMatchByLocation;
 import com.hartwig.hmftools.esvee.prep.types.JunctionData;
+import com.hartwig.hmftools.esvee.prep.types.PrepRead;
 import com.hartwig.hmftools.esvee.prep.types.ReadFilterType;
 import com.hartwig.hmftools.esvee.prep.types.ReadGroup;
 import com.hartwig.hmftools.esvee.prep.types.ReadGroupStatus;
-import com.hartwig.hmftools.esvee.prep.types.PrepRead;
 import com.hartwig.hmftools.esvee.prep.types.ReadType;
-import com.hartwig.hmftools.esvee.prep.types.RemoteJunction;
 
 public class ResultsWriter
 {
@@ -131,18 +126,16 @@ public class ResultsWriter
             sj.add(FLD_JUNCTION_FRAGS);
             sj.add(FLD_EXACT_SUPPORT_FRAGS);
             sj.add(FLD_OTHER_SUPPORT_FRAGS);
-            sj.add("LowMapQualFrags");
-            sj.add("MaxQual");
-            sj.add(FLD_EXTRA_INFO);
+            sj.add(FLD_REMOTE_FRAGS);
             sj.add(FLD_INDEL_JUNCTION);
             sj.add(FLD_HOTSPOT_JUNCTION);
+            sj.add("LowMapQualFrags");
             sj.add("InitialReadId");
             sj.add("Depth");
 
-            if(mConfig.TrackRemotes)
+            if(mConfig.SagaFastaFile != null)
             {
-                sj.add("RemoteJunctionCount");
-                sj.add("RemoteJunctions");
+                sj.add(FLD_SAGA_MATCH);
             }
 
             writer.write(sj.toString());
@@ -167,9 +160,8 @@ public class ResultsWriter
         {
             for(JunctionData junctionData : junctions)
             {
-                int maxMapQual = 0;
                 int lowMapQualFrags = 0;
-                int extraInfoValues = 0;
+                int discRemoteFrags = 0;
 
                 int junctionFrags = junctionData.junctionFragmentCount();
                 int exactSupportFrags = junctionData.exactSupportFragmentCount();
@@ -184,39 +176,24 @@ public class ResultsWriter
                         // check the read supports this junction (it can also support another junction)
                         boolean supportsJunction =
                                 (expectLeftClipped && read.AlignmentStart == junctionData.Position && read.isLeftClipped())
-                            || (!expectLeftClipped && read.AlignmentEnd  == junctionData.Position && read.isRightClipped());
+                                || (!expectLeftClipped && read.AlignmentEnd == junctionData.Position && read.isRightClipped());
 
                         if(!supportsJunction)
                             continue;
 
                         if(ReadFilterType.isSet(read.filters(), ReadFilterType.MIN_MAP_QUAL))
                             ++lowMapQualFrags;
-
-                        maxMapQual = max(maxMapQual, read.mapQuality());
-
-                        if(!junctionData.internalIndel())
-                        {
-                            int scLength = expectLeftClipped ? read.leftClipLength() : read.rightClipLength();
-
-                            if(scLength > extraInfoValues)
-                            {
-                                extraInfoValues = scLength;
-                            }
-                        }
                     }
 
                     for(PrepRead read : junctionData.readTypeReads().get(ReadType.EXACT_SUPPORT))
                     {
-                        maxMapQual = max(maxMapQual, read.mapQuality());
-
                         if(ReadFilterType.isSet(read.filters(), ReadFilterType.MIN_MAP_QUAL))
                             ++lowMapQualFrags;
                     }
                 }
                 else
                 {
-                    // replace soft-clip length with max remote location reads
-                    extraInfoValues = !junctionData.remoteJunctions().isEmpty() ? junctionData.remoteJunctions().get(0).Fragments : 0;
+                    discRemoteFrags = !junctionData.remoteJunctions().isEmpty() ? junctionData.remoteJunctions().get(0).Fragments : 0;
                 }
 
                 StringJoiner sj = new StringJoiner(TSV_DELIM);
@@ -226,39 +203,20 @@ public class ResultsWriter
                 sj.add(String.valueOf(junctionFrags));
                 sj.add(String.valueOf(exactSupportFrags));
                 sj.add(String.valueOf(otherSupportFrags));
-                sj.add(String.valueOf(lowMapQualFrags));
-                sj.add(String.valueOf(maxMapQual));
+                sj.add(String.valueOf(discRemoteFrags));
 
-                sj.add(String.valueOf(extraInfoValues));
                 sj.add(String.valueOf(junctionData.internalIndel()));
                 sj.add(String.valueOf(junctionData.hotspot()));
+
+                sj.add(String.valueOf(lowMapQualFrags));
+
                 sj.add(junctionData.topJunctionRead() != null ? junctionData.topJunctionRead().id() : "EXISTING");
                 sj.add(String.valueOf(junctionData.depth()));
 
-                if(mConfig.TrackRemotes)
+                if(mConfig.SagaFastaFile != null)
                 {
-                    // RemoteChromosome:RemotePosition:RemoteOrientation;Fragments then separated by ';'
-                    String remoteJunctionsStr = "";
-
-                    List<RemoteJunction> remoteJunctions = junctionData.remoteJunctions();
-
-                    if(!junctionData.remoteJunctions().isEmpty())
-                    {
-                        Collections.sort(remoteJunctions, Comparator.comparingInt(x -> -x.Fragments));
-
-                        StringJoiner remoteSj = new StringJoiner(ITEM_DELIM);
-
-                        for(int i = 0; i < min(remoteJunctions.size(), 5); ++i)
-                        {
-                            RemoteJunction remoteJunction = remoteJunctions.get(i);
-                            remoteSj.add(String.format("%s:%d:%d:%d",
-                                    remoteJunction.Chromosome, remoteJunction.Position, remoteJunction.Orient.asByte(), remoteJunction.Fragments));
-                        }
-                        remoteJunctionsStr = remoteSj.toString();
-                    }
-
-                    sj.add(String.valueOf(remoteJunctions.size()));
-                    sj.add(remoteJunctionsStr);
+                    SagaMatchByLocation sagaMatch = junctionData.sagaMatch();
+                    sj.add(sagaMatch == null ? "" : sagaMatch.variant().toString());
                 }
 
                 mJunctionWriter.write(sj.toString());

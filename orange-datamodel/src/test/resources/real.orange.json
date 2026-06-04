@@ -243,6 +243,7 @@
     "fusions": [
       {
         "geneUp": "DMD",
+        "clusterId": 0,
         "contextUp": "Exon 67",
         "transcriptUp": "ENST00000357033",
         "geneDown": "DMD",
@@ -264,6 +265,7 @@
       {
         "id": 190,
         "svId": 174,
+        "clusterId": 0,
         "gene": "PTEN",
         "chromosome": "10",
         "position": 1000,

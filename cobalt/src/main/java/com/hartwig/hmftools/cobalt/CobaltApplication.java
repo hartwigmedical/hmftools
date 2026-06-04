@@ -52,19 +52,40 @@ public class CobaltApplication
     private void run()
     {
         long startTimeMs = System.currentTimeMillis();
+
         CB_LOGGER.info("reading GC Profile from {}", mConfig.GcProfilePath);
-        final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("worker-%d").build();
+
+        ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("worker-%d").build();
         ExecutorService executorService = Executors.newFixedThreadPool(mConfig.Threads, namedThreadFactory);
+
         try
         {
             BamReadCounter brcTumor = mConfig.tumorBamReader(executorService);
             BamReadCounter brcRef = mConfig.referenceBamReader(executorService);
 
-            ListMultimap<HumanChromosome, DepthReading> tumourDepths = brcTumor == null ? create() : brcTumor.calculateReadDepths();
-            CB_LOGGER.info("tumor depths({}) collected", tumourDepths.size());
+            ListMultimap<HumanChromosome, DepthReading> tumourDepths;
 
-            ListMultimap<HumanChromosome, DepthReading> refDepths = brcRef == null ? create() : brcRef.calculateReadDepths();
-            CB_LOGGER.info("reference depths({}) collected", refDepths.size());
+            if(brcTumor != null)
+            {
+                tumourDepths = brcTumor.calculateReadDepths();
+                CB_LOGGER.info("tumor depths({}) collected", tumourDepths.size());
+            }
+            else
+            {
+                tumourDepths = create();
+            }
+
+            ListMultimap<HumanChromosome, DepthReading> refDepths;
+
+            if(brcRef != null)
+            {
+                refDepths = brcRef.calculateReadDepths();
+                CB_LOGGER.info("reference depths({}) collected", refDepths.size());
+            }
+            else
+            {
+                refDepths = create();
+            }
 
             CobaltCalculator calculator = new CobaltCalculator(tumourDepths, refDepths, mConfig);
             ListMultimap<Chromosome, CobaltRatio> results = calculator.getCalculatedRatios();

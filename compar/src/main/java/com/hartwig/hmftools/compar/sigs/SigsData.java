@@ -38,7 +38,7 @@ public record SigsData(SignatureAllocation SignatureAllocation) implements Compa
     public List<String> displayValues()
     {
         List<String> values = Lists.newArrayList();
-        values.add(format("%.2f", SignatureAllocation.percent()));
+        values.add(format("%.4f", SignatureAllocation.percent()));
         return values;
     }
 

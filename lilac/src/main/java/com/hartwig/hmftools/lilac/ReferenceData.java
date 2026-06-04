@@ -216,9 +216,7 @@ public class ReferenceData
         // load indel PON
         String refFile = version.is37() ? "/pon/indels_v37.csv" : "/pon/indels_v38.csv";
 
-        final Stream<String> ponLines = new BufferedReader(new InputStreamReader(
-                ReferenceData.class.getResourceAsStream(refFile)))
-                .lines();
+        Stream<String> ponLines = new BufferedReader(new InputStreamReader(ReferenceData.class.getResourceAsStream(refFile))).lines();
 
         ponLines.map(Indel::fromString).forEach(INDEL_PON::add);
     }

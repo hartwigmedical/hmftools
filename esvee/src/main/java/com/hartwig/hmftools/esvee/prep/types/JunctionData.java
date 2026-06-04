@@ -11,6 +11,9 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.region.Orientation;
+import com.hartwig.hmftools.esvee.common.saga.SagaMatchByLocation;
+
+import org.jetbrains.annotations.Nullable;
 
 public class JunctionData
 {
@@ -20,7 +23,7 @@ public class JunctionData
     private List<ReadGroup> mJunctionGroups; // with a read matching the junction
     private List<ReadGroup> mSupportingGroups;
     private List<ReadGroup> mExactSupportGroups;
-    private List<RemoteJunction> mRemoteJunctions;
+    private List<RemoteJunction> mRemoteJunctions; // currently only used for discordant groups
 
     private final Map<ReadType,List<PrepRead>> mReadTypeReads;
 
@@ -31,6 +34,9 @@ public class JunctionData
     private int mDepth;
 
     private JunctionData mLinkedIndel;
+
+    @Nullable
+    private SagaMatchByLocation mSagaMatch;
 
     public JunctionData(final int position, final Orientation orientation, final PrepRead read)
     {
@@ -54,9 +60,11 @@ public class JunctionData
         mDiscordantGroup = false;
         mDepth = 0;
         mLinkedIndel = null;
+        mSagaMatch = null;
     }
 
     public boolean isForward() { return Orient.isForward(); }
+
     public boolean isReverse() { return Orient.isReverse(); }
 
     public PrepRead topJunctionRead() { return mTopJunctionRead; }
@@ -86,28 +94,36 @@ public class JunctionData
     }
 
     public List<ReadGroup> junctionGroups() { return mJunctionGroups != null ? mJunctionGroups : Collections.emptyList(); }
+
     public List<ReadGroup> supportingGroups() { return mSupportingGroups != null ? mSupportingGroups : Collections.emptyList(); }
+
     public List<ReadGroup> exactSupportGroups() { return mExactSupportGroups != null ? mExactSupportGroups : Collections.emptyList(); }
 
-    public Map<ReadType,List<PrepRead>> readTypeReads() { return mReadTypeReads; }
+    public Map<ReadType, List<PrepRead>> readTypeReads() { return mReadTypeReads; }
 
     public int junctionFragmentCount() { return mJunctionGroups != null ? mJunctionGroups.size() : 0; }
+
     public int supportingFragmentCount() { return mSupportingGroups != null ? mSupportingGroups.size() : 0; }
+
     public int exactSupportFragmentCount() { return mExactSupportGroups != null ? mExactSupportGroups.size() : 0; }
 
     public List<RemoteJunction> remoteJunctions() { return mRemoteJunctions != null ? mRemoteJunctions : Collections.emptyList(); }
 
     public boolean hotspot() { return mHotspot; }
+
     public void markHotspot() { mHotspot = true; }
 
     public boolean internalIndel() { return mInternalIndel; }
+
     public void markInternalIndel() { mInternalIndel = true; }
 
     public boolean discordantGroup() { return mDiscordantGroup; }
+
     public void markDiscordantGroup() { mDiscordantGroup = true; }
 
     public int depth() { return mDepth; }
-    public void setDepth(double depth) { mDepth = (int)depth; }
+
+    public void setDepth(double depth) { mDepth = (int) depth; }
 
     public void addReadType(final PrepRead read, final ReadType type)
     {
@@ -184,8 +200,14 @@ public class JunctionData
     }
 
     public JunctionData linkedIndel() { return mLinkedIndel; }
+
     public void setLinkedIndel(final JunctionData junctionData) { mLinkedIndel = junctionData; }
+
     public boolean hasLinkedIndel() { return mLinkedIndel != null; }
+
+    public SagaMatchByLocation sagaMatch() { return mSagaMatch; }
+
+    public void setSagaMatch(final SagaMatchByLocation match) { mSagaMatch = match; }
 
     public String toString()
     {

@@ -7,6 +7,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Locale;
+
 import com.hartwig.hmftools.amber.PositionEvidence;
 
 import org.apache.commons.math3.distribution.BinomialDistribution;
@@ -189,12 +191,21 @@ public class CandidatePeakTest extends PurityTestBase
     @Test
     public void toStringTest()
     {
-        CandidatePeak level = new CandidatePeak(0.1, 0.02);
-        level.test(evidenceWithDepthAndAltCount(_3, 1_000_000, 1000, 100));
-        level.test(evidenceWithDepthAndAltCount(_3, 2_000_000, 1000, 50));
-        level.test(evidenceWithDepthAndAltCount(_3, 2_001_000, 1000, 50));
-        level.test(evidenceWithDepthAndAltCount(_3, 3_000_000, 1000, 10));
-        assertEquals("VafLevel{vaf=0.10, step=0.02, tested: 4, homozygous: 1, heterozygous: 2}", level.toString());
+        Locale defaultLocale = Locale.getDefault();
+        try
+        {
+            Locale.setDefault(Locale.GERMAN);
+            CandidatePeak level = new CandidatePeak(0.1, 0.02);
+            level.test(evidenceWithDepthAndAltCount(_3, 1_000_000, 1000, 100));
+            level.test(evidenceWithDepthAndAltCount(_3, 2_000_000, 1000, 50));
+            level.test(evidenceWithDepthAndAltCount(_3, 2_001_000, 1000, 50));
+            level.test(evidenceWithDepthAndAltCount(_3, 3_000_000, 1000, 10));
+            assertEquals("VafLevel{vaf=0.10, step=0.02, tested: 4, homozygous: 1, heterozygous: 2}", level.toString());
+        }
+        finally
+        {
+            Locale.setDefault(defaultLocale);
+        }
     }
 
     private void checkNotCaptured(double vafLevel, int readDepth, int altDepth)

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.purple.somatic;
 
+import static java.lang.Math.max;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_COUNT;
@@ -41,7 +42,7 @@ public class MicrosatelliteIndels
     {
         if(mTargetRegions.hasTargetRegions())
         {
-            return mMsiModelPrediction != null ? mMsiModelPrediction.PredictedMsiIndelsPerMb : 0;
+            return mMsiModelPrediction != null ? max(mMsiModelPrediction.PredictedMsiIndelsPerMb, 0) : 0;
         }
         else
         {

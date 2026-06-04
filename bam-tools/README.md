@@ -187,6 +187,7 @@ output_dir | Directory to write output into
 output_id  | Extra file name prefix for the output FASTQ files
 log_level | As above
 threads    | As above
+bqsr_reverse | Revert any BQSR quals back to the original quals
 
 ### Optional Configuration
 

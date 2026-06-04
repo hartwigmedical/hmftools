@@ -18,13 +18,16 @@ public class BreakendData
     public final int Position;
     public final int[] HomologyOffset;
     public final byte Orientation;
+    public final int Depth;
+    public final int Frags;
+    public final int Qual;
     public final String ComparisonChromosome;
     public final int ComparisonPosition;
 
     public BreakendData(
             final LinxBreakend breakend, final String svId, final StructuralVariantType svType, final String chromosome,
-            final int position, final byte orientation, final int[] homologyOffset, final String comparisonChromosome,
-            final int comparisonPosition)
+            final int position, final byte orientation, final int[] homologyOffset, int depth, int frags, int qual,
+            final String comparisonChromosome, final int comparisonPosition)
     {
         Breakend = breakend;
         SvId = svId;
@@ -32,6 +35,9 @@ public class BreakendData
         Chromosome = chromosome;
         Position = position;
         Orientation = orientation;
+        Depth = depth;
+        Frags = frags;
+        Qual = qual;
         HomologyOffset = homologyOffset;
         ComparisonChromosome = comparisonChromosome;
         ComparisonPosition = comparisonPosition;
@@ -77,8 +83,14 @@ public class BreakendData
         return format("%s:%s:%s:%d", Breakend.transcriptId(), Breakend.codingType(), Breakend.regionType(), Breakend.exonUp());
     }
 
-    public String fullStr()
+    public String fullStr(boolean includeDetails)
     {
-        return format("%s reported(%s) transcript(%s)", svInfoStr(), Breakend.reportedStatus(), transcriptStr());
+        if(!includeDetails)
+        {
+            return format("%s reported(%s) transcript(%s)", svInfoStr(),  Breakend.reportedStatus(), transcriptStr());
+        }
+
+        return format("%s af(%d/%d) qual(%d) reported(%s) transcript(%s)",
+                svInfoStr(), Frags, Depth, Qual, Breakend.reportedStatus(), transcriptStr());
     }
 }

@@ -6,8 +6,8 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
-import static com.hartwig.hmftools.bamtools.metrics.OffTargetFragments.FLD_PEAK_POS_END;
-import static com.hartwig.hmftools.bamtools.metrics.OffTargetFragments.FLD_PEAK_POS_START;
+import static com.hartwig.hmftools.bamtools.metrics.OffTargetAnalyser.FLD_PEAK_POS_END;
+import static com.hartwig.hmftools.bamtools.metrics.OffTargetAnalyser.FLD_PEAK_POS_START;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeVersion;
 import static com.hartwig.hmftools.common.sv.RepeatMaskAnnotations.REPEAT_MASK_FILE;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;

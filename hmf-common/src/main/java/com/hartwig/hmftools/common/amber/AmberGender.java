@@ -6,6 +6,8 @@ import static com.hartwig.hmftools.common.purple.Gender.MALE;
 import java.util.Collection;
 import java.util.Map;
 
+import javax.annotation.Nullable;
+
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
@@ -15,11 +17,16 @@ import com.hartwig.hmftools.common.region.BaseRegion;
 
 public final class AmberGender
 {
+    // all constants relate to the observed and threshold values on chromosome-X
     private static final double MIN_BAF_PERC = 0.01;
+    private static final int MIN_BAF_COUNT = 3;
+    private static final double TARGET_REGION_CHR_X_FACTOR = 0.05;
+
     private static final BaseRegion PSEUDOAUTOSOMAL_REGION_V37 = new BaseRegion(2699520, 155260560);
     private static final BaseRegion PSEUDOAUTOSOMAL_REGION_V38 = new BaseRegion(2781479, 156030895);
 
-    public static Gender determineGender(final RefGenomeVersion version, final Multimap<Chromosome,AmberBAF> chromosomeBafs)
+    public static Gender determineGender(
+            final RefGenomeVersion version, final Multimap<Chromosome,AmberBAF> chromosomeBafs, @Nullable final Double chrXRegionPercentage)
     {
         final BaseRegion inclusionRegion = version == RefGenomeVersion.V37 ? PSEUDOAUTOSOMAL_REGION_V37 : PSEUDOAUTOSOMAL_REGION_V38;
 
@@ -34,8 +41,19 @@ public final class AmberGender
                 inclusionPoints = entry.getValue().stream().filter(x -> inclusionRegion.containsPosition(x.Position)).count();
         }
 
+        if(inclusionPoints < MIN_BAF_COUNT)
+            return MALE;
+
         double inclusionPerc = inclusionPoints / (double)totalPoints;
-        return inclusionPerc > MIN_BAF_PERC ? FEMALE : MALE;
+
+        double minBafThreshold = MIN_BAF_PERC;
+
+        if(chrXRegionPercentage != null)
+        {
+            minBafThreshold = TARGET_REGION_CHR_X_FACTOR * chrXRegionPercentage;
+        }
+
+        return inclusionPerc > minBafThreshold ? FEMALE : MALE;
     }
 
 

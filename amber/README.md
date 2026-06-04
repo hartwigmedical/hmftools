@@ -1,8 +1,8 @@
 # AMBER
 
-AMBER is designed to generate a tumor BAF file for use in PURPLE from a provided VCF of likely heterozygous SNP sites.
+Amber is designed to generate a tumor BAF file for use in PURPLE from a provided VCF of likely heterozygous SNP sites.
 
-When using paired reference/tumor data, AMBER is also able to:
+When using paired reference/tumor data, Amber is also able to:
 
 - detect evidence of contamination in the tumor from homozygous sites in the reference
 - facilitate sample matching / patient deduplication by recording SNPs in the germline
@@ -11,7 +11,7 @@ When using paired reference/tumor data, AMBER is also able to:
 All resource files for this tool and the WiGiTs pipeline are available for download via
 the [HMF Resource page](../pipeline/README_RESOURCES.md).
 
-AMBER requires Java 17+ to be installed.
+Amber requires Java 17+ to be installed.
 
 ## Paired Normal/Tumor Mode
 
@@ -38,7 +38,7 @@ Approximately 1000 sites scattered evenly through the VCF have been tagged with 
 The allelic frequency of these sites in the reference bam are written to the `REFERENCE.amber.snp.vcf.gz` file without any filtering to be
 used downstream for sample matching.
 
-AMBER supports both BAM and CRAM file formats.
+Amber supports both BAM and CRAM file formats.
 
 ### Optional Arguments
 
@@ -52,7 +52,6 @@ AMBER supports both BAM and CRAM file formats.
 | min_het_af_percent    | 0.4     | Minimum allelic frequency in reference sample to be considered heterozygous                       |
 | max_het_af_percent    | 0.65    | Maximum allelic frequency in reference sample to be considered heterozygous                       |
 | validation_stringency | STRICT  | SAM validation strategy: STRICT, SILENT, LENIENT                                                  |
-| use_old_segmenter     | false   | Use the Bioconductor copynumber package to produce the segments file                              |
 | threads               | 1       | Number of threads to use                                                                          |
 
 ### Example Usage
@@ -70,7 +69,7 @@ java -Xmx16G -jar amber.jar \
 
 ## Tumor Only Mode
 
-If no reference BAM is supplied, AMBER will be put into tumor-only mode. In this mode,
+If no reference BAM is supplied, Amber will be put into tumor-only mode. In this mode,
 a 'noise floor' is evaluated as follows:
 
 - Frequency peaks in the vaf level are investigated to find those that likely correspond to copy number events or contamination.
@@ -119,7 +118,7 @@ java -Xmx16G -jar amber.jar \
 
 ## Germline Only Mode
 
-If the tumor / tumor bam are not specified then AMBER will be run in germline only mode. Germline mode has the following differences in
+If the tumor / tumor bam are not specified then Amber will be run in germline only mode. Germline mode has the following differences in
 behaviour
 
 - contamination is not run
@@ -129,7 +128,7 @@ behaviour
 
 ## Targeted Mode
 
-AMBER may be run on targeted data. The differences in behaviour in AMBER in targeted mode are documented
+Amber may be run on targeted data. The differences in behaviour in Amber in targeted mode are documented
 here: [here](https://github.com/hartwigmedical/hmftools/blob/master/pipeline/README_TARGETED.md#amber).
 
 ## Multiple Reference / Donor mode
@@ -142,7 +141,7 @@ No change is made to the SNPCheck or contamination output. These will be run on 
 
 ### Analysis and filtering of BAF points
 
-When using paired reference/tumor bams, AMBER confirms these sites as heterozygous in the reference sample bam then calculates the allelic
+When using paired reference/tumor bams, Amber confirms these sites as heterozygous in the reference sample bam then calculates the allelic
 frequency of corresponding sites in the tumor bam. Only observations which meet the min map quality, min base quality and min tumor depth
 and with depth and AF in the specificed range are considered. In tumor only mode, all provided sites are examined in the tumor with
 additional filtering on tumor vaf and allelic depth to ensure that the sites are highly unlikely to be homozygous ref or alt in the
@@ -153,25 +152,15 @@ germline.
 A piecewise constant fit (segmentation) of the BAF ratios is found by least squares regression
 and written as a `.pcf` file. This uses a built-in implementation of the Bioconductor copynumber package.
 
-If the [copynumber](http://bioconductor.org/packages/release/bioc/html/copynumber.html) package is preferred for segmentation, add the
-parameter `use_old_segmenter`.
-This will also require the installation of [R](https://www.r-project.org/) or [RStudio](https://rstudio.com/), and then the installation of
-the copynumber package using the following R commands:
-
-```
-    library(BiocManager)
-    install("copynumber")
-```
-
 ### Contamination
 
 The contamination algorithm aims to detect potential contamination from other patients’ DNA during the preparation stage. It can only be run
 in Normal/Tumor mode as it works by analysing evidence in the tumor for heterozygosity at corresponding high confidence homozygous reference
-sites in the normal. AMBER first detects presence of contamination and then estimates a contamination rate.
+sites in the normal. Amber first detects presence of contamination and then estimates a contamination rate.
 
 **Detect contamination**
 
-AMBER first gathers high confidence homozygous ref sites from the normal sample – each site requires at least 7 reads supporting the REF and
+Amber first gathers high-confidence homozygous ref sites from the normal sample – each site requires at least 7 reads supporting the REF and
 0 reads supporting the ALT. The tumor sample is considered contaminated if, within these corresponding sites,
 
 - The number of sites with three or more ALT support reads is greater than or equals to 10 AND The number of sites with three or more ALT
@@ -201,17 +190,17 @@ Assuming a Poisson distribution, the expected probability of detecting a contami
 + 0.25 * Poisson(observation = ALT support, mean = homozygous mean)
 ```
 
-AMBER then excludes probabilities associated with ALT support of 0 or 1 and re-normalises the expected probability for all higher ALT
+Amber then excludes probabilities associated with ALT support of 0 or 1 and re-normalises the expected probability for all higher ALT
 support from 3 and more.
 
-AMBER also counts the actual number of positions with ALT support. And similarly calculates the proportion belonging to each ALT support,
+Amber also counts the actual number of positions with ALT support. And similarly calculates the proportion belonging to each ALT support,
 excluding 0 and 1.
 
 Finally, the contamination rate is chosen whose value minimises the cumulative differences between the predicted and actual proportions.
 
 ### Regions of Homozygosity
 
-AMBER outputs a file which contains continuous regions of homozygous sites. The sex chromosomes are excluded from consideration, as are the
+Amber outputs a file which contains continuous regions of homozygous sites. The sex chromosomes are excluded from consideration, as are the
 short arms of chr 13,14,15,21 & 22 as well as regions within 1M bases of centromeric gaps and large regions of heterochromatin (ie for chr
 1,chr9, chr 16).
 

@@ -50,17 +50,18 @@ public class SomaticSv implements StructuralVariant
 {
     private final StructuralVariantData mVariant;
     private final List<LinxBreakend> mBreakends;
-    private final List<LinxFusion> mFusions;
+    @Nullable
+    private final LinxFusion mFusion;
     private boolean mIsAmpDriver;
     private boolean mIsDelDriver;
 
     private static final Logger LOGGER = LogManager.getLogger(SomaticSv.class);
 
-    public SomaticSv(final StructuralVariantData variant, final List<LinxBreakend> breakends, final List<LinxFusion> fusions)
+    public SomaticSv(final StructuralVariantData variant, final List<LinxBreakend> breakends, @Nullable final LinxFusion fusion)
     {
         mVariant = variant;
         mBreakends = breakends;
-        mFusions = fusions;
+        mFusion = fusion;
         mIsAmpDriver = false;
         mIsDelDriver = false;
     }
@@ -78,7 +79,7 @@ public class SomaticSv implements StructuralVariant
 
     private boolean isFusion()
     {
-        return !mFusions.isEmpty();
+        return mFusion != null;
     }
 
     private boolean isAmpDriver()
@@ -109,9 +110,9 @@ public class SomaticSv implements StructuralVariant
     @Nullable
     private String gene()
     {
-        if(!mFusions.isEmpty())
+        if(mFusion != null)
         {
-            return mFusions.get(0).name();
+            return mFusion.name();
         }
 
         Optional<LinxBreakend> breakend = mBreakends.stream().filter(x -> x.reportedStatus() == ReportedStatus.REPORTED).findFirst();
@@ -127,7 +128,7 @@ public class SomaticSv implements StructuralVariant
     public boolean isDriver()
     {
         return isAmpDriver() || isDelDriver()
-                || mFusions.stream().anyMatch(LinxFusion::reported)
+                || (mFusion != null && mFusion.reported())
                 || isReportedDisruption();
     }
 
@@ -285,6 +286,13 @@ public class SomaticSv implements StructuralVariant
                     .filter(fusion -> svBreakends.stream().anyMatch(
                             breakend -> breakend.id() == fusion.fivePrimeBreakendId() || breakend.id() == fusion.threePrimeBreakendId()))
                     .toList();
+            if(svFusions.size() > 1)
+            {
+                // We think this can't happen in practice because 1 SV should be resolved to at most 1 fusion in Linx.
+                LOGGER.warn("Multiple reported fusions for SV {} {}. Will use first fusion", variant.id(), variant);
+            }
+            @Nullable
+            final LinxFusion svFusion = svFusions.isEmpty() ? null : svFusions.get(0);
 
             // only use SGLs if in a reportable fusion
             if(variant.type() == StructuralVariantType.SGL && svFusions.isEmpty())
@@ -303,7 +311,7 @@ public class SomaticSv implements StructuralVariant
 
             StructuralVariantData variantData = convertSvData(variant, annotation.svId());
 
-            SomaticSv sv = new SomaticSv(variantData, svBreakends, svFusions);
+            SomaticSv sv = new SomaticSv(variantData, svBreakends, svFusion);
             variants.add(sv);
 
             if(clusterSVs.containsKey(cluster.clusterId()))
@@ -353,6 +361,9 @@ public class SomaticSv implements StructuralVariant
                 }
             }
         }
+
+        // We only support driver somatic structural variants, so filter out nondrivers now.
+        variants = variants.stream().filter(SomaticSv::isDriver).toList();
 
         LOGGER.debug("Loaded {} somatic structural variants", variants.size());
         variants.forEach(variant -> LOGGER.trace("SomaticSv: {}", variant));

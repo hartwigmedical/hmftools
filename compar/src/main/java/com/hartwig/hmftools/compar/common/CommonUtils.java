@@ -3,9 +3,8 @@ package com.hartwig.hmftools.compar.common;
 import static com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache.UNMAPPED_POSITION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
-import static com.hartwig.hmftools.compar.ComparConfig.NEW_SOURCE;
-import static com.hartwig.hmftools.compar.ComparConfig.REF_SOURCE;
-import static com.hartwig.hmftools.compar.common.CategoryType.GENE_COPY_NUMBER;
+import static com.hartwig.hmftools.compar.common.CategoryType.DISRUPTION;
+import static com.hartwig.hmftools.compar.common.CategoryType.FUSION;
 import static com.hartwig.hmftools.compar.common.CategoryType.GERMLINE_BAM_METRICS;
 import static com.hartwig.hmftools.compar.common.CategoryType.GERMLINE_FLAGSTAT;
 import static com.hartwig.hmftools.compar.common.CategoryType.TUMOR_BAM_METRICS;
@@ -15,9 +14,9 @@ import static com.hartwig.hmftools.compar.common.MismatchType.FULL_MATCH;
 import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_BOTH;
 import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_ERROR;
 import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_NEW;
-import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_REF;
+import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_OLD;
 import static com.hartwig.hmftools.compar.common.MismatchType.NEW_ONLY;
-import static com.hartwig.hmftools.compar.common.MismatchType.REF_ONLY;
+import static com.hartwig.hmftools.compar.common.MismatchType.OLD_ONLY;
 import static com.hartwig.hmftools.compar.common.MismatchType.VALUE;
 
 import java.io.File;
@@ -96,12 +95,24 @@ public class CommonUtils
             comparers.add(comparer);
         }
 
-        if(config.runCopyNumberGeneComparer())
+        // link related or dependent comparers - could make this a virtual method too if becomes more common
+        if(config.Categories.containsKey(FUSION))
         {
-            // use the gene copy number comparer to assist with CN-event drivers
-            ItemComparer comparer = createComparer(GENE_COPY_NUMBER, config);
-            comparer.registerThresholds(config.Thresholds);
-            comparers.add(comparer);
+            FusionComparer fusionComparer = (FusionComparer)(comparers.stream()
+                    .filter(x -> x.category() == FUSION).findFirst().orElse(null));
+
+            DisruptionComparer disruptionComparer;
+            if(config.Categories.containsKey(DISRUPTION))
+            {
+                disruptionComparer = (DisruptionComparer)(comparers.stream()
+                        .filter(x -> x.category() == DISRUPTION).findFirst().orElse(null));
+            }
+            else
+            {
+                disruptionComparer = (DisruptionComparer)createComparer(DISRUPTION, config);
+            }
+
+            fusionComparer.setDisruptionComparer(disruptionComparer);
         }
 
         return comparers;
@@ -189,13 +200,13 @@ public class CommonUtils
             case SIGS:
                 return new SigsComparer(config);
 
-            case ISOFOX_SUMMARY:
+            case RNA_SUMMARY:
                 return new IsofoxSummaryComparer(config);
 
-            case ISOFOX_GENE_DATA:
+            case RNA_GENE_DATA:
                 return new IsofoxGeneDataComparer(config);
 
-            case ISOFOX_TRANSCRIPT_DATA:
+            case RNA_TRANSCRIPT_DATA:
                 return new IsofoxTranscriptDataComparer(config);
 
             case NOVEL_SPLICE_JUNCTION:
@@ -214,50 +225,52 @@ public class CommonUtils
     {
         final MatchLevel matchLevel = config.Categories.get(comparer.category());
 
-        Map<String, List<ComparableItem>> sourceItems = Maps.newHashMap();
+        Map<SourceType,List<ComparableItem>> sourceItems = Maps.newHashMap();
 
-        for(String sourceName : config.SourceNames)
+        for(SourceData source : config.Sources)
         {
-            String sourceSampleId = config.sourceSampleId(sourceName, sampleId);
-            String sourceGermlineSampleId = config.sourceGermlineSampleId(sourceName, sampleId);
+            String sourceSampleId = config.sourceSampleId(source.Type, sampleId);
+            String sourceReferenceId = config.sourceReferenceId(source.Type, sampleId);
             List<ComparableItem> items = null;
 
-            if(!config.DbConnections.isEmpty())
+            if(source.Database != null)
             {
-                items = comparer.loadFromDb(sourceSampleId, config.DbConnections.get(sourceName), sourceName);
+                items = comparer.loadFromDb(sourceSampleId, source.Database, source.Type);
             }
             else
             {
-                FileSources fileSources =
-                        FileSources.sampleInstance(config.FileSources.get(sourceName), sourceSampleId, sourceGermlineSampleId);
-                items = comparer.loadFromFile(sourceSampleId, sourceGermlineSampleId, fileSources);
+                FileSources fileSources = FileSources.sampleInstance(source.Files, sourceSampleId, sourceReferenceId);
+
+                items = comparer.loadFromFile(sourceSampleId, sourceReferenceId, fileSources);
             }
 
             if(items != null)
             {
-                sourceItems.put(sourceName, items);
+                sourceItems.put(source.Type, items);
             }
         }
 
-        if(sourceItems.containsKey(REF_SOURCE) && sourceItems.containsKey(NEW_SOURCE))
+        if(sourceItems.containsKey(SourceType.OLD) && sourceItems.containsKey(SourceType.NEW))
         {
             // previously support comparisons for N sources but now can only be 2 as controlled by config
             CommonUtils.compareItems(
-                    mismatches, matchLevel, config.Thresholds, config.IncludeMatches, sourceItems.get(REF_SOURCE), sourceItems.get(NEW_SOURCE));
+                    mismatches, matchLevel, config.Thresholds, config.IncludeMatches,
+                    sourceItems.get(SourceType.OLD), sourceItems.get(SourceType.NEW));
+
             return true;
         }
 
         InvalidDataItem invalidDataItem = new InvalidDataItem(comparer.category());
 
-        if(!sourceItems.containsKey(REF_SOURCE) && !sourceItems.containsKey(NEW_SOURCE))
+        if(!sourceItems.containsKey(SourceType.OLD) && !sourceItems.containsKey(SourceType.NEW))
         {
             mismatches.add(new Mismatch(invalidDataItem, null, INVALID_BOTH, Collections.EMPTY_LIST));
         }
-        else if(!sourceItems.containsKey(REF_SOURCE))
+        else if(!sourceItems.containsKey(SourceType.OLD))
         {
-            mismatches.add(new Mismatch(invalidDataItem, null, INVALID_REF, Collections.EMPTY_LIST));
+            mismatches.add(new Mismatch(invalidDataItem, null, INVALID_OLD, Collections.EMPTY_LIST));
         }
-        else if(!sourceItems.containsKey(NEW_SOURCE))
+        else if(!sourceItems.containsKey(SourceType.NEW))
         {
             mismatches.add(new Mismatch(invalidDataItem, null, INVALID_NEW, Collections.EMPTY_LIST));
         }
@@ -322,19 +335,19 @@ public class CommonUtils
         List<String> emptyDiffs = Lists.newArrayList();
 
         items1.stream().filter(x -> matchLevel != REPORTABLE || x.reportable())
-                .forEach(x -> mismatches.add(new Mismatch(x, null, REF_ONLY, emptyDiffs)));
+                .forEach(x -> mismatches.add(new Mismatch(x, null, OLD_ONLY, emptyDiffs)));
 
         items2.stream().filter(x -> matchLevel != REPORTABLE || x.reportable())
                 .forEach(x -> mismatches.add(new Mismatch(null, x, NEW_ONLY, emptyDiffs)));
     }
 
     public static BasePosition determineComparisonGenomePosition(
-            final String chromosome, final int position, final String fileSource,
+            final String chromosome, final int position, final SourceType sourceType,
             final boolean requiresLiftover, final GenomeLiftoverCache liftoverCache)
     {
         if(requiresLiftover && liftoverCache.hasMappings())
         {
-            RefGenomeVersion destVersion = fileSource.equals(REF_SOURCE) ? V38 : V37;
+            RefGenomeVersion destVersion = sourceType == SourceType.OLD ? V38 : V37;
             int newPosition = liftoverCache.convertPosition(chromosome, position, destVersion);
 
             if(newPosition != UNMAPPED_POSITION)
@@ -389,7 +402,7 @@ public class CommonUtils
             MismatchType mismatchType;
             if(refCountsAsCalled && !newCountsAsCalled)
             {
-                mismatchType = REF_ONLY;
+                mismatchType = OLD_ONLY;
             }
             else if(!refCountsAsCalled && newCountsAsCalled)
             {

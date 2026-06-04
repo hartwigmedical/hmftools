@@ -4,8 +4,8 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
+import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH_LOWER;
 
-import com.hartwig.hmftools.common.sv.EsveeCommon;
 import com.hartwig.hmftools.common.sv.EsveeDiscordantStats;
 import com.hartwig.hmftools.common.sv.LineElements;
 
@@ -21,7 +21,9 @@ public final class PrepConstants
     public static final String FLD_EXACT_SUPPORT_FRAGS = "ExactSupportFrags";
     public static final String FLD_OTHER_SUPPORT_FRAGS = "OtherSupportFrags";
     public static final String FLD_HOTSPOT_JUNCTION = "Hotspot";
-    public static final String FLD_EXTRA_INFO = "ExtraInfo";
+    public static final String FLD_EXTRA_INFO = "ExtraInfo"; // deprecated
+    public static final String FLD_REMOTE_FRAGS = "RemoteFrags"; // currently only used for discordant junctions
+    public static final String FLD_SAGA_MATCH = "SagaMatch";
 
     // region processing
     public static final int DEFAULT_CHR_PARTITION_SIZE = 1_000_000;
@@ -35,7 +37,7 @@ public final class PrepConstants
     public static final int MIN_CALC_ALIGNMENT_LOWER_SCORE = 35;
     public static final int MIN_ALIGNMENT_SCORE_DIFF = 15;
     public static final int MIN_INSERT_ALIGNMENT_OVERLAP = 5;
-    public static final int MIN_SOFT_CLIP_LENGTH = MIN_VARIANT_LENGTH;
+    public static final int MIN_SOFT_CLIP_LENGTH = MIN_VARIANT_LENGTH_LOWER;    // note: perhaps conditionally use lower requirement only for SAGA matched junctions.
     public static final int MIN_LINE_SOFT_CLIP_LENGTH = LineElements.LINE_POLY_AT_TEST_LEN;
     public static final double MIN_SOFT_CLIP_HIGH_QUAL_PERC = 0.75;
     public static final int MAX_SOFT_CLIP_LOW_QUAL_COUNT = 5;

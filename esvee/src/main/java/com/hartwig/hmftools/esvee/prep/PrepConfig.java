@@ -14,7 +14,6 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.parseLogReadIds;
-import static com.hartwig.hmftools.common.utils.config.ConfigItem.enumValueSelectionAsStr;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
@@ -25,6 +24,8 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFil
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.FileCommon.KNOWN_HOTSPOT_FILE;
 import static com.hartwig.hmftools.esvee.common.FileCommon.PREP_FILE_ID;
+import static com.hartwig.hmftools.esvee.common.FileCommon.SAGA_FASTA;
+import static com.hartwig.hmftools.esvee.common.FileCommon.SAGA_FASTA_DESC;
 import static com.hartwig.hmftools.esvee.common.FileCommon.formOutputFile;
 import static com.hartwig.hmftools.esvee.common.FileCommon.parseBamFiles;
 import static com.hartwig.hmftools.esvee.common.FileCommon.parseSampleIds;
@@ -58,6 +59,8 @@ import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.esvee.common.WriteType;
 import com.hartwig.hmftools.esvee.prep.types.ReadFilterConfig;
 
+import org.jetbrains.annotations.Nullable;
+
 import htsjdk.samtools.ValidationStringency;
 
 public class PrepConfig
@@ -69,6 +72,9 @@ public class PrepConfig
 
     public final ReadFilters ReadFiltering;
     public final HotspotCache Hotspots;
+
+    @Nullable
+    public final String SagaFastaFile;
 
     public final int PartitionSize;
     public final ValidationStringency BamStringency;
@@ -86,16 +92,12 @@ public class PrepConfig
     // debug
     public final SpecificRegions SpecificChrRegions;
     public final List<String> LogReadIds;
-    public final boolean TrackRemotes;
     public final boolean PerfDebug;
     public final int MaxFragmentLengthOverride;
 
     public final boolean NoCleanUp;
 
     private boolean mIsValid;
-
-    // both of these are set from the fragment length distribution
-    private boolean mUnpairedReads;
 
     // config strings
     public static final String BAM_FILE = "bam_file";
@@ -106,7 +108,6 @@ public class PrepConfig
 
     public static final String PARTITION_SIZE = "partition_size";
 
-    private static final String TRACK_REMOTES = "track_remotes";
     private static final String NO_CACHE_BAM = "no_cache_bam";
     private static final String NO_CLEAN_UP = "no_clean_up";
     private static final String NO_TRIM_READ_ID = "no_trim_read_id";
@@ -152,6 +153,8 @@ public class PrepConfig
 
         Hotspots = new HotspotCache(configBuilder.getValue(KNOWN_HOTSPOT_FILE));
 
+        SagaFastaFile = configBuilder.getValue(SAGA_FASTA);
+
         PartitionSize = configBuilder.getInteger(PARTITION_SIZE);
 
         ReadFiltering = new ReadFilters(ReadFilterConfig.from(configBuilder));
@@ -176,10 +179,8 @@ public class PrepConfig
         // optimisations and debug
         TrimReadId = !configBuilder.hasFlag(NO_TRIM_READ_ID) && !SpecificChrRegions.hasFilters() && BamFiles.size() == 1;
         UseCacheBam = !configBuilder.hasFlag(NO_CACHE_BAM) && !SpecificChrRegions.hasFilters();
-        TrackRemotes = configBuilder.hasFlag(TRACK_REMOTES);
         NoCleanUp = configBuilder.hasFlag(NO_CLEAN_UP);
         PerfDebug = configBuilder.hasFlag(PERF_DEBUG);
-        mUnpairedReads = false;
     }
 
     public boolean isValid()
@@ -231,20 +232,19 @@ public class PrepConfig
                 MIN_INDEL_LENGTH,
                 MIN_JUNCTION_SUPPORT));
 
+        SagaFastaFile = null;
+
         BamStringency = ValidationStringency.STRICT;
         WriteTypes = Sets.newHashSet();
         SpecificChrRegions = new SpecificRegions();
         LogReadIds = Lists.newArrayList();
         BamToolPath = null;
         Threads = 1;
-        TrackRemotes = true;
         UseCacheBam = false;
         PerfDebug = false;
         TrimReadId = false;
         NoCleanUp = false;
         MaxFragmentLengthOverride = -1;
-
-        mUnpairedReads = false;
     }
 
     public static void registerConfig(final ConfigBuilder configBuilder)
@@ -254,6 +254,7 @@ public class PrepConfig
 
         addRefGenomeConfig(configBuilder, true);
         configBuilder.addPath(KNOWN_HOTSPOT_FILE, false, "Known fusion hotspot BED file");
+        configBuilder.addPath(SAGA_FASTA, false, SAGA_FASTA_DESC);
         configBuilder.addInteger(PARTITION_SIZE, "Partition size", DEFAULT_CHR_PARTITION_SIZE);
 
         registerCommonConfig(configBuilder);
@@ -262,7 +263,6 @@ public class PrepConfig
         addSpecificChromosomesRegionsConfig(configBuilder);
         configBuilder.addConfigItem(LOG_READ_IDS, false, LOG_READ_IDS_DESC);
         configBuilder.addFlag(NO_CACHE_BAM, "Write a BAM to cache candidate reads");
-        configBuilder.addFlag(TRACK_REMOTES, "Track support for remote junctions");
         configBuilder.addFlag(NO_TRIM_READ_ID, "Disable use of a shortened readId internally");
         configBuilder.addFlag(NO_CLEAN_UP, "Keep candidate cache BAM files");
         configBuilder.addFlag(PERF_DEBUG, PERF_DEBUG_DESC);

@@ -3,12 +3,15 @@ package com.hartwig.hmftools.esvee.assembly;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_DISCORDANT_MIN_MAP_QUALITY;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_DISTINCT_FRAGS;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_LENGTH_LOWER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH_LOWER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_SPLIT_MIN_READ_SUPPORT;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_DISTINCT_FRAGS;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.MAX_OBSERVED_CONCORDANT_FRAG_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.PRIMARY_ASSEMBLY_SPLIT_MIN_READ_SUPPORT_PERC;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.findIndelExtensionReads;
@@ -28,6 +31,7 @@ import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_MIN_SOFT_CLIP_S
 import static com.hartwig.hmftools.esvee.common.SvConstants.isSbx;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_HOTSPOT_JUNCTION_SUPPORT;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -38,22 +42,28 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.esvee.assembly.read.Read;
+import com.hartwig.hmftools.esvee.assembly.types.Junction;
+import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.RemoteRegion;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
-import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
-import com.hartwig.hmftools.esvee.assembly.types.Junction;
-import com.hartwig.hmftools.esvee.assembly.read.Read;
+import com.hartwig.hmftools.esvee.common.saga.SagaMatchBySequence;
+import com.hartwig.hmftools.esvee.common.saga.SagaSequenceMatcher;
+
+import org.jetbrains.annotations.Nullable;
 
 public class JunctionAssembler
 {
     private Junction mJunction;
     private final RefGenomeInterface mRefGenome;
+    private final SagaSequenceMatcher mSagaMatcher;
     private final List<Read> mNonJunctionReads;
 
-    public JunctionAssembler(final Junction junction, final RefGenomeInterface refGenome)
+    public JunctionAssembler(final Junction junction, final RefGenomeInterface refGenome, @Nullable final SagaSequenceMatcher sagaMatcher)
     {
         mJunction = junction;
         mRefGenome = refGenome;
+        mSagaMatcher = sagaMatcher;
         mNonJunctionReads = Lists.newArrayList();
     }
 
@@ -64,74 +74,65 @@ public class JunctionAssembler
         // find prominent reads to establish the extension sequence, taking any read meeting min soft-clip lengths
         // and repetitive indels
 
-        List<Read> junctionReads = Lists.newArrayList();
-        List<Read> extensionReads = Lists.newArrayList();
-
         if(!mJunction.indelBased() && hasIndelJunctionReads(mJunction, rawReads))
         {
             // fall-back in case Prep didn't set this state or junctions are loaded from config
             mJunction.markAsIndel();
         }
 
-        boolean hasMinLengthSoftClipRead = false;
+        List<Read> junctionReads;
+        List<Read> extensionReads;
+        boolean hasMinLengthSoftClipRead;
+        boolean usedRelaxedFilters;
 
         if(mJunction.indelBased())
         {
+            junctionReads = new ArrayList<>();
+            extensionReads = new ArrayList<>();
             findIndelExtensionReads(mJunction, rawReads, extensionReads, junctionReads, mNonJunctionReads);
             hasMinLengthSoftClipRead = !extensionReads.isEmpty();
+            usedRelaxedFilters = false;
         }
         else if(mJunction.DiscordantOnly)
         {
             // look for a common soft-clip position, otherwise take the min variant length back from the inner most read as the junction
+            junctionReads = new ArrayList<>();
+            extensionReads = new ArrayList<>();
             assessDiscordantJunction(rawReads, extensionReads, junctionReads);
             hasMinLengthSoftClipRead = !extensionReads.isEmpty();
+            usedRelaxedFilters = false;
         }
         else
         {
-            // the only difference for indel-based junctions is that only the long indels are used to build the consensus extension
-            for(Read read : rawReads)
+            // First, try with the regular soft clip length requirement.
+            AssessJunctionReadsResult result = assessSoftClipJunction(rawReads, false);
+            if(!checkJunctionReadExtension(result.hasMinLengthSoftClipRead, result.extensionReads))
             {
-                if(!readSoftClipsAndCrossesJunction(read, mJunction, mRefGenome))
-                {
-                    mNonJunctionReads.add(read);
-                    continue;
-                }
-
-                if(recordSoftClipsAtJunction(read, mJunction))
-                {
-                    int softClipJunctionExtension = readJunctionExtensionLength(read, mJunction);
-
-                    if(read.hasLineTail(mJunction.isForward()))
-                    {
-                        hasMinLengthSoftClipRead |= softClipJunctionExtension >= LINE_MIN_EXTENSION_LENGTH;
-
-                        if(softClipJunctionExtension >= LINE_MIN_SOFT_CLIP_SECONDARY_LENGTH)
-                            extensionReads.add(read);
-                    }
-                    else
-                    {
-
-                        hasMinLengthSoftClipRead |= softClipJunctionExtension >= ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
-
-                        if(softClipJunctionExtension >= ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH)
-                            extensionReads.add(read);
-                    }
-                }
-
-                junctionReads.add(read);
+                // If that failed, try again with a relaxed requirement - later this will be permitted if the junction sequence matches SAGA.
+                result = assessSoftClipJunction(rawReads, true);
             }
+
+            junctionReads = result.junctionReads();
+            extensionReads = result.extensionReads();
+            mNonJunctionReads.addAll(result.nonJunctionReads());
+            hasMinLengthSoftClipRead = result.hasMinLengthSoftClipRead();
+            usedRelaxedFilters = result.usedRelaxedLimits();
         }
 
-        if(!hasMinLengthSoftClipRead || !aboveMinReadThreshold(extensionReads))
+        if(!checkJunctionReadExtension(hasMinLengthSoftClipRead, extensionReads))
+        {
             return Collections.emptyList();
+        }
 
         List<Read> duplicateLongExtensionReads = isSbx() ? findSbxPossibleDuplicates(mJunction, extensionReads) : Collections.emptyList();
         duplicateLongExtensionReads.forEach(x -> extensionReads.remove(x));
         duplicateLongExtensionReads.forEach(x -> junctionReads.remove(x));
 
-        ExtensionSeqBuilder extensionSeqBuilder = new ExtensionSeqBuilder(mJunction, extensionReads);
+        ExtensionSeqBuilder extensionSeqBuilder = new ExtensionSeqBuilder(mJunction, extensionReads, usedRelaxedFilters);
 
-        int reqExtensionLength = extensionSeqBuilder.hasLineSequence() ? LINE_MIN_EXTENSION_LENGTH : ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
+        int reqExtensionLength = extensionSeqBuilder.hasLineSequence()
+                ? LINE_MIN_EXTENSION_LENGTH
+                : (usedRelaxedFilters ? ASSEMBLY_MIN_SOFT_CLIP_LENGTH_LOWER : ASSEMBLY_MIN_SOFT_CLIP_LENGTH);
 
         if(!extensionSeqBuilder.isValid() || extensionSeqBuilder.extensionLength() < reqExtensionLength)
             return Collections.emptyList();
@@ -154,8 +155,6 @@ public class JunctionAssembler
         if(extensionSeqBuilder.hasLineSequence())
             firstAssembly.markLineSequence();
 
-        List<JunctionAssembly> assemblies = Lists.newArrayList(firstAssembly);
-
         int initialAssemblySupport = assemblySupport.size();
         addJunctionReads(firstAssembly, extensionSeqBuilder, junctionReads);
 
@@ -173,11 +172,12 @@ public class JunctionAssembler
         // test for a second well-supported, alternative assembly at the same junction
         JunctionAssembly secondAssembly = checkSecondAssembly(extensionSeqBuilder.mismatchReads(), firstAssembly, junctionReads);
 
+        List<JunctionAssembly> assemblies = Lists.newArrayList(firstAssembly);
         if(secondAssembly != null)
         {
             assemblies.add(secondAssembly);
 
-            if(!keepSecondAssembly(secondAssembly, initialAssemblySupport))
+            if(!keepSecondAssembly(secondAssembly.supportCount(), initialAssemblySupport))
                 assemblies.remove(firstAssembly);
         }
 
@@ -192,9 +192,82 @@ public class JunctionAssembler
             assembly.setRefBases(refBaseSeqBuilder);
 
             assembly.buildRepeatInfo();
+
+            // check for a SAGA match by sequence, even if a coord match was previously found
+            boolean sagaMatched = matchJunctionAssemblyToSaga(assembly);
+
+            if(usedRelaxedFilters)
+            {
+                if(sagaMatched)
+                {
+                    SV_LOGGER.trace("assembly({}) recovered with SAGA", assembly);
+                }
+                else
+                {
+                    // Failed the regular filters and couldn't recover by matching to SAGA.
+                    return Collections.emptyList();
+                }
+            }
         }
 
         return assemblies;
+    }
+
+    private record AssessJunctionReadsResult(
+            List<Read> junctionReads,
+            List<Read> extensionReads,
+            List<Read> nonJunctionReads,
+            boolean hasMinLengthSoftClipRead,
+            boolean usedRelaxedLimits
+    )
+    {
+    }
+
+    private AssessJunctionReadsResult assessSoftClipJunction(final List<Read> rawReads, boolean useRelaxedLimits)
+    {
+        // the only difference for indel-based junctions is that only the long indels are used to build the consensus extension
+        int minSoftClip = useRelaxedLimits ? ASSEMBLY_MIN_SOFT_CLIP_LENGTH_LOWER : ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
+
+        int minSoftClipSecondary = useRelaxedLimits
+                ? ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH_LOWER : ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH;
+
+        List<Read> extensionReads = new ArrayList<>();
+        List<Read> junctionReads = new ArrayList<>();
+        List<Read> nonJunctionReads = new ArrayList<>();
+        boolean hasMinLengthSoftClipRead = false;
+
+        for(Read read : rawReads)
+        {
+            if(!readSoftClipsAndCrossesJunction(read, mJunction, mRefGenome))
+            {
+                nonJunctionReads.add(read);
+                continue;
+            }
+
+            if(recordSoftClipsAtJunction(read, mJunction))
+            {
+                int softClipJunctionExtension = readJunctionExtensionLength(read, mJunction);
+
+                if(read.hasLineTail(mJunction.isForward()))
+                {
+                    hasMinLengthSoftClipRead |= softClipJunctionExtension >= LINE_MIN_EXTENSION_LENGTH;
+
+                    if(softClipJunctionExtension >= LINE_MIN_SOFT_CLIP_SECONDARY_LENGTH)
+                        extensionReads.add(read);
+                }
+                else
+                {
+                    hasMinLengthSoftClipRead |= softClipJunctionExtension >= minSoftClip;
+
+                    if(softClipJunctionExtension >= minSoftClipSecondary)
+                        extensionReads.add(read);
+                }
+            }
+
+            junctionReads.add(read);
+        }
+
+        return new AssessJunctionReadsResult(junctionReads, extensionReads, nonJunctionReads, hasMinLengthSoftClipRead, useRelaxedLimits);
     }
 
     private void assessDiscordantJunction(final List<Read> rawReads, final List<Read> extensionReads, final List<Read> junctionReads)
@@ -302,7 +375,8 @@ public class JunctionAssembler
         }
 
         mJunction = new Junction(
-                mJunction.Chromosome, adjustedJuncPosition, mJunction.Orient, true, false, false);
+                mJunction.Chromosome, adjustedJuncPosition, mJunction.Orient, true, false, false,
+                null); // no SAGA-match owing to imprecise junction coords
 
         mJunction.setRawDiscordantPosition(originalJuncPosition);
 
@@ -355,6 +429,11 @@ public class JunctionAssembler
         }
     }
 
+    private boolean checkJunctionReadExtension(boolean hasMinLengthSoftClipRead, final List<Read> extensionReads)
+    {
+        return hasMinLengthSoftClipRead && aboveMinReadThreshold(extensionReads);
+    }
+
     private JunctionAssembly checkSecondAssembly(
             final List<Read> extensionReads, final JunctionAssembly firstAssembly, final List<Read> junctionReads)
     {
@@ -365,7 +444,7 @@ public class JunctionAssembler
             return null;
 
         int secondSupport = extensionReads.size();
-        double secondSupportPerc = secondSupport / (double)firstAssembly.supportCount();
+        double secondSupportPerc = secondSupport / (double) firstAssembly.supportCount();
 
         if(secondSupport < ASSEMBLY_SPLIT_MIN_READ_SUPPORT || secondSupportPerc < PRIMARY_ASSEMBLY_SPLIT_MIN_READ_SUPPORT_PERC)
             return null;
@@ -378,7 +457,7 @@ public class JunctionAssembler
         List<SupportRead> assemblySupport = extensionSeqBuilder.formAssemblySupport();
 
         // test min support again from actual supporting reads
-        if(!keepSecondAssembly(firstAssembly, assemblySupport.size()))
+        if(!keepSecondAssembly(firstAssembly.supportCount(), assemblySupport.size()))
             return null;
 
         if(!passDistinctFragmentsFilter(assemblySupport))
@@ -407,9 +486,9 @@ public class JunctionAssembler
         return newAssembly;
     }
 
-    public boolean keepSecondAssembly(final JunctionAssembly firstAssembly, final int secondSupportCount)
+    public boolean keepSecondAssembly(final int firstSupportCount, final int secondSupportCount)
     {
-        double secondSupportPerc = secondSupportCount / (double)firstAssembly.supportCount();
+        double secondSupportPerc = secondSupportCount / (double) firstSupportCount;
 
         return secondSupportCount >= ASSEMBLY_SPLIT_MIN_READ_SUPPORT && secondSupportPerc >= PRIMARY_ASSEMBLY_SPLIT_MIN_READ_SUPPORT_PERC;
     }
@@ -515,9 +594,20 @@ public class JunctionAssembler
         return false;
     }
 
+    private boolean matchJunctionAssemblyToSaga(final JunctionAssembly assembly)
+    {
+        if(mSagaMatcher == null)
+            return false;
+
+        int junctionOffset = mJunction.isForward() ? assembly.refBaseLength() : assembly.baseLength() - assembly.refBaseLength();
+        SagaMatchBySequence match = mSagaMatcher.matchBySequence(assembly.bases(), List.of(junctionOffset));
+        assembly.setSagaMatch(match);
+        return match != null;
+    }
+
     @VisibleForTesting
     public JunctionAssembler(final Junction junction)
     {
-        this(junction, null);
+        this(junction, null, null);
     }
 }

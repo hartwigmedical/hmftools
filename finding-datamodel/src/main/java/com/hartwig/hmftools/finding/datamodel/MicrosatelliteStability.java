@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.finding.datamodel;
 
-import java.util.List;
+import java.util.SortedSet;
 
 import com.hartwig.hmftools.finding.datamodel.finding.Finding;
 
@@ -11,8 +11,7 @@ public record MicrosatelliteStability(
         @NotNull String findingKey,
         @NotNull MicrosatelliteStability.Status status,
         @NotNull ThresholdValue indelsPerMb,
-        @NotNull List<GainDeletion> lohCopyNumbers,
-        @NotNull List<String> drivingGenes
+        @NotNull SortedSet<String> drivingGenes
 ) implements Finding
 {
     public enum Status

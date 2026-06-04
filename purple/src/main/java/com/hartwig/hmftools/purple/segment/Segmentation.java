@@ -49,7 +49,8 @@ public class Segmentation
             return Lists.newArrayList();
         }
 
-        return new ObservedRegionFactory(mWindowSize, cobaltData.CobaltChromosomes).formObservedRegions(segments, amberData.ChromosomeBafs, cobaltData.Ratios);
+        ObservedRegionFactory observedRegionFactory = new ObservedRegionFactory(mWindowSize, cobaltData.CobaltChromosomes);
+        return observedRegionFactory.formObservedRegions(segments, amberData.ChromosomeBafs, cobaltData.Ratios);
     }
 
     public static boolean validateObservedRegions(final List<ObservedRegion> observedRegions)

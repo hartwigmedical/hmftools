@@ -1,8 +1,13 @@
 package com.hartwig.hmftools.geneutils.utils;
 
+import static java.lang.String.format;
+
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.lowerChromosome;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeVersion;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.APP_NAME;
@@ -15,8 +20,11 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -27,13 +35,25 @@ public class RegionFileValidate
 {
     private static final String INPUT_FILE = "input_file";
     private static final String OUTPUT_FILE = "output_file";
+    private static final String MERGE_OTHER_FIELDS = "merge_fields";
 
     private String mOutputHeader;
+    private EnsemblDataCache mEnsemblDataCache;
 
     public RegionFileValidate(final ConfigBuilder configBuilder)
     {
         String inputFile = configBuilder.getValue(INPUT_FILE);
         String outputFile = configBuilder.getValue(OUTPUT_FILE);
+        boolean mergeOtherData = configBuilder.hasFlag(MERGE_OTHER_FIELDS);
+
+        mEnsemblDataCache = null;
+
+        if(configBuilder.hasValue(ENSEMBL_DATA_DIR))
+        {
+            mEnsemblDataCache = new EnsemblDataCache(configBuilder);
+            mEnsemblDataCache.setRequiredData(true, false, false, true);
+            mEnsemblDataCache.load(false);
+        }
 
         mOutputHeader = "";
 
@@ -45,7 +65,7 @@ public class RegionFileValidate
 
             boolean fixFile = outputFile != null;
 
-            validateRegions(regionDataList, fixFile);
+            validateRegions(regionDataList, fixFile, mergeOtherData);
 
             if(outputFile != null)
                 writeBedRegions(regionDataList, outputFile);
@@ -129,7 +149,7 @@ public class RegionFileValidate
         }
     }
 
-    public void validateRegions(final List<RegionData> regionDataList, boolean fixFile)
+    public void validateRegions(final List<RegionData> regionDataList, boolean fixFile, boolean mergeOtherData)
     {
         // check ordering
         int orderingErrors = 0;
@@ -197,7 +217,7 @@ public class RegionFileValidate
 
             while(index < regionDataList.size())
             {
-                ChrBaseRegion nextRegion = regionDataList.get(nextIndex);
+                RegionData nextRegion = regionDataList.get(nextIndex);
 
                 if(!regionData.chromosome().equals(nextRegion.chromosome()))
                     break;
@@ -207,7 +227,23 @@ public class RegionFileValidate
 
                 // no attempt to merge other data fields
                 if(regionData.end() < nextRegion.end())
+                {
                     regionData.setEnd(nextRegion.end());
+
+                    if(mergeOtherData && regionData.OtherData.size() == nextRegion.OtherData.size())
+                    {
+                        for(int i = 0; i < regionData.OtherData.size(); ++i)
+                        {
+                            String firstData = regionData.OtherData.get(i);
+                            String secondData = nextRegion.OtherData.get(i);
+
+                            if(!firstData.isEmpty() && !secondData.isEmpty())
+                                regionData.OtherData.set(i, firstData + ITEM_DELIM + secondData);
+                            else if(!secondData.isEmpty())
+                                regionData.OtherData.set(i, secondData);
+                        }
+                    }
+                }
 
                 regionDataList.remove(nextIndex);
                 ++mergedCount;
@@ -235,6 +271,10 @@ public class RegionFileValidate
             if(!mOutputHeader.isEmpty())
             {
                 writer.write(mOutputHeader);
+
+                if(mEnsemblDataCache != null)
+                    writer.write("\tGeneOverlaps");
+
                 writer.newLine();
             }
 
@@ -252,6 +292,13 @@ public class RegionFileValidate
                 sj.add(String.valueOf(regionData.end()));
 
                 regionData.OtherData.forEach(x -> sj.add(x));
+
+                if(mEnsemblDataCache != null)
+                {
+                    List<GeneData> geneDataList = mEnsemblDataCache.findGeneByRange(regionData.Chromosome, regionData.start(), regionData.end());
+                    String geneNames = geneDataList.stream().map(x -> x.GeneName).collect(Collectors.joining(ITEM_DELIM));
+                    sj.add(geneNames);
+                }
 
                 writer.write(sj.toString());
                 writer.newLine();
@@ -273,6 +320,9 @@ public class RegionFileValidate
 
         configBuilder.addPath(INPUT_FILE, true, "Input regions TSV file - header is optional");
         configBuilder.addConfigItem(OUTPUT_FILE, false, "Output filename");
+        configBuilder.addFlag(MERGE_OTHER_FIELDS, "Merge data columns");
+        EnsemblDataCache.addEnsemblDir(configBuilder, false);
+        addRefGenomeVersion(configBuilder);
         addLoggingOptions(configBuilder);
 
         configBuilder.checkAndParseCommandLine(args);

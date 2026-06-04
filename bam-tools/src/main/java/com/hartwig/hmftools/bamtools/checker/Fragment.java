@@ -4,6 +4,10 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.READ_GROUP_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
+
+import static htsjdk.samtools.CigarOperator.H;
+import static htsjdk.samtools.CigarOperator.S;
 
 import java.util.Collections;
 import java.util.List;
@@ -11,7 +15,12 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bam.BamReadLite;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
+import com.hartwig.hmftools.common.codon.Nucleotides;
+import com.hartwig.hmftools.common.utils.Arrays;
 
+import htsjdk.samtools.Cigar;
+import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMRecord;
 
@@ -30,6 +39,14 @@ public class Fragment
     private String mFirstPrimaryCigar;
     private String mSecondPrimaryCigar;
 
+    // cached read info on primaries for supplementary hard-clip conversion
+    private byte[] mFirstReadBases;
+    private byte[] mSecondReadBases;
+    private byte[] mFirstReadQuals;
+    private byte[] mSecondReadQuals;
+    private boolean mFirstNegOrientation;
+    private boolean mSecondNegOrientation;
+
     private boolean mMateCigarFixed;
 
     public Fragment(final SAMRecord read)
@@ -43,6 +60,11 @@ public class Fragment
         mSecondPrimaryCigar = null;
         mMateCigarFixed = false;
 
+        mFirstReadBases = null;
+        mSecondReadBases = null;
+        mFirstReadQuals = null;
+        mSecondReadQuals = null;
+
         addRead(read);
     }
 
@@ -54,6 +76,13 @@ public class Fragment
 
     public String firstPrimaryCigar() { return mFirstPrimaryCigar; }
     public String secondPrimaryCigar() { return mSecondPrimaryCigar; }
+
+    public byte[] firstReadBases() { return mFirstReadBases; }
+    public byte[] firstBaseQuals() { return mFirstReadQuals; }
+    public boolean firstNegOrientation() { return mFirstNegOrientation; }
+    public byte[] secondReadBases() { return mSecondReadBases; }
+    public byte[] secondBaseQuals() { return mSecondReadQuals; }
+    public boolean secondNegOrientation() { return mSecondNegOrientation; }
 
     public void addRead(final SAMRecord read)
     {
@@ -129,6 +158,20 @@ public class Fragment
             mSecondPrimaryCigar = other.secondPrimaryCigar();
             mExpectedSupplementaryCount += other.expectedSupplementaryCount();
         }
+
+        if(other.firstReadBases() != null && mFirstReadBases == null)
+        {
+            mFirstReadBases = other.firstReadBases();
+            mFirstReadQuals = other.firstBaseQuals();
+            mFirstNegOrientation = other.firstNegOrientation();
+        }
+
+        if(other.secondReadBases() != null && mSecondReadBases == null)
+        {
+            mSecondReadBases = other.secondReadBases();
+            mSecondReadQuals = other.secondBaseQuals();
+            mSecondNegOrientation = other.secondNegOrientation();
+        }
     }
 
     public List<SAMRecord> extractCompleteReads()
@@ -137,6 +180,9 @@ public class Fragment
             return Collections.emptyList();
 
         setMateCigar();
+
+        convertHardClips();
+
         List<SAMRecord> reads = Lists.newArrayList(mReads);
         mReads.clear();
         return reads;
@@ -157,6 +203,74 @@ public class Fragment
                 read.setAttribute(MATE_CIGAR_ATTRIBUTE, mFirstPrimaryCigar);
             }
         }
+    }
+
+    public void cachePrimaryBaseInfo(final SAMRecord read)
+    {
+        if(read.getSupplementaryAlignmentFlag() || !read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE))
+            return;
+
+        if(read.getFirstOfPairFlag())
+        {
+            mFirstReadBases = read.getReadBases();
+            mFirstReadQuals = read.getBaseQualities();
+            mFirstNegOrientation = read.getReadNegativeStrandFlag();
+        }
+        else
+        {
+            mSecondReadBases = read.getReadBases();
+            mSecondReadQuals = read.getBaseQualities();
+            mSecondNegOrientation = read.getReadNegativeStrandFlag();
+        }
+    }
+
+    private void convertHardClips()
+    {
+        if(mFirstReadBases == null && mSecondReadBases == null)
+            return;
+
+        for(SAMRecord read : mReads)
+        {
+            if(!read.getSupplementaryAlignmentFlag())
+                continue;
+
+            if(read.getCigar().getCigarElements().stream().noneMatch(x -> x.getOperator() == H))
+                continue;
+
+            if(read.getFirstOfPairFlag())
+            {
+                convertHardClips(read, mFirstReadBases, mFirstReadQuals, mFirstNegOrientation);
+            }
+            else
+            {
+                convertHardClips(read, mSecondReadBases, mSecondReadQuals, mSecondNegOrientation);
+            }
+        }
+    }
+
+    private static void convertHardClips(final SAMRecord read, final byte[] readBases, final byte[] baseQuals, final boolean negOrientation)
+    {
+        List<CigarElement> cigarElements = read.getCigar().getCigarElements();
+        List<CigarElement> newCigarElements = Lists.newArrayListWithExpectedSize(cigarElements.size());
+
+        if(negOrientation != read.getReadNegativeStrandFlag())
+        {
+            read.setReadBases(Nucleotides.reverseComplementBases(readBases));
+            read.setBaseQualities(Arrays.reverseArray(baseQuals));
+        }
+        else
+        {
+            read.setReadBases(readBases);
+            read.setBaseQualities(baseQuals);
+        }
+
+        for(CigarElement cigarElement : cigarElements)
+        {
+            CigarOperator operator = cigarElement.getOperator() == H ? S : cigarElement.getOperator();
+            newCigarElements.add(new CigarElement(cigarElement.getLength(), operator));
+        }
+
+        read.setCigar(new Cigar(newCigarElements));
     }
 
     public String toString()

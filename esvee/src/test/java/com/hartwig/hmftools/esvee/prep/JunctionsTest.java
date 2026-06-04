@@ -62,7 +62,7 @@ public class JunctionsTest
         mDepthTracker = new DepthTracker(new BaseRegion(mPartitionRegion.start(), mPartitionRegion.end()), DEPTH_WINDOW_SIZE);
 
         mJunctionTracker = new JunctionTracker(
-                mPartitionRegion, new PrepConfig(1000), mDepthTracker, HOTSPOT_CACHE);
+                mPartitionRegion, new PrepConfig(1000), mDepthTracker, HOTSPOT_CACHE, null);
     }
 
     private void addRead(final PrepRead read, final ReadType readType)
@@ -155,8 +155,8 @@ public class JunctionsTest
         assertNotNull(junctionData);
         assertEquals(FORWARD, junctionData.Orient);
         assertEquals(1, junctionData.junctionFragmentCount());
-        assertEquals(1, junctionData.exactSupportFragmentCount());
-        assertEquals(2, junctionData.supportingFragmentCount());
+        assertEquals(2, junctionData.exactSupportFragmentCount());
+        assertEquals(1, junctionData.supportingFragmentCount());
 
         junctionData = mJunctionTracker.junctions().stream().filter(x -> x.Position == 1059).findFirst().orElse(null);
         assertNotNull(junctionData);

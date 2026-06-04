@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.common.variant.pon.PonCache.PON_FILTER;
 import static com.hartwig.hmftools.pave.FilterType.PANEL;
 import static com.hartwig.hmftools.pave.FilterType.PASS;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
-import static com.hartwig.hmftools.pave.PaveConfig.SEQUENCING_TYPE;
 import static com.hartwig.hmftools.pave.PaveConfig.isSbx;
 import static com.hartwig.hmftools.pave.PaveConfig.isUltima;
 import static com.hartwig.hmftools.pave.PaveConstants.GNMOAD_FILTER_HOTSPOT_PATHOGENIC_THRESHOLD;

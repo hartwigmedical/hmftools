@@ -2,6 +2,7 @@ package com.hartwig.hmftools.amber;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 
 import java.io.BufferedWriter;
@@ -9,6 +10,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.StringJoiner;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -25,21 +27,29 @@ public final class RegionOfHomozygosityFile
     {
         BufferedWriter writer = createBufferedWriter(filename);
 
-        writer.write(format("chromosome\tstartPosition\tendPosition\tsnpCount\thomCount\thetCount\tfilter"));
+        StringJoiner sj = new StringJoiner(TSV_DELIM);
+        sj.add("chromosome").add("startPosition").add("endPosition").add("snpCount").add("homCount").add("hetCount").add("filter");
+        writer.write(sj.toString());
         writer.newLine();
 
         for(RegionOfHomozygosity region : regions)
         {
-            writer.write(format("%s\t%d\t%d\t%d\t%d\t%d\t%s",
-                    region.Chromosome.toString(), region.Start, region.End, region.getSnpCount(),
-                    region.NumHomozygous, region.NumHeterozygous, softFilter(region)));
+            sj = new StringJoiner(TSV_DELIM);
+            sj.add(region.Chromosome.toString());
+            sj.add(String.valueOf(region.Start));
+            sj.add(String.valueOf(region.End));
+            sj.add(String.valueOf(region.getSnpCount()));
+            sj.add(String.valueOf(region.NumHomozygous));
+            sj.add(String.valueOf(region.NumHeterozygous));
+            sj.add(softFilter(region));
+
+            writer.write(sj.toString());
             writer.newLine();
         }
 
         writer.close();
     }
 
-    // we have several soft filters
     private static String softFilter(final RegionOfHomozygosity region)
     {
         List<String> softFilters = new ArrayList<>();

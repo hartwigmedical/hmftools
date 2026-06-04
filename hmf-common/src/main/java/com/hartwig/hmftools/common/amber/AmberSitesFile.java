@@ -51,7 +51,7 @@ public final class AmberSitesFile
 
     public static ListMultimap<Chromosome, AmberSite> loadVcf(final String vcfFile) throws IOException
     {
-        final ListMultimap<Chromosome, AmberSite> result = ArrayListMultimap.create();
+        ListMultimap<Chromosome, AmberSite> result = ArrayListMultimap.create();
 
         VcfFileReader reader = new VcfFileReader(vcfFile);
 

@@ -101,6 +101,7 @@ public final class LinxBreakendInterpreter
         return ImmutableLinxBreakend.builder()
                 .id(linxBreakend.id())
                 .svId(linxBreakend.svId())
+                .clusterId(svAnnotation.clusterId())
                 .gene(linxBreakend.gene())
                 .chromosome(chromosome)
                 .position(position)

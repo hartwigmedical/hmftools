@@ -22,6 +22,8 @@ public interface LinxFusion
     @NotNull
     String geneUp();
 
+    int clusterId();
+
     @NotNull
     String contextUp();
 

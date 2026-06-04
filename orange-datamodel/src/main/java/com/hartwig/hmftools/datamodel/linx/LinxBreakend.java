@@ -15,8 +15,8 @@ import org.jetbrains.annotations.Nullable;
 public interface LinxBreakend
 {
     int id();
-
     int svId();
+    int clusterId();
 
     @NotNull
     String gene();

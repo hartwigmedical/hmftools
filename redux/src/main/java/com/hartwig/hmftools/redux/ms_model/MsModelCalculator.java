@@ -180,7 +180,10 @@ public class MsModelCalculator
             int maxCount = matchedData.stream().mapToInt(x -> x.JitterRow.totalReadCount()).max().orElse(0);
 
             if(maxCount < TRAINING_REPEAT_UNIT_MIN_READ_COUNT)
+            {
+                // RD_LOGGER.debug("sample({}) repeat({}) skipped with low read count({})", sampleId, repeatUnitData.rucKey(), maxCount);
                 continue;
+            }
 
             RepeatUnitData maxByConsensusType = matchedData.stream()
                     .filter(x -> x.JitterRow.totalReadCount() == maxCount).findFirst().orElse(null);

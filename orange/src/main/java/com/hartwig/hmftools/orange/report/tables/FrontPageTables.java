@@ -81,11 +81,7 @@ public class FrontPageTables
 
         boolean showCancerType = configuredCancerType != null && !configuredCancerType.isEmpty();
 
-        if(showCancerType)
-        {
-            addEntry(widths, headers, 2, "Primary Tumor");
-        }
-
+        addEntry(widths, headers, 2, "Primary Tumor");
         addEntry(widths, headers, 2, "Purity");
         addEntry(widths, headers, 2, "Ploidy");
         addEntry(widths, headers, 2, "Fit Method");
@@ -95,11 +91,7 @@ public class FrontPageTables
         float[] pcts = toPercentages(intToFloatArray(widths));
 
         List<String> rowValues = Lists.newArrayList();
-        if(showCancerType)
-        {
-            rowValues.add(configuredCancerType);
-        }
-
+        rowValues.add(showCancerType ? configuredCancerType : "NOT SPECIFIED"));
         rowValues.add(purityString(report.purple().fit()));
         rowValues.add(ploidyString(report.purple().fit()));
         rowValues.add(report.purple().fit().fittedPurityMethod().toString());
@@ -135,7 +127,7 @@ public class FrontPageTables
         List<String> rowValues = Lists.newArrayList();
         rowValues.add(report.pipelineVersion());
         rowValues.add(report.refGenomeVersion().toString());
-        rowValues.add(SequencingType.ILLUMINA.toString());
+        rowValues.add(sequencingType(config));
         rowValues.add(pipelineModeDisplay(report, config));
         rowValues.add(sampleTypesDisplay(report));
         rowValues.add(report.samplingDate().toString());
@@ -143,6 +135,11 @@ public class FrontPageTables
         cells.addRow(table, pcts, rowValues);
 
         return table;
+    }
+
+    private static String sequencingType(final OrangeConfig config)
+    {
+        return config != null ? config.SeqType.toString() : SequencingType.ILLUMINA.toString();
     }
 
     private static String pipelineModeDisplay(final OrangeRecord report, final OrangeConfig config)

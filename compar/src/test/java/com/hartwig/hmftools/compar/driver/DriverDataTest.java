@@ -134,7 +134,7 @@ public class DriverDataTest extends ComparableItemTest<DriverData, DriverCompare
         List<Mismatch> mismatches = generateTestMismatches(false);
 
         assertEquals(3, mismatches.size());
-        assertEquals(1, mismatches.stream().filter(x -> x.Type == MismatchType.REF_ONLY).count());
+        assertEquals(1, mismatches.stream().filter(x -> x.Type == MismatchType.OLD_ONLY).count());
         assertEquals(1, mismatches.stream().filter(x -> x.Type == MismatchType.NEW_ONLY).count());
         assertEquals(1, mismatches.stream().filter(x -> x.Type == MismatchType.VALUE).count());
     }
@@ -145,7 +145,7 @@ public class DriverDataTest extends ComparableItemTest<DriverData, DriverCompare
         List<Mismatch> mismatches = generateTestMismatches(true);
 
         assertEquals(4, mismatches.size());
-        assertEquals(1, mismatches.stream().filter(x -> x.Type == MismatchType.REF_ONLY).count());
+        assertEquals(1, mismatches.stream().filter(x -> x.Type == MismatchType.OLD_ONLY).count());
         assertEquals(1, mismatches.stream().filter(x -> x.Type == MismatchType.NEW_ONLY).count());
         assertEquals(1, mismatches.stream().filter(x -> x.Type == MismatchType.VALUE).count());
         assertEquals(1, mismatches.stream().filter(x -> x.Type == MismatchType.FULL_MATCH).count());
@@ -161,15 +161,24 @@ public class DriverDataTest extends ComparableItemTest<DriverData, DriverCompare
         List<ComparableItem> refItems = Lists.newArrayList();
         List<ComparableItem> newItems = Lists.newArrayList();
 
-        refItems.add(new DriverData(createDriverCatalog("AR", DriverType.AMP, 1.0, 6), "1", false));
+        refItems.add(
+                new DriverData(createDriverCatalog("AR", DriverType.AMP, 1.0, 6),
+                        null, "1", false));
 
-        newItems.add(new DriverData(createDriverCatalog("TP53", DriverType.DEL, 1.0, 0.2), "2", false));
+        newItems.add(
+                new DriverData(createDriverCatalog("TP53", DriverType.DEL, 1.0, 0.2),
+                        null, "2", false));
 
-        refItems.add(new DriverData(createDriverCatalog("KRAS", DriverType.MUTATION, 0.7, 2), "3", false));
-        newItems.add(new DriverData(createDriverCatalog("KRAS", DriverType.MUTATION, 0.5, 2), "3", false));
+        refItems.add(new DriverData(createDriverCatalog("KRAS", DriverType.MUTATION, 0.7, 2),
+                null, "3", false));
+        newItems.add(new DriverData(createDriverCatalog("KRAS", DriverType.MUTATION, 0.5, 2),
+                null, "3", false));
 
-        refItems.add(new DriverData(createDriverCatalog("BRAF", DriverType.HOM_DEL_DISRUPTION, 0.9, 2), "4", false));
-        newItems.add(new DriverData(createDriverCatalog("BRAF", DriverType.HOM_DEL_DISRUPTION, 0.9, 2), "4", false));
+        refItems.add(new DriverData(createDriverCatalog("BRAF", DriverType.HOM_DEL_DISRUPTION, 0.9, 2),
+                null, "4", false));
+
+        newItems.add(new DriverData(createDriverCatalog("BRAF", DriverType.HOM_DEL_DISRUPTION, 0.9, 2),
+                null, "4", false));
 
         List<Mismatch> mismatches = Lists.newArrayList();
         CommonUtils.compareItems(mismatches, MatchLevel.REPORTABLE, config.Thresholds, includeMatches, refItems, newItems);

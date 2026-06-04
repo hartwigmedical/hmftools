@@ -33,7 +33,6 @@ import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_SLICE_SIZE;
 import static com.hartwig.hmftools.sage.SageConstants.NON_ILLUMINA_MAX_READ_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.VIS_VARIANT_BUFFER;
-import static com.hartwig.hmftools.sage.common.NumberEvents.setRecomputeNumMutations;
 import static com.hartwig.hmftools.sage.quality.QualityConfig.HIGH_DEPTH_MODE;
 
 import java.io.File;
@@ -139,6 +138,8 @@ public class SageConfig
 
         RefGenVersion = RefGenomeVersion.from(configBuilder);
 
+        SEQUENCING_TYPE = SequencingType.valueOf(configBuilder.getValue(SEQUENCING_TYPE_CFG));
+
         ReferenceIds = Lists.newArrayList();
         if(configBuilder.hasValue(REFERENCE))
         {
@@ -154,8 +155,6 @@ public class SageConfig
             Arrays.stream(configBuilder.getValue(REFERENCE_BAM, Strings.EMPTY).split(SAMPLE_DELIM))
                     .forEach(x -> ReferenceBams.add(SampleDataDir + x));
         }
-
-        setRecomputeNumMutations(ReferenceBams);
 
         OutputFile = SampleDataDir + configBuilder.getValue(OUTPUT_VCF);
 
@@ -232,8 +231,6 @@ public class SageConfig
         SkipMsiJitter = configBuilder.hasFlag(SKIP_MSI_JITTER);
 
         MinMapQuality = configBuilder.getInteger(MIN_MAP_QUALITY);
-
-        SEQUENCING_TYPE = SequencingType.valueOf(configBuilder.getValue(SEQUENCING_TYPE_CFG));
 
         if(isUltima())
         {

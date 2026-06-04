@@ -75,7 +75,7 @@ public class SglMapping
 
         final String[] mappingStrings = alignments.split(INS_SEQ_MAPPING_DELIM, -1);
 
-        for(final String mappingData : mappingStrings)
+        for(String mappingData : mappingStrings)
         {
             final SglMapping mapping = from(mappingData, breakendOrientation);
 

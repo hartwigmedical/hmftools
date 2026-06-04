@@ -2,15 +2,15 @@
 
 ## Introduction
 
-LILAC determines the most likely combination of HLA class I alleles present in a patient, aka HLA typing. 
-HLA typing is performed to 4 digit allele resolution, meaning LILAC uniquely identifies a specific protein, but ignores synonymous variants 
+Lilac determines the most likely combination of HLA class I alleles present in a patient, aka HLA typing. 
+HLA typing is performed to 4 digit allele resolution, meaning Lilac uniquely identifies a specific protein, but ignores synonymous variants 
 (6 digits) and intronic differences (8 digits).
 
-Please jump to **[Usage](#usage)** to get started using LILAC.
+Please jump to **[Usage](#usage)** to get started using Lilac.
 
-LILAC is described and validated in the publication: *Genetic immune escape landscape in primary and metastatic cancer, Nature 2023* (**[link](https://www.nature.com/articles/s41588-023-01367-1)**).
+Lilac is described and validated in the publication: *Genetic immune escape landscape in primary and metastatic cancer, Nature 2023* (**[link](https://www.nature.com/articles/s41588-023-01367-1)**).
 
-Notable existing tools for HLA class I typing include Polysolver, xHLA, Optitype and DRAGEN-HLA. LILAC offers a number of potential 
+Notable existing tools for HLA class I typing include Polysolver, xHLA, Optitype and DRAGEN-HLA. Lilac offers a number of potential 
 advantages including:
 - ~99.8% accuracy on 30x-100x WGS samples; ~96% accuracy on panel samples
 - Handling of variable sequencing depth
@@ -50,7 +50,7 @@ present in the reference genome
 
 ### Versions
 
-The latest LILAC jar version can be downloaded here: [1.7](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.7.1)
+The latest Lilac jar version can be downloaded here: [1.7](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.7.1)
 
 Older versions:
 - [1.6](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.6)
@@ -63,7 +63,7 @@ Older versions:
 
 ### Sample inputs
 
-LILAC performs HLA typing from **BAM** files aligned to GRCh37 or GRCh38 (no alt) ref genomes. 
+Lilac performs HLA typing from **BAM** files aligned to GRCh37 or GRCh38 (no alt) ref genomes. 
 
 It can run in various sample modes:
 - [Germline-only](#reference-only-mode) or [tumor-only](#tumor-only-mode): Basic HLA typing
@@ -71,20 +71,20 @@ It can run in various sample modes:
 alleles. This mode can take somatic variant calls and copy number variant calls from 
 [PURPLE](https://github.com/hartwigmedical/hmftools/tree/master/purple) as inputs, but outputs from other callers are also accepted.
 
-LILAC only considers reads from the HLA gene regions. You may provide BAMs which have been sliced for the HLA gene regions.
+Lilac only considers reads from the HLA gene regions. You may provide BAMs which have been sliced for the HLA gene regions.
 
 > [!WARNING]
 > BAMs aligned to a GRCh38 genome build containing HLA alt contigs must be realigned to a GRCh38 genome build without HLA alt contigs.
 > [AltContigRemapper](https://github.com/hartwigmedical/hmftools/tree/master/bam-tools#altcontigremapper) from hmftools/bam-tools can be
 > used for this task.
 
-LILAC has been tested on WGS samples (30-40x germline depth, 100x tumor depth, paired 151 bp reads) and panel samples 
-(1000x coverage, paired 86 bp reads). Generally, shorter read length and lower depths are problematic for LILAC. In tumor samples with 
+Lilac has been tested on WGS samples (30-40x germline depth, 100x tumor depth, paired 151 bp reads) and panel samples 
+(1000x coverage, paired 86 bp reads). Generally, shorter read length and lower depths are problematic for Lilac. In tumor samples with 
 high purity and LOH, the [lost allele in the tumor](#tumor-and-rna-status-of-alleles) may also be difficult to detect.
 
 ### Reference data
 
-The reference data required to run LILAC can be downloaded from the `oncoanalyser`
+The reference data required to run Lilac can be downloaded from the `oncoanalyser`
 [downloads](https://nf-co.re/oncoanalyser/docs/usage/#reference-data-urls) page:
 - Reference genome FASTA: `Homo_sapiens.GRCh37.GATK.illumina.fasta` or `GRCh38_masked_exclusions_alts_hlas.fasta`
 - Within `hmf_pipeline_resources.*.tar.gz`:
@@ -154,10 +154,10 @@ java -jar lilac.jar \
 | `-ref_genome`         | Reference genome fasta file                                                                                                                                         |
 | `-ref_genome_version` | V37 (default) or V38                                                                                                                                                |
 | `-reference_bam`      | Sample germline BAM                                                                                                                                                 |
-| `-resource_dir`       | Path to LILAC resource directory containing: <br/>- `hla_ref_aminoacid_sequences.csv`<br/>- `hla_ref_nucleotide_sequences.csv`<br/>- `lilac_allele_frequencies.csv` |
+| `-resource_dir`       | Path to Lilac resource directory containing: <br/>- `hla_ref_aminoacid_sequences.csv`<br/>- `hla_ref_nucleotide_sequences.csv`<br/>- `lilac_allele_frequencies.csv` |
 
 Notes:
-- LILAC only considers reads from the HLA gene regions. You may provide BAMs which have been sliced for the HLA gene regions.
+- Lilac only considers reads from the HLA gene regions. You may provide BAMs which have been sliced for the HLA gene regions.
 - If a tumor BAM is provided in place of the reference BAM, then Lilac will determine the allele solution from the tumor instead.
 
 #### Optional input paths
@@ -354,7 +354,7 @@ Allele sequences were derived from the IMGT/HLA database (downloaded on 2024-12-
 - https://www.ebi.ac.uk/ipd/imgt/hla/download/ or
 - https://github.com/ANHIG/IMGTHLA
 
-LILAC constructs its own sequence files using the nucleotide multiple sequence alignment files from the database:
+Lilac constructs its own sequence files using the nucleotide multiple sequence alignment files from the database:
 `A_nuc.txt`, `B_nuc.txt`, `C_nuc.txt`, `Y_nuc.txt`. The procedure is described below.
 
 #### Wildcard handling
@@ -395,9 +395,9 @@ A*34:01:02 original: *** *** ***
 A*34:01:02 replaced: ATG GCC *TC
 ```
 
-#### Generate LILAC sequences
+#### Generate Lilac sequences
 
-These files are converted to the LILAC allele sequences files with the following command:
+These files are converted to the Lilac allele sequences files with the following command:
 ```
 java -cp lilac.jar com.hartwig.hmftools.lilac.utils.GenerateReferenceSequences \
    -resource_dir /dir_containing/*.txt \ 
@@ -415,7 +415,7 @@ with deletions represented by a dot (`.`). For example, for the beginning sequen
 Reference sequence:    ATG GCC GTC ATG GCG CCC CGA ACC CTC CTC CTG CTA CTC
 A*30:220Q alignment:   --- --- --- --- --- --- --- --- --. ... ... ..- ---
 
-# Spaces shown for here clarity but absent in the LILAC nucleotides file
+# Spaces shown for here clarity but absent in the Lilac nucleotides file
 A*30:220Q nucleotides: ATG GCC GTC ATG GCG CCC CGA ACC CT. ... ... ..A CTC 
 
 A*30:220Q amino acids: MAVMAPRTLL...SG
@@ -423,7 +423,7 @@ A*30:220Q amino acids: MAVMAPRTLL...SG
 
 ## Algorithm
 
-The starting data for the LILAC algorithm is:
+The starting data for the Lilac algorithm is:
 - HLA-A, HLA-B, HLA-C and HLA-Y [4-digit allele sequences](#allele-sequences), excluding the following due to their high similarity closely 
 related pseudogenes:
   - HLA-H: `A*31:135`, `A*33:191`, `A*02:783`, `B*07:282`, `B*40:278`
@@ -445,15 +445,15 @@ The main steps of the algorithm are:
   - [Determine fragment support](#determining-fragment-support-per-complex) per allele combination
   - [Score](#scoring) and rank allele combinations
 
-After the germline alleles are determined, LILAC determines the tumor copy number and any somatic mutations in each allele 
+After the germline alleles are determined, Lilac determines the tumor copy number and any somatic mutations in each allele 
 (see: [Tumor and RNA status of alleles](#tumor-and-rna-status-of-alleles)).
 
-Note that if more than 300 bases (~9%) of the HLA-A, HLA-B and HLA-C coding regions have less than 10 coverage, then LILAC will fail with 
+Note that if more than 300 bases (~9%) of the HLA-A, HLA-B and HLA-C coding regions have less than 10 coverage, then Lilac will fail with 
 errors and will not try to fit the sample.
 
 ### Elimination phase
 The elimination phase removes alleles that are unlikely part of the final solution, namely, if they do not have sufficient fragment support 
-at each nucleotide / amino acid position. This reduces runtime by reducing the number of allele combinations LILAC needs to consider in 
+at each nucleotide / amino acid position. This reduces runtime by reducing the number of allele combinations Lilac needs to consider in 
 the evidence phase.
 
 #### Nucleotide matrix
@@ -543,7 +543,7 @@ probe binding affinity.
 
 #### Amino acid matrix
 
-Similar to the nucleotide matrix, LILAC also constructs a matrix of amino acid candidates. 
+Similar to the nucleotide matrix, Lilac also constructs a matrix of amino acid candidates. 
 
 ```
 #index raw_counts candidate1 count1 candidate2 count2 etc...
@@ -668,7 +668,7 @@ complex requiring:
 
 #### Determining fragment support per complex
 
-For each complex, LILAC counts the number of fragments that can be aligned exactly to at least one allele in the complex at all heterozygous 
+For each complex, Lilac counts the number of fragments that can be aligned exactly to at least one allele in the complex at all heterozygous 
 locations (i.e. where the amino acids differ between alleles).
 - When checking if a fragment can be aligned to an allele, if a fragment has an amino acid which does not match **any** of the amino acid
 candidates at a heterozygous position, but has at least 1 nucleotide with base quality >`min(30, median_base_quality)`, then the amino 
@@ -692,7 +692,7 @@ score = total_coverage - frequency_penalty - solution_complexity_penalty - recov
 
 Two performance optimisations are made at this stage of scoring:
 - If there are predicted to be >1,000,000 complexes, the evidence phase is first performed individually for complexes of 2
-  alleles per gene to find the top candidates for each gene. LILAC retains only the top 5 pairs including each individual allele candidate and
+  alleles per gene to find the top candidates for each gene. Lilac retains only the top 5 pairs including each individual allele candidate and
   then chooses the first 10 unique alleles appearing in the ranked list of pairs, with any common alleles also retained. The evidence phase
   is then subsequently run using this reduced set of candidate alleles.
 - Complexes are scored with the number of fragments is downsampled to a maximum of 10,000
@@ -751,13 +751,13 @@ recovery_penalty = total_coverage * recovered_alleles_count * 0 # recovery_penal
 
 #### Somatic variant assignment to alleles
 
-LILAC optionally accepts a somatic SNV/indel VCF (e.g. from 
+Lilac optionally accepts a somatic SNV/indel VCF (e.g. from 
 [SAGE](https://github.com/hartwigmedical/hmftools/tree/master/sage) or 
 [PURPLE](https://github.com/hartwigmedical/hmftools/tree/master/purple)) 
 to assign somatic variants to the specific allele which is damaged.
 
-LILAC gathers the set of PASS variants from the VCF that overlap either a coding or canonical splice region in any of HLA-A,
-HLA-B and HLA-C and finds all fragments that contain that variant. LILAC assigns apportions the fragment to the allele which matches the
+Lilac gathers the set of PASS variants from the VCF that overlap either a coding or canonical splice region in any of HLA-A,
+HLA-B and HLA-C and finds all fragments that contain that variant. Lilac assigns apportions the fragment to the allele which matches the
 fragment at all heterozygous locations after excluding any somatic variants from the fragment. The allele with the highest matching
 fragment count is determined to contain the somatic variant. If the variant is assigned to 2 alleles with identical weight, it is
 assigned with 0.5 weight to each. In the case of homozygous alleles, the variant is assigned arbitrarily to the 1st allele.
@@ -765,7 +765,7 @@ assigned with 0.5 weight to each. In the case of homozygous alleles, the variant
 
 #### Tumor allele specific copy number
 
-LILAC optionally accepts a tumor BAM file and a [PURPLE](https://github.com/hartwigmedical/hmftools/tree/master/purple) 
+Lilac optionally accepts a tumor BAM file and a [PURPLE](https://github.com/hartwigmedical/hmftools/tree/master/purple) 
 gene copy number file (containing minimum copy number and minimum minor allele copy number per gene) to calculate tumor allele specific 
 copy number.
 
@@ -776,12 +776,12 @@ If a gene is homozygous present in the normal sample, then the minor and major a
 
 #### RNA 'expression' of alleles
 
-LILAC also optionally accepts an RNA BAM. Similar to determining [tumor allele specific copy number](#tumor-allele-specific-copy-number) 
+Lilac also optionally accepts an RNA BAM. Similar to determining [tumor allele specific copy number](#tumor-allele-specific-copy-number) 
 fragments in the BAM are counted for each allele in the determined type. This can be interpreted as a proxy for allele specific expression.
 
 ### QC metrics and PON
 
-LILAC produces a comprehensive set of QC metrics and provides warning statuses if the typing confidence may be diminished. In general, the 
+Lilac produces a comprehensive set of QC metrics and provides warning statuses if the typing confidence may be diminished. In general, the 
 warnings may indicate the presence of a novel germline variant/allele, presence of an unusual pseudogene type, or an incorrectly typed 
 sample.
 
@@ -838,11 +838,11 @@ cohort. We therefore exclude the following indels and haplotypes prior to calcul
 
 ## Known issues / future improvements
 
-- **GRCh38 reference genome with alt contigs are not supported**: LILAC currently only obtains reads aligned to the HLA Class 1 genes. 
+- **GRCh38 reference genome with alt contigs are not supported**: Lilac currently only obtains reads aligned to the HLA Class 1 genes. 
 Also need to get all the contigs with ref_name =~ /^HLA|chr6.\*alt/"
-- **LILAC should obtain all read with mates that map at or near HLA class I genes**: Some reads may have been mismapped to pseudogenes or 
+- **Lilac should obtain all read with mates that map at or near HLA class I genes**: Some reads may have been mismapped to pseudogenes or 
 HLA-H and can be rescued by their mates and remapped to HLA class I genes
-- **Support for explicit novel allele prediction**: LILAC reports unmatched_haplotype, but do not explicitly predict the AA sequence of 
+- **Support for explicit novel allele prediction**: Lilac reports unmatched_haplotype, but do not explicitly predict the AA sequence of 
 novel alleles.
 - **Indel realignment**: Sometimes we miss evidence supporting indels due to realignment issues. In particular if a fragment does not have 
 a soft clip or an indel it is not considered for realignment. This can be a problem for `C*17` indels which have long homology and sometimes 

@@ -19,6 +19,7 @@ import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.common.Mismatch;
+import com.hartwig.hmftools.compar.common.SourceType;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public record IsofoxTranscriptDataComparer(ComparConfig mConfig) implements ItemComparer
@@ -26,7 +27,7 @@ public record IsofoxTranscriptDataComparer(ComparConfig mConfig) implements Item
     @Override
     public CategoryType category()
     {
-        return CategoryType.ISOFOX_TRANSCRIPT_DATA;
+        return CategoryType.RNA_TRANSCRIPT_DATA;
     }
 
     @Override
@@ -54,7 +55,7 @@ public record IsofoxTranscriptDataComparer(ComparConfig mConfig) implements Item
     }
 
     @Override
-    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final String sourceName)
+    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final SourceType sourceType)
     {
         // Not currently supported
         return Lists.newArrayList();
@@ -81,16 +82,16 @@ public record IsofoxTranscriptDataComparer(ComparConfig mConfig) implements Item
 
     private static String determineFileName(final String sampleId, final FileSources fileSources)
     {
-        String current_file_name = TranscriptExpressionFile.generateFilename(fileSources.Isofox, sampleId);
-        String old_file_name = current_file_name.replace(".tsv", ".csv");
+        String filename = TranscriptExpressionFile.generateFilename(fileSources.Isofox, sampleId);
+        String oldFilename = filename.replace(".tsv", ".csv");
 
-        if(!Files.exists(Paths.get(current_file_name)) && Files.exists(Paths.get(old_file_name)))
+        if(!Files.exists(Paths.get(filename)) && Files.exists(Paths.get(oldFilename)))
         {
-            return old_file_name;
+            return oldFilename;
         }
         else
         {
-            return current_file_name;
+            return filename;
         }
     }
 }

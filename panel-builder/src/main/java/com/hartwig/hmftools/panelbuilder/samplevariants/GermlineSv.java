@@ -120,6 +120,8 @@ public class GermlineSv implements StructuralVariant
                             .toList();
                     return new GermlineSv(germlineSv, svBreakends);
                 })
+                // We only support driver germline structural variants, so filter out nondrivers now.
+                .filter(GermlineSv::isDriver)
                 .toList();
 
         LOGGER.debug("Loaded {} germline structural variants", variants.size());

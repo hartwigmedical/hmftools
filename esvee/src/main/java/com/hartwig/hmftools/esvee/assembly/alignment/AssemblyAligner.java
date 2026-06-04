@@ -34,8 +34,12 @@ import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.types.SupportType;
 import com.hartwig.hmftools.esvee.assembly.types.ThreadTask;
+import com.hartwig.hmftools.esvee.common.saga.SagaMatchBySequence;
+import com.hartwig.hmftools.esvee.common.saga.SagaSequenceMatcher;
+import com.hartwig.hmftools.esvee.common.saga.SagaMatcherFactory;
 
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
+import org.jetbrains.annotations.Nullable;
 
 public class AssemblyAligner extends ThreadTask
 {
@@ -43,12 +47,16 @@ public class AssemblyAligner extends ThreadTask
     private final Aligner mAligner;
     private final AlignmentWriter mWriter;
 
-    private final TaskQueue mAssemblyAlignments;
+    private final TaskQueue<AssemblyAlignment> mAssemblyAlignments;
     private int mRequeriedSuppCount;
     private int mRequeriedSoftClipCount;
 
+    @Nullable
+    private final SagaSequenceMatcher mSagaMatcher;
+
     public AssemblyAligner(
-            final AssemblyConfig config, final Aligner aligner, final AlignmentWriter writer, final TaskQueue assemblyAlignments)
+            final AssemblyConfig config, final Aligner aligner, @Nullable final SagaMatcherFactory sagaMatcherFactory,
+            final AlignmentWriter writer, final TaskQueue<AssemblyAlignment> assemblyAlignments)
     {
         super("AssemblerAlignment");
         mConfig = config;
@@ -57,6 +65,7 @@ public class AssemblyAligner extends ThreadTask
         mAssemblyAlignments = assemblyAlignments;
         mRequeriedSuppCount = 0;
         mRequeriedSoftClipCount = 0;
+        mSagaMatcher = sagaMatcherFactory == null ? null : sagaMatcherFactory.createSequenceMatcher();
     }
 
     public int requeriedSuppCount()
@@ -77,7 +86,7 @@ public class AssemblyAligner extends ThreadTask
             {
                 mPerfCounter.start();
 
-                AssemblyAlignment assemblyAlignment = (AssemblyAlignment) mAssemblyAlignments.removeItem();
+                AssemblyAlignment assemblyAlignment = mAssemblyAlignments.removeItem();
 
                 processAssembly(assemblyAlignment);
 
@@ -113,6 +122,12 @@ public class AssemblyAligner extends ThreadTask
             return;
         }
 
+        if(mSagaMatcher != null)
+        {
+            SagaMatchBySequence sagaMatch = mSagaMatcher.matchBySequence(assemblyAlignment.fullSequence(), assemblyAlignment.linkIndices());
+            assemblyAlignment.setSagaMatch(sagaMatch);
+        }
+
         List<BwaMemAlignment> bwaAlignments = mAligner.alignSequence(assemblyAlignment.fullSequence().getBytes());
 
         List<AlignData> alignments = bwaAlignments.stream()
@@ -139,7 +154,7 @@ public class AssemblyAligner extends ThreadTask
 
     private List<AlignData> requerySoftClipAlignments(final AssemblyAlignment assemblyAlignment, final List<AlignData> alignments)
     {
-        // re-align long soft-clipped sequences add attach them to the original alignment
+        // re-align long soft-clipped sequences and attach them to the original alignment
         String softClipBases;
         boolean isLeftClip;
         boolean firstBasesMissing;

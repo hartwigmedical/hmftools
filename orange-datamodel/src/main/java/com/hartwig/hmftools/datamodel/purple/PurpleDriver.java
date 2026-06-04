@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.datamodel.purple;
 
+import com.hartwig.hmftools.datamodel.driver.DriverCategory;
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
 
@@ -34,4 +35,7 @@ public interface PurpleDriver
     DriverInterpretation driverInterpretation();
 
     boolean isCanonical();
+
+    @NotNull
+    DriverCategory category();
 }

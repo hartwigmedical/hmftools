@@ -8,50 +8,42 @@ import java.util.function.Supplier;
 import org.jetbrains.annotations.Nullable;
 
 // Generic monad for representing the result of a check/filter that: accepts; or rejects with a reason.
-public record EvaluationResult(
+public record EvaluationResult<R>(
         // Null if accepted.
-        @Nullable String rejectionReason
+        @Nullable R rejectionInfo
 )
 {
-    public EvaluationResult
+    public static <R> EvaluationResult<R> accept()
     {
-        if(rejectionReason != null && rejectionReason.isBlank())
-        {
-            throw new IllegalArgumentException("rejectionReason should not be blank");
-        }
+        return new EvaluationResult<>(null);
     }
 
-    public static EvaluationResult accept()
+    public static <R> EvaluationResult<R> reject(final R rejectionInfo)
     {
-        return new EvaluationResult(null);
+        return new EvaluationResult<>(rejectionInfo);
     }
 
-    public static EvaluationResult reject(final String reason)
+    public static <R> EvaluationResult<R> condition(boolean cond, final R rejectionInfo)
     {
-        return new EvaluationResult(reason);
-    }
-
-    public static EvaluationResult condition(boolean cond, final String rejectionReason)
-    {
-        return cond ? EvaluationResult.accept() : EvaluationResult.reject(rejectionReason);
+        return cond ? EvaluationResult.accept() : EvaluationResult.reject(rejectionInfo);
     }
 
     public boolean accepted()
     {
-        return rejectionReason == null;
+        return rejectionInfo == null;
     }
 
     public boolean rejected()
     {
-        return rejectionReason != null;
+        return rejectionInfo != null;
     }
 
-    public <T> T map(final Supplier<T> onAccepted, final Function<String, T> onRejected)
+    public <T> T map(final Supplier<T> onAccepted, final Function<R, T> onRejected)
     {
-        return accepted() ? onAccepted.get() : onRejected.apply(rejectionReason);
+        return accepted() ? onAccepted.get() : onRejected.apply(rejectionInfo);
     }
 
-    public void unwrap(final Runnable onAccepted, final Consumer<String> onRejected)
+    public void unwrap(final Runnable onAccepted, final Consumer<R> onRejected)
     {
         map(
                 () ->
@@ -67,12 +59,12 @@ public record EvaluationResult(
         );
     }
 
-    public EvaluationResult then(final Supplier<EvaluationResult> filter)
+    public EvaluationResult<R> then(final Supplier<EvaluationResult<R>> filter)
     {
         return map(filter, reason -> this);
     }
 
-    public static EvaluationResult applyEvaluations(final List<Supplier<EvaluationResult>> filters)
+    public static <R> EvaluationResult<R> applyEvaluations(final List<Supplier<EvaluationResult<R>>> filters)
     {
         return filters.stream().reduce(EvaluationResult::accept, (f1, f2) -> () -> f1.get().then(f2)).get();
     }

@@ -56,7 +56,7 @@ public class DeletionDrivers
 
         if(expectSingleChromosome(mDataCache.isMale(), dgData.GeneInfo.Chromosome))
         {
-            for(final HomLossEvent homLoss : mDataCache.CopyNumberData.getHomLossData())
+            for(HomLossEvent homLoss : mDataCache.CopyNumberData.getHomLossData())
             {
                 // allow there to be more than one?
                 if(homLoss.PosStart <= minRegionEnd && homLoss.PosEnd >= minRegionStart)
@@ -78,7 +78,7 @@ public class DeletionDrivers
             return;
         }
 
-        for(final LohEvent lohEvent : mDataCache.CopyNumberData.getLohData())
+        for(LohEvent lohEvent : mDataCache.CopyNumberData.getLohData())
         {
             if(!lohEvent.Chromosome.equals(dgData.GeneInfo.Chromosome))
                 continue;
@@ -131,7 +131,7 @@ public class DeletionDrivers
                 dgData.addEvent(event);
             }
 
-            for(final HomLossEvent homLoss : lohEvent.getHomLossEvents())
+            for(HomLossEvent homLoss : lohEvent.getHomLossEvents())
             {
                 // allow there to be more than one?
                 if(homLoss.PosStart <= minRegionEnd && homLoss.PosEnd >= minRegionStart)
@@ -163,7 +163,7 @@ public class DeletionDrivers
         int codingStart = dgData.TransData.CodingStart;
         int codingEnd = dgData.TransData.CodingEnd;
 
-        for(final LohEvent lohEvent : mDataCache.CopyNumberData.getLohData())
+        for(LohEvent lohEvent : mDataCache.CopyNumberData.getLohData())
         {
             if(!lohEvent.Chromosome.equals(dgData.GeneInfo.Chromosome))
                 continue;
@@ -217,7 +217,7 @@ public class DeletionDrivers
 
         for(Map.Entry<String,List<SvBreakend>> entry : chrBreakendMap.entrySet())
         {
-            for(final SvBreakend breakend : entry.getValue())
+            for(SvBreakend breakend : entry.getValue())
             {
                 boolean delType = breakend.orientation() == 1 && breakend.getDBLink() != null;
                 boolean dupType = breakend.orientation() == -1 && breakend.type() == DUP;
@@ -234,7 +234,7 @@ public class DeletionDrivers
                     continue;
 
                 // consider any disruptive canonical or other configured reportable transcript
-                for(final BreakendGeneData gene : genesList)
+                for(BreakendGeneData gene : genesList)
                 {
                     for(BreakendTransData transcript : gene.transcripts())
                     {

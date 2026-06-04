@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.esvee.prep;
 
-import static com.hartwig.hmftools.common.region.ExcludedRegions.getPolyGRegion;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.region.ExcludedRegions.getPolyGRegion;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.LineUtils.hasLineTail;
 import static com.hartwig.hmftools.esvee.common.WriteType.PREP_JUNCTION;
@@ -18,20 +18,23 @@ import com.hartwig.hmftools.common.bam.BamSlicer;
 import com.hartwig.hmftools.common.perf.PerformanceCounter;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.esvee.common.saga.SagaLocationMatcher;
+import com.hartwig.hmftools.esvee.common.saga.SagaMatcherFactory;
 import com.hartwig.hmftools.esvee.prep.types.CombinedStats;
 import com.hartwig.hmftools.esvee.prep.types.PartitionStats;
+import com.hartwig.hmftools.esvee.prep.types.PrepRead;
 import com.hartwig.hmftools.esvee.prep.types.ReadFilterType;
 import com.hartwig.hmftools.esvee.prep.types.ReadGroup;
 import com.hartwig.hmftools.esvee.prep.types.ReadGroupStatus;
-import com.hartwig.hmftools.esvee.prep.types.PrepRead;
 import com.hartwig.hmftools.esvee.prep.types.ReadType;
+
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 
 public class PartitionSlicer
 {
-    private final int mId;
     private final PrepConfig mConfig;
     private final ChrBaseRegion mRegion;
     private final SpanningReadCache mSpanningReadCache;
@@ -49,7 +52,7 @@ public class PartitionSlicer
     private final PartitionStats mStats;
     private final CombinedStats mCombinedStats;
 
-    private boolean mLogReadIds;
+    private final boolean mLogReadIds;
     private final List<PerformanceCounter> mPerfCounters;
 
     private enum PerfCounters
@@ -60,10 +63,10 @@ public class PartitionSlicer
     }
 
     public PartitionSlicer(
-            final int id, final ChrBaseRegion region, final PrepConfig config, final List<SamReader> samReaders, final BamSlicer bamSlicer,
-            final SpanningReadCache spanningReadCache, final ResultsWriter writer, final CombinedStats combinedStats)
+            final ChrBaseRegion region, final PrepConfig config, final List<SamReader> samReaders, final BamSlicer bamSlicer,
+            final SpanningReadCache spanningReadCache, @Nullable final SagaMatcherFactory sagaMatcherFactory, final ResultsWriter writer,
+            final CombinedStats combinedStats)
     {
-        mId = id;
         mConfig = config;
         mReadFilters = config.ReadFiltering;
         mSpanningReadCache = spanningReadCache;
@@ -72,7 +75,12 @@ public class PartitionSlicer
         mCombinedStats = combinedStats;
 
         mDepthTracker = new DepthTracker(new BaseRegion(mRegion.start(), mRegion.end()), DEPTH_WINDOW_SIZE);
-        mJunctionTracker = new JunctionTracker(mRegion, mConfig, mDepthTracker, mConfig.Hotspots);
+        ChrBaseRegion sagaMatchRegion = new ChrBaseRegion(
+                mRegion.chromosome(),
+                mRegion.start() - mReadFilters.config().observedFragLengthMax(),
+                mRegion.end() + mReadFilters.config().observedFragLengthMax());
+        SagaLocationMatcher sagaMatcher = sagaMatcherFactory == null ? null : sagaMatcherFactory.createLocationMatcher(sagaMatchRegion);
+        mJunctionTracker = new JunctionTracker(mRegion, mConfig, mDepthTracker, mConfig.Hotspots, sagaMatcher);
 
         mSamReaders = samReaders;
         mBamSlicer = bamSlicer;
@@ -218,7 +226,7 @@ public class PartitionSlicer
         if(captureCompleteGroups)
         {
             // read groups that span chromosomes or partitions need to be completed, so gather up their state to enable this
-            Map<String,ReadGroup> spanningGroupsMap = Maps.newHashMap();
+            Map<String, ReadGroup> spanningGroupsMap = Maps.newHashMap();
 
             junctionGroups.forEach(x -> assignReadGroup(x, spanningGroupsMap));
 
@@ -229,7 +237,7 @@ public class PartitionSlicer
             int remoteCandidateCount = remoteCandidateGroups.size();
             int spanningGroupCount = spanningGroupsMap.size();
             int totalGroupCount = junctionGroups.size() + remoteCandidateCount;
-            int expectedGroupCount = (int)junctionGroups.stream().filter(x -> x.groupStatus() == ReadGroupStatus.EXPECTED).count();
+            int expectedGroupCount = (int) junctionGroups.stream().filter(x -> x.groupStatus() == ReadGroupStatus.EXPECTED).count();
 
             mSpanningReadCache.processSpanningReadGroups(mRegion, spanningGroupsMap);
 
@@ -248,13 +256,13 @@ public class PartitionSlicer
         }
 
         mStats.JunctionCount += mJunctionTracker.junctions().size();
-        int junctionFragments = (int)junctionGroups.stream().filter(x -> x.hasReadType(ReadType.JUNCTION)).count();
+        int junctionFragments = (int) junctionGroups.stream().filter(x -> x.hasReadType(ReadType.JUNCTION)).count();
         mStats.JunctionFragmentCount += junctionFragments;
         mStats.SupportingFragmentCount += junctionGroups.size() - junctionFragments;
         mStats.InitialSupportingFragmentCount += mJunctionTracker.initialSupportingFrags();
     }
 
-    private void assignReadGroup(final ReadGroup readGroup, Map<String,ReadGroup> partialGroupsMap)
+    private void assignReadGroup(final ReadGroup readGroup, Map<String, ReadGroup> partialGroupsMap)
     {
         readGroup.setPartitionCount(mRegion, mConfig.PartitionSize);
 

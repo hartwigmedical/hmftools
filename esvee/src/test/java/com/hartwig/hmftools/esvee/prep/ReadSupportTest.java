@@ -147,44 +147,6 @@ public class ReadSupportTest
     }
 
     @Test
-    public void testHardClipSupport()
-    {
-        PrepRead junctionRead = PrepRead.from(createSamRecord(
-                READ_ID_GENERATOR.nextId(), CHR_1, 230, REF_BASES.substring(0, 100), "30S70M"));
-
-        JunctionData junctionData = new JunctionData(230, REVERSE, junctionRead);
-
-        // exact position match
-        PrepRead supportRead = PrepRead.from(createSamRecord(
-                READ_ID_GENERATOR.nextId(), CHR_1, 230, REF_BASES.substring(30, 100), "1H70M"));
-
-        assertTrue(hasExactJunctionSupport(supportRead, junctionData, READ_FILTERS));
-
-        // a few ref bases extend past the junction
-        supportRead = PrepRead.from(createSamRecord(
-                READ_ID_GENERATOR.nextId(), CHR_1, 227, REF_BASES.substring(27, 100), "1H73M"));
-
-        assertTrue(hasExactJunctionSupport(supportRead, junctionData, READ_FILTERS));
-
-        // same again or pos orientation
-        junctionRead = PrepRead.from(createSamRecord(
-                "01", CHR_1, 200, REF_BASES.substring(0, 80), "50M30S"));
-
-        junctionData = new JunctionData(249, FORWARD, junctionRead);
-
-        // exact position match
-        supportRead = PrepRead.from(createSamRecord(
-                READ_ID_GENERATOR.nextId(), CHR_1, 200, REF_BASES.substring(0, 50), "50M3H"));
-
-        assertTrue(hasExactJunctionSupport(supportRead, junctionData, READ_FILTERS));
-
-        supportRead = PrepRead.from(createSamRecord(
-                READ_ID_GENERATOR.nextId(), CHR_1, 200, REF_BASES.substring(0, 53), "53M30H"));
-
-        assertTrue(hasExactJunctionSupport(supportRead, junctionData, READ_FILTERS));
-    }
-
-    @Test
     public void testReadRepeatTrimming()
     {
         String readBases = "ACGTACGTAA" + REF_BASES.substring(10, 40) + REF_BASES.substring(50, 70) + "GGGGGGGGGG" + REF_BASES.substring(70, 100);

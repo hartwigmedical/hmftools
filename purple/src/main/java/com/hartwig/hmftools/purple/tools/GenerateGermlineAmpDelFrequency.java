@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_REGION_END;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_REGION_START;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_SAMPLE_ID;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
@@ -80,10 +81,10 @@ public class GenerateGermlineAmpDelFrequency
 
             Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, ",");
 
-            int sampleIdIndex = fieldsIndexMap.get("SampleId");
-            int chromosomeIndex = fieldsIndexMap.get("Chromosome");
-            int regionStartIndex = fieldsIndexMap.get("RegionStart");
-            int regionEndIndex = fieldsIndexMap.get("RegionEnd");
+            int sampleIdIndex = fieldsIndexMap.get(FLD_SAMPLE_ID);
+            int chromosomeIndex = fieldsIndexMap.get(FLD_CHROMOSOME);
+            int regionStartIndex = fieldsIndexMap.get(FLD_REGION_START);
+            int regionEndIndex = fieldsIndexMap.get(FLD_REGION_END);
             int germlineStatusIndex = fieldsIndexMap.get("GermlineStatus");
 
             String line = "";
@@ -132,7 +133,9 @@ public class GenerateGermlineAmpDelFrequency
             regions = Lists.newArrayList();
             mChrRegionMap.put(chromsome, regions);
         }
-        AmpDelRegionFrequency.EventType type = germlineStatus == GermlineStatus.AMPLIFICATION ? AmpDelRegionFrequency.EventType.AMP : AmpDelRegionFrequency.EventType.DEL;
+
+        AmpDelRegionFrequency.EventType type = germlineStatus == GermlineStatus.AMPLIFICATION ?
+                AmpDelRegionFrequency.EventType.AMP : AmpDelRegionFrequency.EventType.DEL;
 
         int index = 0;
         while(index < regions.size())
@@ -178,7 +181,8 @@ public class GenerateGermlineAmpDelFrequency
                     if(region.Frequency < mMinSampleCount)
                         continue;
 
-                    writer.write(String.format("%s,%d,%d,%s,%d", chromosome, region.Region.start(), region.Region.end(), region.Type, region.Frequency));
+                    writer.write(String.format("%s,%d,%d,%s,%d",
+                            chromosome, region.Region.start(), region.Region.end(), region.Type, region.Frequency));
                     writer.newLine();
                 }
             }

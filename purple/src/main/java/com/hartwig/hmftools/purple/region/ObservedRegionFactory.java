@@ -110,8 +110,8 @@ public class ObservedRegionFactory
         List<PurpleSupportSegment> refinedRegions = new ExcludedRegionsRefiner(EXCLUDED_IMMUNE_REGIONS).refine(regions);
         for(PurpleSupportSegment region : refinedRegions)
         {
-            final BAFAccumulator baf = new BAFAccumulator();
-            final CobaltAccumulator cobalt = new CobaltAccumulator(mWindowSize, region);
+            BAFAccumulator baf = new BAFAccumulator();
+            CobaltAccumulator cobalt = new CobaltAccumulator(mWindowSize, region);
 
             bafSelector.select(region, baf);
             cobaltSelector.select(region, cobalt);

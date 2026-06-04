@@ -81,4 +81,19 @@ public final class Nucleotides
 
         return newBases;
     }
+
+    public static void reverseComplementBasesInPlace(byte[] bases, int start, int length)
+    {
+        for(int i = start, j = start + length - 1; i < j; ++i, --j)
+        {
+            byte temp = bases[i];
+            bases[i] = swapDnaBase(bases[j]);
+            bases[j] = swapDnaBase(temp);
+        }
+        if(length % 2 == 1)
+        {
+            int middle = start + length / 2;
+            bases[middle] = swapDnaBase(bases[middle]);
+        }
+    }
 }

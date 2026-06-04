@@ -3,28 +3,24 @@ package com.hartwig.hmftools.panelbuilder.samplevariants;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_DRIVER_GC_TARGET;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_DRIVER_GC_TOLERANCE;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_DRIVER_QUALITY_MIN;
-import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_FRAGMENT_COUNT_MIN;
-import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_INDEL_LENGTH_MAX;
-import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_INSERT_SEQUENCE_LENGTH_MAX;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_NONDRIVER_GC_TARGET;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_NONDRIVER_GC_TOLERANCE;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_NONDRIVER_QUALITY_MIN;
-import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_REPEAT_COUNT_MAX;
-import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_SV_BREAKENDS_PER_GENE_MAX;
-import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_VAF_MIN;
+import static com.hartwig.hmftools.panelbuilder.samplevariants.VariantSelector.getDriverVariantCandidates;
+import static com.hartwig.hmftools.panelbuilder.samplevariants.VariantSelector.getNondriverVariantCandidates;
+import static com.hartwig.hmftools.panelbuilder.samplevariants.VariantSelector.markUnevaluatedCandidates;
+import static com.hartwig.hmftools.panelbuilder.samplevariants.VariantSelector.selectDriverVariants;
+import static com.hartwig.hmftools.panelbuilder.samplevariants.VariantSelector.selectNondriverVariants;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.panelbuilder.EvaluationResult;
 import com.hartwig.hmftools.panelbuilder.PanelData;
 import com.hartwig.hmftools.panelbuilder.ProbeEvaluator;
@@ -60,7 +56,8 @@ public class SampleVariants
 
     public record VariantInfo(
             String variant,
-            @Nullable String filterReason
+            TargetMetadata.Type targetType,
+            @Nullable VariantFilter filterReason
     )
     {
     }
@@ -77,7 +74,7 @@ public class SampleVariants
         variants.addAll(SomaticSv.load(config.sampleId(), config.purpleDir(), config.linxDir()));
         variants.addAll(GermlineSv.load(config.sampleId(), config.linxGermlineDir()));
 
-        Map<Variant, EvaluationResult> variantFilters = new HashMap<>();
+        Map<Variant, EvaluationResult<VariantFilter>> variantFilters = new HashMap<>();
         generateProbes(variants, config.maxProbes(), config.prioritiseSmallIndels(), probeGenerator, panelData, variantFilters);
 
         List<VariantInfo> variantInfos = createVariantInfos(variants, variantFilters);
@@ -100,16 +97,24 @@ public class SampleVariants
     }
 
     public static void generateProbes(final List<Variant> variants, int maxProbes, boolean prioritiseSmallIndels,
-            final ProbeGenerator probeGenerator, PanelData panelData, Map<Variant, EvaluationResult> variantFilters)
+            final ProbeGenerator probeGenerator, PanelData panelData, Map<Variant, EvaluationResult<VariantFilter>> variantFilters)
     {
+        // Variants which can be considered for probe generation.
+        List<Variant> driverVariantCandidates = getDriverVariantCandidates(variants);
+        List<SomaticMutation> nonDriverVariantCandidates = getNondriverVariantCandidates(variants, prioritiseSmallIndels);
+
         int generatedProbes = 0;
         Map<String, Integer> geneDisruptions = new HashMap<>();
         generatedProbes += generateProbes(
-                remainingProbes -> selectDriverVariants(variants, geneDisruptions, variantFilters, remainingProbes),
+                remainingProbes -> selectDriverVariants(driverVariantCandidates, geneDisruptions, variantFilters, remainingProbes),
                 maxProbes - generatedProbes, probeGenerator, panelData);
         generatedProbes += generateProbes(
-                remainingProbes -> selectNondriverVariants(variants, variantFilters, remainingProbes, prioritiseSmallIndels),
+                remainingProbes -> selectNondriverVariants(nonDriverVariantCandidates, variantFilters, remainingProbes),
                 maxProbes - generatedProbes, probeGenerator, panelData);
+
+        // At this point, candidates are either evaluated (accepted or rejected) or couldn't be evaluated due to the max probe count.
+        markUnevaluatedCandidates(driverVariantCandidates, variantFilters);
+        markUnevaluatedCandidates(nonDriverVariantCandidates, variantFilters);
     }
 
     private static int generateProbes(final Function<Integer, List<Variant>> variantSelector, int maxProbes,
@@ -141,207 +146,12 @@ public class SampleVariants
         return generatedProbes;
     }
 
-    private static List<Variant> selectDriverVariants(final List<Variant> variants, Map<String, Integer> geneDisruptions,
-            Map<Variant, EvaluationResult> variantFilters, int maxCount)
-    {
-        LOGGER.debug("Selecting up to {} driver variants", maxCount);
-
-        List<Variant> candidateVariants = variants.stream()
-                .filter(variant -> !variantFilters.containsKey(variant))
-                .filter(Variant::isDriver)
-                .toList();
-
-        List<Variant> selectedVariants = new ArrayList<>();
-        for(Variant variant : candidateVariants)
-        {
-            if(selectedVariants.size() >= maxCount)
-            {
-                // We assume that there will be enough probes to cover all the driver variants.
-                // If not, then we randomly(?) discarded some drivers, which may be important to handle.
-                // Potentially, there should be a variant prioritisation scheme to avoid this scenario.
-                LOGGER.warn("Filled sample variant probe quota without including all driver variants!");
-                break;
-            }
-            EvaluationResult filterResult = driverFilters(variant, geneDisruptions);
-            variantFilters.put(variant, filterResult);
-            filterResult.unwrap(
-                    () ->
-                    {
-                        registerDisruptedGenes(variant, geneDisruptions);
-                        selectedVariants.add(variant);
-                    },
-                    failReason -> LOGGER.trace("Variant failed filter: {{}} reason=\"{}\"", variant, failReason)
-            );
-        }
-        return selectedVariants;
-    }
-
-    private static List<Variant> selectNondriverVariants(final List<Variant> variants, Map<Variant, EvaluationResult> variantFilters,
-            int maxCount, boolean prioritiseSmallIndels)
-    {
-        LOGGER.debug("Selecting up to {} nondriver variants", maxCount);
-
-        // For nondrivers, we are only interested in somatic SNV/INDEL.
-        // Also, some variants are prioritised over others.
-        List<SomaticMutation> candidateVariants = variants.stream()
-                .filter(variant -> !variantFilters.containsKey(variant))
-                .filter(variant -> variant instanceof SomaticMutation)
-                .filter(variant -> !variant.isDriver())
-                .map(variant -> (SomaticMutation) variant)
-                .sorted(new NondriverVariantComparator(prioritiseSmallIndels))
-                .toList();
-
-        List<Variant> selectedVariants = new ArrayList<>();
-        for(SomaticMutation variant : candidateVariants)
-        {
-            if(selectedVariants.size() >= maxCount)
-            {
-                break;
-            }
-
-            EvaluationResult filterResult = nondriverFilters(variant);
-            variantFilters.put(variant, filterResult);
-            filterResult.unwrap(
-                    () -> selectedVariants.add(variant),
-                    failReason -> LOGGER.trace("Variant failed filter: {{}} reason=\"{}\"", variant, failReason)
-            );
-        }
-        return selectedVariants;
-    }
-
-    private static EvaluationResult commonFilters(final Variant variant)
-    {
-        List<Supplier<EvaluationResult>> filters = new ArrayList<>();
-
-        if(variant instanceof StructuralVariant sv)
-        {
-            filters.add(() -> insertSequenceLengthFilter(sv.insertSequenceLength()));
-        }
-
-        return EvaluationResult.applyEvaluations(filters);
-    }
-
-    private static EvaluationResult driverFilters(final Variant variant, Map<String, Integer> geneDisruptions)
-    {
-        return EvaluationResult.applyEvaluations(List.of(
-                () -> commonFilters(variant),
-                () -> driverOnlyFilters(variant, geneDisruptions)));
-    }
-
-    private static EvaluationResult driverOnlyFilters(final Variant variant, Map<String, Integer> geneDisruptions)
-    {
-        List<Supplier<EvaluationResult>> filters = new ArrayList<>();
-
-        if(variant instanceof SomaticSv sv)
-        {
-            if(sv.isReportedDisruption())
-            {
-                filters.add(() -> vafFilter(sv.vaf()));
-                filters.add(() -> tumorFragmentsFilter(sv.tumorFragments()));
-            }
-        }
-
-        filters.add(() -> geneDisruptionFilter(variant, geneDisruptions));
-
-        return EvaluationResult.applyEvaluations(filters);
-    }
-
-    private record NondriverVariantComparator(
-            boolean prioritiseSmallerVariants
-    )
-            implements Comparator<SomaticMutation>
-    {
-        @Override
-        public int compare(final SomaticMutation v1, final SomaticMutation v2)
-        {
-            if(prioritiseSmallerVariants && v1.indelLength() != v2.indelLength())
-            {
-                return v1.indelLength() < v2.indelLength() ? -1 : 1;
-            }
-            if(v1.isCoding() != v2.isCoding())
-            {
-                return v1.isCoding() ? -1 : 1;
-            }
-            if(v1.isClonal() != v2.isClonal())
-            {
-                return v1.isClonal() ? -1 : 1;
-            }
-            // Otherwise random but deterministic ordering.
-            return Integer.compare(v1.deterministicHash(), v2.deterministicHash());
-        }
-    }
-
-    private static EvaluationResult nondriverFilters(final SomaticMutation variant)
-    {
-        return EvaluationResult.applyEvaluations(List.of(
-                () -> commonFilters(variant),
-                () -> nondriverOnlyFilters(variant)));
-    }
-
-    private static EvaluationResult nondriverOnlyFilters(final SomaticMutation variant)
-    {
-        return EvaluationResult.applyEvaluations(List.of(
-                () -> vafFilter(variant.vaf()),
-                () -> tumorFragmentsFilter(variant.tumorFragments()),
-                () -> indelLengthFilter(variant.indelLength()),
-                () -> repeatCountFilter(variant.repeatCount()),
-                () -> germlineStatusFilter(variant.germlineStatus())));
-    }
-
-    private static EvaluationResult insertSequenceLengthFilter(int insertSequenceLength)
-    {
-        return EvaluationResult.condition(insertSequenceLength <= SAMPLE_INSERT_SEQUENCE_LENGTH_MAX, "insert sequence length");
-    }
-
-    private static EvaluationResult vafFilter(double vaf)
-    {
-        return EvaluationResult.condition(vaf >= SAMPLE_VAF_MIN, "VAF");
-    }
-
-    private static EvaluationResult tumorFragmentsFilter(int tumorFragments)
-    {
-        return EvaluationResult.condition(tumorFragments >= SAMPLE_FRAGMENT_COUNT_MIN, "tumor fragments");
-    }
-
-    private static EvaluationResult indelLengthFilter(int indelLength)
-    {
-        return EvaluationResult.condition(indelLength <= SAMPLE_INDEL_LENGTH_MAX, "indel length");
-    }
-
-    private static EvaluationResult repeatCountFilter(int repeatCount)
-    {
-        return EvaluationResult.condition(repeatCount <= SAMPLE_REPEAT_COUNT_MAX, "repeat count");
-    }
-
-    private static EvaluationResult germlineStatusFilter(final GermlineStatus germlineStatus)
-    {
-        return EvaluationResult.condition(germlineStatus == GermlineStatus.DIPLOID, "germline status");
-    }
-
-    private static EvaluationResult geneDisruptionFilter(final Variant variant, final Map<String, Integer> geneDisruptions)
-    {
-        if(variant instanceof SomaticSv sv)
-        {
-            boolean pass = sv.disruptedGenes().stream()
-                    .allMatch(gene -> geneDisruptions.getOrDefault(gene, 0) + 1 <= SAMPLE_SV_BREAKENDS_PER_GENE_MAX);
-            return EvaluationResult.condition(pass, "gene disruptions");
-        }
-        return EvaluationResult.accept();
-    }
-
-    private static void registerDisruptedGenes(final Variant variant, Map<String, Integer> geneDisruptions)
-    {
-        if(variant instanceof SomaticSv sv)
-        {
-            sv.disruptedGenes().forEach(gene -> geneDisruptions.put(gene, geneDisruptions.getOrDefault(gene, 0) + 1));
-        }
-    }
-
     private static ProbeGenerationSpec createProbeGenerationSpec(final Variant variant)
     {
         LOGGER.trace("Generating probe for variant: {}", variant);
 
         SequenceDefinition definition = variant.generateProbe();
+        // TODO: should target whole range or just altered bases?
         TargetedRange targetedRange = TargetedRange.wholeRegion(definition.baseLength());
         TargetMetadata metadata = createTargetMetadata(variant);
         ProbeEvaluator.Criteria evalCriteria = variant.isDriver() ? DRIVER_PROBE_CRITERIA : NONDRIVER_PROBE_CRITERIA;
@@ -353,15 +163,16 @@ public class SampleVariants
         return new TargetMetadata(variant.targetType(), variant.toString());
     }
 
-    private static List<VariantInfo> createVariantInfos(final List<Variant> variants, final Map<Variant, EvaluationResult> variantFilters)
+    private static List<VariantInfo> createVariantInfos(final List<Variant> variants,
+            final Map<Variant, EvaluationResult<VariantFilter>> variantFilters)
     {
         return variants.stream()
                 .map(variant ->
                 {
-                    EvaluationResult filterResult = variantFilters.get(variant);
-                    // If we didn't even attempt to filter the variant, it must have been because we encountered the probe limit first.
-                    String filterReason = filterResult == null ? "max probe count" : filterResult.rejectionReason();
-                    return new VariantInfo(variant.toString(), filterReason);
+                    EvaluationResult<VariantFilter> filterResult = variantFilters.get(variant);
+                    // If we didn't even attempt to filter the variant, it must have been because it was never a candidate.
+                    VariantFilter filterReason = filterResult == null ? VariantFilter.NotCandidate : filterResult.rejectionInfo();
+                    return new VariantInfo(variant.toString(), variant.targetType(), filterReason);
                 })
                 .toList();
     }
