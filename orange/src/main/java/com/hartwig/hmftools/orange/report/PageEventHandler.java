@@ -21,9 +21,11 @@ public class PageEventHandler
     private boolean mFirstPageOfChapter;
     private PDDocumentOutline mOutline;
 
-    static PageEventHandler create(final String sampleId, final ReportResources reportResources, boolean addDisclaimer)
+    static PageEventHandler create(final String sampleId, final ReportResources reportResources, boolean addDisclaimer,
+            final PDDocument document)
     {
-        return new PageEventHandler(new Header(Resources.getResource("orange_circos.png"), reportResources, addDisclaimer),
+        return new PageEventHandler(
+                new Header(Resources.getResource("orange_circos.png"), reportResources, addDisclaimer, document),
                 new Footer(reportResources, addDisclaimer),
                 new SidePanel(sampleId, reportResources));
     }

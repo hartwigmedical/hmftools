@@ -134,7 +134,7 @@ public class ReportWriter
 
         PageEventHandler pageEventHandler = PageEventHandler.create(
                 mConfig != null ? mConfig.DisplaySampleId : sampleId, reportResources,
-                mConfig != null ? mConfig.AddDisclaimer : false);
+                mConfig != null ? mConfig.AddDisclaimer : false, pdfDocument);
 
         docCtx.setPageEventHandler(pageEventHandler);
 

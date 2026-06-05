@@ -13,12 +13,12 @@ import be.quodlibet.boxable.line.LineStyle;
 public class Cells
 {
     // Compact padding to match iText's tight row spacing
-    private static final float CELL_PADDING_TOP = 1f;
-    private static final float CELL_PADDING_BOTTOM = 1f;
+    private static final float CELL_PADDING_TOP = 2f;
+    private static final float CELL_PADDING_BOTTOM = 2f;
     private static final float CELL_PADDING_LEFT = 2f;
     private static final float CELL_PADDING_RIGHT = 2f;
 
-    public static final float COMPACT_ROW_HEIGHT = 10f;
+    public static final float COMPACT_ROW_HEIGHT = 12f;
 
     private final ReportResources mReportResources;
 

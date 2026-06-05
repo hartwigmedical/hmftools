@@ -17,15 +17,23 @@ import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 
 public class Header
 {
-    private final URL mOrangeCircosPath;
+    private final PDImageXObject mCircosImage;
     private final ReportResources mReportResources;
     private final boolean mAddDisclaimer;
 
-    public Header(final URL orangeCircosPath, final ReportResources reportResources, boolean addDisclaimer)
+    public Header(final URL orangeCircosPath, final ReportResources reportResources, boolean addDisclaimer,
+            final PDDocument document)
     {
-        mOrangeCircosPath = orangeCircosPath;
         mReportResources = reportResources;
         mAddDisclaimer = addDisclaimer;
+        try(InputStream imageStream = orangeCircosPath.openStream())
+        {
+            mCircosImage = PDImageXObject.createFromByteArray(document, imageStream.readAllBytes(), "orange_circos.png");
+        }
+        catch(IOException e)
+        {
+            throw new RuntimeException("Failed to load header image", e);
+        }
     }
 
     public void renderHeader(final PDPage page, final PDDocument document)
@@ -35,16 +43,12 @@ public class Header
             PDRectangle pageSize = page.getMediaBox();
             float pageHeight = pageSize.getHeight();
 
-            // Draw the circos image
-            try(InputStream imageStream = mOrangeCircosPath.openStream())
-            {
-                PDImageXObject circosImage = PDImageXObject.createFromByteArray(document, imageStream.readAllBytes(), "orange_circos.png");
-                float imgScale = (float) HEADER_ORANGE_HEIGHT / circosImage.getHeight();
-                float imgWidth = circosImage.getWidth() * imgScale;
-                float imgHeight = HEADER_ORANGE_HEIGHT;
-                float orangeImageVerticalPosition = pageHeight - HEADER_ORANGE_HEIGHT - 10;
-                cs.drawImage(circosImage, 50, orangeImageVerticalPosition, imgWidth, imgHeight);
-            }
+            // Draw the circos image (reuses the single cached PDImageXObject across all pages)
+            float imgScale = (float) HEADER_ORANGE_HEIGHT / mCircosImage.getHeight();
+            float imgWidth = mCircosImage.getWidth() * imgScale;
+            float imgHeight = HEADER_ORANGE_HEIGHT;
+            float orangeImageVerticalPosition = pageHeight - HEADER_ORANGE_HEIGHT - 10;
+            cs.drawImage(mCircosImage, 50, orangeImageVerticalPosition, imgWidth, imgHeight);
 
             // Draw the "ORANGE Report" title text, each letter in a different orange shade
             float fontSize = 11;

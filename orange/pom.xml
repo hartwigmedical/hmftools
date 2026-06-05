@@ -46,20 +46,6 @@
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
-        <!-- Core PDFBox library for loading documents and extracting text -->
-        <dependency>
-            <groupId>org.apache.pdfbox</groupId>
-            <artifactId>pdfbox</artifactId>
-            <version>3.0.3</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.pdfbox</groupId>
-            <artifactId>pdfbox-tools</artifactId>
-            <version>3.0.3</version>
-            <scope>test</scope>
-        </dependency>
-
     </dependencies>
 
     <build>
