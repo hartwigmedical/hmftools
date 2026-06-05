@@ -87,6 +87,8 @@ public class JunctionAssembly
             final Junction junction, final byte[] bases, final byte[] baseQualities, final List<SupportRead> assemblySupport,
             final List<RepeatInfo> repeatInfo)
     {
+        mAssemblyId = -1;
+
         mJunction = junction;
 
         // set initial bounds from the assembly support
@@ -677,6 +679,8 @@ public class JunctionAssembly
             final JunctionAssembly initialAssembly, final RefSideSoftClip refSideSoftClip, int refBaseLength,
             final List<SupportRead> initialSupport)
     {
+        mAssemblyId = -1;
+
         // build a junction assembly from an initial junction where the ref bases are truncated due to branching (likely short TI)
         mJunction = initialAssembly.junction();
 
@@ -852,6 +856,8 @@ public class JunctionAssembly
     @VisibleForTesting
     public JunctionAssembly(final Junction junction, final byte[] bases, final byte[] quals, final int junctionIndex)
     {
+        mAssemblyId = -1;
+
         mJunction = junction;
         mInitialReadId = null;
 
