@@ -47,6 +47,8 @@ public class JunctionReadTypes
         }
     }
 
+    public List<Read> nonJunctionReads() { return mNonJunctionReads; }
+
     public List<Read> junctionReads()
     {
         return mCandidateJunctionReads.stream().map(x -> x.Read).collect(Collectors.toList());
@@ -118,26 +120,6 @@ public class JunctionReadTypes
             extensionReads.add(readInfo.Read);
         }
     }
-
-    /*
-    public List<Read> extensionReads()
-    {
-        return mCandidateJunctionReads.stream().filter(x -> x.MatchesJunction).map(x -> x.Read).collect(Collectors.toList());
-    }
-
-    public List<Read> extensionReads(int minLength)
-    {
-        return mCandidateJunctionReads.stream().filter(x -> x.ExtensionLength >= minLength).map(x -> x.Read).collect(Collectors.toList());
-    }
-
-    public boolean hasMinLengthExtensionRead(int minLength)
-    {
-        return mCandidateJunctionReads.stream().anyMatch(x -> x.ExtensionLength >= minLength);
-    }
-
-    */
-
-    public List<Read> nonJunctionReads() { return mNonJunctionReads; }
 
     private static final int MIN_SNV_TYPE_EXTENSION = 3; // ie to get at least 2 mismatches without clipping or indels
 

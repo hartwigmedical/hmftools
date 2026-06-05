@@ -327,11 +327,6 @@ public class ExtensionSeqBuilder
         return extBaseMove;
     }
 
-    //public void checkValidity(int minReads, int minExtensionLength, int minSecondExtensionLength)
-
-    @Deprecated
-    public boolean isValid() { return true; }
-
     public void checkValidity(final JunctionThresholdState juncThresholdState)
     {
         int maxValidExtensionLength = 0;
