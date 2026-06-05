@@ -163,6 +163,7 @@ public final class ReadUtils
         return readIndex;
     }
 
+    @Deprecated
     public static boolean readSoftClipsAndCrossesJunction(final Read read, final Junction junction, final RefGenomeInterface refGenome)
     {
         if(junction.isForward())
@@ -188,6 +189,7 @@ public final class ReadUtils
         return refGenome != null ? readMismatchesPastJunction(read, junction, refGenome) : false;
     }
 
+    @Deprecated
     public static boolean readMismatchesPastJunction(final Read read, final Junction junction, final RefGenomeInterface refGenome)
     {
         // must have min mismatches to even be tested

@@ -372,7 +372,7 @@ public final class JunctionUtils
         }
 
         double baseMatchPerc = baseMatches / (double)basesCompared;
-        return baseMatchPerc > MIN_EXACT_BASE_PERC;
+        return baseMatchPerc >= MIN_EXACT_BASE_PERC;
     }
 
     public static boolean hasWellAnchoredRead(final JunctionData junctionData, final ReadFilterConfig filterConfig)

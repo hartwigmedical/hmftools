@@ -54,7 +54,7 @@ public final class PrepConstants
     public static final int UNPAIRED_READ_JUNCTION_DISTANCE = 5;
     public static final int MAX_SUPPORT_FRAGMENT_DISTANCE = 1000;
     public static final int MAX_HIGH_QUAL_BASE_MISMATCHES = 1;
-    public static final double MIN_EXACT_BASE_PERC = 0.25;
+    public static final double MIN_EXACT_BASE_PERC = 0.75;
 
     // depth tracking and filter
     public static final int DEPTH_WINDOW_SIZE = 200;
