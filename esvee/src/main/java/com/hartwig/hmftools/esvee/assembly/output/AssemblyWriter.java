@@ -53,6 +53,7 @@ public class AssemblyWriter
 
             sj.add("Id");
             sj.add("Chromosome").add("JuncPosition").add("JuncOrientation").add("JuncType");
+            sj.add("JuncRawDiscPosition");
 
             sj.add("ExtBaseLength").add("RefBasePosition").add("RefBaseLength").add("RefBaseCigar");
 
@@ -124,6 +125,9 @@ public class AssemblyWriter
             String juncType = assembly.junction().DiscordantOnly ? "DISC" :
                     (assembly.junction().indelBased() ? "INDEL" : "SPLIT");
             sj.add(juncType);
+
+            int rawDiscordantPosition = assembly.junction().rawDiscordantPosition();
+            sj.add(rawDiscordantPosition > 0 ? String.valueOf(rawDiscordantPosition) : "");
 
             sj.add(String.valueOf(assembly.extensionLength()));
             sj.add(String.valueOf(assembly.refBasePosition()));
