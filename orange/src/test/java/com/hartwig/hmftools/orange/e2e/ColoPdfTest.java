@@ -36,7 +36,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.text.PDFTextStripper;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -81,6 +80,12 @@ public class ColoPdfTest
 
             checkPage1(document);
             checkPage2(document);
+            checkPage3(document);
+            checkPage4(document);
+            checkPage5(document);
+            checkPage6(document);
+            checkPage7(document);
+            checkPage8(document);
         }
     }
 
@@ -88,7 +93,7 @@ public class ColoPdfTest
     {
         PDPage page1 = document.getPage(0);
         PageRipper page1Ripper = new PageRipper(page1);
-        checkHeaderAndFooter(page1Ripper, 1);
+        checkHeaderAndFooter(page1Ripper, 1, true);
 
         String[] sampleTable = page1Ripper.getLinesInRectangle(new PositionInPage(0.0, 0.08), new PositionInPage(1.0, 0.18));
         assertEquals(2, sampleTable.length);
@@ -139,7 +144,7 @@ public class ColoPdfTest
     {
         PDPage page2 = document.getPage(1);
         PageRipper page2Ripper = new PageRipper(page2);
-        checkHeaderAndFooter(page2Ripper, 2);
+        checkHeaderAndFooter(page2Ripper, 2, true);
 
         String[] somaticFindingsHeading = page2Ripper.getLinesInRectangle(new PositionInPage(0.0, 0.1), new PositionInPage(1.0, 0.15));
         assertEquals(1, somaticFindingsHeading.length);
@@ -193,13 +198,158 @@ public class ColoPdfTest
         page2Ripper.checkHasImageWithinBoundsOfGivenSize(topLeftCorner, 1234, 1200);
     }
 
-    private void checkHeaderAndFooter(PageRipper ripper, int page) throws IOException
+    private void checkPage3(final PDDocument document) throws IOException
     {
-        String[] topLeft = ripper.getLinesInRectangle(new PositionInPage(0.0, 0.0), new PositionInPage(0.48, 0.05));
+        PageRipper page3Ripper = new PageRipper(document.getPage(2));
+        checkHeaderAndFooter(page3Ripper, 3, true);
+
+        String[] chrArmsTable = page3Ripper.getLinesInRectangle(new PositionInPage(0.0, 0.1), new PositionInPage(1.0, 0.4));
+        assertEquals(15, chrArmsTable.length);
+        //        assertEquals("Arm Copy Number Aberrations", chrArmsTable[0]);
+        assertEquals("CONTINUED FROM THE PREVIOUS PAGE", chrArmsTable[1]);
+        assertEquals("CHROMOSOME ARM TYPE CN REL CN DRIVER", chrArmsTable[2]);
+        assertEquals("chr7 Q GAIN 4.0 1.4 LOW", chrArmsTable[3]);
+        assertEquals("chrX Q GAIN 1.9 1.3 LOW", chrArmsTable[14]);
+
+        String[] signAllocTable = page3Ripper.getLinesInRectangle(new PositionInPage(0.0, 0.4), new PositionInPage(1.0, 0.65));
+        assertEquals(12, signAllocTable.length);
+        assertEquals("Signature Allocations (12)", signAllocTable[0]);
+        assertEquals("SIGNATURE ETIOLOGY ALLOCATION PERCENT", signAllocTable[1]);
+        assertEquals("Sig7 Ultraviolet light exposure 23622 60%", signAllocTable[2]);
+        assertEquals("MISALLOC - 4983 13%", signAllocTable[11]);
+
+        // Check the image
+        assertEquals(1, page3Ripper.numberOfImages());
+        final RectangleInPage topLeftCorner = new RectangleInPage(0.0, 0.0, 0.2, 0.09);
+        page3Ripper.checkHasImageWithinBoundsOfGivenSize(topLeftCorner, 1234, 1200);
+    }
+
+    private void checkPage4(final PDDocument document) throws IOException
+    {
+        PageRipper page4Ripper = new PageRipper(document.getPage(3));
+        checkHeaderAndFooter(page4Ripper, 4, true);
+
+        // Check the images
+        assertEquals(4, page4Ripper.numberOfImages());
+        final RectangleInPage topLeftCorner = new RectangleInPage(0.0, 0.0, 0.2, 0.09);
+        page4Ripper.checkHasImageWithinBoundsOfGivenSize(topLeftCorner, 1234, 1200);
+
+        final RectangleInPage driver1PlotLocation = new RectangleInPage(0.0, 0.1, 0.5, 0.45);
+        page4Ripper.checkHasImageWithinBoundsOfGivenSizeAndColor(driver1PlotLocation, 3000, 3150, new Color(50, 205, 50));
+
+        final RectangleInPage driver2PlotLocation = new RectangleInPage(0.5, 0.1, 1.0, 0.45);
+        page4Ripper.checkHasImageWithinBoundsOfGivenSizeAndColor(driver2PlotLocation, 3000, 3150, new Color(0, 191, 255));
+
+        final RectangleInPage driver3PlotLocation = new RectangleInPage(0.0, 0.4, 0.5, 0.8);
+        page4Ripper.checkHasImageWithinBoundsOfGivenSizeAndColor(driver3PlotLocation, 3000, 3150, new Color(127, 255, 0));
+    }
+
+    private void checkPage5(final PDDocument document) throws IOException
+    {
+        PageRipper page5Ripper = new PageRipper(document.getPage(4));
+        checkHeaderAndFooter(page5Ripper, 5, true);
+
+        String[] wholePage = page5Ripper.getLinesInRectangle(new PositionInPage(0.0, 0.1), new PositionInPage(1.0, 0.6));
+        assertEquals(12, wholePage.length);
+        assertEquals("Germline Findings", wholePage[0]);
+        assertEquals("Small Variants (0)", wholePage[1]);
+        assertEquals("NONE", wholePage[2]);
+        assertEquals("Amplifications and Deletions (0)", wholePage[3]);
+        assertEquals("NONE", wholePage[4]);
+        assertEquals("Disruptions (0)", wholePage[5]);
+        assertEquals("NONE", wholePage[6]);
+        //        assertEquals("Chromosomal Aberrations (0)", wholePage[7]);
+        assertEquals("NONE", wholePage[8]);
+        assertEquals("Pharmacogenetics (1)", wholePage[9]);
+        assertEquals("GENE HAPLOTYPE GENOTYPE FUNCTION LINKED DRUGS SOURCE", wholePage[10]);
+        assertEquals("DPYD *1 HOM Normal Function 5-Fluorouracil;Capecitabine;Tegafur PHARMGKB", wholePage[11]);
+
+        // Check the image
+        assertEquals(1, page5Ripper.numberOfImages());
+        final RectangleInPage topLeftCorner = new RectangleInPage(0.0, 0.0, 0.2, 0.09);
+        page5Ripper.checkHasImageWithinBoundsOfGivenSize(topLeftCorner, 1234, 1200);
+    }
+
+    private void checkPage6(final PDDocument document) throws IOException
+    {
+        PageRipper page6Ripper = new PageRipper(document.getPage(5));
+        checkHeaderAndFooter(page6Ripper, 6, false);
+
+        String[] wholePage = page6Ripper.getLinesInRectangle(new PositionInPage(0.0, 0.12), new PositionInPage(1.0, 0.2));
+        assertEquals(1, wholePage.length);
+        assertEquals("Tissue of Origin", wholePage[0]);
+
+        // Check the images - note that this page has landscape orientation
+        assertEquals(2, page6Ripper.numberOfImages());
+        final RectangleInPage topLeftCorner = new RectangleInPage(0.0, 0.0, 0.2, 0.15);
+        page6Ripper.checkHasImageWithinBoundsOfGivenSize(topLeftCorner, 1234, 1200);
+
+        final RectangleInPage driver1PlotLocation = new RectangleInPage(0.05, 0.1, 0.95, 0.95);
+        page6Ripper.checkHasImageWithinBoundsOfGivenSizeAndColor(driver1PlotLocation, 6000, 3300, new Color(255, 20, 147));
+    }
+
+    private void checkPage7(final PDDocument document) throws IOException
+    {
+        PageRipper page7Ripper = new PageRipper(document.getPage(6));
+        checkHeaderAndFooter(page7Ripper, 7, false);
+
+        String[] wholePage = page7Ripper.getLinesInRectangle(new PositionInPage(0.0, 0.12), new PositionInPage(1.0, 0.2));
+        assertEquals(1, wholePage.length);
+        assertEquals("Quality Control", wholePage[0]);
+
+        // Check the images - note that this page has landscape orientation
+        assertEquals(2, page7Ripper.numberOfImages());
+        final RectangleInPage topLeftCorner = new RectangleInPage(0.0, 0.0, 0.2, 0.15);
+        page7Ripper.checkHasImageWithinBoundsOfGivenSize(topLeftCorner, 1234, 1200);
+
+        final RectangleInPage qcImage = new RectangleInPage(0.05, 0.1, 0.95, 0.95);
+        page7Ripper.checkHasImageWithinBoundsOfGivenSizeAndColor(qcImage, 5100, 3000, new Color(139, 69, 19));
+    }
+
+    private void checkPage8(final PDDocument document) throws IOException
+    {
+        PageRipper page8Ripper = new PageRipper(document.getPage(7));
+        checkHeaderAndFooter(page8Ripper, 8, false);
+
+        String[] wholePage = page8Ripper.getLinesInRectangle(new PositionInPage(0.0, 0.12), new PositionInPage(1.0, 0.2));
+        assertEquals(1, wholePage.length);
+        assertEquals("Purity and Ploidy", wholePage[0]);
+
+        // Check the images - note that this page has landscape orientation
+        assertEquals(7, page8Ripper.numberOfImages());
+        final RectangleInPage topLeftCorner = new RectangleInPage(0.0, 0.0, 0.2, 0.15);
+        page8Ripper.checkHasImageWithinBoundsOfGivenSize(topLeftCorner, 1234, 1200);
+
+        final RectangleInPage pinkPic = new RectangleInPage(0.0, 0.05, 0.4, 0.7);
+        page8Ripper.checkHasImageWithinBoundsOfGivenSizeAndColor(pinkPic, 3000, 3000, new Color(255, 105, 180));
+
+        final RectangleInPage redPic = new RectangleInPage(0.2, 0.05, 0.6, 0.7);
+        page8Ripper.checkHasImageWithinBoundsOfGivenSizeAndColor(redPic, 1440, 1200, new Color(255, 69, 0));
+
+        final RectangleInPage bluePic = new RectangleInPage(0.5, 0.1, 0.95, 0.7);
+        page8Ripper.checkHasImageWithinBoundsOfGivenSizeAndColor(bluePic, 2400, 1800, new Color(30, 144, 255));
+
+        final RectangleInPage tealPic = new RectangleInPage(0.0, 0.5, 0.4, 0.9);
+        page8Ripper.checkHasImageWithinBoundsOfGivenSizeAndColor(tealPic, 1440, 1200, new Color(0, 128, 128));
+
+        final RectangleInPage orangePic = new RectangleInPage(0.2, 0.5, 0.6, 0.9);
+        page8Ripper.checkHasImageWithinBoundsOfGivenSizeAndColor(orangePic, 1440, 1200, new Color(255, 140, 0));
+
+        final RectangleInPage yellowPic = new RectangleInPage(0.5, 0.5, 0.95, 0.9);
+        page8Ripper.checkHasImageWithinBoundsOfGivenSizeAndColor(yellowPic, 2400, 1200, new Color(255, 215, 0));
+    }
+
+    private void checkHeaderAndFooter(PageRipper ripper, int page, boolean isPortrait) throws IOException
+    {
+        double topLeftXMax = isPortrait ? 0.48 : 0.35;
+        double topLeftYMax = isPortrait ? 0.05 : 0.12;
+        String[] topLeft = ripper.getLinesInRectangle(new PositionInPage(0.0, 0.0), new PositionInPage(topLeftXMax, topLeftYMax));
         assertEquals(1, topLeft.length);
         assertEquals("ORANGE Report", topLeft[0]);
 
-        String[] topRight = ripper.getLinesInRectangle(new PositionInPage(0.52, 0.0), new PositionInPage(1.0, 0.05));
+        double topRightXMin = isPortrait ? 0.52 : 0.8;
+        double topRightYMax = isPortrait ? 0.05 : 0.12;
+        String[] topRight = ripper.getLinesInRectangle(new PositionInPage(topRightXMin, 0.0), new PositionInPage(1.0, topRightYMax));
         assertEquals(2, topRight.length);
         assertEquals("SAMPLE", topRight[0]);
         assertEquals(tumor, topRight[1]);
@@ -208,26 +358,6 @@ public class ColoPdfTest
         assertEquals(1, bottomLeft.length);
         assertEquals(page + "/8", bottomLeft[0]);
     }
-
-    /*
-All 14 images have been rewritten. Here's the colour reference:
-| File                    | Colour        | RGB             |
-| ----------------------- | ------------- | --------------- |
-| `copynumber.png`        | Red-orange    | (255, 69, 0)    |
-| `somatic.rainfall.png`  | Gold          | (255, 215, 0)   |
-| `cluster-62.003.png`    | Lime green    | (50, 205, 50)   |
-| `cluster-12.001.png`    | Deep sky blue | (0, 191, 255)   |
-| `somatic.png`           | Violet        | (148, 0, 211)   |
-| `input.png`             | Hot pink      | (255, 105, 180) |
-| `map.png`               | Dark orange   | (255, 140, 0)   |
-| `purity.range.png`      | Teal          | (0, 128, 128)   |
-| `segment.png`           | Crimson       | (220, 20, 60)   |
-| `circos.png`            | Indigo        | (75, 0, 130)    |
-| `cluster-59.007.png`    | Chartreuse    | (127, 255, 0)   |
-| `somatic.clonality.png` | Dodger blue   | (30, 144, 255)  |
-| `cuppa.vis.png`         | Deep pink     | (255, 20, 147)  |
-| `qsee.vis.report.png`   | Saddle brown  | (139, 69, 19)   |
-     */
 
     private void runOrange(String dirName) throws Exception
     {
