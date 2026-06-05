@@ -23,8 +23,10 @@ import static com.hartwig.hmftools.orange.OrangeConfig.EXPERIMENT_TYPE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 import com.hartwig.hmftools.orange.OrangeApplication;
@@ -50,8 +52,8 @@ public class ColoPdfTest
     @Before
     public void setUp() throws IOException
     {
-        //        tempDir = Files.createTempDirectory("pbt").toFile();
-        tempDir = new File("/Users/timlavers/work/batches/2026/6/4/1/tests");
+        tempDir = Files.createTempDirectory("pbt").toFile();
+        //        tempDir = new File("/Users/timlavers/work/batches/2026/6/4/1/tests");
         outputDir = new File(tempDir, "output");
         inputsDir = new File(tempDir, "inputs");
         //noinspection ResultOfMethodCallIgnored
@@ -77,55 +79,134 @@ public class ColoPdfTest
         {
             assertEquals(8, document.getNumberOfPages());
 
-            // Check specific text on Page 1
-            PDFTextStripper stripper = new PDFTextStripper();
-            stripper.setStartPage(1);
-            stripper.setEndPage(1);
-            String page1Text = stripper.getText(document);
-            String[] lines = page1Text.split("\n");
-
-            assertEquals("ORANGE Report", lines[0]);
-            assertEquals("SAMPLE", lines[1]);
-            assertEquals(tumor, lines[2]);
-            assertEquals("1/8", lines[3]);
-            // First table
-            assertEquals("PRIMARY TUMOR PURITY PLOIDY FIT METHOD QC", lines[4]);
-            assertEquals("NOT SPECIFIED 99% (97%-100%) 3.00 (2.96-3.05) NORMAL PASS", lines[5]);
-
-            // Second table
-            assertEquals("PIPELINE VERSION GENOME VERSION SEQUENCING TYPE PIPELINE SAMPLES DATE ANALYSED", lines[6]);
-            assertTrue(lines[7].contains("V38 ILLUMINA WHOLE GENOME TUMOR / NORMAL"));
-
-            // Side-by-side tables: Driver Summary (left) and Genome Wide Biomarkers (right)
-            PDPage page1 = document.getPage(0);
-            PageTextRipper page1Ripper = new PageTextRipper(page1);
-
-            // The driver summary is on the left side of the page, from about 23% to about 50% of the way down.
-            String[] driverSummary = page1Ripper.getLinesInRectangle(new PositionInPage(0.0, 0.23), new PositionInPage(0.5, 0.5));
-            assertEquals("Driver Summary", driverSummary[0]);
-            assertEquals("Somatic variant: 7 (BRAF, CDKN2A, HDAC2, TERT)", driverSummary[1]);
-            assertEquals("Somatic copy number: 1 (PTEN)", driverSummary[2]);
-            assertEquals("Somatic disruption: 2", driverSummary[3]);
-            assertEquals("Germline variant: None", driverSummary[4]);
-            assertEquals("Germline copy number: None", driverSummary[5]);
-            assertEquals("Germline disruption: None", driverSummary[6]);
-            assertEquals("Fusion drivers: None", driverSummary[7]);
-            assertEquals("Viral presence: None", driverSummary[8]);
-            assertEquals("Whole genome Yes", driverSummary[9]);
-            assertEquals("duplicated:", driverSummary[10]);
-            assertEquals("DPYD status: *1 HOM (Normal Function)", driverSummary[11]);
-
-            // The Genome Wide Biomarkers table is to the right of the driver summary table
-            String[] genomeWideBiomarkers = page1Ripper.getLinesInRectangle(new PositionInPage(0.5, 0.23), new PositionInPage(1.0, 0.5));
-            assertEquals("Genome Wide Biomarkers", genomeWideBiomarkers[0]);
-            assertEquals("Microsatellite indels per Mb: 0.1 (Stable)", genomeWideBiomarkers[1]);
-            assertEquals("Tumor mutations per Mb: 14.4 (High)", genomeWideBiomarkers[2]);
-            assertEquals("Tumor mutational load: 198 (High)", genomeWideBiomarkers[3]);
-            assertEquals("HR deficiency score: 0.0 (Proficient)", genomeWideBiomarkers[4]);
-            assertEquals("LOH proportion: 15%", genomeWideBiomarkers[5]);
-            assertEquals("Number of SVs: 125", genomeWideBiomarkers[6]);
-            assertEquals("CUPPA cancer type: Skin: Melanoma (100%)", genomeWideBiomarkers[7]);
+            checkPage1(document);
+            checkPage2(document);
         }
+    }
+
+    private void checkPage1(final PDDocument document) throws IOException
+    {
+        PDPage page1 = document.getPage(0);
+        PageRipper page1Ripper = new PageRipper(page1);
+        checkHeaderAndFooter(page1Ripper, 1);
+
+        String[] sampleTable = page1Ripper.getLinesInRectangle(new PositionInPage(0.0, 0.08), new PositionInPage(1.0, 0.18));
+        assertEquals(2, sampleTable.length);
+        assertEquals("PRIMARY TUMOR PURITY PLOIDY FIT METHOD QC", sampleTable[0]);
+        assertEquals("NOT SPECIFIED 99% (97%-100%) 3.00 (2.96-3.05) NORMAL PASS", sampleTable[1]);
+
+        String[] pieplineTable = page1Ripper.getLinesInRectangle(new PositionInPage(0.0, 0.19), new PositionInPage(1.0, 0.24));
+        assertEquals(2, pieplineTable.length);
+        assertEquals("PIPELINE VERSION GENOME VERSION SEQUENCING TYPE PIPELINE SAMPLES DATE ANALYSED", pieplineTable[0]);
+        assertTrue(pieplineTable[1].contains("V38 ILLUMINA WHOLE GENOME TUMOR / NORMAL"));
+
+        // The driver summary is on the left side of the page, from about 24% to about 50% of the way down.
+        String[] driverSummary = page1Ripper.getLinesInRectangle(new PositionInPage(0.0, 0.24), new PositionInPage(0.5, 0.5));
+        assertEquals("Driver Summary", driverSummary[0]);
+        assertEquals("Somatic variant: 7 (BRAF, CDKN2A, HDAC2, TERT)", driverSummary[1]);
+        assertEquals("Somatic copy number: 1 (PTEN)", driverSummary[2]);
+        assertEquals("Somatic disruption: 2", driverSummary[3]);
+        assertEquals("Germline variant: None", driverSummary[4]);
+        assertEquals("Germline copy number: None", driverSummary[5]);
+        assertEquals("Germline disruption: None", driverSummary[6]);
+        assertEquals("Fusion drivers: None", driverSummary[7]);
+        assertEquals("Viral presence: None", driverSummary[8]);
+        assertEquals("Whole genome Yes", driverSummary[9]);
+        assertEquals("duplicated:", driverSummary[10]);
+        assertEquals("DPYD status: *1 HOM (Normal Function)", driverSummary[11]);
+
+        // The Genome Wide Biomarkers table is to the right of the driver summary table
+        String[] genomeWideBiomarkers = page1Ripper.getLinesInRectangle(new PositionInPage(0.5, 0.24), new PositionInPage(1.0, 0.5));
+        assertEquals("Genome Wide Biomarkers", genomeWideBiomarkers[0]);
+        assertEquals("Microsatellite indels per Mb: 0.1 (Stable)", genomeWideBiomarkers[1]);
+        assertEquals("Tumor mutations per Mb: 14.4 (High)", genomeWideBiomarkers[2]);
+        assertEquals("Tumor mutational load: 198 (High)", genomeWideBiomarkers[3]);
+        assertEquals("HR deficiency score: 0.0 (Proficient)", genomeWideBiomarkers[4]);
+        assertEquals("LOH proportion: 15%", genomeWideBiomarkers[5]);
+        assertEquals("Number of SVs: 125", genomeWideBiomarkers[6]);
+        assertEquals("CUPPA cancer type: Skin: Melanoma (100%)", genomeWideBiomarkers[7]);
+
+        // Check the images
+        assertEquals(2, page1Ripper.numberOfImages());
+        final RectangleInPage topLeftCorner = new RectangleInPage(0.0, 0.0, 0.2, 0.09);
+        page1Ripper.checkHasImageWithinBoundsOfGivenSize(topLeftCorner, 1234, 1200);
+        final RectangleInPage lowerMiddle = new RectangleInPage(0.15, 0.45, 0.85, 0.95);
+        final Color indigo = new Color(75, 0, 130);
+        page1Ripper.checkHasImageWithinBoundsOfGivenSizeAndColor(lowerMiddle, 3000, 3000, indigo);
+    }
+
+    private void checkPage2(final PDDocument document) throws IOException
+    {
+        PDPage page2 = document.getPage(1);
+        PageRipper page2Ripper = new PageRipper(page2);
+        checkHeaderAndFooter(page2Ripper, 2);
+
+        String[] somaticFindingsHeading = page2Ripper.getLinesInRectangle(new PositionInPage(0.0, 0.1), new PositionInPage(1.0, 0.15));
+        assertEquals(1, somaticFindingsHeading.length);
+        assertEquals("Somatic Findings", somaticFindingsHeading[0]);
+
+        String[] smallVariantsTable = page2Ripper.getLinesInRectangle(new PositionInPage(0.0, 0.15), new PositionInPage(1.0, 0.35));
+        assertEquals(10, smallVariantsTable.length);
+        assertEquals("Small Variants (8)", smallVariantsTable[0]);
+        assertEquals("GENE POSITION HGVS AF DEPTH COPIES HOTSPOT BIALL CLONAL DRIVER", smallVariantsTable[1]);
+        assertEquals("BRAF chr7:140753336 c.1799T>A [p.Val600Glu] 0.62 237 3.8 of 6.1 Yes 2% 100% 100%", smallVariantsTable[2]);
+        assertEquals("CDKN2A chr9:21971154 c.203_204delCG [p.Ala68fs] 1.00 96 2.0 of 2.0 Near 100% 100% 100%", smallVariantsTable[3]);
+        assertEquals("CDKN2A chr9:21971154 c.246_247delCG [p.Gly83fs] 1.00 96 2.0 of 2.0 Near 100% 100% 100%", smallVariantsTable[4]);
+        assertEquals("TERT chr5:1295113 c.-125_-124delCCinsTT 0.86 73 1.7 of 2.0 Yes 93% 100% 100%", smallVariantsTable[5]);
+        assertEquals("HDAC2 chr6:113943504 c.1225C>T [p.Arg409*] 0.45 94 1.0 of 2.2 No 2% 100% 33%", smallVariantsTable[6]);
+        assertEquals("GRIN2A chr16:10180333 c.79G>T [p.Ala27Ser] 0.07 121 0.2 of 3.1 No 2% 0% 14%", smallVariantsTable[7]);
+        assertEquals("SF3B1 chr2:197402055 c.2153C>T [p.Pro718Leu] 0.65 115 2.0 of 3.0 No 2% 100% 14%", smallVariantsTable[8]);
+        assertEquals("TP63 chr3:189886541 c.1497G>T [p.Met499Ile] 0.55 150 2.2 of 4.0 No 2% 100% 0%", smallVariantsTable[9]);
+
+        String[] ampsAndDelsTable = page2Ripper.getLinesInRectangle(new PositionInPage(0.0, 0.35), new PositionInPage(1.0, 0.45));
+        assertEquals(3, ampsAndDelsTable.length);
+        assertEquals("Amplifications and Deletions (1)", ampsAndDelsTable[0]);
+        assertEquals("LOCATION GENE TYPE RANGE MIN CN MAX CN REL CN ARM CN DRIVER", ampsAndDelsTable[1]);
+        assertEquals("chr10q23.31 PTEN DEL PARTIAL 0.0 2.0 0.0 2.0 HIGH", ampsAndDelsTable[2]);
+
+        String[] fusionsTable = page2Ripper.getLinesInRectangle(new PositionInPage(0.0, 0.45), new PositionInPage(1.0, 0.5));
+        assertEquals(2, fusionsTable.length);
+        assertEquals("Fusions (0)", fusionsTable[0]);
+        assertEquals("NONE", fusionsTable[1]);
+
+        String[] disruptionsTable = page2Ripper.getLinesInRectangle(new PositionInPage(0.0, 0.5), new PositionInPage(1.0, 0.6));
+        assertEquals(3, disruptionsTable.length);
+        assertEquals("Disruptions (1)", disruptionsTable[0]);
+        assertEquals("GENE POSITION ZYGOSITY CONTEXT TYPE JCN UNDISRUPTED CN DRIVER", disruptionsTable[1]);
+        assertEquals("PTEN chr10:87940542 - chr10:87952584 HOM Intron 5 - Intron 6 DEL 2.0 0.0 LOW", disruptionsTable[2]);
+
+        String[] virusesTable = page2Ripper.getLinesInRectangle(new PositionInPage(0.0, 0.6), new PositionInPage(1.0, 0.65));
+        assertEquals(2, virusesTable.length);
+        assertEquals("Viruses (0)", virusesTable[0]);
+        assertEquals("NONE", virusesTable[1]);
+
+        String[] chrArmsTable = page2Ripper.getLinesInRectangle(new PositionInPage(0.0, 0.65), new PositionInPage(1.0, 0.95));
+        assertEquals(13, chrArmsTable.length);
+        //        assertEquals("Arm Copy Number Aberrations", chrArmsTable[0]);
+        assertEquals("CHROMOSOME ARM TYPE CN REL CN DRIVER", chrArmsTable[1]);
+        assertEquals("chr1 Q GAIN 3.9 1.4 HIGH", chrArmsTable[2]);
+        assertEquals("THE TABLE CONTINUES ON THE NEXT PAGE", chrArmsTable[12]);
+
+        // Check the image
+        assertEquals(1, page2Ripper.numberOfImages());
+        final RectangleInPage topLeftCorner = new RectangleInPage(0.0, 0.0, 0.2, 0.09);
+        page2Ripper.checkHasImageWithinBoundsOfGivenSize(topLeftCorner, 1234, 1200);
+    }
+
+    private void checkHeaderAndFooter(PageRipper ripper, int page) throws IOException
+    {
+        String[] topLeft = ripper.getLinesInRectangle(new PositionInPage(0.0, 0.0), new PositionInPage(0.48, 0.05));
+        assertEquals(1, topLeft.length);
+        assertEquals("ORANGE Report", topLeft[0]);
+
+        String[] topRight = ripper.getLinesInRectangle(new PositionInPage(0.52, 0.0), new PositionInPage(1.0, 0.05));
+        assertEquals(2, topRight.length);
+        assertEquals("SAMPLE", topRight[0]);
+        assertEquals(tumor, topRight[1]);
+
+        String[] bottomLeft = ripper.getLinesInRectangle(new PositionInPage(0.0, 0.95), new PositionInPage(0.2, 1.0));
+        assertEquals(1, bottomLeft.length);
+        assertEquals(page + "/8", bottomLeft[0]);
     }
 
     /*
