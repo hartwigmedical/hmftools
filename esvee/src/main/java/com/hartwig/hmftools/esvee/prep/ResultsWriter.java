@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.common.FileCommon.FLD_SAGA_MATCH;
 import static com.hartwig.hmftools.esvee.common.WriteType.PREP_JUNCTION;
 import static com.hartwig.hmftools.esvee.common.WriteType.PREP_READ;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.BAM_RECORD_SAMPLE_ID_TAG;
@@ -16,7 +17,6 @@ import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_INDEL_JUNCTION;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_JUNCTION_FRAGS;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_OTHER_SUPPORT_FRAGS;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_REMOTE_FRAGS;
-import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_SAGA_MATCH;
 
 import static htsjdk.samtools.SAMFlag.MATE_REVERSE_STRAND;
 import static htsjdk.samtools.SAMFlag.READ_UNMAPPED;

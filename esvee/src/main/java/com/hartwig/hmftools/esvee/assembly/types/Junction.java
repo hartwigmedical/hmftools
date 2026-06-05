@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.compareJunctions;
+import static com.hartwig.hmftools.esvee.common.FileCommon.FLD_SAGA_MATCH;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_EXACT_SUPPORT_FRAGS;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_EXTRA_INFO;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_HOTSPOT_JUNCTION;
@@ -17,7 +18,6 @@ import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_INDEL_JUNCTION;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_JUNCTION_FRAGS;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_OTHER_SUPPORT_FRAGS;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_REMOTE_FRAGS;
-import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_SAGA_MATCH;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
