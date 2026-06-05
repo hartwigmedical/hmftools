@@ -110,7 +110,7 @@ public class BreakendWriter
 
             if(mConfig.SagaFastaFile != null)
             {
-                sj.add("SagaMatchVariant");
+                sj.add("SagaMatch");
             }
 
             writer.write(sj.toString());

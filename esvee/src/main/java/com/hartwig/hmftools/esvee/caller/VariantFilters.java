@@ -172,6 +172,11 @@ public class VariantFilters
 
     private boolean belowMinSupport(final Variant var)
     {
+        if(var.isSagaMatched())
+        {
+            return false;
+        }
+
         double supportThreshold;
 
         if(var.isHotspot())
@@ -205,6 +210,11 @@ public class VariantFilters
 
     private boolean belowMinAf(final Variant var)
     {
+        if(var.isSagaMatched())
+        {
+            return false;
+        }
+
         double afThreshold;
 
         if(var.isHotspot())
@@ -254,6 +264,11 @@ public class VariantFilters
 
     private boolean belowMinQuality(final Variant var)
     {
+        if(var.isSagaMatched())
+        {
+            return false;
+        }
+
         double qualThreshold = var.isHotspot() ? mFilterConstants.MinQualHotspot : mFilterConstants.MinQual;
 
         Breakend breakend = var.breakendStart();
@@ -282,6 +297,11 @@ public class VariantFilters
 
     private boolean belowMinAnchorLength(final Variant var)
     {
+        if(var.isSagaMatched())
+        {
+            return false;
+        }
+
         if(var.isLineSite())
             return false;
 
@@ -313,6 +333,11 @@ public class VariantFilters
 
     private boolean belowMinFragmentLength(final Variant var)
     {
+        if(var.isSagaMatched())
+        {
+            return false;
+        }
+
         if(!hasPairedReads())
             return false;
 
@@ -341,6 +366,11 @@ public class VariantFilters
 
     private boolean isInversionShortLowVafHomology(final Variant var)
     {
+        if(var.isSagaMatched())
+        {
+            return false;
+        }
+
         // filter INVs if adjusted AF is low and length < 3K
         if(var.type() != INV)
             return false;
@@ -369,6 +399,11 @@ public class VariantFilters
 
     private boolean isInversionShortFragmentLowVaf(final Variant var)
     {
+        if(var.isSagaMatched())
+        {
+            return false;
+        }
+
         // Filter for short inv (vaf < 0.05; length < 300; vaf/shortInvRate < 50)
         if(var.type() != INV)
             return false;
@@ -383,6 +418,11 @@ public class VariantFilters
 
     private boolean isDeletionShortLowVaf(final Variant var)
     {
+        if(var.isSagaMatched())
+        {
+            return false;
+        }
+
         // filter DELs if AF is < 0.05> and length < 3K
         if(var.type() != DEL)
             return false;

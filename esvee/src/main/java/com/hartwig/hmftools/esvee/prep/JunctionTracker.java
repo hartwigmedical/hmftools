@@ -864,7 +864,7 @@ public class JunctionTracker
     {
         for(JunctionData junction : mJunctions)
         {
-            SagaMatchByLocation match = mSagaMatcher.match(mRegion.chromosome(), junction.Position);
+            SagaMatchByLocation match = mSagaMatcher.match(mRegion.chromosome(), junction.Position, junction.Orient);
             junction.setSagaMatch(match);
         }
     }

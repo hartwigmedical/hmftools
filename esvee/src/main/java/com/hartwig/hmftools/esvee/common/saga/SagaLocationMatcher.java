@@ -6,11 +6,13 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.esvee.common.SvConstants.SAGA_LOCATION_MATCH_DISTANCE;
 
-import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
-import com.hartwig.hmftools.common.region.BasePosition;
+import com.hartwig.hmftools.common.genome.region.Orientation;
+import com.hartwig.hmftools.common.utils.IntPair;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -38,55 +40,73 @@ public class SagaLocationMatcher
     }
 
     @Nullable
-    public SagaMatchByLocation match(final String chromosome, int position)
+    public SagaMatchByLocation match(final String chromosome, int position, final Orientation orientation)
     {
         Map<String, List<SagaIndexedBreakend>> breakends = mSearchableBreakends;
         List<SagaIndexedBreakend> chrBreakends = breakends.get(chromosome);
-        return matchOnChromosome(position, chrBreakends);
+        return matchOnChromosome(chrBreakends, position, orientation);
     }
 
     @Nullable
-    private SagaMatchByLocation matchOnChromosome(int position, final List<SagaIndexedBreakend> chrBreakends)
+    private SagaMatchByLocation matchOnChromosome(@Nullable final List<SagaIndexedBreakend> chrBreakends, int position,
+            final Orientation orientation)
     {
-        SagaIndexedBreakend bestBreakend = null;
-        int bestDistance = mConfig.locationDistanceMax + 1;
-        if(chrBreakends != null && !chrBreakends.isEmpty())
-        {
-            SagaIndexedBreakend target =
-                    new SagaIndexedBreakend(new BasePosition(chrBreakends.get(0).chromosome(), position), null);
-            int index = Collections.binarySearch(chrBreakends, target);
-            if(index >= 0)
-            {
-                // Exact position found.
-                bestBreakend = chrBreakends.get(index);
-                bestDistance = 0;
-            }
-            else
-            {
-                // Exact position not found, so need to look at adjacent indices.
-                index = -(index + 1);
-                int startIndex = max(index - 1, 0);
-                int endIndex = min(index + 1, chrBreakends.size() - 1);
-                for(int i = startIndex; i <= endIndex; i++)
-                {
-                    SagaIndexedBreakend breakend = chrBreakends.get(i);
-                    int distance = abs(breakend.position() - position);
-                    if(distance < bestDistance)
-                    {
-                        bestBreakend = breakend;
-                        bestDistance = distance;
-                    }
-                }
-            }
-        }
-        if(bestBreakend == null)
+        if(chrBreakends == null || chrBreakends.isEmpty())
         {
             return null;
         }
+
+        IntPair range = SagaIndexedBreakend.binarySearch(chrBreakends, position);
+        if(range.left == range.right)
+        {
+            // Position isn't found exactly, so need to look at adjacent indices.
+            int startIndex = max(range.left - 1, 0);
+            int endIndex = min(range.left + 1, chrBreakends.size());
+            return chooseFromInexactMatchCandidates(chrBreakends.subList(startIndex, endIndex), position, orientation);
+        }
         else
         {
-            SagaVariant variant = bestBreakend.variant();
-            return new SagaMatchByLocation(variant, bestDistance);
+            // Position found exactly. There may be multiple breakends with the same position.
+            return chooseFromExactMatchCandidates(chrBreakends.subList(range.left, range.right), orientation);
         }
+    }
+
+    @Nullable
+    private SagaMatchByLocation chooseFromInexactMatchCandidates(final List<SagaIndexedBreakend> candidateBreakends, int position,
+            final Orientation orientation)
+    {
+        // Consider the nearby breakends, compute their distances, and filter out the breakends too far away.
+        List<SagaMatchByLocation> allCandidates = candidateBreakends.stream()
+                .map(breakend -> new SagaMatchByLocation(breakend.variant(), breakend.breakend(), abs(breakend.position() - position)))
+                .filter(match -> match.distance() <= mConfig.locationDistanceMax)
+                .toList();
+        // Select only the breakend(s) with the lowest distance. This may be 1 breakend or multiple.
+        int minDistance = allCandidates.stream().mapToInt(SagaMatchByLocation::distance).min().orElse(mConfig.locationDistanceMax + 1);
+        if(minDistance > mConfig.locationDistanceMax)
+        {
+            return null;
+        }
+        Stream<SagaMatchByLocation> equidistantCandidates = allCandidates.stream().filter(match -> match.distance() == minDistance);
+        // Select the match based on tie-break conditions.
+        return chooseFromEquidistantCandidates(equidistantCandidates, orientation);
+    }
+
+    private static SagaMatchByLocation chooseFromExactMatchCandidates(final List<SagaIndexedBreakend> candidateBreakends,
+            final Orientation orientation)
+    {
+        Stream<SagaMatchByLocation> candidates = candidateBreakends.stream()
+                .map(breakend -> new SagaMatchByLocation(breakend.variant(), breakend.breakend(), 0));
+        return chooseFromEquidistantCandidates(candidates, orientation);
+    }
+
+    private static SagaMatchByLocation chooseFromEquidistantCandidates(final Stream<SagaMatchByLocation> candidates,
+            final Orientation orientation)
+    {
+        // If there are multiple candidates with the same lowest distance, choose the breakend with the same orientation.
+        // Then finally order by variant ID to deterministically resolve further ties.
+        Comparator<SagaMatchByLocation> comparator = Comparator
+                .comparing((SagaMatchByLocation match) -> match.breakend().orientation() != orientation)
+                .thenComparing(SagaMatchByLocation::variantId);
+        return candidates.min(comparator).orElseThrow();
     }
 }
