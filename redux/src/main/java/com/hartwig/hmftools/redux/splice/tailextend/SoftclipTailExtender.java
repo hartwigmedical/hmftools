@@ -95,8 +95,6 @@ public class SoftclipTailExtender
         }
 
         final int boundary = side.refBoundary(alignmentStart, alignmentEnd);
-        if(crossesAnnotatedJunction(side, chromosome, boundary))
-            return 0;
 
         int extendBudget = Math.min(softclip.Length, mConfig.MaxExtension);
         if(side == Side.LEADING && alignmentStart - extendBudget < 1)
@@ -114,6 +112,18 @@ public class SoftclipTailExtender
         final int walkLength = Math.min(refBases.length, extendBudget);
         final int bestLength = side.walk(readBases, refBases, softclip.Length, walkLength);
 
+        // Junction-guard, applied after the genomic walk rather than before. An annotated junction near
+        // the boundary normally belongs to the junction-rescue path, so we defer. But when the read
+        // matches the contiguous genome cleanly across the whole walk window, this is intron retention
+        // (STAR aligns straight through, doesn't splice) and extension is the correct call. We only
+        // defer when the genomic walk stalls short of the window — i.e. the read diverges at the donor
+        // and genuinely needs splicing. (Tail extension runs after rescue, so rescue already declined.)
+        if(nearAnnotatedJunction(side, chromosome, boundary) && bestLength < walkLength)
+        {
+            mStatistics.countSkippedForJunctionGuard();
+            return 0;
+        }
+
         if(bestLength < mConfig.MinExtension)
         {
             if(bestLength == 0)
@@ -125,18 +135,14 @@ public class SoftclipTailExtender
         return bestLength;
     }
 
-    private boolean crossesAnnotatedJunction(final Side side, final String chromosome, final int boundary)
+    private boolean nearAnnotatedJunction(final Side side, final String chromosome, final int boundary)
     {
         if(mJunctionGuard == null)
             return false;
         for(int offset = 1; offset <= mConfig.MaxExtension; ++offset)
         {
-            final List<ChrIntron> hits = side.junctionLookup(mJunctionGuard, chromosome, boundary, offset);
-            if(!hits.isEmpty())
-            {
-                mStatistics.countSkippedForJunctionGuard();
+            if(!side.junctionLookup(mJunctionGuard, chromosome, boundary, offset).isEmpty())
                 return true;
-            }
         }
         return false;
     }

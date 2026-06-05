@@ -174,15 +174,32 @@ public class MateFieldPatcherTest
     }
 
     @Test
-    public void testPatchTiedStartFirstOfPairIsPositive()
+    public void testPatchOverlappingPairSignFromFivePrime()
     {
+        // fully-overlapping pair sharing alignment-start 100: forward mate's 5' is leftmost (100), reverse
+        // mate's 5' is its end (199), so the forward read carries the positive TLEN regardless of pair order.
         LiftedMateInfoCache cache = new LiftedMateInfoCache();
         cache.recordPrimaryAlignment("read1", false, LiftedMateInfo.mapped("1", 100, 199, "50M", true));
 
         SAMRecord r1 = pairedMappedRecord("read1", true, "1", 100, "50M", false);
         MateFieldPatcher.patchMateFields(r1, cache);
 
-        // span = 199 - 100 + 1 = 100; tie on start so first-of-pair is positive
         assertEquals(100, r1.getInferredInsertSize());
+    }
+
+    @Test
+    public void testPatchOverlappingPairSecondOfPairForwardIsPositive()
+    {
+        // regression: same-start overlapping pair where the second-of-pair read is the forward mate. The
+        // old first-of-pair tie-break gave it a negative TLEN; STAR / htsjdk assign positive to the
+        // leftmost 5' end, i.e. the forward mate, irrespective of first/second-of-pair.
+        LiftedMateInfoCache cache = new LiftedMateInfoCache();
+        cache.recordPrimaryAlignment("read1", true, LiftedMateInfo.mapped("1", 100, 211, "39S112M", true));
+
+        SAMRecord r2 = pairedMappedRecord("read1", false, "1", 100, "117M34S", false);
+        MateFieldPatcher.patchMateFields(r2, cache);
+
+        // forward read 5'=100, reverse mate 5'=211 -> 211 - 100 + 1 = 112, positive on the forward read
+        assertEquals(112, r2.getInferredInsertSize());
     }
 }

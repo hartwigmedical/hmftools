@@ -34,6 +34,8 @@ import com.hartwig.hmftools.redux.splice.rescue.RescueResult;
 import com.hartwig.hmftools.redux.splice.rescue.RescueStatistics;
 import com.hartwig.hmftools.redux.splice.rescue.RescueSupplementary;
 import com.hartwig.hmftools.redux.splice.tailextend.SoftclipTailExtender;
+import com.hartwig.hmftools.redux.splice.tailextend.TerminalCollapseResult;
+import com.hartwig.hmftools.redux.splice.tailextend.TerminalMicroJunctionCollapser;
 import com.hartwig.hmftools.redux.splice.tailextend.TailExtensionConfig;
 import com.hartwig.hmftools.redux.splice.tailextend.TailExtensionResult;
 import com.hartwig.hmftools.redux.splice.tailextend.TailExtensionStatistics;
@@ -80,6 +82,12 @@ public class SpliceLiftBack
 
     // null when -extend_softclip_tails is not set.
     private SoftclipTailExtender mSoftclipTailExtender;
+    private TerminalMicroJunctionCollapser mTerminalJunctionCollapser;
+
+    // Terminal anchor at or below this length is a candidate for the ref-parsimony collapse: the
+    // tx-contig walk fabricates a junction with a 1-2bp exon anchor at a read end when the read runs
+    // a base or two past an exon boundary on the concatenated contig.
+    private static final int TERMINAL_MICRO_JUNCTION_MAX_ANCHOR = 2;
 
     public SpliceLiftBack(final ConfigBuilder configBuilder)
     {
@@ -147,6 +155,16 @@ public class SpliceLiftBack
                     RD_LOGGER.info("extend-softclip-tails enabled (junction guard: {})",
                             index != null ? "enabled" : "disabled");
                 }
+
+                // Runs whenever ref is available: collapses spurious tx-contig terminal micro-junctions
+                // (a 1-2bp exon anchor across an intron at a read end) when the bases align contiguously.
+                if(refSource != null)
+                {
+                    mTerminalJunctionCollapser = new TerminalMicroJunctionCollapser(
+                            refSource, TERMINAL_MICRO_JUNCTION_MAX_ANCHOR);
+                    RD_LOGGER.info("terminal micro-junction collapse enabled (max anchor: {})",
+                            TERMINAL_MICRO_JUNCTION_MAX_ANCHOR);
+                }
             }
             catch(IOException e)
             {
@@ -163,6 +181,10 @@ public class SpliceLiftBack
 
         if(mSoftclipTailExtender != null)
             logTailExtensionStats(mSoftclipTailExtender.statistics());
+
+        if(mTerminalJunctionCollapser != null)
+            RD_LOGGER.info("terminal micro-junction collapse: leading={} trailing={}",
+                    mTerminalJunctionCollapser.collapsedLeading(), mTerminalJunctionCollapser.collapsedTrailing());
 
         try
         {
@@ -461,6 +483,10 @@ public class SpliceLiftBack
         final List<ChrIntron> introduced = new ArrayList<>();
         final boolean[] droppedByRescue = applyJunctionRescue(records, resolved, primary, mateHintIntrons, introduced);
 
+        // Collapse a spurious tx-contig terminal micro-junction before tail extension, so the extender
+        // sees the corrected (contiguous) cigar rather than the fabricated junction.
+        applyTerminalJunctionCollapse(records, resolved, primary, droppedByRescue);
+
         applyTailExtension(records, resolved, primary, droppedByRescue);
 
         return new MateDecision(resolved, droppedByRescue,
@@ -609,6 +635,52 @@ public class SpliceLiftBack
     // Runs after applyJunctionRescue so rescue's lookups see bwa's original cigar; the extender
     // then cleans up tail-trim residual the rescue couldn't merge. Skipped on rescue-merged
     // primaries — their terminal softclips are already gone.
+    private void applyTerminalJunctionCollapse(
+            final List<SAMRecord> records, final LiftBackResult[] resolved, final SAMRecord primary,
+            final boolean[] droppedByRescue)
+    {
+        if(mTerminalJunctionCollapser == null || primary == null || primary.getReadUnmappedFlag())
+            return;
+
+        final int primaryIdx = indexOfPrimary(records, primary);
+        if(primaryIdx < 0 || (droppedByRescue != null && droppedByRescue[primaryIdx]))
+            return;
+
+        final LiftBackResult primaryRes = resolved[primaryIdx];
+        if(primaryRes == null || primaryRes.finalCigar() == null
+                || primaryRes.finalCigar().equals(SAMRecord.NO_ALIGNMENT_CIGAR))
+            return;
+        if(!primaryRes.hasNCigar())
+            return;
+
+        final TerminalCollapseResult collapse = mTerminalJunctionCollapser.tryCollapse(
+                primaryRes.finalChrom(), primaryRes.finalPos(), primaryRes.finalCigar(), primary.getReadBases());
+
+        if(!collapse.Collapsed)
+            return;
+
+        resolved[primaryIdx] = terminalCollapsedResult(primaryRes, collapse);
+    }
+
+    private static LiftBackResult terminalCollapsedResult(
+            final LiftBackResult original, final TerminalCollapseResult collapse)
+    {
+        final boolean stillHasN = collapse.NewCigar.indexOf('N') >= 0;
+        return new LiftBackResult(
+                original.category(), original.comp(), original.role(),
+                original.finalChrom(), collapse.NewStart, collapse.NewCigar,
+                original.negativeStrand(), stillHasN,
+                original.inputMapq(), original.updatedMapq(),
+                original.numXaAlts(), original.numRefAlts(), original.numTxAlts(),
+                original.numLoci(), original.numDistinctCigarsAtPrimaryLocus(),
+                original.txHasNCigar(), original.txSoftClipAtBoundary(),
+                original.refSoftClipped(), original.refFullMatch(),
+                original.geneIds(),
+                appendNote(original.notes(), "terminal-junction-collapsed"),
+                original.transcriptStrand(),
+                original.liftedAlignments());
+    }
+
     private void applyTailExtension(
             final List<SAMRecord> records, final LiftBackResult[] resolved, final SAMRecord primary,
             final boolean[] droppedByRescue)

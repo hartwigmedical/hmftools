@@ -181,15 +181,23 @@ public final class ContigTranslator
     // A leading trim advances the alignment start past the dropped yM + intron (reported via
     // StartShift). A "<...>N yM" tail with no softclip is left intact — there the short exon is
     // the read's genuine end.
-    public static MicroAnchorResult trimMicroAnchors(final Cigar cigar, final int minAnchorBp)
+    // Two floors. bareAnchorFloor applies to a tiny anchor at the read's true terminus (a bare leading
+    // yM nN... with no leading softclip): that yM is where the read genuinely starts inside an exon, so
+    // it is kept down to 1bp. softclipAnchorFloor applies to a tiny anchor sitting NEXT TO a softclip
+    // (...nN yM zS trailing, or zS yM nN... leading): there the read did not actually span the junction -
+    // bwa over-ran the exon boundary by a few bases and clipped the rest - so the implied junction is
+    // unsupported and the tiny anchor is rolled into the softclip below this floor.
+    public static MicroAnchorResult trimMicroAnchors(
+            final Cigar cigar, final int bareAnchorFloor, final int softclipAnchorFloor)
     {
         List<CigarElement> elements = new ArrayList<>(cigar.getCigarElements());
-        elements = trimTrailingAnchor(elements, minAnchorBp);
+        elements = trimTrailingAnchor(elements, softclipAnchorFloor);   // trailing trim is always softclip-adjacent
         int startShift = 0;
 
-        if(leadingAnchorTrimmable(elements, minAnchorBp))
+        final boolean hasLeadingS = !elements.isEmpty() && elements.get(0).getOperator() == CigarOperator.S;
+        final int leadingFloor = hasLeadingS ? softclipAnchorFloor : bareAnchorFloor;
+        if(leadingAnchorTrimmable(elements, leadingFloor))
         {
-            final boolean hasLeadingS = elements.get(0).getOperator() == CigarOperator.S;
             final int anchorIdx = hasLeadingS ? 1 : 0;
             final int existingS = hasLeadingS ? elements.get(0).getLength() : 0;
             final int tinyAnchor = elements.get(anchorIdx).getLength();

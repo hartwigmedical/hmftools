@@ -66,24 +66,16 @@ public class MateFieldPatcher
         record.setInferredInsertSize(computeInferredInsertSize(record, partnerInfo));
     }
 
-    // SAM spec TLEN: signed pair span. Leftmost read gets +span, rightmost gets -span. On a start-position
-    // tie, first-of-pair gets the positive value.
+    // TLEN per the SAM-spec / htsjdk convention (SamPairUtil.computeInsertSize), which STAR also follows:
+    // the signed distance between the two mates' 5' ends (strand-aware), with a +/-1 adjustment so the
+    // leftmost-5' mate carries the positive value. Using 5' ends rather than leftmost alignment-start fixes
+    // both the sign on fully-overlapping (same-start) pairs and the magnitude when softclips extend an end.
     static int computeInferredInsertSize(final SAMRecord record, final LiftedMateInfo partnerInfo)
     {
-        final int readStart = record.getAlignmentStart();
-        final int readEnd = record.getAlignmentEnd();
-        final int mateStart = partnerInfo.alignmentStart();
-        final int mateEnd = partnerInfo.alignmentEnd();
+        final int readFivePrime = record.getReadNegativeStrandFlag() ? record.getAlignmentEnd() : record.getAlignmentStart();
+        final int mateFivePrime = partnerInfo.negativeStrand() ? partnerInfo.alignmentEnd() : partnerInfo.alignmentStart();
 
-        final int leftmost = Math.min(readStart, mateStart);
-        final int rightmost = Math.max(readEnd, mateEnd);
-        final int span = rightmost - leftmost + 1;
-
-        if(readStart < mateStart)
-            return span;
-        if(readStart > mateStart)
-            return -span;
-
-        return record.getFirstOfPairFlag() ? span : -span;
+        final int adjustment = mateFivePrime >= readFivePrime ? 1 : -1;
+        return mateFivePrime - readFivePrime + adjustment;
     }
 }

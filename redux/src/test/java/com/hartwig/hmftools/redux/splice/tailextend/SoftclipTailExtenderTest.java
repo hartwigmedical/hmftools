@@ -236,14 +236,14 @@ public class SoftclipTailExtenderTest
     }
 
     @Test
-    public void testJunctionGuardBlocksTrailing()
+    public void testJunctionGuardDefersWhenGenomicDivergesTrailing()
     {
-        // Annotated intron starts at chr1:131 (just past the M run end). Even though ref matches,
-        // the guard must skip — this is L1 rescue territory.
+        // Annotated intron starts at chr1:131. The clip matches genomic ref for only the first few
+        // bases then diverges (read splices the junction) — the guard must defer to L1 rescue.
         final byte[] chr1 = fill(200, 'A');
-        for(int i = 130; i < 140; ++i) chr1[i] = 'C';
+        chr1[130] = 'C'; chr1[131] = 'C'; chr1[132] = 'C';     // 131..133 match, then ref is 'A'
         final byte[] readBases = new byte[40];
-        for(int i = 30; i < 40; ++i) readBases[i] = 'C';
+        for(int i = 30; i < 40; ++i) readBases[i] = 'C';        // clip is all 'C' -> diverges after 3
 
         final Set<ChrIntron> introns = new HashSet<>(Collections.singletonList(
                 new ChrIntron(CHR1, 131, 200)));
@@ -256,13 +256,35 @@ public class SoftclipTailExtenderTest
     }
 
     @Test
-    public void testJunctionGuardBlocksLeading()
+    public void testRetainedIntronExtendsThroughJunctionTrailing()
     {
-        // Annotated intron ends at chr1:110 (just before the M run start). Guard must skip.
+        // Annotated intron starts at chr1:131, but the clip matches the contiguous genome cleanly all
+        // the way across it — intron retention. STAR aligns straight through, so we extend, not defer.
         final byte[] chr1 = fill(200, 'A');
-        for(int i = 100; i < 110; ++i) chr1[i] = 'T';
+        for(int i = 130; i < 140; ++i) chr1[i] = 'C';           // 131..140 all match the clip
         final byte[] readBases = new byte[40];
-        for(int i = 0; i < 10; ++i) readBases[i] = 'T';
+        for(int i = 30; i < 40; ++i) readBases[i] = 'C';
+
+        final Set<ChrIntron> introns = new HashSet<>(Collections.singletonList(
+                new ChrIntron(CHR1, 131, 200)));
+
+        final SoftclipTailExtender ext = extender(Collections.singletonMap(CHR1, chr1), introns);
+        final TailExtensionResult res = ext.tryExtend(CHR1, 101, "30M10S", readBases);
+
+        assertTrue(res.Extended);
+        assertEquals("40M", res.NewCigar);
+        assertEquals(0, ext.statistics().skippedForJunctionGuard());
+    }
+
+    @Test
+    public void testJunctionGuardDefersWhenGenomicDivergesLeading()
+    {
+        // Annotated intron ends at chr1:110. Clip matches genomic ref for only the last few bases
+        // then diverges — guard must defer.
+        final byte[] chr1 = fill(200, 'A');
+        chr1[107] = 'T'; chr1[108] = 'T'; chr1[109] = 'T';     // 108..110 match, rest 'A'
+        final byte[] readBases = new byte[40];
+        for(int i = 0; i < 10; ++i) readBases[i] = 'T';         // clip all 'T' -> diverges
 
         final Set<ChrIntron> introns = new HashSet<>(Collections.singletonList(
                 new ChrIntron(CHR1, 21, 110)));
@@ -272,6 +294,28 @@ public class SoftclipTailExtenderTest
 
         assertFalse(res.Extended);
         assertEquals(1, ext.statistics().skippedForJunctionGuard());
+    }
+
+    @Test
+    public void testRetainedIntronExtendsThroughJunctionLeading()
+    {
+        // Annotated intron ends at chr1:110, but the clip matches the contiguous genome cleanly across
+        // it — retention. Extend, not defer.
+        final byte[] chr1 = fill(200, 'A');
+        for(int i = 100; i < 110; ++i) chr1[i] = 'T';           // 101..110 all match
+        final byte[] readBases = new byte[40];
+        for(int i = 0; i < 10; ++i) readBases[i] = 'T';
+
+        final Set<ChrIntron> introns = new HashSet<>(Collections.singletonList(
+                new ChrIntron(CHR1, 21, 110)));
+
+        final SoftclipTailExtender ext = extender(Collections.singletonMap(CHR1, chr1), introns);
+        final TailExtensionResult res = ext.tryExtend(CHR1, 111, "10S30M", readBases);
+
+        assertTrue(res.Extended);
+        assertEquals("40M", res.NewCigar);
+        assertEquals(101, res.NewStart);
+        assertEquals(0, ext.statistics().skippedForJunctionGuard());
     }
 
     @Test

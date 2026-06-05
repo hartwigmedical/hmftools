@@ -12,6 +12,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import htsjdk.samtools.Cigar;
+import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.TextCigarCodec;
 
@@ -30,9 +32,28 @@ public class LiftBackResolver
     private static final int RESCUED_MAPQ = 60;
     private static final int INPUT_UNIQUE_MAPQ = 60;
 
-    // Tail-anchor floor for tx-contig supps. A trailing yM after an N with y below this is dropped
-    // into the trailing softclip — the junction it implies isn't supported by enough matched bases.
-    private static final int ANNOTATED_JUNCTION_MIN_ANCHOR_BP = 3;
+    // Min exon overhang to KEEP a tx-contig junction anchor at the read's true terminus (a bare yM nN
+    // with no adjacent softclip). Set to 1: every tx-contig junction is annotated by construction, so a
+    // short overhang maps to a real exon base, and STAR was observed to keep annotated-junction anchors
+    // down to 1bp (exp8 ACTN01020030T). A higher floor clamped 1-2bp anchors STAR kept, manufacturing
+    // false short-anchor junction diffs.
+    private static final int ANNOTATED_JUNCTION_MIN_ANCHOR_BP = 1;
+
+    // Min exon overhang to keep a junction anchor that sits NEXT TO a softclip (...nN yM zS, or zS yM
+    // nN...). There the read did not span the junction - bwa over-ran the exon boundary by a few bases
+    // and softclipped the rest - so a sub-floor anchor is an unsupported (spurious) junction and is
+    // rolled into the softclip. Kept higher than the bare floor because the adjacent clip is evidence the
+    // tiny anchor is an over-extension artifact, not the read's real start/end.
+    private static final int ANNOTATED_JUNCTION_MIN_SOFTCLIP_ANCHOR_BP = 3;
+
+    // bwa-mem2 default scoring, used to reconstruct an alignment score from CIGAR + NM. XA alts carry
+    // no AS tag, so to count only genuine co-optimal competitors (the way STAR's outFilterMultimapScoreRange
+    // does) we recompute each alignment's score here. Must track the `bwa-mem2 mem` invocation: match +1,
+    // mismatch -4, gap-open -6, gap-extend -1; soft-clips are not penalised in AS.
+    private static final int SCORE_MATCH = 1;
+    private static final int SCORE_MISMATCH = 4;
+    private static final int SCORE_GAP_OPEN = 6;
+    private static final int SCORE_GAP_EXTEND = 1;
 
     // per-alt-contig list of segments sorted by altStart so a record's alt-contig position can be
     // bin-searched back to the owning transcript. Non-alt-contig alignments (ref) fall through unindexed.
@@ -326,7 +347,7 @@ public class LiftBackResolver
         // anchoring a tiny terminal yM. Drop sub-threshold anchors at both ends so we don't emit a
         // junction we can't support; a leading trim advances the start past the dropped anchor.
         final ContigTranslator.MicroAnchorResult trimmed = ContigTranslator.trimMicroAnchors(
-                translated.genomicCigar(), ANNOTATED_JUNCTION_MIN_ANCHOR_BP);
+                translated.genomicCigar(), ANNOTATED_JUNCTION_MIN_ANCHOR_BP, ANNOTATED_JUNCTION_MIN_SOFTCLIP_ANCHOR_BP);
 
         return new LiftedAlignment(
                 source, contig, pos, cigarStr,
@@ -337,12 +358,54 @@ public class LiftBackResolver
                 softClipAtBoundary, forwardStrand, entry.strand());
     }
 
+    // Count distinct genomic loci among only the best-scoring alignments. bwa-mem2 -a / XA carries
+    // strictly sub-optimal alts (a worse-scoring paralog hit, the other half of a split read) that are
+    // not real placement competitors — STAR excludes anything below the best score by
+    // outFilterMultimapScoreRange. Counting them here inflated numLoci and blocked the MAPQ rescue, so
+    // a perfectly-aligned read whose exon also exists as a sub-optimal hit elsewhere stayed at MAPQ 0.
+    // Restricting to the best score collapses those down: a uniquely-placed read scores one locus.
     private static int countDistinctLoci(final List<LiftedAlignment> alignments)
     {
+        if(alignments.isEmpty())
+            return 0;
+
+        int bestScore = Integer.MIN_VALUE;
+        for(final LiftedAlignment la : alignments)
+            bestScore = Math.max(bestScore, reconstructedScore(la));
+
         final Set<String> loci = new HashSet<>();
         for(final LiftedAlignment la : alignments)
-            loci.add(locusKey(la));
+        {
+            if(reconstructedScore(la) == bestScore)
+                loci.add(locusKey(la));
+        }
         return loci.size();
+    }
+
+    // bwa-mem2 alignment score from CIGAR + NM. NM counts mismatches plus inserted and deleted bases,
+    // so mismatches = NM - indelBases. Matched bases score +1 each, mismatches -4, and every gap costs
+    // an open (-6) plus one extend (-1) per base. Reproduces the AS tag exactly for default scoring.
+    static int reconstructedScore(final LiftedAlignment alignment)
+    {
+        final Cigar cigar = TextCigarCodec.decode(alignment.OrigCigar);
+        int matched = 0;
+        int indelBases = 0;
+        int gapOps = 0;
+        for(final CigarElement element : cigar.getCigarElements())
+        {
+            final CigarOperator op = element.getOperator();
+            if(op == CigarOperator.M || op == CigarOperator.EQ || op == CigarOperator.X)
+                matched += element.getLength();
+            else if(op == CigarOperator.I || op == CigarOperator.D)
+            {
+                indelBases += element.getLength();
+                ++gapOps;
+            }
+        }
+
+        final int mismatches = Math.max(0, alignment.NumMismatches - indelBases);
+        return (matched - mismatches) * SCORE_MATCH - mismatches * SCORE_MISMATCH
+                - gapOps * SCORE_GAP_OPEN - indelBases * SCORE_GAP_EXTEND;
     }
 
     private static int countDistinctCigarsAtLocus(final List<LiftedAlignment> alignments, final LiftedAlignment primary)

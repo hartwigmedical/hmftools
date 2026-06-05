@@ -197,6 +197,24 @@ public class LiftBackResolverTest
     }
 
     @Test
+    public void testSubOptimalAltDoesNotBlockMapqRescue()
+    {
+        // primary on Tx (50M, perfect) plus a strictly worse XA alt elsewhere (50M with 3 mismatches:
+        // score 50 - 3 - 3*4 = 35 < 50). bwa-mem2 -a / XA carries the sub-optimal hit, but it is not a
+        // real placement competitor, so only the best-scoring locus counts: numLoci == 1, and an
+        // input MAPQ=0 is rescued rather than left at 0.
+        SAMRecord record = newRecord(TX_CONTIG, 1, "50M");
+        record.setMappingQuality(0);
+        record.setAttribute("XA", "chr5,+5000,50M,3;");
+
+        LiftBackResolver resolver = new LiftBackResolver(contigMap());
+        LiftBackResult result = resolver.resolve(record);
+
+        assertEquals(1, result.numLoci());
+        assertEquals(60, result.updatedMapq());
+    }
+
+    @Test
     public void testRefOnlyMulti()
     {
         // primary on ref, XA alt on a different ref chromosome -> two distinct loci, no tx

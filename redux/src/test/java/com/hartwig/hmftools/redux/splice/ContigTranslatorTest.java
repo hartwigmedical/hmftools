@@ -389,7 +389,7 @@ public class ContigTranslatorTest
         // "38S2M3713N68M4I39M" with min anchor 3 -> drop the leading 2M + 3713N, roll 2M into the
         // leading softclip: "40S68M4I39M". Start advances by 2 (anchor) + 3713 (intron) = 3715.
         final ContigTranslator.MicroAnchorResult out =
-                ContigTranslator.trimMicroAnchors(cigar("38S2M3713N68M4I39M"), 3);
+                ContigTranslator.trimMicroAnchors(cigar("38S2M3713N68M4I39M"), 1, 3);
         assertEquals("40S68M4I39M", out.AdjustedCigar.toString());
         assertEquals(3715, out.StartShift);
     }
@@ -399,7 +399,7 @@ public class ContigTranslatorTest
     {
         // 3M leading anchor is kept (>= 3); no start shift.
         final ContigTranslator.MicroAnchorResult out =
-                ContigTranslator.trimMicroAnchors(cigar("38S3M3713N68M"), 3);
+                ContigTranslator.trimMicroAnchors(cigar("38S3M3713N68M"), 1, 3);
         assertEquals("38S3M3713N68M", out.AdjustedCigar.toString());
         assertEquals(0, out.StartShift);
     }
@@ -409,7 +409,7 @@ public class ContigTranslatorTest
     {
         // tiny anchors at both ends: leading 2M and trailing 1M both dropped.
         final ContigTranslator.MicroAnchorResult out =
-                ContigTranslator.trimMicroAnchors(cigar("10S2M500N80M600N1M20S"), 3);
+                ContigTranslator.trimMicroAnchors(cigar("10S2M500N80M600N1M20S"), 1, 3);
         assertEquals("12S80M21S", out.AdjustedCigar.toString());
         assertEquals(502, out.StartShift);
     }
@@ -419,8 +419,32 @@ public class ContigTranslatorTest
     {
         // clean cigar with adequate anchors -> unchanged, no shift.
         final ContigTranslator.MicroAnchorResult out =
-                ContigTranslator.trimMicroAnchors(cigar("38S68M3713N40M"), 3);
+                ContigTranslator.trimMicroAnchors(cigar("38S68M3713N40M"), 1, 3);
         assertEquals("38S68M3713N40M", out.AdjustedCigar.toString());
+        assertEquals(0, out.StartShift);
+    }
+
+    @Test
+    public void testTrimMicroAnchorsBareTinyAnchorKept()
+    {
+        // A 2bp leading anchor at the read's TRUE start (no leading softclip) is the read genuinely
+        // starting 2bp into an exon - kept at the bare floor (1), not trimmed. Mirror of the legit
+        // SpliceLiftBack 2M80N149M case.
+        final ContigTranslator.MicroAnchorResult out =
+                ContigTranslator.trimMicroAnchors(cigar("2M80N149M"), 1, 3);
+        assertEquals("2M80N149M", out.AdjustedCigar.toString());
+        assertEquals(0, out.StartShift);
+    }
+
+    @Test
+    public void testTrimMicroAnchorsSoftclipAdjacentTinyAnchorDropped()
+    {
+        // The SAME 2bp anchor, but now with a trailing softclip (...nN 2M 32S): bwa over-ran the exon
+        // boundary by 2bp then clipped 32 - the junction is unsupported, so the 2M rolls into the clip
+        // and the spurious 89N junction is dropped. 117M89N2M32S -> 117M34S.
+        final ContigTranslator.MicroAnchorResult out =
+                ContigTranslator.trimMicroAnchors(cigar("117M89N2M32S"), 1, 3);
+        assertEquals("117M34S", out.AdjustedCigar.toString());
         assertEquals(0, out.StartShift);
     }
 

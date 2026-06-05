@@ -125,6 +125,25 @@ public class SpliceLiftBackEndToEndTest
     }
 
     @Test
+    public void tinyJunctionAnchorKeptNotClampedToSoftclip()
+    {
+        // R2 starts at tx 200 = the last base of exon2, so the lifted read has a 1bp exon2 anchor
+        // before the intron. With ANNOTATED_JUNCTION_MIN_ANCHOR_BP = 1 this short anchor is kept as a
+        // real junction (1M ... N ... M), matching STAR, rather than being rolled into a leading
+        // softclip and the junction dropped (the old threshold-3 behaviour, which manufactured a
+        // STAR_MARGINAL_DIFFERENCE_IN_JUNCTION diff). Guards against silently re-raising the floor.
+        final SAMRecord r1 = newPrimary("read3", true, TX_CONTIG, 51, "100M");
+        final SAMRecord r2 = newPrimary("read3", false, TX_CONTIG, 200, "50M");
+
+        processFragment(List.of(threeExonContig()), List.of(r1, r2));
+
+        // R2: 1bp exon2 anchor + intron2 (gen 400-499 = 100N) + 49bp exon3, starting at gen 399.
+        assertEquals(CHR_1, r2.getReferenceName());
+        assertEquals(399, r2.getAlignmentStart());
+        assertEquals("1M100N49M", r2.getCigarString());
+    }
+
+    @Test
     public void supplementarySaTagRewrittenToGenomicCoords()
     {
         // R1 primary on tx contig with a supplementary on the same tx contig further along. The
