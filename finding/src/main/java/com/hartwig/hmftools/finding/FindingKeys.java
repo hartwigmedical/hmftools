@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.finding;
 
-import com.hartwig.hmftools.datamodel.chord.ChordStatus;
 import com.hartwig.hmftools.datamodel.hla.LilacAllele;
 import com.hartwig.hmftools.datamodel.isofox.GeneExpression;
 import com.hartwig.hmftools.datamodel.isofox.NovelSpliceJunction;
@@ -14,6 +13,7 @@ import com.hartwig.hmftools.datamodel.purple.PurpleTumorMutationalStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
+import com.hartwig.hmftools.finding.datamodel.HomologousRecombination;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverSource;
 
 public final class FindingKeys
@@ -66,9 +66,9 @@ public final class FindingKeys
         return String.format("microsatelliteStability[%s]", status.name());
     }
 
-    public static String homologousRecombination(ChordStatus status)
+    public static String homologousRecombination(HomologousRecombination.Status status, HomologousRecombination.HrdCancerType cancerType)
     {
-        return String.format("homologousRecombination[%s]", status.name());
+        return String.format("homologousRecombination[%s %s]", status.name(), cancerType.name());
     }
 
     public static String tumorMutationLoadStatus(PurpleTumorMutationalStatus status)

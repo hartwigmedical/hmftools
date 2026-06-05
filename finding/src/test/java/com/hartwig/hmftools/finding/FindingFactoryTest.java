@@ -123,7 +123,7 @@ public class FindingFactoryTest
         NovelSpliceJunction spliceJunction = findingRecord.novelSpliceJunctions().findings().get(0);
         assertEquals("MET", spliceJunction.gene());
         assertEquals(NovelSpliceJunction.Type.SKIPPED_EXONS, spliceJunction.type());
-        assertEquals(NovelSpliceJunction.Context.SPLICE_JUNC, spliceJunction.regionUp());
+        assertEquals(NovelSpliceJunction.Context.SPLICE_JUNC, spliceJunction.regionStart());
     }
 
     @Test
