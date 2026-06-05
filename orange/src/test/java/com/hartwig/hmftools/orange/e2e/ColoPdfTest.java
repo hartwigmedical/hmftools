@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.orange.e2e;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
+import static com.hartwig.hmftools.common.purple.PurpleQCStatus.FAIL_CONTAMINATION;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.CHORD_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.CUPPA_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LILAC_DIR_CFG;
@@ -28,6 +29,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 import com.hartwig.hmftools.orange.OrangeApplication;
 import com.hartwig.hmftools.common.test.Unzipper;
@@ -36,6 +38,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -52,7 +55,7 @@ public class ColoPdfTest
     public void setUp() throws IOException
     {
         tempDir = Files.createTempDirectory("pbt").toFile();
-        //        tempDir = new File("/Users/timlavers/work/batches/2026/6/4/1/tests");
+        //        tempDir = new File("/Users/timlavers/work/batches/2026/6/4/1/tests2");
         outputDir = new File(tempDir, "output");
         inputsDir = new File(tempDir, "inputs");
         //noinspection ResultOfMethodCallIgnored
@@ -64,8 +67,57 @@ public class ColoPdfTest
     }
 
     @Test
+    public void testColoPdfWithQcFail() throws Exception
+    {
+        // This test unzips the required data for generating the Orange report
+        // for Colo829, overwrites the QC file, runs Orange, and checks that the
+        // report has the appropriate warning message and is mostly empty.
+        final String dirName = "colo_swapped_images";
+        File inputsZip = getInputsZip(dirName);
+        Unzipper.unzipInto(inputsZip, inputsDir);
+
+        File filesDir = new File(inputsDir, dirName);
+        File purpleQcFile = new File(filesDir, tumor + ".purple.qc");
+        List<String> lines = Files.readAllLines(purpleQcFile.toPath());
+        lines.set(0, "QCStatus\t" + FAIL_CONTAMINATION.name());
+        Files.write(purpleQcFile.toPath(), lines);
+
+        runOrange(dirName);
+
+        File outputFile = new File(outputDir, tumor + ".orange.pdf");
+        assertTrue(outputFile.exists());
+        long actualFileSize = outputFile.length();
+        long expectedFileSize = 2344033;
+        Assert.assertTrue(actualFileSize < 1.5 * expectedFileSize);
+
+        try(PDDocument document = Loader.loadPDF(outputFile))
+        {
+            assertEquals(6, document.getNumberOfPages());
+
+            PDPage page1 = document.getPage(0);
+            PageRipper page1Ripper = new PageRipper(page1);
+            String[] sampleTable = page1Ripper.getLinesInRectangle(new PositionInPage(0.0, 0.08), new PositionInPage(1.0, 0.2));
+            assertEquals(3, sampleTable.length);
+            assertEquals("PRIMARY TUMOR PURITY PLOIDY FIT METHOD QC", sampleTable[0]);
+            assertEquals("NOT SPECIFIED 99% (97%-100%) 3.00 (2.96-3.05) NORMAL FAIL_CONTAMINATION", sampleTable[1]);
+            assertEquals("The QC status of this sample is fail (contamination): all presented data in this report should be interpreted with caution", sampleTable[2]);
+
+            for(int i = 2; i <= 6; i++)
+            {
+                checkPageIsNA(document, i);
+            }
+        }
+    }
+
+    @Test
     public void testColoPdf() throws Exception
     {
+        // This test unzips the required data for generating the Orange report
+        // for Colo829, runs Orange, and checks the text and images of the generated PDF.
+        // The original image files in the input data have been overwritten with image
+        // data for images of the same size but with each image consisting of a single colour.
+        // We can use the expected images sizes and colours to check that these are being
+        // rendered correctly.
         final String dirName = "colo_swapped_images";
         File inputsZip = getInputsZip(dirName);
         Unzipper.unzipInto(inputsZip, inputsDir);
@@ -73,6 +125,9 @@ public class ColoPdfTest
 
         File outputFile = new File(outputDir, tumor + ".orange.pdf");
         assertTrue(outputFile.exists());
+        long actualFileSize = outputFile.length();
+        long expectedFileSize = 2344033;
+        Assert.assertTrue(actualFileSize < 1.5 * expectedFileSize);
 
         try(PDDocument document = Loader.loadPDF(outputFile))
         {
@@ -87,6 +142,16 @@ public class ColoPdfTest
             checkPage7(document);
             checkPage8(document);
         }
+    }
+
+    private void checkPageIsNA(PDDocument document, int page) throws IOException
+    {
+        PDPage pdPage = document.getPage(page - 1);
+        PageRipper pageRipper = new PageRipper(pdPage);
+
+        String[] body = pageRipper.getLinesInRectangle(new PositionInPage(0.0, 0.1), new PositionInPage(1.0, 0.4));
+        assertEquals(2, body.length);
+        assertEquals("NA", body[1]);
     }
 
     private void checkPage1(final PDDocument document) throws IOException
