@@ -139,6 +139,11 @@
                 <artifactId>artifactregistry-maven-wagon</artifactId>
                 <version>2.2.4</version>
             </extension>
+            <extension>
+                <groupId>org.apache.maven.extensions</groupId>
+                <artifactId>maven-build-cache-extension</artifactId>
+                <version>1.2.3</version>
+            </extension>
         </extensions>
         <pluginManagement>
             <plugins>
