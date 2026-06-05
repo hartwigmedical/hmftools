@@ -24,11 +24,6 @@ public record FindingRecord(
         @NotNull DriverFindingList<Disruption> germlineDisruptions,
         @NotNull DriverFindingList<Fusion> fusions,
         @NotNull DriverFindingList<Virus> viruses,
-        @NotNull FindingItem<RnaStatistics> rnaStatistics,
-        @NotNull FindingList<RnaGeneExpression> highExpressionGenes,
-        @NotNull FindingList<RnaGeneExpression> lowExpressionGenes,
-        @NotNull FindingList<RnaFusion> rnaFusions,
-        @NotNull FindingList<NovelSpliceJunction> novelSpliceJunctions,
         @NotNull FindingList<ChromosomeArmCopyNumber> chromosomeArmCopyNumbers,
         @NotNull FindingList<HlaAllele> hlaAlleles,
         @NotNull FindingList<PharmacoGenotype> pharmacoGenotypes,
@@ -36,7 +31,12 @@ public record FindingRecord(
         @NotNull FindingItem<MicrosatelliteStability> microsatelliteStability,
         @NotNull FindingItem<TumorMutationalLoad> tumorMutationalLoad,
         @NotNull FindingItem<TumorMutationalBurden> tumorMutationalBurden,
-        @NotNull FindingItem<HomologousRecombination> homologousRecombination)
+        @NotNull FindingItem<HomologousRecombination> homologousRecombination,
+        @NotNull FindingItem<RnaStatistics> rnaStatistics,
+        @NotNull FindingList<RnaGeneExpression> highExpressionGenes,
+        @NotNull FindingList<RnaGeneExpression> lowExpressionGenes,
+        @NotNull FindingList<RnaFusion> rnaFusions,
+        @NotNull FindingList<NovelSpliceJunction> novelSpliceJunctions)
 {
     public static final String VERSION = FindingRecord.class.getPackage().getImplementationVersion();
 
