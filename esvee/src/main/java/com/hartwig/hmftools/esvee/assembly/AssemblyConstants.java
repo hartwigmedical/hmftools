@@ -123,6 +123,7 @@ public final class AssemblyConstants
     public static final int BWA_ZDROP = 20;
     public static final int BWA_GAP_OPEN_PENALTY = 6 + BWA_PENALTY_ADJUST;
     public static final int ALIGNMENT_MIN_SOFT_CLIP = MIN_VARIANT_LENGTH;
+    public static final int ALIGNMENT_MIN_SOFT_CLIP_LOWER = MIN_VARIANT_LENGTH_LOWER;
     public static final int ALIGNMENT_INDEL_RECOVERY_MIN_MAP_QUAL = 50;
     public static final int ALIGNMENT_MIN_MOD_MAP_QUAL = 10;
     public static final int ALIGNMENT_MIN_MOD_MAP_QUAL_NO_XA = 5;

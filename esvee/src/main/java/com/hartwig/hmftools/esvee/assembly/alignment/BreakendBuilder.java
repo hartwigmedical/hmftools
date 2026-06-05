@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ALIGNMENT_INDEL_MIN_ANCHOR_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ALIGNMENT_MIN_SOFT_CLIP;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ALIGNMENT_MIN_SOFT_CLIP_LOWER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.PHASED_ASSEMBLY_MAX_TI;
 import static com.hartwig.hmftools.esvee.assembly.LineUtils.findLineSequenceCount;
 import static com.hartwig.hmftools.esvee.common.IndelCoords.findIndelCoords;
@@ -30,11 +31,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.bam.CigarUtils;
-import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.region.Orientation;
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
@@ -310,7 +308,7 @@ public class BreakendBuilder
             insertedBases = reverseComplementBases(insertedBases);
         }
 
-        int requiredSoftClipLength = isLineInsertion(insertedBases, orientation) ? LINE_MIN_EXTENSION_LENGTH : ALIGNMENT_MIN_SOFT_CLIP;
+        int requiredSoftClipLength = calcRequiredSoftClipLength(insertedBases, orientation);
 
         if(softClipLength < requiredSoftClipLength)
             return;
@@ -358,7 +356,7 @@ public class BreakendBuilder
 
         Orientation sglOrientation = segmentOrientation(alignment, !checkStart);
 
-        int requiredSoftClipLength = isLineInsertion(insertSequence, sglOrientation) ? LINE_MIN_EXTENSION_LENGTH : ALIGNMENT_MIN_SOFT_CLIP;
+        int requiredSoftClipLength = calcRequiredSoftClipLength(insertSequence, sglOrientation);
 
         if(softClipLength < requiredSoftClipLength)
             return false;
@@ -379,6 +377,22 @@ public class BreakendBuilder
             breakend.setAlternativeAlignments(altAlignments);
 
         return true;
+    }
+
+    private int calcRequiredSoftClipLength(final String insertSequence, final Orientation orientation)
+    {
+        if(isLineInsertion(insertSequence, orientation))
+        {
+            return LINE_MIN_EXTENSION_LENGTH;
+        }
+        else if(mAssemblyAlignment.isSagaMatched())
+        {
+            return ALIGNMENT_MIN_SOFT_CLIP_LOWER;
+        }
+        else
+        {
+            return ALIGNMENT_MIN_SOFT_CLIP;
+        }
     }
 
     private void checkAlignmentIndel(final AlignData alignment)

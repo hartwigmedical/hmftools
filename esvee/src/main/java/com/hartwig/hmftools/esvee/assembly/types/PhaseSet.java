@@ -5,6 +5,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LOCAL_INDEL;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.SECONDARY;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
+import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH_LOWER;
 
 import java.util.Collections;
 import java.util.List;
@@ -138,7 +139,9 @@ public class PhaseSet
         if(mAssemblyLinks.size() != 1 || mAssemblies.get(0).outcome() != LOCAL_INDEL)
             return false;
 
-        return mAssemblyLinks.get(0).length() < MIN_VARIANT_LENGTH;
+        boolean isSagaMatched = mAssemblies.stream().anyMatch(JunctionAssembly::isSagaMatched);
+        int threshold = isSagaMatched ? MIN_VARIANT_LENGTH_LOWER : MIN_VARIANT_LENGTH;
+        return mAssemblyLinks.get(0).length() < threshold;
     }
 
     public boolean hasFacingLinks() { return mAssemblyLinks.stream().anyMatch(x -> x.type() == LinkType.FACING); }
