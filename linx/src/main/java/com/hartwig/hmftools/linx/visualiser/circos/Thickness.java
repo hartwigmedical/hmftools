@@ -24,10 +24,20 @@ public class Thickness
         double unadjustedGradient = (maxPixels - minPixels) / (maxPloidy - 1);
 
         double totalPloidy = connectors.stream().mapToDouble(x -> thicknessPixels(x.ploidy(), unadjustedGradient)).sum();
-        mGradient = Doubles.greaterThan(totalPloidy, MAX_TOTAL_PLOIDY) ?
-                (MAX_TOTAL_PLOIDY - connectors.size()) / (totalPloidy - connectors.size()) * unadjustedGradient
-                : unadjustedGradient;
 
+        if(Doubles.greaterOrEqual(connectors.size(), MAX_TOTAL_PLOIDY))
+        {
+            // use minimal line width for all lines
+            mGradient = 0;
+        }
+        else if(Doubles.greaterThan(totalPloidy, MAX_TOTAL_PLOIDY))
+        {
+            mGradient = (MAX_TOTAL_PLOIDY - connectors.size()) / (totalPloidy - connectors.size()) * unadjustedGradient;
+        }
+        else
+        {
+            mGradient = unadjustedGradient;
+        }
     }
 
     public double thicknessPixels(double ploidy)
