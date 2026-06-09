@@ -167,8 +167,8 @@ public class JunctionAssembler
                     continue;
 
                 int baseMatches = read.extensionBaseMatches();
-                int extensionLength = read.extensionLength(mJunction.Orient);
-                double matchPerc = baseMatches / (double)extensionLength;
+                int extensionLength = read.extensionBaseOverlap();
+                double matchPerc = extensionLength > 0 ? baseMatches / (double)extensionLength : 0;
 
                 if(matchPerc < ASSEMBLY_MAX_JUNCTION_READ_LOW_QUAL_MISMATCH_PERC)
                     continue;

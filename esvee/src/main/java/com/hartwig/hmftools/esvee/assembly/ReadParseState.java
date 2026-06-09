@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.esvee.assembly;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.isLowBaseQual;
@@ -126,7 +128,12 @@ public class ReadParseState
 
     public int baseLength() { return mBaseLength; }
     public int overlapBaseCount() { return mMoveForward ? mBaseLength - mStartIndex : mStartIndex + 1; }
-    public int evaluatedBaseCount() { return (mMoveForward ? mReadIndex - mStartIndex : mStartIndex - mReadIndex) + 1; }
+
+    public int evaluatedBaseCount()
+    {
+        // cap read index within bounds since state may be exhausted. The +1 is to include the start index base.
+        return (mMoveForward ? min(mReadIndex, mBaseLength - 1) - mStartIndex : mStartIndex - max(mReadIndex, 0)) + 1;
+    }
 
     public void moveOnMatchType(final SequenceDiffInfo seqDiffInfo)
     {

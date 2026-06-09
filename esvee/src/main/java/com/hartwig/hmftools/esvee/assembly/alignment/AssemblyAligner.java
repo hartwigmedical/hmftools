@@ -405,7 +405,7 @@ public class AssemblyAligner extends ThreadTask
             if(read.type() != SupportType.JUNCTION)
                 continue;
 
-            int extensionLength = read.extensionLength(assemblyOrientation);
+            int extensionLength = read.junctionExtensionLength(assemblyOrientation);
 
             extensionLengths.add(extensionLength);
         }
@@ -419,7 +419,7 @@ public class AssemblyAligner extends ThreadTask
             int secondLongestLength = extensionLengths.get(1);
 
             List<SupportRead> topReads = reads.stream()
-                    .filter(x -> x.type() == SupportType.JUNCTION && x.extensionLength(assemblyOrientation) >= secondLongestLength)
+                    .filter(x -> x.type() == SupportType.JUNCTION && x.junctionExtensionLength(assemblyOrientation) >= secondLongestLength)
                     .collect(Collectors.toList());
 
             SupportRead read1 = topReads.get(0);
