@@ -63,8 +63,12 @@ public class LocalSequenceMatcher
 
         if(assemblySeqIndexInRef >= 0)
         {
-            // simple sequence match, so can form a link between these 2 assemblies
-            // could search for other matches too but seems no point
+            // if a second match location can be found, skip making this link
+            int nextStartIndex = assemblySeqIndexInRef + assemblyJunctionSeqLength;
+
+            if(localRefSeq.FullSequence.indexOf(assemblyExtBases, nextStartIndex) >= 0)
+                return null;
+
             return formLocalLink(assembly, localRegionStart, assemblySeqIndexInRef);
         }
 
