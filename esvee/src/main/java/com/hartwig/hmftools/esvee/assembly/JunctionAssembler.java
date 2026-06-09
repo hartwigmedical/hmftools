@@ -70,8 +70,6 @@ public class JunctionAssembler
         juncThresholdState.MinExtensionLength = ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
         juncThresholdState.MinSecondExtensionLength = ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH;
 
-        boolean isValidAssembly = false;
-
         if(mJunction.indelBased())
         {
             findIndelExtensionReads(mJunction, rawReads, extensionReads, junctionReads, mNonJunctionReads);
@@ -182,6 +180,7 @@ public class JunctionAssembler
                 {
                     juncThresholdState.SecondExtensionLengthValid = true;
                     assemblySupport.add(read);
+                    ++firstAssembly.stats().NonExtensionSupportReads;
                 }
             }
 

@@ -7,7 +7,9 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIB
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MAX_JUNC_POS_DIFF;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_LENGTH_LOWER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH_LOWER;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.readJunctionExtensionLength;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.recordSoftClipsAtJunction;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_MIN_EXTENSION_LENGTH;
@@ -97,8 +99,8 @@ public class JunctionReadTypes
             return;
 
         // lower the limits and re-evaluate
-        juncState.MinExtensionLength = ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
-        juncState.MinSecondExtensionLength = ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH;
+        juncState.MinExtensionLength = ASSEMBLY_MIN_SOFT_CLIP_LENGTH_LOWER;
+        juncState.MinSecondExtensionLength = ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH_LOWER;
         juncState.UsesLowerSagaLimits = true;
 
         extensionReads.clear();
