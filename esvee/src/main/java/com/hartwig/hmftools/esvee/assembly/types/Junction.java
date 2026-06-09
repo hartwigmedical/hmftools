@@ -49,7 +49,7 @@ public class Junction implements Comparable<Junction>
     private int mRawDiscordantPosition;
     private IndelCoords mIndelCoords; // the consensus indel if applicable
 
-    private final String mSagaMatchVariantId;
+    private final String mSagaMatchId;
 
     public Junction(final String chromosome, final int position, final Orientation orientation)
     {
@@ -59,7 +59,7 @@ public class Junction implements Comparable<Junction>
 
     public Junction(
             final String chromosome, final int position, final Orientation orientation, final boolean discordantOnly,
-            final boolean indelBased, final boolean hotspot, @Nullable final String sagaMatchVariantId)
+            final boolean indelBased, final boolean hotspot, @Nullable final String sagaMatchId)
     {
         Chromosome = chromosome;
         Position = position;
@@ -86,13 +86,13 @@ public class Junction implements Comparable<Junction>
         }
 
         mIndelCoords = null;
-        mSagaMatchVariantId = sagaMatchVariantId;
+        mSagaMatchId = sagaMatchId;
     }
 
     public boolean isForward() { return Orient.isForward(); }
     public boolean isReverse() { return Orient.isReverse(); }
 
-    public void markAsIndel() { mIndelBased = true; }
+    public void setIndelStatus(boolean isIndel) { mIndelBased = isIndel; }
     public boolean indelBased() { return mIndelBased; }
 
     public void setIndelCoords(final IndelCoords indelCoords) { mIndelCoords = indelCoords; }
@@ -132,13 +132,13 @@ public class Junction implements Comparable<Junction>
 
     public boolean isSagaMatched()
     {
-        return mSagaMatchVariantId != null;
+        return mSagaMatchId != null;
     }
 
     @Nullable
     public String sagaMatch()
     {
-        return mSagaMatchVariantId;
+        return mSagaMatchId;
     }
 
     public boolean lower(final Junction other)

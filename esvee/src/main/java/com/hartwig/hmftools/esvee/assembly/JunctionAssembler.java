@@ -9,7 +9,7 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_SPLIT_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.PRIMARY_ASSEMBLY_SPLIT_MIN_READ_SUPPORT_PERC;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.findIndelExtensionReads;
-import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.hasIndelJunctionReads;
+import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.setIndelStatus;
 import static com.hartwig.hmftools.esvee.assembly.LineUtils.isLineWithLocalAlignedInsert;
 import static com.hartwig.hmftools.esvee.assembly.SeqTechUtils.findSbxPossibleDuplicates;
 import static com.hartwig.hmftools.esvee.assembly.SeqTechUtils.passSbxDistinctPrimePositionsFilter;
@@ -54,11 +54,8 @@ public class JunctionAssembler
         // find prominent reads to establish the extension sequence, taking any read meeting min soft-clip lengths
         // and repetitive indels
 
-        if(!mJunction.indelBased() && hasIndelJunctionReads(mJunction, rawReads))
-        {
-            // fall-back in case Prep didn't set this state or junctions are loaded from config
-            mJunction.markAsIndel();
-        }
+        if(!mJunction.DiscordantOnly) // allow extension candidate read to override indel status set in prep
+            setIndelStatus(mJunction, rawReads);
 
         List<Read> junctionReads = Lists.newArrayList();
         List<Read> extensionReads = Lists.newArrayList();

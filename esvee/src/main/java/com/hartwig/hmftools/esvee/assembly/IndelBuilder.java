@@ -2,16 +2,17 @@ package com.hartwig.hmftools.esvee.assembly;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
-import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_INDEL_UNLINKED_ASSEMBLY_INDEL_PERC;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_INDEL_UNLINKED_ASSEMBLY_MIN_LENGTH;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_READ_OVERLAP_BASES;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.INDEL_TO_SC_MIN_SIZE_SOFTCLIP;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.getReadIndexAtReferencePosition;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.NO_LINK;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.UNSET;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;
+import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 
 import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.M;
@@ -22,6 +23,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.esvee.assembly.read.ReadUtils;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.types.SupportType;
@@ -33,11 +35,46 @@ import htsjdk.samtools.CigarElement;
 
 public final class IndelBuilder
 {
-    public static boolean hasIndelJunctionReads(final Junction junction, final List<Read> reads)
+    public static void setIndelStatus(final Junction junction, final List<Read> reads)
     {
-        return reads.stream()
-                .filter(x -> x.indelCoords() != null && x.indelCoords().Length >= MIN_INDEL_LENGTH)
-                .anyMatch(x -> x.indelCoords().matchesJunction(junction.Position, junction.Orient));
+        int softClippedCount = 0;
+        int matchedIndelCount = 0;
+
+        for(Read read : reads)
+        {
+            if(read.indelCoords() != null && read.indelCoords().Length >= MIN_INDEL_LENGTH
+            && read.indelCoords().matchesJunction(junction.Position, junction.Orient))
+            {
+                ++matchedIndelCount;
+            }
+            else if(ReadUtils.recordSoftClipsAtJunction(read, junction))
+            {
+                if(junction.isForward() && read.rightClipLength() >= MIN_VARIANT_LENGTH)
+                {
+                    ++softClippedCount;
+                }
+                else if(junction.isForward() && read.leftClipLength() >= MIN_VARIANT_LENGTH)
+                {
+                    ++softClippedCount;
+                }
+            }
+        }
+
+        // over-turn the classification if the majority of reads suggest the other way
+        if(junction.indelBased())
+        {
+            if(matchedIndelCount < ASSEMBLY_MIN_READ_SUPPORT && softClippedCount > ASSEMBLY_MIN_READ_SUPPORT)
+                junction.setIndelStatus(false);
+            else if(softClippedCount > matchedIndelCount * 2)
+                junction.setIndelStatus(false);
+        }
+        else
+        {
+            if(softClippedCount < ASSEMBLY_MIN_READ_SUPPORT && matchedIndelCount > ASSEMBLY_MIN_READ_SUPPORT)
+                junction.setIndelStatus(true);
+            else if(matchedIndelCount > softClippedCount * 2)
+                junction.setIndelStatus(true);
+        }
     }
 
     public static void findIndelExtensionReads(
