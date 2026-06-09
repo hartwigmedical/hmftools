@@ -19,7 +19,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.bam.SamRecordUtils;
 import com.hartwig.hmftools.common.bwa.BwaMemAlignParams;
@@ -27,6 +26,7 @@ import com.hartwig.hmftools.common.bwa.BwaMemAligner;
 import com.hartwig.hmftools.common.bwa.IBwaMemAligner;
 
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.Cigar;
@@ -99,16 +99,18 @@ public class SagaSequenceMatcher
     }
 
     @Nullable
-    private SagaMatchBySequence matchFromAlignments(final byte[] sequence, List<BwaMemAlignment> alignments,
+    private SagaMatchBySequence matchFromAlignments(final byte[] sequence, List<BwaMemAlignment> rawAlignments,
             List<Integer> junctionOffsets)
     {
-        Stream<MatchCandidate> candidates = alignments.stream()
+        List<MatchCandidate> candidates = rawAlignments.stream()
                 .map(alignment -> wrapAlignment(alignment, sequence.length))
                 .filter(Objects::nonNull)
                 .map(alignment -> evaluateAlignment(alignment, junctionOffsets))
-                .filter(Objects::nonNull)
-                .sorted(new MatchCandidateComparator(sequence.length));
-        return candidates.findFirst()
+                .sorted(new MatchCandidateComparator(sequence.length))
+                .toList();
+        return candidates.stream()
+                .filter(MatchCandidate::isAccepted)
+                .findFirst()
                 .map(candidate -> new SagaMatchBySequence(candidate.variant(), candidate.cigar(), candidate.alignScore()))
                 .orElse(null);
     }
@@ -116,7 +118,8 @@ public class SagaSequenceMatcher
     private record MatchCandidate(
             Alignment alignment,
             List<List<Integer>> esveeJunctionOverlaps,
-            List<List<Integer>> sagaJunctionOverlaps)
+            List<List<Integer>> sagaJunctionOverlaps,
+            List<String> filters)
     {
         public SagaAssembly sagaAssembly()
         {
@@ -137,6 +140,18 @@ public class SagaSequenceMatcher
         {
             return alignment.alignScore();
         }
+
+        public boolean isAccepted()
+        {
+            return filters.isEmpty();
+        }
+
+        @NotNull
+        @Override
+        public String toString()
+        {
+            return String.format("MatchCandidate(variant=\"%s\", cigar=%s, alignScore=%d, filters=%s)", variant(), cigar(), alignScore(), filters);
+        }
     }
 
     private record MatchCandidateComparator(int sequenceLength) implements Comparator<MatchCandidate>
@@ -144,6 +159,11 @@ public class SagaSequenceMatcher
         @Override
         public int compare(final MatchCandidate o1, final MatchCandidate o2)
         {
+            if(o1.isAccepted() != o2.isAccepted())
+            {
+                return o1.isAccepted() ? -1 : 1;
+            }
+
             // Higher alignment score is better.
             int res = Integer.compare(-o1.alignScore(), -o2.alignScore());
             if(res != 0)
@@ -239,23 +259,25 @@ public class SagaSequenceMatcher
 
     private MatchCandidate evaluateAlignment(final Alignment alignment, final List<Integer> seqJunctionOffsets)
     {
+        List<String> filters = new ArrayList<>();
+
         // ESVEE assemblies are implied as forward strand and so are SAGA assemblies, so there should never be a reverse strand match.
         if(!alignment.isForward())
         {
-            return null;
+            filters.add("reverse_strand");
         }
 
         // Only match if the majority of the sequences align, where possible.
         // I.e. don't allow a small subsequence match where much more sequence was possible to match.
         if(!isAlignLengthOk(alignment))
         {
-            return null;
+            filters.add("aligned_length");
         }
 
         // Low alignment score means low sequence similarity, so we think this is not a good match.
         if(!isAlignScoreOk(alignment))
         {
-            return null;
+            filters.add("align_score");
         }
 
         // The novel sequence created by the variant junction needs to be included in the alignment.
@@ -264,7 +286,7 @@ public class SagaSequenceMatcher
                 seqJunctionOffsets.stream().map(offset -> calcJunctionOverlap(alignment.seqStart(), alignment.seqEnd(), offset)).toList();
         if(!isJunctionOverlapOk(seqJunctionOverlaps))
         {
-            return null;
+            filters.add("esvee_junction_overlap");
         }
 
         List<List<Integer>> sagaJunctionOverlaps = alignment.sagaAssembly().junctionOffsets()
@@ -273,7 +295,7 @@ public class SagaSequenceMatcher
                 .toList();
         if(!isJunctionOverlapOk(sagaJunctionOverlaps))
         {
-            return null;
+            filters.add("saga_junction_overlap");
         }
 
         // Ensure there are no large indels near the junction.
@@ -282,10 +304,10 @@ public class SagaSequenceMatcher
         if(!checkIndelsNotNearJunctions(alignment.cigar(), alignment.sagaStart(), seqJunctionOffsets, alignment.sagaAssembly()
                 .junctionOffsets()))
         {
-            return null;
+            filters.add("indel_near_junction");
         }
 
-        return new MatchCandidate(alignment, seqJunctionOverlaps, sagaJunctionOverlaps);
+        return new MatchCandidate(alignment, seqJunctionOverlaps, sagaJunctionOverlaps, filters);
     }
 
     private int calcMaxUnalignedBases(int assemblyLength1, int assemblyLength2)
