@@ -1,5 +1,3 @@
-import logging
-import sys
 import time
 import matplotlib.pyplot as plt
 import numpy as np
@@ -10,15 +8,7 @@ from torch import nn
 from torchvision.io import read_image
 from torchvision.transforms import v2 # use v2 as it claims to be faster
 import vchord_model
-
-logger = logging.getLogger(__name__)
-
-logging.basicConfig(stream=sys.stdout,
-                    format='%(asctime)s %(levelname)5s - %(message)s',
-                    datefmt='%Y-%m-%d %H:%M:%S',
-                    level=logging.DEBUG)
-
-logger.setLevel(logging.DEBUG)
+from common import LOGGER
 
 IMAGE_SIZE = 512
 NUM_CANCER_TYPES = 5
@@ -88,12 +78,12 @@ class HrdDataset(data_utils.Dataset):
 
         transform = make_transform(image_size)
 
-        logger.info(f"start loading images, augment={augment}")
+        LOGGER.info(f"start loading images, augment={augment}")
         # load all the images into an array
         for idx, row in df.iterrows():
 
             if idx % 50 == 0:
-                logger.debug(f"[{idx+1}/{len(df)}] Loading: {row['circosPngPath']}")
+                LOGGER.debug(f"[{idx + 1}/{len(df)}] Loading: {row['circosPngPath']}")
 
             self.image_tensors.append(image_to_tensor(row["circosPngPath"], image_size, transform))
             self.type_tensors.append(cancer_type_to_tensor(row["primaryTumorLocation"], row["purity"]))
@@ -106,7 +96,7 @@ class HrdDataset(data_utils.Dataset):
 
         elapsed_sec = int(time.time() - start)
         minute, second = divmod(elapsed_sec, 60)
-        logger.info(f"loading dataset of size {len(self)}, hrd={num_hrd}, took {minute:.0f}m {second:.0f}s")
+        LOGGER.info(f"loading dataset of size {len(self)}, hrd={num_hrd}, took {minute:.0f}m {second:.0f}s")
 
     def __len__(self) -> int:
         return len(self.image_tensors)
@@ -177,7 +167,7 @@ class EpochStats:
         self.true_neg += ((1 - pred) * (1 - target)).sum().item()
 
     def log(self, name: str, epoch: int) -> None:
-        logger.info(f"[{name} {epoch:>4d}]    loss: {self.loss:>8.5f}    "
+        LOGGER.info(f"[{name} {epoch:>4d}]    loss: {self.loss:>8.5f}    "
                     f"acc:{self.accuracy * 100:>6.2f}% [{self.correct:>4d}/{self.count:>4d}]    "
                     f"TP:{self.true_pos_rate * 100:>6.2f}% [{self.true_pos:>4d}/{self.num_pos:>4d}]    "
                     f"TN:{self.true_neg_rate * 100:>6.2f}% [{self.true_neg:>4d}/{self.num_neg:>4d}]")
@@ -197,7 +187,7 @@ def create_dataloader(df: pd.DataFrame, image_size: int, batch_size: int, augmen
     train_df[["sampleId"]].to_csv("train_set.tsv.gz", sep="\t", index=False)
     test_df[["sampleId"]].to_csv("test_set.tsv.gz", sep="\t", index=False)
 
-    logger.info(f"train size: {len(train_df)}, test size: {len(test_df)}, batch size: {batch_size}, augment: {augment}")
+    LOGGER.info(f"train size: {len(train_df)}, test size: {len(test_df)}, batch size: {batch_size}, augment: {augment}")
 
     # Create data loaders.
     train_dataset = HrdDataset(train_df, image_size, augment=augment, hrd_sample_dup=hrd_sample_dup)
@@ -254,15 +244,15 @@ def train_model(model: nn.Module, train_dataloader: data_utils.DataLoader, test_
     train_stats_list = []
     test_stats_list = []
 
-    logger.info(f"start training, num epochs={num_epochs}")
+    LOGGER.info(f"start training, num epochs={num_epochs}")
 
     # print the optimizer params
     optimizer_params = {k:v for (k,v) in optimizer.param_groups[0].items() if isinstance(v, (int, float))}
-    logger.info(f"optimizer={optimizer.__class__.__name__}, params={optimizer_params}")
+    LOGGER.info(f"optimizer={optimizer.__class__.__name__}, params={optimizer_params}")
 
     # print the lr scheduler params
     try:
-        logger.info(f"lr scheduler={scheduler.__class__.__name__}, states={scheduler.state_dict()}")
+        LOGGER.info(f"lr scheduler={scheduler.__class__.__name__}, states={scheduler.state_dict()}")
     except NameError:
         pass
 
@@ -279,7 +269,7 @@ def train_model(model: nn.Module, train_dataloader: data_utils.DataLoader, test_
         should_log = epoch % 100 == 0
 
         # if should_log:
-        logger.info(f"-----------------------------------------"
+        LOGGER.info(f"-----------------------------------------"
                     f" Epoch {epoch:>4d}  [lr={optimizer.param_groups[0]['lr']:.6f}] "
                     f"-----------------------------------------")
 
@@ -293,7 +283,7 @@ def train_model(model: nn.Module, train_dataloader: data_utils.DataLoader, test_
 
     elapsed_min = (time.time() - start) / 60
     hours, minutes = divmod(elapsed_min, 60)
-    logger.info(f"training complete! time taken: {hours:.0f}h {minutes:.0f}m")
+    LOGGER.info(f"training complete! time taken: {hours:.0f}h {minutes:.0f}m")
 
     # create a df for the epoch data
     epoch_df = pd.DataFrame()
@@ -412,7 +402,7 @@ def train_main(sample_tsv: str, purple_root: str, epochs: int, batch_size: int, 
     df = filter_df(df)
 
     if starting_model:
-        logger.info(f"starting model: {starting_model}")
+        LOGGER.info(f"starting model: {starting_model}")
         model = torch.jit.load(starting_model, map_location=torch.device('cpu'))
     else:
         model = vchord_model.HrdModel(dropout_rate, NUM_CANCER_TYPES)
@@ -447,8 +437,8 @@ def main() -> None:
     parser.add_argument('--starting_model', help='starting from this model instead of make a new one', default=None)
     args = parser.parse_args()
 
-    logger.info(f"using {device} device")
-    logger.info(f"training cnn hrd, epochs={args.epochs}, batch_size={args.batch_size}, " +
+    LOGGER.info(f"using {device} device")
+    LOGGER.info(f"training cnn hrd, epochs={args.epochs}, batch_size={args.batch_size}, " +
           f"dropout_rate={args.dropout_rate}, hrd_sample_dup={args.hrd_sample_duplication}, test_fraction={args.test_fraction}, " +
           f"use_nesterov={args.use_nesterov}, starting_model={args.starting_model}")
     train_main(args.sample_tsv, args.purple_root, args.epochs, args.batch_size, args.dropout_rate,

@@ -1,20 +1,10 @@
-import logging
-import sys
 import os
 import pandas as pd
 import torch
 import torch.utils.data as data_utils
 from torchvision.io import read_image
 import vchord_train
-
-logger = logging.getLogger(__name__)
-
-logging.basicConfig(stream=sys.stdout,
-                    format='%(asctime)s %(levelname)5s - %(message)s',
-                    datefmt='%Y-%m-%d %H:%M:%S',
-                    level=logging.DEBUG)
-
-logger.setLevel(logging.DEBUG)
+from common import LOGGER
 
 # Get cpu or gpu device for prediction
 device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
@@ -79,14 +69,14 @@ def predict_batch(model: torch.nn.Module, dataloader: data_utils.DataLoader, num
                     predictions[idx] = float(probs[i])
 
             num_processed += len(idx_batch)
-            logger.info(f"Processed batch {batch_idx + 1}/{num_batches}, {num_processed}/{num_samples} samples")
+            LOGGER.info(f"Processed batch {batch_idx + 1}/{num_batches}, {num_processed}/{num_samples} samples")
 
     return predictions
 
 
 def load_model(model_path: str) -> torch.nn.Module:
     """Load trained model from file"""
-    logger.info(f"Loading model from {model_path}")
+    LOGGER.info(f"Loading model from {model_path}")
     model = torch.jit.load(model_path, map_location=torch.device(device))
     model = model.to(device)
     model.eval()
@@ -112,11 +102,11 @@ def log_prediction_summary(df: pd.DataFrame) -> None:
     num_hrd = (df["cnnPred"] > 0.5).sum()
     num_hrp = (df["cnnPred"] <= 0.5).sum()
 
-    logger.info(f"Prediction summary:")
-    logger.info(f"  Predicted: {num_predicted}/{len(df)}")
-    logger.info(f"  Missing images: {num_missing}")
-    logger.info(f"  HR_DEFICIENT: {num_hrd}")
-    logger.info(f"  HR_PROFICIENT: {num_hrp}")
+    LOGGER.info(f"Prediction summary:")
+    LOGGER.info(f"  Predicted: {num_predicted}/{len(df)}")
+    LOGGER.info(f"  Missing images: {num_missing}")
+    LOGGER.info(f"  HR_DEFICIENT: {num_hrd}")
+    LOGGER.info(f"  HR_PROFICIENT: {num_hrp}")
 
 
 def predict_main(sample_tsv: str, purple_root: str, model_path: str, output_tsv: str,
@@ -133,9 +123,9 @@ def predict_main(sample_tsv: str, purple_root: str, model_path: str, output_tsv:
         train_set_tsv: Optional path to train_set.tsv.gz to mark training samples
     """
     # Load samples
-    logger.info(f"Loading samples from {sample_tsv}")
+    LOGGER.info(f"Loading samples from {sample_tsv}")
     df = pd.read_csv(sample_tsv, sep='\t')
-    logger.info(f"Loaded {len(df)} samples")
+    LOGGER.info(f"Loaded {len(df)} samples")
 
     # Load model
     model = load_model(model_path)
@@ -146,7 +136,7 @@ def predict_main(sample_tsv: str, purple_root: str, model_path: str, output_tsv:
     dataloader = data_utils.DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=0)
 
     # Run predictions
-    logger.info(f"Running predictions with batch_size={batch_size} on {device}")
+    LOGGER.info(f"Running predictions with batch_size={batch_size} on {device}")
     predictions = predict_batch(model, dataloader, len(df))
 
     # Process predictions
@@ -154,12 +144,12 @@ def predict_main(sample_tsv: str, purple_root: str, model_path: str, output_tsv:
 
     # Merge training set info if provided
     if train_set_tsv:
-        logger.info(f"Loading training set from {train_set_tsv}")
+        LOGGER.info(f"Loading training set from {train_set_tsv}")
         train_df = pd.read_csv(train_set_tsv, sep='\t')
         df["inTrainingSet"] = df["sampleId"].isin(train_df["sampleId"])
 
     # Save results
-    logger.info(f"Saving predictions to {output_tsv}")
+    LOGGER.info(f"Saving predictions to {output_tsv}")
     df.to_csv(output_tsv, sep='\t', index=False)
 
     # Log summary
@@ -177,7 +167,7 @@ def main() -> None:
     parser.add_argument('--train_set_tsv', help='Optional path to train_set.tsv.gz to mark training samples', default=None)
     args = parser.parse_args()
 
-    logger.info(f"Using {device} device")
+    LOGGER.info(f"Using {device} device")
     predict_main(args.sample_tsv, args.purple_root, args.model_path, args.output_tsv,
                  args.batch_size, args.train_set_tsv)
 
