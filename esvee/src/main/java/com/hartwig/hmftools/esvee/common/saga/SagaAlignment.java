@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.bam.CigarUtils.rightClipLength;
 import com.hartwig.hmftools.common.bam.SamRecordUtils;
 
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
+import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.SAMFlag;
@@ -74,5 +75,14 @@ public record SagaAlignment(
     public int rightUnaligned()
     {
         return min(queryLength - queryEnd(), sagaLength() - sagaEnd());
+    }
+
+    @NotNull
+    @Override
+    public String toString()
+    {
+        return String.format(
+                "SagaAlignment(variant=\"%s\", queryAlign=[%d, %d), sagaAlign=[%d, %d), strand=%s, cigar=%s, alignScore=%d)",
+                sagaAssembly().variant(), queryStart(), queryEnd(), sagaStart(), sagaEnd(), isForward() ? "+" : "-", cigar(), alignScore());
     }
 }
