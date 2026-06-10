@@ -38,7 +38,7 @@ public final class PrepConstants
     public static final int MIN_LINE_SOFT_CLIP_LENGTH = LineElements.LINE_POLY_AT_TEST_LEN;
     public static final double MIN_SOFT_CLIP_HIGH_QUAL_PERC = 0.75;
     public static final int MAX_SOFT_CLIP_LOW_QUAL_COUNT = 5;
-    public static final int MIN_INSERT_LENGTH_SUPPORT = 10;
+    public static final int MIN_INDEL_ANCHOR_LENGTH = 10;
     public static final int SUPP_SHORT_ALIGNMENT_MIN_MAP_QUAL = 10;
 
     public static final int REPEAT_BREAK_CHECK_LENGTH = 9;

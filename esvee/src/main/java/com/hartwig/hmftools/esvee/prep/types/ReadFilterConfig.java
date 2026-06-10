@@ -9,11 +9,9 @@ import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MAX_SUPPORT_FRAGMENT_DISTANCE;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_ALIGNMENT_BASES;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_INSERT_ALIGNMENT_OVERLAP;
-import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_INSERT_LENGTH_SUPPORT;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_JUNCTION_SUPPORT;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_SOFT_CLIP_HIGH_QUAL_PERC;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_SOFT_CLIP_LENGTH;
-import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_SUPPORTING_READ_DISTANCE;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
@@ -28,9 +26,6 @@ public class ReadFilterConfig
     public final int MinIndelLength;
     public final int MinSoftClipLength;
     public final double MinSoftClipHighQualPerc;
-
-    // supporting read config
-    public final int MinInsertLengthSupport;
 
     // final junction filtering
     public final int MinJunctionSupport;
@@ -52,8 +47,6 @@ public class ReadFilterConfig
         MinSoftClipLength = minSoftClipLength;
         MinIndelLength = minIndelLength;
         MinSoftClipHighQualPerc = minSoftClipHighQualPerc;
-
-        MinInsertLengthSupport = MIN_INSERT_LENGTH_SUPPORT;
         MinJunctionSupport = minJunctionSupport;
 
         mMaxSupportingFragmentDistance = DEFAULT_MAX_FRAGMENT_LENGTH;

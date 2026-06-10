@@ -284,11 +284,21 @@ public class JunctionsTest
         addRead(read2, JUNCTION);
 
         // and a more complicated one
-
         PrepRead read3 = PrepRead.from(createSamRecord(
                 READ_ID_GENERATOR.nextId(), CHR_1, 210, REF_BASES.substring(0, 100), "5S10M2D10M3I10M35I10M2S"));
 
         addRead(read3, JUNCTION);
+
+        // not anchored with enough bases
+        PrepRead read4a = PrepRead.from(createSamRecord(
+                READ_ID_GENERATOR.nextId(), CHR_1, 310, REF_BASES.substring(0, 50), "9M40D41M"));
+
+        addRead(read4a, JUNCTION);
+
+        PrepRead read4b = PrepRead.from(createSamRecord(
+                READ_ID_GENERATOR.nextId(), CHR_1, 310, REF_BASES.substring(0, 50), "41M40D9M"));
+
+        addRead(read4b, JUNCTION);
 
         mJunctionTracker.assignJunctionFragmentsAndSupport();
 
