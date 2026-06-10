@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.bam.CigarUtils.rightClipLength;
 import static com.hartwig.hmftools.esvee.common.SvConstants.SAGA_ALIGN_JUNCTION_INDEL_DISTANCE;
 import static com.hartwig.hmftools.esvee.common.SvConstants.SAGA_ALIGN_JUNCTION_INDEL_MAX_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.SAGA_ALIGN_JUNCTION_OVERLAP_MIN;
+import static com.hartwig.hmftools.esvee.common.SvConstants.SAGA_ALIGN_JUNCTION_OVERLAP_MIN_LOWER;
 import static com.hartwig.hmftools.esvee.common.SvConstants.SAGA_ALIGN_LENGTH_MIN_RATIO;
 import static com.hartwig.hmftools.esvee.common.SvConstants.SAGA_ALIGN_SCORE_MIN_BASELINE;
 import static com.hartwig.hmftools.esvee.common.SvConstants.SAGA_ALIGN_SCORE_MIN_RATIO;
@@ -53,7 +54,8 @@ public class SagaSequenceMatcher
             double alignLengthRatioMin,
             int alignScoreMin,
             double alignScoreRatioMin,
-            int junctionOverlapMin
+            int junctionOverlapMin,
+            int junctionOverlapMinLower
     )
     {
         public Config
@@ -76,7 +78,8 @@ public class SagaSequenceMatcher
                 SAGA_ALIGN_LENGTH_MIN_RATIO,
                 SAGA_ALIGN_SCORE_MIN_BASELINE,
                 SAGA_ALIGN_SCORE_MIN_RATIO,
-                SAGA_ALIGN_JUNCTION_OVERLAP_MIN
+                SAGA_ALIGN_JUNCTION_OVERLAP_MIN,
+                SAGA_ALIGN_JUNCTION_OVERLAP_MIN_LOWER
         );
     }
 
@@ -86,26 +89,26 @@ public class SagaSequenceMatcher
     // junctionOffset[0] = 3
     // junctionOffset[1] = 6
     @Nullable
-    public SagaMatchBySequence matchBySequence(final byte[] sequence, List<Integer> junctionOffsets)
+    public SagaMatchBySequence matchBySequence(final byte[] sequence, final List<Integer> junctionOffsets, boolean lowerJunctionOverlap)
     {
         List<BwaMemAlignment> alignments = mAligner.alignSequence(sequence);
-        return matchFromAlignments(sequence, alignments, junctionOffsets);
+        return matchFromAlignments(sequence, alignments, junctionOffsets, lowerJunctionOverlap);
     }
 
     @Nullable
-    public SagaMatchBySequence matchBySequence(final String sequence, List<Integer> junctionOffsets)
+    public SagaMatchBySequence matchBySequence(final String sequence, final List<Integer> junctionOffsets, boolean lowerJunctionOverlap)
     {
-        return matchBySequence(sequence.getBytes(), junctionOffsets);
+        return matchBySequence(sequence.getBytes(), junctionOffsets, lowerJunctionOverlap);
     }
 
     @Nullable
-    private SagaMatchBySequence matchFromAlignments(final byte[] sequence, List<BwaMemAlignment> rawAlignments,
-            List<Integer> junctionOffsets)
+    private SagaMatchBySequence matchFromAlignments(final byte[] sequence, final List<BwaMemAlignment> rawAlignments,
+            final List<Integer> junctionOffsets, boolean lowerJunctionOverlap)
     {
         List<MatchCandidate> candidates = rawAlignments.stream()
                 .map(alignment -> wrapAlignment(alignment, sequence.length))
                 .filter(Objects::nonNull)
-                .map(alignment -> evaluateAlignment(alignment, junctionOffsets))
+                .map(alignment -> evaluateAlignment(alignment, junctionOffsets, lowerJunctionOverlap))
                 .sorted(new MatchCandidateComparator(sequence.length))
                 .toList();
         return candidates.stream()
@@ -257,7 +260,8 @@ public class SagaSequenceMatcher
         return new Alignment(alignment, cigar, seqLength, sagaAssembly);
     }
 
-    private MatchCandidate evaluateAlignment(final Alignment alignment, final List<Integer> seqJunctionOffsets)
+    private MatchCandidate evaluateAlignment(final Alignment alignment, final List<Integer> seqJunctionOffsets,
+            boolean lowerJunctionOverlap)
     {
         List<String> filters = new ArrayList<>();
 
@@ -284,7 +288,7 @@ public class SagaSequenceMatcher
         // Otherwise, we could align onto the surrounding ref bases which could be similar, but the variant is different.
         List<List<Integer>> seqJunctionOverlaps =
                 seqJunctionOffsets.stream().map(offset -> calcJunctionOverlap(alignment.seqStart(), alignment.seqEnd(), offset)).toList();
-        if(!isJunctionOverlapOk(seqJunctionOverlaps))
+        if(!isJunctionOverlapOk(seqJunctionOverlaps, lowerJunctionOverlap))
         {
             filters.add("esvee_junction_overlap");
         }
@@ -293,7 +297,7 @@ public class SagaSequenceMatcher
                 .stream()
                 .map(offset -> calcJunctionOverlap(alignment.sagaStart(), alignment.sagaEnd(), offset))
                 .toList();
-        if(!isJunctionOverlapOk(sagaJunctionOverlaps))
+        if(!isJunctionOverlapOk(sagaJunctionOverlaps, lowerJunctionOverlap))
         {
             filters.add("saga_junction_overlap");
         }
@@ -346,14 +350,20 @@ public class SagaSequenceMatcher
         return List.of(junctionOffset - alignStart, alignEnd - junctionOffset);
     }
 
-    private boolean isJunctionOverlapOk(final List<List<Integer>> overlaps)
+    private boolean isJunctionOverlapOk(final List<List<Integer>> overlaps, boolean lowerJunctionOverlap)
     {
         // Require the alignment to cover the junction +/- some tolerance bases.
         // At least one junction must be covered in this manner. We don't require all the junctions to be covered because we could be
         // matching just one side of the variant (e.g. for junction assembly, or an SGL).
-        int minOverlap = mConfig.junctionOverlapMin();
+        int minOverlap = calcJunctionOverlapMin(lowerJunctionOverlap);
         return overlaps.stream()
                 .anyMatch(junctionOverlaps -> junctionOverlaps.stream().allMatch(overlap -> overlap >= minOverlap));
+    }
+
+    private int calcJunctionOverlapMin(boolean lowerJunctionOverlap)
+    {
+        // For LINE assemblies, the extension is allowed to be shorter.
+        return lowerJunctionOverlap ? mConfig.junctionOverlapMinLower() : mConfig.junctionOverlapMin();
     }
 
     private record ElementWithPositions(

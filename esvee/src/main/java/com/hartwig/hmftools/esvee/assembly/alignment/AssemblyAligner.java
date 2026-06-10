@@ -124,7 +124,7 @@ public class AssemblyAligner extends ThreadTask
 
         if(mSagaMatcher != null)
         {
-            SagaMatchBySequence sagaMatch = mSagaMatcher.matchBySequence(assemblyAlignment.fullSequence(), assemblyAlignment.linkIndices());
+            SagaMatchBySequence sagaMatch = mSagaMatcher.matchBySequence(assemblyAlignment.fullSequence(), assemblyAlignment.linkIndices(), false);
             assemblyAlignment.setSagaMatch(sagaMatch);
         }
 
