@@ -17,10 +17,8 @@ import com.hartwig.hmftools.finding.datamodel.RnaFusion;
 import com.hartwig.hmftools.finding.datamodel.RnaFusionBuilder;
 import com.hartwig.hmftools.finding.datamodel.RnaGeneExpression;
 import com.hartwig.hmftools.finding.datamodel.RnaGeneExpressionBuilder;
-import com.hartwig.hmftools.finding.datamodel.RnaStatistics;
-import com.hartwig.hmftools.finding.datamodel.RnaStatisticsBuilder;
-import com.hartwig.hmftools.finding.datamodel.finding.FindingItem;
-import com.hartwig.hmftools.finding.datamodel.finding.FindingItemBuilder;
+import com.hartwig.hmftools.finding.datamodel.RnaQc;
+import com.hartwig.hmftools.finding.datamodel.RnaQcBuilder;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingList;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingListBuilder;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
@@ -31,18 +29,14 @@ import org.jetbrains.annotations.Nullable;
 
 final class RnaFindingFactory
 {
-    static FindingItem<com.hartwig.hmftools.finding.datamodel.RnaStatistics> createRnaStatistics(
-            @Nullable IsofoxRecord isofox, FindingStatus findingStatus)
+    static @Nullable RnaQc createRnaQc(@Nullable IsofoxRecord isofox)
     {
         if(isofox == null)
         {
-            return FindingUtil.notAvailableFindingItem(Set.of(RNA_REQUIRED));
+            return null;
         }
 
-        return FindingItemBuilder.<com.hartwig.hmftools.finding.datamodel.RnaStatistics>builder()
-                .status(rnaStatus(isofox, findingStatus))
-                .finding(convertRnaStatistics(isofox.summary()))
-                .build();
+        return convertRnaQc(isofox.summary());
     }
 
     static FindingList<RnaGeneExpression> createRnaGeneExpressionFindings(@Nullable IsofoxRecord isofox,
@@ -97,10 +91,10 @@ final class RnaFindingFactory
                 .build();
     }
 
-    private static RnaStatistics convertRnaStatistics(com.hartwig.hmftools.datamodel.isofox.RnaStatistics statistics)
+    private static RnaQc convertRnaQc(com.hartwig.hmftools.datamodel.isofox.RnaStatistics statistics)
     {
-        SortedSet<RnaStatistics.QcStatus> qcErrors = new TreeSet<>();
-        SortedSet<RnaStatistics.QcStatus> qcWarnings = new TreeSet<>();
+        SortedSet<RnaQc.QcStatus> qcErrors = new TreeSet<>();
+        SortedSet<RnaQc.QcStatus> qcWarnings = new TreeSet<>();
 
         statistics.qcStatus().forEach(qcStatus -> {
             switch(qcStatus)
@@ -108,19 +102,18 @@ final class RnaFindingFactory
                 case PASS:
                     break;
                 case FAIL_LOW_COVERAGE:
-                    qcErrors.add(RnaStatistics.QcStatus.FAIL_LOW_COVERAGE);
+                    qcErrors.add(RnaQc.QcStatus.FAIL_LOW_COVERAGE);
                     break;
                 case WARN_DUPLICATE_RATE:
-                    qcWarnings.add(RnaStatistics.QcStatus.WARN_DUPLICATE_RATE);
+                    qcWarnings.add(RnaQc.QcStatus.WARN_DUPLICATE_RATE);
                     break;
                 case WARN_SPLICED_GENE_COVERAGE:
-                    qcWarnings.add(RnaStatistics.QcStatus.WARN_SPLICED_GENE_COVERAGE);
+                    qcWarnings.add(RnaQc.QcStatus.WARN_SPLICED_GENE_COVERAGE);
                     break;
             }
         });
 
-        return RnaStatisticsBuilder.builder()
-                .findingKey(FindingKeys.rnaStatistics())
+        return RnaQcBuilder.builder()
                 .errors(qcErrors)
                 .warnings(qcWarnings)
                 .totalFragments(statistics.totalFragments())

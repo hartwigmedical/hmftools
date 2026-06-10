@@ -2,13 +2,10 @@ package com.hartwig.hmftools.finding.datamodel;
 
 import java.util.SortedSet;
 
-import com.hartwig.hmftools.finding.datamodel.finding.Finding;
-
 import jakarta.validation.constraints.NotNull;
 
 @RecordBuilder
-public record RnaStatistics(
-        @NotNull String findingKey,
+public record RnaQc(
         @NotNull SortedSet<QcStatus> warnings,
         @NotNull SortedSet<QcStatus> errors,
         long totalFragments,
@@ -17,7 +14,7 @@ public record RnaStatistics(
         double unsplicedFragmentPercent,
         double altFragmentPercent,
         double chimericFragmentPercent
-) implements Finding
+)
 {
     public enum QcStatus
     {

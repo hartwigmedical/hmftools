@@ -280,10 +280,9 @@ public class TestFindingFactory
     }
 
     @NotNull
-    public static RnaStatisticsBuilder rnaStatisticsBuilder()
+    public static RnaQcBuilder rnaQcBuilder()
     {
-        return RnaStatisticsBuilder.builder()
-                .findingKey("")
+        return RnaQcBuilder.builder()
                 .errors(new TreeSet<>())
                 .warnings(new TreeSet<>())
                 .totalFragments(0)

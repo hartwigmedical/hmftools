@@ -23,7 +23,7 @@ import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeRecord;
 import com.hartwig.hmftools.finding.datamodel.FindingRecord;
 import com.hartwig.hmftools.finding.datamodel.NovelSpliceJunction;
 import com.hartwig.hmftools.finding.datamodel.RnaFusion;
-import com.hartwig.hmftools.finding.datamodel.RnaStatistics;
+import com.hartwig.hmftools.finding.datamodel.RnaQc;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
 
 import org.junit.Ignore;
@@ -104,12 +104,12 @@ public class FindingFactoryTest
                         .build())
                 .build(), null);
 
-        RnaStatistics statistics = findingRecord.rnaStatistics().finding();
-        assertNotNull(statistics);
-        assertTrue(statistics.errors().isEmpty());
-        assertTrue(statistics.warnings().isEmpty());
-        assertEquals(100, statistics.totalFragments());
-        assertEquals(0.4, statistics.chimericFragmentPercent(), 0);
+        RnaQc rnaQc = findingRecord.rnaQc();
+        assertNotNull(rnaQc);
+        assertTrue(rnaQc.errors().isEmpty());
+        assertTrue(rnaQc.warnings().isEmpty());
+        assertEquals(100, rnaQc.totalFragments());
+        assertEquals(0.4, rnaQc.chimericFragmentPercent(), 0);
 
         assertEquals("ERBB2", findingRecord.highExpressionGenes().findings().get(0).gene());
         assertEquals("PTEN", findingRecord.lowExpressionGenes().findings().get(0).gene());
@@ -149,7 +149,8 @@ public class FindingFactoryTest
                         .build())
                 .build(), null);
 
-        assertRnaSampleQcNotReliable(findingRecord.rnaStatistics().status());
+        assertNotNull(findingRecord.rnaQc());
+        assertEquals(Set.of(RnaQc.QcStatus.FAIL_LOW_COVERAGE), findingRecord.rnaQc().errors());
         assertRnaSampleQcNotReliable(findingRecord.highExpressionGenes().status());
         assertRnaSampleQcNotReliable(findingRecord.lowExpressionGenes().status());
         assertRnaSampleQcNotReliable(findingRecord.rnaFusions().status());

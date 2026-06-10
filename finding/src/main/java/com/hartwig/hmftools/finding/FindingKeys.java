@@ -91,11 +91,6 @@ public final class FindingKeys
         return String.format("pharmacoGenotype[%s:%s]", gene, allele);
     }
 
-    public static String rnaStatistics()
-    {
-        return "rnaStatistics";
-    }
-
     public static String rnaGeneExpression(String expressionType, GeneExpression geneExpression)
     {
         return String.format("rnaGeneExpression[%s %s]", expressionType, geneExpression.gene());
