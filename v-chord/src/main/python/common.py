@@ -1,6 +1,7 @@
 import logging
 import sys
 
+import torch
 
 LOGGER = logging.getLogger(__name__)
 
@@ -13,3 +14,5 @@ LOGGER.setLevel(logging.DEBUG)
 
 logging.getLogger('matplotlib').setLevel(logging.WARNING)
 
+
+DEVICE = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"

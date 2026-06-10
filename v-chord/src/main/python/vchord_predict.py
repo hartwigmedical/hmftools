@@ -4,10 +4,7 @@ import torch
 import torch.utils.data as data_utils
 from torchvision.io import read_image
 import vchord_train
-from common import LOGGER
-
-# Get cpu or gpu device for prediction
-device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
+from common import LOGGER, DEVICE
 
 
 class PredictionDataset(data_utils.Dataset):
@@ -56,8 +53,8 @@ def predict_batch(model: torch.nn.Module, dataloader: data_utils.DataLoader, num
     with torch.no_grad():
         for batch_idx, (image_batch, type_batch, idx_batch) in enumerate(dataloader):
             # Move to device
-            image_batch = image_batch.to(device)
-            type_batch = type_batch.to(device)
+            image_batch = image_batch.to(DEVICE)
+            type_batch = type_batch.to(DEVICE)
 
             # Get predictions and apply sigmoid
             logits = model(image_batch, type_batch)
@@ -77,8 +74,8 @@ def predict_batch(model: torch.nn.Module, dataloader: data_utils.DataLoader, num
 def load_model(model_path: str) -> torch.nn.Module:
     """Load trained model from file"""
     LOGGER.info(f"Loading model from {model_path}")
-    model = torch.jit.load(model_path, map_location=torch.device(device))
-    model = model.to(device)
+    model = torch.jit.load(model_path, map_location=torch.device(DEVICE))
+    model = model.to(DEVICE)
     model.eval()
     return model
 
@@ -136,7 +133,7 @@ def predict_main(sample_tsv: str, purple_root: str, model_path: str, output_tsv:
     dataloader = data_utils.DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=0)
 
     # Run predictions
-    LOGGER.info(f"Running predictions with batch_size={batch_size} on {device}")
+    LOGGER.info(f"Running predictions with batch_size={batch_size} on {DEVICE}")
     predictions = predict_batch(model, dataloader, len(df))
 
     # Process predictions
@@ -167,7 +164,7 @@ def main() -> None:
     parser.add_argument('--train_set_tsv', help='Optional path to train_set.tsv.gz to mark training samples', default=None)
     args = parser.parse_args()
 
-    LOGGER.info(f"Using {device} device")
+    LOGGER.info(f"Using {DEVICE} device")
     predict_main(args.sample_tsv, args.purple_root, args.model_path, args.output_tsv,
                  args.batch_size, args.train_set_tsv)
 

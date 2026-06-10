@@ -8,15 +8,12 @@ from torch import nn
 from torchvision.io import read_image
 from torchvision.transforms import v2 # use v2 as it claims to be faster
 import vchord_model
-from common import LOGGER
+from common import LOGGER, DEVICE
 
 IMAGE_SIZE = 512
 NUM_CANCER_TYPES = 5
 
 # select clinical.sampleId, clinical.primaryTumorLocation, chord.BRCA1, chord.BRCA2, chord.hrd, chord.hrStatus, chord.hrdType, chord.remarksHrStatus, chord.remarksHrdType from clinical, chord where clinical.sampleId = chord.sampleId and (clinical.primaryTumorLocation = 'Breast' or clinical.primaryTumorLocation = 'Ovary' or clinical.primaryTumorLocation = 'Fallopian tube' or clinical.primaryTumorLocation = "Prostate" or clinical.primaryTumorLocation = "Pancreas");
-
-# Get cpu or gpu device for training.
-device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
 
 
 def filter_df(df: pd.DataFrame) -> pd.DataFrame:
@@ -109,7 +106,7 @@ class HrdDataset(data_utils.Dataset):
             # otherwise the CPU would struggle with the load and become the bottleneck
             # However if we are not doing transform then we keep it in GPU and move whole batch to GPU
             # in the train / test functions
-            image_tensor = image_tensor.to(device)
+            image_tensor = image_tensor.to(DEVICE)
             image_tensor = self.transform(image_tensor)
         type_tensor = self.type_tensors[idx]
         target_tensor = self.targets[idx]
@@ -332,9 +329,9 @@ def train_model(model: nn.Module, train_dataloader: data_utils.DataLoader, test_
 def train(dataloader: data_utils.DataLoader, model: nn.Module, loss_fn: nn.Module, optimizer: torch.optim.Optimizer, epoch_stats: EpochStats, epoch: int, should_log: bool) -> None:
     model.train()
     for batch, (x1, x2, y) in enumerate(dataloader):
-        x1 = x1.to(device)
-        x2 = x2.to(device)
-        y = y.to(device)
+        x1 = x1.to(DEVICE)
+        x2 = x2.to(DEVICE)
+        y = y.to(DEVICE)
         # Compute prediction error
         pred = model(x1, x2)
 
@@ -367,9 +364,9 @@ def test(dataloader: data_utils.DataLoader, model: nn.Module, loss_fn: nn.Module
 
     with torch.no_grad():
         for x1, x2, y in dataloader:
-            x1 = x1.to(device)
-            x2 = x2.to(device)
-            y = y.to(device)
+            x1 = x1.to(DEVICE)
+            x2 = x2.to(DEVICE)
+            y = y.to(DEVICE)
             pred = model(x1, x2)
 
             epoch_stats.update_loss(loss_fn(pred, y).item(), y.size(dim=0))
@@ -407,7 +404,7 @@ def train_main(sample_tsv: str, purple_root: str, epochs: int, batch_size: int, 
     else:
         model = vchord_model.HrdModel(dropout_rate, NUM_CANCER_TYPES)
 
-    model = model.to(device)
+    model = model.to(DEVICE)
 
     train_dataloader, test_dataloader = create_dataloader(df, image_size=IMAGE_SIZE, batch_size=batch_size, augment=True,
                                                         hrd_sample_dup=hrd_sample_dup, test_fraction=test_fraction)
@@ -437,7 +434,7 @@ def main() -> None:
     parser.add_argument('--starting_model', help='starting from this model instead of make a new one', default=None)
     args = parser.parse_args()
 
-    LOGGER.info(f"using {device} device")
+    LOGGER.info(f"using {DEVICE} device")
     LOGGER.info(f"training cnn hrd, epochs={args.epochs}, batch_size={args.batch_size}, " +
           f"dropout_rate={args.dropout_rate}, hrd_sample_dup={args.hrd_sample_duplication}, test_fraction={args.test_fraction}, " +
           f"use_nesterov={args.use_nesterov}, starting_model={args.starting_model}")
