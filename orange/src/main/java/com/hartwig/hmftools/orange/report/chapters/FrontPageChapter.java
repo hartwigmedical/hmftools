@@ -54,7 +54,9 @@ public class FrontPageChapter implements ReportChapter
     public void render(@NotNull final DocumentContext document) throws IOException
     {
         final float contentWidth = pageSize().getWidth() - (PAGE_MARGIN_LEFT + PAGE_MARGIN_RIGHT);//contentWidth();
+        document.addSpacing(10);
         document.addTable(FrontPageTables.buildSampleSummary(document, mReport, mConfig, contentWidth, mReportResources));
+        document.addSpacing(10);
         document.addTable(FrontPageTables.buildTechnicalSummary(document, mReport, mConfig, contentWidth, mReportResources));
         document.addSpacing(10);
 
@@ -73,15 +75,17 @@ public class FrontPageChapter implements ReportChapter
         float rightFinalY = document.addTableNoAdvance(genomeTable);
 
         // Draw box borders around both sections
-        float bottomY = Math.min(leftFinalY, rightFinalY);
+        float bottomY = Math.min(leftFinalY, rightFinalY) - 20;
         float borderBoxesWidths = nestedTableWidth + 10;
         float borderBoxesHeight = savedY - bottomY;
         drawBoxBorder(document, driverTableLeft - 5, bottomY, borderBoxesWidths, borderBoxesHeight);
         drawBoxBorder(document, genomeTableLeft - 5, bottomY, borderBoxesWidths, borderBoxesHeight);
-        drawBoxBorder(document, driverTableLeft - 10, savedY + 5, contentWidth, -1 * FRONT_CIRCOS_IMAGE_HEIGHT - 15 - borderBoxesHeight);
+        drawBoxBorder(document, driverTableLeft - 10, bottomY - 5, contentWidth, borderBoxesHeight + 10);
+        float circosBorderY = bottomY - 5;
+        drawBoxBorder(document, driverTableLeft - 10, circosBorderY, contentWidth, -1 * FRONT_CIRCOS_IMAGE_HEIGHT - 15);
 
         // Advance cursor to the lower of the two tables
-        document.setCursorY(bottomY - 5);
+        document.setCursorY(bottomY - 10);
 
         // Add circos plot
         document.addImage(
