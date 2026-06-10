@@ -29,7 +29,6 @@ import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
-import com.hartwig.hmftools.esvee.common.saga.SagaMatchBySequence;
 import com.hartwig.hmftools.esvee.common.saga.SagaSequenceMatcher;
 
 import org.jetbrains.annotations.Nullable;
@@ -227,7 +226,7 @@ public class JunctionAssembler
             assembly.buildRepeatInfo();
 
             // check for a SAGA match by sequence, even if a coord match was previously found
-            boolean sagaMatched = matchJunctionAssemblyToSaga(assembly);
+            boolean sagaMatched = mSagaMatcher != null && assembly.matchToSaga(mSagaMatcher);
 
             if(juncThresholdState.UsesLowerSagaLimits)
             {
@@ -394,17 +393,6 @@ public class JunctionAssembler
         }
 
         return false;
-    }
-
-    private boolean matchJunctionAssemblyToSaga(final JunctionAssembly assembly)
-    {
-        if(mSagaMatcher == null)
-            return false;
-
-        int junctionOffset = mJunction.isForward() ? assembly.refBaseLength() : assembly.baseLength() - assembly.refBaseLength();
-        SagaMatchBySequence match = mSagaMatcher.matchBySequence(assembly.bases(), List.of(junctionOffset));
-        assembly.setSagaMatch(match);
-        return match != null;
     }
 
     @VisibleForTesting

@@ -33,6 +33,7 @@ import com.hartwig.hmftools.esvee.assembly.RefBaseSeqBuilder;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.common.IndelCoords;
 import com.hartwig.hmftools.esvee.common.saga.SagaMatchBySequence;
+import com.hartwig.hmftools.esvee.common.saga.SagaSequenceMatcher;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -739,6 +740,7 @@ public class JunctionAssembly
         mMergedAssemblies = 0;
         mMismatchReadCount = 0;
         mPhaseGroup = null;
+        mSagaMatch = null;
 
         mStats = new AssemblyStats();
 
@@ -848,9 +850,17 @@ public class JunctionAssembly
         return mSagaMatch;
     }
 
-    public void setSagaMatch(final SagaMatchBySequence match)
+    private void setSagaMatch(final SagaMatchBySequence match)
     {
         mSagaMatch = match;
+    }
+
+    public boolean matchToSaga(final SagaSequenceMatcher sagaMatcher)
+    {
+        int junctionOffset = mJunction.isForward() ? refBaseLength() : baseLength() - refBaseLength();
+        SagaMatchBySequence match = sagaMatcher.matchBySequence(bases(), List.of(junctionOffset));
+        setSagaMatch(match);
+        return match != null;
     }
 
     @VisibleForTesting
