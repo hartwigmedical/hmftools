@@ -1,9 +1,12 @@
+import argparse
 import time
+import random
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import torch
 import torch.utils.data as data_utils
+from sklearn.model_selection import train_test_split
 from torch import nn
 from torchvision.io import read_image
 from torchvision.transforms import v2 # use v2 as it claims to be faster
@@ -12,6 +15,17 @@ from common import LOGGER, DEVICE
 
 IMAGE_SIZE = 512
 NUM_CANCER_TYPES = 5
+RANDOM_SEED = 42
+
+# Set seeds for reproducibility
+torch.manual_seed(RANDOM_SEED)
+torch.cuda.manual_seed_all(RANDOM_SEED)
+np.random.seed(RANDOM_SEED)
+random.seed(RANDOM_SEED)
+
+# For full determinism (may impact performance)
+torch.backends.cudnn.deterministic = True
+torch.backends.cudnn.benchmark = False
 
 # select clinical.sampleId, clinical.primaryTumorLocation, chord.BRCA1, chord.BRCA2, chord.hrd, chord.hrStatus, chord.hrdType, chord.remarksHrStatus, chord.remarksHrdType from clinical, chord where clinical.sampleId = chord.sampleId and (clinical.primaryTumorLocation = 'Breast' or clinical.primaryTumorLocation = 'Ovary' or clinical.primaryTumorLocation = 'Fallopian tube' or clinical.primaryTumorLocation = "Prostate" or clinical.primaryTumorLocation = "Pancreas");
 
@@ -175,10 +189,9 @@ class EpochStats:
 # return (train_dataloader, test_dataloader)
 def create_dataloader(df: pd.DataFrame, image_size: int, batch_size: int, augment: bool, hrd_sample_dup: int, test_fraction: float) -> tuple[data_utils.DataLoader, data_utils.DataLoader]:
     # Using Skicit-learn to split data into training and testing sets
-    from sklearn.model_selection import train_test_split
 
     # Split the data into training and testing sets
-    train_df, test_df = train_test_split(df, test_size=test_fraction, random_state=None)
+    train_df, test_df = train_test_split(df, test_size=test_fraction, random_state=RANDOM_SEED)
 
     # write out the train and test set
     train_df[["sampleId"]].to_csv("train_set.tsv.gz", sep="\t", index=False)
@@ -421,7 +434,6 @@ def train_main(sample_tsv: str, purple_root: str, epochs: int, batch_size: int, 
 
 
 def main() -> None:
-    import argparse
     parser = argparse.ArgumentParser(description="train hrd predictor")
     parser.add_argument('--sample_tsv', help='input tsv file', required=True)
     parser.add_argument('--purple_root', help='path to purple plots', required=True)
