@@ -8,6 +8,12 @@ ARG RUN_SCRIPT=/usr/local/bin/${TOOL_NAME}
 
 USER root
 
+RUN apk update && apk upgrade && apk add \
+    procps \
+    openjdk17
+
+RUN ln -s /usr/local/bin/bash /bin/bash
+
 ADD target/${TOOL_NAME}-${VERSION}-jar-with-dependencies.jar ${JAR}
 
 ## Required so that oncoanalyser can find the jar path. Oncoanalyser assumes:
@@ -16,9 +22,3 @@ ADD target/${TOOL_NAME}-${VERSION}-jar-with-dependencies.jar ${JAR}
 ADD target/entrypoint.sh ${JAVA_DIR}/entrypoint.sh
 RUN ln -sf ${JAVA_DIR}/entrypoint.sh ${RUN_SCRIPT} && chmod +x ${RUN_SCRIPT}
 RUN ln -sf ${JAR} ${JAVA_DIR}/${TOOL_NAME}.jar
-
-RUN apk update && apk upgrade && apk add \
-    procps \
-    openjdk17
-
-RUN ln -s /usr/local/bin/bash /bin/bash
