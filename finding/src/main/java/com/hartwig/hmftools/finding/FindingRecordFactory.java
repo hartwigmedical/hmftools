@@ -13,7 +13,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.SortedMap;
 import java.util.SortedSet;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
@@ -48,6 +50,7 @@ import com.hartwig.hmftools.finding.datamodel.FusionBuilder;
 import com.hartwig.hmftools.finding.datamodel.GainDeletion;
 import com.hartwig.hmftools.finding.datamodel.HomologousRecombination;
 import com.hartwig.hmftools.finding.datamodel.HomologousRecombinationBuilder;
+import com.hartwig.hmftools.finding.datamodel.HomologousRecombinationPredictionBuilder;
 import com.hartwig.hmftools.finding.datamodel.MetaProperties;
 import com.hartwig.hmftools.finding.datamodel.MetaPropertiesBuilder;
 import com.hartwig.hmftools.finding.datamodel.MicrosatelliteStability;
@@ -345,22 +348,19 @@ public class FindingRecordFactory
     {
         if(chord != null)
         {
-            HomologousRecombination.Status hrStatus = hrStatus(chord);
-            boolean isPresent = hrStatus == HomologousRecombination.Status.HR_DEFICIENT;
+            HomologousRecombination.Prediction prediction = createHomologousRecombinationPrediction(chord);
+            boolean isPresent = prediction.status() == HomologousRecombination.Status.HR_DEFICIENT;
             SortedSet<String> drivingGenes = isPresent ? GeneListUtil.genes(smallVariants,
                     gainDeletions,
                     germlineHomozygousDisruptions,
                     Genes.HRD_GENES) : new TreeSet<>();
+            SortedMap<HomologousRecombination.HrdCancerType, HomologousRecombination.Prediction> predictions = new TreeMap<>();
+            predictions.put(prediction.cancerType(), prediction);
             return FindingItemBuilder.<HomologousRecombination>builder()
                     .status(findingStatus)
                     .finding(HomologousRecombinationBuilder.builder()
-                            .findingKey(FindingKeys.homologousRecombination(chord.hrStatus()))
-                            .status(hrStatus)
-                            .hrdValue(ThresholdValueFactory.hrdValue(chord.hrdValue()))
-                            .brca1Value(chord.brca1Value())
-                            .brca2Value(chord.brca2Value())
-                            .hrdType(chord.hrdType())
                             .drivingGenes(drivingGenes)
+                            .predictions(predictions)
                             .build())
                     .build();
         }
@@ -385,6 +385,30 @@ public class FindingRecordFactory
             }
         }
     }
+
+    private static HomologousRecombination.Prediction createHomologousRecombinationPrediction(ChordRecord chord)
+    {
+        HomologousRecombination.Status hrStatus = hrStatus(chord);
+        HomologousRecombination.HrdType hrdType = switch (chord.hrdType())
+        {
+            case "none" -> null;
+            case "BRCA1_type" -> HomologousRecombination.HrdType.BRACA1_TYPE;
+            case "BRCA2_type" -> HomologousRecombination.HrdType.BRACA2_TYPE;
+            case "cannot_be_determined" -> HomologousRecombination.HrdType.CANNOT_BE_DETERMINED;
+            default -> throw new IllegalStateException("Unexpected chord hrdType: " + chord.hrdType());
+        };
+        return HomologousRecombinationPredictionBuilder.builder()
+                .findingKey(FindingKeys.homologousRecombination(chord.hrStatus()))
+                .status(hrStatus)
+                .hrdProbability(ThresholdValueFactory.hrdValue(chord.hrdValue()))
+                .brca1Probability(chord.brca1Value())
+                .brca2Probability(chord.brca2Value())
+                .hrdType(hrdType)
+                .cancerType(HomologousRecombination.HrdCancerType.PAN_CANCER)
+                .build();
+    }
+
+
 
     private static HomologousRecombination.Status hrStatus(ChordRecord chord)
     {
