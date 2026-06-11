@@ -144,7 +144,14 @@ public class DocumentContext
         // draw() returns the final Y position after rendering
         float finalY = table.draw();
         // Update current page in case the table spanned multiple pages
-        mCurrentPage = table.getCurrentPage();
+        if(table.getCurrentPage() != mCurrentPage)
+        {
+            mCurrentPage = table.getCurrentPage();
+            if(mPageEventHandler != null)
+            {
+                mPageEventHandler.onPageStart(mCurrentPage, mDocument);
+            }
+        }
         mCursorY = finalY - 5; // small spacing after table
     }
 

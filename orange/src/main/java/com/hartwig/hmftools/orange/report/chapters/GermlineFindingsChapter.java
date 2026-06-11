@@ -135,7 +135,7 @@ public class GermlineFindingsChapter implements ReportChapter
             Cells cells = new Cells(mReportResources);
             BaseTable table = document.createTable(contentWidth(), null);
             Row<PDPage> titleRow = table.createRow(15f);
-            cells.applyTitleStyle(titleRow.createCell(100, "Chromosomal aberrations (" + count + ")"));
+            cells.applyTitleStyle(titleRow.createCell(100, "Chromosomal Aberrations (" + count + ")"));
             Row<PDPage> dataRow = table.createRow(12f);
             cells.addContentCell(dataRow, 100, germlineAberrationJoiner.toString());
             document.addTable(table);

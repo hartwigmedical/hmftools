@@ -18,7 +18,7 @@ public class Cells
     private static final float CELL_PADDING_LEFT = 2f;
     private static final float CELL_PADDING_RIGHT = 2f;
 
-    public static final float COMPACT_ROW_HEIGHT = 14f;
+    public static final float COMPACT_ROW_HEIGHT = 15f;
 
     private final ReportResources mReportResources;
 

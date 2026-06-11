@@ -13,9 +13,8 @@ import be.quodlibet.boxable.Row;
 
 public class Tables
 {
-    private static final float TABLE_BOTTOM_MARGIN = 20;
     private static final float ROW_HEIGHT = Cells.COMPACT_ROW_HEIGHT;
-    private static final float HEADER_ROW_HEIGHT = 14f;
+    private static final float HEADER_ROW_HEIGHT = 16f;
 
     private final ReportResources mReportResources;
 

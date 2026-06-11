@@ -172,6 +172,7 @@ public class ColoPdfTest
 
         // The driver summary is on the left side of the page, from about 24% to about 50% of the way down.
         String[] driverSummary = page1Ripper.getLinesInRectangle(new PositionInPage(0.0, 0.24), new PositionInPage(0.5, 0.5));
+        assertEquals(11, driverSummary.length);
         assertEquals("Driver Summary", driverSummary[0]);
         assertEquals("Somatic variant: 7 (BRAF, CDKN2A, HDAC2, TERT)", driverSummary[1]);
         assertEquals("Somatic copy number: 1 (PTEN)", driverSummary[2]);
@@ -181,12 +182,12 @@ public class ColoPdfTest
         assertEquals("Germline disruption: None", driverSummary[6]);
         assertEquals("Fusion drivers: None", driverSummary[7]);
         assertEquals("Viral presence: None", driverSummary[8]);
-        assertEquals("Whole genome Yes", driverSummary[9]);
-        assertEquals("duplicated:", driverSummary[10]);
-        assertEquals("DPYD status: *1 HOM (Normal Function)", driverSummary[11]);
+        assertEquals("Whole genome duplicated: Yes", driverSummary[9]);
+        assertEquals("DPYD status: *1 HOM (Normal Function)", driverSummary[10]);
 
         // The Genome Wide Biomarkers table is to the right of the driver summary table
         String[] genomeWideBiomarkers = page1Ripper.getLinesInRectangle(new PositionInPage(0.5, 0.24), new PositionInPage(1.0, 0.5));
+        assertEquals(8, genomeWideBiomarkers.length);
         assertEquals("Genome Wide Biomarkers", genomeWideBiomarkers[0]);
         assertEquals("Microsatellite indels per Mb: 0.1 (Stable)", genomeWideBiomarkers[1]);
         assertEquals("Tumor mutations per Mb: 14.4 (High)", genomeWideBiomarkers[2]);
@@ -211,11 +212,11 @@ public class ColoPdfTest
         PageRipper page2Ripper = new PageRipper(page2);
         checkHeaderAndFooter(page2Ripper, 2, true);
 
-        String[] somaticFindingsHeading = page2Ripper.getLinesInRectangle(new PositionInPage(0.0, 0.1), new PositionInPage(1.0, 0.15));
+        String[] somaticFindingsHeading = page2Ripper.getLinesInRectangle(new PositionInPage(0.0, 0.1), new PositionInPage(1.0, 0.14));
         assertEquals(1, somaticFindingsHeading.length);
         assertEquals("Somatic Findings", somaticFindingsHeading[0]);
 
-        String[] smallVariantsTable = page2Ripper.getLinesInRectangle(new PositionInPage(0.0, 0.15), new PositionInPage(1.0, 0.35));
+        String[] smallVariantsTable = page2Ripper.getLinesInRectangle(new PositionInPage(0.0, 0.14), new PositionInPage(1.0, 0.32));
         assertEquals(10, smallVariantsTable.length);
         assertEquals("Small Variants (8)", smallVariantsTable[0]);
         assertEquals("GENE POSITION HGVS AF DEPTH COPIES HOTSPOT BIALL CLONAL DRIVER", smallVariantsTable[1]);
@@ -228,34 +229,34 @@ public class ColoPdfTest
         assertEquals("SF3B1 chr2:197402055 c.2153C>T [p.Pro718Leu] 0.65 115 2.0 of 3.0 No 2% 100% 14%", smallVariantsTable[8]);
         assertEquals("TP63 chr3:189886541 c.1497G>T [p.Met499Ile] 0.55 150 2.2 of 4.0 No 2% 100% 0%", smallVariantsTable[9]);
 
-        String[] ampsAndDelsTable = page2Ripper.getLinesInRectangle(new PositionInPage(0.0, 0.35), new PositionInPage(1.0, 0.45));
+        String[] ampsAndDelsTable = page2Ripper.getLinesInRectangle(new PositionInPage(0.0, 0.32), new PositionInPage(1.0, 0.4));
         assertEquals(3, ampsAndDelsTable.length);
         assertEquals("Amplifications and Deletions (1)", ampsAndDelsTable[0]);
         assertEquals("LOCATION GENE TYPE RANGE MIN CN MAX CN REL CN ARM CN DRIVER", ampsAndDelsTable[1]);
         assertEquals("chr10q23.31 PTEN DEL PARTIAL 0.0 2.0 0.0 2.0 HIGH", ampsAndDelsTable[2]);
 
-        String[] fusionsTable = page2Ripper.getLinesInRectangle(new PositionInPage(0.0, 0.45), new PositionInPage(1.0, 0.5));
+        String[] fusionsTable = page2Ripper.getLinesInRectangle(new PositionInPage(0.0, 0.4), new PositionInPage(1.0, 0.45));
         assertEquals(2, fusionsTable.length);
         assertEquals("Fusions (0)", fusionsTable[0]);
         assertEquals("NONE", fusionsTable[1]);
 
-        String[] disruptionsTable = page2Ripper.getLinesInRectangle(new PositionInPage(0.0, 0.5), new PositionInPage(1.0, 0.6));
+        String[] disruptionsTable = page2Ripper.getLinesInRectangle(new PositionInPage(0.0, 0.45), new PositionInPage(1.0, 0.53));
         assertEquals(3, disruptionsTable.length);
         assertEquals("Disruptions (1)", disruptionsTable[0]);
         assertEquals("GENE POSITION ZYGOSITY CONTEXT TYPE JCN UNDISRUPTED CN DRIVER", disruptionsTable[1]);
         assertEquals("PTEN chr10:87940542 - chr10:87952584 HOM Intron 5 - Intron 6 DEL 2.0 0.0 LOW", disruptionsTable[2]);
 
-        String[] virusesTable = page2Ripper.getLinesInRectangle(new PositionInPage(0.0, 0.6), new PositionInPage(1.0, 0.65));
+        String[] virusesTable = page2Ripper.getLinesInRectangle(new PositionInPage(0.0, 0.53), new PositionInPage(1.0, 0.6));
         assertEquals(2, virusesTable.length);
         assertEquals("Viruses (0)", virusesTable[0]);
         assertEquals("NONE", virusesTable[1]);
 
-        String[] chrArmsTable = page2Ripper.getLinesInRectangle(new PositionInPage(0.0, 0.65), new PositionInPage(1.0, 0.95));
-        assertEquals(13, chrArmsTable.length);
-        //        assertEquals("Arm Copy Number Aberrations", chrArmsTable[0]);
+        String[] chrArmsTable = page2Ripper.getLinesInRectangle(new PositionInPage(0.0, 0.60), new PositionInPage(1.0, 0.95));
+        assertEquals(20, chrArmsTable.length);
+        assertEquals("Arm Copy Number Aberrations", chrArmsTable[0]);
         assertEquals("CHROMOSOME ARM TYPE CN REL CN DRIVER", chrArmsTable[1]);
         assertEquals("chr1 Q GAIN 3.9 1.4 HIGH", chrArmsTable[2]);
-        assertEquals("THE TABLE CONTINUES ON THE NEXT PAGE", chrArmsTable[12]);
+        assertEquals("chr20 P GAIN 4.0 1.3 LOW", chrArmsTable[19]);
 
         // Check the image
         assertEquals(1, page2Ripper.numberOfImages());
@@ -268,25 +269,29 @@ public class ColoPdfTest
         PageRipper page3Ripper = new PageRipper(document.getPage(2));
         checkHeaderAndFooter(page3Ripper, 3, true);
 
-        String[] chrArmsTable = page3Ripper.getLinesInRectangle(new PositionInPage(0.0, 0.1), new PositionInPage(1.0, 0.4));
-        assertEquals(15, chrArmsTable.length);
-        //        assertEquals("Arm Copy Number Aberrations", chrArmsTable[0]);
-        assertEquals("CONTINUED FROM THE PREVIOUS PAGE", chrArmsTable[1]);
-        assertEquals("CHROMOSOME ARM TYPE CN REL CN DRIVER", chrArmsTable[2]);
-        assertEquals("chr7 Q GAIN 4.0 1.4 LOW", chrArmsTable[3]);
-        assertEquals("chrX Q GAIN 1.9 1.3 LOW", chrArmsTable[14]);
+        String[] chrArmsTable = page3Ripper.getLinesInRectangle(new PositionInPage(0.0, 0.1), new PositionInPage(1.0, 0.22));
+        assertEquals(5, chrArmsTable.length);
+        assertEquals("CHROMOSOME ARM TYPE CN REL CN DRIVER", chrArmsTable[0]);
+        assertEquals("chr20 Q GAIN 4.0 1.3 LOW", chrArmsTable[1]);
+        assertEquals("chrX Q GAIN 1.9 1.3 LOW", chrArmsTable[4]);
 
-        String[] signAllocTable = page3Ripper.getLinesInRectangle(new PositionInPage(0.0, 0.4), new PositionInPage(1.0, 0.65));
+        String[] signAllocTable = page3Ripper.getLinesInRectangle(new PositionInPage(0.0, 0.22), new PositionInPage(1.0, 0.47));
         assertEquals(12, signAllocTable.length);
         assertEquals("Signature Allocations (12)", signAllocTable[0]);
         assertEquals("SIGNATURE ETIOLOGY ALLOCATION PERCENT", signAllocTable[1]);
         assertEquals("Sig7 Ultraviolet light exposure 23622 60%", signAllocTable[2]);
         assertEquals("MISALLOC - 4983 13%", signAllocTable[11]);
 
-        // Check the image
-        assertEquals(1, page3Ripper.numberOfImages());
+        // Check the imagea
+        assertEquals(3, page3Ripper.numberOfImages());
         final RectangleInPage topLeftCorner = new RectangleInPage(0.0, 0.0, 0.2, 0.09);
         page3Ripper.checkHasImageWithinBoundsOfGivenSize(topLeftCorner, 1234, 1200);
+
+        final RectangleInPage driver1PlotLocation = new RectangleInPage(0.0, 0.45, 0.5, 0.85);
+        page3Ripper.checkHasImageWithinBoundsOfGivenSizeAndColor(driver1PlotLocation, 3000, 3150, new Color(50, 205, 50));
+
+        final RectangleInPage driver2PlotLocation = new RectangleInPage(0.5, 0.45, 1.0, 0.85);
+        page3Ripper.checkHasImageWithinBoundsOfGivenSizeAndColor(driver2PlotLocation, 3000, 3150, new Color(0, 191, 255));
     }
 
     private void checkPage4(final PDDocument document) throws IOException
@@ -295,17 +300,11 @@ public class ColoPdfTest
         checkHeaderAndFooter(page4Ripper, 4, true);
 
         // Check the images
-        assertEquals(4, page4Ripper.numberOfImages());
+        assertEquals(2, page4Ripper.numberOfImages());
         final RectangleInPage topLeftCorner = new RectangleInPage(0.0, 0.0, 0.2, 0.09);
         page4Ripper.checkHasImageWithinBoundsOfGivenSize(topLeftCorner, 1234, 1200);
 
-        final RectangleInPage driver1PlotLocation = new RectangleInPage(0.0, 0.1, 0.5, 0.45);
-        page4Ripper.checkHasImageWithinBoundsOfGivenSizeAndColor(driver1PlotLocation, 3000, 3150, new Color(50, 205, 50));
-
-        final RectangleInPage driver2PlotLocation = new RectangleInPage(0.5, 0.1, 1.0, 0.45);
-        page4Ripper.checkHasImageWithinBoundsOfGivenSizeAndColor(driver2PlotLocation, 3000, 3150, new Color(0, 191, 255));
-
-        final RectangleInPage driver3PlotLocation = new RectangleInPage(0.0, 0.4, 0.5, 0.8);
+        final RectangleInPage driver3PlotLocation = new RectangleInPage(0.0, 0.1, 0.5, 0.5);
         page4Ripper.checkHasImageWithinBoundsOfGivenSizeAndColor(driver3PlotLocation, 3000, 3150, new Color(127, 255, 0));
     }
 
@@ -323,7 +322,7 @@ public class ColoPdfTest
         assertEquals("NONE", wholePage[4]);
         assertEquals("Disruptions (0)", wholePage[5]);
         assertEquals("NONE", wholePage[6]);
-        //        assertEquals("Chromosomal Aberrations (0)", wholePage[7]);
+        assertEquals("Chromosomal Aberrations (0)", wholePage[7]);
         assertEquals("NONE", wholePage[8]);
         assertEquals("Pharmacogenetics (1)", wholePage[9]);
         assertEquals("GENE HAPLOTYPE GENOTYPE FUNCTION LINKED DRUGS SOURCE", wholePage[10]);
@@ -388,19 +387,19 @@ public class ColoPdfTest
         final RectangleInPage pinkPic = new RectangleInPage(0.0, 0.05, 0.4, 0.7);
         page8Ripper.checkHasImageWithinBoundsOfGivenSizeAndColor(pinkPic, 3000, 3000, new Color(255, 105, 180));
 
-        final RectangleInPage redPic = new RectangleInPage(0.2, 0.05, 0.6, 0.7);
+        final RectangleInPage redPic = new RectangleInPage(0.3, 0.05, 0.7, 0.7);
         page8Ripper.checkHasImageWithinBoundsOfGivenSizeAndColor(redPic, 1440, 1200, new Color(255, 69, 0));
 
-        final RectangleInPage bluePic = new RectangleInPage(0.5, 0.1, 0.95, 0.7);
+        final RectangleInPage bluePic = new RectangleInPage(0.6, 0.1, 0.97, 0.7);
         page8Ripper.checkHasImageWithinBoundsOfGivenSizeAndColor(bluePic, 2400, 1800, new Color(30, 144, 255));
 
-        final RectangleInPage tealPic = new RectangleInPage(0.0, 0.5, 0.4, 0.9);
+        final RectangleInPage tealPic = new RectangleInPage(0.0, 0.5, 0.4, 0.95);
         page8Ripper.checkHasImageWithinBoundsOfGivenSizeAndColor(tealPic, 1440, 1200, new Color(0, 128, 128));
 
-        final RectangleInPage orangePic = new RectangleInPage(0.2, 0.5, 0.6, 0.9);
+        final RectangleInPage orangePic = new RectangleInPage(0.2, 0.5, 0.7, 0.95);
         page8Ripper.checkHasImageWithinBoundsOfGivenSizeAndColor(orangePic, 1440, 1200, new Color(255, 140, 0));
 
-        final RectangleInPage yellowPic = new RectangleInPage(0.5, 0.5, 0.95, 0.9);
+        final RectangleInPage yellowPic = new RectangleInPage(0.6, 0.5, 0.97, 0.95);
         page8Ripper.checkHasImageWithinBoundsOfGivenSizeAndColor(yellowPic, 2400, 1200, new Color(255, 215, 0));
     }
 

@@ -7,7 +7,9 @@ import static com.hartwig.hmftools.orange.report.ReportResources.PAGE_MARGIN_RIG
 import java.io.IOException;
 
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
+import com.hartwig.hmftools.datamodel.purple.PurpleQC;
 import com.hartwig.hmftools.orange.OrangeConfig;
+import com.hartwig.hmftools.orange.algo.QcStatusInterpretation;
 import com.hartwig.hmftools.orange.report.DocumentContext;
 import com.hartwig.hmftools.orange.report.PlotPathResolver;
 import com.hartwig.hmftools.orange.report.ReportResources;
@@ -56,7 +58,10 @@ public class FrontPageChapter implements ReportChapter
         final float contentWidth = pageSize().getWidth() - (PAGE_MARGIN_LEFT + PAGE_MARGIN_RIGHT);//contentWidth();
         document.addSpacing(10);
         document.addTable(FrontPageTables.buildSampleSummary(document, mReport, mConfig, contentWidth, mReportResources));
-        document.addSpacing(10);
+        if(!hasQcFail(mReport.purple().fit().qc()))
+        {
+            document.addSpacing(10);
+        }
         document.addTable(FrontPageTables.buildTechnicalSummary(document, mReport, mConfig, contentWidth, mReportResources));
         document.addSpacing(10);
 
@@ -103,5 +108,12 @@ public class FrontPageChapter implements ReportChapter
             cs.addRect(x, y, width, height);
             cs.stroke();
         }
+    }
+
+    private static boolean hasQcFail(final PurpleQC qc)
+    {
+        boolean isFailNoTumor = QcStatusInterpretation.isFailNoTumor(qc);
+        boolean isContaminated = QcStatusInterpretation.hasTumorContaminated(qc);
+        return (isFailNoTumor || isContaminated);
     }
 }
