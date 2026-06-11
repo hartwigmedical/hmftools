@@ -1,7 +1,7 @@
 FROM bash:5.2
 
 ARG VERSION
-ARG TOOL_NAME=gene-utils
+ARG TOOL_NAME=health-checker
 ARG JAR=/usr/share/java/${TOOL_NAME}_v${VERSION}.jar
 ARG RUN_SCRIPT=/usr/local/bin/${TOOL_NAME}
 

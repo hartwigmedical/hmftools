@@ -124,7 +124,8 @@ public class AssemblyAligner extends ThreadTask
 
         if(mSagaMatcher != null)
         {
-            SagaMatchBySequence sagaMatch = mSagaMatcher.matchBySequence(assemblyAlignment.fullSequence(), assemblyAlignment.linkIndices());
+            boolean lowerJunctionOverlap = assemblyAlignment.assemblies().size() == 1 && assemblyAlignment.assemblies().get(0).hasLineSequence();
+            SagaMatchBySequence sagaMatch = mSagaMatcher.matchBySequence(assemblyAlignment.fullSequence(), assemblyAlignment.linkIndices(), lowerJunctionOverlap);
             assemblyAlignment.setSagaMatch(sagaMatch);
         }
 
