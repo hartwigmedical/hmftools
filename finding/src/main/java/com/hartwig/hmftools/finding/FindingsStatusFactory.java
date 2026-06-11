@@ -11,7 +11,7 @@ import com.hartwig.hmftools.finding.datamodel.finding.FindingStatusBuilder;
 
 class FindingsStatusFactory
 {
-    static FindingStatus toFindingsStatus(Set<Qc.QCStatus> errors, Set<Qc.QCStatus> warnings)
+    static FindingStatus toFindingsStatus(Set<Qc.QcStatus> errors, Set<Qc.QcStatus> warnings)
     {
         SortedSet<FindingStatus.Issue> findingStatusErrors = convert(errors);
         return FindingStatusBuilder.builder()
@@ -21,14 +21,14 @@ class FindingsStatusFactory
                 .build();
     }
 
-    private static SortedSet<FindingStatus.Issue> convert(Set<Qc.QCStatus> qcStatuses)
+    private static SortedSet<FindingStatus.Issue> convert(Set<Qc.QcStatus> qcStatuses)
     {
         return qcStatuses.stream()
                 .map(FindingsStatusFactory::convert)
                 .collect(Collectors.toCollection(TreeSet::new));
     }
 
-    private static FindingStatus.Issue convert(Qc.QCStatus qcStatus)
+    private static FindingStatus.Issue convert(Qc.QcStatus qcStatus)
     {
         return switch(qcStatus)
         {
