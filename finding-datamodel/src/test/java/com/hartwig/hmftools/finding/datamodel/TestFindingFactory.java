@@ -1,9 +1,12 @@
 package com.hartwig.hmftools.finding.datamodel;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 
+import com.google.gson.internal.LinkedTreeMap;
 import com.hartwig.hmftools.finding.datamodel.driver.Driver;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFields;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFieldsBuilder;
@@ -72,12 +75,17 @@ public class TestFindingFactory
     public static HomologousRecombinationBuilder homologousRecombinationBuilder()
     {
         return HomologousRecombinationBuilder.builder()
-                .findingKey("")
-                .status(HomologousRecombination.Status.HR_DEFICIENT)
-                .hrdValue(thresholdValue(0))
-                .hrdType("")
-                .brca1Value(0)
-                .brca2Value(0)
+                .predictions(new TreeMap<>(Map.of(
+                        HomologousRecombination.HrdCancerType.PAN_CANCER,
+                        HomologousRecombinationPredictionBuilder.builder()
+                        .findingKey("")
+                        .cancerType(HomologousRecombination.HrdCancerType.OTHER)
+                        .status(HomologousRecombination.Status.HR_DEFICIENT)
+                        .hrdProbability(new ThresholdValue(0, 0.5))
+                        .hrdType(HomologousRecombination.HrdType.BRACA1_TYPE)
+                        .brca1Probability(0.0)
+                        .brca2Probability(0.0)
+                        .build())))
                 .drivingGenes(new TreeSet<>());
     }
 
@@ -269,6 +277,72 @@ public class TestFindingFactory
                 .driver(driverFields(reported, driverInterpretation))
                 .name("")
                 .qcStatus(Virus.VirusBreakendQCStatus.NO_ABNORMALITIES);
+    }
+
+    @NotNull
+    public static RnaQcBuilder rnaQcBuilder()
+    {
+        return RnaQcBuilder.builder()
+                .errors(new TreeSet<>())
+                .warnings(new TreeSet<>())
+                .totalFragments(0)
+                .duplicateFragments(0)
+                .splicedFragmentPercent(0D)
+                .unsplicedFragmentPercent(0D)
+                .altFragmentPercent(0D)
+                .chimericFragmentPercent(0D);
+    }
+
+    @NotNull
+    public static RnaGeneExpressionBuilder rnaGeneExpressionBuilder()
+    {
+        return RnaGeneExpressionBuilder.builder()
+                .findingKey("")
+                .gene("")
+                .tpm(0D)
+                .medianTpmCohort(0D)
+                .percentileCohort(0D);
+    }
+
+    @NotNull
+    public static RnaFusionBuilder rnaFusionBuilder()
+    {
+        return RnaFusionBuilder.builder()
+                .findingKey("")
+                .chromosomeUp("")
+                .chromosomeDown("")
+                .positionUp(0)
+                .positionDown(0)
+                .junctionTypeUp("")
+                .junctionTypeDown("")
+                .knownType(RnaFusion.KnownType.NONE)
+                .structuralVariantType(RnaFusion.StructuralVariantType.BND)
+                .splitFragments(0)
+                .realignedFragments(0)
+                .discordantFragments(0)
+                .depthUp(0)
+                .depthDown(0)
+                .cohortFrequency(0);
+    }
+
+    @NotNull
+    public static NovelSpliceJunctionBuilder novelSpliceJunctionBuilder()
+    {
+        return NovelSpliceJunctionBuilder.builder()
+                .findingKey("")
+                .gene("")
+                .chromosome("")
+                .junctionStart(0)
+                .junctionEnd(0)
+                .type(NovelSpliceJunction.Type.UNKNOWN)
+                .exonStart(0)
+                .exonEnd(0)
+                .fragmentCount(0)
+                .depthStart(0)
+                .depthEnd(0)
+                .regionStart(NovelSpliceJunction.Context.UNKNOWN)
+                .regionEnd(NovelSpliceJunction.Context.UNKNOWN)
+                .cohortFrequency(0);
     }
 
     @NotNull

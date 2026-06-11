@@ -16,27 +16,27 @@ public class QcStatusFactory
     private final static Set<PurpleQCStatus> QC_ERROR_STATUSES = errors(Arrays.asList(PurpleQCStatus.values()));
     private final static Set<PurpleQCStatus> QC_WARNING_STATUSES = warnings(Arrays.asList(PurpleQCStatus.values()));
 
-    static SortedSet<Qc.QCStatus> toErrors(Set<PurpleQCStatus> qcStatuses) {
+    static SortedSet<Qc.QcStatus> toErrors(Set<PurpleQCStatus> qcStatuses) {
         return QcStatusFactory.toQcStatuses(qcStatuses, QcStatusFactory.QC_ERROR_STATUSES);
     }
 
-    static SortedSet<Qc.QCStatus> toWarnings(Set<PurpleQCStatus> qcStatuses) {
+    static SortedSet<Qc.QcStatus> toWarnings(Set<PurpleQCStatus> qcStatuses) {
         return QcStatusFactory.toQcStatuses(qcStatuses, QcStatusFactory.QC_WARNING_STATUSES);
     }
 
-    private static SortedSet<Qc.QCStatus> toQcStatuses(Set<PurpleQCStatus> qcStatuses, Set<PurpleQCStatus> statusesToInclude)
+    private static SortedSet<Qc.QcStatus> toQcStatuses(Set<PurpleQCStatus> qcStatuses, Set<PurpleQCStatus> statusesToInclude)
     {
         return qcStatuses.stream().filter(statusesToInclude::contains)
                 .map(o -> switch(o)
                 {
                     case PASS -> null;
-                    case WARN_DELETED_GENES -> Qc.QCStatus.DELETED_GENES;
-                    case WARN_HIGH_COPY_NUMBER_NOISE -> Qc.QCStatus.HIGH_COPY_NUMBER_NOISE;
-                    case WARN_GENDER_MISMATCH -> Qc.QCStatus.GENDER_MISMATCH;
-                    case WARN_LOW_PURITY -> Qc.QCStatus.LOW_PURITY;
-                    case WARN_TINC, FAIL_TINC -> Qc.QCStatus.TUMOR_IN_NORMAL_CONTAMINATION;
-                    case FAIL_CONTAMINATION -> Qc.QCStatus.CONTAMINATION;
-                    case FAIL_NO_TUMOR -> Qc.QCStatus.NO_TUMOR;
+                    case WARN_DELETED_GENES -> Qc.QcStatus.DELETED_GENES;
+                    case WARN_HIGH_COPY_NUMBER_NOISE -> Qc.QcStatus.HIGH_COPY_NUMBER_NOISE;
+                    case WARN_GENDER_MISMATCH -> Qc.QcStatus.GENDER_MISMATCH;
+                    case WARN_LOW_PURITY -> Qc.QcStatus.LOW_PURITY;
+                    case WARN_TINC, FAIL_TINC -> Qc.QcStatus.TUMOR_IN_NORMAL_CONTAMINATION;
+                    case FAIL_CONTAMINATION -> Qc.QcStatus.CONTAMINATION;
+                    case FAIL_NO_TUMOR -> Qc.QcStatus.NO_TUMOR;
                 })
                 .filter(Objects::nonNull).collect(Collectors.toCollection(TreeSet::new));
     }

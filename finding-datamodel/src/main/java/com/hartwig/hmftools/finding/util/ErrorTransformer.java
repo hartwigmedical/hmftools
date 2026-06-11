@@ -46,6 +46,10 @@ public class ErrorTransformer
                 .tumorMutationalLoad(transform(record.tumorMutationalLoad()))
                 .tumorMutationalBurden(transform(record.tumorMutationalBurden()))
                 .homologousRecombination(transform(record.homologousRecombination()))
+                .highExpressionGenes(transform(record.highExpressionGenes()))
+                .lowExpressionGenes(transform(record.lowExpressionGenes()))
+                .rnaFusions(transform(record.rnaFusions()))
+                .novelSpliceJunctions(transform(record.novelSpliceJunctions()))
                 .build();
     }
 

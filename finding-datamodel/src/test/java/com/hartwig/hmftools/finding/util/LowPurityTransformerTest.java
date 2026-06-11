@@ -187,7 +187,7 @@ public class LowPurityTransformerTest
     private void assertQc(Qc qc)
     {
         assertFalse(qc.isPass());
-        assertEquals(qc.errors(), new TreeSet<>(Set.of(Qc.QCStatus.LOW_PURITY)));
+        assertEquals(qc.errors(), new TreeSet<>(Set.of(Qc.QcStatus.LOW_PURITY)));
     }
 
     private void assertFindingItemOk(FindingItem<?> item)

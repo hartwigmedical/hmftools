@@ -15,7 +15,7 @@ class ThresholdValueFactory
         return new ThresholdValue(value, TML_THRESHOLD);
     }
 
-    static ThresholdValue hrdValue(double value)
+    static ThresholdValue hrdProbability(double value)
     {
         return new ThresholdValue(value, HRD_THRESHOLD);
     }

@@ -8,6 +8,8 @@ import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingList;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingItem;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingList;
 
+import org.jspecify.annotations.Nullable;
+
 import jakarta.validation.constraints.NotNull;
 
 @RecordBuilder
@@ -31,7 +33,12 @@ public record FindingRecord(
         @NotNull FindingItem<MicrosatelliteStability> microsatelliteStability,
         @NotNull FindingItem<TumorMutationalLoad> tumorMutationalLoad,
         @NotNull FindingItem<TumorMutationalBurden> tumorMutationalBurden,
-        @NotNull FindingItem<HomologousRecombination> homologousRecombination)
+        @NotNull FindingItem<HomologousRecombination> homologousRecombination,
+        @Nullable RnaQc rnaQc,
+        @NotNull FindingList<RnaGeneExpression> highExpressionGenes,
+        @NotNull FindingList<RnaGeneExpression> lowExpressionGenes,
+        @NotNull FindingList<RnaFusion> rnaFusions,
+        @NotNull FindingList<NovelSpliceJunction> novelSpliceJunctions)
 {
     public static final String VERSION = FindingRecord.class.getPackage().getImplementationVersion();
 
