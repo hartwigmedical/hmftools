@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.redux.splice.rescue.CigarShape.OP_SEQ_MISMATC
 import static com.hartwig.hmftools.redux.splice.rescue.CigarShape.OP_SOFTCLIP;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.hartwig.hmftools.redux.splice.rescue.AnnotatedJunctionIndex;
@@ -141,41 +142,9 @@ public class SoftclipTailExtender
         return false;
     }
 
-    // Longest prefix with cumulative mismatches <= max(1, length / 10); the min-of-1 lets short tails recover one mismatch.
-    private static int longestAcceptedPrefix(
-            final byte[] readBases, final int readAnchor,
-            final byte[] refBases, final int refAnchor,
-            final int walkLength, final boolean forward)
-    {
-        int mismatches = 0;
-        int bestLength = 0;
-        for(int i = 0; i < walkLength; ++i)
-        {
-            final int step = forward ? i : -i;
-            final byte readBase = readBases[readAnchor + step];
-            final byte refBase = refBases[refAnchor + step];
-            if(!basesEqualIgnoreCase(readBase, refBase))
-                ++mismatches;
-            final int length = i + 1;
-            final int allowed = Math.max(1, length / 10);
-            if(mismatches <= allowed)
-                bestLength = length;
-            else if(mismatches > allowed + 1)
-                break;
-        }
-        return bestLength;
-    }
-
     private static boolean isMatchedOp(final char op)
     {
         return op == OP_MATCH || op == OP_SEQ_MATCH || op == OP_SEQ_MISMATCH;
-    }
-
-    private static boolean basesEqualIgnoreCase(final byte a, final byte b)
-    {
-        if(a == b)
-            return true;
-        return (a & ~0x20) == (b & ~0x20);
     }
 
     private static void applyExtension(
@@ -221,8 +190,12 @@ public class SoftclipTailExtender
                     @Override
                     int walk(final byte[] readBases, final byte[] refBases, final int softclipLength, final int walkLength)
                     {
-                        return longestAcceptedPrefix(
-                                readBases, softclipLength - 1, refBases, refBases.length - 1, walkLength, false);
+                        // leading softclip's M boundary is at its inner end, so reverse to walk boundary-outward
+                        final byte[] readWin = BoundaryReclaim.reversed(
+                                Arrays.copyOfRange(readBases, softclipLength - walkLength, softclipLength));
+                        final byte[] refWin = BoundaryReclaim.reversed(
+                                Arrays.copyOfRange(refBases, refBases.length - walkLength, refBases.length));
+                        return BoundaryReclaim.maxScoringPrefix(readWin, refWin);
                     }
 
                     @Override
@@ -252,8 +225,11 @@ public class SoftclipTailExtender
                     @Override
                     int walk(final byte[] readBases, final byte[] refBases, final int softclipLength, final int walkLength)
                     {
+                        // trailing softclip's M boundary is at its start, already boundary-outward
                         final int readStart = readBases.length - softclipLength;
-                        return longestAcceptedPrefix(readBases, readStart, refBases, 0, walkLength, true);
+                        final byte[] readWin = Arrays.copyOfRange(readBases, readStart, readStart + walkLength);
+                        final byte[] refWin = Arrays.copyOfRange(refBases, 0, walkLength);
+                        return BoundaryReclaim.maxScoringPrefix(readWin, refWin);
                     }
 
                     @Override

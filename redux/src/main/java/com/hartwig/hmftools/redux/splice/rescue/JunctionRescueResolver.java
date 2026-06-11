@@ -14,6 +14,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.hartwig.hmftools.redux.splice.SpliceCommon;
+
 // Merges a primary's terminal softclip with an annotated-intron-spanning supplementary into a
 // single spliced primary (N op). Chains up to RescueConfig.MaxChainDepth merges per read.
 public class JunctionRescueResolver
@@ -70,7 +72,7 @@ public class JunctionRescueResolver
 
         // Fold tx-contig lift artifact micro-junctions into the softclip so the merge anchors on the
         // real matched block. Only affects the working cigar; emitted cigar changes only on accept.
-        primaryCigar = foldFabricatedTerminalMicroJunctions(primaryCigar, RescueConfig.MAX_FABRICATED_MICRO_ANCHOR);
+        primaryCigar = foldFabricatedTerminalMicroJunctions(primaryCigar, SpliceCommon.MIN_JUNCTION_ANCHOR);
 
         int primaryStart = candidate.PrimaryStart;
         final List<RescueSupplementary> remaining = new ArrayList<>(candidate.Supplementaries);
@@ -746,15 +748,15 @@ public class JunctionRescueResolver
     // Folds tx-contig lift artifact: "<block>M nN yM zS" (trailing) or mirror (leading), where yM
     // is sub-threshold, into "<block>M (y+z)S". Drops the spurious N and conserves read-base count.
     static List<CigarShape.Element> foldFabricatedTerminalMicroJunctions(
-            final List<CigarShape.Element> elements, final int maxAnchor)
+            final List<CigarShape.Element> elements, final int minAnchor)
     {
-        List<CigarShape.Element> result = foldTrailingFabricatedMicroJunction(elements, maxAnchor);
-        result = foldLeadingFabricatedMicroJunction(result, maxAnchor);
+        List<CigarShape.Element> result = foldTrailingFabricatedMicroJunction(elements, minAnchor);
+        result = foldLeadingFabricatedMicroJunction(result, minAnchor);
         return result;
     }
 
     private static List<CigarShape.Element> foldTrailingFabricatedMicroJunction(
-            final List<CigarShape.Element> elements, final int maxAnchor)
+            final List<CigarShape.Element> elements, final int minAnchor)
     {
         final int n = elements.size();
         if(n < 4)
@@ -762,7 +764,7 @@ public class JunctionRescueResolver
         if(elements.get(n - 1).Op != OP_SOFTCLIP)
             return elements;
         final CigarShape.Element anchor = elements.get(n - 2);
-        if(anchor.Op != OP_MATCH || anchor.Length > maxAnchor)
+        if(anchor.Op != OP_MATCH || anchor.Length >= minAnchor)
             return elements;
         if(elements.get(n - 3).Op != OP_SKIPPED)
             return elements;
@@ -776,7 +778,7 @@ public class JunctionRescueResolver
     }
 
     private static List<CigarShape.Element> foldLeadingFabricatedMicroJunction(
-            final List<CigarShape.Element> elements, final int maxAnchor)
+            final List<CigarShape.Element> elements, final int minAnchor)
     {
         final int n = elements.size();
         if(n < 4)
@@ -784,7 +786,7 @@ public class JunctionRescueResolver
         if(elements.get(0).Op != OP_SOFTCLIP)
             return elements;
         final CigarShape.Element anchor = elements.get(1);
-        if(anchor.Op != OP_MATCH || anchor.Length > maxAnchor)
+        if(anchor.Op != OP_MATCH || anchor.Length >= minAnchor)
             return elements;
         if(elements.get(2).Op != OP_SKIPPED)
             return elements;

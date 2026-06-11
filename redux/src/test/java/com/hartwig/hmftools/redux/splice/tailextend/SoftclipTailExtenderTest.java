@@ -96,7 +96,7 @@ public class SoftclipTailExtenderTest
     @Test
     public void testTrailingExtendPartialThenMismatchBurst()
     {
-        // 6 clean matches then mismatches; m=1 budget allows 7th base -> bestLength=7
+        // 6 clean matches then a mismatch burst with no recovery; score peaks at 6 -> reclaim 6
         final byte[] chr1 = fill(200, 'A');
         for(int i = 130; i < 136; ++i) chr1[i] = 'C';
         final byte[] readBases = new byte[40];
@@ -106,8 +106,8 @@ public class SoftclipTailExtenderTest
                 .tryExtend(CHR1, 101, "30M10S", readBases);
 
         assertTrue(res.Extended);
-        assertEquals("37M3S", res.NewCigar);
-        assertEquals(7, res.BasesExtendedTrail);
+        assertEquals("36M4S", res.NewCigar);
+        assertEquals(6, res.BasesExtendedTrail);
     }
 
     @Test
@@ -147,7 +147,7 @@ public class SoftclipTailExtenderTest
     @Test
     public void testLeadingExtendPartial()
     {
-        // last 5 of 10 leading softclip bases match; m=1 budget absorbs the 6th -> bestLength=6
+        // last 5 of 10 leading softclip bases match, then mismatches with no recovery; reclaim 5
         final byte[] chr1 = fill(200, 'A');
         for(int i = 105; i < 110; ++i) chr1[i] = 'G';
         final byte[] readBases = new byte[40];
@@ -159,9 +159,9 @@ public class SoftclipTailExtenderTest
                 .tryExtend(CHR1, 111, "10S30M", readBases);
 
         assertTrue(res.Extended);
-        assertEquals("4S36M", res.NewCigar);
-        assertEquals(105, res.NewStart);
-        assertEquals(6, res.BasesExtendedLead);
+        assertEquals("5S35M", res.NewCigar);
+        assertEquals(106, res.NewStart);
+        assertEquals(5, res.BasesExtendedLead);
     }
 
     @Test

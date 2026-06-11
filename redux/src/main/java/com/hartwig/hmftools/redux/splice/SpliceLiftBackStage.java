@@ -231,7 +231,6 @@ public class SpliceLiftBackStage
         return nameSortedBam;
     }
 
-    private static final int TERMINAL_MICRO_JUNCTION_MAX_ANCHOR = 2;
 
     private LiftBackResources buildResources(final String nameSortedBam)
     {
@@ -272,7 +271,7 @@ public class SpliceLiftBackStage
 
         return new LiftBackResources(
                 resolver, junctionIndex, mConfig.RefGenomeFile,
-                mSpliceConfig.RescueViaSupp, mSpliceConfig.ExtendSoftclipTails, TERMINAL_MICRO_JUNCTION_MAX_ANCHOR,
+                mSpliceConfig.RescueViaSupp, mSpliceConfig.ExtendSoftclipTails, SpliceCommon.MIN_JUNCTION_ANCHOR,
                 mSpliceConfig.UnmapAboveNh, mSpliceConfig.UnmapBelowMapq);
     }
 

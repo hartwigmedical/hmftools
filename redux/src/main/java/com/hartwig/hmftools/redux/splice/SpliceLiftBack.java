@@ -65,9 +65,6 @@ public class SpliceLiftBack
     // null when neither rescue nor extend is enabled.
     private RefSequenceSource mRefSource;
 
-    // tx-contig walk can fabricate a spurious 1-2bp exon anchor at a read end; collapse those.
-    private static final int TERMINAL_MICRO_JUNCTION_MAX_ANCHOR = 2;
-
     public SpliceLiftBack(final ConfigBuilder configBuilder)
     {
         mConfig = new SpliceLiftBackConfig(configBuilder);
@@ -139,9 +136,9 @@ public class SpliceLiftBack
                 if(refSource != null)
                 {
                     mTerminalJunctionCollapser = new TerminalMicroJunctionCollapser(
-                            refSource, TERMINAL_MICRO_JUNCTION_MAX_ANCHOR);
-                    RD_LOGGER.info("terminal micro-junction collapse enabled (max anchor: {})",
-                            TERMINAL_MICRO_JUNCTION_MAX_ANCHOR);
+                            refSource, SpliceCommon.MIN_JUNCTION_ANCHOR);
+                    RD_LOGGER.info("terminal micro-junction collapse enabled (min junction anchor: {})",
+                            SpliceCommon.MIN_JUNCTION_ANCHOR);
 
                     mJunctionCanonicalizer = new JunctionCanonicalizer(
                             refSource, JunctionCanonicalizer.DEFAULT_MAX_SHIFT);

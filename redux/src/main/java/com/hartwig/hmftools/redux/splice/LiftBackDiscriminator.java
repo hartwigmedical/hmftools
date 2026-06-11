@@ -10,10 +10,6 @@ import java.util.Set;
 // so the decision tree reads as one piece.
 public final class LiftBackDiscriminator
 {
-    // Minimum flanking M length for an N to count as a real splice junction. Short anchors (1-3 bp)
-    // from tx-boundary bleed are not splicing evidence; 8 bp gives ~1-in-65k random-match probability.
-    static final int MIN_REAL_N_ANCHOR = 8;
-
     private LiftBackDiscriminator() {}
 
     // Per-alignment evidence emitted into TSV-A for post-hoc "why this category" analysis.
@@ -53,7 +49,7 @@ public final class LiftBackDiscriminator
             if(alignment.fromTxContig())
             {
                 ++features.NumTxAlts;
-                if(alignment.cigarHasRealNJunction(MIN_REAL_N_ANCHOR))
+                if(alignment.cigarHasRealNJunction(SpliceCommon.MIN_JUNCTION_ANCHOR))
                     features.TxHasNCigar = true;
                 if(alignment.SoftClipAtBoundary)
                     features.TxSoftClipAtBoundary = true;
@@ -65,7 +61,7 @@ public final class LiftBackDiscriminator
                     features.RefSoftClipped = true;
                 else
                     features.RefFullMatch = true;
-                if(alignment.cigarHasRealNJunction(MIN_REAL_N_ANCHOR))
+                if(alignment.cigarHasRealNJunction(SpliceCommon.MIN_JUNCTION_ANCHOR))
                     features.RefHasNCigar = true;
             }
         }

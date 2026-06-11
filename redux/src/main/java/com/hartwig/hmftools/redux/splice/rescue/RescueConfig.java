@@ -23,10 +23,6 @@ public class RescueConfig
     // Floor is 0 because the merge validates its own anchors; MAPQ-0 primaries are exactly the
     // tx-contig duplicate artifact the lift is designed to rescue. Knob retained for callers.
     public static final int DEFAULT_MIN_PRIMARY_MAPQ = 0;
-    // Tx-contig over-run lifts to a fabricated micro-junction (e.g. 100M83N3M48S). Anchors at or
-    // below this length are folded into the softclip before merge. 3 matches the lift-time
-    // softclip-anchor floor (ANNOTATED_JUNCTION_MIN_SOFTCLIP_ANCHOR_BP).
-    public static final int MAX_FABRICATED_MICRO_ANCHOR = 3;
 
     public final boolean Enabled;
     public final int MinIntronLength;

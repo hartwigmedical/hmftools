@@ -12,6 +12,8 @@ import java.util.Set;
 
 import org.junit.Test;
 
+import com.hartwig.hmftools.redux.splice.SpliceCommon;
+
 // Tests for JunctionRescueResolver. Reads are 151bp (Illumina default) unless noted.
 public class JunctionRescueResolverTest
 {
@@ -79,22 +81,22 @@ public class JunctionRescueResolverTest
     {
         // 100M83N3M48S: 3bp anchor split off by a spurious 83N against the trailing clip -> 100M51S.
         assertEquals("100M51S", CigarShape.format(JunctionRescueResolver.foldFabricatedTerminalMicroJunctions(
-                CigarShape.parse("100M83N3M48S"), RescueConfig.MAX_FABRICATED_MICRO_ANCHOR)));
+                CigarShape.parse("100M83N3M48S"), SpliceCommon.MIN_JUNCTION_ANCHOR)));
     }
 
     @Test
     public void testFoldLeadingFabricatedMicroJunction()
     {
         assertEquals("51S100M", CigarShape.format(JunctionRescueResolver.foldFabricatedTerminalMicroJunctions(
-                CigarShape.parse("48S3M83N100M"), RescueConfig.MAX_FABRICATED_MICRO_ANCHOR)));
+                CigarShape.parse("48S3M83N100M"), SpliceCommon.MIN_JUNCTION_ANCHOR)));
     }
 
     @Test
     public void testNoFoldWhenAnchorAboveThreshold()
     {
-        // 5bp anchor exceeds MAX_FABRICATED_MICRO_ANCHOR (3) — left intact.
-        assertEquals("100M83N5M48S", CigarShape.format(JunctionRescueResolver.foldFabricatedTerminalMicroJunctions(
-                CigarShape.parse("100M83N5M48S"), RescueConfig.MAX_FABRICATED_MICRO_ANCHOR)));
+        // 8bp anchor meets MIN_JUNCTION_ANCHOR (8) — a trusted junction, left intact.
+        assertEquals("100M83N8M48S", CigarShape.format(JunctionRescueResolver.foldFabricatedTerminalMicroJunctions(
+                CigarShape.parse("100M83N8M48S"), SpliceCommon.MIN_JUNCTION_ANCHOR)));
     }
 
     @Test
@@ -102,7 +104,7 @@ public class JunctionRescueResolverTest
     {
         // no terminal softclip — nothing to fold into.
         assertEquals("100M83N3M", CigarShape.format(JunctionRescueResolver.foldFabricatedTerminalMicroJunctions(
-                CigarShape.parse("100M83N3M"), RescueConfig.MAX_FABRICATED_MICRO_ANCHOR)));
+                CigarShape.parse("100M83N3M"), SpliceCommon.MIN_JUNCTION_ANCHOR)));
     }
 
     @Test
