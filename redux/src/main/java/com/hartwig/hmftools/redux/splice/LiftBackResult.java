@@ -2,8 +2,8 @@ package com.hartwig.hmftools.redux.splice;
 
 import java.util.List;
 
-// per-record decision result. Drives the BAM record rewrite and one TSV-A row.
-// liftedAlignments contains every component of the record's alignment set (self + lifted XA alts) for TSV-B.
+// Per-record decision result. Drives the BAM record rewrite and one TSV-A row.
+// liftedAlignments holds the full alignment set (self + lifted XA alts) for TSV-B.
 public record LiftBackResult(
         LiftBackCategory category,
         Composition comp,
@@ -26,9 +26,7 @@ public record LiftBackResult(
         boolean refFullMatch,
         String geneIds,
         String notes,
-        // Transcript's genome strand for tx-contig-derived primaries (+1 forward / -1 reverse).
-        // 0 when the chosen primary is ref-only (e.g. REF_SINGLE, or N-cigar introduced by
-        // rescue/tail-extend whose source transcript strand we haven't threaded through yet).
+        // +1/−1 for tx-contig-derived primaries; 0 for ref-only or rescue/tail-extend origins.
         // Used by the writer to set XS:A:+/- on spliced records.
         int transcriptStrand,
         List<LiftedAlignment> liftedAlignments)
@@ -39,8 +37,7 @@ public record LiftBackResult(
         SUPPLEMENTARY
     }
 
-    // contig composition of an alignment set. Two views: (a) post-drop "kept" alignments drives TSV-A +
-    // XA rebuild; (b) pre-drop full alignment set drives the LiftBackStats summary.
+    // post-drop view drives TSV-A + XA rebuild; pre-drop view drives LiftBackStats summary
     public enum Composition
     {
         REF_ONLY,

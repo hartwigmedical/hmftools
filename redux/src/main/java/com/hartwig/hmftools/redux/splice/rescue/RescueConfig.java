@@ -8,28 +8,25 @@ public class RescueConfig
     public static final int DEFAULT_MAX_INTRON_LENGTH = 1_000_000;
     public static final int DEFAULT_MIN_ANCHOR_OVERHANG = 3;
     public static final int DEFAULT_MAX_CHAIN_DEPTH = 4;
-    // Tolerance (in read bases) for overlap between primary's matched region and supp's matched
-    // region. BWA's primary and supplementary often disagree by 1-5 bases on where the junction
-    // sits because they use different seed/extend choices. Allowing a small overlap and snapping
-    // to an annotated junction within the disputed window catches the real splice without merging
-    // garbage. STAR-style annotated-junction snap is preferred; ties resolve via "trust primary".
+    // Overlap tolerance between primary and supp matched regions. BWA primary/supp often disagree
+    // by 1-5 bases on junction placement; snapping to an annotated junction within this window recovers
+    // the real splice. STAR-style snap preferred; ties resolve via trust-primary.
     public static final int DEFAULT_SOFTCLIP_TOLERANCE = 5;
-    // For the no-supp ref-verify path: how many over-extended matched bases to trim back into the
-    // softclip when probing for an annotated donor/acceptor. BWA frequently extends past the true exon
-    // boundary into the intron (a coincidental ref match), so an exact boundary probe misses the
-    // junction. Measured on exp8: the over-extension caps at ~8 bases (a wider snap recovers no more),
-    // so 8 covers the real range while staying bounded.
+    // How many over-extended matched bases to trim when probing for an annotated donor/acceptor
+    // (no-supp ref-verify path). BWA frequently extends past the true exon boundary into the intron;
+    // measured over-extension caps at ~8 bases.
     public static final int DEFAULT_MAX_BOUNDARY_SHIFT = 8;
-    // Minimum matched exon-proximal run for a PARTIAL ref-verify rescue (where bwa's softclip carries
-    // an outer adapter/low-quality tail that is left clipped). A full-match clip keeps the lenient
-    // MinAnchorOverhang floor; a partial match leaves an unexplained residual, so it needs a longer
-    // anchor before we trust the spliced alignment over bwa's contiguous/soft-clipped one. ~11 bases
-    // makes a coincidental match implausible; sweeps to 15 if the measured false-positive cost warrants.
+    // Minimum exon-proximal matched run for partial ref-verify rescue (softclip with an outer
+    // unmatched tail). Partial matches need a longer anchor than full-match clips because the
+    // unexplained residual raises false-positive risk; 11 makes coincidental matches implausible.
     public static final int DEFAULT_MIN_PARTIAL_MATCH_RUN = 11;
-    // Supp-merge gate: don't build a spliced read from a primary whose own MAPQ is below this. bwa
-    // MAPQ 0 means >=2 equally-good placements (no trustworthy anchor); MAPQ >=1 has a clear best, so
-    // the floor is 1 — reject only the fully-ambiguous primaries.
-    public static final int DEFAULT_MIN_PRIMARY_MAPQ = 1;
+    // Floor is 0 because the merge validates its own anchors; MAPQ-0 primaries are exactly the
+    // tx-contig duplicate artifact the lift is designed to rescue. Knob retained for callers.
+    public static final int DEFAULT_MIN_PRIMARY_MAPQ = 0;
+    // Tx-contig over-run lifts to a fabricated micro-junction (e.g. 100M83N3M48S). Anchors at or
+    // below this length are folded into the softclip before merge. 3 matches the lift-time
+    // softclip-anchor floor (ANNOTATED_JUNCTION_MIN_SOFTCLIP_ANCHOR_BP).
+    public static final int MAX_FABRICATED_MICRO_ANCHOR = 3;
 
     public final boolean Enabled;
     public final int MinIntronLength;
@@ -62,8 +59,7 @@ public class RescueConfig
 
     public static RescueConfig defaults()
     {
-        // tolerance=0 preserves strict-complementary semantics for tests that pre-date the snap
-        // logic; production paths use enabledDefaults().
+        // tolerance=0 preserves strict-complementary semantics for older tests; production uses enabledDefaults().
         return new RescueConfig(
                 false,
                 DEFAULT_MIN_INTRON_LENGTH, DEFAULT_MAX_INTRON_LENGTH,
@@ -73,10 +69,8 @@ public class RescueConfig
 
     public static RescueConfig enabledDefaults()
     {
-        // AnnotatedOnly=false in production: the merge constructs a better alignment from existing
-        // BWA records (primary + supp), so annotation absence shouldn't block it. When annotation
-        // does match a candidate snap point we still prefer that one (lets us recover STAR's exact
-        // junction when annotated); otherwise trust-primary as fallback.
+        // AnnotatedOnly=false: merge builds a better alignment from existing BWA records, so missing
+        // annotation shouldn't block it. Annotated snap preferred when available; otherwise trust-primary.
         return new RescueConfig(
                 true,
                 DEFAULT_MIN_INTRON_LENGTH, DEFAULT_MAX_INTRON_LENGTH,

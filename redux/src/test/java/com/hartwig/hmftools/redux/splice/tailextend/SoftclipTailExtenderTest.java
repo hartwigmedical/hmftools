@@ -21,8 +21,6 @@ public class SoftclipTailExtenderTest
 {
     private static final String CHR1 = "chr1";
 
-    // Builds a RefSequenceSource backed by an in-memory map. Coords are 1-based inclusive. Returns
-    // null when the chromosome is unknown or the range falls outside the array.
     private static RefSequenceSource refSource(final Map<String, byte[]> ref)
     {
         return (chrom, posStart, posEnd) ->
@@ -61,8 +59,6 @@ public class SoftclipTailExtenderTest
     @Test
     public void testTrailingExtendCleanMatch()
     {
-        // Primary 30M10S at chr1:101. Trailing 10 read bases are "CCCCCCCCCC". Ref at chr1:131..140
-        // = "CCCCCCCCCC". Should fully extend the trailing 10S into M.
         final byte[] chr1 = fill(200, 'A');
         for(int i = 130; i < 140; ++i) chr1[i] = 'C';
         final byte[] readBases = new byte[40];
@@ -82,7 +78,7 @@ public class SoftclipTailExtenderTest
     @Test
     public void testTrailingExtendWithOneMismatchInTen()
     {
-        // 10 trailing bases, one mismatch -> floor(10/10)=1 allowed -> still accepts full 10.
+        // one mismatch in 10 -> floor(10/10)=1 allowed -> accepts full 10
         final byte[] chr1 = fill(200, 'A');
         for(int i = 130; i < 140; ++i) chr1[i] = 'C';
         chr1[135] = 'G';                                 // single mismatch in the middle of the tail
@@ -100,12 +96,9 @@ public class SoftclipTailExtenderTest
     @Test
     public void testTrailingExtendPartialThenMismatchBurst()
     {
-        // First 6 bases match, then a burst of mismatches. The max(1, length/10) floor allows the
-        // 7th base to be a mismatch (m=1, allowed=1) -> bestLength=7. The 8th and 9th positions
-        // would push m to 2 and 3 which exceed allowed+1 -> break.
+        // 6 clean matches then mismatches; m=1 budget allows 7th base -> bestLength=7
         final byte[] chr1 = fill(200, 'A');
-        for(int i = 130; i < 136; ++i) chr1[i] = 'C';     // ref C C C C C C ...
-        // remaining positions stay A; read has C there -> mismatches at positions 6+ of softclip
+        for(int i = 130; i < 136; ++i) chr1[i] = 'C';
         final byte[] readBases = new byte[40];
         for(int i = 30; i < 40; ++i) readBases[i] = 'C';
 
@@ -120,8 +113,7 @@ public class SoftclipTailExtenderTest
     @Test
     public void testTrailingExtendRejectShortAllMismatches()
     {
-        // 3-base tail, every base mismatches. Best matched run is 1 (covered by the floor-of-1
-        // tolerance), which is below MinExtension=3 → no extension.
+        // 3-base all-mismatch tail — below MinExtension=3, no extension
         final byte[] chr1 = fill(200, 'A');
         final byte[] readBases = new byte[33];
         for(int i = 0; i < 30; ++i) readBases[i] = 'A';
@@ -136,8 +128,6 @@ public class SoftclipTailExtenderTest
     @Test
     public void testLeadingExtendCleanMatch()
     {
-        // Primary 10S30M at chr1:111. Leading 10 read bases = "TTTTTTTTTT". Ref at chr1:101..110
-        // = "TTTTTTTTTT". Should extend, new start = 101.
         final byte[] chr1 = fill(200, 'A');
         for(int i = 100; i < 110; ++i) chr1[i] = 'T';
         final byte[] readBases = new byte[40];
@@ -157,15 +147,12 @@ public class SoftclipTailExtenderTest
     @Test
     public void testLeadingExtendPartial()
     {
-        // Leading 10S, only the last 5 bases of the softclip match ref. The walk-back algorithm
-        // pairs read[softclipLen-1-i] with ref[refLen-1-i]. After 5 clean matches, the 6th base
-        // is the first mismatch (m=1, allowed=1, accept) -> bestLength=6. The 7th pushes m=2
-        // which exceeds allowed+1, so it breaks.
+        // last 5 of 10 leading softclip bases match; m=1 budget absorbs the 6th -> bestLength=6
         final byte[] chr1 = fill(200, 'A');
-        for(int i = 105; i < 110; ++i) chr1[i] = 'G';     // ref[106..110] = G
+        for(int i = 105; i < 110; ++i) chr1[i] = 'G';
         final byte[] readBases = new byte[40];
-        for(int i = 0; i < 5; ++i) readBases[i] = 'C';     // first 5 softclip bases mismatch
-        for(int i = 5; i < 10; ++i) readBases[i] = 'G';    // last 5 match
+        for(int i = 0; i < 5; ++i) readBases[i] = 'C';
+        for(int i = 5; i < 10; ++i) readBases[i] = 'G';
         for(int i = 10; i < 40; ++i) readBases[i] = 'A';
 
         final TailExtensionResult res = extender(Collections.singletonMap(CHR1, chr1))
@@ -180,10 +167,9 @@ public class SoftclipTailExtenderTest
     @Test
     public void testBothEndsInOneCall()
     {
-        // Lead 5S + trail 5S, both with ref support.
         final byte[] chr1 = fill(200, 'A');
-        for(int i = 105; i < 110; ++i) chr1[i] = 'T';     // ref for leading (pos 106..110)
-        for(int i = 140; i < 145; ++i) chr1[i] = 'C';     // ref for trailing (pos 141..145)
+        for(int i = 105; i < 110; ++i) chr1[i] = 'T';
+        for(int i = 140; i < 145; ++i) chr1[i] = 'C';
         final byte[] readBases = new byte[40];
         for(int i = 0; i < 5; ++i) readBases[i] = 'T';
         for(int i = 5; i < 35; ++i) readBases[i] = 'A';
@@ -202,9 +188,6 @@ public class SoftclipTailExtenderTest
     @Test
     public void testExtendsAcrossNCigar()
     {
-        // 50M100N50M5S — internal N op, trailing 5S. Extension touches only the trailing side.
-        // Ref span = 50 + 100 + 50 = 200 -> alignmentEnd = 101 + 200 - 1 = 300.
-        // Ref at 301..305 = "CCCCC", softclip = "CCCCC".
         final byte[] chr1 = fill(500, 'A');
         for(int i = 300; i < 305; ++i) chr1[i] = 'C';
         final byte[] readBases = new byte[105];
@@ -221,7 +204,7 @@ public class SoftclipTailExtenderTest
     @Test
     public void testMaxExtensionCap()
     {
-        // 60S trailing softclip, ref matches all 60 bases. MaxExtension=30 caps extension at 30.
+        // MaxExtension=30 caps even when all 60 bases match
         final byte[] chr1 = fill(500, 'A');
         for(int i = 130; i < 200; ++i) chr1[i] = 'C';
         final byte[] readBases = new byte[90];
@@ -238,12 +221,11 @@ public class SoftclipTailExtenderTest
     @Test
     public void testJunctionGuardDefersWhenGenomicDivergesTrailing()
     {
-        // Annotated intron starts at chr1:131. The clip matches genomic ref for only the first few
-        // bases then diverges (read splices the junction) — the guard must defer to L1 rescue.
+        // clip diverges from genomic ref at the annotated intron start -> defer to junction rescue
         final byte[] chr1 = fill(200, 'A');
-        chr1[130] = 'C'; chr1[131] = 'C'; chr1[132] = 'C';     // 131..133 match, then ref is 'A'
+        chr1[130] = 'C'; chr1[131] = 'C'; chr1[132] = 'C';
         final byte[] readBases = new byte[40];
-        for(int i = 30; i < 40; ++i) readBases[i] = 'C';        // clip is all 'C' -> diverges after 3
+        for(int i = 30; i < 40; ++i) readBases[i] = 'C';
 
         final Set<ChrIntron> introns = new HashSet<>(Collections.singletonList(
                 new ChrIntron(CHR1, 131, 200)));
@@ -258,10 +240,9 @@ public class SoftclipTailExtenderTest
     @Test
     public void testRetainedIntronExtendsThroughJunctionTrailing()
     {
-        // Annotated intron starts at chr1:131, but the clip matches the contiguous genome cleanly all
-        // the way across it — intron retention. STAR aligns straight through, so we extend, not defer.
+        // clip matches contiguous genome across the annotated intron — intron retention, extend not defer
         final byte[] chr1 = fill(200, 'A');
-        for(int i = 130; i < 140; ++i) chr1[i] = 'C';           // 131..140 all match the clip
+        for(int i = 130; i < 140; ++i) chr1[i] = 'C';
         final byte[] readBases = new byte[40];
         for(int i = 30; i < 40; ++i) readBases[i] = 'C';
 
@@ -279,12 +260,11 @@ public class SoftclipTailExtenderTest
     @Test
     public void testJunctionGuardDefersWhenGenomicDivergesLeading()
     {
-        // Annotated intron ends at chr1:110. Clip matches genomic ref for only the last few bases
-        // then diverges — guard must defer.
+        // clip diverges from genomic ref at the annotated intron end -> defer
         final byte[] chr1 = fill(200, 'A');
-        chr1[107] = 'T'; chr1[108] = 'T'; chr1[109] = 'T';     // 108..110 match, rest 'A'
+        chr1[107] = 'T'; chr1[108] = 'T'; chr1[109] = 'T';
         final byte[] readBases = new byte[40];
-        for(int i = 0; i < 10; ++i) readBases[i] = 'T';         // clip all 'T' -> diverges
+        for(int i = 0; i < 10; ++i) readBases[i] = 'T';
 
         final Set<ChrIntron> introns = new HashSet<>(Collections.singletonList(
                 new ChrIntron(CHR1, 21, 110)));
@@ -299,10 +279,9 @@ public class SoftclipTailExtenderTest
     @Test
     public void testRetainedIntronExtendsThroughJunctionLeading()
     {
-        // Annotated intron ends at chr1:110, but the clip matches the contiguous genome cleanly across
-        // it — retention. Extend, not defer.
+        // clip cleanly matches genome across the annotated intron end — retention, extend not defer
         final byte[] chr1 = fill(200, 'A');
-        for(int i = 100; i < 110; ++i) chr1[i] = 'T';           // 101..110 all match
+        for(int i = 100; i < 110; ++i) chr1[i] = 'T';
         final byte[] readBases = new byte[40];
         for(int i = 0; i < 10; ++i) readBases[i] = 'T';
 
@@ -333,7 +312,7 @@ public class SoftclipTailExtenderTest
     @Test
     public void testShortSoftclipBelowMinUnchanged()
     {
-        // 2S softclip < MinSoftclipLength=3 -> unchanged.
+        // 2S < MinSoftclipLength=3 -> unchanged
         final byte[] chr1 = fill(200, 'A');
         for(int i = 130; i < 132; ++i) chr1[i] = 'C';
         final byte[] readBases = new byte[32];
@@ -348,7 +327,7 @@ public class SoftclipTailExtenderTest
     @Test
     public void testHardClipRefusal()
     {
-        // Hard clip present -> skip with countSkippedComplexShape.
+        // hard clip -> skipped as complex shape
         final byte[] chr1 = fill(200, 'A');
         final byte[] readBases = fill(35, 'A');
 
@@ -362,7 +341,7 @@ public class SoftclipTailExtenderTest
     @Test
     public void testIndelAdjacentToSoftclipRefused()
     {
-        // 30M5I3S — the op adjacent to the trailing S is I, not M. Refuse to extend.
+        // op adjacent to trailing S is I, not M -> refuse
         final byte[] chr1 = fill(200, 'A');
         for(int i = 130; i < 140; ++i) chr1[i] = 'C';
         final byte[] readBases = fill(38, 'A');
@@ -400,7 +379,7 @@ public class SoftclipTailExtenderTest
 
         final SoftclipTailExtender ext = extender(Collections.singletonMap(CHR1, chr1));
         ext.tryExtend(CHR1, 101, "30M10S", readBases);
-        ext.tryExtend(CHR1, 101, "40M", readBases);     // no softclip, eval still counted
+        ext.tryExtend(CHR1, 101, "40M", readBases);     // no softclip — still counted as evaluated
 
         assertEquals(2, ext.statistics().recordsEvaluated());
         assertEquals(1, ext.statistics().recordsExtended());

@@ -17,11 +17,8 @@ import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.TextCigarCodec;
 
-// per-record categorizer: takes a SAMRecord aligned against ref + Tx contigs and produces a LiftBackResult
-// with the chosen lifted (chrom, pos, CIGAR), the assigned LiftBackCategory, and the full lifted alignment set.
-//
-// 1:1 contract: every input record produces exactly one result. UNMAPPED / LIFT_FAILED results carry placeholder
-// fields so the downstream emit step can flag the BAM record unmapped without dropping it.
+// Lifts SAMRecords aligned against ref + Tx contigs to genomic coords. Every input record produces exactly one
+// result; UNMAPPED / LIFT_FAILED results carry placeholder fields so the emit step can flag records unmapped.
 public class LiftBackResolver
 {
     private static final String XA_TAG = "XA";
@@ -32,36 +29,25 @@ public class LiftBackResolver
     private static final int RESCUED_MAPQ = 60;
     private static final int INPUT_UNIQUE_MAPQ = 60;
 
-    // Min exon overhang to KEEP a tx-contig junction anchor at the read's true terminus (a bare yM nN
-    // with no adjacent softclip). Set to 1: every tx-contig junction is annotated by construction, so a
-    // short overhang maps to a real exon base, and STAR was observed to keep annotated-junction anchors
-    // down to 1bp (exp8 ACTN01020030T). A higher floor clamped 1-2bp anchors STAR kept, manufacturing
-    // false short-anchor junction diffs.
+    // Set to 1: every tx-contig junction is annotated by construction, so even a 1bp anchor is a real exon
+    // base (STAR keeps annotated-junction anchors down to 1bp; a higher floor manufactured false junction diffs).
     private static final int ANNOTATED_JUNCTION_MIN_ANCHOR_BP = 1;
 
-    // Min exon overhang to keep a junction anchor that sits NEXT TO a softclip (...nN yM zS, or zS yM
-    // nN...). There the read did not span the junction - bwa over-ran the exon boundary by a few bases
-    // and softclipped the rest - so a sub-floor anchor is an unsupported (spurious) junction and is
-    // rolled into the softclip. Kept higher than the bare floor because the adjacent clip is evidence the
-    // tiny anchor is an over-extension artifact, not the read's real start/end.
+    // Higher than bare floor because an adjacent softclip indicates bwa over-ran the exon boundary —
+    // the tiny anchor is an over-extension artefact, not the read's real terminus.
     private static final int ANNOTATED_JUNCTION_MIN_SOFTCLIP_ANCHOR_BP = 3;
 
-    // bwa-mem2 default scoring, used to reconstruct an alignment score from CIGAR + NM. XA alts carry
-    // no AS tag, so to count only genuine co-optimal competitors (the way STAR's outFilterMultimapScoreRange
-    // does) we recompute each alignment's score here. Must track the `bwa-mem2 mem` invocation: match +1,
-    // mismatch -4, gap-open -6, gap-extend -1; soft-clips are not penalised in AS.
+    // bwa-mem2 default scoring (match +1, mismatch -4, gap-open -6, gap-extend -1; soft-clips not penalised).
+    // XA alts carry no AS tag, so score is reconstructed to filter sub-optimal competitors as STAR does.
     private static final int SCORE_MATCH = 1;
     private static final int SCORE_MISMATCH = 4;
     private static final int SCORE_GAP_OPEN = 6;
     private static final int SCORE_GAP_EXTEND = 1;
 
-    // per-alt-contig list of segments sorted by altStart so a record's alt-contig position can be
-    // bin-searched back to the owning transcript. Non-alt-contig alignments (ref) fall through unindexed.
+    // per-alt-contig list of segments sorted by altStart for binary search back to the owning transcript.
     private final Map<String, List<ContigEntry>> mSegmentsByAltContig;
 
-    // optional annotated-exon lookup. When provided, a hidden tie (XS==AS, no XA) on a ref-only primary
-    // is overridden when the lifted primary lands inside an annotated exon — the tied alt is then
-    // almost certainly a sub-threshold intronic/intergenic paralog.
+    // when present, resolves hidden ties (XS==AS, no XA) on ref-only primaries landing inside an annotated exon.
     private final ExonRegionIndex mExonIndex;
 
     public LiftBackResolver(final List<ContigEntry> entries)
@@ -85,8 +71,7 @@ public class LiftBackResolver
         return mSegmentsByAltContig.keySet();
     }
 
-    // locates the transcript segment that owns altPos on the given alt contig, or null if the position
-    // falls outside any transcript (e.g. inside the inter-transcript N spacer) or the contig isn't an alt contig.
+    // Returns the segment owning altPos, or null if it falls in an inter-transcript spacer or the contig is unknown.
     ContigEntry findSegment(final String altContig, final int altPos)
     {
         final List<ContigEntry> segments = mSegmentsByAltContig.get(altContig);
@@ -112,8 +97,7 @@ public class LiftBackResolver
 
         if(candidate < 0)
         {
-            // altPos sits before the first segment's altStart (in the upstream spacer). Hand back the first
-            // segment so ContigTranslator's leading-overhang clamp can salvage it.
+            // altPos is before the first segment; return it so ContigTranslator's leading-overhang clamp can salvage it.
             return segments.isEmpty() ? null : segments.get(0);
         }
 
@@ -121,8 +105,7 @@ public class LiftBackResolver
         if(altPos <= segment.altEnd())
             return segment;
 
-        // altPos sits in the spacer between candidate and candidate+1. Choose whichever neighbour the read
-        // overhangs less, and let ContigTranslator's clamp convert the overhang into soft-clip.
+        // altPos in the inter-segment spacer; choose the nearer neighbour and let ContigTranslator clamp the overhang.
         if(candidate + 1 < segments.size())
         {
             final ContigEntry next = segments.get(candidate + 1);
@@ -134,7 +117,7 @@ public class LiftBackResolver
         return segment;
     }
 
-    // lift-only API for callers that don't need the full LiftBackResult machinery (e.g. SA tag rewriting).
+    // Lift-only entry point for callers that don't need the full LiftBackResult (e.g. SA tag rewriting).
     public LiftedCoords liftCoords(final String contig, final int pos, final String cigarStr)
     {
         final LiftedAlignment lifted = liftAlignment(
@@ -158,9 +141,7 @@ public class LiftBackResolver
     private LiftBackResult resolvePrimary(final SAMRecord record)
     {
         final List<LiftedAlignment> xaAlts = parseAndLiftXa(record);
-        // numXaAlts in the result tracks the *deduped + lifted* count, not the raw XA entry count, so dedup
-        // behavior remains visible in TSV-A.
-        return resolvePrimaryWithAlts(record, xaAlts, xaAlts.size());
+        return resolvePrimaryWithAlts(record, xaAlts, xaAlts.size()); // numXaAlts tracks the deduped+lifted count
     }
 
     private LiftBackResult resolvePrimaryWithAlts(
@@ -198,8 +179,9 @@ public class LiftBackResolver
         final boolean hiddenTie = inputMapq == 0 && hasHiddenTie(record);
         final boolean inAnnotatedExon = mExonIndex != null
                 && mExonIndex.contains(effectivePrimary.LiftedChrom, effectivePrimary.LiftedPos);
+        final boolean hasTxMatch = features.NumTxAlts > 0;
         final int updatedMapq = decidePrimaryMapq(
-                inputMapq, numLoci, swapped, hiddenTie, effectivePrimary.fromTxContig(), inAnnotatedExon);
+                inputMapq, numLoci, swapped, hiddenTie, effectivePrimary.fromTxContig(), inAnnotatedExon, hasTxMatch);
 
         final LiftedAlignment primaryCoords = effectivePrimary;
 
@@ -218,9 +200,7 @@ public class LiftBackResolver
                 allAlignments);
     }
 
-    // Supplementaries (0x800) from split reads. Lift coords, build a SUPPLEMENTARY-role result with
-    // one alignment in the set. MAPQ=0 on a tx-contig supp is the multi-alt-contig tie artefact and
-    // is rescued to RESCUED_MAPQ.
+    // MAPQ=0 on a tx-contig supplementary is the multi-alt-contig tie artefact; rescue to RESCUED_MAPQ.
     private LiftBackResult supplementaryResult(final SAMRecord record)
     {
         final LiftedAlignment lifted = liftAlignment(
@@ -253,9 +233,7 @@ public class LiftBackResolver
                 List.of(lifted));
     }
 
-    // parses the XA tag, lifts each alt, and dedupes XA-internally by lifted (chrom, pos, CIGAR).
-    // Self is intentionally NOT in the dedup key set so a Tx XA alt that lifts to the same coords as a
-    // ref self-alignment is preserved (drives BOTH_AGREE).
+    // Self is excluded from the dedup key set so a Tx XA alt lifting to the same coords as a ref self is preserved (drives BOTH_AGREE).
     private List<LiftedAlignment> parseAndLiftXa(final SAMRecord record)
     {
         final List<LiftedAlignment> alts = new ArrayList<>();
@@ -276,7 +254,7 @@ public class LiftBackResolver
             final String contig = parts[0];
             final String cigar = parts[2];
 
-            // bwa XA pos is signed (sign = strand). Tolerate malformed XA — skip entries we can't parse.
+            // bwa XA pos is signed (sign encodes strand). Tolerate malformed entries.
             final int signedPos;
             int nm;
             try
@@ -310,17 +288,15 @@ public class LiftBackResolver
         return alts;
     }
 
-    // single lift kernel. Returns null when the contig is an alt contig but the position cannot be
-    // translated (alt missing from segments map, or position falls outside any transcript span).
-    // For ref alignments the returned LiftedAlignment is a coord-preserving pass-through.
+    // Returns null when the contig is an unknown alt contig or the position falls outside any transcript.
+    // Ref alignments pass through as-is.
     private LiftedAlignment liftAlignment(
             final LiftedAlignment.AlignmentSource source, final String contig, final int pos, final String cigarStr,
             final int as, final int nm, final boolean forwardStrand)
     {
         if(!mSegmentsByAltContig.containsKey(contig))
         {
-            // alt contig missing from the segments map (FASTA/sidecar mismatch) must not pass through
-            // as if it were ref — the resulting "lifted" coords would leak _tx contig names into the BAM.
+            // Unknown alt contig must not pass through as ref — that would leak _tx contig names into the BAM.
             if(contig.endsWith(ALT_CONTIG_SUFFIX))
                 return null;
 
@@ -343,9 +319,7 @@ public class LiftBackResolver
 
         final boolean softClipAtBoundary = ContigTranslator.hasSoftClipAtExonBoundary(entry, pos, parsedCigar);
 
-        // A tx-contig walk that dribbles a few bases past an exon boundary fabricates a junction
-        // anchoring a tiny terminal yM. Drop sub-threshold anchors at both ends so we don't emit a
-        // junction we can't support; a leading trim advances the start past the dropped anchor.
+        // Drop sub-threshold terminal anchors that bwa fabricated by walking past an exon boundary.
         final ContigTranslator.MicroAnchorResult trimmed = ContigTranslator.trimMicroAnchors(
                 translated.genomicCigar(), ANNOTATED_JUNCTION_MIN_ANCHOR_BP, ANNOTATED_JUNCTION_MIN_SOFTCLIP_ANCHOR_BP);
 
@@ -358,12 +332,9 @@ public class LiftBackResolver
                 softClipAtBoundary, forwardStrand, entry.strand());
     }
 
-    // Count distinct genomic loci among only the best-scoring alignments. bwa-mem2 -a / XA carries
-    // strictly sub-optimal alts (a worse-scoring paralog hit, the other half of a split read) that are
-    // not real placement competitors — STAR excludes anything below the best score by
-    // outFilterMultimapScoreRange. Counting them here inflated numLoci and blocked the MAPQ rescue, so
-    // a perfectly-aligned read whose exon also exists as a sub-optimal hit elsewhere stayed at MAPQ 0.
-    // Restricting to the best score collapses those down: a uniquely-placed read scores one locus.
+    // Counts distinct loci among only the best-scoring alignments, matching STAR's outFilterMultimapScoreRange
+    // semantics. Sub-optimal XA alts (paralog hits, split-read mates) are not real placement competitors;
+    // including them inflated numLoci and blocked MAPQ rescue for uniquely-placed reads.
     private static int countDistinctLoci(final List<LiftedAlignment> alignments)
     {
         if(alignments.isEmpty())
@@ -382,9 +353,7 @@ public class LiftBackResolver
         return loci.size();
     }
 
-    // bwa-mem2 alignment score from CIGAR + NM. NM counts mismatches plus inserted and deleted bases,
-    // so mismatches = NM - indelBases. Matched bases score +1 each, mismatches -4, and every gap costs
-    // an open (-6) plus one extend (-1) per base. Reproduces the AS tag exactly for default scoring.
+    // Reconstruct bwa-mem2 AS from CIGAR + NM (NM = mismatches + indel bases, so mismatches = NM - indelBases).
     static int reconstructedScore(final LiftedAlignment alignment)
     {
         final Cigar cigar = TextCigarCodec.decode(alignment.OrigCigar);
@@ -465,20 +434,16 @@ public class LiftBackResolver
                 List.of());
     }
 
-    // MAPQ rewrite policy for primary records. Pure function of the inputs; extracted so the policy
-    // can be unit-tested independently of LiftBackDiscriminator / SAMRecord plumbing.
-    //
-    //  (1) primary was swapped by the discriminator → rescue to RESCUED_MAPQ.
-    //  (2) input MAPQ=0 and the read lifts back to a single genomic locus → rescue, unless an
-    //      unresolved hidden tie is in play (XS==AS, primary isn't tx-derived, and we have no exon
-    //      evidence that the unseen alt is sub-threshold).
-    //  (3) input MAPQ=60 is the sanger cap for confident-unique placements → pass through as
-    //      RESCUED_MAPQ (no-op when RESCUED_MAPQ == 60).
-    //  (4) input MAPQ in (0, 60) is graded quality signal → leave alone.
+    // MAPQ rewrite policy for primary records; extracted for unit testing.
+    // Rescue to RESCUED_MAPQ if: swapped by discriminator; or MAPQ=0 + single locus + no unresolved hidden tie.
+    // Hidden tie (XS==AS, ref-only primary, not in annotated exon) blocks rescue — the unseen alt may be real.
+    // Rescue is gated on hasTxMatch: without a tx alignment, MAPQ-0 is not a tx-artefact and is left alone.
     static int decidePrimaryMapq(
             final int inputMapq, final int numLoci, final boolean swapped, final boolean hiddenTie,
-            final boolean primaryFromTxContig, final boolean primaryInAnnotatedExon)
+            final boolean primaryFromTxContig, final boolean primaryInAnnotatedExon, final boolean hasTxMatch)
     {
+        if(!hasTxMatch)
+            return inputMapq;
         if(swapped)
             return RESCUED_MAPQ;
         final boolean unresolvedHiddenTie = hiddenTie && !primaryFromTxContig && !primaryInAnnotatedExon;
@@ -489,10 +454,7 @@ public class LiftBackResolver
         return inputMapq;
     }
 
-    // bwa-mem2 reports XS as the second-best alignment score; when XS == AS, an equally-scoring alt
-    // exists that wasn't emitted (XA omitted because of suppression heuristics, contig type, etc.). The
-    // resolver can't see this alt so it would mistake the read for unique — flag it as a hidden tie so
-    // the MAPQ rescue is skipped.
+    // When XS == AS, an equally-scoring alt wasn't emitted by bwa. Flag as a hidden tie to skip MAPQ rescue.
     private static boolean hasHiddenTie(final SAMRecord record)
     {
         final Integer alignmentScore = record.getIntegerAttribute(AS_TAG);

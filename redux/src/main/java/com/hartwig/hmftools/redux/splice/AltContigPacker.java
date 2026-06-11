@@ -5,10 +5,8 @@ import static com.hartwig.hmftools.redux.splice.SpliceCommon.altContigName;
 import java.util.ArrayList;
 import java.util.List;
 
-// packs a list of per-transcript sequences into a single per-chromosome alt contig. Lays transcripts down in
-// input order with an N-spacer between consecutive transcripts so no real read can align across two.
-// Output: the assembled sequence + one ContigEntry per packed transcript, each carrying its altStart/altEnd
-// position on the alt contig. Pure function — no I/O — so it tests cleanly in isolation.
+// Packs per-transcript sequences into a single per-chromosome alt contig with N-spacers between transcripts.
+// Pure function — no I/O.
 public final class AltContigPacker
 {
     private final String mSpacer;

@@ -4,10 +4,8 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.region.BaseRegion;
 
-// one transcript-shaped segment laid down on a per-chromosome alt contig. AltStart/AltEnd are 1-based inclusive
-// positions on contigName; exonSpans are 1-based inclusive genomic positions on chromosome.
-// strand is the transcript's genome strand: +1 forward, -1 reverse. Forwarded to LiftedAlignment so the
-// emitter can set XS:A:+/- on spliced (N-cigar) records lifted from this contig.
+// One transcript segment on the alt contig. AltStart/AltEnd are 1-based inclusive positions on contigName;
+// exonSpans are 1-based inclusive genomic positions. Strand (+1/-1) is forwarded to set XS:A on spliced reads.
 public record ContigEntry(
         String contigName,
         int altStart,

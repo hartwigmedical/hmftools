@@ -9,9 +9,7 @@ import java.util.List;
 
 import org.junit.Test;
 
-// Issue #4: contains() must be O(log N) (binary search on merged ranges), not a backward linear scan.
-// These tests exercise the merge-at-load path and a few overlap edge cases that the earlier scan-back
-// implementation tripped over.
+// contains() uses binary search on merged ranges; earlier scan-back was O(N) and tripped on overlap edge cases.
 public class ExonRegionIndexTest
 {
     @Test
@@ -19,7 +17,6 @@ public class ExonRegionIndexTest
     {
         ExonRegionIndex idx = build(List.of(new int[] { 100, 200 }, new int[] { 300, 400 }));
 
-        // start, interior, end of an exon all count as inside
         assertTrue(idx.contains("chr1", 100));
         assertTrue(idx.contains("chr1", 150));
         assertTrue(idx.contains("chr1", 200));
@@ -32,36 +29,31 @@ public class ExonRegionIndexTest
     {
         ExonRegionIndex idx = build(List.of(new int[] { 100, 200 }, new int[] { 300, 400 }));
 
-        // outside all exons
-        assertFalse(idx.contains("chr1", 50));     // before first
-        assertFalse(idx.contains("chr1", 250));    // intronic
-        assertFalse(idx.contains("chr1", 500));    // after last
+        assertFalse(idx.contains("chr1", 50));
+        assertFalse(idx.contains("chr1", 250));
+        assertFalse(idx.contains("chr1", 500));
     }
 
     @Test
     public void containsAcrossOverlappingAndAbuttingIntervals() throws Exception
     {
-        // overlapping (100-200) and (150-300) should merge to (100-300); abutting (301-400) merges to
-        // (100-400). The previous backward-scan would visit every prior exon to confirm misses; the
-        // merged view exits in O(log N).
         ExonRegionIndex idx = build(List.of(
                 new int[] { 100, 200 },
                 new int[] { 150, 300 },
                 new int[] { 301, 400 },
                 new int[] { 600, 700 }));
 
-        assertTrue(idx.contains("chr1", 250));   // overlap region
-        assertTrue(idx.contains("chr1", 301));   // abutment join
-        assertTrue(idx.contains("chr1", 400));   // end of merged range
-        assertFalse(idx.contains("chr1", 401));  // gap between merged ranges
-        assertFalse(idx.contains("chr1", 599));  // intergenic
-        assertTrue(idx.contains("chr1", 700));   // start of second merged range
+        assertTrue(idx.contains("chr1", 250));
+        assertTrue(idx.contains("chr1", 301));
+        assertTrue(idx.contains("chr1", 400));
+        assertFalse(idx.contains("chr1", 401));
+        assertFalse(idx.contains("chr1", 599));
+        assertTrue(idx.contains("chr1", 700));
     }
 
     @Test
     public void chromosomeNormalizationIsBidirectional() throws Exception
     {
-        // gene_data uses "1", BAM uses "chr1" — contains() must accept either form
         ExonRegionIndex idx = build(List.of(new int[] { 100, 200 }));
         assertTrue(idx.contains("chr1", 150));
         assertTrue(idx.contains("1", 150));

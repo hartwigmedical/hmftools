@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.redux.splice;
 
-// minimal lifted-coord summary for one primary alignment, cached in pass 1 so pass 2 can patch the
-// partner record's mate fields (RNEXT / PNEXT / mate-strand / mate-unmapped / TLEN) without re-resolving.
+// Lifted-coord summary for one primary alignment, cached in pass 1 to patch partner mate fields in pass 2.
 // TODO: negativeStrand may need XS:A:+/- from gene strand for IGV colouring — revisit on redux integration.
 public record LiftedMateInfo(
         String chromosome,

@@ -61,7 +61,6 @@ public class SpliceMotifTest
     {
         assertEquals(SpliceMotif.TIER_NONE, SpliceMotif.classify(b("AA"), b("GG")));
         assertEquals(SpliceMotif.TIER_NONE, SpliceMotif.classify(b("NN"), b("NN")));
-        // half-canonical (only donor matches) doesn't count
         assertEquals(SpliceMotif.TIER_NONE, SpliceMotif.classify(b("GT"), b("CC")));
         assertEquals(SpliceMotif.TIER_NONE, SpliceMotif.classify(b("CC"), b("AG")));
     }

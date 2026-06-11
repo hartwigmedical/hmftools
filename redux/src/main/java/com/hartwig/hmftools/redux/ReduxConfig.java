@@ -45,6 +45,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.bam.BamUtils;
 import com.hartwig.hmftools.common.bamops.BamToolName;
 import com.hartwig.hmftools.redux.bqr.BqrConfig;
@@ -61,6 +62,7 @@ import com.hartwig.hmftools.redux.duplicate.DuplicatesConfig;
 import com.hartwig.hmftools.redux.common.FilterReadsType;
 import com.hartwig.hmftools.redux.jitter.MsJitterConfig;
 import com.hartwig.hmftools.redux.duplicate.UmiConfig;
+import com.hartwig.hmftools.redux.splice.SpliceStageConfig;
 import com.hartwig.hmftools.redux.unmap.ReadChecker;
 import com.hartwig.hmftools.redux.unmap.ReadUnmapper;
 import com.hartwig.hmftools.redux.write.ReadOutput;
@@ -94,6 +96,8 @@ public class ReduxConfig
     public final BqrConfig BQR;
 
     public final ReadUnmapper UnmapRegions;
+
+    public final SpliceStageConfig SpliceConfig;
 
     public final String OutputBam;
     public final String OutputDir;
@@ -261,6 +265,11 @@ public class ReduxConfig
             if(configBuilder.hasFlag(UNMAP_MITOCHONDRIAL))
                 UnmapRegions.addMitochondrialRegion(RefGenVersion);
         }
+        else if(configBuilder.hasValue(SpliceStageConfig.RNA_UNMAP_REGIONS) && !SkipUnmapping)
+        {
+            // no genome-wide unmap file, but curated RNA zones still need a mutable map to merge into
+            UnmapRegions = new ReadUnmapper(Maps.newHashMap());
+        }
         else
         {
             UnmapRegions = new ReadUnmapper(Collections.emptyMap());
@@ -268,6 +277,11 @@ public class ReduxConfig
 
         UnmapAltDecoys = configBuilder.hasFlag(UNMAP_NON_ALT_DECOY);
         StandardChromosomes = configBuilder.hasFlag(STANDARD_CHROMOSOMES);
+
+        SpliceConfig = new SpliceStageConfig(configBuilder);
+
+        if(SpliceConfig.RnaUnmapRegionsFile != null && !SkipUnmapping)
+            UnmapRegions.mergeAlwaysUnmapRegions(ReadUnmapper.loadAlwaysUnmapRegions(SpliceConfig.RnaUnmapRegionsFile));
 
         BamStringency = BamUtils.validationStringency(configBuilder);
 
@@ -392,6 +406,8 @@ public class ReduxConfig
 
         UnmappedRegions.registerConfig(configBuilder);
 
+        SpliceStageConfig.registerConfig(configBuilder);
+
         configBuilder.addFlag(NO_WRITE_BAM, "BAM not written, producing only TSV reads and/or statistics");
         configBuilder.addFlag(KEEP_INTERIM_BAMS, "Do no delete per-thread BAMs");
 
@@ -463,6 +479,7 @@ public class ReduxConfig
         ParallelConcatenation = false;
 
         UnmapRegions = readUnmapper;
+        SpliceConfig = null;
 
         BqrAndJitterMsiOnly = false;
         JitterConfig = null;

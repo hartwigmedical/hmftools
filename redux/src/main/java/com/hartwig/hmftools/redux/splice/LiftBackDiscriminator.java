@@ -4,26 +4,19 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-// pure decision step on a record's full lifted alignment set (self + lifted XA alts):
-//   1. categorize() walks the alignments and returns the LiftBackCategory along with the per-alignment
-//      evidence the resolver feeds into LiftBackResult / TSV-A.
-//   2. apply() resolves the discriminator outcome for the categories that need one: marks losing-side
-//      alts Dropped, and may swap the BAM primary onto a winning XA alt (e.g. when bwa picked an
-//      intronless paralog over the spliced parent gene).
-//
-// No SAMRecord, no I/O — kept separate from LiftBackResolver so the decision tree reads as one piece.
+// Pure decision step on a record's full lifted alignment set (self + lifted XA alts).
+// categorize() classifies the set; apply() mutates Dropped/IsPrimaryChoice for categories that need
+// a swap (e.g. intronless paralog vs. spliced parent gene). No I/O — separate from LiftBackResolver
+// so the decision tree reads as one piece.
 public final class LiftBackDiscriminator
 {
-    // minimum flanking M length for an N operator to be treated as a real splice junction in
-    // discriminator decisions. Lift-back of a tx alignment whose last bases bleed into the next exon
-    // can produce N with anchors of 1-3 bp — those are not evidence of splicing and must not swap the
-    // primary off a clean ref full-match. 8 bp gives ~1-in-65k random-match probability.
+    // Minimum flanking M length for an N to count as a real splice junction. Short anchors (1-3 bp)
+    // from tx-boundary bleed are not splicing evidence; 8 bp gives ~1-in-65k random-match probability.
     static final int MIN_REAL_N_ANCHOR = 8;
 
     private LiftBackDiscriminator() {}
 
-    // per-alignment evidence the discriminator collected, emitted into TSV-A so post-hoc analysis can
-    // answer "why did this read land in category X?".
+    // Per-alignment evidence emitted into TSV-A for post-hoc "why this category" analysis.
     public static class Features
     {
         public LiftBackCategory Category;
@@ -84,8 +77,7 @@ public final class LiftBackDiscriminator
         {
             if(hasRef && hasTx)
             {
-                // tx found an annotated junction at one locus, ref alts hit other loci intronlessly —
-                // almost always processed pseudogenes / paralogs. Favour tx and swap the BAM primary.
+                // tx has annotated junction, ref alts map intronlessly at other loci — typically paralogs/pseudogenes.
                 if(features.TxHasNCigar && !features.RefHasNCigar)
                     features.Category = LiftBackCategory.BOTH_MULTI_TX_JUNCTION;
                 else
@@ -98,7 +90,6 @@ public final class LiftBackDiscriminator
             return features;
         }
 
-        // single locus
         if(hasRef && !hasTx)
         {
             features.Category = LiftBackCategory.REF_SINGLE;
@@ -110,15 +101,14 @@ public final class LiftBackDiscriminator
             return features;
         }
 
-        // single locus, both ref and tx contributed — run discriminator
+        // single locus, both ref and tx — run discriminator
         if(distinctCigars.size() == 1 && !anyHasN)
             features.Category = LiftBackCategory.BOTH_AGREE;
         else if(features.TxHasNCigar && features.RefSoftClipped)
             features.Category = LiftBackCategory.BOTH_TX_JUNCTION_REF_SOFTCLIP;
         else if(features.TxHasNCigar && features.RefFullMatch && !features.RefSoftClipped)
-            // ref full-match across the supposed intron with NM=0 is overwhelming evidence the read is
-            // genuinely unspliced (pre-mRNA / retained-intron / DNA contamination). The tx N-CIGAR is
-            // the artifact — favour ref.
+            // ref full-match across the supposed intron is strong evidence the read is unspliced
+            // (pre-mRNA / retained intron / DNA contamination) — the tx N-CIGAR is the artifact.
             features.Category = LiftBackCategory.BOTH_TX_JUNCTION_REF_MATCH;
         else if(features.TxSoftClipAtBoundary && features.RefFullMatch)
             features.Category = LiftBackCategory.BOTH_TX_SOFTCLIP_REF_MATCH;
@@ -130,9 +120,7 @@ public final class LiftBackDiscriminator
 
     public record Outcome(LiftedAlignment effectivePrimary, String note) {}
 
-    // applies confident discriminator outcomes by mutating LiftedAlignment.Dropped / IsPrimaryChoice.
-    // Returns the effective primary (the alignment whose lifted coords become the BAM record's coords)
-    // and a short note for TSV diagnostics.
+    // Mutates Dropped/IsPrimaryChoice and returns the effective primary and a short diagnostic note.
     public static Outcome apply(
             final List<LiftedAlignment> alignments, final LiftBackCategory category, final LiftedAlignment self)
     {
@@ -160,8 +148,7 @@ public final class LiftBackDiscriminator
         }
     }
 
-    // ref-favouring outcome. If self is ref, drop all tx alts. If self is tx, swap: promote the winning
-    // ref alt to primary, demote self (tx) to XA, drop other tx alts.
+    // Ref-favouring: if self is ref, drop tx alts. If self is tx, swap to the best ref alt.
     private static Outcome promoteRefOverTx(final List<LiftedAlignment> alignments, final LiftedAlignment self)
     {
         if(!self.fromTxContig())
@@ -194,9 +181,7 @@ public final class LiftBackDiscriminator
         return new Outcome(winner, "swapped_tx_to_ref");
     }
 
-    // tx-favouring outcome. If self is tx, drop all ref alts. If self is ref, swap: promote the winning
-    // tx alt to primary, demote self to XA (preserves the original locus as an informative paralog hit),
-    // and drop other ref alts.
+    // Tx-favouring: if self is tx, drop ref alts. If self is ref, swap to the best tx alt (self demoted to XA to preserve the paralog locus).
     private static Outcome promoteTxOverRef(final List<LiftedAlignment> alignments, final LiftedAlignment self)
     {
         if(self.fromTxContig())
@@ -207,14 +192,14 @@ public final class LiftBackDiscriminator
             return new Outcome(self, "");
         }
 
-        // prefer the tx alt that actually carries the N junction; fall back to any tx alt
+        // Prefer the N-junction tx alt with fewest mismatches; fall back to any tx alt.
         LiftedAlignment winner = null;
         for(final LiftedAlignment la : alignments)
         {
             if(la.fromTxContig() && la.cigarHasN())
             {
-                winner = la;
-                break;
+                if(winner == null || la.NumMismatches < winner.NumMismatches)
+                    winner = la;
             }
         }
         if(winner == null)

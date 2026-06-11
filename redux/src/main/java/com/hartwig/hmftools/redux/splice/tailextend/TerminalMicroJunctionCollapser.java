@@ -3,26 +3,22 @@ package com.hartwig.hmftools.redux.splice.tailextend;
 import static com.hartwig.hmftools.redux.splice.rescue.CigarShape.OP_MATCH;
 import static com.hartwig.hmftools.redux.splice.rescue.CigarShape.OP_SEQ_MATCH;
 import static com.hartwig.hmftools.redux.splice.rescue.CigarShape.OP_SKIPPED;
+import static com.hartwig.hmftools.redux.splice.rescue.CigarShape.OP_SOFTCLIP;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.hartwig.hmftools.redux.splice.rescue.CigarShape;
 import com.hartwig.hmftools.redux.splice.rescue.RefSequenceSource;
 
-// Removes a spurious junction that the tx-contig walk fabricated at a read terminus. When a read's
-// bases run a base or two past an exon boundary on the concatenated transcript contig, lift-back
-// injects a tiny terminal anchor across an intron: "<...>M nN yM" (trailing) or "yM nN <...>M"
-// (leading), with y at or below MaxAnchor. STAR routinely aligns these same bases contiguously (no
-// intron), because the bases also match the genome continuing the near exon. When they do, the
-// junction is unnecessary and is collapsed: the yM is merged into the adjacent exon's M and the nN is
-// dropped (a leading collapse moves the alignment start back by y+n).
-//
-// This is NOT the legitimate short-anchor case (e.g. a real "2M 80N 149M" where the read genuinely
-// starts 2 bases into an exon): there the terminal bases do NOT match the genome contiguously (an
-// intron sits between), so the ref check fails and the junction is kept. The ref comparison is the
-// discriminator, so anchor length alone never drives the decision.
+// Removes a spurious terminal junction fabricated when the tx-contig walk over-extends a read past an
+// exon boundary. The tiny anchor (yM, y <= MaxAnchor) is collapsed when its bases match the genome
+// contiguously past the near exon; the intron is dropped and any reclaimed softclip bases are merged
+// into the near exon. Anchor bases must match exactly (no error budget); softclip bases tolerate
+// max(1, length/10) mismatches. Legitimate short-anchor junctions are preserved because their anchor
+// bases do NOT match the contiguous genome.
 public class TerminalMicroJunctionCollapser
 {
     private final RefSequenceSource mRefSource;
@@ -49,8 +45,7 @@ public class TerminalMicroJunctionCollapser
         if(elements.size() < 3 || CigarShape.hasHardClip(elements))
             return TerminalCollapseResult.unchanged();
 
-        // try trailing first, then leading; a read can only have one terminal micro-junction per end so
-        // at most one collapse per side, but both ends are independent.
+        // both ends are independent; apply trailing first, then leading on the result.
         final TerminalCollapseResult trailing = tryTrailing(chromosome, alignmentStart, elements, readBases);
         final List<CigarShape.Element> afterTrailing = trailing.Collapsed ? CigarShape.parse(trailing.NewCigar) : elements;
         final int startAfterTrailing = trailing.Collapsed ? trailing.NewStart : alignmentStart;
@@ -65,29 +60,45 @@ public class TerminalMicroJunctionCollapser
             final String chromosome, final int alignmentStart, final List<CigarShape.Element> elements, final byte[] readBases)
     {
         final int last = elements.size() - 1;
-        final CigarShape.Element tail = elements.get(last);
-        if(!isMatch(tail.Op) || tail.Length > mMaxAnchor)
+
+        // shape: "<...>M nN yM [eS]"
+        final boolean hasSoftclip = elements.get(last).Op == OP_SOFTCLIP;
+        final int e = hasSoftclip ? elements.get(last).Length : 0;
+        final int anchorIndex = hasSoftclip ? last - 1 : last;
+        final int intronIndex = anchorIndex - 1;
+        final int nearIndex = intronIndex - 1;
+        if(nearIndex < 0)
             return TerminalCollapseResult.unchanged();
-        if(elements.get(last - 1).Op != OP_SKIPPED)
+
+        final CigarShape.Element anchor = elements.get(anchorIndex);
+        if(!isMatch(anchor.Op) || anchor.Length > mMaxAnchor)
             return TerminalCollapseResult.unchanged();
-        final CigarShape.Element nearExon = elements.get(last - 2);
+        if(elements.get(intronIndex).Op != OP_SKIPPED)
+            return TerminalCollapseResult.unchanged();
+        final CigarShape.Element nearExon = elements.get(nearIndex);
         if(!isMatch(nearExon.Op))
             return TerminalCollapseResult.unchanged();
 
-        final int y = tail.Length;
-        // genomic end of the near exon's matched run (before the intron)
-        final int nearEnd = alignmentStart + CigarShape.referenceSpan(elements.subList(0, last - 1)) - 1;
-        final byte[] ref = mRefSource.getBases(chromosome, nearEnd + 1, nearEnd + y);
-        if(ref == null || ref.length != y)
+        final int y = anchor.Length;
+        final int window = y + e;
+        // genomic end of the near exon, just before the intron
+        final int nearEnd = alignmentStart + CigarShape.referenceSpan(elements.subList(0, intronIndex)) - 1;
+        final byte[] ref = mRefSource.getBases(chromosome, nearEnd + 1, nearEnd + window);
+        if(ref == null || ref.length != window)
             return TerminalCollapseResult.unchanged();
 
-        // the trailing y read bases (no trailing softclip in this shape) align contiguously?
-        if(!tailReadBasesMatchRef(readBases, readBases.length - y, ref))
+        // read window measured from the near-exon boundary outward: anchor then softclip
+        final byte[] readWindow = Arrays.copyOfRange(readBases, readBases.length - window, readBases.length);
+        final int reclaimed = contiguousRun(readWindow, ref, y, e, true);
+        if(reclaimed == 0)
             return TerminalCollapseResult.unchanged();
 
-        // collapse: drop the intron + tiny anchor, extend the near exon by y
-        final List<CigarShape.Element> merged = new ArrayList<>(elements.subList(0, last - 2));
-        merged.add(new CigarShape.Element(nearExon.Length + y, OP_MATCH));
+        // drop intron + anchor, grow near exon; keep unmatched softclip remainder.
+        final List<CigarShape.Element> merged = new ArrayList<>(elements.subList(0, nearIndex));
+        merged.add(new CigarShape.Element(nearExon.Length + reclaimed, OP_MATCH));
+        final int residual = window - reclaimed;
+        if(residual > 0)
+            merged.add(new CigarShape.Element(residual, OP_SOFTCLIP));
         mCollapsedTrailing.incrementAndGet();
         return new TerminalCollapseResult(true, alignmentStart, CigarShape.format(merged));
     }
@@ -95,45 +106,79 @@ public class TerminalMicroJunctionCollapser
     private TerminalCollapseResult tryLeading(
             final String chromosome, final int alignmentStart, final List<CigarShape.Element> elements, final byte[] readBases)
     {
-        final CigarShape.Element head = elements.get(0);
-        if(!isMatch(head.Op) || head.Length > mMaxAnchor)
+        // shape: "[eS] yM nN <...>M"
+        final boolean hasSoftclip = elements.get(0).Op == OP_SOFTCLIP;
+        final int e = hasSoftclip ? elements.get(0).Length : 0;
+        final int anchorIndex = hasSoftclip ? 1 : 0;
+        final int intronIndex = anchorIndex + 1;
+        final int nearIndex = intronIndex + 1;
+        if(nearIndex >= elements.size())
             return TerminalCollapseResult.unchanged();
-        if(elements.get(1).Op != OP_SKIPPED)
+
+        final CigarShape.Element anchor = elements.get(anchorIndex);
+        if(!isMatch(anchor.Op) || anchor.Length > mMaxAnchor)
             return TerminalCollapseResult.unchanged();
-        final CigarShape.Element nearExon = elements.get(2);
+        if(elements.get(intronIndex).Op != OP_SKIPPED)
+            return TerminalCollapseResult.unchanged();
+        final CigarShape.Element nearExon = elements.get(nearIndex);
         if(!isMatch(nearExon.Op))
             return TerminalCollapseResult.unchanged();
 
-        final int y = head.Length;
-        final int intron = elements.get(1).Length;
-        // genomic start of the near exon's matched run (after the intron)
+        final int y = anchor.Length;
+        final int window = y + e;
+        final int intron = elements.get(intronIndex).Length;
+        // leading softclip consumes no reference, so nearStart skips only anchor + intron.
         final int nearStart = alignmentStart + y + intron;
-        final byte[] ref = mRefSource.getBases(chromosome, nearStart - y, nearStart - 1);
-        if(ref == null || ref.length != y)
+        final byte[] ref = mRefSource.getBases(chromosome, nearStart - window, nearStart - 1);
+        if(ref == null || ref.length != window)
             return TerminalCollapseResult.unchanged();
 
-        // the leading y read bases align contiguously continuing the near exon backwards?
-        if(!tailReadBasesMatchRef(readBases, 0, ref))
+        // walk from the near-exon end outward (anchor first, then softclip).
+        final byte[] readWindow = Arrays.copyOfRange(readBases, 0, window);
+        final int reclaimed = contiguousRun(readWindow, ref, y, e, false);
+        if(reclaimed == 0)
             return TerminalCollapseResult.unchanged();
 
+        final int residual = window - reclaimed;
         final List<CigarShape.Element> merged = new ArrayList<>();
-        merged.add(new CigarShape.Element(y + nearExon.Length, OP_MATCH));
-        for(int i = 3; i < elements.size(); ++i)
+        if(residual > 0)
+            merged.add(new CigarShape.Element(residual, OP_SOFTCLIP));
+        merged.add(new CigarShape.Element(reclaimed + nearExon.Length, OP_MATCH));
+        for(int i = nearIndex + 1; i < elements.size(); ++i)
             merged.add(elements.get(i));
         mCollapsedLeading.incrementAndGet();
-        return new TerminalCollapseResult(true, nearStart - y, CigarShape.format(merged));
+        return new TerminalCollapseResult(true, nearStart - reclaimed, CigarShape.format(merged));
     }
 
-    // exact match required: a 1-2bp terminal anchor carries no error budget, and the whole point is
-    // that the bases coincide with the contiguous genome.
-    private static boolean tailReadBasesMatchRef(final byte[] readBases, final int readOffset, final byte[] ref)
+    // Returns reclaimed length in [y, y+e]: anchor (y bases, must match exactly), then softclip
+    // (tolerates max(1, length/10) mismatches). anchorAtStart=true for trailing, false for leading.
+    private static int contiguousRun(
+            final byte[] readWindow, final byte[] ref, final int y, final int e, final boolean anchorAtStart)
     {
-        for(int i = 0; i < ref.length; ++i)
+        final int window = y + e;
+        int mismatches = 0;
+        int reclaimed = 0;
+        for(int step = 0; step < window; ++step)
         {
-            if(!basesEqualIgnoreCase(readBases[readOffset + i], ref[i]))
-                return false;
+            final int idx = anchorAtStart ? step : window - 1 - step;
+            final boolean match = basesEqualIgnoreCase(readWindow[idx], ref[idx]);
+            final int length = step + 1;
+            if(step < y)
+            {
+                if(!match)
+                    return 0;
+                reclaimed = length;
+                continue;
+            }
+            if(!match)
+                ++mismatches;
+            final int allowed = Math.max(1, length / 10);
+            if(mismatches <= allowed)
+                reclaimed = length;
+            else if(mismatches > allowed + 1)
+                break;
         }
-        return true;
+        return reclaimed;
     }
 
     private static boolean isMatch(final char op)

@@ -1,11 +1,8 @@
 package com.hartwig.hmftools.redux.splice;
 
-// one component of a record's alignment set: the record itself or one of its XA alts, post-lift.
-// TransName / GeneId / GeneName are populated only when the source contig was a Tx contig.
-// SoftClipAtBoundary is true only for Tx alignments whose leading or trailing S abuts an interior exon
-// boundary in the source contig (an actual exon-junction edge, not the contig's outermost edge).
-// ForwardStrand reflects the alignment's strand on the genome (Tx contigs are forward genomic, so strand
-// passes through unchanged from the contig-space alignment).
+// One component of a record's alignment set: the record itself or one of its XA alts, post-lift.
+// TransName/GeneId/GeneName are set only for Tx-contig alignments. SoftClipAtBoundary is true only
+// when the leading/trailing S abuts an interior exon boundary (not the contig's outermost edge).
 public class LiftedAlignment
 {
     public enum AlignmentSource
@@ -28,19 +25,15 @@ public class LiftedAlignment
     public final String GeneName;
     public final boolean SoftClipAtBoundary;
     public final boolean ForwardStrand;
-    // Transcript's genome strand for tx-contig alignments (+1 forward / -1 reverse). 0 when this
-    // alignment didn't come off a tx contig — the writer treats that as "no transcript strand known".
+    // +1 forward / -1 reverse for tx-contig alignments; 0 otherwise (no transcript strand known).
     public final int TranscriptStrand;
 
-    // non-final: set by LiftBackResolver when this alignment is on the losing side of a confident
-    // discriminator outcome (JUNCTION_FAVOURS_TX, TX_PICKED_REF_DROPPED, INTRON_RETAINED_FAVOURS_REF,
-    // CROSS_LOCUS_FAVOURS_TX). Dropped alignments stay in LiftedAlignments for TSV-B diagnostics but are
-    // excluded from the BAM XA tag.
+    // Set by LiftBackResolver on the losing side of a discriminator decision. Kept for TSV-B diagnostics
+    // but excluded from the BAM XA tag.
     public boolean Dropped = false;
 
-    // non-final: marks the alignment chosen as the BAM primary. Set true on SELF by default; the
-    // discriminator may flip it to a winning XA alt when bwa's primary pick was suboptimal (e.g. processed
-    // pseudogene preferred over the spliced parent gene). The displaced original becomes an XA entry.
+    // Marks the alignment chosen as the BAM primary. Discriminator may flip it to an XA alt when bwa's
+    // primary pick was suboptimal (e.g. processed pseudogene over spliced parent).
     public boolean IsPrimaryChoice = false;
 
     public LiftedAlignment(
@@ -94,11 +87,8 @@ public class LiftedAlignment
         return LiftedCigar != null && LiftedCigar.indexOf('S') >= 0;
     }
 
-    // returns true iff the CIGAR has at least one N operator AND every N is flanked by an M
-    // segment of at least minAnchor bp on both sides. Tiny anchors (e.g. 1-3M) on either side of
-    // an N happen by chance when a tx-contig alignment's tail bases bleed across an exon boundary —
-    // those are not real junctions and must not be used as evidence to swap the primary off a clean
-    // ref full-match. The check walks the CIGAR once.
+    // True iff every N in the CIGAR is flanked by >= minAnchor M on both sides. Tiny anchors from
+    // tx-contig bleed-over are not real junctions and must not trigger a primary swap.
     public boolean cigarHasRealNJunction(final int minAnchor)
     {
         if(LiftedCigar == null)
@@ -121,7 +111,7 @@ public class LiftedAlignment
             {
                 if(prevMLength < minAnchor)
                     return false;
-                // scan ahead for the next M-length; if no M follows, or it is below threshold, fail.
+                // if no M follows or it is below threshold, fail.
                 final int nextM = nextMLength(LiftedCigar, i + 1);
                 if(nextM < minAnchor)
                     return false;
@@ -134,8 +124,7 @@ public class LiftedAlignment
             }
             else
             {
-                // any other op (S/I/D/H/P) breaks the "directly adjacent" anchor — treat as zero-length
-                // M for the next N's purposes.
+                // S/I/D/H/P break the adjacent anchor
                 prevMLength = 0;
             }
 
@@ -161,7 +150,6 @@ public class LiftedAlignment
             }
             else
             {
-                // any non-match op before we hit M means there is no directly adjacent M anchor.
                 return 0;
             }
         }

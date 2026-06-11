@@ -50,19 +50,17 @@ public class AnnotatedJunctionLoaderTest
                 "GeneId,Chromosome\n"
                 + "ENSG_TEST,1\n");
 
-        // two transcripts, each with 3 exons producing 2 junctions
+        // TX_A: 3 exons → 2 junctions; TX_B: different middle exon → 1 distinct junction
         writeFile("ensembl_trans_exon_data.csv",
                 "GeneId,TransId,ExonStart,ExonEnd,ExonRank\n"
                 + "ENSG_TEST,TX_A,1000,1099,1\n"
                 + "ENSG_TEST,TX_A,1500,1599,2\n"
                 + "ENSG_TEST,TX_A,2000,2099,3\n"
-                + "ENSG_TEST,TX_B,1000,1099,1\n"     // shares first exon with TX_A
-                + "ENSG_TEST,TX_B,1700,1799,2\n");   // different middle exon
+                + "ENSG_TEST,TX_B,1000,1099,1\n"
+                + "ENSG_TEST,TX_B,1700,1799,2\n");
 
         final Set<ChrIntron> introns = AnnotatedJunctionLoader.load(mDir.getAbsolutePath());
 
-        // TX_A produces introns 1100-1499 and 1600-1999
-        // TX_B produces intron 1100-1699
         assertEquals(3, introns.size());
         assertTrue(introns.contains(new ChrIntron("chr1", 1100, 1499)));
         assertTrue(introns.contains(new ChrIntron("chr1", 1600, 1999)));
@@ -86,7 +84,6 @@ public class AnnotatedJunctionLoaderTest
 
         final Set<ChrIntron> introns = AnnotatedJunctionLoader.load(mDir.getAbsolutePath());
 
-        // both should normalize to "chr3"
         assertEquals(2, introns.size());
         assertTrue(introns.contains(new ChrIntron("chr3", 200, 499)));
         assertTrue(introns.contains(new ChrIntron("chr3", 1100, 1499)));
@@ -124,7 +121,6 @@ public class AnnotatedJunctionLoaderTest
 
         final Set<ChrIntron> introns = AnnotatedJunctionLoader.load(mDir.getAbsolutePath());
 
-        // both transcripts produce the same intron 200-299; Set dedupes
         assertEquals(1, introns.size());
         assertTrue(introns.contains(new ChrIntron("chr2", 200, 299)));
     }
@@ -132,20 +128,18 @@ public class AnnotatedJunctionLoaderTest
     @Test
     public void testReverseStrandRankOrder() throws IOException
     {
-        // negative-strand transcripts have exons in higher-genome-pos → lower-genome-pos rank order.
-        // loader should normalize so the intron still spans the lower exon end + 1 to higher start - 1.
+        // negative-strand transcripts have exons ranked high→low genome pos; intron coords must still be lo..hi.
         writeFile("ensembl_gene_data.csv",
                 "GeneId,Chromosome\n"
                 + "ENSG_NEG,4\n");
 
         writeFile("ensembl_trans_exon_data.csv",
                 "GeneId,TransId,ExonStart,ExonEnd,ExonRank\n"
-                + "ENSG_NEG,T_NEG,2000,2099,1\n"      // first by transcription = higher genome pos
-                + "ENSG_NEG,T_NEG,1000,1099,2\n");    // second by transcription = lower genome pos
+                + "ENSG_NEG,T_NEG,2000,2099,1\n"
+                + "ENSG_NEG,T_NEG,1000,1099,2\n");
 
         final Set<ChrIntron> introns = AnnotatedJunctionLoader.load(mDir.getAbsolutePath());
 
-        // intron spans the genomic gap regardless of rank ordering
         assertEquals(1, introns.size());
         assertTrue(introns.contains(new ChrIntron("chr4", 1100, 1999)));
     }

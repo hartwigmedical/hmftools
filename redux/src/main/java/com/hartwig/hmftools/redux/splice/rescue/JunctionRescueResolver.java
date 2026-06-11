@@ -14,14 +14,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-// Detects when a primary record's terminal softclip is actually a splice across an annotated
-// intron, with the missing exon-side already emitted by bwa as a supplementary record. Merges the
-// primary + supp into a single spliced primary with an N op.
-//
-// Per-mate operation: caller assembles a RescueCandidate (primary + supps list) and calls resolve().
-// Result tells caller (a) whether the primary was rewritten and (b) which supp indices to drop.
-// The resolver chains merges up to RescueConfig.MaxChainDepth so a read split into 3 alignments
-// (one primary + two supps spanning 3 exons) can collapse into a single spliced primary.
+// Merges a primary's terminal softclip with an annotated-intron-spanning supplementary into a
+// single spliced primary (N op). Chains up to RescueConfig.MaxChainDepth merges per read.
 public class JunctionRescueResolver
 {
     private final AnnotatedJunctionIndex mAnnotatedIndex;
@@ -60,8 +54,7 @@ public class JunctionRescueResolver
 
         mStatistics.countCandidate();
 
-        // Supp-merge gate: a primary whose own placement is low-confidence isn't a trustworthy anchor
-        // for building a spliced read from its supplementaries.
+        // Low-confidence placement isn't a trustworthy anchor for building a spliced read.
         if(candidate.PrimaryMapq < mConfig.MinPrimaryMapq)
         {
             mStatistics.countReject(RescueRejectReason.LOW_PRIMARY_MAPQ);
@@ -74,6 +67,10 @@ public class JunctionRescueResolver
             mStatistics.countReject(RescueRejectReason.COMPLEX_CIGAR_SHAPE);
             return RescueResult.noMerge(RescueRejectReason.COMPLEX_CIGAR_SHAPE);
         }
+
+        // Fold tx-contig lift artifact micro-junctions into the softclip so the merge anchors on the
+        // real matched block. Only affects the working cigar; emitted cigar changes only on accept.
+        primaryCigar = foldFabricatedTerminalMicroJunctions(primaryCigar, RescueConfig.MAX_FABRICATED_MICRO_ANCHOR);
 
         int primaryStart = candidate.PrimaryStart;
         final List<RescueSupplementary> remaining = new ArrayList<>(candidate.Supplementaries);
@@ -116,7 +113,7 @@ public class JunctionRescueResolver
 
         if(chainDepth == 0)
         {
-            // shouldn't reach here — initial-iteration failures returned above. Belt and braces.
+            // Belt and braces: initial-iteration failures should have returned above.
             return RescueResult.noMerge(lastReject != null ? lastReject : RescueRejectReason.NO_MATCHING_SUPP);
         }
 
@@ -126,9 +123,8 @@ public class JunctionRescueResolver
                 dropped, introns, chainDepth, null);
     }
 
-    // Ref-verify path: primary has a terminal softclip but no supplementary. Look up annotated
-    // junctions whose start/end abuts the softclip boundary, fetch reference bases at the
-    // candidate next-exon position, and accept if the softclipped read bases match within tolerance.
+    // No supplementary: look up annotated junctions abutting the softclip boundary and accept if
+    // softclipped bases match the candidate exon reference within tolerance.
     private RescueResult tryRefVerifyOnly(final RescueCandidate candidate)
     {
         if(mRefSource == null || candidate.ReadBases == null)
@@ -150,9 +146,7 @@ public class JunctionRescueResolver
         if(!trailingS && !leadingS)
             return RescueResult.noMerge(RescueRejectReason.NO_TERMINAL_SOFTCLIP);
 
-        // A read can be soft-clipped at both ends (a short 5' quality clip plus a junction tail). Try
-        // each clipped end as the rescue side, longer clip first (more likely the spliced tail), and
-        // keep the other clip untouched in the merged cigar. First side that merges wins.
+        // Both-end clips: try longer clip first (more likely the splice tail). First win is taken.
         final boolean[] sides;
         if(trailingS && leadingS)
         {
@@ -187,9 +181,8 @@ public class JunctionRescueResolver
         return lastFailure;
     }
 
-    // Ref-verify one terminal softclip (rightExtend = trailing) against annotated donors/acceptors,
-    // with the over-extension boundary snap. Does NOT count the no-candidate reject — tryRefVerifyOnly
-    // aggregates across both ends and counts once.
+    // Ref-verify one terminal softclip against annotated donors/acceptors with boundary snap.
+    // Does NOT count the no-candidate reject; tryRefVerifyOnly aggregates across both ends.
     private RescueResult attemptRefVerifySide(
             final RescueCandidate candidate, final List<CigarShape.Element> primaryCigar, final boolean rightExtend)
     {
@@ -207,10 +200,8 @@ public class JunctionRescueResolver
         if(primaryAnchor < mConfig.MinAnchorOverhang)
             return RescueResult.noMerge(RescueRejectReason.SHORT_ANCHOR);
 
-        // BWA often over-extends a few matched bases past the true exon boundary into the intron, so
-        // the exact boundary probe misses the annotated donor/acceptor. Snap back up to MaxBoundaryShift
-        // bases (smallest shift first = closest to bwa's call), trimming the over-extension into the
-        // softclip, and ref-verify the enlarged softclip against the candidate exon.
+        // BWA often over-extends a few bases past the true exon boundary. Snap back up to
+        // MaxBoundaryShift (smallest shift first), rolling over-extension into the softclip.
         final int primaryRefEnd = candidate.PrimaryStart + CigarShape.referenceSpan(primaryCigar) - 1;
         boolean anyCandidate = false;
         RescueResult lastFailure = RescueResult.noMerge(RescueRejectReason.REF_VERIFY_MISMATCH_TOO_HIGH);
@@ -245,9 +236,8 @@ public class JunctionRescueResolver
         return lastFailure;
     }
 
-    // Moves 'shift' matched bases from the exon-edge M run into the adjacent terminal softclip,
-    // realigning the boundary back toward the true exon edge. Returns null when the edge op isn't a
-    // plain M run or trimming would leave nothing matched.
+    // Moves 'shift' bases from the exon-edge M into the adjacent softclip to snap back the boundary.
+    // Returns null when the edge op isn't M or trimming would leave nothing matched.
     private static List<CigarShape.Element> shiftBoundaryIntoSoftclip(
             final List<CigarShape.Element> cigar, final int shift, final boolean rightExtend)
     {
@@ -287,13 +277,9 @@ public class JunctionRescueResolver
         else
             System.arraycopy(readBases, 0, softclipBases, 0, softclipLen);
 
-        // For each candidate exon across the junction, find the longest run of softclip bases matching
-        // the exon from the JUNCTION-PROXIMAL end (within a cumulative 10% mismatch floor). bwa's softclip
-        // frequently carries an outer adapter / low-quality tail that is NOT exon sequence, so only the
-        // junction-proximal run is converted to M and the outer residual stays soft-clipped (e.g.
-        // 19S132M -> 6S15M..N..130M, not 21M..N..130M which would force-align the adapter). The proximal
-        // end is the high index of a leading softclip (the base just before the intron) and the low index
-        // of a trailing softclip (just after it).
+        // Match from the junction-proximal end (10% mismatch floor). The outer softclip residual stays
+        // soft-clipped since bwa often carries adapter/low-quality bases there (e.g. 19S132M ->
+        // 6S15M..N..130M, not 21M..N..130M). Proximal end is the high index for a leading softclip.
         final boolean proximalAtEnd = !rightExtend;
         ChrIntron chosen = null;
         int chosenRun = 0;
@@ -328,8 +314,7 @@ public class JunctionRescueResolver
                 continue;
             final int mismatches = mismatchesInRun(softclipBases, refBases, softclipLen, run, proximalAtEnd);
 
-            // Longest matched run wins; tie-break on fewest mismatches. Two distinct introns tying on
-            // both make the junction ambiguous (the read could splice to either) -> reject.
+            // Longest run wins; tie-break fewest mismatches. Two introns tying both -> ambiguous -> reject.
             if(run > chosenRun || (run == chosenRun && mismatches < chosenMismatches))
             {
                 chosen = candidateIntron;
@@ -353,9 +338,7 @@ public class JunctionRescueResolver
             mStatistics.countReject(RescueRejectReason.REF_VERIFY_AMBIGUOUS);
             return RescueResult.noMerge(RescueRejectReason.REF_VERIFY_AMBIGUOUS);
         }
-        // A partial match leaves an unexplained outer residual, so it needs a longer junction-proximal
-        // anchor than a clean full match (which keeps the lenient MinAnchorOverhang floor gated upstream)
-        // before we trust the spliced alignment over bwa's soft-clipped one.
+        // Partial match (outer residual stays clipped) requires a longer proximal anchor than a full match.
         final boolean fullMatch = chosenRun == softclipLen;
         if(!fullMatch && chosenRun < mConfig.MinPartialMatchRun)
         {
@@ -366,8 +349,6 @@ public class JunctionRescueResolver
         return buildRefVerifyMerge(candidate, primaryCigar, chosen, chosenRun, softclipLen, rightExtend);
     }
 
-    // Builds the spliced cigar from a ref-verified junction: the matched exon-proximal run becomes M, the
-    // intron an N, and any outer residual of the softclip stays soft-clipped.
     private RescueResult buildRefVerifyMerge(
             final RescueCandidate candidate, final List<CigarShape.Element> primaryCigar,
             final ChrIntron chosen, final int matchedRun, final int softclipLen, final boolean rightExtend)
@@ -402,11 +383,8 @@ public class JunctionRescueResolver
                 1, null);
     }
 
-    // Longest run of softclip bases matching ref from the junction-proximal end, within a cumulative
-    // 10% mismatch floor (so the bases right at the splice site must be clean). The run is extended only
-    // on a matching base, so it ends on a match rather than leaking a tolerated mismatch into the outer
-    // residual. proximalAtEnd=true walks inward from the softclip's high index, false from its low index;
-    // ref is aligned to the softclip (refBases[i] pairs with softclipBases[i]).
+    // Longest run matching ref from the junction-proximal end, within a cumulative 10% mismatch floor.
+    // proximalAtEnd=true walks inward from the high index; ref[i] pairs with softclip[i].
     private static int longestProximalMatchRun(
             final byte[] softclipBases, final byte[] refBases, final int len, final boolean proximalAtEnd)
     {
@@ -439,7 +417,6 @@ public class JunctionRescueResolver
         return mismatches;
     }
 
-    // Annotation > motif. Returns TIER_NONE when ref-source is unavailable.
     private int classifyJunctionTier(final ChrIntron candidateIntron)
     {
         if(mAnnotatedIndex.contains(candidateIntron))
@@ -457,20 +434,16 @@ public class JunctionRescueResolver
     {
         if(a == b)
             return true;
-        // mask the 0x20 bit (ASCII case bit) and re-compare; only valid for letters but cheap.
-        return (a & ~0x20) == (b & ~0x20);
+        return (a & ~0x20) == (b & ~0x20); // mask ASCII case bit; valid for letters, cheap
     }
 
-    // Picks the highest-confidence supplementary that passes all gates. Returns the merged-primary
-    // proposal or a reject reason describing which gate the best candidate(s) failed against.
     private MergeOutcome pickBestSupplementary(
             final RescueCandidate candidate, final int primaryStart,
             final List<CigarShape.Element> primaryCigar, final List<RescueSupplementary> supps)
     {
         MergeOutcome best = null;
         RescueRejectReason lastReject = null;
-        // count viable supps per terminal side: a both-sides-clipped primary legitimately has one supp
-        // for each end, so reach is ambiguous only when one side draws more than one supp.
+        // Ambiguous only when one terminal side draws more than one supp.
         int rightReach = 0;
         int leftReach = 0;
 
@@ -498,8 +471,6 @@ public class JunctionRescueResolver
         if(best == null)
             return MergeOutcome.reject(lastReject != null ? lastReject : RescueRejectReason.NO_MATCHING_SUPP);
 
-        // Only merge when at most one supp is within reach of each boundary. More than one on a side
-        // means the splice destination is ambiguous and we refuse to guess.
         if(rightReach > 1 || leftReach > 1)
         {
             mStatistics.countReject(RescueRejectReason.MULTIPLE_SUPPS_IN_REACH);
@@ -509,8 +480,7 @@ public class JunctionRescueResolver
         return best;
     }
 
-    // Candidate ranking when (rarely) more than one supp passes — higher MAPQ wins, then smaller
-    // intron. Only used to keep the best for diagnostics; >1 within reach is rejected by the caller.
+    // Higher MAPQ wins, then smaller intron. >1 within reach is rejected by the caller.
     private static boolean isBetterCandidate(final MergeOutcome a, final MergeOutcome b)
     {
         if(a.MergedSupp.Mapq != b.MergedSupp.Mapq)
@@ -537,11 +507,8 @@ public class JunctionRescueResolver
         if(CigarShape.hasHardClip(suppCigar))
             return MergeOutcome.reject(RescueRejectReason.COMPLEX_CIGAR_SHAPE);
 
-        // A tx-contig-derived supp can end up with an internal N when ContigTranslator expands a
-        // cross-exon M anchor into M-N-M on the reference. If the post-N M lands inside or past the
-        // primary's mapped interval, those read bases are already explained by the primary and the
-        // post-N piece is a coincidental ref match. Clamp the supp to its primary-distal M anchor
-        // before the rest of the merge logic looks at softclip lengths.
+        // ContigTranslator can expand a cross-exon M into M-N-M. If the post-N M coincidentally
+        // overlaps the primary's span, clamp the supp to its primary-distal anchor before merge logic.
         final int primaryRefEnd = primaryStart + CigarShape.referenceSpan(primaryCigar) - 1;
         int suppStart = supp.Start;
         final ClampedSupp clamped = clampSuppToPrimaryBoundary(suppCigar, suppStart, primaryStart, primaryRefEnd);
@@ -552,8 +519,6 @@ public class JunctionRescueResolver
             mStatistics.countSuppClamp();
         }
 
-        // Decide which record is upstream and which is downstream by softclip shapes (and, when a
-        // middle-anchored primary has S on both sides, by where the supp sits genomically).
         final int primaryLeadS = CigarShape.leadingSoftClip(primaryCigar);
         final int primaryTrailS = CigarShape.trailingSoftClip(primaryCigar);
         final int suppLeadS = CigarShape.leadingSoftClip(suppCigar);
@@ -585,10 +550,8 @@ public class JunctionRescueResolver
         return mergeJunction(candidate, up, down, primaryIsUpstream, supp);
     }
 
-    // The unified merge: validates the up/down anchor pair, scores candidate snap points by
-    // junction tier and min anchor, falls back to mate-hint, then to trust-primary. The body is
-    // direction-agnostic — caller has already mapped primary/supp into upstream/downstream slots.
-    // supp is threaded through purely as the result payload (so callers know which supp was merged).
+    // Direction-agnostic merge: validates anchor pair, scores snap points by junction tier, falls
+    // back to mate-hint then trust-primary. supp is threaded as result payload only.
     private MergeOutcome mergeJunction(
             final RescueCandidate candidate, final Side up, final Side down,
             final boolean primaryIsUpstream, final RescueSupplementary supp)
@@ -610,8 +573,7 @@ public class JunctionRescueResolver
         if(down.Start <= up.RefEnd)
             return MergeOutcome.reject(RescueRejectReason.READ_COVERAGE_OVERLAP);
 
-        // Intron length is invariant under the snap point L: any redistribution of overlap bases
-        // moves both intron endpoints by the same amount. Check once, up front.
+        // Intron length is invariant under snap point L — check once up front.
         final int intronLength = (down.Start - 1 - up.RefEnd) + overlap;
         if(intronLength < mConfig.MinIntronLength)
             return MergeOutcome.reject(RescueRejectReason.INTRON_TOO_SHORT);
@@ -621,10 +583,8 @@ public class JunctionRescueResolver
         if(up.TrailingM < mConfig.MinAnchorOverhang || down.LeadingM < mConfig.MinAnchorOverhang)
             return MergeOutcome.reject(RescueRejectReason.SHORT_ANCHOR);
 
-        // Pick the highest-tier snap point in L ∈ [down.LeadingS, upMatchedRead]; within a tier,
-        // largest min(upAnchor, downAnchor) wins; ties go to "first encountered". Iterate so the
-        // primary-fully-matched value (upLoss=0 when primary is upstream, downLoss=0 when primary
-        // is downstream) is visited first — that preserves trust-primary as the natural tie-break.
+        // Highest-tier snap wins; within a tier, largest min(upAnchor, downAnchor). Trust-primary
+        // is visited first so it wins ties (upLoss=0 / downLoss=0 depending on direction).
         final SnapPick pick = scanSnapPoints(candidate, up, down, upMatchedRead, primaryIsUpstream);
         int chosenL = pick.L;
         ChrIntron chosenIntron = pick.Intron;
@@ -639,8 +599,6 @@ public class JunctionRescueResolver
         {
             if(mConfig.AnnotatedOnly)
                 return MergeOutcome.reject(RescueRejectReason.NOVEL_JUNCTION);
-            // Trust-primary fallback: primary contributes everything it matched. If primary is
-            // upstream, upLoss=0 → L=upMatchedRead. If primary is downstream, downLoss=0 → L=down.LeadingS.
             chosenL = primaryIsUpstream ? upMatchedRead : down.LeadingS;
             final int upLossFb = upMatchedRead - chosenL;
             final int downLossFb = chosenL - down.LeadingS;
@@ -665,7 +623,6 @@ public class JunctionRescueResolver
         int chosenTier = SpliceMotif.TIER_NONE;
         int chosenMinAnchor = -1;
 
-        // Iterate so trust-primary is first encountered (wins ties).
         final int startL = primaryIsUpstream ? upMatchedRead : down.LeadingS;
         final int endL = primaryIsUpstream ? down.LeadingS : upMatchedRead;
         final int step = primaryIsUpstream ? -1 : 1;
@@ -698,10 +655,8 @@ public class JunctionRescueResolver
         return new SnapPick(chosenL, chosenIntron);
     }
 
-    // Mate-hint fallback: partner mate's previously-rescued intron hints the junction position.
-    // The hint position that's load-bearing depends on which side is the primary: if primary is
-    // upstream, the hint pins the intron's start (up.RefEnd-side); if downstream, the intron's
-    // end (down.Start-side).
+    // Use the mate's previously-rescued intron as a hint. Primary-upstream pins intron start;
+    // primary-downstream pins intron end.
     private SnapPick scanMateHint(
             final RescueCandidate candidate, final Side up, final Side down,
             final int upMatchedRead, final boolean primaryIsUpstream)
@@ -729,7 +684,6 @@ public class JunctionRescueResolver
             if(up.TrailingM < upLoss || down.LeadingM < downLoss)
                 continue;
 
-            // Hint pins the primary's side of the intron; the other end is derived from the snap.
             final int hintedIntronStart = primaryIsUpstream ? hint.IntronStart : (up.RefEnd - upLoss + 1);
             final int hintedIntronEnd = primaryIsUpstream ? (down.Start + downLoss - 1) : hint.IntronEnd;
             return new SnapPick(L, new ChrIntron(candidate.Chromosome, hintedIntronStart, hintedIntronEnd));
@@ -742,8 +696,7 @@ public class JunctionRescueResolver
             final int upLoss, final int downLoss, final int intronLength)
     {
         final List<CigarShape.Element> merged = new ArrayList<>(upCigar.size() + downCigar.size());
-        // upstream ops, excluding trailing S; shrink last M by upLoss
-        for(int i = 0; i < upCigar.size() - 1; ++i)
+        for(int i = 0; i < upCigar.size() - 1; ++i) // upstream ops, excluding trailing S
         {
             if(i == upCigar.size() - 2 && upLoss > 0)
                 merged.add(new CigarShape.Element(upCigar.get(i).Length - upLoss, upCigar.get(i).Op));
@@ -751,8 +704,7 @@ public class JunctionRescueResolver
                 merged.add(upCigar.get(i));
         }
         merged.add(new CigarShape.Element(intronLength, OP_SKIPPED));
-        // downstream ops, excluding leading S; shrink first M by downLoss
-        for(int i = 1; i < downCigar.size(); ++i)
+        for(int i = 1; i < downCigar.size(); ++i) // downstream ops, excluding leading S
         {
             if(i == 1 && downLoss > 0)
                 merged.add(new CigarShape.Element(downCigar.get(i).Length - downLoss, downCigar.get(i).Op));
@@ -762,8 +714,7 @@ public class JunctionRescueResolver
         return merged;
     }
 
-    // returns the length of the matched-run (M/=/X) adjacent to the cigar's trailing softclip. If
-    // the cigar ends in `... 5M 50S`, this returns 5.
+    // Length of the M/=/X run adjacent to the trailing softclip (e.g. "5M 50S" -> 5).
     private static int trailingMatchedRun(final List<CigarShape.Element> elements)
     {
         for(int i = elements.size() - 1; i >= 0; --i)
@@ -792,8 +743,66 @@ public class JunctionRescueResolver
         return 0;
     }
 
-    // checks whether an I or D op sits immediately next to the leading or trailing softclip. Such
-    // ops complicate the merge because the matched anchor isn't a clean M block; v1 rejects them.
+    // Folds tx-contig lift artifact: "<block>M nN yM zS" (trailing) or mirror (leading), where yM
+    // is sub-threshold, into "<block>M (y+z)S". Drops the spurious N and conserves read-base count.
+    static List<CigarShape.Element> foldFabricatedTerminalMicroJunctions(
+            final List<CigarShape.Element> elements, final int maxAnchor)
+    {
+        List<CigarShape.Element> result = foldTrailingFabricatedMicroJunction(elements, maxAnchor);
+        result = foldLeadingFabricatedMicroJunction(result, maxAnchor);
+        return result;
+    }
+
+    private static List<CigarShape.Element> foldTrailingFabricatedMicroJunction(
+            final List<CigarShape.Element> elements, final int maxAnchor)
+    {
+        final int n = elements.size();
+        if(n < 4)
+            return elements;
+        if(elements.get(n - 1).Op != OP_SOFTCLIP)
+            return elements;
+        final CigarShape.Element anchor = elements.get(n - 2);
+        if(anchor.Op != OP_MATCH || anchor.Length > maxAnchor)
+            return elements;
+        if(elements.get(n - 3).Op != OP_SKIPPED)
+            return elements;
+        if(!isMatchedOp(elements.get(n - 4).Op)) // real matched block required before the N
+            return elements;
+
+        final int foldedClip = anchor.Length + elements.get(n - 1).Length;
+        final List<CigarShape.Element> out = new ArrayList<>(elements.subList(0, n - 3));
+        out.add(new CigarShape.Element(foldedClip, OP_SOFTCLIP));
+        return out;
+    }
+
+    private static List<CigarShape.Element> foldLeadingFabricatedMicroJunction(
+            final List<CigarShape.Element> elements, final int maxAnchor)
+    {
+        final int n = elements.size();
+        if(n < 4)
+            return elements;
+        if(elements.get(0).Op != OP_SOFTCLIP)
+            return elements;
+        final CigarShape.Element anchor = elements.get(1);
+        if(anchor.Op != OP_MATCH || anchor.Length > maxAnchor)
+            return elements;
+        if(elements.get(2).Op != OP_SKIPPED)
+            return elements;
+        if(!isMatchedOp(elements.get(3).Op)) // real matched block required after the N
+            return elements;
+
+        final int foldedClip = elements.get(0).Length + anchor.Length;
+        final List<CigarShape.Element> out = new ArrayList<>(n - 2);
+        out.add(new CigarShape.Element(foldedClip, OP_SOFTCLIP));
+        out.addAll(elements.subList(3, n));
+        return out;
+    }
+
+    private static boolean isMatchedOp(final char op)
+    {
+        return op == OP_MATCH || op == OP_SEQ_MATCH || op == OP_SEQ_MISMATCH;
+    }
+
     private static boolean opAdjacentToSoftClip(final List<CigarShape.Element> elements, final boolean leadingSide)
     {
         if(elements.size() < 2)
@@ -815,13 +824,9 @@ public class JunctionRescueResolver
         }
     }
 
-    // Clamps a supp cigar so its post-N tail (or pre-N head, for a downstream supp) is replaced
-    // with a soft clip whenever the M-after-N (or M-before-N) lands inside or past the primary's
-    // mapped interval. Driven by the tx-contig-expansion artifact: ContigTranslator may split a
-    // single M anchor across an exon boundary, producing M-N-M; if the inner M coincidentally
-    // matches the reference inside the primary's span, the supp double-counts the same read bases
-    // at two genomic positions. Returns null when no clamp is needed (no internal N, or the supp's
-    // anchor sits entirely on one side of the primary without crossing back).
+    // Replaces the supp's post-N tail (or pre-N head) with a softclip when the M-after-N overlaps
+    // the primary's span (ContigTranslator M-N-M artifact double-counting read bases). Returns null
+    // when no internal N or no overlap.
     private static ClampedSupp clampSuppToPrimaryBoundary(
             final List<CigarShape.Element> suppCigar, final int suppStart,
             final int primaryStart, final int primaryRefEnd)
@@ -846,9 +851,6 @@ public class JunctionRescueResolver
         return null;
     }
 
-    // Walk left-to-right; remember the first N. When a subsequent M's ref start is at or past
-    // primaryStart, cut the cigar at that first N (inclusive) and replace the dropped tail with a
-    // trailing softclip sized to the dropped read bases.
     private static ClampedSupp clampUpstreamSupp(
             final List<CigarShape.Element> suppCigar, final int suppStart, final int primaryStart)
     {
@@ -883,9 +885,6 @@ public class JunctionRescueResolver
         return null;
     }
 
-    // Mirror of clampUpstreamSupp: find the last N whose preceding M ended at or before
-    // primaryRefEnd, drop everything up to and including that N, and add a leading softclip sized
-    // to the dropped read bases. New start = the position of the first kept reference op.
     private static ClampedSupp clampDownstreamSupp(
             final List<CigarShape.Element> suppCigar, final int suppStart, final int primaryRefEnd)
     {
@@ -911,8 +910,7 @@ public class JunctionRescueResolver
             if(op == OP_SKIPPED && prevMInsidePrimary)
             {
                 lastBadNIdx = i;
-                // ref/read cursors just after this N op
-                refAfterLastBadN = refCursor + len;
+                refAfterLastBadN = refCursor + len; // just after this N op
                 readAfterLastBadN = readCursor;
             }
 
@@ -965,8 +963,6 @@ public class JunctionRescueResolver
         }
     }
 
-    // Per-record geometry computed once at the entry to tryMerge — start, parsed cigar, and the
-    // S/M lengths on each side plus the reference end coordinate.
     private static final class Side
     {
         final int Start;
@@ -1017,8 +1013,6 @@ public class JunctionRescueResolver
         }
     }
 
-    // Result of attempting to merge one supp into the primary. Two shapes: success (carries the
-    // merged geometry plus the supp identity) or reject (carries a reason).
     private static final class MergeOutcome
     {
         final RescueRejectReason Reject;

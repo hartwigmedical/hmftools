@@ -12,12 +12,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-// Loads annotated splice junctions from the ensembl_data_cache CSVs. Same source the python
-// BamCompare analysis script reads. Returns a Set<ChrIntron> keyed by (chrom, intronStart,
-// intronEnd) so the rescue resolver can do O(1) annotated-junction lookups.
-//
-// Algorithm: pair each transcript's adjacent exons in TransId+Rank order and emit the intron
-// between them. Multiple transcripts may share the same junction; the Set deduplicates naturally.
+// Loads annotated splice junctions from ensembl_data_cache CSVs into a Set<ChrIntron> for O(1) lookup.
+// Pairs adjacent exons in Rank order to derive intron coords; duplicates across transcripts are deduplicated by the Set.
 public final class AnnotatedJunctionLoader
 {
     private AnnotatedJunctionLoader() {}
@@ -44,9 +40,7 @@ public final class AnnotatedJunctionLoader
             {
                 final Exon a = exons.get(i);
                 final Exon b = exons.get(i + 1);
-                // exons may be ranked in transcription order regardless of genome strand. The
-                // intron lies between the higher genomic end and the lower genomic start of
-                // adjacent exons — work it out from coords directly.
+                // Rank order follows transcription direction, not genomic coords — derive intron bounds from coords directly.
                 final int prevEnd = Math.min(a.End, b.End);
                 final int nextStart = Math.max(a.Start, b.Start);
                 if(nextStart <= prevEnd + 1)

@@ -3,10 +3,8 @@ package com.hartwig.hmftools.redux.splice.rescue;
 import java.util.Collections;
 import java.util.List;
 
-// Output DTO from JunctionRescueResolver. When merged() is true MergedCigar/MergedStart describe the
-// new primary and DroppedSupplementaryIndices lists the supps that were absorbed. When merged() is
-// false RejectReason carries the gate that filtered the candidate (NO_TERMINAL_SOFTCLIP if the
-// primary never offered a softclip to extend across at all).
+// Output DTO from JunctionRescueResolver. On success, MergedCigar/MergedStart describe the new primary
+// and DroppedSupplementaryIndices lists absorbed supps. On failure, RejectReason carries the gate hit.
 public class RescueResult
 {
     private static final RescueResult NO_MERGE_NO_OP = new RescueResult(
@@ -19,7 +17,7 @@ public class RescueResult
     public final List<Integer> DroppedSupplementaryIndices;
     public final List<ChrIntron> IntroducedIntrons;
     public final int ChainDepth;
-    public final RescueRejectReason RejectReason;   // null when Merged is true
+    public final RescueRejectReason RejectReason;   // null on success
 
     public RescueResult(
             final boolean merged, final String mergedCigar, final int mergedStart,

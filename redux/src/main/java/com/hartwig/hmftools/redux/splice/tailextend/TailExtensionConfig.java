@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.redux.splice.tailextend;
 
-// Config for SoftclipTailExtender. MaxExtension caps how far we walk before assuming the
-// softclip should stay clipped (likely the start of a real, unannotated junction).
+// Config for SoftclipTailExtender. MaxExtension caps the walk to avoid consuming real unannotated junctions.
 public class TailExtensionConfig
 {
     public static final int DEFAULT_MIN_SOFTCLIP_LENGTH = 3;

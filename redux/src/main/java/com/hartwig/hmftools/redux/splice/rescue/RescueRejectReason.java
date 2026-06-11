@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.redux.splice.rescue;
 
-// Reasons a rescue candidate was rejected. Drives the per-decision counters in RescueStatistics so
-// we can measure which gate is filtering most candidates after a run.
+// Drives per-decision counters in RescueStatistics.
 public enum RescueRejectReason
 {
     NO_TERMINAL_SOFTCLIP,         // primary cigar has no leading or trailing S to extend across

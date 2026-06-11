@@ -11,6 +11,11 @@ import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.MT_C
 import static com.hartwig.hmftools.common.region.BaseRegion.binarySearch;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
+import static com.hartwig.hmftools.common.region.ChrBaseRegion.getChromosomeFieldIndex;
+import static com.hartwig.hmftools.common.region.ChrBaseRegion.getPositionEndFieldIndex;
+import static com.hartwig.hmftools.common.region.ChrBaseRegion.getPositionStartFieldIndex;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferFileDelimiter;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CHROMOSOME_INDEX;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CHROMOSOME_NAME;
@@ -24,6 +29,10 @@ import static com.hartwig.hmftools.redux.ReduxConstants.UNMAP_MAX_NON_OVERLAPPIN
 import static com.hartwig.hmftools.redux.ReduxConstants.UNMAP_MIN_HIGH_DEPTH;
 import static com.hartwig.hmftools.redux.ReduxConstants.UNMAP_MIN_SOFT_CLIP;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -31,6 +40,7 @@ import javax.annotation.Nullable;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
@@ -887,6 +897,87 @@ public class ReadUnmapper
         }
 
         regions.add(region);
+
+        mEnabled = true;
+    }
+
+    // Loads a curated always-unmap region file (Chromosome/PosStart/PosEnd, e.g. the RNA rRNA / 7SL /
+    // multi-map exclusion zones). No MaxDepth column -- every region is treated as HIGH_DEPTH on merge.
+    public static Map<String,List<ChrBaseRegion>> loadAlwaysUnmapRegions(final String filename)
+    {
+        final Map<String,List<ChrBaseRegion>> regionsByChr = Maps.newHashMap();
+
+        try
+        {
+            final List<String> lines = Files.readAllLines(Paths.get(filename));
+            final String delim = inferFileDelimiter(filename);
+            final Map<String,Integer> fieldIndexMap = createFieldsIndexMap(lines.get(0), delim);
+            final int chrIndex = getChromosomeFieldIndex(fieldIndexMap);
+            final int posStartIndex = getPositionStartFieldIndex(fieldIndexMap);
+            final int posEndIndex = getPositionEndFieldIndex(fieldIndexMap);
+
+            for(int i = 1; i < lines.size(); ++i)
+            {
+                final String[] values = lines.get(i).split(delim, -1);
+                final String chromosome = values[chrIndex];
+                final int posStart = Integer.parseInt(values[posStartIndex]);
+                final int posEnd = Integer.parseInt(values[posEndIndex]);
+                regionsByChr.computeIfAbsent(chromosome, x -> Lists.newArrayList())
+                        .add(new ChrBaseRegion(chromosome, posStart, posEnd));
+            }
+        }
+        catch(IOException e)
+        {
+            RD_LOGGER.error("failed to read always-unmap regions file {}: {}", filename, e.toString());
+            return null;
+        }
+
+        return regionsByChr;
+    }
+
+    // Merges curated always-unmap regions into the high-depth map as HIGH_DEPTH so contained reads are
+    // unmapped unconditionally. Each chromosome's list is re-sorted and overlapping intervals (including
+    // any mappability regions the curated zones straddle) are merged, preserving the sorted, non-overlapping
+    // invariant the overlap finder relies on. The merged depth is the max so a curated zone always wins.
+    public void mergeAlwaysUnmapRegions(final Map<String,List<ChrBaseRegion>> regionsByChr)
+    {
+        if(regionsByChr == null || regionsByChr.isEmpty())
+            return;
+
+        final int regionCount = regionsByChr.values().stream().mapToInt(List::size).sum();
+        RD_LOGGER.info("merged {} always-unmap regions across {} chromosomes", regionCount, regionsByChr.size());
+
+        for(Map.Entry<String,List<ChrBaseRegion>> entry : regionsByChr.entrySet())
+        {
+            final String chromosome = entry.getKey();
+            final List<UnmappingRegion> combined = Lists.newArrayList();
+
+            final List<UnmappingRegion> existing = mChrLocationsMap.get(chromosome);
+            if(existing != null)
+                combined.addAll(existing);
+
+            for(ChrBaseRegion region : entry.getValue())
+                combined.add(new UnmappingRegion(region.start(), region.end(), UNMAP_MIN_HIGH_DEPTH));
+
+            combined.sort(Comparator.comparingInt(UnmappingRegion::start));
+
+            final List<UnmappingRegion> merged = Lists.newArrayList();
+            for(UnmappingRegion region : combined)
+            {
+                final UnmappingRegion last = merged.isEmpty() ? null : merged.get(merged.size() - 1);
+                if(last != null && region.start() <= last.end())
+                {
+                    merged.set(merged.size() - 1, new UnmappingRegion(
+                            last.start(), max(last.end(), region.end()), max(last.maxDepth(), region.maxDepth())));
+                }
+                else
+                {
+                    merged.add(region);
+                }
+            }
+
+            mChrLocationsMap.put(chromosome, merged);
+        }
 
         mEnabled = true;
     }

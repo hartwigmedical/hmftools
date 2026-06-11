@@ -5,10 +5,8 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-// Small CIGAR helpers used by JunctionRescueResolver. Local to the rescue package so we can keep
-// the rescue logic self-contained and testable without dragging in htsjdk's Cigar parser. The
-// resolver only ever inspects boundary ops (leading/trailing S, the M chunks flanking softclip
-// boundaries) so a regex parser is plenty.
+// CIGAR helpers for JunctionRescueResolver. Kept local to avoid htsjdk dependency in tests; a regex
+// parser is sufficient since the resolver only inspects boundary ops.
 public final class CigarShape
 {
     public static final char OP_MATCH = 'M';
@@ -83,8 +81,7 @@ public final class CigarShape
                 || op == OP_SEQ_MATCH || op == OP_SEQ_MISMATCH;
     }
 
-    // sum of read bases consumed by all ops (M/I/S/=/X). Used to validate that primary + supp
-    // together cover the full read length with no overlap and no gap.
+    // Sum of read bases (M/I/S/=/X). Used to validate primary + supp cover the full read with no gap or overlap.
     public static int readLength(final List<Element> elements)
     {
         int total = 0;
@@ -96,8 +93,7 @@ public final class CigarShape
         return total;
     }
 
-    // length of reference span (M + D + N + = + X). The position-1 + refSpan - 1 is the inclusive
-    // end on the reference, used to derive intron start from primary and intron end from supp.
+    // Reference span (M+D+N+=/X). pos-1 + refSpan - 1 gives the inclusive end; used to derive intron boundaries.
     public static int referenceSpan(final List<Element> elements)
     {
         int total = 0;
@@ -109,7 +105,7 @@ public final class CigarShape
         return total;
     }
 
-    // read offset at which matched bases begin (skips a leading S if present, otherwise 0).
+    // Leading soft-clip length, or 0 if none.
     public static int leadingSoftClip(final List<Element> elements)
     {
         if(elements.isEmpty() || elements.get(0).Op != OP_SOFTCLIP)
@@ -135,7 +131,7 @@ public final class CigarShape
         return false;
     }
 
-    // sum of M/=/X bases. The "matched" length under STAR's overhang sense (D/N don't count).
+    // Sum of M/=/X bases (D/N excluded, matching STAR's overhang definition).
     public static int matchedBases(final List<Element> elements)
     {
         int total = 0;

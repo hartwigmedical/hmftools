@@ -3,12 +3,9 @@ package com.hartwig.hmftools.redux.splice;
 import java.util.HashSet;
 import java.util.Set;
 
-// rewrites each chimeric entry in a SAMRecord's SA tag from transcript-contig coordinates to genomic.
-// SA entry format: rname,pos,strand,CIGAR,mapQ,NM; (htsjdk SAMTag.SA).
-//
-// strand and mapQ pass through unchanged. NM is intentionally not recomputed (it would disagree with the
-// rewritten CIGAR once junction N operators are introduced) — same trade-off as the read's own NM tag.
-// Entries that fail to lift are dropped. Surviving entries are deduped by lifted (chrom, pos, strand, CIGAR).
+// Rewrites each SA tag entry from tx-contig to genomic coordinates.
+// NM is not recomputed — it disagrees with the rewritten CIGAR once N operators are introduced, same as the read's own NM.
+// Entries that fail to lift are dropped; survivors are deduped by (chrom, pos, strand, CIGAR).
 public class SaTagRewriter
 {
     public static final String SA_ATTRIBUTE = "SA";

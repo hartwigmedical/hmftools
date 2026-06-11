@@ -19,9 +19,7 @@ public class LiftedMateInfoCacheTest
         cache.recordPrimaryAlignment("read1", true, r1);
         cache.recordPrimaryAlignment("read1", false, r2);
 
-        // looking up partner of R1 returns R2
         assertEquals(r2, cache.getPartnerMateInfo("read1", true));
-        // looking up partner of R2 returns R1
         assertEquals(r1, cache.getPartnerMateInfo("read1", false));
     }
 
@@ -31,7 +29,6 @@ public class LiftedMateInfoCacheTest
         LiftedMateInfoCache cache = new LiftedMateInfoCache();
         cache.recordPrimaryAlignment("read1", true, LiftedMateInfo.mapped("1", 100, 199, "50M", false));
 
-        // R2 never recorded → partner-of-R1 is null
         assertNull(cache.getPartnerMateInfo("read1", true));
     }
 

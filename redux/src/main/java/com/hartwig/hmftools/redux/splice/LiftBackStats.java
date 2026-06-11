@@ -9,8 +9,7 @@ import java.io.IOException;
 
 import htsjdk.samtools.SAMRecord;
 
-// run-level counters for SpliceLiftBack: per-category, alignment-set composition × MAPQ tier, category × MAPQ tier.
-// emits a summary at end-of-run (logs + a TSV) so reviewers can see prevalence before any category pruning is committed.
+// Run-level counters for SpliceLiftBack: per-category, composition x MAPQ tier, category x MAPQ tier.
 public class LiftBackStats
 {
     private static final double LIFT_FAILED_WARN_FRACTION = 0.01;
@@ -31,11 +30,12 @@ public class LiftBackStats
     private final int[][] mCategoryByTier = new int[N_CATEGORIES][N_TIERS];
     private int mTotal = 0;
     private int mLowAsSuppsDropped = 0;
+    private int mOrphanSuppsDropped = 0;
+    private int mLowAsPrimariesUnmapped = 0;
 
     public void record(final SAMRecord record, final LiftBackResult result)
     {
-        // pre-drop full-set composition: includes alts dropped by the discriminator, so the summary reflects what
-        // bwa actually produced (vs. result.comp(), the post-drop "kept" view written to TSV-A).
+        // Full pre-drop composition (includes discriminator-dropped alts) reflects what bwa produced.
         LiftBackResult.Composition fullComposition = LiftBackResult.Composition.fromAlignments(result.liftedAlignments());
         MapqTier tier = deriveMapqTier(record, result);
 
@@ -65,12 +65,55 @@ public class LiftBackStats
         return mLowAsSuppsDropped;
     }
 
+    public void recordOrphanSuppDropped()
+    {
+        ++mOrphanSuppsDropped;
+    }
+
+    public int orphanSuppsDropped()
+    {
+        return mOrphanSuppsDropped;
+    }
+
+    public void recordLowAsPrimaryUnmapped()
+    {
+        ++mLowAsPrimariesUnmapped;
+    }
+
+    public int lowAsPrimariesUnmapped()
+    {
+        return mLowAsPrimariesUnmapped;
+    }
+
+    // Merge per-worker stats into this instance for a combined end-of-run summary.
+    public void merge(final LiftBackStats other)
+    {
+        mTotal += other.mTotal;
+        mLowAsSuppsDropped += other.mLowAsSuppsDropped;
+        mOrphanSuppsDropped += other.mOrphanSuppsDropped;
+        mLowAsPrimariesUnmapped += other.mLowAsPrimariesUnmapped;
+        for(int i = 0; i < mPerCategory.length; ++i)
+            mPerCategory[i] += other.mPerCategory[i];
+        for(int i = 0; i < mCompositionByTier.length; ++i)
+            for(int j = 0; j < N_TIERS; ++j)
+                mCompositionByTier[i][j] += other.mCompositionByTier[i][j];
+        for(int i = 0; i < mCategoryByTier.length; ++i)
+            for(int j = 0; j < N_TIERS; ++j)
+                mCategoryByTier[i][j] += other.mCategoryByTier[i][j];
+    }
+
     public void logSummary()
     {
         RD_LOGGER.info("processed {} records", mTotal);
         if(mLowAsSuppsDropped > 0)
             RD_LOGGER.info("dropped {} non-rescued supps with source AS < {}",
-                    mLowAsSuppsDropped, SpliceLiftBack.SUPP_AS_DROP_THRESHOLD);
+                    mLowAsSuppsDropped, LiftBackGroupProcessor.SUPP_AS_DROP_THRESHOLD);
+        if(mOrphanSuppsDropped > 0)
+            RD_LOGGER.info("dropped {} supps whose SA entries all failed to lift (orphaned in genomic space)",
+                    mOrphanSuppsDropped);
+        if(mLowAsPrimariesUnmapped > 0)
+            RD_LOGGER.info("unmapped {} primaries with AS < {} not improved by liftback",
+                    mLowAsPrimariesUnmapped, LiftBackGroupProcessor.PRIMARY_AS_UNMAP_THRESHOLD);
 
         RD_LOGGER.info("alignment-set composition x MAPQ tier:");
         logTable(mCompositionByTier, LiftBackResult.Composition.values(), MapqTier.values());
@@ -100,8 +143,7 @@ public class LiftBackStats
         int unliftable = mPerCategory[LiftBackCategory.LIFT_FAILED.ordinal()];
         if(mTotal > 0 && unliftable / (double) mTotal > LIFT_FAILED_WARN_FRACTION)
         {
-            // run is already done; ERROR (not throw) so the operator sees this in log scrapers but the
-            // BAM/TSVs we've already written are still available for inspection.
+            // ERROR not throw: BAM/TSVs already written should remain available for inspection.
             RD_LOGGER.error("LIFT_FAILED rate {} / {} = {}% exceeds {}% threshold — likely sidecar/FASTA mismatch",
                     unliftable, mTotal,
                     String.format("%.2f", 100.0 * unliftable / mTotal),
@@ -142,8 +184,6 @@ public class LiftBackStats
                 }
             }
 
-            // bucket -> category breakdown: retains the secondary (full) category alongside the
-            // primary bucket grouping used for headline scanning.
             for(LiftBackCategory.PrimaryBucket bucket : LiftBackCategory.PrimaryBucket.values())
             {
                 for(LiftBackCategory cat : LiftBackCategory.values())

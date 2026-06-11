@@ -21,10 +21,8 @@ public final class ContigTranslator
         if(spans.isEmpty() || contigPos > contig.altEnd())
             return null;
 
-        // bwa-mem2 sometimes anchors a read 1-N bases before this transcript's altStart (i.e. into the
-        // upstream alt-packing spacer-N region) or extends a few bases past altEnd into the downstream
-        // spacer. Reclaim those overhanging M bases as soft-clip so the read still lifts. Falls through
-        // to null when the overhang lands on a non-M op or the M is too short to absorb the shift.
+        // bwa-mem2 can anchor into the alt-contig spacer-N region on either side; reclaim overhanging M
+        // bases as soft-clip so the read still lifts. Returns null when the overhang can't be absorbed.
         Cigar workingCigar = contigCigar;
         if(contigPos < contig.altStart())
         {
@@ -46,7 +44,6 @@ public final class ContigTranslator
 
         int localPos = contigPos - contig.altStart() + 1;
 
-        // locate the span that contains the read's leftmost mapped contig position
         int currentSpanIndex = -1;
         int currentGenomicPos = -1;
         int exonLengthSoFar = 0;
@@ -69,9 +66,7 @@ public final class ContigTranslator
         List<CigarElement> outElements = new ArrayList<>();
         List<BaseRegion> impliedIntrons = new ArrayList<>();
 
-        // walk the contig-space CIGAR left-to-right; for each reference-consuming chunk, step through the
-        // exon spans, copying the operator out and emitting an N whenever we cross an exon boundary so the
-        // rebuilt CIGAR is genome-spaced. Non-reference ops (I, S) pass through unchanged.
+        // walk contig-space CIGAR, emitting N at each exon boundary to produce a genome-spaced CIGAR
         for(CigarElement element : workingCigar.getCigarElements())
         {
             CigarOperator op = element.getOperator();
@@ -87,7 +82,6 @@ public final class ContigTranslator
             {
                 BaseRegion currentSpan = spans.get(currentSpanIndex);
 
-                // if we've stepped past the current span, insert an intron and advance into the next span
                 if(currentGenomicPos > currentSpan.end())
                 {
                     if(currentSpanIndex + 1 >= spans.size())
@@ -120,11 +114,8 @@ public final class ContigTranslator
                 impliedIntrons);
     }
 
-    // A pre-lift D op that straddles an exon boundary gets emitted by translate() as xD nN yD (lead D
-    // up to the exon end, splice N, trail D into the next exon). This is the signature of a tx-FASTA
-    // off-by-N at the junction; the D consumes no read bases and the N consumes no read bases either,
-    // so absorbing xD..yD into the N preserves read and reference span. Only absorbed when each D's
-    // length is <= SPLICE_FLANKING_DELETION_MAX_BP — larger Ds are kept as real deletions.
+    // A D straddling an exon boundary lifts as xD nN yD — artifact of tx-FASTA off-by-N at the junction.
+    // Absorb small flanking Ds into the N (preserves read and ref span); keep larger ones as real deletions.
     static List<CigarElement> collapseSpliceFlankingDeletions(final List<CigarElement> elements)
     {
         if(elements.size() < 3)
@@ -143,11 +134,9 @@ public final class ContigTranslator
 
             int splicedLength = element.getLength();
 
-            // absorb a leading absorbable D already emitted into result
             if(!result.isEmpty() && isAbsorbableDeletion(result.get(result.size() - 1)))
                 splicedLength += result.remove(result.size() - 1).getLength();
 
-            // absorb a trailing absorbable D that immediately follows in the input
             while(i + 1 < elements.size() && isAbsorbableDeletion(elements.get(i + 1)))
                 splicedLength += elements.get(++i).getLength();
 
@@ -173,20 +162,12 @@ public final class ContigTranslator
         }
     }
 
-    // Drops fabricated sub-threshold junction anchors at both read ends. A tx-contig walk that
-    // dribbles a few bases past an exon boundary leaves a tiny terminal "yM nN ..." (leading) or
-    // "... nN yM zS" (trailing) anchor. STAR rejects an annotated junction whose flanking exon
-    // block is shorter than alignSJDBoverhangMin (stitchWindowAligns.cpp), so we do the same:
-    // when y < minAnchorBp the yM is rolled into the adjacent softclip and the junction dropped.
-    // A leading trim advances the alignment start past the dropped yM + intron (reported via
-    // StartShift). A "<...>N yM" tail with no softclip is left intact — there the short exon is
-    // the read's genuine end.
-    // Two floors. bareAnchorFloor applies to a tiny anchor at the read's true terminus (a bare leading
-    // yM nN... with no leading softclip): that yM is where the read genuinely starts inside an exon, so
-    // it is kept down to 1bp. softclipAnchorFloor applies to a tiny anchor sitting NEXT TO a softclip
-    // (...nN yM zS trailing, or zS yM nN... leading): there the read did not actually span the junction -
-    // bwa over-ran the exon boundary by a few bases and clipped the rest - so the implied junction is
-    // unsupported and the tiny anchor is rolled into the softclip below this floor.
+    // Drops fabricated sub-threshold junction anchors at both ends. A tx-contig walk that dribbles past
+    // an exon boundary leaves a tiny "yM nN..." or "...nN yM zS" anchor; STAR rejects junctions whose
+    // flanking block is shorter than alignSJDBoverhangMin. Two floors: bareAnchorFloor for a read
+    // genuinely starting inside an exon (no adjacent S, kept down to 1bp); softclipAnchorFloor for
+    // an anchor sitting next to a softclip (bwa over-ran the boundary, so the implied junction is
+    // unsupported — roll the yM into the softclip). Leading trim advances start past dropped yM+intron.
     public static MicroAnchorResult trimMicroAnchors(
             final Cigar cigar, final int bareAnchorFloor, final int softclipAnchorFloor)
     {
@@ -213,7 +194,6 @@ public final class ContigTranslator
         return new MicroAnchorResult(new Cigar(elements), startShift);
     }
 
-    // "<...>M nN yM zS" -> "<...>M (y+z)S" when y < minAnchorBp.
     public static Cigar trimTrailingMicroAnchor(final Cigar cigar, final int minAnchorBp)
     {
         return new Cigar(trimTrailingAnchor(new ArrayList<>(cigar.getCigarElements()), minAnchorBp));
@@ -231,7 +211,7 @@ public final class ContigTranslator
             return elements;
         if(elements.get(last - 2).getOperator() != CigarOperator.N)
             return elements;
-        // refuse if there's no preceding M anchor — would leave the cigar starting with S/N.
+        // without a preceding M the trimmed cigar would start with S/N — refuse
         boolean hasAnchorBeforeIntron = false;
         for(int i = 0; i < last - 2; ++i)
         {
@@ -251,10 +231,7 @@ public final class ContigTranslator
         return result;
     }
 
-    // matches "[zS]? yM nN <...>M<...>" — optional leading softclip, tiny matched anchor under
-    // threshold, intron, then a real matched anchor that survives the trim. The leading S is
-    // optional because a tx-contig source cigar that begins with M (no clip) lifts to a cigar
-    // starting directly with the tiny anchor — same fabrication pattern, no leading S to merge into.
+    // "[zS]? yM nN <...>M<...>" — leading S optional (absent when source starts with M, no clip to merge)
     private static boolean leadingAnchorTrimmable(final List<CigarElement> elements, final int minAnchorBp)
     {
         if(elements.isEmpty())
@@ -276,8 +253,7 @@ public final class ContigTranslator
         return false;
     }
 
-    // true if the contig CIGAR has a leading or trailing S whose adjacent edge sits at an interior exon
-    // boundary of the contig (i.e. a real splice-junction edge, not the outermost end of the first/last exon).
+    // true if a leading or trailing S abuts an interior exon boundary (not the outermost end of the first/last exon)
     public static boolean hasSoftClipAtExonBoundary(
             final ContigEntry contig, final int contigPos, final Cigar contigCigar)
     {
@@ -291,11 +267,9 @@ public final class ContigTranslator
         if(!leadingSoftClip && !trailingSoftClip)
             return false;
 
-        // shift alt-contig position into transcript-local coordinates (1-based)
         final int localPos = contigPos - contig.altStart() + 1;
         final int endLocalPos = localPos + contigCigar.getReferenceLength() - 1;
 
-        // interior exon-end boundary in contig-local coords = cumulative length of exons[0..i] for i < last
         int exonLengthSoFar = 0;
         for(int i = 0; i < spans.size() - 1; ++i)
         {
@@ -308,9 +282,7 @@ public final class ContigTranslator
         return false;
     }
 
-    // converts the first `overhang` ref-consuming bases of the leading M into soft-clip. Any pre-existing
-    // leading S is merged into one larger S. Returns null when the first ref-consuming op is not a long
-    // enough M (e.g. starts with an I/D/N, or M is shorter than the overhang).
+    // converts the first `overhang` M bases to soft-clip, merging any existing leading S; null if not possible
     private static Cigar clampLeadingMToSoftClip(final Cigar cigar, final int overhang)
     {
         List<CigarElement> elements = cigar.getCigarElements();
@@ -336,7 +308,7 @@ public final class ContigTranslator
         return new Cigar(out);
     }
 
-    // mirror of clampLeadingMToSoftClip for the trailing edge.
+    // trailing-edge mirror of clampLeadingMToSoftClip
     private static Cigar clampTrailingMToSoftClip(final Cigar cigar, final int overhang)
     {
         List<CigarElement> elements = cigar.getCigarElements();

@@ -35,6 +35,7 @@ import com.hartwig.hmftools.common.perf.TaskQueue;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.redux.common.Statistics;
+import com.hartwig.hmftools.redux.splice.SpliceLiftBackStage;
 import com.hartwig.hmftools.redux.unmap.RegionUnmapper;
 import com.hartwig.hmftools.redux.unmap.UnmapStats;
 import com.hartwig.hmftools.redux.write.FileWriterCache;
@@ -60,6 +61,14 @@ public class ReduxApplication
         mConfig.logRoutineTypes();
 
         long startTimeMs = System.currentTimeMillis();
+
+        // Stage 0: lift a transcript-contig BAM back to genomic coords before anything samples the BAM.
+        // No-op unless -splice_liftback is set; on success rebinds mConfig.BamFiles to the lifted BAM.
+        if(!SpliceLiftBackStage.runStage(mConfig, mConfig.SpliceConfig))
+        {
+            RD_LOGGER.error("splice liftback stage failed");
+            System.exit(1);
+        }
 
         setReadLength();
 

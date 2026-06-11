@@ -10,9 +10,8 @@ import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.region.BaseRegion;
 
-// per-transcript exon-concatenation. Produces a forward-strand sequence and the genomic exon spans that
-// generated it. Placement of this sequence onto a per-chromosome alt contig (altStart/altEnd) is the
-// caller's job — SpliceFastaBuilder owns that packing.
+// Concatenates a transcript's exons into a forward-strand sequence with genomic span metadata.
+// Placement onto the alt contig (altStart/altEnd) is SpliceFastaBuilder's responsibility.
 public class TranscriptContigBuilder
 {
     private final RefGenomeInterface mRefGenome;
@@ -27,8 +26,7 @@ public class TranscriptContigBuilder
         if(transcript.exons() == null || transcript.exons().isEmpty())
             return null;
 
-        // exons are stored by Rank (transcribed order). Re-sort by genomic Start so the contig sequence is in
-        // forward-strand orientation regardless of gene strand — keeps lift-back math direct.
+        // exons are stored by transcription rank; re-sort by genomic start for forward-strand orientation
         List<ExonData> ordered = new ArrayList<>(transcript.exons());
         ordered.sort(Comparator.comparingInt(e -> e.Start));
 

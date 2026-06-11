@@ -25,7 +25,6 @@ public class TranscriptContigBuilderTest
     @Test
     public void testThreeExonForwardStrandTranscript()
     {
-        // exons stored in transcribed (Rank) order, which equals genomic-ascending for a forward-strand gene
         TranscriptData transcript = transcript();
         addExon(transcript, 100, 199, 1);
         addExon(transcript, 300, 399, 2);
@@ -45,15 +44,13 @@ public class TranscriptContigBuilderTest
         assertEquals(new BaseRegion(300, 399), result.exonSpans().get(1));
         assertEquals(new BaseRegion(500, 549), result.exonSpans().get(2));
 
-        // sequence length equals total exonic bases (no introns)
         assertEquals(100 + 100 + 50, result.sequence().length());
     }
 
     @Test
     public void testNegativeStrandTranscriptStoresExonsInGenomicOrder()
     {
-        // Rank-ordered exons for a negative-strand transcript run genomic-descending. The builder must re-sort to
-        // genomic-ascending so the contig sequence mirrors the forward strand.
+        // Rank-order for a negative-strand transcript is genomic-descending; builder must re-sort to genomic-ascending.
         TranscriptData transcript = transcript();
         addExon(transcript, 500, 549, 1); // 5' end of mRNA, but genomic-high
         addExon(transcript, 300, 399, 2);
@@ -91,8 +88,6 @@ public class TranscriptContigBuilderTest
     @Test
     public void testMultipleTranscriptsEachGetTheirOwnContig()
     {
-        // simulate two isoforms of the same gene with different exon sets — each should be built independently
-        // (caller iterates transcripts; the builder is per-transcript)
         TranscriptData transA = new TranscriptData(1, "ENST00000001", GENE_ID, true, POS_STRAND, 0, 0, null, null, "protein_coding", null);
         addExon(transA, 100, 199, 1);
         addExon(transA, 300, 399, 2);
@@ -114,7 +109,6 @@ public class TranscriptContigBuilderTest
         assertEquals(2, resultA.exonSpans().size());
         assertEquals(2, resultB.exonSpans().size());
 
-        // contig A spans 100-199 + 300-399, contig B spans 100-199 + 500-549. Different lengths confirm they're independent.
         assertEquals(200, resultA.sequence().length());
         assertEquals(150, resultB.sequence().length());
     }

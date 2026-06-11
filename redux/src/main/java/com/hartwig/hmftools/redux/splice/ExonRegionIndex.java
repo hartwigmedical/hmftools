@@ -9,14 +9,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-// Per-chromosome sorted exon spans, used by LiftBackResolver to decide whether a "hidden tie"
-// (XS==AS with no XA) on a ref-only primary represents a sub-threshold paralog (rescue) or a real
-// equally-scoring placement (keep MAPQ at 0). When the lifted primary's first base falls inside an
-// annotated exon, the placement is likely the biologically-correct one and the tie's alt is almost
-// certainly intronic/intergenic — rescue MAPQ. Outside-exon ties stay ambiguous.
-//
-// Loaded from the ensembl_data_cache CSVs (same files AnnotatedJunctionLoader reads). Lookup is
-// O(log N) per chromosome via binary search over start positions.
+// Per-chromosome merged exon spans loaded from ensembl_data_cache CSVs. Used by LiftBackResolver to
+// distinguish a hidden tie where the primary lands in an annotated exon (rescue MAPQ) from a genuinely
+// ambiguous tie (keep MAPQ 0). Lookup is O(log N) via binary search over sorted, non-overlapping spans.
 public final class ExonRegionIndex
 {
     private final Map<String, int[]> mExonStarts;
@@ -36,10 +31,7 @@ public final class ExonRegionIndex
         if(starts == null)
             return false;
 
-        // Intervals are merged at load time so they're sorted AND non-overlapping. A single binary
-        // search for the largest start <= pos identifies the only possible containing range; the
-        // earlier mistake was a backward walk that scanned every smaller-start interval since
-        // starts[i] <= pos is trivially true for every i below the hit.
+        // Binary search for the largest start <= pos; merged intervals guarantee only one candidate.
         int lo = 0;
         int hi = starts.length - 1;
         int idx = -1;
@@ -100,8 +92,7 @@ public final class ExonRegionIndex
         return new ExonRegionIndex(starts, ends);
     }
 
-    // Sort by start, then sweep collapsing overlapping/abutting ranges. Result is sorted AND non-
-    // overlapping, which is what makes the binary-search-only lookup safe (no backward walk needed).
+    // Produces sorted, non-overlapping intervals required for safe binary-search lookup.
     private static List<int[]> mergeIntervals(final List<int[]> intervals)
     {
         if(intervals.isEmpty())
@@ -143,8 +134,7 @@ public final class ExonRegionIndex
         return out;
     }
 
-    // Ensembl CSVs ship bare chromosome names ("1") while V38 BAMs use "chr1". Normalize both
-    // sides on the lookup so we don't care which convention the inputs use.
+    // Ensembl CSVs use bare names ("1"); BAMs use "chr1". Strip prefix to normalize both sides.
     private static String normalize(final String chrom)
     {
         if(chrom == null)

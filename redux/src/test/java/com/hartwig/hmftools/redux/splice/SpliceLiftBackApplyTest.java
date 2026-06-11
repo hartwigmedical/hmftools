@@ -16,9 +16,7 @@ import htsjdk.samtools.SAMRecord;
 
 import org.junit.Test;
 
-// covers SpliceLiftBack.applyResultToRecord — the SAMRecord-level mutation step. Verifies that
-// chrom/pos/CIGAR are rewritten correctly, that LIFT_FAILED marks the record unmapped without
-// dropping it, and that XA is replaced with lifted, deduped genomic alts (Stage 4).
+// Tests LiftBackRecordOps.applyResultToRecord: chrom/pos/CIGAR rewrite, LIFT_FAILED unmapping, and XA replacement with lifted genomic alts.
 public class SpliceLiftBackApplyTest
 {
     private static final String GENE_ID = "ENSG_TEST";
@@ -51,7 +49,7 @@ public class SpliceLiftBackApplyTest
         SAMRecord record = newRecord(TX_CONTIG, 51, "100M");
         LiftBackResolver resolver = new LiftBackResolver(List.of(threeExonContig()));
 
-        SpliceLiftBack.applyResultToRecord(record, resolver.resolve(record), new LiftedMateInfoCache());
+        LiftBackRecordOps.applyResultToRecord(record, resolver.resolve(record), new LiftedMateInfoCache());
 
         assertEquals(CHR_1, record.getReferenceName());
         assertEquals(150, record.getAlignmentStart());
@@ -66,7 +64,7 @@ public class SpliceLiftBackApplyTest
         SAMRecord record = newRecord(TX_CONTIG, 251, "10M");
         LiftBackResolver resolver = new LiftBackResolver(List.of(threeExonContig()));
 
-        SpliceLiftBack.applyResultToRecord(record, resolver.resolve(record), new LiftedMateInfoCache());
+        LiftBackRecordOps.applyResultToRecord(record, resolver.resolve(record), new LiftedMateInfoCache());
 
         assertTrue(record.getReadUnmappedFlag());
         assertEquals(SAMRecord.NO_ALIGNMENT_REFERENCE_NAME, record.getReferenceName());
@@ -83,9 +81,8 @@ public class SpliceLiftBackApplyTest
         record.setAttribute(XA_TAG, TX_CONTIG + ",+1,50M,0;");
         LiftBackResolver resolver = new LiftBackResolver(List.of(threeExonContig()));
 
-        SpliceLiftBack.applyResultToRecord(record, resolver.resolve(record), new LiftedMateInfoCache());
+        LiftBackRecordOps.applyResultToRecord(record, resolver.resolve(record), new LiftedMateInfoCache());
 
-        // ref primary unchanged; Tx XA alt rewritten to genomic chr1:100/50M
         assertEquals(CHR_1, record.getReferenceName());
         assertEquals(1000, record.getAlignmentStart());
         assertEquals(CHR_1 + ",+100,50M,0;", record.getStringAttribute(XA_TAG));
@@ -99,7 +96,7 @@ public class SpliceLiftBackApplyTest
         record.setReadUnmappedFlag(true);
         LiftBackResolver resolver = new LiftBackResolver(List.of(threeExonContig()));
 
-        SpliceLiftBack.applyResultToRecord(record, resolver.resolve(record), new LiftedMateInfoCache());
+        LiftBackRecordOps.applyResultToRecord(record, resolver.resolve(record), new LiftedMateInfoCache());
 
         assertTrue(record.getReadUnmappedFlag());
     }
@@ -113,24 +110,18 @@ public class SpliceLiftBackApplyTest
         SAMRecord r = newRecord(TX_CONTIG, 51, "100M");
         LiftBackResult result = resolver.resolve(r);
 
-        // category UNMAPPED / LIFT_FAILED are always unmapped regardless of threshold
-        assertTrue(SpliceLiftBack.willBeUnmapped(
+        assertTrue(LiftBackRecordOps.willBeUnmapped(
                 resolver.resolve(unmappedRecord()), 0, 0));
 
-        // mapped result with thresholds off -> stays mapped
-        assertFalse(SpliceLiftBack.willBeUnmapped(result, 0, 0));
+        assertFalse(LiftBackRecordOps.willBeUnmapped(result, 0, 0));
 
-        // numLoci=1 < unmap_above_nh=2 -> stays mapped
-        assertFalse(SpliceLiftBack.willBeUnmapped(result, 2, 0));
+        assertFalse(LiftBackRecordOps.willBeUnmapped(result, 2, 0));
 
-        // numLoci=1 vs unmap_above_nh=0 (off) shouldn't trip
-        assertFalse(SpliceLiftBack.willBeUnmapped(result, 0, 0));
+        assertFalse(LiftBackRecordOps.willBeUnmapped(result, 0, 0));
 
-        // updatedMapq=60 vs unmap_below_mapq=10 -> stays mapped
-        assertFalse(SpliceLiftBack.willBeUnmapped(result, 0, 10));
+        assertFalse(LiftBackRecordOps.willBeUnmapped(result, 0, 10));
 
-        // updatedMapq=60 vs unmap_below_mapq=61 -> tripped
-        assertTrue(SpliceLiftBack.willBeUnmapped(result, 0, 61));
+        assertTrue(LiftBackRecordOps.willBeUnmapped(result, 0, 61));
     }
 
     @Test
@@ -147,14 +138,13 @@ public class SpliceLiftBackApplyTest
         r.setAttribute("MC", "50M");
         r.setMappingQuality(60);
 
-        SpliceLiftBack.markPrimaryUnmapped(r);
+        LiftBackRecordOps.markPrimaryUnmapped(r);
 
         assertTrue(r.getReadUnmappedFlag());
         assertEquals(SAMRecord.NO_ALIGNMENT_CIGAR, r.getCigarString());
         assertEquals(0, r.getMappingQuality());
         assertFalse(r.getProperPairFlag());
         assertEquals(0, r.getInferredInsertSize());
-        // Every tag that pointed at the now-stale lifted coords is cleared
         assertNull(r.getStringAttribute("SA"));
         assertNull(r.getStringAttribute("XA"));
         assertNull(r.getIntegerAttribute("NH"));

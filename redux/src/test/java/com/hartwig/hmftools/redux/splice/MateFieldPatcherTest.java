@@ -46,22 +46,22 @@ public class MateFieldPatcherTest
         assertEquals(400, r1.getMateAlignmentStart());
         assertTrue(r1.getMateNegativeStrandFlag());
         assertFalse(r1.getMateUnmappedFlag());
-        // leftmost is R1 at 100, rightmost end is R2 at 499 → span = 400, positive on R1
+        // leftmost R1 at 100, rightmost end R2 at 499 → span = 400, positive on R1
         assertEquals(400, r1.getInferredInsertSize());
-        // MC must reflect the partner's lifted CIGAR for redux mate-CIGAR consumers
+        // MC must reflect the partner's lifted CIGAR
         assertEquals("50M", r1.getStringAttribute(MATE_CIGAR_ATTRIBUTE));
     }
 
     @Test
     public void testMateCigarWrittenAsLiftedNCigar()
     {
-        // simulate a junction-spanning partner whose lifted CIGAR contains an N operator
+        // junction-spanning partner: MC must carry the lifted N-CIGAR, not the stale pre-lift value
         LiftedMateInfoCache cache = new LiftedMateInfoCache();
         LiftedMateInfo r2Info = LiftedMateInfo.mapped("1", 400, 999, "20M500N30M", true);
         cache.recordPrimaryAlignment("read1", false, r2Info);
 
         SAMRecord r1 = pairedMappedRecord("read1", true, "1", 100, "50M", false);
-        r1.setAttribute(MATE_CIGAR_ATTRIBUTE, "50M"); // stale pre-lift MC bwa/fixmate may have set
+        r1.setAttribute(MATE_CIGAR_ATTRIBUTE, "50M"); // stale pre-lift MC
         MateFieldPatcher.patchMateFields(r1, cache);
 
         assertEquals("20M500N30M", r1.getStringAttribute(MATE_CIGAR_ATTRIBUTE));
@@ -90,7 +90,7 @@ public class MateFieldPatcherTest
         SAMRecord r2 = pairedMappedRecord("read1", false, "1", 400, "50M", true);
         MateFieldPatcher.patchMateFields(r2, cache);
 
-        // span = 449 - 100 + 1 = 350; R2 is to the right so negative
+        // span = 449 - 100 + 1 = 350; R2 rightmost → negative TLEN
         assertEquals(-350, r2.getInferredInsertSize());
     }
 
@@ -122,7 +122,7 @@ public class MateFieldPatcherTest
         MateFieldPatcher.patchMateFields(r1, cache);
 
         assertTrue(r1.getMateUnmappedFlag());
-        // SAM convention: place unmapped mate at the read's own position
+        // SAM: unmapped mate placed at the read's own position
         assertEquals("1", r1.getMateReferenceName());
         assertEquals(100, r1.getMateAlignmentStart());
         assertEquals(0, r1.getInferredInsertSize());
@@ -133,8 +133,6 @@ public class MateFieldPatcherTest
     public void testPatchMissingPartnerClearsProperPair()
     {
         LiftedMateInfoCache cache = new LiftedMateInfoCache();
-        // partner never recorded
-
         SAMRecord r1 = pairedMappedRecord("read1", true, "1", 100, "50M", false);
         r1.setProperPairFlag(true);
         MateFieldPatcher.patchMateFields(r1, cache);
@@ -152,14 +150,14 @@ public class MateFieldPatcherTest
         record.setReferenceName("1");
         record.setAlignmentStart(100);
 
-        // should not throw or attempt to read first-of-pair flag
+        // must not throw or attempt to read first-of-pair flag
         MateFieldPatcher.patchMateFields(record, cache);
     }
 
     @Test
     public void testPatchSuppRecordPatchedFromPartnerPrimary()
     {
-        // supplementary alignment for R1 — patcher must still pick up R2's primary info
+        // supplementary R1 must still use R2's primary info
         LiftedMateInfoCache cache = new LiftedMateInfoCache();
         LiftedMateInfo r2Info = LiftedMateInfo.mapped("1", 400, 499, "50M", true);
         cache.recordPrimaryAlignment("read1", false, r2Info);
@@ -176,8 +174,7 @@ public class MateFieldPatcherTest
     @Test
     public void testPatchOverlappingPairSignFromFivePrime()
     {
-        // fully-overlapping pair sharing alignment-start 100: forward mate's 5' is leftmost (100), reverse
-        // mate's 5' is its end (199), so the forward read carries the positive TLEN regardless of pair order.
+        // Overlapping pair at same start: forward 5' (100) < reverse 5' (199), so forward read gets positive TLEN.
         LiftedMateInfoCache cache = new LiftedMateInfoCache();
         cache.recordPrimaryAlignment("read1", false, LiftedMateInfo.mapped("1", 100, 199, "50M", true));
 
@@ -190,16 +187,14 @@ public class MateFieldPatcherTest
     @Test
     public void testPatchOverlappingPairSecondOfPairForwardIsPositive()
     {
-        // regression: same-start overlapping pair where the second-of-pair read is the forward mate. The
-        // old first-of-pair tie-break gave it a negative TLEN; STAR / htsjdk assign positive to the
-        // leftmost 5' end, i.e. the forward mate, irrespective of first/second-of-pair.
+        // Regression: second-of-pair is the forward mate; TLEN sign must follow 5'-end position, not pair order.
         LiftedMateInfoCache cache = new LiftedMateInfoCache();
         cache.recordPrimaryAlignment("read1", true, LiftedMateInfo.mapped("1", 100, 211, "39S112M", true));
 
         SAMRecord r2 = pairedMappedRecord("read1", false, "1", 100, "117M34S", false);
         MateFieldPatcher.patchMateFields(r2, cache);
 
-        // forward read 5'=100, reverse mate 5'=211 -> 211 - 100 + 1 = 112, positive on the forward read
+        // forward 5'=100, reverse 5'=211 → 211 - 100 + 1 = 112, positive on forward read
         assertEquals(112, r2.getInferredInsertSize());
     }
 }

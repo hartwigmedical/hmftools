@@ -401,4 +401,83 @@ clinical cancer interest have some overlap:  FOXP1 (driver - intronic only), COL
 - The empirical 4bp repeat / 5bp jitter data tends to be sparse and difficult to fit. To address this, we clump all 3bp/4bp/5bp
   microsatellite data together and fit as one microsatellite category
 
+## Splice liftback (RNA)
+
+Splice liftback gives STAR-like splice-aware RNA alignments using bwa-mem2. RNA reads are aligned against the genome
+FASTA with annotated multi-exon transcript contigs (`*_tx`) appended; liftback rewrites those tx-contig alignments
+back to genomic coordinates so the output is an ordinary genomic RNA BAM: no `*_tx` in the header or on records,
+XA/SA/mate fields genomic, spliced reads carried as `N` CIGAR ops.
+
+`SpliceFastaBuilder` builds the transcript contigs and a sidecar TSV mapping packed transcript intervals to
+gene/transcript/exon spans. After bwa-mem2 alignment against the combined FASTA, liftback runs as a REDUX stage,
+reading the BAM plus sidecar.
+
+### Command
+
+```
+java -jar redux.jar 
+    -sample SAMPLE_ID 
+    -input_bam SAMPLE_ID.bwa_tx.bam 
+    -ref_genome /path_to_fasta/genome_plus_tx.fasta 
+    -ref_genome_version V38 
+    -splice_liftback 
+    -contig_sidecar /path_to/SAMPLE_ID.rna_contigs_mappings.tsv 
+    -ensembl_data_dir /ref_data/ensembl_data_cache/38/ 
+    -rescue_via_supp 
+    -extend_softclip_tails 
+    -bamtool /path_to_samtools/ 
+    -output_dir /path_to_output/ 
+    -threads 24
+```
+
+`input_bam`, `ref_genome`, `output_dir`, `bamtool` and `threads` are the standard REDUX arguments; the splice-specific
+flags are:
+
+| Argument              | Required | Description                                                                      |
+|-----------------------|----------|----------------------------------------------------------------------------------|
+| splice_liftback       | Required | Enable the splice liftback stage                                                 |
+| contig_sidecar        | Required | Contig sidecar TSV from `SpliceFastaBuilder` (`*.rna_contigs_mappings.tsv`)       |
+| ensembl_data_dir      | Required | Ensembl cache: annotated exons + junctions, used by the discriminator and rescue |
+| rescue_via_supp       | Optional | Merge primary + supplementary pieces into one spliced primary                    |
+| extend_softclip_tails | Optional | Recover terminal softclipped bases that match the reference (intron retention)   |
+
+`ref_genome` must be the same combined genome + transcript FASTA used at alignment. Debug output goes to
+`*.liftback.records.tsv`, `*.liftback.alignments.tsv` and `*.liftback.summary.tsv`.
+
+### Translation
+
+`ContigTranslator` walks a tx-contig CIGAR through the transcript's exons, inserting an `N` at each exon boundary
+crossed. Small `D` ops next to a new `N` are absorbed into it; terminal anchors under 3 bp are folded into softclip.
+
+### Ref-vs-tx discriminator
+
+When a read has both a ref alignment and a tx (N-carrying) alignment at one locus, `LiftBackDiscriminator` picks the
+primary. An `N` is a real junction only if both flanking M runs are >= 8 bp. Ref wins when it matches cleanly across
+the supposed intron (retained intron / pre-mRNA / DNA contamination), or tx only softclips at the boundary. Tx wins
+when it has a real junction and ref is softclipped (ref never spanned the junction).
+
+### Post-process passes
+
+Run per mate-group in this load-bearing order, each feeding the next:
+
+1. **Rescue** (`JunctionRescueResolver`) — merge a primary's terminal softclip with a short-anchor supplementary across
+   a junction into one `M N M` primary. Gated on softclip complementarity, intron length, anchor overhangs and coverage
+   overlap; snap point chosen by motif tier. Merged supps are dropped; the primary's MAPQ is capped at 55.
+2. **Collapse** (`TerminalMicroJunctionCollapser`) — drop a fabricated tiny terminal anchor (<= 3 bp) across an intron.
+   The anchor bases must match the contiguous genome exactly; reclaimed softclip bases past the anchor tolerate
+   max(1, length/10) mismatches. A real short anchor has an intron between, so it doesn't match contiguously and is kept.
+3. **Extend** (`SoftclipTailExtender`) — walk a terminal softclip into contiguous genome (intron retention, no `N`),
+   min 3 bp, capped at 30 bp.
+4. **Canonicalize** (`JunctionCanonicalizer`) — slide an intron up to 5 bp onto a higher splice motif (GT-AG / CT-AC),
+   smallest shift that strictly improves the tier with every moved base still matching. CIGAR only; start never moves.
+
+### MAPQ, NH and mutation scope
+
+MAPQ is carried from bwa and never raised on collapse/extend/canonicalize. It is set to 60 when the discriminator swaps
+to tx, or a single-locus read had MAPQ 0 with no unresolved hidden tie; rescue caps it at 55. NH = `max(numLoci, 1)`,
+counting distinct genomic loci among best-scoring alignments only, so one junction across many transcript contigs does
+not inflate it. All record mutation lives in `LiftBackRecordOps`, `MateFieldPatcher` and `LiftBackGroupProcessor`;
+everything else is pure. MD is always dropped (not rebuilt), NM is recomputed against the genomic reference, and read
+bases are never reverse-complemented when the strand flag flips (bwa already oriented the read).
+
 ## Version History and Download Links

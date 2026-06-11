@@ -1,8 +1,7 @@
 package com.hartwig.hmftools.redux.splice.rescue;
 
-// One supplementary record under consideration as a merge partner for the primary. Index identifies
-// the supp's position in the caller's original supplementary list so the resolver can return which
-// supps to drop without exposing the SAMRecord layer.
+// Supplementary record under consideration as a merge partner. Index is its position in the caller's
+// supplementary list so the resolver can report which supps to drop without exposing SAMRecord.
 public class RescueSupplementary
 {
     public final int Index;

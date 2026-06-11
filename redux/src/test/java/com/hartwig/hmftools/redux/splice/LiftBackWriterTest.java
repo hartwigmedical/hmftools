@@ -15,9 +15,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-// verifies LiftBackWriter produces the exact TSV layout consumers expect: stable header columns
-// and one row per record (TSV-A) / one row per lifted alignment (TSV-B), with MateNum derived from
-// the record's first-of-pair flag.
+// Verifies LiftBackWriter TSV layout: stable headers, one row per record (TSV-A) / per alignment (TSV-B).
 public class LiftBackWriterTest
 {
     private static SAMRecord pairedRecord(final String readName, final boolean firstOfPair)
@@ -137,8 +135,7 @@ public class LiftBackWriterTest
         }
 
         List<String> bLines = Files.readAllLines(mTsvB);
-        // header + 2 alignment rows
-        assertEquals(3, bLines.size());
+        assertEquals(3, bLines.size()); // header + 2 alignment rows
         assertTrue(bLines.get(1).startsWith("read2\t2\tPRIMARY\tSELF\t"));
         assertTrue(bLines.get(2).startsWith("read2\t2\tPRIMARY\tXA_INPUT\t"));
     }
@@ -146,7 +143,7 @@ public class LiftBackWriterTest
     @Test
     public void testEmptyAlignmentSetStillEmitsTsvARow() throws IOException
     {
-        // UNMAPPED / LIFT_FAILED -> TSV-A still gets a row, TSV-B gets nothing
+        // UNMAPPED: TSV-A row written, TSV-B has header only
         LiftBackResult result = new LiftBackResult(
                 LiftBackCategory.UNMAPPED, LiftBackResult.Composition.NONE,
                 LiftBackResult.RecordRole.PRIMARY,
@@ -170,6 +167,6 @@ public class LiftBackWriterTest
 
         assertEquals(2, aLines.size());
         assertTrue(aLines.get(1).startsWith("read3\t0\tPRIMARY\tNON_PRIMARY\tNONE\tUNMAPPED\t"));
-        assertEquals(1, bLines.size()); // header only
+        assertEquals(1, bLines.size());
     }
 }

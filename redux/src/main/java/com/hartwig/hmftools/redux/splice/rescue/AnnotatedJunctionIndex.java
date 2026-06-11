@@ -8,14 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-// Provides three views of an annotated-junction set:
-//   - exact membership (Set semantics) — used by the supp-merge snap loop
-//   - by-intron-start (Map<(chrom, intronStart), List<ChrIntron>>) — used by right-extend ref-verify
-//     to find candidate downstream exons
-//   - by-intron-end (Map<(chrom, intronEnd), List<ChrIntron>>) — used by left-extend ref-verify to
-//     find candidate upstream exons
-//
-// Builds all three from the same Set<ChrIntron> in one pass at construction.
+// Three views of an annotated-junction set: exact membership, by-intron-start, and by-intron-end.
+// All three are built from the same Set<ChrIntron> in one pass.
 public class AnnotatedJunctionIndex
 {
     private final Set<ChrIntron> mJunctions;
@@ -46,9 +40,6 @@ public class AnnotatedJunctionIndex
         return mJunctions.size();
     }
 
-    // returns introns whose start position equals `intronStart` on the given chromosome. Used by
-    // the ref-verify right-extend path to enumerate candidate downstream exons (the intron's end
-    // tells us where to read reference bases for verification).
     public List<ChrIntron> introByStart(final String chromosome, final int intronStart)
     {
         return mByStart.getOrDefault(new ChrPos(chromosome, intronStart), Collections.emptyList());

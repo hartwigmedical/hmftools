@@ -5,8 +5,7 @@ public enum LiftBackCategory
     UNMAPPED,
     SUPPLEMENTARY,
 
-    // primary alignment was on a tx contig but ContigTranslator couldn't lift it (e.g. position falls in
-    // an inter-transcript N-spacer of the packed alt contig).
+    // position falls in an inter-transcript N-spacer or otherwise outside any transcript span
     LIFT_FAILED,
 
     // ---- 1 locus ----
@@ -14,21 +13,19 @@ public enum LiftBackCategory
     REF_SINGLE,
     TX_SINGLE,
 
-    // ref + tx both contributed, same locus + CIGAR, no N. The two views of the read agree.
+    // same locus + CIGAR, no N — both views agree
     BOTH_AGREE,
 
-    // tx has an N (junction); ref is soft-clipped around it. Tx wins — picks up the splice ref missed.
+    // tx has N-junction, ref is soft-clipped — tx wins (picks up splice ref missed)
     BOTH_TX_JUNCTION_REF_SOFTCLIP,
 
-    // tx has an N (junction); ref is a full match through the supposed intron with low NM. Ref wins —
-    // overwhelming evidence the read is genuinely unspliced (pre-mRNA / retained-intron / DNA contamination).
+    // tx has N-junction, ref is a full match through the intron with low NM — ref wins (unspliced/retained intron)
     BOTH_TX_JUNCTION_REF_MATCH,
 
-    // tx soft-clipped at an exon boundary; ref is a full match. Ref wins — likely intron retention the
-    // tx-contig encoding can't represent.
+    // tx soft-clipped at exon boundary, ref full match — ref wins (likely intron retention)
     BOTH_TX_SOFTCLIP_REF_MATCH,
 
-    // both ref + tx at single locus, no discriminator rule fires.
+    // single locus, no discriminator rule fires
     BOTH_AMBIGUOUS,
 
     // ---- >=2 loci ----
@@ -36,11 +33,10 @@ public enum LiftBackCategory
     REF_MULTI,
     TX_MULTI,
 
-    // ref + tx at distinct loci. Tx has an N (annotated junction); ref alts have no N (intronless paralogs,
-    // typically processed pseudogenes). Tx is the biologically faithful pick.
+    // distinct loci; tx has N-junction, ref alts don't (intronless paralogs) — tx is biologically faithful
     BOTH_MULTI_TX_JUNCTION,
 
-    // ref + tx at distinct loci, tx-junction rule didn't fire. Genuine multi-mapper — paralog / family overlap.
+    // distinct loci, tx-junction rule didn't fire — genuine multi-mapper (paralog/family overlap)
     BOTH_MULTI;
 
     public PrimaryBucket primaryBucket()
@@ -68,9 +64,7 @@ public enum LiftBackCategory
         }
     }
 
-    // categories where the discriminator promoted a tx-contig alignment over what bwa would have picked.
-    // In these cases the lift-back has strictly better placement info than bwa, so the STAR ladder runs
-    // unconditionally; elsewhere it caps at the input MAPQ.
+    // tx-contig won over bwa; lift-back has strictly better placement info so the STAR ladder runs unconditionally.
     public boolean txWon()
     {
         switch(this)

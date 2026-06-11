@@ -1,8 +1,7 @@
 package com.hartwig.hmftools.redux.splice.rescue;
 
-// Classifies a candidate intron's 2-base donor/acceptor flanks. ~99% of human introns are GT-AG
-// (canonical), ~0.6% are GC-AG or AT-AC (semi-canonical). Read strand is unknown at scan time so
-// we accept the reverse-strand complement (CT-AC, CT-GC, GT-AT) on equal terms.
+// Classifies donor/acceptor 2-base flanks: GT-AG canonical (~99%), GC-AG/AT-AC semi-canonical.
+// Strand is unknown at scan time so reverse-complement motifs (CT-AC, CT-GC, GT-AT) are accepted.
 public final class SpliceMotif
 {
     public static final int TIER_NONE = 0;
@@ -12,8 +11,6 @@ public final class SpliceMotif
 
     private SpliceMotif() {}
 
-    // donor bases are at [intronStart, intronStart + 1]; acceptor bases at [intronEnd - 1, intronEnd].
-    // null or wrong-length inputs return TIER_NONE.
     public static int classify(final byte[] donorBases, final byte[] acceptorBases)
     {
         if(donorBases == null || donorBases.length != 2)

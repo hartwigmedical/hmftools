@@ -38,16 +38,13 @@ public class TerminalMicroJunctionCollapserTest
     @Test
     public void testTrailingSpuriousMicroJunctionCollapsed()
     {
-        // Read aligned 5M, then a 10N intron, then a 1bp terminal anchor (5M10N1M). The 6th read base
-        // also matches the genome continuing the first exon (pos 106), so the junction is unnecessary
-        // and collapses to 6M. Ref: exon1 at 101..106 = "ACGTAC" (the 6th base C continues it), intron
-        // 107..116, the spurious far base at 117 also 'C'.
+        // 5M10N1M: anchor base matches the contiguous continuation of the near exon (pos 106), so collapses to 6M.
         final byte[] chr1 = new byte[200];
         Arrays.fill(chr1, (byte) 'T');
-        // 101..106 = ACGTAC  (read M run + the contiguous 6th base)
+        // 101..106 = ACGTAC
         final byte[] exon = { 'A', 'C', 'G', 'T', 'A', 'C' };
         System.arraycopy(exon, 0, chr1, 100, 6);
-        chr1[116] = 'C';   // pos 117: the base the contig walk over-extended onto across the intron
+        chr1[116] = 'C';   // pos 117: spurious far base
 
         // read bases: first 5 = ACGTA (5M), 6th = C (the over-extended 1M, also matches pos 106)
         final byte[] read = { 'A', 'C', 'G', 'T', 'A', 'C' };
@@ -62,37 +59,28 @@ public class TerminalMicroJunctionCollapserTest
     @Test
     public void testLeadingSpuriousMicroJunctionCollapsed()
     {
-        // Mirror on the leading end: 1M 10N 5M. The 1 leading base also matches the genome immediately
-        // before the second exon (contiguous), so collapse to 6M with the start moved back by 1+10.
+        // 1M10N4M: anchor base matches contiguous genome before the near exon; collapses to 5M, start -11.
         final byte[] chr1 = new byte[200];
         Arrays.fill(chr1, (byte) 'T');
-        // near exon (the 5M) sits at 112..116; the contiguous base before it (111) matches the read's
-        // first base. far spurious base at 101.
-        chr1[100] = 'C';                                   // pos 101: spurious leading 1M
-        final byte[] nearExon = { 'C', 'A', 'C', 'G', 'T' }; // pos 111..115: contiguous base + 5M start
+        chr1[100] = 'C';                                       // pos 101: spurious far base
+        final byte[] nearExon = { 'C', 'A', 'C', 'G', 'T' }; // pos 111..115
         System.arraycopy(nearExon, 0, chr1, 110, 5);
-        // read first base C matches both pos 101 (far) and pos 111 (contiguous continuation)
         final byte[] read = { 'C', 'A', 'C', 'G', 'T' };
 
-        // 1M at 101, 10N (102..111), 4M at 112. nearStart = 101 + 1 + 10 = 112; check pos 111.
         final TerminalCollapseResult res = collapser(chr1).tryCollapse(CHR1, 101, "1M10N4M", read);
 
         assertTrue(res.Collapsed);
         assertEquals("5M", res.NewCigar);
-        assertEquals(111, res.NewStart);   // nearStart(112) - y(1)
+        assertEquals(111, res.NewStart);
     }
 
     @Test
     public void testLegitShortAnchorJunctionKept()
     {
-        // The legit "2M 80N 149M" case: the read genuinely starts 2 bases into exon1. Those 2 leading
-        // bases do NOT match the genome immediately before exon2 (an intron sits there), so the ref
-        // check fails and the junction is KEPT. Anchor length alone never drives the decision.
+        // Genuine 2M80N149M: anchor bases don't match the contiguous genome before exon2 (intron sits there).
         final byte[] chr1 = new byte[400];
         Arrays.fill(chr1, (byte) 'T');
-        // read's first 2 bases = "AC" (real exon1 tail). The 2 bases before the near exon (the intron's
-        // last 2 bases, pos 81..82 given start 1, 2M then 80N then exon at 83) are "GG" - no match.
-        chr1[80] = 'G'; chr1[81] = 'G';     // pos 81,82: intron bases before exon2, do not match "AC"
+        chr1[80] = 'G'; chr1[81] = 'G';     // pos 81,82: intron bases, do not match read's "AC"
         final byte[] read = new byte[151];
         Arrays.fill(read, (byte) 'A');
         read[0] = 'A'; read[1] = 'C';
@@ -105,8 +93,7 @@ public class TerminalMicroJunctionCollapserTest
     @Test
     public void testAnchorAboveMaxNotCollapsed()
     {
-        // A 3bp terminal anchor is above the max (2), so it is never a collapse candidate regardless of
-        // whether the bases happen to match contiguously.
+        // 3bp anchor exceeds max (2), so never a collapse candidate.
         final byte[] chr1 = new byte[200];
         Arrays.fill(chr1, (byte) 'C');
         final byte[] read = new byte[9];
@@ -120,9 +107,7 @@ public class TerminalMicroJunctionCollapserTest
     @Test
     public void testTrailingNonContiguousKept()
     {
-        // Terminal 1M anchor, but the over-extended base does NOT match the contiguous continuation of
-        // the near exon (pos 106 is 'A', read's 6th base is 'C') - so the junction has real support and
-        // is kept.
+        // Anchor base doesn't match contiguous genome (pos 106 is 'A', read has 'C'): junction kept.
         final byte[] chr1 = new byte[200];
         Arrays.fill(chr1, (byte) 'A');
         chr1[116] = 'C';   // far base at 117 matches; contiguous pos 106 stays 'A'
@@ -131,5 +116,73 @@ public class TerminalMicroJunctionCollapserTest
         final TerminalCollapseResult res = collapser(chr1).tryCollapse(CHR1, 101, "5M10N1M", read);
 
         assertFalse(res.Collapsed);
+    }
+
+    @Test
+    public void testTrailingSoftclipFullyReclaimed()
+    {
+        // 5M10N1M4S: anchor + all 4 softclip bases match contiguous genome → 10M.
+        final byte[] chr1 = new byte[200];
+        Arrays.fill(chr1, (byte) 'T');
+        final byte[] genome = { 'A', 'C', 'G', 'T', 'A', 'C', 'G', 'T', 'A', 'C' };
+        System.arraycopy(genome, 0, chr1, 100, genome.length);   // 101..110
+        final byte[] read = { 'A', 'C', 'G', 'T', 'A', 'C', 'G', 'T', 'A', 'C' };
+
+        final TerminalCollapseResult res = collapser(chr1).tryCollapse(CHR1, 101, "5M10N1M4S", read);
+
+        assertTrue(res.Collapsed);
+        assertEquals("10M", res.NewCigar);
+        assertEquals(101, res.NewStart);
+    }
+
+    @Test
+    public void testTrailingSoftclipPartiallyReclaimed()
+    {
+        // Last 2 softclip bases diverge beyond budget → anchor + 3 bases reclaimed (9M1S).
+        final byte[] chr1 = new byte[200];
+        Arrays.fill(chr1, (byte) 'T');
+        final byte[] genome = { 'A', 'C', 'G', 'T', 'A', 'C', 'G', 'T', 'G', 'G' };   // 109,110 diverge
+        System.arraycopy(genome, 0, chr1, 100, genome.length);
+        final byte[] read = { 'A', 'C', 'G', 'T', 'A', 'C', 'G', 'T', 'A', 'C' };
+
+        final TerminalCollapseResult res = collapser(chr1).tryCollapse(CHR1, 101, "5M10N1M4S", read);
+
+        assertTrue(res.Collapsed);
+        assertEquals("9M1S", res.NewCigar);
+        assertEquals(101, res.NewStart);
+    }
+
+    @Test
+    public void testTrailingSoftclipAnchorMismatchKept()
+    {
+        // Anchor base mismatches contiguous genome (pos 106 = 'T'): junction kept regardless of softclip.
+        final byte[] chr1 = new byte[200];
+        Arrays.fill(chr1, (byte) 'T');
+        final byte[] nearExon = { 'A', 'C', 'G', 'T', 'A' };
+        System.arraycopy(nearExon, 0, chr1, 100, nearExon.length);   // 101..105, 106 stays 'T'
+        final byte[] read = { 'A', 'C', 'G', 'T', 'A', 'C', 'G', 'T', 'A', 'C' };
+
+        final TerminalCollapseResult res = collapser(chr1).tryCollapse(CHR1, 101, "5M10N1M4S", read);
+
+        assertFalse(res.Collapsed);
+    }
+
+    @Test
+    public void testLeadingSoftclipReclaimed()
+    {
+        // 4S1M10N5M: anchor + 4 softclip bases match contiguous genome before near exon → 10M, start 107.
+        final byte[] chr1 = new byte[200];
+        Arrays.fill(chr1, (byte) 'T');
+        final byte[] window = { 'C', 'G', 'T', 'A', 'C' };       // 107..111: softclip(4) + anchor(1)
+        System.arraycopy(window, 0, chr1, 106, window.length);
+        final byte[] nearExon = { 'A', 'C', 'G', 'T', 'A' };     // 112..116
+        System.arraycopy(nearExon, 0, chr1, 111, nearExon.length);
+        final byte[] read = { 'C', 'G', 'T', 'A', 'C', 'A', 'C', 'G', 'T', 'A' };
+
+        final TerminalCollapseResult res = collapser(chr1).tryCollapse(CHR1, 101, "4S1M10N5M", read);
+
+        assertTrue(res.Collapsed);
+        assertEquals("10M", res.NewCigar);
+        assertEquals(107, res.NewStart);
     }
 }

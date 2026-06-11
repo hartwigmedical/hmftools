@@ -13,12 +13,9 @@ import com.hartwig.hmftools.redux.splice.rescue.CigarShape;
 import com.hartwig.hmftools.redux.splice.rescue.ChrIntron;
 import com.hartwig.hmftools.redux.splice.rescue.RefSequenceSource;
 
-// Recovers ref-matching bases that bwa-mem2 softclipped at the read tails. Runs after junction
-// rescue so rescue's boundary lookups see bwa's original cigar; this pass cleans up what rescue
-// didn't merge. Walks each terminal softclip against the ref, converts S->M while running
-// mismatches stay below max(1, length / 10), and caps the extension at MaxExtension. Skips when
-// an annotated intron starts within MaxExtension of the S boundary — that range belongs to the
-// junction-rescue path.
+// Recovers ref-matching bases bwa-mem2 softclipped at read tails. Runs after junction rescue so
+// rescue's boundary lookups see the original cigar. Skips when an annotated intron starts within
+// MaxExtension of the softclip boundary — that range belongs to junction rescue.
 public class SoftclipTailExtender
 {
     private final RefSequenceSource mRefSource;
@@ -112,12 +109,9 @@ public class SoftclipTailExtender
         final int walkLength = Math.min(refBases.length, extendBudget);
         final int bestLength = side.walk(readBases, refBases, softclip.Length, walkLength);
 
-        // Junction-guard, applied after the genomic walk rather than before. An annotated junction near
-        // the boundary normally belongs to the junction-rescue path, so we defer. But when the read
-        // matches the contiguous genome cleanly across the whole walk window, this is intron retention
-        // (STAR aligns straight through, doesn't splice) and extension is the correct call. We only
-        // defer when the genomic walk stalls short of the window — i.e. the read diverges at the donor
-        // and genuinely needs splicing. (Tail extension runs after rescue, so rescue already declined.)
+        // Junction guard applied after the walk: if the read matches the full window (intron retention),
+        // extension is correct. Only defer when the walk stalls short, meaning the read diverges at the
+        // donor and genuinely needs splicing.
         if(nearAnnotatedJunction(side, chromosome, boundary) && bestLength < walkLength)
         {
             mStatistics.countSkippedForJunctionGuard();
@@ -147,8 +141,7 @@ public class SoftclipTailExtender
         return false;
     }
 
-    // longest p in [0, walkLength] with cumulative mismatches <= max(1, p / 10). The min-of-1
-    // tolerance lets short tails (3-9 bp) recover a single mismatch.
+    // Longest prefix with cumulative mismatches <= max(1, length / 10); the min-of-1 lets short tails recover one mismatch.
     private static int longestAcceptedPrefix(
             final byte[] readBases, final int readAnchor,
             final byte[] refBases, final int refAnchor,
@@ -205,7 +198,7 @@ public class SoftclipTailExtender
         }
     }
 
-    // Encapsulates the leading/trailing geometry so the body of tryExtendSide is direction-free.
+    // Abstracts leading/trailing geometry so tryExtendSide is direction-free.
     private enum Side
     {
         LEADING
@@ -228,7 +221,6 @@ public class SoftclipTailExtender
                     @Override
                     int walk(final byte[] readBases, final byte[] refBases, final int softclipLength, final int walkLength)
                     {
-                        // walk backward from the M boundary into the softclip
                         return longestAcceptedPrefix(
                                 readBases, softclipLength - 1, refBases, refBases.length - 1, walkLength, false);
                     }

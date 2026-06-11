@@ -15,8 +15,8 @@ import htsjdk.samtools.SAMRecord;
 
 import org.junit.Test;
 
-// per-category sanity checks on LiftBackResolver + a small end-to-end smoke through LiftBackStats.
-// uses the same three-exon test contig as ContigTranslatorTest so lifted-coordinate math is consistent.
+// Per-category tests for LiftBackResolver plus an end-to-end smoke through LiftBackStats.
+// Uses the same three-exon contig as ContigTranslatorTest so lifted-coordinate math is consistent.
 public class LiftBackResolverTest
 {
     private static final String GENE_ID = "ENSG_TEST";
@@ -24,8 +24,7 @@ public class LiftBackResolverTest
     private static final String TRANS_NAME = "ENST_TEST";
     private static final String TX_CONTIG = "ens" + GENE_ID + "_" + GENE_NAME + "_" + TRANS_NAME;
 
-    // exon spans on chr1: 100-199, 300-399, 500-549. introns: 200-299, 400-499. contig length 250.
-    // alt contig has the transcript laid down at positions 1..250 so test positions read like local coords.
+    // Exons on chr1: 100-199, 300-399, 500-549; introns: 200-299, 400-499. Alt contig positions 1..250.
     private static ContigEntry threeExonContig()
     {
         return new ContigEntry(
@@ -86,8 +85,7 @@ public class LiftBackResolverTest
     @Test
     public void testTxPrimaryUniqueWithinExon()
     {
-        // contig pos 1, 50M — entirely within exon 1 (chr1:100-149)
-        SAMRecord record = newRecord(TX_CONTIG, 1, "50M");
+        SAMRecord record = newRecord(TX_CONTIG, 1, "50M"); // contig pos 1, 50M -> exon 1 (chr1:100-149)
 
         LiftBackResolver resolver = new LiftBackResolver(contigMap());
         LiftBackResult result = resolver.resolve(record);
@@ -102,8 +100,7 @@ public class LiftBackResolverTest
     @Test
     public void testTxPrimaryUniqueJunctionCrosser()
     {
-        // contig pos 51, 100M — crosses exon 1 -> exon 2 (intron 200-299, length 100)
-        SAMRecord record = newRecord(TX_CONTIG, 51, "100M");
+        SAMRecord record = newRecord(TX_CONTIG, 51, "100M"); // crosses exon 1 -> exon 2 (intron 200-299)
 
         LiftBackResolver resolver = new LiftBackResolver(contigMap());
         LiftBackResult result = resolver.resolve(record);
@@ -118,7 +115,7 @@ public class LiftBackResolverTest
     @Test
     public void testJunctionTxBetter()
     {
-        // primary on Tx (junction-crosser), ref alt in XA at same lifted locus with soft-clip
+        // Tx junction-crosser primary; ref alt at same lifted locus with soft-clip.
         SAMRecord record = newRecord(TX_CONTIG, 51, "100M");
         record.setAttribute("XA", CHR_1 + ",+150,50M50S,0;");
 
@@ -128,9 +125,7 @@ public class LiftBackResolverTest
         assertEquals(LiftBackCategory.BOTH_TX_JUNCTION_REF_SOFTCLIP, result.category());
         assertTrue(result.hasNCigar());
         assertEquals(1, result.numLoci());
-        // ref alt is dropped from the emitted set because tx wins this discriminator outcome,
-        // so only the tx CIGAR remains at the primary locus. The dropped ref alt stays in
-        // LiftedAlignments for TSV-B diagnostics.
+        // tx wins, so ref alt is dropped from the emitted set; only tx CIGAR remains at the locus.
         assertEquals(1, result.numDistinctCigarsAtPrimaryLocus());
         assertEquals(2, result.liftedAlignments().size());
         assertEquals(1, result.liftedAlignments().stream().filter(la -> !la.Dropped).count());
@@ -139,8 +134,7 @@ public class LiftBackResolverTest
     @Test
     public void testRefTxAgree()
     {
-        // primary on ref at chr1:100, Tx alt at contig pos 1 -> same lifted locus, same CIGAR
-        SAMRecord record = newRecord(CHR_1, 100, "50M");
+        SAMRecord record = newRecord(CHR_1, 100, "50M"); // ref primary; Tx alt at contig pos 1 -> same locus+CIGAR
         record.setAttribute("XA", TX_CONTIG + ",+1,50M,0;");
 
         LiftBackResolver resolver = new LiftBackResolver(contigMap());
@@ -153,9 +147,7 @@ public class LiftBackResolverTest
     @Test
     public void testIntronRetRefBetter()
     {
-        // primary on ref full match overlapping exon 1 + intron 1; Tx alt soft-clipped at exon boundary
-        // ref: chr1:170, 50M -> covers chr1:170-219 (last 20 in intron)
-        // Tx: contig pos 71, 30M20S -> 30M lifts to chr1:170-199 (end of exon 1), 20S past contig boundary
+        // ref chr1:170 50M (last 20bp in intron); Tx pos 71 30M20S lifts to chr1:170-199 soft-clipped at exon boundary.
         SAMRecord record = newRecord(CHR_1, 170, "50M");
         record.setAttribute("XA", TX_CONTIG + ",+71,30M20S,0;");
 
@@ -169,9 +161,7 @@ public class LiftBackResolverTest
     @Test
     public void testTxSoftClipNotAtBoundaryFallsToAmbiguous()
     {
-        // ref pos 170, 50M (chr1:170-219, full match). Tx pos 71, 25M25S — 25M lifts to chr1:170-194, ending
-        // mid exon-1 (well shy of exon-1 end 199), so trailing 25S is NOT at any interior exon boundary.
-        // Same lifted locus (chr1:170), distinct CIGARs, refFullMatch=true, txSoftClipAtBoundary=false -> BOTH_AMBIGUOUS.
+        // ref 50M full match; Tx 25M25S — 25M ends mid-exon (chr1:194), trailing clip NOT at exon boundary -> BOTH_AMBIGUOUS.
         SAMRecord record = newRecord(CHR_1, 170, "50M");
         record.setAttribute("XA", TX_CONTIG + ",+71,25M25S,0;");
 
@@ -185,8 +175,7 @@ public class LiftBackResolverTest
     @Test
     public void testParalogMulti()
     {
-        // primary on Tx, ref alt at a different chromosome -> two distinct loci, ref present
-        SAMRecord record = newRecord(TX_CONTIG, 1, "50M");
+        SAMRecord record = newRecord(TX_CONTIG, 1, "50M"); // Tx primary + ref alt on different chrom -> two loci
         record.setAttribute("XA", "chr5,+5000,50M,0;");
 
         LiftBackResolver resolver = new LiftBackResolver(contigMap());
@@ -199,10 +188,8 @@ public class LiftBackResolverTest
     @Test
     public void testSubOptimalAltDoesNotBlockMapqRescue()
     {
-        // primary on Tx (50M, perfect) plus a strictly worse XA alt elsewhere (50M with 3 mismatches:
-        // score 50 - 3 - 3*4 = 35 < 50). bwa-mem2 -a / XA carries the sub-optimal hit, but it is not a
-        // real placement competitor, so only the best-scoring locus counts: numLoci == 1, and an
-        // input MAPQ=0 is rescued rather than left at 0.
+        // Tx primary (perfect) + sub-optimal XA alt with 3 mismatches (score 35 < 50). Sub-optimal alt is
+        // not a real competitor, so numLoci == 1 and MAPQ=0 is rescued.
         SAMRecord record = newRecord(TX_CONTIG, 1, "50M");
         record.setMappingQuality(0);
         record.setAttribute("XA", "chr5,+5000,50M,3;");
@@ -217,8 +204,7 @@ public class LiftBackResolverTest
     @Test
     public void testRefOnlyMulti()
     {
-        // primary on ref, XA alt on a different ref chromosome -> two distinct loci, no tx
-        SAMRecord record = newRecord(CHR_1, 1000, "50M");
+        SAMRecord record = newRecord(CHR_1, 1000, "50M"); // ref primary + ref alt on different chrom, no tx
         record.setAttribute("XA", "chr5,+5000,50M,0;");
 
         LiftBackResolver resolver = new LiftBackResolver(contigMap());
@@ -231,10 +217,6 @@ public class LiftBackResolverTest
     @Test
     public void testTxPrimaryMulti()
     {
-        // primary on Tx, alt on a different ref locus, no actual ref alt -> Tx-only multi-locus
-        // (using two distinct Tx contigs would need a second ContigEntry; instead use a different contig name
-        //  not in our map so it's treated as ref — defeats the test. Simulate with two different lifted positions
-        //  of two Tx alts. Since our map only has one contig, instead build a multi-contig test:)
         ContigEntry entryB = new ContigEntry(
                 "ensG_OTHER_T", 1, 100, "GO", "OTHER", "TO", "chr5", 1,
                 List.of(new BaseRegion(2000, 2099)));
@@ -283,8 +265,7 @@ public class LiftBackResolverTest
     @Test
     public void testSupplementaryOnTxContigUnliftablePastEnd()
     {
-        // pos 251 is past altEnd (250) entirely — no overhang clamp can save it
-        SAMRecord record = newRecord(TX_CONTIG, 251, "10M");
+        SAMRecord record = newRecord(TX_CONTIG, 251, "10M"); // pos 251 past altEnd(250)
         record.setSupplementaryAlignmentFlag(true);
 
         LiftBackResolver resolver = new LiftBackResolver(contigMap());
@@ -311,8 +292,7 @@ public class LiftBackResolverTest
     @Test
     public void testPrimaryTrailingOverhangClampedToSoftClip()
     {
-        // pos 200 + 100M extends 49 bases past altEnd (250) — clamp converts overhang to trailing S
-        SAMRecord record = newRecord(TX_CONTIG, 200, "100M");
+        SAMRecord record = newRecord(TX_CONTIG, 200, "100M"); // 49bp past altEnd(250) -> trailing 49S
 
         LiftBackResolver resolver = new LiftBackResolver(contigMap());
         LiftBackResult result = resolver.resolve(record);
@@ -324,8 +304,7 @@ public class LiftBackResolverTest
     @Test
     public void testIntronRetRefBetterLeadingSoftClipBoundary()
     {
-        // Tx alt at exon-2 start (contig pos 101) with leading 20S abutting the exon-1/exon-2 boundary.
-        // ref alt at chr1:300 full match -> single locus, refFullMatch + txSoftClipAtBoundary -> BOTH_TX_SOFTCLIP_REF_MATCH.
+        // Tx alt contig pos 101 with leading 20S at exon-1/exon-2 boundary; ref chr1:300 full match.
         SAMRecord record = newRecord(CHR_1, 300, "30M");
         record.setAttribute("XA", TX_CONTIG + ",+101,20S30M,0;");
 
@@ -339,32 +318,28 @@ public class LiftBackResolverTest
     @Test
     public void testXaDedupDropsDuplicateAlts()
     {
-        // two identical XA entries -> only one lifted alt retained
-        SAMRecord record = newRecord(TX_CONTIG, 1, "50M");
+        SAMRecord record = newRecord(TX_CONTIG, 1, "50M"); // two identical XA entries -> one alt retained
         record.setAttribute("XA", "chr5,+5000,50M,0;chr5,+5000,50M,0;");
 
         LiftBackResolver resolver = new LiftBackResolver(contigMap());
         LiftBackResult result = resolver.resolve(record);
 
-        // self + one deduped alt = 2 alignments
-        assertEquals(2, result.liftedAlignments().size());
+        assertEquals(2, result.liftedAlignments().size()); // self + one deduped alt
         assertEquals(1, result.numXaAlts());
     }
 
     @Test
     public void testXaDedupKeepsAltMatchingSelfButDropsXaDuplicate()
     {
-        // self at chr1:100/50M; two XA entries that both lift to the same (chr1, 100, 50M) — one Tx, one ref.
-        // Spec: dedup XA among itself only, NOT against self. The Tx alt is kept (so BOTH_AGREE can fire),
-        // the duplicate ref XA is collapsed.
+        // Two XA entries lifting to the same (chr1,100,50M): one Tx, one ref. XA dedup is XA-internal only,
+        // so the Tx alt is kept (drives BOTH_AGREE); the duplicate ref XA collapses.
         SAMRecord record = newRecord(CHR_1, 100, "50M");
         record.setAttribute("XA", TX_CONTIG + ",+1,50M,0;" + CHR_1 + ",+100,50M,0;");
 
         LiftBackResolver resolver = new LiftBackResolver(contigMap());
         LiftBackResult result = resolver.resolve(record);
 
-        // self + 1 surviving XA alt (the Tx one; the chr1,100,50M XA collapses to the Tx one as both share lifted key)
-        assertEquals(2, result.liftedAlignments().size());
+        assertEquals(2, result.liftedAlignments().size()); // self + Tx alt; ref XA collapsed
         assertEquals(1, result.numXaAlts());
         assertEquals(LiftBackCategory.BOTH_AGREE, result.category());
     }
@@ -372,8 +347,7 @@ public class LiftBackResolverTest
     @Test
     public void testXaWithMalformedNmStillLifted()
     {
-        // bwa XA NM field is sometimes garbled; alt should still be lifted, not silently dropped
-        SAMRecord record = newRecord(TX_CONTIG, 1, "50M");
+        SAMRecord record = newRecord(TX_CONTIG, 1, "50M"); // garbled NM field must not silently drop the alt
         record.setAttribute("XA", "chr5,+5000,50M,not_a_number;");
 
         LiftBackResolver resolver = new LiftBackResolver(contigMap());
@@ -386,9 +360,7 @@ public class LiftBackResolverTest
     @Test
     public void testCrossLocusFavoursTxSwapsToTx()
     {
-        // bwa picked an intronless paralog (ref locus chr5:5000, full match) as primary; tx XA lifts to
-        // chr1:150 with the spliced CIGAR 50M100N50M. Expect: category CROSS_LOCUS_FAVOURS_TX, BAM primary
-        // swapped to the tx locus (chr1:150 with N), original ref demoted to XA, MAPQ rescued.
+        // bwa picked paralog chr5:5000 as primary; Tx XA lifts to chr1:150 50M100N50M. Expect swap to Tx, MAPQ rescued.
         SAMRecord record = newRecord("chr5", 5000, "100M");
         record.setAttribute("XA", TX_CONTIG + ",+51,100M,0;");
         record.setMappingQuality(60);
@@ -404,14 +376,12 @@ public class LiftBackResolverTest
         assertEquals(60, result.updatedMapq());
         assertTrue(result.notes().contains("swapped_ref_to_tx"));
 
-        // self (chr5 ref) should still be in the lifted set but not the primary choice and not dropped
         LiftedAlignment originalSelf = result.liftedAlignments().stream()
                 .filter(la -> la.Source == LiftedAlignment.AlignmentSource.SELF)
                 .findFirst().orElseThrow();
         assertFalse(originalSelf.IsPrimaryChoice);
         assertFalse(originalSelf.Dropped);
 
-        // the tx XA alt is now the primary choice
         LiftedAlignment winner = result.liftedAlignments().stream()
                 .filter(la -> la.IsPrimaryChoice)
                 .findFirst().orElseThrow();
@@ -422,8 +392,7 @@ public class LiftBackResolverTest
     @Test
     public void testCrossLocusBothSplicedRemainsMultiLocus()
     {
-        // primary on tx (junction-crosser), XA alt is a ref alignment that also has an N-CIGAR at a
-        // different locus. Both sides found splices — ambiguous, must NOT swap. Falls into MULTI_LOCUS.
+        // Both Tx primary and ref XA alt have spliced CIGARs at different loci — ambiguous, must NOT swap.
         SAMRecord record = newRecord(TX_CONTIG, 51, "100M");
         record.setAttribute("XA", "chr5,+5000,50M100N50M,0;");
 
@@ -431,7 +400,6 @@ public class LiftBackResolverTest
         LiftBackResult result = resolver.resolve(record);
 
         assertEquals(LiftBackCategory.BOTH_MULTI, result.category());
-        // self stays primary (no swap)
         LiftedAlignment self = result.liftedAlignments().stream()
                 .filter(la -> la.Source == LiftedAlignment.AlignmentSource.SELF)
                 .findFirst().orElseThrow();
@@ -441,9 +409,7 @@ public class LiftBackResolverTest
     @Test
     public void testCrossLocusFavoursTxDropsOtherRefAlts()
     {
-        // self ref at chr5 (paralog A), tx XA at chr1:150 spliced (winner), another ref XA at chr7
-        // (paralog B). Expect winner promoted; original self goes to XA (informative paralog); chr7 ref
-        // alt gets Dropped (paralog noise).
+        // Tx XA wins (chr1:150 spliced); original self (chr5) kept as informative paralog; chr7 ref alt dropped.
         SAMRecord record = newRecord("chr5", 5000, "100M");
         record.setAttribute("XA", TX_CONTIG + ",+51,100M,0;chr7,+7000,100M,0;");
 
@@ -467,9 +433,7 @@ public class LiftBackResolverTest
     @Test
     public void testJunctionFavoursTxSwapsWhenSelfIsRef()
     {
-        // single-locus junction case but bwa picked ref as primary: ref self soft-clipped at chr1:150 with
-        // 50M50S, tx XA at contig pos 51 lifts to chr1:150 with 50M100N50M. Tx wins the discriminator and
-        // the BAM primary now actually swaps (previously emitted "self_was_ref_no_swap" without swapping).
+        // bwa picked ref soft-clipped (50M50S) as primary; Tx XA lifts to the same locus with 50M100N50M. Tx wins and swaps.
         SAMRecord record = newRecord(CHR_1, 150, "50M50S");
         record.setAttribute("XA", TX_CONTIG + ",+51,100M,0;");
 
@@ -485,9 +449,7 @@ public class LiftBackResolverTest
     @Test
     public void testJunctionRefMatchKeepsRefAndDropsTx()
     {
-        // single-locus: ref self full-match 151M at chr1:150, tx XA at contig pos 51 lifts to 50M100N50M.
-        // Ref full-match through the supposed intron is overwhelming evidence the read is unspliced —
-        // we keep ref and drop the tx alt (opposite of BOTH_TX_JUNCTION_REF_SOFTCLIP).
+        // Ref full-match 151M through the supposed intron is overwhelming evidence of an unspliced read; keep ref, drop Tx.
         SAMRecord record = newRecord(CHR_1, 150, "151M");
         record.setAttribute("XA", TX_CONTIG + ",+51,100M,0;");
 
@@ -500,14 +462,12 @@ public class LiftBackResolverTest
         assertEquals("151M", result.finalCigar());
         assertFalse(result.hasNCigar());
 
-        // ref self stays primary
         LiftedAlignment self = result.liftedAlignments().stream()
                 .filter(la -> la.Source == LiftedAlignment.AlignmentSource.SELF)
                 .findFirst().orElseThrow();
         assertTrue(self.IsPrimaryChoice);
         assertFalse(self.Dropped);
 
-        // tx alt is dropped
         LiftedAlignment txAlt = result.liftedAlignments().stream()
                 .filter(LiftedAlignment::fromTxContig)
                 .findFirst().orElseThrow();
@@ -518,8 +478,7 @@ public class LiftBackResolverTest
     @Test
     public void testJunctionRefMatchSwapsToRefWhenSelfIsTx()
     {
-        // bwa primary is the tx alignment (51M+99M lifted to 50M100N50M), ref XA is the unspliced full-match.
-        // The discriminator should swap onto the ref locus and drop the tx alt.
+        // Tx primary; ref XA is unspliced full-match. Discriminator swaps to ref and drops Tx alt.
         SAMRecord record = newRecord(TX_CONTIG, 51, "100M");
         record.setAttribute("XA", CHR_1 + ",+150,151M,0;");
 
@@ -533,14 +492,12 @@ public class LiftBackResolverTest
         assertFalse(result.hasNCigar());
         assertTrue(result.notes().contains("swapped_tx_to_ref"));
 
-        // tx self gets demoted (kept in XA, not dropped — informative tx hit)
         LiftedAlignment txSelf = result.liftedAlignments().stream()
                 .filter(la -> la.Source == LiftedAlignment.AlignmentSource.SELF)
                 .findFirst().orElseThrow();
         assertFalse(txSelf.IsPrimaryChoice);
-        assertFalse(txSelf.Dropped);
+        assertFalse(txSelf.Dropped); // demoted to informative XA, not dropped
 
-        // ref alt is now the primary
         LiftedAlignment winner = result.liftedAlignments().stream()
                 .filter(la -> la.IsPrimaryChoice)
                 .findFirst().orElseThrow();
@@ -553,22 +510,18 @@ public class LiftBackResolverTest
         LiftBackResolver resolver = new LiftBackResolver(contigMap());
         LiftBackStats stats = new LiftBackStats();
 
-        // r1: ref-only exonic, MAPQ=60, no XA -> REF_SINGLE, REF_ONLY, MAPQ_POS_UNIQUE
-        SAMRecord r1 = newRecord(CHR_1, 1000, "150M");
+        SAMRecord r1 = newRecord(CHR_1, 1000, "150M"); // REF_SINGLE
         stats.record(r1, resolver.resolve(r1));
 
-        // r2: Tx primary junction-crosser, MAPQ=60, no XA -> TX_SINGLE, TX_ONLY, MAPQ_POS_UNIQUE
-        SAMRecord r2 = newRecord(TX_CONTIG, 51, "100M");
+        SAMRecord r2 = newRecord(TX_CONTIG, 51, "100M"); // TX_SINGLE, junction-crosser
         stats.record(r2, resolver.resolve(r2));
 
-        // r3: ref + Tx agree, MAPQ=0 -> BOTH_AGREE, REF_AND_TX, MAPQ_ZERO
-        SAMRecord r3 = newRecord(CHR_1, 100, "50M");
+        SAMRecord r3 = newRecord(CHR_1, 100, "50M"); // BOTH_AGREE, MAPQ=0
         r3.setAttribute("XA", TX_CONTIG + ",+1,50M,0;");
         r3.setMappingQuality(0);
         stats.record(r3, resolver.resolve(r3));
 
-        // r4: unmapped -> UNMAPPED, NONE composition
-        SAMRecord r4 = newUnmappedRecord();
+        SAMRecord r4 = newUnmappedRecord(); // UNMAPPED
         stats.record(r4, resolver.resolve(r4));
 
         assertEquals(4, stats.total());
@@ -578,17 +531,12 @@ public class LiftBackResolverTest
         assertEquals(1, stats.categoryCount(LiftBackCategory.UNMAPPED));
     }
 
-    // bwa-mem2 reports the same junction across many transcript contigs via XA entries on the
-    // primary, and the lifter collapses them onto one chr1 locus. numLoci must reflect the deduped
-    // genomic-locus count (1), not the XA entry count, because NH is derived from it.
+    // numLoci must reflect the deduped genomic-locus count, not the XA entry count (NH is derived from it).
     @Test
     public void testNumLociDedupesIdenticalLiftedXaEntries()
     {
-        // primary on tx contig spanning exon1 -> exon2; lifts to chr1:150 50M100N50M
-        SAMRecord primary = newRecord(TX_CONTIG, 51, "100M");
-
-        // four XA entries representing the same tx-contig junction; all lift to the identical
-        // genomic locus as the primary. numLoci should still be 1.
+        SAMRecord primary = newRecord(TX_CONTIG, 51, "100M"); // lifts to chr1:150 50M100N50M
+        // four XA entries all lifting to the same locus -> numLoci still 1
         primary.setAttribute("XA",
                 TX_CONTIG + ",+51,100M,0;"
                         + TX_CONTIG + ",+51,100M,0;"
@@ -604,8 +552,6 @@ public class LiftBackResolverTest
         assertEquals(1, result.numLoci());
     }
 
-    // when XA entries genuinely land at distinct genomic loci (paralog / repeat), numLoci tracks
-    // the distinct count.
     @Test
     public void testNumLociCountsDistinctLiftedLoci()
     {
@@ -620,9 +566,7 @@ public class LiftBackResolverTest
         assertEquals(3, result.numLoci());
     }
 
-    // minimal in-memory ExonRegionIndex backed by reflection through the public load() path would be
-    // heavyweight; instead build a fake index against test exon coords by writing a tiny ensembl CSV
-    // pair. Wrapping these in a helper because both rescue-path tests need it.
+    // Builds a real ExonRegionIndex from a temp dir with minimal Ensembl CSV files (shared by rescue-path tests).
     private static ExonRegionIndex buildExonIndex(final List<int[]> exons) throws Exception
     {
         final java.nio.file.Path dir = java.nio.file.Files.createTempDirectory("exonIdxTest");
@@ -641,29 +585,26 @@ public class LiftBackResolverTest
         return ExonRegionIndex.load(dir.toString());
     }
 
-    // hidden tie (XS==AS, no XA) on a ref-only primary inside an annotated exon: rescue MAPQ to 60.
-    // Without the exon index the tie keeps MAPQ at 0 (the historical behavior).
+    // Hidden tie (XS==AS) on a ref-only primary: rescue is gated on a tx match, so exon evidence cannot bump MAPQ.
     @Test
-    public void testHiddenTieInsideAnnotatedExonRescuesMapq() throws Exception
+    public void testHiddenTieRefOnlyNeverRescuesMapq() throws Exception
     {
         SAMRecord record = newRecord(CHR_1, 1500, "150M");
         record.setMappingQuality(0);
         record.setAttribute("AS", 151);
         record.setAttribute("XS", 151);
 
-        // without an exon index: tie blocks the rescue
         LiftBackResolver noIndex = new LiftBackResolver(contigMap());
         assertEquals(0, noIndex.resolve(record).updatedMapq());
 
-        // exon covers position 1500: rescue fires
-        final ExonRegionIndex idx = buildExonIndex(List.of(new int[] { 1400, 1700 }));
+        final ExonRegionIndex idx = buildExonIndex(List.of(new int[] { 1400, 1700 })); // covers pos 1500
         LiftBackResolver withIndex = new LiftBackResolver(contigMap(), idx);
         LiftBackResult result = withIndex.resolve(record);
-        assertEquals(60, result.updatedMapq());
+        assertEquals(0, result.updatedMapq());
         assertEquals(LiftBackCategory.REF_SINGLE, result.category());
     }
 
-    // hidden tie outside any annotated exon: rescue stays blocked even with an index.
+    // Hidden tie with primary outside any annotated exon: rescue stays blocked.
     @Test
     public void testHiddenTieOutsideExonKeepsMapqZero() throws Exception
     {
@@ -672,68 +613,64 @@ public class LiftBackResolverTest
         record.setAttribute("AS", 151);
         record.setAttribute("XS", 151);
 
-        // exon spans 1400-1700, primary at 5000 is intergenic
-        final ExonRegionIndex idx = buildExonIndex(List.of(new int[] { 1400, 1700 }));
+        final ExonRegionIndex idx = buildExonIndex(List.of(new int[] { 1400, 1700 })); // exon at 1400-1700; primary at 5000 is intergenic
         LiftBackResolver resolver = new LiftBackResolver(contigMap(), idx);
         assertEquals(0, resolver.resolve(record).updatedMapq());
     }
 
-    // ===== decidePrimaryMapq policy unit tests =====
-    // Direct exercise of the extracted MAPQ policy. Independent of LiftBackDiscriminator / SAMRecord
-    // plumbing — every input that drives the policy is a parameter.
-
+    // Direct unit tests for the extracted MAPQ policy; independent of LiftBackDiscriminator / SAMRecord plumbing.
     @Test
     public void testMapqPolicy_swappedAlwaysRescues()
     {
-        // even with an unresolved hidden tie, the swap signal is decisive
-        assertEquals(60, LiftBackResolver.decidePrimaryMapq(0, 1, true, true, false, false));
+        assertEquals(60, LiftBackResolver.decidePrimaryMapq(0, 1, true, true, false, false, true)); // swap is decisive even with hidden tie
     }
 
     @Test
     public void testMapqPolicy_singleLocusZeroRescues()
     {
-        assertEquals(60, LiftBackResolver.decidePrimaryMapq(0, 1, false, false, false, false));
+        assertEquals(60, LiftBackResolver.decidePrimaryMapq(0, 1, false, false, false, false, true));
     }
 
     @Test
     public void testMapqPolicy_hiddenTieRefPrimaryNoExonHoldsAtZero()
     {
-        // hidden tie + ref-only primary + no exon evidence → unresolved → no rescue
-        assertEquals(0, LiftBackResolver.decidePrimaryMapq(0, 1, false, true, false, false));
+        assertEquals(0, LiftBackResolver.decidePrimaryMapq(0, 1, false, true, false, false, true)); // unresolved hidden tie
     }
 
     @Test
     public void testMapqPolicy_hiddenTieTxPrimaryRescues()
     {
-        // tx provenance overrides the hidden tie
-        assertEquals(60, LiftBackResolver.decidePrimaryMapq(0, 1, false, true, true, false));
+        assertEquals(60, LiftBackResolver.decidePrimaryMapq(0, 1, false, true, true, false, true)); // tx provenance overrides hidden tie
     }
 
     @Test
     public void testMapqPolicy_hiddenTieInAnnotatedExonRescues()
     {
-        // exon evidence overrides the hidden tie even on a ref-only primary
-        assertEquals(60, LiftBackResolver.decidePrimaryMapq(0, 1, false, true, false, true));
+        assertEquals(60, LiftBackResolver.decidePrimaryMapq(0, 1, false, true, false, true, true)); // exon evidence overrides hidden tie
     }
 
     @Test
     public void testMapqPolicy_inputSixtyPassesAsRescued()
     {
-        // sanger cap; no-op since RESCUED_MAPQ == 60
-        assertEquals(60, LiftBackResolver.decidePrimaryMapq(60, 1, false, false, false, false));
+        assertEquals(60, LiftBackResolver.decidePrimaryMapq(60, 1, false, false, false, false, true)); // no-op since RESCUED_MAPQ==60
     }
 
     @Test
     public void testMapqPolicy_gradedMapqPassesThrough()
     {
-        // mid-range MAPQ carries graded signal; leave alone
-        assertEquals(37, LiftBackResolver.decidePrimaryMapq(37, 1, false, false, false, false));
+        assertEquals(37, LiftBackResolver.decidePrimaryMapq(37, 1, false, false, false, false, true)); // graded signal; leave alone
     }
 
     @Test
     public void testMapqPolicy_multiLocusZeroStaysZero()
     {
-        // numLoci > 1 means there's a real alt; honest 0 stands
-        assertEquals(0, LiftBackResolver.decidePrimaryMapq(0, 2, false, false, false, false));
+        assertEquals(0, LiftBackResolver.decidePrimaryMapq(0, 2, false, false, false, false, true)); // real alt exists; honest 0 stands
+    }
+
+    @Test
+    public void testMapqPolicy_noTxMatchNeverBumps()
+    {
+        assertEquals(0, LiftBackResolver.decidePrimaryMapq(0, 1, false, false, false, false, false)); // no tx -> MAPQ-0 is honest
+        assertEquals(0, LiftBackResolver.decidePrimaryMapq(0, 1, true, false, false, false, false)); // swap can't rescue without tx match
     }
 }

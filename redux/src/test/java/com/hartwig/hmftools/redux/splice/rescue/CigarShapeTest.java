@@ -54,7 +54,6 @@ public class CigarShapeTest
     @Test
     public void testReadLength()
     {
-        // M, I, S, =, X consume read bases; D, N, H, P don't
         assertEquals(151, CigarShape.readLength(CigarShape.parse("94M57S")));
         assertEquals(151, CigarShape.readLength(CigarShape.parse("94M79N57M")));
         assertEquals(154, CigarShape.readLength(CigarShape.parse("94M3I57S")));
@@ -64,7 +63,6 @@ public class CigarShapeTest
     @Test
     public void testReferenceSpan()
     {
-        // M, D, N, =, X consume reference; I, S, H, P don't
         assertEquals(94, CigarShape.referenceSpan(CigarShape.parse("94M57S")));
         assertEquals(94 + 79 + 57, CigarShape.referenceSpan(CigarShape.parse("94M79N57M")));
         assertEquals(94, CigarShape.referenceSpan(CigarShape.parse("94M3I57S")));

@@ -66,10 +66,8 @@ public class MateFieldPatcher
         record.setInferredInsertSize(computeInferredInsertSize(record, partnerInfo));
     }
 
-    // TLEN per the SAM-spec / htsjdk convention (SamPairUtil.computeInsertSize), which STAR also follows:
-    // the signed distance between the two mates' 5' ends (strand-aware), with a +/-1 adjustment so the
-    // leftmost-5' mate carries the positive value. Using 5' ends rather than leftmost alignment-start fixes
-    // both the sign on fully-overlapping (same-start) pairs and the magnitude when softclips extend an end.
+    // TLEN: signed distance between mates' 5' ends (strand-aware), +/-1 so the leftmost-5' mate is positive.
+    // Using 5' ends (not alignment-start) fixes sign for same-start pairs and magnitude when softclips extend an end.
     static int computeInferredInsertSize(final SAMRecord record, final LiftedMateInfo partnerInfo)
     {
         final int readFivePrime = record.getReadNegativeStrandFlag() ? record.getAlignmentEnd() : record.getAlignmentStart();

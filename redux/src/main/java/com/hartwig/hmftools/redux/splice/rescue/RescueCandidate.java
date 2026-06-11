@@ -3,23 +3,19 @@ package com.hartwig.hmftools.redux.splice.rescue;
 import java.util.Collections;
 import java.util.List;
 
-// Input DTO for JunctionRescueResolver. Carries the per-mate state needed to decide a merge,
-// expressed as plain values so the resolver can be tested without involving SAMRecord. Construction
-// from real SAM records happens in the adapter that wires the resolver into LiftBackResolver.
-//
-// ReadBases is optional — only required for the ref-verify path (no-supp rescue via reference
-// lookup). MateHintIntrons is optional — when populated with the partner mate's previously-
-// rescued junctions, the snap loop will prefer one of those as a tie-breaker.
+// Input DTO for JunctionRescueResolver, expressed as plain values so the resolver is testable without SAMRecord.
+// ReadBases is only needed for the ref-verify path. MateHintIntrons, when set, biases junction snap toward the
+// partner mate's already-rescued junctions.
 public class RescueCandidate
 {
     public final String Chromosome;
     public final boolean ForwardStrand;
     public final int ReadLength;
-    public final int PrimaryStart;     // 1-based
+    public final int PrimaryStart;     // 1-based inclusive
     public final String PrimaryCigar;
     public final int PrimaryMapq;
     public final List<RescueSupplementary> Supplementaries;
-    public final byte[] ReadBases;     // nullable
+    public final byte[] ReadBases;     // nullable; only needed for ref-verify path
     public final List<ChrIntron> MateHintIntrons;
 
     public RescueCandidate(

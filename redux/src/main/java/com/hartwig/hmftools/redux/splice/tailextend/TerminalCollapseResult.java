@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.redux.splice.tailextend;
 
-// Result of TerminalMicroJunctionCollapser.tryCollapse. Collapsed=false means no change (NewStart and
-// NewCigar are unset). NewStart shifts only when the leading side was collapsed.
+// Result of TerminalMicroJunctionCollapser.tryCollapse. NewStart shifts only on a leading collapse.
 public class TerminalCollapseResult
 {
     public final boolean Collapsed;

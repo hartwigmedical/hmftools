@@ -21,7 +21,7 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 public class SpliceFastaBuilder
 {
-    // N-padding between consecutive transcripts on the same per-chromosome alt contig
+    // N-padding between transcripts on the same alt contig
     private static final int SPACER_LENGTH = 500;
 
     private final SpliceFastaConfig mConfig;
@@ -80,7 +80,7 @@ public class SpliceFastaBuilder
 
                     for(TranscriptData transcript : transcripts)
                     {
-                        // single-exon transcripts have no junctions — bwa-mem2 already aligns them fine against genomic ref
+                        // single-exon transcripts have no junctions; skip
                         if(transcript.exons().size() < 2)
                         {
                             ++skippedSingleExon;
@@ -91,7 +91,7 @@ public class SpliceFastaBuilder
                         if(result == null)
                             continue;
 
-                        // exonic positions all masked to N in the ref — contig is alignment-useless
+                        // all-N contig is alignment-useless
                         if(isAllN(result.sequence()))
                         {
                             ++skippedAllN;

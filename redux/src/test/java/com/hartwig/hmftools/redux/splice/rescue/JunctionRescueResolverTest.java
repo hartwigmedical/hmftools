@@ -12,9 +12,7 @@ import java.util.Set;
 
 import org.junit.Test;
 
-// Exhaustive coverage for JunctionRescueResolver covering each gate in the design doc edge-case
-// table. Reads are 151bp throughout (matches Illumina default for our exp7 data set) unless a
-// specific test needs a smaller read for clarity. Tests construct annotated-junction sets inline.
+// Tests for JunctionRescueResolver. Reads are 151bp (Illumina default) unless noted.
 public class JunctionRescueResolverTest
 {
     private static final String CHR1 = "chr1";
@@ -51,19 +49,15 @@ public class JunctionRescueResolverTest
         return new JunctionRescueResolver(annotated, RescueConfig.enabledDefaults());
     }
 
-    // ========== happy paths ==========
-
     @Test
     public void testRightExtendCleanMerge()
     {
-        // primary 94M57S + supp 94S57M across an annotated intron; cleanly complementary on read
-        // (primary covers read[0..94), supp covers read[94..151)). Tests the core right-extend.
+        // Clean complementary cigars across an annotated intron; tests core right-extend.
         final int primStart = 31448368;
         final String primCigar = "94M57S";
         final int suppStart = 31448541;
         final String suppCigar = "94S57M";
 
-        // primary ends at primStart + 94 - 1 = 31448461; intron [31448462, 31448540], length 79
         final ChrIntron annotatedIntron = new ChrIntron(CHR1, 31448462, 31448540);
         final RescueSupplementary supp = supp(0, CHR1, true, suppStart, suppCigar, 60);
         final RescueCandidate cand = candidate(CHR1, true, READ_LEN, primStart, primCigar, 255, supp);
@@ -81,17 +75,67 @@ public class JunctionRescueResolverTest
     }
 
     @Test
+    public void testFoldTrailingFabricatedMicroJunction()
+    {
+        // 100M83N3M48S: 3bp anchor split off by a spurious 83N against the trailing clip -> 100M51S.
+        assertEquals("100M51S", CigarShape.format(JunctionRescueResolver.foldFabricatedTerminalMicroJunctions(
+                CigarShape.parse("100M83N3M48S"), RescueConfig.MAX_FABRICATED_MICRO_ANCHOR)));
+    }
+
+    @Test
+    public void testFoldLeadingFabricatedMicroJunction()
+    {
+        assertEquals("51S100M", CigarShape.format(JunctionRescueResolver.foldFabricatedTerminalMicroJunctions(
+                CigarShape.parse("48S3M83N100M"), RescueConfig.MAX_FABRICATED_MICRO_ANCHOR)));
+    }
+
+    @Test
+    public void testNoFoldWhenAnchorAboveThreshold()
+    {
+        // 5bp anchor exceeds MAX_FABRICATED_MICRO_ANCHOR (3) — left intact.
+        assertEquals("100M83N5M48S", CigarShape.format(JunctionRescueResolver.foldFabricatedTerminalMicroJunctions(
+                CigarShape.parse("100M83N5M48S"), RescueConfig.MAX_FABRICATED_MICRO_ANCHOR)));
+    }
+
+    @Test
+    public void testNoFoldWithoutTerminalSoftClip()
+    {
+        // no terminal softclip — nothing to fold into.
+        assertEquals("100M83N3M", CigarShape.format(JunctionRescueResolver.foldFabricatedTerminalMicroJunctions(
+                CigarShape.parse("100M83N3M"), RescueConfig.MAX_FABRICATED_MICRO_ANCHOR)));
+    }
+
+    @Test
+    public void testRescueAcrossFabricatedTerminalMicroJunction()
+    {
+        // exp8 read 25535: tx-contig over-run produces 100M83N3M48S; the 3bp fabricated micro-anchor
+        // defeats supp merge. Folding to 100M51S lets the merge find the true 156N junction.
+        final int primStart = 1051270;
+        final String primCigar = "100M83N3M48S";
+        final int suppStart = 1051525;
+        final String suppCigar = "99S52M";
+
+        final ChrIntron annotatedIntron = new ChrIntron(CHR1, 1051370, 1051525);
+        final RescueSupplementary supp = supp(0, CHR1, true, suppStart, suppCigar, 60);
+        final RescueCandidate cand = candidate(CHR1, true, READ_LEN, primStart, primCigar, 255, supp);
+
+        final RescueResult res = enabledResolver(annotated(annotatedIntron)).resolve(cand);
+
+        assertTrue(res.Merged);
+        assertEquals("100M156N51M", res.MergedCigar);
+        assertEquals(primStart, res.MergedStart);
+        assertEquals(annotatedIntron, res.IntroducedIntrons.get(0));
+    }
+
+    @Test
     public void testLeftExtendCleanMerge()
     {
-        // mirror of right-extend with complementary cigars: primary 57S94M starts after a junction;
-        // supp 57M94S sits upstream covering read[0..57).
+        // Mirror of right-extend: primary starts after junction, supp covers the upstream exon.
         final int suppStart = 31448368;
         final String suppCigar = "57M94S";
         final int primStart = 31448541;
         final String primCigar = "57S94M";
 
-        // supp ref end = 31448368 + 57 - 1 = 31448424; primStart = 31448541
-        // intron [31448425, 31448540], length 116
         final ChrIntron intron = new ChrIntron(CHR1, 31448425, 31448540);
         final RescueSupplementary supp = supp(0, CHR1, true, suppStart, suppCigar, 60);
         final RescueCandidate cand = candidate(CHR1, true, READ_LEN, primStart, primCigar, 255, supp);
@@ -106,13 +150,12 @@ public class JunctionRescueResolverTest
     @Test
     public void testChainMergeAcrossThreeExons()
     {
-        // primary 50M101S (matches first 50 bases) + supp1 50S60M41S (middle 60 bases) +
-        // supp2 110S41M (final 41 bases). Two annotated introns wire it together.
+        // 3-exon read: primary on first exon, two supps on middle and last exons.
         final int primStart = 1000;
         final String primCigar = "50M101S";
-        final int suppMidStart = 2000;        // intron 1: 1050-1999 (len 950)
+        final int suppMidStart = 2000;
         final String suppMidCigar = "50S60M41S";
-        final int suppLastStart = 3000;       // intron 2: 2060-2999 (len 940)
+        final int suppLastStart = 3000;
         final String suppLastCigar = "110S41M";
 
         final Set<ChrIntron> set = annotated(
@@ -137,11 +180,10 @@ public class JunctionRescueResolverTest
     @Test
     public void testMergeWhenPrimaryAlreadyHasInternalN()
     {
-        // primary already has an internal junction: 50M200N40M61S. The supp picks up the next exon.
+        // Primary already has an internal junction; supp picks up the next exon.
         final int primStart = 1000;
         final String primCigar = "50M200N40M61S";
-        // primary ref end = 1000 + 50 + 200 + 40 - 1 = 1289
-        final int suppStart = 1500;        // intron: 1290-1499 (len 210)
+        final int suppStart = 1500;
         final String suppCigar = "90S61M";
 
         final Set<ChrIntron> set = annotated(new ChrIntron(CHR1, 1290, 1499));
@@ -155,12 +197,9 @@ public class JunctionRescueResolverTest
         assertEquals("50M200N40M210N61M", res.MergedCigar);
     }
 
-    // ========== single-gate rejections ==========
-
     @Test
     public void testRejectWhenDisabled()
     {
-        // disabled config returns no merge regardless of inputs
         final RescueCandidate cand = candidate(CHR1, true, READ_LEN, 1000, "94M57S", 60,
                 supp(0, CHR1, true, 1175, "90S61M", 60));
 
@@ -172,7 +211,6 @@ public class JunctionRescueResolverTest
     @Test
     public void testRejectNoTerminalSoftclip()
     {
-        // primary is fully matched (151M); no softclip to extend across
         final RescueCandidate cand = candidate(CHR1, true, READ_LEN, 1000, "151M", 60,
                 supp(0, CHR1, true, 2000, "90S61M", 60));
 
@@ -211,8 +249,7 @@ public class JunctionRescueResolverTest
     @Test
     public void testRejectIntronTooShort()
     {
-        // intron length 6 — below default MinIntronLength=21. Primary ends at 1093; supp at 1100
-        // → intron [1094, 1099].
+        // Intron length 6 — below default MinIntronLength=21.
         final RescueCandidate cand = candidate(CHR1, true, READ_LEN, 1000, "94M57S", 60,
                 supp(0, CHR1, true, 1100, "94S57M", 60));
 
@@ -225,7 +262,6 @@ public class JunctionRescueResolverTest
     @Test
     public void testRejectIntronTooLong()
     {
-        // intron length 2_000_001 — above default MaxIntronLength=1_000_000
         final RescueCandidate cand = candidate(CHR1, true, READ_LEN, 1000, "94M57S", 60,
                 supp(0, CHR1, true, 2_001_095, "94S57M", 60));
 
@@ -238,7 +274,7 @@ public class JunctionRescueResolverTest
     @Test
     public void testRejectShortPrimaryAnchor()
     {
-        // primary 2M149S — anchor adjacent to trailing S is only 2 (< MinAnchorOverhang=3)
+        // Primary anchor 2bp — below MinAnchorOverhang=3.
         final ChrIntron intron = new ChrIntron(CHR1, 1002, 1099);
         final RescueCandidate cand = candidate(CHR1, true, READ_LEN, 1000, "2M149S", 60,
                 supp(0, CHR1, true, 1100, "2S149M", 60));
@@ -252,7 +288,7 @@ public class JunctionRescueResolverTest
     @Test
     public void testRejectShortSuppAnchor()
     {
-        // primary anchor 49M is fine; supp leading-M anchor is 1 (< MinAnchorOverhang=3)
+        // Supp anchor 1bp — below MinAnchorOverhang=3.
         final ChrIntron intron = new ChrIntron(CHR1, 1050, 1099);
         final RescueCandidate cand = candidate(CHR1, true, 50, 1000, "49M1S", 60,
                 supp(0, CHR1, true, 1100, "49S1M", 60));
@@ -266,7 +302,6 @@ public class JunctionRescueResolverTest
     @Test
     public void testRejectNovelJunctionWhenAnnotatedOnly()
     {
-        // Custom config with AnnotatedOnly=true rejects when no L lands on annotated.
         final RescueConfig strict = new RescueConfig(true, 21, 1_000_000, 3, 4, true, 5, 0, 0, RescueConfig.DEFAULT_MIN_PARTIAL_MATCH_RUN);
         final RescueCandidate cand = candidate(CHR1, true, READ_LEN, 1000, "94M57S", 60,
                 supp(0, CHR1, true, 1200, "94S57M", 60));
@@ -280,7 +315,6 @@ public class JunctionRescueResolverTest
     @Test
     public void testAcceptNovelJunctionWhenAnnotatedOnlyFalse()
     {
-        // disable AnnotatedOnly via custom config; merge should proceed despite empty annotation set.
         final RescueConfig perm = new RescueConfig(true, 21, 1_000_000, 3, 4, false, 0, 0, 0, RescueConfig.DEFAULT_MIN_PARTIAL_MATCH_RUN);
         final RescueCandidate cand = candidate(CHR1, true, READ_LEN, 1000, "94M57S", 60,
                 supp(0, CHR1, true, 1200, "94S57M", 60));
@@ -319,7 +353,6 @@ public class JunctionRescueResolverTest
     @Test
     public void testRejectIndelAdjacentToPrimarySoftclip()
     {
-        // primary 90M4I57S — has I adjacent to trailing S
         final ChrIntron intron = new ChrIntron(CHR1, 1091, 1199);
         final RescueCandidate cand = candidate(CHR1, true, READ_LEN, 1000, "90M4I57S", 60,
                 supp(0, CHR1, true, 1200, "94S57M", 60));
@@ -333,7 +366,7 @@ public class JunctionRescueResolverTest
     @Test
     public void testRejectReadCoverageOverlap()
     {
-        // primary 94M57S covers read[0..94); supp 80S71M covers read[80..151) — overlap 14 bases.
+        // overlap 14 bases — exceeds tolerance.
         final ChrIntron intron = new ChrIntron(CHR1, 1095, 1499);
         final RescueCandidate cand = candidate(CHR1, true, READ_LEN, 1001, "94M57S", 60,
                 supp(0, CHR1, true, 1500, "80S71M", 60));
@@ -347,7 +380,6 @@ public class JunctionRescueResolverTest
     @Test
     public void testRejectReadCoverageGap()
     {
-        // primary 94M57S covers read[0..94); supp 110S41M covers read[110..151) — gap 94..110.
         final ChrIntron intron = new ChrIntron(CHR1, 1095, 1499);
         final RescueCandidate cand = candidate(CHR1, true, READ_LEN, 1001, "94M57S", 60,
                 supp(0, CHR1, true, 1500, "110S41M", 60));
@@ -361,7 +393,7 @@ public class JunctionRescueResolverTest
     @Test
     public void testRejectRefOverlap()
     {
-        // primary ends at 1094; supp starts at 1080 — supp upstream of primary's matched end.
+        // Supp starts upstream of primary's matched end — ref overlap.
         final RescueCandidate cand = candidate(CHR1, true, READ_LEN, 1001, "94M57S", 60,
                 supp(0, CHR1, true, 1080, "94S57M", 60));
 
@@ -385,7 +417,6 @@ public class JunctionRescueResolverTest
     @Test
     public void testRejectShapeMismatchSuppWrongClipSide()
     {
-        // primary trailing S expects supp with leading S; this supp has trailing S → invalid pair
         final RescueCandidate cand = candidate(CHR1, true, READ_LEN, 1000, "94M57S", 60,
                 supp(0, CHR1, true, 1200, "61M90S", 60));
 
@@ -398,16 +429,13 @@ public class JunctionRescueResolverTest
     @Test
     public void testPrimaryBothSidesClippedRightExtendAccepted()
     {
-        // Middle-anchored primary in a 3-exon read: both leading and trailing softclip. The right
-        // supp's position past primaryRefEnd disambiguates direction → right-extend fires even
-        // though the primary has a leading softclip (which the left supp would later pick up).
+        // Middle-anchored primary: supp past primaryRefEnd disambiguates direction → right-extend fires.
         final RescueCandidate cand = candidate(CHR1, true, READ_LEN, 1001, "5S90M56S", 60,
                 supp(0, CHR1, true, 1500, "95S56M", 60));
 
         final RescueResult res = enabledResolver(annotated()).resolve(cand);
 
         assertTrue(res.Merged);
-        // primaryRefEnd = 1090, supp.Start = 1500 → intron length = 1500 - 1 - 1090 = 409.
         assertEquals("5S90M409N56M", res.MergedCigar);
         assertEquals(1001, res.MergedStart);
     }
@@ -415,15 +443,13 @@ public class JunctionRescueResolverTest
     @Test
     public void testPrimaryBothSidesClippedLeftExtendAccepted()
     {
-        // Same idea on the left. Primary 5S90M56S at chr1:1001 with a left supp ending before
-        // primaryStart. Left-extend fires; the trailing-S of primary is the unmerged side.
+        // Mirror on the left: supp ends before primaryStart → left-extend fires.
         final RescueCandidate cand = candidate(CHR1, true, READ_LEN, 1001, "5S90M56S", 60,
                 supp(0, CHR1, true, 500, "5M146S", 60));
 
         final RescueResult res = enabledResolver(annotated()).resolve(cand);
 
         assertTrue(res.Merged);
-        // suppRefEnd = 504, primaryStart = 1001 → intron length = 1001 - 1 - 504 = 496.
         assertEquals("5M496N90M56S", res.MergedCigar);
         assertEquals(500, res.MergedStart);
     }
@@ -431,9 +457,7 @@ public class JunctionRescueResolverTest
     @Test
     public void testPrimaryBothSidesClippedChainMergesBothSupps()
     {
-        // Full middle-anchored 3-exon scenario: primary 5S90M56S anchored on the middle exon,
-        // right supp at 1500 (95S56M) and left supp at 500 (5M146S). Chain rescue should merge
-        // in two iterations: right first, then left. Final cigar spans all 3 exons.
+        // Full middle-anchored 3-exon scenario: chain merges right first then left.
         final RescueSupplementary right = supp(0, CHR1, true, 1500, "95S56M", 60);
         final RescueSupplementary left = supp(1, CHR1, true, 500, "5M146S", 60);
         final RescueCandidate cand = new RescueCandidate(CHR1, true, READ_LEN, 1001, "5S90M56S", 60,
@@ -447,13 +471,10 @@ public class JunctionRescueResolverTest
         assertEquals(2, res.ChainDepth);
     }
 
-    // ========== ambiguity ==========
-
     @Test
     public void testMultipleSuppsInReachSkipsMerge()
     {
-        // two supps both pass every merge gate for the same boundary → more than one within reach,
-        // so we refuse to guess the splice destination.
+        // Two supps both pass every gate — refuse to guess the splice destination.
         final ChrIntron intron = new ChrIntron(CHR1, 1095, 1499);
         final RescueCandidate cand = candidate(CHR1, true, READ_LEN, 1001, "94M57S", 60,
                 supp(0, CHR1, true, 1500, "94S57M", 60),
@@ -466,24 +487,22 @@ public class JunctionRescueResolverTest
     }
 
     @Test
-    public void testLowPrimaryMapqSkipsMerge()
+    public void testPrimaryMapqZeroStillMerges()
     {
-        // primary MAPQ 0 (below the floor of 1) = fully ambiguous placement, not a trustworthy anchor.
+        // MAPQ-0 primary is the common tx-contig duplicate artifact — not a disqualifier.
         final ChrIntron intron = new ChrIntron(CHR1, 31448462, 31448540);
         final RescueCandidate cand = candidate(CHR1, true, READ_LEN, 31448368, "94M57S", 0,
                 supp(0, CHR1, true, 31448541, "94S57M", 60));
 
         final RescueResult res = enabledResolver(annotated(intron)).resolve(cand);
 
-        assertFalse(res.Merged);
-        assertEquals(RescueRejectReason.LOW_PRIMARY_MAPQ, res.RejectReason);
+        assertTrue(res.Merged);
     }
 
     @Test
     public void testTwoValidSuppsSameBoundaryRefusesToGuess()
     {
-        // two supps both right-extend the same boundary (different intron lengths). Previously the
-        // resolver ranked and picked one; the single-supp-within-reach policy now refuses to guess.
+        // Two supps at different intron lengths both pass — single-supp-within-reach policy refuses to guess.
         final ChrIntron intron1 = new ChrIntron(CHR1, 1095, 1499);
         final ChrIntron intron2 = new ChrIntron(CHR1, 1095, 1799);
         final RescueCandidate cand = candidate(CHR1, true, READ_LEN, 1001, "94M57S", 60,
@@ -496,17 +515,21 @@ public class JunctionRescueResolverTest
         assertEquals(RescueRejectReason.MULTIPLE_SUPPS_IN_REACH, res.RejectReason);
     }
 
-    // ========== zero-MAPQ scenarios ==========
-
     @Test
-    public void testRejectMergeWhenPrimaryMapqBelowFloor()
+    public void testPrimaryMapqFloorKnobStillRejects()
     {
-        // primary MAPQ 0 is below the merge floor (5) — refuse to anchor a merge on it.
+        // Default floor is 0 (MAPQ-0 primaries merge), but a floor of 1 rejects them.
+        final RescueConfig floorConfig = new RescueConfig(
+                true, RescueConfig.DEFAULT_MIN_INTRON_LENGTH, RescueConfig.DEFAULT_MAX_INTRON_LENGTH,
+                RescueConfig.DEFAULT_MIN_ANCHOR_OVERHANG, RescueConfig.DEFAULT_MAX_CHAIN_DEPTH, false,
+                RescueConfig.DEFAULT_SOFTCLIP_TOLERANCE, RescueConfig.DEFAULT_MAX_BOUNDARY_SHIFT, 1,
+                RescueConfig.DEFAULT_MIN_PARTIAL_MATCH_RUN);
+
         final ChrIntron intron = new ChrIntron(CHR1, 1095, 1499);
         final RescueCandidate cand = candidate(CHR1, true, READ_LEN, 1001, "94M57S", 0,
                 supp(0, CHR1, true, 1500, "94S57M", 60));
 
-        final RescueResult res = enabledResolver(annotated(intron)).resolve(cand);
+        final RescueResult res = new JunctionRescueResolver(annotated(intron), floorConfig).resolve(cand);
 
         assertFalse(res.Merged);
         assertEquals(RescueRejectReason.LOW_PRIMARY_MAPQ, res.RejectReason);
@@ -524,12 +547,10 @@ public class JunctionRescueResolverTest
         assertTrue(res.Merged);
     }
 
-    // ========== chain-depth cap ==========
-
     @Test
     public void testChainDepthCap()
     {
-        // 5 supps would chain into 5-junction read; cap=2 stops the chain after 2 merges.
+        // cap=2 stops the chain after 2 merges even when more supps are available.
         final RescueConfig cappedConfig = new RescueConfig(true, 21, 1_000_000, 3, 2, true, 0, 0, 0, RescueConfig.DEFAULT_MIN_PARTIAL_MATCH_RUN);
 
         final int p = 1000;
@@ -552,12 +573,9 @@ public class JunctionRescueResolverTest
         assertEquals(2, res.DroppedSupplementaryIndices.size());
     }
 
-    // ========== other read lengths ==========
-
     @Test
     public void testShortReadLength()
     {
-        // 50bp read with 30M20S + 30S20M across a 100bp intron
         final ChrIntron intron = new ChrIntron(CHR1, 1031, 1130);
         final RescueCandidate cand = candidate(CHR1, true, 50, 1001, "30M20S", 60,
                 supp(0, CHR1, true, 1131, "30S20M", 60));
@@ -568,23 +586,18 @@ public class JunctionRescueResolverTest
         assertEquals("30M100N20M", res.MergedCigar);
     }
 
-    // ========== statistics ==========
-
     @Test
     public void testStatisticsCounters()
     {
-        // strict config (AnnotatedOnly=true) so the novel-junction reject is observable.
+        // AnnotatedOnly=true so the novel-junction reject is observable.
         final RescueConfig strict = new RescueConfig(true, 21, 1_000_000, 3, 4, true, 5, 0, 0, RescueConfig.DEFAULT_MIN_PARTIAL_MATCH_RUN);
         final JunctionRescueResolver resolver = new JunctionRescueResolver(
                 annotated(new ChrIntron(CHR1, 1095, 1499)), strict);
 
-        // success
         resolver.resolve(candidate(CHR1, true, READ_LEN, 1001, "94M57S", 60,
                 supp(0, CHR1, true, 1500, "94S57M", 60)));
-        // novel-junction reject
         resolver.resolve(candidate(CHR1, true, READ_LEN, 1001, "94M57S", 60,
                 supp(0, CHR1, true, 1800, "94S57M", 60)));
-        // diff-chromosome reject
         resolver.resolve(candidate(CHR1, true, READ_LEN, 1001, "94M57S", 60,
                 supp(0, CHR2, true, 1500, "94S57M", 60)));
 
@@ -613,16 +626,10 @@ public class JunctionRescueResolverTest
         assertEquals(1, resolver.statistics().rejectCount(RescueRejectReason.OPPOSITE_STRAND));
     }
 
-    // ========== exp7 example reads ==========
-
     @Test
     public void testExp7Case2Chr1_31448368()
     {
-        // Inspired by exp7 case 2 (chr1:31448368). The real BWA output had a 4bp overlap between
-        // primary and supp matched regions; v1 doesn't handle overlap (see testExp7Case3 for the
-        // explicit overlap-rejection case). This test uses the clean complementary cigars BWA
-        // would have emitted with a different seed, demonstrating the right-extend merge produces
-        // the spliced cigar STAR ends up with.
+        // exp7 case 2 (chr1:31448368): clean complementary cigars produce the same CIGAR as STAR.
         final ChrIntron annotatedIntron = new ChrIntron(CHR1, 31448462, 31448539);
         final RescueCandidate cand = candidate(CHR1, true, READ_LEN, 31448368, "94M57S", 60,
                 supp(0, CHR1, true, 31448540, "94S57M", 60));
@@ -637,11 +644,8 @@ public class JunctionRescueResolverTest
     @Test
     public void testExp7Case3Chr5_34937631()
     {
-        // Real exp7 case: chr5:34937631 read with primary 59S92M at chr5:34938856 + supp 61M90S
-        // at chr5:34937631. Primary leading-S=59, supp matched=61, overlap=2. STAR's spliced
-        // primary at chr5:34937631 is 61M1166N90M — intron lives at (34937692, 34938857). The
-        // snap finds L=61 (trust-supp end of overlap) lands on the annotated junction, so the
-        // merge produces STAR's exact CIGAR.
+        // exp7 chr5:34937631: overlap=2, snap picks L=61 (trust-supp) on the annotated junction,
+        // producing STAR's exact 61M1166N90M.
         final String chr5 = "chr5";
         final ChrIntron annotatedIntron = new ChrIntron(chr5, 34937692, 34938857);
         final RescueCandidate cand = candidate(chr5, true, READ_LEN, 34938856, "59S92M", 60,
@@ -654,14 +658,10 @@ public class JunctionRescueResolverTest
         assertEquals(34937631, res.MergedStart);
     }
 
-    // ========== overlap-tolerance behavior ==========
-
     @Test
     public void testOverlapWithinToleranceSnapsToAnnotatedJunction()
     {
-        // primary 94M57S at 1001 + supp 90S61M at 1500. overlap = 4.
-        // intronLength = (1500-1-1094) + 4 = 409.
-        // L=94 (trust primary): primaryLoss=0, suppLoss=4 → intron (1095, 1503).
+        // overlap=4; trust-primary L=94 lands on annotated (1095, 1503).
         final ChrIntron annotated = new ChrIntron(CHR1, 1095, 1503);
         final RescueCandidate cand = candidate(CHR1, true, 151, 1001, "94M57S", 60,
                 supp(0, CHR1, true, 1500, "90S61M", 60));
@@ -677,10 +677,7 @@ public class JunctionRescueResolverTest
     @Test
     public void testOverlapWithinToleranceSnapsToAnnotatedAtTrustSuppEnd()
     {
-        // primary 94M57S at 1000 + supp 92S59M at 1498. overlap = 2.
-        // intronLength = (1498-1-1093) + 2 = 406.
-        // L=94 (trust primary): intron (1095, 1500).
-        // L=92 (trust supp): primaryLoss=2, suppLoss=0 → intron (1092, 1497).
+        // overlap=2; trust-supp L=92 lands on annotated (1092, 1497).
         final ChrIntron annotated = new ChrIntron(CHR1, 1092, 1497);
         final RescueCandidate cand = candidate(CHR1, true, 151, 1000, "94M57S", 60,
                 supp(0, CHR1, true, 1498, "92S59M", 60));
@@ -688,19 +685,13 @@ public class JunctionRescueResolverTest
         final RescueResult res = enabledResolver(annotated(annotated)).resolve(cand);
 
         assertTrue(res.Merged);
-        // primaryLoss=2 → primary 94M → 92M; suppLoss=0 → supp 59M unchanged.
         assertEquals("92M406N59M", res.MergedCigar);
     }
 
     @Test
     public void testOverlapWithinToleranceMaxMinAnchorWins()
     {
-        // primary 94M57S at 1001 + supp 92S59M at 1498. overlap = 2.
-        // intronLength = (1498-1-1094) + 2 = 405.
-        // L=94 (trust primary): primary anchor 94, supp anchor 57-2=55. min = 55.
-        // L=92 (trust supp): primary anchor 94-2=92, supp anchor 59. min = 59.
-        // Both annotated → max-min-anchor rule picks trust-supp (L=92, min anchor 59).
-        // Equivalent to STAR: the split point with the strongest support on both sides.
+        // overlap=2, both L's annotated. max-min-anchor: trust-supp (min=59) beats trust-primary (min=55).
         final ChrIntron trustPrimary = new ChrIntron(CHR1, 1095, 1499);
         final ChrIntron trustSupp = new ChrIntron(CHR1, 1093, 1497);
         final RescueCandidate cand = candidate(CHR1, true, 151, 1001, "94M57S", 60,
@@ -716,7 +707,6 @@ public class JunctionRescueResolverTest
     @Test
     public void testOverlapExceedsToleranceRejected()
     {
-        // 6-base overlap exceeds default tolerance (5).
         final ChrIntron annotated = new ChrIntron(CHR1, 1095, 1499);
         final RescueCandidate cand = candidate(CHR1, true, 151, 1001, "94M57S", 60,
                 supp(0, CHR1, true, 1500, "88S63M", 60));
@@ -730,7 +720,6 @@ public class JunctionRescueResolverTest
     @Test
     public void testNoAnnotatedSnapWithAnnotatedOnlyTrueRejects()
     {
-        // Strict config (AnnotatedOnly=true) rejects when no L lands on annotated.
         final RescueConfig strict = new RescueConfig(true, 21, 1_000_000, 3, 4, true, 5, 0, 0, RescueConfig.DEFAULT_MIN_PARTIAL_MATCH_RUN);
         final RescueCandidate cand = candidate(CHR1, true, 151, 1001, "94M57S", 60,
                 supp(0, CHR1, true, 1500, "92S59M", 60));
@@ -744,24 +733,19 @@ public class JunctionRescueResolverTest
     @Test
     public void testNoAnnotatedSnapWithDefaultsFallsBackToTrustPrimary()
     {
-        // Default enabled config has AnnotatedOnly=false — merge succeeds via trust-primary
-        // fallback when no L lands on annotated.
+        // AnnotatedOnly=false — merge succeeds via trust-primary fallback when no L is annotated.
         final RescueCandidate cand = candidate(CHR1, true, 151, 1001, "94M57S", 60,
                 supp(0, CHR1, true, 1500, "92S59M", 60));
 
         final RescueResult res = enabledResolver(annotated()).resolve(cand);
 
         assertTrue(res.Merged);
-        // trust-primary fallback: primaryLoss=0, suppLoss=2 → 94M + N(407) + 57M
         assertEquals("94M407N57M", res.MergedCigar);
     }
 
     @Test
     public void testNoAnnotatedSnapWithAnnotatedOnlyFalseFallsBackToTrustPrimary()
     {
-        // AnnotatedOnly=false → if no L is annotated, fall back to trust-primary (L=primaryMatched).
-        // primary 94M57S at 1001 + supp 92S59M at 1500. overlap = 2.
-        // intronLength = (1500-1-1094) + 2 = 407.
         final RescueConfig perm = new RescueConfig(true, 21, 1_000_000, 3, 4, false, 5, 0, 0, RescueConfig.DEFAULT_MIN_PARTIAL_MATCH_RUN);
         final RescueCandidate cand = candidate(CHR1, true, 151, 1001, "94M57S", 60,
                 supp(0, CHR1, true, 1500, "92S59M", 60));
@@ -771,8 +755,6 @@ public class JunctionRescueResolverTest
         assertTrue(res.Merged);
         assertEquals("94M407N57M", res.MergedCigar);
     }
-
-    // ========== misc ==========
 
     @Test
     public void testMergedIntronListReflectsChainOrder()
@@ -793,8 +775,6 @@ public class JunctionRescueResolverTest
         assertEquals(new ChrIntron(CHR1, 1050, 1999), res.IntroducedIntrons.get(0));
         assertEquals(new ChrIntron(CHR1, 2060, 2999), res.IntroducedIntrons.get(1));
     }
-
-    // ========== Layer 1: ref-verify path ==========
 
     private static RefSequenceSource refSource(final java.util.Map<String, byte[]> chromBases)
     {
@@ -824,18 +804,14 @@ public class JunctionRescueResolverTest
                 RescueConfig.enabledDefaults());
     }
 
-    // ========== splice-motif scan (cryptic-junction recovery) ==========
-
-    // builds a ref backed by uniform 'N' bases, then writes the canonical GT...AG motif at the
-    // intron's flank positions so the motif scan tier fires. Returns the chromosome bases map
-    // ready for refSource().
+    // Builds a ref of 'N' bases with GT...AG canonical motif at the intron flanks.
     private static java.util.Map<String, byte[]> refWithCanonicalIntron(
             final int chromLen, final int intronStart, final int intronEnd)
     {
         final byte[] bases = new byte[chromLen];
         java.util.Arrays.fill(bases, (byte) 'N');
-        bases[intronStart - 1] = 'G'; bases[intronStart] = 'T';        // donor at intronStart..+1 (1-based)
-        bases[intronEnd - 2] = 'A'; bases[intronEnd - 1] = 'G';         // acceptor at intronEnd-1..end
+        bases[intronStart - 1] = 'G'; bases[intronStart] = 'T';
+        bases[intronEnd - 2] = 'A'; bases[intronEnd - 1] = 'G';
         return java.util.Collections.singletonMap(CHR1, bases);
     }
 
@@ -850,9 +826,7 @@ public class JunctionRescueResolverTest
     @Test
     public void testMotifScanPicksCanonicalGTagWhenUnannotated()
     {
-        // primary 94M57S at 1001, supp 94S57M at 1500. overlap=0. intron (1095, 1499) length 405.
-        // Ref placed so 1095..1096="GT" and 1498..1499="AG" — canonical motif. Merge should fire
-        // via the motif scan path even though the annotated index is empty.
+        // Canonical GT-AG motif placed at intron (1095, 1499) with no annotation — merge via motif scan.
         final RescueCandidate cand = candidate(CHR1, true, 151, 1001, "94M57S", 60,
                 supp(0, CHR1, true, 1500, "94S57M", 60));
 
@@ -867,13 +841,10 @@ public class JunctionRescueResolverTest
     @Test
     public void testMotifScanPicksAnnotatedOverMotifWhenBothPresent()
     {
-        // overlap=2 with two viable L's: L=94 (trust primary) and L=92 (trust supp). Place an
-        // ANNOTATED intron at L=94 and a CANONICAL MOTIF at L=92. Annotation must win regardless
-        // of min-anchor.
+        // overlap=2; annotated at L=94 must beat canonical motif at L=92.
         final ChrIntron annotated = new ChrIntron(CHR1, 1095, 1499);
         final byte[] bases = new byte[2000];
         java.util.Arrays.fill(bases, (byte) 'N');
-        // motif candidate at (1093, 1497): donor 1093..1094 = "GT", acceptor 1496..1497 = "AG"
         bases[1092] = 'G'; bases[1093] = 'T';
         bases[1495] = 'A'; bases[1496] = 'G';
 
@@ -884,7 +855,6 @@ public class JunctionRescueResolverTest
                 annotated(annotated), java.util.Collections.singletonMap(CHR1, bases)).resolve(cand);
 
         assertTrue(res.Merged);
-        // annotated at L=94 wins over motif at L=92
         assertEquals("94M405N57M", res.MergedCigar);
         assertEquals(annotated, res.IntroducedIntrons.get(0));
     }
@@ -892,16 +862,12 @@ public class JunctionRescueResolverTest
     @Test
     public void testMotifScanPrefersCanonicalOverSemiCanonical()
     {
-        // overlap=2 with two viable L's. Place a CANONICAL (GT-AG) motif at L=92 and a
-        // SEMI-CANONICAL (GC-AG) motif at L=94. Canonical (tier 2) must beat semi-canonical (tier 1)
-        // regardless of min-anchor.
+        // overlap=2; canonical (GT-AG) at L=92 must beat semi-canonical (GC-AG) at L=94.
         final byte[] bases = new byte[2000];
         java.util.Arrays.fill(bases, (byte) 'N');
-        // semi at (1095, 1499): donor 1095..1096 = "GC", acceptor 1498..1499 = "AG"
-        bases[1094] = 'G'; bases[1095] = 'C';
+        bases[1094] = 'G'; bases[1095] = 'C';   // semi at (1095, 1499): GC-AG
         bases[1497] = 'A'; bases[1498] = 'G';
-        // canonical at (1093, 1497): donor 1093..1094 = "GT", acceptor 1496..1497 = "AG"
-        bases[1092] = 'G'; bases[1093] = 'T';
+        bases[1092] = 'G'; bases[1093] = 'T';   // canonical at (1093, 1497): GT-AG
         bases[1495] = 'A'; bases[1496] = 'G';
 
         final RescueCandidate cand = candidate(CHR1, true, 151, 1001, "94M57S", 60,
@@ -911,7 +877,6 @@ public class JunctionRescueResolverTest
                 java.util.Collections.emptySet(), java.util.Collections.singletonMap(CHR1, bases)).resolve(cand);
 
         assertTrue(res.Merged);
-        // canonical at L=92 wins over semi at L=94
         assertEquals("92M405N59M", res.MergedCigar);
         assertEquals(new ChrIntron(CHR1, 1093, 1497), res.IntroducedIntrons.get(0));
     }
@@ -919,12 +884,11 @@ public class JunctionRescueResolverTest
     @Test
     public void testMotifScanAcceptsReverseStrandCanonical()
     {
-        // Reverse-strand transcript: genomic forward shows "CT" at donor and "AC" at acceptor
-        // (RC of AG and GT). overlap=0, intron (1095, 1499). Merge via motif scan.
+        // Reverse-strand transcript: genomic forward CT...AC (RC of GT-AG). Merge via motif scan.
         final byte[] bases = new byte[2000];
         java.util.Arrays.fill(bases, (byte) 'N');
-        bases[1094] = 'C'; bases[1095] = 'T';    // intronStart=1095..1096 = "CT"
-        bases[1497] = 'A'; bases[1498] = 'C';    // intronEnd=1498..1499 = "AC"
+        bases[1094] = 'C'; bases[1095] = 'T';
+        bases[1497] = 'A'; bases[1498] = 'C';
 
         final RescueCandidate cand = candidate(CHR1, true, 151, 1001, "94M57S", 60,
                 supp(0, CHR1, true, 1500, "94S57M", 60));
@@ -939,8 +903,7 @@ public class JunctionRescueResolverTest
     @Test
     public void testMotifScanIgnoredWhenNoMotifAndNoAnnotated()
     {
-        // overlap=0, ref bases all 'N', no annotation, defaults (AnnotatedOnly=false). Snap loop
-        // finds no tier-1+ candidate, falls through to trust-primary fallback. Behaviour unchanged.
+        // All-N ref, no annotation, AnnotatedOnly=false — falls through to trust-primary fallback.
         final byte[] bases = new byte[2000];
         java.util.Arrays.fill(bases, (byte) 'N');
         final RescueCandidate cand = candidate(CHR1, true, 151, 1001, "94M57S", 60,
@@ -950,16 +913,13 @@ public class JunctionRescueResolverTest
                 java.util.Collections.emptySet(), java.util.Collections.singletonMap(CHR1, bases)).resolve(cand);
 
         assertTrue(res.Merged);
-        // trust-primary fallback: L=primaryMatched=94, intron (1095, 1499), length 405
         assertEquals("94M405N57M", res.MergedCigar);
     }
 
     @Test
     public void testMotifScanLeftExtendCanonical()
     {
-        // Left-extend with no overlap: primary 57S94M at 1500, supp 57M94S at 1001.
-        // suppRefEnd = 1057, primaryStart = 1500 → intron (1058, 1499), length 442.
-        // Ref: 1058..1059 = "GT", 1498..1499 = "AG" — canonical motif.
+        // Left-extend with canonical GT-AG motif at intron (1058, 1499).
         final byte[] bases = new byte[2000];
         java.util.Arrays.fill(bases, (byte) 'N');
         bases[1057] = 'G'; bases[1058] = 'T';
@@ -978,17 +938,14 @@ public class JunctionRescueResolverTest
     @Test
     public void testRefVerifyRightExtendSuccess()
     {
-        // Primary 30M5S at chr1:101. Trailing 5S read bases "CCCCC".
-        // Annotated intron (chr1, 131, 200). Candidate downstream exon at chr1:201.
-        // We supply ref bases such that chr1:201..205 = "CCCCC" exactly.
+        // Trailing 5S "CCCCC" matches chr1:201..205 exactly across annotated intron (131, 200).
         final byte[] chr1Ref = new byte[300];
         for(int i = 0; i < chr1Ref.length; ++i) chr1Ref[i] = 'A';
-        // Place "CCCCC" at position 201..205 (0-based 200..204)
         for(int i = 200; i < 205; ++i) chr1Ref[i] = 'C';
 
         final byte[] readBases = new byte[35];
-        for(int i = 0; i < 30; ++i) readBases[i] = 'A';     // primary anchor
-        for(int i = 30; i < 35; ++i) readBases[i] = 'C';    // trailing softclip
+        for(int i = 0; i < 30; ++i) readBases[i] = 'A';
+        for(int i = 30; i < 35; ++i) readBases[i] = 'C';
 
         final ChrIntron intron = new ChrIntron(CHR1, 131, 200);
         final RescueCandidate cand = new RescueCandidate(
@@ -1007,18 +964,16 @@ public class JunctionRescueResolverTest
     @Test
     public void testRefVerifyRightExtendSnapsBackOverExtendedBoundary()
     {
-        // bwa over-extended 1 base past the true donor into the intron: it aligned 31M (ref 101..131)
-        // and clipped 4, but the exon really ends at 130 and the intron is (131, 200). An exact probe
-        // at refEnd+1 (132) finds no donor; the boundary snap trims 1 base back to 130 / probes 131,
-        // finds the annotated intron, and ref-verifies the 5-base (1 over-extended + 4 clipped) tail.
+        // bwa over-extended 1 base into the intron (31M4S); boundary snap trims back to find
+        // the annotated intron at 131 and ref-verifies the 5-base tail.
         final byte[] chr1Ref = new byte[300];
         for(int i = 0; i < chr1Ref.length; ++i) chr1Ref[i] = 'A';
-        chr1Ref[130] = 'C';                                 // pos 131: the base bwa over-extended onto
-        for(int i = 200; i < 205; ++i) chr1Ref[i] = 'C';    // pos 201..205: downstream exon
+        chr1Ref[130] = 'C';
+        for(int i = 200; i < 205; ++i) chr1Ref[i] = 'C';
 
         final byte[] readBases = new byte[35];
-        for(int i = 0; i < 30; ++i) readBases[i] = 'A';     // primary anchor
-        for(int i = 30; i < 35; ++i) readBases[i] = 'C';    // over-extended base + softclip tail
+        for(int i = 0; i < 30; ++i) readBases[i] = 'A';
+        for(int i = 30; i < 35; ++i) readBases[i] = 'C';
 
         final ChrIntron intron = new ChrIntron(CHR1, 131, 200);
         final RescueCandidate cand = new RescueCandidate(
@@ -1037,16 +992,15 @@ public class JunctionRescueResolverTest
     @Test
     public void testRefVerifyBothEndsClippedRescuesJunctionTailKeepsOtherClip()
     {
-        // Read clipped at both ends: 5S30M5S at 101. The trailing 5S is a junction tail across the
-        // annotated intron (131, 200); the leading 5S is a benign clip that must survive untouched.
+        // Both ends clipped: trailing 5S is the junction tail; leading 5S must survive untouched.
         final byte[] chr1Ref = new byte[300];
         for(int i = 0; i < chr1Ref.length; ++i) chr1Ref[i] = 'A';
-        for(int i = 200; i < 205; ++i) chr1Ref[i] = 'C';    // pos 201..205: downstream exon
+        for(int i = 200; i < 205; ++i) chr1Ref[i] = 'C';
 
         final byte[] readBases = new byte[40];
-        for(int i = 0; i < 5; ++i) readBases[i] = 'T';      // leading benign clip
-        for(int i = 5; i < 35; ++i) readBases[i] = 'A';     // primary anchor
-        for(int i = 35; i < 40; ++i) readBases[i] = 'C';    // trailing junction tail
+        for(int i = 0; i < 5; ++i) readBases[i] = 'T';
+        for(int i = 5; i < 35; ++i) readBases[i] = 'A';
+        for(int i = 35; i < 40; ++i) readBases[i] = 'C';
 
         final ChrIntron intron = new ChrIntron(CHR1, 131, 200);
         final RescueCandidate cand = new RescueCandidate(
@@ -1065,7 +1019,7 @@ public class JunctionRescueResolverTest
     @Test
     public void testRefVerifyRightExtendRejectsOnMismatch()
     {
-        // Same setup but ref bases at downstream exon are "GGGGG" — read's "CCCCC" can't match.
+        // Ref all 'G'; read has 'C' — mismatch rejects the merge.
         final byte[] chr1Ref = new byte[300];
         for(int i = 0; i < chr1Ref.length; ++i) chr1Ref[i] = 'G';
 
@@ -1089,13 +1043,11 @@ public class JunctionRescueResolverTest
     @Test
     public void testRefVerifyAllows10PercentMismatch()
     {
-        // 20-base softclip: tolerance = floor(20/10) = 2 mismatches.
-        // Read "CCCCCCCCCCCCCCCCCCCC", ref "CCCCCCCCCCCCCCCCCCGC" — 1 mismatch, accept.
+        // 20-base softclip: tolerance floor(20/10)=2; 1 mismatch — accept.
         final byte[] chr1Ref = new byte[300];
         for(int i = 0; i < chr1Ref.length; ++i) chr1Ref[i] = 'A';
-        // ref at 201..220 = "CCCCCCCCCCCCCCCCCCGC" (positions 200..219 0-based)
         for(int i = 200; i < 218; ++i) chr1Ref[i] = 'C';
-        chr1Ref[218] = 'G';     // mismatch
+        chr1Ref[218] = 'G';
         chr1Ref[219] = 'C';
 
         final byte[] readBases = new byte[40];
@@ -1118,9 +1070,7 @@ public class JunctionRescueResolverTest
     @Test
     public void testRefVerifyLeftExtendSuccess()
     {
-        // Primary 5S30M at chr1:201. Leading 5S read bases "TTTTT".
-        // Annotated intron (chr1, 131, 200), upstream exon ends at chr1:130.
-        // Place "TTTTT" at chr1:126..130 (0-based 125..129).
+        // Leading 5S "TTTTT" matches chr1:126..130 exactly across annotated intron (131, 200).
         final byte[] chr1Ref = new byte[300];
         for(int i = 0; i < chr1Ref.length; ++i) chr1Ref[i] = 'A';
         for(int i = 125; i < 130; ++i) chr1Ref[i] = 'T';
@@ -1146,7 +1096,7 @@ public class JunctionRescueResolverTest
     @Test
     public void testRefVerifyRejectsWhenNoCandidateExon()
     {
-        // Primary 30M5S at chr1:101 — annotation has no intron starting at 131, so no candidate.
+        // Empty annotation — no candidate exon for the trailing softclip.
         final byte[] readBases = new byte[35];
         final byte[] chr1Ref = new byte[300];
         final RescueCandidate cand = new RescueCandidate(
@@ -1164,8 +1114,7 @@ public class JunctionRescueResolverTest
     @Test
     public void testRefVerifyAmbiguousRejected()
     {
-        // Two annotated introns share the same start; their downstream exons both match the
-        // softclipped read bases equally well → ambiguous → skip.
+        // Two annotated introns share donor; both downstream exons match equally — ambiguous.
         final byte[] chr1Ref = new byte[600];
         for(int i = 0; i < chr1Ref.length; ++i) chr1Ref[i] = 'A';
         // Ref bases at 201..205 and at 501..505 both equal "CCCCC"
@@ -1193,7 +1142,7 @@ public class JunctionRescueResolverTest
     @Test
     public void testRefVerifyWithoutRefSourceSkipsSilently()
     {
-        // No RefSequenceSource configured → ref-verify can't run, return NO_MATCHING_SUPP.
+        // No RefSequenceSource — ref-verify skips silently.
         final RescueCandidate cand = candidate(CHR1, true, 35, 101, "30M5S", 60);
 
         final RescueResult res = enabledResolver(annotated()).resolve(cand);
@@ -1205,18 +1154,16 @@ public class JunctionRescueResolverTest
     @Test
     public void testRefVerifyPartialMatchTrailingKeepsOuterClip()
     {
-        // bwa softclipped 19 bases at an annotated acceptor: the 15 junction-proximal bases are the
-        // real exon overhang, the outer 4 are adapter/low-quality that do NOT match the exon. Only the
-        // proximal 15 should be converted to M (the outer 4 stay clipped): 30M19S -> 30M70N15M4S, not
-        // 30M70N19M which would force-align the adapter.
+        // 15 proximal bases match the exon; outer 4 are adapter residual — only proximal bases convert
+        // to M, outer stay clipped: 30M19S → 30M70N15M4S.
         final byte[] chr1Ref = new byte[300];
         for(int i = 0; i < chr1Ref.length; ++i) chr1Ref[i] = 'A';
-        for(int i = 200; i < 215; ++i) chr1Ref[i] = 'C';    // pos 201..215: downstream exon (15 bases)
+        for(int i = 200; i < 215; ++i) chr1Ref[i] = 'C';    // downstream exon: 15 bases
 
         final byte[] readBases = new byte[49];
-        for(int i = 0; i < 30; ++i) readBases[i] = 'A';     // primary anchor
-        for(int i = 30; i < 45; ++i) readBases[i] = 'C';    // 15-base junction overhang (matches exon)
-        for(int i = 45; i < 49; ++i) readBases[i] = 'T';    // 4-base adapter residual (ref is 'A')
+        for(int i = 0; i < 30; ++i) readBases[i] = 'A';
+        for(int i = 30; i < 45; ++i) readBases[i] = 'C';    // 15-base junction overhang
+        for(int i = 45; i < 49; ++i) readBases[i] = 'T';    // 4-base adapter residual
 
         final ChrIntron intron = new ChrIntron(CHR1, 131, 200);
         final RescueCandidate cand = new RescueCandidate(
@@ -1235,16 +1182,15 @@ public class JunctionRescueResolverTest
     @Test
     public void testRefVerifyPartialMatchLeadingKeepsOuterClip()
     {
-        // Mirror on the leading side: 19S30M at an annotated donor. The 4 outer (low-index) bases are
-        // adapter; the 15 junction-proximal (high-index) bases are the real overhang -> 4S15M70N30M.
+        // Mirror on leading side: outer 4 are adapter, proximal 15 are real overhang → 4S15M70N30M.
         final byte[] chr1Ref = new byte[300];
         for(int i = 0; i < chr1Ref.length; ++i) chr1Ref[i] = 'A';
-        for(int i = 115; i < 130; ++i) chr1Ref[i] = 'C';    // pos 116..130: upstream exon (15 bases)
+        for(int i = 115; i < 130; ++i) chr1Ref[i] = 'C';    // upstream exon: 15 bases
 
         final byte[] readBases = new byte[49];
-        for(int i = 0; i < 4; ++i) readBases[i] = 'T';      // 4-base adapter residual (ref is 'A')
-        for(int i = 4; i < 19; ++i) readBases[i] = 'C';     // 15-base junction overhang (matches exon)
-        for(int i = 19; i < 49; ++i) readBases[i] = 'A';    // primary anchor
+        for(int i = 0; i < 4; ++i) readBases[i] = 'T';      // 4-base adapter residual
+        for(int i = 4; i < 19; ++i) readBases[i] = 'C';     // 15-base junction overhang
+        for(int i = 19; i < 49; ++i) readBases[i] = 'A';
 
         final ChrIntron intron = new ChrIntron(CHR1, 131, 200);
         final RescueCandidate cand = new RescueCandidate(
@@ -1257,23 +1203,21 @@ public class JunctionRescueResolverTest
 
         assertTrue(res.Merged);
         assertEquals("4S15M70N30M", res.MergedCigar);
-        assertEquals(116, res.MergedStart);     // IntronStart(131) - matchedRun(15)
+        assertEquals(116, res.MergedStart);
     }
 
     @Test
     public void testRefVerifyShortPartialRunRejected()
     {
-        // Only 8 junction-proximal bases match the exon before the read diverges. 8 < MinPartialMatchRun
-        // (11), and a partial match (outer residual left clipped) needs the longer anchor, so the splice
-        // is not trusted -> reject. Guards against a short chance match manufacturing a junction.
+        // 8-base proximal match < MinPartialMatchRun (11) — guards against chance match manufacturing a junction.
         final byte[] chr1Ref = new byte[300];
         for(int i = 0; i < chr1Ref.length; ++i) chr1Ref[i] = 'A';
-        for(int i = 200; i < 208; ++i) chr1Ref[i] = 'C';    // pos 201..208: only 8 matching bases
+        for(int i = 200; i < 208; ++i) chr1Ref[i] = 'C';    // only 8 matching bases
 
         final byte[] readBases = new byte[49];
-        for(int i = 0; i < 30; ++i) readBases[i] = 'A';     // primary anchor
+        for(int i = 0; i < 30; ++i) readBases[i] = 'A';
         for(int i = 30; i < 38; ++i) readBases[i] = 'C';    // 8-base proximal match
-        for(int i = 38; i < 49; ++i) readBases[i] = 'T';    // 11-base divergent residual (ref is 'A')
+        for(int i = 38; i < 49; ++i) readBases[i] = 'T';    // 11-base divergent residual
 
         final ChrIntron intron = new ChrIntron(CHR1, 131, 200);
         final RescueCandidate cand = new RescueCandidate(
@@ -1291,18 +1235,16 @@ public class JunctionRescueResolverTest
     @Test
     public void testRefVerifySnapsBackSevenBaseOverExtension()
     {
-        // bwa over-extended 7 bases past the true donor (130) into the intron (131..200), aligning 37M3S
-        // where the exon really ends at 130. The boundary snap must reach 7 bases back (MaxBoundaryShift
-        // widened to 8) to find the annotated intron and re-verify the 10-base tail against the
-        // downstream exon. With the old shift cap of 3 this would not rescue.
+        // bwa over-extended 7 bases into the intron (37M3S); boundary snap (MaxBoundaryShift≥8)
+        // trims back to find annotated intron 131 and re-verifies the 10-base tail.
         final byte[] chr1Ref = new byte[300];
         for(int i = 0; i < chr1Ref.length; ++i) chr1Ref[i] = 'A';
-        for(int i = 130; i < 137; ++i) chr1Ref[i] = 'C';    // pos 131..137: bwa's 7 over-extended bases
-        for(int i = 200; i < 210; ++i) chr1Ref[i] = 'C';    // pos 201..210: real downstream exon
+        for(int i = 130; i < 137; ++i) chr1Ref[i] = 'C';    // bwa's 7 over-extended bases
+        for(int i = 200; i < 210; ++i) chr1Ref[i] = 'C';    // real downstream exon
 
         final byte[] readBases = new byte[40];
-        for(int i = 0; i < 30; ++i) readBases[i] = 'A';     // true anchor
-        for(int i = 30; i < 40; ++i) readBases[i] = 'C';    // 7 over-extended + 3 clipped, all exon
+        for(int i = 0; i < 30; ++i) readBases[i] = 'A';
+        for(int i = 30; i < 40; ++i) readBases[i] = 'C';    // 7 over-extended + 3 clipped
 
         final ChrIntron intron = new ChrIntron(CHR1, 131, 200);
         final RescueCandidate cand = new RescueCandidate(
@@ -1318,21 +1260,16 @@ public class JunctionRescueResolverTest
         assertEquals(101, res.MergedStart);
     }
 
-    // ========== Layer 2: mate-informed snap hint ==========
-
     @Test
     public void testMateHintUsedAsFallbackWhenAnnotationMisses()
     {
-        // overlap=2, no annotated junction within window. Without mate hint → trust-primary
-        // fallback. With mate hint pointing to the L=92 (trust-supp) split → use the hint.
+        // Mate hint overrides trust-primary fallback when no annotation is within the snap window.
         final RescueCandidate withoutHint = candidate(CHR1, true, 151, 1001, "94M57S", 60,
                 supp(0, CHR1, true, 1498, "92S59M", 60));
         final RescueResult resNoHint = enabledResolver(annotated()).resolve(withoutHint);
         assertTrue(resNoHint.Merged);
-        // trust-primary fallback: intron starts at 1095
         assertEquals(1095, resNoHint.IntroducedIntrons.get(0).IntronStart);
 
-        // With hint pointing at the trust-supp intron (1093, 1497)
         final ChrIntron hint = new ChrIntron(CHR1, 1093, 1497);
         final RescueCandidate withHint = new RescueCandidate(
                 CHR1, true, 151, 1001, "94M57S", 60,
@@ -1341,14 +1278,13 @@ public class JunctionRescueResolverTest
         final RescueResult resHinted = enabledResolver(annotated()).resolve(withHint);
         assertTrue(resHinted.Merged);
         assertEquals(1093, resHinted.IntroducedIntrons.get(0).IntronStart);
-        // trust-supp snap: primary anchor 94M → 92M, supp 59M unchanged
         assertEquals("92M405N59M", resHinted.MergedCigar);
     }
 
     @Test
     public void testMateHintIgnoredWhenAnnotatedMatchExists()
     {
-        // Annotated junction wins over mate hint when both are within the snap window.
+        // Annotated junction beats mate hint when both are within the snap window.
         final ChrIntron annotatedJunc = new ChrIntron(CHR1, 1095, 1499);
         final ChrIntron hint = new ChrIntron(CHR1, 1093, 1497);
         final RescueCandidate cand = new RescueCandidate(
@@ -1365,7 +1301,7 @@ public class JunctionRescueResolverTest
     @Test
     public void testMateHintOutsideOverlapWindowIgnored()
     {
-        // Hint intron is way outside the read's overlap window → resolver falls back to trust-primary.
+        // Hint outside the overlap window — ignored, falls back to trust-primary.
         final ChrIntron hint = new ChrIntron(CHR1, 50000, 50100);
         final RescueCandidate cand = new RescueCandidate(
                 CHR1, true, 151, 1001, "94M57S", 60,

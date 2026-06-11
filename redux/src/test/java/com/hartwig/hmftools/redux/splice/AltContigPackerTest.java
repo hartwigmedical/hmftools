@@ -67,7 +67,6 @@ public class AltContigPackerTest
         assertEquals(4, first.altEnd());
 
         ContigEntry second = result.entries().get(1);
-        // 4 (first transcript) + 5 (spacer) + 1 = 10
         assertEquals(10, second.altStart());
         assertEquals(12, second.altEnd());
     }
@@ -81,7 +80,6 @@ public class AltContigPackerTest
                 txResult("T2", "CCC", List.of(new BaseRegion(200, 202))),
                 txResult("T3", "GGGGGGGG", List.of(new BaseRegion(300, 307)))));
 
-        // ranges must not overlap, must lie inside the sequence, and must be spacer-separated
         assertEquals(6 + 5 + 3 + 5 + 8, result.sequence().length());
         for(int i = 0; i < result.entries().size() - 1; ++i)
         {

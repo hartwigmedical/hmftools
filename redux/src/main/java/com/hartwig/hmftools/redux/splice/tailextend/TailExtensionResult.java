@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.redux.splice.tailextend;
 
-// Result of SoftclipTailExtender.tryExtend. Extended=false means no change (NewStart and NewCigar
-// are unset). NewStart shifts only when the leading side was extended.
+// Result of SoftclipTailExtender.tryExtend. NewStart shifts only on a leading extension.
 public class TailExtensionResult
 {
     public final boolean Extended;

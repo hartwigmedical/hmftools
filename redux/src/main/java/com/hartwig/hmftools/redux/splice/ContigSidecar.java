@@ -26,7 +26,6 @@ public final class ContigSidecar
         ExonSpans
     }
 
-    // matches the convention in SpecificRegions: ITEM_DELIM separates spans, '-' separates start from end (BaseRegion.toString)
     private static final String SPAN_DELIM = "-";
 
     public static void write(final String filename, final List<ContigEntry> entries)
@@ -58,9 +57,7 @@ public final class ContigSidecar
 
         try(DelimFileReader reader = new DelimFileReader(filename))
         {
-            // Strand is a newer column (added with the XS:A:+/- emit pass). Older sidecars built by
-            // pre-strand SpliceFastaBuilder runs lack it; tolerate that by defaulting to 0 (no XS:A
-            // written for records lifted off those contigs) instead of failing the run.
+            // Strand was added after the initial release; older sidecars lack it. Default to 0 (suppresses XS:A emission) rather than failing.
             final boolean hasStrand = reader.getColumnNames().contains(Column.Strand.name());
 
             for(DelimFileReader.Row row : reader)
