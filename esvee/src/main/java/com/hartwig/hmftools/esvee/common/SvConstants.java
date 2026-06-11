@@ -29,6 +29,7 @@ public final class SvConstants
     }
 
     public static final int MAX_JUNC_POSITION_DIFF = 15;
+    public static final int MAX_JUNC_SC_VS_INDEL_POSITION_DIFF = 50;
 
     // sequencing type - set in config
     public static SequencingType SEQUENCING_TYPE = SequencingType.ILLUMINA;

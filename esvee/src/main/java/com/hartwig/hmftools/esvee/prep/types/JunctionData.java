@@ -94,31 +94,24 @@ public class JunctionData
     }
 
     public List<ReadGroup> junctionGroups() { return mJunctionGroups != null ? mJunctionGroups : Collections.emptyList(); }
-
     public List<ReadGroup> supportingGroups() { return mSupportingGroups != null ? mSupportingGroups : Collections.emptyList(); }
-
     public List<ReadGroup> exactSupportGroups() { return mExactSupportGroups != null ? mExactSupportGroups : Collections.emptyList(); }
 
     public Map<ReadType, List<PrepRead>> readTypeReads() { return mReadTypeReads; }
 
     public int junctionFragmentCount() { return mJunctionGroups != null ? mJunctionGroups.size() : 0; }
-
     public int supportingFragmentCount() { return mSupportingGroups != null ? mSupportingGroups.size() : 0; }
-
     public int exactSupportFragmentCount() { return mExactSupportGroups != null ? mExactSupportGroups.size() : 0; }
 
     public List<RemoteJunction> remoteJunctions() { return mRemoteJunctions != null ? mRemoteJunctions : Collections.emptyList(); }
 
     public boolean hotspot() { return mHotspot; }
-
     public void markHotspot() { mHotspot = true; }
 
     public boolean internalIndel() { return mInternalIndel; }
-
     public void markInternalIndel() { mInternalIndel = true; }
 
     public boolean discordantGroup() { return mDiscordantGroup; }
-
     public void markDiscordantGroup() { mDiscordantGroup = true; }
 
     public int depth() { return mDepth; }
