@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.finding.DisruptionFactory.createGermlineDisru
 import static com.hartwig.hmftools.finding.DisruptionFactory.createSomaticDisruptions;
 import static com.hartwig.hmftools.finding.datamodel.finding.FindingStatus.Issue.NORMAL_REQUIRED;
 import static com.hartwig.hmftools.finding.datamodel.finding.FindingStatus.Issue.WGS_REQUIRED;
+import static com.hartwig.hmftools.finding.util.FindingUtil.notAvailableStatus;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -73,11 +74,13 @@ import com.hartwig.hmftools.finding.datamodel.TumorMutationalLoad;
 import com.hartwig.hmftools.finding.datamodel.TumorMutationalLoadBuilder;
 import com.hartwig.hmftools.finding.datamodel.Virus;
 import com.hartwig.hmftools.finding.datamodel.VirusBuilder;
+import com.hartwig.hmftools.finding.datamodel.driver.Driver;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFieldsBuilder;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingList;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingListBuilder;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverSource;
+import com.hartwig.hmftools.finding.datamodel.finding.Finding;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingItem;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingItemBuilder;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingList;
@@ -168,7 +171,15 @@ public class FindingRecordFactory
                 .predictedTumorOrigin(createPredictedTumorOrigin(orangeRecord.cuppa(), orangeRecord.plots(), experimentType, findingStatus))
                 .hlaAlleles(HlaAlleleFactory.createHlaAllelesFindings(orangeRecord, findingStatus))
                 .pharmacoGenotypes(createPharmacoGenotypesFindings(orangeRecord.peach(), findingStatus))
+                .highExpressionGenes(notAvailableFindingList(Set.of(FindingStatus.Issue.RNA_REQUIRED)))
+                .lowExpressionGenes(notAvailableFindingList(Set.of(FindingStatus.Issue.RNA_REQUIRED)))
+                .rnaFusions(notAvailableFindingList(Set.of(FindingStatus.Issue.RNA_REQUIRED)))
+                .novelSpliceJunctions(notAvailableFindingList(Set.of(FindingStatus.Issue.RNA_REQUIRED)))
                 .build();
+    }
+
+    public static <T> FindingList<T> notAvailableFindingList(Set<FindingStatus.Issue> errors) {
+        return FindingListBuilder.<T>builder().status(notAvailableStatus(errors)).findings(List.of()).build();
     }
 
     private static MetaProperties createMetaProperties(final OrangeRecord orangeRecord, final ExperimentType experimentType)
