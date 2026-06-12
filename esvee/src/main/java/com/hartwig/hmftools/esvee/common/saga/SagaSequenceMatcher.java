@@ -325,7 +325,7 @@ public class SagaSequenceMatcher
     private void applyJunctionFilters(final MatchArguments args, final SagaAlignment alignment,
             List<SagaJunctionMatchInfo> queryJunctionMatches, List<SagaJunctionMatchInfo> sagaJunctionMatches, Set<String> filters)
     {
-        List<CigarElemWithPos> cigarElements = getCigarElementPositions(alignment.cigar(), alignment.queryStart());
+        List<CigarElemWithPos> cigarElements = getCigarElementPositions(alignment.cigar(), alignment.sagaStart());
 
         List<SagaJunctionMatchInfo> queryJunctionMatchInfos = args.junctions().stream()
                 .map(j -> evaluateJunctionAlignment(alignment, cigarElements, j, true)).toList();
