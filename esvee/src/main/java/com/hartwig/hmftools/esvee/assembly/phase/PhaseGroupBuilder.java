@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.types.ThreadTask.mergePerfCounters;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -141,6 +142,8 @@ public class PhaseGroupBuilder
             }
         }
 
+        // Deterministic order for reproducibility.
+        mPhaseGroups.sort(Comparator.comparing(phaseGroup -> phaseGroup.assemblies().get(0).junction()));
         for(int i = 0; i < mPhaseGroups.size(); ++i)
         {
             mPhaseGroups.get(i).setId(i);

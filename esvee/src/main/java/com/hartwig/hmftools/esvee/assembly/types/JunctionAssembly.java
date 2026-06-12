@@ -859,7 +859,7 @@ public class JunctionAssembly
     {
         int junctionOffset = mJunction.isForward() ? refBaseLength() : baseLength() - refBaseLength();
         boolean lowerJunctionOverlap = hasLineSequence();
-        SagaMatchBySequence match = sagaMatcher.matchBySequence(bases(), List.of(junctionOffset), lowerJunctionOverlap);
+        SagaMatchBySequence match = sagaMatcher.matchBySequence(bases(), junctionOffset, mJunction.Orient, lowerJunctionOverlap);
         setSagaMatch(match);
         return match != null;
     }

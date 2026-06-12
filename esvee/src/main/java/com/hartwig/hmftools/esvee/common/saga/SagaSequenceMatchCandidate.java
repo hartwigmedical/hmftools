@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.esvee.common.saga;
 
 import java.util.List;
+import java.util.Set;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -8,9 +9,9 @@ import htsjdk.samtools.Cigar;
 
 public record SagaSequenceMatchCandidate(
         SagaAlignment alignment,
-        List<List<Integer>> esveeJunctionOverlaps,
-        List<List<Integer>> sagaJunctionOverlaps,
-        List<String> filters)
+        List<SagaJunctionMatchInfo> queryJunctionMatches,
+        List<SagaJunctionMatchInfo> sagaJunctionMatches,
+        Set<String> filters)
 {
     public SagaAssembly sagaAssembly()
     {
