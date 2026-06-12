@@ -184,10 +184,7 @@ final class RnaFindingFactory
 
     private static <T> FindingList<T> rnaNotAvailableFindingList()
     {
-        return FindingListBuilder.<T>builder()
-                .status(FindingUtil.notAvailableStatus(Set.of(RNA_REQUIRED)))
-                .findings(List.of())
-                .build();
+        return FindingUtil.notAvailableFindingList(Set.of(RNA_REQUIRED));
     }
 
     private static FindingStatus rnaStatus(IsofoxRecord isofox, FindingStatus findingStatus)

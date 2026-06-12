@@ -12,6 +12,8 @@ import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingList;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingListBuilder;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingItem;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingItemBuilder;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingList;
+import com.hartwig.hmftools.finding.datamodel.finding.FindingListBuilder;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingStatusBuilder;
 
@@ -65,6 +67,11 @@ public class FindingUtil
     public static <T extends Driver> DriverFindingList<T> normalRequired()
     {
         return notAvailableDriverFindingList(Set.of(FindingStatus.Issue.NORMAL_REQUIRED));
+    }
+
+    public static <T> FindingList<T> notAvailableFindingList(Set<FindingStatus.Issue> errors)
+    {
+        return FindingListBuilder.<T>builder().status(notAvailableStatus(errors)).findings(List.of()).build();
     }
 
     public static <T extends Driver> DriverFindingList<T> notAvailableDriverFindingList(Set<FindingStatus.Issue> errors)
