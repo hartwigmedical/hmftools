@@ -31,6 +31,33 @@ public record LiftBackResult(
         int transcriptStrand,
         List<LiftedAlignment> liftedAlignments)
 {
+    // Copy with a post-lift cigar pass applied: position, cigar, N-flag, MAPQ and an appended note change;
+    // every other field is preserved. Shared by the rescue / collapse / tail-extend / canonicalize passes.
+    public LiftBackResult withRevisedCigar(
+            final int newPos, final String newCigar, final boolean newHasNCigar, final int newUpdatedMapq, final String note)
+    {
+        return new LiftBackResult(
+                category, comp, role,
+                finalChrom, newPos, newCigar,
+                negativeStrand, newHasNCigar,
+                inputMapq, newUpdatedMapq,
+                numXaAlts, numRefAlts, numTxAlts,
+                numLoci, numDistinctCigarsAtPrimaryLocus,
+                txHasNCigar, txSoftClipAtBoundary,
+                refSoftClipped, refFullMatch,
+                geneIds,
+                appendNote(notes, note),
+                transcriptStrand,
+                liftedAlignments);
+    }
+
+    private static String appendNote(final String existing, final String note)
+    {
+        if(existing == null || existing.isEmpty())
+            return note;
+        return existing + ";" + note;
+    }
+
     public enum RecordRole
     {
         PRIMARY,

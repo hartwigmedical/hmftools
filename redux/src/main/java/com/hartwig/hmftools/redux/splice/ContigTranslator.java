@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.redux.splice;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import com.hartwig.hmftools.common.region.BaseRegion;
@@ -15,61 +16,84 @@ public final class ContigTranslator
     // (see collapseSpliceFlankingDeletions). Larger D values are kept as real deletions.
     static final int SPLICE_FLANKING_DELETION_MAX_BP = 5;
 
-    public static TranslationResult translate(final ContigEntry contig, int contigPos, final Cigar contigCigar)
+    public static TranslationResult translate(final ContigEntry contig, final int contigPos, final Cigar contigCigar)
     {
         final List<BaseRegion> spans = contig.exonSpans();
         if(spans.isEmpty() || contigPos > contig.altEnd())
             return null;
 
-        // bwa-mem2 can anchor into the alt-contig spacer-N region on either side; reclaim overhanging M
-        // bases as soft-clip so the read still lifts. Returns null when the overhang can't be absorbed.
-        Cigar workingCigar = contigCigar;
+        // reclaim any M bases that over-run the transcript bounds into soft-clip so the read still lifts.
+        final ClampedAlignment clamped = clampToContigBounds(contig, contigPos, contigCigar);
+        if(clamped == null)
+            return null;
+
+        // locate the exon span (and its genomic position) that the alignment starts in.
+        final int localPos = clamped.contigPos() - contig.altStart() + 1;
+        final SpanLocation start = locateStartSpan(spans, localPos);
+        if(start == null)
+            return null; // read starts past the end of the contig
+
+        return walkCigarToGenome(contig, spans, start, clamped.cigar());
+    }
+
+    // bwa-mem2 can anchor into the alt-contig spacer-N region on either side; convert the overhanging M
+    // bases to soft-clip so the read still lifts. Returns null when the overhang can't be absorbed.
+    private static ClampedAlignment clampToContigBounds(final ContigEntry contig, int contigPos, Cigar cigar)
+    {
         if(contigPos < contig.altStart())
         {
-            int overhang = contig.altStart() - contigPos;
-            workingCigar = clampLeadingMToSoftClip(workingCigar, overhang);
-            if(workingCigar == null)
+            final int overhang = contig.altStart() - contigPos;
+            cigar = clampLeadingMToSoftClip(cigar, overhang);
+            if(cigar == null)
                 return null;
             contigPos = contig.altStart();
         }
 
-        int readEnd = contigPos + workingCigar.getReferenceLength() - 1;
+        final int readEnd = contigPos + cigar.getReferenceLength() - 1;
         if(readEnd > contig.altEnd())
         {
-            int overhang = readEnd - contig.altEnd();
-            workingCigar = clampTrailingMToSoftClip(workingCigar, overhang);
-            if(workingCigar == null)
+            final int overhang = readEnd - contig.altEnd();
+            cigar = clampTrailingMToSoftClip(cigar, overhang);
+            if(cigar == null)
                 return null;
         }
 
-        int localPos = contigPos - contig.altStart() + 1;
+        return new ClampedAlignment(cigar, contigPos);
+    }
 
-        int currentSpanIndex = -1;
-        int currentGenomicPos = -1;
+    // Finds the exon span containing localPos (1-based offset into the concatenated exons) and the genomic
+    // position there. Returns null when localPos runs past the last exon.
+    private static SpanLocation locateStartSpan(final List<BaseRegion> spans, final int localPos)
+    {
         int exonLengthSoFar = 0;
         for(int i = 0; i < spans.size(); ++i)
         {
-            BaseRegion span = spans.get(i);
+            final BaseRegion span = spans.get(i);
             if(localPos <= exonLengthSoFar + span.baseLength())
             {
-                currentSpanIndex = i;
-                currentGenomicPos = span.start() + (localPos - exonLengthSoFar - 1);
-                break;
+                final int genomicPos = span.start() + (localPos - exonLengthSoFar - 1);
+                return new SpanLocation(i, genomicPos);
             }
             exonLengthSoFar += span.baseLength();
         }
+        return null;
+    }
 
-        if(currentSpanIndex < 0)
-            return null; // read starts past the end of the contig
+    // Walks the clamped contig-space CIGAR, emitting an N at every exon boundary crossed to produce a
+    // genome-spaced CIGAR plus the introns it implied. Returns null when the read extends past the last exon.
+    private static TranslationResult walkCigarToGenome(
+            final ContigEntry contig, final List<BaseRegion> spans, final SpanLocation start, final Cigar cigar)
+    {
+        final int genomicStart = start.genomicPos();
+        int currentSpanIndex = start.spanIndex();
+        int currentGenomicPos = start.genomicPos();
 
-        int genomicStart = currentGenomicPos;
-        List<CigarElement> outElements = new ArrayList<>();
-        List<BaseRegion> impliedIntrons = new ArrayList<>();
+        final List<CigarElement> outElements = new ArrayList<>();
+        final List<BaseRegion> impliedIntrons = new ArrayList<>();
 
-        // walk contig-space CIGAR, emitting N at each exon boundary to produce a genome-spaced CIGAR
-        for(CigarElement element : workingCigar.getCigarElements())
+        for(final CigarElement element : cigar.getCigarElements())
         {
-            CigarOperator op = element.getOperator();
+            final CigarOperator op = element.getOperator();
             int remaining = element.getLength();
 
             if(!op.consumesReferenceBases())
@@ -87,9 +111,9 @@ public final class ContigTranslator
                     if(currentSpanIndex + 1 >= spans.size())
                         return null; // read extends past last span
 
-                    BaseRegion nextSpan = spans.get(currentSpanIndex + 1);
-                    int intronStart = currentSpan.end() + 1;
-                    int intronEnd = nextSpan.start() - 1;
+                    final BaseRegion nextSpan = spans.get(currentSpanIndex + 1);
+                    final int intronStart = currentSpan.end() + 1;
+                    final int intronEnd = nextSpan.start() - 1;
 
                     outElements.add(new CigarElement(intronEnd - intronStart + 1, CigarOperator.N));
                     impliedIntrons.add(new BaseRegion(intronStart, intronEnd));
@@ -99,8 +123,8 @@ public final class ContigTranslator
                     currentGenomicPos = currentSpan.start();
                 }
 
-                int remainInSpan = currentSpan.end() - currentGenomicPos + 1;
-                int take = Math.min(remaining, remainInSpan);
+                final int remainInSpan = currentSpan.end() - currentGenomicPos + 1;
+                final int take = Math.min(remaining, remainInSpan);
 
                 outElements.add(new CigarElement(take, op));
                 currentGenomicPos += take;
@@ -113,6 +137,12 @@ public final class ContigTranslator
                 new Cigar(collapseSpliceFlankingDeletions(outElements)),
                 impliedIntrons);
     }
+
+    // (cigar, contigPos) after the spacer-overhang clamp; contigPos advances when the leading edge is clipped.
+    private record ClampedAlignment(Cigar cigar, int contigPos) {}
+
+    // exon span index + genomic position where an alignment begins.
+    private record SpanLocation(int spanIndex, int genomicPos) {}
 
     // A D straddling an exon boundary lifts as xD nN yD — artifact of tx-FASTA off-by-N at the junction.
     // Absorb small flanking Ds into the N (preserves read and ref span); keep larger ones as real deletions.
@@ -308,29 +338,18 @@ public final class ContigTranslator
         return new Cigar(out);
     }
 
-    // trailing-edge mirror of clampLeadingMToSoftClip
+    // trailing-edge mirror of clampLeadingMToSoftClip: reverse the elements, clamp the (now-leading) edge, reverse back.
     private static Cigar clampTrailingMToSoftClip(final Cigar cigar, final int overhang)
     {
-        List<CigarElement> elements = cigar.getCigarElements();
-        int existingTrailingSoftClip = 0;
-        int idx = elements.size() - 1;
-        while(idx >= 0 && elements.get(idx).getOperator() == CigarOperator.S)
-        {
-            existingTrailingSoftClip += elements.get(idx).getLength();
-            --idx;
-        }
-        if(idx < 0)
+        final List<CigarElement> reversed = new ArrayList<>(cigar.getCigarElements());
+        Collections.reverse(reversed);
+
+        final Cigar clamped = clampLeadingMToSoftClip(new Cigar(reversed), overhang);
+        if(clamped == null)
             return null;
 
-        CigarElement last = elements.get(idx);
-        if(last.getOperator() != CigarOperator.M || last.getLength() <= overhang)
-            return null;
-
-        List<CigarElement> out = new ArrayList<>(elements.size());
-        for(int i = 0; i < idx; ++i)
-            out.add(elements.get(i));
-        out.add(new CigarElement(last.getLength() - overhang, CigarOperator.M));
-        out.add(new CigarElement(existingTrailingSoftClip + overhang, CigarOperator.S));
+        final List<CigarElement> out = new ArrayList<>(clamped.getCigarElements());
+        Collections.reverse(out);
         return new Cigar(out);
     }
 

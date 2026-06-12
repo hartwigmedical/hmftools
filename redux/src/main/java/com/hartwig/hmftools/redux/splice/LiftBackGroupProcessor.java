@@ -350,8 +350,12 @@ public class LiftBackGroupProcessor
         if(!result.merged())
             return null;
 
-        // rewrite the primary's LiftBackResult with the merged cigar + start; mark merged supps for drop.
-        resolved[primaryIdx] = mergedPrimaryResult(primaryRes, result.MergedCigar, result.MergedStart);
+        // rewrite the primary's LiftBackResult with the merged (now-spliced) cigar + start; the start may
+        // shift for a left-extend, and MAPQ caps at RESCUED_MAPQ_CAP to mark it a constructed alignment.
+        // mark merged supps for drop.
+        resolved[primaryIdx] = primaryRes.withRevisedCigar(
+                result.MergedStart, result.MergedCigar, true,
+                Math.min(primaryRes.updatedMapq(), RESCUED_MAPQ_CAP), "rescued-via-supp");
 
         if(introducedIntronsOut != null && result.IntroducedIntrons != null)
             introducedIntronsOut.addAll(result.IntroducedIntrons);
@@ -388,26 +392,9 @@ public class LiftBackGroupProcessor
         if(!collapse.Collapsed)
             return;
 
-        resolved[primaryIdx] = terminalCollapsedResult(primaryRes, collapse);
-    }
-
-    private static LiftBackResult terminalCollapsedResult(
-            final LiftBackResult original, final TerminalCollapseResult collapse)
-    {
-        final boolean stillHasN = collapse.NewCigar.indexOf('N') >= 0;
-        return new LiftBackResult(
-                original.category(), original.comp(), original.role(),
-                original.finalChrom(), collapse.NewStart, collapse.NewCigar,
-                original.negativeStrand(), stillHasN,
-                original.inputMapq(), original.updatedMapq(),
-                original.numXaAlts(), original.numRefAlts(), original.numTxAlts(),
-                original.numLoci(), original.numDistinctCigarsAtPrimaryLocus(),
-                original.txHasNCigar(), original.txSoftClipAtBoundary(),
-                original.refSoftClipped(), original.refFullMatch(),
-                original.geneIds(),
-                appendNote(original.notes(), "terminal-junction-collapsed"),
-                original.transcriptStrand(),
-                original.liftedAlignments());
+        resolved[primaryIdx] = primaryRes.withRevisedCigar(
+                collapse.NewStart, collapse.NewCigar, collapse.NewCigar.indexOf('N') >= 0,
+                primaryRes.updatedMapq(), "terminal-junction-collapsed");
     }
 
     private void applyTailExtension(
@@ -436,7 +423,9 @@ public class LiftBackGroupProcessor
         if(!extension.Extended)
             return;
 
-        resolved[primaryIdx] = tailExtendedResult(primaryRes, extension);
+        resolved[primaryIdx] = primaryRes.withRevisedCigar(
+                extension.NewStart, extension.NewCigar, primaryRes.hasNCigar(),
+                primaryRes.updatedMapq(), "tail-extended");
     }
 
     private void applyJunctionCanonicalization(
@@ -463,72 +452,9 @@ public class LiftBackGroupProcessor
         if(!canon.Changed)
             return;
 
-        resolved[primaryIdx] = junctionCanonicalizedResult(primaryRes, canon);
-    }
-
-    private static LiftBackResult junctionCanonicalizedResult(
-            final LiftBackResult original, final JunctionCanonicalizationResult canon)
-    {
-        return new LiftBackResult(
-                original.category(), original.comp(), original.role(),
-                original.finalChrom(), original.finalPos(), canon.NewCigar,
-                original.negativeStrand(), original.hasNCigar(),
-                original.inputMapq(), original.updatedMapq(),
-                original.numXaAlts(), original.numRefAlts(), original.numTxAlts(),
-                original.numLoci(), original.numDistinctCigarsAtPrimaryLocus(),
-                original.txHasNCigar(), original.txSoftClipAtBoundary(),
-                original.refSoftClipped(), original.refFullMatch(),
-                original.geneIds(),
-                appendNote(original.notes(), "junction-canonicalized"),
-                original.transcriptStrand(),
-                original.liftedAlignments());
-    }
-
-    private static LiftBackResult tailExtendedResult(
-            final LiftBackResult original, final TailExtensionResult extension)
-    {
-        return new LiftBackResult(
-                original.category(), original.comp(), original.role(),
-                original.finalChrom(), extension.NewStart, extension.NewCigar,
-                original.negativeStrand(), original.hasNCigar(),
-                original.inputMapq(), original.updatedMapq(),
-                original.numXaAlts(), original.numRefAlts(), original.numTxAlts(),
-                original.numLoci(), original.numDistinctCigarsAtPrimaryLocus(),
-                original.txHasNCigar(), original.txSoftClipAtBoundary(),
-                original.refSoftClipped(), original.refFullMatch(),
-                original.geneIds(),
-                appendNote(original.notes(), "tail-extended"),
-                original.transcriptStrand(),
-                original.liftedAlignments());
-    }
-
-    // constructs an updated LiftBackResult preserving every field except finalPos/finalCigar/hasNCigar/
-    // updatedMapq. The rescue changes the cigar shape (now spliced), possibly the start position (for
-    // left-extends), and caps MAPQ to RESCUED_MAPQ_CAP to mark it as a constructed alignment.
-    private static LiftBackResult mergedPrimaryResult(
-            final LiftBackResult original, final String mergedCigar, final int mergedStart)
-    {
-        final int rescuedMapq = Math.min(original.updatedMapq(), RESCUED_MAPQ_CAP);
-        return new LiftBackResult(
-                original.category(), original.comp(), original.role(),
-                original.finalChrom(), mergedStart, mergedCigar,
-                original.negativeStrand(), true,
-                original.inputMapq(), rescuedMapq,
-                original.numXaAlts(), original.numRefAlts(), original.numTxAlts(),
-                original.numLoci(), original.numDistinctCigarsAtPrimaryLocus(),
-                original.txHasNCigar(), original.txSoftClipAtBoundary(),
-                original.refSoftClipped(), original.refFullMatch(),
-                original.geneIds(),
-                appendNote(original.notes(), "rescued-via-supp"),
-                original.transcriptStrand(),
-                original.liftedAlignments());
-    }
-
-    private static String appendNote(final String existing, final String note)
-    {
-        if(existing == null || existing.isEmpty())
-            return note;
-        return existing + ";" + note;
+        resolved[primaryIdx] = primaryRes.withRevisedCigar(
+                primaryRes.finalPos(), canon.NewCigar, primaryRes.hasNCigar(),
+                primaryRes.updatedMapq(), "junction-canonicalized");
     }
 
     // Dedup key for supplementaries: lifted (chrom, pos, cigar) + lifted strand. Opposite-strand
