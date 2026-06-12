@@ -4,6 +4,8 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.genome.region.Orientation;
+
 public record SagaAssembly(
         String fastaLabel,
         SagaVariant variant,
@@ -15,6 +17,10 @@ public record SagaAssembly(
 {
     public SagaAssembly
     {
+        if(junctionOffsets.size() != 1 && junctionOffsets.size() != 2)
+        {
+            throw new IllegalArgumentException("Invalid number of junction offsets");
+        }
         // E.g.
         // sequence = RRRJJJRRR
         // junctionOffset[0] = 3
@@ -25,9 +31,13 @@ public record SagaAssembly(
         }
     }
 
-    public String variantId()
+    public List<SagaJunctionInfo> junctions()
     {
-        return variant.id();
+        // Junctions are always +1 & -1.
+        // If it's a DEL then there's only 1 offset representing 2 junctions.
+        int offset1 = junctionOffsets.get(0);
+        int offset2 = junctionOffsets.size() > 1 ? junctionOffsets.get(1) : offset1;
+        return List.of(new SagaJunctionInfo(offset1, Orientation.FORWARD), new SagaJunctionInfo(offset2, Orientation.REVERSE));
     }
 
     public static SagaAssembly fromFastaLabel(final String fastaLabel, int assemblyLength)
