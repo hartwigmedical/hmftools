@@ -34,6 +34,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -95,7 +96,7 @@ public class AssemblyApplication
         mConfig = new AssemblyConfig(configBuilder, asSubRoutine);
 
         mChrJunctionsMap = Maps.newHashMap();
-        mJunctionGroupMap = Maps.newHashMap();
+        mJunctionGroupMap = new TreeMap<>();
         mBamReaders = Lists.newArrayList();
 
         mResultsWriter = new ResultsWriter(mConfig);
