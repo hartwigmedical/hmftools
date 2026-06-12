@@ -3,6 +3,7 @@ package com.hartwig.hmftools.esvee.common.saga;
 import static java.lang.Math.abs;
 import static java.lang.Math.ceil;
 import static java.lang.Math.min;
+import static java.util.Collections.emptyList;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.cigarFromStr;
 
@@ -221,8 +222,6 @@ public class SagaSequenceMatcher
     {
         // Require the alignment to cover the junction +/- some tolerance bases.
         // Otherwise, we could align onto the surrounding ref bases which could be similar, but the variant is different.
-        // At least one junction must be covered in this manner. We don't require all the junctions to be covered because we could be
-        // matching just one side of the variant (e.g. for junction assembly, or an SGL).
         int minOverlap = calcJunctionOverlapMin(lowerJunctionOverlap);
         return junctionMatchInfo.alignOverlapLeft() >= minOverlap && junctionMatchInfo.alignOverlapRight() >= minOverlap;
     }
@@ -275,9 +274,6 @@ public class SagaSequenceMatcher
 
     private boolean junctionHasIndelNearby(final SagaJunctionInfo junctionInfo, final List<CigarElemWithPos> cigarElements, boolean isQuery)
     {
-        // Ensure there are no large indels near the junctions.
-        // This would mean the junction sequence is different, despite the rest of the sequence aligning.
-        // Potential FIXME: limit to only the matched junctions.
         return cigarElements.stream()
                 .filter(e -> e.operator().isIndel() && !ignoreIndel(e.element()))
                 .anyMatch(e -> isJunctionNearIndel(
@@ -301,31 +297,29 @@ public class SagaSequenceMatcher
     private List<SagaJunctionMatchInfo> filterJunctionMatches(final MatchArguments args,
             final List<SagaJunctionMatchInfo> junctionMatchInfos, final String prefix, Set<String> filters)
     {
-        List<SagaJunctionMatchInfo> matches = new ArrayList<>();
-        for(SagaJunctionMatchInfo junctionMatchInfo : junctionMatchInfos)
+        List<SagaJunctionMatchInfo> alignedJunctions = junctionMatchInfos.stream()
+                .filter(j -> checkJunctionOverlap(j, args.lowerJunctionOverlap()))
+                .toList();
+
+        // Require at least 1 junction to be covered by the alignment.
+        // Don't require all the junctions to be covered because we could be matching just one side of the variant (e.g. for junction assembly, or an SGL).
+        if(alignedJunctions.isEmpty())
         {
-            boolean isMatch = true;
-
-            boolean junctionOverlapOk = checkJunctionOverlap(junctionMatchInfo, args.lowerJunctionOverlap());
-            if(!junctionOverlapOk)
-            {
-                filters.add(prefix + "_junction_overlap");
-                isMatch = false;
-            }
-
-            boolean indelsOk = !junctionMatchInfo.indelNearby();
-            if(!indelsOk)
-            {
-                filters.add(prefix + "_junction_indel");
-                isMatch = false;
-            }
-
-            if(isMatch)
-            {
-                matches.add(junctionMatchInfo);
-            }
+            filters.add(prefix + "_junction_overlap");
         }
-        return matches;
+
+        // Ensure there are no large indels near the junctions.
+        // This would mean the junction sequence is different, despite the rest of the sequence aligning.
+        // Potential FIXME: limit to only the matched junctions.
+        if(junctionMatchInfos.stream().anyMatch(SagaJunctionMatchInfo::indelNearby))
+        {
+            filters.add(prefix + "_junction_indel");
+            return emptyList();
+        }
+        else
+        {
+            return alignedJunctions;
+        }
     }
 
     private void applyJunctionFilters(final MatchArguments args, final SagaAlignment alignment,
