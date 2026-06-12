@@ -100,6 +100,7 @@ public class Fragment
 
     public boolean firstUnmapped() { return mFirstUnmapped; }
     public boolean secondUnmapped() { return mSecondUnmapped; }
+    public int unmappedPrimaryCount() { return (mFirstUnmapped ? 1 : 0) + (mSecondUnmapped ? 1 : 0); }
 
     public void addRead(final SAMRecord read)
     {
@@ -383,23 +384,29 @@ public class Fragment
         SAMRecord mappedRead = !mFirstUnmapped ? firstPrimary : secondPrimary;
         SAMRecord unmappedRead = mFirstUnmapped ? firstPrimary : secondPrimary;
 
-        mappedRead.setProperPairFlag(false);
+        if(mappedRead != null)
+        {
+            mappedRead.setProperPairFlag(false);
 
-        mappedRead.setInferredInsertSize(0);
-        mappedRead.setMateUnmappedFlag(true);
-        mappedRead.setMateAlignmentStart(mappedRead.getAlignmentStart());
-        mappedRead.setMateReferenceIndex(NO_CHROMOSOME_INDEX);
-        mappedRead.setMateReferenceName(NO_CHROMOSOME_NAME);
-        mappedRead.setAttribute(MATE_CIGAR_ATTRIBUTE, null);
+            mappedRead.setInferredInsertSize(0);
+            mappedRead.setMateUnmappedFlag(true);
+            mappedRead.setMateAlignmentStart(mappedRead.getAlignmentStart());
+            mappedRead.setMateReferenceIndex(NO_CHROMOSOME_INDEX);
+            mappedRead.setMateReferenceName(NO_CHROMOSOME_NAME);
+            mappedRead.setAttribute(MATE_CIGAR_ATTRIBUTE, null);
+        }
 
-        unmappedRead.setProperPairFlag(false);
-        unmappedRead.setInferredInsertSize(0);
-        unmappedRead.setReadUnmappedFlag(true);
-        unmappedRead.setMappingQuality(0);
-        unmappedRead.setReferenceIndex(NO_CHROMOSOME_INDEX);
-        unmappedRead.setReferenceName(NO_CHROMOSOME_NAME);
-        unmappedRead.setAlignmentStart(mappedRead.getAlignmentStart());
-        unmappedRead.setCigarString(NO_CIGAR);
+        if(unmappedRead != null)
+        {
+            unmappedRead.setProperPairFlag(false);
+            unmappedRead.setInferredInsertSize(0);
+            unmappedRead.setReadUnmappedFlag(true);
+            unmappedRead.setMappingQuality(0);
+            unmappedRead.setReferenceIndex(NO_CHROMOSOME_INDEX);
+            unmappedRead.setReferenceName(NO_CHROMOSOME_NAME);
+            unmappedRead.setAlignmentStart(mappedRead.getAlignmentStart());
+            unmappedRead.setCigarString(NO_CIGAR);
+        }
     }
 
     private void convertHardClips()

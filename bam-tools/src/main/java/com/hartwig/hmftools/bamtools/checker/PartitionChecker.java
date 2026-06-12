@@ -249,6 +249,8 @@ public class PartitionChecker
 
                 if(fragment.requiredMateCigarFix())
                     ++mCurrentStats.MateCigarFixed;
+
+                mCurrentStats.PrimariesUnmapped += fragment.unmappedPrimaryCount();
             }
         }
     }
