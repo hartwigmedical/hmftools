@@ -4,7 +4,11 @@ import static com.hartwig.hmftools.finding.DisruptionFactory.createGermlineDisru
 import static com.hartwig.hmftools.finding.DisruptionFactory.createSomaticDisruptions;
 import static com.hartwig.hmftools.finding.datamodel.finding.FindingStatus.Issue.NORMAL_REQUIRED;
 import static com.hartwig.hmftools.finding.datamodel.finding.FindingStatus.Issue.WGS_REQUIRED;
-import static com.hartwig.hmftools.finding.util.FindingUtil.notAvailableStatus;
+import static com.hartwig.hmftools.finding.util.FindingUtil.germlineStatus;
+import static com.hartwig.hmftools.finding.util.FindingUtil.notAvailableDriverFindingList;
+import static com.hartwig.hmftools.finding.util.FindingUtil.notAvailableFindingItem;
+import static com.hartwig.hmftools.finding.util.FindingUtil.notAvailableFindingList;
+import static com.hartwig.hmftools.finding.util.FindingUtil.somaticStatus;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -74,19 +78,16 @@ import com.hartwig.hmftools.finding.datamodel.TumorMutationalLoad;
 import com.hartwig.hmftools.finding.datamodel.TumorMutationalLoadBuilder;
 import com.hartwig.hmftools.finding.datamodel.Virus;
 import com.hartwig.hmftools.finding.datamodel.VirusBuilder;
-import com.hartwig.hmftools.finding.datamodel.driver.Driver;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFieldsBuilder;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingList;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingListBuilder;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverSource;
-import com.hartwig.hmftools.finding.datamodel.finding.Finding;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingItem;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingItemBuilder;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingList;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingListBuilder;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
-import com.hartwig.hmftools.finding.util.FindingUtil;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -178,10 +179,6 @@ public class FindingRecordFactory
                 .build();
     }
 
-    public static <T> FindingList<T> notAvailableFindingList(Set<FindingStatus.Issue> errors) {
-        return FindingListBuilder.<T>builder().status(notAvailableStatus(errors)).findings(List.of()).build();
-    }
-
     private static MetaProperties createMetaProperties(final OrangeRecord orangeRecord, final ExperimentType experimentType)
     {
         return MetaPropertiesBuilder.builder()
@@ -270,7 +267,7 @@ public class FindingRecordFactory
         {
             if(experimentType == ExperimentType.TARGETED)
             {
-                return FindingUtil.notAvailableFindingItem(Set.of(WGS_REQUIRED));
+                return notAvailableFindingItem(Set.of(WGS_REQUIRED));
             }
             else
             {
@@ -330,7 +327,7 @@ public class FindingRecordFactory
     {
         TumorMutationalLoad.Status status = tumorMutationalLoadStatus(purple.characteristics().tumorMutationalLoadStatus());
         return FindingItemBuilder.<TumorMutationalLoad>builder()
-                .status(FindingUtil.somaticStatus(findingStatus))
+                .status(somaticStatus(findingStatus))
                 .finding(TumorMutationalLoadBuilder.builder()
                         .findingKey(FindingKeys.tumorMutationLoadStatus(purple.characteristics().tumorMutationalLoadStatus()))
                         .load(ThresholdValueFactory.tmlValue(purple.characteristics().tumorMutationalLoad()))
@@ -388,7 +385,7 @@ public class FindingRecordFactory
             }
             if(!errors.isEmpty())
             {
-                return FindingUtil.notAvailableFindingItem(errors);
+                return notAvailableFindingItem(errors);
             }
             else
             {
@@ -446,7 +443,7 @@ public class FindingRecordFactory
                 Genes.MSI_GENES) : new TreeSet<>();
 
         return FindingItemBuilder.<MicrosatelliteStability>builder()
-                .status(FindingUtil.somaticStatus(findingStatus))
+                .status(somaticStatus(findingStatus))
                 .finding(MicrosatelliteStabilityBuilder.builder()
                         .findingKey(FindingKeys.microsatelliteStability(purple.characteristics().microsatelliteStatus()))
                         .status(microsatelliteStatus)
@@ -469,7 +466,7 @@ public class FindingRecordFactory
     public static DriverFindingList<Fusion> createFusionsFindings(LinxRecord linx, FindingStatus findingStatus)
     {
         return DriverFindingListBuilder.<Fusion>builder()
-                .status(FindingUtil.somaticStatus(findingStatus))
+                .status(somaticStatus(findingStatus))
                 .findings(linx.reportableSomaticFusions().stream()
                         .map(o -> convertFusion(o, DriverSource.SOMATIC)).sorted(Fusion.COMPARATOR).toList())
                 .build();
@@ -551,7 +548,7 @@ public class FindingRecordFactory
         {
             if(experimentType == ExperimentType.TARGETED)
             {
-                return FindingUtil.notAvailableDriverFindingList(Set.of(WGS_REQUIRED));
+                return notAvailableDriverFindingList(Set.of(WGS_REQUIRED));
             }
             else
             {
@@ -615,7 +612,7 @@ public class FindingRecordFactory
         if(peachGenotypes != null)
         {
             return FindingListBuilder.<PharmacoGenotype>builder()
-                    .status(FindingUtil.germlineStatus(findingStatus))
+                    .status(germlineStatus(findingStatus))
                     .findings(peachGenotypes.stream().map(o ->
                                     PharmacoGenotypeBuilder.builder()
                                             .findingKey(FindingKeys.pharmacoGenotype(o.gene(), o.allele()))
