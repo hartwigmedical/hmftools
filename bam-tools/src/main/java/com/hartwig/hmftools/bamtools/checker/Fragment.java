@@ -2,7 +2,11 @@ package com.hartwig.hmftools.bamtools.checker;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CHROMOSOME_INDEX;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CHROMOSOME_NAME;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CIGAR;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.READ_GROUP_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SupplementaryReadData.ALIGNMENTS_DELIM;
@@ -52,6 +56,9 @@ public class Fragment
     private boolean mFirstNegOrientation;
     private boolean mSecondNegOrientation;
 
+    private boolean mFirstUnmapped;
+    private boolean mSecondUnmapped;
+
     private boolean mMateCigarFixed;
 
     public Fragment(final SAMRecord read)
@@ -64,6 +71,8 @@ public class Fragment
         mFirstPrimaryCigar = null;
         mSecondPrimaryCigar = null;
         mMateCigarFixed = false;
+        mFirstUnmapped = false;
+        mSecondUnmapped = false;
 
         mFirstReadBases = null;
         mSecondReadBases = null;
@@ -89,34 +98,59 @@ public class Fragment
     public byte[] secondBaseQuals() { return mSecondReadQuals; }
     public boolean secondNegOrientation() { return mSecondNegOrientation; }
 
+    public boolean firstUnmapped() { return mFirstUnmapped; }
+    public boolean secondUnmapped() { return mSecondUnmapped; }
+
     public void addRead(final SAMRecord read)
     {
         if(mReads == null)
             mReads = Lists.newArrayListWithExpectedSize(2);
 
-        mReads.add(read);
-
         if(read.getSupplementaryAlignmentFlag())
         {
+            if((mFirstUnmapped && read.getFirstOfPairFlag()) || (mSecondUnmapped && !read.getFirstOfPairFlag()))
+                return;
+
             ++mReceivedSupplementaryCount;
         }
         else
         {
             if(read.getFirstOfPairFlag())
             {
-                mFirstPrimaryCigar = read.getCigarString();
+                mFirstUnmapped = belowMinAlignmentScore(read);
+                mFirstPrimaryCigar = !mFirstUnmapped ? read.getCigarString() : NO_CIGAR;
+
             }
             else
             {
-                mSecondPrimaryCigar = read.getCigarString();
+                mSecondUnmapped = belowMinAlignmentScore(read);
+                mSecondPrimaryCigar = !mSecondUnmapped ? read.getCigarString() : NO_CIGAR;
             }
+
+            if(mFirstUnmapped || mSecondUnmapped)
+                purgeSupplementaryReads();
 
             checkSupplementaryData(read);
         }
+
+        mReads.add(read);
+    }
+
+    private boolean belowMinAlignmentScore(final SAMRecord read)
+    {
+        Integer asScore = read.getIntegerAttribute(ALIGNMENT_SCORE_ATTRIBUTE);
+        return asScore != null && asScore.intValue() < CheckConfig.Params.MinAlignmentScore;
     }
 
     private void checkSupplementaryData(final SAMRecord read)
     {
+        if((mFirstUnmapped && read.getFirstOfPairFlag()) || (mSecondUnmapped && !read.getFirstOfPairFlag()))
+        {
+            // clear supp attributes
+            read.setAttribute(SUPPLEMENTARY_ATTRIBUTE, null);
+            return;
+        }
+
         // filter out supps with low alignment scores, rebuilding the SA tag if required
         List<SupplementaryReadData> suppDataList = SupplementaryReadData.extractAlignments(read);
 
@@ -131,7 +165,7 @@ public class Fragment
             int alignedBases = suppCigar.getCigarElements().stream()
                     .filter(x -> x.getOperator() == M).mapToInt(x -> x.getLength()).sum();
 
-            if(alignedBases >= CheckConfig.Params.MinSuppAlignmentScore)
+            if(alignedBases >= CheckConfig.Params.MinAlignmentScore)
             {
                 validSuppDataList.add(suppData);
             }
@@ -202,6 +236,8 @@ public class Fragment
         {
             mFirstPrimaryCigar = other.firstPrimaryCigar();
             mSecondPrimaryCigar = other.secondPrimaryCigar();
+            mFirstUnmapped = other.firstUnmapped();
+            mSecondUnmapped = other.secondUnmapped();
             mExpectedSupplementaryCount += other.expectedSupplementaryCount();
         }
 
@@ -224,6 +260,8 @@ public class Fragment
     {
         if(!hasPrimaryInfo() || mReads == null || mReads.isEmpty())
             return Collections.emptyList();
+
+        checkPrimaryUnmapping();
 
         setMateCigar();
 
@@ -268,6 +306,100 @@ public class Fragment
             mSecondReadQuals = read.getBaseQualities();
             mSecondNegOrientation = read.getReadNegativeStrandFlag();
         }
+    }
+
+    private void purgeSupplementaryReads()
+    {
+        int index = 0;
+
+        while(index < mReads.size())
+        {
+            SAMRecord read = mReads.get(index);
+
+            if(mFirstUnmapped && read.getFirstOfPairFlag() && read.getSupplementaryAlignmentFlag())
+            {
+                --mReceivedSupplementaryCount;
+                mReads.remove(index);
+                continue;
+            }
+            else if(mSecondUnmapped && !read.getFirstOfPairFlag() && read.getSupplementaryAlignmentFlag())
+            {
+                --mReceivedSupplementaryCount;
+                mReads.remove(index);
+                continue;
+            }
+
+            ++index;
+        }
+    }
+
+    private void checkPrimaryUnmapping()
+    {
+        if(!mFirstUnmapped && !mSecondUnmapped)
+            return;
+
+        SAMRecord firstPrimary = null;
+        SAMRecord secondPrimary = null;
+
+        for(SAMRecord read : mReads)
+        {
+            if(read.getSupplementaryAlignmentFlag())
+                continue;
+
+            if(read.getFirstOfPairFlag())
+            {
+                firstPrimary = read;
+            }
+            else
+            {
+                secondPrimary = read;
+            }
+        }
+
+        if(mFirstUnmapped && mSecondUnmapped)
+        {
+            for(SAMRecord read : mReads)
+            {
+                read.setProperPairFlag(false);
+                read.setInferredInsertSize(0);
+                read.setReadUnmappedFlag(true);
+                read.setMateUnmappedFlag(true);
+                read.setMappingQuality(0);
+                read.setAlignmentStart(0);
+
+                read.setReferenceIndex(NO_CHROMOSOME_INDEX);
+                read.setReferenceName(NO_CHROMOSOME_NAME);
+                read.setCigarString(NO_CIGAR);
+
+                read.setMateAlignmentStart(0);
+                read.setMateReferenceIndex(NO_CHROMOSOME_INDEX);
+                read.setMateReferenceName(NO_CHROMOSOME_NAME);
+                read.setAttribute(MATE_CIGAR_ATTRIBUTE, null);
+            }
+
+            return;
+        }
+
+        SAMRecord mappedRead = !mFirstUnmapped ? firstPrimary : secondPrimary;
+        SAMRecord unmappedRead = mFirstUnmapped ? firstPrimary : secondPrimary;
+
+        mappedRead.setProperPairFlag(false);
+
+        mappedRead.setInferredInsertSize(0);
+        mappedRead.setMateUnmappedFlag(true);
+        mappedRead.setMateAlignmentStart(mappedRead.getAlignmentStart());
+        mappedRead.setMateReferenceIndex(NO_CHROMOSOME_INDEX);
+        mappedRead.setMateReferenceName(NO_CHROMOSOME_NAME);
+        mappedRead.setAttribute(MATE_CIGAR_ATTRIBUTE, null);
+
+        unmappedRead.setProperPairFlag(false);
+        unmappedRead.setInferredInsertSize(0);
+        unmappedRead.setReadUnmappedFlag(true);
+        unmappedRead.setMappingQuality(0);
+        unmappedRead.setReferenceIndex(NO_CHROMOSOME_INDEX);
+        unmappedRead.setReferenceName(NO_CHROMOSOME_NAME);
+        unmappedRead.setAlignmentStart(mappedRead.getAlignmentStart());
+        unmappedRead.setCigarString(NO_CIGAR);
     }
 
     private void convertHardClips()
