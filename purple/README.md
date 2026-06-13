@@ -114,7 +114,7 @@ java -jar purple.jar \
 | somatic_vcf            | None    | Optional location of somatic variants vcf                                                                      |
 | somatic_sv_vcf         | None    | Optional location of somatic structural variants VCF for fitting and annotation                                |
 | germline_sv_vcf        | None    | Optional location of germline structural variants variants VCF for annotation                                  |
-| germline_del_freq_file | None    | Provide a cohort frequency for germline deletions                                                              |
+| germline_del_freq_file | None    | Provide a cohort frequency for germline deletions and amplifications                                           |
 | circos                 | None    | Optional path to circos binary. When supplied, circos graphs will be written to <output_dir>/plot              |
 | no_charts              | NA      | Disables creation of (non-circos) charts                                                                       |
 
@@ -335,7 +335,7 @@ in a male and which we have found to affect 0.2% of the male samples in our coho
 
 To determine the sex of a sample with AMBER, we examine the number of heterozygous loci in our provided BED file of common germline SNPs on
 the X chromosome, outside the pseudoautosomal region. If the X chromosome contains < 1% of total heterozygous loci for the sample, then it
-is considered male.
+is considered male.   In panel mode since only on target BAF points are considered we use the min(1% and 0.25 * chrX on target sixe / total on target sixe) as the threshold.
 
 To determine sex using COBALT, we first use the reference ratio to determine the number of copies of the X chromosome.
 A median X ratio greater than 0.65 is interpreted as 2 copies (note that nearly all female samples are very close to a ratio of 1,
@@ -369,8 +369,8 @@ median read ratio of both the tumor and reference samples. We also record the nu
 the number of tumor read depth windows within the segment as the depth window count.
 
 A reference sample copy number status is determined at this stage based on the observed mean read depth ratio in the reference sample,
-either ‘DIPLOID’ (0.85 <= ratio <= 1.15), ‘HETEROZYGOUS_DELETION’ (0.1 <= ratio < 0.85), ‘HOMOZYGOUS_DELETION’ (ratio < 0.1),
-‘AMPLIFICATION’ (1.15 < ratio <= 2.2) or ‘NOISE’ (ratio > 2.2). The 'diploid normalised' mean read depth ratio is used for this annotation.
+either ‘DIPLOID’ (0.85 <= ratio <= 1.15),‘LIKELY DIPLOID’ (0.7 <= ratio <= 0.85 or 1.15 <= ratio <= 1.3), ‘HETEROZYGOUS_DELETION’ (0.1 <= ratio < 0.7), ‘HOMOZYGOUS_DELETION’ (ratio < 0.1),
+‘AMPLIFICATION’ (1.3 < ratio <= 2.2) or ‘NOISE’ (ratio > 2.2). The 'diploid normalised' mean read depth ratio is used for this annotation.
 However, if a continuous region of >5MB has diploidNormalisedRatio / rawRatio < 0.7 or >1.3 (aside from the following noisy regions chr1:
 1-50M, chr9:135M-end, chr17:75M-end, chr19:1-20M), then this likely indicates a (rare) large copy number event the raw ratio is used
 instead. Regions within 2MB of a centromere and in the IG and TCR regions are further masked. The purity fitting and smoothing steps below
@@ -552,9 +552,13 @@ significantly higher than the fitted VAF peak, then Purple sets the purity to 2x
 
 #### Somatic Purity - Tumor Only
 
-In Tumor-only, Purple selects initial fits that are highly diploid (1.8 <= ploidy <= 2.2) and has a high purity (purity >= 0.92) or if any
-of the candidate solutions are highly diploid (>= 0.97). It then checks for the number of SNV and INDEL (with repeat count <=4) that are
-subjected to tier = Hotspot OR ((tier = PANEL and not NONE or synonymous) with VAF >= 0.05 and VAF <= 0.35) in the sample.
+In Tumor-only, Purple will use somatic mode if initial fit if the candidate solutions are highly diploid (>= 0.97) OR the sample is chimer OR all the following are true:
+- highly diploid (1.8 <= ploidy <= 2.2) AND
+- purity >= 0.92
+- proportion of [% of BAF sites >0.6] < 0.008 
+
+It then checks for the number of SNV and INDEL (with repeat count <=4) that are
+subjected to VAF >= 0.05 AND (tier = Hotspot OR ((tier = PANEL and not NONE or synonymous) and VAF <= 0.35)) in the sample.
 
 If the variant counts are less than one, then the sample is marked as NO_TUMOR. Otherwise the SOMATIC mode is triggered and the purity is
 calculated as 2 times the 75th percentile VAF in the sample.
@@ -673,15 +677,8 @@ breakpoint.
 
 Purple searches for candidate germline gene amplifications and deletions based on the combined tumor normal raw segmented copy number
 files.  
-For the purposes of purity and ploidy fitting and copy number smoothing each segment is already annotated according to its genotype in the
-germline based on its observedNormal ratio, ie, one of
-DIPLOID (0.85-1.15),
-LIKELY_DIPLOID (0.7-0.85) or (1.15-1.3),
-HET_DELETION (0.1-0.7),
-HOM_DELETION (<0.1),
-AMPLIFICATION (1.3-2.2) or NOISE.
 
-Any gene with a HET_DELETION or HOM_DELETION segment overlapping (within +/- 500 bases to allow for depth window resolution) an exonic
+Any gene with a germlineStatus of HET_DELETION or HOM_DELETION segment overlapping (within +/- 500 bases to allow for depth window resolution) an exonic
 region is marked as a germline gene deletion. Likewise, any gene with an AMPLIFICATION segment overlapping
 (within +/- 500 bases to allow for depth window resolution) an exonic
 region is marked as a germline gene amplification
@@ -888,9 +885,9 @@ The purity file `TUMOR.purple.purity.tsv` contains a single row with a summary o
 | wholeGenomeDuplication         | True if more than 10 autosomes have major allele copy number > 1.5                                                                                                                                           |
 | msIndelsPerMb                  | Microsatellite indels per mega base                                                                                                                                                                          |
 | msStatus                       | Microsatellite status. One of `MSI`, `MSS` or `UNKNOWN` if somatic variants not supplied                                                                                                                     |
-| tml                            | Tumor mutational load (# of missense variants in sample)                                                                                                                                                     |
+| tml                            | Tumor mutational load (# of missense variants in sample)  [vaf > 5%]                                                                                                                                                   |
 | tmlStatus                      | Tumor mutational load status. One of `HIGH`, `LOW` or `UNKNOWN` if somatic variants not supplied                                                                                                             |
-| tmbPerMb                       | Tumor mutational burden (#passing variants per Mb) per mega base                                                                                                                                             |
+| tmbPerMb                       | Tumor mutational burden (#passing variants per Mb) per mega base [vaf > 5%]                                                                                                                                             |
 | tmbStatus                      | Tumor mutational burden status. One of `HIGH`, `LOW` or `UNKNOWN` if somatic variants not supplied.  High = > 10 pass variants per Mb                                                                        |
 | svTumorMutationalBurden        | Total number of non inferred, non single passing structural variants detected in sample                                                                                                                      |
 | runMode                        | TUMOR_GERMLINE, TUMOR or GERMLINE, set based on whether a tumor and/or reference sample were supplied                                                                                                        |
