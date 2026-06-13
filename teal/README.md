@@ -163,6 +163,8 @@ Where only 1 read is telomeric the orientation of the telomeric read is importan
 
 $$ Total Telomeric Reads = 2 \times Both Telomeric Fragment Count + Single Read Telomeric Fragment C-rich count - Single Read Telomeric Fragment G-rich count $$
 
+Note for single read technologies (Axelios and Ultima), the factor of 2 is not omitted.
+
 To calculate the average telomere length we need to normalise this to the coverage of the genome as a whole. The formula used to normalise is:
 
 $$ Mean Telomere Length = \frac{Total Telomeric Reads \times (1-duplicatePercent) \times MeanReadLength }{ MeanReadDepth \times GCBiasAdj \times 46 } $$
