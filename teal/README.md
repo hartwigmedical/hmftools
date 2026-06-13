@@ -157,7 +157,7 @@ In this step, each read is annotated according to it’s telomeric and other cha
 
 ### 3. Estimate total telomeric content and length
 
-We must first estimate the total amount of telomeric content (in bases) in the BAM. To do this we count the number of fragments with both reads telomeric and with only one read telomeric. A read is classified as telomeric if it has at least 4 canonical T-type repeats and 5 consecutive telomeric repeats overall. 
+We must first estimate the total amount of telomeric content (in bases) in the BAM. To do this we count the number of fragments with both reads telomeric and with only one read telomeric. A read is classified as telomeric if it has at least a minimum # of canonical T-type repeats and minimum numbe of consecutive telomeric hexamers overall within the first N bases according to the following:
 
 | Sequencing Technology    | minCanonicalCount | minConsecutiveHexamers | singleReadTelomereCheckBases |
 |------------|----------------|--------------|--------------|
