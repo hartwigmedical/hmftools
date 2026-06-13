@@ -168,6 +168,7 @@ We must first estimate the total amount of telomeric content (in bases) in the B
 Where only 1 read is telomeric the orientation of the telomeric read is important as only C-rich fragments are candidate telomeres, whereas the G-rich) likely represent one end of an interstitial telomeric repeat. As described in TelomereCat (https://www.nature.com/articles/s41598-017-14403-y), we expect interstitial telomeric repeats to be symmetric and have equal numbers of G and C rich reads. Hence we can use the G-rich count to estimate the proportion of the c-rich single read telomeric 
 
 $$ Total Telomeric Reads = 2 \times Both Telomeric Fragment Count + Single Read Telomeric Fragment C-rich count - Single Read Telomeric Fragment G-rich count $$
+
 _Note for single read technologies (Axelios and Ultima), the factor of 2 is omitted._
 
 To calculate the average telomere length we need to normalise this to the coverage of the genome as a whole. The formula used to normalise is:
