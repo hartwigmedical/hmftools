@@ -378,14 +378,7 @@ use only the DIPLOID germline segments.
 
 ### 3. Chimerism
 
-Purple checks for chimeric content in the sample (ie. the presence of a donor sample) which may affect the copy number fit
-
-This is done by searching for evidence of more than 2 peaks in the BAF segmentation. For each segment the SD of the (filtered) BAFs is
-calculated. If sample's weighted mean of SD > 0.08, chimerism is detected. For samples with detected chimersim, all near opy number neutral
-segments (i.e. tumorRatio ~= 1) are selected. A KDE is used fixed bandwidth is used o find the peak with the highest value in observed
-mirrored BAF (mBAF) across all segments. The chimerism % (i.e. donor %) is set to 2 * (1-fitted max mBAF)
-
-Note for any sample with chimerism detected, the SOMATIC fit method is always used since amber data is deemed unreliable.
+Purple checks for the contamination level reported by amber if it exceeds warning level, the SOMATIC fit method is always used since amber data is deemed unreliable.
 
 ### 4. Sample Purity and Ploidy
 
