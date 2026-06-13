@@ -207,10 +207,10 @@ Field | Description
 ---|---
 FivePrimeBreakendId | Id of the 5' breakend in the fusion
 ThreePrimeBreakendId | Id of the 3' breakend in the fusion
-fivePrimeVcfId | matching ID for SV in VCF
-threePrimeVcfId | matching ID for SV in VCF
-fivePrimeCoords | chr:pos:orientation of SV breakend
-threePrimeCoords | chr:pos:orientation of SV breakend
+FivePrimeVcfId | matching ID for SV in VCF
+ThreePrimeVcfId | matching ID for SV in VCF
+FivePrimeCoords | chr:pos:orientation of SV breakend
+ThreePrimeCoords | chr:pos:orientation of SV breakend
 Name | Name of the fusion in the form 5'GENE_3'GENE
 Reported | True if the fusion meets all reportable fusion criteria for Linx
 ReportedType | If one or both of the genes matches  a promiscuous gene or known rearrangement in the HMF fusion knowledgebase, then the type of reportable gene pair:  f 'KNOWN_PAIR', 'PROMISCUOUS_5', 'PROMISCUOUS_3', 'PROMISCUOUS_BOTH', 'EXON_DEL_DUP', 'IG_PROMISCUOUS', 'IG_KNOWN_PAIR', KNOWN_PAIR_UNMAPPABLE_3' or 'NONE' (if no match is found)
