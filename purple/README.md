@@ -1099,7 +1099,7 @@ The second figure shows the output from Purple.
 
 A typical input figure is shown below:
 
-![Input CIRCOS](src/main/resources/readme/COLO829T.input.png)
+![Input CIRCOS](src/main/resources/readme/COLO829T.input.new.png)
 
 The outer circle shows the COBALT ratios of the reference and tumor samples in green and blue respectively.
 Note the reference ratios are after GC and diploid normalization have been applied.
