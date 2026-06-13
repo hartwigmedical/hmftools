@@ -159,6 +159,12 @@ In this step, each read is annotated according to it’s telomeric and other cha
 
 We must first estimate the total amount of telomeric content (in bases) in the BAM. To do this we count the number of fragments with both reads telomeric and with only one read telomeric. A read is classified as telomeric if it has at least 4 canonical T-type repeats and 5 consecutive telomeric repeats overall. 
 
+| Sequencing Technology    | minCanonicalCount | minConsecutiveHexamers | singleReadTelomereCheckBases |
+|------------|----------------|--------------|--------------|
+| Illumina | 4 | 6 | 151 |
+| Ultima | 3 | 0 | 75 |
+| Axelios | 3 | 0 | 75 |
+     
 Where only 1 read is telomeric the orientation of the telomeric read is important as only C-rich fragments are candidate telomeres, whereas the G-rich) likely represent one end of an interstitial telomeric repeat. As described in TelomereCat (https://www.nature.com/articles/s41598-017-14403-y), we expect interstitial telomeric repeats to be symmetric and have equal numbers of G and C rich reads. Hence we can use the G-rich count to estimate the proportion of the c-rich single read telomeric 
 
 $$ Total Telomeric Reads = 2 \times Both Telomeric Fragment Count + Single Read Telomeric Fragment C-rich count - Single Read Telomeric Fragment G-rich count $$
