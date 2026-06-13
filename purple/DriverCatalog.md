@@ -13,7 +13,7 @@ Field | Valid values                               | Description
 gene |                                            | HGNC symbol of gene 
 reportMissense | TRUE/FALSE                                 | Report if any missense variant is found in the gene
 reportNonsense | TRUE/FALSE                                 | Report if any nonsense or frameshift variant is found in the gene
-reportSplice | TRUE/FALSE                                 |  Report if any canonical splice acceptor or donor variant is found in the gene [+1,+2,+5,-1,-2]  Mutations affecting the last exonic base at a donor location as well as N>G variants only at the -3 acceptor base are also treated as SPLICE.
+reportSplice | TRUE/FALSE                                 |  Report if any canonical splice acceptor or donor variant is found in the gene [+1,+2,+5,-1,-2]  Mutations affecting the last exonic base at a donor location as well as N>G variants only at the -3 acceptor base are also treated as SPLICE. Any other mutations within 10 bases of an exon are also reported as splice but with 0 likleihood.
 reportDeletion | TRUE/FALSE                                 | Report if gene copy number < 0.5 (Note - If qcStatus in {WARN_DELETED_GENES,WARN_HIGH_COPY_NUMBER_NOISE} deletions must also be supported on both sides by SV OR (supported by SV + CENTROMERE/TELOMERE and be <10M bases)
 reportHetDeletion | TRUE/FALSE                                 | report deletions of < hetDeletionthreshold x sample ploidy
 hetDeletionThreshold | positive number | relative threshold compared to copy number below which het deletions are call
@@ -34,7 +34,7 @@ reportNovelSpliceJunction | TRUE/FALSE                                 | Report 
 
 Up to 3 individual driver catalog records may be added per gene per sample if more than 1 type of event is present: 
 * Germline mutations (GERMLINE_MUTATION,GERMLINE_DELETION,GERMLINE_DISRUPTION)
-* Copy number or disruption events (DEL,AMP,HOM_DISRUPTION) 
+* Copy number or disruption events (DEL,AMP,HOM_DISRUPTION, HET_DELETION,LOH) 
 * Somatic point mutations (MUTATION).
 
 The Hartwig Medical Foundation curated gene panel is available from the [HMF Resource page](../pipeline/README_RESOURCES.md)
@@ -43,7 +43,7 @@ A detailed description of our gene discovery and initial construction of our gen
 
 ## Gene Driver Likelihood
 
-A driver likelihood estimate between 0 and 1 is calculated for each variant in the gene panel.  High level amplifications, homozygous deletions, homozygous disruptions and TERT promoter mutations are all rare so have a likelihood of 1 when found affecting a driver gene.   Note that non homozygous disruptions are also added to the driver catalog, but driver likelihood is set to 0.    
+A driver likelihood estimate between 0 and 1 is calculated for each variant in the gene panel.  High level amplifications, homozygous deletions, homozygous disruptions and TERT promoter mutations are all rare so have a likelihood of 1 when found affecting a driver gene.   Note that non homozygous disruptions, het deletions and LOH events are also added to the driver catalog, but driver likelihood is set to 0.    
   
 For coding mutations we need to account for the large number of passenger point mutations that are present throughout the genome and thus also in driver genes.  This is implemented as a model where the driver likelihood algorithm depends on the configured 'likelihood type' in the driver gene panel.  The impacts of configuring `ONCO` vs `TSG` type is the following:
 
