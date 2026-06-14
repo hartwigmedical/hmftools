@@ -14,7 +14,9 @@ import static com.hartwig.hmftools.cup.prep.DataSource.DNA;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -193,8 +195,12 @@ public class DriverPrep implements CategoryPrep
     public void getVirusAnnotations(String sampleId) throws IOException
     {
         String viralAnnotationFilename = mConfig.viralAnnotationFile(sampleId);
-        final List<AnnotatedVirus> virusAnnotations = new ArrayList<>();
 
+        // allow missing virus files, at least for this release
+        if(!Files.exists(Paths.get(viralAnnotationFilename)))
+            return;
+
+        final List<AnnotatedVirus> virusAnnotations = new ArrayList<>();
         AnnotatedVirusFile.read(viralAnnotationFilename).stream().filter(AnnotatedVirus::reported).forEach(virusAnnotations::add);
 
         if(virusAnnotations.size() == 0)
