@@ -74,6 +74,8 @@ public class TestFindingRecordFactory
                 .sampleId("")
                 .samplingDate(LocalDate.of(2026, 1, 1))
                 .sequencingScope(SequencingScope.WHOLE_GENOME)
-                .refGenomeVersion(RefGenomeVersion.V37);
+                .refGenomeVersion(RefGenomeVersion.V37)
+                .hasNormalSample(true)
+                .hasRnaSample(false);
     }
 }
