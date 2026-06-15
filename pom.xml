@@ -73,7 +73,7 @@
         <esvee.version>1.1</esvee.version>
         <fastq-tools.version>1.0</fastq-tools.version>
         <finding.version>local-SNAPSHOT</finding.version>
-        <finding-datamodel.version>0.2.5-beta.2</finding-datamodel.version>
+        <finding-datamodel.version>0.2.6-beta.1</finding-datamodel.version>
         <gene-utils.version>1.2</gene-utils.version>
         <health-checker.version>3.6</health-checker.version>
         <hmf-id-generator.version>3.1</hmf-id-generator.version>

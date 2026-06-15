@@ -187,6 +187,8 @@ public class FindingRecordFactory
                 .pipelineVersion(orangeRecord.pipelineVersion())
                 .sampleId(orangeRecord.sampleId())
                 .samplingDate(orangeRecord.samplingDate())
+                .hasNormalSample(orangeRecord.refSample() != null)
+                .hasRnaSample(false)
                 .build();
     }
 
