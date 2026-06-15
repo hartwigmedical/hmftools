@@ -408,40 +408,60 @@ FASTA with annotated multi-exon transcript contigs (`*_tx`) appended; liftback r
 back to genomic coordinates so the output is an ordinary genomic RNA BAM: no `*_tx` in the header or on records,
 XA/SA/mate fields genomic, spliced reads carried as `N` CIGAR ops.
 
-`SpliceFastaBuilder` builds the transcript contigs and a sidecar TSV mapping packed transcript intervals to
-gene/transcript/exon spans. After bwa-mem2 alignment against the combined FASTA, liftback runs as a REDUX stage,
-reading the BAM plus sidecar.
+`SpliceLiftBack` is a standalone tool (not a REDUX dedup stage). The end-to-end RNA flow is:
+
+1. **`SpliceFastaBuilder`** (offline, once per ensembl release) builds the transcript-contig FASTA and a sidecar TSV
+   mapping packed transcript intervals to gene/transcript/exon spans.
+2. Append the transcript contigs to the genome FASTA and re-index with `bwa-mem2`.
+3. Align RNA reads with `bwa-mem2` against the combined FASTA. bwa's default output is **name-grouped** (each
+   fragment's mates + supplementaries contiguous, FASTQ order) - feed it to liftback directly, no sort needed.
+4. **`SpliceLiftBack`** consumes that name-grouped BAM in a single pass (no input sort, no index, no fragment cache),
+   lifts each fragment to genomic coordinates, and writes a coord-sorted + indexed genomic BAM.
+5. Feed the lifted BAM into REDUX for normal dedup. REDUX itself is splice-agnostic.
+
+### Building transcript contigs (SpliceFastaBuilder)
+
+```
+java -cp redux.jar com.hartwig.hmftools.redux.splice.SpliceFastaBuilder 
+    -ensembl_data_dir /ref_data/ensembl_data_cache/38/ 
+    -ref_genome /path_to_fasta/genome.fasta 
+    -ref_genome_version V38 
+    -output_dir /path_to_output/
+```
+
+Outputs `ref_genome_v38_rna_contigs.fasta` and `ref_genome_v38_rna_contigs.rna_contigs_mappings.tsv`. Concatenate the
+FASTA onto the genome FASTA and `bwa-mem2 index` the result before aligning.
 
 ### Command
 
 ```
-java -jar redux.jar 
-    -sample SAMPLE_ID 
-    -input_bam SAMPLE_ID.bwa_tx.bam 
+java -cp redux.jar com.hartwig.hmftools.redux.splice.SpliceLiftBack 
+    -input_bam SAMPLE_ID.bwa_tx.namegrouped.bam 
     -ref_genome /path_to_fasta/genome_plus_tx.fasta 
     -ref_genome_version V38 
-    -splice_liftback 
-    -contig_sidecar /path_to/SAMPLE_ID.rna_contigs_mappings.tsv 
+    -contig_sidecar /path_to/ref_genome_v38_rna_contigs.rna_contigs_mappings.tsv 
     -ensembl_data_dir /ref_data/ensembl_data_cache/38/ 
+    -rna_unmap_regions /ref_data/rna/38/rna_excluded_regions.38.tsv 
     -rescue_via_supp 
     -extend_softclip_tails 
     -bamtool /path_to_samtools/ 
     -output_dir /path_to_output/ 
+    -output_id SAMPLE_ID 
     -threads 24
 ```
 
-`input_bam`, `ref_genome`, `output_dir`, `bamtool` and `threads` are the standard REDUX arguments; the splice-specific
-flags are:
-
 | Argument              | Required | Description                                                                      |
 |-----------------------|----------|----------------------------------------------------------------------------------|
-| splice_liftback       | Required | Enable the splice liftback stage                                                 |
+| input_bam             | Required | bwa-mem2 output against the combined FASTA, **name-grouped** (not coord-sorted)  |
+| ref_genome            | Required | The same combined genome + transcript FASTA used at alignment                    |
 | contig_sidecar        | Required | Contig sidecar TSV from `SpliceFastaBuilder` (`*.rna_contigs_mappings.tsv`)       |
 | ensembl_data_dir      | Required | Ensembl cache: annotated exons + junctions, used by the discriminator and rescue |
+| bamtool               | Required | samtools / sambamba path, used to decompress the input and sort + index output   |
+| rna_unmap_regions     | Optional | Curated regions (rRNA / 7SL / multi-map); a fragment is dropped before lifting   |
 | rescue_via_supp       | Optional | Merge primary + supplementary pieces into one spliced primary                    |
 | extend_softclip_tails | Optional | Recover terminal softclipped bases that match the reference (intron retention)   |
 
-`ref_genome` must be the same combined genome + transcript FASTA used at alignment. Debug output goes to
+Output is `<output_id>.bam` (+ `.bai`), coord-sorted and ready for REDUX. Debug output goes to
 `*.liftback.records.tsv`, `*.liftback.alignments.tsv` and `*.liftback.summary.tsv`.
 
 ### Translation
