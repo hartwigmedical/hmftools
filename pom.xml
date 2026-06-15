@@ -42,6 +42,7 @@
         <module>sage</module>
         <module>sigs</module>
         <module>sv-tools</module>
+        <module>tars</module>
         <module>teal</module>
         <module>virus-interpreter</module>
         <module>v-chord</module>
@@ -95,6 +96,7 @@
         <sage.version>5.1</sage.version>
         <sigs.version>1.2.1</sigs.version>
         <sv-tools.version>1.0</sv-tools.version>
+        <tars.version>1.0</tars.version>
         <teal.version>1.4</teal.version>
         <virus-interpreter.version>1.7.1</virus-interpreter.version>
         <v-chord.version>1.0.1</v-chord.version>
