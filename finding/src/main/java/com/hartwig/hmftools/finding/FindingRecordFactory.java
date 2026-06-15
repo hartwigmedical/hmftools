@@ -18,7 +18,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -183,6 +182,8 @@ public class FindingRecordFactory
                 .pipelineVersion(orangeRecord.pipelineVersion())
                 .sampleId(orangeRecord.sampleId())
                 .samplingDate(orangeRecord.samplingDate())
+                .hasNormalSample(orangeRecord.referenceId() != null)
+                .hasRnaSample(orangeRecord.hasRna())
                 .build();
     }
 
