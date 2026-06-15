@@ -7,8 +7,6 @@ import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.common.bam.BamSlicer.createIntervals;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.BQSR_ORIGINAL_QUALS;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.getAlignmentEndFromCigar;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
 import static com.hartwig.hmftools.common.genome.chromosome.Chromosome.isAltRegionContig;
 
@@ -28,7 +26,6 @@ import htsjdk.samtools.QueryInterval;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
-import htsjdk.samtools.SAMTag;
 import htsjdk.samtools.SamReader;
 
 public class PartitionChecker
@@ -160,7 +157,7 @@ public class PartitionChecker
         if(read.getSupplementaryAlignmentFlag())
         {
             Integer alignmentScore = read.getIntegerAttribute(ALIGNMENT_SCORE_ATTRIBUTE);
-            if(alignmentScore != null && alignmentScore < CheckConfig.Params.MinSuppAlignmentScore)
+            if(alignmentScore != null && alignmentScore < CheckConfig.Params.MinAlignmentScore)
             {
                 ++mStats.SuppsDropped;
                 return;
@@ -252,6 +249,8 @@ public class PartitionChecker
 
                 if(fragment.requiredMateCigarFix())
                     ++mCurrentStats.MateCigarFixed;
+
+                mCurrentStats.PrimariesUnmapped += fragment.unmappedPrimaryCount();
             }
         }
     }
