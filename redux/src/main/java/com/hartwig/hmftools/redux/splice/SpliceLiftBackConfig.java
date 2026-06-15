@@ -41,6 +41,11 @@ public class SpliceLiftBackConfig
     public static final String ENSEMBL_DATA_DIR_DESC =
             "Ensembl data cache directory (annotated exons + junctions). Required.";
 
+    public static final String RNA_UNMAP_REGIONS = "rna_unmap_regions";
+    public static final String RNA_UNMAP_REGIONS_DESC =
+            "Curated excluded regions (Chromosome/PosStart/PosEnd), e.g. RNA rRNA / 7SL / multi-map zones; "
+                    + "a fragment with a primary in any region is dropped before lifting";
+
     public static final String DEFAULT_OUTPUT_PREFIX = "splice_lifted";
     public static final String TSV_A_SUFFIX = ".liftback.records.tsv";
     public static final String TSV_B_SUFFIX = ".liftback.alignments.tsv";
@@ -54,6 +59,7 @@ public class SpliceLiftBackConfig
     public final boolean RescueViaSupp;
     public final boolean ExtendSoftclipTails;
     public final String EnsemblDataDir;
+    public final String RnaUnmapRegionsFile;
     public final String OutputDir;
     public final String OutputId;
     public final String BamToolPath;
@@ -69,6 +75,7 @@ public class SpliceLiftBackConfig
         RescueViaSupp = configBuilder.hasFlag(RESCUE_VIA_SUPP);
         ExtendSoftclipTails = configBuilder.hasFlag(EXTEND_SOFTCLIP_TAILS);
         EnsemblDataDir = configBuilder.getValue(ENSEMBL_DATA_DIR);
+        RnaUnmapRegionsFile = configBuilder.getValue(RNA_UNMAP_REGIONS);
         OutputDir = parseOutputDir(configBuilder);
         OutputId = configBuilder.getValue(OUTPUT_ID);
         BamToolPath = configBuilder.getValue(BAMTOOL_PATH);
@@ -121,6 +128,7 @@ public class SpliceLiftBackConfig
         configBuilder.addFlag(RESCUE_VIA_SUPP, RESCUE_VIA_SUPP_DESC);
         configBuilder.addFlag(EXTEND_SOFTCLIP_TAILS, EXTEND_SOFTCLIP_TAILS_DESC);
         configBuilder.addPath(ENSEMBL_DATA_DIR, true, ENSEMBL_DATA_DIR_DESC);
+        configBuilder.addPath(RNA_UNMAP_REGIONS, false, RNA_UNMAP_REGIONS_DESC);
         BamToolName.addConfig(configBuilder);
 
         addOutputOptions(configBuilder);

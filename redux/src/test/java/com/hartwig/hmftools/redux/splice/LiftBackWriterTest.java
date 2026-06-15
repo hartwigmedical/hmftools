@@ -140,6 +140,83 @@ public class LiftBackWriterTest
         assertTrue(bLines.get(2).startsWith("read2\t2\tPRIMARY\tXA_INPUT\t"));
     }
 
+    private static LiftBackResult refOnlyResult()
+    {
+        LiftedAlignment self = new LiftedAlignment(
+                LiftedAlignment.AlignmentSource.SELF, "1", 1000, "50M",
+                "1", 1000, "50M",
+                100, 0,
+                null, null, null,
+                false, true);
+
+        return new LiftBackResult(
+                LiftBackCategory.REF_SINGLE, LiftBackResult.Composition.REF_ONLY,
+                LiftBackResult.RecordRole.PRIMARY,
+                "1", 1000, "50M",
+                false,
+                false, 60, 60,
+                0, 1, 0,
+                1, 1,
+                false, false, false, true,
+                "", "",
+                0,
+                List.of(self));
+    }
+
+    @Test
+    public void headerlessWriterEmitsDataRowsOnly() throws IOException
+    {
+        try(LiftBackWriter writer = new LiftBackWriter(mTsvA.toString(), mTsvB.toString(), false))
+        {
+            writer.write(pairedRecord("read1", true), refOnlyResult());
+        }
+
+        List<String> aLines = Files.readAllLines(mTsvA);
+        List<String> bLines = Files.readAllLines(mTsvB);
+
+        assertEquals(1, aLines.size());
+        assertTrue(aLines.get(0).startsWith("read1\t1\tPRIMARY\t"));
+        assertEquals(1, bLines.size());
+        assertTrue(bLines.get(0).startsWith("read1\t1\tPRIMARY\tSELF\t"));
+    }
+
+    @Test
+    public void headerLineConstantsMatchWrittenHeaders() throws IOException
+    {
+        try(LiftBackWriter writer = new LiftBackWriter(mTsvA.toString(), mTsvB.toString()))
+        {
+            // header-only files
+        }
+
+        assertEquals(Files.readAllLines(mTsvA).get(0), LiftBackWriter.TSV_A_HEADER_LINE);
+        assertEquals(Files.readAllLines(mTsvB).get(0), LiftBackWriter.TSV_B_HEADER_LINE);
+    }
+
+    @Test
+    public void concatJoinsShardsUnderSingleHeader() throws IOException
+    {
+        Path shard0 = Files.createTempFile("shard0_", ".tsv");
+        Path shard1 = Files.createTempFile("shard1_", ".tsv");
+        Path out = Files.createTempFile("concat_", ".tsv");
+        try
+        {
+            Files.write(shard0, List.of("rowA", "rowB"));
+            Files.write(shard1, List.of("rowC"));
+
+            SpliceLiftBack.concatenateTsvShards(
+                    List.of(shard0.toString(), shard1.toString()), LiftBackWriter.TSV_A_HEADER_LINE, out.toString());
+
+            List<String> lines = Files.readAllLines(out);
+            assertEquals(List.of(LiftBackWriter.TSV_A_HEADER_LINE, "rowA", "rowB", "rowC"), lines);
+        }
+        finally
+        {
+            Files.deleteIfExists(shard0);
+            Files.deleteIfExists(shard1);
+            Files.deleteIfExists(out);
+        }
+    }
+
     @Test
     public void testEmptyAlignmentSetStillEmitsTsvARow() throws IOException
     {

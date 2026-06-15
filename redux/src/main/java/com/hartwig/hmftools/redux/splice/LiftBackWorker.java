@@ -1,14 +1,14 @@
 package com.hartwig.hmftools.redux.splice;
 
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
-import static com.hartwig.hmftools.redux.splice.SpliceLiftBackStage.END_OF_STREAM;
+import static com.hartwig.hmftools.redux.splice.ChunkProducer.END_OF_STREAM;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
-import com.hartwig.hmftools.redux.splice.SpliceLiftBackStage.LiftBackResources;
 import com.hartwig.hmftools.redux.splice.rescue.JunctionRescueResolver;
 import com.hartwig.hmftools.redux.splice.rescue.RefSequenceSource;
 import com.hartwig.hmftools.redux.splice.rescue.RescueConfig;
@@ -32,18 +32,32 @@ public class LiftBackWorker extends Thread
     private final LiftBackStats mStats;
     private final LiftBackGroupProcessor mProcessor;
     private final SAMFileWriter mShardWriter;
+    private final LiftBackWriter mTsvWriter; // headerless per-worker records + alignments shard
 
     private final JunctionRescueResolver mRescueResolver;
     private final SoftclipTailExtender mSoftclipExtender;
     private final TerminalMicroJunctionCollapser mTerminalCollapser;
     private final JunctionCanonicalizer mJunctionCanonicalizer;
 
+    private final ExcludedRegions mExcludedRegions; // nullable: drop fragments here before lifting
+    private long mExcludedReads;
+
     public LiftBackWorker(
             final BlockingQueue<List<SAMRecord>> queue, final LiftBackResources resources,
-            final SAMFileHeader header, final String shardBam)
+            final SAMFileHeader header, final String shardBam, final String tsvAShard, final String tsvBShard)
     {
         mQueue = queue;
         mStats = new LiftBackStats();
+        mExcludedRegions = resources.ExcludedRegions;
+
+        try
+        {
+            mTsvWriter = new LiftBackWriter(tsvAShard, tsvBShard, false);
+        }
+        catch(IOException e)
+        {
+            throw new RuntimeException("failed to open liftback TSV shard: " + e, e);
+        }
 
         final RefSequenceSource refSource =
                 resources.RescueViaSupp || resources.ExtendSoftclipTails ? resources.openRefSource() : null;
@@ -91,12 +105,20 @@ public class LiftBackWorker extends Thread
         }
         catch(Exception e)
         {
-            e.printStackTrace();
+            RD_LOGGER.error("liftback worker failed: {}", e.toString());
             System.exit(1);
         }
         finally
         {
             mShardWriter.close();
+            try
+            {
+                mTsvWriter.close();
+            }
+            catch(IOException e)
+            {
+                RD_LOGGER.warn("failed to close liftback TSV shard: {}", e.toString());
+            }
         }
     }
 
@@ -123,11 +145,29 @@ public class LiftBackWorker extends Thread
 
     private void processNameGroup(final List<SAMRecord> group)
     {
+        // pre-liftback filter: drop the whole fragment if a primary lands in an excluded (e.g. rRNA) region,
+        // so contaminating reads are never lifted or passed to dedup.
+        if(mExcludedRegions != null && mExcludedRegions.fragmentExcluded(group))
+        {
+            mExcludedReads += group.size();
+            return;
+        }
+
         mProcessor.processNameGroup(group, new LiftedMateInfoCache(), this::write);
     }
+
+    public long excludedReads() { return mExcludedReads; }
 
     private void write(final SAMRecord record, final LiftBackResult result)
     {
         mShardWriter.addAlignment(record);
+        try
+        {
+            mTsvWriter.write(record, result);
+        }
+        catch(IOException e)
+        {
+            throw new RuntimeException("failed to write liftback TSV shard: " + e, e);
+        }
     }
 }

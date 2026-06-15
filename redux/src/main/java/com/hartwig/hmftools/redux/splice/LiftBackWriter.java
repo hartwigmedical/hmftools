@@ -30,12 +30,26 @@ public class LiftBackWriter implements AutoCloseable
             "TransName", "GeneId", "GeneName"
     };
 
+    // header lines for the records (A) and alignments (B) TSVs, written once by the shard-concat step.
+    public static final String TSV_A_HEADER_LINE = String.join(TSV_DELIM, TSV_A_HEADERS);
+    public static final String TSV_B_HEADER_LINE = String.join(TSV_DELIM, TSV_B_HEADERS);
+
     public LiftBackWriter(final String tsvAPath, final String tsvBPath) throws IOException
+    {
+        this(tsvAPath, tsvBPath, true);
+    }
+
+    // writeHeaders=false produces a data-only shard: each worker writes one, and the driver concatenates the
+    // shards under a single header line (see SpliceLiftBack.concatenateTsvShards).
+    public LiftBackWriter(final String tsvAPath, final String tsvBPath, final boolean writeHeaders) throws IOException
     {
         mTsvAWriter = createBufferedWriter(tsvAPath);
         mTsvBWriter = createBufferedWriter(tsvBPath);
-        writeHeader(mTsvAWriter, TSV_A_HEADERS);
-        writeHeader(mTsvBWriter, TSV_B_HEADERS);
+        if(writeHeaders)
+        {
+            writeHeader(mTsvAWriter, TSV_A_HEADERS);
+            writeHeader(mTsvBWriter, TSV_B_HEADERS);
+        }
     }
 
     public void write(final SAMRecord record, final LiftBackResult result) throws IOException
