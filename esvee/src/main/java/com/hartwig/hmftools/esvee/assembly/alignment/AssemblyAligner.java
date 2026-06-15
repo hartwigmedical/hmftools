@@ -34,6 +34,7 @@ import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.types.SupportType;
 import com.hartwig.hmftools.esvee.assembly.types.ThreadTask;
+import com.hartwig.hmftools.esvee.common.saga.SagaJunctionInfo;
 import com.hartwig.hmftools.esvee.common.saga.SagaMatchBySequence;
 import com.hartwig.hmftools.esvee.common.saga.SagaSequenceMatcher;
 import com.hartwig.hmftools.esvee.common.saga.SagaMatcherFactory;
@@ -124,8 +125,9 @@ public class AssemblyAligner extends ThreadTask
 
         if(mSagaMatcher != null)
         {
+            List<SagaJunctionInfo> junctionInfos = assemblyAlignment.linkIndices().stream().map(SagaJunctionInfo::new).toList();
             boolean lowerJunctionOverlap = assemblyAlignment.assemblies().size() == 1 && assemblyAlignment.assemblies().get(0).hasLineSequence();
-            SagaMatchBySequence sagaMatch = mSagaMatcher.matchBySequence(assemblyAlignment.fullSequence().getBytes(), assemblyAlignment.linkIndices(), lowerJunctionOverlap);
+            SagaMatchBySequence sagaMatch = mSagaMatcher.matchBySequence(assemblyAlignment.fullSequence().getBytes(), junctionInfos, lowerJunctionOverlap);
             assemblyAlignment.setSagaMatch(sagaMatch);
         }
 

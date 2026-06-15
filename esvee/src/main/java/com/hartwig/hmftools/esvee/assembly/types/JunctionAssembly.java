@@ -32,6 +32,7 @@ import com.hartwig.hmftools.esvee.assembly.ReadParseState;
 import com.hartwig.hmftools.esvee.assembly.RefBaseSeqBuilder;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.common.IndelCoords;
+import com.hartwig.hmftools.esvee.common.saga.SagaJunctionInfo;
 import com.hartwig.hmftools.esvee.common.saga.SagaMatchBySequence;
 import com.hartwig.hmftools.esvee.common.saga.SagaSequenceMatcher;
 
@@ -858,8 +859,9 @@ public class JunctionAssembly
     public boolean matchToSaga(final SagaSequenceMatcher sagaMatcher)
     {
         int junctionOffset = mJunction.isForward() ? refBaseLength() : baseLength() - refBaseLength();
+        List<SagaJunctionInfo> junctionInfos = List.of(new SagaJunctionInfo(junctionOffset));
         boolean lowerJunctionOverlap = hasLineSequence();
-        SagaMatchBySequence match = sagaMatcher.matchBySequence(bases(), junctionOffset, mJunction.Orient, lowerJunctionOverlap);
+        SagaMatchBySequence match = sagaMatcher.matchBySequence(bases(), junctionInfos, lowerJunctionOverlap);
         setSagaMatch(match);
         return match != null;
     }

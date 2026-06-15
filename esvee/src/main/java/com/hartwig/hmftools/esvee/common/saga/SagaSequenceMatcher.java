@@ -19,7 +19,6 @@ import com.hartwig.hmftools.common.bam.SamRecordUtils;
 import com.hartwig.hmftools.common.bwa.BwaMemAlignParams;
 import com.hartwig.hmftools.common.bwa.BwaMemAligner;
 import com.hartwig.hmftools.common.bwa.IBwaMemAligner;
-import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.utils.IntPair;
 
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
@@ -60,18 +59,8 @@ public class SagaSequenceMatcher
     // junctionOffset[0] = 3
     // junctionOffset[1] = 6
     @Nullable
-    public SagaMatchBySequence matchBySequence(final byte[] sequence, final List<Integer> junctionOffsets, boolean lowerJunctionOverlap)
+    public SagaMatchBySequence matchBySequence(final byte[] sequence, final List<SagaJunctionInfo> junctions, boolean lowerJunctionOverlap)
     {
-        List<SagaJunctionInfo> junctions = junctionOffsets.stream().map(offset -> new SagaJunctionInfo(offset, null)).toList();
-        MatchArguments args = new MatchArguments(sequence, junctions, lowerJunctionOverlap);
-        return matchBySequenceImpl(args);
-    }
-
-    @Nullable
-    public SagaMatchBySequence matchBySequence(final byte[] sequence, int junctionOffset, Orientation junctionOrient,
-            boolean lowerJunctionOverlap)
-    {
-        List<SagaJunctionInfo> junctions = List.of(new SagaJunctionInfo(junctionOffset, junctionOrient));
         MatchArguments args = new MatchArguments(sequence, junctions, lowerJunctionOverlap);
         return matchBySequenceImpl(args);
     }
