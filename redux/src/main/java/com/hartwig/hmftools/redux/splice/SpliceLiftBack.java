@@ -88,8 +88,11 @@ public class SpliceLiftBack
         if(!sortAndIndex(unsortedBam, mConfig.formOutputBam()))
             throw new RuntimeException("failed to sort + index lifted BAM");
 
-        concatenateTsvShards(tsvAShards, LiftBackWriter.TSV_A_HEADER_LINE, mConfig.formTsvAFile());
-        concatenateTsvShards(tsvBShards, LiftBackWriter.TSV_B_HEADER_LINE, mConfig.formTsvBFile());
+        if(mConfig.WriteLiftbackTsv)
+        {
+            concatenateTsvShards(tsvAShards, LiftBackWriter.TSV_A_HEADER_LINE, mConfig.formTsvAFile());
+            concatenateTsvShards(tsvBShards, LiftBackWriter.TSV_B_HEADER_LINE, mConfig.formTsvBFile());
+        }
 
         cleanupIntermediates(unsortedBam, shardBams, tsvAShards, tsvBShards);
 
@@ -120,11 +123,17 @@ public class SpliceLiftBack
         for(int i = 0; i < workerCount; ++i)
         {
             final String shardBam = formShardBamPath(i);
-            final String tsvAShard = formTsvShardPath(i, "records");
-            final String tsvBShard = formTsvShardPath(i, "alignments");
             shardBams.add(shardBam);
-            tsvAShards.add(tsvAShard);
-            tsvBShards.add(tsvBShard);
+
+            // null shard paths disable the worker's TSV writer; debug TSVs are opt-in (whole-sample is huge).
+            final String tsvAShard = mConfig.WriteLiftbackTsv ? formTsvShardPath(i, "records") : null;
+            final String tsvBShard = mConfig.WriteLiftbackTsv ? formTsvShardPath(i, "alignments") : null;
+            if(mConfig.WriteLiftbackTsv)
+            {
+                tsvAShards.add(tsvAShard);
+                tsvBShards.add(tsvBShard);
+            }
+
             final LiftBackWorker worker = new LiftBackWorker(chunkQueue, resources, outputHeader, shardBam, tsvAShard, tsvBShard);
             workers.add(worker);
             threadTasks.add(worker);

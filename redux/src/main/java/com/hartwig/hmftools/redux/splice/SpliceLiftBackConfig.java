@@ -46,6 +46,10 @@ public class SpliceLiftBackConfig
             "Curated excluded regions (Chromosome/PosStart/PosEnd), e.g. RNA rRNA / 7SL / multi-map zones; "
                     + "a fragment with a primary in any region is dropped before lifting";
 
+    public static final String WRITE_LIFTBACK_TSV = "write_liftback_tsv";
+    public static final String WRITE_LIFTBACK_TSV_DESC =
+            "Write per-record liftback debug TSVs (records + alignments). Off by default -- whole-sample TSVs are huge";
+
     public static final String DEFAULT_OUTPUT_PREFIX = "splice_lifted";
     public static final String TSV_A_SUFFIX = ".liftback.records.tsv";
     public static final String TSV_B_SUFFIX = ".liftback.alignments.tsv";
@@ -60,6 +64,7 @@ public class SpliceLiftBackConfig
     public final boolean ExtendSoftclipTails;
     public final String EnsemblDataDir;
     public final String RnaUnmapRegionsFile;
+    public final boolean WriteLiftbackTsv;
     public final String OutputDir;
     public final String OutputId;
     public final String BamToolPath;
@@ -76,6 +81,7 @@ public class SpliceLiftBackConfig
         ExtendSoftclipTails = configBuilder.hasFlag(EXTEND_SOFTCLIP_TAILS);
         EnsemblDataDir = configBuilder.getValue(ENSEMBL_DATA_DIR);
         RnaUnmapRegionsFile = configBuilder.getValue(RNA_UNMAP_REGIONS);
+        WriteLiftbackTsv = configBuilder.hasFlag(WRITE_LIFTBACK_TSV);
         OutputDir = parseOutputDir(configBuilder);
         OutputId = configBuilder.getValue(OUTPUT_ID);
         BamToolPath = configBuilder.getValue(BAMTOOL_PATH);
@@ -129,6 +135,7 @@ public class SpliceLiftBackConfig
         configBuilder.addFlag(EXTEND_SOFTCLIP_TAILS, EXTEND_SOFTCLIP_TAILS_DESC);
         configBuilder.addPath(ENSEMBL_DATA_DIR, true, ENSEMBL_DATA_DIR_DESC);
         configBuilder.addPath(RNA_UNMAP_REGIONS, false, RNA_UNMAP_REGIONS_DESC);
+        configBuilder.addFlag(WRITE_LIFTBACK_TSV, WRITE_LIFTBACK_TSV_DESC);
         BamToolName.addConfig(configBuilder);
 
         addOutputOptions(configBuilder);

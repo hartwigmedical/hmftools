@@ -32,7 +32,7 @@ public class LiftBackWorker extends Thread
     private final LiftBackStats mStats;
     private final LiftBackGroupProcessor mProcessor;
     private final SAMFileWriter mShardWriter;
-    private final LiftBackWriter mTsvWriter; // headerless per-worker records + alignments shard
+    private final LiftBackWriter mTsvWriter; // nullable: headerless per-worker TSV shard, only when enabled
 
     private final JunctionRescueResolver mRescueResolver;
     private final SoftclipTailExtender mSoftclipExtender;
@@ -52,7 +52,7 @@ public class LiftBackWorker extends Thread
 
         try
         {
-            mTsvWriter = new LiftBackWriter(tsvAShard, tsvBShard, false);
+            mTsvWriter = tsvAShard != null ? new LiftBackWriter(tsvAShard, tsvBShard, false) : null;
         }
         catch(IOException e)
         {
@@ -111,13 +111,16 @@ public class LiftBackWorker extends Thread
         finally
         {
             mShardWriter.close();
-            try
+            if(mTsvWriter != null)
             {
-                mTsvWriter.close();
-            }
-            catch(IOException e)
-            {
-                RD_LOGGER.warn("failed to close liftback TSV shard: {}", e.toString());
+                try
+                {
+                    mTsvWriter.close();
+                }
+                catch(IOException e)
+                {
+                    RD_LOGGER.warn("failed to close liftback TSV shard: {}", e.toString());
+                }
             }
         }
     }
@@ -161,6 +164,8 @@ public class LiftBackWorker extends Thread
     private void write(final SAMRecord record, final LiftBackResult result)
     {
         mShardWriter.addAlignment(record);
+        if(mTsvWriter == null)
+            return;
         try
         {
             mTsvWriter.write(record, result);

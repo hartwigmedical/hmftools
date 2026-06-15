@@ -460,9 +460,11 @@ java -cp redux.jar com.hartwig.hmftools.redux.splice.SpliceLiftBack
 | rna_unmap_regions     | Optional | Curated regions (rRNA / 7SL / multi-map); a fragment is dropped before lifting   |
 | rescue_via_supp       | Optional | Merge primary + supplementary pieces into one spliced primary                    |
 | extend_softclip_tails | Optional | Recover terminal softclipped bases that match the reference (intron retention)   |
+| write_liftback_tsv    | Optional | Emit per-record debug TSVs; off by default (whole-sample TSVs run to 100s of GB) |
 
-Output is `<output_id>.bam` (+ `.bai`), coord-sorted and ready for REDUX. Debug output goes to
-`*.liftback.records.tsv`, `*.liftback.alignments.tsv` and `*.liftback.summary.tsv`.
+Output is `<output_id>.bam` (+ `.bai`), coord-sorted and ready for REDUX. The summary always writes to
+`*.liftback.summary.tsv`; the per-record `*.liftback.records.tsv` / `*.liftback.alignments.tsv` are written only
+with `-write_liftback_tsv`.
 
 ### Translation
 
