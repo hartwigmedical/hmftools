@@ -57,6 +57,7 @@ java -jar redux.jar
 | output_bam          | Output BAM file, otherwise will write SAMPLE_ID.redux.bam                                          |
 | ref_genome          | Path to reference genome files as used in alignment                                                |
 | ref_genome_version  | V37 or V38                                                                                         |
+| sequencing_type     | ILLUMINA (default), SBX or ULTIMA                                                                  |
 | form_consensus      | Form a consensus read from duplicates                                                              |
 | unmap_regions       | TSV file specifying regions of high depth, repeats or otherwise problematic for mapping            |
 | bamtool             | Used for BAM sorting, concatenation and indexing                                                   |
@@ -65,7 +66,7 @@ java -jar redux.jar
 | ref_genome_msi_file | (Optional) Path to file of microsatellite sites used for sample-specific jitter, required for Sage |
 | msi_model_coefficients | (Optional)MSI model cooefficients file                                                             |
 | msi_model_error_rates  | (Optional) MSI model error rates file                                                              |
-| sequencing_type     | ILLUMINA (default), SBX or ULTIMA                                                                  |
+| bqr_use_all_regions | Base qual recalibration by default uses 2M-base regions from each chromosome. Add this flag in targeted panel model to use entire BAM | 
 
 ### Optional arguments
 

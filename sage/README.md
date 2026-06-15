@@ -50,6 +50,7 @@ Argument | Default           | Description
 reference | NA                | Comma separated names of the reference sample
 reference_bam | NA                | Comma separated paths to indexed reference BAM file
 germline | NA | Flag is required to run in germline mode, impacts variant filtering
+sequencing_type | Illumina | Otherwise SBX, Ultima
 run_tinc | False | Run tumor in normal detection and variant recovery (only valid if using exactly 1 reference sample)
 ref_sample_count | 1                 | Controls the set of ref samples used for tumor-reference soft-filtering. Zero means none will be used.)
 resource_dir | None              | Path to all resource files, in which case specify the file names only for ref_genome, hotspots, panel_bed and high_confidence_bed  
@@ -57,35 +58,14 @@ panel_bed | Path to panel bed (if driver_gene_panel not specified)
 threads | 2                 | Number of threads to use
 max_read_depth | 1000              | Maximum number of reads to look for evidence of any `HIGH_CONFIDENCE` or `LOW_CONFIDENCE` variant. Reads in excess of this are ignored.  
 max_read_depth_panel | 100,000           | Maximum number of reads to look for evidence of any `HOTSPOT` or `PANEL` variant. Reads in excess of this are ignored.  
-min_map_quality | 10                | Min mapping quality to apply to non-hotspot variants
-min_avg_base_qual | 25                | Min average base quality soft filter. Hotspots default is 18 (config: min_avg_base_qual_hotspot).
-validation_stringency | STRICT            | SAM validation strategy: STRICT, SILENT, LENIENT
 include_mt | NA                | By default the mitochondrial DNA is not read but will be if this config is included
-no_fragment_sync | False             | Where R1 and R2 in a fragment overlap, consider both observations' base and qual as separate pieces of evidence
 high_depth_mode  | False             | To be used in targeted sequencing - places additional conditions on read-supporting variants to increase precision
 read_length | Inferred from BAM | Max read length, affects memory usage slightly and some filtering
-jitter_param_dir | BAM path | Path to jitter files (jitter_params.tsv and ms_table.tsv.gz) from Redux
+jitter_bqr_dir | BAM path | Path to Redux MSI jitter files and BQR files
+skip_bqr | NA                | Run without loading Redux BQR files
 skip_msi_jitter | NA                | Use default MSI jitter params instead of sample-specific values from Redux files
-read_context_flank_size | 10                | Number of flanking bases on each side of read core
 
 The cardinality of `reference` must match `reference_bam`.
-
-## Optional Base Quality Recalibration Arguments
-
-The following arguments control the [alt specific base quality recalibration](#1-alt-specific-base-quality-recalibration) logic.
-
-Argument | Default  | Description 
----|----------|---
-bqr_disable | false    | Disable base quality recalibration
-bqr_load | false    | Reload previously generated BQR files to avoid re-running this stage, or if running on a sliced BAM
-bqr_write_plot | false    | Generate base-quality recalibration plots (requires R)
-bqr_sample_size | 2,000,000 | Sample size of each autosome
-bqr_min_map_qual | 50       | Min mapping quality of bam record
-bqr_write_positions | false    | Write positional data as contributes to BQR
-bqr_write_reads | false    | Write detailed read data as contributes to BQR
-bqr_full_bam | false    | Run BQR over full BAM
-bqr_use_panel | false    | Run BQR over panel only
-bqr_exclude_known | false    | In append mode, exclude known variants
 
 ## Optional Quality Arguments
 
@@ -139,18 +119,6 @@ output_vcf | Name of the output VCF
 ref_genome | Path to reference genome fasta file
 
 The cardinality of `reference` must match `reference_bam` and must not already exist in the input VCF.
-
-## Optional Arguments
-Argument | Default | Description 
----|---|---
-threads | 2 | Number of threads to use
-specifc_chr | NA | Limit sage to comma separated list of chromosomes
-max_read_depth | 1000 | Maximum number of reads to look for evidence of any `HIGH_CONFIDENCE` or `LOW_CONFIDENCE` variant. Reads in excess of this are ignored.  
-max_read_depth_panel | 100,000 | Maximum number of reads to look for evidence of any `HOTSPOT` or `PANEL` variant. Reads in excess of this are ignored.  
-min_map_quality | 10 | Min mapping quality to apply to non-hotspot variants
-require_gene | false | Restrict processing to variants with gene annotations
-
-The optional [base quality recalibration](#optional-base-quality-recalibration-arguments) and [quality](#optional-quality-arguments) arguments also apply.  
 
 ## Example Usage
 

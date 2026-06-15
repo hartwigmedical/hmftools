@@ -34,6 +34,7 @@ bqr_dir | Path to Sage pipeline output
 ref_genome | Path to reference gebnome
 ref_genome | 37 or 38
 output_dir | Output directory
+sequencing_type | Illumina (default), SBX, Ultima
 
 
 ## Algorithm

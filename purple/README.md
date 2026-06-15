@@ -84,8 +84,9 @@ java -jar purple.jar \
    -driver_gene_panel /ref_data/DriverGenePanel.38.tsv
    -somatic_hotspots /ref_data/KnownHotspots.somatic.38.tsv \
    -germline_hotspots /ref_data/KnownHotspots.germline.38.tsv \
-   -germline_del_freq_file /ref_data/cohort_germline_deletion_freq.38.tsv \
+   -germline_amp_del_freq_file /ref_data/cohort_germline_amp_del_freq.38.tsv \
    -circos /path/circos-0.69-6/bin/circos \
+   -threads 8 \
    -output_dir /output/purple/ \
 ```
 
@@ -106,17 +107,19 @@ java -jar purple.jar \
 
 ### Optional Arguments
 
-| Argument               | Default | Description                                                                                                    |
-|------------------------|---------|----------------------------------------------------------------------------------------------------------------|
-| threads                | 2       | Number of threads to use for ploidy & purity fitting routine                                                   |
-| sample_dir             | None    | Root directory for sample pipeline directory, will then look for Amber, Cobalt, Pave and Esvee sub-directories |
-| germline_vcf           | None    | Optional location of germline variants VCF. Sample names must match reference parameter. GZ files supported.   |
-| somatic_vcf            | None    | Optional location of somatic variants vcf                                                                      |
-| somatic_sv_vcf         | None    | Optional location of somatic structural variants VCF for fitting and annotation                                |
-| germline_sv_vcf        | None    | Optional location of germline structural variants variants VCF for annotation                                  |
-| germline_del_freq_file | None    | Provide a cohort frequency for germline deletions and amplifications                                           |
-| circos                 | None    | Optional path to circos binary. When supplied, circos graphs will be written to <output_dir>/plot              |
-| no_charts              | NA      | Disables creation of (non-circos) charts                                                                       |
+| Argument               | Description                                                                                                    |
+|------------------------|---------------------------------------------------------------------------------------------------------------|
+| sample_dir             | Root directory for sample pipeline directory, will then look for Amber, Cobalt, Pave and Esvee sub-directories |
+| germline_vcf           | Optional location of germline variants VCF. Sample names must match reference parameter. GZ files supported.   |
+| somatic_vcf            | Optional location of somatic variants vcf                                                                      |
+| somatic_sv_vcf         | Optional location of somatic structural variants VCF for fitting and annotation                                |
+| germline_sv_vcf        | Optional location of germline structural variants variants VCF for annotation                                  |
+| redux_tumor | Path to Redux tumor MSI prediction file |
+| germline_amp_del_freq_file | Provide a cohort frequency for germline deletions and amplifications                                           |
+| target_regions_bed | Panel definition file when run on targeted-panel sample |
+| circos                 | Optional path to circos binary. When supplied, circos graphs will be written to <output_dir>/plot              |
+| no_charts              | Disables creation of (non-circos) charts                                                                       |
+| threads                |Number of threads to use for ploidy & purity fitting routine                                                   |
 
 #### Optional Somatic Fit Arguments
 
