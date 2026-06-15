@@ -48,7 +48,8 @@ public class SagaSequenceMatcher
     private record MatchArguments(
             byte[] query,
             List<SagaJunctionInfo> junctions,
-            boolean lowerJunctionOverlap
+            boolean lowerJunctionOverlap,
+            boolean allowReverseStrand
     )
     {
     }
@@ -59,9 +60,10 @@ public class SagaSequenceMatcher
     // junctionOffset[0] = 3
     // junctionOffset[1] = 6
     @Nullable
-    public SagaMatchBySequence matchBySequence(final byte[] sequence, final List<SagaJunctionInfo> junctions, boolean lowerJunctionOverlap)
+    public SagaMatchBySequence matchBySequence(final byte[] sequence, final List<SagaJunctionInfo> junctions, boolean lowerJunctionOverlap,
+            boolean allowReverseStrand)
     {
-        MatchArguments args = new MatchArguments(sequence, junctions, lowerJunctionOverlap);
+        MatchArguments args = new MatchArguments(sequence, junctions, lowerJunctionOverlap, allowReverseStrand);
         return matchBySequenceImpl(args);
     }
 
@@ -130,7 +132,7 @@ public class SagaSequenceMatcher
     {
         Set<String> filters = new TreeSet<>();
 
-        applyAlignmentFilters(alignment, filters);
+        applyAlignmentFilters(alignment, args, filters);
 
         List<SagaJunctionMatchInfo> queryJunctionMatches = new ArrayList<>();
         List<SagaJunctionMatchInfo> sagaJunctionMatches = new ArrayList<>();
@@ -139,10 +141,11 @@ public class SagaSequenceMatcher
         return new SagaSequenceMatchCandidate(alignment, queryJunctionMatches, sagaJunctionMatches, filters);
     }
 
-    private void applyAlignmentFilters(final SagaAlignment alignment, Set<String> filters)
+    private void applyAlignmentFilters(final SagaAlignment alignment, final MatchArguments args, Set<String> filters)
     {
-        // ESVEE assemblies are implied as forward strand and so are SAGA assemblies, so there should never be a reverse strand match.
-        if(!alignment.isForward())
+        // For junction assemblies, the sequence may match to SAGA in reverse if it's part of an INV.
+        // For phased assemblies, expect that it matches to the forward strand because ESVEE assemblies are always forward strand.
+        if(!args.allowReverseStrand() && !alignment.isForward())
         {
             filters.add("reverse_strand");
         }

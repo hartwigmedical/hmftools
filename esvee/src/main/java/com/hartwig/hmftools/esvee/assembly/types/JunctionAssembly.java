@@ -861,7 +861,7 @@ public class JunctionAssembly
         int junctionOffset = mJunction.isForward() ? refBaseLength() : baseLength() - refBaseLength();
         List<SagaJunctionInfo> junctionInfos = List.of(new SagaJunctionInfo(junctionOffset));
         boolean lowerJunctionOverlap = hasLineSequence();
-        SagaMatchBySequence match = sagaMatcher.matchBySequence(bases(), junctionInfos, lowerJunctionOverlap);
+        SagaMatchBySequence match = sagaMatcher.matchBySequence(bases(), junctionInfos, lowerJunctionOverlap, true);
         setSagaMatch(match);
         return match != null;
     }
