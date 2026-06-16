@@ -45,6 +45,7 @@ import com.hartwig.hmftools.esvee.common.saga.SagaAssembly;
 import com.hartwig.hmftools.esvee.common.saga.SagaBreakend;
 import com.hartwig.hmftools.esvee.common.saga.SagaVariant;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.CigarElement;
@@ -108,9 +109,9 @@ public class BreakendBuilder
         boolean upperBreakendInferred;
         if(sagaJunctionOffsets.size() == 2)
         {
-            String phasedAsmSeq = mAssemblyAlignment.fullSequence();
-            int phasedAsmStart = min(max(0, seqJunctionOffsets.get(0)), phasedAsmSeq.length() - 1);
-            int phasedAsmEnd = min(max(0, seqJunctionOffsets.get(1)), phasedAsmSeq.length());
+            String assemblySeq = mAssemblyAlignment.fullSequence();
+            int assemblyStart = min(max(0, seqJunctionOffsets.get(0)), assemblySeq.length() - 1);
+            int assemblyEnd = min(max(0, seqJunctionOffsets.get(1)), assemblySeq.length());
 
             // If there wasn't enough phased assembly to cover the whole SAGA insert sequence, get the missing part of the insert from SAGA.
             int startInferredLength = sagaAlignment.sagaStart() - sagaJunctionOffsets.get(0);
@@ -120,7 +121,7 @@ public class BreakendBuilder
             String endInferredSeq =
                     endInferredLength > 0 ? sagaAssembly.sequence().substring(sagaAlignment.sagaEnd(), sagaJunctionOffsets.get(1)) : "";
 
-            insertedBases = startInferredSeq + phasedAsmSeq.substring(phasedAsmStart, phasedAsmEnd) + endInferredSeq;
+            insertedBases = startInferredSeq + assemblySeq.substring(assemblyStart, assemblyEnd) + endInferredSeq;
 
             lowerBreakendInferred = startInferredLength > 0;
             upperBreakendInferred = endInferredLength > 0;
@@ -138,6 +139,8 @@ public class BreakendBuilder
 
         // TODO: homology
         HomologyData homology = null;
+
+        // TODO: use createIndelBreakends
 
         Breakend lowerBreakend = new Breakend(
                 mAssemblyAlignment, lowerSagaBreakend.chromosome(), lowerSagaBreakend.position(), lowerSagaBreakend.orientation(),
@@ -162,7 +165,6 @@ public class BreakendBuilder
                 seqJunctionOffsets.size() > 1 ? seqJunctionOffsets.get(1) : seqJunctionOffsets.get(0) + 1 };
         BreakendSegment segment =
                 new BreakendSegment(mAssemblyAlignment.id(), sagaAlignment.queryStart(), 0, alignData, indelIndices);
-
         lowerBreakend.addSegment(segment);
         upperBreakend.addSegment(segment);
 
@@ -214,128 +216,33 @@ public class BreakendBuilder
         if(indelCoords == null || indelCoords.Length < MIN_INDEL_LENGTH)
             return false;
 
-        int indelSeqStart = alignment.sequenceStart() + getReadIndexFromPosition(
+        int assemblyIndelStart = alignment.sequenceStart() + getReadIndexFromPosition(
                 alignment.positionStart(), alignment.cigarElements(), indelCoords.PosStart, true, false)
                 // back out soft-clip since the method above includes that
                 - leftSoftClipLength(alignment.cigarElements());
-
-        int indelSeqEnd = indelSeqStart + (indelCoords.isInsert() ? indelCoords.Length : 1);
+        int assemblyIndelEnd = assemblyIndelStart + (indelCoords.isInsert() ? indelCoords.Length : 1);
 
         boolean isChained = mAssemblyAlignment.phaseSet() != null && mAssemblyAlignment.phaseSet().assemblyLinks().size() > 1;
         if(!isChained)
         {
             // the indel must have sufficient bases either side of it to be called
-            int leftAnchorLength = indelSeqStart + 1;
-            int rightAnchorLength = alignment.segmentLength() - indelSeqEnd - 1;
+            int leftAnchorLength = assemblyIndelStart + 1;
+            int rightAnchorLength = alignment.segmentLength() - assemblyIndelEnd - 1;
 
             if(leftAnchorLength < ALIGNMENT_INDEL_MIN_ANCHOR_LENGTH || rightAnchorLength < ALIGNMENT_INDEL_MIN_ANCHOR_LENGTH)
                 return false;
         }
 
-        String insertedBases = "";
-        HomologyData homology = null;
-
-        int indelPosStart = indelCoords.PosStart;
-        int indelPosEnd = indelCoords.PosEnd;
-
-        Orientation lowerOrient = FORWARD;
-        Orientation upperOrient = REVERSE;
-
-        if(indelCoords.isInsert())
+        String assemblySeq = mAssemblyAlignment.fullSequence();
+        if(indelCoords.isInsert() && assemblyIndelStart >= 0 && assemblyIndelEnd < assemblySeq.length())
         {
-            if(indelSeqStart >= 0 && indelSeqEnd < mAssemblyAlignment.fullSequenceLength())
-            {
-                insertedBases = mAssemblyAlignment.fullSequence().substring(indelSeqStart + 1, indelSeqEnd + 1);
-                String basesStart = insertedBases;
-
-                int homPosEnd = indelPosEnd;
-                String basesEnd = mRefGenome.getBaseString(alignment.chromosome(), homPosEnd, homPosEnd + insertedBases.length() - 1);
-
-                homology = HomologyData.determineIndelHomology(basesStart, basesEnd, insertedBases.length());
-
-                if(!homology.Homology.isEmpty())
-                {
-                    // convert an INS to a DUP and reassess homology
-                    int totalInexactHomology = homology.InexactEnd - homology.InexactStart;
-
-                    indelSeqStart += totalInexactHomology;
-                    indelPosStart += 1;
-                    indelPosEnd += totalInexactHomology - 1;
-                    lowerOrient = REVERSE;
-                    upperOrient = FORWARD;
-                    int newHomologyLength = 0;
-                    if(totalInexactHomology == insertedBases.length())
-                    {
-                        String postIndelBases = mRefGenome.getBaseString(
-                                alignment.chromosome(), indelPosEnd + 1, indelPosEnd + insertedBases.length());
-
-                        while(newHomologyLength < insertedBases.length() && newHomologyLength < postIndelBases.length()
-                                && insertedBases.charAt(newHomologyLength) == postIndelBases.charAt(newHomologyLength))
-                        {
-                            ++newHomologyLength;
-                        }
-                    }
-
-                    if(newHomologyLength > 0)
-                    {
-                        String newHomologyBases = insertedBases.substring(0, newHomologyLength);
-
-                        homology = new HomologyData(newHomologyBases, 0, newHomologyLength, 0, newHomologyLength);
-                    }
-                    else
-                    {
-                        homology = null;
-                    }
-
-                    insertedBases = insertedBases.substring(totalInexactHomology);
-                }
-            }
-        }
-        else
-        {
-            // check for exact homology at the bases either side of the delete
-            int maxLength = indelCoords.Length - 1;
-            int homPosStart = indelPosStart + 1;
-            String basesStart = mRefGenome.getBaseString(alignment.chromosome(), homPosStart, homPosStart + maxLength);
-
-            int homPosEnd = indelPosEnd;
-            String basesEnd = mRefGenome.getBaseString(alignment.chromosome(), homPosEnd, homPosEnd + maxLength);
-
-            homology = HomologyData.determineIndelHomology(basesStart, basesEnd, maxLength);
-
-            if(homology.Homology.isEmpty())
-            {
-                homology = null;
-            }
-            else
-            {
-                // in this case the delete does not include the overlapped homology bases, so both breakends need to be shifted forward
-                // by the same amount, being the exact homology at the start
-                indelPosStart += abs(homology.ExactStart);
-                indelPosEnd += abs(homology.ExactStart);
-            }
+            indelCoords.setInsertedBases(assemblySeq.substring(assemblyIndelStart + 1, assemblyIndelEnd + 1));
         }
 
-        Breakend lowerBreakend = new Breakend(
-                mAssemblyAlignment, alignment.chromosome(), indelPosStart, lowerOrient, insertedBases, homology);
+        IndelBreakendData breakendData =
+                calcIndelBreakendsWithHomology(alignment.chromosome(), indelCoords, assemblyIndelStart, assemblyIndelEnd);
 
-        mAssemblyAlignment.addBreakend(lowerBreakend);
-
-        int[] indelSequenceIndices = new int[] { indelSeqStart, indelSeqEnd };
-        BreakendSegment segment =
-                new BreakendSegment(mAssemblyAlignment.id(), alignment.sequenceStart(), 0, alignment, indelSequenceIndices);
-
-        lowerBreakend.addSegment(segment);
-
-        Breakend upperBreakend =
-                new Breakend(mAssemblyAlignment, alignment.chromosome(), indelPosEnd, upperOrient, insertedBases, homology);
-
-        mAssemblyAlignment.addBreakend(upperBreakend);
-
-        upperBreakend.addSegment(segment);
-
-        lowerBreakend.setOtherBreakend(upperBreakend);
-        upperBreakend.setOtherBreakend(lowerBreakend);
+        createIndelBreakends(alignment, breakendData);
 
         return true;
     }
@@ -375,6 +282,139 @@ public class BreakendBuilder
         }
 
         return indelCoords;
+    }
+
+    private record IndelBreakendData(
+            String chromosome,
+            int lowerPosition,
+            Orientation lowerOrient,
+            int upperPosition,
+            Orientation upperOrient,
+            String insertedBases,
+            @Nullable
+            HomologyData homology,
+            int assemblyIndelStart,
+            int assemblyIndelEnd
+    )
+    {
+    }
+
+    private IndelBreakendData calcIndelBreakendsWithHomology(final String chromosome, final IndelCoords indelCoords, int indelSeqStart,
+            int indelSeqEnd)
+    {
+        int lowerPosition = indelCoords.PosStart;
+        int upperPosition = indelCoords.PosEnd;
+
+        Orientation lowerOrient = FORWARD;
+        Orientation upperOrient = REVERSE;
+
+        String insertedBases = indelCoords.insertedBases();
+
+        HomologyData homology = null;
+
+        if(indelCoords.isInsert())
+        {
+            if(!insertedBases.isEmpty())
+            {
+                String basesStart = insertedBases;
+
+                int homPosEnd = upperPosition;
+                String basesEnd = mRefGenome.getBaseString(chromosome, homPosEnd, homPosEnd + insertedBases.length() - 1);
+
+                homology = HomologyData.determineIndelHomology(basesStart, basesEnd, insertedBases.length());
+                assert homology != null;
+
+                if(!homology.Homology.isEmpty())
+                {
+                    // convert an INS to a DUP and reassess homology
+                    int totalInexactHomology = homology.InexactEnd - homology.InexactStart;
+
+                    indelSeqStart += totalInexactHomology;
+                    lowerPosition += 1;
+                    upperPosition += totalInexactHomology - 1;
+                    lowerOrient = REVERSE;
+                    upperOrient = FORWARD;
+                    int newHomologyLength = 0;
+                    if(totalInexactHomology == insertedBases.length())
+                    {
+                        String postIndelBases =
+                                mRefGenome.getBaseString(chromosome, upperPosition + 1, upperPosition + insertedBases.length());
+
+                        while(newHomologyLength < insertedBases.length() && newHomologyLength < postIndelBases.length()
+                                && insertedBases.charAt(newHomologyLength) == postIndelBases.charAt(newHomologyLength))
+                        {
+                            ++newHomologyLength;
+                        }
+                    }
+
+                    if(newHomologyLength > 0)
+                    {
+                        String newHomologyBases = insertedBases.substring(0, newHomologyLength);
+
+                        homology = new HomologyData(newHomologyBases, 0, newHomologyLength, 0, newHomologyLength);
+                    }
+                    else
+                    {
+                        homology = null;
+                    }
+
+                    insertedBases = insertedBases.substring(totalInexactHomology);
+                }
+            }
+        }
+        else
+        {
+            // check for exact homology at the bases either side of the delete
+            int maxLength = indelCoords.Length - 1;
+            int homPosStart = lowerPosition + 1;
+            String basesStart = mRefGenome.getBaseString(chromosome, homPosStart, homPosStart + maxLength);
+
+            int homPosEnd = upperPosition;
+            String basesEnd = mRefGenome.getBaseString(chromosome, homPosEnd, homPosEnd + maxLength);
+
+            homology = HomologyData.determineIndelHomology(basesStart, basesEnd, maxLength);
+            assert homology != null;
+
+            if(homology.Homology.isEmpty())
+            {
+                homology = null;
+            }
+            else
+            {
+                // in this case the delete does not include the overlapped homology bases, so both breakends need to be shifted forward
+                // by the same amount, being the exact homology at the start
+                lowerPosition += abs(homology.ExactStart);
+                upperPosition += abs(homology.ExactStart);
+            }
+        }
+
+        return new IndelBreakendData(
+                chromosome, lowerPosition, lowerOrient, upperPosition, upperOrient, insertedBases, homology, indelSeqStart, indelSeqEnd);
+    }
+
+    private Pair<Breakend, Breakend> createIndelBreakends(final AlignData alignData, final IndelBreakendData breakendData)
+    {
+        Breakend lowerBreakend = new Breakend(
+                mAssemblyAlignment, breakendData.chromosome(), breakendData.lowerPosition(), breakendData.lowerOrient(),
+                breakendData.insertedBases(), breakendData.homology());
+
+        Breakend upperBreakend = new Breakend(
+                mAssemblyAlignment, breakendData.chromosome(), breakendData.upperPosition(), breakendData.upperOrient(),
+                breakendData.insertedBases(), breakendData.homology());
+
+        int[] indelSequenceIndices = new int[] { breakendData.assemblyIndelStart(), breakendData.assemblyIndelEnd() };
+        BreakendSegment segment =
+                new BreakendSegment(mAssemblyAlignment.id(), alignData.sequenceStart(), 0, alignData, indelSequenceIndices);
+        lowerBreakend.addSegment(segment);
+        upperBreakend.addSegment(segment);
+
+        lowerBreakend.setOtherBreakend(upperBreakend);
+        upperBreakend.setOtherBreakend(lowerBreakend);
+
+        mAssemblyAlignment.addBreakend(lowerBreakend);
+        mAssemblyAlignment.addBreakend(upperBreakend);
+
+        return Pair.of(lowerBreakend, upperBreakend);
     }
 
     private void formSingleBreakend(final AlignData alignment, final List<AlignData> zeroQualAlignments)
