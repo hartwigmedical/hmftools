@@ -11,7 +11,7 @@ Example report for a [targeted panel sample](./docs/DemoPanel.orange.pdf).
 
 ## Command
 
-Orange requires most output from the WiGiTTs pipeline.
+Orange uses most outputs from the WiGiTs pipeline.
 
 ### WGS mode
 
