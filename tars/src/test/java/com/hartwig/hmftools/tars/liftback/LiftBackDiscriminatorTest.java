@@ -68,101 +68,78 @@ public class LiftBackDiscriminatorTest
         return LiftBackDiscriminator.categorize(alignments).Category;
     }
 
-    // ---- categorize(): one locus, single source ----
-
+    // The full ref-vs-tx category matrix: one assert per discriminator branch. Each assert carries a message
+    // naming the branch so a failure pinpoints which category misclassified.
     @Test
-    public void testRefSingle()
+    public void testCategorize()
     {
-        assertEquals(REF_SINGLE, categoryOf(set(ref(CHR1, 100, FULL_MATCH_CIGAR))));
-    }
+        // ---- one locus, single source ----
 
-    @Test
-    public void testTxSingle()
-    {
-        assertEquals(TX_SINGLE, categoryOf(set(tx(CHR1, 100, TX_JUNCTION_CIGAR, false, 0))));
-    }
+        // only a ref alignment present -> REF_SINGLE.
+        assertEquals("single ref alignment", REF_SINGLE,
+                categoryOf(set(ref(CHR1, 100, FULL_MATCH_CIGAR))));
 
-    // ---- categorize(): one locus, ref and tx both present ----
+        // only a tx (spliced) alignment present -> TX_SINGLE.
+        assertEquals("single tx alignment", TX_SINGLE,
+                categoryOf(set(tx(CHR1, 100, TX_JUNCTION_CIGAR, false, 0))));
 
-    @Test
-    public void testBothAgreeSameCigarNoJunction()
-    {
-        // identical cigar, no N — the two views agree, no contest.
-        assertEquals(BOTH_AGREE, categoryOf(set(
-                ref(CHR1, 100, FULL_MATCH_CIGAR),
-                tx(CHR1, 100, FULL_MATCH_CIGAR, false, 0))));
-    }
+        // ---- one locus, ref and tx both present (the discriminator) ----
 
-    @Test
-    public void testBothTxJunctionRefSoftclip()
-    {
-        // tx spliced across a real junction, ref ran off the exon edge into a softclip -> tx wins.
-        assertEquals(BOTH_TX_JUNCTION_REF_SOFTCLIP, categoryOf(set(
-                ref(CHR1, 100, SOFTCLIP_CIGAR),
-                tx(CHR1, 100, TX_JUNCTION_CIGAR, false, 0))));
-    }
+        // identical cigar, no N: the two views agree, no contest -> BOTH_AGREE.
+        assertEquals("ref and tx agree on the same gapless cigar", BOTH_AGREE,
+                categoryOf(set(
+                        ref(CHR1, 100, FULL_MATCH_CIGAR),
+                        tx(CHR1, 100, FULL_MATCH_CIGAR, false, 0))));
 
-    @Test
-    public void testBothTxJunctionRefMatch()
-    {
-        // ref matched cleanly through the supposed intron (no softclip) -> read is unspliced, ref wins.
-        assertEquals(BOTH_TX_JUNCTION_REF_MATCH, categoryOf(set(
-                ref(CHR1, 100, FULL_MATCH_CIGAR),
-                tx(CHR1, 100, TX_JUNCTION_CIGAR, false, 0))));
-    }
+        // tx spliced across a real junction, ref ran off the exon edge into a softclip: tx wins.
+        assertEquals("tx junction beats a ref softclip", BOTH_TX_JUNCTION_REF_SOFTCLIP,
+                categoryOf(set(
+                        ref(CHR1, 100, SOFTCLIP_CIGAR),
+                        tx(CHR1, 100, TX_JUNCTION_CIGAR, false, 0))));
 
-    @Test
-    public void testBothTxSoftclipRefMatch()
-    {
-        // tx softclipped at the exon boundary (no N junction), ref full match -> ref wins (intron retention).
-        assertEquals(BOTH_TX_SOFTCLIP_REF_MATCH, categoryOf(set(
-                ref(CHR1, 100, FULL_MATCH_CIGAR),
-                tx(CHR1, 100, "50M50S", true, 0))));
-    }
+        // ref matched cleanly through the supposed intron (no softclip): read is unspliced, ref wins.
+        assertEquals("clean ref match through the intron beats the tx junction", BOTH_TX_JUNCTION_REF_MATCH,
+                categoryOf(set(
+                        ref(CHR1, 100, FULL_MATCH_CIGAR),
+                        tx(CHR1, 100, TX_JUNCTION_CIGAR, false, 0))));
 
-    @Test
-    public void testBothAmbiguousWhenNoRuleFires()
-    {
-        // tx contiguous (no junction, no boundary clip), ref softclipped -> no discriminator rule applies.
-        assertEquals(BOTH_AMBIGUOUS, categoryOf(set(
-                ref(CHR1, 100, SOFTCLIP_CIGAR),
-                tx(CHR1, 100, FULL_MATCH_CIGAR, false, 0))));
-    }
+        // tx softclipped at the exon boundary (no N junction), ref full match: ref wins (intron retention).
+        assertEquals("ref full match beats a tx that only softclips at the boundary", BOTH_TX_SOFTCLIP_REF_MATCH,
+                categoryOf(set(
+                        ref(CHR1, 100, FULL_MATCH_CIGAR),
+                        tx(CHR1, 100, "50M50S", true, 0))));
 
-    // ---- categorize(): two or more loci ----
+        // tx contiguous (no junction, no boundary clip), ref softclipped: no discriminator rule applies.
+        assertEquals("no rule fires when tx is contiguous and ref is softclipped", BOTH_AMBIGUOUS,
+                categoryOf(set(
+                        ref(CHR1, 100, SOFTCLIP_CIGAR),
+                        tx(CHR1, 100, FULL_MATCH_CIGAR, false, 0))));
 
-    @Test
-    public void testRefMulti()
-    {
-        assertEquals(REF_MULTI, categoryOf(set(
-                ref(CHR1, 100, FULL_MATCH_CIGAR),
-                ref(CHR2, 200, FULL_MATCH_CIGAR))));
-    }
+        // ---- two or more loci ----
 
-    @Test
-    public void testTxMulti()
-    {
-        assertEquals(TX_MULTI, categoryOf(set(
-                tx(CHR1, 100, TX_JUNCTION_CIGAR, false, 0),
-                tx(CHR2, 200, TX_JUNCTION_CIGAR, false, 0))));
-    }
+        // multiple loci, all ref, zero tx alts -> REF_MULTI.
+        assertEquals("multi-locus, ref only", REF_MULTI,
+                categoryOf(set(
+                        ref(CHR1, 100, FULL_MATCH_CIGAR),
+                        ref(CHR2, 200, FULL_MATCH_CIGAR))));
 
-    @Test
-    public void testBothMultiTxJunction()
-    {
-        // distinct loci; tx has an annotated junction, the ref alt is intronless (paralog/pseudogene) -> tx faithful.
-        assertEquals(BOTH_MULTI_TX_JUNCTION, categoryOf(set(
-                tx(CHR1, 100, TX_JUNCTION_CIGAR, false, 0),
-                ref(CHR2, 200, FULL_MATCH_CIGAR))));
-    }
+        // multiple loci, all tx, zero ref alts -> TX_MULTI.
+        assertEquals("multi-locus, tx only", TX_MULTI,
+                categoryOf(set(
+                        tx(CHR1, 100, TX_JUNCTION_CIGAR, false, 0),
+                        tx(CHR2, 200, TX_JUNCTION_CIGAR, false, 0))));
 
-    @Test
-    public void testBothMultiWhenNoTxJunction()
-    {
-        // distinct loci, neither side has a junction -> genuine multi-mapper.
-        assertEquals(BOTH_MULTI, categoryOf(set(
-                tx(CHR1, 100, FULL_MATCH_CIGAR, false, 0),
-                ref(CHR2, 200, FULL_MATCH_CIGAR))));
+        // distinct loci, ref and tx; tx has an annotated junction, ref alt is intronless (paralog): tx faithful.
+        assertEquals("multi-locus with a tx junction against an intronless ref paralog", BOTH_MULTI_TX_JUNCTION,
+                categoryOf(set(
+                        tx(CHR1, 100, TX_JUNCTION_CIGAR, false, 0),
+                        ref(CHR2, 200, FULL_MATCH_CIGAR))));
+
+        // distinct loci, neither side has a junction: genuine multi-mapper.
+        assertEquals("multi-locus with no junction on either side", BOTH_MULTI,
+                categoryOf(set(
+                        tx(CHR1, 100, FULL_MATCH_CIGAR, false, 0),
+                        ref(CHR2, 200, FULL_MATCH_CIGAR))));
     }
 
     // ---- apply(): tx-favouring swap (promoteTxOverRef) ----
@@ -272,10 +249,10 @@ public class LiftBackDiscriminatorTest
     }
 
     @Test
-    public void testTxSoftclipRefMatchTxSelfNoSwap()
+    public void testTxSoftclipRefMatchTxSelfSwapsToRef()
     {
-        // self is tx and ref-match wins, but there is nothing to promote to (self is the only mapping kept):
-        // no swap, flagged for diagnostics.
+        // self is the softclipped tx placement; a clean ref full-match sits at the same locus (intron
+        // retention). Ref wins: swap primary to the ref alt, demote self.
         final LiftedAlignment self = tx(CHR1, 100, "50M50S", true, 0);
         self.IsPrimaryChoice = true;
         final LiftedAlignment refAlt = ref(CHR1, 100, FULL_MATCH_CIGAR);
@@ -283,8 +260,8 @@ public class LiftBackDiscriminatorTest
         final LiftBackDiscriminator.Outcome outcome =
                 LiftBackDiscriminator.apply(set(self, refAlt), BOTH_TX_SOFTCLIP_REF_MATCH, self);
 
-        assertSame(self, outcome.effectivePrimary());
-        assertEquals("self_was_tx_no_swap", outcome.note());
+        assertSame(refAlt, outcome.effectivePrimary());
+        assertEquals("swapped_tx_to_ref", outcome.note());
         assertFalse(refAlt.Dropped);
     }
 
