@@ -93,16 +93,14 @@ public class BreakendBuilder
         String phasedAsmSeq = mAssemblyAlignment.fullSequence();
 
         // Calculate the indices of the breakends within the phased assembly sequence.
-        List<Integer> seqJunctionOffsets = sagaAlignment.sagaAssembly().junctionOffsets().stream()
-                .map(o -> getReadIndexFromPosition(sagaAlignment.sagaStart(), sagaAlignment.cigar().getCigarElements(), o, false, true))
-                .toList();
+        List<Integer> seqJunctionOffsets = sagaAlignment.queryJunctionOffsets();
 
         // If it's an insert, the insert sequence is between the two junctions. Otherwise, it's a deletion and there's no insert sequence.
         String insertedBases;
         if(seqJunctionOffsets.size() == 2)
         {
-            int phasedAsmStart = max(seqJunctionOffsets.get(0), 0);
-            int phasedAsmEnd = min(seqJunctionOffsets.get(1), phasedAsmSeq.length());
+            int phasedAsmStart = min(max(0, seqJunctionOffsets.get(0)), phasedAsmSeq.length() - 1);
+            int phasedAsmEnd = min(max(0, seqJunctionOffsets.get(1)), phasedAsmSeq.length());
             int startInferred = phasedAsmStart - seqJunctionOffsets.get(0);
             int endInferred = seqJunctionOffsets.get(1) - phasedAsmEnd;
             // TODO: fill SAGA sequence instead of N

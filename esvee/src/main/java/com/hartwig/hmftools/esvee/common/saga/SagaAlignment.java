@@ -2,8 +2,11 @@ package com.hartwig.hmftools.esvee.common.saga;
 
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.bam.CigarUtils.getReadIndexFromPosition;
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftClipLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.rightClipLength;
+
+import java.util.List;
 
 import com.hartwig.hmftools.common.bam.SamRecordUtils;
 
@@ -80,6 +83,35 @@ public record SagaAlignment(
     public SagaVariant sagaVariant()
     {
         return sagaAssembly.variant();
+    }
+
+    public List<Integer> queryJunctionOffsets()
+    {
+        // The indices of the SAGA junctions, mapped into the query sequence range, with extrapolation if required.
+        return sagaAssembly().junctionOffsets().stream()
+                .map(this::sagaIndexToQueryIndex)
+                .toList();
+    }
+
+    private int sagaIndexToQueryIndex(int sagaIndex)
+    {
+        // Extrapolate outside of the aligned range.
+        if(sagaIndex <= sagaStart())
+        {
+            return queryStart() - (sagaStart() - sagaIndex);
+        }
+        if(sagaIndex >= sagaEnd())
+        {
+            return queryEnd() + (sagaIndex - sagaEnd());
+        }
+        // On a D element, use the next index.
+        int result = getReadIndexFromPosition(sagaStart(), cigar.getCigarElements(), sagaIndex, 1, false);
+        if(!(result >= 0 && result <= queryLength))
+        {
+            // Should be impossible because the out of bounds cases were already handled.
+            throw new RuntimeException();
+        }
+        return result;
     }
 
     @NotNull
