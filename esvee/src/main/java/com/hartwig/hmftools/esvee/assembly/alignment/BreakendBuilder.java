@@ -87,6 +87,12 @@ public class BreakendBuilder
             return false;
         }
 
+        // Reverse strand match shouldn't occur and isn't handled here.
+        if(!sagaAlignment.isForward())
+        {
+            return false;
+        }
+
         SagaAssembly sagaAssembly = sagaAlignment.sagaAssembly();
         SagaVariant sagaVariant = sagaAssembly.variant();
         SagaBreakend lowerSagaBreakend = sagaVariant.breakend1();
@@ -119,12 +125,15 @@ public class BreakendBuilder
             lowerBreakendInferred = startInferredLength > 0;
             upperBreakendInferred = endInferredLength > 0;
         }
-        else
+        else if(sagaJunctionOffsets.size() == 1)
         {
-            assert sagaJunctionOffsets.size() == 1;
             insertedBases = "";
             lowerBreakendInferred = false;
             upperBreakendInferred = false;
+        }
+        else
+        {
+            return false;
         }
 
         // TODO: homology
