@@ -18,56 +18,29 @@ public class SaTagRewriterTest
     }
 
     @Test
-    public void testNullOrEmptyInputReturnsNull()
+    public void testRewriteSaTag()
     {
         final LiftBackResolver resolver = newResolver();
+
+        // null or empty input -> null
         assertNull(SaTagRewriter.rewriteSaTag(null, resolver));
         assertNull(SaTagRewriter.rewriteSaTag("", resolver));
-    }
 
-    @Test
-    public void testRefContigPassesThrough()
-    {
-        final LiftBackResolver resolver = newResolver();
-        final String sa =CHR_1 + ",1000,+,50M,60,2;";
-        final String rewritten =SaTagRewriter.rewriteSaTag(sa, resolver);
-        assertEquals(sa, rewritten);
-    }
+        // ref-contig entry passes through unchanged
+        final String refEntry = CHR_1 + ",1000,+,50M,60,2;";
+        assertEquals(refEntry, SaTagRewriter.rewriteSaTag(refEntry, resolver));
 
-    @Test
-    public void testTxContigLifted()
-    {
-        final LiftBackResolver resolver = newResolver();
-        final String sa =TX_CONTIG + ",1,+,50M,60,2;";
-        final String rewritten =SaTagRewriter.rewriteSaTag(sa, resolver);
-        assertEquals(CHR_1 + ",100,+,50M,60,2;", rewritten);
-    }
+        // tx-contig entry lifted to genomic coordinates
+        assertEquals(CHR_1 + ",100,+,50M,60,2;", SaTagRewriter.rewriteSaTag(TX_CONTIG + ",1,+,50M,60,2;", resolver));
 
-    @Test
-    public void testMalformedEntriesSkipped()
-    {
-        final LiftBackResolver resolver = newResolver();
-        final String sa ="junk;"
-                + CHR_1 + ",notanumber,+,50M,60,0;"
-                + CHR_1 + ",1000,+,50M,60,2;";
-        final String rewritten =SaTagRewriter.rewriteSaTag(sa, resolver);
-        assertEquals(CHR_1 + ",1000,+,50M,60,2;", rewritten);
-    }
+        // malformed entries skipped, valid one survives
+        assertEquals(refEntry, SaTagRewriter.rewriteSaTag(
+                "junk;" + CHR_1 + ",notanumber,+,50M,60,0;" + refEntry, resolver));
 
-    @Test
-    public void testDuplicateLiftedEntriesDeduped()
-    {
-        final LiftBackResolver resolver = newResolver();
-        final String entry = CHR_1 + ",1000,+,50M,60,2;";
-        final String rewritten =SaTagRewriter.rewriteSaTag(entry + entry, resolver);
-        assertEquals(entry, rewritten);
-    }
+        // duplicate lifted entries deduped
+        assertEquals(refEntry, SaTagRewriter.rewriteSaTag(refEntry + refEntry, resolver));
 
-    @Test
-    public void testAllEntriesFailReturnsNull()
-    {
-        final LiftBackResolver resolver = newResolver();
-        final String sa =TX_CONTIG + ",10000,+,50M,60,0;malformed;";
-        assertNull(SaTagRewriter.rewriteSaTag(sa, resolver));
+        // all entries fail -> null
+        assertNull(SaTagRewriter.rewriteSaTag(TX_CONTIG + ",10000,+,50M,60,0;malformed;", resolver));
     }
 }

@@ -3,6 +3,8 @@ package com.hartwig.hmftools.tars.liftback.rescue;
 import java.util.Collections;
 import java.util.List;
 
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
+
 // Input DTO for JunctionRescueResolver, expressed as plain values so the resolver is testable without SAMRecord.
 // ReadBases is only needed for the ref-verify path. MateHintIntrons, when set, biases junction snap toward the
 // partner mate's already-rescued junctions.
@@ -16,7 +18,7 @@ public class RescueCandidate
     public final int PrimaryMapq;
     public final List<RescueSupplementary> Supplementaries;
     public final byte[] ReadBases;     // nullable; only needed for ref-verify path
-    public final List<ChrIntron> MateHintIntrons;
+    public final List<ChrBaseRegion> MateHintIntrons;
 
     public RescueCandidate(
             final String chromosome, final boolean forwardStrand, final int readLength,
@@ -31,7 +33,7 @@ public class RescueCandidate
             final String chromosome, final boolean forwardStrand, final int readLength,
             final int primaryStart, final String primaryCigar, final int primaryMapq,
             final List<RescueSupplementary> supplementaries,
-            final byte[] readBases, final List<ChrIntron> mateHintIntrons)
+            final byte[] readBases, final List<ChrBaseRegion> mateHintIntrons)
     {
         Chromosome = chromosome;
         ForwardStrand = forwardStrand;

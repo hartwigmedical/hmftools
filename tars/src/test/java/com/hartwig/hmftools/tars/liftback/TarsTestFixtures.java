@@ -2,8 +2,13 @@ package com.hartwig.hmftools.tars.liftback;
 
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 
+import static org.junit.Assert.assertEquals;
+
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.test.MockRefGenome;
@@ -55,7 +60,12 @@ public final class TarsTestFixtures
 
     public static SAMRecord secondMateRecord(final String contig, final int pos, final String cigar)
     {
-        final SAMRecord record = primaryRecord(contig, pos, cigar);
+        return secondMateRecord("readX", contig, pos, cigar);
+    }
+
+    public static SAMRecord secondMateRecord(final String readName, final String contig, final int pos, final String cigar)
+    {
+        final SAMRecord record = primaryRecord(readName, contig, pos, cigar);
         record.setFirstOfPairFlag(false);
         record.setSecondOfPairFlag(true);
         return record;
@@ -63,9 +73,15 @@ public final class TarsTestFixtures
 
     public static SAMRecord supplementaryRecord(final String contig, final int pos, final String cigar, final String saTag)
     {
-        final SAMRecord record = primaryRecord(contig, pos, cigar);
-        record.setSupplementaryAlignmentFlag(true);
+        final SAMRecord record = supplementaryRecord("readX", contig, pos, cigar);
         record.setAttribute("SA", saTag);
+        return record;
+    }
+
+    public static SAMRecord supplementaryRecord(final String readName, final String contig, final int pos, final String cigar)
+    {
+        final SAMRecord record = primaryRecord(readName, contig, pos, cigar);
+        record.setSupplementaryAlignmentFlag(true);
         return record;
     }
 
@@ -94,6 +110,72 @@ public final class TarsTestFixtures
         final byte[] out = new byte[length];
         Arrays.fill(out, (byte) base);
         return out;
+    }
+
+    // ASCII bytes for a base string, e.g. read/ref windows in the tail-extend and collapse tests.
+    public static byte[] bases(final String sequence)
+    {
+        return sequence.getBytes(StandardCharsets.US_ASCII);
+    }
+
+    // Mutable in-memory genome for the ref-dependent passes (tail-extend / collapse / canonicalize / rescue
+    // ref-verify). Allocate a chromosome with with(), overwrite bases at 1-based coords with set(), then hand
+    // asRefSource() to the engine. Out-of-range reads return null per the RefSequenceSource contract.
+    public static final class TestGenome
+    {
+        private final Map<String,byte[]> mBases = new HashMap<>();
+
+        public TestGenome with(final String chromosome, final int length, final char fill)
+        {
+            final byte[] seq = new byte[length];
+            Arrays.fill(seq, (byte) fill);
+            mBases.put(chromosome, seq);
+            return this;
+        }
+
+        public TestGenome with(final String chromosome, final byte[] bases)
+        {
+            mBases.put(chromosome, bases);
+            return this;
+        }
+
+        // overwrite bases at a 1-based start (e.g. to match a read for NM=0, or seed a splice motif).
+        public TestGenome set(final String chromosome, final int oneBasedStart, final String sequence)
+        {
+            final byte[] seq = mBases.get(chromosome);
+            for(int i = 0; i < sequence.length(); ++i)
+                seq[oneBasedStart - 1 + i] = (byte) sequence.charAt(i);
+            return this;
+        }
+
+        // overwrite a run of one base at a 1-based start (e.g. a divergent exon/intron stretch).
+        public TestGenome set(final String chromosome, final int oneBasedStart, final int count, final char base)
+        {
+            final byte[] seq = mBases.get(chromosome);
+            for(int i = 0; i < count; ++i)
+                seq[oneBasedStart - 1 + i] = (byte) base;
+            return this;
+        }
+
+        public RefSequenceSource asRefSource()
+        {
+            final MockRefGenome ref = new MockRefGenome(true);
+            for(final Map.Entry<String,byte[]> entry : mBases.entrySet())
+                ref.RefGenomeMap.put(entry.getKey(), new String(entry.getValue(), StandardCharsets.US_ASCII));
+            return (chrom, posStart, posEnd) ->
+            {
+                final byte[] result = ref.getBases(chrom, posStart, posEnd);
+                return result.length == 0 ? null : result;
+            };
+        }
+    }
+
+    // assert a lifted record's genomic placement (chrom + start + cigar) in one line.
+    public static void assertLifted(final SAMRecord record, final String chrom, final int pos, final String cigar)
+    {
+        assertEquals(chrom, record.getReferenceName());
+        assertEquals(pos, record.getAlignmentStart());
+        assertEquals(cigar, record.getCigarString());
     }
 
     public static LiftedAlignment selfAlignment(final String chrom, final int pos, final String cigar)

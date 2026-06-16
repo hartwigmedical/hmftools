@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreate
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 
 import com.hartwig.hmftools.common.bamops.BamToolName;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 public class SpliceLiftBackConfig
@@ -24,7 +25,7 @@ public class SpliceLiftBackConfig
     public static final String CONTIG_SIDECAR_DESC = "Contig sidecar TSV from SpliceFastaBuilder. Required.";
 
     public static final String UNMAP_ABOVE_NH = "unmap_above_nh";
-    public static final String UNMAP_ABOVE_NH_DESC = "If > 0, mark records with NH > N as unmapped (STAR default 10)";
+    public static final String UNMAP_ABOVE_NH_DESC = "If > 0, mark records with NH > N as unmapped";
 
     public static final String UNMAP_BELOW_MAPQ = "unmap_below_mapq";
     public static final String UNMAP_BELOW_MAPQ_DESC = "If > 0, mark primary records with final MAPQ < N as unmapped";
@@ -57,6 +58,7 @@ public class SpliceLiftBackConfig
 
     public final String InputBam;
     public final String RefGenomeFile;
+    public final RefGenomeVersion RefGenVersion;
     public final String ContigSidecarFile;
     public final int UnmapAboveNh;
     public final int UnmapBelowMapq;
@@ -74,6 +76,7 @@ public class SpliceLiftBackConfig
     {
         InputBam = configBuilder.getValue(INPUT_BAM);
         RefGenomeFile = configBuilder.getValue(REF_GENOME);
+        RefGenVersion = RefGenomeVersion.from(configBuilder);
         ContigSidecarFile = configBuilder.getValue(CONTIG_SIDECAR);
         UnmapAboveNh = configBuilder.getInteger(UNMAP_ABOVE_NH);
         UnmapBelowMapq = configBuilder.getInteger(UNMAP_BELOW_MAPQ);

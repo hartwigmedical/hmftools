@@ -3,6 +3,7 @@ package com.hartwig.hmftools.tars.liftback;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.tars.liftback.SaTagRewriter.SA_ATTRIBUTE;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.TX_CONTIG;
+import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.bases;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.primaryRecord;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.refSource;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.secondMateRecord;
@@ -15,7 +16,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -66,11 +66,7 @@ public class LiftBackGroupProcessorTest
         // returns all 'A'; the read has two trailing mismatches -> NM must be recomputed to 2, not carried
         // from the stale tx-contig NM:0, and MD must be dropped.
         final SAMRecord primary = primaryRecord(TX_CONTIG, 1, "50M");
-        final byte[] bases = new byte[50];
-        Arrays.fill(bases, (byte) 'A');
-        bases[48] = 'C';
-        bases[49] = 'C';
-        primary.setReadBases(bases);
+        primary.setReadBases(bases("A".repeat(48) + "CC"));   // two trailing mismatches vs the all-'A' genomic stub
         primary.setAttribute("NM", 0);
         primary.setAttribute("MD", "50");
 

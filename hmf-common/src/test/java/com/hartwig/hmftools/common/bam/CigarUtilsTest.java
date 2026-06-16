@@ -34,6 +34,20 @@ import junit.framework.TestCase;
 public class CigarUtilsTest
 {
     @Test
+    public void testElementListHelpers()
+    {
+        final List<CigarElement> elements = CigarUtils.cigarElementsFromStr("10S94M79N57M3S");
+
+        assertEquals(164, CigarUtils.cigarBaseLength(elements));     // read-consuming: 10S + 94M + 57M + 3S
+        assertEquals(230, CigarUtils.cigarAlignedLength(elements));  // ref-consuming: 94M + 79N + 57M
+        assertEquals(151, CigarUtils.matchedBases(elements));        // M/=/X only: 94M + 57M
+        assertEquals(10, CigarUtils.leftSoftClipLength(elements));
+        assertEquals(3, CigarUtils.rightSoftClipLength(elements));
+        assertFalse(CigarUtils.hasHardClip(elements));
+        assertTrue(CigarUtils.hasHardClip(CigarUtils.cigarElementsFromStr("5H94M")));
+    }
+
+    @Test
     public void testCigarFromStr()
     {
         Cigar cigar = CigarUtils.cigarFromStr("120S35M1099N11M5H");

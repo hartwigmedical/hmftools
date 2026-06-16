@@ -1,14 +1,23 @@
 package com.hartwig.hmftools.tars.liftback;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.addGeneData;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.addTransExonData;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.createEnsemblGeneData;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.createGeneDataCache;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.TX_CONTIG;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.threeExonContig;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.gene.ExonData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.tars.common.ContigEntry;
 
@@ -557,23 +566,22 @@ public class LiftBackResolverTest
         assertEquals(3, result.numLoci());
     }
 
-    // Builds a real ExonRegionIndex from a temp dir with minimal Ensembl CSV files (shared by rescue-path tests).
-    private static ExonRegionIndex buildExonIndex(final List<int[]> exons) throws Exception
+    // Builds an ExonRegionIndex from an in-memory ensembl cache (shared by rescue-path tests).
+    private static ExonRegionIndex buildExonIndex(final List<int[]> exons)
     {
-        final java.nio.file.Path dir = java.nio.file.Files.createTempDirectory("exonIdxTest");
-        java.nio.file.Files.writeString(dir.resolve("ensembl_gene_data.csv"),
-                "GeneId,GeneName,Chromosome,Strand,GeneStart,GeneEnd\n"
-                        + "ENSG_TEST,TESTG," + CHR_1.replaceFirst("^chr", "") + ",1,1,100000\n");
-        final StringBuilder sb = new StringBuilder("GeneId,CanonicalTranscriptId,Strand,TransId,TransName,BioType,"
-                + "TransStart,TransEnd,ExonRank,ExonStart,ExonEnd,ExonPhase,ExonEndPhase,CodingStart,CodingEnd,RefSeqId\n");
+        final EnsemblDataCache cache = createGeneDataCache();
+        addGeneData(cache, CHR_1, List.of(createEnsemblGeneData("ENSG_TEST", "TESTG", CHR_1, 1, 1, 100000)));
+
+        final TranscriptData transcript = new TranscriptData(
+                1, "ENST_TEST", "ENSG_TEST", true, (byte) 1, 1, 100000, null, null, "protein_coding", "");
+        final List<ExonData> exonData = new ArrayList<>();
         int rank = 1;
         for(final int[] exon : exons)
-        {
-            sb.append("ENSG_TEST,1,1,1,ENST_TEST,protein_coding,1,100000,").append(rank++).append(",")
-                    .append(exon[0]).append(",").append(exon[1]).append(",0,0,0,0,\n");
-        }
-        java.nio.file.Files.writeString(dir.resolve("ensembl_trans_exon_data.csv"), sb.toString());
-        return ExonRegionIndex.load(dir.toString());
+            exonData.add(new ExonData(1, exon[0], exon[1], rank++, -1, -1));
+        transcript.setExons(exonData);
+        addTransExonData(cache, "ENSG_TEST", List.of(transcript));
+
+        return ExonRegionIndex.fromCache(cache, V38);
     }
 
     // Hidden tie (XS==AS) on a ref-only primary: rescue is gated on a tx match, so exon evidence cannot bump MAPQ.

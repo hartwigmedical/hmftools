@@ -32,7 +32,7 @@ import com.hartwig.hmftools.tars.common.ContigSidecar;
 import com.hartwig.hmftools.tars.common.SpliceCommon;
 import com.hartwig.hmftools.tars.liftback.rescue.AnnotatedJunctionIndex;
 import com.hartwig.hmftools.tars.liftback.rescue.AnnotatedJunctionLoader;
-import com.hartwig.hmftools.tars.liftback.rescue.ChrIntron;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.tars.liftback.rescue.RescueRejectReason;
 import com.hartwig.hmftools.tars.liftback.rescue.RescueStatistics;
 import com.hartwig.hmftools.tars.liftback.tailextend.TailExtensionStatistics;
@@ -150,15 +150,8 @@ public class SpliceLiftBack
         ExonRegionIndex exonIndex = null;
         if(mConfig.EnsemblDataDir != null)
         {
-            try
-            {
-                exonIndex = ExonRegionIndex.load(mConfig.EnsemblDataDir);
-                TARS_LOGGER.info("loaded annotated-exon index from {}", mConfig.EnsemblDataDir);
-            }
-            catch(IOException e)
-            {
-                throw new IllegalStateException("failed to load annotated exons: " + e, e);
-            }
+            exonIndex = ExonRegionIndex.load(mConfig.EnsemblDataDir, mConfig.RefGenVersion);
+            TARS_LOGGER.info("loaded annotated-exon index from {}", mConfig.EnsemblDataDir);
         }
 
         final LiftBackResolver resolver = new LiftBackResolver(contigEntries, exonIndex);
@@ -167,16 +160,9 @@ public class SpliceLiftBack
         AnnotatedJunctionIndex junctionIndex = null;
         if(mConfig.RescueViaSupp || mConfig.ExtendSoftclipTails)
         {
-            try
-            {
-                final Set<ChrIntron> annotated = AnnotatedJunctionLoader.load(mConfig.EnsemblDataDir);
-                junctionIndex = new AnnotatedJunctionIndex(annotated);
-                TARS_LOGGER.info("loaded {} annotated junctions from {}", annotated.size(), mConfig.EnsemblDataDir);
-            }
-            catch(IOException e)
-            {
-                throw new IllegalStateException("failed to load annotated junctions: " + e, e);
-            }
+            final Set<ChrBaseRegion> annotated = AnnotatedJunctionLoader.load(mConfig.EnsemblDataDir, mConfig.RefGenVersion);
+            junctionIndex = new AnnotatedJunctionIndex(annotated);
+            TARS_LOGGER.info("loaded {} annotated junctions from {}", annotated.size(), mConfig.EnsemblDataDir);
         }
 
         ExcludedRegions excludedRegions = null;

@@ -3,6 +3,8 @@ package com.hartwig.hmftools.tars.liftback.rescue;
 import java.util.Collections;
 import java.util.List;
 
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
+
 // Output DTO from JunctionRescueResolver. On success, MergedCigar/MergedStart describe the new primary
 // and DroppedSupplementaryIndices lists absorbed supps. On failure, RejectReason carries the gate hit.
 public class RescueResult
@@ -15,13 +17,13 @@ public class RescueResult
     public final String MergedCigar;
     public final int MergedStart;
     public final List<Integer> DroppedSupplementaryIndices;
-    public final List<ChrIntron> IntroducedIntrons;
+    public final List<ChrBaseRegion> IntroducedIntrons;
     public final int ChainDepth;
     public final RescueRejectReason RejectReason;   // null on success
 
     public RescueResult(
             final boolean merged, final String mergedCigar, final int mergedStart,
-            final List<Integer> droppedSupplementaryIndices, final List<ChrIntron> introducedIntrons,
+            final List<Integer> droppedSupplementaryIndices, final List<ChrBaseRegion> introducedIntrons,
             final int chainDepth, final RescueRejectReason rejectReason)
     {
         Merged = merged;

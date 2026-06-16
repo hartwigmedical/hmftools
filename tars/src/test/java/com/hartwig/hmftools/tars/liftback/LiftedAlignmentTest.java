@@ -22,54 +22,36 @@ public class LiftedAlignmentTest
     }
 
     @Test
-    public void testNoNReturnsFalse()
+    public void testCigarHasRealNJunction()
     {
+        // no N -> not a junction
         assertFalse(alignmentWithCigar("151M").cigarHasRealNJunction(MIN_ANCHOR));
         assertFalse(alignmentWithCigar("100M51S").cigarHasRealNJunction(MIN_ANCHOR));
-    }
 
-    @Test
-    public void testTinyTrailingAnchorRejected()
-    {
+        // tiny trailing anchor (1-3bp M after N) rejected
         assertFalse(alignmentWithCigar("128M102N2M21S").cigarHasRealNJunction(MIN_ANCHOR));
         assertFalse(alignmentWithCigar("147M3309N1M3S").cigarHasRealNJunction(MIN_ANCHOR));
         assertFalse(alignmentWithCigar("130M172N3M18S").cigarHasRealNJunction(MIN_ANCHOR));
-    }
 
-    @Test
-    public void testTinyLeadingAnchorRejected()
-    {
+        // tiny leading anchor (before N) rejected
         assertFalse(alignmentWithCigar("2M102N128M21S").cigarHasRealNJunction(MIN_ANCHOR));
         assertFalse(alignmentWithCigar("20S5M102N128M").cigarHasRealNJunction(MIN_ANCHOR));
-    }
 
-    @Test
-    public void testThresholdBoundary()
-    {
+        // threshold boundary: both anchors must be >= MIN_ANCHOR
         assertTrue(alignmentWithCigar("8M100N8M").cigarHasRealNJunction(MIN_ANCHOR));
         assertFalse(alignmentWithCigar("8M100N7M").cigarHasRealNJunction(MIN_ANCHOR));
         assertFalse(alignmentWithCigar("7M100N8M").cigarHasRealNJunction(MIN_ANCHOR));
-    }
 
-    @Test
-    public void testMultipleNJunctionsAllMustPass()
-    {
+        // multiple junctions: all must pass
         assertTrue(alignmentWithCigar("20M100N20M100N50M").cigarHasRealNJunction(MIN_ANCHOR));
         assertFalse(alignmentWithCigar("20M100N5M100N50M").cigarHasRealNJunction(MIN_ANCHOR));
         assertFalse(alignmentWithCigar("5M100N5M100N50M").cigarHasRealNJunction(MIN_ANCHOR));
-    }
 
-    @Test
-    public void testNonAdjacentMNotAnchor()
-    {
-        // I/D between M and N breaks adjacency — anchor is 0
+        // I/D between M and N breaks adjacency -> anchor is 0
         assertFalse(alignmentWithCigar("10M5I100N20M").cigarHasRealNJunction(MIN_ANCHOR));
         assertFalse(alignmentWithCigar("20M100N5D20M").cigarHasRealNJunction(MIN_ANCHOR));
-    }
 
-    @Test
-    public void testRealJunctionAccepted()
-    {
+        // real junctions with ample anchors accepted
         assertTrue(alignmentWithCigar("50M1000N50M").cigarHasRealNJunction(MIN_ANCHOR));
         assertTrue(alignmentWithCigar("75M5000N76M").cigarHasRealNJunction(MIN_ANCHOR));
     }

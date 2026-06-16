@@ -47,35 +47,22 @@ public class ExcludedRegionsTest
     }
 
     @Test
-    public void primaryInsideRegionExcludesFragment()
+    public void testFragmentExclusion()
     {
+        // primary inside the region -> drop the fragment
         assertTrue(regions(1000, 2000).fragmentExcluded(List.of(primary(CHR, 1500, 1600))));
-    }
 
-    @Test
-    public void primaryOutsideRegionKeepsFragment()
-    {
+        // primary outside the region -> keep
         assertFalse(regions(1000, 2000).fragmentExcluded(List.of(primary(CHR, 2500, 2600))));
-    }
 
-    @Test
-    public void onlySuppInsideRegionKeepsFragment()
-    {
-        // the supp falls in the region but the primary does not -- the primary decides, so keep.
-        final List<SAMRecord> group = List.of(primary(CHR, 5000, 5100), supplementary(CHR, 1500, 1600));
-        assertFalse(regions(1000, 2000).fragmentExcluded(group));
-    }
+        // supp falls in the region but the primary does not -- the primary decides, so keep
+        assertFalse(regions(1000, 2000).fragmentExcluded(
+                List.of(primary(CHR, 5000, 5100), supplementary(CHR, 1500, 1600))));
 
-    @Test
-    public void otherChromosomeKeepsFragment()
-    {
+        // primary on a different chromosome -> keep
         assertFalse(regions(1000, 2000).fragmentExcluded(List.of(primary("2", 1500, 1600))));
-    }
 
-    @Test
-    public void overlapAtRegionEdgeExcludes()
-    {
-        // read end just touches the region start -- inclusive overlap must fire.
+        // read end just touches the region start -- inclusive overlap must fire
         assertTrue(regions(2000, 3000).fragmentExcluded(List.of(primary(CHR, 1900, 2000))));
     }
 }

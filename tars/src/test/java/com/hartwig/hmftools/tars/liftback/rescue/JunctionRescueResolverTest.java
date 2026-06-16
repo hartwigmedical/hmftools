@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.tars.liftback.rescue;
 
+import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.bases;
+import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.repeatedBase;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -10,8 +13,11 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.hartwig.hmftools.common.bam.CigarUtils;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.tars.common.SpliceCommon;
 import com.hartwig.hmftools.tars.liftback.TarsTestFixtures;
+import com.hartwig.hmftools.tars.liftback.TarsTestFixtures.TestGenome;
 
 import org.junit.Test;
 
@@ -22,7 +28,7 @@ public class JunctionRescueResolverTest
     private static final String CHR2 = "chr2";
     private static final int READ_LEN = 151;
 
-    private static Set<ChrIntron> annotated(final ChrIntron... introns)
+    private static Set<ChrBaseRegion> annotated(final ChrBaseRegion... introns)
     {
         return new HashSet<>(Arrays.asList(introns));
     }
@@ -47,7 +53,7 @@ public class JunctionRescueResolverTest
         return new JunctionRescueResolver(Collections.emptySet(), RescueConfig.defaults());
     }
 
-    private JunctionRescueResolver enabledResolver(final Set<ChrIntron> annotated)
+    private JunctionRescueResolver enabledResolver(final Set<ChrBaseRegion> annotated)
     {
         return new JunctionRescueResolver(annotated, RescueConfig.enabledDefaults());
     }
@@ -61,7 +67,7 @@ public class JunctionRescueResolverTest
         final int suppStart = 31448541;
         final String suppCigar = "94S57M";
 
-        final ChrIntron annotatedIntron = new ChrIntron(CHR1, 31448462, 31448540);
+        final ChrBaseRegion annotatedIntron = new ChrBaseRegion(CHR1, 31448462, 31448540);
         final RescueSupplementary supp = supp(0, CHR1, true, suppStart, suppCigar, 60);
         final RescueCandidate cand = candidate(CHR1, true, READ_LEN, primStart, primCigar, 255, supp);
 
@@ -81,31 +87,31 @@ public class JunctionRescueResolverTest
     public void testFoldTrailingFabricatedMicroJunction()
     {
         // 100M83N3M48S: 3bp anchor split off by a spurious 83N against the trailing clip -> 100M51S.
-        assertEquals("100M51S", CigarShape.format(JunctionRescueResolver.foldFabricatedTerminalMicroJunctions(
-                CigarShape.parse("100M83N3M48S"), SpliceCommon.MIN_JUNCTION_ANCHOR)));
+        assertEquals("100M51S", CigarUtils.cigarElementsToStr(JunctionRescueResolver.foldFabricatedTerminalMicroJunctions(
+                CigarUtils.cigarElementsFromStr("100M83N3M48S"), SpliceCommon.MIN_JUNCTION_ANCHOR)));
     }
 
     @Test
     public void testFoldLeadingFabricatedMicroJunction()
     {
-        assertEquals("51S100M", CigarShape.format(JunctionRescueResolver.foldFabricatedTerminalMicroJunctions(
-                CigarShape.parse("48S3M83N100M"), SpliceCommon.MIN_JUNCTION_ANCHOR)));
+        assertEquals("51S100M", CigarUtils.cigarElementsToStr(JunctionRescueResolver.foldFabricatedTerminalMicroJunctions(
+                CigarUtils.cigarElementsFromStr("48S3M83N100M"), SpliceCommon.MIN_JUNCTION_ANCHOR)));
     }
 
     @Test
     public void testNoFoldWhenAnchorAboveThreshold()
     {
         // 8bp anchor meets MIN_JUNCTION_ANCHOR (8) — a trusted junction, left intact.
-        assertEquals("100M83N8M48S", CigarShape.format(JunctionRescueResolver.foldFabricatedTerminalMicroJunctions(
-                CigarShape.parse("100M83N8M48S"), SpliceCommon.MIN_JUNCTION_ANCHOR)));
+        assertEquals("100M83N8M48S", CigarUtils.cigarElementsToStr(JunctionRescueResolver.foldFabricatedTerminalMicroJunctions(
+                CigarUtils.cigarElementsFromStr("100M83N8M48S"), SpliceCommon.MIN_JUNCTION_ANCHOR)));
     }
 
     @Test
     public void testNoFoldWithoutTerminalSoftClip()
     {
         // no terminal softclip — nothing to fold into.
-        assertEquals("100M83N3M", CigarShape.format(JunctionRescueResolver.foldFabricatedTerminalMicroJunctions(
-                CigarShape.parse("100M83N3M"), SpliceCommon.MIN_JUNCTION_ANCHOR)));
+        assertEquals("100M83N3M", CigarUtils.cigarElementsToStr(JunctionRescueResolver.foldFabricatedTerminalMicroJunctions(
+                CigarUtils.cigarElementsFromStr("100M83N3M"), SpliceCommon.MIN_JUNCTION_ANCHOR)));
     }
 
     @Test
@@ -118,7 +124,7 @@ public class JunctionRescueResolverTest
         final int suppStart = 1051525;
         final String suppCigar = "99S52M";
 
-        final ChrIntron annotatedIntron = new ChrIntron(CHR1, 1051370, 1051525);
+        final ChrBaseRegion annotatedIntron = new ChrBaseRegion(CHR1, 1051370, 1051525);
         final RescueSupplementary supp = supp(0, CHR1, true, suppStart, suppCigar, 60);
         final RescueCandidate cand = candidate(CHR1, true, READ_LEN, primStart, primCigar, 255, supp);
 
@@ -139,7 +145,7 @@ public class JunctionRescueResolverTest
         final int primStart = 31448541;
         final String primCigar = "57S94M";
 
-        final ChrIntron intron = new ChrIntron(CHR1, 31448425, 31448540);
+        final ChrBaseRegion intron = new ChrBaseRegion(CHR1, 31448425, 31448540);
         final RescueSupplementary supp = supp(0, CHR1, true, suppStart, suppCigar, 60);
         final RescueCandidate cand = candidate(CHR1, true, READ_LEN, primStart, primCigar, 255, supp);
 
@@ -161,9 +167,9 @@ public class JunctionRescueResolverTest
         final int suppLastStart = 3000;
         final String suppLastCigar = "110S41M";
 
-        final Set<ChrIntron> set = annotated(
-                new ChrIntron(CHR1, 1050, 1999),
-                new ChrIntron(CHR1, 2060, 2999));
+        final Set<ChrBaseRegion> set = annotated(
+                new ChrBaseRegion(CHR1, 1050, 1999),
+                new ChrBaseRegion(CHR1, 2060, 2999));
 
         final RescueCandidate cand = candidate(CHR1, true, READ_LEN, primStart, primCigar, 255,
                 supp(0, CHR1, true, suppMidStart, suppMidCigar, 60),
@@ -189,7 +195,7 @@ public class JunctionRescueResolverTest
         final int suppStart = 1500;
         final String suppCigar = "90S61M";
 
-        final Set<ChrIntron> set = annotated(new ChrIntron(CHR1, 1290, 1499));
+        final Set<ChrBaseRegion> set = annotated(new ChrBaseRegion(CHR1, 1290, 1499));
 
         final RescueCandidate cand = candidate(CHR1, true, READ_LEN, primStart, primCigar, 255,
                 supp(0, CHR1, true, suppStart, suppCigar, 60));
@@ -226,7 +232,7 @@ public class JunctionRescueResolverTest
     @Test
     public void testRejectDifferentChromosome()
     {
-        final ChrIntron annotatedIntron = new ChrIntron(CHR1, 1095, 1499);
+        final ChrBaseRegion annotatedIntron = new ChrBaseRegion(CHR1, 1095, 1499);
         final RescueCandidate cand = candidate(CHR1, true, READ_LEN, 1001, "94M57S", 60,
                 supp(0, CHR2, true, 1500, "90S61M", 60));
 
@@ -239,7 +245,7 @@ public class JunctionRescueResolverTest
     @Test
     public void testRejectOppositeStrand()
     {
-        final ChrIntron annotatedIntron = new ChrIntron(CHR1, 1095, 1499);
+        final ChrBaseRegion annotatedIntron = new ChrBaseRegion(CHR1, 1095, 1499);
         final RescueCandidate cand = candidate(CHR1, true, READ_LEN, 1001, "94M57S", 60,
                 supp(0, CHR1, false, 1500, "90S61M", 60));
 
@@ -278,7 +284,7 @@ public class JunctionRescueResolverTest
     public void testRejectShortPrimaryAnchor()
     {
         // Primary anchor 2bp — below MinAnchorOverhang=3.
-        final ChrIntron intron = new ChrIntron(CHR1, 1002, 1099);
+        final ChrBaseRegion intron = new ChrBaseRegion(CHR1, 1002, 1099);
         final RescueCandidate cand = candidate(CHR1, true, READ_LEN, 1000, "2M149S", 60,
                 supp(0, CHR1, true, 1100, "2S149M", 60));
 
@@ -292,7 +298,7 @@ public class JunctionRescueResolverTest
     public void testRejectShortSuppAnchor()
     {
         // Supp anchor 1bp — below MinAnchorOverhang=3.
-        final ChrIntron intron = new ChrIntron(CHR1, 1050, 1099);
+        final ChrBaseRegion intron = new ChrBaseRegion(CHR1, 1050, 1099);
         final RescueCandidate cand = candidate(CHR1, true, 50, 1000, "49M1S", 60,
                 supp(0, CHR1, true, 1100, "49S1M", 60));
 
@@ -343,7 +349,7 @@ public class JunctionRescueResolverTest
     @Test
     public void testRejectHardClipSupp()
     {
-        final ChrIntron intron = new ChrIntron(CHR1, 1095, 1199);
+        final ChrBaseRegion intron = new ChrBaseRegion(CHR1, 1095, 1199);
         final RescueCandidate cand = candidate(CHR1, true, READ_LEN, 1001, "94M57S", 60,
                 supp(0, CHR1, true, 1200, "5H90S61M", 60));
 
@@ -356,7 +362,7 @@ public class JunctionRescueResolverTest
     @Test
     public void testRejectIndelAdjacentToPrimarySoftclip()
     {
-        final ChrIntron intron = new ChrIntron(CHR1, 1091, 1199);
+        final ChrBaseRegion intron = new ChrBaseRegion(CHR1, 1091, 1199);
         final RescueCandidate cand = candidate(CHR1, true, READ_LEN, 1000, "90M4I57S", 60,
                 supp(0, CHR1, true, 1200, "94S57M", 60));
 
@@ -370,7 +376,7 @@ public class JunctionRescueResolverTest
     public void testRejectReadCoverageOverlap()
     {
         // overlap 14 bases — exceeds tolerance.
-        final ChrIntron intron = new ChrIntron(CHR1, 1095, 1499);
+        final ChrBaseRegion intron = new ChrBaseRegion(CHR1, 1095, 1499);
         final RescueCandidate cand = candidate(CHR1, true, READ_LEN, 1001, "94M57S", 60,
                 supp(0, CHR1, true, 1500, "80S71M", 60));
 
@@ -383,7 +389,7 @@ public class JunctionRescueResolverTest
     @Test
     public void testRejectReadCoverageGap()
     {
-        final ChrIntron intron = new ChrIntron(CHR1, 1095, 1499);
+        final ChrBaseRegion intron = new ChrBaseRegion(CHR1, 1095, 1499);
         final RescueCandidate cand = candidate(CHR1, true, READ_LEN, 1001, "94M57S", 60,
                 supp(0, CHR1, true, 1500, "110S41M", 60));
 
@@ -478,7 +484,7 @@ public class JunctionRescueResolverTest
     public void testMultipleSuppsInReachSkipsMerge()
     {
         // Two supps both pass every gate — refuse to guess the splice destination.
-        final ChrIntron intron = new ChrIntron(CHR1, 1095, 1499);
+        final ChrBaseRegion intron = new ChrBaseRegion(CHR1, 1095, 1499);
         final RescueCandidate cand = candidate(CHR1, true, READ_LEN, 1001, "94M57S", 60,
                 supp(0, CHR1, true, 1500, "94S57M", 60),
                 supp(1, CHR1, true, 1500, "94S57M", 60));
@@ -493,7 +499,7 @@ public class JunctionRescueResolverTest
     public void testPrimaryMapqZeroStillMerges()
     {
         // MAPQ-0 primary is the common tx-contig duplicate artifact — not a disqualifier.
-        final ChrIntron intron = new ChrIntron(CHR1, 31448462, 31448540);
+        final ChrBaseRegion intron = new ChrBaseRegion(CHR1, 31448462, 31448540);
         final RescueCandidate cand = candidate(CHR1, true, READ_LEN, 31448368, "94M57S", 0,
                 supp(0, CHR1, true, 31448541, "94S57M", 60));
 
@@ -506,8 +512,8 @@ public class JunctionRescueResolverTest
     public void testTwoValidSuppsSameBoundaryRefusesToGuess()
     {
         // Two supps at different intron lengths both pass — single-supp-within-reach policy refuses to guess.
-        final ChrIntron intron1 = new ChrIntron(CHR1, 1095, 1499);
-        final ChrIntron intron2 = new ChrIntron(CHR1, 1095, 1799);
+        final ChrBaseRegion intron1 = new ChrBaseRegion(CHR1, 1095, 1499);
+        final ChrBaseRegion intron2 = new ChrBaseRegion(CHR1, 1095, 1799);
         final RescueCandidate cand = candidate(CHR1, true, READ_LEN, 1001, "94M57S", 60,
                 supp(0, CHR1, true, 1500, "94S57M", 60),
                 supp(1, CHR1, true, 1800, "94S57M", 60));
@@ -528,7 +534,7 @@ public class JunctionRescueResolverTest
                 RescueConfig.DEFAULT_SOFTCLIP_TOLERANCE, RescueConfig.DEFAULT_MAX_BOUNDARY_SHIFT, 1,
                 RescueConfig.DEFAULT_MIN_PARTIAL_MATCH_RUN);
 
-        final ChrIntron intron = new ChrIntron(CHR1, 1095, 1499);
+        final ChrBaseRegion intron = new ChrBaseRegion(CHR1, 1095, 1499);
         final RescueCandidate cand = candidate(CHR1, true, READ_LEN, 1001, "94M57S", 0,
                 supp(0, CHR1, true, 1500, "94S57M", 60));
 
@@ -541,7 +547,7 @@ public class JunctionRescueResolverTest
     @Test
     public void testMergeWhenSuppMapqZero()
     {
-        final ChrIntron intron = new ChrIntron(CHR1, 1095, 1499);
+        final ChrBaseRegion intron = new ChrBaseRegion(CHR1, 1095, 1499);
         final RescueCandidate cand = candidate(CHR1, true, READ_LEN, 1001, "94M57S", 60,
                 supp(0, CHR1, true, 1500, "94S57M", 0));
 
@@ -563,11 +569,11 @@ public class JunctionRescueResolverTest
                 supp(2, CHR1, true, 4000, "90S30M31S", 60),
                 supp(3, CHR1, true, 5000, "120S31M", 60));
 
-        final Set<ChrIntron> set = annotated(
-                new ChrIntron(CHR1, 1030, 1999),
-                new ChrIntron(CHR1, 2030, 2999),
-                new ChrIntron(CHR1, 3030, 3999),
-                new ChrIntron(CHR1, 4030, 4999));
+        final Set<ChrBaseRegion> set = annotated(
+                new ChrBaseRegion(CHR1, 1030, 1999),
+                new ChrBaseRegion(CHR1, 2030, 2999),
+                new ChrBaseRegion(CHR1, 3030, 3999),
+                new ChrBaseRegion(CHR1, 4030, 4999));
 
         final RescueResult res = new JunctionRescueResolver(set, cappedConfig).resolve(cand);
 
@@ -579,7 +585,7 @@ public class JunctionRescueResolverTest
     @Test
     public void testShortReadLength()
     {
-        final ChrIntron intron = new ChrIntron(CHR1, 1031, 1130);
+        final ChrBaseRegion intron = new ChrBaseRegion(CHR1, 1031, 1130);
         final RescueCandidate cand = candidate(CHR1, true, 50, 1001, "30M20S", 60,
                 supp(0, CHR1, true, 1131, "30S20M", 60));
 
@@ -595,7 +601,7 @@ public class JunctionRescueResolverTest
         // AnnotatedOnly=true so the novel-junction reject is observable.
         final RescueConfig strict = new RescueConfig(true, 21, 1_000_000, 3, 4, true, 5, 0, 0, RescueConfig.DEFAULT_MIN_PARTIAL_MATCH_RUN);
         final JunctionRescueResolver resolver = new JunctionRescueResolver(
-                annotated(new ChrIntron(CHR1, 1095, 1499)), strict);
+                annotated(new ChrBaseRegion(CHR1, 1095, 1499)), strict);
 
         resolver.resolve(candidate(CHR1, true, READ_LEN, 1001, "94M57S", 60,
                 supp(0, CHR1, true, 1500, "94S57M", 60)));
@@ -632,8 +638,8 @@ public class JunctionRescueResolverTest
     @Test
     public void testExp7Case2Chr1_31448368()
     {
-        // exp7 case 2 (chr1:31448368): clean complementary cigars produce the same CIGAR as STAR.
-        final ChrIntron annotatedIntron = new ChrIntron(CHR1, 31448462, 31448539);
+        // exp7 case 2 (chr1:31448368): clean complementary cigars merge into the expected junction CIGAR.
+        final ChrBaseRegion annotatedIntron = new ChrBaseRegion(CHR1, 31448462, 31448539);
         final RescueCandidate cand = candidate(CHR1, true, READ_LEN, 31448368, "94M57S", 60,
                 supp(0, CHR1, true, 31448540, "94S57M", 60));
 
@@ -648,9 +654,9 @@ public class JunctionRescueResolverTest
     public void testExp7Case3Chr5_34937631()
     {
         // exp7 chr5:34937631: overlap=2, snap picks L=61 (trust-supp) on the annotated junction,
-        // producing STAR's exact 61M1166N90M.
+        // producing the expected 61M1166N90M.
         final String chr5 = "chr5";
-        final ChrIntron annotatedIntron = new ChrIntron(chr5, 34937692, 34938857);
+        final ChrBaseRegion annotatedIntron = new ChrBaseRegion(chr5, 34937692, 34938857);
         final RescueCandidate cand = candidate(chr5, true, READ_LEN, 34938856, "59S92M", 60,
                 supp(0, chr5, true, 34937631, "61M90S", 60));
 
@@ -665,7 +671,7 @@ public class JunctionRescueResolverTest
     public void testOverlapWithinToleranceSnapsToAnnotatedJunction()
     {
         // overlap=4; trust-primary L=94 lands on annotated (1095, 1503).
-        final ChrIntron annotated = new ChrIntron(CHR1, 1095, 1503);
+        final ChrBaseRegion annotated = new ChrBaseRegion(CHR1, 1095, 1503);
         final RescueCandidate cand = candidate(CHR1, true, 151, 1001, "94M57S", 60,
                 supp(0, CHR1, true, 1500, "90S61M", 60));
 
@@ -681,7 +687,7 @@ public class JunctionRescueResolverTest
     public void testOverlapWithinToleranceSnapsToAnnotatedAtTrustSuppEnd()
     {
         // overlap=2; trust-supp L=92 lands on annotated (1092, 1497).
-        final ChrIntron annotated = new ChrIntron(CHR1, 1092, 1497);
+        final ChrBaseRegion annotated = new ChrBaseRegion(CHR1, 1092, 1497);
         final RescueCandidate cand = candidate(CHR1, true, 151, 1000, "94M57S", 60,
                 supp(0, CHR1, true, 1498, "92S59M", 60));
 
@@ -695,8 +701,8 @@ public class JunctionRescueResolverTest
     public void testOverlapWithinToleranceMaxMinAnchorWins()
     {
         // overlap=2, both L's annotated. max-min-anchor: trust-supp (min=59) beats trust-primary (min=55).
-        final ChrIntron trustPrimary = new ChrIntron(CHR1, 1095, 1499);
-        final ChrIntron trustSupp = new ChrIntron(CHR1, 1093, 1497);
+        final ChrBaseRegion trustPrimary = new ChrBaseRegion(CHR1, 1095, 1499);
+        final ChrBaseRegion trustSupp = new ChrBaseRegion(CHR1, 1093, 1497);
         final RescueCandidate cand = candidate(CHR1, true, 151, 1001, "94M57S", 60,
                 supp(0, CHR1, true, 1498, "92S59M", 60));
 
@@ -710,7 +716,7 @@ public class JunctionRescueResolverTest
     @Test
     public void testOverlapExceedsToleranceRejected()
     {
-        final ChrIntron annotated = new ChrIntron(CHR1, 1095, 1499);
+        final ChrBaseRegion annotated = new ChrBaseRegion(CHR1, 1095, 1499);
         final RescueCandidate cand = candidate(CHR1, true, 151, 1001, "94M57S", 60,
                 supp(0, CHR1, true, 1500, "88S63M", 60));
 
@@ -763,9 +769,9 @@ public class JunctionRescueResolverTest
     public void testMergedIntronListReflectsChainOrder()
     {
         final int primStart = 1000;
-        final Set<ChrIntron> set = annotated(
-                new ChrIntron(CHR1, 1050, 1999),
-                new ChrIntron(CHR1, 2060, 2999));
+        final Set<ChrBaseRegion> set = annotated(
+                new ChrBaseRegion(CHR1, 1050, 1999),
+                new ChrBaseRegion(CHR1, 2060, 2999));
 
         final RescueCandidate cand = candidate(CHR1, true, READ_LEN, primStart, "50M101S", 60,
                 supp(0, CHR1, true, 2000, "50S60M41S", 60),
@@ -775,44 +781,29 @@ public class JunctionRescueResolverTest
 
         assertTrue(res.Merged);
         assertEquals(2, res.IntroducedIntrons.size());
-        assertEquals(new ChrIntron(CHR1, 1050, 1999), res.IntroducedIntrons.get(0));
-        assertEquals(new ChrIntron(CHR1, 2060, 2999), res.IntroducedIntrons.get(1));
+        assertEquals(new ChrBaseRegion(CHR1, 1050, 1999), res.IntroducedIntrons.get(0));
+        assertEquals(new ChrBaseRegion(CHR1, 2060, 2999), res.IntroducedIntrons.get(1));
     }
 
-    // single-chromosome in-memory ref backed by the shared fixture (MockRefGenome, 1-based inclusive).
-    private static RefSequenceSource refSource(final java.util.Map<String, byte[]> chromBases)
-    {
-        final java.util.Map.Entry<String, byte[]> entry = chromBases.entrySet().iterator().next();
-        return TarsTestFixtures.refSource(entry.getKey(), new String(entry.getValue(), java.nio.charset.StandardCharsets.US_ASCII));
-    }
-
-    private static JunctionRescueResolver refVerifyResolver(
-            final java.util.Set<ChrIntron> annotated,
-            final java.util.Map<String, byte[]> chromBases)
+    // Resolver wired to a base-level genome, for the motif-scan and ref-verify passes.
+    private static JunctionRescueResolver resolverWithRef(final Set<ChrBaseRegion> annotated, final TestGenome genome)
     {
         return new JunctionRescueResolver(
-                new AnnotatedJunctionIndex(annotated),
-                refSource(chromBases),
-                RescueConfig.enabledDefaults());
+                new AnnotatedJunctionIndex(annotated), genome.asRefSource(), RescueConfig.enabledDefaults());
     }
 
-    // Builds a ref of 'N' bases with GT...AG canonical motif at the intron flanks.
-    private static java.util.Map<String, byte[]> refWithCanonicalIntron(
-            final int chromLen, final int intronStart, final int intronEnd)
+    // 'N' genome with a canonical GT-AG motif seeded at the intron flanks.
+    private static TestGenome refWithCanonicalIntron(final int chromLen, final int intronStart, final int intronEnd)
     {
-        final byte[] bases = new byte[chromLen];
-        java.util.Arrays.fill(bases, (byte) 'N');
-        bases[intronStart - 1] = 'G'; bases[intronStart] = 'T';
-        bases[intronEnd - 2] = 'A'; bases[intronEnd - 1] = 'G';
-        return java.util.Collections.singletonMap(CHR1, bases);
+        return new TestGenome().with(CHR1, chromLen, 'N')
+                .set(CHR1, intronStart, "GT").set(CHR1, intronEnd - 1, "AG");
     }
 
-    private static JunctionRescueResolver motifResolver(
-            final java.util.Set<ChrIntron> annotated, final java.util.Map<String, byte[]> chromBases)
+    // Candidate carrying read bases for ref-verify: no supps, no mate hints.
+    private static RescueCandidate refVerifyCandidate(final int start, final String cigar, final int readLen, final byte[] readBases)
     {
-        return new JunctionRescueResolver(
-                new AnnotatedJunctionIndex(annotated), refSource(chromBases),
-                RescueConfig.enabledDefaults());
+        return new RescueCandidate(CHR1, true, readLen, start, cigar, 60,
+                Collections.emptyList(), readBases, Collections.emptyList());
     }
 
     @Test
@@ -822,29 +813,26 @@ public class JunctionRescueResolverTest
         final RescueCandidate cand = candidate(CHR1, true, 151, 1001, "94M57S", 60,
                 supp(0, CHR1, true, 1500, "94S57M", 60));
 
-        final RescueResult res = motifResolver(
-                java.util.Collections.emptySet(), refWithCanonicalIntron(2000, 1095, 1499)).resolve(cand);
+        final RescueResult res = resolverWithRef(
+                Collections.emptySet(), refWithCanonicalIntron(2000, 1095, 1499)).resolve(cand);
 
         assertTrue(res.Merged);
         assertEquals("94M405N57M", res.MergedCigar);
-        assertEquals(new ChrIntron(CHR1, 1095, 1499), res.IntroducedIntrons.get(0));
+        assertEquals(new ChrBaseRegion(CHR1, 1095, 1499), res.IntroducedIntrons.get(0));
     }
 
     @Test
     public void testMotifScanPicksAnnotatedOverMotifWhenBothPresent()
     {
         // overlap=2; annotated at L=94 must beat canonical motif at L=92.
-        final ChrIntron annotated = new ChrIntron(CHR1, 1095, 1499);
-        final byte[] bases = new byte[2000];
-        java.util.Arrays.fill(bases, (byte) 'N');
-        bases[1092] = 'G'; bases[1093] = 'T';
-        bases[1495] = 'A'; bases[1496] = 'G';
+        final ChrBaseRegion annotated = new ChrBaseRegion(CHR1, 1095, 1499);
+        final TestGenome genome = new TestGenome().with(CHR1, 2000, 'N')
+                .set(CHR1, 1093, "GT").set(CHR1, 1496, "AG");
 
         final RescueCandidate cand = candidate(CHR1, true, 151, 1001, "94M57S", 60,
                 supp(0, CHR1, true, 1498, "92S59M", 60));
 
-        final RescueResult res = motifResolver(
-                annotated(annotated), java.util.Collections.singletonMap(CHR1, bases)).resolve(cand);
+        final RescueResult res = resolverWithRef(annotated(annotated), genome).resolve(cand);
 
         assertTrue(res.Merged);
         assertEquals("94M405N57M", res.MergedCigar);
@@ -855,38 +843,31 @@ public class JunctionRescueResolverTest
     public void testMotifScanPrefersCanonicalOverSemiCanonical()
     {
         // overlap=2; canonical (GT-AG) at L=92 must beat semi-canonical (GC-AG) at L=94.
-        final byte[] bases = new byte[2000];
-        java.util.Arrays.fill(bases, (byte) 'N');
-        bases[1094] = 'G'; bases[1095] = 'C';   // semi at (1095, 1499): GC-AG
-        bases[1497] = 'A'; bases[1498] = 'G';
-        bases[1092] = 'G'; bases[1093] = 'T';   // canonical at (1093, 1497): GT-AG
-        bases[1495] = 'A'; bases[1496] = 'G';
+        final TestGenome genome = new TestGenome().with(CHR1, 2000, 'N')
+                .set(CHR1, 1095, "GC").set(CHR1, 1498, "AG")    // semi at (1095, 1499): GC-AG
+                .set(CHR1, 1093, "GT").set(CHR1, 1496, "AG");   // canonical at (1093, 1497): GT-AG
 
         final RescueCandidate cand = candidate(CHR1, true, 151, 1001, "94M57S", 60,
                 supp(0, CHR1, true, 1498, "92S59M", 60));
 
-        final RescueResult res = motifResolver(
-                java.util.Collections.emptySet(), java.util.Collections.singletonMap(CHR1, bases)).resolve(cand);
+        final RescueResult res = resolverWithRef(Collections.emptySet(), genome).resolve(cand);
 
         assertTrue(res.Merged);
         assertEquals("92M405N59M", res.MergedCigar);
-        assertEquals(new ChrIntron(CHR1, 1093, 1497), res.IntroducedIntrons.get(0));
+        assertEquals(new ChrBaseRegion(CHR1, 1093, 1497), res.IntroducedIntrons.get(0));
     }
 
     @Test
     public void testMotifScanAcceptsReverseStrandCanonical()
     {
         // Reverse-strand transcript: genomic forward CT...AC (RC of GT-AG). Merge via motif scan.
-        final byte[] bases = new byte[2000];
-        java.util.Arrays.fill(bases, (byte) 'N');
-        bases[1094] = 'C'; bases[1095] = 'T';
-        bases[1497] = 'A'; bases[1498] = 'C';
+        final TestGenome genome = new TestGenome().with(CHR1, 2000, 'N')
+                .set(CHR1, 1095, "CT").set(CHR1, 1498, "AC");
 
         final RescueCandidate cand = candidate(CHR1, true, 151, 1001, "94M57S", 60,
                 supp(0, CHR1, true, 1500, "94S57M", 60));
 
-        final RescueResult res = motifResolver(
-                java.util.Collections.emptySet(), java.util.Collections.singletonMap(CHR1, bases)).resolve(cand);
+        final RescueResult res = resolverWithRef(Collections.emptySet(), genome).resolve(cand);
 
         assertTrue(res.Merged);
         assertEquals("94M405N57M", res.MergedCigar);
@@ -896,13 +877,11 @@ public class JunctionRescueResolverTest
     public void testMotifScanIgnoredWhenNoMotifAndNoAnnotated()
     {
         // All-N ref, no annotation, AnnotatedOnly=false — falls through to trust-primary fallback.
-        final byte[] bases = new byte[2000];
-        java.util.Arrays.fill(bases, (byte) 'N');
+        final TestGenome genome = new TestGenome().with(CHR1, 2000, 'N');
         final RescueCandidate cand = candidate(CHR1, true, 151, 1001, "94M57S", 60,
                 supp(0, CHR1, true, 1500, "94S57M", 60));
 
-        final RescueResult res = motifResolver(
-                java.util.Collections.emptySet(), java.util.Collections.singletonMap(CHR1, bases)).resolve(cand);
+        final RescueResult res = resolverWithRef(Collections.emptySet(), genome).resolve(cand);
 
         assertTrue(res.Merged);
         assertEquals("94M405N57M", res.MergedCigar);
@@ -912,16 +891,13 @@ public class JunctionRescueResolverTest
     public void testMotifScanLeftExtendCanonical()
     {
         // Left-extend with canonical GT-AG motif at intron (1058, 1499).
-        final byte[] bases = new byte[2000];
-        java.util.Arrays.fill(bases, (byte) 'N');
-        bases[1057] = 'G'; bases[1058] = 'T';
-        bases[1497] = 'A'; bases[1498] = 'G';
+        final TestGenome genome = new TestGenome().with(CHR1, 2000, 'N')
+                .set(CHR1, 1058, "GT").set(CHR1, 1498, "AG");
 
         final RescueCandidate cand = candidate(CHR1, true, 151, 1500, "57S94M", 60,
                 supp(0, CHR1, true, 1001, "57M94S", 60));
 
-        final RescueResult res = motifResolver(
-                java.util.Collections.emptySet(), java.util.Collections.singletonMap(CHR1, bases)).resolve(cand);
+        final RescueResult res = resolverWithRef(Collections.emptySet(), genome).resolve(cand);
 
         assertTrue(res.Merged);
         assertEquals("57M442N94M", res.MergedCigar);
@@ -931,22 +907,12 @@ public class JunctionRescueResolverTest
     public void testRefVerifyRightExtendSuccess()
     {
         // Trailing 5S "CCCCC" matches chr1:201..205 exactly across annotated intron (131, 200).
-        final byte[] chr1Ref = new byte[300];
-        for(int i = 0; i < chr1Ref.length; ++i) chr1Ref[i] = 'A';
-        for(int i = 200; i < 205; ++i) chr1Ref[i] = 'C';
+        final TestGenome genome = new TestGenome().with(CHR1, 300, 'A').set(CHR1, 201, 5, 'C');
+        final byte[] readBases = bases("A".repeat(30) + "C".repeat(5));
 
-        final byte[] readBases = new byte[35];
-        for(int i = 0; i < 30; ++i) readBases[i] = 'A';
-        for(int i = 30; i < 35; ++i) readBases[i] = 'C';
+        final RescueCandidate cand = refVerifyCandidate(101, "30M5S", 35, readBases);
 
-        final ChrIntron intron = new ChrIntron(CHR1, 131, 200);
-        final RescueCandidate cand = new RescueCandidate(
-                CHR1, true, 35, 101, "30M5S", 60, Collections.emptyList(),
-                readBases, Collections.emptyList());
-
-        final RescueResult res = refVerifyResolver(
-                new java.util.HashSet<>(Arrays.asList(intron)),
-                java.util.Collections.singletonMap(CHR1, chr1Ref)).resolve(cand);
+        final RescueResult res = resolverWithRef(annotated(new ChrBaseRegion(CHR1, 131, 200)), genome).resolve(cand);
 
         assertTrue(res.Merged);
         assertEquals("30M70N5M", res.MergedCigar);
@@ -958,23 +924,13 @@ public class JunctionRescueResolverTest
     {
         // bwa over-extended 1 base into the intron (31M4S); boundary snap trims back to find
         // the annotated intron at 131 and ref-verifies the 5-base tail.
-        final byte[] chr1Ref = new byte[300];
-        for(int i = 0; i < chr1Ref.length; ++i) chr1Ref[i] = 'A';
-        chr1Ref[130] = 'C';
-        for(int i = 200; i < 205; ++i) chr1Ref[i] = 'C';
+        final TestGenome genome = new TestGenome().with(CHR1, 300, 'A')
+                .set(CHR1, 131, "C").set(CHR1, 201, 5, 'C');
+        final byte[] readBases = bases("A".repeat(30) + "C".repeat(5));
 
-        final byte[] readBases = new byte[35];
-        for(int i = 0; i < 30; ++i) readBases[i] = 'A';
-        for(int i = 30; i < 35; ++i) readBases[i] = 'C';
+        final RescueCandidate cand = refVerifyCandidate(101, "31M4S", 35, readBases);
 
-        final ChrIntron intron = new ChrIntron(CHR1, 131, 200);
-        final RescueCandidate cand = new RescueCandidate(
-                CHR1, true, 35, 101, "31M4S", 60, Collections.emptyList(),
-                readBases, Collections.emptyList());
-
-        final RescueResult res = refVerifyResolver(
-                new java.util.HashSet<>(Arrays.asList(intron)),
-                java.util.Collections.singletonMap(CHR1, chr1Ref)).resolve(cand);
+        final RescueResult res = resolverWithRef(annotated(new ChrBaseRegion(CHR1, 131, 200)), genome).resolve(cand);
 
         assertTrue(res.Merged);
         assertEquals("30M70N5M", res.MergedCigar);
@@ -985,23 +941,12 @@ public class JunctionRescueResolverTest
     public void testRefVerifyBothEndsClippedRescuesJunctionTailKeepsOtherClip()
     {
         // Both ends clipped: trailing 5S is the junction tail; leading 5S must survive untouched.
-        final byte[] chr1Ref = new byte[300];
-        for(int i = 0; i < chr1Ref.length; ++i) chr1Ref[i] = 'A';
-        for(int i = 200; i < 205; ++i) chr1Ref[i] = 'C';
+        final TestGenome genome = new TestGenome().with(CHR1, 300, 'A').set(CHR1, 201, 5, 'C');
+        final byte[] readBases = bases("T".repeat(5) + "A".repeat(30) + "C".repeat(5));
 
-        final byte[] readBases = new byte[40];
-        for(int i = 0; i < 5; ++i) readBases[i] = 'T';
-        for(int i = 5; i < 35; ++i) readBases[i] = 'A';
-        for(int i = 35; i < 40; ++i) readBases[i] = 'C';
+        final RescueCandidate cand = refVerifyCandidate(101, "5S30M5S", 40, readBases);
 
-        final ChrIntron intron = new ChrIntron(CHR1, 131, 200);
-        final RescueCandidate cand = new RescueCandidate(
-                CHR1, true, 40, 101, "5S30M5S", 60, Collections.emptyList(),
-                readBases, Collections.emptyList());
-
-        final RescueResult res = refVerifyResolver(
-                new java.util.HashSet<>(Arrays.asList(intron)),
-                java.util.Collections.singletonMap(CHR1, chr1Ref)).resolve(cand);
+        final RescueResult res = resolverWithRef(annotated(new ChrBaseRegion(CHR1, 131, 200)), genome).resolve(cand);
 
         assertTrue(res.Merged);
         assertEquals("5S30M70N5M", res.MergedCigar);
@@ -1012,21 +957,12 @@ public class JunctionRescueResolverTest
     public void testRefVerifyRightExtendRejectsOnMismatch()
     {
         // Ref all 'G'; read has 'C' — mismatch rejects the merge.
-        final byte[] chr1Ref = new byte[300];
-        for(int i = 0; i < chr1Ref.length; ++i) chr1Ref[i] = 'G';
+        final TestGenome genome = new TestGenome().with(CHR1, 300, 'G');
+        final byte[] readBases = bases("A".repeat(30) + "C".repeat(5));
 
-        final byte[] readBases = new byte[35];
-        for(int i = 0; i < 30; ++i) readBases[i] = 'A';
-        for(int i = 30; i < 35; ++i) readBases[i] = 'C';
+        final RescueCandidate cand = refVerifyCandidate(101, "30M5S", 35, readBases);
 
-        final ChrIntron intron = new ChrIntron(CHR1, 131, 200);
-        final RescueCandidate cand = new RescueCandidate(
-                CHR1, true, 35, 101, "30M5S", 60, Collections.emptyList(),
-                readBases, Collections.emptyList());
-
-        final RescueResult res = refVerifyResolver(
-                new java.util.HashSet<>(Arrays.asList(intron)),
-                java.util.Collections.singletonMap(CHR1, chr1Ref)).resolve(cand);
+        final RescueResult res = resolverWithRef(annotated(new ChrBaseRegion(CHR1, 131, 200)), genome).resolve(cand);
 
         assertFalse(res.Merged);
         assertEquals(RescueRejectReason.REF_VERIFY_MISMATCH_TOO_HIGH, res.RejectReason);
@@ -1036,24 +972,13 @@ public class JunctionRescueResolverTest
     public void testRefVerifyAllows10PercentMismatch()
     {
         // 20-base softclip: tolerance floor(20/10)=2; 1 mismatch — accept.
-        final byte[] chr1Ref = new byte[300];
-        for(int i = 0; i < chr1Ref.length; ++i) chr1Ref[i] = 'A';
-        for(int i = 200; i < 218; ++i) chr1Ref[i] = 'C';
-        chr1Ref[218] = 'G';
-        chr1Ref[219] = 'C';
+        final TestGenome genome = new TestGenome().with(CHR1, 300, 'A')
+                .set(CHR1, 201, 18, 'C').set(CHR1, 219, "GC");
+        final byte[] readBases = bases("A".repeat(20) + "C".repeat(20));
 
-        final byte[] readBases = new byte[40];
-        for(int i = 0; i < 20; ++i) readBases[i] = 'A';
-        for(int i = 20; i < 40; ++i) readBases[i] = 'C';
+        final RescueCandidate cand = refVerifyCandidate(101, "20M20S", 40, readBases);
 
-        final ChrIntron intron = new ChrIntron(CHR1, 121, 200);
-        final RescueCandidate cand = new RescueCandidate(
-                CHR1, true, 40, 101, "20M20S", 60, Collections.emptyList(),
-                readBases, Collections.emptyList());
-
-        final RescueResult res = refVerifyResolver(
-                new java.util.HashSet<>(Arrays.asList(intron)),
-                java.util.Collections.singletonMap(CHR1, chr1Ref)).resolve(cand);
+        final RescueResult res = resolverWithRef(annotated(new ChrBaseRegion(CHR1, 121, 200)), genome).resolve(cand);
 
         assertTrue(res.Merged);
         assertEquals("20M80N20M", res.MergedCigar);
@@ -1063,22 +988,12 @@ public class JunctionRescueResolverTest
     public void testRefVerifyLeftExtendSuccess()
     {
         // Leading 5S "TTTTT" matches chr1:126..130 exactly across annotated intron (131, 200).
-        final byte[] chr1Ref = new byte[300];
-        for(int i = 0; i < chr1Ref.length; ++i) chr1Ref[i] = 'A';
-        for(int i = 125; i < 130; ++i) chr1Ref[i] = 'T';
+        final TestGenome genome = new TestGenome().with(CHR1, 300, 'A').set(CHR1, 126, 5, 'T');
+        final byte[] readBases = bases("T".repeat(5) + "A".repeat(30));
 
-        final byte[] readBases = new byte[35];
-        for(int i = 0; i < 5; ++i) readBases[i] = 'T';
-        for(int i = 5; i < 35; ++i) readBases[i] = 'A';
+        final RescueCandidate cand = refVerifyCandidate(201, "5S30M", 35, readBases);
 
-        final ChrIntron intron = new ChrIntron(CHR1, 131, 200);
-        final RescueCandidate cand = new RescueCandidate(
-                CHR1, true, 35, 201, "5S30M", 60, Collections.emptyList(),
-                readBases, Collections.emptyList());
-
-        final RescueResult res = refVerifyResolver(
-                new java.util.HashSet<>(Arrays.asList(intron)),
-                java.util.Collections.singletonMap(CHR1, chr1Ref)).resolve(cand);
+        final RescueResult res = resolverWithRef(annotated(new ChrBaseRegion(CHR1, 131, 200)), genome).resolve(cand);
 
         assertTrue(res.Merged);
         assertEquals("5M70N30M", res.MergedCigar);
@@ -1089,15 +1004,10 @@ public class JunctionRescueResolverTest
     public void testRefVerifyRejectsWhenNoCandidateExon()
     {
         // Empty annotation — no candidate exon for the trailing softclip.
-        final byte[] readBases = new byte[35];
-        final byte[] chr1Ref = new byte[300];
-        final RescueCandidate cand = new RescueCandidate(
-                CHR1, true, 35, 101, "30M5S", 60, Collections.emptyList(),
-                readBases, Collections.emptyList());
+        final TestGenome genome = new TestGenome().with(CHR1, 300, 'A');
+        final RescueCandidate cand = refVerifyCandidate(101, "30M5S", 35, repeatedBase(35, 'A'));
 
-        final RescueResult res = refVerifyResolver(
-                Collections.emptySet(),
-                java.util.Collections.singletonMap(CHR1, chr1Ref)).resolve(cand);
+        final RescueResult res = resolverWithRef(Collections.emptySet(), genome).resolve(cand);
 
         assertFalse(res.Merged);
         assertEquals(RescueRejectReason.REF_VERIFY_NO_CANDIDATE_EXON, res.RejectReason);
@@ -1106,26 +1016,15 @@ public class JunctionRescueResolverTest
     @Test
     public void testRefVerifyAmbiguousRejected()
     {
-        // Two annotated introns share donor; both downstream exons match equally — ambiguous.
-        final byte[] chr1Ref = new byte[600];
-        for(int i = 0; i < chr1Ref.length; ++i) chr1Ref[i] = 'A';
-        // Ref bases at 201..205 and at 501..505 both equal "CCCCC"
-        for(int i = 200; i < 205; ++i) chr1Ref[i] = 'C';
-        for(int i = 500; i < 505; ++i) chr1Ref[i] = 'C';
+        // Two annotated introns share donor; both downstream exons (201..205 and 501..505) match "CCCCC" — ambiguous.
+        final TestGenome genome = new TestGenome().with(CHR1, 600, 'A')
+                .set(CHR1, 201, 5, 'C').set(CHR1, 501, 5, 'C');
+        final byte[] readBases = bases("A".repeat(30) + "C".repeat(5));
 
-        final byte[] readBases = new byte[35];
-        for(int i = 0; i < 30; ++i) readBases[i] = 'A';
-        for(int i = 30; i < 35; ++i) readBases[i] = 'C';
+        final RescueCandidate cand = refVerifyCandidate(101, "30M5S", 35, readBases);
 
-        final ChrIntron intron1 = new ChrIntron(CHR1, 131, 200);
-        final ChrIntron intron2 = new ChrIntron(CHR1, 131, 500);
-        final RescueCandidate cand = new RescueCandidate(
-                CHR1, true, 35, 101, "30M5S", 60, Collections.emptyList(),
-                readBases, Collections.emptyList());
-
-        final RescueResult res = refVerifyResolver(
-                new java.util.HashSet<>(Arrays.asList(intron1, intron2)),
-                java.util.Collections.singletonMap(CHR1, chr1Ref)).resolve(cand);
+        final RescueResult res = resolverWithRef(
+                annotated(new ChrBaseRegion(CHR1, 131, 200), new ChrBaseRegion(CHR1, 131, 500)), genome).resolve(cand);
 
         assertFalse(res.Merged);
         assertEquals(RescueRejectReason.REF_VERIFY_AMBIGUOUS, res.RejectReason);
@@ -1148,23 +1047,12 @@ public class JunctionRescueResolverTest
     {
         // 15 proximal bases match the exon; outer 4 are adapter residual — only proximal bases convert
         // to M, outer stay clipped: 30M19S → 30M70N15M4S.
-        final byte[] chr1Ref = new byte[300];
-        for(int i = 0; i < chr1Ref.length; ++i) chr1Ref[i] = 'A';
-        for(int i = 200; i < 215; ++i) chr1Ref[i] = 'C';    // downstream exon: 15 bases
+        final TestGenome genome = new TestGenome().with(CHR1, 300, 'A').set(CHR1, 201, 15, 'C');   // downstream exon: 15 bases
+        final byte[] readBases = bases("A".repeat(30) + "C".repeat(15) + "T".repeat(4));   // overhang + adapter residual
 
-        final byte[] readBases = new byte[49];
-        for(int i = 0; i < 30; ++i) readBases[i] = 'A';
-        for(int i = 30; i < 45; ++i) readBases[i] = 'C';    // 15-base junction overhang
-        for(int i = 45; i < 49; ++i) readBases[i] = 'T';    // 4-base adapter residual
+        final RescueCandidate cand = refVerifyCandidate(101, "30M19S", 49, readBases);
 
-        final ChrIntron intron = new ChrIntron(CHR1, 131, 200);
-        final RescueCandidate cand = new RescueCandidate(
-                CHR1, true, 49, 101, "30M19S", 60, Collections.emptyList(),
-                readBases, Collections.emptyList());
-
-        final RescueResult res = refVerifyResolver(
-                new java.util.HashSet<>(Arrays.asList(intron)),
-                java.util.Collections.singletonMap(CHR1, chr1Ref)).resolve(cand);
+        final RescueResult res = resolverWithRef(annotated(new ChrBaseRegion(CHR1, 131, 200)), genome).resolve(cand);
 
         assertTrue(res.Merged);
         assertEquals("30M70N15M4S", res.MergedCigar);
@@ -1175,23 +1063,12 @@ public class JunctionRescueResolverTest
     public void testRefVerifyPartialMatchLeadingKeepsOuterClip()
     {
         // Mirror on leading side: outer 4 are adapter, proximal 15 are real overhang → 4S15M70N30M.
-        final byte[] chr1Ref = new byte[300];
-        for(int i = 0; i < chr1Ref.length; ++i) chr1Ref[i] = 'A';
-        for(int i = 115; i < 130; ++i) chr1Ref[i] = 'C';    // upstream exon: 15 bases
+        final TestGenome genome = new TestGenome().with(CHR1, 300, 'A').set(CHR1, 116, 15, 'C');   // upstream exon: 15 bases
+        final byte[] readBases = bases("T".repeat(4) + "C".repeat(15) + "A".repeat(30));   // adapter + overhang
 
-        final byte[] readBases = new byte[49];
-        for(int i = 0; i < 4; ++i) readBases[i] = 'T';      // 4-base adapter residual
-        for(int i = 4; i < 19; ++i) readBases[i] = 'C';     // 15-base junction overhang
-        for(int i = 19; i < 49; ++i) readBases[i] = 'A';
+        final RescueCandidate cand = refVerifyCandidate(201, "19S30M", 49, readBases);
 
-        final ChrIntron intron = new ChrIntron(CHR1, 131, 200);
-        final RescueCandidate cand = new RescueCandidate(
-                CHR1, true, 49, 201, "19S30M", 60, Collections.emptyList(),
-                readBases, Collections.emptyList());
-
-        final RescueResult res = refVerifyResolver(
-                new java.util.HashSet<>(Arrays.asList(intron)),
-                java.util.Collections.singletonMap(CHR1, chr1Ref)).resolve(cand);
+        final RescueResult res = resolverWithRef(annotated(new ChrBaseRegion(CHR1, 131, 200)), genome).resolve(cand);
 
         assertTrue(res.Merged);
         assertEquals("4S15M70N30M", res.MergedCigar);
@@ -1202,23 +1079,12 @@ public class JunctionRescueResolverTest
     public void testRefVerifyShortPartialRunRejected()
     {
         // 8-base proximal match < MinPartialMatchRun (11) — guards against chance match manufacturing a junction.
-        final byte[] chr1Ref = new byte[300];
-        for(int i = 0; i < chr1Ref.length; ++i) chr1Ref[i] = 'A';
-        for(int i = 200; i < 208; ++i) chr1Ref[i] = 'C';    // only 8 matching bases
+        final TestGenome genome = new TestGenome().with(CHR1, 300, 'A').set(CHR1, 201, 8, 'C');   // only 8 matching bases
+        final byte[] readBases = bases("A".repeat(30) + "C".repeat(8) + "T".repeat(11));   // 8-base match + divergent residual
 
-        final byte[] readBases = new byte[49];
-        for(int i = 0; i < 30; ++i) readBases[i] = 'A';
-        for(int i = 30; i < 38; ++i) readBases[i] = 'C';    // 8-base proximal match
-        for(int i = 38; i < 49; ++i) readBases[i] = 'T';    // 11-base divergent residual
+        final RescueCandidate cand = refVerifyCandidate(101, "30M19S", 49, readBases);
 
-        final ChrIntron intron = new ChrIntron(CHR1, 131, 200);
-        final RescueCandidate cand = new RescueCandidate(
-                CHR1, true, 49, 101, "30M19S", 60, Collections.emptyList(),
-                readBases, Collections.emptyList());
-
-        final RescueResult res = refVerifyResolver(
-                new java.util.HashSet<>(Arrays.asList(intron)),
-                java.util.Collections.singletonMap(CHR1, chr1Ref)).resolve(cand);
+        final RescueResult res = resolverWithRef(annotated(new ChrBaseRegion(CHR1, 131, 200)), genome).resolve(cand);
 
         assertFalse(res.Merged);
         assertEquals(RescueRejectReason.REF_VERIFY_SHORT_PARTIAL_RUN, res.RejectReason);
@@ -1229,23 +1095,14 @@ public class JunctionRescueResolverTest
     {
         // bwa over-extended 7 bases into the intron (37M3S); boundary snap (MaxBoundaryShift≥8)
         // trims back to find annotated intron 131 and re-verifies the 10-base tail.
-        final byte[] chr1Ref = new byte[300];
-        for(int i = 0; i < chr1Ref.length; ++i) chr1Ref[i] = 'A';
-        for(int i = 130; i < 137; ++i) chr1Ref[i] = 'C';    // bwa's 7 over-extended bases
-        for(int i = 200; i < 210; ++i) chr1Ref[i] = 'C';    // real downstream exon
+        final TestGenome genome = new TestGenome().with(CHR1, 300, 'A')
+                .set(CHR1, 131, 7, 'C')     // bwa's 7 over-extended bases
+                .set(CHR1, 201, 10, 'C');   // real downstream exon
+        final byte[] readBases = bases("A".repeat(30) + "C".repeat(10));   // 7 over-extended + 3 clipped
 
-        final byte[] readBases = new byte[40];
-        for(int i = 0; i < 30; ++i) readBases[i] = 'A';
-        for(int i = 30; i < 40; ++i) readBases[i] = 'C';    // 7 over-extended + 3 clipped
+        final RescueCandidate cand = refVerifyCandidate(101, "37M3S", 40, readBases);
 
-        final ChrIntron intron = new ChrIntron(CHR1, 131, 200);
-        final RescueCandidate cand = new RescueCandidate(
-                CHR1, true, 40, 101, "37M3S", 60, Collections.emptyList(),
-                readBases, Collections.emptyList());
-
-        final RescueResult res = refVerifyResolver(
-                new java.util.HashSet<>(Arrays.asList(intron)),
-                java.util.Collections.singletonMap(CHR1, chr1Ref)).resolve(cand);
+        final RescueResult res = resolverWithRef(annotated(new ChrBaseRegion(CHR1, 131, 200)), genome).resolve(cand);
 
         assertTrue(res.Merged);
         assertEquals("30M70N10M", res.MergedCigar);
@@ -1260,16 +1117,16 @@ public class JunctionRescueResolverTest
                 supp(0, CHR1, true, 1498, "92S59M", 60));
         final RescueResult resNoHint = enabledResolver(annotated()).resolve(withoutHint);
         assertTrue(resNoHint.Merged);
-        assertEquals(1095, resNoHint.IntroducedIntrons.get(0).IntronStart);
+        assertEquals(1095, resNoHint.IntroducedIntrons.get(0).start());
 
-        final ChrIntron hint = new ChrIntron(CHR1, 1093, 1497);
+        final ChrBaseRegion hint = new ChrBaseRegion(CHR1, 1093, 1497);
         final RescueCandidate withHint = new RescueCandidate(
                 CHR1, true, 151, 1001, "94M57S", 60,
                 Arrays.asList(supp(0, CHR1, true, 1498, "92S59M", 60)),
                 null, Arrays.asList(hint));
         final RescueResult resHinted = enabledResolver(annotated()).resolve(withHint);
         assertTrue(resHinted.Merged);
-        assertEquals(1093, resHinted.IntroducedIntrons.get(0).IntronStart);
+        assertEquals(1093, resHinted.IntroducedIntrons.get(0).start());
         assertEquals("92M405N59M", resHinted.MergedCigar);
     }
 
@@ -1277,8 +1134,8 @@ public class JunctionRescueResolverTest
     public void testMateHintIgnoredWhenAnnotatedMatchExists()
     {
         // Annotated junction beats mate hint when both are within the snap window.
-        final ChrIntron annotatedJunc = new ChrIntron(CHR1, 1095, 1499);
-        final ChrIntron hint = new ChrIntron(CHR1, 1093, 1497);
+        final ChrBaseRegion annotatedJunc = new ChrBaseRegion(CHR1, 1095, 1499);
+        final ChrBaseRegion hint = new ChrBaseRegion(CHR1, 1093, 1497);
         final RescueCandidate cand = new RescueCandidate(
                 CHR1, true, 151, 1001, "94M57S", 60,
                 Arrays.asList(supp(0, CHR1, true, 1498, "92S59M", 60)),
@@ -1287,14 +1144,14 @@ public class JunctionRescueResolverTest
         final RescueResult res = enabledResolver(annotated(annotatedJunc)).resolve(cand);
 
         assertTrue(res.Merged);
-        assertEquals(1095, res.IntroducedIntrons.get(0).IntronStart);
+        assertEquals(1095, res.IntroducedIntrons.get(0).start());
     }
 
     @Test
     public void testMateHintOutsideOverlapWindowIgnored()
     {
         // Hint outside the overlap window — ignored, falls back to trust-primary.
-        final ChrIntron hint = new ChrIntron(CHR1, 50000, 50100);
+        final ChrBaseRegion hint = new ChrBaseRegion(CHR1, 50000, 50100);
         final RescueCandidate cand = new RescueCandidate(
                 CHR1, true, 151, 1001, "94M57S", 60,
                 Arrays.asList(supp(0, CHR1, true, 1498, "92S59M", 60)),
@@ -1303,13 +1160,13 @@ public class JunctionRescueResolverTest
         final RescueResult res = enabledResolver(annotated()).resolve(cand);
 
         assertTrue(res.Merged);
-        assertEquals(1095, res.IntroducedIntrons.get(0).IntronStart);
+        assertEquals(1095, res.IntroducedIntrons.get(0).start());
     }
 
     @Test
     public void testRejectReasonIsNullOnSuccess()
     {
-        final ChrIntron intron = new ChrIntron(CHR1, 1095, 1499);
+        final ChrBaseRegion intron = new ChrBaseRegion(CHR1, 1095, 1499);
         final RescueCandidate cand = candidate(CHR1, true, READ_LEN, 1001, "94M57S", 60,
                 supp(0, CHR1, true, 1500, "94S57M", 60));
 

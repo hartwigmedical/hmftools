@@ -8,29 +8,32 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.BasePosition;
+
 // Three views of an annotated-junction set: exact membership, by-intron-start, and by-intron-end.
-// All three are built from the same Set<ChrIntron> in one pass.
+// All three are built from the same Set<ChrBaseRegion> in one pass.
 public class AnnotatedJunctionIndex
 {
-    private final Set<ChrIntron> mJunctions;
-    private final Map<ChrPos, List<ChrIntron>> mByStart;
-    private final Map<ChrPos, List<ChrIntron>> mByEnd;
+    private final Set<ChrBaseRegion> mJunctions;
+    private final Map<BasePosition, List<ChrBaseRegion>> mByStart;
+    private final Map<BasePosition, List<ChrBaseRegion>> mByEnd;
 
-    public AnnotatedJunctionIndex(final Set<ChrIntron> junctions)
+    public AnnotatedJunctionIndex(final Set<ChrBaseRegion> junctions)
     {
         mJunctions = junctions != null ? junctions : new HashSet<>();
         mByStart = new HashMap<>();
         mByEnd = new HashMap<>();
-        for(ChrIntron intron : mJunctions)
+        for(ChrBaseRegion intron : mJunctions)
         {
-            mByStart.computeIfAbsent(new ChrPos(intron.Chromosome, intron.IntronStart),
+            mByStart.computeIfAbsent(new BasePosition(intron.Chromosome, intron.start()),
                     k -> new ArrayList<>()).add(intron);
-            mByEnd.computeIfAbsent(new ChrPos(intron.Chromosome, intron.IntronEnd),
+            mByEnd.computeIfAbsent(new BasePosition(intron.Chromosome, intron.end()),
                     k -> new ArrayList<>()).add(intron);
         }
     }
 
-    public boolean contains(final ChrIntron intron)
+    public boolean contains(final ChrBaseRegion intron)
     {
         return mJunctions.contains(intron);
     }
@@ -40,40 +43,13 @@ public class AnnotatedJunctionIndex
         return mJunctions.size();
     }
 
-    public List<ChrIntron> introByStart(final String chromosome, final int intronStart)
+    public List<ChrBaseRegion> introByStart(final String chromosome, final int intronStart)
     {
-        return mByStart.getOrDefault(new ChrPos(chromosome, intronStart), Collections.emptyList());
+        return mByStart.getOrDefault(new BasePosition(chromosome, intronStart), Collections.emptyList());
     }
 
-    public List<ChrIntron> introByEnd(final String chromosome, final int intronEnd)
+    public List<ChrBaseRegion> introByEnd(final String chromosome, final int intronEnd)
     {
-        return mByEnd.getOrDefault(new ChrPos(chromosome, intronEnd), Collections.emptyList());
-    }
-
-    private static final class ChrPos
-    {
-        final String Chromosome;
-        final int Position;
-
-        ChrPos(final String chromosome, final int position)
-        {
-            Chromosome = chromosome;
-            Position = position;
-        }
-
-        @Override
-        public boolean equals(final Object o)
-        {
-            if(this == o) return true;
-            if(!(o instanceof ChrPos)) return false;
-            final ChrPos other = (ChrPos) o;
-            return Position == other.Position && Chromosome.equals(other.Chromosome);
-        }
-
-        @Override
-        public int hashCode()
-        {
-            return Chromosome.hashCode() * 31 + Position;
-        }
+        return mByEnd.getOrDefault(new BasePosition(chromosome, intronEnd), Collections.emptyList());
     }
 }
