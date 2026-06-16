@@ -2,8 +2,10 @@ package com.hartwig.hmftools.esvee.assembly.alignment;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.getReadIndexFromPosition;
+import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipLength;
 import static com.hartwig.hmftools.common.codon.Nucleotides.reverseComplementBases;
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
@@ -25,7 +27,6 @@ import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
-import static htsjdk.samtools.CigarOperator.S;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -39,6 +40,11 @@ import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.LinkType;
 import com.hartwig.hmftools.esvee.common.IndelCoords;
+import com.hartwig.hmftools.esvee.common.saga.SagaAlignment;
+import com.hartwig.hmftools.esvee.common.saga.SagaBreakend;
+import com.hartwig.hmftools.esvee.common.saga.SagaVariant;
+
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.CigarElement;
 
@@ -69,6 +75,72 @@ public class BreakendBuilder
                 SV_LOGGER.debug("alignment({})", alignData);
             }
         }
+    }
+
+    public boolean formBreakendsFromSaga(final SagaAlignment sagaAlignment, final AlignData alignData)
+    {
+        // Only use SAGA breakends for the simple case of 0 or 1 links. Chained assemblies require more care, not implemented for now.
+        boolean isChained = mAssemblyAlignment.phaseSet() != null && mAssemblyAlignment.phaseSet().assemblyLinks().size() > 1;
+        if(isChained)
+        {
+            return false;
+        }
+
+        SagaVariant sagaVariant = sagaAlignment.sagaVariant();
+        SagaBreakend lowerSagaBreakend = sagaVariant.breakend1();
+        SagaBreakend upperSagaBreakend = sagaVariant.breakend2();
+
+        String phasedAsmSeq = mAssemblyAlignment.fullSequence();
+
+        // Calculate the indices of the breakends within the phased assembly sequence.
+        List<Integer> seqJunctionOffsets = sagaAlignment.sagaAssembly().junctionOffsets().stream()
+                .map(o -> getReadIndexFromPosition(sagaAlignment.sagaStart(), sagaAlignment.cigar().getCigarElements(), o, false, true))
+                .toList();
+
+        // If it's an insert, the insert sequence is between the two junctions. Otherwise, it's a deletion and there's no insert sequence.
+        String insertedBases;
+        if(seqJunctionOffsets.size() == 2)
+        {
+            int phasedAsmStart = max(seqJunctionOffsets.get(0), 0);
+            int phasedAsmEnd = min(seqJunctionOffsets.get(1), phasedAsmSeq.length());
+            int startInferred = phasedAsmStart - seqJunctionOffsets.get(0);
+            int endInferred = seqJunctionOffsets.get(1) - phasedAsmEnd;
+            // TODO: fill SAGA sequence instead of N
+            insertedBases = "N".repeat(startInferred) + phasedAsmSeq.substring(phasedAsmStart, phasedAsmEnd) + "N".repeat(endInferred);
+        }
+        else
+        {
+            insertedBases = "";
+        }
+
+        // TODO: homology
+        HomologyData homology = null;
+
+        Breakend lowerBreakend = new Breakend(
+                mAssemblyAlignment, lowerSagaBreakend.chromosome(), lowerSagaBreakend.position(), lowerSagaBreakend.orientation(),
+                insertedBases, homology);
+
+        Breakend upperBreakend = new Breakend(
+                mAssemblyAlignment, upperSagaBreakend.chromosome(), upperSagaBreakend.position(), upperSagaBreakend.orientation(),
+                insertedBases, homology);
+
+        // There isn't really an indel in the alignment, but these are only used for assigning read support.
+        int[] indelIndices = new int[] {
+                seqJunctionOffsets.get(0),
+                seqJunctionOffsets.size() > 1 ? seqJunctionOffsets.get(1) : seqJunctionOffsets.get(0) + 1 };
+        BreakendSegment segment =
+                new BreakendSegment(mAssemblyAlignment.id(), sagaAlignment.queryStart(), 0, alignData, indelIndices);
+
+        lowerBreakend.addSegment(segment);
+        upperBreakend.addSegment(segment);
+
+        lowerBreakend.setOtherBreakend(upperBreakend);
+        upperBreakend.setOtherBreakend(lowerBreakend);
+
+        mAssemblyAlignment.addBreakend(lowerBreakend);
+        mAssemblyAlignment.addBreakend(upperBreakend);
+
+        return true;
     }
 
     private void doFormBreakends(final List<AlignData> alignments)
@@ -105,53 +177,19 @@ public class BreakendBuilder
 
     private boolean formIndelBreakends(final AlignData alignment)
     {
-        // parse the CIGAR to get the indel coords, first looking for a close match to what was expected
-        IndelCoords indelCoords = null;
-
-        boolean isChained = false;
-
-        if(mAssemblyAlignment.phaseSet() != null)
-        {
-            if(mAssemblyAlignment.phaseSet().assemblyLinks().size() == 1)
-            {
-                AssemblyLink assemblyLink = mAssemblyAlignment.phaseSet().assemblyLinks().get(0);
-                StructuralVariantType svType = assemblyLink.svType();
-
-                if(svType == DEL || svType == DUP || svType == INS)
-                {
-                    int svLength = assemblyLink.length();
-
-                    if(svLength == 0 && assemblyLink.insertedBases().length() > 0) // same-base DUP/INS, change implied Cigar insert length
-                    {
-                        svLength = assemblyLink.insertedBases().length();
-                        svType = INS;
-                    }
-
-                    CigarElement specificIndel = new CigarElement(svLength, svType == DEL ? D : I);
-                    indelCoords = IndelCoords.findMatchingIndelCoords(alignment.positionStart(), alignment.cigarElements(), specificIndel);
-                }
-            }
-            else
-            {
-                isChained = true;
-            }
-        }
-
-        // if no match was found, just take the longest
-        if(indelCoords == null)
-            indelCoords = findIndelCoords(alignment.positionStart(), alignment.cigarElements(), MIN_INDEL_LENGTH);
+        IndelCoords indelCoords = getIndelAlignmentIndelCoords(alignment);
 
         if(indelCoords == null || indelCoords.Length < MIN_INDEL_LENGTH)
             return false;
 
         int indelSeqStart = alignment.sequenceStart() + getReadIndexFromPosition(
-                alignment.positionStart(), alignment.cigarElements(),  indelCoords.PosStart, true, false);
-
-        if(alignment.cigarElements().get(0).getOperator() == S) // back out soft-clip since the method above includes that
-            indelSeqStart -= alignment.cigarElements().get(0).getLength();
+                alignment.positionStart(), alignment.cigarElements(), indelCoords.PosStart, true, false)
+                // back out soft-clip since the method above includes that
+                - leftSoftClipLength(alignment.cigarElements());
 
         int indelSeqEnd = indelSeqStart + (indelCoords.isInsert() ? indelCoords.Length : 1);
 
+        boolean isChained = mAssemblyAlignment.phaseSet() != null && mAssemblyAlignment.phaseSet().assemblyLinks().size() > 1;
         if(!isChained)
         {
             // the indel must have sufficient bases either side of it to be called
@@ -200,7 +238,7 @@ public class BreakendBuilder
                                 alignment.chromosome(), indelPosEnd + 1, indelPosEnd + insertedBases.length());
 
                         while(newHomologyLength < insertedBases.length() && newHomologyLength < postIndelBases.length()
-                        && insertedBases.charAt(newHomologyLength) == postIndelBases.charAt(newHomologyLength))
+                                && insertedBases.charAt(newHomologyLength) == postIndelBases.charAt(newHomologyLength))
                         {
                             ++newHomologyLength;
                         }
@@ -226,7 +264,7 @@ public class BreakendBuilder
             // check for exact homology at the bases either side of the delete
             int maxLength = indelCoords.Length - 1;
             int homPosStart = indelPosStart + 1;
-            String basesStart = mRefGenome.getBaseString( alignment.chromosome(), homPosStart, homPosStart + maxLength);
+            String basesStart = mRefGenome.getBaseString(alignment.chromosome(), homPosStart, homPosStart + maxLength);
 
             int homPosEnd = indelPosEnd;
             String basesEnd = mRefGenome.getBaseString(alignment.chromosome(), homPosEnd, homPosEnd + maxLength);
@@ -252,11 +290,13 @@ public class BreakendBuilder
         mAssemblyAlignment.addBreakend(lowerBreakend);
 
         int[] indelSequenceIndices = new int[] { indelSeqStart, indelSeqEnd };
-        BreakendSegment segment = new BreakendSegment(mAssemblyAlignment.id(), alignment.sequenceStart(), 0, alignment, indelSequenceIndices);
+        BreakendSegment segment =
+                new BreakendSegment(mAssemblyAlignment.id(), alignment.sequenceStart(), 0, alignment, indelSequenceIndices);
 
         lowerBreakend.addSegment(segment);
 
-        Breakend upperBreakend = new Breakend(mAssemblyAlignment, alignment.chromosome(), indelPosEnd, upperOrient, insertedBases, homology);
+        Breakend upperBreakend =
+                new Breakend(mAssemblyAlignment, alignment.chromosome(), indelPosEnd, upperOrient, insertedBases, homology);
 
         mAssemblyAlignment.addBreakend(upperBreakend);
 
@@ -266,6 +306,43 @@ public class BreakendBuilder
         upperBreakend.setOtherBreakend(lowerBreakend);
 
         return true;
+    }
+
+    @Nullable
+    private IndelCoords getIndelAlignmentIndelCoords(final AlignData alignment)
+    {
+        // parse the CIGAR to get the indel coords, first looking for a close match to what was expected
+        IndelCoords indelCoords = null;
+        if(mAssemblyAlignment.phaseSet() != null)
+        {
+            if(mAssemblyAlignment.phaseSet().assemblyLinks().size() == 1)
+            {
+                AssemblyLink assemblyLink = mAssemblyAlignment.phaseSet().assemblyLinks().get(0);
+                StructuralVariantType svType = assemblyLink.svType();
+
+                if(svType == DEL || svType == DUP || svType == INS)
+                {
+                    int svLength = assemblyLink.length();
+
+                    if(svLength == 0 && !assemblyLink.insertedBases().isEmpty()) // same-base DUP/INS, change implied Cigar insert length
+                    {
+                        svLength = assemblyLink.insertedBases().length();
+                        svType = INS;
+                    }
+
+                    CigarElement specificIndel = new CigarElement(svLength, svType == DEL ? D : I);
+                    indelCoords = IndelCoords.findMatchingIndelCoords(alignment.positionStart(), alignment.cigarElements(), specificIndel);
+                }
+            }
+        }
+
+        // if no match was found, just take the longest
+        if(indelCoords == null)
+        {
+            indelCoords = findIndelCoords(alignment.positionStart(), alignment.cigarElements(), MIN_INDEL_LENGTH);
+        }
+
+        return indelCoords;
     }
 
     private void formSingleBreakend(final AlignData alignment, final List<AlignData> zeroQualAlignments)
@@ -510,7 +587,8 @@ public class BreakendBuilder
 
             mAssemblyAlignment.addBreakend(breakend);
 
-            BreakendSegment segment = new BreakendSegment(mAssemblyAlignment.id(), alignment.sequenceStart(), nextSegmentIndex++, alignment);
+            BreakendSegment segment =
+                    new BreakendSegment(mAssemblyAlignment.id(), alignment.sequenceStart(), nextSegmentIndex++, alignment);
 
             breakend.addSegment(segment);
 

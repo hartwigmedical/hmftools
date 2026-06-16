@@ -14,7 +14,7 @@ import htsjdk.samtools.Cigar;
 import htsjdk.samtools.SAMFlag;
 
 public record SagaAlignment(
-        BwaMemAlignment alignment,
+        BwaMemAlignment rawAlignment,
         Cigar cigar,
         int queryLength,
         SagaAssembly sagaAssembly
@@ -22,7 +22,7 @@ public record SagaAlignment(
 {
     public boolean isForward()
     {
-        return !SamRecordUtils.isFlagSet(alignment.getSamFlag(), SAMFlag.READ_REVERSE_STRAND);
+        return !SamRecordUtils.isFlagSet(rawAlignment.getSamFlag(), SAMFlag.READ_REVERSE_STRAND);
     }
 
     public int queryStart()
@@ -42,12 +42,12 @@ public record SagaAlignment(
 
     public int sagaStart()
     {
-        return alignment.getRefStart();
+        return rawAlignment.getRefStart();
     }
 
     public int sagaEnd()
     {
-        return alignment.getRefEnd();
+        return rawAlignment.getRefEnd();
     }
 
     public int sagaAlignLength()
@@ -62,7 +62,7 @@ public record SagaAlignment(
 
     public int alignScore()
     {
-        return alignment.getAlignerScore();
+        return rawAlignment.getAlignerScore();
     }
 
     // How many more bases could've been aligned on the left?
@@ -75,6 +75,11 @@ public record SagaAlignment(
     public int rightUnaligned()
     {
         return min(queryLength - queryEnd(), sagaLength() - sagaEnd());
+    }
+
+    public SagaVariant sagaVariant()
+    {
+        return sagaAssembly.variant();
     }
 
     @NotNull

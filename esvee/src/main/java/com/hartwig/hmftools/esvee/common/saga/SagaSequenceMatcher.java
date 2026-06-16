@@ -86,7 +86,7 @@ public class SagaSequenceMatcher
         return candidates.stream()
                 .filter(SagaSequenceMatchCandidate::isAccepted)
                 .findFirst()
-                .map(candidate -> new SagaMatchBySequence(candidate.variant(), candidate.cigar(), candidate.alignScore()))
+                .map(candidate -> new SagaMatchBySequence(candidate.alignment()))
                 .orElse(null);
     }
 
