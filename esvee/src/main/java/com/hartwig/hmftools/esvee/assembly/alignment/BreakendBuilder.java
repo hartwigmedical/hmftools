@@ -41,6 +41,7 @@ import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.LinkType;
 import com.hartwig.hmftools.esvee.common.IndelCoords;
 import com.hartwig.hmftools.esvee.common.saga.SagaAlignment;
+import com.hartwig.hmftools.esvee.common.saga.SagaAssembly;
 import com.hartwig.hmftools.esvee.common.saga.SagaBreakend;
 import com.hartwig.hmftools.esvee.common.saga.SagaVariant;
 
@@ -86,28 +87,36 @@ public class BreakendBuilder
             return false;
         }
 
-        SagaVariant sagaVariant = sagaAlignment.sagaVariant();
+        SagaAssembly sagaAssembly = sagaAlignment.sagaAssembly();
+        SagaVariant sagaVariant = sagaAssembly.variant();
         SagaBreakend lowerSagaBreakend = sagaVariant.breakend1();
         SagaBreakend upperSagaBreakend = sagaVariant.breakend2();
-
-        String phasedAsmSeq = mAssemblyAlignment.fullSequence();
+        List<Integer> sagaJunctionOffsets = sagaAlignment.sagaAssembly().junctionOffsets();
 
         // Calculate the indices of the breakends within the phased assembly sequence.
         List<Integer> seqJunctionOffsets = sagaAlignment.queryJunctionOffsets();
 
         // If it's an insert, the insert sequence is between the two junctions. Otherwise, it's a deletion and there's no insert sequence.
         String insertedBases;
-        if(seqJunctionOffsets.size() == 2)
+        if(sagaJunctionOffsets.size() == 2)
         {
+            String phasedAsmSeq = mAssemblyAlignment.fullSequence();
             int phasedAsmStart = min(max(0, seqJunctionOffsets.get(0)), phasedAsmSeq.length() - 1);
             int phasedAsmEnd = min(max(0, seqJunctionOffsets.get(1)), phasedAsmSeq.length());
-            int startInferred = phasedAsmStart - seqJunctionOffsets.get(0);
-            int endInferred = seqJunctionOffsets.get(1) - phasedAsmEnd;
-            // TODO: fill SAGA sequence instead of N
-            insertedBases = "N".repeat(startInferred) + phasedAsmSeq.substring(phasedAsmStart, phasedAsmEnd) + "N".repeat(endInferred);
+
+            // If there wasn't enough phased assembly to cover the whole SAGA insert sequence, get the missing part of the insert from SAGA.
+            int startInferredLength = sagaAlignment.sagaStart() - sagaJunctionOffsets.get(0);
+            String startInferredSeq =
+                    startInferredLength > 0 ? sagaAssembly.sequence().substring(sagaJunctionOffsets.get(0), sagaAlignment.sagaStart()) : "";
+            int endInferredLength = sagaJunctionOffsets.get(1) - sagaAlignment.sagaEnd();
+            String endInferredSeq =
+                    endInferredLength > 0 ? sagaAssembly.sequence().substring(sagaAlignment.sagaEnd(), sagaJunctionOffsets.get(1)) : "";
+
+            insertedBases = startInferredSeq + phasedAsmSeq.substring(phasedAsmStart, phasedAsmEnd) + endInferredSeq;
         }
         else
         {
+            assert sagaJunctionOffsets.size() == 1;
             insertedBases = "";
         }
 
