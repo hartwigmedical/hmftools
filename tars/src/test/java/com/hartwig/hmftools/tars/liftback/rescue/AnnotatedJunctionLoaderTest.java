@@ -1,150 +1,122 @@
 package com.hartwig.hmftools.tars.liftback.rescue;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.addGeneData;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.addTransExonData;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.createEnsemblGeneData;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.createGeneDataCache;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.createTransExons;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.Writer;
-import java.nio.file.Files;
+import java.util.List;
 import java.util.Set;
 
-import org.junit.After;
-import org.junit.Before;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
+
 import org.junit.Test;
 
 public class AnnotatedJunctionLoaderTest
 {
-    private File mDir;
+    private static final byte POS_STRAND = 1;
+    private static final byte NEG_STRAND = -1;
+    private static final String BIOTYPE = "protein_coding";
 
-    @Before
-    public void setUp() throws IOException
+    private static GeneData gene(final String geneId, final String chromosome)
     {
-        mDir = Files.createTempDirectory("ensembl_loader_test").toFile();
+        return createEnsemblGeneData(geneId, geneId, chromosome, 1, 1, 1_000_000);
     }
 
-    @After
-    public void tearDown()
+    // exonLength 99 -> a 100-base exon spanning start..start+99 (e.g. 1000..1099).
+    private static TranscriptData transcript(final String geneId, final int transId, final byte strand, final int[] exonStarts)
     {
-        if(mDir != null && mDir.exists())
-        {
-            final File[] files = mDir.listFiles();
-            if(files != null)
-            {
-                for(final File file : files)
-                    file.delete();
-            }
-            mDir.delete();
-        }
+        return transcript(geneId, transId, strand, exonStarts, 99);
     }
 
-    private void writeFile(final String name, final String content) throws IOException
+    private static TranscriptData transcript(
+            final String geneId, final int transId, final byte strand, final int[] exonStarts, final int exonLength)
     {
-        try(Writer writer = new FileWriter(new File(mDir, name)))
-        {
-            writer.write(content);
-        }
+        return createTransExons(geneId, transId, strand, exonStarts, exonLength, null, null, false, BIOTYPE);
     }
 
     @Test
-    public void testLoadsIntronsFromAdjacentExonPairs() throws IOException
+    public void testLoadsIntronsFromAdjacentExonPairs()
     {
-        writeFile("ensembl_gene_data.csv",
-                "GeneId,Chromosome\n"
-                + "ENSG_TEST,1\n");
+        final EnsemblDataCache cache = createGeneDataCache();
+        addGeneData(cache, "1", List.of(gene("ENSG_TEST", "1")));
 
-        // TX_A: 3 exons → 2 junctions; TX_B: different middle exon → 1 distinct junction
-        writeFile("ensembl_trans_exon_data.csv",
-                "GeneId,TransId,ExonStart,ExonEnd,ExonRank\n"
-                + "ENSG_TEST,TX_A,1000,1099,1\n"
-                + "ENSG_TEST,TX_A,1500,1599,2\n"
-                + "ENSG_TEST,TX_A,2000,2099,3\n"
-                + "ENSG_TEST,TX_B,1000,1099,1\n"
-                + "ENSG_TEST,TX_B,1700,1799,2\n");
+        // TX_A: 3 exons -> 2 junctions; TX_B: different middle exon -> 1 distinct junction
+        addTransExonData(cache, "ENSG_TEST", List.of(
+                transcript("ENSG_TEST", 1, POS_STRAND, new int[] { 1000, 1500, 2000 }),
+                transcript("ENSG_TEST", 2, POS_STRAND, new int[] { 1000, 1700 })));
 
-        final Set<ChrIntron> introns = AnnotatedJunctionLoader.load(mDir.getAbsolutePath());
+        final Set<ChrBaseRegion> introns = AnnotatedJunctionLoader.deriveIntrons(cache, V38);
 
         assertEquals(3, introns.size());
-        assertTrue(introns.contains(new ChrIntron("chr1", 1100, 1499)));
-        assertTrue(introns.contains(new ChrIntron("chr1", 1600, 1999)));
-        assertTrue(introns.contains(new ChrIntron("chr1", 1100, 1699)));
+        assertTrue(introns.contains(new ChrBaseRegion("chr1", 1100, 1499)));
+        assertTrue(introns.contains(new ChrBaseRegion("chr1", 1600, 1999)));
+        assertTrue(introns.contains(new ChrBaseRegion("chr1", 1100, 1699)));
     }
 
     @Test
-    public void testChrPrefixNormalization() throws IOException
+    public void testChrPrefixNormalization()
     {
-        writeFile("ensembl_gene_data.csv",
-                "GeneId,Chromosome\n"
-                + "ENSG_PREFIXED,chr3\n"
-                + "ENSG_BARE,3\n");
+        final EnsemblDataCache cache = createGeneDataCache();
+        addGeneData(cache, "chr3", List.of(gene("ENSG_PREFIXED", "chr3")));
+        addGeneData(cache, "3", List.of(gene("ENSG_BARE", "3")));
 
-        writeFile("ensembl_trans_exon_data.csv",
-                "GeneId,TransId,ExonStart,ExonEnd,ExonRank\n"
-                + "ENSG_PREFIXED,TX_P,100,199,1\n"
-                + "ENSG_PREFIXED,TX_P,500,599,2\n"
-                + "ENSG_BARE,TX_B,1000,1099,1\n"
-                + "ENSG_BARE,TX_B,1500,1599,2\n");
+        addTransExonData(cache, "ENSG_PREFIXED", List.of(transcript("ENSG_PREFIXED", 1, POS_STRAND, new int[] { 100, 500 })));
+        addTransExonData(cache, "ENSG_BARE", List.of(transcript("ENSG_BARE", 2, POS_STRAND, new int[] { 1000, 1500 })));
 
-        final Set<ChrIntron> introns = AnnotatedJunctionLoader.load(mDir.getAbsolutePath());
+        final Set<ChrBaseRegion> introns = AnnotatedJunctionLoader.deriveIntrons(cache, V38);
 
+        // both genes' introns land on chr3 regardless of the cache's chr-prefix form
         assertEquals(2, introns.size());
-        assertTrue(introns.contains(new ChrIntron("chr3", 200, 499)));
-        assertTrue(introns.contains(new ChrIntron("chr3", 1100, 1499)));
+        assertTrue(introns.contains(new ChrBaseRegion("chr3", 200, 499)));
+        assertTrue(introns.contains(new ChrBaseRegion("chr3", 1100, 1499)));
     }
 
     @Test
-    public void testSingleExonTranscriptsProduceNoIntrons() throws IOException
+    public void testSingleExonTranscriptsProduceNoIntrons()
     {
-        writeFile("ensembl_gene_data.csv",
-                "GeneId,Chromosome\n"
-                + "ENSG_X,1\n");
+        final EnsemblDataCache cache = createGeneDataCache();
+        addGeneData(cache, "1", List.of(gene("ENSG_X", "1")));
+        addTransExonData(cache, "ENSG_X", List.of(transcript("ENSG_X", 1, POS_STRAND, new int[] { 1000 }, 1000)));
 
-        writeFile("ensembl_trans_exon_data.csv",
-                "GeneId,TransId,ExonStart,ExonEnd,ExonRank\n"
-                + "ENSG_X,TX_SINGLE,1000,2000,1\n");
-
-        final Set<ChrIntron> introns = AnnotatedJunctionLoader.load(mDir.getAbsolutePath());
+        final Set<ChrBaseRegion> introns = AnnotatedJunctionLoader.deriveIntrons(cache, V38);
 
         assertEquals(0, introns.size());
     }
 
     @Test
-    public void testDuplicateJunctionsAcrossTranscriptsDeduplicate() throws IOException
+    public void testDuplicateJunctionsAcrossTranscriptsDeduplicate()
     {
-        writeFile("ensembl_gene_data.csv",
-                "GeneId,Chromosome\n"
-                + "ENSG_DUP,2\n");
+        final EnsemblDataCache cache = createGeneDataCache();
+        addGeneData(cache, "2", List.of(gene("ENSG_DUP", "2")));
+        addTransExonData(cache, "ENSG_DUP", List.of(
+                transcript("ENSG_DUP", 1, POS_STRAND, new int[] { 100, 300 }),
+                transcript("ENSG_DUP", 2, POS_STRAND, new int[] { 100, 300 })));
 
-        writeFile("ensembl_trans_exon_data.csv",
-                "GeneId,TransId,ExonStart,ExonEnd,ExonRank\n"
-                + "ENSG_DUP,T1,100,199,1\n"
-                + "ENSG_DUP,T1,300,399,2\n"
-                + "ENSG_DUP,T2,100,199,1\n"
-                + "ENSG_DUP,T2,300,399,2\n");
-
-        final Set<ChrIntron> introns = AnnotatedJunctionLoader.load(mDir.getAbsolutePath());
+        final Set<ChrBaseRegion> introns = AnnotatedJunctionLoader.deriveIntrons(cache, V38);
 
         assertEquals(1, introns.size());
-        assertTrue(introns.contains(new ChrIntron("chr2", 200, 299)));
+        assertTrue(introns.contains(new ChrBaseRegion("chr2", 200, 299)));
     }
 
     @Test
-    public void testReverseStrandRankOrder() throws IOException
+    public void testReverseStrandRankOrder()
     {
-        // negative-strand transcripts have exons ranked high→low genome pos; intron coords must still be lo..hi.
-        writeFile("ensembl_gene_data.csv",
-                "GeneId,Chromosome\n"
-                + "ENSG_NEG,4\n");
+        // negative-strand transcripts have exons ranked high->low genome pos; intron coords must still be lo..hi.
+        final EnsemblDataCache cache = createGeneDataCache();
+        addGeneData(cache, "4", List.of(gene("ENSG_NEG", "4")));
+        addTransExonData(cache, "ENSG_NEG", List.of(transcript("ENSG_NEG", 1, NEG_STRAND, new int[] { 1000, 2000 })));
 
-        writeFile("ensembl_trans_exon_data.csv",
-                "GeneId,TransId,ExonStart,ExonEnd,ExonRank\n"
-                + "ENSG_NEG,T_NEG,2000,2099,1\n"
-                + "ENSG_NEG,T_NEG,1000,1099,2\n");
-
-        final Set<ChrIntron> introns = AnnotatedJunctionLoader.load(mDir.getAbsolutePath());
+        final Set<ChrBaseRegion> introns = AnnotatedJunctionLoader.deriveIntrons(cache, V38);
 
         assertEquals(1, introns.size());
-        assertTrue(introns.contains(new ChrIntron("chr4", 1100, 1999)));
+        assertTrue(introns.contains(new ChrBaseRegion("chr4", 1100, 1999)));
     }
 }

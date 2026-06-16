@@ -12,7 +12,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.hartwig.hmftools.tars.liftback.rescue.ChrIntron;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.tars.liftback.rescue.JunctionRescueResolver;
 import com.hartwig.hmftools.tars.liftback.rescue.RefSequenceSource;
 import com.hartwig.hmftools.tars.liftback.rescue.RescueCandidate;
@@ -156,12 +156,12 @@ public class LiftBackGroupProcessor
         final LiftBackResult[] Resolved;
         final boolean[] DroppedByRescue;
         final LiftBackResult PrimaryResult;
-        final List<ChrIntron> IntroducedIntrons;
+        final List<ChrBaseRegion> IntroducedIntrons;
         final int PrimaryIndex;
         final boolean PrimaryPostProcessed;
 
         MateDecision(final LiftBackResult[] resolved, final boolean[] droppedByRescue,
-                final LiftBackResult primaryResult, final List<ChrIntron> introducedIntrons,
+                final LiftBackResult primaryResult, final List<ChrBaseRegion> introducedIntrons,
                 final int primaryIndex, final boolean primaryPostProcessed)
         {
             Resolved = resolved;
@@ -178,7 +178,7 @@ public class LiftBackGroupProcessor
         }
     }
 
-    private MateDecision decideMateGroup(final List<SAMRecord> records, final List<ChrIntron> mateHintIntrons)
+    private MateDecision decideMateGroup(final List<SAMRecord> records, final List<ChrBaseRegion> mateHintIntrons)
     {
         if(records.isEmpty())
             return MateDecision.empty();
@@ -203,7 +203,7 @@ public class LiftBackGroupProcessor
 
         final int primaryIdx = primary != null ? indexOfPrimary(records, primary) : -1;
 
-        final List<ChrIntron> introduced = new ArrayList<>();
+        final List<ChrBaseRegion> introduced = new ArrayList<>();
         final boolean[] droppedByRescue = applyJunctionRescue(records, resolved, primary, mateHintIntrons, introduced);
 
         // Collapse a spurious tx-contig terminal micro-junction before tail extension, so the extender
@@ -304,7 +304,7 @@ public class LiftBackGroupProcessor
     // is appended-to (caller-provided list) so the partner mate can use them as hints in the second pass.
     private boolean[] applyJunctionRescue(
             final List<SAMRecord> records, final LiftBackResult[] resolved, final SAMRecord primary,
-            final List<ChrIntron> mateHintIntrons, final List<ChrIntron> introducedIntronsOut)
+            final List<ChrBaseRegion> mateHintIntrons, final List<ChrBaseRegion> introducedIntronsOut)
     {
         if(mJunctionRescueResolver == null || primary == null || primary.getReadUnmappedFlag())
             return null;

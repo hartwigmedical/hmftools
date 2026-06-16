@@ -1,18 +1,14 @@
 package com.hartwig.hmftools.tars.liftback;
 
-import static com.hartwig.hmftools.tars.liftback.rescue.CigarShape.OP_MATCH;
-import static com.hartwig.hmftools.tars.liftback.rescue.CigarShape.OP_SEQ_MATCH;
-import static com.hartwig.hmftools.tars.liftback.rescue.CigarShape.OP_SEQ_MISMATCH;
-import static com.hartwig.hmftools.tars.liftback.rescue.CigarShape.OP_SKIPPED;
-import static com.hartwig.hmftools.tars.liftback.rescue.CigarShape.consumesRead;
-import static com.hartwig.hmftools.tars.liftback.rescue.CigarShape.consumesReference;
-
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
-import com.hartwig.hmftools.tars.liftback.rescue.CigarShape;
+import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.tars.liftback.rescue.RefSequenceSource;
 import com.hartwig.hmftools.tars.liftback.rescue.SpliceMotif;
+
+import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
 
 // Slides a lifted intron a few bp to land its donor/acceptor on a canonical splice motif (GT-AG, or
 // the reverse-strand complement CT-AC). A tx-contig alignment that carries a small deletion straddling
@@ -49,7 +45,7 @@ public class JunctionCanonicalizer
         if(mRefSource == null || chromosome == null || cigar == null || readBases == null || readBases.length == 0)
             return JunctionCanonicalizationResult.unchanged();
 
-        final List<CigarShape.Element> elements = CigarShape.parse(cigar);
+        final List<CigarElement> elements = CigarUtils.cigarElementsFromStr(cigar);
         if(elements.size() < 3)
             return JunctionCanonicalizationResult.unchanged();
 
@@ -60,9 +56,9 @@ public class JunctionCanonicalizer
         // re-sizes the flanking M's) is reflected when the next junction is evaluated.
         for(int j = 1; j < elements.size() - 1; ++j)
         {
-            if(elements.get(j).Op != OP_SKIPPED)
+            if(elements.get(j).getOperator() != CigarOperator.N)
                 continue;
-            if(!isMatchedOp(elements.get(j - 1).Op) || !isMatchedOp(elements.get(j + 1).Op))
+            if(!isMatchedOp(elements.get(j - 1).getOperator()) || !isMatchedOp(elements.get(j + 1).getOperator()))
                 continue;
 
             if(trySlideJunction(chromosome, alignmentStart, elements, j, readBases))
@@ -73,13 +69,13 @@ public class JunctionCanonicalizer
             return JunctionCanonicalizationResult.unchanged();
 
         mJunctionsShifted.addAndGet(shifted);
-        return new JunctionCanonicalizationResult(true, CigarShape.format(elements), shifted);
+        return new JunctionCanonicalizationResult(true, CigarUtils.cigarElementsToStr(elements), shifted);
     }
 
     // Evaluates intron at element index j and applies the best canonicalizing shift in place. Returns
     // true if a shift was applied.
     private boolean trySlideJunction(
-            final String chromosome, final int alignmentStart, final List<CigarShape.Element> elements,
+            final String chromosome, final int alignmentStart, final List<CigarElement> elements,
             final int j, final byte[] readBases)
     {
         // genome position of the first base after the left flank = intron start; read index of the
@@ -88,20 +84,20 @@ public class JunctionCanonicalizer
         int readIndex = 0;
         for(int i = 0; i < j; ++i)
         {
-            final CigarShape.Element e = elements.get(i);
-            if(consumesReference(e.Op))
-                genomePos += e.Length;
-            if(consumesRead(e.Op))
-                readIndex += e.Length;
+            final CigarElement e = elements.get(i);
+            if(e.getOperator().consumesReferenceBases())
+                genomePos += e.getLength();
+            if(e.getOperator().consumesReadBases())
+                readIndex += e.getLength();
         }
 
-        final int intronLength = elements.get(j).Length;
+        final int intronLength = elements.get(j).getLength();
         final int intronStart = genomePos;                 // first intronic base (1-based)
         final int intronEnd = genomePos + intronLength - 1; // last intronic base
         final int rightReadStart = readIndex;              // read index of right flank's first base
 
-        final int leftLen = elements.get(j - 1).Length;
-        final int rightLen = elements.get(j + 1).Length;
+        final int leftLen = elements.get(j - 1).getLength();
+        final int rightLen = elements.get(j + 1).getLength();
         final int maxShift = Math.min(mMaxShift, Math.min(leftLen - 1, rightLen - 1));
         if(maxShift < 1)
             return false;
@@ -143,8 +139,8 @@ public class JunctionCanonicalizer
             return false;
 
         // apply: +d grows the left flank and shrinks the right; -d the reverse. Intron length unchanged.
-        elements.set(j - 1, new CigarShape.Element(leftLen + bestShift, elements.get(j - 1).Op));
-        elements.set(j + 1, new CigarShape.Element(rightLen - bestShift, elements.get(j + 1).Op));
+        elements.set(j - 1, new CigarElement(leftLen + bestShift, elements.get(j - 1).getOperator()));
+        elements.set(j + 1, new CigarElement(rightLen - bestShift, elements.get(j + 1).getOperator()));
         return true;
     }
 
@@ -206,9 +202,9 @@ public class JunctionCanonicalizer
         return new byte[] {block[offset], block[offset + 1]};
     }
 
-    private static boolean isMatchedOp(final char op)
+    private static boolean isMatchedOp(final CigarOperator op)
     {
-        return op == OP_MATCH || op == OP_SEQ_MATCH || op == OP_SEQ_MISMATCH;
+        return op == CigarOperator.M || op == CigarOperator.EQ || op == CigarOperator.X;
     }
 
     private static boolean basesEqualIgnoreCase(final byte a, final byte b)

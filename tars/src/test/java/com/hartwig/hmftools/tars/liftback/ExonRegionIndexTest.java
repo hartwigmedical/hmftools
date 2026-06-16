@@ -1,43 +1,66 @@
 package com.hartwig.hmftools.tars.liftback;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.addGeneData;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.addTransExonData;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.createEnsemblGeneData;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.createGeneDataCache;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
+
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.gene.ExonData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 
 import org.junit.Test;
 
 // contains() uses binary search on merged ranges; earlier scan-back was O(N) and tripped on overlap edge cases.
 public class ExonRegionIndexTest
 {
-    @Test
-    public void testContainsHitsIncludeBoundaries() throws Exception
+    // builds an index from a single gene on ensembl chromosome "1" (keyed as chr1 under V38) whose one
+    // transcript carries the given exon spans. fromCache merges the spans, so overlapping/abutting spans coalesce.
+    private static ExonRegionIndex indexFor(final String chromosome, final List<int[]> exonSpans)
     {
-        final ExonRegionIndex idx = build(List.of(new int[] { 100, 200 }, new int[] { 300, 400 }));
+        final EnsemblDataCache cache = createGeneDataCache();
+        addGeneData(cache, chromosome, List.of(createEnsemblGeneData("ENSG_TEST", "TESTG", chromosome, 1, 1, 100_000)));
 
+        final TranscriptData transcript = new TranscriptData(
+                1, "ENST_TEST", "ENSG_TEST", true, (byte) 1, 1, 100_000, null, null, "protein_coding", "");
+        final List<ExonData> exons = new ArrayList<>();
+        int rank = 1;
+        for(final int[] span : exonSpans)
+            exons.add(new ExonData(1, span[0], span[1], rank++, -1, -1));
+        transcript.setExons(exons);
+        addTransExonData(cache, "ENSG_TEST", List.of(transcript));
+
+        return ExonRegionIndex.fromCache(cache, V38);
+    }
+
+    @Test
+    public void testContains()
+    {
+        final ExonRegionIndex idx = indexFor("1", List.of(new int[] { 100, 200 }, new int[] { 300, 400 }));
+
+        // hits include interval boundaries
         assertTrue(idx.contains("chr1", 100));
         assertTrue(idx.contains("chr1", 150));
         assertTrue(idx.contains("chr1", 200));
         assertTrue(idx.contains("chr1", 300));
         assertTrue(idx.contains("chr1", 400));
-    }
 
-    @Test
-    public void testContainsMissesIntronicAndIntergenic() throws Exception
-    {
-        final ExonRegionIndex idx = build(List.of(new int[] { 100, 200 }, new int[] { 300, 400 }));
-
+        // intronic / intergenic positions miss
         assertFalse(idx.contains("chr1", 50));
         assertFalse(idx.contains("chr1", 250));
         assertFalse(idx.contains("chr1", 500));
     }
 
     @Test
-    public void testContainsAcrossOverlappingAndAbuttingIntervals() throws Exception
+    public void testContainsAcrossOverlappingAndAbuttingIntervals()
     {
-        final ExonRegionIndex idx = build(List.of(
+        final ExonRegionIndex idx = indexFor("1", List.of(
                 new int[] { 100, 200 },
                 new int[] { 150, 300 },
                 new int[] { 301, 400 },
@@ -52,28 +75,12 @@ public class ExonRegionIndexTest
     }
 
     @Test
-    public void testChromosomeNormalizationIsBidirectional() throws Exception
+    public void testChromosomeKeyedInVersionedForm()
     {
-        final ExonRegionIndex idx = build(List.of(new int[] { 100, 200 }));
+        // ensembl stores bare "1"; the index keys it in the run's ref-genome form (V38 -> chr1) so lookups by
+        // lifted genomic contig match directly. The bare form does not match.
+        final ExonRegionIndex idx = indexFor("1", List.of(new int[] { 100, 200 }));
         assertTrue(idx.contains("chr1", 150));
-        assertTrue(idx.contains("1", 150));
-        assertFalse(idx.contains("chr2", 150));
-    }
-
-    private static ExonRegionIndex build(final List<int[]> exons) throws Exception
-    {
-        final Path dir = Files.createTempDirectory("exonIdxTest");
-        Files.writeString(dir.resolve("ensembl_gene_data.csv"),
-                "GeneId,GeneName,Chromosome,Strand,GeneStart,GeneEnd\nENSG_TEST,TESTG,1,1,1,100000\n");
-        final StringBuilder sb = new StringBuilder("GeneId,CanonicalTranscriptId,Strand,TransId,TransName,BioType,"
-                + "TransStart,TransEnd,ExonRank,ExonStart,ExonEnd,ExonPhase,ExonEndPhase,CodingStart,CodingEnd,RefSeqId\n");
-        int rank = 1;
-        for(final int[] exon : exons)
-        {
-            sb.append("ENSG_TEST,1,1,1,ENST_TEST,protein_coding,1,100000,").append(rank++).append(",")
-                    .append(exon[0]).append(",").append(exon[1]).append(",0,0,0,0,\n");
-        }
-        Files.writeString(dir.resolve("ensembl_trans_exon_data.csv"), sb.toString());
-        return ExonRegionIndex.load(dir.toString());
+        assertFalse(idx.contains("1", 150));
     }
 }

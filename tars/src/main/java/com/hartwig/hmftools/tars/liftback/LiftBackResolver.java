@@ -32,7 +32,7 @@ public class LiftBackResolver
     private static final int INPUT_UNIQUE_MAPQ = 60;
 
     // Set to 1: every tx-contig junction is annotated by construction, so even a 1bp anchor is a real exon
-    // base (STAR keeps annotated-junction anchors down to 1bp; a higher floor manufactured false junction diffs).
+    // base. A higher floor manufactured false junction diffs by clipping legitimate short anchors.
     private static final int ANNOTATED_JUNCTION_MIN_ANCHOR_BP = 1;
 
     // Higher than bare floor because an adjacent softclip indicates bwa over-ran the exon boundary —
@@ -40,7 +40,7 @@ public class LiftBackResolver
     private static final int ANNOTATED_JUNCTION_MIN_SOFTCLIP_ANCHOR_BP = 3;
 
     // bwa-mem2 default scoring (match +1, mismatch -4, gap-open -6, gap-extend -1; soft-clips not penalised).
-    // XA alts carry no AS tag, so score is reconstructed to filter sub-optimal competitors as STAR does.
+    // XA alts carry no AS tag, so score is reconstructed to filter out sub-optimal competitors.
     private static final int SCORE_MATCH = 1;
     private static final int SCORE_MISMATCH = 4;
     private static final int SCORE_GAP_OPEN = 6;
@@ -129,6 +129,14 @@ public class LiftBackResolver
         return new LiftedCoords(lifted.LiftedChrom, lifted.LiftedPos, lifted.LiftedCigar);
     }
 
+    private LiftedAlignment liftSelf(final SAMRecord record)
+    {
+        return liftAlignment(
+                LiftedAlignment.AlignmentSource.SELF,
+                record.getReferenceName(), record.getAlignmentStart(), record.getCigarString(),
+                getInt(record, AS_TAG), getInt(record, NM_TAG), !record.getReadNegativeStrandFlag());
+    }
+
     public LiftBackResult resolve(final SAMRecord record)
     {
         if(record.getReadUnmappedFlag())
@@ -143,17 +151,13 @@ public class LiftBackResolver
     private LiftBackResult resolvePrimary(final SAMRecord record)
     {
         final List<LiftedAlignment> xaAlts = parseAndLiftXa(record);
-        return resolvePrimaryWithAlts(record, xaAlts, xaAlts.size()); // numXaAlts tracks the deduped+lifted count
+        return resolvePrimaryWithAlts(record, xaAlts, xaAlts.size());
     }
 
     private LiftBackResult resolvePrimaryWithAlts(
             final SAMRecord record, final List<LiftedAlignment> alts, final int numXaAltsForReport)
     {
-        final LiftedAlignment self = liftAlignment(
-                LiftedAlignment.AlignmentSource.SELF,
-                record.getReferenceName(), record.getAlignmentStart(), record.getCigarString(),
-                getInt(record, AS_TAG), getInt(record, NM_TAG),
-                !record.getReadNegativeStrandFlag());
+        final LiftedAlignment self = liftSelf(record);
 
         if(self == null)
             return unliftableResult(LiftBackResult.RecordRole.PRIMARY, numXaAltsForReport, "primary_translate_failed");
@@ -205,11 +209,7 @@ public class LiftBackResolver
     // MAPQ=0 on a tx-contig supplementary is the multi-alt-contig tie artefact; rescue to RESCUED_MAPQ.
     private LiftBackResult supplementaryResult(final SAMRecord record)
     {
-        final LiftedAlignment lifted = liftAlignment(
-                LiftedAlignment.AlignmentSource.SELF,
-                record.getReferenceName(), record.getAlignmentStart(), record.getCigarString(),
-                getInt(record, AS_TAG), getInt(record, NM_TAG),
-                !record.getReadNegativeStrandFlag());
+        final LiftedAlignment lifted = liftSelf(record);
 
         if(lifted == null)
             return unliftableResult(LiftBackResult.RecordRole.SUPPLEMENTARY, 0, "supp_translate_failed");
@@ -334,9 +334,8 @@ public class LiftBackResolver
                 softClipAtBoundary, forwardStrand, entry.strand());
     }
 
-    // Counts distinct loci among only the best-scoring alignments, matching STAR's outFilterMultimapScoreRange
-    // semantics. Sub-optimal XA alts (paralog hits, split-read mates) are not real placement competitors;
-    // including them inflated numLoci and blocked MAPQ rescue for uniquely-placed reads.
+    // Counts distinct loci among only the best-scoring alignments (sub-optimal alts excluded from the multimap count).
+    // Sub-optimal XA alts aren't real placement competitors -- counting them inflated numLoci and blocked MAPQ rescue.
     private static int countDistinctLoci(final List<LiftedAlignment> alignments)
     {
         if(alignments.isEmpty())
@@ -436,10 +435,9 @@ public class LiftBackResolver
                 List.of());
     }
 
-    // MAPQ rewrite policy for primary records; extracted for unit testing.
     // Rescue to RESCUED_MAPQ if: swapped by discriminator; or MAPQ=0 + single locus + no unresolved hidden tie.
     // Hidden tie (XS==AS, ref-only primary, not in annotated exon) blocks rescue — the unseen alt may be real.
-    // Rescue is gated on hasTxMatch: without a tx alignment, MAPQ-0 is not a tx-artefact and is left alone.
+    // Gated on hasTxMatch: without a tx alignment, MAPQ-0 is not a tx-artefact and is left alone.
     static int decidePrimaryMapq(
             final int inputMapq, final int numLoci, final boolean swapped, final boolean hiddenTie,
             final boolean primaryFromTxContig, final boolean primaryInAnnotatedExon, final boolean hasTxMatch)

@@ -1,17 +1,22 @@
 package com.hartwig.hmftools.tars.liftback;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-// Per-chromosome merged exon spans loaded from ensembl_data_cache CSVs. Used by LiftBackResolver to
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.gene.ExonData;
+import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+
+// Per-chromosome merged exon spans loaded from the ensembl data cache. Used by LiftBackResolver to
 // distinguish a hidden tie where the primary lands in an annotated exon (rescue MAPQ) from a genuinely
 // ambiguous tie (keep MAPQ 0). Lookup is O(log N) via binary search over sorted, non-overlapping spans.
+// Chromosomes are keyed in the run's ref-genome form (versionedChromosome) so lookups by lifted genomic
+// contig match directly.
 public final class ExonRegionIndex
 {
     private final Map<String, int[]> mExonStarts;
@@ -23,11 +28,10 @@ public final class ExonRegionIndex
         mExonEnds = ends;
     }
 
-    public boolean contains(final String chrom, final int pos)
+    public boolean contains(final String chromosome, final int pos)
     {
-        final String key = normalize(chrom);
-        final int[] starts = mExonStarts.get(key);
-        final int[] ends = mExonEnds.get(key);
+        final int[] starts = mExonStarts.get(chromosome);
+        final int[] ends = mExonEnds.get(chromosome);
         if(starts == null)
             return false;
 
@@ -51,43 +55,49 @@ public final class ExonRegionIndex
         return idx >= 0 && pos <= ends[idx];
     }
 
-    public static ExonRegionIndex load(final String ensemblDir)
-            throws IOException
+    public static ExonRegionIndex load(final String ensemblDir, final RefGenomeVersion refGenomeVersion)
     {
-        final Map<String, String> geneChrom = loadGeneChromosomes(ensemblDir + "/ensembl_gene_data.csv");
-        final Map<String, List<int[]>> byChrom = new HashMap<>();
-        try(BufferedReader reader = new BufferedReader(new FileReader(ensemblDir + "/ensembl_trans_exon_data.csv")))
+        final EnsemblDataCache ensemblDataCache = new EnsemblDataCache(ensemblDir, refGenomeVersion);
+        ensemblDataCache.setRequiredData(true, false, false, false);
+        ensemblDataCache.load(false);
+        return fromCache(ensemblDataCache, refGenomeVersion);
+    }
+
+    public static ExonRegionIndex fromCache(final EnsemblDataCache ensemblDataCache, final RefGenomeVersion refGenomeVersion)
+    {
+        final Map<String, List<int[]>> spansByChromosome = new HashMap<>();
+        for(final List<GeneData> genes : ensemblDataCache.getChrGeneDataMap().values())
         {
-            final String[] header = reader.readLine().split(",");
-            final int gi = indexOf(header, "GeneId");
-            final int si = indexOf(header, "ExonStart");
-            final int ei = indexOf(header, "ExonEnd");
-            String line;
-            while((line = reader.readLine()) != null)
+            for(final GeneData gene : genes)
             {
-                final String[] cols = line.split(",");
-                final String chrom = geneChrom.get(cols[gi]);
-                if(chrom == null)
+                final List<TranscriptData> transcripts = ensemblDataCache.getTranscripts(gene.GeneId);
+                if(transcripts == null)
                     continue;
-                byChrom.computeIfAbsent(chrom, k -> new ArrayList<>())
-                        .add(new int[] { Integer.parseInt(cols[si]), Integer.parseInt(cols[ei]) });
+
+                final String chromosome = refGenomeVersion.versionedChromosome(gene.Chromosome);
+                final List<int[]> spans = spansByChromosome.computeIfAbsent(chromosome, k -> new ArrayList<>());
+                for(final TranscriptData transcript : transcripts)
+                {
+                    for(final ExonData exon : transcript.exons())
+                        spans.add(new int[] { exon.Start, exon.End });
+                }
             }
         }
 
         final Map<String, int[]> starts = new HashMap<>();
         final Map<String, int[]> ends = new HashMap<>();
-        for(Map.Entry<String, List<int[]>> entry : byChrom.entrySet())
+        for(final Map.Entry<String, List<int[]>> entry : spansByChromosome.entrySet())
         {
             final List<int[]> merged = mergeIntervals(entry.getValue());
-            final int[] s = new int[merged.size()];
-            final int[] e = new int[merged.size()];
+            final int[] mergedStarts = new int[merged.size()];
+            final int[] mergedEnds = new int[merged.size()];
             for(int i = 0; i < merged.size(); ++i)
             {
-                s[i] = merged.get(i)[0];
-                e[i] = merged.get(i)[1];
+                mergedStarts[i] = merged.get(i)[0];
+                mergedEnds[i] = merged.get(i)[1];
             }
-            starts.put(entry.getKey(), s);
-            ends.put(entry.getKey(), e);
+            starts.put(entry.getKey(), mergedStarts);
+            ends.put(entry.getKey(), mergedEnds);
         }
         return new ExonRegionIndex(starts, ends);
     }
@@ -97,6 +107,7 @@ public final class ExonRegionIndex
     {
         if(intervals.isEmpty())
             return intervals;
+
         Collections.sort(intervals, (a, b) -> Integer.compare(a[0], b[0]));
         final List<int[]> merged = new ArrayList<>();
         int[] current = new int[] { intervals.get(0)[0], intervals.get(0)[1] };
@@ -113,42 +124,5 @@ public final class ExonRegionIndex
         }
         merged.add(current);
         return merged;
-    }
-
-    private static Map<String, String> loadGeneChromosomes(final String path)
-            throws IOException
-    {
-        final Map<String, String> out = new HashMap<>();
-        try(BufferedReader reader = new BufferedReader(new FileReader(path)))
-        {
-            final String[] header = reader.readLine().split(",");
-            final int gi = indexOf(header, "GeneId");
-            final int ci = indexOf(header, "Chromosome");
-            String line;
-            while((line = reader.readLine()) != null)
-            {
-                final String[] cols = line.split(",");
-                out.put(cols[gi], normalize(cols[ci]));
-            }
-        }
-        return out;
-    }
-
-    // Ensembl CSVs use bare names ("1"); BAMs use "chr1". Strip prefix to normalize both sides.
-    private static String normalize(final String chrom)
-    {
-        if(chrom == null)
-            return null;
-        return chrom.startsWith("chr") ? chrom.substring(3) : chrom;
-    }
-
-    private static int indexOf(final String[] header, final String name)
-    {
-        for(int i = 0; i < header.length; ++i)
-        {
-            if(header[i].equals(name))
-                return i;
-        }
-        throw new IllegalArgumentException("missing column: " + name);
     }
 }

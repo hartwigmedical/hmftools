@@ -64,7 +64,7 @@ public enum LiftBackCategory
         }
     }
 
-    // tx-contig won over bwa; lift-back has strictly better placement info so the STAR ladder runs unconditionally.
+    // tx-contig won over bwa; lift-back has strictly better placement info so the refinement ladder runs unconditionally.
     public boolean txWon()
     {
         switch(this)

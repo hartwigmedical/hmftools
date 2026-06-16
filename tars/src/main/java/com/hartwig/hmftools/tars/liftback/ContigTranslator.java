@@ -194,8 +194,8 @@ public final class ContigTranslator
     }
 
     // Drops fabricated sub-threshold junction anchors at both ends. A tx-contig walk that dribbles past
-    // an exon boundary leaves a tiny "yM nN..." or "...nN yM zS" anchor; STAR rejects junctions whose
-    // flanking block is shorter than alignSJDBoverhangMin. Two floors: bareAnchorFloor for a read
+    // an exon boundary leaves a tiny "yM nN..." or "...nN yM zS" anchor; a junction whose flanking block
+    // is shorter than the overhang floor is unsupported and rejected. Two floors: bareAnchorFloor for a read
     // genuinely starting inside an exon (no adjacent S, kept down to 1bp); softclipAnchorFloor for
     // an anchor sitting next to a softclip (bwa over-ran the boundary, so the implied junction is
     // unsupported — roll the yM into the softclip). Leading trim advances start past dropped yM+intron.

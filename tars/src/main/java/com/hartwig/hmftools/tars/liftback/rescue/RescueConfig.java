@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.tars.liftback.rescue;
 
-// Config for JunctionRescueResolver. Defaults mirror STAR's annotated-junction policy:
-// alignSJoverhangMin=3, alignIntronMin=21, alignIntronMax=1_000_000.
+// Config for JunctionRescueResolver. Defaults for the annotated-junction policy:
+// min anchor overhang 3, min intron 21, max intron 1_000_000.
 public class RescueConfig
 {
     public static final int DEFAULT_MIN_INTRON_LENGTH = 21;
@@ -10,7 +10,7 @@ public class RescueConfig
     public static final int DEFAULT_MAX_CHAIN_DEPTH = 4;
     // Overlap tolerance between primary and supp matched regions. BWA primary/supp often disagree
     // by 1-5 bases on junction placement; snapping to an annotated junction within this window recovers
-    // the real splice. STAR-style snap preferred; ties resolve via trust-primary.
+    // the real splice. Snapping to the annotated junction is preferred; ties resolve via trust-primary.
     public static final int DEFAULT_SOFTCLIP_TOLERANCE = 5;
     // How many over-extended matched bases to trim when probing for an annotated donor/acceptor
     // (no-supp ref-verify path). BWA frequently extends past the true exon boundary into the intron;

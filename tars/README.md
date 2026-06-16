@@ -1,6 +1,6 @@
 # TARS
 
-**TARS** (Transcript Alignment for RNA Splicing) gives STAR-like splice-aware RNA alignments using bwa-mem2. RNA reads
+**TARS** (Transcript Alignment for RNA Splicing) produces splice-aware RNA alignments using bwa-mem2. RNA reads
 are aligned against the genome FASTA with annotated multi-exon transcript contigs (`*_tx`) appended; liftback rewrites
 those tx-contig alignments back to genomic coordinates so the output is an ordinary genomic RNA BAM: no `*_tx` in the
 header or on records, XA/SA/mate fields genomic, spliced reads carried as `N` CIGAR ops.

@@ -2,6 +2,7 @@ package com.hartwig.hmftools.tars.liftback;
 
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.TX_CONTIG;
+import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.assertLifted;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.threeExonContig;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -41,9 +42,7 @@ public class SpliceLiftBackApplyTest
 
         LiftBackRecordOps.applyResultToRecord(record, resolver.resolve(record), new LiftedMateInfoCache());
 
-        assertEquals(CHR_1, record.getReferenceName());
-        assertEquals(150, record.getAlignmentStart());
-        assertEquals("50M100N50M", record.getCigarString());
+        assertLifted(record, CHR_1, 150, "50M100N50M");
         assertNull(record.getStringAttribute(XA_TAG));
     }
 

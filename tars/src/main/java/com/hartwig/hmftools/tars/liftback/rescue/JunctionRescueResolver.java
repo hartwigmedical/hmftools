@@ -1,20 +1,17 @@
 package com.hartwig.hmftools.tars.liftback.rescue;
 
-import static com.hartwig.hmftools.tars.liftback.rescue.CigarShape.OP_DELETION;
-import static com.hartwig.hmftools.tars.liftback.rescue.CigarShape.OP_INSERTION;
-import static com.hartwig.hmftools.tars.liftback.rescue.CigarShape.OP_MATCH;
-import static com.hartwig.hmftools.tars.liftback.rescue.CigarShape.OP_SEQ_MATCH;
-import static com.hartwig.hmftools.tars.liftback.rescue.CigarShape.OP_SEQ_MISMATCH;
-import static com.hartwig.hmftools.tars.liftback.rescue.CigarShape.OP_SKIPPED;
-import static com.hartwig.hmftools.tars.liftback.rescue.CigarShape.OP_SOFTCLIP;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.hartwig.hmftools.common.bam.CigarUtils;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.tars.common.SpliceCommon;
+
+import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
 
 // Merges a primary's terminal softclip with an annotated-intron-spanning supplementary into a
 // single spliced primary (N op). Chains up to RescueConfig.MaxChainDepth merges per read.
@@ -25,7 +22,7 @@ public class JunctionRescueResolver
     private final RescueConfig mConfig;
     private final RescueStatistics mStatistics;
 
-    public JunctionRescueResolver(final Set<ChrIntron> annotatedJunctions, final RescueConfig config)
+    public JunctionRescueResolver(final Set<ChrBaseRegion> annotatedJunctions, final RescueConfig config)
     {
         this(new AnnotatedJunctionIndex(annotatedJunctions != null ? annotatedJunctions : new HashSet<>()),
                 null, config);
@@ -63,8 +60,8 @@ public class JunctionRescueResolver
             return RescueResult.noMerge(RescueRejectReason.LOW_PRIMARY_MAPQ);
         }
 
-        List<CigarShape.Element> primaryCigar = CigarShape.parse(candidate.PrimaryCigar);
-        if(CigarShape.hasHardClip(primaryCigar))
+        List<CigarElement> primaryCigar = CigarUtils.cigarElementsFromStr(candidate.PrimaryCigar);
+        if(CigarUtils.hasHardClip(primaryCigar))
         {
             mStatistics.countReject(RescueRejectReason.COMPLEX_CIGAR_SHAPE);
             return RescueResult.noMerge(RescueRejectReason.COMPLEX_CIGAR_SHAPE);
@@ -77,16 +74,16 @@ public class JunctionRescueResolver
         int primaryStart = candidate.PrimaryStart;
         final List<RescueSupplementary> remaining = new ArrayList<>(candidate.Supplementaries);
         final List<Integer> dropped = new ArrayList<>();
-        final List<ChrIntron> introns = new ArrayList<>();
+        final List<ChrBaseRegion> introns = new ArrayList<>();
         RescueRejectReason lastReject = null;
         int chainDepth = 0;
 
         while(chainDepth < mConfig.MaxChainDepth && !remaining.isEmpty())
         {
             final boolean primaryHasLeadingS = !primaryCigar.isEmpty()
-                    && primaryCigar.get(0).Op == OP_SOFTCLIP;
+                    && primaryCigar.get(0).getOperator() == CigarOperator.S;
             final boolean primaryHasTrailingS = !primaryCigar.isEmpty()
-                    && primaryCigar.get(primaryCigar.size() - 1).Op == OP_SOFTCLIP;
+                    && primaryCigar.get(primaryCigar.size() - 1).getOperator() == CigarOperator.S;
             if(!primaryHasLeadingS && !primaryHasTrailingS)
             {
                 if(chainDepth == 0)
@@ -121,7 +118,7 @@ public class JunctionRescueResolver
 
         mStatistics.countMergedChain(chainDepth);
         return new RescueResult(
-                true, CigarShape.format(primaryCigar), primaryStart,
+                true, CigarUtils.cigarElementsToStr(primaryCigar), primaryStart,
                 dropped, introns, chainDepth, null);
     }
 
@@ -134,8 +131,8 @@ public class JunctionRescueResolver
 
         mStatistics.countCandidate();
 
-        final List<CigarShape.Element> primaryCigar = CigarShape.parse(candidate.PrimaryCigar);
-        if(CigarShape.hasHardClip(primaryCigar))
+        final List<CigarElement> primaryCigar = CigarUtils.cigarElementsFromStr(candidate.PrimaryCigar);
+        if(CigarUtils.hasHardClip(primaryCigar))
         {
             mStatistics.countReject(RescueRejectReason.COMPLEX_CIGAR_SHAPE);
             return RescueResult.noMerge(RescueRejectReason.COMPLEX_CIGAR_SHAPE);
@@ -143,8 +140,8 @@ public class JunctionRescueResolver
         if(primaryCigar.isEmpty())
             return RescueResult.noMerge(RescueRejectReason.NO_TERMINAL_SOFTCLIP);
 
-        final boolean trailingS = primaryCigar.get(primaryCigar.size() - 1).Op == OP_SOFTCLIP;
-        final boolean leadingS = primaryCigar.get(0).Op == OP_SOFTCLIP;
+        final boolean trailingS = primaryCigar.get(primaryCigar.size() - 1).getOperator() == CigarOperator.S;
+        final boolean leadingS = primaryCigar.get(0).getOperator() == CigarOperator.S;
         if(!trailingS && !leadingS)
             return RescueResult.noMerge(RescueRejectReason.NO_TERMINAL_SOFTCLIP);
 
@@ -153,7 +150,7 @@ public class JunctionRescueResolver
         if(trailingS && leadingS)
         {
             final boolean trailingFirst =
-                    CigarShape.trailingSoftClip(primaryCigar) >= CigarShape.leadingSoftClip(primaryCigar);
+                    CigarUtils.rightSoftClipLength(primaryCigar) >= CigarUtils.leftSoftClipLength(primaryCigar);
             sides = new boolean[] { trailingFirst, !trailingFirst };
         }
         else
@@ -186,14 +183,14 @@ public class JunctionRescueResolver
     // Ref-verify one terminal softclip against annotated donors/acceptors with boundary snap.
     // Does NOT count the no-candidate reject; tryRefVerifyOnly aggregates across both ends.
     private RescueResult attemptRefVerifySide(
-            final RescueCandidate candidate, final List<CigarShape.Element> primaryCigar, final boolean rightExtend)
+            final RescueCandidate candidate, final List<CigarElement> primaryCigar, final boolean rightExtend)
     {
         if(opAdjacentToSoftClip(primaryCigar, !rightExtend))
             return RescueResult.noMerge(RescueRejectReason.COMPLEX_CIGAR_SHAPE);
 
         final int softclipLen = rightExtend
-                ? CigarShape.trailingSoftClip(primaryCigar)
-                : CigarShape.leadingSoftClip(primaryCigar);
+                ? CigarUtils.rightSoftClipLength(primaryCigar)
+                : CigarUtils.leftSoftClipLength(primaryCigar);
         if(softclipLen < mConfig.MinAnchorOverhang)
             return RescueResult.noMerge(RescueRejectReason.SHORT_ANCHOR);
         final int primaryAnchor = rightExtend
@@ -204,7 +201,7 @@ public class JunctionRescueResolver
 
         // BWA often over-extends a few bases past the true exon boundary. Snap back up to
         // MaxBoundaryShift (smallest shift first), rolling over-extension into the softclip.
-        final int primaryRefEnd = candidate.PrimaryStart + CigarShape.referenceSpan(primaryCigar) - 1;
+        final int primaryRefEnd = candidate.PrimaryStart + CigarUtils.cigarAlignedLength(primaryCigar) - 1;
         boolean anyCandidate = false;
         RescueResult lastFailure = RescueResult.noMerge(RescueRejectReason.REF_VERIFY_MISMATCH_TOO_HIGH);
 
@@ -212,14 +209,14 @@ public class JunctionRescueResolver
         {
             if(primaryAnchor - shift < mConfig.MinAnchorOverhang)
                 break;
-            final List<CigarShape.Element> shiftedCigar = shift == 0
+            final List<CigarElement> shiftedCigar = shift == 0
                     ? primaryCigar
                     : shiftBoundaryIntoSoftclip(primaryCigar, shift, rightExtend);
             if(shiftedCigar == null)
                 break;
 
             final int boundary = rightExtend ? (primaryRefEnd + 1 - shift) : (candidate.PrimaryStart - 1 + shift);
-            final List<ChrIntron> candidates = rightExtend
+            final List<ChrBaseRegion> candidates = rightExtend
                     ? mAnnotatedIndex.introByStart(candidate.Chromosome, boundary)
                     : mAnnotatedIndex.introByEnd(candidate.Chromosome, boundary);
             if(candidates.isEmpty())
@@ -240,31 +237,31 @@ public class JunctionRescueResolver
 
     // Moves 'shift' bases from the exon-edge M into the adjacent softclip to snap back the boundary.
     // Returns null when the edge op isn't M or trimming would leave nothing matched.
-    private static List<CigarShape.Element> shiftBoundaryIntoSoftclip(
-            final List<CigarShape.Element> cigar, final int shift, final boolean rightExtend)
+    private static List<CigarElement> shiftBoundaryIntoSoftclip(
+            final List<CigarElement> cigar, final int shift, final boolean rightExtend)
     {
-        final List<CigarShape.Element> shifted = new ArrayList<>(cigar);
+        final List<CigarElement> shifted = new ArrayList<>(cigar);
         final int last = shifted.size() - 1;
         final int softIdx = rightExtend ? last : 0;
         final int matchIdx = rightExtend ? last - 1 : 1;
         if(matchIdx < 0 || matchIdx >= shifted.size())
             return null;
 
-        final CigarShape.Element softElement = shifted.get(softIdx);
-        final CigarShape.Element matchElement = shifted.get(matchIdx);
-        if(matchElement.Op != OP_MATCH && matchElement.Op != OP_SEQ_MATCH)
+        final CigarElement softElement = shifted.get(softIdx);
+        final CigarElement matchElement = shifted.get(matchIdx);
+        if(matchElement.getOperator() != CigarOperator.M && matchElement.getOperator() != CigarOperator.EQ)
             return null;
-        if(matchElement.Length - shift < 1)
+        if(matchElement.getLength() - shift < 1)
             return null;
 
-        shifted.set(matchIdx, new CigarShape.Element(matchElement.Length - shift, matchElement.Op));
-        shifted.set(softIdx, new CigarShape.Element(softElement.Length + shift, OP_SOFTCLIP));
+        shifted.set(matchIdx, new CigarElement(matchElement.getLength() - shift, matchElement.getOperator()));
+        shifted.set(softIdx, new CigarElement(softElement.getLength() + shift, CigarOperator.S));
         return shifted;
     }
 
     private RescueResult verifyAgainstCandidates(
-            final RescueCandidate candidate, final List<CigarShape.Element> primaryCigar,
-            final List<ChrIntron> candidates, final int softclipLen, final boolean rightExtend)
+            final RescueCandidate candidate, final List<CigarElement> primaryCigar,
+            final List<ChrBaseRegion> candidates, final int softclipLen, final boolean rightExtend)
     {
         if(candidates.isEmpty())
         {
@@ -283,14 +280,14 @@ public class JunctionRescueResolver
         // soft-clipped since bwa often carries adapter/low-quality bases there (e.g. 19S132M ->
         // 6S15M..N..130M, not 21M..N..130M). Proximal end is the high index for a leading softclip.
         final boolean proximalAtEnd = !rightExtend;
-        ChrIntron chosen = null;
+        ChrBaseRegion chosen = null;
         int chosenRun = 0;
         int chosenMismatches = Integer.MAX_VALUE;
         boolean ambiguous = false;
 
-        for(ChrIntron candidateIntron : candidates)
+        for(ChrBaseRegion candidateIntron : candidates)
         {
-            final int intronLength = candidateIntron.IntronEnd - candidateIntron.IntronStart + 1;
+            final int intronLength = candidateIntron.end() - candidateIntron.start() + 1;
             if(intronLength < mConfig.MinIntronLength || intronLength > mConfig.MaxIntronLength)
                 continue;
 
@@ -298,13 +295,13 @@ public class JunctionRescueResolver
             final int refEnd;
             if(rightExtend)
             {
-                refStart = candidateIntron.IntronEnd + 1;
-                refEnd = candidateIntron.IntronEnd + softclipLen;
+                refStart = candidateIntron.end() + 1;
+                refEnd = candidateIntron.end() + softclipLen;
             }
             else
             {
-                refStart = candidateIntron.IntronStart - softclipLen;
-                refEnd = candidateIntron.IntronStart - 1;
+                refStart = candidateIntron.start() - softclipLen;
+                refEnd = candidateIntron.start() - 1;
             }
 
             final byte[] refBases = mRefSource.getBases(candidate.Chromosome, refStart, refEnd);
@@ -352,35 +349,35 @@ public class JunctionRescueResolver
     }
 
     private RescueResult buildRefVerifyMerge(
-            final RescueCandidate candidate, final List<CigarShape.Element> primaryCigar,
-            final ChrIntron chosen, final int matchedRun, final int softclipLen, final boolean rightExtend)
+            final RescueCandidate candidate, final List<CigarElement> primaryCigar,
+            final ChrBaseRegion chosen, final int matchedRun, final int softclipLen, final boolean rightExtend)
     {
-        final int intronLength = chosen.IntronEnd - chosen.IntronStart + 1;
+        final int intronLength = chosen.end() - chosen.start() + 1;
         final int residualSoftclip = softclipLen - matchedRun;
-        final List<CigarShape.Element> merged = new ArrayList<>(primaryCigar.size() + 3);
+        final List<CigarElement> merged = new ArrayList<>(primaryCigar.size() + 3);
         if(rightExtend)
         {
             for(int i = 0; i < primaryCigar.size() - 1; ++i)
                 merged.add(primaryCigar.get(i));
-            merged.add(new CigarShape.Element(intronLength, OP_SKIPPED));
-            merged.add(new CigarShape.Element(matchedRun, OP_MATCH));
+            merged.add(new CigarElement(intronLength, CigarOperator.N));
+            merged.add(new CigarElement(matchedRun, CigarOperator.M));
             if(residualSoftclip > 0)
-                merged.add(new CigarShape.Element(residualSoftclip, OP_SOFTCLIP));
+                merged.add(new CigarElement(residualSoftclip, CigarOperator.S));
         }
         else
         {
             if(residualSoftclip > 0)
-                merged.add(new CigarShape.Element(residualSoftclip, OP_SOFTCLIP));
-            merged.add(new CigarShape.Element(matchedRun, OP_MATCH));
-            merged.add(new CigarShape.Element(intronLength, OP_SKIPPED));
+                merged.add(new CigarElement(residualSoftclip, CigarOperator.S));
+            merged.add(new CigarElement(matchedRun, CigarOperator.M));
+            merged.add(new CigarElement(intronLength, CigarOperator.N));
             for(int i = 1; i < primaryCigar.size(); ++i)
                 merged.add(primaryCigar.get(i));
         }
 
-        final int mergedStart = rightExtend ? candidate.PrimaryStart : (chosen.IntronStart - matchedRun);
+        final int mergedStart = rightExtend ? candidate.PrimaryStart : (chosen.start() - matchedRun);
         mStatistics.countMergedChain(1);
         return new RescueResult(
-                true, CigarShape.format(merged), mergedStart,
+                true, CigarUtils.cigarElementsToStr(merged), mergedStart,
                 Collections.emptyList(), Collections.singletonList(chosen),
                 1, null);
     }
@@ -419,16 +416,16 @@ public class JunctionRescueResolver
         return mismatches;
     }
 
-    private int classifyJunctionTier(final ChrIntron candidateIntron)
+    private int classifyJunctionTier(final ChrBaseRegion candidateIntron)
     {
         if(mAnnotatedIndex.contains(candidateIntron))
             return SpliceMotif.TIER_ANNOTATED;
         if(mRefSource == null)
             return SpliceMotif.TIER_NONE;
         final byte[] donor = mRefSource.getBases(
-                candidateIntron.Chromosome, candidateIntron.IntronStart, candidateIntron.IntronStart + 1);
+                candidateIntron.Chromosome, candidateIntron.start(), candidateIntron.start() + 1);
         final byte[] acceptor = mRefSource.getBases(
-                candidateIntron.Chromosome, candidateIntron.IntronEnd - 1, candidateIntron.IntronEnd);
+                candidateIntron.Chromosome, candidateIntron.end() - 1, candidateIntron.end());
         return SpliceMotif.classify(donor, acceptor);
     }
 
@@ -441,7 +438,7 @@ public class JunctionRescueResolver
 
     private MergeOutcome pickBestSupplementary(
             final RescueCandidate candidate, final int primaryStart,
-            final List<CigarShape.Element> primaryCigar, final List<RescueSupplementary> supps)
+            final List<CigarElement> primaryCigar, final List<RescueSupplementary> supps)
     {
         MergeOutcome best = null;
         RescueRejectReason lastReject = null;
@@ -490,14 +487,14 @@ public class JunctionRescueResolver
         return intronLength(a.IntroducedIntron) < intronLength(b.IntroducedIntron);
     }
 
-    private static int intronLength(final ChrIntron intron)
+    private static int intronLength(final ChrBaseRegion intron)
     {
-        return intron.IntronEnd - intron.IntronStart + 1;
+        return intron.end() - intron.start() + 1;
     }
 
     private MergeOutcome tryMerge(
             final RescueCandidate candidate, final int primaryStart,
-            final List<CigarShape.Element> primaryCigar, final RescueSupplementary supp)
+            final List<CigarElement> primaryCigar, final RescueSupplementary supp)
     {
         if(!candidate.Chromosome.equals(supp.Chromosome))
             return MergeOutcome.reject(RescueRejectReason.DIFFERENT_CHROMOSOME);
@@ -505,13 +502,13 @@ public class JunctionRescueResolver
         if(candidate.ForwardStrand != supp.ForwardStrand)
             return MergeOutcome.reject(RescueRejectReason.OPPOSITE_STRAND);
 
-        List<CigarShape.Element> suppCigar = CigarShape.parse(supp.Cigar);
-        if(CigarShape.hasHardClip(suppCigar))
+        List<CigarElement> suppCigar = CigarUtils.cigarElementsFromStr(supp.Cigar);
+        if(CigarUtils.hasHardClip(suppCigar))
             return MergeOutcome.reject(RescueRejectReason.COMPLEX_CIGAR_SHAPE);
 
         // ContigTranslator can expand a cross-exon M into M-N-M. If the post-N M coincidentally
         // overlaps the primary's span, clamp the supp to its primary-distal anchor before merge logic.
-        final int primaryRefEnd = primaryStart + CigarShape.referenceSpan(primaryCigar) - 1;
+        final int primaryRefEnd = primaryStart + CigarUtils.cigarAlignedLength(primaryCigar) - 1;
         int suppStart = supp.Start;
         final ClampedSupp clamped = clampSuppToPrimaryBoundary(suppCigar, suppStart, primaryStart, primaryRefEnd);
         if(clamped != null)
@@ -521,10 +518,10 @@ public class JunctionRescueResolver
             mStatistics.countSuppClamp();
         }
 
-        final int primaryLeadS = CigarShape.leadingSoftClip(primaryCigar);
-        final int primaryTrailS = CigarShape.trailingSoftClip(primaryCigar);
-        final int suppLeadS = CigarShape.leadingSoftClip(suppCigar);
-        final int suppTrailS = CigarShape.trailingSoftClip(suppCigar);
+        final int primaryLeadS = CigarUtils.leftSoftClipLength(primaryCigar);
+        final int primaryTrailS = CigarUtils.rightSoftClipLength(primaryCigar);
+        final int suppLeadS = CigarUtils.leftSoftClipLength(suppCigar);
+        final int suppTrailS = CigarUtils.rightSoftClipLength(suppCigar);
 
         boolean rightExtend = primaryTrailS > 0 && suppLeadS > 0;
         boolean leftExtend = primaryLeadS > 0 && suppTrailS > 0;
@@ -534,7 +531,7 @@ public class JunctionRescueResolver
 
         if(rightExtend && leftExtend)
         {
-            final int suppRefEnd = suppStart + CigarShape.referenceSpan(suppCigar) - 1;
+            final int suppRefEnd = suppStart + CigarUtils.cigarAlignedLength(suppCigar) - 1;
             if(suppStart > primaryRefEnd && suppRefEnd >= primaryStart)
                 leftExtend = false;
             else if(suppRefEnd < primaryStart && suppStart <= primaryRefEnd)
@@ -558,8 +555,8 @@ public class JunctionRescueResolver
             final RescueCandidate candidate, final Side up, final Side down,
             final boolean primaryIsUpstream, final RescueSupplementary supp)
     {
-        if(CigarShape.readLength(up.Cigar) != candidate.ReadLength
-                || CigarShape.readLength(down.Cigar) != candidate.ReadLength)
+        if(CigarUtils.cigarBaseLength(up.Cigar) != candidate.ReadLength
+                || CigarUtils.cigarBaseLength(down.Cigar) != candidate.ReadLength)
             return MergeOutcome.reject(RescueRejectReason.COMPLEX_CIGAR_SHAPE);
 
         if(opAdjacentToSoftClip(up.Cigar, false) || opAdjacentToSoftClip(down.Cigar, true))
@@ -589,7 +586,7 @@ public class JunctionRescueResolver
         // is visited first so it wins ties (upLoss=0 / downLoss=0 depending on direction).
         final SnapPick pick = scanSnapPoints(candidate, up, down, upMatchedRead, primaryIsUpstream);
         int chosenL = pick.L;
-        ChrIntron chosenIntron = pick.Intron;
+        ChrBaseRegion chosenIntron = pick.Intron;
 
         if(chosenL == -1)
         {
@@ -607,12 +604,12 @@ public class JunctionRescueResolver
             if(up.TrailingM - upLossFb < mConfig.MinAnchorOverhang || up.TrailingM < upLossFb
                     || down.LeadingM - downLossFb < mConfig.MinAnchorOverhang || down.LeadingM < downLossFb)
                 return MergeOutcome.reject(RescueRejectReason.SHORT_ANCHOR);
-            chosenIntron = new ChrIntron(candidate.Chromosome, up.RefEnd + 1, down.Start - 1);
+            chosenIntron = new ChrBaseRegion(candidate.Chromosome, up.RefEnd + 1, down.Start - 1);
         }
 
         final int upLoss = upMatchedRead - chosenL;
         final int downLoss = chosenL - down.LeadingS;
-        final List<CigarShape.Element> merged = buildMergedCigar(up.Cigar, down.Cigar, upLoss, downLoss, intronLength);
+        final List<CigarElement> merged = buildMergedCigar(up.Cigar, down.Cigar, upLoss, downLoss, intronLength);
         return MergeOutcome.success(up.Start, merged, chosenIntron, supp, primaryIsUpstream);
     }
 
@@ -621,7 +618,7 @@ public class JunctionRescueResolver
             final int upMatchedRead, final boolean primaryIsUpstream)
     {
         int chosenL = -1;
-        ChrIntron chosenIntron = null;
+        ChrBaseRegion chosenIntron = null;
         int chosenTier = SpliceMotif.TIER_NONE;
         int chosenMinAnchor = -1;
 
@@ -639,7 +636,7 @@ public class JunctionRescueResolver
             if(up.TrailingM < upLoss || down.LeadingM < downLoss)
                 continue;
 
-            final ChrIntron candidateIntron = new ChrIntron(
+            final ChrBaseRegion candidateIntron = new ChrBaseRegion(
                     candidate.Chromosome, up.RefEnd - upLoss + 1, down.Start + downLoss - 1);
             final int tier = classifyJunctionTier(candidateIntron);
             if(tier == SpliceMotif.TIER_NONE)
@@ -666,15 +663,15 @@ public class JunctionRescueResolver
         if(candidate.MateHintIntrons.isEmpty())
             return SnapPick.miss();
 
-        for(ChrIntron hint : candidate.MateHintIntrons)
+        for(ChrBaseRegion hint : candidate.MateHintIntrons)
         {
             if(!hint.Chromosome.equals(candidate.Chromosome))
                 continue;
             final int upLoss;
             if(primaryIsUpstream)
-                upLoss = up.RefEnd - hint.IntronStart + 1;
+                upLoss = up.RefEnd - hint.start() + 1;
             else
-                upLoss = upMatchedRead - (down.LeadingS + (hint.IntronEnd - (down.Start - 1)));
+                upLoss = upMatchedRead - (down.LeadingS + (hint.end() - (down.Start - 1)));
             final int L = upMatchedRead - upLoss;
             if(L < down.LeadingS || L > upMatchedRead)
                 continue;
@@ -686,30 +683,30 @@ public class JunctionRescueResolver
             if(up.TrailingM < upLoss || down.LeadingM < downLoss)
                 continue;
 
-            final int hintedIntronStart = primaryIsUpstream ? hint.IntronStart : (up.RefEnd - upLoss + 1);
-            final int hintedIntronEnd = primaryIsUpstream ? (down.Start + downLoss - 1) : hint.IntronEnd;
-            return new SnapPick(L, new ChrIntron(candidate.Chromosome, hintedIntronStart, hintedIntronEnd));
+            final int hintedIntronStart = primaryIsUpstream ? hint.start() : (up.RefEnd - upLoss + 1);
+            final int hintedIntronEnd = primaryIsUpstream ? (down.Start + downLoss - 1) : hint.end();
+            return new SnapPick(L, new ChrBaseRegion(candidate.Chromosome, hintedIntronStart, hintedIntronEnd));
         }
         return SnapPick.miss();
     }
 
-    private static List<CigarShape.Element> buildMergedCigar(
-            final List<CigarShape.Element> upCigar, final List<CigarShape.Element> downCigar,
+    private static List<CigarElement> buildMergedCigar(
+            final List<CigarElement> upCigar, final List<CigarElement> downCigar,
             final int upLoss, final int downLoss, final int intronLength)
     {
-        final List<CigarShape.Element> merged = new ArrayList<>(upCigar.size() + downCigar.size());
+        final List<CigarElement> merged = new ArrayList<>(upCigar.size() + downCigar.size());
         for(int i = 0; i < upCigar.size() - 1; ++i) // upstream ops, excluding trailing S
         {
             if(i == upCigar.size() - 2 && upLoss > 0)
-                merged.add(new CigarShape.Element(upCigar.get(i).Length - upLoss, upCigar.get(i).Op));
+                merged.add(new CigarElement(upCigar.get(i).getLength() - upLoss, upCigar.get(i).getOperator()));
             else
                 merged.add(upCigar.get(i));
         }
-        merged.add(new CigarShape.Element(intronLength, OP_SKIPPED));
+        merged.add(new CigarElement(intronLength, CigarOperator.N));
         for(int i = 1; i < downCigar.size(); ++i) // downstream ops, excluding leading S
         {
             if(i == 1 && downLoss > 0)
-                merged.add(new CigarShape.Element(downCigar.get(i).Length - downLoss, downCigar.get(i).Op));
+                merged.add(new CigarElement(downCigar.get(i).getLength() - downLoss, downCigar.get(i).getOperator()));
             else
                 merged.add(downCigar.get(i));
         }
@@ -717,29 +714,29 @@ public class JunctionRescueResolver
     }
 
     // Length of the M/=/X run adjacent to the trailing softclip (e.g. "5M 50S" -> 5).
-    private static int trailingMatchedRun(final List<CigarShape.Element> elements)
+    private static int trailingMatchedRun(final List<CigarElement> elements)
     {
         for(int i = elements.size() - 1; i >= 0; --i)
         {
-            final char op = elements.get(i).Op;
-            if(op == OP_SOFTCLIP)
+            final CigarOperator op = elements.get(i).getOperator();
+            if(op == CigarOperator.S)
                 continue;
-            if(op == OP_MATCH || op == OP_SEQ_MATCH || op == OP_SEQ_MISMATCH)
-                return elements.get(i).Length;
+            if(op == CigarOperator.M || op == CigarOperator.EQ || op == CigarOperator.X)
+                return elements.get(i).getLength();
             return 0;
         }
         return 0;
     }
 
-    private static int leadingMatchedRun(final List<CigarShape.Element> elements)
+    private static int leadingMatchedRun(final List<CigarElement> elements)
     {
         for(int i = 0; i < elements.size(); ++i)
         {
-            final char op = elements.get(i).Op;
-            if(op == OP_SOFTCLIP)
+            final CigarOperator op = elements.get(i).getOperator();
+            if(op == CigarOperator.S)
                 continue;
-            if(op == OP_MATCH || op == OP_SEQ_MATCH || op == OP_SEQ_MISMATCH)
-                return elements.get(i).Length;
+            if(op == CigarOperator.M || op == CigarOperator.EQ || op == CigarOperator.X)
+                return elements.get(i).getLength();
             return 0;
         }
         return 0;
@@ -747,82 +744,82 @@ public class JunctionRescueResolver
 
     // Folds tx-contig lift artifact: "<block>M nN yM zS" (trailing) or mirror (leading), where yM
     // is sub-threshold, into "<block>M (y+z)S". Drops the spurious N and conserves read-base count.
-    static List<CigarShape.Element> foldFabricatedTerminalMicroJunctions(
-            final List<CigarShape.Element> elements, final int minAnchor)
+    static List<CigarElement> foldFabricatedTerminalMicroJunctions(
+            final List<CigarElement> elements, final int minAnchor)
     {
-        List<CigarShape.Element> result = foldTrailingFabricatedMicroJunction(elements, minAnchor);
+        List<CigarElement> result = foldTrailingFabricatedMicroJunction(elements, minAnchor);
         result = foldLeadingFabricatedMicroJunction(result, minAnchor);
         return result;
     }
 
-    private static List<CigarShape.Element> foldTrailingFabricatedMicroJunction(
-            final List<CigarShape.Element> elements, final int minAnchor)
+    private static List<CigarElement> foldTrailingFabricatedMicroJunction(
+            final List<CigarElement> elements, final int minAnchor)
     {
         final int n = elements.size();
         if(n < 4)
             return elements;
-        if(elements.get(n - 1).Op != OP_SOFTCLIP)
+        if(elements.get(n - 1).getOperator() != CigarOperator.S)
             return elements;
-        final CigarShape.Element anchor = elements.get(n - 2);
-        if(anchor.Op != OP_MATCH || anchor.Length >= minAnchor)
+        final CigarElement anchor = elements.get(n - 2);
+        if(anchor.getOperator() != CigarOperator.M || anchor.getLength() >= minAnchor)
             return elements;
-        if(elements.get(n - 3).Op != OP_SKIPPED)
+        if(elements.get(n - 3).getOperator() != CigarOperator.N)
             return elements;
-        if(!isMatchedOp(elements.get(n - 4).Op)) // real matched block required before the N
+        if(!isMatchedOp(elements.get(n - 4).getOperator())) // real matched block required before the N
             return elements;
 
-        final int foldedClip = anchor.Length + elements.get(n - 1).Length;
-        final List<CigarShape.Element> out = new ArrayList<>(elements.subList(0, n - 3));
-        out.add(new CigarShape.Element(foldedClip, OP_SOFTCLIP));
+        final int foldedClip = anchor.getLength() + elements.get(n - 1).getLength();
+        final List<CigarElement> out = new ArrayList<>(elements.subList(0, n - 3));
+        out.add(new CigarElement(foldedClip, CigarOperator.S));
         return out;
     }
 
-    private static List<CigarShape.Element> foldLeadingFabricatedMicroJunction(
-            final List<CigarShape.Element> elements, final int minAnchor)
+    private static List<CigarElement> foldLeadingFabricatedMicroJunction(
+            final List<CigarElement> elements, final int minAnchor)
     {
         final int n = elements.size();
         if(n < 4)
             return elements;
-        if(elements.get(0).Op != OP_SOFTCLIP)
+        if(elements.get(0).getOperator() != CigarOperator.S)
             return elements;
-        final CigarShape.Element anchor = elements.get(1);
-        if(anchor.Op != OP_MATCH || anchor.Length >= minAnchor)
+        final CigarElement anchor = elements.get(1);
+        if(anchor.getOperator() != CigarOperator.M || anchor.getLength() >= minAnchor)
             return elements;
-        if(elements.get(2).Op != OP_SKIPPED)
+        if(elements.get(2).getOperator() != CigarOperator.N)
             return elements;
-        if(!isMatchedOp(elements.get(3).Op)) // real matched block required after the N
+        if(!isMatchedOp(elements.get(3).getOperator())) // real matched block required after the N
             return elements;
 
-        final int foldedClip = elements.get(0).Length + anchor.Length;
-        final List<CigarShape.Element> out = new ArrayList<>(n - 2);
-        out.add(new CigarShape.Element(foldedClip, OP_SOFTCLIP));
+        final int foldedClip = elements.get(0).getLength() + anchor.getLength();
+        final List<CigarElement> out = new ArrayList<>(n - 2);
+        out.add(new CigarElement(foldedClip, CigarOperator.S));
         out.addAll(elements.subList(3, n));
         return out;
     }
 
-    private static boolean isMatchedOp(final char op)
+    private static boolean isMatchedOp(final CigarOperator op)
     {
-        return op == OP_MATCH || op == OP_SEQ_MATCH || op == OP_SEQ_MISMATCH;
+        return op == CigarOperator.M || op == CigarOperator.EQ || op == CigarOperator.X;
     }
 
-    private static boolean opAdjacentToSoftClip(final List<CigarShape.Element> elements, final boolean leadingSide)
+    private static boolean opAdjacentToSoftClip(final List<CigarElement> elements, final boolean leadingSide)
     {
         if(elements.size() < 2)
             return false;
         if(leadingSide)
         {
-            if(elements.get(0).Op != OP_SOFTCLIP)
+            if(elements.get(0).getOperator() != CigarOperator.S)
                 return false;
-            final char next = elements.get(1).Op;
-            return next == OP_INSERTION || next == OP_DELETION;
+            final CigarOperator next = elements.get(1).getOperator();
+            return next == CigarOperator.I || next == CigarOperator.D;
         }
         else
         {
             final int last = elements.size() - 1;
-            if(elements.get(last).Op != OP_SOFTCLIP)
+            if(elements.get(last).getOperator() != CigarOperator.S)
                 return false;
-            final char prev = elements.get(last - 1).Op;
-            return prev == OP_INSERTION || prev == OP_DELETION;
+            final CigarOperator prev = elements.get(last - 1).getOperator();
+            return prev == CigarOperator.I || prev == CigarOperator.D;
         }
     }
 
@@ -830,13 +827,13 @@ public class JunctionRescueResolver
     // the primary's span (ContigTranslator M-N-M artifact double-counting read bases). Returns null
     // when no internal N or no overlap.
     private static ClampedSupp clampSuppToPrimaryBoundary(
-            final List<CigarShape.Element> suppCigar, final int suppStart,
+            final List<CigarElement> suppCigar, final int suppStart,
             final int primaryStart, final int primaryRefEnd)
     {
         boolean hasInternalN = false;
-        for(CigarShape.Element e : suppCigar)
+        for(CigarElement e : suppCigar)
         {
-            if(e.Op == OP_SKIPPED)
+            if(e.getOperator() == CigarOperator.N)
             {
                 hasInternalN = true;
                 break;
@@ -845,7 +842,7 @@ public class JunctionRescueResolver
         if(!hasInternalN)
             return null;
 
-        final int suppRefEnd = suppStart + CigarShape.referenceSpan(suppCigar) - 1;
+        final int suppRefEnd = suppStart + CigarUtils.cigarAlignedLength(suppCigar) - 1;
         if(suppStart < primaryStart)
             return clampUpstreamSupp(suppCigar, suppStart, primaryStart);
         if(suppRefEnd > primaryRefEnd)
@@ -854,7 +851,7 @@ public class JunctionRescueResolver
     }
 
     private static ClampedSupp clampUpstreamSupp(
-            final List<CigarShape.Element> suppCigar, final int suppStart, final int primaryStart)
+            final List<CigarElement> suppCigar, final int suppStart, final int primaryStart)
     {
         int refCursor = suppStart;
         int readCursor = 0;
@@ -863,32 +860,32 @@ public class JunctionRescueResolver
 
         for(int i = 0; i < suppCigar.size(); i++)
         {
-            final CigarShape.Element e = suppCigar.get(i);
-            final char op = e.Op;
-            final int len = e.Length;
+            final CigarElement e = suppCigar.get(i);
+            final CigarOperator op = e.getOperator();
+            final int len = e.getLength();
 
-            if(op == OP_SKIPPED && firstNIdx == -1)
+            if(op == CigarOperator.N && firstNIdx == -1)
             {
                 firstNIdx = i;
                 readAtFirstN = readCursor;
             }
 
             if(firstNIdx != -1 && refCursor >= primaryStart
-                    && (op == OP_MATCH || op == OP_SEQ_MATCH || op == OP_SEQ_MISMATCH))
+                    && (op == CigarOperator.M || op == CigarOperator.EQ || op == CigarOperator.X))
             {
                 return cutTailAt(suppCigar, suppStart, firstNIdx, readAtFirstN);
             }
 
-            if(CigarShape.consumesReference(op))
+            if(op.consumesReferenceBases())
                 refCursor += len;
-            if(CigarShape.consumesRead(op))
+            if(op.consumesReadBases())
                 readCursor += len;
         }
         return null;
     }
 
     private static ClampedSupp clampDownstreamSupp(
-            final List<CigarShape.Element> suppCigar, final int suppStart, final int primaryRefEnd)
+            final List<CigarElement> suppCigar, final int suppStart, final int primaryRefEnd)
     {
         int refCursor = suppStart;
         int readCursor = 0;
@@ -899,26 +896,26 @@ public class JunctionRescueResolver
 
         for(int i = 0; i < suppCigar.size(); i++)
         {
-            final CigarShape.Element e = suppCigar.get(i);
-            final char op = e.Op;
-            final int len = e.Length;
+            final CigarElement e = suppCigar.get(i);
+            final CigarOperator op = e.getOperator();
+            final int len = e.getLength();
 
-            if(op == OP_MATCH || op == OP_SEQ_MATCH || op == OP_SEQ_MISMATCH)
+            if(op == CigarOperator.M || op == CigarOperator.EQ || op == CigarOperator.X)
             {
                 final int mRefEnd = refCursor + len - 1;
                 prevMInsidePrimary = mRefEnd <= primaryRefEnd;
             }
 
-            if(op == OP_SKIPPED && prevMInsidePrimary)
+            if(op == CigarOperator.N && prevMInsidePrimary)
             {
                 lastBadNIdx = i;
                 refAfterLastBadN = refCursor + len; // just after this N op
                 readAfterLastBadN = readCursor;
             }
 
-            if(CigarShape.consumesReference(op))
+            if(op.consumesReferenceBases())
                 refCursor += len;
-            if(CigarShape.consumesRead(op))
+            if(op.consumesReadBases())
                 readCursor += len;
         }
 
@@ -928,26 +925,26 @@ public class JunctionRescueResolver
     }
 
     private static ClampedSupp cutTailAt(
-            final List<CigarShape.Element> suppCigar, final int suppStart,
+            final List<CigarElement> suppCigar, final int suppStart,
             final int cutIdx, final int readBeforeCut)
     {
-        final List<CigarShape.Element> trimmed = new ArrayList<>(cutIdx + 1);
+        final List<CigarElement> trimmed = new ArrayList<>(cutIdx + 1);
         for(int i = 0; i < cutIdx; i++)
             trimmed.add(suppCigar.get(i));
-        final int totalRead = CigarShape.readLength(suppCigar);
+        final int totalRead = CigarUtils.cigarBaseLength(suppCigar);
         final int trailingS = totalRead - readBeforeCut;
         if(trailingS > 0)
-            trimmed.add(new CigarShape.Element(trailingS, OP_SOFTCLIP));
+            trimmed.add(new CigarElement(trailingS, CigarOperator.S));
         return new ClampedSupp(suppStart, trimmed);
     }
 
     private static ClampedSupp cutHeadAt(
-            final List<CigarShape.Element> suppCigar, final int newStart,
+            final List<CigarElement> suppCigar, final int newStart,
             final int cutIdx, final int readBeforeCut)
     {
-        final List<CigarShape.Element> trimmed = new ArrayList<>(suppCigar.size() - cutIdx);
+        final List<CigarElement> trimmed = new ArrayList<>(suppCigar.size() - cutIdx);
         if(readBeforeCut > 0)
-            trimmed.add(new CigarShape.Element(readBeforeCut, OP_SOFTCLIP));
+            trimmed.add(new CigarElement(readBeforeCut, CigarOperator.S));
         for(int i = cutIdx + 1; i < suppCigar.size(); i++)
             trimmed.add(suppCigar.get(i));
         return new ClampedSupp(newStart, trimmed);
@@ -956,9 +953,9 @@ public class JunctionRescueResolver
     private static final class ClampedSupp
     {
         final int Start;
-        final List<CigarShape.Element> Cigar;
+        final List<CigarElement> Cigar;
 
-        ClampedSupp(final int start, final List<CigarShape.Element> cigar)
+        ClampedSupp(final int start, final List<CigarElement> cigar)
         {
             Start = start;
             Cigar = cigar;
@@ -968,7 +965,7 @@ public class JunctionRescueResolver
     private static final class Side
     {
         final int Start;
-        final List<CigarShape.Element> Cigar;
+        final List<CigarElement> Cigar;
         final int LeadingS;
         final int TrailingS;
         final int LeadingM;
@@ -976,7 +973,7 @@ public class JunctionRescueResolver
         final int RefEnd;
 
         private Side(
-                final int start, final List<CigarShape.Element> cigar,
+                final int start, final List<CigarElement> cigar,
                 final int leadingS, final int trailingS,
                 final int leadingM, final int trailingM, final int refEnd)
         {
@@ -989,21 +986,21 @@ public class JunctionRescueResolver
             RefEnd = refEnd;
         }
 
-        static Side of(final int start, final List<CigarShape.Element> cigar)
+        static Side of(final int start, final List<CigarElement> cigar)
         {
             return new Side(start, cigar,
-                    CigarShape.leadingSoftClip(cigar), CigarShape.trailingSoftClip(cigar),
+                    CigarUtils.leftSoftClipLength(cigar), CigarUtils.rightSoftClipLength(cigar),
                     leadingMatchedRun(cigar), trailingMatchedRun(cigar),
-                    start + CigarShape.referenceSpan(cigar) - 1);
+                    start + CigarUtils.cigarAlignedLength(cigar) - 1);
         }
     }
 
     private static final class SnapPick
     {
         final int L;
-        final ChrIntron Intron;
+        final ChrBaseRegion Intron;
 
-        SnapPick(final int l, final ChrIntron intron)
+        SnapPick(final int l, final ChrBaseRegion intron)
         {
             L = l;
             Intron = intron;
@@ -1019,15 +1016,15 @@ public class JunctionRescueResolver
     {
         final RescueRejectReason Reject;
         final int MergedStart;
-        final List<CigarShape.Element> MergedCigar;
-        final ChrIntron IntroducedIntron;
+        final List<CigarElement> MergedCigar;
+        final ChrBaseRegion IntroducedIntron;
         final RescueSupplementary MergedSupp;
         final boolean RightExtend;       // which terminal softclip of the primary this merge resolved
 
         private MergeOutcome(
                 final RescueRejectReason reject,
-                final int mergedStart, final List<CigarShape.Element> mergedCigar,
-                final ChrIntron intron, final RescueSupplementary supp, final boolean rightExtend)
+                final int mergedStart, final List<CigarElement> mergedCigar,
+                final ChrBaseRegion intron, final RescueSupplementary supp, final boolean rightExtend)
         {
             Reject = reject;
             MergedStart = mergedStart;
@@ -1043,8 +1040,8 @@ public class JunctionRescueResolver
         }
 
         static MergeOutcome success(
-                final int start, final List<CigarShape.Element> cigar,
-                final ChrIntron intron, final RescueSupplementary supp, final boolean rightExtend)
+                final int start, final List<CigarElement> cigar,
+                final ChrBaseRegion intron, final RescueSupplementary supp, final boolean rightExtend)
         {
             return new MergeOutcome(null, start, cigar, intron, supp, rightExtend);
         }

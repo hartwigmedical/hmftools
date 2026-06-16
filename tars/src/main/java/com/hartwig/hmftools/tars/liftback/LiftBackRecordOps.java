@@ -53,7 +53,7 @@ public final class LiftBackRecordOps
                 record.setReadNegativeStrandFlag(result.negativeStrand());
                 record.setMappingQuality(result.updatedMapq());
                 record.setAttribute(XA_TAG, buildLiftedXa(result));
-                // STAR-style XS:A:+/- on spliced records: downstream RNA tools (Isofox) rely on
+                // XS:A:+/- on spliced records: downstream RNA tools (Isofox) rely on
                 // transcript strand for stranded junction interpretation. bwa-mem2 emits XS:i: as
                 // the sub-optimal alignment score on the same tag name -- clear first so the SAM
                 // tag-type bookkeeping isn't ambiguous. Only set XS:A when the lifted cigar has

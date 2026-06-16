@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.tars.liftback;
 
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.threeExonContig;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -19,19 +20,6 @@ import htsjdk.samtools.TextCigarCodec;
 
 public class ContigTranslatorTest
 {
-    private static final String GENE_ID = "ENSG00000000001";
-    private static final String GENE_NAME = "TESTGN";
-    private static final String TRANS_NAME = "ENST00000000001";
-    private static final String CONTIG_NAME = "ens" + GENE_ID + "_" + GENE_NAME + "_" + TRANS_NAME;
-
-    // three exons on chr1: 100-199, 300-399, 500-549; introns 200-299, 400-499.
-    private static ContigEntry threeExonContig()
-    {
-        return new ContigEntry(
-                CONTIG_NAME, 1, 250, GENE_ID, GENE_NAME, TRANS_NAME, CHR_1, 1,
-                List.of(new BaseRegion(100, 199), new BaseRegion(300, 399), new BaseRegion(500, 549)));
-    }
-
     @Test
     public void testReadEntirelyInFirstExon()
     {
@@ -245,170 +233,86 @@ public class ContigTranslatorTest
     }
 
     @Test
-    public void testSoftClipAtTrailingExonBoundary()
+    public void testHasSoftClipAtExonBoundary()
     {
+        // softclip abutting an interior exon boundary, trailing then leading -> true
         assertTrue(ContigTranslator.hasSoftClipAtExonBoundary(threeExonContig(), 71, cigar("30M20S")));
-    }
-
-    @Test
-    public void testSoftClipAtLeadingExonBoundary()
-    {
         assertTrue(ContigTranslator.hasSoftClipAtExonBoundary(threeExonContig(), 101, cigar("20S30M")));
-    }
 
-    @Test
-    public void testSoftClipNotAtBoundary()
-    {
+        // softclip away from any boundary, and no softclip at all -> false
         assertFalse(ContigTranslator.hasSoftClipAtExonBoundary(threeExonContig(), 60, cigar("30M20S")));
-    }
-
-    @Test
-    public void testNoSoftClipReturnsFalse()
-    {
         assertFalse(ContigTranslator.hasSoftClipAtExonBoundary(threeExonContig(), 71, cigar("30M")));
-    }
 
-    @Test
-    public void testSingleExonContigReturnsFalse()
-    {
-        // no interior boundaries on a single-exon contig
-        ContigEntry singleExon = new ContigEntry(
-                "single", 1, 100, GENE_ID, GENE_NAME, TRANS_NAME, CHR_1, 1, List.of(new BaseRegion(100, 199)));
+        // single-exon contig has no interior boundaries -> false either side
+        final ContigEntry singleExon = new ContigEntry(
+                "single", 1, 100, "G", "X", "T", CHR_1, 1, List.of(new BaseRegion(100, 199)));
         assertFalse(ContigTranslator.hasSoftClipAtExonBoundary(singleExon, 1, cigar("50S50M")));
         assertFalse(ContigTranslator.hasSoftClipAtExonBoundary(singleExon, 1, cigar("50M50S")));
-    }
 
-    @Test
-    public void testContigOuterEdgesNotTreatedAsBoundary()
-    {
-        // outer edges of the contig are not interior boundaries
+        // outer edges of the contig are not interior boundaries -> false
         assertFalse(ContigTranslator.hasSoftClipAtExonBoundary(threeExonContig(), 1, cigar("20S30M")));
         assertFalse(ContigTranslator.hasSoftClipAtExonBoundary(threeExonContig(), 201, cigar("50M20S")));
     }
 
     @Test
-    public void testTrimMicroAnchorAtThreshold()
+    public void testTrimTrailingMicroAnchor()
     {
-        final Cigar in = cigar("100M500N3M48S");
-        final Cigar out = ContigTranslator.trimTrailingMicroAnchor(in, 2);
-        assertEquals("100M500N3M48S", out.toString());
+        // 3M tail at threshold 2 -> kept (trim fires only strictly below threshold)
+        assertEquals("100M500N3M48S", ContigTranslator.trimTrailingMicroAnchor(cigar("100M500N3M48S"), 2).toString());
+
+        // 2M tail below threshold 3 -> dropped, intron collapsed into the trailing clip
+        assertEquals("100M51S", ContigTranslator.trimTrailingMicroAnchor(cigar("100M500N2M49S"), 3).toString());
+
+        // 3M tail at threshold 3 -> kept
+        assertEquals("100M500N3M48S", ContigTranslator.trimTrailingMicroAnchor(cigar("100M500N3M48S"), 3).toString());
+
+        // 1bp tail -> dropped
+        assertEquals("80M71S", ContigTranslator.trimTrailingMicroAnchor(cigar("80M2000N1M70S"), 3).toString());
+
+        // no trailing softclip to fold into -> unchanged
+        assertEquals("80M2000N2M", ContigTranslator.trimTrailingMicroAnchor(cigar("80M2000N2M"), 3).toString());
+
+        // no preceding N -> nothing to trim; adjacent M ops are not a junction
+        assertEquals("100M", ContigTranslator.trimTrailingMicroAnchor(cigar("100M"), 3).toString());
+        assertEquals("80M3M48S", ContigTranslator.trimTrailingMicroAnchor(cigar("80M3M48S"), 3).toString());
+
+        // no preceding M anchor — trimming would leave only softclips, so refuse
+        assertEquals("50S100N2M99S", ContigTranslator.trimTrailingMicroAnchor(cigar("50S100N2M99S"), 3).toString());
+
+        // 4M tail above threshold -> kept
+        assertEquals("100M500N4M47S", ContigTranslator.trimTrailingMicroAnchor(cigar("100M500N4M47S"), 3).toString());
     }
 
     @Test
-    public void testTrimMicroAnchorBelowThreshold()
+    public void testTrimMicroAnchors()
     {
-        final Cigar in = cigar("100M500N2M49S");
-        final Cigar out = ContigTranslator.trimTrailingMicroAnchor(in, 3);
-        assertEquals("100M51S", out.toString());
-    }
-
-    @Test
-    public void testTrimMicroAnchorAtThresholdKept()
-    {
-        // 3M tail with threshold 3 is kept — trim fires only strictly below threshold.
-        final Cigar in = cigar("100M500N3M48S");
-        final Cigar out = ContigTranslator.trimTrailingMicroAnchor(in, 3);
-        assertEquals("100M500N3M48S", out.toString());
-    }
-
-    @Test
-    public void testTrimMicroAnchorOneBaseTail()
-    {
-        final Cigar in = cigar("80M2000N1M70S");
-        final Cigar out = ContigTranslator.trimTrailingMicroAnchor(in, 3);
-        assertEquals("80M71S", out.toString());
-    }
-
-    @Test
-    public void testTrimMicroAnchorNoTrailingSoftClip()
-    {
-        final Cigar in = cigar("80M2000N2M");
-        final Cigar out = ContigTranslator.trimTrailingMicroAnchor(in, 3);
-        assertEquals("80M2000N2M", out.toString());
-    }
-
-    @Test
-    public void testTrimMicroAnchorNoTrailingIntron()
-    {
-        // no preceding N -> nothing to trim
-        final Cigar in = cigar("100M");
-        assertEquals("100M", ContigTranslator.trimTrailingMicroAnchor(in, 3).toString());
-
-        // adjacent M ops are not a junction
-        final Cigar in2 = cigar("80M3M48S");
-        assertEquals("80M3M48S", ContigTranslator.trimTrailingMicroAnchor(in2, 3).toString());
-    }
-
-    @Test
-    public void testTrimMicroAnchorMustHaveAnchorBeforeIntron()
-    {
-        // no preceding M anchor — trimming would leave only softclips, so refuse.
-        final Cigar in = cigar("50S100N2M99S");
-        final Cigar out = ContigTranslator.trimTrailingMicroAnchor(in, 3);
-        assertEquals("50S100N2M99S", out.toString());
-    }
-
-    @Test
-    public void testTrimMicroAnchorTrailingMatchAboveThresholdUnchanged()
-    {
-        final Cigar in = cigar("100M500N4M47S");
-        final Cigar out = ContigTranslator.trimTrailingMicroAnchor(in, 3);
-        assertEquals("100M500N4M47S", out.toString());
-    }
-
-    @Test
-    public void testTrimMicroAnchorsLeading()
-    {
-        // 2M anchor dropped, rolled into leading S; start advances by anchor + intron = 3715.
-        final ContigTranslator.MicroAnchorResult out =
-                ContigTranslator.trimMicroAnchors(cigar("38S2M3713N68M4I39M"), 1, 3);
+        // leading 2M anchor dropped, rolled into leading S; start advances by anchor + intron = 3715
+        ContigTranslator.MicroAnchorResult out = ContigTranslator.trimMicroAnchors(cigar("38S2M3713N68M4I39M"), 1, 3);
         assertEquals("40S68M4I39M", out.AdjustedCigar.toString());
         assertEquals(3715, out.StartShift);
-    }
 
-    @Test
-    public void testTrimMicroAnchorsLeadingAnchorAtThresholdKept()
-    {
-        final ContigTranslator.MicroAnchorResult out =
-                ContigTranslator.trimMicroAnchors(cigar("38S3M3713N68M"), 1, 3);
+        // leading 3M anchor at threshold -> kept
+        out = ContigTranslator.trimMicroAnchors(cigar("38S3M3713N68M"), 1, 3);
         assertEquals("38S3M3713N68M", out.AdjustedCigar.toString());
         assertEquals(0, out.StartShift);
-    }
 
-    @Test
-    public void testTrimMicroAnchorsBothEnds()
-    {
-        final ContigTranslator.MicroAnchorResult out =
-                ContigTranslator.trimMicroAnchors(cigar("10S2M500N80M600N1M20S"), 1, 3);
+        // both ends trimmed
+        out = ContigTranslator.trimMicroAnchors(cigar("10S2M500N80M600N1M20S"), 1, 3);
         assertEquals("12S80M21S", out.AdjustedCigar.toString());
         assertEquals(502, out.StartShift);
-    }
 
-    @Test
-    public void testTrimMicroAnchorsNoChange()
-    {
-        final ContigTranslator.MicroAnchorResult out =
-                ContigTranslator.trimMicroAnchors(cigar("38S68M3713N40M"), 1, 3);
+        // nothing tiny -> unchanged
+        out = ContigTranslator.trimMicroAnchors(cigar("38S68M3713N40M"), 1, 3);
         assertEquals("38S68M3713N40M", out.AdjustedCigar.toString());
         assertEquals(0, out.StartShift);
-    }
 
-    @Test
-    public void testTrimMicroAnchorsBareTinyAnchorKept()
-    {
-        // bare leading anchor (no softclip) means the read genuinely starts mid-exon — keep it.
-        final ContigTranslator.MicroAnchorResult out =
-                ContigTranslator.trimMicroAnchors(cigar("2M80N149M"), 1, 3);
+        // bare leading anchor (no softclip) means the read genuinely starts mid-exon -> keep it
+        out = ContigTranslator.trimMicroAnchors(cigar("2M80N149M"), 1, 3);
         assertEquals("2M80N149M", out.AdjustedCigar.toString());
         assertEquals(0, out.StartShift);
-    }
 
-    @Test
-    public void testTrimMicroAnchorsSoftclipAdjacentTinyAnchorDropped()
-    {
-        // same 2bp anchor but with trailing softclip: bwa over-ran the exon boundary, junction unsupported — drop it.
-        final ContigTranslator.MicroAnchorResult out =
-                ContigTranslator.trimMicroAnchors(cigar("117M89N2M32S"), 1, 3);
+        // same 2bp anchor but with trailing softclip: bwa over-ran the boundary, junction unsupported -> drop it
+        out = ContigTranslator.trimMicroAnchors(cigar("117M89N2M32S"), 1, 3);
         assertEquals("117M34S", out.AdjustedCigar.toString());
         assertEquals(0, out.StartShift);
     }

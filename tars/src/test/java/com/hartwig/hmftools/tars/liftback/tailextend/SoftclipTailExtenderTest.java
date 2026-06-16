@@ -1,20 +1,19 @@
 package com.hartwig.hmftools.tars.liftback.tailextend;
 
+import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.bases;
+import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.repeatedBase;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
-import com.hartwig.hmftools.tars.liftback.TarsTestFixtures;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.tars.liftback.TarsTestFixtures.TestGenome;
 import com.hartwig.hmftools.tars.liftback.rescue.AnnotatedJunctionIndex;
-import com.hartwig.hmftools.tars.liftback.rescue.ChrIntron;
-import com.hartwig.hmftools.tars.liftback.rescue.RefSequenceSource;
 
 import org.junit.Test;
 
@@ -22,66 +21,53 @@ public class SoftclipTailExtenderTest
 {
     private static final String CHR1 = "chr1";
 
-    // single-chromosome in-memory ref backed by the shared fixture (MockRefGenome, 1-based inclusive);
-    // an empty map yields a source that always returns null (used by the null-input no-op test).
-    private static RefSequenceSource refSource(final Map<String, byte[]> ref)
+    private static TestGenome genome()
     {
-        if(ref.isEmpty())
-            return (chrom, posStart, posEnd) -> null;
-
-        final Map.Entry<String, byte[]> entry = ref.entrySet().iterator().next();
-        return TarsTestFixtures.refSource(entry.getKey(), new String(entry.getValue(), StandardCharsets.US_ASCII));
+        return new TestGenome().with(CHR1, 200, 'A');
     }
 
-    private static byte[] fill(final int length, final char base)
-    {
-        return TarsTestFixtures.repeatedBase(length, base);
-    }
-
-    private static SoftclipTailExtender extender(final Map<String, byte[]> ref, final Set<ChrIntron> introns)
+    private static SoftclipTailExtender extender(final TestGenome genome, final Set<ChrBaseRegion> introns)
     {
         return new SoftclipTailExtender(
-                refSource(ref),
+                genome.asRefSource(),
                 introns == null ? null : new AnnotatedJunctionIndex(introns),
                 TailExtensionConfig.enabledDefaults());
     }
 
-    private static SoftclipTailExtender extender(final Map<String, byte[]> ref)
+    private static SoftclipTailExtender extender(final TestGenome genome)
     {
-        return extender(ref, null);
+        return extender(genome, null);
     }
 
     @Test
     public void testTrailingExtendCleanMatch()
     {
-        final byte[] chr1 = fill(200, 'A');
-        for(int i = 130; i < 140; ++i) chr1[i] = 'C';
-        final byte[] readBases = new byte[40];
-        for(int i = 0; i < 30; ++i) readBases[i] = 'A';
-        for(int i = 30; i < 40; ++i) readBases[i] = 'C';
+        final TestGenome genome = genome().set(CHR1, 131, 10, 'C');
 
-        final TailExtensionResult res = extender(Collections.singletonMap(CHR1, chr1))
-                .tryExtend(CHR1, 101, "30M10S", readBases);
+        final SoftclipTailExtender ext = extender(genome);
+        final TailExtensionResult res = ext.tryExtend(CHR1, 101, "30M10S", bases("A".repeat(30) + "C".repeat(10)));
 
         assertTrue(res.Extended);
         assertEquals("40M", res.NewCigar);
         assertEquals(101, res.NewStart);
         assertEquals(10, res.BasesExtendedTrail);
         assertEquals(0, res.BasesExtendedLead);
+
+        // statistics accumulate from the same call
+        assertEquals(1, ext.statistics().recordsEvaluated());
+        assertEquals(1, ext.statistics().recordsExtended());
+        assertEquals(10, ext.statistics().basesExtendedTrail());
+        assertEquals(0, ext.statistics().basesExtendedLead());
     }
 
     @Test
     public void testTrailingExtendWithOneMismatchInTen()
     {
         // one mismatch in 10 -> floor(10/10)=1 allowed -> accepts full 10
-        final byte[] chr1 = fill(200, 'A');
-        for(int i = 130; i < 140; ++i) chr1[i] = 'C';
-        chr1[135] = 'G';                                 // single mismatch in the middle of the tail
-        final byte[] readBases = new byte[40];
-        for(int i = 30; i < 40; ++i) readBases[i] = 'C';
+        final TestGenome genome = genome().set(CHR1, 131, 10, 'C').set(CHR1, 136, "G");   // single mismatch mid-tail
 
-        final TailExtensionResult res = extender(Collections.singletonMap(CHR1, chr1))
-                .tryExtend(CHR1, 101, "30M10S", readBases);
+        final TailExtensionResult res = extender(genome)
+                .tryExtend(CHR1, 101, "30M10S", bases("A".repeat(30) + "C".repeat(10)));
 
         assertTrue(res.Extended);
         assertEquals("40M", res.NewCigar);
@@ -92,13 +78,10 @@ public class SoftclipTailExtenderTest
     public void testTrailingExtendPartialThenMismatchBurst()
     {
         // 6 clean matches then a mismatch burst with no recovery; score peaks at 6 -> reclaim 6
-        final byte[] chr1 = fill(200, 'A');
-        for(int i = 130; i < 136; ++i) chr1[i] = 'C';
-        final byte[] readBases = new byte[40];
-        for(int i = 30; i < 40; ++i) readBases[i] = 'C';
+        final TestGenome genome = genome().set(CHR1, 131, 6, 'C');
 
-        final TailExtensionResult res = extender(Collections.singletonMap(CHR1, chr1))
-                .tryExtend(CHR1, 101, "30M10S", readBases);
+        final TailExtensionResult res = extender(genome)
+                .tryExtend(CHR1, 101, "30M10S", bases("A".repeat(30) + "C".repeat(10)));
 
         assertTrue(res.Extended);
         assertEquals("36M4S", res.NewCigar);
@@ -109,13 +92,8 @@ public class SoftclipTailExtenderTest
     public void testTrailingExtendRejectShortAllMismatches()
     {
         // 3-base all-mismatch tail — below MinExtension=3, no extension
-        final byte[] chr1 = fill(200, 'A');
-        final byte[] readBases = new byte[33];
-        for(int i = 0; i < 30; ++i) readBases[i] = 'A';
-        for(int i = 30; i < 33; ++i) readBases[i] = 'G';
-
-        final TailExtensionResult res = extender(Collections.singletonMap(CHR1, chr1))
-                .tryExtend(CHR1, 101, "30M3S", readBases);
+        final TailExtensionResult res = extender(genome())
+                .tryExtend(CHR1, 101, "30M3S", bases("A".repeat(30) + "GGG"));
 
         assertFalse(res.Extended);
     }
@@ -123,14 +101,10 @@ public class SoftclipTailExtenderTest
     @Test
     public void testLeadingExtendCleanMatch()
     {
-        final byte[] chr1 = fill(200, 'A');
-        for(int i = 100; i < 110; ++i) chr1[i] = 'T';
-        final byte[] readBases = new byte[40];
-        for(int i = 0; i < 10; ++i) readBases[i] = 'T';
-        for(int i = 10; i < 40; ++i) readBases[i] = 'A';
+        final TestGenome genome = genome().set(CHR1, 101, 10, 'T');
 
-        final TailExtensionResult res = extender(Collections.singletonMap(CHR1, chr1))
-                .tryExtend(CHR1, 111, "10S30M", readBases);
+        final TailExtensionResult res = extender(genome)
+                .tryExtend(CHR1, 111, "10S30M", bases("T".repeat(10) + "A".repeat(30)));
 
         assertTrue(res.Extended);
         assertEquals("40M", res.NewCigar);
@@ -143,15 +117,10 @@ public class SoftclipTailExtenderTest
     public void testLeadingExtendPartial()
     {
         // last 5 of 10 leading softclip bases match, then mismatches with no recovery; reclaim 5
-        final byte[] chr1 = fill(200, 'A');
-        for(int i = 105; i < 110; ++i) chr1[i] = 'G';
-        final byte[] readBases = new byte[40];
-        for(int i = 0; i < 5; ++i) readBases[i] = 'C';
-        for(int i = 5; i < 10; ++i) readBases[i] = 'G';
-        for(int i = 10; i < 40; ++i) readBases[i] = 'A';
+        final TestGenome genome = genome().set(CHR1, 106, 5, 'G');
 
-        final TailExtensionResult res = extender(Collections.singletonMap(CHR1, chr1))
-                .tryExtend(CHR1, 111, "10S30M", readBases);
+        final TailExtensionResult res = extender(genome)
+                .tryExtend(CHR1, 111, "10S30M", bases("C".repeat(5) + "G".repeat(5) + "A".repeat(30)));
 
         assertTrue(res.Extended);
         assertEquals("5S35M", res.NewCigar);
@@ -162,16 +131,10 @@ public class SoftclipTailExtenderTest
     @Test
     public void testBothEndsInOneCall()
     {
-        final byte[] chr1 = fill(200, 'A');
-        for(int i = 105; i < 110; ++i) chr1[i] = 'T';
-        for(int i = 140; i < 145; ++i) chr1[i] = 'C';
-        final byte[] readBases = new byte[40];
-        for(int i = 0; i < 5; ++i) readBases[i] = 'T';
-        for(int i = 5; i < 35; ++i) readBases[i] = 'A';
-        for(int i = 35; i < 40; ++i) readBases[i] = 'C';
+        final TestGenome genome = genome().set(CHR1, 106, 5, 'T').set(CHR1, 141, 5, 'C');
 
-        final TailExtensionResult res = extender(Collections.singletonMap(CHR1, chr1))
-                .tryExtend(CHR1, 111, "5S30M5S", readBases);
+        final TailExtensionResult res = extender(genome)
+                .tryExtend(CHR1, 111, "5S30M5S", bases("T".repeat(5) + "A".repeat(30) + "C".repeat(5)));
 
         assertTrue(res.Extended);
         assertEquals("40M", res.NewCigar);
@@ -183,13 +146,10 @@ public class SoftclipTailExtenderTest
     @Test
     public void testExtendsAcrossNCigar()
     {
-        final byte[] chr1 = fill(500, 'A');
-        for(int i = 300; i < 305; ++i) chr1[i] = 'C';
-        final byte[] readBases = new byte[105];
-        for(int i = 100; i < 105; ++i) readBases[i] = 'C';
+        final TestGenome genome = new TestGenome().with(CHR1, 500, 'A').set(CHR1, 301, 5, 'C');
 
-        final TailExtensionResult res = extender(Collections.singletonMap(CHR1, chr1))
-                .tryExtend(CHR1, 101, "50M100N50M5S", readBases);
+        final TailExtensionResult res = extender(genome)
+                .tryExtend(CHR1, 101, "50M100N50M5S", bases("A".repeat(100) + "C".repeat(5)));
 
         assertTrue(res.Extended);
         assertEquals("50M100N55M", res.NewCigar);
@@ -200,13 +160,10 @@ public class SoftclipTailExtenderTest
     public void testMaxExtensionCap()
     {
         // MaxExtension=30 caps even when all 60 bases match
-        final byte[] chr1 = fill(500, 'A');
-        for(int i = 130; i < 200; ++i) chr1[i] = 'C';
-        final byte[] readBases = new byte[90];
-        for(int i = 30; i < 90; ++i) readBases[i] = 'C';
+        final TestGenome genome = new TestGenome().with(CHR1, 500, 'A').set(CHR1, 131, 70, 'C');
 
-        final TailExtensionResult res = extender(Collections.singletonMap(CHR1, chr1))
-                .tryExtend(CHR1, 101, "30M60S", readBases);
+        final TailExtensionResult res = extender(genome)
+                .tryExtend(CHR1, 101, "30M60S", bases("A".repeat(30) + "C".repeat(60)));
 
         assertTrue(res.Extended);
         assertEquals("60M30S", res.NewCigar);
@@ -217,16 +174,12 @@ public class SoftclipTailExtenderTest
     public void testJunctionGuardDefersWhenGenomicDivergesTrailing()
     {
         // clip diverges from genomic ref at the annotated intron start -> defer to junction rescue
-        final byte[] chr1 = fill(200, 'A');
-        chr1[130] = 'C'; chr1[131] = 'C'; chr1[132] = 'C';
-        final byte[] readBases = new byte[40];
-        for(int i = 30; i < 40; ++i) readBases[i] = 'C';
+        final TestGenome genome = genome().set(CHR1, 131, 3, 'C');
+        final Set<ChrBaseRegion> introns = new HashSet<>(Collections.singletonList(
+                new ChrBaseRegion(CHR1, 131, 200)));
 
-        final Set<ChrIntron> introns = new HashSet<>(Collections.singletonList(
-                new ChrIntron(CHR1, 131, 200)));
-
-        final SoftclipTailExtender ext = extender(Collections.singletonMap(CHR1, chr1), introns);
-        final TailExtensionResult res = ext.tryExtend(CHR1, 101, "30M10S", readBases);
+        final SoftclipTailExtender ext = extender(genome, introns);
+        final TailExtensionResult res = ext.tryExtend(CHR1, 101, "30M10S", bases("A".repeat(30) + "C".repeat(10)));
 
         assertFalse(res.Extended);
         assertEquals(1, ext.statistics().skippedForJunctionGuard());
@@ -236,16 +189,12 @@ public class SoftclipTailExtenderTest
     public void testRetainedIntronExtendsThroughJunctionTrailing()
     {
         // clip matches contiguous genome across the annotated intron — intron retention, extend not defer
-        final byte[] chr1 = fill(200, 'A');
-        for(int i = 130; i < 140; ++i) chr1[i] = 'C';
-        final byte[] readBases = new byte[40];
-        for(int i = 30; i < 40; ++i) readBases[i] = 'C';
+        final TestGenome genome = genome().set(CHR1, 131, 10, 'C');
+        final Set<ChrBaseRegion> introns = new HashSet<>(Collections.singletonList(
+                new ChrBaseRegion(CHR1, 131, 200)));
 
-        final Set<ChrIntron> introns = new HashSet<>(Collections.singletonList(
-                new ChrIntron(CHR1, 131, 200)));
-
-        final SoftclipTailExtender ext = extender(Collections.singletonMap(CHR1, chr1), introns);
-        final TailExtensionResult res = ext.tryExtend(CHR1, 101, "30M10S", readBases);
+        final SoftclipTailExtender ext = extender(genome, introns);
+        final TailExtensionResult res = ext.tryExtend(CHR1, 101, "30M10S", bases("A".repeat(30) + "C".repeat(10)));
 
         assertTrue(res.Extended);
         assertEquals("40M", res.NewCigar);
@@ -256,16 +205,12 @@ public class SoftclipTailExtenderTest
     public void testJunctionGuardDefersWhenGenomicDivergesLeading()
     {
         // clip diverges from genomic ref at the annotated intron end -> defer
-        final byte[] chr1 = fill(200, 'A');
-        chr1[107] = 'T'; chr1[108] = 'T'; chr1[109] = 'T';
-        final byte[] readBases = new byte[40];
-        for(int i = 0; i < 10; ++i) readBases[i] = 'T';
+        final TestGenome genome = genome().set(CHR1, 108, 3, 'T');
+        final Set<ChrBaseRegion> introns = new HashSet<>(Collections.singletonList(
+                new ChrBaseRegion(CHR1, 21, 110)));
 
-        final Set<ChrIntron> introns = new HashSet<>(Collections.singletonList(
-                new ChrIntron(CHR1, 21, 110)));
-
-        final SoftclipTailExtender ext = extender(Collections.singletonMap(CHR1, chr1), introns);
-        final TailExtensionResult res = ext.tryExtend(CHR1, 111, "10S30M", readBases);
+        final SoftclipTailExtender ext = extender(genome, introns);
+        final TailExtensionResult res = ext.tryExtend(CHR1, 111, "10S30M", bases("T".repeat(10) + "A".repeat(30)));
 
         assertFalse(res.Extended);
         assertEquals(1, ext.statistics().skippedForJunctionGuard());
@@ -275,16 +220,12 @@ public class SoftclipTailExtenderTest
     public void testRetainedIntronExtendsThroughJunctionLeading()
     {
         // clip cleanly matches genome across the annotated intron end — retention, extend not defer
-        final byte[] chr1 = fill(200, 'A');
-        for(int i = 100; i < 110; ++i) chr1[i] = 'T';
-        final byte[] readBases = new byte[40];
-        for(int i = 0; i < 10; ++i) readBases[i] = 'T';
+        final TestGenome genome = genome().set(CHR1, 101, 10, 'T');
+        final Set<ChrBaseRegion> introns = new HashSet<>(Collections.singletonList(
+                new ChrBaseRegion(CHR1, 21, 110)));
 
-        final Set<ChrIntron> introns = new HashSet<>(Collections.singletonList(
-                new ChrIntron(CHR1, 21, 110)));
-
-        final SoftclipTailExtender ext = extender(Collections.singletonMap(CHR1, chr1), introns);
-        final TailExtensionResult res = ext.tryExtend(CHR1, 111, "10S30M", readBases);
+        final SoftclipTailExtender ext = extender(genome, introns);
+        final TailExtensionResult res = ext.tryExtend(CHR1, 111, "10S30M", bases("T".repeat(10) + "A".repeat(30)));
 
         assertTrue(res.Extended);
         assertEquals("40M", res.NewCigar);
@@ -293,101 +234,34 @@ public class SoftclipTailExtenderTest
     }
 
     @Test
-    public void testNoSoftclipUnchanged()
+    public void testNoOpAndRefusalGuards()
     {
-        final byte[] chr1 = fill(200, 'A');
-        final byte[] readBases = fill(30, 'A');
+        // no softclip -> unchanged
+        assertFalse(extender(genome()).tryExtend(CHR1, 101, "30M", repeatedBase(30, 'A')).Extended);
 
-        final TailExtensionResult res = extender(Collections.singletonMap(CHR1, chr1))
-                .tryExtend(CHR1, 101, "30M", readBases);
-
-        assertFalse(res.Extended);
-    }
-
-    @Test
-    public void testShortSoftclipBelowMinUnchanged()
-    {
         // 2S < MinSoftclipLength=3 -> unchanged
-        final byte[] chr1 = fill(200, 'A');
-        for(int i = 130; i < 132; ++i) chr1[i] = 'C';
-        final byte[] readBases = new byte[32];
-        readBases[30] = 'C'; readBases[31] = 'C';
+        assertFalse(extender(genome().set(CHR1, 131, 2, 'C'))
+                .tryExtend(CHR1, 101, "30M2S", bases("A".repeat(30) + "CC")).Extended);
 
-        final TailExtensionResult res = extender(Collections.singletonMap(CHR1, chr1))
-                .tryExtend(CHR1, 101, "30M2S", readBases);
-
-        assertFalse(res.Extended);
-    }
-
-    @Test
-    public void testHardClipRefusal()
-    {
         // hard clip -> skipped as complex shape
-        final byte[] chr1 = fill(200, 'A');
-        final byte[] readBases = fill(35, 'A');
+        final SoftclipTailExtender hardClip = extender(genome());
+        assertFalse(hardClip.tryExtend(CHR1, 101, "10H30M5S", repeatedBase(35, 'A')).Extended);
+        assertEquals(1, hardClip.statistics().skippedComplexShape());
 
-        final SoftclipTailExtender ext = extender(Collections.singletonMap(CHR1, chr1));
-        final TailExtensionResult res = ext.tryExtend(CHR1, 101, "10H30M5S", readBases);
+        // op adjacent to the trailing S is I, not M -> refuse as complex shape
+        final SoftclipTailExtender indelAdjacent = extender(genome().set(CHR1, 131, 10, 'C'));
+        assertFalse(indelAdjacent.tryExtend(CHR1, 101, "30M5I3S", bases("A".repeat(35) + "CCC")).Extended);
+        assertTrue(indelAdjacent.statistics().skippedComplexShape() >= 1);
 
-        assertFalse(res.Extended);
-        assertEquals(1, ext.statistics().skippedComplexShape());
-    }
+        // disabled config -> no-op even with a clean match
+        final SoftclipTailExtender disabled = new SoftclipTailExtender(
+                genome().set(CHR1, 131, 10, 'C').asRefSource(), null, TailExtensionConfig.defaults());
+        assertFalse(disabled.tryExtend(CHR1, 101, "30M10S", bases("A".repeat(30) + "C".repeat(10))).Extended);
 
-    @Test
-    public void testIndelAdjacentToSoftclipRefused()
-    {
-        // op adjacent to trailing S is I, not M -> refuse
-        final byte[] chr1 = fill(200, 'A');
-        for(int i = 130; i < 140; ++i) chr1[i] = 'C';
-        final byte[] readBases = fill(38, 'A');
-        for(int i = 35; i < 38; ++i) readBases[i] = 'C';
-
-        final SoftclipTailExtender ext = extender(Collections.singletonMap(CHR1, chr1));
-        final TailExtensionResult res = ext.tryExtend(CHR1, 101, "30M5I3S", readBases);
-
-        assertFalse(res.Extended);
-        assertTrue(ext.statistics().skippedComplexShape() >= 1);
-    }
-
-    @Test
-    public void testDisabledConfigIsNoOp()
-    {
-        final byte[] chr1 = fill(200, 'A');
-        for(int i = 130; i < 140; ++i) chr1[i] = 'C';
-        final byte[] readBases = new byte[40];
-        for(int i = 30; i < 40; ++i) readBases[i] = 'C';
-
-        final SoftclipTailExtender ext = new SoftclipTailExtender(
-                refSource(Collections.singletonMap(CHR1, chr1)), null, TailExtensionConfig.defaults());
-        final TailExtensionResult res = ext.tryExtend(CHR1, 101, "30M10S", readBases);
-
-        assertFalse(res.Extended);
-    }
-
-    @Test
-    public void testStatisticsCounters()
-    {
-        final byte[] chr1 = fill(200, 'A');
-        for(int i = 130; i < 140; ++i) chr1[i] = 'C';
-        final byte[] readBases = new byte[40];
-        for(int i = 30; i < 40; ++i) readBases[i] = 'C';
-
-        final SoftclipTailExtender ext = extender(Collections.singletonMap(CHR1, chr1));
-        ext.tryExtend(CHR1, 101, "30M10S", readBases);
-        ext.tryExtend(CHR1, 101, "40M", readBases);     // no softclip — still counted as evaluated
-
-        assertEquals(2, ext.statistics().recordsEvaluated());
-        assertEquals(1, ext.statistics().recordsExtended());
-        assertEquals(10, ext.statistics().basesExtendedTrail());
-        assertEquals(0, ext.statistics().basesExtendedLead());
-    }
-
-    @Test
-    public void testNullInputsAreNoOp()
-    {
-        final SoftclipTailExtender ext = extender(new HashMap<>());
-        assertFalse(ext.tryExtend(null, 101, "30M5S", fill(35, 'A')).Extended);
-        assertFalse(ext.tryExtend(CHR1, 101, null, fill(35, 'A')).Extended);
-        assertFalse(ext.tryExtend(CHR1, 101, "30M5S", null).Extended);
+        // null chromosome / cigar / read bases -> no-op
+        final SoftclipTailExtender nullInputs = extender(new TestGenome());
+        assertFalse(nullInputs.tryExtend(null, 101, "30M5S", repeatedBase(35, 'A')).Extended);
+        assertFalse(nullInputs.tryExtend(CHR1, 101, null, repeatedBase(35, 'A')).Extended);
+        assertFalse(nullInputs.tryExtend(CHR1, 101, "30M5S", null).Extended);
     }
 }

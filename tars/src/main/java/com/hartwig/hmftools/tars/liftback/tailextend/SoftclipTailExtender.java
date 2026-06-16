@@ -1,18 +1,16 @@
 package com.hartwig.hmftools.tars.liftback.tailextend;
 
-import static com.hartwig.hmftools.tars.liftback.rescue.CigarShape.OP_MATCH;
-import static com.hartwig.hmftools.tars.liftback.rescue.CigarShape.OP_SEQ_MATCH;
-import static com.hartwig.hmftools.tars.liftback.rescue.CigarShape.OP_SEQ_MISMATCH;
-import static com.hartwig.hmftools.tars.liftback.rescue.CigarShape.OP_SOFTCLIP;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import com.hartwig.hmftools.common.bam.CigarUtils;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.tars.liftback.rescue.AnnotatedJunctionIndex;
-import com.hartwig.hmftools.tars.liftback.rescue.ChrIntron;
-import com.hartwig.hmftools.tars.liftback.rescue.CigarShape;
 import com.hartwig.hmftools.tars.liftback.rescue.RefSequenceSource;
+
+import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
 
 // Recovers ref-matching bases bwa-mem2 softclipped at read tails. Runs after junction rescue so
 // rescue's boundary lookups see the original cigar. Skips when an annotated intron starts within
@@ -46,10 +44,10 @@ public class SoftclipTailExtender
                 || cigar == null || readBases == null || readBases.length == 0)
             return TailExtensionResult.unchanged();
 
-        final List<CigarShape.Element> elements = CigarShape.parse(cigar);
+        final List<CigarElement> elements = CigarUtils.cigarElementsFromStr(cigar);
         if(elements.isEmpty())
             return TailExtensionResult.unchanged();
-        if(CigarShape.hasHardClip(elements))
+        if(CigarUtils.hasHardClip(elements))
         {
             mStatistics.countSkippedComplexShape();
             return TailExtensionResult.unchanged();
@@ -57,8 +55,8 @@ public class SoftclipTailExtender
 
         mStatistics.countEvaluated();
 
-        final List<CigarShape.Element> working = new ArrayList<>(elements);
-        final int alignmentEnd = alignmentStart + CigarShape.referenceSpan(working) - 1;
+        final List<CigarElement> working = new ArrayList<>(elements);
+        final int alignmentEnd = alignmentStart + CigarUtils.cigarAlignedLength(working) - 1;
 
         final int trailExtended = tryExtendSide(Side.TRAILING, chromosome, alignmentStart, alignmentEnd, readBases, working);
         final int leadExtended = tryExtendSide(Side.LEADING, chromosome, alignmentStart, alignmentEnd, readBases, working);
@@ -68,13 +66,13 @@ public class SoftclipTailExtender
 
         mStatistics.countExtended(leadExtended, trailExtended);
         final int newStart = alignmentStart - leadExtended;
-        return new TailExtensionResult(true, newStart, CigarShape.format(working),
+        return new TailExtensionResult(true, newStart, CigarUtils.cigarElementsToStr(working),
                 leadExtended, trailExtended);
     }
 
     private int tryExtendSide(
             final Side side, final String chromosome, final int alignmentStart, final int alignmentEnd,
-            final byte[] readBases, final List<CigarShape.Element> working)
+            final byte[] readBases, final List<CigarElement> working)
     {
         if(working.size() < 2)
             return 0;
@@ -82,11 +80,11 @@ public class SoftclipTailExtender
         final int softclipIndex = side.softclipIndex(working);
         final int matchedIndex = side.matchedIndex(working);
 
-        final CigarShape.Element softclip = working.get(softclipIndex);
-        if(softclip.Op != OP_SOFTCLIP || softclip.Length < mConfig.MinSoftclipLength)
+        final CigarElement softclip = working.get(softclipIndex);
+        if(softclip.getOperator() != CigarOperator.S || softclip.getLength() < mConfig.MinSoftclipLength)
             return 0;
 
-        if(!isMatchedOp(working.get(matchedIndex).Op))
+        if(!isMatchedOp(working.get(matchedIndex).getOperator()))
         {
             mStatistics.countSkippedComplexShape();
             return 0;
@@ -94,7 +92,7 @@ public class SoftclipTailExtender
 
         final int boundary = side.refBoundary(alignmentStart, alignmentEnd);
 
-        int extendBudget = Math.min(softclip.Length, mConfig.MaxExtension);
+        int extendBudget = Math.min(softclip.getLength(), mConfig.MaxExtension);
         if(side == Side.LEADING && alignmentStart - extendBudget < 1)
             extendBudget = alignmentStart - 1;
         if(extendBudget < mConfig.MinExtension)
@@ -108,7 +106,7 @@ public class SoftclipTailExtender
         }
 
         final int walkLength = Math.min(refBases.length, extendBudget);
-        final int bestLength = side.walk(readBases, refBases, softclip.Length, walkLength);
+        final int bestLength = side.walk(readBases, refBases, softclip.getLength(), walkLength);
 
         // Junction guard applied after the walk: if the read matches the full window (intron retention),
         // extension is correct. Only defer when the walk stalls short, meaning the read diverges at the
@@ -142,28 +140,28 @@ public class SoftclipTailExtender
         return false;
     }
 
-    private static boolean isMatchedOp(final char op)
+    private static boolean isMatchedOp(final CigarOperator op)
     {
-        return op == OP_MATCH || op == OP_SEQ_MATCH || op == OP_SEQ_MISMATCH;
+        return op == CigarOperator.M || op == CigarOperator.EQ || op == CigarOperator.X;
     }
 
     private static void applyExtension(
-            final List<CigarShape.Element> working, final int softclipIndex,
+            final List<CigarElement> working, final int softclipIndex,
             final int matchedIndex, final int extend)
     {
-        final CigarShape.Element softclip = working.get(softclipIndex);
-        final CigarShape.Element matched = working.get(matchedIndex);
+        final CigarElement softclip = working.get(softclipIndex);
+        final CigarElement matched = working.get(matchedIndex);
 
-        final CigarShape.Element grownMatch = new CigarShape.Element(matched.Length + extend, matched.Op);
+        final CigarElement grownMatch = new CigarElement(matched.getLength() + extend, matched.getOperator());
         working.set(matchedIndex, grownMatch);
 
-        if(softclip.Length - extend == 0)
+        if(softclip.getLength() - extend == 0)
         {
             working.remove(softclipIndex);
         }
         else
         {
-            working.set(softclipIndex, new CigarShape.Element(softclip.Length - extend, OP_SOFTCLIP));
+            working.set(softclipIndex, new CigarElement(softclip.getLength() - extend, CigarOperator.S));
         }
     }
 
@@ -173,10 +171,10 @@ public class SoftclipTailExtender
         LEADING
                 {
                     @Override
-                    int softclipIndex(final List<CigarShape.Element> cigar) { return 0; }
+                    int softclipIndex(final List<CigarElement> cigar) { return 0; }
 
                     @Override
-                    int matchedIndex(final List<CigarShape.Element> cigar) { return 1; }
+                    int matchedIndex(final List<CigarElement> cigar) { return 1; }
 
                     @Override
                     int refBoundary(final int alignmentStart, final int alignmentEnd) { return alignmentStart; }
@@ -199,7 +197,7 @@ public class SoftclipTailExtender
                     }
 
                     @Override
-                    List<ChrIntron> junctionLookup(
+                    List<ChrBaseRegion> junctionLookup(
                             final AnnotatedJunctionIndex idx, final String chr, final int boundary, final int offset)
                     {
                         return idx.introByEnd(chr, boundary - offset);
@@ -208,10 +206,10 @@ public class SoftclipTailExtender
         TRAILING
                 {
                     @Override
-                    int softclipIndex(final List<CigarShape.Element> cigar) { return cigar.size() - 1; }
+                    int softclipIndex(final List<CigarElement> cigar) { return cigar.size() - 1; }
 
                     @Override
-                    int matchedIndex(final List<CigarShape.Element> cigar) { return cigar.size() - 2; }
+                    int matchedIndex(final List<CigarElement> cigar) { return cigar.size() - 2; }
 
                     @Override
                     int refBoundary(final int alignmentStart, final int alignmentEnd) { return alignmentEnd; }
@@ -233,18 +231,18 @@ public class SoftclipTailExtender
                     }
 
                     @Override
-                    List<ChrIntron> junctionLookup(
+                    List<ChrBaseRegion> junctionLookup(
                             final AnnotatedJunctionIndex idx, final String chr, final int boundary, final int offset)
                     {
                         return idx.introByStart(chr, boundary + offset);
                     }
                 };
 
-        abstract int softclipIndex(List<CigarShape.Element> cigar);
-        abstract int matchedIndex(List<CigarShape.Element> cigar);
+        abstract int softclipIndex(List<CigarElement> cigar);
+        abstract int matchedIndex(List<CigarElement> cigar);
         abstract int refBoundary(int alignmentStart, int alignmentEnd);
         abstract byte[] fetchRef(RefSequenceSource src, String chr, int boundary, int budget);
         abstract int walk(byte[] readBases, byte[] refBases, int softclipLength, int walkLength);
-        abstract List<ChrIntron> junctionLookup(AnnotatedJunctionIndex idx, String chr, int boundary, int offset);
+        abstract List<ChrBaseRegion> junctionLookup(AnnotatedJunctionIndex idx, String chr, int boundary, int offset);
     }
 }

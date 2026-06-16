@@ -1,18 +1,16 @@
 package com.hartwig.hmftools.tars.liftback.tailextend;
 
-import static com.hartwig.hmftools.tars.liftback.rescue.CigarShape.OP_MATCH;
-import static com.hartwig.hmftools.tars.liftback.rescue.CigarShape.OP_SEQ_MATCH;
-import static com.hartwig.hmftools.tars.liftback.rescue.CigarShape.OP_SKIPPED;
-import static com.hartwig.hmftools.tars.liftback.rescue.CigarShape.OP_SOFTCLIP;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.tars.common.SpliceCommon;
-import com.hartwig.hmftools.tars.liftback.rescue.CigarShape;
 import com.hartwig.hmftools.tars.liftback.rescue.RefSequenceSource;
+
+import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
 
 // Resolves an untrusted terminal junction fabricated when the tx-contig walk over-extends a read past an
 // exon boundary, shape "<...>M nN yM [eS]" (trailing) or "[eS] yM nN <...>M" (leading) where the terminal
@@ -47,13 +45,13 @@ public class TerminalMicroJunctionCollapser
         if(mRefSource == null || chromosome == null || cigar == null || readBases == null || readBases.length == 0)
             return TerminalCollapseResult.unchanged();
 
-        final List<CigarShape.Element> elements = CigarShape.parse(cigar);
-        if(elements.size() < 3 || CigarShape.hasHardClip(elements))
+        final List<CigarElement> elements = CigarUtils.cigarElementsFromStr(cigar);
+        if(elements.size() < 3 || CigarUtils.hasHardClip(elements))
             return TerminalCollapseResult.unchanged();
 
         // both ends are independent; apply trailing first, then leading on the result.
         final TerminalCollapseResult trailing = tryTrailing(chromosome, alignmentStart, elements, readBases);
-        final List<CigarShape.Element> afterTrailing = trailing.Collapsed ? CigarShape.parse(trailing.NewCigar) : elements;
+        final List<CigarElement> afterTrailing = trailing.Collapsed ? CigarUtils.cigarElementsFromStr(trailing.NewCigar) : elements;
         final int startAfterTrailing = trailing.Collapsed ? trailing.NewStart : alignmentStart;
 
         final TerminalCollapseResult leading = tryLeading(chromosome, startAfterTrailing, afterTrailing, readBases);
@@ -63,33 +61,33 @@ public class TerminalMicroJunctionCollapser
     }
 
     private TerminalCollapseResult tryTrailing(
-            final String chromosome, final int alignmentStart, final List<CigarShape.Element> elements, final byte[] readBases)
+            final String chromosome, final int alignmentStart, final List<CigarElement> elements, final byte[] readBases)
     {
         final int last = elements.size() - 1;
 
         // shape: "<...>M nN yM [eS]"
-        final boolean hasSoftclip = elements.get(last).Op == OP_SOFTCLIP;
-        final int e = hasSoftclip ? elements.get(last).Length : 0;
+        final boolean hasSoftclip = elements.get(last).getOperator() == CigarOperator.S;
+        final int e = hasSoftclip ? elements.get(last).getLength() : 0;
         final int anchorIndex = hasSoftclip ? last - 1 : last;
         final int intronIndex = anchorIndex - 1;
         final int nearIndex = intronIndex - 1;
         if(nearIndex < 0)
             return TerminalCollapseResult.unchanged();
 
-        final CigarShape.Element anchor = elements.get(anchorIndex);
-        if(!isMatch(anchor.Op) || anchor.Length >= mMinJunctionAnchor)
+        final CigarElement anchor = elements.get(anchorIndex);
+        if(!isMatch(anchor.getOperator()) || anchor.getLength() >= mMinJunctionAnchor)
             return TerminalCollapseResult.unchanged();
-        if(elements.get(intronIndex).Op != OP_SKIPPED)
+        if(elements.get(intronIndex).getOperator() != CigarOperator.N)
             return TerminalCollapseResult.unchanged();
-        final CigarShape.Element nearExon = elements.get(nearIndex);
-        if(!isMatch(nearExon.Op))
+        final CigarElement nearExon = elements.get(nearIndex);
+        if(!isMatch(nearExon.getOperator()))
             return TerminalCollapseResult.unchanged();
 
-        final int y = anchor.Length;
+        final int y = anchor.getLength();
         final int window = y + e;
-        final int intronLen = elements.get(intronIndex).Length;
+        final int intronLen = elements.get(intronIndex).getLength();
         // genomic end of the near exon, just before the intron
-        final int nearEnd = alignmentStart + CigarShape.referenceSpan(elements.subList(0, intronIndex)) - 1;
+        final int nearEnd = alignmentStart + CigarUtils.cigarAlignedLength(elements.subList(0, intronIndex)) - 1;
         final byte[] ref = mRefSource.getBases(chromosome, nearEnd + 1, nearEnd + window);
         if(ref == null || ref.length != window)
             return TerminalCollapseResult.unchanged();
@@ -110,39 +108,39 @@ public class TerminalMicroJunctionCollapser
             return TerminalCollapseResult.unchanged();
 
         // drop the intron; reclaim the scoring prefix into the near exon, clip the remainder.
-        final List<CigarShape.Element> merged = new ArrayList<>(elements.subList(0, nearIndex));
-        merged.add(new CigarShape.Element(nearExon.Length + reclaimed, OP_MATCH));
+        final List<CigarElement> merged = new ArrayList<>(elements.subList(0, nearIndex));
+        merged.add(new CigarElement(nearExon.getLength() + reclaimed, CigarOperator.M));
         final int residual = window - reclaimed;
         if(residual > 0)
-            merged.add(new CigarShape.Element(residual, OP_SOFTCLIP));
+            merged.add(new CigarElement(residual, CigarOperator.S));
         mCollapsedTrailing.incrementAndGet();
-        return new TerminalCollapseResult(true, alignmentStart, CigarShape.format(merged));
+        return new TerminalCollapseResult(true, alignmentStart, CigarUtils.cigarElementsToStr(merged));
     }
 
     private TerminalCollapseResult tryLeading(
-            final String chromosome, final int alignmentStart, final List<CigarShape.Element> elements, final byte[] readBases)
+            final String chromosome, final int alignmentStart, final List<CigarElement> elements, final byte[] readBases)
     {
         // shape: "[eS] yM nN <...>M"
-        final boolean hasSoftclip = elements.get(0).Op == OP_SOFTCLIP;
-        final int e = hasSoftclip ? elements.get(0).Length : 0;
+        final boolean hasSoftclip = elements.get(0).getOperator() == CigarOperator.S;
+        final int e = hasSoftclip ? elements.get(0).getLength() : 0;
         final int anchorIndex = hasSoftclip ? 1 : 0;
         final int intronIndex = anchorIndex + 1;
         final int nearIndex = intronIndex + 1;
         if(nearIndex >= elements.size())
             return TerminalCollapseResult.unchanged();
 
-        final CigarShape.Element anchor = elements.get(anchorIndex);
-        if(!isMatch(anchor.Op) || anchor.Length >= mMinJunctionAnchor)
+        final CigarElement anchor = elements.get(anchorIndex);
+        if(!isMatch(anchor.getOperator()) || anchor.getLength() >= mMinJunctionAnchor)
             return TerminalCollapseResult.unchanged();
-        if(elements.get(intronIndex).Op != OP_SKIPPED)
+        if(elements.get(intronIndex).getOperator() != CigarOperator.N)
             return TerminalCollapseResult.unchanged();
-        final CigarShape.Element nearExon = elements.get(nearIndex);
-        if(!isMatch(nearExon.Op))
+        final CigarElement nearExon = elements.get(nearIndex);
+        if(!isMatch(nearExon.getOperator()))
             return TerminalCollapseResult.unchanged();
 
-        final int y = anchor.Length;
+        final int y = anchor.getLength();
         final int window = y + e;
-        final int intron = elements.get(intronIndex).Length;
+        final int intron = elements.get(intronIndex).getLength();
         // leading softclip consumes no reference, so nearStart skips only anchor + intron.
         final int nearStart = alignmentStart + y + intron;
         final byte[] ref = mRefSource.getBases(chromosome, nearStart - window, nearStart - 1);
@@ -164,14 +162,14 @@ public class TerminalMicroJunctionCollapser
             return TerminalCollapseResult.unchanged();
 
         final int residual = window - reclaimed;
-        final List<CigarShape.Element> merged = new ArrayList<>();
+        final List<CigarElement> merged = new ArrayList<>();
         if(residual > 0)
-            merged.add(new CigarShape.Element(residual, OP_SOFTCLIP));
-        merged.add(new CigarShape.Element(reclaimed + nearExon.Length, OP_MATCH));
+            merged.add(new CigarElement(residual, CigarOperator.S));
+        merged.add(new CigarElement(reclaimed + nearExon.getLength(), CigarOperator.M));
         for(int i = nearIndex + 1; i < elements.size(); ++i)
             merged.add(elements.get(i));
         mCollapsedLeading.incrementAndGet();
-        return new TerminalCollapseResult(true, nearStart - reclaimed, CigarShape.format(merged));
+        return new TerminalCollapseResult(true, nearStart - reclaimed, CigarUtils.cigarElementsToStr(merged));
     }
 
     // bwa's split placement wins when the anchor scores strictly better on the far exon than the whole terminal
@@ -184,8 +182,8 @@ public class TerminalMicroJunctionCollapser
         return BoundaryReclaim.score(anchorRead, farRef) > contiguousScore;
     }
 
-    private static boolean isMatch(final char op)
+    private static boolean isMatch(final CigarOperator op)
     {
-        return op == OP_MATCH || op == OP_SEQ_MATCH;
+        return op == CigarOperator.M || op == CigarOperator.EQ;
     }
 }

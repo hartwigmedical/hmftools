@@ -1,77 +1,44 @@
 package com.hartwig.hmftools.tars.liftback.rescue;
 
-import static org.junit.Assert.assertEquals;
+import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.bases;
 
-import java.nio.charset.StandardCharsets;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
 public class SpliceMotifTest
 {
-    private static byte[] b(final String s)
+    @Test
+    public void testClassifiesMotifTiers()
     {
-        return s.getBytes(StandardCharsets.US_ASCII);
+        // canonical GT-AG and its reverse-complement CT-AC (strand unknown at scan time)
+        assertEquals(SpliceMotif.TIER_CANONICAL, SpliceMotif.classify(bases("GT"), bases("AG")));
+        assertEquals(SpliceMotif.TIER_CANONICAL, SpliceMotif.classify(bases("CT"), bases("AC")));
+
+        // semi-canonical GC-AG / AT-AC and their reverse-complements CT-GC / GT-AT
+        assertEquals(SpliceMotif.TIER_SEMI_CANONICAL, SpliceMotif.classify(bases("GC"), bases("AG")));
+        assertEquals(SpliceMotif.TIER_SEMI_CANONICAL, SpliceMotif.classify(bases("CT"), bases("GC")));
+        assertEquals(SpliceMotif.TIER_SEMI_CANONICAL, SpliceMotif.classify(bases("AT"), bases("AC")));
+        assertEquals(SpliceMotif.TIER_SEMI_CANONICAL, SpliceMotif.classify(bases("GT"), bases("AT")));
+
+        // lowercase normalises to the same tier
+        assertEquals(SpliceMotif.TIER_CANONICAL, SpliceMotif.classify(bases("gt"), bases("ag")));
+        assertEquals(SpliceMotif.TIER_CANONICAL, SpliceMotif.classify(bases("ct"), bases("ac")));
+
+        // non-motif flanks, including a matching donor with a non-matching acceptor
+        assertEquals(SpliceMotif.TIER_NONE, SpliceMotif.classify(bases("AA"), bases("GG")));
+        assertEquals(SpliceMotif.TIER_NONE, SpliceMotif.classify(bases("NN"), bases("NN")));
+        assertEquals(SpliceMotif.TIER_NONE, SpliceMotif.classify(bases("GT"), bases("CC")));
+        assertEquals(SpliceMotif.TIER_NONE, SpliceMotif.classify(bases("CC"), bases("AG")));
     }
 
     @Test
-    public void testCanonicalGTagForwardStrand()
+    public void testRejectsNullOrWrongLengthInputs()
     {
-        assertEquals(SpliceMotif.TIER_CANONICAL, SpliceMotif.classify(b("GT"), b("AG")));
-    }
-
-    @Test
-    public void testCanonicalCTacReverseStrand()
-    {
-        assertEquals(SpliceMotif.TIER_CANONICAL, SpliceMotif.classify(b("CT"), b("AC")));
-    }
-
-    @Test
-    public void testSemiCanonicalGCagForwardStrand()
-    {
-        assertEquals(SpliceMotif.TIER_SEMI_CANONICAL, SpliceMotif.classify(b("GC"), b("AG")));
-    }
-
-    @Test
-    public void testSemiCanonicalCTgcReverseStrand()
-    {
-        assertEquals(SpliceMotif.TIER_SEMI_CANONICAL, SpliceMotif.classify(b("CT"), b("GC")));
-    }
-
-    @Test
-    public void testSemiCanonicalATacForwardStrand()
-    {
-        assertEquals(SpliceMotif.TIER_SEMI_CANONICAL, SpliceMotif.classify(b("AT"), b("AC")));
-    }
-
-    @Test
-    public void testSemiCanonicalGTatReverseStrand()
-    {
-        assertEquals(SpliceMotif.TIER_SEMI_CANONICAL, SpliceMotif.classify(b("GT"), b("AT")));
-    }
-
-    @Test
-    public void testCaseInsensitive()
-    {
-        assertEquals(SpliceMotif.TIER_CANONICAL, SpliceMotif.classify(b("gt"), b("ag")));
-        assertEquals(SpliceMotif.TIER_CANONICAL, SpliceMotif.classify(b("ct"), b("ac")));
-    }
-
-    @Test
-    public void testNoMotif()
-    {
-        assertEquals(SpliceMotif.TIER_NONE, SpliceMotif.classify(b("AA"), b("GG")));
-        assertEquals(SpliceMotif.TIER_NONE, SpliceMotif.classify(b("NN"), b("NN")));
-        assertEquals(SpliceMotif.TIER_NONE, SpliceMotif.classify(b("GT"), b("CC")));
-        assertEquals(SpliceMotif.TIER_NONE, SpliceMotif.classify(b("CC"), b("AG")));
-    }
-
-    @Test
-    public void testNullOrWrongLengthInputs()
-    {
-        assertEquals(SpliceMotif.TIER_NONE, SpliceMotif.classify(null, b("AG")));
-        assertEquals(SpliceMotif.TIER_NONE, SpliceMotif.classify(b("GT"), null));
-        assertEquals(SpliceMotif.TIER_NONE, SpliceMotif.classify(b("G"), b("AG")));
-        assertEquals(SpliceMotif.TIER_NONE, SpliceMotif.classify(b("GT"), b("A")));
-        assertEquals(SpliceMotif.TIER_NONE, SpliceMotif.classify(b("GTC"), b("AG")));
+        assertEquals(SpliceMotif.TIER_NONE, SpliceMotif.classify(null, bases("AG")));
+        assertEquals(SpliceMotif.TIER_NONE, SpliceMotif.classify(bases("GT"), null));
+        assertEquals(SpliceMotif.TIER_NONE, SpliceMotif.classify(bases("G"), bases("AG")));
+        assertEquals(SpliceMotif.TIER_NONE, SpliceMotif.classify(bases("GT"), bases("A")));
+        assertEquals(SpliceMotif.TIER_NONE, SpliceMotif.classify(bases("GTC"), bases("AG")));
     }
 }
