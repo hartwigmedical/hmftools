@@ -73,7 +73,7 @@ public class LiftBackWorker extends Thread
 
         mProcessor = new LiftBackGroupProcessor(
                 resources.Resolver, mRescueResolver, mSoftclipExtender, mTerminalCollapser, mJunctionCanonicalizer,
-                refSource, resources.UnmapAboveNh, resources.UnmapBelowMapq, mStats);
+                refSource, mStats);
 
         mShardWriter = new SAMFileWriterFactory().makeBAMWriter(header, false, new File(shardBam));
     }
@@ -83,6 +83,8 @@ public class LiftBackWorker extends Thread
     public TailExtensionStatistics tailExtStatistics() { return mSoftclipExtender != null ? mSoftclipExtender.statistics() : null; }
     public long collapsedLeading() { return mTerminalCollapser != null ? mTerminalCollapser.collapsedLeading() : 0; }
     public long collapsedTrailing() { return mTerminalCollapser != null ? mTerminalCollapser.collapsedTrailing() : 0; }
+    public long junctionsCanonicalized() { return mJunctionCanonicalizer != null ? mJunctionCanonicalizer.junctionsShifted() : 0; }
+    public long overCapUnmapped() { return mProcessor.overCapUnmapped(); }
 
     @Override
     public void run()

@@ -24,12 +24,6 @@ public class SpliceLiftBackConfig
     public static final String CONTIG_SIDECAR = "contig_sidecar";
     public static final String CONTIG_SIDECAR_DESC = "Contig sidecar TSV from SpliceFastaBuilder. Required.";
 
-    public static final String UNMAP_ABOVE_NH = "unmap_above_nh";
-    public static final String UNMAP_ABOVE_NH_DESC = "If > 0, mark records with NH > N as unmapped";
-
-    public static final String UNMAP_BELOW_MAPQ = "unmap_below_mapq";
-    public static final String UNMAP_BELOW_MAPQ_DESC = "If > 0, mark primary records with final MAPQ < N as unmapped";
-
     public static final String RESCUE_VIA_SUPP = "rescue_via_supp";
     public static final String RESCUE_VIA_SUPP_DESC =
             "Merge primary + supplementary across annotated junctions when read coverage complements cleanly";
@@ -60,8 +54,6 @@ public class SpliceLiftBackConfig
     public final String RefGenomeFile;
     public final RefGenomeVersion RefGenVersion;
     public final String ContigSidecarFile;
-    public final int UnmapAboveNh;
-    public final int UnmapBelowMapq;
     public final boolean RescueViaSupp;
     public final boolean ExtendSoftclipTails;
     public final String EnsemblDataDir;
@@ -78,8 +70,6 @@ public class SpliceLiftBackConfig
         RefGenomeFile = configBuilder.getValue(REF_GENOME);
         RefGenVersion = RefGenomeVersion.from(configBuilder);
         ContigSidecarFile = configBuilder.getValue(CONTIG_SIDECAR);
-        UnmapAboveNh = configBuilder.getInteger(UNMAP_ABOVE_NH);
-        UnmapBelowMapq = configBuilder.getInteger(UNMAP_BELOW_MAPQ);
         RescueViaSupp = configBuilder.hasFlag(RESCUE_VIA_SUPP);
         ExtendSoftclipTails = configBuilder.hasFlag(EXTEND_SOFTCLIP_TAILS);
         EnsemblDataDir = configBuilder.getValue(ENSEMBL_DATA_DIR);
@@ -132,8 +122,6 @@ public class SpliceLiftBackConfig
         configBuilder.addPath(INPUT_BAM, true, INPUT_BAM_DESC);
         addRefGenomeConfig(configBuilder, true);
         configBuilder.addPath(CONTIG_SIDECAR, true, CONTIG_SIDECAR_DESC);
-        configBuilder.addInteger(UNMAP_ABOVE_NH, UNMAP_ABOVE_NH_DESC, 0);
-        configBuilder.addInteger(UNMAP_BELOW_MAPQ, UNMAP_BELOW_MAPQ_DESC, 0);
         configBuilder.addFlag(RESCUE_VIA_SUPP, RESCUE_VIA_SUPP_DESC);
         configBuilder.addFlag(EXTEND_SOFTCLIP_TAILS, EXTEND_SOFTCLIP_TAILS_DESC);
         configBuilder.addPath(ENSEMBL_DATA_DIR, true, ENSEMBL_DATA_DIR_DESC);

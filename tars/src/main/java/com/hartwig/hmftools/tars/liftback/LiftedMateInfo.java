@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.tars.liftback;
 
 // Lifted-coord summary for one primary alignment, cached in pass 1 to patch partner mate fields in pass 2.
-// TODO: negativeStrand may need XS:A:+/- from gene strand for IGV colouring — revisit on redux integration.
+// TODO: negativeStrand may need XS:A:+/- from gene strand for IGV colouring - revisit on redux integration.
 public record LiftedMateInfo(
         String chromosome,
         int alignmentStart,

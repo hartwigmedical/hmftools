@@ -8,7 +8,7 @@ import java.util.List;
 import com.hartwig.hmftools.tars.common.ContigEntry;
 
 // Packs per-transcript sequences into a single per-chromosome alt contig with N-spacers between transcripts.
-// Pure function — no I/O.
+// Pure function - no I/O.
 public final class AltContigPacker
 {
     private final String mSpacer;

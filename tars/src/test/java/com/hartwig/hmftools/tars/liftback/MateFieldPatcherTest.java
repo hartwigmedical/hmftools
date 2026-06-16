@@ -31,6 +31,17 @@ public class MateFieldPatcherTest
         return record;
     }
 
+    private static SAMRecord pairedUnmappedRecord(final String readName, final boolean firstOfPair)
+    {
+        SAMRecord record = new SAMRecord(new SAMFileHeader());
+        record.setReadName(readName);
+        record.setReadPairedFlag(true);
+        record.setFirstOfPairFlag(firstOfPair);
+        record.setSecondOfPairFlag(!firstOfPair);
+        record.setReadUnmappedFlag(true);
+        return record;
+    }
+
     @Test
     public void testPatchSamePairSameChromSetsTlenAndMateFields()
     {
@@ -137,6 +148,43 @@ public class MateFieldPatcherTest
         MateFieldPatcher.patchMateFields(r1, cache);
 
         assertFalse(r1.getProperPairFlag());
+    }
+
+    @Test
+    public void testUnmappedReadWithMappedMateParkedAtMateLocus()
+    {
+        // An unmapped read whose mate is mapped is placed at the mate's coordinates so the pair stays
+        // together in a coord-sorted BAM. It is not a proper pair and carries no insert size.
+        LiftedMateInfoCache cache = new LiftedMateInfoCache();
+        cache.recordPrimaryAlignment("read1", false, LiftedMateInfo.mapped("1", 400, 499, "50M", true));
+
+        SAMRecord r1 = pairedUnmappedRecord("read1", true);
+        MateFieldPatcher.patchMateFields(r1, cache);
+
+        assertFalse(r1.getMateUnmappedFlag());
+        assertEquals("1", r1.getMateReferenceName());
+        assertEquals(400, r1.getMateAlignmentStart());
+        assertEquals("1", r1.getReferenceName());
+        assertEquals(400, r1.getAlignmentStart());
+        assertEquals(0, r1.getInferredInsertSize());
+        assertFalse(r1.getProperPairFlag());
+    }
+
+    @Test
+    public void testBothMatesUnmappedClearsOwnCoordinates()
+    {
+        // When both mates are unmapped, the read's stale pre-lift coordinates are cleared.
+        LiftedMateInfoCache cache = new LiftedMateInfoCache();
+        cache.recordPrimaryAlignment("read1", false, LiftedMateInfo.UNMAPPED);
+
+        SAMRecord r1 = pairedUnmappedRecord("read1", true);
+        r1.setReferenceName("1");          // stale pre-lift placement carried over from bwa
+        r1.setAlignmentStart(100);
+        MateFieldPatcher.patchMateFields(r1, cache);
+
+        assertTrue(r1.getMateUnmappedFlag());
+        assertEquals(SAMRecord.NO_ALIGNMENT_REFERENCE_NAME, r1.getReferenceName());
+        assertEquals(SAMRecord.NO_ALIGNMENT_START, r1.getAlignmentStart());
     }
 
     @Test

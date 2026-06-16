@@ -79,15 +79,15 @@ when it has a real junction and ref is softclipped (ref never spanned the juncti
 
 Run per mate-group in this load-bearing order, each feeding the next:
 
-1. **Rescue** (`JunctionRescueResolver`) — merge a primary's terminal softclip with a short-anchor supplementary across
+1. **Rescue** (`JunctionRescueResolver`) - merge a primary's terminal softclip with a short-anchor supplementary across
    a junction into one `M N M` primary. Gated on softclip complementarity, intron length, anchor overhangs and coverage
    overlap; snap point chosen by motif tier. Merged supps are dropped; the primary's MAPQ is capped at 55.
-2. **Collapse** (`TerminalMicroJunctionCollapser`) — drop a fabricated tiny terminal anchor (<= 3 bp) across an intron.
+2. **Collapse** (`TerminalMicroJunctionCollapser`) - drop a fabricated tiny terminal anchor (<= 3 bp) across an intron.
    The anchor bases must match the contiguous genome exactly; reclaimed softclip bases past the anchor tolerate
    max(1, length/10) mismatches. A real short anchor has an intron between, so it doesn't match contiguously and is kept.
-3. **Extend** (`SoftclipTailExtender`) — walk a terminal softclip into contiguous genome (intron retention, no `N`),
+3. **Extend** (`SoftclipTailExtender`) - walk a terminal softclip into contiguous genome (intron retention, no `N`),
    min 3 bp, capped at 30 bp.
-4. **Canonicalize** (`JunctionCanonicalizer`) — slide an intron up to 5 bp onto a higher splice motif (GT-AG / CT-AC),
+4. **Canonicalize** (`JunctionCanonicalizer`) - slide an intron up to 5 bp onto a higher splice motif (GT-AG / CT-AC),
    smallest shift that strictly improves the tier with every moved base still matching. CIGAR only; start never moves.
 
 ### MAPQ, NH and mutation scope

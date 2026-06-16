@@ -145,7 +145,7 @@ public final class ContigTranslator
     // exon span index + genomic position where an alignment begins.
     private record SpanLocation(int spanIndex, int genomicPos) {}
 
-    // A D straddling an exon boundary lifts as xD nN yD — artifact of tx-FASTA off-by-N at the junction.
+    // A D straddling an exon boundary lifts as xD nN yD - artifact of tx-FASTA off-by-N at the junction.
     // Absorb small flanking Ds into the N (preserves read and ref span); keep larger ones as real deletions.
     static List<CigarElement> collapseSpliceFlankingDeletions(final List<CigarElement> elements)
     {
@@ -198,7 +198,7 @@ public final class ContigTranslator
     // is shorter than the overhang floor is unsupported and rejected. Two floors: bareAnchorFloor for a read
     // genuinely starting inside an exon (no adjacent S, kept down to 1bp); softclipAnchorFloor for
     // an anchor sitting next to a softclip (bwa over-ran the boundary, so the implied junction is
-    // unsupported — roll the yM into the softclip). Leading trim advances start past dropped yM+intron.
+    // unsupported - roll the yM into the softclip). Leading trim advances start past dropped yM+intron.
     public static MicroAnchorResult trimMicroAnchors(
             final Cigar cigar, final int bareAnchorFloor, final int softclipAnchorFloor)
     {
@@ -242,7 +242,7 @@ public final class ContigTranslator
             return elements;
         if(elements.get(last - 2).getOperator() != CigarOperator.N)
             return elements;
-        // without a preceding M the trimmed cigar would start with S/N — refuse
+        // without a preceding M the trimmed cigar would start with S/N - refuse
         boolean hasAnchorBeforeIntron = false;
         for(int i = 0; i < last - 2; ++i)
         {
@@ -262,7 +262,7 @@ public final class ContigTranslator
         return result;
     }
 
-    // "[zS]? yM nN <...>M<...>" — leading S optional (absent when source starts with M, no clip to merge)
+    // "[zS]? yM nN <...>M<...>" - leading S optional (absent when source starts with M, no clip to merge)
     private static boolean leadingAnchorTrimmable(final List<CigarElement> elements, final int minAnchorBp)
     {
         if(elements.isEmpty())

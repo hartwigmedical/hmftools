@@ -72,7 +72,7 @@ public final class ContigSidecar
                     strand = 0;
                     if(!missingStrandWarned)
                     {
-                        TARS_LOGGER.warn("contig sidecar {} lacks the Strand column — XS:A:+/- will not "
+                        TARS_LOGGER.warn("contig sidecar {} lacks the Strand column - XS:A:+/- will not "
                                 + "be emitted on tx-derived spliced records. Regenerate the sidecar "
                                 + "with the current SpliceFastaBuilder to enable.", filename);
                         missingStrandWarned = true;

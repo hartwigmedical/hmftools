@@ -49,7 +49,7 @@ public class SpliceLiftBackApplyTest
     @Test
     public void testUnliftableRecordMarkedUnmappedAndStripped()
     {
-        // pos 251 is entirely past altEnd (250) — no overhang clamp can save it -> translate fails
+        // pos 251 is entirely past altEnd (250) - no overhang clamp can save it -> translate fails
         final SAMRecord record = newRecord(TX_CONTIG, 251, "10M");
         final LiftBackResolver resolver = new LiftBackResolver(List.of(threeExonContig()));
 
@@ -90,27 +90,28 @@ public class SpliceLiftBackApplyTest
         assertTrue(record.getReadUnmappedFlag());
     }
 
-    // Issue #2: willBeUnmapped is the single source of truth for both mate-cache build and the
-    // applyAndWriteRecord unmap branches. Cover the cases that previously slipped through.
+    // willBeUnmapped is the single source of truth for both mate-cache build and the apply-time unmap branch.
     @Test
-    public void testWillBeUnmappedThresholdLogic()
+    public void testWillBeUnmapped()
     {
         final LiftBackResolver resolver = new LiftBackResolver(List.of(threeExonContig()));
-        final SAMRecord record = newRecord(TX_CONTIG, 51, "100M");
-        final LiftBackResult result = resolver.resolve(record);
 
-        assertTrue(LiftBackRecordOps.willBeUnmapped(
-                resolver.resolve(unmappedRecord()), 0, 0));
+        // an unliftable read is always unmapped
+        assertTrue(LiftBackRecordOps.willBeUnmapped(resolver.resolve(unmappedRecord())));
 
-        assertFalse(LiftBackRecordOps.willBeUnmapped(result, 0, 0));
+        // clean unique tx read (MAPQ 60, no XA) -> kept
+        assertFalse(LiftBackRecordOps.willBeUnmapped(resolver.resolve(newRecord(TX_CONTIG, 51, "100M"))));
 
-        assertFalse(LiftBackRecordOps.willBeUnmapped(result, 2, 0));
+        // over the XA cap: MAPQ 0 with no XA -> unmapped (maps to too many loci to place)
+        final SAMRecord overCap = newRecord(TX_CONTIG, 51, "100M");
+        overCap.setMappingQuality(0);
+        assertTrue(LiftBackRecordOps.willBeUnmapped(resolver.resolve(overCap)));
 
-        assertFalse(LiftBackRecordOps.willBeUnmapped(result, 0, 0));
-
-        assertFalse(LiftBackRecordOps.willBeUnmapped(result, 0, 10));
-
-        assertTrue(LiftBackRecordOps.willBeUnmapped(result, 0, 61));
+        // MAPQ 0 but XA present = ordinary few-way multimapper -> kept
+        final SAMRecord multimapper = newRecord(TX_CONTIG, 51, "100M");
+        multimapper.setMappingQuality(0);
+        multimapper.setAttribute("XA", CHR_1 + ",+5000,100M,0;");
+        assertFalse(LiftBackRecordOps.willBeUnmapped(resolver.resolve(multimapper)));
     }
 
     @Test
@@ -138,6 +139,60 @@ public class SpliceLiftBackApplyTest
         assertNull(record.getStringAttribute("XA"));
         assertNull(record.getIntegerAttribute("NH"));
         assertNull(record.getStringAttribute("MC"));
+    }
+
+    @Test
+    public void testTinyAnnotatedJunctionAnchorKept()
+    {
+        // tx 200 is the last base of exon2: a 1bp exon2 anchor. With ANNOTATED_JUNCTION_MIN_ANCHOR_BP=1
+        // the translated junction (1M...N...M) is kept, not rolled into a softclip. This is the resolve+apply
+        // layer, before the engine's collapser runs - guards the floor independently of collapse.
+        final SAMRecord record = newRecord(TX_CONTIG, 200, "50M");
+        final LiftBackResolver resolver = new LiftBackResolver(List.of(threeExonContig()));
+
+        LiftBackRecordOps.applyResultToRecord(record, resolver.resolve(record), new LiftedMateInfoCache());
+
+        assertLifted(record, CHR_1, 399, "1M100N49M");
+    }
+
+    @Test
+    public void testTxPrimaryDropsRefXaAltAtSameLocus()
+    {
+        // tx primary with a softclipped ref XA at the same locus; the discriminator favours tx and drops the ref alt.
+        final SAMRecord record = newRecord(TX_CONTIG, 51, "100M");
+        record.setAttribute(XA_TAG, CHR_1 + ",+150,50M50S,0;");
+        final LiftBackResolver resolver = new LiftBackResolver(List.of(threeExonContig()));
+
+        LiftBackRecordOps.applyResultToRecord(record, resolver.resolve(record), new LiftedMateInfoCache());
+
+        assertLifted(record, CHR_1, 150, "50M100N50M");
+        assertNull(record.getStringAttribute(XA_TAG));
+    }
+
+    @Test
+    public void testSplicedTxRecordGetsXsAStrand()
+    {
+        // spliced tx records must carry XS:A:+/- for strand-aware junction interpretation (e.g. Isofox).
+        final SAMRecord record = newRecord(TX_CONTIG, 51, "100M");
+        final LiftBackResolver resolver = new LiftBackResolver(List.of(threeExonContig()));
+
+        LiftBackRecordOps.applyResultToRecord(record, resolver.resolve(record), new LiftedMateInfoCache());
+
+        assertTrue("expected N in lifted cigar", record.getCigarString().contains("N"));
+        assertEquals(Character.valueOf('+'), record.getAttribute("XS"));
+    }
+
+    @Test
+    public void testNonSplicedRecordHasNoXsA()
+    {
+        // a non-spliced genomic record must NOT get XS:A.
+        final SAMRecord record = newRecord(CHR_1, 1000, "100M");
+        final LiftBackResolver resolver = new LiftBackResolver(List.of(threeExonContig()));
+
+        LiftBackRecordOps.applyResultToRecord(record, resolver.resolve(record), new LiftedMateInfoCache());
+
+        assertFalse("expected no N in lifted cigar", record.getCigarString().contains("N"));
+        assertNull(record.getAttribute("XS"));
     }
 
     private static SAMRecord unmappedRecord()

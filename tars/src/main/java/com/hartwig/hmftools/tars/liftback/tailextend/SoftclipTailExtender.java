@@ -14,7 +14,7 @@ import htsjdk.samtools.CigarOperator;
 
 // Recovers ref-matching bases bwa-mem2 softclipped at read tails. Runs after junction rescue so
 // rescue's boundary lookups see the original cigar. Skips when an annotated intron starts within
-// MaxExtension of the softclip boundary — that range belongs to junction rescue.
+// MaxExtension of the softclip boundary - that range belongs to junction rescue.
 public class SoftclipTailExtender
 {
     private final RefSequenceSource mRefSource;
