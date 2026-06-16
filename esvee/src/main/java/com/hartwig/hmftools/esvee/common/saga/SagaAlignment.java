@@ -57,7 +57,7 @@ public record SagaAlignment(
 
     public int sagaLength()
     {
-        return sagaAssembly.assemblyLength();
+        return sagaAssembly.length();
     }
 
     public int alignScore()

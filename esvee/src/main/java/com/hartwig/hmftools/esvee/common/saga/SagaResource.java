@@ -45,7 +45,8 @@ public class SagaResource
         {
             samDict = fasta.getSequenceDictionary();
             samDict.getSequences().stream()
-                    .map(seq -> SagaAssembly.fromFastaLabel(seq.getSequenceName(), seq.getSequenceLength()))
+                    .map(seq ->
+                            SagaAssembly.fromFastaRecord(seq.getSequenceName(), fasta.getSequence(seq.getSequenceName()).getBaseString()))
                     .forEach(assemblies::add);
         }
         catch(IOException e)

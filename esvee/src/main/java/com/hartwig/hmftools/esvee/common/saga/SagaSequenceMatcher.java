@@ -108,8 +108,8 @@ public class SagaSequenceMatcher
             }
 
             // Then prefer the variant whose length is closer to the ESVEE assembly length (rarely occurs but can help tie-break different alleles).
-            int distance1 = abs(o1.sagaAssembly().assemblyLength() - args.query().length);
-            int distance2 = abs(o2.sagaAssembly().assemblyLength() - args.query().length);
+            int distance1 = abs(o1.sagaAssembly().length() - args.query().length);
+            int distance2 = abs(o2.sagaAssembly().length() - args.query().length);
             return Integer.compare(distance1, distance2);
         }
     }
