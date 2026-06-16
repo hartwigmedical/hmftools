@@ -1,10 +1,17 @@
 # Oncogenic Results of Analyzing the Genome
 
-ORANGE summarizes the key outputs from all algorithms in the Hartwig suite into a single PDF and JSON file.
+Orange summarizes the key outputs from all algorithms in the Hartwig suite into a single PDF and JSON file.
+
+Example report for a [whole genome sample](./docs/DemoWGS.orange.pdf).
+
+Example report for a [targeted panel sample](./docs/DemoPanel.orange.pdf).
+
+[Orange User Manual](./docs/orange_user_manual.pdf)
+
 
 ## Command
 
-ORANGE requires most output from the WiGiTTs pipeline.
+Orange requires most output from the WiGiTTs pipeline.
 
 ### WGS mode
 
@@ -41,7 +48,8 @@ java -jar orange.jar \
 | ref_genome_version       | V37 (default) or V38                                                                                                               |
 | primary_tumor_location   | Printed at top of report                                                                                                           | 
 | experiment_type          | WGS or PANEL                                                                                                                       |
-| panel_name               | Optional, for display only
+| rna_sample_id            | Used to display RNA sample genotype values from SageAppend                                                                         |
+| panel_name               | Optional, for display only                                                                                                         
 | add_disclaimer           | If set, adds a "research use only" disclaimer to the footer of every page.                                                         |  
 | pipeline_sample_root_dir | Optional, all individual algo paths are derived from this path, assuming the pipeline has been run using HMF pipeline              |
-| sample_data_dir          | Optional, all data is expected to exist in the root of this path                                                        | 
+| sample_data_dir          | Optional, all data is expected to exist in the root of this path                                                                   | 
