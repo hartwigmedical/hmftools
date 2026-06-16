@@ -9,6 +9,7 @@ import java.util.Set;
 import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.tars.common.SpliceCommon;
+import com.hartwig.hmftools.tars.liftback.tailextend.BoundaryReclaim;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
@@ -276,7 +277,7 @@ public class JunctionRescueResolver
         else
             System.arraycopy(readBases, 0, softclipBases, 0, softclipLen);
 
-        // Match from the junction-proximal end (10% mismatch floor). The outer softclip residual stays
+        // Match from the junction-proximal end (bwa-mem score walk). The outer softclip residual stays
         // soft-clipped since bwa often carries adapter/low-quality bases there (e.g. 19S132M ->
         // 6S15M..N..130M, not 21M..N..130M). Proximal end is the high index for a leading softclip.
         final boolean proximalAtEnd = !rightExtend;
@@ -308,7 +309,7 @@ public class JunctionRescueResolver
             if(refBases == null || refBases.length != softclipLen)
                 continue;
 
-            final int run = longestProximalMatchRun(softclipBases, refBases, softclipLen, proximalAtEnd);
+            final int run = proximalScoringRun(softclipBases, refBases, rightExtend);
             if(run == 0)
                 continue;
             final int mismatches = mismatchesInRun(softclipBases, refBases, softclipLen, run, proximalAtEnd);
@@ -382,25 +383,15 @@ public class JunctionRescueResolver
                 1, null);
     }
 
-    // Longest run matching ref from the junction-proximal end, within a cumulative 10% mismatch floor.
-    // proximalAtEnd=true walks inward from the high index; ref[i] pairs with softclip[i].
-    private static int longestProximalMatchRun(
-            final byte[] softclipBases, final byte[] refBases, final int len, final boolean proximalAtEnd)
+    // Longest run matching ref from the junction-proximal end, scored with the shared bwa-mem model
+    // (BoundaryReclaim: match +1, mismatch -4) so ref-verify uses the same matching as collapse/tail-extend.
+    // Trailing clips walk forward from index 0 (junction-proximal); leading clips reverse both arrays so the
+    // walk runs from the high-index proximal end outward.
+    private static int proximalScoringRun(final byte[] softclipBases, final byte[] refBases, final boolean rightExtend)
     {
-        int mismatches = 0;
-        int best = 0;
-        for(int k = 1; k <= len; ++k)
-        {
-            final int idx = proximalAtEnd ? (len - k) : (k - 1);
-            final boolean match = basesEqualIgnoreCase(softclipBases[idx], refBases[idx]);
-            if(!match)
-                ++mismatches;
-            if(mismatches > k / 10)
-                break;
-            if(match)
-                best = k;
-        }
-        return best;
+        if(rightExtend)
+            return BoundaryReclaim.maxScoringPrefix(softclipBases, refBases);
+        return BoundaryReclaim.maxScoringPrefix(BoundaryReclaim.reversed(softclipBases), BoundaryReclaim.reversed(refBases));
     }
 
     private static int mismatchesInRun(

@@ -969,9 +969,11 @@ public class JunctionRescueResolverTest
     }
 
     @Test
-    public void testRefVerifyAllows10PercentMismatch()
+    public void testRefVerifyClipsMismatchNotRecoveredByScore()
     {
-        // 20-base softclip: tolerance floor(20/10)=2; 1 mismatch - accept.
+        // 20-base trailing clip: 18 proximal matches, then a mismatch with only 1 trailing match. Under the
+        // shared bwa-mem score walk (mismatch -4) one trailing match cannot recover the mismatch, so the run
+        // stops at 18 and the outer 2 bases stay soft-clipped.
         final TestGenome genome = new TestGenome().with(CHR1, 300, 'A')
                 .set(CHR1, 201, 18, 'C').set(CHR1, 219, "GC");
         final byte[] readBases = bases("A".repeat(20) + "C".repeat(20));
@@ -981,7 +983,7 @@ public class JunctionRescueResolverTest
         final RescueResult res = resolverWithRef(annotated(new ChrBaseRegion(CHR1, 121, 200)), genome).resolve(cand);
 
         assertTrue(res.merged());
-        assertEquals("20M80N20M", res.mergedCigar());
+        assertEquals("20M80N18M2S", res.mergedCigar());
     }
 
     @Test
