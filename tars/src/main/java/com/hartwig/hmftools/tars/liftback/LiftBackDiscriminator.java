@@ -8,7 +8,7 @@ import com.hartwig.hmftools.tars.common.SpliceCommon;
 
 // Pure decision step on a record's full lifted alignment set (self + lifted XA alts).
 // categorize() classifies the set; apply() mutates Dropped/IsPrimaryChoice for categories that need
-// a swap (e.g. intronless paralog vs. spliced parent gene). No I/O — separate from LiftBackResolver
+// a swap (e.g. intronless paralog vs. spliced parent gene). No I/O - separate from LiftBackResolver
 // so the decision tree reads as one piece.
 public final class LiftBackDiscriminator
 {
@@ -75,7 +75,7 @@ public final class LiftBackDiscriminator
         {
             if(hasRef && hasTx)
             {
-                // tx has annotated junction, ref alts map intronlessly at other loci — typically paralogs/pseudogenes.
+                // tx has annotated junction, ref alts map intronlessly at other loci - typically paralogs/pseudogenes.
                 if(features.TxHasNCigar && !features.RefHasNCigar)
                     features.Category = LiftBackCategory.BOTH_MULTI_TX_JUNCTION;
                 else
@@ -99,14 +99,14 @@ public final class LiftBackDiscriminator
             return features;
         }
 
-        // single locus, both ref and tx — run discriminator
+        // single locus, both ref and tx - run discriminator
         if(distinctCigars.size() == 1 && !anyHasN)
             features.Category = LiftBackCategory.BOTH_AGREE;
         else if(features.TxHasNCigar && features.RefSoftClipped)
             features.Category = LiftBackCategory.BOTH_TX_JUNCTION_REF_SOFTCLIP;
         else if(features.TxHasNCigar && features.RefFullMatch && !features.RefSoftClipped)
             // ref full-match across the supposed intron is strong evidence the read is unspliced
-            // (pre-mRNA / retained intron / DNA contamination) — the tx N-CIGAR is the artifact.
+            // (pre-mRNA / retained intron / DNA contamination) - the tx N-CIGAR is the artifact.
             features.Category = LiftBackCategory.BOTH_TX_JUNCTION_REF_MATCH;
         else if(features.TxSoftClipAtBoundary && features.RefFullMatch)
             features.Category = LiftBackCategory.BOTH_TX_SOFTCLIP_REF_MATCH;
@@ -122,28 +122,12 @@ public final class LiftBackDiscriminator
     public static Outcome apply(
             final List<LiftedAlignment> alignments, final LiftBackCategory category, final LiftedAlignment self)
     {
-        switch(category)
+        return switch(category)
         {
-            case BOTH_TX_JUNCTION_REF_SOFTCLIP:
-            case BOTH_MULTI_TX_JUNCTION:
-                return promoteTxOverRef(alignments, self);
-
-            case BOTH_TX_JUNCTION_REF_MATCH:
-                return promoteRefOverTx(alignments, self);
-
-            case BOTH_TX_SOFTCLIP_REF_MATCH:
-                if(!self.fromTxContig())
-                {
-                    for(final LiftedAlignment la : alignments)
-                        if(la.fromTxContig())
-                            la.Dropped = true;
-                    return new Outcome(self, "");
-                }
-                return new Outcome(self, "self_was_tx_no_swap");
-
-            default:
-                return new Outcome(self, "");
-        }
+            case BOTH_TX_JUNCTION_REF_SOFTCLIP, BOTH_MULTI_TX_JUNCTION -> promoteTxOverRef(alignments, self);
+            case BOTH_TX_JUNCTION_REF_MATCH, BOTH_TX_SOFTCLIP_REF_MATCH -> promoteRefOverTx(alignments, self);
+            default -> new Outcome(self, "");
+        };
     }
 
     // Ref-favouring: if self is ref, drop tx alts. If self is tx, swap to the best ref alt.
