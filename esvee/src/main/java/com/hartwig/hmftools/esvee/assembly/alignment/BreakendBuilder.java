@@ -98,6 +98,8 @@ public class BreakendBuilder
 
         // If it's an insert, the insert sequence is between the two junctions. Otherwise, it's a deletion and there's no insert sequence.
         String insertedBases;
+        boolean lowerBreakendInferred;
+        boolean upperBreakendInferred;
         if(sagaJunctionOffsets.size() == 2)
         {
             String phasedAsmSeq = mAssemblyAlignment.fullSequence();
@@ -113,11 +115,16 @@ public class BreakendBuilder
                     endInferredLength > 0 ? sagaAssembly.sequence().substring(sagaAlignment.sagaEnd(), sagaJunctionOffsets.get(1)) : "";
 
             insertedBases = startInferredSeq + phasedAsmSeq.substring(phasedAsmStart, phasedAsmEnd) + endInferredSeq;
+
+            lowerBreakendInferred = startInferredLength > 0;
+            upperBreakendInferred = endInferredLength > 0;
         }
         else
         {
             assert sagaJunctionOffsets.size() == 1;
             insertedBases = "";
+            lowerBreakendInferred = false;
+            upperBreakendInferred = false;
         }
 
         // TODO: homology
@@ -130,6 +137,15 @@ public class BreakendBuilder
         Breakend upperBreakend = new Breakend(
                 mAssemblyAlignment, upperSagaBreakend.chromosome(), upperSagaBreakend.position(), upperSagaBreakend.orientation(),
                 insertedBases, homology);
+
+        if(lowerBreakendInferred)
+        {
+            lowerBreakend.setSagaInferred();
+        }
+        if(upperBreakendInferred)
+        {
+            upperBreakend.setSagaInferred();
+        }
 
         // There isn't really an indel in the alignment, but these are only used for assigning read support.
         int[] indelIndices = new int[] {
