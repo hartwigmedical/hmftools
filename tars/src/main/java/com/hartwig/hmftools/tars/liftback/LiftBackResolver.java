@@ -35,7 +35,7 @@ public class LiftBackResolver
     // base. A higher floor manufactured false junction diffs by clipping legitimate short anchors.
     private static final int ANNOTATED_JUNCTION_MIN_ANCHOR_BP = 1;
 
-    // Higher than bare floor because an adjacent softclip indicates bwa over-ran the exon boundary —
+    // Higher than bare floor because an adjacent softclip indicates bwa over-ran the exon boundary -
     // the tiny anchor is an over-extension artefact, not the read's real terminus.
     private static final int ANNOTATED_JUNCTION_MIN_SOFTCLIP_ANCHOR_BP = 3;
 
@@ -174,7 +174,7 @@ public class LiftBackResolver
 
         final List<LiftedAlignment> keptAlignments = allAlignments.stream()
                 .filter(la -> !la.Dropped)
-                .collect(Collectors.toList());
+                .toList();
 
         final int numLoci = countDistinctLoci(keptAlignments);
         final int cigarsAtPrimaryLocus = countDistinctCigarsAtLocus(keptAlignments, effectivePrimary);
@@ -298,7 +298,7 @@ public class LiftBackResolver
     {
         if(!mSegmentsByAltContig.containsKey(contig))
         {
-            // Unknown alt contig must not pass through as ref — that would leak _tx contig names into the BAM.
+            // Unknown alt contig must not pass through as ref - that would leak _tx contig names into the BAM.
             if(contig.endsWith(ALT_CONTIG_SUFFIX))
                 return null;
 
@@ -436,7 +436,7 @@ public class LiftBackResolver
     }
 
     // Rescue to RESCUED_MAPQ if: swapped by discriminator; or MAPQ=0 + single locus + no unresolved hidden tie.
-    // Hidden tie (XS==AS, ref-only primary, not in annotated exon) blocks rescue — the unseen alt may be real.
+    // Hidden tie (XS==AS, ref-only primary, not in annotated exon) blocks rescue - the unseen alt may be real.
     // Gated on hasTxMatch: without a tx alignment, MAPQ-0 is not a tx-artefact and is left alone.
     static int decidePrimaryMapq(
             final int inputMapq, final int numLoci, final boolean swapped, final boolean hiddenTie,

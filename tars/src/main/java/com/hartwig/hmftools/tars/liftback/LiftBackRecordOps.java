@@ -87,16 +87,7 @@ public final class LiftBackRecordOps
 
     public static LiftedMateInfo toLiftedMateInfo(final SAMRecord record, final LiftBackResult result)
     {
-        return toLiftedMateInfo(record, result, 0, 0);
-    }
-
-    // unmapAboveNh / unmapBelowMapq are forwarded so cache entries reflect threshold-unmap decisions
-    // that the apply step will make later. Without this, a partner record's patched mate fields
-    // would still claim "mate mapped" for a primary about to be threshold-unmapped.
-    public static LiftedMateInfo toLiftedMateInfo(
-            final SAMRecord record, final LiftBackResult result, final int unmapAboveNh, final int unmapBelowMapq)
-    {
-        if(willBeUnmapped(result, unmapAboveNh, unmapBelowMapq))
+        if(willBeUnmapped(result))
             return LiftedMateInfo.UNMAPPED;
 
         final Cigar liftedCigar = TextCigarCodec.decode(result.finalCigar());
@@ -128,16 +119,20 @@ public final class LiftBackRecordOps
     // Single source of truth for whether a primary's final state ends up unmapped, used both at cache-
     // build time (so partner records see the correct MateUnmapped) and at apply time (where we mutate
     // the record itself).
-    public static boolean willBeUnmapped(final LiftBackResult result, final int unmapAboveNh, final int unmapBelowMapq)
+    public static boolean willBeUnmapped(final LiftBackResult result)
     {
         if(result.category() == LiftBackCategory.UNMAPPED || result.category() == LiftBackCategory.LIFT_FAILED)
             return true;
-        final int nh = Math.max(result.numLoci(), 1);
-        if(unmapAboveNh > 0 && nh > unmapAboveNh)
-            return true;
-        if(unmapBelowMapq > 0 && result.updatedMapq() < unmapBelowMapq)
-            return true;
-        return false;
+        return exceedsMappingCap(result);
+    }
+
+    // bwa caps the XA alternative-hit list (run with -h 75 here); a read that maps to more loci than the cap
+    // is emitted with MAPQ 0 and NO XA tag (the list is suppressed, not truncated). Such a read maps to too
+    // many places to trust, so it is unmapped. inputMapq 0 distinguishes it from a unique read (MAPQ 60, no XA)
+    // and numXaAlts 0 from an ordinary few-way multimapper (MAPQ 0 with its alts listed in XA).
+    public static boolean exceedsMappingCap(final LiftBackResult result)
+    {
+        return result.inputMapq() == 0 && result.numXaAlts() == 0;
     }
 
     // The tx-contig MD/NM are stale once the read is lifted and (for rescue/extend/collapse/canon) recut.

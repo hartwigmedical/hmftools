@@ -32,16 +32,16 @@ import org.junit.Test;
 import htsjdk.samtools.SAMRecord;
 
 // End-to-end tests of how SpliceLiftBack reacts to a bwa-mem2 read aligned against a transcript contig.
-// Unlike SpliceLiftBackEndToEndTest (which drives the resolver alone), this runs the FULL per-group
-// pipeline: resolve -> junction-rescue -> terminal-collapse -> tail-extend -> canonicalize -> mate-patch
-// -> NH/unmap policy, exactly as LiftBackWorker does in REDUX.
+// Runs the FULL per-group pipeline: resolve -> junction-rescue -> terminal-collapse -> tail-extend ->
+// canonicalize -> mate-patch -> NH/unmap policy. (Per-component behaviour is unit-tested in
+// LiftBackResolverTest / SpliceLiftBackApplyTest / the rescue + tailextend suites.)
 //
 // Shares the standard three-exon contig, record builders and TestGenome with TarsTestFixtures (exons
 // 100-199, 300-399, 500-549; introns 200-299, 400-499; contig length 250). REF-FREE passes (translation,
 // SA/mate rewrite, NH, unmap-on-lift-failure) work with the default genome; REF-DEPENDENT passes (rescue
 // ref-verify, tail-extend, collapse, canonicalize) only fire when the genome bases match the read / carry a
 // splice motif -- set those explicitly via TestGenome.set() in the scenario.
-public class LiftBackScenarioTest
+public class LiftBackEndToEndTest
 {
     // genomic introns implied by the exon layout, registered as annotated so rescue / tail-extend recognise them.
     private static Set<ChrBaseRegion> annotatedIntrons()
@@ -84,7 +84,7 @@ public class LiftBackScenarioTest
 
         final LiftBackStats stats = new LiftBackStats();
         final LiftBackGroupProcessor processor = new LiftBackGroupProcessor(
-                resolver, rescue, extender, collapser, canonicalizer, ref, 0, 0, stats);
+                resolver, rescue, extender, collapser, canonicalizer, ref, stats);
 
         final List<SAMRecord> emitted = new ArrayList<>();
         processor.processNameGroup(reads, new LiftedMateInfoCache(), (record, result) -> emitted.add(record));

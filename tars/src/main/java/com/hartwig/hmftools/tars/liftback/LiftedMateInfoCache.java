@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 // Cache of lifted primary alignment info keyed by read name. Built in pass 1, consumed in pass 2 to patch
-// mate fields (RNEXT/PNEXT/TLEN). Supplementary/secondary records are not cached — they don't populate mates.
+// mate fields (RNEXT/PNEXT/TLEN). Supplementary/secondary records are not cached - they don't populate mates.
 public class LiftedMateInfoCache
 {
     private final Map<String, ReadPairLiftedMateInfo> mLiftedMateInfoByReadName;

@@ -21,14 +21,12 @@ public final class LiftBackResources
     public final boolean RescueViaSupp;
     public final boolean ExtendSoftclipTails;
     public final int TerminalAnchor;
-    public final int UnmapAboveNh;
-    public final int UnmapBelowMapq;
     public final ExcludedRegions ExcludedRegions; // nullable: drop fragments here before lifting
 
     public LiftBackResources(
             final LiftBackResolver resolver, final AnnotatedJunctionIndex junctionIndex, final String refGenomeFile,
             final boolean rescueViaSupp, final boolean extendSoftclipTails, final int terminalAnchor,
-            final int unmapAboveNh, final int unmapBelowMapq, final ExcludedRegions excludedRegions)
+            final ExcludedRegions excludedRegions)
     {
         Resolver = resolver;
         JunctionIndex = junctionIndex;
@@ -36,8 +34,6 @@ public final class LiftBackResources
         RescueViaSupp = rescueViaSupp;
         ExtendSoftclipTails = extendSoftclipTails;
         TerminalAnchor = terminalAnchor;
-        UnmapAboveNh = unmapAboveNh;
-        UnmapBelowMapq = unmapBelowMapq;
         ExcludedRegions = excludedRegions;
     }
 

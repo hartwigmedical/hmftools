@@ -144,7 +144,7 @@ public class LiftBackStats
         if(mTotal > 0 && unliftable / (double) mTotal > LIFT_FAILED_WARN_FRACTION)
         {
             // ERROR not throw: BAM/TSVs already written should remain available for inspection.
-            TARS_LOGGER.error("LIFT_FAILED rate {} / {} = {}% exceeds {}% threshold — likely sidecar/FASTA mismatch",
+            TARS_LOGGER.error("LIFT_FAILED rate {} / {} = {}% exceeds {}% threshold - likely sidecar/FASTA mismatch",
                     unliftable, mTotal,
                     String.format("%.2f", 100.0 * unliftable / mTotal),
                     String.format("%.2f", 100.0 * LIFT_FAILED_WARN_FRACTION));

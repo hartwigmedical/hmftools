@@ -47,11 +47,11 @@ public class SoftclipTailExtenderTest
         final SoftclipTailExtender ext = extender(genome);
         final TailExtensionResult res = ext.tryExtend(CHR1, 101, "30M10S", bases("A".repeat(30) + "C".repeat(10)));
 
-        assertTrue(res.Extended);
-        assertEquals("40M", res.NewCigar);
-        assertEquals(101, res.NewStart);
-        assertEquals(10, res.BasesExtendedTrail);
-        assertEquals(0, res.BasesExtendedLead);
+        assertTrue(res.extended());
+        assertEquals("40M", res.newCigar());
+        assertEquals(101, res.newStart());
+        assertEquals(10, res.basesExtendedTrail());
+        assertEquals(0, res.basesExtendedLead());
 
         // statistics accumulate from the same call
         assertEquals(1, ext.statistics().recordsEvaluated());
@@ -69,9 +69,9 @@ public class SoftclipTailExtenderTest
         final TailExtensionResult res = extender(genome)
                 .tryExtend(CHR1, 101, "30M10S", bases("A".repeat(30) + "C".repeat(10)));
 
-        assertTrue(res.Extended);
-        assertEquals("40M", res.NewCigar);
-        assertEquals(10, res.BasesExtendedTrail);
+        assertTrue(res.extended());
+        assertEquals("40M", res.newCigar());
+        assertEquals(10, res.basesExtendedTrail());
     }
 
     @Test
@@ -83,19 +83,19 @@ public class SoftclipTailExtenderTest
         final TailExtensionResult res = extender(genome)
                 .tryExtend(CHR1, 101, "30M10S", bases("A".repeat(30) + "C".repeat(10)));
 
-        assertTrue(res.Extended);
-        assertEquals("36M4S", res.NewCigar);
-        assertEquals(6, res.BasesExtendedTrail);
+        assertTrue(res.extended());
+        assertEquals("36M4S", res.newCigar());
+        assertEquals(6, res.basesExtendedTrail());
     }
 
     @Test
     public void testTrailingExtendRejectShortAllMismatches()
     {
-        // 3-base all-mismatch tail — below MinExtension=3, no extension
+        // 3-base all-mismatch tail - below MinExtension=3, no extension
         final TailExtensionResult res = extender(genome())
                 .tryExtend(CHR1, 101, "30M3S", bases("A".repeat(30) + "GGG"));
 
-        assertFalse(res.Extended);
+        assertFalse(res.extended());
     }
 
     @Test
@@ -106,11 +106,11 @@ public class SoftclipTailExtenderTest
         final TailExtensionResult res = extender(genome)
                 .tryExtend(CHR1, 111, "10S30M", bases("T".repeat(10) + "A".repeat(30)));
 
-        assertTrue(res.Extended);
-        assertEquals("40M", res.NewCigar);
-        assertEquals(101, res.NewStart);
-        assertEquals(10, res.BasesExtendedLead);
-        assertEquals(0, res.BasesExtendedTrail);
+        assertTrue(res.extended());
+        assertEquals("40M", res.newCigar());
+        assertEquals(101, res.newStart());
+        assertEquals(10, res.basesExtendedLead());
+        assertEquals(0, res.basesExtendedTrail());
     }
 
     @Test
@@ -122,10 +122,10 @@ public class SoftclipTailExtenderTest
         final TailExtensionResult res = extender(genome)
                 .tryExtend(CHR1, 111, "10S30M", bases("C".repeat(5) + "G".repeat(5) + "A".repeat(30)));
 
-        assertTrue(res.Extended);
-        assertEquals("5S35M", res.NewCigar);
-        assertEquals(106, res.NewStart);
-        assertEquals(5, res.BasesExtendedLead);
+        assertTrue(res.extended());
+        assertEquals("5S35M", res.newCigar());
+        assertEquals(106, res.newStart());
+        assertEquals(5, res.basesExtendedLead());
     }
 
     @Test
@@ -136,11 +136,11 @@ public class SoftclipTailExtenderTest
         final TailExtensionResult res = extender(genome)
                 .tryExtend(CHR1, 111, "5S30M5S", bases("T".repeat(5) + "A".repeat(30) + "C".repeat(5)));
 
-        assertTrue(res.Extended);
-        assertEquals("40M", res.NewCigar);
-        assertEquals(106, res.NewStart);
-        assertEquals(5, res.BasesExtendedLead);
-        assertEquals(5, res.BasesExtendedTrail);
+        assertTrue(res.extended());
+        assertEquals("40M", res.newCigar());
+        assertEquals(106, res.newStart());
+        assertEquals(5, res.basesExtendedLead());
+        assertEquals(5, res.basesExtendedTrail());
     }
 
     @Test
@@ -151,9 +151,9 @@ public class SoftclipTailExtenderTest
         final TailExtensionResult res = extender(genome)
                 .tryExtend(CHR1, 101, "50M100N50M5S", bases("A".repeat(100) + "C".repeat(5)));
 
-        assertTrue(res.Extended);
-        assertEquals("50M100N55M", res.NewCigar);
-        assertEquals(5, res.BasesExtendedTrail);
+        assertTrue(res.extended());
+        assertEquals("50M100N55M", res.newCigar());
+        assertEquals(5, res.basesExtendedTrail());
     }
 
     @Test
@@ -165,9 +165,9 @@ public class SoftclipTailExtenderTest
         final TailExtensionResult res = extender(genome)
                 .tryExtend(CHR1, 101, "30M60S", bases("A".repeat(30) + "C".repeat(60)));
 
-        assertTrue(res.Extended);
-        assertEquals("60M30S", res.NewCigar);
-        assertEquals(30, res.BasesExtendedTrail);
+        assertTrue(res.extended());
+        assertEquals("60M30S", res.newCigar());
+        assertEquals(30, res.basesExtendedTrail());
     }
 
     @Test
@@ -181,14 +181,14 @@ public class SoftclipTailExtenderTest
         final SoftclipTailExtender ext = extender(genome, introns);
         final TailExtensionResult res = ext.tryExtend(CHR1, 101, "30M10S", bases("A".repeat(30) + "C".repeat(10)));
 
-        assertFalse(res.Extended);
+        assertFalse(res.extended());
         assertEquals(1, ext.statistics().skippedForJunctionGuard());
     }
 
     @Test
     public void testRetainedIntronExtendsThroughJunctionTrailing()
     {
-        // clip matches contiguous genome across the annotated intron — intron retention, extend not defer
+        // clip matches contiguous genome across the annotated intron - intron retention, extend not defer
         final TestGenome genome = genome().set(CHR1, 131, 10, 'C');
         final Set<ChrBaseRegion> introns = new HashSet<>(Collections.singletonList(
                 new ChrBaseRegion(CHR1, 131, 200)));
@@ -196,8 +196,8 @@ public class SoftclipTailExtenderTest
         final SoftclipTailExtender ext = extender(genome, introns);
         final TailExtensionResult res = ext.tryExtend(CHR1, 101, "30M10S", bases("A".repeat(30) + "C".repeat(10)));
 
-        assertTrue(res.Extended);
-        assertEquals("40M", res.NewCigar);
+        assertTrue(res.extended());
+        assertEquals("40M", res.newCigar());
         assertEquals(0, ext.statistics().skippedForJunctionGuard());
     }
 
@@ -212,14 +212,14 @@ public class SoftclipTailExtenderTest
         final SoftclipTailExtender ext = extender(genome, introns);
         final TailExtensionResult res = ext.tryExtend(CHR1, 111, "10S30M", bases("T".repeat(10) + "A".repeat(30)));
 
-        assertFalse(res.Extended);
+        assertFalse(res.extended());
         assertEquals(1, ext.statistics().skippedForJunctionGuard());
     }
 
     @Test
     public void testRetainedIntronExtendsThroughJunctionLeading()
     {
-        // clip cleanly matches genome across the annotated intron end — retention, extend not defer
+        // clip cleanly matches genome across the annotated intron end - retention, extend not defer
         final TestGenome genome = genome().set(CHR1, 101, 10, 'T');
         final Set<ChrBaseRegion> introns = new HashSet<>(Collections.singletonList(
                 new ChrBaseRegion(CHR1, 21, 110)));
@@ -227,9 +227,9 @@ public class SoftclipTailExtenderTest
         final SoftclipTailExtender ext = extender(genome, introns);
         final TailExtensionResult res = ext.tryExtend(CHR1, 111, "10S30M", bases("T".repeat(10) + "A".repeat(30)));
 
-        assertTrue(res.Extended);
-        assertEquals("40M", res.NewCigar);
-        assertEquals(101, res.NewStart);
+        assertTrue(res.extended());
+        assertEquals("40M", res.newCigar());
+        assertEquals(101, res.newStart());
         assertEquals(0, ext.statistics().skippedForJunctionGuard());
     }
 
@@ -237,31 +237,31 @@ public class SoftclipTailExtenderTest
     public void testNoOpAndRefusalGuards()
     {
         // no softclip -> unchanged
-        assertFalse(extender(genome()).tryExtend(CHR1, 101, "30M", repeatedBase(30, 'A')).Extended);
+        assertFalse(extender(genome()).tryExtend(CHR1, 101, "30M", repeatedBase(30, 'A')).extended());
 
         // 2S < MinSoftclipLength=3 -> unchanged
         assertFalse(extender(genome().set(CHR1, 131, 2, 'C'))
-                .tryExtend(CHR1, 101, "30M2S", bases("A".repeat(30) + "CC")).Extended);
+                .tryExtend(CHR1, 101, "30M2S", bases("A".repeat(30) + "CC")).extended());
 
         // hard clip -> skipped as complex shape
         final SoftclipTailExtender hardClip = extender(genome());
-        assertFalse(hardClip.tryExtend(CHR1, 101, "10H30M5S", repeatedBase(35, 'A')).Extended);
+        assertFalse(hardClip.tryExtend(CHR1, 101, "10H30M5S", repeatedBase(35, 'A')).extended());
         assertEquals(1, hardClip.statistics().skippedComplexShape());
 
         // op adjacent to the trailing S is I, not M -> refuse as complex shape
         final SoftclipTailExtender indelAdjacent = extender(genome().set(CHR1, 131, 10, 'C'));
-        assertFalse(indelAdjacent.tryExtend(CHR1, 101, "30M5I3S", bases("A".repeat(35) + "CCC")).Extended);
+        assertFalse(indelAdjacent.tryExtend(CHR1, 101, "30M5I3S", bases("A".repeat(35) + "CCC")).extended());
         assertTrue(indelAdjacent.statistics().skippedComplexShape() >= 1);
 
         // disabled config -> no-op even with a clean match
         final SoftclipTailExtender disabled = new SoftclipTailExtender(
                 genome().set(CHR1, 131, 10, 'C').asRefSource(), null, TailExtensionConfig.defaults());
-        assertFalse(disabled.tryExtend(CHR1, 101, "30M10S", bases("A".repeat(30) + "C".repeat(10))).Extended);
+        assertFalse(disabled.tryExtend(CHR1, 101, "30M10S", bases("A".repeat(30) + "C".repeat(10))).extended());
 
         // null chromosome / cigar / read bases -> no-op
         final SoftclipTailExtender nullInputs = extender(new TestGenome());
-        assertFalse(nullInputs.tryExtend(null, 101, "30M5S", repeatedBase(35, 'A')).Extended);
-        assertFalse(nullInputs.tryExtend(CHR1, 101, null, repeatedBase(35, 'A')).Extended);
-        assertFalse(nullInputs.tryExtend(CHR1, 101, "30M5S", null).Extended);
+        assertFalse(nullInputs.tryExtend(null, 101, "30M5S", repeatedBase(35, 'A')).extended());
+        assertFalse(nullInputs.tryExtend(CHR1, 101, null, repeatedBase(35, 'A')).extended());
+        assertFalse(nullInputs.tryExtend(CHR1, 101, "30M5S", null).extended());
     }
 }

@@ -41,12 +41,12 @@ public class JunctionCanonicalizerTest
     @Test
     public void slidesNonCanonicalJunctionToCanonical()
     {
-        final JunctionCanonicalizationResult result = canonicalizer(slidableGenome())
-                .tryCanonicalize(CHR1, 1, "5M10N5M", slidableRead());
+        final JunctionCanonicalizer canonicalizer = canonicalizer(slidableGenome());
+        final JunctionCanonicalizationResult result = canonicalizer.tryCanonicalize(CHR1, 1, "5M10N5M", slidableRead());
 
-        assertTrue(result.Changed);
-        assertEquals(1, result.JunctionsShifted);
-        assertEquals("7M10N3M", result.NewCigar);
+        assertTrue(result.changed());
+        assertEquals(1, canonicalizer.junctionsShifted());
+        assertEquals("7M10N3M", result.newCigar());
     }
 
     @Test
@@ -59,7 +59,7 @@ public class JunctionCanonicalizerTest
         final JunctionCanonicalizationResult result = canonicalizer(genome)
                 .tryCanonicalize(CHR1, 1, "5M10N5M", bases("CCCCCTTCCC"));
 
-        assertFalse(result.Changed);
+        assertFalse(result.changed());
     }
 
     @Test
@@ -70,13 +70,13 @@ public class JunctionCanonicalizerTest
         final JunctionCanonicalizationResult result = canonicalizer(slidableGenome())
                 .tryCanonicalize(CHR1, 1, "5M10N5M", bases("CCCCCGGCCC"));   // read[5,6] = GG != ref AA
 
-        assertFalse(result.Changed);
+        assertFalse(result.changed());
     }
 
     @Test
     public void noRefSourceLeavesCigarUnchanged()
     {
         final JunctionCanonicalizer canon = new JunctionCanonicalizer(null, JunctionCanonicalizer.DEFAULT_MAX_SHIFT);
-        assertFalse(canon.tryCanonicalize(CHR1, 1, "5M10N5M", slidableRead()).Changed);
+        assertFalse(canon.tryCanonicalize(CHR1, 1, "5M10N5M", slidableRead()).changed());
     }
 }

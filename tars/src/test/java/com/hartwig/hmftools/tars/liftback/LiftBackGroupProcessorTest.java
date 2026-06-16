@@ -35,24 +35,24 @@ public class LiftBackGroupProcessorTest
 {
     private static List<SAMRecord> process(final List<SAMRecord> group, final LiftBackStats stats)
     {
-        return process(group, stats, null, null, 0, 0);
+        return process(group, stats, null, null);
     }
 
     private static List<SAMRecord> process(
             final List<SAMRecord> group, final LiftBackStats stats, final JunctionRescueResolver rescueResolver)
     {
-        return process(group, stats, rescueResolver, null, 0, 0);
+        return process(group, stats, rescueResolver, null);
     }
 
     // Single harness for all LiftBackGroupProcessor scenarios: the only thing tests vary is which ctor arg is
     // non-default, so a ctor change touches one call site.
     private static List<SAMRecord> process(
             final List<SAMRecord> group, final LiftBackStats stats, final JunctionRescueResolver rescueResolver,
-            final RefSequenceSource refSource, final int unmapAboveNh, final int unmapBelowMapq)
+            final RefSequenceSource refSource)
     {
         final LiftBackResolver resolver = new LiftBackResolver(List.of(threeExonContig()));
         final LiftBackGroupProcessor processor = new LiftBackGroupProcessor(
-                resolver, rescueResolver, null, null, null, refSource, unmapAboveNh, unmapBelowMapq, stats);
+                resolver, rescueResolver, null, null, null, refSource, stats);
 
         final List<SAMRecord> emitted = new ArrayList<>();
         processor.processNameGroup(group, new LiftedMateInfoCache(), (record, result) -> emitted.add(record));
@@ -71,7 +71,7 @@ public class LiftBackGroupProcessorTest
         primary.setAttribute("MD", "50");
 
         final String chr1Bases = "A".repeat(600);
-        final List<SAMRecord> emitted = process(List.of(primary), new LiftBackStats(), null, refSource(CHR_1, chr1Bases), 0, 0);
+        final List<SAMRecord> emitted = process(List.of(primary), new LiftBackStats(), null, refSource(CHR_1, chr1Bases));
 
         assertEquals(1, emitted.size());
         final SAMRecord out = emitted.get(0);
@@ -93,24 +93,28 @@ public class LiftBackGroupProcessorTest
     }
 
     @Test
-    public void unmapBelowMapqUnmapsLowMapqPrimary()
+    public void overCapPrimaryMapq0NoXaUnmapped()
     {
+        // bwa emitted MAPQ 0 with no XA: the read maps past the XA cap (75+ loci), so it is unmapped even
+        // though, with no XA, the resolver sees a single locus and would otherwise rescue MAPQ to 60.
         final SAMRecord primary = primaryRecord(TX_CONTIG, 1, "50M");
-        primary.setMappingQuality(10);
+        primary.setMappingQuality(0);
 
-        final List<SAMRecord> emitted = process(List.of(primary), new LiftBackStats(), null, null, 0, 20);
+        final List<SAMRecord> emitted = process(List.of(primary), new LiftBackStats());
 
         assertEquals(1, emitted.size());
         assertTrue(emitted.get(0).getReadUnmappedFlag());
     }
 
     @Test
-    public void mapqAtOrAboveFloorKeptMapped()
+    public void mapq0WithXaKeptMapped()
     {
+        // MAPQ 0 but XA present = an ordinary few-way multimapper (within the cap); keep and lift it.
         final SAMRecord primary = primaryRecord(TX_CONTIG, 1, "50M");
-        primary.setMappingQuality(20);
+        primary.setMappingQuality(0);
+        primary.setAttribute("XA", CHR_1 + ",+5000,50M,0;");
 
-        final List<SAMRecord> emitted = process(List.of(primary), new LiftBackStats(), null, null, 0, 20);
+        final List<SAMRecord> emitted = process(List.of(primary), new LiftBackStats());
 
         assertEquals(1, emitted.size());
         assertFalse(emitted.get(0).getReadUnmappedFlag());

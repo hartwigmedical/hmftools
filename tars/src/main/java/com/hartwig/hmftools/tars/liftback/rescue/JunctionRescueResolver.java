@@ -48,19 +48,19 @@ public class JunctionRescueResolver
         if(!mConfig.Enabled)
             return RescueResult.noMerge(RescueRejectReason.NO_MATCHING_SUPP);
 
-        if(candidate.Supplementaries.isEmpty())
+        if(candidate.supplementaries().isEmpty())
             return tryRefVerifyOnly(candidate);
 
         mStatistics.countCandidate();
 
         // Low-confidence placement isn't a trustworthy anchor for building a spliced read.
-        if(candidate.PrimaryMapq < mConfig.MinPrimaryMapq)
+        if(candidate.primaryMapq() < mConfig.MinPrimaryMapq)
         {
             mStatistics.countReject(RescueRejectReason.LOW_PRIMARY_MAPQ);
             return RescueResult.noMerge(RescueRejectReason.LOW_PRIMARY_MAPQ);
         }
 
-        List<CigarElement> primaryCigar = CigarUtils.cigarElementsFromStr(candidate.PrimaryCigar);
+        List<CigarElement> primaryCigar = CigarUtils.cigarElementsFromStr(candidate.primaryCigar());
         if(CigarUtils.hasHardClip(primaryCigar))
         {
             mStatistics.countReject(RescueRejectReason.COMPLEX_CIGAR_SHAPE);
@@ -71,8 +71,8 @@ public class JunctionRescueResolver
         // real matched block. Only affects the working cigar; emitted cigar changes only on accept.
         primaryCigar = foldFabricatedTerminalMicroJunctions(primaryCigar, SpliceCommon.MIN_JUNCTION_ANCHOR);
 
-        int primaryStart = candidate.PrimaryStart;
-        final List<RescueSupplementary> remaining = new ArrayList<>(candidate.Supplementaries);
+        int primaryStart = candidate.primaryStart();
+        final List<RescueSupplementary> remaining = new ArrayList<>(candidate.supplementaries());
         final List<Integer> dropped = new ArrayList<>();
         final List<ChrBaseRegion> introns = new ArrayList<>();
         RescueRejectReason lastReject = null;
@@ -104,7 +104,7 @@ public class JunctionRescueResolver
 
             primaryStart = attempt.MergedStart;
             primaryCigar = attempt.MergedCigar;
-            dropped.add(attempt.MergedSupp.Index);
+            dropped.add(attempt.MergedSupp.index());
             introns.add(attempt.IntroducedIntron);
             remaining.remove(attempt.MergedSupp);
             ++chainDepth;
@@ -126,12 +126,12 @@ public class JunctionRescueResolver
     // softclipped bases match the candidate exon reference within tolerance.
     private RescueResult tryRefVerifyOnly(final RescueCandidate candidate)
     {
-        if(mRefSource == null || candidate.ReadBases == null)
+        if(mRefSource == null || candidate.readBases() == null)
             return RescueResult.noMerge(RescueRejectReason.NO_MATCHING_SUPP);
 
         mStatistics.countCandidate();
 
-        final List<CigarElement> primaryCigar = CigarUtils.cigarElementsFromStr(candidate.PrimaryCigar);
+        final List<CigarElement> primaryCigar = CigarUtils.cigarElementsFromStr(candidate.primaryCigar());
         if(CigarUtils.hasHardClip(primaryCigar))
         {
             mStatistics.countReject(RescueRejectReason.COMPLEX_CIGAR_SHAPE);
@@ -163,9 +163,9 @@ public class JunctionRescueResolver
         for(boolean rightExtend : sides)
         {
             final RescueResult sideResult = attemptRefVerifySide(candidate, primaryCigar, rightExtend);
-            if(sideResult.Merged)
+            if(sideResult.merged())
                 return sideResult;
-            if(sideResult.RejectReason != RescueRejectReason.REF_VERIFY_NO_CANDIDATE_EXON)
+            if(sideResult.rejectReason() != RescueRejectReason.REF_VERIFY_NO_CANDIDATE_EXON)
             {
                 anyCandidate = true;
                 lastFailure = sideResult;
@@ -201,7 +201,7 @@ public class JunctionRescueResolver
 
         // BWA often over-extends a few bases past the true exon boundary. Snap back up to
         // MaxBoundaryShift (smallest shift first), rolling over-extension into the softclip.
-        final int primaryRefEnd = candidate.PrimaryStart + CigarUtils.cigarAlignedLength(primaryCigar) - 1;
+        final int primaryRefEnd = candidate.primaryStart() + CigarUtils.cigarAlignedLength(primaryCigar) - 1;
         boolean anyCandidate = false;
         RescueResult lastFailure = RescueResult.noMerge(RescueRejectReason.REF_VERIFY_MISMATCH_TOO_HIGH);
 
@@ -215,17 +215,17 @@ public class JunctionRescueResolver
             if(shiftedCigar == null)
                 break;
 
-            final int boundary = rightExtend ? (primaryRefEnd + 1 - shift) : (candidate.PrimaryStart - 1 + shift);
+            final int boundary = rightExtend ? (primaryRefEnd + 1 - shift) : (candidate.primaryStart() - 1 + shift);
             final List<ChrBaseRegion> candidates = rightExtend
-                    ? mAnnotatedIndex.introByStart(candidate.Chromosome, boundary)
-                    : mAnnotatedIndex.introByEnd(candidate.Chromosome, boundary);
+                    ? mAnnotatedIndex.introByStart(candidate.chromosome(), boundary)
+                    : mAnnotatedIndex.introByEnd(candidate.chromosome(), boundary);
             if(candidates.isEmpty())
                 continue;
 
             anyCandidate = true;
             final RescueResult result = verifyAgainstCandidates(
                     candidate, shiftedCigar, candidates, softclipLen + shift, rightExtend);
-            if(result.Merged)
+            if(result.merged())
                 return result;
             lastFailure = result;
         }
@@ -269,7 +269,7 @@ public class JunctionRescueResolver
             return RescueResult.noMerge(RescueRejectReason.REF_VERIFY_NO_CANDIDATE_EXON);
         }
 
-        final byte[] readBases = candidate.ReadBases;
+        final byte[] readBases = candidate.readBases();
         final byte[] softclipBases = new byte[softclipLen];
         if(rightExtend)
             System.arraycopy(readBases, readBases.length - softclipLen, softclipBases, 0, softclipLen);
@@ -304,7 +304,7 @@ public class JunctionRescueResolver
                 refEnd = candidateIntron.start() - 1;
             }
 
-            final byte[] refBases = mRefSource.getBases(candidate.Chromosome, refStart, refEnd);
+            final byte[] refBases = mRefSource.getBases(candidate.chromosome(), refStart, refEnd);
             if(refBases == null || refBases.length != softclipLen)
                 continue;
 
@@ -374,7 +374,7 @@ public class JunctionRescueResolver
                 merged.add(primaryCigar.get(i));
         }
 
-        final int mergedStart = rightExtend ? candidate.PrimaryStart : (chosen.start() - matchedRun);
+        final int mergedStart = rightExtend ? candidate.primaryStart() : (chosen.start() - matchedRun);
         mStatistics.countMergedChain(1);
         return new RescueResult(
                 true, CigarUtils.cigarElementsToStr(merged), mergedStart,
@@ -482,8 +482,8 @@ public class JunctionRescueResolver
     // Higher MAPQ wins, then smaller intron. >1 within reach is rejected by the caller.
     private static boolean isBetterCandidate(final MergeOutcome a, final MergeOutcome b)
     {
-        if(a.MergedSupp.Mapq != b.MergedSupp.Mapq)
-            return a.MergedSupp.Mapq > b.MergedSupp.Mapq;
+        if(a.MergedSupp.mapq() != b.MergedSupp.mapq())
+            return a.MergedSupp.mapq() > b.MergedSupp.mapq();
         return intronLength(a.IntroducedIntron) < intronLength(b.IntroducedIntron);
     }
 
@@ -496,20 +496,20 @@ public class JunctionRescueResolver
             final RescueCandidate candidate, final int primaryStart,
             final List<CigarElement> primaryCigar, final RescueSupplementary supp)
     {
-        if(!candidate.Chromosome.equals(supp.Chromosome))
+        if(!candidate.chromosome().equals(supp.chromosome()))
             return MergeOutcome.reject(RescueRejectReason.DIFFERENT_CHROMOSOME);
 
-        if(candidate.ForwardStrand != supp.ForwardStrand)
+        if(candidate.forwardStrand() != supp.forwardStrand())
             return MergeOutcome.reject(RescueRejectReason.OPPOSITE_STRAND);
 
-        List<CigarElement> suppCigar = CigarUtils.cigarElementsFromStr(supp.Cigar);
+        List<CigarElement> suppCigar = CigarUtils.cigarElementsFromStr(supp.cigar());
         if(CigarUtils.hasHardClip(suppCigar))
             return MergeOutcome.reject(RescueRejectReason.COMPLEX_CIGAR_SHAPE);
 
         // ContigTranslator can expand a cross-exon M into M-N-M. If the post-N M coincidentally
         // overlaps the primary's span, clamp the supp to its primary-distal anchor before merge logic.
         final int primaryRefEnd = primaryStart + CigarUtils.cigarAlignedLength(primaryCigar) - 1;
-        int suppStart = supp.Start;
+        int suppStart = supp.start();
         final ClampedSupp clamped = clampSuppToPrimaryBoundary(suppCigar, suppStart, primaryStart, primaryRefEnd);
         if(clamped != null)
         {
@@ -555,14 +555,14 @@ public class JunctionRescueResolver
             final RescueCandidate candidate, final Side up, final Side down,
             final boolean primaryIsUpstream, final RescueSupplementary supp)
     {
-        if(CigarUtils.cigarBaseLength(up.Cigar) != candidate.ReadLength
-                || CigarUtils.cigarBaseLength(down.Cigar) != candidate.ReadLength)
+        if(CigarUtils.cigarBaseLength(up.Cigar) != candidate.readLength()
+                || CigarUtils.cigarBaseLength(down.Cigar) != candidate.readLength())
             return MergeOutcome.reject(RescueRejectReason.COMPLEX_CIGAR_SHAPE);
 
         if(opAdjacentToSoftClip(up.Cigar, false) || opAdjacentToSoftClip(down.Cigar, true))
             return MergeOutcome.reject(RescueRejectReason.COMPLEX_CIGAR_SHAPE);
 
-        final int upMatchedRead = candidate.ReadLength - up.TrailingS;
+        final int upMatchedRead = candidate.readLength() - up.TrailingS;
         final int overlap = upMatchedRead - down.LeadingS;
 
         if(overlap < 0)
@@ -572,7 +572,7 @@ public class JunctionRescueResolver
         if(down.Start <= up.RefEnd)
             return MergeOutcome.reject(RescueRejectReason.READ_COVERAGE_OVERLAP);
 
-        // Intron length is invariant under snap point L — check once up front.
+        // Intron length is invariant under snap point L - check once up front.
         final int intronLength = (down.Start - 1 - up.RefEnd) + overlap;
         if(intronLength < mConfig.MinIntronLength)
             return MergeOutcome.reject(RescueRejectReason.INTRON_TOO_SHORT);
@@ -604,7 +604,7 @@ public class JunctionRescueResolver
             if(up.TrailingM - upLossFb < mConfig.MinAnchorOverhang || up.TrailingM < upLossFb
                     || down.LeadingM - downLossFb < mConfig.MinAnchorOverhang || down.LeadingM < downLossFb)
                 return MergeOutcome.reject(RescueRejectReason.SHORT_ANCHOR);
-            chosenIntron = new ChrBaseRegion(candidate.Chromosome, up.RefEnd + 1, down.Start - 1);
+            chosenIntron = new ChrBaseRegion(candidate.chromosome(), up.RefEnd + 1, down.Start - 1);
         }
 
         final int upLoss = upMatchedRead - chosenL;
@@ -637,7 +637,7 @@ public class JunctionRescueResolver
                 continue;
 
             final ChrBaseRegion candidateIntron = new ChrBaseRegion(
-                    candidate.Chromosome, up.RefEnd - upLoss + 1, down.Start + downLoss - 1);
+                    candidate.chromosome(), up.RefEnd - upLoss + 1, down.Start + downLoss - 1);
             final int tier = classifyJunctionTier(candidateIntron);
             if(tier == SpliceMotif.TIER_NONE)
                 continue;
@@ -660,12 +660,12 @@ public class JunctionRescueResolver
             final RescueCandidate candidate, final Side up, final Side down,
             final int upMatchedRead, final boolean primaryIsUpstream)
     {
-        if(candidate.MateHintIntrons.isEmpty())
+        if(candidate.mateHintIntrons().isEmpty())
             return SnapPick.miss();
 
-        for(ChrBaseRegion hint : candidate.MateHintIntrons)
+        for(ChrBaseRegion hint : candidate.mateHintIntrons())
         {
-            if(!hint.Chromosome.equals(candidate.Chromosome))
+            if(!hint.Chromosome.equals(candidate.chromosome()))
                 continue;
             final int upLoss;
             if(primaryIsUpstream)
@@ -685,7 +685,7 @@ public class JunctionRescueResolver
 
             final int hintedIntronStart = primaryIsUpstream ? hint.start() : (up.RefEnd - upLoss + 1);
             final int hintedIntronEnd = primaryIsUpstream ? (down.Start + downLoss - 1) : hint.end();
-            return new SnapPick(L, new ChrBaseRegion(candidate.Chromosome, hintedIntronStart, hintedIntronEnd));
+            return new SnapPick(L, new ChrBaseRegion(candidate.chromosome(), hintedIntronStart, hintedIntronEnd));
         }
         return SnapPick.miss();
     }

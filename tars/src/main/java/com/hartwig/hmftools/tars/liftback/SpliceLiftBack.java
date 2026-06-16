@@ -48,7 +48,7 @@ import htsjdk.samtools.SamReaderFactory;
 // output directly (mates + supplementaries already contiguous, FASTQ order): ChunkProducer streams it once
 // and cuts whole-fragment chunks at name boundaries, N LiftBackWorkers lift + emit each chunk to its own
 // BAM + (headerless) TSV shard. No input sort, no index, no fragment cache; only the lifted OUTPUT is
-// sorted + indexed. The per-record transform lives in LiftBackGroupProcessor (shared by every worker).
+// sorted + indexed. The per-record transform lives in LiftBackGroupProcessor (one per worker, no shared state).
 public class SpliceLiftBack
 {
     private final SpliceLiftBackConfig mConfig;
@@ -175,7 +175,7 @@ public class SpliceLiftBack
         return new LiftBackResources(
                 resolver, junctionIndex, mConfig.RefGenomeFile,
                 mConfig.RescueViaSupp, mConfig.ExtendSoftclipTails, SpliceCommon.MIN_JUNCTION_ANCHOR,
-                mConfig.UnmapAboveNh, mConfig.UnmapBelowMapq, excludedRegions);
+                excludedRegions);
     }
 
     // fails fast on a BAM/sidecar mismatch -- root cause of a prior silent failure where alt contigs missing
@@ -269,6 +269,17 @@ public class SpliceLiftBack
         }
         if(collapsedLeading > 0 || collapsedTrailing > 0)
             TARS_LOGGER.info("terminal micro-junction collapse: leading={} trailing={}", collapsedLeading, collapsedTrailing);
+
+        long junctionsCanonicalized = 0;
+        long overCapUnmapped = 0;
+        for(final LiftBackWorker worker : workers)
+        {
+            junctionsCanonicalized += worker.junctionsCanonicalized();
+            overCapUnmapped += worker.overCapUnmapped();
+        }
+        TARS_LOGGER.info("junction-canonicalize summary: shifted={}", junctionsCanonicalized);
+        if(overCapUnmapped > 0)
+            TARS_LOGGER.info("over-cap unmap: {} primaries unmapped (MAPQ 0 + no XA, maps past the bwa XA cap)", overCapUnmapped);
 
         long excludedReads = 0;
         for(final LiftBackWorker worker : workers)

@@ -48,10 +48,12 @@ public class LiftBackGroupProcessor
     // off), in which case NM is cleared rather than recomputed.
     private final RefSequenceSource mRefSource;
 
-    private final int mUnmapAboveNh;
-    private final int mUnmapBelowMapq;
-
     private final LiftBackStats mStats;
+
+    // primaries unmapped because bwa exceeded the XA cap (MAPQ 0 + no XA = maps to too many loci).
+    private long mOverCapUnmapped;
+
+    public long overCapUnmapped() { return mOverCapUnmapped; }
 
     private static final String AS_TAG = "AS";
 
@@ -64,8 +66,7 @@ public class LiftBackGroupProcessor
     // Same bwa -T 19 rationale for primaries: a primary whose AS is still below the default floor of 30
     // AFTER liftback (and which rescue/tail-extend/collapse did not improve) is a residual short-anchor
     // alignment. AS is never recomputed in liftback, so post-processed primaries keep a stale-low AS and
-    // must be exempt. Such primaries are unmapped (not dropped) to keep the pair + SA references intact,
-    // matching the unmap_below_mapq policy.
+    // must be exempt. Such primaries are unmapped (not dropped) to keep the pair + SA references intact.
     static final int PRIMARY_AS_UNMAP_THRESHOLD = 30;
 
     // BWA emits MAPQ=60 for a clean unique alignment. Rescued primaries are constructed by us, not
@@ -82,7 +83,7 @@ public class LiftBackGroupProcessor
             final LiftBackResolver resolver, final JunctionRescueResolver junctionRescueResolver,
             final SoftclipTailExtender softclipTailExtender, final TerminalMicroJunctionCollapser terminalJunctionCollapser,
             final JunctionCanonicalizer junctionCanonicalizer, final RefSequenceSource refSource,
-            final int unmapAboveNh, final int unmapBelowMapq, final LiftBackStats stats)
+            final LiftBackStats stats)
     {
         mResolver = resolver;
         mJunctionRescueResolver = junctionRescueResolver;
@@ -90,8 +91,6 @@ public class LiftBackGroupProcessor
         mTerminalJunctionCollapser = terminalJunctionCollapser;
         mJunctionCanonicalizer = junctionCanonicalizer;
         mRefSource = refSource;
-        mUnmapAboveNh = unmapAboveNh;
-        mUnmapBelowMapq = unmapBelowMapq;
         mStats = stats;
     }
 
@@ -144,8 +143,7 @@ public class LiftBackGroupProcessor
         }
         if(primary == null)
             return;
-        final LiftedMateInfo refreshed = LiftBackRecordOps.toLiftedMateInfo(
-                primary, decision.PrimaryResult, mUnmapAboveNh, mUnmapBelowMapq);
+        final LiftedMateInfo refreshed = LiftBackRecordOps.toLiftedMateInfo(primary, decision.PrimaryResult);
         cache.recordPrimaryAlignment(primary.getReadName(), primary.getFirstOfPairFlag(), refreshed);
     }
 
@@ -354,14 +352,14 @@ public class LiftBackGroupProcessor
         // shift for a left-extend, and MAPQ caps at RESCUED_MAPQ_CAP to mark it a constructed alignment.
         // mark merged supps for drop.
         resolved[primaryIdx] = primaryRes.withRevisedCigar(
-                result.MergedStart, result.MergedCigar, true,
+                result.mergedStart(), result.mergedCigar(), true,
                 Math.min(primaryRes.updatedMapq(), RESCUED_MAPQ_CAP), "rescued-via-supp");
 
-        if(introducedIntronsOut != null && result.IntroducedIntrons != null)
-            introducedIntronsOut.addAll(result.IntroducedIntrons);
+        if(introducedIntronsOut != null)
+            introducedIntronsOut.addAll(result.introducedIntrons());
 
         final boolean[] dropped = new boolean[records.size()];
-        for(Integer dtoIdx : result.DroppedSupplementaryIndices)
+        for(Integer dtoIdx : result.droppedSupplementaryIndices())
             dropped[suppIndices.get(dtoIdx)] = true;
         return dropped;
     }
@@ -389,11 +387,11 @@ public class LiftBackGroupProcessor
         final TerminalCollapseResult collapse = mTerminalJunctionCollapser.tryCollapse(
                 primaryRes.finalChrom(), primaryRes.finalPos(), primaryRes.finalCigar(), primary.getReadBases());
 
-        if(!collapse.Collapsed)
+        if(!collapse.collapsed())
             return;
 
         resolved[primaryIdx] = primaryRes.withRevisedCigar(
-                collapse.NewStart, collapse.NewCigar, collapse.NewCigar.indexOf('N') >= 0,
+                collapse.newStart(), collapse.newCigar(), collapse.newCigar().indexOf('N') >= 0,
                 primaryRes.updatedMapq(), "terminal-junction-collapsed");
     }
 
@@ -420,11 +418,11 @@ public class LiftBackGroupProcessor
                 primaryRes.finalChrom(), primaryRes.finalPos(), primaryRes.finalCigar(),
                 primary.getReadBases());
 
-        if(!extension.Extended)
+        if(!extension.extended())
             return;
 
         resolved[primaryIdx] = primaryRes.withRevisedCigar(
-                extension.NewStart, extension.NewCigar, primaryRes.hasNCigar(),
+                extension.newStart(), extension.newCigar(), primaryRes.hasNCigar(),
                 primaryRes.updatedMapq(), "tail-extended");
     }
 
@@ -449,11 +447,11 @@ public class LiftBackGroupProcessor
         final JunctionCanonicalizationResult canon = mJunctionCanonicalizer.tryCanonicalize(
                 primaryRes.finalChrom(), primaryRes.finalPos(), primaryRes.finalCigar(), primary.getReadBases());
 
-        if(!canon.Changed)
+        if(!canon.changed())
             return;
 
         resolved[primaryIdx] = primaryRes.withRevisedCigar(
-                primaryRes.finalPos(), canon.NewCigar, primaryRes.hasNCigar(),
+                primaryRes.finalPos(), canon.newCigar(), primaryRes.hasNCigar(),
                 primaryRes.updatedMapq(), "junction-canonicalized");
     }
 
@@ -490,19 +488,15 @@ public class LiftBackGroupProcessor
         if(result.category() != LiftBackCategory.UNMAPPED)
             record.setAttribute("NH", nh);
 
-        if(mUnmapAboveNh > 0 && nh > mUnmapAboveNh
+        // Over bwa's XA reporting cap: a primary that bwa emitted MAPQ 0 with no XA maps to too many loci to
+        // place (the alt list was suppressed, not truncated). Unmap it. Keyed on the input state because the
+        // missing XA makes the resolver see a single locus, which would otherwise rescue MAPQ to 60.
+        if(LiftBackRecordOps.exceedsMappingCap(result)
                 && !record.getReadUnmappedFlag()
                 && !record.getSupplementaryAlignmentFlag())
         {
             markPrimaryUnmapped(record);
-        }
-
-        if(mUnmapBelowMapq > 0
-                && !record.getReadUnmappedFlag()
-                && !record.getSupplementaryAlignmentFlag()
-                && record.getMappingQuality() < mUnmapBelowMapq)
-        {
-            markPrimaryUnmapped(record);
+            ++mOverCapUnmapped;
         }
 
         // residual short-anchor primary: bwa scored it below the default -T 30 floor and liftback couldn't

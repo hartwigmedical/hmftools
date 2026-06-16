@@ -5,7 +5,7 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
-// covers LiftedAlignment.cigarHasRealNJunction — rejects micro-anchors (1-3 bp M on either side of N)
+// covers LiftedAlignment.cigarHasRealNJunction - rejects micro-anchors (1-3 bp M on either side of N)
 // that previously caused BOTH_TX_JUNCTION_REF_MATCH to swap off a clean ref full-match.
 public class LiftedAlignmentTest
 {

@@ -3,7 +3,6 @@ package com.hartwig.hmftools.tars.liftback.tailextend;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 
 import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.tars.common.SpliceCommon;
@@ -27,8 +26,8 @@ public class TerminalMicroJunctionCollapser
 {
     private final RefSequenceSource mRefSource;
     private final int mMinJunctionAnchor;
-    private final AtomicLong mCollapsedLeading = new AtomicLong();
-    private final AtomicLong mCollapsedTrailing = new AtomicLong();
+    private long mCollapsedLeading;
+    private long mCollapsedTrailing;
 
     public TerminalMicroJunctionCollapser(final RefSequenceSource refSource, final int minJunctionAnchor)
     {
@@ -36,8 +35,8 @@ public class TerminalMicroJunctionCollapser
         mMinJunctionAnchor = minJunctionAnchor;
     }
 
-    public long collapsedLeading() { return mCollapsedLeading.get(); }
-    public long collapsedTrailing() { return mCollapsedTrailing.get(); }
+    public long collapsedLeading() { return mCollapsedLeading; }
+    public long collapsedTrailing() { return mCollapsedTrailing; }
 
     public TerminalCollapseResult tryCollapse(
             final String chromosome, final int alignmentStart, final String cigar, final byte[] readBases)
@@ -51,11 +50,11 @@ public class TerminalMicroJunctionCollapser
 
         // both ends are independent; apply trailing first, then leading on the result.
         final TerminalCollapseResult trailing = tryTrailing(chromosome, alignmentStart, elements, readBases);
-        final List<CigarElement> afterTrailing = trailing.Collapsed ? CigarUtils.cigarElementsFromStr(trailing.NewCigar) : elements;
-        final int startAfterTrailing = trailing.Collapsed ? trailing.NewStart : alignmentStart;
+        final List<CigarElement> afterTrailing = trailing.collapsed() ? CigarUtils.cigarElementsFromStr(trailing.newCigar()) : elements;
+        final int startAfterTrailing = trailing.collapsed() ? trailing.newStart() : alignmentStart;
 
         final TerminalCollapseResult leading = tryLeading(chromosome, startAfterTrailing, afterTrailing, readBases);
-        if(leading.Collapsed)
+        if(leading.collapsed())
             return leading;
         return trailing;
     }
@@ -113,7 +112,7 @@ public class TerminalMicroJunctionCollapser
         final int residual = window - reclaimed;
         if(residual > 0)
             merged.add(new CigarElement(residual, CigarOperator.S));
-        mCollapsedTrailing.incrementAndGet();
+        ++mCollapsedTrailing;
         return new TerminalCollapseResult(true, alignmentStart, CigarUtils.cigarElementsToStr(merged));
     }
 
@@ -168,7 +167,7 @@ public class TerminalMicroJunctionCollapser
         merged.add(new CigarElement(reclaimed + nearExon.getLength(), CigarOperator.M));
         for(int i = nearIndex + 1; i < elements.size(); ++i)
             merged.add(elements.get(i));
-        mCollapsedLeading.incrementAndGet();
+        ++mCollapsedLeading;
         return new TerminalCollapseResult(true, nearStart - reclaimed, CigarUtils.cigarElementsToStr(merged));
     }
 

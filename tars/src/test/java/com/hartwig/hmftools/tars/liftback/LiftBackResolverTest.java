@@ -161,7 +161,7 @@ public class LiftBackResolverTest
     @Test
     public void testTxSoftClipNotAtBoundaryFallsToAmbiguous()
     {
-        // ref 50M full match; Tx 25M25S — 25M ends mid-exon (chr1:194), trailing clip NOT at exon boundary -> BOTH_AMBIGUOUS.
+        // ref 50M full match; Tx 25M25S - 25M ends mid-exon (chr1:194), trailing clip NOT at exon boundary -> BOTH_AMBIGUOUS.
         final SAMRecord record = newRecord(CHR_1, 170, "50M");
         record.setAttribute("XA", TX_CONTIG + ",+71,25M25S,0;");
 
@@ -392,7 +392,7 @@ public class LiftBackResolverTest
     @Test
     public void testCrossLocusBothSplicedRemainsMultiLocus()
     {
-        // Both Tx primary and ref XA alt have spliced CIGARs at different loci — ambiguous, must NOT swap.
+        // Both Tx primary and ref XA alt have spliced CIGARs at different loci - ambiguous, must NOT swap.
         final SAMRecord record = newRecord(TX_CONTIG, 51, "100M");
         record.setAttribute("XA", "chr5,+5000,50M100N50M,0;");
 

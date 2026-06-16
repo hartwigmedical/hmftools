@@ -3,6 +3,7 @@ package com.hartwig.hmftools.tars.liftback;
 import static com.hartwig.hmftools.common.bamops.BamToolName.fromPath;
 import static com.hartwig.hmftools.tars.common.TarsConfig.TARS_LOGGER;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -39,6 +40,10 @@ public class ChunkProducer extends Thread
     private final int mChunkTargetReads;
     private final String mBamToolPath; // nullable: when set, decompress via the tool's threads
     private final int mDecompressThreads;
+
+    // buffer over the decompress pipe: `-u` emits high-volume uncompressed BGZF and htsjdk reads blocks straight
+    // off the raw pipe, so a large buffer batches the otherwise tiny per-block read() syscalls.
+    private static final int PIPE_BUFFER_BYTES = 1 << 20;
 
     public ChunkProducer(
             final String inputBam, final String refGenomeFile, final BlockingQueue<List<SAMRecord>> queue,
@@ -100,7 +105,7 @@ public class ChunkProducer extends Thread
         final Process process = new ProcessBuilder(command).redirectError(ProcessBuilder.Redirect.INHERIT).start();
         try(SamReader reader = SamReaderFactory.makeDefault()
                 .validationStringency(ValidationStringency.SILENT)
-                .open(SamInputResource.of(process.getInputStream())))
+                .open(SamInputResource.of(new BufferedInputStream(process.getInputStream(), PIPE_BUFFER_BYTES))))
         {
             streamChunks(reader.iterator());
         }
@@ -112,7 +117,6 @@ public class ChunkProducer extends Thread
             throw e;
         }
 
-        // let the tool exit naturally now the full stream has been consumed.
         final int exitCode = process.waitFor();
         if(exitCode != 0)
             throw new IOException("decompress process exit code " + exitCode);
@@ -161,7 +165,7 @@ public class ChunkProducer extends Thread
     static void streamChunks(final Iterator<SAMRecord> iter, final int targetReads, final ChunkSink sink)
             throws InterruptedException
     {
-        List<SAMRecord> chunk = new ArrayList<>();
+        List<SAMRecord> chunk = new ArrayList<>(targetReads);
         String currentName = null;
         long readsStreamed = 0;
         int chunksQueued = 0;
@@ -175,7 +179,7 @@ public class ChunkProducer extends Thread
             if(currentName != null && !name.equals(currentName) && chunk.size() >= targetReads)
             {
                 sink.accept(chunk);
-                chunk = new ArrayList<>();
+                chunk = new ArrayList<>(targetReads);
                 ++chunksQueued;
             }
 

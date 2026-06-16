@@ -30,9 +30,9 @@ public class TerminalMicroJunctionCollapserTest
         // read bases: first 5 = ACGTA (5M), 6th = C (the over-extended 1M, also matches pos 106)
         final TerminalCollapseResult res = collapser(genome).tryCollapse(CHR1, 101, "5M10N1M", bases("ACGTAC"));
 
-        assertTrue(res.Collapsed);
-        assertEquals("6M", res.NewCigar);
-        assertEquals(101, res.NewStart);
+        assertTrue(res.collapsed());
+        assertEquals("6M", res.newCigar());
+        assertEquals(101, res.newStart());
     }
 
     @Test
@@ -45,9 +45,9 @@ public class TerminalMicroJunctionCollapserTest
 
         final TerminalCollapseResult res = collapser(genome).tryCollapse(CHR1, 101, "1M10N8M", bases("CACGTACGT"));
 
-        assertTrue(res.Collapsed);
-        assertEquals("9M", res.NewCigar);
-        assertEquals(111, res.NewStart);
+        assertTrue(res.collapsed());
+        assertEquals("9M", res.newCigar());
+        assertEquals(111, res.newStart());
     }
 
     @Test
@@ -60,9 +60,9 @@ public class TerminalMicroJunctionCollapserTest
 
         final TerminalCollapseResult res = collapser(genome).tryCollapse(CHR1, 1, "2M80N149M", bases("AC" + "A".repeat(149)));
 
-        assertTrue(res.Collapsed);
-        assertEquals("2S149M", res.NewCigar);
-        assertEquals(83, res.NewStart);   // nearStart = 1 + 2 + 80
+        assertTrue(res.collapsed());
+        assertEquals("2S149M", res.newCigar());
+        assertEquals(83, res.newStart());   // nearStart = 1 + 2 + 80
     }
 
     @Test
@@ -76,7 +76,7 @@ public class TerminalMicroJunctionCollapserTest
         final TerminalCollapseResult res = collapser(genome)
                 .tryCollapse(CHR1, 101, "50M200N5M", bases("G".repeat(50) + "ACGAC"));
 
-        assertFalse(res.Collapsed);
+        assertFalse(res.collapsed());
     }
 
     @Test
@@ -89,7 +89,7 @@ public class TerminalMicroJunctionCollapserTest
         final TerminalCollapseResult res = collapser(genome)
                 .tryCollapse(CHR1, 101, "50M200N5M3S", bases("G".repeat(50) + "ACGAC" + "GGG"));   // 5M anchor; last 3 = junk clip
 
-        assertFalse(res.Collapsed);
+        assertFalse(res.collapsed());
     }
 
     @Test
@@ -100,7 +100,7 @@ public class TerminalMicroJunctionCollapserTest
 
         final TerminalCollapseResult res = collapser(genome).tryCollapse(CHR1, 101, "8M10N8M", bases("C".repeat(16)));
 
-        assertFalse(res.Collapsed);
+        assertFalse(res.collapsed());
     }
 
     @Test
@@ -112,9 +112,9 @@ public class TerminalMicroJunctionCollapserTest
 
         final TerminalCollapseResult res = collapser(genome).tryCollapse(CHR1, 101, "5M10N1M", bases("AAAAAC"));
 
-        assertTrue(res.Collapsed);
-        assertEquals("5M1S", res.NewCigar);
-        assertEquals(101, res.NewStart);
+        assertTrue(res.collapsed());
+        assertEquals("5M1S", res.newCigar());
+        assertEquals(101, res.newStart());
     }
 
     @Test
@@ -125,9 +125,9 @@ public class TerminalMicroJunctionCollapserTest
 
         final TerminalCollapseResult res = collapser(genome).tryCollapse(CHR1, 101, "5M10N1M4S", bases("ACGTACGTAC"));
 
-        assertTrue(res.Collapsed);
-        assertEquals("10M", res.NewCigar);
-        assertEquals(101, res.NewStart);
+        assertTrue(res.collapsed());
+        assertEquals("10M", res.newCigar());
+        assertEquals(101, res.newStart());
     }
 
     @Test
@@ -139,9 +139,9 @@ public class TerminalMicroJunctionCollapserTest
 
         final TerminalCollapseResult res = collapser(genome).tryCollapse(CHR1, 101, "5M10N1M4S", bases("ACGTACGTAC"));
 
-        assertTrue(res.Collapsed);
-        assertEquals("8M2S", res.NewCigar);
-        assertEquals(101, res.NewStart);
+        assertTrue(res.collapsed());
+        assertEquals("8M2S", res.newCigar());
+        assertEquals(101, res.newStart());
     }
 
     @Test
@@ -153,9 +153,9 @@ public class TerminalMicroJunctionCollapserTest
 
         final TerminalCollapseResult res = collapser(genome).tryCollapse(CHR1, 101, "5M10N1M4S", bases("ACGTACGTAC"));
 
-        assertTrue(res.Collapsed);
-        assertEquals("5M5S", res.NewCigar);
-        assertEquals(101, res.NewStart);
+        assertTrue(res.collapsed());
+        assertEquals("5M5S", res.newCigar());
+        assertEquals(101, res.newStart());
     }
 
     @Test
@@ -169,8 +169,8 @@ public class TerminalMicroJunctionCollapserTest
         final TerminalCollapseResult res = collapser(genome)
                 .tryCollapse(CHR1, 101, "4S1M10N8M", bases("CGTACACGTACGT"));   // anchor + 8M near exon
 
-        assertTrue(res.Collapsed);
-        assertEquals("13M", res.NewCigar);
-        assertEquals(107, res.NewStart);
+        assertTrue(res.collapsed());
+        assertEquals("13M", res.newCigar());
+        assertEquals(107, res.newStart());
     }
 }

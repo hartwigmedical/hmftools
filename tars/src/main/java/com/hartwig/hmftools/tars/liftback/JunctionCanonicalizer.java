@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.tars.liftback;
 
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 
 import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.tars.liftback.rescue.RefSequenceSource;
@@ -29,7 +28,7 @@ public class JunctionCanonicalizer
 
     private final RefSequenceSource mRefSource;
     private final int mMaxShift;
-    private final AtomicLong mJunctionsShifted = new AtomicLong();
+    private long mJunctionsShifted;
 
     public JunctionCanonicalizer(final RefSequenceSource refSource, final int maxShift)
     {
@@ -37,7 +36,7 @@ public class JunctionCanonicalizer
         mMaxShift = maxShift;
     }
 
-    public long junctionsShifted() { return mJunctionsShifted.get(); }
+    public long junctionsShifted() { return mJunctionsShifted; }
 
     public JunctionCanonicalizationResult tryCanonicalize(
             final String chromosome, final int alignmentStart, final String cigar, final byte[] readBases)
@@ -68,8 +67,8 @@ public class JunctionCanonicalizer
         if(shifted == 0)
             return JunctionCanonicalizationResult.unchanged();
 
-        mJunctionsShifted.addAndGet(shifted);
-        return new JunctionCanonicalizationResult(true, CigarUtils.cigarElementsToStr(elements), shifted);
+        mJunctionsShifted += shifted;
+        return new JunctionCanonicalizationResult(true, CigarUtils.cigarElementsToStr(elements));
     }
 
     // Evaluates intron at element index j and applies the best canonicalizing shift in place. Returns

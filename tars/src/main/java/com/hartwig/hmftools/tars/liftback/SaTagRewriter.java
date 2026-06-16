@@ -4,7 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 // Rewrites each SA tag entry from tx-contig to genomic coordinates.
-// NM is not recomputed — it disagrees with the rewritten CIGAR once N operators are introduced, same as the read's own NM.
+// NM is not recomputed - it disagrees with the rewritten CIGAR once N operators are introduced, same as the read's own NM.
 // Entries that fail to lift are dropped; survivors are deduped by (chrom, pos, strand, CIGAR).
 public class SaTagRewriter
 {
