@@ -161,6 +161,8 @@ public class AssemblyAligner extends ThreadTask
             return null;
         }
 
+        // FIXME? validate that the saga match is nearby to the assembly.
+
         SagaAlignment sagaAlignment = sagaMatch.alignment();
         AlignData alignData = AlignData.fromSaga(sagaAlignment);
         alignData.setFullSequenceData(assemblyAlignment.fullSequence(), assemblyAlignment.fullSequenceLength());

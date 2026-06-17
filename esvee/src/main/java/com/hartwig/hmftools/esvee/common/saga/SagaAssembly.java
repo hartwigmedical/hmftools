@@ -9,6 +9,10 @@ public record SagaAssembly(
         SagaVariant variant,
         // Junctions occur just before each of these indices in the assembly sequence.
         // Usually length 2. Can be length 1 for DELs where the junction is a single position.
+        // E.g.
+        // sequence = RRRJJJRRR
+        // junctionOffsets[0] = 3
+        // junctionOffsets[1] = 6
         List<Integer> junctionOffsets,
         String sequence
 )
@@ -17,16 +21,19 @@ public record SagaAssembly(
     {
         if(junctionOffsets.size() != 1 && junctionOffsets.size() != 2)
         {
-            throw new IllegalArgumentException("Invalid number of junction offsets");
+            throw new IllegalArgumentException("Expected 1 or 2 junction offsets");
         }
-        // E.g.
-        // sequence = RRRJJJRRR
-        // junctionOffset[0] = 3
-        // junctionOffset[1] = 6
+
+        if(variant.isInsert() && junctionOffsets.size() != 2)
+        {
+            throw new IllegalArgumentException("Insert should have 2 junction offsets");
+        }
+
         if(!junctionOffsets.stream().allMatch(offset -> offset >= 1 && offset < sequence.length()))
         {
             throw new IllegalArgumentException("Junction offsets out of bounds");
         }
+
         for(int i = 0; i < junctionOffsets.size() - 1; i++)
         {
             if(junctionOffsets.get(i) >= junctionOffsets.get(i + 1))
@@ -67,7 +74,8 @@ public record SagaAssembly(
         {
             throw new IllegalArgumentException("Invalid junction offsets");
         }
-        SagaVariant variant = new SagaVariant(id, breakend1, breakend2);
+        String insertSequence = sequence.substring(junctionOffset1, junctionOffset2 == null ? junctionOffset1 : junctionOffset2);
+        SagaVariant variant = new SagaVariant(id, breakend1, breakend2, insertSequence);
         List<Integer> junctionOffsets = junctionOffset2 == null ? List.of(junctionOffset1) : List.of(junctionOffset1, junctionOffset2);
         return new SagaAssembly(label, variant, junctionOffsets, sequence);
     }

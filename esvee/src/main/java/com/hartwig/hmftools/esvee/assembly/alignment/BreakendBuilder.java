@@ -98,57 +98,62 @@ public class BreakendBuilder
         SagaVariant sagaVariant = sagaAssembly.variant();
         SagaBreakend lowerSagaBreakend = sagaVariant.breakend1();
         SagaBreakend upperSagaBreakend = sagaVariant.breakend2();
-        List<Integer> sagaJunctionOffsets = sagaAlignment.sagaAssembly().junctionOffsets();
 
-        // Calculate the indices of the breakends within the phased assembly sequence.
-        List<Integer> seqJunctionOffsets = sagaAlignment.queryJunctionOffsets();
-
-        // If it's an insert, the insert sequence is between the two junctions. Otherwise, it's a deletion and there's no insert sequence.
-        String insertedBases;
-        boolean lowerBreakendInferred;
-        boolean upperBreakendInferred;
-        if(sagaJunctionOffsets.size() == 2)
-        {
-            String assemblySeq = mAssemblyAlignment.fullSequence();
-            int assemblyStart = min(max(0, seqJunctionOffsets.get(0)), assemblySeq.length() - 1);
-            int assemblyEnd = min(max(0, seqJunctionOffsets.get(1)), assemblySeq.length());
-
-            // If there wasn't enough phased assembly to cover the whole SAGA insert sequence, get the missing part of the insert from SAGA.
-            int startInferredLength = sagaAlignment.sagaStart() - sagaJunctionOffsets.get(0);
-            String startInferredSeq =
-                    startInferredLength > 0 ? sagaAssembly.sequence().substring(sagaJunctionOffsets.get(0), sagaAlignment.sagaStart()) : "";
-            int endInferredLength = sagaJunctionOffsets.get(1) - sagaAlignment.sagaEnd();
-            String endInferredSeq =
-                    endInferredLength > 0 ? sagaAssembly.sequence().substring(sagaAlignment.sagaEnd(), sagaJunctionOffsets.get(1)) : "";
-
-            insertedBases = startInferredSeq + assemblySeq.substring(assemblyStart, assemblyEnd) + endInferredSeq;
-
-            lowerBreakendInferred = startInferredLength > 0;
-            upperBreakendInferred = endInferredLength > 0;
-        }
-        else if(sagaJunctionOffsets.size() == 1)
-        {
-            insertedBases = "";
-            lowerBreakendInferred = false;
-            upperBreakendInferred = false;
-        }
-        else
+        // SAGA variants should only be indels, but check because other types are not handled here.
+        if(!lowerSagaBreakend.chromosome().equals(upperSagaBreakend.chromosome()))
         {
             return false;
         }
 
-        // TODO: homology
-        HomologyData homology = null;
+        List<Integer> sagaJunctionOffsets = sagaAssembly.junctionOffsets();
 
-        // TODO: use createIndelBreakends
+        // Calculate the indices of the breakends within the phased assembly sequence.
+        // Note these can be out of bounds if the assembly doesn't span the whole SAGA variant.
+        List<Integer> assemblyJunctionOffsets = sagaAlignment.queryJunctionOffsets();
 
-        Breakend lowerBreakend = new Breakend(
-                mAssemblyAlignment, lowerSagaBreakend.chromosome(), lowerSagaBreakend.position(), lowerSagaBreakend.orientation(),
-                insertedBases, homology);
+        String rawInsertSequence;
+        boolean lowerBreakendInferred;
+        boolean upperBreakendInferred;
+        if(sagaVariant.isInsert())
+        {
+            // Insertion - the assembly overlaps the SAGA insert sequence, which is bounded by the junction offsets.
 
-        Breakend upperBreakend = new Breakend(
-                mAssemblyAlignment, upperSagaBreakend.chromosome(), upperSagaBreakend.position(), upperSagaBreakend.orientation(),
-                insertedBases, homology);
+            String assemblySeq = mAssemblyAlignment.fullSequence();
+            int assemblyStart = min(max(0, assemblyJunctionOffsets.get(0)), assemblySeq.length() - 1);
+            int assemblyEnd = min(max(0, assemblyJunctionOffsets.get(1)), assemblySeq.length());
+
+            // If there wasn't enough phased assembly to cover the whole SAGA insert sequence, get the missing part of the insert from SAGA.
+            String sagaInsertSeq = sagaVariant.insertSequence();
+            int startInferredLength = sagaAlignment.sagaStart() - sagaJunctionOffsets.get(0);
+            int endInferredLength = sagaJunctionOffsets.get(1) - sagaAlignment.sagaEnd();
+            String startInferredSeq = startInferredLength > 0 ? sagaInsertSeq.substring(0, startInferredLength) : "";
+            String endInferredSeq = endInferredLength > 0 ? sagaInsertSeq.substring(sagaInsertSeq.length() - endInferredLength) : "";
+
+            rawInsertSequence = startInferredSeq + assemblySeq.substring(assemblyStart, assemblyEnd) + endInferredSeq;
+
+            lowerBreakendInferred = startInferredLength > 0;
+            upperBreakendInferred = endInferredLength > 0;
+        }
+        else
+        {
+            // Deletion - no insert sequence and the assembly spans the junction (otherwise it couldn't have matched the SAGA variant).
+            rawInsertSequence = "";
+            lowerBreakendInferred = false;
+            upperBreakendInferred = false;
+        }
+
+        int assemblyIndelStart = assemblyJunctionOffsets.get(0);
+        int assemblyIndelEnd = assemblyJunctionOffsets.size() > 1 ? assemblyJunctionOffsets.get(1) : assemblyJunctionOffsets.get(0) + 1;
+
+        IndelCoords indelCoords = new IndelCoords(lowerSagaBreakend.position(), upperSagaBreakend.position(), rawInsertSequence.length());
+        indelCoords.setInsertedBases(rawInsertSequence);
+
+        IndelBreakendData breakendData =
+                calcIndelBreakendsWithHomology(lowerSagaBreakend.chromosome(), indelCoords, assemblyIndelStart, assemblyIndelEnd);
+
+        Pair<Breakend, Breakend> breakends = createIndelBreakends(alignData, breakendData);
+        Breakend lowerBreakend = breakends.getLeft();
+        Breakend upperBreakend = breakends.getRight();
 
         if(lowerBreakendInferred)
         {
@@ -158,21 +163,6 @@ public class BreakendBuilder
         {
             upperBreakend.setSagaInferred();
         }
-
-        // There isn't really an indel in the alignment, but these are only used for assigning read support.
-        int[] indelIndices = new int[] {
-                seqJunctionOffsets.get(0),
-                seqJunctionOffsets.size() > 1 ? seqJunctionOffsets.get(1) : seqJunctionOffsets.get(0) + 1 };
-        BreakendSegment segment =
-                new BreakendSegment(mAssemblyAlignment.id(), sagaAlignment.queryStart(), 0, alignData, indelIndices);
-        lowerBreakend.addSegment(segment);
-        upperBreakend.addSegment(segment);
-
-        lowerBreakend.setOtherBreakend(upperBreakend);
-        upperBreakend.setOtherBreakend(lowerBreakend);
-
-        mAssemblyAlignment.addBreakend(lowerBreakend);
-        mAssemblyAlignment.addBreakend(upperBreakend);
 
         return true;
     }
@@ -299,8 +289,8 @@ public class BreakendBuilder
     {
     }
 
-    private IndelBreakendData calcIndelBreakendsWithHomology(final String chromosome, final IndelCoords indelCoords, int indelSeqStart,
-            int indelSeqEnd)
+    private IndelBreakendData calcIndelBreakendsWithHomology(final String chromosome, final IndelCoords indelCoords, int assemblyIndelStart,
+            int assemblyIndelEnd)
     {
         int lowerPosition = indelCoords.PosStart;
         int upperPosition = indelCoords.PosEnd;
@@ -329,7 +319,7 @@ public class BreakendBuilder
                     // convert an INS to a DUP and reassess homology
                     int totalInexactHomology = homology.InexactEnd - homology.InexactStart;
 
-                    indelSeqStart += totalInexactHomology;
+                    assemblyIndelStart += totalInexactHomology;
                     lowerPosition += 1;
                     upperPosition += totalInexactHomology - 1;
                     lowerOrient = REVERSE;
@@ -389,7 +379,7 @@ public class BreakendBuilder
         }
 
         return new IndelBreakendData(
-                chromosome, lowerPosition, lowerOrient, upperPosition, upperOrient, insertedBases, homology, indelSeqStart, indelSeqEnd);
+                chromosome, lowerPosition, lowerOrient, upperPosition, upperOrient, insertedBases, homology, assemblyIndelStart, assemblyIndelEnd);
     }
 
     private Pair<Breakend, Breakend> createIndelBreakends(final AlignData alignData, final IndelBreakendData breakendData)
