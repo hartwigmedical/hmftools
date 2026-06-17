@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.hartwig.hmftools.tars.common.BwaMemScore;
 import com.hartwig.hmftools.tars.common.ContigEntry;
 
 import htsjdk.samtools.Cigar;
@@ -28,8 +29,8 @@ public class LiftBackResolver
     private static final String XS_TAG = "XS";
     private static final String NM_TAG = "NM";
 
-    private static final int RESCUED_MAPQ = 60;
-    private static final int INPUT_UNIQUE_MAPQ = 60;
+    // bwa's unique-placement MAPQ, also the value liftback assigns when it resolves a placement.
+    private static final int RESCUE_MAPQ = 60;
 
     // Set to 1: every tx-contig junction is annotated by construction, so even a 1bp anchor is a real exon
     // base. A higher floor manufactured false junction diffs by clipping legitimate short anchors.
@@ -38,13 +39,6 @@ public class LiftBackResolver
     // Higher than bare floor because an adjacent softclip indicates bwa over-ran the exon boundary -
     // the tiny anchor is an over-extension artefact, not the read's real terminus.
     private static final int ANNOTATED_JUNCTION_MIN_SOFTCLIP_ANCHOR_BP = 3;
-
-    // bwa-mem2 default scoring (match +1, mismatch -4, gap-open -6, gap-extend -1; soft-clips not penalised).
-    // XA alts carry no AS tag, so score is reconstructed to filter out sub-optimal competitors.
-    private static final int SCORE_MATCH = 1;
-    private static final int SCORE_MISMATCH = 4;
-    private static final int SCORE_GAP_OPEN = 6;
-    private static final int SCORE_GAP_EXTEND = 1;
 
     // per-alt-contig list of segments sorted by altStart for binary search back to the owning transcript.
     private final Map<String, List<ContigEntry>> mSegmentsByAltContig;
@@ -206,7 +200,7 @@ public class LiftBackResolver
                 allAlignments);
     }
 
-    // MAPQ=0 on a tx-contig supplementary is the multi-alt-contig tie artefact; rescue to RESCUED_MAPQ.
+    // MAPQ=0 on a tx-contig supplementary is the multi-alt-contig tie artefact; rescue to RESCUE_MAPQ.
     private LiftBackResult supplementaryResult(final SAMRecord record)
     {
         final LiftedAlignment lifted = liftSelf(record);
@@ -217,7 +211,7 @@ public class LiftBackResolver
         lifted.IsPrimaryChoice = true;
 
         final int inputMapq = record.getMappingQuality();
-        final int outputMapq = (lifted.fromTxContig() && inputMapq == 0) ? RESCUED_MAPQ : inputMapq;
+        final int outputMapq = (lifted.fromTxContig() && inputMapq == 0) ? RESCUE_MAPQ : inputMapq;
         final int numRefAlts = lifted.fromTxContig() ? 0 : 1;
         final int numTxAlts = lifted.fromTxContig() ? 1 : 0;
 
@@ -373,9 +367,10 @@ public class LiftBackResolver
             }
         }
 
+        // XA alts carry no AS tag, so score is reconstructed from the CIGAR to filter out sub-optimal competitors.
         final int mismatches = Math.max(0, alignment.NumMismatches - indelBases);
-        return (matched - mismatches) * SCORE_MATCH - mismatches * SCORE_MISMATCH
-                - gapOps * SCORE_GAP_OPEN - indelBases * SCORE_GAP_EXTEND;
+        return (matched - mismatches) * BwaMemScore.MATCH + mismatches * BwaMemScore.MISMATCH
+                + gapOps * BwaMemScore.GAP_OPEN + indelBases * BwaMemScore.GAP_EXTEND;
     }
 
     private static int countDistinctCigarsAtLocus(final List<LiftedAlignment> alignments, final LiftedAlignment primary)
@@ -435,7 +430,7 @@ public class LiftBackResolver
                 List.of());
     }
 
-    // Rescue to RESCUED_MAPQ if: swapped by discriminator; or MAPQ=0 + single locus + no unresolved hidden tie.
+    // Rescue to RESCUE_MAPQ if: swapped by discriminator; or MAPQ=0 + single locus + no unresolved hidden tie.
     // Hidden tie (XS==AS, ref-only primary, not in annotated exon) blocks rescue - the unseen alt may be real.
     // Gated on hasTxMatch: without a tx alignment, MAPQ-0 is not a tx-artefact and is left alone.
     static int decidePrimaryMapq(
@@ -445,12 +440,10 @@ public class LiftBackResolver
         if(!hasTxMatch)
             return inputMapq;
         if(swapped)
-            return RESCUED_MAPQ;
+            return RESCUE_MAPQ;
         final boolean unresolvedHiddenTie = hiddenTie && !primaryFromTxContig && !primaryInAnnotatedExon;
         if(numLoci == 1 && inputMapq == 0 && !unresolvedHiddenTie)
-            return RESCUED_MAPQ;
-        if(inputMapq == INPUT_UNIQUE_MAPQ)
-            return RESCUED_MAPQ;
+            return RESCUE_MAPQ;
         return inputMapq;
     }
 

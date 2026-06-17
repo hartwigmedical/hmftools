@@ -311,7 +311,7 @@ public class JunctionRescueResolverTest
     @Test
     public void testRejectNovelJunctionWhenAnnotatedOnly()
     {
-        final RescueConfig strict = new RescueConfig(true, 21, 1_000_000, 3, 4, true, 5, 0, 0, RescueConfig.DEFAULT_MIN_PARTIAL_MATCH_RUN);
+        final RescueConfig strict = new RescueConfig(true, 21, 1_000_000, 3, 4, true, 5, 0, RescueConfig.DEFAULT_MIN_PARTIAL_MATCH_RUN);
         final RescueCandidate cand = candidate(CHR1, true, READ_LEN, 1000, "94M57S", 60,
                 supp(0, CHR1, true, 1200, "94S57M", 60));
 
@@ -324,7 +324,7 @@ public class JunctionRescueResolverTest
     @Test
     public void testAcceptNovelJunctionWhenAnnotatedOnlyFalse()
     {
-        final RescueConfig perm = new RescueConfig(true, 21, 1_000_000, 3, 4, false, 0, 0, 0, RescueConfig.DEFAULT_MIN_PARTIAL_MATCH_RUN);
+        final RescueConfig perm = new RescueConfig(true, 21, 1_000_000, 3, 4, false, 0, 0, RescueConfig.DEFAULT_MIN_PARTIAL_MATCH_RUN);
         final RescueCandidate cand = candidate(CHR1, true, READ_LEN, 1000, "94M57S", 60,
                 supp(0, CHR1, true, 1200, "94S57M", 60));
 
@@ -525,26 +525,6 @@ public class JunctionRescueResolverTest
     }
 
     @Test
-    public void testPrimaryMapqFloorKnobStillRejects()
-    {
-        // Default floor is 0 (MAPQ-0 primaries merge), but a floor of 1 rejects them.
-        final RescueConfig floorConfig = new RescueConfig(
-                true, RescueConfig.DEFAULT_MIN_INTRON_LENGTH, RescueConfig.DEFAULT_MAX_INTRON_LENGTH,
-                RescueConfig.DEFAULT_MIN_ANCHOR_OVERHANG, RescueConfig.DEFAULT_MAX_CHAIN_DEPTH, false,
-                RescueConfig.DEFAULT_SOFTCLIP_TOLERANCE, RescueConfig.DEFAULT_MAX_BOUNDARY_SHIFT, 1,
-                RescueConfig.DEFAULT_MIN_PARTIAL_MATCH_RUN);
-
-        final ChrBaseRegion intron = new ChrBaseRegion(CHR1, 1095, 1499);
-        final RescueCandidate cand = candidate(CHR1, true, READ_LEN, 1001, "94M57S", 0,
-                supp(0, CHR1, true, 1500, "94S57M", 60));
-
-        final RescueResult res = new JunctionRescueResolver(annotated(intron), floorConfig).resolve(cand);
-
-        assertFalse(res.merged());
-        assertEquals(RescueRejectReason.LOW_PRIMARY_MAPQ, res.rejectReason());
-    }
-
-    @Test
     public void testMergeWhenSuppMapqZero()
     {
         final ChrBaseRegion intron = new ChrBaseRegion(CHR1, 1095, 1499);
@@ -560,7 +540,7 @@ public class JunctionRescueResolverTest
     public void testChainDepthCap()
     {
         // cap=2 stops the chain after 2 merges even when more supps are available.
-        final RescueConfig cappedConfig = new RescueConfig(true, 21, 1_000_000, 3, 2, true, 0, 0, 0, RescueConfig.DEFAULT_MIN_PARTIAL_MATCH_RUN);
+        final RescueConfig cappedConfig = new RescueConfig(true, 21, 1_000_000, 3, 2, true, 0, 0, RescueConfig.DEFAULT_MIN_PARTIAL_MATCH_RUN);
 
         final int p = 1000;
         final RescueCandidate cand = candidate(CHR1, true, READ_LEN, p, "30M121S", 60,
@@ -599,7 +579,7 @@ public class JunctionRescueResolverTest
     public void testStatisticsCounters()
     {
         // AnnotatedOnly=true so the novel-junction reject is observable.
-        final RescueConfig strict = new RescueConfig(true, 21, 1_000_000, 3, 4, true, 5, 0, 0, RescueConfig.DEFAULT_MIN_PARTIAL_MATCH_RUN);
+        final RescueConfig strict = new RescueConfig(true, 21, 1_000_000, 3, 4, true, 5, 0, RescueConfig.DEFAULT_MIN_PARTIAL_MATCH_RUN);
         final JunctionRescueResolver resolver = new JunctionRescueResolver(
                 annotated(new ChrBaseRegion(CHR1, 1095, 1499)), strict);
 
@@ -729,7 +709,7 @@ public class JunctionRescueResolverTest
     @Test
     public void testNoAnnotatedSnapWithAnnotatedOnlyTrueRejects()
     {
-        final RescueConfig strict = new RescueConfig(true, 21, 1_000_000, 3, 4, true, 5, 0, 0, RescueConfig.DEFAULT_MIN_PARTIAL_MATCH_RUN);
+        final RescueConfig strict = new RescueConfig(true, 21, 1_000_000, 3, 4, true, 5, 0, RescueConfig.DEFAULT_MIN_PARTIAL_MATCH_RUN);
         final RescueCandidate cand = candidate(CHR1, true, 151, 1001, "94M57S", 60,
                 supp(0, CHR1, true, 1500, "92S59M", 60));
 
@@ -755,7 +735,7 @@ public class JunctionRescueResolverTest
     @Test
     public void testNoAnnotatedSnapWithAnnotatedOnlyFalseFallsBackToTrustPrimary()
     {
-        final RescueConfig perm = new RescueConfig(true, 21, 1_000_000, 3, 4, false, 5, 0, 0, RescueConfig.DEFAULT_MIN_PARTIAL_MATCH_RUN);
+        final RescueConfig perm = new RescueConfig(true, 21, 1_000_000, 3, 4, false, 5, 0, RescueConfig.DEFAULT_MIN_PARTIAL_MATCH_RUN);
         final RescueCandidate cand = candidate(CHR1, true, 151, 1001, "94M57S", 60,
                 supp(0, CHR1, true, 1500, "92S59M", 60));
 

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.tars.liftback.tailextend;
 
+import com.hartwig.hmftools.tars.common.BwaMemScore;
+
 // Re-evaluates a lifted terminal region (bwa's M-tail anchor + soft-clip) against the contiguous
 // reference, independent of bwa's tx-contig M/S split. bwa scored the alignment over the spliced
 // transcript contig, so a locally-negative stretch (e.g. a 3M that is 2 matches + 1 mismatch, scoring
@@ -8,10 +10,6 @@ package com.hartwig.hmftools.tars.liftback.tailextend;
 // maximises cumulative bwa-mem score walking from the near-exon boundary outward.
 public final class BoundaryReclaim
 {
-    // bwa-mem defaults: match +1, mismatch -4.
-    public static final int MATCH_SCORE = 1;
-    public static final int MISMATCH_SCORE = -4;
-
     private BoundaryReclaim() {}
 
     // read and ref are aligned index-for-index, ordered from the near-exon boundary outward. Returns the
@@ -26,7 +24,7 @@ public final class BoundaryReclaim
         int bestLength = 0;
         for(int i = 0; i < len; ++i)
         {
-            score += basesEqualIgnoreCase(read[i], ref[i]) ? MATCH_SCORE : MISMATCH_SCORE;
+            score += basesEqualIgnoreCase(read[i], ref[i]) ? BwaMemScore.MATCH : BwaMemScore.MISMATCH;
             if(score >= bestScore && score > 0)
             {
                 bestScore = score;
@@ -45,7 +43,7 @@ public final class BoundaryReclaim
         int bestScore = 0;
         for(int i = 0; i < len; ++i)
         {
-            score += basesEqualIgnoreCase(read[i], ref[i]) ? MATCH_SCORE : MISMATCH_SCORE;
+            score += basesEqualIgnoreCase(read[i], ref[i]) ? BwaMemScore.MATCH : BwaMemScore.MISMATCH;
             if(score > bestScore)
                 bestScore = score;
         }
@@ -59,7 +57,7 @@ public final class BoundaryReclaim
         int total = 0;
         final int len = Math.min(read.length, ref.length);
         for(int i = 0; i < len; ++i)
-            total += basesEqualIgnoreCase(read[i], ref[i]) ? MATCH_SCORE : MISMATCH_SCORE;
+            total += basesEqualIgnoreCase(read[i], ref[i]) ? BwaMemScore.MATCH : BwaMemScore.MISMATCH;
         return total;
     }
 

@@ -20,9 +20,6 @@ public class RescueConfig
     // unmatched tail). Partial matches need a longer anchor than full-match clips because the
     // unexplained residual raises false-positive risk; 11 makes coincidental matches implausible.
     public static final int DEFAULT_MIN_PARTIAL_MATCH_RUN = 11;
-    // Floor is 0 because the merge validates its own anchors; MAPQ-0 primaries are exactly the
-    // tx-contig duplicate artifact the lift is designed to rescue. Knob retained for callers.
-    public static final int DEFAULT_MIN_PRIMARY_MAPQ = 0;
 
     public final boolean Enabled;
     public final int MinIntronLength;
@@ -32,14 +29,12 @@ public class RescueConfig
     public final boolean AnnotatedOnly;
     public final int SoftclipTolerance;
     public final int MaxBoundaryShift;
-    public final int MinPrimaryMapq;
     public final int MinPartialMatchRun;
 
     public RescueConfig(
             final boolean enabled, final int minIntronLength, final int maxIntronLength,
             final int minAnchorOverhang, final int maxChainDepth, final boolean annotatedOnly,
-            final int softclipTolerance, final int maxBoundaryShift, final int minPrimaryMapq,
-            final int minPartialMatchRun)
+            final int softclipTolerance, final int maxBoundaryShift, final int minPartialMatchRun)
     {
         Enabled = enabled;
         MinIntronLength = minIntronLength;
@@ -49,7 +44,6 @@ public class RescueConfig
         AnnotatedOnly = annotatedOnly;
         SoftclipTolerance = softclipTolerance;
         MaxBoundaryShift = maxBoundaryShift;
-        MinPrimaryMapq = minPrimaryMapq;
         MinPartialMatchRun = minPartialMatchRun;
     }
 
@@ -60,7 +54,7 @@ public class RescueConfig
                 false,
                 DEFAULT_MIN_INTRON_LENGTH, DEFAULT_MAX_INTRON_LENGTH,
                 DEFAULT_MIN_ANCHOR_OVERHANG, DEFAULT_MAX_CHAIN_DEPTH,
-                true, 0, 0, DEFAULT_MIN_PRIMARY_MAPQ, DEFAULT_MIN_PARTIAL_MATCH_RUN);
+                true, 0, 0, DEFAULT_MIN_PARTIAL_MATCH_RUN);
     }
 
     public static RescueConfig enabledDefaults()
@@ -71,7 +65,6 @@ public class RescueConfig
                 true,
                 DEFAULT_MIN_INTRON_LENGTH, DEFAULT_MAX_INTRON_LENGTH,
                 DEFAULT_MIN_ANCHOR_OVERHANG, DEFAULT_MAX_CHAIN_DEPTH,
-                false, DEFAULT_SOFTCLIP_TOLERANCE, DEFAULT_MAX_BOUNDARY_SHIFT, DEFAULT_MIN_PRIMARY_MAPQ,
-                DEFAULT_MIN_PARTIAL_MATCH_RUN);
+                false, DEFAULT_SOFTCLIP_TOLERANCE, DEFAULT_MAX_BOUNDARY_SHIFT, DEFAULT_MIN_PARTIAL_MATCH_RUN);
     }
 }

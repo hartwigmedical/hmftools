@@ -15,7 +15,6 @@ public enum RescueRejectReason
     NOVEL_JUNCTION,               // candidate intron not in annotated set (and AnnotatedOnly is true)
     COMPLEX_CIGAR_SHAPE,          // hard clip, indel adjacent to softclip boundary, etc.
     AMBIGUOUS_SUPP_CHOICE,        // multiple equally-good candidate supps; refuse to guess
-    LOW_PRIMARY_MAPQ,             // primary MAPQ below the merge floor - placement not trusted enough
     MULTIPLE_SUPPS_IN_REACH,      // more than one supp within merge reach; refuse to guess which splice
     // ref-verify path: primary has terminal softclip but no matching supp
     REF_VERIFY_NO_CANDIDATE_EXON, // no annotated junction's adjacent exon lines up with the softclip
