@@ -1,17 +1,13 @@
-TARS LIFTBACK POLICY
-====================
+# TARS liftback policy
 
 How liftback decides between a bwa reference (ref) placement and a transcript-contig (tx) placement, and
 how it then modifies a read on the way to the genomic output BAM. Values below are the current in-code
 defaults; the parenthesised name is the constant they come from.
 
+## 0. CONSTANTS IN PLAY
 
------------------------------------------------------------------------------------------------------------
-0. CONSTANTS IN PLAY
------------------------------------------------------------------------------------------------------------
-
---- Junctions / anchors ---
-
+### Junctions / anchors
+```text
 MIN_JUNCTION_ANCHOR = 8
     : WHERE  -> SpliceCommon
     : WHY    -> an N is trusted as a real splice only when BOTH flanking M runs are >= 8 bp.
@@ -20,7 +16,8 @@ MIN_JUNCTION_ANCHOR = 8
 
 ANNOTATED_JUNCTION_MIN_ANCHOR_BP = 1
     : WHERE  -> LiftBackResolver
-    : WHY    -> every tx-contig junction is annotated by construction, so even a 1 bp anchor is a real exon base.
+    : WHY    -> every tx-contig junction is annotated by construction, so even a 1 bp anchor is a
+                real exon base.
     : GOTCHA -> applies only to a BARE anchor; an anchor next to a softclip uses the 3 bp floor below instead.
 
 ANNOTATED_JUNCTION_MIN_SOFTCLIP_ANCHOR_BP = 3
@@ -29,23 +26,27 @@ ANNOTATED_JUNCTION_MIN_SOFTCLIP_ANCHOR_BP = 3
 
 SPLICE_FLANKING_DELETION_MAX_BP = 5
     : WHERE  -> ContigTranslator
-    : WHY    -> a small D straddling an exon boundary is a tx-FASTA off-by-N artefact; fold it into the intron N.
+    : WHY    -> a small D straddling an exon boundary is a tx-FASTA off-by-N artefact; fold it into
+                the intron N.
     : GOTCHA -> bound is inclusive (<= 5 absorbed, 6+ preserved).
+```
 
---- Scoring (bwa-mem defaults, used to re-score lifted boundaries) ---
-
+### Scoring (bwa-mem defaults, used to re-score lifted boundaries)
+```text
 MATCH / MISMATCH = +1 / -4
     : WHERE  -> BwaMemScore (shared by LiftBackResolver + BoundaryReclaim)
     : WHY    -> the one bwa-mem affine model used by both the base walk and the CIGAR reconstruction.
-    : GOTCHA -> XA alts carry no AS tag, so their score is RECONSTRUCTED from the CIGAR, not read off the record.
+    : GOTCHA -> XA alts carry no AS tag, so their score is RECONSTRUCTED from the CIGAR, not read
+                off the record.
 
 GAP_OPEN / GAP_EXTEND = -6 / -1
     : WHERE  -> BwaMemScore (used by LiftBackResolver's CIGAR reconstruction)
     : WHY    -> standard affine gap cost for the reconstructed score.
     : GOTCHA -> soft-clips are NOT penalised (clipped bases score 0), so a clipped alt can still win on score.
+```
 
---- Rescue (-rescue_via_supp) ---
-
+### Rescue (-rescue_via_supp)
+```text
 DEFAULT_MIN_INTRON_LENGTH = 21
     : WHERE  -> RescueConfig
     : WHY    -> shortest plausible spliceosomal intron; below it an N gap is more likely a deletion.
@@ -64,26 +65,32 @@ DEFAULT_MAX_CHAIN_DEPTH = 4
 
 DEFAULT_SOFTCLIP_TOLERANCE = 5
     : WHERE  -> RescueConfig
-    : WHY    -> primary/supp boundaries often disagree by 1-5 bp; snap to an annotated junction within this window.
+    : WHY    -> primary/supp boundaries often disagree by 1-5 bp; snap to an annotated junction
+                within this window.
 
 DEFAULT_MAX_BOUNDARY_SHIFT = 8
     : WHERE  -> RescueConfig
-    : WHY    -> bwa over-extends past the true exon boundary by up to ~8 bp; trim that far when probing for a donor/acceptor.
+    : WHY    -> bwa over-extends past the true exon boundary by up to ~8 bp; trim that far when
+                probing for a donor/acceptor.
 
 DEFAULT_MIN_PARTIAL_MATCH_RUN = 11
     : WHERE  -> RescueConfig
-    : WHY    -> exon-proximal matched run required for a partial ref-verify rescue (clip with an unmatched outer tail).
-    : GOTCHA -> longer than a full-match clip needs ON PURPOSE: the unexplained residual raises false-positive risk.
+    : WHY    -> exon-proximal matched run required for a partial ref-verify rescue (clip with an
+                unmatched outer tail).
+    : GOTCHA -> longer than a full-match clip needs ON PURPOSE: the unexplained residual raises
+                false-positive risk.
 
 ref-verify match run = bwa-mem score walk (match +1, mismatch -4)
     : WHERE  -> BoundaryReclaim, via JunctionRescueResolver
     : WHY    -> the clip-vs-candidate-exon match length is the score-maximising proximal prefix, the same
-                model collapse + tail-extend use; a mismatch is reclaimed only if later matches recover the score.
+                model collapse + tail-extend use; a mismatch is reclaimed only if later matches
+                recover the score.
     : GOTCHA -> outer residual past the score-max prefix stays soft-clipped (e.g. 20S -> 18M 2S, not 20M);
                 a longer floor (DEFAULT_MIN_PARTIAL_MATCH_RUN = 11) still gates partial-match rescues.
+```
 
---- Tail extension (-extend_softclip_tails) ---
-
+### Tail extension (-extend_softclip_tails)
+```text
 DEFAULT_MIN_SOFTCLIP_LENGTH = 3
     : WHERE  -> TailExtensionConfig
     : WHY    -> shorter terminal clips are not worth re-walking into the genome.
@@ -96,9 +103,10 @@ DEFAULT_MAX_EXTENSION = 30
     : WHERE  -> TailExtensionConfig
     : WHY    -> cap on bases reclaimed into the genome.
     : GOTCHA -> also bounds the annotated-junction guard probe window; caps even when more bases would match.
+```
 
---- Terminal micro-junction collapse ---
-
+### Terminal micro-junction collapse
+```text
 anchor threshold = MIN_JUNCTION_ANCHOR (8)
     : WHERE  -> TerminalMicroJunctionCollapser (via SpliceCommon)
     : WHY    -> a sub-threshold terminal anchor across an intron is a candidate fabricated junction.
@@ -108,12 +116,14 @@ reclaim scoring = bwa-mem score (match +1, mismatch -4)
     : WHERE  -> BoundaryReclaim, via TerminalMicroJunctionCollapser
     : WHY    -> the reclaimed prefix is the one maximising cumulative bwa-mem score walking from the near-exon
                 boundary outward; bwa's split is kept only when the anchor scores STRICTLY higher on the far
-                exon than the whole terminal window does extended contiguously. No fixed mismatch-count threshold.
+                exon than the whole terminal window does extended contiguously. No fixed
+                mismatch-count threshold.
     : GOTCHA -> NOT a "max(1, length/10)" tolerance; an internal mismatch is reclaimed when later matches
                 lift the cumulative score back to its running max.
+```
 
---- Canonicalize ---
-
+### Canonicalize
+```text
 DEFAULT_MAX_SHIFT = 5
     : WHERE  -> JunctionCanonicalizer
     : WHY    -> an intron may slide at most 5 bp onto a higher splice motif.
@@ -123,13 +133,15 @@ motif tiers: NONE 0  <  SEMI_CANONICAL 1  <  CANONICAL 2  <  ANNOTATED 3
     : WHERE  -> SpliceMotif
     : WHY    -> rank used to pick the best donor/acceptor; a slide must STRICTLY improve the tier.
     : GOTCHA -> classify() is strand-agnostic: it matches GT-AG and its reverse-complement CT-AC alike.
+```
 
---- MAPQ / NH ---
-
+### MAPQ / NH
+```text
 RESCUE_MAPQ = 60
     : WHERE  -> LiftBackResolver
     : WHY    -> bwa's unique-placement MAPQ, and the value liftback assigns when it resolves a placement
-                (discriminator swap, or rescued MAPQ-0 unique). One constant: the recognise and assign values coincide.
+                (discriminator swap, or rescued MAPQ-0 unique). One constant: the recognise and
+                assign values coincide.
 
 SUPP_RESCUE_MAPQ_CAP = 55
     : WHERE  -> LiftBackGroupProcessor
@@ -139,46 +151,54 @@ SUPP_RESCUE_MAPQ_CAP = 55
 NH = max(numLoci, 1)
     : WHERE  -> LiftBackGroupProcessor / LiftBackRecordOps
     : WHY    -> number of distinct genomic loci the read lifts back to.
-    : GOTCHA -> counts LOCI, not emitted records; one junction across many tx contigs would otherwise inflate NH.
+    : GOTCHA -> counts LOCI, not emitted records; one junction across many tx contigs would
+                otherwise inflate NH.
 
 over-cap unmap = (inputMapq == 0 AND numXaAlts == 0)
     : WHERE  -> LiftBackRecordOps.exceedsMappingCap
-    : WHY    -> bwa was run with -h 75 (XA cap); a read mapping to more loci than the cap is emitted MAPQ 0 with NO
-                XA (the alt list is suppressed, not truncated). Too many places to trust, so the primary is unmapped.
-    : GOTCHA -> keyed on the INPUT state, not the post-lift MAPQ: with no XA the resolver sees a single locus and
+    : WHY    -> bwa was run with -h 75 (XA cap); a read mapping to more loci than the cap is
+                emitted MAPQ 0 with NO XA (the alt list is suppressed, not truncated). Too many
+                places to trust, so the primary is unmapped.
+    : GOTCHA -> keyed on the INPUT state, not the post-lift MAPQ: with no XA the resolver sees a
+                single locus and
                 decidePrimaryMapq would otherwise rescue the MAPQ to 60. A unique read (MAPQ 60, no XA) and a
                 few-way multimapper (MAPQ 0 WITH XA) are both excluded.
+```
 
---- Excluded regions (-rna_unmap_regions) ---
-
+### Excluded regions (-rna_unmap_regions)
+```text
 excluded region overlap  (checked POST-lift on genomic coords)
     : WHERE  -> ExcludedRegions.excludes, via LiftBackGroupProcessor
     : WHY    -> curated rRNA / 7SL / acrocentric / multi-map contamination zones. A read lifting into one is
-                contamination: the primary is UNMAPPED (REDUX-style, kept not dropped), a supplementary is DROPPED.
+                contamination: the primary is UNMAPPED (REDUX-style, kept not dropped), a
+                supplementary is DROPPED.
     : GOTCHA -> POST-lift, not pre-lift: a tx-contig read's input coords are chrN_tx and can't be tested against
-                the genomic region list, and some excluded zones (acrocentric p-arms) ARE in the transcriptome, so
+                the genomic region list, and some excluded zones (acrocentric p-arms) ARE in the
+                transcriptome, so
                 contamination reaches them via tx contigs and is only visible once lifted to genomic coords.
-                Primary unmap is done by flipping its LiftBackResult to UNMAPPED, so the mate is coordinated via the
+                Primary unmap is done by flipping its LiftBackResult to UNMAPPED, so the mate is
+                coordinated via the
                 cache (willBeUnmapped) and the dropped supps' SA entries are removed from the primary's SA tag.
+```
 
---- Primary AS floor ---
-
+### Primary AS floor
+```text
 PRIMARY_AS_UNMAP_THRESHOLD = 30
     : WHERE  -> LiftBackGroupProcessor
-    : WHY    -> bwa runs at -T 19 to surface short-anchor supps for rescue; a primary still below the default -T 30
-                AS floor after liftback (not rescued/extended/collapsed) is residual short-anchor noise, so it is unmapped.
+    : WHY    -> bwa runs at -T 19 to surface short-anchor supps for rescue; a primary still below
+                the default -T 30 AS floor after liftback (not rescued/extended/collapsed) is
+                residual short-anchor noise, so it is unmapped.
     : GOTCHA -> gated on rescue running; AS is never recomputed, so post-processed primaries keep a stale-low AS
                 and are exempt. Unmapped (not dropped) to keep the pair + SA references intact.
 
 SUPP_AS_DROP_THRESHOLD = 30
     : WHERE  -> LiftBackGroupProcessor
-    : WHY    -> a supplementary in the [19, 30) AS band that survived rescue + tail-extend is residual noise; drop it.
+    : WHY    -> a supplementary in the [19, 30) AS band that survived rescue + tail-extend is
+                residual noise; drop it.
+```
 
-
------------------------------------------------------------------------------------------------------------
-1. REF vs TX DECISION TREE  (LiftBackDiscriminator.categorize, then .apply)
------------------------------------------------------------------------------------------------------------
-
+## 1. REF vs TX DECISION TREE  (LiftBackDiscriminator.categorize, then .apply)
+```text
 Inputs per lifted alignment set:
   hasRef / hasTx ....... at least one ref / tx alignment present
   loci ................. count of distinct genomic chrom:pos loci
@@ -222,12 +242,10 @@ Inputs per lifted alignment set:
                 by construction, so there is always a ref to promote to.)
     no-swap   : REF_SINGLE, TX_SINGLE, BOTH_AGREE, BOTH_AMBIGUOUS, REF_MULTI, TX_MULTI, BOTH_MULTI leave the
                 primary as-is and drop nothing.
+```
 
-
------------------------------------------------------------------------------------------------------------
-2. HOW LIFTBACK MODIFIES A READ
------------------------------------------------------------------------------------------------------------
-
+## 2. HOW LIFTBACK MODIFIES A READ
+```text
 Passes run per name-group in this order; each feeds the next. Ref-dependent passes (rescue ref-verify,
 collapse, tail-extend, canonicalize) only fire when a reference genome is loaded.
 
@@ -292,19 +310,18 @@ collapse, tail-extend, canonicalize) only fire when a reference genome is loaded
   POST-FILTERS (unmap, never drop - the pair + SA references are preserved)
           - over the XA cap (input MAPQ 0, no XA)  -> primary unmapped: maps to too many loci to place.
           - lifts into an excluded region          -> primary UNMAPPED (REDUX-style: kept, flagged unmapped, no
-            cigar, placed on the mate's coords if the mate stays mapped, else *:0); supplementary DROPPED and its
-            entry removed from the primary's SA. Checked post-lift on genomic coords (see Excluded regions above).
+            cigar, placed on the mate's coords if the mate stays mapped, else *:0); supplementary
+            DROPPED and its entry removed from the primary's SA. Checked post-lift on genomic
+            coords (see Excluded regions above).
           - residual short-anchor primary          -> unmapped when rescue ran and post-lift AS is still
             below PRIMARY_AS_UNMAP_THRESHOLD (30) and the read was not rescued/extended/collapsed.
           - residual short-anchor supplementary     -> dropped when its AS is in the [19, 30) band after rescue.
           - any dropped supplementary (excluded / orphan / low-AS) has its SA entry stripped from the primary's
             SA tag (SaTagRewriter excludeKeys), so the primary never references a supp that is not emitted.
+```
 
-
------------------------------------------------------------------------------------------------------------
-3. RULE PRECEDENCE  (what overrides what, highest priority first)
------------------------------------------------------------------------------------------------------------
-
+## 3. RULE PRECEDENCE  (what overrides what, highest priority first)
+```text
 When several rules could touch one record, they resolve in this order:
 
   1. UNMAPPED / LIFT_FAILED
@@ -314,14 +331,15 @@ When several rules could touch one record, they resolve in this order:
 
   2. OVER-CAP UNMAP  (input MAPQ 0 + no XA)
        Overrides the MAPQ rescue below: even though the missing XA makes the read look single-locus (which would
-       rescue MAPQ to 60), the primary is unmapped. Beats the discriminator result too - it does not matter which
-       placement won if the read maps to 75+ loci.
+       rescue MAPQ to 60), the primary is unmapped. Beats the discriminator result too - it does
+       not matter which placement won if the read maps to 75+ loci.
 
   3. REF vs TX DISCRIMINATOR  (Part 1)
        Decides which placement is primary BEFORE the refinement passes run. A swap fixes the MAPQ at 60.
        Within the discriminator, a clean ref full-match lets REF swap out a tx primary in both REF-WINS cases:
        tx spans a real N "intron" the ref reads straight through (BOTH_TX_JUNCTION_REF_MATCH = unspliced /
-       retained intron / DNA), or tx only softclips at the boundary (BOTH_TX_SOFTCLIP_REF_MATCH = intron retention).
+       retained intron / DNA), or tx only softclips at the boundary (BOTH_TX_SOFTCLIP_REF_MATCH =
+       intron retention).
 
   4. REFINEMENT PASSES, in order: rescue -> collapse -> tail-extend -> canonicalize  (Part 2, steps 2-5)
        Each consumes the previous pass's CIGAR. Rescue caps MAPQ at 55 (overriding a 60). Collapse, tail-extend
@@ -340,6 +358,10 @@ The full end-to-end behaviour is pinned by LiftBackEndToEndTest (full per-group 
   offMotifJunctionSlidToCanonical               - junction slid 2 bp onto a GT-AG motif (canonicalize).
   nativeGenomicReadPassesThroughUnchanged       - a read already on the genome is left untouched.
 
-Component layers below the engine: LiftBackResolverTest (categorize + the resolved LiftBackResult),
-SpliceLiftBackApplyTest (resolve + apply record mutation: CIGAR / XA / XS / NH / unmap), LiftBackDiscriminatorTest
-(the full category matrix + swap/drop), and the rescue / tailextend suites for the individual passes.
+Component layers below the engine:
+
+  LiftBackResolverTest                          - categorize + the resolved LiftBackResult.
+  SpliceLiftBackApplyTest                       - resolve + apply record mutation: CIGAR / XA / XS / NH / unmap.
+  LiftBackDiscriminatorTest                     - the full category matrix + swap/drop.
+  rescue / tailextend suites                    - the individual refinement passes.
+```
