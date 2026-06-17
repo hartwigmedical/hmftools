@@ -402,8 +402,8 @@ public class Fragment
             unmappedRead.setInferredInsertSize(0);
             unmappedRead.setReadUnmappedFlag(true);
             unmappedRead.setMappingQuality(0);
-            unmappedRead.setReferenceIndex(NO_CHROMOSOME_INDEX);
-            unmappedRead.setReferenceName(NO_CHROMOSOME_NAME);
+            unmappedRead.setReferenceIndex(mappedRead.getReferenceIndex());
+            unmappedRead.setReferenceName(mappedRead.getReferenceName());
             unmappedRead.setAlignmentStart(mappedRead.getAlignmentStart());
             unmappedRead.setCigarString(NO_CIGAR);
         }
