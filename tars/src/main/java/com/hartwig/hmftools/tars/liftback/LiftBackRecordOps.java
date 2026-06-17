@@ -130,9 +130,14 @@ public final class LiftBackRecordOps
     // is emitted with MAPQ 0 and NO XA tag (the list is suppressed, not truncated). Such a read maps to too
     // many places to trust, so it is unmapped. inputMapq 0 distinguishes it from a unique read (MAPQ 60, no XA)
     // and numXaAlts 0 from an ordinary few-way multimapper (MAPQ 0 with its alts listed in XA).
+    //
+    // The cap is meaningful only for a GENOMIC (REF_ONLY) primary: there, 75+ suppressed hits are 75+ distinct
+    // genomic loci. A tx-contig primary instead hits 75+ transcript contigs of one gene (a shared exon), which
+    // all lift back to a single genomic locus, so its suppressed XA must NOT be read as "too many genomic
+    // places". Gating on REF_ONLY keeps genuine genomic repeats unmapped while letting tx reads lift normally.
     public static boolean exceedsMappingCap(final LiftBackResult result)
     {
-        return result.inputMapq() == 0 && result.numXaAlts() == 0;
+        return result.inputMapq() == 0 && result.numXaAlts() == 0 && result.comp() == LiftBackResult.Composition.REF_ONLY;
     }
 
     // The tx-contig MD/NM are stale once the read is lifted and (for rescue/extend/collapse/canon) recut.
