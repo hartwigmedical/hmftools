@@ -187,7 +187,7 @@ public class LiftBackResolver
         final LiftedAlignment primaryCoords = effectivePrimary;
 
         if(swapped)
-            TARS_LOGGER.debug("discriminator {} {}: primary -> {}:{} {} ({})",
+            TARS_LOGGER.trace("discriminator {} {}: primary -> {}:{} {} ({})",
                     features.Category, record.getReadName(), primaryCoords.LiftedChrom, primaryCoords.LiftedPos,
                     primaryCoords.LiftedCigar, outcome.note());
 
