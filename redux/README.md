@@ -6,12 +6,12 @@ techniques.
 
 Redux performs these key tasks:
 
-| Feature                         | Functionality                                                                                                                                                                                                                                                                                                                                                                                                                                               | Why?                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-|---------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Unmapping                       | Unmap reads that are aligned to a set of predefined problematic regions AND are either discordant, have long soft clipping or are in a region of extreme high depth. The reads are retained in the BAM and can be used by downstream tools. Supplementary reads that qualify for unmapping are deleted.<br/><br/>Overall, the problematic regions make up ~0.3% of the genome and lead to the ~3-6% of all reads being unmapped depending on genome version | There are 2 types of reads we want to unmap: <br/><br/> 1. Regions with recurrent very high depth – these are generally unmappable regions that have high discordant fragments.  Unmapping reduces false positive variant calling downstream and can drastically reduce runtime and memory usage.  ~98% of unmapped reads fall into this category  <br/> 2. Very long repeats – reads with long homopolymers or dinucleotide repeats may align randomly to arbitrary microsatellite locations based on idosyncratic sequencing errors.  Unmapping improves duplicate marking and detection of LINE insertions (which have a characteristic polyA insert which often is misaligned by BWA). |
+| Feature                        | Functionality                                                                                                                                                                                                                                                                                                                                                                                                                                               | Why?                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+|--------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Unmapping                      | Unmap reads that are aligned to a set of predefined problematic regions AND are either discordant, have long soft clipping or are in a region of extreme high depth. The reads are retained in the BAM and can be used by downstream tools. Supplementary reads that qualify for unmapping are deleted.<br/><br/>Overall, the problematic regions make up ~0.3% of the genome and lead to the ~3-6% of all reads being unmapped depending on genome version | There are 2 types of reads we want to unmap: <br/><br/> 1. Regions with recurrent very high depth – these are generally unmappable regions that have high discordant fragments.  Unmapping reduces false positive variant calling downstream and can drastically reduce runtime and memory usage.  ~98% of unmapped reads fall into this category  <br/> 2. Very long repeats – reads with long homopolymers or dinucleotide repeats may align randomly to arbitrary microsatellite locations based on idosyncratic sequencing errors.  Unmapping improves duplicate marking and detection of LINE insertions (which have a characteristic polyA insert which often is misaligned by BWA). |
 | Duplicate marking and consensus | Mark duplicates based off fragment start and end positions and UMI (if available). Supplementary reads are also deduplicated. <br/><br/> For any fragments found to be duplicates a single consensus fragment is formed and a consensus base and qual is calculated.                                                                                                                                                                                        | Amplification during library preparation or on-sequencer can cause duplicates of fragments. By marking duplicates, we avoid potential multiple counting of evidence from a single source fragment which reduces FP variant calling. <br/><br/> Forming a consensus read for every duplicated fragment ensures we choose the most likely base at each location and a representative base quality.                                                                                                                                                                                                                                                                                           |
-| Microsatellite jitter rates     | The rate of microsatellite errors is measured genome wide per {consensusType, repeatContext, repeatLength} and fit to a model.                                                                                                                                                                                                                                                                                                                              | Microsatellite jitter or stutter is a common error caused by PCR amplification and on-sequencer errors.  Some sequencing technologies have specific problems with homopolymers. The rate may be highly sample specific as it depends on the amount of and quality of the amplification process. The sample and context specific rate measured in Redux is used to inform and improve variant calling in downstream tools                                                                                                                                                                                                                                                                   |
-| MSI indel prediction            | Uses indel jitter rates to estimate a rate of MS indels per MB                                                                                                                                                                                                                                                                                                                                                                                              |
+| Microsatellite jitter rates    | The rate of microsatellite errors is measured genome wide per {consensusType, repeatContext, repeatLength} and fit to a model.                                                                                                                                                                                                                                                                                                                              | Microsatellite jitter or stutter is a common error caused by PCR amplification and on-sequencer errors.  Some sequencing technologies have specific problems with homopolymers. The rate may be highly sample specific as it depends on the amount of and quality of the amplification process. The sample and context specific rate measured in Redux is used to inform and improve variant calling in downstream tools                                                                                                                                                                                                                                                                   |
+| MSI prediction            | Uses indel jitter rates to estimate a rate of MS indels per MB                                                                                                                                                                                                                                                                                                                                                                                              |
 
 
 ### Notes on Redux compatibility
@@ -286,26 +286,71 @@ Then for each repeat unit, we do the following:
 
 ### MSI prediction
 
-Redux can use the MSI jitter output to estimate the rate of MSI indels per MB which is the written to SAMPLE_ID.msi_prediction.tsv 
-For this it requires model cooefficients and error rate input files, trained on Hartwig's WGS samples. 
-For use with a targered a panel, the panel must first have been run in a training model to produce panel-specific error rates - see OncoAnalyser documentation for more details.
-This MSI prediction file is then used by Sage to adjust its jitter handling routine, and is used by Purple to set the MS indels per MB for targeted panel.
+Redux estimates microsatellite indels per MB using an ensemble of polynomial regressions ("MSI model") trained on jitter rates ("error rates")
+for a range of A/T repeat lengths (length range varies depending on sequencing technology). MSI model output is written to 
+`SAMPLE_ID.msi_prediction.tsv` and used by Sage (jitter handling) and Purple (microsatellite indels per MB estimation for targeted panels).
+
+#### Training vs prediction
+
+The MSI model is trained on Hartwig WGS samples using denoised error rates (normalised to a baseline). For targeted panel cohorts,
+cohort-specific normalisation factors must be trained since error rate noise varies by cohort. Error rate normalisation allows a single set
+of coefficients (trained using WGS samples) to be used for all cohorts.
+
+<img src="src/main/resources/msi_model.png" width="500">
+
+#### 1. Calculate error rate
+
+For a given microsatellite A/T repeat length (`numUnits`), the number of observed reads (`readCount`) with a given indel length (`jitter`) may be:
+
+```
+   jitter  ..., -3, -2,  -1,   0,   1, 2, 3, ...
+readCount  ...,  6, 11, 3e3, 7e7, 352, 5, 0, ...
+```
+
+The error rate for a given `numUnits` is calculated as below:
+
+```
+weightedErrorCounts = sum(readCounts * abs(jitter)) # By definition, 0 jitter counts are not counted as errors 
+errorRate = weightedErrorCounts / sum(readCounts)
+```
+
+#### 2. Denoise error rates
+
+During training, the noise threshold (90th percentile of error rates) is calculated per `numUnits`:
+
+`noiseThreshold = percentile(errorRates, 90)`
+
+Error rates are then normalised as below:
+
+`denoisedErrorRate = errorRate - noiseThreshold`
+
+#### 3. Train and predict
+
+During training, a polynomial regression is fitted per `numUnits` with the form:
+
+`y = 0 + ax + bx^3  # where x = denoisedErrorRate, y = known msIndelsPerMb`
+
+When predicting, the output is clamped to non-negative values:
+
+`y = max(0, y)`
+
+The final predicted `msIndelsPerMb` is the mean across all polynomial regressions (i.e. one per `numUnits`).
 
 ## Performance and Settings
 
-When run wth multiple threads, a BAM will be written per thread and then merged and index at the end.
+When run with multiple threads, a BAM will be written per thread and then merged and index at the end.
 Recommended settings for a standard 100x tumor BAM is 16-24 CPUs and 48GB RAM.
 Runtime on COLO829T with these settings is approximately 100mins.
 
 ## Output Files
 
-| File Name                                        | Details                                                                                                                                                   |
-|--------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| SAMPLE_ID.redux.duplicate_freq.tsv               | Frequency distribution of duplicate groups                                                                                                                |
-| SAMPLE_ID.redux.bqr.tsv                          | Base quality recalibration counts for use in Sage                                                                                                         |
-| SAMPLE_ID.redux.ms_table.tsv.gz                  | Aggregating counts of reads across microsatellites by consensus type / repeat unit / ref repeat count / read repeat count, discarding potential alt sites |
-| SAMPLE_ID.redux.jitter_params.tsv                | 6-parameter model parameterisation for each consensus type and repeat unit                                                                                |
-| SAMPLE_ID.redux.msi_prediction.tsv | MS Indels per MB estimateion                                                                                                                              |
+| File Name                          | Details                                                                                                                                                   |
+|------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
+| SAMPLE_ID.redux.duplicate_freq.tsv | Frequency distribution of duplicate groups                                                                                                                |
+| SAMPLE_ID.redux.bqr.tsv            | Base quality recalibration counts for use in Sage                                                                                                         |
+| SAMPLE_ID.redux.ms_table.tsv.gz    | Aggregating counts of reads across microsatellites by consensus type / repeat unit / ref repeat count / read repeat count, discarding potential alt sites |
+| SAMPLE_ID.redux.jitter_params.tsv  | 6-parameter model parameterisation for each consensus type and repeat unit                                                                                |
+| SAMPLE_ID.redux.msi_prediction.tsv | MS indels per MB estimation                                                                                                                               |
 
 If -umi_base_diff_stats config is specified, the following detailed UMI-related output is written:
 
