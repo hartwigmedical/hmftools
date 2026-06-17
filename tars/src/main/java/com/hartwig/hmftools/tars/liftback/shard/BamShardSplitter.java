@@ -12,14 +12,10 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.util.BinaryCodec;
 import htsjdk.samtools.util.BlockCompressedInputStream;
 
-// Splits a name-grouped BAM into N byte ranges that each begin on a read-name-group boundary, so a shard can
-// read [start, end) with no cross-shard reconciliation: every fragment's records sit wholly in one shard.
-//
-// A split offset is a BGZF virtual file pointer (coffset << 16 | uoffset) pointing at the FIRST record of a
-// group. To find one near a target byte position: locate a BGZF block boundary at/after the target (by its
-// magic), decode forward tracking read names, and take the virtual pointer of the first record whose name
-// differs from the previous one. The leading shard starts at the first record after the header; the trailing
-// shard runs to EOF.
+// Splits a name-grouped BAM into N byte ranges, each starting on a read-name boundary so a shard reads
+// [start, end) with whole fragments and no cross-shard reconciliation. A split is a BGZF virtual pointer at a
+// group's first record: from a target byte offset, find the next block (by its magic), decode until the name
+// changes, and take that record's pointer. Shard 0 starts after the header; the last runs to EOF.
 public final class BamShardSplitter
 {
     private BamShardSplitter() {}
