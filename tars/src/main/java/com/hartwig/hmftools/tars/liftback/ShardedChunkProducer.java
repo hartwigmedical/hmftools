@@ -145,14 +145,14 @@ public class ShardedChunkProducer extends Thread
             for(final ShardRecordIterator iter : iterators)
                 consumed += iter.consumedBytes();
 
-            final int percent = fileLength > 0 ? (int) Math.min(100, consumed * 100 / fileLength) : 0;
+            final double percent = fileLength > 0 ? Math.min(100.0, consumed * 100.0 / fileLength) : 0.0;
             final long reads = readsCounter.sum();
             final long nowNanos = System.nanoTime();
             final double intervalSecs = (nowNanos - lastNanos) / 1e9;
             final long rate = intervalSecs > 0 ? (long) ((reads - lastReads) / intervalSecs) : 0;
 
             TARS_LOGGER.info("liftback {} {}% | {} reads | {}/s",
-                    bar(percent), percent, formatCount(reads), formatCount(rate));
+                    bar((int) percent), String.format("%.2f", percent), formatCount(reads), formatCount(rate));
 
             lastReads = reads;
             lastNanos = nowNanos;
