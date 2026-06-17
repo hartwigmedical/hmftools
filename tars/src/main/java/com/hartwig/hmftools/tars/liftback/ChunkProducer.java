@@ -149,7 +149,7 @@ public class ChunkProducer extends Thread
 
     private void streamChunks(final SAMRecordIterator iter) throws InterruptedException
     {
-        streamChunks(iter, mChunkTargetReads, mQueue::put, mQueue::size);
+        streamChunks(iter, mChunkTargetReads, mQueue::put, mQueue::size, true);
     }
 
     // sink that may block (the bounded queue) and so propagates InterruptedException.
@@ -167,6 +167,14 @@ public class ChunkProducer extends Thread
     // is the bottleneck; backlog near the queue cap = workers saturated / they are the bottleneck).
     static void streamChunks(
             final Iterator<SAMRecord> iter, final int targetReads, final ChunkSink sink, final IntSupplier backlog)
+            throws InterruptedException
+    {
+        streamChunks(iter, targetReads, sink, backlog, true);
+    }
+
+    static void streamChunks(
+            final Iterator<SAMRecord> iter, final int targetReads, final ChunkSink sink, final IntSupplier backlog,
+            final boolean logProgress)
             throws InterruptedException
     {
         List<SAMRecord> chunk = new ArrayList<>(targetReads);
@@ -192,7 +200,8 @@ public class ChunkProducer extends Thread
             chunk.add(record);
             currentName = name;
 
-            if(++readsStreamed == nextProgressLog)
+            ++readsStreamed;
+            if(logProgress && readsStreamed == nextProgressLog)
             {
                 final long nowNanos = System.nanoTime();
                 final double intervalSecs = (nowNanos - lastLogNanos) / 1e9;
@@ -213,6 +222,7 @@ public class ChunkProducer extends Thread
             ++chunksQueued;
         }
 
-        TARS_LOGGER.info("liftback stream complete: {} reads in {} chunks", readsStreamed, chunksQueued);
+        if(logProgress)
+            TARS_LOGGER.info("liftback stream complete: {} reads in {} chunks", readsStreamed, chunksQueued);
     }
 }

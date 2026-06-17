@@ -59,6 +59,9 @@ public class SpliceLiftBack
     // bounded in-flight chunk queue so memory scales with concurrency, not sample size (the OOM guard).
     private static final int CHUNK_QUEUE_DEPTH_PER_THREAD = 2;
 
+    // upper bound on parallel input-reader shards; a few parse threads outpace the workers, more just block.
+    private static final int READER_SHARD_CAP = 8;
+
     public SpliceLiftBack(final ConfigBuilder configBuilder)
     {
         mConfig = new SpliceLiftBackConfig(configBuilder);
@@ -112,12 +115,12 @@ public class SpliceLiftBack
         final BlockingQueue<List<SAMRecord>> chunkQueue =
                 new ArrayBlockingQueue<>(Math.max(workerCount * CHUNK_QUEUE_DEPTH_PER_THREAD, 2));
 
-        // decompress the input across a few of the bam tool's threads so the single producer doesn't starve
-        // the workers; the workers still get the bulk of the cores.
-        final int decompressThreads = Math.max(1, Math.min(4, mConfig.Threads));
-        final ChunkProducer producer = new ChunkProducer(
-                mConfig.InputBam, mConfig.RefGenomeFile, chunkQueue, workerCount, CHUNK_TARGET_READS,
-                mConfig.BamToolPath, decompressThreads);
+        // a single-thread BGZF parse starves the workers, so the input is read by several shard threads that
+        // each parse their own byte range (split on read-name-group boundaries). A handful saturates the queue;
+        // beyond that the bounded queue just blocks them, so the count is capped well below the worker pool.
+        final int shardCount = Math.max(1, Math.min(workerCount, READER_SHARD_CAP));
+        final ShardedChunkProducer producer = new ShardedChunkProducer(
+                mConfig.InputBam, mConfig.RefGenomeFile, chunkQueue, workerCount, CHUNK_TARGET_READS, shardCount);
 
         final List<LiftBackWorker> workers = Lists.newArrayList();
         final List<Thread> threadTasks = Lists.newArrayList();
@@ -397,12 +400,12 @@ public class SpliceLiftBack
 
     private String formShardBamPath(final int index)
     {
-        return mConfig.OutputDir + "splice_liftback.shard_" + index + ".bam";
+        return mConfig.OutputDir + mConfig.prefix() + ".shard_" + index + ".bam";
     }
 
     private String formTsvShardPath(final int index, final String kind)
     {
-        return mConfig.OutputDir + "splice_liftback." + kind + ".shard_" + index + ".tsv";
+        return mConfig.OutputDir + mConfig.prefix() + "." + kind + ".shard_" + index + ".tsv";
     }
 
     private void cleanupIntermediates(

@@ -92,7 +92,9 @@ public class SpliceLiftBackConfig
         return OutputDir + prefix() + ".unsorted" + BAM_EXTENSION;
     }
 
-    private String prefix()
+    // the run's output prefix, also used to namespace the per-worker shard intermediates so concurrent or
+    // repeated runs into one output dir do not clobber each other's shards.
+    public String prefix()
     {
         return OutputId != null ? OutputId : DEFAULT_OUTPUT_PREFIX;
     }

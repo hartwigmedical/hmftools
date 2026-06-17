@@ -135,17 +135,32 @@ public class LiftBackGroupProcessorTest
     }
 
     @Test
-    public void overCapPrimaryMapq0NoXaUnmapped()
+    public void overCapGenomicPrimaryMapq0NoXaUnmapped()
     {
-        // bwa emitted MAPQ 0 with no XA: the read maps past the XA cap (75+ loci), so it is unmapped even
-        // though, with no XA, the resolver sees a single locus and would otherwise rescue MAPQ to 60.
-        final SAMRecord primary = primaryRecord(TX_CONTIG, 1, "50M");
+        // a GENOMIC primary emitted MAPQ 0 with no XA maps past the XA cap (75+ distinct genomic loci), so it
+        // is unmapped even though, with no XA, the resolver sees a single locus and would otherwise rescue to 60.
+        final SAMRecord primary = primaryRecord(CHR_1, 100, "50M");
         primary.setMappingQuality(0);
 
         final List<SAMRecord> emitted = process(List.of(primary), new LiftBackStats());
 
         assertEquals(1, emitted.size());
         assertTrue(emitted.get(0).getReadUnmappedFlag());
+    }
+
+    @Test
+    public void overCapTxPrimaryMapq0NoXaKept()
+    {
+        // a TX-CONTIG primary with MAPQ 0 + no XA hit 75+ transcript contigs of one gene, which all lift to one
+        // genomic locus -- the over-cap rule is REF_ONLY-gated and must NOT unmap it. It lifts and is kept.
+        final SAMRecord primary = primaryRecord(TX_CONTIG, 1, "50M");
+        primary.setMappingQuality(0);
+
+        final List<SAMRecord> emitted = process(List.of(primary), new LiftBackStats());
+
+        assertEquals(1, emitted.size());
+        assertFalse(emitted.get(0).getReadUnmappedFlag());
+        assertEquals(CHR_1, emitted.get(0).getReferenceName());
     }
 
     @Test
