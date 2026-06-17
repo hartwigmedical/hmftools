@@ -87,6 +87,8 @@ public class SpliceLiftBack
 
         mergeWorkerStats(workers);
 
+        TARS_LOGGER.info("liftback processing complete, mins({}); concatenating + sorting shards", runTimeMinsStr(startTimeMs));
+
         final String unsortedBam = mConfig.formUnsortedBam();
         if(!concatenateShards(shardBams, unsortedBam))
             throw new RuntimeException("failed to concatenate liftback BAM shards");

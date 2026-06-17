@@ -27,7 +27,7 @@ public class ChunkProducerTest
             throws InterruptedException
     {
         final List<List<SAMRecord>> chunks = new ArrayList<>();
-        ChunkProducer.streamChunks(records.iterator(), targetReads, chunks::add, () -> 0);
+        ChunkProducer.streamChunks(records.iterator(), targetReads, chunks::add, null);
         return chunks;
     }
 

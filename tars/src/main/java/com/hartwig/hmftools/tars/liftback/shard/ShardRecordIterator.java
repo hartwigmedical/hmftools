@@ -19,6 +19,7 @@ public class ShardRecordIterator implements Iterator<SAMRecord>, Closeable
     private final BlockCompressedInputStream mStream;
     private final BAMRecordCodec mCodec;
     private final long mEndVptr;
+    private final long mStartOffset;
     private SAMRecord mNext;
 
     public ShardRecordIterator(final File bam, final SAMFileHeader header, final BamShardSplitter.ShardRange range)
@@ -36,7 +37,14 @@ public class ShardRecordIterator implements Iterator<SAMRecord>, Closeable
         mCodec = new BAMRecordCodec(header);
         mCodec.setInputStream(mStream);
         mEndVptr = range.endVptr();
+        mStartOffset = range.startVptr() >>> 16;
         mNext = readNext();
+    }
+
+    // compressed bytes this shard has consumed so far -- the progress monitor sums these across shards.
+    public long consumedBytes()
+    {
+        return Math.max(0, (mStream.getFilePointer() >>> 16) - mStartOffset);
     }
 
     private SAMRecord readNext()

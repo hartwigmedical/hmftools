@@ -28,9 +28,6 @@ import htsjdk.samtools.SAMRecord;
 // handle so nothing serialises across workers. Exits on END_OF_STREAM.
 public class LiftBackWorker extends Thread
 {
-    // per-worker DEBUG progress cadence: 500 chunks * CHUNK_TARGET_READS (5000) ~= 2.5M reads.
-    private static final int WORKER_PROGRESS_CHUNKS = 500;
-
     private final BlockingQueue<List<SAMRecord>> mQueue;
     private final LiftBackStats mStats;
     private final LiftBackGroupProcessor mProcessor;
@@ -93,21 +90,13 @@ public class LiftBackWorker extends Thread
     {
         try
         {
-            final String threadName = Thread.currentThread().getName();
-            int chunks = 0;
-            long reads = 0;
             while(true)
             {
                 final List<SAMRecord> chunk = mQueue.take();
                 if(chunk == END_OF_STREAM)
                     break;
                 processChunk(chunk);
-                ++chunks;
-                reads += chunk.size();
-                if(chunks % WORKER_PROGRESS_CHUNKS == 0)
-                    TARS_LOGGER.debug("liftback worker {} processed {} chunks ({} reads)", threadName, chunks, reads);
             }
-            TARS_LOGGER.debug("liftback worker {} complete: {} chunks, {} reads", threadName, chunks, reads);
         }
         catch(InterruptedException e)
         {
