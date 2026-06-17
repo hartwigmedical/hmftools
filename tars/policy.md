@@ -149,6 +149,18 @@ over-cap unmap = (inputMapq == 0 AND numXaAlts == 0)
                 decidePrimaryMapq would otherwise rescue the MAPQ to 60. A unique read (MAPQ 60, no XA) and a
                 few-way multimapper (MAPQ 0 WITH XA) are both excluded.
 
+--- Excluded regions (-rna_unmap_regions) ---
+
+excluded region overlap  (checked POST-lift on genomic coords)
+    : WHERE  -> ExcludedRegions.excludes, via LiftBackGroupProcessor
+    : WHY    -> curated rRNA / 7SL / acrocentric / multi-map contamination zones. A read lifting into one is
+                contamination: the primary is UNMAPPED (REDUX-style, kept not dropped), a supplementary is DROPPED.
+    : GOTCHA -> POST-lift, not pre-lift: a tx-contig read's input coords are chrN_tx and can't be tested against
+                the genomic region list, and some excluded zones (acrocentric p-arms) ARE in the transcriptome, so
+                contamination reaches them via tx contigs and is only visible once lifted to genomic coords.
+                Primary unmap is done by flipping its LiftBackResult to UNMAPPED, so the mate is coordinated via the
+                cache (willBeUnmapped) and the dropped supps' SA entries are removed from the primary's SA tag.
+
 --- Primary AS floor ---
 
 PRIMARY_AS_UNMAP_THRESHOLD = 30
@@ -279,9 +291,14 @@ collapse, tail-extend, canonicalize) only fire when a reference genome is loaded
 
   POST-FILTERS (unmap, never drop - the pair + SA references are preserved)
           - over the XA cap (input MAPQ 0, no XA)  -> primary unmapped: maps to too many loci to place.
+          - lifts into an excluded region          -> primary UNMAPPED (REDUX-style: kept, flagged unmapped, no
+            cigar, placed on the mate's coords if the mate stays mapped, else *:0); supplementary DROPPED and its
+            entry removed from the primary's SA. Checked post-lift on genomic coords (see Excluded regions above).
           - residual short-anchor primary          -> unmapped when rescue ran and post-lift AS is still
             below PRIMARY_AS_UNMAP_THRESHOLD (30) and the read was not rescued/extended/collapsed.
           - residual short-anchor supplementary     -> dropped when its AS is in the [19, 30) band after rescue.
+          - any dropped supplementary (excluded / orphan / low-AS) has its SA entry stripped from the primary's
+            SA tag (SaTagRewriter excludeKeys), so the primary never references a supp that is not emitted.
 
 
 -----------------------------------------------------------------------------------------------------------

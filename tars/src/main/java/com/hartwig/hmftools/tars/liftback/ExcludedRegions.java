@@ -18,11 +18,10 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
-import htsjdk.samtools.SAMRecord;
-
-// Genomic regions a fragment is dropped for before liftback (e.g. RNA rRNA / 7SL contamination zones). Loaded
-// from a regions TSV (Chromosome/PosStart/PosEnd) and queried per fragment: if a mapped primary read overlaps
-// an excluded region the whole fragment is filtered, so contaminating reads never get lifted or reach dedup.
+// Genomic regions reads are excluded from (e.g. RNA rRNA / 7SL / acrocentric contamination zones). Loaded from a
+// regions TSV (Chromosome/PosStart/PosEnd) and queried post-lift on lifted genomic coords (excludes()): a primary
+// lifting in is unmapped, a supp dropped. Post-lift because a tx-contig read's input coords are chrN_tx and can't
+// be tested against the genomic region list; some excluded zones (acrocentric arms) ARE in the transcriptome.
 // Per-chromosome regions are sorted for an O(log N) overlap test.
 public class ExcludedRegions
 {
@@ -73,19 +72,10 @@ public class ExcludedRegions
         return regionsByChr;
     }
 
-    // a fragment is excluded if any of its mapped primary reads overlaps an excluded region. Supplementary and
-    // unmapped reads aren't tested -- the primary placement decides the fragment.
-    public boolean fragmentExcluded(final List<SAMRecord> group)
+    // true if [posStart, posEnd] on chromosome overlaps an excluded region. Called post-lift on genomic coords.
+    public boolean excludes(final String chromosome, final int posStart, final int posEnd)
     {
-        for(final SAMRecord record : group)
-        {
-            if(record.getReadUnmappedFlag() || record.getSupplementaryAlignmentFlag() || record.isSecondaryAlignment())
-                continue;
-
-            if(overlaps(record.getReferenceName(), record.getAlignmentStart(), record.getAlignmentEnd()))
-                return true;
-        }
-        return false;
+        return overlaps(chromosome, posStart, posEnd);
     }
 
     private boolean overlaps(final String chromosome, final int posStart, final int posEnd)

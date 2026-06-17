@@ -25,6 +25,7 @@ import com.hartwig.hmftools.tars.liftback.tailextend.TerminalCollapseResult;
 import com.hartwig.hmftools.tars.liftback.tailextend.TerminalMicroJunctionCollapser;
 
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.TextCigarCodec;
 
 // Stateless-per-group transform engine: resolves one contiguous read-name group to genomic coordinates,
 // runs the optional rescue / terminal-collapse / tail-extend passes, patches mate fields against a
@@ -49,12 +50,19 @@ public class LiftBackGroupProcessor
     // off), in which case NM is cleared rather than recomputed.
     private final RefSequenceSource mRefSource;
 
+    // genomic excluded regions (rRNA / contamination), checked post-lift. Null when no regions file configured.
+    private final ExcludedRegions mExcludedRegions;
+
     private final LiftBackStats mStats;
 
     // primaries unmapped because bwa exceeded the XA cap (MAPQ 0 + no XA = maps to too many loci).
     private long mOverCapUnmapped;
 
+    // reads dropped because they (primary -> whole fragment, or a supp) lift into an excluded region.
+    private long mExcludedReads;
+
     public long overCapUnmapped() { return mOverCapUnmapped; }
+    public long excludedReads() { return mExcludedReads; }
 
     private static final String AS_TAG = "AS";
 
@@ -84,7 +92,7 @@ public class LiftBackGroupProcessor
             final LiftBackResolver resolver, final JunctionRescueResolver junctionRescueResolver,
             final SoftclipTailExtender softclipTailExtender, final TerminalMicroJunctionCollapser terminalJunctionCollapser,
             final JunctionCanonicalizer junctionCanonicalizer, final RefSequenceSource refSource,
-            final LiftBackStats stats)
+            final ExcludedRegions excludedRegions, final LiftBackStats stats)
     {
         mResolver = resolver;
         mJunctionRescueResolver = junctionRescueResolver;
@@ -92,6 +100,7 @@ public class LiftBackGroupProcessor
         mTerminalJunctionCollapser = terminalJunctionCollapser;
         mJunctionCanonicalizer = junctionCanonicalizer;
         mRefSource = refSource;
+        mExcludedRegions = excludedRegions;
         mStats = stats;
     }
 
@@ -215,6 +224,16 @@ public class LiftBackGroupProcessor
         // (fixes a tx-contig boundary deletion that lifted the intron off the true GT-AG site).
         applyJunctionCanonicalization(records, resolved, primary, droppedByRescue);
 
+        // post-lift exclusion: if the final primary placement lands in an excluded (rRNA / contamination) region,
+        // unmap it REDUX-style - flip the result to UNMAPPED so the mate is coordinated via the cache (willBeUnmapped)
+        // and the record is unmapped at apply time. Lifted genomic coords are the only space tx-contig reads can be
+        // tested against the genomic region list, so this is post-lift, not the old pre-lift fragment pre-filter.
+        if(primaryIdx >= 0 && liftsIntoExcludedRegion(resolved[primaryIdx]))
+        {
+            resolved[primaryIdx] = LiftBackResult.unmapped(LiftBackResult.RecordRole.PRIMARY, "excluded_region_unmapped");
+            ++mExcludedReads;
+        }
+
         // rescue / collapse / tail-extend each replace resolved[primaryIdx] with a new result object when
         // they improve the primary. A changed reference means liftback post-processed it, so its stale bwa
         // AS must not be used to AS-filter it (see PRIMARY_AS_UNMAP_THRESHOLD).
@@ -274,7 +293,29 @@ public class LiftBackGroupProcessor
                     mStats.recordLowAsSuppDropped();
                 }
             }
+            // a supp lifting into an excluded region is dropped (a supp can't be unmapped); its SA entry is
+            // removed from the primary below so the primary doesn't reference a supp that isn't emitted.
+            if(!drop && record.getSupplementaryAlignmentFlag() && liftsIntoExcludedRegion(result))
+            {
+                drop = true;
+                ++mExcludedReads;
+            }
             willEmit[i] = !drop;
+        }
+
+        // SA entries of dropped supps removed from the primary's SA so it never references a missing supp.
+        final Set<String> droppedSuppSaKeys = new HashSet<>();
+        for(int i = 0; i < records.size(); i++)
+        {
+            if(willEmit[i])
+                continue;
+            final SAMRecord record = records.get(i);
+            final LiftBackResult result = resolved[i];
+            if(record == primary || !record.getSupplementaryAlignmentFlag() || result == null
+                    || result.finalChrom() == null || result.finalCigar() == null
+                    || result.finalCigar().equals(SAMRecord.NO_ALIGNMENT_CIGAR))
+                continue;
+            droppedSuppSaKeys.add(suppSaKey(result));
         }
 
         // NH = the number of distinct genomic loci the read lifts back to, taken from the resolver's
@@ -293,7 +334,7 @@ public class LiftBackGroupProcessor
                 continue;
             }
             final boolean primaryPostProcessed = i == decision.PrimaryIndex && decision.PrimaryPostProcessed;
-            applyAndWriteRecord(record, result, nh, primaryPostProcessed, liftedMateInfoCache, sink);
+            applyAndWriteRecord(record, result, nh, primaryPostProcessed, droppedSuppSaKeys, liftedMateInfoCache, sink);
         }
     }
 
@@ -470,15 +511,40 @@ public class LiftBackGroupProcessor
                 + ":" + (result.negativeStrand() ? '-' : '+');
     }
 
+    // true if the result's lifted genomic span overlaps an excluded region. False for unmapped / unlifted results.
+    private boolean liftsIntoExcludedRegion(final LiftBackResult result)
+    {
+        if(mExcludedRegions == null || result == null)
+            return false;
+        final String cigar = result.finalCigar();
+        if(result.finalChrom() == null || cigar == null || cigar.equals(SAMRecord.NO_ALIGNMENT_CIGAR))
+            return false;
+        final int end = result.finalPos() + TextCigarCodec.decode(cigar).getReferenceLength() - 1;
+        return mExcludedRegions.excludes(result.finalChrom(), result.finalPos(), end);
+    }
+
+    // SA entry key (chrom:pos:strand:cigar) of a supplementary's lifted placement, matching SaTagRewriter's
+    // entry key so a dropped supp's entry can be removed from the primary's SA tag.
+    private static String suppSaKey(final LiftBackResult result)
+    {
+        return result.finalChrom() + ":" + result.finalPos()
+                + ":" + (result.negativeStrand() ? '-' : '+') + ":" + result.finalCigar();
+    }
+
     private void applyAndWriteRecord(
             final SAMRecord record, final LiftBackResult result, final int nh, final boolean primaryPostProcessed,
-            final LiftedMateInfoCache liftedMateInfoCache, final EmitSink sink)
+            final Set<String> droppedSuppSaKeys, final LiftedMateInfoCache liftedMateInfoCache, final EmitSink sink)
     {
         mStats.record(record, result);
 
         LiftBackRecordOps.applyResultToRecord(record, result, liftedMateInfoCache);
 
-        final String rewrittenSa = rewriteSaTag(record.getStringAttribute(SA_ATTRIBUTE), mResolver);
+        // A primary flipped to UNMAPPED post-lift (e.g. excluded region) still carries its mapped coords -
+        // applyResultToRecord's UNMAPPED case is a no-op for input-unmapped reads, so unmap it explicitly.
+        if(result.category() == LiftBackCategory.UNMAPPED && !record.getReadUnmappedFlag())
+            markPrimaryUnmapped(record);
+
+        final String rewrittenSa = rewriteSaTag(record.getStringAttribute(SA_ATTRIBUTE), mResolver, droppedSuppSaKeys);
 
         // A record that stays supplementary must carry an SA tag -- REDUX dedup (FragmentCoords.fromRead)
         // reads the primary's coords from it. If every SA entry failed to lift the supplementary is orphaned

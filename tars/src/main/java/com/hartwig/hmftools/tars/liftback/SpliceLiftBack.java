@@ -169,7 +169,7 @@ public class SpliceLiftBack
         if(mConfig.RnaUnmapRegionsFile != null)
         {
             excludedRegions = ExcludedRegions.load(mConfig.RnaUnmapRegionsFile);
-            TARS_LOGGER.info("loaded pre-liftback excluded regions from {}", mConfig.RnaUnmapRegionsFile);
+            TARS_LOGGER.info("loaded excluded regions from {}", mConfig.RnaUnmapRegionsFile);
         }
 
         return new LiftBackResources(
@@ -285,7 +285,7 @@ public class SpliceLiftBack
         for(final LiftBackWorker worker : workers)
             excludedReads += worker.excludedReads();
         if(excludedReads > 0)
-            TARS_LOGGER.info("pre-liftback excluded-region reads dropped: {}", excludedReads);
+            TARS_LOGGER.info("excluded-region reads (primary unmapped / supp dropped, post-lift): {}", excludedReads);
     }
 
     private static void logRescueStats(final List<LiftBackWorker> workers)

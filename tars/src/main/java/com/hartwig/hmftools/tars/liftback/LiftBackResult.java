@@ -51,6 +51,22 @@ public record LiftBackResult(
                 liftedAlignments);
     }
 
+    // UNMAPPED result with the given role and a diagnostic note. Used when a lifted placement is rejected
+    // post-lift (e.g. it falls in an excluded region) and the record must be flipped to unmapped.
+    public static LiftBackResult unmapped(final RecordRole role, final String note)
+    {
+        return new LiftBackResult(
+                LiftBackCategory.UNMAPPED, Composition.NONE, role,
+                "*", 0, "*",
+                false, false, 0, 0,
+                0, 0, 0,
+                0, 0,
+                false, false, false, false,
+                "", note,
+                0,
+                List.of());
+    }
+
     private static String appendNote(final String existing, final String note)
     {
         if(existing == null || existing.isEmpty())
