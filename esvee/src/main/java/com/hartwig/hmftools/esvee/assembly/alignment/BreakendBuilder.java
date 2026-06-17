@@ -112,6 +112,7 @@ public class BreakendBuilder
         List<Integer> assemblyJunctionOffsets = sagaAlignment.queryJunctionOffsets();
 
         String rawInsertSequence;
+        int indelLength;
         boolean lowerBreakendInferred;
         boolean upperBreakendInferred;
         if(sagaVariant.isInsert())
@@ -131,21 +132,27 @@ public class BreakendBuilder
 
             rawInsertSequence = startInferredSeq + assemblySeq.substring(assemblyStart, assemblyEnd) + endInferredSeq;
 
+            indelLength = rawInsertSequence.length();
+
             lowerBreakendInferred = startInferredLength > 0;
             upperBreakendInferred = endInferredLength > 0;
         }
         else
         {
             // Deletion - no insert sequence and the assembly spans the junction (otherwise it couldn't have matched the SAGA variant).
+
+            // FIXME: the assembly can have a few different number of bases deleted and that is lost here, since in the saga alignment small indels are allowed around the junction
+
             rawInsertSequence = "";
+            indelLength = upperSagaBreakend.position() - lowerSagaBreakend.position() - 1;
             lowerBreakendInferred = false;
             upperBreakendInferred = false;
         }
 
         int assemblyIndelStart = assemblyJunctionOffsets.get(0);
-        int assemblyIndelEnd = assemblyJunctionOffsets.size() > 1 ? assemblyJunctionOffsets.get(1) : assemblyJunctionOffsets.get(0) + 1;
+        int assemblyIndelEnd = assemblyIndelStart + rawInsertSequence.length();
 
-        IndelCoords indelCoords = new IndelCoords(lowerSagaBreakend.position(), upperSagaBreakend.position(), rawInsertSequence.length());
+        IndelCoords indelCoords = new IndelCoords(lowerSagaBreakend.position(), upperSagaBreakend.position(), indelLength);
         indelCoords.setInsertedBases(rawInsertSequence);
 
         IndelBreakendData breakendData =
@@ -206,27 +213,29 @@ public class BreakendBuilder
         if(indelCoords == null || indelCoords.Length < MIN_INDEL_LENGTH)
             return false;
 
-        int assemblyIndelStart = alignment.sequenceStart() + getReadIndexFromPosition(
-                alignment.positionStart(), alignment.cigarElements(), indelCoords.PosStart, true, false)
+        int assemblyIndelStart = alignment.sequenceStart()
+                + getReadIndexFromPosition(alignment.positionStart(), alignment.cigarElements(), indelCoords.PosStart, true, false)
+                // Advance from the last ref base to the first indel base.
+                + 1
                 // back out soft-clip since the method above includes that
                 - leftSoftClipLength(alignment.cigarElements());
-        int assemblyIndelEnd = assemblyIndelStart + (indelCoords.isInsert() ? indelCoords.Length : 1);
+        int assemblyIndelEnd = assemblyIndelStart + (indelCoords.isInsert() ? indelCoords.Length : 0);
 
         boolean isChained = mAssemblyAlignment.phaseSet() != null && mAssemblyAlignment.phaseSet().assemblyLinks().size() > 1;
         if(!isChained)
         {
             // the indel must have sufficient bases either side of it to be called
-            int leftAnchorLength = assemblyIndelStart + 1;
-            int rightAnchorLength = alignment.segmentLength() - assemblyIndelEnd - 1;
+            int leftAnchorLength = assemblyIndelStart;
+            int rightAnchorLength = alignment.segmentLength() - assemblyIndelEnd;
 
             if(leftAnchorLength < ALIGNMENT_INDEL_MIN_ANCHOR_LENGTH || rightAnchorLength < ALIGNMENT_INDEL_MIN_ANCHOR_LENGTH)
                 return false;
         }
 
         String assemblySeq = mAssemblyAlignment.fullSequence();
-        if(indelCoords.isInsert() && assemblyIndelStart >= 0 && assemblyIndelEnd < assemblySeq.length())
+        if(indelCoords.isInsert() && assemblyIndelStart >= 0 && assemblyIndelEnd <= assemblySeq.length())
         {
-            indelCoords.setInsertedBases(assemblySeq.substring(assemblyIndelStart + 1, assemblyIndelEnd + 1));
+            indelCoords.setInsertedBases(assemblySeq.substring(assemblyIndelStart, assemblyIndelEnd));
         }
 
         IndelBreakendData breakendData =
