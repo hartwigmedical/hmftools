@@ -313,7 +313,7 @@ public class SpliceLiftBack
         for(final RescueRejectReason reason : RescueRejectReason.values())
         {
             if(rejects.getOrDefault(reason, 0) > 0)
-                TARS_LOGGER.info("rescue-via-supp reject {}: {}", reason, rejects.get(reason));
+                TARS_LOGGER.debug("rescue-via-supp reject {}: {}", reason, rejects.get(reason));
         }
     }
 

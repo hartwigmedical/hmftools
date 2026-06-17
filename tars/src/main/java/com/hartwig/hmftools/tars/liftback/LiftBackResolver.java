@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.tars.liftback;
 
 import static com.hartwig.hmftools.tars.common.SpliceCommon.ALT_CONTIG_SUFFIX;
+import static com.hartwig.hmftools.tars.common.TarsConfig.TARS_LOGGER;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -184,6 +185,11 @@ public class LiftBackResolver
                 inputMapq, numLoci, swapped, hiddenTie, effectivePrimary.fromTxContig(), inAnnotatedExon, hasTxMatch);
 
         final LiftedAlignment primaryCoords = effectivePrimary;
+
+        if(swapped)
+            TARS_LOGGER.debug("discriminator {} {}: primary -> {}:{} {} ({})",
+                    features.Category, record.getReadName(), primaryCoords.LiftedChrom, primaryCoords.LiftedPos,
+                    primaryCoords.LiftedCigar, outcome.note());
 
         return new LiftBackResult(
                 features.Category, LiftBackResult.Composition.fromAlignments(keptAlignments),
