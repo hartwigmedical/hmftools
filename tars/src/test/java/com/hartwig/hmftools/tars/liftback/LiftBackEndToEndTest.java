@@ -84,7 +84,7 @@ public class LiftBackEndToEndTest
 
         final LiftBackStats stats = new LiftBackStats();
         final LiftBackGroupProcessor processor = new LiftBackGroupProcessor(
-                resolver, rescue, extender, collapser, canonicalizer, ref, stats);
+                resolver, rescue, extender, collapser, canonicalizer, ref, null, stats);
 
         final List<SAMRecord> emitted = new ArrayList<>();
         processor.processNameGroup(reads, new LiftedMateInfoCache(), (record, result) -> emitted.add(record));

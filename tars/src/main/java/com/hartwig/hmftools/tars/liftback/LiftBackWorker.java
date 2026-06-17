@@ -42,8 +42,7 @@ public class LiftBackWorker extends Thread
     private final TerminalMicroJunctionCollapser mTerminalCollapser;
     private final JunctionCanonicalizer mJunctionCanonicalizer;
 
-    private final ExcludedRegions mExcludedRegions; // nullable: drop fragments here before lifting
-    private long mExcludedReads;
+    private final ExcludedRegions mExcludedRegions; // nullable: passed to the processor for post-lift exclusion
 
     public LiftBackWorker(
             final BlockingQueue<List<SAMRecord>> queue, final LiftBackResources resources,
@@ -76,7 +75,7 @@ public class LiftBackWorker extends Thread
 
         mProcessor = new LiftBackGroupProcessor(
                 resources.Resolver, mRescueResolver, mSoftclipExtender, mTerminalCollapser, mJunctionCanonicalizer,
-                refSource, mStats);
+                refSource, mExcludedRegions, mStats);
 
         mShardWriter = new SAMFileWriterFactory().makeBAMWriter(header, false, new File(shardBam));
     }
@@ -161,18 +160,13 @@ public class LiftBackWorker extends Thread
 
     private void processNameGroup(final List<SAMRecord> group)
     {
-        // pre-liftback filter: drop the whole fragment if a primary lands in an excluded (e.g. rRNA) region,
-        // so contaminating reads are never lifted or passed to dedup.
-        if(mExcludedRegions != null && mExcludedRegions.fragmentExcluded(group))
-        {
-            mExcludedReads += group.size();
-            return;
-        }
-
+        // exclusion is applied post-lift inside the processor (on lifted genomic coords): a primary lifting into
+        // an excluded region is unmapped REDUX-style, a supp dropped. Pre-lift can't test tx-contig reads, whose
+        // input coords are chrN_tx, against the genomic region list.
         mProcessor.processNameGroup(group, new LiftedMateInfoCache(), this::write);
     }
 
-    public long excludedReads() { return mExcludedReads; }
+    public long excludedReads() { return mProcessor.excludedReads(); }
 
     private void write(final SAMRecord record, final LiftBackResult result)
     {

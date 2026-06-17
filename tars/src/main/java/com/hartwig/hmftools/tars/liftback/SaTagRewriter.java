@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.tars.liftback;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -11,6 +12,13 @@ public class SaTagRewriter
     public static final String SA_ATTRIBUTE = "SA";
 
     public static String rewriteSaTag(final String saTagValue, final LiftBackResolver resolver)
+    {
+        return rewriteSaTag(saTagValue, resolver, Collections.emptySet());
+    }
+
+    // excludeKeys: lifted entry keys (chrom:pos:strand:cigar) of supplementaries dropped from the output (excluded
+    // region / orphan / low-AS). Their SA entries are removed so the primary never references a supp that isn't emitted.
+    public static String rewriteSaTag(final String saTagValue, final LiftBackResolver resolver, final Set<String> excludeKeys)
     {
         if(saTagValue == null || saTagValue.isEmpty())
             return null;
@@ -47,6 +55,8 @@ public class SaTagRewriter
                 continue;
 
             final String entryKey = lifted.chromosome() + ':' + lifted.position() + ':' + strand + ':' + lifted.cigarString();
+            if(excludeKeys.contains(entryKey))
+                continue;
             if(!seenEntryKeys.add(entryKey))
                 continue;
 

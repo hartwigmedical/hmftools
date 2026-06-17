@@ -52,11 +52,53 @@ public class LiftBackGroupProcessorTest
     {
         final LiftBackResolver resolver = new LiftBackResolver(List.of(threeExonContig()));
         final LiftBackGroupProcessor processor = new LiftBackGroupProcessor(
-                resolver, rescueResolver, null, null, null, refSource, stats);
+                resolver, rescueResolver, null, null, null, refSource, null, stats);
 
         final List<SAMRecord> emitted = new ArrayList<>();
         processor.processNameGroup(group, new LiftedMateInfoCache(), (record, result) -> emitted.add(record));
         return emitted;
+    }
+
+    private static List<SAMRecord> processExcluded(
+            final List<SAMRecord> group, final LiftBackStats stats, final ExcludedRegions excluded)
+    {
+        final LiftBackResolver resolver = new LiftBackResolver(List.of(threeExonContig()));
+        final LiftBackGroupProcessor processor = new LiftBackGroupProcessor(
+                resolver, null, null, null, null, null, excluded, stats);
+
+        final List<SAMRecord> emitted = new ArrayList<>();
+        processor.processNameGroup(group, new LiftedMateInfoCache(), (record, result) -> emitted.add(record));
+        return emitted;
+    }
+
+    private static ExcludedRegions excludedRegion(final String chromosome, final int start, final int end)
+    {
+        final java.util.Map<String, List<com.hartwig.hmftools.common.region.ChrBaseRegion>> map = new java.util.HashMap<>();
+        map.put(chromosome, new ArrayList<>(List.of(new com.hartwig.hmftools.common.region.ChrBaseRegion(chromosome, start, end))));
+        return new ExcludedRegions(map);
+    }
+
+    @Test
+    public void primaryLiftingIntoExcludedRegionIsUnmapped()
+    {
+        // tx primary (exon1) lifts to chr1:100; an excluded region covering it unmaps the read REDUX-style:
+        // kept in the output but flagged unmapped with no cigar, not aligned in the excluded zone.
+        final SAMRecord primary = primaryRecord(TX_CONTIG, 1, "50M");
+        final List<SAMRecord> emitted = processExcluded(List.of(primary), new LiftBackStats(), excludedRegion(CHR_1, 50, 300));
+
+        assertEquals(1, emitted.size());
+        assertTrue(emitted.get(0).getReadUnmappedFlag());
+        assertEquals(SAMRecord.NO_ALIGNMENT_CIGAR, emitted.get(0).getCigarString());
+    }
+
+    @Test
+    public void primaryOutsideExcludedRegionIsKept()
+    {
+        final SAMRecord primary = primaryRecord(TX_CONTIG, 1, "50M");   // chr1:100
+        final List<SAMRecord> emitted = processExcluded(List.of(primary), new LiftBackStats(), excludedRegion(CHR_1, 5000, 6000));
+
+        assertEquals(1, emitted.size());
+        assertFalse(emitted.get(0).getReadUnmappedFlag());
     }
 
     @Test
