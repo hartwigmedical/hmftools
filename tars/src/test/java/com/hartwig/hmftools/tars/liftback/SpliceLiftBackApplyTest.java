@@ -102,10 +102,16 @@ public class SpliceLiftBackApplyTest
         // clean unique tx read (MAPQ 60, no XA) -> kept
         assertFalse(LiftBackRecordOps.willBeUnmapped(resolver.resolve(newRecord(TX_CONTIG, 51, "100M"))));
 
-        // over the XA cap: MAPQ 0 with no XA -> unmapped (maps to too many loci to place)
-        final SAMRecord overCap = newRecord(TX_CONTIG, 51, "100M");
+        // over the XA cap on a GENOMIC primary: MAPQ 0 with no XA -> unmapped (75+ distinct genomic loci)
+        final SAMRecord overCap = newRecord(CHR_1, 1000, "100M");
         overCap.setMappingQuality(0);
         assertTrue(LiftBackRecordOps.willBeUnmapped(resolver.resolve(overCap)));
+
+        // a TX-CONTIG primary with MAPQ 0 + no XA hit 75+ transcript contigs of one gene -> one genomic locus,
+        // so the REF_ONLY-gated over-cap rule does NOT unmap it; it lifts and is kept.
+        final SAMRecord txOverCap = newRecord(TX_CONTIG, 51, "100M");
+        txOverCap.setMappingQuality(0);
+        assertFalse(LiftBackRecordOps.willBeUnmapped(resolver.resolve(txOverCap)));
 
         // MAPQ 0 but XA present = ordinary few-way multimapper -> kept
         final SAMRecord multimapper = newRecord(TX_CONTIG, 51, "100M");
