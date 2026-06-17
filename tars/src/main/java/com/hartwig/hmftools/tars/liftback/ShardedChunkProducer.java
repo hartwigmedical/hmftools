@@ -3,6 +3,7 @@ package com.hartwig.hmftools.tars.liftback;
 import static com.hartwig.hmftools.tars.common.TarsConfig.TARS_LOGGER;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
@@ -18,11 +19,9 @@ import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
 
-// Parallel input reader: a single-thread BGZF parse starves the workers, so the input is split into byte
-// ranges that each begin on a read-name-group boundary (BamShardSplitter) and read by one thread apiece. Each
-// shard cuts whole-fragment chunks into the shared queue; the fragment invariant holds because the splits land
-// between groups. A monitor thread reports a single aggregate progress bar (compressed bytes consumed across
-// all shards / file size). After every shard drains, one END_OF_STREAM per worker is enqueued.
+// Reads the input across several threads, one per byte range from BamShardSplitter. A single-thread BGZF parse
+// can't keep the workers fed; the ranges split on read-name boundaries so each shard still emits whole fragments.
+// A daemon thread logs aggregate progress; END_OF_STREAM is queued per worker once all shards drain.
 public class ShardedChunkProducer extends Thread
 {
     private final String mInputBam;
@@ -57,7 +56,7 @@ public class ShardedChunkProducer extends Thread
             final List<BamShardSplitter.ShardRange> ranges = BamShardSplitter.computeSplits(bam, header, mShardCount);
             TARS_LOGGER.info("liftback reading input across {} shard(s)", ranges.size());
 
-            // iterators stay open until all shards finish so the monitor can sample their offsets safely.
+            // kept open until all shards finish so the monitor can read their offsets.
             final List<ShardRecordIterator> iterators = new ArrayList<>();
             for(final BamShardSplitter.ShardRange range : ranges)
                 iterators.add(new ShardRecordIterator(bam, header, range));
@@ -122,9 +121,7 @@ public class ShardedChunkProducer extends Thread
         }
     }
 
-    // one aggregate progress line per tick: a bar of compressed bytes consumed across all shards, plus the
-    // read count and throughput since the last tick. Logged to a file in production, so each tick is its own
-    // line (no in-place redraw).
+    // periodic progress: a bar of compressed bytes consumed across the shards, with read count and throughput.
     private void runMonitor(
             final List<ShardRecordIterator> iterators, final long fileLength, final LongAdder readsCounter,
             final AtomicBoolean done)
@@ -173,7 +170,6 @@ public class ShardedChunkProducer extends Thread
         return sb.toString();
     }
 
-    // compact human count: 412M, 851K, 1.2B.
     private static String formatCount(final long value)
     {
         if(value >= 1_000_000_000)
@@ -199,7 +195,7 @@ public class ShardedChunkProducer extends Thread
         }
     }
 
-    private SAMFileHeader readHeader(final File bam) throws java.io.IOException
+    private SAMFileHeader readHeader(final File bam) throws IOException
     {
         try(SamReader reader = SamReaderFactory.makeDefault()
                 .validationStringency(ValidationStringency.SILENT)
