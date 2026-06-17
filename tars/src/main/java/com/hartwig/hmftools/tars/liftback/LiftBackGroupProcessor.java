@@ -71,7 +71,7 @@ public class LiftBackGroupProcessor
 
     // BWA emits MAPQ=60 for a clean unique alignment. Rescued primaries are constructed by us, not
     // directly emitted by BWA, so we cap at 55 to signal a primary+supp merge. Capping never goes UP.
-    private static final int RESCUED_MAPQ_CAP = 55;
+    private static final int SUPP_RESCUE_MAPQ_CAP = 55;
 
     // sink for emitted records: the standalone writes a BAM + TSV, the REDUX worker writes the shared BAM.
     public interface EmitSink
@@ -349,11 +349,11 @@ public class LiftBackGroupProcessor
             return null;
 
         // rewrite the primary's LiftBackResult with the merged (now-spliced) cigar + start; the start may
-        // shift for a left-extend, and MAPQ caps at RESCUED_MAPQ_CAP to mark it a constructed alignment.
+        // shift for a left-extend, and MAPQ caps at SUPP_RESCUE_MAPQ_CAP to mark it a constructed alignment.
         // mark merged supps for drop.
         resolved[primaryIdx] = primaryRes.withRevisedCigar(
                 result.mergedStart(), result.mergedCigar(), true,
-                Math.min(primaryRes.updatedMapq(), RESCUED_MAPQ_CAP), "rescued-via-supp");
+                Math.min(primaryRes.updatedMapq(), SUPP_RESCUE_MAPQ_CAP), "rescued-via-supp");
 
         if(introducedIntronsOut != null)
             introducedIntronsOut.addAll(result.introducedIntrons());

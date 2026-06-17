@@ -54,13 +54,6 @@ public class JunctionRescueResolver
 
         mStatistics.countCandidate();
 
-        // Low-confidence placement isn't a trustworthy anchor for building a spliced read.
-        if(candidate.primaryMapq() < mConfig.MinPrimaryMapq)
-        {
-            mStatistics.countReject(RescueRejectReason.LOW_PRIMARY_MAPQ);
-            return RescueResult.noMerge(RescueRejectReason.LOW_PRIMARY_MAPQ);
-        }
-
         List<CigarElement> primaryCigar = CigarUtils.cigarElementsFromStr(candidate.primaryCigar());
         if(CigarUtils.hasHardClip(primaryCigar))
         {

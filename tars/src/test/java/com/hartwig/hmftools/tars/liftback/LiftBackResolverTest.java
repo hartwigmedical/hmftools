@@ -652,7 +652,7 @@ public class LiftBackResolverTest
     @Test
     public void testMapqPolicy_inputSixtyPassesAsRescued()
     {
-        assertEquals(60, LiftBackResolver.decidePrimaryMapq(60, 1, false, false, false, false, true)); // no-op since RESCUED_MAPQ==60
+        assertEquals(60, LiftBackResolver.decidePrimaryMapq(60, 1, false, false, false, false, true)); // input 60 passes through unchanged
     }
 
     @Test

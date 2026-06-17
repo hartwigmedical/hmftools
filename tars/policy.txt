@@ -34,13 +34,13 @@ SPLICE_FLANKING_DELETION_MAX_BP = 5
 
 --- Scoring (bwa-mem defaults, used to re-score lifted boundaries) ---
 
-SCORE_MATCH / SCORE_MISMATCH = +1 / -4
-    : WHERE  -> LiftBackResolver, BoundaryReclaim
-    : WHY    -> reconstruct an alignment score to filter sub-optimal competitors.
+MATCH / MISMATCH = +1 / -4
+    : WHERE  -> BwaMemScore (shared by LiftBackResolver + BoundaryReclaim)
+    : WHY    -> the one bwa-mem affine model used by both the base walk and the CIGAR reconstruction.
     : GOTCHA -> XA alts carry no AS tag, so their score is RECONSTRUCTED from the CIGAR, not read off the record.
 
-SCORE_GAP_OPEN / SCORE_GAP_EXTEND = -6 / -1
-    : WHERE  -> LiftBackResolver
+GAP_OPEN / GAP_EXTEND = -6 / -1
+    : WHERE  -> BwaMemScore (used by LiftBackResolver's CIGAR reconstruction)
     : WHY    -> standard affine gap cost for the reconstructed score.
     : GOTCHA -> soft-clips are NOT penalised (clipped bases score 0), so a clipped alt can still win on score.
 
@@ -74,11 +74,6 @@ DEFAULT_MIN_PARTIAL_MATCH_RUN = 11
     : WHERE  -> RescueConfig
     : WHY    -> exon-proximal matched run required for a partial ref-verify rescue (clip with an unmatched outer tail).
     : GOTCHA -> longer than a full-match clip needs ON PURPOSE: the unexplained residual raises false-positive risk.
-
-DEFAULT_MIN_PRIMARY_MAPQ = 0
-    : WHERE  -> RescueConfig
-    : WHY    -> MAPQ-0 tx-contig primaries are exactly the duplicate artefact the lift is designed to rescue.
-    : GOTCHA -> floor of 0 means MAPQ is not a gate here; the merge validates its own anchors instead.
 
 ref-verify match run = bwa-mem score walk (match +1, mismatch -4)
     : WHERE  -> BoundaryReclaim, via JunctionRescueResolver
@@ -131,15 +126,12 @@ motif tiers: NONE 0  <  SEMI_CANONICAL 1  <  CANONICAL 2  <  ANNOTATED 3
 
 --- MAPQ / NH ---
 
-INPUT_UNIQUE_MAPQ = 60
+RESCUE_MAPQ = 60
     : WHERE  -> LiftBackResolver
-    : WHY    -> bwa's unique-placement MAPQ; an input 60 is reaffirmed to 60 by liftback.
+    : WHY    -> bwa's unique-placement MAPQ, and the value liftback assigns when it resolves a placement
+                (discriminator swap, or rescued MAPQ-0 unique). One constant: the recognise and assign values coincide.
 
-RESCUED_MAPQ = 60
-    : WHERE  -> LiftBackResolver
-    : WHY    -> MAPQ assigned when liftback resolves a placement (discriminator swap, or rescued MAPQ-0 unique).
-
-RESCUED_MAPQ_CAP = 55
+SUPP_RESCUE_MAPQ_CAP = 55
     : WHERE  -> LiftBackGroupProcessor
     : WHY    -> ceiling on a primary+supp merge, deliberately < 60 to flag a constructed alignment.
     : GOTCHA -> capping only ever lowers MAPQ; it never raises it.
@@ -243,7 +235,7 @@ collapse, tail-extend, canonicalize) only fire when a reference genome is loaded
             motif-supported) junction into one "M N M" primary; drop the merged supplementary.
           - gated on softclip complementarity, intron length [21 .. 1,000,000], anchor overhang >= 3,
             coverage overlap, and chain depth <= 4; snap point chosen by motif tier.
-          - merged primary MAPQ capped at RESCUED_MAPQ_CAP (55).
+          - merged primary MAPQ capped at SUPP_RESCUE_MAPQ_CAP (55).
 
   STEP 3  TERMINAL MICRO-JUNCTION COLLAPSE        (TerminalMicroJunctionCollapser)
           - a sub-threshold terminal anchor (< MIN_JUNCTION_ANCHOR = 8) across an intron is dropped when
@@ -278,8 +270,8 @@ collapse, tail-extend, canonicalize) only fire when a reference genome is loaded
 
   MAPQ POLICY                                     (LiftBackResolver.decidePrimaryMapq)
           - no tx alignment in the set            -> keep bwa's input MAPQ (MAPQ-0 here is not a tx artefact).
-          - discriminator swapped the primary     -> RESCUED_MAPQ (60).
-          - single locus, input MAPQ 0, no unresolved hidden tie -> RESCUED_MAPQ (60).
+          - discriminator swapped the primary     -> RESCUE_MAPQ (60).
+          - single locus, input MAPQ 0, no unresolved hidden tie -> RESCUE_MAPQ (60).
             (hidden tie = XS == AS on a ref-only primary outside any annotated exon; it blocks the rescue.)
           - input MAPQ == 60                       -> 60 (reaffirmed).
           - otherwise                              -> keep input MAPQ.
