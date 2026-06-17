@@ -48,6 +48,7 @@ public class FastqWriterCache implements AutoCloseable
     {
         for(SAMReadGroupRecord readGroup : ToFastqUtils.getReadGroups(mConfig))
         {
+            String readGroupId = readGroup.getId();
             FastqWriter fastqWriter = new FastqWriter(mConfig.formFilePrefix(mThreadId, readGroup.getId(), false));
             mReadGroupWriters.put(readGroup.getId(), fastqWriter);
         }
