@@ -154,15 +154,18 @@ NH = max(numLoci, 1)
     : GOTCHA -> counts LOCI, not emitted records; one junction across many tx contigs would
                 otherwise inflate NH.
 
-over-cap unmap = (inputMapq == 0 AND numXaAlts == 0)
+over-cap unmap = (inputMapq == 0 AND numXaAlts == 0 AND comp == REF_ONLY)
     : WHERE  -> LiftBackRecordOps.exceedsMappingCap
     : WHY    -> bwa was run with -h 75 (XA cap); a read mapping to more loci than the cap is
                 emitted MAPQ 0 with NO XA (the alt list is suppressed, not truncated). Too many
-                places to trust, so the primary is unmapped.
+                genomic places to trust, so the primary is unmapped.
+    : GOTCHA -> the REF_ONLY gate matters: a tx-contig primary hits 75+ transcript contigs of one
+                gene (a shared exon) that all lift to ONE genomic locus, so its suppressed XA must
+                NOT be read as too many genomic places. Only a genomic (REF_ONLY) primary is
+                unmapped; TX_ONLY / REF_AND_TX lift normally.
     : GOTCHA -> keyed on the INPUT state, not the post-lift MAPQ: with no XA the resolver sees a
-                single locus and
-                decidePrimaryMapq would otherwise rescue the MAPQ to 60. A unique read (MAPQ 60, no XA) and a
-                few-way multimapper (MAPQ 0 WITH XA) are both excluded.
+                single locus and decidePrimaryMapq would otherwise rescue the MAPQ to 60. A unique
+                read (MAPQ 60, no XA) and a few-way multimapper (MAPQ 0 WITH XA) are both excluded.
 ```
 
 ### Excluded regions (-rna_unmap_regions)
@@ -308,7 +311,8 @@ collapse, tail-extend, canonicalize) only fire when a reference genome is loaded
           MAPQ is never raised by collapse / tail-extend / canonicalize; a primary+supp merge caps it at 55.
 
   POST-FILTERS (unmap, never drop - the pair + SA references are preserved)
-          - over the XA cap (input MAPQ 0, no XA)  -> primary unmapped: maps to too many loci to place.
+          - over the XA cap (genomic primary, input MAPQ 0, no XA) -> primary unmapped: maps to too
+            many genomic loci.
           - lifts into an excluded region          -> primary UNMAPPED (REDUX-style: kept, flagged unmapped, no
             cigar, placed on the mate's coords if the mate stays mapped, else *:0); supplementary
             DROPPED and its entry removed from the primary's SA. Checked post-lift on genomic
@@ -329,10 +333,11 @@ When several rules could touch one record, they resolve in this order:
        and its tags stripped; no later rule runs on it. (A supplementary whose own lift failed is mirrored onto
        its primary's coords instead, to keep the 0x800 flag valid.)
 
-  2. OVER-CAP UNMAP  (input MAPQ 0 + no XA)
+  2. OVER-CAP UNMAP  (genomic primary, input MAPQ 0 + no XA)
        Overrides the MAPQ rescue below: even though the missing XA makes the read look single-locus (which would
        rescue MAPQ to 60), the primary is unmapped. Beats the discriminator result too - it does
-       not matter which placement won if the read maps to 75+ loci.
+       not matter which placement won if the read maps to 75+ genomic loci. Only REF_ONLY primaries
+       qualify; a tx-contig primary's 75+ hits collapse to one genomic locus, so it lifts normally.
 
   3. REF vs TX DISCRIMINATOR  (Part 1)
        Decides which placement is primary BEFORE the refinement passes run. A swap fixes the MAPQ at 60.

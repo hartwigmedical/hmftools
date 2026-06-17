@@ -198,10 +198,9 @@ public class ChunkProducer extends Thread
                 final double intervalSecs = (nowNanos - lastLogNanos) / 1e9;
                 final long rate = intervalSecs > 0 ? (long) ((readsStreamed - lastLogReads) / intervalSecs) : 0;
                 final int queued = backlog.getAsInt();
-                // ~processed = produced - waiting (ignores the handful currently in flight across workers).
                 TARS_LOGGER.info(
-                        "liftback progress: {} reads streamed | chunks {} produced, ~{} processed, {} queued (backlog) | {} reads/s",
-                        readsStreamed, chunksQueued, Math.max(0, chunksQueued - queued), queued, rate);
+                        "liftback progress: {} reads | {} chunks | {} queued | {} reads/s",
+                        readsStreamed, chunksQueued, queued, rate);
                 nextProgressLog += PROGRESS_LOG_INTERVAL;
                 lastLogNanos = nowNanos;
                 lastLogReads = readsStreamed;
