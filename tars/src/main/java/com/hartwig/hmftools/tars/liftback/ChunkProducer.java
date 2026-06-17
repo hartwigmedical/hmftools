@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
+import java.util.function.IntSupplier;
 
 import com.hartwig.hmftools.common.bamops.BamToolName;
 
@@ -148,7 +149,7 @@ public class ChunkProducer extends Thread
 
     private void streamChunks(final SAMRecordIterator iter) throws InterruptedException
     {
-        streamChunks(iter, mChunkTargetReads, mQueue::put);
+        streamChunks(iter, mChunkTargetReads, mQueue::put, mQueue::size);
     }
 
     // sink that may block (the bounded queue) and so propagates InterruptedException.
@@ -161,8 +162,11 @@ public class ChunkProducer extends Thread
     private static final long PROGRESS_LOG_INTERVAL = 10_000_000;
 
     // cut the name-grouped record stream into chunks of >= targetReads, never splitting a read-name group:
-    // a chunk is only flushed at a name boundary, so every chunk holds whole fragments.
-    static void streamChunks(final Iterator<SAMRecord> iter, final int targetReads, final ChunkSink sink)
+    // a chunk is only flushed at a name boundary, so every chunk holds whole fragments. backlog supplies the
+    // current queue depth so the progress line shows worker keep-up (backlog ~0 = workers starved / producer
+    // is the bottleneck; backlog near the queue cap = workers saturated / they are the bottleneck).
+    static void streamChunks(
+            final Iterator<SAMRecord> iter, final int targetReads, final ChunkSink sink, final IntSupplier backlog)
             throws InterruptedException
     {
         List<SAMRecord> chunk = new ArrayList<>(targetReads);
@@ -170,6 +174,8 @@ public class ChunkProducer extends Thread
         long readsStreamed = 0;
         int chunksQueued = 0;
         long nextProgressLog = PROGRESS_LOG_INTERVAL;
+        long lastLogNanos = System.nanoTime();
+        long lastLogReads = 0;
 
         while(iter.hasNext())
         {
@@ -188,8 +194,17 @@ public class ChunkProducer extends Thread
 
             if(++readsStreamed == nextProgressLog)
             {
-                TARS_LOGGER.info("liftback streamed {} reads ({} chunks queued)", readsStreamed, chunksQueued);
+                final long nowNanos = System.nanoTime();
+                final double intervalSecs = (nowNanos - lastLogNanos) / 1e9;
+                final long rate = intervalSecs > 0 ? (long) ((readsStreamed - lastLogReads) / intervalSecs) : 0;
+                final int queued = backlog.getAsInt();
+                // ~processed = produced - waiting (ignores the handful currently in flight across workers).
+                TARS_LOGGER.info(
+                        "liftback progress: {} reads streamed | chunks {} produced, ~{} processed, {} queued (backlog) | {} reads/s",
+                        readsStreamed, chunksQueued, Math.max(0, chunksQueued - queued), queued, rate);
                 nextProgressLog += PROGRESS_LOG_INTERVAL;
+                lastLogNanos = nowNanos;
+                lastLogReads = readsStreamed;
             }
         }
 

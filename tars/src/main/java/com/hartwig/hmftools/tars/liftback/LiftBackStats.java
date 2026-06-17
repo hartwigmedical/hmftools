@@ -115,13 +115,13 @@ public class LiftBackStats
             TARS_LOGGER.info("unmapped {} primaries with AS < {} not improved by liftback",
                     mLowAsPrimariesUnmapped, LiftBackGroupProcessor.PRIMARY_AS_UNMAP_THRESHOLD);
 
-        TARS_LOGGER.info("alignment-set composition x MAPQ tier:");
+        TARS_LOGGER.debug("alignment-set composition x MAPQ tier:");
         logTable(mCompositionByTier, LiftBackResult.Composition.values(), MapqTier.values());
 
-        TARS_LOGGER.info("category x MAPQ tier:");
+        TARS_LOGGER.debug("category x MAPQ tier:");
         logTable(mCategoryByTier, LiftBackCategory.values(), MapqTier.values());
 
-        TARS_LOGGER.info("primary bucket -> category breakdown:");
+        TARS_LOGGER.debug("primary bucket -> category breakdown:");
         for(LiftBackCategory.PrimaryBucket bucket : LiftBackCategory.PrimaryBucket.values())
         {
             int bucketTotal = 0;
@@ -137,7 +137,7 @@ public class LiftBackStats
             }
             if(bucketTotal == 0)
                 continue;
-            TARS_LOGGER.info("  {}: total={} {}", bucket.name(), bucketTotal, sb.toString());
+            TARS_LOGGER.debug("  {}: total={} {}", bucket.name(), bucketTotal, sb.toString());
         }
 
         int unliftable = mPerCategory[LiftBackCategory.LIFT_FAILED.ordinal()];
@@ -221,7 +221,7 @@ public class LiftBackStats
             if(rowTotal == 0)
                 continue;
 
-            TARS_LOGGER.info("  {}: total={} {}", row.name(), rowTotal, sb.toString());
+            TARS_LOGGER.debug("  {}: total={} {}", row.name(), rowTotal, sb.toString());
         }
     }
 
