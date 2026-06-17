@@ -4,10 +4,7 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.esvee.assembly.alignment.BreakendBuilder.segmentOrientation;
-
 import com.hartwig.hmftools.common.codon.Nucleotides;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 
 public class HomologyData
@@ -183,12 +180,6 @@ public class HomologyData
         return new HomologyData(exactHomology, -exactStart, exactEnd, -inexactStart, inexactEnd);
     }
 
-    public boolean matches(final HomologyData other)
-    {
-        return other.Homology.equals(Homology) && ExactStart == other.ExactStart && ExactEnd == other.ExactEnd
-                && InexactStart == other.InexactStart && InexactEnd == other.InexactEnd;
-    }
-
     public static HomologyData determineIndelHomology(final String refBasesStart, final String refBasesEnd, final int overlap)
     {
         if(refBasesStart.length() != refBasesEnd.length())
@@ -227,20 +218,5 @@ public class HomologyData
         int exactEnd = exactMatch - exactStart;
 
         return new HomologyData(sb.toString(), -exactStart, exactEnd, -exactStart, exactEnd);
-    }
-
-    private static String getOverlapBases(
-            final AlignData alignment, final Orientation orientation, final int overlap, final RefGenomeInterface refGenome)
-    {
-        if(orientation.isForward())
-        {
-            return refGenome.getBaseString(
-                    alignment.refLocation().Chromosome, alignment.refLocation().end() - overlap + 1, alignment.refLocation().end());
-        }
-        else
-        {
-            return refGenome.getBaseString(
-                    alignment.refLocation().Chromosome, alignment.refLocation().start(), alignment.refLocation().start() + overlap - 1);
-        }
     }
 }
