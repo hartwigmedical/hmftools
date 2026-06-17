@@ -112,6 +112,7 @@ public class BreakendWriter
             if(mConfig.SagaFastaFile != null)
             {
                 sj.add(FLD_SAGA_MATCH);
+                sj.add("SagaInferred");
             }
 
             writer.write(sj.toString());
@@ -254,6 +255,7 @@ public class BreakendWriter
                 {
                     SagaMatchBySequence sagaMatch = assemblyAlignment.sagaMatch();
                     sj.add(sagaMatch == null ? "" : sagaMatch.variant().toString());
+                    sj.add(String.valueOf(breakend.isSagaInferred()));
                 }
 
                 mWriter.write(sj.toString());
