@@ -136,10 +136,12 @@ public class AlignData
     public String cigar() { return mCigar; }
     public String xaTag() { return mXaTag; }
     public String mdTag() { return mMdTag; }
+
     public Orientation orientation() { return mOrientation; }
     public boolean isForward() { return mOrientation.isForward(); }
     public boolean isReverse() { return mOrientation.isReverse(); }
     public boolean isSupplementary() { return SamRecordUtils.isFlagSet(mFlags, SUPPLEMENTARY_ALIGNMENT); }
+
     public int leftSoftClipLength() { return mSoftClipLeft; }
     public int rightSoftClipLength() { return mSoftClipRight; }
     public int alignedBases() { return mAlignedBases; }
@@ -175,9 +177,7 @@ public class AlignData
     }
 
     public void markDroppedOnRequery() { mDroppedOnRequery = true; }
-
     public boolean droppedOnRequery() { return mDroppedOnRequery; }
-
     public boolean isRequery() { return mIsRequery; }
 
     public void setRequeriedSequenceCoords(int sequenceStart, int sequenceEnd)
@@ -189,17 +189,14 @@ public class AlignData
     }
 
     public int sequenceStart() { return mSequenceStart; }
-
     public int sequenceEnd() { return mSequenceEnd; }
 
     public int rawSequenceStart() { return mRawSequenceStart; }
-
     public int rawSequenceEnd() { return mRawSequenceEnd; }
 
     public List<CigarElement> cigarElements() { return mCigarElements; }
 
     public int adjustedAlignment() { return mAdjustedAlignment; }
-
     public double modifiedMapQual() { return mModifiedMapQual; }
 
     private int calcAdjustedIndelScore()
@@ -324,11 +321,8 @@ public class AlignData
     }
 
     public boolean hasLowMapQualAlignment() { return mSelectedAltAlignment != null || mUnselectedAltAlignments != null; }
-
     public boolean hasSelectedAltAlignment() { return mSelectedAltAlignment != null; }
-
     public boolean hasLowMapQualShortSvLink() { return mHasLowMapQualShortSvLink; }
-
     public AlternativeAlignment selectedAltAlignment() { return mSelectedAltAlignment; }
 
     public void setSelectedAltAlignments(
