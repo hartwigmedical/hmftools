@@ -126,41 +126,23 @@ public class AlignData
     }
 
     public ChrBaseRegion refLocation() { return mRefLocation; }
-
     public String chromosome() { return mRefLocation.Chromosome; }
-
     public int positionStart() { return mRefLocation.start(); }
-
     public int positionEnd() { return mRefLocation.end(); }
-
     public int mapQual() { return mMapQual; }
-
     public int nMatches() { return mNMatches; }
-
     public int score() { return mScore; }
-
     public int flags() { return mFlags; }
-
     public String cigar() { return mCigar; }
-
     public String xaTag() { return mXaTag; }
-
     public String mdTag() { return mMdTag; }
-
     public Orientation orientation() { return mOrientation; }
-
     public boolean isForward() { return mOrientation.isForward(); }
-
     public boolean isReverse() { return mOrientation.isReverse(); }
-
     public boolean isSupplementary() { return SamRecordUtils.isFlagSet(mFlags, SUPPLEMENTARY_ALIGNMENT); }
-
     public int leftSoftClipLength() { return mSoftClipLeft; }
-
     public int rightSoftClipLength() { return mSoftClipRight; }
-
     public int alignedBases() { return mAlignedBases; }
-
     public int segmentLength() { return mSequenceEnd - mSequenceStart + 1; }
 
     public void setSoftClipLengths(int left, int right)
