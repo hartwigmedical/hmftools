@@ -361,7 +361,8 @@ public class SpliceLiftBack
         final BamToolName toolName = fromPath(mConfig.SortBamToolPath);
         TARS_LOGGER.info("sorting BAM via {}: {}", toolName, sortedBam);
 
-        if(!BamOperations.sortBam(toolName, mConfig.SortBamToolPath, unsortedBam, sortedBam, mConfig.Threads))
+        final Integer sortMemoryGb = mConfig.SortMemoryGb > 0 ? mConfig.SortMemoryGb : null;
+        if(!BamOperations.sortBam(toolName, mConfig.SortBamToolPath, unsortedBam, sortedBam, mConfig.Threads, sortMemoryGb))
             return false;
 
         // sambamba sort indexes inline; only samtools needs the explicit index pass.
