@@ -74,8 +74,6 @@ import com.hartwig.hmftools.datamodel.orange.ExperimentType;
 import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
 import com.hartwig.hmftools.orange.util.PathResolver;
 
-import javax.swing.*;
-
 public class OrangeConfig
 {
     public final ExperimentType RunType;
@@ -256,25 +254,8 @@ public class OrangeConfig
             LOGGER.debug("disclaimer will be included in footer");
         }
 
-        if(configBuilder.hasValue(SAMPLING_DATE))
-        {
-            SamplingDate = interpretSamplingDateParam(configBuilder.getValue(SAMPLING_DATE));
-        }
-        else
-        {
-            LOGGER.debug("no sampling date provided, defaulting to null");
-            SamplingDate = null;
-        }
-
-        if(configBuilder.hasValue(ANALYSIS_DATE))
-        {
-            AnalysisDate = interpretAnalysisDateParam(configBuilder.getValue(ANALYSIS_DATE));
-        }
-        else
-        {
-            LOGGER.debug("defaulting analysis date to current date");
-            AnalysisDate = LocalDate.now();
-        }
+        SamplingDate = interpretDateParam(configBuilder, SAMPLING_DATE, null);
+        AnalysisDate = interpretDateParam(configBuilder, ANALYSIS_DATE, LocalDate.now());
         RunType = determineExperimentType(configBuilder.getValue(EXPERIMENT_TYPE));
         LOGGER.info("experiment type has been resolved to '{}'", RunType);
     }
@@ -342,39 +323,27 @@ public class OrangeConfig
         return RefGenVersion.is37() ? OrangeRefGenomeVersion.V37 : OrangeRefGenomeVersion.V38;
     }
 
-    static LocalDate interpretSamplingDateParam(final String samplingDateString) // return type stays LocalDate, just nullable
+    @VisibleForTesting
+    static LocalDate interpretDateParam(final ConfigBuilder configBuilder, final String argName, final LocalDate defaultValue)
     {
-        String format = "yyMMdd";
+        if(!configBuilder.hasValue(argName))
+        {
+            return defaultValue;
+        }
 
-        LocalDate samplingDate;
+        String format = "yyMMdd";
+        String dateString = configBuilder.getValue(argName);
         try
         {
-            samplingDate = LocalDate.parse(samplingDateString, DateTimeFormatter.ofPattern(format, Locale.ENGLISH));
-            LOGGER.debug("Configured sampling date to {}", samplingDate);
+            LocalDate date = LocalDate.parse(dateString, DateTimeFormatter.ofPattern(format, Locale.ENGLISH));
+            LOGGER.debug("Configured {} to {}", argName, date);
+            return date;
         }
         catch(DateTimeParseException exception)
         {
-            samplingDate = null;
-            LOGGER.warn("Could not parse configured sampling date '{}'. Expected format is '{}'", samplingDateString, format);
+            LOGGER.warn("Could not parse configured {} '{}'. Expected format is '{}'", argName, dateString, format);
+            return defaultValue;
         }
-        return samplingDate;
-    }
-    static LocalDate interpretAnalysisDateParam(final String analysisDateString)
-    {
-        String format = "yyMMdd";
-
-        LocalDate analysisDate;
-        try
-        {
-            analysisDate = LocalDate.parse(analysisDateString, DateTimeFormatter.ofPattern(format, Locale.ENGLISH));
-            LOGGER.debug("Configured analysis date to {}", analysisDate);
-        }
-        catch(DateTimeParseException exception)
-        {
-            analysisDate = LocalDate.now();
-            LOGGER.warn("Could not parse configured analysis date '{}'. Expected format is '{}'", analysisDateString, format);
-        }
-        return analysisDate;
     }
 
     private static ExperimentType determineExperimentType(final String experimentTypeString)

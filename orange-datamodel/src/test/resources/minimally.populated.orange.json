@@ -2,6 +2,7 @@
   "sampleId": "TEST",
   "referenceId": "REFERENCE",
   "samplingDate": "2022-01-20",
+  "analysisDate": "2022-01-20",
   "experimentType": "WHOLE_GENOME",
   "configuredPrimaryTumor": [],
   "refGenomeVersion": "V37",

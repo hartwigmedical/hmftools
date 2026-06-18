@@ -36,4 +36,5 @@ patient-db/patient-db-logs/*.log
 # Ignore R files
 .Rhistory
 
-/CLAUDE.md
+# Ignore Claude-related files
+CLAUDE.md

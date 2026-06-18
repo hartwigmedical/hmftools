@@ -109,6 +109,10 @@ public class FrontPageTables
         addEntry(cells, widths, cellEntries, 2, "Pipeline");
         addEntry(cells, widths, cellEntries, 2, "Samples");
         addEntry(cells, widths, cellEntries, 2, "Date Analysed");
+        if(report.samplingDate() != null)
+        {
+            addEntry(cells, widths, cellEntries, 2, "Sampling Date");
+        }
 
         Table table = Tables.createContent(width, intToFloatArray(widths), cellArray(cellEntries));
 
@@ -120,7 +124,11 @@ public class FrontPageTables
         table.addCell(cells.createContent(pipelineModeDisplay(report, config)));
         table.addCell(cells.createContent(sampleTypesDisplay(report)));
 
-        table.addCell(cells.createContent(report.samplingDate().toString()));
+        table.addCell(cells.createContent(report.analysisDate().toString()));
+        if(report.samplingDate() != null)
+        {
+            table.addCell(cells.createContent(report.samplingDate().toString()));
+        }
 
         return table;
     }
