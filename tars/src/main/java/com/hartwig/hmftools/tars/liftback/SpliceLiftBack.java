@@ -3,6 +3,7 @@ package com.hartwig.hmftools.tars.liftback;
 import static com.hartwig.hmftools.common.bamops.BamToolName.fromPath;
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.runThreadTasks;
+import static com.hartwig.hmftools.tars.liftback.SpliceLiftBackConfig.SORT_BAMTOOL_PATH;
 import static com.hartwig.hmftools.tars.common.SpliceCommon.ALT_CONTIG_SUFFIX;
 import static com.hartwig.hmftools.tars.common.TarsConfig.APP_NAME;
 import static com.hartwig.hmftools.tars.common.TarsConfig.TARS_LOGGER;
@@ -20,6 +21,10 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -87,14 +92,17 @@ public class SpliceLiftBack
 
         mergeWorkerStats(workers);
 
-        TARS_LOGGER.info("liftback processing complete, mins({}); concatenating + sorting shards", runTimeMinsStr(startTimeMs));
+        TARS_LOGGER.info("liftback processing complete, mins({}); sorting + merging shards", runTimeMinsStr(startTimeMs));
 
-        final String unsortedBam = mConfig.formUnsortedBam();
-        if(!concatenateShards(shardBams, unsortedBam))
-            throw new RuntimeException("failed to concatenate liftback BAM shards");
+        // each shard spans the genome in random coordinate order, so sort the (small) shards in parallel -- each
+        // fits in memory with little/no temp -- then stream-merge the sorted shards. Avoids a full-size cat copy
+        // and a monolithic sort that spills the whole sample to temp.
+        final List<String> sortedShards = sortShards(shardBams);
+        if(sortedShards == null)
+            throw new RuntimeException("failed to sort liftback BAM shards");
 
-        if(!sortAndIndex(unsortedBam, mConfig.formOutputBam()))
-            throw new RuntimeException("failed to sort + index lifted BAM");
+        if(!mergeShards(sortedShards, mConfig.formOutputBam()))
+            throw new RuntimeException("failed to merge + index lifted BAM");
 
         if(mConfig.WriteLiftbackTsv)
         {
@@ -102,7 +110,7 @@ public class SpliceLiftBack
             concatenateTsvShards(tsvBShards, LiftBackWriter.TSV_B_HEADER_LINE, mConfig.formTsvBFile());
         }
 
-        cleanupIntermediates(unsortedBam, shardBams, tsvAShards, tsvBShards);
+        cleanupIntermediates(shardBams, sortedShards, tsvAShards, tsvBShards);
 
         TARS_LOGGER.info("SpliceLiftBack complete, mins({})", runTimeMinsStr(startTimeMs));
     }
@@ -342,37 +350,64 @@ public class SpliceLiftBack
                 evaluated, extended, basesLead, basesTrail);
     }
 
-    private boolean concatenateShards(final List<String> shardBams, final String unsortedBam)
-    {
-        final BamToolName toolName = fromPath(mConfig.BamToolPath);
-        TARS_LOGGER.info("concatenating {} liftback shards via {}", shardBams.size(), toolName);
-        // samtools cat is a plain BGZF block concat and rejects -@, so pass threads=1.
-        return BamOperations.concatenateBams(toolName, mConfig.BamToolPath, unsortedBam, shardBams, 1);
-    }
-
-    private boolean sortAndIndex(final String unsortedBam, final String sortedBam)
+    // sort each shard concurrently as a subprocess. Each shard is ~1/workerCount of the data, so with a modest
+    // per-shard -m it sorts mostly in memory; running workerCount of them at once gives sort parallelism the
+    // single-process sort lacks. Peak RAM ~= Threads x sort_memory_gb, so size that flag with the box in mind.
+    private List<String> sortShards(final List<String> shardBams)
     {
         if(mConfig.SortBamToolPath == null)
         {
-            TARS_LOGGER.info("no -{} configured; leaving unsorted BAM at {}", BamToolName.BAMTOOL_PATH, unsortedBam);
-            return false;
+            TARS_LOGGER.error("no -{} or -{} configured; cannot sort lifted shards", BamToolName.BAMTOOL_PATH, SORT_BAMTOOL_PATH);
+            return null;
         }
 
         final BamToolName toolName = fromPath(mConfig.SortBamToolPath);
-        TARS_LOGGER.info("sorting BAM via {}: {}", toolName, sortedBam);
-
         final Integer sortMemoryGb = mConfig.SortMemoryGb > 0 ? mConfig.SortMemoryGb : null;
-        if(!BamOperations.sortBam(toolName, mConfig.SortBamToolPath, unsortedBam, sortedBam, mConfig.Threads, sortMemoryGb))
-            return false;
+        TARS_LOGGER.info("sorting {} shards via {} ({} concurrent)", shardBams.size(), toolName, mConfig.Threads);
 
-        // sambamba sort indexes inline; only samtools needs the explicit index pass.
-        if(toolName == BamToolName.SAMTOOLS)
+        final List<String> sortedShards = Lists.newArrayList();
+        for(int i = 0; i < shardBams.size(); ++i)
+            sortedShards.add(formSortedShardPath(i));
+
+        final ExecutorService executor = Executors.newFixedThreadPool(mConfig.Threads);
+        final List<Future<Boolean>> futures = Lists.newArrayList();
+        for(int i = 0; i < shardBams.size(); ++i)
         {
-            if(!BamOperations.indexBam(toolName, mConfig.SortBamToolPath, sortedBam, mConfig.Threads))
-                return false;
+            final String inputShard = shardBams.get(i);
+            final String sortedShard = sortedShards.get(i);
+            futures.add(executor.submit(() ->
+                    BamOperations.sortBam(toolName, mConfig.SortBamToolPath, inputShard, sortedShard, 1, sortMemoryGb)));
+        }
+        executor.shutdown();
+
+        boolean allSorted = true;
+        for(final Future<Boolean> future : futures)
+        {
+            try
+            {
+                if(!future.get())
+                    allSorted = false;
+            }
+            catch(InterruptedException | ExecutionException e)
+            {
+                TARS_LOGGER.error("shard sort failed: {}", e.toString());
+                allSorted = false;
+            }
         }
 
-        return true;
+        return allSorted ? sortedShards : null;
+    }
+
+    private boolean mergeShards(final List<String> sortedShards, final String outputBam)
+    {
+        // merge over the coordinate-sorted shards is a streaming k-way merge: near-zero temp, no decode-resort.
+        final BamToolName toolName = fromPath(mConfig.BamToolPath);
+        TARS_LOGGER.info("merging {} sorted shards via {}: {}", sortedShards.size(), toolName, outputBam);
+
+        if(!BamOperations.mergeBams(toolName, mConfig.BamToolPath, outputBam, sortedShards, mConfig.Threads))
+            return false;
+
+        return BamOperations.indexBam(toolName, mConfig.BamToolPath, outputBam, mConfig.Threads);
     }
 
     // write the header line once, then append each worker's headerless data shard.
@@ -406,17 +441,22 @@ public class SpliceLiftBack
         return mConfig.OutputDir + mConfig.prefix() + ".shard_" + index + ".bam";
     }
 
+    private String formSortedShardPath(final int index)
+    {
+        return mConfig.OutputDir + mConfig.prefix() + ".shard_" + index + ".sorted.bam";
+    }
+
     private String formTsvShardPath(final int index, final String kind)
     {
         return mConfig.OutputDir + mConfig.prefix() + "." + kind + ".shard_" + index + ".tsv";
     }
 
     private void cleanupIntermediates(
-            final String unsortedBam, final List<String> shardBams,
+            final List<String> shardBams, final List<String> sortedShards,
             final List<String> tsvAShards, final List<String> tsvBShards)
     {
-        deleteQuietly(unsortedBam);
         shardBams.forEach(SpliceLiftBack::deleteQuietly);
+        sortedShards.forEach(SpliceLiftBack::deleteQuietly);
         tsvAShards.forEach(SpliceLiftBack::deleteQuietly);
         tsvBShards.forEach(SpliceLiftBack::deleteQuietly);
     }
