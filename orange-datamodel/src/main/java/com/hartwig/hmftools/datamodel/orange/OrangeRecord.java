@@ -31,8 +31,11 @@ public interface OrangeRecord
     @Nullable
     String referenceId();
 
-    @NotNull
+    @Nullable
     LocalDate samplingDate();
+
+    @NotNull
+    LocalDate analysisDate();
 
     @NotNull
     ExperimentType experimentType();

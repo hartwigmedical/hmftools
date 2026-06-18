@@ -73,6 +73,7 @@ public final class TestOrangeReportFactory
                 .referenceId(REFERENCE_SAMPLE)
                 .pipelineVersion(PipelineToolDirectories.DEFAULT_PIPELINE_OUTPUT.toString())
                 .samplingDate(LocalDate.of(2021, 11, 19))
+                .analysisDate(LocalDate.now())
                 .experimentType(ExperimentType.TARGETED)
                 .refGenomeVersion(OrangeRefGenomeVersion.V37)
                 .purple(TestPurpleInterpretationFactory.createMinimalTestPurpleData())
