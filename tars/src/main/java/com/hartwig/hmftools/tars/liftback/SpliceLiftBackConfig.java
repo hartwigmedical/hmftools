@@ -52,8 +52,8 @@ public class SpliceLiftBackConfig
 
     public static final String SORT_MEMORY_GB = "sort_memory_gb";
     public static final String SORT_MEMORY_GB_DESC =
-            "Sort memory in GB passed to the sort tool's -m (sambamba: total across threads; samtools: per thread). "
-                    + "Unset uses the tool default";
+            "Per-shard sort memory in GB passed to the sort tool's -m; shards sort concurrently so peak RAM is "
+                    + "roughly -threads x this. Unset uses the tool default";
 
     public static final String DEFAULT_OUTPUT_PREFIX = "splice_lifted";
     public static final String TSV_A_SUFFIX = ".liftback.records.tsv";
@@ -99,11 +99,6 @@ public class SpliceLiftBackConfig
 
         if(!checkCreateOutputDir(OutputDir))
             throw new IllegalStateException("failed to create output directory: " + OutputDir);
-    }
-
-    public String formUnsortedBam()
-    {
-        return OutputDir + prefix() + ".unsorted" + BAM_EXTENSION;
     }
 
     // the run's output prefix, also used to namespace the per-worker shard intermediates so concurrent or
