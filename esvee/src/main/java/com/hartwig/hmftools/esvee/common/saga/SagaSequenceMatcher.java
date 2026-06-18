@@ -54,11 +54,6 @@ public class SagaSequenceMatcher
     {
     }
 
-    // junctionOffsets are the indices just after the junction in sequence.
-    // E.g.
-    // sequence = RRRJJJRRR
-    // junctionOffset[0] = 3
-    // junctionOffset[1] = 6
     @Nullable
     public SagaMatchBySequence matchBySequence(final byte[] sequence, final List<SagaJunctionInfo> junctions, boolean lowerJunctionOverlap,
             boolean allowReverseStrand)
