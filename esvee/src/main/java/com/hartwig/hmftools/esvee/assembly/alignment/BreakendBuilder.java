@@ -2,7 +2,6 @@ package com.hartwig.hmftools.esvee.assembly.alignment;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
-import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.getReadIndexFromPosition;
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipLength;
@@ -81,6 +80,10 @@ public class BreakendBuilder
 
     public boolean formBreakendsFromSaga(final SagaAlignment sagaAlignment, final AlignData alignData)
     {
+        // For a SAGA-matched variant, use the breakends stated in the SAGA resource. Why?
+        //   - Some cases where homology causes alignment to be misleading, resulting in wrong breakends.
+        //   - Recover SGLs to full variants given that one half matches a SAGA variant.
+
         // Only use SAGA breakends for the simple case of 0 or 1 links. Chained assemblies require more care, not implemented for now.
         boolean isChained = mAssemblyAlignment.phaseSet() != null && mAssemblyAlignment.phaseSet().assemblyLinks().size() > 1;
         if(isChained)
@@ -105,12 +108,6 @@ public class BreakendBuilder
             return false;
         }
 
-        List<Integer> sagaJunctionOffsets = sagaAssembly.junctionOffsets();
-
-        // Calculate the indices of the breakends within the phased assembly sequence.
-        // Note these can be out of bounds if the assembly doesn't span the whole SAGA variant.
-        List<Integer> assemblyJunctionOffsets = sagaAlignment.queryJunctionOffsets();
-
         String rawInsertSequence;
         int indelLength;
         boolean lowerBreakendInferred;
@@ -119,21 +116,18 @@ public class BreakendBuilder
         {
             // Insertion - the assembly overlaps the SAGA insert sequence, which is bounded by the junction offsets.
 
-            String assemblySeq = mAssemblyAlignment.fullSequence();
-            int assemblyStart = min(max(0, assemblyJunctionOffsets.get(0)), assemblySeq.length() - 1);
-            int assemblyEnd = min(max(0, assemblyJunctionOffsets.get(1)), assemblySeq.length());
-
-            // If there wasn't enough phased assembly to cover the whole SAGA insert sequence, get the missing part of the insert from SAGA.
-            String sagaInsertSeq = sagaVariant.insertSequence();
-            int startInferredLength = sagaAlignment.sagaStart() - sagaJunctionOffsets.get(0);
-            int endInferredLength = sagaJunctionOffsets.get(1) - sagaAlignment.sagaEnd();
-            String startInferredSeq = startInferredLength > 0 ? sagaInsertSeq.substring(0, startInferredLength) : "";
-            String endInferredSeq = endInferredLength > 0 ? sagaInsertSeq.substring(sagaInsertSeq.length() - endInferredLength) : "";
-
-            rawInsertSequence = startInferredSeq + assemblySeq.substring(assemblyStart, assemblyEnd) + endInferredSeq;
+            // Replace the ESVEE-assembled insert sequence with the SAGA insert sequence. This is because:
+            //   - In the case of 2 unlinked SGLs recovered to paired breakends, deduping requires the insert sequence to be the same.
+            //   - The differences between the phased assembly and SAGA sequence are known to be small, otherwise no SAGA match.
+            //   - Allows more advanced resolution of the SAGA breakends (e.g. template insertions) to be precomputed, in the future.
+            rawInsertSequence = sagaVariant.insertSequence();
 
             indelLength = rawInsertSequence.length();
 
+            // If the phased assembly didn't span the whole SAGA variant, take note that the other breakend is inferred from SAGA.
+            List<Integer> sagaJunctionOffsets = sagaAssembly.junctionOffsets();
+            int startInferredLength = sagaAlignment.sagaStart() - sagaJunctionOffsets.get(0);
+            int endInferredLength = sagaJunctionOffsets.get(1) - sagaAlignment.sagaEnd();
             lowerBreakendInferred = startInferredLength > 0;
             upperBreakendInferred = endInferredLength > 0;
         }
@@ -141,16 +135,19 @@ public class BreakendBuilder
         {
             // Deletion - no insert sequence and the assembly spans the junction (otherwise it couldn't have matched the SAGA variant).
 
-            // FIXME: the assembly can have a few different number of bases deleted and that is lost here, since in the saga alignment small indels are allowed around the junction
-
             rawInsertSequence = "";
+            // Using the SAGA breakends can differ in a few bases of deletion, which is ok. Similar explanation to the insert case above.
             indelLength = upperSagaBreakend.position() - lowerSagaBreakend.position() - 1;
             lowerBreakendInferred = false;
             upperBreakendInferred = false;
         }
 
+        // Calculate the indices of the (adjusted) breakends within the phased assembly sequence.
+        // Note these can be out of bounds if the assembly doesn't span the whole SAGA variant.
+        // These are only used for fragment support counting.
+        List<Integer> assemblyJunctionOffsets = sagaAlignment.queryJunctionOffsets();
         int assemblyIndelStart = assemblyJunctionOffsets.get(0);
-        int assemblyIndelEnd = assemblyIndelStart + rawInsertSequence.length();
+        int assemblyIndelEnd = assemblyJunctionOffsets.size() > 1 ? assemblyJunctionOffsets.get(1) : assemblyIndelStart;
 
         IndelCoords indelCoords = new IndelCoords(lowerSagaBreakend.position(), upperSagaBreakend.position(), indelLength);
         indelCoords.setInsertedBases(rawInsertSequence);
@@ -380,8 +377,7 @@ public class BreakendBuilder
             }
             else
             {
-                // in this case the delete does not include the overlapped homology bases, so both breakends need to be shifted forward
-                // by the same amount, being the exact homology at the start
+                // Adjust the breakends to be middle-aligned. Doesn't change the nature of the variant, however.
                 lowerPosition += abs(homology.ExactStart);
                 upperPosition += abs(homology.ExactStart);
             }
