@@ -49,8 +49,6 @@ public class ClusterFactoryTest
     @Test
     public void testAmberPcfSegmentation()
     {
-        // PurpleConfig.OldAmberPcfSegmentation = true;
-
         List<SvPosition> sv = Collections.emptyList();
 
         List<CobaltRatio> cobaltRatios = Lists.newArrayList();

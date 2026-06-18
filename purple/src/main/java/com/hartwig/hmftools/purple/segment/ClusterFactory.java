@@ -103,7 +103,7 @@ public class ClusterFactory
             {
                 if(earliestCnChangePosition > segment.end())
                 {
-                    if(pcfPosition != null && pcfPosition.Source == PCFSource.TUMOR_BAF && !PurpleConfig.OldAmberPcfSegmentation)
+                    if(pcfPosition != null && pcfPosition.Source == PCFSource.TUMOR_BAF)
                     {
                         // cannot be the final segment
                         boolean useAmberSegment = lastPositionWasAmberPcfEnd && pcfPosition.isSegmentStart()&& i < allPositions.size() - 2;
