@@ -50,6 +50,11 @@ public class SpliceLiftBackConfig
             "Path to sambamba or samtools used for the final sort only; defaults to -" + BAMTOOL_PATH
                     + " (concat stays samtools)";
 
+    public static final String SORT_MEMORY_GB = "sort_memory_gb";
+    public static final String SORT_MEMORY_GB_DESC =
+            "Sort memory in GB passed to the sort tool's -m (sambamba: total across threads; samtools: per thread). "
+                    + "Unset uses the tool default";
+
     public static final String DEFAULT_OUTPUT_PREFIX = "splice_lifted";
     public static final String TSV_A_SUFFIX = ".liftback.records.tsv";
     public static final String TSV_B_SUFFIX = ".liftback.alignments.tsv";
@@ -68,6 +73,7 @@ public class SpliceLiftBackConfig
     public final String OutputId;
     public final String BamToolPath;
     public final String SortBamToolPath;
+    public final int SortMemoryGb;
     public final int Threads;
 
     public SpliceLiftBackConfig(final ConfigBuilder configBuilder)
@@ -85,6 +91,7 @@ public class SpliceLiftBackConfig
         OutputId = configBuilder.getValue(OUTPUT_ID);
         BamToolPath = configBuilder.getValue(BAMTOOL_PATH);
         SortBamToolPath = configBuilder.hasValue(SORT_BAMTOOL_PATH) ? configBuilder.getValue(SORT_BAMTOOL_PATH) : BamToolPath;
+        SortMemoryGb = configBuilder.getInteger(SORT_MEMORY_GB);
         Threads = parseThreads(configBuilder);
 
         if(OutputDir == null)
@@ -138,6 +145,7 @@ public class SpliceLiftBackConfig
         configBuilder.addFlag(WRITE_LIFTBACK_TSV, WRITE_LIFTBACK_TSV_DESC);
         BamToolName.addConfig(configBuilder);
         configBuilder.addPath(SORT_BAMTOOL_PATH, false, SORT_BAMTOOL_PATH_DESC);
+        configBuilder.addInteger(SORT_MEMORY_GB, SORT_MEMORY_GB_DESC, 0);
 
         addOutputOptions(configBuilder);
         addThreadOptions(configBuilder);
