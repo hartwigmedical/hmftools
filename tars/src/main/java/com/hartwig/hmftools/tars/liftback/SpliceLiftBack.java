@@ -352,22 +352,22 @@ public class SpliceLiftBack
 
     private boolean sortAndIndex(final String unsortedBam, final String sortedBam)
     {
-        if(mConfig.BamToolPath == null)
+        if(mConfig.SortBamToolPath == null)
         {
             TARS_LOGGER.info("no -{} configured; leaving unsorted BAM at {}", BamToolName.BAMTOOL_PATH, unsortedBam);
             return false;
         }
 
-        final BamToolName toolName = fromPath(mConfig.BamToolPath);
+        final BamToolName toolName = fromPath(mConfig.SortBamToolPath);
         TARS_LOGGER.info("sorting BAM via {}: {}", toolName, sortedBam);
 
-        if(!BamOperations.sortBam(toolName, mConfig.BamToolPath, unsortedBam, sortedBam, mConfig.Threads))
+        if(!BamOperations.sortBam(toolName, mConfig.SortBamToolPath, unsortedBam, sortedBam, mConfig.Threads))
             return false;
 
         // sambamba sort indexes inline; only samtools needs the explicit index pass.
         if(toolName == BamToolName.SAMTOOLS)
         {
-            if(!BamOperations.indexBam(toolName, mConfig.BamToolPath, sortedBam, mConfig.Threads))
+            if(!BamOperations.indexBam(toolName, mConfig.SortBamToolPath, sortedBam, mConfig.Threads))
                 return false;
         }
 
