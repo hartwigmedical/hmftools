@@ -11,6 +11,8 @@ import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.tars.common.ContigEntry;
 
 // Per-chromosome merged exon spans loaded from the ensembl data cache. Used by LiftBackResolver to
 // distinguish a hidden tie where the primary lands in an annotated exon (rescue MAPQ) from a genuinely
@@ -63,6 +65,23 @@ public final class ExonRegionIndex
         return fromCache(ensemblDataCache, refGenomeVersion);
     }
 
+    // built from the contig sidecar instead of the ensembl cache: each entry's exonSpans are the genomic exons
+    // of a multi-exon transcript (the only transcripts that get a tx-contig). Single-exon transcripts are absent,
+    // but their exons only matter to the discriminator when a read has a tx-contig match -- which only multi-exon
+    // transcripts produce -- so the derived index is behaviour-equivalent to the ensembl-loaded one. Keyed by the
+    // sidecar chromosome, the exact form the lift emits.
+    public static ExonRegionIndex fromContigEntries(final List<ContigEntry> entries)
+    {
+        final Map<String, List<int[]>> spansByChromosome = new HashMap<>();
+        for(final ContigEntry entry : entries)
+        {
+            final List<int[]> spans = spansByChromosome.computeIfAbsent(entry.chromosome(), k -> new ArrayList<>());
+            for(final BaseRegion exon : entry.exonSpans())
+                spans.add(new int[] { exon.start(), exon.end() });
+        }
+        return fromSpans(spansByChromosome);
+    }
+
     public static ExonRegionIndex fromCache(final EnsemblDataCache ensemblDataCache, final RefGenomeVersion refGenomeVersion)
     {
         final Map<String, List<int[]>> spansByChromosome = new HashMap<>();
@@ -83,7 +102,11 @@ public final class ExonRegionIndex
                 }
             }
         }
+        return fromSpans(spansByChromosome);
+    }
 
+    private static ExonRegionIndex fromSpans(final Map<String, List<int[]>> spansByChromosome)
+    {
         final Map<String, int[]> starts = new HashMap<>();
         final Map<String, int[]> ends = new HashMap<>();
         for(final Map.Entry<String, List<int[]>> entry : spansByChromosome.entrySet())
