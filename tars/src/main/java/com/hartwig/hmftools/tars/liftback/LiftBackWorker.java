@@ -31,7 +31,8 @@ public class LiftBackWorker extends Thread
     private final BlockingQueue<List<SAMRecord>> mQueue;
     private final LiftBackStats mStats;
     private final LiftBackGroupProcessor mProcessor;
-    private final SAMFileWriter mShardWriter;
+    private final GenomicBucketIndex mBucketIndex;
+    private final SAMFileWriter[] mBucketWriters; // one unsorted shard per genomic bucket, routed by lifted coord
     private final LiftBackWriter mTsvWriter; // nullable: headerless per-worker TSV shard, only when enabled
 
     private final JunctionRescueResolver mRescueResolver;
@@ -43,11 +44,13 @@ public class LiftBackWorker extends Thread
 
     public LiftBackWorker(
             final BlockingQueue<List<SAMRecord>> queue, final LiftBackResources resources,
-            final SAMFileHeader header, final String shardBam, final String tsvAShard, final String tsvBShard)
+            final SAMFileHeader header, final GenomicBucketIndex bucketIndex, final List<String> bucketBams,
+            final String tsvAShard, final String tsvBShard)
     {
         mQueue = queue;
         mStats = new LiftBackStats();
         mExcludedRegions = resources.ExcludedRegions;
+        mBucketIndex = bucketIndex;
 
         try
         {
@@ -74,7 +77,10 @@ public class LiftBackWorker extends Thread
                 resources.Resolver, mRescueResolver, mSoftclipExtender, mTerminalCollapser, mJunctionCanonicalizer,
                 refSource, mExcludedRegions, mStats);
 
-        mShardWriter = new SAMFileWriterFactory().makeBAMWriter(header, false, new File(shardBam));
+        final SAMFileWriterFactory writerFactory = new SAMFileWriterFactory();
+        mBucketWriters = new SAMFileWriter[bucketBams.size()];
+        for(int b = 0; b < bucketBams.size(); ++b)
+            mBucketWriters[b] = writerFactory.makeBAMWriter(header, false, new File(bucketBams.get(b)));
     }
 
     public LiftBackStats liftBackStats() { return mStats; }
@@ -111,7 +117,8 @@ public class LiftBackWorker extends Thread
         }
         finally
         {
-            mShardWriter.close();
+            for(final SAMFileWriter writer : mBucketWriters)
+                writer.close();
             if(mTsvWriter != null)
             {
                 try
@@ -159,7 +166,7 @@ public class LiftBackWorker extends Thread
 
     private void write(final SAMRecord record, final LiftBackResult result)
     {
-        mShardWriter.addAlignment(record);
+        mBucketWriters[mBucketIndex.bucketOf(record)].addAlignment(record);
         if(mTsvWriter == null)
             return;
         try
