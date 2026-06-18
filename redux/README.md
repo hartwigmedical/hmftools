@@ -26,9 +26,9 @@ conversion. This functionality is included by default in the BamTools BamToFastq
 
 ## Roche SBX Alexios and Ultima BAMs
 
-Redux supports BAMs (or CRAMs) from SBX and Ultima. These do not produce recoverable BAMs since bases and base qualities are modified for most reads.
+Redux supports BAMs (or CRAMs) from SBX and Ultima. These do not produce recoverable BAMs since some read attributes are overwritten.
 
-Set 'sequencing_type' as described below for these platforms.
+Set 'sequencing_type' as described below for these platforms. Details of algorithms specific to these technologies will be provided.
 
 
 ## Commands
@@ -50,19 +50,21 @@ java -jar redux.jar
 
 ## Arguments
 
-| Argument            | Description                                                                                        |
-|---------------------|----------------------------------------------------------------------------------------------------|
-| sample              | Sample ID                                                                                          |
-| input_bam           | Path to BAM file(s)                                                                                |
-| output_bam          | Output BAM file, otherwise will write SAMPLE_ID.redux.bam                                          |
-| ref_genome          | Path to reference genome files as used in alignment                                                |
-| ref_genome_version  | V37 or V38                                                                                         |
-| sequencing_type     | ILLUMINA (default), SBX or ULTIMA                                                                  |
-| form_consensus      | Form a consensus read from duplicates                                                              |
-| unmap_regions       | TSV file specifying regions of high depth, repeats or otherwise problematic for mapping            |
-| bamtool             | Used for BAM sorting, concatenation and indexing                                                   |
-| threads             | Number of threads, default = 1                                                                     |
-| output_dir          | If not specified will write output same directory as input BAM                                     |
+| Argument           | Description                                                                             |
+|--------------------|-----------------------------------------------------------------------------------------|
+| sample             | Sample ID                                                                               |
+| input_bam          | Path to BAM file(s)                                                                     |
+| output_bam         | Output BAM file, otherwise will write SAMPLE_ID.redux.bam                               |
+| ref_genome         | Path to reference genome files as used in alignment                                     |
+| ref_genome_version | V37 or V38                                                                              |
+| sequencing_type    | ILLUMINA (default), SBX or ULTIMA                                                       |
+| form_consensus     | Form a consensus read from duplicates                                                   |
+| unmap_regions      | TSV file specifying regions of high depth, repeats or otherwise problematic for mapping |
+| bamtool            | Used for BAM sorting, concatenation and indexing                                        |
+| threads            | Number of threads, default = 1                                                          |
+| output_dir         | If not specified will write output same directory as input BAM                          |
+| jitter_bqr_dir     | Path to sample MSI jitter files and BQR files                                           |
+
 | ref_genome_msi_file | (Optional) Path to file of microsatellite sites used for sample-specific jitter, required for Sage |
 | msi_model_coefficients | (Optional)MSI model cooefficients file                                                             |
 | msi_model_error_rates  | (Optional) MSI model error rates file                                                              |
@@ -70,10 +72,11 @@ java -jar redux.jar
 
 ### Optional arguments
 
-| Argument            | Description                                                                             |
-|---------------------|-----------------------------------------------------------------------------------------|
-| bqr_jitter_msi_only     | Only generate BQR and MSI model output, requires an existing Redux BAM as input         
-| drop_duplicates | Drop duplicate reads from output BAM                                                    |
+| Argument            | Description                                                                     |
+|---------------------|---------------------------------------------------------------------------------|
+| bqr_jitter_msi_only | Only generate BQR and MSI model output, requires an existing Redux BAM as input 
+| drop_duplicates     | Drop duplicate reads from output BAM  <br/>jitter_bqr_dir                       | BAM path | Path to Redux MSI jitter files and BQR files
+| skip_bqr            | Disable base quality recalibration                                              |
 
 
 ### UMI Command
@@ -232,6 +235,7 @@ must satisfy the following conditions:
 * At least 5 aligned (i.e. inside M cigar element) flanking the microsatellite repeat on both sites
 * Each base associated with the microsatellite repeat is part of a M, I or D Cigar element
 * Any inserted bases should be multiples of the microsatellite repeat unit
+* No bases inside the repeat (plus 1 flanking base) should be a minimum quality base (qual 1) or a simplex base (SBX only)
 
 For each read, identify the insertion or deletion at the start of the microsatellite repeat which extends or contracts the repeat count, and
 this becomes the repeat unit count. Then for each microsatellite site, the number of reads with repeat unit counts from ref_count-10 to
@@ -292,15 +296,15 @@ for a range of A/T repeat lengths (length range varies depending on sequencing t
 
 #### Training vs prediction
 
-The MSI model is trained on Hartwig WGS samples using denoised error rates (normalised to a baseline). For targeted panel cohorts,
+The MSI model is trained on Hartwig WGS samples with purities < 50% using denoised error rates (normalised to a baseline). For targeted panel cohorts,
 cohort-specific normalisation factors must be trained since error rate noise varies by cohort. Error rate normalisation allows a single set
-of coefficients (trained using WGS samples) to be used for all cohorts.
+of coefficients (trained using WGS samples) to be used for all cohorts. Other sequencing technologies are trained separately using their own WGS cohorts, with a purity cutoff of 85%.
 
 <img src="src/main/resources/msi_model.png" width="500">
 
 #### 1. Calculate error rate
 
-For a given microsatellite A/T repeat length (`numUnits`), the number of observed reads (`readCount`) with a given indel length (`jitter`) may be:
+For a given microsatellite repeat length (`numUnits`), the number of observed reads (`readCount`) with a given indel length (`jitter`) may be:
 
 ```
    jitter  ..., -3, -2,  -1,   0,   1, 2, 3, ...
@@ -314,9 +318,11 @@ weightedErrorCounts = sum(readCounts * abs(jitter)) # By definition, 0 jitter co
 errorRate = weightedErrorCounts / sum(readCounts)
 ```
 
+For Illumina samples, the assessed repeat types are A/T homopolymers of length 11-20. For SBX we use A/T of length 11-15, and for Ultima we use AC/AG repeats of length 11-15.
+
 #### 2. Denoise error rates
 
-During training, the noise threshold (90th percentile of error rates) is calculated per `numUnits`:
+During training, the noise threshold (90th percentile of error rates, 80th percentile for Ultima) is calculated per `numUnits`:
 
 `noiseThreshold = percentile(errorRates, 90)`
 
@@ -334,7 +340,38 @@ When predicting, the output is clamped to non-negative values:
 
 `y = max(0, y)`
 
-The final predicted `msIndelsPerMb` is the mean across all polynomial regressions (i.e. one per `numUnits`).
+The final predicted `msIndelsPerMb` is the mean across all polynomial regressions (i.e. one per `numUnits`). Any with less than 500 read counts are omitted due to sparsity.
+
+### Alt Specific Base Quality Recalibration
+
+Redux includes a base quality recalibration method to adjust sequencer reported base qualities to empirically observed values since we observe that qualities for certain base contexts and alts can be systematically over or under estimated which can cause either false positives or poor sensitivity respectively.
+This idea is inspired by the GATK BQSR tool, but instead of using a covariate model we create a direct lookup table for base quality adjustments.
+The recalibration is unique per sample.
+
+R is used to generate the base quality recalibration charts, which is done if the config 'write_bqr_plot' is included. Required packages include `ggplot2`,`tidyr` and `dplyr`.
+
+The empirical base quality is measured in each reference and tumor sample for each {trinucleotide context, alt, sequencer reported base qual, consensus type} combination and an adjustment is calculated. This is performed by sampling a 2M base window from each autosome and counting the number of mismatches per {trinucleotide context, alt, sequencer reported base qual, consensus type}.
+
+Fragments with low mapping quality (by default: below 50) are ignored as errors can be plausibly explained as mapping errors rather than base quality errors. Similarly, sites that may harbour a genuine germline or somatic variant rather than errors are excluded from contribution. This is determined as follows:
+
+* Across `DUAL` fragments (i.e. duplex consensus): exclude site if `altVaf >= 0.01 && (altVaf >= 0.05 || altCount > 2)`
+* Across other fragments (i.e. non-duplex or singleton): exclude site if `altVaf >= 0.075 && (altVaf >= 0.125 || altCount > 3)`
+
+Note that the definition of this recalibrated base quality is slightly different to the sequencer base quality, since it is the probability of making a specific ALT error given a trinucleotide sequence, whereas the sequencer base quality is the probability of making any error at the base in question.   Since the chance of making an error to a specific base is lower than the chance of making it to a random base, the ALT specific base quality will generally be higher even if the sequencer base quality matches the empirical distribution.
+
+For all SNV and MNV calls the base quality is adjusted to the empirically observed value before determining the quality.
+Sage produces both a file output and QC chart which show the magnitude of the base quality adjustment applied for each {trinucleotide context, alt, sequencer reported base qual, consensus type} combination.
+These files are written into the same directory as the output file.
+
+A typical example of the chart (for one consensus type) is shown below. Note that each bar represents the amount that will be added to the sequencer Phred score:
+
+![Base Quality Adjustment](docs/COLO829v003T.bqr.png)
+
+Base quality recalibration is enabled by default but can be disabled by supplying including the`-bqr_disable` argument.
+
+The base quality recalibration chart is generated with the config `-bqr_write_plot`.
+
+
 
 ## Performance and Settings
 
@@ -474,3 +511,9 @@ clinical cancer interest have some overlap:  FOXP1 (driver - intronic only), COL
   underlying model or add a wing boost
 - The empirical 4bp repeat / 5bp jitter data tends to be sparse and difficult to fit. To address this, we clump all 3bp/4bp/5bp
   microsatellite data together and fit as one microsatellite category
+
+**Base Quality Recalibration**
+
+- **BQR based on read position** - some library preparations have strong positional biases. Adjusting for this would reduce FP.
+- **BQR at long palindromic sequences** - some library preparations frequently have errors in palindromic regions. Adjusting for this would reduce FP.
+- **Adding strand context to BQR** - Recalibration accuracy could be improved if we aggregated BQR evidence on reverse strand reads into reverse complemented trinucleotide/ref/alt contexts

@@ -24,8 +24,6 @@ The supplied Sage VCF is used to determine the candidate variants and no changes
 
 All resource files for this tool and the WiGiTs pipeline are available for download via the [HMF Resource page](../pipeline/README_RESOURCES.md).
 
-R is used to generate the base quality recalibration charts, which is done if the config 'write_bqr_plot' is included. Required packages include `ggplot2`,`tidyr` and `dplyr`. 
-
 # Usage
 
 ## Mandatory Arguments
@@ -61,8 +59,6 @@ max_read_depth_panel | 100,000           | Maximum number of reads to look for e
 include_mt | NA                | By default the mitochondrial DNA is not read but will be if this config is included
 high_depth_mode  | False             | To be used in targeted sequencing - places additional conditions on read-supporting variants to increase precision
 read_length | Inferred from BAM | Max read length, affects memory usage slightly and some filtering
-jitter_bqr_dir | BAM path | Path to Redux MSI jitter files and BQR files
-skip_bqr | NA                | Run without loading Redux BQR files
 skip_msi_jitter | NA                | Use default MSI jitter params instead of sample-specific values from Redux files
 
 The cardinality of `reference` must match `reference_bam`.
@@ -269,44 +265,16 @@ A similar principle applies to any repeat sequences. Spanning them in the read c
 # Algorithm
 
 There are 9 key steps in the Sage algorithm described in detail below:
-  1. [Alt Specific Base Quality Recalibration](#1-alt-specific-base-quality-recalibration)
-  2. [Candidate Variants](#2-candidate-variants)
-  3. [Tumor Counts and Quality](#3-tumor-counts-and-quality)
-  4. [Jitter Determinations](#4-jitter-determinations)
-  5. [Reference Counts and Quality](#5-reference-counts-and-quality)
-  6. [Soft Filter](#6-soft-filters)
-  7. [Phasing](#7-phasing)
-  8. [De-duplication](#8-de-duplication)
-  9. [TINC Analysis](#9-tinc-analysis)
+  1. [Candidate Variants](#1-candidate-variants)
+  2. [Tumor Counts and Quality](#2-tumor-counts-and-quality)
+  3. [Jitter Determinations](#3-jitter-determinations)
+  4. [Reference Counts and Quality](#4-reference-counts-and-quality)
+  5. [Soft Filter](#5-soft-filters)
+  6. [Phasing](#6-phasing)
+  7. [De-duplication](#7-de-duplication)
+  8. [TINC Analysis](#8-tinc-analysis)
 
-## 1. Alt Specific Base Quality Recalibration
-
-Sage includes a base quality recalibration method to adjust sequencer reported base qualities to empirically observed values since we observe that qualities for certain base contexts and alts can be systematically over or under estimated which can cause either false positives or poor sensitivity respectively.
-This idea is inspired by the GATK BQSR tool, but instead of using a covariate model we create a direct lookup table for base quality adjustments. 
-The recalibration is unique per sample.
-
-The empirical base quality is measured in each reference and tumor sample for each {trinucleotide context, alt, sequencer reported base qual, consensus type} combination and an adjustment is calculated. This is performed by sampling a 2M base window from each autosome and counting the number of mismatches per {trinucleotide context, alt, sequencer reported base qual}.
-
-Fragments with low mapping quality (by default: below 50) are ignored as errors can be plausibly explained as mapping errors rather than base quality errors. Similarly, sites that may harbour a genuine germline or somatic variant rather than errors are excluded from contribution. This is determined as follows:
-
-* Across `DUAL` fragments (i.e. duplex consensus): exclude site if `altVaf >= 0.01 && (altVaf >= 0.05 || altCount > 2)`
-* Across other fragments (i.e. non-duplex or singleton): exclude site if `altVaf >= 0.075 && (altVaf >= 0.125 || altCount > 3)`
-
-Note that the definition of this recalibrated base quality is slightly different to the sequencer base quality, since it is the probability of making a specific ALT error given a trinucleotide sequence, whereas the sequencer base quality is the probability of making any error at the base in question.   Since the chance of making an error to a specific base is lower than the chance of making it to a random base, the ALT specific base quality will generally be higher even if the sequencer base quality matches the empirical distribution.
-
-For all SNV and MNV calls the base quality is adjusted to the empirically observed value before determining the quality. 
-Sage produces both a file output and QC chart which show the magnitude of the base quality adjustment applied for each {trinucleotide context, alt, sequencer reported base qual, consensus type} combination.
-These files are written into the same directory as the output file.
-
-A typical example of the chart (for one consensus type) is shown below. Note that each bar represents the amount that will be added to the sequencer Phred score: 
-
-![Base Quality Adjustment](docs/COLO829v003T.bqr.png)
-
-Base quality recalibration is enabled by default but can be disabled by supplying including the`-bqr_disable` argument.
-
-The base quality recalibration chart is generated with the config `-bqr_write_plot`.
- 
-## 2. Candidate Variants
+## 1. Candidate Variants
 
 In this first pass of the tumor BAM(s), Sage looks for candidate variants using reads with adjusted MAPQ >=1 (penalising the mapping quality for NM and softclips in accordance with `read_events_qual_penalty`)
 Valid candidates must include a complete read context, with full-length flanks.
@@ -324,7 +292,7 @@ A candidate will be dropped at this stage if it is only identified on one fragme
 ### Multiple Tumors
 If multiple tumors are supplied, the final set of candidates is the superset of all individual tumor candidates that satisfy the hard filter criteria. 
 
-## 3. Tumor Counts and Quality
+## 2. Tumor Counts and Quality
 
 The aim of the stage it to collect evidence of each candidate variant's read context in the tumor. 
 
@@ -416,7 +384,7 @@ Note that hotspots are never hard-filtered. Note also that the hard min tumor qu
 
 Variants failing any of the first 4 filters are excluded from this point onwards and have no further processing applied to them. The filtered_max_germline_alt_support is applied at the final step of the algorithm, solely to reduce file size, and is not applied in the absence of a provided reference sample. The filtered_max_germline_alt_support does not apply to germline variants in the same local phase set as passing somatic variants.
 
-## 4. Jitter determinations
+## 3. Jitter determinations
 After aggregating read support counts, as well as `LENGTHENED` and `SHORTENED` jitter counts in the previous step, we now determine if the variant should be discarded as likely jitter noise from an alternative allele.
 
 Specifically:
@@ -429,7 +397,7 @@ Specifically:
 Notes:
 * All error rates used in the above calculations are floored at 1e-4, including an error rate for any repeat count < 4
 * We floor the modelled error rate at 0.04 for PANEL/HOTSPOT variants with a trinucleotide repeat in the core that aren’t themselves a non-trinucleotide indel. This is to model the predisposition towards trinucleotide indels in coding regions (since they do not cause a frameshift)
-## 5. Reference Counts and Quality
+## 4. Reference Counts and Quality
 
 Evidence of each candidate variant is collected in all of the supplied reference bams in the same manner as step 3.
 
@@ -437,7 +405,7 @@ The only exception is that for inserts of >10 bases, we run a supplementary matc
 
 RNA bams are valid reference sources.
 
-## 6. Soft Filters
+## 5. Soft Filters
 
 Given evidence of the variants in the tumor and reference we apply somatic filters. 
 The key principles behind the filters are ensuring sufficient support for the variant (minimum VAF and score) in the tumor sample and validating that the variant is highly unlikely to be present in the reference sample.
@@ -501,7 +469,7 @@ For targeted sequencing, the `high_depth_mode` flag should be provided. This all
 * Reads that have discordant or unmapped mates are ignored
 * Reads with raw base qual < 30 do not provide variant support
 
-## 7. Phasing
+## 6. Phasing
 
 ### Local Phase Set
 
@@ -525,7 +493,7 @@ Note also that to increase performance for complex regions with high numbers of 
 ```
 Sets with less than the read count threshold are dropped before merging and collapsing. 
 
-## 8. De-duplication
+## 7. De-duplication
 
 De-duplication removes any duplicate candidate variants, which may represent the same underlying mutation in different ways.  Sage removes the following 4 types of deduplication in the following order on PASS variants only:
 - **dedupMNV** - DEDUP any overlapping MNV in the same phase set. MNV may have 2 or 3 bases.  First any MNV which has 2 changed bases and overlaps with an MNV with 3 changed bases is filtered. If both have 2 changed bases then the least compact MNV is filtered.  If both have the same number of bases and changed bases then the lowest qual MNV is filtered.
@@ -537,7 +505,7 @@ After deduplication any uninformative or duplicate phase sets are further remove
 
 If there are any cases where the exact same variant is still duplicated (ie. same chromosome, position, ref, alt) but with different read core contexts, then the lower quality variant is hard filtered with the LPS information merged.
 
-## 9. TINC Analysis
+## 8. TINC Analysis
 If the `-run_tinc` config is provided, Sage will measure the level of tumor in normal contamination in the sample, and use this to conditionally recover likely somatic variants that were filtered due to germline evidence. The routine works as follows:
 
 ### Finding fitting variants
@@ -612,12 +580,9 @@ Variant calling Improvements
 - **Filtering of supplementary reads** - This is necessary to remove artefacts, but may lead to reduced sensitivity particularly for long deletions which may be mapped with a supplementary read 
 - **Event penalty** - We currently have an event penalty which reduces MAPQ by 7 for every ‘event’ in a read. This means we have reduced sensitivity for highly clustered variants and no sensitivity where there are more than 6 events in a 150 base window. The penalty on soft clips also decreases sensitivity near genuine SVs.
 - **Complex events in key cancer genes** - Any messy read profile is likely to be something interesting if it falls within a well known cancer gene.  We should make sure not to miss any of these
-- **BQR based on read position** - some library preparations have strong positional biases. Adjusting for this would reduce FP.
-- **BQR at long palindromic sequences** - some library preparations frequently have errors in palindromic regions. Adjusting for this would reduce FP.
 - **Low MAPQ** - Sage penalises low MAPQ reads harshly. No truth set is available in these regions, so it is unclear whether this behaviour is the correct decision.
 - **SNV base qual downstream of long homopolymer with insert** - If a sample has a germline extension of a long homopolymer, a somatic SNV immediately downstream of the homopolymer that extends it will have different QUAL characteristics for forward and reverse stranded reads, due to the left-alignment convention for indels. Specifically, the negative strand should use a different base for variant qual.
 - **Better MNV handling** - we don't consider that multiple high quality SNVs in a row may imply multiple adjacent sequencing or upstream errors in our QUAL model, and so have scope to be more sensitive here
-- **Adding strand context to BQR** - Recalibration accuracy could be improved if we aggregated BQR evidence on reverse strand reads into reverse complemented trinucleotide/ref/alt contexts
 - **Improve readEvents calculation for synced fragments** - we normally transform a read's raw NM by applying only 1 edit count per INDEL element and ignoring the edit count for the variant itself, when applying event penalty. However, doing this with synced fragments (which use the first read's NM attribute but a 'superset' CIGAR) can result in unexpected behaviour. We may also want to calculate a more representative NM rather than just using the first's value.
 - **Looking in correct direction for homopolymer in synced fragment** - we suppress calling specific known NovaSeqX artefacts by looking for long homopolymers upstream of a candidate variant. For synced fragments, we will sometimes look the wrong way and so assign the wrong base qual to that read. Most relevant for targeted panel sequencing on NovaSeqX
 - **Handling germline multi-base inserts in NovaSeqX artefact suppression logic** - suppressing artefacts phased with homopolymer inserts of 3 or more bases is not currently supported by the algorithm, and there is a known issue with handling 2 base inserts, causing some artefacts associated with these to PASS as well
