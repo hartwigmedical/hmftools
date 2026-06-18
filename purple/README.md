@@ -217,7 +217,8 @@ common germline heterozygous SNP loci.
 
 To ensure that we only capture heterozygous points, we filter the panel to only loci with allelic frequencies in the reference sample
 between 40% and 65% and with depth between 50% and 150% of the reference sample genome wide average.
-Furthermore, we filter any loci with a mapping quality < 1 or base quality < 13.
+Furthermore, we filter any reads with a mapping quality < 50 or base quality < 13 or in a low qual Ultima region (as defined by the `UQ` tag),
+and the whole site is rejected if over 15% of reads at the site are rejected.
 This typically yields 500k-540k heterozygous germline variants per patient.
 
 As part of a contamination check, Amber also finds sites in the tumor that are homozygous in the reference sample using the same panel as
@@ -550,14 +551,31 @@ significantly higher than the fitted VAF peak, then Purple sets the purity to 2x
 
 In Tumor-only, Purple will use somatic mode if initial fit if the candidate solutions are highly diploid (>= 0.97) OR the sample is chimer OR all the following are true:
 - highly diploid (1.8 <= ploidy <= 2.2) AND
-- purity >= 0.92
-- proportion of [% of BAF sites >0.6] < 0.008 
+- purity >= 0.92 AND
+- proportion of [% of BAF sites >0.57] < 0.008 or there exists a region with [BAF > 70% and % of BAF sites > 0.003 and # of BAF sites >= 5]
 
 It then checks for the number of SNV and INDEL (with repeat count <=4) that are
 subjected to VAF >= 0.05 AND (tier = Hotspot OR ((tier = PANEL and not NONE or synonymous) and VAF <= 0.35)) in the sample.
 
 If the variant counts are less than one, then the sample is marked as NO_TUMOR. Otherwise the SOMATIC mode is triggered and the purity is
 calculated as 2 times the 75th percentile VAF in the sample.
+
+#### Fit modification - Tumor Only
+
+If we retain the normal fit, produce a diploid high purity result, detect aneuploidy but no high BAF region consistent with such a fit, we will modify the fit. This occurs if:
+- highly diploid (1.8 <= ploidy <= 2.2) AND
+- purity >= 0.92 AND
+- no region exists with [BAF > 84%] (2 * 0.92 - 1)
+
+In this case, we infer a plausible purity using the following approach:
+- Sort all regions by their BAF, ascending
+- Keep a cumulative total of the bafCounts
+- Find the last region satisfying:
+  - [BAF > 57%] AND
+  - [bafCount > 5] AND
+  - cumulative accumulation of BAF counts (excluding this region) < 99.7%
+- If no region exists, then the fit is not adjusted
+- Otherwise the target purity is 2 * regionBAF - 1. We set the fit to the candidate with the closest purity and diploid ploidy
 
 ### 5. Copy Number Smoothing
 
