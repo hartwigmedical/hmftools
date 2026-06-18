@@ -11,10 +11,8 @@ import java.util.concurrent.BlockingQueue;
 
 import com.hartwig.hmftools.tars.liftback.rescue.JunctionRescueResolver;
 import com.hartwig.hmftools.tars.liftback.rescue.RefSequenceSource;
-import com.hartwig.hmftools.tars.liftback.rescue.RescueConfig;
 import com.hartwig.hmftools.tars.liftback.rescue.RescueStatistics;
 import com.hartwig.hmftools.tars.liftback.tailextend.SoftclipTailExtender;
-import com.hartwig.hmftools.tars.liftback.tailextend.TailExtensionConfig;
 import com.hartwig.hmftools.tars.liftback.tailextend.TailExtensionStatistics;
 import com.hartwig.hmftools.tars.liftback.tailextend.TerminalMicroJunctionCollapser;
 
@@ -58,13 +56,10 @@ public class LiftBackWorker extends Thread
             throw new RuntimeException("failed to open liftback TSV shard: " + e, e);
         }
 
-        final RefSequenceSource refSource =
-                resources.RescueViaSupp || resources.ExtendSoftclipTails ? resources.openRefSource() : null;
+        final RefSequenceSource refSource = resources.openRefSource();
 
-        mRescueResolver = resources.RescueViaSupp
-                ? new JunctionRescueResolver(resources.JunctionIndex, refSource, RescueConfig.enabledDefaults()) : null;
-        mSoftclipExtender = resources.ExtendSoftclipTails
-                ? new SoftclipTailExtender(refSource, resources.JunctionIndex, TailExtensionConfig.enabledDefaults()) : null;
+        mRescueResolver = new JunctionRescueResolver(resources.JunctionIndex, refSource, resources.Rescue);
+        mSoftclipExtender = new SoftclipTailExtender(refSource, resources.JunctionIndex, resources.TailExtension);
         mTerminalCollapser = refSource != null
                 ? new TerminalMicroJunctionCollapser(refSource, resources.TerminalAnchor) : null;
         mJunctionCanonicalizer = refSource != null

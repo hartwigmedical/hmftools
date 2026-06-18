@@ -10,13 +10,16 @@ import static com.hartwig.hmftools.tars.common.TarsConfig.TARS_LOGGER;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
+import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.tars.common.ContigEntry;
 import com.hartwig.hmftools.tars.common.ContigSidecar;
@@ -82,10 +85,12 @@ public class SpliceFastaBuilder
 
                     for(TranscriptData transcript : transcripts)
                     {
-                        // single-exon transcripts have no junctions; skip
+                        // single-exon transcripts have no junctions, so no contig; still record their exon as an
+                        // annotation-only row so the liftback exon index matches the full ensembl cache.
                         if(transcript.exons().size() < 2)
                         {
                             ++skippedSingleExon;
+                            contigEntries.add(annotationEntry(gene, transcript, exonSpansOf(transcript)));
                             continue;
                         }
 
@@ -93,10 +98,11 @@ public class SpliceFastaBuilder
                         if(result == null)
                             continue;
 
-                        // all-N contig is alignment-useless
+                        // all-N contig is alignment-useless, so no contig; keep its exons as annotation only.
                         if(isAllN(result.sequence()))
                         {
                             ++skippedAllN;
+                            contigEntries.add(annotationEntry(gene, transcript, result.exonSpans()));
                             continue;
                         }
 
@@ -131,6 +137,23 @@ public class SpliceFastaBuilder
                 fastaFile);
 
         TARS_LOGGER.info("SpliceFastaBuilder complete, mins({})", runTimeMinsStr(startTimeMs));
+    }
+
+    private static ContigEntry annotationEntry(final GeneData gene, final TranscriptData transcript, final List<BaseRegion> exonSpans)
+    {
+        return ContigEntry.annotationOnly(
+                gene.GeneId, gene.GeneName, transcript.TransName, gene.Chromosome, gene.Strand, exonSpans);
+    }
+
+    private static List<BaseRegion> exonSpansOf(final TranscriptData transcript)
+    {
+        final List<ExonData> ordered = new ArrayList<>(transcript.exons());
+        ordered.sort(Comparator.comparingInt(exon -> exon.Start));
+
+        final List<BaseRegion> spans = new ArrayList<>(ordered.size());
+        for(final ExonData exon : ordered)
+            spans.add(new BaseRegion(exon.Start, exon.End));
+        return spans;
     }
 
     private static boolean isAllN(final String sequence)

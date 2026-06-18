@@ -152,23 +152,20 @@ public class SpliceLiftBack
 
     private LiftBackResources buildResources(final List<ContigEntry> contigEntries)
     {
-        ExonRegionIndex exonIndex = null;
-        if(mConfig.EnsemblDataDir != null)
-        {
-            exonIndex = ExonRegionIndex.load(mConfig.EnsemblDataDir, mConfig.RefGenVersion);
-            TARS_LOGGER.info("loaded annotated-exon index from {}", mConfig.EnsemblDataDir);
-        }
+        // exon + junction annotation are derived from the sidecar's exonSpans (all rows, including annotation-only
+        // ones for transcripts without a contig), so liftback needs no ensembl cache.
+        final ExonRegionIndex exonIndex = ExonRegionIndex.fromContigEntries(contigEntries);
+        TARS_LOGGER.info("built annotated-exon index from sidecar");
 
-        final LiftBackResolver resolver = new LiftBackResolver(contigEntries, exonIndex);
+        // annotation-only rows have no contig to lift against, so the resolver sees only real contig entries.
+        final List<ContigEntry> liftEntries = contigEntries.stream()
+                .filter(entry -> !entry.isAnnotationOnly()).collect(Collectors.toList());
+        final LiftBackResolver resolver = new LiftBackResolver(liftEntries, exonIndex);
         validateBamAgainstSidecar(resolver.contigNames());
 
-        AnnotatedJunctionIndex junctionIndex = null;
-        if(mConfig.RescueViaSupp || mConfig.ExtendSoftclipTails)
-        {
-            final Set<ChrBaseRegion> annotated = AnnotatedJunctionLoader.load(mConfig.EnsemblDataDir, mConfig.RefGenVersion);
-            junctionIndex = new AnnotatedJunctionIndex(annotated);
-            TARS_LOGGER.info("loaded {} annotated junctions from {}", annotated.size(), mConfig.EnsemblDataDir);
-        }
+        final Set<ChrBaseRegion> annotated = AnnotatedJunctionLoader.fromContigEntries(contigEntries);
+        final AnnotatedJunctionIndex junctionIndex = new AnnotatedJunctionIndex(annotated);
+        TARS_LOGGER.info("built {} annotated junctions from sidecar", annotated.size());
 
         ExcludedRegions excludedRegions = null;
         if(mConfig.RnaUnmapRegionsFile != null)
@@ -179,7 +176,7 @@ public class SpliceLiftBack
 
         return new LiftBackResources(
                 resolver, junctionIndex, mConfig.RefGenomeFile,
-                mConfig.RescueViaSupp, mConfig.ExtendSoftclipTails, SpliceCommon.MIN_JUNCTION_ANCHOR,
+                mConfig.Rescue, mConfig.TailExtension, SpliceCommon.MIN_JUNCTION_ANCHOR,
                 excludedRegions);
     }
 
@@ -260,10 +257,8 @@ public class SpliceLiftBack
             TARS_LOGGER.warn("failed to write liftback summary: {}", e.toString());
         }
 
-        if(mConfig.RescueViaSupp)
-            logRescueStats(workers);
-        if(mConfig.ExtendSoftclipTails)
-            logTailExtensionStats(workers);
+        logRescueStats(workers);
+        logTailExtensionStats(workers);
 
         long collapsedLeading = 0;
         long collapsedTrailing = 0;

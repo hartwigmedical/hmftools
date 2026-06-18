@@ -6,6 +6,8 @@ import java.io.File;
 
 import com.hartwig.hmftools.tars.liftback.rescue.AnnotatedJunctionIndex;
 import com.hartwig.hmftools.tars.liftback.rescue.RefSequenceSource;
+import com.hartwig.hmftools.tars.liftback.rescue.RescueConfig;
+import com.hartwig.hmftools.tars.liftback.tailextend.TailExtensionConfig;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequence;
@@ -18,21 +20,21 @@ public final class LiftBackResources
     public final LiftBackResolver Resolver;
     public final AnnotatedJunctionIndex JunctionIndex; // nullable
     public final String RefGenomeFile;
-    public final boolean RescueViaSupp;
-    public final boolean ExtendSoftclipTails;
+    public final RescueConfig Rescue;
+    public final TailExtensionConfig TailExtension;
     public final int TerminalAnchor;
     public final ExcludedRegions ExcludedRegions; // nullable: drop fragments here before lifting
 
     public LiftBackResources(
             final LiftBackResolver resolver, final AnnotatedJunctionIndex junctionIndex, final String refGenomeFile,
-            final boolean rescueViaSupp, final boolean extendSoftclipTails, final int terminalAnchor,
+            final RescueConfig rescue, final TailExtensionConfig tailExtension, final int terminalAnchor,
             final ExcludedRegions excludedRegions)
     {
         Resolver = resolver;
         JunctionIndex = junctionIndex;
         RefGenomeFile = refGenomeFile;
-        RescueViaSupp = rescueViaSupp;
-        ExtendSoftclipTails = extendSoftclipTails;
+        Rescue = rescue;
+        TailExtension = tailExtension;
         TerminalAnchor = terminalAnchor;
         ExcludedRegions = excludedRegions;
     }
