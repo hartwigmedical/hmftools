@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -73,6 +74,10 @@ public class LilacAppTest
             return;
 
         GENE_CACHE = new GeneCache(loadHlaTranscripts(V37, GeneSelector.MHC_CLASS_1));
+
+        if(GENE_EXON_BOUNDARIES == null)
+            GENE_EXON_BOUNDARIES = new HashMap<>();
+
         GENE_EXON_BOUNDARIES.put(HLA_A, GENE_CACHE.AminoAcidExonBoundaries.get(HLA_A));
         GENE_EXON_BOUNDARIES.put(HLA_B, GENE_CACHE.AminoAcidExonBoundaries.get(HLA_B));
         GENE_EXON_BOUNDARIES.put(HLA_C, GENE_CACHE.AminoAcidExonBoundaries.get(HLA_C));
