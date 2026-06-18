@@ -7,10 +7,6 @@ ARG RUN_SCRIPT=/usr/local/bin/${TOOL_NAME}
 
 USER root
 
-ADD target/${TOOL_NAME}-${VERSION}-jar-with-dependencies.jar ${JAR}
-ADD target/entrypoint.sh ${RUN_SCRIPT}
-RUN chmod +x ${RUN_SCRIPT}
-
 RUN micromamba install -y -n base -c bioconda -c conda-forge \
     procps-ng \
     openjdk">=8,<=21" \
@@ -28,3 +24,7 @@ ENV PATH="/opt/conda/bin:/opt/conda/condabin:${PATH}"
 
 # Fix missing GD perl module error (despite GD already being installed with circos)
 RUN perl -MCPAN -e 'install GD'
+
+ADD target/${TOOL_NAME}-${VERSION}-jar-with-dependencies.jar ${JAR}
+ADD target/entrypoint.sh ${RUN_SCRIPT}
+RUN chmod +x ${RUN_SCRIPT}

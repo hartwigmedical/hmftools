@@ -158,7 +158,9 @@ public class SupplementaryReadData
     public static SupplementaryReadData createSupplementaryReadDataForRecord(SAMRecord record)
     {
         char strand = record.getReadNegativeStrandFlag() ? SUPP_NEG_STRAND : SUPP_POS_STRAND;
-        return new SupplementaryReadData(record.getContig(), record.getAlignmentStart(), strand, record.getCigarString(), record.getMappingQuality(), record.getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE));
+        return new SupplementaryReadData(
+                record.getContig(), record.getAlignmentStart(), strand, record.getCigarString(), record.getMappingQuality(),
+                record.getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE));
     }
 
     public static int alignmentCount(final SAMRecord record)

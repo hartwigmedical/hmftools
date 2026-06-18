@@ -299,6 +299,12 @@ public class CallerApplication
     @VisibleForTesting
     public static boolean isGermline(final Variant var, @Nullable final String referenceId)
     {
+        // High-confidence match to a known germline variant.
+        if(var.isSagaMatched())
+        {
+            return true;
+        }
+
         Breakend breakend = var.breakendStart();
 
         double maxGermlineAf = 0;

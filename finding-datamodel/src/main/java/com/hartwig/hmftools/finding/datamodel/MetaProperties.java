@@ -12,6 +12,8 @@ public record MetaProperties(
         @Nullable String pipelineVersion,
         @NotNull RefGenomeVersion refGenomeVersion,
         @NotNull String sampleId,
-        @NotNull LocalDate samplingDate)
+        @NotNull LocalDate samplingDate,
+        boolean hasNormalSample,
+        boolean hasRnaSample)
 {
 }

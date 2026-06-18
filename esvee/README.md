@@ -25,18 +25,44 @@ java -jar esvee.jar
   -reference_bam /sample_data/REF_SAMPLE_ID.bam
   -ref_genome /path_to_ref_genome_fasta/
   -ref_genome_version 38
-  -write_types 'PREP_STANDARD;ASSEMBLY_STANDARD' 
   -known_hotspot_file /ref_data/known_fusions.38.bedpe
   -pon_sgl_file /ref_data/sgl_pon.38.bed.gz
   -pon_sv_file /ref_data/sv_pon.38.bedpe.gz
-  -target_regions_bed /ref_data/CoverageCodingPanel.38.bed
-  -artefact_pon_sgl_file /ref_data/sgl_artefact_pon.38.bed.gz
-  -artefact_pon_sv_file /ref_data/sgl_artefact_pon.38.bed.gz
   -repeat_mask_file /ref_data/repeat_mask_data.38.fa.gz
   -bamtool /tools/sambamba/sambamba 
   -output_dir /sample_data/output/ 
   -threads 16
 ```
+
+### Mandatory Arguments
+
+Argument | Description 
+---|---
+tumor | Tumor IDs separated by ','
+tumor_bam | BAM file paths separated by ','
+reference | Reference IDs separated by ','
+reference_bam | Reference BAM file paths separated by ','
+ref_genome | Reference genome fasta file
+ref_genome_version | 37 (default) or 38
+bamtool | Sambamba or Samtools, required to sort and index the output Prep BAMs
+output_dir | Output directory
+threads | Thread count
+
+### Optional Arguments
+
+Argument | Description 
+---|---
+known_hotspot_file | BED file with known fusion pair coordinates, require only 1 fragment for junctions
+sequencing_type | Illumina (default), SBX, Ultima
+write_types | Defaults: PREP_JUNCTION, PREP_BAM, FRAGMENT_LENGTH_DIST, DISCORDANT_STATS, JUNC_ASSEMBLY, BREAKEND, VCF<br>Debug: PREP_READ, ASSEMBLY_READ, PHASED_ASSEMBLY, ALIGNMENT
+
+### Targeted Panel Arguments
+
+Argument | Description 
+---|---
+target_regions_bed | Targeted regions BED file, will only pass variants within this range
+artefact_pon_sgl_file | Additional PON file for SGLs formed from common panel artefacts
+artefact_pon_sv_file | As above for SVs
 
 
 ## STEP 1: BAM Filtering & Prep
@@ -58,25 +84,6 @@ java -cp esvee.jar com.hartwig.hmftools.esvee.prep.PrepApplication
   -threads 16
 ```
 
-#### Mandatory Arguments
-
-Argument | Description 
----|---
-sample | Sample IDs separated by ','
-bam_file | BAM file paths separated by ','
-ref_genome | Reference genome fasta file
-ref_genome_version | 37 (default) or 38
-bamtool | Sambamba or Samtools, required to sort and index the output BAMs
-output_dir | Output directory
-threads | Thread count
-
-#### Optional Arguments
-
-Argument | Description 
----|---
-known_fusion_bed | BED file with known fusion pair coordinates, require only 1 fragment for junctions
-bam_stringency | SAM validation strategy: STRICT, SILENT, LENIENT
-
 ## STEP 2: Assembly & Alignment
 
 ### Command
@@ -90,7 +97,6 @@ java -cp esvee.jar com.hartwig.hmftools.esvee.assembly.AssemblyApplication
   -junction_file /sample_data/output/TUMOR_SAMPLE_ID.esvee.prep.junction.tsv
   -ref_genome /path_to_ref_genome_fasta/
   -ref_genome_version 38
-  -write_types 'JUNC_ASSEMBLY;PHASED_ASSEMBLY;ALIGNMENTS;BREAKEND;VCF'
   -output_dir /sample_data/output/ 
   -threads 16
 ```
@@ -106,7 +112,6 @@ reference_bam | Path to Prep reference BAM file
 junction_file | Path to Prep junction TSV file, assumes named as 'TUMOR_SAMPLE_ID.esvee.prep.junction.tsv'
 ref_genome | Reference genome fasta file
 ref_genome_version | 37 (default) or 38
-write_types | Minimum required is VCF for latter steps
 output_dir | Output directory
 threads | Thread count
 

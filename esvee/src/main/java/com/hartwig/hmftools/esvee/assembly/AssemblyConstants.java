@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.esvee.assembly;
 
 import static com.hartwig.hmftools.esvee.common.SvConstants.DEFAULT_MAX_CONCORDANT_FRAG_LENGTH;
+import static com.hartwig.hmftools.esvee.common.SvConstants.MAX_JUNC_POSITION_DIFF;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_ANCHOR_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_MAP_QUALITY;
@@ -34,10 +35,11 @@ public final class AssemblyConstants
     public static final int ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH = ASSEMBLY_MIN_SOFT_CLIP_LENGTH / 2;
     public static final int ASSEMBLY_MIN_SOFT_CLIP_LENGTH_LOWER = MIN_VARIANT_LENGTH_LOWER;
     public static final int ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH_LOWER = ASSEMBLY_MIN_SOFT_CLIP_LENGTH_LOWER / 2;
-    public static final int ASSEMBLY_MAX_JUNC_POS_DIFF = 2;
+    public static final int ASSEMBLY_MAX_JUNC_POS_DIFF = MAX_JUNC_POSITION_DIFF;
     public static final int ASSEMBLY_REF_READ_MIN_SOFT_CLIP = 10;
     public static final int ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH = 2;
     public static final double ASSEMBLY_MAX_EXTENSION_READ_LOW_QUAL_MISMATCH_PERC = 0.34;
+    public static final double ASSEMBLY_MAX_JUNCTION_READ_LOW_QUAL_MISMATCH_PERC = 0.90;
     public static final int ASSEMBLY_DISCORDANT_MIN_MAP_QUALITY = MIN_MAP_QUALITY;
     public static final int ASSEMBLY_MIN_DISTINCT_FRAGS = 2;
     public static final int ASSEMBLY_INDEL_UNLINKED_ASSEMBLY_MIN_LENGTH = 85;
@@ -97,6 +99,7 @@ public final class AssemblyConstants
     public static final int ASSEMBLY_EXTENSION_BASE_MISMATCH = 2;
     public static final int ASSEMBLY_REF_BASE_MAX_GAP = 200;
     public static final int REF_SIDE_MIN_SOFT_CLIP_LENGTH = ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH;
+    public static final int REF_SIDE_INITIAL_MIN_SOFT_CLIP_LENGTH = 5;
 
     public static final int LOCAL_ASSEMBLY_MATCH_DISTANCE = 500;
     public static final int MATCH_SUBSEQUENCE_LENGTH = 20;

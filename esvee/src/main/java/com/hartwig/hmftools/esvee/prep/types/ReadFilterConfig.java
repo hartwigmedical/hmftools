@@ -9,11 +9,9 @@ import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MAX_SUPPORT_FRAGMENT_DISTANCE;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_ALIGNMENT_BASES;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_INSERT_ALIGNMENT_OVERLAP;
-import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_INSERT_LENGTH_SUPPORT;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_JUNCTION_SUPPORT;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_SOFT_CLIP_HIGH_QUAL_PERC;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_SOFT_CLIP_LENGTH;
-import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_SUPPORTING_READ_DISTANCE;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
@@ -29,10 +27,6 @@ public class ReadFilterConfig
     public final int MinSoftClipLength;
     public final double MinSoftClipHighQualPerc;
 
-    // supporting read config
-    public final int MinSupportingReadDistance;
-    public final int MinInsertLengthSupport;
-
     // final junction filtering
     public final int MinJunctionSupport;
 
@@ -45,8 +39,7 @@ public class ReadFilterConfig
 
     public ReadFilterConfig(
             final int minAlignmentBases, final int minMapQuality, final int minInsertAlignmentOverlap, final int minSoftClipLength,
-            final double minSoftClipHighQualPerc, final int minSupportingReadDistance,
-            final int minIndelLength, final int minJunctionSupport)
+            final double minSoftClipHighQualPerc, final int minIndelLength, final int minJunctionSupport)
     {
         MinAlignmentBases = minAlignmentBases;
         MinMapQuality = minMapQuality;
@@ -54,9 +47,6 @@ public class ReadFilterConfig
         MinSoftClipLength = minSoftClipLength;
         MinIndelLength = minIndelLength;
         MinSoftClipHighQualPerc = minSoftClipHighQualPerc;
-        MinSupportingReadDistance = minSupportingReadDistance;
-
-        MinInsertLengthSupport = MIN_INSERT_LENGTH_SUPPORT;
         MinJunctionSupport = minJunctionSupport;
 
         mMaxSupportingFragmentDistance = DEFAULT_MAX_FRAGMENT_LENGTH;
@@ -83,7 +73,6 @@ public class ReadFilterConfig
                 MIN_INSERT_ALIGNMENT_OVERLAP,
                 MIN_SOFT_CLIP_LENGTH,
                 MIN_SOFT_CLIP_HIGH_QUAL_PERC,
-                MIN_SUPPORTING_READ_DISTANCE,
                 MIN_INDEL_LENGTH,
                 configBuilder.getInteger(CFG_MIN_JUNCTION_FRAGS));
     }

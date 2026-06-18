@@ -73,7 +73,6 @@ public class PaveConfig
     // optional and debugging config
     private static final String ONLY_CANONCIAL = "only_canonical";
     private static final String FILTER_TYPE = "filter_type";
-    private static final String PROCESS_NON_PASS = "process_non_pass"; // to be deprecated
     private static final String WRITE_PASS_ONLY = "write_pass_only";
     private static final String WRITE_TRANSCRIPT_DATA = "write_transcript_data";
     private static final String WRITE_DETAILED = "write_detailed";
@@ -96,10 +95,6 @@ public class PaveConfig
         if(configBuilder.hasValue(FILTER_TYPE))
         {
             Filter = FilterType.valueOf(configBuilder.getValue(FILTER_TYPE));
-        }
-        else if(configBuilder.hasValue(PROCESS_NON_PASS))
-        {
-            Filter = ALL;
         }
         else
         {
@@ -159,7 +154,6 @@ public class PaveConfig
         configBuilder.addFlag(WRITE_TRANSCRIPT_DATA, "Write variant impacts per transcript to TSV");
         configBuilder.addFlag(ONLY_CANONCIAL, "Only check canonical transcripts");
 
-        configBuilder.addFlag(PROCESS_NON_PASS, "Process all variants from Sage");
         configBuilder.addConfigItem(FILTER_TYPE, false, enumValueSelectionAsStr(FilterType.values(), "Variant filters"));
 
         configBuilder.addFlag(WRITE_PASS_ONLY, "Only annotate passing variants");

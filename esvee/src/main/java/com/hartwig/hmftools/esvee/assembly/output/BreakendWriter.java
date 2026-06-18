@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBuffer
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.withinLineProximity;
+import static com.hartwig.hmftools.esvee.common.FileCommon.FLD_SAGA_MATCH;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -110,7 +111,7 @@ public class BreakendWriter
 
             if(mConfig.SagaFastaFile != null)
             {
-                sj.add("SagaMatch");
+                sj.add(FLD_SAGA_MATCH);
             }
 
             writer.write(sj.toString());

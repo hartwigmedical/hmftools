@@ -48,6 +48,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.bamops.BamToolName;
@@ -207,46 +208,6 @@ public class PrepConfig
 
     public boolean writeReads() { return WriteTypes.contains(PREP_BAM) || WriteTypes.contains(PREP_READ); }
 
-    public PrepConfig(int partitionSize)
-    {
-        mIsValid = true;
-        SampleIds = Collections.emptyList();
-        BamFiles = Collections.emptyList();
-        RefGenomeFile = "";
-        OutputDir = null;
-        OutputId = null;
-
-        RefGenVersion = V37;
-
-        Hotspots = new HotspotCache(null);
-
-        PartitionSize = partitionSize;
-
-        ReadFiltering = new ReadFilters(new ReadFilterConfig(
-                MIN_ALIGNMENT_BASES,
-                MIN_MAP_QUALITY,
-                MIN_INSERT_ALIGNMENT_OVERLAP,
-                MIN_SOFT_CLIP_LENGTH,
-                MIN_SOFT_CLIP_HIGH_QUAL_PERC,
-                MIN_SUPPORTING_READ_DISTANCE,
-                MIN_INDEL_LENGTH,
-                MIN_JUNCTION_SUPPORT));
-
-        SagaFastaFile = null;
-
-        BamStringency = ValidationStringency.STRICT;
-        WriteTypes = Sets.newHashSet();
-        SpecificChrRegions = new SpecificRegions();
-        LogReadIds = Lists.newArrayList();
-        BamToolPath = null;
-        Threads = 1;
-        UseCacheBam = false;
-        PerfDebug = false;
-        TrimReadId = false;
-        NoCleanUp = false;
-        MaxFragmentLengthOverride = -1;
-    }
-
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addConfigItem(SAMPLE, false, SAMPLE_ID_DESC); // not required since may take from tumor and ref config values
@@ -273,5 +234,45 @@ public class PrepConfig
         addThreadOptions(configBuilder);
         addOutputOptions(configBuilder, false);
         ConfigUtils.addLoggingOptions(configBuilder);
+    }
+
+    @VisibleForTesting
+    public PrepConfig(int partitionSize)
+    {
+        mIsValid = true;
+        SampleIds = Collections.emptyList();
+        BamFiles = Collections.emptyList();
+        RefGenomeFile = "";
+        OutputDir = null;
+        OutputId = null;
+
+        RefGenVersion = V37;
+
+        Hotspots = new HotspotCache(null);
+
+        PartitionSize = partitionSize;
+
+        ReadFiltering = new ReadFilters(new ReadFilterConfig(
+                MIN_ALIGNMENT_BASES,
+                MIN_MAP_QUALITY,
+                MIN_INSERT_ALIGNMENT_OVERLAP,
+                MIN_SOFT_CLIP_LENGTH,
+                MIN_SOFT_CLIP_HIGH_QUAL_PERC,
+                MIN_INDEL_LENGTH,
+                MIN_JUNCTION_SUPPORT));
+
+        SagaFastaFile = null;
+
+        BamStringency = ValidationStringency.STRICT;
+        WriteTypes = Sets.newHashSet();
+        SpecificChrRegions = new SpecificRegions();
+        LogReadIds = Lists.newArrayList();
+        BamToolPath = null;
+        Threads = 1;
+        UseCacheBam = false;
+        PerfDebug = false;
+        TrimReadId = false;
+        NoCleanUp = false;
+        MaxFragmentLengthOverride = -1;
     }
 }

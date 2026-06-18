@@ -53,10 +53,12 @@ public class ImmunologyChapter implements ReportChapter
 
         addHLAData(document);
 
+        /*
         if(mReport.experimentType() == ExperimentType.WHOLE_GENOME)
         {
             addImmuneEscapeData(document);
         }
+        */
     }
 
     private void addHLAData(final Document document)
@@ -65,9 +67,6 @@ public class ImmunologyChapter implements ReportChapter
 
         if(lilacData == null)
             return;
-
-        // Cells cells = new Cells(mReportResources);
-        // Table qc = new Table(UnitValue.createPercentArray(new float[] { 1, 1 }));
 
         String title = "HLA Class I Alleles";
 
@@ -83,10 +82,12 @@ public class ImmunologyChapter implements ReportChapter
         }
     }
 
+    /*
     private void addImmuneEscapeData(final Document document)
     {
         String title = "Genetic Immune Escape";
         boolean isTumorFail = QcStatusInterpretation.hasPurpleFail(mReport.purple().fit().qc());
         document.add(ImmuneEscapeTable.build(title, contentWidth(), mReport.immuneEscape(), mReportResources, isTumorFail));
     }
+    */
 }

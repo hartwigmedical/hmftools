@@ -34,6 +34,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -64,6 +65,7 @@ import com.hartwig.hmftools.esvee.assembly.vis.AssemblyVisualiser;
 import com.hartwig.hmftools.esvee.common.FragmentLengthBounds;
 import com.hartwig.hmftools.esvee.common.saga.SagaMatcherFactory;
 import com.hartwig.hmftools.esvee.common.WriteType;
+import com.hartwig.hmftools.esvee.common.saga.SagaSequenceMatcher;
 import com.hartwig.hmftools.esvee.prep.FragmentSizeDistribution;
 import com.hartwig.hmftools.esvee.prep.types.DiscordantStats;
 
@@ -94,7 +96,7 @@ public class AssemblyApplication
         mConfig = new AssemblyConfig(configBuilder, asSubRoutine);
 
         mChrJunctionsMap = Maps.newHashMap();
-        mJunctionGroupMap = Maps.newHashMap();
+        mJunctionGroupMap = new TreeMap<>();
         mBamReaders = Lists.newArrayList();
 
         mResultsWriter = new ResultsWriter(mConfig);
@@ -385,6 +387,19 @@ public class AssemblyApplication
                     }
 
                     allAssemblies.add(assembly);
+                }
+            }
+        }
+
+        if(mSagaMatcherFactory != null)
+        {
+            // Apply SAGA matching to assemblies which were created during phasing and so didn't get matched yet.
+            SagaSequenceMatcher sagaMatcher = mSagaMatcherFactory.createSequenceMatcher();
+            for(PhaseGroup phaseGroup : phaseGroups)
+            {
+                for(JunctionAssembly assembly : phaseGroup.derivedAssemblies())
+                {
+                    assembly.matchToSaga(sagaMatcher);
                 }
             }
         }

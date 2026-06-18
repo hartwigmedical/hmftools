@@ -22,11 +22,11 @@ public class SagaMatcherFactory
     private final SagaLocationMatcher.Config mLocationMatcherConfig;
     private final Map<String, List<SagaIndexedBreakend>> mSearchableBreakends;
 
-    private final SagaSequenceMatcher.Config mSequenceMatcherConfig;
+    private final SagaSequenceMatcherConfig mSequenceMatcherConfig;
     private final Map<Integer, SagaAssembly> mAssembliesByContigId;
 
     public SagaMatcherFactory(final SagaResource sagaResource, final SagaLocationMatcher.Config locationMatcherConfig,
-            final SagaSequenceMatcher.Config sequenceMatcherConfig)
+            final SagaSequenceMatcherConfig sequenceMatcherConfig)
     {
         mSagaResource = sagaResource;
 
@@ -58,7 +58,7 @@ public class SagaMatcherFactory
 
     public SagaMatcherFactory(final SagaResource sagaResource)
     {
-        this(sagaResource, SagaLocationMatcher.Config.DEFAULT, SagaSequenceMatcher.Config.DEFAULT);
+        this(sagaResource, SagaLocationMatcher.Config.DEFAULT, SagaSequenceMatcherConfig.DEFAULT);
     }
 
     // Creates a SagaLocationMatcher instance for matching variants within the specified region only.

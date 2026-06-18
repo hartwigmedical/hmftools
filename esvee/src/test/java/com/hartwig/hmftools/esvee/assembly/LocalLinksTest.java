@@ -136,7 +136,7 @@ public class LocalLinksTest
         assembly2.addJunctionRead(juncRead2);
 
         Junction junction3 = new Junction(CHR_1, 250, FORWARD);
-        junction3.markAsIndel();
+        junction3.setIndelStatus(true);
 
         String duplicatedBases = refGenome.getBaseString(CHR_1, 251, 285);
         IndelCoords indelCoords = new IndelCoords(250, 251, duplicatedBases.length());
@@ -151,7 +151,7 @@ public class LocalLinksTest
         assembly3.setIndelCoords(indelCoords);
 
         Junction junction4 = new Junction(CHR_1, 251, REVERSE);
-        junction4.markAsIndel();
+        junction4.setIndelStatus(true);
 
         String refBases4 = refGenome.getBaseString(CHR_1, 251, 350);
         String extBases4 = duplicatedBases;

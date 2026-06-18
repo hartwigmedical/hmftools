@@ -54,7 +54,8 @@ For any variant with one or more impacted transcripts, the following summary dat
 | output_dir            | Output directory for VCF and transcript CSV, will use input VCF directory if not specified |
 | output_vcf_file       | Specify the output VCF filename                                                            |
 | only_canonical        | Only annotate impacts on canonical transcripts                                             |
-| read_pass_only        | Only process passing variants                                                              |
+| sequencing_type       | Illumina (default), SBX, Ultima |
+| filter_type | ALL, PASS (default) or PANEL
 | threads               | Splits variants by chromosome across threads                                               |
 | write_pass_only       | Only write passing variants                                                                |
 | write_transcript_data | Write a detailed TSV file for each impacted transcript                                     |

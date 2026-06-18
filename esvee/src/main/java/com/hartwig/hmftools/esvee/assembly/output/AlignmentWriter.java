@@ -7,6 +7,8 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.common.FileCommon.FLD_SAGA_CIGAR;
+import static com.hartwig.hmftools.esvee.common.FileCommon.FLD_SAGA_MATCH;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -64,8 +66,8 @@ public class AlignmentWriter
 
             if(mSagaEnabled)
             {
-                sj.add("SagaMatch");
-                sj.add("SagaMatchCigar");
+                sj.add(FLD_SAGA_MATCH);
+                sj.add(FLD_SAGA_CIGAR);
             }
 
             writer.write(sj.toString());

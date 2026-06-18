@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_200;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_400;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_RANDOM_100;
 import static com.hartwig.hmftools.esvee.TestUtils.TEST_READ_ID;
+import static com.hartwig.hmftools.esvee.TestUtils.cloneRead;
 import static com.hartwig.hmftools.esvee.TestUtils.createRead;
 import static com.hartwig.hmftools.esvee.TestUtils.makeCigarString;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_DEDUP_HIGH_SUPPORT_RATIO;
@@ -199,6 +200,61 @@ public class IndelsTest
         assertEquals(1, assemblies.size());
         assembly = assemblies.get(0);
         assertEquals(4, assembly.supportCount());
+    }
+
+    @Test
+    public void testJunctionIndelTypeDetermination()
+    {
+        // a junction is marked as indel in prep but changed to soft-clip based on extension candidate reads
+        Junction posJunction = new Junction(CHR_1, 50, FORWARD, false, true, false, null);
+
+        String readBases = REF_BASES_200.substring(11, 51) + REF_BASES_200.substring(100, 140);
+        Read read1 = createRead(READ_ID_GENERATOR.nextId(), 11, readBases, "40M49D40M");
+        calcIndelInferredUnclippedPositions(read1);
+
+        // other reads will soft-clip at the junctions
+        readBases = REF_BASES_200.substring(31, 51) + REF_BASES_200.substring(100, 140);
+        Read read2 = createRead(READ_ID_GENERATOR.nextId(), 31, readBases, "20M40S");
+        Read read3 = cloneRead(read2, READ_ID_GENERATOR.nextId());
+        readBases = REF_BASES_200.substring(30, 51) + REF_BASES_200.substring(100, 140); // diff frag coords
+        Read read4 = createRead(READ_ID_GENERATOR.nextId(), 30, readBases, "21M40S");
+
+        List<Read> reads = List.of(read1, read2, read3, read4);
+
+        JunctionAssembler junctionAssembler = new JunctionAssembler(posJunction);
+        List<JunctionAssembly> assemblies = junctionAssembler.processJunction(reads);
+        assertEquals(1, assemblies.size());
+        JunctionAssembly assembly = assemblies.get(0);
+        assertFalse(posJunction.indelBased());
+        assertEquals(4, assembly.supportCount());
+        assertEquals(0, assembly.mismatchReadCount());
+
+        // test indels being more dominant than soft-clips
+        posJunction = new Junction(CHR_1, 50, FORWARD, false, false, false, null);
+
+        readBases = REF_BASES_200.substring(11, 51) + REF_BASES_200.substring(100, 140);
+        read1 = createRead(READ_ID_GENERATOR.nextId(), 11, readBases, "40M49D40M");
+        read2 = cloneRead(read1, READ_ID_GENERATOR.nextId());
+        readBases = REF_BASES_200.substring(10, 51) + REF_BASES_200.substring(100, 140);
+        read3 = createRead(READ_ID_GENERATOR.nextId(), 10, readBases, "41M49D40M");
+
+        calcIndelInferredUnclippedPositions(read1);
+        calcIndelInferredUnclippedPositions(read2);
+        calcIndelInferredUnclippedPositions(read3);
+
+        // other reads will soft-clip at the junctions
+        readBases = REF_BASES_200.substring(31, 51) + REF_BASES_200.substring(100, 140);
+        read4 = createRead(READ_ID_GENERATOR.nextId(), 31, readBases, "20M40S");
+
+        reads = List.of(read1, read2, read3, read4);
+
+        junctionAssembler = new JunctionAssembler(posJunction);
+        assemblies = junctionAssembler.processJunction(reads);
+        assertEquals(1, assemblies.size());
+        assemblies.get(0);
+        assertTrue(posJunction.indelBased());
+        assertEquals(4, assembly.supportCount());
+        assertEquals(0, assembly.mismatchReadCount());
     }
 
     @Test

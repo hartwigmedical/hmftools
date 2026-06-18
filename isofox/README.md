@@ -59,10 +59,22 @@ functions | List separated by ';', default is 'TRANSCRIPT_COUNTS;ALT_SPLICE_JUNC
 ### Optional
 Argument | Description
 ---|---
+read_length | Default 151, otherwise determined from read sampling
+exp_counts_file | Pre-computed expected counts per transcript and gene, required for TPM calcs
+exp_gc_ratios_file | Pre-computed expected GC ratio counts per transcript, required for TPM calcs
+gene_distribution_file | TPM median and percentile values from Hartwig cohort, for annotation and filtering
+cancer_type | Used for TPM median and percentiles if available
+known_fusion_file | As used in Linx, annotate known and promiscuous fusion gene pairings
+fusion_cohort_file| Frequencies of RNA fusions from Hartwig cohort, for annotation and filtering
+alt_sj_cohort_file | Frequencies of novel splice junctions from Hartwig cohort, for annotation and filtering
+driver_gene_panel | Used for reportability of gene expression and novel splice junctions
+panel_tpm_norm_file | Targeted panel TPM normalisation
 gene_id_file | Restrict analysis to genes in file, format EnsemblGeneId,GeneName
+excluded_regions | Drop reads in regions of high multi-mappability
 excluded_gene_id_file | Exclude genes in file, format EnsemblGeneId,GeneName
 enriched_gene_ids | List of EnsemblGeneIds separated by ';', see Enriched Genes information below
 drop_dups | Default is false. By default duplicate fragments will be counted towards transcript expression.
+write_type | Debug only: EXON, SPLICE_JUNC, FRAG_LENGTH, FRAG_LENGTH_BY_GENE, READ, CHIMERIC_READ, CHIMERIC_POSITION_DATA, SPLICE_SITE, TRANS_COMBO;GC_RATIO, separated by ';'
 
 ### Reference Files
 
@@ -84,8 +96,6 @@ Argument | Description
 ---|---
 frag_length_min_count | Minimum number of fragments to observe for length distribution calcs, default = 1M 
 exp_rate_frag_lengths | Discrete buckets for fragment lengths, either with frequency specified or left as zero if to be calculated (ie with -apply_calc_frag_lengths). eg '50-0;75-0;100-0;125-0;150-0;200-0;250-0;300-0;400-0;550-0' 
-exp_counts_file | Pre-computed expected counts per transcript and gene
-exp_gc_ratios_file | Pre-computed expected GC ratio counts per transcript
 read_length | Expected RNA read length (eg 76 or 151), will be computed if not provided
 long_frag_limit | Default 550 bases, fragments longer than this without a splice junction are not considered to support a gene for the purposes of expression
 single_map_qual | Default 255, discard reads with map quality below this unless using the config 'apply_map_qual_adjust'
@@ -490,13 +500,3 @@ TransDataDown | Transcript ids which contain a splice junction which includes ma
 OtherGenesUp | Other genes which match the up breakpoint
 OtherGenesDown | Other genes which match the down breakpoint
 RelatedFusions | Ids of other fusions in the same gene which may be caused by the same structural variant
-
-## Version History and Download Links
-- [1.6](https://github.com/hartwigmedical/hmftools/releases/tag/isofox-v1.6.1)
-- [1.5](https://github.com/hartwigmedical/hmftools/releases/tag/isofox-v1.5)
-- [1.4](https://github.com/hartwigmedical/hmftools/releases/tag/isofox-v1.4)
-- [1.3](https://github.com/hartwigmedical/hmftools/releases/tag/isofox-v1.3)
-- [1.2](https://github.com/hartwigmedical/hmftools/releases/tag/isofox-v1.2)
-- [1.1](https://github.com/hartwigmedical/hmftools/releases/tag/isofox-v1.1)
-- [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/isofox-v1.0)
-

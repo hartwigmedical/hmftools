@@ -15,6 +15,10 @@ public record SagaAssembly(
 {
     public SagaAssembly
     {
+        if(junctionOffsets.size() != 1 && junctionOffsets.size() != 2)
+        {
+            throw new IllegalArgumentException("Invalid number of junction offsets");
+        }
         // E.g.
         // sequence = RRRJJJRRR
         // junctionOffset[0] = 3
@@ -25,9 +29,9 @@ public record SagaAssembly(
         }
     }
 
-    public String variantId()
+    public List<SagaJunctionInfo> junctions()
     {
-        return variant.id();
+        return junctionOffsets.stream().map(SagaJunctionInfo::new).toList();
     }
 
     public static SagaAssembly fromFastaLabel(final String fastaLabel, int assemblyLength)

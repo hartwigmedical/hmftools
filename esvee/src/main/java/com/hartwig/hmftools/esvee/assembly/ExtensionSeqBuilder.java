@@ -12,12 +12,7 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MAX_EXTENSION_READ_LOW_QUAL_MISMATCH_PERC;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_LENGTH_LOWER;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH_LOWER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.basesMatch;
-import static com.hartwig.hmftools.esvee.assembly.JunctionAssembler.minReadThreshold;
 import static com.hartwig.hmftools.esvee.assembly.LineUtils.findConsensusLineExtension;
 import static com.hartwig.hmftools.esvee.assembly.LineUtils.hasLineTail;
 import static com.hartwig.hmftools.esvee.assembly.SequenceBuilder.NEXT_BASE_CHECK_COUNT;
@@ -30,8 +25,6 @@ import static com.hartwig.hmftools.esvee.assembly.SequenceDiffType.REPEAT;
 import static com.hartwig.hmftools.esvee.assembly.SequenceDiffType.UNSET;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.INVALID_INDEX;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.aboveMinQual;
-import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_MIN_EXTENSION_LENGTH;
-import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_MIN_SOFT_CLIP_SECONDARY_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;
 
 import java.util.Collections;
@@ -54,26 +47,19 @@ public class ExtensionSeqBuilder
     private final Junction mJunction;
     private final List<ReadParseState> mReads;
     private final boolean mBuildForwards;
-    private final boolean mUseRelaxedFilters;
 
     private final SequenceBuilder mSequenceBuilder;
 
     private boolean mHasLineSequence;
-    private boolean mIsValid;
 
     private int mRefRepeatCount; // counts of a repeat which extends back into the ref bases
 
     public ExtensionSeqBuilder(final Junction junction, final List<Read> reads)
     {
-        this(junction, reads, false);
-    }
-
-    public ExtensionSeqBuilder(final Junction junction, final List<Read> reads, boolean useRelaxedFilters)
-    {
         mJunction = junction;
         mBuildForwards = mJunction.isForward();
         mReads = Lists.newArrayListWithCapacity(reads.size());
-        mUseRelaxedFilters = useRelaxedFilters;
+
 
         int maxExtension = 0;
         boolean hasLineReads = false;
@@ -105,30 +91,23 @@ public class ExtensionSeqBuilder
         int baseLength = maxExtension + 1; // since the junction base itself is included (which is a ref base)
         mSequenceBuilder = new SequenceBuilder(mReads, mBuildForwards, baseLength);
 
-        mIsValid = true;
         mRefRepeatCount = 0;
 
         mHasLineSequence = hasLineReads ? checkLineSequence() : false;
+
+        checkRepeatInRefBases();
 
         if(AssemblyConfig.AssemblyBuildDebug)
         {
             SV_LOGGER.debug("junc({}) initial extension bases sequence {}",
                     mJunction.coords(), new String(mSequenceBuilder.bases()));
         }
-
-        validateFinalBases();
     }
 
     public byte[] extensionBases() { return mSequenceBuilder.bases(); }
-
     public int extensionLength() { return mSequenceBuilder.bases().length - 1; } // since includes the first ref base
-
     public byte[] baseQualities() { return mSequenceBuilder.baseQuals(); }
-
     public List<RepeatInfo> repeats() { return mSequenceBuilder.repeats(); }
-
-    public boolean isValid() { return mIsValid; }
-
     public int refBaseRepeatCount() { return mRefRepeatCount; }
 
     public List<SupportRead> formAssemblySupport()
@@ -146,7 +125,7 @@ public class ExtensionSeqBuilder
             SupportRead supportRead = new SupportRead(
                     read.read(), SupportType.JUNCTION, read.startIndex(), read.matchedBases(), read.mismatchCount(true));
             read.read().setExtensionMismatches(read.mismatches()); // cached for the visualiser
-            supportRead.setMismatchInfo(read.mismatchInfo());
+            supportRead.setExtensionMatchInfo(read);
 
             supportReads.add(supportRead);
         }
@@ -191,25 +170,8 @@ public class ExtensionSeqBuilder
 
         int extensionIndex = mBuildForwards ? 0 : mSequenceBuilder.baseQuals().length - 1;
 
-        /*
-        // allowance for DEL indel reads vs a DEL indlel junction - is this required?
-
-        int repeatIndexStart = -1;
-        int repeatSkipCount = 0;
-
-        if(mJunction.indelCoords() != null && read.indelCoords() != null
-        && mJunction.indelCoords().isDelete() && read.indelCoords().isDelete())
-        {
-            // the read must cover the assembly INDEL entirely
-            if(read.alignmentStart() < mJunction.indelCoords().PosStart && read.alignmentEnd() > mJunction.indelCoords().PosEnd
-            && mJunction.indelCoords().Length != read.indelCoords().Length)
-            {
-                // a shorter delete means more ref bases need to be skipped
-                repeatSkipCount = mJunction.indelCoords().Length - read.indelCoords().Length;
-                repeatIndexStart = extensionIndex + (mJunction.isForward() ? 1 : -1); // first base after the delete
-            }
-        }
-        */
+        // NOTE: previously there was logic to specifically handle deletes if a shorter length then indel junction DEL, but
+        // haven't seen the need for this
 
         final byte[] extensionBases = mSequenceBuilder.bases();
 
@@ -358,23 +320,14 @@ public class ExtensionSeqBuilder
         return extBaseMove;
     }
 
-    private void validateFinalBases()
+    public void checkValidity(final JunctionThresholdState juncThresholdState)
     {
         int maxValidExtensionLength = 0;
         int validExtensionReadCount = 0;
-        boolean hasMinLengthSoftClipRead = false;
-
-        int reqExtensionLength = mHasLineSequence
-                ? LINE_MIN_EXTENSION_LENGTH
-                : (mUseRelaxedFilters ? ASSEMBLY_MIN_SOFT_CLIP_LENGTH_LOWER : ASSEMBLY_MIN_SOFT_CLIP_LENGTH);
-
-        int reqSecondaryExtensionLength = mHasLineSequence
-                ? LINE_MIN_SOFT_CLIP_SECONDARY_LENGTH
-                : (mUseRelaxedFilters ? ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH_LOWER : ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH);
+        boolean hasExtensionLengthRead = false;
 
         for(ReadParseState read : mReads)
         {
-            // CHECK, rework, make common etc
             if(read.mismatched())
                 continue;
 
@@ -390,16 +343,16 @@ public class ExtensionSeqBuilder
                 scLength = mJunction.isForward() ? read.read().rightClipLength() : read.read().leftClipLength();
             }
 
-            if(scLength >= reqSecondaryExtensionLength)
+            if(scLength >= juncThresholdState.MinSecondExtensionLength)
             {
-                hasMinLengthSoftClipRead |= scLength >= reqExtensionLength;
+                hasExtensionLengthRead |= scLength >= juncThresholdState.MinExtensionLength;
                 ++validExtensionReadCount;
             }
             else if(read.read().indelCoords() != null && read.read().indelCoords().Length >= MIN_INDEL_LENGTH)
             {
                 // check for extensions comprised only of short indels, even if they started with some soft-clipped reads
                 ++validExtensionReadCount;
-                hasMinLengthSoftClipRead = true;
+                hasExtensionLengthRead = true;
             }
             else
             {
@@ -410,15 +363,18 @@ public class ExtensionSeqBuilder
             maxValidExtensionLength = max(read.overlapBaseCount(), maxValidExtensionLength);
         }
 
-        int minRequiredReadCount = minReadThreshold(mJunction);
+        juncThresholdState.ExtensionLengthValid |= hasExtensionLengthRead && maxValidExtensionLength > 0;
 
-        if(maxValidExtensionLength == 0 || !hasMinLengthSoftClipRead || validExtensionReadCount < minRequiredReadCount)
+        juncThresholdState.SecondExtensionLengthValid |= validExtensionReadCount >= 2;
+
+        juncThresholdState.MinReadsValid |= validExtensionReadCount >= juncThresholdState.MinRequiredReads;
+
+        /*
+        if(maxValidExtensionLength == 0 || !hasMinLengthSoftClipRead || validExtensionReadCount < juncThresholdState.MinRequiredReads)
         {
             mIsValid = false;
-            return;
         }
-
-        checkRepeatInRefBases();
+        */
     }
 
     private void checkRepeatInRefBases()

@@ -34,6 +34,7 @@ import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.types.SupportType;
 import com.hartwig.hmftools.esvee.assembly.types.ThreadTask;
+import com.hartwig.hmftools.esvee.common.saga.SagaJunctionInfo;
 import com.hartwig.hmftools.esvee.common.saga.SagaMatchBySequence;
 import com.hartwig.hmftools.esvee.common.saga.SagaSequenceMatcher;
 import com.hartwig.hmftools.esvee.common.saga.SagaMatcherFactory;
@@ -124,7 +125,9 @@ public class AssemblyAligner extends ThreadTask
 
         if(mSagaMatcher != null)
         {
-            SagaMatchBySequence sagaMatch = mSagaMatcher.matchBySequence(assemblyAlignment.fullSequence(), assemblyAlignment.linkIndices());
+            List<SagaJunctionInfo> junctionInfos = assemblyAlignment.linkIndices().stream().map(SagaJunctionInfo::new).toList();
+            boolean lowerJunctionOverlap = assemblyAlignment.assemblies().size() == 1 && assemblyAlignment.assemblies().get(0).hasLineSequence();
+            SagaMatchBySequence sagaMatch = mSagaMatcher.matchBySequence(assemblyAlignment.fullSequence().getBytes(), junctionInfos, lowerJunctionOverlap, false);
             assemblyAlignment.setSagaMatch(sagaMatch);
         }
 
@@ -405,7 +408,7 @@ public class AssemblyAligner extends ThreadTask
             if(read.type() != SupportType.JUNCTION)
                 continue;
 
-            int extensionLength = read.extensionLength(assemblyOrientation);
+            int extensionLength = read.junctionExtensionLength(assemblyOrientation);
 
             extensionLengths.add(extensionLength);
         }
@@ -419,7 +422,7 @@ public class AssemblyAligner extends ThreadTask
             int secondLongestLength = extensionLengths.get(1);
 
             List<SupportRead> topReads = reads.stream()
-                    .filter(x -> x.type() == SupportType.JUNCTION && x.extensionLength(assemblyOrientation) >= secondLongestLength)
+                    .filter(x -> x.type() == SupportType.JUNCTION && x.junctionExtensionLength(assemblyOrientation) >= secondLongestLength)
                     .collect(Collectors.toList());
 
             SupportRead read1 = topReads.get(0);

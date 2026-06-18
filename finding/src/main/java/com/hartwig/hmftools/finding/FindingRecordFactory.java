@@ -2,6 +2,10 @@ package com.hartwig.hmftools.finding;
 
 import static com.hartwig.hmftools.finding.DisruptionFactory.createGermlineDisruptions;
 import static com.hartwig.hmftools.finding.DisruptionFactory.createSomaticDisruptions;
+import static com.hartwig.hmftools.finding.RnaFindingFactory.createNovelSpliceJunctionFindings;
+import static com.hartwig.hmftools.finding.RnaFindingFactory.createRnaFusionFindings;
+import static com.hartwig.hmftools.finding.RnaFindingFactory.createRnaGeneExpressionFindings;
+import static com.hartwig.hmftools.finding.RnaFindingFactory.createRnaQc;
 import static com.hartwig.hmftools.finding.datamodel.finding.FindingStatus.Issue.NORMAL_REQUIRED;
 import static com.hartwig.hmftools.finding.datamodel.finding.FindingStatus.Issue.WGS_REQUIRED;
 
@@ -11,9 +15,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.SortedSet;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
@@ -47,6 +53,7 @@ import com.hartwig.hmftools.finding.datamodel.FusionBuilder;
 import com.hartwig.hmftools.finding.datamodel.GainDeletion;
 import com.hartwig.hmftools.finding.datamodel.HomologousRecombination;
 import com.hartwig.hmftools.finding.datamodel.HomologousRecombinationBuilder;
+import com.hartwig.hmftools.finding.datamodel.HomologousRecombinationPredictionBuilder;
 import com.hartwig.hmftools.finding.datamodel.MetaProperties;
 import com.hartwig.hmftools.finding.datamodel.MetaPropertiesBuilder;
 import com.hartwig.hmftools.finding.datamodel.MicrosatelliteStability;
@@ -149,6 +156,11 @@ public class FindingRecordFactory
                 .somaticDisruptions(createSomaticDisruptions(linx, findingStatus))
                 .germlineDisruptions(germlineDisruptions)
                 .viruses(createVirusFindings(orangeRecord.virusInterpreter(), experimentType, findingStatus))
+                .rnaQc(createRnaQc(orangeRecord.isofox()))
+                .highExpressionGenes(createRnaGeneExpressionFindings(orangeRecord.isofox(), true, findingStatus))
+                .lowExpressionGenes(createRnaGeneExpressionFindings(orangeRecord.isofox(), false, findingStatus))
+                .rnaFusions(createRnaFusionFindings(orangeRecord.isofox(), findingStatus))
+                .novelSpliceJunctions(createNovelSpliceJunctionFindings(orangeRecord.isofox(), findingStatus))
                 .homologousRecombination(createHomologousRecombination(orangeRecord.chord(),
                         smallVariants,
                         somaticGainDeletions,
@@ -170,6 +182,8 @@ public class FindingRecordFactory
                 .pipelineVersion(orangeRecord.pipelineVersion())
                 .sampleId(orangeRecord.sampleId())
                 .samplingDate(orangeRecord.samplingDate())
+                .hasNormalSample(orangeRecord.referenceId() != null)
+                .hasRnaSample(orangeRecord.hasRna())
                 .build();
     }
 
@@ -377,6 +391,14 @@ public class FindingRecordFactory
         if(chord != null)
         {
             HomologousRecombination.Status hrStatus = hrStatus(chord);
+            HomologousRecombination.HrdType hrdType = switch (chord.hrdType())
+            {
+                case "none" -> null;
+                case "BRCA1_type" -> HomologousRecombination.HrdType.BRACA1_TYPE;
+                case "BRCA2_type" -> HomologousRecombination.HrdType.BRACA2_TYPE;
+                case "cannot_be_determined" -> HomologousRecombination.HrdType.CANNOT_BE_DETERMINED;
+                default -> throw new IllegalStateException("Unexpected chord hrdType: " + chord.hrdType());
+            };
             boolean isPresent = hrStatus == HomologousRecombination.Status.HR_DEFICIENT;
             SortedSet<String> drivingGenes = isPresent ? GeneListUtil.genes(smallVariants,
                     gainDeletions,
@@ -385,12 +407,17 @@ public class FindingRecordFactory
             return FindingItemBuilder.<HomologousRecombination>builder()
                     .status(findingStatus)
                     .finding(HomologousRecombinationBuilder.builder()
-                            .findingKey(FindingKeys.homologousRecombination(chord.hrStatus()))
-                            .status(hrStatus)
-                            .hrdValue(ThresholdValueFactory.hrdValue(chord.hrdValue()))
-                            .brca1Value(chord.brca1Value())
-                            .brca2Value(chord.brca2Value())
-                            .hrdType(chord.hrdType())
+                            .predictions(new TreeMap<>(Map.of(
+                                    HomologousRecombination.HrdCancerType.PAN_CANCER,
+                                    HomologousRecombinationPredictionBuilder.builder()
+                                        .findingKey(FindingKeys.homologousRecombination(hrStatus, HomologousRecombination.HrdCancerType.PAN_CANCER))
+                                        .cancerType(HomologousRecombination.HrdCancerType.PAN_CANCER)
+                                        .status(hrStatus)
+                                        .hrdProbability(ThresholdValueFactory.hrdProbability(chord.hrdValue()))
+                                        .brca1Probability(chord.brca1Value())
+                                        .brca2Probability(chord.brca2Value())
+                                        .hrdType(hrdType)
+                                        .build())))
                             .drivingGenes(drivingGenes)
                             .build())
                     .build();
@@ -398,7 +425,7 @@ public class FindingRecordFactory
         else
         {
             Set<FindingStatus.Issue> errors = new HashSet<>();
-            if(experimentType == ExperimentType.TARGETED)
+            if(experimentType != ExperimentType.WHOLE_GENOME)
             {
                 errors.add(WGS_REQUIRED);
             }

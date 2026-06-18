@@ -6,7 +6,6 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CHROMOSOME_NAME;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.inferredInsertSize;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.inferredInsertSizeAbs;
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
@@ -28,6 +27,7 @@ import java.util.List;
 import com.hartwig.hmftools.common.bam.SamRecordUtils;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.genome.region.Orientation;
+import com.hartwig.hmftools.esvee.assembly.ReadParseState;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.common.IndelCoords;
 
@@ -82,7 +82,8 @@ public class SupportRead
 
     // those past the junction
     private int mExtBaseMatches;
-    private int mExtBaseMismatches;
+    private int mExtBaseMismatches; // excludes low-qual
+    private int mExtBaseOverlap;
     private int mMediumQualCount;
     private Integer mRefBaseMismatches;
     private String mMismatchInfo;
@@ -134,6 +135,7 @@ public class SupportRead
 
         mExtBaseMatches = matches;
         mExtBaseMismatches = mismatches;
+        mExtBaseOverlap = 0;
         mRefBaseMismatches =  null;
         mMismatchInfo = "";
         mMediumQualCount = isSbx() && type == SupportType.JUNCTION ? setSbxMediumQualCount(read) : 0;
@@ -197,13 +199,19 @@ public class SupportRead
 
     public int extensionBaseMismatches() { return mExtBaseMismatches; }
     public int extensionBaseMatches() { return mExtBaseMatches; }
+    public int extensionBaseOverlap() { return mExtBaseOverlap; }
     public int mediumQualCount() { return mMediumQualCount; }
 
     public int referenceMismatches() { return mRefBaseMismatches != null ? mRefBaseMismatches : -1; }
     public boolean hasReferenceMismatches() { return mRefBaseMismatches != null; }
 
     public String mismatchInfo() { return mMismatchInfo; }
-    public void setMismatchInfo(final String mismatchInfo) { mMismatchInfo = mismatchInfo; }
+
+    public void setExtensionMatchInfo(final ReadParseState readInfo)
+    {
+        mMismatchInfo = readInfo.mismatchInfo();
+        mExtBaseOverlap = readInfo.evaluatedBaseCount() - 1; // removed the junction ref base
+    }
 
     public void setReferenceMismatches(int mismatches) { mRefBaseMismatches = mismatches; }
 
@@ -214,12 +222,14 @@ public class SupportRead
 
     public int junctionReadStartDistance() { return mJunctionReadStartDistance; }
 
-    public int extensionLength(final Orientation junctionOrientation)
+    public int junctionExtensionLength(final Orientation junctionOrientation)
     {
-        if(mType != SupportType.JUNCTION)
-            return 0;
+        if(mType == SupportType.JUNCTION || mType == SupportType.INDEL)
+        {
+            return junctionOrientation.isForward() ? baseLength() - mJunctionReadStartDistance - 1 : mJunctionReadStartDistance;
+        }
 
-        return junctionOrientation.isForward() ? baseLength() - mJunctionReadStartDistance : mJunctionReadStartDistance;
+        return 0;
     }
 
     public void setFullAssemblyInfo(int assemblyIndex, final Orientation orientation)

@@ -124,16 +124,16 @@ public class VcfComparer
                 List<Breakend> newFilteredBreakends = newFilteredVariants.getChromosomeBreakends(chromosome);
 
                 // first exact only from the passing breakeands
-                findBreakendMatches(oldBreakends, newBreakends, true);
+                findBreakendMatches(oldBreakends, newBreakends, true, true);
 
                 // then inexact from the main lists
-                findBreakendMatches(oldBreakends, newBreakends, false);
+                findBreakendMatches(oldBreakends, newBreakends, false, true);
 
                 // then search for old in the filtered new list and vice versa - again first exact then inexact matches
-                findBreakendMatches(oldBreakends, newFilteredBreakends, true);
-                findBreakendMatches(newBreakends, oldFilteredBreakends, true);
-                findBreakendMatches(oldBreakends, newFilteredBreakends, false);
-                findBreakendMatches(newBreakends, oldFilteredBreakends, false);
+                findBreakendMatches(oldBreakends, newFilteredBreakends, true, true);
+                findBreakendMatches(newBreakends, oldFilteredBreakends, true, false);
+                findBreakendMatches(oldBreakends, newFilteredBreakends, false, true);
+                findBreakendMatches(newBreakends, oldFilteredBreakends, false, false);
 
                 // finally log unmatched breakends
                 for(Breakend breakend : oldBreakends)
@@ -174,7 +174,7 @@ public class VcfComparer
         }
 
         private void findBreakendMatches(
-                final List<Breakend> breakends, final List<Breakend> otherBreakends, boolean exactOnly)
+                final List<Breakend> breakends, final List<Breakend> otherBreakends, boolean exactOnly, boolean firstIsOld)
         {
             for(Breakend breakend : breakends)
             {
@@ -195,7 +195,10 @@ public class VcfComparer
                 breakend.setCoordMatchType(match.MatchType);
                 match.Breakend.setCoordMatchType(match.MatchType);
 
-                compareBreakends(breakend, match.Breakend, match.MatchType);
+                if(firstIsOld)
+                    compareBreakends(breakend, match.Breakend, match.MatchType);
+                else
+                    compareBreakends(match.Breakend, breakend, match.MatchType);
             }
         }
 
