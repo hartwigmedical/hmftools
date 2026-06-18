@@ -3,7 +3,6 @@ package com.hartwig.hmftools.tars.liftback;
 import static com.hartwig.hmftools.common.bamops.BamToolName.fromPath;
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.runThreadTasks;
-import static com.hartwig.hmftools.tars.liftback.SpliceLiftBackConfig.SORT_BAMTOOL_PATH;
 import static com.hartwig.hmftools.tars.common.SpliceCommon.ALT_CONTIG_SUFFIX;
 import static com.hartwig.hmftools.tars.common.TarsConfig.APP_NAME;
 import static com.hartwig.hmftools.tars.common.TarsConfig.TARS_LOGGER;
@@ -21,10 +20,6 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -82,35 +77,24 @@ public class SpliceLiftBack
         final LiftBackResources resources = buildResources(contigEntries);
         final SAMFileHeader outputHeader = buildOutputHeader();
 
-        final int mappedBuckets = mConfig.SortBuckets > 0 ? mConfig.SortBuckets : Math.max(mConfig.Threads, 1);
-        final GenomicBucketIndex bucketIndex = new GenomicBucketIndex(outputHeader, mappedBuckets);
-
-        // bucketWorkerBams[b] = the per-worker shard files routed to bucket b
-        final List<List<String>> bucketWorkerBams = Lists.newArrayList();
-        for(int b = 0; b < bucketIndex.bucketCount(); ++b)
-            bucketWorkerBams.add(Lists.newArrayList());
-
+        final List<String> shardBams = Lists.newArrayList();
         final List<String> tsvAShards = Lists.newArrayList();
         final List<String> tsvBShards = Lists.newArrayList();
 
-        final List<LiftBackWorker> workers = runChunkStream(
-                resources, outputHeader, bucketIndex, bucketWorkerBams, tsvAShards, tsvBShards);
+        final List<LiftBackWorker> workers = runChunkStream(resources, outputHeader, shardBams, tsvAShards, tsvBShards);
         if(workers == null)
             throw new RuntimeException("liftback chunk stream failed");
 
         mergeWorkerStats(workers);
 
-        TARS_LOGGER.info("liftback processing complete, mins({}); sorting {} buckets then concatenating",
-                runTimeMinsStr(startTimeMs), bucketIndex.bucketCount());
+        TARS_LOGGER.info("liftback processing complete, mins({}); concatenating + sorting shards", runTimeMinsStr(startTimeMs));
 
-        // each bucket is a disjoint, ordered genomic range. Combine + sort each bucket in parallel, then a plain
-        // cat of the sorted buckets in order yields a coordinate-sorted BAM -- no whole-sample sort or k-way merge.
-        final List<String> sortedBuckets = sortBuckets(bucketWorkerBams);
-        if(sortedBuckets == null)
-            throw new RuntimeException("failed to sort liftback genomic buckets");
+        final String unsortedBam = mConfig.formUnsortedBam();
+        if(!concatenateShards(shardBams, unsortedBam))
+            throw new RuntimeException("failed to concatenate liftback BAM shards");
 
-        if(!concatenateSortedBuckets(sortedBuckets, mConfig.formOutputBam()))
-            throw new RuntimeException("failed to concatenate + index lifted BAM");
+        if(!sortAndIndex(unsortedBam, mConfig.formOutputBam()))
+            throw new RuntimeException("failed to sort + index lifted BAM");
 
         if(mConfig.WriteLiftbackTsv)
         {
@@ -118,7 +102,7 @@ public class SpliceLiftBack
             concatenateTsvShards(tsvBShards, LiftBackWriter.TSV_B_HEADER_LINE, mConfig.formTsvBFile());
         }
 
-        cleanupIntermediates(bucketWorkerBams, sortedBuckets, tsvAShards, tsvBShards);
+        cleanupIntermediates(unsortedBam, shardBams, tsvAShards, tsvBShards);
 
         TARS_LOGGER.info("SpliceLiftBack complete, mins({})", runTimeMinsStr(startTimeMs));
     }
@@ -126,8 +110,8 @@ public class SpliceLiftBack
     // One producer streams bwa's name-grouped BAM, cutting whole-fragment chunks; N workers lift + emit each
     // chunk to its own BAM + TSV shard. No input sort, no index, no fragment cache.
     private List<LiftBackWorker> runChunkStream(
-            final LiftBackResources resources, final SAMFileHeader outputHeader, final GenomicBucketIndex bucketIndex,
-            final List<List<String>> bucketWorkerBams, final List<String> tsvAShards, final List<String> tsvBShards)
+            final LiftBackResources resources, final SAMFileHeader outputHeader,
+            final List<String> shardBams, final List<String> tsvAShards, final List<String> tsvBShards)
     {
         final int workerCount = Math.max(mConfig.Threads, 1);
         final BlockingQueue<List<SAMRecord>> chunkQueue =
@@ -146,14 +130,8 @@ public class SpliceLiftBack
 
         for(int i = 0; i < workerCount; ++i)
         {
-            // this worker's per-bucket shard files; also indexed by bucket for the downstream combine + sort.
-            final List<String> workerBucketBams = Lists.newArrayList();
-            for(int b = 0; b < bucketIndex.bucketCount(); ++b)
-            {
-                final String bucketBam = formBucketBamPath(i, b);
-                workerBucketBams.add(bucketBam);
-                bucketWorkerBams.get(b).add(bucketBam);
-            }
+            final String shardBam = formShardBamPath(i);
+            shardBams.add(shardBam);
 
             // null shard paths disable the worker's TSV writer; debug TSVs are opt-in (whole-sample is huge).
             final String tsvAShard = mConfig.WriteLiftbackTsv ? formTsvShardPath(i, "records") : null;
@@ -164,8 +142,7 @@ public class SpliceLiftBack
                 tsvBShards.add(tsvBShard);
             }
 
-            final LiftBackWorker worker = new LiftBackWorker(
-                    chunkQueue, resources, outputHeader, bucketIndex, workerBucketBams, tsvAShard, tsvBShard);
+            final LiftBackWorker worker = new LiftBackWorker(chunkQueue, resources, outputHeader, shardBam, tsvAShard, tsvBShard);
             workers.add(worker);
             threadTasks.add(worker);
         }
@@ -365,73 +342,36 @@ public class SpliceLiftBack
                 evaluated, extended, basesLead, basesTrail);
     }
 
-    // for each bucket: cat its per-worker shards (cheap block concat) into one unsorted bucket, then sort it.
-    // Buckets sort concurrently; each is ~1/buckets of the data so it sorts with little temp. Peak RAM ~=
-    // Threads x sort_memory_gb (capped by the executor width), so size that flag with the box in mind.
-    private List<String> sortBuckets(final List<List<String>> bucketWorkerBams)
+    private boolean concatenateShards(final List<String> shardBams, final String unsortedBam)
     {
-        if(mConfig.SortBamToolPath == null)
-        {
-            TARS_LOGGER.error("no -{} or -{} configured; cannot sort lifted buckets", BamToolName.BAMTOOL_PATH, SORT_BAMTOOL_PATH);
-            return null;
-        }
-
-        final BamToolName sortTool = fromPath(mConfig.SortBamToolPath);
-        final BamToolName catTool = fromPath(mConfig.BamToolPath);
-        final Integer sortMemoryGb = mConfig.SortMemoryGb > 0 ? mConfig.SortMemoryGb : null;
-        TARS_LOGGER.info("sorting {} buckets via {} ({} concurrent)", bucketWorkerBams.size(), sortTool, mConfig.Threads);
-
-        final List<String> sortedBuckets = Lists.newArrayList();
-        for(int b = 0; b < bucketWorkerBams.size(); ++b)
-            sortedBuckets.add(formSortedBucketPath(b));
-
-        final ExecutorService executor = Executors.newFixedThreadPool(mConfig.Threads);
-        final List<Future<Boolean>> futures = Lists.newArrayList();
-        for(int b = 0; b < bucketWorkerBams.size(); ++b)
-        {
-            final List<String> workerFiles = bucketWorkerBams.get(b);
-            final String unsortedBucket = formBucketUnsortedPath(b);
-            final String sortedBucket = sortedBuckets.get(b);
-            futures.add(executor.submit(() ->
-            {
-                if(!BamOperations.concatenateBams(catTool, mConfig.BamToolPath, unsortedBucket, workerFiles, 1))
-                    return false;
-                if(!BamOperations.sortBam(sortTool, mConfig.SortBamToolPath, unsortedBucket, sortedBucket, 1, sortMemoryGb))
-                    return false;
-                deleteQuietly(unsortedBucket);
-                return true;
-            }));
-        }
-        executor.shutdown();
-
-        boolean allSorted = true;
-        for(final Future<Boolean> future : futures)
-        {
-            try
-            {
-                if(!future.get())
-                    allSorted = false;
-            }
-            catch(InterruptedException | ExecutionException e)
-            {
-                TARS_LOGGER.error("bucket sort failed: {}", e.toString());
-                allSorted = false;
-            }
-        }
-
-        return allSorted ? sortedBuckets : null;
+        final BamToolName toolName = fromPath(mConfig.BamToolPath);
+        TARS_LOGGER.info("concatenating {} liftback shards via {}", shardBams.size(), toolName);
+        // samtools cat is a plain BGZF block concat and rejects -@, so pass threads=1.
+        return BamOperations.concatenateBams(toolName, mConfig.BamToolPath, unsortedBam, shardBams, 1);
     }
 
-    private boolean concatenateSortedBuckets(final List<String> sortedBuckets, final String outputBam)
+    private boolean sortAndIndex(final String unsortedBam, final String sortedBam)
     {
-        // buckets are disjoint, ordered genomic ranges, so a plain cat of the sorted pieces is coordinate-sorted.
-        final BamToolName toolName = fromPath(mConfig.BamToolPath);
-        TARS_LOGGER.info("concatenating {} sorted buckets via {}: {}", sortedBuckets.size(), toolName, outputBam);
+        if(mConfig.BamToolPath == null)
+        {
+            TARS_LOGGER.info("no -{} configured; leaving unsorted BAM at {}", BamToolName.BAMTOOL_PATH, unsortedBam);
+            return false;
+        }
 
-        if(!BamOperations.concatenateBams(toolName, mConfig.BamToolPath, outputBam, sortedBuckets, 1))
+        final BamToolName toolName = fromPath(mConfig.BamToolPath);
+        TARS_LOGGER.info("sorting BAM via {}: {}", toolName, sortedBam);
+
+        if(!BamOperations.sortBam(toolName, mConfig.BamToolPath, unsortedBam, sortedBam, mConfig.Threads))
             return false;
 
-        return BamOperations.indexBam(toolName, mConfig.BamToolPath, outputBam, mConfig.Threads);
+        // sambamba sort indexes inline; only samtools needs the explicit index pass.
+        if(toolName == BamToolName.SAMTOOLS)
+        {
+            if(!BamOperations.indexBam(toolName, mConfig.BamToolPath, sortedBam, mConfig.Threads))
+                return false;
+        }
+
+        return true;
     }
 
     // write the header line once, then append each worker's headerless data shard.
@@ -460,19 +400,9 @@ public class SpliceLiftBack
         }
     }
 
-    private String formBucketBamPath(final int worker, final int bucket)
+    private String formShardBamPath(final int index)
     {
-        return mConfig.OutputDir + mConfig.prefix() + ".shard_" + worker + ".bucket_" + bucket + ".bam";
-    }
-
-    private String formBucketUnsortedPath(final int bucket)
-    {
-        return mConfig.OutputDir + mConfig.prefix() + ".bucket_" + bucket + ".unsorted.bam";
-    }
-
-    private String formSortedBucketPath(final int bucket)
-    {
-        return mConfig.OutputDir + mConfig.prefix() + ".bucket_" + bucket + ".sorted.bam";
+        return mConfig.OutputDir + mConfig.prefix() + ".shard_" + index + ".bam";
     }
 
     private String formTsvShardPath(final int index, final String kind)
@@ -481,11 +411,11 @@ public class SpliceLiftBack
     }
 
     private void cleanupIntermediates(
-            final List<List<String>> bucketWorkerBams, final List<String> sortedBuckets,
+            final String unsortedBam, final List<String> shardBams,
             final List<String> tsvAShards, final List<String> tsvBShards)
     {
-        bucketWorkerBams.forEach(bucket -> bucket.forEach(SpliceLiftBack::deleteQuietly));
-        sortedBuckets.forEach(SpliceLiftBack::deleteQuietly);
+        deleteQuietly(unsortedBam);
+        shardBams.forEach(SpliceLiftBack::deleteQuietly);
         tsvAShards.forEach(SpliceLiftBack::deleteQuietly);
         tsvBShards.forEach(SpliceLiftBack::deleteQuietly);
     }

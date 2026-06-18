@@ -45,21 +45,6 @@ public class SpliceLiftBackConfig
     public static final String WRITE_LIFTBACK_TSV_DESC =
             "Write per-record liftback debug TSVs (records + alignments). Off by default -- whole-sample TSVs are huge";
 
-    public static final String SORT_BAMTOOL_PATH = "sort_bamtool";
-    public static final String SORT_BAMTOOL_PATH_DESC =
-            "Path to sambamba or samtools used for the final sort only; defaults to -" + BAMTOOL_PATH
-                    + " (concat stays samtools)";
-
-    public static final String SORT_BUCKETS = "sort_buckets";
-    public static final String SORT_BUCKETS_DESC =
-            "Number of disjoint genomic buckets reads are routed to; each is sorted in parallel then cat in order. "
-                    + "0 (default) uses -threads";
-
-    public static final String SORT_MEMORY_GB = "sort_memory_gb";
-    public static final String SORT_MEMORY_GB_DESC =
-            "Per-shard sort memory in GB passed to the sort tool's -m; shards sort concurrently so peak RAM is "
-                    + "roughly -threads x this. Unset uses the tool default";
-
     public static final String DEFAULT_OUTPUT_PREFIX = "splice_lifted";
     public static final String TSV_A_SUFFIX = ".liftback.records.tsv";
     public static final String TSV_B_SUFFIX = ".liftback.alignments.tsv";
@@ -77,9 +62,6 @@ public class SpliceLiftBackConfig
     public final String OutputDir;
     public final String OutputId;
     public final String BamToolPath;
-    public final String SortBamToolPath;
-    public final int SortMemoryGb;
-    public final int SortBuckets;
     public final int Threads;
 
     public SpliceLiftBackConfig(final ConfigBuilder configBuilder)
@@ -96,9 +78,6 @@ public class SpliceLiftBackConfig
         OutputDir = parseOutputDir(configBuilder);
         OutputId = configBuilder.getValue(OUTPUT_ID);
         BamToolPath = configBuilder.getValue(BAMTOOL_PATH);
-        SortBamToolPath = configBuilder.hasValue(SORT_BAMTOOL_PATH) ? configBuilder.getValue(SORT_BAMTOOL_PATH) : BamToolPath;
-        SortMemoryGb = configBuilder.getInteger(SORT_MEMORY_GB);
-        SortBuckets = configBuilder.getInteger(SORT_BUCKETS);
         Threads = parseThreads(configBuilder);
 
         if(OutputDir == null)
@@ -106,6 +85,11 @@ public class SpliceLiftBackConfig
 
         if(!checkCreateOutputDir(OutputDir))
             throw new IllegalStateException("failed to create output directory: " + OutputDir);
+    }
+
+    public String formUnsortedBam()
+    {
+        return OutputDir + prefix() + ".unsorted" + BAM_EXTENSION;
     }
 
     // the run's output prefix, also used to namespace the per-worker shard intermediates so concurrent or
@@ -146,9 +130,6 @@ public class SpliceLiftBackConfig
         configBuilder.addPath(RNA_UNMAP_REGIONS, false, RNA_UNMAP_REGIONS_DESC);
         configBuilder.addFlag(WRITE_LIFTBACK_TSV, WRITE_LIFTBACK_TSV_DESC);
         BamToolName.addConfig(configBuilder);
-        configBuilder.addPath(SORT_BAMTOOL_PATH, false, SORT_BAMTOOL_PATH_DESC);
-        configBuilder.addInteger(SORT_MEMORY_GB, SORT_MEMORY_GB_DESC, 0);
-        configBuilder.addInteger(SORT_BUCKETS, SORT_BUCKETS_DESC, 0);
 
         addOutputOptions(configBuilder);
         addThreadOptions(configBuilder);
