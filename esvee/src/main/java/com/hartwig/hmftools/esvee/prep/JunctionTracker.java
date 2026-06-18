@@ -29,7 +29,7 @@ import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_INDEL_ANCHOR_LEN
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_LINE_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.NON_ILLUMINA_X_DEPTH_MIN_SUPPORT_RATIO;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.UNPAIRED_READ_JUNCTION_DISTANCE;
-import static com.hartwig.hmftools.esvee.prep.types.DiscordantStats.isDiscordantUnpairedReadGroup;
+import static com.hartwig.hmftools.esvee.prep.types.DiscordantStats.hasPrimaryWithSupplementary;
 import static com.hartwig.hmftools.esvee.prep.types.ReadFilterType.INSERT_MAP_OVERLAP;
 import static com.hartwig.hmftools.esvee.prep.types.ReadFilterType.SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.types.ReadType.NO_SUPPORT;
@@ -353,8 +353,8 @@ public class JunctionTracker
                     mCandidateDiscordantGroups.add(readGroup);
             }
 
-            if(isDiscordantGroup || isDiscordantUnpairedReadGroup(readGroup))
-                mDiscordantStats.processReadGroup(readGroup);
+            if(isDiscordantGroup || hasPrimaryWithSupplementary(readGroup))
+                mDiscordantStats.processReadGroup(readGroup, isDiscordantGroup);
         }
 
         perfCounterStop(PerfCounters.JunctionSupport);

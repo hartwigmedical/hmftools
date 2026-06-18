@@ -3,6 +3,7 @@ package com.hartwig.hmftools.esvee.prep.types;
 import static java.lang.Math.abs;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.getAlignmentEndFromCigar;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.inferredInsertSizeAbs;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
@@ -11,6 +12,7 @@ import static com.hartwig.hmftools.esvee.common.WriteType.DISCORDANT_STATS;
 import java.util.Arrays;
 import java.util.StringJoiner;
 
+import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.sv.DiscordantFragType;
 import com.hartwig.hmftools.common.sv.EsveeDiscordantStats;
@@ -42,30 +44,108 @@ public class DiscordantStats
     private static final int LENGTH_5K = 5000;
     private static final int LENGTH_100K = 100_000;
 
-    public void processReadGroup(final ReadGroup readGroup)
+    public void processReadGroup(final ReadGroup readGroup, final boolean isDiscordantPair)
     {
         PrepRead read = readGroup.reads().stream().filter(x -> !x.isSupplementaryAlignment()).findFirst().orElse(null);
 
         if(read.isPaired())
         {
-            addToCounts(
-                    read.Chromosome, read.MateChromosome, read.AlignmentStart, read.MatePosStart, read.orientation(), read.mateOrientation(),
-                    inferredInsertSizeAbs(read.record()));
+            if(isDiscordantPair)
+            {
+                // use the primary reads if discordant
+                addToCounts(
+                        read.Chromosome, read.MateChromosome, read.AlignmentStart, read.MatePosStart, read.orientation(), read.mateOrientation(),
+                        inferredInsertSizeAbs(read.record()));
+            }
+            else
+            {
+                // otherwise use the longest primary to supp pairing
+                int maxInsertSize = -1;
+                PrepRead maxPrimaryRead = null;
+                PrimarySuppPairing maxPositionPairing = null;
+
+                for(PrepRead primaryRead : readGroup.reads())
+                {
+                    if(!primaryRead.hasSuppAlignment() || primaryRead.isUnmapped())
+                        continue;
+
+                    PrimarySuppPairing positionPairing = formPositionPairing(primaryRead);
+                    int inferredInsertSize = primarySuppInferredInsertSize(primaryRead, positionPairing);
+
+                    if(inferredInsertSize > maxInsertSize)
+                    {
+                        maxPrimaryRead = primaryRead;
+                        maxInsertSize = inferredInsertSize;
+                        maxPositionPairing = positionPairing;
+                    }
+                }
+
+                if(maxPrimaryRead != null)
+                {
+                    addToCounts(
+                            maxPrimaryRead.Chromosome, maxPrimaryRead.supplementaryAlignment().Chromosome, maxPositionPairing.ReadPosition,
+                            maxPositionPairing.SuppPosition, maxPrimaryRead.orientation(),
+                            maxPrimaryRead.supplementaryAlignment().orient().opposite(), maxInsertSize);
+                }
+            }
         }
         else if(read.supplementaryAlignment() != null)
         {
-            int inferredInsertSize = abs(read.AlignmentStart - read.supplementaryAlignment().Position);
+            // use the span of the read and the reads if on the same chromosome
+            PrimarySuppPairing positionPairing = formPositionPairing(read);
+            int inferredInsertSize = primarySuppInferredInsertSize(read, positionPairing);
 
             addToCounts(
-                    read.Chromosome, read.supplementaryAlignment().Chromosome, read.AlignmentStart, read.supplementaryAlignment().Position,
+                    read.Chromosome, read.supplementaryAlignment().Chromosome, positionPairing.ReadPosition, positionPairing.SuppPosition,
                     read.orientation(), read.supplementaryAlignment().orient().opposite(), inferredInsertSize);
         }
     }
 
-    public static boolean isDiscordantUnpairedReadGroup(final ReadGroup readGroup)
+    private static int primarySuppInferredInsertSize(final PrepRead read, final PrimarySuppPairing positionPairing)
     {
-        PrepRead read = readGroup.reads().stream().filter(x -> !x.isSupplementaryAlignment()).findFirst().orElse(null);
-        return read != null && read.hasSuppAlignment();
+        if(read.Chromosome.equals(read.supplementaryAlignment().Chromosome))
+        {
+            return abs(positionPairing.ReadPosition - positionPairing.SuppPosition);
+        }
+        else
+        {
+            return 0;
+        }
+    }
+
+    private record PrimarySuppPairing(int ReadPosition, int SuppPosition) {}
+
+    private static PrimarySuppPairing formPositionPairing(final PrepRead read)
+    {
+        SupplementaryReadData suppData = read.supplementaryAlignment();
+
+        int readPosition, suppPosition;
+
+        if(read.Chromosome.equals(suppData.Chromosome))
+        {
+            if(read.leftClipLength() > read.rightClipLength())
+            {
+                readPosition = read.AlignmentEnd;
+                suppPosition = suppData.Position;
+            }
+            else
+            {
+                readPosition = read.AlignmentStart;
+                suppPosition = getAlignmentEndFromCigar(suppData.Position, suppData.Cigar);
+            }
+        }
+        else
+        {
+            readPosition = read.AlignmentStart;
+            suppPosition = suppData.Position;
+        }
+
+        return new PrimarySuppPairing(readPosition, suppPosition);
+    }
+
+    public static boolean hasPrimaryWithSupplementary(final ReadGroup readGroup)
+    {
+        return readGroup.reads().stream().anyMatch(x -> !x.isSupplementaryAlignment() && x.hasSuppAlignment());
     }
 
     private void addToCounts(
